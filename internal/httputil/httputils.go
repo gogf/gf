@@ -46,10 +46,10 @@ func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr strin
 		urlEncode = !noUrlEncode[0]
 	}
 	// If there's file uploading, it ignores the url encoding.
-	if urlEncode {
+	if !urlEncode {
 		for k, v := range m {
 			if gstr.Contains(k, fileUploadingKey) || gstr.Contains(gconv.String(v), fileUploadingKey) {
-				urlEncode = false
+				urlEncode = true
 				break
 			}
 		}
@@ -67,6 +67,7 @@ func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr strin
 		if urlEncode {
 			if strings.HasPrefix(s, fileUploadingKey) && len(s) > len(fileUploadingKey) {
 				// No url encoding if uploading file.
+				s = fileUploadingKey + gurl.Encode(strings.TrimPrefix(s, fileUploadingKey))
 			} else {
 				s = gurl.Encode(s)
 			}
