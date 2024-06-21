@@ -62,7 +62,6 @@ func (tree *RedBlackTree) SetComparator(comparator func(a, b interface{}) int) {
 	size := tree.tree.Size()
 	if size > 0 {
 		m := tree.Map()
-		tree.tree = redblacktree.NewWith(comparator)
 		tree.Sets(m)
 	}
 }
@@ -494,6 +493,7 @@ func (tree *RedBlackTree) UnmarshalJSON(b []byte) error {
 	defer tree.mu.Unlock()
 	if tree.comparator == nil {
 		tree.comparator = gutil.ComparatorString
+		tree.tree = redblacktree.NewWith(tree.comparator)
 	}
 	var data map[string]interface{}
 	if err := json.UnmarshalUseNumber(b, &data); err != nil {
@@ -511,6 +511,7 @@ func (tree *RedBlackTree) UnmarshalValue(value interface{}) (err error) {
 	defer tree.mu.Unlock()
 	if tree.comparator == nil {
 		tree.comparator = gutil.ComparatorString
+		tree.tree = redblacktree.NewWith(tree.comparator)
 	}
 	for k, v := range gconv.Map(value) {
 		tree.doSet(k, v)
