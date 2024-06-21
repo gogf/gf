@@ -864,6 +864,16 @@ func Test_Model_Count(t *testing.T) {
 	})
 }
 
+func Test_Model_Exist(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		exist, err := db.Model(table).Exist()
+		t.AssertNil(err)
+		t.Assert(exist, TableSize > 0)
+	})
+}
+
 func Test_Model_Select(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)

@@ -448,6 +448,39 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 	return 0, nil
 }
 
+// Exist does "SELECT COUNT(x) FROM ... LIMIT 1" statement for the model.
+// The optional parameter `where` is the same as the parameter of Model.Where function,
+// see Model.Where.
+func (m *Model) Exist(where ...interface{}) (bool, error) {
+	var (
+		core = m.db.GetCore()
+		ctx  = core.injectInternalColumn(m.GetCtx())
+	)
+	if len(where) > 0 {
+		return m.Where(where[0], where[1:]...).Exist()
+	}
+	var (
+		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(ctx, queryTypeCount, true)
+		all, err                  = m.doGetAllBySql(ctx, queryTypeCount, sqlWithHolder, holderArgs...)
+	)
+	if err != nil {
+		return false, err
+	}
+	if len(all) > 0 {
+		if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
+			if v, ok := all[0][internalData.FirstResultColumn]; ok {
+				return v.Bool(), nil
+			}
+		} else {
+			return false, gerror.NewCode(
+				gcode.CodeInternalError,
+				`query count error: the internal context data is missing. there's internal issue should be fixed`,
+			)
+		}
+	}
+	return false, nil
+}
+
 // CountColumn does "SELECT COUNT(x) FROM ..." statement for the model.
 func (m *Model) CountColumn(column string) (int, error) {
 	if len(column) == 0 {
