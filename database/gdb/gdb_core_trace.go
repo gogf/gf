@@ -29,7 +29,6 @@ const (
 	traceAttrDbLink           = "db.link"
 	traceAttrDbGroup          = "db.group"
 	traceEventDbExecution     = "db.execution"
-	traceEventDbExecutionSql  = "db.execution.sql"
 	traceEventDbExecutionCost = "db.execution.cost"
 	traceEventDbExecutionRows = "db.execution.rows"
 	traceEventDbExecutionTxID = "db.execution.txid"
@@ -70,7 +69,6 @@ func (c *Core) traceSpanEnd(ctx context.Context, span trace.Span, sql *Sql) {
 	}
 	span.SetAttributes(labels...)
 	events := []attribute.KeyValue{
-		attribute.String(traceEventDbExecutionSql, sql.Format),
 		attribute.String(traceEventDbExecutionCost, fmt.Sprintf(`%d ms`, sql.End-sql.Start)),
 		attribute.String(traceEventDbExecutionRows, fmt.Sprintf(`%d`, sql.RowsAffected)),
 	}
