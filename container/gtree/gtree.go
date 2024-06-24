@@ -11,8 +11,9 @@ package gtree
 
 import "github.com/gogf/gf/v2/container/gvar"
 
-// gtree defines the interface for basic operations of a tree.
-type gtree interface {
+// Gtree defines the interface for basic operations of a tree.
+type Gtree interface {
+	// Set inserts node into the tree.
 	Set(key interface{}, value interface{})
 
 	// Sets batch sets key-values to the tree.
@@ -32,6 +33,7 @@ type gtree interface {
 	// it executes function `f` with mutex.Lock of the hash map.
 	SetIfNotExistFuncLock(key interface{}, f func() interface{}) bool
 
+	// Get searches the node in the tree by `key` and returns its value or nil if key is not found in tree.
 	Get(key interface{}) (value interface{})
 
 	// GetOrSet returns the value by key,
@@ -50,9 +52,20 @@ type gtree interface {
 	// with mutex.Lock of the hash map.
 	GetOrSetFuncLock(key interface{}, f func() interface{}) interface{}
 
+	// GetVar returns a gvar.Var with the value by given `key`.
+	// The returned gvar.Var is un-concurrent safe.
 	GetVar(key interface{}) *gvar.Var
+
+	// GetVarOrSet returns a gvar.Var with result from GetVarOrSet.
+	// The returned gvar.Var is un-concurrent safe.
 	GetVarOrSet(key interface{}, value interface{}) *gvar.Var
+
+	// GetVarOrSetFunc returns a gvar.Var with result from GetOrSetFunc.
+	// The returned gvar.Var is un-concurrent safe.
 	GetVarOrSetFunc(key interface{}, f func() interface{}) *gvar.Var
+
+	// GetVarOrSetFuncLock returns a gvar.Var with result from GetOrSetFuncLock.
+	// The returned gvar.Var is un-concurrent safe.
 	GetVarOrSetFuncLock(key interface{}, f func() interface{}) *gvar.Var
 
 	// Search searches the tree with given `key`.
@@ -62,18 +75,38 @@ type gtree interface {
 	// Contains checks whether `key` exists in the tree.
 	Contains(key interface{}) bool
 
+	// Size returns number of nodes in the tree.
 	Size() int
+
+	// IsEmpty returns true if tree does not contain any nodes.
 	IsEmpty() bool
+
+	// Remove removes the node from the tree by key.
+	// Key should adhere to the comparator's type assertion, otherwise method panics.
 	Remove(key interface{}) (value interface{})
+
+	// Removes batch deletes values of the tree by `keys`.
 	Removes(keys []interface{})
+
+	// Clear removes all nodes from the tree.
 	Clear()
 
+	// Keys returns all keys in asc order.
 	Keys() []interface{}
+
+	// Values returns all values in asc order based on the key.
 	Values() []interface{}
+
+	// Replace the data of the tree with given `data`.
 	Replace(data map[interface{}]interface{})
 
+	// Print prints the tree to stdout.
 	Print()
+
+	// String returns a string representation of container
 	String() string
+
+	// MarshalJSON implements the interface MarshalJSON for json.Marshal.
 	MarshalJSON() (jsonBytes []byte, err error)
 
 	Map() map[interface{}]interface{}
@@ -81,10 +114,27 @@ type gtree interface {
 
 	// Iterator is alias of IteratorAsc.
 	Iterator(f func(key, value interface{}) bool)
+
 	// IteratorFrom is alias of IteratorAscFrom.
 	IteratorFrom(key interface{}, match bool, f func(key, value interface{}) bool)
+
+	// IteratorAsc iterates the tree readonly in ascending order with given callback function `f`.
+	// If `f` returns true, then it continues iterating; or false to stop.
 	IteratorAsc(f func(key, value interface{}) bool)
+
+	// IteratorAscFrom iterates the tree readonly in ascending order with given callback function `f`.
+	// The parameter `key` specifies the start entry for iterating. The `match` specifies whether
+	// starting iterating if the `key` is fully matched, or else using index searching iterating.
+	// If `f` returns true, then it continues iterating; or false to stop.
 	IteratorAscFrom(key interface{}, match bool, f func(key, value interface{}) bool)
+
+	// IteratorDesc iterates the tree readonly in descending order with given callback function `f`.
+	// If `f` returns true, then it continues iterating; or false to stop.
 	IteratorDesc(f func(key, value interface{}) bool)
+
+	// IteratorDescFrom iterates the tree readonly in descending order with given callback function `f`.
+	// The parameter `key` specifies the start entry for iterating. The `match` specifies whether
+	// starting iterating if the `key` is fully matched, or else using index searching iterating.
+	// If `f` returns true, then it continues iterating; or false to stop.
 	IteratorDescFrom(key interface{}, match bool, f func(key, value interface{}) bool)
 }
