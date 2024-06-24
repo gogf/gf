@@ -154,6 +154,7 @@ const (
 	contentTypeXml                          = "text/xml"
 	contentTypeHtml                         = "text/html"
 	contentTypeJson                         = "application/json"
+	contentTypeJavascript                   = "application/javascript"
 	swaggerUIPackedPath                     = "/goframe/swaggerui"
 	responseHeaderTraceID                   = "Trace-ID"
 	responseHeaderContentLength             = "Content-Length"
