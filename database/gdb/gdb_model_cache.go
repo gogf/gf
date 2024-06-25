@@ -109,7 +109,7 @@ func (m *Model) saveSelectResultToCache(
 	if len(result) > 0 {
 		var core = m.db.GetCore()
 		switch queryType {
-		case queryTypeValue, queryTypeCount:
+		case queryTypeCount, queryTypeValue, queryTypeExist:
 			if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
 				if result[0][internalData.FirstResultColumn].IsEmpty() {
 					result = nil
