@@ -493,7 +493,6 @@ func TestOpenApiV3_CommonRequest_Files(t *testing.T) {
 		t.AssertNil(err)
 
 		// fmt.Println(oai.String())
-		// TODO https://openapi.apifox.cn/
 		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Req`).Value.Properties.Get("files").Value.Type, goai.TypeArray)
 		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Req`).Value.Properties.Get("file").Value.Type, goai.TypeFile)
 	})
@@ -1040,7 +1039,7 @@ func Test_EmbeddedStructAttribute(t *testing.T) {
 
 		b, err := json.Marshal(oai)
 		t.AssertNil(err)
-		t.Assert(b, `{"openapi":"3.0.0","components":{"schemas":{"github.com.gogf.gf.v2.net.goai_test.CreateResourceReq":{"properties":{"Name":{"description":"This is name.","format":"string","properties":{},"type":"string"},"Embedded":{"properties":{"Age":{"description":"This is embedded age.","format":"uint","properties":{},"type":"integer"}},"type":"object"}},"type":"object"}}},"info":{"title":"","version":""},"paths":null}`)
+		t.Assert(b, `{"openapi":"3.0.0","components":{"schemas":{"github.com.gogf.gf.v2.net.goai_test.CreateResourceReq":{"properties":{"Name":{"description":"This is name.","format":"string","type":"string"},"Embedded":{"properties":{"Age":{"description":"This is embedded age.","format":"uint","type":"integer"}},"type":"object"}},"type":"object"}}},"info":{"title":"","version":""},"paths":null}`)
 	})
 }
 
@@ -1064,7 +1063,7 @@ func Test_NameFromJsonTag(t *testing.T) {
 
 		b, err := json.Marshal(oai)
 		t.AssertNil(err)
-		t.Assert(b, `{"openapi":"3.0.0","components":{"schemas":{"github.com.gogf.gf.v2.net.goai_test.CreateReq":{"properties":{"nick_name":{"format":"string","properties":{},"type":"string"}},"type":"object"}}},"info":{"title":"","version":""},"paths":null}`)
+		t.Assert(b, `{"openapi":"3.0.0","components":{"schemas":{"github.com.gogf.gf.v2.net.goai_test.CreateReq":{"properties":{"nick_name":{"format":"string","type":"string"}},"type":"object"}}},"info":{"title":"","version":""},"paths":null}`)
 	})
 	// GET
 	gtest.C(t, func(t *gtest.T) {
@@ -1085,7 +1084,7 @@ func Test_NameFromJsonTag(t *testing.T) {
 		b, err := json.Marshal(oai)
 		t.AssertNil(err)
 		fmt.Println(string(b))
-		t.Assert(b, `{"openapi":"3.0.0","components":{"schemas":{"github.com.gogf.gf.v2.net.goai_test.CreateReq":{"properties":{"nick_name":{"format":"string","properties":{},"type":"string"}},"type":"object"}}},"info":{"title":"","version":""},"paths":null}`)
+		t.Assert(b, `{"openapi":"3.0.0","components":{"schemas":{"github.com.gogf.gf.v2.net.goai_test.CreateReq":{"properties":{"nick_name":{"format":"string","type":"string"}},"type":"object"}}},"info":{"title":"","version":""},"paths":null}`)
 	})
 }
 
@@ -1221,6 +1220,6 @@ func Test_XExtension(t *testing.T) {
 			Object: req,
 		})
 		t.AssertNil(err)
-		t.Assert(oai.String(), `{"openapi":"3.0.0","components":{"schemas":{"github.com.gogf.gf.v2.net.goai_test.GetListReq":{"properties":{"Page":{"default":1,"description":"Page number","format":"int","properties":{},"type":"integer","x-sort":"1"},"Size":{"default":10,"description":"Size for per page.","format":"int","properties":{},"type":"integer","x-sort":"2"}},"type":"object","x-group":"User/Info"}}},"info":{"title":"","version":""},"paths":null}`)
+		t.Assert(oai.String(), `{"openapi":"3.0.0","components":{"schemas":{"github.com.gogf.gf.v2.net.goai_test.GetListReq":{"properties":{"Page":{"default":1,"description":"Page number","format":"int","type":"integer","x-sort":"1"},"Size":{"default":10,"description":"Size for per page.","format":"int","type":"integer","x-sort":"2"}},"type":"object","x-group":"User/Info"}}},"info":{"title":"","version":""},"paths":null}`)
 	})
 }
