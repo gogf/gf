@@ -152,7 +152,9 @@ func (e *Entry) checkAndRun(ctx context.Context) {
 		e.Close()
 
 	case StatusReady, StatusRunning:
+		e.cron.jobWaiter.Add(1)
 		defer func() {
+			e.cron.jobWaiter.Done()
 			if exception := recover(); exception != nil {
 				// Exception caught, it logs the error content to logger in default behavior.
 				e.logErrorf(ctx,

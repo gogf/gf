@@ -8,6 +8,7 @@ package gcron
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -19,10 +20,11 @@ import (
 
 // Cron stores all the cron job entries.
 type Cron struct {
-	idGen   *gtype.Int64    // Used for unique name generation.
-	status  *gtype.Int      // Timed task status(0: Not Start; 1: Running; 2: Stopped; -1: Closed)
-	entries *gmap.StrAnyMap // All timed task entries.
-	logger  glog.ILogger    // Logger, it is nil in default.
+	idGen     *gtype.Int64    // Used for unique name generation.
+	status    *gtype.Int      // Timed task status(0: Not Start; 1: Running; 2: Stopped; -1: Closed)
+	entries   *gmap.StrAnyMap // All timed task entries.
+	logger    glog.ILogger    // Logger, it is nil in default.
+	jobWaiter sync.WaitGroup  // Graceful shutdown when cron jobs are stopped.
 }
 
 // New returns a new Cron object with default settings.
@@ -185,6 +187,12 @@ func (c *Cron) Stop(name ...string) {
 	} else {
 		c.status.Set(StatusStopped)
 	}
+}
+
+// StopGracefully Blocks and waits all current running jobs done.
+func (c *Cron) StopGracefully() {
+	c.status.Set(StatusStopped)
+	c.jobWaiter.Wait()
 }
 
 // Remove deletes scheduled task which named `name`.
