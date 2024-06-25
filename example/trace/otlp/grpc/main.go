@@ -21,12 +21,15 @@ const (
 )
 
 func main() {
-	var ctx = gctx.New()
-	shutdown, err := otlpgrpc.Init(serviceName, endpoint, traceToken)
+	var (
+		ctx           = gctx.New()
+		shutdown, err = otlpgrpc.Init(serviceName, endpoint, traceToken)
+	)
+
 	if err != nil {
 		g.Log().Fatal(ctx, err)
 	}
-	defer shutdown()
+	defer shutdown(ctx)
 
 	StartRequests()
 }

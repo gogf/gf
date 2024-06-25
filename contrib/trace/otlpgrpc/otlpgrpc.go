@@ -33,7 +33,7 @@ const (
 //
 // The output parameter `Shutdown` is used for waiting exported trace spans to be uploaded,
 // which is useful if your program is ending, and you do not want to lose recent spans.
-func Init(serviceName, endpoint, traceToken string) (func(), error) {
+func Init(serviceName, endpoint, traceToken string) (func(ctx context.Context), error) {
 	// Try retrieving host ip for tracing info.
 	var (
 		intranetIPArray, err = gipv4.GetIntranetIpArray()
@@ -90,7 +90,7 @@ func Init(serviceName, endpoint, traceToken string) (func(), error) {
 	otel.SetTextMapPropagator(propagation.TraceContext{})
 	otel.SetTracerProvider(tracerProvider)
 
-	return func() {
+	return func(ctx context.Context) {
 		ctx, cancel := context.WithTimeout(ctx, time.Second)
 		defer cancel()
 		if err = tracerProvider.Shutdown(ctx); err != nil {

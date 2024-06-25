@@ -29,12 +29,15 @@ const (
 )
 
 func main() {
-	var ctx = gctx.New()
-	shutdown, err := otlphttp.Init(serviceName, endpoint, path)
+	var (
+		ctx           = gctx.New()
+		shutdown, err = otlphttp.Init(serviceName, endpoint, path)
+	)
+
 	if err != nil {
 		g.Log().Fatal(ctx, err)
 	}
-	defer shutdown()
+	defer shutdown(ctx)
 
 	// Set ORM cache adapter with redis.
 	g.DB().GetCache().SetAdapter(gcache.NewAdapterRedis(g.Redis()))
@@ -101,7 +104,7 @@ func (c *cTrace) Query(ctx context.Context, req *QueryReq) (res *QueryRes, err e
 
 // DeleteReq is the input parameter for deleting user info.
 type DeleteReq struct {
-	Id int `v:"min:1#User id is required for deleting."`
+	ID int `v:"min:1#User id is required for deleting."`
 }
 
 // DeleteRes is the output parameter for deleting user info.
@@ -111,9 +114,9 @@ type DeleteRes struct{}
 func (c *cTrace) Delete(ctx context.Context, req *DeleteReq) (res *DeleteRes, err error) {
 	_, err = g.Model("user").Ctx(ctx).Cache(gdb.CacheOption{
 		Duration: -1,
-		Name:     c.userCacheKey(req.Id),
+		Name:     c.userCacheKey(req.ID),
 		Force:    false,
-	}).WherePri(req.Id).Delete()
+	}).WherePri(req.ID).Delete()
 	if err != nil {
 		return nil, err
 	}

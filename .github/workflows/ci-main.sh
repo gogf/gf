@@ -46,9 +46,9 @@ for file in `find . -name go.mod`; do
         fi
     fi
 
-    # package example needs golang >= v1.20
+    # package example needs golang >= v1.21
     if [ "example" = $(basename $dirpath) ]; then
-        if ! go version|grep -qE "go1.[2-9][0-9]"; then
+        if ! go version|grep -qE "go1.[2-9][1-9]"; then
           echo "ignore example as go version: $(go version)"
           continue 1
         fi
@@ -83,6 +83,13 @@ for file in `find . -name go.mod`; do
           continue 1
         fi
     fi
+    # package provider needs golang >= v1.21
+        if [ "provider" = $(basename $dirpath) ]; then
+            if ! go version|grep -qE "go1.[2-9][1-9]"; then
+              echo "ignore provider as go version: $(go version)"
+              continue 1
+            fi
+        fi
 
     cd $dirpath
     go mod tidy
