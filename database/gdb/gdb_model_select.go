@@ -460,7 +460,7 @@ func (m *Model) Exist(where ...interface{}) (bool, error) {
 		return m.Where(where[0], where[1:]...).Exist()
 	}
 	var (
-		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(ctx, queryTypeCount, true)
+		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(ctx, queryTypeCount, false)
 		all, err                  = m.doGetAllBySql(ctx, queryTypeCount, sqlWithHolder, holderArgs...)
 	)
 	if err != nil {
