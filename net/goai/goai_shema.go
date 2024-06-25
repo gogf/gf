@@ -54,7 +54,7 @@ type Schema struct {
 	MaxItems             *uint64        `json:"maxItems,omitempty"`
 	Items                *SchemaRef     `json:"items,omitempty"`
 	Required             []string       `json:"required,omitempty"`
-	Properties           Schemas        `json:"properties,omitempty"`
+	Properties           *Schemas       `json:"properties,omitempty"`
 	MinProps             uint64         `json:"minProperties,omitempty"`
 	MaxProps             *uint64        `json:"maxProperties,omitempty"`
 	AdditionalProperties *SchemaRef     `json:"additionalProperties,omitempty"`

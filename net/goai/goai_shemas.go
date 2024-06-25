@@ -14,8 +14,8 @@ type Schemas struct {
 	refs *gmap.ListMap // map[string]SchemaRef
 }
 
-func createSchemas() Schemas {
-	return Schemas{
+func createSchemas() *Schemas {
+	return &Schemas{
 		refs: gmap.NewListMap(),
 	}
 }
@@ -26,7 +26,7 @@ func (s *Schemas) init() {
 	}
 }
 
-func (s *Schemas) Clone() Schemas {
+func (s *Schemas) Clone() *Schemas {
 	newSchemas := createSchemas()
 	newSchemas.refs = s.refs.Clone()
 	return newSchemas
