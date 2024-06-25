@@ -460,7 +460,7 @@ func (m *Model) Exist(where ...interface{}) (bool, error) {
 		return m.Where(where[0], where[1:]...).Exist()
 	}
 	var (
-		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(ctx, queryTypeExist, false)
+		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(ctx, queryTypeExist, true)
 		all, err                  = m.doGetAllBySql(ctx, queryTypeExist, sqlWithHolder, holderArgs...)
 	)
 	if err != nil {
@@ -671,7 +671,7 @@ func (m *Model) getFormattedSqlAndArgs(
 			sqlWithHolder = fmt.Sprintf("SELECT 1 FROM (%s) AS T", m.rawSql)
 			return sqlWithHolder, nil
 		}
-		conditionWhere, conditionExtra, conditionArgs := m.formatCondition(ctx, true, true)
+		conditionWhere, conditionExtra, conditionArgs := m.formatCondition(ctx, true, false)
 		sqlWithHolder = fmt.Sprintf("SELECT 1 FROM %s%s", m.tables, conditionWhere+conditionExtra)
 		if len(m.groupBy) > 0 {
 			sqlWithHolder = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", sqlWithHolder)
