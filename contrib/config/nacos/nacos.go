@@ -114,7 +114,7 @@ func (c *Client) updateLocalValue() (err error) {
 
 func (c *Client) doUpdate(content string) (err error) {
 	var j *gjson.Json
-	if j, err = gjson.LoadContent(content); err != nil {
+	if j, err = gjson.LoadContent([]byte(content)); err != nil {
 		return gerror.Wrap(err, `parse config map item from nacos failed`)
 	}
 	c.value.Set(j)
