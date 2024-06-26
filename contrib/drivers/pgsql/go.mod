@@ -3,13 +3,14 @@ module github.com/gogf/gf/contrib/drivers/pgsql/v2
 go 1.18
 
 require (
-	github.com/gogf/gf/v2 v2.7.1
+	github.com/gogf/gf/v2 v2.7.2
 	github.com/lib/pq v1.10.9
 )
 
 require (
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/clbanning/mxj/v2 v2.7.0 // indirect
+	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
