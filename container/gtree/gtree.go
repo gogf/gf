@@ -11,8 +11,8 @@ package gtree
 
 import "github.com/gogf/gf/v2/container/gvar"
 
-// Tree defines the interface for basic operations of a tree.
-type Tree interface {
+// iTree defines the interface for basic operations of a tree.
+type iTree interface {
 	// Set inserts node into the tree.
 	Set(key interface{}, value interface{})
 
