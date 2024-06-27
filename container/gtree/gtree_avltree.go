@@ -16,6 +16,8 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+var _ iTree = (*AVLTree)(nil)
+
 // AVLTree holds elements of the AVL tree.
 type AVLTree struct {
 	mu         rwmutex.RWMutex
