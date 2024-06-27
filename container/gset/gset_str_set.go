@@ -17,6 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// StrSet is consisted of string items.
 type StrSet struct {
 	mu   rwmutex.RWMutex
 	data map[string]struct{}

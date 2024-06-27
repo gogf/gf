@@ -5,7 +5,8 @@
 // You can obtain one at https://github.com/gogf/gf.
 //
 
-// Package glist provides most commonly used doubly linked list container which also supports concurrent-safe/unsafe switch feature.
+// Package glist provides most commonly used doubly linked list container which also supports
+// concurrent-safe/unsafe switch feature.
 package glist
 
 import (

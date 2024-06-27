@@ -16,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// Set is consisted of interface{} items.
 type Set struct {
 	mu   rwmutex.RWMutex
 	data map[interface{}]struct{}
