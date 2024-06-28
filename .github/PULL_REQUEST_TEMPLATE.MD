@@ -16,7 +16,6 @@
   + Lowercase verb after the colon
   + No trailing period
   + Keep the title as short as possible. ideally under 76 characters or shorter
-  + Title not Markdown
   + [Reference Documentation](https://www.conventionalcommits.org/en/v1.0.0/)
 + If there is a corresponding issue, add either `Fixes #1234` or `Updates #1234`
   (the latter if this is not a complete fix) to this comment
@@ -40,7 +39,6 @@
   + 冒号后的动词小写
   + 不要有结尾句号
   + 标题尽量保持简短，最好在 76 个字符或更短
-  + 标题不要使用 Markdown
   + [参考文档](https://www.conventionalcommits.org/zh-hans/v1.0.0/)
 + 如果有对应的 issue，请在此评论中添加 `Fixes #1234`，如果不是完全修复则添加 `Updates #1234`
 + 应用这些规则后删除所有的说明
