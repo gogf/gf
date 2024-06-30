@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/trace/otlphttp/v2
 go 1.18
 
 require (
-	github.com/gogf/gf/v2 v2.7.0
+	github.com/gogf/gf/v2 v2.7.2
 	go.opentelemetry.io/otel v1.22.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.22.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.22.0
@@ -14,6 +14,7 @@ require (
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/clbanning/mxj/v2 v2.7.0 // indirect
+	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect

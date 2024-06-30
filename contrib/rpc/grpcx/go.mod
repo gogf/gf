@@ -3,8 +3,8 @@ module github.com/gogf/gf/contrib/rpc/grpcx/v2
 go 1.18
 
 require (
-	github.com/gogf/gf/contrib/registry/file/v2 v2.7.0
-	github.com/gogf/gf/v2 v2.7.0
+	github.com/gogf/gf/contrib/registry/file/v2 v2.7.2
+	github.com/gogf/gf/v2 v2.7.2
 	go.opentelemetry.io/otel v1.14.0
 	go.opentelemetry.io/otel/trace v1.14.0
 	google.golang.org/grpc v1.57.2
@@ -14,6 +14,7 @@ require (
 require (
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/clbanning/mxj/v2 v2.7.0 // indirect
+	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
