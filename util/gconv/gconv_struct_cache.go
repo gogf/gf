@@ -9,10 +9,33 @@ package gconv
 import (
 	"reflect"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/util/gtag"
 )
+
+var (
+	poolUsedParamsKeyOrTagNameMap = &sync.Pool{
+		New: func() any {
+			return make(map[string]struct{})
+		},
+	}
+)
+
+func poolGetUsedParamsKeyOrTagNameMap() map[string]struct{} {
+	return poolUsedParamsKeyOrTagNameMap.Get().(map[string]struct{})
+}
+
+func poolPutUsedParamsKeyOrTagNameMap(m map[string]struct{}) {
+	// 需要清空，不然会有bug
+	for k := range m {
+		delete(m, k)
+	}
+	poolUsedParamsKeyOrTagNameMap.Put(m)
+}
 
 type convertFieldInfo struct {
 	// 字段的索引，有可能是一个嵌套的结构体，所以需要[]int
@@ -25,91 +48,108 @@ type convertFieldInfo struct {
 	// 实现了以上三种接口之一的类型，除了[time.Time]和[gtime.Time]
 	isCommonInterface bool
 	fieldTypeName     string
-	// 用来存储重名的字段
+	// 用来存储重名的字段索引
+	// 一般用于嵌套的结构体
 	otherFieldIndex [][]int
+	// 缓存类型转换的函数
+	// 比如字段的类型是int ，那么直接缓存gconv.Int函数
+	convFunc func(from any, to reflect.Value)
 }
 
 func (c *convertFieldInfo) FieldName() string {
 	return c.tags[len(c.tags)-1]
 }
 
-type convertedStructInfo struct {
-	// key   = field's name
-	// value = field's tag
+type convertStructInfo struct {
+	// key = field's name
 	fields map[string]*convertFieldInfo
 }
 
-// MergeField
-// 需要 parentIndex 参数的原因
-// 当一个结构体类型A已经被缓存，如果他被嵌入在B结构体中时，
-// 那么此时在注册B结构体时，由于A结构体已经被缓存，字段的索引也是相对于A结构体来说的
-// 举例：
-//
-//	type A struct {
-//		Name string  // index = 0
-//		Age int      // index = 1
-//	}
-//
-//	type B struct {
-//		Id int        // index = 0
-//		A
-//		可以把A字段展开到B结构体里面，由于A结构体已经被缓存，所以它的字段索引需要重新设置
-//		Name string  // index = 0 => {1,0}
-//		Age int      // index = 1 => {1,1}
-//	}
-//func (structInfo *convertedStructInfo) MergeField(fieldName string, fieldInfo *convertFieldInfo, parentIndex []int) *convertFieldInfo {
-//	convertInfo, ok := structInfo.fields[fieldName]
-//
-//	newFieldInfo := &convertFieldInfo{}
-//	*newFieldInfo = *fieldInfo
-//	newFieldInfo.fieldIndex = append(parentIndex, newFieldInfo.fieldIndex...)
-//
-//	if !ok {
-//		structInfo.fields[fieldName] = newFieldInfo
-//		return newFieldInfo
-//	}
-//	if convertInfo.otherFieldIndex == nil {
-//		convertInfo.otherFieldIndex = make([][]int, 0, 2)
-//	}
-//	convertInfo.otherFieldIndex = append(convertInfo.otherFieldIndex, newFieldInfo.fieldIndex)
-//	return convertInfo
-//}
-
-func (structInfo *convertedStructInfo) AddField(field reflect.StructField, fieldIndex []int, priorityTags []string) *convertFieldInfo {
+func (structInfo *convertStructInfo) AddField(field reflect.StructField, fieldIndex []int, priorityTags []string) *convertFieldInfo {
 	convFieldInfo, ok := structInfo.fields[field.Name]
 	if !ok {
 		fieldInfo := &convertFieldInfo{
 			isCommonInterface: checkTypeIsImplCommonInterface(field),
 			fieldTypeName:     field.Type.String(),
 			fieldIndex:        fieldIndex,
+			convFunc:          getFieldConvFunc(field.Type.String()),
 		}
 		structInfo.fields[field.Name] = fieldInfo
-		//if field.Anonymous {
-		//	// Since the main logic has already been recursive,
-		//	// there is no need for it here
-		//	return fieldInfo
-		//}
 		fieldInfo.tags = getFieldTags(field, priorityTags)
 		return fieldInfo
 	}
 	if convFieldInfo.otherFieldIndex == nil {
 		convFieldInfo.otherFieldIndex = make([][]int, 0, 2)
 	}
-	convFieldInfo.otherFieldIndex = append(convFieldInfo.otherFieldIndex, fieldIndex)
 
+	convFieldInfo.otherFieldIndex = append(convFieldInfo.otherFieldIndex, fieldIndex)
 	return convFieldInfo
 }
 
+func getFieldConvFunc(fieldType string) (convFunc func(from any, to reflect.Value)) {
+	switch fieldType {
+	case "int":
+		convFunc = func(from any, to reflect.Value) {
+			to.SetInt(int64(Int(from)))
+		}
+	case "int64":
+		convFunc = func(from any, to reflect.Value) {
+			to.SetInt(Int64(from))
+		}
+	case "uint":
+		convFunc = func(from any, to reflect.Value) {
+			to.SetUint(uint64(Uint(from)))
+		}
+	case "uint64":
+		convFunc = func(from any, to reflect.Value) {
+			to.SetUint(Uint64(from))
+		}
+	case "string":
+		convFunc = func(from any, to reflect.Value) {
+			to.SetString(String(from))
+		}
+	case "float32":
+		convFunc = func(from any, to reflect.Value) {
+			to.SetFloat(float64(Float32(from)))
+		}
+	case "float64":
+		convFunc = func(from any, to reflect.Value) {
+			to.SetFloat(Float64(from))
+		}
+	case "Time", "time.Time":
+		convFunc = func(from any, to reflect.Value) {
+			*to.Addr().Interface().(*time.Time) = Time(from)
+		}
+	case "GTime", "gtime.Time":
+		convFunc = func(from any, to reflect.Value) {
+			v := GTime(from)
+			if v == nil {
+				v = gtime.New()
+			}
+			*to.Addr().Interface().(*gtime.Time) = *v
+		}
+	default:
+		return nil
+	}
+	if convFunc != nil {
+		if fieldType[0] == '*' {
+			return func(from any, to reflect.Value) {
+				convFunc(from, to.Elem())
+			}
+		}
+	}
+	return convFunc
+}
+
 type toBeConvertedStructInfo struct {
-	// key   = field's name
-	// value = field's tag
-	fields map[string]*toBeConvertedFieldInfo
+	// key = field's name
+	fields map[string]toBeConvertedFieldInfo
 }
 
 func (t *toBeConvertedStructInfo) AddField(fieldName string, fieldInfo *convertFieldInfo) {
 	convertInfo, ok := t.fields[fieldName]
 	if !ok {
-		t.fields[fieldName] = &toBeConvertedFieldInfo{
+		t.fields[fieldName] = toBeConvertedFieldInfo{
 			Value:            nil,
 			convertFieldInfo: fieldInfo,
 		}
@@ -122,35 +162,37 @@ func (t *toBeConvertedStructInfo) AddField(fieldName string, fieldInfo *convertF
 }
 
 var (
-	cacheConvertedStructsInfo = make(map[reflect.Type]*convertedStructInfo)
+	cacheConvStructsInfo = make(map[reflect.Type]*convertStructInfo)
 
 	implUnmarshalText  = reflect.TypeOf((*iUnmarshalText)(nil)).Elem()
 	implUnmarshalJson  = reflect.TypeOf((*iUnmarshalJSON)(nil)).Elem()
 	implUnmarshalValue = reflect.TypeOf((*iUnmarshalValue)(nil)).Elem()
 )
 
-func parseStruct(structType reflect.Type, priorityTag string) *toBeConvertedStructInfo {
+func cacheConvStructInfo(structType reflect.Type, info *convertStructInfo) {
+	cacheConvStructsInfo[structType] = info
+}
 
+func getConvStructInfo(structType reflect.Type, priorityTag string) *toBeConvertedStructInfo {
 	if structType.Kind() != reflect.Struct {
 		return nil
 	}
 	// key=fieldName
 	toBeConvertedFieldNameToInfo := &toBeConvertedStructInfo{
-		fields: make(map[string]*toBeConvertedFieldInfo),
+		fields: make(map[string]toBeConvertedFieldInfo),
 	}
-
 	// 检查是否已经缓存，
-	structInfo, ok := cacheConvertedStructsInfo[structType]
+	structInfo, ok := cacheConvStructsInfo[structType]
 	if ok {
 		for k, v := range structInfo.fields {
 			toBeConvertedFieldNameToInfo.AddField(k, v)
 		}
 		return toBeConvertedFieldNameToInfo
 	}
-	structInfo = &convertedStructInfo{
+
+	structInfo = &convertStructInfo{
 		fields: make(map[string]*convertFieldInfo),
 	}
-
 	var (
 		priorityTagArray []string
 		parentIndex      = make([]int, 0)
@@ -160,23 +202,21 @@ func parseStruct(structType reflect.Type, priorityTag string) *toBeConvertedStru
 	} else {
 		priorityTagArray = gtag.StructTagPriority
 	}
-
-	parseStructField(structType, parentIndex, structInfo, priorityTagArray)
-
-	cacheConvertedStructsInfo[structType] = structInfo
-
+	parseStruct(structType, parentIndex, structInfo, priorityTagArray)
+	cacheConvStructInfo(structType, structInfo)
 	for k, v := range structInfo.fields {
 		toBeConvertedFieldNameToInfo.AddField(k, v)
 	}
 	return toBeConvertedFieldNameToInfo
 }
 
-func parseStructField(structType reflect.Type, parentIndex []int, structInfo *convertedStructInfo, priorityTagArray []string) *convertedStructInfo {
+func parseStruct(structType reflect.Type, parentIndex []int, structInfo *convertStructInfo, priorityTagArray []string) {
 	var (
 		fieldName   string
 		structField reflect.StructField
 		fieldType   reflect.Type
 	)
+	// TODO 查找缓存中是否已经缓存了结构体，如果缓存了，可以复用一些信息，但是需要重新设置[FieldIndex]，暂时不做实现，因为有些复杂
 	for i := 0; i < structType.NumField(); i++ {
 		structField = structType.Field(i)
 		fieldType = structField.Type
@@ -199,19 +239,10 @@ func parseStructField(structType reflect.Type, parentIndex []int, structInfo *co
 		if fieldType.Kind() != reflect.Struct {
 			continue
 		}
-		// It is only recorded if the name has a fieldTag
 		// TODO: If it's an anonymous field with a tag, doesn't it need to be recursive?
 		structInfo.AddField(structField, append(parentIndex, i), priorityTagArray)
-
-		parseStructField(fieldType, append(parentIndex, i), structInfo, priorityTagArray)
-		// TODO 如果解析的结构体之前已经解析过，需要重新设置FieldIndex
-		//for k, v := range convStructInfo.fields {
-		//	newFieldInfo := structInfo.MergeField(k, v, append([]int{}, i))
-		//	_ = newFieldInfo
-		//	// toBeConvertedFieldNameToInfo.AddField(k, newFieldInfo)
-		//}
+		parseStruct(fieldType, append(parentIndex, i), structInfo, priorityTagArray)
 	}
-	return structInfo
 }
 
 // Holds the info for subsequent converting.
