@@ -17,7 +17,7 @@ import (
 
 type convertFieldInfo struct {
 	// 字段的索引，有可能是一个嵌套的结构体，所以需要[]int
-	fieldIndex [][]int
+	fieldIndex []int
 	// 包括字段的名字，且字段名是最后一个
 	tags []string
 	// iUnmarshalValue
@@ -26,24 +26,39 @@ type convertFieldInfo struct {
 	// 实现了以上三种接口之一的类型，除了[time.Time]和[gtime.Time]
 	isCommonInterface bool
 	fieldTypeName     string
-	fieldLevel        int
+	// 用来存储重名的字段
+	otherFieldIndex [][]int
 }
 
 type convertedStructInfo struct {
 	// key   = field's name
 	// value = field's tag
-	// TODO 在多层嵌套时字段可能会重复，需要另外的手段来区别
 	fields map[string]*convertFieldInfo
 }
 
 type toBeConvertedStructInfo struct {
 	// key   = field's name
 	// value = field's tag
-	// TODO 在多层嵌套时字段可能会重复，需要另外的手段来区别
 	fields map[string]*toBeConvertedFieldInfo
 }
 
-func (structInfo *convertedStructInfo) AddField(field reflect.StructField, fieldIndex [][]int, priorityTags []string) *convertFieldInfo {
+func (t *toBeConvertedStructInfo) AddField(field reflect.StructField, fieldInfo *convertFieldInfo) {
+	convertInfo, ok := t.fields[field.Name]
+	if !ok {
+		t.fields[field.Name] = &toBeConvertedFieldInfo{
+			Value:            nil,
+			convertFieldInfo: fieldInfo,
+		}
+		return
+	}
+
+	if convertInfo.otherFieldIndex == nil {
+		convertInfo.otherFieldIndex = make([][]int, 0, 2)
+	}
+	convertInfo.otherFieldIndex = append(convertInfo.otherFieldIndex, fieldInfo.fieldIndex)
+}
+
+func (structInfo *convertedStructInfo) AddField(field reflect.StructField, fieldIndex []int, priorityTags []string) *convertFieldInfo {
 	_, ok := structInfo.fields[field.Name]
 	if ok {
 		panic(fmt.Sprintf("Field `%s` already exists", field.Name))
@@ -75,10 +90,10 @@ func parseStruct(
 	pointerElem reflect.Value,
 	structType reflect.Type,
 	priorityTag string, parentIndex []int,
-	toBeConvertedFieldNameToInfo *toBeConvertedStructInfo) {
+	toBeConvertedFieldNameToInfo *toBeConvertedStructInfo) *toBeConvertedStructInfo {
 
 	if structType.Kind() != reflect.Struct {
-		return
+		return toBeConvertedFieldNameToInfo
 	}
 	// 检查是否已经缓存，
 	structInfo, ok := cacheConvertedStructsInfo[structType]
@@ -90,7 +105,7 @@ func parseStruct(
 				convertFieldInfo: v,
 			}
 		}
-		return
+		return toBeConvertedFieldNameToInfo
 	}
 	structInfo = &convertedStructInfo{
 		fields: make(map[string]*convertFieldInfo),
@@ -115,19 +130,12 @@ func parseStruct(
 		if !utils.IsLetterUpper(fieldName[0]) {
 			continue
 		}
-		/////////可以用下面的[getFieldTags]来实现////////////////////////
-		// var fieldTagName = getTagNameFromField(structField, priorityTagArray)
-		//////////////////////////
 		if structField.Anonymous == false {
-
-			toBeConvertedFieldNameToInfo.fields[fieldName] = &toBeConvertedFieldInfo{
-				convertFieldInfo: structInfo.AddField(structField, append(parentIndex, i), priorityTagArray),
-			}
+			toBeConvertedFieldNameToInfo.AddField(structField,
+				structInfo.AddField(structField, append(parentIndex, i), priorityTagArray))
 			continue
 		}
-
 		// Maybe it's struct/*struct embedded.
-		// TODO 暂时不解析接口，使用特定的字段标识，直到赋值时才解析接口字段
 		if fieldType.Kind() == reflect.Interface {
 			// 如果是接口，不需要进入
 			//fieldValue := pointerElem.FieldByIndex(append(parentIndex, i))
@@ -164,35 +172,12 @@ func parseStruct(
 		// It is only recorded if the name has a fieldTag
 		// TODO: If it's an anonymous field with a tag, doesn't it need to be recursive?
 
-		toBeConvertedFieldNameToInfo.fields[fieldName] = &toBeConvertedFieldInfo{
-			Value:            nil,
-			convertFieldInfo: structInfo.AddField(structField, append(parentIndex, i), priorityTagArray),
-		}
-
+		toBeConvertedFieldNameToInfo.AddField(structField,
+			structInfo.AddField(structField, append(parentIndex, i), priorityTagArray))
 		parseStruct(pointerElem, fieldType, priorityTag, append(parentIndex, i), toBeConvertedFieldNameToInfo)
-
 	}
-	/////////////////////////////////////////////////////
-	cacheConvertedStructsInfo[fieldType] = structInfo
-}
-
-// 可以用下面的[getFieldTags]来实现
-func getTagNameFromField(field reflect.StructField, priorityTags []string) string {
-	for _, tag := range priorityTags {
-		value, ok := field.Tag.Lookup(tag)
-		if ok {
-			// If there's something else in the tag string,
-			// it uses the first part which is split using char ','.
-			// Example:
-			// orm:"id, priority"
-			// orm:"name, with:uid=id"
-			array := strings.Split(value, ",")
-			// json:",omitempty"
-			trimmedTagName := strings.TrimSpace(array[0])
-			return trimmedTagName
-		}
-	}
-	return ""
+	cacheConvertedStructsInfo[structType] = structInfo
+	return toBeConvertedFieldNameToInfo
 }
 
 // 只为value服务
@@ -202,6 +187,35 @@ func (f *toBeConvertedFieldInfo) getFieldReflectValue(structValue reflect.Value)
 	}
 	v := structValue
 	for i, x := range f.fieldIndex {
+		if i > 0 {
+			switch v.Kind() {
+			case reflect.Pointer:
+				if v.IsNil() {
+					v.Set(reflect.New(v.Type().Elem()))
+				}
+				v = v.Elem()
+			case reflect.Interface:
+				// Compatible with previous code
+				// Interface => struct
+				v = v.Elem()
+				if v.Kind() == reflect.Ptr {
+					// maybe *struct or other types
+					v = v.Elem()
+				}
+			}
+		}
+		v = v.Field(x)
+	}
+	return v
+}
+
+func (f *toBeConvertedFieldInfo) getOtherFieldReflectValue(structValue reflect.Value, fieldLevel int) reflect.Value {
+	fieldIndex := f.otherFieldIndex[fieldLevel]
+	if len(fieldIndex) == 1 {
+		return structValue.Field(fieldIndex[0])
+	}
+	v := structValue
+	for i, x := range fieldIndex {
 		if i > 0 {
 			switch v.Kind() {
 			case reflect.Pointer:

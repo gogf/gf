@@ -186,6 +186,7 @@ func doStruct(
 	for fieldName, fieldInfo := range toBeConvertedFieldNameToInfoMap.fields {
 		for _, fieldTag := range fieldInfo.tags {
 			if paramsValue, ok = paramsMap[fieldTag]; ok {
+
 				fieldInfo.Value = paramsValue
 				toBeConvertedFieldNameToInfoMap.fields[fieldName] = fieldInfo
 				break
@@ -219,6 +220,7 @@ func doStruct(
 	for fieldName, fieldInfo = range toBeConvertedFieldNameToInfoMap.fields {
 		// If it is not empty, the tag or elemFieldName name matches
 		if fieldInfo.Value != nil {
+
 			fieldValue := fieldInfo.getFieldReflectValue(pointerElemReflectValue)
 			if err = bindVarToStructAttrWithFieldIndex(
 				fieldValue, fieldName,
@@ -226,6 +228,19 @@ func doStruct(
 				paramKeyToAttrMap); err != nil {
 				return err
 			}
+			// TODO
+			if len(fieldInfo.otherFieldIndex) > 0 {
+				for i := 0; i < len(fieldInfo.otherFieldIndex); i++ {
+					fieldValue := fieldInfo.getOtherFieldReflectValue(pointerElemReflectValue, i)
+					if err = bindVarToStructAttrWithFieldIndex(
+						fieldValue, fieldName,
+						fieldInfo.Value, fieldInfo.isCommonInterface,
+						paramKeyToAttrMap); err != nil {
+						return err
+					}
+				}
+			}
+
 			for _, tag := range fieldInfo.tags {
 				usedParamsKeyOrTagNameMap[tag] = struct{}{}
 			}
@@ -247,6 +262,17 @@ func doStruct(
 					paramValue, fieldInfo.isCommonInterface,
 					paramKeyToAttrMap); err != nil {
 					return err
+				}
+				if len(fieldInfo.otherFieldIndex) > 0 {
+					for i := 0; i < len(fieldInfo.otherFieldIndex); i++ {
+						fieldValue := fieldInfo.getOtherFieldReflectValue(pointerElemReflectValue, i)
+						if err = bindVarToStructAttrWithFieldIndex(
+							fieldValue, fieldName,
+							fieldInfo.Value, fieldInfo.isCommonInterface,
+							paramKeyToAttrMap); err != nil {
+							return err
+						}
+					}
 				}
 			}
 			usedParamsKeyOrTagNameMap[paramKey] = struct{}{}
