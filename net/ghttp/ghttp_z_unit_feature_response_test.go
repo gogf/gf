@@ -301,6 +301,8 @@ func Test_Response_Write(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/Writefln", "name=john"), "john\n")
 		t.Assert(client.GetContent(ctx, "/WriteJson"), "{\"name\":\"john\"}")
 		t.Assert(client.GetContent(ctx, "/WriteJsonP"), "{\"name\":\"john\"}")
+		resp, _ := client.DoRequest(ctx, http.MethodGet, "/WriteJsonP", "{\"name\":\"john\"}", nil)
+		t.Assert(resp.Header.Get("Content-Type"), "application/javascript")
 		t.Assert(client.GetContent(ctx, "/WriteJsonPWithStruct"), "{\"name\":\"john\"}")
 		t.Assert(client.GetContent(ctx, "/WriteJsonPWithStruct", "callback=callback"),
 			"callback({\"name\":\"john\"})")
