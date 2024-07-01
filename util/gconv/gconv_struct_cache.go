@@ -185,12 +185,14 @@ var (
 )
 
 func setCacheConvStructInfo(structType reflect.Type, info *convertStructInfo) {
+	// Temporarily enabled as an experimental feature
 	if convCacheExperiment {
 		cacheConvStructsInfo[structType] = info
 	}
 }
 
 func getCacheConvStructInfo(structType reflect.Type) (*convertStructInfo, bool) {
+	// Temporarily enabled as an experimental feature
 	if convCacheExperiment {
 		structInfo, ok := cacheConvStructsInfo[structType]
 		return structInfo, ok
@@ -202,14 +204,17 @@ func getConvStructInfo(structType reflect.Type, priorityTag string) *toBeConvert
 	if structType.Kind() != reflect.Struct {
 		return nil
 	}
-	// key=field's name
-	toBeConvertedFieldNameToInfo := &toBeConvertedStructInfo{
-		fields: make(map[string]toBeConvertedFieldInfo),
-	}
-
 	// Check if it has been cached
 	structInfo, ok := getCacheConvStructInfo(structType)
 	if ok {
+		// For the structure types of 0 fields,
+		// they also need to be cached to prevent invalid logic
+		if len(structInfo.fields) == 0 {
+			return nil
+		}
+		toBeConvertedFieldNameToInfo := &toBeConvertedStructInfo{
+			fields: make(map[string]toBeConvertedFieldInfo),
+		}
 		for k, v := range structInfo.fields {
 			toBeConvertedFieldNameToInfo.AddField(k, v)
 		}
@@ -230,6 +235,15 @@ func getConvStructInfo(structType reflect.Type, priorityTag string) *toBeConvert
 	}
 	parseStruct(structType, parentIndex, structInfo, priorityTagArray)
 	setCacheConvStructInfo(structType, structInfo)
+	// For the structure types of 0 fields,
+	// they also need to be cached to prevent invalid logic
+	if len(structInfo.fields) == 0 {
+		return nil
+	}
+	// key=field's name
+	toBeConvertedFieldNameToInfo := &toBeConvertedStructInfo{
+		fields: make(map[string]toBeConvertedFieldInfo),
+	}
 	for k, v := range structInfo.fields {
 		toBeConvertedFieldNameToInfo.AddField(k, v)
 	}
@@ -275,7 +289,6 @@ func parseStruct(structType reflect.Type, parentIndex []int, structInfo *convert
 	}
 }
 
-// Holds the info for subsequent converting.
 type toBeConvertedFieldInfo struct {
 	Value any // Found value by tag name or field name from input.
 	*convertFieldInfo
@@ -353,6 +366,7 @@ func checkTypeIsImplCommonInterface(field reflect.StructField) bool {
 	case "gtime.Time", "*gtime.Time":
 		// default convert
 	default:
+		// Implemented three types of interfaces that must be pointer types, otherwise it is meaningless
 		if field.Type.Kind() != reflect.Ptr {
 			field.Type = reflect.PointerTo(field.Type)
 		}
