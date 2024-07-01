@@ -181,21 +181,23 @@ func (t *toBeConvertedStructInfo) AddField(fieldName string, fieldInfo *convertF
 }
 
 var (
-	cacheConvStructsInfo = make(map[reflect.Type]*convertStructInfo)
+	cacheConvStructsInfo = sync.Map{}
 )
 
 func setCacheConvStructInfo(structType reflect.Type, info *convertStructInfo) {
 	// Temporarily enabled as an experimental feature
 	if convCacheExperiment {
-		cacheConvStructsInfo[structType] = info
+		cacheConvStructsInfo.Store(structType, info)
 	}
 }
 
 func getCacheConvStructInfo(structType reflect.Type) (*convertStructInfo, bool) {
 	// Temporarily enabled as an experimental feature
 	if convCacheExperiment {
-		structInfo, ok := cacheConvStructsInfo[structType]
-		return structInfo, ok
+		v, ok := cacheConvStructsInfo.Load(structType)
+		if ok {
+			return v.(*convertStructInfo), ok
+		}
 	}
 	return nil, false
 }
