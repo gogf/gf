@@ -23,14 +23,20 @@ var (
 			return make(map[string]struct{})
 		},
 	}
+	// Allow users to choose whether to enable this feature
+	convCacheExperiment = true
 )
+
+func UseConvCacheExperiment(b bool) {
+	convCacheExperiment = b
+}
 
 func poolGetUsedParamsKeyOrTagNameMap() map[string]struct{} {
 	return poolUsedParamsKeyOrTagNameMap.Get().(map[string]struct{})
 }
 
 func poolPutUsedParamsKeyOrTagNameMap(m map[string]struct{}) {
-	// 需要清空，不然会有bug
+	// need to be cleared, otherwise there will be a bug
 	for k := range m {
 		delete(m, k)
 	}
@@ -38,21 +44,23 @@ func poolPutUsedParamsKeyOrTagNameMap(m map[string]struct{}) {
 }
 
 type convertFieldInfo struct {
-	// 字段的索引，有可能是一个嵌套的结构体，所以需要[]int
+	// The index of a field may be a nested structure, so [] int is required
 	fieldIndex []int
-	// 包括字段的名字，且字段名是最后一个
+	// All tags in the field include the field name, and the field name is the last one
 	tags []string
-	// iUnmarshalValue
-	// iUnmarshalText
-	// iUnmarshalJSON
-	// 实现了以上三种接口之一的类型，除了[time.Time]和[gtime.Time]
+	// 1.iUnmarshalValue
+	// 2.iUnmarshalText
+	// 3.iUnmarshalJSON
+	// Implemented one of the three types of interfaces mentioned above,
+	// except for [time.Time] and [gtime.Time]
 	isCommonInterface bool
 	fieldTypeName     string
-	// 用来存储重名的字段索引
-	// 一般用于嵌套的结构体
+	// Field index used to store duplicate names
+	// Generally used for nested structures
 	otherFieldIndex [][]int
-	// 缓存类型转换的函数
-	// 比如字段的类型是int ，那么直接缓存gconv.Int函数
+	// Cache type conversion function
+	// For example:
+	// if the type of the field is int, then directly cache the [gconv.Int] function
 	convFunc func(from any, to reflect.Value)
 }
 
@@ -163,26 +171,33 @@ func (t *toBeConvertedStructInfo) AddField(fieldName string, fieldInfo *convertF
 
 var (
 	cacheConvStructsInfo = make(map[reflect.Type]*convertStructInfo)
-
-	implUnmarshalText  = reflect.TypeOf((*iUnmarshalText)(nil)).Elem()
-	implUnmarshalJson  = reflect.TypeOf((*iUnmarshalJSON)(nil)).Elem()
-	implUnmarshalValue = reflect.TypeOf((*iUnmarshalValue)(nil)).Elem()
 )
 
-func cacheConvStructInfo(structType reflect.Type, info *convertStructInfo) {
-	cacheConvStructsInfo[structType] = info
+func setCacheConvStructInfo(structType reflect.Type, info *convertStructInfo) {
+	if convCacheExperiment {
+		cacheConvStructsInfo[structType] = info
+	}
+}
+
+func getCacheConvStructInfo(structType reflect.Type) (*convertStructInfo, bool) {
+	if convCacheExperiment {
+		structInfo, ok := cacheConvStructsInfo[structType]
+		return structInfo, ok
+	}
+	return nil, false
 }
 
 func getConvStructInfo(structType reflect.Type, priorityTag string) *toBeConvertedStructInfo {
 	if structType.Kind() != reflect.Struct {
 		return nil
 	}
-	// key=fieldName
+	// key=field's name
 	toBeConvertedFieldNameToInfo := &toBeConvertedStructInfo{
 		fields: make(map[string]toBeConvertedFieldInfo),
 	}
-	// 检查是否已经缓存，
-	structInfo, ok := cacheConvStructsInfo[structType]
+
+	// Check if it has been cached
+	structInfo, ok := getCacheConvStructInfo(structType)
 	if ok {
 		for k, v := range structInfo.fields {
 			toBeConvertedFieldNameToInfo.AddField(k, v)
@@ -203,7 +218,7 @@ func getConvStructInfo(structType reflect.Type, priorityTag string) *toBeConvert
 		priorityTagArray = gtag.StructTagPriority
 	}
 	parseStruct(structType, parentIndex, structInfo, priorityTagArray)
-	cacheConvStructInfo(structType, structInfo)
+	setCacheConvStructInfo(structType, structInfo)
 	for k, v := range structInfo.fields {
 		toBeConvertedFieldNameToInfo.AddField(k, v)
 	}
@@ -216,7 +231,11 @@ func parseStruct(structType reflect.Type, parentIndex []int, structInfo *convert
 		structField reflect.StructField
 		fieldType   reflect.Type
 	)
-	// TODO 查找缓存中是否已经缓存了结构体，如果缓存了，可以复用一些信息，但是需要重新设置[FieldIndex]，暂时不做实现，因为有些复杂
+	// TODO:
+	//  Check if the structure has already been cached in the cache.
+	//  If it has been cached, some information can be reused,
+	//  but the [FieldIndex] needs to be reset.
+	//  We will not implement it temporarily because it is somewhat complex
 	for i := 0; i < structType.NumField(); i++ {
 		structField = structType.Field(i)
 		fieldType = structField.Type
@@ -247,47 +266,11 @@ func parseStruct(structType reflect.Type, parentIndex []int, structInfo *convert
 
 // Holds the info for subsequent converting.
 type toBeConvertedFieldInfo struct {
-	// Value 不需要存储，或者单独使用两个结构体来
-	// 存储 Value 和下面所有的字段
 	Value any // Found value by tag name or field name from input.
 	*convertFieldInfo
 }
 
-// 只为value服务
-func (f *toBeConvertedFieldInfo) getFieldReflectValue(structValue reflect.Value) reflect.Value {
-	if len(f.fieldIndex) == 1 {
-		return structValue.Field(f.fieldIndex[0])
-	}
-	v := structValue
-	for i, x := range f.fieldIndex {
-		if i > 0 {
-			switch v.Kind() {
-			case reflect.Pointer:
-				if v.IsNil() {
-					v.Set(reflect.New(v.Type().Elem()))
-				}
-				v = v.Elem()
-			case reflect.Interface:
-				// Compatible with previous code
-				// Interface => struct
-				v = v.Elem()
-				if v.Kind() == reflect.Ptr {
-					// maybe *struct or other types
-					v = v.Elem()
-				}
-			}
-		}
-		v = v.Field(x)
-	}
-	return v
-}
-
-func (f *toBeConvertedFieldInfo) getOtherFieldReflectValue(structValue reflect.Value, fieldLevel int) reflect.Value {
-	fieldIndex := f.otherFieldIndex[fieldLevel]
-	if len(fieldIndex) == 1 {
-		return structValue.Field(fieldIndex[0])
-	}
-	v := structValue
+func fieldReflectValue(v reflect.Value, fieldIndex []int) reflect.Value {
 	for i, x := range fieldIndex {
 		if i > 0 {
 			switch v.Kind() {
@@ -311,6 +294,22 @@ func (f *toBeConvertedFieldInfo) getOtherFieldReflectValue(structValue reflect.V
 	return v
 }
 
+// Only serving value
+func (f *toBeConvertedFieldInfo) getFieldReflectValue(structValue reflect.Value) reflect.Value {
+	if len(f.fieldIndex) == 1 {
+		return structValue.Field(f.fieldIndex[0])
+	}
+	return fieldReflectValue(structValue, f.fieldIndex)
+}
+
+func (f *toBeConvertedFieldInfo) getOtherFieldReflectValue(structValue reflect.Value, fieldLevel int) reflect.Value {
+	fieldIndex := f.otherFieldIndex[fieldLevel]
+	if len(fieldIndex) == 1 {
+		return structValue.Field(fieldIndex[0])
+	}
+	return fieldReflectValue(structValue, fieldIndex)
+}
+
 func getFieldTags(field reflect.StructField, priorityTags []string) (tags []string) {
 	for _, tag := range priorityTags {
 		value, ok := field.Tag.Lookup(tag)
@@ -330,6 +329,12 @@ func getFieldTags(field reflect.StructField, priorityTags []string) (tags []stri
 	return tags
 }
 
+var (
+	implUnmarshalText  = reflect.TypeOf((*iUnmarshalText)(nil)).Elem()
+	implUnmarshalJson  = reflect.TypeOf((*iUnmarshalJSON)(nil)).Elem()
+	implUnmarshalValue = reflect.TypeOf((*iUnmarshalValue)(nil)).Elem()
+)
+
 func checkTypeIsImplCommonInterface(field reflect.StructField) bool {
 	isCommonInterface := false
 	switch field.Type.String() {
@@ -337,7 +342,6 @@ func checkTypeIsImplCommonInterface(field reflect.StructField) bool {
 	case "gtime.Time", "*gtime.Time":
 		// default convert
 	default:
-		// TODO slice 和 map 类型是否需要特殊处理
 		if field.Type.Kind() != reflect.Ptr {
 			field.Type = reflect.PointerTo(field.Type)
 		}

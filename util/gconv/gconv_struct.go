@@ -209,6 +209,19 @@ func doStruct(
 	)
 	defer poolPutUsedParamsKeyOrTagNameMap(usedParamsKeyOrTagNameMap)
 
+	setOtherField := func(fieldInfo toBeConvertedFieldInfo, srcValue any) error {
+		for i := 0; i < len(fieldInfo.otherFieldIndex); i++ {
+			fieldValue := fieldInfo.getOtherFieldReflectValue(pointerElemReflectValue, i)
+			if err = bindVarToStructAttrWithFieldIndex(
+				fieldValue, fieldName,
+				srcValue, fieldInfo.convertFieldInfo,
+				paramKeyToAttrMap); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
 	for fieldName, fieldInfo = range toBeConvertedFieldNameToInfoMap.fields {
 		// If it is not empty, the tag or elemFieldName name matches
 		if fieldInfo.Value != nil {
@@ -221,14 +234,8 @@ func doStruct(
 			}
 
 			if len(fieldInfo.otherFieldIndex) > 0 {
-				for i := 0; i < len(fieldInfo.otherFieldIndex); i++ {
-					fieldValue := fieldInfo.getOtherFieldReflectValue(pointerElemReflectValue, i)
-					if err = bindVarToStructAttrWithFieldIndex(
-						fieldValue, fieldName,
-						fieldInfo.Value, fieldInfo.convertFieldInfo,
-						paramKeyToAttrMap); err != nil {
-						return err
-					}
+				if err = setOtherField(fieldInfo, fieldInfo.Value); err != nil {
+					return err
 				}
 			}
 			for _, tag := range fieldInfo.tags {
@@ -254,14 +261,8 @@ func doStruct(
 					return err
 				}
 				if len(fieldInfo.otherFieldIndex) > 0 {
-					for i := 0; i < len(fieldInfo.otherFieldIndex); i++ {
-						fieldValue := fieldInfo.getOtherFieldReflectValue(pointerElemReflectValue, i)
-						if err = bindVarToStructAttrWithFieldIndex(
-							fieldValue, fieldName,
-							fieldInfo.Value, fieldInfo.convertFieldInfo,
-							paramKeyToAttrMap); err != nil {
-							return err
-						}
+					if err = setOtherField(fieldInfo, paramValue); err != nil {
+						return err
 					}
 				}
 			}
@@ -333,7 +334,7 @@ func bindVarToStructAttrWithFieldIndex(
 			return
 		}
 	}
-	// 对于基础类型直接缓存一个函数
+	// Common types use fast assignment logic
 	if fieldInfo.convFunc != nil {
 		fieldInfo.convFunc(srcValue, structFieldValue)
 		return nil
