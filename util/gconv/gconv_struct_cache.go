@@ -82,6 +82,7 @@ func (structInfo *convertStructInfo) AddField(field reflect.StructField, fieldIn
 			fieldIndex:        fieldIndex,
 			convFunc:          getFieldConvFunc(field.Type.String()),
 		}
+
 		structInfo.fields[field.Name] = fieldInfo
 		fieldInfo.tags = getFieldTags(field, priorityTags)
 		return fieldInfo
@@ -94,7 +95,23 @@ func (structInfo *convertStructInfo) AddField(field reflect.StructField, fieldIn
 	return convFieldInfo
 }
 
+func ptrConvFunc(convFunc func(from any, to reflect.Value)) func(from any, to reflect.Value) {
+	return func(from any, to reflect.Value) {
+		if to.IsNil() {
+			to.Set(reflect.New(to.Type().Elem()))
+		}
+		convFunc(from, to.Elem())
+	}
+}
+
 func getFieldConvFunc(fieldType string) (convFunc func(from any, to reflect.Value)) {
+	if fieldType[0] == '*' {
+		convFunc = getFieldConvFunc(fieldType[1:])
+		if convFunc == nil {
+			return nil
+		}
+		return ptrConvFunc(convFunc)
+	}
 	switch fieldType {
 	case "int":
 		convFunc = func(from any, to reflect.Value) {
@@ -139,13 +156,7 @@ func getFieldConvFunc(fieldType string) (convFunc func(from any, to reflect.Valu
 	default:
 		return nil
 	}
-	if convFunc != nil {
-		if fieldType[0] == '*' {
-			return func(from any, to reflect.Value) {
-				convFunc(from, to.Elem())
-			}
-		}
-	}
+
 	return convFunc
 }
 
