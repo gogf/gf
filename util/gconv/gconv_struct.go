@@ -165,19 +165,10 @@ func doStruct(
 		return nil
 	}
 
-	var (
-		// key=fieldName
-		toBeConvertedFieldNameToInfoMap = &toBeConvertedStructInfo{
-			fields: make(map[string]*toBeConvertedFieldInfo),
-		}
-		parentIndex = make([]int, 0)
-	)
-
 	// parse struct
-	parseStruct(pointerElemReflectValue, pointerElemReflectValue.Type(), priorityTag, parentIndex, toBeConvertedFieldNameToInfoMap)
-
+	toBeConvertedFieldNameToInfoMap := parseStruct(pointerElemReflectValue.Type(), priorityTag)
 	// Nothing to be converted.
-	if len(toBeConvertedFieldNameToInfoMap.fields) == 0 {
+	if toBeConvertedFieldNameToInfoMap == nil {
 		return nil
 	}
 
