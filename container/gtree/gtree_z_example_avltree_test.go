@@ -443,7 +443,7 @@ func ExampleAVLTree_Right() {
 	fmt.Println(tree.Right().Key, tree.Right().Value)
 
 	emptyTree := gtree.NewAVLTree(gutil.ComparatorInt)
-	fmt.Println(emptyTree.Left())
+	fmt.Println(emptyTree.Right())
 
 	// Output:
 	// 99 99
