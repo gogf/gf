@@ -44,7 +44,7 @@ func poolPutUsedParamsKeyOrTagNameMap(m map[string]struct{}) {
 }
 
 type convertFieldInfo struct {
-	// The index of a field may be a nested structure, so [] int is required
+	// The index of a field may be a nested structure, so []int is required
 	fieldIndex []int
 	// All tags in the field include the field name, and the field name is the last one
 	tags []string

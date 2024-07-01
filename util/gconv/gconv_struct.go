@@ -294,10 +294,9 @@ func fuzzyMatchingFieldName(
 
 // bindVarToStructAttrWithFieldIndex sets value to struct object attribute by name.
 func bindVarToStructAttrWithFieldIndex(
-	structFieldValue reflect.Value, attrName string,
-	srcValue interface{}, fieldInfo *convertFieldInfo, paramKeyToAttrMap map[string]string,
+	structFieldValue reflect.Value, attrName string, srcValue interface{},
+	fieldInfo *convertFieldInfo, paramKeyToAttrMap map[string]string,
 ) (err error) {
-
 	if !structFieldValue.IsValid() {
 		return nil
 	}
