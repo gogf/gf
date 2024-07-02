@@ -47,6 +47,14 @@ type convertFieldInfo struct {
 	// The index of a field may be a nested structure, so []int is required
 	fieldIndex []int
 	// All tags in the field include the field name, and the field name is the last one
+	// TODO can use a separate field to record the last used tag, without having to loop every time
+	//  For example, name string `p:"name1" orm:"name2" json:"name"`
+	//  If the key of paramsMap is always name, it needs to be traversed 3 times to match
+	//  Or can we put JSON in the first one? After all, it's the most commonly used
+	//  [lastUsedTag string]
+	//  When searching in paramsMap, you can first try using the lastUsedTag field to search once
+	//  It is highly likely to be found at once,
+	//  but it is not very effective when there are only one or two tags in the field
 	tags []string
 	// 1.iUnmarshalValue
 	// 2.iUnmarshalText
@@ -66,6 +74,22 @@ type convertFieldInfo struct {
 
 func (c *convertFieldInfo) FieldName() string {
 	return c.tags[len(c.tags)-1]
+}
+
+// Only serving value
+func (c *convertFieldInfo) getFieldReflectValue(structValue reflect.Value) reflect.Value {
+	if len(c.fieldIndex) == 1 {
+		return structValue.Field(c.fieldIndex[0])
+	}
+	return fieldReflectValue(structValue, c.fieldIndex)
+}
+
+func (c *convertFieldInfo) getOtherFieldReflectValue(structValue reflect.Value, fieldLevel int) reflect.Value {
+	fieldIndex := c.otherFieldIndex[fieldLevel]
+	if len(fieldIndex) == 1 {
+		return structValue.Field(fieldIndex[0])
+	}
+	return fieldReflectValue(structValue, fieldIndex)
 }
 
 type convertStructInfo struct {
@@ -160,26 +184,6 @@ func getFieldConvFunc(fieldType string) (convFunc func(from any, to reflect.Valu
 	return convFunc
 }
 
-type toBeConvertedStructInfo struct {
-	// key = field's name
-	fields map[string]toBeConvertedFieldInfo
-}
-
-func (t *toBeConvertedStructInfo) AddField(fieldName string, fieldInfo *convertFieldInfo) {
-	convertInfo, ok := t.fields[fieldName]
-	if !ok {
-		t.fields[fieldName] = toBeConvertedFieldInfo{
-			Value:            nil,
-			convertFieldInfo: fieldInfo,
-		}
-		return
-	}
-	if convertInfo.otherFieldIndex == nil {
-		convertInfo.otherFieldIndex = make([][]int, 0, 2)
-	}
-	convertInfo.otherFieldIndex = append(convertInfo.otherFieldIndex, fieldInfo.fieldIndex)
-}
-
 var (
 	cacheConvStructsInfo = sync.Map{}
 )
@@ -202,7 +206,7 @@ func getCacheConvStructInfo(structType reflect.Type) (*convertStructInfo, bool) 
 	return nil, false
 }
 
-func getConvStructInfo(structType reflect.Type, priorityTag string) *toBeConvertedStructInfo {
+func getConvStructInfo(structType reflect.Type, priorityTag string) *convertStructInfo {
 	if structType.Kind() != reflect.Struct {
 		return nil
 	}
@@ -214,15 +218,8 @@ func getConvStructInfo(structType reflect.Type, priorityTag string) *toBeConvert
 		if len(structInfo.fields) == 0 {
 			return nil
 		}
-		toBeConvertedFieldNameToInfo := &toBeConvertedStructInfo{
-			fields: make(map[string]toBeConvertedFieldInfo),
-		}
-		for k, v := range structInfo.fields {
-			toBeConvertedFieldNameToInfo.AddField(k, v)
-		}
-		return toBeConvertedFieldNameToInfo
+		return structInfo
 	}
-
 	structInfo = &convertStructInfo{
 		fields: make(map[string]*convertFieldInfo),
 	}
@@ -242,14 +239,7 @@ func getConvStructInfo(structType reflect.Type, priorityTag string) *toBeConvert
 	if len(structInfo.fields) == 0 {
 		return nil
 	}
-	// key=field's name
-	toBeConvertedFieldNameToInfo := &toBeConvertedStructInfo{
-		fields: make(map[string]toBeConvertedFieldInfo),
-	}
-	for k, v := range structInfo.fields {
-		toBeConvertedFieldNameToInfo.AddField(k, v)
-	}
-	return toBeConvertedFieldNameToInfo
+	return structInfo
 }
 
 func parseStruct(structType reflect.Type, parentIndex []int, structInfo *convertStructInfo, priorityTagArray []string) {
@@ -291,11 +281,6 @@ func parseStruct(structType reflect.Type, parentIndex []int, structInfo *convert
 	}
 }
 
-type toBeConvertedFieldInfo struct {
-	Value any // Found value by tag name or field name from input.
-	*convertFieldInfo
-}
-
 func fieldReflectValue(v reflect.Value, fieldIndex []int) reflect.Value {
 	for i, x := range fieldIndex {
 		if i > 0 {
@@ -319,23 +304,6 @@ func fieldReflectValue(v reflect.Value, fieldIndex []int) reflect.Value {
 	}
 	return v
 }
-
-// Only serving value
-func (f *toBeConvertedFieldInfo) getFieldReflectValue(structValue reflect.Value) reflect.Value {
-	if len(f.fieldIndex) == 1 {
-		return structValue.Field(f.fieldIndex[0])
-	}
-	return fieldReflectValue(structValue, f.fieldIndex)
-}
-
-func (f *toBeConvertedFieldInfo) getOtherFieldReflectValue(structValue reflect.Value, fieldLevel int) reflect.Value {
-	fieldIndex := f.otherFieldIndex[fieldLevel]
-	if len(fieldIndex) == 1 {
-		return structValue.Field(fieldIndex[0])
-	}
-	return fieldReflectValue(structValue, fieldIndex)
-}
-
 func getFieldTags(field reflect.StructField, priorityTags []string) (tags []string) {
 	for _, tag := range priorityTags {
 		value, ok := field.Tag.Lookup(tag)
