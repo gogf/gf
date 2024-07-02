@@ -18,6 +18,8 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
+var _ iTree = (*RedBlackTree)(nil)
+
 // RedBlackTree holds elements of the red-black tree.
 type RedBlackTree struct {
 	mu         rwmutex.RWMutex
