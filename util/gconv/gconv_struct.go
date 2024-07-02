@@ -148,18 +148,19 @@ func doStruct(
 		// Retrieve its element, may be struct at last.
 		pointerElemReflectValue = pointerElemReflectValue.Elem()
 	}
-
-	// paramsMap is the map[string]interface{} type variable for params.
-	// DO NOT use MapDeep here.
-	paramsMap := doMapConvert(paramsInterface, recursiveTypeAuto, true)
-	if paramsMap == nil {
-		return gerror.NewCodef(
-			gcode.CodeInvalidParameter,
-			`convert params from "%#v" to "map[string]interface{}" failed`,
-			params,
-		)
+	paramsMap, ok := paramsInterface.(map[string]interface{})
+	if !ok {
+		// paramsMap is the map[string]interface{} type variable for params.
+		// DO NOT use MapDeep here.
+		paramsMap = doMapConvert(paramsInterface, recursiveTypeAuto, true)
+		if paramsMap == nil {
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`convert params from "%#v" to "map[string]interface{}" failed`,
+				params,
+			)
+		}
 	}
-
 	// Nothing to be done as the parameters are empty.
 	if len(paramsMap) == 0 {
 		return nil
@@ -310,11 +311,13 @@ func bindVarToStructField(
 		customConverterInput reflect.Value
 		ok                   bool
 	)
-	if customConverterInput, ok = srcValue.(reflect.Value); !ok {
-		customConverterInput = reflect.ValueOf(srcValue)
-	}
-	if ok, err = callCustomConverter(customConverterInput, structFieldValue); ok || err != nil {
-		return
+	if fieldInfo.isCustomConvert {
+		if customConverterInput, ok = srcValue.(reflect.Value); !ok {
+			customConverterInput = reflect.ValueOf(srcValue)
+		}
+		if ok, err = callCustomConverter(customConverterInput, structFieldValue); ok || err != nil {
+			return
+		}
 	}
 	if fieldInfo.isCommonInterface {
 		if ok, err = bindVarToReflectValueWithInterfaceCheck(structFieldValue, srcValue); ok || err != nil {

@@ -82,6 +82,7 @@ func RegisterConverter(fn interface{}) (err error) {
 		return
 	}
 	registeredOutTypeMap[outType] = reflect.ValueOf(fn)
+	registerCacheConvFieldCustomType(outType)
 	return
 }
 

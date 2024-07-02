@@ -62,6 +62,7 @@ type convertFieldInfo struct {
 	// Implemented one of the three types of interfaces mentioned above,
 	// except for [time.Time] and [gtime.Time]
 	isCommonInterface bool
+	isCustomConvert   bool
 	fieldTypeName     string
 	// Field index used to store duplicate names
 	// Generally used for nested structures
@@ -105,18 +106,40 @@ func (structInfo *convertStructInfo) AddField(field reflect.StructField, fieldIn
 			fieldTypeName:     field.Type.String(),
 			fieldIndex:        fieldIndex,
 			convFunc:          getFieldConvFunc(field.Type.String()),
+			isCustomConvert:   fieldTypeIsCustomConvertType(field.Type),
+			tags:              getFieldTags(field, priorityTags),
 		}
-
 		structInfo.fields[field.Name] = fieldInfo
-		fieldInfo.tags = getFieldTags(field, priorityTags)
 		return fieldInfo
 	}
 	if convFieldInfo.otherFieldIndex == nil {
 		convFieldInfo.otherFieldIndex = make([][]int, 0, 2)
 	}
-
 	convFieldInfo.otherFieldIndex = append(convFieldInfo.otherFieldIndex, fieldIndex)
 	return convFieldInfo
+}
+
+var (
+	// Used to store whether field types are registered to custom conversions
+	// For example:
+	// func (src *TypeA) (dst *TypeB,err error)
+	// This map will store TypeB for quick judgment during assignment
+	customConvTypeMap = map[reflect.Type]struct{}{}
+)
+
+func registerCacheConvFieldCustomType(fieldType reflect.Type) {
+	if fieldType.Kind() == reflect.Ptr {
+		fieldType = fieldType.Elem()
+	}
+	customConvTypeMap[fieldType] = struct{}{}
+}
+
+func fieldTypeIsCustomConvertType(fieldType reflect.Type) bool {
+	if fieldType.Kind() == reflect.Ptr {
+		fieldType = fieldType.Elem()
+	}
+	_, ok := customConvTypeMap[fieldType]
+	return ok
 }
 
 func ptrConvFunc(convFunc func(from any, to reflect.Value)) func(from any, to reflect.Value) {

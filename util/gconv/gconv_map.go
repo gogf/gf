@@ -70,7 +70,6 @@ func doMapConvert(value interface{}, recursive recursiveType, mustMapReturn bool
 	if v, ok := value.(iVal); ok {
 		value = v.Val()
 	}
-
 	var (
 		usedOption = getUsedMapOption(option...)
 		newTags    = gtag.StructTagPriority
