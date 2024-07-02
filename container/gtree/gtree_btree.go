@@ -16,6 +16,8 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+var _ iTree = (*BTree)(nil)
+
 // BTree holds elements of the B-tree.
 type BTree struct {
 	mu         rwmutex.RWMutex
@@ -75,6 +77,45 @@ func (tree *BTree) Sets(data map[interface{}]interface{}) {
 	for k, v := range data {
 		tree.doSet(k, v)
 	}
+}
+
+// SetIfNotExist sets `value` to the map if the `key` does not exist, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
+func (tree *BTree) SetIfNotExist(key interface{}, value interface{}) bool {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	if _, ok := tree.doGet(key); !ok {
+		tree.doSet(key, value)
+		return true
+	}
+	return false
+}
+
+// SetIfNotExistFunc sets value with return value of callback function `f`, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
+func (tree *BTree) SetIfNotExistFunc(key interface{}, f func() interface{}) bool {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	if _, ok := tree.doGet(key); !ok {
+		tree.doSet(key, f())
+		return true
+	}
+	return false
+}
+
+// SetIfNotExistFuncLock sets value with return value of callback function `f`, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
+//
+// SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
+// it executes function `f` with mutex.Lock of the hash map.
+func (tree *BTree) SetIfNotExistFuncLock(key interface{}, f func() interface{}) bool {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	if _, ok := tree.doGet(key); !ok {
+		tree.doSet(key, f)
+		return true
+	}
+	return false
 }
 
 // Get searches the node in the tree by `key` and returns its value or nil if key is not found in tree.
@@ -150,45 +191,6 @@ func (tree *BTree) GetVarOrSetFuncLock(key interface{}, f func() interface{}) *g
 	return gvar.New(tree.GetOrSetFuncLock(key, f))
 }
 
-// SetIfNotExist sets `value` to the map if the `key` does not exist, and then returns true.
-// It returns false if `key` exists, and `value` would be ignored.
-func (tree *BTree) SetIfNotExist(key interface{}, value interface{}) bool {
-	tree.mu.Lock()
-	defer tree.mu.Unlock()
-	if _, ok := tree.doGet(key); !ok {
-		tree.doSet(key, value)
-		return true
-	}
-	return false
-}
-
-// SetIfNotExistFunc sets value with return value of callback function `f`, and then returns true.
-// It returns false if `key` exists, and `value` would be ignored.
-func (tree *BTree) SetIfNotExistFunc(key interface{}, f func() interface{}) bool {
-	tree.mu.Lock()
-	defer tree.mu.Unlock()
-	if _, ok := tree.doGet(key); !ok {
-		tree.doSet(key, f())
-		return true
-	}
-	return false
-}
-
-// SetIfNotExistFuncLock sets value with return value of callback function `f`, and then returns true.
-// It returns false if `key` exists, and `value` would be ignored.
-//
-// SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
-// it executes function `f` with mutex.Lock of the hash map.
-func (tree *BTree) SetIfNotExistFuncLock(key interface{}, f func() interface{}) bool {
-	tree.mu.Lock()
-	defer tree.mu.Unlock()
-	if _, ok := tree.doGet(key); !ok {
-		tree.doSet(key, f)
-		return true
-	}
-	return false
-}
-
 // Search searches the tree with given `key`.
 // Second return parameter `found` is true if key was found, otherwise false.
 func (tree *BTree) Search(key interface{}) (value interface{}, found bool) {
@@ -203,6 +205,20 @@ func (tree *BTree) Contains(key interface{}) bool {
 	defer tree.mu.RUnlock()
 	_, ok := tree.doGet(key)
 	return ok
+}
+
+// Size returns number of nodes in the tree.
+func (tree *BTree) Size() int {
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
+	return tree.tree.Size()
+}
+
+// IsEmpty returns true if tree does not contain any nodes
+func (tree *BTree) IsEmpty() bool {
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
+	return tree.tree.Size() == 0
 }
 
 // Remove removes the node from the tree by `key`.
@@ -221,18 +237,11 @@ func (tree *BTree) Removes(keys []interface{}) {
 	}
 }
 
-// IsEmpty returns true if tree does not contain any nodes
-func (tree *BTree) IsEmpty() bool {
-	tree.mu.RLock()
-	defer tree.mu.RUnlock()
-	return tree.tree.Size() == 0
-}
-
-// Size returns number of nodes in the tree.
-func (tree *BTree) Size() int {
-	tree.mu.RLock()
-	defer tree.mu.RUnlock()
-	return tree.tree.Size()
+// Clear removes all nodes from the tree.
+func (tree *BTree) Clear() {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	tree.tree.Clear()
 }
 
 // Keys returns all keys in asc order.
@@ -247,6 +256,16 @@ func (tree *BTree) Values() []interface{} {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	return tree.tree.Values()
+}
+
+// Replace the data of the tree with given `data`.
+func (tree *BTree) Replace(data map[interface{}]interface{}) {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	tree.tree.Clear()
+	for k, v := range data {
+		tree.doSet(k, v)
+	}
 }
 
 // Map returns all key-value items as map.
@@ -273,56 +292,9 @@ func (tree *BTree) MapStrAny() map[string]interface{} {
 	return m
 }
 
-// Clear removes all nodes from the tree.
-func (tree *BTree) Clear() {
-	tree.mu.Lock()
-	defer tree.mu.Unlock()
-	tree.tree.Clear()
-}
-
-// Replace the data of the tree with given `data`.
-func (tree *BTree) Replace(data map[interface{}]interface{}) {
-	tree.mu.Lock()
-	defer tree.mu.Unlock()
-	tree.tree.Clear()
-	for k, v := range data {
-		tree.doSet(k, v)
-	}
-}
-
-// Height returns the height of the tree.
-func (tree *BTree) Height() int {
-	tree.mu.RLock()
-	defer tree.mu.RUnlock()
-	return tree.tree.Height()
-}
-
-// Left returns the left-most (min) entry or nil if tree is empty.
-func (tree *BTree) Left() *BTreeEntry {
-	tree.mu.RLock()
-	defer tree.mu.RUnlock()
-	node := tree.tree.Left()
-	if node == nil || node.Entries == nil || len(node.Entries) == 0 {
-		return nil
-	}
-	return &BTreeEntry{
-		Key:   node.Entries[0].Key,
-		Value: node.Entries[0].Value,
-	}
-}
-
-// Right returns the right-most (max) entry or nil if tree is empty.
-func (tree *BTree) Right() *BTreeEntry {
-	tree.mu.RLock()
-	defer tree.mu.RUnlock()
-	node := tree.tree.Right()
-	if node == nil || node.Entries == nil || len(node.Entries) == 0 {
-		return nil
-	}
-	return &BTreeEntry{
-		Key:   node.Entries[len(node.Entries)-1].Key,
-		Value: node.Entries[len(node.Entries)-1].Value,
-	}
+// Print prints the tree to stdout.
+func (tree *BTree) Print() {
+	fmt.Println(tree.String())
 }
 
 // String returns a string representation of container (for debugging purposes)
@@ -332,9 +304,11 @@ func (tree *BTree) String() string {
 	return gstr.Replace(tree.tree.String(), "BTree\n", "")
 }
 
-// Print prints the tree to stdout.
-func (tree *BTree) Print() {
-	fmt.Println(tree.String())
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (tree *BTree) MarshalJSON() (jsonBytes []byte, err error) {
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
+	return tree.tree.MarshalJSON()
 }
 
 // Iterator is alias of IteratorAsc.
@@ -409,11 +383,39 @@ func (tree *BTree) IteratorDescFrom(key interface{}, match bool, f func(key, val
 	}
 }
 
-// MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (tree *BTree) MarshalJSON() (jsonBytes []byte, err error) {
+// Height returns the height of the tree.
+func (tree *BTree) Height() int {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	return tree.tree.MarshalJSON()
+	return tree.tree.Height()
+}
+
+// Left returns the left-most (min) entry or nil if tree is empty.
+func (tree *BTree) Left() *BTreeEntry {
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
+	node := tree.tree.Left()
+	if node == nil || node.Entries == nil || len(node.Entries) == 0 {
+		return nil
+	}
+	return &BTreeEntry{
+		Key:   node.Entries[0].Key,
+		Value: node.Entries[0].Value,
+	}
+}
+
+// Right returns the right-most (max) entry or nil if tree is empty.
+func (tree *BTree) Right() *BTreeEntry {
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
+	node := tree.tree.Right()
+	if node == nil || node.Entries == nil || len(node.Entries) == 0 {
+		return nil
+	}
+	return &BTreeEntry{
+		Key:   node.Entries[len(node.Entries)-1].Key,
+		Value: node.Entries[len(node.Entries)-1].Value,
+	}
 }
 
 // doSet inserts key-value pair node into the tree.
