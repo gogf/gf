@@ -1,5 +1,5 @@
 **Please ensure you adhere to every item in this list.**
-+ The PR title is formatted as follows: `<type>[optional scope]: <description>` For example, `fix(os/gtime): fixed time zone issues`
++ The PR title is formatted as follows: `<type>[optional scope]: <description>` For example, `fix(os/gtime): fix time zone issue`
   + `<type>` is mandatory and can be one of `fix`, `feat`, `build`, `ci`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
     + fix: Used when a bug has been fixed.
     + feat: Used when a new feature has been added.
@@ -22,7 +22,7 @@
 + Delete these instructions once you have read and applied them
 
 **提交前请遵守每个事项，感谢！**
-+ PR 标题格式如下：`<类型>[可选 范围]: <描述>` 例如 `fix(os/gtime): fixed time zone issues`
++ PR 标题格式如下：`<类型>[可选 范围]: <描述>` 例如 `fix(os/gtime): fix time zone issue`
   + `<类型>`是必须的，可以是 `fix`、`feat`、`build`、`ci`、`docs`、`style`、`refactor`、`perf`、`test`、`chore` 中的一个
     + fix: 用于修复了一个 bug
     + feat: 用于新增了一个功能
