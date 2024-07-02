@@ -16,6 +16,8 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+var _ iTree = (*BTree)(nil)
+
 // BTree holds elements of the B-tree.
 type BTree struct {
 	mu         rwmutex.RWMutex
