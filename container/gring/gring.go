@@ -5,6 +5,8 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gring provides a concurrent-safe/unsafe ring(circular lists).
+//
+// Deprecated.
 package gring
 
 import (
@@ -15,6 +17,8 @@ import (
 )
 
 // Ring is a struct of ring structure.
+//
+// Deprecated.
 type Ring struct {
 	mu    *rwmutex.RWMutex
 	ring  *ring.Ring  // Underlying ring.
@@ -31,6 +35,8 @@ type internalRingItem struct {
 // New creates and returns a Ring structure of `cap` elements.
 // The optional parameter `safe` specifies whether using this structure in concurrent safety,
 // which is false in default.
+//
+// Deprecated.
 func New(cap int, safe ...bool) *Ring {
 	return &Ring{
 		mu:    rwmutex.New(safe...),
