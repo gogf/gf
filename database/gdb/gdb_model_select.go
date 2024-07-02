@@ -8,12 +8,14 @@ package gdb
 
 import (
 	"context"
+
 	"fmt"
 	"reflect"
 
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -183,14 +185,102 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 			model = m.Fields(pointer)
 		}
 	}
-	one, err := model.One(where...)
+
+	one, err := model.one(pointer, where...)
 	if err != nil {
 		return err
 	}
-	if err = one.Struct(pointer); err != nil {
+	if err = m.doScanStruct(pointer, one); err != nil {
 		return err
 	}
 	return model.doWithScanStruct(pointer)
+}
+
+func (m *Model) doScanStruct(pointer any, record Record) (err error) {
+	var (
+		// *struct => struct
+		// **struct => *struct
+		elemType  = reflect.TypeOf(pointer).Elem()
+		elemIsPtr = false
+	)
+
+	switch elemType.Kind() {
+	case reflect.Ptr:
+		elemIsPtr = true
+		// *struct => struct
+		elemType = elemType.Elem()
+	case reflect.Struct:
+	}
+	var (
+		table     *Table
+		tableName = getTableName(elemType)
+	)
+	tableValue, ok := tablesMap.Load(tableName)
+	if !ok {
+		err = record.Struct(pointer)
+		return err
+	}
+
+	// It needs to be deleted, otherwise it will cause
+	// conflicts as long as the struct name is the same within different functions during testing
+	// TODO: Add a parameter to determine if it is in the testing environment. If it is not, do not delete it
+	defer tablesMap.Delete(tableName)
+
+	table = tableValue.(*Table)
+	structPointerValue := reflect.ValueOf(pointer).Elem()
+
+	var structValue = reflect.New(elemType)
+	// UnmarshalValue
+	fn, ok := structValue.Interface().(iUnmarshalValue)
+	if ok {
+		err = fn.UnmarshalValue(record)
+		if err != nil {
+			return err
+		}
+		structValue = structValue.Elem()
+	} else {
+		structValue = structValue.Elem()
+		for _, field := range table.fields {
+			// This field does not exist in the structure, for example,
+			// when querying some databases, an additional column may be added, such as MSSQL or Oracle
+			if field.convertFunc == nil {
+				continue
+			}
+			fieldValue := field.GetReflectValue(structValue)
+			value := record[field.ColumnFieldName]
+			if value == nil {
+				continue
+			}
+			fieldValue.Set(reflect.ValueOf(value.Val()))
+		}
+	}
+	if elemIsPtr {
+		structValue = structValue.Addr()
+	}
+	structPointerValue.Set(structValue)
+	return nil
+}
+
+// Mainly called by doStruct, similar to the One method
+func (m *Model) one(pointer any, where ...any) (Record, error) {
+	if len(where) > 0 {
+		return m.Where(where[0], where[1:]...).one(pointer)
+	}
+
+	var ctx = m.GetCtx()
+	ctx = context.WithValue(ctx, scanPointerCtxKey, &scanPointer{
+		scan:    true,
+		pointer: pointer,
+	})
+	sqlWithHolder, holderArgs := m.getFormattedSqlAndArgs(ctx, queryTypeNormal, true)
+	all, err := m.doGetAllBySql(ctx, queryTypeNormal, sqlWithHolder, holderArgs...)
+	if err != nil {
+		return nil, err
+	}
+	if len(all) > 0 {
+		return all[0], nil
+	}
+	return nil, nil
 }
 
 // Structs retrieves records from table and converts them into given struct slice.
@@ -227,14 +317,104 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 			)
 		}
 	}
-	all, err := model.All(where...)
+
+	all, err := model.all(pointer, where...)
 	if err != nil {
 		return err
 	}
-	if err = all.Structs(pointer); err != nil {
+	if err = m.doScanStructs(pointer, all); err != nil {
 		return err
 	}
 	return model.doWithScanStructs(pointer)
+}
+
+func (m *Model) doScanStructs(pointer any, records Result) (err error) {
+	var (
+		// *[]struct  => []struct
+		// *[]*struct => []*struct
+		elemType    = reflect.TypeOf(pointer).Elem()
+		sliceType   = elemType
+		structIsPtr = false
+	)
+	// []struct  => struct
+	// []*struct => *struct
+	elemType = elemType.Elem()
+
+	switch elemType.Kind() {
+	case reflect.Ptr:
+		structIsPtr = true
+		elemType = elemType.Elem()
+	case reflect.Struct:
+	}
+
+	var (
+		table     *Table
+		tableName = getTableName(elemType)
+	)
+
+	tableValue, ok := tablesMap.Load(tableName)
+	if !ok {
+		err = records.Structs(pointer)
+		return err
+	}
+
+	// It needs to be deleted, otherwise it will cause
+	// conflicts as long as the struct name is the same within different functions during testing
+	// TODO: Add a parameter to determine if it is in the testing environment. If it is not, do not delete it
+	defer tablesMap.Delete(tableName)
+
+	table = tableValue.(*Table)
+	slicePtr := reflect.ValueOf(pointer)
+	sliceValue := reflect.MakeSlice(sliceType, 0, len(records))
+
+	for _, record := range records {
+		var structValue = reflect.New(elemType)
+		// UnmarshalValue
+		fn, ok := structValue.Interface().(iUnmarshalValue)
+		if ok {
+			err = fn.UnmarshalValue(record)
+			if err != nil {
+				return err
+			}
+			structValue = structValue.Elem()
+		} else {
+			structValue = structValue.Elem()
+			for _, field := range table.fields {
+				// This field does not exist in the structure, for example,
+				// when querying some databases, an additional column may be added, such as MSSQL or Oracle
+				if field.convertFunc == nil {
+					continue
+				}
+				fieldValue := field.GetReflectValue(structValue)
+				val := record[field.ColumnFieldName]
+				if val == nil {
+					continue
+				}
+				fieldValue.Set(reflect.ValueOf(val.Val()))
+			}
+		}
+		if structIsPtr {
+			structValue = structValue.Addr()
+		}
+		sliceValue = reflect.Append(sliceValue, structValue)
+	}
+
+	slicePtr.Elem().Set(sliceValue)
+	return nil
+}
+
+// Mainly called by doStructs, similar to the All method
+func (m *Model) all(pointer any, where ...interface{}) (Result, error) {
+	if len(where) > 0 {
+		return m.Where(where[0], where[1:]...).all(pointer)
+	}
+	var ctx = m.GetCtx()
+	ctx = context.WithValue(ctx, scanPointerCtxKey, &scanPointer{
+		scan:    true,
+		pointer: pointer,
+	})
+	sqlWithHolder, holderArgs := m.getFormattedSqlAndArgs(ctx, queryTypeNormal, false)
+	return m.doGetAllBySql(ctx, queryTypeNormal, sqlWithHolder, holderArgs...)
 }
 
 // Scan automatically calls Struct or Structs function according to the type of parameter `pointer`.
