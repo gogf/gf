@@ -15,7 +15,6 @@ import (
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
-	"github.com/gogf/gf/v2/util/gtag"
 )
 
 // Struct maps the params key-value pairs to the corresponding struct object's attributes.
@@ -149,175 +148,117 @@ func doStruct(
 		// Retrieve its element, may be struct at last.
 		pointerElemReflectValue = pointerElemReflectValue.Elem()
 	}
-
-	// paramsMap is the map[string]interface{} type variable for params.
-	// DO NOT use MapDeep here.
-	paramsMap := doMapConvert(paramsInterface, recursiveTypeAuto, true)
-	if paramsMap == nil {
-		return gerror.NewCodef(
-			gcode.CodeInvalidParameter,
-			`convert params from "%#v" to "map[string]interface{}" failed`,
-			params,
-		)
+	paramsMap, ok := paramsInterface.(map[string]interface{})
+	if !ok {
+		// paramsMap is the map[string]interface{} type variable for params.
+		// DO NOT use MapDeep here.
+		paramsMap = doMapConvert(paramsInterface, recursiveTypeAuto, true)
+		if paramsMap == nil {
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`convert params from "%#v" to "map[string]interface{}" failed`,
+				params,
+			)
+		}
 	}
-
 	// Nothing to be done as the parameters are empty.
 	if len(paramsMap) == 0 {
 		return nil
 	}
 
-	// Holds the info for subsequent converting.
-	type toBeConvertedFieldInfo struct {
-		Value          any    // Found value by tag name or field name from input.
-		FieldIndex     int    // The associated reflection field index.
-		FieldOrTagName string // Field name or tag name for field tag by priority tags.
-	}
-
-	var (
-		priorityTagArray                []string
-		elemFieldName                   string
-		elemFieldType                   reflect.StructField
-		elemFieldValue                  reflect.Value
-		elemType                        = pointerElemReflectValue.Type()
-		toBeConvertedFieldNameToInfoMap = map[string]toBeConvertedFieldInfo{} // key=elemFieldName
-	)
-
-	if priorityTag != "" {
-		priorityTagArray = append(utils.SplitAndTrim(priorityTag, ","), gtag.StructTagPriority...)
-	} else {
-		priorityTagArray = gtag.StructTagPriority
-	}
-
-	for i := 0; i < pointerElemReflectValue.NumField(); i++ {
-		elemFieldType = elemType.Field(i)
-		elemFieldName = elemFieldType.Name
-		// Only do converting to public attributes.
-		if !utils.IsLetterUpper(elemFieldName[0]) {
-			continue
-		}
-
-		var fieldTagName = getTagNameFromField(elemFieldType, priorityTagArray)
-		// Maybe it's struct/*struct embedded.
-		if elemFieldType.Anonymous {
-			// type Name struct {
-			//    LastName  string `json:"lastName"`
-			//    FirstName string `json:"firstName"`
-			// }
-			//
-			// type User struct {
-			//     Name `json:"name"`
-			//     // ...
-			// }
-			//
-			// It is only recorded if the name has a fieldTag
-			if fieldTagName != "" {
-				toBeConvertedFieldNameToInfoMap[elemFieldName] = toBeConvertedFieldInfo{
-					FieldIndex:     elemFieldType.Index[0],
-					FieldOrTagName: fieldTagName,
-				}
-			}
-
-			elemFieldValue = pointerElemReflectValue.Field(i)
-			// Ignore the interface attribute if it's nil.
-			if elemFieldValue.Kind() == reflect.Interface {
-				elemFieldValue = elemFieldValue.Elem()
-				if !elemFieldValue.IsValid() {
-					continue
-				}
-			}
-			if err = doStruct(paramsMap, elemFieldValue, paramKeyToAttrMap, priorityTag); err != nil {
-				return err
-			}
-		} else {
-			// Use the native elemFieldName name as the fieldTag
-			if fieldTagName == "" {
-				fieldTagName = elemFieldName
-			}
-			toBeConvertedFieldNameToInfoMap[elemFieldName] = toBeConvertedFieldInfo{
-				FieldIndex:     elemFieldType.Index[0],
-				FieldOrTagName: fieldTagName,
-			}
-		}
-	}
-
+	// parse struct
+	convStructInfo := getConvStructInfo(pointerElemReflectValue.Type(), priorityTag)
 	// Nothing to be converted.
-	if len(toBeConvertedFieldNameToInfoMap) == 0 {
+	if convStructInfo == nil {
 		return nil
 	}
 
-	// Search the parameter value for the field.
-	var paramsValue any
-	for fieldName, fieldInfo := range toBeConvertedFieldNameToInfoMap {
-		if paramsValue, ok = paramsMap[fieldInfo.FieldOrTagName]; ok {
-			fieldInfo.Value = paramsValue
-			toBeConvertedFieldNameToInfoMap[fieldName] = fieldInfo
-		}
-	}
+	var (
+		// Indicates that those values have been used and cannot be reused.
+		usedParamsKeyOrTagNameMap = poolGetUsedParamsKeyOrTagNameMap()
+	)
+	defer poolPutUsedParamsKeyOrTagNameMap(usedParamsKeyOrTagNameMap)
 
 	// Firstly, search according to custom mapping rules.
 	// If a possible direct assignment is found, reduce the number of subsequent map searches.
-	var fieldInfo toBeConvertedFieldInfo
 	for paramKey, fieldName := range paramKeyToAttrMap {
-		// Prevent setting of non-existent fields
-		fieldInfo, ok = toBeConvertedFieldNameToInfoMap[fieldName]
+		fieldInfo, ok := convStructInfo.fields[fieldName]
 		if ok {
-			// Prevent non-existent values from being set.
-			if paramsValue, ok = paramsMap[paramKey]; ok {
-				fieldInfo.Value = paramsValue
-				toBeConvertedFieldNameToInfoMap[fieldName] = fieldInfo
+			if paramsValue, ok := paramsMap[paramKey]; ok {
+				fieldValue := fieldInfo.getFieldReflectValue(pointerElemReflectValue)
+				if err = bindVarToStructField(
+					fieldValue, fieldName, paramsValue,
+					fieldInfo, paramKeyToAttrMap); err != nil {
+					return err
+				}
 			}
+			usedParamsKeyOrTagNameMap[paramKey] = struct{}{}
 		}
 	}
-
-	var (
-		paramKey   string
-		paramValue any
-		fieldName  string
-		// Indicates that those values have been used and cannot be reused.
-		usedParamsKeyOrTagNameMap = map[string]struct{}{}
-	)
-	for fieldName, fieldInfo = range toBeConvertedFieldNameToInfoMap {
-		// If it is not empty, the tag or elemFieldName name matches
-		if fieldInfo.Value != nil {
-			if err = bindVarToStructAttrWithFieldIndex(
-				pointerElemReflectValue, fieldName, fieldInfo.FieldIndex, fieldInfo.Value, paramKeyToAttrMap,
-			); err != nil {
+	setOtherField := func(fieldInfo *convertFieldInfo, fieldName string, srcValue any) error {
+		for i := 0; i < len(fieldInfo.otherFieldIndex); i++ {
+			fieldValue := fieldInfo.getOtherFieldReflectValue(pointerElemReflectValue, i)
+			if err = bindVarToStructField(fieldValue, fieldName, srcValue, fieldInfo, paramKeyToAttrMap); err != nil {
 				return err
 			}
-			usedParamsKeyOrTagNameMap[fieldInfo.FieldOrTagName] = struct{}{}
+		}
+		return nil
+	}
+	var (
+		fieldName  string
+		fieldInfo  *convertFieldInfo
+		fieldValue reflect.Value
+		paramKey   string
+		paramValue any
+		matched    bool
+	)
+
+	for fieldName, fieldInfo = range convStructInfo.fields {
+		for _, fieldTag := range fieldInfo.tags {
+			if paramsValue, ok := paramsMap[fieldTag]; ok {
+				if _, ok = usedParamsKeyOrTagNameMap[fieldTag]; ok {
+					matched = true
+					break
+				}
+				fieldValue = fieldInfo.getFieldReflectValue(pointerElemReflectValue)
+				if err = bindVarToStructField(fieldValue, fieldName, paramsValue,
+					fieldInfo, paramKeyToAttrMap); err != nil {
+					return err
+				}
+				if len(fieldInfo.otherFieldIndex) > 0 {
+					if err = setOtherField(fieldInfo, fieldName, paramsValue); err != nil {
+						return err
+					}
+				}
+				usedParamsKeyOrTagNameMap[fieldTag] = struct{}{}
+				matched = true
+				break
+			}
+		}
+		if matched {
+			matched = false
 			continue
 		}
-
-		// If value is nil, a fuzzy match is used for search the key and value for converting.
 		paramKey, paramValue = fuzzyMatchingFieldName(fieldName, paramsMap, usedParamsKeyOrTagNameMap)
-		if paramValue != nil {
-			if err = bindVarToStructAttrWithFieldIndex(
-				pointerElemReflectValue, fieldName, fieldInfo.FieldIndex, paramValue, paramKeyToAttrMap,
-			); err != nil {
-				return err
+		if paramKey != "" {
+			// If paramValue is nil, you don't need to set any value
+			// Because getFieldReflectValue is already initialized
+			fieldValue = fieldInfo.getFieldReflectValue(pointerElemReflectValue)
+			if paramValue != nil {
+				if err = bindVarToStructField(fieldValue, fieldName, paramValue,
+					fieldInfo, paramKeyToAttrMap); err != nil {
+					return err
+				}
+				if len(fieldInfo.otherFieldIndex) > 0 {
+					if err = setOtherField(fieldInfo, fieldName, paramValue); err != nil {
+						return err
+					}
+				}
 			}
 			usedParamsKeyOrTagNameMap[paramKey] = struct{}{}
 		}
 	}
 	return nil
-}
-
-func getTagNameFromField(field reflect.StructField, priorityTags []string) string {
-	for _, tag := range priorityTags {
-		value, ok := field.Tag.Lookup(tag)
-		if ok {
-			// If there's something else in the tag string,
-			// it uses the first part which is split using char ','.
-			// Example:
-			// orm:"id, priority"
-			// orm:"name, with:uid=id"
-			array := strings.Split(value, ",")
-			// json:",omitempty"
-			trimmedTagName := strings.TrimSpace(array[0])
-			return trimmedTagName
-		}
-	}
-	return ""
 }
 
 // fuzzy matching rule:
@@ -340,12 +281,11 @@ func fuzzyMatchingFieldName(
 	return "", nil
 }
 
-// bindVarToStructAttrWithFieldIndex sets value to struct object attribute by name.
-func bindVarToStructAttrWithFieldIndex(
-	structReflectValue reflect.Value, attrName string,
-	fieldIndex int, value interface{}, paramKeyToAttrMap map[string]string,
+// bindVarToStructField sets value to struct object attribute by name.
+func bindVarToStructField(
+	structFieldValue reflect.Value, fieldName string, srcValue interface{},
+	fieldInfo *convertFieldInfo, paramKeyToAttrMap map[string]string,
 ) (err error) {
-	structFieldValue := structReflectValue.Field(fieldIndex)
 	if !structFieldValue.IsValid() {
 		return nil
 	}
@@ -355,63 +295,45 @@ func bindVarToStructAttrWithFieldIndex(
 	}
 	defer func() {
 		if exception := recover(); exception != nil {
-			if err = bindVarToReflectValue(structFieldValue, value, paramKeyToAttrMap); err != nil {
-				err = gerror.Wrapf(err, `error binding value to attribute "%s"`, attrName)
+			if err = bindVarToReflectValue(structFieldValue, srcValue, paramKeyToAttrMap); err != nil {
+				err = gerror.Wrapf(err, `error binding srcValue to attribute "%s"`, fieldName)
 			}
 		}
 	}()
 	// Directly converting.
-	if empty.IsNil(value) {
+	if empty.IsNil(srcValue) {
 		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
-	} else {
-		// Try to call custom converter.
-		// Issue: https://github.com/gogf/gf/issues/3099
-		var (
-			customConverterInput reflect.Value
-			ok                   bool
-		)
-		if customConverterInput, ok = value.(reflect.Value); !ok {
-			customConverterInput = reflect.ValueOf(value)
+		return nil
+	}
+	// Try to call custom converter.
+	// Issue: https://github.com/gogf/gf/issues/3099
+	var (
+		customConverterInput reflect.Value
+		ok                   bool
+	)
+	if fieldInfo.isCustomConvert {
+		if customConverterInput, ok = srcValue.(reflect.Value); !ok {
+			customConverterInput = reflect.ValueOf(srcValue)
 		}
-
 		if ok, err = callCustomConverter(customConverterInput, structFieldValue); ok || err != nil {
 			return
 		}
-
-		// Special handling for certain types:
-		// - Overwrite the default type converting logic of stdlib for time.Time/*time.Time.
-		var structFieldTypeName = structFieldValue.Type().String()
-		switch structFieldTypeName {
-		case "time.Time", "*time.Time":
-			doConvertWithReflectValueSet(structFieldValue, doConvertInput{
-				FromValue:  value,
-				ToTypeName: structFieldTypeName,
-				ReferValue: structFieldValue,
-			})
-			return
-		// Hold the time zone consistent in recursive
-		// Issue: https://github.com/gogf/gf/issues/2980
-		case "*gtime.Time", "gtime.Time":
-			doConvertWithReflectValueSet(structFieldValue, doConvertInput{
-				FromValue:  value,
-				ToTypeName: structFieldTypeName,
-				ReferValue: structFieldValue,
-			})
-			return
-		}
-
-		// Common interface check.
-		if ok, err = bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
-			return err
-		}
-
-		// Default converting.
-		doConvertWithReflectValueSet(structFieldValue, doConvertInput{
-			FromValue:  value,
-			ToTypeName: structFieldTypeName,
-			ReferValue: structFieldValue,
-		})
 	}
+	if fieldInfo.isCommonInterface {
+		if ok, err = bindVarToReflectValueWithInterfaceCheck(structFieldValue, srcValue); ok || err != nil {
+			return
+		}
+	}
+	// Common types use fast assignment logic
+	if fieldInfo.convFunc != nil {
+		fieldInfo.convFunc(srcValue, structFieldValue)
+		return nil
+	}
+	doConvertWithReflectValueSet(structFieldValue, doConvertInput{
+		FromValue:  srcValue,
+		ToTypeName: fieldInfo.fieldTypeName,
+		ReferValue: structFieldValue,
+	})
 	return nil
 }
 
