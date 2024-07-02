@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// IntSet is consisted of int items.
 type IntSet struct {
 	mu   rwmutex.RWMutex
 	data map[int]struct{}

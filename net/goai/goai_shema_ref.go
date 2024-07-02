@@ -73,6 +73,9 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 		if err := oai.tagMapToSchema(tagMap, schema); err != nil {
 			return nil, err
 		}
+		if oaiType == TypeArray && schema.Type == TypeFile {
+			schema.Type = TypeArray
+		}
 	}
 	schemaRef.Value = schema
 	switch oaiType {
@@ -111,8 +114,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 			schemaRef.Value.Example = gconv.Bool(schemaRef.Value.Example)
 		}
 		// keep the example value as nil.
-	case
-		TypeArray:
+	case TypeArray:
 		subSchemaRef, err := oai.newSchemaRefWithGolangType(golangType.Elem(), nil)
 		if err != nil {
 			return nil, err
@@ -123,8 +125,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 			schema.Enum = nil
 		}
 
-	case
-		TypeObject:
+	case TypeObject:
 		for golangType.Kind() == reflect.Ptr {
 			golangType = golangType.Elem()
 		}
