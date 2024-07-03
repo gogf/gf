@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gogf/gf/v2/internal/utils"
@@ -43,18 +44,10 @@ func poolPutUsedParamsKeyOrTagNameMap(m map[string]struct{}) {
 	poolUsedParamsKeyOrTagNameMap.Put(m)
 }
 
-type convertFieldInfo struct {
+type convertFieldInfoBase struct {
 	// The index of a field may be a nested structure, so []int is required
 	fieldIndex []int
 	// All tags in the field include the field name, and the field name is the last one
-	// TODO can use a separate field to record the last used tag, without having to loop every time
-	//  For example, name string `p:"name1" orm:"name2" json:"name"`
-	//  If the key of paramsMap is always name, it needs to be traversed 3 times to match
-	//  Or can we put JSON in the first one? After all, it's the most commonly used
-	//  [lastUsedTag string]
-	//  When searching in paramsMap, you can first try using the lastUsedTag field to search once
-	//  It is highly likely to be found at once,
-	//  but it is not very effective when there are only one or two tags in the field
 	tags []string
 	// 1.iUnmarshalValue
 	// 2.iUnmarshalText
@@ -63,7 +56,7 @@ type convertFieldInfo struct {
 	// except for [time.Time] and [gtime.Time]
 	isCommonInterface bool
 	isCustomConvert   bool
-	fieldTypeName     string
+	structField       reflect.StructField
 	// Field index used to store duplicate names
 	// Generally used for nested structures
 	otherFieldIndex [][]int
@@ -71,6 +64,21 @@ type convertFieldInfo struct {
 	// For example:
 	// if the type of the field is int, then directly cache the [gconv.Int] function
 	convFunc func(from any, to reflect.Value)
+}
+
+type convertFieldInfo struct {
+	*convertFieldInfoBase
+	// lastFuzzKey string
+	lastFuzzKey atomic.Value
+	// The essence of this field is that there is only one unique key in the map,
+	// field string `json:"name"`
+	// map = {
+	//	field:"f1",
+	//	name :"n1",
+	// }
+	// In this case, name shall prevail
+	isField                bool
+	removeSymbolsFieldName string
 }
 
 func (c *convertFieldInfo) FieldName() string {
@@ -95,28 +103,49 @@ func (c *convertFieldInfo) getOtherFieldReflectValue(structValue reflect.Value, 
 
 type convertStructInfo struct {
 	// key = field's name
-	fields map[string]*convertFieldInfo
+	fieldsMap   map[string]*convertFieldInfo
+	fieldsCount int
 }
 
-func (structInfo *convertStructInfo) AddField(field reflect.StructField, fieldIndex []int, priorityTags []string) *convertFieldInfo {
-	convFieldInfo, ok := structInfo.fields[field.Name]
+func (structInfo *convertStructInfo) NoFields() bool {
+	return len(structInfo.fieldsMap) == 0
+}
+
+func (structInfo *convertStructInfo) GetFieldInfo(fieldName string) *convertFieldInfo {
+	v := structInfo.fieldsMap[fieldName]
+	return v
+}
+
+func (structInfo *convertStructInfo) AddField(field reflect.StructField, fieldIndex []int, priorityTags []string) {
+	defer func() {
+		structInfo.fieldsCount++
+	}()
+	convFieldInfo, ok := structInfo.fieldsMap[field.Name]
 	if !ok {
-		fieldInfo := &convertFieldInfo{
+		baseInfo := &convertFieldInfoBase{
 			isCommonInterface: checkTypeIsImplCommonInterface(field),
-			fieldTypeName:     field.Type.String(),
+			structField:       field,
 			fieldIndex:        fieldIndex,
 			convFunc:          getFieldConvFunc(field.Type.String()),
 			isCustomConvert:   fieldTypeIsCustomConvertType(field.Type),
 			tags:              getFieldTags(field, priorityTags),
 		}
-		structInfo.fields[field.Name] = fieldInfo
-		return fieldInfo
+		for _, tag := range baseInfo.tags {
+			info := &convertFieldInfo{
+				convertFieldInfoBase:   baseInfo,
+				isField:                tag == field.Name,
+				removeSymbolsFieldName: utils.RemoveSymbols(field.Name),
+			}
+			info.lastFuzzKey.Store(field.Name)
+			structInfo.fieldsMap[tag] = info
+		}
+		return
 	}
 	if convFieldInfo.otherFieldIndex == nil {
 		convFieldInfo.otherFieldIndex = make([][]int, 0, 2)
 	}
 	convFieldInfo.otherFieldIndex = append(convFieldInfo.otherFieldIndex, fieldIndex)
-	return convFieldInfo
+	return
 }
 
 var (
@@ -236,15 +265,10 @@ func getConvStructInfo(structType reflect.Type, priorityTag string) *convertStru
 	// Check if it has been cached
 	structInfo, ok := getCacheConvStructInfo(structType)
 	if ok {
-		// For the structure types of 0 fields,
-		// they also need to be cached to prevent invalid logic
-		if len(structInfo.fields) == 0 {
-			return nil
-		}
 		return structInfo
 	}
 	structInfo = &convertStructInfo{
-		fields: make(map[string]*convertFieldInfo),
+		fieldsMap: make(map[string]*convertFieldInfo),
 	}
 	var (
 		priorityTagArray []string
@@ -257,11 +281,6 @@ func getConvStructInfo(structType reflect.Type, priorityTag string) *convertStru
 	}
 	parseStruct(structType, parentIndex, structInfo, priorityTagArray)
 	setCacheConvStructInfo(structType, structInfo)
-	// For the structure types of 0 fields,
-	// they also need to be cached to prevent invalid logic
-	if len(structInfo.fields) == 0 {
-		return nil
-	}
 	return structInfo
 }
 
