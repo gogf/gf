@@ -320,7 +320,7 @@ func bindStructWithLoopConvFieldsMap(paramsMap map[string]any,
 	for _, fieldInfo = range convStructInfo.fieldNamesMap {
 		for _, fieldTag := range fieldInfo.tags {
 			if paramValue, ok = paramsMap[fieldTag]; !ok {
-				break
+				continue
 			}
 			if _, ok = usedParamsKeyOrTagNameMap[fieldTag]; ok {
 				matched = true
