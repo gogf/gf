@@ -103,24 +103,27 @@ func (c *convertFieldInfo) getOtherFieldReflectValue(structValue reflect.Value, 
 
 type convertStructInfo struct {
 	// key = field's name
-	fieldsMap   map[string]*convertFieldInfo
-	fieldsCount int
+	// Will save all field names and tags
+	// for example：
+	//	field string `json:"name"`
+	// It will be stored twice
+	fieldAndTagsMap map[string]*convertFieldInfo
+	// It will only be stored according to the name of the field,
+	// and only a few fields will be stored in the structure
+	fieldNamesMap map[string]*convertFieldInfo
 }
 
 func (structInfo *convertStructInfo) NoFields() bool {
-	return len(structInfo.fieldsMap) == 0
+	return len(structInfo.fieldAndTagsMap) == 0
 }
 
 func (structInfo *convertStructInfo) GetFieldInfo(fieldName string) *convertFieldInfo {
-	v := structInfo.fieldsMap[fieldName]
+	v := structInfo.fieldAndTagsMap[fieldName]
 	return v
 }
 
 func (structInfo *convertStructInfo) AddField(field reflect.StructField, fieldIndex []int, priorityTags []string) {
-	defer func() {
-		structInfo.fieldsCount++
-	}()
-	convFieldInfo, ok := structInfo.fieldsMap[field.Name]
+	convFieldInfo, ok := structInfo.fieldAndTagsMap[field.Name]
 	if !ok {
 		baseInfo := &convertFieldInfoBase{
 			isCommonInterface: checkTypeIsImplCommonInterface(field),
@@ -137,7 +140,10 @@ func (structInfo *convertStructInfo) AddField(field reflect.StructField, fieldIn
 				removeSymbolsFieldName: utils.RemoveSymbols(field.Name),
 			}
 			info.lastFuzzKey.Store(field.Name)
-			structInfo.fieldsMap[tag] = info
+			structInfo.fieldAndTagsMap[tag] = info
+			if info.isField {
+				structInfo.fieldNamesMap[field.Name] = info
+			}
 		}
 		return
 	}
@@ -229,6 +235,15 @@ func getFieldConvFunc(fieldType string) (convFunc func(from any, to reflect.Valu
 			}
 			*to.Addr().Interface().(*gtime.Time) = *v
 		}
+	case "bool":
+		convFunc = func(from any, to reflect.Value) {
+			to.SetBool(Bool(from))
+		}
+	case "[]byte":
+		convFunc = func(from any, to reflect.Value) {
+			to.SetBytes(Bytes(from))
+		}
+
 	default:
 		return nil
 	}
@@ -268,7 +283,8 @@ func getConvStructInfo(structType reflect.Type, priorityTag string) *convertStru
 		return structInfo
 	}
 	structInfo = &convertStructInfo{
-		fieldsMap: make(map[string]*convertFieldInfo),
+		fieldAndTagsMap: make(map[string]*convertFieldInfo),
+		fieldNamesMap:   make(map[string]*convertFieldInfo),
 	}
 	var (
 		priorityTagArray []string
