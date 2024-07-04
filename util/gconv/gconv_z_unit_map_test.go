@@ -7,717 +7,372 @@
 package gconv_test
 
 import (
-	"encoding/json"
+	"fmt"
+	"reflect"
 	"testing"
-
-	"gopkg.in/yaml.v3"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func Test_Map_Basic(t *testing.T) {
+type SubMapTest struct {
+	Name string
+}
+
+var mapTests = []struct {
+	value  interface{}
+	expect interface{}
+}{
+	{map[string]int{"k1": 1}, map[string]interface{}{"k1": 1}},
+	{map[string]uint{"k1": 1}, map[string]interface{}{"k1": 1}},
+	{map[string]string{"k1": "v1"}, map[string]interface{}{"k1": "v1"}},
+	{map[string]float32{"k1": 1.1}, map[string]interface{}{"k1": 1.1}},
+	{map[string]float64{"k1": 1.1}, map[string]interface{}{"k1": 1.1}},
+	{map[string]bool{"k1": true}, map[string]interface{}{"k1": true}},
+	{map[string]interface{}{"k1": "v1"}, map[string]interface{}{"k1": "v1"}},
+
+	{map[interface{}]int{"k1": 1}, map[string]interface{}{"k1": 1}},
+	{map[interface{}]uint{"k1": 1}, map[string]interface{}{"k1": 1}},
+	{map[interface{}]string{"k1": "v1"}, map[string]interface{}{"k1": "v1"}},
+	{map[interface{}]float32{"k1": 1.1}, map[string]interface{}{"k1": 1.1}},
+	{map[interface{}]float64{"k1": 1.1}, map[string]interface{}{"k1": 1.1}},
+	{map[interface{}]bool{"k1": true}, map[string]interface{}{"k1": true}},
+	{map[interface{}]interface{}{"k1": "v1"}, map[string]interface{}{"k1": "v1"}},
+
+	{map[int]int{1: 1}, map[string]interface{}{"1": 1}},
+	{map[int]string{1: "v1"}, map[string]interface{}{"1": "v1"}},
+	{map[uint]int{1: 1}, map[string]interface{}{"1": 1}},
+	{map[uint]string{1: "v1"}, map[string]interface{}{"1": "v1"}},
+
+	{[]int{1, 2, 3}, map[string]interface{}{"1": 2, "3": nil}},
+	{[]int{1, 2, 3, 4}, map[string]interface{}{"1": 2, "3": 4}},
+
+	{`{"earth": "亚马逊雨林"}`,
+		map[string]interface{}{"earth": "亚马逊雨林"}},
+	{[]byte(`{"earth": "撒哈拉沙漠"}`),
+		map[string]interface{}{"earth": "撒哈拉沙漠"}},
+	{`{Earth}`, nil},
+
+	{"", nil},
+	{[]byte(""), nil},
+	{`"{earth亚马逊雨林}`, nil},
+	{[]byte(`{earth撒哈拉沙漠}`), nil},
+	{[]byte(`{Earth}`), nil},
+
+	{nil, nil},
+
+	{&struct {
+		Earth string
+	}{
+		Earth: "大峡谷",
+	}, map[string]interface{}{"Earth": "大峡谷"}},
+
+	{struct {
+		Earth string
+	}{
+		Earth: "马里亚纳海沟",
+	}, map[string]interface{}{"Earth": "马里亚纳海沟"}},
+
+	{struct {
+		Earth string
+		mars  string
+	}{
+		Earth: "大堡礁",
+		mars:  "奥林帕斯山",
+	}, map[string]interface{}{"Earth": "大堡礁"}},
+
+	{struct {
+		Earth string
+		SubMapTest
+	}{
+		Earth: "中国",
+		SubMapTest: SubMapTest{
+			Name: "长江",
+		},
+	}, map[string]interface{}{"Earth": "中国", "Name": "长江"}},
+
+	{struct {
+		Earth string
+		China SubMapTest
+	}{
+		Earth: "中国",
+		China: SubMapTest{
+			Name: "黄河",
+		},
+	}, map[string]interface{}{"Earth": "中国", "China": map[string]interface{}{"Name": "黄河"}}},
+
+	{struct {
+		Earth      string
+		SubMapTest `json:"sub_map_test"`
+	}{
+		Earth: "中国",
+		SubMapTest: SubMapTest{
+			Name: "淮河",
+		},
+	}, map[string]interface{}{"Earth": "中国", "sub_map_test": map[string]interface{}{"Name": "淮河"}}},
+
+	{struct {
+		Earth string
+		China SubMapTest `gconv:"中国"`
+	}{
+		Earth: "中国",
+		China: SubMapTest{
+			Name: "黄河",
+		},
+	}, map[string]interface{}{"Earth": "中国", "中国": map[string]interface{}{"Name": "黄河"}}},
+
+	{struct {
+		China         string `c:"中国"`
+		America       string `c:"-"`
+		UnitedKingdom string `c:"UK,omitempty"`
+	}{
+		China:         "长城",
+		America:       "Statue of Liberty",
+		UnitedKingdom: "",
+	}, map[string]interface{}{"中国": "长城", "UK": ""}},
+
+	{struct {
+		China         string `gconv:"中国"`
+		America       string `gconv:"-"`
+		UnitedKingdom string `c:"UK,omitempty"`
+	}{
+		China:         "故宫",
+		America:       "White House",
+		UnitedKingdom: "",
+	}, map[string]interface{}{"中国": "故宫", "UK": ""}},
+
+	{struct {
+		China         string `json:"中国"`
+		America       string `json:"-"`
+		UnitedKingdom string `json:"UK,omitempty"`
+	}{
+		China:         "东方明珠",
+		America:       "Empire State Building",
+		UnitedKingdom: "",
+	}, map[string]interface{}{"中国": "东方明珠", "UK": ""}},
+
+	{struct {
+		China   interface{} `json:",omitempty"`
+		America string      `json:",omitempty"`
+	}{
+		China:   "黄山",
+		America: "",
+	}, map[string]interface{}{"China": "黄山", "America": ""}},
+}
+
+func TestMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		m1 := map[string]string{
-			"k": "v",
+		for _, test := range mapTests {
+			t.Assert(gconv.Map(test.value), test.expect)
 		}
-		m2 := map[int]string{
-			3: "v",
-		}
-		m3 := map[float64]float32{
-			1.22: 3.1,
-		}
-		t.Assert(gconv.Map(m1), g.Map{
-			"k": "v",
-		})
-		t.Assert(gconv.Map(m2), g.Map{
-			"3": "v",
-		})
-		t.Assert(gconv.Map(m3), g.Map{
-			"1.22": "3.1",
-		})
-		t.Assert(gconv.Map(`{"name":"goframe"}`), g.Map{
-			"name": "goframe",
-		})
-		t.Assert(gconv.Map(`{"name":"goframe"`), nil)
-		t.Assert(gconv.Map(`{goframe}`), nil)
-		t.Assert(gconv.Map([]byte(`{"name":"goframe"}`)), g.Map{
-			"name": "goframe",
-		})
-		t.Assert(gconv.Map([]byte(`{"name":"goframe"`)), nil)
-		t.Assert(gconv.Map([]byte(`{goframe}`)), nil)
 	})
 }
 
-func Test_Map_Slice(t *testing.T) {
+func TestMaps(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		slice1 := g.Slice{"1", "2", "3", "4"}
-		slice2 := g.Slice{"1", "2", "3"}
-		slice3 := g.Slice{}
-		t.Assert(gconv.Map(slice1), g.Map{
-			"1": "2",
-			"3": "4",
-		})
-		t.Assert(gconv.Map(slice2), g.Map{
-			"1": "2",
-			"3": nil,
-		})
-		t.Assert(gconv.Map(slice3), g.Map{})
-	})
-}
+		for _, test := range mapTests {
+			var (
+				maps    interface{}
+				expects interface{}
+			)
 
-func Test_Maps_Basic(t *testing.T) {
-	params := g.Slice{
-		g.Map{"id": 100, "name": "john"},
-		g.Map{"id": 200, "name": "smith"},
-	}
-	gtest.C(t, func(t *gtest.T) {
-		list := gconv.Maps(params)
-		t.Assert(len(list), 2)
-		t.Assert(list[0]["id"], 100)
-		t.Assert(list[1]["id"], 200)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		list := gconv.SliceMap(params)
-		t.Assert(len(list), 2)
-		t.Assert(list[0]["id"], 100)
-		t.Assert(list[1]["id"], 200)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		list := gconv.SliceMapDeep(params)
-		t.Assert(len(list), 2)
-		t.Assert(list[0]["id"], 100)
-		t.Assert(list[1]["id"], 200)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		type Base struct {
-			Age int
+			if v, ok := test.value.(string); ok {
+				maps = fmt.Sprintf(`[%s,%s]`, v, v)
+			} else if v, ok := test.value.([]byte); ok {
+				maps = []byte(fmt.Sprintf(`[%s,%s]`, v, v))
+			} else if test.value == nil {
+				maps = nil
+			} else {
+				maps = []interface{}{
+					test.value,
+					test.value,
+				}
+			}
+
+			if test.expect == nil {
+				expects = test.expect
+			} else {
+				expects = []interface{}{
+					test.expect,
+					test.expect,
+				}
+			}
+			t.Assert(gconv.Maps(maps), expects)
+
+			// The following is the same as gconv.Maps.
+			t.Assert(gconv.MapsDeep(maps), expects)
+			t.Assert(gconv.SliceMap(maps), expects)
+			t.Assert(gconv.SliceMapDeep(maps), expects)
 		}
-		type User struct {
-			Id   int
-			Name string
-			Base
-		}
-
-		users := make([]User, 0)
-		params := []g.Map{
-			{"id": 1, "name": "john", "age": 18},
-			{"id": 2, "name": "smith", "age": 20},
-		}
-		err := gconv.SliceStruct(params, &users)
-		t.AssertNil(err)
-		t.Assert(len(users), 2)
-		t.Assert(users[0].Id, params[0]["id"])
-		t.Assert(users[0].Name, params[0]["name"])
-		t.Assert(users[0].Age, 18)
-
-		t.Assert(users[1].Id, params[1]["id"])
-		t.Assert(users[1].Name, params[1]["name"])
-		t.Assert(users[1].Age, 20)
-	})
-}
-
-func Test_Maps_JsonStr(t *testing.T) {
-	jsonStr := `[{"id":100, "name":"john"},{"id":200, "name":"smith"}]`
-	gtest.C(t, func(t *gtest.T) {
-		list := gconv.Maps(jsonStr)
-		t.Assert(len(list), 2)
-		t.Assert(list[0]["id"], 100)
-		t.Assert(list[1]["id"], 200)
-
-		list = gconv.Maps([]byte(jsonStr))
-		t.Assert(len(list), 2)
-		t.Assert(list[0]["id"], 100)
-		t.Assert(list[1]["id"], 200)
 	})
 
+	// Test for special types.
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gconv.Maps(`[id]`), nil)
+		mapStrAny := []map[string]interface{}{
+			{"earth": "亚马逊雨林"},
+			{"mars": "奥林帕斯山"},
+		}
+		t.Assert(gconv.Maps(mapStrAny), mapStrAny)
+
+		mapEmpty := []map[string]string{}
+		t.AssertNil(gconv.Maps(mapEmpty))
+
 		t.Assert(gconv.Maps(`test`), nil)
-		t.Assert(gconv.Maps([]byte(`[id]`)), nil)
 		t.Assert(gconv.Maps([]byte(`test`)), nil)
 	})
 }
 
-func Test_Map_StructWithGConvTag(t *testing.T) {
+func TestMapsDeepExtra(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		type User struct {
-			Uid      int
-			Name     string
-			SiteUrl  string `gconv:"-"`
-			NickName string `gconv:"nickname, omitempty"`
-			Pass1    string `gconv:"password1"`
-			Pass2    string `gconv:"password2"`
+		type s struct {
+			Earth g.Map `c:"earth_map"`
 		}
-		user1 := User{
-			Uid:     100,
-			Name:    "john",
-			SiteUrl: "https://goframe.org",
-			Pass1:   "123",
-			Pass2:   "456",
-		}
-		user2 := &user1
-		map1 := gconv.Map(user1)
-		map2 := gconv.Map(user2)
-		t.Assert(map1["Uid"], 100)
-		t.Assert(map1["Name"], "john")
-		t.Assert(map1["SiteUrl"], nil)
-		t.Assert(map1["NickName"], nil)
-		t.Assert(map1["nickname"], nil)
-		t.Assert(map1["password1"], "123")
-		t.Assert(map1["password2"], "456")
 
-		t.Assert(map2["Uid"], 100)
-		t.Assert(map2["Name"], "john")
-		t.Assert(map2["SiteUrl"], nil)
-		t.Assert(map2["NickName"], nil)
-		t.Assert(map2["nickname"], nil)
-		t.Assert(map2["password1"], "123")
-		t.Assert(map2["password2"], "456")
-	})
-}
-
-func Test_Map_StructWithJsonTag(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		type User struct {
-			Uid      int
-			Name     string
-			SiteUrl  string `json:"-"`
-			NickName string `json:"nickname, omitempty"`
-			Pass1    string `json:"password1"`
-			Pass2    string `json:"password2"`
-		}
-		user1 := User{
-			Uid:     100,
-			Name:    "john",
-			SiteUrl: "https://goframe.org",
-			Pass1:   "123",
-			Pass2:   "456",
-		}
-		user2 := &user1
-		map1 := gconv.Map(user1)
-		map2 := gconv.Map(user2)
-		t.Assert(map1["Uid"], 100)
-		t.Assert(map1["Name"], "john")
-		t.Assert(map1["SiteUrl"], nil)
-		t.Assert(map1["NickName"], nil)
-		t.Assert(map1["nickname"], nil)
-		t.Assert(map1["password1"], "123")
-		t.Assert(map1["password2"], "456")
-
-		t.Assert(map2["Uid"], 100)
-		t.Assert(map2["Name"], "john")
-		t.Assert(map2["SiteUrl"], nil)
-		t.Assert(map2["NickName"], nil)
-		t.Assert(map2["nickname"], nil)
-		t.Assert(map2["password1"], "123")
-		t.Assert(map2["password2"], "456")
-	})
-}
-
-func Test_Map_StructWithCTag(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		type User struct {
-			Uid      int
-			Name     string
-			SiteUrl  string `c:"-"`
-			NickName string `c:"nickname, omitempty"`
-			Pass1    string `c:"password1"`
-			Pass2    string `c:"password2"`
-		}
-		user1 := User{
-			Uid:     100,
-			Name:    "john",
-			SiteUrl: "https://goframe.org",
-			Pass1:   "123",
-			Pass2:   "456",
-		}
-		user2 := &user1
-		map1 := gconv.Map(user1)
-		map2 := gconv.Map(user2)
-		t.Assert(map1["Uid"], 100)
-		t.Assert(map1["Name"], "john")
-		t.Assert(map1["SiteUrl"], nil)
-		t.Assert(map1["NickName"], nil)
-		t.Assert(map1["nickname"], nil)
-		t.Assert(map1["password1"], "123")
-		t.Assert(map1["password2"], "456")
-
-		t.Assert(map2["Uid"], 100)
-		t.Assert(map2["Name"], "john")
-		t.Assert(map2["SiteUrl"], nil)
-		t.Assert(map2["NickName"], nil)
-		t.Assert(map2["nickname"], nil)
-		t.Assert(map2["password1"], "123")
-		t.Assert(map2["password2"], "456")
-	})
-}
-
-func Test_Map_PrivateAttribute(t *testing.T) {
-	type User struct {
-		Id   int
-		name string
-	}
-	gtest.C(t, func(t *gtest.T) {
-		user := &User{1, "john"}
-		t.Assert(gconv.Map(user), g.Map{"Id": 1})
-	})
-}
-
-func Test_Map_Embedded(t *testing.T) {
-	type Base struct {
-		Id int
-	}
-	type User struct {
-		Base
-		Name string
-	}
-	type UserDetail struct {
-		User
-		Brief string
-	}
-	gtest.C(t, func(t *gtest.T) {
-		user := &User{}
-		user.Id = 1
-		user.Name = "john"
-
-		m := gconv.Map(user)
-		t.Assert(len(m), 2)
-		t.Assert(m["Id"], user.Id)
-		t.Assert(m["Name"], user.Name)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		user := &UserDetail{}
-		user.Id = 1
-		user.Name = "john"
-		user.Brief = "john guo"
-
-		m := gconv.Map(user)
-		t.Assert(len(m), 3)
-		t.Assert(m["Id"], user.Id)
-		t.Assert(m["Name"], user.Name)
-		t.Assert(m["Brief"], user.Brief)
-	})
-}
-
-func Test_Map_Embedded2(t *testing.T) {
-	type Ids struct {
-		Id  int `c:"id"`
-		Uid int `c:"uid"`
-	}
-	type Base struct {
-		Ids
-		CreateTime string `c:"create_time"`
-	}
-	type User struct {
-		Base
-		Passport string `c:"passport"`
-		Password string `c:"password"`
-		Nickname string `c:"nickname"`
-	}
-	gtest.C(t, func(t *gtest.T) {
-		user := new(User)
-		user.Id = 100
-		user.Nickname = "john"
-		user.CreateTime = "2019"
-		m := gconv.Map(user)
-		t.Assert(m["id"], "100")
-		t.Assert(m["nickname"], user.Nickname)
-		t.Assert(m["create_time"], "2019")
-	})
-	gtest.C(t, func(t *gtest.T) {
-		user := new(User)
-		user.Id = 100
-		user.Nickname = "john"
-		user.CreateTime = "2019"
-		m := gconv.MapDeep(user)
-		t.Assert(m["id"], user.Id)
-		t.Assert(m["nickname"], user.Nickname)
-		t.Assert(m["create_time"], user.CreateTime)
-	})
-}
-
-func Test_MapDeep2(t *testing.T) {
-	type A struct {
-		F string
-		G string
-	}
-
-	type B struct {
-		A
-		H string
-	}
-
-	type C struct {
-		A A
-		F string
-	}
-
-	type D struct {
-		I A
-		F string
-	}
-
-	gtest.C(t, func(t *gtest.T) {
-		b := new(B)
-		c := new(C)
-		d := new(D)
-		mb := gconv.MapDeep(b)
-		mc := gconv.MapDeep(c)
-		md := gconv.MapDeep(d)
-		t.Assert(gutil.MapContains(mb, "F"), true)
-		t.Assert(gutil.MapContains(mb, "G"), true)
-		t.Assert(gutil.MapContains(mb, "H"), true)
-		t.Assert(gutil.MapContains(mc, "A"), true)
-		t.Assert(gutil.MapContains(mc, "F"), true)
-		t.Assert(gutil.MapContains(mc, "G"), false)
-		t.Assert(gutil.MapContains(md, "F"), true)
-		t.Assert(gutil.MapContains(md, "I"), true)
-		t.Assert(gutil.MapContains(md, "H"), false)
-		t.Assert(gutil.MapContains(md, "G"), false)
-	})
-}
-
-func Test_MapDeep3(t *testing.T) {
-	type Base struct {
-		Id   int    `c:"id"`
-		Date string `c:"date"`
-	}
-	type User struct {
-		UserBase Base   `c:"base"`
-		Passport string `c:"passport"`
-		Password string `c:"password"`
-		Nickname string `c:"nickname"`
-	}
-
-	gtest.C(t, func(t *gtest.T) {
-		user := &User{
-			UserBase: Base{
-				Id:   1,
-				Date: "2019-10-01",
-			},
-			Passport: "john",
-			Password: "123456",
-			Nickname: "JohnGuo",
-		}
-		m := gconv.MapDeep(user)
-		t.Assert(m, g.Map{
-			"base": g.Map{
-				"id":   user.UserBase.Id,
-				"date": user.UserBase.Date,
-			},
-			"passport": user.Passport,
-			"password": user.Password,
-			"nickname": user.Nickname,
-		})
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		user := &User{
-			UserBase: Base{
-				Id:   1,
-				Date: "2019-10-01",
-			},
-			Passport: "john",
-			Password: "123456",
-			Nickname: "JohnGuo",
-		}
-		m := gconv.Map(user)
-		t.Assert(m, g.Map{
-			"base":     user.UserBase,
-			"passport": user.Passport,
-			"password": user.Password,
-			"nickname": user.Nickname,
-		})
-	})
-}
-
-func Test_MapDeepWithAttributeTag(t *testing.T) {
-	type Ids struct {
-		Id  int `c:"id"`
-		Uid int `c:"uid"`
-	}
-	type Base struct {
-		Ids        `json:"ids"`
-		CreateTime string `c:"create_time"`
-	}
-	type User struct {
-		Base     `json:"base"`
-		Passport string `c:"passport"`
-		Password string `c:"password"`
-		Nickname string `c:"nickname"`
-	}
-	gtest.C(t, func(t *gtest.T) {
-		user := new(User)
-		user.Id = 100
-		user.Nickname = "john"
-		user.CreateTime = "2019"
-		m := gconv.Map(user)
-		t.Assert(m["id"], "")
-		t.Assert(m["nickname"], user.Nickname)
-		t.Assert(m["create_time"], "")
-	})
-	gtest.C(t, func(t *gtest.T) {
-		user := new(User)
-		user.Id = 100
-		user.Nickname = "john"
-		user.CreateTime = "2019"
-		m := gconv.MapDeep(user)
-		t.Assert(m["base"].(map[string]interface{})["ids"].(map[string]interface{})["id"], user.Id)
-		t.Assert(m["nickname"], user.Nickname)
-		t.Assert(m["base"].(map[string]interface{})["create_time"], user.CreateTime)
-	})
-}
-
-func Test_MapDeepWithNestedMapAnyAny(t *testing.T) {
-	type User struct {
-		ExtraAttributes g.Map `c:"extra_attributes"`
-	}
-
-	gtest.C(t, func(t *gtest.T) {
-		user := &User{
-			ExtraAttributes: g.Map{
-				"simple_attribute": 123,
-				"map_string_attribute": g.Map{
-					"inner_value": 456,
+		t.Assert(gconv.MapDeep(&s{
+			Earth: g.Map{
+				"sea_num": 4,
+				"one_sea": g.Map{
+					"sea_name": "太平洋",
 				},
-				"map_interface_attribute": g.MapAnyAny{
-					"inner_value": 456,
-					123:           "integer_key_should_be_converted_to_string",
+				"map_sat": g.MapAnyAny{
+					1:         "Arctic",
+					"Pacific": 2,
+					"Indian":  "印度洋",
 				},
 			},
-		}
-		m := gconv.MapDeep(user)
-		t.Assert(m, g.Map{
-			"extra_attributes": g.Map{
-				"simple_attribute": 123,
-				"map_string_attribute": g.Map{
-					"inner_value": user.ExtraAttributes["map_string_attribute"].(g.Map)["inner_value"],
+		}), g.Map{
+			"earth_map": g.Map{
+				"sea_num": 4,
+				"one_sea": g.Map{
+					"sea_name": "太平洋",
 				},
-				"map_interface_attribute": g.Map{
-					"inner_value": user.ExtraAttributes["map_interface_attribute"].(g.MapAnyAny)["inner_value"],
-					"123":         "integer_key_should_be_converted_to_string",
+				"map_sat": g.Map{
+					"1":       "Arctic",
+					"Pacific": 2,
+					"Indian":  "印度洋",
 				},
 			},
 		})
 	})
 
-	type Outer struct {
-		OuterStruct map[string]interface{} `c:"outer_struct" yaml:"outer_struct"`
-		Field3      map[string]interface{} `c:"field3" yaml:"field3"`
-	}
-
 	gtest.C(t, func(t *gtest.T) {
-		problemYaml := []byte(`
-outer_struct:
-  field1: &anchor1
-    inner1: 123
-    inner2: 345
-  field2: 
-    inner3: 456
-    inner4: 789
-    <<: *anchor1
-field3:
-  123: integer_key
-`)
-		parsed := &Outer{}
-
-		err := yaml.Unmarshal(problemYaml, parsed)
-		t.AssertNil(err)
-
-		_, err = json.Marshal(parsed)
-		t.AssertNil(err)
-
-		converted := gconv.MapDeep(parsed)
-		jsonData, err := json.Marshal(converted)
-		t.AssertNil(err)
-
-		t.Assert(string(jsonData), `{"field3":{"123":"integer_key"},"outer_struct":{"field1":{"inner1":123,"inner2":345},"field2":{"inner1":123,"inner2":345,"inner3":456,"inner4":789}}}`)
-	})
-}
-
-func Test_MapWithDeepOption(t *testing.T) {
-	type Base struct {
-		Id   int    `c:"id"`
-		Date string `c:"date"`
-	}
-	type User struct {
-		UserBase Base   `c:"base"`
-		Passport string `c:"passport"`
-		Password string `c:"password"`
-		Nickname string `c:"nickname"`
-	}
-
-	gtest.C(t, func(t *gtest.T) {
-		user := &User{
-			UserBase: Base{
-				Id:   1,
-				Date: "2019-10-01",
-			},
-			Passport: "john",
-			Password: "123456",
-			Nickname: "JohnGuo",
-		}
-		m := gconv.Map(user)
-		t.Assert(m, g.Map{
-			"base":     user.UserBase,
-			"passport": user.Passport,
-			"password": user.Password,
-			"nickname": user.Nickname,
-		})
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		user := &User{
-			UserBase: Base{
-				Id:   1,
-				Date: "2019-10-01",
-			},
-			Passport: "john",
-			Password: "123456",
-			Nickname: "JohnGuo",
-		}
-		m := gconv.Map(user, gconv.MapOption{Deep: true})
-		t.Assert(m, g.Map{
-			"base": g.Map{
-				"id":   user.UserBase.Id,
-				"date": user.UserBase.Date,
-			},
-			"passport": user.Passport,
-			"password": user.Password,
-			"nickname": user.Nickname,
-		})
+		t.Assert(gconv.MapsDeep(`test`), nil)
+		t.Assert(gconv.MapsDeep([]byte(`test`)), nil)
 	})
 }
 
 func TestMapStrStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gconv.MapStrStr(map[string]string{"k": "v"}), map[string]string{"k": "v"})
-		t.Assert(gconv.MapStrStr(`{}`), nil)
+		for _, test := range mapTests {
+			var expect map[string]interface{}
+			if v, ok := test.expect.(map[string]interface{}); ok {
+				expect = v
+			}
+			for k, v := range expect {
+				expect[k] = gconv.String(v)
+			}
+			t.Assert(gconv.MapStrStr(test.value), test.expect)
+		}
 	})
 }
 
-func TestMapStrStrDeep(t *testing.T) {
+func TestMapStrStrDeepExtra(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gconv.MapStrStrDeep(map[string]string{"k": "v"}), map[string]string{"k": "v"})
-		t.Assert(gconv.MapStrStrDeep(`{"k":"v"}`), map[string]string{"k": "v"})
+		t.Assert(gconv.MapStrStrDeep(map[string]string{"mars": "Syrtis"}), map[string]string{"mars": "Syrtis"})
 		t.Assert(gconv.MapStrStrDeep(`{}`), nil)
 	})
 }
 
-func TestMapsDeep(t *testing.T) {
-	jsonStr := `[{"id":100, "name":"john"},{"id":200, "name":"smith"}]`
-	params := g.Slice{
-		g.Map{"id": 100, "name": "john"},
-		g.Map{"id": 200, "name": "smith"},
-	}
-
+func TestMapWithMapOption(t *testing.T) {
+	// Test for option: Deep.
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gconv.MapsDeep(nil), nil)
+		var testMapDeep = struct {
+			Earth      string
+			SubMapTest SubMapTest
+		}{
+			Earth: "中国",
+			SubMapTest: SubMapTest{
+				Name: "黄山",
+			},
+		}
+		var (
+			dt  = gconv.Map(testMapDeep, gconv.MapOption{Deep: true})
+			df  = gconv.Map(testMapDeep, gconv.MapOption{Deep: false})
+			dtk = reflect.TypeOf(dt["SubMapTest"]).Kind()
+			dfk = reflect.TypeOf(df["SubMapTest"]).Kind()
+		)
+		t.AssertNE(dtk, dfk)
 	})
 
+	// Test for option: OmitEmpty.
 	gtest.C(t, func(t *gtest.T) {
-		list := gconv.MapsDeep(params)
-		t.Assert(len(list), 2)
-		t.Assert(list[0]["id"], 100)
-		t.Assert(list[1]["id"], 200)
+		var testMapOmitEmpty = struct {
+			Earth   string
+			Venus   int         `gconv:",omitempty"`
+			Mars    string      `c:",omitempty"`
+			Mercury interface{} `json:",omitempty"`
+		}{
+			Earth:   "死海",
+			Venus:   0,
+			Mars:    "",
+			Mercury: nil,
+		}
+		r := gconv.Map(testMapOmitEmpty, gconv.MapOption{OmitEmpty: true})
+		t.Assert(r, map[string]interface{}{"Earth": "死海"})
 	})
 
+	// Test for option: Tags.
 	gtest.C(t, func(t *gtest.T) {
-		list := gconv.MapsDeep(jsonStr)
-		t.Assert(len(list), 2)
-		t.Assert(list[0]["id"], 100)
-		t.Assert(list[1]["id"], 200)
+		var testMapOmitEmpty = struct {
+			Earth string `gconv:"errEarth" chinese:"地球" french:"Terre"`
+		}{
+			Earth: "尼莫点",
+		}
+		c := gconv.Map(testMapOmitEmpty, gconv.MapOption{Tags: []string{"chinese", "french"}})
+		t.Assert(c, map[string]interface{}{"地球": "尼莫点"})
 
-		list = gconv.MapsDeep([]byte(jsonStr))
-		t.Assert(len(list), 2)
-		t.Assert(list[0]["id"], 100)
-		t.Assert(list[1]["id"], 200)
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gconv.MapsDeep(`[id]`), nil)
-		t.Assert(gconv.MapsDeep(`test`), nil)
-		t.Assert(gconv.MapsDeep([]byte(`[id]`)), nil)
-		t.Assert(gconv.MapsDeep([]byte(`test`)), nil)
-		t.Assert(gconv.MapsDeep([]string{}), nil)
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		stringInterfaceMapList := make([]map[string]interface{}, 0)
-		stringInterfaceMapList = append(stringInterfaceMapList, map[string]interface{}{"id": 100})
-		stringInterfaceMapList = append(stringInterfaceMapList, map[string]interface{}{"id": 200})
-		list := gconv.MapsDeep(stringInterfaceMapList)
-		t.Assert(len(list), 2)
-		t.Assert(list[0]["id"], 100)
-		t.Assert(list[1]["id"], 200)
-
-		list = gconv.MapsDeep([]byte(jsonStr))
-		t.Assert(len(list), 2)
-		t.Assert(list[0]["id"], 100)
-		t.Assert(list[1]["id"], 200)
+		f := gconv.Map(testMapOmitEmpty, gconv.MapOption{Tags: []string{"french", "chinese"}})
+		t.Assert(f, map[string]interface{}{"Terre": "尼莫点"})
 	})
 }
 
-func TestMapWithJsonOmitEmpty(t *testing.T) {
+func TestMapToMapExtra(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		type S struct {
-			Key   string      `json:",omitempty"`
-			Value interface{} `json:",omitempty"`
-		}
-		s := S{
-			Key:   "",
-			Value: 1,
-		}
-		m1 := gconv.Map(s)
-		t.Assert(m1, g.Map{
-			"Key":   "",
-			"Value": 1,
-		})
-
-		m2 := gconv.Map(s, gconv.MapOption{
-			Deep:      false,
-			OmitEmpty: true,
-			Tags:      nil,
-		})
-		t.Assert(m2, g.Map{
-			"Value": 1,
-		})
+		var (
+			err    error
+			value  = map[string]string{"k1": "v1"}
+			expect = make(map[string]interface{})
+		)
+		err = gconv.MapToMap(value, &expect)
+		t.Assert(err, nil)
+		t.Assert(value["k1"], expect["k1"])
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		type ProductConfig struct {
-			Pid      int `v:"required" json:"pid,omitempty"`
-			TimeSpan int `v:"required" json:"timeSpan,omitempty"`
-		}
-		type CreateGoodsDetail struct {
-			ProductConfig
-			AutoRenewFlag int `v:"required" json:"autoRenewFlag"`
-		}
-		s := &CreateGoodsDetail{
-			ProductConfig: ProductConfig{
-				Pid:      1,
-				TimeSpan: 0,
+		v := g.Map{
+			"k": g.Map{
+				"name": "Earth",
 			},
-			AutoRenewFlag: 0,
 		}
-		m1 := gconv.Map(s)
-		t.Assert(m1, g.Map{
-			"pid":           1,
-			"timeSpan":      0,
-			"autoRenewFlag": 0,
-		})
+		e := make(map[string]SubMapTest)
+		err := gconv.MapToMap(v, &e)
+		t.AssertNil(err)
+		t.Assert(len(e), 1)
+		t.Assert(e["k"].Name, "Earth")
+	})
+}
 
-		m2 := gconv.Map(s, gconv.MapOption{
-			Deep:      false,
-			OmitEmpty: true,
-			Tags:      nil,
-		})
-		t.Assert(m2, g.Map{
-			"pid":           1,
-			"autoRenewFlag": 0,
-		})
+func TestMaptoMapsExtra(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := g.Slice{
+			g.Map{"id": 1, "name": "john"},
+			g.Map{"id": 2, "name": "smith"},
+		}
+		var e []*g.Map
+		err := gconv.MapToMaps(v, &e)
+		t.AssertNil(err)
+		t.Assert(len(v), 2)
+		t.Assert(v, e)
 	})
 }

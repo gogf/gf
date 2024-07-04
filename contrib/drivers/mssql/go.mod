@@ -3,18 +3,19 @@ module github.com/gogf/gf/contrib/drivers/mssql/v2
 go 1.18
 
 require (
-	github.com/denisenkom/go-mssqldb v0.12.3
-	github.com/gogf/gf/v2 v2.7.0
+	github.com/gogf/gf/v2 v2.7.2
+	github.com/microsoft/go-mssqldb v1.7.1
 )
 
 require (
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/clbanning/mxj/v2 v2.7.0 // indirect
+	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/golang-sql/civil v0.0.0-20190719163853-cb61b32ac6fe // indirect
+	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/grokify/html-strip-tags-go v0.1.0 // indirect

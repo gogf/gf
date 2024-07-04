@@ -190,43 +190,51 @@ func (m *softTimeMaintainer) getSoftFieldNameAndType(
 	schema string, table string, checkFiledNames []string,
 ) (fieldName string, fieldType LocalType) {
 	var (
-		cacheKey      = fmt.Sprintf(`getSoftFieldNameAndType:%s#%s#%s`, schema, table, strings.Join(checkFiledNames, "_"))
+		innerMemCache = m.db.GetCore().GetInnerMemCache()
+		cacheKey      = fmt.Sprintf(
+			`getSoftFieldNameAndType:%s#%s#%s`,
+			schema, table, strings.Join(checkFiledNames, "_"),
+		)
 		cacheDuration = gcache.DurationNoExpire
 		cacheFunc     = func(ctx context.Context) (value interface{}, err error) {
 			// Ignore the error from TableFields.
-			fieldsMap, _ := m.TableFields(table, schema)
-			if len(fieldsMap) > 0 {
-				for _, checkFiledName := range checkFiledNames {
-					fieldName, _ = gutil.MapPossibleItemByKey(
-						gconv.Map(fieldsMap), checkFiledName,
+			fieldsMap, err := m.TableFields(table, schema)
+			if err != nil {
+				return nil, err
+			}
+			if len(fieldsMap) == 0 {
+				return nil, nil
+			}
+			for _, checkFiledName := range checkFiledNames {
+				fieldName, _ = gutil.MapPossibleItemByKey(
+					gconv.Map(fieldsMap), checkFiledName,
+				)
+				if fieldName != "" {
+					fieldType, _ = m.db.CheckLocalTypeForField(
+						ctx, fieldsMap[fieldName].Type, nil,
 					)
-					if fieldName != "" {
-						fieldType, _ = m.db.CheckLocalTypeForField(
-							ctx, fieldsMap[fieldName].Type, nil,
-						)
-						var cacheItem = getSoftFieldNameAndTypeCacheItem{
-							FieldName: fieldName,
-							FieldType: fieldType,
-						}
-						return cacheItem, nil
+					var cacheItem = getSoftFieldNameAndTypeCacheItem{
+						FieldName: fieldName,
+						FieldType: fieldType,
 					}
+					return cacheItem, nil
 				}
 			}
 			return
 		}
 	)
-	result, err := gcache.GetOrSetFunc(ctx, cacheKey, cacheFunc, cacheDuration)
+	result, err := innerMemCache.GetOrSetFunc(
+		ctx, cacheKey, cacheFunc, cacheDuration,
+	)
 	if err != nil {
-		intlog.Error(ctx, err)
+		return
 	}
-	if result != nil {
-		var cacheItem getSoftFieldNameAndTypeCacheItem
-		if err = result.Scan(&cacheItem); err != nil {
-			return "", ""
-		}
-		fieldName = cacheItem.FieldName
-		fieldType = cacheItem.FieldType
+	if result == nil {
+		return
 	}
+	cacheItem := result.Val().(getSoftFieldNameAndTypeCacheItem)
+	fieldName = cacheItem.FieldName
+	fieldType = cacheItem.FieldType
 	return
 }
 

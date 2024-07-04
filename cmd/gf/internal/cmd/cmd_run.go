@@ -9,6 +9,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -55,7 +56,7 @@ The "run" command is used for running go codes with hot-compiled-like feature,
 which compiles and runs the go codes asynchronously when codes change.
 `
 	cRunFileBrief       = `building file path.`
-	cRunPathBrief       = `output directory path for built binary file. it's "manifest/output" in default`
+	cRunPathBrief       = `output directory path for built binary file. it's "./" in default`
 	cRunExtraBrief      = `the same options as "go run"/"go build" except some options as follows defined`
 	cRunArgsBrief       = `custom arguments for your process`
 	cRunWatchPathsBrief = `watch additional paths for live reload, separated by ",". i.e. "manifest/config/*.yaml"`
@@ -81,7 +82,7 @@ func init() {
 
 type (
 	cRunInput struct {
-		g.Meta     `name:"run"`
+		g.Meta     `name:"run" config:"gfcli.run"`
 		File       string   `name:"FILE"       arg:"true" brief:"{cRunFileBrief}" v:"required"`
 		Path       string   `name:"path"       short:"p"  brief:"{cRunPathBrief}" d:"./"`
 		Extra      string   `name:"extra"      short:"e"  brief:"{cRunExtraBrief}"`
@@ -104,13 +105,14 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 
 	app := &cRunApp{
 		File:       in.File,
-		Path:       in.Path,
+		Path:       filepath.FromSlash(in.Path),
 		Options:    in.Extra,
 		Args:       in.Args,
 		WatchPaths: in.WatchPaths,
 	}
 	dirty := gtype.NewBool()
 
+	var outputPath = app.genOutputPath()
 	callbackFunc := func(event *gfsnotify.Event) {
 		if gfile.ExtName(event.Path) != "go" {
 			return
@@ -125,7 +127,7 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		gtimer.SetTimeout(ctx, 1500*gtime.MS, func(ctx context.Context) {
 			defer dirty.Set(false)
 			mlog.Printf(`watched file changes: %s`, event.String())
-			app.Run(ctx)
+			app.Run(ctx, outputPath)
 		})
 	}
 
@@ -143,24 +145,21 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		}
 	}
 
-	go app.Run(ctx)
+	go app.Run(ctx, outputPath)
+
+	gproc.AddSigHandlerShutdown(func(sig os.Signal) {
+		app.End(ctx, sig, outputPath)
+		os.Exit(0)
+	})
+	gproc.Listen()
+
 	select {}
 }
 
-func (app *cRunApp) Run(ctx context.Context) {
+func (app *cRunApp) Run(ctx context.Context, outputPath string) {
 	// Rebuild and run the codes.
-	renamePath := ""
 	mlog.Printf("build: %s", app.File)
-	outputPath := gfile.Join(app.Path, gfile.Name(app.File))
-	if runtime.GOOS == "windows" {
-		outputPath += ".exe"
-		if gfile.Exists(outputPath) {
-			renamePath = outputPath + "~"
-			if err := gfile.Rename(outputPath, renamePath); err != nil {
-				mlog.Print(err)
-			}
-		}
-	}
+
 	// In case of `pipe: too many open files` error.
 	// Build the app.
 	buildCommand := fmt.Sprintf(
@@ -196,6 +195,36 @@ func (app *cRunApp) Run(ctx context.Context) {
 	} else {
 		mlog.Printf("build running pid: %d", pid)
 	}
+}
+
+func (app *cRunApp) End(ctx context.Context, sig os.Signal, outputPath string) {
+	// Delete the binary file.
+	// firstly, kill the process.
+	if process != nil {
+		if err := process.Kill(); err != nil {
+			mlog.Debugf("kill process error: %s", err.Error())
+		}
+	}
+	if err := gfile.Remove(outputPath); err != nil {
+		mlog.Printf("delete binary file error: %s", err.Error())
+	} else {
+		mlog.Printf("deleted binary file: %s", outputPath)
+	}
+}
+
+func (app *cRunApp) genOutputPath() (outputPath string) {
+	var renamePath string
+	outputPath = gfile.Join(app.Path, gfile.Name(app.File))
+	if runtime.GOOS == "windows" {
+		outputPath += ".exe"
+		if gfile.Exists(outputPath) {
+			renamePath = outputPath + "~"
+			if err := gfile.Rename(outputPath, renamePath); err != nil {
+				mlog.Print(err)
+			}
+		}
+	}
+	return filepath.FromSlash(outputPath)
 }
 
 func matchWatchPaths(watchPaths []string, eventPath string) bool {

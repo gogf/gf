@@ -8,8 +8,9 @@ package pgsql_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/database/gdb"
 	"testing"
+
+	"github.com/gogf/gf/v2/database/gdb"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -71,5 +72,34 @@ func Test_Issue3330(t *testing.T) {
 			t.Assert(one["password"], list[i-1]["password"])
 			t.Assert(one["nickname"], list[i-1]["nickname"])
 		}
+	})
+}
+
+// https://github.com/gogf/gf/issues/3632
+func Test_Issue3632(t *testing.T) {
+	type Member struct {
+		One []int64    `json:"one" orm:"one"`
+		Two [][]string `json:"two" orm:"two"`
+	}
+	var (
+		sqlText = gtest.DataContent("issues", "issue3632.sql")
+		table   = fmt.Sprintf(`%s_%d`, TablePrefix+"issue3632", gtime.TimestampNano())
+	)
+	if _, err := db.Exec(ctx, fmt.Sprintf(sqlText, table)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			dao    = db.Model(table)
+			member = Member{
+				One: []int64{1, 2, 3},
+				Two: [][]string{{"a", "b"}, {"c", "d"}},
+			}
+		)
+
+		_, err := dao.Ctx(ctx).Data(&member).Insert()
+		t.AssertNil(err)
 	})
 }

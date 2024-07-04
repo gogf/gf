@@ -16,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// Set is consisted of interface{} items.
 type Set struct {
 	mu   rwmutex.RWMutex
 	data map[interface{}]struct{}
@@ -53,9 +54,7 @@ func NewFrom(items interface{}, safe ...bool) *Set {
 // Iterator iterates the set readonly with given callback function `f`,
 // if `f` returns true then continue iterating; or false to stop.
 func (set *Set) Iterator(f func(v interface{}) bool) {
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	for k := range set.data {
+	for _, k := range set.Slice() {
 		if !f(k) {
 			break
 		}
