@@ -7,11 +7,28 @@
 package gdb
 
 import (
+	"database/sql"
 	"fmt"
 	"reflect"
 
 	"github.com/gogf/gf/v2/container/gvar"
 )
+
+func (c *Core) scanRowsToMap(rows *sql.Rows, table *Table, columns int) (result Result, err error) {
+	mapQuery := table.makeMapQueryModel(columns)
+	for {
+		record := Record{}
+		mapQuery.next(record)
+		if err = rows.Scan(mapQuery.scanArgs...); err != nil {
+			return result, err
+		}
+		result = append(result, record)
+		if !rows.Next() {
+			break
+		}
+	}
+	return
+}
 
 func (t *Table) makeMapQueryModel(columns int) *queryMapModel {
 	scaArgs := make([]any, columns)

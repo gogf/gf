@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"context"
+	"database/sql"
 
 	"fmt"
 	"reflect"
@@ -15,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/empty"
 
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -185,49 +187,68 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 			model = m.Fields(pointer)
 		}
 	}
-
-	one, err := model.one(pointer, where...)
-	if err != nil {
-		return err
-	}
-	if err = m.doScanStruct(pointer, one); err != nil {
-		return err
+	if useCacheTableExperiment {
+		one, err := model.one(pointer, where...)
+		if err != nil {
+			return err
+		}
+		if err = m.doScanStruct(pointer, one); err != nil {
+			return err
+		}
+	} else {
+		one, err := model.One(where...)
+		if err != nil {
+			return err
+		}
+		if err = one.Struct(pointer); err != nil {
+			return err
+		}
 	}
 	return model.doWithScanStruct(pointer)
 }
 
 func (m *Model) doScanStruct(pointer any, record Record) (err error) {
+	if record.IsEmpty() {
+		if !empty.IsNil(pointer, true) {
+			return sql.ErrNoRows
+		}
+		return nil
+	}
 	var (
-		// *struct => struct
-		// **struct => *struct
-		elemType  = reflect.TypeOf(pointer).Elem()
-		elemIsPtr = false
+		elemType           reflect.Type
+		structPointerValue reflect.Value
+		// Secondary pointer
+		// *struct   => false
+		// **struct  => true
+		secondPtr = false
+		ok        bool
 	)
+	structPointerValue, ok = pointer.(reflect.Value)
+	if !ok {
+		// **struct => *struct
+		// *struct  => struct
+		elemType = reflect.TypeOf(pointer).Elem()
+		structPointerValue = reflect.ValueOf(pointer)
+	} else {
+		elemType = structPointerValue.Type().Elem()
+	}
 
 	switch elemType.Kind() {
 	case reflect.Ptr:
-		elemIsPtr = true
+		secondPtr = true
 		// *struct => struct
 		elemType = elemType.Elem()
 	case reflect.Struct:
 	}
-	var (
-		table     *Table
-		tableName = getTableName(elemType)
-	)
-	tableValue, ok := tablesMap.Load(tableName)
-	if !ok {
+	table := convTableInfo.Get(elemType)
+	if table == nil {
 		err = record.Struct(pointer)
 		return err
 	}
-
 	// It needs to be deleted, otherwise it will cause
 	// conflicts as long as the struct name is the same within different functions during testing
 	// TODO: Add a parameter to determine if it is in the testing environment. If it is not, do not delete it
-	defer tablesMap.Delete(tableName)
-
-	table = tableValue.(*Table)
-	structPointerValue := reflect.ValueOf(pointer).Elem()
+	defer convTableInfo.Delete(elemType)
 
 	var structValue = reflect.New(elemType)
 	// UnmarshalValue
@@ -254,10 +275,13 @@ func (m *Model) doScanStruct(pointer any, record Record) (err error) {
 			fieldValue.Set(reflect.ValueOf(value.Val()))
 		}
 	}
-	if elemIsPtr {
+	if secondPtr {
 		structValue = structValue.Addr()
 	}
-	structPointerValue.Set(structValue)
+	if structPointerValue.IsNil() {
+		structPointerValue.Set(reflect.New(structPointerValue.Type().Elem()))
+	}
+	structPointerValue.Elem().Set(structValue)
 	return nil
 }
 
@@ -317,25 +341,47 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 			)
 		}
 	}
-
-	all, err := model.all(pointer, where...)
-	if err != nil {
-		return err
-	}
-	if err = m.doScanStructs(pointer, all); err != nil {
-		return err
+	if useCacheTableExperiment {
+		all, err := model.all(pointer, where...)
+		if err != nil {
+			return err
+		}
+		if err = m.doScanStructs(pointer, all); err != nil {
+			return err
+		}
+	} else {
+		all, err := model.All(where...)
+		if err != nil {
+			return err
+		}
+		if err = all.Structs(pointer); err != nil {
+			return err
+		}
 	}
 	return model.doWithScanStructs(pointer)
 }
 
 func (m *Model) doScanStructs(pointer any, records Result) (err error) {
+	if records.IsEmpty() {
+		if !empty.IsEmpty(pointer, true) {
+			return sql.ErrNoRows
+		}
+		return nil
+	}
 	var (
-		// *[]struct  => []struct
-		// *[]*struct => []*struct
-		elemType    = reflect.TypeOf(pointer).Elem()
-		sliceType   = elemType
+		elemType    reflect.Type
+		sliceType   reflect.Type
 		structIsPtr = false
 	)
+	slicePointerValue, ok := pointer.(reflect.Value)
+	if !ok {
+		slicePointerValue = reflect.ValueOf(pointer)
+	}
+	// *[]struct  => []struct
+	// *[]*struct => []*struct
+	elemType = slicePointerValue.Type().Elem()
+	sliceType = elemType
+
 	// []struct  => struct
 	// []*struct => *struct
 	elemType = elemType.Elem()
@@ -346,14 +392,8 @@ func (m *Model) doScanStructs(pointer any, records Result) (err error) {
 		elemType = elemType.Elem()
 	case reflect.Struct:
 	}
-
-	var (
-		table     *Table
-		tableName = getTableName(elemType)
-	)
-
-	tableValue, ok := tablesMap.Load(tableName)
-	if !ok {
+	table := convTableInfo.Get(elemType)
+	if table == nil {
 		err = records.Structs(pointer)
 		return err
 	}
@@ -361,10 +401,8 @@ func (m *Model) doScanStructs(pointer any, records Result) (err error) {
 	// It needs to be deleted, otherwise it will cause
 	// conflicts as long as the struct name is the same within different functions during testing
 	// TODO: Add a parameter to determine if it is in the testing environment. If it is not, do not delete it
-	defer tablesMap.Delete(tableName)
+	defer convTableInfo.Delete(elemType)
 
-	table = tableValue.(*Table)
-	slicePtr := reflect.ValueOf(pointer)
 	sliceValue := reflect.MakeSlice(sliceType, 0, len(records))
 
 	for _, record := range records {
@@ -398,8 +436,7 @@ func (m *Model) doScanStructs(pointer any, records Result) (err error) {
 		}
 		sliceValue = reflect.Append(sliceValue, structValue)
 	}
-
-	slicePtr.Elem().Set(sliceValue)
+	slicePointerValue.Elem().Set(sliceValue)
 	return nil
 }
 

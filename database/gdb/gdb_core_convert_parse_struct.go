@@ -16,15 +16,79 @@ import (
 	"github.com/gogf/gf/v2/internal/utils"
 )
 
-var (
-	tablesMap sync.Map
-)
-
 const (
 	scanPointerCtxKey = "gf.orm.scan.ctx.key"
 )
 
+var (
+	convTableInfo = &convertTableInfo{}
+	//
+	useCacheTableExperiment = true
+	// Mainly used to call the [convTableInfo.Delete] function
+	// Due to the large number of declared structures within functions in the testing environment,
+	// For example:
+	// 		Declare an A structure within the A function, regardless of any fields
+	// 		Then declare a structure inside the B function, regardless of any fields
+	// 		So the go language believes that the names of the structures within these two functions are the same
+	// Will result in duplicate names when storing structures in [convTableInfo]
+	// So during testing, after testing a function, it is necessary to delete the registered ones
+	// During formal development, there is no need to delete it
+	isTextEnvironment = false
+)
+
+func EnableCacheTableExperiment(b bool) {
+	useCacheTableExperiment = b
+}
+
+type structTypeName = string
+type structFieldName = string
+
+type convertTableInfo struct {
+	// key   = string
+	// value = *Table
+	tablesMap sync.Map
+	// Mainly used by [RegisterStructFieldConvertFunc] to register custom conversions
+	customStructFieldConvertFunc map[structTypeName]map[structFieldName]fieldConvertFunc
+}
+
+func (c *convertTableInfo) getStructFieldConvertFunc(structType reflect.Type, fieldName string) fieldConvertFunc {
+	tableConv, ok := c.customStructFieldConvertFunc[getTableName(structType)]
+	if !ok {
+		return nil
+	}
+	fn := tableConv[fieldName]
+	return fn
+}
+
+func (c *convertTableInfo) Get(structType reflect.Type) *Table {
+	var (
+		tableName = getTableName(structType)
+	)
+	tableValue, ok := c.tablesMap.Load(tableName)
+	if ok {
+		return tableValue.(*Table)
+	}
+	return nil
+}
+
+func (c *convertTableInfo) Add(structType reflect.Type, table *Table) {
+	var (
+		tableName = getTableName(structType)
+	)
+	c.tablesMap.Store(tableName, table)
+}
+
+func (c *convertTableInfo) Delete(structType reflect.Type) {
+	var (
+		tableName = getTableName(structType)
+	)
+	c.tablesMap.Delete(tableName)
+}
+
 func getTableName(pointerType reflect.Type) string {
+	if pointerType.Kind() == reflect.Ptr {
+		pointerType = pointerType.Elem()
+	}
 	return pointerType.PkgPath() + "." + pointerType.Name()
 }
 
@@ -39,7 +103,19 @@ type Table struct {
 	fields []*fieldConvertInfo
 }
 
+func (t *Table) GetFieldInfo(fieldName string) *fieldConvertInfo {
+	for _, field := range t.fields {
+		if field.StructField.Name == fieldName {
+			return field
+		}
+	}
+	return nil
+}
+
 func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Table {
+	if useCacheTableExperiment == false {
+		return nil
+	}
 	ctxKey := ctx.Value(scanPointerCtxKey)
 	if ctxKey == nil {
 		return nil
@@ -48,18 +124,21 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 	if val.scan == false {
 		return nil
 	}
-
 	var (
-		pointer = val.pointer
 		// 1.[]*struct  => *struct
 		// 2.[]struct   => struct
 		// 3.*[]*struct => []*struct
 		// 4.*[]struct  => []struct
 		// 5.*struct    => struct
 		// 6.**struct   => *struct
-		pointerType = reflect.TypeOf(pointer).Elem()
+		pointerType reflect.Type
 	)
-
+	pointer, ok := val.pointer.(reflect.Value)
+	if ok {
+		pointerType = pointer.Type().Elem()
+	} else {
+		pointerType = reflect.TypeOf(val.pointer).Elem()
+	}
 	switch pointerType.Kind() {
 	case reflect.Array, reflect.Slice:
 		// 1.[]*struct => *struct
@@ -73,10 +152,9 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 		pointerType = pointerType.Elem()
 	}
 
-	tableName := getTableName(pointerType)
-	tableValue, ok := tablesMap.Load(tableName)
-	if ok {
-		return tableValue.(*Table)
+	tableValue := convTableInfo.Get(pointerType)
+	if tableValue != nil {
+		return tableValue
 	}
 	var (
 		fieldsConvertInfoMap = make(map[string]*fieldConvertInfo)
@@ -105,7 +183,7 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 		table.fields[v.ColumnFieldIndex] = v
 	}
 
-	tablesMap.Store(tableName, table)
+	convTableInfo.Add(pointerType, table)
 	return table
 }
 
@@ -134,9 +212,7 @@ func (t *Table) getStructFields(ctx context.Context, db DB, fieldsConvertInfoMap
 		if field.Type.String() == "gmeta.Meta" {
 			continue
 		}
-
-		tag := field.Tag.Get(OrmTagForStruct)
-		if field.Anonymous && tag == "" {
+		if field.Anonymous && field.Tag == "" {
 			if field.Type.Kind() == reflect.Ptr {
 				field.Type = field.Type.Elem()
 			}
@@ -150,7 +226,7 @@ func (t *Table) getStructFields(ctx context.Context, db DB, fieldsConvertInfoMap
 			fieldInfo.StructFieldIndex = append(parentIndex, i)
 			fieldInfo.StructFieldType = field.Type
 			fieldInfo.StructField = field
-			convertFn := registerFieldConvertFunc(ctx, db, fieldInfo.ColumnFieldType, fieldInfo.StructField)
+			convertFn := registerFieldConvertFunc(ctx, db, fieldInfo.ColumnFieldType, fieldInfo.StructField, structType)
 			fieldInfo.convertFunc = convertFn
 			matchedCount++
 		}
@@ -185,7 +261,7 @@ func (t *Table) parseTagAndMatchColumn(fieldTag reflect.StructTag, fieldName str
 		tag = strings.Split(tag, ",")[0]
 		tag = strings.TrimSpace(tag)
 		if tag == "-" {
-			return nil
+			tag = fieldName
 		}
 	}
 

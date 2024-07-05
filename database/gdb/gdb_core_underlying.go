@@ -433,22 +433,6 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 	return c.scanRowsToResult(ctx, scanArgs, rows, columnTypes)
 }
 
-func (c *Core) scanRowsToMap(rows *sql.Rows, table *Table, columns int) (result Result, err error) {
-	mapQuery := table.makeMapQueryModel(columns)
-	for {
-		record := Record{}
-		mapQuery.next(record)
-		if err = rows.Scan(mapQuery.scanArgs...); err != nil {
-			return result, err
-		}
-		result = append(result, record)
-		if !rows.Next() {
-			break
-		}
-	}
-	return
-}
-
 func (c *Core) scanRowsToResult(ctx context.Context, scanArgs []any, rows *sql.Rows, columnTypes []*sql.ColumnType) (result Result, err error) {
 	for {
 		if err = rows.Scan(scanArgs...); err != nil {

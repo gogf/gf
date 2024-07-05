@@ -141,7 +141,6 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		if bindToReflectValue.Kind() != reflect.Ptr && bindToReflectValue.CanAddr() {
 			bindToReflectValue = bindToReflectValue.Addr()
 		}
-
 		// It automatically retrieves struct field names from current attribute struct/slice.
 		if structType, err := gstructs.StructType(field.Value); err != nil {
 			return err
@@ -166,47 +165,12 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		if m.cacheEnabled && m.cacheOption.Name == "" {
 			model = model.Cache(m.cacheOption)
 		}
-
-		var (
-			fieldIsPtrAndNil = bindToReflectValue.IsNil()
-			fieldKind        = bindToReflectValue.Kind()
-			newFieldValue    = bindToReflectValue
-		)
-		// If the field is of the pointer type and is nil, you will need to re-use the reflection assignment
-		// If it's a value-type field, it's not nil after bindToReflectValue.Addr().
-		// type  _ struct {
-		//	A int   => Addr().IsNil() = false
-		//	B *int  => Addr().IsNil() = true
-		// }
-		if fieldIsPtrAndNil {
-			fieldType := field.Field.Type
-			switch fieldKind {
-			case reflect.Ptr:
-				fieldType = fieldType.Elem()
-				newFieldValue = reflect.New(fieldType)
-
-			case reflect.Slice, reflect.Array:
-				newFieldValue = reflect.New(fieldType)
-			}
-		}
-
 		err = model.Fields(fieldKeys).
 			Where(relatedSourceName, relatedTargetValue).
-			Scan(newFieldValue.Interface())
+			Scan(bindToReflectValue)
 		// It ignores sql.ErrNoRows in with feature.
 		if err != nil && err != sql.ErrNoRows {
 			return err
-		}
-
-		// If the field is of the pointer type and is nil, you will need to re-use the reflection assignment
-		// If it's a value-type field, it's not nil after bindToReflectValue.Addr().
-		if fieldIsPtrAndNil {
-			switch fieldKind {
-			case reflect.Ptr:
-				field.Value.Set(newFieldValue)
-			case reflect.Slice, reflect.Array:
-				field.Value.Set(newFieldValue.Elem())
-			}
 		}
 	}
 	return nil
