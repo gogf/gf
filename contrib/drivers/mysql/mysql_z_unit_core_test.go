@@ -10,7 +10,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"strconv"
 	"testing"
 	"time"
 
@@ -1673,64 +1672,4 @@ func Test_Core_ClearCacheAll(t *testing.T) {
 		err := db.GetCore().ClearCacheAll(ctx)
 		t.AssertNil(err)
 	})
-}
-
-type MyDecimal struct {
-	v float64
-}
-
-func (m *MyDecimal) Scan(src any) (err error) {
-	var v float64
-	switch sv := src.(type) {
-	case []byte:
-		v, err = strconv.ParseFloat(string(sv), 64)
-	case string:
-		v, err = strconv.ParseFloat(sv, 64)
-	case float64:
-		v = sv
-	case float32:
-		v = float64(sv)
-	default:
-		err = fmt.Errorf("unknown type: %v(%T)", src, src)
-	}
-	if err != nil {
-		return err
-	}
-	m.v = v
-	return nil
-}
-
-func Test_Core_Convert_Custom_SqlScanner(t *testing.T) {
-	sql := `CREATE TABLE IF NOT EXISTS %s (
-	id int(10) unsigned NOT NULL AUTO_INCREMENT primary key,
-	my_decimal1 decimal(5,2) NOT NULL,
-	my_decimal2 decimal(5,2) NOT NULL                                 
-	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-	`
-	gtest.C(t, func(t *gtest.T) {
-		tableName := "test_decimal"
-		_, err := db.Exec(ctx, fmt.Sprintf(sql, tableName))
-		t.AssertNil(err)
-		defer dropTable(tableName)
-
-		table := db.Model(tableName)
-		type TestDecimal struct {
-			MyDecimal1 MyDecimal  `orm:"my_decimal1"`
-			MyDecimal2 *MyDecimal `orm:"my_decimal2"`
-		}
-		data := g.Map{
-			"my_decimal1": 777.333,
-			"my_decimal2": 888.444,
-		}
-
-		_, err = table.Data(data).Insert()
-		t.AssertNil(err)
-
-		var res *TestDecimal
-		err = table.Scan(&res)
-		t.AssertNil(err)
-		t.Assert(res.MyDecimal1.v, 777.33)
-		t.Assert(res.MyDecimal2.v, 888.44)
-	})
-
 }

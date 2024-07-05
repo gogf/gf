@@ -21,7 +21,9 @@ const (
 )
 
 var (
-	convTableInfo = &convertTableInfo{}
+	convTableInfo = &convertTableInfo{
+		customStructFieldConvertFunc: make(map[structTypeName]map[structFieldName]fieldConvertFunc),
+	}
 	//
 	useCacheTableExperiment = true
 	// Mainly used to call the [convTableInfo.Delete] function

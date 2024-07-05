@@ -73,9 +73,12 @@ func (d *driverConvertFunc) GetOrSetColumnTypeConvertFunc(columnType string, fn 
 	if d.columnTypeConvertFunc == nil {
 		d.columnTypeConvertFunc = make(map[string]fieldConvertFunc)
 	}
+	columnType = strings.ToLower(columnType)
 	convFunc, ok := d.columnTypeConvertFunc[columnType]
 	if !ok {
-		d.columnTypeConvertFunc[columnType] = fn
+		if fn != nil {
+			d.columnTypeConvertFunc[columnType] = fn
+		}
 		return fn
 	}
 	return convFunc
@@ -105,6 +108,7 @@ func fromDriverGetFieldConvFunc(driverName, columnType string) fieldConvertFunc 
 	if driverConv == nil {
 		return nil
 	}
+
 	return driverConv.GetOrSetColumnTypeConvertFunc(columnType, nil)
 }
 
