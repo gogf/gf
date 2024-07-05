@@ -37,6 +37,8 @@ func init() {
 		Link: `pgsql:postgres:12345678@tcp(127.0.0.1:5432)`,
 	}
 
+	gdb.SetTestEnvironment(true)
+
 	//pgsql only permit to connect to the designation database.
 	//so you need to create the pgsql database before you use orm
 	gdb.AddConfigNode(gdb.DefaultGroupName, configNode)

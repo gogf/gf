@@ -60,6 +60,8 @@ func init() {
 
 	nodeInvalid := configNode
 
+	gdb.SetTestEnvironment(true)
+
 	gdb.AddConfigNode(DBGroupTest, configNode)
 	gdb.AddConfigNode(DBGroupPrefix, nodePrefix)
 	gdb.AddConfigNode(DBGroupInvalid, nodeInvalid)

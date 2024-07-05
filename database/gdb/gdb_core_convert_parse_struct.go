@@ -33,8 +33,12 @@ var (
 	// Will result in duplicate names when storing structures in [convTableInfo]
 	// So during testing, after testing a function, it is necessary to delete the registered ones
 	// During formal development, there is no need to delete it
-	isTextEnvironment = false
+	isTestEnvironment = false
 )
+
+func SetTestEnvironment(b bool) {
+	isTestEnvironment = true
+}
 
 func EnableCacheTableExperiment(b bool) {
 	useCacheTableExperiment = b
@@ -79,10 +83,9 @@ func (c *convertTableInfo) Add(structType reflect.Type, table *Table) {
 }
 
 func (c *convertTableInfo) Delete(structType reflect.Type) {
-	var (
-		tableName = getTableName(structType)
-	)
-	c.tablesMap.Delete(tableName)
+	if isTestEnvironment {
+		c.tablesMap.Delete(getTableName(structType))
+	}
 }
 
 func getTableName(pointerType reflect.Type) string {
