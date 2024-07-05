@@ -15,12 +15,11 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // SoftTimeType custom defines the soft time field type.
@@ -206,9 +205,7 @@ func (m *softTimeMaintainer) getSoftFieldNameAndType(
 				return nil, nil
 			}
 			for _, checkFiledName := range checkFiledNames {
-				fieldName, _ = gutil.MapPossibleItemByKey(
-					gconv.Map(fieldsMap), checkFiledName,
-				)
+				fieldName = getTableFields(fieldsMap, checkFiledName)
 				if fieldName != "" {
 					fieldType, _ = m.db.CheckLocalTypeForField(
 						ctx, fieldsMap[fieldName].Type, nil,
@@ -236,6 +233,23 @@ func (m *softTimeMaintainer) getSoftFieldNameAndType(
 	fieldName = cacheItem.FieldName
 	fieldType = cacheItem.FieldType
 	return
+}
+
+func getTableFields(fieldsMap map[string]*TableField, key string) string {
+	if len(fieldsMap) == 0 {
+		return ""
+	}
+	_, ok := fieldsMap[key]
+	if ok {
+		return key
+	}
+	key = utils.RemoveSymbols(key)
+	for k := range fieldsMap {
+		if utils.RemoveSymbols(k) == key {
+			return k
+		}
+	}
+	return ""
 }
 
 // GetWhereConditionForDelete retrieves and returns the condition string for soft deleting.
