@@ -206,6 +206,7 @@ func (m *softTimeMaintainer) getSoftFieldNameAndType(
 			}
 			for _, checkFiledName := range checkFiledNames {
 				fieldName = getTableFields(fieldsMap, checkFiledName)
+				//fieldName, _ = gutil.MapPossibleItemByKey(gconv.Map(fieldsMap), checkFiledName)
 				if fieldName != "" {
 					fieldType, _ = m.db.CheckLocalTypeForField(
 						ctx, fieldsMap[fieldName].Type, nil,
@@ -245,7 +246,7 @@ func getTableFields(fieldsMap map[string]*TableField, key string) string {
 	}
 	key = utils.RemoveSymbols(key)
 	for k := range fieldsMap {
-		if utils.RemoveSymbols(k) == key {
+		if strings.EqualFold(utils.RemoveSymbols(k), key) {
 			return k
 		}
 	}
