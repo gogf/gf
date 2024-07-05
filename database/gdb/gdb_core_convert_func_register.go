@@ -16,7 +16,6 @@ import (
 
 func registerFieldConvertFunc(ctx context.Context, db DB,
 	tableField *sql.ColumnType, structField reflect.StructField, structType reflect.Type) (convertFn fieldConvertFunc) {
-
 	convertFn = convTableInfo.getStructFieldConvertFunc(structType, structField.Name)
 	if convertFn != nil {
 		return convertFn
