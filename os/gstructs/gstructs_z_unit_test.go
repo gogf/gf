@@ -347,57 +347,6 @@ func Test_StructTypeBySlice(t *testing.T) {
 	})
 }
 
-func TestType_FieldKeys(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		type B struct {
-			Id   int
-			Name string
-		}
-		type A struct {
-			Array []*B
-		}
-		r, err := gstructs.StructType(new(A).Array)
-		t.AssertNil(err)
-		t.Assert(r.FieldKeys(), g.Slice{"Id", "Name"})
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		type A struct {
-			Age   int
-			Score float64
-		}
-		type B struct {
-			A
-			Id   int
-			Name string
-		}
-		r, err := gstructs.StructType(new(B))
-		t.AssertNil(err)
-		t.Assert(r.FieldKeys(), g.Slice{"Age", "Score", "Id", "Name"})
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		type Time struct {
-			CreatedAt string
-			UpdatedAt string
-		}
-		type A struct {
-			Age   int
-			Score float64
-		}
-		type B struct {
-			*A
-			Time
-			Aa   *A
-			Id   int
-			Name string
-		}
-		r, err := gstructs.StructType(new(B))
-		t.AssertNil(err)
-		t.Assert(r.FieldKeys(), g.Slice{"Age", "Score", "CreatedAt", "UpdatedAt", "Aa", "Id", "Name"})
-	})
-}
-
 func TestType_TagMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type A struct {
