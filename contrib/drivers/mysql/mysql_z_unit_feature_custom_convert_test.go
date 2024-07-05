@@ -7,6 +7,7 @@
 package mysql_test
 
 import (
+	"database/sql"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -107,10 +108,22 @@ func testCustomFieldConvertFunc(dest reflect.Value, src any) (err error) {
 	}
 	switch dest.Kind() {
 	case reflect.Float32, reflect.Float64:
-		dest.SetFloat(v + 100)
-	// case reflect.Int64,reflect.Uint64, ...:
+		dest.SetFloat(v)
+	case reflect.Int, reflect.Int64 /* reflect.Int16,reflect.Int32 */ :
+		dest.SetInt(int64(v))
+	case reflect.Uint, reflect.Uint64 /* reflect.Uint16,reflect.Uint32 */ :
+		dest.SetUint(uint64(v))
+	// case other types...:
 	default:
-		return fmt.Errorf("unsupported types: %v(%T)", src, src)
+		if dest.Kind() != reflect.Ptr {
+			dest = dest.Addr()
+			switch impl := dest.Interface().(type) {
+			case sql.Scanner:
+				return impl.Scan(v)
+			default:
+			}
+		}
+		return fmt.Errorf("Error: mysql_z_unit_feature_custom_convert_test.go:125  unsupported types: %v", dest.Type())
 	}
 	return nil
 }
@@ -129,8 +142,8 @@ func Test_Custom_Convert_RegisterDatabaseConvertFunc(t *testing.T) {
 			var res *TestDecimal
 			err := table.Scan(&res)
 			t.AssertNil(err)
-			t.Assert(res.MyDecimal1, 777.33+100)
-			t.Assert(res.MyDecimal2, 888.44+100)
+			t.Assert(res.MyDecimal1, 777.33)
+			t.Assert(res.MyDecimal2, 888.44)
 		})
 	})
 }
@@ -149,7 +162,7 @@ func Test_Custom_Convert_RegisterStructFieldConvertFunc(t *testing.T) {
 			var res *TestDecimal
 			err := table.Scan(&res)
 			t.AssertNil(err)
-			t.Assert(res.MyDecimal1, 777.33+100)
+			t.Assert(res.MyDecimal1, 777.33)
 			t.Assert(res.MyDecimal2.v, 888.44)
 		})
 	})
