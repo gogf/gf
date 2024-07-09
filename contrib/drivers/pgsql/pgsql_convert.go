@@ -19,9 +19,11 @@ import (
 
 // ConvertValueForField converts value to database acceptable value.
 func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) {
-	var (
-		fieldValueKind = reflect.TypeOf(fieldValue).Kind()
-	)
+	if fieldValue == nil {
+		return d.Core.ConvertValueForField(ctx, fieldType, fieldValue)
+	}
+
+	var fieldValueKind = reflect.TypeOf(fieldValue).Kind()
 
 	if fieldValueKind == reflect.Slice {
 		fieldValue = gstr.ReplaceByMap(gconv.String(fieldValue),
