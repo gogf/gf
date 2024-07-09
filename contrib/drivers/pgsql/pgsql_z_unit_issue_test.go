@@ -104,6 +104,7 @@ func Test_Issue3632(t *testing.T) {
 	})
 }
 
+// https://github.com/gogf/gf/issues/3668
 func Test_Issue3668(t *testing.T) {
 	type Issue3668 struct {
 		Text   interface{}
