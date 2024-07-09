@@ -21,9 +21,7 @@ const (
 )
 
 var (
-	convTableInfo = &convertTableInfo{
-		customStructFieldConvertFunc: make(map[structTypeName]map[structFieldName]fieldConvertFunc),
-	}
+	convTableInfo = &convertTableInfo{}
 	//
 	useCacheTableExperiment = true
 	// Mainly used to call the [convTableInfo.Delete] function
@@ -53,17 +51,6 @@ type convertTableInfo struct {
 	// key   = string
 	// value = *Table
 	tablesMap sync.Map
-	// Mainly used by [RegisterStructFieldConvertFunc] to register custom conversions
-	customStructFieldConvertFunc map[structTypeName]map[structFieldName]fieldConvertFunc
-}
-
-func (c *convertTableInfo) getStructFieldConvertFunc(structType reflect.Type, fieldName string) fieldConvertFunc {
-	tableConv, ok := c.customStructFieldConvertFunc[getTableName(structType)]
-	if !ok {
-		return nil
-	}
-	fn := tableConv[fieldName]
-	return fn
 }
 
 func (c *convertTableInfo) Get(structType reflect.Type) *Table {
@@ -231,7 +218,7 @@ func (t *Table) getStructFields(ctx context.Context, db DB, fieldsConvertInfoMap
 			fieldInfo.StructFieldIndex = append(parentIndex, i)
 			fieldInfo.StructFieldType = field.Type
 			fieldInfo.StructField = field
-			convertFn := registerFieldConvertFunc(ctx, db, fieldInfo.ColumnFieldType, fieldInfo.StructField, structType)
+			convertFn := registerFieldConvertFunc(ctx, db, fieldInfo.ColumnFieldType, fieldInfo.StructField)
 			fieldInfo.convertFunc = convertFn
 			matchedCount++
 		}

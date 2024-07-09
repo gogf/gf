@@ -15,8 +15,8 @@ import (
 )
 
 func registerFieldConvertFunc(ctx context.Context, db DB,
-	tableField *sql.ColumnType, structField reflect.StructField, structType reflect.Type) (convertFn fieldConvertFunc) {
-	convertFn = convTableInfo.getStructFieldConvertFunc(structType, structField.Name)
+	tableField *sql.ColumnType, structField reflect.StructField) (convertFn fieldConvertFunc) {
+	convertFn = getGoTypeConvertFunc(structField.Type)
 	if convertFn != nil {
 		return convertFn
 	}
@@ -64,7 +64,7 @@ func (t *typeConvertError) Error() string {
 
 type driverConvertFunc struct {
 	driverName string
-	// key = columnType
+	// key = {bigint, text, char, json, ...}
 	columnTypeConvertFunc map[string]fieldConvertFunc
 }
 
@@ -85,16 +85,18 @@ func (d *driverConvertFunc) GetOrSetColumnTypeConvertFunc(columnType string, fn 
 
 var (
 	// key = {mysql,mssql,oracle,pgsql, ...}
-	driverConvertFuncs = map[string]*driverConvertFunc{}
+	customDriverFieldTypeConvertFuncs = map[string]*driverConvertFunc{}
+	// key = {int,int8, others...}
+	customGoTypeConvertFuncs = map[reflect.Type]fieldConvertFunc{}
 )
 
 func getDriverConvertFunc(driverName string, init bool) *driverConvertFunc {
-	convertFunc, ok := driverConvertFuncs[driverName]
+	convertFunc, ok := customDriverFieldTypeConvertFuncs[driverName]
 	if !ok && init {
 		convertFunc = &driverConvertFunc{
 			driverName: driverName,
 		}
-		driverConvertFuncs[driverName] = convertFunc
+		customDriverFieldTypeConvertFuncs[driverName] = convertFunc
 	}
 	return convertFunc
 }
@@ -107,7 +109,6 @@ func fromDriverGetFieldConvFunc(driverName, columnType string) fieldConvertFunc 
 	if driverConv == nil {
 		return nil
 	}
-
 	return driverConv.GetOrSetColumnTypeConvertFunc(columnType, nil)
 }
 
@@ -126,22 +127,57 @@ func RegisterDatabaseConvertFunc(driverName, columnType string, fn fieldConvertF
 	databaseConv.GetOrSetColumnTypeConvertFunc(columnType, fn)
 }
 
-// RegisterStructFieldConvertFunc
-// Registering Field Conversion Functions for Structures
+// RegisterGoTypeConvertFunc
+// Registering Field Conversion Functions for Go Language Types
 // For example, if a field in the structure is of a third-party library type,
 // it is not possible to implement [sql.Scanner]
 // You can use this function to register a field conversion function,
 // which has a higher priority than [RegisterBaseConvertFunc]
-func RegisterStructFieldConvertFunc(structType reflect.Type, fieldName string, fn fieldConvertFunc) {
+func RegisterGoTypeConvertFunc(goType reflect.Type, fn fieldConvertFunc) {
 	if useCacheTableExperiment == false {
 		return
 	}
-	tableConv, ok := convTableInfo.customStructFieldConvertFunc[getTableName(structType)]
-	if !ok {
-		tableConv = make(map[structFieldName]fieldConvertFunc)
-		convTableInfo.customStructFieldConvertFunc[getTableName(structType)] = tableConv
+	if goType == nil || fn == nil {
+		panic(fmt.Errorf("parameter cannot be empty"))
 	}
-	tableConv[fieldName] = fn
+	addGoTypeConvertFunc(goType, fn)
+}
+
+func addGoTypeConvertFunc(goType reflect.Type, fn fieldConvertFunc) {
+	elemType, deref := getElemType(goType)
+	_, ok := customGoTypeConvertFuncs[elemType]
+	if ok {
+		panic(fmt.Errorf("repeatedly registering conversion functions for go type [%v]", goType))
+	}
+	customGoTypeConvertFuncs[elemType] = getPtrConvFunc(deref, fn)
+}
+
+func getGoTypeConvertFunc(goType reflect.Type) fieldConvertFunc {
+	elemType, _ := getElemType(goType)
+	conv := customGoTypeConvertFuncs[elemType]
+	return conv
+}
+
+func getElemType(typ reflect.Type) (reflect.Type, int) {
+	deref := 0
+	for {
+		if typ.Kind() != reflect.Ptr {
+			break
+		}
+		deref++
+		typ = typ.Elem()
+	}
+	return typ, deref
+}
+
+// If you are registering * int, you need to wrap it with a pointer conversion function
+// Users ensure that the type is non pointer type before operation
+// The same goes for multi-level pointers
+func getPtrConvFunc(deref int, fn fieldConvertFunc) fieldConvertFunc {
+	if deref > 0 {
+		return getPtrConvFunc(deref-1, ptrConverter(fn))
+	}
+	return fn
 }
 
 func checkStringIsEmpty(strs ...string) bool {

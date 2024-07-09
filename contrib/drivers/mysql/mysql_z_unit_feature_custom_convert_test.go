@@ -155,7 +155,7 @@ func Test_Custom_Convert_RegisterStructFieldConvertFunc(t *testing.T) {
 			MyDecimal1 MyDecimal         `orm:"my_decimal1"`
 			MyDecimal2 *sqlScanMyDecimal `orm:"my_decimal2"`
 		}
-		gdb.RegisterStructFieldConvertFunc(reflect.TypeOf(TestDecimal{}), "MyDecimal1", testCustomFieldConvertFunc)
+		gdb.RegisterGoTypeConvertFunc(reflect.TypeOf(MyDecimal(0)), testCustomFieldConvertFunc)
 		tableName := "test_decimal"
 		table := db.Model(tableName)
 		testCustomConvert(t, func(t *gtest.T) {
