@@ -14,7 +14,7 @@
 //      // others...
 // }
 // The convention for calling closure functions in Go language is usually to store&closure in the dx register
-// func request(fn {typ, data unsafe.Pointer}, ctx {typ, data unsafe.Pointer},req *HelloReq) (*HelloReq,error)
+// func request(fn {typ, data unsafe.Pointer}, ctx {typ, data unsafe.Pointer},req *HelloReq) (*HelloRes,error)
 TEXT  ·doAnyCallRequest_with_res_err(SB), $24
     MOVQ fn_data+8(FP),DX
 
