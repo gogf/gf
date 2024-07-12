@@ -10,7 +10,9 @@ import (
 	"bytes"
 	"context"
 	"reflect"
+	"runtime"
 	"strings"
+	"unsafe"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -257,6 +259,9 @@ func (s *Server) checkAndCreateFuncInfo(
 		return funcInfo, err
 	}
 	funcInfo.ReqStructFields = fields
+	if runtime.GOARCH == "amd64" {
+		funcInfo.handlerFuncClosure = funcInfo.Value.Interface()
+	}
 	funcInfo.Func = createRouterFunc(funcInfo)
 	return
 }
@@ -269,20 +274,29 @@ func createRouterFunc(funcInfo handlerFuncInfo) func(r *Request) {
 			inputValues = []reflect.Value{
 				reflect.ValueOf(r.Context()),
 			}
+			reqParameter unsafe.Pointer
 		)
 		if funcInfo.Type.NumIn() == 2 {
 			var inputObject reflect.Value
 			if funcInfo.Type.In(1).Kind() == reflect.Ptr {
 				inputObject = reflect.New(funcInfo.Type.In(1).Elem())
 				r.error = r.Parse(inputObject.Interface())
+				reqParameter = inputObject.UnsafePointer()
 			} else {
 				inputObject = reflect.New(funcInfo.Type.In(1).Elem()).Elem()
 				r.error = r.Parse(inputObject.Addr().Interface())
+				reqParameter = inputObject.Addr().UnsafePointer()
 			}
 			if r.error != nil {
 				return
 			}
 			inputValues = append(inputValues, inputObject)
+		}
+		if runtime.GOARCH == "amd64" {
+			if funcInfo.handlerFuncClosure != nil {
+				asmCall(&funcInfo, r, reqParameter)
+				return
+			}
 		}
 		// Call handler with dynamic created parameter values.
 		results := funcInfo.Value.Call(inputValues)
@@ -304,6 +318,47 @@ func createRouterFunc(funcInfo handlerFuncInfo) func(r *Request) {
 		}
 	}
 }
+
+func asmCall(funcInfo *handlerFuncInfo, r *Request, req unsafe.Pointer) {
+	type iface struct {
+		typ  unsafe.Pointer
+		data unsafe.Pointer
+	}
+	switch funcInfo.Type.NumOut() {
+	case 2:
+		if funcInfo.Type.Out(0).Kind() == reflect.Slice {
+			res, err := doAnyCallRequest_with_sliceRes_err(funcInfo.handlerFuncClosure, r.Context(), req)
+			sliceValue := reflect.New(funcInfo.Type.Out(0)).Elem().Interface()
+			out := (*iface)(unsafe.Pointer(&sliceValue))
+			(*out).data = unsafe.Pointer(&res)
+			r.handlerResponse = sliceValue
+			r.error = err
+		} else {
+			res, err := doAnyCallRequest_with_res_err(funcInfo.handlerFuncClosure, r.Context(), req)
+			outType := funcInfo.Type.Out(0).Elem()
+			outValue := reflect.New(outType).Interface()
+			out := (*iface)(unsafe.Pointer(&outValue))
+			(*out).data = res
+			r.handlerResponse = outValue
+			r.error = err
+		}
+	case 1:
+		err := doAnyCallRequest_with_err(funcInfo.handlerFuncClosure, r.Context(), req)
+		r.error = err
+	}
+}
+
+func doAnyCallRequest_with_err(fn any, ctx context.Context, req unsafe.Pointer) error
+
+func doAnyCallRequest_with_res_err(fn any, ctx context.Context, req unsafe.Pointer) (unsafe.Pointer, error)
+
+type _slice struct {
+	ptr unsafe.Pointer
+	len int
+	cap int
+}
+
+func doAnyCallRequest_with_sliceRes_err(fn any, ctx context.Context, req unsafe.Pointer) (_slice, error)
 
 // trimGeneric removes type definitions string from response type name if generic
 func trimGeneric(structName string) string {

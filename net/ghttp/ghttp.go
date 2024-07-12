@@ -77,11 +77,12 @@ type (
 
 	// handlerFuncInfo contains the HandlerFunc address and its reflection type.
 	handlerFuncInfo struct {
-		Func            HandlerFunc      // Handler function address.
-		Type            reflect.Type     // Reflect type information for current handler, which is used for extensions of the handler feature.
-		Value           reflect.Value    // Reflect value information for current handler, which is used for extensions of the handler feature.
-		IsStrictRoute   bool             // Whether strict route matching is enabled.
-		ReqStructFields []gstructs.Field // Request struct fields.
+		Func               HandlerFunc      // Handler function address.
+		Type               reflect.Type     // Reflect type information for current handler, which is used for extensions of the handler feature.
+		Value              reflect.Value    // Reflect value information for current handler, which is used for extensions of the handler feature.
+		IsStrictRoute      bool             // Whether strict route matching is enabled.
+		ReqStructFields    []gstructs.Field // Request struct fields.
+		handlerFuncClosure any              // handlerFuncClosure = Value.Interface()
 	}
 
 	// HandlerItem is the registered handler for route handling,
