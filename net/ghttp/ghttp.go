@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"sync"
 	"time"
+	"unsafe"
 
 	"github.com/gorilla/websocket"
 
@@ -77,12 +78,14 @@ type (
 
 	// handlerFuncInfo contains the HandlerFunc address and its reflection type.
 	handlerFuncInfo struct {
-		Func               HandlerFunc      // Handler function address.
-		Type               reflect.Type     // Reflect type information for current handler, which is used for extensions of the handler feature.
-		Value              reflect.Value    // Reflect value information for current handler, which is used for extensions of the handler feature.
-		IsStrictRoute      bool             // Whether strict route matching is enabled.
-		ReqStructFields    []gstructs.Field // Request struct fields.
-		handlerFuncClosure any              // handlerFuncClosure = Value.Interface()
+		Func                  HandlerFunc      // Handler function address.
+		Type                  reflect.Type     // Reflect type information for current handler, which is used for extensions of the handler feature.
+		Value                 reflect.Value    // Reflect value information for current handler, which is used for extensions of the handler feature.
+		IsStrictRoute         bool             // Whether strict route matching is enabled.
+		ReqStructFields       []gstructs.Field // Request struct fields.
+		handlerFuncClosure    any              // handlerFuncClosure = Value.Interface()
+		rawHandlerFuncCodePtr unsafe.Pointer   // The first parameter is the receiver
+		objPointer            unsafe.Pointer   // receiver object
 	}
 
 	// HandlerItem is the registered handler for route handling,

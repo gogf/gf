@@ -12,11 +12,12 @@ import (
 	"unsafe"
 )
 
-func asmCallStrictRoute(funcInfo *handlerFuncInfo, r *Request, req unsafe.Pointer) {
-	type iface struct {
-		typ  unsafe.Pointer
-		data unsafe.Pointer
-	}
+type iface struct {
+	typ  unsafe.Pointer
+	data unsafe.Pointer
+}
+
+func doAsmClosureCallStrictRoute(funcInfo *handlerFuncInfo, r *Request, req unsafe.Pointer) {
 	switch funcInfo.Type.NumOut() {
 	case 2:
 		if funcInfo.Type.Out(0).Kind() == reflect.Slice {
@@ -52,3 +53,34 @@ type _slice struct {
 }
 
 func doAnyCallRequest_with_sliceRes_err(fn any, ctx context.Context, req unsafe.Pointer) (_slice, error)
+
+func doAsmMethodCallStrictRoute(funcInfo *handlerFuncInfo, r *Request, req unsafe.Pointer) {
+	switch funcInfo.Type.NumOut() {
+	case 2:
+		if funcInfo.Type.Out(0).Kind() == reflect.Slice {
+			res, err := doMethodCallRequest_with_sliceRes_err(funcInfo.rawHandlerFuncCodePtr, funcInfo.objPointer, r.Context(), req)
+			sliceValue := reflect.New(funcInfo.Type.Out(0)).Elem().Interface()
+			out := (*iface)(unsafe.Pointer(&sliceValue))
+			(*out).data = unsafe.Pointer(&res)
+			r.handlerResponse = sliceValue
+			r.error = err
+		} else {
+			res, err := doMethodCallRequest_with_res_err(funcInfo.rawHandlerFuncCodePtr, funcInfo.objPointer, r.Context(), req)
+			outType := funcInfo.Type.Out(0).Elem()
+			outValue := reflect.New(outType).Interface()
+			out := (*iface)(unsafe.Pointer(&outValue))
+			(*out).data = res
+			r.handlerResponse = outValue
+			r.error = err
+		}
+	case 1:
+		err := doMethodCallRequest_with_err(funcInfo.rawHandlerFuncCodePtr, funcInfo.objPointer, r.Context(), req)
+		r.error = err
+	}
+}
+
+func doMethodCallRequest_with_err(fn, obj unsafe.Pointer, ctx context.Context, req unsafe.Pointer) error
+
+func doMethodCallRequest_with_res_err(fn, obj unsafe.Pointer, ctx context.Context, req unsafe.Pointer) (unsafe.Pointer, error)
+
+func doMethodCallRequest_with_sliceRes_err(fn, obj unsafe.Pointer, ctx context.Context, req unsafe.Pointer) (_slice, error)

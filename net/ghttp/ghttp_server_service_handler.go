@@ -27,7 +27,7 @@ import (
 // 2. func(context.Context, BizRequest)(BizResponse, error)
 func (s *Server) BindHandler(pattern string, handler interface{}) {
 	var ctx = context.TODO()
-	funcInfo, err := s.checkAndCreateFuncInfo(handler, "", "", "")
+	funcInfo, err := s.checkAndCreateFuncInfo(handler, "", "", "", reflect.Value{})
 	if err != nil {
 		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
@@ -148,7 +148,7 @@ func (s *Server) nameToUri(name string) string {
 }
 
 func (s *Server) checkAndCreateFuncInfo(
-	f interface{}, pkgPath, structName, methodName string,
+	f interface{}, pkgPath, structName, methodName string, obj reflect.Value,
 ) (funcInfo handlerFuncInfo, err error) {
 	funcInfo = handlerFuncInfo{
 		Type:  reflect.TypeOf(f),
@@ -261,6 +261,14 @@ func (s *Server) checkAndCreateFuncInfo(
 	funcInfo.ReqStructFields = fields
 	if runtime.GOARCH == "amd64" {
 		funcInfo.handlerFuncClosure = funcInfo.Value.Interface()
+		if methodName != "" {
+			objType := obj.Type()
+			funcInfo.objPointer = obj.UnsafePointer()
+			method, ok := objType.MethodByName(methodName)
+			if ok {
+				funcInfo.rawHandlerFuncCodePtr = method.Func.UnsafePointer()
+			}
+		}
 	}
 	funcInfo.Func = createRouterFunc(funcInfo)
 	return
@@ -293,8 +301,12 @@ func createRouterFunc(funcInfo handlerFuncInfo) func(r *Request) {
 			inputValues = append(inputValues, inputObject)
 		}
 		if runtime.GOARCH == "amd64" {
-			if funcInfo.IsStrictRoute && funcInfo.handlerFuncClosure != nil {
-				asmCallStrictRoute(&funcInfo, r, reqParameter)
+			if funcInfo.IsStrictRoute {
+				if funcInfo.rawHandlerFuncCodePtr == nil {
+					doAsmClosureCallStrictRoute(&funcInfo, r, reqParameter)
+				} else {
+					doAsmMethodCallStrictRoute(&funcInfo, r, reqParameter)
+				}
 				return
 			}
 		}

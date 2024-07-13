@@ -129,7 +129,7 @@ func (s *Server) doBindObject(ctx context.Context, in doBindObjectInput) {
 			objName = fmt.Sprintf(`(%s)`, objName)
 		}
 
-		funcInfo, err := s.checkAndCreateFuncInfo(reflectValue.Method(i).Interface(), pkgPath, objName, methodName)
+		funcInfo, err := s.checkAndCreateFuncInfo(reflectValue.Method(i).Interface(), pkgPath, objName, methodName, reflectValue)
 		if err != nil {
 			s.Logger().Fatalf(ctx, `%+v`, err)
 		}
@@ -225,7 +225,7 @@ func (s *Server) doBindObjectMethod(ctx context.Context, in doBindObjectMethodIn
 		objName = fmt.Sprintf(`(%s)`, objName)
 	}
 
-	funcInfo, err := s.checkAndCreateFuncInfo(methodValue.Interface(), pkgPath, objName, methodName)
+	funcInfo, err := s.checkAndCreateFuncInfo(methodValue.Interface(), pkgPath, objName, methodName, reflectValue)
 	if err != nil {
 		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
@@ -283,7 +283,7 @@ func (s *Server) doBindObjectRest(ctx context.Context, in doBindObjectInput) {
 			reflectValue.Method(i).Interface(),
 			pkgPath,
 			objName,
-			methodName,
+			methodName, reflectValue,
 		)
 		if err != nil {
 			s.Logger().Fatalf(ctx, `%+v`, err)
