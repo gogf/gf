@@ -37,8 +37,8 @@ jobs:
 
     strategy:
       matrix:
-        go-version: [ "1.18", "1.19", "1.20", "1.22" ]
-        goarch: [ "386", "amd64" ]
+        go-version: [ "1.21", "1.22" ]
+        goarch: [ "amd64" ]
 
     steps:
     - name: Setup Timezone
