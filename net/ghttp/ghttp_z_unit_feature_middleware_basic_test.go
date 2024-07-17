@@ -14,13 +14,15 @@ import (
 	"testing"
 	"time"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
+
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/trace"
 )
 
 func Test_BindMiddleware_Basic1(t *testing.T) {
@@ -772,10 +774,12 @@ func Test_MiddlewareHandlerGzipResponse(t *testing.T) {
 	})
 }
 
-type testTracerProvider struct{}
+type testTracerProvider struct {
+	noop.TracerProvider
+}
 
 var _ trace.TracerProvider = &testTracerProvider{}
 
 func (*testTracerProvider) Tracer(_ string, _ ...trace.TracerOption) trace.Tracer {
-	return trace.NewNoopTracerProvider().Tracer("")
+	return noop.NewTracerProvider().Tracer("")
 }
