@@ -205,7 +205,7 @@ func (m *softTimeMaintainer) getSoftFieldNameAndType(
 				return nil, nil
 			}
 			for _, checkFiledName := range checkFiledNames {
-				fieldName = getTableFields(fieldsMap, checkFiledName)
+				fieldName = searchFieldNameFromMap(fieldsMap, checkFiledName)
 				if fieldName != "" {
 					fieldType, _ = m.db.CheckLocalTypeForField(
 						ctx, fieldsMap[fieldName].Type, nil,
@@ -235,7 +235,7 @@ func (m *softTimeMaintainer) getSoftFieldNameAndType(
 	return
 }
 
-func getTableFields(fieldsMap map[string]*TableField, key string) string {
+func searchFieldNameFromMap(fieldsMap map[string]*TableField, key string) string {
 	if len(fieldsMap) == 0 {
 		return ""
 	}
