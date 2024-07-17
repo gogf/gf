@@ -781,5 +781,5 @@ type testTracerProvider struct {
 var _ trace.TracerProvider = &testTracerProvider{}
 
 func (*testTracerProvider) Tracer(_ string, _ ...trace.TracerOption) trace.Tracer {
-	return trace.NewNoopTracerProvider().Tracer("")
+	return noop.NewTracerProvider().Tracer("")
 }
