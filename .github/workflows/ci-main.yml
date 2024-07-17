@@ -186,7 +186,7 @@ jobs:
     strategy:
       matrix:
         go-version: [ "1.21", "1.22" ]
-        goarch: [ "amd64" ]
+        goarch: ["386", "amd64" ]
 
     steps:
     # TODO: szenius/set-timezone update to node16
