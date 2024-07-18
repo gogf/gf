@@ -8,6 +8,7 @@ package grpcx
 
 import (
 	"fmt"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -31,11 +32,11 @@ func (c modClient) NewGrpcClientConn(serviceNameOrAddress string, opts ...grpc.D
 	autoLoadAndRegisterFileRegistry()
 
 	var (
-		dialAddress       = serviceNameOrAddress
+		target            = serviceNameOrAddress
 		grpcClientOptions = make([]grpc.DialOption, 0)
 	)
 	if isServiceName(serviceNameOrAddress) {
-		dialAddress = fmt.Sprintf(
+		target = fmt.Sprintf(
 			`%s://%s`,
 			gsvc.Schema, gsvc.NewServiceWithName(serviceNameOrAddress).GetKey(),
 		)
@@ -69,7 +70,7 @@ func (c modClient) NewGrpcClientConn(serviceNameOrAddress string, opts ...grpc.D
 	grpcClientOptions = append(grpcClientOptions, c.ChainStream(
 		c.StreamTracing,
 	))
-	conn, err := grpc.Dial(dialAddress, grpcClientOptions...)
+	conn, err := grpc.NewClient(target, grpcClientOptions...)
 	if err != nil {
 		return nil, err
 	}
