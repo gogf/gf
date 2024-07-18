@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -19,7 +20,7 @@ import (
 
 // ConvertValueForField converts value to database acceptable value.
 func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) {
-	if fieldValue == nil {
+	if g.IsNil(fieldValue) {
 		return d.Core.ConvertValueForField(ctx, fieldType, fieldValue)
 	}
 
