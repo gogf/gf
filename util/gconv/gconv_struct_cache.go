@@ -24,13 +24,7 @@ var (
 			return make(map[string]struct{})
 		},
 	}
-	// Allow users to choose whether to enable this feature
-	convCacheExperiment = true
 )
-
-func UseConvCacheExperiment(b bool) {
-	convCacheExperiment = b
-}
 
 func poolGetUsedParamsKeyOrTagNameMap() map[string]struct{} {
 	return poolUsedParamsKeyOrTagNameMap.Get().(map[string]struct{})
@@ -45,39 +39,66 @@ func poolPutUsedParamsKeyOrTagNameMap(m map[string]struct{}) {
 }
 
 type convertFieldInfoBase struct {
-	// The index of a field may be a nested structure, so []int is required
+	// 字段的索引，可能是匿名嵌套的结构体，所以是[]int
 	fieldIndex []int
-	// All tags in the field include the field name, and the field name is the last one
+	// 字段的tag(可能是conv,param,p,c,json之类的),
+	// tags 包含字段的名字，并且在最后一个
 	tags []string
 	// 1.iUnmarshalValue
 	// 2.iUnmarshalText
 	// 3.iUnmarshalJSON
-	// Implemented one of the three types of interfaces mentioned above,
-	// except for [time.Time] and [gtime.Time]
+	// 实现了以上3种接口的类型
+	// 除了 [time.Time] and [gtime.Time]
 	isCommonInterface bool
-	isCustomConvert   bool
-	structField       reflect.StructField
-	// Field index used to store duplicate names
-	// Generally used for nested structures
-	otherFieldIndex [][]int
-	// Cache type conversion function
-	// For example:
-	// if the type of the field is int, then directly cache the [gconv.Int] function
+	// 注册自定义转换的时候，比如func(src *int)(dest *string,err error)
+	// 当结构体字段类型为string的时候，isCustomConvert 字段会为true
+	// 表示此次转换有可能会是自定义转换，具体还需要进一步确定
+	isCustomConvert bool
+	structField     reflect.StructField
+	// type Name struct{
+	//   LastName string
+	//   FirstName string
+	// }
+	// type User struct{
+	//  Name
+	//  LastName string
+	//  FirstName string
+	// }
+	// 当结构体可能是类似于User结构体这种情况时
+	// 只会存储两个字段LastName, FirstName使用不同的索引来代表不同的字段
+	// 对于 LastName 字段来说
+	// fieldIndex      = []int{0,1}
+	// otherSameNameFieldIndex = [][]int{[]int{1}}长度只有1，因为只有一个重复的,且索引为1
+	// 在赋值时会对这两个索引{0,1}和{1}都赋同样的值
+	// 目前对于重复的字段可以做以下3种可能
+	// 1.只设置第一个，后面重名的不设置
+	// 2.只设置最后一个
+	// 3.全部设置 (目前的做法)
+	otherSameNameFieldIndex [][]int
+	// 直接缓存字段的转换函数,对于简单的类型来说,相当于直接调用gconv.Int
 	convFunc func(from any, to reflect.Value)
 }
 
 type convertFieldInfo struct {
 	*convertFieldInfoBase
+	// 表示上次模糊匹配到的字段名字，可以缓存下来
+	// 如果用户没有设置tag之类的条件
+	// 而且字段名都匹配不上map的key时，缓存这个非常有用，可以省掉模糊匹配的开销
 	// lastFuzzKey string
 	lastFuzzKey atomic.Value
-	// The essence of this field is that there is only one unique key in the map,
+	// 这个字段主要用在 bindStructWithLoopParamsMap 方法中，
+	// 当map中同时存在一个字段的fieldName和tag时需要用到这个字段
+	// 例如为以下情况时
 	// field string `json:"name"`
 	// map = {
 	//	field:"f1",
 	//	name :"n1",
 	// }
-	// In this case, name shall prevail
-	isField                bool
+	// 这里应该以name为准,
+	// 在 bindStructWithLoopParamsMap 方法中，由于map的无序性，可能会导致先遍历到field
+	// 这个字段更多的是表示优先级，即name的优先级比field的优先级高，即便之前已经设置过了
+	isField bool
+	// removeSymbolsFieldName = utils.RemoveSymbols(fieldName)
 	removeSymbolsFieldName string
 }
 
@@ -85,7 +106,6 @@ func (c *convertFieldInfo) FieldName() string {
 	return c.tags[len(c.tags)-1]
 }
 
-// Only serving value
 func (c *convertFieldInfo) getFieldReflectValue(structValue reflect.Value) reflect.Value {
 	if len(c.fieldIndex) == 1 {
 		return structValue.Field(c.fieldIndex[0])
@@ -94,7 +114,7 @@ func (c *convertFieldInfo) getFieldReflectValue(structValue reflect.Value) refle
 }
 
 func (c *convertFieldInfo) getOtherFieldReflectValue(structValue reflect.Value, fieldLevel int) reflect.Value {
-	fieldIndex := c.otherFieldIndex[fieldLevel]
+	fieldIndex := c.otherSameNameFieldIndex[fieldLevel]
 	if len(fieldIndex) == 1 {
 		return structValue.Field(fieldIndex[0])
 	}
@@ -102,24 +122,23 @@ func (c *convertFieldInfo) getOtherFieldReflectValue(structValue reflect.Value, 
 }
 
 type convertStructInfo struct {
+	// This map field is mainly used in the [bindStructWithLoopParamsMap] method
 	// key = field's name
 	// Will save all field names and tags
 	// for example：
 	//	field string `json:"name"`
 	// It will be stored twice
 	fieldAndTagsMap map[string]*convertFieldInfo
-	// It will only be stored according to the name of the field,
-	// and only a few fields will be stored in the structure
-	fieldNamesMap map[string]*convertFieldInfo
+	// Using slices here can speed up the loop
+	fieldConvertInfos []*convertFieldInfo
 }
 
-func (structInfo *convertStructInfo) NoFields() bool {
+func (structInfo *convertStructInfo) HasNoFields() bool {
 	return len(structInfo.fieldAndTagsMap) == 0
 }
 
 func (structInfo *convertStructInfo) GetFieldInfo(fieldName string) *convertFieldInfo {
-	v := structInfo.fieldAndTagsMap[fieldName]
-	return v
+	return structInfo.fieldAndTagsMap[fieldName]
 }
 
 func (structInfo *convertStructInfo) AddField(field reflect.StructField, fieldIndex []int, priorityTags []string) {
@@ -130,7 +149,7 @@ func (structInfo *convertStructInfo) AddField(field reflect.StructField, fieldIn
 			structField:       field,
 			fieldIndex:        fieldIndex,
 			convFunc:          getFieldConvFunc(field.Type.String()),
-			isCustomConvert:   fieldTypeIsCustomConvertType(field.Type),
+			isCustomConvert:   checkTypeMaybeIsCustomConvert(field.Type),
 			tags:              getFieldTags(field, priorityTags),
 		}
 		for _, tag := range baseInfo.tags {
@@ -142,15 +161,15 @@ func (structInfo *convertStructInfo) AddField(field reflect.StructField, fieldIn
 			info.lastFuzzKey.Store(field.Name)
 			structInfo.fieldAndTagsMap[tag] = info
 			if info.isField {
-				structInfo.fieldNamesMap[field.Name] = info
+				structInfo.fieldConvertInfos = append(structInfo.fieldConvertInfos, info)
 			}
 		}
 		return
 	}
-	if convFieldInfo.otherFieldIndex == nil {
-		convFieldInfo.otherFieldIndex = make([][]int, 0, 2)
+	if convFieldInfo.otherSameNameFieldIndex == nil {
+		convFieldInfo.otherSameNameFieldIndex = make([][]int, 0, 2)
 	}
-	convFieldInfo.otherFieldIndex = append(convFieldInfo.otherFieldIndex, fieldIndex)
+	convFieldInfo.otherSameNameFieldIndex = append(convFieldInfo.otherSameNameFieldIndex, fieldIndex)
 	return
 }
 
@@ -169,7 +188,7 @@ func registerCacheConvFieldCustomType(fieldType reflect.Type) {
 	customConvTypeMap[fieldType] = struct{}{}
 }
 
-func fieldTypeIsCustomConvertType(fieldType reflect.Type) bool {
+func checkTypeMaybeIsCustomConvert(fieldType reflect.Type) bool {
 	if fieldType.Kind() == reflect.Ptr {
 		fieldType = fieldType.Elem()
 	}
@@ -243,32 +262,27 @@ func getFieldConvFunc(fieldType string) (convFunc func(from any, to reflect.Valu
 		convFunc = func(from any, to reflect.Value) {
 			to.SetBytes(Bytes(from))
 		}
-
 	default:
 		return nil
 	}
-
 	return convFunc
 }
 
 var (
+	// map[reflect.Type]*convertStructInfo
 	cacheConvStructsInfo = sync.Map{}
 )
 
 func setCacheConvStructInfo(structType reflect.Type, info *convertStructInfo) {
 	// Temporarily enabled as an experimental feature
-	if convCacheExperiment {
-		cacheConvStructsInfo.Store(structType, info)
-	}
+	cacheConvStructsInfo.Store(structType, info)
 }
 
 func getCacheConvStructInfo(structType reflect.Type) (*convertStructInfo, bool) {
 	// Temporarily enabled as an experimental feature
-	if convCacheExperiment {
-		v, ok := cacheConvStructsInfo.Load(structType)
-		if ok {
-			return v.(*convertStructInfo), ok
-		}
+	v, ok := cacheConvStructsInfo.Load(structType)
+	if ok {
+		return v.(*convertStructInfo), ok
 	}
 	return nil, false
 }
@@ -284,7 +298,6 @@ func getConvStructInfo(structType reflect.Type, priorityTag string) *convertStru
 	}
 	structInfo = &convertStructInfo{
 		fieldAndTagsMap: make(map[string]*convertFieldInfo),
-		fieldNamesMap:   make(map[string]*convertFieldInfo),
 	}
 	var (
 		priorityTagArray []string
@@ -376,7 +389,10 @@ func getFieldTags(field reflect.StructField, priorityTags []string) (tags []stri
 			array := strings.Split(value, ",")
 			// json:",omitempty"
 			trimmedTagName := strings.TrimSpace(array[0])
-			tags = append(tags, trimmedTagName)
+			if trimmedTagName != "" {
+				tags = append(tags, trimmedTagName)
+				break
+			}
 		}
 	}
 	tags = append(tags, field.Name)

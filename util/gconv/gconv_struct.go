@@ -173,7 +173,7 @@ func doStruct(
 	}
 	// For the structure types of 0 fieldAndTagsMap,
 	// they also need to be cached to prevent invalid logic
-	if convStructInfo.NoFields() {
+	if convStructInfo.HasNoFields() {
 		return nil
 	}
 	var (
@@ -194,8 +194,8 @@ func doStruct(
 					fieldInfo, paramKeyToAttrMap); err != nil {
 					return err
 				}
-				if len(fieldInfo.otherFieldIndex) > 0 {
-					if err = setOtherField(fieldInfo, paramsValue, pointerReflectValue, paramKeyToAttrMap); err != nil {
+				if len(fieldInfo.otherSameNameFieldIndex) > 0 {
+					if err = setOtherSameNameField(fieldInfo, paramsValue, pointerReflectValue, paramKeyToAttrMap); err != nil {
 						return err
 					}
 				}
@@ -207,14 +207,14 @@ func doStruct(
 		return nil
 	}
 	// If the length of [paramsMap] is less than the number of fields, then loop based on [paramsMap]
-	if len(paramsMap) < len(convStructInfo.fieldNamesMap) {
+	if len(paramsMap) < len(convStructInfo.fieldConvertInfos) {
 		return bindStructWithLoopParamsMap(paramsMap, convStructInfo, usedParamsKeyOrTagNameMap, pointerElemReflectValue, paramKeyToAttrMap)
 	}
 	return bindStructWithLoopConvFieldsMap(paramsMap, convStructInfo, usedParamsKeyOrTagNameMap, pointerElemReflectValue, paramKeyToAttrMap)
 }
 
-func setOtherField(fieldInfo *convertFieldInfo, srcValue any, structValue reflect.Value, paramKeyToAttrMap map[string]string) (err error) {
-	for i := 0; i < len(fieldInfo.otherFieldIndex); i++ {
+func setOtherSameNameField(fieldInfo *convertFieldInfo, srcValue any, structValue reflect.Value, paramKeyToAttrMap map[string]string) (err error) {
+	for i := range fieldInfo.otherSameNameFieldIndex {
 		fieldValue := fieldInfo.getOtherFieldReflectValue(structValue, i)
 		if err = bindVarToStructField(fieldValue, srcValue, fieldInfo, paramKeyToAttrMap); err != nil {
 			return err
@@ -257,8 +257,8 @@ func bindStructWithLoopParamsMap(paramsMap map[string]any,
 				fieldInfo, paramKeyToAttrMap); err != nil {
 				return err
 			}
-			if len(fieldInfo.otherFieldIndex) > 0 {
-				if err = setOtherField(fieldInfo, paramValue, structValue, paramKeyToAttrMap); err != nil {
+			if len(fieldInfo.otherSameNameFieldIndex) > 0 {
+				if err = setOtherSameNameField(fieldInfo, paramValue, structValue, paramKeyToAttrMap); err != nil {
 					return err
 				}
 			}
@@ -266,7 +266,8 @@ func bindStructWithLoopParamsMap(paramsMap map[string]any,
 			continue
 		}
 		// fuzz
-		for fieldName, fieldInfo = range convStructInfo.fieldNamesMap {
+		for _, fieldInfo = range convStructInfo.fieldConvertInfos {
+			fieldName = fieldInfo.FieldName()
 			_, ok = usedParamsKeyOrTagNameMap[fieldName]
 			if ok {
 				continue
@@ -289,8 +290,8 @@ func bindStructWithLoopParamsMap(paramsMap map[string]any,
 						fieldInfo, paramKeyToAttrMap); err != nil {
 						return err
 					}
-					if len(fieldInfo.otherFieldIndex) > 0 {
-						if err = setOtherField(fieldInfo, paramValue, structValue, paramKeyToAttrMap); err != nil {
+					if len(fieldInfo.otherSameNameFieldIndex) > 0 {
+						if err = setOtherSameNameField(fieldInfo, paramValue, structValue, paramKeyToAttrMap); err != nil {
 							return err
 						}
 					}
@@ -306,7 +307,7 @@ func bindStructWithLoopParamsMap(paramsMap map[string]any,
 func bindStructWithLoopConvFieldsMap(paramsMap map[string]any,
 	convStructInfo *convertStructInfo,
 	usedParamsKeyOrTagNameMap map[string]struct{},
-	pointerElemReflectValue reflect.Value,
+	structValue reflect.Value,
 	paramKeyToAttrMap map[string]string) (err error) {
 	var (
 		fieldInfo   *convertFieldInfo
@@ -317,7 +318,7 @@ func bindStructWithLoopConvFieldsMap(paramsMap map[string]any,
 		matched     bool
 		ok          bool
 	)
-	for _, fieldInfo = range convStructInfo.fieldNamesMap {
+	for _, fieldInfo = range convStructInfo.fieldConvertInfos {
 		for _, fieldTag := range fieldInfo.tags {
 			if paramValue, ok = paramsMap[fieldTag]; !ok {
 				continue
@@ -326,13 +327,13 @@ func bindStructWithLoopConvFieldsMap(paramsMap map[string]any,
 				matched = true
 				break
 			}
-			fieldValue = fieldInfo.getFieldReflectValue(pointerElemReflectValue)
+			fieldValue = fieldInfo.getFieldReflectValue(structValue)
 			if err = bindVarToStructField(fieldValue, paramValue,
 				fieldInfo, paramKeyToAttrMap); err != nil {
 				return err
 			}
-			if len(fieldInfo.otherFieldIndex) > 0 {
-				if err = setOtherField(fieldInfo, paramValue, pointerElemReflectValue, paramKeyToAttrMap); err != nil {
+			if len(fieldInfo.otherSameNameFieldIndex) > 0 {
+				if err = setOtherSameNameField(fieldInfo, paramValue, structValue, paramKeyToAttrMap); err != nil {
 					return err
 				}
 			}
@@ -353,14 +354,14 @@ func bindStructWithLoopConvFieldsMap(paramsMap map[string]any,
 		if ok {
 			// If paramValue is nil, you don't need to set any value
 			// Because getFieldReflectValue is already initialized
-			fieldValue = fieldInfo.getFieldReflectValue(pointerElemReflectValue)
+			fieldValue = fieldInfo.getFieldReflectValue(structValue)
 			if paramValue != nil {
 				if err = bindVarToStructField(fieldValue, paramValue,
 					fieldInfo, paramKeyToAttrMap); err != nil {
 					return err
 				}
-				if len(fieldInfo.otherFieldIndex) > 0 {
-					if err = setOtherField(fieldInfo, paramValue, pointerElemReflectValue, paramKeyToAttrMap); err != nil {
+				if len(fieldInfo.otherSameNameFieldIndex) > 0 {
+					if err = setOtherSameNameField(fieldInfo, paramValue, structValue, paramKeyToAttrMap); err != nil {
 						return err
 					}
 				}
