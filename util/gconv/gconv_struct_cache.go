@@ -214,19 +214,11 @@ func getFieldConvFunc(fieldType string) (convFunc func(from any, to reflect.Valu
 		return ptrConvFunc(convFunc)
 	}
 	switch fieldType {
-	case "int":
-		convFunc = func(from any, to reflect.Value) {
-			to.SetInt(int64(Int(from)))
-		}
-	case "int64":
+	case "int", "int8", "int16", "int32", "int64":
 		convFunc = func(from any, to reflect.Value) {
 			to.SetInt(Int64(from))
 		}
-	case "uint":
-		convFunc = func(from any, to reflect.Value) {
-			to.SetUint(uint64(Uint(from)))
-		}
-	case "uint64":
+	case "uint", "uint8", "uint16", "uint32", "uint64":
 		convFunc = func(from any, to reflect.Value) {
 			to.SetUint(Uint64(from))
 		}
