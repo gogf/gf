@@ -431,6 +431,41 @@ func Test_Issue1733(t *testing.T) {
 	})
 }
 
+// https://github.com/gogf/gf/issues/2102
+func Test_Issue2012(t *testing.T) {
+	table := "issue2012"
+	array := gstr.SplitAndTrim(gtest.DataContent(`issue2012.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table)
+
+	type TimeOnly struct {
+		Id       int         `json:"id"`
+		TimeOnly *gtime.Time `json:"timeOnly"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		timeOnly := gtime.New("15:04:05")
+		m := db.Model(table)
+
+		_, err := m.Insert(TimeOnly{
+			TimeOnly: gtime.New(timeOnly),
+		})
+		t.AssertNil(err)
+
+		_, err = m.Insert(g.Map{
+			"time_only": timeOnly,
+		})
+		t.AssertNil(err)
+
+		_, err = m.Insert("time_only", timeOnly)
+		t.AssertNil(err)
+	})
+}
+
 // https://github.com/gogf/gf/issues/2105
 func Test_Issue2105(t *testing.T) {
 	table := "issue2105"

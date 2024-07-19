@@ -8,6 +8,7 @@ package gtime_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -97,17 +98,70 @@ func Test_Format(t *testing.T) {
 		t.Assert(ti.Format("Y-m-d h:i:s"), "")
 		t.Assert(ti.FormatNew("Y-m-d h:i:s"), nil)
 		t.Assert(ti.FormatTo("Y-m-d h:i:s"), nil)
-		t.Assert(ti.Layout("Y-m-d h:i:s"), "")
-		t.Assert(ti.LayoutNew("Y-m-d h:i:s"), nil)
-		t.Assert(ti.LayoutTo("Y-m-d h:i:s"), nil)
+		t.Assert(ti.Layout("2006-01-02 15:04:05"), "")
+		t.Assert(ti.LayoutNew("2006-01-02 15:04:05"), nil)
+		t.Assert(ti.LayoutTo("2006-01-02 15:04:05"), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		timeOnly, err := gtime.StrToTime("15:04:05")
+		t.Assert(err, nil)
+
+		t.Assert(timeOnly.Format("Y-m-d h:i:s"), "0001-01-01 03:04:05")
+		t.Assert(timeOnly.FormatNew("Y-m-d h:i:s"), "0001-01-01 03:04:05")
+		t.Assert(timeOnly.Format("Y-m-d H:i:s"), "0001-01-01 15:04:05")
+		t.Assert(timeOnly.FormatNew("Y-m-d H:i:s"), "0001-01-01 15:04:05")
+		t.Assert(timeOnly.Layout("2006-01-02 15:04:05"), "0001-01-01 15:04:05")
+		t.Assert(timeOnly.LayoutNew("2006-01-02 15:04:05"), "0001-01-01 15:04:05")
+
+		t.Assert(timeOnly.Clone().FormatTo("Y-m-d h:i:s"), "0001-01-01 03:04:05")
+		t.Assert(timeOnly.Clone().FormatTo("Y-m-d H:i:s"), "0001-01-01 15:04:05")
+		t.Assert(timeOnly.Clone().LayoutTo("2006-01-02 15:04:05"), "0001-01-01 15:04:05")
+
+		d := timeOnly.UTC().Truncate(gtime.D)
+		t.Assert(d.IsZero(), true)
+
+		// std time.IsZero: zero time instant, January 1, year 1, 00:00:00 UTC
+		zero := time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
+		t.Assert(d.Time.Equal(zero), true)
 	})
 }
 
 func Test_Format_ZeroString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		// 0000-00-00 00:00:00 is not a valid time
 		timeTemp, err := gtime.StrToTime("0000-00-00 00:00:00")
 		t.AssertNE(err, nil)
+		t.AssertEQ(timeTemp, nil)
 		t.Assert(timeTemp.String(), "")
+	})
+
+	const zeroTimeStr = "0001-01-01 00:00:00"
+
+	gtest.C(t, func(t *gtest.T) {
+		// std time.IsZero: zero time instant, January 1, year 1, 00:00:00 UTC
+		zero := time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
+		t.AssertEQ(zero.IsZero(), true)
+		t.AssertEQ(zero.Format("2006-01-02 15:04:05"), zeroTimeStr)
+
+		year0 := time.Date(0, 1, 1, 0, 0, 0, 0, time.UTC)
+		t.AssertEQ(year0.IsZero(), false)
+		t.AssertEQ(year0.Format("2006-01-02 15:04:05"), "0000-01-01 00:00:00")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// set timezone to UTC to get zero time instant
+		err := gtime.SetTimeZone(time.UTC.String())
+		t.Assert(err, nil)
+
+		zeroDateTime, err := gtime.StrToTime(zeroTimeStr)
+		t.AssertEQ(err, nil)
+		t.Assert(zeroDateTime.IsZero(), true)
+		t.Assert(zeroDateTime.String(), "")
+
+		zeroTimeOnly, err := gtime.StrToTime("00:00:00")
+		t.AssertEQ(err, nil)
+		t.Assert(zeroTimeOnly.IsZero(), true)
+		t.Assert(zeroTimeOnly.String(), "")
 	})
 }
 

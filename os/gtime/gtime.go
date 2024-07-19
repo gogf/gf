@@ -233,7 +233,7 @@ func StrToTime(str string, format ...string) (*Time, error) {
 		for i := 0; i < 9-len(match[4]); i++ {
 			nsec *= 10
 		}
-		return NewFromTime(time.Date(0, time.Month(1), 1, hour, min, sec, nsec, local)), nil
+		return NewFromTime(time.Date(1, time.Month(1), 1, hour, min, sec, nsec, local)), nil
 	} else {
 		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `unsupported time converting for string "%s"`, str)
 	}
