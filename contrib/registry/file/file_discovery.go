@@ -10,6 +10,7 @@ import (
 	"context"
 
 	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -55,8 +56,12 @@ func (r *Registry) Watch(ctx context.Context, key string) (watcher gsvc.Watcher,
 		prefix:    key,
 		discovery: r,
 		ch:        make(chan gsvc.Service, 100),
+		closed:    gtype.NewBool(false),
 	}
 	_, err = gfsnotify.Add(r.path, func(event *gfsnotify.Event) {
+		if fileWatcher.closed.Val() {
+			return
+		}
 		if event.IsChmod() {
 			return
 		}
