@@ -229,6 +229,12 @@ func (r *Request) parseBody() {
 	if r.parsedBody {
 		return
 	}
+
+	// If it's binary data, it does not need to be parsed.
+	if contentType := r.Header.Get("Content-Type"); contentType == "" || gstr.Contains(contentType, "octet-stream") {
+		return
+	}
+
 	r.parsedBody = true
 	// There's no data posted.
 	if r.ContentLength == 0 {
@@ -273,6 +279,11 @@ func (r *Request) parseForm() {
 			err            error
 			repeatableRead = true
 		)
+		// If it's binary data, it does not need to be parsed.
+		if gstr.Contains(contentType, "octet-stream") {
+			return
+		}
+
 		if gstr.Contains(contentType, "multipart/") {
 			// To avoid big memory consuming.
 			// The `multipart/` type form always contains binary data, which is not necessary read twice.
