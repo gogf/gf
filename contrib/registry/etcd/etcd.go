@@ -12,6 +12,7 @@ import (
 	"time"
 
 	etcd3 "go.etcd.io/etcd/client/v3"
+	"google.golang.org/grpc"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -38,11 +39,24 @@ type Registry struct {
 type Option struct {
 	Logger       glog.ILogger
 	KeepaliveTTL time.Duration
+
+	// DialTimeout is the timeout for failing to establish a connection.
+	DialTimeout time.Duration
+
+	// AutoSyncInterval is the interval to update endpoints with its latest members.
+	AutoSyncInterval time.Duration
 }
 
 const (
 	// DefaultKeepAliveTTL is the default keepalive TTL.
 	DefaultKeepAliveTTL = 10 * time.Second
+
+	// DefaultDialTimeout is the timeout for failing to establish a connection.
+	DefaultDialTimeout = time.Second * 5
+
+	// DefaultAutoSyncInterval is the interval to update endpoints with its latest members.
+	// 0 disables auto-sync. By default auto-sync is disabled.
+	DefaultAutoSyncInterval = time.Second
 )
 
 // New creates and returns a new etcd registry.
@@ -80,6 +94,22 @@ func New(address string, option ...Option) gsvc.Registry {
 	if password != "" {
 		cfg.Password = password
 	}
+
+	cfg.DialTimeout = DefaultDialTimeout
+	cfg.AutoSyncInterval = DefaultAutoSyncInterval
+
+	var usedOption Option
+	if len(option) > 0 {
+		usedOption = option[0]
+	}
+	if usedOption.DialTimeout > 0 {
+		cfg.DialTimeout = usedOption.DialTimeout
+	}
+	if usedOption.AutoSyncInterval > 0 {
+		cfg.AutoSyncInterval = usedOption.AutoSyncInterval
+	}
+
+	cfg.DialOptions = []grpc.DialOption{grpc.WithBlock()}
 	client, err := etcd3.New(cfg)
 	if err != nil {
 		panic(gerror.Wrap(err, `create etcd client failed`))
@@ -90,18 +120,14 @@ func New(address string, option ...Option) gsvc.Registry {
 // NewWithClient creates and returns a new etcd registry with the given client.
 func NewWithClient(client *etcd3.Client, option ...Option) *Registry {
 	r := &Registry{
-		client: client,
-		kv:     etcd3.NewKV(client),
+		client:       client,
+		kv:           etcd3.NewKV(client),
+		logger:       g.Log(),
+		keepaliveTTL: DefaultKeepAliveTTL,
 	}
 	if len(option) > 0 {
 		r.logger = option[0].Logger
 		r.keepaliveTTL = option[0].KeepaliveTTL
-	}
-	if r.logger == nil {
-		r.logger = g.Log()
-	}
-	if r.keepaliveTTL == 0 {
-		r.keepaliveTTL = DefaultKeepAliveTTL
 	}
 	return r
 }
