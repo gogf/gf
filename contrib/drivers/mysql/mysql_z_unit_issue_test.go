@@ -1024,7 +1024,7 @@ func Test_Issue2552_ClearTableFieldsAll(t *testing.T) {
 		ctx = context.Background()
 		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
 			one, err := db.Model(table).Ctx(ctx).One()
-			t.Assert(len(one), 5)
+			t.Assert(len(one), 6)
 			return err
 		})
 		t.AssertNil(err)
@@ -1039,7 +1039,7 @@ func Test_Issue2552_ClearTableFieldsAll(t *testing.T) {
 		ctx = context.Background()
 		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
 			one, err := db.Model(table).Ctx(ctx).One()
-			t.Assert(len(one), 4)
+			t.Assert(len(one), 5)
 			return err
 		})
 		t.AssertNil(err)
@@ -1070,7 +1070,7 @@ func Test_Issue2552_ClearTableFields(t *testing.T) {
 		ctx = context.Background()
 		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
 			one, err := db.Model(table).Ctx(ctx).One()
-			t.Assert(len(one), 5)
+			t.Assert(len(one), 6)
 			return err
 		})
 		t.AssertNil(err)
@@ -1085,7 +1085,7 @@ func Test_Issue2552_ClearTableFields(t *testing.T) {
 		ctx = context.Background()
 		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
 			one, err := db.Model(table).Ctx(ctx).One()
-			t.Assert(len(one), 4)
+			t.Assert(len(one), 5)
 			return err
 		})
 		t.AssertNil(err)

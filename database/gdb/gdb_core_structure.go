@@ -117,11 +117,19 @@ func (c *Core) ConvertValueForField(ctx context.Context, fieldType string, field
 		case time.Time:
 			if r.IsZero() {
 				convertedValue = nil
+			} else if fieldType == fieldTypeDate {
+				convertedValue = r.Format(time.DateOnly)
+			} else if fieldType == fieldTypeTime {
+				convertedValue = r.Format(time.TimeOnly)
 			}
 
 		case gtime.Time:
 			if r.IsZero() {
 				convertedValue = nil
+			} else if fieldType == fieldTypeDate {
+				convertedValue = r.Layout(time.DateOnly)
+			} else if fieldType == fieldTypeTime {
+				convertedValue = r.Layout(time.TimeOnly)
 			} else {
 				convertedValue = r.Time
 			}
@@ -129,11 +137,20 @@ func (c *Core) ConvertValueForField(ctx context.Context, fieldType string, field
 		case *gtime.Time:
 			if r.IsZero() {
 				convertedValue = nil
+			} else if fieldType == fieldTypeDate {
+				convertedValue = r.Layout(time.DateOnly)
+			} else if fieldType == fieldTypeTime {
+				convertedValue = r.Layout(time.TimeOnly)
 			} else {
 				convertedValue = r.Time
 			}
 
 		case *time.Time:
+			if r != nil && fieldType == fieldTypeDate {
+				convertedValue = r.Format(time.DateOnly)
+			} else if r != nil && fieldType == fieldTypeTime {
+				convertedValue = r.Format(time.TimeOnly)
+			}
 			// Nothing to do.
 
 		case Counter, *Counter:

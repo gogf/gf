@@ -2335,7 +2335,7 @@ func Test_Model_FieldsEx(t *testing.T) {
 		r, err := db.Model(table).FieldsEx("create_time, id").Where("id in (?)", g.Slice{1, 2}).Order("id asc").All()
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
-		t.Assert(len(r[0]), 3)
+		t.Assert(len(r[0]), 4)
 		t.Assert(r[0]["id"], "")
 		t.Assert(r[0]["passport"], "user_1")
 		t.Assert(r[0]["password"], "pass_1")
@@ -2982,7 +2982,7 @@ func Test_Model_FieldsEx_AutoMapping(t *testing.T) {
 			"CreateTime": 1,
 		}).Where("id", 2).One()
 		t.AssertNil(err)
-		t.Assert(len(one), 2)
+		t.Assert(len(one), 3)
 		t.Assert(one["id"], 2)
 		t.Assert(one["nickname"], "name_2")
 	})
@@ -2999,7 +2999,7 @@ func Test_Model_FieldsEx_AutoMapping(t *testing.T) {
 			CreateTime: 0,
 		}).Where("id", 2).One()
 		t.AssertNil(err)
-		t.Assert(len(one), 2)
+		t.Assert(len(one), 3)
 		t.Assert(one["id"], 2)
 		t.Assert(one["nickname"], "name_2")
 	})

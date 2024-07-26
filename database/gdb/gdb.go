@@ -492,6 +492,7 @@ const (
 	fieldTypeBool       = "bool"
 	fieldTypeBit        = "bit"
 	fieldTypeDate       = "date"
+	fieldTypeTime       = "time"
 	fieldTypeDatetime   = "datetime"
 	fieldTypeTimestamp  = "timestamp"
 	fieldTypeTimestampz = "timestamptz"
