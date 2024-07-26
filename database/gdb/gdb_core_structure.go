@@ -118,18 +118,18 @@ func (c *Core) ConvertValueForField(ctx context.Context, fieldType string, field
 			if r.IsZero() {
 				convertedValue = nil
 			} else if fieldType == fieldTypeDate {
-				convertedValue = r.Format(time.DateOnly)
+				convertedValue = r.Format("2006-01-02")
 			} else if fieldType == fieldTypeTime {
-				convertedValue = r.Format(time.TimeOnly)
+				convertedValue = r.Format("15:04:05")
 			}
 
 		case gtime.Time:
 			if r.IsZero() {
 				convertedValue = nil
 			} else if fieldType == fieldTypeDate {
-				convertedValue = r.Layout(time.DateOnly)
+				convertedValue = r.Layout("2006-01-02")
 			} else if fieldType == fieldTypeTime {
-				convertedValue = r.Layout(time.TimeOnly)
+				convertedValue = r.Layout("15:04:05")
 			} else {
 				convertedValue = r.Time
 			}
@@ -138,18 +138,18 @@ func (c *Core) ConvertValueForField(ctx context.Context, fieldType string, field
 			if r.IsZero() {
 				convertedValue = nil
 			} else if fieldType == fieldTypeDate {
-				convertedValue = r.Layout(time.DateOnly)
+				convertedValue = r.Layout("2006-01-02")
 			} else if fieldType == fieldTypeTime {
-				convertedValue = r.Layout(time.TimeOnly)
+				convertedValue = r.Layout("15:04:05")
 			} else {
 				convertedValue = r.Time
 			}
 
 		case *time.Time:
 			if r != nil && fieldType == fieldTypeDate {
-				convertedValue = r.Format(time.DateOnly)
+				convertedValue = r.Format("2006-01-02")
 			} else if r != nil && fieldType == fieldTypeTime {
-				convertedValue = r.Format(time.TimeOnly)
+				convertedValue = r.Format("15:04:05")
 			}
 			// Nothing to do.
 
