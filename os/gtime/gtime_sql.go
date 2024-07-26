@@ -26,3 +26,20 @@ func (t *Time) Value() (driver.Value, error) {
 	}
 	return t.Time, nil
 }
+
+// ValueForFieldType is the interface providing the Value method for package database/sql/driver
+// for retrieving value from golang variable to database.
+func (t *Time) ValueForFieldType(fieldType string) (driver.Value, error) {
+	if t == nil {
+		return nil, nil
+	}
+	if t.IsZero() {
+		return nil, nil
+	}
+	if fieldType == "date" {
+		return t.Layout("2006-01-02"), nil
+	} else if fieldType == "time" {
+		return t.Layout("15:04:05"), nil
+	}
+	return t.Time, nil
+}
