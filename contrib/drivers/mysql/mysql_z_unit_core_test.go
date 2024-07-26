@@ -195,6 +195,7 @@ func Test_DB_Insert(t *testing.T) {
 				"passport":    "t300",
 				"password":    "25d55ad283aa400af464c76d713c07ad",
 				"nickname":    "T300",
+				"create_time": timeStr,
 				"create_date": gTime,
 			},
 		})
