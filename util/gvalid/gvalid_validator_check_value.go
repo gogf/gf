@@ -38,6 +38,9 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 	if in.Rule == "" {
 		return nil
 	}
+	if v.fieldBail {
+		in.Rule = "bail|" + in.Rule
+	}
 	// It converts value to string and then does the validation.
 	var (
 		// Do not trim it as the space is also part of the value.
