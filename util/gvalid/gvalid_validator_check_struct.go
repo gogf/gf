@@ -132,6 +132,12 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 			fieldName       = field.Name()                  // Attribute name.
 			name, rule, msg = ParseTagValue(field.TagValue) // The `name` is different from `attribute alias`, which is used for validation only.
 		)
+		// It uses json tag value as alias name if exists.
+		if len(name) == 0 && v.jsonTagAsAlias {
+			if jsonTag := field.Tag("json"); jsonTag != "" && jsonTag != "-" {
+				name = strings.Split(jsonTag, ",")[0]
+			}
+		}
 		if len(name) == 0 {
 			if value, ok := fieldToAliasNameMap[fieldName]; ok {
 				// It uses alias name of the attribute if its alias name tag exists.

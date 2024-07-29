@@ -512,3 +512,31 @@ func Test_CheckStruct_PointerAttribute(t *testing.T) {
 		t.Assert(err.String(), "The Age value `0` must be equal or greater than 18")
 	})
 }
+
+func Test_CheckStruct_JsonTagAsAlias(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Req struct {
+			Id       uint   `v:"min:10"`
+			Name     string `json:"" v:"min-length:12"`
+			Level    uint   `json:"-" v:"min:10"`
+			HomeAddr string `json:"home_addr" v:"min-length:30"`
+			Age      uint   `json:"age,omitempty" v:"min:18"`
+			Salary   uint   `json:",omitempty" v:"min:60000"`
+		}
+		req := Req{
+			Id:       2,
+			Name:     "johnson",
+			Level:    4,
+			HomeAddr: "Shenzhen",
+			Age:      6,
+			Salary:   1000,
+		}
+		err := g.Validator().JsonTagAsAlias().Data(req).Run(context.TODO())
+		t.Assert(err.Maps()["Id"]["min"], "The Id value `2` must be equal or greater than 10")
+		t.Assert(err.Maps()["Name"]["min-length"], "The Name value `johnson` length must be equal or greater than 12")
+		t.Assert(err.Maps()["Level"]["min"], "The Level value `4` must be equal or greater than 10")
+		t.Assert(err.Maps()["home_addr"]["min-length"], "The home_addr value `Shenzhen` length must be equal or greater than 30")
+		t.Assert(err.Maps()["age"]["min"], "The age value `6` must be equal or greater than 18")
+		t.Assert(err.Maps()["Salary"]["min"], "The Salary value `1000` must be equal or greater than 60000")
+	})
+}

@@ -28,8 +28,10 @@ type Validator struct {
 	ruleFuncMap                       map[string]RuleFunc // ruleFuncMap stores custom rule functions for current Validator.
 	useAssocInsteadOfObjectAttributes bool                // Using `assoc` as its validation source instead of attribute values from `Object`.
 	bail                              bool                // Stop validation after the first validation error.
+	fieldBail                         bool                // Stop field validation after the first validation error.
 	foreach                           bool                // It tells the next validation using current value as an array and validates each of its element.
 	caseInsensitive                   bool                // Case-Insensitive configuration for those rules that need value comparison.
+	jsonTagAsAlias                    bool                // Using the JSON tag value as an alias when the alias name is not set in the validation rule.
 }
 
 // New creates and returns a new Validator.
@@ -109,6 +111,13 @@ func (v *Validator) Bail() *Validator {
 	return newValidator
 }
 
+// FieldBail sets the mark for stopping field validation after the first validation error.
+func (v *Validator) FieldBail() *Validator {
+	newValidator := v.Clone()
+	newValidator.fieldBail = true
+	return newValidator
+}
+
 // Foreach tells the next validation using current value as an array and validates each of its element.
 // Note that this decorating rule takes effect just once for next validation rule, specially for single value validation.
 func (v *Validator) Foreach() *Validator {
@@ -121,6 +130,13 @@ func (v *Validator) Foreach() *Validator {
 func (v *Validator) Ci() *Validator {
 	newValidator := v.Clone()
 	newValidator.caseInsensitive = true
+	return newValidator
+}
+
+// JsonTagAsAlias sets using the JSON tag value as an alias name.
+func (v *Validator) JsonTagAsAlias() *Validator {
+	newValidator := v.Clone()
+	newValidator.jsonTagAsAlias = true
 	return newValidator
 }
 
