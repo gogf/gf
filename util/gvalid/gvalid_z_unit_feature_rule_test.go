@@ -1206,6 +1206,63 @@ func Test_Bail(t *testing.T) {
 	})
 }
 
+func Test_FieldBail(t *testing.T) {
+	// check value with no bail
+	gtest.C(t, func(t *gtest.T) {
+		err := g.Validator().FieldBail().
+			Rules("required|min:1|between:1,100").
+			Messages("|check_value_nobail min number is 1|check_value_nobail size is between 1 and 100").
+			Data(-1).Run(ctx)
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "check_value_nobail min number is 1")
+	})
+
+	// check value with bail
+	gtest.C(t, func(t *gtest.T) {
+		err := g.Validator().FieldBail().
+			Rules("bail|required|min:1|between:1,100").
+			Messages("||check_value_bail min number is 1|check_value_bail size is between 1 and 100").
+			Data(-1).Run(ctx)
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "check_value_bail min number is 1")
+	})
+
+	// struct with no bail
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			Page int `v:"required|min:1|between:1,100 # |check_struct_nobail page min number is 1|check_struct_nobail page is between 1 and 100"`
+			Size int `v:"required|min:1|between:1,100 # |check_struct_nobail size min number is 1|check_struct_nobail size is between 1 and 100"`
+		}
+		obj := &Params{
+			Page: -1,
+			Size: -1,
+		}
+		err := g.Validator().FieldBail().Data(obj).Run(ctx)
+		t.AssertNE(err, nil)
+		t.Assert(err.Maps()["Page"]["min"], "check_struct_nobail page min number is 1")
+		t.Assert(err.Maps()["Size"]["min"], "check_struct_nobail size min number is 1")
+	})
+	// struct with bail
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			Page int `v:"bail|required|min:1|between:1,100 # ||check_struct_bail page min number is 1|check_struct_bail page is between 1 and 100"`
+			Size int `v:"bail|required|min:1|between:1,100 # ||check_struct_bail size min number is 1|check_struct_bail size is between 1 and 100"`
+		}
+		obj := &Params{
+			Page: -1,
+			Size: -1,
+		}
+		err := g.Validator().FieldBail().Data(obj).Run(ctx)
+		t.AssertNE(err, nil)
+		t.Assert(err.Maps()["Page"]["min"], "check_struct_bail page min number is 1")
+		_, pageMaxExists := err.Maps()["Page"]["max"]
+		t.Assert(pageMaxExists, false)
+		t.Assert(err.Maps()["Size"]["min"], "check_struct_bail size min number is 1")
+		_, sizeMaxExists := err.Maps()["Size"]["max"]
+		t.Assert(sizeMaxExists, false)
+	})
+}
+
 func Test_After(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Params struct {
