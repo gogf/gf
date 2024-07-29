@@ -76,6 +76,9 @@ func (r GroupScript) ScriptExists(ctx context.Context, sha1 string, sha1s ...str
 	s = append(s, "Exists")
 	s = append(s, sha1Array...)
 	result, err := r.Operation.Do(ctx, "Script", s...)
+	if err != nil {
+		return nil, err
+	}
 	var (
 		m           = make(map[string]bool)
 		resultArray = result.Vars()
