@@ -53,6 +53,9 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 	)
 	switch messages := in.Messages.(type) {
 	case string:
+		if v.fieldBail {
+			messages = "|" + messages
+		}
 		msgArray = strings.Split(messages, "|")
 
 	default:

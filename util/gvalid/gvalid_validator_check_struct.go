@@ -134,8 +134,8 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		)
 		// It uses json tag value as alias name if exists.
 		if len(name) == 0 && v.jsonTagAsAlias {
-			if jsonTag := field.Tag("json"); len(jsonTag) > 0 {
-				name = jsonTag
+			if jsonTag := field.Tag("json"); jsonTag != "" && jsonTag != "-" {
+				name = strings.Split(jsonTag, ",")[0]
 			}
 		}
 		if len(name) == 0 {
