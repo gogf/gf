@@ -83,13 +83,6 @@ func (c *Core) ConvertValueForField(ctx context.Context, fieldType string, field
 		err            error
 		convertedValue = fieldValue
 	)
-	// If `value` implements interface `gdb.ValuerForFieldType`, it then uses the interface for value converting.
-	if valuer, ok := fieldValue.(ValuerForFieldType); ok {
-		if convertedValue, err = valuer.ValueForFieldType(fieldType); err != nil {
-			return nil, err
-		}
-		return convertedValue, nil
-	}
 	// If `value` implements interface `driver.Valuer`, it then uses the interface for value converting.
 	if valuer, ok := fieldValue.(driver.Valuer); ok {
 		if convertedValue, err = valuer.Value(); err != nil {
@@ -129,22 +122,38 @@ func (c *Core) ConvertValueForField(ctx context.Context, fieldType string, field
 			} else if fieldType == fieldTypeTime {
 				convertedValue = r.Format("15:04:05")
 			}
+
 		case *time.Time:
-			if r != nil && fieldType == fieldTypeDate {
+			if r == nil {
+				// Nothing to do.
+			} else if fieldType == fieldTypeDate {
 				convertedValue = r.Format("2006-01-02")
-			} else if r != nil && fieldType == fieldTypeTime {
+			} else if fieldType == fieldTypeTime {
 				convertedValue = r.Format("15:04:05")
 			}
-			// Nothing to do.
 
 		case gtime.Time:
-			if convertedValue, err = r.ValueForFieldType(fieldType); err != nil {
-				return nil, err
+			if r.IsZero() {
+				convertedValue = nil
+			} else if fieldType == fieldTypeDate {
+				convertedValue = r.Layout("2006-01-02")
+			} else if fieldType == fieldTypeTime {
+				convertedValue = r.Layout("15:04:05")
+			} else {
+				convertedValue = r.Time
 			}
+
 		case *gtime.Time:
-			if convertedValue, err = r.ValueForFieldType(fieldType); err != nil {
-				return nil, err
+			if r.IsZero() {
+				convertedValue = nil
+			} else if fieldType == fieldTypeDate {
+				convertedValue = r.Layout("2006-01-02")
+			} else if fieldType == fieldTypeTime {
+				convertedValue = r.Layout("15:04:05")
+			} else {
+				convertedValue = r.Time
 			}
+
 		case Counter, *Counter:
 			// Nothing to do.
 
@@ -257,7 +266,10 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 		return LocalTypeDate, nil
 
 	case
-		fieldTypeTime,
+		fieldTypeTime:
+		return LocalTypeTime, nil
+
+	case
 		fieldTypeDatetime,
 		fieldTypeTimestamp,
 		fieldTypeTimestampz:
@@ -363,12 +375,18 @@ func (c *Core) ConvertValueForLocal(
 		return gconv.Bool(fieldValue), nil
 
 	case LocalTypeDate:
-		// Date without time.
 		if t, ok := fieldValue.(time.Time); ok {
 			return gtime.NewFromTime(t).Format("Y-m-d"), nil
 		}
 		t, _ := gtime.StrToTime(gconv.String(fieldValue))
 		return t.Format("Y-m-d"), nil
+
+	case LocalTypeTime:
+		if t, ok := fieldValue.(time.Time); ok {
+			return gtime.NewFromTime(t).Format("H:i:s"), nil
+		}
+		t, _ := gtime.StrToTime(gconv.String(fieldValue))
+		return t.Format("H:i:s"), nil
 
 	case LocalTypeDatetime:
 		if t, ok := fieldValue.(time.Time); ok {
