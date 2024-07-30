@@ -10,7 +10,9 @@ import (
 	"bytes"
 	"context"
 	"reflect"
+	"runtime"
 	"strings"
+	"unsafe"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -25,7 +27,7 @@ import (
 // 2. func(context.Context, BizRequest)(BizResponse, error)
 func (s *Server) BindHandler(pattern string, handler interface{}) {
 	var ctx = context.TODO()
-	funcInfo, err := s.checkAndCreateFuncInfo(handler, "", "", "")
+	funcInfo, err := s.checkAndCreateFuncInfo(handler, "", "", "", reflect.Value{})
 	if err != nil {
 		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
@@ -146,7 +148,7 @@ func (s *Server) nameToUri(name string) string {
 }
 
 func (s *Server) checkAndCreateFuncInfo(
-	f interface{}, pkgPath, structName, methodName string,
+	f interface{}, pkgPath, structName, methodName string, obj reflect.Value,
 ) (funcInfo handlerFuncInfo, err error) {
 	funcInfo = handlerFuncInfo{
 		Type:  reflect.TypeOf(f),
@@ -257,6 +259,17 @@ func (s *Server) checkAndCreateFuncInfo(
 		return funcInfo, err
 	}
 	funcInfo.ReqStructFields = fields
+	if runtime.GOARCH == "amd64" {
+		funcInfo.handlerFuncClosure = funcInfo.Value.Interface()
+		if methodName != "" {
+			objType := obj.Type()
+			funcInfo.objPointer = obj.UnsafePointer()
+			method, ok := objType.MethodByName(methodName)
+			if ok {
+				funcInfo.rawHandlerFuncCodePtr = method.Func.UnsafePointer()
+			}
+		}
+	}
 	funcInfo.Func = createRouterFunc(funcInfo)
 	return
 }
@@ -269,20 +282,33 @@ func createRouterFunc(funcInfo handlerFuncInfo) func(r *Request) {
 			inputValues = []reflect.Value{
 				reflect.ValueOf(r.Context()),
 			}
+			reqParameter unsafe.Pointer
 		)
 		if funcInfo.Type.NumIn() == 2 {
 			var inputObject reflect.Value
 			if funcInfo.Type.In(1).Kind() == reflect.Ptr {
 				inputObject = reflect.New(funcInfo.Type.In(1).Elem())
 				r.error = r.Parse(inputObject.Interface())
+				reqParameter = inputObject.UnsafePointer()
 			} else {
 				inputObject = reflect.New(funcInfo.Type.In(1).Elem()).Elem()
 				r.error = r.Parse(inputObject.Addr().Interface())
+				reqParameter = inputObject.Addr().UnsafePointer()
 			}
 			if r.error != nil {
 				return
 			}
 			inputValues = append(inputValues, inputObject)
+		}
+		if runtime.GOARCH == "amd64" {
+			if funcInfo.IsStrictRoute {
+				if funcInfo.rawHandlerFuncCodePtr == nil {
+					doAsmClosureCallStrictRoute(&funcInfo, r, reqParameter)
+				} else {
+					doAsmMethodCallStrictRoute(&funcInfo, r, reqParameter)
+				}
+				return
+			}
 		}
 		// Call handler with dynamic created parameter values.
 		results := funcInfo.Value.Call(inputValues)
