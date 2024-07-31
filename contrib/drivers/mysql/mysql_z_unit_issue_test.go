@@ -431,6 +431,45 @@ func Test_Issue1733(t *testing.T) {
 	})
 }
 
+// https://github.com/gogf/gf/issues/2012
+func Test_Issue2012(t *testing.T) {
+	table := "time_only_" + guid.S()
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE %s(
+			id int(8) unsigned zerofill NOT NULL AUTO_INCREMENT,
+			time_only time,
+			PRIMARY KEY (id)
+	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table,
+	)); err != nil {
+		gtest.AssertNil(err)
+	}
+	defer dropTable(table)
+
+	type TimeOnly struct {
+		Id       int         `json:"id"`
+		TimeOnly *gtime.Time `json:"timeOnly"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		timeOnly := gtime.New("15:04:05")
+		m := db.Model(table)
+
+		_, err := m.Insert(TimeOnly{
+			TimeOnly: gtime.New(timeOnly),
+		})
+		t.AssertNil(err)
+
+		_, err = m.Insert(g.Map{
+			"time_only": timeOnly,
+		})
+		t.AssertNil(err)
+
+		_, err = m.Insert("time_only", timeOnly)
+		t.AssertNil(err)
+	})
+}
+
 // https://github.com/gogf/gf/issues/2105
 func Test_Issue2105(t *testing.T) {
 	table := "issue2105"
