@@ -1,5 +1,6 @@
 module github.com/gogf/gf/v2
 
+//增加一个注释
 go 1.18
 
 require (
