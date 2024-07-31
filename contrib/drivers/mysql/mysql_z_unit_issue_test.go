@@ -1160,3 +1160,16 @@ func Test_Issue3238(t *testing.T) {
 		}
 	})
 }
+
+// https://github.com/gogf/gf/issues/3649
+func Test_Issue3649(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		user := db.Model(table)
+		_, err := user.Where("create_time = ?", gdb.Raw("now()")).WhereLT("create_time", gdb.Raw("now()")).Count()
+		t.AssertNil(err)
+		//t.Assert(n, 1)
+	})
+}
