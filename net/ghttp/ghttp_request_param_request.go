@@ -7,6 +7,8 @@
 package ghttp
 
 import (
+	"reflect"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/net/goai"
@@ -175,10 +177,15 @@ func (r *Request) GetRequestStruct(pointer interface{}, mapping ...map[string]st
 
 func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]string) (data map[string]interface{}, err error) {
 	data = r.GetRequestMap()
-	if data == nil {
-		data = map[string]interface{}{}
+	// Delete the null value,
+	// otherwise the null value will be overwritten when calling gconv.Struct subsequently.
+	for k, v := range data {
+		if v == "" {
+			delete(data, k)
+		}
 	}
-	// Default struct values.
+
+	// `default` `d` Tag struct values.
 	if err = r.mergeDefaultStructValue(data, pointer); err != nil {
 		return data, nil
 	}
@@ -187,37 +194,35 @@ func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]
 		return data, nil
 	}
 
+	// If there is no data, it needs to be set to nil
+	// Otherwise required and default tag conflict
+	// fast path
+	if len(data) == 0 || data == nil {
+		return nil, nil
+	}
 	return data, gconv.Struct(data, pointer, mapping...)
 }
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
 func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) error {
-	fields := r.serveHandler.Handler.Info.ReqStructFields
-	if len(fields) > 0 {
-		var (
-			foundKey   string
-			foundValue interface{}
-		)
-		for _, field := range fields {
-			if tagValue := field.TagDefault(); tagValue != "" {
-				foundKey, foundValue = gutil.MapPossibleItemByKey(data, field.Name())
-				if foundKey == "" {
-					data[field.Name()] = tagValue
-				} else {
-					if empty.IsEmpty(foundValue) {
-						data[foundKey] = tagValue
-					}
-				}
-			}
-		}
-		return nil
-	}
-
-	// provide non strict routing
 	tagFields, err := gstructs.TagFields(pointer, defaultValueTags)
 	if err != nil {
 		return err
 	}
+	if len(tagFields) == 0 {
+		return nil
+	}
+	if r.serveHandler.Handler.Info.IsStrictRoute {
+		// Under strict routing,
+		// the d data format is relatively simple and can be set directly without the need for subsequent
+		for _, field := range tagFields {
+			convtVal := gconv.Convert(field.TagValue, field.Type().String())
+			val := reflect.ValueOf(convtVal)
+			field.Value.Set(val)
+		}
+		return nil
+	}
+	// Other styles of routing
 	if len(tagFields) > 0 {
 		var (
 			foundKey   string
@@ -234,56 +239,74 @@ func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer i
 			}
 		}
 	}
-
 	return nil
 }
 
 // mergeInTagStructValue merges the request parameters with header or cookie values from struct `in` tag definition.
 func (r *Request) mergeInTagStructValue(data map[string]interface{}, pointer interface{}) error {
-	fields := r.serveHandler.Handler.Info.ReqStructFields
-	if len(fields) > 0 {
-		var (
-			foundKey   string
-			foundValue interface{}
-			headerMap  = make(map[string]interface{})
-			cookieMap  = make(map[string]interface{})
-		)
+	fields, err := gstructs.TagFields(pointer, []string{"in"})
+	if err != nil {
+		return err
+	}
+	if len(fields) == 0 {
+		return nil
+	}
+	var (
+		foundKey   string
+		foundValue interface{}
+		headerMap  = make(map[string]interface{})
+		cookieMap  = make(map[string]interface{})
+	)
 
-		for k, v := range r.Header {
-			if len(v) > 0 {
-				headerMap[k] = v[0]
+	for k, v := range r.Header {
+		if len(v) > 0 {
+			headerMap[k] = v[0]
+		}
+	}
+
+	for _, cookie := range r.Cookies() {
+		cookieMap[cookie.Name] = cookie.Value
+	}
+
+	if r.serveHandler.Handler.Info.IsStrictRoute {
+		for _, field := range fields {
+			switch field.TagValue {
+			case goai.ParameterInHeader:
+				foundKey, foundValue = gutil.MapPossibleItemByKey(headerMap, field.TagPriorityName())
+			case goai.ParameterInCookie:
+				foundKey, foundValue = gutil.MapPossibleItemByKey(cookieMap, field.TagPriorityName())
+			}
+			if foundKey != "" {
+				data[foundKey] = foundValue
 			}
 		}
+		return nil
+	}
 
-		for _, cookie := range r.Cookies() {
-			cookieMap[cookie.Name] = cookie.Value
-		}
-
-		for _, field := range fields {
-			if tagValue := field.TagIn(); tagValue != "" {
-				switch tagValue {
-				case goai.ParameterInHeader:
-					foundHeaderKey, foundHeaderValue := gutil.MapPossibleItemByKey(headerMap, field.TagPriorityName())
-					if foundHeaderKey != "" {
-						foundKey, foundValue = gutil.MapPossibleItemByKey(data, foundHeaderKey)
-						if foundKey == "" {
-							data[field.Name()] = foundHeaderValue
-						} else {
-							if empty.IsEmpty(foundValue) {
-								data[foundKey] = foundHeaderValue
-							}
+	for _, field := range fields {
+		if tagValue := field.TagIn(); tagValue != "" {
+			switch tagValue {
+			case goai.ParameterInHeader:
+				foundHeaderKey, foundHeaderValue := gutil.MapPossibleItemByKey(headerMap, field.TagPriorityName())
+				if foundHeaderKey != "" {
+					foundKey, foundValue = gutil.MapPossibleItemByKey(data, foundHeaderKey)
+					if foundKey == "" {
+						data[field.Name()] = foundHeaderValue
+					} else {
+						if empty.IsEmpty(foundValue) {
+							data[foundKey] = foundHeaderValue
 						}
 					}
-				case goai.ParameterInCookie:
-					foundCookieKey, foundCookieValue := gutil.MapPossibleItemByKey(cookieMap, field.TagPriorityName())
-					if foundCookieKey != "" {
-						foundKey, foundValue = gutil.MapPossibleItemByKey(data, foundCookieKey)
-						if foundKey == "" {
-							data[field.Name()] = foundCookieValue
-						} else {
-							if empty.IsEmpty(foundValue) {
-								data[foundKey] = foundCookieValue
-							}
+				}
+			case goai.ParameterInCookie:
+				foundCookieKey, foundCookieValue := gutil.MapPossibleItemByKey(cookieMap, field.TagPriorityName())
+				if foundCookieKey != "" {
+					foundKey, foundValue = gutil.MapPossibleItemByKey(data, foundCookieKey)
+					if foundKey == "" {
+						data[field.Name()] = foundCookieValue
+					} else {
+						if empty.IsEmpty(foundValue) {
+							data[foundKey] = foundCookieValue
 						}
 					}
 				}
