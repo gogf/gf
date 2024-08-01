@@ -9,6 +9,7 @@ package gclient
 import (
 	"bytes"
 	"context"
+	"github.com/gogf/gf/v2/encoding/gurl"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -230,16 +231,21 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 				writer = multipart.NewWriter(buffer)
 			)
 			for _, item := range strings.Split(params, "&") {
-				array := strings.Split(item, "=")
-				if len(array[1]) > 6 && strings.Compare(array[1][0:6], httpParamFileHolder) == 0 {
-					path := array[1][6:]
+				array := strings.SplitN(item, "=", 2)
+				var (
+					fieldName  = array[0]
+					fieldValue = array[1]
+				)
+				fieldValue, _ = gurl.Decode(fieldValue)
+				if len(fieldValue) > 6 && strings.Compare(fieldValue[0:6], httpParamFileHolder) == 0 {
+					path := fieldValue[6:]
 					if !gfile.Exists(path) {
 						return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `"%s" does not exist`, path)
 					}
 					var (
 						file          io.Writer
 						formFileName  = gfile.Basename(path)
-						formFieldName = array[0]
+						formFieldName = fieldName
 					)
 					if file, err = writer.CreateFormFile(formFieldName, formFileName); err != nil {
 						err = gerror.Wrapf(err, `CreateFormFile failed with "%s", "%s"`, formFieldName, formFileName)
@@ -257,10 +263,6 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 						_ = f.Close()
 					}
 				} else {
-					var (
-						fieldName  = array[0]
-						fieldValue = array[1]
-					)
 					if err = writer.WriteField(fieldName, fieldValue); err != nil {
 						err = gerror.Wrapf(err, `write form field failed with "%s", "%s"`, fieldName, fieldValue)
 						return nil, err
