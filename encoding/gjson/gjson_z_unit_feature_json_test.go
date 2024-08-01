@@ -49,11 +49,11 @@ func Test_ToJson(t *testing.T) {
 }
 
 func Test_MapAttributeConvert(t *testing.T) {
-	var data = `
- {
+	var data = []byte(`
+{
    "title": {"l1":"标签1","l2":"标签2"}
 }
-`
+`)
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.LoadContent(data)
 		gtest.AssertNil(err)
