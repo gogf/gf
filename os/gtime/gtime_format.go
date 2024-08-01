@@ -225,16 +225,6 @@ func (t *Time) WeeksOfYear() int {
 	return week
 }
 
-// DateString  returns date string in the format of `2006-01-02`
-func (t *Time) DateString() string {
-	return t.Format("Y-m-d")
-}
-
-// TimeString  returns date string in the format of `15:04:05`
-func (t *Time) TimeString() string {
-	return t.Format("H:i:s")
-}
-
 // formatToStdLayout converts custom format to stdlib layout.
 func formatToStdLayout(format string) string {
 	b := bytes.NewBuffer(nil)
