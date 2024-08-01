@@ -50,6 +50,8 @@ func init() {
 		MaxOpenConnCount: 10,
 	}
 
+	gdb.SetTestEnvironment(true)
+
 	nodeLink := gdb.ConfigNode{
 		Type: "mssql",
 		Name: "test",

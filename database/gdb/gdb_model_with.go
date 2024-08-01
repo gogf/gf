@@ -141,7 +141,6 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		if bindToReflectValue.Kind() != reflect.Ptr && bindToReflectValue.CanAddr() {
 			bindToReflectValue = bindToReflectValue.Addr()
 		}
-
 		// It automatically retrieves struct field names from current attribute struct/slice.
 		if structType, err := gstructs.StructType(field.Value); err != nil {
 			return err
