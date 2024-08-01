@@ -1167,9 +1167,13 @@ func Test_Issue3649(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		user := db.Model(table)
-		_, err := user.Where("create_time = ?", gdb.Raw("now()")).WhereLT("create_time", gdb.Raw("now()")).Count()
+		sql, err := gdb.CatchSQL(context.Background(), func(ctx context.Context) (err error) {
+			user := db.Model(table).Ctx(ctx)
+			_, err = user.Where("create_time = ?", gdb.Raw("now()")).WhereLT("create_time", gdb.Raw("now()")).Count()
+			return
+		})
 		t.AssertNil(err)
-		//t.Assert(n, 1)
+		sqlStr := fmt.Sprintf("SELECT COUNT(1) FROM `%s` WHERE (create_time = now()) AND (`create_time` < now())", table)
+		t.Assert(sql[0], sqlStr)
 	})
 }
