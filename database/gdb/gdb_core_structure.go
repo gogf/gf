@@ -83,6 +83,10 @@ func (c *Core) ConvertValueForField(ctx context.Context, fieldType string, field
 		err            error
 		convertedValue = fieldValue
 	)
+	switch fieldValue.(type) {
+	case time.Time, *time.Time, gtime.Time, *gtime.Time:
+		goto Default
+	}
 	// If `value` implements interface `driver.Valuer`, it then uses the interface for value converting.
 	if valuer, ok := fieldValue.(driver.Valuer); ok {
 		if convertedValue, err = valuer.Value(); err != nil {
@@ -90,6 +94,7 @@ func (c *Core) ConvertValueForField(ctx context.Context, fieldType string, field
 		}
 		return convertedValue, nil
 	}
+Default:
 	// Default value converting.
 	var (
 		rvValue = reflect.ValueOf(fieldValue)
@@ -175,6 +180,7 @@ func (c *Core) ConvertValueForField(ctx context.Context, fieldType string, field
 			}
 		}
 	}
+
 	return convertedValue, nil
 }
 
