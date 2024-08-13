@@ -1,0 +1,100 @@
+app_env: "local"
+server:
+  serverBg:
+    address: ":8803"
+    serverRoot: "resource/public"
+    dumpRouterMap: false
+    routeOverWrite: true
+    openapiPath: "/api.json"
+    swaggerPath: "/swagger"
+    NameToUriType: 3
+    maxHeaderBytes: "20KB"
+    clientMaxBodySize: "50MB"
+  serverApi:
+    address: ":8804"
+    serverRoot: "resource/public"
+    dumpRouterMap: false
+    routeOverWrite: true
+    openapiPath: "/api.json"
+    swaggerPath: "/swagger"
+    NameToUriType: 3
+    maxHeaderBytes: "20KB"
+    clientMaxBodySize: "50MB"
+
+    # Sessions配置
+    sessionMaxAge: "24h"              # Session有效期。默认为24小时
+    sessionIdName: "wb2gsid"      # SessionId的键名名称。默认为gfsessionid
+    sessionCookieOutput: true               # Session特性开启时，是否将SessionId返回到Cookie中。默认true
+    sessionPath: "/tmp/gsessions"   # Session存储的文件目录路径。默认为当前系统临时目录下的gsessions目录
+
+  # Logging配置
+  logPath: "resource/log/server"                 # 日志文件存储目录路径，建议使用绝对路径。默认为空，表示关闭
+  logStdout: true               # 日志是否输出到终端。默认为true
+  errorStack: true               # 当Server捕获到异常时是否记录堆栈信息到日志中。默认为true
+  errorLogEnabled: true               # 是否记录异常日志信息到日志中。默认为true
+  errorLogPattern: "error-{Ymd}.log"  # 异常错误日志文件格式。默认为"error-{Ymd}.log"
+  accessLogEnabled: true              # 是否记录访问日志。默认为false
+  accessLogPattern: "access-{Ymd}.log" # 访问日志文件格式。默认为"access-{Ymd}.log"
+
+# redis 耗时监控，超过此值报警，单位毫秒
+redis_exec_max_time: 100
+# db 耗时监控，超过此值报警，单位毫秒
+db_exec_max_time: 1000
+
+logger:
+  path: "resource/log/run"
+  file: "{Y-m-d}.log"
+  level: "all"
+  stdout: true
+
+# Database.
+database:
+  logger:
+    level: "all"
+    stdout: false
+    Path: "resource/log/sql"
+
+
+  wb2_games:
+    - link: "mysql:root:123456@tcp(192.168.0.10:3306)/wb2_games?charset=utf8&parseTime=true&loc=Local&multiStatements=true"
+      role: master
+      maxIdle: 3
+      maxOpen: 10
+      debug: true
+    - link: "mysql:pt_admin:123456@tcp(192.168.2.99:3306)/wb2_games?charset=utf8&parseTime=true&loc=Local&multiStatements=true"
+      role: slave
+      maxIdle: 3
+      maxOpen: 10
+      debug: true
+  wb2_games_log:
+    - link: "mysql:pt_admin:123456@tcp(192.168.2.99:3306)/wb2_games_log?charset=utf8&parseTime=true&loc=Local&multiStatements=true"
+      role: master
+      maxIdle: 3
+      maxOpen: 10
+      debug: true
+    - link: "mysql:pt_admin:123456@tcp(192.168.2.99:3306)/wb2_games_log?charset=utf8&parseTime=true&loc=Local&multiStatements=true"
+      role: slave
+      maxIdle: 3
+      maxOpen: 10
+      debug: true
+
+#      link: "mysql:root:123456@tcp(192.168.0.10:3306)/gfastv32?charset=utf8mb4&parseTime=true&loc=Local"
+#      debug: true
+#      charset: "utf8mb4" #数据库编码
+#      dryRun: false #空跑
+#      maxIdle: 10 #连接池最大闲置的连接数
+#      maxOpen: 10 #连接池最大打开的连接数
+#      maxLifetime: "30s" #(单位秒)连接对象可重复使用的时间长度
+
+# Redis 配置示例
+# redis 从库配置最大个数，示例： default_1:
+redis_slave_max_index: 1
+redis:
+  # 单实例配置
+  default:
+    address: 192.168.5.1:6379
+    db: 8
+    pass: 123456
+    idleTimeout: 600
+    minIdle: 2
+    waitTimeout: 30
