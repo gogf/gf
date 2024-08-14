@@ -105,6 +105,9 @@ Default:
 		rvKind = rvValue.Kind()
 	}
 	switch rvKind {
+	case reflect.Invalid:
+		convertedValue = nil
+
 	case reflect.Slice, reflect.Array, reflect.Map:
 		// It should ignore the bytes type.
 		if _, ok := fieldValue.([]byte); !ok {
@@ -114,7 +117,6 @@ Default:
 				return nil, err
 			}
 		}
-
 	case reflect.Struct:
 		switch r := fieldValue.(type) {
 		// If the time is zero, it then updates it to nil,
