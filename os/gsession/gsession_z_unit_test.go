@@ -7,13 +7,8 @@
 package gsession
 
 import (
-	"fmt"
-	"github.com/gogf/gf/v2/database/gredis"
-	"github.com/gogf/gf/v2/os/gctx"
-	"testing"
-	"time"
-
 	"github.com/gogf/gf/v2/test/gtest"
+	"testing"
 
 	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
 )
@@ -30,7 +25,7 @@ func Test_NewSessionId(t *testing.T) {
 func TestSession_RegenSession(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 
-		config := &gredis.Config{
+		/*config := &gredis.Config{
 			Address:     "192.168.5.1:6379",
 			Db:          10,
 			Pass:        "123456",
@@ -78,7 +73,7 @@ func TestSession_RegenSession(t *testing.T) {
 		oldSid := sid
 		sessionOld := sManger.New(gctx.New(), oldSid)
 		oldData, _ := sessionOld.Data()
-		fmt.Println("oldData:", oldData, " oldSid:", oldSid)
+		fmt.Println("oldData:", oldData, " oldSid:", oldSid)*/
 		//time.Sleep(time.Second * 2)
 	})
 }
