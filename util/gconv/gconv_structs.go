@@ -25,8 +25,8 @@ func SliceStruct(params interface{}, pointer interface{}, mapping ...map[string]
 }
 
 // StructsTag acts as Structs but also with support for priority tag feature, which retrieves the
-// specified tags for `params` key-value items to struct attribute names mapping.
-// The parameter `priorityTag` supports multiple tags that can be joined with char ','.
+// specified priorityTagAndFieldName for `params` key-value items to struct attribute names mapping.
+// The parameter `priorityTag` supports multiple priorityTagAndFieldName that can be joined with char ','.
 func StructsTag(params interface{}, pointer interface{}, priorityTag string) (err error) {
 	return doStructs(params, pointer, nil, priorityTag)
 }
