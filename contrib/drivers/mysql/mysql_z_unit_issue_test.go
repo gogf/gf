@@ -1199,3 +1199,20 @@ func Test_Issue3238(t *testing.T) {
 		}
 	})
 }
+
+// https://github.com/gogf/gf/issues/3649
+func Test_Issue3649(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		sql, err := gdb.CatchSQL(context.Background(), func(ctx context.Context) (err error) {
+			user := db.Model(table).Ctx(ctx)
+			_, err = user.Where("create_time = ?", gdb.Raw("now()")).WhereLT("create_time", gdb.Raw("now()")).Count()
+			return
+		})
+		t.AssertNil(err)
+		sqlStr := fmt.Sprintf("SELECT COUNT(1) FROM `%s` WHERE (create_time = now()) AND (`create_time` < now())", table)
+		t.Assert(sql[0], sqlStr)
+	})
+}
