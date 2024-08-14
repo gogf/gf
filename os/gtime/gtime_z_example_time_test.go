@@ -23,12 +23,14 @@ func ExampleNew_Basic() {
 	t3 := gtime.New(curTime, "Y-m-d H:i:s")
 	t4 := gtime.New(curTime)
 	t5 := gtime.New(1533686888)
+	t6 := gtime.New("08:08:08")
 
 	fmt.Println(t1)
 	fmt.Println(t2)
 	fmt.Println(t3)
 	fmt.Println(t4)
 	fmt.Println(t5)
+	fmt.Println(t6)
 
 	// Output:
 	// 2018-08-08 08:08:08
@@ -36,6 +38,7 @@ func ExampleNew_Basic() {
 	// 2018-08-08 08:08:08
 	// 2018-08-08 08:08:08
 	// 2018-08-08 08:08:08
+	// 08:08:08
 }
 
 func ExampleNew_WithFormat() {
@@ -68,12 +71,15 @@ func ExampleNewFromTime() {
 // NewFromStr creates and returns a Time object with given string.
 // Note that it returns nil if there's error occurs.
 func ExampleNewFromStr() {
-	t := gtime.NewFromStr("2018-08-08 08:08:08")
+	t1 := gtime.NewFromStr("2018-08-08 08:08:08")
+	t2 := gtime.NewFromStr("08:08:08")
 
-	fmt.Println(t)
+	fmt.Println(t1)
+	fmt.Println(t2)
 
 	// Output:
 	// 2018-08-08 08:08:08
+	// 08:08:08
 }
 
 // NewFromStrFormat creates and returns a Time object with given string and
@@ -189,25 +195,37 @@ func ExampleTime_Second() {
 
 // String returns current time object as string.
 func ExampleTime_String() {
-	gt := gtime.New("2018-08-08 08:08:08")
-	t1 := gt.String()
+	gt1 := gtime.New("2018-08-08 08:08:08")
+	t1 := gt1.String()
+	gt2 := gtime.New("08:08:08")
 
 	fmt.Println(t1)
 	fmt.Println(reflect.TypeOf(t1))
+	fmt.Println(gt2)
 
 	// Output:
 	// 2018-08-08 08:08:08
 	// string
+	// 08:08:08
 }
 
 // IsZero reports whether t represents the zero time instant,
 // January 1, year 1, 00:00:00 UTC.
 func ExampleTime_IsZero() {
-	gt := gtime.New("2018-08-08 08:08:08")
+	gt1 := gtime.New("2018-08-08 08:08:08")
+	gt2 := gtime.New("00:00:00")
+	timer, _ := time.Parse("15:04:05", "00:00:00")
+	gt3 := gtime.NewFromTime(timer)
 
-	fmt.Println(gt.IsZero())
+	fmt.Println(gt1.IsZero())
+	fmt.Println(gt2.IsZero())
+	fmt.Println(timer.IsZero()) // stdlib is also false
+	fmt.Println(gt3.IsZero())
 
 	// Output:
+	// false
+	// false
+	// false
 	// false
 }
 
