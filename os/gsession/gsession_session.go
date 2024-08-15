@@ -168,9 +168,7 @@ func (s *Session) RegenSession(delOld ...bool) (newSid string, err error) {
 		}
 	} else {
 		if oldDel {
-			err = s.RemoveAll()
-			if err != nil {
-
+			if err = s.RemoveAll(); err != nil {
 				return newSid, err
 			}
 		}
