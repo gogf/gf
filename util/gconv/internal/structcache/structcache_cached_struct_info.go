@@ -42,21 +42,23 @@ func (csi *CachedStructInfo) AddField(field reflect.StructField, fieldIndexes []
 	alreadyExistFieldInfo, ok := csi.tagOrFiledNameToFieldInfoMap[field.Name]
 	if !ok {
 		priorityTagAndFieldName := csi.genPriorityTagAndFieldName(field, priorityTags)
+		newFieldInfoBase := &cachedFieldInfoBase{
+			IsCommonInterface:       checkTypeIsCommonInterface(field),
+			StructField:             field,
+			FieldIndexes:            fieldIndexes,
+			ConvertFunc:             csi.genFieldConvertFunc(field.Type.String()),
+			IsCustomConvert:         csi.checkTypeHasCustomConvert(field.Type),
+			PriorityTagAndFieldName: priorityTagAndFieldName,
+			RemoveSymbolsFieldName:  utils.RemoveSymbols(field.Name),
+		}
+		newFieldInfoBase.LastFuzzyKey.Store(field.Name)
 		for _, tagOrFieldName := range priorityTagAndFieldName {
 			newFieldInfo := &CachedFieldInfo{
-				IsCommonInterface:       checkTypeIsCommonInterface(field),
-				StructField:             field,
-				FieldIndexes:            fieldIndexes,
-				ConvertFunc:             csi.genFieldConvertFunc(field.Type.String()),
-				IsCustomConvert:         csi.checkTypeHasCustomConvert(field.Type), // TODO merged to ConvertFunc?
-				PriorityTagAndFieldName: priorityTagAndFieldName,
-				IsField:                 tagOrFieldName == field.Name,
-				RemoveSymbolsFieldName:  utils.RemoveSymbols(field.Name),
+				cachedFieldInfoBase: newFieldInfoBase,
+				IsField:             tagOrFieldName == field.Name,
 			}
-			newFieldInfo.LastFuzzyKey.Store(field.Name)
 			csi.tagOrFiledNameToFieldInfoMap[tagOrFieldName] = newFieldInfo
 			if newFieldInfo.IsField {
-				// TODO 为什么只有isField才添加到fieldConvertInfos
 				csi.FieldConvertInfos = append(csi.FieldConvertInfos, newFieldInfo)
 			}
 		}

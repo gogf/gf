@@ -13,6 +13,28 @@ import (
 
 // CachedFieldInfo holds the cached info for struct field.
 type CachedFieldInfo struct {
+	// WARN:
+	//  The [cachedFieldInfoBase] structure cannot be merged with the following [IsField] field into one structure.
+	// 	The [IsField] field should be used separately in the [bindStructWithLoopParamsMap] method
+	*cachedFieldInfoBase
+
+	// This field is mainly used in the [bindStructWithLoopParamsMap] method.
+	// This field is needed when both `fieldName` and `tag` of a field exist in the map.
+	// For example:
+	// field string `json:"name"`
+	// map = {
+	//     "field" : "f1",
+	//     "name" : "n1",
+	// }
+	// The `name` should be used here.
+	// In the bindStructWithLoopParamsMap method, due to the disorder of `map`, `field` may be traversed first.
+	// This field is more about priority, that is, the priority of `name` is higher than that of `field`,
+	// even if it has been set before.
+	IsField bool
+}
+
+// cachedFieldInfoBase holds the cached info for struct field.
+type cachedFieldInfoBase struct {
 	// FieldIndexes holds the global index number from struct info.
 	// The field may belong to an embedded structure, so it is defined here as []int.
 	FieldIndexes []int
@@ -63,20 +85,6 @@ type CachedFieldInfo struct {
 	//      the cached value may be continuously updated.
 	// LastFuzzyKey string.
 	LastFuzzyKey atomic.Value
-
-	// This field is mainly used in the bindStructWithLoopParamsMap method.
-	// This field is needed when both `fieldName` and `tag` of a field exist in the map.
-	// For example:
-	// field string `json:"name"`
-	// map = {
-	//     "field" : "f1",
-	//     "name" : "n1",
-	// }
-	// The `name` should be used here.
-	// In the bindStructWithLoopParamsMap method, due to the disorder of `map`, `field` may be traversed first.
-	// This field is more about priority, that is, the priority of `name` is higher than that of `field`,
-	// even if it has been set before.
-	IsField bool
 
 	// removeSymbolsFieldName is used for quick fuzzy match for parameter key.
 	// removeSymbolsFieldName = utils.RemoveSymbols(fieldName)
