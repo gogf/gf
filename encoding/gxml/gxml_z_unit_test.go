@@ -148,7 +148,7 @@ func Test_Encode(t *testing.T) {
 	}
 	// t.Logf("%s\n", string(xmlStr))
 
-	res := `<root><bool>true</bool><float>100.92</float><int>123</int><string>hello world</string></root>`
+	res := `<root><string>hello world</string><int>123</int><float>100.92</float><bool>true</bool></root>`
 	if string(xmlStr) != res {
 		t.Errorf("encode error. result: [%s], expect:[%s]", string(xmlStr), res)
 	}

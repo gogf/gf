@@ -1,109 +1,119 @@
-// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
-//
-// This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
-
-// Package gxml provides accessing and converting for XML content.
 package gxml
 
 import (
-	"strings"
+	"bytes"
+	"encoding/xml"
+	"fmt"
+	"io"
+	"reflect"
 
-	"github.com/clbanning/mxj/v2"
-
-	"github.com/gogf/gf/v2/encoding/gcharset"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
-// Decode parses `content` into and returns as map.
-func Decode(content []byte) (map[string]interface{}, error) {
-	res, err := convert(content)
-	if err != nil {
-		return nil, err
-	}
-	m, err := mxj.NewMapXml(res)
-	if err != nil {
-		err = gerror.Wrapf(err, `mxj.NewMapXml failed`)
-	}
-	return m, err
-}
+type gxmlMap map[string]interface{}
 
-// DecodeWithoutRoot parses `content` into a map, and returns the map without root level.
-func DecodeWithoutRoot(content []byte) (map[string]interface{}, error) {
-	res, err := convert(content)
-	if err != nil {
-		return nil, err
-	}
-	m, err := mxj.NewMapXml(res)
-	if err != nil {
-		err = gerror.Wrapf(err, `mxj.NewMapXml failed`)
-		return nil, err
-	}
-	for _, v := range m {
-		if r, ok := v.(map[string]interface{}); ok {
-			return r, nil
+func (m *gxmlMap) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	*m = gxmlMap{}
+	var a map[string]interface{}
+	for {
+		// var e xmlMapEntry
+		err := d.Decode(&a)
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return err
 		}
 	}
-	return m, nil
+	fmt.Println(a)
+	return nil
 }
 
-// Encode encodes map `m` to an XML format content as bytes.
-// The optional parameter `rootTag` is used to specify the XML root tag.
+func (m gxmlMap) MarshalXML(enc *xml.Encoder, _ xml.StartElement) error {
+	if len(m) == 0 {
+		return nil
+	}
+
+	if err := marshal(enc, m); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func Decode2(content []byte) (map[string]interface{}, error) {
+	var enc = xml.NewDecoder(bytes.NewReader(content))
+
+	var rm map[string]interface{}
+	if err := enc.Decode((*gxmlMap)(&rm)); err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
 func Encode(m map[string]interface{}, rootTag ...string) ([]byte, error) {
-	b, err := mxj.Map(m).Xml(rootTag...)
-	if err != nil {
-		err = gerror.Wrapf(err, `mxj.Map.Xml failed`)
-	}
-	return b, err
-}
-
-// EncodeWithIndent encodes map `m` to an XML format content as bytes with indent.
-// The optional parameter `rootTag` is used to specify the XML root tag.
-func EncodeWithIndent(m map[string]interface{}, rootTag ...string) ([]byte, error) {
-	b, err := mxj.Map(m).XmlIndent("", "\t", rootTag...)
-	if err != nil {
-		err = gerror.Wrapf(err, `mxj.Map.XmlIndent failed`)
-	}
-	return b, err
-}
-
-// ToJson converts `content` as XML format into JSON format bytes.
-func ToJson(content []byte) ([]byte, error) {
-	res, err := convert(content)
-	if err != nil {
-		return nil, err
-	}
-	mv, err := mxj.NewMapXml(res)
-	if err == nil {
-		return mv.Json()
-	}
-	err = gerror.Wrap(err, `mxj.NewMapXml failed`)
-	return nil, err
-}
-
-// convert does convert the encoding of given XML content from XML root tag into UTF-8 encoding content.
-func convert(xml []byte) (res []byte, err error) {
 	var (
-		patten      = `<\?xml.*encoding\s*=\s*['|"](.*?)['|"].*\?>`
-		matchStr, _ = gregex.MatchString(patten, string(xml))
-		xmlEncode   = "UTF-8"
+		b    bytes.Buffer
+		enc  = xml.NewEncoder(&b)
+		data = mergeRootTag(m, rootTag...)
 	)
-	if len(matchStr) == 2 {
-		xmlEncode = matchStr[1]
-	}
-	xmlEncode = strings.ToUpper(xmlEncode)
-	res, err = gregex.Replace(patten, []byte(""), xml)
-	if err != nil {
+
+	if err := enc.Encode(gxmlMap(data)); err != nil {
 		return nil, err
 	}
-	if xmlEncode != "UTF-8" && xmlEncode != "UTF8" {
-		dst, err := gcharset.Convert("UTF-8", xmlEncode, string(res))
-		if err != nil {
-			return nil, err
-		}
-		res = []byte(dst)
+	return b.Bytes(), nil
+}
+
+func EncodeWithIndent(m map[string]interface{}, rootTag ...string) ([]byte, error) {
+	var (
+		b    bytes.Buffer
+		enc  = xml.NewEncoder(&b)
+		data = mergeRootTag(m, rootTag...)
+	)
+	enc.Indent("", "\t")
+
+	if err := enc.Encode(gxmlMap(data)); err != nil {
+		return nil, err
 	}
-	return res, nil
+	return b.Bytes(), nil
+}
+
+func mergeRootTag(m map[string]interface{}, rootTag ...string) map[string]interface{} {
+	if len(rootTag) == 0 && len(m) > 1 {
+		rootTag = []string{"doc"}
+	}
+	for i := len(rootTag) - 1; i >= 0; i-- {
+		m = map[string]interface{}{rootTag[i]: m}
+	}
+	return m
+}
+
+func marshal(enc *xml.Encoder, m map[string]interface{}) error {
+	for key, value := range m {
+		if reflect.TypeOf(value).Kind() == reflect.Map {
+			v, t := value.(map[string]interface{})
+			if !t {
+				v = gconv.Map(value)
+			}
+			start := xml.StartElement{Name: xml.Name{Local: key}}
+
+			if err := enc.EncodeToken(start); err != nil {
+				return err
+			}
+
+			if err := marshal(enc, v); err != nil {
+				return err
+			}
+
+			if err := enc.EncodeToken(start.End()); err != nil {
+				return err
+			}
+			return nil
+		} else {
+			err := enc.EncodeElement(value, xml.StartElement{Name: xml.Name{Local: key}})
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
