@@ -27,9 +27,13 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Serv
 		service := &Service{
 			Service: gsvc.NewServiceWithName(in.Name),
 		}
-		in.Prefix = service.GetPrefix()
+		// Use the provided service name as the prefix.
+		in.Prefix = service.GetName()
 	}
-	in.Prefix = trimAndReplace(in.Prefix)
+	// If the service name is not provided, format it.
+	if in.Prefix != in.Name {
+		in.Prefix = trimAndReplace(in.Prefix)
+	}
 	// get instances
 	instancesResponse, err := r.consumer.GetInstances(&polaris.GetInstancesRequest{
 		GetInstancesRequest: model.GetInstancesRequest{

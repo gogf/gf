@@ -23,13 +23,19 @@ func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Ser
 	service = &Service{
 		Service: service,
 	}
+	// get service name
+	svcName := service.GetName()
+	if svcName == "" {
+		// If the service name is empty, use the prefix instead.
+		svcName = service.GetPrefix()
+	}
 	// Register logic.
 	var ids = make([]string, 0, len(service.GetEndpoints()))
 	for _, endpoint := range service.GetEndpoints() {
 		// medata
 		var (
 			rmd            map[string]interface{}
-			serviceName    = service.GetPrefix()
+			serviceName    = svcName
 			serviceVersion = service.GetVersion()
 		)
 		if service.GetMetadata().IsEmpty() {
