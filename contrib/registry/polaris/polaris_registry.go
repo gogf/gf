@@ -23,7 +23,7 @@ func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Ser
 	service = &Service{
 		Service: service,
 	}
-	// get service name
+	// get service name.
 	svcName := service.GetName()
 	if svcName == "" {
 		// If the service name is empty, use the prefix instead.
