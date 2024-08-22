@@ -220,11 +220,11 @@ func Test_Issue3716(t *testing.T) {
 			}
 		)
 
-		xmlByte, err := gxml.Encode(m)
+		xb, err := gxml.Encode(m)
 		t.AssertNil(err)
-		t.Assert(string(xmlByte), xml)
+		t.Assert(string(xb), xml)
 
-		dm, err := gxml.Decode(xmlByte)
+		dm, err := gxml.Decode(xb)
 		t.AssertNil(err)
 		t.Assert(dm, m)
 	})
