@@ -615,3 +615,18 @@ func Test_Issue2520(t *testing.T) {
 		t.Assert(gjson.MustEncodeString(t2), gjson.New(t2).MustToJsonString())
 	})
 }
+
+func Test_Issue_3716(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		data := map[string]interface{}{
+			"Person": map[string]interface{}{
+				"Name":  "<>&'\"AAA",
+				"Email": "john.doe@example.com",
+				"Bio":   "I am a software developer & I love coding.",
+			},
+		}
+		str, err := gjson.New(data).ToXmlString("root")
+		t.AssertNil(err)
+		fmt.Println(str)
+	})
+}

@@ -8,6 +8,7 @@ package gxml_test
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -112,6 +113,7 @@ func Test_Decode2(t *testing.T) {
 <?xml version="1.0" encoding="UTF-8"?><doc><username>johngcn</username><password1>123456</password1><password2>123456</password2></doc>
 `
 		m, err := gxml.Decode([]byte(content))
+		fmt.Println(m)
 		t.AssertNil(err)
 		t.Assert(m["doc"].(map[string]interface{})["username"], "johngcn")
 		t.Assert(m["doc"].(map[string]interface{})["password1"], "123456")

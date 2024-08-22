@@ -14,6 +14,7 @@ import (
 
 	"github.com/gogf/gf/v2/encoding/gxml"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 func TestEncodeing(t *testing.T) {
@@ -90,31 +91,46 @@ func TestA(t *testing.T) {
 func TestAi(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		data := map[string]interface{}{
-			"Name":  "<>&'\"AAA",
-			"Email": "john.doe@example.com",
-			"Bio":   "I am a software developer & I love coding.",
-			// "Slices": []interface{}{"a", "b", true, 1},
-			// "map": map[string]interface{}{
-			// 	"Name":  "<>&'\"AAA",
-			// 	"Email": "john.doe@example.com",
-			// 	"Bio":   "I am a software developer & I love coding.",
-			// 	"map2": map[string]string{
-			// 		"a": "b",
-			// 		"c": "d",
-			// 	},
-			// },
+			"Name":   "<>&'\"AAA",
+			"Email":  "john.doe@example.com",
+			"Bio":    "I am a software developer & I love coding.",
+			"Slices": []interface{}{"a", "b", true, 1},
+			"map": map[string]interface{}{
+				"Name":  "<>&'\"AAA",
+				"Email": "john.doe@example.com",
+				"Bio":   "I am a software developer & I love coding.",
+				"map2": map[string]string{
+					"a": "b",
+					"c": "d",
+				},
+			},
 		}
-		str, err := gxml.Encode(data)
+		str, err := gxml.EncodeWithIndent(data, "doc")
 		t.AssertNil(err)
 		fmt.Println(string(str))
 	})
 }
 
+// <Name>&lt;&gt;&amp;&#39;&#34;AAA</Name>
+// <Email>john.doe@example.com</Email>
+// <Bio>I am a software developer &amp; I love coding.</Bio>
+// <Slices>a</Slices>
+// <Slices>b</Slices>
+// <Slices>true</Slices>
+// <Slices>1</Slices>
 func TestB(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var x = `<doc><Name>&lt;&gt;&amp;&#39;&#34;AAA</Name><Email>john.doe@example.com</Email><Bio>I am a software developer &amp; I love coding.</Bio></doc>`
-		m, err := gxml.Decode([]byte(x))
+		var x = `
+<doc>
+	<Name>&lt;&gt;&amp;&#39;&#34;AAA</Name>
+	<map>
+		<Name>&lt;&gt;&amp;&#39;&#34;AAA</Name>
+		<Bio>I am a software developer &amp; I love coding.</Bio>
+	</map>
+</doc>
+`
+		m, err := gxml.Decode2([]byte(x))
 		t.AssertNil(err)
-		fmt.Println(m)
+		gutil.Dump(m)
 	})
 }
