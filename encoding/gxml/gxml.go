@@ -52,6 +52,9 @@ func DecodeWithoutRoot(content []byte) (map[string]interface{}, error) {
 // Encode encodes map `m` to an XML format content as bytes.
 // The optional parameter `rootTag` is used to specify the XML root tag.
 func Encode(m map[string]interface{}, rootTag ...string) ([]byte, error) {
+	mxj.XMLEscapeChars(true)
+	defer mxj.XMLEscapeChars(false)
+
 	b, err := mxj.Map(m).Xml(rootTag...)
 	if err != nil {
 		err = gerror.Wrapf(err, `mxj.Map.Xml failed`)
