@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/gogf/gf/v2 v2.7.2
-	github.com/joy999/nacos-sdk-go v0.0.0-20231120071639-10a34b3e7288
+	github.com/nacos-group/nacos-sdk-go/v2 v2.2.7
 )
 
 require (
@@ -17,7 +17,7 @@ require (
 	github.com/aliyun/alibabacloud-dkms-transfer-go-sdk v0.1.7 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
-	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/clbanning/mxj/v2 v2.7.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect
