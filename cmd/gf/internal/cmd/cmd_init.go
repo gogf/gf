@@ -81,6 +81,7 @@ type cInitInput struct {
 type cInitOutput struct{}
 
 func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err error) {
+	in.Name = filepath.FromSlash(in.Name)
 	var overwrote = false
 	if !gfile.IsEmpty(in.Name) && !allyes.Check() {
 		s := gcmd.Scanf(`the folder "%s" is not empty, files might be overwrote, continue? [y/n]: `, in.Name)
@@ -218,5 +219,24 @@ func (c cInit) getGoVersion() (string, error) {
 }
 
 func (c cInit) enjoyCommand(in *cInitInput) {
-	mlog.Printf("enjoy %s", in.Name)
+	var (
+		enjoyCommand string
+		commandCd    = `cd ` + in.Name
+		commandTidy  = `go mod tidy`
+		commandRun   = `gf run main.go`
+	)
+
+	if in.Name != "." {
+		enjoyCommand = commandCd
+	}
+	if !in.MonoApp {
+		enjoyCommand = fmt.Sprintf(`%s && %s`, enjoyCommand, commandTidy)
+	}
+	if !in.Mono {
+		enjoyCommand = fmt.Sprintf(`%s && %s`, enjoyCommand, commandRun)
+	}
+	mlog.Printf(`you can now run "%s" to start your journey, enjoy!`, enjoyCommand)
+	if in.Mono {
+		mlog.Print(`if you want to get a mono-repo-app, you can run "gf init [NAME] -a"`)
+	}
 }
