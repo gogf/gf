@@ -142,3 +142,33 @@ func Test_Issue3671(t *testing.T) {
 		t.AssertNil(err)
 	})
 }
+
+// https://github.com/gogf/gf/issues/3668
+func Test_Issue3668(t *testing.T) {
+	type Issue3668 struct {
+		Text   interface{}
+		Number interface{}
+	}
+	var (
+		sqlText = gtest.DataContent("issues", "issue3668.sql")
+		table   = fmt.Sprintf(`%s_%d`, TablePrefix+"issue3668", gtime.TimestampNano())
+	)
+	if _, err := db.Exec(ctx, fmt.Sprintf(sqlText, table)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			dao  = db.Model(table)
+			data = Issue3668{
+				Text:   "我们都是自然的婴儿，卧在宇宙的摇篮里",
+				Number: nil,
+			}
+		)
+		_, err := dao.Ctx(ctx).
+			Data(data).
+			Insert()
+		t.AssertNil(err)
+	})
+}
