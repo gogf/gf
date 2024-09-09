@@ -266,10 +266,10 @@ func doConvert(in doConvertInput) (convertedValue interface{}) {
 	case "map[string]string":
 		return MapStrStr(in.FromValue)
 
-	case "map[string]interface{}":
+	case "map[string]interface {}":
 		return Map(in.FromValue)
 
-	case "[]map[string]interface{}":
+	case "[]map[string]interface {}":
 		return Maps(in.FromValue)
 
 	case "RawMessage", "json.RawMessage":
