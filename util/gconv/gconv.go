@@ -6,7 +6,7 @@
 
 // Package gconv implements powerful and convenient converting functionality for any types of variables.
 //
-// This package should keep much less dependencies with other packages.
+// This package should keep much fewer dependencies with other packages.
 package gconv
 
 import (
@@ -23,7 +23,8 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
+	"github.com/gogf/gf/v2/util/gconv/internal/structcache"
 )
 
 var (
@@ -35,12 +36,22 @@ var (
 		"off":   {},
 		"false": {},
 	}
-
-	// StructTagPriority defines the default priority tags for Map*/Struct* functions.
-	// Note that, the `gconv/param` tags are used by old version of package.
-	// It is strongly recommended using short tag `c/p` instead in the future.
-	StructTagPriority = gtag.StructTagPriority
 )
+
+func init() {
+	// register common converters for internal usage.
+	structcache.RegisterCommonConverter(structcache.CommonConverter{
+		Int64:   Int64,
+		Uint64:  Uint64,
+		String:  String,
+		Float32: Float32,
+		Float64: Float64,
+		Time:    Time,
+		GTime:   GTime,
+		Bytes:   Bytes,
+		Bool:    Bool,
+	})
+}
 
 // Byte converts `any` to byte.
 func Byte(any interface{}) byte {
@@ -63,7 +74,7 @@ func Bytes(any interface{}) []byte {
 		return value
 
 	default:
-		if f, ok := value.(iBytes); ok {
+		if f, ok := value.(localinterface.IBytes); ok {
 			return f.Bytes()
 		}
 		originValueAndKind := reflection.OriginValueAndKind(any)
@@ -174,12 +185,12 @@ func String(any interface{}) string {
 		if value == nil {
 			return ""
 		}
-		if f, ok := value.(iString); ok {
+		if f, ok := value.(localinterface.IString); ok {
 			// If the variable implements the String() interface,
 			// then use that interface to perform the conversion
 			return f.String()
 		}
-		if f, ok := value.(iError); ok {
+		if f, ok := value.(localinterface.IError); ok {
 			// If the variable implements the Error() interface,
 			// then use that interface to perform the conversion
 			return f.Error()
@@ -235,7 +246,7 @@ func Bool(any interface{}) bool {
 		}
 		return true
 	default:
-		if f, ok := value.(iBool); ok {
+		if f, ok := value.(localinterface.IBool); ok {
 			return f.Bool()
 		}
 		rv := reflect.ValueOf(any)

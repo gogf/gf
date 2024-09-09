@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/gogf/gf/v2/encoding/gbinary"
+	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
 // Float32 converts `any` to float32.
@@ -25,7 +26,7 @@ func Float32(any interface{}) float32 {
 	case []byte:
 		return gbinary.DecodeToFloat32(value)
 	default:
-		if f, ok := value.(iFloat32); ok {
+		if f, ok := value.(localinterface.IFloat32); ok {
 			return f.Float32()
 		}
 		v, _ := strconv.ParseFloat(String(any), 64)
@@ -46,7 +47,7 @@ func Float64(any interface{}) float64 {
 	case []byte:
 		return gbinary.DecodeToFloat64(value)
 	default:
-		if f, ok := value.(iFloat64); ok {
+		if f, ok := value.(localinterface.IFloat64); ok {
 			return f.Float64()
 		}
 		v, _ := strconv.ParseFloat(String(any), 64)
