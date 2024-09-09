@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
 // Scan automatically checks the type of `pointer` and converts `params` to `pointer`.
@@ -197,7 +198,7 @@ func doConvertWithJsonCheck(srcValue interface{}, dstPointer interface{}) (ok bo
 
 	default:
 		// The `params` might be struct that implements interface function Interface, eg: gvar.Var.
-		if v, ok := srcValue.(iInterface); ok {
+		if v, ok := srcValue.(localinterface.IInterface); ok {
 			return doConvertWithJsonCheck(v.Interface(), dstPointer)
 		}
 	}
