@@ -7,6 +7,7 @@
 package gconv_test
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 	"time"
@@ -364,5 +365,25 @@ func TestIssue3006(t *testing.T) {
 		t.Assert(ff.Val2[0], []byte(`{"hello":"world"}`))
 		t.AssertEQ(len(ff.Val3), 1)
 		t.Assert(ff.Val3["val3"], []byte(`{"hello":"world"}`))
+	})
+}
+
+// https://github.com/gogf/gf/issues/3731
+func TestIssue3731(t *testing.T) {
+	type Data struct {
+		Doc map[string]interface{} `json:"doc"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		dataMap := map[string]any{
+			"doc": map[string]any{
+				"craft": nil,
+			},
+		}
+
+		var args Data
+		err := gconv.Struct(dataMap, &args)
+		t.AssertNil(err)
+		t.AssertEQ("<nil>", fmt.Sprintf("%T", args.Doc["craft"]))
 	})
 }
