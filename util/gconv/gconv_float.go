@@ -52,7 +52,6 @@ func Float32(any interface{}) float32 {
 			v, _ := strconv.ParseFloat(String(any), 64)
 			return float32(v)
 		}
-
 	}
 }
 
