@@ -31,7 +31,7 @@ func MiddlewareHandlerResponse(r *Request) {
 		return
 	}
 
-	//The response will not return any additional custom content or body
+	// The response will not return any additional custom content or body
 	mediaType, _, _ := mime.ParseMediaType(r.Response.Header().Get("Content-Type"))
 	for _, ct := range []string{
 		"text/event-stream",
