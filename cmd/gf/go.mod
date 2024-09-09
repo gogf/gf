@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/gogf/gf/contrib/drivers/clickhouse/v2 v2.7.2
+	github.com/gogf/gf/contrib/drivers/dm/v2 v2.7.1
 	github.com/gogf/gf/contrib/drivers/mssql/v2 v2.7.2
 	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.7.2
 	github.com/gogf/gf/contrib/drivers/oracle/v2 v2.7.2
@@ -18,6 +19,7 @@ require (
 
 require (
 	aead.dev/minisign v0.2.0 // indirect
+	gitee.com/chunanyong/dm v1.8.12 // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/ClickHouse/clickhouse-go/v2 v2.0.15 // indirect
 	github.com/clbanning/mxj/v2 v2.7.0 // indirect
@@ -31,6 +33,7 @@ require (
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
+	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/grokify/html-strip-tags-go v0.1.0 // indirect

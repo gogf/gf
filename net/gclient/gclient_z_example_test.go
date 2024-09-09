@@ -137,7 +137,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	time.Sleep(time.Millisecond * 500)
+	time.Sleep(time.Millisecond * 2000)
 }
 
 func ExampleNew() {
@@ -195,7 +195,7 @@ func ExampleNew_MultiConn_Recommend() {
 		if r, err := client.Get(ctx, "http://127.0.0.1:8999/var/json"); err != nil {
 			panic(err)
 		} else {
-			fmt.Println(r.ReadAllString())
+			fmt.Print(r.ReadAllString())
 			r.Close()
 		}
 	}
@@ -272,9 +272,9 @@ func ExampleClient_ContentJson() {
 		}
 	)
 	// Post using JSON string.
-	fmt.Println(g.Client().ContentJson().PostContent(ctx, url, jsonStr))
+	fmt.Print(g.Client().ContentJson().PostContent(ctx, url, jsonStr))
 	// Post using JSON map.
-	fmt.Println(g.Client().ContentJson().PostContent(ctx, url, jsonMap))
+	fmt.Print(g.Client().ContentJson().PostContent(ctx, url, jsonMap))
 
 	// Output:
 	// Content-Type: application/json, id: 10000
@@ -289,7 +289,7 @@ func ExampleClient_Post() {
 		panic(err)
 	}
 	defer r1.Close()
-	fmt.Println(r1.ReadAllString())
+	fmt.Print(r1.ReadAllString())
 
 	// Send with map parameter.
 	r2, err := g.Client().Post(ctx, url, g.Map{
@@ -300,7 +300,7 @@ func ExampleClient_Post() {
 		panic(err)
 	}
 	defer r2.Close()
-	fmt.Println(r2.ReadAllString())
+	fmt.Print(r2.ReadAllString())
 
 	// Output:
 	// POST: form: 10000, john
@@ -425,7 +425,7 @@ func ExampleClient_Get() {
 		panic(err)
 	}
 	defer r1.Close()
-	fmt.Println(r1.ReadAllString())
+	fmt.Print(r1.ReadAllString())
 
 	// Send with string parameter in request body.
 	r2, err := g.Client().Get(ctx, url, "id=10000&name=john")
@@ -433,7 +433,7 @@ func ExampleClient_Get() {
 		panic(err)
 	}
 	defer r2.Close()
-	fmt.Println(r2.ReadAllString())
+	fmt.Print(r2.ReadAllString())
 
 	// Send with map parameter.
 	r3, err := g.Client().Get(ctx, url, g.Map{
@@ -444,7 +444,7 @@ func ExampleClient_Get() {
 		panic(err)
 	}
 	defer r3.Close()
-	fmt.Println(r3.ReadAllString())
+	fmt.Print(r3.ReadAllString())
 
 	// Output:
 	// GET: query: 10000, john
@@ -596,16 +596,16 @@ func ExampleClient_Proxy() {
 
 	client2 := g.Client()
 	_, err = client2.Proxy("socks5://127.0.0.1:1080").Get(ctx, "http://127.0.0.1:8999")
-	fmt.Println(err != nil)
+	fmt.Print(err != nil)
 
 	client3 := g.Client()
 	_, err = client3.Proxy("").Get(ctx, "http://127.0.0.1:8999")
-	fmt.Println(err != nil)
+	fmt.Print(err != nil)
 
 	client4 := g.Client()
 	url := "http://127.0.0.1:1081" + string([]byte{0x7f})
 	_, err = client4.Proxy(url).Get(ctx, "http://127.0.0.1:8999")
-	fmt.Println(err != nil)
+	fmt.Print(err != nil)
 
 	// Output:
 	// true
@@ -639,7 +639,7 @@ func ExampleClient_Prefix() {
 		"http://127.0.0.1:%d/api/v1/", s.GetListenedPort(),
 	))
 
-	fmt.Println(string(client.GetBytes(ctx, "prefix")))
+	fmt.Print(string(client.GetBytes(ctx, "prefix")))
 	fmt.Println(string(client.GetBytes(ctx, "hello")))
 
 	// Output:
@@ -742,7 +742,7 @@ func ExampleClient_SetRedirectLimit() {
 		"name": "john",
 	})
 	if err == nil {
-		fmt.Println(resp.ReadAllString())
+		fmt.Print(resp.ReadAllString())
 		resp.Close()
 	}
 
@@ -752,12 +752,13 @@ func ExampleClient_SetRedirectLimit() {
 		"name": "john",
 	})
 	if err == nil {
-		fmt.Println(resp.ReadAllString())
+		fmt.Print(resp.ReadAllString())
 		resp.Close()
 	}
 
 	// Output:
 	// Found
+	//
 	// hello world
 }
 

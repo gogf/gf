@@ -22,3 +22,4 @@ go.work.sum
 node_modules
 .docusaurus
 output
+config/*
