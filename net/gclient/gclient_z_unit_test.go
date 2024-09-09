@@ -19,6 +19,7 @@ import (
 	"github.com/gorilla/websocket"
 
 	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gclient"
@@ -667,6 +668,32 @@ func TestClient_NoUrlEncode(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write(r.URL.RawQuery)
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		var params = g.Map{
+			"path": "/data/binlog",
+		}
+		t.Assert(c.GetContent(ctx, `/`, params), `path=%2Fdata%2Fbinlog`)
+
+		t.Assert(c.NoUrlEncode().GetContent(ctx, `/`, params), `path=/data/binlog`)
+	})
+}
+
+func TestClient_UrlParameterWithFileUploading(t *testing.T) {
+	s := g.Server(guid.S())
+	s.BindHandler("/post", func(r *ghttp.Request) {
+		file := r.GetUploadFile("image")
+		r.Response.Write(r.Get("src").String())
+		r.Response.Write("\n")
+		r.Response.Write(gjson.MustEncodeString(file))
 	})
 	s.SetDumpRouterMap(false)
 	s.Start()

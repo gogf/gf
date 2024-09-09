@@ -230,7 +230,10 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 				writer = multipart.NewWriter(buffer)
 			)
 			for _, item := range strings.Split(params, "&") {
-				array := strings.Split(item, "=")
+				array := strings.SplitN(item, "=", 2)
+				if len(array) < 2 {
+					continue
+				}
 				if len(array[1]) > 6 && strings.Compare(array[1][0:6], httpParamFileHolder) == 0 {
 					path := array[1][6:]
 					if !gfile.Exists(path) {
@@ -256,15 +259,16 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 						}
 						_ = f.Close()
 					}
-				} else {
-					var (
-						fieldName  = array[0]
-						fieldValue = array[1]
-					)
-					if err = writer.WriteField(fieldName, fieldValue); err != nil {
-						err = gerror.Wrapf(err, `write form field failed with "%s", "%s"`, fieldName, fieldValue)
-						return nil, err
-					}
+					continue
+				}
+
+				var (
+					fieldName  = array[0]
+					fieldValue = array[1]
+				)
+				if err = writer.WriteField(fieldName, fieldValue); err != nil {
+					err = gerror.Wrapf(err, `write form field failed with "%s", "%s"`, fieldName, fieldValue)
+					return nil, err
 				}
 			}
 			// Close finishes the multipart message and writes the trailing

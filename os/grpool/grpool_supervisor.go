@@ -16,6 +16,7 @@ import (
 // if there are jobs but no workers in pool.
 func (p *Pool) supervisor(_ context.Context) {
 	if p.IsClosed() {
+
 		gtimer.Exit()
 	}
 	if p.list.Size() > 0 && p.count.Val() == 0 {

@@ -8,14 +8,22 @@
 package httputil
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
 	"github.com/gogf/gf/v2/encoding/gurl"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/empty"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/util/gconv"
 )
+
+// BuildParamsOption specifies the option for building parameters.
+type BuildParamsOption struct {
+	NoUrlEncode bool // NoUrlEncode specifies whether ignore the url encoding for the data
+}
 
 const (
 	fileUploadingKey = "@file:"
@@ -30,6 +38,7 @@ func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr strin
 	switch v := params.(type) {
 	case string, []byte:
 		return gconv.String(params)
+
 	case []interface{}:
 		if len(v) > 0 {
 			params = v[0]
@@ -37,25 +46,17 @@ func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr strin
 			params = nil
 		}
 	}
-	// Else converts it to map and does the url encoding.
-	m, urlEncode := gconv.Map(params), true
-	if len(m) == 0 {
-		return gconv.String(params)
-	}
+	var urlEncode = true
 	if len(noUrlEncode) == 1 {
 		urlEncode = !noUrlEncode[0]
 	}
-	// If there's file uploading, it ignores the url encoding.
-	if urlEncode {
-		for k, v := range m {
-			if gstr.Contains(k, fileUploadingKey) || gstr.Contains(gconv.String(v), fileUploadingKey) {
-				urlEncode = false
-				break
-			}
-		}
+	paramsMap, err := BuildParamsToMap(params)
+	if err != nil {
+		intlog.Errorf(context.TODO(), `BuildParamsToMap failed: %+v`, err)
+		return
 	}
-	s := ""
-	for k, v := range m {
+	var tempParam string
+	for k, v := range paramsMap {
 		// Ignore nil attributes.
 		if empty.IsNil(v) {
 			continue
@@ -63,15 +64,67 @@ func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr strin
 		if len(encodedParamStr) > 0 {
 			encodedParamStr += "&"
 		}
-		s = gconv.String(v)
+		tempParam = gconv.String(v)
 		if urlEncode {
-			if strings.HasPrefix(s, fileUploadingKey) && len(s) > len(fileUploadingKey) {
+			if strings.HasPrefix(tempParam, fileUploadingKey) && len(tempParam) > len(fileUploadingKey) {
 				// No url encoding if uploading file.
 			} else {
-				s = gurl.Encode(s)
+				tempParam = gurl.Encode(tempParam)
 			}
 		}
-		encodedParamStr += k + "=" + s
+		encodedParamStr += k + "=" + tempParam
+	}
+	return
+}
+
+// BuildParamsToMap builds the request string for the http client as map.
+// The `params` can be type of:
+// string/[]byte/map/struct/*struct.
+//
+// The optional parameter `noUrlEncode` specifies whether ignore the url encoding for the data.
+func BuildParamsToMap(params interface{}, buildOption ...BuildParamsOption) (paramsMap map[string]string, err error) {
+	var usedOption BuildParamsOption
+	if len(buildOption) > 0 {
+		usedOption = buildOption[0]
+	}
+	paramsMap = make(map[string]string)
+	// If given string/[]byte, converts and returns it directly as string.
+	switch v := params.(type) {
+	case string, []byte:
+		for _, item := range strings.Split(gconv.String(params), "&") {
+			array := strings.SplitN(item, "=", 2)
+			if len(array) < 2 {
+				return nil, gerror.NewCodef(
+					gcode.CodeInvalidParameter,
+					`invalid url paraeter item: %s`,
+					item,
+				)
+			}
+		}
+	case []interface{}:
+		if len(v) > 0 {
+			return BuildParamsToMap(v[0])
+		}
+		return nil, nil
+
+	default:
+		paramsMap = gconv.MapStrStr(params)
+	}
+
+	if usedOption.NoUrlEncode {
+		return
+	}
+	// Else converts it to map and does the url encoding.
+	for k, v := range paramsMap {
+		// Ignore nil attributes.
+		if empty.IsNil(v) {
+			continue
+		}
+		if strings.HasPrefix(k, fileUploadingKey) && len(k) > len(fileUploadingKey) {
+			// No url encoding if uploading file.
+		} else {
+			paramsMap[k] = gurl.Encode(v)
+		}
 	}
 	return
 }
