@@ -777,11 +777,7 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []interface{}) {
 			} else {
 				in.Buffer.WriteString(quotedKey)
 			}
-			if s, ok := in.Value.(Raw); ok {
-				in.Buffer.WriteString(gconv.String(s))
-			} else {
-				in.Args = append(in.Args, in.Value)
-			}
+			in.Args = append(in.Args, in.Value)
 		}
 	}
 	return in.Args
