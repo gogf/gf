@@ -7,6 +7,8 @@
 package ghttp
 
 import (
+	"github.com/gogf/gf/v2/text/gstr"
+	"mime"
 	"net/http"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -27,6 +29,18 @@ func MiddlewareHandlerResponse(r *Request) {
 	// There's custom buffer content, it then exits current handler.
 	if r.Response.BufferLength() > 0 {
 		return
+	}
+
+	//The response will not return any additional custom content or body
+	mediaType, _, _ := mime.ParseMediaType(r.Response.Header().Get("Content-Type"))
+	for _, ct := range []string{
+		"text/event-stream",
+		"application/octet-stream",
+		"multipart/x-mixed-replace",
+	} {
+		if gstr.Equal(mediaType, ct) {
+			return
+		}
 	}
 
 	var (
