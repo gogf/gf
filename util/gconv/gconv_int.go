@@ -8,6 +8,7 @@ package gconv
 
 import (
 	"math"
+	"reflect"
 	"strconv"
 
 	"github.com/gogf/gf/v2/encoding/gbinary"
@@ -99,39 +100,56 @@ func Int64(any interface{}) int64 {
 		if f, ok := value.(localinterface.IInt64); ok {
 			return f.Int64()
 		}
-		var (
-			s       = String(value)
-			isMinus = false
-		)
-		if len(s) > 0 {
-			if s[0] == '-' {
-				isMinus = true
-				s = s[1:]
-			} else if s[0] == '+' {
-				s = s[1:]
+		rv := reflect.ValueOf(value)
+		switch rv.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			return int64(rv.Int())
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			return int64(rv.Uint())
+		case reflect.Float32, reflect.Float64:
+			return int64(rv.Float())
+		case reflect.Bool:
+			if rv.Bool() {
+				return 1
 			}
-		}
-		// Hexadecimal
-		if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
-			if v, e := strconv.ParseInt(s[2:], 16, 64); e == nil {
+			return 0
+		case reflect.Ptr:
+			return Int64(rv.Elem().Interface())
+		default:
+			var (
+				s       = String(value)
+				isMinus = false
+			)
+			if len(s) > 0 {
+				if s[0] == '-' {
+					isMinus = true
+					s = s[1:]
+				} else if s[0] == '+' {
+					s = s[1:]
+				}
+			}
+			// Hexadecimal
+			if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
+				if v, e := strconv.ParseInt(s[2:], 16, 64); e == nil {
+					if isMinus {
+						return -v
+					}
+					return v
+				}
+			}
+			// Decimal
+			if v, e := strconv.ParseInt(s, 10, 64); e == nil {
 				if isMinus {
 					return -v
 				}
 				return v
 			}
-		}
-		// Decimal
-		if v, e := strconv.ParseInt(s, 10, 64); e == nil {
-			if isMinus {
-				return -v
+			// Float64
+			if valueInt64 := Float64(value); math.IsNaN(valueInt64) {
+				return 0
+			} else {
+				return int64(valueInt64)
 			}
-			return v
-		}
-		// Float64
-		if valueInt64 := Float64(value); math.IsNaN(valueInt64) {
-			return 0
-		} else {
-			return int64(valueInt64)
 		}
 	}
 }

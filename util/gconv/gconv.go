@@ -205,7 +205,6 @@ func String(any interface{}) string {
 			reflect.Map,
 			reflect.Slice,
 			reflect.Func,
-			reflect.Ptr,
 			reflect.Interface,
 			reflect.UnsafePointer:
 			if rv.IsNil() {
@@ -213,9 +212,22 @@ func String(any interface{}) string {
 			}
 		case reflect.String:
 			return rv.String()
-		}
-		if kind == reflect.Ptr {
+		case reflect.Ptr:
+			if rv.IsNil() {
+				return ""
+			}
 			return String(rv.Elem().Interface())
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			return strconv.FormatInt(rv.Int(), 10)
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			return strconv.FormatUint(rv.Uint(), 10)
+		case reflect.Float32, reflect.Float64:
+			return strconv.FormatFloat(rv.Float(), 'G', -1, 64)
+		case reflect.Bool:
+			if rv.Bool() {
+				return "true"
+			}
+			return "false"
 		}
 		// Finally, we use json.Marshal to convert.
 		if jsonContent, err := json.Marshal(value); err != nil {
@@ -252,7 +264,21 @@ func Bool(any interface{}) bool {
 		rv := reflect.ValueOf(any)
 		switch rv.Kind() {
 		case reflect.Ptr:
-			return !rv.IsNil()
+			if rv.IsNil() {
+				return false
+			}
+			if rv.Elem().Kind() == reflect.Bool {
+				return rv.Elem().Bool()
+			}
+			return Bool(rv.Elem().Interface())
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			return rv.Int() != 0
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			return rv.Uint() != 0
+		case reflect.Float32, reflect.Float64:
+			return rv.Float() != 0
+		case reflect.Bool:
+			return rv.Bool()
 		case reflect.Map:
 			fallthrough
 		case reflect.Array:

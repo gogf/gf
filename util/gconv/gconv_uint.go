@@ -8,6 +8,7 @@ package gconv
 
 import (
 	"math"
+	"reflect"
 	"strconv"
 
 	"github.com/gogf/gf/v2/encoding/gbinary"
@@ -99,22 +100,39 @@ func Uint64(any interface{}) uint64 {
 		if f, ok := value.(localinterface.IUint64); ok {
 			return f.Uint64()
 		}
-		s := String(value)
-		// Hexadecimal
-		if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
-			if v, e := strconv.ParseUint(s[2:], 16, 64); e == nil {
+		rv := reflect.ValueOf(value)
+		switch rv.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			return uint64(rv.Int())
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			return uint64(rv.Uint())
+		case reflect.Float32, reflect.Float64:
+			return uint64(rv.Float())
+		case reflect.Bool:
+			if rv.Bool() {
+				return 1
+			}
+			return 0
+		case reflect.Ptr:
+			return Uint64(rv.Elem().Interface())
+		default:
+			s := String(value)
+			// Hexadecimal
+			if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
+				if v, e := strconv.ParseUint(s[2:], 16, 64); e == nil {
+					return v
+				}
+			}
+			// Decimal
+			if v, e := strconv.ParseUint(s, 10, 64); e == nil {
 				return v
 			}
-		}
-		// Decimal
-		if v, e := strconv.ParseUint(s, 10, 64); e == nil {
-			return v
-		}
-		// Float64
-		if valueFloat64 := Float64(value); math.IsNaN(valueFloat64) {
-			return 0
-		} else {
-			return uint64(valueFloat64)
+			// Float64
+			if valueFloat64 := Float64(value); math.IsNaN(valueFloat64) {
+				return 0
+			} else {
+				return uint64(valueFloat64)
+			}
 		}
 	}
 }

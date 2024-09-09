@@ -15,6 +15,10 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+var (
+	uintTestValue = 123
+)
+
 var uintTests = []struct {
 	value    interface{}
 	expect   uint
@@ -78,6 +82,8 @@ var uintTests = []struct {
 
 	{gvar.New(123), 123, 123, 123, 123, 123},
 	{gvar.New(123.456), 123, 123, 123, 123, 123},
+
+	{&uintTestValue, 123, 123, 123, 123, 123},
 }
 
 func TestUint(t *testing.T) {

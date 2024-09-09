@@ -7,6 +7,7 @@
 package gconv
 
 import (
+	"reflect"
 	"strconv"
 
 	"github.com/gogf/gf/v2/encoding/gbinary"
@@ -29,8 +30,29 @@ func Float32(any interface{}) float32 {
 		if f, ok := value.(localinterface.IFloat32); ok {
 			return f.Float32()
 		}
-		v, _ := strconv.ParseFloat(String(any), 64)
-		return float32(v)
+		rv := reflect.ValueOf(any)
+		switch rv.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			return float32(rv.Int())
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			return float32(rv.Uint())
+		case reflect.Float32, reflect.Float64:
+			return float32(rv.Float())
+		case reflect.Bool:
+			if rv.Bool() {
+				return 1
+			}
+			return 0
+		case reflect.String:
+			f, _ := strconv.ParseFloat(rv.String(), 32)
+			return float32(f)
+		case reflect.Ptr:
+			return Float32(rv.Elem().Interface())
+		default:
+			v, _ := strconv.ParseFloat(String(any), 64)
+			return float32(v)
+		}
+
 	}
 }
 
@@ -50,7 +72,27 @@ func Float64(any interface{}) float64 {
 		if f, ok := value.(localinterface.IFloat64); ok {
 			return f.Float64()
 		}
-		v, _ := strconv.ParseFloat(String(any), 64)
-		return v
+		rv := reflect.ValueOf(any)
+		switch rv.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			return float64(rv.Int())
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			return float64(rv.Uint())
+		case reflect.Float32, reflect.Float64:
+			return rv.Float()
+		case reflect.Bool:
+			if rv.Bool() {
+				return 1
+			}
+			return 0
+		case reflect.String:
+			f, _ := strconv.ParseFloat(rv.String(), 64)
+			return f
+		case reflect.Ptr:
+			return Float64(rv.Elem().Interface())
+		default:
+			v, _ := strconv.ParseFloat(String(any), 64)
+			return v
+		}
 	}
 }

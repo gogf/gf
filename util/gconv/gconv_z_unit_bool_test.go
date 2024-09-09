@@ -13,6 +13,11 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+var (
+	boolTestTrueValue  = true
+	boolTestFalseValue = false
+)
+
 var boolTests = []struct {
 	value  interface{}
 	expect bool
@@ -46,6 +51,9 @@ var boolTests = []struct {
 	{struct{}{}, true},
 	{&struct{}{}, true},
 	{nil, false},
+
+	{&boolTestTrueValue, true},
+	{&boolTestFalseValue, false},
 }
 
 func TestBool(t *testing.T) {
