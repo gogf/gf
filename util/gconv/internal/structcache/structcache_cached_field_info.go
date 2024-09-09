@@ -14,9 +14,9 @@ import (
 // CachedFieldInfo holds the cached info for struct field.
 type CachedFieldInfo struct {
 	// WARN:
-	//  The [cachedFieldInfoBase] structure cannot be merged with the following [IsField] field into one structure.
+	//  The [CachedFieldInfoBase] structure cannot be merged with the following [IsField] field into one structure.
 	// 	The [IsField] field should be used separately in the [bindStructWithLoopParamsMap] method
-	*cachedFieldInfoBase
+	*CachedFieldInfoBase
 
 	// This field is mainly used in the [bindStructWithLoopParamsMap] method.
 	// This field is needed when both `fieldName` and `tag` of a field exist in the map.
@@ -33,8 +33,8 @@ type CachedFieldInfo struct {
 	IsField bool
 }
 
-// cachedFieldInfoBase holds the cached info for struct field.
-type cachedFieldInfoBase struct {
+// CachedFieldInfoBase holds the cached info for struct field.
+type CachedFieldInfoBase struct {
 	// FieldIndexes holds the global index number from struct info.
 	// The field may belong to an embedded structure, so it is defined here as []int.
 	FieldIndexes []int

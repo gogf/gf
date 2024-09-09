@@ -42,7 +42,7 @@ func (csi *CachedStructInfo) AddField(field reflect.StructField, fieldIndexes []
 	alreadyExistFieldInfo, ok := csi.tagOrFiledNameToFieldInfoMap[field.Name]
 	if !ok {
 		priorityTagAndFieldName := csi.genPriorityTagAndFieldName(field, priorityTags)
-		newFieldInfoBase := &cachedFieldInfoBase{
+		newFieldInfoBase := &CachedFieldInfoBase{
 			IsCommonInterface:       checkTypeIsCommonInterface(field),
 			StructField:             field,
 			FieldIndexes:            fieldIndexes,
@@ -54,7 +54,7 @@ func (csi *CachedStructInfo) AddField(field reflect.StructField, fieldIndexes []
 		newFieldInfoBase.LastFuzzyKey.Store(field.Name)
 		for _, tagOrFieldName := range priorityTagAndFieldName {
 			newFieldInfo := &CachedFieldInfo{
-				cachedFieldInfoBase: newFieldInfoBase,
+				CachedFieldInfoBase: newFieldInfoBase,
 				IsField:             tagOrFieldName == field.Name,
 			}
 			csi.tagOrFiledNameToFieldInfoMap[tagOrFieldName] = newFieldInfo
