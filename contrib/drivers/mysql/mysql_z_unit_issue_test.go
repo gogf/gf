@@ -431,6 +431,45 @@ func Test_Issue1733(t *testing.T) {
 	})
 }
 
+// https://github.com/gogf/gf/issues/2012
+func Test_Issue2012(t *testing.T) {
+	table := "time_only_" + guid.S()
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE %s(
+			id int(8) unsigned zerofill NOT NULL AUTO_INCREMENT,
+			time_only time,
+			PRIMARY KEY (id)
+	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, table,
+	)); err != nil {
+		gtest.AssertNil(err)
+	}
+	defer dropTable(table)
+
+	type TimeOnly struct {
+		Id       int         `json:"id"`
+		TimeOnly *gtime.Time `json:"timeOnly"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		timeOnly := gtime.New("15:04:05")
+		m := db.Model(table)
+
+		_, err := m.Insert(TimeOnly{
+			TimeOnly: gtime.New(timeOnly),
+		})
+		t.AssertNil(err)
+
+		_, err = m.Insert(g.Map{
+			"time_only": timeOnly,
+		})
+		t.AssertNil(err)
+
+		_, err = m.Insert("time_only", timeOnly)
+		t.AssertNil(err)
+	})
+}
+
 // https://github.com/gogf/gf/issues/2105
 func Test_Issue2105(t *testing.T) {
 	table := "issue2105"
@@ -1024,7 +1063,7 @@ func Test_Issue2552_ClearTableFieldsAll(t *testing.T) {
 		ctx = context.Background()
 		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
 			one, err := db.Model(table).Ctx(ctx).One()
-			t.Assert(len(one), 5)
+			t.Assert(len(one), 6)
 			return err
 		})
 		t.AssertNil(err)
@@ -1039,7 +1078,7 @@ func Test_Issue2552_ClearTableFieldsAll(t *testing.T) {
 		ctx = context.Background()
 		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
 			one, err := db.Model(table).Ctx(ctx).One()
-			t.Assert(len(one), 4)
+			t.Assert(len(one), 5)
 			return err
 		})
 		t.AssertNil(err)
@@ -1070,7 +1109,7 @@ func Test_Issue2552_ClearTableFields(t *testing.T) {
 		ctx = context.Background()
 		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
 			one, err := db.Model(table).Ctx(ctx).One()
-			t.Assert(len(one), 5)
+			t.Assert(len(one), 6)
 			return err
 		})
 		t.AssertNil(err)
@@ -1085,7 +1124,7 @@ func Test_Issue2552_ClearTableFields(t *testing.T) {
 		ctx = context.Background()
 		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
 			one, err := db.Model(table).Ctx(ctx).One()
-			t.Assert(len(one), 4)
+			t.Assert(len(one), 5)
 			return err
 		})
 		t.AssertNil(err)
@@ -1158,5 +1197,22 @@ func Test_Issue3238(t *testing.T) {
 			).All()
 			t.AssertNil(err)
 		}
+	})
+}
+
+// https://github.com/gogf/gf/issues/3649
+func Test_Issue3649(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		sql, err := gdb.CatchSQL(context.Background(), func(ctx context.Context) (err error) {
+			user := db.Model(table).Ctx(ctx)
+			_, err = user.Where("create_time = ?", gdb.Raw("now()")).WhereLT("create_time", gdb.Raw("now()")).Count()
+			return
+		})
+		t.AssertNil(err)
+		sqlStr := fmt.Sprintf("SELECT COUNT(1) FROM `%s` WHERE (create_time = now()) AND (`create_time` < now())", table)
+		t.Assert(sql[0], sqlStr)
 	})
 }

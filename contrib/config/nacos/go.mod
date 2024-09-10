@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/config/nacos/v2
 go 1.18
 
 require (
-	github.com/gogf/gf/v2 v2.7.2
+	github.com/gogf/gf/v2 v2.7.3
 	github.com/nacos-group/nacos-sdk-go/v2 v2.2.5
 )
 
@@ -59,7 +59,7 @@ require (
 	golang.org/x/time v0.1.0 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/grpc v1.56.3 // indirect
-	google.golang.org/protobuf v1.30.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

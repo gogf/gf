@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/metric/otelmetric/v2
 go 1.18
 
 require (
-	github.com/gogf/gf/v2 v2.7.2
+	github.com/gogf/gf/v2 v2.7.3
 	github.com/prometheus/client_golang v1.19.0
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.49.0
 	go.opentelemetry.io/otel v1.24.0
@@ -38,7 +38,7 @@ require (
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	google.golang.org/protobuf v1.32.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

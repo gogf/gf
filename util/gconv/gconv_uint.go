@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/gogf/gf/v2/encoding/gbinary"
+	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
 // Uint converts `any` to uint.
@@ -95,7 +96,7 @@ func Uint64(any interface{}) uint64 {
 	case []byte:
 		return gbinary.DecodeToUint64(value)
 	default:
-		if f, ok := value.(iUint64); ok {
+		if f, ok := value.(localinterface.IUint64); ok {
 			return f.Uint64()
 		}
 		s := String(value)

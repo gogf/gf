@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/registry/polaris/v2
 go 1.18
 
 require (
-	github.com/gogf/gf/v2 v2.7.2
+	github.com/gogf/gf/v2 v2.7.3
 	github.com/polarismesh/polaris-go v1.5.5
 )
 
@@ -52,7 +52,7 @@ require (
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/grpc v1.59.0 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

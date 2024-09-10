@@ -353,7 +353,7 @@ func (m *softTimeMaintainer) getConditionByFieldNameAndTypeForSoftDeleting(
 	switch m.softTimeOption.SoftTimeType {
 	case SoftTimeTypeAuto:
 		switch fieldType {
-		case LocalTypeDate, LocalTypeDatetime:
+		case LocalTypeDate, LocalTypeTime, LocalTypeDatetime:
 			return fmt.Sprintf(`%s IS NULL`, quotedFieldName)
 		case LocalTypeInt, LocalTypeUint, LocalTypeInt64, LocalTypeUint64, LocalTypeBool:
 			return fmt.Sprintf(`%s=0`, quotedFieldName)
@@ -382,7 +382,7 @@ func (m *softTimeMaintainer) GetValueByFieldTypeForCreateOrUpdate(
 	var value any
 	if isDeletedField {
 		switch fieldType {
-		case LocalTypeDate, LocalTypeDatetime:
+		case LocalTypeDate, LocalTypeTime, LocalTypeDatetime:
 			value = nil
 		default:
 			value = 0
@@ -392,7 +392,7 @@ func (m *softTimeMaintainer) GetValueByFieldTypeForCreateOrUpdate(
 	switch m.softTimeOption.SoftTimeType {
 	case SoftTimeTypeAuto:
 		switch fieldType {
-		case LocalTypeDate, LocalTypeDatetime:
+		case LocalTypeDate, LocalTypeTime, LocalTypeDatetime:
 			value = gtime.Now()
 		case LocalTypeInt, LocalTypeUint, LocalTypeInt64, LocalTypeUint64:
 			value = gtime.Timestamp()
