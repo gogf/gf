@@ -16,7 +16,11 @@ import (
 )
 
 var (
-	intTestValue = 123
+	intTestValue   = 123
+	int8TestValue  = int8(123)
+	int16TestValue = int16(123)
+	int32TestValue = int32(123)
+	int64TestValue = int64(123)
 )
 
 var intTests = []struct {
@@ -87,6 +91,22 @@ var intTests = []struct {
 	{gvar.New(123.456), 123, 123, 123, 123, 123},
 
 	{&intTestValue, 123, 123, 123, 123, 123},
+	{&int8TestValue, 123, 123, 123, 123, 123},
+	{&int16TestValue, 123, 123, 123, 123, 123},
+	{&int32TestValue, 123, 123, 123, 123, 123},
+	{&int64TestValue, 123, 123, 123, 123, 123},
+
+	{(myInt)(intTestValue), 123, 123, 123, 123, 123},
+	{(myInt8)(int8TestValue), 123, 123, 123, 123, 123},
+	{(myInt16)(int16TestValue), 123, 123, 123, 123, 123},
+	{(myInt32)(int32TestValue), 123, 123, 123, 123, 123},
+	{(myInt64)(int64TestValue), 123, 123, 123, 123, 123},
+
+	{(*myInt)(&intTestValue), 123, 123, 123, 123, 123},
+	{(*myInt8)(&int8TestValue), 123, 123, 123, 123, 123},
+	{(*myInt16)(&int16TestValue), 123, 123, 123, 123, 123},
+	{(*myInt32)(&int32TestValue), 123, 123, 123, 123, 123},
+	{(*myInt64)(&int64TestValue), 123, 123, 123, 123, 123},
 }
 
 func TestInt(t *testing.T) {

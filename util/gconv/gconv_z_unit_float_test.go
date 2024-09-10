@@ -17,7 +17,10 @@ import (
 )
 
 var (
-	floatTestValue = 123.456
+	// WARN: When the type is float32 or a new type defined based on float32,
+	//		switching to float64 may result in a few extra decimal places
+	float32TestValue = float32(123)
+	float64TestValue = float64(123.456)
 )
 
 var floatTests = []struct {
@@ -78,7 +81,14 @@ var floatTests = []struct {
 	{gvar.New(123), 123, 123},
 	{gvar.New(123.456), 123.456, 123.456},
 
-	{&floatTestValue, 123.456, 123.456},
+	{&float32TestValue, 123, 123},
+	{&float64TestValue, 123.456, 123.456},
+
+	{myFloat32(123), 123, 123},
+	{myFloat64(123.456), 123.456, 123.456},
+
+	{(*myFloat32)(&float32TestValue), 123, 123},
+	{(*myFloat64)(&float64TestValue), 123.456, 123.456},
 }
 
 func TestFloat32(t *testing.T) {
