@@ -7,7 +7,6 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/v2/text/gstr"
 	"mime"
 	"net/http"
 
@@ -22,6 +21,17 @@ type DefaultHandlerResponse struct {
 	Data    interface{} `json:"data"    dc:"Result data for certain request according API definition"`
 }
 
+const (
+	contentTypeEventStream  = "text/event-stream"
+	contentTypeOctetStream  = "application/octet-stream"
+	contentTypeMixedReplace = "multipart/x-mixed-replace"
+)
+
+var (
+	// streamContentType is the content types for stream response.
+	streamContentType = []string{contentTypeEventStream, contentTypeOctetStream, contentTypeMixedReplace}
+)
+
 // MiddlewareHandlerResponse is the default middleware handling handler response object and its error.
 func MiddlewareHandlerResponse(r *Request) {
 	r.Middleware.Next()
@@ -31,14 +41,10 @@ func MiddlewareHandlerResponse(r *Request) {
 		return
 	}
 
-	// The response will not return any additional custom content or body
+	// It does not output common response content if it is stream response.
 	mediaType, _, _ := mime.ParseMediaType(r.Response.Header().Get("Content-Type"))
-	for _, ct := range []string{
-		"text/event-stream",
-		"application/octet-stream",
-		"multipart/x-mixed-replace",
-	} {
-		if gstr.Equal(mediaType, ct) {
+	for _, ct := range streamContentType {
+		if mediaType == ct {
 			return
 		}
 	}
