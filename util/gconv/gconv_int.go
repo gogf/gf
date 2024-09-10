@@ -88,6 +88,7 @@ func Int64(any interface{}) int64 {
 		}
 		return Int64(rv.Elem().Interface())
 	case reflect.Slice:
+		// TODO：(Map，Array，Slice，Struct) These types should be panic
 		if rv.Type().Elem().Kind() == reflect.Uint8 {
 			return gbinary.DecodeToInt64(rv.Bytes())
 		}

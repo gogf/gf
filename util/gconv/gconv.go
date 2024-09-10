@@ -276,6 +276,7 @@ func Bool(any interface{}) bool {
 			return rv.Float() != 0
 		case reflect.Bool:
 			return rv.Bool()
+		// TODO：(Map，Array，Slice，Struct) These types should be panic
 		case reflect.Map:
 			fallthrough
 		case reflect.Array:

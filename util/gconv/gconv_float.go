@@ -83,6 +83,7 @@ func Float64(any interface{}) float64 {
 		}
 		return Float64(rv.Elem().Interface())
 	case reflect.Slice:
+		// TODO：These types should be panic
 		if rv.Type().Elem().Kind() == reflect.Uint8 {
 			return gbinary.DecodeToFloat64(rv.Bytes())
 		}
