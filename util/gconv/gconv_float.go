@@ -45,6 +45,9 @@ func Float32(any interface{}) float32 {
 			f, _ := strconv.ParseFloat(rv.String(), 32)
 			return float32(f)
 		case reflect.Ptr:
+			if f, ok := value.(localinterface.IFloat32); ok {
+				return f.Float32()
+			}
 			return Float32(rv.Elem().Interface())
 		default:
 			if f, ok := value.(localinterface.IFloat32); ok {
@@ -89,7 +92,10 @@ func Float64(any interface{}) float64 {
 			f, _ := strconv.ParseFloat(rv.String(), 64)
 			return f
 		case reflect.Ptr:
-			return float64(Float32(rv.Elem().Interface()))
+			if f, ok := value.(localinterface.IFloat64); ok {
+				return f.Float64()
+			}
+			return Float64(rv.Elem().Interface())
 		default:
 			if f, ok := value.(localinterface.IFloat64); ok {
 				return f.Float64()

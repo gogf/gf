@@ -101,7 +101,8 @@ func TestFloat32(t *testing.T) {
 
 func TestFloat64(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		for _, test := range floatTests {
+		for i, test := range floatTests {
+			t.Log(i)
 			t.AssertEQ(gconv.Float64(test.value), test.expect64)
 		}
 	})
