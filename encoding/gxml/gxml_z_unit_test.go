@@ -219,6 +219,7 @@ func Test_Issue3716(t *testing.T) {
 				},
 			}
 		)
+		gxml.XMLEscapeChars(true)
 
 		xb, err := gxml.Encode(m)
 		t.AssertNil(err)
