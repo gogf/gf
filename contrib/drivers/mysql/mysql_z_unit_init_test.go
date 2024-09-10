@@ -129,6 +129,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 	        password    char(32) NULL,
 	        nickname    varchar(45) NULL,
 	        create_time timestamp(6) NULL,
+	        create_date       date NULL,
 	        PRIMARY KEY (id)
 	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 	    `, name,
