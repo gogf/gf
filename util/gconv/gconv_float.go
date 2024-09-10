@@ -60,38 +60,41 @@ func Float64(any interface{}) float64 {
 	if any == nil {
 		return 0
 	}
-	switch value := any.(type) {
-	case float32:
-		return float64(value)
-	case float64:
-		return value
-	case []byte:
-		return gbinary.DecodeToFloat64(value)
-	default:
-		if f, ok := value.(localinterface.IFloat64); ok {
+	rv := reflect.ValueOf(any)
+
+	switch rv.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return float64(rv.Int())
+	case reflect.Uintptr, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return float64(rv.Uint())
+	case reflect.Float32, reflect.Float64:
+		return rv.Float()
+	case reflect.Bool:
+		if rv.Bool() {
+			return 1
+		}
+		return 0
+	case reflect.Ptr:
+		if rv.IsNil() {
+			return 0
+		}
+		if f, ok := any.(localinterface.IFloat64); ok {
 			return f.Float64()
 		}
-		rv := reflect.ValueOf(any)
-		switch rv.Kind() {
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			return float64(rv.Int())
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			return float64(rv.Uint())
-		case reflect.Float32, reflect.Float64:
-			return rv.Float()
-		case reflect.Bool:
-			if rv.Bool() {
-				return 1
-			}
-			return 0
-		case reflect.String:
-			f, _ := strconv.ParseFloat(rv.String(), 64)
-			return f
-		case reflect.Ptr:
-			return Float64(rv.Elem().Interface())
-		default:
-			v, _ := strconv.ParseFloat(String(any), 64)
-			return v
+		return Float64(rv.Elem().Interface())
+	case reflect.Slice:
+		if rv.Type().Elem().Kind() == reflect.Uint8 {
+			return gbinary.DecodeToFloat64(rv.Bytes())
 		}
+	case reflect.String:
+		f, _ := strconv.ParseFloat(rv.String(), 64)
+		return f
+	default:
+		if f, ok := any.(localinterface.IFloat64); ok {
+			return f.Float64()
+		}
+		v, _ := strconv.ParseFloat(String(any), 64)
+		return v
 	}
+	return 0
 }

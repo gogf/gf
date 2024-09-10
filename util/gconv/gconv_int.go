@@ -64,92 +64,72 @@ func Int64(any interface{}) int64 {
 	if any == nil {
 		return 0
 	}
-	switch value := any.(type) {
-	case int:
-		return int64(value)
-	case int8:
-		return int64(value)
-	case int16:
-		return int64(value)
-	case int32:
-		return int64(value)
-	case int64:
-		return value
-	case uint:
-		return int64(value)
-	case uint8:
-		return int64(value)
-	case uint16:
-		return int64(value)
-	case uint32:
-		return int64(value)
-	case uint64:
-		return int64(value)
-	case float32:
-		return int64(value)
-	case float64:
-		return int64(value)
-	case bool:
-		if value {
+	rv := reflect.ValueOf(any)
+	switch rv.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return int64(rv.Int())
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return int64(rv.Uint())
+	case reflect.Uintptr:
+		return int64(rv.Uint())
+	case reflect.Float32, reflect.Float64:
+		return int64(rv.Float())
+	case reflect.Bool:
+		if rv.Bool() {
 			return 1
 		}
 		return 0
-	case []byte:
-		return gbinary.DecodeToInt64(value)
-	default:
-		if f, ok := value.(localinterface.IInt64); ok {
+	case reflect.Ptr:
+		if rv.IsNil() {
+			return 0
+		}
+		if f, ok := any.(localinterface.IInt64); ok {
 			return f.Int64()
 		}
-		rv := reflect.ValueOf(value)
-		switch rv.Kind() {
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			return int64(rv.Int())
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			return int64(rv.Uint())
-		case reflect.Float32, reflect.Float64:
-			return int64(rv.Float())
-		case reflect.Bool:
-			if rv.Bool() {
-				return 1
+		return Int64(rv.Elem().Interface())
+	case reflect.Slice:
+		if rv.Type().Elem().Kind() == reflect.Uint8 {
+			return gbinary.DecodeToInt64(rv.Bytes())
+		}
+	case reflect.String:
+		var (
+			s       = rv.String()
+			isMinus = false
+		)
+		if len(s) > 0 {
+			if s[0] == '-' {
+				isMinus = true
+				s = s[1:]
+			} else if s[0] == '+' {
+				s = s[1:]
 			}
-			return 0
-		case reflect.Ptr:
-			return Int64(rv.Elem().Interface())
-		default:
-			var (
-				s       = String(value)
-				isMinus = false
-			)
-			if len(s) > 0 {
-				if s[0] == '-' {
-					isMinus = true
-					s = s[1:]
-				} else if s[0] == '+' {
-					s = s[1:]
-				}
-			}
-			// Hexadecimal
-			if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
-				if v, e := strconv.ParseInt(s[2:], 16, 64); e == nil {
-					if isMinus {
-						return -v
-					}
-					return v
-				}
-			}
-			// Decimal
-			if v, e := strconv.ParseInt(s, 10, 64); e == nil {
+		}
+		// Hexadecimal
+		if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
+			if v, e := strconv.ParseInt(s[2:], 16, 64); e == nil {
 				if isMinus {
 					return -v
 				}
 				return v
 			}
-			// Float64
-			if valueInt64 := Float64(value); math.IsNaN(valueInt64) {
-				return 0
-			} else {
-				return int64(valueInt64)
+		}
+		// Decimal
+		if v, e := strconv.ParseInt(s, 10, 64); e == nil {
+			if isMinus {
+				return -v
 			}
+			return v
+		}
+		// Float64
+		if valueInt64 := Float64(s); math.IsNaN(valueInt64) {
+			return 0
+		} else {
+			return int64(valueInt64)
+		}
+	default:
+		if f, ok := any.(localinterface.IInt64); ok {
+			return f.Int64()
 		}
 	}
+	return 0
 }

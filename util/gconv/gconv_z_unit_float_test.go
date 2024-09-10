@@ -83,10 +83,8 @@ var floatTests = []struct {
 
 func TestFloat32(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		for i, test := range floatTests {
-			t.Log(i, gconv.Float32(test.value), test.expect32)
-			// t.AssertEQ(gconv.Float32(test.value), test.expect32)
-
+		for _, test := range floatTests {
+			t.AssertEQ(gconv.Float32(test.value), test.expect32)
 		}
 	})
 }

@@ -224,10 +224,7 @@ func String(any interface{}) string {
 		case reflect.Float32, reflect.Float64:
 			return strconv.FormatFloat(rv.Float(), 'G', -1, 64)
 		case reflect.Bool:
-			if rv.Bool() {
-				return "true"
-			}
-			return "false"
+			return strconv.FormatBool(rv.Bool())
 		}
 		// Finally, we use json.Marshal to convert.
 		if jsonContent, err := json.Marshal(value); err != nil {
@@ -267,13 +264,13 @@ func Bool(any interface{}) bool {
 			if rv.IsNil() {
 				return false
 			}
-			if rv.Elem().Kind() == reflect.Bool {
+			if rv.Type().Elem().Kind() == reflect.Bool {
 				return rv.Elem().Bool()
 			}
 			return Bool(rv.Elem().Interface())
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			return rv.Int() != 0
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		case reflect.Uintptr, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			return rv.Uint() != 0
 		case reflect.Float32, reflect.Float64:
 			return rv.Float() != 0
