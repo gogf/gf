@@ -307,32 +307,21 @@ func createRouterFuncOriginal(funcInfo handlerFuncInfo) func(r *Request) {
 func createRouterFunc(funcInfo handlerFuncInfo) func(r *Request) {
 	cachedInfo := getFuncCachedInfo(funcInfo)
 	return func(r *Request) {
-
 		// Initialize input values with context
 		inputValues := []reflect.Value{reflect.ValueOf(r.Context())}
 		if cachedInfo.hasInput {
-
-			var inputObject interface{}
-			// Ensure we pass the correct type to the handler
+			var inputObject reflect.Value
 			if cachedInfo.parsePtr {
-				inputObject = reflect.New(cachedInfo.inputType.Elem()).Interface()
-				inputValues = append(inputValues, reflect.ValueOf(inputObject))
-
-				// 性能测试这部分与原方法测试一起注释关闭，原方法与新方法都是同一方法，可以注释后再进行性能测试
-				// Performance testing part can be commented out together with the original method
-				r.error = r.Parse(inputObject)
+				inputObject = reflect.New(cachedInfo.inputType.Elem())
+				r.error = r.Parse(inputObject.Interface())
 			} else {
-				inputObject = reflect.New(cachedInfo.inputType).Interface()
-				elem := reflect.ValueOf(inputObject).Elem()
-				inputValues = append(inputValues, elem)
-
-				// Performance testing part can be commented out together with the original method
-				r.error = r.Parse(elem.Interface())
+				inputObject = reflect.New(cachedInfo.inputType.Elem()).Elem()
+				r.error = r.Parse(inputObject.Addr().Interface())
 			}
-
 			if r.error != nil {
 				return
 			}
+			inputValues = append(inputValues, inputObject)
 		}
 
 		// Call handler with dynamic created parameter values.
