@@ -84,6 +84,14 @@ type (
 		ReqStructFields []gstructs.Field // Request struct fields.
 	}
 
+	// cachedHandlerInfo stores precomputed reflection information for a handler function.
+	cachedHandlerInfo struct {
+		inputType reflect.Type  // inputType represents the type of the input parameter for the handler function.
+		callFunc  reflect.Value // callFunc is the reflect.Value representing the handler function.
+		hasInput  bool          // hasInput indicates whether the handler function has an input parameter.
+		parsePtr  bool          // parsePtr indicates whether the input parameter is a pointer.
+	}
+
 	// HandlerItem is the registered handler for route handling,
 	// including middleware and hook functions.
 	HandlerItem struct {

@@ -9,13 +9,12 @@ package ghttp
 import (
 	"bytes"
 	"context"
-	"reflect"
-	"strings"
-
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
+	"reflect"
+	"strings"
 )
 
 // BindHandler registers a handler function to server with a given pattern.
@@ -261,7 +260,7 @@ func (s *Server) checkAndCreateFuncInfo(
 	return
 }
 
-func createRouterFunc(funcInfo handlerFuncInfo) func(r *Request) {
+func createRouterFuncOriginal(funcInfo handlerFuncInfo) func(r *Request) {
 	return func(r *Request) {
 		var (
 			ok          bool
@@ -302,6 +301,78 @@ func createRouterFunc(funcInfo handlerFuncInfo) func(r *Request) {
 				}
 			}
 		}
+	}
+}
+
+func createRouterFunc(funcInfo handlerFuncInfo) func(r *Request) {
+	cachedInfo := getFuncCachedInfo(funcInfo)
+	return func(r *Request) {
+
+		// Initialize input values with context
+		inputValues := []reflect.Value{reflect.ValueOf(r.Context())}
+		if cachedInfo.hasInput {
+
+			var inputObject interface{}
+			// Ensure we pass the correct type to the handler
+			if cachedInfo.parsePtr {
+				inputObject = reflect.New(cachedInfo.inputType.Elem()).Interface()
+				inputValues = append(inputValues, reflect.ValueOf(inputObject))
+
+				// 性能测试这部分与原方法测试一起注释关闭，原方法与新方法都是同一方法，可以注释后再进行性能测试
+				// Performance testing part can be commented out together with the original method
+				r.error = r.Parse(inputObject)
+			} else {
+				inputObject = reflect.New(cachedInfo.inputType).Interface()
+				elem := reflect.ValueOf(inputObject).Elem()
+				inputValues = append(inputValues, elem)
+
+				// Performance testing part can be commented out together with the original method
+				r.error = r.Parse(elem.Interface())
+			}
+
+			if r.error != nil {
+				return
+			}
+		}
+
+		// Call handler with dynamic created parameter values.
+		results := cachedInfo.callFunc.Call(inputValues)
+		switch len(results) {
+		case 1:
+			if !results[0].IsNil() {
+				if err, ok := results[0].Interface().(error); ok {
+					r.error = err
+				}
+			}
+		case 2:
+			r.handlerResponse = results[0].Interface()
+			if !results[1].IsNil() {
+				if err, ok := results[1].Interface().(error); ok {
+					r.error = err
+				}
+			}
+		}
+	}
+}
+
+// getFuncCachedInfo precomputes and caches reflection information.
+func getFuncCachedInfo(funcInfo handlerFuncInfo) cachedHandlerInfo {
+	var (
+		inputType reflect.Type
+		parsePtr  bool
+	)
+
+	hasInput := funcInfo.Type.NumIn() == 2
+	if hasInput {
+		inputType = funcInfo.Type.In(1)
+		parsePtr = inputType.Kind() == reflect.Ptr
+	}
+
+	return cachedHandlerInfo{
+		callFunc:  funcInfo.Value,
+		hasInput:  hasInput,
+		inputType: inputType,
+		parsePtr:  parsePtr,
 	}
 }
 
