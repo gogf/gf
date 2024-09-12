@@ -51,6 +51,7 @@ var boolTests = []struct {
 	{struct{}{}, true},
 	{&struct{}{}, true},
 	{nil, false},
+	{(*bool)(nil), false},
 
 	{&boolTestTrueValue, true},
 	{&boolTestFalseValue, false},
@@ -59,6 +60,8 @@ var boolTests = []struct {
 	{myBool(false), false},
 	{(*myBool)(&boolTestTrueValue), true},
 	{(*myBool)(&boolTestFalseValue), false},
+
+	{(*myBool)(nil), false},
 }
 
 func TestBool(t *testing.T) {

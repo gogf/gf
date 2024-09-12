@@ -78,6 +78,8 @@ var floatTests = []struct {
 
 	{struct{}{}, 0, 0},
 	{nil, 0, 0},
+	{(*float32)(nil), 0, 0},
+	{(*float64)(nil), 0, 0},
 
 	{gvar.New(123), 123, 123},
 	{gvar.New(123.456), 123.456, 123.456},
@@ -90,6 +92,9 @@ var floatTests = []struct {
 
 	{(*myFloat32)(&float32TestValue), 123, 123},
 	{(*myFloat64)(&float64TestValue), 123.456, 123.456},
+
+	{(*myFloat32)(nil), 0, 0},
+	{(*myFloat64)(nil), 0, 0},
 }
 
 func TestFloat32(t *testing.T) {

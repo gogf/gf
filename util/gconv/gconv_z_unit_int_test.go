@@ -87,6 +87,12 @@ var intTests = []struct {
 	{struct{}{}, 0, 0, 0, 0, 0},
 	{nil, 0, 0, 0, 0, 0},
 
+	{(*int)(nil), 0, 0, 0, 0, 0},
+	{(*int8)(nil), 0, 0, 0, 0, 0},
+	{(*int16)(nil), 0, 0, 0, 0, 0},
+	{(*int32)(nil), 0, 0, 0, 0, 0},
+	{(*int64)(nil), 0, 0, 0, 0, 0},
+
 	{gvar.New(123), 123, 123, 123, 123, 123},
 	{gvar.New(123.456), 123, 123, 123, 123, 123},
 
@@ -107,6 +113,12 @@ var intTests = []struct {
 	{(*myInt16)(&int16TestValue), 123, 123, 123, 123, 123},
 	{(*myInt32)(&int32TestValue), 123, 123, 123, 123, 123},
 	{(*myInt64)(&int64TestValue), 123, 123, 123, 123, 123},
+
+	{(*myInt)(nil), 0, 0, 0, 0, 0},
+	{(*myInt8)(nil), 0, 0, 0, 0, 0},
+	{(*myInt16)(nil), 0, 0, 0, 0, 0},
+	{(*myInt32)(nil), 0, 0, 0, 0, 0},
+	{(*myInt64)(nil), 0, 0, 0, 0, 0},
 }
 
 func TestInt(t *testing.T) {
