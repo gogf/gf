@@ -17,8 +17,9 @@ import (
 )
 
 var (
-	// WARN: When the type is float32 or a new type defined based on float32,
-	//		switching to float64 may result in a few extra decimal places
+	// Please Note:
+	// When the type is float32 or a custom type defined based on float32,
+	// switching to float64 may result in a few extra decimal places.
 	float32TestValue = float32(123)
 	float64TestValue = float64(123.456)
 )
@@ -101,8 +102,7 @@ func TestFloat32(t *testing.T) {
 
 func TestFloat64(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		for i, test := range floatTests {
-			t.Log(i)
+		for _, test := range floatTests {
 			t.AssertEQ(gconv.Float64(test.value), test.expect64)
 		}
 	})

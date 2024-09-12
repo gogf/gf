@@ -181,10 +181,6 @@ func String(any interface{}) string {
 		}
 		return value.String()
 	default:
-		// Empty checks.
-		if value == nil {
-			return ""
-		}
 		if f, ok := value.(localinterface.IString); ok {
 			// If the variable implements the String() interface,
 			// then use that interface to perform the conversion
@@ -201,7 +197,8 @@ func String(any interface{}) string {
 			kind = rv.Kind()
 		)
 		switch kind {
-		case reflect.Chan,
+		case
+			reflect.Chan,
 			reflect.Map,
 			reflect.Slice,
 			reflect.Func,
@@ -221,8 +218,10 @@ func String(any interface{}) string {
 			return strconv.FormatInt(rv.Int(), 10)
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			return strconv.FormatUint(rv.Uint(), 10)
+		case reflect.Uintptr:
+			return strconv.FormatUint(rv.Uint(), 10)
 		case reflect.Float32, reflect.Float64:
-			return strconv.FormatFloat(rv.Float(), 'G', -1, 64)
+			return strconv.FormatFloat(rv.Float(), 'f', -1, 64)
 		case reflect.Bool:
 			return strconv.FormatBool(rv.Bool())
 		}
@@ -276,10 +275,8 @@ func Bool(any interface{}) bool {
 			return rv.Float() != 0
 		case reflect.Bool:
 			return rv.Bool()
-		// TODO：(Map，Array，Slice，Struct) These types should be panic
-		case reflect.Map:
-			fallthrough
-		case reflect.Array:
+		// TODO：(Map，Array，Slice，Struct) It might panic here for these types.
+		case reflect.Map, reflect.Array:
 			fallthrough
 		case reflect.Slice:
 			return rv.Len() != 0

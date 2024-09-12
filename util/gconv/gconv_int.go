@@ -88,7 +88,7 @@ func Int64(any interface{}) int64 {
 		}
 		return Int64(rv.Elem().Interface())
 	case reflect.Slice:
-		// TODO：These types should be panic
+		// TODO: It might panic here for these types.
 		if rv.Type().Elem().Kind() == reflect.Uint8 {
 			return gbinary.DecodeToInt64(rv.Bytes())
 		}
@@ -105,7 +105,7 @@ func Int64(any interface{}) int64 {
 				s = s[1:]
 			}
 		}
-		// Hexadecimal
+		// Hexadecimal.
 		if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
 			if v, e := strconv.ParseInt(s[2:], 16, 64); e == nil {
 				if isMinus {
@@ -114,14 +114,14 @@ func Int64(any interface{}) int64 {
 				return v
 			}
 		}
-		// Decimal
+		// Decimal.
 		if v, e := strconv.ParseInt(s, 10, 64); e == nil {
 			if isMinus {
 				return -v
 			}
 			return v
 		}
-		// Float64
+		// Float64.
 		if valueInt64 := Float64(s); math.IsNaN(valueInt64) {
 			return 0
 		} else {

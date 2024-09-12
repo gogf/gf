@@ -25,7 +25,7 @@ func Float32(any interface{}) float32 {
 	case float64:
 		return float32(value)
 	case []byte:
-		// TODO: These types should be panic
+		// TODO: It might panic here for these types.
 		return gbinary.DecodeToFloat32(value)
 	default:
 		rv := reflect.ValueOf(any)
@@ -70,18 +70,21 @@ func Float64(any interface{}) float64 {
 	case float64:
 		return value
 	case []byte:
-		// TODO: These types should be panic
+		// TODO: It might panic here for these types.
 		return gbinary.DecodeToFloat64(value)
 	default:
 		rv := reflect.ValueOf(any)
 		switch rv.Kind() {
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			return float64(rv.Int())
-		case reflect.Uintptr, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			return float64(rv.Uint())
+		case reflect.Uintptr:
 			return float64(rv.Uint())
 		case reflect.Float32, reflect.Float64:
-			// WARN: When the type is float32 or a new type defined based on float32,
-			//		switching to float64 may result in a few extra decimal places
+			// Please Note:
+			// When the type is float32 or a custom type defined based on float32,
+			// switching to float64 may result in a few extra decimal places.
 			return rv.Float()
 		case reflect.Bool:
 			if rv.Bool() {
