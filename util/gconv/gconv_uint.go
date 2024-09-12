@@ -8,6 +8,7 @@ package gconv
 
 import (
 	"math"
+	"reflect"
 	"strconv"
 
 	"github.com/gogf/gf/v2/encoding/gbinary"
@@ -63,43 +64,38 @@ func Uint64(any interface{}) uint64 {
 	if any == nil {
 		return 0
 	}
-	switch value := any.(type) {
-	case int:
-		return uint64(value)
-	case int8:
-		return uint64(value)
-	case int16:
-		return uint64(value)
-	case int32:
-		return uint64(value)
-	case int64:
-		return uint64(value)
-	case uint:
-		return uint64(value)
-	case uint8:
-		return uint64(value)
-	case uint16:
-		return uint64(value)
-	case uint32:
-		return uint64(value)
-	case uint64:
-		return value
-	case float32:
-		return uint64(value)
-	case float64:
-		return uint64(value)
-	case bool:
-		if value {
+	rv := reflect.ValueOf(any)
+	switch rv.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return uint64(rv.Int())
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return uint64(rv.Uint())
+	case reflect.Uintptr:
+		return uint64(rv.Uint())
+	case reflect.Float32, reflect.Float64:
+		return uint64(rv.Float())
+	case reflect.Bool:
+		if rv.Bool() {
 			return 1
 		}
 		return 0
-	case []byte:
-		return gbinary.DecodeToUint64(value)
-	default:
-		if f, ok := value.(localinterface.IUint64); ok {
+	case reflect.Ptr:
+		if rv.IsNil() {
+			return 0
+		}
+		if f, ok := any.(localinterface.IUint64); ok {
 			return f.Uint64()
 		}
-		s := String(value)
+		return Uint64(rv.Elem().Interface())
+	case reflect.Slice:
+		// TODO：These types should be panic
+		if rv.Type().Elem().Kind() == reflect.Uint8 {
+			return gbinary.DecodeToUint64(rv.Bytes())
+		}
+	case reflect.String:
+		var (
+			s = rv.String()
+		)
 		// Hexadecimal
 		if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
 			if v, e := strconv.ParseUint(s[2:], 16, 64); e == nil {
@@ -111,10 +107,15 @@ func Uint64(any interface{}) uint64 {
 			return v
 		}
 		// Float64
-		if valueFloat64 := Float64(value); math.IsNaN(valueFloat64) {
+		if valueFloat64 := Float64(any); math.IsNaN(valueFloat64) {
 			return 0
 		} else {
 			return uint64(valueFloat64)
 		}
+	default:
+		if f, ok := any.(localinterface.IUint64); ok {
+			return f.Uint64()
+		}
 	}
+	return 0
 }
