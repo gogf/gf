@@ -387,3 +387,30 @@ func TestIssue3731(t *testing.T) {
 		t.AssertEQ("<nil>", fmt.Sprintf("%T", args.Doc["craft"]))
 	})
 }
+
+// https://github.com/gogf/gf/issues/3764
+func TestIssue3764(t *testing.T) {
+	type T struct {
+		True     bool  `json:"true"`
+		False    bool  `json:"false"`
+		TruePtr  *bool `json:"true_ptr"`
+		FalsePtr *bool `json:"false_ptr"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		trueValue := true
+		falseValue := false
+		m := g.Map{
+			"true":      trueValue,
+			"false":     falseValue,
+			"true_ptr":  &trueValue,
+			"false_ptr": &falseValue,
+		}
+		tt := &T{}
+		err := gconv.Struct(m, &tt)
+		t.AssertNil(err)
+		t.AssertEQ(tt.True, true)
+		t.AssertEQ(tt.False, false)
+		t.AssertEQ(*tt.TruePtr, trueValue)
+		t.AssertEQ(*tt.FalsePtr, falseValue)
+	})
+}
