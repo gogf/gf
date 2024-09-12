@@ -9,7 +9,6 @@ package gjson_test
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"testing"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -640,7 +639,6 @@ func TestIssue(t *testing.T) {
 		data := `{"uid": "123", "uname": "456"}`
 		var u UserIssue3769
 		t.AssertNil(gjson.New(data).Scan(&u))
-		log.Println(u)
 		t.Assert(u.Id, `123`)
 	})
 }
