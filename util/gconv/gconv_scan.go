@@ -7,6 +7,7 @@
 package gconv
 
 import (
+	stdjson "encoding/json"
 	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -197,6 +198,20 @@ func doConvertWithJsonCheck(srcValue interface{}, dstPointer interface{}) (ok bo
 		}
 
 	default:
+		switch dst := dstPointer.(type) {
+		case stdjson.Unmarshaler:
+			bytes, err := json.Marshal(srcValue)
+			if err != nil {
+				return false, err
+			}
+
+			err = dst.UnmarshalJSON(bytes)
+			if err != nil {
+				return false, err
+			}
+			return true, nil
+		}
+
 		// The `params` might be struct that implements interface function Interface, eg: gvar.Var.
 		if v, ok := srcValue.(localinterface.IInterface); ok {
 			return doConvertWithJsonCheck(v.Interface(), dstPointer)
