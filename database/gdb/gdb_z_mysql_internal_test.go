@@ -232,6 +232,7 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		t.Assert(newNode.Charset, defaultCharset)
 		t.Assert(newNode.Protocol, `tcp`)
 	})
+	// #3755
 	gtest.C(t, func(t *gtest.T) {
 		node := &ConfigNode{
 			Link: "mysql:user:pwd@tcp(rdsid.mysql.rds.aliyuncs.com)/dbname?charset=utf8&loc=Local",
