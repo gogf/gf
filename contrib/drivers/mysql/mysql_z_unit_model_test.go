@@ -2335,7 +2335,7 @@ func Test_Model_FieldsEx(t *testing.T) {
 		r, err := db.Model(table).FieldsEx("create_time, id").Where("id in (?)", g.Slice{1, 2}).Order("id asc").All()
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
-		t.Assert(len(r[0]), 3)
+		t.Assert(len(r[0]), 4)
 		t.Assert(r[0]["id"], "")
 		t.Assert(r[0]["passport"], "user_1")
 		t.Assert(r[0]["password"], "pass_1")
@@ -2982,7 +2982,7 @@ func Test_Model_FieldsEx_AutoMapping(t *testing.T) {
 			"CreateTime": 1,
 		}).Where("id", 2).One()
 		t.AssertNil(err)
-		t.Assert(len(one), 2)
+		t.Assert(len(one), 3)
 		t.Assert(one["id"], 2)
 		t.Assert(one["nickname"], "name_2")
 	})
@@ -2999,7 +2999,7 @@ func Test_Model_FieldsEx_AutoMapping(t *testing.T) {
 			CreateTime: 0,
 		}).Where("id", 2).One()
 		t.AssertNil(err)
-		t.Assert(len(one), 2)
+		t.Assert(len(one), 3)
 		t.Assert(one["id"], 2)
 		t.Assert(one["nickname"], "name_2")
 	})
@@ -3157,8 +3157,8 @@ func Test_TimeZoneInsert(t *testing.T) {
 	gtest.AssertNil(err)
 
 	CreateTime := "2020-11-22 12:23:45"
-	UpdateTime := "2020-11-22 13:23:45"
-	DeleteTime := "2020-11-22 14:23:45"
+	UpdateTime := "2020-11-22 13:23:46"
+	DeleteTime := "2020-11-22 14:23:47"
 	type User struct {
 		Id        int         `json:"id"`
 		CreatedAt *gtime.Time `json:"created_at"`
@@ -3176,13 +3176,14 @@ func Test_TimeZoneInsert(t *testing.T) {
 	}
 
 	gtest.C(t, func(t *gtest.T) {
-		_, _ = db.Model(tableName).Unscoped().Insert(u)
+		_, err = db.Model(tableName).Unscoped().Insert(u)
+		t.AssertNil(err)
 		userEntity := &User{}
-		err := db.Model(tableName).Where("id", 1).Unscoped().Scan(&userEntity)
+		err = db.Model(tableName).Where("id", 1).Unscoped().Scan(&userEntity)
 		t.AssertNil(err)
 		t.Assert(userEntity.CreatedAt.String(), "2020-11-22 11:23:45")
-		t.Assert(userEntity.UpdatedAt.String(), "2020-11-22 12:23:45")
-		t.Assert(gtime.NewFromTime(userEntity.DeletedAt).String(), "2020-11-22 13:23:45")
+		t.Assert(userEntity.UpdatedAt.String(), "2020-11-22 12:23:46")
+		t.Assert(gtime.NewFromTime(userEntity.DeletedAt).String(), "2020-11-22 13:23:47")
 	})
 }
 

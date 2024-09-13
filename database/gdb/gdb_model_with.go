@@ -67,6 +67,9 @@ func (m *Model) WithAll() *Model {
 
 // doWithScanStruct handles model association operations feature for single struct.
 func (m *Model) doWithScanStruct(pointer interface{}) error {
+	if len(m.withArray) == 0 && m.withAll == false {
+		return nil
+	}
 	var (
 		err                 error
 		allowedTypeStrArray = make([]string, 0)
@@ -183,6 +186,9 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 // doWithScanStructs handles model association operations feature for struct slice.
 // Also see doWithScanStruct.
 func (m *Model) doWithScanStructs(pointer interface{}) error {
+	if len(m.withArray) == 0 && m.withAll == false {
+		return nil
+	}
 	if v, ok := pointer.(reflect.Value); ok {
 		pointer = v.Interface()
 	}
