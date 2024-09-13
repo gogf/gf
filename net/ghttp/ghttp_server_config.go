@@ -231,7 +231,20 @@ type ServerConfig struct {
 	SwaggerUITemplate string `json:"swaggerUITemplate"` // SwaggerUITemplate specifies the swagger UI custom template
 
 	// ======================================================================================================
-	// Mess.
+	// Graceful reload & shutdown.
+	// ======================================================================================================
+
+	// Graceful enables graceful reload feature for all servers of the process.
+	Graceful bool `json:"graceful"`
+
+	// GracefulTimeout set the maximum survival time (seconds) of the parent process.
+	GracefulTimeout uint8 `json:"gracefulTimeout"`
+
+	// GracefulShutdownTimeout set the maximum survival time (seconds) before stopping the server.
+	GracefulShutdownTimeout uint8 `json:"gracefulShutdownTimeout"`
+
+	// ======================================================================================================
+	// Other.
 	// ======================================================================================================
 
 	// ClientMaxBodySize specifies the max body size limit in bytes for client request.
@@ -254,15 +267,6 @@ type ServerConfig struct {
 
 	// DumpRouterMap specifies whether automatically dumps router map when server starts.
 	DumpRouterMap bool `json:"dumpRouterMap"`
-
-	// Graceful enables graceful reload feature for all servers of the process.
-	Graceful bool `json:"graceful"`
-
-	// GracefulTimeout set the maximum survival time (seconds) of the parent process.
-	GracefulTimeout int `json:"gracefulTimeout"`
-
-	// GracefulShutdownTimeout set the maximum survival time (seconds) before stopping the server.
-	GracefulShutdownTimeout int `json:"gracefulShutdownTimeout"`
 }
 
 // NewConfig creates and returns a ServerConfig object with default configurations.
