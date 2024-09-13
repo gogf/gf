@@ -223,10 +223,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			return nil, err
 		}
 	} else {
-		if strings.Contains(params, httpParamFileHolder) &&
-			c.header[httpHeaderContentType] != httpHeaderContentTypeJson &&
-			c.header[httpHeaderContentType] != httpHeaderContentTypeXml &&
-			c.header[httpHeaderContentType] != httpHeaderContentTypeForm {
+		if strings.Contains(params, httpParamFileHolder) && c.allowUpdateHeader() {
 			// File uploading request.
 			var (
 				buffer = bytes.NewBuffer(nil)
@@ -375,4 +372,13 @@ func (c *Client) callRequest(req *http.Request) (resp *Response, err error) {
 		}
 	}
 	return resp, err
+}
+
+func (c *Client) allowUpdateHeader() bool {
+	var notAllows = []string{
+		httpHeaderContentTypeJson,
+		httpHeaderContentTypeXml,
+		httpHeaderContentTypeForm}
+	// 判断切片中是否包含某个值
+	return !gstr.InArray(notAllows, c.header[httpHeaderContentType])
 }
