@@ -379,6 +379,5 @@ func (c *Client) allowUploadHeader() bool {
 		httpHeaderContentTypeJson,
 		httpHeaderContentTypeXml,
 		httpHeaderContentTypeForm}
-	// 判断切片中是否包含某个值
 	return !gstr.InArray(notAllows, c.header[httpHeaderContentType])
 }
