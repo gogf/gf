@@ -238,10 +238,10 @@ type ServerConfig struct {
 	Graceful bool `json:"graceful"`
 
 	// GracefulTimeout set the maximum survival time (seconds) of the parent process.
-	GracefulTimeout uint8 `json:"gracefulTimeout"`
+	GracefulTimeout int `json:"gracefulTimeout"`
 
 	// GracefulShutdownTimeout set the maximum survival time (seconds) before stopping the server.
-	GracefulShutdownTimeout uint8 `json:"gracefulShutdownTimeout"`
+	GracefulShutdownTimeout int `json:"gracefulShutdownTimeout"`
 
 	// ======================================================================================================
 	// Other.
