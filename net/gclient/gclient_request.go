@@ -223,7 +223,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			return nil, err
 		}
 	} else {
-		if strings.Contains(params, httpParamFileHolder) && c.allowUpdateHeader() {
+		if strings.Contains(params, httpParamFileHolder) && c.allowUploadHeader() {
 			// File uploading request.
 			var (
 				buffer = bytes.NewBuffer(nil)
@@ -374,7 +374,7 @@ func (c *Client) callRequest(req *http.Request) (resp *Response, err error) {
 	return resp, err
 }
 
-func (c *Client) allowUpdateHeader() bool {
+func (c *Client) allowUploadHeader() bool {
 	var notAllows = []string{
 		httpHeaderContentTypeJson,
 		httpHeaderContentTypeXml,
