@@ -176,7 +176,7 @@ func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 	model := m
 	// Auto selecting fields by struct attributes.
-	if model.fieldsEx == "" && (model.fields == "" || model.fields == "*") {
+	if len(model.fieldsEx) == 0 && (model.fields == "" || model.fields == "*") {
 		if v, ok := pointer.(reflect.Value); ok {
 			model = m.Fields(v.Interface())
 		} else {
@@ -212,7 +212,7 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 	model := m
 	// Auto selecting fields by struct attributes.
-	if model.fieldsEx == "" && (model.fields == "" || model.fields == "*") {
+	if len(model.fieldsEx) == 0 && (model.fields == "" || model.fields == "*") {
 		if v, ok := pointer.(reflect.Value); ok {
 			model = m.Fields(
 				reflect.New(
@@ -341,7 +341,7 @@ func (m *Model) ScanList(structSlicePointer interface{}, bindToAttrName string, 
 	if err != nil {
 		return err
 	}
-	if m.fields != defaultFields || m.fieldsEx != "" {
+	if m.fields != defaultFields || len(m.fieldsEx) != 0 {
 		// There are custom fields.
 		result, err = m.All()
 	} else {
@@ -675,7 +675,7 @@ func (m *Model) getAutoPrefix() string {
 // getFieldsFiltered checks the fields and fieldsEx attributes, filters and returns the fields that will
 // really be committed to underlying database driver.
 func (m *Model) getFieldsFiltered() string {
-	if m.fieldsEx == "" {
+	if len(m.fieldsEx) == 0 {
 		// No filtering, containing special chars.
 		if gstr.ContainsAny(m.fields, "()") {
 			return m.fields
@@ -688,7 +688,7 @@ func (m *Model) getFieldsFiltered() string {
 	}
 	var (
 		fieldsArray []string
-		fieldsExSet = gset.NewStrSetFrom(gstr.SplitAndTrim(m.fieldsEx, ","))
+		fieldsExSet = gset.NewStrSetFrom(m.fieldsEx)
 	)
 	if m.fields != "*" {
 		// Filter custom fields with fieldEx.
