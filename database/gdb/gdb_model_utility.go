@@ -204,7 +204,7 @@ func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(data Map, allowOmitEm
 		}
 	} else if len(m.fieldsEx) > 0 {
 		// Filter specified fields.
-		for _, v := range gstr.SplitAndTrim(m.fieldsEx, ",") {
+		for _, v := range m.fieldsEx {
 			delete(data, v)
 		}
 	}

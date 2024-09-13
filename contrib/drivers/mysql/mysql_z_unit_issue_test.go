@@ -1216,3 +1216,65 @@ func Test_Issue3649(t *testing.T) {
 		t.Assert(sql[0], sqlStr)
 	})
 }
+
+// https://github.com/gogf/gf/issues/3754
+func Test_Issue3754(t *testing.T) {
+	table := "issue3754"
+	array := gstr.SplitAndTrim(gtest.DataContent(`issue3754.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		fieldsEx := []string{"delete_at", "create_at", "update_at"}
+		// Insert.
+		dataInsert := g.Map{
+			"id":   1,
+			"name": "name_1",
+		}
+		r, err := db.Model(table).Data(dataInsert).FieldsEx(fieldsEx).Insert()
+		t.AssertNil(err)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 1)
+
+		oneInsert, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(oneInsert["id"].Int(), 1)
+		t.Assert(oneInsert["name"].String(), "name_1")
+		t.Assert(oneInsert["delete_at"].String(), "")
+		t.Assert(oneInsert["create_at"].String(), "")
+		t.Assert(oneInsert["update_at"].String(), "")
+
+		// Update.
+		dataUpdate := g.Map{
+			"name": "name_1000",
+		}
+		r, err = db.Model(table).Data(dataUpdate).FieldsEx(fieldsEx).WherePri(1).Update()
+		t.AssertNil(err)
+		n, _ = r.RowsAffected()
+		t.Assert(n, 1)
+
+		oneUpdate, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(oneUpdate["id"].Int(), 1)
+		t.Assert(oneUpdate["name"].String(), "name_1000")
+		t.Assert(oneUpdate["delete_at"].String(), "")
+		t.Assert(oneUpdate["create_at"].String(), "")
+		t.Assert(oneUpdate["update_at"].String(), "")
+
+		// FieldsEx does not affect Delete operation.
+		r, err = db.Model(table).FieldsEx(fieldsEx).WherePri(1).Delete()
+		n, _ = r.RowsAffected()
+		t.Assert(n, 1)
+		oneDeleteUnscoped, err := db.Model(table).Unscoped().WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(oneDeleteUnscoped["id"].Int(), 1)
+		t.Assert(oneDeleteUnscoped["name"].String(), "name_1000")
+		t.AssertNE(oneDeleteUnscoped["delete_at"].String(), "")
+		t.Assert(oneDeleteUnscoped["create_at"].String(), "")
+		t.Assert(oneDeleteUnscoped["update_at"].String(), "")
+	})
+}
