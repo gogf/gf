@@ -133,8 +133,8 @@ func filterFileByFilters(file string, filters []string) (filtered bool) {
 // CallerPackage returns the package name of the caller.
 func CallerPackage() string {
 	function, _, _ := Caller()
-	// it defines a new internal function to retrieve the package name from call function name,
-	// which is for testing available purpose for core function name handling logic.
+	// it defines a new internal function to retrieve the package name from caller function name,
+	// which is for unit testing purpose for core logic of this function.
 	return getPackageFromCallerFunction(function)
 }
 
