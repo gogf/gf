@@ -276,12 +276,18 @@ func parseConfigNodeLink(node *ConfigNode) *ConfigNode {
 			node.Pass = match[3]
 			node.Protocol = match[4]
 			array := gstr.Split(match[5], ":")
-			if len(array) == 2 && node.Protocol != "file" {
-				node.Host = array[0]
-				node.Port = array[1]
-				node.Name = match[6]
-			} else {
+			if node.Protocol == "file" {
 				node.Name = match[5]
+			} else {
+				if len(array) == 2 {
+					// link with port.
+					node.Host = array[0]
+					node.Port = array[1]
+				} else {
+					// link without port.
+					node.Host = array[0]
+				}
+				node.Name = match[6]
 			}
 			if len(match) > 6 && match[7] != "" {
 				node.Extra = match[7]
