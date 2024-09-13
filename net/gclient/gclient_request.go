@@ -227,7 +227,6 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			c.header[httpHeaderContentType] != httpHeaderContentTypeJson &&
 			c.header[httpHeaderContentType] != httpHeaderContentTypeXml &&
 			c.header[httpHeaderContentType] != httpHeaderContentTypeForm {
-
 			// File uploading request.
 			var (
 				buffer = bytes.NewBuffer(nil)
