@@ -231,7 +231,7 @@ type ServerConfig struct {
 	SwaggerUITemplate string `json:"swaggerUITemplate"` // SwaggerUITemplate specifies the swagger UI custom template
 
 	// ======================================================================================================
-	// Other.
+	// Mess.
 	// ======================================================================================================
 
 	// ClientMaxBodySize specifies the max body size limit in bytes for client request.
@@ -259,10 +259,10 @@ type ServerConfig struct {
 	Graceful bool `json:"graceful"`
 
 	// GracefulTimeout set the maximum survival time (seconds) of the parent process.
-	GracefulTimeout uint8 `json:"gracefulTimeout"`
+	GracefulTimeout int `json:"gracefulTimeout"`
 
 	// GracefulShutdownTimeout set the maximum survival time (seconds) before stopping the server.
-	GracefulShutdownTimeout uint8 `json:"gracefulShutdownTimeout"`
+	GracefulShutdownTimeout int `json:"gracefulShutdownTimeout"`
 }
 
 // NewConfig creates and returns a ServerConfig object with default configurations.
