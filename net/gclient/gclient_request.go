@@ -223,7 +223,11 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			return nil, err
 		}
 	} else {
-		if strings.Contains(params, httpParamFileHolder) {
+		if strings.Contains(params, httpParamFileHolder) &&
+			c.header[httpHeaderContentType] != httpHeaderContentTypeJson &&
+			c.header[httpHeaderContentType] != httpHeaderContentTypeXml &&
+			c.header[httpHeaderContentType] != httpHeaderContentTypeForm {
+
 			// File uploading request.
 			var (
 				buffer = bytes.NewBuffer(nil)
@@ -231,6 +235,9 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			)
 			for _, item := range strings.Split(params, "&") {
 				array := strings.Split(item, "=")
+				if len(array) < 2 {
+					continue
+				}
 				if len(array[1]) > 6 && strings.Compare(array[1][0:6], httpParamFileHolder) == 0 {
 					path := array[1][6:]
 					if !gfile.Exists(path) {
