@@ -13,8 +13,10 @@ import (
 )
 
 type adapterMemoryExpireSets struct {
-	mu         sync.RWMutex        // expireSetMu ensures the concurrent safety of expireSets map.
-	expireSets map[int64]*gset.Set // expireSets is the expiring timestamp to its key set mapping, which is used for quick indexing and deleting.
+	// expireSetMu ensures the concurrent safety of expireSets map.
+	mu sync.RWMutex
+	// expireSets is the expiring timestamp in seconds to its key set mapping, which is used for quick indexing and deleting.
+	expireSets map[int64]*gset.Set
 }
 
 func newAdapterMemoryExpireSets() *adapterMemoryExpireSets {
