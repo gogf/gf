@@ -9,12 +9,13 @@ package ghttp
 import (
 	"bytes"
 	"context"
+	"reflect"
+	"strings"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
-	"reflect"
-	"strings"
 )
 
 // BindHandler registers a handler function to server with a given pattern.
