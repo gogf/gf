@@ -259,6 +259,7 @@ func (s *gracefulServer) getRawListener() net.Listener {
 }
 
 // close shuts down the server forcibly.
+// for graceful shutdown, please use gracefulServer.shutdown.
 func (s *gracefulServer) close(ctx context.Context) {
 	if s.status.Val() == ServerStatusStopped {
 		return
