@@ -142,8 +142,9 @@ func (c cUp) doUpgradeVersion(ctx context.Context, in cUpInput) (out *doUpgradeV
 			}
 			for _, pkg := range packages {
 				mlog.Printf(`upgrading "%s" from "%s" to "latest"`, pkg.Name, pkg.Version)
-				// go get -u
-				command := fmt.Sprintf(`cd %s && go get -u %s@latest`, dirPath, pkg.Name)
+				mlog.Printf(`running command: go get %s@latest`, pkg.Name)
+				// go get @latest
+				command := fmt.Sprintf(`cd %s && go get %s@latest`, dirPath, pkg.Name)
 				if err = gproc.ShellRun(ctx, command); err != nil {
 					return
 				}

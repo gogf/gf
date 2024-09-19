@@ -774,6 +774,48 @@ func Test_MiddlewareHandlerGzipResponse(t *testing.T) {
 	})
 }
 
+func Test_MiddlewareHandlerStreamResponse(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareHandlerResponse)
+
+		group.GET("/stream/event", func(r *ghttp.Request) {
+			r.Response.Header().Set("Content-Type", "text/event-stream")
+		})
+
+		group.GET("/stream/octet", func(r *ghttp.Request) {
+			r.Response.Header().Set("Content-Type", "application/octet-stream")
+		})
+
+		group.GET("/stream/mixed", func(r *ghttp.Request) {
+			r.Response.Header().Set("Content-Type", "multipart/x-mixed-replace")
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		rsp, err := client.Get(ctx, "/stream/event")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusOK)
+		t.Assert(rsp.ReadAllString(), "")
+
+		rsp, err = client.Get(ctx, "/stream/octet")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusOK)
+		t.Assert(rsp.ReadAllString(), "")
+
+		rsp, err = client.Get(ctx, "/stream/mixed")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusOK)
+		t.Assert(rsp.ReadAllString(), "")
+	})
+}
 type testTracerProvider struct {
 	noop.TracerProvider
 }

@@ -7,6 +7,7 @@
 package gconv_test
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 	"time"
@@ -364,5 +365,52 @@ func TestIssue3006(t *testing.T) {
 		t.Assert(ff.Val2[0], []byte(`{"hello":"world"}`))
 		t.AssertEQ(len(ff.Val3), 1)
 		t.Assert(ff.Val3["val3"], []byte(`{"hello":"world"}`))
+	})
+}
+
+// https://github.com/gogf/gf/issues/3731
+func TestIssue3731(t *testing.T) {
+	type Data struct {
+		Doc map[string]interface{} `json:"doc"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		dataMap := map[string]any{
+			"doc": map[string]any{
+				"craft": nil,
+			},
+		}
+
+		var args Data
+		err := gconv.Struct(dataMap, &args)
+		t.AssertNil(err)
+		t.AssertEQ("<nil>", fmt.Sprintf("%T", args.Doc["craft"]))
+	})
+}
+
+// https://github.com/gogf/gf/issues/3764
+func TestIssue3764(t *testing.T) {
+	type T struct {
+		True     bool  `json:"true"`
+		False    bool  `json:"false"`
+		TruePtr  *bool `json:"true_ptr"`
+		FalsePtr *bool `json:"false_ptr"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		trueValue := true
+		falseValue := false
+		m := g.Map{
+			"true":      trueValue,
+			"false":     falseValue,
+			"true_ptr":  &trueValue,
+			"false_ptr": &falseValue,
+		}
+		tt := &T{}
+		err := gconv.Struct(m, &tt)
+		t.AssertNil(err)
+		t.AssertEQ(tt.True, true)
+		t.AssertEQ(tt.False, false)
+		t.AssertEQ(*tt.TruePtr, trueValue)
+		t.AssertEQ(*tt.FalsePtr, falseValue)
 	})
 }
