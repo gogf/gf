@@ -111,5 +111,9 @@ func Test_IsNumeric(t *testing.T) {
 		t.Assert(utils.IsNumeric("1e10"), false)
 		t.Assert(utils.IsNumeric("123 45"), false)
 		t.Assert(utils.IsNumeric("!!!"), false)
+		t.Assert(utils.IsNumeric("-a23"), false)
+		t.Assert(utils.IsNumeric("+a23"), false)
+		t.Assert(utils.IsNumeric("1+23"), false)
+		t.Assert(utils.IsNumeric("1-23"), false)
 	})
 }
