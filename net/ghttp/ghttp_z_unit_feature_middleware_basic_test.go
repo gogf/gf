@@ -816,6 +816,7 @@ func Test_MiddlewareHandlerStreamResponse(t *testing.T) {
 		t.Assert(rsp.ReadAllString(), "")
 	})
 }
+
 type testTracerProvider struct {
 	noop.TracerProvider
 }
