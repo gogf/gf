@@ -332,6 +332,44 @@ func Test_Client_File_And_Param(t *testing.T) {
 	})
 }
 
+// It posts data along with file uploading.
+// It does not url-encodes the parameters.
+func Test_Client_Complex_File_And_Complex_Param(t *testing.T) {
+	s := g.Server(guid.S())
+	s.BindHandler("/", func(r *ghttp.Request) {
+		tmpPath := gfile.Temp(guid.S())
+		err := gfile.Mkdir(tmpPath)
+		gtest.AssertNil(err)
+		defer gfile.Remove(tmpPath)
+
+		file := r.GetUploadFile("file")
+		_, err = file.Save(tmpPath)
+		gtest.AssertNil(err)
+		r.Response.Write(
+			r.Get("json"),
+			gfile.GetContents(gfile.Join(tmpPath, gfile.Basename(file.Filename))),
+			r.Get("url"),
+		)
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		path := gtest.DataPath("upload", "file&&name=1.txt")
+		data := g.Map{
+			"file": "@file:" + path,
+			"json": `{"uuid": "luijquiopm", "isRelative": false, "fileName": "test111.xls"}`,
+			"url":  fmt.Sprintf("https://127.0.0.1:%d/rand?key=%s&value=%s", s.GetListenedPort(), guid.S(), guid.S()),
+		}
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		t.Assert(c.PostContent(ctx, "/", data), data["json"].(string)+gfile.GetContents(path)+data["url"].(string))
+	})
+}
+
 func Test_Client_Middleware(t *testing.T) {
 	s := g.Server(guid.S())
 	isServerHandler := false
