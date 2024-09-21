@@ -59,6 +59,9 @@ func IsNumeric(s string) bool {
 	}
 	for i := 0; i < length; i++ {
 		if (s[i] == '-' || s[i] == '+') && i == 0 {
+			if length == 1 {
+				return false
+			}
 			continue
 		}
 		if s[i] == '.' {
