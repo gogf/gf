@@ -414,3 +414,35 @@ func TestIssue3764(t *testing.T) {
 		t.AssertEQ(*tt.FalsePtr, falseValue)
 	})
 }
+
+// https://github.com/gogf/gf/issues/3789
+func TestIssue3789(t *testing.T) {
+	type ItemSecondThird struct {
+		SecondID uint64 `json:"secondId,string"`
+		ThirdID  uint64 `json:"thirdId,string"`
+	}
+	type ItemFirst struct {
+		ID uint64 `json:"id,string"`
+		ItemSecondThird
+	}
+	type ItemInput struct {
+		ItemFirst
+	}
+	type HelloReq struct {
+		g.Meta `path:"/hello" method:"GET"`
+		ItemInput
+	}
+	gtest.C(t, func(t *gtest.T) {
+		m := map[string]interface{}{
+			"id":       1,
+			"secondId": 2,
+			"thirdId":  3,
+		}
+		var dest HelloReq
+		err := gconv.Scan(m, &dest)
+		t.AssertNil(err)
+		t.Assert(dest.ID, uint64(1))
+		t.Assert(dest.SecondID, uint64(2))
+		t.Assert(dest.ThirdID, uint64(3))
+	})
+}
