@@ -38,6 +38,10 @@ var (
 	}
 )
 
+// IUnmarshalValue is the interface for custom defined types customizing value assignment.
+// Note that only pointer can implement interface IUnmarshalValue.
+type IUnmarshalValue = localinterface.IUnmarshalValue
+
 func init() {
 	// register common converters for internal usage.
 	structcache.RegisterCommonConverter(structcache.CommonConverter{
