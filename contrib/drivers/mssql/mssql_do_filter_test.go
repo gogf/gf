@@ -1,11 +1,18 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package mssql
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/test/gtest"
 	"reflect"
 	"testing"
+
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func TestDriver_DoFilter(t *testing.T) {
@@ -18,15 +25,13 @@ func TestDriver_DoFilter(t *testing.T) {
 		sql  string
 		args []interface{}
 	}
-	tests := []struct {
+	var tests []struct {
 		name        string
 		fields      fields
 		args        args
 		wantNewSql  string
 		wantNewArgs []interface{}
 		wantErr     bool
-	}{
-		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
