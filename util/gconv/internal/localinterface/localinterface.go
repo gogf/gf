@@ -89,22 +89,22 @@ type IMapStrAny interface {
 	MapStrAny() map[string]interface{}
 }
 
-// IUnmarshalValue is the interface for custom defined types customizing value assignment.
-// Note that only pointer can implement interface iUnmarshalValue.
-type IUnmarshalValue interface {
-	UnmarshalValue(interface{}) error
-}
-
 // IUnmarshalText is the interface for custom defined types customizing value assignment.
-// Note that only pointer can implement interface iUnmarshalText.
+// Note that only pointer can implement interface IUnmarshalText.
 type IUnmarshalText interface {
 	UnmarshalText(text []byte) error
 }
 
 // IUnmarshalJSON is the interface for custom defined types customizing value assignment.
-// Note that only pointer can implement interface iUnmarshalJSON.
+// Note that only pointer can implement interface IUnmarshalJSON.
 type IUnmarshalJSON interface {
 	UnmarshalJSON(b []byte) error
+}
+
+// IUnmarshalValue is the interface for custom defined types customizing value assignment.
+// Note that only pointer can implement interface IUnmarshalValue.
+type IUnmarshalValue interface {
+	UnmarshalValue(interface{}) error
 }
 
 // ISet is the interface for custom value assignment.
