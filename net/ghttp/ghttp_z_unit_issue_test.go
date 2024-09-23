@@ -591,7 +591,6 @@ type Issue3789Res struct {
 type Issue3789 struct{}
 
 func (Issue3789) Say(ctx context.Context, req *Issue3789Req) (res *Issue3789Res, err error) {
-	g.Log().Debugf(ctx, `receive say: %+v`, req)
 	res = &Issue3789Res{
 		ItemInput: req.ItemInput,
 	}
@@ -608,6 +607,7 @@ func TestIssue3789(t *testing.T) {
 				new(Issue3789),
 			)
 		})
+		s.SetDumpRouterMap(false)
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)

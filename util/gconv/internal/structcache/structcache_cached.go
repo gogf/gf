@@ -53,8 +53,11 @@ func GetCachedStructInfo(
 	// check if it has been cached.
 	structInfo, ok := getCachedConvertStructInfo(structType)
 	if ok {
+		// directly returns the cached struct info if already exists.
 		return structInfo
 	}
+
+	// else create one.
 
 	// it parses and generates a cache info for given struct type.
 	structInfo = &CachedStructInfo{
@@ -115,6 +118,7 @@ func parseStruct(
 
 		copyFieldIndexes := make([]int, len(fieldIndexes))
 		copy(copyFieldIndexes, fieldIndexes)
+
 		// Do not directly use append(fieldIndexes, i)
 		// When the structure is nested deeply, it may lead to bugs,
 		// which are caused by the slice expansion mechanism
