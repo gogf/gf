@@ -101,7 +101,7 @@ func internalMiddlewareObservability(c *Client, r *http.Request) (response *Resp
 	if response == nil || response.Response == nil {
 		return
 	}
-
+	// TODO ignore binary content ReadAll, for example downloading request.
 	reqBodyContentBytes, _ := io.ReadAll(response.Body)
 	response.Body = utils.NewReadCloser(reqBodyContentBytes, false)
 
