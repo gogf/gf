@@ -115,16 +115,11 @@ func parseStruct(
 		if !utils.IsLetterUpper(fieldName[0]) {
 			continue
 		}
-
+		if fieldType.String() == "gmeta.Meta" {
+			continue
+		}
 		copyFieldIndexes := make([]int, len(fieldIndexes))
 		copy(copyFieldIndexes, fieldIndexes)
-
-		// Do not directly use append(fieldIndexes, i)
-		// When the structure is nested deeply, it may lead to bugs,
-		// which are caused by the slice expansion mechanism
-		// So it is necessary to allocate a separate index for each field
-		// See details https://github.com/gogf/gf/issues/3789
-		structInfo.AddField(structField, append(copyFieldIndexes, i), priorityTagArray)
 
 		// normal basic attributes.
 		if structField.Anonymous {
@@ -136,9 +131,17 @@ func parseStruct(
 				continue
 			}
 			if structField.Tag != "" {
-				// TODO: If it's an anonymous field with a tag, doesn't it need to be recursive?
+				// Do not add anonymous structures without tags
+				structInfo.AddField(structField, append(copyFieldIndexes, i), priorityTagArray)
 			}
 			parseStruct(fieldType, append(copyFieldIndexes, i), structInfo, priorityTagArray)
+			continue
 		}
+		// Do not directly use append(fieldIndexes, i)
+		// When the structure is nested deeply, it may lead to bugs,
+		// which are caused by the slice expansion mechanism
+		// So it is necessary to allocate a separate index for each field
+		// See details https://github.com/gogf/gf/issues/3789
+		structInfo.AddField(structField, append(copyFieldIndexes, i), priorityTagArray)
 	}
 }
