@@ -116,7 +116,7 @@ func (d *Driver) handleSelectSqlReplacement(toBeCommittedSql string) (newSql str
 	}
 
 	if orderStr != "" {
-		// hava ORDER BY clause
+		// have ORDER BY clause
 		newSql = fmt.Sprintf(
 			orderBySqlTmp,
 			selectStr, orderStr, first, limit,
