@@ -1180,7 +1180,6 @@ func Test_Model_Replace(t *testing.T) {
 func Test_OrderRandom(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	db.SetDebug(true)
 
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).OrderRandom().All()
