@@ -108,22 +108,24 @@ jobs:
       # -e MSSQL_USER=root \
       # -e MSSQL_PASSWORD=LoremIpsum86 \
       # loads/mssqldocker:14.0.3391.2
-      mssql:
-        image: loads/mssqldocker:14.0.3391.2
-        env:
-          ACCEPT_EULA:    Y
-          SA_PASSWORD:    LoremIpsum86
-          MSSQL_DB:       test
-          MSSQL_USER:     root
-          MSSQL_PASSWORD: LoremIpsum86
-        ports:
-          - 1433:1433
-        options: >-
-          --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P LoremIpsum86 -l 30 -Q \"SELECT 1\" || exit 1"
-          --health-start-period 10s
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
+
+# TODO mssql docker failed, will be enabled later after it is OK in github action.
+#      mssql:
+#        image: loads/mssqldocker:14.0.3391.2
+#        env:
+#          ACCEPT_EULA:    Y
+#          SA_PASSWORD:    LoremIpsum86
+#          MSSQL_DB:       test
+#          MSSQL_USER:     root
+#          MSSQL_PASSWORD: LoremIpsum86
+#        ports:
+#          - 1433:1433
+#        options: >-
+#          --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P LoremIpsum86 -l 30 -Q \"SELECT 1\" || exit 1"
+#          --health-start-period 10s
+#          --health-interval 10s
+#          --health-timeout 5s
+#          --health-retries 10
 
       # ClickHouse backend server.
       # docker run -d --name clickhouse \
@@ -185,7 +187,7 @@ jobs:
 
     strategy:
       matrix:
-        go-version: [ "1.18", "1.19", "1.20", "1.21", "1.22" ]
+        go-version: [ "1.18", "1.19", "1.20", "1.21", "1.22", "1.23" ]
         goarch: [ "386", "amd64" ]
 
     steps:
