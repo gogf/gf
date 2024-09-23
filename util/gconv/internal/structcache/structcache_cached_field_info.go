@@ -96,20 +96,26 @@ func (cfi *CachedFieldInfo) FieldName() string {
 	return cfi.PriorityTagAndFieldName[len(cfi.PriorityTagAndFieldName)-1]
 }
 
-// GetFieldReflectValue retrieves and returns the reflect.Value of given struct value,
+// GetFieldReflectValueFrom retrieves and returns the `reflect.Value` of given struct field,
 // which is used for directly value assignment.
-func (cfi *CachedFieldInfo) GetFieldReflectValue(structValue reflect.Value) reflect.Value {
+//
+// Note that, the input parameter `structValue` might be initialized internally.
+func (cfi *CachedFieldInfo) GetFieldReflectValueFrom(structValue reflect.Value) reflect.Value {
 	if len(cfi.FieldIndexes) == 1 {
+		// no nested struct.
 		return structValue.Field(cfi.FieldIndexes[0])
 	}
 	return cfi.fieldReflectValue(structValue, cfi.FieldIndexes)
 }
 
-// GetOtherFieldReflectValue retrieves and returns the reflect.Value of given struct value with nested index
+// GetOtherFieldReflectValueFrom retrieves and returns the `reflect.Value` of given struct field with nested index
 // by `fieldLevel`, which is used for directly value assignment.
-func (cfi *CachedFieldInfo) GetOtherFieldReflectValue(structValue reflect.Value, fieldLevel int) reflect.Value {
+//
+// Note that, the input parameter `structValue` might be initialized internally.
+func (cfi *CachedFieldInfo) GetOtherFieldReflectValueFrom(structValue reflect.Value, fieldLevel int) reflect.Value {
 	fieldIndex := cfi.OtherSameNameFieldIndex[fieldLevel]
 	if len(fieldIndex) == 1 {
+		// no nested struct.
 		return structValue.Field(fieldIndex[0])
 	}
 	return cfi.fieldReflectValue(structValue, fieldIndex)
@@ -118,9 +124,11 @@ func (cfi *CachedFieldInfo) GetOtherFieldReflectValue(structValue reflect.Value,
 func (cfi *CachedFieldInfo) fieldReflectValue(v reflect.Value, fieldIndexes []int) reflect.Value {
 	for i, x := range fieldIndexes {
 		if i > 0 {
+			// it means nested struct.
 			switch v.Kind() {
 			case reflect.Pointer:
 				if v.IsNil() {
+					// Initialization.
 					v.Set(reflect.New(v.Type().Elem()))
 				}
 				v = v.Elem()
@@ -133,6 +141,7 @@ func (cfi *CachedFieldInfo) fieldReflectValue(v reflect.Value, fieldIndexes []in
 					// maybe *struct or other types
 					v = v.Elem()
 				}
+			default:
 			}
 		}
 		v = v.Field(x)
