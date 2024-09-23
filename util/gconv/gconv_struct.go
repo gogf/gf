@@ -201,7 +201,7 @@ func doStruct(
 				); err != nil {
 					return err
 				}
-				if len(fieldInfo.OtherSameNameFieldIndex) > 0 {
+				if len(fieldInfo.OtherSameNameField) > 0 {
 					if err = setOtherSameNameField(
 						fieldInfo, paramsValue, pointerReflectValue, paramKeyToAttrMap,
 					); err != nil {
@@ -234,9 +234,9 @@ func setOtherSameNameField(
 	paramKeyToAttrMap map[string]string,
 ) (err error) {
 	// loop the same field name of all sub attributes.
-	for i := range fieldInfo.OtherSameNameFieldIndex {
+	for i, otherFieldInfo := range fieldInfo.OtherSameNameField {
 		fieldValue := fieldInfo.GetOtherFieldReflectValue(structValue, i)
-		if err = bindVarToStructField(fieldValue, srcValue, fieldInfo, paramKeyToAttrMap); err != nil {
+		if err = bindVarToStructField(fieldValue, srcValue, otherFieldInfo, paramKeyToAttrMap); err != nil {
 			return err
 		}
 	}
@@ -279,7 +279,7 @@ func bindStructWithLoopParamsMap(
 				return err
 			}
 			// handle same field name in nested struct.
-			if len(fieldInfo.OtherSameNameFieldIndex) > 0 {
+			if len(fieldInfo.OtherSameNameField) > 0 {
 				if err = setOtherSameNameField(fieldInfo, paramValue, structValue, paramKeyToAttrMap); err != nil {
 					return err
 				}
@@ -314,7 +314,7 @@ func bindStructWithLoopParamsMap(
 						return err
 					}
 					// handle same field name in nested struct.
-					if len(fieldInfo.OtherSameNameFieldIndex) > 0 {
+					if len(fieldInfo.OtherSameNameField) > 0 {
 						if err = setOtherSameNameField(
 							fieldInfo, paramValue, structValue, paramKeyToAttrMap,
 						); err != nil {
@@ -362,7 +362,7 @@ func bindStructWithLoopFieldInfos(
 				return err
 			}
 			// handle same field name in nested struct.
-			if len(fieldInfo.OtherSameNameFieldIndex) > 0 {
+			if len(fieldInfo.OtherSameNameField) > 0 {
 				if err = setOtherSameNameField(
 					fieldInfo, paramValue, structValue, paramKeyToAttrMap,
 				); err != nil {
@@ -395,7 +395,7 @@ func bindStructWithLoopFieldInfos(
 					return err
 				}
 				// handle same field name in nested struct.
-				if len(fieldInfo.OtherSameNameFieldIndex) > 0 {
+				if len(fieldInfo.OtherSameNameField) > 0 {
 					if err = setOtherSameNameField(
 						fieldInfo, paramValue, structValue, paramKeyToAttrMap,
 					); err != nil {

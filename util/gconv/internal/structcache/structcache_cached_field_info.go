@@ -56,28 +56,24 @@ type CachedFieldInfoBase struct {
 	// StructField is the type info of this field.
 	StructField reflect.StructField
 
-	// OtherSameNameFieldIndex holds the sub attributes of the same field name.
-	// For example:
-	// type Name struct{
-	//     LastName  string
-	//     FirstName string
-	// }
-	// type User struct{
-	//     Name
-	//     LastName  string
-	//     FirstName string
-	// }
-	//
-	// As the `LastName` in `User`, its internal attributes:
-	//   FieldIndexes = []int{0,1}
-	//   // item length 1, as there's only one repeat item with the same field name.
-	//   OtherSameNameFieldIndex = [][]int{[]int{1}}
-	//
-	// In value assignment, the value will be assigned to index {0,1} and {1}.
-	OtherSameNameFieldIndex [][]int
-
 	// ConvertFunc is the converting function for this field.
 	ConvertFunc func(from any, to reflect.Value)
+
+	// There may be fields with the same name and type or different types of nested structures
+	// For example:
+	// type ID struct{
+	//     ID1  string
+	//     ID2 int
+	// }
+	// type Card struct{
+	//     ID
+	//     ID1  uint64
+	//     ID2 int64
+	// }
+	//
+	// We will cache each ID1 and ID2 separately,
+	// even if their types are different and their indexes are different
+	OtherSameNameField []*CachedFieldInfo
 
 	// The last fuzzy matching key for this field.
 	// The fuzzy matching occurs only if there are no direct tag and field name matching in the params map.
@@ -96,6 +92,23 @@ func (cfi *CachedFieldInfo) FieldName() string {
 	return cfi.PriorityTagAndFieldName[len(cfi.PriorityTagAndFieldName)-1]
 }
 
+// copyWithFieldIndexes Copy a new CachedFieldInfo based on FieldIndexes
+// Mainly used for copying fields with the same name and type
+func (cfi *CachedFieldInfo) copyWithFieldIndexes(fieldIndexes []int) *CachedFieldInfo {
+	base := &CachedFieldInfoBase{
+		FieldIndexes:            fieldIndexes,
+		PriorityTagAndFieldName: cfi.PriorityTagAndFieldName,
+		IsCommonInterface:       cfi.IsCommonInterface,
+		IsCustomConvert:         cfi.IsCustomConvert,
+		StructField:             cfi.StructField,
+		ConvertFunc:             cfi.ConvertFunc,
+		RemoveSymbolsFieldName:  cfi.RemoveSymbolsFieldName,
+	}
+	return &CachedFieldInfo{
+		CachedFieldInfoBase: base,
+	}
+}
+
 // GetFieldReflectValue retrieves and returns the reflect.Value of given struct value,
 // which is used for directly value assignment.
 func (cfi *CachedFieldInfo) GetFieldReflectValue(structValue reflect.Value) reflect.Value {
@@ -108,7 +121,7 @@ func (cfi *CachedFieldInfo) GetFieldReflectValue(structValue reflect.Value) refl
 // GetOtherFieldReflectValue retrieves and returns the reflect.Value of given struct value with nested index
 // by `fieldLevel`, which is used for directly value assignment.
 func (cfi *CachedFieldInfo) GetOtherFieldReflectValue(structValue reflect.Value, fieldLevel int) reflect.Value {
-	fieldIndex := cfi.OtherSameNameFieldIndex[fieldLevel]
+	fieldIndex := cfi.OtherSameNameField[fieldLevel].FieldIndexes
 	if len(fieldIndex) == 1 {
 		return structValue.Field(fieldIndex[0])
 	}

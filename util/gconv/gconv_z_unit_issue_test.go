@@ -446,3 +446,31 @@ func TestIssue3789(t *testing.T) {
 		t.Assert(dest.ThirdID, uint64(3))
 	})
 }
+
+// https://github.com/gogf/gf/issues/3797
+func TestIssue3797(t *testing.T) {
+	type Option struct {
+		F1 int
+		F2 string
+	}
+	type Rule struct {
+		ID   int64     `json:"id"`
+		Rule []*Option `json:"rule"`
+	}
+	type Res1 struct {
+		g.Meta
+		Rule
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var r = &Rule{
+			ID: 100,
+		}
+		var res = &Res1{}
+		for i := 0; i < 10000; i++ {
+			err := gconv.Scan(r, res)
+			t.AssertNil(err)
+			t.Assert(res.ID, 100)
+			t.AssertEQ(res.Rule.Rule, nil)
+		}
+	})
+}

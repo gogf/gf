@@ -41,20 +41,10 @@ func (csi *CachedStructInfo) GetFieldInfo(fieldName string) *CachedFieldInfo {
 func (csi *CachedStructInfo) AddField(field reflect.StructField, fieldIndexes []int, priorityTags []string) {
 	alreadyExistFieldInfo, ok := csi.tagOrFiledNameToFieldInfoMap[field.Name]
 	if !ok {
-		priorityTagAndFieldName := csi.genPriorityTagAndFieldName(field, priorityTags)
-		newFieldInfoBase := &CachedFieldInfoBase{
-			IsCommonInterface:       checkTypeIsCommonInterface(field),
-			StructField:             field,
-			FieldIndexes:            fieldIndexes,
-			ConvertFunc:             csi.genFieldConvertFunc(field.Type.String()),
-			IsCustomConvert:         csi.checkTypeHasCustomConvert(field.Type),
-			PriorityTagAndFieldName: priorityTagAndFieldName,
-			RemoveSymbolsFieldName:  utils.RemoveSymbols(field.Name),
-		}
-		newFieldInfoBase.LastFuzzyKey.Store(field.Name)
-		for _, tagOrFieldName := range priorityTagAndFieldName {
+		fieldInfo := csi.makeFieldInfo(field, fieldIndexes, priorityTags)
+		for _, tagOrFieldName := range fieldInfo.PriorityTagAndFieldName {
 			newFieldInfo := &CachedFieldInfo{
-				CachedFieldInfoBase: newFieldInfoBase,
+				CachedFieldInfoBase: fieldInfo.CachedFieldInfoBase,
 				IsField:             tagOrFieldName == field.Name,
 			}
 			csi.tagOrFiledNameToFieldInfoMap[tagOrFieldName] = newFieldInfo
@@ -64,14 +54,35 @@ func (csi *CachedStructInfo) AddField(field reflect.StructField, fieldIndexes []
 		}
 		return
 	}
-	if alreadyExistFieldInfo.OtherSameNameFieldIndex == nil {
-		alreadyExistFieldInfo.OtherSameNameFieldIndex = make([][]int, 0, 2)
+	// If the field name and type are the same
+	if alreadyExistFieldInfo.StructField.Type == field.Type {
+		alreadyExistFieldInfo.OtherSameNameField = append(
+			alreadyExistFieldInfo.OtherSameNameField,
+			alreadyExistFieldInfo.copyWithFieldIndexes(fieldIndexes),
+		)
+		return
 	}
-	alreadyExistFieldInfo.OtherSameNameFieldIndex = append(
-		alreadyExistFieldInfo.OtherSameNameFieldIndex,
-		fieldIndexes,
-	)
+	// If the types are different, some information needs to be reset
+	alreadyExistFieldInfo.OtherSameNameField = append(
+		alreadyExistFieldInfo.OtherSameNameField,
+		csi.makeFieldInfo(field, fieldIndexes, priorityTags))
 	return
+}
+
+func (csi *CachedStructInfo) makeFieldInfo(field reflect.StructField, fieldIndexes []int, priorityTags []string) *CachedFieldInfo {
+	base := &CachedFieldInfoBase{
+		IsCommonInterface:       checkTypeIsCommonInterface(field),
+		StructField:             field,
+		FieldIndexes:            fieldIndexes,
+		ConvertFunc:             csi.genFieldConvertFunc(field.Type.String()),
+		IsCustomConvert:         csi.checkTypeHasCustomConvert(field.Type),
+		PriorityTagAndFieldName: csi.genPriorityTagAndFieldName(field, priorityTags),
+		RemoveSymbolsFieldName:  utils.RemoveSymbols(field.Name),
+	}
+	base.LastFuzzyKey.Store(field.Name)
+	return &CachedFieldInfo{
+		CachedFieldInfoBase: base,
+	}
 }
 
 func (csi *CachedStructInfo) genFieldConvertFunc(fieldType string) (convertFunc func(from any, to reflect.Value)) {
