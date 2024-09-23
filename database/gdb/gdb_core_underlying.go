@@ -455,8 +455,8 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 	return result, nil
 }
 
-// OrderRandomStatement returns the SQL statement for random ordering.
-func (c *Core) OrderRandomStatement() string {
+// OrderRandomFunction returns the SQL function for random ordering.
+func (c *Core) OrderRandomFunction() string {
 	return "RAND()"
 }
 

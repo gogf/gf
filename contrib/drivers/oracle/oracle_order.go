@@ -6,7 +6,7 @@
 
 package oracle
 
-// OrderRandomStatement returns the SQL statement for random ordering.
-func (d *Driver) OrderRandomStatement() string {
+// OrderRandomFunction returns the SQL function for random ordering.
+func (d *Driver) OrderRandomFunction() string {
 	return "DBMS_RANDOM.VALUE()"
 }

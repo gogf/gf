@@ -59,7 +59,7 @@ func (m *Model) OrderDesc(column string) *Model {
 // OrderRandom sets the "ORDER BY RANDOM()" statement for the model.
 func (m *Model) OrderRandom() *Model {
 	model := m.getModel()
-	model.orderBy = m.db.OrderRandomStatement()
+	model.orderBy = m.db.OrderRandomFunction()
 	return model
 }
 
