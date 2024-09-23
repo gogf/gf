@@ -35,6 +35,8 @@ func TestDuration(t *testing.T) {
 		t.AssertEQ(gconv.Duration(timeTimeTests), time.Duration(0))
 		t.AssertEQ(gconv.Duration("1m"), time.Minute)
 		t.AssertEQ(gconv.Duration(time.Hour), time.Hour)
+		t.AssertEQ(gconv.Duration("-1"), time.Duration(-1))
+		t.AssertEQ(gconv.Duration("+1"), time.Duration(1))
 	})
 }
 
