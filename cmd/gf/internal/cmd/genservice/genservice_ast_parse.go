@@ -12,6 +12,7 @@ import (
 	"go/token"
 
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 type pkgItem struct {
@@ -28,10 +29,22 @@ type funcItem struct {
 	Comment    string              `eg:"Get user list"`
 }
 
+func checkValidStructName(structName string) bool {
+	if gstr.Contains(structName, ".") {
+		s := gstr.Split(structName, ".")
+		if !gstr.HasPrefix(s[len(s)-1], "s") {
+			return false
+		}
+	} else if !gstr.HasPrefix(structName, "s") {
+		return false
+	}
+	return true
+}
+
 // parseItemsInSrc parses the pkgItem and funcItem from the specified file.
 // It can't skip the private methods.
 // It can't skip the imported packages of import alias equal to `_`.
-func (c CGenService) parseItemsInSrc(filePath string) (pkgItems []pkgItem, funcItems []funcItem, err error) {
+func (c CGenService) parseItemsInSrc(filePath string) (pkgItems []pkgItem, structItems map[string][]string, funcItems []funcItem, err error) {
 	var (
 		fileContent = gfile.GetContents(filePath)
 		fileSet     = token.NewFileSet()
@@ -42,12 +55,46 @@ func (c CGenService) parseItemsInSrc(filePath string) (pkgItems []pkgItem, funcI
 		return
 	}
 
+	structItems = make(map[string][]string)
+
 	ast.Inspect(node, func(n ast.Node) bool {
 		switch x := n.(type) {
 		case *ast.ImportSpec:
 			// parse the imported packages.
 			pkgItems = append(pkgItems, c.parseImportPackages(x))
+		case *ast.TypeSpec:
+			if st, ok := x.Type.(*ast.StructType); ok {
+				// parse the struct declaration.
+				var structName = x.Name.Name
 
+				if !checkValidStructName(structName) {
+					break
+				}
+				var structEmbeddedStruct []string
+				for _, field := range st.Fields.List {
+					if len(field.Names) == 0 { // 匿名字段
+						if embeddedStruct, err := c.astExprToString(field.Type); err == nil && embeddedStruct != "" {
+							if !checkValidStructName(embeddedStruct) {
+								continue
+							}
+							structEmbeddedStruct = append(structEmbeddedStruct, embeddedStruct)
+						}
+
+						// if _, ok := field.Type.(*ast.Ident); ok {
+						// 	if parent, err = c.astExprToString(field.Type); err != nil {
+						// 		parent = ""
+						// 	}
+						// } else if ptr, ok := field.Type.(*ast.StarExpr); ok {
+						// 	if parent, err = c.astExprToString(ptr.X); err != nil {
+						// 		parent = ""
+						// 	}
+						// }
+					}
+				}
+				if len(structEmbeddedStruct) > 0 {
+					structItems[structName] = structEmbeddedStruct
+				}
+			}
 		case *ast.FuncDecl:
 			// parse the function items.
 			if x.Recv == nil {
