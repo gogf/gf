@@ -199,15 +199,16 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	if operation.RequestBody.Value == nil {
 		var (
 			requestBody = RequestBody{
-				Required: true,
-				Content:  map[string]MediaType{},
+				Content: map[string]MediaType{},
 			}
 		)
 		// Supported mime types of request.
 		var (
-			contentTypes = oai.Config.ReadContentTypes
-			tagMimeValue = gmeta.Get(inputObject.Interface(), gtag.Mime).String()
+			contentTypes     = oai.Config.ReadContentTypes
+			tagMimeValue     = gmeta.Get(inputObject.Interface(), gtag.Mime).String()
+			tagRequiredValue = gmeta.Get(inputObject.Interface(), gtag.Required).Bool()
 		)
+		requestBody.Required = tagRequiredValue
 		if tagMimeValue != "" {
 			contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
 		}

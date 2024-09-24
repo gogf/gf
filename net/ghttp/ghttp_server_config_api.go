@@ -17,6 +17,7 @@ func (s *Server) SetSwaggerUITemplate(swaggerUITemplate string) {
 }
 
 // SetOpenApiPath sets the OpenApiPath for server.
+// For example: SetOpenApiPath("/api.json")
 func (s *Server) SetOpenApiPath(path string) {
 	s.config.OpenApiPath = path
 }

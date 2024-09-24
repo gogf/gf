@@ -908,7 +908,7 @@ func TestPointerToStruct(t *testing.T) {
 	}
 }
 
-func TestIssue9(t *testing.T) {
+func Test_Issue9(t *testing.T) {
 	// simple pointer copy
 	x := 42
 	testA := map[string]*int{
