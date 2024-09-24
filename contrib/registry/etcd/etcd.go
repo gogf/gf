@@ -12,6 +12,7 @@ import (
 	"time"
 
 	etcd3 "go.etcd.io/etcd/client/v3"
+	"google.golang.org/grpc"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -38,11 +39,26 @@ type Registry struct {
 type Option struct {
 	Logger       glog.ILogger
 	KeepaliveTTL time.Duration
+
+	// DialTimeout is the timeout for failing to establish a connection.
+	DialTimeout time.Duration
+
+	// AutoSyncInterval is the interval to update endpoints with its latest members.
+	AutoSyncInterval time.Duration
+
+	DialOptions []grpc.DialOption
 }
 
 const (
 	// DefaultKeepAliveTTL is the default keepalive TTL.
 	DefaultKeepAliveTTL = 10 * time.Second
+
+	// DefaultDialTimeout is the timeout for failing to establish a connection.
+	DefaultDialTimeout = time.Second * 5
+
+	// DefaultAutoSyncInterval is the interval to update endpoints with its latest members.
+	// 0 disables auto-sync. By default auto-sync is disabled.
+	DefaultAutoSyncInterval = time.Second
 )
 
 // New creates and returns a new etcd registry.
@@ -80,6 +96,21 @@ func New(address string, option ...Option) gsvc.Registry {
 	if password != "" {
 		cfg.Password = password
 	}
+
+	cfg.DialTimeout = DefaultDialTimeout
+	cfg.AutoSyncInterval = DefaultAutoSyncInterval
+
+	var usedOption Option
+	if len(option) > 0 {
+		usedOption = option[0]
+	}
+	if usedOption.DialTimeout > 0 {
+		cfg.DialTimeout = usedOption.DialTimeout
+	}
+	if usedOption.AutoSyncInterval > 0 {
+		cfg.AutoSyncInterval = usedOption.AutoSyncInterval
+	}
+
 	client, err := etcd3.New(cfg)
 	if err != nil {
 		panic(gerror.Wrap(err, `create etcd client failed`))
