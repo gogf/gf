@@ -151,6 +151,33 @@ func (c CGenService) tidyResult(resultSlice []map[string]string) (resultStr stri
 	return
 }
 
+func (c CGenService) getStructFuncItems(structName string, allStructItems map[string][]string, funcItemsWithoutEmbed map[string][]*funcItem) (funcItems []*funcItem) {
+	funcItemNameSet := map[string]struct{}{}
+
+	if items, ok := funcItemsWithoutEmbed[structName]; ok {
+		funcItems = append(funcItems, items...)
+		for _, item := range items {
+			funcItemNameSet[item.MethodName] = struct{}{}
+		}
+	}
+
+	if embeddedStructNames, ok := allStructItems[structName]; ok {
+		for _, embeddedStructName := range embeddedStructNames {
+			items := c.getStructFuncItems(embeddedStructName, allStructItems, funcItemsWithoutEmbed)
+
+			for _, item := range items {
+				if _, ok := funcItemNameSet[item.MethodName]; ok {
+					continue
+				}
+				funcItemNameSet[item.MethodName] = struct{}{}
+				funcItems = append(funcItems, item)
+			}
+		}
+	}
+
+	return
+}
+
 func (c CGenService) calculateStructEmbeddedFuncInfos(folderInfos []folderInfo, allStructItems map[string][]string) (newFolerInfos []folderInfo) {
 	funcItemsWithoutEmbed := make(map[string][]*funcItem)
 	funcItemMap := make(map[string]*([]funcItem))
@@ -173,7 +200,7 @@ func (c CGenService) calculateStructEmbeddedFuncInfos(folderInfos []folderInfo, 
 	for receiver, structItems := range allStructItems {
 		for _, structName := range structItems {
 			//获取对应的structName的methods列表
-			for _, funcItem := range funcItemsWithoutEmbed[structName] {
+			for _, funcItem := range c.getStructFuncItems(structName, allStructItems, funcItemsWithoutEmbed) {
 				if _, ok := funcItemsWithoutEmbedMap[fmt.Sprintf("%s:%s", receiver, funcItem.MethodName)]; ok {
 					continue
 				}
