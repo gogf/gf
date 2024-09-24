@@ -167,7 +167,10 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 	if !gstr.ContainsI(url, httpProtocolName) {
 		url = httpProtocolName + `://` + url
 	}
-	var params string
+	var (
+		params             string
+		allowFileUploading = true
+	)
 	if len(data) > 0 {
 		switch c.header[httpHeaderContentType] {
 		case httpHeaderContentTypeJson:
@@ -181,6 +184,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 					params = string(b)
 				}
 			}
+			allowFileUploading = false
 
 		case httpHeaderContentTypeXml:
 			switch data[0].(type) {
@@ -193,6 +197,8 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 					params = string(b)
 				}
 			}
+			allowFileUploading = false
+
 		default:
 			params = httputil.BuildParams(data[0], c.noUrlEncode)
 		}
@@ -223,7 +229,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			return nil, err
 		}
 	} else {
-		if strings.Contains(params, httpParamFileHolder) && c.allowUploadHeader() {
+		if allowFileUploading && strings.Contains(params, httpParamFileHolder) {
 			// File uploading request.
 			var (
 				buffer = bytes.NewBuffer(nil)
@@ -244,21 +250,21 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 						formFileName  = gfile.Basename(path)
 						formFieldName = array[0]
 					)
+					// it sets post content type as `application/octet-stream`
 					if file, err = writer.CreateFormFile(formFieldName, formFileName); err != nil {
 						err = gerror.Wrapf(err, `CreateFormFile failed with "%s", "%s"`, formFieldName, formFileName)
 						return nil, err
-					} else {
-						var f *os.File
-						if f, err = gfile.Open(path); err != nil {
-							return nil, err
-						}
-						if _, err = io.Copy(file, f); err != nil {
-							err = gerror.Wrapf(err, `io.Copy failed from "%s" to form "%s"`, path, formFieldName)
-							_ = f.Close()
-							return nil, err
-						}
-						_ = f.Close()
 					}
+					var f *os.File
+					if f, err = gfile.Open(path); err != nil {
+						return nil, err
+					}
+					if _, err = io.Copy(file, f); err != nil {
+						err = gerror.Wrapf(err, `io.Copy failed from "%s" to form "%s"`, path, formFieldName)
+						_ = f.Close()
+						return nil, err
+					}
+					_ = f.Close()
 				} else {
 					var (
 						fieldName  = array[0]
@@ -280,27 +286,25 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			if req, err = http.NewRequest(method, url, buffer); err != nil {
 				err = gerror.Wrapf(err, `http.NewRequest failed for method "%s" and URL "%s"`, method, url)
 				return nil, err
-			} else {
-				req.Header.Set(httpHeaderContentType, writer.FormDataContentType())
 			}
+			req.Header.Set(httpHeaderContentType, writer.FormDataContentType())
 		} else {
 			// Normal request.
 			paramBytes := []byte(params)
 			if req, err = http.NewRequest(method, url, bytes.NewReader(paramBytes)); err != nil {
 				err = gerror.Wrapf(err, `http.NewRequest failed for method "%s" and URL "%s"`, method, url)
 				return nil, err
-			} else {
-				if v, ok := c.header[httpHeaderContentType]; ok {
-					// Custom Content-Type.
-					req.Header.Set(httpHeaderContentType, v)
-				} else if len(paramBytes) > 0 {
-					if (paramBytes[0] == '[' || paramBytes[0] == '{') && json.Valid(paramBytes) {
-						// Auto-detecting and setting the post content format: JSON.
-						req.Header.Set(httpHeaderContentType, httpHeaderContentTypeJson)
-					} else if gregex.IsMatchString(httpRegexParamJson, params) {
-						// If the parameters passed like "name=value", it then uses form type.
-						req.Header.Set(httpHeaderContentType, httpHeaderContentTypeForm)
-					}
+			}
+			if v, ok := c.header[httpHeaderContentType]; ok {
+				// Custom Content-Type.
+				req.Header.Set(httpHeaderContentType, v)
+			} else if len(paramBytes) > 0 {
+				if (paramBytes[0] == '[' || paramBytes[0] == '{') && json.Valid(paramBytes) {
+					// Auto-detecting and setting the post content format: JSON.
+					req.Header.Set(httpHeaderContentType, httpHeaderContentTypeJson)
+				} else if gregex.IsMatchString(httpRegexParamJson, params) {
+					// If the parameters passed like "name=value", it then uses form type.
+					req.Header.Set(httpHeaderContentType, httpHeaderContentTypeForm)
 				}
 			}
 		}
@@ -372,12 +376,4 @@ func (c *Client) callRequest(req *http.Request) (resp *Response, err error) {
 		}
 	}
 	return resp, err
-}
-
-func (c *Client) allowUploadHeader() bool {
-	var notAllows = []string{
-		httpHeaderContentTypeJson,
-		httpHeaderContentTypeXml,
-		httpHeaderContentTypeForm}
-	return !gstr.InArray(notAllows, c.header[httpHeaderContentType])
 }
