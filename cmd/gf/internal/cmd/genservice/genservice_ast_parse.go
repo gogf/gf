@@ -73,22 +73,20 @@ func (c CGenService) parseItemsInSrc(filePath string) (pkgItems []pkgItem, struc
 				var structEmbeddedStruct []string
 				for _, field := range st.Fields.List {
 					if len(field.Names) == 0 { // 匿名字段
-						if embeddedStruct, err := c.astExprToString(field.Type); err == nil && embeddedStruct != "" {
-							if !checkValidStructName(embeddedStruct) {
-								continue
+						var embeddedStruct string
+						if _, ok := field.Type.(*ast.Ident); ok {
+							if embeddedStruct, err = c.astExprToString(field.Type); err != nil {
+								embeddedStruct = ""
 							}
-							structEmbeddedStruct = append(structEmbeddedStruct, embeddedStruct)
+						} else if ptr, ok := field.Type.(*ast.StarExpr); ok {
+							if embeddedStruct, err = c.astExprToString(ptr.X); err != nil {
+								embeddedStruct = ""
+							}
 						}
-
-						// if _, ok := field.Type.(*ast.Ident); ok {
-						// 	if parent, err = c.astExprToString(field.Type); err != nil {
-						// 		parent = ""
-						// 	}
-						// } else if ptr, ok := field.Type.(*ast.StarExpr); ok {
-						// 	if parent, err = c.astExprToString(ptr.X); err != nil {
-						// 		parent = ""
-						// 	}
-						// }
+						if embeddedStruct == "" || !checkValidStructName(embeddedStruct) {
+							continue
+						}
+						structEmbeddedStruct = append(structEmbeddedStruct, embeddedStruct)
 					}
 				}
 				if len(structEmbeddedStruct) > 0 {
