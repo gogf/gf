@@ -223,7 +223,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			return nil, err
 		}
 	} else {
-		if strings.Contains(params, httpParamFileHolder) {
+		if strings.Contains(params, httpParamFileHolder) && c.allowUploadHeader() {
 			// File uploading request.
 			var (
 				buffer = bytes.NewBuffer(nil)
@@ -231,6 +231,9 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			)
 			for _, item := range strings.Split(params, "&") {
 				array := strings.Split(item, "=")
+				if len(array) < 2 {
+					continue
+				}
 				if len(array[1]) > 6 && strings.Compare(array[1][0:6], httpParamFileHolder) == 0 {
 					path := array[1][6:]
 					if !gfile.Exists(path) {
@@ -369,4 +372,12 @@ func (c *Client) callRequest(req *http.Request) (resp *Response, err error) {
 		}
 	}
 	return resp, err
+}
+
+func (c *Client) allowUploadHeader() bool {
+	var notAllows = []string{
+		httpHeaderContentTypeJson,
+		httpHeaderContentTypeXml,
+		httpHeaderContentTypeForm}
+	return !gstr.InArray(notAllows, c.header[httpHeaderContentType])
 }
