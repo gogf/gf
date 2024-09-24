@@ -291,7 +291,7 @@ func TestRemove(t *testing.T) {
 	})
 }
 
-func TestIssue4103(t *testing.T) {
+func Test_Issue4103(t *testing.T) {
 	l1 := New()
 	l1.PushBack(1)
 	l1.PushBack(2)
@@ -312,7 +312,7 @@ func TestIssue4103(t *testing.T) {
 	}
 }
 
-func TestIssue6349(t *testing.T) {
+func Test_Issue6349(t *testing.T) {
 	l := New()
 	l.PushBack(1)
 	l.PushBack(2)

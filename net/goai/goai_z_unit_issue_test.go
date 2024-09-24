@@ -45,7 +45,7 @@ func (Issue3664) RequiredTag(ctx context.Context, req *Issue3664RequiredTagReq) 
 }
 
 // https://github.com/gogf/gf/issues/3664
-func TestIssue3664(t *testing.T) {
+func Test_Issue3664(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server()
 		s.Use(ghttp.MiddlewareHandlerResponse)
