@@ -4299,3 +4299,14 @@ func TestResult_Structs1(t *testing.T) {
 		t.Assert(array[1].Name, "smith")
 	})
 }
+
+func Test_OrderRandom(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).OrderRandom().All()
+		t.AssertNil(err)
+		t.Assert(len(result), TableSize)
+	})
+}
