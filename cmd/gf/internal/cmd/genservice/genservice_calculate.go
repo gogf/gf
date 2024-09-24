@@ -151,7 +151,7 @@ func (c CGenService) tidyResult(resultSlice []map[string]string) (resultStr stri
 	return
 }
 
-func (c CGenService) calculateStructEmbeddedFuncTimes(folderInfos []folderInfo, allStructItems map[string][]string) (newFolerInfos []folderInfo) {
+func (c CGenService) calculateStructEmbeddedFuncInfos(folderInfos []folderInfo, allStructItems map[string][]string) (newFolerInfos []folderInfo) {
 	funcItemsWithoutEmbed := make(map[string][]*funcItem)
 	funcItemMap := make(map[string]*([]funcItem))
 	funcItemsWithoutEmbedMap := make(map[string]*funcItem)

@@ -227,7 +227,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		folderInfos = append(folderInfos, folder)
 	}
 
-	folderInfos = c.calculateStructEmbeddedFuncTimes(folderInfos, allStructItems)
+	folderInfos = c.calculateStructEmbeddedFuncInfos(folderInfos, allStructItems)
 
 	for _, folder := range folderInfos {
 		// Parse single logic package folder.
