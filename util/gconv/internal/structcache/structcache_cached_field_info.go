@@ -56,7 +56,8 @@ type CachedFieldInfoBase struct {
 	// StructField is the type info of this field.
 	StructField reflect.StructField
 
-	// There may be fields with the same name and type or different types of nested structures
+	// OtherSameNameField stores fields with the same name and type or different types of nested structures.
+	//
 	// For example:
 	// type ID struct{
 	//     ID1  string

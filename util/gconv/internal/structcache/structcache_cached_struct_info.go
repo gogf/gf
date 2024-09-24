@@ -41,10 +41,10 @@ func (csi *CachedStructInfo) GetFieldInfo(fieldName string) *CachedFieldInfo {
 func (csi *CachedStructInfo) AddField(field reflect.StructField, fieldIndexes []int, priorityTags []string) {
 	alreadyExistFieldInfo, ok := csi.tagOrFiledNameToFieldInfoMap[field.Name]
 	if !ok {
-		fieldInfo := csi.makeCachedFieldInfo(field, fieldIndexes, priorityTags)
-		for _, tagOrFieldName := range fieldInfo.PriorityTagAndFieldName {
+		cachedFieldInfo := csi.makeCachedFieldInfo(field, fieldIndexes, priorityTags)
+		for _, tagOrFieldName := range cachedFieldInfo.PriorityTagAndFieldName {
 			newFieldInfo := &CachedFieldInfo{
-				CachedFieldInfoBase: fieldInfo.CachedFieldInfoBase,
+				CachedFieldInfoBase: cachedFieldInfo.CachedFieldInfoBase,
 				IsField:             tagOrFieldName == field.Name,
 			}
 			csi.tagOrFiledNameToFieldInfoMap[tagOrFieldName] = newFieldInfo
@@ -65,28 +65,24 @@ func (csi *CachedStructInfo) AddField(field reflect.StructField, fieldIndexes []
 	// If the types are different, some information needs to be reset
 	alreadyExistFieldInfo.OtherSameNameField = append(
 		alreadyExistFieldInfo.OtherSameNameField,
-		csi.makeCachedFieldInfo(field, fieldIndexes, priorityTags))
-	return
+		csi.makeCachedFieldInfo(field, fieldIndexes, priorityTags),
+	)
 }
 
-// copyWithFieldIndexes Copy a new CachedFieldInfo based on FieldIndexes
-// Mainly used for copying fields with the same name and type
+// copyCachedInfoWithFieldIndexes copies and returns a new CachedFieldInfo based on given CachedFieldInfo, but different
+// FieldIndexes. Mainly used for copying fields with the same name and type.
 func (csi *CachedStructInfo) copyCachedInfoWithFieldIndexes(cfi *CachedFieldInfo, fieldIndexes []int) *CachedFieldInfo {
-	base := &CachedFieldInfoBase{
-		FieldIndexes:            fieldIndexes,
-		PriorityTagAndFieldName: cfi.PriorityTagAndFieldName,
-		IsCommonInterface:       cfi.IsCommonInterface,
-		IsCustomConvert:         cfi.IsCustomConvert,
-		StructField:             cfi.StructField,
-		ConvertFunc:             cfi.ConvertFunc,
-		RemoveSymbolsFieldName:  cfi.RemoveSymbolsFieldName,
-	}
+	base := CachedFieldInfoBase{}
+	base = *cfi.CachedFieldInfoBase
+	base.FieldIndexes = fieldIndexes
 	return &CachedFieldInfo{
-		CachedFieldInfoBase: base,
+		CachedFieldInfoBase: &base,
 	}
 }
 
-func (csi *CachedStructInfo) makeCachedFieldInfo(field reflect.StructField, fieldIndexes []int, priorityTags []string) *CachedFieldInfo {
+func (csi *CachedStructInfo) makeCachedFieldInfo(
+	field reflect.StructField, fieldIndexes []int, priorityTags []string,
+) *CachedFieldInfo {
 	base := &CachedFieldInfoBase{
 		IsCommonInterface:       checkTypeIsCommonInterface(field),
 		StructField:             field,

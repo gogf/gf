@@ -455,6 +455,11 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 	return result, nil
 }
 
+// OrderRandomFunction returns the SQL function for random ordering.
+func (c *Core) OrderRandomFunction() string {
+	return "RAND()"
+}
+
 func (c *Core) columnValueToLocalValue(ctx context.Context, value interface{}, columnType *sql.ColumnType) (interface{}, error) {
 	var scanType = columnType.ScanType()
 	if scanType != nil {
