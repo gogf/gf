@@ -178,6 +178,7 @@ type DB interface {
 	ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) // See Core.ConvertValueForLocal
 	CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (LocalType, error) // See Core.CheckLocalTypeForField
 	FormatUpsert(columns []string, list List, option DoInsertOption) (string, error)                         // See Core.DoFormatUpsert
+	OrderRandomFunction() string                                                                             // See Core.OrderRandomFunction
 }
 
 // TX defines the interfaces for ORM transaction operations.

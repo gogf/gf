@@ -587,3 +587,14 @@ func Test_Model_OnDuplicateEx(t *testing.T) {
 		t.Assert(one["nickname"], "name_1")
 	})
 }
+
+func Test_OrderRandom(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).OrderRandom().All()
+		t.AssertNil(err)
+		t.Assert(len(result), TableSize)
+	})
+}
