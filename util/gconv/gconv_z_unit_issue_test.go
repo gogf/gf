@@ -448,7 +448,7 @@ func Test_Issue3789(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/3797
-func TestIssue3797(t *testing.T) {
+func Test_Issue3797(t *testing.T) {
 	type Option struct {
 		F1 int
 		F2 string
@@ -476,7 +476,7 @@ func TestIssue3797(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/3800
-func TestIssue3800(t *testing.T) {
+func Test_Issue3800(t *testing.T) {
 	// might be random assignment in converting,
 	// it here so runs multiple times to reproduce the issue.
 	for i := 0; i < 1000; i++ {
