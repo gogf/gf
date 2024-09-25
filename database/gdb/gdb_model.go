@@ -53,6 +53,19 @@ type Model struct {
 	onConflict     interface{}       // onConflict is used for conflict keys on Upsert clause.
 	tableAliasMap  map[string]string // Table alias to true table name, usually used in join statements.
 	softTimeOption SoftTimeOption    // SoftTimeOption is the option to customize soft time feature for Model.
+	ModelInterface
+}
+
+func (m *Model) initModelInterface() {
+	impl := registerModelInterface(m)
+	if impl != nil {
+		m.ModelInterface = impl
+	} else {
+		// Prevent nil pointer
+		m.ModelInterface = &DefaultHookModelInterfaceImpl{
+			Model: m,
+		}
+	}
 }
 
 // ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
@@ -139,6 +152,7 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 		extraArgs:     extraArgs,
 		tableAliasMap: make(map[string]string),
 	}
+	m.initModelInterface()
 	m.whereBuilder = m.Builder()
 	if defaultModelSafe {
 		m.safe = true
@@ -163,7 +177,7 @@ func (c *Core) Raw(rawSql string, args ...interface{}) *Model {
 //	db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)
 //
 // See Core.Raw.
-func (m *Model) Raw(rawSql string, args ...interface{}) *Model {
+func (m *DefaultHookModelInterfaceImpl) Raw(rawSql string, args ...interface{}) *Model {
 	model := m.db.Raw(rawSql, args...)
 	model.db = m.db
 	model.tx = m.tx
@@ -182,7 +196,7 @@ func (c *Core) With(objects ...interface{}) *Model {
 // Partition sets Partition name.
 // Example:
 // dao.User.Ctx(ctx).Partition（"p1","p2","p3").All()
-func (m *Model) Partition(partitions ...string) *Model {
+func (m *DefaultHookModelInterfaceImpl) Partition(partitions ...string) *Model {
 	model := m.getModel()
 	model.partition = gstr.Join(partitions, ",")
 	return model
@@ -204,9 +218,9 @@ func (tx *TXCore) With(object interface{}) *Model {
 }
 
 // Ctx sets the context for current operation.
-func (m *Model) Ctx(ctx context.Context) *Model {
+func (m *DefaultHookModelInterfaceImpl) Ctx(ctx context.Context) *Model {
 	if ctx == nil {
-		return m
+		return m.Model
 	}
 	model := m.getModel()
 	model.db = model.db.Ctx(ctx)
@@ -218,7 +232,7 @@ func (m *Model) Ctx(ctx context.Context) *Model {
 
 // GetCtx returns the context for current Model.
 // It returns `context.Background()` is there's no context previously set.
-func (m *Model) GetCtx() context.Context {
+func (m *DefaultHookModelInterfaceImpl) GetCtx() context.Context {
 	if m.tx != nil && m.tx.GetCtx() != nil {
 		return m.tx.GetCtx()
 	}
@@ -226,7 +240,7 @@ func (m *Model) GetCtx() context.Context {
 }
 
 // As sets an alias name for current table.
-func (m *Model) As(as string) *Model {
+func (m *DefaultHookModelInterfaceImpl) As(as string) *Model {
 	if m.tables != "" {
 		model := m.getModel()
 		split := " JOIN "
@@ -241,18 +255,18 @@ func (m *Model) As(as string) *Model {
 		}
 		return model
 	}
-	return m
+	return m.Model
 }
 
 // DB sets/changes the db object for current operation.
-func (m *Model) DB(db DB) *Model {
+func (m *DefaultHookModelInterfaceImpl) DB(db DB) *Model {
 	model := m.getModel()
 	model.db = db
 	return model
 }
 
 // TX sets/changes the transaction for current operation.
-func (m *Model) TX(tx TX) *Model {
+func (m *DefaultHookModelInterfaceImpl) TX(tx TX) *Model {
 	model := m.getModel()
 	model.db = tx.GetDB()
 	model.tx = tx
@@ -260,7 +274,7 @@ func (m *Model) TX(tx TX) *Model {
 }
 
 // Schema sets the schema for current operation.
-func (m *Model) Schema(schema string) *Model {
+func (m *DefaultHookModelInterfaceImpl) Schema(schema string) *Model {
 	model := m.getModel()
 	model.schema = schema
 	return model
@@ -268,15 +282,17 @@ func (m *Model) Schema(schema string) *Model {
 
 // Clone creates and returns a new model which is a Clone of current model.
 // Note that it uses deep-copy for the Clone.
-func (m *Model) Clone() *Model {
-	newModel := (*Model)(nil)
-	if m.tx != nil {
-		newModel = m.tx.Model(m.tablesInit)
-	} else {
-		newModel = m.db.Model(m.tablesInit)
-	}
+func (m *DefaultHookModelInterfaceImpl) Clone() *Model {
+	newModel := &Model{}
+	//if m.tx != nil {
+	//	newModel = m.tx.Model(m.tablesInit)
+	//} else {
+	//	newModel = m.db.Model(m.tablesInit)
+	//}
 	// Basic attributes copy.
-	*newModel = *m
+	*newModel = *m.Model
+	newModel.initModelInterface()
+
 	// WhereBuilder copy, note the attribute pointer.
 	newModel.whereBuilder = m.whereBuilder.Clone()
 	newModel.whereBuilder.model = newModel
@@ -301,7 +317,7 @@ func (m *Model) Clone() *Model {
 }
 
 // Master marks the following operation on master node.
-func (m *Model) Master() *Model {
+func (m *DefaultHookModelInterfaceImpl) Master() *Model {
 	model := m.getModel()
 	model.linkType = linkTypeMaster
 	return model
@@ -309,7 +325,7 @@ func (m *Model) Master() *Model {
 
 // Slave marks the following operation on slave node.
 // Note that it makes sense only if there's any slave node configured.
-func (m *Model) Slave() *Model {
+func (m *DefaultHookModelInterfaceImpl) Slave() *Model {
 	model := m.getModel()
 	model.linkType = linkTypeSlave
 	return model
@@ -317,17 +333,17 @@ func (m *Model) Slave() *Model {
 
 // Safe marks this model safe or unsafe. If safe is true, it clones and returns a new model object
 // whenever the operation done, or else it changes the attribute of current model.
-func (m *Model) Safe(safe ...bool) *Model {
+func (m *DefaultHookModelInterfaceImpl) Safe(safe ...bool) *Model {
 	if len(safe) > 0 {
 		m.safe = safe[0]
 	} else {
 		m.safe = true
 	}
-	return m
+	return m.Model
 }
 
 // Args sets custom arguments for model operation.
-func (m *Model) Args(args ...interface{}) *Model {
+func (m *DefaultHookModelInterfaceImpl) Args(args ...interface{}) *Model {
 	model := m.getModel()
 	model.extraArgs = append(model.extraArgs, args)
 	return model
@@ -335,7 +351,7 @@ func (m *Model) Args(args ...interface{}) *Model {
 
 // Handler calls each of `handlers` on current Model and returns a new Model.
 // ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
-func (m *Model) Handler(handlers ...ModelHandler) *Model {
+func (m *DefaultHookModelInterfaceImpl) Handler(handlers ...ModelHandler) *Model {
 	model := m.getModel()
 	for _, handler := range handlers {
 		model = handler(model)

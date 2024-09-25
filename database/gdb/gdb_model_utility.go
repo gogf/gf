@@ -22,7 +22,7 @@ import (
 // and returns the quoted string; or else it returns `s` without any change.
 //
 // The meaning of a `word` can be considered as a column name.
-func (m *Model) QuoteWord(s string) string {
+func (m *DefaultHookModelInterfaceImpl) QuoteWord(s string) string {
 	return m.db.GetCore().QuoteWord(s)
 }
 
@@ -30,7 +30,7 @@ func (m *Model) QuoteWord(s string) string {
 // schema.
 //
 // Also see DriverMysql.TableFields.
-func (m *Model) TableFields(tableStr string, schema ...string) (fields map[string]*TableField, err error) {
+func (m *DefaultHookModelInterfaceImpl) TableFields(tableStr string, schema ...string) (fields map[string]*TableField, err error) {
 	var (
 		table      = m.db.GetCore().guessPrimaryTableName(tableStr)
 		usedSchema = gutil.GetOrDefaultStr(m.schema, schema...)

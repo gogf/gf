@@ -43,7 +43,7 @@ import (
 // Or:
 //
 //	db.With(UserDetail{}, UserScores{}).Scan(xxx)
-func (m *Model) With(objects ...interface{}) *Model {
+func (m *DefaultHookModelInterfaceImpl) With(objects ...interface{}) *Model {
 	model := m.getModel()
 	for _, object := range objects {
 		if m.tables == "" {
@@ -59,7 +59,7 @@ func (m *Model) With(objects ...interface{}) *Model {
 }
 
 // WithAll enables model association operations on all objects that have "with" tag in the struct.
-func (m *Model) WithAll() *Model {
+func (m *DefaultHookModelInterfaceImpl) WithAll() *Model {
 	model := m.getModel()
 	model.withAll = true
 	return model

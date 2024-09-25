@@ -22,7 +22,7 @@ import (
 )
 
 // Batch sets the batch operation number for the model.
-func (m *Model) Batch(batch int) *Model {
+func (m *DefaultHookModelInterfaceImpl) Batch(batch int) *Model {
 	model := m.getModel()
 	model.batch = batch
 	return model
@@ -38,7 +38,7 @@ func (m *Model) Batch(batch int) *Model {
 // Data("uid=? AND name=?", 10000, "john")
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"}).
-func (m *Model) Data(data ...interface{}) *Model {
+func (m *DefaultHookModelInterfaceImpl) Data(data ...interface{}) *Model {
 	var model = m.getModel()
 	if len(data) > 1 {
 		if s := gconv.String(data[0]); gstr.Contains(s, "?") {
@@ -121,9 +121,9 @@ func (m *Model) Data(data ...interface{}) *Model {
 
 // OnConflict sets the primary key or index when columns conflicts occurs.
 // It's not necessary for MySQL driver.
-func (m *Model) OnConflict(onConflict ...interface{}) *Model {
+func (m *DefaultHookModelInterfaceImpl) OnConflict(onConflict ...interface{}) *Model {
 	if len(onConflict) == 0 {
-		return m
+		return m.Model
 	}
 	model := m.getModel()
 	if len(onConflict) > 1 {
@@ -150,9 +150,9 @@ func (m *Model) OnConflict(onConflict ...interface{}) *Model {
 //	OnDuplicate(g.Map{
 //		  "nickname": "passport",
 //	}).
-func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
+func (m *DefaultHookModelInterfaceImpl) OnDuplicate(onDuplicate ...interface{}) *Model {
 	if len(onDuplicate) == 0 {
-		return m
+		return m.Model
 	}
 	model := m.getModel()
 	if len(onDuplicate) > 1 {
@@ -176,9 +176,9 @@ func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
 //		  "passport": "",
 //		  "password": "",
 //	}).
-func (m *Model) OnDuplicateEx(onDuplicateEx ...interface{}) *Model {
+func (m *DefaultHookModelInterfaceImpl) OnDuplicateEx(onDuplicateEx ...interface{}) *Model {
 	if len(onDuplicateEx) == 0 {
-		return m
+		return m.Model
 	}
 	model := m.getModel()
 	if len(onDuplicateEx) > 1 {
@@ -192,7 +192,7 @@ func (m *Model) OnDuplicateEx(onDuplicateEx ...interface{}) *Model {
 // Insert does "INSERT INTO ..." statement for the model.
 // The optional parameter `data` is the same as the parameter of Model.Data function,
 // see Model.Data.
-func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
+func (m *DefaultHookModelInterfaceImpl) Insert(data ...interface{}) (result sql.Result, err error) {
 	var ctx = m.GetCtx()
 	if len(data) > 0 {
 		return m.Data(data...).Insert()
@@ -201,7 +201,7 @@ func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 }
 
 // InsertAndGetId performs action Insert and returns the last insert id that automatically generated.
-func (m *Model) InsertAndGetId(data ...interface{}) (lastInsertId int64, err error) {
+func (m *DefaultHookModelInterfaceImpl) InsertAndGetId(data ...interface{}) (lastInsertId int64, err error) {
 	var ctx = m.GetCtx()
 	if len(data) > 0 {
 		return m.Data(data...).InsertAndGetId()
@@ -216,7 +216,7 @@ func (m *Model) InsertAndGetId(data ...interface{}) (lastInsertId int64, err err
 // InsertIgnore does "INSERT IGNORE INTO ..." statement for the model.
 // The optional parameter `data` is the same as the parameter of Model.Data function,
 // see Model.Data.
-func (m *Model) InsertIgnore(data ...interface{}) (result sql.Result, err error) {
+func (m *DefaultHookModelInterfaceImpl) InsertIgnore(data ...interface{}) (result sql.Result, err error) {
 	var ctx = m.GetCtx()
 	if len(data) > 0 {
 		return m.Data(data...).InsertIgnore()
@@ -227,7 +227,7 @@ func (m *Model) InsertIgnore(data ...interface{}) (result sql.Result, err error)
 // Replace does "REPLACE INTO ..." statement for the model.
 // The optional parameter `data` is the same as the parameter of Model.Data function,
 // see Model.Data.
-func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
+func (m *DefaultHookModelInterfaceImpl) Replace(data ...interface{}) (result sql.Result, err error) {
 	var ctx = m.GetCtx()
 	if len(data) > 0 {
 		return m.Data(data...).Replace()
@@ -241,7 +241,7 @@ func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
 //
 // It updates the record if there's primary or unique index in the saving data,
 // or else it inserts a new record into the table.
-func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
+func (m *DefaultHookModelInterfaceImpl) Save(data ...interface{}) (result sql.Result, err error) {
 	var ctx = m.GetCtx()
 	if len(data) > 0 {
 		return m.Data(data...).Save()

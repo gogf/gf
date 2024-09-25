@@ -20,7 +20,7 @@ import (
 // Model("user").LeftJoin("user_detail", "user_detail.uid=user.uid")
 // Model("user", "u").LeftJoin("user_detail", "ud", "ud.uid=u.uid")
 // Model("user", "u").LeftJoin("SELECT xxx FROM xxx","a", "a.uid=u.uid").
-func (m *Model) LeftJoin(tableOrSubQueryAndJoinConditions ...string) *Model {
+func (m *DefaultHookModelInterfaceImpl) LeftJoin(tableOrSubQueryAndJoinConditions ...string) *Model {
 	return m.doJoin(joinOperatorLeft, tableOrSubQueryAndJoinConditions...)
 }
 
@@ -32,7 +32,7 @@ func (m *Model) LeftJoin(tableOrSubQueryAndJoinConditions ...string) *Model {
 // Model("user").RightJoin("user_detail", "user_detail.uid=user.uid")
 // Model("user", "u").RightJoin("user_detail", "ud", "ud.uid=u.uid")
 // Model("user", "u").RightJoin("SELECT xxx FROM xxx","a", "a.uid=u.uid").
-func (m *Model) RightJoin(tableOrSubQueryAndJoinConditions ...string) *Model {
+func (m *DefaultHookModelInterfaceImpl) RightJoin(tableOrSubQueryAndJoinConditions ...string) *Model {
 	return m.doJoin(joinOperatorRight, tableOrSubQueryAndJoinConditions...)
 }
 
@@ -44,7 +44,7 @@ func (m *Model) RightJoin(tableOrSubQueryAndJoinConditions ...string) *Model {
 // Model("user").InnerJoin("user_detail", "user_detail.uid=user.uid")
 // Model("user", "u").InnerJoin("user_detail", "ud", "ud.uid=u.uid")
 // Model("user", "u").InnerJoin("SELECT xxx FROM xxx","a", "a.uid=u.uid").
-func (m *Model) InnerJoin(tableOrSubQueryAndJoinConditions ...string) *Model {
+func (m *DefaultHookModelInterfaceImpl) InnerJoin(tableOrSubQueryAndJoinConditions ...string) *Model {
 	return m.doJoin(joinOperatorInner, tableOrSubQueryAndJoinConditions...)
 }
 
@@ -53,7 +53,7 @@ func (m *Model) InnerJoin(tableOrSubQueryAndJoinConditions ...string) *Model {
 // Eg:
 // Model("order").LeftJoinOnField("user", "user_id")
 // Model("order").LeftJoinOnField("product", "product_id").
-func (m *Model) LeftJoinOnField(table, field string) *Model {
+func (m *DefaultHookModelInterfaceImpl) LeftJoinOnField(table, field string) *Model {
 	return m.doJoin(joinOperatorLeft, table, fmt.Sprintf(
 		`%s.%s=%s.%s`,
 		m.tablesInit,
@@ -68,7 +68,7 @@ func (m *Model) LeftJoinOnField(table, field string) *Model {
 // Eg:
 // Model("order").InnerJoinOnField("user", "user_id")
 // Model("order").InnerJoinOnField("product", "product_id").
-func (m *Model) RightJoinOnField(table, field string) *Model {
+func (m *DefaultHookModelInterfaceImpl) RightJoinOnField(table, field string) *Model {
 	return m.doJoin(joinOperatorRight, table, fmt.Sprintf(
 		`%s.%s=%s.%s`,
 		m.tablesInit,
@@ -83,7 +83,7 @@ func (m *Model) RightJoinOnField(table, field string) *Model {
 // Eg:
 // Model("order").InnerJoinOnField("user", "user_id")
 // Model("order").InnerJoinOnField("product", "product_id").
-func (m *Model) InnerJoinOnField(table, field string) *Model {
+func (m *DefaultHookModelInterfaceImpl) InnerJoinOnField(table, field string) *Model {
 	return m.doJoin(joinOperatorInner, table, fmt.Sprintf(
 		`%s.%s=%s.%s`,
 		m.tablesInit,
@@ -99,7 +99,7 @@ func (m *Model) InnerJoinOnField(table, field string) *Model {
 // Model("user").LeftJoinOnFields("order", "id", "=", "user_id")
 // Model("user").LeftJoinOnFields("order", "id", ">", "user_id")
 // Model("user").LeftJoinOnFields("order", "id", "<", "user_id")
-func (m *Model) LeftJoinOnFields(table, firstField, operator, secondField string) *Model {
+func (m *DefaultHookModelInterfaceImpl) LeftJoinOnFields(table, firstField, operator, secondField string) *Model {
 	return m.doJoin(joinOperatorLeft, table, fmt.Sprintf(
 		`%s.%s %s %s.%s`,
 		m.tablesInit,
@@ -116,7 +116,7 @@ func (m *Model) LeftJoinOnFields(table, firstField, operator, secondField string
 // Model("user").RightJoinOnFields("order", "id", "=", "user_id")
 // Model("user").RightJoinOnFields("order", "id", ">", "user_id")
 // Model("user").RightJoinOnFields("order", "id", "<", "user_id")
-func (m *Model) RightJoinOnFields(table, firstField, operator, secondField string) *Model {
+func (m *DefaultHookModelInterfaceImpl) RightJoinOnFields(table, firstField, operator, secondField string) *Model {
 	return m.doJoin(joinOperatorRight, table, fmt.Sprintf(
 		`%s.%s %s %s.%s`,
 		m.tablesInit,
@@ -133,7 +133,7 @@ func (m *Model) RightJoinOnFields(table, firstField, operator, secondField strin
 // Model("user").InnerJoinOnFields("order", "id", "=", "user_id")
 // Model("user").InnerJoinOnFields("order", "id", ">", "user_id")
 // Model("user").InnerJoinOnFields("order", "id", "<", "user_id")
-func (m *Model) InnerJoinOnFields(table, firstField, operator, secondField string) *Model {
+func (m *DefaultHookModelInterfaceImpl) InnerJoinOnFields(table, firstField, operator, secondField string) *Model {
 	return m.doJoin(joinOperatorInner, table, fmt.Sprintf(
 		`%s.%s %s %s.%s`,
 		m.tablesInit,
