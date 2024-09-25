@@ -22,6 +22,83 @@ func (w *Watcher) Add(path string, callbackFunc func(event *Event), recursive ..
 	return w.AddOnce("", path, callbackFunc, recursive...)
 }
 
+// AppendPath adds a `path` to the watcher with an optional `recursive` parameter.
+// This method checks whether the path or any of its parent paths has a callback bound.
+// If no callback is found for the path or its parent paths, it returns an error.
+//
+// Current Behavior:
+// - The specified path, if valid, is added to the monitor.
+// - If recursive is true or not specified, all existing sub-directories are also added.
+// - Only folders are added for monitoring; files are implicitly covered by folder monitoring.
+//
+// Important Scenario:
+//   - If any new sub-folder is created under a monitored path, these newly created directories
+//     will NOT be automatically monitored by this watcher. To address this:
+//     1. Listen for folder creation events on the parent directory.
+//     2. Upon detecting a new directory event, dynamically add the new directory to the watcher.
+//
+// Adding dynamic monitoring for newly created folders can ensure that any changes within
+// new sub-directories are captured, thus maintaining comprehensive monitoring coverage
+// without manual interventions after initial setup.
+func (w *Watcher) AppendPath(path string, recursive ...bool) error {
+
+	// Check and convert the given path to absolute path.
+	if t := fileRealPath(path); t == "" {
+		return gerror.NewCodef(gcode.CodeInvalidParameter, `"%s" does not exist`, path)
+	} else {
+		path = t
+	}
+
+	// Validate if the path or its parent has a callback.
+	if !w.hasCallbackOrParentCallback(path) {
+		return gerror.NewCodef(gcode.CodeInvalidParameter, `no callback set for path "%s" or its parents`, path)
+	}
+
+	// Add the path to underlying monitor.
+	if err := w.watcher.Add(path); err != nil {
+		return gerror.Wrapf(err, `add watch failed for path "%s"`, path)
+	}
+	intlog.Printf(context.TODO(), "watcher adds monitor for: %s", path)
+
+	// If it's recursive adding, it then adds all sub-folders to the monitor.
+	// NOTE:
+	// 1. It only recursively adds **folders** to the monitor, NOT files,
+	//    because if the folders are monitored and their sub-files are also monitored.
+	if fileIsDir(path) && (len(recursive) == 0 || recursive[0]) {
+		for _, subPath := range fileAllDirs(path) {
+			if fileIsDir(subPath) {
+				if err := w.watcher.Add(subPath); err != nil {
+					return gerror.Wrapf(err, `add watch failed for path "%s"`, subPath)
+				}
+				intlog.Printf(context.TODO(), "watcher adds monitor for: %s", subPath)
+			}
+		}
+	}
+	return nil
+}
+
+// hasCallbackOrParentCallback checks if the given path or any of its parent paths have a callback registered.
+func (w *Watcher) hasCallbackOrParentCallback(path string) bool {
+	// Check the path itself.
+	if w.callbacks.Get(path) != nil {
+		return true
+	}
+	// Check its parent paths recursively.
+	parentDirPath := fileDir(path)
+	for parentDirPath != path {
+		if v := w.callbacks.Get(parentDirPath); v != nil {
+			for _, c := range v.(*glist.List).FrontAll() {
+				if c.(*Callback).recursive {
+					return true
+				}
+			}
+		}
+		path = parentDirPath
+		parentDirPath = fileDir(parentDirPath)
+	}
+	return false
+}
+
 // AddOnce monitors `path` with callback function `callbackFunc` only once using unique name
 // `name` to the watcher. If AddOnce is called multiple times with the same `name` parameter,
 // `path` is only added to monitor once.
