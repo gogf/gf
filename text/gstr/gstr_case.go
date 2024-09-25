@@ -107,6 +107,7 @@ func CaseConvert(s string, caseType CaseType) string {
 //
 // Example:
 // CaseCamel("any_kind_of_string") -> AnyKindOfString
+// CaseCamel("anyKindOfString")    -> AnyKindOfString
 func CaseCamel(s string) string {
 	return toCamelInitCase(s, true)
 }
@@ -115,6 +116,7 @@ func CaseCamel(s string) string {
 //
 // Example:
 // CaseCamelLower("any_kind_of_string") -> anyKindOfString
+// CaseCamelLower("AnyKindOfString")    -> anyKindOfString
 func CaseCamelLower(s string) string {
 	if s == "" {
 		return s
