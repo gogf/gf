@@ -446,3 +446,264 @@ func Test_Issue3789(t *testing.T) {
 		t.Assert(dest.ThirdID, uint64(3))
 	})
 }
+
+// https://github.com/gogf/gf/issues/3797
+func Test_Issue3797(t *testing.T) {
+	type Option struct {
+		F1 int
+		F2 string
+	}
+	type Rule struct {
+		ID   int64     `json:"id"`
+		Rule []*Option `json:"rule"`
+	}
+	type Res1 struct {
+		g.Meta
+		Rule
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var r = &Rule{
+			ID: 100,
+		}
+		var res = &Res1{}
+		for i := 0; i < 10000; i++ {
+			err := gconv.Scan(r, res)
+			t.AssertNil(err)
+			t.Assert(res.ID, 100)
+			t.AssertEQ(res.Rule.Rule, nil)
+		}
+	})
+}
+
+// https://github.com/gogf/gf/issues/3800
+func Test_Issue3800(t *testing.T) {
+	// might be random assignment in converting,
+	// it here so runs multiple times to reproduce the issue.
+	for i := 0; i < 1000; i++ {
+		doTestIssue3800(t)
+	}
+}
+
+func doTestIssue3800(t *testing.T) {
+	type NullID string
+
+	type StructA struct {
+		Superior    string `json:"superior"`
+		UpdatedTick int    `json:"updated_tick"`
+	}
+	type StructB struct {
+		Superior    *NullID `json:"superior"`
+		UpdatedTick *int    `json:"updated_tick"`
+	}
+
+	type StructC struct {
+		Superior    string `json:"superior"`
+		UpdatedTick int    `json:"updated_tick"`
+	}
+	type StructD struct {
+		StructC
+		Superior    *NullID `json:"superior"`
+		UpdatedTick *int    `json:"updated_tick"`
+	}
+
+	type StructE struct {
+		Superior    string `json:"superior"`
+		UpdatedTick int    `json:"updated_tick"`
+	}
+	type StructF struct {
+		Superior    *NullID `json:"superior"`
+		UpdatedTick *int    `json:"updated_tick"`
+		StructE
+	}
+
+	type StructG struct {
+		Superior    string `json:"superior"`
+		UpdatedTick int    `json:"updated_tick"`
+	}
+	type StructH struct {
+		Superior    *string `json:"superior"`
+		UpdatedTick *int    `json:"updated_tick"`
+		StructG
+	}
+
+	type StructI struct {
+		Master struct {
+			Superior    *NullID `json:"superior"`
+			UpdatedTick int     `json:"updated_tick"`
+		} `json:"master"`
+	}
+	type StructJ struct {
+		StructA
+		Superior    *NullID `json:"superior"`
+		UpdatedTick *int    `json:"updated_tick"`
+	}
+
+	type StructK struct {
+		Master struct {
+			Superior    *NullID `json:"superior"`
+			UpdatedTick int     `json:"updated_tick"`
+		} `json:"master"`
+	}
+	type StructL struct {
+		Superior    *NullID `json:"superior"`
+		UpdatedTick *int    `json:"updated_tick"`
+		StructA
+	}
+
+	// case 0
+	// NullID should not be initialized.
+	gtest.C(t, func(t *gtest.T) {
+		structA := g.Map{
+			"UpdatedTick": 10,
+		}
+		structB := StructB{}
+		err := gconv.Scan(structA, &structB)
+		t.AssertNil(err)
+		t.AssertNil(structB.Superior)
+		t.Assert(*structB.UpdatedTick, structA["UpdatedTick"])
+	})
+
+	// case 1
+	gtest.C(t, func(t *gtest.T) {
+		structA := StructA{
+			Superior:    "superior100",
+			UpdatedTick: 20,
+		}
+		structB := StructB{}
+		err := gconv.Scan(structA, &structB)
+		t.AssertNil(err)
+		t.Assert(*structB.Superior, structA.Superior)
+	})
+
+	// case 2
+	gtest.C(t, func(t *gtest.T) {
+		structA1 := StructA{
+			Superior:    "100",
+			UpdatedTick: 20,
+		}
+		structB1 := StructB{}
+		err := gconv.Scan(structA1, &structB1)
+		t.AssertNil(err)
+		t.Assert(*structB1.Superior, structA1.Superior)
+		t.Assert(*structB1.UpdatedTick, structA1.UpdatedTick)
+	})
+
+	// case 3
+	gtest.C(t, func(t *gtest.T) {
+		structC := StructC{
+			Superior:    "superior100",
+			UpdatedTick: 20,
+		}
+		structD := StructD{}
+		err := gconv.Scan(structC, &structD)
+		t.AssertNil(err)
+		t.Assert(structD.StructC.Superior, structC.Superior)
+		t.Assert(*structD.Superior, structC.Superior)
+		t.Assert(*structD.UpdatedTick, structC.UpdatedTick)
+	})
+
+	// case 4
+	gtest.C(t, func(t *gtest.T) {
+		structC1 := StructC{
+			Superior:    "100",
+			UpdatedTick: 20,
+		}
+		structD1 := StructD{}
+		err := gconv.Scan(structC1, &structD1)
+		t.AssertNil(err)
+		t.Assert(structD1.StructC.Superior, structC1.Superior)
+		t.Assert(structD1.StructC.UpdatedTick, structC1.UpdatedTick)
+		t.Assert(*structD1.Superior, structC1.Superior)
+		t.Assert(*structD1.UpdatedTick, structC1.UpdatedTick)
+	})
+
+	// case 5
+	gtest.C(t, func(t *gtest.T) {
+		structE := StructE{
+			Superior:    "superior100",
+			UpdatedTick: 20,
+		}
+		structF := StructF{}
+		err := gconv.Scan(structE, &structF)
+		t.AssertNil(err)
+		t.Assert(structF.StructE.Superior, structE.Superior)
+		t.Assert(structF.StructE.UpdatedTick, structE.UpdatedTick)
+		t.Assert(*structF.Superior, structE.Superior)
+		t.Assert(*structF.UpdatedTick, structE.UpdatedTick)
+	})
+
+	// case 6
+	gtest.C(t, func(t *gtest.T) {
+		structE1 := StructE{
+			Superior:    "100",
+			UpdatedTick: 20,
+		}
+		structF1 := StructF{}
+		err := gconv.Scan(structE1, &structF1)
+		t.AssertNil(err)
+		t.Assert(*structF1.Superior, structE1.Superior)
+		t.Assert(*structF1.UpdatedTick, structE1.UpdatedTick)
+		t.Assert(structF1.StructE.Superior, structE1.Superior)
+		t.Assert(structF1.StructE.UpdatedTick, structE1.UpdatedTick)
+	})
+
+	// case 7
+	gtest.C(t, func(t *gtest.T) {
+		structG := StructG{
+			Superior:    "superior100",
+			UpdatedTick: 20,
+		}
+		structH := StructH{}
+		err := gconv.Scan(structG, &structH)
+		t.AssertNil(err)
+		t.Assert(*structH.Superior, structG.Superior)
+		t.Assert(*structH.UpdatedTick, structG.UpdatedTick)
+		t.Assert(structH.StructG.Superior, structG.Superior)
+		t.Assert(structH.StructG.UpdatedTick, structG.UpdatedTick)
+	})
+
+	// case 8
+	gtest.C(t, func(t *gtest.T) {
+		structG1 := StructG{
+			Superior:    "100",
+			UpdatedTick: 20,
+		}
+		structH1 := StructH{}
+		err := gconv.Scan(structG1, &structH1)
+		t.AssertNil(err)
+		t.Assert(*structH1.Superior, structG1.Superior)
+		t.Assert(*structH1.UpdatedTick, structG1.UpdatedTick)
+		t.Assert(structH1.StructG.Superior, structG1.Superior)
+		t.Assert(structH1.StructG.UpdatedTick, structG1.UpdatedTick)
+	})
+
+	// case 9
+	gtest.C(t, func(t *gtest.T) {
+		structI := StructI{}
+		xxx := NullID("superior100")
+		structI.Master.Superior = &xxx
+		structI.Master.UpdatedTick = 30
+		structJ := StructJ{}
+		err := gconv.Scan(structI.Master, &structJ)
+		t.AssertNil(err)
+		t.Assert(*structJ.Superior, structI.Master.Superior)
+		t.Assert(*structJ.UpdatedTick, structI.Master.UpdatedTick)
+		t.Assert(structJ.StructA.Superior, structI.Master.Superior)
+		t.Assert(structJ.StructA.UpdatedTick, structI.Master.UpdatedTick)
+	})
+
+	// case 10
+	gtest.C(t, func(t *gtest.T) {
+		structK := StructK{}
+		yyy := NullID("superior100")
+		structK.Master.Superior = &yyy
+		structK.Master.UpdatedTick = 40
+		structL := StructL{}
+		err := gconv.Scan(structK.Master, &structL)
+		t.AssertNil(err)
+		t.Assert(*structL.Superior, structK.Master.Superior)
+		t.Assert(*structL.UpdatedTick, structK.Master.UpdatedTick)
+		t.Assert(structL.StructA.Superior, structK.Master.Superior)
+		t.Assert(structL.StructA.UpdatedTick, structK.Master.UpdatedTick)
+	})
+}
