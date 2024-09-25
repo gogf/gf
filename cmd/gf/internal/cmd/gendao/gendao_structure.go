@@ -180,7 +180,8 @@ func formatFieldName(fieldName string, nameCase FieldNameCase) string {
 	// field/table names of that are in normal case.
 	var newFieldName = fieldName
 	if isAllUpper(fieldName) {
-		// For dameng/oracle databases that all field/table names are in upper case.
+		// For special databases like dm, oracle,
+		// field/table names of that are in upper case.
 		newFieldName = strings.ToLower(fieldName)
 	}
 	switch nameCase {
