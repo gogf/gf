@@ -267,7 +267,7 @@ type (
 	}
 )
 
-func (receiver Issue3670Last) Index(ctx context.Context, in Issue3670LastInput) (out *Issue3670LastOutput, err error) {
+func (receiver Issue3670Last) LastRecv(ctx context.Context, in Issue3670LastInput) (out *Issue3670LastOutput, err error) {
 	out = &Issue3670LastOutput{
 		Content: gjson.MustEncodeString(in),
 	}
