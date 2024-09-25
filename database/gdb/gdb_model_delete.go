@@ -18,7 +18,7 @@ import (
 // Delete does "DELETE FROM ... " statement for the model.
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
-func (m DefaultHookModelInterfaceImpl) Delete(where ...interface{}) (result sql.Result, err error) {
+func (m DefaultModelInterfaceImpl) Delete(where ...interface{}) (result sql.Result, err error) {
 	var ctx = m.GetCtx()
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).Delete()

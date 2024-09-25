@@ -21,7 +21,7 @@ import (
 // Order("id desc,name asc")
 // Order("id desc").Order("name asc")
 // Order(gdb.Raw("field(id, 3,1,2)")).
-func (m DefaultHookModelInterfaceImpl) Order(orderBy ...interface{}) *Model {
+func (m DefaultModelInterfaceImpl) Order(orderBy ...interface{}) *Model {
 	if len(orderBy) == 0 {
 		return m.Model
 	}
@@ -41,7 +41,7 @@ func (m DefaultHookModelInterfaceImpl) Order(orderBy ...interface{}) *Model {
 }
 
 // OrderAsc sets the "ORDER BY xxx ASC" statement for the model.
-func (m DefaultHookModelInterfaceImpl) OrderAsc(column string) *Model {
+func (m DefaultModelInterfaceImpl) OrderAsc(column string) *Model {
 	if len(column) == 0 {
 		return m.Model
 	}
@@ -49,7 +49,7 @@ func (m DefaultHookModelInterfaceImpl) OrderAsc(column string) *Model {
 }
 
 // OrderDesc sets the "ORDER BY xxx DESC" statement for the model.
-func (m DefaultHookModelInterfaceImpl) OrderDesc(column string) *Model {
+func (m DefaultModelInterfaceImpl) OrderDesc(column string) *Model {
 	if len(column) == 0 {
 		return m.Model
 	}
@@ -57,14 +57,14 @@ func (m DefaultHookModelInterfaceImpl) OrderDesc(column string) *Model {
 }
 
 // OrderRandom sets the "ORDER BY RANDOM()" statement for the model.
-func (m DefaultHookModelInterfaceImpl) OrderRandom() *Model {
+func (m DefaultModelInterfaceImpl) OrderRandom() *Model {
 	model := m.getModel()
 	model.orderBy = m.db.OrderRandomFunction()
 	return model
 }
 
 // Group sets the "GROUP BY" statement for the model.
-func (m DefaultHookModelInterfaceImpl) Group(groupBy ...string) *Model {
+func (m DefaultModelInterfaceImpl) Group(groupBy ...string) *Model {
 	if len(groupBy) == 0 {
 		return m.Model
 	}

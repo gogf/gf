@@ -11,18 +11,18 @@ var (
 )
 
 type ModelInterface interface {
-	ModelSelectInterface
-	ModelExecInterface
-	ModelOmitInterface
-	ModelUtilInterface
-	ModelWhereInterface
+	modelSelectInterface
+	modelExecInterface
+	modelOmitInterface
+	modelUtilInterface
+	modelWhereInterface
 	// 主要用于Model.Clone
 	// 当Safe为true时，每次链式调用需要深拷贝Model
-	// 同时也需要更新DefaultHookModelInterfaceImpl里面的Model
+	// 同时也需要更新DefaultModelInterfaceImpl里面的Model
 	setModel(model *Model)
 }
 
-type ModelOmitInterface interface {
+type modelOmitInterface interface {
 	// gdb_model_option.go
 	OmitEmpty() *Model
 	OmitEmptyWhere() *Model
@@ -32,7 +32,7 @@ type ModelOmitInterface interface {
 	OmitNilData() *Model
 }
 
-type ModelExecInterface interface {
+type modelExecInterface interface {
 	// gdb_model_insert.go
 	Batch(batch int) *Model
 	Data(data ...interface{}) *Model
@@ -55,7 +55,7 @@ type ModelExecInterface interface {
 	Decrement(column string, amount interface{}) (sql.Result, error)
 }
 
-type ModelSelectResult interface {
+type modelSelectResult interface {
 	All(where ...interface{}) (Result, error)
 	AllAndCount(useFieldForCount bool) (result Result, totalCount int, err error)
 	Chunk(size int, handler ChunkHandler)
@@ -74,7 +74,7 @@ type ModelSelectResult interface {
 	Sum(column string) (float64, error)
 }
 
-type ModelSelectJoin interface {
+type modelSelectJoin interface {
 	LeftJoin(tableOrSubQueryAndJoinConditions ...string) *Model
 	RightJoin(tableOrSubQueryAndJoinConditions ...string) *Model
 	InnerJoin(tableOrSubQueryAndJoinConditions ...string) *Model
@@ -86,7 +86,7 @@ type ModelSelectJoin interface {
 	InnerJoinOnFields(table, firstField, operator, secondField string) *Model
 }
 
-type ModelSelectField interface {
+type modelSelectField interface {
 	Fields(fieldNamesOrMapStruct ...interface{}) *Model
 	FieldsPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...interface{}) *Model
 	FieldsEx(fieldNamesOrMapStruct ...interface{}) *Model
@@ -101,7 +101,7 @@ type ModelSelectField interface {
 	HasField(field string) (bool, error)
 }
 
-type ModelSelectOrderGroup interface {
+type modelSelectOrderGroup interface {
 	Order(orderBy ...interface{}) *Model
 	OrderAsc(column string) *Model
 	OrderDesc(column string) *Model
@@ -109,18 +109,18 @@ type ModelSelectOrderGroup interface {
 	Group(groupBy ...string) *Model
 }
 
-type ModelSelectPage interface {
+type modelSelectPage interface {
 	Limit(limit ...int) *Model
 	Offset(offset int) *Model
 	Page(page, limit int) *Model
 }
 
-type ModelSelectInterface interface {
-	ModelSelectResult
-	ModelSelectJoin
-	ModelSelectField
-	ModelSelectOrderGroup
-	ModelSelectPage
+type modelSelectInterface interface {
+	modelSelectResult
+	modelSelectJoin
+	modelSelectField
+	modelSelectOrderGroup
+	modelSelectPage
 
 	Union(unions ...*Model) *Model
 	UnionAll(unions ...*Model) *Model
@@ -131,7 +131,7 @@ type ModelSelectInterface interface {
 	Distinct() *Model
 }
 
-type ModelUtilInterface interface {
+type modelUtilInterface interface {
 	// gdb_model.go
 	Raw(rawSql string, args ...interface{}) *Model
 	Partition(partitions ...string) *Model
@@ -166,7 +166,7 @@ type ModelUtilInterface interface {
 	TableFields(tableStr string, schema ...string) (fields map[string]*TableField, err error)
 }
 
-type ModelWhereInterface interface {
+type modelWhereInterface interface {
 	// gdb_model_where.go
 	Where(where interface{}, args ...interface{}) *Model
 	Wheref(format string, args ...interface{}) *Model

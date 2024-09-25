@@ -236,7 +236,7 @@ func (h *HookDeleteInput) Next(ctx context.Context) (result sql.Result, err erro
 }
 
 // Hook sets the hook functions for current model.
-func (m DefaultHookModelInterfaceImpl) Hook(hook HookHandler) *Model {
+func (m DefaultModelInterfaceImpl) Hook(hook HookHandler) *Model {
 	model := m.getModel()
 	model.hookHandler = hook
 	return model

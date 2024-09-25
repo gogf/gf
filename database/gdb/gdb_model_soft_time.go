@@ -83,14 +83,14 @@ var (
 )
 
 // SoftTime sets the SoftTimeOption to customize soft time feature for Model.
-func (m DefaultHookModelInterfaceImpl) SoftTime(option SoftTimeOption) *Model {
+func (m DefaultModelInterfaceImpl) SoftTime(option SoftTimeOption) *Model {
 	model := m.getModel()
 	model.softTimeOption = option
 	return model
 }
 
 // Unscoped disables the soft time feature for insert, update and delete operations.
-func (m DefaultHookModelInterfaceImpl) Unscoped() *Model {
+func (m DefaultModelInterfaceImpl) Unscoped() *Model {
 	model := m.getModel()
 	model.unscoped = true
 	return model

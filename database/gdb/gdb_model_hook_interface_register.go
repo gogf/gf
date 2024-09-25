@@ -1,22 +1,22 @@
 package gdb
 
-type DefaultHookModelInterfaceImpl struct {
+type DefaultModelInterfaceImpl struct {
 	*Model
 }
 
-func (m DefaultHookModelInterfaceImpl) setModel(model *Model) {
+func (m DefaultModelInterfaceImpl) setModel(model *Model) {
 	m.Model = model
 }
 
 var (
 	registerModelInterface = func(model *Model) ModelInterface {
-		return DefaultHookModelInterfaceImpl{
+		return DefaultModelInterfaceImpl{
 			Model: model,
 		}
 	}
 )
 
-func RegisterHookModelInterface(fn func(model *Model) ModelInterface) {
+func RegisterModelInterface(fn func(model *Model) ModelInterface) {
 	if fn == nil {
 		return
 	}

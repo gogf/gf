@@ -25,7 +25,7 @@ import (
 //
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
-func (m DefaultHookModelInterfaceImpl) All(where ...interface{}) (Result, error) {
+func (m DefaultModelInterfaceImpl) All(where ...interface{}) (Result, error) {
 	var ctx = m.GetCtx()
 	return m.doGetAll(ctx, false, where...)
 }
@@ -47,7 +47,7 @@ func (m DefaultHookModelInterfaceImpl) All(where ...interface{}) (Result, error)
 //	    // Handle error.
 //	}
 //	fmt.Println(result, count)
-func (m DefaultHookModelInterfaceImpl) AllAndCount(useFieldForCount bool) (result Result, totalCount int, err error) {
+func (m DefaultModelInterfaceImpl) AllAndCount(useFieldForCount bool) (result Result, totalCount int, err error) {
 	// Clone the model for counting
 	countModel := m.Clone()
 
@@ -73,7 +73,7 @@ func (m DefaultHookModelInterfaceImpl) AllAndCount(useFieldForCount bool) (resul
 }
 
 // Chunk iterates the query result with given `size` and `handler` function.
-func (m DefaultHookModelInterfaceImpl) Chunk(size int, handler ChunkHandler) {
+func (m DefaultModelInterfaceImpl) Chunk(size int, handler ChunkHandler) {
 	page := m.start
 	if page <= 0 {
 		page = 1
@@ -104,7 +104,7 @@ func (m DefaultHookModelInterfaceImpl) Chunk(size int, handler ChunkHandler) {
 //
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
-func (m DefaultHookModelInterfaceImpl) One(where ...interface{}) (Record, error) {
+func (m DefaultModelInterfaceImpl) One(where ...interface{}) (Record, error) {
 	var ctx = m.GetCtx()
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).One()
@@ -125,7 +125,7 @@ func (m DefaultHookModelInterfaceImpl) One(where ...interface{}) (Record, error)
 // If the optional parameter `fieldsAndWhere` is given, the fieldsAndWhere[0] is the selected fields
 // and fieldsAndWhere[1:] is treated as where condition fields.
 // Also see Model.Fields and Model.Where functions.
-func (m DefaultHookModelInterfaceImpl) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
+func (m DefaultModelInterfaceImpl) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 	if len(fieldsAndWhere) > 0 {
 		if len(fieldsAndWhere) > 2 {
 			return m.Fields(gconv.String(fieldsAndWhere[0])).Where(fieldsAndWhere[1], fieldsAndWhere[2:]...).Array()
@@ -258,7 +258,7 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 //
 // users := ([]*User)(nil)
 // err   := db.Model("user").Scan(&users).
-func (m DefaultHookModelInterfaceImpl) Scan(pointer interface{}, where ...interface{}) error {
+func (m DefaultModelInterfaceImpl) Scan(pointer interface{}, where ...interface{}) error {
 	reflectInfo := reflection.OriginTypeAndKind(pointer)
 	if reflectInfo.InputKind != reflect.Ptr {
 		return gerror.NewCode(
@@ -309,7 +309,7 @@ func (m DefaultHookModelInterfaceImpl) Scan(pointer interface{}, where ...interf
 //		Fields("u1.passport,u1.id,u2.name,u2.age").
 //		Where("u1.id<2").
 //		ScanAndCount(&users, &count, false)
-func (m DefaultHookModelInterfaceImpl) ScanAndCount(pointer interface{}, totalCount *int, useFieldForCount bool) (err error) {
+func (m DefaultModelInterfaceImpl) ScanAndCount(pointer interface{}, totalCount *int, useFieldForCount bool) (err error) {
 	// support Fields with *, example: .Fields("a.*, b.name"). Count sql is select count(1) from xxx
 	countModel := m.Clone()
 	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
@@ -335,7 +335,7 @@ func (m DefaultHookModelInterfaceImpl) ScanAndCount(pointer interface{}, totalCo
 // Note that the parameter `listPointer` should be type of *[]struct/*[]*struct.
 //
 // See Result.ScanList.
-func (m DefaultHookModelInterfaceImpl) ScanList(structSlicePointer interface{}, bindToAttrName string, relationAttrNameAndFields ...string) (err error) {
+func (m DefaultModelInterfaceImpl) ScanList(structSlicePointer interface{}, bindToAttrName string, relationAttrNameAndFields ...string) (err error) {
 	var result Result
 	out, err := checkGetSliceElementInfoForScanList(structSlicePointer, bindToAttrName)
 	if err != nil {
@@ -379,7 +379,7 @@ func (m DefaultHookModelInterfaceImpl) ScanList(structSlicePointer interface{}, 
 // If the optional parameter `fieldsAndWhere` is given, the fieldsAndWhere[0] is the selected fields
 // and fieldsAndWhere[1:] is treated as where condition fields.
 // Also see Model.Fields and Model.Where functions.
-func (m DefaultHookModelInterfaceImpl) Value(fieldsAndWhere ...interface{}) (Value, error) {
+func (m DefaultModelInterfaceImpl) Value(fieldsAndWhere ...interface{}) (Value, error) {
 	var (
 		core = m.db.GetCore()
 		ctx  = core.injectInternalColumn(m.GetCtx())
@@ -418,7 +418,7 @@ func (m DefaultHookModelInterfaceImpl) Value(fieldsAndWhere ...interface{}) (Val
 // Count does "SELECT COUNT(x) FROM ..." statement for the model.
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
-func (m DefaultHookModelInterfaceImpl) Count(where ...interface{}) (int, error) {
+func (m DefaultModelInterfaceImpl) Count(where ...interface{}) (int, error) {
 	var (
 		core = m.db.GetCore()
 		ctx  = core.injectInternalColumn(m.GetCtx())
@@ -449,7 +449,7 @@ func (m DefaultHookModelInterfaceImpl) Count(where ...interface{}) (int, error) 
 }
 
 // CountColumn does "SELECT COUNT(x) FROM ..." statement for the model.
-func (m DefaultHookModelInterfaceImpl) CountColumn(column string) (int, error) {
+func (m DefaultModelInterfaceImpl) CountColumn(column string) (int, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
@@ -457,7 +457,7 @@ func (m DefaultHookModelInterfaceImpl) CountColumn(column string) (int, error) {
 }
 
 // Min does "SELECT MIN(x) FROM ..." statement for the model.
-func (m DefaultHookModelInterfaceImpl) Min(column string) (float64, error) {
+func (m DefaultModelInterfaceImpl) Min(column string) (float64, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
@@ -469,7 +469,7 @@ func (m DefaultHookModelInterfaceImpl) Min(column string) (float64, error) {
 }
 
 // Max does "SELECT MAX(x) FROM ..." statement for the model.
-func (m DefaultHookModelInterfaceImpl) Max(column string) (float64, error) {
+func (m DefaultModelInterfaceImpl) Max(column string) (float64, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
@@ -481,7 +481,7 @@ func (m DefaultHookModelInterfaceImpl) Max(column string) (float64, error) {
 }
 
 // Avg does "SELECT AVG(x) FROM ..." statement for the model.
-func (m DefaultHookModelInterfaceImpl) Avg(column string) (float64, error) {
+func (m DefaultModelInterfaceImpl) Avg(column string) (float64, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
@@ -493,7 +493,7 @@ func (m DefaultHookModelInterfaceImpl) Avg(column string) (float64, error) {
 }
 
 // Sum does "SELECT SUM(x) FROM ..." statement for the model.
-func (m DefaultHookModelInterfaceImpl) Sum(column string) (float64, error) {
+func (m DefaultModelInterfaceImpl) Sum(column string) (float64, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
@@ -505,12 +505,12 @@ func (m DefaultHookModelInterfaceImpl) Sum(column string) (float64, error) {
 }
 
 // Union does "(SELECT xxx FROM xxx) UNION (SELECT xxx FROM xxx) ..." statement for the model.
-func (m DefaultHookModelInterfaceImpl) Union(unions ...*Model) *Model {
+func (m DefaultModelInterfaceImpl) Union(unions ...*Model) *Model {
 	return m.db.Union(unions...)
 }
 
 // UnionAll does "(SELECT xxx FROM xxx) UNION ALL (SELECT xxx FROM xxx) ..." statement for the model.
-func (m DefaultHookModelInterfaceImpl) UnionAll(unions ...*Model) *Model {
+func (m DefaultModelInterfaceImpl) UnionAll(unions ...*Model) *Model {
 	return m.db.UnionAll(unions...)
 }
 
@@ -518,7 +518,7 @@ func (m DefaultHookModelInterfaceImpl) UnionAll(unions ...*Model) *Model {
 // The parameter `limit` can be either one or two number, if passed two number is passed,
 // it then sets "LIMIT limit[0],limit[1]" statement for the model, or else it sets "LIMIT limit[0]"
 // statement.
-func (m DefaultHookModelInterfaceImpl) Limit(limit ...int) *Model {
+func (m DefaultModelInterfaceImpl) Limit(limit ...int) *Model {
 	model := m.getModel()
 	switch len(limit) {
 	case 1:
@@ -532,14 +532,14 @@ func (m DefaultHookModelInterfaceImpl) Limit(limit ...int) *Model {
 
 // Offset sets the "OFFSET" statement for the model.
 // It only makes sense for some databases like SQLServer, PostgreSQL, etc.
-func (m DefaultHookModelInterfaceImpl) Offset(offset int) *Model {
+func (m DefaultModelInterfaceImpl) Offset(offset int) *Model {
 	model := m.getModel()
 	model.offset = offset
 	return model
 }
 
 // Distinct forces the query to only return distinct results.
-func (m DefaultHookModelInterfaceImpl) Distinct() *Model {
+func (m DefaultModelInterfaceImpl) Distinct() *Model {
 	model := m.getModel()
 	model.distinct = "DISTINCT "
 	return model
@@ -548,7 +548,7 @@ func (m DefaultHookModelInterfaceImpl) Distinct() *Model {
 // Page sets the paging number for the model.
 // The parameter `page` is started from 1 for paging.
 // Note that, it differs that the Limit function starts from 0 for "LIMIT" statement.
-func (m DefaultHookModelInterfaceImpl) Page(page, limit int) *Model {
+func (m DefaultModelInterfaceImpl) Page(page, limit int) *Model {
 	model := m.getModel()
 	if page <= 0 {
 		page = 1
@@ -561,7 +561,7 @@ func (m DefaultHookModelInterfaceImpl) Page(page, limit int) *Model {
 // Having sets the having statement for the model.
 // The parameters of this function usage are as the same as function Where.
 // See Where.
-func (m DefaultHookModelInterfaceImpl) Having(having interface{}, args ...interface{}) *Model {
+func (m DefaultModelInterfaceImpl) Having(having interface{}, args ...interface{}) *Model {
 	model := m.getModel()
 	model.having = []interface{}{
 		having, args,
