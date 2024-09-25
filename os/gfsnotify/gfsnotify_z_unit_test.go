@@ -7,6 +7,7 @@
 package gfsnotify_test
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -77,17 +78,20 @@ func TestWatcher_AppendPath(t *testing.T) {
 		// Add a callback to the main directory
 		_, err = watcher.Add(dirPath, func(event *gfsnotify.Event) {
 			// Track events
-			array.Append(1)
+			if strings.Contains(event.Path, "file.txt") {
+				array.Append(1)
+			}
 		})
+		t.AssertNil(err)
+
+		// Manually create the sub-folder to check callback binding
+		err = gfile.Mkdir(subDirPath)
 		t.AssertNil(err)
 
 		// Using AppendPath to add subfolder
 		err = watcher.AppendPath(subDirPath)
 		t.AssertNil(err)
 
-		// Manually create the sub-folder to check callback binding
-		err = gfile.Mkdir(subDirPath)
-		t.AssertNil(err)
 		time.Sleep(time.Millisecond * 100)
 
 		// Now create a file in the sub-folder to see if any event is tracked
