@@ -28,7 +28,19 @@ import (
 func (c *Core) GetFieldTypeStr(ctx context.Context, fieldName, table, schema string) string {
 	field := c.GetFieldType(ctx, fieldName, table, schema)
 	if field != nil {
-		return field.Type
+		// Kinds of data type examples:
+		// year(4)
+		// datetime
+		// varchar(64)
+		// bigint(20)
+		// int(10) unsigned
+		typeName := gstr.StrTillEx(field.Type, "(") // int(10) unsigned -> int
+		if typeName != "" {
+			typeName = gstr.Trim(typeName)
+		} else {
+			typeName = field.Type
+		}
+		return typeName
 	}
 	return ""
 }
@@ -63,9 +75,10 @@ func (c *Core) ConvertDataForRecord(ctx context.Context, value interface{}, tabl
 		data = MapOrStructToMapDeep(value, true)
 	)
 	for fieldName, fieldValue := range data {
+		var fieldType = c.GetFieldTypeStr(ctx, fieldName, table, c.GetSchema())
 		data[fieldName], err = c.db.ConvertValueForField(
 			ctx,
-			c.GetFieldTypeStr(ctx, fieldName, table, c.GetSchema()),
+			fieldType,
 			fieldValue,
 		)
 		if err != nil {
