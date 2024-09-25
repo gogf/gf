@@ -121,11 +121,17 @@ func parseStructToCachedStructInfo(
 
 		// normal basic attributes.
 		if structField.Anonymous {
+			isStructPtr := false
 			// handle struct attributes, it might be struct/*struct embedded..
 			if fieldType.Kind() == reflect.Ptr {
 				fieldType = fieldType.Elem()
+				isStructPtr = true
 			}
 			if fieldType.Kind() != reflect.Struct {
+				continue
+			}
+			// Skip the embedded structure of the value type of the 0 field,
+			if isStructPtr == false && fieldType.NumField() == 0 {
 				continue
 			}
 			if structField.Tag != "" {
