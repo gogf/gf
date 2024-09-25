@@ -18,6 +18,7 @@ func Test_CaseCamel(t *testing.T) {
 		{"test_case", "TestCase"},
 		{"test", "Test"},
 		{"TestCase", "TestCase"},
+		{"testCase", "TestCase"},
 		{" test  case ", "TestCase"},
 		{"userLogin_log.bak", "UserLoginLogBak"},
 		{"", ""},
