@@ -68,6 +68,8 @@ func Test_Issue3748(t *testing.T) {
 		content := client.PostContent(ctx, "/", data)
 		t.Assert(strings.Contains(content, `Content-Disposition: form-data; name="value"`), true)
 		t.Assert(strings.Contains(content, `Content-Disposition: form-data; name="name"`), true)
+		t.Assert(strings.Contains(content, "\r\n@file:"), true)
+		t.Assert(strings.Contains(content, "\r\nx-www-form-urlencoded"), true)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
