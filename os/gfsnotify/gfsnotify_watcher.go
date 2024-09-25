@@ -41,25 +41,21 @@ func (w *Watcher) Add(path string, callbackFunc func(event *Event), recursive ..
 // new sub-directories are captured, thus maintaining comprehensive monitoring coverage
 // without manual interventions after initial setup.
 func (w *Watcher) AppendPath(path string, recursive ...bool) error {
-
 	// Check and convert the given path to absolute path.
 	if t := fileRealPath(path); t == "" {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, `"%s" does not exist`, path)
 	} else {
 		path = t
 	}
-
 	// Validate if the path or its parent has a callback.
 	if !w.hasCallbackOrParentCallback(path) {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, `no callback set for path "%s" or its parents`, path)
 	}
-
 	// Add the path to underlying monitor.
 	if err := w.watcher.Add(path); err != nil {
 		return gerror.Wrapf(err, `add watch failed for path "%s"`, path)
 	}
 	intlog.Printf(context.TODO(), "watcher adds monitor for: %s", path)
-
 	// If it's recursive adding, it then adds all sub-folders to the monitor.
 	// NOTE:
 	// 1. It only recursively adds **folders** to the monitor, NOT files,
