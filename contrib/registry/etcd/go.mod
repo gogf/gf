@@ -3,8 +3,9 @@ module github.com/gogf/gf/contrib/registry/etcd/v2
 go 1.18
 
 require (
-	github.com/gogf/gf/v2 v2.7.3
+	github.com/gogf/gf/v2 v2.7.4
 	go.etcd.io/etcd/client/v3 v3.5.7
+	google.golang.org/grpc v1.59.0
 )
 
 require (
@@ -41,7 +42,6 @@ require (
 	google.golang.org/genproto v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d // indirect
-	google.golang.org/grpc v1.59.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
