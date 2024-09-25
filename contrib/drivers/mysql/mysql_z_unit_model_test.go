@@ -4814,7 +4814,7 @@ func Test_Model_Year_Date_Time_DateTime_Timestamp(t *testing.T) {
 		t.Assert(one["year"].String(), now.Format("Y"))
 		t.Assert(one["date"].String(), now.Format("Y-m-d"))
 		t.Assert(one["time"].String(), now.Format("H:i:s"))
-		t.AssertLT(one["datetime"].GTime().Sub(now), 5)
-		t.AssertLT(one["timestamp"].GTime().Sub(now), 5)
+		t.AssertLT(one["datetime"].GTime().Sub(now).Seconds(), 5)
+		t.AssertLT(one["timestamp"].GTime().Sub(now).Seconds(), 5)
 	})
 }
