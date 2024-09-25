@@ -206,7 +206,7 @@ func doStruct(
 			); err != nil {
 				return err
 			}
-			if len(cachedFieldInfo.OtherSameNameFieldIndex) > 0 {
+			if len(cachedFieldInfo.OtherSameNameField) > 0 {
 				if err = setOtherSameNameField(
 					cachedFieldInfo, paramsValue, pointerReflectValue, paramKeyToAttrMap,
 				); err != nil {
@@ -238,9 +238,9 @@ func setOtherSameNameField(
 	paramKeyToAttrMap map[string]string,
 ) (err error) {
 	// loop the same field name of all sub attributes.
-	for i := range cachedFieldInfo.OtherSameNameFieldIndex {
-		fieldValue := cachedFieldInfo.GetOtherFieldReflectValueFrom(structValue, i)
-		if err = bindVarToStructField(fieldValue, srcValue, cachedFieldInfo, paramKeyToAttrMap); err != nil {
+	for _, otherFieldInfo := range cachedFieldInfo.OtherSameNameField {
+		fieldValue := cachedFieldInfo.GetOtherFieldReflectValueFrom(structValue, otherFieldInfo.FieldIndexes)
+		if err = bindVarToStructField(fieldValue, srcValue, otherFieldInfo, paramKeyToAttrMap); err != nil {
 			return err
 		}
 	}
@@ -283,7 +283,7 @@ func bindStructWithLoopParamsMap(
 				return err
 			}
 			// handle same field name in nested struct.
-			if len(cachedFieldInfo.OtherSameNameFieldIndex) > 0 {
+			if len(cachedFieldInfo.OtherSameNameField) > 0 {
 				if err = setOtherSameNameField(cachedFieldInfo, paramValue, structValue, paramKeyToAttrMap); err != nil {
 					return err
 				}
@@ -318,7 +318,7 @@ func bindStructWithLoopParamsMap(
 						return err
 					}
 					// handle same field name in nested struct.
-					if len(cachedFieldInfo.OtherSameNameFieldIndex) > 0 {
+					if len(cachedFieldInfo.OtherSameNameField) > 0 {
 						if err = setOtherSameNameField(
 							cachedFieldInfo, paramValue, structValue, paramKeyToAttrMap,
 						); err != nil {
@@ -366,7 +366,7 @@ func bindStructWithLoopFieldInfos(
 				return err
 			}
 			// handle same field name in nested struct.
-			if len(cachedFieldInfo.OtherSameNameFieldIndex) > 0 {
+			if len(cachedFieldInfo.OtherSameNameField) > 0 {
 				if err = setOtherSameNameField(
 					cachedFieldInfo, paramValue, structValue, paramKeyToAttrMap,
 				); err != nil {
@@ -399,7 +399,7 @@ func bindStructWithLoopFieldInfos(
 					return err
 				}
 				// handle same field name in nested struct.
-				if len(cachedFieldInfo.OtherSameNameFieldIndex) > 0 {
+				if len(cachedFieldInfo.OtherSameNameField) > 0 {
 					if err = setOtherSameNameField(
 						cachedFieldInfo, paramValue, structValue, paramKeyToAttrMap,
 					); err != nil {
