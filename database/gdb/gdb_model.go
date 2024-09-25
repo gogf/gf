@@ -177,7 +177,7 @@ func (c *Core) Raw(rawSql string, args ...interface{}) *Model {
 //	db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)
 //
 // See Core.Raw.
-func (m *DefaultHookModelInterfaceImpl) Raw(rawSql string, args ...interface{}) *Model {
+func (m DefaultHookModelInterfaceImpl) Raw(rawSql string, args ...interface{}) *Model {
 	model := m.db.Raw(rawSql, args...)
 	model.db = m.db
 	model.tx = m.tx
@@ -196,7 +196,7 @@ func (c *Core) With(objects ...interface{}) *Model {
 // Partition sets Partition name.
 // Example:
 // dao.User.Ctx(ctx).Partition（"p1","p2","p3").All()
-func (m *DefaultHookModelInterfaceImpl) Partition(partitions ...string) *Model {
+func (m DefaultHookModelInterfaceImpl) Partition(partitions ...string) *Model {
 	model := m.getModel()
 	model.partition = gstr.Join(partitions, ",")
 	return model
@@ -218,7 +218,7 @@ func (tx *TXCore) With(object interface{}) *Model {
 }
 
 // Ctx sets the context for current operation.
-func (m *DefaultHookModelInterfaceImpl) Ctx(ctx context.Context) *Model {
+func (m DefaultHookModelInterfaceImpl) Ctx(ctx context.Context) *Model {
 	if ctx == nil {
 		return m.Model
 	}
@@ -232,7 +232,7 @@ func (m *DefaultHookModelInterfaceImpl) Ctx(ctx context.Context) *Model {
 
 // GetCtx returns the context for current Model.
 // It returns `context.Background()` is there's no context previously set.
-func (m *DefaultHookModelInterfaceImpl) GetCtx() context.Context {
+func (m DefaultHookModelInterfaceImpl) GetCtx() context.Context {
 	if m.tx != nil && m.tx.GetCtx() != nil {
 		return m.tx.GetCtx()
 	}
@@ -240,7 +240,7 @@ func (m *DefaultHookModelInterfaceImpl) GetCtx() context.Context {
 }
 
 // As sets an alias name for current table.
-func (m *DefaultHookModelInterfaceImpl) As(as string) *Model {
+func (m DefaultHookModelInterfaceImpl) As(as string) *Model {
 	if m.tables != "" {
 		model := m.getModel()
 		split := " JOIN "
@@ -259,14 +259,14 @@ func (m *DefaultHookModelInterfaceImpl) As(as string) *Model {
 }
 
 // DB sets/changes the db object for current operation.
-func (m *DefaultHookModelInterfaceImpl) DB(db DB) *Model {
+func (m DefaultHookModelInterfaceImpl) DB(db DB) *Model {
 	model := m.getModel()
 	model.db = db
 	return model
 }
 
 // TX sets/changes the transaction for current operation.
-func (m *DefaultHookModelInterfaceImpl) TX(tx TX) *Model {
+func (m DefaultHookModelInterfaceImpl) TX(tx TX) *Model {
 	model := m.getModel()
 	model.db = tx.GetDB()
 	model.tx = tx
@@ -274,7 +274,7 @@ func (m *DefaultHookModelInterfaceImpl) TX(tx TX) *Model {
 }
 
 // Schema sets the schema for current operation.
-func (m *DefaultHookModelInterfaceImpl) Schema(schema string) *Model {
+func (m DefaultHookModelInterfaceImpl) Schema(schema string) *Model {
 	model := m.getModel()
 	model.schema = schema
 	return model
@@ -282,7 +282,7 @@ func (m *DefaultHookModelInterfaceImpl) Schema(schema string) *Model {
 
 // Clone creates and returns a new model which is a Clone of current model.
 // Note that it uses deep-copy for the Clone.
-func (m *DefaultHookModelInterfaceImpl) Clone() *Model {
+func (m DefaultHookModelInterfaceImpl) Clone() *Model {
 	newModel := &Model{}
 	//if m.tx != nil {
 	//	newModel = m.tx.Model(m.tablesInit)
@@ -317,7 +317,7 @@ func (m *DefaultHookModelInterfaceImpl) Clone() *Model {
 }
 
 // Master marks the following operation on master node.
-func (m *DefaultHookModelInterfaceImpl) Master() *Model {
+func (m DefaultHookModelInterfaceImpl) Master() *Model {
 	model := m.getModel()
 	model.linkType = linkTypeMaster
 	return model
@@ -325,7 +325,7 @@ func (m *DefaultHookModelInterfaceImpl) Master() *Model {
 
 // Slave marks the following operation on slave node.
 // Note that it makes sense only if there's any slave node configured.
-func (m *DefaultHookModelInterfaceImpl) Slave() *Model {
+func (m DefaultHookModelInterfaceImpl) Slave() *Model {
 	model := m.getModel()
 	model.linkType = linkTypeSlave
 	return model
@@ -333,7 +333,7 @@ func (m *DefaultHookModelInterfaceImpl) Slave() *Model {
 
 // Safe marks this model safe or unsafe. If safe is true, it clones and returns a new model object
 // whenever the operation done, or else it changes the attribute of current model.
-func (m *DefaultHookModelInterfaceImpl) Safe(safe ...bool) *Model {
+func (m DefaultHookModelInterfaceImpl) Safe(safe ...bool) *Model {
 	if len(safe) > 0 {
 		m.safe = safe[0]
 	} else {
@@ -343,7 +343,7 @@ func (m *DefaultHookModelInterfaceImpl) Safe(safe ...bool) *Model {
 }
 
 // Args sets custom arguments for model operation.
-func (m *DefaultHookModelInterfaceImpl) Args(args ...interface{}) *Model {
+func (m DefaultHookModelInterfaceImpl) Args(args ...interface{}) *Model {
 	model := m.getModel()
 	model.extraArgs = append(model.extraArgs, args)
 	return model
@@ -351,7 +351,7 @@ func (m *DefaultHookModelInterfaceImpl) Args(args ...interface{}) *Model {
 
 // Handler calls each of `handlers` on current Model and returns a new Model.
 // ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
-func (m *DefaultHookModelInterfaceImpl) Handler(handlers ...ModelHandler) *Model {
+func (m DefaultHookModelInterfaceImpl) Handler(handlers ...ModelHandler) *Model {
 	model := m.getModel()
 	for _, handler := range handlers {
 		model = handler(model)

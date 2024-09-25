@@ -23,7 +23,7 @@ import (
 // Fields([]string{"id", "name", "age"})
 // Fields(map[string]interface{}{"id":1, "name":"john", "age":18})
 // Fields(User{Id: 1, Name: "john", Age: 18}).
-func (m *DefaultHookModelInterfaceImpl) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
+func (m DefaultHookModelInterfaceImpl) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 	length := len(fieldNamesOrMapStruct)
 	if length == 0 {
 		return m.Model
@@ -37,7 +37,7 @@ func (m *DefaultHookModelInterfaceImpl) Fields(fieldNamesOrMapStruct ...interfac
 }
 
 // FieldsPrefix performs as function Fields but add extra prefix for each field.
-func (m *DefaultHookModelInterfaceImpl) FieldsPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...interface{}) *Model {
+func (m DefaultHookModelInterfaceImpl) FieldsPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...interface{}) *Model {
 	fields := m.filterFieldsFrom(
 		m.getTableNameByPrefixOrAlias(prefixOrAlias),
 		fieldNamesOrMapStruct...,
@@ -60,7 +60,7 @@ func (m *DefaultHookModelInterfaceImpl) FieldsPrefix(prefixOrAlias string, field
 // FieldsEx([]string{"id", "name", "age"})
 // FieldsEx(map[string]interface{}{"id":1, "name":"john", "age":18})
 // FieldsEx(User{Id: 1, Name: "john", Age: 18}).
-func (m *DefaultHookModelInterfaceImpl) FieldsEx(fieldNamesOrMapStruct ...interface{}) *Model {
+func (m DefaultHookModelInterfaceImpl) FieldsEx(fieldNamesOrMapStruct ...interface{}) *Model {
 	return m.doFieldsEx(m.tablesInit, fieldNamesOrMapStruct...)
 }
 
@@ -79,7 +79,7 @@ func (m *Model) doFieldsEx(table string, fieldNamesOrMapStruct ...interface{}) *
 }
 
 // FieldsExPrefix performs as function FieldsEx but add extra prefix for each field.
-func (m *DefaultHookModelInterfaceImpl) FieldsExPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...interface{}) *Model {
+func (m DefaultHookModelInterfaceImpl) FieldsExPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...interface{}) *Model {
 	model := m.doFieldsEx(
 		m.getTableNameByPrefixOrAlias(prefixOrAlias),
 		fieldNamesOrMapStruct...,
@@ -89,7 +89,7 @@ func (m *DefaultHookModelInterfaceImpl) FieldsExPrefix(prefixOrAlias string, fie
 }
 
 // FieldCount formats and appends commonly used field `COUNT(column)` to the select fields of model.
-func (m *DefaultHookModelInterfaceImpl) FieldCount(column string, as ...string) *Model {
+func (m DefaultHookModelInterfaceImpl) FieldCount(column string, as ...string) *Model {
 	asStr := ""
 	if len(as) > 0 && as[0] != "" {
 		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
@@ -101,7 +101,7 @@ func (m *DefaultHookModelInterfaceImpl) FieldCount(column string, as ...string) 
 }
 
 // FieldSum formats and appends commonly used field `SUM(column)` to the select fields of model.
-func (m *DefaultHookModelInterfaceImpl) FieldSum(column string, as ...string) *Model {
+func (m DefaultHookModelInterfaceImpl) FieldSum(column string, as ...string) *Model {
 	asStr := ""
 	if len(as) > 0 && as[0] != "" {
 		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
@@ -113,7 +113,7 @@ func (m *DefaultHookModelInterfaceImpl) FieldSum(column string, as ...string) *M
 }
 
 // FieldMin formats and appends commonly used field `MIN(column)` to the select fields of model.
-func (m *DefaultHookModelInterfaceImpl) FieldMin(column string, as ...string) *Model {
+func (m DefaultHookModelInterfaceImpl) FieldMin(column string, as ...string) *Model {
 	asStr := ""
 	if len(as) > 0 && as[0] != "" {
 		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
@@ -125,7 +125,7 @@ func (m *DefaultHookModelInterfaceImpl) FieldMin(column string, as ...string) *M
 }
 
 // FieldMax formats and appends commonly used field `MAX(column)` to the select fields of model.
-func (m *DefaultHookModelInterfaceImpl) FieldMax(column string, as ...string) *Model {
+func (m DefaultHookModelInterfaceImpl) FieldMax(column string, as ...string) *Model {
 	asStr := ""
 	if len(as) > 0 && as[0] != "" {
 		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
@@ -137,7 +137,7 @@ func (m *DefaultHookModelInterfaceImpl) FieldMax(column string, as ...string) *M
 }
 
 // FieldAvg formats and appends commonly used field `AVG(column)` to the select fields of model.
-func (m *DefaultHookModelInterfaceImpl) FieldAvg(column string, as ...string) *Model {
+func (m DefaultHookModelInterfaceImpl) FieldAvg(column string, as ...string) *Model {
 	asStr := ""
 	if len(as) > 0 && as[0] != "" {
 		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
@@ -150,7 +150,7 @@ func (m *DefaultHookModelInterfaceImpl) FieldAvg(column string, as ...string) *M
 
 // GetFieldsStr retrieves and returns all fields from the table, joined with char ','.
 // The optional parameter `prefix` specifies the prefix for each field, eg: GetFieldsStr("u.").
-func (m *DefaultHookModelInterfaceImpl) GetFieldsStr(prefix ...string) string {
+func (m DefaultHookModelInterfaceImpl) GetFieldsStr(prefix ...string) string {
 	prefixStr := ""
 	if len(prefix) > 0 {
 		prefixStr = prefix[0]
@@ -181,7 +181,7 @@ func (m *DefaultHookModelInterfaceImpl) GetFieldsStr(prefix ...string) string {
 // joined with char ','.
 // The parameter `fields` specifies the fields that are excluded.
 // The optional parameter `prefix` specifies the prefix for each field, eg: FieldsExStr("id", "u.").
-func (m *DefaultHookModelInterfaceImpl) GetFieldsExStr(fields string, prefix ...string) (string, error) {
+func (m DefaultHookModelInterfaceImpl) GetFieldsExStr(fields string, prefix ...string) (string, error) {
 	prefixStr := ""
 	if len(prefix) > 0 {
 		prefixStr = prefix[0]
@@ -213,7 +213,7 @@ func (m *DefaultHookModelInterfaceImpl) GetFieldsExStr(fields string, prefix ...
 }
 
 // HasField determine whether the field exists in the table.
-func (m *DefaultHookModelInterfaceImpl) HasField(field string) (bool, error) {
+func (m DefaultHookModelInterfaceImpl) HasField(field string) (bool, error) {
 	return m.db.GetCore().HasField(m.GetCtx(), m.tablesInit, field)
 }
 

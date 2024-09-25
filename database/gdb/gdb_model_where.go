@@ -18,7 +18,7 @@ func (m *Model) callWhereBuilder(builder *WhereBuilder) *Model {
 // string/map/gmap/slice/struct/*struct, etc. Note that, if it's called more than one times,
 // multiple conditions will be joined into where statement using "AND".
 // See WhereBuilder.Where.
-func (m *DefaultHookModelInterfaceImpl) Where(where interface{}, args ...interface{}) *Model {
+func (m DefaultHookModelInterfaceImpl) Where(where interface{}, args ...interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.Where(where, args...))
 }
 
@@ -26,7 +26,7 @@ func (m *DefaultHookModelInterfaceImpl) Where(where interface{}, args ...interfa
 // Note that if the number of `args` is more than the placeholder in `format`,
 // the extra `args` will be used as the where condition arguments of the Model.
 // See WhereBuilder.Wheref.
-func (m *DefaultHookModelInterfaceImpl) Wheref(format string, args ...interface{}) *Model {
+func (m DefaultHookModelInterfaceImpl) Wheref(format string, args ...interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.Wheref(format, args...))
 }
 
@@ -36,84 +36,84 @@ func (m *DefaultHookModelInterfaceImpl) Wheref(format string, args ...interface{
 // WherePri function treats the condition as "id=123", but Model.Where treats the condition
 // as string "123".
 // See WhereBuilder.WherePri.
-func (m *DefaultHookModelInterfaceImpl) WherePri(where interface{}, args ...interface{}) *Model {
+func (m DefaultHookModelInterfaceImpl) WherePri(where interface{}, args ...interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WherePri(where, args...))
 }
 
 // WhereLT builds `column < value` statement.
 // See WhereBuilder.WhereLT.
-func (m *DefaultHookModelInterfaceImpl) WhereLT(column string, value interface{}) *Model {
+func (m DefaultHookModelInterfaceImpl) WhereLT(column string, value interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereLT(column, value))
 }
 
 // WhereLTE builds `column <= value` statement.
 // See WhereBuilder.WhereLTE.
-func (m *DefaultHookModelInterfaceImpl) WhereLTE(column string, value interface{}) *Model {
+func (m DefaultHookModelInterfaceImpl) WhereLTE(column string, value interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereLTE(column, value))
 }
 
 // WhereGT builds `column > value` statement.
 // See WhereBuilder.WhereGT.
-func (m *DefaultHookModelInterfaceImpl) WhereGT(column string, value interface{}) *Model {
+func (m DefaultHookModelInterfaceImpl) WhereGT(column string, value interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereGT(column, value))
 }
 
 // WhereGTE builds `column >= value` statement.
 // See WhereBuilder.WhereGTE.
-func (m *DefaultHookModelInterfaceImpl) WhereGTE(column string, value interface{}) *Model {
+func (m DefaultHookModelInterfaceImpl) WhereGTE(column string, value interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereGTE(column, value))
 }
 
 // WhereBetween builds `column BETWEEN min AND max` statement.
 // See WhereBuilder.WhereBetween.
-func (m *DefaultHookModelInterfaceImpl) WhereBetween(column string, min, max interface{}) *Model {
+func (m DefaultHookModelInterfaceImpl) WhereBetween(column string, min, max interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereBetween(column, min, max))
 }
 
 // WhereLike builds `column LIKE like` statement.
 // See WhereBuilder.WhereLike.
-func (m *DefaultHookModelInterfaceImpl) WhereLike(column string, like string) *Model {
+func (m DefaultHookModelInterfaceImpl) WhereLike(column string, like string) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereLike(column, like))
 }
 
 // WhereIn builds `column IN (in)` statement.
 // See WhereBuilder.WhereIn.
-func (m *DefaultHookModelInterfaceImpl) WhereIn(column string, in interface{}) *Model {
+func (m DefaultHookModelInterfaceImpl) WhereIn(column string, in interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereIn(column, in))
 }
 
 // WhereNull builds `columns[0] IS NULL AND columns[1] IS NULL ...` statement.
 // See WhereBuilder.WhereNull.
-func (m *DefaultHookModelInterfaceImpl) WhereNull(columns ...string) *Model {
+func (m DefaultHookModelInterfaceImpl) WhereNull(columns ...string) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereNull(columns...))
 }
 
 // WhereNotBetween builds `column NOT BETWEEN min AND max` statement.
 // See WhereBuilder.WhereNotBetween.
-func (m *DefaultHookModelInterfaceImpl) WhereNotBetween(column string, min, max interface{}) *Model {
+func (m DefaultHookModelInterfaceImpl) WhereNotBetween(column string, min, max interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereNotBetween(column, min, max))
 }
 
 // WhereNotLike builds `column NOT LIKE like` statement.
 // See WhereBuilder.WhereNotLike.
-func (m *DefaultHookModelInterfaceImpl) WhereNotLike(column string, like interface{}) *Model {
+func (m DefaultHookModelInterfaceImpl) WhereNotLike(column string, like interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereNotLike(column, like))
 }
 
 // WhereNot builds `column != value` statement.
 // See WhereBuilder.WhereNot.
-func (m *DefaultHookModelInterfaceImpl) WhereNot(column string, value interface{}) *Model {
+func (m DefaultHookModelInterfaceImpl) WhereNot(column string, value interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereNot(column, value))
 }
 
 // WhereNotIn builds `column NOT IN (in)` statement.
 // See WhereBuilder.WhereNotIn.
-func (m *DefaultHookModelInterfaceImpl) WhereNotIn(column string, in interface{}) *Model {
+func (m DefaultHookModelInterfaceImpl) WhereNotIn(column string, in interface{}) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereNotIn(column, in))
 }
 
 // WhereNotNull builds `columns[0] IS NOT NULL AND columns[1] IS NOT NULL ...` statement.
 // See WhereBuilder.WhereNotNull.
-func (m *DefaultHookModelInterfaceImpl) WhereNotNull(columns ...string) *Model {
+func (m DefaultHookModelInterfaceImpl) WhereNotNull(columns ...string) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereNotNull(columns...))
 }

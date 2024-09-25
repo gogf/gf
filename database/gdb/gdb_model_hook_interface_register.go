@@ -4,14 +4,13 @@ type DefaultHookModelInterfaceImpl struct {
 	*Model
 }
 
-// TODO: 把所有接收者改为值类型实现
-func (m *DefaultHookModelInterfaceImpl) setModel(model *Model) {
+func (m DefaultHookModelInterfaceImpl) setModel(model *Model) {
 	m.Model = model
 }
 
 var (
 	registerModelInterface = func(model *Model) ModelInterface {
-		return &DefaultHookModelInterfaceImpl{
+		return DefaultHookModelInterfaceImpl{
 			Model: model,
 		}
 	}

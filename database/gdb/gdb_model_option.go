@@ -19,7 +19,7 @@ const (
 
 // OmitEmpty sets optionOmitEmpty option for the model, which automatically filers
 // the data and where parameters for `empty` values.
-func (m *DefaultHookModelInterfaceImpl) OmitEmpty() *Model {
+func (m DefaultHookModelInterfaceImpl) OmitEmpty() *Model {
 	model := m.getModel()
 	model.option = model.option | optionOmitEmpty
 	return model
@@ -34,7 +34,7 @@ func (m *DefaultHookModelInterfaceImpl) OmitEmpty() *Model {
 //	Where("name", "").All()                -> SELECT xxx FROM xxx WHERE `name`=''
 //	OmitEmpty().Where("id", []int{}).All() -> SELECT xxx FROM xxx
 //	OmitEmpty().("name", "").All()         -> SELECT xxx FROM xxx.
-func (m *DefaultHookModelInterfaceImpl) OmitEmptyWhere() *Model {
+func (m DefaultHookModelInterfaceImpl) OmitEmptyWhere() *Model {
 	model := m.getModel()
 	model.option = model.option | optionOmitEmptyWhere
 	return model
@@ -42,7 +42,7 @@ func (m *DefaultHookModelInterfaceImpl) OmitEmptyWhere() *Model {
 
 // OmitEmptyData sets optionOmitEmptyData option for the model, which automatically filers
 // the Data parameters for `empty` values.
-func (m *DefaultHookModelInterfaceImpl) OmitEmptyData() *Model {
+func (m DefaultHookModelInterfaceImpl) OmitEmptyData() *Model {
 	model := m.getModel()
 	model.option = model.option | optionOmitEmptyData
 	return model
@@ -50,7 +50,7 @@ func (m *DefaultHookModelInterfaceImpl) OmitEmptyData() *Model {
 
 // OmitNil sets optionOmitNil option for the model, which automatically filers
 // the data and where parameters for `nil` values.
-func (m *DefaultHookModelInterfaceImpl) OmitNil() *Model {
+func (m DefaultHookModelInterfaceImpl) OmitNil() *Model {
 	model := m.getModel()
 	model.option = model.option | optionOmitNil
 	return model
@@ -58,7 +58,7 @@ func (m *DefaultHookModelInterfaceImpl) OmitNil() *Model {
 
 // OmitNilWhere sets optionOmitNilWhere option for the model, which automatically filers
 // the Where/Having parameters for `nil` values.
-func (m *DefaultHookModelInterfaceImpl) OmitNilWhere() *Model {
+func (m DefaultHookModelInterfaceImpl) OmitNilWhere() *Model {
 	model := m.getModel()
 	model.option = model.option | optionOmitNilWhere
 	return model
@@ -66,7 +66,7 @@ func (m *DefaultHookModelInterfaceImpl) OmitNilWhere() *Model {
 
 // OmitNilData sets optionOmitNilData option for the model, which automatically filers
 // the Data parameters for `nil` values.
-func (m *DefaultHookModelInterfaceImpl) OmitNilData() *Model {
+func (m DefaultHookModelInterfaceImpl) OmitNilData() *Model {
 	model := m.getModel()
 	model.option = model.option | optionOmitNilData
 	return model
