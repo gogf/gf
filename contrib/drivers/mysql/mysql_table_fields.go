@@ -11,6 +11,7 @@ import (
 	"fmt"
 
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -94,5 +95,6 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 			Comment: m["Comment"].String(),
 		}
 	}
+	g.Dump(fields)
 	return fields, nil
 }
