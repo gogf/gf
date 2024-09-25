@@ -4788,21 +4788,21 @@ func Test_Model_FixGdbJoin(t *testing.T) {
 	})
 }
 
-func TestOrderByStatementGenerated(t *testing.T) {
+func Test_OrderBy_Statement_Generated(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		array := gstr.SplitAndTrim(gtest.DataContent(`table_with_prefix.sql`), ";")
+		array := gstr.SplitAndTrim(gtest.DataContent(`fix_gdb_order_by.sql`), ";")
 		for _, v := range array {
 			if _, err := db.Exec(ctx, v); err != nil {
 				gtest.Error(err)
 			}
 		}
-		defer dropTable(`instance`)
+		defer dropTable(`employee`)
 		sqlArray, _ := gdb.CatchSQL(ctx, func(ctx context.Context) error {
-			g.DB("default").Ctx(ctx).Model("instance").Order("f_id asc", "name desc").All()
+			g.DB("default").Ctx(ctx).Model("employee").Order("name asc", "age desc").All()
 			return nil
 		})
 		rawSql := strings.ReplaceAll(sqlArray[len(sqlArray)-1], " ", "")
-		expectSql := strings.ReplaceAll("SELECT * FROM `instance` ORDER BY `f_id` asc, `name` desc", " ", "")
+		expectSql := strings.ReplaceAll("SELECT * FROM `employee` ORDER BY `name` asc, `age` desc", " ", "")
 		t.Assert(rawSql, expectSql)
 	})
 }
