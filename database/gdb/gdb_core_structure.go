@@ -124,41 +124,63 @@ Default:
 		case time.Time:
 			if r.IsZero() {
 				convertedValue = nil
-			} else if fieldType == fieldTypeDate {
-				convertedValue = r.Format("2006-01-02")
-			} else if fieldType == fieldTypeTime {
-				convertedValue = r.Format("15:04:05")
+			} else {
+				switch fieldType {
+				case fieldTypeYear:
+					convertedValue = r.Format("2006")
+				case fieldTypeDate:
+					convertedValue = r.Format("2006-01-02")
+				case fieldTypeTime:
+					convertedValue = r.Format("15:04:05")
+				default:
+				}
 			}
 
 		case *time.Time:
 			if r == nil {
 				// Nothing to do.
-			} else if fieldType == fieldTypeDate {
-				convertedValue = r.Format("2006-01-02")
-			} else if fieldType == fieldTypeTime {
-				convertedValue = r.Format("15:04:05")
+			} else {
+				switch fieldType {
+				case fieldTypeYear:
+					convertedValue = r.Format("2006")
+				case fieldTypeDate:
+					convertedValue = r.Format("2006-01-02")
+				case fieldTypeTime:
+					convertedValue = r.Format("15:04:05")
+				default:
+				}
 			}
 
 		case gtime.Time:
 			if r.IsZero() {
 				convertedValue = nil
-			} else if fieldType == fieldTypeDate {
-				convertedValue = r.Layout("2006-01-02")
-			} else if fieldType == fieldTypeTime {
-				convertedValue = r.Layout("15:04:05")
 			} else {
-				convertedValue = r.Time
+				switch fieldType {
+				case fieldTypeYear:
+					convertedValue = r.Layout("2006")
+				case fieldTypeDate:
+					convertedValue = r.Layout("2006-01-02")
+				case fieldTypeTime:
+					convertedValue = r.Layout("15:04:05")
+				default:
+					convertedValue = r.Time
+				}
 			}
 
 		case *gtime.Time:
 			if r.IsZero() {
 				convertedValue = nil
-			} else if fieldType == fieldTypeDate {
-				convertedValue = r.Layout("2006-01-02")
-			} else if fieldType == fieldTypeTime {
-				convertedValue = r.Layout("15:04:05")
 			} else {
-				convertedValue = r.Time
+				switch fieldType {
+				case fieldTypeYear:
+					convertedValue = r.Layout("2006")
+				case fieldTypeDate:
+					convertedValue = r.Layout("2006-01-02")
+				case fieldTypeTime:
+					convertedValue = r.Layout("15:04:05")
+				default:
+					convertedValue = r.Time
+				}
 			}
 
 		case Counter, *Counter:
@@ -181,6 +203,7 @@ Default:
 				}
 			}
 		}
+	default:
 	}
 
 	return convertedValue, nil
