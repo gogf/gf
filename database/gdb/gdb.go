@@ -493,10 +493,11 @@ const (
 	fieldTypeSmallmoney = "smallmoney"
 	fieldTypeBool       = "bool"
 	fieldTypeBit        = "bit"
-	fieldTypeDate       = "date"
-	fieldTypeTime       = "time"
-	fieldTypeDatetime   = "datetime"
-	fieldTypeTimestamp  = "timestamp"
+	fieldTypeYear       = "year"      // YYYY
+	fieldTypeDate       = "date"      // YYYY-MM-DD
+	fieldTypeTime       = "time"      // HH:MM:SS
+	fieldTypeDatetime   = "datetime"  // YYYY-MM-DD HH:MM:SS
+	fieldTypeTimestamp  = "timestamp" // YYYYMMDD HHMMSS
 	fieldTypeTimestampz = "timestamptz"
 	fieldTypeJson       = "json"
 	fieldTypeJsonb      = "jsonb"

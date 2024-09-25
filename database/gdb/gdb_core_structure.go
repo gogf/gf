@@ -28,7 +28,19 @@ import (
 func (c *Core) GetFieldTypeStr(ctx context.Context, fieldName, table, schema string) string {
 	field := c.GetFieldType(ctx, fieldName, table, schema)
 	if field != nil {
-		return field.Type
+		// Kinds of data type examples:
+		// year(4)
+		// datetime
+		// varchar(64)
+		// bigint(20)
+		// int(10) unsigned
+		typeName := gstr.StrTillEx(field.Type, "(") // int(10) unsigned -> int
+		if typeName != "" {
+			typeName = gstr.Trim(typeName)
+		} else {
+			typeName = field.Type
+		}
+		return typeName
 	}
 	return ""
 }
@@ -63,9 +75,10 @@ func (c *Core) ConvertDataForRecord(ctx context.Context, value interface{}, tabl
 		data = MapOrStructToMapDeep(value, true)
 	)
 	for fieldName, fieldValue := range data {
+		var fieldType = c.GetFieldTypeStr(ctx, fieldName, table, c.GetSchema())
 		data[fieldName], err = c.db.ConvertValueForField(
 			ctx,
-			c.GetFieldTypeStr(ctx, fieldName, table, c.GetSchema()),
+			fieldType,
 			fieldValue,
 		)
 		if err != nil {
@@ -124,41 +137,63 @@ Default:
 		case time.Time:
 			if r.IsZero() {
 				convertedValue = nil
-			} else if fieldType == fieldTypeDate {
-				convertedValue = r.Format("2006-01-02")
-			} else if fieldType == fieldTypeTime {
-				convertedValue = r.Format("15:04:05")
+			} else {
+				switch fieldType {
+				case fieldTypeYear:
+					convertedValue = r.Format("2006")
+				case fieldTypeDate:
+					convertedValue = r.Format("2006-01-02")
+				case fieldTypeTime:
+					convertedValue = r.Format("15:04:05")
+				default:
+				}
 			}
 
 		case *time.Time:
 			if r == nil {
 				// Nothing to do.
-			} else if fieldType == fieldTypeDate {
-				convertedValue = r.Format("2006-01-02")
-			} else if fieldType == fieldTypeTime {
-				convertedValue = r.Format("15:04:05")
+			} else {
+				switch fieldType {
+				case fieldTypeYear:
+					convertedValue = r.Format("2006")
+				case fieldTypeDate:
+					convertedValue = r.Format("2006-01-02")
+				case fieldTypeTime:
+					convertedValue = r.Format("15:04:05")
+				default:
+				}
 			}
 
 		case gtime.Time:
 			if r.IsZero() {
 				convertedValue = nil
-			} else if fieldType == fieldTypeDate {
-				convertedValue = r.Layout("2006-01-02")
-			} else if fieldType == fieldTypeTime {
-				convertedValue = r.Layout("15:04:05")
 			} else {
-				convertedValue = r.Time
+				switch fieldType {
+				case fieldTypeYear:
+					convertedValue = r.Layout("2006")
+				case fieldTypeDate:
+					convertedValue = r.Layout("2006-01-02")
+				case fieldTypeTime:
+					convertedValue = r.Layout("15:04:05")
+				default:
+					convertedValue = r.Time
+				}
 			}
 
 		case *gtime.Time:
 			if r.IsZero() {
 				convertedValue = nil
-			} else if fieldType == fieldTypeDate {
-				convertedValue = r.Layout("2006-01-02")
-			} else if fieldType == fieldTypeTime {
-				convertedValue = r.Layout("15:04:05")
 			} else {
-				convertedValue = r.Time
+				switch fieldType {
+				case fieldTypeYear:
+					convertedValue = r.Layout("2006")
+				case fieldTypeDate:
+					convertedValue = r.Layout("2006-01-02")
+				case fieldTypeTime:
+					convertedValue = r.Layout("15:04:05")
+				default:
+					convertedValue = r.Time
+				}
 			}
 
 		case Counter, *Counter:
@@ -181,6 +216,7 @@ Default:
 				}
 			}
 		}
+	default:
 	}
 
 	return convertedValue, nil
