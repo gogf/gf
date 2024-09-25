@@ -53,8 +53,11 @@ func GetCachedStructInfo(
 	// check if it has been cached.
 	structInfo, ok := getCachedConvertStructInfo(structType)
 	if ok {
+		// directly returns the cached struct info if already exists.
 		return structInfo
 	}
+
+	// else create one.
 
 	// it parses and generates a cache info for given struct type.
 	structInfo = &CachedStructInfo{
@@ -113,8 +116,15 @@ func parseStruct(
 			continue
 		}
 
-		// store field
-		structInfo.AddField(structField, append(fieldIndexes, i), priorityTagArray)
+		copyFieldIndexes := make([]int, len(fieldIndexes))
+		copy(copyFieldIndexes, fieldIndexes)
+
+		// Do not directly use append(fieldIndexes, i)
+		// When the structure is nested deeply, it may lead to bugs,
+		// which are caused by the slice expansion mechanism
+		// So it is necessary to allocate a separate index for each field
+		// See details https://github.com/gogf/gf/issues/3789
+		structInfo.AddField(structField, append(copyFieldIndexes, i), priorityTagArray)
 
 		// normal basic attributes.
 		if structField.Anonymous {
@@ -128,7 +138,7 @@ func parseStruct(
 			if structField.Tag != "" {
 				// TODO: If it's an anonymous field with a tag, doesn't it need to be recursive?
 			}
-			parseStruct(fieldType, append(fieldIndexes, i), structInfo, priorityTagArray)
+			parseStruct(fieldType, append(copyFieldIndexes, i), structInfo, priorityTagArray)
 		}
 	}
 }

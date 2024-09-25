@@ -22,7 +22,7 @@ import (
 )
 
 // https://github.com/gogf/gf/issues/1227
-func TestIssue1227(t *testing.T) {
+func Test_Issue1227(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type StructFromIssue1227 struct {
 			Name string `json:"n1"`
@@ -130,7 +130,7 @@ func (f *issue1607Float64) UnmarshalValue(value interface{}) error {
 	return nil
 }
 
-func TestIssue1607(t *testing.T) {
+func Test_Issue1607(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Demo struct {
 			B issue1607Float64
@@ -148,7 +148,7 @@ func TestIssue1607(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/1946
-func TestIssue1946(t *testing.T) {
+func Test_Issue1946(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
 			init *gtype.Bool
@@ -222,7 +222,7 @@ func TestIssue1946(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2381
-func TestIssue2381(t *testing.T) {
+func Test_Issue2381(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Inherit struct {
 			Id        int64       `json:"id"          description:"Id"`
@@ -259,7 +259,7 @@ func TestIssue2381(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2391
-func TestIssue2391(t *testing.T) {
+func Test_Issue2391(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Inherit struct {
 			Ids   []int
@@ -299,7 +299,7 @@ func TestIssue2391(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2395
-func TestIssue2395(t *testing.T) {
+func Test_Issue2395(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Test struct {
 			Num int
@@ -311,7 +311,7 @@ func TestIssue2395(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2371
-func TestIssue2371(t *testing.T) {
+func Test_Issue2371(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			s = struct {
@@ -327,7 +327,7 @@ func TestIssue2371(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/2901
-func TestIssue2901(t *testing.T) {
+func Test_Issue2901(t *testing.T) {
 	type GameApp2 struct {
 		ForceUpdateTime *time.Time
 	}
@@ -342,7 +342,7 @@ func TestIssue2901(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/3006
-func TestIssue3006(t *testing.T) {
+func Test_Issue3006(t *testing.T) {
 	type tFF struct {
 		Val1 json.RawMessage            `json:"val1"`
 		Val2 []json.RawMessage          `json:"val2"`
@@ -369,7 +369,7 @@ func TestIssue3006(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/3731
-func TestIssue3731(t *testing.T) {
+func Test_Issue3731(t *testing.T) {
 	type Data struct {
 		Doc map[string]interface{} `json:"doc"`
 	}
@@ -389,7 +389,7 @@ func TestIssue3731(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/3764
-func TestIssue3764(t *testing.T) {
+func Test_Issue3764(t *testing.T) {
 	type T struct {
 		True     bool  `json:"true"`
 		False    bool  `json:"false"`
@@ -412,5 +412,37 @@ func TestIssue3764(t *testing.T) {
 		t.AssertEQ(tt.False, false)
 		t.AssertEQ(*tt.TruePtr, trueValue)
 		t.AssertEQ(*tt.FalsePtr, falseValue)
+	})
+}
+
+// https://github.com/gogf/gf/issues/3789
+func Test_Issue3789(t *testing.T) {
+	type ItemSecondThird struct {
+		SecondID uint64 `json:"secondId,string"`
+		ThirdID  uint64 `json:"thirdId,string"`
+	}
+	type ItemFirst struct {
+		ID uint64 `json:"id,string"`
+		ItemSecondThird
+	}
+	type ItemInput struct {
+		ItemFirst
+	}
+	type HelloReq struct {
+		g.Meta `path:"/hello" method:"GET"`
+		ItemInput
+	}
+	gtest.C(t, func(t *gtest.T) {
+		m := map[string]interface{}{
+			"id":       1,
+			"secondId": 2,
+			"thirdId":  3,
+		}
+		var dest HelloReq
+		err := gconv.Scan(m, &dest)
+		t.AssertNil(err)
+		t.Assert(dest.ID, uint64(1))
+		t.Assert(dest.SecondID, uint64(2))
+		t.Assert(dest.ThirdID, uint64(3))
 	})
 }
