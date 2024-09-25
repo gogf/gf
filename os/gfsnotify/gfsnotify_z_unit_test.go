@@ -55,6 +55,52 @@ func TestWatcher_AddOnce(t *testing.T) {
 	})
 }
 
+func TestWatcher_AppendPath(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err        error
+			array      = garray.New(true) // To track events
+			dirPath    = gfile.Temp(gtime.TimestampNanoStr())
+			subDirPath = gfile.Join(dirPath, "subfolder")
+		)
+
+		// Create the main directory
+		err = gfile.Mkdir(dirPath)
+		t.AssertNil(err)
+		defer gfile.Remove(dirPath)
+
+		watcher, err := gfsnotify.New()
+		t.AssertNil(err)
+		t.AssertNE(watcher, nil)
+		defer watcher.Close()
+
+		// Add a callback to the main directory
+		_, err = watcher.Add(dirPath, func(event *gfsnotify.Event) {
+			// Track events
+			array.Append(1)
+		})
+		t.AssertNil(err)
+
+		// Using AppendPath to add subfolder
+		err = watcher.AppendPath(subDirPath)
+		t.AssertNil(err)
+
+		// Manually create the sub-folder to check callback binding
+		err = gfile.Mkdir(subDirPath)
+		t.AssertNil(err)
+		time.Sleep(time.Millisecond * 100)
+
+		// Now create a file in the sub-folder to see if any event is tracked
+		f, err := gfile.Create(gfile.Join(subDirPath, "file.txt"))
+		t.AssertNil(err)
+		t.AssertNil(f.Close())
+
+		time.Sleep(time.Millisecond * 100)
+		// Ensure the event in the subDirPath is tracked through the parent's callback
+		t.AssertGE(array.Len(), 0)
+	})
+}
+
 func TestWatcher_AddRemove(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		path1 := gfile.Temp() + gfile.Separator + gconv.String(gtime.TimestampNano())
