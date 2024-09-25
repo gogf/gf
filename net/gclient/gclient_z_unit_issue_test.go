@@ -66,10 +66,8 @@ func Test_Issue3748(t *testing.T) {
 		}
 		client.SetPrefix(clientHost)
 		content := client.PostContent(ctx, "/", data)
-		contentSlice := strings.Split(content, "&")
-		t.Assert(len(contentSlice), 2)
-		t.Assert(strings.Contains(content, `name=@file:`), true)
-		t.Assert(strings.Contains(content, `value=x-www-form-urlencoded`), true)
+		t.Assert(strings.Contains(content, `Content-Disposition: form-data; name="value"`), true)
+		t.Assert(strings.Contains(content, `Content-Disposition: form-data; name="name"`), true)
 	})
 
 	gtest.C(t, func(t *gtest.T) {

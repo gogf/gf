@@ -232,8 +232,9 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 		if allowFileUploading && strings.Contains(params, httpParamFileHolder) {
 			// File uploading request.
 			var (
-				buffer = bytes.NewBuffer(nil)
-				writer = multipart.NewWriter(buffer)
+				buffer          = bytes.NewBuffer(nil)
+				writer          = multipart.NewWriter(buffer)
+				isFileUploading = false
 			)
 			for _, item := range strings.Split(params, "&") {
 				array := strings.Split(item, "=")
@@ -252,42 +253,50 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 					)
 					// it sets post content type as `application/octet-stream`
 					if file, err = writer.CreateFormFile(formFieldName, formFileName); err != nil {
-						err = gerror.Wrapf(err, `CreateFormFile failed with "%s", "%s"`, formFieldName, formFileName)
-						return nil, err
+						return nil, gerror.Wrapf(
+							err, `CreateFormFile failed with "%s", "%s"`, formFieldName, formFileName,
+						)
 					}
 					var f *os.File
 					if f, err = gfile.Open(path); err != nil {
 						return nil, err
 					}
 					if _, err = io.Copy(file, f); err != nil {
-						err = gerror.Wrapf(err, `io.Copy failed from "%s" to form "%s"`, path, formFieldName)
 						_ = f.Close()
-						return nil, err
+						return nil, gerror.Wrapf(
+							err, `io.Copy failed from "%s" to form "%s"`, path, formFieldName,
+						)
 					}
-					_ = f.Close()
+					if err = f.Close(); err != nil {
+						return nil, gerror.Wrapf(err, `close file descriptor failed for "%s"`, path)
+					}
+					isFileUploading = true
 				} else {
 					var (
 						fieldName  = array[0]
 						fieldValue = array[1]
 					)
 					if err = writer.WriteField(fieldName, fieldValue); err != nil {
-						err = gerror.Wrapf(err, `write form field failed with "%s", "%s"`, fieldName, fieldValue)
-						return nil, err
+						return nil, gerror.Wrapf(
+							err, `write form field failed with "%s", "%s"`, fieldName, fieldValue,
+						)
 					}
 				}
 			}
 			// Close finishes the multipart message and writes the trailing
 			// boundary end line to the output.
 			if err = writer.Close(); err != nil {
-				err = gerror.Wrapf(err, `form writer close failed`)
-				return nil, err
+				return nil, gerror.Wrapf(err, `form writer close failed`)
 			}
 
 			if req, err = http.NewRequest(method, url, buffer); err != nil {
-				err = gerror.Wrapf(err, `http.NewRequest failed for method "%s" and URL "%s"`, method, url)
-				return nil, err
+				return nil, gerror.Wrapf(
+					err, `http.NewRequest failed for method "%s" and URL "%s"`, method, url,
+				)
 			}
-			req.Header.Set(httpHeaderContentType, writer.FormDataContentType())
+			if isFileUploading {
+				req.Header.Set(httpHeaderContentType, writer.FormDataContentType())
+			}
 		} else {
 			// Normal request.
 			paramBytes := []byte(params)
