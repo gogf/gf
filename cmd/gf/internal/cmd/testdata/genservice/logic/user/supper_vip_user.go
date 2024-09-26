@@ -7,11 +7,13 @@ import (
 )
 
 func init() {
-	service.RegisterSuperVipUser(&sSuperVipUser{})
+	service.RegisterSuperVipUser(&sSuperVipUser{
+		sVipUser: &sVipUser{},
+	})
 }
 
 type sSuperVipUser struct {
-	sVipUser
+	*sVipUser
 }
 
 // Get supper vip user level
