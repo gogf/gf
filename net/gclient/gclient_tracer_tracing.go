@@ -218,14 +218,8 @@ func (ct *clientTracerTracing) WroteRequest(info httptrace.WroteRequestInfo) {
 		ct.span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, info.Err))
 	}
 
-	reqBodyContent, err := gtrace.SafeContentForHttp(ct.requestBody, ct.request.Header)
-	if err != nil {
-		ct.span.SetStatus(codes.Error, fmt.Sprintf(`converting safe content failed: %s`, err.Error()))
-	}
-
 	ct.span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
 		attribute.String(tracingEventHttpRequestHeaders, gconv.String(ct.headers)),
 		attribute.String(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ct.Context).String()),
-		attribute.String(tracingEventHttpRequestBody, reqBodyContent),
 	))
 }
