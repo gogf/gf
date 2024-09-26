@@ -81,7 +81,6 @@ func GetImportPath(filePath string) string {
 	// If `filePath` does not exist, create it firstly to find the import path.
 	var realPath = gfile.RealPath(filePath)
 	if realPath == "" {
-		_ = gfile.Mkdir(filePath)
 		realPath = gfile.RealPath(filePath)
 	}
 
