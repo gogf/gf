@@ -9,7 +9,6 @@ package gi18n
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/text/gstr"
 	"strings"
 	"sync"
 
@@ -167,21 +166,8 @@ func (m *Manager) Tf(ctx context.Context, format string, values ...interface{}) 
 
 // TranslateFormat translates, formats and returns the `format` with configured language
 // and given `values`.
-// When values[0] is of type map[string]string, parameter replacement is order-independent.
-// the values' format  :{key}
 func (m *Manager) TranslateFormat(ctx context.Context, format string, values ...interface{}) string {
-	result := m.Translate(ctx, format)
-	if len(values) > 0 {
-		val := values[0]
-		if valMapStrStr, ok := val.(map[string]string); ok {
-			for k, v := range valMapStrStr {
-				rpStr := ":" + k
-				result = gstr.Replace(result, rpStr, v)
-			}
-			return result
-		}
-	}
-	return fmt.Sprintf(result, values...)
+	return fmt.Sprintf(m.Translate(ctx, format), values...)
 }
 
 // Translate translates `content` with configured language.

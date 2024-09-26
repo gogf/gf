@@ -7,7 +7,6 @@
 package gi18n_test
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gbase64"
@@ -119,18 +118,6 @@ func Test_DefaultManager(t *testing.T) {
 
 		gi18n.SetLanguage("zh-CN")
 		t.Assert(gi18n.Translate(context.Background(), "{#hello}{#world}"), "你好世界")
-	})
-}
-
-func Test_MapStrStrRelace(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		i18n := gi18n.New(gi18n.Options{
-			Path: gtest.DataPath("i18n-file"),
-		})
-		i18n.SetLanguage("zh-CN")
-		str := i18n.Tf(context.Background(), "replace_map_test", map[string]string{"score": "3000", "name": "blue"})
-		fmt.Println(str)
-		t.Assert(str, "hello 3000 blue is ok")
 	})
 }
 
