@@ -72,7 +72,7 @@ func (c CGenService) parseItemsInSrc(filePath string) (pkgItems []pkgItem, struc
 				}
 				var structEmbeddedStruct []string
 				for _, field := range st.Fields.List {
-					if len(field.Names) == 0 { // 匿名字段
+					if len(field.Names) == 0 { // anonymous field
 						var embeddedStruct string
 						if _, ok := field.Type.(*ast.Ident); ok {
 							if embeddedStruct, err = c.astExprToString(field.Type); err != nil {

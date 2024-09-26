@@ -190,21 +190,23 @@ func (c CGenService) calculateStructEmbeddedFuncInfos(folderInfos []folderInfo, 
 			fi := folder.FileInfos[k]
 			for k := range fi.FuncItems {
 				item := &fi.FuncItems[k]
-				funcItemMap[item.Receiver] = &fi.FuncItems
-				funcItemsWithoutEmbed[item.Receiver] = append(funcItemsWithoutEmbed[item.Receiver], item)
-				funcItemsWithoutEmbedMap[fmt.Sprintf("%s:%s", item.Receiver, item.MethodName)] = item
+				receiver := strings.TrimLeft(item.Receiver, "*")
+				funcItemMap[receiver] = &fi.FuncItems
+				funcItemsWithoutEmbed[receiver] = append(funcItemsWithoutEmbed[receiver], item)
+				funcItemsWithoutEmbedMap[fmt.Sprintf("%s:%s", receiver, item.MethodName)] = item
 			}
 		}
 	}
 
 	for receiver, structItems := range allStructItems {
+		receiverName := strings.TrimLeft(receiver, "*")
 		for _, structName := range structItems {
 			//获取对应的structName的methods列表
 			for _, funcItem := range c.getStructFuncItems(structName, allStructItems, funcItemsWithoutEmbed) {
-				if _, ok := funcItemsWithoutEmbedMap[fmt.Sprintf("%s:%s", receiver, funcItem.MethodName)]; ok {
+				if _, ok := funcItemsWithoutEmbedMap[fmt.Sprintf("%s:%s", receiverName, funcItem.MethodName)]; ok {
 					continue
 				}
-				if funcItemsPtr, ok := funcItemMap[receiver]; ok {
+				if funcItemsPtr, ok := funcItemMap[receiverName]; ok {
 					newFuncItem := *funcItem
 					newFuncItem.Receiver = receiver
 					(*funcItemsPtr) = append((*funcItemsPtr), newFuncItem)
