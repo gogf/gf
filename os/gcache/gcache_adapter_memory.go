@@ -105,7 +105,7 @@ func (c *AdapterMemory) SetMap(ctx context.Context, data map[interface{}]interfa
 		})
 	}
 	if c.lru != nil {
-		for key, _ := range data {
+		for key := range data {
 			c.handleLruKey(ctx, key)
 		}
 	}
