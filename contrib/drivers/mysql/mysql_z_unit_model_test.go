@@ -4788,6 +4788,38 @@ func Test_Model_FixGdbJoin(t *testing.T) {
 	})
 }
 
+func Test_Model_Year_Date_Time_DateTime_Timestamp(t *testing.T) {
+	table := "date_time_example"
+	array := gstr.SplitAndTrim(gtest.DataContent(`date_time_example.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// insert.
+		var now = gtime.Now()
+		_, err := db.Model("date_time_example").Insert(g.Map{
+			"year":      now,
+			"date":      now,
+			"time":      now,
+			"datetime":  now,
+			"timestamp": now,
+		})
+		t.AssertNil(err)
+		// select.
+		one, err := db.Model("date_time_example").One()
+		t.AssertNil(err)
+		t.Assert(one["year"].String(), now.Format("Y"))
+		t.Assert(one["date"].String(), now.Format("Y-m-d"))
+		t.Assert(one["time"].String(), now.Format("H:i:s"))
+		t.AssertLT(one["datetime"].GTime().Sub(now).Seconds(), 5)
+		t.AssertLT(one["timestamp"].GTime().Sub(now).Seconds(), 5)
+	})
+}
+
 func Test_OrderBy_Statement_Generated(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := gstr.SplitAndTrim(gtest.DataContent(`fix_gdb_order_by.sql`), ";")

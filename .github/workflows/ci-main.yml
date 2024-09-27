@@ -58,6 +58,11 @@ jobs:
           - 6379:6379
 
       # MySQL backend server.
+      # docker run -d --name mysql \
+      # -p 3306:3306 \
+      # -e MYSQL_DATABASE=test \
+      # -e MYSQL_ROOT_PASSWORD=12345678 \
+      # loads/mysql:5.7
       mysql:
         image: loads/mysql:5.7
         env:
