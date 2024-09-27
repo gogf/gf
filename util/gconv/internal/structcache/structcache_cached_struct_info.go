@@ -43,6 +43,12 @@ func (csi *CachedStructInfo) AddField(field reflect.StructField, fieldIndexes []
 	if !ok {
 		cachedFieldInfo := csi.makeCachedFieldInfo(field, fieldIndexes, priorityTags)
 		for _, tagOrFieldName := range cachedFieldInfo.PriorityTagAndFieldName {
+			// has same tag
+			if info, ok := csi.tagOrFiledNameToFieldInfoMap[tagOrFieldName]; ok {
+				info.OtherSameNameField = append(info.OtherSameNameField, cachedFieldInfo)
+				continue
+			}
+
 			newFieldInfo := &CachedFieldInfo{
 				CachedFieldInfoBase: cachedFieldInfo.CachedFieldInfoBase,
 				IsField:             tagOrFieldName == field.Name,
