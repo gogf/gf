@@ -36,7 +36,7 @@ func (m *Model) Order(orderBy ...interface{}) *Model {
 			return model
 		}
 	}
-	model.orderBy += model.db.GetCore().QuoteString(gstr.JoinAny(orderBy, " "))
+	model.orderBy += model.db.GetCore().QuoteString(gstr.JoinAny(orderBy, ", "))
 	return model
 }
 
