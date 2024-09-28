@@ -457,7 +457,7 @@ func (c *AdapterMemory) syncEventAndClearExpired(ctx context.Context) {
 		if expireSet = c.expireSets.Get(expireTime); expireSet != nil {
 			// Iterating the set to delete all keys in it.
 			expireSet.Iterator(func(key interface{}) bool {
-				c.clearByKey(key, false)
+				c.deleteExpiredKey(key)
 				// remove auto expired key for lru.
 				c.lru.Remove(key)
 				return true
@@ -481,9 +481,9 @@ func (c *AdapterMemory) handleLruKey(ctx context.Context, keys ...interface{}) {
 
 // clearByKey deletes the key-value pair with given `key`.
 // The parameter `force` specifies whether doing this deleting forcibly.
-func (c *AdapterMemory) clearByKey(key interface{}, force bool) {
+func (c *AdapterMemory) deleteExpiredKey(key interface{}) {
 	// Doubly check before really deleting it from cache.
-	c.data.DeleteWithDoubleCheck(key, force)
+	c.data.Delete(key)
 	// Deleting its expiration time from `expireTimes`.
 	c.expireTimes.Delete(key)
 }

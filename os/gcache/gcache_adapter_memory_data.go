@@ -207,11 +207,8 @@ func (d *memoryData) SetWithLock(ctx context.Context, key interface{}, value int
 	return value, nil
 }
 
-func (d *memoryData) DeleteWithDoubleCheck(key interface{}, force bool) {
+func (d *memoryData) Delete(key interface{}) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	// Doubly check before really deleting it from cache.
-	if item, ok := d.data[key]; (ok && item.IsExpired()) || force {
-		delete(d.data, key)
-	}
+	delete(d.data, key)
 }
