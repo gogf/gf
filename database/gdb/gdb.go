@@ -178,6 +178,7 @@ type DB interface {
 	ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) // See Core.ConvertValueForLocal
 	CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (LocalType, error) // See Core.CheckLocalTypeForField
 	FormatUpsert(columns []string, list List, option DoInsertOption) (string, error)                         // See Core.DoFormatUpsert
+	OrderRandomFunction() string                                                                             // See Core.OrderRandomFunction
 }
 
 // TX defines the interfaces for ORM transaction operations.
@@ -446,6 +447,7 @@ type LocalType string
 const (
 	LocalTypeUndefined   LocalType = ""
 	LocalTypeString      LocalType = "string"
+	LocalTypeTime        LocalType = "time"
 	LocalTypeDate        LocalType = "date"
 	LocalTypeDatetime    LocalType = "datetime"
 	LocalTypeInt         LocalType = "int"
@@ -491,9 +493,11 @@ const (
 	fieldTypeSmallmoney = "smallmoney"
 	fieldTypeBool       = "bool"
 	fieldTypeBit        = "bit"
-	fieldTypeDate       = "date"
-	fieldTypeDatetime   = "datetime"
-	fieldTypeTimestamp  = "timestamp"
+	fieldTypeYear       = "year"      // YYYY
+	fieldTypeDate       = "date"      // YYYY-MM-DD
+	fieldTypeTime       = "time"      // HH:MM:SS
+	fieldTypeDatetime   = "datetime"  // YYYY-MM-DD HH:MM:SS
+	fieldTypeTimestamp  = "timestamp" // YYYYMMDD HHMMSS
 	fieldTypeTimestampz = "timestamptz"
 	fieldTypeJson       = "json"
 	fieldTypeJsonb      = "jsonb"

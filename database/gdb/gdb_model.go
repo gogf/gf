@@ -25,7 +25,7 @@ type Model struct {
 	tablesInit     string            // Table names when model initialization.
 	tables         string            // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
 	fields         string            // Operation fields, multiple fields joined using char ','.
-	fieldsEx       string            // Excluded operation fields, multiple fields joined using char ','.
+	fieldsEx       []string          // Excluded operation fields, it here uses slice instead of string type for quick filtering.
 	withArray      []interface{}     // Arguments for With feature.
 	withAll        bool              // Enable model association operations on all objects that have "with" tag in the struct.
 	extraArgs      []interface{}     // Extra custom arguments for sql, which are prepended to the arguments before sql committed to underlying driver.
@@ -281,6 +281,10 @@ func (m *Model) Clone() *Model {
 	newModel.whereBuilder = m.whereBuilder.Clone()
 	newModel.whereBuilder.model = newModel
 	// Shallow copy slice attributes.
+	if n := len(m.fieldsEx); n > 0 {
+		newModel.fieldsEx = make([]string, n)
+		copy(newModel.fieldsEx, m.fieldsEx)
+	}
 	if n := len(m.extraArgs); n > 0 {
 		newModel.extraArgs = make([]interface{}, n)
 		copy(newModel.extraArgs, m.extraArgs)
@@ -288,6 +292,10 @@ func (m *Model) Clone() *Model {
 	if n := len(m.withArray); n > 0 {
 		newModel.withArray = make([]interface{}, n)
 		copy(newModel.withArray, m.withArray)
+	}
+	if n := len(m.having); n > 0 {
+		newModel.having = make([]interface{}, n)
+		copy(newModel.having, m.having)
 	}
 	return newModel
 }

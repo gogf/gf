@@ -46,6 +46,7 @@ const (
 	Json              = "json"         // Json tag is supported by stdlib.
 	Security          = "security"     // Security defines scheme for authentication. Detail to see https://swagger.io/docs/specification/authentication/
 	In                = "in"           // Swagger distinguishes between the following parameter types based on the parameter location. Detail to see https://swagger.io/docs/specification/describing-parameters/
+	Required          = "required"     // OpenAPIv3 required attribute name for request body.
 )
 
 // StructTagPriority defines the default priority tags for Map*/Struct* functions.

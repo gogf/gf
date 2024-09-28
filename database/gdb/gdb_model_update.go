@@ -54,7 +54,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 			ctx, "", m.tablesInit,
 		)
 	)
-	if m.unscoped {
+	if fieldNameUpdate != "" && (m.unscoped || m.isFieldInFieldsEx(fieldNameUpdate)) {
 		fieldNameUpdate = ""
 	}
 
