@@ -98,10 +98,10 @@ func Test_TX_Prepare(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(array[0], "100")
 
-		rows.Close()
+		err = rows.Close()
 		t.AssertNil(err)
 
-		tx.Commit()
+		err = tx.Commit()
 		t.AssertNil(err)
 	})
 }
