@@ -1,10 +1,10 @@
 module github.com/gogf/gf/contrib/registry/polaris/v2
 
-go 1.20
+go 1.21
 
 require (
 	github.com/gogf/gf/v2 v2.7.2
-	github.com/polarismesh/polaris-go v1.5.6
+	github.com/polarismesh/polaris-go v1.5.8
 )
 
 require (
