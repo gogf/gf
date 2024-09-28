@@ -41,20 +41,10 @@ func (csi *CachedStructInfo) GetFieldInfo(fieldName string) *CachedFieldInfo {
 func (csi *CachedStructInfo) AddField(field reflect.StructField, fieldIndexes []int, priorityTags []string) {
 	alreadyExistFieldInfo, ok := csi.tagOrFiledNameToFieldInfoMap[field.Name]
 	if !ok {
-		priorityTagAndFieldName := csi.genPriorityTagAndFieldName(field, priorityTags)
-		newFieldInfoBase := &CachedFieldInfoBase{
-			IsCommonInterface:       checkTypeIsCommonInterface(field),
-			StructField:             field,
-			FieldIndexes:            fieldIndexes,
-			ConvertFunc:             csi.genFieldConvertFunc(field.Type.String()),
-			IsCustomConvert:         csi.checkTypeHasCustomConvert(field.Type),
-			PriorityTagAndFieldName: priorityTagAndFieldName,
-			RemoveSymbolsFieldName:  utils.RemoveSymbols(field.Name),
-		}
-		newFieldInfoBase.LastFuzzyKey.Store(field.Name)
-		for _, tagOrFieldName := range priorityTagAndFieldName {
+		cachedFieldInfo := csi.makeCachedFieldInfo(field, fieldIndexes, priorityTags)
+		for _, tagOrFieldName := range cachedFieldInfo.PriorityTagAndFieldName {
 			newFieldInfo := &CachedFieldInfo{
-				CachedFieldInfoBase: newFieldInfoBase,
+				CachedFieldInfoBase: cachedFieldInfo.CachedFieldInfoBase,
 				IsField:             tagOrFieldName == field.Name,
 			}
 			csi.tagOrFiledNameToFieldInfoMap[tagOrFieldName] = newFieldInfo
@@ -64,14 +54,48 @@ func (csi *CachedStructInfo) AddField(field reflect.StructField, fieldIndexes []
 		}
 		return
 	}
-	if alreadyExistFieldInfo.OtherSameNameFieldIndex == nil {
-		alreadyExistFieldInfo.OtherSameNameFieldIndex = make([][]int, 0, 2)
+	// If the field name and type are the same
+	if alreadyExistFieldInfo.StructField.Type == field.Type {
+		alreadyExistFieldInfo.OtherSameNameField = append(
+			alreadyExistFieldInfo.OtherSameNameField,
+			csi.copyCachedInfoWithFieldIndexes(alreadyExistFieldInfo, fieldIndexes),
+		)
+		return
 	}
-	alreadyExistFieldInfo.OtherSameNameFieldIndex = append(
-		alreadyExistFieldInfo.OtherSameNameFieldIndex,
-		fieldIndexes,
+	// If the types are different, some information needs to be reset
+	alreadyExistFieldInfo.OtherSameNameField = append(
+		alreadyExistFieldInfo.OtherSameNameField,
+		csi.makeCachedFieldInfo(field, fieldIndexes, priorityTags),
 	)
-	return
+}
+
+// copyCachedInfoWithFieldIndexes copies and returns a new CachedFieldInfo based on given CachedFieldInfo, but different
+// FieldIndexes. Mainly used for copying fields with the same name and type.
+func (csi *CachedStructInfo) copyCachedInfoWithFieldIndexes(cfi *CachedFieldInfo, fieldIndexes []int) *CachedFieldInfo {
+	base := CachedFieldInfoBase{}
+	base = *cfi.CachedFieldInfoBase
+	base.FieldIndexes = fieldIndexes
+	return &CachedFieldInfo{
+		CachedFieldInfoBase: &base,
+	}
+}
+
+func (csi *CachedStructInfo) makeCachedFieldInfo(
+	field reflect.StructField, fieldIndexes []int, priorityTags []string,
+) *CachedFieldInfo {
+	base := &CachedFieldInfoBase{
+		IsCommonInterface:       checkTypeIsCommonInterface(field),
+		StructField:             field,
+		FieldIndexes:            fieldIndexes,
+		ConvertFunc:             csi.genFieldConvertFunc(field.Type.String()),
+		IsCustomConvert:         csi.checkTypeHasCustomConvert(field.Type),
+		PriorityTagAndFieldName: csi.genPriorityTagAndFieldName(field, priorityTags),
+		RemoveSymbolsFieldName:  utils.RemoveSymbols(field.Name),
+	}
+	base.LastFuzzyKey.Store(field.Name)
+	return &CachedFieldInfo{
+		CachedFieldInfoBase: base,
+	}
 }
 
 func (csi *CachedStructInfo) genFieldConvertFunc(fieldType string) (convertFunc func(from any, to reflect.Value)) {

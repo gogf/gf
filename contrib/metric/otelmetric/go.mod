@@ -1,9 +1,9 @@
 module github.com/gogf/gf/contrib/metric/otelmetric/v2
 
-go 1.18
+go 1.20
 
 require (
-	github.com/gogf/gf/v2 v2.7.3
+	github.com/gogf/gf/v2 v2.7.4
 	github.com/prometheus/client_golang v1.19.1
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.49.0
 	go.opentelemetry.io/otel v1.24.0
