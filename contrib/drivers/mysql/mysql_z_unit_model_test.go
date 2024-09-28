@@ -12,6 +12,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -4816,5 +4817,24 @@ func Test_Model_Year_Date_Time_DateTime_Timestamp(t *testing.T) {
 		t.Assert(one["time"].String(), now.Format("H:i:s"))
 		t.AssertLT(one["datetime"].GTime().Sub(now).Seconds(), 5)
 		t.AssertLT(one["timestamp"].GTime().Sub(now).Seconds(), 5)
+	})
+}
+
+func Test_OrderBy_Statement_Generated(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := gstr.SplitAndTrim(gtest.DataContent(`fix_gdb_order_by.sql`), ";")
+		for _, v := range array {
+			if _, err := db.Exec(ctx, v); err != nil {
+				gtest.Error(err)
+			}
+		}
+		defer dropTable(`employee`)
+		sqlArray, _ := gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			g.DB("default").Ctx(ctx).Model("employee").Order("name asc", "age desc").All()
+			return nil
+		})
+		rawSql := strings.ReplaceAll(sqlArray[len(sqlArray)-1], " ", "")
+		expectSql := strings.ReplaceAll("SELECT * FROM `employee` ORDER BY `name` asc, `age` desc", " ", "")
+		t.Assert(rawSql, expectSql)
 	})
 }
