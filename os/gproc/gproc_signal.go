@@ -8,12 +8,13 @@ package gproc
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/util/gutil"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // SigHandler defines a function type for signal handling.
