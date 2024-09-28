@@ -9,7 +9,7 @@ for file in `find . -name go.mod`; do
 
     # package kuhecm needs golang >= v1.19
     if [ "kubecm" = $(basename $dirpath) ]; then
-        if ! go version|grep -qE "go1.19|go1.[2-9][0-9]"; then
+        if ! go version|grep -qE "go1.[2-9][0-9]"; then
           echo "ignore kubecm as go version: $(go version)"
           continue 1
         fi

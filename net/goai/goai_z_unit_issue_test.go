@@ -63,7 +63,7 @@ func Test_Issue3664(t *testing.T) {
 
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-		apiContent := c.GetContent(ctx, "/api.json")
+		apiContent := c.GetBytes(ctx, "/api.json")
 		j, err := gjson.LoadJson(apiContent)
 		t.AssertNil(err)
 		t.Assert(j.Get(`paths./default.post.requestBody.required`).String(), "")
