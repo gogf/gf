@@ -6,7 +6,7 @@
 
 // Package gconv implements powerful and convenient converting functionality for any types of variables.
 //
-// This package should keep much less dependencies with other packages.
+// This package should keep much fewer dependencies with other packages.
 package gconv
 
 import (
@@ -23,7 +23,8 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
+	"github.com/gogf/gf/v2/util/gconv/internal/structcache"
 )
 
 var (
@@ -35,12 +36,26 @@ var (
 		"off":   {},
 		"false": {},
 	}
-
-	// StructTagPriority defines the default priority tags for Map*/Struct* functions.
-	// Note that, the `gconv/param` tags are used by old version of package.
-	// It is strongly recommended using short tag `c/p` instead in the future.
-	StructTagPriority = gtag.StructTagPriority
 )
+
+// IUnmarshalValue is the interface for custom defined types customizing value assignment.
+// Note that only pointer can implement interface IUnmarshalValue.
+type IUnmarshalValue = localinterface.IUnmarshalValue
+
+func init() {
+	// register common converters for internal usage.
+	structcache.RegisterCommonConverter(structcache.CommonConverter{
+		Int64:   Int64,
+		Uint64:  Uint64,
+		String:  String,
+		Float32: Float32,
+		Float64: Float64,
+		Time:    Time,
+		GTime:   GTime,
+		Bytes:   Bytes,
+		Bool:    Bool,
+	})
+}
 
 // Byte converts `any` to byte.
 func Byte(any interface{}) byte {
@@ -63,7 +78,7 @@ func Bytes(any interface{}) []byte {
 		return value
 
 	default:
-		if f, ok := value.(iBytes); ok {
+		if f, ok := value.(localinterface.IBytes); ok {
 			return f.Bytes()
 		}
 		originValueAndKind := reflection.OriginValueAndKind(any)
@@ -170,16 +185,12 @@ func String(any interface{}) string {
 		}
 		return value.String()
 	default:
-		// Empty checks.
-		if value == nil {
-			return ""
-		}
-		if f, ok := value.(iString); ok {
+		if f, ok := value.(localinterface.IString); ok {
 			// If the variable implements the String() interface,
 			// then use that interface to perform the conversion
 			return f.String()
 		}
-		if f, ok := value.(iError); ok {
+		if f, ok := value.(localinterface.IError); ok {
 			// If the variable implements the Error() interface,
 			// then use that interface to perform the conversion
 			return f.Error()
@@ -190,11 +201,11 @@ func String(any interface{}) string {
 			kind = rv.Kind()
 		)
 		switch kind {
-		case reflect.Chan,
+		case
+			reflect.Chan,
 			reflect.Map,
 			reflect.Slice,
 			reflect.Func,
-			reflect.Ptr,
 			reflect.Interface,
 			reflect.UnsafePointer:
 			if rv.IsNil() {
@@ -202,9 +213,21 @@ func String(any interface{}) string {
 			}
 		case reflect.String:
 			return rv.String()
-		}
-		if kind == reflect.Ptr {
+		case reflect.Ptr:
+			if rv.IsNil() {
+				return ""
+			}
 			return String(rv.Elem().Interface())
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			return strconv.FormatInt(rv.Int(), 10)
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			return strconv.FormatUint(rv.Uint(), 10)
+		case reflect.Uintptr:
+			return strconv.FormatUint(rv.Uint(), 10)
+		case reflect.Float32, reflect.Float64:
+			return strconv.FormatFloat(rv.Float(), 'f', -1, 64)
+		case reflect.Bool:
+			return strconv.FormatBool(rv.Bool())
 		}
 		// Finally, we use json.Marshal to convert.
 		if jsonContent, err := json.Marshal(value); err != nil {
@@ -235,16 +258,29 @@ func Bool(any interface{}) bool {
 		}
 		return true
 	default:
-		if f, ok := value.(iBool); ok {
+		if f, ok := value.(localinterface.IBool); ok {
 			return f.Bool()
 		}
 		rv := reflect.ValueOf(any)
 		switch rv.Kind() {
 		case reflect.Ptr:
-			return !rv.IsNil()
-		case reflect.Map:
-			fallthrough
-		case reflect.Array:
+			if rv.IsNil() {
+				return false
+			}
+			if rv.Type().Elem().Kind() == reflect.Bool {
+				return rv.Elem().Bool()
+			}
+			return Bool(rv.Elem().Interface())
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			return rv.Int() != 0
+		case reflect.Uintptr, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			return rv.Uint() != 0
+		case reflect.Float32, reflect.Float64:
+			return rv.Float() != 0
+		case reflect.Bool:
+			return rv.Bool()
+		// TODO：(Map，Array，Slice，Struct) It might panic here for these types.
+		case reflect.Map, reflect.Array:
 			fallthrough
 		case reflect.Slice:
 			return rv.Len() != 0

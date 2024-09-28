@@ -17,7 +17,7 @@ import (
 
 var (
 	localCache    = gcache.New()
-	localCacheLru = gcache.New(10000)
+	localCacheLru = gcache.NewWithAdapter(gcache.NewAdapterMemoryLru(10000))
 )
 
 func Benchmark_CacheSet(b *testing.B) {
