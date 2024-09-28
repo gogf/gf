@@ -73,3 +73,46 @@ func Test_Gen_Service_Default(t *testing.T) {
 		}
 	})
 }
+
+// https://github.com/gogf/gf/issues/3328
+func Test_Issue3328(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			path        = gfile.Temp(guid.S())
+			dstFolder   = path + filepath.FromSlash("/service")
+			apiFolder   = gtest.DataPath("issue", "3328", "logic")
+			logicGoPath = apiFolder + filepath.FromSlash("/logic.go")
+			in          = genservice.CGenServiceInput{
+				SrcFolder:       apiFolder,
+				DstFolder:       dstFolder,
+				DstFileNameCase: "Snake",
+				WatchFile:       "",
+				StPattern:       "",
+				Packages:        nil,
+				ImportPrefix:    "",
+				Clear:           false,
+			}
+		)
+		gfile.Remove(logicGoPath)
+		defer gfile.Remove(logicGoPath)
+
+		err := gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+		defer gfile.Remove(path)
+
+		_, err = genservice.CGenService{}.Service(ctx, in)
+		t.AssertNil(err)
+
+		files, err := gfile.ScanDir(apiFolder, "*", true)
+		for _, file := range files {
+			if file == logicGoPath {
+				if gfile.IsDir(logicGoPath) {
+					t.Fatalf("%s should not is folder", logicGoPath)
+				}
+			}
+		}
+	})
+}
