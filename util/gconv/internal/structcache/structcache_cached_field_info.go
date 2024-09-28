@@ -56,25 +56,22 @@ type CachedFieldInfoBase struct {
 	// StructField is the type info of this field.
 	StructField reflect.StructField
 
-	// OtherSameNameFieldIndex holds the sub attributes of the same field name.
+	// OtherSameNameField stores fields with the same name and type or different types of nested structures.
+	//
 	// For example:
-	// type Name struct{
-	//     LastName  string
-	//     FirstName string
+	// type ID struct{
+	//     ID1  string
+	//     ID2 int
 	// }
-	// type User struct{
-	//     Name
-	//     LastName  string
-	//     FirstName string
+	// type Card struct{
+	//     ID
+	//     ID1  uint64
+	//     ID2 int64
 	// }
 	//
-	// As the `LastName` in `User`, its internal attributes:
-	//   FieldIndexes = []int{0,1}
-	//   // item length 1, as there's only one repeat item with the same field name.
-	//   OtherSameNameFieldIndex = [][]int{[]int{1}}
-	//
-	// In value assignment, the value will be assigned to index {0,1} and {1}.
-	OtherSameNameFieldIndex [][]int
+	// We will cache each ID1 and ID2 separately,
+	// even if their types are different and their indexes are different
+	OtherSameNameField []*CachedFieldInfo
 
 	// ConvertFunc is the converting function for this field.
 	ConvertFunc func(from any, to reflect.Value)
@@ -96,20 +93,25 @@ func (cfi *CachedFieldInfo) FieldName() string {
 	return cfi.PriorityTagAndFieldName[len(cfi.PriorityTagAndFieldName)-1]
 }
 
-// GetFieldReflectValue retrieves and returns the reflect.Value of given struct value,
+// GetFieldReflectValueFrom retrieves and returns the `reflect.Value` of given struct field,
 // which is used for directly value assignment.
-func (cfi *CachedFieldInfo) GetFieldReflectValue(structValue reflect.Value) reflect.Value {
+//
+// Note that, the input parameter `structValue` might be initialized internally.
+func (cfi *CachedFieldInfo) GetFieldReflectValueFrom(structValue reflect.Value) reflect.Value {
 	if len(cfi.FieldIndexes) == 1 {
+		// no nested struct.
 		return structValue.Field(cfi.FieldIndexes[0])
 	}
 	return cfi.fieldReflectValue(structValue, cfi.FieldIndexes)
 }
 
-// GetOtherFieldReflectValue retrieves and returns the reflect.Value of given struct value with nested index
+// GetOtherFieldReflectValueFrom retrieves and returns the `reflect.Value` of given struct field with nested index
 // by `fieldLevel`, which is used for directly value assignment.
-func (cfi *CachedFieldInfo) GetOtherFieldReflectValue(structValue reflect.Value, fieldLevel int) reflect.Value {
-	fieldIndex := cfi.OtherSameNameFieldIndex[fieldLevel]
+//
+// Note that, the input parameter `structValue` might be initialized internally.
+func (cfi *CachedFieldInfo) GetOtherFieldReflectValueFrom(structValue reflect.Value, fieldIndex []int) reflect.Value {
 	if len(fieldIndex) == 1 {
+		// no nested struct.
 		return structValue.Field(fieldIndex[0])
 	}
 	return cfi.fieldReflectValue(structValue, fieldIndex)
@@ -118,9 +120,11 @@ func (cfi *CachedFieldInfo) GetOtherFieldReflectValue(structValue reflect.Value,
 func (cfi *CachedFieldInfo) fieldReflectValue(v reflect.Value, fieldIndexes []int) reflect.Value {
 	for i, x := range fieldIndexes {
 		if i > 0 {
+			// it means nested struct.
 			switch v.Kind() {
 			case reflect.Pointer:
 				if v.IsNil() {
+					// Initialization.
 					v.Set(reflect.New(v.Type().Elem()))
 				}
 				v = v.Elem()
@@ -133,6 +137,7 @@ func (cfi *CachedFieldInfo) fieldReflectValue(v reflect.Value, fieldIndexes []in
 					// maybe *struct or other types
 					v = v.Elem()
 				}
+			default:
 			}
 		}
 		v = v.Field(x)

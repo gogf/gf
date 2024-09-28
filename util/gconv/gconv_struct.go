@@ -80,7 +80,7 @@ func doStruct(
 		paramsInterface         interface{} // DO NOT use `params` directly as it might be type `reflect.Value`
 		pointerReflectValue     reflect.Value
 		pointerReflectKind      reflect.Kind
-		pointerElemReflectValue reflect.Value // The pointed element.
+		pointerElemReflectValue reflect.Value // The reflection value to struct element.
 	)
 	if v, ok := params.(reflect.Value); ok {
 		paramsReflectValue = v
@@ -183,33 +183,37 @@ func doStruct(
 	var (
 		// Indicates that those values have been used and cannot be reused.
 		usedParamsKeyOrTagNameMap = structcache.GetUsedParamsKeyOrTagNameMapFromPool()
+		cachedFieldInfo           *structcache.CachedFieldInfo
+		paramsValue               interface{}
 	)
 	defer structcache.PutUsedParamsKeyOrTagNameMapToPool(usedParamsKeyOrTagNameMap)
 
 	// Firstly, search according to custom mapping rules.
 	// If a possible direct assignment is found, reduce the number of subsequent map searches.
 	for paramKey, fieldName := range paramKeyToAttrMap {
-		fieldInfo := cachedStructInfo.GetFieldInfo(fieldName)
-		if fieldInfo != nil {
-			if paramsValue, ok := paramsMap[paramKey]; ok {
-				fieldValue := fieldInfo.GetFieldReflectValue(pointerElemReflectValue)
-				if err = bindVarToStructField(
-					fieldValue,
-					paramsValue,
-					fieldInfo,
-					paramKeyToAttrMap,
+		paramsValue, ok = paramsMap[paramKey]
+		if !ok {
+			continue
+		}
+		cachedFieldInfo = cachedStructInfo.GetFieldInfo(fieldName)
+		if cachedFieldInfo != nil {
+			fieldValue := cachedFieldInfo.GetFieldReflectValueFrom(pointerElemReflectValue)
+			if err = bindVarToStructField(
+				fieldValue,
+				paramsValue,
+				cachedFieldInfo,
+				paramKeyToAttrMap,
+			); err != nil {
+				return err
+			}
+			if len(cachedFieldInfo.OtherSameNameField) > 0 {
+				if err = setOtherSameNameField(
+					cachedFieldInfo, paramsValue, pointerReflectValue, paramKeyToAttrMap,
 				); err != nil {
 					return err
 				}
-				if len(fieldInfo.OtherSameNameFieldIndex) > 0 {
-					if err = setOtherSameNameField(
-						fieldInfo, paramsValue, pointerReflectValue, paramKeyToAttrMap,
-					); err != nil {
-						return err
-					}
-				}
-				usedParamsKeyOrTagNameMap[paramKey] = struct{}{}
 			}
+			usedParamsKeyOrTagNameMap[paramKey] = struct{}{}
 		}
 	}
 	// Already done converting for given `paramsMap`.
@@ -228,15 +232,15 @@ func doStruct(
 }
 
 func setOtherSameNameField(
-	fieldInfo *structcache.CachedFieldInfo,
+	cachedFieldInfo *structcache.CachedFieldInfo,
 	srcValue any,
 	structValue reflect.Value,
 	paramKeyToAttrMap map[string]string,
 ) (err error) {
 	// loop the same field name of all sub attributes.
-	for i := range fieldInfo.OtherSameNameFieldIndex {
-		fieldValue := fieldInfo.GetOtherFieldReflectValue(structValue, i)
-		if err = bindVarToStructField(fieldValue, srcValue, fieldInfo, paramKeyToAttrMap); err != nil {
+	for _, otherFieldInfo := range cachedFieldInfo.OtherSameNameField {
+		fieldValue := cachedFieldInfo.GetOtherFieldReflectValueFrom(structValue, otherFieldInfo.FieldIndexes)
+		if err = bindVarToStructField(fieldValue, srcValue, otherFieldInfo, paramKeyToAttrMap); err != nil {
 			return err
 		}
 	}
@@ -251,36 +255,36 @@ func bindStructWithLoopParamsMap(
 	cachedStructInfo *structcache.CachedStructInfo,
 ) (err error) {
 	var (
-		fieldName   string
-		fieldInfo   *structcache.CachedFieldInfo
-		fuzzLastKey string
-		fieldValue  reflect.Value
-		paramKey    string
-		paramValue  any
-		ok          bool
+		fieldName       string
+		cachedFieldInfo *structcache.CachedFieldInfo
+		fuzzLastKey     string
+		fieldValue      reflect.Value
+		paramKey        string
+		paramValue      any
+		ok              bool
 	)
 	for paramKey, paramValue = range paramsMap {
 		if _, ok = usedParamsKeyOrTagNameMap[paramKey]; ok {
 			continue
 		}
-		fieldInfo = cachedStructInfo.GetFieldInfo(paramKey)
-		if fieldInfo != nil {
-			fieldName = fieldInfo.FieldName()
+		cachedFieldInfo = cachedStructInfo.GetFieldInfo(paramKey)
+		if cachedFieldInfo != nil {
+			fieldName = cachedFieldInfo.FieldName()
 			// already converted using its field name?
 			// the field name has the more priority than tag name.
 			_, ok = usedParamsKeyOrTagNameMap[fieldName]
-			if ok && fieldInfo.IsField {
+			if ok && cachedFieldInfo.IsField {
 				continue
 			}
-			fieldValue = fieldInfo.GetFieldReflectValue(structValue)
+			fieldValue = cachedFieldInfo.GetFieldReflectValueFrom(structValue)
 			if err = bindVarToStructField(
-				fieldValue, paramValue, fieldInfo, paramKeyToAttrMap,
+				fieldValue, paramValue, cachedFieldInfo, paramKeyToAttrMap,
 			); err != nil {
 				return err
 			}
 			// handle same field name in nested struct.
-			if len(fieldInfo.OtherSameNameFieldIndex) > 0 {
-				if err = setOtherSameNameField(fieldInfo, paramValue, structValue, paramKeyToAttrMap); err != nil {
+			if len(cachedFieldInfo.OtherSameNameField) > 0 {
+				if err = setOtherSameNameField(cachedFieldInfo, paramValue, structValue, paramKeyToAttrMap); err != nil {
 					return err
 				}
 			}
@@ -289,40 +293,40 @@ func bindStructWithLoopParamsMap(
 		}
 
 		// fuzzy matching.
-		for _, fieldInfo = range cachedStructInfo.FieldConvertInfos {
-			fieldName = fieldInfo.FieldName()
+		for _, cachedFieldInfo = range cachedStructInfo.FieldConvertInfos {
+			fieldName = cachedFieldInfo.FieldName()
 			if _, ok = usedParamsKeyOrTagNameMap[fieldName]; ok {
 				continue
 			}
-			fuzzLastKey = fieldInfo.LastFuzzyKey.Load().(string)
+			fuzzLastKey = cachedFieldInfo.LastFuzzyKey.Load().(string)
 			paramValue, ok = paramsMap[fuzzLastKey]
 			if !ok {
 				if strings.EqualFold(
-					fieldInfo.RemoveSymbolsFieldName, utils.RemoveSymbols(paramKey),
+					cachedFieldInfo.RemoveSymbolsFieldName, utils.RemoveSymbols(paramKey),
 				) {
 					paramValue, ok = paramsMap[paramKey]
 					// If it is found this time, update it based on what was not found last time.
-					fieldInfo.LastFuzzyKey.Store(paramKey)
+					cachedFieldInfo.LastFuzzyKey.Store(paramKey)
 				}
 			}
 			if ok {
-				fieldValue = fieldInfo.GetFieldReflectValue(structValue)
+				fieldValue = cachedFieldInfo.GetFieldReflectValueFrom(structValue)
 				if paramValue != nil {
 					if err = bindVarToStructField(
-						fieldValue, paramValue, fieldInfo, paramKeyToAttrMap,
+						fieldValue, paramValue, cachedFieldInfo, paramKeyToAttrMap,
 					); err != nil {
 						return err
 					}
 					// handle same field name in nested struct.
-					if len(fieldInfo.OtherSameNameFieldIndex) > 0 {
+					if len(cachedFieldInfo.OtherSameNameField) > 0 {
 						if err = setOtherSameNameField(
-							fieldInfo, paramValue, structValue, paramKeyToAttrMap,
+							cachedFieldInfo, paramValue, structValue, paramKeyToAttrMap,
 						); err != nil {
 							return err
 						}
 					}
 				}
-				usedParamsKeyOrTagNameMap[fieldInfo.FieldName()] = struct{}{}
+				usedParamsKeyOrTagNameMap[cachedFieldInfo.FieldName()] = struct{}{}
 				break
 			}
 		}
@@ -338,16 +342,16 @@ func bindStructWithLoopFieldInfos(
 	cachedStructInfo *structcache.CachedStructInfo,
 ) (err error) {
 	var (
-		fieldInfo   *structcache.CachedFieldInfo
-		fuzzLastKey string
-		fieldValue  reflect.Value
-		paramKey    string
-		paramValue  any
-		matched     bool
-		ok          bool
+		cachedFieldInfo *structcache.CachedFieldInfo
+		fuzzLastKey     string
+		fieldValue      reflect.Value
+		paramKey        string
+		paramValue      any
+		matched         bool
+		ok              bool
 	)
-	for _, fieldInfo = range cachedStructInfo.FieldConvertInfos {
-		for _, fieldTag := range fieldInfo.PriorityTagAndFieldName {
+	for _, cachedFieldInfo = range cachedStructInfo.FieldConvertInfos {
+		for _, fieldTag := range cachedFieldInfo.PriorityTagAndFieldName {
 			if paramValue, ok = paramsMap[fieldTag]; !ok {
 				continue
 			}
@@ -355,16 +359,16 @@ func bindStructWithLoopFieldInfos(
 				matched = true
 				break
 			}
-			fieldValue = fieldInfo.GetFieldReflectValue(structValue)
+			fieldValue = cachedFieldInfo.GetFieldReflectValueFrom(structValue)
 			if err = bindVarToStructField(
-				fieldValue, paramValue, fieldInfo, paramKeyToAttrMap,
+				fieldValue, paramValue, cachedFieldInfo, paramKeyToAttrMap,
 			); err != nil {
 				return err
 			}
 			// handle same field name in nested struct.
-			if len(fieldInfo.OtherSameNameFieldIndex) > 0 {
+			if len(cachedFieldInfo.OtherSameNameField) > 0 {
 				if err = setOtherSameNameField(
-					fieldInfo, paramValue, structValue, paramKeyToAttrMap,
+					cachedFieldInfo, paramValue, structValue, paramKeyToAttrMap,
 				); err != nil {
 					return err
 				}
@@ -378,26 +382,26 @@ func bindStructWithLoopFieldInfos(
 			continue
 		}
 
-		fuzzLastKey = fieldInfo.LastFuzzyKey.Load().(string)
+		fuzzLastKey = cachedFieldInfo.LastFuzzyKey.Load().(string)
 		if paramValue, ok = paramsMap[fuzzLastKey]; !ok {
 			paramKey, paramValue = fuzzyMatchingFieldName(
-				fieldInfo.RemoveSymbolsFieldName, paramsMap, usedParamsKeyOrTagNameMap,
+				cachedFieldInfo.RemoveSymbolsFieldName, paramsMap, usedParamsKeyOrTagNameMap,
 			)
 			ok = paramKey != ""
-			fieldInfo.LastFuzzyKey.Store(paramKey)
+			cachedFieldInfo.LastFuzzyKey.Store(paramKey)
 		}
 		if ok {
-			fieldValue = fieldInfo.GetFieldReflectValue(structValue)
+			fieldValue = cachedFieldInfo.GetFieldReflectValueFrom(structValue)
 			if paramValue != nil {
 				if err = bindVarToStructField(
-					fieldValue, paramValue, fieldInfo, paramKeyToAttrMap,
+					fieldValue, paramValue, cachedFieldInfo, paramKeyToAttrMap,
 				); err != nil {
 					return err
 				}
 				// handle same field name in nested struct.
-				if len(fieldInfo.OtherSameNameFieldIndex) > 0 {
+				if len(cachedFieldInfo.OtherSameNameField) > 0 {
 					if err = setOtherSameNameField(
-						fieldInfo, paramValue, structValue, paramKeyToAttrMap,
+						cachedFieldInfo, paramValue, structValue, paramKeyToAttrMap,
 					); err != nil {
 						return err
 					}
@@ -432,7 +436,7 @@ func fuzzyMatchingFieldName(
 func bindVarToStructField(
 	fieldValue reflect.Value,
 	srcValue interface{},
-	fieldInfo *structcache.CachedFieldInfo,
+	cachedFieldInfo *structcache.CachedFieldInfo,
 	paramKeyToAttrMap map[string]string,
 ) (err error) {
 	if !fieldValue.IsValid() {
@@ -445,7 +449,7 @@ func bindVarToStructField(
 	defer func() {
 		if exception := recover(); exception != nil {
 			if err = bindVarToReflectValue(fieldValue, srcValue, paramKeyToAttrMap); err != nil {
-				err = gerror.Wrapf(err, `error binding srcValue to attribute "%s"`, fieldInfo.FieldName())
+				err = gerror.Wrapf(err, `error binding srcValue to attribute "%s"`, cachedFieldInfo.FieldName())
 			}
 		}
 	}()
@@ -460,7 +464,7 @@ func bindVarToStructField(
 		customConverterInput reflect.Value
 		ok                   bool
 	)
-	if fieldInfo.IsCustomConvert {
+	if cachedFieldInfo.IsCustomConvert {
 		if customConverterInput, ok = srcValue.(reflect.Value); !ok {
 			customConverterInput = reflect.ValueOf(srcValue)
 		}
@@ -468,19 +472,19 @@ func bindVarToStructField(
 			return
 		}
 	}
-	if fieldInfo.IsCommonInterface {
+	if cachedFieldInfo.IsCommonInterface {
 		if ok, err = bindVarToReflectValueWithInterfaceCheck(fieldValue, srcValue); ok || err != nil {
 			return
 		}
 	}
 	// Common types use fast assignment logic
-	if fieldInfo.ConvertFunc != nil {
-		fieldInfo.ConvertFunc(srcValue, fieldValue)
+	if cachedFieldInfo.ConvertFunc != nil {
+		cachedFieldInfo.ConvertFunc(srcValue, fieldValue)
 		return nil
 	}
 	doConvertWithReflectValueSet(fieldValue, doConvertInput{
 		FromValue:  srcValue,
-		ToTypeName: fieldInfo.StructField.Type.String(),
+		ToTypeName: cachedFieldInfo.StructField.Type.String(),
 		ReferValue: fieldValue,
 	})
 	return nil

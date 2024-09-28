@@ -296,12 +296,14 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		if value != nil {
 			switch checkRuleItem.FieldKind {
 			case reflect.Struct, reflect.Map:
+				// empty struct or map.
 				if gconv.String(value) == emptyJsonObjectStr {
-					value = ""
+					value = nil
 				}
 			case reflect.Slice, reflect.Array:
+				// empty slice.
 				if gconv.String(value) == emptyJsonArrayStr {
-					value = ""
+					value = []any{}
 				}
 			default:
 			}
