@@ -289,7 +289,7 @@ func (c CGenService) checkAndUpdateMain(srcFolder string) (err error) {
 	var (
 		logicPackageName = gstr.ToLower(gfile.Basename(srcFolder))
 		logicFilePath    = gfile.Join(srcFolder, logicPackageName+".go")
-		importPath       = utils.GetImportPath(logicFilePath)
+		importPath       = utils.GetImportPath(srcFolder)
 		importStr        = fmt.Sprintf(`_ "%s"`, importPath)
 		mainFilePath     = gfile.Join(gfile.Dir(gfile.Dir(gfile.Dir(logicFilePath))), "main.go")
 		mainFileContent  = gfile.GetContents(mainFilePath)
