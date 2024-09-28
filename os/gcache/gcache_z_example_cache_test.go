@@ -97,7 +97,7 @@ func ExampleCache_SetIfNotExist() {
 	// true <nil>
 	// false <nil>
 	// [k1]
-	// [<nil>]
+	// []
 }
 
 func ExampleCache_SetMap() {
