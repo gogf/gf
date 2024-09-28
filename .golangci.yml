@@ -180,6 +180,9 @@ linters-settings:
 
   # https://golangci-lint.run/usage/linters/#govet
   govet:
+    # Report about shadowed variables.
+    # Default: false
+    # check-shadowing: true
     # Settings per analyzer.
     settings:
       # Analyzer name, run `go tool vet help` to see all analyzers.
