@@ -14,6 +14,7 @@ bin/
 cmd/gf/main
 cmd/gf/gf
 temp/
+example/log
 go.work
 go.work.sum
 !cmd/gf/go.work
