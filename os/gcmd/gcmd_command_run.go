@@ -93,7 +93,8 @@ func (c *Command) RunWithSpecificArgs(ctx context.Context, args []string) (value
 	parsedArgs = parsedArgs[1:]
 
 	// Find the matched command and run it.
-	lastCmd, foundCmd, newCtx := c.searchCommand(ctx, parsedArgs, 0)
+	// It here `fromArgIndex` set to 1 to calculate the argument index in to `newCtx`.
+	lastCmd, foundCmd, newCtx := c.searchCommand(ctx, parsedArgs, 1)
 	if foundCmd != nil {
 		return foundCmd.doRun(newCtx, args, parser)
 	}
