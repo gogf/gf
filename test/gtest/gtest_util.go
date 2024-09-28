@@ -364,11 +364,11 @@ func AssertNil(value interface{}) {
 // which will be joined with current system separator and returned with the path.
 func DataPath(names ...string) string {
 	_, path, _ := gdebug.CallerWithFilter([]string{pathFilterKey})
-	path = filepath.Dir(path) + string(filepath.Separator) + "testdata"
+	path = filepath.Dir(path) + "/testdata"
 	for _, name := range names {
-		path += string(filepath.Separator) + name
+		path += "/" + name
 	}
-	return path
+	return filepath.FromSlash(path)
 }
 
 // DataContent retrieves and returns the file content for specified testdata path of current package

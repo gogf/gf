@@ -12,6 +12,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -2335,7 +2336,7 @@ func Test_Model_FieldsEx(t *testing.T) {
 		r, err := db.Model(table).FieldsEx("create_time, id").Where("id in (?)", g.Slice{1, 2}).Order("id asc").All()
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
-		t.Assert(len(r[0]), 3)
+		t.Assert(len(r[0]), 4)
 		t.Assert(r[0]["id"], "")
 		t.Assert(r[0]["passport"], "user_1")
 		t.Assert(r[0]["password"], "pass_1")
@@ -2982,7 +2983,7 @@ func Test_Model_FieldsEx_AutoMapping(t *testing.T) {
 			"CreateTime": 1,
 		}).Where("id", 2).One()
 		t.AssertNil(err)
-		t.Assert(len(one), 2)
+		t.Assert(len(one), 3)
 		t.Assert(one["id"], 2)
 		t.Assert(one["nickname"], "name_2")
 	})
@@ -2999,7 +3000,7 @@ func Test_Model_FieldsEx_AutoMapping(t *testing.T) {
 			CreateTime: 0,
 		}).Where("id", 2).One()
 		t.AssertNil(err)
-		t.Assert(len(one), 2)
+		t.Assert(len(one), 3)
 		t.Assert(one["id"], 2)
 		t.Assert(one["nickname"], "name_2")
 	})
@@ -3157,8 +3158,8 @@ func Test_TimeZoneInsert(t *testing.T) {
 	gtest.AssertNil(err)
 
 	CreateTime := "2020-11-22 12:23:45"
-	UpdateTime := "2020-11-22 13:23:45"
-	DeleteTime := "2020-11-22 14:23:45"
+	UpdateTime := "2020-11-22 13:23:46"
+	DeleteTime := "2020-11-22 14:23:47"
 	type User struct {
 		Id        int         `json:"id"`
 		CreatedAt *gtime.Time `json:"created_at"`
@@ -3176,13 +3177,14 @@ func Test_TimeZoneInsert(t *testing.T) {
 	}
 
 	gtest.C(t, func(t *gtest.T) {
-		_, _ = db.Model(tableName).Unscoped().Insert(u)
+		_, err = db.Model(tableName).Unscoped().Insert(u)
+		t.AssertNil(err)
 		userEntity := &User{}
-		err := db.Model(tableName).Where("id", 1).Unscoped().Scan(&userEntity)
+		err = db.Model(tableName).Where("id", 1).Unscoped().Scan(&userEntity)
 		t.AssertNil(err)
 		t.Assert(userEntity.CreatedAt.String(), "2020-11-22 11:23:45")
-		t.Assert(userEntity.UpdatedAt.String(), "2020-11-22 12:23:45")
-		t.Assert(gtime.NewFromTime(userEntity.DeletedAt).String(), "2020-11-22 13:23:45")
+		t.Assert(userEntity.UpdatedAt.String(), "2020-11-22 12:23:46")
+		t.Assert(gtime.NewFromTime(userEntity.DeletedAt).String(), "2020-11-22 13:23:47")
 	})
 }
 
@@ -4783,5 +4785,56 @@ func Test_Model_FixGdbJoin(t *testing.T) {
 		t.AssertNil(err)
 
 		t.Assert(gtest.DataContent(`fix_gdb_join_expect.sql`), sqlSlice[len(sqlSlice)-1])
+	})
+}
+
+func Test_Model_Year_Date_Time_DateTime_Timestamp(t *testing.T) {
+	table := "date_time_example"
+	array := gstr.SplitAndTrim(gtest.DataContent(`date_time_example.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// insert.
+		var now = gtime.Now()
+		_, err := db.Model("date_time_example").Insert(g.Map{
+			"year":      now,
+			"date":      now,
+			"time":      now,
+			"datetime":  now,
+			"timestamp": now,
+		})
+		t.AssertNil(err)
+		// select.
+		one, err := db.Model("date_time_example").One()
+		t.AssertNil(err)
+		t.Assert(one["year"].String(), now.Format("Y"))
+		t.Assert(one["date"].String(), now.Format("Y-m-d"))
+		t.Assert(one["time"].String(), now.Format("H:i:s"))
+		t.AssertLT(one["datetime"].GTime().Sub(now).Seconds(), 5)
+		t.AssertLT(one["timestamp"].GTime().Sub(now).Seconds(), 5)
+	})
+}
+
+func Test_OrderBy_Statement_Generated(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := gstr.SplitAndTrim(gtest.DataContent(`fix_gdb_order_by.sql`), ";")
+		for _, v := range array {
+			if _, err := db.Exec(ctx, v); err != nil {
+				gtest.Error(err)
+			}
+		}
+		defer dropTable(`employee`)
+		sqlArray, _ := gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			g.DB("default").Ctx(ctx).Model("employee").Order("name asc", "age desc").All()
+			return nil
+		})
+		rawSql := strings.ReplaceAll(sqlArray[len(sqlArray)-1], " ", "")
+		expectSql := strings.ReplaceAll("SELECT * FROM `employee` ORDER BY `name` asc, `age` desc", " ", "")
+		t.Assert(rawSql, expectSql)
 	})
 }

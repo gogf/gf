@@ -7,9 +7,11 @@
 package gconv
 
 import (
+	"reflect"
 	"strconv"
 
 	"github.com/gogf/gf/v2/encoding/gbinary"
+	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
 // Float32 converts `any` to float32.
@@ -23,13 +25,40 @@ func Float32(any interface{}) float32 {
 	case float64:
 		return float32(value)
 	case []byte:
+		// TODO: It might panic here for these types.
 		return gbinary.DecodeToFloat32(value)
 	default:
-		if f, ok := value.(iFloat32); ok {
-			return f.Float32()
+		rv := reflect.ValueOf(any)
+		switch rv.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			return float32(rv.Int())
+		case reflect.Uintptr, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			return float32(rv.Uint())
+		case reflect.Float32, reflect.Float64:
+			return float32(rv.Float())
+		case reflect.Bool:
+			if rv.Bool() {
+				return 1
+			}
+			return 0
+		case reflect.String:
+			f, _ := strconv.ParseFloat(rv.String(), 32)
+			return float32(f)
+		case reflect.Ptr:
+			if rv.IsNil() {
+				return 0
+			}
+			if f, ok := value.(localinterface.IFloat32); ok {
+				return f.Float32()
+			}
+			return Float32(rv.Elem().Interface())
+		default:
+			if f, ok := value.(localinterface.IFloat32); ok {
+				return f.Float32()
+			}
+			v, _ := strconv.ParseFloat(String(any), 32)
+			return float32(v)
 		}
-		v, _ := strconv.ParseFloat(String(any), 64)
-		return float32(v)
 	}
 }
 
@@ -44,12 +73,44 @@ func Float64(any interface{}) float64 {
 	case float64:
 		return value
 	case []byte:
+		// TODO: It might panic here for these types.
 		return gbinary.DecodeToFloat64(value)
 	default:
-		if f, ok := value.(iFloat64); ok {
-			return f.Float64()
+		rv := reflect.ValueOf(any)
+		switch rv.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			return float64(rv.Int())
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			return float64(rv.Uint())
+		case reflect.Uintptr:
+			return float64(rv.Uint())
+		case reflect.Float32, reflect.Float64:
+			// Please Note:
+			// When the type is float32 or a custom type defined based on float32,
+			// switching to float64 may result in a few extra decimal places.
+			return rv.Float()
+		case reflect.Bool:
+			if rv.Bool() {
+				return 1
+			}
+			return 0
+		case reflect.String:
+			f, _ := strconv.ParseFloat(rv.String(), 64)
+			return f
+		case reflect.Ptr:
+			if rv.IsNil() {
+				return 0
+			}
+			if f, ok := value.(localinterface.IFloat64); ok {
+				return f.Float64()
+			}
+			return Float64(rv.Elem().Interface())
+		default:
+			if f, ok := value.(localinterface.IFloat64); ok {
+				return f.Float64()
+			}
+			v, _ := strconv.ParseFloat(String(any), 64)
+			return v
 		}
-		v, _ := strconv.ParseFloat(String(any), 64)
-		return v
 	}
 }

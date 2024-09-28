@@ -32,7 +32,7 @@ env:
 
 jobs:
   code-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     # Service containers to run with `code-test`
     services:
@@ -58,6 +58,11 @@ jobs:
           - 6379:6379
 
       # MySQL backend server.
+      # docker run -d --name mysql \
+      # -p 3306:3306 \
+      # -e MYSQL_DATABASE=test \
+      # -e MYSQL_ROOT_PASSWORD=12345678 \
+      # loads/mysql:5.7
       mysql:
         image: loads/mysql:5.7
         env:
@@ -185,7 +190,7 @@ jobs:
 
     strategy:
       matrix:
-        go-version: [ "1.20", "1.21", "1.22" ]
+        go-version: [ "1.20", "1.21", "1.22", "1.23" ]
         goarch: [ "386", "amd64" ]
 
     steps:

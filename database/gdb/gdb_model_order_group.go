@@ -36,7 +36,7 @@ func (m *Model) Order(orderBy ...interface{}) *Model {
 			return model
 		}
 	}
-	model.orderBy += model.db.GetCore().QuoteString(gstr.JoinAny(orderBy, " "))
+	model.orderBy += model.db.GetCore().QuoteString(gstr.JoinAny(orderBy, ", "))
 	return model
 }
 
@@ -59,7 +59,7 @@ func (m *Model) OrderDesc(column string) *Model {
 // OrderRandom sets the "ORDER BY RANDOM()" statement for the model.
 func (m *Model) OrderRandom() *Model {
 	model := m.getModel()
-	model.orderBy = "RAND()"
+	model.orderBy = m.db.OrderRandomFunction()
 	return model
 }
 

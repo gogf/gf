@@ -36,7 +36,7 @@ func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
 			structDefinition, appendImports = generateStructDefinition(ctx, generateStructDefinitionInput{
 				CGenDaoInternalInput: in,
 				TableName:            tableName,
-				StructName:           gstr.CaseCamel(strings.ToLower(newTableName)),
+				StructName:           formatFieldName(newTableName, FieldNameCaseCamel),
 				FieldMap:             fieldMap,
 				IsDo:                 false,
 			})
@@ -44,7 +44,7 @@ func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
 				ctx,
 				in,
 				newTableName,
-				gstr.CaseCamel(strings.ToLower(newTableName)),
+				formatFieldName(newTableName, FieldNameCaseCamel),
 				structDefinition,
 				appendImports,
 			)
