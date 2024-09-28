@@ -894,7 +894,7 @@ func Test_DB_ToJson(t *testing.T) {
 		}
 
 		// ToJson
-		resultJson, err := gjson.LoadContent(result.Json())
+		resultJson, err := gjson.LoadContent([]byte(result.Json()))
 		if err != nil {
 			gtest.Fatal(err)
 		}

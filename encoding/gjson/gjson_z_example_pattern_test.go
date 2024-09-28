@@ -51,7 +51,7 @@ func ExampleDecodeToJson_PatternViolenceCheck() {
 }
 
 func ExampleJson_Get_MapSliceChange() {
-	jsonContent := `{"map":{"key":"value"}, "slice":[59,90]}`
+	jsonContent := []byte(`{"map":{"key":"value"}, "slice":[59,90]}`)
 	j, _ := gjson.LoadJson(jsonContent)
 	m := j.Get("map").Map()
 	fmt.Println(m)

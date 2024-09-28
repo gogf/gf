@@ -138,7 +138,7 @@ func (c *Client) doUpdate(ctx context.Context, namespace string) (err error) {
 		)
 	}
 	var j *gjson.Json
-	if j, err = gjson.LoadContent(cm.Data[c.config.DataItem]); err != nil {
+	if j, err = gjson.LoadContent([]byte(cm.Data[c.config.DataItem])); err != nil {
 		return gerror.Wrapf(
 			err,
 			`parse config map item from %s[%s] failed`, c.config.ConfigMap, c.config.DataItem,
