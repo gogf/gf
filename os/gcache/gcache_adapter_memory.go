@@ -447,15 +447,19 @@ func (c *AdapterMemory) syncEventAndClearExpired(ctx context.Context) {
 	// Data expiration auto cleaning up.
 	// =================================
 	var (
-		expireSet *gset.Set
-		ek        = c.makeExpireKey(gtime.TimestampMilli())
-		eks       = []int64{ek - 1000, ek - 2000, ek - 3000, ek - 4000, ek - 5000}
+		expireSet  *gset.Set
+		expireTime int64
+		currentEk  = c.makeExpireKey(gtime.TimestampMilli())
 	)
-	for _, expireTime := range eks {
+	// auto removing expiring key set for latest seconds.
+	for i := int64(1); i <= 5; i++ {
+		expireTime = currentEk - i*1000
 		if expireSet = c.expireSets.Get(expireTime); expireSet != nil {
 			// Iterating the set to delete all keys in it.
 			expireSet.Iterator(func(key interface{}) bool {
 				c.clearByKey(key, false)
+				// remove auto expired key for lru.
+				c.lru.Remove(key)
 				return true
 			})
 			// Deleting the set after all of its keys are deleted.
