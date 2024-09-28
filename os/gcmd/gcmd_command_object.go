@@ -267,10 +267,6 @@ func newCommandFromMethod(
 		)
 		if value := ctx.Value(CtxKeyArgumentsIndex); value != nil {
 			argIndex = value.(int)
-			// Use the left args to assign to input struct object.
-			if argIndex < len(arguments) {
-				arguments = arguments[argIndex:]
-			}
 		}
 		if data == nil {
 			data = map[string]interface{}{}

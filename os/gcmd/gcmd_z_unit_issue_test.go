@@ -232,3 +232,76 @@ func Test_Issue3417(t *testing.T) {
 		)
 	})
 }
+
+// https://github.com/gogf/gf/issues/3670
+type (
+	Issue3670FirstCommand struct {
+		*gcmd.Command
+	}
+
+	Issue3670First struct {
+		g.Meta `name:"first"`
+	}
+
+	Issue3670Second struct {
+		g.Meta `name:"second"`
+	}
+
+	Issue3670Third struct {
+		g.Meta `name:"third"`
+		Issue3670Last
+	}
+
+	Issue3670Last struct {
+		g.Meta `name:"last"`
+	}
+
+	Issue3670LastInput struct {
+		g.Meta  `name:"last"`
+		Country string `name:"country" arg:"true"`
+		Singer  string `name:"singer" arg:"true"`
+	}
+
+	Issue3670LastOutput struct {
+		Content string
+	}
+)
+
+func (receiver Issue3670Last) LastRecv(ctx context.Context, in Issue3670LastInput) (out *Issue3670LastOutput, err error) {
+	out = &Issue3670LastOutput{
+		Content: gjson.MustEncodeString(in),
+	}
+	return
+}
+
+func Test_Issue3670(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx = gctx.New()
+			err error
+		)
+
+		third, err := gcmd.NewFromObject(Issue3670Third{})
+		t.AssertNil(err)
+
+		second, err := gcmd.NewFromObject(Issue3670Second{})
+		t.AssertNil(err)
+		err = second.AddCommand(third)
+		t.AssertNil(err)
+
+		first, err := gcmd.NewFromObject(Issue3670First{})
+		t.AssertNil(err)
+		err = first.AddCommand(second)
+		t.AssertNil(err)
+
+		command := &Issue3670FirstCommand{first}
+
+		value, err := command.RunWithSpecificArgs(
+			ctx,
+			[]string{"main", "second", "third", "last", "china", "邓丽君"},
+		)
+		t.AssertNil(err)
+
+		t.Assert(value.(*Issue3670LastOutput).Content, `{"Country":"china","Singer":"邓丽君"}`)
+	})
+}

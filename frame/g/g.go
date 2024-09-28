@@ -4,7 +4,10 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package g provides commonly used type/function defines and coupled calling for creating commonly used objects.
+// Package g provides commonly used type/function defines and coupled calling for creating commonly-used objects.
+//
+// Note that, using package g might make the compiled binary a little bit bigger, as it imports a few frequently-used
+// packages whatever you use them or not.
 package g
 
 import (
