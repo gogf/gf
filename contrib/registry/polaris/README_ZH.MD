@@ -19,7 +19,7 @@ require github.com/gogf/gf/contrib/registry/polaris/v2 latest
 ## Golang版本限制
 
 ```
-golang version >= 1.15
+golang version >= 1.20
 ```
 
 ## 示例
