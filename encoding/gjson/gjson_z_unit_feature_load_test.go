@@ -105,7 +105,8 @@ func Test_Load_XML(t *testing.T) {
 
 	// XML
 	gtest.C(t, func(t *gtest.T) {
-		xml := `<?xml version="1.0"?>
+		xml := []byte(`
+<?xml version="1.0"?>
 
 	<Output type="o">
 	<itotalSize>0</itotalSize>
@@ -114,7 +115,8 @@ func Test_Load_XML(t *testing.T) {
 	<itotalRecords>GF框架</itotalRecords>
 	<nworkOrderDtos/>
 	<nworkOrderFrontXML/>
-	</Output>`
+	</Output>
+`)
 		j, err := gjson.LoadContent(xml)
 		t.AssertNil(err)
 		t.Assert(j.Get("Output.ipageIndex"), "2")
@@ -250,10 +252,10 @@ func Test_Load_Basic(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(j.Interface(), nil)
 
-		j, err = gjson.LoadContent(`{"name": "gf"}`)
+		j, err = gjson.LoadContent([]byte(`{"name": "gf"}`))
 		t.AssertNil(err)
 
-		j, err = gjson.LoadContent(`{"name": "gf"""}`)
+		j, err = gjson.LoadContent([]byte(`{"name": "gf"""}`))
 		t.AssertNE(err, nil)
 
 		j = gjson.New(&g.Map{"name": "gf"})
@@ -263,7 +265,7 @@ func Test_Load_Basic(t *testing.T) {
 }
 
 func Test_Load_Ini(t *testing.T) {
-	var data = `
+	var data = []byte(`
 
 ;注释
 
@@ -277,7 +279,7 @@ enable=true
 	user=root
 	password=password
 
-`
+`)
 
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.LoadContent(data)
@@ -320,7 +322,7 @@ enable=true
 }
 
 func Test_Load_YamlWithV3(t *testing.T) {
-	content := `
+	content := []byte(`
 # CLI tool, only in development environment.
 # https://goframe.org/pages/viewpage.action?pageId=3673173
 gfcli:
@@ -355,7 +357,7 @@ gfcli:
       noModelComment  : true
       overwriteDao    : true
       modelFileForDao : "model_dao.go"
-`
+`)
 	gtest.C(t, func(t *gtest.T) {
 		_, err := gjson.LoadContent(content)
 		t.AssertNil(err)
@@ -363,7 +365,7 @@ gfcli:
 }
 
 func Test_Load_Properties(t *testing.T) {
-	var data = `
+	var data = []byte(`
 
 #注释
 
@@ -375,7 +377,7 @@ DBINFO.type=mysql
 DBINFO.user=root
 DBINFO.password=password
 
-`
+`)
 
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.LoadContent(data)
