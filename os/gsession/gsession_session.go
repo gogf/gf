@@ -8,7 +8,6 @@ package gsession
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -83,7 +82,6 @@ func (s *Session) init() error {
 //
 // NOTE that this function must be called ever after a session request done.
 func (s *Session) Close() error {
-	fmt.Println("")
 	if s.manager.storage == nil {
 		return nil
 	}
@@ -155,33 +153,6 @@ func (s *Session) Remove(keys ...string) (err error) {
 	}
 	s.dirty = true
 	return nil
-}
-
-func (s *Session) RegenSession(delOld ...bool) (newSid string, err error) {
-	oldDel := false
-	if len(delOld) > 0 {
-		oldDel = delOld[0]
-	}
-	if s.id == "" {
-		if err = s.init(); err != nil {
-			return newSid, err
-		}
-	} else {
-		if oldDel {
-			if err = s.RemoveAll(); err != nil {
-				return newSid, err
-			}
-		}
-		s.id = ""
-		s.start = false
-		s.data.Clear()
-		if err = s.init(); err != nil {
-			return newSid, err
-		}
-	}
-	newSid = s.id
-	s.dirty = false
-	return newSid, err
 }
 
 // RemoveAll deletes all key-value pairs from this session.
