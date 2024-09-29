@@ -39,34 +39,35 @@ func (csi *CachedStructInfo) GetFieldInfo(fieldName string) *CachedFieldInfo {
 }
 
 func (csi *CachedStructInfo) AddField(field reflect.StructField, fieldIndexes []int, priorityTags []string) {
-	alreadyExistFieldInfo, ok := csi.tagOrFiledNameToFieldInfoMap[field.Name]
-	if !ok {
-		cachedFieldInfo := csi.makeCachedFieldInfo(field, fieldIndexes, priorityTags)
-		for _, tagOrFieldName := range cachedFieldInfo.PriorityTagAndFieldName {
-			newFieldInfo := &CachedFieldInfo{
-				CachedFieldInfoBase: cachedFieldInfo.CachedFieldInfoBase,
-				IsField:             tagOrFieldName == field.Name,
-			}
-			csi.tagOrFiledNameToFieldInfoMap[tagOrFieldName] = newFieldInfo
-			if newFieldInfo.IsField {
-				csi.FieldConvertInfos = append(csi.FieldConvertInfos, newFieldInfo)
-			}
+	tagOrFieldNameArr := csi.genPriorityTagAndFieldName(field, priorityTags)
+	for _, tagOrFieldName := range tagOrFieldNameArr {
+		cachedInfo, ok := csi.tagOrFiledNameToFieldInfoMap[tagOrFieldName]
+
+		newFieldInfo := csi.makeOrCopyCachedInfo(field, fieldIndexes, priorityTags, cachedInfo, tagOrFieldName)
+
+		if newFieldInfo.IsField {
+			csi.FieldConvertInfos = append(csi.FieldConvertInfos, newFieldInfo)
 		}
-		return
+		// cached. so add to other same name field
+		if ok {
+			cachedInfo.OtherSameNameField = append(cachedInfo.OtherSameNameField, newFieldInfo)
+			continue
+		}
+		csi.tagOrFiledNameToFieldInfoMap[tagOrFieldName] = newFieldInfo
 	}
-	// If the field name and type are the same
-	if alreadyExistFieldInfo.StructField.Type == field.Type {
-		alreadyExistFieldInfo.OtherSameNameField = append(
-			alreadyExistFieldInfo.OtherSameNameField,
-			csi.copyCachedInfoWithFieldIndexes(alreadyExistFieldInfo, fieldIndexes),
-		)
-		return
+}
+
+func (csi *CachedStructInfo) makeOrCopyCachedInfo(field reflect.StructField, fieldIndexes []int, priorityTags []string,
+	cachedInfo *CachedFieldInfo, currTagOrFieldName string) (newFieldInfo *CachedFieldInfo) {
+	if cachedInfo == nil || cachedInfo.StructField.Type != field.Type {
+		// If the types are different, some information needs to be reset
+		newFieldInfo = csi.makeCachedFieldInfo(field, fieldIndexes, priorityTags)
+	} else {
+		// If the field name and type are the same
+		newFieldInfo = csi.copyCachedInfoWithFieldIndexes(cachedInfo, fieldIndexes)
 	}
-	// If the types are different, some information needs to be reset
-	alreadyExistFieldInfo.OtherSameNameField = append(
-		alreadyExistFieldInfo.OtherSameNameField,
-		csi.makeCachedFieldInfo(field, fieldIndexes, priorityTags),
-	)
+	newFieldInfo.IsField = currTagOrFieldName == field.Name
+	return
 }
 
 // copyCachedInfoWithFieldIndexes copies and returns a new CachedFieldInfo based on given CachedFieldInfo, but different
