@@ -21,12 +21,15 @@ const (
 )
 
 func main() {
-	var ctx = gctx.New()
-	shutdown, err := otlphttp.Init(serviceName, endpoint, path)
+	var (
+		ctx           = gctx.New()
+		shutdown, err = otlphttp.Init(serviceName, endpoint, path)
+	)
+
 	if err != nil {
 		g.Log().Fatal(ctx, err)
 	}
-	defer shutdown()
+	defer shutdown(ctx)
 
 	s := g.Server()
 	s.Group("/", func(group *ghttp.RouterGroup) {

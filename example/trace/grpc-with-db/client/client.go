@@ -25,12 +25,15 @@ const (
 func main() {
 	grpcx.Resolver.Register(etcd.New("127.0.0.1:2379"))
 
-	var ctx = gctx.New()
-	shutdown, err := otlpgrpc.Init(serviceName, endpoint, traceToken)
+	var (
+		ctx           = gctx.New()
+		shutdown, err = otlpgrpc.Init(serviceName, endpoint, traceToken)
+	)
+
 	if err != nil {
 		g.Log().Fatal(ctx, err)
 	}
-	defer shutdown()
+	defer shutdown(ctx)
 
 	StartRequests()
 }

@@ -29,12 +29,15 @@ const (
 )
 
 func main() {
-	var ctx = gctx.New()
-	shutdown, err := otlphttp.Init(serviceName, endpoint, path)
+	var (
+		ctx           = gctx.New()
+		shutdown, err = otlphttp.Init(serviceName, endpoint, path)
+	)
+
 	if err != nil {
 		g.Log().Fatal(ctx, err)
 	}
-	defer shutdown()
+	defer shutdown(ctx)
 
 	// Set ORM cache adapter with redis.
 	g.DB().GetCache().SetAdapter(gcache.NewAdapterRedis(g.Redis()))
