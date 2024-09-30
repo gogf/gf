@@ -106,14 +106,12 @@ func doFileScanDir(path string, pattern string, recursive ...bool) ([]string, er
 		file, err = os.Open(path)
 	)
 	if err != nil {
-		err = gerror.Wrapf(err, `os.Open failed for path "%s"`, path)
-		return nil, err
+		return nil, gerror.Wrapf(err, `os.Open failed for path "%s"`, path)
 	}
 	defer file.Close()
 	names, err := file.Readdirnames(-1)
 	if err != nil {
-		err = gerror.Wrapf(err, `read directory files failed for path "%s"`, path)
-		return nil, err
+		return nil, gerror.Wrapf(err, `read directory files failed for path "%s"`, path)
 	}
 	filePath := ""
 	for _, name := range names {

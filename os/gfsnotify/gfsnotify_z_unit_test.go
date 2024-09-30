@@ -193,6 +193,39 @@ func TestWatcher_Callback2(t *testing.T) {
 	})
 }
 
+func TestWatcher_WatchFolderWithRecursively(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err     error
+			array   = garray.New(true)
+			dirPath = gfile.Temp(gtime.TimestampNanoStr())
+		)
+		err = gfile.Mkdir(dirPath)
+		t.AssertNil(err)
+		defer gfile.Remove(dirPath)
+
+		_, err = gfsnotify.Add(dirPath, func(event *gfsnotify.Event) {
+			//fmt.Println(event.String())
+			array.Append(1)
+		})
+		t.AssertNil(err)
+		time.Sleep(time.Millisecond * 100)
+		t.Assert(array.Len(), 0)
+
+		subDirPath := gfile.Join(dirPath, gtime.TimestampNanoStr())
+		err = gfile.Mkdir(subDirPath)
+		t.AssertNil(err)
+		time.Sleep(time.Millisecond * 100)
+		t.Assert(array.Len(), 1)
+
+		f, err := gfile.Create(gfile.Join(subDirPath, gtime.TimestampNanoStr()))
+		t.AssertNil(err)
+		t.AssertNil(f.Close())
+		time.Sleep(time.Millisecond * 100)
+		t.Assert(array.Len(), 2)
+	})
+}
+
 func TestWatcher_WatchFolderWithoutRecursively(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -206,7 +239,7 @@ func TestWatcher_WatchFolderWithoutRecursively(t *testing.T) {
 		_, err = gfsnotify.Add(dirPath, func(event *gfsnotify.Event) {
 			// fmt.Println(event.String())
 			array.Append(1)
-		}, false)
+		}, gfsnotify.WatchOption{NoRecursive: true})
 		t.AssertNil(err)
 		time.Sleep(time.Millisecond * 100)
 		t.Assert(array.Len(), 0)

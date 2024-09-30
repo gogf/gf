@@ -83,7 +83,7 @@ func (sp *SPath) addToCache(filePath, rootPath string) {
 // When the files under the directory are updated, the cache will be updated meanwhile.
 // Note that since the listener is added recursively, if you delete a directory, the files (including the directory)
 // under the directory will also generate delete events, which means it will generate N+1 events in total
-// if a directory deleted and there're N files under it.
+// if a directory deleted and there are N files under it.
 func (sp *SPath) addMonitorByPath(path string) {
 	if sp.cache == nil {
 		return
@@ -102,7 +102,7 @@ func (sp *SPath) addMonitorByPath(path string) {
 		case event.IsCreate():
 			sp.addToCache(event.Path, path)
 		}
-	}, true)
+	})
 }
 
 // removeMonitorByPath removes gfsnotify monitoring of `path` recursively.
