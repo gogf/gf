@@ -285,23 +285,23 @@ func (s *GrpcServer) calculateListenedEndpoints(ctx context.Context) gsvc.Endpoi
 				s.Logger().Errorf(ctx, `error retrieving intranet ip: %+v`, err)
 				return nil
 			}
-			// If no intranet ips found, it uses all ips that can be retrieved,
-			// it may include internet ip.
-			if len(intranetIps) == 0 {
-				allIps, err := gipv4.GetIpArray()
-				if err != nil {
-					s.Logger().Errorf(ctx, `error retrieving ip from current node: %+v`, err)
-					return nil
-				}
-				s.Logger().Noticef(
-					ctx,
-					`no intranet ip found, using internet ip to register service: %v`,
-					allIps,
-				)
-				listenedIps = allIps
+			if len(intranetIps) != 0 {
+				listenedIps = intranetIps
 				break
 			}
-			listenedIps = intranetIps
+			// If no intranet ips found, it uses all ips that can be retrieved,
+			// it may include internet ip.
+			allIps, err := gipv4.GetIpArray()
+			if err != nil {
+				s.Logger().Errorf(ctx, `error retrieving ip from current node: %+v`, err)
+				return nil
+			}
+			s.Logger().Noticef(
+				ctx,
+				`no intranet ip found, using internet ip to register service: %v`,
+				allIps,
+			)
+			listenedIps = allIps
 		default:
 			listenedIps = []string{addrArray[0]}
 		}
