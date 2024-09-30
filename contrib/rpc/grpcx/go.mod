@@ -5,8 +5,8 @@ go 1.20
 require (
 	github.com/gogf/gf/contrib/registry/file/v2 v2.7.4
 	github.com/gogf/gf/v2 v2.7.4
-	go.opentelemetry.io/otel v1.30.0
-	go.opentelemetry.io/otel/trace v1.30.0
+	go.opentelemetry.io/otel v1.24.0
+	go.opentelemetry.io/otel/trace v1.24.0
 	google.golang.org/grpc v1.64.1
 	google.golang.org/protobuf v1.34.2
 )
@@ -27,7 +27,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	go.opentelemetry.io/otel/metric v1.30.0 // indirect
+	go.opentelemetry.io/otel/metric v1.24.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.24.0 // indirect
 	golang.org/x/net v0.27.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
