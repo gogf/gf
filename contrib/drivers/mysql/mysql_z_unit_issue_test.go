@@ -1333,21 +1333,7 @@ func Test_Issue3626(t *testing.T) {
 		}
 	)
 	gtest.C(t, func(t *gtest.T) {
-		count, err := db.Model(table).Count()
-		t.AssertNil(err)
-		t.Assert(count, 1)
-		count, err = db.Model(table).Hook(cacheFunc(time.Hour)).Count()
-		t.AssertNil(err)
-		t.Assert(count, 1)
-		count, err = db.Model(table).Hook(cacheFunc(time.Hour)).Count()
-		t.AssertNil(err)
-		t.Assert(count, 1)
-	})
-
-	_ = db.GetCache().Clear(ctx)
-
-	// it should error for Count/Value/Array operations if there are multiple fields in the result.
-	gtest.C(t, func(t *gtest.T) {
+		defer db.GetCache().Clear(ctx)
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
 		t.Assert(count, 1)
