@@ -635,6 +635,8 @@ func Instance(name ...string) (db DB, err error) {
 // getConfigNodeByGroup calculates and returns a configuration node of given group. It
 // calculates the value internally using weight algorithm for load balance.
 //
+// The returned node is a clone of configuration node, which is safe for later modification.
+//
 // The parameter `master` specifies whether retrieving a master node, or else a slave node
 // if master-slave configured.
 func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
@@ -674,6 +676,7 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 }
 
 // getConfigNodeByWeight calculates the configuration weights and randomly returns a node.
+// The returned node is a clone of configuration node, which is safe for later modification.
 //
 // Calculation algorithm brief:
 // 1. If we have 2 nodes, and their weights are both 1, then the weight range is [0, 199];
@@ -729,6 +732,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		configs.RLock()
 		defer configs.RUnlock()
 		// Value COPY for node.
+		// The returned node is a clone of configuration node, which is safe for later modification.
 		node, err = getConfigNodeByGroup(c.group, master)
 		if err != nil {
 			return nil, err
@@ -777,7 +781,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 			}
 			return sqlDb
 		}
-		// it here uses node value not pointer as the cache key, in case of oracle ORA-12516 error.
+		// it here uses NODE VALUE not pointer as the cache key, in case of oracle ORA-12516 error.
 		instanceValue = c.links.GetOrSetFuncLock(*node, instanceCacheFunc)
 	)
 	if instanceValue != nil && sqlDb == nil {
