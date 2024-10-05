@@ -155,10 +155,7 @@ func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 			)
 		}
 		if len(recordFields) == 1 {
-			for k, _ := range all[0] {
-				field = k
-				break
-			}
+			field = recordFields[0]
 		}
 	}
 	return all.Array(field), nil
