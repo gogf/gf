@@ -21,7 +21,8 @@ type Driver struct {
 }
 
 const (
-	quoteChar = `"`
+	rowNumberAliasForSelect = `__ROW_NUMBER__`
+	quoteChar               = `"`
 )
 
 func init() {
