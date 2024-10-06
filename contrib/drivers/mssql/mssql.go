@@ -23,7 +23,7 @@ type Driver struct {
 }
 
 const (
-	rowNumberAliasForSelect = `__ROW_NUMBER__`
+	rowNumberAliasForSelect = `ROW_NUMBER__`
 	quoteChar               = `"`
 )
 
