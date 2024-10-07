@@ -107,7 +107,7 @@ func (tree *BTree) SetIfNotExistFunc(key any, f func() any) bool {
 // It returns false if `key` exists, and such setting key-value pair operation would be ignored.
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
-// it executes function `f` within mutex.Lock of the hash map.
+// it executes function `f` within mutex lock.
 func (tree *BTree) SetIfNotExistFuncLock(key any, f func() any) bool {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
@@ -156,8 +156,7 @@ func (tree *BTree) GetOrSetFunc(key any, f func() any) any {
 // GetOrSetFuncLock returns its `value` of `key`, or sets value with returned value of callback function `f` if it does
 // not exist and then returns this value.
 //
-// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f` within mutex.Lock of the hash
-// map.
+// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f` within mutex lock.
 func (tree *BTree) GetOrSetFuncLock(key any, f func() any) any {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
