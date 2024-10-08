@@ -23,6 +23,8 @@ type internalCtxData struct {
 }
 
 // column stores column data in ctx for internal usage purpose.
+// Deprecated.
+// TODO remove this usage in future.
 type internalColumnData struct {
 	// The first column in result response from database server.
 	// This attribute is used for Value/Count selection statement purpose,

@@ -20,9 +20,8 @@ import (
 var (
 	newSqlReplacementTmp = `
 SELECT * FROM (
-	SELECT GFORM.*, ROWNUM ROWNUM_ FROM (%s %s) GFORM WHERE ROWNUM <= %d
-) 
-	WHERE ROWNUM_ > %d
+	SELECT GFORM.*, ROWNUM ROW_NUMBER__ FROM (%s %s) GFORM WHERE ROWNUM <= %d
+) WHERE ROW_NUMBER__ > %d
 `
 )
 

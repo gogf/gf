@@ -53,7 +53,9 @@ func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...inter
 	}
 
 	if c.db.GetConfig().QueryTimeout > 0 {
-		ctx, _ = context.WithTimeout(ctx, c.db.GetConfig().QueryTimeout)
+		var cancelFunc context.CancelFunc
+		ctx, cancelFunc = context.WithTimeout(ctx, c.db.GetConfig().QueryTimeout)
+		defer cancelFunc()
 	}
 
 	// Sql filtering.
@@ -83,6 +85,9 @@ func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...inter
 		Type:          SqlTypeQueryContext,
 		IsTransaction: link.IsTransaction(),
 	})
+	if err != nil {
+		return nil, err
+	}
 	return out.Records, err
 }
 
@@ -144,13 +149,18 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 		Type:          SqlTypeExecContext,
 		IsTransaction: link.IsTransaction(),
 	})
+	if err != nil {
+		return nil, err
+	}
 	return out.Result, err
 }
 
 // DoFilter is a hook function, which filters the sql and its arguments before it's committed to underlying driver.
 // The parameter `link` specifies the current database connection operation object. You can modify the sql
 // string `sql` and its arguments `args` as you wish before they're committed to driver.
-func (c *Core) DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+func (c *Core) DoFilter(
+	ctx context.Context, link Link, sql string, args []interface{},
+) (newSql string, newArgs []interface{}, err error) {
 	return sql, args, nil
 }
 
@@ -322,7 +332,6 @@ func (c *Core) DoPrepare(ctx context.Context, link Link, sql string) (stmt *Stmt
 			link = &txLink{tx.GetSqlTX()}
 		} else {
 			// Or else it creates one from master node.
-			var err error
 			if link, err = c.MasterLink(); err != nil {
 				return nil, err
 			}
@@ -336,7 +345,9 @@ func (c *Core) DoPrepare(ctx context.Context, link Link, sql string) (stmt *Stmt
 
 	if c.db.GetConfig().PrepareTimeout > 0 {
 		// DO NOT USE cancel function in prepare statement.
-		ctx, _ = context.WithTimeout(ctx, c.db.GetConfig().PrepareTimeout)
+		var cancelFunc context.CancelFunc
+		ctx, cancelFunc = context.WithTimeout(ctx, c.db.GetConfig().PrepareTimeout)
+		defer cancelFunc()
 	}
 
 	// Link execution.
@@ -347,6 +358,9 @@ func (c *Core) DoPrepare(ctx context.Context, link Link, sql string) (stmt *Stmt
 		Type:          SqlTypePrepareContext,
 		IsTransaction: link.IsTransaction(),
 	})
+	if err != nil {
+		return nil, err
+	}
 	return out.Stmt, err
 }
 
@@ -379,7 +393,7 @@ func (c *Core) FormatUpsert(columns []string, list List, option DoInsertOption) 
 		}
 	} else {
 		for _, column := range columns {
-			// If it's SAVE operation, do not automatically update the creating time.
+			// If it's `SAVE` operation, do not automatically update the creating time.
 			if c.IsSoftCreatedFieldName(column) {
 				continue
 			}
@@ -474,6 +488,7 @@ func (c *Core) columnValueToLocalValue(ctx context.Context, value interface{}, c
 				gconv.String(value),
 				columnType.ScanType().String(),
 			), nil
+		default:
 		}
 	}
 	// Other complex types, especially custom types.
