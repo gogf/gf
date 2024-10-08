@@ -20,7 +20,7 @@ func GetOrDefaultStr(def string, param ...string) string {
 // It returns `param[0]` if it is available, or else it returns `def`.
 func GetOrDefaultAny(def interface{}, param ...interface{}) interface{} {
 	value := def
-	if len(param) > 0 && param[0] != "" {
+	if len(param) > 0 && param[0] != nil {
 		value = param[0]
 	}
 	return value
