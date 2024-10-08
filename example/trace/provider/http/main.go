@@ -45,6 +45,10 @@ func main() {
 		g.Log().Fatal(ctx, err)
 	}
 	var (
+		// BatchSpanProcessor batches spans before exporting them.
+		// This is a useful way to reduce the number of calls made to the exporter.
+		// The batch processor will automatically flush the spans if the batch size is reached.
+		// bsp = provider.NewSimpleSpanProcessor(exporter)
 		bsp = provider.NewBatchSpanProcessor(exporter)
 		// AlwaysOnSampler is a sampler that samples every trace.
 		// This is useful for debugging and testing.

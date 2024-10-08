@@ -78,8 +78,8 @@ func NewGRPCDefaultTraceClient(endpoint, traceToken string) otlptrace.Client {
 		otlptracegrpc.WithCompressor(gzip.Name))
 }
 
-// NewGRPCCustomTraceClient creates and returns a new OTLP trace client.
-func NewGRPCCustomTraceClient(opts ...otlptracegrpc.Option) otlptrace.Client {
+// NewGRPCTraceClient creates and returns a new OTLP trace client.
+func NewGRPCTraceClient(opts ...otlptracegrpc.Option) otlptrace.Client {
 	return otlptracegrpc.NewClient(opts...)
 }
 
@@ -91,39 +91,14 @@ func NewHTTPDefaultTraceClient(endpoint, path string) otlptrace.Client {
 		otlptracehttp.WithCompression(1))
 }
 
-// NewHTTPCustomTraceClient creates and returns a new OTLP trace client.
-func NewHTTPCustomTraceClient(opts ...otlptracehttp.Option) otlptrace.Client {
+// NewHTTPTraceClient creates and returns a new OTLP trace client.
+func NewHTTPTraceClient(opts ...otlptracehttp.Option) otlptrace.Client {
 	return otlptracehttp.NewClient(opts...)
 }
 
 // NewExporter creates and returns a new OTLP trace exporter.
 func NewExporter(ctx context.Context, client otlptrace.Client) (*otlptrace.Exporter, error) {
 	return otlptrace.New(ctx, client)
-}
-
-// NewDefaultResource creates and returns a new resource.
-// serviceName is the name of the service displayed on the traceback end.
-// serverIP is the IP address of the server.
-func NewDefaultResource(ctx context.Context, serviceName, serverIP string) (*resource.Resource, error) {
-	return resource.New(ctx,
-		resource.WithFromEnv(),
-		resource.WithProcess(),
-		resource.WithTelemetrySDK(),
-		resource.WithHost(),
-		resource.WithAttributes(
-			// The name of the service displayed on the traceback end。
-			semconv.ServiceNameKey.String(serviceName),
-			// The IP address of the server.
-			semconv.HostNameKey.String(serverIP),
-			// The IP address of the server.
-			attribute.String(tracerHostnameTagKey, serverIP),
-		),
-	)
-}
-
-// NewResource creates and returns a new resource.
-func NewResource(ctx context.Context, opts ...resource.Option) (*resource.Resource, error) {
-	return resource.New(ctx, opts...)
 }
 
 // NewBatchSpanProcessor returns a new SpanProcessor that will batch up completed spans and send them to the exporter in batches.
@@ -161,6 +136,31 @@ func NewAlwaysOnSampler() trace.Sampler {
 // traceIDRatio is the ratio of traces to sample.
 func NewTraceIDRatioBasedSampler(traceIDRatio float64) trace.Sampler {
 	return trace.TraceIDRatioBased(traceIDRatio)
+}
+
+// NewDefaultResource creates and returns a new resource.
+// serviceName is the name of the service displayed on the traceback end.
+// serverIP is the IP address of the server.
+func NewDefaultResource(ctx context.Context, serviceName, serverIP string) (*resource.Resource, error) {
+	return resource.New(ctx,
+		resource.WithFromEnv(),
+		resource.WithProcess(),
+		resource.WithTelemetrySDK(),
+		resource.WithHost(),
+		resource.WithAttributes(
+			// The name of the service displayed on the traceback end。
+			semconv.ServiceNameKey.String(serviceName),
+			// The IP address of the server.
+			semconv.HostNameKey.String(serverIP),
+			// The IP address of the server.
+			attribute.String(tracerHostnameTagKey, serverIP),
+		),
+	)
+}
+
+// NewResource creates and returns a new resource.
+func NewResource(ctx context.Context, opts ...resource.Option) (*resource.Resource, error) {
+	return resource.New(ctx, opts...)
 }
 
 // NewDefaultTracerProviderOptions creates and returns a new slice of TracerProviderOption.
