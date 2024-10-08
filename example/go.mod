@@ -18,6 +18,7 @@ require (
 	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.7.4
 	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.7.4
 	github.com/gogf/gf/contrib/trace/otlphttp/v2 v2.7.4
+	github.com/gogf/gf/contrib/trace/provider/v2 v2.7.4
 	github.com/gogf/gf/v2 v2.7.4
 	github.com/hashicorp/consul/api v1.24.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
@@ -175,5 +176,6 @@ replace (
 	github.com/gogf/gf/contrib/rpc/grpcx/v2 => ../contrib/rpc/grpcx/
 	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 => ../contrib/trace/otlpgrpc
 	github.com/gogf/gf/contrib/trace/otlphttp/v2 => ../contrib/trace/otlphttp
+	github.com/gogf/gf/contrib/trace/provider/v2 => ../contrib/trace/provider
 	github.com/gogf/gf/v2 => ../
 )
