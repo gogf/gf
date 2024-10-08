@@ -34,7 +34,7 @@ func main() {
 		g.Log().Fatal(ctx, err)
 	}
 	var res *resource.Resource
-	if res, err = provider.NewResource(ctx, serviceName, serverIP); err != nil {
+	if res, err = provider.NewDefaultResource(ctx, serviceName, serverIP); err != nil {
 		g.Log().Fatal(ctx, err)
 	}
 
@@ -46,14 +46,18 @@ func main() {
 		g.Log().Fatal(ctx, err)
 	}
 	var (
+		// BatchSpanProcessor batches spans before exporting them.
+		// This is a useful way to reduce the number of calls made to the exporter.
+		// The batch processor will automatically flush the spans if the batch size is reached.
+		// bsp = provider.NewSimpleSpanProcessor(exporter)
 		bsp = provider.NewBatchSpanProcessor(exporter)
 		// AlwaysOnSampler is a sampler that samples every trace.
-		// sampler  = provider.NewTraceIDRatioBasedSampler(0.1)
+		// sampler = provider.NewTraceIDRatioBasedSampler(0.1)
 		sampler  = provider.NewAlwaysOnSampler()
 		shutdown func(ctx context.Context)
 	)
 
-	if shutdown, err = provider.InitTracer(provider.NewTracerProviderOptions(sampler, res, bsp)...); err != nil {
+	if shutdown, err = provider.InitTracer(provider.NewDefaultTracerProviderOptions(sampler, res, bsp)...); err != nil {
 		g.Log().Fatal(ctx, err)
 	}
 

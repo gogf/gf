@@ -101,10 +101,10 @@ func NewExporter(ctx context.Context, client otlptrace.Client) (*otlptrace.Expor
 	return otlptrace.New(ctx, client)
 }
 
-// NewResource creates and returns a new resource.
+// NewDefaultResource creates and returns a new resource.
 // serviceName is the name of the service displayed on the traceback end.
 // serverIP is the IP address of the server.
-func NewResource(ctx context.Context, serviceName, serverIP string) (*resource.Resource, error) {
+func NewDefaultResource(ctx context.Context, serviceName, serverIP string) (*resource.Resource, error) {
 	return resource.New(ctx,
 		resource.WithFromEnv(),
 		resource.WithProcess(),
@@ -119,6 +119,11 @@ func NewResource(ctx context.Context, serviceName, serverIP string) (*resource.R
 			attribute.String(tracerHostnameTagKey, serverIP),
 		),
 	)
+}
+
+// NewResource creates and returns a new resource.
+func NewResource(ctx context.Context, opts ...resource.Option) (*resource.Resource, error) {
+	return resource.New(ctx, opts...)
 }
 
 // NewBatchSpanProcessor returns a new SpanProcessor that will batch up completed spans and send them to the exporter in batches.
@@ -158,14 +163,14 @@ func NewTraceIDRatioBasedSampler(traceIDRatio float64) trace.Sampler {
 	return trace.TraceIDRatioBased(traceIDRatio)
 }
 
-// NewTracerProviderOptions creates and returns a new slice of TracerProviderOption.
+// NewDefaultTracerProviderOptions creates and returns a new slice of TracerProviderOption.
 // sampler is the sampler to use.
 // If the sampler is nil, it will use the default sampler AlwaysSample().
 // resource is the resource to use.
 // If the resource is nil, it will use the default resource.
 // If the resource is not nil, it will use the resource.
 
-func NewTracerProviderOptions(sampler trace.Sampler, resource *resource.Resource, spanProcessor trace.SpanProcessor) []trace.TracerProviderOption {
+func NewDefaultTracerProviderOptions(sampler trace.Sampler, resource *resource.Resource, spanProcessor trace.SpanProcessor) []trace.TracerProviderOption {
 	options := make([]trace.TracerProviderOption, 0)
 	if sampler != nil {
 		options = append(options, trace.WithSampler(sampler))

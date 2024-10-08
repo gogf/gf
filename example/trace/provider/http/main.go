@@ -33,7 +33,7 @@ func main() {
 		g.Log().Fatal(ctx, err)
 	}
 	var res *resource.Resource
-	if res, err = provider.NewResource(ctx, serviceName, serverIP); err != nil {
+	if res, err = provider.NewDefaultResource(ctx, serviceName, serverIP); err != nil {
 		g.Log().Fatal(ctx, err)
 	}
 
@@ -52,7 +52,7 @@ func main() {
 		shutdown func(ctx context.Context)
 	)
 
-	if shutdown, err = provider.InitTracer(provider.NewTracerProviderOptions(sampler, res, bsp)...); err != nil {
+	if shutdown, err = provider.InitTracer(provider.NewDefaultTracerProviderOptions(sampler, res, bsp)...); err != nil {
 		g.Log().Fatal(ctx, err)
 	}
 	defer shutdown(ctx)
