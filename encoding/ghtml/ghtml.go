@@ -8,12 +8,12 @@
 package ghtml
 
 import (
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"html"
 	"reflect"
 	"strings"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	strip "github.com/grokify/html-strip-tags-go"
 )
 
