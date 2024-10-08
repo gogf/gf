@@ -142,8 +142,6 @@ func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 	}
 	var field string
 	if len(all) > 0 {
-		// the result might be modified by custom hook function,
-		// which might make the internalData.FirstResultColumn missing.
 		var recordFields = m.getRecordFields(all[0])
 		if len(recordFields) > 1 {
 			// it returns error if there are multiple fields in the result record.
@@ -405,8 +403,6 @@ func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
 		return nil, err
 	}
 	if len(all) > 0 {
-		// the result might be modified by custom hook function,
-		// which might make the internalData.FirstResultColumn missing.
 		var recordFields = m.getRecordFields(all[0])
 		if len(recordFields) == 1 {
 			for _, v := range all[0] {
@@ -454,8 +450,6 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 		return 0, err
 	}
 	if len(all) > 0 {
-		// the result might be modified by custom hook function,
-		// which might make the internalData.FirstResultColumn missing.
 		var recordFields = m.getRecordFields(all[0])
 		if len(recordFields) == 1 {
 			for _, v := range all[0] {
