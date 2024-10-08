@@ -179,12 +179,12 @@ func TestCache_LRU(t *testing.T) {
 func TestCache_LRU_expire(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New(2)
-		t.Assert(cache.Set(ctx, 1, nil, time.Millisecond), nil)
+		t.Assert(cache.Set(ctx, 1, nil, 50*time.Millisecond), nil)
 
 		n, _ := cache.Size(ctx)
 		t.Assert(n, 1)
 
-		time.Sleep(time.Millisecond * 10)
+		time.Sleep(time.Millisecond * 100)
 
 		n, _ = cache.Size(ctx)
 		t.Assert(n, 0)
