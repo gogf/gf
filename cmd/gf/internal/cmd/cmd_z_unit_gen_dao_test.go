@@ -762,3 +762,80 @@ func Test_Gen_Dao_Issue3749(t *testing.T) {
 		}
 	})
 }
+
+func Test_Gen_Dao_Sqlite3(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err         error
+			table       = "table_user"
+			path        = gfile.Temp(guid.S())
+			linkSqlite3 = fmt.Sprintf("sqlite::@file(%s/db.sqlite3)", path)
+			sqlContent  = fmt.Sprintf(
+				gtest.DataContent(`gendao`, `sqlite3`, `user.sqlite3.sql`),
+				table,
+			)
+		)
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+		defer gfile.Remove(path)
+
+		dbSqlite3, err := gdb.New(gdb.ConfigNode{
+			Link: linkSqlite3,
+		})
+		t.AssertNil(err)
+
+		array := gstr.SplitAndTrim(sqlContent, ";")
+		for _, v := range array {
+			if v == "" {
+				continue
+			}
+			if _, err = dbSqlite3.Exec(ctx, v); err != nil {
+				t.AssertNil(err)
+			}
+		}
+
+		var (
+			group = "test"
+			in    = gendao.CGenDaoInput{
+				Path:   path,
+				Link:   linkSqlite3,
+				Group:  group,
+				Tables: table,
+			}
+		)
+		err = gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		// for go mod import path auto retrieve.
+		err = gfile.Copy(
+			gtest.DataPath("gendao", "go.mod.txt"),
+			gfile.Join(path, "go.mod"),
+		)
+		t.AssertNil(err)
+
+		_, err = gendao.CGenDao{}.Dao(ctx, in)
+		t.AssertNil(err)
+		defer gfile.Remove(path)
+
+		// files
+		files, err := gfile.ScanDir(path, "*.go", true)
+		t.AssertNil(err)
+		t.Assert(files, []string{
+			filepath.FromSlash(path + "/dao/internal/table_user.go"),
+			filepath.FromSlash(path + "/dao/table_user.go"),
+			filepath.FromSlash(path + "/model/do/table_user.go"),
+			filepath.FromSlash(path + "/model/entity/table_user.go"),
+		})
+		// content
+		testPath := gtest.DataPath("gendao", "generated_user_sqlite3")
+		expectFiles := []string{
+			filepath.FromSlash(testPath + "/dao/internal/table_user.go"),
+			filepath.FromSlash(testPath + "/dao/table_user.go"),
+			filepath.FromSlash(testPath + "/model/do/table_user.go"),
+			filepath.FromSlash(testPath + "/model/entity/table_user.go"),
+		}
+		for i, _ := range files {
+			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
+		}
+	})
+}
