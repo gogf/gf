@@ -1010,7 +1010,6 @@ func Test_Properties_In_Sequence(t *testing.T) {
 			Object: req,
 		})
 		t.AssertNil(err)
-		fmt.Println(oai)
 
 		// Schema Required.
 		var schemaReq = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.ResourceCreateReq`)

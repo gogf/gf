@@ -9,7 +9,6 @@ package goai_test
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/util/guid"
 	"testing"
 	"time"
 
@@ -17,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 var ctx = context.Background()
