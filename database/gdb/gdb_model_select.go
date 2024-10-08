@@ -12,6 +12,7 @@ import (
 	"reflect"
 
 	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/reflection"
@@ -139,19 +140,20 @@ func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 	if err != nil {
 		return nil, err
 	}
-	var (
-		field string
-		core  = m.db.GetCore()
-		ctx   = core.injectInternalColumn(m.GetCtx())
-	)
+	var field string
 	if len(all) > 0 {
-		if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
-			field = internalData.FirstResultColumn
-		} else {
-			return nil, gerror.NewCode(
-				gcode.CodeInternalError,
-				`query array error: the internal context data is missing. there's internal issue should be fixed`,
+		var recordFields = m.getRecordFields(all[0])
+		if len(recordFields) > 1 {
+			// it returns error if there are multiple fields in the result record.
+			return nil, gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid fields for "Array" operation, result fields number "%d"%s, but expect one`,
+				len(recordFields),
+				gjson.MustEncodeString(recordFields),
 			)
+		}
+		if len(recordFields) == 1 {
+			field = recordFields[0]
 		}
 	}
 	return all.Array(field), nil
@@ -401,18 +403,32 @@ func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
 		return nil, err
 	}
 	if len(all) > 0 {
-		if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
-			if v, ok := all[0][internalData.FirstResultColumn]; ok {
+		var recordFields = m.getRecordFields(all[0])
+		if len(recordFields) == 1 {
+			for _, v := range all[0] {
 				return v, nil
 			}
-		} else {
-			return nil, gerror.NewCode(
-				gcode.CodeInternalError,
-				`query value error: the internal context data is missing. there's internal issue should be fixed`,
-			)
 		}
+		// it returns error if there are multiple fields in the result record.
+		return nil, gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`invalid fields for "Value" operation, result fields number "%d"%s, but expect one`,
+			len(recordFields),
+			gjson.MustEncodeString(recordFields),
+		)
 	}
 	return nil, nil
+}
+
+func (m *Model) getRecordFields(record Record) []string {
+	if len(record) == 0 {
+		return nil
+	}
+	var fields = make([]string, 0)
+	for k := range record {
+		fields = append(fields, k)
+	}
+	return fields
 }
 
 // Count does "SELECT COUNT(x) FROM ..." statement for the model.
@@ -434,16 +450,19 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 		return 0, err
 	}
 	if len(all) > 0 {
-		if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
-			if v, ok := all[0][internalData.FirstResultColumn]; ok {
+		var recordFields = m.getRecordFields(all[0])
+		if len(recordFields) == 1 {
+			for _, v := range all[0] {
 				return v.Int(), nil
 			}
-		} else {
-			return 0, gerror.NewCode(
-				gcode.CodeInternalError,
-				`query count error: the internal context data is missing. there's internal issue should be fixed`,
-			)
 		}
+		// it returns error if there are multiple fields in the result record.
+		return 0, gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`invalid fields for "Count" operation, result fields number "%d"%s, but expect one`,
+			len(recordFields),
+			gjson.MustEncodeString(recordFields),
+		)
 	}
 	return 0, nil
 }

@@ -697,7 +697,7 @@ func (c *Core) FilteredLink() string {
 //
 // Note that this interface implements mainly for workaround for a json infinite loop bug
 // of Golang version < v1.14.
-func (c Core) MarshalJSON() ([]byte, error) {
+func (c *Core) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`%+v`, c)), nil
 }
 

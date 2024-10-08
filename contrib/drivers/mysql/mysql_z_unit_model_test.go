@@ -761,7 +761,7 @@ func Test_Model_Value_WithCache(t *testing.T) {
 		value, err := db.Model(table).Where("id", 1).Cache(gdb.CacheOption{
 			Duration: time.Second * 10,
 			Force:    false,
-		}).Value()
+		}).Value("id")
 		t.AssertNil(err)
 		t.Assert(value.Int(), 1)
 	})
@@ -2965,13 +2965,13 @@ func Test_Model_FieldsEx_AutoMapping(t *testing.T) {
 	// "create_time": gtime.NewFromStr("2018-10-24 10:00:00").String(),
 
 	gtest.C(t, func(t *gtest.T) {
-		value, err := db.Model(table).FieldsEx("Passport, Password, NickName, CreateTime").Where("id", 2).Value()
+		value, err := db.Model(table).FieldsEx("create_date, Passport, Password, NickName, CreateTime").Where("id", 2).Value()
 		t.AssertNil(err)
 		t.Assert(value.Int(), 2)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		value, err := db.Model(table).FieldsEx("ID, Passport, Password, CreateTime").Where("id", 2).Value()
+		value, err := db.Model(table).FieldsEx("create_date, ID, Passport, Password, CreateTime").Where("id", 2).Value()
 		t.AssertNil(err)
 		t.Assert(value.String(), "name_2")
 	})

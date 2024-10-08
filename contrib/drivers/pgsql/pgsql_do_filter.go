@@ -31,9 +31,13 @@ func (d *Driver) DoFilter(
 	// Refer:
 	// https://github.com/gogf/gf/issues/1537
 	// https://www.postgresql.org/docs/12/functions-json.html
-	newSql, err = gregex.ReplaceStringFuncMatch(`(::jsonb([^\w\d]*)\$\d)`, newSql, func(match []string) string {
-		return fmt.Sprintf(`::jsonb%s?`, match[2])
-	})
+	newSql, err = gregex.ReplaceStringFuncMatch(
+		`(::jsonb([^\w\d]*)\$\d)`,
+		newSql,
+		func(match []string) string {
+			return fmt.Sprintf(`::jsonb%s?`, match[2])
+		},
+	)
 	if err != nil {
 		return "", nil, err
 	}
