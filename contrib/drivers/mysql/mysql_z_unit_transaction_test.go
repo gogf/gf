@@ -279,26 +279,23 @@ func Test_TX_Save(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin(ctx)
-		if err != nil {
-			gtest.Error(err)
-		}
-		if _, err := tx.Save(table, g.Map{
+		t.AssertNil(err)
+
+		_, err = tx.Save(table, g.Map{
 			"id":          1,
 			"passport":    "USER_1",
 			"password":    "PASS_1",
 			"nickname":    "NAME_1",
 			"create_time": gtime.Now().String(),
-		}); err != nil {
-			gtest.Error(err)
-		}
-		if err := tx.Commit(); err != nil {
-			gtest.Error(err)
-		}
-		if value, err := db.Model(table).Fields("nickname").Where("id", 1).Value(); err != nil {
-			gtest.Error(err)
-		} else {
-			t.Assert(value.String(), "NAME_1")
-		}
+		})
+		t.AssertNil(err)
+
+		err = tx.Commit()
+		t.AssertNil(err)
+
+		value, err := db.Model(table).Fields("nickname").Where("id", 1).Value()
+		t.AssertNil(err)
+		t.Assert(value.String(), "NAME_1")
 	})
 }
 
@@ -308,26 +305,22 @@ func Test_TX_Update(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin(ctx)
-		if err != nil {
-			gtest.Error(err)
-		}
-		if result, err := tx.Update(table, "create_time='2019-10-24 10:00:00'", "id=3"); err != nil {
-			gtest.Error(err)
-		} else {
-			n, _ := result.RowsAffected()
-			t.Assert(n, 1)
-		}
-		if err := tx.Commit(); err != nil {
-			gtest.Error(err)
-		}
-		_, err = tx.Model(table).Fields("create_time").Where("id", 3).Value()
-		t.AssertNE(err, nil)
+		t.AssertNil(err)
 
-		if value, err := db.Model(table).Fields("create_time").Where("id", 3).Value(); err != nil {
-			gtest.Error(err)
-		} else {
-			t.Assert(value.String(), "2019-10-24 10:00:00")
-		}
+		result, err := tx.Update(table, "create_time='2019-10-24 10:00:00'", "id=3")
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+
+		err = tx.Commit()
+		t.AssertNil(err)
+
+		_, err = tx.Model(table).Fields("create_time").Where("id", 3).Value()
+		t.AssertNil(err)
+
+		value, err := db.Model(table).Fields("create_time").Where("id", 3).Value()
+		t.AssertNil(err)
+		t.Assert(value.String(), "2019-10-24 10:00:00")
 	})
 }
 
@@ -337,17 +330,14 @@ func Test_TX_GetAll(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin(ctx)
-		if err != nil {
-			gtest.Error(err)
-		}
-		if result, err := tx.GetAll(fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 1); err != nil {
-			gtest.Error(err)
-		} else {
-			t.Assert(len(result), 1)
-		}
-		if err := tx.Commit(); err != nil {
-			gtest.Error(err)
-		}
+		t.AssertNil(err)
+
+		result, err := tx.GetAll(fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 1)
+		t.AssertNil(err)
+		t.Assert(len(result), 1)
+
+		err = tx.Commit()
+		t.AssertNil(err)
 	})
 }
 
@@ -357,20 +347,15 @@ func Test_TX_GetOne(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin(ctx)
-		if err != nil {
-			gtest.Error(err)
-		}
-		if record, err := tx.GetOne(fmt.Sprintf("SELECT * FROM %s WHERE passport=?", table), "user_2"); err != nil {
-			gtest.Error(err)
-		} else {
-			if record == nil {
-				gtest.Error("FAIL")
-			}
-			t.Assert(record["nickname"].String(), "name_2")
-		}
-		if err := tx.Commit(); err != nil {
-			gtest.Error(err)
-		}
+		t.AssertNil(err)
+
+		record, err := tx.GetOne(fmt.Sprintf("SELECT * FROM %s WHERE passport=?", table), "user_2")
+		t.AssertNil(err)
+		t.AssertNE(record, nil)
+		t.Assert(record["nickname"].String(), "name_2")
+
+		err = tx.Commit()
+		t.AssertNil(err)
 	})
 }
 
@@ -380,17 +365,14 @@ func Test_TX_GetValue(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin(ctx)
-		if err != nil {
-			gtest.Error(err)
-		}
-		if value, err := tx.GetValue(fmt.Sprintf("SELECT id FROM %s WHERE passport=?", table), "user_3"); err != nil {
-			gtest.Error(err)
-		} else {
-			t.Assert(value.Int(), 3)
-		}
-		if err := tx.Commit(); err != nil {
-			gtest.Error(err)
-		}
+		t.AssertNil(err)
+
+		value, err := tx.GetValue(fmt.Sprintf("SELECT id FROM %s WHERE passport=?", table), "user_3")
+		t.AssertNil(err)
+		t.Assert(value.Int(), 3)
+
+		err = tx.Commit()
+		t.AssertNil(err)
 	})
 }
 
@@ -400,17 +382,14 @@ func Test_TX_GetCount(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin(ctx)
-		if err != nil {
-			gtest.Error(err)
-		}
-		if count, err := tx.GetCount("SELECT * FROM " + table); err != nil {
-			gtest.Error(err)
-		} else {
-			t.Assert(count, int64(TableSize))
-		}
-		if err := tx.Commit(); err != nil {
-			gtest.Error(err)
-		}
+		t.AssertNil(err)
+
+		count, err := tx.GetCount("SELECT * FROM " + table)
+		t.AssertNil(err)
+		t.Assert(count, int64(TableSize))
+
+		err = tx.Commit()
+		t.AssertNil(err)
 	})
 }
 
