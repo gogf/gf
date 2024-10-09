@@ -12,6 +12,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -760,7 +761,7 @@ func Test_Model_Value_WithCache(t *testing.T) {
 		value, err := db.Model(table).Where("id", 1).Cache(gdb.CacheOption{
 			Duration: time.Second * 10,
 			Force:    false,
-		}).Value()
+		}).Value("id")
 		t.AssertNil(err)
 		t.Assert(value.Int(), 1)
 	})
@@ -2964,13 +2965,13 @@ func Test_Model_FieldsEx_AutoMapping(t *testing.T) {
 	// "create_time": gtime.NewFromStr("2018-10-24 10:00:00").String(),
 
 	gtest.C(t, func(t *gtest.T) {
-		value, err := db.Model(table).FieldsEx("Passport, Password, NickName, CreateTime").Where("id", 2).Value()
+		value, err := db.Model(table).FieldsEx("create_date, Passport, Password, NickName, CreateTime").Where("id", 2).Value()
 		t.AssertNil(err)
 		t.Assert(value.Int(), 2)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		value, err := db.Model(table).FieldsEx("ID, Passport, Password, CreateTime").Where("id", 2).Value()
+		value, err := db.Model(table).FieldsEx("create_date, ID, Passport, Password, CreateTime").Where("id", 2).Value()
 		t.AssertNil(err)
 		t.Assert(value.String(), "name_2")
 	})
@@ -4816,5 +4817,24 @@ func Test_Model_Year_Date_Time_DateTime_Timestamp(t *testing.T) {
 		t.Assert(one["time"].String(), now.Format("H:i:s"))
 		t.AssertLT(one["datetime"].GTime().Sub(now).Seconds(), 5)
 		t.AssertLT(one["timestamp"].GTime().Sub(now).Seconds(), 5)
+	})
+}
+
+func Test_OrderBy_Statement_Generated(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := gstr.SplitAndTrim(gtest.DataContent(`fix_gdb_order_by.sql`), ";")
+		for _, v := range array {
+			if _, err := db.Exec(ctx, v); err != nil {
+				gtest.Error(err)
+			}
+		}
+		defer dropTable(`employee`)
+		sqlArray, _ := gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			g.DB("default").Ctx(ctx).Model("employee").Order("name asc", "age desc").All()
+			return nil
+		})
+		rawSql := strings.ReplaceAll(sqlArray[len(sqlArray)-1], " ", "")
+		expectSql := strings.ReplaceAll("SELECT * FROM `employee` ORDER BY `name` asc, `age` desc", " ", "")
+		t.Assert(rawSql, expectSql)
 	})
 }
