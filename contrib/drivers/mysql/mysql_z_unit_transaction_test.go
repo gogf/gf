@@ -20,67 +20,67 @@ import (
 )
 
 func Test_TX_Query(t *testing.T) {
-	tx, err := db.Begin(ctx)
-	if err != nil {
-		gtest.Error(err)
-	}
-	if _, err = tx.Query("SELECT ?", 1); err != nil {
-		gtest.Error(err)
-	}
-	if _, err = tx.Query("SELECT ?+?", 1, 2); err != nil {
-		gtest.Error(err)
-	}
-	if _, err = tx.Query("SELECT ?+?", g.Slice{1, 2}); err != nil {
-		gtest.Error(err)
-	}
-	if _, err = tx.Query("ERROR"); err == nil {
-		gtest.Error("FAIL")
-	}
-	if err = tx.Commit(); err != nil {
-		gtest.Error(err)
-	}
+	gtest.C(t, func(t *gtest.T) {
+		tx, err := db.Begin(ctx)
+		t.AssertNil(err)
+
+		_, err = tx.Query("SELECT ?", 1)
+		t.AssertNil(err)
+
+		_, err = tx.Query("SELECT ?+?", 1, 2)
+		t.AssertNil(err)
+
+		_, err = tx.Query("SELECT ?+?", g.Slice{1, 2})
+		t.AssertNil(err)
+
+		_, err = tx.Query("ERROR")
+		t.AssertNil(err)
+
+		err = tx.Commit()
+		t.AssertNil(err)
+	})
 }
 
 func Test_TX_Exec(t *testing.T) {
-	tx, err := db.Begin(ctx)
-	if err != nil {
-		gtest.Error(err)
-	}
-	if _, err := tx.Exec("SELECT ?", 1); err != nil {
-		gtest.Error(err)
-	}
-	if _, err := tx.Exec("SELECT ?+?", 1, 2); err != nil {
-		gtest.Error(err)
-	}
-	if _, err := tx.Exec("SELECT ?+?", g.Slice{1, 2}); err != nil {
-		gtest.Error(err)
-	}
-	if _, err := tx.Exec("ERROR"); err == nil {
-		gtest.Error("FAIL")
-	}
-	if err := tx.Commit(); err != nil {
-		gtest.Error(err)
-	}
+	gtest.C(t, func(t *gtest.T) {
+		tx, err := db.Begin(ctx)
+		t.AssertNil(err)
+
+		_, err = tx.Exec("SELECT ?", 1)
+		t.AssertNil(err)
+
+		_, err = tx.Exec("SELECT ?+?", 1, 2)
+		t.AssertNil(err)
+
+		_, err = tx.Exec("SELECT ?+?", g.Slice{1, 2})
+		t.AssertNil(err)
+
+		_, err = tx.Exec("ERROR")
+		t.AssertNil(err)
+
+		err = tx.Commit()
+		t.AssertNil(err)
+	})
 }
 
 func Test_TX_Commit(t *testing.T) {
-	tx, err := db.Begin(ctx)
-	if err != nil {
-		gtest.Error(err)
-	}
-	if err := tx.Commit(); err != nil {
-		gtest.Error(err)
-	}
+	gtest.C(t, func(t *gtest.T) {
+		tx, err := db.Begin(ctx)
+		t.AssertNil(err)
+
+		err = tx.Commit()
+		t.AssertNil(err)
+	})
 }
 
 func Test_TX_Rollback(t *testing.T) {
-	tx, err := db.Begin(ctx)
-	if err != nil {
-		gtest.Error(err)
-	}
-	if err := tx.Rollback(); err != nil {
-		gtest.Error(err)
-	}
+	gtest.C(t, func(t *gtest.T) {
+		tx, err := db.Begin(ctx)
+		t.AssertNil(err)
+
+		err = tx.Rollback()
+		t.AssertNil(err)
+	})
 }
 
 func Test_TX_Prepare(t *testing.T) {
@@ -112,38 +112,33 @@ func Test_TX_Insert(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin(ctx)
-		if err != nil {
-			gtest.Error(err)
-		}
+		t.AssertNil(err)
 		user := tx.Model(table)
-		if _, err := user.Data(g.Map{
+
+		_, err = user.Data(g.Map{
 			"id":          1,
 			"passport":    "t1",
 			"password":    "25d55ad283aa400af464c76d713c07ad",
 			"nickname":    "T1",
 			"create_time": gtime.Now().String(),
-		}).Insert(); err != nil {
-			gtest.Error(err)
-		}
-		if _, err := tx.Insert(table, g.Map{
+		}).Insert()
+		t.AssertNil(err)
+
+		_, err = tx.Insert(table, g.Map{
 			"id":          2,
 			"passport":    "t1",
 			"password":    "25d55ad283aa400af464c76d713c07ad",
 			"nickname":    "T1",
 			"create_time": gtime.Now().String(),
-		}); err != nil {
-			gtest.Error(err)
-		}
+		})
+		t.AssertNil(err)
 
-		if n, err := tx.Model(table).Count(); err != nil {
-			gtest.Error(err)
-		} else {
-			t.Assert(n, int64(2))
-		}
+		n, err := tx.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(n, int64(2))
 
-		if err := tx.Commit(); err != nil {
-			gtest.Error(err)
-		}
+		err = tx.Commit()
+		t.AssertNil(err)
 	})
 }
 
@@ -153,10 +148,9 @@ func Test_TX_BatchInsert(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin(ctx)
-		if err != nil {
-			gtest.Error(err)
-		}
-		if _, err := tx.Insert(table, g.List{
+		t.AssertNil(err)
+
+		_, err = tx.Insert(table, g.List{
 			{
 				"id":          2,
 				"passport":    "t",
@@ -171,17 +165,15 @@ func Test_TX_BatchInsert(t *testing.T) {
 				"nickname":    "T3",
 				"create_time": gtime.Now().String(),
 			},
-		}, 10); err != nil {
-			gtest.Error(err)
-		}
-		if err := tx.Commit(); err != nil {
-			gtest.Error(err)
-		}
-		if n, err := db.Model(table).Count(); err != nil {
-			gtest.Error(err)
-		} else {
-			t.Assert(n, int64(2))
-		}
+		}, 10)
+		t.AssertNil(err)
+
+		err = tx.Commit()
+		t.AssertNil(err)
+
+		n, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(n, int64(2))
 	})
 }
 
@@ -191,10 +183,9 @@ func Test_TX_BatchReplace(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin(ctx)
-		if err != nil {
-			gtest.Error(err)
-		}
-		if _, err := tx.Replace(table, g.List{
+		t.AssertNil(err)
+
+		_, err = tx.Replace(table, g.List{
 			{
 				"id":          2,
 				"passport":    "USER_2",
@@ -209,22 +200,19 @@ func Test_TX_BatchReplace(t *testing.T) {
 				"nickname":    "NAME_4",
 				"create_time": gtime.Now().String(),
 			},
-		}, 10); err != nil {
-			gtest.Error(err)
-		}
-		if err := tx.Commit(); err != nil {
-			gtest.Error(err)
-		}
-		if n, err := db.Model(table).Count(); err != nil {
-			gtest.Error(err)
-		} else {
-			t.Assert(n, int64(TableSize))
-		}
-		if value, err := db.Model(table).Fields("password").Where("id", 2).Value(); err != nil {
-			gtest.Error(err)
-		} else {
-			t.Assert(value.String(), "PASS_2")
-		}
+		}, 10)
+		t.AssertNil(err)
+
+		err = tx.Commit()
+		t.AssertNil(err)
+
+		n, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(n, int64(TableSize))
+
+		value, err := db.Model(table).Fields("password").Where("id", 2).Value()
+		t.AssertNil(err)
+		t.Assert(value.String(), "PASS_2")
 	})
 }
 
@@ -234,10 +222,9 @@ func Test_TX_BatchSave(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin(ctx)
-		if err != nil {
-			gtest.Error(err)
-		}
-		if _, err := tx.Save(table, g.List{
+		t.AssertNil(err)
+
+		_, err = tx.Save(table, g.List{
 			{
 				"id":          4,
 				"passport":    "USER_4",
@@ -245,24 +232,18 @@ func Test_TX_BatchSave(t *testing.T) {
 				"nickname":    "NAME_4",
 				"create_time": gtime.Now().String(),
 			},
-		}, 10); err != nil {
-			gtest.Error(err)
-		}
-		if err := tx.Commit(); err != nil {
-			gtest.Error(err)
-		}
+		}, 10)
+		t.AssertNil(err)
+		err = tx.Commit()
+		t.AssertNil(err)
 
-		if n, err := db.Model(table).Count(); err != nil {
-			gtest.Error(err)
-		} else {
-			t.Assert(n, int64(TableSize))
-		}
+		n, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(n, int64(TableSize))
 
-		if value, err := db.Model(table).Fields("password").Where("id", 4).Value(); err != nil {
-			gtest.Error(err)
-		} else {
-			t.Assert(value.String(), "PASS_4")
-		}
+		value, err := db.Model(table).Fields("password").Where("id", 4).Value()
+		t.AssertNil(err)
+		t.Assert(value.String(), "PASS_4")
 	})
 }
 
@@ -272,26 +253,23 @@ func Test_TX_Replace(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin(ctx)
-		if err != nil {
-			gtest.Error(err)
-		}
-		if _, err := tx.Replace(table, g.Map{
+		t.AssertNil(err)
+
+		_, err = tx.Replace(table, g.Map{
 			"id":          1,
 			"passport":    "USER_1",
 			"password":    "PASS_1",
 			"nickname":    "NAME_1",
 			"create_time": gtime.Now().String(),
-		}); err != nil {
-			gtest.Error(err)
-		}
-		if err := tx.Rollback(); err != nil {
-			gtest.Error(err)
-		}
-		if value, err := db.Model(table).Fields("nickname").Where("id", 1).Value(); err != nil {
-			gtest.Error(err)
-		} else {
-			t.Assert(value.String(), "name_1")
-		}
+		})
+		t.AssertNil(err)
+
+		err = tx.Rollback()
+		t.AssertNil(err)
+
+		value, err := db.Model(table).Fields("nickname").Where("id", 1).Value()
+		t.AssertNil(err)
+		t.Assert(value.String(), "name_1")
 	})
 }
 
