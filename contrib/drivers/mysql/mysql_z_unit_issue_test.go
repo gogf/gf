@@ -1278,3 +1278,70 @@ func Test_Issue3754(t *testing.T) {
 		t.Assert(oneDeleteUnscoped["update_at"].String(), "")
 	})
 }
+
+// https://github.com/gogf/gf/issues/3626
+func Test_Issue3626(t *testing.T) {
+	table := "issue3626"
+	array := gstr.SplitAndTrim(gtest.DataContent(`issue3626.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table)
+
+	// Insert.
+	gtest.C(t, func(t *gtest.T) {
+		dataInsert := g.Map{
+			"id":   1,
+			"name": "name_1",
+		}
+		r, err := db.Model(table).Data(dataInsert).Insert()
+		t.AssertNil(err)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 1)
+
+		oneInsert, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(oneInsert["id"].Int(), 1)
+		t.Assert(oneInsert["name"].String(), "name_1")
+	})
+
+	var (
+		cacheKey  = guid.S()
+		cacheFunc = func(duration time.Duration) gdb.HookHandler {
+			return gdb.HookHandler{
+				Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
+					get, err := db.GetCache().Get(ctx, cacheKey)
+					if err == nil && !get.IsEmpty() {
+						err = get.Scan(&result)
+						if err == nil {
+							return result, nil
+						}
+					}
+					result, err = in.Next(ctx)
+					if err != nil {
+						return nil, err
+					}
+					if result == nil || result.Len() < 1 {
+						result = make(gdb.Result, 0)
+					}
+					_ = db.GetCache().Set(ctx, cacheKey, result, duration)
+					return
+				},
+			}
+		}
+	)
+	gtest.C(t, func(t *gtest.T) {
+		defer db.GetCache().Clear(ctx)
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+		count, err = db.Model(table).Hook(cacheFunc(time.Hour)).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+		count, err = db.Model(table).Hook(cacheFunc(time.Hour)).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+	})
+}

@@ -17,9 +17,9 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.20.0"
-	"google.golang.org/grpc"
+	"go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
+	"google.golang.org/grpc/encoding/gzip"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gipv4"
@@ -33,7 +33,7 @@ const (
 //
 // The output parameter `Shutdown` is used for waiting exported trace spans to be uploaded,
 // which is useful if your program is ending, and you do not want to lose recent spans.
-func Init(serviceName, endpoint, traceToken string) (func(), error) {
+func Init(serviceName, endpoint, traceToken string) (func(ctx context.Context), error) {
 	// Try retrieving host ip for tracing info.
 	var (
 		intranetIPArray, err = gipv4.GetIntranetIpArray()
@@ -57,7 +57,7 @@ func Init(serviceName, endpoint, traceToken string) (func(), error) {
 		otlptracegrpc.WithInsecure(),
 		otlptracegrpc.WithEndpoint(endpoint), // Replace the otel Agent Addr with the access point obtained in the prerequisite。
 		otlptracegrpc.WithHeaders(map[string]string{"Authentication": traceToken}),
-		otlptracegrpc.WithDialOption(grpc.WithBlock()))
+		otlptracegrpc.WithCompressor(gzip.Name))
 	ctx := context.Background()
 	traceExp, err := otlptrace.New(ctx, traceClient)
 	if err != nil {
@@ -79,18 +79,18 @@ func Init(serviceName, endpoint, traceToken string) (func(), error) {
 		return nil, err
 	}
 
-	bsp := sdktrace.NewBatchSpanProcessor(traceExp)
-	tracerProvider := sdktrace.NewTracerProvider(
-		sdktrace.WithSampler(sdktrace.AlwaysSample()),
-		sdktrace.WithResource(res),
-		sdktrace.WithSpanProcessor(bsp),
+	bsp := trace.NewBatchSpanProcessor(traceExp)
+	tracerProvider := trace.NewTracerProvider(
+		trace.WithSampler(trace.AlwaysSample()),
+		trace.WithResource(res),
+		trace.WithSpanProcessor(bsp),
 	)
 
 	// Set the global propagator to traceContext (not set by default).
-	otel.SetTextMapPropagator(propagation.TraceContext{})
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 	otel.SetTracerProvider(tracerProvider)
 
-	return func() {
+	return func(ctx context.Context) {
 		ctx, cancel := context.WithTimeout(ctx, time.Second)
 		defer cancel()
 		if err = tracerProvider.Shutdown(ctx); err != nil {
