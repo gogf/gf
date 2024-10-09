@@ -201,7 +201,7 @@ func (c CGenService) calculateStructEmbeddedFuncInfos(folderInfos []folderInfo, 
 	for receiver, structItems := range allStructItems {
 		receiverName := strings.TrimLeft(receiver, "*")
 		for _, structName := range structItems {
-			//获取对应的structName的methods列表
+			// Get the list of methods for the corresponding structName.
 			for _, funcItem := range c.getStructFuncItems(structName, allStructItems, funcItemsWithoutEmbed) {
 				if _, ok := funcItemsWithoutEmbedMap[fmt.Sprintf("%s:%s", receiverName, funcItem.MethodName)]; ok {
 					continue
