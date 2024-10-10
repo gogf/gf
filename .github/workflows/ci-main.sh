@@ -77,6 +77,14 @@ for file in `find . -name go.mod`; do
         fi
     fi
 
+    # package provider needs golang >= v1.21
+        if [ "provider" = $(basename $dirpath) ]; then
+            if ! go version|grep -qE "go1.[2-9][1-9]"; then
+              echo "ignore provider as go version: $(go version)"
+              continue 1
+            fi
+        fi
+
     # package otelmetric needs golang >= v1.20
     if [ "otelmetric" = $(basename $dirpath) ]; then
         if ! go version|grep -qE "go1.[2-9][0-9]"; then
