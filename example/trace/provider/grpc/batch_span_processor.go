@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// Package main provides a simple example for OTLP tracing with gRPC client.
 package main
 
 import (
@@ -11,13 +12,14 @@ import (
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
+	"google.golang.org/grpc/encoding/gzip"
 
-	"github.com/gogf/gf/contrib/trace/provider/v2"
 	"github.com/gogf/gf/example/trace/provider/internal"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 )
@@ -31,6 +33,7 @@ func main() {
 		g.Log().Fatal(ctx, err)
 	}
 	var res *resource.Resource
+	// resource.New(ctx, opts...) returns a new Resource.
 	if res, err = resource.New(ctx,
 		// WithFromEnv returns a resource option that sets the resource attributes from the environment.
 		resource.WithFromEnv(),
@@ -43,7 +46,7 @@ func main() {
 		// WithAttributes returns a resource option that sets the resource attributes.
 		resource.WithAttributes(
 			// The name of the service displayed on the traceback end。
-			semconv.ServiceNameKey.String(internal.HTTPServiceName),
+			semconv.ServiceNameKey.String(internal.GRPCServiceName),
 			// The IP address of the server.
 			semconv.HostNameKey.String(serverIP),
 			// The IP address of the server.
@@ -59,15 +62,16 @@ func main() {
 	}
 
 	var exporter *otlptrace.Exporter
-	if exporter, err = otlptrace.New(ctx, otlptracehttp.NewClient(
-		// WithEndpoint returns an otlptracehttp.Option that sets the endpoint to which the exporter is going to send the spans.
-		otlptracehttp.WithEndpoint(internal.HTTPEndpoint),
-		// WithHeaders returns an otlptracehttp.Option that sets the headers to be sent with HTTP requests.
-		otlptracehttp.WithURLPath(internal.HTTPPath),
-		// WithInsecure returns an otlptracehttp.Option that disables secure connection to the collector.
-		otlptracehttp.WithInsecure(),
-		// WithCompression returns an otlptracehttp.Option that sets the compression level for the exporter.
-		otlptracehttp.WithCompression(1))); err != nil {
+	// otlptrace.New(ctx, client) returns a new OTLP trace exporter.
+	if exporter, err = otlptrace.New(ctx, otlptracegrpc.NewClient(
+		// WithInsecure returns an otlptracegrpc.Option that disables transport security for the connection.
+		otlptracegrpc.WithInsecure(),
+		// WithEndpoint returns an otlptracegrpc.Option that sets the endpoint to which the exporter is going to send the spans.
+		otlptracegrpc.WithEndpoint(internal.Endpoint), // Replace the otel Agent Addr with the access point obtained in the prerequisite。
+		// WithHeaders returns an otlptracegrpc.Option that sets the headers to be sent with gRPC requests.
+		otlptracegrpc.WithHeaders(map[string]string{"Authentication": internal.TraceToken}),
+		// WithCompressor returns an otlptracegrpc.Option that sets the compressor to be used for gRPC requests.
+		otlptracegrpc.WithCompressor(gzip.Name))); err != nil {
 		g.Log().Fatal(ctx, err)
 	}
 	var shutdown func(ctx context.Context)
@@ -81,7 +85,7 @@ func main() {
 	//  1. NewSimpleSpanProcessor: NewSimpleSpanProcessor returns a new SimpleSpanProcessor.
 	//  2. NewBatchSpanProcessor: NewBatchSpanProcessor returns a new BatchSpanProcessor.
 	// WithRawSpanLimits sets the raw span limits for the trace provider.
-	if shutdown, err = provider.InitTracer(
+	if shutdown, err = internal.InitTracer(
 		// WithSampler returns a trace option that sets the sampler for the trace provider.
 		trace.WithSampler(trace.AlwaysSample()),
 		// WithResource returns a trace option that sets the resource for the trace provider.
@@ -93,6 +97,7 @@ func main() {
 	); err != nil {
 		g.Log().Fatal(ctx, err)
 	}
+
 	defer shutdown(ctx)
 
 	internal.StartRequests()
