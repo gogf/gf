@@ -741,6 +741,7 @@ func Test_Transaction_Panic(t *testing.T) {
 				"create_time": gtime.Now().String(),
 			})
 			t.AssertNil(err)
+			panic("error")
 			return nil
 		})
 		t.AssertNE(err, nil)
