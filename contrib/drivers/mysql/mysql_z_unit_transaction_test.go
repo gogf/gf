@@ -34,7 +34,7 @@ func Test_TX_Query(t *testing.T) {
 		t.AssertNil(err)
 
 		_, err = tx.Query("ERROR")
-		t.AssertNil(err)
+		t.AssertNE(err, nil)
 
 		err = tx.Commit()
 		t.AssertNil(err)
@@ -57,7 +57,7 @@ func Test_TX_Exec(t *testing.T) {
 		t.AssertNil(err)
 
 		_, err = tx.Exec("ERROR")
-		t.AssertNil(err)
+		t.AssertNE(err, nil)
 
 		err = tx.Commit()
 		t.AssertNil(err)
@@ -334,7 +334,7 @@ func Test_TX_Update(t *testing.T) {
 		t.AssertNil(err)
 
 		_, err = tx.Model(table).Fields("create_time").Where("id", 3).Value()
-		t.AssertNil(err)
+		t.AssertNE(err, nil)
 
 		value, err := db.Model(table).Fields("create_time").Where("id", 3).Value()
 		t.AssertNil(err)
