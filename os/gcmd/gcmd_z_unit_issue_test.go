@@ -305,3 +305,26 @@ func Test_Issue3670(t *testing.T) {
 		t.Assert(value.(*Issue3670LastOutput).Content, `{"Country":"china","Singer":"邓丽君"}`)
 	})
 }
+
+func Test_Issue3701(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			outputArgs []string
+			inputArgs  = []string{"abc", "def"}
+			ctx        = gctx.New()
+			cmd        = gcmd.Command{
+				Name:  "main",
+				Usage: "main",
+				Brief: "...",
+				Func: func(ctx context.Context, parser *gcmd.Parser) (err error) {
+					outputArgs = parser.GetArgAll()
+					return nil
+				},
+			}
+		)
+
+		_, err := cmd.RunWithSpecificArgs(ctx, inputArgs)
+		t.AssertNil(err)
+		t.Assert(outputArgs, inputArgs)
+	})
+}

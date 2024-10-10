@@ -73,7 +73,7 @@ func (c *Command) Run(ctx context.Context) {
 func GetCommand(ctx context.Context) (*Command, error) {
 	root, err := gcmd.NewFromObject(cmd.GF)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	err = root.AddObject(
 		cmd.Up,
