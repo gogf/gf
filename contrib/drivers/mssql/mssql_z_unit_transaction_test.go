@@ -34,7 +34,7 @@ func Test_TX_Query(t *testing.T) {
 		t.AssertNil(err)
 
 		_, err = tx.Query("ERROR")
-		t.AssertNil(err)
+		t.AssertNE(err, nil)
 
 		err = tx.Commit()
 		t.AssertNil(err)
@@ -56,7 +56,7 @@ func Test_TX_Exec(t *testing.T) {
 		t.AssertNil(err)
 
 		_, err = tx.Exec("ERROR")
-		t.AssertNil(err)
+		t.AssertNE(err, nil)
 
 		err = tx.Commit()
 		t.AssertNil(err)
