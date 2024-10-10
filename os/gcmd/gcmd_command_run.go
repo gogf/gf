@@ -85,12 +85,14 @@ func (c *Command) RunWithSpecificArgs(ctx context.Context, args []string) (value
 		return nil, err
 	}
 	parsedArgs := parser.GetArgAll()
-	if len(parsedArgs) == 1 {
-		return c.doRun(ctx, args, parser)
-	}
 
 	// Exclude the root binary name.
 	parsedArgs = parsedArgs[1:]
+
+	// If no args or no sub command, it runs standalone.
+	if len(parsedArgs) == 0 || len(c.commands) == 0 {
+		return c.doRun(ctx, args, parser)
+	}
 
 	// Find the matched command and run it.
 	// It here `fromArgIndex` set to 1 to calculate the argument index in to `newCtx`.
@@ -129,6 +131,7 @@ func (c *Command) doRun(ctx context.Context, args []string, parser *Parser) (val
 		}
 		return nil, c.defaultHelpFunc(ctx, parser)
 	}
+
 	// OpenTelemetry for command.
 	var (
 		span trace.Span
