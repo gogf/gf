@@ -85,10 +85,22 @@ func main() {
 	// WithRawSpanLimits sets the raw span limits for the trace provider.
 	if shutdown, err = internal.InitTracer(
 		// WithSampler returns a trace option that sets the sampler for the trace provider.
-		trace.WithSampler(trace.AlwaysSample()),
+		// trace.WithSampler(trace.AlwaysSample()),
+		// trace.WithSampler(trace.NeverSample()),
+		// trace.WithSampler(trace.ParentBased(trace.AlwaysSample())),
+		// WithSampler returns a trace option that sets the sampler for the trace provider.
+		//  1. AlwaysSample: AlwaysSample is a sampler that samples every trace.
+		//  2. NeverSample: NeverSample is a sampler that samples no traces.
+		//  3. ParentBased: ParentBased is a sampler that samples a trace based on the parent span.
+		//  4. TraceIDRatioBased: TraceIDRatioBased is a sampler that samples a trace based on the TraceID.
+		trace.WithSampler(trace.TraceIDRatioBased(0.1)),
 		// WithResource returns a trace option that sets the resource for the trace provider.
 		trace.WithResource(res),
 		// WithSpanProcessor returns a trace option that sets the span processor for the trace provider.
+		// trace.WithSpanProcessor(trace.NewSimpleSpanProcessor(exporter)),
+		// trace.WithSpanProcessor(trace.NewBatchSpanProcessor(exporter)),
+		//  1. NewSimpleSpanProcessor: NewSimpleSpanProcessor returns a new SimpleSpanProcessor.
+		//  2. NewBatchSpanProcessor: NewBatchSpanProcessor returns a new BatchSpanProcessor.
 		trace.WithSpanProcessor(trace.NewBatchSpanProcessor(exporter)),
 		// WithRawSpanLimits returns a trace option that sets the raw span limits for the trace provider.
 		trace.WithRawSpanLimits(trace.NewSpanLimits()),
