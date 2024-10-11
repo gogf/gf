@@ -177,10 +177,11 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		return nil, err
 	}
 	// it will use goroutine to generate service files for each package.
-	var wg = sync.WaitGroup{}
-
-	var folderInfos []folderInfo
-	var allStructItems = make(map[string][]string)
+	var (
+		folderInfos    []folderInfo
+		wg             = sync.WaitGroup{}
+		allStructItems = make(map[string][]string)
+	)
 
 	for _, srcFolderPath := range srcFolderPaths {
 		if !gfile.IsDir(srcFolderPath) {
