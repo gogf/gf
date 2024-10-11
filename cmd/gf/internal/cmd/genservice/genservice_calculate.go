@@ -161,17 +161,20 @@ func (c CGenService) getStructFuncItems(structName string, allStructItems map[st
 		}
 	}
 
-	if embeddedStructNames, ok := allStructItems[structName]; ok {
-		for _, embeddedStructName := range embeddedStructNames {
-			items := c.getStructFuncItems(embeddedStructName, allStructItems, funcItemsWithoutEmbed)
+	embeddedStructNames, ok := allStructItems[structName]
+	if !ok {
+		return
+	}
 
-			for _, item := range items {
-				if _, ok := funcItemNameSet[item.MethodName]; ok {
-					continue
-				}
-				funcItemNameSet[item.MethodName] = struct{}{}
-				funcItems = append(funcItems, item)
+	for _, embeddedStructName := range embeddedStructNames {
+		items := c.getStructFuncItems(embeddedStructName, allStructItems, funcItemsWithoutEmbed)
+
+		for _, item := range items {
+			if _, ok := funcItemNameSet[item.MethodName]; ok {
+				continue
 			}
+			funcItemNameSet[item.MethodName] = struct{}{}
+			funcItems = append(funcItems, item)
 		}
 	}
 
