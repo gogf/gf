@@ -190,7 +190,7 @@ func (c CGenService) calculateStructEmbeddedFuncInfos(folderInfos []folderInfo, 
 			fi := folder.FileInfos[k]
 			for k := range fi.FuncItems {
 				item := &fi.FuncItems[k]
-				receiver := strings.TrimLeft(item.Receiver, "*")
+				receiver := folder.SrcPackageName + "." + strings.ReplaceAll(item.Receiver, "*", "")
 				funcItemMap[receiver] = &fi.FuncItems
 				funcItemsWithoutEmbed[receiver] = append(funcItemsWithoutEmbed[receiver], item)
 				funcItemsWithoutEmbedMap[fmt.Sprintf("%s:%s", receiver, item.MethodName)] = item
@@ -199,7 +199,7 @@ func (c CGenService) calculateStructEmbeddedFuncInfos(folderInfos []folderInfo, 
 	}
 
 	for receiver, structItems := range allStructItems {
-		receiverName := strings.TrimLeft(receiver, "*")
+		receiverName := strings.ReplaceAll(receiver, "*", "")
 		for _, structName := range structItems {
 			// Get the list of methods for the corresponding structName.
 			for _, funcItem := range c.getStructFuncItems(structName, allStructItems, funcItemsWithoutEmbed) {
@@ -208,7 +208,7 @@ func (c CGenService) calculateStructEmbeddedFuncInfos(folderInfos []folderInfo, 
 				}
 				if funcItemsPtr, ok := funcItemMap[receiverName]; ok {
 					newFuncItem := *funcItem
-					newFuncItem.Receiver = receiver
+					newFuncItem.Receiver = getReceiverName(receiver)
 					(*funcItemsPtr) = append((*funcItemsPtr), newFuncItem)
 				}
 			}
@@ -216,4 +216,9 @@ func (c CGenService) calculateStructEmbeddedFuncInfos(folderInfos []folderInfo, 
 	}
 
 	return
+}
+
+func getReceiverName(receiver string) string {
+	ss := strings.Split(receiver, ".")
+	return ss[len(ss)-1]
 }

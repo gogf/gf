@@ -25,6 +25,12 @@ type (
 		Update(ctx context.Context, id int) (name string, err error)
 		// Delete deletes user by id.
 		Delete(ctx context.Context, id int) (err error)
+		// base Init
+		Init()
+		// base Destory
+		Destory()
+		// baseDestory BeforeDestory
+		BeforeDestory()
 	}
 	IUser interface {
 		// Create creates a new user.
@@ -51,6 +57,12 @@ type (
 		Update(ctx context.Context, id int) (name string, err error)
 		// Delete deletes user by id.
 		Delete(ctx context.Context, id int) (err error)
+		// base Init
+		Init()
+		// base Destory
+		Destory()
+		// baseDestory BeforeDestory
+		BeforeDestory()
 	}
 )
 

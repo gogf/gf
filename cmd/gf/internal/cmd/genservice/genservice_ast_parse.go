@@ -10,8 +10,10 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"strings"
 
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
@@ -29,18 +31,6 @@ type funcItem struct {
 	Comment    string              `eg:"Get user list"`
 }
 
-func checkValidStructName(structName string) bool {
-	if gstr.Contains(structName, ".") {
-		s := gstr.Split(structName, ".")
-		if !gstr.HasPrefix(s[len(s)-1], "s") {
-			return false
-		}
-	} else if !gstr.HasPrefix(structName, "s") {
-		return false
-	}
-	return true
-}
-
 // parseItemsInSrc parses the pkgItem and funcItem from the specified file.
 // It can't skip the private methods.
 // It can't skip the imported packages of import alias equal to `_`.
@@ -56,7 +46,7 @@ func (c CGenService) parseItemsInSrc(filePath string) (pkgItems []pkgItem, struc
 	}
 
 	structItems = make(map[string][]string)
-
+	pkg := node.Name.Name
 	ast.Inspect(node, func(n ast.Node) bool {
 		switch x := n.(type) {
 		case *ast.ImportSpec:
@@ -65,29 +55,56 @@ func (c CGenService) parseItemsInSrc(filePath string) (pkgItems []pkgItem, struc
 		case *ast.TypeSpec:
 			if st, ok := x.Type.(*ast.StructType); ok {
 				// parse the struct declaration.
-				var structName = x.Name.Name
-
-				if !checkValidStructName(structName) {
-					break
-				}
+				var structName = pkg + "." + x.Name.Name
 				var structEmbeddedStruct []string
 				for _, field := range st.Fields.List {
-					if len(field.Names) == 0 { // anonymous field
-						var embeddedStruct string
-						if _, ok := field.Type.(*ast.Ident); ok {
-							if embeddedStruct, err = c.astExprToString(field.Type); err != nil {
-								embeddedStruct = ""
-							}
-						} else if ptr, ok := field.Type.(*ast.StarExpr); ok {
-							if embeddedStruct, err = c.astExprToString(ptr.X); err != nil {
-								embeddedStruct = ""
-							}
-						}
-						if embeddedStruct == "" || !checkValidStructName(embeddedStruct) {
-							continue
-						}
-						structEmbeddedStruct = append(structEmbeddedStruct, embeddedStruct)
+					if len(field.Names) > 0 || field.Tag == nil { // not anonymous field
+						continue
 					}
+
+					tagValue := strings.Trim(field.Tag.Value, "`")
+					tagValue = strings.TrimSpace(tagValue)
+					if len(tagValue) == 0 { // not set tag
+						continue
+					}
+					tags := gstructs.ParseTag(tagValue)
+
+					if v, ok := tags["gen"]; !ok || v != "extend" {
+						continue
+					}
+
+					var embeddedStruct string
+					switch v := field.Type.(type) {
+					case *ast.Ident:
+						if embeddedStruct, err = c.astExprToString(v); err != nil {
+							embeddedStruct = ""
+							break
+						}
+						embeddedStruct = pkg + "." + embeddedStruct
+					case *ast.StarExpr:
+						if embeddedStruct, err = c.astExprToString(v.X); err != nil {
+							embeddedStruct = ""
+							break
+						}
+						embeddedStruct = pkg + "." + embeddedStruct
+					case *ast.SelectorExpr:
+						var pkg string
+						if pkg, err = c.astExprToString(v.X); err != nil {
+							embeddedStruct = ""
+							break
+						}
+						if embeddedStruct, err = c.astExprToString(v.Sel); err != nil {
+							embeddedStruct = ""
+							break
+						}
+						embeddedStruct = pkg + "." + embeddedStruct
+					}
+
+					if embeddedStruct == "" {
+						continue
+					}
+					structEmbeddedStruct = append(structEmbeddedStruct, embeddedStruct)
+
 				}
 				if len(structEmbeddedStruct) > 0 {
 					structItems[structName] = structEmbeddedStruct

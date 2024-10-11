@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 
+	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genservice/logic/base"
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genservice/service"
 )
 
@@ -11,7 +12,8 @@ func init() {
 }
 
 type sVipUser struct {
-	sUser
+	sUser     `gen:"extend"`
+	base.Base `gen:"extend"`
 }
 
 // Create creates a new vip user.

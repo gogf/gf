@@ -13,7 +13,7 @@ func init() {
 }
 
 type sSuperVipUser struct {
-	*sVipUser
+	*sVipUser `gen:"extend"`
 }
 
 // Get supper vip user level
