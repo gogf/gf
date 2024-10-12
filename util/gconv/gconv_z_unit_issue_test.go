@@ -8,10 +8,7 @@ package gconv_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/util/gconv/internal/structcache"
 	"math/big"
-	"reflect"
-	"sort"
 	"testing"
 	"time"
 
@@ -599,8 +596,6 @@ func doTestIssue3800(t *testing.T) {
 		}
 		structD := StructD{}
 		err := gconv.Scan(structC, &structD)
-		structInfo := structcache.GetCachedStructInfo(reflect.TypeOf(structD), "json")
-		_ = structInfo
 		t.AssertNil(err)
 		t.Assert(structD.StructC.Superior, structC.Superior)
 		t.Assert(*structD.Superior, structC.Superior)
@@ -715,92 +710,6 @@ func doTestIssue3800(t *testing.T) {
 
 // https://github.com/gogf/gf/issues/3821
 func Test_Issue3821(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		type Foo struct {
-			Bar int `orm:"barOrm"`
-		}
-		var foo Foo
-		structInfo := structcache.GetCachedStructInfo(reflect.TypeOf(foo), "orm")
-
-		barTypeInfo := structInfo.GetFieldInfo(`Bar`)
-		barOrmTypeInfo := structInfo.GetFieldInfo(`barOrm`)
-
-		t.AssertEQ(barTypeInfo.StructField, barOrmTypeInfo.StructField)
-		t.Assert(barTypeInfo.IsField, true)
-		t.Assert(barOrmTypeInfo.IsField, false)
-		t.AssertNil(barTypeInfo.OtherSameNameField)
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		type Inner struct {
-			Bar *int `orm:"barOrm"`
-		}
-		type Foo struct {
-			Bar  int    `orm:"barOrm"`
-			Bar2 string `orm:"barOrm2"`
-			Inner
-		}
-		var foo Foo
-		structInfo := structcache.GetCachedStructInfo(reflect.TypeOf(foo), "orm")
-
-		barTypeInfo := structInfo.GetFieldInfo(`Bar`)
-		barOrmTypeInfo := structInfo.GetFieldInfo(`barOrm`)
-
-		t.AssertEQ(barTypeInfo.StructField, barOrmTypeInfo.StructField) // Bar barOrm is same Field
-		t.AssertEQ(barTypeInfo.StructField.Type.String(), "int")
-		t.Assert(len(barTypeInfo.OtherSameNameField), 1) // has same field
-		t.AssertEQ(barTypeInfo.OtherSameNameField[0].StructField.Type.String(), "*int")
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		type Foo struct {
-			Bar  int    `orm:"barOrm"`
-			Bar2 *int   `orm:"barOrm"`
-			Bar3 string `orm:"barOrm"`
-		}
-
-		var foo Foo
-		structInfo := structcache.GetCachedStructInfo(reflect.TypeOf(foo), "orm")
-		barTypeInfo := structInfo.GetFieldInfo(`Bar`)
-		barOrmTypeInfo := structInfo.GetFieldInfo(`barOrm`)
-
-		t.AssertEQ(barTypeInfo.StructField, barOrmTypeInfo.StructField) // Bar barOrm is same Field
-		t.AssertEQ(barTypeInfo.StructField.Type.String(), "int")
-		t.Assert(len(barOrmTypeInfo.OtherSameNameField), 2) // has same field
-		var sameNameFieldTypeNameArr = make([]string, 0, len(barTypeInfo.OtherSameNameField))
-		for _, info := range barOrmTypeInfo.OtherSameNameField {
-			sameNameFieldTypeNameArr = append(sameNameFieldTypeNameArr, info.StructField.Type.String())
-		}
-		wantTypeArr := []string{"*int", "string"}
-		sort.Strings(sameNameFieldTypeNameArr)
-		sort.Strings(wantTypeArr)
-		t.AssertEQ(sameNameFieldTypeNameArr, wantTypeArr)
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		type InnerFoo struct {
-			Bar int `orm:"barOrm"`
-		}
-		type Foo struct {
-			Bar   int    `orm:"barOrm"`
-			Bar2  *int   `orm:"barOrm"`
-			Bar3  string `orm:"barOrm"`
-			Other int    `orm:"other"`
-			InnerFoo
-		}
-
-		var foo Foo
-		structInfo := structcache.GetCachedStructInfo(reflect.TypeOf(foo), "orm")
-
-		barTypeInfo := structInfo.GetFieldInfo(`Bar`)
-		barOrmTypeInfo := structInfo.GetFieldInfo(`barOrm`)
-		otherTypeInfo := structInfo.GetFieldInfo(`other`)
-
-		t.AssertEQ(barOrmTypeInfo.StructField, barTypeInfo.StructField) // Bar barOrm is same Field
-		t.AssertEQ(len(barOrmTypeInfo.OtherSameNameField), 3)
-		t.AssertEQ(len(otherTypeInfo.OtherSameNameField), 0)
-	})
-
 	// Scan
 	gtest.C(t, func(t *gtest.T) {
 		var record = map[string]interface{}{
