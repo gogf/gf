@@ -25,9 +25,9 @@ type (
 		Update(ctx context.Context, id int) (name string, err error)
 		// Delete deletes user by id.
 		Delete(ctx context.Context, id int) (err error)
-		// base Init
+		// sBase Init
 		Init()
-		// base Destory
+		// sBase Destory
 		Destory()
 		// baseDestory BeforeDestory
 		BeforeDestory()
@@ -57,9 +57,9 @@ type (
 		Update(ctx context.Context, id int) (name string, err error)
 		// Delete deletes user by id.
 		Delete(ctx context.Context, id int) (err error)
-		// base Init
+		// sBase Init
 		Init()
-		// base Destory
+		// sBase Destory
 		Destory()
 		// baseDestory BeforeDestory
 		BeforeDestory()

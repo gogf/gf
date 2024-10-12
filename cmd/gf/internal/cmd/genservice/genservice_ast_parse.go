@@ -47,17 +47,27 @@ func (c CGenService) parseItemsInSrc(filePath string) (pkgItems []pkgItem, struc
 
 	structItems = make(map[string][]string)
 	pkg := node.Name.Name
+	pkgAliasMap := make(map[string]string)
 	ast.Inspect(node, func(n ast.Node) bool {
 		switch x := n.(type) {
 		case *ast.ImportSpec:
 			// parse the imported packages.
-			pkgItems = append(pkgItems, c.parseImportPackages(x))
-		case *ast.TypeSpec:
-			if st, ok := x.Type.(*ast.StructType); ok {
+			pkgItem := c.parseImportPackages(x)
+			pkgItems = append(pkgItems, pkgItem)
+			pkgPath := strings.Trim(pkgItem.Path, "\"")
+			pkgPath = strings.ReplaceAll(pkgPath, "\\", "/")
+			tmp := strings.Split(pkgPath, "/")
+			srcPkg := tmp[len(tmp)-1]
+			if srcPkg != pkgItem.Alias {
+				pkgAliasMap[pkgItem.Alias] = srcPkg
+			}
+		case *ast.TypeSpec: // type define
+			switch xType := x.Type.(type) {
+			case *ast.StructType: // define struct
 				// parse the struct declaration.
 				var structName = pkg + "." + x.Name.Name
 				var structEmbeddedStruct []string
-				for _, field := range st.Fields.List {
+				for _, field := range xType.Fields.List {
 					if len(field.Names) > 0 || field.Tag == nil { // not anonymous field
 						continue
 					}
@@ -93,6 +103,9 @@ func (c CGenService) parseItemsInSrc(filePath string) (pkgItems []pkgItem, struc
 							embeddedStruct = ""
 							break
 						}
+						if v, ok := pkgAliasMap[pkg]; ok {
+							pkg = v
+						}
 						if embeddedStruct, err = c.astExprToString(v.Sel); err != nil {
 							embeddedStruct = ""
 							break
@@ -109,7 +122,31 @@ func (c CGenService) parseItemsInSrc(filePath string) (pkgItems []pkgItem, struc
 				if len(structEmbeddedStruct) > 0 {
 					structItems[structName] = structEmbeddedStruct
 				}
+			case *ast.Ident: // define ident
+				var (
+					structName = pkg + "." + x.Name.Name
+					typeName   = pkg + "." + xType.Name
+				)
+				structItems[structName] = []string{typeName}
+			case *ast.SelectorExpr: // define selector
+				var (
+					structName  = pkg + "." + x.Name.Name
+					selecotrPkg string
+					typeName    string
+				)
+				if selecotrPkg, err = c.astExprToString(xType.X); err != nil {
+					break
+				}
+				if v, ok := pkgAliasMap[selecotrPkg]; ok {
+					selecotrPkg = v
+				}
+				if typeName, err = c.astExprToString(xType.Sel); err != nil {
+					break
+				}
+				typeName = selecotrPkg + "." + typeName
+				structItems[structName] = []string{typeName}
 			}
+
 		case *ast.FuncDecl:
 			// parse the function items.
 			if x.Recv == nil {

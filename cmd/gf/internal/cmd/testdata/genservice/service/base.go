@@ -7,9 +7,9 @@ package service
 
 type (
 	IBase interface {
-		// base Init
+		// sBase Init
 		Init()
-		// base Destory
+		// sBase Destory
 		Destory()
 		// baseDestory BeforeDestory
 		BeforeDestory()

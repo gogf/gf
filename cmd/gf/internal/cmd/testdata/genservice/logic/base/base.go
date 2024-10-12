@@ -1,18 +1,17 @@
 package base
 
-type Base struct {
-	sBase `gen:"extend"`
-}
+type Base = sBase
+
 type sBase struct {
 	baseDestory `gen:"extend"`
 }
 
-// base Init
+// sBase Init
 func (*sBase) Init() {
 
 }
 
-// base Destory
+// sBase Destory
 func (*sBase) Destory() {
 
 }
