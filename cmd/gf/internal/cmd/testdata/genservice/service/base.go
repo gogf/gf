@@ -5,4 +5,28 @@
 
 package service
 
-type ()
+type (
+	IBase interface {
+		// base Init
+		Init()
+		// base Destory
+		Destory()
+		// baseDestory BeforeDestory
+		BeforeDestory()
+	}
+)
+
+var (
+	localBase IBase
+)
+
+func Base() IBase {
+	if localBase == nil {
+		panic("implement not found for interface IBase, forgot register?")
+	}
+	return localBase
+}
+
+func RegisterBase(i IBase) {
+	localBase = i
+}
