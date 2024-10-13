@@ -235,9 +235,17 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	}
 
 	// =================================================================================================================
-	// Response.
+	// Default Response.
 	// =================================================================================================================
-	if _, ok := operation.Responses[responseOkKey]; !ok {
+	status := responseOkKey
+	if statusValue, ok := outputMetaMap[gtag.Status]; ok {
+		statusCode := gconv.Int(statusValue)
+		if statusCode < 100 || statusCode >= 600 {
+			return gerror.Newf("Invalid HTTP status code: %s", statusValue)
+		}
+		status = statusValue
+	}
+	if _, ok := operation.Responses[status]; !ok {
 		var (
 			response = Response{
 				Content:     map[string]MediaType{},
@@ -276,7 +284,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 				Schema: schemaRef,
 			}
 		}
-		operation.Responses[responseOkKey] = ResponseRef{Value: &response}
+		operation.Responses[status] = ResponseRef{Value: &response}
 	}
 
 	// Remove operation body duplicated properties.
