@@ -287,6 +287,65 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		operation.Responses[status] = ResponseRef{Value: &response}
 	}
 
+	// =================================================================================================================
+	// Other Responses.
+	// =================================================================================================================
+
+	Fields, _ := gstructs.Fields(gstructs.FieldsInput{
+		Pointer:         outputObject.Interface(),
+		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+	})
+	for _, Field := range Fields {
+		if err := oai.addSchema(Field.Value.Interface()); err != nil {
+			return err
+		}
+		if Field.Tag("status") != "" {
+			statusValue := Field.Tag("status")
+			statusCode := gconv.Int(statusValue)
+			if statusCode < 100 || statusCode >= 600 {
+				return gerror.Newf("Invalid HTTP status code: %s", statusValue)
+			}
+			status = statusValue
+			if _, ok := operation.Responses[statusValue]; !ok {
+				var (
+					extraResponse = Response{
+						Content:     map[string]MediaType{},
+						XExtensions: make(XExtensions),
+					}
+					metaMap = gmeta.Data(Field.Value.Interface())
+				)
+				if len(metaMap) > 0 {
+					if err := oai.tagMapToResponse(metaMap, &extraResponse); err != nil {
+						return err
+					}
+				}
+				// Supported mime types of response.
+				var (
+					contentTypes = oai.Config.ReadContentTypes
+					tagMimeValue = gmeta.Get(Field.Value.Interface(), gtag.Mime).String()
+					refInput     = getResponseSchemaRefInput{
+						BusinessStructName:      oai.golangTypeToSchemaName(Field.Type()),
+						CommonResponseObject:    nil,
+						CommonResponseDataField: "",
+					}
+				)
+				if tagMimeValue != "" {
+					contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
+				}
+				for _, v := range contentTypes {
+					schemaRef, err := oai.getResponseSchemaRef(refInput)
+					if err != nil {
+						return err
+					}
+					extraResponse.Content[v] = MediaType{
+						Schema: schemaRef,
+					}
+				}
+				operation.Responses[statusValue] = ResponseRef{Value: &extraResponse}
+			}
+		}
+	}
+
 	// Remove operation body duplicated properties.
 	oai.removeOperationDuplicatedProperties(operation)
 
