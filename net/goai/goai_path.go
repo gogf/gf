@@ -7,14 +7,18 @@
 package goai
 
 import (
+	"fmt"
 	"net/http"
 	"reflect"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gres"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -329,6 +333,51 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 						CommonResponseDataField: "",
 					}
 				)
+
+				examples := make(map[string]*ExampleRef)
+				responseExamplePath := gmeta.Get(outputObject.Interface(), gtag.ResponseExampleShort).String()
+				if responseExamplePath == "" {
+					responseExamplePath = gmeta.Get(outputObject.Interface(), gtag.ResponseExample).String()
+				}
+				if responseExamplePath != "" {
+					var json string
+					if resource := gres.Get(responseExamplePath); resource != nil {
+						json = string(resource.Content())
+					} else {
+						absolutePath := gfile.RealPath(responseExamplePath)
+						if absolutePath != "" {
+							json = gfile.GetContents(absolutePath)
+						}
+					}
+					if json != "" {
+						var data interface{}
+						err := gjson.Unmarshal([]byte(json), &data)
+						if err != nil {
+							return err
+						}
+
+						switch v := data.(type) {
+						case map[string]interface{}:
+							for key, value := range v {
+								examples[key] = &ExampleRef{
+									Value: &Example{
+										Value: value,
+									},
+								}
+							}
+						case []interface{}:
+							for i, value := range v {
+								examples[fmt.Sprintf("example %d", i+1)] = &ExampleRef{
+									Value: &Example{
+										Value: value,
+									},
+								}
+							}
+						default:
+						}
+					}
+				}
+
 				if tagMimeValue != "" {
 					contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
 				}
@@ -338,7 +387,8 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 						return err
 					}
 					extraResponse.Content[v] = MediaType{
-						Schema: schemaRef,
+						Schema:   schemaRef,
+						Examples: examples,
 					}
 				}
 				operation.Responses[statusValue] = ResponseRef{Value: &extraResponse}
