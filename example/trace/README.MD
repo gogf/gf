@@ -75,3 +75,6 @@ https://medium.com/jaegertracing/better-alignment-with-opentelemetry-by-focusing
 Open Source, End-to-End Distributed Tracing. Hosted by Cloud Native Computing Foundation.
 
 https://medium.com/jaegertracing
+
+
+## For more information on distributed tracing initialization, please refer to the content in the [provider](./provider) directory
