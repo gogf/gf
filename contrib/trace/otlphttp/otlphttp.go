@@ -52,15 +52,13 @@ func Init(serviceName, endpoint, path string) (func(ctx context.Context), error)
 		hostIP = intranetIPArray[0]
 	}
 
-	traceClientHTTP := otlptracehttp.NewClient(
+	ctx := context.Background()
+	traceExp, err := otlptrace.New(ctx, otlptracehttp.NewClient(
 		otlptracehttp.WithEndpoint(endpoint),
 		otlptracehttp.WithURLPath(path),
 		otlptracehttp.WithInsecure(),
 		otlptracehttp.WithCompression(1),
-	)
-
-	ctx := context.Background()
-	traceExp, err := otlptrace.New(ctx, traceClientHTTP)
+	))
 	if err != nil {
 		return nil, err
 	}
@@ -77,11 +75,19 @@ func Init(serviceName, endpoint, path string) (func(ctx context.Context), error)
 		),
 	)
 
-	bsp := trace.NewBatchSpanProcessor(traceExp)
 	tracerProvider := trace.NewTracerProvider(
+		// AlwaysSample is a sampler that samples every trace.
+		// see: https://pkg.go.dev/go.opentelemetry.io/otel/sdk/trace#AlwaysSample
+		// example see: [example/trace/provider/http/main.go](../../../../../example/trace/provider/http/main.go#L84)
 		trace.WithSampler(trace.AlwaysSample()),
+		// WithResource returns a trace option that sets the resource to be associated with spans.
+		// see: https://pkg.go.dev/go.opentelemetry.io/otel/sdk/trace#WithResource
+		// example see: [example/trace/provider/http/main.go](../../../../../example/trace/provider/http/main.go#L33)
 		trace.WithResource(res),
-		trace.WithSpanProcessor(bsp),
+		// WithSpanProcessor returns a trace option that sets the span processor to be used by the trace provider.
+		// see: https://pkg.go.dev/go.opentelemetry.io/otel/sdk/trace#WithSpanProcessor
+		// example see: [example/trace/provider/http/main.go](../../../../../example/trace/provider/http/main.go#L96)
+		trace.WithSpanProcessor(trace.NewBatchSpanProcessor(traceExp)),
 	)
 
 	// Set the global propagator to traceContext (not set by default).

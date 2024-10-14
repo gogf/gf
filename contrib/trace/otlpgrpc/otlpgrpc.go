@@ -53,13 +53,12 @@ func Init(serviceName, endpoint, traceToken string) (func(ctx context.Context), 
 		hostIP = intranetIPArray[0]
 	}
 
-	traceClient := otlptracegrpc.NewClient(
+	ctx := context.Background()
+	traceExp, err := otlptrace.New(ctx, otlptracegrpc.NewClient(
 		otlptracegrpc.WithInsecure(),
 		otlptracegrpc.WithEndpoint(endpoint), // Replace the otel Agent Addr with the access point obtained in the prerequisite。
 		otlptracegrpc.WithHeaders(map[string]string{"Authentication": traceToken}),
-		otlptracegrpc.WithCompressor(gzip.Name))
-	ctx := context.Background()
-	traceExp, err := otlptrace.New(ctx, traceClient)
+		otlptracegrpc.WithCompressor(gzip.Name)))
 	if err != nil {
 		return nil, err
 	}
@@ -79,11 +78,19 @@ func Init(serviceName, endpoint, traceToken string) (func(ctx context.Context), 
 		return nil, err
 	}
 
-	bsp := trace.NewBatchSpanProcessor(traceExp)
 	tracerProvider := trace.NewTracerProvider(
+		// AlwaysSample is a sampler that samples every trace.
+		// see: https://pkg.go.dev/go.opentelemetry.io/otel/sdk/trace#AlwaysSample
+		// example see: [example/trace/provider/grpc/main.go](../../../../../example/trace/provider/grpc/main.go#L87)
 		trace.WithSampler(trace.AlwaysSample()),
+		// WithResource returns a trace option that sets the resource to be associated with spans.
+		// see: https://pkg.go.dev/go.opentelemetry.io/otel/sdk/trace#WithResource
+		// example see: [example/trace/provider/grpc/main.go](../../../../../example/trace/provider/grpc/main.go#L36)
 		trace.WithResource(res),
-		trace.WithSpanProcessor(bsp),
+		// WithSpanProcessor returns a trace option that sets the span processor to be used by the trace provider.
+		// see: https://pkg.go.dev/go.opentelemetry.io/otel/sdk/trace#WithSpanProcessor
+		// example see: [example/trace/provider/grpc/main.go](../../../../../example/trace/provider/grpc/main.go#L99)
+		trace.WithSpanProcessor(trace.NewBatchSpanProcessor(traceExp)),
 	)
 
 	// Set the global propagator to traceContext (not set by default).
