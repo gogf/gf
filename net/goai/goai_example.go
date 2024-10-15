@@ -7,7 +7,12 @@
 package goai
 
 import (
+	"fmt"
+
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gres"
 )
 
 // Example is specified by OpenAPI/Swagger 3.0 standard.
@@ -23,6 +28,49 @@ type Examples map[string]*ExampleRef
 type ExampleRef struct {
 	Ref   string
 	Value *Example
+}
+
+func (e *Examples) applyExamplesFile(path string) error {
+	if e == nil {
+		return nil
+	}
+	var json string
+	if resource := gres.Get(path); resource != nil {
+		json = string(resource.Content())
+	} else {
+		absolutePath := gfile.RealPath(path)
+		if absolutePath != "" {
+			json = gfile.GetContents(absolutePath)
+		}
+	}
+	if json != "" {
+		var data interface{}
+		err := gjson.Unmarshal([]byte(json), &data)
+		if err != nil {
+			return err
+		}
+
+		switch v := data.(type) {
+		case map[string]interface{}:
+			for key, value := range v {
+				(*e)[key] = &ExampleRef{
+					Value: &Example{
+						Value: value,
+					},
+				}
+			}
+		case []interface{}:
+			for i, value := range v {
+				(*e)[fmt.Sprintf("example %d", i+1)] = &ExampleRef{
+					Value: &Example{
+						Value: value,
+					},
+				}
+			}
+		default:
+		}
+	}
+	return nil
 }
 
 func (r ExampleRef) MarshalJSON() ([]byte, error) {
