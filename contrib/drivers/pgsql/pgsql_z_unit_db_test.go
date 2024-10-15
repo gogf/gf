@@ -426,7 +426,7 @@ func Test_DB_InsertIgnore(t *testing.T) {
 		t.Assert(answer[0]["password"], "25d55ad283aa400af464c76d713c07ad")
 		t.Assert(answer[0]["nickname"], "T1")
 
-		//  Insert Correct Record
+		// Insert Correct Record
 		result, err = db.Insert(ctx, table, g.Map{
 			"id":          2,
 			"passport":    "t2",
@@ -444,5 +444,54 @@ func Test_DB_InsertIgnore(t *testing.T) {
 		t.Assert(answer[0]["passport"], "t2")
 		t.Assert(answer[0]["password"], "25d55ad283aa400af464c76d713c07ad")
 		t.Assert(answer[0]["nickname"], "name_2")
+
+		// Insert Multiple Records Using g.Map Array
+		data := g.List{
+			{
+				"id":          3,
+				"passport":    "t3",
+				"password":    "25d55ad283aa400af464c76d713c07ad",
+				"nickname":    "name_3",
+				"create_time": gtime.Now().String(),
+			},
+			{
+				"id":          4,
+				"passport":    "t4",
+				"password":    "25d55ad283aa400af464c76d713c07ad",
+				"nickname":    "name_4",
+				"create_time": gtime.Now().String(),
+			},
+			{
+				"id":          1,
+				"passport":    "t1_conflict",
+				"password":    "conflict_password",
+				"nickname":    "conflict_name",
+				"create_time": gtime.Now().String(),
+			},
+			{
+				"id":          2,
+				"passport":    "t2_conflict",
+				"password":    "conflict_password",
+				"nickname":    "conflict_name",
+				"create_time": gtime.Now().String(),
+			},
+		}
+
+		// Insert Multiple Records with Ignore
+		result, err = db.InsertIgnore(ctx, table, data)
+		t.AssertNil(err)
+
+		n, _ = result.RowsAffected()
+		t.Assert(n, 2)
+
+		answer, err = db.GetAll(ctx, fmt.Sprintf("SELECT * FROM %s", table))
+		t.AssertNil(err)
+		t.Assert(len(answer), 4)
+		// Should have four records in total (ID 1, 2, 3, 4)
+
+		t.Assert(answer[0]["passport"], "t1")
+		t.Assert(answer[1]["passport"], "t2")
+		t.Assert(answer[2]["passport"], "t3")
+		t.Assert(answer[3]["passport"], "t4")
 	})
 }
