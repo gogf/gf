@@ -117,3 +117,94 @@ func Test_Issue3135(t *testing.T) {
 		t.AssertIN("rgba", requiredArray)
 	})
 }
+
+type Issue3747CommonRes struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
+
+type Issue3747Req struct {
+	g.Meta `path:"/default" method:"post"`
+	Name   string
+}
+type Issue3747Res struct {
+	g.Meta       `status:"201" resEg:"testdata/Issue3747JsonFile/201.json"`
+	Info         string           `json:"info" eg:"Created!"`
+	OtherStatus1 interface{}      `status:"401" resEg:"testdata/Issue3747JsonFile/401.json"`
+	OtherStatus2 struct{}         `status:"402" mime:"application/json"`
+	OtherStatus3 *Issue3747Res403 `status:"403"`
+	OtherStatus4 interface{}      `status:"404"`
+	OtherStatus5 *Issue3747Res403 `status:"405" mime:"application/json"`
+}
+
+type Issue3747Res403 struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+type Issue3747 struct{}
+
+func (Issue3747) Default(ctx context.Context, req *Issue3747Req) (res *Issue3747Res, err error) {
+	res = &Issue3747Res{}
+	return
+}
+
+// https://github.com/gogf/gf/issues/3747
+func Test_Issue3747(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		openapi := s.GetOpenApi()
+		openapi.Config.CommonResponse = Issue3747CommonRes{}
+		openapi.Config.CommonResponseDataField = `Data`
+		s.Use(ghttp.MiddlewareHandlerResponse)
+		s.Group("/", func(group *ghttp.RouterGroup) {
+			group.Bind(
+				new(Issue3747),
+			)
+		})
+		s.SetLogger(nil)
+		s.SetOpenApiPath("/api.json")
+		s.SetDumpRouterMap(false)
+		s.Start()
+		defer s.Shutdown()
+		time.Sleep(100 * time.Millisecond)
+
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		apiContent := c.GetBytes(ctx, "/api.json")
+		j, err := gjson.LoadJson(apiContent)
+		// print json
+		t.AssertNil(err)
+		// 200 should not be found
+		t.Assert(j.Get(`paths./default.post.responses.200`).String(), "")
+		t.AssertNE(j.Get(`paths./default.post.responses.201`).String(), "")
+		t.AssertNE(j.Get(`paths./default.post.responses.401`).String(), "")
+		t.AssertNE(j.Get(`paths./default.post.responses.402`).String(), "")
+		t.AssertNE(j.Get(`paths./default.post.responses.403`).String(), "")
+		t.AssertNE(j.Get(`paths./default.post.responses.404`).String(), "")
+		t.AssertNE(j.Get(`paths./default.post.responses.405`).String(), "")
+
+		// Check content
+		commonResponseSchema := `{"properties":{"code":{"format":"int","type":"integer"},"data":{"properties":{},"type":"object"},"message":{"format":"string","type":"string"}},"type":"object"}`
+		Status201ExamplesContent := `{"code 1":{"value":{"code":1,"data":"Good","message":"Aha, 201 - 1"}},"code 2":{"value":{"code":2,"data":"Not Bad","message":"Aha, 201 - 2"}}}`
+		Status401ExamplesContent := `{"example 1":{"value":{"code":1,"data":null,"message":"Aha, 401 - 1"}},"example 2":{"value":{"code":2,"data":null,"message":"Aha, 401 - 2"}}}`
+		Status402SchemaContent := `{"$ref":"#/components/schemas/struct"}`
+		Issue3747Res403Ref := `{"$ref":"#/components/schemas/github.com.gogf.gf.v2.net.goai_test.Issue3747Res403"}`
+
+		t.AssertNil(err)
+		t.Assert(j.Get(`paths./default.post.responses.201.content.application/json.examples`).String(), Status201ExamplesContent)
+		t.Assert(j.Get(`paths./default.post.responses.401.content.application/json.examples`).String(), Status401ExamplesContent)
+		t.Assert(j.Get(`paths./default.post.responses.402.content.application/json.schema`).String(), Status402SchemaContent)
+		t.Assert(j.Get(`paths./default.post.responses.403.content.application/json.schema`).String(), Issue3747Res403Ref)
+		t.Assert(j.Get(`paths./default.post.responses.404.content.application/json.schema`).String(), commonResponseSchema)
+		t.Assert(j.Get(`paths./default.post.responses.405.content.application/json.schema`).String(), Issue3747Res403Ref)
+
+		api := s.GetOpenApi()
+		reqPath := "github.com.gogf.gf.v2.net.goai_test.Issue3747Res403"
+		schema := api.Components.Schemas.Get(reqPath).Value
+
+		Issue3747Res403Schema := `{"properties":{"code":{"format":"int","type":"integer"},"message":{"format":"string","type":"string"}},"type":"object"}`
+		t.Assert(schema, Issue3747Res403Schema)
+	})
+}
