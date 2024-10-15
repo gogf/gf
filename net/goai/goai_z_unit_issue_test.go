@@ -174,9 +174,8 @@ func Test_Issue3747(t *testing.T) {
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		apiContent := c.GetBytes(ctx, "/api.json")
 		j, err := gjson.LoadJson(apiContent)
-		// print json
+
 		t.AssertNil(err)
-		// 200 should not be found
 		t.Assert(j.Get(`paths./default.post.responses.200`).String(), "")
 		t.AssertNE(j.Get(`paths./default.post.responses.201`).String(), "")
 		t.AssertNE(j.Get(`paths./default.post.responses.401`).String(), "")
@@ -192,7 +191,6 @@ func Test_Issue3747(t *testing.T) {
 		Status402SchemaContent := `{"$ref":"#/components/schemas/struct"}`
 		Issue3747Res403Ref := `{"$ref":"#/components/schemas/github.com.gogf.gf.v2.net.goai_test.Issue3747Res403"}`
 
-		t.AssertNil(err)
 		t.Assert(j.Get(`paths./default.post.responses.201.content.application/json.examples`).String(), Status201ExamplesContent)
 		t.Assert(j.Get(`paths./default.post.responses.401.content.application/json.examples`).String(), Status401ExamplesContent)
 		t.Assert(j.Get(`paths./default.post.responses.402.content.application/json.schema`).String(), Status402SchemaContent)
