@@ -9,7 +9,6 @@ package pgsql
 import (
 	"context"
 	"database/sql"
-
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -22,12 +21,6 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 		return nil, gerror.NewCode(
 			gcode.CodeNotSupported,
 			`Replace operation is not supported by pgsql driver`,
-		)
-
-	case gdb.InsertOptionIgnore:
-		return nil, gerror.NewCode(
-			gcode.CodeNotSupported,
-			`Insert ignore operation is not supported by pgsql driver`,
 		)
 
 	case gdb.InsertOptionDefault:
