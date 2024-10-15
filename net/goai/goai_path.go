@@ -295,28 +295,45 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	// Other Responses.
 	// =================================================================================================================
 
-	Fields, _ := gstructs.Fields(gstructs.FieldsInput{
+	fields, _ := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         outputObject.Interface(),
 		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 	})
-	for _, Field := range Fields {
-		if err := oai.addSchema(Field.Value.Interface()); err != nil {
-			return err
-		}
-		if Field.Tag("status") != "" {
-			statusValue := Field.Tag("status")
+	for _, field := range fields {
+		if field.Tag("status") != "" {
+			if field.Value.Interface() != nil {
+				if err := oai.addSchema(field.Value.Interface()); err != nil {
+					return err
+				}
+			}
+
+			tagMimeValue := field.Tag(gtag.Mime)
+
+			isOverrideResponse := false
+			if tagMimeValue != "" {
+				isOverrideResponse = true
+			} else {
+				fields, _ := gstructs.Fields(gstructs.FieldsInput{
+					Pointer:         field.Value.Interface(),
+					RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+				})
+				if len(fields) > 0 {
+					isOverrideResponse = true
+				}
+			}
+
+			statusValue := field.Tag("status")
 			statusCode := gconv.Int(statusValue)
 			if statusCode < 100 || statusCode >= 600 {
 				return gerror.Newf("Invalid HTTP status code: %s", statusValue)
 			}
-			status = statusValue
 			if _, ok := operation.Responses[statusValue]; !ok {
 				var (
 					extraResponse = Response{
 						Content:     map[string]MediaType{},
 						XExtensions: make(XExtensions),
 					}
-					metaMap = gmeta.Data(Field.Value.Interface())
+					metaMap = gmeta.Data(field.Value.Interface())
 				)
 				if len(metaMap) > 0 {
 					if err := oai.tagMapToResponse(metaMap, &extraResponse); err != nil {
@@ -326,13 +343,16 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 				// Supported mime types of response.
 				var (
 					contentTypes = oai.Config.ReadContentTypes
-					tagMimeValue = gmeta.Get(Field.Value.Interface(), gtag.Mime).String()
 					refInput     = getResponseSchemaRefInput{
-						BusinessStructName:      oai.golangTypeToSchemaName(Field.Type()),
-						CommonResponseObject:    nil,
-						CommonResponseDataField: "",
+						BusinessStructName:      oai.golangTypeToSchemaName(field.Type()),
+						CommonResponseObject:    oai.Config.CommonResponse,
+						CommonResponseDataField: oai.Config.CommonResponseDataField,
 					}
 				)
+				if isOverrideResponse {
+					refInput.CommonResponseObject = nil
+					refInput.CommonResponseDataField = ""
+				}
 
 				examples := make(map[string]*ExampleRef)
 				responseExamplePath := gmeta.Get(outputObject.Interface(), gtag.ResponseExampleShort).String()
