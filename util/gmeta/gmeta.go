@@ -32,7 +32,7 @@ func Data(object interface{}) map[string]string {
 		return nil
 	}
 
-	if cachedData, ok := cachedMetadata.Load(reflectType.String()); ok {
+	if cachedData, ok := cachedMetadata.Load(reflectType.Type); ok {
 		return cachedData.(map[string]string)
 	}
 
@@ -47,7 +47,7 @@ func Data(object interface{}) map[string]string {
 		metadata = map[string]string{}
 	}
 
-	cachedMetadata.Store(reflectType.String(), metadata)
+	cachedMetadata.Store(reflectType.Type, metadata)
 	return metadata
 }
 
