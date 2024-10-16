@@ -18,7 +18,6 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
-	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/gogf/gf/v2/util/gvalid"
 )
 
@@ -182,10 +181,6 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 	schema.Type = TypeObject
 	for _, structField := range structFields {
 		if !gstr.IsLetterUpper(structField.Name()[0]) {
-			continue
-		}
-		// Filter Response status structures fields.
-		if structField.TagMap()[gtag.Status] != "" {
 			continue
 		}
 		var fieldName = structField.TagPriorityName()
