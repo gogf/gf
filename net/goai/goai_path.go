@@ -129,7 +129,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		)
 	}
 
-	if err := oai.addSchema(inputObject.Interface(), outputObject.Interface()); err != nil {
+	if err := oai.addSchema(inputObject.Interface()); err != nil {
 		return err
 	}
 
@@ -245,58 +245,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		}
 		status = statusValue
 	}
-	if _, ok := operation.Responses[status]; !ok {
-		var (
-			response = Response{
-				Content:     map[string]MediaType{},
-				XExtensions: make(XExtensions),
-			}
-		)
-		if len(outputMetaMap) > 0 {
-			if err := oai.tagMapToResponse(outputMetaMap, &response); err != nil {
-				return err
-			}
-		}
-		// Supported mime types of response.
-		var (
-			contentTypes = oai.Config.ReadContentTypes
-			tagMimeValue = gmeta.Get(outputObject.Interface(), gtag.Mime).String()
-			refInput     = getResponseSchemaRefInput{
-				BusinessStructName:      outputStructTypeName,
-				CommonResponseObject:    oai.Config.CommonResponse,
-				CommonResponseDataField: oai.Config.CommonResponseDataField,
-			}
-		)
-		if tagMimeValue != "" {
-			contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
-		}
-		for _, v := range contentTypes {
-			// If customized response mime type, it then ignores common response feature.
-			if tagMimeValue != "" {
-				refInput.CommonResponseObject = nil
-				refInput.CommonResponseDataField = ""
-			}
-			responseExamplePath := outputMetaMap[gtag.ResponseExampleShort]
-			if responseExamplePath == "" {
-				responseExamplePath = outputMetaMap[gtag.ResponseExample]
-			}
-			examples := make(Examples)
-			if responseExamplePath != "" {
-				if err := examples.applyExamplesFile(responseExamplePath); err != nil {
-					return err
-				}
-			}
-			schemaRef, err := oai.getResponseSchemaRef(refInput)
-			if err != nil {
-				return err
-			}
-			response.Content[v] = MediaType{
-				Schema:   schemaRef,
-				Examples: examples,
-			}
-		}
-		operation.Responses[status] = ResponseRef{Value: &response}
-	}
+	operation.Responses.AddStatus(oai, status, outputObject.Interface(), outputStructTypeName, true)
 
 	// =================================================================================================================
 	// Other Responses.
@@ -306,82 +255,12 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			if statusCode < 100 || statusCode >= 600 {
 				return gerror.Newf("Invalid HTTP status code: %d", statusCode)
 			}
-			status := gconv.String(statusCode)
-			if _, ok := operation.Responses[status]; !ok {
-				// Add the response to the operation
-				if data != nil {
-					if err := oai.addSchema(data); err != nil {
-						return err
-					}
-				}
-
-				tagMimeValue := gmeta.Get(data, gtag.Mime).String()
-
-				isOverrideResponse := false
-				if tagMimeValue != "" {
-					isOverrideResponse = true
-				} else {
-					fields, _ := gstructs.Fields(gstructs.FieldsInput{
-						Pointer:         data,
-						RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
-					})
-					if len(fields) > 0 {
-						isOverrideResponse = true
-					}
-				}
-
-				var (
-					extraResponse = Response{
-						Content:     map[string]MediaType{},
-						XExtensions: make(XExtensions),
-					}
-					metaMap = gmeta.Data(data)
-				)
-				if len(metaMap) > 0 {
-					if err := oai.tagMapToResponse(metaMap, &extraResponse); err != nil {
-						return err
-					}
-				}
-				// Supported mime types of response.
-				var (
-					contentTypes = oai.Config.ReadContentTypes
-					refInput     = getResponseSchemaRefInput{
-						BusinessStructName:      oai.golangTypeToSchemaName(reflect.TypeOf(data)),
-						CommonResponseObject:    oai.Config.CommonResponse,
-						CommonResponseDataField: oai.Config.CommonResponseDataField,
-					}
-				)
-				if isOverrideResponse {
-					refInput.CommonResponseObject = nil
-					refInput.CommonResponseDataField = ""
-				}
-
-				responseExamplePath := gmeta.Get(data, gtag.ResponseExampleShort).String()
-				if responseExamplePath == "" {
-					responseExamplePath = gmeta.Get(data, gtag.ResponseExample).String()
-				}
-				examples := make(Examples)
-				if responseExamplePath != "" {
-					if err := examples.applyExamplesFile(responseExamplePath); err != nil {
-						return err
-					}
-				}
-
-				if tagMimeValue != "" {
-					contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
-				}
-				for _, v := range contentTypes {
-					schemaRef, err := oai.getResponseSchemaRef(refInput)
-					if err != nil {
-						return err
-					}
-					extraResponse.Content[v] = MediaType{
-						Schema:   schemaRef,
-						Examples: examples,
-					}
-				}
-				operation.Responses[status] = ResponseRef{Value: &extraResponse}
+			if data == nil {
+				continue
 			}
+			dataType := oai.golangTypeToSchemaName(reflect.TypeOf(data))
+			status := gconv.String(statusCode)
+			operation.Responses.AddStatus(oai, status, data, dataType, false)
 		}
 	}
 
