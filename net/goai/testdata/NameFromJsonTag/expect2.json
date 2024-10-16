@@ -1,0 +1,1 @@
+{"openapi":"3.0.0","components":{"schemas":{"github.com.gogf.gf.v2.net.goai_test.CreateReq":{"properties":{"nick_name":{"format":"string","type":"string"}},"type":"object"}}},"info":{"title":"","version":""},"paths":null}

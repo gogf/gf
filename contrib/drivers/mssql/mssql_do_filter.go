@@ -21,8 +21,8 @@ var (
 	orderBySqlTmp         = `SELECT %s %s OFFSET %d ROWS FETCH NEXT %d ROWS ONLY`
 	withoutOrderBySqlTmp  = `SELECT %s OFFSET %d ROWS FETCH NEXT %d ROWS ONLY`
 	selectWithOrderSqlTmp = `
-SELECT * FROM (SELECT ROW_NUMBER() OVER (ORDER BY %s) as ROWNUMBER_, %s ) as TMP_ 
-WHERE TMP_.ROWNUMBER_ > %d AND TMP_.ROWNUMBER_ <= %d
+SELECT * FROM (SELECT ROW_NUMBER() OVER (ORDER BY %s) as ROW_NUMBER__, %s ) as TMP_ 
+WHERE TMP_.ROW_NUMBER__ > %d AND TMP_.ROW_NUMBER__ <= %d
 `
 )
 
