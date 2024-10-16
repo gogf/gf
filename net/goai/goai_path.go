@@ -245,7 +245,10 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		}
 		status = statusValue
 	}
-	operation.Responses.AddStatus(oai, status, outputObject.Interface(), outputStructTypeName, true)
+	err := operation.Responses.AddStatus(oai, status, outputObject.Interface(), outputStructTypeName, true)
+	if err != nil {
+		return err
+	}
 
 	// =================================================================================================================
 	// Other Responses.
@@ -260,7 +263,10 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			}
 			dataType := oai.golangTypeToSchemaName(reflect.TypeOf(data))
 			status := gconv.String(statusCode)
-			operation.Responses.AddStatus(oai, status, data, dataType, false)
+			err := operation.Responses.AddStatus(oai, status, data, dataType, false)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
