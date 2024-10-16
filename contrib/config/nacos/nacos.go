@@ -9,7 +9,6 @@ package nacos
 
 import (
 	"context"
-
 	"github.com/nacos-group/nacos-sdk-go/v2/clients"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients/config_client"
 	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
@@ -23,10 +22,11 @@ import (
 
 // Config is the configuration object for nacos client.
 type Config struct {
-	ServerConfigs []constant.ServerConfig `v:"required"` // See constant.ServerConfig
-	ClientConfig  constant.ClientConfig   `v:"required"` // See constant.ClientConfig
-	ConfigParam   vo.ConfigParam          `v:"required"` // See vo.ConfigParam
-	Watch         bool                    // Watch watches remote configuration updates, which updates local configuration in memory immediately when remote configuration changes.
+	ServerConfigs  []constant.ServerConfig `v:"required"` // See constant.ServerConfig
+	ClientConfig   constant.ClientConfig   `v:"required"` // See constant.ClientConfig
+	ConfigParam    vo.ConfigParam          `v:"required"` // See vo.ConfigParam
+	Watch          bool                    // Watch watches remote configuration updates, which updates local configuration in memory immediately when remote configuration changes.
+	OnConfigChange func()                  // Configure change callback function
 }
 
 // Client implements gcfg.Adapter implementing using nacos service.
@@ -125,9 +125,11 @@ func (c *Client) addWatcher() error {
 	if !c.config.Watch {
 		return nil
 	}
-
 	c.config.ConfigParam.OnChange = func(namespace, group, dataId, data string) {
 		c.doUpdate(data)
+		if c.config.OnConfigChange != nil {
+			go c.config.OnConfigChange()
+		}
 	}
 
 	if err := c.client.ListenConfig(c.config.ConfigParam); err != nil {
