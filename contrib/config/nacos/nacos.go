@@ -9,8 +9,6 @@ package nacos
 
 import (
 	"context"
-	"sync"
-
 	"github.com/nacos-group/nacos-sdk-go/v2/clients"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients/config_client"
 	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
@@ -24,10 +22,11 @@ import (
 
 // Config is the configuration object for nacos client.
 type Config struct {
-	ServerConfigs []constant.ServerConfig `v:"required"` // See constant.ServerConfig
-	ClientConfig  constant.ClientConfig   `v:"required"` // See constant.ClientConfig
-	ConfigParam   vo.ConfigParam          `v:"required"` // See vo.ConfigParam
-	Watch         bool                    // Watch watches remote configuration updates, which updates local configuration in memory immediately when remote configuration changes.
+	ServerConfigs  []constant.ServerConfig `v:"required"` // See constant.ServerConfig
+	ClientConfig   constant.ClientConfig   `v:"required"` // See constant.ClientConfig
+	ConfigParam    vo.ConfigParam          `v:"required"` // See vo.ConfigParam
+	Watch          bool                    // Watch watches remote configuration updates, which updates local configuration in memory immediately when remote configuration changes.
+	OnConfigChange func()                  // Configure change callback function
 }
 
 // Client implements gcfg.Adapter implementing using nacos service.
@@ -38,7 +37,7 @@ type Client struct {
 }
 
 // New creates and returns gcfg.Adapter implementing using nacos service.
-func New(ctx context.Context, config Config, actions ...func()) (adapter gcfg.Adapter, err error) {
+func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 	// Data validation.
 	err = g.Validator().Data(config).Run(ctx)
 	if err != nil {
@@ -58,7 +57,7 @@ func New(ctx context.Context, config Config, actions ...func()) (adapter gcfg.Ad
 		return nil, gerror.Wrapf(err, `create nacos client failed with config: %+v`, config)
 	}
 
-	err = client.addWatcher(actions...)
+	err = client.addWatcher()
 	if err != nil {
 		return nil, err
 	}
@@ -122,22 +121,15 @@ func (c *Client) doUpdate(content string) (err error) {
 	return nil
 }
 
-func (c *Client) addWatcher(actions ...func()) error {
+func (c *Client) addWatcher() error {
 	if !c.config.Watch {
 		return nil
 	}
-
 	c.config.ConfigParam.OnChange = func(namespace, group, dataId, data string) {
 		c.doUpdate(data)
-		var wg sync.WaitGroup
-		for _, action := range actions {
-			wg.Add(1)
-			go func(f func()) {
-				defer wg.Done()
-				f()
-			}(action)
+		if c.config.OnConfigChange != nil {
+			go c.config.OnConfigChange()
 		}
-		wg.Wait()
 	}
 
 	if err := c.client.ListenConfig(c.config.ConfigParam); err != nil {
