@@ -301,46 +301,41 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	// =================================================================================================================
 	// Other Responses.
 	// =================================================================================================================
-
-	fields, _ := gstructs.Fields(gstructs.FieldsInput{
-		Pointer:         outputObject.Interface(),
-		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
-	})
-	for _, field := range fields {
-		if field.Tag("status") != "" {
-			if field.Value.Interface() != nil {
-				if err := oai.addSchema(field.Value.Interface()); err != nil {
-					return err
-				}
-			}
-
-			tagMimeValue := field.Tag(gtag.Mime)
-
-			isOverrideResponse := false
-			if tagMimeValue != "" {
-				isOverrideResponse = true
-			} else {
-				fields, _ := gstructs.Fields(gstructs.FieldsInput{
-					Pointer:         field.Value.Interface(),
-					RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
-				})
-				if len(fields) > 0 {
-					isOverrideResponse = true
-				}
-			}
-
-			statusValue := field.Tag("status")
-			statusCode := gconv.Int(statusValue)
+	if enhancedResponse, ok := outputObject.Interface().(EnhancedResponse); ok {
+		for statusCode, data := range enhancedResponse.ResponseStatusMap() {
 			if statusCode < 100 || statusCode >= 600 {
-				return gerror.Newf("Invalid HTTP status code: %s", statusValue)
+				return gerror.Newf("Invalid HTTP status code: %d", statusCode)
 			}
-			if _, ok := operation.Responses[statusValue]; !ok {
+			status := gconv.String(statusCode)
+			if _, ok := operation.Responses[status]; !ok {
+				// Add the response to the operation
+				if data != nil {
+					if err := oai.addSchema(data); err != nil {
+						return err
+					}
+				}
+
+				tagMimeValue := gmeta.Get(data, gtag.Mime).String()
+
+				isOverrideResponse := false
+				if tagMimeValue != "" {
+					isOverrideResponse = true
+				} else {
+					fields, _ := gstructs.Fields(gstructs.FieldsInput{
+						Pointer:         data,
+						RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+					})
+					if len(fields) > 0 {
+						isOverrideResponse = true
+					}
+				}
+
 				var (
 					extraResponse = Response{
 						Content:     map[string]MediaType{},
 						XExtensions: make(XExtensions),
 					}
-					metaMap = gmeta.Data(field.Value.Interface())
+					metaMap = gmeta.Data(data)
 				)
 				if len(metaMap) > 0 {
 					if err := oai.tagMapToResponse(metaMap, &extraResponse); err != nil {
@@ -351,7 +346,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 				var (
 					contentTypes = oai.Config.ReadContentTypes
 					refInput     = getResponseSchemaRefInput{
-						BusinessStructName:      oai.golangTypeToSchemaName(field.Type()),
+						BusinessStructName:      oai.golangTypeToSchemaName(reflect.TypeOf(data)),
 						CommonResponseObject:    oai.Config.CommonResponse,
 						CommonResponseDataField: oai.Config.CommonResponseDataField,
 					}
@@ -361,9 +356,9 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 					refInput.CommonResponseDataField = ""
 				}
 
-				responseExamplePath := field.Tag(gtag.ResponseExampleShort)
+				responseExamplePath := gmeta.Get(data, gtag.ResponseExampleShort).String()
 				if responseExamplePath == "" {
-					responseExamplePath = field.Tag(gtag.ResponseExample)
+					responseExamplePath = gmeta.Get(data, gtag.ResponseExample).String()
 				}
 				examples := make(Examples)
 				if responseExamplePath != "" {
@@ -385,7 +380,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 						Examples: examples,
 					}
 				}
-				operation.Responses[statusValue] = ResponseRef{Value: &extraResponse}
+				operation.Responses[status] = ResponseRef{Value: &extraResponse}
 			}
 		}
 	}
