@@ -26,7 +26,6 @@ type Responses map[string]ResponseRef
 
 func (r *Responses) AddStatus(oai *OpenApiV3, status string, object interface{}, businessStructName string, isDefault bool) error {
 	if _, ok := (*r)[status]; !ok {
-
 		if err := oai.addSchema(object); err != nil {
 			return err
 		}
