@@ -402,6 +402,7 @@ const (
 	queryTypeNormal queryType = iota
 	queryTypeCount
 	queryTypeValue
+	queryTypeExist
 )
 
 type joinOperator string
