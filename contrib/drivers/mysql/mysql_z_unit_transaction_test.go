@@ -768,15 +768,14 @@ func Test_Transaction_Panic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		ctx := context.TODO()
 		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
-			if _, err := tx.Replace(table, g.Map{
+			_, err := tx.Replace(table, g.Map{
 				"id":          1,
 				"passport":    "USER_1",
 				"password":    "PASS_1",
 				"nickname":    "NAME_1",
 				"create_time": gtime.Now().String(),
-			}); err != nil {
-				t.Error(err)
-			}
+			})
+			t.AssertNil(err)
 			panic("error")
 			return nil
 		})
