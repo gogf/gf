@@ -36,28 +36,67 @@ type IGroupString interface {
 	MGet(ctx context.Context, keys ...string) (map[string]*gvar.Var, error)
 }
 
-// TTLOption provides extra option for TTL related functions.
-type TTLOption struct {
-	EX      *int64 // EX seconds -- Set the specified expire time, in seconds.
-	PX      *int64 // PX milliseconds -- Set the specified expire time, in milliseconds.
-	EXAT    *int64 // EXAT timestamp-seconds -- Set the specified Unix time at which the key will expire, in seconds.
-	PXAT    *int64 // PXAT timestamp-milliseconds -- Set the specified Unix time at which the key will expire, in milliseconds.
-	KeepTTL bool   // Retain the time to live associated with the key.
-}
-
 // SetOption provides extra option for Set function.
 type SetOption struct {
-	TTLOption
 	NX bool // Only set the key if it does not already exist.
 	XX bool // Only set the key if it already exists.
 
 	// Return the old string stored at key, or nil if key did not exist.
 	// An error is returned and SET aborted if the value stored at key is not a string.
 	Get bool
+
+	EX      int64 // EX seconds -- Set the specified expire time, in seconds.
+	PX      int64 // PX milliseconds -- Set the specified expire time, in milliseconds.
+	EXAT    int64 // EXAT timestamp-seconds -- Set the specified Unix time at which the key will expire, in seconds.
+	PXAT    int64 // PXAT timestamp-milliseconds -- Set the specified Unix time at which the key will expire, in milliseconds.
+	KeepTTL bool  // Retain the time to live associated with the key.
+}
+
+func (so SetOption) OptionToArgs() []interface{} {
+	var args []interface{}
+	if so.NX {
+		args = append(args, "NX")
+	} else if so.XX {
+		args = append(args, "XX")
+	}
+	if so.Get {
+		args = append(args, "GET")
+	}
+	if so.EX > 0 {
+		args = append(args, "EX", so.EX)
+	} else if so.PX > 0 {
+		args = append(args, "PX", so.PX)
+	} else if so.EXAT > 0 {
+		args = append(args, "EXAT", so.EXAT)
+	} else if so.PXAT > 0 {
+		args = append(args, "PXAT", so.PXAT)
+	} else if so.KeepTTL {
+		args = append(args, "KEEPTTL")
+	}
+	return args
 }
 
 // GetEXOption provides extra option for GetEx function.
 type GetEXOption struct {
-	TTLOption
-	Persist bool // Persist -- Remove the time to live associated with the key.
+	EX      int64 // EX seconds -- Set the specified expire time, in seconds.
+	PX      int64 // PX milliseconds -- Set the specified expire time, in milliseconds.
+	EXAT    int64 // EXAT timestamp-seconds -- Set the specified Unix time at which the key will expire, in seconds.
+	PXAT    int64 // PXAT timestamp-milliseconds -- Set the specified Unix time at which the key will expire, in milliseconds.
+	Persist bool  // Persist -- Remove the time to live associated with the key.
+}
+
+func (sgo GetEXOption) OptionToArgs() []interface{} {
+	var args []interface{}
+	if sgo.EX > 0 {
+		args = append(args, "EX", sgo.EX)
+	} else if sgo.PX > 0 {
+		args = append(args, "PX", sgo.PX)
+	} else if sgo.EXAT > 0 {
+		args = append(args, "EXAT", sgo.EXAT)
+	} else if sgo.PXAT > 0 {
+		args = append(args, "PXAT", sgo.PXAT)
+	} else if sgo.Persist {
+		args = append(args, "PERSIST")
+	}
+	return args
 }

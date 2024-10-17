@@ -12,7 +12,6 @@ import (
 
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -50,9 +49,7 @@ func Test_GroupString_Set(t *testing.T) {
 
 		_, err = redis.GroupString().Set(ctx, k1, v2, gredis.SetOption{
 			NX: true,
-			TTLOption: gredis.TTLOption{
-				EX: gconv.PtrInt64(60),
-			},
+			EX: 60,
 		})
 		t.AssertNil(err)
 
@@ -62,9 +59,7 @@ func Test_GroupString_Set(t *testing.T) {
 
 		_, err = redis.GroupString().Set(ctx, k1, v2, gredis.SetOption{
 			XX: true,
-			TTLOption: gredis.TTLOption{
-				EX: gconv.PtrInt64(60),
-			},
+			EX: 60,
 		})
 		t.AssertNil(err)
 

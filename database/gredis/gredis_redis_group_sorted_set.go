@@ -53,6 +53,27 @@ type ZAddOption struct {
 	INCR bool
 }
 
+func (zao ZAddOption) OptionToArgs() []interface{} {
+	var args []interface{}
+	if zao.NX {
+		args = append(args, "NX")
+	} else if zao.XX {
+		args = append(args, "XX")
+	}
+	if zao.GT {
+		args = append(args, "GT")
+	} else if zao.LT {
+		args = append(args, "LT")
+	}
+	if zao.CH {
+		args = append(args, "CH")
+	}
+	if zao.INCR {
+		args = append(args, "INCR")
+	}
+	return args
+}
+
 // ZAddMember is element struct for set.
 type ZAddMember struct {
 	Score  float64
@@ -71,15 +92,42 @@ type ZRangeOption struct {
 	WithScores bool
 }
 
+func (zro ZRangeOption) OptionToArgs() []interface{} {
+	var args []interface{}
+	if zro.ByScore {
+		args = append(args, "BYSCORE")
+	} else if zro.ByLex {
+		args = append(args, "BYLEX")
+	}
+	if zro.Rev {
+		args = append(args, "REV")
+	}
+	if zro.Limit != nil {
+		args = append(args, "LIMIT", zro.Limit.Offset, zro.Limit.Count)
+	}
+	if zro.WithScores {
+		args = append(args, "WITHSCORES")
+	}
+	return args
+}
+
 // ZRangeOptionLimit provides LIMIT argument for ZRange function.
 // The optional LIMIT argument can be used to obtain a sub-range from the matching elements
 // (similar to SELECT LIMIT offset, count in SQL). A negative `Count` returns all elements from the `Offset`.
 type ZRangeOptionLimit struct {
-	Offset *int
-	Count  *int
+	Offset int
+	Count  int
 }
 
 // ZRevRangeOption provides options for function ZRevRange.
 type ZRevRangeOption struct {
 	WithScores bool
+}
+
+func (zrro ZRevRangeOption) OptionToArgs() []interface{} {
+	var args []interface{}
+	if zrro.WithScores {
+		args = append(args, "WITHSCORES")
+	}
+	return args
 }

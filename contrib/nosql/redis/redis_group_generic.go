@@ -41,7 +41,7 @@ func (r *Redis) GroupGeneric() gredis.IGroupGeneric {
 //
 // https://redis.io/commands/copy/
 func (r GroupGeneric) Copy(ctx context.Context, source, destination string, option ...gredis.CopyOption) (int64, error) {
-	var usedOption interface{}
+	var usedOption redisOption
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
@@ -179,11 +179,10 @@ func (r GroupGeneric) Keys(ctx context.Context, pattern string) ([]string, error
 //
 // https://redis.io/commands/scan/
 func (r GroupGeneric) Scan(ctx context.Context, cursor uint64, option ...gredis.ScanOption) (uint64, []string, error) {
-	var usedOption interface{}
+	var usedOption redisOption
 	if len(option) > 0 {
-		usedOption = option[0].ToUsedOption()
+		usedOption = option[0]
 	}
-
 	v, err := r.Operation.Do(ctx, "Scan", mustMergeOptionToArgs(
 		[]interface{}{cursor}, usedOption,
 	)...)
@@ -231,7 +230,7 @@ func (r GroupGeneric) FlushAll(ctx context.Context, option ...gredis.FlushOp) er
 //
 // https://redis.io/commands/expire/
 func (r GroupGeneric) Expire(ctx context.Context, key string, seconds int64, option ...gredis.ExpireOption) (int64, error) {
-	var usedOption interface{}
+	var usedOption redisOption
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
@@ -252,7 +251,7 @@ func (r GroupGeneric) Expire(ctx context.Context, key string, seconds int64, opt
 //
 // https://redis.io/commands/expireat/
 func (r GroupGeneric) ExpireAt(ctx context.Context, key string, time time.Time, option ...gredis.ExpireOption) (int64, error) {
-	var usedOption interface{}
+	var usedOption redisOption
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
@@ -316,7 +315,7 @@ func (r GroupGeneric) Persist(ctx context.Context, key string) (int64, error) {
 //
 // https://redis.io/commands/pexpire/
 func (r GroupGeneric) PExpire(ctx context.Context, key string, milliseconds int64, option ...gredis.ExpireOption) (int64, error) {
-	var usedOption interface{}
+	var usedOption redisOption
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
@@ -331,7 +330,7 @@ func (r GroupGeneric) PExpire(ctx context.Context, key string, milliseconds int6
 //
 // https://redis.io/commands/pexpireat/
 func (r GroupGeneric) PExpireAt(ctx context.Context, key string, time time.Time, option ...gredis.ExpireOption) (int64, error) {
-	var usedOption interface{}
+	var usedOption redisOption
 	if len(option) > 0 {
 		usedOption = option[0]
 	}

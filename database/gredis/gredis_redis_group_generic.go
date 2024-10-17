@@ -47,6 +47,15 @@ type CopyOption struct {
 	REPLACE bool // REPLACE option removes the destination key before copying the value to it.
 }
 
+func (co CopyOption) OptionToArgs() []interface{} {
+	var args []interface{}
+	args = append(args, "DB", co.DB)
+	if co.REPLACE {
+		args = append(args, "REPLACE")
+	}
+	return args
+}
+
 type FlushOp string
 
 const (
@@ -62,6 +71,20 @@ type ExpireOption struct {
 	LT bool // LT -- Set expiry only when the new expiry is less than current one
 }
 
+func (eo ExpireOption) OptionToArgs() []interface{} {
+	var args []interface{}
+	if eo.NX {
+		args = append(args, "NX")
+	} else if eo.XX {
+		args = append(args, "XX")
+	} else if eo.GT {
+		args = append(args, "GT")
+	} else if eo.LT {
+		args = append(args, "LT")
+	}
+	return args
+}
+
 // ScanOption provides options for function Scan.
 type ScanOption struct {
 	Match string // Match -- Specifies a glob-style pattern for filtering keys.
@@ -69,26 +92,16 @@ type ScanOption struct {
 	Type  string // Type -- Filters keys by their data type. Valid types are "string", "list", "set", "zset", "hash", and "stream".
 }
 
-// doScanOption is the internal representation of ScanOption.
-type doScanOption struct {
-	Match *string
-	Count *int
-	Type  *string
-}
-
-// ToUsedOption converts fields in ScanOption with zero values to nil. Only fields with values are retained.
-func (scanOpt *ScanOption) ToUsedOption() doScanOption {
-	var usedOption doScanOption
-
-	if scanOpt.Match != "" {
-		usedOption.Match = &scanOpt.Match
+func (so ScanOption) OptionToArgs() []interface{} {
+	var args []interface{}
+	if len(so.Match) > 0 {
+		args = append(args, "MATCH", so.Match)
 	}
-	if scanOpt.Count != 0 {
-		usedOption.Count = &scanOpt.Count
+	if so.Count != 0 {
+		args = append(args, "COUNT", so.Count)
 	}
-	if scanOpt.Type != "" {
-		usedOption.Type = &scanOpt.Type
+	if len(so.Type) > 0 {
+		args = append(args, "TYPE", so.Type)
 	}
-
-	return usedOption
+	return args
 }

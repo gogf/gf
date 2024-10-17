@@ -28,3 +28,13 @@ type ScriptFlushOption struct {
 	SYNC  bool // SYNC  flushes the cache synchronously.
 	ASYNC bool // ASYNC flushes the cache asynchronously.
 }
+
+func (sfo ScriptFlushOption) OptionToArgs() []interface{} {
+	var args []interface{}
+	if sfo.SYNC {
+		args = append(args, "SYNC")
+	} else if sfo.ASYNC {
+		args = append(args, "ASYNC")
+	}
+	return args
+}

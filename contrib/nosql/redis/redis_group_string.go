@@ -32,7 +32,7 @@ func (r *Redis) GroupString() gredis.IGroupString {
 //
 // https://redis.io/commands/set/
 func (r GroupString) Set(ctx context.Context, key string, value interface{}, option ...gredis.SetOption) (*gvar.Var, error) {
-	var usedOption interface{}
+	var usedOption redisOption
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
@@ -52,7 +52,7 @@ func (r GroupString) Set(ctx context.Context, key string, value interface{}, opt
 //
 // https://redis.io/commands/setnx/
 func (r GroupString) SetNX(ctx context.Context, key string, value interface{}) (bool, error) {
-	v, err := r.Operation.Do(ctx, "SetNX", key, value)
+	v, err := r.Operation.Do(ctx, "Set", key, value, "NX")
 	return v.Bool(), err
 }
 
@@ -70,7 +70,7 @@ func (r GroupString) SetNX(ctx context.Context, key string, value interface{}) (
 //
 // https://redis.io/commands/setex/
 func (r GroupString) SetEX(ctx context.Context, key string, value interface{}, ttlInSeconds int64) error {
-	_, err := r.Operation.Do(ctx, "SetEX", key, ttlInSeconds, value)
+	_, err := r.Operation.Do(ctx, "Set", key, value, "EX", ttlInSeconds)
 	return err
 }
 
@@ -95,7 +95,7 @@ func (r GroupString) GetDel(ctx context.Context, key string) (*gvar.Var, error) 
 //
 // https://redis.io/commands/getex/
 func (r GroupString) GetEX(ctx context.Context, key string, option ...gredis.GetEXOption) (*gvar.Var, error) {
-	var usedOption interface{}
+	var usedOption redisOption
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
