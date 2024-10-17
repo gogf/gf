@@ -10,7 +10,7 @@ import (
 	"fmt"
 
 	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gres"
@@ -32,7 +32,7 @@ type ExampleRef struct {
 }
 
 func (e *Examples) applyExamplesFile(path string) error {
-	if g.IsNil(e) {
+	if empty.IsNil(e) {
 		return nil
 	}
 	var json string
