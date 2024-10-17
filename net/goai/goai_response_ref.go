@@ -24,11 +24,18 @@ type ResponseRef struct {
 // Responses is specified by OpenAPI/Swagger 3.0 standard.
 type Responses map[string]ResponseRef
 
-func (r *Responses) AddStatus(oai *OpenApiV3, status string, object interface{}, businessStructName string, isDefault bool) error {
+// AddStatus adds object to Responses with given status code.
+// It ignores adding status code that already exists.
+// businessStructName is the name of the business struct, could use the same way in oai.golangTypeToSchemaName.
+// isDefault is a flag indicating whether it is the default response.
+// If isDefault is set to false, it would override response schema when the mime type is set or the object has fields.
+// Otherwise it would remain the same logic as original response adding logic.
+func (r *Responses) addStatus(oai *OpenApiV3, status string, object interface{}, businessStructName string, isDefault bool) error {
 	// Ignore added status
 	if _, ok := (*r)[status]; ok {
 		return nil
 	}
+	// Add object schema to oai
 	if err := oai.addSchema(object); err != nil {
 		return err
 	}
