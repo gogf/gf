@@ -24,31 +24,28 @@ type ResponseRef struct {
 // Responses is specified by OpenAPI/Swagger 3.0 standard.
 type Responses map[string]ResponseRef
 
-// AddStatus adds object to Responses with given status code.
-// It ignores adding status code that already exists.
-// businessStructName is the name of the business struct, could use the same way in oai.golangTypeToSchemaName.
-// isDefault is a flag indicating whether it is the default response.
-// If isDefault is set to false, it would override response schema when the mime type is set or the object has fields.
-// Otherwise it would remain the same logic as original response adding logic.
-func (r *Responses) addStatus(oai *OpenApiV3, status string, object interface{}, businessStructName string, isDefault bool) error {
-	// Ignore added status
-	if _, ok := (*r)[status]; ok {
-		return nil
+// object could be someObject.Interface()
+// There may be some difference between someObject.Type() and reflect.TypeOf(object).
+func (oai *OpenApiV3) getResponseFromObject(object interface{}, isDefault ...bool) (*Response, error) {
+	// Add default status by default.
+	var isDefaultStatus = true
+	if len(isDefault) > 0 {
+		isDefaultStatus = isDefault[0]
 	}
 	// Add object schema to oai
 	if err := oai.addSchema(object); err != nil {
-		return err
+		return nil, err
 	}
 	var (
 		metaMap  = gmeta.Data(object)
-		response = Response{
+		response = &Response{
 			Content:     map[string]MediaType{},
 			XExtensions: make(XExtensions),
 		}
 	)
 	if len(metaMap) > 0 {
-		if err := oai.tagMapToResponse(metaMap, &response); err != nil {
-			return err
+		if err := oai.tagMapToResponse(metaMap, response); err != nil {
+			return nil, err
 		}
 	}
 	// Supported mime types of response.
@@ -56,7 +53,7 @@ func (r *Responses) addStatus(oai *OpenApiV3, status string, object interface{},
 		contentTypes = oai.Config.ReadContentTypes
 		tagMimeValue = gmeta.Get(object, gtag.Mime).String()
 		refInput     = getResponseSchemaRefInput{
-			BusinessStructName:      businessStructName,
+			BusinessStructName:      oai.golangTypeToSchemaName(reflect.TypeOf(object)),
 			CommonResponseObject:    oai.Config.CommonResponse,
 			CommonResponseDataField: oai.Config.CommonResponseDataField,
 		}
@@ -70,7 +67,7 @@ func (r *Responses) addStatus(oai *OpenApiV3, status string, object interface{},
 			refInput.CommonResponseObject = nil
 			refInput.CommonResponseDataField = ""
 		}
-		if !isDefault {
+		if !isDefaultStatus {
 			fields, _ := gstructs.Fields(gstructs.FieldsInput{
 				Pointer:         object,
 				RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
@@ -88,20 +85,19 @@ func (r *Responses) addStatus(oai *OpenApiV3, status string, object interface{},
 		examples := make(Examples)
 		if responseExamplePath != "" {
 			if err := examples.applyExamplesFile(responseExamplePath); err != nil {
-				return err
+				return nil, err
 			}
 		}
 		schemaRef, err := oai.getResponseSchemaRef(refInput)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		response.Content[v] = MediaType{
 			Schema:   schemaRef,
 			Examples: examples,
 		}
 	}
-	(*r)[status] = ResponseRef{Value: &response}
-	return nil
+	return response, nil
 }
 
 func (r ResponseRef) MarshalJSON() ([]byte, error) {

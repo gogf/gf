@@ -85,14 +85,13 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	}
 
 	var (
-		mime                 string
-		path                 = Path{XExtensions: make(XExtensions)}
-		inputMetaMap         = gmeta.Data(inputObject.Interface())
-		outputMetaMap        = gmeta.Data(outputObject.Interface())
-		isInputStructEmpty   = oai.doesStructHasNoFields(inputObject.Interface())
-		inputStructTypeName  = oai.golangTypeToSchemaName(inputObject.Type())
-		outputStructTypeName = oai.golangTypeToSchemaName(outputObject.Type())
-		operation            = Operation{
+		mime                string
+		path                = Path{XExtensions: make(XExtensions)}
+		inputMetaMap        = gmeta.Data(inputObject.Interface())
+		outputMetaMap       = gmeta.Data(outputObject.Interface())
+		isInputStructEmpty  = oai.doesStructHasNoFields(inputObject.Interface())
+		inputStructTypeName = oai.golangTypeToSchemaName(inputObject.Type())
+		operation           = Operation{
 			Responses:   map[string]ResponseRef{},
 			XExtensions: make(XExtensions),
 		}
@@ -245,9 +244,12 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		}
 		status = statusValue
 	}
-	err := operation.Responses.addStatus(oai, status, outputObject.Interface(), outputStructTypeName, true)
-	if err != nil {
-		return err
+	if _, ok := operation.Responses[status]; !ok {
+		response, err := oai.getResponseFromObject(outputObject.Interface())
+		if err != nil {
+			return err
+		}
+		operation.Responses[status] = ResponseRef{Value: response}
 	}
 
 	// =================================================================================================================
@@ -261,11 +263,13 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			if data == nil {
 				continue
 			}
-			dataType := oai.golangTypeToSchemaName(reflect.TypeOf(data))
 			status := gconv.String(statusCode)
-			err := operation.Responses.addStatus(oai, status, data, dataType, false)
-			if err != nil {
-				return err
+			if _, ok := operation.Responses[status]; !ok {
+				response, err := oai.getResponseFromObject(data, false)
+				if err != nil {
+					return err
+				}
+				operation.Responses[status] = ResponseRef{Value: response}
 			}
 		}
 	}
