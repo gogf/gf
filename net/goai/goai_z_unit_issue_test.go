@@ -160,6 +160,9 @@ func (r Issue3747Res) ResponseStatusMap() map[goai.StatusCode]any {
 		402: Issue3747Res402{},
 		403: Issue3747Res403{},
 		404: Issue3747Res404{},
+		405: struct{}{},
+		407: interface{}(nil),
+		406: nil,
 	}
 }
 
@@ -202,6 +205,9 @@ func Test_Issue3747(t *testing.T) {
 		t.AssertNE(j.Get(`paths./default.post.responses.402`).String(), "")
 		t.AssertNE(j.Get(`paths./default.post.responses.403`).String(), "")
 		t.AssertNE(j.Get(`paths./default.post.responses.404`).String(), "")
+		t.AssertNE(j.Get(`paths./default.post.responses.405`).String(), "")
+		t.Assert(j.Get(`paths./default.post.responses.406`).String(), "")
+		t.Assert(j.Get(`paths./default.post.responses.407`).String(), "")
 
 		// Check content
 		commonResponseSchema := `{"properties":{"code":{"format":"int","type":"integer"},"data":{"properties":{},"type":"object"},"message":{"format":"string","type":"string"}},"type":"object"}`
@@ -215,6 +221,7 @@ func Test_Issue3747(t *testing.T) {
 		t.Assert(j.Get(`paths./default.post.responses.402.content.application/json.schema`).String(), Status402SchemaContent)
 		t.Assert(j.Get(`paths./default.post.responses.403.content.application/json.schema`).String(), Issue3747Res403Ref)
 		t.Assert(j.Get(`paths./default.post.responses.404.content.application/json.schema`).String(), commonResponseSchema)
+		t.Assert(j.Get(`paths./default.post.responses.405.content.application/json.schema`).String(), commonResponseSchema)
 
 		api := s.GetOpenApi()
 		reqPath := "github.com.gogf.gf.v2.net.goai_test.Issue3747Res403"
