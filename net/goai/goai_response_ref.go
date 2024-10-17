@@ -25,73 +25,75 @@ type ResponseRef struct {
 type Responses map[string]ResponseRef
 
 func (r *Responses) AddStatus(oai *OpenApiV3, status string, object interface{}, businessStructName string, isDefault bool) error {
-	if _, ok := (*r)[status]; !ok {
-		if err := oai.addSchema(object); err != nil {
+	// Ignore added status
+	if _, ok := (*r)[status]; ok {
+		return nil
+	}
+	if err := oai.addSchema(object); err != nil {
+		return err
+	}
+	var (
+		metaMap  = gmeta.Data(object)
+		response = Response{
+			Content:     map[string]MediaType{},
+			XExtensions: make(XExtensions),
+		}
+	)
+	if len(metaMap) > 0 {
+		if err := oai.tagMapToResponse(metaMap, &response); err != nil {
 			return err
 		}
-		var (
-			metaMap  = gmeta.Data(object)
-			response = Response{
-				Content:     map[string]MediaType{},
-				XExtensions: make(XExtensions),
-			}
-		)
-		if len(metaMap) > 0 {
-			if err := oai.tagMapToResponse(metaMap, &response); err != nil {
-				return err
-			}
+	}
+	// Supported mime types of response.
+	var (
+		contentTypes = oai.Config.ReadContentTypes
+		tagMimeValue = gmeta.Get(object, gtag.Mime).String()
+		refInput     = getResponseSchemaRefInput{
+			BusinessStructName:      businessStructName,
+			CommonResponseObject:    oai.Config.CommonResponse,
+			CommonResponseDataField: oai.Config.CommonResponseDataField,
 		}
-		// Supported mime types of response.
-		var (
-			contentTypes = oai.Config.ReadContentTypes
-			tagMimeValue = gmeta.Get(object, gtag.Mime).String()
-			refInput     = getResponseSchemaRefInput{
-				BusinessStructName:      businessStructName,
-				CommonResponseObject:    oai.Config.CommonResponse,
-				CommonResponseDataField: oai.Config.CommonResponseDataField,
-			}
-		)
+	)
+	if tagMimeValue != "" {
+		contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
+	}
+	for _, v := range contentTypes {
+		// If customized response mime type, it then ignores common response feature.
 		if tagMimeValue != "" {
-			contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
+			refInput.CommonResponseObject = nil
+			refInput.CommonResponseDataField = ""
 		}
-		for _, v := range contentTypes {
-			// If customized response mime type, it then ignores common response feature.
-			if tagMimeValue != "" {
+		if !isDefault {
+			fields, _ := gstructs.Fields(gstructs.FieldsInput{
+				Pointer:         object,
+				RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+			})
+			if len(fields) > 0 {
 				refInput.CommonResponseObject = nil
 				refInput.CommonResponseDataField = ""
 			}
-			if !isDefault {
-				fields, _ := gstructs.Fields(gstructs.FieldsInput{
-					Pointer:         object,
-					RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
-				})
-				if len(fields) > 0 {
-					refInput.CommonResponseObject = nil
-					refInput.CommonResponseDataField = ""
-				}
-			}
+		}
 
-			responseExamplePath := metaMap[gtag.ResponseExampleShort]
-			if responseExamplePath == "" {
-				responseExamplePath = metaMap[gtag.ResponseExample]
-			}
-			examples := make(Examples)
-			if responseExamplePath != "" {
-				if err := examples.applyExamplesFile(responseExamplePath); err != nil {
-					return err
-				}
-			}
-			schemaRef, err := oai.getResponseSchemaRef(refInput)
-			if err != nil {
+		responseExamplePath := metaMap[gtag.ResponseExampleShort]
+		if responseExamplePath == "" {
+			responseExamplePath = metaMap[gtag.ResponseExample]
+		}
+		examples := make(Examples)
+		if responseExamplePath != "" {
+			if err := examples.applyExamplesFile(responseExamplePath); err != nil {
 				return err
 			}
-			response.Content[v] = MediaType{
-				Schema:   schemaRef,
-				Examples: examples,
-			}
 		}
-		(*r)[status] = ResponseRef{Value: &response}
+		schemaRef, err := oai.getResponseSchemaRef(refInput)
+		if err != nil {
+			return err
+		}
+		response.Content[v] = MediaType{
+			Schema:   schemaRef,
+			Examples: examples,
+		}
 	}
+	(*r)[status] = ResponseRef{Value: &response}
 	return nil
 }
 
