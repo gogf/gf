@@ -729,7 +729,7 @@ func (m *Model) getFieldsFiltered() string {
 	}
 	var (
 		fieldsArray []string
-		fieldsExSet = gset.NewStrSetFrom(m.fieldsEx)
+		fieldsExSet = gset.NewStrSetFrom(gconv.Strings(m.fieldsEx))
 	)
 	if len(m.fields) > 0 {
 		// Filter custom fields with fieldEx.

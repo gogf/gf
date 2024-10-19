@@ -76,7 +76,7 @@ func (m *Model) doFieldsEx(table string, fieldNamesOrMapStruct ...interface{}) *
 		return m
 	}
 	model := m.getModel()
-	model.fieldsEx = append(model.fieldsEx, gconv.Strings(fields)...)
+	model.fieldsEx = append(model.fieldsEx, fields...)
 	return model
 }
 
@@ -86,7 +86,9 @@ func (m *Model) FieldsExPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...in
 		m.getTableNameByPrefixOrAlias(prefixOrAlias),
 		fieldNamesOrMapStruct...,
 	)
-	gstr.PrefixArray(model.fieldsEx, prefixOrAlias+".")
+	for i, field := range model.fieldsEx {
+		model.fieldsEx[i] = prefixOrAlias + "." + gconv.String(field)
+	}
 	return model
 }
 
