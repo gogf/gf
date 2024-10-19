@@ -15,10 +15,10 @@ import (
 // StatusCode is http status for response.
 type StatusCode = int
 
-// ResponseStatusDef is used to enhance the documentation of the response.
+// EnhancedResponse is used to enhance the documentation of the response.
 // Normal response structure could implement this interface to provide more information.
-type ResponseStatusDef interface {
-	ResponseStatusMap() map[StatusCode]any
+type EnhancedResponse interface {
+	ResponseStatusDef() map[StatusCode]any
 }
 
 // Response is specified by OpenAPI/Swagger 3.0 standard.
