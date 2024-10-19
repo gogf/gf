@@ -26,12 +26,7 @@ type Responses map[string]ResponseRef
 
 // object could be someObject.Interface()
 // There may be some difference between someObject.Type() and reflect.TypeOf(object).
-func (oai *OpenApiV3) getResponseFromObject(object interface{}, isDefault ...bool) (*Response, error) {
-	// Add default status by default.
-	var isDefaultStatus = true
-	if len(isDefault) > 0 {
-		isDefaultStatus = isDefault[0]
-	}
+func (oai *OpenApiV3) getResponseFromObject(object interface{}, isDefault bool) (*Response, error) {
 	// Add object schema to oai
 	if err := oai.addSchema(object); err != nil {
 		return nil, err
@@ -68,7 +63,7 @@ func (oai *OpenApiV3) getResponseFromObject(object interface{}, isDefault ...boo
 
 	// If it is not default status, check if it has any fields.
 	// If so, it would override the common response.
-	if !isDefaultStatus {
+	if !isDefault {
 		fields, _ := gstructs.Fields(gstructs.FieldsInput{
 			Pointer:         object,
 			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
