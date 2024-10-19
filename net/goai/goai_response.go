@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// StatusCode is http status for response.
 type StatusCode = int
 
 // EnhancedResponse is used to enhance the documentation of the response.
