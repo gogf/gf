@@ -58,40 +58,46 @@ func (oai *OpenApiV3) getResponseFromObject(object interface{}, isDefault ...boo
 			CommonResponseDataField: oai.Config.CommonResponseDataField,
 		}
 	)
+
+	// If customized response mime type, it then ignores common response feature.
 	if tagMimeValue != "" {
 		contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
+		refInput.CommonResponseObject = nil
+		refInput.CommonResponseDataField = ""
 	}
-	for _, v := range contentTypes {
-		// If customized response mime type, it then ignores common response feature.
-		if tagMimeValue != "" {
+
+	// If it is not default status, check if it has any fields.
+	// If so, it would override the common response.
+	if !isDefaultStatus {
+		fields, _ := gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         object,
+			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+		})
+		if len(fields) > 0 {
 			refInput.CommonResponseObject = nil
 			refInput.CommonResponseDataField = ""
 		}
-		if !isDefaultStatus {
-			fields, _ := gstructs.Fields(gstructs.FieldsInput{
-				Pointer:         object,
-				RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
-			})
-			if len(fields) > 0 {
-				refInput.CommonResponseObject = nil
-				refInput.CommonResponseDataField = ""
-			}
-		}
+	}
 
-		responseExamplePath := metaMap[gtag.ResponseExampleShort]
-		if responseExamplePath == "" {
-			responseExamplePath = metaMap[gtag.ResponseExample]
-		}
-		examples := make(Examples)
-		if responseExamplePath != "" {
-			if err := examples.applyExamplesFile(responseExamplePath); err != nil {
-				return nil, err
-			}
-		}
-		schemaRef, err := oai.getResponseSchemaRef(refInput)
-		if err != nil {
+	// Generate response example from meta data.
+	responseExamplePath := metaMap[gtag.ResponseExampleShort]
+	if responseExamplePath == "" {
+		responseExamplePath = metaMap[gtag.ResponseExample]
+	}
+	examples := make(Examples)
+	if responseExamplePath != "" {
+		if err := examples.applyExamplesFile(responseExamplePath); err != nil {
 			return nil, err
 		}
+	}
+
+	// Generate response schema from input.
+	schemaRef, err := oai.getResponseSchemaRef(refInput)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range contentTypes {
 		response.Content[v] = MediaType{
 			Schema:   schemaRef,
 			Examples: examples,
