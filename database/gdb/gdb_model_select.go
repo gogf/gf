@@ -54,7 +54,7 @@ func (m *Model) AllAndCount(useFieldForCount bool) (result Result, totalCount in
 
 	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
 	if !useFieldForCount {
-		countModel.fields = "1"
+		countModel.fields = []any{"1"}
 	}
 
 	// Get the total count of records
@@ -178,7 +178,7 @@ func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 	model := m
 	// Auto selecting fields by struct attributes.
-	if len(model.fieldsEx) == 0 && (model.fields == "" || model.fields == "*") {
+	if len(model.fieldsEx) == 0 && len(model.fields) == 0 {
 		if v, ok := pointer.(reflect.Value); ok {
 			model = m.Fields(v.Interface())
 		} else {
@@ -214,7 +214,7 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 	model := m
 	// Auto selecting fields by struct attributes.
-	if len(model.fieldsEx) == 0 && (model.fields == "" || model.fields == "*") {
+	if len(model.fieldsEx) == 0 && len(model.fields) == 0 {
 		if v, ok := pointer.(reflect.Value); ok {
 			model = m.Fields(
 				reflect.New(
@@ -316,7 +316,7 @@ func (m *Model) ScanAndCount(pointer interface{}, totalCount *int, useFieldForCo
 	countModel := m.Clone()
 	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
 	if !useFieldForCount {
-		countModel.fields = "1"
+		countModel.fields = []any{"1"}
 	}
 
 	// Get the total count of records
@@ -343,7 +343,7 @@ func (m *Model) ScanList(structSlicePointer interface{}, bindToAttrName string, 
 	if err != nil {
 		return err
 	}
-	if m.fields != defaultFields || len(m.fieldsEx) != 0 {
+	if len(m.fields) > 0 || len(m.fieldsEx) != 0 {
 		// There are custom fields.
 		result, err = m.All()
 	} else {
@@ -604,7 +604,9 @@ func (m *Model) doGetAll(ctx context.Context, limit1 bool, where ...interface{})
 }
 
 // doGetAllBySql does the select statement on the database.
-func (m *Model) doGetAllBySql(ctx context.Context, queryType queryType, sql string, args ...interface{}) (result Result, err error) {
+func (m *Model) doGetAllBySql(
+	ctx context.Context, queryType queryType, sql string, args ...interface{},
+) (result Result, err error) {
 	if result, err = m.getSelectResultFromCache(ctx, sql, args...); err != nil || result != nil {
 		return
 	}
@@ -635,10 +637,10 @@ func (m *Model) getFormattedSqlAndArgs(
 	switch queryType {
 	case queryTypeCount:
 		queryFields := "COUNT(1)"
-		if m.fields != "" && m.fields != "*" {
+		if len(m.fields) > 0 {
 			// DO NOT quote the m.fields here, in case of fields like:
 			// DISTINCT t.user_id uid
-			queryFields = fmt.Sprintf(`COUNT(%s%s)`, m.distinct, m.fields)
+			queryFields = fmt.Sprintf(`COUNT(%s%s)`, m.distinct, m.getFieldsAsStr())
 		}
 		// Raw SQL Model.
 		if m.rawSql != "" {
@@ -691,29 +693,50 @@ func (m *Model) getAutoPrefix() string {
 	return autoPrefix
 }
 
+func (m *Model) getFieldsAsStr() string {
+	var (
+		fieldsStr string
+		core      = m.db.GetCore()
+	)
+	for _, v := range m.fields {
+		field := gconv.String(v)
+		switch {
+		case gstr.ContainsAny(field, "()"):
+		case gstr.ContainsAny(field, ". "):
+		default:
+			switch v.(type) {
+			case Raw, *Raw:
+			default:
+				field = core.QuoteString(field)
+			}
+		}
+		if fieldsStr != "" {
+			fieldsStr += ","
+		}
+		fieldsStr += field
+	}
+	return fieldsStr
+}
+
 // getFieldsFiltered checks the fields and fieldsEx attributes, filters and returns the fields that will
 // really be committed to underlying database driver.
 func (m *Model) getFieldsFiltered() string {
-	if len(m.fieldsEx) == 0 {
-		// No filtering, containing special chars.
-		if gstr.ContainsAny(m.fields, "()") {
-			return m.fields
-		}
-		// No filtering.
-		if !gstr.ContainsAny(m.fields, ". ") {
-			return m.db.GetCore().QuoteString(m.fields)
-		}
-		return m.fields
+	if len(m.fieldsEx) == 0 && len(m.fields) == 0 {
+		return defaultField
+	}
+	if len(m.fieldsEx) == 0 && len(m.fields) > 0 {
+		return m.getFieldsAsStr()
 	}
 	var (
 		fieldsArray []string
 		fieldsExSet = gset.NewStrSetFrom(m.fieldsEx)
 	)
-	if m.fields != "*" {
+	if len(m.fields) > 0 {
 		// Filter custom fields with fieldEx.
 		fieldsArray = make([]string, 0, 8)
-		for _, v := range gstr.SplitAndTrim(m.fields, ",") {
-			fieldsArray = append(fieldsArray, v[gstr.PosR(v, "-")+1:])
+		for _, v := range m.fields {
+			field := gconv.String(v)
+			fieldsArray = append(fieldsArray, field[gstr.PosR(field, "-")+1:])
 		}
 	} else {
 		if gstr.Contains(m.tables, " ") {

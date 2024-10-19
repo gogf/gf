@@ -24,7 +24,7 @@ type Model struct {
 	linkType       int               // Mark for operation on master or slave.
 	tablesInit     string            // Table names when model initialization.
 	tables         string            // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
-	fields         string            // Operation fields, multiple fields joined using char ','.
+	fields         []any             // Operation fields, multiple fields joined using char ','.
 	fieldsEx       []string          // Excluded operation fields, it here uses slice instead of string type for quick filtering.
 	withArray      []interface{}     // Arguments for With feature.
 	withAll        bool              // Enable model association operations on all objects that have "with" tag in the struct.
@@ -65,7 +65,7 @@ type ChunkHandler func(result Result, err error) bool
 const (
 	linkTypeMaster           = 1
 	linkTypeSlave            = 2
-	defaultFields            = "*"
+	defaultField             = "*"
 	whereHolderOperatorWhere = 1
 	whereHolderOperatorAnd   = 2
 	whereHolderOperatorOr    = 3
@@ -132,7 +132,6 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 		schema:        c.schema,
 		tablesInit:    tableStr,
 		tables:        tableStr,
-		fields:        defaultFields,
 		start:         -1,
 		offset:        -1,
 		filter:        true,

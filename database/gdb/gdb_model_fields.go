@@ -33,7 +33,7 @@ func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 		return m
 	}
 	model := m.getModel()
-	return model.appendFieldsByStr(gstr.Join(fields, ","))
+	return model.appendToFields(fields...)
 }
 
 // FieldsPrefix performs as function Fields but add extra prefix for each field.
@@ -45,9 +45,11 @@ func (m *Model) FieldsPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...inte
 	if len(fields) == 0 {
 		return m
 	}
-	gstr.PrefixArray(fields, prefixOrAlias+".")
+	for i, field := range fields {
+		fields[i] = prefixOrAlias + "." + gconv.String(field)
+	}
 	model := m.getModel()
-	return model.appendFieldsByStr(gstr.Join(fields, ","))
+	return model.appendToFields(fields...)
 }
 
 // FieldsEx appends `fieldNamesOrMapStruct` to the excluded operation fields of the model,
@@ -74,7 +76,7 @@ func (m *Model) doFieldsEx(table string, fieldNamesOrMapStruct ...interface{}) *
 		return m
 	}
 	model := m.getModel()
-	model.fieldsEx = append(model.fieldsEx, fields...)
+	model.fieldsEx = append(model.fieldsEx, gconv.Strings(fields)...)
 	return model
 }
 
@@ -95,7 +97,7 @@ func (m *Model) FieldCount(column string, as ...string) *Model {
 		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
 	}
 	model := m.getModel()
-	return model.appendFieldsByStr(
+	return model.appendToFields(
 		fmt.Sprintf(`COUNT(%s)%s`, m.QuoteWord(column), asStr),
 	)
 }
@@ -107,7 +109,7 @@ func (m *Model) FieldSum(column string, as ...string) *Model {
 		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
 	}
 	model := m.getModel()
-	return model.appendFieldsByStr(
+	return model.appendToFields(
 		fmt.Sprintf(`SUM(%s)%s`, m.QuoteWord(column), asStr),
 	)
 }
@@ -119,7 +121,7 @@ func (m *Model) FieldMin(column string, as ...string) *Model {
 		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
 	}
 	model := m.getModel()
-	return model.appendFieldsByStr(
+	return model.appendToFields(
 		fmt.Sprintf(`MIN(%s)%s`, m.QuoteWord(column), asStr),
 	)
 }
@@ -131,7 +133,7 @@ func (m *Model) FieldMax(column string, as ...string) *Model {
 		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
 	}
 	model := m.getModel()
-	return model.appendFieldsByStr(
+	return model.appendToFields(
 		fmt.Sprintf(`MAX(%s)%s`, m.QuoteWord(column), asStr),
 	)
 }
@@ -143,7 +145,7 @@ func (m *Model) FieldAvg(column string, as ...string) *Model {
 		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
 	}
 	model := m.getModel()
-	return model.appendFieldsByStr(
+	return model.appendToFields(
 		fmt.Sprintf(`AVG(%s)%s`, m.QuoteWord(column), asStr),
 	)
 }
@@ -218,7 +220,7 @@ func (m *Model) HasField(field string) (bool, error) {
 }
 
 // getFieldsFrom retrieves, filters and returns fields name from table `table`.
-func (m *Model) filterFieldsFrom(table string, fieldNamesOrMapStruct ...interface{}) []string {
+func (m *Model) filterFieldsFrom(table string, fieldNamesOrMapStruct ...any) []any {
 	length := len(fieldNamesOrMapStruct)
 	if length == 0 {
 		return nil
@@ -227,7 +229,7 @@ func (m *Model) filterFieldsFrom(table string, fieldNamesOrMapStruct ...interfac
 	// String slice.
 	case length >= 2:
 		return m.mappingAndFilterToTableFields(
-			table, gconv.Strings(fieldNamesOrMapStruct), true,
+			table, fieldNamesOrMapStruct, true,
 		)
 
 	// It needs type asserting.
@@ -235,13 +237,13 @@ func (m *Model) filterFieldsFrom(table string, fieldNamesOrMapStruct ...interfac
 		structOrMap := fieldNamesOrMapStruct[0]
 		switch r := structOrMap.(type) {
 		case string:
-			return m.mappingAndFilterToTableFields(table, []string{r}, false)
+			return m.mappingAndFilterToTableFields(table, []any{r}, false)
 
 		case []string:
-			return m.mappingAndFilterToTableFields(table, r, true)
+			return m.mappingAndFilterToTableFields(table, gconv.Interfaces(r), true)
 
 		case Raw, *Raw:
-			return []string{gconv.String(structOrMap)}
+			return []any{structOrMap}
 
 		default:
 			return m.mappingAndFilterToTableFields(table, getFieldsFromStructOrMap(structOrMap), true)
@@ -252,19 +254,13 @@ func (m *Model) filterFieldsFrom(table string, fieldNamesOrMapStruct ...interfac
 	}
 }
 
-func (m *Model) appendFieldsByStr(fields string) *Model {
-	if fields != "" {
-		model := m.getModel()
-		if model.fields == defaultFields {
-			model.fields = ""
-		}
-		if model.fields != "" {
-			model.fields += ","
-		}
-		model.fields += fields
-		return model
+func (m *Model) appendToFields(fields ...any) *Model {
+	if len(fields) == 0 {
+		return m
 	}
-	return m
+	model := m.getModel()
+	model.fields = append(model.fields, fields...)
+	return model
 }
 
 func (m *Model) isFieldInFieldsEx(field string) bool {
