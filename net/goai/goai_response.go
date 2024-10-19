@@ -15,9 +15,9 @@ import (
 // StatusCode is http status for response.
 type StatusCode = int
 
-// EnhancedResponse is used to enhance the documentation of the response.
+// ResponseStatusDef is used to enhance the documentation of the response.
 // Normal response structure could implement this interface to provide more information.
-type EnhancedResponse interface {
+type ResponseStatusDef interface {
 	ResponseStatusMap() map[StatusCode]any
 }
 
