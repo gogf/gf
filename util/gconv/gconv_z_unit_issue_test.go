@@ -758,6 +758,7 @@ func Test_Issue3821(t *testing.T) {
 	})
 }
 
+// https://github.com/gogf/gf/issues/3868
 func Test_Issue3868(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Config struct {
