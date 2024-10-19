@@ -298,30 +298,28 @@ func bindStructWithLoopParamsMap(
 				continue
 			}
 			if !strings.EqualFold(
-				cachedFieldInfo.RemoveSymbolsFieldName, utils.RemoveSymbols(paramKey)) {
+				cachedFieldInfo.RemoveSymbolsFieldName,
+				utils.RemoveSymbols(paramKey)) {
 				continue
 			}
-			paramValue, ok = paramsMap[paramKey]
-			if ok {
-				fieldValue = cachedFieldInfo.GetFieldReflectValueFrom(structValue)
-				if paramValue != nil {
-					if err = bindVarToStructField(
-						fieldValue, paramValue, cachedFieldInfo, paramKeyToAttrMap,
+			fieldValue = cachedFieldInfo.GetFieldReflectValueFrom(structValue)
+			if paramValue != nil {
+				if err = bindVarToStructField(
+					fieldValue, paramValue, cachedFieldInfo, paramKeyToAttrMap,
+				); err != nil {
+					return err
+				}
+				// handle same field name in nested struct.
+				if len(cachedFieldInfo.OtherSameNameField) > 0 {
+					if err = setOtherSameNameField(
+						cachedFieldInfo, paramValue, structValue, paramKeyToAttrMap,
 					); err != nil {
 						return err
 					}
-					// handle same field name in nested struct.
-					if len(cachedFieldInfo.OtherSameNameField) > 0 {
-						if err = setOtherSameNameField(
-							cachedFieldInfo, paramValue, structValue, paramKeyToAttrMap,
-						); err != nil {
-							return err
-						}
-					}
 				}
-				usedParamsKeyOrTagNameMap[cachedFieldInfo.FieldName()] = struct{}{}
-				break
 			}
+			usedParamsKeyOrTagNameMap[cachedFieldInfo.FieldName()] = struct{}{}
+			break
 		}
 	}
 	return nil
