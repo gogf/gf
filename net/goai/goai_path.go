@@ -245,7 +245,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		status = statusValue
 	}
 	if _, ok := operation.Responses[status]; !ok {
-		response, err := oai.getResponseFromObject(outputObject.Interface())
+		response, err := oai.getResponseFromObject(outputObject.Interface(), true)
 		if err != nil {
 			return err
 		}
@@ -255,7 +255,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	// =================================================================================================================
 	// Other Responses.
 	// =================================================================================================================
-	if enhancedResponse, ok := outputObject.Interface().(EnhancedResponse); ok {
+	if enhancedResponse, ok := outputObject.Interface().(ResponseStatusDef); ok {
 		for statusCode, data := range enhancedResponse.ResponseStatusMap() {
 			if statusCode < 100 || statusCode >= 600 {
 				return gerror.Newf("Invalid HTTP status code: %d", statusCode)
