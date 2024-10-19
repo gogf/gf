@@ -97,8 +97,8 @@ func (oai *OpenApiV3) getResponseFromObject(object interface{}, isDefault ...boo
 		return nil, err
 	}
 
-	for _, v := range contentTypes {
-		response.Content[v] = MediaType{
+	for _, contentType := range contentTypes {
+		response.Content[contentType] = MediaType{
 			Schema:   schemaRef,
 			Examples: examples,
 		}
