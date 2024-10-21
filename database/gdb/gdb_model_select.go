@@ -467,6 +467,42 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 	return 0, nil
 }
 
+// Exist does "SELECT 1 FROM ... LIMIT 1" statement for the model.
+// The optional parameter `where` is the same as the parameter of Model.Where function,
+// see Model.Where.
+func (m *Model) Exist(where ...interface{}) (bool, error) {
+	var (
+		core = m.db.GetCore()
+		ctx  = core.injectInternalColumn(m.GetCtx())
+	)
+	if len(where) > 0 {
+		return m.Where(where[0], where[1:]...).Exist()
+	}
+	var (
+		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(ctx, queryTypeExist, true)
+		all, err                  = m.doGetAllBySql(ctx, queryTypeExist, sqlWithHolder, holderArgs...)
+	)
+	if err != nil {
+		return false, err
+	}
+	if len(all) > 0 {
+		var recordFields = m.getRecordFields(all[0])
+		if len(recordFields) == 1 {
+			for _, v := range all[0] {
+				return v.Bool(), nil
+			}
+		}
+		// it returns error if there are multiple fields in the result record.
+		return false, gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`invalid fields, result fields number "%d"%s, but expect one`,
+			len(recordFields),
+			gjson.MustEncodeString(recordFields),
+		)
+	}
+	return false, nil
+}
+
 // CountColumn does "SELECT COUNT(x) FROM ..." statement for the model.
 func (m *Model) CountColumn(column string) (int, error) {
 	if len(column) == 0 {
@@ -653,7 +689,15 @@ func (m *Model) getFormattedSqlAndArgs(
 			sqlWithHolder = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", sqlWithHolder)
 		}
 		return sqlWithHolder, conditionArgs
-
+	case queryTypeExist:
+		// Raw SQL Model.
+		if m.rawSql != "" {
+			sqlWithHolder = fmt.Sprintf("SELECT COUNT(1) FROM (%s) AS T", m.rawSql)
+			return sqlWithHolder, nil
+		}
+		conditionWhere, conditionExtra, conditionArgs := m.formatCondition(ctx, true, false)
+		sqlWithHolder = fmt.Sprintf("SELECT 1 FROM %s%s", m.tables, conditionWhere+conditionExtra)
+		return sqlWithHolder, conditionArgs
 	default:
 		conditionWhere, conditionExtra, conditionArgs := m.formatCondition(ctx, limit1, false)
 		// Raw SQL Model, especially for UNION/UNION ALL featured SQL.
