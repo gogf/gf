@@ -54,7 +54,7 @@ func (m *Model) AllAndCount(useFieldForCount bool) (result Result, totalCount in
 
 	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
 	if !useFieldForCount {
-		countModel.fields = []any{"1"}
+		countModel.fields = []any{Raw("1")}
 	}
 
 	// Get the total count of records
@@ -316,7 +316,7 @@ func (m *Model) ScanAndCount(pointer interface{}, totalCount *int, useFieldForCo
 	countModel := m.Clone()
 	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
 	if !useFieldForCount {
-		countModel.fields = []any{"1"}
+		countModel.fields = []any{Raw("1")}
 	}
 
 	// Get the total count of records
