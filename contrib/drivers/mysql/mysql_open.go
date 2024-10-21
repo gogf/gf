@@ -9,7 +9,6 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
-
 	"net/url"
 	"strings"
 
@@ -23,9 +22,21 @@ import (
 // Note that it converts time.Time argument to local timezone in default.
 func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
-		source               string
+		source               = configNodeToSource(config)
 		underlyingDriverName = "mysql"
 	)
+	if db, err = sql.Open(underlyingDriverName, source); err != nil {
+		err = gerror.WrapCodef(
+			gcode.CodeDbOperationError, err,
+			`sql.Open failed for driver "%s" by source "%s"`, underlyingDriverName, source,
+		)
+		return nil, err
+	}
+	return
+}
+
+func configNodeToSource(config *gdb.ConfigNode) string {
+	var source string
 	// [username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
 	if config.Link != "" {
 		// ============================================================================
@@ -37,10 +48,13 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 			source, _ = gregex.ReplaceString(`/([\w\.\-]+)+`, "/"+config.Name, source)
 		}
 	} else {
-		// TODO: Do not set charset when charset is not specified (in v2.5.0)
+		var portStr string
+		if config.Port != "" {
+			portStr = ":" + config.Port
+		}
 		source = fmt.Sprintf(
-			"%s:%s@%s(%s:%s)/%s?charset=%s",
-			config.User, config.Pass, config.Protocol, config.Host, config.Port, config.Name, config.Charset,
+			"%s:%s@%s(%s%s)/%s?charset=%s",
+			config.User, config.Pass, config.Protocol, config.Host, portStr, config.Name, config.Charset,
 		)
 		if config.Timezone != "" {
 			if strings.Contains(config.Timezone, "/") {
@@ -52,12 +66,5 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 			source = fmt.Sprintf("%s&%s", source, config.Extra)
 		}
 	}
-	if db, err = sql.Open(underlyingDriverName, source); err != nil {
-		err = gerror.WrapCodef(
-			gcode.CodeDbOperationError, err,
-			`sql.Open failed for driver "%s" by source "%s"`, underlyingDriverName, source,
-		)
-		return nil, err
-	}
-	return
+	return source
 }
