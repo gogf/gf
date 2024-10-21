@@ -4838,3 +4838,25 @@ func Test_OrderBy_Statement_Generated(t *testing.T) {
 		t.Assert(rawSql, expectSql)
 	})
 }
+
+func Test_Fields_Raw(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+		one, err := db.Model(table).Fields(gdb.Raw("1")).One()
+		t.AssertNil(err)
+		t.Assert(one["1"], 1)
+
+		one, err = db.Model(table).Fields(gdb.Raw("2")).One()
+		t.AssertNil(err)
+		t.Assert(one["2"], 2)
+
+		one, err = db.Model(table).Fields(gdb.Raw("2")).Where("id", 2).One()
+		t.AssertNil(err)
+		t.Assert(one["2"], 2)
+
+		one, err = db.Model(table).Fields(gdb.Raw("2")).Where("id", 10000000000).One()
+		t.AssertNil(err)
+		t.Assert(len(one), 0)
+	})
+}
