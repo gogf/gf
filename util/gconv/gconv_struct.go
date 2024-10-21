@@ -257,7 +257,6 @@ func bindStructWithLoopParamsMap(
 	var (
 		fieldName       string
 		cachedFieldInfo *structcache.CachedFieldInfo
-		fuzzLastKey     string
 		fieldValue      reflect.Value
 		paramKey        string
 		paramValue      any
@@ -298,37 +297,29 @@ func bindStructWithLoopParamsMap(
 			if _, ok = usedParamsKeyOrTagNameMap[fieldName]; ok {
 				continue
 			}
-			fuzzLastKey = cachedFieldInfo.LastFuzzyKey.Load().(string)
-			paramValue, ok = paramsMap[fuzzLastKey]
-			if !ok {
-				if strings.EqualFold(
-					cachedFieldInfo.RemoveSymbolsFieldName, utils.RemoveSymbols(paramKey),
-				) {
-					paramValue, ok = paramsMap[paramKey]
-					// If it is found this time, update it based on what was not found last time.
-					cachedFieldInfo.LastFuzzyKey.Store(paramKey)
-				}
+			if !strings.EqualFold(
+				cachedFieldInfo.RemoveSymbolsFieldName,
+				utils.RemoveSymbols(paramKey)) {
+				continue
 			}
-			if ok {
-				fieldValue = cachedFieldInfo.GetFieldReflectValueFrom(structValue)
-				if paramValue != nil {
-					if err = bindVarToStructField(
-						fieldValue, paramValue, cachedFieldInfo, paramKeyToAttrMap,
+			fieldValue = cachedFieldInfo.GetFieldReflectValueFrom(structValue)
+			if paramValue != nil {
+				if err = bindVarToStructField(
+					fieldValue, paramValue, cachedFieldInfo, paramKeyToAttrMap,
+				); err != nil {
+					return err
+				}
+				// handle same field name in nested struct.
+				if len(cachedFieldInfo.OtherSameNameField) > 0 {
+					if err = setOtherSameNameField(
+						cachedFieldInfo, paramValue, structValue, paramKeyToAttrMap,
 					); err != nil {
 						return err
 					}
-					// handle same field name in nested struct.
-					if len(cachedFieldInfo.OtherSameNameField) > 0 {
-						if err = setOtherSameNameField(
-							cachedFieldInfo, paramValue, structValue, paramKeyToAttrMap,
-						); err != nil {
-							return err
-						}
-					}
 				}
-				usedParamsKeyOrTagNameMap[cachedFieldInfo.FieldName()] = struct{}{}
-				break
 			}
+			usedParamsKeyOrTagNameMap[cachedFieldInfo.FieldName()] = struct{}{}
+			break
 		}
 	}
 	return nil

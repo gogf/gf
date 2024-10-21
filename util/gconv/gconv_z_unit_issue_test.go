@@ -757,3 +757,29 @@ func Test_Issue3821(t *testing.T) {
 		t.AssertEQ(user.DoubleInnerUser.UserId, int64(1))
 	})
 }
+
+// https://github.com/gogf/gf/issues/3868
+func Test_Issue3868(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Config struct {
+			Enable   bool
+			Spec     string
+			PoolSize int
+		}
+		data := gjson.New(`[{"enable":false,"spec":"a"},{"enable":true,"poolSize":1}]`)
+		for i := 0; i < 1000; i++ {
+			var configs []*Config
+			err := gconv.Structs(data, &configs)
+			t.AssertNil(err)
+			t.Assert(len(configs), 2)
+			t.Assert(configs[0], &Config{
+				Enable: false,
+				Spec:   "a",
+			})
+			t.Assert(configs[1], &Config{
+				Enable:   true,
+				PoolSize: 1,
+			})
+		}
+	})
+}
