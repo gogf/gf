@@ -650,6 +650,7 @@ func Test_Model_AllAndCount(t *testing.T) {
 		t.Assert(len(result), TableSize)
 		t.Assert(count, TableSize)
 	})
+
 	// AllAndCount with no data
 	gtest.C(t, func(t *gtest.T) {
 		result, count, err := db.Model(table).Where("id<0").AllAndCount(false)
