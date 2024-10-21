@@ -107,6 +107,12 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 				return err
 			}
 		}
+		funcInfo := r.serveHandler.Handler.Info
+		if funcInfo.IsStrictRoute {
+			if funcInfo.hasValidTagFields == false {
+				return nil
+			}
+		}
 		// TODO: https://github.com/gogf/gf/pull/2450
 		// Validation.
 		if err = gvalid.New().
