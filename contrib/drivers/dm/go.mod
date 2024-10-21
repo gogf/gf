@@ -1,6 +1,6 @@
 module github.com/gogf/gf/contrib/drivers/dm/v2
 
-go 1.18
+go 1.20
 
 replace github.com/gogf/gf/v2 => ../../../
 

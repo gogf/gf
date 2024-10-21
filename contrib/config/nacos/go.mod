@@ -1,6 +1,6 @@
 module github.com/gogf/gf/contrib/config/nacos/v2
 
-go 1.18
+go 1.20
 
 require (
 	github.com/gogf/gf/v2 v2.8.0-beta

@@ -1,6 +1,6 @@
 module github.com/gogf/gf/contrib/registry/zookeeper/v2
 
-go 1.18
+go 1.20
 
 require (
 	github.com/go-zookeeper/zk v1.0.3

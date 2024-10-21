@@ -1,6 +1,6 @@
 module github.com/gogf/gf/contrib/config/apollo/v2
 
-go 1.18
+go 1.20
 
 require (
 	github.com/apolloconfig/agollo/v4 v4.3.1
