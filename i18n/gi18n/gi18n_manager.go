@@ -9,7 +9,6 @@ package gi18n
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/text/gstr"
 	"strings"
 	"sync"
 
@@ -165,23 +164,33 @@ func (m *Manager) Tf(ctx context.Context, format string, values ...interface{}) 
 	return m.TranslateFormat(ctx, format, values...)
 }
 
+// Tm is alias of TranslateMap for convenience.
+func (m *Manager) Tm(ctx context.Context, context string, valMap map[string]interface{}) string {
+	return m.TranslateMap(ctx, context, valMap)
+}
+
 // TranslateFormat translates, formats and returns the `format` with configured language
 // and given `values`.
 // When values[0] is of type map[string]string, parameter replacement is order-independent.
 // the values' format  :{key}
 func (m *Manager) TranslateFormat(ctx context.Context, format string, values ...interface{}) string {
 	result := m.Translate(ctx, format)
-	if len(values) > 0 {
-		val := values[0]
-		if valMapStrStr, ok := val.(map[string]string); ok {
-			for k, v := range valMapStrStr {
-				rpStr := ":" + k
-				result = gstr.Replace(result, rpStr, v)
-			}
-			return result
+	return fmt.Sprintf(result, values...)
+}
+
+// TranslateMap parameter replacement is order-independent.
+// replaced param format is  :{key}.  for example: content is "my name is :name.",the valMap is map[string]interface{}{"name":"alias"}
+// the result of translation is "my name is alias."
+func (m *Manager) TranslateMap(ctx context.Context, content string, valMap map[string]interface{}) string {
+	result := m.Translate(ctx, content)
+	mpStrStr := gconv.MapStrStr(valMap)
+	if len(mpStrStr) > 0 {
+		for k, v := range mpStrStr {
+			rpKey := ":" + k
+			result = strings.ReplaceAll(result, rpKey, v)
 		}
 	}
-	return fmt.Sprintf(result, values...)
+	return result
 }
 
 // Translate translates `content` with configured language.
