@@ -92,13 +92,13 @@ func Test_TranslateFormat(t *testing.T) {
 	})
 }
 
-func Test_MapStrStrRelace(t *testing.T) {
+func Test_TranslateMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		i18n := gi18n.New(gi18n.Options{
 			Path: gtest.DataPath("i18n-file"),
 		})
 		i18n.SetLanguage("zh-CN")
-		str := i18n.Tf(context.Background(), "replace_map_test", map[string]string{"name": "blue", "score": "3000"})
+		str := i18n.Tm(context.Background(), "replace_map_test", map[string]interface{}{"name": "blue", "score": "3000"})
 		fmt.Println(str)
 		t.Assert(str, "hello 3000 blue is ok")
 	})
