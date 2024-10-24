@@ -467,6 +467,25 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 	return 0, nil
 }
 
+// Exist does "SELECT 1 FROM ... LIMIT 1" statement for the model.
+// The optional parameter `where` is the same as the parameter of Model.Where function,
+// see Model.Where.
+func (m *Model) Exist(where ...interface{}) (bool, error) {
+	if len(where) > 0 {
+		return m.Where(where[0], where[1:]...).Exist()
+	}
+	one, err := m.Fields(Raw("1")).One()
+	if err != nil {
+		return false, err
+	}
+	for _, val := range one {
+		if val.Bool() {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 // CountColumn does "SELECT COUNT(x) FROM ..." statement for the model.
 func (m *Model) CountColumn(column string) (int, error) {
 	if len(column) == 0 {
