@@ -1,10 +1,10 @@
 module github.com/gogf/gf/contrib/registry/zookeeper/v2
 
-go 1.18
+go 1.20
 
 require (
 	github.com/go-zookeeper/zk v1.0.3
-	github.com/gogf/gf/v2 v2.7.4
+	github.com/gogf/gf/v2 v2.8.0-beta
 	golang.org/x/sync v0.7.0
 )
 

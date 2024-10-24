@@ -1,10 +1,10 @@
 module github.com/gogf/gf/contrib/drivers/sqlite/v2
 
-go 1.18
+go 1.20
 
 require (
 	github.com/glebarez/go-sqlite v1.21.2
-	github.com/gogf/gf/v2 v2.7.4
+	github.com/gogf/gf/v2 v2.8.0-beta
 )
 
 require (
