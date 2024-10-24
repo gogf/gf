@@ -1,9 +1,9 @@
 module github.com/gogf/gf/contrib/registry/etcd/v2
 
-go 1.18
+go 1.20
 
 require (
-	github.com/gogf/gf/v2 v2.7.4
+	github.com/gogf/gf/v2 v2.8.0-beta
 	go.etcd.io/etcd/client/v3 v3.5.7
 	google.golang.org/grpc v1.59.0
 )
