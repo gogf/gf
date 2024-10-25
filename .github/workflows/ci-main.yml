@@ -220,7 +220,12 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: ${{ matrix.go-version }}
-        cache-dependency-path: '**/go.sum' 
+        cache-dependency-path: '**/go.sum'
+
+    - name: Install the protocol compiler plugins
+      run: |
+        go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+        go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
     - name: Before Script
       run:  bash .github/workflows/before_script.sh
