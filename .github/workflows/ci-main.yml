@@ -222,20 +222,14 @@ jobs:
         go-version: ${{ matrix.go-version }}
         cache-dependency-path: '**/go.sum'
 
+    - name: Install Protoc
+      uses: arduino/setup-protoc@v2
+      with:
+        version: "23.x"
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Install the protobuf and the protocol compiler plugins for Go
       run: |
-        curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v21.6/protobuf-all-21.6.tar.gz
-        tar -zxvf protobuf-all-21.6.tar.gz
-        cd protobuf-all-21.6
-        Makefile：./configure --prefix=/usr/local/protobuf
-        make && make install
-        cd ~
-        export PROTOBUF=/usr/local/protobuf
-        export PATH=$PROTOBUF/bin:$PATH
-        vim .bash_profile
-        source .bash_profile
-        protoc --version
-        
         go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
         go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
         export PATH="$PATH:$(go env GOPATH)/bin"
