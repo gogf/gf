@@ -228,7 +228,7 @@ jobs:
         version: "23.x"
         repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Install the protobuf and the protocol compiler plugins for Go
+    - name: Install the protocol compiler plugins for Go
       run: |
         go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
         go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
