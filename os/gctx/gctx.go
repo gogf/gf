@@ -64,15 +64,15 @@ func WithCtx(ctx context.Context) context.Context {
 }
 
 // WithSpan creates and returns a context containing span upon given parent context `ctx`.
-func WithSpan(ctx context.Context, spanName ...string) context.Context {
+func WithSpan(ctx context.Context, spanName string) context.Context {
 	if CtxId(ctx) != "" {
 		return ctx
 	}
-	if len(spanName) == 0 {
-		spanName = append(spanName, "gctx.WithSpan")
+	if spanName == "" {
+		spanName = "gctx.WithSpan"
 	}
 	var span *gtrace.Span
-	ctx, span = gtrace.NewSpan(ctx, spanName[0])
+	ctx, span = gtrace.NewSpan(ctx, spanName)
 	defer span.End()
 	return ctx
 }
