@@ -274,6 +274,11 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		}
 	}
 
+	// Override operation.
+	if oai.Config.OperationOverrideHook != nil {
+		oai.Config.OperationOverrideHook(&operation, inputObject.Interface(), outputObject.Interface())
+	}
+
 	// Remove operation body duplicated properties.
 	oai.removeOperationDuplicatedProperties(operation)
 
