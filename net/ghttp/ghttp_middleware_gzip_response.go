@@ -13,12 +13,18 @@ import (
 
 // MiddlewareGzip compresses the response content using gzip algorithm.
 func MiddlewareGzip(r *Request) {
+
 	r.Middleware.Next()
 
 	var buffer strings.Builder
 	gzipwriter := gzip.NewWriter(&buffer)
 
-	gzipwriter.Write(r.Response.Buffer())
+	_, err := gzipwriter.Write(r.Response.Buffer())
+	if err != nil {
+		r.Response.Write("gzip write error")
+		return
+	}
+
 	gzipwriter.Flush()
 	gzipwriter.Close()
 
@@ -26,5 +32,4 @@ func MiddlewareGzip(r *Request) {
 	r.Response.ClearBuffer()
 
 	r.Response.Write(buffer.String())
-
 }
