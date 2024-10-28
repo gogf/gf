@@ -734,6 +734,19 @@ func Test_Model_Count(t *testing.T) {
 	})
 }
 
+func Test_Model_Exist(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		exist, err := db.Model(table).Exist()
+		t.AssertNil(err)
+		t.Assert(exist, TableSize > 0)
+		exist, err = db.Model(table).Where("id", -1).Exist()
+		t.AssertNil(err)
+		t.Assert(exist, false)
+	})
+}
+
 func Test_Model_Value_WithCache(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
@@ -761,7 +774,7 @@ func Test_Model_Value_WithCache(t *testing.T) {
 		value, err := db.Model(table).Where("id", 1).Cache(gdb.CacheOption{
 			Duration: time.Second * 10,
 			Force:    false,
-		}).Value()
+		}).Value("id")
 		t.AssertNil(err)
 		t.Assert(value.Int(), 1)
 	})
@@ -2965,13 +2978,13 @@ func Test_Model_FieldsEx_AutoMapping(t *testing.T) {
 	// "create_time": gtime.NewFromStr("2018-10-24 10:00:00").String(),
 
 	gtest.C(t, func(t *gtest.T) {
-		value, err := db.Model(table).FieldsEx("Passport, Password, NickName, CreateTime").Where("id", 2).Value()
+		value, err := db.Model(table).FieldsEx("create_date, Passport, Password, NickName, CreateTime").Where("id", 2).Value()
 		t.AssertNil(err)
 		t.Assert(value.Int(), 2)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		value, err := db.Model(table).FieldsEx("ID, Passport, Password, CreateTime").Where("id", 2).Value()
+		value, err := db.Model(table).FieldsEx("create_date, ID, Passport, Password, CreateTime").Where("id", 2).Value()
 		t.AssertNil(err)
 		t.Assert(value.String(), "name_2")
 	})
@@ -4836,5 +4849,27 @@ func Test_OrderBy_Statement_Generated(t *testing.T) {
 		rawSql := strings.ReplaceAll(sqlArray[len(sqlArray)-1], " ", "")
 		expectSql := strings.ReplaceAll("SELECT * FROM `employee` ORDER BY `name` asc, `age` desc", " ", "")
 		t.Assert(rawSql, expectSql)
+	})
+}
+
+func Test_Fields_Raw(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+		one, err := db.Model(table).Fields(gdb.Raw("1")).One()
+		t.AssertNil(err)
+		t.Assert(one["1"], 1)
+
+		one, err = db.Model(table).Fields(gdb.Raw("2")).One()
+		t.AssertNil(err)
+		t.Assert(one["2"], 2)
+
+		one, err = db.Model(table).Fields(gdb.Raw("2")).Where("id", 2).One()
+		t.AssertNil(err)
+		t.Assert(one["2"], 2)
+
+		one, err = db.Model(table).Fields(gdb.Raw("2")).Where("id", 10000000000).One()
+		t.AssertNil(err)
+		t.Assert(len(one), 0)
 	})
 }

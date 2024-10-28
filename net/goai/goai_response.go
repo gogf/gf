@@ -12,6 +12,15 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// StatusCode is http status for response.
+type StatusCode = int
+
+// ResponseStatusDef is used to enhance the documentation of the response.
+// Normal response structure could implement this interface to provide more information.
+type ResponseStatusDef interface {
+	ResponseStatusMap() map[StatusCode]any
+}
+
 // Response is specified by OpenAPI/Swagger 3.0 standard.
 type Response struct {
 	Description string      `json:"description"`

@@ -650,6 +650,7 @@ func Test_Model_AllAndCount(t *testing.T) {
 		t.Assert(len(result), TableSize)
 		t.Assert(count, TableSize)
 	})
+
 	// AllAndCount with no data
 	gtest.C(t, func(t *gtest.T) {
 		result, count, err := db.Model(table).Where("id<0").AllAndCount(false)
@@ -861,6 +862,19 @@ func Test_Model_Count(t *testing.T) {
 		count, err := db.Model(table).Page(1, 2).Count()
 		t.AssertNil(err)
 		t.Assert(count, int64(TableSize))
+	})
+}
+
+func Test_Model_Exist(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		exist, err := db.Model(table).Exist()
+		t.AssertNil(err)
+		t.Assert(exist, TableSize > 0)
+		exist, err = db.Model(table).Where("id", -1).Exist()
+		t.AssertNil(err)
+		t.Assert(exist, false)
 	})
 }
 
