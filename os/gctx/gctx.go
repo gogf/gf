@@ -52,7 +52,7 @@ func New() context.Context {
 }
 
 // WithCtx creates and returns a context containing context id upon given parent context `ctx`.
-// Deprecated, use WithSpan instead.
+// Deprecated: use WithSpan instead.
 func WithCtx(ctx context.Context) context.Context {
 	if CtxId(ctx) != "" {
 		return ctx
