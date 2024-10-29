@@ -447,12 +447,19 @@ func (c *Core) ConvertValueForLocal(
 // mappingAndFilterData automatically mappings the map key to table field and removes
 // all key-value pairs that are not the field of given table.
 func (c *Core) mappingAndFilterData(ctx context.Context, schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error) {
-	fieldsMap, err := c.db.TableFields(ctx, c.guessPrimaryTableName(table), schema)
+
+	if schema == "" {
+		schema, table = c.getSchemaTableName(table)
+	}
+	//todo using incoming ctx may cause a failure to switch libraries in a transaction
+	fieldsMap, err := c.db.TableFields(context.TODO(), c.guessPrimaryTableName(table), schema)
 	if err != nil {
 		return nil, err
 	}
 	if len(fieldsMap) == 0 {
-		return nil, gerror.Newf(`The table %s may not exist, or the table contains no fields`, table)
+		// todo If the data is not found, use the data key instead of reporting an error directly
+		return data, nil
+		//return nil, gerror.Newf(`The table %s may not exist, or the table contains no fields`, table)
 	}
 	fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
 	for k := range fieldsMap {

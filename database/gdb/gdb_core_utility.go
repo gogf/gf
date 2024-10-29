@@ -10,6 +10,7 @@ package gdb
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -224,6 +225,26 @@ func (c *Core) HasField(ctx context.Context, table, field string, schema ...stri
 		}
 	}
 	return false, nil
+}
+
+func (c *Core) getSchemaTableName(tableStr string) (schema string, table string) {
+	n := strings.SplitN(tableStr, "..", 2)
+	if len(n) == 2 {
+		return c.guessPrimaryTableName(n[0]), n[1]
+	}
+	newTableStr := strings.ToLower(tableStr)
+	n = strings.SplitN(newTableStr, ".dbo.", 2)
+	if len(n) == 2 {
+		return c.guessPrimaryTableName(n[0]), n[1]
+	}
+
+	n = strings.SplitN(tableStr, ".", 2)
+	if len(n) == 2 {
+		return c.guessPrimaryTableName(n[0]), n[1]
+	}
+
+	return "", tableStr
+
 }
 
 // guessPrimaryTableName parses and returns the primary table name.
