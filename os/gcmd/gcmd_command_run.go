@@ -235,11 +235,20 @@ func (c *Command) searchCommand(
 			//
 			// Note that the args here (using default args parsing) could be different with the args
 			// that are parsed in command.
-			if cmd.hasArgumentFromIndex() || len(leftArgs) == 0 {
-				ctx = context.WithValue(ctx, CtxKeyArgumentsIndex, fromArgIndex+1)
-				return c, cmd, ctx
+
+			// 2024.11.05-ynwcel-fix
+			// if cmd.hasArgumentFromIndex() || len(leftArgs) == 0 {
+			// 	ctx = context.WithValue(ctx, CtxKeyArgumentsIndex, fromArgIndex+1)
+			// 	return c, cmd, ctx
+			// }
+			// return cmd.searchCommand(ctx, leftArgs, fromArgIndex+1)
+
+			//2024.11.05-ynwcel-add
+			if subc, subcmd, subCtx := cmd.searchCommand(ctx, leftArgs, fromArgIndex+1); subcmd != nil {
+				return subc, subcmd, subCtx
 			}
-			return cmd.searchCommand(ctx, leftArgs, fromArgIndex+1)
+			ctx = context.WithValue(ctx, CtxKeyArgumentsIndex, fromArgIndex+1)
+			return c, cmd, ctx
 		}
 	}
 	return c, nil, ctx
