@@ -177,6 +177,40 @@ func Test_Client_Chain_Header(t *testing.T) {
 		t.Assert(c.HeaderRaw("test1: 1234567890\ntest2: abcdefg").GetContent(ctx, "/header1"), "1234567890")
 		t.Assert(c.HeaderRaw("test1: 1234567890\ntest2: abcdefg").GetContent(ctx, "/header2"), "abcdefg")
 	})
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(c.GetContent(ctx, "/header1"), "")
+
+		copyWithHeader := c.Header(g.MapStrStr{"test1": "1234567890"})
+		t.Assert(copyWithHeader.GetContent(ctx, "/header1"), "1234567890")
+
+		t.Assert(c.GetContent(ctx, "/header1"), "")
+	})
+}
+
+func Test_Client_Chain_Cookie(t *testing.T) {
+	s := g.Server(guid.S())
+	s.BindHandler("/cookie", func(r *ghttp.Request) {
+		r.Response.Write(r.Cookie.Get("test", "def"))
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(c.GetContent(ctx, "/cookie"), "def")
+
+		copyWithCookie := c.Cookie(g.MapStrStr{"test": "1234567890"})
+		t.Assert(copyWithCookie.GetContent(ctx, "/cookie"), "1234567890")
+
+		t.Assert(c.GetContent(ctx, "/cookie"), "def")
+	})
 }
 
 func Test_Client_Chain_Context(t *testing.T) {
