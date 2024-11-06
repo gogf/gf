@@ -220,12 +220,6 @@ func doStruct(
 	if len(usedParamsKeyOrTagNameMap) == len(paramsMap) {
 		return nil
 	}
-	// If the length of `paramsMap` is less than the number of fields, then loop based on `paramsMap`
-	if len(paramsMap) < len(cachedStructInfo.FieldConvertInfos) {
-		return bindStructWithLoopParamsMap(
-			paramsMap, pointerElemReflectValue, paramKeyToAttrMap, usedParamsKeyOrTagNameMap, cachedStructInfo,
-		)
-	}
 	return bindStructWithLoopFieldInfos(
 		paramsMap, pointerElemReflectValue, paramKeyToAttrMap, usedParamsKeyOrTagNameMap, cachedStructInfo,
 	)
@@ -242,84 +236,6 @@ func setOtherSameNameField(
 		fieldValue := cachedFieldInfo.GetOtherFieldReflectValueFrom(structValue, otherFieldInfo.FieldIndexes)
 		if err = bindVarToStructField(fieldValue, srcValue, otherFieldInfo, paramKeyToAttrMap); err != nil {
 			return err
-		}
-	}
-	return nil
-}
-
-func bindStructWithLoopParamsMap(
-	paramsMap map[string]any,
-	structValue reflect.Value,
-	paramKeyToAttrMap map[string]string,
-	usedParamsKeyOrTagNameMap map[string]struct{},
-	cachedStructInfo *structcache.CachedStructInfo,
-) (err error) {
-	var (
-		fieldName       string
-		cachedFieldInfo *structcache.CachedFieldInfo
-		fieldValue      reflect.Value
-		paramKey        string
-		paramValue      any
-		ok              bool
-	)
-	for paramKey, paramValue = range paramsMap {
-		if _, ok = usedParamsKeyOrTagNameMap[paramKey]; ok {
-			continue
-		}
-		cachedFieldInfo = cachedStructInfo.GetFieldInfo(paramKey)
-		if cachedFieldInfo != nil {
-			fieldName = cachedFieldInfo.FieldName()
-			// already converted using its field name?
-			// the field name has the more priority than tag name.
-			_, ok = usedParamsKeyOrTagNameMap[fieldName]
-			if ok && cachedFieldInfo.IsField {
-				continue
-			}
-			fieldValue = cachedFieldInfo.GetFieldReflectValueFrom(structValue)
-			if err = bindVarToStructField(
-				fieldValue, paramValue, cachedFieldInfo, paramKeyToAttrMap,
-			); err != nil {
-				return err
-			}
-			// handle same field name in nested struct.
-			if len(cachedFieldInfo.OtherSameNameField) > 0 {
-				if err = setOtherSameNameField(cachedFieldInfo, paramValue, structValue, paramKeyToAttrMap); err != nil {
-					return err
-				}
-			}
-			usedParamsKeyOrTagNameMap[fieldName] = struct{}{}
-			continue
-		}
-
-		// fuzzy matching.
-		for _, cachedFieldInfo = range cachedStructInfo.FieldConvertInfos {
-			fieldName = cachedFieldInfo.FieldName()
-			if _, ok = usedParamsKeyOrTagNameMap[fieldName]; ok {
-				continue
-			}
-			if !strings.EqualFold(
-				cachedFieldInfo.RemoveSymbolsFieldName,
-				utils.RemoveSymbols(paramKey)) {
-				continue
-			}
-			fieldValue = cachedFieldInfo.GetFieldReflectValueFrom(structValue)
-			if paramValue != nil {
-				if err = bindVarToStructField(
-					fieldValue, paramValue, cachedFieldInfo, paramKeyToAttrMap,
-				); err != nil {
-					return err
-				}
-				// handle same field name in nested struct.
-				if len(cachedFieldInfo.OtherSameNameField) > 0 {
-					if err = setOtherSameNameField(
-						cachedFieldInfo, paramValue, structValue, paramKeyToAttrMap,
-					); err != nil {
-						return err
-					}
-				}
-			}
-			usedParamsKeyOrTagNameMap[cachedFieldInfo.FieldName()] = struct{}{}
-			break
 		}
 	}
 	return nil
@@ -345,10 +261,6 @@ func bindStructWithLoopFieldInfos(
 		for _, fieldTag := range cachedFieldInfo.PriorityTagAndFieldName {
 			if paramValue, ok = paramsMap[fieldTag]; !ok {
 				continue
-			}
-			if _, ok = usedParamsKeyOrTagNameMap[fieldTag]; ok {
-				matched = true
-				break
 			}
 			fieldValue = cachedFieldInfo.GetFieldReflectValueFrom(structValue)
 			if err = bindVarToStructField(

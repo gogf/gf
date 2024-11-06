@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
@@ -781,5 +782,26 @@ func Test_Issue3868(t *testing.T) {
 				PoolSize: 1,
 			})
 		}
+	})
+}
+
+// https://github.com/gogf/gf/issues/3903
+func Test_Issue3903(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type TestA struct {
+			UserId int `json:"UserId"   orm:"user_id"   `
+		}
+		type TestB struct {
+			TestA
+			UserId int `json:"NewUserId"  description:""`
+		}
+		var input = map[string]interface{}{
+			"user_id": gvar.New(100, true),
+		}
+		var a TestB
+		err := gconv.StructTag(input, &a, "orm")
+		t.AssertNil(err)
+		t.Assert(a.TestA.UserId, 100)
+		t.Assert(a.UserId, 100)
 	})
 }
