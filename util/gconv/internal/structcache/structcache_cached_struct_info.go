@@ -59,16 +59,17 @@ func (csi *CachedStructInfo) AddField(field reflect.StructField, fieldIndexes []
 }
 
 func (csi *CachedStructInfo) makeOrCopyCachedInfo(
-	field reflect.StructField,
-	fieldIndexes []int,
-	priorityTags []string,
+	field reflect.StructField, fieldIndexes []int, priorityTags []string,
 	cachedFieldInfo *CachedFieldInfo,
 	currTagOrFieldName string,
 ) (newFieldInfo *CachedFieldInfo) {
 	if cachedFieldInfo == nil {
 		// If the field is not cached, it creates a new one.
 		newFieldInfo = csi.makeCachedFieldInfo(field, fieldIndexes, priorityTags)
-	} else if cachedFieldInfo.StructField.Type != field.Type {
+		newFieldInfo.IsField = currTagOrFieldName == field.Name
+		return
+	}
+	if cachedFieldInfo.StructField.Type != field.Type {
 		// If the types are different, some information needs to be reset.
 		newFieldInfo = csi.makeCachedFieldInfo(field, fieldIndexes, priorityTags)
 	} else {
