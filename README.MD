@@ -89,7 +89,7 @@ golang version >= 1.20
 # Contributors
 
 This project exists thanks to all the people who contribute. [[Contributors](https://github.com/gogf/gf/graphs/contributors)].
-<a href="https://github.com/gogf/gf/graphs/contributors"><img src="https://contributors-img.web.app/image?repo=gogf/gf" /></a>
+<a href="https://github.com/gogf/gf/graphs/contributors"><img src="https://goframe.org/img/contributors.svg" /></a>
 
 # Donators
 
