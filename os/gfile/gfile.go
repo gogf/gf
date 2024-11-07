@@ -253,7 +253,7 @@ func Glob(pattern string, onlyNames ...bool) ([]string, error) {
 //
 // It does nothing if given `path` does not exist or is empty.
 //
-// Deprecated, please use RemoveFile or RemoveAll instead.
+// Deprecated: please use RemoveFile or RemoveAll instead.
 func Remove(path string) (err error) {
 	// It does nothing if `path` is empty.
 	if path == "" {
