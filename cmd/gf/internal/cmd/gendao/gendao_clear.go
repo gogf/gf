@@ -40,7 +40,7 @@ func doClearItem(item CGenDaoInternalGenItem, allGeneratedFilePaths []string) {
 	}
 	for _, filePath := range generatedFilePaths {
 		if !gstr.InArray(allGeneratedFilePaths, filePath) {
-			if err := gfile.Remove(filePath); err != nil {
+			if err := gfile.RemoveFile(filePath); err != nil {
 				mlog.Print(err)
 			}
 		}

@@ -106,10 +106,10 @@ func NewDocSetting(ctx context.Context, in cDocInput) *DocSetting {
 
 }
 
-// Clean clean the temporary directory
+// Clean cleans the temporary directory
 func (d *DocSetting) Clean() error {
 	if _, err := os.Stat(d.TempDir); err == nil {
-		err = gfile.Remove(d.TempDir)
+		err = gfile.RemoveAll(d.TempDir)
 		if err != nil {
 			mlog.Print("Failed to delete temporary directory:", err)
 			return err
@@ -168,7 +168,7 @@ func (d *DocSetting) DownloadDoc() error {
 	err := gcompress.UnZipFile(d.DocZipFile, d.TempDir)
 	if err != nil {
 		mlog.Print("Failed to unzip the file, please run again:", err)
-		gfile.Remove(d.DocZipFile)
+		_ = gfile.RemoveFile(d.DocZipFile)
 		return err
 	}
 

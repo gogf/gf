@@ -44,7 +44,7 @@ func (r *Registry) Register(ctx context.Context, service gsvc.Service) (register
 
 // Deregister off-lines and removes `service` from the Registry.
 func (r *Registry) Deregister(ctx context.Context, service gsvc.Service) error {
-	return gfile.Remove(r.getServiceFilePath(service))
+	return gfile.RemoveFile(r.getServiceFilePath(service))
 }
 
 func (r *Registry) getServiceFilePath(service gsvc.Service) string {
