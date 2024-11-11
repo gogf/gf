@@ -12,6 +12,7 @@ import (
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -90,8 +91,12 @@ func (c CGenPb) tagCommentIntoListMap(comment string, lineTagMap *gmap.ListMap) 
 		lineTagMap.Set(tagName, lineTagMap.GetVar(tagName).String()+tagContent)
 	} else {
 		var (
-			tagName    = "dc"
-			tagContent = comment
+			tagName = "dc"
+			// Convert backticks and double quotes to single quotes.
+			tagContent = gstr.ReplaceByMap(comment, g.MapStrStr{
+				"`": `'`,
+				`"`: `'`,
+			})
 		)
 		lineTagMap.Set(tagName, lineTagMap.GetVar(tagName).String()+tagContent)
 	}
