@@ -94,6 +94,9 @@ func (c CGenPb) Pb(ctx context.Context, in CGenPbInput) (out *CGenPbOutput, err 
 		mlog.Fatalf(`no proto files found in folder "%s"`, in.Path)
 	}
 
+	var originPwd = gfile.Pwd()
+	defer gfile.Chdir(originPwd)
+
 	if err = gfile.Chdir(protoPath); err != nil {
 		mlog.Fatal(err)
 	}
