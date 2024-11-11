@@ -217,7 +217,7 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 		if !gfile.Exists(in.PackDst) {
 			// Remove the go file that is automatically packed resource.
 			defer func() {
-				_ = gfile.Remove(in.PackDst)
+				_ = gfile.RemoveFile(in.PackDst)
 				mlog.Printf(`remove the automatically generated resource go file: %s`, in.PackDst)
 			}()
 		}
