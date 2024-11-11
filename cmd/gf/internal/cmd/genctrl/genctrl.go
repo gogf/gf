@@ -128,7 +128,7 @@ func (c CGenCtrl) generateByWatchFile(watchFile, sdkPath string, sdkStdVersion, 
 			return
 		}
 	}
-	defer gfile.Remove(flockFilePath)
+	defer gfile.RemoveFile(flockFilePath)
 	_ = gfile.PutContents(flockFilePath, gtime.TimestampStr())
 
 	// check this updated file is an api file.
