@@ -318,7 +318,7 @@ func (m *Model) parseWithTagInFieldStruct(field gstructs.Field) (output parseWit
 		array  []string
 		key    string
 	)
-	for _, v := range gstr.SplitAndTrim(ormTag, " ") {
+	for _, v := range gstr.SplitAndTrim(ormTag, ",") {
 		array = gstr.Split(v, ":")
 		if len(array) == 2 {
 			key = array[0]
@@ -326,9 +326,6 @@ func (m *Model) parseWithTagInFieldStruct(field gstructs.Field) (output parseWit
 		} else {
 			data[key] += " " + gstr.Trim(v)
 		}
-	}
-	for k, v := range data {
-		data[k] = gstr.TrimRight(v, ",")
 	}
 	output.With = data[OrmTagForWith]
 	output.Where = data[OrmTagForWithWhere]
