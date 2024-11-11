@@ -128,7 +128,7 @@ func (s *StorageFile) sessionFilePath(sessionId string) string {
 
 // RemoveAll deletes all key-value pairs from storage.
 func (s *StorageFile) RemoveAll(ctx context.Context, sessionId string) error {
-	return gfile.Remove(s.sessionFilePath(sessionId))
+	return gfile.RemoveAll(s.sessionFilePath(sessionId))
 }
 
 // GetSession returns the session data as *gmap.StrAnyMap for given session id from storage.
@@ -262,7 +262,7 @@ func (s *StorageFile) checkAndClearSessionFile(ctx context.Context, path string)
 				path, gtime.NewFromTimeStamp(fileTimestampMilli), s.ttl,
 			)
 		})
-		return gfile.Remove(path)
+		return gfile.RemoveFile(path)
 	}
 	return nil
 }

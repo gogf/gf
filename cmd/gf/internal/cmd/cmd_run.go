@@ -93,6 +93,12 @@ type (
 )
 
 func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err error) {
+	if !gfile.Exists(in.File) {
+		mlog.Fatalf(`given file "%s" not found`, in.File)
+	}
+	if !gfile.IsFile(in.File) {
+		mlog.Fatalf(`given "%s" is not a file`, in.File)
+	}
 	// Necessary check.
 	if gproc.SearchBinary("go") == "" {
 		mlog.Fatalf(`command "go" not found in your environment, please install golang first to proceed this command`)
@@ -205,7 +211,7 @@ func (app *cRunApp) End(ctx context.Context, sig os.Signal, outputPath string) {
 			mlog.Debugf("kill process error: %s", err.Error())
 		}
 	}
-	if err := gfile.Remove(outputPath); err != nil {
+	if err := gfile.RemoveFile(outputPath); err != nil {
 		mlog.Printf("delete binary file error: %s", err.Error())
 	} else {
 		mlog.Printf("deleted binary file: %s", outputPath)
