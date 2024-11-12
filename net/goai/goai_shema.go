@@ -8,6 +8,7 @@ package goai
 
 import (
 	"reflect"
+	"strings"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gset"
@@ -204,6 +205,62 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 			if validationRuleSet.Contains(validationRuleKeyForRequired) {
 				schema.Required = append(schema.Required, key)
 			}
+
+			// Extract validation rules to schema. like min, max, length
+			validationRules := ref.Value.ValidationRules
+			// remove custom error message
+			if idx := strings.Index(ref.Value.ValidationRules, "#"); idx != -1 {
+				validationRules = ref.Value.ValidationRules[:idx]
+			}
+			lstRules := gstr.Split(validationRules, "|")
+			for _, rule := range lstRules {
+				if strings.HasPrefix(rule, "max") {
+					if ref.Value.Type == "integer" || ref.Value.Type == "number" {
+						f := gconv.Float64(rule[4:])
+						ref.Value.Max = &f
+					}
+				}
+
+				if strings.HasPrefix(rule, "min") {
+					if ref.Value.Type == "integer" || ref.Value.Type == "number" {
+						f := gconv.Float64(rule[4:])
+						ref.Value.Min = &f
+					}
+				}
+
+				if strings.HasPrefix(rule, "length") {
+					lengthRule := gstr.Split(rule[7:], ",")
+					if len(lengthRule) == 2 {
+						minlength := gconv.Uint64(lengthRule[0])
+						ref.Value.MinLength = minlength
+						maxlength := gconv.Uint64(lengthRule[1])
+						ref.Value.MaxLength = &maxlength
+					}
+				}
+
+				if strings.HasPrefix(rule, "min-length") {
+					minlength := gconv.Uint64(rule[11:])
+					ref.Value.MinLength = minlength
+				}
+
+				if strings.HasPrefix(rule, "max-length") {
+					maxlength := gconv.Uint64(rule[11:])
+					ref.Value.MaxLength = &maxlength
+				}
+
+				if strings.HasPrefix(rule, "between") {
+					if ref.Value.Type == "integer" || ref.Value.Type == "number" {
+						lengthRule := gstr.Split(rule[8:], ",")
+						if len(lengthRule) == 2 {
+							minimum := gconv.Float64(lengthRule[0])
+							ref.Value.Min = &minimum
+							maximum := gconv.Float64(lengthRule[1])
+							ref.Value.Max = &maximum
+						}
+					}
+				}
+			}
+
 		}
 		if !isValidParameterName(key) {
 			ignoreProperties = append(ignoreProperties, key)
