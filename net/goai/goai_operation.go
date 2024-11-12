@@ -12,6 +12,12 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// IEnhanceOperation is an interface for enhancing the Operation struct.
+// It also gets request and response struct from router to offer more information.
+type IEnhanceOperation interface {
+	EnhanceOperation(operation *Operation, req interface{}, res interface{})
+}
+
 // Operation represents "operation" specified by OpenAPI/Swagger 3.0 standard.
 type Operation struct {
 	Tags         []string              `json:"tags,omitempty"`
