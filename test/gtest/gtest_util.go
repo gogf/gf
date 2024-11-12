@@ -331,10 +331,13 @@ func compareMap(value, expect interface{}) error {
 	// Turn two interface maps to the same type for comparison.
 	// Direct use of rvValue.MapIndex(key).Interface() will panic
 	// when the key types are inconsistent.
-	mValue := make(map[string]string)
-	mExpect := make(map[string]string)
-	ksValue := rvValue.MapKeys()
-	ksExpect := rvExpect.MapKeys()
+	var (
+		mValue   = make(map[string]string)
+		mExpect  = make(map[string]string)
+		ksValue  = rvValue.MapKeys()
+		ksExpect = rvExpect.MapKeys()
+	)
+
 	for _, key := range ksValue {
 		mValue[gconv.String(key.Interface())] = gconv.String(rvValue.MapIndex(key).Interface())
 	}
