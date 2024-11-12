@@ -37,6 +37,12 @@
 - OpenAPIV3 documentation generating, automatically
 - much, much more...ready to explore?
 
+# Documentation
+
+- GoFrame Official Site: [https://goframe.org](https://goframe.org)
+- GoDoc API: [https://pkg.go.dev/github.com/gogf/gf/v2](https://pkg.go.dev/github.com/gogf/gf/v2)
+
+
 # Installation
 
 Enter your repo. directory and execute following command:
@@ -59,37 +65,17 @@ go install github.com/gogf/gf/cmd/gf/v2@latest
 golang version >= 1.20
 ```
 
-# Documentation
+# Contributors
 
-- Chinese Official Site(中文官网): [https://goframe.org](https://goframe.org/display/gf)
-- Chinese Pages Document(中文镜像文档): [https://pages.goframe.org](https://pages.goframe.org)
-- Chinese Offline Document(中文离线文档): [https://github.com/gogf/goframe.org-pdf](https://github.com/gogf/goframe.org-pdf)
-- GoDoc API: [https://pkg.go.dev/github.com/gogf/gf/v2](https://pkg.go.dev/github.com/gogf/gf/v2)
+This project exists thanks to all the people who contribute. [[Contributors](https://github.com/gogf/gf/graphs/contributors)].
+<a href="https://github.com/gogf/gf/graphs/contributors">
+<img src="https://goframe.org/img/contributors.svg" />
+</a>
 
 # License
 
 `GoFrame` is licensed under the [MIT License](LICENSE), 100% free and open-source, forever.
 
-# Part Of Users
-
-- [Tencent](https://www.tencent.com/)
-- [ZTE](https://www.zte.com.cn/china/)
-- [Ant Financial Services](https://www.antfin.com/)
-- [VIVO](https://www.vivo.com/)
-- [MedLinker](https://www.medlinker.com/)
-- [KuCoin](https://www.kucoin.io/)
-- [LeYouJia](https://www.leyoujia.com/)
-- [IGG](https://igg.com)
-- [37](https://www.37.com)
-- [XiMaLaYa](https://www.ximalaya.com)
-- [ZYBang](https://www.zybang.com/)
-
-> We list part of the users here, if your company or products are using `GoFrame`, please let us know [here](https://goframe.org/pages/viewpage.action?pageId=1114415).
-
-# Contributors
-
-This project exists thanks to all the people who contribute. [[Contributors](https://github.com/gogf/gf/graphs/contributors)].
-<a href="https://github.com/gogf/gf/graphs/contributors"><img src="https://goframe.org/img/contributors.svg" /></a>
 
 # Donators
 
@@ -101,5 +87,5 @@ We appreciate any kind of sponsorship for `GoFrame` development. If you've got s
 
 # Thanks
 
-<a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/download/thumbnails/1114119/jetbrains.png" height="120" alt="JetBrains"/></a>
-<a href="https://www.atlassian.com/?from=GoFrame"><img src="https://goframe.org/download/attachments/1114119/atlassian.jpg" height="120" alt="Atlassian"/></a>
+<a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/img/jetbrains.png" height="120" alt="JetBrains"/></a>
+<a href="https://www.atlassian.com/?from=GoFrame"><img src="https://goframe.org/img/atlassian.jpg" height="120" alt="Atlassian"/></a>
