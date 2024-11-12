@@ -15,8 +15,6 @@ type Config struct {
 	CommonResponse          interface{} // Common response structure for all paths.
 	CommonResponseDataField string      // Common response field name to be replaced with certain business response structure. Eg: `Data`, `Response.`.
 	IgnorePkgPath           bool        // Ignores package name for schema name.
-
-	OperationOverrideHook func(operation *Operation, reqObject interface{}, resObject interface{}) // OperationOverrideHook is a hook function to override the auto-generated operation.
 }
 
 // fillWithDefaultValue fills configuration object of `oai` with default values if these are not configured.
