@@ -7,7 +7,7 @@ require (
 	github.com/clbanning/mxj/v2 v2.7.0
 	github.com/emirpasic/gods v1.18.1
 	github.com/fatih/color v1.17.0
-	github.com/fsnotify/fsnotify v1.7.0
+	github.com/fsnotify/fsnotify v1.8.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/grokify/html-strip-tags-go v0.1.0
 	github.com/magiconair/properties v1.8.7
