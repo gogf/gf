@@ -8,6 +8,9 @@ package gclient
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/internal/httputil"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"net/http"
 	"reflect"
 
@@ -60,7 +63,56 @@ func (c *Client) DoRequestObj(ctx context.Context, req, res interface{}) error {
 			gtag.Path, reflect.TypeOf(req).String(),
 		)
 	}
-	path = c.handlePathForObjRequest(path, req)
+	fields, err := gstructs.Fields(gstructs.FieldsInput{
+		Pointer:         req,
+		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+	})
+	if err != nil {
+		return gerror.Newf(`invalid request object "%s"`, reflect.TypeOf(req).String())
+	}
+
+	var (
+		pathParamsMap  *gmap.StrAnyMap
+		queryParamsMap *gmap.StrAnyMap
+		bodyParamsMap  *gmap.StrAnyMap
+	)
+	for _, field := range fields {
+		tagMap := gmap.NewStrStrMapFrom(field.TagMap())
+		pathParamName := tagMap.Get(gtag.Path)
+		if len(pathParamName) > 0 {
+			if pathParamsMap == nil {
+				pathParamsMap = gmap.NewStrAnyMap()
+			}
+			pathParamsMap.Set(pathParamName, field.Value.Interface())
+		}
+
+		queryParamName := tagMap.Get(gtag.Param)
+		if len(queryParamName) > 0 {
+			if queryParamsMap == nil {
+				queryParamsMap = gmap.NewStrAnyMap()
+			}
+			queryParamsMap.Set(queryParamName, field.Value.Interface())
+		}
+
+		queryParamShortName := tagMap.Get(gtag.ParamShort)
+		if len(queryParamShortName) > 0 {
+			if queryParamsMap == nil {
+				queryParamsMap = gmap.NewStrAnyMap()
+			}
+			queryParamsMap.Set(queryParamShortName, field.Value.Interface())
+		}
+
+		bodyParamName := tagMap.Get(gtag.Json)
+		if len(bodyParamName) > 0 {
+			if bodyParamsMap == nil {
+				bodyParamsMap = gmap.NewStrAnyMap()
+			}
+			bodyParamsMap.Set(bodyParamName, field.Value.Interface())
+		}
+	}
+
+	path = c.handlePathForObjRequest(path, pathParamsMap)
+	path = c.handleQueryParamsForObjRequest(path, queryParamsMap)
 	switch gstr.ToUpper(method) {
 	case
 		http.MethodGet,
@@ -72,7 +124,7 @@ func (c *Client) DoRequestObj(ctx context.Context, req, res interface{}) error {
 		http.MethodConnect,
 		http.MethodOptions,
 		http.MethodTrace:
-		if result := c.RequestVar(ctx, method, path, req); res != nil && !result.IsEmpty() {
+		if result := c.RequestVar(ctx, method, path, bodyParamsMap); res != nil && !result.IsEmpty() {
 			return result.Scan(res)
 		}
 		return nil
@@ -86,18 +138,32 @@ func (c *Client) DoRequestObj(ctx context.Context, req, res interface{}) error {
 // Eg:
 // /order/{id}  -> /order/1
 // /user/{name} -> /order/john
-func (c *Client) handlePathForObjRequest(path string, req interface{}) string {
+func (c *Client) handlePathForObjRequest(path string, paramsMap *gmap.StrAnyMap) string {
+	if paramsMap.IsEmpty() {
+		return path
+	}
 	if gstr.Contains(path, "{") {
-		requestParamsMap := gconv.Map(req)
-		if len(requestParamsMap) > 0 {
-			path, _ = gregex.ReplaceStringFuncMatch(`\{(\w+)\}`, path, func(match []string) string {
-				foundKey, foundValue := gutil.MapPossibleItemByKey(requestParamsMap, match[1])
-				if foundKey != "" {
-					return gconv.String(foundValue)
-				}
-				return match[0]
-			})
-		}
+		path, _ = gregex.ReplaceStringFuncMatch(`\{(\w+)\}`, path, func(match []string) string {
+			foundKey, foundValue := gutil.MapPossibleItemByKey(paramsMap.Map(), match[1])
+			if foundKey != "" {
+				return gconv.String(foundValue)
+			}
+			return match[0]
+		})
+	}
+	return path
+}
+
+// handleQueryParamsForObjRequest add parameters in `param` or `p` with parameters from request object.
+// Eg:
+// /order  -> /order?id=1234
+// /user -> /user?name=john&age=18
+func (c *Client) handleQueryParamsForObjRequest(path string, paramsMap *gmap.StrAnyMap) string {
+	params := httputil.BuildParams(paramsMap, c.noUrlEncode)
+	if gstr.Contains(path, "?") {
+		path = path + "&" + params
+	} else {
+		path = path + "?" + params
 	}
 	return path
 }
