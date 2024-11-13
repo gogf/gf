@@ -154,8 +154,8 @@ type Issue3747Res403 struct {
 // Common response case
 type Issue3747Res404 struct{}
 
-func (r Issue3747Res) ResponseStatusMap() map[goai.StatusCode]any {
-	return map[goai.StatusCode]any{
+func (r Issue3747Res) EnhanceResponseStatus() map[goai.StatusCode]goai.ResponseStatusStruct {
+	return map[goai.StatusCode]goai.ResponseStatusStruct{
 		401: Issue3747Res401{},
 		402: Issue3747Res402{},
 		403: Issue3747Res403{},
