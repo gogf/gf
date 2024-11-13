@@ -260,7 +260,6 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 					}
 				}
 			}
-
 		}
 		if !isValidParameterName(key) {
 			ignoreProperties = append(ignoreProperties, key)
