@@ -125,6 +125,9 @@ func Int64(any interface{}) int64 {
 		if valueInt64 := Float64(s); math.IsNaN(valueInt64) {
 			return 0
 		} else {
+			if isMinus {
+				return -int64(valueInt64)
+			}
 			return int64(valueInt64)
 		}
 	default:
