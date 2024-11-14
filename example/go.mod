@@ -3,22 +3,22 @@ module github.com/gogf/gf/example
 go 1.21
 
 require (
-	github.com/gogf/gf/contrib/config/apollo/v2 v2.8.0-beta
-	github.com/gogf/gf/contrib/config/consul/v2 v2.8.0-beta
-	github.com/gogf/gf/contrib/config/kubecm/v2 v2.8.0-beta
-	github.com/gogf/gf/contrib/config/nacos/v2 v2.8.0-beta
-	github.com/gogf/gf/contrib/config/polaris/v2 v2.8.0-beta
-	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.8.0-beta
-	github.com/gogf/gf/contrib/metric/otelmetric/v2 v2.8.0-beta
-	github.com/gogf/gf/contrib/nosql/redis/v2 v2.8.0-beta
-	github.com/gogf/gf/contrib/registry/etcd/v2 v2.8.0-beta
-	github.com/gogf/gf/contrib/registry/file/v2 v2.8.0-beta
-	github.com/gogf/gf/contrib/registry/nacos/v2 v2.8.0-beta
-	github.com/gogf/gf/contrib/registry/polaris/v2 v2.8.0-beta
-	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.8.0-beta
-	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.8.0-beta
-	github.com/gogf/gf/contrib/trace/otlphttp/v2 v2.8.0-beta
-	github.com/gogf/gf/v2 v2.8.0-beta
+	github.com/gogf/gf/contrib/config/apollo/v2 v2.8.0
+	github.com/gogf/gf/contrib/config/consul/v2 v2.8.0
+	github.com/gogf/gf/contrib/config/kubecm/v2 v2.8.0
+	github.com/gogf/gf/contrib/config/nacos/v2 v2.8.0
+	github.com/gogf/gf/contrib/config/polaris/v2 v2.8.0
+	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.8.0
+	github.com/gogf/gf/contrib/metric/otelmetric/v2 v2.8.0
+	github.com/gogf/gf/contrib/nosql/redis/v2 v2.8.0
+	github.com/gogf/gf/contrib/registry/etcd/v2 v2.8.0
+	github.com/gogf/gf/contrib/registry/file/v2 v2.8.0
+	github.com/gogf/gf/contrib/registry/nacos/v2 v2.8.0
+	github.com/gogf/gf/contrib/registry/polaris/v2 v2.8.0
+	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.8.0
+	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.8.0
+	github.com/gogf/gf/contrib/trace/otlphttp/v2 v2.8.0
+	github.com/gogf/gf/v2 v2.8.0
 	github.com/hashicorp/consul/api v1.24.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/nacos-group/nacos-sdk-go/v2 v2.2.7
@@ -65,7 +65,7 @@ require (
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fatih/color v1.17.0 // indirect
-	github.com/fsnotify/fsnotify v1.8.0 // indirect
+	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
