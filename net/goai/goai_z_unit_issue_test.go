@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/net/goai"
@@ -119,71 +120,97 @@ func Test_Issue3135(t *testing.T) {
 	})
 }
 
-type Issue3747CommonRes struct {
+type Issue3889CommonRes struct {
 	g.Meta  `mime:"application/json"`
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
 	Data    interface{} `json:"data"`
 }
 
-type Issue3747Req struct {
+type Issue3889Req struct {
 	g.Meta `path:"/default" method:"post"`
 	Name   string
 }
-type Issue3747Res struct {
-	g.Meta `status:"201" resEg:"testdata/Issue3747JsonFile/201.json"`
+type Issue3889Res struct {
+	g.Meta `status:"201" resEg:"testdata/Issue3889JsonFile/201.json"`
 	Info   string `json:"info" eg:"Created!"`
 }
 
 // Example case
-type Issue3747Res401 struct {
-	g.Meta `resEg:"testdata/Issue3747JsonFile/401.json"`
-}
+type Issue3889Res401 struct{}
 
 // Override case 1
-type Issue3747Res402 struct {
+type Issue3889Res402 struct {
 	g.Meta `mime:"application/json"`
 }
 
 // Override case 2
-type Issue3747Res403 struct {
+type Issue3889Res403 struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
 
 // Common response case
-type Issue3747Res404 struct{}
+type Issue3889Res404 struct{}
 
-func (r Issue3747Res) EnhanceResponseStatus() map[goai.StatusCode]goai.ResponseStatusStruct {
-	return map[goai.StatusCode]goai.ResponseStatusStruct{
-		401: Issue3747Res401{},
-		402: Issue3747Res402{},
-		403: Issue3747Res403{},
-		404: Issue3747Res404{},
-		405: struct{}{},
-		407: interface{}(nil),
-		406: nil,
+var Issue3889ErrorRes = map[int][]gcode.Code{
+	401: {
+		gcode.New(1, "Aha, 401 - 1", nil),
+		gcode.New(2, "Aha, 401 - 2", nil),
+	},
+}
+
+func (r Issue3889Res) EnhanceResponseStatus() map[goai.EnhancedStatusCode]goai.EnhancedStatusType {
+	Codes401 := Issue3889ErrorRes[401]
+	// iterate Codes401 to generate Examples
+	var Examples401 []interface{}
+	for _, code := range Codes401 {
+		example := Issue3889CommonRes{
+			Code:    code.Code(),
+			Message: code.Message(),
+			Data:    nil,
+		}
+		Examples401 = append(Examples401, example)
+	}
+	return map[goai.EnhancedStatusCode]goai.EnhancedStatusType{
+		401: {
+			Response: Issue3889Res401{},
+			Examples: Examples401,
+		},
+		402: {
+			Response: Issue3889Res402{},
+		},
+		403: {
+			Response: Issue3889Res403{},
+		},
+		404: {
+			Response: Issue3889Res404{},
+		},
+		500: {
+			Response: struct{}{},
+		},
+		501: {},
 	}
 }
 
-type Issue3747 struct{}
+type Issue3889 struct{}
 
-func (Issue3747) Default(ctx context.Context, req *Issue3747Req) (res *Issue3747Res, err error) {
-	res = &Issue3747Res{}
+func (Issue3889) Default(ctx context.Context, req *Issue3889Req) (res *Issue3889Res, err error) {
+	res = &Issue3889Res{}
 	return
 }
 
-// https://github.com/gogf/gf/issues/3747
-func Test_Issue3747(t *testing.T) {
+// https://github.com/gogf/gf/issues/3889
+func Test_Issue3889(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
 		openapi := s.GetOpenApi()
-		openapi.Config.CommonResponse = Issue3747CommonRes{}
+		openapi.Config.CommonResponse = Issue3889CommonRes{}
 		openapi.Config.CommonResponseDataField = `Data`
 		s.Use(ghttp.MiddlewareHandlerResponse)
 		s.Group("/", func(group *ghttp.RouterGroup) {
 			group.Bind(
-				new(Issue3747),
+				new(Issue3889),
 			)
 		})
 		s.SetLogger(nil)
@@ -205,29 +232,27 @@ func Test_Issue3747(t *testing.T) {
 		t.AssertNE(j.Get(`paths./default.post.responses.402`).String(), "")
 		t.AssertNE(j.Get(`paths./default.post.responses.403`).String(), "")
 		t.AssertNE(j.Get(`paths./default.post.responses.404`).String(), "")
-		t.AssertNE(j.Get(`paths./default.post.responses.405`).String(), "")
-		t.Assert(j.Get(`paths./default.post.responses.406`).String(), "")
-		t.Assert(j.Get(`paths./default.post.responses.407`).String(), "")
-
+		t.AssertNE(j.Get(`paths./default.post.responses.500`).String(), "")
+		t.Assert(j.Get(`paths./default.post.responses.501`).String(), "")
 		// Check content
 		commonResponseSchema := `{"properties":{"code":{"format":"int","type":"integer"},"data":{"properties":{},"type":"object"},"message":{"format":"string","type":"string"}},"type":"object"}`
 		Status201ExamplesContent := `{"code 1":{"value":{"code":1,"data":"Good","message":"Aha, 201 - 1"}},"code 2":{"value":{"code":2,"data":"Not Bad","message":"Aha, 201 - 2"}}}`
 		Status401ExamplesContent := `{"example 1":{"value":{"code":1,"data":null,"message":"Aha, 401 - 1"}},"example 2":{"value":{"code":2,"data":null,"message":"Aha, 401 - 2"}}}`
-		Status402SchemaContent := `{"$ref":"#/components/schemas/github.com.gogf.gf.v2.net.goai_test.Issue3747Res402"}`
-		Issue3747Res403Ref := `{"$ref":"#/components/schemas/github.com.gogf.gf.v2.net.goai_test.Issue3747Res403"}`
+		Status402SchemaContent := `{"$ref":"#/components/schemas/github.com.gogf.gf.v2.net.goai_test.Issue3889Res402"}`
+		Issue3889Res403Ref := `{"$ref":"#/components/schemas/github.com.gogf.gf.v2.net.goai_test.Issue3889Res403"}`
 
 		t.Assert(j.Get(`paths./default.post.responses.201.content.application/json.examples`).String(), Status201ExamplesContent)
 		t.Assert(j.Get(`paths./default.post.responses.401.content.application/json.examples`).String(), Status401ExamplesContent)
 		t.Assert(j.Get(`paths./default.post.responses.402.content.application/json.schema`).String(), Status402SchemaContent)
-		t.Assert(j.Get(`paths./default.post.responses.403.content.application/json.schema`).String(), Issue3747Res403Ref)
+		t.Assert(j.Get(`paths./default.post.responses.403.content.application/json.schema`).String(), Issue3889Res403Ref)
 		t.Assert(j.Get(`paths./default.post.responses.404.content.application/json.schema`).String(), commonResponseSchema)
-		t.Assert(j.Get(`paths./default.post.responses.405.content.application/json.schema`).String(), commonResponseSchema)
+		t.Assert(j.Get(`paths./default.post.responses.500.content.application/json.schema`).String(), commonResponseSchema)
 
 		api := s.GetOpenApi()
-		reqPath := "github.com.gogf.gf.v2.net.goai_test.Issue3747Res403"
+		reqPath := "github.com.gogf.gf.v2.net.goai_test.Issue3889Res403"
 		schema := api.Components.Schemas.Get(reqPath).Value
 
-		Issue3747Res403Schema := `{"properties":{"code":{"format":"int","type":"integer"},"message":{"format":"string","type":"string"}},"type":"object"}`
-		t.Assert(schema, Issue3747Res403Schema)
+		Issue3889Res403Schema := `{"properties":{"code":{"format":"int","type":"integer"},"message":{"format":"string","type":"string"}},"type":"object"}`
+		t.Assert(schema, Issue3889Res403Schema)
 	})
 }
