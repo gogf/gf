@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/config/polaris/v2
 go 1.20
 
 require (
-	github.com/gogf/gf/v2 v2.8.0-beta
+	github.com/gogf/gf/v2 v2.8.0
 	github.com/polarismesh/polaris-go v1.5.8
 )
 
@@ -15,7 +15,7 @@ require (
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fatih/color v1.17.0 // indirect
-	github.com/fsnotify/fsnotify v1.8.0 // indirect
+	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
