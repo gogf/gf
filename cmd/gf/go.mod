@@ -3,13 +3,13 @@ module github.com/gogf/gf/cmd/gf/v2
 go 1.18
 
 require (
-	github.com/gogf/gf/contrib/drivers/clickhouse/v2 v2.8.0-beta
-	github.com/gogf/gf/contrib/drivers/mssql/v2 v2.8.0-beta
-	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.8.0-beta
-	github.com/gogf/gf/contrib/drivers/oracle/v2 v2.8.0-beta
-	github.com/gogf/gf/contrib/drivers/pgsql/v2 v2.8.0-beta
-	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.8.0-beta
-	github.com/gogf/gf/v2 v2.8.0-beta
+	github.com/gogf/gf/contrib/drivers/clickhouse/v2 v2.8.0
+	github.com/gogf/gf/contrib/drivers/mssql/v2 v2.8.0
+	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.8.0
+	github.com/gogf/gf/contrib/drivers/oracle/v2 v2.8.0
+	github.com/gogf/gf/contrib/drivers/pgsql/v2 v2.8.0
+	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.8.0
+	github.com/gogf/gf/v2 v2.8.0
 	github.com/gogf/selfupdate v0.0.0-20231215043001-5c48c528462f
 	github.com/olekukonko/tablewriter v0.0.5
 	golang.org/x/mod v0.17.0
@@ -24,7 +24,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fatih/color v1.17.0 // indirect
-	github.com/fsnotify/fsnotify v1.7.0 // indirect
+	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/glebarez/go-sqlite v1.21.2 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect

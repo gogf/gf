@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/registry/etcd/v2
 go 1.20
 
 require (
-	github.com/gogf/gf/v2 v2.8.0-beta
+	github.com/gogf/gf/v2 v2.8.0
 	go.etcd.io/etcd/client/v3 v3.5.7
 	google.golang.org/grpc v1.59.0
 )
