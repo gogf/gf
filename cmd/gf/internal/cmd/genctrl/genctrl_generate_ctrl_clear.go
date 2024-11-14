@@ -49,7 +49,7 @@ func (c *controllerClearer) doClear(dstModuleFolderPath string, item apiItem) (e
 				`remove unimplemented and of no api definitions controller file: %s`,
 				methodFilePath,
 			)
-			err = gfile.Remove(methodFilePath)
+			err = gfile.RemoveFile(methodFilePath)
 		}
 	}
 	return
