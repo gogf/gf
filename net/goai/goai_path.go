@@ -260,7 +260,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			if statusCode < 100 || statusCode >= 600 {
 				return gerror.Newf("Invalid HTTP status code: %d", statusCode)
 			}
-			if data == nil {
+			if data.Response == nil {
 				continue
 			}
 			status := gconv.String(statusCode)

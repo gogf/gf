@@ -26,7 +26,14 @@ type Responses map[string]ResponseRef
 
 // object could be someObject.Interface()
 // There may be some difference between someObject.Type() and reflect.TypeOf(object).
-func (oai *OpenApiV3) getResponseFromObject(object interface{}, isDefault bool) (*Response, error) {
+func (oai *OpenApiV3) getResponseFromObject(data interface{}, isDefault bool) (*Response, error) {
+	var object interface{}
+	enhancedResponse, isEnhanced := data.(EnhancedStatusType)
+	if isEnhanced {
+		object = enhancedResponse.Response
+	} else {
+		object = data
+	}
 	// Add object schema to oai
 	if err := oai.addSchema(object); err != nil {
 		return nil, err
@@ -82,6 +89,14 @@ func (oai *OpenApiV3) getResponseFromObject(object interface{}, isDefault bool) 
 	examples := make(Examples)
 	if responseExamplePath != "" {
 		if err := examples.applyExamplesFile(responseExamplePath); err != nil {
+			return nil, err
+		}
+	}
+
+	// Override examples from enhanced response.
+	if isEnhanced {
+		err := examples.applyExamplesData(enhancedResponse.Examples)
+		if err != nil {
 			return nil, err
 		}
 	}
