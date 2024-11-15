@@ -70,7 +70,7 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 			mlog.Fatalf(`writing content to "%s" failed: %v`, doFilePath, err)
 		} else {
 			utils.GoFmt(doFilePath)
-			mlog.Print("generated:", doFilePath)
+			mlog.Print("generated:", gfile.RealPath(doFilePath))
 		}
 	}
 }
