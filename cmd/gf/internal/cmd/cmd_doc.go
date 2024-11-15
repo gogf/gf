@@ -8,6 +8,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -22,8 +23,12 @@ import (
 )
 
 const (
+	GitName    = "gf-site"
+	BranchName = "gh-pages"
+
+	SiteFileName = GitName + "-" + BranchName
 	// DocURL is the download address of the document
-	DocURL = "https://github.com/gogf/gf/archive/refs/heads/gh-pages.zip"
+	DocURL = "https://github.com/gogf/" + GitName + "/archive/refs/heads/" + BranchName + ".zip"
 )
 
 var (
@@ -70,12 +75,13 @@ func (c cDoc) Index(ctx context.Context, in cDocInput) (out *cDocOutput, err err
 		mlog.Print("Failed to download document:", err)
 		return
 	}
-	s := g.Server()
-	s.SetServerRoot(docs.DocDir)
-	s.SetPort(in.Port)
-	s.SetDumpRouterMap(false)
-	mlog.Printf("Access address http://127.0.0.1:%d", in.Port)
-	s.Run()
+
+	http.Handle("/", http.FileServer(http.Dir(docs.DocDir)))
+	mlog.Printf("Access address http://127.0.0.1:%d in %s", in.Port, docs.DocDir)
+	err = http.ListenAndServe(fmt.Sprintf(":%d", in.Port), nil)
+	if err != nil {
+		return nil, err
+	}
 	return
 }
 
@@ -89,7 +95,7 @@ type DocSetting struct {
 
 // NewDocSetting new DocSetting
 func NewDocSetting(ctx context.Context, in cDocInput) *DocSetting {
-	fileName := "gf-doc-md.zip"
+	fileName := SiteFileName + ".zip"
 	tempDir := in.Path
 	if tempDir == "" {
 		tempDir = gfile.Temp("goframe/docs")
@@ -99,7 +105,7 @@ func NewDocSetting(ctx context.Context, in cDocInput) *DocSetting {
 
 	return &DocSetting{
 		TempDir:    filepath.FromSlash(tempDir),
-		DocDir:     filepath.FromSlash(path.Join(tempDir, "gf-gh-pages")),
+		DocDir:     filepath.FromSlash(path.Join(tempDir, SiteFileName)),
 		DocURL:     in.Proxy + DocURL,
 		DocZipFile: filepath.FromSlash(path.Join(tempDir, fileName)),
 	}
