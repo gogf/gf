@@ -67,7 +67,8 @@ golang version >= 1.20
 
 # Contributors
 
-This project exists thanks to all the people who contribute. [[Contributors](https://github.com/gogf/gf/graphs/contributors)].
+💖 Thanks all the contributors making GoFrame awesome! [[Contributors](https://github.com/gogf/gf/graphs/contributors)] 💖
+
 <a href="https://github.com/gogf/gf/graphs/contributors">
 <img src="https://goframe.org/img/contributors.svg" />
 </a>
@@ -79,7 +80,7 @@ This project exists thanks to all the people who contribute. [[Contributors](htt
 
 # Donators
 
-If you love `GoFrame`, why not [buy developer a cup of coffee](https://goframe.org/pages/viewpage.action?pageId=1115633)?
+If you love `GoFrame`, why not [buy developer a cup of coffee](https://goframe.org/supportus/donate)?
 
 # Sponsors
 
