@@ -207,28 +207,33 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 			}
 
 			// Extract validation rules to schema. like min, max, length
-			validationRules := ref.Value.ValidationRules
-			// remove custom error message
-			if idx := strings.Index(ref.Value.ValidationRules, "#"); idx != -1 {
-				validationRules = ref.Value.ValidationRules[:idx]
-			}
-			lstRules := gstr.Split(validationRules, "|")
+			lstRules := gstr.Split(ref.Value.ValidationRules, "|")
 			for _, rule := range lstRules {
-				if strings.HasPrefix(rule, "max") {
-					if ref.Value.Type == "integer" || ref.Value.Type == "number" {
-						f := gconv.Float64(rule[4:])
-						ref.Value.Max = &f
+				if strings.HasPrefix(rule, validationRuleKeyMax) {
+					if strings.HasPrefix(rule, validationRuleKeyMaxLength) {
+						maxlength := gconv.Uint64(rule[11:])
+						ref.Value.MaxLength = &maxlength
+					} else {
+						if ref.Value.Type == "integer" || ref.Value.Type == "number" {
+							f := gconv.Float64(rule[4:])
+							ref.Value.Max = &f
+						}
 					}
 				}
 
-				if strings.HasPrefix(rule, "min") {
-					if ref.Value.Type == "integer" || ref.Value.Type == "number" {
-						f := gconv.Float64(rule[4:])
-						ref.Value.Min = &f
+				if strings.HasPrefix(rule, validationRuleKeyMin) {
+					if strings.HasPrefix(rule, validationRuleKeyMinLength) {
+						minlength := gconv.Uint64(rule[11:])
+						ref.Value.MinLength = minlength
+					} else {
+						if ref.Value.Type == "integer" || ref.Value.Type == "number" {
+							f := gconv.Float64(rule[4:])
+							ref.Value.Min = &f
+						}
 					}
 				}
 
-				if strings.HasPrefix(rule, "length") {
+				if strings.HasPrefix(rule, validationRuleKeyLength) {
 					lengthRule := gstr.Split(rule[7:], ",")
 					if len(lengthRule) == 2 {
 						minlength := gconv.Uint64(lengthRule[0])
@@ -238,17 +243,7 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 					}
 				}
 
-				if strings.HasPrefix(rule, "min-length") {
-					minlength := gconv.Uint64(rule[11:])
-					ref.Value.MinLength = minlength
-				}
-
-				if strings.HasPrefix(rule, "max-length") {
-					maxlength := gconv.Uint64(rule[11:])
-					ref.Value.MaxLength = &maxlength
-				}
-
-				if strings.HasPrefix(rule, "between") {
+				if strings.HasPrefix(rule, validationRuleKeyBetween) {
 					if ref.Value.Type == "integer" || ref.Value.Type == "number" {
 						lengthRule := gstr.Split(rule[8:], ",")
 						if len(lengthRule) == 2 {
