@@ -41,8 +41,8 @@ body:
     attributes:
       label: Can this bug be reproduced with the latest release?
       options:
-        - Yes
-        - No
+        - Option Yes
+        - Option No
     validations:
       required: true
 
