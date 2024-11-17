@@ -55,7 +55,7 @@ func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
 			mlog.Fatalf("writing content to '%s' failed: %v", entityFilePath, err)
 		} else {
 			utils.GoFmt(entityFilePath)
-			mlog.Print("generated:", entityFilePath)
+			mlog.Print("generated:", gfile.RealPath(entityFilePath))
 		}
 	}
 }
