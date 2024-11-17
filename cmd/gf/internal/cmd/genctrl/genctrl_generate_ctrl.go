@@ -89,7 +89,7 @@ func (c *controllerGenerator) doGenerateCtrlNewByModuleAndVersion(
 		if err = gfile.PutContents(moduleFilePath, gstr.TrimLeft(content)); err != nil {
 			return err
 		}
-		mlog.Printf(`generated: %s`, moduleFilePath)
+		mlog.Printf(`generated: %s`, gfile.RealPath(moduleFilePath))
 	}
 	if !gfile.Exists(moduleFilePathNew) {
 		content := gstr.ReplaceByMap(consts.TemplateGenCtrlControllerNewEmpty, g.MapStrStr{
@@ -99,7 +99,7 @@ func (c *controllerGenerator) doGenerateCtrlNewByModuleAndVersion(
 		if err = gfile.PutContents(moduleFilePathNew, gstr.TrimLeft(content)); err != nil {
 			return err
 		}
-		mlog.Printf(`generated: %s`, moduleFilePathNew)
+		mlog.Printf(`generated: %s`, gfile.RealPath(moduleFilePathNew))
 	}
 	filePaths, err := gfile.ScanDir(dstModuleFolderPath, "*.go", false)
 	if err != nil {
@@ -161,7 +161,7 @@ func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, ite
 			return err
 		}
 	}
-	mlog.Printf(`generated: %s`, methodFilePath)
+	mlog.Printf(`generated: %s`, gfile.RealPath(methodFilePath))
 	return
 }
 
@@ -221,7 +221,7 @@ func (c *controllerGenerator) doGenerateCtrlMergeItem(dstModuleFolderPath string
 		if err = gfile.PutContentsAppend(ctrlFilePath, ctrlFileItem.controllers.String()); err != nil {
 			return err
 		}
-		mlog.Printf(`generated: %s`, ctrlFilePath)
+		mlog.Printf(`generated: %s`, gfile.RealPath(ctrlFilePath))
 	}
 	return
 }

@@ -254,7 +254,7 @@ func generatePbEntityContentFile(ctx context.Context, in CGenPbEntityInternalInp
 	if err := gfile.PutContents(path, strings.TrimSpace(entityContent)); err != nil {
 		mlog.Fatalf("writing content to '%s' failed: %v", path, err)
 	} else {
-		mlog.Print("generated:", path)
+		mlog.Print("generated:", gfile.RealPath(path))
 	}
 }
 

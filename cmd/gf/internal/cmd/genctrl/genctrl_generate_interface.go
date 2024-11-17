@@ -94,7 +94,7 @@ func (c *apiInterfaceGenerator) doGenerate(apiModuleFolderPath string, module st
 		"{Interfaces}": gstr.TrimRightStr(interfaceDefinition, "\n", 2),
 	}))
 	err = gfile.PutContents(moduleFilePath, interfaceContent)
-	mlog.Printf(`generated: %s`, moduleFilePath)
+	mlog.Printf(`generated: %s`, gfile.RealPath(moduleFilePath))
 	return
 }
 
