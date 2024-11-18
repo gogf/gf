@@ -17,7 +17,6 @@ import (
 //
 // Eg:
 // Order("id desc")
-// Order("id", "desc").
 // Order("id desc,name asc")
 // Order("id desc").Order("name asc")
 // Order(gdb.Raw("field(id, 3,1,2)")).
