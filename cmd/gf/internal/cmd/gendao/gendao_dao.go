@@ -123,7 +123,7 @@ func generateDaoIndex(in generateDaoIndexInput) {
 			mlog.Fatalf("writing content to '%s' failed: %v", path, err)
 		} else {
 			utils.GoFmt(path)
-			mlog.Print("generated:", path)
+			mlog.Print("generated:", gfile.RealPath(path))
 		}
 	}
 }
@@ -157,7 +157,7 @@ func generateDaoInternal(in generateDaoInternalInput) {
 		mlog.Fatalf("writing content to '%s' failed: %v", path, err)
 	} else {
 		utils.GoFmt(path)
-		mlog.Print("generated:", path)
+		mlog.Print("generated:", gfile.RealPath(path))
 	}
 }
 
