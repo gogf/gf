@@ -288,11 +288,7 @@ func (c *AdapterMemory) GetExpire(ctx context.Context, key interface{}) (time.Du
 // If multiple keys are given, it returns the value of the last deleted item.
 func (c *AdapterMemory) Remove(ctx context.Context, keys ...interface{}) (*gvar.Var, error) {
 	defer c.lru.Remove(keys...)
-	value, err := c.doRemove(ctx, keys...)
-	if err != nil {
-		return nil, err
-	}
-	return gvar.New(value), nil
+	return c.doRemove(ctx, keys...)
 }
 
 func (c *AdapterMemory) doRemove(_ context.Context, keys ...interface{}) (*gvar.Var, error) {
