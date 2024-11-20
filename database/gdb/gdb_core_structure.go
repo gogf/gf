@@ -259,10 +259,6 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 		if gstr.ContainsI(fieldType, "unsigned") {
 			return LocalTypeUint, nil
 		}
-		// field length is 1 means boolean.
-		if typePattern == "1" {
-			return LocalTypeBool, nil
-		}
 		return LocalTypeInt, nil
 
 	case
