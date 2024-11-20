@@ -13,12 +13,32 @@ func Test_PackFS(t *testing.T) {
 	var (
 		srcAbsPath      = gtest.DataPath("files")
 		srcRelativePath = "./testdata/files"
-		tests           = map[string]struct {
+		tests           = []struct {
+			tag    string
 			path   string
 			fspath fs.FS
 			opt    gres.Option
 		}{
-			"files@true": {
+			{
+				tag:    "none@true",
+				path:   srcAbsPath,
+				fspath: os.DirFS(srcAbsPath),
+				opt: gres.Option{
+					Prefix:   "",
+					KeepPath: true,
+				},
+			},
+			{
+				tag:    "none@false",
+				path:   srcAbsPath,
+				fspath: os.DirFS(srcAbsPath),
+				opt: gres.Option{
+					Prefix:   "",
+					KeepPath: false,
+				},
+			},
+			{
+				tag:    "files@true",
 				path:   srcAbsPath,
 				fspath: os.DirFS(srcAbsPath),
 				opt: gres.Option{
@@ -26,7 +46,8 @@ func Test_PackFS(t *testing.T) {
 					KeepPath: true,
 				},
 			},
-			"files@false": {
+			{
+				tag:    "files@false",
 				path:   srcAbsPath,
 				fspath: os.DirFS(srcAbsPath),
 
@@ -35,7 +56,8 @@ func Test_PackFS(t *testing.T) {
 					KeepPath: false,
 				},
 			},
-			"./testdata/files@true": {
+			{
+				tag:    "./testdata/files@true",
 				path:   srcRelativePath,
 				fspath: os.DirFS(srcRelativePath),
 				opt: gres.Option{
@@ -43,7 +65,8 @@ func Test_PackFS(t *testing.T) {
 					KeepPath: true,
 				},
 			},
-			"./testdata/files@false": {
+			{
+				tag:    "./testdata/files@false",
 				path:   srcRelativePath,
 				fspath: os.DirFS(srcRelativePath),
 
@@ -52,7 +75,8 @@ func Test_PackFS(t *testing.T) {
 					KeepPath: false,
 				},
 			},
-			"./testdata/files@true1": {
+			{
+				tag:    "./testdata/files@true@/testdata/files",
 				path:   srcRelativePath,
 				fspath: os.DirFS(srcRelativePath),
 				opt: gres.Option{
@@ -60,7 +84,8 @@ func Test_PackFS(t *testing.T) {
 					KeepPath: true,
 				},
 			},
-			"./testdata/files@false1": {
+			{
+				tag:    "./testdata/files@false@/testdata/files",
 				path:   srcRelativePath,
 				fspath: os.DirFS(srcRelativePath),
 
@@ -69,7 +94,8 @@ func Test_PackFS(t *testing.T) {
 					KeepPath: false,
 				},
 			},
-			"./testdata/files@true2": {
+			{
+				tag:    "./testdata/files@true@/",
 				path:   srcRelativePath,
 				fspath: os.DirFS(srcRelativePath),
 				opt: gres.Option{
@@ -77,7 +103,8 @@ func Test_PackFS(t *testing.T) {
 					KeepPath: true,
 				},
 			},
-			"./testdata/files@false2": {
+			{
+				tag:    "./testdata/files@false@/",
 				path:   srcRelativePath,
 				fspath: os.DirFS(srcRelativePath),
 
@@ -88,14 +115,14 @@ func Test_PackFS(t *testing.T) {
 			},
 		}
 	)
-	for key, testinfo := range tests {
-		t.Log(key, ":")
+	for _, testinfo := range tests {
+		t.Log(testinfo.tag, ":")
 		var (
 			t1, err1         = gres.PackWithOption(testinfo.path, testinfo.opt)
-			t2, err2         = gres.PackFsWithOption(testinfo.fspath, "files", testinfo.opt)
+			t2, err2         = gres.PackFsWithOption(testinfo.fspath, testinfo.path, testinfo.opt)
 			r1, r2           = gres.New(), gres.New()
 			err3             = r1.Add(string(t1))
-			err4             = r2.Add(string(t1))
+			err4             = r2.Add(string(t2))
 			r1files, r2files = r1.ScanDir(".", "*", true), r2.ScanDir(".", "*", true)
 		)
 		gtest.AssertNil(err1)
@@ -108,5 +135,6 @@ func Test_PackFS(t *testing.T) {
 		// r1.Dump()
 		// t.Log("r2:")
 		// r2.Dump()
+		// _, _ = r1files, r2files
 	}
 }

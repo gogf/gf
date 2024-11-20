@@ -17,9 +17,9 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func PackFsWithOption(dirfs fs.FS, dirBaseName string, option Option) ([]byte, error) {
+func PackFsWithOption(dirfs fs.FS, dirPath string, option Option) ([]byte, error) {
 	var buffer = bytes.NewBuffer(nil)
-	err := zipFsWriter(dirfs, dirBaseName, buffer, option)
+	err := zipFsWriter(dirfs, dirPath, buffer, option)
 	if err != nil {
 		return nil, err
 	}
@@ -30,20 +30,20 @@ func PackFsWithOption(dirfs fs.FS, dirBaseName string, option Option) ([]byte, e
 // PackToFileWithOption packs the path specified by `srcPaths` to target file `dstPath`.
 //
 // Note that parameter `srcPaths` supports multiple paths join with ','.
-func PackFsToFileWithOption(dirfs fs.FS, dirBaseName string, option Option) error {
-	data, err := PackFsWithOption(dirfs, dirBaseName, option)
+func PackFsToFileWithOption(dirfs fs.FS, dirPath string, option Option) error {
+	data, err := PackFsWithOption(dirfs, dirPath, option)
 	if err != nil {
 		return err
 	}
-	return gfile.PutBytes(dirBaseName, data)
+	return gfile.PutBytes(dirPath, data)
 }
 
 // PackToGoFileWithOption packs the path specified by `srcPaths` to target go file `goFilePath`
 // with given package name `pkgName`.
 //
 // Note that parameter `srcPaths` supports multiple paths join with ','.
-func PackFsToGoFileWithOption(dirfs fs.FS, dirBaseName string, goFilePath, pkgName string, option Option) error {
-	data, err := PackFsWithOption(dirfs, dirBaseName, option)
+func PackFsToGoFileWithOption(dirfs fs.FS, dirPath string, goFilePath, pkgName string, option Option) error {
+	data, err := PackFsWithOption(dirfs, dirPath, option)
 	if err != nil {
 		return err
 	}

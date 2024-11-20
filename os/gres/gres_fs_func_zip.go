@@ -21,16 +21,16 @@ import (
 	"github.com/gogf/gf/v2/os/gfile"
 )
 
-func zipFsWriter(dirfs fs.FS, dirBaseName string, writer io.Writer, option ...Option) error {
+func zipFsWriter(dirfs fs.FS, dirPath string, writer io.Writer, option ...Option) error {
 	zipWriter := zip.NewWriter(writer)
 	defer zipWriter.Close()
-	if err := doZipFsWriter(dirfs, dirBaseName, zipWriter, option...); err != nil {
+	if err := doZipFsWriter(dirfs, dirPath, zipWriter, option...); err != nil {
 		return err
 	}
 	return nil
 }
 
-func doZipFsWriter(dirfs fs.FS, dirBaseName string, zipWriter *zip.Writer, option ...Option) error {
+func doZipFsWriter(dirfs fs.FS, dirPath string, zipWriter *zip.Writer, option ...Option) error {
 	var (
 		err         error
 		files       []string
@@ -83,9 +83,9 @@ func doZipFsWriter(dirfs fs.FS, dirBaseName string, zipWriter *zip.Writer, optio
 		if usedOption.KeepPath {
 			// It keeps the path from file system to zip info in resource manager.
 			// Usually for relative path, it makes little sense for absolute path.
-			headerPrefix = dirBaseName
+			headerPrefix = dirPath
 		} else {
-			headerPrefix = filepath.Base(dirBaseName)
+			headerPrefix = filepath.Base(dirPath)
 		}
 	}
 
