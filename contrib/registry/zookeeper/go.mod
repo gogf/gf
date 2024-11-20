@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/go-zookeeper/zk v1.0.3
-	github.com/gogf/gf/v2 v2.8.0
+	github.com/gogf/gf/v2 v2.8.1
 	golang.org/x/sync v0.7.0
 )
 
