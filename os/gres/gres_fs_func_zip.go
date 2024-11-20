@@ -21,37 +21,37 @@ import (
 	"github.com/gogf/gf/v2/os/gfile"
 )
 
-func zipFsWriter(stdfs fs.FS, fsPath string, writer io.Writer, option ...Option) error {
+func zipFsWriter(dirfs fs.FS, dirBaseName string, writer io.Writer, option ...Option) error {
 	zipWriter := zip.NewWriter(writer)
 	defer zipWriter.Close()
-	if err := doZipFsWriter(stdfs, fsPath, zipWriter, option...); err != nil {
+	if err := doZipFsWriter(dirfs, dirBaseName, zipWriter, option...); err != nil {
 		return err
 	}
 	return nil
 }
 
-func doZipFsWriter(stdfs fs.FS, fsPath string, zipWriter *zip.Writer, option ...Option) error {
+func doZipFsWriter(dirfs fs.FS, dirBaseName string, zipWriter *zip.Writer, option ...Option) error {
 	var (
 		err         error
 		files       []string
 		usedOption  Option
-		listfsfiles func(stdfs fs.FS) ([]string, error)
+		listfsfiles func(dirfs fs.FS) ([]string, error)
 	)
-	listfsfiles = func(stdfs fs.FS) ([]string, error) {
+	listfsfiles = func(dirfs fs.FS) ([]string, error) {
 
-		files, err := fs.Glob(stdfs, "*")
+		files, err := fs.Glob(dirfs, "*")
 		if err != nil {
 			return nil, err
 		}
 		result := make([]string, 0, len(files))
 		for _, f := range files {
 			result = append(result, f)
-			finfo, err := fs.Stat(stdfs, f)
+			finfo, err := fs.Stat(dirfs, f)
 			if err != nil {
 				return nil, err
 			}
 			if finfo.IsDir() {
-				subfs, _ := fs.Sub(stdfs, f)
+				subfs, _ := fs.Sub(dirfs, f)
 				if subresult, err := listfsfiles(subfs); err != nil {
 					return nil, err
 				} else {
@@ -66,7 +66,7 @@ func doZipFsWriter(stdfs fs.FS, fsPath string, zipWriter *zip.Writer, option ...
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
-	if files, err = listfsfiles(stdfs); err != nil {
+	if files, err = listfsfiles(dirfs); err != nil {
 		return err
 	}
 
@@ -74,8 +74,19 @@ func doZipFsWriter(stdfs fs.FS, fsPath string, zipWriter *zip.Writer, option ...
 	if !(headerPrefix == "/") {
 		headerPrefix = strings.TrimRight(headerPrefix, `\/`)
 	}
+
+	if headerPrefix != "" {
+		headerPrefix += "/"
+	}
+
 	if headerPrefix == "" {
-		headerPrefix = fsPath
+		if usedOption.KeepPath {
+			// It keeps the path from file system to zip info in resource manager.
+			// Usually for relative path, it makes little sense for absolute path.
+			headerPrefix = dirBaseName
+		} else {
+			headerPrefix = filepath.Base(dirBaseName)
+		}
 	}
 
 	headerPrefix = strings.ReplaceAll(headerPrefix, `//`, `/`)
@@ -90,7 +101,7 @@ func doZipFsWriter(stdfs fs.FS, fsPath string, zipWriter *zip.Writer, option ...
 		if subFilePath == "." {
 			subFilePath = ""
 		}
-		if err = zipFsFile(stdfs, file, headerPrefix+"/"+subFilePath, zipWriter); err != nil {
+		if err = zipFsFile(dirfs, file, headerPrefix+"/"+subFilePath, zipWriter); err != nil {
 			return err
 		}
 	}
@@ -119,8 +130,7 @@ func zipFsFile(fspath fs.FS, path string, prefix string, zw *zip.Writer) error {
 	prefix = strings.ReplaceAll(prefix, `//`, `/`)
 	file, err := fspath.Open(path)
 	if err != nil {
-		err = gerror.Wrapf(err, `fs.ReadFile failed for path "%s"`, path)
-		return nil
+		return gerror.Wrapf(err, `fs.ReadFile failed for path "%s"`, path)
 	}
 	defer file.Close()
 
