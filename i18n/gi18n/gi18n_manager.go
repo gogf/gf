@@ -9,6 +9,8 @@ package gi18n
 import (
 	"context"
 	"fmt"
+	"io/fs"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -30,6 +32,7 @@ const (
 	pathTypeNone   pathType = "none"
 	pathTypeNormal pathType = "normal"
 	pathTypeGres   pathType = "gres"
+	pathTypeFS     pathType = "stdfs"
 )
 
 // Manager for i18n contents, it is concurrent safe, supporting hot reload.
@@ -43,6 +46,7 @@ type Manager struct {
 
 // Options is used for i18n object configuration.
 type Options struct {
+	PathFs     fs.FS          // I18n files storage fs.FS.
 	Path       string         // I18n files storage path.
 	Language   string         // Default local language.
 	Delimiters []string       // Delimiters for variable parsing.
@@ -68,7 +72,11 @@ func New(options ...Options) *Manager {
 	var pathType = pathTypeNone
 	if len(options) > 0 {
 		opts = options[0]
-		pathType = opts.checkPathType(opts.Path)
+		if opts.PathFs != nil {
+			pathType = pathTypeFS
+		} else {
+			pathType = opts.checkPathType(opts.Path)
+		}
 	} else {
 		opts = Options{}
 		for _, folder := range searchFolders {
@@ -138,6 +146,13 @@ func (m *Manager) SetPath(path string) error {
 	m.pathType = pathType
 	intlog.Printf(context.TODO(), `SetPath[%s]: %s`, m.pathType, m.options.Path)
 	// Reset the manager after path changed.
+	m.reset()
+	return nil
+}
+
+func (m *Manager) SetPathFS(pathfs fs.FS) error {
+	m.pathType = pathTypeFS
+	m.options.PathFs = pathfs
 	m.reset()
 	return nil
 }
@@ -245,6 +260,51 @@ func (m *Manager) init(ctx context.Context) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	switch m.pathType {
+	case pathTypeFS:
+		files1, err1 := fs.Glob(m.options.PathFs, "*.*")
+		files2, err2 := fs.Glob(m.options.PathFs, "*/*.*")
+		if err1 != nil || err2 != nil {
+			if err1 != nil {
+				intlog.Errorf(ctx, "load i18n files failed: %+v", err1)
+			} else {
+				intlog.Errorf(ctx, "load i18n files failed: %+v", err2)
+			}
+			return
+		}
+		files := append(files1, files2...)
+		if len(files) > 0 {
+			var (
+				name    string
+				lang    string
+				array   []string
+				content []byte
+				err     error
+			)
+			m.data = make(map[string]map[string]string)
+			for _, file := range files {
+				if content, err = fs.ReadFile(m.options.PathFs, file); err != nil {
+					intlog.Errorf(ctx, "get i18n file content failed: %+v", err)
+					continue
+				}
+				name = strings.TrimSuffix(filepath.Base(file), filepath.Ext(file))
+				array = strings.Split(file, "/")
+				if len(array) > 1 {
+					lang = array[0]
+				} else if len(array) == 1 {
+					lang = gfile.Name(array[0])
+				}
+				if m.data[lang] == nil {
+					m.data[lang] = make(map[string]string)
+				}
+				if j, err := gjson.LoadContent(content); err == nil {
+					for k, v := range j.Var().Map() {
+						m.data[lang][k] = gconv.String(v)
+					}
+				} else {
+					intlog.Errorf(ctx, "load i18n file '%s' failed: %+v", name, err)
+				}
+			}
+		}
 	case pathTypeGres:
 		files := m.options.Resource.ScanDirFile(m.options.Path, "*.*", true)
 		if len(files) > 0 {
