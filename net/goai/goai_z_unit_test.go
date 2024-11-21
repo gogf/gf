@@ -1200,8 +1200,8 @@ func TestOpenApiV3_PathSecurity(t *testing.T) {
 
 	type Req struct {
 		gmeta.Meta `method:"PUT" security:"apiKey"` // 这里的apiKey要和openApi定义的key一致
-		Product    string `json:"product" v:"required" description:"Unique product key"`
-		Name       string `json:"name"    v:"required" description:"Instance name"`
+		Product    string `json:"product"           v:"required" description:"Unique product key"`
+		Name       string `json:"name"              v:"required" description:"Instance name"`
 	}
 	type Res struct{}
 
