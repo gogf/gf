@@ -231,3 +231,47 @@ func Test_Issue3747(t *testing.T) {
 		t.Assert(schema, Issue3747Res403Schema)
 	})
 }
+
+type Issue3930DefaultReq struct {
+	g.Meta `path:"/user/{id}" method:"get" tags:"User" summary:"Get one user"`
+	Id     int64 `v:"required" dc:"user id"`
+}
+type Issue3930DefaultRes struct {
+	*Issue3930User `dc:"user"`
+}
+type Issue3930User struct {
+	Id uint `json:"id"     orm:"id"     description:"user id"` // user id
+}
+
+type Issue3930 struct{}
+
+func (Issue3930) Default(ctx context.Context, req *Issue3930DefaultReq) (res *Issue3930DefaultRes, err error) {
+	res = &Issue3930DefaultRes{}
+	return
+}
+
+// https://github.com/gogf/gf/issues/3930
+func Test_Issue3930(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		s.Use(ghttp.MiddlewareHandlerResponse)
+		s.Group("/", func(group *ghttp.RouterGroup) {
+			group.Bind(
+				new(Issue3930),
+			)
+		})
+		s.SetLogger(nil)
+		s.SetOpenApiPath("/api.json")
+		s.SetDumpRouterMap(false)
+		s.Start()
+		defer s.Shutdown()
+
+		time.Sleep(100 * time.Millisecond)
+
+		var (
+			api     = s.GetOpenApi()
+			reqPath = "github.com.gogf.gf.v2.net.goai_test.Issue3930DefaultRes"
+		)
+		t.AssertNE(api.Components.Schemas.Get(reqPath).Value.Properties.Get("id"), nil)
+	})
+}
