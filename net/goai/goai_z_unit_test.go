@@ -1348,10 +1348,11 @@ func Test_XExtension(t *testing.T) {
 
 func Test_ValidationRules(t *testing.T) {
 	type Req struct {
-		g.Meta `path:"/rules" method:"POST" tags:"Rules" summary:"Validation rules."`
-		Name   string `v:"required|min-length:3|max-length:32#required|min|max" dc:"Name"`
-		Age    int    `v:"required|min:1|max:100" dc:"Age"`
-		Grade  int    `v:"between:1,12#please enter the correct grade." dc:"Grade"`
+		g.Meta  `path:"/rules" method:"POST" tags:"Rules" summary:"Validation rules."`
+		Name    string `v:"required|min-length:3|max-length:32#required|min|max" dc:"Name"`
+		Age     int    `v:"required|min:1|max:100" dc:"Age"`
+		Grade   int    `v:"between:1,12#please enter the correct grade." dc:"Grade"`
+		Address string `v:"length:3,64" dc:"Address"`
 	}
 
 	gtest.C(t, func(t *gtest.T) {
@@ -1372,5 +1373,7 @@ func Test_ValidationRules(t *testing.T) {
 		t.Assert(schema.Properties.Get("Age").Value.Max, 100.0)
 		t.Assert(schema.Properties.Get("Grade").Value.Min, 1.0)
 		t.Assert(schema.Properties.Get("Grade").Value.Max, 12.0)
+		t.Assert(schema.Properties.Get("Address").Value.MinLength, 3)
+		t.Assert(schema.Properties.Get("Address").Value.MaxLength, 64)
 	})
 }
