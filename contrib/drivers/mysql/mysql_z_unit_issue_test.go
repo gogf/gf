@@ -1345,3 +1345,35 @@ func Test_Issue3626(t *testing.T) {
 		t.Assert(count, 1)
 	})
 }
+
+// https://github.com/gogf/gf/issues/3932
+func Test_Issue3932(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Model(table).Order("id", "desc").One()
+		t.AssertNil(err)
+		t.Assert(one["id"], 10)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Model(table).Order("id desc").One()
+		t.AssertNil(err)
+		t.Assert(one["id"], 10)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Model(table).Order("id desc, nickname asc").One()
+		t.AssertNil(err)
+		t.Assert(one["id"], 10)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Model(table).Order("id desc", "nickname asc").One()
+		t.AssertNil(err)
+		t.Assert(one["id"], 10)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Model(table).Order("id desc").Order("nickname asc").One()
+		t.AssertNil(err)
+		t.Assert(one["id"], 10)
+	})
+}
