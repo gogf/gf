@@ -63,14 +63,14 @@ const (
 )
 
 const (
-	validationRuleKeyForRequired = `required`
-	validationRuleKeyForIn       = `in:`
-	validationRuleKeyMax         = `max`
-	validationRuleKeyMin         = `min`
-	validationRuleKeyLength      = `length`
-	validationRuleKeyMaxLength   = `max-length`
-	validationRuleKeyMinLength   = `min-length`
-	validationRuleKeyBetween     = `between`
+	validationRuleKeyForRequired  = `required`
+	validationRuleKeyForIn        = `in:`
+	validationRuleKeyForMax       = `max:`
+	validationRuleKeyForMin       = `min:`
+	validationRuleKeyForLength    = `length:`
+	validationRuleKeyForMaxLength = `max-length:`
+	validationRuleKeyForMinLength = `min-length:`
+	validationRuleKeyForBetween   = `between:`
 )
 
 var (

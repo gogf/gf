@@ -1200,8 +1200,8 @@ func TestOpenApiV3_PathSecurity(t *testing.T) {
 
 	type Req struct {
 		gmeta.Meta `method:"PUT" security:"apiKey"` // 这里的apiKey要和openApi定义的key一致
-		Product    string                           `json:"product" v:"required" description:"Unique product key"`
-		Name       string                           `json:"name"    v:"required" description:"Instance name"`
+		Product    string `json:"product" v:"required" description:"Unique product key"`
+		Name       string `json:"name"    v:"required" description:"Instance name"`
 	}
 	type Res struct{}
 
@@ -1343,5 +1343,34 @@ func Test_XExtension(t *testing.T) {
 		})
 		t.AssertNil(err)
 		t.Assert(oai.String(), gtest.DataContent("XExtension", "expect.json"))
+	})
+}
+
+func Test_ValidationRules(t *testing.T) {
+	type Req struct {
+		g.Meta `path:"/rules" method:"POST" tags:"Rules" summary:"Validation rules."`
+		Name   string `v:"required|min-length:3|max-length:32#required|min|max" dc:"Name"`
+		Age    int    `v:"required|min:1|max:100" dc:"Age"`
+		Grade  int    `v:"between:1,12#please enter the correct grade." dc:"Grade"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+			req = new(Req)
+		)
+		err = oai.Add(goai.AddInput{
+			Object: req,
+		})
+		t.AssertNil(err)
+
+		schema := oai.Components.Schemas.Get("github.com.gogf.gf.v2.net.goai_test.Req").Value
+		t.Assert(schema.Properties.Get("Name").Value.MinLength, 3)
+		t.Assert(schema.Properties.Get("Name").Value.MaxLength, 32)
+		t.Assert(schema.Properties.Get("Age").Value.Min, 1.0)
+		t.Assert(schema.Properties.Get("Age").Value.Max, 100.0)
+		t.Assert(schema.Properties.Get("Grade").Value.Min, 1.0)
+		t.Assert(schema.Properties.Get("Grade").Value.Max, 12.0)
 	})
 }
