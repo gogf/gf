@@ -52,6 +52,17 @@ func (e *Examples) applyExamplesFile(path string) error {
 	if err != nil {
 		return err
 	}
+	err = e.applyExamplesData(data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (e *Examples) applyExamplesData(data interface{}) error {
+	if empty.IsNil(e) || empty.IsNil(data) {
+		return nil
+	}
 
 	switch v := data.(type) {
 	case map[string]interface{}:

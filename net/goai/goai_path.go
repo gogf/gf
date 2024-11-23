@@ -255,12 +255,12 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	// =================================================================================================================
 	// Other Responses.
 	// =================================================================================================================
-	if enhancedResponse, ok := outputObject.Interface().(ResponseStatusDef); ok {
-		for statusCode, data := range enhancedResponse.ResponseStatusMap() {
+	if enhancedResponse, ok := outputObject.Interface().(IEnhanceResponseStatus); ok {
+		for statusCode, data := range enhancedResponse.EnhanceResponseStatus() {
 			if statusCode < 100 || statusCode >= 600 {
 				return gerror.Newf("Invalid HTTP status code: %d", statusCode)
 			}
-			if data == nil {
+			if data.Response == nil {
 				continue
 			}
 			status := gconv.String(statusCode)
