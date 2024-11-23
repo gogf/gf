@@ -176,7 +176,7 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 	// struct.
 	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         object,
-		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+		RecursiveOption: gstructs.RecursiveOptionEmbedded,
 	})
 	schema.Type = TypeObject
 	for _, structField := range structFields {
