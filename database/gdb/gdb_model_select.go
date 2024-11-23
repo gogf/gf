@@ -283,10 +283,12 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 	}
 }
 
-// ScanAndCount scans a single record or record array that matches the given conditions and counts the total number of records that match those conditions.
-// If useFieldForCount is true, it will use the fields specified in the model for counting;
-// The pointer parameter is a pointer to a struct that the scanned data will be stored in.
-// The pointerCount parameter is a pointer to an integer that will be set to the total number of records that match the given conditions.
+// ScanAndCount scans a single record or record array that matches the given conditions and counts the total number
+// of records that match those conditions.
+//
+// If `useFieldForCount` is true, it will use the fields specified in the model for counting;
+// The `pointer` parameter is a pointer to a struct that the scanned data will be stored in.
+// The `totalCount` parameter is a pointer to an integer that will be set to the total number of records that match the given conditions.
 // The where parameter is an optional list of conditions to use when retrieving records.
 //
 // Example:
