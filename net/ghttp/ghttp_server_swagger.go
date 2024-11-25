@@ -53,3 +53,17 @@ func (s *Server) swaggerUI(r *Request) {
 		r.ExitAll()
 	}
 }
+
+// openApiBasicAuth is a build-in hook handler for auth openapi url.
+// This handler makes sense only if the openapi specification automatic producing configuration is enabled
+// and configured OpenApiAuthUser OpenApiAuthPass.
+func (s *Server) openApiBasicAuth(r *Request) {
+	if s.config.OpenApiPath == "" || s.config.OpenApiAuthUser == "" || s.config.OpenApiAuthPass == "" {
+		return
+	}
+
+	if !r.BasicAuth(s.config.OpenApiAuthUser, s.config.OpenApiAuthPass, "Restricted") {
+		r.ExitAll()
+		return
+	}
+}

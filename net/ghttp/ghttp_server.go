@@ -133,6 +133,7 @@ func (s *Server) Start() error {
 	// OpenApi specification json producing handler.
 	if s.config.OpenApiPath != "" {
 		s.BindHandler(s.config.OpenApiPath, s.openapiSpec)
+		s.BindHookHandler(s.config.OpenApiPath, HookBeforeServe, s.openApiBasicAuth)
 	}
 
 	// Register group routes.

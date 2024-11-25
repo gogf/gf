@@ -21,3 +21,15 @@ func (s *Server) SetSwaggerUITemplate(swaggerUITemplate string) {
 func (s *Server) SetOpenApiPath(path string) {
 	s.config.OpenApiPath = path
 }
+
+// SetOpenApiAuthUser sets the OpenApiAuthUser for server.
+// For example: SetOpenApiAuthUser("gf")
+func (s *Server) SetOpenApiAuthUser(user string) {
+	s.config.OpenApiAuthUser = user
+}
+
+// SetOpenApiAuthPass sets the OpenApiAuthPass for server.
+// For example: SetOpenApiAuthPass("123456")
+func (s *Server) SetOpenApiAuthPass(pass string) {
+	s.config.OpenApiAuthPass = pass
+}

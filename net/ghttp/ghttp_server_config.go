@@ -227,6 +227,8 @@ type ServerConfig struct {
 	// ======================================================================================================
 
 	OpenApiPath       string `json:"openapiPath"`       // OpenApiPath specifies the OpenApi specification file path.
+	OpenApiAuthUser   string `json:"openapiAuthUser"`   // OpenApiAuthUser specifies the OpenApi auth username.
+	OpenApiAuthPass   string `json:"openapiAuthPass"`   // OpenApiAuthPass specifies the OpenApi auth password.
 	SwaggerPath       string `json:"swaggerPath"`       // SwaggerPath specifies the swagger UI path for route registering.
 	SwaggerUITemplate string `json:"swaggerUITemplate"` // SwaggerUITemplate specifies the swagger UI custom template
 
