@@ -1,6 +1,6 @@
 server:
-  address:     ":8199"
-  openapiPath: "/api.json"
-  openapiAuthUser: "gf"
-  openapiAuthPass: "123456"
-  swaggerPath: "/swagger"
+  address:          ":8199"
+  openapiPath:      "/api.json"
+  openapiAuthUser:  "gf"
+  openapiAuthPass:  "123456"
+  swaggerPath:      "/swagger"

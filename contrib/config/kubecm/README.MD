@@ -26,8 +26,8 @@ data:
     server:
       address:          ":8888"
       openapiPath:      "/api.json"
-      openapiAuthUser: "gf"
-      openapiAuthPass: "123456"
+      openapiAuthUser:  "gf"
+      openapiAuthPass:  "123456"
       swaggerPath:      "/swagger"
       accessLogEnabled: true
 ```
