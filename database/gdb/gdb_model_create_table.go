@@ -3,9 +3,10 @@ package gdb
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/text/gstr"
 	"log"
 	"reflect"
+
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // 不同库对应 golang字段类型与数据库类型映射
