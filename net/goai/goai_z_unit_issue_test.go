@@ -238,8 +238,8 @@ func Test_Issue3889(t *testing.T) {
 		commonResponseSchema := `{"properties":{"code":{"format":"int","type":"integer"},"data":{"properties":{},"type":"object"},"message":{"format":"string","type":"string"}},"type":"object"}`
 		Status201ExamplesContent := `{"code 1":{"value":{"code":1,"data":"Good","message":"Aha, 201 - 1"}},"code 2":{"value":{"code":2,"data":"Not Bad","message":"Aha, 201 - 2"}}}`
 		Status401ExamplesContent := `{"example 1":{"value":{"code":1,"data":null,"message":"Aha, 401 - 1"}},"example 2":{"value":{"code":2,"data":null,"message":"Aha, 401 - 2"}}}`
-		Status402SchemaContent := `{"$ref":"#/components/schemas/github.com.gogf.gf.v2.net.goai_test.Issue3889Res402"}`
-		Issue3889Res403Ref := `{"$ref":"#/components/schemas/github.com.gogf.gf.v2.net.goai_test.Issue3889Res403"}`
+		Status402SchemaContent := `{"$ref":"#/components/schemas/github.com.gogf.gf.v2.net.goai_test.Issue3889Res402","description":""}`
+		Issue3889Res403Ref := `{"$ref":"#/components/schemas/github.com.gogf.gf.v2.net.goai_test.Issue3889Res403","description":""}`
 
 		t.Assert(j.Get(`paths./default.post.responses.201.content.application/json.examples`).String(), Status201ExamplesContent)
 		t.Assert(j.Get(`paths./default.post.responses.401.content.application/json.examples`).String(), Status401ExamplesContent)
