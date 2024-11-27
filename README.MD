@@ -22,7 +22,7 @@
 A powerful framework for faster, easier, and more efficient project development.
 
 
-# Documents
+# Documentation
 
 - GoFrame Official Site: [https://goframe.org](https://goframe.org)
 - GoFrame Official Site(en): [https://goframe.org/en](https://goframe.org/en)
