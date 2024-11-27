@@ -52,6 +52,8 @@ func Test_Gen_Pbentity_Default(t *testing.T) {
 				NameCase:          "",
 				JsonCase:          "",
 				Option:            "",
+				TypeMapping:       nil,
+				FieldMapping:      nil,
 			}
 		)
 		err = gutil.FillStructWithDefault(&in)
@@ -115,6 +117,8 @@ func Test_Gen_Pbentity_NameCase_SnakeScreaming(t *testing.T) {
 				NameCase:          "SnakeScreaming",
 				JsonCase:          "",
 				Option:            "",
+				TypeMapping:       nil,
+				FieldMapping:      nil,
 			}
 		)
 		err = gutil.FillStructWithDefault(&in)
@@ -179,6 +183,8 @@ func Test_Issue_3545(t *testing.T) {
 				NameCase:          "",
 				JsonCase:          "",
 				Option:            "",
+				TypeMapping:       nil,
+				FieldMapping:      nil,
 			}
 		)
 		err = gutil.FillStructWithDefault(&in)
@@ -200,6 +206,77 @@ func Test_Issue_3545(t *testing.T) {
 
 		// contents
 		testPath := gtest.DataPath("issue", "3545")
+		expectFiles := []string{
+			testPath + filepath.FromSlash("/table_user.proto"),
+		}
+		for i := range files {
+			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
+		}
+	})
+}
+
+// https://github.com/gogf/gf/issues/3685
+func Test_Issue_3685(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err        error
+			db         = testDB
+			table      = "table_user"
+			sqlContent = fmt.Sprintf(
+				gtest.DataContent(`issue`, `3685`, `user.tpl.sql`),
+				table,
+			)
+		)
+		dropTableWithDb(db, table)
+		array := gstr.SplitAndTrim(sqlContent, ";")
+		for _, v := range array {
+			if _, err = db.Exec(ctx, v); err != nil {
+				t.AssertNil(err)
+			}
+		}
+		defer dropTableWithDb(db, table)
+
+		var (
+			path = gfile.Temp(guid.S())
+			in   = genpbentity.CGenPbEntityInput{
+				Path:              path,
+				Package:           "",
+				Link:              link,
+				Tables:            "",
+				Prefix:            "",
+				RemovePrefix:      "",
+				RemoveFieldPrefix: "",
+				NameCase:          "",
+				JsonCase:          "",
+				Option:            "",
+				TypeMapping: map[genpbentity.DBFieldTypeName]genpbentity.CustomAttributeType{
+					"json": {
+						Type:   "google.protobuf.Value",
+						Import: "google/protobuf/struct.proto",
+					},
+				},
+				FieldMapping: nil,
+			}
+		)
+		err = gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+		defer gfile.Remove(path)
+
+		_, err = genpbentity.CGenPbEntity{}.PbEntity(ctx, in)
+		t.AssertNil(err)
+
+		// files
+		files, err := gfile.ScanDir(path, "*.proto", false)
+		t.AssertNil(err)
+		t.Assert(files, []string{
+			path + filepath.FromSlash("/table_user.proto"),
+		})
+
+		// contents
+		testPath := gtest.DataPath("issue", "3685")
 		expectFiles := []string{
 			testPath + filepath.FromSlash("/table_user.proto"),
 		}
