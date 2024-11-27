@@ -110,6 +110,7 @@ func (m *Model) One(where ...interface{}) (Record, error) {
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).One()
 	}
+
 	all, err := m.doGetAll(ctx, true)
 	if err != nil {
 		return nil, err
@@ -185,10 +186,12 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 			model = m.Fields(pointer)
 		}
 	}
+
 	one, err := model.One(where...)
 	if err != nil {
 		return err
 	}
+
 	if err = one.Struct(pointer); err != nil {
 		return err
 	}
@@ -275,6 +278,21 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 	case reflect.Struct, reflect.Invalid:
 		return m.doStruct(pointer, where...)
 
+	case reflect.Int:
+		// 假设为*int
+		// 通过ctx往下传递此次需要基础类型的数据
+		// ctx = context.WithValue(ctx,"scan_typ","int")
+		// 假设这里就是像上面调用doStruct方法一样
+		// 通过生成sql，然后调用底层的(*Core).RowsToResult
+		// 调用完成返回到这里来
+		panic("")
+
+		// 返回后为取出第一列的数据即可
+		// val:=result[0]["这里第一列的列名"]
+		// 也可以使用for range语句取出第一列的数据，由于只有一个数据
+		// v:=gconv.Int(val)
+		// reflect.ValueOf(pointer).Elem.SetInt(v)
+		// return
 	default:
 		return gerror.NewCode(
 			gcode.CodeInvalidParameter,

@@ -430,6 +430,33 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 		return nil, err
 	}
 
+	typ := ctx.Value("scan_typ")
+	if typ != nil {
+		values := make([]interface{}, 1)
+		result := make(Result, 1)
+		scanArgs := make([]interface{}, 1)
+		// 只取第一列返回
+		scanArgs[0] = &values[0]
+		if err = rows.Scan(scanArgs...); err != nil {
+			return result, err
+		}
+		record := Record{}
+		value := values[0]
+		if value == nil {
+			// DO NOT use `gvar.New(nil)` here as it creates an initialized object
+			// which will cause struct converting issue.
+			record[columnTypes[0].Name()] = nil
+		} else {
+			var convertedValue interface{}
+			if convertedValue, err = c.columnValueToLocalValue(ctx, value, columnTypes[i]); err != nil {
+				return nil, err
+			}
+			record[columnTypes[0].Name()] = gvar.New(convertedValue)
+		}
+		result[0] = record
+		return result, nil
+	}
+
 	if len(columnTypes) > 0 {
 		if internalData := c.getInternalColumnFromCtx(ctx); internalData != nil {
 			internalData.FirstResultColumn = columnTypes[0].Name()
