@@ -300,3 +300,52 @@ func Test_Issue3930(t *testing.T) {
 		t.AssertNE(api.Components.Schemas.Get(reqPath).Value.Properties.Get("id"), nil)
 	})
 }
+
+type Issue3235DefaultReq struct {
+	g.Meta `path:"/user/{id}" method:"get" tags:"User" summary:"Get one user"`
+	Id     int64 `v:"required" dc:"user id"`
+}
+type Issue3235DefaultRes struct {
+	Name string         `dc:"test name desc"`
+	User *Issue3235User `dc:"test user desc"`
+}
+type Issue3235User struct {
+	Id uint `json:"id"     orm:"id"     description:"user id"` // user id
+}
+
+type Issue3235 struct{}
+
+func (Issue3235) Default(ctx context.Context, req *Issue3235DefaultReq) (res *Issue3235DefaultRes, err error) {
+	res = &Issue3235DefaultRes{}
+	return
+}
+
+// https://github.com/gogf/gf/issues/3235
+func Test_Issue3235(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		s.Use(ghttp.MiddlewareHandlerResponse)
+		s.Group("/", func(group *ghttp.RouterGroup) {
+			group.Bind(
+				new(Issue3235),
+			)
+		})
+		s.SetLogger(nil)
+		s.SetOpenApiPath("/api.json")
+		s.SetDumpRouterMap(false)
+		s.Start()
+		defer s.Shutdown()
+
+		time.Sleep(100 * time.Millisecond)
+
+		var (
+			api     = s.GetOpenApi()
+			reqPath = "github.com.gogf.gf.v2.net.goai_test.Issue3235DefaultRes"
+		)
+
+		t.Assert(api.Components.Schemas.Get(reqPath).Value.Properties.Get("Name").Value.Description,
+			"test name desc")
+		t.Assert(api.Components.Schemas.Get(reqPath).Value.Properties.Get("User").Description,
+			"test user desc")
+	})
+}
