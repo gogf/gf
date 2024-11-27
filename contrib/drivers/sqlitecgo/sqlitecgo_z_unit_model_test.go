@@ -764,6 +764,25 @@ func Test_Model_Value(t *testing.T) {
 	})
 }
 
+func Test_Model_ValueScan(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		var gtimePtr *gtime.Time
+		err := db.Model(table).Fields("create_time").Where("id", 1).ValueScan(&gtimePtr)
+		t.AssertNil(err)
+		t.Assert(gtimePtr.IsZero(), false)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var gtimePtr *gtime.Time
+		err := db.Model(table).Fields("create_time").Where("id", 0).ValueScan(&gtimePtr)
+		t.AssertNil(err)
+		t.Assert(gtimePtr.IsZero(), true)
+	})
+}
+
 func Test_Model_Array(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)

@@ -377,6 +377,15 @@ func (m *Model) ScanList(structSlicePointer interface{}, bindToAttrName string, 
 	})
 }
 
+// ValueScan Encapsulation of Model.Value, support converting the result of a single field to a specified pointer
+func (m *Model) ValueScan(pointer interface{}, fieldsAndWhere ...interface{}) (err error) {
+	val, err := m.Value(fieldsAndWhere...)
+	if err != nil {
+		return err
+	}
+	return val.Scan(pointer)
+}
+
 // Value retrieves a specified record value from table and returns the result as interface type.
 // It returns nil if there's no record found with the given conditions from table.
 //
