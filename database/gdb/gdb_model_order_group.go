@@ -17,7 +17,6 @@ import (
 //
 // Example:
 // Order("id desc")
-// Order("id", "desc")
 // Order("id desc,name asc")
 // Order("id desc", "name asc")
 // Order("id desc").Order("name asc")
