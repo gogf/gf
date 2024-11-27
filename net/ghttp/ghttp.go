@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gogf/gf/v2/net/ghttp/internal/gracefulserver"
 	"github.com/gorilla/websocket"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -34,7 +35,7 @@ type (
 		instance         string                    // Instance name of current HTTP server.
 		config           ServerConfig              // Server configuration.
 		plugins          []Plugin                  // Plugin array to extend server functionality.
-		servers          []*gracefulServer         // Underlying http.Server array.
+		servers          []*gracefulserver.Server  // Underlying http.Server array.
 		serverCount      *gtype.Int                // Underlying http.Server number for internal usage.
 		closeChan        chan struct{}             // Used for underlying server closing event notification.
 		serveTree        map[string]interface{}    // The route maps tree.
@@ -127,7 +128,7 @@ type (
 
 const (
 	// FreePortAddress marks the server listens using random free port.
-	FreePortAddress = ":0"
+	FreePortAddress = gracefulserver.FreePortAddress
 )
 
 const (
@@ -136,33 +137,32 @@ const (
 	HookAfterServe        HookName     = "HOOK_AFTER_SERVE"   // Hook handler after route handler/file serving.
 	HookBeforeOutput      HookName     = "HOOK_BEFORE_OUTPUT" // Hook handler before response output.
 	HookAfterOutput       HookName     = "HOOK_AFTER_OUTPUT"  // Hook handler after response output.
-	ServerStatusStopped   ServerStatus = 0
-	ServerStatusRunning   ServerStatus = 1
 	DefaultServerName                  = "default"
 	DefaultDomainName                  = "default"
 	HandlerTypeHandler    HandlerType  = "handler"
 	HandlerTypeObject     HandlerType  = "object"
 	HandlerTypeMiddleware HandlerType  = "middleware"
 	HandlerTypeHook       HandlerType  = "hook"
+	ServerStatusStopped   ServerStatus = gracefulserver.ServerStatusStopped
+	ServerStatusRunning   ServerStatus = gracefulserver.ServerStatusRunning
 )
 
 const (
-	supportedHttpMethods                    = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
-	defaultMethod                           = "ALL"
-	routeCacheDuration                      = time.Hour
-	ctxKeyForRequest            gctx.StrKey = "gHttpRequestObject"
-	contentTypeXml                          = "text/xml"
-	contentTypeHtml                         = "text/html"
-	contentTypeJson                         = "application/json"
-	contentTypeJavascript                   = "application/javascript"
-	swaggerUIPackedPath                     = "/goframe/swaggerui"
-	responseHeaderTraceID                   = "Trace-ID"
-	responseHeaderContentLength             = "Content-Length"
-	specialMethodNameInit                   = "Init"
-	specialMethodNameShut                   = "Shut"
-	specialMethodNameIndex                  = "Index"
-	defaultEndpointPort                     = 80
-	noPrintInternalRoute                    = "internalMiddlewareServerTracing"
+	supportedHttpMethods               = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+	defaultMethod                      = "ALL"
+	routeCacheDuration                 = time.Hour
+	ctxKeyForRequest       gctx.StrKey = "gHttpRequestObject"
+	contentTypeXml                     = "text/xml"
+	contentTypeHtml                    = "text/html"
+	contentTypeJson                    = "application/json"
+	contentTypeJavascript              = "application/javascript"
+	swaggerUIPackedPath                = "/goframe/swaggerui"
+	responseHeaderTraceID              = "Trace-ID"
+	specialMethodNameInit              = "Init"
+	specialMethodNameShut              = "Shut"
+	specialMethodNameIndex             = "Index"
+	defaultEndpointPort                = 80
+	noPrintInternalRoute               = "internalMiddlewareServerTracing"
 )
 
 const (
