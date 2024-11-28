@@ -4,6 +4,17 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// Package graceful implements graceful reload/restart features for HTTP servers.
+// It provides the ability to gracefully shutdown or restart HTTP servers without
+// interrupting existing connections. This is particularly useful for zero-downtime
+// deployments and maintenance operations.
+//
+// The package wraps the standard net/http.Server and provides additional functionality
+// for graceful server management, including:
+// - Graceful server shutdown with timeout
+// - Support for both HTTP and HTTPS servers
+// - File descriptor inheritance for server reload/restart
+// - Connection management during shutdown
 package graceful
 
 import (
@@ -34,21 +45,23 @@ type ServerStatus = int
 const (
 	// FreePortAddress marks the server listens using random free port.
 	FreePortAddress                  = ":0"
+	// ServerStatusStopped indicates the server is stopped.
 	ServerStatusStopped ServerStatus = 0
+	// ServerStatusRunning indicates the server is running.
 	ServerStatusRunning ServerStatus = 1
 )
 
 // Server wraps the net/http.Server with graceful reload/restart feature.
 type Server struct {
-	fd          uintptr      // File descriptor for passing to the child process when graceful reload.
-	address     string       // Listening address like:":80", ":8080".
-	httpServer  *http.Server // Underlying http.Server.
-	rawListener net.Listener // Underlying net.Listener.
-	rawLnMu     sync.RWMutex // Concurrent safety mutex for `rawListener`.
-	listener    net.Listener // Wrapped net.Listener.
-	isHttps     bool         // Is HTTPS.
-	status      *gtype.Int   // Status of current server. Using `gtype` to ensure concurrent safety.
-	config      ServerConfig
+	fd          uintptr         // File descriptor for passing to the child process when graceful reload.
+	address     string          // Listening address like ":80", ":8080".
+	httpServer  *http.Server    // Underlying http.Server.
+	rawListener net.Listener    // Underlying net.Listener.
+	rawLnMu     sync.RWMutex    // Concurrent safety mutex for rawListener.
+	listener    net.Listener    // Wrapped net.Listener with TLS support if necessary.
+	isHttps     bool            // Whether server is running in HTTPS mode.
+	status      *gtype.Int      // Server status using gtype for concurrent safety.
+	config      ServerConfig    // Server configuration.
 }
 
 // ServerConfig is the graceful Server configuration manager.
@@ -177,14 +190,18 @@ func (s *Server) CreateListener() error {
 	return nil
 }
 
+// IsHttps returns whether the server is running in HTTPS mode.
 func (s *Server) IsHttps() bool {
 	return s.isHttps
 }
 
+// GetAddress returns the server's configured address.
 func (s *Server) GetAddress() string {
 	return s.address
 }
 
+// SetIsHttps sets the HTTPS mode for the server.
+// The parameter isHttps determines whether to enable HTTPS mode.
 func (s *Server) SetIsHttps(isHttps bool) {
 	s.isHttps = isHttps
 }
@@ -272,6 +289,8 @@ func (s *Server) GetListenedPort() int {
 	return -1
 }
 
+// Status returns the current status of the server.
+// It returns either ServerStatusStopped or ServerStatusRunning.
 func (s *Server) Status() ServerStatus {
 	return s.status.Val()
 }
@@ -336,7 +355,7 @@ func (s *Server) setRawListener(ln net.Listener) {
 	s.rawListener = ln
 }
 
-// setRawListener returns the `rawListener` of current server.
+// getRawListener returns the `rawListener` of current server.
 func (s *Server) getRawListener() net.Listener {
 	s.rawLnMu.RLock()
 	defer s.rawLnMu.RUnlock()
