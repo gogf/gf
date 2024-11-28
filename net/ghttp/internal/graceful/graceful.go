@@ -44,7 +44,7 @@ type ServerStatus = int
 
 const (
 	// FreePortAddress marks the server listens using random free port.
-	FreePortAddress                  = ":0"
+	FreePortAddress = ":0"
 	// ServerStatusStopped indicates the server is stopped.
 	ServerStatusStopped ServerStatus = 0
 	// ServerStatusRunning indicates the server is running.
@@ -53,15 +53,15 @@ const (
 
 // Server wraps the net/http.Server with graceful reload/restart feature.
 type Server struct {
-	fd          uintptr         // File descriptor for passing to the child process when graceful reload.
-	address     string          // Listening address like ":80", ":8080".
-	httpServer  *http.Server    // Underlying http.Server.
-	rawListener net.Listener    // Underlying net.Listener.
-	rawLnMu     sync.RWMutex    // Concurrent safety mutex for rawListener.
-	listener    net.Listener    // Wrapped net.Listener with TLS support if necessary.
-	isHttps     bool            // Whether server is running in HTTPS mode.
-	status      *gtype.Int      // Server status using gtype for concurrent safety.
-	config      ServerConfig    // Server configuration.
+	fd          uintptr      // File descriptor for passing to the child process when graceful reload.
+	address     string       // Listening address like ":80", ":8080".
+	httpServer  *http.Server // Underlying http.Server.
+	rawListener net.Listener // Underlying net.Listener.
+	rawLnMu     sync.RWMutex // Concurrent safety mutex for rawListener.
+	listener    net.Listener // Wrapped net.Listener with TLS support if necessary.
+	isHttps     bool         // Whether server is running in HTTPS mode.
+	status      *gtype.Int   // Server status using gtype for concurrent safety.
+	config      ServerConfig // Server configuration.
 }
 
 // ServerConfig is the graceful Server configuration manager.
