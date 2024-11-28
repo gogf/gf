@@ -63,12 +63,6 @@ func (r *Response) DefaultCORSOptions() CORSOptions {
 	// Allow all anywhere origin in default.
 	if origin := r.Request.Header.Get("Origin"); origin != "" {
 		options.AllowOrigin = origin
-	} else if referer := r.Request.Referer(); referer != "" {
-		if p := gstr.PosR(referer, "/", 6); p != -1 {
-			options.AllowOrigin = referer[:p]
-		} else {
-			options.AllowOrigin = referer
-		}
 	}
 	return options
 }
