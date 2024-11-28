@@ -17,7 +17,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gogf/gf/v2/net/ghttp/internal/gracefulserver"
+	"github.com/gogf/gf/v2/net/ghttp/internal/graceful"
 	"github.com/olekukonko/tablewriter"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -98,7 +98,7 @@ func GetServer(name ...interface{}) *Server {
 		s := &Server{
 			instance:         serverName,
 			plugins:          make([]Plugin, 0),
-			servers:          make([]*gracefulserver.Server, 0),
+			servers:          make([]*graceful.Server, 0),
 			closeChan:        make(chan struct{}, 10000),
 			serverCount:      gtype.NewInt(),
 			statusHandlerMap: make(map[string][]HandlerFunc),
@@ -584,7 +584,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 	wg.Wait()
 }
 
-func (s *Server) startGracefulServer(ctx context.Context, wg *sync.WaitGroup, server *gracefulserver.Server) {
+func (s *Server) startGracefulServer(ctx context.Context, wg *sync.WaitGroup, server *graceful.Server) {
 	s.serverCount.Add(1)
 	var err error
 	// Create listener.

@@ -6,16 +6,14 @@
 
 package ghttp
 
-import (
-	"github.com/gogf/gf/v2/net/ghttp/internal/gracefulserver"
-)
+import "github.com/gogf/gf/v2/net/ghttp/internal/graceful"
 
 // newGracefulServer creates and returns a graceful http server with a given address.
 // The optional parameter `fd` specifies the file descriptor which is passed from parent server.
-func (s *Server) newGracefulServer(address string, fd int) *gracefulserver.Server {
+func (s *Server) newGracefulServer(address string, fd int) *graceful.Server {
 	var (
 		loggerWriter = &errorLogger{logger: s.config.Logger}
-		serverConfig = gracefulserver.ServerConfig{
+		serverConfig = graceful.ServerConfig{
 			Listeners:               s.config.Listeners,
 			Handler:                 s.config.Handler,
 			ReadTimeout:             s.config.ReadTimeout,
@@ -27,5 +25,5 @@ func (s *Server) newGracefulServer(address string, fd int) *gracefulserver.Serve
 			Logger:                  s.config.Logger,
 		}
 	)
-	return gracefulserver.New(address, fd, loggerWriter, serverConfig)
+	return graceful.New(address, fd, loggerWriter, serverConfig)
 }

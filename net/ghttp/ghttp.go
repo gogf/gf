@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gogf/gf/v2/net/ghttp/internal/gracefulserver"
+	"github.com/gogf/gf/v2/net/ghttp/internal/graceful"
 	"github.com/gorilla/websocket"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -35,7 +35,7 @@ type (
 		instance         string                    // Instance name of current HTTP server.
 		config           ServerConfig              // Server configuration.
 		plugins          []Plugin                  // Plugin array to extend server functionality.
-		servers          []*gracefulserver.Server  // Underlying http.Server array.
+		servers          []*graceful.Server        // Underlying http.Server array.
 		serverCount      *gtype.Int                // Underlying http.Server number for internal usage.
 		closeChan        chan struct{}             // Used for underlying server closing event notification.
 		serveTree        map[string]interface{}    // The route maps tree.
@@ -128,7 +128,7 @@ type (
 
 const (
 	// FreePortAddress marks the server listens using random free port.
-	FreePortAddress = gracefulserver.FreePortAddress
+	FreePortAddress = graceful.FreePortAddress
 )
 
 const (
@@ -143,8 +143,8 @@ const (
 	HandlerTypeObject     HandlerType  = "object"
 	HandlerTypeMiddleware HandlerType  = "middleware"
 	HandlerTypeHook       HandlerType  = "hook"
-	ServerStatusStopped   ServerStatus = gracefulserver.ServerStatusStopped
-	ServerStatusRunning   ServerStatus = gracefulserver.ServerStatusRunning
+	ServerStatusStopped   ServerStatus = graceful.ServerStatusStopped
+	ServerStatusRunning   ServerStatus = graceful.ServerStatusRunning
 )
 
 const (
