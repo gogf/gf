@@ -682,10 +682,11 @@ func (m *Model) doGetAllBySql(
 			},
 			handler: m.hookHandler.Select,
 		},
-		Model: m,
-		Table: m.tables,
-		Sql:   sql,
-		Args:  m.mergeArguments(args),
+		Model:      m,
+		Table:      m.tables,
+		Sql:        sql,
+		Args:       m.mergeArguments(args),
+		SelectType: selectType,
 	}
 	if result, err = in.Next(ctx); err != nil {
 		return

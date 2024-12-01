@@ -701,13 +701,13 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 	}
 	// Exclude the right border value.
 	var (
-		min    = 0
-		max    = 0
-		random = grand.N(0, total-1)
+		minWeight = 0
+		maxWeight = 0
+		random    = grand.N(0, total-1)
 	)
 	for i := 0; i < len(cg); i++ {
-		max = min + cg[i].Weight*100
-		if random >= min && random < max {
+		maxWeight = minWeight + cg[i].Weight*100
+		if random >= minWeight && random < maxWeight {
 			// ====================================================
 			// Return a COPY of the ConfigNode.
 			// ====================================================
@@ -715,7 +715,7 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 			node = cg[i]
 			return &node
 		}
-		min = max
+		minWeight = maxWeight
 	}
 	return nil
 }
