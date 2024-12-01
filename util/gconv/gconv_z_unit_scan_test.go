@@ -362,29 +362,15 @@ func TestScan(t *testing.T) {
 				mapParameter = map[string]string{"Name": "Place", "Place": "Name"}
 			)
 
-			// TODO: The following test cases should be working, but they are not.
-			//err = gconv.Scan(test, &scanExpects.mapStrStr, mapParameter)
-			//t.AssertNil(err)
-			//t.Assert(test["Name"], scanExpects.mapStrStr["Place"])
-			//t.Assert(test["Place"], scanExpects.mapStrStr["Name"])
-			//
-			//err = gconv.Scan(test, &scanExpects.mapStrAny, mapParameter)
-			//t.AssertNil(err)
-			//t.Assert(test["Name"], scanExpects.mapStrAny["Place"])
-			//t.Assert(test["Place"], scanExpects.mapStrAny["Name"])
-			//
-			//err = gconv.Scan(test, &scanExpects.mapAnyAny, mapParameter)
-			//t.AssertNil(err)
-			//t.Assert(test["Name"], scanExpects.mapAnyAny["Place"])
-			//t.Assert(test["Place"], scanExpects.mapAnyAny["Name"])
-
 			err = gconv.Scan(test, &scanExpects.structSub, mapParameter)
 			t.AssertNil(err)
 			t.Assert(test["Name"], scanExpects.structSub.Place)
 			t.Assert(test["Place"], scanExpects.structSub.Name)
 
+			//t.Logf("%#v", test)
 			err = gconv.Scan(test, &scanExpects.structSubPtr, mapParameter)
 			t.AssertNil(err)
+			//t.Logf("%#v", scanExpects.structSubPtr)
 			t.Assert(test["Name"], scanExpects.structSubPtr.Place)
 			t.Assert(test["Place"], scanExpects.structSubPtr.Name)
 		}
