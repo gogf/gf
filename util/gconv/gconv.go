@@ -19,6 +19,8 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gbinary"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/reflection"
@@ -58,7 +60,7 @@ func init() {
 }
 
 // Byte converts `any` to byte.
-func Byte(any interface{}) byte {
+func Byte(any any) byte {
 	if v, ok := any.(byte); ok {
 		return v
 	}
@@ -66,7 +68,7 @@ func Byte(any interface{}) byte {
 }
 
 // Bytes converts `any` to []byte.
-func Bytes(any interface{}) []byte {
+func Bytes(any any) []byte {
 	if any == nil {
 		return nil
 	}
@@ -112,7 +114,7 @@ func Bytes(any interface{}) []byte {
 }
 
 // Rune converts `any` to rune.
-func Rune(any interface{}) rune {
+func Rune(any any) rune {
 	if v, ok := any.(rune); ok {
 		return v
 	}
@@ -120,7 +122,7 @@ func Rune(any interface{}) rune {
 }
 
 // Runes converts `any` to []rune.
-func Runes(any interface{}) []rune {
+func Runes(any any) []rune {
 	if v, ok := any.([]rune); ok {
 		return v
 	}
@@ -129,71 +131,76 @@ func Runes(any interface{}) []rune {
 
 // String converts `any` to string.
 // It's most commonly used converting function.
-func String(any interface{}) string {
+func String(any any) string {
+	v, _ := doString(any)
+	return v
+}
+
+func doString(any any) (string, error) {
 	if any == nil {
-		return ""
+		return "", nil
 	}
 	switch value := any.(type) {
 	case int:
-		return strconv.Itoa(value)
+		return strconv.Itoa(value), nil
 	case int8:
-		return strconv.Itoa(int(value))
+		return strconv.Itoa(int(value)), nil
 	case int16:
-		return strconv.Itoa(int(value))
+		return strconv.Itoa(int(value)), nil
 	case int32:
-		return strconv.Itoa(int(value))
+		return strconv.Itoa(int(value)), nil
 	case int64:
-		return strconv.FormatInt(value, 10)
+		return strconv.FormatInt(value, 10), nil
 	case uint:
-		return strconv.FormatUint(uint64(value), 10)
+		return strconv.FormatUint(uint64(value), 10), nil
 	case uint8:
-		return strconv.FormatUint(uint64(value), 10)
+		return strconv.FormatUint(uint64(value), 10), nil
 	case uint16:
-		return strconv.FormatUint(uint64(value), 10)
+		return strconv.FormatUint(uint64(value), 10), nil
 	case uint32:
-		return strconv.FormatUint(uint64(value), 10)
+		return strconv.FormatUint(uint64(value), 10), nil
 	case uint64:
-		return strconv.FormatUint(value, 10)
+		return strconv.FormatUint(value, 10), nil
 	case float32:
-		return strconv.FormatFloat(float64(value), 'f', -1, 32)
+		return strconv.FormatFloat(float64(value), 'f', -1, 32), nil
 	case float64:
-		return strconv.FormatFloat(value, 'f', -1, 64)
+		return strconv.FormatFloat(value, 'f', -1, 64), nil
 	case bool:
-		return strconv.FormatBool(value)
+		return strconv.FormatBool(value), nil
 	case string:
-		return value
+		return value, nil
 	case []byte:
-		return string(value)
+		return string(value), nil
 	case time.Time:
 		if value.IsZero() {
-			return ""
+			return "", nil
 		}
-		return value.String()
+		return value.String(), nil
 	case *time.Time:
 		if value == nil {
-			return ""
+			return "", nil
 		}
-		return value.String()
+		return value.String(), nil
 	case gtime.Time:
 		if value.IsZero() {
-			return ""
+			return "", nil
 		}
-		return value.String()
+		return value.String(), nil
 	case *gtime.Time:
 		if value == nil {
-			return ""
+			return "", nil
 		}
-		return value.String()
+		return value.String(), nil
 	default:
 		if f, ok := value.(localinterface.IString); ok {
 			// If the variable implements the String() interface,
 			// then use that interface to perform the conversion
-			return f.String()
+			return f.String(), nil
 		}
 		if f, ok := value.(localinterface.IError); ok {
 			// If the variable implements the Error() interface,
 			// then use that interface to perform the conversion
-			return f.Error()
+			return f.Error(), nil
 		}
 		// Reflect checks.
 		var (
@@ -209,38 +216,42 @@ func String(any interface{}) string {
 			reflect.Interface,
 			reflect.UnsafePointer:
 			if rv.IsNil() {
-				return ""
+				return "", nil
 			}
 		case reflect.String:
-			return rv.String()
+			return rv.String(), nil
 		case reflect.Ptr:
 			if rv.IsNil() {
-				return ""
+				return "", nil
 			}
-			return String(rv.Elem().Interface())
+			return doString(rv.Elem().Interface())
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			return strconv.FormatInt(rv.Int(), 10)
+			return strconv.FormatInt(rv.Int(), 10), nil
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			return strconv.FormatUint(rv.Uint(), 10)
+			return strconv.FormatUint(rv.Uint(), 10), nil
 		case reflect.Uintptr:
-			return strconv.FormatUint(rv.Uint(), 10)
+			return strconv.FormatUint(rv.Uint(), 10), nil
 		case reflect.Float32, reflect.Float64:
-			return strconv.FormatFloat(rv.Float(), 'f', -1, 64)
+			return strconv.FormatFloat(rv.Float(), 'f', -1, 64), nil
 		case reflect.Bool:
-			return strconv.FormatBool(rv.Bool())
+			return strconv.FormatBool(rv.Bool()), nil
+		default:
+
 		}
 		// Finally, we use json.Marshal to convert.
-		if jsonContent, err := json.Marshal(value); err != nil {
-			return fmt.Sprint(value)
-		} else {
-			return string(jsonContent)
+		jsonContent, err := json.Marshal(value)
+		if err != nil {
+			return fmt.Sprint(value), gerror.WrapCodef(
+				gcode.CodeInvalidParameter, err, "error marshaling value to JSON for: %v", value,
+			)
 		}
+		return string(jsonContent), nil
 	}
 }
 
 // Bool converts `any` to bool.
 // It returns false if `any` is: false, "", 0, "false", "off", "no", empty slice/map.
-func Bool(any interface{}) bool {
+func Bool(any any) bool {
 	if any == nil {
 		return false
 	}
@@ -297,7 +308,7 @@ func Bool(any interface{}) bool {
 }
 
 // checkJsonAndUnmarshalUseNumber checks if given `any` is JSON formatted string value and does converting using `json.UnmarshalUseNumber`.
-func checkJsonAndUnmarshalUseNumber(any interface{}, target interface{}) bool {
+func checkJsonAndUnmarshalUseNumber(any any, target any) bool {
 	switch r := any.(type) {
 	case []byte:
 		if json.Valid(r) {
