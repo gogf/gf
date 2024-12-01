@@ -182,6 +182,8 @@ func Scan(srcValue any, dstPointer any, paramKeyToAttrMap ...map[string]string) 
 // It supports converting between maps, structs, and slices of these types.
 // The function first attempts JSON conversion, then falls back to specific type handling.
 //
+// It supports `pointer` in type of `*map/*[]map/*[]*map/*struct/**struct/*[]struct/*[]*struct` for converting.
+//
 // Parameters:
 // - srcValue: The source value to convert from
 // - dstPointer: The destination pointer to convert to
