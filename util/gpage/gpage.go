@@ -9,6 +9,7 @@ package gpage
 
 import (
 	"fmt"
+	"html"
 	"math"
 
 	"github.com/gogf/gf/v2/text/gstr"
@@ -215,12 +216,12 @@ func (p *Page) GetLink(page int, text, title string) string {
 	if len(p.AjaxActionName) > 0 {
 		return fmt.Sprintf(
 			`<a class="%s" href="javascript:%s('%s')" title="%s">%s</a>`,
-			p.LinkStyle, p.AjaxActionName, p.GetUrl(page), title, text,
+			p.LinkStyle, p.AjaxActionName, p.GetUrl(page), html.EscapeString(title), text,
 		)
 	} else {
 		return fmt.Sprintf(
 			`<a class="%s" href="%s" title="%s">%s</a>`,
-			p.LinkStyle, p.GetUrl(page), title, text,
+			p.LinkStyle, p.GetUrl(page), html.EscapeString(title), text,
 		)
 	}
 }
