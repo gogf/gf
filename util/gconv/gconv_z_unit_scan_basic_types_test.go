@@ -20,7 +20,7 @@ type testScan struct {
 	Expect any
 }
 
-func TestScan_BasicTypes(t *testing.T) {
+func TestScanBasicTypes(t *testing.T) {
 	// Define test data structure
 	type User struct {
 		Name string
