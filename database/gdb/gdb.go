@@ -396,12 +396,13 @@ const (
 	linkPattern = `(\w+):([\w\-\$]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*)`
 )
 
-type queryType int
+type SelectType int
 
 const (
-	queryTypeNormal queryType = iota
-	queryTypeCount
-	queryTypeValue
+	SelectTypeDefault SelectType = iota
+	SelectTypeCount
+	SelectTypeValue
+	SelectTypeArray
 )
 
 type joinOperator string
