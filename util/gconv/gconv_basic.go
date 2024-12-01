@@ -234,7 +234,6 @@ func doString(any any) (string, error) {
 		case reflect.Bool:
 			return strconv.FormatBool(rv.Bool()), nil
 		default:
-
 		}
 		// Finally, we use json.Marshal to convert.
 		jsonContent, err := json.Marshal(value)
