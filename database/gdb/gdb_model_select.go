@@ -28,7 +28,7 @@ import (
 // see Model.Where.
 func (m *Model) All(where ...interface{}) (Result, error) {
 	var ctx = m.GetCtx()
-	return m.doGetAll(ctx, false, where...)
+	return m.doGetAll(ctx, SelectTypeDefault, false, where...)
 }
 
 // AllAndCount retrieves all records and the total count of records from the model.
@@ -69,7 +69,7 @@ func (m *Model) AllAndCount(useFieldForCount bool) (result Result, totalCount in
 	}
 
 	// Retrieve all records
-	result, err = m.doGetAll(m.GetCtx(), false)
+	result, err = m.doGetAll(m.GetCtx(), SelectTypeDefault, false)
 	return
 }
 
@@ -110,7 +110,7 @@ func (m *Model) One(where ...interface{}) (Record, error) {
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).One()
 	}
-	all, err := m.doGetAll(ctx, true)
+	all, err := m.doGetAll(ctx, SelectTypeDefault, true)
 	if err != nil {
 		return nil, err
 	}
@@ -136,24 +136,41 @@ func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 			return m.Fields(gconv.String(fieldsAndWhere[0])).Array()
 		}
 	}
-	all, err := m.All()
+
+	var (
+		field string
+		core  = m.db.GetCore()
+		ctx   = core.injectInternalColumn(m.GetCtx())
+	)
+	all, err := m.doGetAll(ctx, SelectTypeArray, false)
 	if err != nil {
 		return nil, err
 	}
-	var field string
 	if len(all) > 0 {
-		var recordFields = m.getRecordFields(all[0])
-		if len(recordFields) > 1 {
-			// it returns error if there are multiple fields in the result record.
-			return nil, gerror.NewCodef(
-				gcode.CodeInvalidParameter,
-				`invalid fields for "Array" operation, result fields number "%d"%s, but expect one`,
-				len(recordFields),
-				gjson.MustEncodeString(recordFields),
+		internalData := core.getInternalColumnFromCtx(ctx)
+		if internalData == nil {
+			return nil, gerror.NewCode(
+				gcode.CodeInternalError,
+				`query count error: the internal context data is missing. there's internal issue should be fixed`,
 			)
 		}
-		if len(recordFields) == 1 {
-			field = recordFields[0]
+		// If FirstResultColumn present, it returns the value of the first record of the first field.
+		// It means it use no cache mechanism, while cache mechanism makes `internalData` missing.
+		field = internalData.FirstResultColumn
+		if field == "" {
+			// Fields number check.
+			var recordFields = m.getRecordFields(all[0])
+			if len(recordFields) == 1 {
+				field = recordFields[0]
+			} else {
+				// it returns error if there are multiple fields in the result record.
+				return nil, gerror.NewCodef(
+					gcode.CodeInvalidParameter,
+					`invalid fields for "Array" operation, result fields number "%d"%s, but expect one`,
+					len(recordFields),
+					gjson.MustEncodeString(recordFields),
+				)
+			}
 		}
 	}
 	return all.Array(field), nil
@@ -398,13 +415,26 @@ func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
 		}
 	}
 	var (
-		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(ctx, queryTypeValue, true)
-		all, err                  = m.doGetAllBySql(ctx, queryTypeValue, sqlWithHolder, holderArgs...)
+		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(ctx, SelectTypeValue, true)
+		all, err                  = m.doGetAllBySql(ctx, SelectTypeValue, sqlWithHolder, holderArgs...)
 	)
 	if err != nil {
 		return nil, err
 	}
 	if len(all) > 0 {
+		internalData := core.getInternalColumnFromCtx(ctx)
+		if internalData == nil {
+			return nil, gerror.NewCode(
+				gcode.CodeInternalError,
+				`query count error: the internal context data is missing. there's internal issue should be fixed`,
+			)
+		}
+		// If FirstResultColumn present, it returns the value of the first record of the first field.
+		// It means it use no cache mechanism, while cache mechanism makes `internalData` missing.
+		if v, ok := all[0][internalData.FirstResultColumn]; ok {
+			return v, nil
+		}
+		// Fields number check.
 		var recordFields = m.getRecordFields(all[0])
 		if len(recordFields) == 1 {
 			for _, v := range all[0] {
@@ -445,13 +475,26 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 		return m.Where(where[0], where[1:]...).Count()
 	}
 	var (
-		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(ctx, queryTypeCount, false)
-		all, err                  = m.doGetAllBySql(ctx, queryTypeCount, sqlWithHolder, holderArgs...)
+		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(ctx, SelectTypeCount, false)
+		all, err                  = m.doGetAllBySql(ctx, SelectTypeCount, sqlWithHolder, holderArgs...)
 	)
 	if err != nil {
 		return 0, err
 	}
 	if len(all) > 0 {
+		internalData := core.getInternalColumnFromCtx(ctx)
+		if internalData == nil {
+			return 0, gerror.NewCode(
+				gcode.CodeInternalError,
+				`query count error: the internal context data is missing. there's internal issue should be fixed`,
+			)
+		}
+		// If FirstResultColumn present, it returns the value of the first record of the first field.
+		// It means it use no cache mechanism, while cache mechanism makes `internalData` missing.
+		if v, ok := all[0][internalData.FirstResultColumn]; ok {
+			return v.Int(), nil
+		}
+		// Fields number check.
 		var recordFields = m.getRecordFields(all[0])
 		if len(recordFields) == 1 {
 			for _, v := range all[0] {
@@ -616,17 +659,17 @@ func (m *Model) Having(having interface{}, args ...interface{}) *Model {
 // The parameter `limit1` specifies whether limits querying only one record if m.limit is not set.
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
-func (m *Model) doGetAll(ctx context.Context, limit1 bool, where ...interface{}) (Result, error) {
+func (m *Model) doGetAll(ctx context.Context, selectType SelectType, limit1 bool, where ...interface{}) (Result, error) {
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).All()
 	}
-	sqlWithHolder, holderArgs := m.getFormattedSqlAndArgs(ctx, queryTypeNormal, limit1)
-	return m.doGetAllBySql(ctx, queryTypeNormal, sqlWithHolder, holderArgs...)
+	sqlWithHolder, holderArgs := m.getFormattedSqlAndArgs(ctx, selectType, limit1)
+	return m.doGetAllBySql(ctx, selectType, sqlWithHolder, holderArgs...)
 }
 
 // doGetAllBySql does the select statement on the database.
 func (m *Model) doGetAllBySql(
-	ctx context.Context, queryType queryType, sql string, args ...interface{},
+	ctx context.Context, selectType SelectType, sql string, args ...interface{},
 ) (result Result, err error) {
 	if result, err = m.getSelectResultFromCache(ctx, sql, args...); err != nil || result != nil {
 		return
@@ -639,24 +682,25 @@ func (m *Model) doGetAllBySql(
 			},
 			handler: m.hookHandler.Select,
 		},
-		Model: m,
-		Table: m.tables,
-		Sql:   sql,
-		Args:  m.mergeArguments(args),
+		Model:      m,
+		Table:      m.tables,
+		Sql:        sql,
+		Args:       m.mergeArguments(args),
+		SelectType: selectType,
 	}
 	if result, err = in.Next(ctx); err != nil {
 		return
 	}
 
-	err = m.saveSelectResultToCache(ctx, queryType, result, sql, args...)
+	err = m.saveSelectResultToCache(ctx, selectType, result, sql, args...)
 	return
 }
 
 func (m *Model) getFormattedSqlAndArgs(
-	ctx context.Context, queryType queryType, limit1 bool,
+	ctx context.Context, selectType SelectType, limit1 bool,
 ) (sqlWithHolder string, holderArgs []interface{}) {
-	switch queryType {
-	case queryTypeCount:
+	switch selectType {
+	case SelectTypeCount:
 		queryFields := "COUNT(1)"
 		if len(m.fields) > 0 {
 			// DO NOT quote the m.fields here, in case of fields like:
@@ -698,7 +742,7 @@ func (m *Model) getFormattedSqlAndArgs(
 
 func (m *Model) getHolderAndArgsAsSubModel(ctx context.Context) (holder string, args []interface{}) {
 	holder, args = m.getFormattedSqlAndArgs(
-		ctx, queryTypeNormal, false,
+		ctx, SelectTypeDefault, false,
 	)
 	args = m.mergeArguments(args)
 	return

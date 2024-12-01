@@ -278,7 +278,7 @@ func (c *Core) doUnion(ctx context.Context, unionType int, unions ...*Model) *Mo
 		unionTypeStr = "UNION"
 	}
 	for _, v := range unions {
-		sqlWithHolder, holderArgs := v.getFormattedSqlAndArgs(ctx, queryTypeNormal, false)
+		sqlWithHolder, holderArgs := v.getFormattedSqlAndArgs(ctx, SelectTypeDefault, false)
 		if composedSqlStr == "" {
 			composedSqlStr += fmt.Sprintf(`(%s)`, sqlWithHolder)
 		} else {
