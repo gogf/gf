@@ -183,7 +183,7 @@ func (m *softTimeMaintainer) GetFieldNameAndTypeForDelete(
 	)
 }
 
-// getSoftFieldName retrieves and returns the field name of the table for possible key.
+// getSoftFieldNameAndType retrieves and returns the field name of the table for possible key.
 func (m *softTimeMaintainer) getSoftFieldNameAndType(
 	ctx context.Context,
 	schema string, table string, checkFiledNames []string,
