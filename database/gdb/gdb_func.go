@@ -856,9 +856,20 @@ func handleSliceAndStructArgsForSql(
 				return s
 			})
 
-		// Special struct handling.
-		case reflect.Struct:
+		default:
 			switch oldArg.(type) {
+			// Do not append Raw arg to args but directly into the sql.
+			case Raw, *Raw:
+				var counter = 0
+				newSql, _ = gregex.ReplaceStringFunc(`\?`, newSql, func(s string) string {
+					counter++
+					if counter == index+insertHolderCount+1 {
+						return gconv.String(oldArg)
+					}
+					return s
+				})
+				continue
+
 			// The underlying driver supports time.Time/*time.Time types.
 			case time.Time, *time.Time:
 				newArgs = append(newArgs, oldArg)
@@ -880,9 +891,6 @@ func handleSliceAndStructArgsForSql(
 					continue
 				}
 			}
-			newArgs = append(newArgs, oldArg)
-
-		default:
 			newArgs = append(newArgs, oldArg)
 		}
 	}
