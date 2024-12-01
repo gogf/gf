@@ -66,11 +66,12 @@ type internalParamHookDelete struct {
 // which is usually not be interesting for upper business hook handler.
 type HookSelectInput struct {
 	internalParamHookSelect
-	Model  *Model        // Current operation Model.
-	Table  string        // The table name that to be used. Update this attribute to change target table name.
-	Schema string        // The schema name that to be used. Update this attribute to change target schema name.
-	Sql    string        // The sql string that to be committed.
-	Args   []interface{} // The arguments of sql.
+	Model      *Model        // Current operation Model.
+	Table      string        // The table name that to be used. Update this attribute to change target table name.
+	Schema     string        // The schema name that to be used. Update this attribute to change target schema name.
+	Sql        string        // The sql string that to be committed.
+	Args       []interface{} // The arguments of sql.
+	SelectType SelectType    // The type of this SELECT operation.
 }
 
 // HookInsertInput holds the parameters for insert hook operation.
