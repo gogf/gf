@@ -75,53 +75,62 @@ func doFloat32(any any) (float32, error) {
 
 // Float64 converts `any` to float64.
 func Float64(any any) float64 {
+	v, _ := doFloat64(any)
+	return v
+}
+
+func doFloat64(any any) (float64, error) {
 	if any == nil {
-		return 0
+		return 0, nil
 	}
 	switch value := any.(type) {
 	case float32:
-		return float64(value)
+		return float64(value), nil
 	case float64:
-		return value
+		return value, nil
 	case []byte:
 		// TODO: It might panic here for these types.
-		return gbinary.DecodeToFloat64(value)
+		return gbinary.DecodeToFloat64(value), nil
 	default:
 		rv := reflect.ValueOf(any)
 		switch rv.Kind() {
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			return float64(rv.Int())
+			return float64(rv.Int()), nil
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			return float64(rv.Uint())
+			return float64(rv.Uint()), nil
 		case reflect.Uintptr:
-			return float64(rv.Uint())
+			return float64(rv.Uint()), nil
 		case reflect.Float32, reflect.Float64:
 			// Please Note:
 			// When the type is float32 or a custom type defined based on float32,
 			// switching to float64 may result in a few extra decimal places.
-			return rv.Float()
+			return rv.Float(), nil
 		case reflect.Bool:
 			if rv.Bool() {
-				return 1
+				return 1, nil
 			}
-			return 0
+			return 0, nil
 		case reflect.String:
-			f, _ := strconv.ParseFloat(rv.String(), 64)
-			return f
+			f, err := strconv.ParseFloat(rv.String(), 64)
+			return f, gerror.WrapCodef(
+				gcode.CodeInvalidParameter, err, "converting string to float64 failed for: %v", any,
+			)
 		case reflect.Ptr:
 			if rv.IsNil() {
-				return 0
+				return 0, nil
 			}
 			if f, ok := value.(localinterface.IFloat64); ok {
-				return f.Float64()
+				return f.Float64(), nil
 			}
-			return Float64(rv.Elem().Interface())
+			return doFloat64(rv.Elem().Interface())
 		default:
 			if f, ok := value.(localinterface.IFloat64); ok {
-				return f.Float64()
+				return f.Float64(), nil
 			}
-			v, _ := strconv.ParseFloat(String(any), 64)
-			return v
+			v, err := strconv.ParseFloat(String(any), 64)
+			return v, gerror.WrapCodef(
+				gcode.CodeInvalidParameter, err, "converting string to float64 failed for: %v", any,
+			)
 		}
 	}
 }
