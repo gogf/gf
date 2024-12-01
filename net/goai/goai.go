@@ -233,6 +233,10 @@ func formatRefToBytes(ref string) []byte {
 	return []byte(fmt.Sprintf(`{"$ref":"#/components/schemas/%s"}`, ref))
 }
 
+func formatRefAndDescToBytes(ref, desc string) []byte {
+	return []byte(fmt.Sprintf(`{"$ref":"#/components/schemas/%s","description":"%s"}`, ref, desc))
+}
+
 func isValidParameterName(key string) bool {
 	return key != "-"
 }
