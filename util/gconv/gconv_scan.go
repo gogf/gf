@@ -85,13 +85,16 @@ func Scan(srcValue any, dstPointer any, paramKeyToAttrMap ...map[string]string) 
 	)
 	// Handle multiple level pointers
 	if dstPointerReflectValueElemKind == reflect.Ptr {
-		// Create a new value for the pointer dereference
-		nextLevelPtr := reflect.New(dstPointerReflectValueElem.Type().Elem())
-		// Recursively scan into the dereferenced pointer
-		if err = Scan(srcValueReflectValue, nextLevelPtr, paramKeyToAttrMap...); err == nil {
-			dstPointerReflectValueElem.Set(nextLevelPtr)
+		if dstPointerReflectValueElem.IsNil() {
+			// Create a new value for the pointer dereference
+			nextLevelPtr := reflect.New(dstPointerReflectValueElem.Type().Elem())
+			// Recursively scan into the dereferenced pointer
+			if err = Scan(srcValueReflectValue, nextLevelPtr, paramKeyToAttrMap...); err == nil {
+				dstPointerReflectValueElem.Set(nextLevelPtr)
+			}
+			return
 		}
-		return
+		return Scan(srcValueReflectValue, dstPointerReflectValueElem, paramKeyToAttrMap...)
 	}
 
 	// Check if srcValue and dstPointer are the same type, in which case direct assignment can be performed

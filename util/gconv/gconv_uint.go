@@ -146,32 +146,27 @@ func doUint64(any any) (uint64, error) {
 			rv.Type().String(),
 		)
 	case reflect.String:
-		var (
-			s = rv.String()
-		)
+		var s = rv.String()
 		// Hexadecimal
 		if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
-			if v, e := strconv.ParseUint(s[2:], 16, 64); e == nil {
+			v, err := strconv.ParseUint(s[2:], 16, 64)
+			if err == nil {
 				return v, nil
-			} else {
-				return 0, gerror.WrapCodef(
-					gcode.CodeInvalidParameter,
-					e,
-					`cannot convert hexadecimal string "%s" to uint64`,
-					s,
-				)
 			}
+			return 0, gerror.WrapCodef(
+				gcode.CodeInvalidParameter,
+				err,
+				`cannot convert hexadecimal string "%s" to uint64`,
+				s,
+			)
 		}
 		// Decimal
 		if v, err := strconv.ParseUint(s, 10, 64); err == nil {
 			return v, nil
-		} else {
-			return 0, gerror.WrapCodef(
-				gcode.CodeInvalidParameter,
-				err,
-				`cannot convert decimal string "%s" to uint64`,
-				s,
-			)
+		}
+		// Float64
+		if v, err := doFloat64(any); err == nil {
+			return uint64(v), nil
 		}
 	default:
 		if f, ok := any.(localinterface.IUint64); ok {
