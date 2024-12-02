@@ -278,7 +278,7 @@ func (c *Core) doUnion(ctx context.Context, unionType int, unions ...*Model) *Mo
 		unionTypeStr = "UNION"
 	}
 	for _, v := range unions {
-		sqlWithHolder, holderArgs := v.getFormattedSqlAndArgs(ctx, queryTypeNormal, false)
+		sqlWithHolder, holderArgs := v.getFormattedSqlAndArgs(ctx, SelectTypeDefault, false)
 		if composedSqlStr == "" {
 			composedSqlStr += fmt.Sprintf(`(%s)`, sqlWithHolder)
 		} else {
@@ -697,7 +697,7 @@ func (c *Core) FilteredLink() string {
 //
 // Note that this interface implements mainly for workaround for a json infinite loop bug
 // of Golang version < v1.14.
-func (c Core) MarshalJSON() ([]byte, error) {
+func (c *Core) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`%+v`, c)), nil
 }
 

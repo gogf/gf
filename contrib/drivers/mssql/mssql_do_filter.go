@@ -18,10 +18,11 @@ import (
 )
 
 var (
-	selectSqlTmp          = `SELECT * FROM (SELECT TOP %d * FROM (SELECT TOP %d %s) as TMP1_ ) as TMP2_ `
+	orderBySqlTmp         = `SELECT %s %s OFFSET %d ROWS FETCH NEXT %d ROWS ONLY`
+	withoutOrderBySqlTmp  = `SELECT %s OFFSET %d ROWS FETCH NEXT %d ROWS ONLY`
 	selectWithOrderSqlTmp = `
-SELECT * FROM (SELECT ROW_NUMBER() OVER (ORDER BY %s) as ROWNUMBER_, %s ) as TMP_ 
-WHERE TMP_.ROWNUMBER_ > %d AND TMP_.ROWNUMBER_ <= %d
+SELECT * FROM (SELECT ROW_NUMBER() OVER (ORDER BY %s) as ROW_NUMBER__, %s ) as TMP_ 
+WHERE TMP_.ROW_NUMBER__ > %d AND TMP_.ROW_NUMBER__ <= %d
 `
 )
 
@@ -78,89 +79,55 @@ func (d *Driver) parseSql(toBeCommittedSql string) (string, error) {
 
 func (d *Driver) handleSelectSqlReplacement(toBeCommittedSql string) (newSql string, err error) {
 	// SELECT * FROM USER WHERE ID=1 LIMIT 1
-	match, err := gregex.MatchString(`^SELECT(.+)LIMIT 1$`, toBeCommittedSql)
+	match, err := gregex.MatchString(`^SELECT(.+?)LIMIT\s+1$`, toBeCommittedSql)
 	if err != nil {
 		return "", err
 	}
 	if len(match) > 1 {
-		return fmt.Sprintf(`SELECT TOP 1 %s`, match[1]), nil
+		return fmt.Sprintf(`SELECT TOP 1 %s`, strings.TrimSpace(match[1])), nil
 	}
 
 	// SELECT * FROM USER WHERE AGE>18 ORDER BY ID DESC LIMIT 100, 200
-	patten := `^\s*(?i)(SELECT)|(LIMIT\s*(\d+)\s*,\s*(\d+))`
-	if gregex.IsMatchString(patten, toBeCommittedSql) == false {
-		return toBeCommittedSql, nil
-	}
-	allMatch, err := gregex.MatchAllString(patten, toBeCommittedSql)
-	if err != nil {
-		return "", err
-	}
-	var index = 1
-	// LIMIT statement checks.
-	if len(allMatch) < 2 ||
-		(strings.HasPrefix(allMatch[index][0], "LIMIT") == false &&
-			strings.HasPrefix(allMatch[index][0], "limit") == false) {
-		return toBeCommittedSql, nil
-	}
-	if gregex.IsMatchString("((?i)SELECT)(.+)((?i)LIMIT)", toBeCommittedSql) == false {
-		return toBeCommittedSql, nil
-	}
-	// ORDER BY statement checks.
-	var (
-		selectStr = ""
-		orderStr  = ""
-		haveOrder = gregex.IsMatchString("((?i)SELECT)(.+)((?i)ORDER BY)", toBeCommittedSql)
-	)
-	if haveOrder {
-		queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)ORDER BY)", toBeCommittedSql)
-		if len(queryExpr) != 4 ||
-			strings.EqualFold(queryExpr[1], "SELECT") == false ||
-			strings.EqualFold(queryExpr[3], "ORDER BY") == false {
-			return toBeCommittedSql, nil
-		}
-		selectStr = queryExpr[2]
-		orderExpr, _ := gregex.MatchString("((?i)ORDER BY)(.+)((?i)LIMIT)", toBeCommittedSql)
-		if len(orderExpr) != 4 ||
-			strings.EqualFold(orderExpr[1], "ORDER BY") == false ||
-			strings.EqualFold(orderExpr[3], "LIMIT") == false {
-			return toBeCommittedSql, nil
-		}
-		orderStr = orderExpr[2]
-	} else {
-		queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", toBeCommittedSql)
-		if len(queryExpr) != 4 ||
-			strings.EqualFold(queryExpr[1], "SELECT") == false ||
-			strings.EqualFold(queryExpr[3], "LIMIT") == false {
-			return toBeCommittedSql, nil
-		}
-		selectStr = queryExpr[2]
-	}
-	first, limit := 0, 0
-	for i := 1; i < len(allMatch[index]); i++ {
-		if len(strings.TrimSpace(allMatch[index][i])) == 0 {
-			continue
-		}
-		if strings.HasPrefix(allMatch[index][i], "LIMIT") ||
-			strings.HasPrefix(allMatch[index][i], "limit") {
-			first, _ = strconv.Atoi(allMatch[index][i+1])
-			limit, _ = strconv.Atoi(allMatch[index][i+2])
-			break
-		}
-	}
-	if haveOrder {
-		toBeCommittedSql = fmt.Sprintf(
-			selectWithOrderSqlTmp,
-			orderStr, selectStr, first, first+limit,
-		)
+	pattern := `(?i)SELECT(.+?)(ORDER BY.+?)?\s*LIMIT\s*(\d+)(?:\s*,\s*(\d+))?`
+	if !gregex.IsMatchString(pattern, toBeCommittedSql) {
 		return toBeCommittedSql, nil
 	}
 
-	if first == 0 {
-		first = limit
+	allMatch, err := gregex.MatchString(pattern, toBeCommittedSql)
+	if err != nil {
+		return "", err
 	}
-	toBeCommittedSql = fmt.Sprintf(
-		selectSqlTmp,
-		limit, first+limit, selectStr,
-	)
-	return toBeCommittedSql, nil
+
+	// SELECT and ORDER BY
+	selectStr := strings.TrimSpace(allMatch[1])
+	orderStr := ""
+	if len(allMatch[2]) > 0 {
+		orderStr = strings.TrimSpace(allMatch[2])
+	}
+
+	// LIMIT and OFFSET value
+	first, _ := strconv.Atoi(allMatch[3]) // LIMIT first parameter
+	limit := 0
+	if len(allMatch) > 4 && allMatch[4] != "" {
+		limit, _ = strconv.Atoi(allMatch[4]) // LIMIT second parameter
+	} else {
+		limit = first
+		first = 0
+	}
+
+	if orderStr != "" {
+		// have ORDER BY clause
+		newSql = fmt.Sprintf(
+			orderBySqlTmp,
+			selectStr, orderStr, first, limit,
+		)
+	} else {
+		// without ORDER BY clause
+		newSql = fmt.Sprintf(
+			withoutOrderBySqlTmp,
+			selectStr, first, limit,
+		)
+	}
+
+	return newSql, nil
 }

@@ -67,6 +67,9 @@ func (m *Model) WithAll() *Model {
 
 // doWithScanStruct handles model association operations feature for single struct.
 func (m *Model) doWithScanStruct(pointer interface{}) error {
+	if len(m.withArray) == 0 && m.withAll == false {
+		return nil
+	}
 	var (
 		err                 error
 		allowedTypeStrArray = make([]string, 0)
@@ -183,6 +186,9 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 // doWithScanStructs handles model association operations feature for struct slice.
 // Also see doWithScanStruct.
 func (m *Model) doWithScanStructs(pointer interface{}) error {
+	if len(m.withArray) == 0 && m.withAll == false {
+		return nil
+	}
 	if v, ok := pointer.(reflect.Value); ok {
 		pointer = v.Interface()
 	}
@@ -312,7 +318,7 @@ func (m *Model) parseWithTagInFieldStruct(field gstructs.Field) (output parseWit
 		array  []string
 		key    string
 	)
-	for _, v := range gstr.SplitAndTrim(ormTag, " ") {
+	for _, v := range gstr.SplitAndTrim(ormTag, ",") {
 		array = gstr.Split(v, ":")
 		if len(array) == 2 {
 			key = array[0]
@@ -320,9 +326,6 @@ func (m *Model) parseWithTagInFieldStruct(field gstructs.Field) (output parseWit
 		} else {
 			data[key] += " " + gstr.Trim(v)
 		}
-	}
-	for k, v := range data {
-		data[k] = gstr.TrimRight(v, ",")
 	}
 	output.With = data[OrmTagForWith]
 	output.Where = data[OrmTagForWithWhere]

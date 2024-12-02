@@ -204,5 +204,7 @@ func Test_GetOrDefaultAny(t *testing.T) {
 		t.Assert(gutil.GetOrDefaultAny("a", "b"), "b")
 		t.Assert(gutil.GetOrDefaultAny("a", "b", "c"), "b")
 		t.Assert(gutil.GetOrDefaultAny("a"), "a")
+		t.Assert(gutil.GetOrDefaultAny("a", nil), "a")
+		t.Assert(gutil.GetOrDefaultAny("a", ""), "")
 	})
 }

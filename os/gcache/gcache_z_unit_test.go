@@ -168,30 +168,26 @@ func TestCache_LRU(t *testing.T) {
 			t.AssertNil(cache.Set(ctx, i, i, 0))
 		}
 		n, _ := cache.Size(ctx)
-		t.Assert(n, 10)
-		v, _ := cache.Get(ctx, 6)
-		t.Assert(v, 6)
-		time.Sleep(4 * time.Second)
-		g.Log().Debugf(ctx, `items after lru: %+v`, cache.MustData(ctx))
-		n, _ = cache.Size(ctx)
 		t.Assert(n, 2)
-		v, _ = cache.Get(ctx, 6)
-		t.Assert(v, 6)
-		v, _ = cache.Get(ctx, 1)
-		t.Assert(v, nil)
-		t.Assert(cache.Close(ctx), nil)
+		v, _ := cache.Get(ctx, 6)
+		t.AssertNil(v)
+		v, _ = cache.Get(ctx, 9)
+		t.Assert(v, 9)
 	})
 }
 
 func TestCache_LRU_expire(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New(2)
-		t.Assert(cache.Set(ctx, 1, nil, 1000), nil)
+		t.Assert(cache.Set(ctx, 1, nil, 50*time.Millisecond), nil)
+
 		n, _ := cache.Size(ctx)
 		t.Assert(n, 1)
-		v, _ := cache.Get(ctx, 1)
 
-		t.Assert(v, nil)
+		time.Sleep(time.Millisecond * 100)
+
+		n, _ = cache.Size(ctx)
+		t.Assert(n, 0)
 	})
 }
 
@@ -480,7 +476,10 @@ func TestCache_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		{
 			cache := gcache.New()
-			cache.SetMap(ctx, g.MapAnyAny{1: 11, 2: 22}, 0)
+			cache.SetMap(ctx, g.MapAnyAny{
+				1: 11,
+				2: 22,
+			}, 0)
 			b, _ := cache.Contains(ctx, 1)
 			t.Assert(b, true)
 			v, _ := cache.Get(ctx, 1)
@@ -520,6 +519,7 @@ func TestCache_Basic(t *testing.T) {
 			t.Assert(data[3], nil)
 			n, _ := gcache.Size(ctx)
 			t.Assert(n, 2)
+
 			keys, _ := gcache.Keys(ctx)
 			t.Assert(gset.NewFrom(g.Slice{1, 2}).Equal(gset.NewFrom(keys)), true)
 			keyStrs, _ := gcache.KeyStrings(ctx)

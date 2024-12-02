@@ -12,25 +12,27 @@ import (
 	"github.com/gogf/gf/v2/container/gset"
 )
 
-type adapterMemoryExpireSets struct {
-	mu         sync.RWMutex        // expireSetMu ensures the concurrent safety of expireSets map.
-	expireSets map[int64]*gset.Set // expireSets is the expiring timestamp to its key set mapping, which is used for quick indexing and deleting.
+type memoryExpireSets struct {
+	// expireSetMu ensures the concurrent safety of expireSets map.
+	mu sync.RWMutex
+	// expireSets is the expiring timestamp in seconds to its key set mapping, which is used for quick indexing and deleting.
+	expireSets map[int64]*gset.Set
 }
 
-func newAdapterMemoryExpireSets() *adapterMemoryExpireSets {
-	return &adapterMemoryExpireSets{
+func newMemoryExpireSets() *memoryExpireSets {
+	return &memoryExpireSets{
 		expireSets: make(map[int64]*gset.Set),
 	}
 }
 
-func (d *adapterMemoryExpireSets) Get(key int64) (result *gset.Set) {
+func (d *memoryExpireSets) Get(key int64) (result *gset.Set) {
 	d.mu.RLock()
 	result = d.expireSets[key]
 	d.mu.RUnlock()
 	return
 }
 
-func (d *adapterMemoryExpireSets) GetOrNew(key int64) (result *gset.Set) {
+func (d *memoryExpireSets) GetOrNew(key int64) (result *gset.Set) {
 	if result = d.Get(key); result != nil {
 		return
 	}
@@ -45,7 +47,7 @@ func (d *adapterMemoryExpireSets) GetOrNew(key int64) (result *gset.Set) {
 	return
 }
 
-func (d *adapterMemoryExpireSets) Delete(key int64) {
+func (d *memoryExpireSets) Delete(key int64) {
 	d.mu.Lock()
 	delete(d.expireSets, key)
 	d.mu.Unlock()

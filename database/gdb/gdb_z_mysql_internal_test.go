@@ -232,6 +232,38 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		t.Assert(newNode.Charset, defaultCharset)
 		t.Assert(newNode.Protocol, `tcp`)
 	})
+	// https://github.com/gogf/gf/issues/3755
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: "mysql:user:pwd@tcp(rdsid.mysql.rds.aliyuncs.com)/dbname?charset=utf8&loc=Local",
+		}
+		newNode := parseConfigNodeLink(node)
+		t.Assert(newNode.Type, `mysql`)
+		t.Assert(newNode.User, `user`)
+		t.Assert(newNode.Pass, `pwd`)
+		t.Assert(newNode.Host, `rdsid.mysql.rds.aliyuncs.com`)
+		t.Assert(newNode.Port, ``)
+		t.Assert(newNode.Name, `dbname`)
+		t.Assert(newNode.Extra, `charset=utf8&loc=Local`)
+		t.Assert(newNode.Charset, `utf8`)
+		t.Assert(newNode.Protocol, `tcp`)
+	})
+	// https://github.com/gogf/gf/issues/3862
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: "mysql:username:password@unix(/tmp/mysql.sock)/dbname",
+		}
+		newNode := parseConfigNodeLink(node)
+		t.Assert(newNode.Type, `mysql`)
+		t.Assert(newNode.User, `username`)
+		t.Assert(newNode.Pass, `password`)
+		t.Assert(newNode.Host, `/tmp/mysql.sock`)
+		t.Assert(newNode.Port, ``)
+		t.Assert(newNode.Name, `dbname`)
+		t.Assert(newNode.Extra, ``)
+		t.Assert(newNode.Charset, `utf8`)
+		t.Assert(newNode.Protocol, `unix`)
+	})
 }
 
 func Test_Func_doQuoteWord(t *testing.T) {

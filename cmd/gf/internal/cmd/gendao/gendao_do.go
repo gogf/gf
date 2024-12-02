@@ -40,7 +40,7 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 			structDefinition, _ = generateStructDefinition(ctx, generateStructDefinitionInput{
 				CGenDaoInternalInput: in,
 				TableName:            tableName,
-				StructName:           gstr.CaseCamel(strings.ToLower(newTableName)),
+				StructName:           formatFieldName(newTableName, FieldNameCaseCamel),
 				FieldMap:             fieldMap,
 				IsDo:                 true,
 			})
@@ -61,7 +61,7 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 			ctx,
 			in,
 			tableName,
-			gstr.CaseCamel(strings.ToLower(newTableName)),
+			formatFieldName(newTableName, FieldNameCaseCamel),
 			structDefinition,
 		)
 		in.genItems.AppendGeneratedFilePath(doFilePath)
@@ -70,7 +70,7 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 			mlog.Fatalf(`writing content to "%s" failed: %v`, doFilePath, err)
 		} else {
 			utils.GoFmt(doFilePath)
-			mlog.Print("generated:", doFilePath)
+			mlog.Print("generated:", gfile.RealPath(doFilePath))
 		}
 	}
 }

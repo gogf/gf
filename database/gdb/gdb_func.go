@@ -344,8 +344,8 @@ func doQuoteString(s, charLeft, charRight string) string {
 	return gstr.Join(array1, ",")
 }
 
-func getFieldsFromStructOrMap(structOrMap interface{}) (fields []string) {
-	fields = []string{}
+func getFieldsFromStructOrMap(structOrMap any) (fields []any) {
+	fields = []any{}
 	if utils.IsStruct(structOrMap) {
 		structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 			Pointer:         structOrMap,
@@ -362,7 +362,7 @@ func getFieldsFromStructOrMap(structOrMap interface{}) (fields []string) {
 			}
 		}
 	} else {
-		fields = gutil.Keys(structOrMap)
+		fields = gconv.Interfaces(gutil.Keys(structOrMap))
 	}
 	return
 }
@@ -777,11 +777,7 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []interface{}) {
 			} else {
 				in.Buffer.WriteString(quotedKey)
 			}
-			if s, ok := in.Value.(Raw); ok {
-				in.Buffer.WriteString(gconv.String(s))
-			} else {
-				in.Args = append(in.Args, in.Value)
-			}
+			in.Args = append(in.Args, in.Value)
 		}
 	}
 	return in.Args
