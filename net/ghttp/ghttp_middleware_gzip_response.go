@@ -13,7 +13,6 @@ import (
 
 // MiddlewareGzip compresses the response content using gzip algorithm.
 func MiddlewareGzip(r *Request) {
-
 	r.Middleware.Next()
 
 	var buffer strings.Builder
