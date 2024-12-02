@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -1283,12 +1284,12 @@ func Test_Issue3754(t *testing.T) {
 func Test_Issue3626(t *testing.T) {
 	table := "issue3626"
 	array := gstr.SplitAndTrim(gtest.DataContent(`issue3626.sql`), ";")
+	defer dropTable(table)
 	for _, v := range array {
 		if _, err := db.Exec(ctx, v); err != nil {
 			gtest.Error(err)
 		}
 	}
-	defer dropTable(table)
 
 	// Insert.
 	gtest.C(t, func(t *gtest.T) {
@@ -1375,6 +1376,37 @@ func Test_Issue3932(t *testing.T) {
 		one, err := db.Model(table).Order("id desc").Order("nickname asc").One()
 		t.AssertNil(err)
 		t.Assert(one["id"], 10)
+	})
+}
+
+// https://github.com/gogf/gf/issues/3968
+func Test_Issue3968(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		var hook = gdb.HookHandler{
+			Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
+				result, err = in.Next(ctx)
+				if err != nil {
+					return nil, err
+				}
+				if result != nil {
+					for i, _ := range result {
+						result[i]["location"] = gvar.New("ny")
+					}
+				}
+				return
+			},
+		}
+		var (
+			count  int
+			result gdb.Result
+		)
+		err := db.Model(table).Hook(hook).ScanAndCount(&result, &count, false)
+		t.AssertNil(err)
+		t.Assert(count, 10)
+		t.Assert(len(result), 10)
 	})
 }
 
