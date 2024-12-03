@@ -1409,3 +1409,51 @@ func Test_Issue3968(t *testing.T) {
 		t.Assert(len(result), 10)
 	})
 }
+
+// https://github.com/gogf/gf/issues/3915
+func Test_Issue3915(t *testing.T) {
+	table := "issue3915"
+	array := gstr.SplitAndTrim(gtest.DataContent(`issue3915.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		//db.SetDebug(true)
+		all, err := db.Model(table).Where("a < b").All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 1)
+
+		all, err = db.Model(table).Where(gdb.Raw("a < b")).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 1)
+
+		all, err = db.Model(table).WhereLT("a", gdb.Raw("`b`")).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 1)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		//db.SetDebug(true)
+		all, err := db.Model(table).Where("a > b").All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 2)
+
+		all, err = db.Model(table).Where(gdb.Raw("a > b")).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 2)
+
+		all, err = db.Model(table).WhereGT("a", gdb.Raw("`b`")).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 2)
+	})
+}
