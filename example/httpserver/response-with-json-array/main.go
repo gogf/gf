@@ -24,15 +24,7 @@ func main() {
 	oai.Config.CommonResponseDataField = "Data"
 	s.SetOpenApiPath("/api")
 	s.SetSwaggerPath("/swagger")
-	// if api.json requires authentication, add openApiBasicAuth handler
-	s.BindHookHandler(s.GetOpenApiPath(), ghttp.HookBeforeServe, openApiBasicAuth)
+
 	s.SetPort(8199)
 	s.Run()
-}
-
-func openApiBasicAuth(r *ghttp.Request) {
-	if !r.BasicAuth("OpenApiAuthUserName", "OpenApiAuthPass", "Restricted") {
-		r.ExitAll()
-		return
-	}
 }
