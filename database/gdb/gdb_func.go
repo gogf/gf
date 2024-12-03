@@ -608,7 +608,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 			// ===============================================================
 			if subModel, ok := in.Args[i].(*Model); ok {
 				index := -1
-				whereStr, _ = gregex.ReplaceStringFunc(`(\?)`, whereStr, func(s string) string {
+				whereStr = gstr.ReplaceFunc(whereStr, `?`, func(s string) string {
 					index++
 					if i+len(newArgs) == index {
 						sqlWithHolder, holderArgs := subModel.getHolderAndArgsAsSubModel(ctx)
@@ -843,7 +843,7 @@ func handleSliceAndStructArgsForSql(
 				counter  = 0
 				replaced = false
 			)
-			newSql, _ = gregex.ReplaceStringFunc(`\?`, newSql, func(s string) string {
+			newSql = gstr.ReplaceFunc(newSql, `?`, func(s string) string {
 				if replaced {
 					return s
 				}
@@ -861,7 +861,7 @@ func handleSliceAndStructArgsForSql(
 			// Do not append Raw arg to args but directly into the sql.
 			case Raw, *Raw:
 				var counter = 0
-				newSql, _ = gregex.ReplaceStringFunc(`\?`, newSql, func(s string) string {
+				newSql = gstr.ReplaceFunc(newSql, `?`, func(s string) string {
 					counter++
 					if counter == index+insertHolderCount+1 {
 						return gconv.String(oldArg)

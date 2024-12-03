@@ -9,12 +9,12 @@
 package gstr_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
-	"strings"
 )
 
 func Test_Replace(t *testing.T) {
@@ -215,5 +215,17 @@ func Test_ReplaceFunc(t *testing.T) {
 			return "g"
 		})
 		t.Assert(result, "g")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			origin  = "gggg"
+			search  = "g"
+			replace = "gg"
+		)
+		// Simple replacement
+		result := gstr.ReplaceFunc(origin, search, func(s string) string {
+			return replace
+		})
+		t.Assert(result, "gggggggg")
 	})
 }
