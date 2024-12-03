@@ -238,8 +238,8 @@ func Test_Issue3889(t *testing.T) {
 		commonResponseSchema := `{"properties":{"code":{"format":"int","type":"integer"},"data":{"properties":{},"type":"object"},"message":{"format":"string","type":"string"}},"type":"object"}`
 		Status201ExamplesContent := `{"code 1":{"value":{"code":1,"data":"Good","message":"Aha, 201 - 1"}},"code 2":{"value":{"code":2,"data":"Not Bad","message":"Aha, 201 - 2"}}}`
 		Status401ExamplesContent := `{"example 1":{"value":{"code":1,"data":null,"message":"Aha, 401 - 1"}},"example 2":{"value":{"code":2,"data":null,"message":"Aha, 401 - 2"}}}`
-		Status402SchemaContent := `{"$ref":"#/components/schemas/github.com.gogf.gf.v2.net.goai_test.Issue3889Res402"}`
-		Issue3889Res403Ref := `{"$ref":"#/components/schemas/github.com.gogf.gf.v2.net.goai_test.Issue3889Res403"}`
+		Status402SchemaContent := `{"$ref":"#/components/schemas/github.com.gogf.gf.v2.net.goai_test.Issue3889Res402","description":""}`
+		Issue3889Res403Ref := `{"$ref":"#/components/schemas/github.com.gogf.gf.v2.net.goai_test.Issue3889Res403","description":""}`
 
 		t.Assert(j.Get(`paths./default.post.responses.201.content.application/json.examples`).String(), Status201ExamplesContent)
 		t.Assert(j.Get(`paths./default.post.responses.401.content.application/json.examples`).String(), Status401ExamplesContent)
@@ -298,5 +298,54 @@ func Test_Issue3930(t *testing.T) {
 			reqPath = "github.com.gogf.gf.v2.net.goai_test.Issue3930DefaultRes"
 		)
 		t.AssertNE(api.Components.Schemas.Get(reqPath).Value.Properties.Get("id"), nil)
+	})
+}
+
+type Issue3235DefaultReq struct {
+	g.Meta `path:"/user/{id}" method:"get" tags:"User" summary:"Get one user"`
+	Id     int64 `v:"required" dc:"user id"`
+}
+type Issue3235DefaultRes struct {
+	Name string         `dc:"test name desc"`
+	User *Issue3235User `dc:"test user desc"`
+}
+type Issue3235User struct {
+	Id uint `json:"id"     orm:"id"     description:"user id"` // user id
+}
+
+type Issue3235 struct{}
+
+func (Issue3235) Default(ctx context.Context, req *Issue3235DefaultReq) (res *Issue3235DefaultRes, err error) {
+	res = &Issue3235DefaultRes{}
+	return
+}
+
+// https://github.com/gogf/gf/issues/3235
+func Test_Issue3235(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		s.Use(ghttp.MiddlewareHandlerResponse)
+		s.Group("/", func(group *ghttp.RouterGroup) {
+			group.Bind(
+				new(Issue3235),
+			)
+		})
+		s.SetLogger(nil)
+		s.SetOpenApiPath("/api.json")
+		s.SetDumpRouterMap(false)
+		s.Start()
+		defer s.Shutdown()
+
+		time.Sleep(100 * time.Millisecond)
+
+		var (
+			api     = s.GetOpenApi()
+			reqPath = "github.com.gogf.gf.v2.net.goai_test.Issue3235DefaultRes"
+		)
+
+		t.Assert(api.Components.Schemas.Get(reqPath).Value.Properties.Get("Name").Value.Description,
+			"test name desc")
+		t.Assert(api.Components.Schemas.Get(reqPath).Value.Properties.Get("User").Description,
+			"test user desc")
 	})
 }

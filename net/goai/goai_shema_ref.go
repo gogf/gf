@@ -19,8 +19,9 @@ import (
 type SchemaRefs []SchemaRef
 
 type SchemaRef struct {
-	Ref   string
-	Value *Schema
+	Ref         string
+	Description string
+	Value       *Schema
 }
 
 // isEmbeddedStructDefinition checks and returns whether given golang type is embedded struct definition, like:
@@ -169,6 +170,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 				}
 				schemaRef.Ref = structTypeName
 				schemaRef.Value = schema
+				schemaRef.Description = schema.Description
 			}
 		}
 	}
@@ -177,7 +179,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 
 func (r SchemaRef) MarshalJSON() ([]byte, error) {
 	if r.Ref != "" {
-		return formatRefToBytes(r.Ref), nil
+		return formatRefAndDescToBytes(r.Ref, r.Description), nil
 	}
 	return json.Marshal(r.Value)
 }
