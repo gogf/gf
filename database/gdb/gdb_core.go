@@ -393,13 +393,18 @@ func (c *Core) Save(ctx context.Context, table string, data interface{}, batch .
 }
 
 func (c *Core) fieldsToSequence(ctx context.Context, table string, fields []string) ([]string, error) {
+	schema, newTable := c.getSchemaTableName(table)
+	newTable = c.guessPrimaryTableName(newTable)
+
 	var (
 		fieldSet               = gset.NewStrSetFrom(fields)
 		fieldsResultInSequence = make([]string, 0)
-		tableFields, err       = c.db.TableFields(ctx, table)
+		//todo using incoming ctx may cause a failure to switch libraries in a transaction
+		tableFields, err = c.db.TableFields(context.TODO(), newTable, schema)
 	)
-	if err != nil {
-		return nil, err
+	//todo If no field is found, fields can be returned
+	if err != nil || len(tableFields) == 0 {
+		return fieldSet.Slice(), err
 	}
 	// Sort the fields in order.
 	var fieldsOfTableInSequence = make([]string, len(tableFields))
