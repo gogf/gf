@@ -21,3 +21,8 @@ func (s *Server) SetSwaggerUITemplate(swaggerUITemplate string) {
 func (s *Server) SetOpenApiPath(path string) {
 	s.config.OpenApiPath = path
 }
+
+// GetOpenApiPath get the OpenApiPath for server.
+func (s *Server) GetOpenApiPath() string {
+	return s.config.OpenApiPath
+}
