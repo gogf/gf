@@ -24,14 +24,14 @@ func Uint(any any) uint {
 }
 
 func doUint(any any) (uint, error) {
+	if any == nil {
+		return 0, nil
+	}
 	if v, ok := any.(uint); ok {
 		return v, nil
 	}
 	v, err := doUint64(any)
-	if err != nil {
-		return 0, err
-	}
-	return uint(v), nil
+	return uint(v), err
 }
 
 // Uint8 converts `any` to uint8.
@@ -41,14 +41,14 @@ func Uint8(any any) uint8 {
 }
 
 func doUint8(any any) (uint8, error) {
+	if any == nil {
+		return 0, nil
+	}
 	if v, ok := any.(uint8); ok {
 		return v, nil
 	}
 	v, err := doUint64(any)
-	if err != nil {
-		return 0, err
-	}
-	return uint8(v), nil
+	return uint8(v), err
 }
 
 // Uint16 converts `any` to uint16.
@@ -58,14 +58,14 @@ func Uint16(any any) uint16 {
 }
 
 func doUint16(any any) (uint16, error) {
+	if any == nil {
+		return 0, nil
+	}
 	if v, ok := any.(uint16); ok {
 		return v, nil
 	}
 	v, err := doUint64(any)
-	if err != nil {
-		return 0, err
-	}
-	return uint16(v), nil
+	return uint16(v), err
 }
 
 // Uint32 converts `any` to uint32.
@@ -75,14 +75,14 @@ func Uint32(any any) uint32 {
 }
 
 func doUint32(any any) (uint32, error) {
+	if any == nil {
+		return 0, nil
+	}
 	if v, ok := any.(uint32); ok {
 		return v, nil
 	}
 	v, err := doUint64(any)
-	if err != nil {
-		return 0, err
-	}
-	return uint32(v), nil
+	return uint32(v), err
 }
 
 // Uint64 converts `any` to uint64.
@@ -103,7 +103,7 @@ func doUint64(any any) (uint64, error) {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		val := rv.Int()
 		if val < 0 {
-			return 0, gerror.NewCodef(
+			return uint64(val), gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`cannot convert negative value "%d" to uint64`,
 				val,
@@ -117,7 +117,7 @@ func doUint64(any any) (uint64, error) {
 	case reflect.Float32, reflect.Float64:
 		val := rv.Float()
 		if val < 0 {
-			return 0, gerror.NewCodef(
+			return uint64(val), gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`cannot convert negative value "%f" to uint64`,
 				val,
