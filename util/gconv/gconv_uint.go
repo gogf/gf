@@ -7,6 +7,7 @@
 package gconv
 
 import (
+	"math"
 	"reflect"
 	"strconv"
 
@@ -166,6 +167,9 @@ func doUint64(any any) (uint64, error) {
 		}
 		// Float64
 		if v, err := doFloat64(any); err == nil {
+			if math.IsNaN(v) {
+				return 0, nil
+			}
 			return uint64(v), nil
 		}
 	default:
