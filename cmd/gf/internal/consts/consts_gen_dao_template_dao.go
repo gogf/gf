@@ -92,7 +92,7 @@ func (dao *{TplTableNameCamelCase}Dao) Columns() {TplTableNameCamelCase}Columns 
 	return dao.columns
 }
 
-// Group returns the configuration group name of database of current dao.
+// Group returns the database configuration group name of the current dao.
 func (dao *{TplTableNameCamelCase}Dao) Group() string {
 	return dao.group
 }
