@@ -45,5 +45,14 @@ func main() {
 			new(Hello),
 		)
 	})
+	// if api.json requires authentication, add openApiBasicAuth handler
+	s.BindHookHandler(s.GetOpenApiPath(), ghttp.HookBeforeServe, openApiBasicAuth)
 	s.Run()
+}
+
+func openApiBasicAuth(r *ghttp.Request) {
+	if !r.BasicAuth("OpenApiAuthUserName", "OpenApiAuthPass", "Restricted") {
+		r.ExitAll()
+		return
+	}
 }
