@@ -30,8 +30,6 @@ func (r *Request) Context() context.Context {
 	if RequestFromCtx(ctx) == nil {
 		// Inject Request object into context.
 		ctx = context.WithValue(ctx, ctxKeyForRequest, r)
-		// Add default tracing info if using default tracing provider.
-		ctx = gctx.WithCtx(ctx)
 		// Update the values of the original HTTP request.
 		*r.Request = *r.Request.WithContext(ctx)
 	}

@@ -25,7 +25,7 @@ func Test_New(t *testing.T) {
 func Test_WithCtx(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		ctx := context.WithValue(context.TODO(), "TEST", 1)
-		ctx = gctx.WithCtx(ctx)
+		ctx = gctx.WithSpan(ctx, "test")
 		t.AssertNE(gctx.CtxId(ctx), "")
 		t.Assert(ctx.Value("TEST"), 1)
 	})
