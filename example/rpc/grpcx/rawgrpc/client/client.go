@@ -13,14 +13,14 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/gogf/gf/contrib/registry/file/v2"
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
-	"github.com/gogf/gf/v2/os/gfile"
-
-	pb "github.com/gogf/gf/example/rpc/grpcx/rawgrpc/helloworld"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/os/gfile"
+
+	"github.com/gogf/gf/contrib/registry/file/v2"
+	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
+	pb "github.com/gogf/gf/example/rpc/grpcx/rawgrpc/helloworld"
 )
 
 func main() {

@@ -7,9 +7,9 @@
 package main
 
 import (
-	"fmt"
-
 	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
+
+	"fmt"
 
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/frame/g"

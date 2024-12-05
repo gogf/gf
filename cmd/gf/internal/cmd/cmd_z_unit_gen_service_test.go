@@ -10,11 +10,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/genservice"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gutil"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/genservice"
 )
 
 func Test_Gen_Service_Default(t *testing.T) {

@@ -28,10 +28,8 @@ const (
 	stackFilterKeyLocal = "/errors/gerror/gerror"
 )
 
-var (
-	// goRootForFilter is used for stack filtering in development environment purpose.
-	goRootForFilter = runtime.GOROOT()
-)
+// goRootForFilter is used for stack filtering in development environment purpose.
+var goRootForFilter = runtime.GOROOT()
 
 func init() {
 	if goRootForFilter != "" {

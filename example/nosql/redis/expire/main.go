@@ -7,10 +7,10 @@
 package main
 
 import (
+	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
+
 	"fmt"
 	"time"
-
-	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"

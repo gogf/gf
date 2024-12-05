@@ -10,15 +10,15 @@ import (
 	"testing"
 	"time"
 
-	consul "github.com/gogf/gf/contrib/config/consul/v2"
-
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/guid"
 	"github.com/hashicorp/consul/api"
 	"github.com/hashicorp/go-cleanhttp"
 
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
+
+	consul "github.com/gogf/gf/contrib/config/consul/v2"
 )
 
 func TestConsul(t *testing.T) {

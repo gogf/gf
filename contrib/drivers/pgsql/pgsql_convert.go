@@ -8,9 +8,10 @@ package pgsql
 
 import (
 	"context"
-	"github.com/lib/pq"
 	"reflect"
 	"strings"
+
+	"github.com/lib/pq"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
