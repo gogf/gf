@@ -57,6 +57,7 @@ func Test_Gen_Service_Default(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(files, []string{
 			dstFolder + filepath.FromSlash("/article.go"),
+			dstFolder + filepath.FromSlash("/base.go"),
 			dstFolder + filepath.FromSlash("/delivery.go"),
 			dstFolder + filepath.FromSlash("/user.go"),
 		})
@@ -65,6 +66,7 @@ func Test_Gen_Service_Default(t *testing.T) {
 		testPath := gtest.DataPath("genservice", "service")
 		expectFiles := []string{
 			testPath + filepath.FromSlash("/article.go"),
+			testPath + filepath.FromSlash("/base.go"),
 			testPath + filepath.FromSlash("/delivery.go"),
 			testPath + filepath.FromSlash("/user.go"),
 		}
