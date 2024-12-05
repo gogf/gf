@@ -83,6 +83,8 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 		   	password varchar(32) NOT NULL,
 		   	nickname varchar(45) NOT NULL,
 		   	create_time timestamp NOT NULL,
+		    favorite_movie varchar[],
+		    favorite_music text[],
 		   	PRIMARY KEY (id)
 		) ;`, name,
 	)); err != nil {
