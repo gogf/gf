@@ -7,6 +7,7 @@
 package gi18n_test
 
 import (
+	"os"
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gbase64"
@@ -77,6 +78,58 @@ func Test_Basic(t *testing.T) {
 	})
 }
 
+func Test_BasicFS(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		i18n := gi18n.New(gi18n.Options{
+			PathFs: os.DirFS(gtest.DataPath("i18n")),
+		})
+		i18n.SetLanguage("none")
+		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "{#hello}{#world}")
+
+		i18n.SetLanguage("ja")
+		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "こんにちは世界")
+
+		i18n.SetLanguage("zh-CN")
+		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "你好世界")
+		i18n.SetDelimiters("{$", "}")
+		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "{#hello}{#world}")
+		t.Assert(i18n.T(context.Background(), "{$hello}{$world}"), "你好世界")
+		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "{#hello}{#world}")
+		t.Assert(i18n.T(context.Background(), "{$你好} {$世界}"), "hello world")
+		// undefined variables.
+		t.Assert(i18n.T(context.Background(), "{$你好1}{$世界1}"), "{$你好1}{$世界1}")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		i18n := gi18n.New(gi18n.Options{
+			PathFs: os.DirFS(gtest.DataPath("i18n-file")),
+		})
+		i18n.SetLanguage("none")
+		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "{#hello}{#world}")
+
+		i18n.SetLanguage("ja")
+		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "こんにちは世界")
+
+		i18n.SetLanguage("zh-CN")
+		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "你好世界")
+		t.Assert(i18n.T(context.Background(), "{#你好} {#世界}"), "hello world")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		i18n := gi18n.New(gi18n.Options{
+			PathFs: os.DirFS(gdebug.CallerDirectory() + gfile.Separator + "testdata" + gfile.Separator + "i18n-dir"),
+		})
+		i18n.SetLanguage("none")
+		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "{#hello}{#world}")
+
+		i18n.SetLanguage("ja")
+		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "こんにちは世界")
+
+		i18n.SetLanguage("zh-CN")
+		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "你好世界")
+	})
+}
+
 func Test_TranslateFormat(t *testing.T) {
 	// Tf
 	gtest.C(t, func(t *gtest.T) {
@@ -108,6 +161,36 @@ func Test_DefaultManager(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		err := gi18n.SetPath(gdebug.CallerDirectory() + gfile.Separator + "testdata" + gfile.Separator + "i18n-dir")
+		t.AssertNil(err)
+
+		gi18n.SetLanguage("none")
+		t.Assert(gi18n.Translate(context.Background(), "{#hello}{#world}"), "{#hello}{#world}")
+
+		gi18n.SetLanguage("ja")
+		t.Assert(gi18n.Translate(context.Background(), "{#hello}{#world}"), "こんにちは世界")
+
+		gi18n.SetLanguage("zh-CN")
+		t.Assert(gi18n.Translate(context.Background(), "{#hello}{#world}"), "你好世界")
+	})
+}
+
+func Test_FSDefaultManager(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := gi18n.SetPathFS(os.DirFS(gtest.DataPath("i18n")))
+		t.AssertNil(err)
+
+		gi18n.SetLanguage("none")
+		t.Assert(gi18n.T(context.Background(), "{#hello}{#world}"), "{#hello}{#world}")
+
+		gi18n.SetLanguage("ja")
+		t.Assert(gi18n.T(context.Background(), "{#hello}{#world}"), "こんにちは世界")
+
+		gi18n.SetLanguage("zh-CN")
+		t.Assert(gi18n.T(context.Background(), "{#hello}{#world}"), "你好世界")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		err := gi18n.SetPathFS(os.DirFS(gdebug.CallerDirectory() + gfile.Separator + "testdata" + gfile.Separator + "i18n-dir"))
 		t.AssertNil(err)
 
 		gi18n.SetLanguage("none")
