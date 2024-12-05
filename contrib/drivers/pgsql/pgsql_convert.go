@@ -8,6 +8,7 @@ package pgsql
 
 import (
 	"context"
+	"github.com/lib/pq"
 	"reflect"
 	"strings"
 
@@ -72,6 +73,10 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 		"_int8":
 		return gdb.LocalTypeInt64Slice, nil
 
+	case
+		"_varchar", "_text":
+		return gdb.LocalTypeStringSlice, nil
+
 	default:
 		return d.Core.CheckLocalTypeForField(ctx, fieldType, fieldValue)
 	}
@@ -115,6 +120,14 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 				},
 			),
 		), nil
+
+	// String slice.
+	case "_varchar", "_text":
+		var result pq.StringArray
+		if err := result.Scan(fieldValue); err != nil {
+			return nil, err
+		}
+		return result, nil
 
 	default:
 		return d.Core.ConvertValueForLocal(ctx, fieldType, fieldValue)

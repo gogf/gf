@@ -611,3 +611,62 @@ func Test_OrderRandom(t *testing.T) {
 		t.Assert(len(result), TableSize)
 	})
 }
+
+func Test_ConvertSliceString(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id            int
+			Passport      string
+			Password      string
+			NickName      string
+			CreateTime    *gtime.Time
+			FavoriteMovie []string
+			FavoriteMusic []string
+		}
+
+		var (
+			user  User
+			user2 User
+			err   error
+		)
+
+		// slice string not null
+		_, err = db.Model(table).Data(g.Map{
+			"id":             1,
+			"passport":       "p1",
+			"password":       "pw1",
+			"nickname":       "n1",
+			"create_time":    CreateTime,
+			"favorite_movie": g.Slice{"Iron-Man", "Spider-Man"},
+			"favorite_music": g.Slice{"Hey jude", "Let it be"},
+		}).Insert()
+		t.AssertNil(err)
+
+		err = db.Model(table).Where("id", 1).Scan(&user)
+		t.AssertNil(err)
+		t.Assert(len(user.FavoriteMusic), 2)
+		t.Assert(user.FavoriteMusic[0], "Hey jude")
+		t.Assert(user.FavoriteMusic[1], "Let it be")
+		t.Assert(len(user.FavoriteMovie), 2)
+		t.Assert(user.FavoriteMovie[0], "Iron-Man")
+		t.Assert(user.FavoriteMovie[1], "Spider-Man")
+
+		// slice string null
+		_, err = db.Model(table).Data(g.Map{
+			"id":          2,
+			"passport":    "p1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": CreateTime,
+		}).Insert()
+		t.AssertNil(err)
+
+		err = db.Model(table).Where("id", 2).Scan(&user2)
+		t.AssertNil(err)
+		t.Assert(user2.FavoriteMusic, nil)
+		t.Assert(len(user2.FavoriteMovie), 0)
+	})
+}

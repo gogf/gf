@@ -458,6 +458,7 @@ const (
 	LocalTypeIntSlice    LocalType = "[]int"
 	LocalTypeInt64Slice  LocalType = "[]int64"
 	LocalTypeUint64Slice LocalType = "[]uint64"
+	LocalTypeStringSlice LocalType = "[]string"
 	LocalTypeInt64Bytes  LocalType = "int64-bytes"
 	LocalTypeUint64Bytes LocalType = "uint64-bytes"
 	LocalTypeFloat32     LocalType = "float32"
