@@ -8,7 +8,6 @@ package ghttp_test
 
 import (
 	"compress/gzip"
-	"context"
 	"fmt"
 	"io"
 	"strings"
@@ -23,7 +22,6 @@ import (
 
 func Test_Middleware_Gzip(t *testing.T) {
 	s := g.Server(guid.S())
-	
 	// Routes with GZIP enabled
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(ghttp.MiddlewareGzip)
@@ -47,7 +45,6 @@ func Test_Middleware_Gzip(t *testing.T) {
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
 
-	ctx := context.Background()
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
