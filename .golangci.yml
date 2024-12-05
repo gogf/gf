@@ -43,6 +43,7 @@ linters:
     - goconst       # Finds repeated strings that could be replaced by a constant
     - gocritic      # Provides diagnostics that check for bugs, performance and style issues.
     - gofmt         # Gofmt checks whether code was gofmt-ed. By default this tool runs with -s option to check for code simplification
+    - goimports     # Check import statements are formatted according to the 'goimport' command. Reformat imports in autofix mode.
     - gosimple      # Linter for Go source code that specializes in simplifying code
     - govet         # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string
     - misspell      # Finds commonly misspelled English words in comments
@@ -79,7 +80,11 @@ linters-settings:
     locale: US
     ignore-words:
       - cancelled
-
+  goimports:
+    # A comma-separated list of prefixes, which, if set, checks import paths
+    # with the given prefixes are grouped after 3rd-party packages.
+    # Default: ""
+    local-prefixes: github.com/gogf/gf/v2
   # https://golangci-lint.run/usage/linters/#revive
   # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md
   revive:
