@@ -144,6 +144,7 @@ type DB interface {
 
 	Begin(ctx context.Context) (TX, error)                                           // See Core.Begin.
 	Transaction(ctx context.Context, f func(ctx context.Context, tx TX) error) error // See Core.Transaction.
+	TransactionWithOptions(ctx context.Context, opts TransactionOptions, f func(ctx context.Context, tx TX) error) error
 
 	// ===========================================================================
 	// Configuration methods.
@@ -198,6 +199,7 @@ type TX interface {
 	Commit() error
 	Rollback() error
 	Transaction(ctx context.Context, f func(ctx context.Context, tx TX) error) (err error)
+	TransactionWithOptions(ctx context.Context, opts TransactionOptions, f func(ctx context.Context, tx TX) error) error
 
 	// ===========================================================================
 	// Core method.
@@ -640,7 +642,7 @@ func Instance(name ...string) (db DB, err error) {
 // The returned node is a clone of configuration node, which is safe for later modification.
 //
 // The parameter `master` specifies whether retrieving a master node, or else a slave node
-// if master-slave configured.
+// if master-slave nodes are configured.
 func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 	if list, ok := configs.config[group]; ok {
 		// Separates master and slave configuration nodes array.
