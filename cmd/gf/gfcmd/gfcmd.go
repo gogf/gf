@@ -7,10 +7,10 @@
 package gfcmd
 
 import (
-	_ "github.com/gogf/gf/cmd/gf/v2/internal/packed"
-
 	"context"
 	"runtime"
+
+	_ "github.com/gogf/gf/cmd/gf/v2/internal/packed"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"

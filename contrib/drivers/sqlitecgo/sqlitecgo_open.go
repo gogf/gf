@@ -13,10 +13,10 @@
 package sqlitecgo
 
 import (
-	_ "github.com/mattn/go-sqlite3"
-
 	"database/sql"
 	"fmt"
+
+	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/encoding/gurl"

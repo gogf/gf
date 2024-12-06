@@ -7,11 +7,11 @@
 package oracle_test
 
 import (
-	_ "github.com/sijms/go-ora/v2"
-
 	"context"
 	"fmt"
 	"strings"
+
+	_ "github.com/sijms/go-ora/v2"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"

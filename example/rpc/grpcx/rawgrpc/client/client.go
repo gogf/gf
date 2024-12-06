@@ -20,6 +20,7 @@ import (
 
 	"github.com/gogf/gf/contrib/registry/file/v2"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
+
 	pb "github.com/gogf/gf/example/rpc/grpcx/rawgrpc/helloworld"
 )
 

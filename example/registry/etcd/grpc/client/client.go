@@ -12,6 +12,7 @@ import (
 
 	"github.com/gogf/gf/contrib/registry/etcd/v2"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
+
 	"github.com/gogf/gf/example/registry/etcd/grpc/protobuf"
 )
 

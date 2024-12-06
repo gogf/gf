@@ -21,6 +21,7 @@ import (
 	"github.com/gogf/gf/v2/os/gfile"
 
 	"github.com/gogf/gf/contrib/registry/file/v2"
+
 	"github.com/gogf/gf/example/rpc/grpcx/rawgrpc/helloworld"
 )
 

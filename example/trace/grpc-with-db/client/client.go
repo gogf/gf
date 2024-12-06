@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/contrib/registry/etcd/v2"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/contrib/trace/otlpgrpc/v2"
+
 	"github.com/gogf/gf/example/trace/grpc-with-db/protobuf/user"
 )
 
