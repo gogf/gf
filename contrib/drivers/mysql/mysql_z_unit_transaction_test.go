@@ -8,6 +8,7 @@ package mysql_test
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"testing"
 
@@ -1159,7 +1160,7 @@ func Test_Transaction_Propagation(t *testing.T) {
 			t.AssertNil(err)
 
 			// Nested transaction with PropagationRequired
-			err = tx.TransactionWithOptions(ctx, gdb.TransactionOptions{
+			err = tx.TransactionWithOptions(ctx, gdb.TxOptions{
 				Propagation: gdb.PropagationRequired,
 			}, func(ctx context.Context, tx2 gdb.TX) error {
 				// Should use the same transaction
@@ -1195,7 +1196,7 @@ func Test_Transaction_Propagation(t *testing.T) {
 			t.AssertNil(err)
 
 			// Inner transaction with PropagationRequiresNew
-			err = tx.TransactionWithOptions(ctx, gdb.TransactionOptions{
+			err = tx.TransactionWithOptions(ctx, gdb.TxOptions{
 				Propagation: gdb.PropagationRequiresNew,
 			}, func(ctx context.Context, tx2 gdb.TX) error {
 				// This is a new transaction
@@ -1233,7 +1234,7 @@ func Test_Transaction_Propagation(t *testing.T) {
 			t.AssertNil(err)
 
 			// Nested transaction
-			err = tx.TransactionWithOptions(ctx, gdb.TransactionOptions{
+			err = tx.TransactionWithOptions(ctx, gdb.TxOptions{
 				Propagation: gdb.PropagationNested,
 			}, func(ctx context.Context, tx2 gdb.TX) error {
 				_, _ = tx2.Insert(table, g.Map{
@@ -1281,7 +1282,7 @@ func Test_Transaction_Propagation(t *testing.T) {
 			t.AssertNil(err)
 
 			// Non-transactional operation
-			err = tx.TransactionWithOptions(ctx, gdb.TransactionOptions{
+			err = tx.TransactionWithOptions(ctx, gdb.TxOptions{
 				Propagation: gdb.PropagationNotSupported,
 			}, func(ctx context.Context, tx2 gdb.TX) error {
 				// Should execute without transaction
@@ -1313,7 +1314,7 @@ func Test_Transaction_Propagation(t *testing.T) {
 		defer dropTable(table)
 
 		// Test PropagationMandatory
-		err := db.TransactionWithOptions(ctx, gdb.TransactionOptions{
+		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
 			Propagation: gdb.PropagationMandatory,
 		}, func(ctx context.Context, tx gdb.TX) error {
 			return nil
@@ -1323,7 +1324,7 @@ func Test_Transaction_Propagation(t *testing.T) {
 
 		// Test within an existing transaction
 		err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
-			return tx.TransactionWithOptions(ctx, gdb.TransactionOptions{
+			return tx.TransactionWithOptions(ctx, gdb.TxOptions{
 				Propagation: gdb.PropagationMandatory,
 			}, func(ctx context.Context, tx2 gdb.TX) error {
 				// Should succeed because transaction exists
@@ -1342,7 +1343,7 @@ func Test_Transaction_Propagation(t *testing.T) {
 		defer dropTable(table)
 
 		// Test PropagationNever
-		err := db.TransactionWithOptions(ctx, gdb.TransactionOptions{
+		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
 			Propagation: gdb.PropagationNever,
 		}, func(ctx context.Context, tx gdb.TX) error {
 			// Should execute without transaction
@@ -1357,7 +1358,7 @@ func Test_Transaction_Propagation(t *testing.T) {
 
 		// Test within an existing transaction
 		err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
-			return tx.TransactionWithOptions(ctx, gdb.TransactionOptions{
+			return tx.TransactionWithOptions(ctx, gdb.TxOptions{
 				Propagation: gdb.PropagationNever,
 			}, func(ctx context.Context, tx2 gdb.TX) error {
 				return nil
@@ -1385,7 +1386,7 @@ func Test_Transaction_Propagation_Complex(t *testing.T) {
 			t.AssertNil(err)
 
 			// First nested transaction (NESTED)
-			err = tx1.TransactionWithOptions(ctx, gdb.TransactionOptions{
+			err = tx1.TransactionWithOptions(ctx, gdb.TxOptions{
 				Propagation: gdb.PropagationNested,
 			}, func(ctx context.Context, tx2 gdb.TX) error {
 				_, err := tx2.Insert(table1, g.Map{
@@ -1395,7 +1396,7 @@ func Test_Transaction_Propagation_Complex(t *testing.T) {
 				t.AssertNil(err)
 
 				// Second nested transaction (REQUIRES_NEW)
-				err = tx2.TransactionWithOptions(ctx, gdb.TransactionOptions{
+				err = tx2.TransactionWithOptions(ctx, gdb.TxOptions{
 					Propagation: gdb.PropagationRequiresNew,
 				}, func(ctx context.Context, tx3 gdb.TX) error {
 					_, _ = tx3.Insert(table1, g.Map{
@@ -1408,7 +1409,7 @@ func Test_Transaction_Propagation_Complex(t *testing.T) {
 				t.AssertNE(err, nil)
 
 				// Third nested transaction (NESTED)
-				return tx2.TransactionWithOptions(ctx, gdb.TransactionOptions{
+				return tx2.TransactionWithOptions(ctx, gdb.TxOptions{
 					Propagation: gdb.PropagationNested,
 				}, func(ctx context.Context, tx3 gdb.TX) error {
 					_, _ = tx3.Insert(table1, g.Map{
@@ -1423,7 +1424,7 @@ func Test_Transaction_Propagation_Complex(t *testing.T) {
 
 			// Fourth transaction (NOT_SUPPORTED)
 			// Note that, it locks table if it continues using table1.
-			err = tx1.TransactionWithOptions(ctx, gdb.TransactionOptions{
+			err = tx1.TransactionWithOptions(ctx, gdb.TxOptions{
 				Propagation: gdb.PropagationNotSupported,
 			}, func(ctx context.Context, tx2 gdb.TX) error {
 				// Should execute without transaction
@@ -1485,7 +1486,7 @@ func Test_Transaction_Propagation_Complex(t *testing.T) {
 			t.AssertNil(err)
 
 			// Suspend current transaction (NOT_SUPPORTED)
-			err = tx1.TransactionWithOptions(ctx, gdb.TransactionOptions{
+			err = tx1.TransactionWithOptions(ctx, gdb.TxOptions{
 				Propagation: gdb.PropagationNotSupported,
 			}, func(ctx context.Context, tx2 gdb.TX) error {
 				// Should execute without transaction
@@ -1531,5 +1532,111 @@ func Test_Transaction_Propagation_Complex(t *testing.T) {
 		count, err = db.Model(table).Where("passport", "independent").Count()
 		t.AssertNil(err)
 		t.Assert(count, int64(1))
+	})
+}
+
+func Test_Transaction_Isolation(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test Read Uncommitted (Dirty Read)
+		var value1, value2 string
+
+		// Transaction 1: Update but don't commit
+		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
+			Isolation: sql.LevelReadUncommitted,
+		}, func(ctx context.Context, tx1 gdb.TX) error {
+			// Modify data
+			_, err := tx1.Update(table, g.Map{"passport": "changed"}, "id=1")
+			t.AssertNil(err)
+
+			// Transaction 2: Read uncommitted data
+			err = db.TransactionWithOptions(ctx, gdb.TxOptions{
+				Isolation: sql.LevelReadUncommitted,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				v, err := tx2.Model(table).Where("id=1").Value("passport")
+				t.AssertNil(err)
+				value1 = v.String()
+				return nil
+			})
+			t.AssertNil(err)
+
+			// Rollback Transaction 1
+			return gerror.New("rollback")
+		})
+		t.AssertNE(err, nil)
+
+		// Read final value
+		v, err := db.Model(table).Where("id=1").Value("passport")
+		t.AssertNil(err)
+		value2 = v.String()
+
+		// In Read Uncommitted, value1 should see the uncommitted change
+		t.Assert(value1, "changed")
+		// After rollback, value2 should be the original value
+		t.Assert(value2, "user_1")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test Read Committed (No Dirty Read)
+		var value1, value2 string
+
+		// Transaction 1: Update but don't commit
+		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
+			Isolation: sql.LevelReadCommitted,
+		}, func(ctx context.Context, tx1 gdb.TX) error {
+			// Modify data
+			_, err := tx1.Update(table, g.Map{"passport": "changed"}, "id=1")
+			t.AssertNil(err)
+
+			// Transaction 2: Try to read uncommitted data
+			err = db.TransactionWithOptions(ctx, gdb.TxOptions{
+				Isolation: sql.LevelReadCommitted,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				v, err := tx2.Model(table).Where("id=1").Value("passport")
+				t.AssertNil(err)
+				value1 = v.String()
+				return nil
+			})
+			t.AssertNil(err)
+
+			// Rollback Transaction 1
+			return gerror.New("rollback")
+		})
+		t.AssertNE(err, nil)
+
+		// Read final value
+		v, err := db.Model(table).Where("id=1").Value("passport")
+		t.AssertNil(err)
+		value2 = v.String()
+
+		// In Read Committed, value1 should NOT see the uncommitted change
+		t.Assert(value1, "user_1")
+		// After rollback, value2 should be the original value
+		t.Assert(value2, "user_1")
+	})
+}
+
+func Test_Transaction_ReadOnly(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test read-only transaction
+		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
+			ReadOnly: true,
+		}, func(ctx context.Context, tx gdb.TX) error {
+			// Try to modify data in read-only transaction
+			_, err := tx.Update(table, g.Map{"passport": "changed"}, "id=1")
+			// Should return error
+			return err
+		})
+		t.AssertNE(err, nil)
+
+		// Verify data was not modified
+		v, err := db.Model(table).Where("id=1").Value("passport")
+		t.AssertNil(err)
+		t.Assert(v.String(), "user_1")
 	})
 }

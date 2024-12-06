@@ -144,7 +144,7 @@ type DB interface {
 
 	Begin(ctx context.Context) (TX, error)                                           // See Core.Begin.
 	Transaction(ctx context.Context, f func(ctx context.Context, tx TX) error) error // See Core.Transaction.
-	TransactionWithOptions(ctx context.Context, opts TransactionOptions, f func(ctx context.Context, tx TX) error) error
+	TransactionWithOptions(ctx context.Context, opts TxOptions, f func(ctx context.Context, tx TX) error) error
 
 	// ===========================================================================
 	// Configuration methods.
@@ -199,7 +199,7 @@ type TX interface {
 	Commit() error
 	Rollback() error
 	Transaction(ctx context.Context, f func(ctx context.Context, tx TX) error) (err error)
-	TransactionWithOptions(ctx context.Context, opts TransactionOptions, f func(ctx context.Context, tx TX) error) error
+	TransactionWithOptions(ctx context.Context, opts TxOptions, f func(ctx context.Context, tx TX) error) error
 
 	// ===========================================================================
 	// Core method.
@@ -289,6 +289,7 @@ type DoCommitInput struct {
 	Sql           string
 	Args          []interface{}
 	Type          SqlType
+	TxOptions     sql.TxOptions
 	IsTransaction bool
 }
 

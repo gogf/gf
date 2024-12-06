@@ -156,7 +156,7 @@ func (tx *TXCore) Transaction(ctx context.Context, f func(ctx context.Context, t
 
 // TransactionWithOptions wraps the transaction logic with propagation options using function `f`.
 func (tx *TXCore) TransactionWithOptions(
-	ctx context.Context, opts TransactionOptions, f func(ctx context.Context, tx TX) error,
+	ctx context.Context, opts TxOptions, f func(ctx context.Context, tx TX) error,
 ) (err error) {
 	return tx.db.TransactionWithOptions(ctx, opts, f)
 }

@@ -187,7 +187,7 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 	// Execution cased by type.
 	switch in.Type {
 	case SqlTypeBegin:
-		if sqlTx, err = in.Db.Begin(); err == nil {
+		if sqlTx, err = in.Db.BeginTx(ctx, &in.TxOptions); err == nil {
 			out.Tx = &TXCore{
 				db:            c.db,
 				tx:            sqlTx,

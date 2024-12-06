@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -18,27 +19,40 @@ import (
 type Propagation string
 
 const (
-	// PropagationRequired - Support a current transaction, create a new one if none exists.
-	PropagationRequired Propagation = "REQUIRED"
-	// PropagationSupports - Support a current transaction, execute non-transactional if none exists.
+	// PropagationRequired starts a new transaction if not in a transaction,
+	// or uses the existing transaction if already in a transaction.
+	PropagationRequired Propagation = "" // REQUIRED
+
+	// PropagationSupports executes within the existing transaction if present,
+	// otherwise executes without transaction.
 	PropagationSupports Propagation = "SUPPORTS"
-	// PropagationMandatory - Support a current transaction, throw an exception if none exists.
-	PropagationMandatory Propagation = "MANDATORY"
-	// PropagationRequiresNew - Create a new transaction, and suspend the current transaction if one exists.
+
+	// PropagationRequiresNew starts a new transaction, and suspends the current transaction if one exists.
 	PropagationRequiresNew Propagation = "REQUIRES_NEW"
-	// PropagationNotSupported - Execute non-transactional, suspend the current transaction if one exists.
-	PropagationNotSupported Propagation = "NOT_SUPPORTED"
-	// PropagationNever - Execute non-transactional, throw an exception if a transaction exists.
-	PropagationNever Propagation = "NEVER"
-	// PropagationNested - Execute within a nested transaction if a current transaction exists,
-	// behave like PropagationRequired else.
+
+	// PropagationNested starts a nested transaction if already in a transaction,
+	// or behaves like PropagationRequired if not in a transaction.
 	PropagationNested Propagation = "NESTED"
+
+	// PropagationNotSupported executes non-transactionally, suspends any existing transaction.
+	PropagationNotSupported Propagation = "NOT_SUPPORTED"
+
+	// PropagationMandatory executes in a transaction, fails if no existing transaction.
+	PropagationMandatory Propagation = "MANDATORY"
+
+	// PropagationNever executes non-transactionally, fails if in an existing transaction.
+	PropagationNever Propagation = "NEVER"
 )
 
-// TransactionOptions defines options for transaction.
-type TransactionOptions struct {
+// TxOptions defines options for transaction control.
+type TxOptions struct {
 	// Propagation specifies the propagation behavior.
 	Propagation Propagation
+	// Isolation is the transaction isolation level.
+	// If zero, the driver or database's default level is used.
+	Isolation sql.IsolationLevel
+	// ReadOnly is used to mark the transaction as read-only.
+	ReadOnly bool
 }
 
 const (
@@ -50,8 +64,8 @@ const (
 var transactionIdGenerator = gtype.NewUint64()
 
 // DefaultTxOptions returns the default transaction options.
-func DefaultTxOptions() TransactionOptions {
-	return TransactionOptions{
+func DefaultTxOptions() TxOptions {
+	return TxOptions{
 		Propagation: PropagationRequired,
 	}
 }
@@ -61,10 +75,10 @@ func DefaultTxOptions() TransactionOptions {
 // if you no longer use the transaction. Commit or Rollback functions will also
 // close the transaction automatically.
 func (c *Core) Begin(ctx context.Context) (tx TX, err error) {
-	return c.doBeginCtx(ctx)
+	return c.doBeginCtx(ctx, sql.TxOptions{})
 }
 
-func (c *Core) doBeginCtx(ctx context.Context) (TX, error) {
+func (c *Core) doBeginCtx(ctx context.Context, opts sql.TxOptions) (TX, error) {
 	master, err := c.db.Master()
 	if err != nil {
 		return nil, err
@@ -74,6 +88,7 @@ func (c *Core) doBeginCtx(ctx context.Context) (TX, error) {
 		Db:            master,
 		Sql:           "BEGIN",
 		Type:          SqlTypeBegin,
+		TxOptions:     opts,
 		IsTransaction: true,
 	})
 	return out.Tx, err
@@ -92,7 +107,7 @@ func (c *Core) Transaction(ctx context.Context, f func(ctx context.Context, tx T
 
 // TransactionWithOptions wraps the transaction logic with propagation options using function `f`.
 func (c *Core) TransactionWithOptions(
-	ctx context.Context, opts TransactionOptions, f func(ctx context.Context, tx TX) error,
+	ctx context.Context, opts TxOptions, f func(ctx context.Context, tx TX) error,
 ) (err error) {
 	if ctx == nil {
 		ctx = c.db.GetCtx()
@@ -109,13 +124,10 @@ func (c *Core) TransactionWithOptions(
 		if currentTx != nil {
 			return currentTx.Transaction(ctx, f)
 		}
-		return c.handleNewTransaction(ctx, f)
+		return c.createNewTransaction(ctx, opts, f)
 
 	case PropagationSupports:
-		if currentTx != nil {
-			return f(ctx, currentTx)
-		}
-		return f(ctx, nil)
+		return f(ctx, currentTx)
 
 	case PropagationMandatory:
 		if currentTx == nil {
@@ -127,7 +139,7 @@ func (c *Core) TransactionWithOptions(
 		return f(ctx, currentTx)
 
 	case PropagationRequiresNew:
-		return c.handleNewTransaction(ctx, f)
+		return c.createNewTransaction(ctx, opts, f)
 
 	case PropagationNotSupported:
 		ctx = WithoutTX(ctx, group)
@@ -157,7 +169,7 @@ func (c *Core) TransactionWithOptions(
 			}()
 			return f(ctx, currentTx)
 		}
-		return c.handleNewTransaction(ctx, f)
+		return c.createNewTransaction(ctx, opts, f)
 
 	default:
 		return gerror.NewCodef(
@@ -168,9 +180,15 @@ func (c *Core) TransactionWithOptions(
 	}
 }
 
-// handleNewTransaction handles creating and managing a new transaction
-func (c *Core) handleNewTransaction(ctx context.Context, f func(ctx context.Context, tx TX) error) (err error) {
-	tx, err := c.doBeginCtx(ctx)
+// createNewTransaction handles creating and managing a new transaction
+func (c *Core) createNewTransaction(
+	ctx context.Context, opts TxOptions, f func(ctx context.Context, tx TX) error,
+) (err error) {
+	// Begin transaction with options
+	tx, err := c.doBeginCtx(ctx, sql.TxOptions{
+		Isolation: opts.Isolation,
+		ReadOnly:  opts.ReadOnly,
+	})
 	if err != nil {
 		return err
 	}
