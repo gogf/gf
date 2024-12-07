@@ -187,7 +187,13 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 	// Execution cased by type.
 	switch in.Type {
 	case SqlTypeBegin:
-		if sqlTx, err = in.Db.Begin(); err == nil {
+		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctx, ctxTimeoutTypeTrans)
+		defer cancelFuncForTimeout()
+		formattedSql = fmt.Sprintf(
+			`%s (IosolationLevel: %s, ReadOnly: %t)`,
+			formattedSql, in.TxOptions.Isolation.String(), in.TxOptions.ReadOnly,
+		)
+		if sqlTx, err = in.Db.BeginTx(ctx, &in.TxOptions); err == nil {
 			out.Tx = &TXCore{
 				db:            c.db,
 				tx:            sqlTx,
@@ -206,6 +212,8 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 		err = in.Tx.Rollback()
 
 	case SqlTypeExecContext:
+		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctx, ctxTimeoutTypeExec)
+		defer cancelFuncForTimeout()
 		if c.db.GetDryRun() {
 			sqlResult = new(SqlResult)
 		} else {
@@ -214,10 +222,14 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 		out.RawResult = sqlResult
 
 	case SqlTypeQueryContext:
+		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctx, ctxTimeoutTypeQuery)
+		defer cancelFuncForTimeout()
 		sqlRows, err = in.Link.QueryContext(ctx, in.Sql, in.Args...)
 		out.RawResult = sqlRows
 
 	case SqlTypePrepareContext:
+		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctx, ctxTimeoutTypePrepare)
+		defer cancelFuncForTimeout()
 		sqlStmt, err = in.Link.PrepareContext(ctx, in.Sql)
 		out.RawResult = sqlStmt
 
