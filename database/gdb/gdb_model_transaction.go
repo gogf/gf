@@ -26,3 +26,17 @@ func (m *Model) Transaction(ctx context.Context, f func(ctx context.Context, tx 
 	}
 	return m.db.Transaction(ctx, f)
 }
+
+// TransactionWithOptions executes transaction with options.
+// The parameter `opts` specifies the transaction options.
+// The parameter `f` specifies the function that will be called within the transaction.
+// If f returns error, the transaction will be rolled back, or else the transaction will be committed.
+func (m *Model) TransactionWithOptions(ctx context.Context, opts TxOptions, f func(ctx context.Context, tx TX) error) (err error) {
+	if ctx == nil {
+		ctx = m.GetCtx()
+	}
+	if m.tx != nil {
+		return m.tx.Transaction(ctx, f)
+	}
+	return m.db.TransactionWithOptions(ctx, opts, f)
+}
