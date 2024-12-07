@@ -33,15 +33,13 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 )
 
-var (
-	// Alias for charsets.
-	charsetAlias = map[string]string{
-		"HZGB2312": "HZ-GB-2312",
-		"hzgb2312": "HZ-GB-2312",
-		"GB2312":   "HZ-GB-2312",
-		"gb2312":   "HZ-GB-2312",
-	}
-)
+// Alias for charsets.
+var charsetAlias = map[string]string{
+	"HZGB2312": "HZ-GB-2312",
+	"hzgb2312": "HZ-GB-2312",
+	"GB2312":   "HZ-GB-2312",
+	"gb2312":   "HZ-GB-2312",
+}
 
 // Supported returns whether charset `charset` is supported.
 func Supported(charset string) bool {

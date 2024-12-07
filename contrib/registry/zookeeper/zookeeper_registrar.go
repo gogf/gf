@@ -8,12 +8,13 @@ package zookeeper
 
 import (
 	"context"
-	"github.com/go-zookeeper/zk"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"path"
 	"strings"
 	"time"
 
+	"github.com/go-zookeeper/zk"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"
 )
 

@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/v2/encoding/gcompress"
-
 	"github.com/gogf/gf/v2/text/gstr"
 )
 

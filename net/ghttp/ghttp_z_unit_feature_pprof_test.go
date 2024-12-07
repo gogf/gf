@@ -13,9 +13,10 @@ import (
 	"testing"
 	"time"
 
+	. "github.com/gogf/gf/v2/test/gtest"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	. "github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 )
 

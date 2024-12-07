@@ -9,10 +9,11 @@ package zookeeper
 import (
 	"context"
 	"errors"
-	"github.com/go-zookeeper/zk"
-	"golang.org/x/sync/singleflight"
 	"path"
 	"strings"
+
+	"github.com/go-zookeeper/zk"
+	"golang.org/x/sync/singleflight"
 
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"

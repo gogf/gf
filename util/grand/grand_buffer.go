@@ -18,11 +18,9 @@ const (
 	bufferChanSize = 10000
 )
 
-var (
-	// bufferChan is the buffer for random bytes,
-	// every item storing 4 bytes.
-	bufferChan = make(chan []byte, bufferChanSize)
-)
+// bufferChan is the buffer for random bytes,
+// every item storing 4 bytes.
+var bufferChan = make(chan []byte, bufferChanSize)
 
 func init() {
 	go asyncProducingRandomBufferBytesLoop()

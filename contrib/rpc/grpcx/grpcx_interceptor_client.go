@@ -12,9 +12,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
 
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/tracing"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+
+	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/tracing"
 )
 
 // UnaryError handles the error types converting between grpc and gerror.

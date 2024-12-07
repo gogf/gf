@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogf/gf/contrib/nosql/redis/v2"
-
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
+
+	"github.com/gogf/gf/contrib/nosql/redis/v2"
 )
 
 var (

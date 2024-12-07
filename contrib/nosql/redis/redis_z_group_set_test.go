@@ -7,9 +7,10 @@
 package redis_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
-	"testing"
 )
 
 func Test_GroupSet_SAdd(t *testing.T) {

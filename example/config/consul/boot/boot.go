@@ -7,13 +7,13 @@
 package boot
 
 import (
-	consul "github.com/gogf/gf/contrib/config/consul/v2"
-
 	"github.com/hashicorp/consul/api"
 	"github.com/hashicorp/go-cleanhttp"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
+
+	consul "github.com/gogf/gf/contrib/config/consul/v2"
 )
 
 func init() {

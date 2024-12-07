@@ -377,9 +377,7 @@ func ParseTimeFromContent(content string, format ...string) *Time {
 //
 // Very note that it supports unit "d" more than function time.ParseDuration.
 func ParseDuration(s string) (duration time.Duration, err error) {
-	var (
-		num int64
-	)
+	var num int64
 	if utils.IsNumeric(s) {
 		num, err = strconv.ParseInt(s, 10, 64)
 		if err != nil {
