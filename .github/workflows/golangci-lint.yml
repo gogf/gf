@@ -46,7 +46,7 @@ jobs:
           version: v1.62.2
           only-new-issues: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          args: --timeout 3m0s
+          args: --timeout 3m0s --fix
       - name: Install gci
         run: go install github.com/daixiang0/gci@latest
       - name: Run gci
