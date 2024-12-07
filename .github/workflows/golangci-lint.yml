@@ -64,14 +64,20 @@ jobs:
           -s "prefix(github.com/gogf/gf/example)" \
           ./
       - name: Check for changes
+        id: check_changes
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
-          echo "has_changes=true" >> $GITHUB_ENV
+          echo "HAS_CHANGES=true" >> $GITHUB_ENV
           else
-          echo "has_changes=false" >> $GITHUB_ENV
+          echo "HAS_CHANGES=false" >> $GITHUB_ENV
           fi
-          echo "has_changes=$has_changes"
+      - name: Show changes
+        env:
+          has_changes: ${{ steps.check_changes.outputs.HAS_CHANGES }}
+        run: echo "has_changes value is $has_changes"
       - name: Commit and push changes
+        env:
+          has_changes: ${{ steps.check_changes.outputs.HAS_CHANGES }}
         if: "$has_changes" == 'true'
         run: |
           git config --global user.name "github-actions[bot]"
