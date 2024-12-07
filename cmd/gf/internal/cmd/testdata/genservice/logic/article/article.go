@@ -11,8 +11,9 @@ import (
 	"go/ast"
 	t "time"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genservice/service"
 	gdbalias "github.com/gogf/gf/v2/database/gdb"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genservice/service"
 )
 
 type sArticle struct {

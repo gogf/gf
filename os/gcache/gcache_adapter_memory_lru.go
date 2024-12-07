@@ -7,9 +7,10 @@
 package gcache
 
 import (
+	"sync"
+
 	"github.com/gogf/gf/v2/container/glist"
 	"github.com/gogf/gf/v2/container/gmap"
-	"sync"
 )
 
 // memoryLru holds LRU info.

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/issue/3835/service"
+
 	"github.com/gogf/gf/contrib/drivers/mysql/v2"
 )
 

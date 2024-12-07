@@ -9,6 +9,7 @@ package main
 import (
 	"github.com/gogf/gf/contrib/registry/nacos/v2"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
+
 	"github.com/gogf/gf/example/registry/etcd/grpc/controller"
 )
 

@@ -7,17 +7,15 @@
 package gi18n_test
 
 import (
-	"time"
-
-	"github.com/gogf/gf/v2/encoding/gbase64"
-	"github.com/gogf/gf/v2/os/gctx"
-
 	"context"
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/encoding/gbase64"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/i18n/gi18n"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gres"
 	"github.com/gogf/gf/v2/os/gtime"

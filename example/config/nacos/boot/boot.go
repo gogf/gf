@@ -10,9 +10,10 @@ import (
 	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 
-	"github.com/gogf/gf/contrib/config/nacos/v2"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
+
+	"github.com/gogf/gf/contrib/config/nacos/v2"
 )
 
 func init() {

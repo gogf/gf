@@ -10,10 +10,8 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 )
 
-var (
-	// Type name => enums json.
-	enumsMap = make(map[string]json.RawMessage)
-)
+// Type name => enums json.
+var enumsMap = make(map[string]json.RawMessage)
 
 // SetGlobalEnums sets the global enums into package.
 // Note that this operation is not concurrent safety.

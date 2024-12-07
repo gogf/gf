@@ -9,11 +9,12 @@ package main
 import (
 	"context"
 
-	"github.com/gogf/gf/contrib/trace/otlphttp/v2"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/util/gutil"
+
+	"github.com/gogf/gf/contrib/trace/otlphttp/v2"
 )
 
 const (

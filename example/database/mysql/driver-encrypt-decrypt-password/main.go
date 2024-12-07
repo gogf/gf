@@ -12,10 +12,11 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/gogf/gf/contrib/drivers/mysql/v2"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/encoding/gbase64"
 	"github.com/gogf/gf/v2/frame/g"
+
+	"github.com/gogf/gf/contrib/drivers/mysql/v2"
 )
 
 const (

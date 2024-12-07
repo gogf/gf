@@ -9,9 +9,10 @@ package main
 import (
 	"go.opentelemetry.io/otel/exporters/prometheus"
 
-	"github.com/gogf/gf/contrib/metric/otelmetric/v2"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
+
+	"github.com/gogf/gf/contrib/metric/otelmetric/v2"
 )
 
 func main() {

@@ -31,11 +31,9 @@ const (
 	StackModeDetail StackMode = "detail"
 )
 
-var (
-	// stackModeConfigured is the configured error stack mode variable.
-	// It is brief stack mode in default.
-	stackModeConfigured = StackModeBrief
-)
+// stackModeConfigured is the configured error stack mode variable.
+// It is brief stack mode in default.
+var stackModeConfigured = StackModeBrief
 
 func init() {
 	// Deprecated.

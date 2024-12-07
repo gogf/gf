@@ -61,7 +61,7 @@ func ParseURL(str string, component int) (map[string]string, error) {
 	if component == -1 {
 		component = 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128
 	}
-	var components = make(map[string]string)
+	components := make(map[string]string)
 	if (component & 1) == 1 {
 		components["scheme"] = u.Scheme
 	}

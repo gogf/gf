@@ -14,7 +14,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel/exporters/prometheus"
 
-	"github.com/gogf/gf/contrib/metric/otelmetric/v2"
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -24,6 +23,8 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
+
+	"github.com/gogf/gf/contrib/metric/otelmetric/v2"
 )
 
 func Test_HTTP_Server(t *testing.T) {

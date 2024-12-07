@@ -19,10 +19,11 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/grpcctx"
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/util/gconv"
+
+	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/grpcctx"
 )
 
 // UnaryServerInterceptor returns a grpc.UnaryServerInterceptor suitable
