@@ -72,24 +72,30 @@ func (c *Core) GetCtx() context.Context {
 }
 
 // GetCtxTimeout returns the context and cancel function for specified timeout type.
-func (c *Core) GetCtxTimeout(ctx context.Context, timeoutType int) (context.Context, context.CancelFunc) {
+func (c *Core) GetCtxTimeout(ctx context.Context, timeoutType ctxTimeoutType) (context.Context, context.CancelFunc) {
 	if ctx == nil {
 		ctx = c.db.GetCtx()
 	} else {
 		ctx = context.WithValue(ctx, "WrappedByGetCtxTimeout", nil)
 	}
+	var config = c.db.GetConfig()
 	switch timeoutType {
 	case ctxTimeoutTypeExec:
 		if c.db.GetConfig().ExecTimeout > 0 {
-			return context.WithTimeout(ctx, c.db.GetConfig().ExecTimeout)
+			return context.WithTimeout(ctx, config.ExecTimeout)
 		}
 	case ctxTimeoutTypeQuery:
 		if c.db.GetConfig().QueryTimeout > 0 {
-			return context.WithTimeout(ctx, c.db.GetConfig().QueryTimeout)
+			return context.WithTimeout(ctx, config.QueryTimeout)
 		}
 	case ctxTimeoutTypePrepare:
 		if c.db.GetConfig().PrepareTimeout > 0 {
-			return context.WithTimeout(ctx, c.db.GetConfig().PrepareTimeout)
+			return context.WithTimeout(ctx, config.PrepareTimeout)
+		}
+
+	case ctxTimeoutTypeTrans:
+		if c.db.GetConfig().TranTimeout > 0 {
+			return context.WithTimeout(ctx, config.TranTimeout)
 		}
 	default:
 		panic(gerror.NewCodef(gcode.CodeInvalidParameter, "invalid context timeout type: %d", timeoutType))
