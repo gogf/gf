@@ -8,9 +8,10 @@
 package zookeeper
 
 import (
+	"time"
+
 	"github.com/go-zookeeper/zk"
 	"golang.org/x/sync/singleflight"
-	"time"
 
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"
