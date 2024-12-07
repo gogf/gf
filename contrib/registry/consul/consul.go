@@ -32,9 +32,9 @@ var (
 
 // Registry implements gsvc.Registry interface using consul.
 type Registry struct {
-	client  *api.Client        // Consul client
-	address string             // Consul address
-	options map[string]string  // Additional options
+	client  *api.Client       // Consul client
+	address string            // Consul address
+	options map[string]string // Additional options
 }
 
 // Option is the configuration option type for registry.
