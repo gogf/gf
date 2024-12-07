@@ -13,9 +13,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/consul/api"
+
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/hashicorp/consul/api"
 )
 
 const (
