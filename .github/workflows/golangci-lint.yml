@@ -73,7 +73,7 @@ jobs:
           fi
       - name: Show changes
         run: | 
-          printf 'Has changes value is  %s\n' "${{ steps.check_changes.outputs.HAS_CHANGES }}"
+          printf 'Has changes value is  %s\n' "${{ env.HAS_CHANGES }}"
       - name: Commit and push changes
         env:
           HAS_CHANGES: ${{ steps.check_changes.outputs.HAS_CHANGES }}
