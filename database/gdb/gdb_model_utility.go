@@ -33,10 +33,20 @@ func (m *Model) QuoteWord(s string) string {
 // Also see DriverMysql.TableFields.
 func (m *Model) TableFields(tableStr string, schema ...string) (fields map[string]*TableField, err error) {
 	var (
-		table      = m.db.GetCore().guessPrimaryTableName(tableStr)
+		ctx        = m.GetCtx()
+		usedTable  = m.db.GetCore().guessPrimaryTableName(tableStr)
 		usedSchema = gutil.GetOrDefaultStr(m.schema, schema...)
 	)
-	return m.db.TableFields(m.GetCtx(), table, usedSchema)
+	// Sharding feature.
+	usedSchema, err = m.getActualSchema(ctx, usedSchema)
+	if err != nil {
+		return nil, err
+	}
+	usedTable, err = m.getActualTable(ctx, usedTable)
+	if err != nil {
+		return nil, err
+	}
+	return m.db.TableFields(ctx, usedTable, usedSchema)
 }
 
 // getModel creates and returns a cloned model of current model if `safe` is true, or else it returns
@@ -143,9 +153,24 @@ func (m *Model) filterDataForInsertOrUpdate(data interface{}) (interface{}, erro
 // doMappingAndFilterForInsertOrUpdateDataMap does the filter features for map.
 // Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
 func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(data Map, allowOmitEmpty bool) (Map, error) {
-	var err error
-	data, err = m.db.GetCore().mappingAndFilterData(
-		m.GetCtx(), m.schema, m.tablesInit, data, m.filter,
+	var (
+		err    error
+		ctx    = m.GetCtx()
+		core   = m.db.GetCore()
+		schema = m.schema
+		table  = m.tablesInit
+	)
+	// Sharding feature.
+	schema, err = m.getActualSchema(ctx, schema)
+	if err != nil {
+		return nil, err
+	}
+	table, err = m.getActualTable(ctx, table)
+	if err != nil {
+		return nil, err
+	}
+	data, err = core.mappingAndFilterData(
+		ctx, schema, table, data, m.filter,
 	)
 	if err != nil {
 		return nil, err
