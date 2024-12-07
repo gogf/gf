@@ -10,10 +10,11 @@ import (
 	"go/constant"
 	"go/types"
 
+	"golang.org/x/tools/go/packages"
+
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-	"golang.org/x/tools/go/packages"
 )
 
 const pkgLoadMode = 0xffffff

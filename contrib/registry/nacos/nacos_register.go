@@ -9,9 +9,10 @@ package nacos
 import (
 	"context"
 
+	"github.com/nacos-group/nacos-sdk-go/v2/vo"
+
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 )
 
 // Register registers `service` to Registry.
