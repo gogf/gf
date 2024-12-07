@@ -64,16 +64,12 @@ jobs:
           -s "prefix(github.com/gogf/gf/example)" \
           ./
       - name: Check for changes
-        id: check_changes
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
           echo "HAS_CHANGES=true" >> $GITHUB_ENV
           else
           echo "HAS_CHANGES=false" >> $GITHUB_ENV
           fi
-      - name: Show changes
-        run: | 
-          printf 'Has changes value is  %s\n' "${{ env.HAS_CHANGES }}"
       - name: Commit and push changes
         if: env.HAS_CHANGES
         run: |
