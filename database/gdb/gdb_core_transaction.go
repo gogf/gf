@@ -34,13 +34,13 @@ const (
 	// or behaves like PropagationRequired if not in a transaction.
 	PropagationNested Propagation = "NESTED"
 
-	// PropagationNotSupported executes non-transactionally, suspends any existing transaction.
+	// PropagationNotSupported executes non-transactional, suspends any existing transaction.
 	PropagationNotSupported Propagation = "NOT_SUPPORTED"
 
 	// PropagationMandatory executes in a transaction, fails if no existing transaction.
 	PropagationMandatory Propagation = "MANDATORY"
 
-	// PropagationNever executes non-transactionally, fails if in an existing transaction.
+	// PropagationNever executes non-transactional, fails if in an existing transaction.
 	PropagationNever Propagation = "NEVER"
 )
 
@@ -139,6 +139,7 @@ func (c *Core) TransactionWithOptions(
 		return f(ctx, currentTx)
 
 	case PropagationRequiresNew:
+		ctx = WithoutTX(ctx, group)
 		return c.createNewTransaction(ctx, opts, f)
 
 	case PropagationNotSupported:

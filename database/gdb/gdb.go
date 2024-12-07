@@ -383,9 +383,6 @@ const (
 	defaultMaxIdleConnCount               = 10               // Max idle connection count in pool.
 	defaultMaxOpenConnCount               = 0                // Max open connection count in pool. Default is no limit.
 	defaultMaxConnLifeTime                = 30 * time.Second // Max lifetime for per connection in pool in seconds.
-	ctxTimeoutTypeExec                    = 0
-	ctxTimeoutTypeQuery                   = 1
-	ctxTimeoutTypePrepare                 = 2
 	cachePrefixTableFields                = `TableFields:`
 	cachePrefixSelectCache                = `SelectCache:`
 	commandEnvKeyForDryRun                = "gf.gdb.dryrun"
@@ -397,6 +394,15 @@ const (
 
 	// type:[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
 	linkPattern = `(\w+):([\w\-\$]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*)`
+)
+
+type ctxTimeoutType int
+
+const (
+	ctxTimeoutTypeExec ctxTimeoutType = iota
+	ctxTimeoutTypeQuery
+	ctxTimeoutTypePrepare
+	ctxTimeoutTypeTrans
 )
 
 type SelectType int

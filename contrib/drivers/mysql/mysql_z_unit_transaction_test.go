@@ -1535,89 +1535,6 @@ func Test_Transaction_Propagation_Complex(t *testing.T) {
 	})
 }
 
-func Test_Transaction_Isolation(t *testing.T) {
-	table := createInitTable()
-	defer dropTable(table)
-
-	gtest.C(t, func(t *gtest.T) {
-		// Test Read Uncommitted (Dirty Read)
-		var value1, value2 string
-
-		// Transaction 1: Update but don't commit
-		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
-			Isolation: sql.LevelReadUncommitted,
-		}, func(ctx context.Context, tx1 gdb.TX) error {
-			// Modify data
-			_, err := tx1.Update(table, g.Map{"passport": "changed"}, "id=1")
-			t.AssertNil(err)
-
-			// Transaction 2: Read uncommitted data
-			err = db.TransactionWithOptions(ctx, gdb.TxOptions{
-				Isolation: sql.LevelReadUncommitted,
-			}, func(ctx context.Context, tx2 gdb.TX) error {
-				v, err := tx2.Model(table).Where("id=1").Value("passport")
-				t.AssertNil(err)
-				value1 = v.String()
-				return nil
-			})
-			t.AssertNil(err)
-
-			// Rollback Transaction 1
-			return gerror.New("rollback")
-		})
-		t.AssertNE(err, nil)
-
-		// Read final value
-		v, err := db.Model(table).Where("id=1").Value("passport")
-		t.AssertNil(err)
-		value2 = v.String()
-
-		// In Read Uncommitted, value1 should see the uncommitted change
-		t.Assert(value1, "changed")
-		// After rollback, value2 should be the original value
-		t.Assert(value2, "user_1")
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		// Test Read Committed (No Dirty Read)
-		var value1, value2 string
-
-		// Transaction 1: Update but don't commit
-		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
-			Isolation: sql.LevelReadCommitted,
-		}, func(ctx context.Context, tx1 gdb.TX) error {
-			// Modify data
-			_, err := tx1.Update(table, g.Map{"passport": "changed"}, "id=1")
-			t.AssertNil(err)
-
-			// Transaction 2: Try to read uncommitted data
-			err = db.TransactionWithOptions(ctx, gdb.TxOptions{
-				Isolation: sql.LevelReadCommitted,
-			}, func(ctx context.Context, tx2 gdb.TX) error {
-				v, err := tx2.Model(table).Where("id=1").Value("passport")
-				t.AssertNil(err)
-				value1 = v.String()
-				return nil
-			})
-			t.AssertNil(err)
-
-			// Rollback Transaction 1
-			return gerror.New("rollback")
-		})
-		t.AssertNE(err, nil)
-
-		// Read final value
-		v, err := db.Model(table).Where("id=1").Value("passport")
-		t.AssertNil(err)
-		value2 = v.String()
-
-		// In Read Committed, value1 should NOT see the uncommitted change
-		t.Assert(value1, "user_1")
-		// After rollback, value2 should be the original value
-		t.Assert(value2, "user_1")
-	})
-}
-
 func Test_Transaction_ReadOnly(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
@@ -1638,5 +1555,156 @@ func Test_Transaction_ReadOnly(t *testing.T) {
 		v, err := db.Model(table).Where("id=1").Value("passport")
 		t.AssertNil(err)
 		t.Assert(v.String(), "user_1")
+	})
+}
+
+func Test_Transaction_Isolation(t *testing.T) {
+	// Test READ UNCOMMITTED
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
+			Isolation: sql.LevelReadUncommitted,
+		}, func(ctx context.Context, tx1 gdb.TX) error {
+			// Update value in first transaction
+			_, err := tx1.Update(table, g.Map{"passport": "dirty_read"}, "id=1")
+			t.AssertNil(err)
+
+			// Start another transaction to verify dirty read
+			err = db.TransactionWithOptions(ctx, gdb.TxOptions{
+				Isolation: sql.LevelReadUncommitted,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				// Should see uncommitted change in READ UNCOMMITTED
+				v, err := tx2.Model(table).Where("id=1").Value("passport")
+				t.AssertNil(err)
+				t.Assert(v.String(), "dirty_read")
+				return nil
+			})
+			t.AssertNil(err)
+
+			// Rollback the first transaction
+			return gerror.New("rollback first transaction")
+		})
+		t.AssertNE(err, nil)
+
+		// Verify the value is rolled back
+		v, err := db.Model(table).Where("id=1").Value("passport")
+		t.AssertNil(err)
+		t.Assert(v.String(), "user_1")
+	})
+
+	// Test REPEATABLE READ (default)
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+
+		// Start a transaction with REPEATABLE READ isolation
+		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
+			Propagation: gdb.PropagationRequiresNew,
+			Isolation:   sql.LevelRepeatableRead,
+		}, func(ctx context.Context, tx1 gdb.TX) error {
+			// First read
+			v1, err := tx1.Model(table).Where("id=1").Value("passport")
+			t.AssertNil(err)
+			initialValue := v1.String()
+
+			// Another transaction updates and commits the value
+			err = db.TransactionWithOptions(ctx, gdb.TxOptions{
+				Propagation: gdb.PropagationRequiresNew,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err := tx2.Update(table, g.Map{
+					"passport": "changed_value",
+				}, "id=1")
+				t.AssertNil(err)
+				return nil
+			})
+			t.AssertNil(err)
+
+			// Verify the change is visible outside transaction
+			v, err := db.Model(table).Where("id=1").Value("passport")
+			t.AssertNil(err)
+			t.Assert(v.String(), "changed_value")
+
+			// Should still see old value in REPEATABLE READ transaction
+			v2, err := tx1.Model(table).Where("id=1").Value("passport")
+			t.AssertNil(err)
+			t.Assert(v2.String(), initialValue)
+
+			// Even after multiple reads, should still see the same value
+			v3, err := tx1.Model(table).Where("id=1").Value("passport")
+			t.AssertNil(err)
+			t.Assert(v3.String(), initialValue)
+
+			return nil
+		})
+		t.AssertNil(err)
+
+		// After transaction ends, should see the committed change
+		v, err := db.Model(table).Where("id=1").Value("passport")
+		t.AssertNil(err)
+		t.Assert(v.String(), "changed_value")
+	})
+
+	// Test SERIALIZABLE
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+
+		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
+			Propagation: gdb.PropagationRequiresNew,
+			Isolation:   sql.LevelSerializable,
+		}, func(ctx context.Context, tx1 gdb.TX) error {
+			// Read all records
+			_, err := tx1.Model(table).All()
+			t.AssertNil(err)
+
+			// Try concurrent insert in another transaction
+			err = db.TransactionWithOptions(ctx, gdb.TxOptions{
+				Propagation: gdb.PropagationRequiresNew,
+				Isolation:   sql.LevelSerializable,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err := tx2.Insert(table, g.Map{
+					"id":       1000,
+					"passport": "new_user",
+				})
+				return err
+			})
+			t.AssertNE(err, nil)
+			return nil
+		})
+		t.AssertNil(err)
+	})
+
+	// Test READ COMMITTED
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
+			Propagation: gdb.PropagationRequiresNew,
+			Isolation:   sql.LevelReadCommitted,
+		}, func(ctx context.Context, tx1 gdb.TX) error {
+			// First read
+			v1, err := tx1.Model(table).Where("id=1").Value("passport")
+			t.AssertNil(err)
+			initialValue := v1.String()
+
+			// Another transaction updates and commits
+			err = db.TransactionWithOptions(ctx, gdb.TxOptions{
+				Propagation: gdb.PropagationRequiresNew,
+				Isolation:   sql.LevelReadCommitted,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err := tx2.Update(table, g.Map{"passport": "committed_value"}, "id=1")
+				return err
+			})
+			t.AssertNil(err)
+
+			// Should see new value in READ COMMITTED
+			v2, err := tx1.Model(table).Where("id=1").Value("passport")
+			t.AssertNil(err)
+			t.Assert(v2.String(), "committed_value")
+			t.AssertNE(v2.String(), initialValue)
+			return nil
+		})
+		t.AssertNil(err)
 	})
 }
