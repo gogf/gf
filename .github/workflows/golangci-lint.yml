@@ -66,12 +66,12 @@ jobs:
       - name: Check for changes
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
-          echo "HAS_CHANGES=true" >> $GITHUB_ENV
+          echo "HAS_CHANGES='true'" >> $GITHUB_ENV
           else
-          echo "HAS_CHANGES=false" >> $GITHUB_ENV
+          echo "HAS_CHANGES='false'" >> $GITHUB_ENV
           fi
       - name: Commit and push changes
-        if: env.HAS_CHANGES
+        if: env.HAS_CHANGES == 'true'
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
