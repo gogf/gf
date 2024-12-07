@@ -72,10 +72,8 @@ jobs:
           echo "HAS_CHANGES=false" >> $GITHUB_ENV
           fi
       - name: Show changes
-        env:
-          HAS_CHANGES: ${{ steps.check_changes.outputs.HAS_CHANGES }}
         run: | 
-          printf 'Has changes value is  %s == %s\n' "${{ env.HAS_CHANGES }}" "${{ steps.check_changes.outputs.HAS_CHANGES }}"
+          printf 'Has changes value is  %s\n' "${{ steps.check_changes.outputs.HAS_CHANGES }}"
       - name: Commit and push changes
         env:
           HAS_CHANGES: ${{ steps.check_changes.outputs.HAS_CHANGES }}
