@@ -75,7 +75,23 @@ func DefaultTxOptions() TxOptions {
 // if you no longer use the transaction. Commit or Rollback functions will also
 // close the transaction automatically.
 func (c *Core) Begin(ctx context.Context) (tx TX, err error) {
-	return c.doBeginCtx(ctx, sql.TxOptions{})
+	return c.BeginWithOptions(ctx, DefaultTxOptions())
+}
+
+// BeginWithOptions starts and returns the transaction object with given options.
+// The options allow specifying the isolation level and read-only mode.
+// You should call Commit or Rollback functions of the transaction object
+// if you no longer use the transaction. Commit or Rollback functions will also
+// close the transaction automatically.
+func (c *Core) BeginWithOptions(ctx context.Context, opts TxOptions) (tx TX, err error) {
+	if ctx == nil {
+		ctx = c.db.GetCtx()
+	}
+	ctx = c.injectInternalCtxData(ctx)
+	return c.doBeginCtx(ctx, sql.TxOptions{
+		Isolation: opts.Isolation,
+		ReadOnly:  opts.ReadOnly,
+	})
 }
 
 func (c *Core) doBeginCtx(ctx context.Context, opts sql.TxOptions) (TX, error) {

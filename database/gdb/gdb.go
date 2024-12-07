@@ -231,6 +231,11 @@ type DB interface {
 	// The returned TX must be committed or rolled back to release resources.
 	Begin(ctx context.Context) (TX, error)
 
+	// BeginWithOptions starts a new transaction with the given options and returns a TX interface.
+	// The options allow specifying isolation level and read-only mode.
+	// The returned TX must be committed or rolled back to release resources.
+	BeginWithOptions(ctx context.Context, opts TxOptions) (TX, error)
+
 	// Transaction executes a function within a transaction.
 	// It automatically handles commit/rollback based on whether f returns an error.
 	Transaction(ctx context.Context, f func(ctx context.Context, tx TX) error) error
@@ -340,67 +345,154 @@ type DB interface {
 type TX interface {
 	Link
 
+	// Ctx binds a context to current transaction.
+	// The context is used for operations like timeout control.
 	Ctx(ctx context.Context) TX
+
+	// Raw creates and returns a model based on a raw SQL.
+	// The rawSql can contain placeholders ? and corresponding args.
 	Raw(rawSql string, args ...interface{}) *Model
+
+	// Model creates and returns a Model from given table name/struct.
+	// The parameter can be table name as string, or struct/*struct type.
 	Model(tableNameQueryOrStruct ...interface{}) *Model
+
+	// With creates and returns a Model from given object.
+	// It automatically analyzes the object and generates corresponding SQL.
 	With(object interface{}) *Model
 
 	// ===========================================================================
 	// Nested transaction if necessary.
 	// ===========================================================================
 
+	// Begin starts a nested transaction.
+	// It creates a new savepoint for current transaction.
 	Begin() error
+
+	// Commit commits current transaction/savepoint.
+	// For nested transactions, it releases the current savepoint.
 	Commit() error
+
+	// Rollback rolls back current transaction/savepoint.
+	// For nested transactions, it rolls back to the current savepoint.
 	Rollback() error
+
+	// Transaction executes given function in a nested transaction.
+	// It automatically handles commit/rollback based on function's error return.
 	Transaction(ctx context.Context, f func(ctx context.Context, tx TX) error) (err error)
+
+	// TransactionWithOptions executes given function in a nested transaction with options.
+	// It allows customizing transaction behavior like isolation level.
 	TransactionWithOptions(ctx context.Context, opts TxOptions, f func(ctx context.Context, tx TX) error) error
 
 	// ===========================================================================
 	// Core method.
 	// ===========================================================================
 
+	// Query executes a query that returns rows using given SQL and arguments.
+	// The args are for any placeholder parameters in the query.
 	Query(sql string, args ...interface{}) (result Result, err error)
+
+	// Exec executes a query that doesn't return rows.
+	// For example: INSERT, UPDATE, DELETE.
 	Exec(sql string, args ...interface{}) (sql.Result, error)
+
+	// Prepare creates a prepared statement for later queries or executions.
+	// Multiple queries or executions may be run concurrently from the statement.
 	Prepare(sql string) (*Stmt, error)
 
 	// ===========================================================================
 	// Query.
 	// ===========================================================================
 
+	// GetAll executes a query and returns all rows as Result.
+	// It's a convenient wrapper for Query.
 	GetAll(sql string, args ...interface{}) (Result, error)
+
+	// GetOne executes a query and returns the first row as Record.
+	// It's useful when you expect only one row to be returned.
 	GetOne(sql string, args ...interface{}) (Record, error)
+
+	// GetStruct executes a query and scans the result into given struct.
+	// The obj should be a pointer to struct.
 	GetStruct(obj interface{}, sql string, args ...interface{}) error
+
+	// GetStructs executes a query and scans all results into given struct slice.
+	// The objPointerSlice should be a pointer to slice of struct.
 	GetStructs(objPointerSlice interface{}, sql string, args ...interface{}) error
+
+	// GetScan executes a query and scans the result into given variables.
+	// The pointer can be type of struct/*struct/[]struct/[]*struct.
 	GetScan(pointer interface{}, sql string, args ...interface{}) error
+
+	// GetValue executes a query and returns the first column of first row.
+	// It's useful for queries like SELECT COUNT(*).
 	GetValue(sql string, args ...interface{}) (Value, error)
+
+	// GetCount executes a query that should return a count value.
+	// It's a convenient wrapper for count queries.
 	GetCount(sql string, args ...interface{}) (int64, error)
 
 	// ===========================================================================
 	// CURD.
 	// ===========================================================================
 
+	// Insert inserts one or multiple records into table.
+	// The data can be map/struct/*struct/[]map/[]struct/[]*struct.
 	Insert(table string, data interface{}, batch ...int) (sql.Result, error)
+
+	// InsertIgnore inserts one or multiple records with IGNORE option.
+	// It ignores records that would cause duplicate key conflicts.
 	InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error)
+
+	// InsertAndGetId inserts one record and returns its id value.
+	// It's commonly used with auto-increment primary key.
 	InsertAndGetId(table string, data interface{}, batch ...int) (int64, error)
+
+	// Replace inserts or replaces records using REPLACE INTO syntax.
+	// Existing records with same unique key will be deleted and re-inserted.
 	Replace(table string, data interface{}, batch ...int) (sql.Result, error)
+
+	// Save inserts or updates records using INSERT ... ON DUPLICATE KEY UPDATE syntax.
+	// It updates existing records instead of replacing them entirely.
 	Save(table string, data interface{}, batch ...int) (sql.Result, error)
+
+	// Update updates records in table that match given condition.
+	// The data can be map/struct, and condition supports various formats.
 	Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error)
+
+	// Delete deletes records from table that match given condition.
+	// The condition supports various formats with optional arguments.
 	Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)
 
 	// ===========================================================================
 	// Utility methods.
 	// ===========================================================================
 
+	// GetCtx returns the context that is bound to current transaction.
 	GetCtx() context.Context
+
+	// GetDB returns the underlying DB interface object.
 	GetDB() DB
+
+	// GetSqlTX returns the underlying *sql.Tx object.
+	// Note: be very careful when using this method.
 	GetSqlTX() *sql.Tx
+
+	// IsClosed checks if current transaction is closed.
+	// A transaction is closed after Commit or Rollback.
 	IsClosed() bool
 
 	// ===========================================================================
 	// Save point feature.
 	// ===========================================================================
 
+	// SavePoint creates a save point with given name.
+	// It's used in nested transactions to create rollback points.
 	SavePoint(point string) error
+
+	// RollbackTo rolls back transaction to previously created save point.
+	// If the save point doesn't exist, it returns an error.
 	RollbackTo(point string) error
 }
 
