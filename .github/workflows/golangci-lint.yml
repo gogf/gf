@@ -73,12 +73,13 @@ jobs:
           fi
       - name: Show changes
         env:
-          has_changes: ${{ steps.check_changes.outputs.HAS_CHANGES }}
-        run: echo "has_changes value is $has_changes"
+          HAS_CHANGES: ${{ steps.check_changes.outputs.HAS_CHANGES }}
+        run: | 
+          echo "Has changes value is $HAS_CHANGES"
       - name: Commit and push changes
         env:
-          has_changes: ${{ steps.check_changes.outputs.HAS_CHANGES }}
-        if: "$has_changes" == 'true'
+          HAS_CHANGES: ${{ steps.check_changes.outputs.HAS_CHANGES }}
+        if: "$HAS_CHANGES" == 'true'
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
