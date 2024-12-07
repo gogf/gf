@@ -75,9 +75,7 @@ jobs:
         run: | 
           printf 'Has changes value is  %s\n' "${{ env.HAS_CHANGES }}"
       - name: Commit and push changes
-        env:
-          HAS_CHANGES: ${{ steps.check_changes.outputs.HAS_CHANGES }}
-        if: env.HAS_CHANGES == 'true'
+        if: env.HAS_CHANGES == true
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
