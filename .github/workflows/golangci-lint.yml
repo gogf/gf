@@ -71,9 +71,9 @@ jobs:
           else
           echo "HAS_CHANGES=false" >> $GITHUB_ENV
           fi
-      - name: Show changes
-        run: | 
-          printf 'Has changes value is  %s\n' "${{ env.HAS_CHANGES }}"
+#      - name: Show changes
+#        run: |
+#          printf 'Has changes value is  %s\n' "${{ env.HAS_CHANGES }}"
       - name: Commit and push changes
         if: env.HAS_CHANGES
         run: |
