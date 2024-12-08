@@ -12,10 +12,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/hashicorp/consul/api"
 	"github.com/hashicorp/consul/api/watch"
+
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/net/gsvc"
 )
 
 // Watcher implements the gsvc.Watcher interface for consul.
