@@ -13,8 +13,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
-
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -27,6 +25,7 @@ import (
 	"github.com/gogf/gf/v2/os/gsession"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/gorilla/websocket"
 )
 
 type (
@@ -70,7 +69,7 @@ type (
 		Method           string       // Handler method name.
 		Route            string       // Route URI.
 		Priority         int          // Just for reference.
-		IsServiceHandler bool         // Is service handler.
+		IsServiceHandler bool         // Is a service handler.
 	}
 
 	// HandlerFunc is request handler function.
@@ -132,19 +131,19 @@ const (
 )
 
 const (
-	HeaderXUrlPath                     = "x-url-path"         // Used for custom route handler, which does not change URL.Path.
-	HookBeforeServe       HookName     = "HOOK_BEFORE_SERVE"  // Hook handler before route handler/file serving.
-	HookAfterServe        HookName     = "HOOK_AFTER_SERVE"   // Hook handler after route handler/file serving.
-	HookBeforeOutput      HookName     = "HOOK_BEFORE_OUTPUT" // Hook handler before response output.
-	HookAfterOutput       HookName     = "HOOK_AFTER_OUTPUT"  // Hook handler after response output.
-	DefaultServerName                  = "default"
-	DefaultDomainName                  = "default"
-	HandlerTypeHandler    HandlerType  = "handler"
-	HandlerTypeObject     HandlerType  = "object"
-	HandlerTypeMiddleware HandlerType  = "middleware"
-	HandlerTypeHook       HandlerType  = "hook"
-	ServerStatusStopped   ServerStatus = graceful.ServerStatusStopped
-	ServerStatusRunning   ServerStatus = graceful.ServerStatusRunning
+	HeaderXUrlPath                    = "x-url-path"         // Used for custom route handler, which does not change URL.Path.
+	HookBeforeServe       HookName    = "HOOK_BEFORE_SERVE"  // Hook handler before route handler/file serving.
+	HookAfterServe        HookName    = "HOOK_AFTER_SERVE"   // Hook handler after route handler/file serving.
+	HookBeforeOutput      HookName    = "HOOK_BEFORE_OUTPUT" // Hook handler before response output.
+	HookAfterOutput       HookName    = "HOOK_AFTER_OUTPUT"  // Hook handler after response output.
+	DefaultServerName                 = "default"
+	DefaultDomainName                 = "default"
+	HandlerTypeHandler    HandlerType = "handler"
+	HandlerTypeObject     HandlerType = "object"
+	HandlerTypeMiddleware HandlerType = "middleware"
+	HandlerTypeHook       HandlerType = "hook"
+	ServerStatusStopped               = graceful.ServerStatusStopped
+	ServerStatusRunning               = graceful.ServerStatusRunning
 )
 
 const (
