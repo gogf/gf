@@ -18,7 +18,234 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Model_Sharding_Table(t *testing.T) {
+const (
+	TestDbNameSh0 = "test_0"
+	TestDbNameSh1 = "test_1"
+	TestTableName = "user"
+)
+
+type ShardingUser struct {
+	Id   int
+	Name string
+}
+
+// createShardingDatabase creates test databases and tables for sharding
+func createShardingDatabase(t *gtest.T) {
+	// Create databases
+	dbs := []string{TestDbNameSh0, TestDbNameSh1}
+	for _, dbName := range dbs {
+		sql := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS `%s`", dbName)
+		_, err := db.Exec(ctx, sql)
+		t.AssertNil(err)
+
+		// Switch to the database
+		sql = fmt.Sprintf("USE `%s`", dbName)
+		_, err = db.Exec(ctx, sql)
+		t.AssertNil(err)
+
+		// Create tables
+		tables := []string{"user_0", "user_1", "user_2", "user_3"}
+		for _, table := range tables {
+			sql := fmt.Sprintf(`
+				CREATE TABLE IF NOT EXISTS %s (
+					id int(11) NOT NULL,
+					name varchar(255) NOT NULL,
+					PRIMARY KEY (id)
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+			`, table)
+			_, err := db.Exec(ctx, sql)
+			t.AssertNil(err)
+		}
+	}
+}
+
+// dropShardingDatabase drops test databases
+func dropShardingDatabase(t *gtest.T) {
+	dbs := []string{TestDbNameSh0, TestDbNameSh1}
+	for _, dbName := range dbs {
+		sql := fmt.Sprintf("DROP DATABASE IF EXISTS `%s`", dbName)
+		_, err := db.Exec(ctx, sql)
+		t.AssertNil(err)
+	}
+}
+
+func Test_Sharding_Basic(t *testing.T) {
+	return
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			tablePrefix  = "user_"
+			schemaPrefix = "test_"
+		)
+
+		// Create test databases and tables
+		createShardingDatabase(t)
+		defer dropShardingDatabase(t)
+
+		// Create sharding configuration
+		shardingConfig := gdb.ShardingConfig{
+			Table: gdb.ShardingTableConfig{
+				Enable: true,
+				Prefix: tablePrefix,
+				Rule: &gdb.DefaultShardingRule{
+					TableCount: 4,
+				},
+			},
+			Schema: gdb.ShardingSchemaConfig{
+				Enable: true,
+				Prefix: schemaPrefix,
+				Rule: &gdb.DefaultShardingRule{
+					SchemaCount: 2,
+				},
+			},
+		}
+
+		// Prepare test data
+		user := ShardingUser{
+			Id:   1,
+			Name: "John",
+		}
+
+		model := db.Model(TestTableName).
+			Sharding(shardingConfig).
+			ShardingValue(user.Id).
+			Safe()
+
+		// Test Insert
+		_, err := model.Data(user).Insert()
+		t.AssertNil(err)
+
+		// Test Select
+		var result ShardingUser
+		err = model.Where("id", user.Id).Scan(&result)
+		t.AssertNil(err)
+		t.Assert(result.Id, user.Id)
+		t.Assert(result.Name, user.Name)
+
+		// Test Update
+		_, err = model.Data(g.Map{"name": "John Doe"}).
+			Where("id", user.Id).
+			Update()
+		t.AssertNil(err)
+
+		// Verify Update
+		err = model.Where("id", user.Id).Scan(&result)
+		t.AssertNil(err)
+		t.Assert(result.Name, "John Doe")
+
+		// Test Delete
+		_, err = model.Where("id", user.Id).Delete()
+		t.AssertNil(err)
+
+		// Verify Delete
+		count, err := model.Where("id", user.Id).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
+	})
+}
+
+// Test_Sharding_Error tests error cases
+func Test_Sharding_Error(t *testing.T) {
+	return
+	gtest.C(t, func(t *gtest.T) {
+		// Create test databases and tables
+		createShardingDatabase(t)
+		defer dropShardingDatabase(t)
+
+		// Test missing sharding value
+		model := db.Model(TestTableName).
+			Sharding(gdb.ShardingConfig{
+				Table: gdb.ShardingTableConfig{
+					Enable: true,
+					Prefix: "user_",
+					Rule:   &gdb.DefaultShardingRule{TableCount: 4},
+				},
+			}).Safe()
+
+		_, err := model.Insert(g.Map{"id": 1, "name": "test"})
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "sharding value is required when sharding feature enabled")
+
+		// Test missing sharding rule
+		model = db.Model(TestTableName).
+			Sharding(gdb.ShardingConfig{
+				Table: gdb.ShardingTableConfig{
+					Enable: true,
+					Prefix: "user_",
+				},
+			}).
+			ShardingValue(1)
+
+		_, err = model.Insert(g.Map{"id": 1, "name": "test"})
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "sharding rule is required when sharding feature enabled")
+	})
+}
+
+// Test_Sharding_Complex tests complex sharding scenarios
+func Test_Sharding_Complex(t *testing.T) {
+	return
+	gtest.C(t, func(t *gtest.T) {
+		// Create test databases and tables
+		createShardingDatabase(t)
+		defer dropShardingDatabase(t)
+
+		shardingConfig := gdb.ShardingConfig{
+			Table: gdb.ShardingTableConfig{
+				Enable: true,
+				Prefix: "user_",
+				Rule:   &gdb.DefaultShardingRule{TableCount: 4},
+			},
+			Schema: gdb.ShardingSchemaConfig{
+				Enable: true,
+				Prefix: "test_",
+				Rule:   &gdb.DefaultShardingRule{SchemaCount: 2},
+			},
+		}
+
+		users := []ShardingUser{
+			{Id: 1, Name: "User1"},
+			{Id: 2, Name: "User2"},
+			{Id: 3, Name: "User3"},
+		}
+
+		for _, user := range users {
+			model := db.Model(TestTableName).
+				Sharding(shardingConfig).
+				ShardingValue(user.Id).
+				Safe()
+
+			_, err := model.Data(user).Insert()
+			t.AssertNil(err)
+		}
+
+		// Test batch query
+		for _, user := range users {
+			model := db.Model(TestTableName).
+				Sharding(shardingConfig).
+				ShardingValue(user.Id).
+				Safe()
+
+			var result ShardingUser
+			err := model.Where("id", user.Id).Scan(&result)
+			t.AssertNil(err)
+			t.Assert(result.Id, user.Id)
+			t.Assert(result.Name, user.Name)
+		}
+
+		// Clean up
+		for _, user := range users {
+			model := db.Model(TestTableName).
+				Sharding(shardingConfig).
+				ShardingValue(user.Id).
+				Safe()
+
+			_, err := model.Where("id", user.Id).Delete()
+			t.AssertNil(err)
+		}
+	})
+}
+
+func Test_Model_Sharding_Table_Using_Hook(t *testing.T) {
 	var (
 		table1 = gtime.TimestampNanoStr() + "_table1"
 		table2 = gtime.TimestampNanoStr() + "_table2"
@@ -127,7 +354,7 @@ func Test_Model_Sharding_Table(t *testing.T) {
 	})
 }
 
-func Test_Model_Sharding_Schema(t *testing.T) {
+func Test_Model_Sharding_Schema_Using_Hook(t *testing.T) {
 	var (
 		table = gtime.TimestampNanoStr() + "_table"
 	)

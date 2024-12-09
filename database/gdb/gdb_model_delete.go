@@ -64,6 +64,7 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 			},
 			Model:     m,
 			Table:     m.tables,
+			Schema:    m.schema,
 			Data:      dataHolder,
 			Condition: conditionStr,
 			Args:      append([]interface{}{dataValue}, conditionArgs...),
@@ -80,6 +81,7 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 		},
 		Model:     m,
 		Table:     m.tables,
+		Schema:    m.schema,
 		Condition: conditionStr,
 		Args:      conditionArgs,
 	}

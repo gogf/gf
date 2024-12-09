@@ -684,6 +684,7 @@ func (m *Model) doGetAllBySql(
 		},
 		Model:      m,
 		Table:      m.tables,
+		Schema:     m.schema,
 		Sql:        sql,
 		Args:       m.mergeArguments(args),
 		SelectType: selectType,
