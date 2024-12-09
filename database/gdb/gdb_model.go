@@ -53,6 +53,8 @@ type Model struct {
 	onConflict     interface{}       // onConflict is used for conflict keys on Upsert clause.
 	tableAliasMap  map[string]string // Table alias to true table name, usually used in join statements.
 	softTimeOption SoftTimeOption    // SoftTimeOption is the option to customize soft time feature for Model.
+	shardingConfig ShardingConfig    // ShardingConfig for database/table sharding feature.
+	shardingValue  any               // Sharding value for sharding feature.
 }
 
 // ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
