@@ -173,7 +173,14 @@ func UnpackContent(content string) ([]*File, error) {
 	}
 	array := make([]*File, len(reader.File))
 	for i, file := range reader.File {
-		array[i] = &File{file: file}
+		array[i] = &File{
+			name:     file.Name,
+			path:     file.Name,
+			file:     file.FileInfo(),
+			reader:   nil,
+			resource: nil,
+			fs:       nil,
+		}
 	}
 	return array, nil
 }

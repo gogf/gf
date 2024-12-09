@@ -7,11 +7,6 @@
 // Package gres provides resource management and packing/unpacking feature between files and bytes.
 package gres
 
-const (
-	// Separator for directories.
-	Separator = "/"
-)
-
 var (
 	// Default resource object.
 	defaultResource = Instance()
@@ -56,7 +51,7 @@ func Contains(path string) bool {
 
 // IsEmpty checks and returns whether the resource manager is empty.
 func IsEmpty() bool {
-	return defaultResource.tree.IsEmpty()
+	return defaultResource.IsEmpty()
 }
 
 // ScanDir returns the files under the given path, the parameter `path` should be a folder type.
