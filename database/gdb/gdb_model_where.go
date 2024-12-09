@@ -117,3 +117,13 @@ func (m *Model) WhereNotIn(column string, in interface{}) *Model {
 func (m *Model) WhereNotNull(columns ...string) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereNotNull(columns...))
 }
+
+// WhereExists builds `EXISTS (subQuery)` statement.
+func (m *Model) WhereExists(subQuery *Model) *Model {
+	return m.callWhereBuilder(m.whereBuilder.WhereExists(subQuery))
+}
+
+// WhereNotExists builds `NOT EXISTS (subQuery)` statement.
+func (m *Model) WhereNotExists(subQuery *Model) *Model {
+	return m.callWhereBuilder(m.whereBuilder.WhereNotExists(subQuery))
+}
