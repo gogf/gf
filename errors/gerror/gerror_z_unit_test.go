@@ -17,6 +17,22 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
+// customError is used to test As function
+type customError struct {
+	Message string
+}
+
+func (e *customError) Error() string {
+	return e.Message
+}
+
+// anotherError is used to test As function with different error type
+type anotherError struct{}
+
+func (e *anotherError) Error() string {
+	return "another error"
+}
+
 func nilError() error {
 	return nil
 }
@@ -470,5 +486,58 @@ func Test_NewOption(t *testing.T) {
 			Text:  "Text",
 			Code:  gcode.CodeNotAuthorized,
 		}), gerror.New("NewOptionError"))
+	})
+}
+
+func Test_As(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var myerr = &customError{Message: "custom error"}
+
+		// Test with nil error
+		var targetErr *customError
+		t.Assert(gerror.As(nil, &targetErr), false)
+		t.Assert(targetErr, nil)
+
+		// Test with standard error
+		err1 := errors.New("standard error")
+		t.Assert(gerror.As(err1, &targetErr), false)
+		t.Assert(targetErr, nil)
+
+		// Test with custom error type
+		err2 := myerr
+		t.Assert(gerror.As(err2, &targetErr), true)
+		t.Assert(targetErr.Message, "custom error")
+
+		// Test with wrapped error
+		err3 := gerror.Wrap(myerr, "wrapped")
+		targetErr = nil
+		t.Assert(gerror.As(err3, &targetErr), true)
+		t.Assert(targetErr.Message, "custom error")
+
+		// Test with deeply wrapped error
+		err4 := gerror.Wrap(gerror.Wrap(gerror.Wrap(myerr, "wrap3"), "wrap2"), "wrap1")
+		targetErr = nil
+		t.Assert(gerror.As(err4, &targetErr), true)
+		t.Assert(targetErr.Message, "custom error")
+
+		// Test with different error type
+		var otherErr *anotherError
+		t.Assert(gerror.As(err4, &otherErr), false)
+		t.Assert(otherErr, nil)
+
+		// Test with non-pointer target
+		defer func() {
+			t.Assert(recover() != nil, true)
+		}()
+		var nonPtr customError
+		gerror.As(err4, nonPtr)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test with nil target
+		defer func() {
+			t.Assert(recover() != nil, true)
+		}()
+		gerror.As(errors.New("error"), nil)
 	})
 }

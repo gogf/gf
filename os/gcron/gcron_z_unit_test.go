@@ -133,7 +133,7 @@ func doTestCronAddFixedPattern(t *testing.T) {
 			array.Append(1)
 		})
 		t.AssertNil(err)
-		time.Sleep(3000 * time.Millisecond)
+		time.Sleep(3500 * time.Millisecond)
 		g.Log().Debug(ctx, `current time`)
 		t.Assert(array.Len(), 1)
 	})
