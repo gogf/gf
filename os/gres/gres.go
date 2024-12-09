@@ -8,6 +8,9 @@
 package gres
 
 var (
+	// Default resource file system.
+	defaultFS = NewResFS()
+
 	// Default resource object.
 	defaultResource = Instance()
 )
@@ -16,18 +19,18 @@ var (
 // The unnecessary parameter `prefix` indicates the prefix
 // for each file storing into current resource object.
 func Add(content string, prefix ...string) error {
-	return defaultResource.Add(content, prefix...)
+	return defaultFS.Add(content, prefix...)
 }
 
 // Load loads, unpacks and adds the data from `path` into the default resource object.
 // The unnecessary parameter `prefix` indicates the prefix
 // for each file storing into current resource object.
 func Load(path string, prefix ...string) error {
-	return defaultResource.Load(path, prefix...)
+	return defaultFS.Load(path, prefix...)
 }
 
 // Get returns the file with given path.
-func Get(path string) *File {
+func Get(path string) File {
 	return defaultResource.Get(path)
 }
 
@@ -35,7 +38,7 @@ func Get(path string) *File {
 // it then does index files searching under this directory.
 //
 // GetWithIndex is usually used for http static file service.
-func GetWithIndex(path string, indexFiles []string) *File {
+func GetWithIndex(path string, indexFiles []string) File {
 	return defaultResource.GetWithIndex(path, indexFiles)
 }
 
@@ -60,7 +63,7 @@ func IsEmpty() bool {
 // using the ',' symbol to separate multiple patterns.
 //
 // It scans directory recursively if given parameter `recursive` is true.
-func ScanDir(path string, pattern string, recursive ...bool) []*File {
+func ScanDir(path string, pattern string, recursive ...bool) []File {
 	return defaultResource.ScanDir(path, pattern, recursive...)
 }
 
@@ -68,7 +71,7 @@ func ScanDir(path string, pattern string, recursive ...bool) []*File {
 // It scans directory recursively if given parameter `recursive` is true.
 //
 // Note that it returns only files, exclusive of directories.
-func ScanDirFile(path string, pattern string, recursive ...bool) []*File {
+func ScanDirFile(path string, pattern string, recursive ...bool) []File {
 	return defaultResource.ScanDirFile(path, pattern, recursive...)
 }
 

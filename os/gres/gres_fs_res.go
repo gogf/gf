@@ -23,6 +23,8 @@ type ResFS struct {
 	tree *gtree.BTree // The tree storing all resource files.
 }
 
+var _ FS = (*ResFS)(nil)
+
 const (
 	defaultTreeM = 100
 )
@@ -37,7 +39,7 @@ func NewResFS() *ResFS {
 }
 
 // Get returns the file with given path.
-func (fs *ResFS) Get(path string) *File {
+func (fs *ResFS) Get(path string) File {
 	if path == "" {
 		return nil
 	}
@@ -50,7 +52,7 @@ func (fs *ResFS) Get(path string) *File {
 	}
 	result := fs.tree.Get(path)
 	if result != nil {
-		return result.(*File)
+		return result.(File)
 	}
 	return nil
 }
@@ -62,7 +64,7 @@ func (fs *ResFS) IsEmpty() bool {
 
 // ScanDir returns the files under the given path,
 // the parameter `path` should be a folder type.
-func (fs *ResFS) ScanDir(path string, pattern string, recursive ...bool) []*File {
+func (fs *ResFS) ScanDir(path string, pattern string, recursive ...bool) []File {
 	isRecursive := false
 	if len(recursive) > 0 {
 		isRecursive = recursive[0]
@@ -77,7 +79,7 @@ func (fs *ResFS) ScanDir(path string, pattern string, recursive ...bool) []*File
 // using the ',' symbol to separate multiple patterns.
 //
 // It scans directory recursively if given parameter `recursive` is true.
-func (fs *ResFS) doScanDir(path string, pattern string, recursive bool) []*File {
+func (fs *ResFS) doScanDir(path string, pattern string, recursive bool) []File {
 	path = strings.ReplaceAll(path, "\\", "/")
 	path = strings.ReplaceAll(path, "//", "/")
 	if path != "/" {
@@ -86,7 +88,7 @@ func (fs *ResFS) doScanDir(path string, pattern string, recursive bool) []*File 
 		}
 	}
 	var (
-		files    = make([]*File, 0)
+		files    = make([]File, 0)
 		patterns = strings.Split(pattern, ",")
 	)
 	for i := 0; i < len(patterns); i++ {
@@ -102,7 +104,7 @@ func (fs *ResFS) doScanDir(path string, pattern string, recursive bool) []*File 
 	// Walk through the tree to find matching files
 	fs.tree.IteratorAsc(func(key, value interface{}) bool {
 		var (
-			file     = value.(*File)
+			file     = value.(File)
 			filePath = key.(string)
 		)
 
@@ -144,7 +146,7 @@ func (fs *ResFS) Add(content string, prefix ...string) error {
 		namePrefix = prefix[0]
 	}
 	for i := 0; i < len(files); i++ {
-		files[i].fs = fs
+		files[i].(*localFile).fs = fs
 		fs.tree.Set(namePrefix+files[i].Path(), files[i])
 	}
 	intlog.Printf(context.TODO(), "Add %d files to resource manager", fs.tree.Size())
@@ -164,7 +166,7 @@ func (fs *ResFS) Load(path string, prefix ...string) error {
 func (fs *ResFS) Dump() {
 	var info os.FileInfo
 	fs.tree.Iterator(func(key, value interface{}) bool {
-		info = value.(*File).FileInfo()
+		info = value.(File).FileInfo()
 		intlog.Printf(
 			context.TODO(),
 			"%v %8s %s",

@@ -8,6 +8,7 @@ package gres
 
 import (
 	"io/fs"
+	"sort"
 )
 
 // MixedFS implements the FS interface by combining StdFS and ResFS.
@@ -16,6 +17,8 @@ type MixedFS struct {
 	stdFS *StdFS
 	resFS *ResFS
 }
+
+var _ FS = (*MixedFS)(nil)
 
 // NewMixedFS creates and returns a new MixedFS.
 func NewMixedFS(stdFs fs.FS, resFS *ResFS) *MixedFS {
@@ -26,7 +29,7 @@ func NewMixedFS(stdFs fs.FS, resFS *ResFS) *MixedFS {
 }
 
 // Get returns the file with given path.
-func (fs *MixedFS) Get(path string) *File {
+func (fs *MixedFS) Get(path string) File {
 	if file := fs.resFS.Get(path); file != nil {
 		return file
 	}
@@ -40,15 +43,15 @@ func (fs *MixedFS) IsEmpty() bool {
 
 // ScanDir returns the files under the given path,
 // the parameter `path` should be a folder type.
-func (fs *MixedFS) ScanDir(path string, pattern string, recursive ...bool) []*File {
+func (fs *MixedFS) ScanDir(path string, pattern string, recursive ...bool) []File {
 	var (
-		filesMap = make(map[string]*File)
-		files    = make([]*File, 0)
+		filesMap = make(map[string]File)
+		files    = make([]File, 0)
 	)
 
 	// Get files from ResFS
-	defaultFiles := fs.resFS.ScanDir(path, pattern, recursive...)
-	for _, file := range defaultFiles {
+	resFiles := fs.resFS.ScanDir(path, pattern, recursive...)
+	for _, file := range resFiles {
 		if _, exists := filesMap[file.Path()]; !exists {
 			filesMap[file.Path()] = file
 		}
@@ -56,32 +59,21 @@ func (fs *MixedFS) ScanDir(path string, pattern string, recursive ...bool) []*Fi
 
 	// Get files from StdFS
 	stdFiles := fs.stdFS.ScanDir(path, pattern, recursive...)
-	if len(stdFiles) > 0 {
-
-	}
 	for _, file := range stdFiles {
 		filesMap[file.Path()] = file
 	}
 
-	// Convert map to slice
-	for _, file := range filesMap {
-		files = append(files, file)
+	// Convert map to slice and sort by path
+	paths := make([]string, 0, len(filesMap))
+	for filePath := range filesMap {
+		paths = append(paths, filePath)
+	}
+	sort.Strings(paths)
+
+	// Build sorted result
+	for _, filePath := range paths {
+		files = append(files, filesMap[filePath])
 	}
 
 	return files
-}
-
-// ScanDirFile returns all sub-files with absolute paths of given `path`,
-// It scans directory recursively if given parameter `recursive` is true.
-func (fs *MixedFS) ScanDirFile(path string, pattern string, recursive ...bool) []*File {
-	return fs.ScanDir(path, pattern, recursive...)
-}
-
-// Export exports and saves specified path `src` and all its sub files
-// to specified system path `dst` recursively.
-func (fs *MixedFS) Export(src, dst string, option ...ExportOption) error {
-	if file := fs.Get(src); file != nil {
-		return file.Export(dst, option...)
-	}
-	return nil
 }

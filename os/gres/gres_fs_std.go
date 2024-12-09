@@ -20,6 +20,8 @@ type StdFS struct {
 	fs fs.FS
 }
 
+var _ FS = (*StdFS)(nil)
+
 // NewStdFS creates and returns a new StdFS.
 func NewStdFS(fs fs.FS) *StdFS {
 	return &StdFS{
@@ -28,7 +30,7 @@ func NewStdFS(fs fs.FS) *StdFS {
 }
 
 // Get returns the file with given path.
-func (fs *StdFS) Get(path string) *File {
+func (fs *StdFS) Get(path string) File {
 	f, err := fs.fs.Open(path)
 	if err != nil {
 		return nil
@@ -37,6 +39,7 @@ func (fs *StdFS) Get(path string) *File {
 
 	info, err := f.Stat()
 	if err != nil {
+		panic(err)
 		return nil
 	}
 
@@ -46,12 +49,12 @@ func (fs *StdFS) Get(path string) *File {
 		return nil
 	}
 
-	file := &File{
-		name:     info.Name(),
-		path:     path,
-		file:     info,
-		resource: content,
-		fs:       fs,
+	file := &localFile{
+		name:    info.Name(),
+		path:    path,
+		file:    info,
+		content: content,
+		fs:      fs,
 	}
 	return file
 }
@@ -72,9 +75,9 @@ func (fs *StdFS) IsEmpty() bool {
 
 // ScanDir returns the files under the given path,
 // the parameter `path` should be a folder type.
-func (fs *StdFS) ScanDir(path string, pattern string, recursive ...bool) []*File {
+func (fs *StdFS) ScanDir(path string, pattern string, recursive ...bool) []File {
 	var (
-		files       = make([]*File, 0)
+		files       = make([]File, 0)
 		isRecursive = len(recursive) > 0 && recursive[0]
 	)
 	err := fs.walkDir(path, func(path string, d os.DirEntry, err error) error {

@@ -30,14 +30,19 @@ func NewWithFS(fs FS) *Resource {
 	}
 }
 
+// SetFS sets the underlying file system implementation.
+func (r *Resource) SetFS(fs FS) {
+	r.fs = fs
+}
+
 // Get returns the file with given path.
-func (r *Resource) Get(path string) *File {
+func (r *Resource) Get(path string) File {
 	return r.fs.Get(path)
 }
 
 // GetWithIndex searches file with `path`, if the file is directory
 // it then does index files searching under this directory.
-func (r *Resource) GetWithIndex(path string, indexFiles []string) *File {
+func (r *Resource) GetWithIndex(path string, indexFiles []string) File {
 	// Necessary for double char '/' replacement in prefix.
 	path = strings.ReplaceAll(path, "\\", "/")
 	path = strings.ReplaceAll(path, "//", "/")
@@ -48,7 +53,7 @@ func (r *Resource) GetWithIndex(path string, indexFiles []string) *File {
 	}
 	if file := r.fs.Get(path); file != nil {
 		if len(indexFiles) > 0 && file.FileInfo().IsDir() {
-			var f *File
+			var f File
 			for _, name := range indexFiles {
 				if f = r.fs.Get(path + "/" + name); f != nil {
 					return f
@@ -80,15 +85,15 @@ func (r *Resource) IsEmpty() bool {
 }
 
 // ScanDir returns the files under the given path, the parameter `path` should be a folder type.
-func (r *Resource) ScanDir(path string, pattern string, recursive ...bool) []*File {
+func (r *Resource) ScanDir(path string, pattern string, recursive ...bool) []File {
 	return r.fs.ScanDir(path, pattern, recursive...)
 }
 
 // ScanDirFile returns all sub-files with absolute paths of given `path`,
 // It scans directory recursively if given parameter `recursive` is true.
-func (r *Resource) ScanDirFile(path string, pattern string, recursive ...bool) []*File {
+func (r *Resource) ScanDirFile(path string, pattern string, recursive ...bool) []File {
 	var (
-		result = make([]*File, 0)
+		result = make([]File, 0)
 		files  = r.fs.ScanDir(path, pattern, recursive...)
 	)
 	for _, file := range files {

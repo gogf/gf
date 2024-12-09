@@ -11,104 +11,71 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
+// A File provides access to a single file.
+// The File interface is the minimum implementation required of the file.
+// Directory files should also implement [ReadDirFile].
+// A file may implement [io.ReaderAt] or [io.Seeker] as optimizations.
+type File interface {
+	Name() string
+	Path() string
+	Content() []byte
+	FileInfo() os.FileInfo
+	Export(dst string, option ...ExportOption) error
+
+	// For http.File implementation.
+
+	Readdir(count int) ([]os.FileInfo, error)
+	io.ReadSeekCloser
+}
+
 // File implements the interface fs.File.
-type File struct {
-	name     string      // Name is the file name
-	path     string      // Path is the file path
-	file     os.FileInfo // FileInfo is the underlying file info
-	reader   io.Reader   // Reader is the file content reader
-	resource []byte      // Resource is the file content in binary format
-	fs       FS          // FS is the file system that contains this file
+type localFile struct {
+	name    string      // Name is the file name
+	path    string      // Path is the file path
+	content []byte      // file content
+	file    os.FileInfo // FileInfo is the underlying file info
+	fs      FS          // FS is the file system that contains this file
+	mu      sync.Mutex  // mu protects concurrent access to the file
 }
 
 // Name returns the name of the file
-func (f *File) Name() string {
+func (f *localFile) Name() string {
 	return f.name
 }
 
 // Path returns the path of the file
-func (f *File) Path() string {
+func (f *localFile) Path() string {
 	return f.path
 }
 
-// Open opens the file for reading
-func (f *File) Open() error {
-	if f.reader == nil && len(f.resource) > 0 {
-		f.reader = bytes.NewReader(f.resource)
-	}
-	return nil
-}
-
-// Close closes the file
-func (f *File) Close() error {
-	if closer, ok := f.reader.(io.Closer); ok {
-		return closer.Close()
-	}
-	return nil
-}
-
-// Read reads up to len(p) bytes into p
-func (f *File) Read(p []byte) (n int, err error) {
-	if f.reader == nil {
-		if err := f.Open(); err != nil {
-			return 0, err
-		}
-	}
-	return f.reader.Read(p)
-}
-
-// Seek implements the io.Seeker interface
-func (f *File) Seek(offset int64, whence int) (int64, error) {
-	if seeker, ok := f.reader.(io.Seeker); ok {
-		return seeker.Seek(offset, whence)
-	}
-	return 0, fs.ErrInvalid
-}
-
 // FileInfo returns an os.FileInfo describing this file
-func (f *File) FileInfo() os.FileInfo {
+func (f *localFile) FileInfo() os.FileInfo {
 	return f.file
 }
 
-// Stat returns the FileInfo structure describing file
-func (f *File) Stat() (os.FileInfo, error) {
-	return f.file, nil
-}
-
 // Content returns the file content
-func (f *File) Content() []byte {
-	if len(f.resource) > 0 {
-		return f.resource
-	}
-	buffer := new(bytes.Buffer)
-	if err := f.Open(); err != nil {
-		return nil
-	}
-	defer f.Close()
-	if _, err := io.Copy(buffer, f); err != nil {
-		return nil
-	}
-	f.resource = buffer.Bytes()
-	return f.resource
+func (f *localFile) Content() []byte {
+	return f.content
 }
 
 // Export exports and saves all its sub files to specified system path `dst` recursively.
-func (f *File) Export(dst string, option ...ExportOption) error {
+func (f *localFile) Export(dst string, option ...ExportOption) error {
 	var (
 		err          error
 		name         string
 		path         string
 		exportOption ExportOption
-		exportFiles  []*File
+		exportFiles  []File
 	)
-
 	if f.FileInfo().IsDir() {
 		exportFiles = f.fs.ScanDir(f.path, "*", true)
 	} else {
@@ -128,7 +95,7 @@ func (f *File) Export(dst string, option ...ExportOption) error {
 			continue
 		}
 		path = gfile.Join(dst, name)
-		if exportFile.FileInfo().IsDir() {
+		if f.FileInfo().IsDir() {
 			err = gfile.Mkdir(path)
 		} else {
 			err = gfile.PutBytes(path, exportFile.Content())
@@ -140,8 +107,51 @@ func (f *File) Export(dst string, option ...ExportOption) error {
 	return nil
 }
 
+// Close implements interface of http.File.
+func (f *localFile) Close() error {
+	return nil
+}
+
+// Readdir implements Readdir interface of http.File.
+func (f *localFile) Readdir(count int) ([]os.FileInfo, error) {
+	files := f.fs.ScanDir(f.Name(), "*", false)
+	if len(files) > 0 {
+		if count <= 0 || count > len(files) {
+			count = len(files)
+		}
+		infos := make([]os.FileInfo, count)
+		for k, v := range files {
+			infos[k] = v.FileInfo()
+		}
+		return infos, nil
+	}
+	return nil, nil
+}
+
+// Read implements the io.Reader interface.
+func (f *localFile) Read(b []byte) (n int, err error) {
+	reader := bytes.NewReader(f.Content())
+	if n, err = reader.Read(b); err != nil {
+		err = gerror.Wrapf(err, `read content failed`)
+	}
+	return
+}
+
+// Seek implements the io.Seeker interface.
+func (f *localFile) Seek(offset int64, whence int) (n int64, err error) {
+	reader := bytes.NewReader(f.Content())
+	if n, err = reader.Seek(offset, whence); err != nil {
+		err = gerror.Wrapf(err, `seek failed for offset %d, whence %d`, offset, whence)
+	}
+	return
+}
+
+func (f *localFile) getReader() (io.ReadSeeker, error) {
+	return bytes.NewReader(f.Content()), nil
+}
+
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (f *File) MarshalJSON() ([]byte, error) {
+func (f *localFile) MarshalJSON() ([]byte, error) {
 	info := f.FileInfo()
 	return gjson.Marshal(map[string]interface{}{
 		"name":    f.name,
@@ -155,7 +165,7 @@ func (f *File) MarshalJSON() ([]byte, error) {
 
 // fileInfo is the internal implementation of os.FileInfo interface.
 type fileInfo struct {
-	file *File
+	file *localFile
 }
 
 // Name returns the base name of the file.

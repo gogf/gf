@@ -26,6 +26,6 @@ func Instance(name ...string) *Resource {
 		key = name[0]
 	}
 	return instances.GetOrSetFuncLock(key, func() interface{} {
-		return New()
+		return NewWithFS(defaultFS)
 	}).(*Resource)
 }

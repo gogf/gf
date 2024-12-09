@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"sync"
 
 	"github.com/gogf/gf/v2/encoding/gbase64"
 	"github.com/gogf/gf/v2/encoding/gcompress"
@@ -129,7 +130,7 @@ func PackToGoFileWithOption(srcPath, goFilePath, pkgName string, option Option) 
 }
 
 // Unpack unpacks the content specified by `path` to []*File.
-func Unpack(path string) ([]*File, error) {
+func Unpack(path string) ([]File, error) {
 	realPath, err := gfile.Search(path)
 	if err != nil {
 		return nil, err
@@ -137,8 +138,8 @@ func Unpack(path string) ([]*File, error) {
 	return UnpackContent(gfile.GetContents(realPath))
 }
 
-// UnpackContent unpacks the content to []*File.
-func UnpackContent(content string) ([]*File, error) {
+// UnpackContent unpacks the content to []File.
+func UnpackContent(content string) ([]File, error) {
 	var (
 		err  error
 		data []byte
@@ -171,15 +172,15 @@ func UnpackContent(content string) ([]*File, error) {
 		err = gerror.Wrapf(err, `create zip reader failed`)
 		return nil, err
 	}
-	array := make([]*File, len(reader.File))
+	array := make([]File, len(reader.File))
 	for i, file := range reader.File {
-		array[i] = &File{
-			name:     file.Name,
-			path:     file.Name,
-			file:     file.FileInfo(),
-			reader:   nil,
-			resource: nil,
-			fs:       nil,
+		array[i] = &localFile{
+			name:    file.Name,
+			path:    file.Name,
+			content: data,
+			file:    file.FileInfo(),
+			fs:      nil,
+			mu:      sync.Mutex{},
 		}
 	}
 	return array, nil

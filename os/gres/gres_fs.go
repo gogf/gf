@@ -9,14 +9,14 @@ package gres
 // FS is the interface that defines a virtual file system.
 type FS interface {
 	// Get returns the file with given path.
-	Get(path string) *File
+	Get(path string) File
 
 	// IsEmpty checks and returns whether the resource is empty.
 	IsEmpty() bool
 
 	// ScanDir returns the files under the given path,
 	// the parameter `path` should be a folder type.
-	ScanDir(path string, pattern string, recursive ...bool) []*File
+	ScanDir(path string, pattern string, recursive ...bool) []File
 }
 
 // ExportOption contains options for Export.
