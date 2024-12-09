@@ -25,7 +25,6 @@ import (
 	"github.com/gogf/gf/v2/os/gsession"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/util/gtag"
-	"github.com/gorilla/websocket"
 )
 
 type (
