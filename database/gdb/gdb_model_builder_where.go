@@ -159,3 +159,13 @@ func (b *WhereBuilder) WhereNotNull(columns ...string) *WhereBuilder {
 	}
 	return builder
 }
+
+// WhereExists builds `EXISTS (subQuery)` statement.
+func (b *WhereBuilder) WhereExists(subQuery *Model) *WhereBuilder {
+	return b.Wheref(`EXISTS (?)`, subQuery)
+}
+
+// WhereNotExists builds `NOT EXISTS (subQuery)` statement.
+func (b *WhereBuilder) WhereNotExists(subQuery *Model) *WhereBuilder {
+	return b.Wheref(`NOT EXISTS (?)`, subQuery)
+}

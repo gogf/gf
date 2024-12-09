@@ -225,7 +225,7 @@ jobs:
     - name: Install Protoc
       uses: arduino/setup-protoc@v2
       with:
-        version: "23.x"
+        version: "29.x"
         repo-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Install the protocol compiler plugins for Go

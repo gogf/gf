@@ -12,12 +12,14 @@ import (
 	"time"
 
 	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
-	"github.com/gogf/gf/contrib/trace/otlphttp/v2"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gctx"
+
+	"github.com/gogf/gf/contrib/trace/otlphttp/v2"
 )
 
 type cTrace struct{}

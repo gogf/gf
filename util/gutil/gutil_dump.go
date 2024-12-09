@@ -465,6 +465,7 @@ func doDumpDefault(in doDumpInternalInput) {
 func addSlashesForString(s string) string {
 	return gstr.ReplaceByMap(s, map[string]string{
 		`"`:  `\"`,
+		`'`:  `\'`,
 		"\r": `\r`,
 		"\t": `\t`,
 		"\n": `\n`,

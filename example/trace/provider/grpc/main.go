@@ -18,10 +18,10 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 	"google.golang.org/grpc/encoding/gzip"
 
-	"github.com/gogf/gf/example/trace/provider/internal"
-
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
+
+	"github.com/gogf/gf/example/trace/provider/internal"
 )
 
 func main() {

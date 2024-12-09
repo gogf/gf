@@ -101,7 +101,7 @@ func filterLinesOfStackInfos(infos []*stackInfo) {
 
 // formatStackInfos formats and returns error stack information as string.
 func formatStackInfos(infos []*stackInfo) string {
-	var buffer = bytes.NewBuffer(nil)
+	buffer := bytes.NewBuffer(nil)
 	for i, info := range infos {
 		buffer.WriteString(fmt.Sprintf("%d. %s\n", i+1, info.Message))
 		if info.Lines != nil && info.Lines.Len() > 0 {

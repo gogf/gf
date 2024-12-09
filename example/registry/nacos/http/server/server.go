@@ -7,10 +7,11 @@
 package main
 
 import (
-	"github.com/gogf/gf/contrib/registry/nacos/v2"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/net/gsvc"
+
+	"github.com/gogf/gf/contrib/registry/nacos/v2"
 )
 
 func main() {

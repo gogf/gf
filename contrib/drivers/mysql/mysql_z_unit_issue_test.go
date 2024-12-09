@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -1283,12 +1284,12 @@ func Test_Issue3754(t *testing.T) {
 func Test_Issue3626(t *testing.T) {
 	table := "issue3626"
 	array := gstr.SplitAndTrim(gtest.DataContent(`issue3626.sql`), ";")
+	defer dropTable(table)
 	for _, v := range array {
 		if _, err := db.Exec(ctx, v); err != nil {
 			gtest.Error(err)
 		}
 	}
-	defer dropTable(table)
 
 	// Insert.
 	gtest.C(t, func(t *gtest.T) {
@@ -1375,5 +1376,183 @@ func Test_Issue3932(t *testing.T) {
 		one, err := db.Model(table).Order("id desc").Order("nickname asc").One()
 		t.AssertNil(err)
 		t.Assert(one["id"], 10)
+	})
+}
+
+// https://github.com/gogf/gf/issues/3968
+func Test_Issue3968(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		var hook = gdb.HookHandler{
+			Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
+				result, err = in.Next(ctx)
+				if err != nil {
+					return nil, err
+				}
+				if result != nil {
+					for i, _ := range result {
+						result[i]["location"] = gvar.New("ny")
+					}
+				}
+				return
+			},
+		}
+		var (
+			count  int
+			result gdb.Result
+		)
+		err := db.Model(table).Hook(hook).ScanAndCount(&result, &count, false)
+		t.AssertNil(err)
+		t.Assert(count, 10)
+		t.Assert(len(result), 10)
+	})
+}
+
+// https://github.com/gogf/gf/issues/3915
+func Test_Issue3915(t *testing.T) {
+	table := "issue3915"
+	array := gstr.SplitAndTrim(gtest.DataContent(`issue3915.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		//db.SetDebug(true)
+		all, err := db.Model(table).Where("a < b").All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 1)
+
+		all, err = db.Model(table).Where(gdb.Raw("a < b")).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 1)
+
+		all, err = db.Model(table).WhereLT("a", gdb.Raw("`b`")).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 1)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		//db.SetDebug(true)
+		all, err := db.Model(table).Where("a > b").All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 2)
+
+		all, err = db.Model(table).Where(gdb.Raw("a > b")).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 2)
+
+		all, err = db.Model(table).WhereGT("a", gdb.Raw("`b`")).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 2)
+	})
+}
+
+type RoleBase struct {
+	gmeta.Meta  `orm:"table:sys_role"`
+	Name        string      `json:"name"           description:"角色名称"     `
+	Code        string      `json:"code"           description:"角色 code"    `
+	Description string      `json:"description"    description:"描述信息"     `
+	Weight      int         `json:"weight"         description:"排序"         `
+	StatusId    int         `json:"statusId"       description:"发布状态"     `
+	CreatedAt   *gtime.Time `json:"createdAt"      description:""             `
+	UpdatedAt   *gtime.Time `json:"updatedAt"      description:""             `
+}
+
+type Role struct {
+	gmeta.Meta `orm:"table:sys_role"`
+	RoleBase
+	Id     uint    `json:"id"          description:""`
+	Status *Status `json:"status"       description:"发布状态"     orm:"with:id=status_id"        `
+}
+
+type StatusBase struct {
+	gmeta.Meta `orm:"table:sys_status"`
+	En         string `json:"en"        description:"英文名称"    `
+	Cn         string `json:"cn"        description:"中文名称"    `
+	Weight     int    `json:"weight"    description:"排序权重"    `
+}
+
+type Status struct {
+	gmeta.Meta `orm:"table:sys_status"`
+	StatusBase
+	Id uint `json:"id"          description:""`
+}
+
+// https://github.com/gogf/gf/issues/2119
+func Test_Issue2119(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		tables := []string{
+			"sys_role",
+			"sys_status",
+		}
+
+		defer dropTable(tables[0])
+		defer dropTable(tables[1])
+		_ = tables
+		array := gstr.SplitAndTrim(gtest.DataContent(`issue2119.sql`), ";")
+		for _, v := range array {
+			_, err := db.Exec(ctx, v)
+			t.AssertNil(err)
+		}
+		roles := make([]*Role, 0)
+		err := db.Ctx(context.Background()).Model(&Role{}).WithAll().Scan(&roles)
+		t.AssertNil(err)
+		expectStatus := []*Status{
+			{
+				StatusBase: StatusBase{
+					En:     "undecided",
+					Cn:     "未决定",
+					Weight: 800,
+				},
+				Id: 2,
+			},
+			{
+				StatusBase: StatusBase{
+					En:     "on line",
+					Cn:     "上线",
+					Weight: 900,
+				},
+				Id: 1,
+			},
+			{
+				StatusBase: StatusBase{
+					En:     "on line",
+					Cn:     "上线",
+					Weight: 900,
+				},
+				Id: 1,
+			},
+			{
+				StatusBase: StatusBase{
+					En:     "on line",
+					Cn:     "上线",
+					Weight: 900,
+				},
+				Id: 1,
+			},
+			{
+				StatusBase: StatusBase{
+					En:     "on line",
+					Cn:     "上线",
+					Weight: 900,
+				},
+				Id: 1,
+			},
+		}
+
+		for i := 0; i < len(roles); i++ {
+			t.Assert(roles[i].Status, expectStatus[i])
+		}
 	})
 }

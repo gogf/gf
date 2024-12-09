@@ -9,16 +9,18 @@ package grpcx_test
 import (
 	"context"
 	"fmt"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
+
+	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 )
 
 var ctx = context.Background()
