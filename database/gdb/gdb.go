@@ -90,7 +90,7 @@ type DB interface {
 	Prepare(ctx context.Context, sql string, execOnMaster ...bool) (*Stmt, error)
 
 	// ===========================================================================
-	// Common APIs for CURD.
+	// Common APIs for CRUD.
 	// ===========================================================================
 
 	// Insert inserts one or multiple records into table.
@@ -124,7 +124,7 @@ type DB interface {
 	Delete(ctx context.Context, table string, condition interface{}, args ...interface{}) (sql.Result, error)
 
 	// ===========================================================================
-	// Internal APIs for CURD, which can be overwritten by custom CURD implements.
+	// Internal APIs for CRUD, which can be overwritten by custom CRUD implements.
 	// ===========================================================================
 
 	// DoSelect executes a SELECT query using the given link and returns the result.
@@ -434,7 +434,7 @@ type TX interface {
 	GetCount(sql string, args ...interface{}) (int64, error)
 
 	// ===========================================================================
-	// CURD.
+	// CRUD.
 	// ===========================================================================
 
 	// Insert inserts one or multiple records into table.
