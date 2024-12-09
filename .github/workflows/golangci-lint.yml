@@ -14,6 +14,7 @@ on:
       - feature/**
       - enhance/**
       - fix/**
+      - feat/**
   pull_request:
     branches:
       - master
@@ -22,12 +23,13 @@ on:
       - feature/**
       - enhance/**
       - fix/**
+      - feat/**
 
 jobs:
   golangci:
     strategy:
       matrix:
-        go-version: [ '1.20','1.21.4','1.22','1.23' ]
+        go-version: [ 'stable' ]
     name: golangci-lint
     runs-on: ubuntu-latest
     steps:
@@ -42,4 +44,38 @@ jobs:
         with:
           # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
           version: v1.62.2
-          args: --timeout 3m0s
+          only-new-issues: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          args: --timeout 3m0s --fix
+      - name: Install gci
+        run: go install github.com/daixiang0/gci@latest
+      - name: Run gci
+        run: |
+          gci write --custom-order \
+          --skip-generated \
+          --skip-vendor \
+          -s standard \
+          -s blank \
+          -s default \
+          -s dot \
+          -s "prefix(github.com/gogf/gf/v2)" \
+          -s "prefix(github.com/gogf/gf/cmd)" \
+          -s "prefix(github.com/gogf/gf/contrib)" \
+          -s "prefix(github.com/gogf/gf/example)" \
+          ./
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+          echo "HAS_CHANGES=true" >> $GITHUB_ENV
+          else
+          echo "HAS_CHANGES=false" >> $GITHUB_ENV
+          fi
+      - name: Commit and push changes
+        if: env.HAS_CHANGES == 'true'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Apply gci import order changes"
+          git push

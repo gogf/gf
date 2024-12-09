@@ -125,7 +125,7 @@ linters-settings:
     custom-order: true
     # Drops lexical ordering for custom sections.
     # Default: false
-    no-lex-order: true
+    no-lex-order: false
   # https://golangci-lint.run/usage/linters/#revive
   # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md
   revive:
