@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -41,7 +42,8 @@ var (
 
 func init() {
 	nodeDefault := gdb.ConfigNode{
-		Link: fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3306)/?loc=Local&parseTime=true", TestDbPass),
+		ExecTimeout: time.Second * 2,
+		Link:        fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3306)/?loc=Local&parseTime=true", TestDbPass),
 	}
 	partitionDefault := gdb.ConfigNode{
 		Link:  fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3307)/?loc=Local&parseTime=true", TestDbPass),
@@ -129,6 +131,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 	        password    char(32) NULL,
 	        nickname    varchar(45) NULL,
 	        create_time timestamp(6) NULL,
+	        create_date       date NULL,
 	        PRIMARY KEY (id)
 	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 	    `, name,

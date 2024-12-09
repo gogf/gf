@@ -32,7 +32,7 @@ env:
 
 jobs:
   code-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     # Service containers to run with `code-test`
     services:
@@ -58,6 +58,11 @@ jobs:
           - 6379:6379
 
       # MySQL backend server.
+      # docker run -d --name mysql \
+      # -p 3306:3306 \
+      # -e MYSQL_DATABASE=test \
+      # -e MYSQL_ROOT_PASSWORD=12345678 \
+      # loads/mysql:5.7
       mysql:
         image: loads/mysql:5.7
         env:
@@ -185,7 +190,7 @@ jobs:
 
     strategy:
       matrix:
-        go-version: [ "1.18", "1.19", "1.20", "1.21", "1.22" ]
+        go-version: [ "1.20", "1.21", "1.22", "1.23" ]
         goarch: [ "386", "amd64" ]
 
     steps:
@@ -215,7 +220,19 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: ${{ matrix.go-version }}
-        cache-dependency-path: '**/go.sum' 
+        cache-dependency-path: '**/go.sum'
+
+    - name: Install Protoc
+      uses: arduino/setup-protoc@v2
+      with:
+        version: "29.x"
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Install the protocol compiler plugins for Go
+      run: |
+        go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+        go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+        export PATH="$PATH:$(go env GOPATH)/bin"
 
     - name: Before Script
       run:  bash .github/workflows/before_script.sh

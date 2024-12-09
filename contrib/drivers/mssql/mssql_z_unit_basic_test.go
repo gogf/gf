@@ -231,7 +231,6 @@ func Test_DB_Insert(t *testing.T) {
 
 		one, err := db.Model(table).Where("id", 3).One()
 		t.AssertNil(err)
-		fmt.Println(one)
 		t.Assert(one["ID"].Int(), 3)
 		t.Assert(one["PASSPORT"].String(), "user_3")
 		t.Assert(one["PASSWORD"].String(), "25d55ad283aa400af464c76d713c07ad")
@@ -794,7 +793,7 @@ func Test_DB_ToJson(t *testing.T) {
 		}
 
 		// ToJson
-		resultJson, err := gjson.LoadContent(result.Json())
+		resultJson, err := gjson.LoadContent([]byte(result.Json()))
 		if err != nil {
 			gtest.Fatal(err)
 		}

@@ -8,12 +8,13 @@ package zookeeper
 
 import (
 	"context"
-	"github.com/go-zookeeper/zk"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"path"
 	"strings"
 	"time"
 
+	"github.com/go-zookeeper/zk"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"
 )
 
@@ -65,7 +66,7 @@ func (r *Registry) Register(_ context.Context, service gsvc.Service) (gsvc.Servi
 // Deregister off-lines and removes `service` from the Registry.
 func (r *Registry) Deregister(ctx context.Context, service gsvc.Service) error {
 	ch := make(chan error, 1)
-	prefix := strings.TrimPrefix(strings.ReplaceAll(service.GetPrefix(), "/", "-"), "-")
+	prefix := strings.Trim(strings.ReplaceAll(service.GetPrefix(), "/", "-"), "-")
 	servicePath := path.Join(r.opts.namespace, prefix, service.GetName())
 	go func() {
 		err := r.conn.Delete(servicePath, -1)

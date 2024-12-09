@@ -94,6 +94,20 @@ const (
 	genServiceFileLockSeconds = 10
 )
 
+type fileInfo struct {
+	PkgItems  []pkgItem
+	FuncItems []funcItem
+}
+
+type folderInfo struct {
+	SrcPackageName      string
+	SrcImportedPackages *garray.SortedStrArray
+	SrcStructFunctions  *gmap.ListMap
+	DstFilePath         string
+
+	FileInfos []*fileInfo
+}
+
 func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGenServiceOutput, err error) {
 	in.SrcFolder = filepath.ToSlash(in.SrcFolder)
 	in.SrcFolder = gstr.TrimRight(in.SrcFolder, `/`)
@@ -114,7 +128,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 				return
 			}
 		}
-		defer gfile.Remove(flockFilePath)
+		defer gfile.RemoveFile(flockFilePath)
 		_ = gfile.PutContents(flockFilePath, gtime.TimestampStr())
 
 		// It works only if given WatchFile is in SrcFolder.
@@ -163,7 +177,12 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		return nil, err
 	}
 	// it will use goroutine to generate service files for each package.
-	var wg = sync.WaitGroup{}
+	var (
+		folderInfos    []folderInfo
+		wg             = sync.WaitGroup{}
+		allStructItems = make(map[string][]string)
+	)
+
 	for _, srcFolderPath := range srcFolderPaths {
 		if !gfile.IsDir(srcFolderPath) {
 			continue
@@ -175,7 +194,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		if len(files) == 0 {
 			continue
 		}
-		// Parse single logic package folder.
+
 		var (
 			srcPackageName      = gfile.Basename(srcFolderPath)
 			srcImportedPackages = garray.NewSortedStrArray().SetUnique(true)
@@ -184,14 +203,46 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 				c.getDstFileNameCase(srcPackageName, in.DstFileNameCase)+".go",
 			)
 		)
-		generatedDstFilePathSet.Add(dstFilePath)
-		// if it were to use goroutine,
-		// it would cause the order of the generated functions in the file to be disordered.
+
+		folder := folderInfo{
+			SrcPackageName:      srcPackageName,
+			SrcImportedPackages: srcImportedPackages,
+			SrcStructFunctions:  srcStructFunctions,
+			DstFilePath:         dstFilePath,
+		}
+
 		for _, file := range files {
-			pkgItems, funcItems, err := c.parseItemsInSrc(file)
+			pkgItems, structItems, funcItems, err := c.parseItemsInSrc(file)
 			if err != nil {
 				return nil, err
 			}
+			for k, v := range structItems {
+				allStructItems[k] = v
+			}
+			folder.FileInfos = append(folder.FileInfos, &fileInfo{
+				PkgItems:  pkgItems,
+				FuncItems: funcItems,
+			})
+		}
+
+		folderInfos = append(folderInfos, folder)
+	}
+
+	folderInfos = c.calculateStructEmbeddedFuncInfos(folderInfos, allStructItems)
+
+	for _, folder := range folderInfos {
+		// Parse single logic package folder.
+		var (
+			srcPackageName      = folder.SrcPackageName
+			srcImportedPackages = folder.SrcImportedPackages
+			srcStructFunctions  = folder.SrcStructFunctions
+			dstFilePath         = folder.DstFilePath
+		)
+		generatedDstFilePathSet.Add(dstFilePath)
+		// if it were to use goroutine,
+		// it would cause the order of the generated functions in the file to be disordered.
+		for _, file := range folder.FileInfos {
+			pkgItems, funcItems := file.PkgItems, file.FuncItems
 
 			// Calculate imported packages for service generating.
 			err = c.calculateImportedItems(in, pkgItems, funcItems, srcImportedPackages)
@@ -253,7 +304,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 				utils.IsFileDoNotEdit(relativeFilePath) {
 
 				mlog.Printf(`remove no longer used service file: %s`, relativeFilePath)
-				if err = gfile.Remove(file); err != nil {
+				if err = gfile.RemoveFile(file); err != nil {
 					return nil, err
 				}
 			}
@@ -289,7 +340,7 @@ func (c CGenService) checkAndUpdateMain(srcFolder string) (err error) {
 	var (
 		logicPackageName = gstr.ToLower(gfile.Basename(srcFolder))
 		logicFilePath    = gfile.Join(srcFolder, logicPackageName+".go")
-		importPath       = utils.GetImportPath(logicFilePath)
+		importPath       = utils.GetImportPath(srcFolder)
 		importStr        = fmt.Sprintf(`_ "%s"`, importPath)
 		mainFilePath     = gfile.Join(gfile.Dir(gfile.Dir(gfile.Dir(logicFilePath))), "main.go")
 		mainFileContent  = gfile.GetContents(mainFilePath)

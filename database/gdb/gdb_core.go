@@ -72,24 +72,30 @@ func (c *Core) GetCtx() context.Context {
 }
 
 // GetCtxTimeout returns the context and cancel function for specified timeout type.
-func (c *Core) GetCtxTimeout(ctx context.Context, timeoutType int) (context.Context, context.CancelFunc) {
+func (c *Core) GetCtxTimeout(ctx context.Context, timeoutType ctxTimeoutType) (context.Context, context.CancelFunc) {
 	if ctx == nil {
 		ctx = c.db.GetCtx()
 	} else {
 		ctx = context.WithValue(ctx, "WrappedByGetCtxTimeout", nil)
 	}
+	var config = c.db.GetConfig()
 	switch timeoutType {
 	case ctxTimeoutTypeExec:
 		if c.db.GetConfig().ExecTimeout > 0 {
-			return context.WithTimeout(ctx, c.db.GetConfig().ExecTimeout)
+			return context.WithTimeout(ctx, config.ExecTimeout)
 		}
 	case ctxTimeoutTypeQuery:
 		if c.db.GetConfig().QueryTimeout > 0 {
-			return context.WithTimeout(ctx, c.db.GetConfig().QueryTimeout)
+			return context.WithTimeout(ctx, config.QueryTimeout)
 		}
 	case ctxTimeoutTypePrepare:
 		if c.db.GetConfig().PrepareTimeout > 0 {
-			return context.WithTimeout(ctx, c.db.GetConfig().PrepareTimeout)
+			return context.WithTimeout(ctx, config.PrepareTimeout)
+		}
+
+	case ctxTimeoutTypeTrans:
+		if c.db.GetConfig().TranTimeout > 0 {
+			return context.WithTimeout(ctx, config.TranTimeout)
 		}
 	default:
 		panic(gerror.NewCodef(gcode.CodeInvalidParameter, "invalid context timeout type: %d", timeoutType))
@@ -278,7 +284,7 @@ func (c *Core) doUnion(ctx context.Context, unionType int, unions ...*Model) *Mo
 		unionTypeStr = "UNION"
 	}
 	for _, v := range unions {
-		sqlWithHolder, holderArgs := v.getFormattedSqlAndArgs(ctx, queryTypeNormal, false)
+		sqlWithHolder, holderArgs := v.getFormattedSqlAndArgs(ctx, SelectTypeDefault, false)
 		if composedSqlStr == "" {
 			composedSqlStr += fmt.Sprintf(`(%s)`, sqlWithHolder)
 		} else {
@@ -697,7 +703,7 @@ func (c *Core) FilteredLink() string {
 //
 // Note that this interface implements mainly for workaround for a json infinite loop bug
 // of Golang version < v1.14.
-func (c Core) MarshalJSON() ([]byte, error) {
+func (c *Core) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`%+v`, c)), nil
 }
 
@@ -789,9 +795,5 @@ func (c *Core) IsSoftCreatedFieldName(fieldName string) bool {
 // The internal handleArguments function might be called twice during the SQL procedure,
 // but do not worry about it, it's safe and efficient.
 func (c *Core) FormatSqlBeforeExecuting(sql string, args []interface{}) (newSql string, newArgs []interface{}) {
-	// DO NOT do this as there may be multiple lines and comments in the sql.
-	// sql = gstr.Trim(sql)
-	// sql = gstr.Replace(sql, "\n", " ")
-	// sql, _ = gregex.ReplaceString(`\s{2,}`, ` `, sql)
 	return handleSliceAndStructArgsForSql(sql, args)
 }

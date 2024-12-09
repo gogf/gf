@@ -7,24 +7,25 @@ for file in `find . -name go.mod`; do
     dirpath=$(dirname $file)
     echo $dirpath
 
+    # ignore mssql tests as its docker service failed
+    # TODO remove this ignoring codes after the mssql docker service OK
+    if [ "mssql" = $(basename $dirpath) ]; then
+        continue 1
+    fi
+
     if [[ $file =~ "/testdata/" ]]; then
         echo "ignore testdata path $file"
         continue 1
     fi
 
-    # package kuhecm needs golang >= v1.19
+    # package kuhecm was moved to sub ci procedure.
     if [ "kubecm" = $(basename $dirpath) ]; then
         continue 1
-        if ! go version|grep -qE "go1.19|go1.[2-9][0-9]"; then
-          echo "ignore kubecm as go version: $(go version)"
-          continue 1
-        fi
     fi
 
     # package consul needs golang >= v1.19
     if [ "consul" = $(basename $dirpath) ]; then
-        continue 1
-        if ! go version|grep -qE "go1.19|go1.[2-9][0-9]"; then
+        if ! go version|grep -qE "go1.[2-9][0-9]"; then
           echo "ignore consul as go version: $(go version)"
           continue 1
         fi
@@ -32,7 +33,7 @@ for file in `find . -name go.mod`; do
 
     # package etcd needs golang >= v1.19
     if [ "etcd" = $(basename $dirpath) ]; then
-        if ! go version|grep -qE "go1.19|go1.[2-9][0-9]"; then
+        if ! go version|grep -qE "go1.[2-9][0-9]"; then
           echo "ignore etcd as go version: $(go version)"
           continue 1
         fi
@@ -40,7 +41,7 @@ for file in `find . -name go.mod`; do
 
     # package polaris needs golang >= v1.19
     if [ "polaris" = $(basename $dirpath) ]; then
-        if ! go version|grep -qE "go1.19|go1.[2-9][0-9]"; then
+        if ! go version|grep -qE "go1.[2-9][0-9]"; then
           echo "ignore polaris as go version: $(go version)"
           continue 1
         fi
@@ -48,7 +49,7 @@ for file in `find . -name go.mod`; do
 
     # package example needs golang >= v1.20
     if [ "example" = $(basename $dirpath) ]; then
-        if ! go version|grep -qE "go1.[2-9][0-9]"; then
+        if ! go version|grep -qE "go1.[2-9][1-9]"; then
           echo "ignore example as go version: $(go version)"
           continue 1
         fi

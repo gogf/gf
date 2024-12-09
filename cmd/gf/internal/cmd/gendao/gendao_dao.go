@@ -58,8 +58,8 @@ func generateDaoSingle(ctx context.Context, in generateDaoSingleInput) {
 		mlog.Fatalf(`fetching tables fields failed for table "%s": %+v`, in.TableName, err)
 	}
 	var (
-		tableNameCamelCase      = gstr.CaseCamel(strings.ToLower(in.NewTableName))
-		tableNameCamelLowerCase = gstr.CaseCamelLower(strings.ToLower(in.NewTableName))
+		tableNameCamelCase      = formatFieldName(in.NewTableName, FieldNameCaseCamel)
+		tableNameCamelLowerCase = formatFieldName(in.NewTableName, FieldNameCaseCamelLower)
 		tableNameSnakeCase      = gstr.CaseSnake(in.NewTableName)
 		importPrefix            = in.ImportPrefix
 	)
@@ -123,7 +123,7 @@ func generateDaoIndex(in generateDaoIndexInput) {
 			mlog.Fatalf("writing content to '%s' failed: %v", path, err)
 		} else {
 			utils.GoFmt(path)
-			mlog.Print("generated:", path)
+			mlog.Print("generated:", gfile.RealPath(path))
 		}
 	}
 }
@@ -157,7 +157,7 @@ func generateDaoInternal(in generateDaoInternalInput) {
 		mlog.Fatalf("writing content to '%s' failed: %v", path, err)
 	} else {
 		utils.GoFmt(path)
-		mlog.Print("generated:", path)
+		mlog.Print("generated:", gfile.RealPath(path))
 	}
 }
 
@@ -179,7 +179,7 @@ func generateColumnNamesForDao(fieldMap map[string]*gdb.TableField, removeFieldP
 		}
 
 		array[index] = []string{
-			"            #" + gstr.CaseCamel(strings.ToLower(newFiledName)) + ":",
+			"            #" + formatFieldName(newFiledName, FieldNameCaseCamel) + ":",
 			fmt.Sprintf(` #"%s",`, field.Name),
 		}
 	}
@@ -219,7 +219,7 @@ func generateColumnDefinitionForDao(fieldMap map[string]*gdb.TableField, removeF
 			newFiledName = gstr.TrimLeftStr(newFiledName, v, 1)
 		}
 		array[index] = []string{
-			"    #" + gstr.CaseCamel(strings.ToLower(newFiledName)),
+			"    #" + formatFieldName(newFiledName, FieldNameCaseCamel),
 			" # " + "string",
 			" #" + fmt.Sprintf(`// %s`, comment),
 		}

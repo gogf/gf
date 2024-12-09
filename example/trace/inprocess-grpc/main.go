@@ -9,11 +9,12 @@ package main
 import (
 	"context"
 
-	"github.com/gogf/gf/contrib/trace/otlpgrpc/v2"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/util/gutil"
+
+	"github.com/gogf/gf/contrib/trace/otlpgrpc/v2"
 )
 
 const (
@@ -23,12 +24,15 @@ const (
 )
 
 func main() {
-	var ctx = gctx.New()
-	shutdown, err := otlpgrpc.Init(serviceName, endpoint, traceToken)
+	var (
+		ctx           = gctx.New()
+		shutdown, err = otlpgrpc.Init(serviceName, endpoint, traceToken)
+	)
+
 	if err != nil {
 		g.Log().Fatal(ctx, err)
 	}
-	defer shutdown()
+	defer shutdown(ctx)
 
 	ctx, span := gtrace.NewSpan(ctx, "main")
 	defer span.End()

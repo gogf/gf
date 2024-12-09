@@ -10,6 +10,8 @@ import (
 	"context"
 	"runtime"
 
+	_ "github.com/gogf/gf/cmd/gf/v2/internal/packed"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
@@ -19,7 +21,6 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd"
-	_ "github.com/gogf/gf/cmd/gf/v2/internal/packed"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/allyes"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
@@ -73,7 +74,7 @@ func (c *Command) Run(ctx context.Context) {
 func GetCommand(ctx context.Context) (*Command, error) {
 	root, err := gcmd.NewFromObject(cmd.GF)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	err = root.AddObject(
 		cmd.Up,

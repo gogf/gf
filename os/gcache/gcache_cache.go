@@ -23,9 +23,14 @@ type localAdapter = Adapter
 // New creates and returns a new cache object using default memory adapter.
 // Note that the LRU feature is only available using memory adapter.
 func New(lruCap ...int) *Cache {
-	memAdapter := NewAdapterMemory(lruCap...)
+	var adapter Adapter
+	if len(lruCap) == 0 {
+		adapter = NewAdapterMemory()
+	} else {
+		adapter = NewAdapterMemoryLru(lruCap[0])
+	}
 	c := &Cache{
-		localAdapter: memAdapter,
+		localAdapter: adapter,
 	}
 	return c
 }

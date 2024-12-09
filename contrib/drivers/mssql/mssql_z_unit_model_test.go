@@ -12,14 +12,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/util/gconv"
-
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gutil"
 )
@@ -519,7 +518,19 @@ func Test_Model_Count(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(count, int64(TableSize))
 	})
+}
 
+func Test_Model_Exist(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		exist, err := db.Model(table).Exist()
+		t.AssertNil(err)
+		t.Assert(exist, TableSize > 0)
+		exist, err = db.Model(table).Where("id", -1).Exist()
+		t.AssertNil(err)
+		t.Assert(exist, false)
+	})
 }
 
 func Test_Model_Select(t *testing.T) {

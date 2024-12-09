@@ -42,7 +42,7 @@ type Callback struct {
 	Path      string             // Bound file path (absolute).
 	name      string             // Registered name for AddOnce.
 	elem      *glist.Element     // Element in the callbacks of watcher.
-	recursive bool               // Is bound to path recursively or not.
+	recursive bool               // Is bound to sub-path recursively or not.
 }
 
 // Event is the event produced by underlying fsnotify.
@@ -51,6 +51,15 @@ type Event struct {
 	Path    string         // Absolute file path.
 	Op      Op             // File operation.
 	Watcher *Watcher       // Parent watcher.
+}
+
+// WatchOption holds the option for watching.
+type WatchOption struct {
+	// NoRecursive explicitly specifies no recursive watching.
+	// Recursive watching will also watch all its current and following created subfolders and sub-files.
+	//
+	// Note that the recursive watching is enabled in default.
+	NoRecursive bool
 }
 
 // Op is the bits union for file operations.
@@ -75,13 +84,15 @@ const (
 var (
 	mu                  sync.Mutex                // Mutex for concurrent safety of defaultWatcher.
 	defaultWatcher      *Watcher                  // Default watcher.
-	callbackIdMap       = gmap.NewIntAnyMap(true) // Id to callback mapping.
+	callbackIdMap       = gmap.NewIntAnyMap(true) // Global callback id to callback function mapping.
 	callbackIdGenerator = gtype.NewInt()          // Atomic id generator for callback.
 )
 
 // New creates and returns a new watcher.
 // Note that the watcher number is limited by the file handle setting of the system.
-// Eg: fs.inotify.max_user_instances system variable in linux systems.
+// Example: fs.inotify.max_user_instances system variable in linux systems.
+//
+// In most case, you can use the default watcher for usage instead of creating one.
 func New() (*Watcher, error) {
 	w := &Watcher{
 		cache:     gcache.New(),
@@ -102,26 +113,30 @@ func New() (*Watcher, error) {
 }
 
 // Add monitors `path` using default watcher with callback function `callbackFunc`.
+//
+// The parameter `path` can be either a file or a directory path.
 // The optional parameter `recursive` specifies whether monitoring the `path` recursively, which is true in default.
-func Add(path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
+func Add(path string, callbackFunc func(event *Event), option ...WatchOption) (callback *Callback, err error) {
 	w, err := getDefaultWatcher()
 	if err != nil {
 		return nil, err
 	}
-	return w.Add(path, callbackFunc, recursive...)
+	return w.Add(path, callbackFunc, option...)
 }
 
 // AddOnce monitors `path` using default watcher with callback function `callbackFunc` only once using unique name `name`.
-// If AddOnce is called multiple times with the same `name` parameter, `path` is only added to monitor once. It returns error
-// if it's called twice with the same `name`.
 //
+// If AddOnce is called multiple times with the same `name` parameter, `path` is only added to monitor once.
+// It returns error if it's called twice with the same `name`.
+//
+// The parameter `path` can be either a file or a directory path.
 // The optional parameter `recursive` specifies whether monitoring the `path` recursively, which is true in default.
-func AddOnce(name, path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
+func AddOnce(name, path string, callbackFunc func(event *Event), option ...WatchOption) (callback *Callback, err error) {
 	w, err := getDefaultWatcher()
 	if err != nil {
 		return nil, err
 	}
-	return w.AddOnce(name, path, callbackFunc, recursive...)
+	return w.AddOnce(name, path, callbackFunc, option...)
 }
 
 // Remove removes all monitoring callbacks of given `path` from watcher recursively.

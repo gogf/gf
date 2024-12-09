@@ -85,14 +85,13 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	}
 
 	var (
-		mime                 string
-		path                 = Path{XExtensions: make(XExtensions)}
-		inputMetaMap         = gmeta.Data(inputObject.Interface())
-		outputMetaMap        = gmeta.Data(outputObject.Interface())
-		isInputStructEmpty   = oai.doesStructHasNoFields(inputObject.Interface())
-		inputStructTypeName  = oai.golangTypeToSchemaName(inputObject.Type())
-		outputStructTypeName = oai.golangTypeToSchemaName(outputObject.Type())
-		operation            = Operation{
+		mime                string
+		path                = Path{XExtensions: make(XExtensions)}
+		inputMetaMap        = gmeta.Data(inputObject.Interface())
+		outputMetaMap       = gmeta.Data(outputObject.Interface())
+		isInputStructEmpty  = oai.doesStructHasNoFields(inputObject.Interface())
+		inputStructTypeName = oai.golangTypeToSchemaName(inputObject.Type())
+		operation           = Operation{
 			Responses:   map[string]ResponseRef{},
 			XExtensions: make(XExtensions),
 		}
@@ -129,7 +128,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		)
 	}
 
-	if err := oai.addSchema(inputObject.Interface(), outputObject.Interface()); err != nil {
+	if err := oai.addSchema(inputObject.Interface()); err != nil {
 		return err
 	}
 
@@ -199,15 +198,16 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	if operation.RequestBody.Value == nil {
 		var (
 			requestBody = RequestBody{
-				Required: true,
-				Content:  map[string]MediaType{},
+				Content: map[string]MediaType{},
 			}
 		)
 		// Supported mime types of request.
 		var (
-			contentTypes = oai.Config.ReadContentTypes
-			tagMimeValue = gmeta.Get(inputObject.Interface(), gtag.Mime).String()
+			contentTypes     = oai.Config.ReadContentTypes
+			tagMimeValue     = gmeta.Get(inputObject.Interface(), gtag.Mime).String()
+			tagRequiredValue = gmeta.Get(inputObject.Interface(), gtag.Required).Bool()
 		)
+		requestBody.Required = tagRequiredValue
 		if tagMimeValue != "" {
 			contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
 		}
@@ -234,48 +234,44 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	}
 
 	// =================================================================================================================
-	// Response.
+	// Default Response.
 	// =================================================================================================================
-	if _, ok := operation.Responses[responseOkKey]; !ok {
-		var (
-			response = Response{
-				Content:     map[string]MediaType{},
-				XExtensions: make(XExtensions),
+	status := responseOkKey
+	if statusValue, ok := outputMetaMap[gtag.Status]; ok {
+		statusCode := gconv.Int(statusValue)
+		if statusCode < 100 || statusCode >= 600 {
+			return gerror.Newf("Invalid HTTP status code: %s", statusValue)
+		}
+		status = statusValue
+	}
+	if _, ok := operation.Responses[status]; !ok {
+		response, err := oai.getResponseFromObject(outputObject.Interface(), true)
+		if err != nil {
+			return err
+		}
+		operation.Responses[status] = ResponseRef{Value: response}
+	}
+
+	// =================================================================================================================
+	// Other Responses.
+	// =================================================================================================================
+	if enhancedResponse, ok := outputObject.Interface().(IEnhanceResponseStatus); ok {
+		for statusCode, data := range enhancedResponse.EnhanceResponseStatus() {
+			if statusCode < 100 || statusCode >= 600 {
+				return gerror.Newf("Invalid HTTP status code: %d", statusCode)
 			}
-		)
-		if len(outputMetaMap) > 0 {
-			if err := oai.tagMapToResponse(outputMetaMap, &response); err != nil {
-				return err
+			if data.Response == nil {
+				continue
+			}
+			status := gconv.String(statusCode)
+			if _, ok := operation.Responses[status]; !ok {
+				response, err := oai.getResponseFromObject(data, false)
+				if err != nil {
+					return err
+				}
+				operation.Responses[status] = ResponseRef{Value: response}
 			}
 		}
-		// Supported mime types of response.
-		var (
-			contentTypes = oai.Config.ReadContentTypes
-			tagMimeValue = gmeta.Get(outputObject.Interface(), gtag.Mime).String()
-			refInput     = getResponseSchemaRefInput{
-				BusinessStructName:      outputStructTypeName,
-				CommonResponseObject:    oai.Config.CommonResponse,
-				CommonResponseDataField: oai.Config.CommonResponseDataField,
-			}
-		)
-		if tagMimeValue != "" {
-			contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
-		}
-		for _, v := range contentTypes {
-			// If customized response mime type, it then ignores common response feature.
-			if tagMimeValue != "" {
-				refInput.CommonResponseObject = nil
-				refInput.CommonResponseDataField = ""
-			}
-			schemaRef, err := oai.getResponseSchemaRef(refInput)
-			if err != nil {
-				return err
-			}
-			response.Content[v] = MediaType{
-				Schema: schemaRef,
-			}
-		}
-		operation.Responses[responseOkKey] = ResponseRef{Value: &response}
 	}
 
 	// Remove operation body duplicated properties.

@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/v2/database/gdb"
-
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -100,6 +99,75 @@ func Test_Issue3632(t *testing.T) {
 		)
 
 		_, err := dao.Ctx(ctx).Data(&member).Insert()
+		t.AssertNil(err)
+	})
+}
+
+// https://github.com/gogf/gf/issues/3671
+func Test_Issue3671(t *testing.T) {
+	type SubMember struct {
+		Seven string
+		Eight int64
+	}
+	type Member struct {
+		One   []int64     `json:"one" orm:"one"`
+		Two   [][]string  `json:"two" orm:"two"`
+		Three []string    `json:"three" orm:"three"`
+		Four  []int64     `json:"four" orm:"four"`
+		Five  []SubMember `json:"five" orm:"five"`
+	}
+	var (
+		sqlText = gtest.DataContent("issues", "issue3671.sql")
+		table   = fmt.Sprintf(`%s_%d`, TablePrefix+"issue3632", gtime.TimestampNano())
+	)
+	if _, err := db.Exec(ctx, fmt.Sprintf(sqlText, table)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			dao    = db.Model(table)
+			member = Member{
+				One:   []int64{1, 2, 3},
+				Two:   [][]string{{"a", "b"}, {"c", "d"}},
+				Three: []string{"x", "y", "z"},
+				Four:  []int64{1, 2, 3},
+				Five:  []SubMember{{Seven: "1", Eight: 2}, {Seven: "3", Eight: 4}},
+			}
+		)
+
+		_, err := dao.Ctx(ctx).Data(&member).Insert()
+		t.AssertNil(err)
+	})
+}
+
+// https://github.com/gogf/gf/issues/3668
+func Test_Issue3668(t *testing.T) {
+	type Issue3668 struct {
+		Text   interface{}
+		Number interface{}
+	}
+	var (
+		sqlText = gtest.DataContent("issues", "issue3668.sql")
+		table   = fmt.Sprintf(`%s_%d`, TablePrefix+"issue3668", gtime.TimestampNano())
+	)
+	if _, err := db.Exec(ctx, fmt.Sprintf(sqlText, table)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			dao  = db.Model(table)
+			data = Issue3668{
+				Text:   "我们都是自然的婴儿，卧在宇宙的摇篮里",
+				Number: nil,
+			}
+		)
+		_, err := dao.Ctx(ctx).
+			Data(data).
+			Insert()
 		t.AssertNil(err)
 	})
 }

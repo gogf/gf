@@ -10,10 +10,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gogf/gf/v2/os/gtime"
-
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gmeta"
@@ -93,36 +92,17 @@ func Test_Table_Relation_With_Scan(t *testing.T) {
 		tableUserDetail = "user_detail"
 		tableUserScores = "user_score"
 	)
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-name varchar(45) NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUser)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user.sql"), tableUser)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUser)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-uid int(10) unsigned NOT NULL AUTO_INCREMENT,
-address varchar(45) NOT NULL,
-PRIMARY KEY (uid)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUserDetail)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_detail.sql"), tableUserDetail)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserDetail)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-uid int(10) unsigned NOT NULL,
-score int(10) unsigned NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUserScores)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_scores.sql"), tableUserScores)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserScores)
@@ -291,36 +271,17 @@ func Test_Table_Relation_With(t *testing.T) {
 		tableUserDetail = "user_detail"
 		tableUserScores = "user_scores"
 	)
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-name varchar(45) NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUser)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user.sql"), tableUser)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUser)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-uid int(10) unsigned NOT NULL AUTO_INCREMENT,
-address varchar(45) NOT NULL,
-PRIMARY KEY (uid)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUserDetail)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_detail.sql"), tableUserDetail)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserDetail)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-uid int(10) unsigned NOT NULL,
-score int(10) unsigned NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUserScores)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_scores.sql"), tableUserScores)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserScores)
@@ -491,36 +452,17 @@ func Test_Table_Relation_WithAll(t *testing.T) {
 		tableUserDetail = "user_detail"
 		tableUserScores = "user_scores"
 	)
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-name varchar(45) NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUser)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user.sql"), tableUser)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUser)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-uid int(10) unsigned NOT NULL AUTO_INCREMENT,
-address varchar(45) NOT NULL,
-PRIMARY KEY (uid)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUserDetail)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_detail.sql"), tableUserDetail)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserDetail)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-uid int(10) unsigned NOT NULL,
-score int(10) unsigned NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUserScores)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_scores.sql"), tableUserScores)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserScores)
@@ -606,36 +548,17 @@ func Test_Table_Relation_WithAll_List(t *testing.T) {
 		tableUserDetail = "user_detail"
 		tableUserScores = "user_scores"
 	)
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-name varchar(45) NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUser)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user.sql"), tableUser)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUser)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-uid int(10) unsigned NOT NULL AUTO_INCREMENT,
-address varchar(45) NOT NULL,
-PRIMARY KEY (uid)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUserDetail)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_detail.sql"), tableUserDetail)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserDetail)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-uid int(10) unsigned NOT NULL,
-score int(10) unsigned NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUserScores)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_scores.sql"), tableUserScores)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserScores)
@@ -747,36 +670,17 @@ func Test_Table_Relation_WithAllCondition_List(t *testing.T) {
 		tableUserDetail = "user_detail"
 		tableUserScores = "user_scores"
 	)
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-name varchar(45) NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-`, tableUser)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user.sql"), tableUser)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUser)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-uid int(10) unsigned NOT NULL AUTO_INCREMENT,
-address varchar(45) NOT NULL,
-PRIMARY KEY (uid)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-`, tableUserDetail)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_detail.sql"), tableUserDetail)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserDetail)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-uid int(10) unsigned NOT NULL,
-score int(10) unsigned NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-`, tableUserScores)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_scores.sql"), tableUserScores)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserScores)
@@ -883,36 +787,17 @@ func Test_Table_Relation_WithAll_Embedded_With_SelfMaintained_Attributes(t *test
 		tableUserDetail = "user_detail"
 		tableUserScores = "user_scores"
 	)
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-name varchar(45) NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUser)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user.sql"), tableUser)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUser)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-uid int(10) unsigned NOT NULL AUTO_INCREMENT,
-address varchar(45) NOT NULL,
-PRIMARY KEY (uid)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUserDetail)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_detail.sql"), tableUserDetail)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserDetail)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-uid int(10) unsigned NOT NULL,
-score int(10) unsigned NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUserScores)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_scores.sql"), tableUserScores)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserScores)
@@ -998,36 +883,17 @@ func Test_Table_Relation_WithAll_Embedded_Without_SelfMaintained_Attributes(t *t
 		tableUserDetail = "user_detail"
 		tableUserScores = "user_scores"
 	)
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-name varchar(45) NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUser)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user.sql"), tableUser)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUser)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-uid int(10) unsigned NOT NULL AUTO_INCREMENT,
-address varchar(45) NOT NULL,
-PRIMARY KEY (uid)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUserDetail)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_detail.sql"), tableUserDetail)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserDetail)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-uid int(10) unsigned NOT NULL,
-score int(10) unsigned NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUserScores)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_scores.sql"), tableUserScores)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserScores)
@@ -1121,36 +987,17 @@ func Test_Table_Relation_WithAll_Embedded_WithoutMeta(t *testing.T) {
 		tableUserDetail = "user_detail"
 		tableUserScores = "user_scores"
 	)
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-name varchar(45) NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUser)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user.sql"), tableUser)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUser)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-uid int(10) unsigned NOT NULL AUTO_INCREMENT,
-address varchar(45) NOT NULL,
-PRIMARY KEY (uid)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUserDetail)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_detail.sql"), tableUserDetail)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserDetail)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-uid int(10) unsigned NOT NULL,
-score int(10) unsigned NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- `, tableUserScores)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_scores.sql"), tableUserScores)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserScores)
@@ -1237,36 +1084,17 @@ func Test_Table_Relation_WithAll_AttributeStructAlsoHasWithTag(t *testing.T) {
 		tableUserDetail = "user_detail"
 		tableUserScores = "user_scores"
 	)
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-name varchar(45) NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-`, tableUser)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user.sql"), tableUser)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUser)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-uid int(10) unsigned NOT NULL AUTO_INCREMENT,
-address varchar(45) NOT NULL,
-PRIMARY KEY (uid)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-`, tableUserDetail)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_detail.sql"), tableUserDetail)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserDetail)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-uid int(10) unsigned NOT NULL,
-score int(10) unsigned NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-`, tableUserScores)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_scores.sql"), tableUserScores)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserScores)
@@ -1353,36 +1181,17 @@ func Test_Table_Relation_WithAll_AttributeStructAlsoHasWithTag_MoreDeep(t *testi
 		tableUserDetail = "user_detail"
 		tableUserScores = "user_scores"
 	)
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-name varchar(45) NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-`, tableUser)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user.sql"), tableUser)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUser)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-uid int(10) unsigned NOT NULL AUTO_INCREMENT,
-address varchar(45) NOT NULL,
-PRIMARY KEY (uid)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-`, tableUserDetail)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_detail.sql"), tableUserDetail)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserDetail)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-uid int(10) unsigned NOT NULL,
-score int(10) unsigned NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-`, tableUserScores)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_scores.sql"), tableUserScores)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserScores)
@@ -1499,36 +1308,17 @@ func Test_Table_Relation_With_AttributeStructAlsoHasWithTag_MoreDeep(t *testing.
 		tableUserDetail = "user_detail"
 		tableUserScores = "user_scores"
 	)
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-name varchar(45) NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-`, tableUser)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user.sql"), tableUser)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUser)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-uid int(10) unsigned NOT NULL AUTO_INCREMENT,
-address varchar(45) NOT NULL,
-PRIMARY KEY (uid)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-`, tableUserDetail)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_detail.sql"), tableUserDetail)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserDetail)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
-id int(10) unsigned NOT NULL AUTO_INCREMENT,
-uid int(10) unsigned NOT NULL,
-score int(10) unsigned NOT NULL,
-PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-`, tableUserScores)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_scores.sql"), tableUserScores)); err != nil {
 		gtest.Error(err)
 	}
 	defer dropTable(tableUserScores)

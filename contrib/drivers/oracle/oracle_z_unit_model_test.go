@@ -460,6 +460,19 @@ func Test_Model_Count(t *testing.T) {
 
 }
 
+func Test_Model_Exist(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		exist, err := db.Model(table).Exist()
+		t.AssertNil(err)
+		t.Assert(exist, TableSize > 0)
+		exist, err = db.Model(table).Where("id", -1).Exist()
+		t.AssertNil(err)
+		t.Assert(exist, false)
+	})
+}
+
 func Test_Model_Select(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
@@ -1174,6 +1187,17 @@ func Test_Model_Replace(t *testing.T) {
 			"create_time": "2018-10-24 10:00:00",
 		}).Replace()
 		t.Assert(err, "Replace operation is not supported by oracle driver")
+	})
+}
+
+func Test_OrderRandom(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).OrderRandom().All()
+		t.AssertNil(err)
+		t.Assert(len(result), TableSize)
 	})
 }
 

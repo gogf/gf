@@ -7,6 +7,7 @@
 package gconv_test
 
 import (
+	"strconv"
 	"testing"
 	"time"
 
@@ -179,6 +180,39 @@ func TestStruct(t *testing.T) {
 		t.Assert(expect.PlanetName, "")
 		t.Assert(expect.Planet_Place, "")
 		t.Assert(expect.planetTime, "")
+	})
+}
+
+func TestStructDuplicateField(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := map[string]any{
+			"ID": 100,
+		}
+		type Nested1 struct {
+			ID string
+		}
+		type Nested2 struct {
+			ID uint
+		}
+		type Nested3 struct {
+			ID int
+		}
+		type Dest struct {
+			ID int
+			Nested1
+			Nested2
+			Nested3
+		}
+		var (
+			err  error
+			dest = new(Dest)
+		)
+		err = gconv.Struct(m, dest)
+		t.AssertNil(err)
+		t.Assert(dest.ID, m["ID"])
+		t.Assert(dest.Nested1.ID, strconv.Itoa(m["ID"].(int)))
+		t.Assert(dest.Nested2.ID, m["ID"])
+		t.Assert(dest.Nested3.ID, m["ID"])
 	})
 }
 

@@ -7,10 +7,10 @@
 package pgsql_test
 
 import (
-	_ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
-
 	"context"
 	"fmt"
+
+	_ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -83,6 +83,8 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 		   	password varchar(32) NOT NULL,
 		   	nickname varchar(45) NOT NULL,
 		   	create_time timestamp NOT NULL,
+		    favorite_movie varchar[],
+		    favorite_music text[],
 		   	PRIMARY KEY (id)
 		) ;`, name,
 	)); err != nil {

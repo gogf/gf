@@ -82,3 +82,25 @@ func ExampleIs() {
 	// true
 	// false
 }
+
+func ExampleCode() {
+	err1 := gerror.NewCode(gcode.CodeInternalError, "permission denied")
+	err2 := gerror.Wrap(err1, "operation failed")
+	fmt.Println(gerror.Code(err1))
+	fmt.Println(gerror.Code(err2))
+
+	// Output:
+	// 50:Internal Error
+	// 50:Internal Error
+}
+
+func ExampleHasCode() {
+	err1 := gerror.NewCode(gcode.CodeInternalError, "permission denied")
+	err2 := gerror.Wrap(err1, "operation failed")
+	fmt.Println(gerror.HasCode(err1, gcode.CodeOK))
+	fmt.Println(gerror.HasCode(err2, gcode.CodeInternalError))
+
+	// Output:
+	// false
+	// true
+}

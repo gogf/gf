@@ -12,6 +12,7 @@ import (
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
@@ -31,9 +32,13 @@ func (d *Driver) DoFilter(
 	// Refer:
 	// https://github.com/gogf/gf/issues/1537
 	// https://www.postgresql.org/docs/12/functions-json.html
-	newSql, err = gregex.ReplaceStringFuncMatch(`(::jsonb([^\w\d]*)\$\d)`, newSql, func(match []string) string {
-		return fmt.Sprintf(`::jsonb%s?`, match[2])
-	})
+	newSql, err = gregex.ReplaceStringFuncMatch(
+		`(::jsonb([^\w\d]*)\$\d)`,
+		newSql,
+		func(match []string) string {
+			return fmt.Sprintf(`::jsonb%s?`, match[2])
+		},
+	)
 	if err != nil {
 		return "", nil, err
 	}
@@ -41,6 +46,13 @@ func (d *Driver) DoFilter(
 	if err != nil {
 		return "", nil, err
 	}
+
+	// Add support for pgsql INSERT OR IGNORE.
+	if gstr.HasPrefix(newSql, gdb.InsertOperationIgnore) {
+		newSql = "INSERT" + newSql[len(gdb.InsertOperationIgnore):] + " ON CONFLICT DO NOTHING"
+	}
+
 	newArgs = args
+
 	return d.Core.DoFilter(ctx, link, newSql, newArgs)
 }

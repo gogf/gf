@@ -14,13 +14,15 @@ import (
 	"testing"
 	"time"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
+
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/trace"
 )
 
 func Test_BindMiddleware_Basic1(t *testing.T) {
@@ -772,10 +774,55 @@ func Test_MiddlewareHandlerGzipResponse(t *testing.T) {
 	})
 }
 
-type testTracerProvider struct{}
+func Test_MiddlewareHandlerStreamResponse(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareHandlerResponse)
+
+		group.GET("/stream/event", func(r *ghttp.Request) {
+			r.Response.Header().Set("Content-Type", "text/event-stream")
+		})
+
+		group.GET("/stream/octet", func(r *ghttp.Request) {
+			r.Response.Header().Set("Content-Type", "application/octet-stream")
+		})
+
+		group.GET("/stream/mixed", func(r *ghttp.Request) {
+			r.Response.Header().Set("Content-Type", "multipart/x-mixed-replace")
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		rsp, err := client.Get(ctx, "/stream/event")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusOK)
+		t.Assert(rsp.ReadAllString(), "")
+
+		rsp, err = client.Get(ctx, "/stream/octet")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusOK)
+		t.Assert(rsp.ReadAllString(), "")
+
+		rsp, err = client.Get(ctx, "/stream/mixed")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusOK)
+		t.Assert(rsp.ReadAllString(), "")
+	})
+}
+
+type testTracerProvider struct {
+	noop.TracerProvider
+}
 
 var _ trace.TracerProvider = &testTracerProvider{}
 
 func (*testTracerProvider) Tracer(_ string, _ ...trace.TracerOption) trace.Tracer {
-	return trace.NewNoopTracerProvider().Tracer("")
+	return noop.NewTracerProvider().Tracer("")
 }

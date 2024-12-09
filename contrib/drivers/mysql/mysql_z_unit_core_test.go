@@ -104,6 +104,7 @@ func Test_DB_Insert(t *testing.T) {
 			"password":    "25d55ad283aa400af464c76d713c07ad",
 			"nickname":    "T1",
 			"create_time": gtime.Now().String(),
+			"create_date": gtime.Date(),
 		})
 		t.AssertNil(err)
 
@@ -114,6 +115,7 @@ func Test_DB_Insert(t *testing.T) {
 			"password":    "25d55ad283aa400af464c76d713c07ad",
 			"nickname":    "name_2",
 			"create_time": gtime.Now().String(),
+			"create_date": gtime.Date(),
 		})
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
@@ -121,19 +123,22 @@ func Test_DB_Insert(t *testing.T) {
 
 		// struct
 		type User struct {
-			Id         int    `gconv:"id"`
-			Passport   string `json:"passport"`
-			Password   string `gconv:"password"`
-			Nickname   string `gconv:"nickname"`
-			CreateTime string `json:"create_time"`
+			Id         int         `gconv:"id"`
+			Passport   string      `json:"passport"`
+			Password   string      `gconv:"password"`
+			Nickname   string      `gconv:"nickname"`
+			CreateTime string      `json:"create_time"`
+			CreateDate *gtime.Time `json:"create_date"`
 		}
-		timeStr := gtime.New("2024-10-01 12:01:01").String()
+		gTime := gtime.New("2024-10-01 12:01:01")
+		timeStr, dateStr := gTime.String(), "2024-10-01 00:00:00"
 		result, err = db.Insert(ctx, table, User{
 			Id:         3,
 			Passport:   "user_3",
 			Password:   "25d55ad283aa400af464c76d713c07ad",
 			Nickname:   "name_3",
 			CreateTime: timeStr,
+			CreateDate: gTime,
 		})
 		t.AssertNil(err)
 		n, _ = result.RowsAffected()
@@ -147,15 +152,18 @@ func Test_DB_Insert(t *testing.T) {
 		t.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
 		t.Assert(one["nickname"].String(), "name_3")
 		t.Assert(one["create_time"].GTime().String(), timeStr)
+		t.Assert(one["create_date"].GTime().String(), dateStr)
 
 		// *struct
-		timeStr = gtime.New("2024-10-01 12:01:01").String()
+		gTime = gtime.New("2024-10-01 12:01:01")
+		timeStr, dateStr = gTime.String(), "2024-10-01 00:00:00"
 		result, err = db.Insert(ctx, table, &User{
 			Id:         4,
 			Passport:   "t4",
 			Password:   "25d55ad283aa400af464c76d713c07ad",
 			Nickname:   "name_4",
 			CreateTime: timeStr,
+			CreateDate: gTime,
 		})
 		t.AssertNil(err)
 		n, _ = result.RowsAffected()
@@ -168,9 +176,11 @@ func Test_DB_Insert(t *testing.T) {
 		t.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
 		t.Assert(one["nickname"].String(), "name_4")
 		t.Assert(one["create_time"].GTime().String(), timeStr)
+		t.Assert(one["create_date"].GTime().String(), dateStr)
 
 		// batch with Insert
-		timeStr = gtime.New("2024-10-01 12:01:01").String()
+		gTime = gtime.New("2024-10-01 12:01:01")
+		timeStr, dateStr = gTime.String(), "2024-10-01 00:00:00"
 		r, err := db.Insert(ctx, table, g.Slice{
 			g.Map{
 				"id":          200,
@@ -178,6 +188,7 @@ func Test_DB_Insert(t *testing.T) {
 				"password":    "25d55ad283aa400af464c76d71qw07ad",
 				"nickname":    "T200",
 				"create_time": timeStr,
+				"create_date": gTime,
 			},
 			g.Map{
 				"id":          300,
@@ -185,6 +196,7 @@ func Test_DB_Insert(t *testing.T) {
 				"password":    "25d55ad283aa400af464c76d713c07ad",
 				"nickname":    "T300",
 				"create_time": timeStr,
+				"create_date": gTime,
 			},
 		})
 		t.AssertNil(err)
@@ -198,6 +210,7 @@ func Test_DB_Insert(t *testing.T) {
 		t.Assert(one["password"].String(), "25d55ad283aa400af464c76d71qw07ad")
 		t.Assert(one["nickname"].String(), "T200")
 		t.Assert(one["create_time"].GTime().String(), timeStr)
+		t.Assert(one["create_date"].GTime().String(), dateStr)
 	})
 }
 
@@ -881,7 +894,7 @@ func Test_DB_ToJson(t *testing.T) {
 		}
 
 		// ToJson
-		resultJson, err := gjson.LoadContent(result.Json())
+		resultJson, err := gjson.LoadContent([]byte(result.Json()))
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -1644,7 +1657,7 @@ func Test_Core_ClearTableFields(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		fields, err := db.TableFields(ctx, table)
 		t.AssertNil(err)
-		t.Assert(len(fields), 5)
+		t.Assert(len(fields), 6)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		err := db.GetCore().ClearTableFields(ctx, table)
