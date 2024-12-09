@@ -14,19 +14,20 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"
+
 	"github.com/hashicorp/consul/api"
 	"github.com/hashicorp/consul/api/watch"
 )
 
 // Watcher watches the service changes.
 type Watcher struct {
-	registry   *Registry      // The registry instance
-	key        string         // The service name to watch
-	closeChan  chan struct{}  // Channel for closing
-	eventChan  chan struct{}  // Channel for notifying changes
-	mu         sync.RWMutex   // Mutex for thread safety
-	plan       *watch.Plan    // The watch plan
-	services   []gsvc.Service // Current services
+	registry  *Registry      // The registry instance
+	key       string         // The service name to watch
+	closeChan chan struct{}  // Channel for closing
+	eventChan chan struct{}  // Channel for notifying changes
+	mu        sync.RWMutex   // Mutex for thread safety
+	plan      *watch.Plan    // The watch plan
+	services  []gsvc.Service // Current services
 }
 
 // New creates and returns a new watcher.
