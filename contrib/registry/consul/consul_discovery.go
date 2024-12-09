@@ -20,7 +20,7 @@ import (
 // Search searches and returns services with specified condition.
 func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Service, error) {
 	// Get services from consul
-	services, _, err := r.client.Health().Service(in.Name, in.Version, true, &api.QueryOptions{
+	services, _, err := r.client.Health().Service(in.Name, "", true, &api.QueryOptions{
 		WaitTime: time.Second * 3,
 	})
 	if err != nil {
@@ -35,10 +35,40 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Serv
 
 		// Parse metadata
 		var metadata map[string]interface{}
-		if metaStr, ok := service.Service.Meta["metadata"]; ok {
+		if metaStr, ok := service.Service.Meta["metadata"]; ok && metaStr != "" {
 			if err = json.Unmarshal([]byte(metaStr), &metadata); err != nil {
 				return nil, gerror.Wrap(err, "failed to unmarshal service metadata")
 			}
+		}
+
+		// Skip if version doesn't match
+		if in.Version != "" {
+			if len(service.Service.Tags) == 0 || service.Service.Tags[0] != in.Version {
+				continue
+			}
+		}
+
+		// Skip if metadata doesn't match
+		if len(in.Metadata) > 0 {
+			if metadata == nil {
+				continue
+			}
+			match := true
+			for k, v := range in.Metadata {
+				if mv, ok := metadata[k]; !ok || mv != v {
+					match = false
+					break
+				}
+			}
+			if !match {
+				continue
+			}
+		}
+
+		// Get version from tags
+		version := ""
+		if len(service.Service.Tags) > 0 {
+			version = service.Service.Tags[0]
 		}
 
 		// Create service instance
@@ -47,7 +77,7 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Serv
 			Deployment: "",
 			Namespace:  "",
 			Name:       service.Service.Service,
-			Version:    service.Service.Tags[0],
+			Version:    version,
 			Endpoints: []gsvc.Endpoint{
 				gsvc.NewEndpoint(fmt.Sprintf("%s:%d", service.Service.Address, service.Service.Port)),
 			},

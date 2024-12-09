@@ -11,6 +11,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -35,6 +36,7 @@ type Registry struct {
 	client  *api.Client        // Consul client
 	address string             // Consul address
 	options map[string]string  // Additional options
+	mu      sync.RWMutex      // Mutex for thread safety
 }
 
 // Option is the configuration option type for registry.
@@ -43,14 +45,18 @@ type Option func(r *Registry)
 // WithAddress sets the address for consul client.
 func WithAddress(address string) Option {
 	return func(r *Registry) {
+		r.mu.Lock()
 		r.address = address
+		r.mu.Unlock()
 	}
 }
 
 // WithToken sets the ACL token for consul client.
 func WithToken(token string) Option {
 	return func(r *Registry) {
+		r.mu.Lock()
 		r.options["token"] = token
+		r.mu.Unlock()
 	}
 }
 
@@ -68,10 +74,12 @@ func New(opts ...Option) (gsvc.Registry, error) {
 
 	// Create consul config
 	config := api.DefaultConfig()
+	r.mu.RLock()
 	config.Address = r.address
 	if token, ok := r.options["token"]; ok {
 		config.Token = token
 	}
+	r.mu.RUnlock()
 
 	// Create consul client
 	client, err := api.NewClient(config)
@@ -85,10 +93,23 @@ func New(opts ...Option) (gsvc.Registry, error) {
 
 // Register registers a service to consul.
 func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Service, error) {
-	metadata, err := json.Marshal(service.GetMetadata())
-	if err != nil {
-		return nil, gerror.Wrap(err, "failed to marshal service metadata")
+	metadata := service.GetMetadata()
+	if metadata == nil {
+		metadata = make(map[string]interface{})
 	}
+
+	// Convert metadata to string map
+	meta := make(map[string]string)
+	if len(metadata) > 0 {
+		metadataBytes, err := json.Marshal(metadata)
+		if err != nil {
+			return nil, gerror.Wrap(err, "failed to marshal metadata")
+		}
+		meta["metadata"] = string(metadataBytes)
+	}
+
+	// Add version to meta
+	meta["version"] = service.GetVersion()
 
 	endpoints := service.GetEndpoints()
 	if len(endpoints) == 0 {
@@ -103,7 +124,7 @@ func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Ser
 		ID:      serviceID,
 		Name:    service.GetName(),
 		Tags:    []string{service.GetVersion()},
-		Meta:    map[string]string{"metadata": string(metadata)},
+		Meta:    meta,
 		Address: endpoints[0].Host(),
 		Port:    endpoints[0].Port(),
 	}
@@ -162,10 +183,16 @@ func (r *Registry) ttlHealthCheck(serviceID string) {
 
 // GetAddress returns the consul address
 func (r *Registry) GetAddress() string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 	return r.address
 }
 
-// Watch creates a watcher according to the key prefix.
+// Watch creates and returns a watcher for specified service.
 func (r *Registry) Watch(ctx context.Context, key string) (gsvc.Watcher, error) {
-	return newWatcher(r.client, r, key), nil
+	watcher, err := newWatcher(r, key)
+	if err != nil {
+		return nil, err
+	}
+	return watcher, nil
 }
