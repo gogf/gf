@@ -1,0 +1,40 @@
+撤销修改
+gi18n_manager.go
+
+// TranslateFormat translates, formats and returns the `format` with configured language
+// and given `values`.
+// When values[0] is of type map[string]string, parameter replacement is order-independent.
+// the values' format  :{key}
+func (m *Manager) TranslateFormat(ctx context.Context, format string, values ...interface{}) string {
+	result := m.Translate(ctx, format)
+	if len(values) > 0 {
+		val := values[0]
+		if valMapStrStr, ok := val.(map[string]string); ok {
+			for k, v := range valMapStrStr {
+				rpStr := ":" + k
+				result = gstr.Replace(result, rpStr, v)
+			}
+			return result
+		}
+	}
+	return fmt.Sprintf(result, values...)
+}
+
+gi18n_z_unit_test.go
+撤销修改
+func Test_MapStrStrRelace(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		i18n := gi18n.New(gi18n.Options{
+			Path: gtest.DataPath("i18n-file"),
+		})
+		i18n.SetLanguage("zh-CN")
+		str := i18n.Tf(context.Background(), "replace_map_test", map[string]string{"score": "3000", "name": "blue"})
+		fmt.Println(str)
+		t.Assert(str, "hello 3000 blue is ok")
+	})
+}
+
+
+
+修改内容
+ fix(i18n/gi18n_manager): TranslateFormat bug fixed
