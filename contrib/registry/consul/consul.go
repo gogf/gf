@@ -14,9 +14,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hashicorp/consul/api"
+
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/hashicorp/consul/api"
 )
 
 const (
@@ -33,9 +34,9 @@ var (
 
 // Registry implements gsvc.Registry interface using consul.
 type Registry struct {
-	client  *api.Client        // Consul client
-	address string             // Consul address
-	options map[string]string  // Additional options
+	client  *api.Client       // Consul client
+	address string            // Consul address
+	options map[string]string // Additional options
 	mu      sync.RWMutex      // Mutex for thread safety
 }
 
