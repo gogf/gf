@@ -33,9 +33,9 @@ var (
 
 // Registry implements gsvc.Registry interface using consul.
 type Registry struct {
-	client  *api.Client        // Consul client
-	address string             // Consul address
-	options map[string]string  // Additional options
+	client  *api.Client       // Consul client
+	address string            // Consul address
+	options map[string]string // Additional options
 	mu      sync.RWMutex      // Mutex for thread safety
 }
 
