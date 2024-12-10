@@ -145,13 +145,13 @@ func parseConfigNode(node ConfigNode) (ConfigNode, error) {
 }
 
 // AddDefaultConfigNode adds one node configuration to configuration of default group.
-func AddDefaultConfigNode(node ConfigNode) {
-	AddConfigNode(DefaultGroupName, node)
+func AddDefaultConfigNode(node ConfigNode) error {
+	return AddConfigNode(DefaultGroupName, node)
 }
 
 // AddDefaultConfigGroup adds multiple node configurations to configuration of default group.
-func AddDefaultConfigGroup(nodes ConfigGroup) {
-	SetConfigGroup(DefaultGroupName, nodes)
+func AddDefaultConfigGroup(nodes ConfigGroup) error {
+	return SetConfigGroup(DefaultGroupName, nodes)
 }
 
 // GetConfig retrieves and returns the configuration of given group.
