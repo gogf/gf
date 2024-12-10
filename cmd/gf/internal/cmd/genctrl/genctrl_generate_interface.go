@@ -10,15 +10,16 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
 type apiInterfaceGenerator struct{}
@@ -94,7 +95,7 @@ func (c *apiInterfaceGenerator) doGenerate(apiModuleFolderPath string, module st
 		"{Interfaces}": gstr.TrimRightStr(interfaceDefinition, "\n", 2),
 	}))
 	err = gfile.PutContents(moduleFilePath, interfaceContent)
-	mlog.Printf(`generated: %s`, moduleFilePath)
+	mlog.Printf(`generated: %s`, gfile.RealPath(moduleFilePath))
 	return
 }
 

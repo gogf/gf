@@ -14,12 +14,13 @@ package article
 import (
 	"context"
 
-	// This is a random comment
-	gdbas "github.com/gogf/gf/v2/database/gdb"
 	/**
 	 *
 	 */
 	_ "github.com/gogf/gf/v2/os/gfile"
+
+	// This is a random comment
+	gdbas "github.com/gogf/gf/v2/database/gdb"
 )
 
 // T1 random comment

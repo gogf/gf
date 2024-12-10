@@ -8,22 +8,24 @@ package genenums
 
 import (
 	"context"
+
 	"golang.org/x/tools/go/packages"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gtag"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 type (
 	CGenEnums      struct{}
 	CGenEnumsInput struct {
 		g.Meta   `name:"enums" config:"{CGenEnumsConfig}" brief:"{CGenEnumsBrief}" eg:"{CGenEnumsEg}"`
-		Src      string   `name:"src"      short:"s"  dc:"source folder path to be parsed" d:"."`
-		Path     string   `name:"path"     short:"p"  dc:"output go file path storing enums content" d:"internal/boot/boot_enums.go"`
+		Src      string   `name:"src"      short:"s"  dc:"source folder path to be parsed" d:"api"`
+		Path     string   `name:"path"     short:"p"  dc:"output go file path storing enums content" d:"internal/packed/packed_enums.go"`
 		Prefixes []string `name:"prefixes" short:"x"  dc:"only exports packages that starts with specified prefixes"`
 	}
 	CGenEnumsOutput struct{}
@@ -34,8 +36,8 @@ const (
 	CGenEnumsBrief  = `parse go files in current project and generate enums go file`
 	CGenEnumsEg     = `
 gf gen enums
-gf gen enums -p internal/boot/boot_enums.go
-gf gen enums -p internal/boot/boot_enums.go -s .
+gf gen enums -p internal/packed/packed_enums.go
+gf gen enums -p internal/packed/packed_enums.go -s .
 gf gen enums -x github.com/gogf
 `
 )

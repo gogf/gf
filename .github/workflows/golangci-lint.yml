@@ -1,17 +1,8 @@
-# Tencent is pleased to support the open source community by making Polaris available.
+# Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 #
-# Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-#
-# Licensed under the BSD 3-Clause License (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# https://opensource.org/licenses/BSD-3-Clause
-#
-# Unless required by applicable law or agreed to in writing, software distributed
-# under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-# CONDITIONS OF ANY KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations under the License.
+# This Source Code Form is subject to the terms of the MIT License.
+# If a copy of the MIT was not distributed with this file,
+# You can obtain one at https://github.com/gogf/gf.
 
 name: GolangCI-Lint
 on:
@@ -23,20 +14,13 @@ on:
       - feature/**
       - enhance/**
       - fix/**
-  pull_request:
-    branches:
-      - master
-      - develop
-      - personal/**
-      - feature/**
-      - enhance/**
-      - fix/**
+      - feat/**
 
 jobs:
   golangci:
     strategy:
       matrix:
-        go-version: [ '1.20','1.21.4','1.22', '1.23' ]
+        go-version: [ 'stable' ]
     name: golangci-lint
     runs-on: ubuntu-latest
     steps:
@@ -50,5 +34,38 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
-          version: v1.60.1
-          args: --timeout 3m0s
+          version: v1.62.2
+          only-new-issues: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          args: --timeout 3m0s --fix
+      - name: Install gci
+        run: go install github.com/daixiang0/gci@latest
+      - name: Run gci
+        run: |
+          gci write --custom-order \
+          --skip-generated \
+          --skip-vendor \
+          -s standard \
+          -s blank \
+          -s default \
+          -s dot \
+          -s "prefix(github.com/gogf/gf/v2)" \
+          -s "prefix(github.com/gogf/gf/cmd)" \
+          -s "prefix(github.com/gogf/gf/contrib)" \
+          -s "prefix(github.com/gogf/gf/example)" \
+          ./
+      - name: Check for changes
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+          echo "HAS_CHANGES=true" >> $GITHUB_ENV
+          else
+          echo "HAS_CHANGES=false" >> $GITHUB_ENV
+          fi
+      - name: Commit and push changes
+        if: env.HAS_CHANGES == 'true'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Apply gci import order changes"
+          git push

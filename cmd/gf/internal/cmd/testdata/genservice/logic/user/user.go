@@ -9,6 +9,7 @@ package user
 import (
 	"context"
 
+	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genservice/logic/base"
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genservice/service"
 )
 
@@ -17,6 +18,7 @@ func init() {
 }
 
 type sUser struct {
+	base.Base
 }
 
 func New() *sUser {
