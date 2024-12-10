@@ -268,7 +268,7 @@ func shutdownWebServersGracefully(ctx context.Context, signal os.Signal) {
 			server := v.(*Server)
 			server.doServiceDeregister()
 			for _, s := range server.servers {
-				s.shutdown(ctx)
+				s.Shutdown(ctx)
 			}
 		}
 	})
@@ -279,7 +279,7 @@ func forceCloseWebServers(ctx context.Context) {
 	serverMapping.RLockFunc(func(m map[string]interface{}) {
 		for _, v := range m {
 			for _, s := range v.(*Server).servers {
-				s.close(ctx)
+				s.Close(ctx)
 			}
 		}
 	})

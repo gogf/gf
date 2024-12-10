@@ -15,15 +15,6 @@ on:
       - enhance/**
       - fix/**
       - feat/**
-  pull_request:
-    branches:
-      - master
-      - develop
-      - personal/**
-      - feature/**
-      - enhance/**
-      - fix/**
-      - feat/**
 
 jobs:
   golangci:
@@ -64,7 +55,6 @@ jobs:
           -s "prefix(github.com/gogf/gf/example)" \
           ./
       - name: Check for changes
-        id: check_changes
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
           echo "HAS_CHANGES=true" >> $GITHUB_ENV
