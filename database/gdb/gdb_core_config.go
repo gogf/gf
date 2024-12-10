@@ -10,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/text/gregex"
@@ -73,42 +75,64 @@ func init() {
 
 // SetConfig sets the global configuration for package.
 // It will overwrite the old configuration of package.
-func SetConfig(config Config) {
+func SetConfig(config Config) error {
 	defer instances.Clear()
 	configs.Lock()
 	defer configs.Unlock()
+
 	for k, nodes := range config {
 		for i, node := range nodes {
-			nodes[i] = parseConfigNode(node)
+			parsedNode, err := parseConfigNode(node)
+			if err != nil {
+				return err
+			}
+			nodes[i] = parsedNode
 		}
 		config[k] = nodes
 	}
 	configs.config = config
+	return nil
 }
 
 // SetConfigGroup sets the configuration for given group.
-func SetConfigGroup(group string, nodes ConfigGroup) {
+func SetConfigGroup(group string, nodes ConfigGroup) error {
 	defer instances.Clear()
 	configs.Lock()
 	defer configs.Unlock()
+
 	for i, node := range nodes {
-		nodes[i] = parseConfigNode(node)
+		parsedNode, err := parseConfigNode(node)
+		if err != nil {
+			return err
+		}
+		nodes[i] = parsedNode
 	}
 	configs.config[group] = nodes
+	return nil
 }
 
 // AddConfigNode adds one node configuration to configuration of given group.
-func AddConfigNode(group string, node ConfigNode) {
+func AddConfigNode(group string, node ConfigNode) error {
 	defer instances.Clear()
 	configs.Lock()
 	defer configs.Unlock()
-	configs.config[group] = append(configs.config[group], parseConfigNode(node))
+
+	parsedNode, err := parseConfigNode(node)
+	if err != nil {
+		return err
+	}
+	configs.config[group] = append(configs.config[group], parsedNode)
+	return nil
 }
 
 // parseConfigNode parses `Link` configuration syntax.
-func parseConfigNode(node ConfigNode) ConfigNode {
+func parseConfigNode(node ConfigNode) (ConfigNode, error) {
 	if node.Link != "" {
-		node = *parseConfigNodeLink(&node)
+		parsedLinkNode, err := parseConfigNodeLink(&node)
+		if err != nil {
+			return node, err
+		}
+		node = *parsedLinkNode
 	}
 	if node.Link != "" && node.Type == "" {
 		match, _ := gregex.MatchString(`([a-z]+):(.+)`, node.Link)
@@ -117,7 +141,7 @@ func parseConfigNode(node ConfigNode) ConfigNode {
 			node.Link = gstr.Trim(match[2])
 		}
 	}
-	return node
+	return node, nil
 }
 
 // AddDefaultConfigNode adds one node configuration to configuration of default group.
@@ -266,34 +290,39 @@ func (c *Core) GetSchema() string {
 	return schema
 }
 
-func parseConfigNodeLink(node *ConfigNode) *ConfigNode {
+func parseConfigNodeLink(node *ConfigNode) (*ConfigNode, error) {
 	var match []string
 	if node.Link != "" {
 		match, _ = gregex.MatchString(linkPattern, node.Link)
-		if len(match) > 5 {
-			node.Type = match[1]
-			node.User = match[2]
-			node.Pass = match[3]
-			node.Protocol = match[4]
-			array := gstr.Split(match[5], ":")
-			if node.Protocol == "file" {
-				node.Name = match[5]
-			} else {
-				if len(array) == 2 {
-					// link with port.
-					node.Host = array[0]
-					node.Port = array[1]
-				} else {
-					// link without port.
-					node.Host = array[0]
-				}
-				node.Name = match[6]
-			}
-			if len(match) > 6 && match[7] != "" {
-				node.Extra = match[7]
-			}
-			node.Link = ""
+		if len(match) <= 5 {
+			return nil, gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid link configuration: %s, shuold be pattern like %s`,
+				node.Link, linkPatternDescription,
+			)
 		}
+		node.Type = match[1]
+		node.User = match[2]
+		node.Pass = match[3]
+		node.Protocol = match[4]
+		array := gstr.Split(match[5], ":")
+		if node.Protocol == "file" {
+			node.Name = match[5]
+		} else {
+			if len(array) == 2 {
+				// link with port.
+				node.Host = array[0]
+				node.Port = array[1]
+			} else {
+				// link without port.
+				node.Host = array[0]
+			}
+			node.Name = match[6]
+		}
+		if len(match) > 6 && match[7] != "" {
+			node.Extra = match[7]
+		}
+		node.Link = ""
 	}
 	if node.Extra != "" {
 		if m, _ := gstr.Parse(node.Extra); len(m) > 0 {
@@ -307,5 +336,5 @@ func parseConfigNodeLink(node *ConfigNode) *ConfigNode {
 	if node.Protocol == "" {
 		node.Protocol = defaultProtocol
 	}
-	return node
+	return node, nil
 }

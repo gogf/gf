@@ -638,8 +638,8 @@ const (
 	ctxKeyCatchSQL            gctx.StrKey = `CtxKeyCatchSQL`
 	ctxKeyInternalProducedSQL gctx.StrKey = `CtxKeyInternalProducedSQL`
 
-	// type:[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
-	linkPattern = `(\w+):([\w\-\$]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*)`
+	linkPattern            = `(\w+):([\w\-\$]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*)`
+	linkPatternDescription = `type:[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]`
 )
 
 type ctxTimeoutType int
@@ -843,7 +843,10 @@ func NewByGroup(group ...string) (db DB, err error) {
 // So all db type configurations in the same group should be the same.
 func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 	if node.Link != "" {
-		node = parseConfigNodeLink(node)
+		node, err = parseConfigNodeLink(node)
+		if err != nil {
+			return
+		}
 	}
 	c := &Core{
 		group:         group,
