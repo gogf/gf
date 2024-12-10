@@ -121,7 +121,7 @@ func (view *View) ParseOption(ctx context.Context, option Option) (result string
 			path     string
 			folder   string
 			content  string
-			resource *gres.File
+			resource gres.File
 		)
 		// Searching the absolute file path for `file`.
 		path, folder, resource, err = view.searchFile(ctx, option.File)
@@ -372,7 +372,9 @@ func (view *View) formatTemplateObjectCreatingError(filePath, tplName string, er
 // searchFile returns the found absolute path for `file` and its template folder path.
 // Note that, the returned `folder` is the template folder path, but not the folder of
 // the returned template file `path`.
-func (view *View) searchFile(ctx context.Context, file string) (path string, folder string, resource *gres.File, err error) {
+func (view *View) searchFile(
+	ctx context.Context, file string) (path string, folder string, resource gres.File, err error,
+) {
 	var tempPath string
 	// Firstly checking the resource manager.
 	if !gres.IsEmpty() {

@@ -223,7 +223,7 @@ func (s *Server) handleAfterRequestDone(request *Request) {
 // It returns a file struct specifying the file information.
 func (s *Server) searchStaticFile(uri string) *staticFile {
 	var (
-		file *gres.File
+		file gres.File
 		path string
 		dir  bool
 	)

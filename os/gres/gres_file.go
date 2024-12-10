@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"io"
 	"io/fs"
+	"net/http"
 	"os"
 	"sync"
 	"time"
@@ -25,16 +26,12 @@ import (
 // Directory files should also implement [ReadDirFile].
 // A file may implement [io.ReaderAt] or [io.Seeker] as optimizations.
 type File interface {
+	http.File
 	Name() string
 	Path() string
 	Content() []byte
 	FileInfo() os.FileInfo
 	Export(dst string, option ...ExportOption) error
-
-	// For http.File implementation.
-
-	Readdir(count int) ([]os.FileInfo, error)
-	io.ReadSeekCloser
 }
 
 // File implements the interface fs.File.
@@ -60,6 +57,11 @@ func (f *localFile) Path() string {
 // FileInfo returns an os.FileInfo describing this file
 func (f *localFile) FileInfo() os.FileInfo {
 	return f.file
+}
+
+// Stat returns the FileInfo structure describing file.
+func (f *localFile) Stat() (os.FileInfo, error) {
+	return f.file, nil
 }
 
 // Content returns the file content

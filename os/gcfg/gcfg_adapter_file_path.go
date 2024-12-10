@@ -179,7 +179,7 @@ func (a *AdapterFile) GetPaths() []string {
 func (a *AdapterFile) doGetFilePath(fileNameOrPath string) (filePath string) {
 	var (
 		tempPath string
-		resFile  *gres.File
+		resFile  gres.File
 		fileInfo os.FileInfo
 	)
 	// Searching resource manager.
@@ -187,7 +187,7 @@ func (a *AdapterFile) doGetFilePath(fileNameOrPath string) (filePath string) {
 		for _, tryFolder := range resourceTryFolders {
 			tempPath = tryFolder + fileNameOrPath
 			if resFile = gres.Get(tempPath); resFile != nil {
-				fileInfo, _ = resFile.Stat()
+				fileInfo = resFile.FileInfo()
 				if fileInfo != nil && !fileInfo.IsDir() {
 					filePath = resFile.Name()
 					return
@@ -199,7 +199,7 @@ func (a *AdapterFile) doGetFilePath(fileNameOrPath string) (filePath string) {
 				for _, tryFolder := range resourceTryFolders {
 					tempPath = searchPath + tryFolder + fileNameOrPath
 					if resFile = gres.Get(tempPath); resFile != nil {
-						fileInfo, _ = resFile.Stat()
+						fileInfo = resFile.FileInfo()
 						if fileInfo != nil && !fileInfo.IsDir() {
 							filePath = resFile.Name()
 							return

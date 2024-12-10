@@ -58,10 +58,12 @@ func Test_Pack(t *testing.T) {
 		)
 		t.AssertNil(err)
 
-		r := gres.New()
-		err = r.Add(string(data))
+		fs := gres.NewResFS()
+		err = fs.Add(string(data))
 		t.AssertNil(err)
-		t.Assert(r.Contains("files/"), true)
+
+		res := gres.NewWithFS(fs)
+		t.Assert(res.Contains("files/"), true)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -71,10 +73,12 @@ func Test_Pack(t *testing.T) {
 		)
 		t.AssertNil(err)
 
-		r := gres.New()
-		err = r.Add(string(data))
+		fs := gres.NewResFS()
+		err = fs.Add(string(data))
 		t.AssertNil(err)
-		t.Assert(r.Contains("/root/"), true)
+
+		res := gres.NewWithFS(fs)
+		t.Assert(res.Contains("/root/"), true)
 	})
 }
 
@@ -89,10 +93,12 @@ func Test_PackToFile(t *testing.T) {
 
 		defer gfile.Remove(dstPath)
 
-		r := gres.New()
-		err = r.Load(dstPath)
+		fs := gres.NewResFS()
+		err = fs.Load(dstPath)
 		t.AssertNil(err)
-		t.Assert(r.Contains("files"), true)
+
+		res := gres.NewWithFS(fs)
+		t.Assert(res.Contains("files"), true)
 	})
 }
 
@@ -152,12 +158,8 @@ func Test_Basic(t *testing.T) {
 		t.Assert(info.IsDir(), false)
 		t.Assert(info.Name(), "test1")
 
-		rc, err := file.Open()
-		t.AssertNil(err)
-		defer rc.Close()
-
 		b := make([]byte, 5)
-		n, err := rc.Read(b)
+		n, err := file.Read(b)
 		t.Assert(n, 5)
 		t.AssertNil(err)
 		t.Assert(string(b), "test1")
@@ -175,11 +177,6 @@ func Test_Basic(t *testing.T) {
 		t.AssertNE(info, nil)
 		t.Assert(info.IsDir(), true)
 		t.Assert(info.Name(), "dir2")
-
-		rc, err := file.Open()
-		t.AssertNil(err)
-		defer rc.Close()
-
 		t.Assert(file.Content(), nil)
 	})
 
