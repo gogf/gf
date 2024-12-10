@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// Package cmd provides the management of CLI commands for `gf` tool.
 package cmd
 
 import (
@@ -19,9 +20,8 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
-var (
-	GF = cGF{}
-)
+// GF is the management object for `gf` command line tool.
+var GF = cGF{}
 
 type cGF struct {
 	g.Meta `name:"gf" ad:"{cGFAd}"`

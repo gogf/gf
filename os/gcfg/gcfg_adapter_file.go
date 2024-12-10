@@ -47,7 +47,7 @@ var (
 		"manifest/config/", "manifest/config", "/manifest/config", "/manifest/config/",
 	}
 
-	// Prefix array for trying searching in local system.
+	// Prefix array for trying searching in the local system.
 	localSystemTryFolders = []string{"", "config/", "manifest/config"}
 )
 

@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 # Declare default permissions as read only.
-permissions: read-all
+permissions: read
 
 jobs:
   analysis:
@@ -34,7 +34,7 @@ jobs:
           persist-credentials: false
 
       - name: "Run analysis"
-        uses: ossf/scorecard-action@0864cf19026789058feabb7e87baa5f140aac736 # v2.3.1
+        uses: ossf/scorecard-action@v2.4.0 # v2.4.0
         with:
           results_file: results.sarif
           results_format: sarif

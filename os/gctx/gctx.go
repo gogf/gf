@@ -19,7 +19,7 @@ import (
 )
 
 type (
-	Ctx    = context.Context // Ctx is short name alias for context.Context.
+	Ctx    = context.Context // Ctx is a short name alias for context.Context.
 	StrKey string            // StrKey is a type for warps basic type string as context key.
 )
 

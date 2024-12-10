@@ -22,7 +22,7 @@ func (s *Server) SetOpenApiPath(path string) {
 	s.config.OpenApiPath = path
 }
 
-// GetOpenApiPath returns the configuration of `OpenApiPath` of server.
+// GetOpenApiPath returns the `OpenApiPath` configuration of the server.
 func (s *Server) GetOpenApiPath() string {
 	return s.config.OpenApiPath
 }

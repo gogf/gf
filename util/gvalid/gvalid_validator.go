@@ -85,7 +85,7 @@ func (v *Validator) Run(ctx context.Context) Error {
 	})
 }
 
-// Clone creates and returns a new Validator which is a shallow copy of current one.
+// Clone creates and returns a new Validator, which is a shallow copy of the current one.
 func (v *Validator) Clone() *Validator {
 	newValidator := New()
 	*newValidator = *v
