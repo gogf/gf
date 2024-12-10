@@ -55,10 +55,6 @@ const (
 
 	// DefaultDialTimeout is the timeout for failing to establish a connection.
 	DefaultDialTimeout = time.Second * 5
-
-	// DefaultAutoSyncInterval is the interval to update endpoints with its latest members.
-	// 0 disables auto-sync. By default auto-sync is disabled.
-	DefaultAutoSyncInterval = time.Second
 )
 
 // New creates and returns a new etcd registry.
@@ -98,7 +94,6 @@ func New(address string, option ...Option) gsvc.Registry {
 	}
 
 	cfg.DialTimeout = DefaultDialTimeout
-	cfg.AutoSyncInterval = DefaultAutoSyncInterval
 
 	var usedOption Option
 	if len(option) > 0 {
