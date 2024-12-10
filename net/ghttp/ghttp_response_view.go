@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmode"
 	"github.com/gogf/gf/v2/util/gutil"
+	"html"
 )
 
 // WriteTpl parses and responses given template file.
@@ -26,7 +27,7 @@ func (r *Response) WriteTpl(tpl string, params ...gview.Params) error {
 		}
 		return err
 	}
-	r.Write(b)
+	r.Write(html.EscapeString(b))
 	return nil
 }
 
@@ -41,7 +42,7 @@ func (r *Response) WriteTplDefault(params ...gview.Params) error {
 		}
 		return err
 	}
-	r.Write(b)
+	r.Write(html.EscapeString(b))
 	return nil
 }
 
@@ -56,7 +57,7 @@ func (r *Response) WriteTplContent(content string, params ...gview.Params) error
 		}
 		return err
 	}
-	r.Write(b)
+	r.Write(html.EscapeString(b))
 	return nil
 }
 
