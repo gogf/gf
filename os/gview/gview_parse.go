@@ -430,7 +430,7 @@ func (view *View) searchFile(ctx context.Context, file string) (path string, fol
 	if path == "" {
 		buffer := bytes.NewBuffer(nil)
 		if view.searchPaths.Len() > 0 {
-			buffer.WriteString(fmt.Sprintf("cannot find template file \"%s\" in following paths:", file))
+			buffer.WriteString(fmt.Sprintf("cannot find template file %s in following paths:", strconv.Quote(file)))
 			view.searchPaths.RLockFunc(func(array []string) {
 				index := 1
 				for _, searchPath := range array {
@@ -445,12 +445,12 @@ func (view *View) searchFile(ctx context.Context, file string) (path string, fol
 				}
 			})
 		} else {
-			buffer.WriteString(fmt.Sprintf("cannot find template file \"%s\" with no path set/add", file))
+			buffer.WriteString(fmt.Sprintf("cannot find template file %s with no path set/add", strconv.Quote(file)))
 		}
 		if errorPrint() {
 			glog.Error(ctx, buffer.String())
 		}
-		err = gerror.NewCodef(gcode.CodeInvalidParameter, `template file "%s" not found`, file)
+		err = gerror.NewCodef(gcode.CodeInvalidParameter, `template file %s not found`, strconv.Quote(file))
 	}
 	return
 }
