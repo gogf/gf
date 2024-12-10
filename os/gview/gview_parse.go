@@ -85,7 +85,7 @@ func (view *View) ParseDefault(ctx context.Context, params ...Params) (result st
 	})
 }
 
-// ParseContent parses given template content `content`  with template variables `params`
+// ParseContent parses given template content `content` with template variables `params`
 // and returns the parsed content in []byte.
 func (view *View) ParseContent(ctx context.Context, content string, params ...Params) (string, error) {
 	var usedParams Params
@@ -115,7 +115,7 @@ func (view *View) ParseOption(ctx context.Context, option Option) (result string
 	if option.File == "" {
 		return "", gerror.New(`template file cannot be empty`)
 	}
-	// It caches the file, folder and content to enhance performance.
+	// It caches the file, folder, and content to enhance performance.
 	r := view.fileCacheMap.GetOrSetFuncLock(option.File, func() interface{} {
 		var (
 			path     string
@@ -158,7 +158,7 @@ func (view *View) ParseOption(ctx context.Context, option Option) (result string
 	if item.content == "" {
 		return "", nil
 	}
-	// If it's Orphan option, it just parses the single file by ParseContent.
+	// If it's an Orphan option, it just parses the single file by ParseContent.
 	if option.Orphan {
 		return view.doParseContent(ctx, item.content, option.Params)
 	}
@@ -212,7 +212,7 @@ func (view *View) ParseOption(ctx context.Context, option Option) (result string
 	return result, nil
 }
 
-// doParseContent parses given template content `content`  with template variables `params`
+// doParseContent parses given template content `content` with template variables `params`
 // and returns the parsed content in []byte.
 func (view *View) doParseContent(ctx context.Context, content string, params Params) (string, error) {
 	// It's not necessary continuing parsing if template content is empty.
@@ -430,7 +430,7 @@ func (view *View) searchFile(ctx context.Context, file string) (path string, fol
 	if path == "" {
 		buffer := bytes.NewBuffer(nil)
 		if view.searchPaths.Len() > 0 {
-			buffer.WriteString(fmt.Sprintf("cannot find template file %s in following paths:", strconv.Quote(file)))
+			buffer.WriteString(fmt.Sprintf("cannot find template file \"%s\" in following paths:", file))
 			view.searchPaths.RLockFunc(func(array []string) {
 				index := 1
 				for _, searchPath := range array {
@@ -445,12 +445,12 @@ func (view *View) searchFile(ctx context.Context, file string) (path string, fol
 				}
 			})
 		} else {
-			buffer.WriteString(fmt.Sprintf("cannot find template file %s with no path set/add", strconv.Quote(file)))
+			buffer.WriteString(fmt.Sprintf("cannot find template file \"%s\" with no path set/add", file))
 		}
 		if errorPrint() {
 			glog.Error(ctx, buffer.String())
 		}
-		err = gerror.NewCodef(gcode.CodeInvalidParameter, `template file %s not found`, strconv.Quote(file))
+		err = gerror.NewCodef(gcode.CodeInvalidParameter, `template file %s not found`, file)
 	}
 	return
 }
