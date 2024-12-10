@@ -23,7 +23,7 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	if err != nil {
 		return nil, err
 	}
-	underlyingDriverName := "pgsql"
+	underlyingDriverName := "postgres"
 	if db, err = sql.Open(underlyingDriverName, source); err != nil {
 		err = gerror.WrapCodef(
 			gcode.CodeDbOperationError, err,
