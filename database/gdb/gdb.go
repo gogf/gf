@@ -639,7 +639,7 @@ const (
 	ctxKeyInternalProducedSQL gctx.StrKey = `CtxKeyInternalProducedSQL`
 
 	linkPattern            = `(\w+):([\w\-\$]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*)`
-	linkPatternDescription = `type:[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]`
+	linkPatternDescription = `type:username:password@protocol(host:port)/dbname?param1=value1&...&paramN=valueN`
 )
 
 type ctxTimeoutType int

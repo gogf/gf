@@ -297,7 +297,7 @@ func parseConfigNodeLink(node *ConfigNode) (*ConfigNode, error) {
 		if len(match) <= 5 {
 			return nil, gerror.NewCodef(
 				gcode.CodeInvalidParameter,
-				`invalid link configuration: %s, shuold be pattern like %s`,
+				`invalid link configuration: %s, shuold be pattern like: %s`,
 				node.Link, linkPatternDescription,
 			)
 		}
