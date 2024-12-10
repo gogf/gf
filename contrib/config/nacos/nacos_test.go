@@ -9,14 +9,14 @@ package nacos_test
 import (
 	"github.com/gogf/gf/contrib/config/nacos/v2"
 	"github.com/gogf/gf/v2/encoding/gjson"
-	"testing"
-	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
-	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
+	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
+	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 	"net/url"
+	"testing"
 	"time"
 )
 
@@ -80,12 +80,14 @@ func TestNacosOnConfigChangeFunc(t *testing.T) {
 		t.Assert(appName.String(), "")
 		c, _ := g.Cfg().Data(ctx)
 		j := gjson.New(c)
-		j.Set("app.name", "gf")
+		err = j.Set("app.name", "gf")
+		t.AssertNil(err)
 		res, _ := j.ToTomlString()
 		_, err = g.Client().Post(ctx, configPublishUrl+"&content="+url.QueryEscape(res))
 		t.AssertNil(err)
 		time.Sleep(5 * time.Second)
-		j.Remove("app")
+		err = j.Remove("app")
+		t.AssertNil(err)
 		res2, _ := j.ToTomlString()
 		_, err = g.Client().Post(ctx, configPublishUrl+"&content="+url.QueryEscape(res2))
 	})
