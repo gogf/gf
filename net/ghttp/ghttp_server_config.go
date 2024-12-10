@@ -399,6 +399,7 @@ func (s *Server) SetAddr(address string) {
 }
 
 // SetPort sets the listening ports for the server.
+// It uses random port if the port is 0.
 // The listening ports can be multiple like: SetPort(80, 8080).
 func (s *Server) SetPort(port ...int) {
 	if len(port) > 0 {
@@ -418,6 +419,7 @@ func (s *Server) SetHTTPSAddr(address string) {
 }
 
 // SetHTTPSPort sets the HTTPS listening ports for the server.
+// It uses random port if the port is 0.
 // The listening ports can be multiple like: SetHTTPSPort(443, 500).
 func (s *Server) SetHTTPSPort(port ...int) {
 	if len(port) > 0 {
