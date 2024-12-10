@@ -34,7 +34,7 @@ const (
 	templateNameForContentParsing = "TemplateContent"
 )
 
-// fileCacheItem is the cache item for template file.
+// fileCacheItem is the cache item for the template file.
 type fileCacheItem struct {
 	path    string
 	folder  string
@@ -52,7 +52,7 @@ var (
 		"resource/template/", "resource/template", "/resource/template", "/resource/template/",
 	}
 
-	// Prefix array for trying searching in local system.
+	// Prefix array for trying searching in the local system.
 	localSystemTryFolders = []string{"", "template/", "resource/template"}
 )
 
