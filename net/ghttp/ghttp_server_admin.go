@@ -95,7 +95,7 @@ func (s *Server) Shutdown() error {
 	// Only shut down current servers.
 	// It may have multiple underlying http servers.
 	for _, v := range s.servers {
-		v.shutdown(ctx)
+		v.Shutdown(ctx)
 	}
 	return nil
 }
