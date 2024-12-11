@@ -171,3 +171,37 @@ func Test_Issue3668(t *testing.T) {
 		t.AssertNil(err)
 	})
 }
+
+type Status int
+
+const (
+	StatusA Status = 1
+)
+
+func (s Status) String() string {
+	return "somevalue"
+}
+
+func (s Status) Int64() int64 {
+	return int64(s)
+}
+
+// https://github.com/gogf/gf/issues/4033
+func Test_Issue4033(t *testing.T) {
+	var (
+		sqlText = gtest.DataContent("issues", "issue4033.sql")
+		table   = "test_enum"
+	)
+	if _, err := db.Exec(ctx, sqlText); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(table)
+	db.SetDebug(true)
+	gtest.C(t, func(t *gtest.T) {
+		query := g.Map{
+			"status": g.Slice{StatusA},
+		}
+		_, err := db.Model(table).Ctx(ctx).Where(query).All()
+		t.AssertNil(err)
+	})
+}

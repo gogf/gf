@@ -87,9 +87,9 @@ jobs:
       # -e POSTGRES_USER=postgres \
       # -e POSTGRES_DB=test \
       # -v postgres:/Users/john/Temp/postgresql/data \
-      # loads/postgres:13
+      # postgres:13.18-alpine
       postgres:
-        image: loads/postgres:13
+        image: postgres:13.18-alpine
         env:
           POSTGRES_PASSWORD: 12345678
           POSTGRES_USER:     postgres
