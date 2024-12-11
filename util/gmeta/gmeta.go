@@ -8,6 +8,8 @@
 package gmeta
 
 import (
+	"sync"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/os/gstructs"
 )
@@ -20,18 +22,33 @@ const (
 	metaTypeName      = "gmeta.Meta" // metaTypeName is for type string comparison.
 )
 
+// cachedMetadata stores the parsed metadata for struct types.
+var cachedMetadata = sync.Map{}
+
 // Data retrieves and returns all metadata from `object`.
 func Data(object interface{}) map[string]string {
 	reflectType, err := gstructs.StructType(object)
 	if err != nil {
 		return nil
 	}
+
+	if cachedData, ok := cachedMetadata.Load(reflectType.Type); ok {
+		return cachedData.(map[string]string)
+	}
+
+	var metadata map[string]string
 	if field, ok := reflectType.FieldByName(metaAttributeName); ok {
 		if field.Type.String() == metaTypeName {
-			return gstructs.ParseTag(string(field.Tag))
+			metadata = gstructs.ParseTag(string(field.Tag))
 		}
 	}
-	return map[string]string{}
+
+	if metadata == nil {
+		metadata = map[string]string{}
+	}
+
+	cachedMetadata.Store(reflectType.Type, metadata)
+	return metadata
 }
 
 // Get retrieves and returns specified metadata by `key` from `object`.
