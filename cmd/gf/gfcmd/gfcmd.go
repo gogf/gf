@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// Package gfcmd provides the management of CLI commands for `gf` tool.
 package gfcmd
 
 import (
@@ -25,9 +26,7 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
-const (
-	cliFolderName = `hack`
-)
+const cliFolderName = `hack`
 
 // Command manages the CLI command of `gf`.
 // This struct can be globally accessible and extended with custom struct.

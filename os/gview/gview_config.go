@@ -182,7 +182,7 @@ func (view *View) AddPath(path string) error {
 			isDir = gfile.IsDir(realPath)
 		}
 	}
-	// Path not exist.
+	// Path doesn't exist.
 	if realPath == "" {
 		err := gerror.NewCodef(gcode.CodeInvalidParameter, `View.AddPath failed: path "%s" does not exist`, path)
 		if errorPrint() {
