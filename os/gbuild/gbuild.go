@@ -18,10 +18,10 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 )
 
-// BuildInfo maintains the built info of current binary.
+// BuildInfo maintains the built info of the current binary.
 type BuildInfo struct {
 	GoFrame string                 // Built used GoFrame version.
-	Golang  string                 // Built used Golang version.
+	Golang  string                 // Built the used Golang version.
 	Git     string                 // Built used git repo. commit id and datetime.
 	Time    string                 // Built datetime.
 	Version string                 // Built version.
@@ -81,7 +81,7 @@ func Get(name string, def ...interface{}) *gvar.Var {
 	return nil
 }
 
-// Data returns the custom build-in variables as map.
+// Data returns the custom build-in variables as the map.
 func Data() map[string]interface{} {
 	return builtInVarMap
 }

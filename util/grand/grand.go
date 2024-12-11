@@ -30,7 +30,7 @@ func Intn(max int) int {
 		return max
 	}
 	n := int(binary.LittleEndian.Uint32(<-bufferChan)) % max
-	if (max > 0 && n < 0) || (max < 0 && n > 0) {
+	if n < 0 {
 		return -n
 	}
 	return n

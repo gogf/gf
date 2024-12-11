@@ -67,7 +67,7 @@ var (
 )
 
 // Format formats and returns the formatted result with custom `format`.
-// Refer method Layout, if you want to follow stdlib layout.
+// Refer method Layout if you want to follow stdlib layout.
 func (t *Time) Format(format string) string {
 	if t == nil {
 		return ""
@@ -205,7 +205,7 @@ func (t *Time) DayOfYear() int {
 	return dayOfMonth[month-1] + day - 1
 }
 
-// DaysInMonth returns the day count of current month.
+// DaysInMonth returns the day count of the current month.
 func (t *Time) DaysInMonth() int {
 	switch t.Month() {
 	case 1, 3, 5, 7, 8, 10, 12:
@@ -225,7 +225,7 @@ func (t *Time) WeeksOfYear() int {
 	return week
 }
 
-// formatToStdLayout converts custom format to stdlib layout.
+// formatToStdLayout converts the custom format to stdlib layout.
 func formatToStdLayout(format string) string {
 	b := bytes.NewBuffer(nil)
 	for i := 0; i < len(format); {

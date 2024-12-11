@@ -71,7 +71,7 @@ func MiddlewareHandlerResponse(r *Request) {
 			default:
 				code = gcode.CodeUnknown
 			}
-			// It creates error as it can be retrieved by other middlewares.
+			// It creates an error as it can be retrieved by other middlewares.
 			err = gerror.NewCode(code, msg)
 			r.SetError(err)
 		} else {

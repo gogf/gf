@@ -207,6 +207,7 @@ var (
 )
 
 var (
+	// ErrNeedJsonBody is the error that indicates the request body content should be JSON format.
 	ErrNeedJsonBody = gerror.NewWithOption(gerror.Option{
 		Text: "the request body content should be JSON format",
 		Code: gcode.CodeInvalidRequest,

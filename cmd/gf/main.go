@@ -16,9 +16,10 @@ import (
 
 func main() {
 	var (
-		ctx = gctx.GetInitCtx()
+		ctx          = gctx.GetInitCtx()
+		command, err = gfcmd.GetCommand(ctx)
 	)
-	command, err := gfcmd.GetCommand(ctx)
+
 	if err != nil {
 		mlog.Fatalf(`%+v`, err)
 	}

@@ -1,6 +1,6 @@
 
 <div align=center>
-<img src="https://goframe.org/img/logo_full.png" width="300"/>
+<img src="https://goframe.org/img/logo_full.png" width="300" alt="goframe gf logo"/>
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/gogf/gf/v2.svg)](https://pkg.go.dev/github.com/gogf/gf/v2)
 [![GoFrame CI](https://github.com/gogf/gf/actions/workflows/ci-main.yml/badge.svg)](https://github.com/gogf/gf/actions/workflows/ci-main.yml)
@@ -36,7 +36,7 @@ A powerful framework for faster, easier, and more efficient project development.
 💖 [Thanks to all the contributors who made GoFrame possible](https://github.com/gogf/gf/graphs/contributors) 💖
 
 <a href="https://github.com/gogf/gf/graphs/contributors">
-<img src="https://goframe.org/img/contributors.svg?version=v2.8.2" />
+<img src="https://goframe.org/img/contributors.svg?version=v2.8.2" alt="goframe contributors"/>
 </a>
 
 # License
