@@ -91,8 +91,13 @@ func (r *Registry) doKeepAlive(
 				// Re-register the service.
 				for {
 					if err := r.doRegisterLease(ctx, service); err != nil {
-						r.logger.Errorf(ctx, `keepalive retry register failed: %+v`, err)
-						time.Sleep(grand.D(time.Second, time.Second*3))
+						retryDuration := grand.D(time.Second, time.Second*3)
+						r.logger.Errorf(
+							ctx,
+							`keepalive retry register failed, will retry in %s: %+v`,
+							retryDuration, err,
+						)
+						time.Sleep(retryDuration)
 						continue
 					}
 					break
