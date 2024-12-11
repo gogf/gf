@@ -13,7 +13,7 @@ tidy:
 
 .PHONY: lint
 lint:
-	golangci-lint run
+	golangci-lint run -c .golangci.yml
 
 # make version to=v2.4.0
 .PHONY: version

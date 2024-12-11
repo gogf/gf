@@ -26,14 +26,14 @@ const (
 )
 
 var (
-	sequence     gtype.Uint32 // Sequence for unique purpose of current process.
-	macAddrStr   = "0000000"  // MAC addresses hash result in 7 bytes.
+	sequence     gtype.Uint32 // Sequence for unique purpose of the current process.
+	macAddrStr   = "0000000"  // Hash result of MAC addresses in 7 bytes.
 	processIdStr = "0000"     // Process id in 4 bytes.
 )
 
 // init initializes several fixed local variable.
 func init() {
-	// MAC addresses hash result in 7 bytes.
+	// Hash result of MAC addresses in 7 bytes.
 	macs, _ := gipv4.GetMacArray()
 	if len(macs) > 0 {
 		var macAddrBytes []byte

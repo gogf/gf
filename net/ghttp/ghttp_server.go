@@ -345,7 +345,7 @@ func (s *Server) doRouterMapDump() {
 	}
 }
 
-// GetOpenApi returns the OpenApi specification management object of current server.
+// GetOpenApi returns the OpenApi specification management object of the current server.
 func (s *Server) GetOpenApi() *goai.OpenApiV3 {
 	return s.openapi
 }
@@ -452,7 +452,7 @@ func (s *Server) Run() {
 	// Signal handler in asynchronous way.
 	go handleProcessSignal()
 
-	// Blocking using channel for graceful restart.
+	// Blocking using the channel for graceful restart.
 	<-s.closeChan
 	// Remove plugins.
 	if len(s.plugins) > 0 {
@@ -653,8 +653,8 @@ func (s *Server) getListenerFdMap() map[string]string {
 	return m
 }
 
-// GetListenedPort retrieves and returns one port which is listened by current server.
-// It returns the normal HTTP port in most priority if both HTTP and HTTPS are enabled.
+// GetListenedPort returns a port currently listened to by the server.
+// It prioritizes the HTTP port if both HTTP and HTTPS are enabled.
 func (s *Server) GetListenedPort() int {
 	for _, server := range s.servers {
 		if !server.IsHttps() {

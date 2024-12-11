@@ -10,6 +10,7 @@ import (
 	sdkTrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
+// TracerProvider is a wrapper around sdkTrace.TracerProvider.
 type TracerProvider struct {
 	*sdkTrace.TracerProvider
 }

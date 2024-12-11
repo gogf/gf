@@ -17,7 +17,7 @@ const (
 	dumpIndent = `    `
 )
 
-// Keys retrieves and returns the keys from given map or struct.
+// Keys retrieves and returns the keys from the given map or struct.
 func Keys(mapOrStruct any) (keysOrAttrs []string) {
 	keysOrAttrs = make([]string, 0)
 	if m, ok := mapOrStruct.(map[string]any); ok {
@@ -68,7 +68,7 @@ func Keys(mapOrStruct any) (keysOrAttrs []string) {
 	return
 }
 
-// Values retrieves and returns the values from given map or struct.
+// Values retrieves and returns the values from the given map or struct.
 func Values(mapOrStruct interface{}) (values []interface{}) {
 	values = make([]interface{}, 0)
 	if m, ok := mapOrStruct.(map[string]interface{}); ok {

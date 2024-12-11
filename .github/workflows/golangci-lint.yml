@@ -15,6 +15,15 @@ on:
       - enhance/**
       - fix/**
       - feat/**
+  pull_request:
+    branches:
+      - master
+      - develop
+      - personal/**
+      - feature/**
+      - enhance/**
+      - fix/**
+      - feat/**
 
 jobs:
   golangci:
@@ -33,11 +42,11 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
+          # Required: specify the golangci-lint version without the patch version to always use the latest patch.
           version: v1.62.2
           only-new-issues: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          args: --timeout 3m0s --fix
+          args: --timeout 3m0s
       - name: Install gci
         run: go install github.com/daixiang0/gci@latest
       - name: Run gci
@@ -55,6 +64,8 @@ jobs:
           -s "prefix(github.com/gogf/gf/example)" \
           ./
       - name: Check for changes
+        # Check if the event is a push or a pull request from a forked repository
+        if: github.event_name == 'push'|| (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true)
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
           echo "HAS_CHANGES=true" >> $GITHUB_ENV
