@@ -15,7 +15,6 @@ import (
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -35,30 +34,19 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 		options["TRACE FILE"] = "oracle_trace.log"
 	}
 	// [username:[password]@]host[:port][/service_name][?param1=value1&...&paramN=valueN]
-	if config.Link != "" {
-		// ============================================================================
-		// Deprecated from v2.2.0.
-		// ============================================================================
-		source = config.Link
-		// Custom changing the schema in runtime.
-		if config.Name != "" {
-			source, _ = gregex.ReplaceString(`@(.+?)/([\w\.\-]+)+`, "@$1/"+config.Name, source)
-		}
-	} else {
-		if config.Extra != "" {
-			// fix #3226
-			list := strings.Split(config.Extra, "&")
-			for _, v := range list {
-				kv := strings.Split(v, "=")
-				if len(kv) == 2 {
-					options[kv[0]] = kv[1]
-				}
+	if config.Extra != "" {
+		// fix #3226
+		list := strings.Split(config.Extra, "&")
+		for _, v := range list {
+			kv := strings.Split(v, "=")
+			if len(kv) == 2 {
+				options[kv[0]] = kv[1]
 			}
 		}
-		source = gora.BuildUrl(
-			config.Host, gconv.Int(config.Port), config.Name, config.User, config.Pass, options,
-		)
 	}
+	source = gora.BuildUrl(
+		config.Host, gconv.Int(config.Port), config.Name, config.User, config.Pass, options,
+	)
 
 	if db, err = sql.Open(underlyingDriverName, source); err != nil {
 		err = gerror.WrapCodef(

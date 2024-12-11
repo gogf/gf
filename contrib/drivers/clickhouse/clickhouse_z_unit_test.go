@@ -544,7 +544,7 @@ func TestDriverClickhouse_Open(t *testing.T) {
 	// link
 	// DSM
 	// clickhouse://username:password@host1:9000,host2:9000/database?dial_timeout=200ms&max_execution_time=60
-	link := "clickhouse://default@127.0.0.1:9000,127.0.0.1:9000/default?dial_timeout=200ms&max_execution_time=60"
+	link := "clickhouse:default:@tcp(127.0.0.1:9000)/default?dial_timeout=200ms&max_execution_time=60"
 	db, err := gdb.New(gdb.ConfigNode{
 		Link: link,
 		Type: "clickhouse",

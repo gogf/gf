@@ -53,7 +53,8 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		node := &ConfigNode{
 			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/khaos_oss?loc=Local&parseTime=true&charset=latin`,
 		}
-		newNode := parseConfigNodeLink(node)
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
 		t.Assert(newNode.Type, `mysql`)
 		t.Assert(newNode.User, `root`)
 		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
@@ -68,7 +69,8 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		node := &ConfigNode{
 			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/khaos_oss?`,
 		}
-		newNode := parseConfigNodeLink(node)
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
 		t.Assert(newNode.Type, `mysql`)
 		t.Assert(newNode.User, `root`)
 		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
@@ -83,7 +85,8 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		node := &ConfigNode{
 			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/khaos_oss`,
 		}
-		newNode := parseConfigNodeLink(node)
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
 		t.Assert(newNode.Type, `mysql`)
 		t.Assert(newNode.User, `root`)
 		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
@@ -99,7 +102,8 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		node := &ConfigNode{
 			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/?loc=Local&parseTime=true&charset=latin`,
 		}
-		newNode := parseConfigNodeLink(node)
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
 		t.Assert(newNode.Type, `mysql`)
 		t.Assert(newNode.User, `root`)
 		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
@@ -114,7 +118,8 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		node := &ConfigNode{
 			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)?loc=Local&parseTime=true&charset=latin`,
 		}
-		newNode := parseConfigNodeLink(node)
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
 		t.Assert(newNode.Type, `mysql`)
 		t.Assert(newNode.User, `root`)
 		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
@@ -129,7 +134,8 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		node := &ConfigNode{
 			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/`,
 		}
-		newNode := parseConfigNodeLink(node)
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
 		t.Assert(newNode.Type, `mysql`)
 		t.Assert(newNode.User, `root`)
 		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
@@ -144,7 +150,8 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		node := &ConfigNode{
 			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)`,
 		}
-		newNode := parseConfigNodeLink(node)
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
 		t.Assert(newNode.Type, `mysql`)
 		t.Assert(newNode.User, `root`)
 		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
@@ -160,7 +167,8 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		node := &ConfigNode{
 			Link: `mysql:root:CxzhD*624:27jh@udp(9.135.69.119:3306)`,
 		}
-		newNode := parseConfigNodeLink(node)
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
 		t.Assert(newNode.Type, `mysql`)
 		t.Assert(newNode.User, `root`)
 		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
@@ -175,7 +183,8 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		node := &ConfigNode{
 			Link: `sqlite:root:CxzhD*624:27jh@file(/var/data/db.sqlite3)?local=Local&parseTime=true`,
 		}
-		newNode := parseConfigNodeLink(node)
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
 		t.Assert(newNode.Type, `sqlite`)
 		t.Assert(newNode.User, `root`)
 		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
@@ -190,7 +199,8 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		node := &ConfigNode{
 			Link: `sqlite::CxzhD*624:2@7jh@file(/var/data/db.sqlite3)`,
 		}
-		newNode := parseConfigNodeLink(node)
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
 		t.Assert(newNode.Type, `sqlite`)
 		t.Assert(newNode.User, ``)
 		t.Assert(newNode.Pass, `CxzhD*624:2@7jh`)
@@ -205,7 +215,8 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		node := &ConfigNode{
 			Link: `sqlite::@file(/var/data/db.sqlite3)`,
 		}
-		newNode := parseConfigNodeLink(node)
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
 		t.Assert(newNode.Type, `sqlite`)
 		t.Assert(newNode.User, ``)
 		t.Assert(newNode.Pass, ``)
@@ -221,7 +232,8 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		node := &ConfigNode{
 			Link: `pgsql:BASIC$xxxx:123456@tcp(xxxx.hologres.aliyuncs.com:80)/xxx`,
 		}
-		newNode := parseConfigNodeLink(node)
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
 		t.Assert(newNode.Type, `pgsql`)
 		t.Assert(newNode.User, `BASIC$xxxx`)
 		t.Assert(newNode.Pass, `123456`)
@@ -237,7 +249,8 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		node := &ConfigNode{
 			Link: "mysql:user:pwd@tcp(rdsid.mysql.rds.aliyuncs.com)/dbname?charset=utf8&loc=Local",
 		}
-		newNode := parseConfigNodeLink(node)
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
 		t.Assert(newNode.Type, `mysql`)
 		t.Assert(newNode.User, `user`)
 		t.Assert(newNode.Pass, `pwd`)
@@ -253,7 +266,8 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		node := &ConfigNode{
 			Link: "mysql:username:password@unix(/tmp/mysql.sock)/dbname",
 		}
-		newNode := parseConfigNodeLink(node)
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
 		t.Assert(newNode.Type, `mysql`)
 		t.Assert(newNode.User, `username`)
 		t.Assert(newNode.Pass, `password`)
