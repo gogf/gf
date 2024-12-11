@@ -26,19 +26,11 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 		source               string
 		underlyingDriverName = "sqlite"
 	)
-	if config.Link != "" {
-		// ============================================================================
-		// Deprecated from v2.2.0.
-		// ============================================================================
-		source = config.Link
-	} else {
-		source = config.Name
-	}
+	source = config.Name
 	// It searches the source file to locate its absolute path..
 	if absolutePath, _ := gfile.Search(source); absolutePath != "" {
 		source = absolutePath
 	}
-
 	// Multiple PRAGMAs can be specified, e.g.:
 	// path/to/some.db?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)
 	if config.Extra != "" {
