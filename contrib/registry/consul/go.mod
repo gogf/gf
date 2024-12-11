@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/registry/consul/v2
 go 1.18
 
 require (
-	github.com/gogf/gf/v2 v2.8.1
+	github.com/gogf/gf/v2 v2.8.2
 	github.com/hashicorp/consul/api v1.26.1
 )
 
@@ -44,3 +44,5 @@ require (
 	golang.org/x/text v0.16.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/gogf/gf/v2 => ../../../
