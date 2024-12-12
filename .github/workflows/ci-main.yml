@@ -37,9 +37,9 @@ jobs:
     # Service containers to run with `code-test`
     services:
       # Etcd service.
-      # docker run -d --name etcd -p 2379:2379 -e ALLOW_NONE_AUTHENTICATION=yes loads/etcd:3.4.24
+      # docker run -d --name etcd -p 2379:2379 -e ALLOW_NONE_AUTHENTICATION=yes bitnami/etcd:3.4.24
       etcd:
-        image: loads/etcd:3.4.24
+        image: bitnami/etcd:3.4.24
         env:
           ALLOW_NONE_AUTHENTICATION: yes
         ports:
@@ -47,7 +47,7 @@ jobs:
 
       # Redis backend server.
       redis:
-        image  : loads/redis:7.0
+        image  : redis:7.0
         options: >-
           --health-cmd      "redis-cli ping"
           --health-interval 10s
@@ -62,9 +62,9 @@ jobs:
       # -p 3306:3306 \
       # -e MYSQL_DATABASE=test \
       # -e MYSQL_ROOT_PASSWORD=12345678 \
-      # loads/mysql:5.7
+      # mysql:5.7
       mysql:
-        image: loads/mysql:5.7
+        image: mysql:5.7
         env:
           MYSQL_DATABASE     : test
           MYSQL_ROOT_PASSWORD: 12345678
@@ -73,7 +73,7 @@ jobs:
 
       # MariaDb backend server.
       mariadb:
-        image: loads/mariadb:10.4
+        image: mariadb:10.4
         env:
           MARIADB_DATABASE: test
           MARIADB_ROOT_PASSWORD: 12345678
@@ -87,9 +87,9 @@ jobs:
       # -e POSTGRES_USER=postgres \
       # -e POSTGRES_DB=test \
       # -v postgres:/Users/john/Temp/postgresql/data \
-      # postgres:13.18-alpine
+      # postgres:17-alpine
       postgres:
-        image: postgres:13.18-alpine
+        image: postgres:17-alpine
         env:
           POSTGRES_PASSWORD: 12345678
           POSTGRES_USER:     postgres
@@ -133,9 +133,9 @@ jobs:
       # ClickHouse backend server.
       # docker run -d --name clickhouse \
       # -p 9000:9000 -p 8123:8123 -p 9001:9001 \
-      # loads/clickhouse-server:22.1.3.7
+      # clickhouse:24.9.3.128
       clickhouse-server:
-        image: loads/clickhouse-server:22.1.3.7
+        image: clickhouse:24.9.3.128
         ports:
           - 9000:9000
           - 8123:8123
@@ -184,7 +184,7 @@ jobs:
           - 5236:5236
 
       zookeeper:
-        image: loads/zookeeper:3.8
+        image: zookeeper:3.8
         ports:
           - 2181:2181
 

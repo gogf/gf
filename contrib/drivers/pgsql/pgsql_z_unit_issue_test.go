@@ -172,17 +172,17 @@ func Test_Issue3668(t *testing.T) {
 	})
 }
 
-type Status int
+type Issue4033Status int
 
 const (
-	StatusA Status = 1
+	Issue4033StatusA Issue4033Status = 1
 )
 
-func (s Status) String() string {
+func (s Issue4033Status) String() string {
 	return "somevalue"
 }
 
-func (s Status) Int64() int64 {
+func (s Issue4033Status) Int64() int64 {
 	return int64(s)
 }
 
@@ -196,10 +196,10 @@ func Test_Issue4033(t *testing.T) {
 		gtest.Fatal(err)
 	}
 	defer dropTable(table)
-	db.SetDebug(true)
+
 	gtest.C(t, func(t *gtest.T) {
 		query := g.Map{
-			"status": g.Slice{StatusA},
+			"status": g.Slice{Issue4033StatusA},
 		}
 		_, err := db.Model(table).Ctx(ctx).Where(query).All()
 		t.AssertNil(err)
