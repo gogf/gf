@@ -2,8 +2,6 @@ module github.com/gogf/gf/example
 
 go 1.22
 
-toolchain go1.23.1
-
 require (
 	github.com/gogf/gf/contrib/config/apollo/v2 v2.8.2
 	github.com/gogf/gf/contrib/config/consul/v2 v2.8.2
