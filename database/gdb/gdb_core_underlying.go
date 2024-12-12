@@ -186,8 +186,6 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 	// Execution cased by type.
 	switch in.Type {
 	case SqlTypeBegin:
-		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctx, ctxTimeoutTypeTrans)
-		defer cancelFuncForTimeout()
 		formattedSql = fmt.Sprintf(
 			`%s (IosolationLevel: %s, ReadOnly: %t)`,
 			formattedSql, in.TxOptions.Isolation.String(), in.TxOptions.ReadOnly,
