@@ -154,33 +154,6 @@ func (s *Session) Remove(keys ...string) (err error) {
 	return nil
 }
 
-func (s *Session) RegenSession(delOld ...bool) (newSid string, err error) {
-	oldDel := false
-	if len(delOld) > 0 {
-		oldDel = delOld[0]
-	}
-	if s.id == "" {
-		if err = s.init(); err != nil {
-			return newSid, err
-		}
-	} else {
-		if oldDel {
-			if err = s.RemoveAll(); err != nil {
-				return newSid, err
-			}
-		}
-		s.id = ""
-		s.start = false
-		s.data.Clear()
-		if err = s.init(); err != nil {
-			return newSid, err
-		}
-	}
-	newSid = s.id
-	s.dirty = false
-	return newSid, err
-}
-
 // RemoveAll deletes all key-value pairs from this session.
 func (s *Session) RemoveAll() (err error) {
 	if s.id == "" {
