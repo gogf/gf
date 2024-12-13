@@ -35,7 +35,7 @@ const (
 	templateNameForContentParsing = "TemplateContent"
 )
 
-// fileCacheItem is the cache item for template file.
+// fileCacheItem is the cache item for the template file.
 type fileCacheItem struct {
 	path    string
 	folder  string
@@ -53,7 +53,7 @@ var (
 		"resource/template/", "resource/template", "/resource/template", "/resource/template/",
 	}
 
-	// Prefix array for trying searching in local system.
+	// Prefix array for trying searching in the local system.
 	localSystemTryFolders = []string{"", "template/", "resource/template"}
 )
 
@@ -86,7 +86,7 @@ func (view *View) ParseDefault(ctx context.Context, params ...Params) (result st
 	})
 }
 
-// ParseContent parses given template content `content`  with template variables `params`
+// ParseContent parses given template content `content` with template variables `params`
 // and returns the parsed content in []byte.
 func (view *View) ParseContent(ctx context.Context, content string, params ...Params) (string, error) {
 	var usedParams Params
@@ -116,7 +116,7 @@ func (view *View) ParseOption(ctx context.Context, option Option) (result string
 	if option.File == "" {
 		return "", gerror.New(`template file cannot be empty`)
 	}
-	// It caches the file, folder and content to enhance performance.
+	// It caches the file, folder, and content to enhance performance.
 	r := view.fileCacheMap.GetOrSetFuncLock(option.File, func() interface{} {
 		var (
 			path     string
@@ -159,7 +159,7 @@ func (view *View) ParseOption(ctx context.Context, option Option) (result string
 	if item.content == "" {
 		return "", nil
 	}
-	// If it's Orphan option, it just parses the single file by ParseContent.
+	// If it's an Orphan option, it just parses the single file by ParseContent.
 	if option.Orphan {
 		return view.doParseContent(ctx, item.content, option.Params)
 	}
@@ -213,7 +213,7 @@ func (view *View) ParseOption(ctx context.Context, option Option) (result string
 	return result, nil
 }
 
-// doParseContent parses given template content `content`  with template variables `params`
+// doParseContent parses given template content `content` with template variables `params`
 // and returns the parsed content in []byte.
 func (view *View) doParseContent(ctx context.Context, content string, params Params) (string, error) {
 	// It's not necessary continuing parsing if template content is empty.
@@ -302,7 +302,7 @@ func (view *View) getTemplate(filePath, folderPath, pattern string) (tpl interfa
 					view.config.Delimiters[1],
 				).Funcs(view.funcMap)
 			}
-			// Firstly checking the resource manager.
+			// Firstly, checking the resource manager.
 			if !gres.IsEmpty() {
 				if files := gres.ScanDirFile(folderPath, pattern, true); len(files) > 0 {
 					if view.config.AutoEncode {
@@ -328,7 +328,7 @@ func (view *View) getTemplate(filePath, folderPath, pattern string) (tpl interfa
 				}
 			}
 
-			// Secondly checking the file system,
+			// Secondly, checking the file system,
 			// and then automatically parsing all its sub-files recursively.
 			var files []string
 			files, err = gfile.ScanDir(folderPath, pattern, true)
@@ -362,7 +362,7 @@ func (view *View) getTemplate(filePath, folderPath, pattern string) (tpl interfa
 	return
 }
 
-// formatTemplateObjectCreatingError formats the error that created from creating template object.
+// formatTemplateObjectCreatingError formats the error that created from creating the template object.
 func (view *View) formatTemplateObjectCreatingError(filePath, tplName string, err error) error {
 	if err != nil {
 		return gerror.NewSkip(1, gstr.Replace(err.Error(), tplName, filePath))
@@ -370,9 +370,8 @@ func (view *View) formatTemplateObjectCreatingError(filePath, tplName string, er
 	return nil
 }
 
-// searchFile returns the found absolute path for `file` and its template folder path.
-// Note that, the returned `folder` is the template folder path, but not the folder of
-// the returned template file `path`.
+// searchFile returns the absolute path of the `file` and its template folder path.
+// The returned `folder` is the template folder path, not the folder of the template file `path`.
 func (view *View) searchFile(ctx context.Context, file string) (path string, folder string, resource *gres.File, err error) {
 	var (
 		tempPath    string
@@ -418,7 +417,7 @@ func (view *View) searchFile(ctx context.Context, file string) (path string, fol
 		}
 	}
 
-	// Secondly checking the file system.
+	// Secondly, checking the file system.
 	if path == "" {
 		// Absolute path.
 		path = gfile.RealPath(file)
