@@ -2,6 +2,5 @@
     "你好": "hello",
     "世界": "world",
     "hello": "你好",
-    "world": "世界",
-    "replace_map_test": "hello :score :name is ok"
+    "world": "世界"
 }
