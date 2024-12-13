@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/container/gpool"
+	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 )
@@ -20,10 +21,10 @@ var nf gpool.NewFunc = func() (i interface{}, e error) {
 	return "hello", nil
 }
 
-var assertIndex int = 0
+var assertIndex = gtype.NewInt(0)
 
 var ef gpool.ExpireFunc = func(i interface{}) {
-	assertIndex++
+	assertIndex.Add(1)
 	gtest.Assert(i, assertIndex)
 }
 
@@ -83,7 +84,7 @@ func Test_Gpool(t *testing.T) {
 		v2, err2 = p2.Get()
 		t.Assert(err2, nil)
 		t.Assert(v2, 0)
-		assertIndex = 0
+		assertIndex.Set(0)
 		p2.Close()
 		time.Sleep(3 * time.Second)
 		t.AssertNE(p2.Put(1), nil)

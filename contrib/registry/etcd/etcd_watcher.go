@@ -8,9 +8,12 @@ package etcd
 
 import (
 	"context"
+	"time"
 
 	etcd3 "go.etcd.io/etcd/client/v3"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"
 )
 
@@ -27,17 +30,31 @@ type watcher struct {
 	kv        etcd3.KV
 }
 
-func newWatcher(key string, client *etcd3.Client) (*watcher, error) {
+func newWatcher(key string, client *etcd3.Client, dialTimeout time.Duration) (*watcher, error) {
 	w := &watcher{
 		key:     key,
 		watcher: etcd3.NewWatcher(client),
 		kv:      etcd3.NewKV(client),
 	}
+
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), dialTimeout)
+	defer cancel()
+
+	// Test connection first.
+	if _, err := client.Get(ctx, "ping"); err != nil {
+		return nil, gerror.WrapCode(gcode.CodeOperationFailed, err, "failed to connect to etcd")
+	}
+
 	w.ctx, w.cancel = context.WithCancel(context.Background())
 	w.watchChan = w.watcher.Watch(w.ctx, key, etcd3.WithPrefix(), etcd3.WithRev(0))
+
 	if err := w.watcher.RequestProgress(context.Background()); err != nil {
-		return nil, err
+		// Clean up
+		w.cancel()
+		return nil, gerror.WrapCode(gcode.CodeOperationFailed, err, "failed to establish watch connection")
 	}
+
 	return w, nil
 }
 

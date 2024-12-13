@@ -295,7 +295,7 @@ func Test_DB_Tables(t *testing.T) {
 		}
 
 		result, err := db.Tables(ctx)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		for i := 0; i < len(tables); i++ {
 			find := false

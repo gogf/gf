@@ -58,5 +58,5 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Serv
 // Watch watches specified condition changes.
 // The `key` is the prefix of service key.
 func (r *Registry) Watch(ctx context.Context, key string) (gsvc.Watcher, error) {
-	return newWatcher(key, r.client)
+	return newWatcher(key, r.client, r.etcdConfig.DialTimeout)
 }

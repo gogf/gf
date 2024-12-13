@@ -61,7 +61,8 @@ func init() {
 
 	nodeErr := gdb.ConfigNode{
 		Type: "mssql",
-		Link: fmt.Sprintf("user id=%s;password=%s;server=%s;port=%s;database=%s;encrypt=disable",
+		Link: fmt.Sprintf(
+			"mssql:%s:%s@tcp(%s:%s)/%s?encrypt=disable",
 			node.User, "node.Pass", node.Host, node.Port, node.Name),
 	}
 
@@ -130,7 +131,7 @@ func createInitTable(table ...string) (name string) {
 		})
 	}
 	result, err := db.Insert(context.Background(), name, array.Slice())
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 
 	n, e := result.RowsAffected()
 	gtest.Assert(e, nil)

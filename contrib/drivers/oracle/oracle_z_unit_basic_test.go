@@ -27,7 +27,7 @@ func Test_Tables(t *testing.T) {
 		}
 
 		result, err := db.Tables(ctx)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		for i := 0; i < len(tables); i++ {
 			find := false
@@ -41,7 +41,7 @@ func Test_Tables(t *testing.T) {
 		}
 
 		result, err = db.Tables(ctx, TestSchema)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		for i := 0; i < len(tables); i++ {
 			find := false
 			for j := 0; j < len(result); j++ {
@@ -76,7 +76,7 @@ func Test_Table_Fields(t *testing.T) {
 		gtest.AssertNE(err, nil)
 
 		res, err := db.TableFields(ctx, "t_user")
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		for k, v := range expect {
 			_, ok := res[k]
@@ -88,7 +88,7 @@ func Test_Table_Fields(t *testing.T) {
 		}
 
 		res, err = db.TableFields(ctx, "t_user", TestSchema)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		for k, v := range expect {
 			_, ok := res[k]
@@ -121,7 +121,7 @@ func Test_Do_Insert(t *testing.T) {
 			"CREATE_TIME": gtime.Now().String(),
 		}
 		_, err := db.Insert(ctx, "t_user", data)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 	})
 
