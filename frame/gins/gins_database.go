@@ -91,7 +91,9 @@ func Database(name ...string) gdb.DB {
 			if len(cg) > 0 {
 				if gdb.GetConfig(group) == nil {
 					intlog.Printf(ctx, "add configuration for group: %s, %#v", g, cg)
-					gdb.SetConfigGroup(g, cg)
+					if err := gdb.SetConfigGroup(g, cg); err != nil {
+						panic(err)
+					}
 				} else {
 					intlog.Printf(ctx, "ignore configuration as it already exists for group: %s, %#v", g, cg)
 					intlog.Printf(ctx, "%s, %#v", g, cg)
@@ -108,7 +110,9 @@ func Database(name ...string) gdb.DB {
 			if len(cg) > 0 {
 				if gdb.GetConfig(group) == nil {
 					intlog.Printf(ctx, "add configuration for group: %s, %#v", gdb.DefaultGroupName, cg)
-					gdb.SetConfigGroup(gdb.DefaultGroupName, cg)
+					if err := gdb.SetConfigGroup(gdb.DefaultGroupName, cg); err != nil {
+						panic(err)
+					}
 				} else {
 					intlog.Printf(
 						ctx,

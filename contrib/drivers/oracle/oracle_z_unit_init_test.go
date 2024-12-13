@@ -143,7 +143,7 @@ func createInitTable(table ...string) (name string) {
 		})
 	}
 	result, err := db.Insert(context.Background(), name, array.Slice())
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 
 	n, e := result.RowsAffected()
 	gtest.Assert(e, nil)

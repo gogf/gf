@@ -27,7 +27,7 @@ func Test_New(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		node := gdb.ConfigNode{
 			Type:    "sqlite",
-			Link:    gfile.Join(dbDir, "test.db"),
+			Name:    gfile.Join(dbDir, "test.db"),
 			Charset: "utf8",
 		}
 		newDb, err := gdb.New(node)
@@ -1553,7 +1553,7 @@ func Test_TableFields(t *testing.T) {
 		}
 
 		res, err := db.TableFields(context.Background(), tableName)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		for k, v := range expect {
 			_, ok := res[k]
