@@ -183,9 +183,10 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 	ctx, span := tr.Start(ctx, string(in.Type), trace.WithSpanKind(trace.SpanKindInternal))
 	defer span.End()
 
-	// Execution cased by type.
+	// Execution by type.
 	switch in.Type {
 	case SqlTypeBegin:
+		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctx, ctxTimeoutTypeTrans)
 		formattedSql = fmt.Sprintf(
 			`%s (IosolationLevel: %s, ReadOnly: %t)`,
 			formattedSql, in.TxOptions.Isolation.String(), in.TxOptions.ReadOnly,
@@ -197,6 +198,7 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 				ctx:           context.WithValue(ctx, transactionIdForLoggerCtx, transactionIdGenerator.Add(1)),
 				master:        in.Db,
 				transactionId: guid.S(),
+				cancelFunc:    cancelFuncForTimeout,
 			}
 			ctx = out.Tx.GetCtx()
 		}

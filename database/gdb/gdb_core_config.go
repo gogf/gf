@@ -115,8 +115,8 @@ type ConfigNode struct {
 	// Optional field
 	ExecTimeout time.Duration `json:"execTimeout"`
 
-	// TranTimeout specifies the maximum execution time for a transaction
-	// Deprecated: not recommended to use this field due tonhttps://github.com/gogf/gf/issues/4034.
+	// TranTimeout specifies the maximum execution time for a transaction block
+	// Optional field
 	TranTimeout time.Duration `json:"tranTimeout"`
 
 	// PrepareTimeout specifies the maximum execution time for prepare operations
