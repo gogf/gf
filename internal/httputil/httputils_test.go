@@ -36,3 +36,18 @@ func TestBuildParams(t *testing.T) {
 		t.Assert(gstr.Contains(params, "b"), false)
 	})
 }
+
+// https://github.com/gogf/gf/issues/4023
+func TestIssue4023(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type HttpGetRequest struct {
+			Key1 string `json:"key1"`
+			Key2 string `json:"key2,omitempty"`
+		}
+		r := &HttpGetRequest{
+			Key1: "value1",
+		}
+		params := httputil.BuildParams(r)
+		t.Assert(params, "key1=value1")
+	})
+}

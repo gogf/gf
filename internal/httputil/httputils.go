@@ -38,7 +38,9 @@ func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr strin
 		}
 	}
 	// Else converts it to map and does the url encoding.
-	m, urlEncode := gconv.Map(params), true
+	m, urlEncode := gconv.Map(params, gconv.MapOption{
+		OmitEmpty: true,
+	}), true
 	if len(m) == 0 {
 		return gconv.String(params)
 	}
