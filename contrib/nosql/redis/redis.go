@@ -17,6 +17,12 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
+var hooks []redis.Hook
+
+func AddHook(hk redis.Hook) {
+	hooks = append(hooks, hk)
+}
+
 // Redis is an implement of Adapter using go-redis.
 type Redis struct {
 	gredis.AdapterOperation
@@ -74,6 +80,12 @@ func New(config *gredis.Config) *Redis {
 		client = redis.NewClusterClient(opts.Cluster())
 	} else {
 		client = redis.NewClient(opts.Simple())
+	}
+	//加入所有的hook，为所有新建对象加上hook
+	if len(hooks) > 0 {
+		for _, hk := range hooks {
+			client.AddHook(hk)
+		}
 	}
 
 	r := &Redis{
