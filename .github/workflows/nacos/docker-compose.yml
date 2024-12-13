@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   nacos:
-    image: loads/nacos-server:v2.1.2
+    image: nacos/nacos-server:v2.1.2
     container_name: nacos
     env_file:
       - ./env/nacos.env
