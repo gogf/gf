@@ -18,9 +18,9 @@ example/log
 go.work
 go.work.sum
 !cmd/gf/go.work
+.windsurfrules
 
 # Ignore for docs
 node_modules
 .docusaurus
 output
-config/*
