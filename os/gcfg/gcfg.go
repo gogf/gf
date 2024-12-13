@@ -25,8 +25,10 @@ type Config struct {
 }
 
 const (
-	DefaultInstanceName   = "config" // DefaultName is the default instance name for instance usage.
-	DefaultConfigFileName = "config" // DefaultConfigFile is the default configuration file name.
+	// DefaultInstanceName is the default instance name for instance usage.
+	DefaultInstanceName = "config"
+	// DefaultConfigFileName is the default configuration file name.
+	DefaultConfigFileName = "config"
 )
 
 // New creates and returns a Config object with default adapter of AdapterFile.
@@ -69,12 +71,12 @@ func Instance(name ...string) *Config {
 	}).(*Config)
 }
 
-// SetAdapter sets the adapter of current Config object.
+// SetAdapter sets the adapter of the current Config object.
 func (c *Config) SetAdapter(adapter Adapter) {
 	c.adapter = adapter
 }
 
-// GetAdapter returns the adapter of current Config object.
+// GetAdapter returns the adapter of the current Config object.
 func (c *Config) GetAdapter() Adapter {
 	return c.adapter
 }

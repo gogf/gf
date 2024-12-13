@@ -335,6 +335,7 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 		},
 		Model:  m,
 		Table:  m.tables,
+		Schema: m.schema,
 		Data:   list,
 		Option: doInsertOption,
 	}
