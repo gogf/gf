@@ -74,15 +74,3 @@ func (h *CustomRedisHook) ProcessPipelineHook(hook redis2.ProcessPipelineHook) r
 	//}
 	return hook
 }
-
-type myProcessHook struct {
-}
-
-func (m *myProcessHook) ProcessHook(next redis2.ProcessHook) redis2.ProcessHook {
-	return func(ctx context.Context, cmd redis2.Cmder) error {
-		fmt.Println("start myProcessHook")
-		ret := next(ctx, cmd)
-		fmt.Println("end myProcessHook")
-		return ret
-	}
-}
