@@ -374,15 +374,17 @@ func (view *View) formatTemplateObjectCreatingError(filePath, tplName string, er
 // Note that, the returned `folder` is the template folder path, but not the folder of
 // the returned template file `path`.
 func (view *View) searchFile(ctx context.Context, file string) (path string, folder string, resource *gres.File, err error) {
-	var tempPath string
-	var clear_file = strings.TrimLeft(file, `/`)
+	var (
+		tempPath    string
+		trimmedFile = strings.TrimLeft(file, `/`)
+	)
 	// Firstly checking the resource manager.
 	if !gres.IsEmpty() {
 		// Search folders.
 		if path == "" {
 			view.searchPaths.RLockFunc(func(array []string) {
 				for _, searchPath := range array {
-					tempPath = strings.TrimRight(searchPath, `\/`) + `/` + clear_file
+					tempPath = strings.TrimRight(searchPath, `/`) + `/` + trimmedFile
 					if tmpFile := gres.Get(tempPath); tmpFile != nil {
 						path = tmpFile.Name()
 						folder = searchPath
@@ -391,7 +393,7 @@ func (view *View) searchFile(ctx context.Context, file string) (path string, fol
 					}
 
 					for _, tryFolder := range resourceTryFolders {
-						tempPath = strings.TrimRight(searchPath, `\/`) + `/` + strings.TrimRight(tryFolder, `\/`) + `/` + file
+						tempPath = strings.TrimRight(searchPath, `/`) + `/` + strings.TrimRight(tryFolder, `/`) + `/` + file
 						if tmpFile := gres.Get(tempPath); tmpFile != nil {
 							path = tmpFile.Name()
 							folder = searchPath + tryFolder
@@ -405,7 +407,7 @@ func (view *View) searchFile(ctx context.Context, file string) (path string, fol
 		// Try folders.
 		if path == "" {
 			for _, tryFolder := range resourceTryFolders {
-				tempPath = strings.TrimRight(tryFolder, `\/`) + `\/` + clear_file
+				tempPath = strings.TrimRight(tryFolder, `/`) + `/` + trimmedFile
 				if tmpFile := gres.Get(tempPath); tmpFile != nil {
 					path = tmpFile.Name()
 					folder = tryFolder
