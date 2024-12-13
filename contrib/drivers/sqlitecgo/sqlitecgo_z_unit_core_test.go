@@ -1553,7 +1553,7 @@ func Test_TableFields(t *testing.T) {
 		}
 
 		res, err := db.TableFields(context.Background(), tableName)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		for k, v := range expect {
 			_, ok := res[k]

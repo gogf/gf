@@ -33,6 +33,7 @@ type Registry struct {
 	lease        etcd3.Lease
 	keepaliveTTL time.Duration
 	logger       glog.ILogger
+	etcdConfig   etcd3.Config
 }
 
 // Option is the option for the etcd registry.
@@ -59,7 +60,7 @@ const (
 
 // New creates and returns a new etcd registry.
 // Support Etcd Address format: ip:port,ip:port...,ip:port@username:password
-func New(address string, option ...Option) gsvc.Registry {
+func New(address string, option ...Option) *Registry {
 	if address == "" {
 		panic(gerror.NewCode(gcode.CodeInvalidParameter, `invalid etcd address ""`))
 	}
@@ -110,7 +111,9 @@ func New(address string, option ...Option) gsvc.Registry {
 	if err != nil {
 		panic(gerror.Wrap(err, `create etcd client failed`))
 	}
-	return NewWithClient(client, option...)
+	r := NewWithClient(client, option...)
+	r.etcdConfig = cfg
+	return r
 }
 
 // NewWithClient creates and returns a new etcd registry with the given client.
