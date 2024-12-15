@@ -7,13 +7,43 @@
 // Package gres provides resource management and packing/unpacking feature between files and bytes.
 package gres
 
+import (
+	"io/fs"
+
+	"github.com/gogf/gf/v2/os/gres/internal/defines"
+	"github.com/gogf/gf/v2/os/gres/internal/fs_mixed"
+	"github.com/gogf/gf/v2/os/gres/internal/fs_res"
+	"github.com/gogf/gf/v2/os/gres/internal/fs_std"
+)
+
+type (
+	FS   = defines.FS
+	File = defines.File
+	// Deprecated: used PackOption instead.
+	Option       = defines.PackOption
+	PackOption   = defines.PackOption
+	ExportOption = defines.ExportOption
+)
+
 var (
 	// Default resource file system.
-	defaultFS = NewResFS()
+	defaultFS = fs_res.NewFS()
 
 	// Default resource object.
 	defaultResource = Instance()
 )
+
+func NewResFS() *fs_res.FS {
+	return fs_res.NewFS()
+}
+
+func NewStdFS(fs fs.FS) *fs_std.FS {
+	return fs_std.NewFS(fs)
+}
+
+func NewMixedFS(resFS *fs_res.FS, stdFs fs.FS) *fs_mixed.FS {
+	return fs_mixed.NewFS(resFS, stdFs)
+}
 
 // Add unpacks and adds the `content` into the default resource object.
 // The unnecessary parameter `prefix` indicates the prefix

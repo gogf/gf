@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gres
+package fs_res
 
 import (
 	"archive/zip"
@@ -16,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/fileinfo"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gres/internal/defines"
 	"github.com/gogf/gf/v2/text/gregex"
 )
 
@@ -24,7 +25,7 @@ import (
 //
 // Note that the parameter `paths` can be either a directory or a file, which
 // supports multiple paths join with ','.
-func zipPathWriter(paths string, writer io.Writer, option ...Option) error {
+func zipPathWriter(paths string, writer io.Writer, option ...defines.PackOption) error {
 	zipWriter := zip.NewWriter(writer)
 	defer zipWriter.Close()
 	for _, path := range strings.Split(paths, ",") {
@@ -40,11 +41,11 @@ func zipPathWriter(paths string, writer io.Writer, option ...Option) error {
 // The parameter `exclude` specifies the exclusive file path that is not compressed to `zipWriter`,
 // commonly the destination zip file path.
 // The unnecessary parameter `prefix` indicates the path prefix for zip file.
-func doZipPathWriter(srcPath string, zipWriter *zip.Writer, option ...Option) error {
+func doZipPathWriter(srcPath string, zipWriter *zip.Writer, option ...defines.PackOption) error {
 	var (
 		err          error
 		files        []string
-		usedOption   Option
+		usedOption   defines.PackOption
 		absolutePath string
 	)
 	if len(option) > 0 {

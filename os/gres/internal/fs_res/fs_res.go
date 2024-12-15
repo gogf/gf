@@ -4,34 +4,33 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gres
+package fs_res
 
 import (
 	"context"
-	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/gogf/gf/v2/container/gtree"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/os/gres/internal/defines"
 )
 
-// ResFS implements the FS interface using the default resource implementation.
-type ResFS struct {
+// FS implements the FS interface using the default resource implementation.
+type FS struct {
 	tree *gtree.BTree // The tree storing all resource files.
 }
 
-var _ FS = (*ResFS)(nil)
+var _ defines.FS = (*FS)(nil)
 
 const (
 	defaultTreeM = 100
 )
 
-// NewResFS creates and returns a new ResFS.
-func NewResFS() *ResFS {
-	return &ResFS{
+// NewFS creates and returns a new FS using resource manager.
+func NewFS() *FS {
+	return &FS{
 		tree: gtree.NewBTree(defaultTreeM, func(v1, v2 interface{}) int {
 			return strings.Compare(v1.(string), v2.(string))
 		}),
@@ -39,7 +38,7 @@ func NewResFS() *ResFS {
 }
 
 // Get returns the file with given path.
-func (fs *ResFS) Get(path string) File {
+func (fs *FS) Get(path string) defines.File {
 	if path == "" {
 		return nil
 	}
@@ -52,24 +51,24 @@ func (fs *ResFS) Get(path string) File {
 	}
 	result := fs.tree.Get(path)
 	if result != nil {
-		return result.(File)
+		return result.(defines.File)
 	}
 	return nil
 }
 
 // IsEmpty checks and returns whether the resource is empty.
-func (fs *ResFS) IsEmpty() bool {
+func (fs *FS) IsEmpty() bool {
 	return fs.tree.IsEmpty()
 }
 
 // ScanDir returns the files under the given path,
 // the parameter `path` should be a folder type.
-func (fs *ResFS) ScanDir(path string, pattern string, recursive ...bool) []File {
+func (fs *FS) ScanDir(path string, pattern string, recursive ...bool) []defines.File {
 	isRecursive := false
 	if len(recursive) > 0 {
 		isRecursive = recursive[0]
 	}
-	return fs.doScanDir(path, pattern, isRecursive)
+	return fs.doScanDir(path, pattern, isRecursive, false)
 }
 
 // doScanDir is an internal method which scans directory
@@ -79,7 +78,7 @@ func (fs *ResFS) ScanDir(path string, pattern string, recursive ...bool) []File 
 // using the ',' symbol to separate multiple patterns.
 //
 // It scans directory recursively if given parameter `recursive` is true.
-func (fs *ResFS) doScanDir(path string, pattern string, recursive bool) []File {
+func (fs *FS) doScanDir(path string, pattern string, recursive bool, onlyFile bool) []defines.File {
 	path = strings.ReplaceAll(path, "\\", "/")
 	path = strings.ReplaceAll(path, "//", "/")
 	if path != "/" {
@@ -88,45 +87,47 @@ func (fs *ResFS) doScanDir(path string, pattern string, recursive bool) []File {
 		}
 	}
 	var (
-		files    = make([]File, 0)
+		name     = ""
+		files    = make([]defines.File, 0)
+		length   = len(path)
 		patterns = strings.Split(pattern, ",")
 	)
 	for i := 0; i < len(patterns); i++ {
 		patterns[i] = strings.TrimSpace(patterns[i])
 	}
 
-	// Get root directory
-	rootFile := fs.Get(path)
-	if rootFile == nil || !rootFile.FileInfo().IsDir() {
-		return files
-	}
-
-	// Walk through the tree to find matching files
-	fs.tree.IteratorAsc(func(key, value interface{}) bool {
-		var (
-			file     = value.(File)
-			filePath = key.(string)
-		)
-
-		// Skip if not under the target path
-		if !strings.HasPrefix(filePath, path) {
+	// Used for type checking for first entry.
+	first := true
+	fs.tree.IteratorFrom(path, true, func(key, value interface{}) bool {
+		if first {
+			if !value.(defines.File).FileInfo().IsDir() {
+				return false
+			}
+			first = false
+		}
+		if onlyFile && value.(defines.File).FileInfo().IsDir() {
 			return true
 		}
-
-		// Skip if not recursive and file is in subdirectory
+		name = key.(string)
+		if len(name) <= length {
+			return true
+		}
+		if path != name[:length] {
+			return false
+		}
+		// To avoid of, eg: /i18n and /i18n-dir
+		if !first && name[length] != '/' {
+			return true
+		}
 		if !recursive {
-			relPath := strings.TrimPrefix(filePath, path)
-			if strings.Contains(relPath, "/") {
+			if strings.IndexByte(name[length+1:], '/') != -1 {
 				return true
 			}
 		}
-
-		// Check if file matches any pattern
-		name := gfile.Basename(filePath)
 		for _, p := range patterns {
-			if match, _ := filepath.Match(p, name); match {
-				files = append(files, file)
-				break
+			if match, err := filepath.Match(p, gfile.Basename(name)); err == nil && match {
+				files = append(files, value.(defines.File))
+				return true
 			}
 		}
 		return true
@@ -134,8 +135,17 @@ func (fs *ResFS) doScanDir(path string, pattern string, recursive bool) []File {
 	return files
 }
 
-// Add adds the `content` into current ResFS with given `prefix`.
-func (fs *ResFS) Add(content string, prefix ...string) error {
+func (fs *FS) ListAll() []defines.File {
+	files := make([]defines.File, 0)
+	fs.tree.Iterator(func(key, value interface{}) bool {
+		files = append(files, value.(defines.File))
+		return true
+	})
+	return files
+}
+
+// Add adds the `content` into current FS with given `prefix`.
+func (fs *FS) Add(content string, prefix ...string) error {
 	files, err := UnpackContent(content)
 	if err != nil {
 		intlog.Printf(context.TODO(), "Add resource files failed: %v", err)
@@ -146,35 +156,18 @@ func (fs *ResFS) Add(content string, prefix ...string) error {
 		namePrefix = prefix[0]
 	}
 	for i := 0; i < len(files); i++ {
-		files[i].(*localFile).fs = fs
-		fs.tree.Set(namePrefix+files[i].Path(), files[i])
+		files[i].(*FileImp).fs = fs
+		fs.tree.Set(namePrefix+files[i].Name(), files[i])
 	}
 	intlog.Printf(context.TODO(), "Add %d files to resource manager", fs.tree.Size())
 	return nil
 }
 
-// Load loads, unpacks and adds the data from `path` into ResFS.
-func (fs *ResFS) Load(path string, prefix ...string) error {
+// Load loads, unpacks and adds the data from `path` into FS.
+func (fs *FS) Load(path string, prefix ...string) error {
 	realPath, err := gfile.Search(path)
 	if err != nil {
 		return err
 	}
 	return fs.Add(gfile.GetContents(realPath), prefix...)
-}
-
-// Dump prints the files of ResFS.
-func (fs *ResFS) Dump() {
-	var info os.FileInfo
-	fs.tree.Iterator(func(key, value interface{}) bool {
-		info = value.(File).FileInfo()
-		intlog.Printf(
-			context.TODO(),
-			"%v %8s %s",
-			gtime.New(info.ModTime()).ISO8601(),
-			gfile.FormatSize(info.Size()),
-			key,
-		)
-		return true
-	})
-	intlog.Printf(context.TODO(), "TOTAL FILES: %d", fs.tree.Size())
 }

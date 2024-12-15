@@ -25,7 +25,7 @@ func Test_PackFolderToGoFile(t *testing.T) {
 			srcPath    = gtest.DataPath("files")
 			goFilePath = gfile.Temp(gtime.TimestampNanoStr(), "testdata.go")
 			pkgName    = "testdata"
-			err        = gres.PackToGoFile(srcPath, goFilePath, pkgName)
+			err        = gres.PackToGoFileWithOption(srcPath, goFilePath, pkgName, gres.PackOption{})
 		)
 		t.AssertNil(err)
 		_ = gfile.Remove(goFilePath)
@@ -33,7 +33,7 @@ func Test_PackFolderToGoFile(t *testing.T) {
 }
 
 func Test_PackMultiFilesToGoFile(t *testing.T) {
-	gres.Dump()
+	// gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			srcPath    = gtest.DataPath("files")
@@ -42,11 +42,11 @@ func Test_PackMultiFilesToGoFile(t *testing.T) {
 			array, err = gfile.ScanDir(srcPath, "*", false)
 		)
 		t.AssertNil(err)
-		err = gres.PackToGoFile(strings.Join(array, ","), goFilePath, pkgName)
+		err = gres.PackToGoFileWithOption(strings.Join(array, ","), goFilePath, pkgName, gres.PackOption{})
 		t.AssertNil(err)
 		defer gfile.Remove(goFilePath)
 
-		t.AssertNil(gfile.CopyFile(goFilePath, gtest.DataPath("data/data.go")))
+		//t.AssertNil(gfile.CopyFile(goFilePath, gtest.DataPath("data/data.go")))
 	})
 }
 
@@ -140,13 +140,12 @@ func Test_Unpack(t *testing.T) {
 }
 
 func Test_Basic(t *testing.T) {
-	// gres.Dump()
+	//gres.Dump()
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gres.Get("none"), nil)
 		t.Assert(gres.Contains("none"), false)
 		t.Assert(gres.Contains("dir1"), true)
 	})
-
 	gtest.C(t, func(t *gtest.T) {
 		path := "dir1/test1"
 		file := gres.Get(path)
@@ -158,8 +157,11 @@ func Test_Basic(t *testing.T) {
 		t.Assert(info.IsDir(), false)
 		t.Assert(info.Name(), "test1")
 
+		r, err := file.Open()
+		t.AssertNil(err)
+
 		b := make([]byte, 5)
-		n, err := file.Read(b)
+		n, err := r.Read(b)
 		t.Assert(n, 5)
 		t.AssertNil(err)
 		t.Assert(string(b), "test1")
@@ -210,9 +212,9 @@ func Test_ScanDir(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		path := "dir1"
 		files := gres.ScanDir(path, "*", false)
-		t.AssertNE(files, nil)
 		t.Assert(len(files), 2)
 	})
+
 	gtest.C(t, func(t *gtest.T) {
 		path := "dir1"
 		files := gres.ScanDir(path, "*", true)
@@ -272,6 +274,7 @@ func Test_Export(t *testing.T) {
 		name := `template-res/index.html`
 		t.Assert(gfile.GetContents(gfile.Join(dst, name)), gres.GetContent(name))
 	})
+
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			src = `template-res`

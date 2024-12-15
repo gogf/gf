@@ -4,63 +4,46 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gres
+package fs_std
 
 import (
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gres/internal/defines"
 )
 
-// StdFS implements the FS interface using the standard library fs.FS.
-type StdFS struct {
+// FS implements the FS interface using the standard library fs.FS.
+type FS struct {
 	fs fs.FS
 }
 
-var _ FS = (*StdFS)(nil)
+var _ defines.FS = (*FS)(nil)
 
-// NewStdFS creates and returns a new StdFS.
-func NewStdFS(fs fs.FS) *StdFS {
-	return &StdFS{
+func NewFS(fs fs.FS) *FS {
+	return &FS{
 		fs: fs,
 	}
 }
 
 // Get returns the file with given path.
-func (fs *StdFS) Get(path string) File {
+func (fs *FS) Get(path string) defines.File {
 	f, err := fs.fs.Open(path)
 	if err != nil {
 		return nil
 	}
-	defer f.Close()
-
-	info, err := f.Stat()
-	if err != nil {
-		panic(err)
-		return nil
-	}
-
-	// Read the content
-	content, err := io.ReadAll(f)
-	if err != nil {
-		return nil
-	}
-
-	file := &localFile{
-		name:    info.Name(),
-		path:    path,
-		file:    info,
-		content: content,
-		fs:      fs,
+	file := &FileImp{
+		path: path,
+		file: f,
+		fs:   fs,
 	}
 	return file
 }
 
 // IsEmpty checks and returns whether the resource is empty.
-func (fs *StdFS) IsEmpty() bool {
+func (fs *FS) IsEmpty() bool {
 	if dir, ok := fs.fs.(interface {
 		ReadDir(name string) ([]os.DirEntry, error)
 	}); ok {
@@ -75,9 +58,9 @@ func (fs *StdFS) IsEmpty() bool {
 
 // ScanDir returns the files under the given path,
 // the parameter `path` should be a folder type.
-func (fs *StdFS) ScanDir(path string, pattern string, recursive ...bool) []File {
+func (fs *FS) ScanDir(path string, pattern string, recursive ...bool) []defines.File {
 	var (
-		files       = make([]File, 0)
+		files       = make([]defines.File, 0)
 		isRecursive = len(recursive) > 0 && recursive[0]
 	)
 	err := fs.walkDir(path, func(path string, d os.DirEntry, err error) error {
@@ -109,7 +92,7 @@ func (fs *StdFS) ScanDir(path string, pattern string, recursive ...bool) []File 
 
 // walkDir walks the file tree rooted at path, calling fn for each file or
 // directory in the tree, including path.
-func (fs *StdFS) walkDir(path string, fn func(path string, d os.DirEntry, err error) error) error {
+func (fs *FS) walkDir(path string, fn func(path string, d os.DirEntry, err error) error) error {
 	if dir, ok := fs.fs.(interface {
 		ReadDir(name string) ([]os.DirEntry, error)
 	}); ok {
@@ -150,4 +133,8 @@ func (fs *StdFS) walkDir(path string, fn func(path string, d os.DirEntry, err er
 		return nil
 	}
 	return gerror.New("filesystem does not implement ReadDir")
+}
+
+func (fs *FS) ListAll() []defines.File {
+	return fs.ScanDir(".", "*", true)
 }

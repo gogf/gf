@@ -287,22 +287,30 @@ func (s *Server) searchStaticFile(uri string) *staticFile {
 func (s *Server) serveFile(r *Request, f *staticFile, allowIndex ...bool) {
 	// Use resource file from memory.
 	if f.File != nil {
+		httpFile, err := f.File.HttpFile()
+		if err != nil {
+			intlog.Errorf(r.Context(), "serving file failed: %+v", err)
+			r.Response.WriteStatus(http.StatusInternalServerError)
+			return
+		}
+		defer httpFile.Close()
 		if f.IsDir {
 			if s.config.IndexFolder || (len(allowIndex) > 0 && allowIndex[0]) {
-				s.listDir(r, f.File)
+				s.listDir(r, httpFile)
 			} else {
 				r.Response.WriteStatus(http.StatusForbidden)
 			}
 		} else {
 			info := f.File.FileInfo()
-			r.Response.ServeContent(info.Name(), info.ModTime(), f.File)
+			r.Response.ServeContent(info.Name(), info.ModTime(), httpFile)
 		}
 		return
 	}
 	// Use file from dist.
 	file, err := os.Open(f.Path)
 	if err != nil {
-		r.Response.WriteStatus(http.StatusForbidden)
+		intlog.Errorf(r.Context(), "open file failed: %+v", err)
+		r.Response.WriteStatus(http.StatusInternalServerError)
 		return
 	}
 	defer func() {
@@ -313,7 +321,12 @@ func (s *Server) serveFile(r *Request, f *staticFile, allowIndex ...bool) {
 	// It ignores all custom buffer content and uses the file content.
 	r.Response.ClearBuffer()
 
-	info, _ := file.Stat()
+	info, err := file.Stat()
+	if err != nil {
+		intlog.Errorf(r.Context(), "getting file info failed: %+v", err)
+		r.Response.WriteStatus(http.StatusInternalServerError)
+		return
+	}
 	if info.IsDir() {
 		if s.config.IndexFolder || (len(allowIndex) > 0 && allowIndex[0]) {
 			s.listDir(r, file)

@@ -7,10 +7,12 @@
 package gres
 
 import (
-	"context"
+	"fmt"
+	"os"
 	"strings"
 
-	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
 )
 
 // Resource implements the FS interface.
@@ -76,7 +78,7 @@ func (r *Resource) GetContent(path string) []byte {
 
 // Contains checks whether the `path` exists in current resource object.
 func (r *Resource) Contains(path string) bool {
-	return r.Get(path) == nil
+	return r.Get(path) != nil
 }
 
 // IsEmpty checks and returns whether the resource manager is empty.
@@ -116,12 +118,19 @@ func (r *Resource) Export(src, dst string, option ...ExportOption) error {
 
 // Dump prints the files of current resource object.
 func (r *Resource) Dump() {
-	var ctx = context.TODO()
-	if r.IsEmpty() {
-		intlog.Printf(ctx, "empty resource")
-	} else {
-		for _, v := range r.ScanDir("/", "*", true) {
-			intlog.Printf(ctx, "%s %d", v.Path(), v.FileInfo().Size())
-		}
+	var (
+		count int
+		info  os.FileInfo
+	)
+	for _, file := range r.fs.ListAll() {
+		count++
+		info = file.FileInfo()
+		fmt.Printf(
+			"%v %8s %s\n",
+			gtime.New(info.ModTime()).ISO8601(),
+			gfile.FormatSize(info.Size()),
+			file.Name(),
+		)
 	}
+	fmt.Printf("TOTAL FILES: %d\n", count)
 }
