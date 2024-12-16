@@ -29,9 +29,9 @@ var (
 	}()
 	ctx    = gctx.GetInitCtx()
 	config = &gredis.Config{
-		Address: `192.168.5.3:6379`, //
+		Address: `:6379`, //192.168.5.3:6379
 		Db:      7,
-		Pass:    "123456",
+		//Pass:    "123456",
 	}
 	redis, _ = gredis.New(config)
 )
