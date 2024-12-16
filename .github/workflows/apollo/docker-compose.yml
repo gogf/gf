@@ -20,7 +20,7 @@ services:
       #APOLLO_PORTAL_DB_PASSWORD: 'apollo'
 
   apollo-db:
-    image: "loads/mysql:5.7"
+    image: "mysql:5.7"
     container_name: apollo-db
     environment:
       TZ: Asia/Shanghai
@@ -36,7 +36,7 @@ services:
       - apollo-dbdata
 
   apollo-dbdata:
-    image: "loads/alpine:3.8"
+    image: "alpine:3.8"
     container_name: apollo-dbdata
     volumes:
       - /var/lib/mysql
