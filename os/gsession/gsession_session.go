@@ -8,7 +8,6 @@ package gsession
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -83,7 +82,6 @@ func (s *Session) init() error {
 //
 // NOTE that this function must be called ever after a session request done.
 func (s *Session) Close() error {
-	fmt.Println("")
 	if s.manager.storage == nil {
 		return nil
 	}
