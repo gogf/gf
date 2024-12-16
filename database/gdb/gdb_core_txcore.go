@@ -86,13 +86,11 @@ func (tx *TXCore) Commit() error {
 		_, err := tx.Exec("RELEASE SAVEPOINT " + tx.transactionKeyForNestedPoint())
 		return err
 	}
-	if tx.cancelFunc != nil {
-		defer tx.cancelFunc()
-	}
 	_, err := tx.db.DoCommit(tx.ctx, DoCommitInput{
 		Tx:            tx.tx,
 		Sql:           "COMMIT",
 		Type:          SqlTypeTXCommit,
+		TxCancelFunc:  tx.cancelFunc,
 		IsTransaction: true,
 	})
 	if err == nil {
@@ -110,13 +108,11 @@ func (tx *TXCore) Rollback() error {
 		_, err := tx.Exec("ROLLBACK TO SAVEPOINT " + tx.transactionKeyForNestedPoint())
 		return err
 	}
-	if tx.cancelFunc != nil {
-		defer tx.cancelFunc()
-	}
 	_, err := tx.db.DoCommit(tx.ctx, DoCommitInput{
 		Tx:            tx.tx,
 		Sql:           "ROLLBACK",
 		Type:          SqlTypeTXRollback,
+		TxCancelFunc:  tx.cancelFunc,
 		IsTransaction: true,
 	})
 	if err == nil {
