@@ -11,6 +11,7 @@ import (
 	"fmt"
 	reddis3 "github.com/gogf/gf/contrib/nosql/redis/v2"
 	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/test/gtest"
 	redis2 "github.com/redis/go-redis/v9"
@@ -59,11 +60,14 @@ func (h *CustomRedisHook) DialHook(hook redis2.DialHook) redis2.DialHook {
 
 func (h *CustomRedisHook) ProcessHook(next redis2.ProcessHook) redis2.ProcessHook {
 	return func(ctx context.Context, cmd redis2.Cmder) error {
-		fmt.Println("start myProcessHook cmd:", cmd.String())
+		//fmt.Println("start myProcessHook cmd:", cmd.String())
 		start := time.Now().UnixMilli()
 		ret := next(ctx, cmd)
 		end := time.Now().UnixMilli()
-		fmt.Println("end 查询耗时:", end-start, "ms")
+		if (end - start) > 300 {
+			g.Log().Info(ctx, " redis command exec too long ,consume time:", end-start, "ms command:", cmd.String())
+		}
+		//fmt.Println("end 查询耗时:", end-start, "ms")
 		return ret
 	}
 }
