@@ -54,7 +54,6 @@ func TestDriver_DoFilter(t *testing.T) {
 }
 
 func TestDriver_handleSelectSqlReplacement(t *testing.T) {
-
 	gtest.C(t, func(t *gtest.T) {
 		d := &Driver{}
 
@@ -67,7 +66,7 @@ func TestDriver_handleSelectSqlReplacement(t *testing.T) {
 
 		// LIMIT query with offset and number of rows
 		inputSql = "SELECT * FROM User ORDER BY ID DESC LIMIT 100, 200"
-		expectedSql = "SELECT * FROM User ORDER BY ID DESC OFFSET 100 ROWS FETCH NEXT 200 ROWS ONLY"
+		expectedSql = "SELECT * FROM ( SELECT ROW_NUMBER() OVER (ORDER BY ID DESC) as ROW_NUMBER__, * FROM (SELECT * FROM User) as InnerQuery ) as TMP_ WHERE TMP_.ROW_NUMBER__ > 100 AND TMP_.ROW_NUMBER__ <= 300"
 		resultSql, err = d.handleSelectSqlReplacement(inputSql)
 		t.AssertNil(err)
 		t.Assert(resultSql, expectedSql)
@@ -88,42 +87,42 @@ func TestDriver_handleSelectSqlReplacement(t *testing.T) {
 
 		// LIMIT query with only rows
 		inputSql = "SELECT * FROM User LIMIT 50"
-		expectedSql = "SELECT * FROM User OFFSET 0 ROWS FETCH NEXT 50 ROWS ONLY"
+		expectedSql = "SELECT * FROM ( SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) as ROW_NUMBER__, * FROM (SELECT * FROM User) as InnerQuery ) as TMP_ WHERE TMP_.ROW_NUMBER__ > 0 AND TMP_.ROW_NUMBER__ <= 50"
 		resultSql, err = d.handleSelectSqlReplacement(inputSql)
 		t.AssertNil(err)
 		t.Assert(resultSql, expectedSql)
 
 		// LIMIT query without ORDER BY
 		inputSql = "SELECT * FROM User LIMIT 30"
-		expectedSql = "SELECT * FROM User OFFSET 0 ROWS FETCH NEXT 30 ROWS ONLY"
+		expectedSql = "SELECT * FROM ( SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) as ROW_NUMBER__, * FROM (SELECT * FROM User) as InnerQuery ) as TMP_ WHERE TMP_.ROW_NUMBER__ > 0 AND TMP_.ROW_NUMBER__ <= 30"
 		resultSql, err = d.handleSelectSqlReplacement(inputSql)
 		t.AssertNil(err)
 		t.Assert(resultSql, expectedSql)
 
 		// Complex query with ORDER BY and LIMIT
 		inputSql = "SELECT name, age FROM User WHERE age > 18 ORDER BY age ASC LIMIT 10, 5"
-		expectedSql = "SELECT name, age FROM User WHERE age > 18 ORDER BY age ASC OFFSET 10 ROWS FETCH NEXT 5 ROWS ONLY"
+		expectedSql = "SELECT * FROM ( SELECT ROW_NUMBER() OVER (ORDER BY age ASC) as ROW_NUMBER__, * FROM (SELECT name, age FROM User WHERE age > 18) as InnerQuery ) as TMP_ WHERE TMP_.ROW_NUMBER__ > 10 AND TMP_.ROW_NUMBER__ <= 15"
 		resultSql, err = d.handleSelectSqlReplacement(inputSql)
 		t.AssertNil(err)
 		t.Assert(resultSql, expectedSql)
 
 		// Complex conditional queries have limits
 		inputSql = "SELECT * FROM User WHERE age > 18 AND status = 'active' LIMIT 100, 50"
-		expectedSql = "SELECT * FROM User WHERE age > 18 AND status = 'active' OFFSET 100 ROWS FETCH NEXT 50 ROWS ONLY"
+		expectedSql = "SELECT * FROM ( SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) as ROW_NUMBER__, * FROM (SELECT * FROM User WHERE age > 18 AND status = 'active') as InnerQuery ) as TMP_ WHERE TMP_.ROW_NUMBER__ > 100 AND TMP_.ROW_NUMBER__ <= 150"
 		resultSql, err = d.handleSelectSqlReplacement(inputSql)
 		t.AssertNil(err)
 		t.Assert(resultSql, expectedSql)
 
 		// A LIMIT query that contains subquery
 		inputSql = "SELECT * FROM (SELECT * FROM User WHERE age > 18) AS subquery LIMIT 10"
-		expectedSql = "SELECT * FROM (SELECT * FROM User WHERE age > 18) AS subquery OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY"
+		expectedSql = "SELECT * FROM ( SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) as ROW_NUMBER__, * FROM (SELECT * FROM (SELECT * FROM User WHERE age > 18) AS subquery) as InnerQuery ) as TMP_ WHERE TMP_.ROW_NUMBER__ > 0 AND TMP_.ROW_NUMBER__ <= 10"
 		resultSql, err = d.handleSelectSqlReplacement(inputSql)
 		t.AssertNil(err)
 		t.Assert(resultSql, expectedSql)
 
 		// Queries with complex ORDER BY and LIMIT
 		inputSql = "SELECT name, age FROM User WHERE age > 18 ORDER BY age DESC, name ASC LIMIT 20, 10"
-		expectedSql = "SELECT name, age FROM User WHERE age > 18 ORDER BY age DESC, name ASC OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY"
+		expectedSql = "SELECT * FROM ( SELECT ROW_NUMBER() OVER (ORDER BY age DESC, name ASC) as ROW_NUMBER__, * FROM (SELECT name, age FROM User WHERE age > 18) as InnerQuery ) as TMP_ WHERE TMP_.ROW_NUMBER__ > 20 AND TMP_.ROW_NUMBER__ <= 30"
 		resultSql, err = d.handleSelectSqlReplacement(inputSql)
 		t.AssertNil(err)
 		t.Assert(resultSql, expectedSql)

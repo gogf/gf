@@ -18,17 +18,27 @@ import (
 )
 
 var (
-	orderBySqlTmp         = `SELECT %s %s OFFSET %d ROWS FETCH NEXT %d ROWS ONLY`
-	withoutOrderBySqlTmp  = `SELECT %s OFFSET %d ROWS FETCH NEXT %d ROWS ONLY`
 	selectWithOrderSqlTmp = `
-SELECT * FROM (SELECT ROW_NUMBER() OVER (ORDER BY %s) as ROW_NUMBER__, %s ) as TMP_ 
-WHERE TMP_.ROW_NUMBER__ > %d AND TMP_.ROW_NUMBER__ <= %d
-`
+SELECT * FROM (
+    SELECT ROW_NUMBER() OVER (ORDER BY %s) as ROW_NUMBER__, %s 
+    FROM (%s) as InnerQuery
+) as TMP_ 
+WHERE TMP_.ROW_NUMBER__ > %d AND TMP_.ROW_NUMBER__ <= %d`
+	selectWithoutOrderSqlTmp = `
+SELECT * FROM (
+    SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) as ROW_NUMBER__, %s 
+    FROM (%s) as InnerQuery
+) as TMP_ 
+WHERE TMP_.ROW_NUMBER__ > %d AND TMP_.ROW_NUMBER__ <= %d`
 )
 
 func init() {
 	var err error
 	selectWithOrderSqlTmp, err = gdb.FormatMultiLineSqlToSingle(selectWithOrderSqlTmp)
+	if err != nil {
+		panic(err)
+	}
+	selectWithoutOrderSqlTmp, err = gdb.FormatMultiLineSqlToSingle(selectWithoutOrderSqlTmp)
 	if err != nil {
 		panic(err)
 	}
@@ -98,14 +108,19 @@ func (d *Driver) handleSelectSqlReplacement(toBeCommittedSql string) (newSql str
 		return "", err
 	}
 
-	// SELECT and ORDER BY
+	// Extract SELECT part
 	selectStr := strings.TrimSpace(allMatch[1])
+
+	// Extract ORDER BY part
 	orderStr := ""
 	if len(allMatch[2]) > 0 {
 		orderStr = strings.TrimSpace(allMatch[2])
+		// Remove "ORDER BY" prefix as it will be used in OVER clause
+		orderStr = strings.TrimPrefix(orderStr, "ORDER BY")
+		orderStr = strings.TrimSpace(orderStr)
 	}
 
-	// LIMIT and OFFSET value
+	// Calculate LIMIT and OFFSET values
 	first, _ := strconv.Atoi(allMatch[3]) // LIMIT first parameter
 	limit := 0
 	if len(allMatch) > 4 && allMatch[4] != "" {
@@ -115,19 +130,26 @@ func (d *Driver) handleSelectSqlReplacement(toBeCommittedSql string) (newSql str
 		first = 0
 	}
 
+	// Build the final query
 	if orderStr != "" {
-		// have ORDER BY clause
+		// Have ORDER BY clause
 		newSql = fmt.Sprintf(
-			orderBySqlTmp,
-			selectStr, orderStr, first, limit,
+			selectWithOrderSqlTmp,
+			orderStr,                            // ORDER BY clause for ROW_NUMBER
+			"*",                                 // Select all columns
+			fmt.Sprintf("SELECT %s", selectStr), // Original SELECT
+			first,                               // OFFSET
+			first+limit,                         // OFFSET + LIMIT
 		)
 	} else {
-		// without ORDER BY clause
+		// Without ORDER BY clause
 		newSql = fmt.Sprintf(
-			withoutOrderBySqlTmp,
-			selectStr, first, limit,
+			selectWithoutOrderSqlTmp,
+			"*",                                 // Select all columns
+			fmt.Sprintf("SELECT %s", selectStr), // Original SELECT
+			first,                               // OFFSET
+			first+limit,                         // OFFSET + LIMIT
 		)
 	}
-
 	return newSql, nil
 }
