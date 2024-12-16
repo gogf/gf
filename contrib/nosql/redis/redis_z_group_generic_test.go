@@ -7,6 +7,10 @@
 package redis_test
 
 import (
+	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -22,8 +26,29 @@ var (
 )
 
 func Test_GroupGeneric_Copy(t *testing.T) {
+
+	sInfo, errSInfo := redis.Do(ctx, "INFO", "server")
+	if errSInfo != nil {
+		t.Fatalf("get redis version info err：%s", errSInfo)
+	}
+	pattern := `redis_version\:(\d+\.\d+\.\d+)`
+	regCompile := regexp.MustCompile(pattern)
+	ret := regCompile.FindStringSubmatch(sInfo.String())
+	//fmt.Println("redis version:", rdsVersion)
+	rdsVersion := ret[1]
+	verAry := strings.Split(rdsVersion, ".")
+	verF1, _ := strconv.Atoi(verAry[0])
+	verF2, _ := strconv.Atoi(verAry[1])
+	verF3, _ := strconv.Atoi(verAry[2])
+	if !(verF1 >= 6 && verF2 >= 2 && verF3 >= 26) {
+		//不是6.2.26 或更高版本不用检测这个
+		fmt.Println("redis服务器低于6.2.26没有该命令无需检测")
+		return
+	}
+
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
+
 		var (
 			k1     = guid.S()
 			v1     = guid.S()
