@@ -10,6 +10,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/v2/os/gctx"
 	"testing"
 	"time"
 
@@ -145,6 +146,21 @@ func TestDoInsert(t *testing.T) {
 
 		_, err = db.Replace(context.Background(), "t_user", data, 10)
 		gtest.AssertNE(err, nil)
+	})
+}
+
+func TestDoInsertGetId(t *testing.T) {
+	//先创建表
+	createInsertAndGetIdTableForTest()
+	gtest.C(t, func(t *gtest.T) {
+		table := "ip_to_id"
+		data := map[string]interface{}{
+			"ip": "192.168.179.1",
+		}
+		id, err := db.InsertAndGetId(gctx.New(), table, data)
+		t.AssertNil(err)
+		t.AssertGT(id, 0)
+		//fmt.Println("id:", id)
 	})
 }
 
