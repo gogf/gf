@@ -51,12 +51,6 @@ func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...inter
 		}
 	}
 
-	if c.db.GetConfig().QueryTimeout > 0 {
-		var cancelFunc context.CancelFunc
-		ctx, cancelFunc = context.WithTimeout(ctx, c.db.GetConfig().QueryTimeout)
-		defer cancelFunc()
-	}
-
 	// Sql filtering.
 	sql, args = c.FormatSqlBeforeExecuting(sql, args)
 	sql, args, err = c.db.DoFilter(ctx, link, sql, args)
@@ -113,12 +107,6 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
 			link = &txLink{tx.GetSqlTX()}
 		}
-	}
-
-	if c.db.GetConfig().ExecTimeout > 0 {
-		var cancelFunc context.CancelFunc
-		ctx, cancelFunc = context.WithTimeout(ctx, c.db.GetConfig().ExecTimeout)
-		defer cancelFunc()
 	}
 
 	// SQL filtering.
@@ -183,11 +171,10 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 	ctx, span := tr.Start(ctx, string(in.Type), trace.WithSpanKind(trace.SpanKindInternal))
 	defer span.End()
 
-	// Execution cased by type.
+	// Execution by type.
 	switch in.Type {
 	case SqlTypeBegin:
 		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctx, ctxTimeoutTypeTrans)
-		defer cancelFuncForTimeout()
 		formattedSql = fmt.Sprintf(
 			`%s (IosolationLevel: %s, ReadOnly: %t)`,
 			formattedSql, in.TxOptions.Isolation.String(), in.TxOptions.ReadOnly,
@@ -199,15 +186,22 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 				ctx:           context.WithValue(ctx, transactionIdForLoggerCtx, transactionIdGenerator.Add(1)),
 				master:        in.Db,
 				transactionId: guid.S(),
+				cancelFunc:    cancelFuncForTimeout,
 			}
 			ctx = out.Tx.GetCtx()
 		}
 		out.RawResult = sqlTx
 
 	case SqlTypeTXCommit:
+		if in.TxCancelFunc != nil {
+			defer in.TxCancelFunc()
+		}
 		err = in.Tx.Commit()
 
 	case SqlTypeTXRollback:
+		if in.TxCancelFunc != nil {
+			defer in.TxCancelFunc()
+		}
 		err = in.Tx.Rollback()
 
 	case SqlTypeExecContext:

@@ -92,7 +92,6 @@ func (c *Core) GetCtxTimeout(ctx context.Context, timeoutType ctxTimeoutType) (c
 		if c.db.GetConfig().PrepareTimeout > 0 {
 			return context.WithTimeout(ctx, config.PrepareTimeout)
 		}
-
 	case ctxTimeoutTypeTrans:
 		if c.db.GetConfig().TranTimeout > 0 {
 			return context.WithTimeout(ctx, config.TranTimeout)

@@ -1556,3 +1556,37 @@ func Test_Issue2119(t *testing.T) {
 		}
 	})
 }
+
+// https://github.com/gogf/gf/issues/4034
+func Test_Issue4034(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := "issue4034"
+		array := gstr.SplitAndTrim(gtest.DataContent(`issue4034.sql`), ";")
+		for _, v := range array {
+			_, err := db.Exec(ctx, v)
+			t.AssertNil(err)
+		}
+		defer dropTable(table)
+
+		err := issue4034SaveDeviceAndToken(ctx, table)
+		t.AssertNil(err)
+	})
+}
+
+func issue4034SaveDeviceAndToken(ctx context.Context, table string) error {
+	return db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+		if err := issue4034SaveAppDevice(ctx, table, tx); err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func issue4034SaveAppDevice(ctx context.Context, table string, tx gdb.TX) error {
+	_, err := db.Model(table).Safe().Ctx(ctx).TX(tx).Data(g.Map{
+		"passport": "111",
+		"password": "222",
+		"nickname": "333",
+	}).Save()
+	return err
+}
