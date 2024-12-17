@@ -52,7 +52,7 @@ func init() {
 
 	nodeLink := gdb.ConfigNode{
 		Type: "mssql",
-		Name: "test",
+		Name: "master",
 		Link: fmt.Sprintf(
 			"mssql:%s:%s@tcp(%s:%s)/%s?encrypt=disable",
 			node.User, node.Pass, node.Host, node.Port, node.Name,
