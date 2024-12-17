@@ -64,12 +64,6 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 
 	// Only the insert operation with primary key can execute the following code
 
-	if d.GetConfig().ExecTimeout > 0 {
-		var cancelFunc context.CancelFunc
-		ctx, cancelFunc = context.WithTimeout(ctx, d.GetConfig().ExecTimeout)
-		defer cancelFunc()
-	}
-
 	// Sql filtering.
 	sql, args = d.FormatSqlBeforeExecuting(sql, args)
 	sql, args, err = d.DoFilter(ctx, link, sql, args)
