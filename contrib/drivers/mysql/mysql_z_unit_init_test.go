@@ -44,18 +44,22 @@ func init() {
 	nodeDefault := gdb.ConfigNode{
 		ExecTimeout: time.Second * 2,
 		Link:        fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3306)/?loc=Local&parseTime=true", TestDbPass),
+		TranTimeout: time.Second * 3,
 	}
 	partitionDefault := gdb.ConfigNode{
-		Link:  fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3307)/?loc=Local&parseTime=true", TestDbPass),
-		Debug: true,
+		Link:        fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3307)/?loc=Local&parseTime=true", TestDbPass),
+		Debug:       true,
+		TranTimeout: time.Second * 3,
 	}
 	nodePrefix := gdb.ConfigNode{
-		Link: fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3306)/?loc=Local&parseTime=true", TestDbPass),
+		Link:        fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3306)/?loc=Local&parseTime=true", TestDbPass),
+		TranTimeout: time.Second * 3,
 	}
 	nodePrefix.Prefix = TableNamePrefix1
 
 	nodeInvalid := gdb.ConfigNode{
-		Link: fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3307)/?loc=Local&parseTime=true", TestDbPass),
+		Link:        fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3307)/?loc=Local&parseTime=true", TestDbPass),
+		TranTimeout: time.Second * 3,
 	}
 	gdb.AddConfigNode("test", nodeDefault)
 	gdb.AddConfigNode("prefix", nodePrefix)
