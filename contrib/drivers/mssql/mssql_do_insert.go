@@ -148,17 +148,19 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 				return retResult.(sql.Result), err
 			}
 			var (
-				aCount int64
-				lId    int64
+				aCount int64 // affect count
+				lId    int64 // last insert id
 			)
 			if len(stdSqlResult) == 0 {
 				err = gerror.WrapCode(gcode.CodeDbOperationError, gerror.New("affectcount is zero"), `sql.Result.RowsAffected failed`)
 				retResult = &MssqlResult{lastInsertId: 0, rowsAffected: 0, err: err}
 				return retResult.(sql.Result), err
 			}
+			// get affect count
 			aCount = stdSqlResult[0].GMap().GetVar(affectCountFieldName).Int64()
+			// get last_insert_id
 			lId = stdSqlResult[0].GMap().GetVar(fdId).Int64()
-			//fmt.Println(fmt.Sprintf("---------------------------type:%d", stdSqlResult[0].GMap().Get("ID").(int64)))
+
 			retResult = &MssqlResult{lastInsertId: lId, rowsAffected: aCount}
 
 			batchResult.Result = retResult.(sql.Result)
@@ -171,6 +173,7 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 	return batchResult, nil
 }
 
+// MssqlResult instance of sql.Result
 type MssqlResult struct {
 	lastInsertId int64
 	rowsAffected int64
@@ -185,6 +188,7 @@ func (r *MssqlResult) RowsAffected() (int64, error) {
 	return r.rowsAffected, r.err
 }
 
+// GetInsertOutputSql  gen get last_insert_id code
 func (m *Driver) GetInsertOutputSql(ctx context.Context, table string) string {
 	fds, errFd := m.GetDB().TableFields(ctx, table)
 	if errFd != nil {
@@ -195,10 +199,11 @@ func (m *Driver) GetInsertOutputSql(ctx context.Context, table string) string {
 	incrNo := 0
 	if len(fds) > 0 {
 		for _, fd := range fds {
+			// has primary key and is auto-incement
 			if fd.Extra == autoIncrementName && fd.Key == mssqlPrimaryKeyName && !fd.Null {
 				incrNoStr := ""
-				if incrNo == 0 {
-					incrNoStr = " as ID"
+				if incrNo == 0 { //fixed first field named id, convenient to get
+					incrNoStr = fmt.Sprintf(" as %s", fdId)
 				}
 
 				extraSqlAry = append(extraSqlAry, fmt.Sprintf("%s.%s%s", mssqlInsertedObjName, fd.Name, incrNoStr))
