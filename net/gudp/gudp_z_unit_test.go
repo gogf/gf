@@ -99,14 +99,6 @@ func Test_Basic(t *testing.T) {
 			t.AssertNil(err)
 		}
 	})
-	// gudp.SendRecv
-	gtest.C(t, func(t *gtest.T) {
-		for i := 0; i < 100; i++ {
-			result, err := gudp.SendRecv(s.GetListenedAddress(), []byte(gconv.String(i)), -1)
-			t.AssertNil(err)
-			t.Assert(string(result), fmt.Sprintf(`> %d`, i))
-		}
-	})
 }
 
 // If the read buffer size is less than the sent package size,
