@@ -128,7 +128,7 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 		if err := result.Scan(fieldValue); err != nil {
 			return nil, err
 		}
-		return result, nil
+		return []string(result), nil
 
 	default:
 		return d.Core.ConvertValueForLocal(ctx, fieldType, fieldValue)
