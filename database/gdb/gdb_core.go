@@ -421,6 +421,9 @@ func (c *Core) fieldsToSequence(ctx context.Context, table string, fields []stri
 	return fieldsResultInSequence, nil
 }
 
+// InsertHandler special need for mssql insert and get id
+type InsertHandler func(db DB, ctx context.Context, link Link, sql string, args ...interface{}) (sql.Result, error)
+
 // DoInsert inserts or updates data for given table.
 // This function is usually used for custom interface definition, you do not need call it manually.
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
@@ -433,13 +436,30 @@ func (c *Core) fieldsToSequence(ctx context.Context, table string, fields []stri
 // InsertOptionReplace: if there's unique/primary key in the data, it deletes it from table and inserts a new one;
 // InsertOptionSave:    if there's unique/primary key in the data, it updates it or else inserts a new one;
 // InsertOptionIgnore:  if there's unique/primary key in the data, it ignores the inserting;
-func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption) (result sql.Result, err error) {
+func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption, ext ...interface{}) (result sql.Result, err error) {
 	var (
-		keys           []string      // Field names.
-		values         []string      // Value holder string array, like: (?,?,?)
-		params         []interface{} // Values that will be committed to underlying database driver.
-		onDuplicateStr string        // onDuplicateStr is used in "ON DUPLICATE KEY UPDATE" statement.
+		keys                 []string      // Field names.
+		values               []string      // Value holder string array, like: (?,?,?)
+		params               []interface{} // Values that will be committed to underlying database driver.
+		onDuplicateStr       string        // onDuplicateStr is used in "ON DUPLICATE KEY UPDATE" statement.
+		insertDefaultHandler InsertHandler // drive to do insert data
+		insertOutPutStr      string
 	)
+	insertOutPutStr = ""
+	insertDefaultHandler = func(db DB, ctx context.Context, link Link, sql string, args ...interface{}) (sql.Result, error) {
+		return db.DoExec(ctx, link, sql, args...)
+	}
+	//deal special insert. for example: mssql
+	if len(ext) > 0 {
+		if fn, ok := ext[0].(InsertHandler); ok {
+			insertDefaultHandler = fn
+		}
+		if len(ext) > 1 {
+			if outStr, ok := ext[1].(string); ok {
+				insertOutPutStr = outStr
+			}
+		}
+	}
 	// ============================================================================================
 	// Group the list by fields. Different fields to different list.
 	// It here uses ListMap to keep sequence for data inserting.
@@ -524,12 +544,14 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 				stdSqlResult sql.Result
 				affectedRows int64
 			)
-			stdSqlResult, err = c.db.DoExec(ctx, link, fmt.Sprintf(
-				"%s INTO %s(%s) VALUES%s %s",
+			sqlStr := fmt.Sprintf(
+				"%s INTO %s(%s) %s VALUES%s %s ",
 				operation, c.QuotePrefixTableName(table), keysStr,
+				insertOutPutStr,
 				gstr.Join(valueHolders, ","),
 				onDuplicateStr,
-			), params...)
+			)
+			stdSqlResult, err = insertDefaultHandler(c.db, ctx, link, sqlStr, params...)
 			if err != nil {
 				return stdSqlResult, err
 			}

@@ -31,17 +31,17 @@ const (
 	TestSchema2      = "test2"
 	TableNamePrefix1 = "gf_"
 	TestDbUser       = "sa"
-	TestDbPass       = "LoremIpsum86" //"theone@123"
+	TestDbPass       = "theone@123" // "LoremIpsum86"
 	CreateTime       = "2018-10-24 10:00:00"
 )
 
 func init() {
 	node := gdb.ConfigNode{
-		Host:             "127.0.0.1", //192.168.5.72  127.0.0.1
+		Host:             "192.168.5.72", // 192.168.5.72  127.0.0.1
 		Port:             "1433",
 		User:             TestDbUser,
 		Pass:             TestDbPass,
-		Name:             "test", //"QPLogDB", //
+		Name:             "QPLogDB", // "test",
 		Type:             "mssql",
 		Role:             "master",
 		Charset:          "utf8",

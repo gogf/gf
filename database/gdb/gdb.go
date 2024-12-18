@@ -133,7 +133,7 @@ type DB interface {
 
 	// DoInsert performs the actual INSERT operation with given options.
 	// This is an internal method that can be overridden by custom implementations.
-	DoInsert(ctx context.Context, link Link, table string, data List, option DoInsertOption) (result sql.Result, err error)
+	DoInsert(ctx context.Context, link Link, table string, data List, option DoInsertOption, ext ...interface{}) (result sql.Result, err error)
 
 	// DoUpdate performs the actual UPDATE operation.
 	// This is an internal method that can be overridden by custom implementations.
