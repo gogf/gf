@@ -449,7 +449,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 	insertDefaultHandler = func(db DB, ctx context.Context, link Link, sql string, args ...interface{}) (sql.Result, error) {
 		return db.DoExec(ctx, link, sql, args...)
 	}
-	//deal special insert. for example: mssql
+	// deal special insert. for example: mssql
 	if len(ext) > 0 {
 		if fn, ok := ext[0].(InsertHandler); ok {
 			insertDefaultHandler = fn
