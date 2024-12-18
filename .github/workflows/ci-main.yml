@@ -130,9 +130,9 @@ jobs:
       # ClickHouse backend server.
       # docker run -d --name clickhouse \
       # -p 9000:9000 -p 8123:8123 -p 9001:9001 \
-      # loads/clickhouse-server:22.1.3.7
+      # clickhouse/clickhouse-server:24.11.1.2557-alpine
       clickhouse-server:
-        image: loads/clickhouse-server:22.1.3.7
+        image: clickhouse/clickhouse-server:24.11.1.2557-alpine
         ports:
           - 9000:9000
           - 8123:8123
