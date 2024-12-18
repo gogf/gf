@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/container/gset"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -43,6 +44,7 @@ type (
 		Prefix            string `name:"prefix"            short:"f"  brief:"{CGenPbEntityBriefPrefix}"`
 		RemovePrefix      string `name:"removePrefix"      short:"r"  brief:"{CGenPbEntityBriefRemovePrefix}"`
 		RemoveFieldPrefix string `name:"removeFieldPrefix" short:"rf" brief:"{CGenPbEntityBriefRemoveFieldPrefix}"`
+		TableExclude      string `name:"tableExclude"      short:"te" brief:"{CGenPbEntityBriefTableExclude}"`
 		NameCase          string `name:"nameCase"          short:"n"  brief:"{CGenPbEntityBriefNameCase}" d:"Camel"`
 		JsonCase          string `name:"jsonCase"          short:"j"  brief:"{CGenPbEntityBriefJsonCase}" d:"none"`
 		Option            string `name:"option"            short:"o"  brief:"{CGenPbEntityBriefOption}"`
@@ -115,6 +117,7 @@ CONFIGURATION SUPPORT
 	CGenPbEntityBriefTables            = `generate models only for given tables, multiple table names separated with ','`
 	CGenPbEntityBriefPrefix            = `add specified prefix for all entity names and entity proto files`
 	CGenPbEntityBriefRemovePrefix      = `remove specified prefix of the table, multiple prefix separated with ','`
+	CGenPbEntityBriefTableExclude      = `generate all models exclude the specified tables, multiple prefix separated with ','`
 	CGenPbEntityBriefRemoveFieldPrefix = `remove specified prefix of the field, multiple prefix separated with ','`
 	CGenPbEntityBriefOption            = `extra protobuf options`
 	CGenPbEntityBriefGroup             = `
@@ -240,6 +243,7 @@ func init() {
 		`CGenPbEntityBriefTables`:            CGenPbEntityBriefTables,
 		`CGenPbEntityBriefPrefix`:            CGenPbEntityBriefPrefix,
 		`CGenPbEntityBriefRemovePrefix`:      CGenPbEntityBriefRemovePrefix,
+		`CGenPbEntityBriefTableExclude`:      CGenPbEntityBriefTableExclude,
 		`CGenPbEntityBriefRemoveFieldPrefix`: CGenPbEntityBriefRemoveFieldPrefix,
 		`CGenPbEntityBriefGroup`:             CGenPbEntityBriefGroup,
 		`CGenPbEntityBriefNameCase`:          CGenPbEntityBriefNameCase,
@@ -290,6 +294,9 @@ func doGenPbEntityForArray(ctx context.Context, index int, in CGenPbEntityInput)
 		in.Package = modName + "/" + defaultPackageSuffix
 	}
 	removePrefixArray := gstr.SplitAndTrim(in.RemovePrefix, ",")
+
+	excludeTables := gset.NewStrSetFrom(gstr.SplitAndTrim(in.TableExclude, ","))
+
 	// It uses user passed database configuration.
 	if in.Link != "" {
 		var (
@@ -331,6 +338,9 @@ func doGenPbEntityForArray(ctx context.Context, index int, in CGenPbEntityInput)
 	}
 
 	for _, tableName := range tableNames {
+		if excludeTables.Contains(tableName) {
+			continue
+		}
 		newTableName := tableName
 		for _, v := range removePrefixArray {
 			newTableName = gstr.TrimLeftStr(newTableName, v, 1)
