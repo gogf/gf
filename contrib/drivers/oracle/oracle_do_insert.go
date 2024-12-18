@@ -22,7 +22,7 @@ import (
 
 // DoInsert inserts or updates data for given table.
 func (d *Driver) DoInsert(
-	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
+	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption, ext ...interface{},
 ) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case gdb.InsertOptionSave:

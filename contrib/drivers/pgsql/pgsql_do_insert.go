@@ -16,7 +16,7 @@ import (
 )
 
 // DoInsert inserts or updates data for given table.
-func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
+func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption, ext ...interface{}) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case gdb.InsertOptionReplace:
 		return nil, gerror.NewCode(
@@ -36,5 +36,5 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 			}
 		}
 	}
-	return d.Core.DoInsert(ctx, link, table, list, option)
+	return d.Core.DoInsert(ctx, link, table, list, option, ext)
 }
