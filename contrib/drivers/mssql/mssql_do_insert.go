@@ -130,10 +130,8 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 		// Batch package checks: It meets the batch number, or it is the last element.
 		if len(valueHolder) == option.BatchCount || (i == listLength-1 && len(valueHolder) > 0) {
 			var (
-				//stdSqlResult sql.Result
 				stdSqlResult gdb.Result
-				//affectedRows int64
-				retResult interface{}
+				retResult    interface{}
 			)
 
 			stdSqlResult, err = d.GetDB().DoQuery(ctx, link, fmt.Sprintf(
