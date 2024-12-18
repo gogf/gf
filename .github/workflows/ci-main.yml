@@ -28,10 +28,16 @@ concurrency:
 
 env:
   TZ: "Asia/Shanghai"
-
+  # for unit testing cases of some components that only execute on the latest go version.
+  LATEST_GO_VERSION: "1.23"
 
 jobs:
   code-test:
+    strategy:
+      matrix:
+        go-version: [ "1.20", "1.21", "1.22", "1.23" ]
+        goarch: [ "386", "amd64" ]
+
     runs-on: ubuntu-20.04
 
     # Service containers to run with `code-test`
@@ -184,11 +190,6 @@ jobs:
         image: zookeeper:3.8
         ports:
           - 2181:2181
-
-    strategy:
-      matrix:
-        go-version: [ "1.20", "1.21", "1.22", "1.23" ]
-        goarch: [ "386", "amd64" ]
 
     steps:
     # TODO: szenius/set-timezone update to node16
