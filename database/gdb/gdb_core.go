@@ -29,16 +29,6 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-const (
-	autoIncrementName    = "auto_increment"
-	mssqlOutPutKey       = "OUTPUT"
-	mssqlInsertedObjName = "INSERTED"
-	mssqlAffectFd        = " 1 as AffectCount"
-	affectCountFieldName = "AffectCount"
-	mssqlPrimaryKeyName  = "PRI"
-	fdId                 = "ID"
-)
-
 // GetCore returns the underlying *Core object.
 func (c *Core) GetCore() *Core {
 	return c
@@ -531,91 +521,30 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		// Batch package checks: It meets the batch number, or it is the last element.
 		if len(valueHolders) == option.BatchCount || (i == listLength-1 && len(valueHolders) > 0) {
 			var (
-				//stdSqlResult sql.Result
-				stdSqlResult Result
-				//affectedRows int64
-				retResult interface{}
+				stdSqlResult sql.Result
+				affectedRows int64
 			)
-
-			stdSqlResult, err = c.db.DoQuery(ctx, link, fmt.Sprintf(
-				"%s INTO %s(%s) %s VALUES%s %s ",
+			stdSqlResult, err = c.db.DoExec(ctx, link, fmt.Sprintf(
+				"%s INTO %s(%s) VALUES%s %s",
 				operation, c.QuotePrefixTableName(table), keysStr,
-				c.GetInsertOutputSql(ctx, table),
 				gstr.Join(valueHolders, ","),
 				onDuplicateStr,
 			), params...)
 			if err != nil {
-				retResult = &MssqlResult{lastInsertId: 0, rowsAffected: 0, err: err}
-				return retResult.(sql.Result), err
+				return stdSqlResult, err
 			}
-			var (
-				aCount int64 // affect count
-				lId    int64 // last insert id
-			)
-			if len(stdSqlResult) == 0 {
-				err = gerror.WrapCode(gcode.CodeDbOperationError, gerror.New("affectcount is zero"), `sql.Result.RowsAffected failed`)
-				retResult = &MssqlResult{lastInsertId: 0, rowsAffected: 0, err: err}
-				return retResult.(sql.Result), err
+			if affectedRows, err = stdSqlResult.RowsAffected(); err != nil {
+				err = gerror.WrapCode(gcode.CodeDbOperationError, err, `sql.Result.RowsAffected failed`)
+				return stdSqlResult, err
+			} else {
+				batchResult.Result = stdSqlResult
+				batchResult.Affected += affectedRows
 			}
-			// get affect count
-			aCount = stdSqlResult[0].GMap().GetVar(affectCountFieldName).Int64()
-			// get last_insert_id
-			lId = stdSqlResult[0].GMap().GetVar(fdId).Int64()
-
-			retResult = &MssqlResult{lastInsertId: lId, rowsAffected: aCount}
-
-			batchResult.Result = retResult.(sql.Result)
-			batchResult.Affected += aCount
-
 			params = params[:0]
 			valueHolders = valueHolders[:0]
 		}
 	}
 	return batchResult, nil
-}
-
-// MssqlResult instance of sql.Result
-type MssqlResult struct {
-	lastInsertId int64
-	rowsAffected int64
-	err          error
-}
-
-func (r *MssqlResult) LastInsertId() (int64, error) {
-	return r.lastInsertId, r.err
-}
-
-func (r *MssqlResult) RowsAffected() (int64, error) {
-	return r.rowsAffected, r.err
-}
-
-// GetInsertOutputSql  gen get last_insert_id code
-func (c *Core) GetInsertOutputSql(ctx context.Context, table string) string {
-	fds, errFd := c.GetDB().TableFields(ctx, table)
-	if errFd != nil {
-		return ""
-	}
-	extraSqlAry := make([]string, 0)
-	extraSqlAry = append(extraSqlAry, fmt.Sprintf("%s %s", mssqlOutPutKey, mssqlAffectFd))
-	incrNo := 0
-	if len(fds) > 0 {
-		for _, fd := range fds {
-			// has primary key and is auto-incement
-			if fd.Extra == autoIncrementName && fd.Key == mssqlPrimaryKeyName && !fd.Null {
-				incrNoStr := ""
-				if incrNo == 0 { //fixed first field named id, convenient to get
-					incrNoStr = fmt.Sprintf(" as %s", fdId)
-				}
-
-				extraSqlAry = append(extraSqlAry, fmt.Sprintf("%s.%s%s", mssqlInsertedObjName, fd.Name, incrNoStr))
-				incrNo++
-			}
-			//fmt.Printf("null:%t name:%s key:%s k:%s \n", fd.Null, fd.Name, fd.Key, k)
-		}
-	}
-	//fmt.Println(extraSqlAry)
-	return strings.Join(extraSqlAry, ",")
-	//";select ID = convert(bigint, SCOPE_IDENTITY()), AffectCount = @@ROWCOUNT;"
 }
 
 // Update does "UPDATE ... " statement for the table.
