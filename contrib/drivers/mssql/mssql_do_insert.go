@@ -144,7 +144,7 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 				onDuplicateStr,
 			), params...)
 			if err != nil {
-				retResult = &MssqlResult{lastInsertId: 0, rowsAffected: 0, err: err}
+				retResult = &InsertResult{lastInsertId: 0, rowsAffected: 0, err: err}
 				return retResult.(sql.Result), err
 			}
 			var (
@@ -153,7 +153,7 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 			)
 			if len(stdSqlResult) == 0 {
 				err = gerror.WrapCode(gcode.CodeDbOperationError, gerror.New("affectcount is zero"), `sql.Result.RowsAffected failed`)
-				retResult = &MssqlResult{lastInsertId: 0, rowsAffected: 0, err: err}
+				retResult = &InsertResult{lastInsertId: 0, rowsAffected: 0, err: err}
 				return retResult.(sql.Result), err
 			}
 			// get affect count
@@ -161,7 +161,7 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 			// get last_insert_id
 			lId = stdSqlResult[0].GMap().GetVar(fdId).Int64()
 
-			retResult = &MssqlResult{lastInsertId: lId, rowsAffected: aCount}
+			retResult = &InsertResult{lastInsertId: lId, rowsAffected: aCount}
 
 			batchResult.Result = retResult.(sql.Result)
 			batchResult.Affected += aCount
@@ -173,18 +173,18 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 	return batchResult, nil
 }
 
-// MssqlResult instance of sql.Result
-type MssqlResult struct {
+// InsertResult instance of sql.Result
+type InsertResult struct {
 	lastInsertId int64
 	rowsAffected int64
 	err          error
 }
 
-func (r *MssqlResult) LastInsertId() (int64, error) {
+func (r *InsertResult) LastInsertId() (int64, error) {
 	return r.lastInsertId, r.err
 }
 
-func (r *MssqlResult) RowsAffected() (int64, error) {
+func (r *InsertResult) RowsAffected() (int64, error) {
 	return r.rowsAffected, r.err
 }
 
