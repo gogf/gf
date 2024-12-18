@@ -545,7 +545,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 				affectedRows int64
 			)
 			sqlStr := fmt.Sprintf(
-				"%s INTO %s(%s) %s VALUES%s %s ",
+				"%s INTO %s(%s)%s VALUES%s %s ",
 				operation, c.QuotePrefixTableName(table), keysStr,
 				insertOutPutStr,
 				gstr.Join(valueHolders, ","),

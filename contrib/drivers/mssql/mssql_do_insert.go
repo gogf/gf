@@ -48,7 +48,7 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 				stdSqlResult gdb.Result
 				retResult    interface{}
 			)
-			stdSqlResult, err = d.GetDB().DoQuery(ctx, link, sqlStr, args...)
+			stdSqlResult, err = db.DoQuery(ctx, link, sqlStr, args...)
 			if err != nil {
 				retResult = &InsertResult{lastInsertId: 0, rowsAffected: 0, err: err}
 				return retResult.(sql.Result), err
@@ -96,26 +96,25 @@ func (m *Driver) GetInsertOutputSql(ctx context.Context, table string) string {
 		return ""
 	}
 	extraSqlAry := make([]string, 0)
-	extraSqlAry = append(extraSqlAry, fmt.Sprintf("%s %s", mssqlOutPutKey, mssqlAffectFd))
+	extraSqlAry = append(extraSqlAry, fmt.Sprintf(" %s %s", mssqlOutPutKey, mssqlAffectFd))
 	incrNo := 0
 	if len(fds) > 0 {
 		for _, fd := range fds {
 			// has primary key and is auto-incement
 			if fd.Extra == autoIncrementName && fd.Key == mssqlPrimaryKeyName && !fd.Null {
 				incrNoStr := ""
-				if incrNo == 0 { //fixed first field named id, convenient to get
+				if incrNo == 0 { // fixed first field named id, convenient to get
 					incrNoStr = fmt.Sprintf(" as %s", fdId)
 				}
 
 				extraSqlAry = append(extraSqlAry, fmt.Sprintf("%s.%s%s", mssqlInsertedObjName, fd.Name, incrNoStr))
 				incrNo++
 			}
-			//fmt.Printf("null:%t name:%s key:%s k:%s \n", fd.Null, fd.Name, fd.Key, k)
+			// fmt.Printf("null:%t name:%s key:%s k:%s \n", fd.Null, fd.Name, fd.Key, k)
 		}
 	}
-	//fmt.Println(extraSqlAry)
 	return strings.Join(extraSqlAry, ",")
-	//";select ID = convert(bigint, SCOPE_IDENTITY()), AffectCount = @@ROWCOUNT;"
+	// sql example:INSERT INTO "ip_to_id"("ip") OUTPUT  1 as AffectCount,INSERTED.id as ID VALUES(?)
 }
 
 // doSave support upsert for SQL server
