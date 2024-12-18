@@ -278,6 +278,23 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		t.Assert(newNode.Charset, `utf8`)
 		t.Assert(newNode.Protocol, `unix`)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Type: "mysql",
+			Link: "username:password@unix(/tmp/mysql.sock)/dbname",
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Type, `mysql`)
+		t.Assert(newNode.User, `username`)
+		t.Assert(newNode.Pass, `password`)
+		t.Assert(newNode.Host, `/tmp/mysql.sock`)
+		t.Assert(newNode.Port, ``)
+		t.Assert(newNode.Name, `dbname`)
+		t.Assert(newNode.Extra, ``)
+		t.Assert(newNode.Charset, `utf8`)
+		t.Assert(newNode.Protocol, `unix`)
+	})
 }
 
 func Test_Func_doQuoteWord(t *testing.T) {

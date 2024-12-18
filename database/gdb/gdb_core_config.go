@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -381,14 +382,22 @@ func (c *Core) GetSchema() string {
 }
 
 func parseConfigNodeLink(node *ConfigNode) (*ConfigNode, error) {
-	var match []string
-	if node.Link != "" {
-		match, _ = gregex.MatchString(linkPattern, node.Link)
+	var (
+		link  = node.Link
+		match []string
+	)
+	if link != "" {
+		// To be compatible with old configuration,
+		// it checks and converts the link to new configuration.
+		if node.Type != "" && !gstr.HasPrefix(link, node.Type+":") {
+			link = fmt.Sprintf("%s:%s", node.Type, link)
+		}
+		match, _ = gregex.MatchString(linkPattern, link)
 		if len(match) <= 5 {
 			return nil, gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid link configuration: %s, shuold be pattern like: %s`,
-				node.Link, linkPatternDescription,
+				link, linkPatternDescription,
 			)
 		}
 		node.Type = match[1]
@@ -412,7 +421,6 @@ func parseConfigNodeLink(node *ConfigNode) (*ConfigNode, error) {
 		if len(match) > 6 && match[7] != "" {
 			node.Extra = match[7]
 		}
-		node.Link = ""
 	}
 	if node.Extra != "" {
 		if m, _ := gstr.Parse(node.Extra); len(m) > 0 {
