@@ -35,6 +35,11 @@ jobs:
   code-test:
     strategy:
       matrix:
+        # 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+        # When adding new go version to the list, make sure:
+        # 1. Update the `LATEST_GO_VERSION` env variable.
+        # 2. Update the `Report Coverage` action.
+        # 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
         go-version: [ "1.20", "1.21", "1.22", "1.23" ]
         goarch: [ "386", "amd64" ]
 
@@ -257,7 +262,8 @@ jobs:
 
     - name: Report Coverage
       uses: codecov/codecov-action@v4
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+      # Only report coverage on the latest go version and amd64 arch
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == '1.23' && matrix.goarch == 'amd64' }}
       with:
         flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
         token: ${{ secrets.CODECOV_TOKEN }}
