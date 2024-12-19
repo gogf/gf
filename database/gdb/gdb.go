@@ -133,7 +133,7 @@ type DB interface {
 
 	// DoInsert performs the actual INSERT operation with given options.
 	// This is an internal method that can be overridden by custom implementations.
-	DoInsert(ctx context.Context, link Link, table string, data List, option DoInsertOption, ext ...interface{}) (result sql.Result, err error)
+	DoInsert(ctx context.Context, link Link, table string, data List, option DoInsertOption) (result sql.Result, err error)
 
 	// DoUpdate performs the actual UPDATE operation.
 	// This is an internal method that can be overridden by custom implementations.
@@ -705,8 +705,8 @@ const (
 	modelForDaoSuffix                     = `ForDao`
 	dbRoleSlave                           = `slave`
 	ctxKeyForDB               gctx.StrKey = `CtxKeyForDB`
-	ctxKeyCatchSQL            gctx.StrKey = `CtxKeyCatchSQL`
-	ctxKeyInternalProducedSQL gctx.StrKey = `CtxKeyInternalProducedSQL`
+	CtxKeyCatchSQL            gctx.StrKey = `CtxKeyCatchSQL`            // To facilitate the rewrite, it should be public
+	CtxKeyInternalProducedSQL gctx.StrKey = `CtxKeyInternalProducedSQL` // To facilitate the rewrite, it should be public
 
 	linkPattern            = `(\w+):([\w\-\$]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*)`
 	linkPatternDescription = `type:username:password@protocol(host:port)/dbname?param1=value1&...&paramN=valueN`

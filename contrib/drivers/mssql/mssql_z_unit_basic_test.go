@@ -10,6 +10,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/contrib/drivers/mssql/v2"
+	"github.com/gogf/gf/v2/database/gdb"
 	"testing"
 	"time"
 
@@ -161,6 +163,33 @@ func TestDoInsertGetId(t *testing.T) {
 		t.AssertNil(err)
 		t.AssertGT(id, 0)
 		//fmt.Println("id:", id)
+	})
+}
+
+func TestGetTableFromSql(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		okTable := "ip_to_id"
+		sqlStr := "INSERT INTO \"ip_to_id\"(\"ip\") VALUES(?)"
+		dbMssql, _ := db.GetCore().GetDB().(*gdb.DriverWrapperDB).DB.(*mssql.Driver)
+		//fmt.Println("db:", fmt.Sprintf("%T", dbMssql), " ok:", ok)
+		table := dbMssql.GetTableNameFromSql(sqlStr)
+		// fmt.Println("default table:", table)
+		t.Assert(table, okTable)
+
+		sqlStr = "INSERT INTO \"MyLogDb\".\"dbo\".\"ip_to_id\"(\"ip\") VALUES(?)"
+		table = dbMssql.GetTableNameFromSql(sqlStr)
+		// fmt.Println("MyLogDb.dbo.ip_to_id table:", table)
+		t.Assert(table, okTable)
+
+		sqlStr = "INSERT INTO \"ip_to_id\" as \"tt\" (\"ip\") VALUES(?)"
+		table = dbMssql.GetTableNameFromSql(sqlStr)
+		// fmt.Println("ip_to_id as tt table:", table)
+		t.Assert(table, okTable)
+
+		sqlStr = "INSERT INTO \"ip_to_id\" \"tt\" (\"ip\") VALUES(?)"
+		table = dbMssql.GetTableNameFromSql(sqlStr)
+		// fmt.Println("ip_to_id tt table:", table)
+		t.Assert(table, okTable)
 	})
 }
 

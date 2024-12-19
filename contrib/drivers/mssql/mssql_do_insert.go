@@ -19,18 +19,8 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-const (
-	autoIncrementName    = "auto_increment"
-	mssqlOutPutKey       = "OUTPUT"
-	mssqlInsertedObjName = "INSERTED"
-	mssqlAffectFd        = " 1 as AffectCount"
-	affectCountFieldName = "AffectCount"
-	mssqlPrimaryKeyName  = "PRI"
-	fdId                 = "ID"
-)
-
 // DoInsert inserts or updates data for given table. rewrite db.core.DoInsert
-func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption, ext ...interface{}) (result sql.Result, err error) {
+func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case gdb.InsertOptionSave:
 		return d.doSave(ctx, link, table, list, option)
@@ -41,80 +31,8 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 			`Replace operation is not supported by mssql driver`,
 		)
 	default:
-		outPutStr := d.GetInsertOutputSql(ctx, table)
-		var insertHandler gdb.InsertHandler
-		insertHandler = func(db gdb.DB, ctx context.Context, link gdb.Link, sqlStr string, args ...interface{}) (sql.Result, error) {
-			var (
-				stdSqlResult gdb.Result
-				retResult    interface{}
-			)
-			stdSqlResult, err = db.DoQuery(ctx, link, sqlStr, args...)
-			if err != nil {
-				retResult = &InsertResult{lastInsertId: 0, rowsAffected: 0, err: err}
-				return retResult.(sql.Result), err
-			}
-			var (
-				aCount int64 // affect count
-				lId    int64 // last insert id
-			)
-			if len(stdSqlResult) == 0 {
-				err = gerror.WrapCode(gcode.CodeDbOperationError, gerror.New("affectcount is zero"), `sql.Result.RowsAffected failed`)
-				retResult = &InsertResult{lastInsertId: 0, rowsAffected: 0, err: err}
-				return retResult.(sql.Result), err
-			}
-			// get affect count
-			aCount = stdSqlResult[0].GMap().GetVar(affectCountFieldName).Int64()
-			// get last_insert_id
-			lId = stdSqlResult[0].GMap().GetVar(fdId).Int64()
-
-			retResult = &InsertResult{lastInsertId: lId, rowsAffected: aCount}
-			return retResult.(sql.Result), nil
-		}
-		return d.Core.DoInsert(ctx, link, table, list, option, insertHandler, outPutStr)
+		return d.Core.DoInsert(ctx, link, table, list, option)
 	}
-}
-
-// InsertResult instance of sql.Result
-type InsertResult struct {
-	lastInsertId int64
-	rowsAffected int64
-	err          error
-}
-
-func (r *InsertResult) LastInsertId() (int64, error) {
-	return r.lastInsertId, r.err
-}
-
-func (r *InsertResult) RowsAffected() (int64, error) {
-	return r.rowsAffected, r.err
-}
-
-// GetInsertOutputSql  gen get last_insert_id code
-func (m *Driver) GetInsertOutputSql(ctx context.Context, table string) string {
-	fds, errFd := m.GetDB().TableFields(ctx, table)
-	if errFd != nil {
-		return ""
-	}
-	extraSqlAry := make([]string, 0)
-	extraSqlAry = append(extraSqlAry, fmt.Sprintf(" %s %s", mssqlOutPutKey, mssqlAffectFd))
-	incrNo := 0
-	if len(fds) > 0 {
-		for _, fd := range fds {
-			// has primary key and is auto-incement
-			if fd.Extra == autoIncrementName && fd.Key == mssqlPrimaryKeyName && !fd.Null {
-				incrNoStr := ""
-				if incrNo == 0 { // fixed first field named id, convenient to get
-					incrNoStr = fmt.Sprintf(" as %s", fdId)
-				}
-
-				extraSqlAry = append(extraSqlAry, fmt.Sprintf("%s.%s%s", mssqlInsertedObjName, fd.Name, incrNoStr))
-				incrNo++
-			}
-			// fmt.Printf("null:%t name:%s key:%s k:%s \n", fd.Null, fd.Name, fd.Key, k)
-		}
-	}
-	return strings.Join(extraSqlAry, ",")
-	// sql example:INSERT INTO "ip_to_id"("ip") OUTPUT  1 as AffectCount,INSERTED.id as ID VALUES(?)
 }
 
 // doSave support upsert for SQL server

@@ -435,30 +435,13 @@ type InsertHandler func(db DB, ctx context.Context, link Link, sql string, args 
 // InsertOptionReplace: if there's unique/primary key in the data, it deletes it from table and inserts a new one;
 // InsertOptionSave:    if there's unique/primary key in the data, it updates it or else inserts a new one;
 // InsertOptionIgnore:  if there's unique/primary key in the data, it ignores the inserting;
-func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption, ext ...interface{}) (result sql.Result, err error) {
+func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption) (result sql.Result, err error) {
 	var (
-		keys                 []string      // Field names.
-		values               []string      // Value holder string array, like: (?,?,?)
-		params               []interface{} // Values that will be committed to underlying database driver.
-		onDuplicateStr       string        // onDuplicateStr is used in "ON DUPLICATE KEY UPDATE" statement.
-		insertDefaultHandler InsertHandler // drive to do insert data
-		insertOutPutStr      string
+		keys           []string      // Field names.
+		values         []string      // Value holder string array, like: (?,?,?)
+		params         []interface{} // Values that will be committed to underlying database driver.
+		onDuplicateStr string        // onDuplicateStr is used in "ON DUPLICATE KEY UPDATE" statement.
 	)
-	insertOutPutStr = ""
-	insertDefaultHandler = func(db DB, ctx context.Context, link Link, sql string, args ...interface{}) (sql.Result, error) {
-		return db.DoExec(ctx, link, sql, args...)
-	}
-	// deal special insert. for example: mssql
-	if len(ext) > 0 {
-		if fn, ok := ext[0].(InsertHandler); ok {
-			insertDefaultHandler = fn
-		}
-		if len(ext) > 1 {
-			if outStr, ok := ext[1].(string); ok {
-				insertOutPutStr = outStr
-			}
-		}
-	}
 	// ============================================================================================
 	// Group the list by fields. Different fields to different list.
 	// It here uses ListMap to keep sequence for data inserting.
@@ -543,14 +526,12 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 				stdSqlResult sql.Result
 				affectedRows int64
 			)
-			sqlStr := fmt.Sprintf(
-				"%s INTO %s(%s)%s VALUES%s %s ",
+			stdSqlResult, err = c.db.DoExec(ctx, link, fmt.Sprintf(
+				"%s INTO %s(%s) VALUES%s %s",
 				operation, c.QuotePrefixTableName(table), keysStr,
-				insertOutPutStr,
 				gstr.Join(valueHolders, ","),
 				onDuplicateStr,
-			)
-			stdSqlResult, err = insertDefaultHandler(c.db, ctx, link, sqlStr, params...)
+			), params...)
 			if err != nil {
 				return stdSqlResult, err
 			}
