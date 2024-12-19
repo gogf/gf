@@ -337,7 +337,7 @@ func Test_Issue_3955(t *testing.T) {
 				NameCase:          "",
 				JsonCase:          "",
 				Option:            "",
-				TableExclude:      "table_user_a",
+				TablesEx:          "table_user_a",
 			}
 		)
 		err = gutil.FillStructWithDefault(&in)
