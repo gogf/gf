@@ -618,3 +618,15 @@ func Test_Issue3789(t *testing.T) {
 		t.Assert(c.GetContent(ctx, "/hello?id=&secondId=2&thirdId=3"), expect)
 	})
 }
+
+// https://github.com/gogf/gf/issues/4047
+func Test_Issue4047(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		err := s.SetConfigWithMap(g.Map{
+			"logger": nil,
+		})
+		t.AssertNil(err)
+		t.Assert(s.Logger(), nil)
+	})
+}
