@@ -9,7 +9,9 @@ package nacos
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients/config_client"
 	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
@@ -19,6 +21,14 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
+)
+
+const (
+	componentNameNacos = "gf.component.nacos"
+)
+
+var (
+	instance = gmap.StrAnyMap{}
 )
 
 // Config is the configuration object for nacos client.
@@ -49,14 +59,7 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 		config: config,
 		value:  g.NewVar(nil, true),
 	}
-
-	client.client, err = clients.CreateConfigClient(map[string]interface{}{
-		"serverConfigs": config.ServerConfigs,
-		"clientConfig":  config.ClientConfig,
-	})
-	if err != nil {
-		return nil, gerror.Wrapf(err, `create nacos client failed with config: %+v`, config)
-	}
+	client.initConfigClient()
 
 	err = client.addWatcher()
 	if err != nil {
@@ -64,6 +67,35 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 	}
 
 	return client, nil
+}
+
+// initConfigClient create a singleton config_client.IConfigClient
+func (c *Client) initConfigClient() {
+	key := componentNameNacos
+	for _, v := range c.config.ServerConfigs {
+		key = fmt.Sprintf("%s:%s:%d", key, v.IpAddr, v.Port)
+	}
+	if c.config.ClientConfig.NamespaceId != "" {
+		key += ":" + c.config.ClientConfig.NamespaceId
+	}
+	if c.config.ClientConfig.AccessKey != "" {
+		key += ":" + c.config.ClientConfig.AccessKey
+	}
+	if c.config.ClientConfig.Username != "" {
+		key += ":" + c.config.ClientConfig.Username
+	}
+	res := instance.GetOrSetFuncLock(key, func() interface{} {
+		ins, err := clients.CreateConfigClient(map[string]interface{}{
+			"serverConfigs": c.config.ServerConfigs,
+			"clientConfig":  c.config.ClientConfig,
+		})
+		if err != nil {
+			panic("create nacos client failed with config: " + err.Error())
+		}
+		return ins
+	})
+	c.client = res.(config_client.IConfigClient)
+	return
 }
 
 // Available checks and returns the backend configuration service is available.
