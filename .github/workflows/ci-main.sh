@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-# Define the latest Go version requirement
-LATEST_GO_VERSION="1.23"
-
 coverage=$1
 
 # find all path that contains go.mod.
