@@ -73,7 +73,7 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args 
 	sqlValueAfter := sqlStr[pos+1:]
 	sqlStr = fmt.Sprintf("%s%s%s", sqlValueBefore, outPutSql, sqlValueAfter)
 
-	fmt.Println("sql str:", sqlStr)
+	// fmt.Println("sql str:", sqlStr)
 	// Link execution.
 	var out gdb.DoCommitOutput
 	out, err = d.DoCommit(ctx, gdb.DoCommitInput{
