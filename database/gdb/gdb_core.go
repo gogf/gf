@@ -420,9 +420,6 @@ func (c *Core) fieldsToSequence(ctx context.Context, table string, fields []stri
 	return fieldsResultInSequence, nil
 }
 
-// InsertHandler special need for mssql insert and get id
-type InsertHandler func(db DB, ctx context.Context, link Link, sql string, args ...interface{}) (sql.Result, error)
-
 // DoInsert inserts or updates data for given table.
 // This function is usually used for custom interface definition, you do not need call it manually.
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.

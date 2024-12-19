@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-// DoInsert inserts or updates data for given table. rewrite db.core.DoInsert
+// DoInsert inserts or updates data for given table.
 func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case gdb.InsertOptionSave:
