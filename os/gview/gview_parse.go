@@ -12,6 +12,7 @@ import (
 	"fmt"
 	htmltpl "html/template"
 	"strconv"
+	"strings"
 	texttpl "text/template"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -372,31 +373,48 @@ func (view *View) formatTemplateObjectCreatingError(filePath, tplName string, er
 // searchFile returns the absolute path of the `file` and its template folder path.
 // The returned `folder` is the template folder path, not the folder of the template file `path`.
 func (view *View) searchFile(ctx context.Context, file string) (path string, folder string, resource *gres.File, err error) {
-	var tempPath string
-	// Firstly, checking the resource manager.
+	var (
+		tempPath    string
+		trimmedFile = strings.TrimLeft(file, `\/`)
+	)
+	// Firstly checking the resource manager.
 	if !gres.IsEmpty() {
-		// Try folders.
-		for _, tryFolder := range resourceTryFolders {
-			tempPath = tryFolder + file
-			if resource = gres.Get(tempPath); resource != nil {
-				path = resource.Name()
-				folder = tryFolder
-				return
-			}
-		}
 		// Search folders.
-		view.searchPaths.RLockFunc(func(array []string) {
-			for _, searchPath := range array {
-				for _, tryFolder := range resourceTryFolders {
-					tempPath = searchPath + tryFolder + file
-					if resFile := gres.Get(tempPath); resFile != nil {
-						path = resFile.Name()
-						folder = searchPath + tryFolder
+		if path == "" {
+			view.searchPaths.RLockFunc(func(array []string) {
+				for _, searchPath := range array {
+					tempPath = strings.TrimRight(searchPath, `\/`) + `/` + trimmedFile
+					if tmpFile := gres.Get(tempPath); tmpFile != nil {
+						path = tmpFile.Name()
+						folder = searchPath
+						resource = tmpFile
 						return
 					}
+
+					for _, tryFolder := range resourceTryFolders {
+						tempPath = strings.TrimRight(searchPath, `\/`) + `/` + strings.TrimRight(tryFolder, `\/`) + `/` + file
+						if tmpFile := gres.Get(tempPath); tmpFile != nil {
+							path = tmpFile.Name()
+							folder = searchPath + tryFolder
+							resource = tmpFile
+							return
+						}
+					}
+				}
+			})
+		}
+		// Try folders.
+		if path == "" {
+			for _, tryFolder := range resourceTryFolders {
+				tempPath = strings.TrimRight(tryFolder, `\/`) + `/` + trimmedFile
+				if tmpFile := gres.Get(tempPath); tmpFile != nil {
+					path = tmpFile.Name()
+					folder = tryFolder
+					resource = tmpFile
+					return
 				}
 			}
-		})
+		}
 	}
 
 	// Secondly, checking the file system.
