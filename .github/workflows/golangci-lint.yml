@@ -82,7 +82,8 @@ jobs:
           sudo apt-get install -y jq
       - name: Get Pull Request info
         run: |
-          BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          # BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          BRANCH=${{ github.event.pull_request.head.ref }}
           echo "Current branch: $BRANCH"
             
           PR_LIST=$(gh pr list --state open --head $BRANCH --json number)
@@ -96,6 +97,11 @@ jobs:
           else
             echo "No Pull Request found for this branch."
           fi
+          
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          BRANCH=$(gh pr view $PR_NUMBER --json headRefName --jq '.headRefName')
+          echo "Pull Request source branch: $BRANCH"
+          
           PR_NUMBER=$(gh pr list --state open --head $(git rev-parse --abbrev-ref HEAD) --json number --jq '.[0].number')
           if [[ -n "$PR_NUMBER" ]]; then
             echo "Pull Request number: $PR_NUMBER"
