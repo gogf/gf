@@ -64,13 +64,21 @@ jobs:
           -s "prefix(github.com/gogf/gf/example)" \
           ./
       - name: Check for changes
-        # Check if the event is a push or a pull request from a forked repository
-        if: github.event_name == 'push'|| (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true)
         run: |
+          # check for code changes
           if [[ -n "$(git status --porcelain)" ]]; then
-          echo "HAS_CHANGES=true" >> $GITHUB_ENV
+            HAS_CHANGES=true
           else
-          echo "HAS_CHANGES=false" >> $GITHUB_ENV
+            HAS_CHANGES=false
+          fi
+      
+          # Set the HAS_CHANGES based on the type of event and whether there are code changes
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.event.pull_request }}" == "null" && "$HAS_CHANGES" == "true" ]]; then
+            echo "HAS_CHANGES=true" >> $GITHUB_ENV
+          elif [[ "${{ github.event_name }}" == "pull_request" && "$HAS_CHANGES" == "true" ]]; then
+            echo "HAS_CHANGES=true" >> $GITHUB_ENV
+          else
+            echo "HAS_CHANGES=false" >> $GITHUB_ENV
           fi
       - name: Configure Git
         if: env.HAS_CHANGES == 'true'
@@ -81,5 +89,5 @@ jobs:
         if: env.HAS_CHANGES == 'true'
         run: |
           git add .
-          git commit -m "Apply gci import order changes"
+          git commit -m "Apply gci import order changes [skip ci]"
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:$(git rev-parse --abbrev-ref HEAD)
