@@ -15,7 +15,7 @@ on:
       - enhance/**
       - fix/**
       - feat/**
-  pull_request_target:
+  pull_request:
     branches:
       - master
       - develop
@@ -112,7 +112,7 @@ jobs:
           # Set the HAS_CHANGES based on the type of event and whether there are code changes
           if [[ "${{ github.event_name }}" == "push" && "$HAS_PR" != 'true' && "$HAS_CHANGES" == 'true' ]]; then
             echo "NEED_COMMIT=true" >> $GITHUB_ENV
-          elif [[ "${{ github.event_name }}" == "pull_request_target" && "$HAS_CHANGES" == 'true' ]]; then
+          elif [[ "${{ github.event_name }}" == "pull_request" && "$HAS_CHANGES" == 'true' ]]; then
             echo "NEED_COMMIT=true" >> $GITHUB_ENV
           else
             echo "NEED_COMMIT=false" >> $GITHUB_ENV
