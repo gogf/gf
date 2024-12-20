@@ -30,6 +30,7 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 			gcode.CodeNotSupported,
 			`Replace operation is not supported by mssql driver`,
 		)
+
 	default:
 		return d.Core.DoInsert(ctx, link, table, list, option)
 	}

@@ -153,7 +153,7 @@ func TestDoInsert(t *testing.T) {
 }
 
 func TestDoInsertGetId(t *testing.T) {
-	// 先创建表
+	// create test table
 	createInsertAndGetIdTableForTest()
 	gtest.C(t, func(t *gtest.T) {
 		table := "ip_to_id"
