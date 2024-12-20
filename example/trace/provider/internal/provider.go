@@ -10,11 +10,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/gipv4"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/trace"
+
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/gipv4"
 )
 
 // InitTracer initializes and registers `otlpgrpc` or `otlphttp` to global TracerProvider.
