@@ -128,8 +128,6 @@ jobs:
         run: |
             env
       - name: Configure Git
-        echo "NEED_COMMIT: $NEED_COMMIT"
-        echo "env NEED_COMMIT: env.NEED_COMMIT"
         if: env.NEED_COMMIT == 'true'
         run: |
           git config user.name 'github-actions[bot]'
