@@ -7,14 +7,14 @@
 name: GolangCI-Lint
 on:
   push:
-#    branches:
-#      - master
-#      - develop
-#      - personal/**
-#      - feature/**
-#      - enhance/**
-#      - fix/**
-#      - feat/**
+    branches:
+      - master
+      - develop
+      - personal/**
+      - feature/**
+      - enhance/**
+      - fix/**
+      - feat/**
   pull_request_target:
     branches:
       - master
@@ -82,8 +82,12 @@ jobs:
           sudo apt-get install -y jq
       - name: Get Pull Request info
         run: |
-          # BRANCH=$(git rev-parse --abbrev-ref HEAD)
-          BRANCH=${{ github.event.pull_request.head.ref }}
+          if [[ "${{ github.event_name }}" == "push"]]; then
+            BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          else
+            BRANCH=${{ github.event.pull_request.head.ref }}
+          fi
+          
           echo "Current branch: $BRANCH"
             
           PR_LIST=$(gh pr list --state open --head $BRANCH --json number)
@@ -128,14 +132,15 @@ jobs:
         run: |
             env
       - name: Configure Git
-        if: env.HAS_CHANGES == 'true'
+        if: env.NEED_COMMIT == 'true'
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
       - name: Commit and push changes
-        if: env.HAS_CHANGES == 'true'
+        if: env.NEED_COMMIT == 'true'
         run: |
           echo $(git rev-parse --abbrev-ref HEAD)
           git add .
           git commit -m "Apply gci import order changes [skip ci]"
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:$(git rev-parse --abbrev-ref HEAD)
+          git push  origin HEAD:$(git rev-parse --abbrev-ref HEAD)
+          # git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:$(git rev-parse --abbrev-ref HEAD)
