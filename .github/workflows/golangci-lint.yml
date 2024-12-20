@@ -73,8 +73,29 @@ jobs:
           else
             echo "HAS_CHANGES=false" >> $GITHUB_ENV
           fi
+      - name: Install GitHub CLI (gh)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
+      - name: Install jq
+        run: |
+          sudo apt-get install -y jq
       - name: Get Pull Request info
         run: |
+          BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          echo "Current branch: $BRANCH"
+            
+          PR_LIST=$(gh pr list --state open --head $BRANCH --json number)
+          echo "PR list: $PR_LIST"
+            
+          PR_NUMBER=$(echo "$PR_LIST" | jq '.[0].number')
+          echo "PR number: $PR_NUMBER"
+            
+          if [[ -n "$PR_NUMBER" ]]; then
+            echo "Pull Request number: $PR_NUMBER"
+          else
+            echo "No Pull Request found for this branch."
+          fi
           PR_NUMBER=$(gh pr list --state open --head $(git rev-parse --abbrev-ref HEAD) --json number --jq '.[0].number')
           if [[ -n "$PR_NUMBER" ]]; then
             echo "Pull Request number: $PR_NUMBER"
@@ -103,6 +124,7 @@ jobs:
       - name: Commit and push changes
         if: env.NEED_COMMIT == 'true'
         run: |
+          echo $(git rev-parse --abbrev-ref HEAD)
           git add .
           git commit -m "Apply gci import order changes [skip ci]"
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:$(git rev-parse --abbrev-ref HEAD)
