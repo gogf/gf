@@ -27,12 +27,11 @@ if [[ $? -ne 0 ]]; then
 fi
 
 if [[ true ]]; then
-    echo "package gf" > version.go
-    echo "" >> version.go
-    echo "const (" >> version.go
-    echo -e "\t// VERSION is the current GoFrame version." >> version.go
-    echo -e "\tVERSION = \"${newVersion}\"" >> version.go
-    echo ")" >> version.go
+    # Use sed to replace the version number in version.go
+    sed -i '' 's/VERSION = ".*"/VERSION = "'${newVersion}'"/' version.go
+
+    # Use sed to replace the version number in README.MD
+    sed -i '' 's/version=[^"]*/version='${newVersion}'/' README.MD
 fi
 
 if [ -f "go.work" ]; then
@@ -44,6 +43,12 @@ for file in `find ${workdir} -name go.mod`; do
     goModPath=$(dirname $file)
     echo ""
     echo "processing dir: $goModPath"
+
+    if [[ $goModPath =~ "/testdata/" ]]; then
+        echo "ignore testdata path $goModPath"
+        continue 1
+    fi
+
     cd $goModPath
     if [ $goModPath = "./cmd/gf" ]; then
         mv go.work go.work.version.bak

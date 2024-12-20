@@ -9,11 +9,12 @@ package genpb
 import (
 	"context"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/util/gtag"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 type (
@@ -93,6 +94,9 @@ func (c CGenPb) Pb(ctx context.Context, in CGenPbInput) (out *CGenPbOutput, err 
 	if len(files) == 0 {
 		mlog.Fatalf(`no proto files found in folder "%s"`, in.Path)
 	}
+
+	var originPwd = gfile.Pwd()
+	defer gfile.Chdir(originPwd)
 
 	if err = gfile.Chdir(protoPath); err != nil {
 		mlog.Fatal(err)

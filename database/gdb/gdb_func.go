@@ -344,8 +344,8 @@ func doQuoteString(s, charLeft, charRight string) string {
 	return gstr.Join(array1, ",")
 }
 
-func getFieldsFromStructOrMap(structOrMap interface{}) (fields []string) {
-	fields = []string{}
+func getFieldsFromStructOrMap(structOrMap any) (fields []any) {
+	fields = []any{}
 	if utils.IsStruct(structOrMap) {
 		structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 			Pointer:         structOrMap,
@@ -362,7 +362,7 @@ func getFieldsFromStructOrMap(structOrMap interface{}) (fields []string) {
 			}
 		}
 	} else {
-		fields = gutil.Keys(structOrMap)
+		fields = gconv.Interfaces(gutil.Keys(structOrMap))
 	}
 	return
 }
@@ -608,7 +608,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 			// ===============================================================
 			if subModel, ok := in.Args[i].(*Model); ok {
 				index := -1
-				whereStr, _ = gregex.ReplaceStringFunc(`(\?)`, whereStr, func(s string) string {
+				whereStr = gstr.ReplaceFunc(whereStr, `?`, func(s string) string {
 					index++
 					if i+len(newArgs) == index {
 						sqlWithHolder, holderArgs := subModel.getHolderAndArgsAsSubModel(ctx)
@@ -843,7 +843,7 @@ func handleSliceAndStructArgsForSql(
 				counter  = 0
 				replaced = false
 			)
-			newSql, _ = gregex.ReplaceStringFunc(`\?`, newSql, func(s string) string {
+			newSql = gstr.ReplaceFunc(newSql, `?`, func(s string) string {
 				if replaced {
 					return s
 				}
@@ -856,7 +856,7 @@ func handleSliceAndStructArgsForSql(
 				return s
 			})
 
-		// Special struct handling.
+			// Special struct handling.
 		case reflect.Struct:
 			switch oldArg.(type) {
 			// The underlying driver supports time.Time/*time.Time types.
@@ -883,6 +883,21 @@ func handleSliceAndStructArgsForSql(
 			newArgs = append(newArgs, oldArg)
 
 		default:
+			switch oldArg.(type) {
+			// Do not append Raw arg to args but directly into the sql.
+			case Raw, *Raw:
+				var counter = 0
+				newSql = gstr.ReplaceFunc(newSql, `?`, func(s string) string {
+					counter++
+					if counter == index+insertHolderCount+1 {
+						return gconv.String(oldArg)
+					}
+					return s
+				})
+				continue
+
+			default:
+			}
 			newArgs = append(newArgs, oldArg)
 		}
 	}

@@ -9,9 +9,10 @@ package genctrl
 import (
 	"fmt"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 type controllerClearer struct{}
@@ -49,7 +50,7 @@ func (c *controllerClearer) doClear(dstModuleFolderPath string, item apiItem) (e
 				`remove unimplemented and of no api definitions controller file: %s`,
 				methodFilePath,
 			)
-			err = gfile.Remove(methodFilePath)
+			err = gfile.RemoveFile(methodFilePath)
 		}
 	}
 	return

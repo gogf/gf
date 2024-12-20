@@ -24,8 +24,8 @@ type Model struct {
 	linkType       int               // Mark for operation on master or slave.
 	tablesInit     string            // Table names when model initialization.
 	tables         string            // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
-	fields         string            // Operation fields, multiple fields joined using char ','.
-	fieldsEx       string            // Excluded operation fields, multiple fields joined using char ','.
+	fields         []any             // Operation fields, multiple fields joined using char ','.
+	fieldsEx       []any             // Excluded operation fields, it here uses slice instead of string type for quick filtering.
 	withArray      []interface{}     // Arguments for With feature.
 	withAll        bool              // Enable model association operations on all objects that have "with" tag in the struct.
 	extraArgs      []interface{}     // Extra custom arguments for sql, which are prepended to the arguments before sql committed to underlying driver.
@@ -53,6 +53,8 @@ type Model struct {
 	onConflict     interface{}       // onConflict is used for conflict keys on Upsert clause.
 	tableAliasMap  map[string]string // Table alias to true table name, usually used in join statements.
 	softTimeOption SoftTimeOption    // SoftTimeOption is the option to customize soft time feature for Model.
+	shardingConfig ShardingConfig    // ShardingConfig for database/table sharding feature.
+	shardingValue  any               // Sharding value for sharding feature.
 }
 
 // ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
@@ -65,7 +67,7 @@ type ChunkHandler func(result Result, err error) bool
 const (
 	linkTypeMaster           = 1
 	linkTypeSlave            = 2
-	defaultFields            = "*"
+	defaultField             = "*"
 	whereHolderOperatorWhere = 1
 	whereHolderOperatorAnd   = 2
 	whereHolderOperatorOr    = 3
@@ -132,7 +134,6 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 		schema:        c.schema,
 		tablesInit:    tableStr,
 		tables:        tableStr,
-		fields:        defaultFields,
 		start:         -1,
 		offset:        -1,
 		filter:        true,
@@ -281,6 +282,14 @@ func (m *Model) Clone() *Model {
 	newModel.whereBuilder = m.whereBuilder.Clone()
 	newModel.whereBuilder.model = newModel
 	// Shallow copy slice attributes.
+	if n := len(m.fields); n > 0 {
+		newModel.fields = make([]any, n)
+		copy(newModel.fields, m.fields)
+	}
+	if n := len(m.fieldsEx); n > 0 {
+		newModel.fieldsEx = make([]any, n)
+		copy(newModel.fieldsEx, m.fieldsEx)
+	}
 	if n := len(m.extraArgs); n > 0 {
 		newModel.extraArgs = make([]interface{}, n)
 		copy(newModel.extraArgs, m.extraArgs)
@@ -288,6 +297,10 @@ func (m *Model) Clone() *Model {
 	if n := len(m.withArray); n > 0 {
 		newModel.withArray = make([]interface{}, n)
 		copy(newModel.withArray, m.withArray)
+	}
+	if n := len(m.having); n > 0 {
+		newModel.having = make([]interface{}, n)
+		copy(newModel.having, m.having)
 	}
 	return newModel
 }

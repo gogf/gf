@@ -4,11 +4,14 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// Package gfcmd provides the management of CLI commands for `gf` tool.
 package gfcmd
 
 import (
 	"context"
 	"runtime"
+
+	_ "github.com/gogf/gf/cmd/gf/v2/internal/packed"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -19,14 +22,11 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd"
-	_ "github.com/gogf/gf/cmd/gf/v2/internal/packed"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/allyes"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
-const (
-	cliFolderName = `hack`
-)
+const cliFolderName = `hack`
 
 // Command manages the CLI command of `gf`.
 // This struct can be globally accessible and extended with custom struct.
@@ -73,7 +73,7 @@ func (c *Command) Run(ctx context.Context) {
 func GetCommand(ctx context.Context) (*Command, error) {
 	root, err := gcmd.NewFromObject(cmd.GF)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	err = root.AddObject(
 		cmd.Up,

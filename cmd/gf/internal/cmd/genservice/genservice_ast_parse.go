@@ -10,8 +10,11 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"strings"
 
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gstructs"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 type pkgItem struct {
@@ -31,7 +34,7 @@ type funcItem struct {
 // parseItemsInSrc parses the pkgItem and funcItem from the specified file.
 // It can't skip the private methods.
 // It can't skip the imported packages of import alias equal to `_`.
-func (c CGenService) parseItemsInSrc(filePath string) (pkgItems []pkgItem, funcItems []funcItem, err error) {
+func (c CGenService) parseItemsInSrc(filePath string) (pkgItems []pkgItem, structItems map[string][]string, funcItems []funcItem, err error) {
 	var (
 		fileContent = gfile.GetContents(filePath)
 		fileSet     = token.NewFileSet()
@@ -42,11 +45,107 @@ func (c CGenService) parseItemsInSrc(filePath string) (pkgItems []pkgItem, funcI
 		return
 	}
 
+	structItems = make(map[string][]string)
+	pkg := node.Name.Name
+	pkgAliasMap := make(map[string]string)
 	ast.Inspect(node, func(n ast.Node) bool {
 		switch x := n.(type) {
 		case *ast.ImportSpec:
 			// parse the imported packages.
-			pkgItems = append(pkgItems, c.parseImportPackages(x))
+			pkgItem := c.parseImportPackages(x)
+			pkgItems = append(pkgItems, pkgItem)
+			pkgPath := strings.Trim(pkgItem.Path, "\"")
+			pkgPath = strings.ReplaceAll(pkgPath, "\\", "/")
+			tmp := strings.Split(pkgPath, "/")
+			srcPkg := tmp[len(tmp)-1]
+			if srcPkg != pkgItem.Alias {
+				pkgAliasMap[pkgItem.Alias] = srcPkg
+			}
+		case *ast.TypeSpec: // type define
+			switch xType := x.Type.(type) {
+			case *ast.StructType: // define struct
+				// parse the struct declaration.
+				var structName = pkg + "." + x.Name.Name
+				var structEmbeddedStruct []string
+				for _, field := range xType.Fields.List {
+					if len(field.Names) > 0 || field.Tag == nil { // not anonymous field
+						continue
+					}
+
+					tagValue := strings.Trim(field.Tag.Value, "`")
+					tagValue = strings.TrimSpace(tagValue)
+					if len(tagValue) == 0 { // not set tag
+						continue
+					}
+					tags := gstructs.ParseTag(tagValue)
+
+					if v, ok := tags["gen"]; !ok || v != "extend" {
+						continue
+					}
+
+					var embeddedStruct string
+					switch v := field.Type.(type) {
+					case *ast.Ident:
+						if embeddedStruct, err = c.astExprToString(v); err != nil {
+							embeddedStruct = ""
+							break
+						}
+						embeddedStruct = pkg + "." + embeddedStruct
+					case *ast.StarExpr:
+						if embeddedStruct, err = c.astExprToString(v.X); err != nil {
+							embeddedStruct = ""
+							break
+						}
+						embeddedStruct = pkg + "." + embeddedStruct
+					case *ast.SelectorExpr:
+						var pkg string
+						if pkg, err = c.astExprToString(v.X); err != nil {
+							embeddedStruct = ""
+							break
+						}
+						if v, ok := pkgAliasMap[pkg]; ok {
+							pkg = v
+						}
+						if embeddedStruct, err = c.astExprToString(v.Sel); err != nil {
+							embeddedStruct = ""
+							break
+						}
+						embeddedStruct = pkg + "." + embeddedStruct
+					}
+
+					if embeddedStruct == "" {
+						continue
+					}
+					structEmbeddedStruct = append(structEmbeddedStruct, embeddedStruct)
+
+				}
+				if len(structEmbeddedStruct) > 0 {
+					structItems[structName] = structEmbeddedStruct
+				}
+			case *ast.Ident: // define ident
+				var (
+					structName = pkg + "." + x.Name.Name
+					typeName   = pkg + "." + xType.Name
+				)
+				structItems[structName] = []string{typeName}
+			case *ast.SelectorExpr: // define selector
+				var (
+					structName  = pkg + "." + x.Name.Name
+					selecotrPkg string
+					typeName    string
+				)
+				if selecotrPkg, err = c.astExprToString(xType.X); err != nil {
+					break
+				}
+				if v, ok := pkgAliasMap[selecotrPkg]; ok {
+					selecotrPkg = v
+				}
+				if typeName, err = c.astExprToString(xType.Sel); err != nil {
+					break
+				}
+				typeName = selecotrPkg + "." + typeName
+				structItems[structName] = []string{typeName}
+			}
 
 		case *ast.FuncDecl:
 			// parse the function items.
@@ -78,17 +177,51 @@ func (c CGenService) parseImportPackages(node *ast.ImportSpec) (packages pkgItem
 		path      = node.Path.Value
 		rawImport string
 	)
+
 	if node.Name != nil {
 		alias = node.Name.Name
-		rawImport = alias + " " + path
+		rawImport = node.Name.Name + " " + path
 	} else {
 		rawImport = path
 	}
+
+	// if the alias is empty, it will further retrieve the real alias.
+	if alias == "" {
+		alias = c.getRealAlias(path)
+	}
+
 	return pkgItem{
 		Alias:     alias,
 		Path:      path,
 		RawImport: rawImport,
 	}
+}
+
+// getRealAlias retrieves the real alias of the package.
+// If package is "github.com/gogf/gf", the alias is "gf".
+// If package is "github.com/gogf/gf/v2", the alias is "gf" instead of "v2".
+func (c CGenService) getRealAlias(importPath string) (pkgName string) {
+	importPath = gstr.Trim(importPath, `"`)
+	parts := gstr.Split(importPath, "/")
+	if len(parts) == 0 {
+		return
+	}
+
+	pkgName = parts[len(parts)-1]
+
+	if !gstr.HasPrefix(pkgName, "v") {
+		return pkgName
+	}
+
+	if len(parts) < 2 {
+		return pkgName
+	}
+
+	if gstr.IsNumeric(gstr.SubStr(pkgName, 1)) {
+		pkgName = parts[len(parts)-2]
+	}
+
+	return pkgName
 }
 
 // parseFuncReceiverTypeName retrieves the receiver type of the function.

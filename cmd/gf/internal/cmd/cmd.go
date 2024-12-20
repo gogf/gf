@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// Package cmd provides the management of CLI commands for `gf` tool.
 package cmd
 
 import (
@@ -19,9 +20,8 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
-var (
-	GF = cGF{}
-)
+// GF is the management object for `gf` command line tool.
+var GF = cGF{}
 
 type cGF struct {
 	g.Meta `name:"gf" ad:"{cGFAd}"`
@@ -59,7 +59,7 @@ func (c cGF) Index(ctx context.Context, in cGFInput) (out *cGFOutput, err error)
 	answer := "n"
 	// No argument or option, do installation checks.
 	if data, isInstalled := service.Install.IsInstalled(); !isInstalled {
-		mlog.Print("hi, it seams it's the first time you installing gf cli.")
+		mlog.Print("hi, it seems it's the first time you installing gf cli.")
 		answer = gcmd.Scanf("do you want to install gf(%s) binary to your system? [y/n]: ", gf.VERSION)
 	} else if !data.IsSelf {
 		mlog.Print("hi, you have installed gf cli.")

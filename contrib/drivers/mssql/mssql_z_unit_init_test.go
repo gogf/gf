@@ -25,14 +25,9 @@ var (
 )
 
 const (
-	TableSize        = 10
-	TableName        = "t_user"
-	TestSchema1      = "test1"
-	TestSchema2      = "test2"
-	TableNamePrefix1 = "gf_"
-	TestDbUser       = "sa"
-	TestDbPass       = "LoremIpsum86"
-	CreateTime       = "2018-10-24 10:00:00"
+	TableSize  = 10
+	TestDbUser = "sa"
+	TestDbPass = "LoremIpsum86"
 )
 
 func init() {
@@ -41,7 +36,7 @@ func init() {
 		Port:             "1433",
 		User:             TestDbUser,
 		Pass:             TestDbPass,
-		Name:             "test",
+		Name:             "master",
 		Type:             "mssql",
 		Role:             "master",
 		Charset:          "utf8",
@@ -52,7 +47,7 @@ func init() {
 
 	nodeLink := gdb.ConfigNode{
 		Type: "mssql",
-		Name: "test",
+		Name: "master",
 		Link: fmt.Sprintf(
 			"mssql:%s:%s@tcp(%s:%s)/%s?encrypt=disable",
 			node.User, node.Pass, node.Host, node.Port, node.Name,
@@ -61,7 +56,8 @@ func init() {
 
 	nodeErr := gdb.ConfigNode{
 		Type: "mssql",
-		Link: fmt.Sprintf("user id=%s;password=%s;server=%s;port=%s;database=%s;encrypt=disable",
+		Link: fmt.Sprintf(
+			"mssql:%s:%s@tcp(%s:%s)/%s?encrypt=disable",
 			node.User, "node.Pass", node.Host, node.Port, node.Name),
 	}
 
@@ -126,11 +122,11 @@ func createInitTable(table ...string) (name string) {
 			"passport":    fmt.Sprintf(`user_%d`, i),
 			"password":    fmt.Sprintf(`pass_%d`, i),
 			"nickname":    fmt.Sprintf(`name_%d`, i),
-			"create_time": gtime.Now(),
+			"create_time": "2018-10-24 10:00:00",
 		})
 	}
 	result, err := db.Insert(context.Background(), name, array.Slice())
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 
 	n, e := result.RowsAffected()
 	gtest.Assert(e, nil)

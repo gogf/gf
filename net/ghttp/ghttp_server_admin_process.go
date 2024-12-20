@@ -21,6 +21,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -55,7 +56,10 @@ var (
 // The optional parameter `newExeFilePath` specifies the new binary file for creating process.
 func RestartAllServer(ctx context.Context, newExeFilePath string) error {
 	if !gracefulEnabled {
-		return gerror.NewCode(gcode.CodeInvalidOperation, "graceful reload feature is disabled")
+		return gerror.NewCode(
+			gcode.CodeInvalidOperation,
+			"graceful reload feature is disabled",
+		)
 	}
 	serverActionLocker.Lock()
 	defer serverActionLocker.Unlock()
@@ -115,13 +119,16 @@ func checkActionFrequency() error {
 // forkReloadProcess creates a new child process and copies the fd to child process.
 func forkReloadProcess(ctx context.Context, newExeFilePath ...string) error {
 	var (
-		path = os.Args[0]
+		binaryPath = os.Args[0]
 	)
 	if len(newExeFilePath) > 0 && newExeFilePath[0] != "" {
-		path = newExeFilePath[0]
+		binaryPath = newExeFilePath[0]
+	}
+	if !gfile.Exists(binaryPath) {
+		return gerror.Newf(`binary file path "%s" does not exist`, binaryPath)
 	}
 	var (
-		p   = gproc.NewProcess(path, os.Args[1:], os.Environ())
+		p   = gproc.NewProcess(binaryPath, os.Args[1:], os.Environ())
 		sfm = getServerFdMap()
 	)
 	for name, m := range sfm {
@@ -145,9 +152,9 @@ func forkReloadProcess(ctx context.Context, newExeFilePath ...string) error {
 	buffer, _ := gjson.Encode(sfm)
 	p.Env = append(p.Env, adminActionReloadEnvKey+"="+string(buffer))
 	if _, err := p.Start(ctx); err != nil {
-		glog.Errorf(
+		intlog.Errorf(
 			ctx,
-			"%d: fork process failed, error:%s, %s",
+			"%d: fork process failed, error: %s, %s",
 			gproc.Pid(), err.Error(), string(buffer),
 		)
 		return err
@@ -254,14 +261,14 @@ func shutdownWebServersGracefully(ctx context.Context, signal os.Signal) {
 			gproc.Pid(), signal.String(),
 		)
 	} else {
-		glog.Printf(ctx, "%d: server gracefully shutting down by api", gproc.Pid())
+		glog.Printf(ctx, "pid[%d]: server gracefully shutting down by api", gproc.Pid())
 	}
 	serverMapping.RLockFunc(func(m map[string]interface{}) {
 		for _, v := range m {
 			server := v.(*Server)
 			server.doServiceDeregister()
 			for _, s := range server.servers {
-				s.shutdown(ctx)
+				s.Shutdown(ctx)
 			}
 		}
 	})
@@ -272,7 +279,7 @@ func forceCloseWebServers(ctx context.Context) {
 	serverMapping.RLockFunc(func(m map[string]interface{}) {
 		for _, v := range m {
 			for _, s := range v.(*Server).servers {
-				s.close(ctx)
+				s.Close(ctx)
 			}
 		}
 	})

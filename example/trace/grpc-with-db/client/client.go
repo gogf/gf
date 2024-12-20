@@ -7,13 +7,15 @@
 package main
 
 import (
-	"github.com/gogf/gf/contrib/registry/etcd/v2"
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
-	"github.com/gogf/gf/contrib/trace/otlpgrpc/v2"
-	"github.com/gogf/gf/example/trace/grpc-with-db/protobuf/user"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gctx"
+
+	"github.com/gogf/gf/contrib/registry/etcd/v2"
+	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
+	"github.com/gogf/gf/contrib/trace/otlpgrpc/v2"
+
+	"github.com/gogf/gf/example/trace/grpc-with-db/protobuf/user"
 )
 
 const (
@@ -25,12 +27,15 @@ const (
 func main() {
 	grpcx.Resolver.Register(etcd.New("127.0.0.1:2379"))
 
-	var ctx = gctx.New()
-	shutdown, err := otlpgrpc.Init(serviceName, endpoint, traceToken)
+	var (
+		ctx           = gctx.New()
+		shutdown, err = otlpgrpc.Init(serviceName, endpoint, traceToken)
+	)
+
 	if err != nil {
 		g.Log().Fatal(ctx, err)
 	}
-	defer shutdown()
+	defer shutdown(ctx)
 
 	StartRequests()
 }

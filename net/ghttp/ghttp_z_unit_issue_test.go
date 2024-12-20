@@ -568,3 +568,65 @@ func Test_Issue3245(t *testing.T) {
 		t.Assert(c.GetContent(ctx, "/hello?nickname=oldme"), expect)
 	})
 }
+
+type ItemSecondThird struct {
+	SecondID uint64 `json:"secondId,string"`
+	ThirdID  uint64 `json:"thirdId,string"`
+}
+type ItemFirst struct {
+	ID uint64 `json:"id,string"`
+	ItemSecondThird
+}
+type ItemInput struct {
+	ItemFirst
+}
+type Issue3789Req struct {
+	g.Meta `path:"/hello" method:"GET"`
+	ItemInput
+}
+type Issue3789Res struct {
+	ItemInput
+}
+
+type Issue3789 struct{}
+
+func (Issue3789) Say(ctx context.Context, req *Issue3789Req) (res *Issue3789Res, err error) {
+	res = &Issue3789Res{
+		ItemInput: req.ItemInput,
+	}
+	return
+}
+
+// https://github.com/gogf/gf/issues/3789
+func Test_Issue3789(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server()
+		s.Use(ghttp.MiddlewareHandlerResponse)
+		s.Group("/", func(group *ghttp.RouterGroup) {
+			group.Bind(
+				new(Issue3789),
+			)
+		})
+		s.SetDumpRouterMap(false)
+		s.Start()
+		defer s.Shutdown()
+		time.Sleep(100 * time.Millisecond)
+
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		expect := `{"code":0,"message":"","data":{"id":"0","secondId":"2","thirdId":"3"}}`
+		t.Assert(c.GetContent(ctx, "/hello?id=&secondId=2&thirdId=3"), expect)
+	})
+}
+
+// https://github.com/gogf/gf/issues/4047
+func Test_Issue4047(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		err := s.SetConfigWithMap(g.Map{
+			"logger": nil,
+		})
+		t.AssertNil(err)
+		t.Assert(s.Logger(), nil)
+	})
+}

@@ -11,7 +11,10 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/lib/pq"
+
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -19,17 +22,22 @@ import (
 
 // ConvertValueForField converts value to database acceptable value.
 func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) {
-	var (
-		fieldValueKind = reflect.TypeOf(fieldValue).Kind()
-	)
+	if g.IsNil(fieldValue) {
+		return d.Core.ConvertValueForField(ctx, fieldType, fieldValue)
+	}
+
+	var fieldValueKind = reflect.TypeOf(fieldValue).Kind()
 
 	if fieldValueKind == reflect.Slice {
-		fieldValue = gstr.ReplaceByMap(gconv.String(fieldValue),
-			map[string]string{
-				"[": "{",
-				"]": "}",
-			},
-		)
+		// For pgsql, json or jsonb require '[]'
+		if !gstr.Contains(fieldType, "json") {
+			fieldValue = gstr.ReplaceByMap(gconv.String(fieldValue),
+				map[string]string{
+					"[": "{",
+					"]": "}",
+				},
+			)
+		}
 	}
 	return d.Core.ConvertValueForField(ctx, fieldType, fieldValue)
 }
@@ -65,6 +73,10 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 	case
 		"_int8":
 		return gdb.LocalTypeInt64Slice, nil
+
+	case
+		"_varchar", "_text":
+		return gdb.LocalTypeStringSlice, nil
 
 	default:
 		return d.Core.CheckLocalTypeForField(ctx, fieldType, fieldValue)
@@ -109,6 +121,14 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 				},
 			),
 		), nil
+
+	// String slice.
+	case "_varchar", "_text":
+		var result pq.StringArray
+		if err := result.Scan(fieldValue); err != nil {
+			return nil, err
+		}
+		return []string(result), nil
 
 	default:
 		return d.Core.ConvertValueForLocal(ctx, fieldType, fieldValue)

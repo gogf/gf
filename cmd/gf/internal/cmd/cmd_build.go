@@ -138,11 +138,6 @@ type cBuildInput struct {
 type cBuildOutput struct{}
 
 func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, err error) {
-	// print used go env
-	if in.DumpENV {
-		_, _ = Env.Index(ctx, cEnvInput{})
-	}
-
 	mlog.SetHeaderPrint(true)
 
 	mlog.Debugf(`build command input: %+v`, in)
@@ -217,7 +212,7 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 		if !gfile.Exists(in.PackDst) {
 			// Remove the go file that is automatically packed resource.
 			defer func() {
-				_ = gfile.Remove(in.PackDst)
+				_ = gfile.RemoveFile(in.PackDst)
 				mlog.Printf(`remove the automatically generated resource go file: %s`, in.PackDst)
 			}()
 		}
@@ -240,6 +235,10 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 		genv.MustSet("CGO_ENABLED", "1")
 	} else {
 		genv.MustSet("CGO_ENABLED", "0")
+	}
+	// print used go env
+	if in.DumpENV {
+		_, _ = Env.Index(ctx, cEnvInput{})
 	}
 	for system, item := range platformMap {
 		if len(customSystems) > 0 && customSystems[0] != "all" && !gstr.InArray(customSystems, system) {

@@ -7,15 +7,14 @@
 package ghttp_test
 
 import (
-	_ "github.com/gogf/gf/v2/net/ghttp/testdata/https/packed"
-
 	"fmt"
 	"testing"
 	"time"
 
+	_ "github.com/gogf/gf/v2/net/ghttp/testdata/https/packed"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -90,10 +89,6 @@ func Test_HTTPS_Resource(t *testing.T) {
 }
 
 func Test_HTTPS_HTTP_Basic(t *testing.T) {
-	var (
-		portHttp, _  = gtcp.GetFreePort()
-		portHttps, _ = gtcp.GetFreePort()
-	)
 	s := g.Server(gtime.TimestampNanoStr())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.GET("/test", func(r *ghttp.Request) {
@@ -104,8 +99,8 @@ func Test_HTTPS_HTTP_Basic(t *testing.T) {
 		gtest.DataPath("https", "files", "server.crt"),
 		gtest.DataPath("https", "files", "server.key"),
 	)
-	s.SetPort(portHttp)
-	s.SetHTTPSPort(portHttps)
+	s.SetPort(0)
+	s.SetHTTPSPort(0)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -115,14 +110,14 @@ func Test_HTTPS_HTTP_Basic(t *testing.T) {
 	// HTTP
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
-		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", portHttp))
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(c.GetContent(ctx, "/"), "Not Found")
 		t.Assert(c.GetContent(ctx, "/test"), "test")
 	})
 	// HTTPS
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
-		c.SetPrefix(fmt.Sprintf("https://127.0.0.1:%d", portHttps))
+		c.SetPrefix(fmt.Sprintf("https://127.0.0.1:%d", s.GetListenedHTTPSPort()))
 		t.Assert(c.GetContent(ctx, "/"), "Not Found")
 		t.Assert(c.GetContent(ctx, "/test"), "test")
 	})

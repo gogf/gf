@@ -12,6 +12,7 @@ import (
 	"reflect"
 
 	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/reflection"
@@ -27,7 +28,7 @@ import (
 // see Model.Where.
 func (m *Model) All(where ...interface{}) (Result, error) {
 	var ctx = m.GetCtx()
-	return m.doGetAll(ctx, false, where...)
+	return m.doGetAll(ctx, SelectTypeDefault, false, where...)
 }
 
 // AllAndCount retrieves all records and the total count of records from the model.
@@ -53,7 +54,7 @@ func (m *Model) AllAndCount(useFieldForCount bool) (result Result, totalCount in
 
 	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
 	if !useFieldForCount {
-		countModel.fields = "1"
+		countModel.fields = []any{Raw("1")}
 	}
 
 	// Get the total count of records
@@ -68,7 +69,7 @@ func (m *Model) AllAndCount(useFieldForCount bool) (result Result, totalCount in
 	}
 
 	// Retrieve all records
-	result, err = m.doGetAll(m.GetCtx(), false)
+	result, err = m.doGetAll(m.GetCtx(), SelectTypeDefault, false)
 	return
 }
 
@@ -109,7 +110,7 @@ func (m *Model) One(where ...interface{}) (Record, error) {
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).One()
 	}
-	all, err := m.doGetAll(ctx, true)
+	all, err := m.doGetAll(ctx, SelectTypeDefault, true)
 	if err != nil {
 		return nil, err
 	}
@@ -135,23 +136,41 @@ func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 			return m.Fields(gconv.String(fieldsAndWhere[0])).Array()
 		}
 	}
-	all, err := m.All()
-	if err != nil {
-		return nil, err
-	}
+
 	var (
 		field string
 		core  = m.db.GetCore()
 		ctx   = core.injectInternalColumn(m.GetCtx())
 	)
+	all, err := m.doGetAll(ctx, SelectTypeArray, false)
+	if err != nil {
+		return nil, err
+	}
 	if len(all) > 0 {
-		if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
-			field = internalData.FirstResultColumn
-		} else {
+		internalData := core.getInternalColumnFromCtx(ctx)
+		if internalData == nil {
 			return nil, gerror.NewCode(
 				gcode.CodeInternalError,
-				`query array error: the internal context data is missing. there's internal issue should be fixed`,
+				`query count error: the internal context data is missing. there's internal issue should be fixed`,
 			)
+		}
+		// If FirstResultColumn present, it returns the value of the first record of the first field.
+		// It means it use no cache mechanism, while cache mechanism makes `internalData` missing.
+		field = internalData.FirstResultColumn
+		if field == "" {
+			// Fields number check.
+			var recordFields = m.getRecordFields(all[0])
+			if len(recordFields) == 1 {
+				field = recordFields[0]
+			} else {
+				// it returns error if there are multiple fields in the result record.
+				return nil, gerror.NewCodef(
+					gcode.CodeInvalidParameter,
+					`invalid fields for "Array" operation, result fields number "%d"%s, but expect one`,
+					len(recordFields),
+					gjson.MustEncodeString(recordFields),
+				)
+			}
 		}
 	}
 	return all.Array(field), nil
@@ -176,7 +195,7 @@ func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 	model := m
 	// Auto selecting fields by struct attributes.
-	if model.fieldsEx == "" && (model.fields == "" || model.fields == "*") {
+	if len(model.fieldsEx) == 0 && len(model.fields) == 0 {
 		if v, ok := pointer.(reflect.Value); ok {
 			model = m.Fields(v.Interface())
 		} else {
@@ -212,7 +231,7 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 	model := m
 	// Auto selecting fields by struct attributes.
-	if model.fieldsEx == "" && (model.fields == "" || model.fields == "*") {
+	if len(model.fieldsEx) == 0 && len(model.fields) == 0 {
 		if v, ok := pointer.(reflect.Value); ok {
 			model = m.Fields(
 				reflect.New(
@@ -281,10 +300,12 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 	}
 }
 
-// ScanAndCount scans a single record or record array that matches the given conditions and counts the total number of records that match those conditions.
-// If useFieldForCount is true, it will use the fields specified in the model for counting;
-// The pointer parameter is a pointer to a struct that the scanned data will be stored in.
-// The pointerCount parameter is a pointer to an integer that will be set to the total number of records that match the given conditions.
+// ScanAndCount scans a single record or record array that matches the given conditions and counts the total number
+// of records that match those conditions.
+//
+// If `useFieldForCount` is true, it will use the fields specified in the model for counting;
+// The `pointer` parameter is a pointer to a struct that the scanned data will be stored in.
+// The `totalCount` parameter is a pointer to an integer that will be set to the total number of records that match the given conditions.
 // The where parameter is an optional list of conditions to use when retrieving records.
 //
 // Example:
@@ -314,7 +335,7 @@ func (m *Model) ScanAndCount(pointer interface{}, totalCount *int, useFieldForCo
 	countModel := m.Clone()
 	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
 	if !useFieldForCount {
-		countModel.fields = "1"
+		countModel.fields = []any{Raw("1")}
 	}
 
 	// Get the total count of records
@@ -341,7 +362,7 @@ func (m *Model) ScanList(structSlicePointer interface{}, bindToAttrName string, 
 	if err != nil {
 		return err
 	}
-	if m.fields != defaultFields || m.fieldsEx != "" {
+	if len(m.fields) > 0 || len(m.fieldsEx) != 0 {
 		// There are custom fields.
 		result, err = m.All()
 	} else {
@@ -394,25 +415,52 @@ func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
 		}
 	}
 	var (
-		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(ctx, queryTypeValue, true)
-		all, err                  = m.doGetAllBySql(ctx, queryTypeValue, sqlWithHolder, holderArgs...)
+		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(ctx, SelectTypeValue, true)
+		all, err                  = m.doGetAllBySql(ctx, SelectTypeValue, sqlWithHolder, holderArgs...)
 	)
 	if err != nil {
 		return nil, err
 	}
 	if len(all) > 0 {
-		if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
-			if v, ok := all[0][internalData.FirstResultColumn]; ok {
-				return v, nil
-			}
-		} else {
+		internalData := core.getInternalColumnFromCtx(ctx)
+		if internalData == nil {
 			return nil, gerror.NewCode(
 				gcode.CodeInternalError,
-				`query value error: the internal context data is missing. there's internal issue should be fixed`,
+				`query count error: the internal context data is missing. there's internal issue should be fixed`,
 			)
 		}
+		// If FirstResultColumn present, it returns the value of the first record of the first field.
+		// It means it use no cache mechanism, while cache mechanism makes `internalData` missing.
+		if v, ok := all[0][internalData.FirstResultColumn]; ok {
+			return v, nil
+		}
+		// Fields number check.
+		var recordFields = m.getRecordFields(all[0])
+		if len(recordFields) == 1 {
+			for _, v := range all[0] {
+				return v, nil
+			}
+		}
+		// it returns error if there are multiple fields in the result record.
+		return nil, gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`invalid fields for "Value" operation, result fields number "%d"%s, but expect one`,
+			len(recordFields),
+			gjson.MustEncodeString(recordFields),
+		)
 	}
 	return nil, nil
+}
+
+func (m *Model) getRecordFields(record Record) []string {
+	if len(record) == 0 {
+		return nil
+	}
+	var fields = make([]string, 0)
+	for k := range record {
+		fields = append(fields, k)
+	}
+	return fields
 }
 
 // Count does "SELECT COUNT(x) FROM ..." statement for the model.
@@ -427,25 +475,60 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 		return m.Where(where[0], where[1:]...).Count()
 	}
 	var (
-		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(ctx, queryTypeCount, false)
-		all, err                  = m.doGetAllBySql(ctx, queryTypeCount, sqlWithHolder, holderArgs...)
+		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(ctx, SelectTypeCount, false)
+		all, err                  = m.doGetAllBySql(ctx, SelectTypeCount, sqlWithHolder, holderArgs...)
 	)
 	if err != nil {
 		return 0, err
 	}
 	if len(all) > 0 {
-		if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
-			if v, ok := all[0][internalData.FirstResultColumn]; ok {
-				return v.Int(), nil
-			}
-		} else {
+		internalData := core.getInternalColumnFromCtx(ctx)
+		if internalData == nil {
 			return 0, gerror.NewCode(
 				gcode.CodeInternalError,
 				`query count error: the internal context data is missing. there's internal issue should be fixed`,
 			)
 		}
+		// If FirstResultColumn present, it returns the value of the first record of the first field.
+		// It means it use no cache mechanism, while cache mechanism makes `internalData` missing.
+		if v, ok := all[0][internalData.FirstResultColumn]; ok {
+			return v.Int(), nil
+		}
+		// Fields number check.
+		var recordFields = m.getRecordFields(all[0])
+		if len(recordFields) == 1 {
+			for _, v := range all[0] {
+				return v.Int(), nil
+			}
+		}
+		// it returns error if there are multiple fields in the result record.
+		return 0, gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`invalid fields for "Count" operation, result fields number "%d"%s, but expect one`,
+			len(recordFields),
+			gjson.MustEncodeString(recordFields),
+		)
 	}
 	return 0, nil
+}
+
+// Exist does "SELECT 1 FROM ... LIMIT 1" statement for the model.
+// The optional parameter `where` is the same as the parameter of Model.Where function,
+// see Model.Where.
+func (m *Model) Exist(where ...interface{}) (bool, error) {
+	if len(where) > 0 {
+		return m.Where(where[0], where[1:]...).Exist()
+	}
+	one, err := m.Fields(Raw("1")).One()
+	if err != nil {
+		return false, err
+	}
+	for _, val := range one {
+		if val.Bool() {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // CountColumn does "SELECT COUNT(x) FROM ..." statement for the model.
@@ -576,16 +659,18 @@ func (m *Model) Having(having interface{}, args ...interface{}) *Model {
 // The parameter `limit1` specifies whether limits querying only one record if m.limit is not set.
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
-func (m *Model) doGetAll(ctx context.Context, limit1 bool, where ...interface{}) (Result, error) {
+func (m *Model) doGetAll(ctx context.Context, selectType SelectType, limit1 bool, where ...interface{}) (Result, error) {
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).All()
 	}
-	sqlWithHolder, holderArgs := m.getFormattedSqlAndArgs(ctx, queryTypeNormal, limit1)
-	return m.doGetAllBySql(ctx, queryTypeNormal, sqlWithHolder, holderArgs...)
+	sqlWithHolder, holderArgs := m.getFormattedSqlAndArgs(ctx, selectType, limit1)
+	return m.doGetAllBySql(ctx, selectType, sqlWithHolder, holderArgs...)
 }
 
 // doGetAllBySql does the select statement on the database.
-func (m *Model) doGetAllBySql(ctx context.Context, queryType queryType, sql string, args ...interface{}) (result Result, err error) {
+func (m *Model) doGetAllBySql(
+	ctx context.Context, selectType SelectType, sql string, args ...interface{},
+) (result Result, err error) {
 	if result, err = m.getSelectResultFromCache(ctx, sql, args...); err != nil || result != nil {
 		return
 	}
@@ -597,29 +682,31 @@ func (m *Model) doGetAllBySql(ctx context.Context, queryType queryType, sql stri
 			},
 			handler: m.hookHandler.Select,
 		},
-		Model: m,
-		Table: m.tables,
-		Sql:   sql,
-		Args:  m.mergeArguments(args),
+		Model:      m,
+		Table:      m.tables,
+		Schema:     m.schema,
+		Sql:        sql,
+		Args:       m.mergeArguments(args),
+		SelectType: selectType,
 	}
 	if result, err = in.Next(ctx); err != nil {
 		return
 	}
 
-	err = m.saveSelectResultToCache(ctx, queryType, result, sql, args...)
+	err = m.saveSelectResultToCache(ctx, selectType, result, sql, args...)
 	return
 }
 
 func (m *Model) getFormattedSqlAndArgs(
-	ctx context.Context, queryType queryType, limit1 bool,
+	ctx context.Context, selectType SelectType, limit1 bool,
 ) (sqlWithHolder string, holderArgs []interface{}) {
-	switch queryType {
-	case queryTypeCount:
+	switch selectType {
+	case SelectTypeCount:
 		queryFields := "COUNT(1)"
-		if m.fields != "" && m.fields != "*" {
+		if len(m.fields) > 0 {
 			// DO NOT quote the m.fields here, in case of fields like:
 			// DISTINCT t.user_id uid
-			queryFields = fmt.Sprintf(`COUNT(%s%s)`, m.distinct, m.fields)
+			queryFields = fmt.Sprintf(`COUNT(%s%s)`, m.distinct, m.getFieldsAsStr())
 		}
 		// Raw SQL Model.
 		if m.rawSql != "" {
@@ -656,7 +743,7 @@ func (m *Model) getFormattedSqlAndArgs(
 
 func (m *Model) getHolderAndArgsAsSubModel(ctx context.Context) (holder string, args []interface{}) {
 	holder, args = m.getFormattedSqlAndArgs(
-		ctx, queryTypeNormal, false,
+		ctx, SelectTypeDefault, false,
 	)
 	args = m.mergeArguments(args)
 	return
@@ -672,29 +759,50 @@ func (m *Model) getAutoPrefix() string {
 	return autoPrefix
 }
 
+func (m *Model) getFieldsAsStr() string {
+	var (
+		fieldsStr string
+		core      = m.db.GetCore()
+	)
+	for _, v := range m.fields {
+		field := gconv.String(v)
+		switch {
+		case gstr.ContainsAny(field, "()"):
+		case gstr.ContainsAny(field, ". "):
+		default:
+			switch v.(type) {
+			case Raw, *Raw:
+			default:
+				field = core.QuoteString(field)
+			}
+		}
+		if fieldsStr != "" {
+			fieldsStr += ","
+		}
+		fieldsStr += field
+	}
+	return fieldsStr
+}
+
 // getFieldsFiltered checks the fields and fieldsEx attributes, filters and returns the fields that will
 // really be committed to underlying database driver.
 func (m *Model) getFieldsFiltered() string {
-	if m.fieldsEx == "" {
-		// No filtering, containing special chars.
-		if gstr.ContainsAny(m.fields, "()") {
-			return m.fields
-		}
-		// No filtering.
-		if !gstr.ContainsAny(m.fields, ". ") {
-			return m.db.GetCore().QuoteString(m.fields)
-		}
-		return m.fields
+	if len(m.fieldsEx) == 0 && len(m.fields) == 0 {
+		return defaultField
+	}
+	if len(m.fieldsEx) == 0 && len(m.fields) > 0 {
+		return m.getFieldsAsStr()
 	}
 	var (
 		fieldsArray []string
-		fieldsExSet = gset.NewStrSetFrom(gstr.SplitAndTrim(m.fieldsEx, ","))
+		fieldsExSet = gset.NewStrSetFrom(gconv.Strings(m.fieldsEx))
 	)
-	if m.fields != "*" {
+	if len(m.fields) > 0 {
 		// Filter custom fields with fieldEx.
 		fieldsArray = make([]string, 0, 8)
-		for _, v := range gstr.SplitAndTrim(m.fields, ",") {
-			fieldsArray = append(fieldsArray, v[gstr.PosR(v, "-")+1:])
+		for _, v := range m.fields {
+			field := gconv.String(v)
+			fieldsArray = append(fieldsArray, field[gstr.PosR(field, "-")+1:])
 		}
 	} else {
 		if gstr.Contains(m.tables, " ") {

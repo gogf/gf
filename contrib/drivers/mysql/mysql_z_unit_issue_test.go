@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -1063,7 +1064,7 @@ func Test_Issue2552_ClearTableFieldsAll(t *testing.T) {
 		ctx = context.Background()
 		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
 			one, err := db.Model(table).Ctx(ctx).One()
-			t.Assert(len(one), 5)
+			t.Assert(len(one), 6)
 			return err
 		})
 		t.AssertNil(err)
@@ -1078,7 +1079,7 @@ func Test_Issue2552_ClearTableFieldsAll(t *testing.T) {
 		ctx = context.Background()
 		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
 			one, err := db.Model(table).Ctx(ctx).One()
-			t.Assert(len(one), 4)
+			t.Assert(len(one), 5)
 			return err
 		})
 		t.AssertNil(err)
@@ -1109,7 +1110,7 @@ func Test_Issue2552_ClearTableFields(t *testing.T) {
 		ctx = context.Background()
 		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
 			one, err := db.Model(table).Ctx(ctx).One()
-			t.Assert(len(one), 5)
+			t.Assert(len(one), 6)
 			return err
 		})
 		t.AssertNil(err)
@@ -1124,7 +1125,7 @@ func Test_Issue2552_ClearTableFields(t *testing.T) {
 		ctx = context.Background()
 		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
 			one, err := db.Model(table).Ctx(ctx).One()
-			t.Assert(len(one), 4)
+			t.Assert(len(one), 5)
 			return err
 		})
 		t.AssertNil(err)
@@ -1215,4 +1216,377 @@ func Test_Issue3649(t *testing.T) {
 		sqlStr := fmt.Sprintf("SELECT COUNT(1) FROM `%s` WHERE (create_time = now()) AND (`create_time` < now())", table)
 		t.Assert(sql[0], sqlStr)
 	})
+}
+
+// https://github.com/gogf/gf/issues/3754
+func Test_Issue3754(t *testing.T) {
+	table := "issue3754"
+	array := gstr.SplitAndTrim(gtest.DataContent(`issue3754.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		fieldsEx := []string{"delete_at", "create_at", "update_at"}
+		// Insert.
+		dataInsert := g.Map{
+			"id":   1,
+			"name": "name_1",
+		}
+		r, err := db.Model(table).Data(dataInsert).FieldsEx(fieldsEx).Insert()
+		t.AssertNil(err)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 1)
+
+		oneInsert, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(oneInsert["id"].Int(), 1)
+		t.Assert(oneInsert["name"].String(), "name_1")
+		t.Assert(oneInsert["delete_at"].String(), "")
+		t.Assert(oneInsert["create_at"].String(), "")
+		t.Assert(oneInsert["update_at"].String(), "")
+
+		// Update.
+		dataUpdate := g.Map{
+			"name": "name_1000",
+		}
+		r, err = db.Model(table).Data(dataUpdate).FieldsEx(fieldsEx).WherePri(1).Update()
+		t.AssertNil(err)
+		n, _ = r.RowsAffected()
+		t.Assert(n, 1)
+
+		oneUpdate, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(oneUpdate["id"].Int(), 1)
+		t.Assert(oneUpdate["name"].String(), "name_1000")
+		t.Assert(oneUpdate["delete_at"].String(), "")
+		t.Assert(oneUpdate["create_at"].String(), "")
+		t.Assert(oneUpdate["update_at"].String(), "")
+
+		// FieldsEx does not affect Delete operation.
+		r, err = db.Model(table).FieldsEx(fieldsEx).WherePri(1).Delete()
+		n, _ = r.RowsAffected()
+		t.Assert(n, 1)
+		oneDeleteUnscoped, err := db.Model(table).Unscoped().WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(oneDeleteUnscoped["id"].Int(), 1)
+		t.Assert(oneDeleteUnscoped["name"].String(), "name_1000")
+		t.AssertNE(oneDeleteUnscoped["delete_at"].String(), "")
+		t.Assert(oneDeleteUnscoped["create_at"].String(), "")
+		t.Assert(oneDeleteUnscoped["update_at"].String(), "")
+	})
+}
+
+// https://github.com/gogf/gf/issues/3626
+func Test_Issue3626(t *testing.T) {
+	table := "issue3626"
+	array := gstr.SplitAndTrim(gtest.DataContent(`issue3626.sql`), ";")
+	defer dropTable(table)
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			gtest.Error(err)
+		}
+	}
+
+	// Insert.
+	gtest.C(t, func(t *gtest.T) {
+		dataInsert := g.Map{
+			"id":   1,
+			"name": "name_1",
+		}
+		r, err := db.Model(table).Data(dataInsert).Insert()
+		t.AssertNil(err)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 1)
+
+		oneInsert, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(oneInsert["id"].Int(), 1)
+		t.Assert(oneInsert["name"].String(), "name_1")
+	})
+
+	var (
+		cacheKey  = guid.S()
+		cacheFunc = func(duration time.Duration) gdb.HookHandler {
+			return gdb.HookHandler{
+				Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
+					get, err := db.GetCache().Get(ctx, cacheKey)
+					if err == nil && !get.IsEmpty() {
+						err = get.Scan(&result)
+						if err == nil {
+							return result, nil
+						}
+					}
+					result, err = in.Next(ctx)
+					if err != nil {
+						return nil, err
+					}
+					if result == nil || result.Len() < 1 {
+						result = make(gdb.Result, 0)
+					}
+					_ = db.GetCache().Set(ctx, cacheKey, result, duration)
+					return
+				},
+			}
+		}
+	)
+	gtest.C(t, func(t *gtest.T) {
+		defer db.GetCache().Clear(ctx)
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+		count, err = db.Model(table).Hook(cacheFunc(time.Hour)).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+		count, err = db.Model(table).Hook(cacheFunc(time.Hour)).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+	})
+}
+
+// https://github.com/gogf/gf/issues/3932
+func Test_Issue3932(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Model(table).Order("id", "desc").One()
+		t.AssertNil(err)
+		t.Assert(one["id"], 10)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Model(table).Order("id desc").One()
+		t.AssertNil(err)
+		t.Assert(one["id"], 10)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Model(table).Order("id desc, nickname asc").One()
+		t.AssertNil(err)
+		t.Assert(one["id"], 10)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Model(table).Order("id desc", "nickname asc").One()
+		t.AssertNil(err)
+		t.Assert(one["id"], 10)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Model(table).Order("id desc").Order("nickname asc").One()
+		t.AssertNil(err)
+		t.Assert(one["id"], 10)
+	})
+}
+
+// https://github.com/gogf/gf/issues/3968
+func Test_Issue3968(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		var hook = gdb.HookHandler{
+			Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
+				result, err = in.Next(ctx)
+				if err != nil {
+					return nil, err
+				}
+				if result != nil {
+					for i, _ := range result {
+						result[i]["location"] = gvar.New("ny")
+					}
+				}
+				return
+			},
+		}
+		var (
+			count  int
+			result gdb.Result
+		)
+		err := db.Model(table).Hook(hook).ScanAndCount(&result, &count, false)
+		t.AssertNil(err)
+		t.Assert(count, 10)
+		t.Assert(len(result), 10)
+	})
+}
+
+// https://github.com/gogf/gf/issues/3915
+func Test_Issue3915(t *testing.T) {
+	table := "issue3915"
+	array := gstr.SplitAndTrim(gtest.DataContent(`issue3915.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		//db.SetDebug(true)
+		all, err := db.Model(table).Where("a < b").All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 1)
+
+		all, err = db.Model(table).Where(gdb.Raw("a < b")).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 1)
+
+		all, err = db.Model(table).WhereLT("a", gdb.Raw("`b`")).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 1)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		//db.SetDebug(true)
+		all, err := db.Model(table).Where("a > b").All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 2)
+
+		all, err = db.Model(table).Where(gdb.Raw("a > b")).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 2)
+
+		all, err = db.Model(table).WhereGT("a", gdb.Raw("`b`")).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 2)
+	})
+}
+
+type RoleBase struct {
+	gmeta.Meta  `orm:"table:sys_role"`
+	Name        string      `json:"name"           description:"角色名称"     `
+	Code        string      `json:"code"           description:"角色 code"    `
+	Description string      `json:"description"    description:"描述信息"     `
+	Weight      int         `json:"weight"         description:"排序"         `
+	StatusId    int         `json:"statusId"       description:"发布状态"     `
+	CreatedAt   *gtime.Time `json:"createdAt"      description:""             `
+	UpdatedAt   *gtime.Time `json:"updatedAt"      description:""             `
+}
+
+type Role struct {
+	gmeta.Meta `orm:"table:sys_role"`
+	RoleBase
+	Id     uint    `json:"id"          description:""`
+	Status *Status `json:"status"       description:"发布状态"     orm:"with:id=status_id"        `
+}
+
+type StatusBase struct {
+	gmeta.Meta `orm:"table:sys_status"`
+	En         string `json:"en"        description:"英文名称"    `
+	Cn         string `json:"cn"        description:"中文名称"    `
+	Weight     int    `json:"weight"    description:"排序权重"    `
+}
+
+type Status struct {
+	gmeta.Meta `orm:"table:sys_status"`
+	StatusBase
+	Id uint `json:"id"          description:""`
+}
+
+// https://github.com/gogf/gf/issues/2119
+func Test_Issue2119(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		tables := []string{
+			"sys_role",
+			"sys_status",
+		}
+
+		defer dropTable(tables[0])
+		defer dropTable(tables[1])
+		_ = tables
+		array := gstr.SplitAndTrim(gtest.DataContent(`issue2119.sql`), ";")
+		for _, v := range array {
+			_, err := db.Exec(ctx, v)
+			t.AssertNil(err)
+		}
+		roles := make([]*Role, 0)
+		err := db.Ctx(context.Background()).Model(&Role{}).WithAll().Scan(&roles)
+		t.AssertNil(err)
+		expectStatus := []*Status{
+			{
+				StatusBase: StatusBase{
+					En:     "undecided",
+					Cn:     "未决定",
+					Weight: 800,
+				},
+				Id: 2,
+			},
+			{
+				StatusBase: StatusBase{
+					En:     "on line",
+					Cn:     "上线",
+					Weight: 900,
+				},
+				Id: 1,
+			},
+			{
+				StatusBase: StatusBase{
+					En:     "on line",
+					Cn:     "上线",
+					Weight: 900,
+				},
+				Id: 1,
+			},
+			{
+				StatusBase: StatusBase{
+					En:     "on line",
+					Cn:     "上线",
+					Weight: 900,
+				},
+				Id: 1,
+			},
+			{
+				StatusBase: StatusBase{
+					En:     "on line",
+					Cn:     "上线",
+					Weight: 900,
+				},
+				Id: 1,
+			},
+		}
+
+		for i := 0; i < len(roles); i++ {
+			t.Assert(roles[i].Status, expectStatus[i])
+		}
+	})
+}
+
+// https://github.com/gogf/gf/issues/4034
+func Test_Issue4034(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := "issue4034"
+		array := gstr.SplitAndTrim(gtest.DataContent(`issue4034.sql`), ";")
+		for _, v := range array {
+			_, err := db.Exec(ctx, v)
+			t.AssertNil(err)
+		}
+		defer dropTable(table)
+
+		err := issue4034SaveDeviceAndToken(ctx, table)
+		t.AssertNil(err)
+	})
+}
+
+func issue4034SaveDeviceAndToken(ctx context.Context, table string) error {
+	return db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+		if err := issue4034SaveAppDevice(ctx, table, tx); err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func issue4034SaveAppDevice(ctx context.Context, table string, tx gdb.TX) error {
+	_, err := db.Model(table).Safe().Ctx(ctx).TX(tx).Data(g.Map{
+		"passport": "111",
+		"password": "222",
+		"nickname": "333",
+	}).Save()
+	return err
 }

@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/v2/database/gdb"
-
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -100,6 +99,109 @@ func Test_Issue3632(t *testing.T) {
 		)
 
 		_, err := dao.Ctx(ctx).Data(&member).Insert()
+		t.AssertNil(err)
+	})
+}
+
+// https://github.com/gogf/gf/issues/3671
+func Test_Issue3671(t *testing.T) {
+	type SubMember struct {
+		Seven string
+		Eight int64
+	}
+	type Member struct {
+		One   []int64     `json:"one" orm:"one"`
+		Two   [][]string  `json:"two" orm:"two"`
+		Three []string    `json:"three" orm:"three"`
+		Four  []int64     `json:"four" orm:"four"`
+		Five  []SubMember `json:"five" orm:"five"`
+	}
+	var (
+		sqlText = gtest.DataContent("issues", "issue3671.sql")
+		table   = fmt.Sprintf(`%s_%d`, TablePrefix+"issue3632", gtime.TimestampNano())
+	)
+	if _, err := db.Exec(ctx, fmt.Sprintf(sqlText, table)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			dao    = db.Model(table)
+			member = Member{
+				One:   []int64{1, 2, 3},
+				Two:   [][]string{{"a", "b"}, {"c", "d"}},
+				Three: []string{"x", "y", "z"},
+				Four:  []int64{1, 2, 3},
+				Five:  []SubMember{{Seven: "1", Eight: 2}, {Seven: "3", Eight: 4}},
+			}
+		)
+
+		_, err := dao.Ctx(ctx).Data(&member).Insert()
+		t.AssertNil(err)
+	})
+}
+
+// https://github.com/gogf/gf/issues/3668
+func Test_Issue3668(t *testing.T) {
+	type Issue3668 struct {
+		Text   interface{}
+		Number interface{}
+	}
+	var (
+		sqlText = gtest.DataContent("issues", "issue3668.sql")
+		table   = fmt.Sprintf(`%s_%d`, TablePrefix+"issue3668", gtime.TimestampNano())
+	)
+	if _, err := db.Exec(ctx, fmt.Sprintf(sqlText, table)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			dao  = db.Model(table)
+			data = Issue3668{
+				Text:   "我们都是自然的婴儿，卧在宇宙的摇篮里",
+				Number: nil,
+			}
+		)
+		_, err := dao.Ctx(ctx).
+			Data(data).
+			Insert()
+		t.AssertNil(err)
+	})
+}
+
+type Issue4033Status int
+
+const (
+	Issue4033StatusA Issue4033Status = 1
+)
+
+func (s Issue4033Status) String() string {
+	return "somevalue"
+}
+
+func (s Issue4033Status) Int64() int64 {
+	return int64(s)
+}
+
+// https://github.com/gogf/gf/issues/4033
+func Test_Issue4033(t *testing.T) {
+	var (
+		sqlText = gtest.DataContent("issues", "issue4033.sql")
+		table   = "test_enum"
+	)
+	if _, err := db.Exec(ctx, sqlText); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		query := g.Map{
+			"status": g.Slice{Issue4033StatusA},
+		}
+		_, err := db.Model(table).Ctx(ctx).Where(query).All()
 		t.AssertNil(err)
 	})
 }

@@ -16,14 +16,13 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/gogf/gf/v2/util/gconv"
-
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -50,10 +49,6 @@ func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...inter
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
 			link = &txLink{tx.GetSqlTX()}
 		}
-	}
-
-	if c.db.GetConfig().QueryTimeout > 0 {
-		ctx, _ = context.WithTimeout(ctx, c.db.GetConfig().QueryTimeout)
 	}
 
 	// Sql filtering.
@@ -83,6 +78,9 @@ func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...inter
 		Type:          SqlTypeQueryContext,
 		IsTransaction: link.IsTransaction(),
 	})
+	if err != nil {
+		return nil, err
+	}
 	return out.Records, err
 }
 
@@ -109,12 +107,6 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
 			link = &txLink{tx.GetSqlTX()}
 		}
-	}
-
-	if c.db.GetConfig().ExecTimeout > 0 {
-		var cancelFunc context.CancelFunc
-		ctx, cancelFunc = context.WithTimeout(ctx, c.db.GetConfig().ExecTimeout)
-		defer cancelFunc()
 	}
 
 	// SQL filtering.
@@ -144,13 +136,18 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 		Type:          SqlTypeExecContext,
 		IsTransaction: link.IsTransaction(),
 	})
+	if err != nil {
+		return nil, err
+	}
 	return out.Result, err
 }
 
 // DoFilter is a hook function, which filters the sql and its arguments before it's committed to underlying driver.
 // The parameter `link` specifies the current database connection operation object. You can modify the sql
 // string `sql` and its arguments `args` as you wish before they're committed to driver.
-func (c *Core) DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+func (c *Core) DoFilter(
+	ctx context.Context, link Link, sql string, args []interface{},
+) (newSql string, newArgs []interface{}, err error) {
 	return sql, args, nil
 }
 
@@ -174,28 +171,42 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 	ctx, span := tr.Start(ctx, string(in.Type), trace.WithSpanKind(trace.SpanKindInternal))
 	defer span.End()
 
-	// Execution cased by type.
+	// Execution by type.
 	switch in.Type {
 	case SqlTypeBegin:
-		if sqlTx, err = in.Db.Begin(); err == nil {
+		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctx, ctxTimeoutTypeTrans)
+		formattedSql = fmt.Sprintf(
+			`%s (IosolationLevel: %s, ReadOnly: %t)`,
+			formattedSql, in.TxOptions.Isolation.String(), in.TxOptions.ReadOnly,
+		)
+		if sqlTx, err = in.Db.BeginTx(ctx, &in.TxOptions); err == nil {
 			out.Tx = &TXCore{
 				db:            c.db,
 				tx:            sqlTx,
 				ctx:           context.WithValue(ctx, transactionIdForLoggerCtx, transactionIdGenerator.Add(1)),
 				master:        in.Db,
 				transactionId: guid.S(),
+				cancelFunc:    cancelFuncForTimeout,
 			}
 			ctx = out.Tx.GetCtx()
 		}
 		out.RawResult = sqlTx
 
 	case SqlTypeTXCommit:
+		if in.TxCancelFunc != nil {
+			defer in.TxCancelFunc()
+		}
 		err = in.Tx.Commit()
 
 	case SqlTypeTXRollback:
+		if in.TxCancelFunc != nil {
+			defer in.TxCancelFunc()
+		}
 		err = in.Tx.Rollback()
 
 	case SqlTypeExecContext:
+		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctx, ctxTimeoutTypeExec)
+		defer cancelFuncForTimeout()
 		if c.db.GetDryRun() {
 			sqlResult = new(SqlResult)
 		} else {
@@ -204,10 +215,14 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 		out.RawResult = sqlResult
 
 	case SqlTypeQueryContext:
+		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctx, ctxTimeoutTypeQuery)
+		defer cancelFuncForTimeout()
 		sqlRows, err = in.Link.QueryContext(ctx, in.Sql, in.Args...)
 		out.RawResult = sqlRows
 
 	case SqlTypePrepareContext:
+		ctx, cancelFuncForTimeout = c.GetCtxTimeout(ctx, ctxTimeoutTypePrepare)
+		defer cancelFuncForTimeout()
 		sqlStmt, err = in.Link.PrepareContext(ctx, in.Sql)
 		out.RawResult = sqlStmt
 
@@ -322,7 +337,6 @@ func (c *Core) DoPrepare(ctx context.Context, link Link, sql string) (stmt *Stmt
 			link = &txLink{tx.GetSqlTX()}
 		} else {
 			// Or else it creates one from master node.
-			var err error
 			if link, err = c.MasterLink(); err != nil {
 				return nil, err
 			}
@@ -336,7 +350,9 @@ func (c *Core) DoPrepare(ctx context.Context, link Link, sql string) (stmt *Stmt
 
 	if c.db.GetConfig().PrepareTimeout > 0 {
 		// DO NOT USE cancel function in prepare statement.
-		ctx, _ = context.WithTimeout(ctx, c.db.GetConfig().PrepareTimeout)
+		var cancelFunc context.CancelFunc
+		ctx, cancelFunc = context.WithTimeout(ctx, c.db.GetConfig().PrepareTimeout)
+		defer cancelFunc()
 	}
 
 	// Link execution.
@@ -347,6 +363,9 @@ func (c *Core) DoPrepare(ctx context.Context, link Link, sql string) (stmt *Stmt
 		Type:          SqlTypePrepareContext,
 		IsTransaction: link.IsTransaction(),
 	})
+	if err != nil {
+		return nil, err
+	}
 	return out.Stmt, err
 }
 
@@ -379,7 +398,7 @@ func (c *Core) FormatUpsert(columns []string, list List, option DoInsertOption) 
 		}
 	} else {
 		for _, column := range columns {
-			// If it's SAVE operation, do not automatically update the creating time.
+			// If it's `SAVE` operation, do not automatically update the creating time.
 			if c.IsSoftCreatedFieldName(column) {
 				continue
 			}
@@ -455,6 +474,11 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 	return result, nil
 }
 
+// OrderRandomFunction returns the SQL function for random ordering.
+func (c *Core) OrderRandomFunction() string {
+	return "RAND()"
+}
+
 func (c *Core) columnValueToLocalValue(ctx context.Context, value interface{}, columnType *sql.ColumnType) (interface{}, error) {
 	var scanType = columnType.ScanType()
 	if scanType != nil {
@@ -469,6 +493,7 @@ func (c *Core) columnValueToLocalValue(ctx context.Context, value interface{}, c
 				gconv.String(value),
 				columnType.ScanType().String(),
 			), nil
+		default:
 		}
 	}
 	// Other complex types, especially custom types.
