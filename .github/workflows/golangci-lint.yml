@@ -45,6 +45,7 @@ jobs:
           # Required: specify the golangci-lint version without the patch version to always use the latest patch.
           version: v1.62.2
           only-new-issues: true
+          skip-cache: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
           args: --timeout 3m0s --config=.golangci.yml -v
       - name: Install gci
