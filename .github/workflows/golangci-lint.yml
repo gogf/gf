@@ -69,26 +69,39 @@ jobs:
         run: |
           # check for code changes
           if [[ -n "$(git status --porcelain)" ]]; then
-            HAS_CHANGES=true
-          else
-            HAS_CHANGES=false
-          fi
-      
-          # Set the HAS_CHANGES based on the type of event and whether there are code changes
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.event.pull_request }}" == "null" && "$HAS_CHANGES" == "true" ]]; then
-            echo "HAS_CHANGES=true" >> $GITHUB_ENV
-          elif [[ "${{ github.event_name }}" == "pull_request" && "$HAS_CHANGES" == "true" ]]; then
             echo "HAS_CHANGES=true" >> $GITHUB_ENV
           else
             echo "HAS_CHANGES=false" >> $GITHUB_ENV
           fi
+      - name: Get Pull Request info
+        run: |
+          PR_NUMBER=$(gh pr list --state open --head $(git rev-parse --abbrev-ref HEAD) --json number --jq '.[0].number')
+          if [[ -n "$PR_NUMBER" ]]; then
+            echo "Pull Request number: $PR_NUMBER"
+            echo "HAS_PR=true" >> $GITHUB_ENV
+          else
+            echo "No Pull Request found for this branch."
+            echo "HAS_PR=false" >> $GITHUB_ENV
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Configure Commit Content
+        run: |
+          # Set the HAS_CHANGES based on the type of event and whether there are code changes
+          if [[ "${{ github.event_name }}" == "push" && env.HAS_PR != 'true' && env.HAS_CHANGES == 'true' ]]; then
+            echo "NEED_COMMIT=true" >> $GITHUB_ENV
+          elif [[ "${{ github.event_name }}" == "pull_request" && env.HAS_CHANGES == 'true' ]]; then
+            echo "NEED_COMMIT=true" >> $GITHUB_ENV
+          else
+            echo "NEED_COMMIT=false" >> $GITHUB_ENV
+          fi
       - name: Configure Git
-        if: env.HAS_CHANGES == 'true'
+        if: env.NEED_COMMIT == 'true'
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
       - name: Commit and push changes
-        if: env.HAS_CHANGES == 'true'
+        if: env.NEED_COMMIT == 'true'
         run: |
           git add .
           git commit -m "Apply gci import order changes [skip ci]"
