@@ -1,6 +1,7 @@
 package gerror
 
 import (
+	"bytes"
 	"strconv"
 	"sync"
 )
@@ -10,6 +11,21 @@ var cacheStackTrace = &stackTrace{
 	pcMap:  make(map[uintptr]int),
 }
 
+var bytesBufferPool = &sync.Pool{
+	New: func() interface{} {
+		return &bytes.Buffer{}
+	},
+}
+
+func getBytesBuffer() *bytes.Buffer {
+	return bytesBufferPool.Get().(*bytes.Buffer)
+}
+
+func putBytesBuffer(b *bytes.Buffer) {
+	b.Reset()
+	bytesBufferPool.Put(b)
+}
+
 type stackTrace struct {
 	mu     sync.RWMutex
 	stacks [][]byte
@@ -17,20 +33,23 @@ type stackTrace struct {
 	pcMap map[uintptr]int
 }
 
-func (st *stackTrace) add(pc uintptr, buf []byte) {
+func (st *stackTrace) addAndGetBytesPtr(pc uintptr, buf []byte) *[]byte {
 	st.mu.Lock()
 	defer st.mu.Unlock()
+
 	st.stacks = append(st.stacks, buf)
 	id := len(st.stacks)
 	st.pcMap[pc] = id - 1
+
+	return &st.stacks[id-1]
 }
 
-func (st *stackTrace) get(pc uintptr) []byte {
+func (st *stackTrace) getBytesPtr(pc uintptr) *[]byte {
 	st.mu.RLock()
 	defer st.mu.RUnlock()
 	id, ok := st.pcMap[pc]
 	if ok {
-		return st.stacks[id]
+		return &st.stacks[id]
 	}
 	return nil
 }
@@ -38,6 +57,10 @@ func (st *stackTrace) get(pc uintptr) []byte {
 func init() {
 	n := 50
 	for i := 0; i < n; i++ {
+		// 1).
+		// 2).
+		// ...
+		// 50).
 		stackTraceFuncIDHeader = append(stackTraceFuncIDHeader, []byte("\n\t"+strconv.Itoa(i+1)+"). "))
 	}
 }

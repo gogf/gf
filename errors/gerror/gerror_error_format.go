@@ -28,11 +28,14 @@ func (err *Error) Format(s fmt.State, verb rune) {
 				_, _ = io.WriteString(s, err.Error())
 			}
 		case s.Flag('+'):
+			var sb = getBytesBuffer()
+			defer putBytesBuffer(sb)
 			if verb == 's' {
-				_, _ = io.WriteString(s, err.Stack())
+				err.stackWithBuffer(sb, "")
 			} else {
-				_, _ = io.WriteString(s, err.Error()+"\n"+err.Stack())
+				err.stackWithBuffer(sb, err.Error())
 			}
+			_, _ = sb.WriteTo(s)
 		default:
 			_, _ = io.WriteString(s, err.Error())
 		}

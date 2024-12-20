@@ -13,6 +13,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"unsafe"
 
 	"github.com/gogf/gf/v2/internal/consts"
 )
@@ -35,84 +36,130 @@ func (err *Error) Stack() string {
 	if err == nil {
 		return ""
 	}
-	return getStackInfo(err, 1)
 
-	//var (
-	//	loop             = err
-	//	index            = 1
-	//	infos            []*stackInfo
-	//	isStackModeBrief = errors.IsStackModeBrief()
-	//)
-	//for loop != nil {
-	//	info := &stackInfo{
-	//		Index:   index,
-	//		Message: fmt.Sprintf("%-v", loop),
-	//	}
-	//	index++
-	//	infos = append(infos, info)
-	//	loopLinesOfStackInfo(loop.stack, info, isStackModeBrief)
-	//	if loop.error != nil {
-	//		if e, ok := loop.error.(*Error); ok {
-	//			loop = e
-	//		} else {
-	//			infos = append(infos, &stackInfo{
-	//				Index:   index,
-	//				Message: loop.error.Error(),
-	//			})
-	//			index++
-	//			break
-	//		}
-	//	} else {
-	//		break
-	//	}
-	//}
-	//filterLinesOfStackInfos(infos)
-	//return formatStackInfos(infos)
+	id := 1
+
+	count := 0
+	stackInfos := make([]tempStackInfo, 0, 4)
+
+	tsi := getErrorStackInfo(err, id)
+	stackInfos = append(stackInfos, tsi)
+	count += tsi.count
+
+	temp := err.error
+	for temp != nil {
+		switch x := temp.(type) {
+		case *Error:
+			id++
+			tsi = getErrorStackInfo(x, id)
+			stackInfos = append(stackInfos, tsi)
+			count += tsi.count + len("\n")
+			temp = x.error
+		default:
+			// TODO sb.Write(x.Error())
+			break
+		}
+	}
+
+	var sb = getBytesBuffer()
+	sb.Grow(count)
+	defer putBytesBuffer(sb)
+
+	for _, si := range stackInfos {
+		sb.Write(si.funcLine)
+		for k, b := range si.bufptrs {
+			sb.Write(getStackTraceFuncIDHeader(k))
+			sb.Write(*(*[]byte)(b))
+		}
+		sb.WriteByte('\n')
+	}
+	return sb.String()
 }
 
-func getStackInfo(x error, id int) string {
-	switch err := x.(type) {
-	case *Error:
-		prevError := ""
-		if err.error != nil {
-			prevError = "\n" + getStackInfo(err.error, id+1)
-		}
-		var sb strings.Builder
-		count := getIntLength(id) + len(". ") + len(err.text) + len(prevError)
-		pcs := err.stack
-
-		for i, pc := range pcs {
-			count += len("\n\t") + getIntLength(i+1) + len(").")
-
-			buf := cacheStackTrace.get(pc)
-			if buf != nil {
-				count += len(buf)
-				continue
-			}
-			f, _ := runtime.CallersFrames(pcs[i : i+1]).Next()
-
-			buf = []byte(f.Function + "\n\t\t" + f.File + ":" + strconv.Itoa(f.Line))
-			// TODO: buf变量可能会缓存，全部都是一个变量
-			cacheStackTrace.add(pc, buf)
-			count += len(buf)
-		}
-
-		// 先统计长度，再扩容
-		sb.Grow(count)
-		sb.WriteString(strconv.Itoa(id) + ". " + err.text)
-
-		var b []byte
-		for i, pc := range pcs {
-			b = cacheStackTrace.get(pc)
-			sb.Write(getStackTraceFuncIDHeader(i))
-			sb.Write(b)
-		}
-		if prevError != "" {
-			sb.WriteString(prevError)
-		}
-		return sb.String()
+// Stack returns the error stack information as string.
+func (err *Error) stackWithBuffer(buffer *bytes.Buffer, errError string) {
+	if err == nil {
+		return
 	}
-	return x.Error()
+	var (
+		id         = 1
+		count      = 0
+		stackInfos = make([]tempStackInfo, 0, 4)
+	)
+	tsi := getErrorStackInfo(err, id)
+	stackInfos = append(stackInfos, tsi)
+	count += tsi.count
+
+	temp := err.error
+	for temp != nil {
+		switch x := temp.(type) {
+		case *Error:
+			id++
+			tsi = getErrorStackInfo(x, id)
+			stackInfos = append(stackInfos, tsi)
+			count += tsi.count + len("\n")
+			temp = x.error
+		default:
+			// TODO buffer.Write(x.Error())
+			break
+		}
+	}
+
+	if len(errError) > 0 {
+		buffer.Grow(count + len(errError) + 1)
+		buffer.WriteString(errError)
+		buffer.WriteString("\n")
+	} else {
+		buffer.Grow(count)
+	}
+
+	for _, si := range stackInfos {
+		buffer.Write(si.funcLine)
+		for k, bytesPtr := range si.bufptrs {
+			buffer.Write(getStackTraceFuncIDHeader(k))
+			buffer.Write(*(*[]byte)(bytesPtr))
+		}
+		buffer.WriteByte('\n')
+	}
+}
+
+type tempStackInfo struct {
+	// buf [][]byte
+	// bufptrs[0] = unsafe.Pointer(&buf[0])
+	bufptrs []unsafe.Pointer
+	// funcName
+	// 		xx/yy/zz:10
+	funcLine []byte
+	// count+=len [for len range len(buf[i])]
+	count int
+}
+
+func getErrorStackInfo(err *Error, id int) (tsi tempStackInfo) {
+	var (
+		count = getIntLength(id) + len(". ") + len(err.text)
+		pcs   = err.stack
+	)
+	tsi.bufptrs = make([]unsafe.Pointer, len(pcs))
+
+	for i, pc := range pcs {
+		count += len("\n\t") + getIntLength(i+1) + len(").")
+
+		bufptr := cacheStackTrace.getBytesPtr(pc)
+		if bufptr != nil {
+			count += len(*bufptr)
+			tsi.bufptrs[i] = unsafe.Pointer(bufptr)
+			continue
+		}
+
+		f, _ := runtime.CallersFrames(pcs[i : i+1]).Next()
+		buf := []byte(f.Function + "\n\t\t" + f.File + ":" + strconv.Itoa(f.Line))
+		bufptr = cacheStackTrace.addAndGetBytesPtr(pc, buf)
+		count += len(buf)
+		tsi.bufptrs[i] = unsafe.Pointer(bufptr)
+	}
+	tsi.funcLine = []byte(strconv.Itoa(id) + ". " + err.text)
+	tsi.count = count
+	return tsi
 }
 
 // 0-9     = 1
