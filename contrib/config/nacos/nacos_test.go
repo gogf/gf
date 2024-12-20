@@ -47,7 +47,13 @@ func TestNacos(t *testing.T) {
 			ClientConfig:  clientConfig,
 			ConfigParam:   configParam,
 		})
+		_, err2 := nacos.New(ctx, nacos.Config{
+			ServerConfigs: []constant.ServerConfig{serverConfig},
+			ClientConfig:  clientConfig,
+			ConfigParam:   configParam,
+		})
 		t.AssertNil(err)
+		t.AssertNil(err2)
 		config := g.Cfg(guid.S())
 		config.SetAdapter(adapter)
 
