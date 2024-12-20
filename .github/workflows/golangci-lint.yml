@@ -15,7 +15,7 @@ on:
       - enhance/**
       - fix/**
       - feat/**
-  pull_request_target:
+  pull_request:
     branches:
       - master
       - develop
@@ -90,6 +90,7 @@ jobs:
           fi
           
           echo "Current branch: $BRANCH"
+          echo "CURRENT_BRANCH=$BRANCH" >> $GITHUB_ENV
             
           PR_LIST=$(gh pr list --state open --head $BRANCH --json number)
           echo "PR list: $PR_LIST"
@@ -104,27 +105,14 @@ jobs:
             echo "No Pull Request found for this branch."
             echo "HAS_PR=false" >> $GITHUB_ENV
           fi
-          
-#          PR_NUMBER=${{ github.event.pull_request.number }}
-#          BRANCH=$(gh pr view $PR_NUMBER --json headRefName --jq '.headRefName')
-#          echo "Pull Request source branch: $BRANCH"
-#
-#          PR_NUMBER=$(gh pr list --state open --head $(git rev-parse --abbrev-ref HEAD) --json number --jq '.[0].number')
-#          if [[ -n "$PR_NUMBER" ]]; then
-#            echo "Pull Request number: $PR_NUMBER"
-#            echo "HAS_PR=true" >> $GITHUB_ENV
-#          else
-#            echo "No Pull Request found for this branch."
-#            echo "HAS_PR=false" >> $GITHUB_ENV
-#          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Configure Commit Content
         run: |
           # Set the HAS_CHANGES based on the type of event and whether there are code changes
-          if [[ "${{ github.event_name }}" == "push" && env.HAS_PR != 'true' && "$HAS_CHANGES" == 'true' ]]; then
+          if [[ "${{ github.event_name }}" == "push" && "$HAS_PR" != 'true' && "$HAS_CHANGES" == 'true' ]]; then
             echo "NEED_COMMIT=true" >> $GITHUB_ENV
-          elif [[ "${{ github.event_name }}" == "pull_request_target" && "$HAS_CHANGES" == 'true' ]]; then
+          elif [[ "${{ github.event_name }}" == "pull_request" && "$HAS_CHANGES" == 'true' ]]; then
             echo "NEED_COMMIT=true" >> $GITHUB_ENV
           else
             echo "NEED_COMMIT=false" >> $GITHUB_ENV
@@ -140,8 +128,16 @@ jobs:
       - name: Commit and push changes
         if: env.NEED_COMMIT == 'true'
         run: |
-          echo $(git rev-parse --abbrev-ref HEAD)
+          echo "branch: $(git rev-parse --abbrev-ref HEAD)"
+          echo "status: $(git status)"
+          echo "diff: $(git diff)"
+          echo "env branch: $CURRENT_BRANCH"
           git add .
           git commit -m "Apply gci import order changes [skip ci]"
-          git push  origin HEAD:$(git rev-parse --abbrev-ref HEAD)
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            git push origin HEAD:$(git rev-parse --abbrev-ref HEAD)
+          else
+            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:$(git rev-parse --abbrev-ref HEAD)
+          fi
+          # git push  origin HEAD:$(git rev-parse --abbrev-ref HEAD)
           # git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:$(git rev-parse --abbrev-ref HEAD)
