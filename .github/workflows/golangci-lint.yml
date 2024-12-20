@@ -137,7 +137,7 @@ jobs:
           if [[ "${{ github.event_name }}" == "push" ]]; then
             git push origin HEAD:$(git rev-parse --abbrev-ref HEAD)
           else
-            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:$(git rev-parse --abbrev-ref HEAD)
+            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:${{ github.event.pull_request.head.ref }}
           fi
           # git push  origin HEAD:$(git rev-parse --abbrev-ref HEAD)
           # git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:$(git rev-parse --abbrev-ref HEAD)
