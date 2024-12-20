@@ -83,8 +83,10 @@ jobs:
       - name: Get Pull Request info
         run: |
           BRANCH=${{ github.event.pull_request.head.ref }}
-          if [[ "${{ github.event_name }}" == "push"]]; then
+          if [[ "${{ github.event_name }}" == "push" ]]; then
             BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          else{
+            BRANCH=${{ github.event.pull_request.head.ref }}
           fi
           
           echo "Current branch: $BRANCH"
