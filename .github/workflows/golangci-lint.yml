@@ -15,7 +15,7 @@ on:
       - enhance/**
       - fix/**
       - feat/**
-  pull_request:
+  pull_request_target:
     branches:
       - master
       - develop
@@ -35,6 +35,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Setup Golang ${{ matrix.go-version }}
         uses: actions/setup-go@v5
         with:
