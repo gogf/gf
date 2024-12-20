@@ -6,15 +6,15 @@
 
 name: GolangCI-Lint
 on:
-#  push:
-#    branches:
-#      - master
-#      - develop
-#      - personal/**
-#      - feature/**
-#      - enhance/**
-#      - fix/**
-#      - feat/**
+  push:
+    branches:
+      - master
+      - develop
+      - personal/**
+      - feature/**
+      - enhance/**
+      - fix/**
+      - feat/**
   pull_request_target:
     branches:
       - master
@@ -125,6 +125,8 @@ jobs:
             echo "NEED_COMMIT=false" >> $GITHUB_ENV
           fi
       - name: Configure Git
+        echo "NEED_COMMIT: $NEED_COMMIT"
+        echo "env NEED_COMMIT: env.NEED_COMMIT"
         if: env.NEED_COMMIT == 'true'
         run: |
           git config user.name 'github-actions[bot]'
