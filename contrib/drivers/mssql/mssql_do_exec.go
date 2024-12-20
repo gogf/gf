@@ -26,6 +26,8 @@ const (
 	positionInsertValues = ") VALUES" // find the position of the string "VALUES" in the INSERT SQL statement to embed output code for retrieving the last inserted ID
 )
 
+// DoExec commits the sql string and its arguments to underlying driver
+// through given link object and returns the execution result.
 func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args ...interface{}) (result sql.Result, err error) {
 	// Transaction checks.
 	if link == nil {
