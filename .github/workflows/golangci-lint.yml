@@ -7,14 +7,14 @@
 name: GolangCI-Lint
 on:
   push:
-    branches:
-      - master
-      - develop
-      - personal/**
-      - feature/**
-      - enhance/**
-      - fix/**
-      - feat/**
+#    branches:
+#      - master
+#      - develop
+#      - personal/**
+#      - feature/**
+#      - enhance/**
+#      - fix/**
+#      - feat/**
   pull_request_target:
     branches:
       - master
@@ -128,7 +128,7 @@ jobs:
         run: |
             env
       - name: Configure Git
-        if: env.NEED_COMMIT == 'true'
+        if: env.HAS_CHANGES == 'true'
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
