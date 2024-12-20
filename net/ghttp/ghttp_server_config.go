@@ -343,6 +343,9 @@ func (s *Server) SetConfigWithMap(m map[string]interface{}) error {
 	if k, v := gutil.MapPossibleItemByKey(m, "FormParsingMemory"); k != "" {
 		m[k] = gfile.StrToSize(gconv.String(v))
 	}
+	if _, v := gutil.MapPossibleItemByKey(m, "Logger"); v == nil {
+		intlog.Printf(context.TODO(), "SetConfigWithMap: set Logger nil")
+	}
 	// Update the current configuration object.
 	// It only updates the configured keys not all the object.
 	if err := gconv.Struct(m, &s.config); err != nil {
@@ -379,8 +382,10 @@ func (s *Server) SetConfig(c ServerConfig) error {
 			return err
 		}
 	}
-	if err := s.config.Logger.SetLevelStr(s.config.LogLevel); err != nil {
-		intlog.Errorf(context.TODO(), `%+v`, err)
+	if s.config.Logger != nil {
+		if err := s.config.Logger.SetLevelStr(s.config.LogLevel); err != nil {
+			intlog.Errorf(context.TODO(), `%+v`, err)
+		}
 	}
 	gracefulEnabled = c.Graceful
 	intlog.Printf(context.TODO(), "SetConfig: %+v", s.config)
