@@ -124,6 +124,9 @@ jobs:
           else
             echo "NEED_COMMIT=false" >> $GITHUB_ENV
           fi
+      - name: Output all environment variables
+        run: |
+            env
       - name: Configure Git
         echo "NEED_COMMIT: $NEED_COMMIT"
         echo "env NEED_COMMIT: env.NEED_COMMIT"
