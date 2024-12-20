@@ -119,7 +119,7 @@ jobs:
           # Set the HAS_CHANGES based on the type of event and whether there are code changes
           if [[ "${{ github.event_name }}" == "push" && env.HAS_PR != 'true' && env.HAS_CHANGES == 'true' ]]; then
             echo "NEED_COMMIT=true" >> $GITHUB_ENV
-          elif [[ "${{ github.event_name }}" == "pull_request" && env.HAS_CHANGES == 'true' ]]; then
+          elif [[ "${{ github.event_name }}" == "pull_request_target" && env.HAS_CHANGES == 'true' ]]; then
             echo "NEED_COMMIT=true" >> $GITHUB_ENV
           else
             echo "NEED_COMMIT=false" >> $GITHUB_ENV
