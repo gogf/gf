@@ -39,7 +39,7 @@ func (d *DriverWrapperDB) Open(node *ConfigNode) (db *sql.DB, err error) {
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
 func (d *DriverWrapperDB) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
-	ctx = context.WithValue(ctx, CtxKeyInternalProducedSQL, struct{}{})
+	ctx = context.WithValue(ctx, ctxKeyInternalProducedSQL, struct{}{})
 	return d.DB.Tables(ctx, schema...)
 }
 
@@ -79,7 +79,7 @@ func (d *DriverWrapperDB) TableFields(
 		)
 		cacheFunc = func(ctx context.Context) (interface{}, error) {
 			return d.DB.TableFields(
-				context.WithValue(ctx, CtxKeyInternalProducedSQL, struct{}{}),
+				context.WithValue(ctx, ctxKeyInternalProducedSQL, struct{}{}),
 				table, schema...,
 			)
 		}

@@ -109,7 +109,7 @@ func ToSQL(ctx context.Context, f func(ctx context.Context) error) (sql string, 
 		SQLArray: garray.NewStrArray(),
 		DoCommit: false,
 	}
-	ctx = context.WithValue(ctx, CtxKeyCatchSQL, manager)
+	ctx = context.WithValue(ctx, ctxKeyCatchSQL, manager)
 	err = f(ctx)
 	sql, _ = manager.SQLArray.PopRight()
 	return
@@ -122,7 +122,7 @@ func CatchSQL(ctx context.Context, f func(ctx context.Context) error) (sqlArray 
 		SQLArray: garray.NewStrArray(),
 		DoCommit: true,
 	}
-	ctx = context.WithValue(ctx, CtxKeyCatchSQL, manager)
+	ctx = context.WithValue(ctx, ctxKeyCatchSQL, manager)
 	err = f(ctx)
 	return manager.SQLArray.Slice(), err
 }

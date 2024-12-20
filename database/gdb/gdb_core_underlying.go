@@ -58,13 +58,13 @@ func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...inter
 		return nil, err
 	}
 	// SQL format and retrieve.
-	if v := ctx.Value(CtxKeyCatchSQL); v != nil {
+	if v := ctx.Value(ctxKeyCatchSQL); v != nil {
 		var (
 			manager      = v.(*CatchSQLManager)
 			formattedSql = FormatSqlWithArgs(sql, args)
 		)
 		manager.SQLArray.Append(formattedSql)
-		if !manager.DoCommit && ctx.Value(CtxKeyInternalProducedSQL) == nil {
+		if !manager.DoCommit && ctx.Value(ctxKeyInternalProducedSQL) == nil {
 			return nil, nil
 		}
 	}
@@ -116,13 +116,13 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 		return nil, err
 	}
 	// SQL format and retrieve.
-	if v := ctx.Value(CtxKeyCatchSQL); v != nil {
+	if v := ctx.Value(ctxKeyCatchSQL); v != nil {
 		var (
 			manager      = v.(*CatchSQLManager)
 			formattedSql = FormatSqlWithArgs(sql, args)
 		)
 		manager.SQLArray.Append(formattedSql)
-		if !manager.DoCommit && ctx.Value(CtxKeyInternalProducedSQL) == nil {
+		if !manager.DoCommit && ctx.Value(ctxKeyInternalProducedSQL) == nil {
 			return new(SqlResult), nil
 		}
 	}

@@ -4,11 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"regexp"
+	"strings"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"regexp"
-	"strings"
 )
 
 const (
@@ -48,29 +49,21 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args 
 	if err != nil {
 		return nil, err
 	}
-	// SQL format and retrieve.
-	if v := ctx.Value(gdb.CtxKeyCatchSQL); v != nil {
-		var (
-			manager      = v.(*gdb.CatchSQLManager)
-			formattedSql = gdb.FormatSqlWithArgs(sqlStr, args)
-		)
-		manager.SQLArray.Append(formattedSql)
-		if !manager.DoCommit && ctx.Value(gdb.CtxKeyInternalProducedSQL) == nil {
-			return new(gdb.SqlResult), nil
-		}
-	}
 
 	if !(strings.HasPrefix(sqlStr, backIdInsertHeadDefault) || strings.HasPrefix(sqlStr, backIdInsertHeadInsertIgnore)) {
 		return d.Core.DoExec(ctx, link, sqlStr, args)
 	}
-	//find the first pos
+	// find the first pos
 	pos := strings.Index(sqlStr, positionInsertValues)
 
 	table := d.GetTableNameFromSql(sqlStr)
 	outPutSql := d.GetInsertOutputSql(ctx, table)
-	//rebuild sql add output
-	sqlValueBefore := sqlStr[:pos+1]
-	sqlValueAfter := sqlStr[pos+1:]
+	// rebuild sql add output
+	var (
+		sqlValueBefore = sqlStr[:pos+1]
+		sqlValueAfter  = sqlStr[pos+1:]
+	)
+
 	sqlStr = fmt.Sprintf("%s%s%s", sqlValueBefore, outPutSql, sqlValueAfter)
 
 	// fmt.Println("sql str:", sqlStr)

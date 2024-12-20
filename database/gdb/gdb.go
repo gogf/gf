@@ -705,8 +705,8 @@ const (
 	modelForDaoSuffix                     = `ForDao`
 	dbRoleSlave                           = `slave`
 	ctxKeyForDB               gctx.StrKey = `CtxKeyForDB`
-	CtxKeyCatchSQL            gctx.StrKey = `CtxKeyCatchSQL`            // To facilitate the rewrite, it should be public
-	CtxKeyInternalProducedSQL gctx.StrKey = `CtxKeyInternalProducedSQL` // To facilitate the rewrite, it should be public
+	ctxKeyCatchSQL            gctx.StrKey = `ctxKeyCatchSQL`
+	ctxKeyInternalProducedSQL gctx.StrKey = `ctxKeyInternalProducedSQL`
 
 	linkPattern            = `(\w+):([\w\-\$]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*)`
 	linkPatternDescription = `type:username:password@protocol(host:port)/dbname?param1=value1&...&paramN=valueN`
