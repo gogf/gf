@@ -6,15 +6,15 @@
 
 name: GolangCI-Lint
 on:
-  push:
-    branches:
-      - master
-      - develop
-      - personal/**
-      - feature/**
-      - enhance/**
-      - fix/**
-      - feat/**
+#  push:
+#    branches:
+#      - master
+#      - develop
+#      - personal/**
+#      - feature/**
+#      - enhance/**
+#      - fix/**
+#      - feat/**
   pull_request_target:
     branches:
       - master
@@ -94,22 +94,24 @@ jobs:
             
           if [[ -n "$PR_NUMBER" ]]; then
             echo "Pull Request number: $PR_NUMBER"
-          else
-            echo "No Pull Request found for this branch."
-          fi
-          
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          BRANCH=$(gh pr view $PR_NUMBER --json headRefName --jq '.headRefName')
-          echo "Pull Request source branch: $BRANCH"
-          
-          PR_NUMBER=$(gh pr list --state open --head $(git rev-parse --abbrev-ref HEAD) --json number --jq '.[0].number')
-          if [[ -n "$PR_NUMBER" ]]; then
-            echo "Pull Request number: $PR_NUMBER"
             echo "HAS_PR=true" >> $GITHUB_ENV
           else
             echo "No Pull Request found for this branch."
             echo "HAS_PR=false" >> $GITHUB_ENV
           fi
+          
+#          PR_NUMBER=${{ github.event.pull_request.number }}
+#          BRANCH=$(gh pr view $PR_NUMBER --json headRefName --jq '.headRefName')
+#          echo "Pull Request source branch: $BRANCH"
+#
+#          PR_NUMBER=$(gh pr list --state open --head $(git rev-parse --abbrev-ref HEAD) --json number --jq '.[0].number')
+#          if [[ -n "$PR_NUMBER" ]]; then
+#            echo "Pull Request number: $PR_NUMBER"
+#            echo "HAS_PR=true" >> $GITHUB_ENV
+#          else
+#            echo "No Pull Request found for this branch."
+#            echo "HAS_PR=false" >> $GITHUB_ENV
+#          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Configure Commit Content
