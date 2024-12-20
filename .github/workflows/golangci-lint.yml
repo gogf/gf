@@ -117,9 +117,9 @@ jobs:
       - name: Configure Commit Content
         run: |
           # Set the HAS_CHANGES based on the type of event and whether there are code changes
-          if [[ "${{ github.event_name }}" == "push" && env.HAS_PR != 'true' && env.HAS_CHANGES == 'true' ]]; then
+          if [[ "${{ github.event_name }}" == "push" && env.HAS_PR != 'true' && "$HAS_CHANGES" == 'true' ]]; then
             echo "NEED_COMMIT=true" >> $GITHUB_ENV
-          elif [[ "${{ github.event_name }}" == "pull_request_target" && env.HAS_CHANGES == 'true' ]]; then
+          elif [[ "${{ github.event_name }}" == "pull_request_target" && "$HAS_CHANGES" == 'true' ]]; then
             echo "NEED_COMMIT=true" >> $GITHUB_ENV
           else
             echo "NEED_COMMIT=false" >> $GITHUB_ENV
@@ -133,7 +133,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
       - name: Commit and push changes
-        if: env.NEED_COMMIT == 'true'
+        if: env.HAS_CHANGES == 'true'
         run: |
           echo $(git rev-parse --abbrev-ref HEAD)
           git add .
