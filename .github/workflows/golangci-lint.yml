@@ -85,7 +85,7 @@ jobs:
           BRANCH=${{ github.event.pull_request.head.ref }}
           if [[ "${{ github.event_name }}" == "push" ]]; then
             BRANCH=$(git rev-parse --abbrev-ref HEAD)
-          else{
+          else
             BRANCH=${{ github.event.pull_request.head.ref }}
           fi
           
