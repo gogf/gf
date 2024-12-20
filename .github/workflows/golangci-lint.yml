@@ -82,4 +82,4 @@ jobs:
         run: |
           git add .
           git commit -m "Apply gci import order changes"
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:${{ github.head_ref }}
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:$(git rev-parse --abbrev-ref HEAD)
