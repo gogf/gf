@@ -123,7 +123,7 @@ type stackInfo struct {
 	errLine []byte
 	// for _,buf:=range len(bufs) {
 	//		count += len(buf)
-	//}
+	// }
 	// Calculate the space that needs to be expanded to avoid further expansion during writing
 	count int32
 }
@@ -134,7 +134,6 @@ func getErrorStackInfo(err *Error, id int, isStackModeBrief bool) (errStackInfo 
 		pcs   = err.stack
 	)
 	errStackInfo.bufptrs = make([]unsafe.Pointer, 0, len(pcs))
-
 	for i, pc := range pcs {
 		// count += len("\n\t%d). ")
 		count += len("\n\t") + getIntLength(i+1) + len("). ")
