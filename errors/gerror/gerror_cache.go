@@ -7,8 +7,8 @@ import (
 )
 
 var cacheStackTrace = &stackTrace{
-	stacks: make([][]byte, 1),
-	pcMap:  make(map[uintptr]int),
+	stackBufs: make([][]byte, 0),
+	pcMap:     make(map[uintptr]int),
 }
 
 var bytesBufferPool = &sync.Pool{
@@ -26,50 +26,93 @@ func putBytesBuffer(b *bytes.Buffer) {
 	bytesBufferPool.Put(b)
 }
 
-type stackTrace struct {
-	mu     sync.RWMutex
-	stacks [][]byte
-	// map[pc]stacks.idx
-	pcMap map[uintptr]int
+type stackObjectFlag int32
+
+const (
+	// consts.StackFilterKeyForGoFrame = "github.com/gogf/gf/"
+	stackObjectFlagStackFilterKeyForGoFrame stackObjectFlag = 1
+	// stackFilterKeyLocal = "/errors/gerror/gerror"
+	stackObjectFlagStackFilterKeyLocal stackObjectFlag = 2
+)
+
+type stackObject struct {
+	// stackBufs[bufId]
+	stackBufId int32
+	flag       stackObjectFlag
 }
 
-func (st *stackTrace) addAndGetBytesPtr(pc uintptr, buf []byte) *[]byte {
+type stackTrace struct {
+	mu           sync.RWMutex
+	stackBufs    [][]byte
+	stackObjects []stackObject
+	// map[pc]stackBufs.idx
+	pcMap map[uintptr]int
+	//pcMap sync.Map
+}
+
+func (st *stackTrace) addAndGetBytesPtr(pc uintptr, buf []byte, flag stackObjectFlag) *[]byte {
 	st.mu.Lock()
 	defer st.mu.Unlock()
 
-	st.stacks = append(st.stacks, buf)
-	id := len(st.stacks)
-	st.pcMap[pc] = id - 1
+	v, ok := st.pcMap[pc]
+	if ok {
+		return &st.stackBufs[v]
+	}
 
-	return &st.stacks[id-1]
+	st.stackBufs = append(st.stackBufs, buf)
+	id := len(st.stackBufs)
+	st.stackObjects = append(st.stackObjects, stackObject{
+		stackBufId: int32(id - 1),
+		flag:       stackObjectFlag(flag),
+	})
+	st.pcMap[pc] = id - 1
+	return &st.stackBufs[id-1]
 }
 
-func (st *stackTrace) getBytesPtr(pc uintptr) *[]byte {
+func (st *stackTrace) getBytesPtr(pc uintptr) (*[]byte, stackObjectFlag) {
 	st.mu.RLock()
 	defer st.mu.RUnlock()
-	id, ok := st.pcMap[pc]
+
+	idx, ok := st.pcMap[pc]
 	if ok {
-		return &st.stacks[id]
+		flag := st.stackObjects[idx].flag
+		return &st.stackBufs[idx], flag
 	}
-	return nil
+	return nil, -1
 }
 
 func init() {
 	n := 50
-	for i := 0; i < n; i++ {
+	lineIdPrefix = make([][]byte, n+1)
+	for i := 0; i <= n; i++ {
 		// 1).
 		// 2).
 		// ...
 		// 50).
-		stackTraceFuncIDHeader = append(stackTraceFuncIDHeader, []byte("\n\t"+strconv.Itoa(i+1)+"). "))
+		lineIdPrefix[i] = []byte("\n\t" + strconv.Itoa(i+1) + "). ")
+	}
+
+	idStrs = make([]string, n+1)
+	for i := 0; i <= n; i++ {
+		idStrs[i] = strconv.Itoa(i)
 	}
 }
 
-func getStackTraceFuncIDHeader(i int) []byte {
-	if i < 50 {
-		return stackTraceFuncIDHeader[i]
+func getLineIdPrefix(i int) []byte {
+	if i < len(lineIdPrefix) {
+		return lineIdPrefix[i]
 	}
 	return []byte("\n\t" + strconv.Itoa(i+1) + "). ")
 }
 
-var stackTraceFuncIDHeader = [][]byte{}
+var (
+	lineIdPrefix [][]byte
+	idStrs       []string
+)
+
+func getIdStr(id int) string {
+	if id < len(idStrs) {
+		return idStrs[id]
+	}
+	return strconv.Itoa(id)
+}
