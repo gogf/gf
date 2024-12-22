@@ -174,19 +174,19 @@ func addStackInfoToCache(pc uintptr) stackObject {
 	f, _ := runtime.CallersFrames(pcs[:]).Next()
 	buf := []byte(f.Function + "\n\t\t" + f.File + ":" + strconv.Itoa(f.Line))
 
-	//fn = runtime.FuncForPC(pc - 1)
-	//file, line = fn.FileLine(pc - 1)
-	//buf := []byte(fn.Name() + "\n\t\t" + file + ":" + strconv.Itoa(line))
+	// fn = runtime.FuncForPC(pc - 1)
+	// file, line = fn.FileLine(pc - 1)
+	// buf := []byte(fn.Name() + "\n\t\t" + file + ":" + strconv.Itoa(line))
 
 	const gf_path = consts.StackFilterKeyForGoFrame
 	flag := stackObjectFlag(0)
 	if strings.Contains(f.File, gf_path) {
 		// package path stack filtering.
 		if strings.Contains(f.File, stackFilterKeyLocal) {
-			//continue
+			// continue
 			flag = stackObjectFlagStackFilterKeyLocal
 		} else {
-			//continue
+			// continue
 			flag = stackObjectFlagStackFilterKeyForGoFrame
 		}
 	}
