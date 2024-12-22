@@ -42,8 +42,13 @@ func (err *Error) Stack() string {
 			count += int(tsi.count) + len("\n")
 			temp = x.error
 		default:
-			// TODO sb.Write(x.Error()) ?
-			break
+			temp = nil
+			count += len(x.Error()) + len("\n")
+			stackInfos = append(stackInfos, stackInfo{
+				bufs:    nil,
+				errLine: []byte(x.Error()),
+				count:   0,
+			})
 		}
 	}
 
@@ -87,8 +92,13 @@ func (err *Error) stackWithBuffer(buffer *bytes.Buffer, errError string) {
 			count += int(errStackInfo.count) + len("\n")
 			temp = x.error
 		default:
-			// TODO buffer.Write(x.Error()) ?
-			break
+			temp = nil
+			count += len(x.Error()) + len("\n")
+			stackInfos = append(stackInfos, stackInfo{
+				bufs:    nil,
+				errLine: []byte(x.Error()),
+				count:   0,
+			})
 		}
 	}
 
