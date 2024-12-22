@@ -1,10 +1,10 @@
 module github.com/gogf/gf/contrib/registry/etcd/v2
 
-go 1.20
+go 1.22
 
 require (
-	github.com/gogf/gf/v2 v2.8.2
-	go.etcd.io/etcd/client/v3 v3.5.7
+	github.com/gogf/gf/v2 v2.8.3
+	go.etcd.io/etcd/client/v3 v3.5.17
 	google.golang.org/grpc v1.59.0
 )
 
@@ -19,7 +19,7 @@ require (
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/grokify/html-strip-tags-go v0.1.0 // indirect
 	github.com/magiconair/properties v1.8.9 // indirect
@@ -28,8 +28,8 @@ require (
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	go.etcd.io/etcd/api/v3 v3.5.7 // indirect
-	go.etcd.io/etcd/client/pkg/v3 v3.5.7 // indirect
+	go.etcd.io/etcd/api/v3 v3.5.17 // indirect
+	go.etcd.io/etcd/client/pkg/v3 v3.5.17 // indirect
 	go.opentelemetry.io/otel v1.24.0 // indirect
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.24.0 // indirect

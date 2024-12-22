@@ -13,82 +13,39 @@ for file in `find . -name go.mod`; do
         continue 1
     fi
 
-    if [[ $file =~ "/testdata/" ]]; then
-        echo "ignore testdata path $file"
-        continue 1
-    fi
-
     # package kuhecm was moved to sub ci procedure.
     if [ "kubecm" = $(basename $dirpath) ]; then
         continue 1
     fi
 
-    # package consul needs golang >= v1.19
-    if [ "consul" = $(basename $dirpath) ]; then
-        if ! go version|grep -qE "go1.[2-9][0-9]"; then
-          echo "ignore consul as go version: $(go version)"
-          continue 1
+    # Check if it's a contrib directory or example directory
+    if [[ $dirpath =~ "/contrib/" ]] || [ "example" = $(basename $dirpath) ]; then
+        # Check if go version meets the requirement
+        if ! go version | grep -qE "go${LATEST_GO_VERSION}"; then
+            echo "ignore path $dirpath as go version is not ${LATEST_GO_VERSION}: $(go version)"
+            continue 1
+        fi
+        # If it's example directory, only build without tests
+        if [ "example" = $(basename $dirpath) ]; then
+            echo "the example directory only needs to be built, not unit tests and coverage tests."
+            cd $dirpath
+            go mod tidy
+            go build ./...
+            cd -
+            continue 1
         fi
     fi
 
-    # package etcd needs golang >= v1.19
-    if [ "etcd" = $(basename $dirpath) ]; then
-        if ! go version|grep -qE "go1.[2-9][0-9]"; then
-          echo "ignore etcd as go version: $(go version)"
-          continue 1
-        fi
-    fi
-
-    # package polaris needs golang >= v1.19
-    if [ "polaris" = $(basename $dirpath) ]; then
-        if ! go version|grep -qE "go1.[2-9][0-9]"; then
-          echo "ignore polaris as go version: $(go version)"
-          continue 1
-        fi
-    fi
-
-    # package example needs golang >= v1.20
-    if [ "example" = $(basename $dirpath) ]; then
-        if ! go version|grep -qE "go1.[2-9][1-9]"; then
-          echo "ignore example as go version: $(go version)"
-          continue 1
-        fi
-        echo "the example directory only needs to be built, not unit tests and coverage tests."
-        cd $dirpath
-        go mod tidy
-        go build ./...
-        cd -
+    if [[ $file =~ "/testdata/" ]]; then
+        echo "ignore testdata path $file"
         continue 1
-    fi
-
-    # package otlpgrpc needs golang >= v1.20
-    if [ "otlpgrpc" = $(basename $dirpath) ]; then
-        if ! go version|grep -qE "go1.[2-9][0-9]"; then
-          echo "ignore otlpgrpc as go version: $(go version)"
-          continue 1
-        fi
-    fi
-
-    # package otlphttp needs golang >= v1.20
-    if [ "otlphttp" = $(basename $dirpath) ]; then
-        if ! go version|grep -qE "go1.[2-9][0-9]"; then
-          echo "ignore otlphttp as go version: $(go version)"
-          continue 1
-        fi
-    fi
-
-    # package otelmetric needs golang >= v1.20
-    if [ "otelmetric" = $(basename $dirpath) ]; then
-        if ! go version|grep -qE "go1.[2-9][0-9]"; then
-          echo "ignore otelmetric as go version: $(go version)"
-          continue 1
-        fi
     fi
 
     cd $dirpath
     go mod tidy
     go build ./...
-    # check coverage
+
+    # test with coverage
     if [ "${coverage}" = "coverage" ]; then
       go test ./... -race -coverprofile=coverage.out -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
 
