@@ -6,10 +6,7 @@ import (
 	"sync"
 )
 
-var cacheStackTrace = &stackTrace{
-	stackBufs: make([][]byte, 0),
-	pcMap:     make(map[uintptr]int),
-}
+var cacheStackTrace = &stackTrace{}
 
 var bytesBufferPool = &sync.Pool{
 	New: func() interface{} {
@@ -36,49 +33,25 @@ const (
 )
 
 type stackObject struct {
-	// stackBufs[bufId]
-	stackBufId int32
-	flag       stackObjectFlag
+	stackBuf []byte
+	flag     stackObjectFlag
 }
 
 type stackTrace struct {
-	mu           sync.RWMutex
-	stackBufs    [][]byte
-	stackObjects []stackObject
-	// map[pc]stackBufs.idx
-	pcMap map[uintptr]int
-	//pcMap sync.Map
+	pcMap sync.Map
+	// pcMap map[uintptr]stackObject
 }
 
-func (st *stackTrace) addAndGetBytesPtr(pc uintptr, buf []byte, flag stackObjectFlag) *[]byte {
-	st.mu.Lock()
-	defer st.mu.Unlock()
-
-	v, ok := st.pcMap[pc]
-	if ok {
-		return &st.stackBufs[v]
-	}
-
-	st.stackBufs = append(st.stackBufs, buf)
-	id := len(st.stackBufs)
-	st.stackObjects = append(st.stackObjects, stackObject{
-		stackBufId: int32(id - 1),
-		flag:       stackObjectFlag(flag),
-	})
-	st.pcMap[pc] = id - 1
-	return &st.stackBufs[id-1]
+func (st *stackTrace) addStackObject(pc uintptr, stackObj stackObject) {
+	st.pcMap.LoadOrStore(pc, stackObj)
 }
 
-func (st *stackTrace) getBytesPtr(pc uintptr) (*[]byte, stackObjectFlag) {
-	st.mu.RLock()
-	defer st.mu.RUnlock()
-
-	idx, ok := st.pcMap[pc]
+func (st *stackTrace) getStackObject(pc uintptr) stackObject {
+	v, ok := st.pcMap.Load(pc)
 	if ok {
-		flag := st.stackObjects[idx].flag
-		return &st.stackBufs[idx], flag
+		return v.(stackObject)
 	}
-	return nil, -1
+	return stackObject{nil, 0}
 }
 
 func init() {
@@ -94,7 +67,7 @@ func init() {
 
 	idStrs = make([]string, n+1)
 	for i := 0; i <= n; i++ {
-		idStrs[i] = strconv.Itoa(i)
+		idStrs[i] = strconv.Itoa(i) + ". "
 	}
 }
 
