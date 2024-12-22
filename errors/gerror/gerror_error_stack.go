@@ -43,10 +43,11 @@ func (err *Error) Stack() string {
 			temp = x.error
 		default:
 			temp = nil
-			count += len(x.Error()) + len("\n")
+			e := x.Error()
+			count += len(e) + len("\n")
 			stackInfos = append(stackInfos, stackInfo{
 				bufs:    nil,
-				errLine: []byte(x.Error()),
+				errLine: []byte(e),
 				count:   0,
 			})
 		}
@@ -93,10 +94,11 @@ func (err *Error) stackWithBuffer(buffer *bytes.Buffer, errError string) {
 			temp = x.error
 		default:
 			temp = nil
-			count += len(x.Error()) + len("\n")
+			e := x.Error()
+			count += len(e) + len("\n")
 			stackInfos = append(stackInfos, stackInfo{
 				bufs:    nil,
-				errLine: []byte(x.Error()),
+				errLine: []byte(e),
 				count:   0,
 			})
 		}
