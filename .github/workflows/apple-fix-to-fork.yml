@@ -7,6 +7,10 @@ on:
 
 jobs:
   apply-fix:
+    strategy:
+      matrix:
+        go-version: [ 'stable' ]
+    name: gci-lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout PR code
@@ -18,6 +22,10 @@ jobs:
         run: |
           echo "Base repository: ${{ github.event.pull_request.base.repo.full_name }}"
           echo "Head repository: ${{ github.event.pull_request.head.repo.full_name }}"
+      - name: Setup Golang ${{ matrix.go-version }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}          
       - name: Install gci
         run: go install github.com/daixiang0/gci@latest
       - name: Run gci
