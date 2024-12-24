@@ -7,14 +7,14 @@
 name: GolangCI-Lint
 on:
   push:
-    branches:
-      - master
-      - develop
-      - personal/**
-      - feature/**
-      - enhance/**
-      - fix/**
-      - feat/**
+#    branches:
+#      - master
+#      - develop
+#      - personal/**
+#      - feature/**
+#      - enhance/**
+#      - fix/**
+#      - feat/**
   pull_request:
     branches:
       - master
@@ -69,9 +69,9 @@ jobs:
         if: github.event_name == 'push'|| (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true)
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
-          echo "HAS_CHANGES=true" >> $GITHUB_ENV
+            echo "HAS_CHANGES=true" >> $GITHUB_ENV
           else
-          echo "HAS_CHANGES=false" >> $GITHUB_ENV
+            echo "HAS_CHANGES=false" >> $GITHUB_ENV
           fi
       - name: Commit and push changes
         if: env.HAS_CHANGES == 'true'
@@ -79,5 +79,5 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "Apply gci import order changes"
+          git commit -m "Apply gci import order changes [skip ci]"
           git push  origin HEAD:$(git rev-parse --abbrev-ref HEAD)
