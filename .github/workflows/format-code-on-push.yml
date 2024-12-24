@@ -1,4 +1,4 @@
-name: Apply format code on Push
+name: Format code on Push
 
 on:
   push:
@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         go-version: [ 'stable' ]
-    name: apply-format-code-by-gci
+    name: format-code-by-gci
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -64,3 +64,5 @@ jobs:
           else
             echo "No change to commit push"
           fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
