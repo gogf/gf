@@ -4,6 +4,39 @@ on:
   push:
 
 jobs:
+  format-code-golangci-lint:
+    permissions:
+      checks: write
+      contents: read
+      pull-requests: write
+    name: runner / golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: reviewdog/action-golangci-lint@v2
+        with:
+          github_token: ${{ secrets.github_token }}
+          golangci_lint_flags: "--timeout 3m  --config=.golangci.yml -v"
+          level: "warning"
+          reporter: github-pr-check
+  format-code-staticcheck:
+    permissions:
+      checks: write
+      contents: read
+      pull-requests: write
+    name: runner / staticcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+      - uses: reviewdog/action-staticcheck@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review
+          filter_mode: nofilter
+          fail_on_error: true         
   apply-format-code:
     strategy:
       matrix:
@@ -16,7 +49,20 @@ jobs:
       - name: Setup Golang ${{ matrix.go-version }}
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go-version }}          
+          go-version: ${{ matrix.go-version }}
+      - name: golangci-lint
+        uses: reviewdog/action-golangci-lint@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+          github_token: ${{ secrets.github_token }}
+          golangci_lint_flags: "--timeout 2m --config=.golangci.yml -v"
+          level: "warning"
+      - name: golint-gci
+        uses: reviewdog/action-golangci-lint@v2
+        with:
+          golangci_lint_flags: "--disable-all -E gci"
+          tool_name: gci # Change reporter name.
+          level: warning          
       - name: Install gci
         run: go install github.com/daixiang0/gci@latest
       - name: Run gci
