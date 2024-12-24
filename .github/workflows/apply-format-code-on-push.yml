@@ -1,0 +1,66 @@
+name: Apply format code on Push
+
+on:
+  push:
+
+jobs:      
+  apply-format-code:
+    strategy:
+      matrix:
+        go-version: [ 'stable' ]
+    name: apply-format-code-by-gci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: golangci-lint
+        uses: reviewdog/action-golangci-lint@v2
+        with:
+          github_token: ${{ secrets.github_token }}
+          cache: false
+          golangci_lint_flags: "--timeout 2m --config=.golangci.yml -v"
+          level: "warning"
+      - name: Setup Golang ${{ matrix.go-version }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}          
+      - name: Install gci
+        run: go install github.com/daixiang0/gci@latest
+      - name: Run gci
+        run: |
+          gci write --custom-order \
+          --skip-generated \
+          --skip-vendor \
+          -s standard \
+          -s blank \
+          -s default \
+          -s dot \
+          -s "prefix(github.com/gogf/gf/v2)" \
+          -s "prefix(github.com/gogf/gf/cmd)" \
+          -s "prefix(github.com/gogf/gf/contrib)" \
+          -s "prefix(github.com/gogf/gf/example)" \
+          ./
+      - name: Check for changes
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "HAS_CHANGES=true" >> $GITHUB_ENV
+          else
+            echo "HAS_CHANGES=false" >> $GITHUB_ENV
+          fi         
+      - name: Configure Git
+        run: |
+          if [[ "$HAS_CHANGES" == 'true' ]]; then
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          else
+            echo "HAS_CHANGES= $HAS_CHANGES "
+          fi
+      - name: Commit and push changes
+        run: |
+          if [[ "$HAS_CHANGES" == 'true' ]]; then
+            git add .
+            git commit -m "Apply gci import order changes [skip ci]"
+            git push origin ${{ github.event.pull_request.head.ref }}
+          else
+            echo "No change to commit push"
+          fi
