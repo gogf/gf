@@ -88,7 +88,7 @@ func (s *Server) EnableAdmin(pattern ...string) {
 	s.BindObject(p, &utilAdmin{})
 }
 
-// Shutdown shuts down current server.
+// Shutdown shuts the current server.
 func (s *Server) Shutdown() error {
 	var ctx = context.TODO()
 	s.doServiceDeregister()
@@ -96,6 +96,17 @@ func (s *Server) Shutdown() error {
 	// It may have multiple underlying http servers.
 	for _, v := range s.servers {
 		v.Shutdown(ctx)
+	}
+	s.Logger().Infof(ctx, "pid[%d]: all servers shutdown", gproc.Pid())
+
+	// Remove plugins.
+	if len(s.plugins) > 0 {
+		for _, p := range s.plugins {
+			s.Logger().Printf(ctx, `remove plugin: %s`, p.Name())
+			if err := p.Remove(); err != nil {
+				s.Logger().Errorf(ctx, "%+v", err)
+			}
+		}
 	}
 	return nil
 }
