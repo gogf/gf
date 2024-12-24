@@ -1,0 +1,61 @@
+name: Apply Fix to Fork
+
+on:
+  pull_request_target:
+    types: [synchronize]
+
+jobs:
+  apply-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+      - name: Print repository information
+        run: |
+          echo "Base repository: ${{ github.event.pull_request.base.repo.full_name }}"
+          echo "Head repository: ${{ github.event.pull_request.head.repo.full_name }}"
+      - name: Install gci
+        run: go install github.com/daixiang0/gci@latest
+      - name: Run gci
+        run: |
+          gci write --custom-order \
+          --skip-generated \
+          --skip-vendor \
+          -s standard \
+          -s blank \
+          -s default \
+          -s dot \
+          -s "prefix(github.com/gogf/gf/v2)" \
+          -s "prefix(github.com/gogf/gf/cmd)" \
+          -s "prefix(github.com/gogf/gf/contrib)" \
+          -s "prefix(github.com/gogf/gf/example)" \
+          ./
+      - name: Check for changes
+        # Check if the event is a push or a pull request from a forked repository
+        if: github.event_name == 'push'|| (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.fork == true)
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "HAS_CHANGES=true" >> $GITHUB_ENV
+          else
+            echo "HAS_CHANGES=false" >> $GITHUB_ENV
+          fi
+      - name: Output all environment variables
+        run: |
+            env          
+      - name: Configure Git
+        run: |
+          if [[ "$HAS_CHANGES" == 'true' ]]; then
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          else
+            echo "HAS_CHANGES= $HAS_CHANGES "
+          fi
+      - name: Commit and push changes
+        if: env.HAS_CHANGES == 'true'
+        run: |
+          git add .
+          git commit -m "Apply fixes via pull_request_target"
+          git push origin ${{ github.event.pull_request.head.ref }}
