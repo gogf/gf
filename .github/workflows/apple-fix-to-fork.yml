@@ -66,5 +66,5 @@ jobs:
         if: env.HAS_CHANGES == 'true'
         run: |
           git add .
-          git commit -m "Apply fixes via pull_request_target"
+          git commit -m "Apply gci import order changes [skip ci]"
           git push origin ${{ github.event.pull_request.head.ref }}
