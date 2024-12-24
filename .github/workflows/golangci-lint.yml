@@ -47,36 +47,3 @@ jobs:
           only-new-issues: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
           args: --timeout 3m0s
-      - name: Install gci
-        run: go install github.com/daixiang0/gci@latest
-      - name: Run gci
-        run: |
-          gci write --custom-order \
-          --skip-generated \
-          --skip-vendor \
-          -s standard \
-          -s blank \
-          -s default \
-          -s dot \
-          -s "prefix(github.com/gogf/gf/v2)" \
-          -s "prefix(github.com/gogf/gf/cmd)" \
-          -s "prefix(github.com/gogf/gf/contrib)" \
-          -s "prefix(github.com/gogf/gf/example)" \
-          ./
-      - name: Check for changes
-        # Check if the event is a push or a pull request from a forked repository
-        if: github.event_name == 'push'|| (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true)
-        run: |
-          if [[ -n "$(git status --porcelain)" ]]; then
-          echo "HAS_CHANGES=true" >> $GITHUB_ENV
-          else
-          echo "HAS_CHANGES=false" >> $GITHUB_ENV
-          fi
-      - name: Commit and push changes
-        if: env.HAS_CHANGES == 'true'
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "Apply gci import order changes"
-          git push  origin HEAD:$(git rev-parse --abbrev-ref HEAD)

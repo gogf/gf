@@ -1,27 +1,25 @@
-name: Apply Fix to Fork
+name: Apply format code on Push
 
 on:
   push:
-  pull_request_target:
-    types: [synchronize]
 
-jobs:
-  apply-fix:
+jobs:      
+  apply-format-code:
     strategy:
       matrix:
         go-version: [ 'stable' ]
-    name: gci-lint
+    name: apply-format-code-by-gci
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout PR code
+      - name: Checkout code
         uses: actions/checkout@v4
+      - name: golangci-lint
+        uses: reviewdog/action-golangci-lint@v2
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-      - name: Print repository information
-        run: |
-          echo "Base repository: ${{ github.event.pull_request.base.repo.full_name }}"
-          echo "Head repository: ${{ github.event.pull_request.head.repo.full_name }}"
+          github_token: ${{ secrets.github_token }}
+          cache: false
+          golangci_lint_flags: "--timeout 2m --config=.golangci.yml -v"
+          level: "warning"
       - name: Setup Golang ${{ matrix.go-version }}
         uses: actions/setup-go@v5
         with:
@@ -43,17 +41,12 @@ jobs:
           -s "prefix(github.com/gogf/gf/example)" \
           ./
       - name: Check for changes
-        # Check if the event is a push or a pull request from a forked repository
-        if: github.event_name == 'push'|| (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.fork == true)
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
             echo "HAS_CHANGES=true" >> $GITHUB_ENV
           else
             echo "HAS_CHANGES=false" >> $GITHUB_ENV
-          fi
-      - name: Output all environment variables
-        run: |
-            env          
+          fi         
       - name: Configure Git
         run: |
           if [[ "$HAS_CHANGES" == 'true' ]]; then
@@ -63,8 +56,11 @@ jobs:
             echo "HAS_CHANGES= $HAS_CHANGES "
           fi
       - name: Commit and push changes
-        if: env.HAS_CHANGES == 'true'
         run: |
-          git add .
-          git commit -m "Apply fixes via pull_request_target"
-          git push origin ${{ github.event.pull_request.head.ref }}
+          if [[ "$HAS_CHANGES" == 'true' ]]; then
+            git add .
+            git commit -m "Apply gci import order changes [skip ci]"
+            git push origin ${{ github.event.pull_request.head.ref }}
+          else
+            echo "No change to commit push"
+          fi
