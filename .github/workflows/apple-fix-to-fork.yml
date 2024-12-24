@@ -1,6 +1,7 @@
 name: Apply Fix to Fork
 
 on:
+  push:
   pull_request_target:
     types: [synchronize]
 
