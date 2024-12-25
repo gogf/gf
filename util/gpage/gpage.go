@@ -210,20 +210,24 @@ func (p *Page) GetContent(mode int) string {
 // The UrlTemplate attribute can be a URL or URI string containing the "{.page}" placeholder,
 // which will be replaced by the actual page number.
 func (p *Page) GetUrl(page int) string {
-	return gstr.Replace(p.UrlTemplate, DefaultPagePlaceHolder, gconv.String(page))
+	return html.EscapeString(gstr.Replace(p.UrlTemplate, DefaultPagePlaceHolder, gconv.String(page)))
 }
 
 // GetLink returns the HTML link tag `a` content for given page number.
 func (p *Page) GetLink(page int, text, title string) string {
+	var (
+		escapedTitle = html.EscapeString(title)
+		escapedText  = html.EscapeString(text)
+	)
 	if len(p.AjaxActionName) > 0 {
 		return fmt.Sprintf(
 			`<a class="%s" href="javascript:%s('%s')" title="%s">%s</a>`,
-			p.LinkStyle, p.AjaxActionName, p.GetUrl(page), html.EscapeString(title), text,
+			p.LinkStyle, p.AjaxActionName, p.GetUrl(page), escapedTitle, escapedText,
 		)
 	} else {
 		return fmt.Sprintf(
 			`<a class="%s" href="%s" title="%s">%s</a>`,
-			p.LinkStyle, p.GetUrl(page), html.EscapeString(title), text,
+			p.LinkStyle, p.GetUrl(page), escapedTitle, escapedText,
 		)
 	}
 }
