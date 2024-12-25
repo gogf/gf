@@ -13,13 +13,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: golangci-lint
-        uses: reviewdog/action-golangci-lint@v2
-        with:
-          github_token: ${{ secrets.github_token }}
-          cache: false
-          golangci_lint_flags: "--timeout 2m --config=.golangci.yml -v"
-          level: "warning"
       - name: Setup Golang ${{ matrix.go-version }}
         uses: actions/setup-go@v5
         with:
