@@ -91,14 +91,6 @@ func (s *Server) EnableAdmin(pattern ...string) {
 // Shutdown shuts the current server.
 func (s *Server) Shutdown() error {
 	var ctx = context.TODO()
-	s.doServiceDeregister()
-	// Only shut down current servers.
-	// It may have multiple underlying http servers.
-	for _, v := range s.servers {
-		v.Shutdown(ctx)
-	}
-	s.Logger().Infof(ctx, "pid[%d]: all servers shutdown", gproc.Pid())
-
 	// Remove plugins.
 	if len(s.plugins) > 0 {
 		for _, p := range s.plugins {
@@ -108,5 +100,13 @@ func (s *Server) Shutdown() error {
 			}
 		}
 	}
+
+	s.doServiceDeregister()
+	// Only shut down current servers.
+	// It may have multiple underlying http servers.
+	for _, v := range s.servers {
+		v.Shutdown(ctx)
+	}
+	s.Logger().Infof(ctx, "pid[%d]: all servers shutdown", gproc.Pid())
 	return nil
 }
