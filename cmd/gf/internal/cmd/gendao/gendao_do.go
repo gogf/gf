@@ -12,8 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 
@@ -78,16 +78,23 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 func generateDoContent(
 	ctx context.Context, in CGenDaoInternalInput, tableName, tableNameCamelCase, structDefine string,
 ) string {
-	doContent := gstr.ReplaceByMap(
-		getTemplateFromPathOrDefault(in.TplDaoDoPath, consts.TemplateGenDaoDoContent),
-		g.MapStrStr{
-			tplVarTableName:          tableName,
-			tplVarPackageImports:     getImportPartContent(ctx, structDefine, true, nil),
-			tplVarTableNameCamelCase: tableNameCamelCase,
-			tplVarStructDefine:       structDefine,
-			tplVarPackageName:        filepath.Base(in.DoPath),
-		},
+	var (
+		tplContent = getTemplateFromPathOrDefault(
+			in.TplDaoDoPath, consts.TemplateGenDaoDoContent,
+		)
 	)
-	doContent = replaceDefaultVar(in, doContent)
+	tplView.ClearAssigns()
+	tplView.Assigns(gview.Params{
+		tplVarTableName:          tableName,
+		tplVarPackageImports:     getImportPartContent(ctx, structDefine, true, nil),
+		tplVarTableNameCamelCase: tableNameCamelCase,
+		tplVarStructDefine:       structDefine,
+		tplVarPackageName:        filepath.Base(in.DoPath),
+	})
+	assignDefaultVar(tplView, in)
+	doContent, err := tplView.ParseContent(ctx, tplContent)
+	if err != nil {
+		mlog.Fatalf("parsing template content failed: %v", err)
+	}
 	return doContent
 }

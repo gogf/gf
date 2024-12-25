@@ -83,6 +83,11 @@ jobs:
           - 3306:3306
 
       # MariaDb backend server.
+      # docker run -d --name mariadb \
+      # -p 3307:3306 \
+      # -e MYSQL_DATABASE=test \
+      # -e MYSQL_ROOT_PASSWORD=12345678 \
+      # mariadb:10.4
       mariadb:
         image: mariadb:10.4
         env:

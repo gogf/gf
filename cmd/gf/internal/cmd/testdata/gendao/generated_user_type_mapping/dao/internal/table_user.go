@@ -13,9 +13,10 @@ import (
 
 // TableUserDao is the data access object for the table table_user.
 type TableUserDao struct {
-	table   string           // table is the underlying table name of the DAO.
-	group   string           // group is the database configuration group name of the current DAO.
-	columns TableUserColumns // columns contains all the column names of Table for convenient usage.
+	table    string             // table is the underlying table name of the DAO.
+	group    string             // group is the database configuration group name of the current DAO.
+	columns  TableUserColumns   // columns contains all the column names of Table for convenient usage.
+	handlers []gdb.ModelHandler // handlers for customized model modification.
 }
 
 // TableUserColumns defines and stores column names for the table table_user.
@@ -41,11 +42,12 @@ var tableUserColumns = TableUserColumns{
 }
 
 // NewTableUserDao creates and returns a new DAO object for table data access.
-func NewTableUserDao() *TableUserDao {
+func NewTableUserDao(handlers ...gdb.ModelHandler) *TableUserDao {
 	return &TableUserDao{
-		group:   "test",
-		table:   "table_user",
-		columns: tableUserColumns,
+		group:    "test",
+		table:    "table_user",
+		columns:  tableUserColumns,
+		handlers: handlers,
 	}
 }
 
@@ -71,7 +73,11 @@ func (dao *TableUserDao) Group() string {
 
 // Ctx creates and returns a Model for the current DAO. It automatically sets the context for the current operation.
 func (dao *TableUserDao) Ctx(ctx context.Context) *gdb.Model {
-	return dao.DB().Model(dao.table).Safe().Ctx(ctx)
+	model := dao.DB().Model(dao.table).Safe().Ctx(ctx)
+	for _, handler := range dao.handlers {
+		model = handler(model)
+	}
+	return model
 }
 
 // Transaction wraps the transaction logic using function f.
