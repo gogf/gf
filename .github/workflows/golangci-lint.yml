@@ -4,7 +4,7 @@
 # If a copy of the MIT was not distributed with this file,
 # You can obtain one at https://github.com/gogf/gf.
 
-name: GolangCI-Lint
+name: GolangCI Lint
 on:
   push:
     branches:
@@ -30,7 +30,7 @@ jobs:
     strategy:
       matrix:
         go-version: [ 'stable' ]
-    name: golangci-lint
+    name: golang-ci-lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

@@ -1,10 +1,10 @@
-name: Format code on Push
+name: Format Code on Push
 
 on:
   push
 
-jobs:      
-  apply-format-code:
+jobs:
+  format-code:
     strategy:
       matrix:
         go-version: [ 'stable' ]
