@@ -1,7 +1,7 @@
 name: Format code on Push
 
 on:
-  push:
+  push
 
 jobs:      
   apply-format-code:
@@ -23,7 +23,7 @@ jobs:
       - name: Setup Golang ${{ matrix.go-version }}
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go-version }}          
+          go-version: ${{ matrix.go-version }}
       - name: Install gci
         run: go install github.com/daixiang0/gci@latest
       - name: Run gci
@@ -59,7 +59,7 @@ jobs:
         run: |
           if [[ "$HAS_CHANGES" == 'true' ]]; then
             git add .
-            git commit -m "Apply gci import order changes [skip ci]"
+            git commit -m "Apply gci import order changes"
             git push origin ${{ github.event.pull_request.head.ref }}
           else
             echo "No change to commit push"
