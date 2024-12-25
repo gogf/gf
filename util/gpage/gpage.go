@@ -164,7 +164,7 @@ func (p *Page) GetContent(mode int) string {
 		p.FirstPageTag = "首页"
 		p.LastPageTag = "尾页"
 		return fmt.Sprintf(
-			`%s%s<span class="current">[第%d页]</span>%s%s第%s页`,
+			`%s%s<span class="current">[第 %d 页]</span>%s%s第%s页`,
 			p.FirstPage(),
 			p.PrevPage(),
 			p.CurrentPage,
@@ -184,7 +184,7 @@ func (p *Page) GetContent(mode int) string {
 		pageStr += p.NextPage()
 		pageStr += p.LastPage()
 		pageStr += fmt.Sprintf(
-			`<span>当前页%d/%d</span> <span>共%d条</span>`,
+			`<span>当前页 %d/%d</span> <span>共 %d 条</span>`,
 			p.CurrentPage,
 			p.TotalPage,
 			p.TotalSize,

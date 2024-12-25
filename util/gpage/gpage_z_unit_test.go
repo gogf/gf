@@ -34,9 +34,9 @@ func Test_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		page := gpage.New(9, 2, 1, `/user/list?page={.page}`)
 		t.Assert(page.NextPage(), `<a class="GPageLink" href="/user/list?page=2" title="">&gt;</a>`)
-		t.Assert(page.PrevPage(), `<span class="GPageSpan">&lt;</span>`)
+		t.Assert(page.PrevPage(), `<span class="GPageSpan"><</span>`)
 		t.Assert(page.FirstPage(), `<span class="GPageSpan">|<</span>`)
-		t.Assert(page.LastPage(), `<a class="GPageLink" href="/user/list?page=5" title="">>|</a>`)
+		t.Assert(page.LastPage(), `<a class="GPageLink" href="/user/list?page=5" title="">&gt;|</a>`)
 		t.Assert(page.PageBar(), `<span class="GPageSpan">1</span><a class="GPageLink" href="/user/list?page=2" title="2">2</a><a class="GPageLink" href="/user/list?page=3" title="3">3</a><a class="GPageLink" href="/user/list?page=4" title="4">4</a><a class="GPageLink" href="/user/list?page=5" title="5">5</a>`)
 	})
 
@@ -44,16 +44,16 @@ func Test_Basic(t *testing.T) {
 		page := gpage.New(9, 2, 3, `/user/list?page={.page}`)
 		t.Assert(page.NextPage(), `<a class="GPageLink" href="/user/list?page=4" title="">&gt;</a>`)
 		t.Assert(page.PrevPage(), `<a class="GPageLink" href="/user/list?page=2" title="">&lt;</a>`)
-		t.Assert(page.FirstPage(), `<a class="GPageLink" href="/user/list?page=1" title="">|<</a>`)
-		t.Assert(page.LastPage(), `<a class="GPageLink" href="/user/list?page=5" title="">>|</a>`)
+		t.Assert(page.FirstPage(), `<a class="GPageLink" href="/user/list?page=1" title="">|&lt;</a>`)
+		t.Assert(page.LastPage(), `<a class="GPageLink" href="/user/list?page=5" title="">&gt;|</a>`)
 		t.Assert(page.PageBar(), `<a class="GPageLink" href="/user/list?page=1" title="1">1</a><a class="GPageLink" href="/user/list?page=2" title="2">2</a><span class="GPageSpan">3</span><a class="GPageLink" href="/user/list?page=4" title="4">4</a><a class="GPageLink" href="/user/list?page=5" title="5">5</a>`)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
 		page := gpage.New(9, 2, 5, `/user/list?page={.page}`)
-		t.Assert(page.NextPage(), `<span class="GPageSpan">&gt;</span>`)
+		t.Assert(page.NextPage(), `<span class="GPageSpan">></span>`)
 		t.Assert(page.PrevPage(), `<a class="GPageLink" href="/user/list?page=4" title="">&lt;</a>`)
-		t.Assert(page.FirstPage(), `<a class="GPageLink" href="/user/list?page=1" title="">|<</a>`)
+		t.Assert(page.FirstPage(), `<a class="GPageLink" href="/user/list?page=1" title="">|&lt;</a>`)
 		t.Assert(page.LastPage(), `<span class="GPageSpan">>|</span>`)
 		t.Assert(page.PageBar(), `<a class="GPageLink" href="/user/list?page=1" title="1">1</a><a class="GPageLink" href="/user/list?page=2" title="2">2</a><a class="GPageLink" href="/user/list?page=3" title="3">3</a><a class="GPageLink" href="/user/list?page=4" title="4">4</a><span class="GPageSpan">5</span>`)
 	})
@@ -68,10 +68,10 @@ func Test_CustomTag(t *testing.T) {
 		page.LastPageTag = "》|"
 		page.PrevBarTag = "《《"
 		page.NextBarTag = "》》"
-		t.Assert(page.NextPage(), `<a class="GPageLink" href="/user/list/3" title="">"</a>`)
-		t.Assert(page.PrevPage(), `<a class="GPageLink" href="/user/list/1" title="">"</a>`)
-		t.Assert(page.FirstPage(), `<a class="GPageLink" href="/user/list/1" title="">|"</a>`)
-		t.Assert(page.LastPage(), `<a class="GPageLink" href="/user/list/5" title="">"|</a>`)
+		t.Assert(page.NextPage(), `<a class="GPageLink" href="/user/list/3" title="">》</a>`)
+		t.Assert(page.PrevPage(), `<a class="GPageLink" href="/user/list/1" title="">《</a>`)
+		t.Assert(page.FirstPage(), `<a class="GPageLink" href="/user/list/1" title="">|《</a>`)
+		t.Assert(page.LastPage(), `<a class="GPageLink" href="/user/list/5" title="">》|</a>`)
 		t.Assert(page.PageBar(), `<a class="GPageLink" href="/user/list/1" title="1">1</a><span class="GPageSpan">2</span><a class="GPageLink" href="/user/list/3" title="3">3</a><a class="GPageLink" href="/user/list/4" title="4">4</a><a class="GPageLink" href="/user/list/5" title="5">5</a>`)
 	})
 }
@@ -84,8 +84,8 @@ func Test_CustomStyle(t *testing.T) {
 		page.SelectStyle = "MyPageSelect"
 		t.Assert(page.NextPage(), `<a class="MyPageLink" href="/user/list/3" title="">&gt;</a>`)
 		t.Assert(page.PrevPage(), `<a class="MyPageLink" href="/user/list/1" title="">&lt;</a>`)
-		t.Assert(page.FirstPage(), `<a class="MyPageLink" href="/user/list/1" title="">|<</a>`)
-		t.Assert(page.LastPage(), `<a class="MyPageLink" href="/user/list/5" title="">>|</a>`)
+		t.Assert(page.FirstPage(), `<a class="MyPageLink" href="/user/list/1" title="">|&lt;</a>`)
+		t.Assert(page.LastPage(), `<a class="MyPageLink" href="/user/list/5" title="">&gt;|</a>`)
 		t.Assert(page.PageBar(), `<a class="MyPageLink" href="/user/list/1" title="1">1</a><span class="MyPageSpan">2</span><a class="MyPageLink" href="/user/list/3" title="3">3</a><a class="MyPageLink" href="/user/list/4" title="4">4</a><a class="MyPageLink" href="/user/list/5" title="5">5</a>`)
 		t.Assert(page.SelectBar(), `<select name="MyPageSelect" onchange="window.location.href=this.value"><option value="/user/list/1">1</option><option value="/user/list/2" selected>2</option><option value="/user/list/3">3</option><option value="/user/list/4">4</option><option value="/user/list/5">5</option></select>`)
 	})
@@ -97,8 +97,8 @@ func Test_Ajax(t *testing.T) {
 		page.AjaxActionName = "LoadPage"
 		t.Assert(page.NextPage(), `<a class="GPageLink" href="javascript:LoadPage('/user/list/3')" title="">&gt;</a>`)
 		t.Assert(page.PrevPage(), `<a class="GPageLink" href="javascript:LoadPage('/user/list/1')" title="">&lt;</a>`)
-		t.Assert(page.FirstPage(), `<a class="GPageLink" href="javascript:LoadPage('/user/list/1')" title="">|<</a>`)
-		t.Assert(page.LastPage(), `<a class="GPageLink" href="javascript:LoadPage('/user/list/5')" title="">>|</a>`)
+		t.Assert(page.FirstPage(), `<a class="GPageLink" href="javascript:LoadPage('/user/list/1')" title="">|&lt;</a>`)
+		t.Assert(page.LastPage(), `<a class="GPageLink" href="javascript:LoadPage('/user/list/5')" title="">&gt;|</a>`)
 		t.Assert(page.PageBar(), `<a class="GPageLink" href="javascript:LoadPage('/user/list/1')" title="1">1</a><span class="GPageSpan">2</span><a class="GPageLink" href="javascript:LoadPage('/user/list/3')" title="3">3</a><a class="GPageLink" href="javascript:LoadPage('/user/list/4')" title="4">4</a><a class="GPageLink" href="javascript:LoadPage('/user/list/5')" title="5">5</a>`)
 	})
 }
