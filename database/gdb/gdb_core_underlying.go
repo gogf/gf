@@ -388,6 +388,22 @@ func (c *Core) FormatUpsert(columns []string, list List, option DoInsertOption) 
 					c.QuoteWord(k),
 					v,
 				)
+			case Counter, *Counter:
+				var counter Counter
+				switch value := v.(type) {
+				case Counter:
+					counter = value
+				case *Counter:
+					counter = *value
+				}
+				operator, columnVal := c.getCounterAlter(counter)
+				onDuplicateStr += fmt.Sprintf(
+					"%s=%s%s%s",
+					c.QuoteWord(k),
+					c.QuoteWord(counter.Field),
+					operator,
+					gconv.String(columnVal),
+				)
 			default:
 				onDuplicateStr += fmt.Sprintf(
 					"%s=VALUES(%s)",
