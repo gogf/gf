@@ -1,0 +1,61 @@
+name: Format Code on Push
+
+on:
+  push
+
+jobs:
+  format-code:
+    strategy:
+      matrix:
+        go-version: [ 'stable' ]
+    name: format-code-by-gci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Golang ${{ matrix.go-version }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Install gci
+        run: go install github.com/daixiang0/gci@latest
+      - name: Run gci
+        run: |
+          gci write --custom-order \
+          --skip-generated \
+          --skip-vendor \
+          -s standard \
+          -s blank \
+          -s default \
+          -s dot \
+          -s "prefix(github.com/gogf/gf/v2)" \
+          -s "prefix(github.com/gogf/gf/cmd)" \
+          -s "prefix(github.com/gogf/gf/contrib)" \
+          -s "prefix(github.com/gogf/gf/example)" \
+          ./
+      - name: Check for changes
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "HAS_CHANGES=true" >> $GITHUB_ENV
+          else
+            echo "HAS_CHANGES=false" >> $GITHUB_ENV
+          fi         
+      - name: Configure Git
+        run: |
+          if [[ "$HAS_CHANGES" == 'true' ]]; then
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          else
+            echo "HAS_CHANGES= $HAS_CHANGES "
+          fi
+      - name: Commit and push changes
+        run: |
+          if [[ "$HAS_CHANGES" == 'true' ]]; then
+            git add .
+            git commit -m "Apply gci import order changes"
+            git push origin ${{ github.event.pull_request.head.ref }}
+          else
+            echo "No change to commit push"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

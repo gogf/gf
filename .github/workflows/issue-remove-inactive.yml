@@ -1,4 +1,4 @@
-# 规则描述：在 issue 没有活跃且尚未被关闭期间，若 issue 作者更新或评论该 ISSUE，则移除其 inactive 标签
+# Rule description: If an issue author updates or comments on an issue while it is not active and has not been closed, the inactive tag will be removed
 name: Issue Remove Inactive
 
 on:
@@ -7,8 +7,8 @@ on:
   issue_comment:
     types: [created, edited]
 
-env: # 设置环境变量
-  TZ: Asia/Shanghai #时区（设置时区可使页面中的`最近更新时间`使用时区时间）
+env: # Set environment variables
+  TZ: Asia/Shanghai #Time zone (setting the time zone allows the 'Last Updated' on the page to use the time zone)
 
 permissions:
   contents: read
