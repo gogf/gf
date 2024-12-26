@@ -8,6 +8,7 @@ package otelmetric
 
 import (
 	"go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/exemplar"
 	"go.opentelemetry.io/otel/sdk/resource"
 )
 
@@ -38,6 +39,7 @@ type providerConfig struct {
 	viewOption            metric.Option
 	readerOption          metric.Option
 	resourceOption        metric.Option
+	exemplarFilter        metric.Option
 	enabledBuiltInMetrics bool
 }
 
@@ -57,6 +59,9 @@ func (cfg providerConfig) MetricOptions() []metric.Option {
 	}
 	if cfg.resourceOption != nil {
 		metricOptions = append(metricOptions, cfg.resourceOption)
+	}
+	if cfg.exemplarFilter != nil {
+		metricOptions = append(metricOptions, cfg.exemplarFilter)
 	}
 	return metricOptions
 }
@@ -103,6 +108,22 @@ func WithReader(reader metric.Reader) Option {
 func WithView(views ...metric.View) Option {
 	return optionFunc(func(cfg providerConfig) providerConfig {
 		cfg.viewOption = metric.WithView(views...)
+		return cfg
+	})
+}
+
+// WithExemplarFilter configures the exemplar filter.
+//
+// The exemplar filter determines which measurements are offered to the
+// exemplar reservoir, but the exemplar reservoir makes the final decision of
+// whether to store an exemplar.
+//
+// By default, the [exemplar.SampledFilter]
+// is used. Exemplars can be entirely disabled by providing the
+// [exemplar.AlwaysOffFilter].
+func WithExemplarFilter(filter exemplar.Filter) Option {
+	return optionFunc(func(cfg providerConfig) providerConfig {
+		cfg.exemplarFilter = metric.WithExemplarFilter(filter)
 		return cfg
 	})
 }
