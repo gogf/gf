@@ -120,8 +120,9 @@ var uintTests = []struct {
 
 func TestUint(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		for _, test := range uintTests {
-			t.AssertEQ(gconv.Uint(test.value), test.expect)
+		for _, v := range uintTests {
+			//t.Logf(`%+v`, v)
+			t.AssertEQ(gconv.Uint(v.value), v.expect)
 		}
 	})
 }
