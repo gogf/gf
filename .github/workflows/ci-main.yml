@@ -87,9 +87,9 @@ jobs:
       # -p 3307:3306 \
       # -e MYSQL_DATABASE=test \
       # -e MYSQL_ROOT_PASSWORD=12345678 \
-      # mariadb:10.4
+      # mariadb:11.4
       mariadb:
-        image: mariadb:10.4
+        image: mariadb:11.4
         env:
           MARIADB_DATABASE: test
           MARIADB_ROOT_PASSWORD: 12345678
