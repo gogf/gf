@@ -223,6 +223,11 @@ func (view *View) Assign(key string, value interface{}) {
 	view.data[key] = value
 }
 
+// ClearAssigns trunk all global template variables assignments.
+func (view *View) ClearAssigns() {
+	view.data = make(map[string]interface{})
+}
+
 // SetDefaultFile sets default template file for parsing.
 func (view *View) SetDefaultFile(file string) {
 	view.config.DefaultFile = file

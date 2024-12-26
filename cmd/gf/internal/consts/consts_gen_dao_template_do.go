@@ -8,13 +8,13 @@ package consts
 
 const TemplateGenDaoDoContent = `
 // =================================================================================
-// Code generated and maintained by GoFrame CLI tool. DO NOT EDIT. {TplCreatedAtDatetimeStr}
+// Code generated and maintained by GoFrame CLI tool. DO NOT EDIT. {{.TplCreatedAtDatetimeStr}}
 // =================================================================================
 
-package {TplPackageName}
+package {{.TplPackageName}}
 
-{TplPackageImports}
+{{.TplPackageImports}}
 
-// {TplTableNameCamelCase} is the golang structure of table {TplTableName} for DAO operations like Where/Data.
-{TplStructDefine}
+// {{.TplTableNameCamelCase}} is the golang structure of table {{.TplTableName}} for DAO operations like Where/Data.
+{{.TplStructDefine}}
 `
