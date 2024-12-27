@@ -378,6 +378,9 @@ func newArgumentsFromInput(object interface{}) (args []Argument, err error) {
 		if arg.Brief == "" {
 			arg.Brief = field.TagDescription()
 		}
+		if arg.Default == "" {
+			arg.Default = field.TagDefault()
+		}
 		if v, ok := metaData[gtag.Arg]; ok {
 			arg.IsArg = gconv.Bool(v)
 		}
