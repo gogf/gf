@@ -375,7 +375,7 @@ func Test_Model_Save(t *testing.T) {
 			"nickname":    "oldme",
 			"create_time": CreateTime,
 		}).OnConflict("id").Save()
-		t.Assert(err, ErrorSave)
+		t.AssertNil(err)
 	})
 }
 
@@ -4359,5 +4359,27 @@ func TestResult_Structs1(t *testing.T) {
 		t.Assert(array[1].Id, 0)
 		t.Assert(array[0].Name, "john")
 		t.Assert(array[1].Name, "smith")
+	})
+}
+
+func Test_Model_OnDuplicateWithCounter(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnConflict("id").OnDuplicate(g.Map{
+			"id": gdb.Counter{Field: "id", Value: 999999},
+		}).Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.AssertNil(one)
 	})
 }

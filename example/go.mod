@@ -3,23 +3,23 @@ module github.com/gogf/gf/example
 go 1.22
 
 require (
-	github.com/gogf/gf/contrib/config/apollo/v2 v2.8.2
-	github.com/gogf/gf/contrib/config/consul/v2 v2.8.2
-	github.com/gogf/gf/contrib/config/kubecm/v2 v2.8.2
-	github.com/gogf/gf/contrib/config/nacos/v2 v2.8.2
-	github.com/gogf/gf/contrib/config/polaris/v2 v2.8.2
-	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.8.2
-	github.com/gogf/gf/contrib/metric/otelmetric/v2 v2.8.2
-	github.com/gogf/gf/contrib/nosql/redis/v2 v2.8.2
-	github.com/gogf/gf/contrib/registry/consul/v2 v2.8.2
-	github.com/gogf/gf/contrib/registry/etcd/v2 v2.8.2
-	github.com/gogf/gf/contrib/registry/file/v2 v2.8.2
-	github.com/gogf/gf/contrib/registry/nacos/v2 v2.8.2
-	github.com/gogf/gf/contrib/registry/polaris/v2 v2.8.2
-	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.8.2
-	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.8.2
-	github.com/gogf/gf/contrib/trace/otlphttp/v2 v2.8.2
-	github.com/gogf/gf/v2 v2.8.2
+	github.com/gogf/gf/contrib/config/apollo/v2 v2.8.3
+	github.com/gogf/gf/contrib/config/consul/v2 v2.8.3
+	github.com/gogf/gf/contrib/config/kubecm/v2 v2.8.3
+	github.com/gogf/gf/contrib/config/nacos/v2 v2.8.3
+	github.com/gogf/gf/contrib/config/polaris/v2 v2.8.3
+	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.8.3
+	github.com/gogf/gf/contrib/metric/otelmetric/v2 v2.8.3
+	github.com/gogf/gf/contrib/nosql/redis/v2 v2.8.3
+	github.com/gogf/gf/contrib/registry/consul/v2 v2.8.3
+	github.com/gogf/gf/contrib/registry/etcd/v2 v2.8.3
+	github.com/gogf/gf/contrib/registry/file/v2 v2.8.3
+	github.com/gogf/gf/contrib/registry/nacos/v2 v2.8.3
+	github.com/gogf/gf/contrib/registry/polaris/v2 v2.8.3
+	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.8.3
+	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.8.3
+	github.com/gogf/gf/contrib/trace/otlphttp/v2 v2.8.3
+	github.com/gogf/gf/v2 v2.8.3
 	github.com/hashicorp/consul/api v1.26.1
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/nacos-group/nacos-sdk-go/v2 v2.2.7
@@ -135,9 +135,9 @@ require (
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/crypto v0.30.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
-	golang.org/x/net v0.32.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect

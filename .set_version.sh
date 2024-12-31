@@ -43,6 +43,12 @@ for file in `find ${workdir} -name go.mod`; do
     goModPath=$(dirname $file)
     echo ""
     echo "processing dir: $goModPath"
+
+    if [[ $goModPath =~ "/testdata/" ]]; then
+        echo "ignore testdata path $goModPath"
+        continue 1
+    fi
+
     cd $goModPath
     if [ $goModPath = "./cmd/gf" ]; then
         mv go.work go.work.version.bak

@@ -18,17 +18,36 @@ import (
 )
 
 var (
+<<<<<<< HEAD
 	orderBySqlTmp        = `SELECT %s %s OFFSET %d ROWS FETCH NEXT %d ROWS ONLY`
 	withoutOrderBySqlTmp = `SELECT %s OFFSET %d ROWS FETCH NEXT %d ROWS ONLY`
 	orderBySqlTmpFor2008 = `
 SELECT * FROM (SELECT ROW_NUMBER() OVER (%s) as ROW_NUMBER__, %s ) as TMP_ 
 WHERE TMP_.ROW_NUMBER__ > %d AND TMP_.ROW_NUMBER__ <= %d
 `
+=======
+	selectWithOrderSqlTmp = `
+SELECT * FROM (
+    SELECT ROW_NUMBER() OVER (ORDER BY %s) as ROW_NUMBER__, %s 
+    FROM (%s) as InnerQuery
+) as TMP_ 
+WHERE TMP_.ROW_NUMBER__ > %d AND TMP_.ROW_NUMBER__ <= %d`
+	selectWithoutOrderSqlTmp = `
+SELECT * FROM (
+    SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) as ROW_NUMBER__, %s 
+    FROM (%s) as InnerQuery
+) as TMP_ 
+WHERE TMP_.ROW_NUMBER__ > %d AND TMP_.ROW_NUMBER__ <= %d`
+>>>>>>> 80f57d1c24f6a7d8fadb11a3271a4d3f26e8d826
 )
 
 func init() {
 	var err error
 	orderBySqlTmpFor2008, err = gdb.FormatMultiLineSqlToSingle(orderBySqlTmpFor2008)
+	if err != nil {
+		panic(err)
+	}
+	selectWithoutOrderSqlTmp, err = gdb.FormatMultiLineSqlToSingle(selectWithoutOrderSqlTmp)
 	if err != nil {
 		panic(err)
 	}
@@ -98,14 +117,19 @@ func (d *Driver) handleSelectSqlReplacement(toBeCommittedSql string) (newSql str
 		return "", err
 	}
 
-	// SELECT and ORDER BY
+	// Extract SELECT part
 	selectStr := strings.TrimSpace(allMatch[1])
+
+	// Extract ORDER BY part
 	orderStr := ""
 	if len(allMatch[2]) > 0 {
 		orderStr = strings.TrimSpace(allMatch[2])
+		// Remove "ORDER BY" prefix as it will be used in OVER clause
+		orderStr = strings.TrimPrefix(orderStr, "ORDER BY")
+		orderStr = strings.TrimSpace(orderStr)
 	}
 
-	// LIMIT and OFFSET value
+	// Calculate LIMIT and OFFSET values
 	first, _ := strconv.Atoi(allMatch[3]) // LIMIT first parameter
 	limit := 0
 	if len(allMatch) > 4 && allMatch[4] != "" {
@@ -115,7 +139,9 @@ func (d *Driver) handleSelectSqlReplacement(toBeCommittedSql string) (newSql str
 		first = 0
 	}
 
+	// Build the final query
 	if orderStr != "" {
+<<<<<<< HEAD
 		// have ORDER BY clause
 		if strings.HasPrefix(version, "Microsoft SQL Server 2008") {
 			newSql = fmt.Sprintf(
@@ -128,13 +154,26 @@ func (d *Driver) handleSelectSqlReplacement(toBeCommittedSql string) (newSql str
 				selectStr, orderStr, first, limit,
 			)
 		}
-	} else {
-		// without ORDER BY clause
+=======
+		// Have ORDER BY clause
 		newSql = fmt.Sprintf(
-			withoutOrderBySqlTmp,
-			selectStr, first, limit,
+			selectWithOrderSqlTmp,
+			orderStr,                            // ORDER BY clause for ROW_NUMBER
+			"*",                                 // Select all columns
+			fmt.Sprintf("SELECT %s", selectStr), // Original SELECT
+			first,                               // OFFSET
+			first+limit,                         // OFFSET + LIMIT
+		)
+>>>>>>> 80f57d1c24f6a7d8fadb11a3271a4d3f26e8d826
+	} else {
+		// Without ORDER BY clause
+		newSql = fmt.Sprintf(
+			selectWithoutOrderSqlTmp,
+			"*",                                 // Select all columns
+			fmt.Sprintf("SELECT %s", selectStr), // Original SELECT
+			first,                               // OFFSET
+			first+limit,                         // OFFSET + LIMIT
 		)
 	}
-
 	return newSql, nil
 }

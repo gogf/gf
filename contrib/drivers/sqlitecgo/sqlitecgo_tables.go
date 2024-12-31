@@ -12,6 +12,10 @@ import (
 	"github.com/gogf/gf/v2/database/gdb"
 )
 
+const (
+	tablesSqlTmp = `SELECT NAME FROM SQLITE_MASTER WHERE TYPE='table' ORDER BY NAME`
+)
+
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
 func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
@@ -21,11 +25,7 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 		return nil, err
 	}
 
-	result, err = d.DoSelect(
-		ctx,
-		link,
-		`SELECT NAME FROM SQLITE_MASTER WHERE TYPE='table' ORDER BY NAME`,
-	)
+	result, err = d.DoSelect(ctx, link, tablesSqlTmp)
 	if err != nil {
 		return
 	}

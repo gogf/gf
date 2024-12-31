@@ -25,14 +25,9 @@ var (
 )
 
 const (
-	TableSize        = 10
-	TableName        = "t_user"
-	TestSchema1      = "test1"
-	TestSchema2      = "test2"
-	TableNamePrefix1 = "gf_"
-	TestDbUser       = "sa"
-	TestDbPass       = "LoremIpsum86"
-	CreateTime       = "2018-10-24 10:00:00"
+	TableSize  = 10
+	TestDbUser = "sa"
+	TestDbPass = "LoremIpsum86"
 )
 
 func init() {
@@ -41,7 +36,7 @@ func init() {
 		Port:             "1433",
 		User:             TestDbUser,
 		Pass:             TestDbPass,
-		Name:             "test",
+		Name:             "master",
 		Type:             "mssql",
 		Role:             "master",
 		Charset:          "utf8",
@@ -52,7 +47,7 @@ func init() {
 
 	nodeLink := gdb.ConfigNode{
 		Type: "mssql",
-		Name: "test",
+		Name: "master",
 		Link: fmt.Sprintf(
 			"mssql:%s:%s@tcp(%s:%s)/%s?encrypt=disable",
 			node.User, node.Pass, node.Host, node.Port, node.Name,

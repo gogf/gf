@@ -51,7 +51,6 @@ func Test_Page(t *testing.T) {
 		t.AssertNil(err)
 		gtest.Assert(len(result), 3)
 	})
-
 }
 
 func Test_Model_Insert(t *testing.T) {
