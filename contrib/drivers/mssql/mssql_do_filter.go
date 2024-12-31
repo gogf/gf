@@ -18,14 +18,6 @@ import (
 )
 
 var (
-<<<<<<< HEAD
-	orderBySqlTmp        = `SELECT %s %s OFFSET %d ROWS FETCH NEXT %d ROWS ONLY`
-	withoutOrderBySqlTmp = `SELECT %s OFFSET %d ROWS FETCH NEXT %d ROWS ONLY`
-	orderBySqlTmpFor2008 = `
-SELECT * FROM (SELECT ROW_NUMBER() OVER (%s) as ROW_NUMBER__, %s ) as TMP_ 
-WHERE TMP_.ROW_NUMBER__ > %d AND TMP_.ROW_NUMBER__ <= %d
-`
-=======
 	selectWithOrderSqlTmp = `
 SELECT * FROM (
     SELECT ROW_NUMBER() OVER (ORDER BY %s) as ROW_NUMBER__, %s 
@@ -38,12 +30,11 @@ SELECT * FROM (
     FROM (%s) as InnerQuery
 ) as TMP_ 
 WHERE TMP_.ROW_NUMBER__ > %d AND TMP_.ROW_NUMBER__ <= %d`
->>>>>>> 80f57d1c24f6a7d8fadb11a3271a4d3f26e8d826
 )
 
 func init() {
 	var err error
-	orderBySqlTmpFor2008, err = gdb.FormatMultiLineSqlToSingle(orderBySqlTmpFor2008)
+	selectWithOrderSqlTmp, err = gdb.FormatMultiLineSqlToSingle(selectWithOrderSqlTmp)
 	if err != nil {
 		panic(err)
 	}
@@ -141,20 +132,6 @@ func (d *Driver) handleSelectSqlReplacement(toBeCommittedSql string) (newSql str
 
 	// Build the final query
 	if orderStr != "" {
-<<<<<<< HEAD
-		// have ORDER BY clause
-		if strings.HasPrefix(version, "Microsoft SQL Server 2008") {
-			newSql = fmt.Sprintf(
-				orderBySqlTmpFor2008,
-				orderStr, selectStr, first, first+limit,
-			)
-		} else {
-			newSql = fmt.Sprintf(
-				orderBySqlTmp,
-				selectStr, orderStr, first, limit,
-			)
-		}
-=======
 		// Have ORDER BY clause
 		newSql = fmt.Sprintf(
 			selectWithOrderSqlTmp,
@@ -164,7 +141,6 @@ func (d *Driver) handleSelectSqlReplacement(toBeCommittedSql string) (newSql str
 			first,                               // OFFSET
 			first+limit,                         // OFFSET + LIMIT
 		)
->>>>>>> 80f57d1c24f6a7d8fadb11a3271a4d3f26e8d826
 	} else {
 		// Without ORDER BY clause
 		newSql = fmt.Sprintf(
