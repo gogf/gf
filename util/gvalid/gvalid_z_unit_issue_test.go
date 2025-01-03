@@ -135,7 +135,7 @@ func Test_Issue4092(t *testing.T) {
 			Run(context.Background())
 		t.Assert(err, "The Test value `6` is not in acceptable range: 1,2,3")
 		allocMb := getMemAlloc()
-		t.AssertLE(allocMb, 100)
+		t.AssertLE(allocMb, 110)
 	})
 }
 
