@@ -7,11 +7,12 @@
 package utils
 
 import (
-	"github.com/schollz/progressbar/v3"
 	"io"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/schollz/progressbar/v3"
 
 	"github.com/gogf/gf/v2/errors/gerror"
 
