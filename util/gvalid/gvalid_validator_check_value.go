@@ -287,21 +287,21 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 		}
 
 	case reflect.Slice, reflect.Array:
-		loopValid := false
+		loop := false
 		switch in.Type.Elem().Kind() {
 		// []struct []map
 		case reflect.Struct, reflect.Map:
-			loopValid = true
+			loop = true
 		case reflect.Ptr:
 			// []*struct
 			// []*int
-			loopValid = true
+			loop = true
 		}
 		// When it is a base type array,
 		// there is no need for recursive loop validation,
 		// otherwise it will cause memory leakage
 		// https://github.com/gogf/gf/issues/4092
-		if loopValid {
+		if loop {
 			var array []interface{}
 			if gjson.Valid(in.Value) {
 				array = gconv.Interfaces(gconv.Bytes(in.Value))
