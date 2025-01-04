@@ -28,18 +28,29 @@ concurrency:
 
 env:
   TZ: "Asia/Shanghai"
-
+  # for unit testing cases of some components that only execute on the latest go version.
+  LATEST_GO_VERSION: "1.23"
 
 jobs:
   code-test:
+    strategy:
+      matrix:
+        # 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+        # When adding new go version to the list, make sure:
+        # 1. Update the `LATEST_GO_VERSION` env variable.
+        # 2. Update the `Report Coverage` action.
+        # 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+        go-version: [ "1.20", "1.21", "1.22", "1.23" ]
+        goarch: [ "386", "amd64" ]
+
     runs-on: ubuntu-20.04
 
     # Service containers to run with `code-test`
     services:
       # Etcd service.
-      # docker run -d --name etcd -p 2379:2379 -e ALLOW_NONE_AUTHENTICATION=yes loads/etcd:3.4.24
+      # docker run -d --name etcd -p 2379:2379 -e ALLOW_NONE_AUTHENTICATION=yes bitnami/etcd:3.4.24
       etcd:
-        image: loads/etcd:3.4.24
+        image: bitnami/etcd:3.4.24
         env:
           ALLOW_NONE_AUTHENTICATION: yes
         ports:
@@ -47,7 +58,7 @@ jobs:
 
       # Redis backend server.
       redis:
-        image  : loads/redis:7.0
+        image  : redis:7.0
         options: >-
           --health-cmd      "redis-cli ping"
           --health-interval 10s
@@ -62,9 +73,9 @@ jobs:
       # -p 3306:3306 \
       # -e MYSQL_DATABASE=test \
       # -e MYSQL_ROOT_PASSWORD=12345678 \
-      # loads/mysql:5.7
+      # mysql:5.7
       mysql:
-        image: loads/mysql:5.7
+        image: mysql:5.7
         env:
           MYSQL_DATABASE     : test
           MYSQL_ROOT_PASSWORD: 12345678
@@ -73,7 +84,7 @@ jobs:
 
       # MariaDb backend server.
       mariadb:
-        image: loads/mariadb:10.4
+        image: mariadb:10.4
         env:
           MARIADB_DATABASE: test
           MARIADB_ROOT_PASSWORD: 12345678
@@ -87,9 +98,9 @@ jobs:
       # -e POSTGRES_USER=postgres \
       # -e POSTGRES_DB=test \
       # -v postgres:/Users/john/Temp/postgresql/data \
-      # loads/postgres:13
+      # postgres:17-alpine
       postgres:
-        image: loads/postgres:13
+        image: postgres:17-alpine
         env:
           POSTGRES_PASSWORD: 12345678
           POSTGRES_USER:     postgres
@@ -109,22 +120,19 @@ jobs:
       # -p 1433:1433 \
       # -e ACCEPT_EULA=Y \
       # -e SA_PASSWORD=LoremIpsum86 \
-      # -e MSSQL_DB=test \
       # -e MSSQL_USER=root \
       # -e MSSQL_PASSWORD=LoremIpsum86 \
-      # loads/mssqldocker:14.0.3391.2
+      # mcr.microsoft.com/mssql/server:2022-latest
       mssql:
-        image: loads/mssqldocker:14.0.3391.2
+        image: mcr.microsoft.com/mssql/server:2022-latest
         env:
-          ACCEPT_EULA:    Y
-          SA_PASSWORD:    LoremIpsum86
-          MSSQL_DB:       test
-          MSSQL_USER:     root
-          MSSQL_PASSWORD: LoremIpsum86
+          TZ: Asia/Shanghai
+          ACCEPT_EULA: Y
+          MSSQL_SA_PASSWORD: LoremIpsum86
         ports:
           - 1433:1433
         options: >-
-          --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P LoremIpsum86 -l 30 -Q \"SELECT 1\" || exit 1"
+          --health-cmd="/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P ${MSSQL_SA_PASSWORD} -N -C -l 30 -Q \"SELECT 1\" || exit 1"
           --health-start-period 10s
           --health-interval 10s
           --health-timeout 5s
@@ -184,14 +192,9 @@ jobs:
           - 5236:5236
 
       zookeeper:
-        image: loads/zookeeper:3.8
+        image: zookeeper:3.8
         ports:
           - 2181:2181
-
-    strategy:
-      matrix:
-        go-version: [ "1.20", "1.21", "1.22", "1.23" ]
-        goarch: [ "386", "amd64" ]
 
     steps:
     # TODO: szenius/set-timezone update to node16
@@ -259,7 +262,8 @@ jobs:
 
     - name: Report Coverage
       uses: codecov/codecov-action@v4
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+      # Only report coverage on the latest go version and amd64 arch
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == '1.23' && matrix.goarch == 'amd64' }}
       with:
         flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
         token: ${{ secrets.CODECOV_TOKEN }}

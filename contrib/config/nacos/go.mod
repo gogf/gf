@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/config/nacos/v2
 go 1.20
 
 require (
-	github.com/gogf/gf/v2 v2.8.2
+	github.com/gogf/gf/v2 v2.8.3
 	github.com/nacos-group/nacos-sdk-go/v2 v2.2.5
 )
 
@@ -52,8 +52,8 @@ require (
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
-	golang.org/x/crypto v0.30.0 // indirect
-	golang.org/x/net v0.32.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
