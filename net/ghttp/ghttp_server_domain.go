@@ -24,6 +24,9 @@ func (s *Server) Domain(domains string) *Domain {
 		domains: make(map[string]struct{}),
 	}
 	for _, v := range strings.Split(domains, ",") {
+		if v == "" {
+			continue
+		}
 		d.domains[strings.TrimSpace(v)] = struct{}{}
 	}
 	return d
