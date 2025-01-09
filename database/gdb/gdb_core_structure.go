@@ -236,9 +236,9 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ i
 		typePattern = gstr.Trim(match[2])
 	} else {
 		var array = gstr.SplitAndTrim(fieldType, " ")
-		if gstr.Equal(array[0], "unsigned") {
+		if len(array) > 1 && gstr.Equal(array[0], "unsigned") {
 			typeName = array[1]
-		} else {
+		} else if len(array) > 0 {
 			typeName = array[0]
 		}
 	}
