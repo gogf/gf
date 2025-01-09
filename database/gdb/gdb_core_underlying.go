@@ -17,7 +17,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gogf/gf/v2"
-	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
@@ -459,11 +458,19 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 				// which will cause struct converting issue.
 				record[columnTypes[i].Name()] = nil
 			} else {
-				var convertedValue interface{}
-				if convertedValue, err = c.columnValueToLocalValue(ctx, value, columnTypes[i]); err != nil {
+				var (
+					convertedValue interface{}
+					columnType     = columnTypes[i]
+					localType      = LocalTypeUndefined
+				)
+				if convertedValue, err = c.columnValueToLocalValue(ctx, value, columnType); err != nil {
 					return nil, err
 				}
-				record[columnTypes[i].Name()] = gvar.New(convertedValue)
+				localType, err = c.getLocalTypeForFieldWithCache(ctx, columnType.DatabaseTypeName(), convertedValue)
+				if err != nil {
+					return nil, err
+				}
+				record[columnTypes[i].Name()] = NewValueWithType(convertedValue, localType)
 			}
 		}
 		result = append(result, record)
@@ -474,12 +481,30 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 	return result, nil
 }
 
+func (c *Core) getLocalTypeForFieldWithCache(
+	ctx context.Context, fieldType string, fieldValue any,
+) (localType LocalType, err error) {
+	v := c.localTypeMap.GetOrSetFuncLock(fieldType, func() any {
+		localType, err = c.db.CheckLocalTypeForField(ctx, fieldType, fieldValue)
+		if err != nil {
+			return nil
+		}
+		return localType
+	})
+	if err != nil {
+		return LocalTypeUndefined, err
+	}
+	return v.(LocalType), nil
+}
+
 // OrderRandomFunction returns the SQL function for random ordering.
 func (c *Core) OrderRandomFunction() string {
 	return "RAND()"
 }
 
-func (c *Core) columnValueToLocalValue(ctx context.Context, value interface{}, columnType *sql.ColumnType) (interface{}, error) {
+func (c *Core) columnValueToLocalValue(
+	ctx context.Context, value interface{}, columnType *sql.ColumnType,
+) (interface{}, error) {
 	var scanType = columnType.ScanType()
 	if scanType != nil {
 		// Common basic builtin types.

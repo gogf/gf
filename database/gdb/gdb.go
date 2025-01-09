@@ -17,7 +17,8 @@ import (
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/database/gdb/internal/defines"
+	"github.com/gogf/gf/v2/database/gdb/internal/fieldvar"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gcache"
@@ -516,8 +517,9 @@ type Core struct {
 	links         *gmap.Map       // links caches all created links by node.
 	logger        glog.ILogger    // Logger for logging functionality.
 	config        *ConfigNode     // Current config node.
+	localTypeMap  *gmap.StrAnyMap // Local type map for database field type conversion.
 	dynamicConfig dynamicConfig   // Dynamic configurations, which can be changed in runtime.
-	innerMemCache *gcache.Cache
+	innerMemCache *gcache.Cache   // Internal memory cache for storing temporary data.
 }
 
 type dynamicConfig struct {
@@ -667,7 +669,7 @@ type (
 	Raw string
 
 	// Value is the field value type.
-	Value = *gvar.Var
+	Value = *fieldvar.Var
 
 	// Record is the row record of the table.
 	Record map[string]Value
@@ -768,30 +770,30 @@ const (
 	SqlTypeStmtQueryRowContext SqlType = "DB.Statement.QueryRowContext"
 )
 
-type LocalType string
+type LocalType = defines.LocalType
 
 const (
-	LocalTypeUndefined   LocalType = ""
-	LocalTypeString      LocalType = "string"
-	LocalTypeTime        LocalType = "time"
-	LocalTypeDate        LocalType = "date"
-	LocalTypeDatetime    LocalType = "datetime"
-	LocalTypeInt         LocalType = "int"
-	LocalTypeUint        LocalType = "uint"
-	LocalTypeInt64       LocalType = "int64"
-	LocalTypeUint64      LocalType = "uint64"
-	LocalTypeIntSlice    LocalType = "[]int"
-	LocalTypeInt64Slice  LocalType = "[]int64"
-	LocalTypeUint64Slice LocalType = "[]uint64"
-	LocalTypeStringSlice LocalType = "[]string"
-	LocalTypeInt64Bytes  LocalType = "int64-bytes"
-	LocalTypeUint64Bytes LocalType = "uint64-bytes"
-	LocalTypeFloat32     LocalType = "float32"
-	LocalTypeFloat64     LocalType = "float64"
-	LocalTypeBytes       LocalType = "[]byte"
-	LocalTypeBool        LocalType = "bool"
-	LocalTypeJson        LocalType = "json"
-	LocalTypeJsonb       LocalType = "jsonb"
+	LocalTypeUndefined   = defines.LocalTypeUndefined
+	LocalTypeString      = defines.LocalTypeString
+	LocalTypeTime        = defines.LocalTypeTime
+	LocalTypeDate        = defines.LocalTypeDate
+	LocalTypeDatetime    = defines.LocalTypeDatetime
+	LocalTypeInt         = defines.LocalTypeInt
+	LocalTypeUint        = defines.LocalTypeUint
+	LocalTypeInt64       = defines.LocalTypeInt64
+	LocalTypeUint64      = defines.LocalTypeUint64
+	LocalTypeIntSlice    = defines.LocalTypeIntSlice
+	LocalTypeInt64Slice  = defines.LocalTypeInt64Slice
+	LocalTypeUint64Slice = defines.LocalTypeUint64Slice
+	LocalTypeStringSlice = defines.LocalTypeStringSlice
+	LocalTypeInt64Bytes  = defines.LocalTypeInt64Bytes
+	LocalTypeUint64Bytes = defines.LocalTypeUint64Bytes
+	LocalTypeFloat32     = defines.LocalTypeFloat32
+	LocalTypeFloat64     = defines.LocalTypeFloat64
+	LocalTypeBytes       = defines.LocalTypeBytes
+	LocalTypeBool        = defines.LocalTypeBool
+	LocalTypeJson        = defines.LocalTypeJson
+	LocalTypeJsonb       = defines.LocalTypeJsonb
 )
 
 const (
@@ -925,6 +927,7 @@ func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 		links:         gmap.New(true),
 		logger:        glog.New(),
 		config:        node,
+		localTypeMap:  gmap.NewStrAnyMap(true),
 		innerMemCache: gcache.New(),
 		dynamicConfig: dynamicConfig{
 			MaxIdleConnCount: node.MaxIdleConnCount,
