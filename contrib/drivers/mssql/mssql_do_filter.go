@@ -88,6 +88,10 @@ func (d *Driver) parseSql(toBeCommittedSql string) (string, error) {
 }
 
 func (d *Driver) handleSelectSqlReplacement(toBeCommittedSql string) (newSql string, err error) {
+	toBeCommittedSql, err = gdb.FormatMultiLineSqlToSingle(toBeCommittedSql)
+	if err != nil {
+		return "", err
+	}
 	// SELECT * FROM USER WHERE ID=1 LIMIT 1
 	match, err := gregex.MatchString(`^SELECT(.+?)LIMIT\s+1$`, toBeCommittedSql)
 	if err != nil {

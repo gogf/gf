@@ -58,8 +58,10 @@ func TestDriver_handleSelectSqlReplacement(t *testing.T) {
 		d := &Driver{}
 
 		// LIMIT 1
-		inputSql := "SELECT * FROM User WHERE ID = 1 LIMIT 1"
-		expectedSql := "SELECT TOP 1 * FROM User WHERE ID = 1"
+		inputSql := `SELECT a,
+b
+FROM User WHERE ID = 1 LIMIT 1`
+		expectedSql := `SELECT TOP 1 a, b FROM User WHERE ID = 1`
 		resultSql, err := d.handleSelectSqlReplacement(inputSql)
 		t.AssertNil(err)
 		t.Assert(resultSql, expectedSql)
