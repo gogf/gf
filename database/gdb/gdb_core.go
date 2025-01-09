@@ -222,6 +222,9 @@ func (c *Core) GetScan(ctx context.Context, pointer interface{}, sql string, arg
 
 	case reflect.Struct:
 		return c.db.GetCore().doGetStruct(ctx, pointer, sql, args...)
+
+	default:
+
 	}
 	return gerror.NewCodef(
 		gcode.CodeInvalidParameter,
@@ -236,12 +239,12 @@ func (c *Core) GetScan(ctx context.Context, pointer interface{}, sql string, arg
 func (c *Core) GetValue(ctx context.Context, sql string, args ...interface{}) (Value, error) {
 	one, err := c.db.GetOne(ctx, sql, args...)
 	if err != nil {
-		return nil, err
+		return NewValue(nil), err
 	}
 	for _, v := range one {
 		return v, nil
 	}
-	return nil, nil
+	return NewValue(nil), nil
 }
 
 // GetCount queries and returns the count from database.

@@ -517,6 +517,7 @@ type Core struct {
 	links         *gmap.Map       // links caches all created links by node.
 	logger        glog.ILogger    // Logger for logging functionality.
 	config        *ConfigNode     // Current config node.
+	localTypeMap  *gmap.StrAnyMap // Local type map for database field type conversion.
 	dynamicConfig dynamicConfig   // Dynamic configurations, which can be changed in runtime.
 	innerMemCache *gcache.Cache   // Internal memory cache for storing temporary data.
 }
@@ -926,6 +927,7 @@ func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 		links:         gmap.New(true),
 		logger:        glog.New(),
 		config:        node,
+		localTypeMap:  gmap.NewStrAnyMap(true),
 		innerMemCache: gcache.New(),
 		dynamicConfig: dynamicConfig{
 			MaxIdleConnCount: node.MaxIdleConnCount,
