@@ -10,10 +10,10 @@ import "github.com/gogf/gf/v2/database/gdb/internal/fieldvar"
 
 // NewValue creates and returns a new Value object.
 func NewValue(value any) Value {
-    return fieldvar.New(value)
+	return fieldvar.New(value)
 }
 
 // NewValueWithType creates and returns a new Value object with specified local type.
 func NewValueWithType(value any, localType LocalType) Value {
-    return fieldvar.NewWithType(value, localType)
+	return fieldvar.NewWithType(value, localType)
 }
