@@ -466,7 +466,7 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 				if convertedValue, err = c.columnValueToLocalValue(ctx, value, columnType); err != nil {
 					return nil, err
 				}
-				localType, err = c.getLocalTypeForFieldWithCache(ctx, columnType.DatabaseTypeName())
+				localType, err = c.getLocalTypeForFieldWithCache(ctx, columnType.DatabaseTypeName(), convertedValue)
 				if err != nil {
 					return nil, err
 				}
@@ -481,9 +481,11 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 	return result, nil
 }
 
-func (c *Core) getLocalTypeForFieldWithCache(ctx context.Context, fieldType string) (localType LocalType, err error) {
-	v := c.localTypeMap.GetOrSetFuncLock(fieldType, func() interface{} {
-		localType, err = c.db.CheckLocalTypeForField(ctx, fieldType, nil)
+func (c *Core) getLocalTypeForFieldWithCache(
+	ctx context.Context, fieldType string, fieldValue any,
+) (localType LocalType, err error) {
+	v := c.localTypeMap.GetOrSetFuncLock(fieldType, func() any {
+		localType, err = c.db.CheckLocalTypeForField(ctx, fieldType, fieldValue)
 		if err != nil {
 			return nil
 		}
