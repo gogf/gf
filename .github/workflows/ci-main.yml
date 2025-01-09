@@ -29,7 +29,7 @@ concurrency:
 env:
   TZ: "Asia/Shanghai"
   # for unit testing cases of some components that only execute on the latest go version.
-  LATEST_GO_VERSION: "1.24"
+  LATEST_GO_VERSION: "1.23"
 
 jobs:
   code-test:
@@ -40,7 +40,7 @@ jobs:
         # 1. Update the `LATEST_GO_VERSION` env variable.
         # 2. Update the `Report Coverage` action.
         # 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        go-version: [ "1.22", "1.23", "1.24"]
+        go-version: [ "1.22", "1.23" ]
         goarch: [ "386", "amd64" ]
 
     runs-on: ubuntu-20.04
@@ -268,7 +268,7 @@ jobs:
     - name: Report Coverage
       uses: codecov/codecov-action@v4
       # Only report coverage on the latest go version and amd64 arch
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == '1.24' && matrix.goarch == 'amd64' }}
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == '1.23' && matrix.goarch == 'amd64' }}
       with:
         flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
         token: ${{ secrets.CODECOV_TOKEN }}
