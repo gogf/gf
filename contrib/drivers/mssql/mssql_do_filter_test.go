@@ -58,11 +58,18 @@ func TestDriver_handleSelectSqlReplacement(t *testing.T) {
 		d := &Driver{}
 
 		// LIMIT 1
-		inputSql := `SELECT a,
-b
-FROM User WHERE ID = 1 LIMIT 1`
-		expectedSql := `SELECT TOP 1 a, b FROM User WHERE ID = 1`
+		inputSql := `SELECT * FROM User WHERE ID = 1 LIMIT 1`
+		expectedSql := `SELECT TOP 1 * FROM User WHERE ID = 1`
 		resultSql, err := d.handleSelectSqlReplacement(inputSql)
+		t.AssertNil(err)
+		t.Assert(resultSql, expectedSql)
+
+		// MultiLine LIMIT 1
+		inputSql = `SELECT * 
+FROM User WHERE ID = 1 LIMIT 1`
+		expectedSql = `SELECT TOP 1 * 
+FROM User WHERE ID = 1`
+		resultSql, err = d.handleSelectSqlReplacement(inputSql)
 		t.AssertNil(err)
 		t.Assert(resultSql, expectedSql)
 
@@ -102,8 +109,10 @@ FROM User WHERE ID = 1 LIMIT 1`
 		t.Assert(resultSql, expectedSql)
 
 		// Complex query with ORDER BY and LIMIT
-		inputSql = "SELECT name, age FROM User WHERE age > 18 ORDER BY age ASC LIMIT 10, 5"
-		expectedSql = "SELECT * FROM ( SELECT ROW_NUMBER() OVER (ORDER BY age ASC) as ROW_NUMBER__, * FROM (SELECT name, age FROM User WHERE age > 18) as InnerQuery ) as TMP_ WHERE TMP_.ROW_NUMBER__ > 10 AND TMP_.ROW_NUMBER__ <= 15"
+		inputSql = `SELECT name,
+age FROM User WHERE age > 18 ORDER BY age ASC LIMIT 10, 5`
+		expectedSql = `SELECT * FROM ( SELECT ROW_NUMBER() OVER (ORDER BY age ASC) as ROW_NUMBER__, * FROM (SELECT name,
+age FROM User WHERE age > 18) as InnerQuery ) as TMP_ WHERE TMP_.ROW_NUMBER__ > 10 AND TMP_.ROW_NUMBER__ <= 15`
 		resultSql, err = d.handleSelectSqlReplacement(inputSql)
 		t.AssertNil(err)
 		t.Assert(resultSql, expectedSql)
@@ -125,6 +134,20 @@ FROM User WHERE ID = 1 LIMIT 1`
 		// Queries with complex ORDER BY and LIMIT
 		inputSql = "SELECT name, age FROM User WHERE age > 18 ORDER BY age DESC, name ASC LIMIT 20, 10"
 		expectedSql = "SELECT * FROM ( SELECT ROW_NUMBER() OVER (ORDER BY age DESC, name ASC) as ROW_NUMBER__, * FROM (SELECT name, age FROM User WHERE age > 18) as InnerQuery ) as TMP_ WHERE TMP_.ROW_NUMBER__ > 20 AND TMP_.ROW_NUMBER__ <= 30"
+		resultSql, err = d.handleSelectSqlReplacement(inputSql)
+		t.AssertNil(err)
+		t.Assert(resultSql, expectedSql)
+
+		// MultiLine Queries with comment and complex ORDER BY and LIMIT
+		inputSql = `SELECT name, -- 名称
+age -- 年龄
+FROM User WHERE age > 18 
+ORDER BY age DESC,
+name ASC LIMIT 20, 10`
+		expectedSql = `SELECT * FROM ( SELECT ROW_NUMBER() OVER (ORDER BY age DESC,
+name ASC) as ROW_NUMBER__, * FROM (SELECT name, -- 名称
+age -- 年龄
+FROM User WHERE age > 18) as InnerQuery ) as TMP_ WHERE TMP_.ROW_NUMBER__ > 20 AND TMP_.ROW_NUMBER__ <= 30`
 		resultSql, err = d.handleSelectSqlReplacement(inputSql)
 		t.AssertNil(err)
 		t.Assert(resultSql, expectedSql)

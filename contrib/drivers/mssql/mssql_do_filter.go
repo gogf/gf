@@ -88,12 +88,8 @@ func (d *Driver) parseSql(toBeCommittedSql string) (string, error) {
 }
 
 func (d *Driver) handleSelectSqlReplacement(toBeCommittedSql string) (newSql string, err error) {
-	toBeCommittedSql, err = gdb.FormatMultiLineSqlToSingle(toBeCommittedSql)
-	if err != nil {
-		return "", err
-	}
 	// SELECT * FROM USER WHERE ID=1 LIMIT 1
-	match, err := gregex.MatchString(`^SELECT(.+?)LIMIT\s+1$`, toBeCommittedSql)
+	match, err := gregex.MatchString(`^SELECT([\s\S]+?)LIMIT\s+1$`, toBeCommittedSql)
 	if err != nil {
 		return "", err
 	}
@@ -102,7 +98,7 @@ func (d *Driver) handleSelectSqlReplacement(toBeCommittedSql string) (newSql str
 	}
 
 	// SELECT * FROM USER WHERE AGE>18 ORDER BY ID DESC LIMIT 100, 200
-	pattern := `(?i)SELECT(.+?)(ORDER BY.+?)?\s*LIMIT\s*(\d+)(?:\s*,\s*(\d+))?`
+	pattern := `(?i)SELECT([\s\S]+?)(ORDER BY[\s\S]+?)?\s*LIMIT\s*(\d+)(?:\s*,\s*(\d+))?`
 	if !gregex.IsMatchString(pattern, toBeCommittedSql) {
 		return toBeCommittedSql, nil
 	}
