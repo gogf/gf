@@ -67,8 +67,6 @@ func init() {
 		UpdatedAt:        "updated_time",
 	}
 
-	gdb.SetTestEnvironment(true)
-
 	// todo
 	nodeLink := gdb.ConfigNode{
 		Type: TestDBType,

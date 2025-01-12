@@ -36,8 +36,6 @@ func init() {
 		Type:  "clickhouse",
 		Debug: false,
 	}
-
-	gdb.SetTestEnvironment(true)
 	var err error
 	db, err = gdb.New(node)
 	gtest.AssertNil(err)

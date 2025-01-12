@@ -80,8 +80,6 @@ func init() {
 		Weight:  1,
 	}
 
-	gdb.SetTestEnvironment(true)
-
 	gdb.AddConfigNode(gdb.DefaultGroupName, node)
 	if r, err := gdb.New(node); err != nil {
 		gtest.Fatal(err)
