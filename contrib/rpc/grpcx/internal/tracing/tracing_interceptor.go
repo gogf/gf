@@ -139,16 +139,15 @@ const (
 )
 
 func wrapClientStream(s grpc.ClientStream, desc *grpc.StreamDesc) *clientStream {
-	events := make(chan streamEvent)
-	eventsDone := make(chan struct{})
-	finished := make(chan error)
-
+	var (
+		events     = make(chan streamEvent)
+		eventsDone = make(chan struct{})
+		finished   = make(chan error)
+	)
 	go func() {
 		defer close(eventsDone)
-
 		// Both streams have to be closed
 		state := byte(0)
-
 		for event := range events {
 			switch event.Type {
 			case closeEvent:

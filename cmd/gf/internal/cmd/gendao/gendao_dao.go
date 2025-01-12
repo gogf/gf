@@ -58,8 +58,8 @@ func generateDaoSingle(ctx context.Context, in generateDaoSingleInput) {
 		mlog.Fatalf(`fetching tables fields failed for table "%s": %+v`, in.TableName, err)
 	}
 	var (
-		tableNameCamelCase      = gstr.CaseCamel(in.NewTableName)
-		tableNameCamelLowerCase = gstr.CaseCamelLower(in.NewTableName)
+		tableNameCamelCase      = formatFieldName(in.NewTableName, FieldNameCaseCamel)
+		tableNameCamelLowerCase = formatFieldName(in.NewTableName, FieldNameCaseCamelLower)
 		tableNameSnakeCase      = gstr.CaseSnake(in.NewTableName)
 		importPrefix            = in.ImportPrefix
 	)
@@ -116,13 +116,14 @@ func generateDaoIndex(in generateDaoIndexInput) {
 				tplVarTableName:               in.TableName,
 				tplVarTableNameCamelCase:      in.TableNameCamelCase,
 				tplVarTableNameCamelLowerCase: in.TableNameCamelLowerCase,
+				tplVarPackageName:             filepath.Base(in.DaoPath),
 			})
 		indexContent = replaceDefaultVar(in.CGenDaoInternalInput, indexContent)
 		if err := gfile.PutContents(path, strings.TrimSpace(indexContent)); err != nil {
 			mlog.Fatalf("writing content to '%s' failed: %v", path, err)
 		} else {
 			utils.GoFmt(path)
-			mlog.Print("generated:", path)
+			mlog.Print("generated:", gfile.RealPath(path))
 		}
 	}
 }
@@ -156,7 +157,7 @@ func generateDaoInternal(in generateDaoInternalInput) {
 		mlog.Fatalf("writing content to '%s' failed: %v", path, err)
 	} else {
 		utils.GoFmt(path)
-		mlog.Print("generated:", path)
+		mlog.Print("generated:", gfile.RealPath(path))
 	}
 }
 
@@ -178,7 +179,7 @@ func generateColumnNamesForDao(fieldMap map[string]*gdb.TableField, removeFieldP
 		}
 
 		array[index] = []string{
-			"            #" + gstr.CaseCamel(newFiledName) + ":",
+			"            #" + formatFieldName(newFiledName, FieldNameCaseCamel) + ":",
 			fmt.Sprintf(` #"%s",`, field.Name),
 		}
 	}
@@ -218,7 +219,7 @@ func generateColumnDefinitionForDao(fieldMap map[string]*gdb.TableField, removeF
 			newFiledName = gstr.TrimLeftStr(newFiledName, v, 1)
 		}
 		array[index] = []string{
-			"    #" + gstr.CaseCamel(newFiledName),
+			"    #" + formatFieldName(newFiledName, FieldNameCaseCamel),
 			" # " + "string",
 			" #" + fmt.Sprintf(`// %s`, comment),
 		}

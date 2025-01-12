@@ -26,6 +26,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/net/ghttp/internal/graceful"
 	"github.com/gogf/gf/v2/net/ghttp/internal/swaggerui"
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/net/gsvc"
@@ -97,7 +98,7 @@ func GetServer(name ...interface{}) *Server {
 		s := &Server{
 			instance:         serverName,
 			plugins:          make([]Plugin, 0),
-			servers:          make([]*gracefulServer, 0),
+			servers:          make([]*graceful.Server, 0),
 			closeChan:        make(chan struct{}, 10000),
 			serverCount:      gtype.NewInt(),
 			statusHandlerMap: make(map[string][]HandlerFunc),
@@ -247,7 +248,13 @@ func (s *Server) Start() error {
 
 	// If this is a child process, it then notifies its parent exit.
 	if gproc.IsChild() {
-		gtimer.SetTimeout(ctx, time.Duration(s.config.GracefulTimeout)*time.Second, func(ctx context.Context) {
+		var gracefulTimeout = time.Duration(s.config.GracefulTimeout) * time.Second
+		gtimer.SetTimeout(ctx, gracefulTimeout, func(ctx context.Context) {
+			intlog.Printf(
+				ctx,
+				`pid[%d]: notice parent server graceful shuttingdown, ppid: %d`,
+				gproc.Pid(), gproc.PPid(),
+			)
 			if err := gproc.Send(gproc.PPid(), []byte("exit"), adminGProcCommGroup); err != nil {
 				intlog.Errorf(ctx, `server error in process communication: %+v`, err)
 			}
@@ -338,7 +345,7 @@ func (s *Server) doRouterMapDump() {
 	}
 }
 
-// GetOpenApi returns the OpenApi specification management object of current server.
+// GetOpenApi returns the OpenApi specification management object of the current server.
 func (s *Server) GetOpenApi() *goai.OpenApiV3 {
 	return s.openapi
 }
@@ -445,7 +452,7 @@ func (s *Server) Run() {
 	// Signal handler in asynchronous way.
 	go handleProcessSignal()
 
-	// Blocking using channel for graceful restart.
+	// Blocking using the channel for graceful restart.
 	<-s.closeChan
 	// Remove plugins.
 	if len(s.plugins) > 0 {
@@ -529,9 +536,9 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			if fd > 0 {
 				s.servers = append(s.servers, s.newGracefulServer(itemFunc, fd))
 			} else {
-				s.servers = append(s.servers, s.newGracefulServer(itemFunc))
+				s.servers = append(s.servers, s.newGracefulServer(itemFunc, 0))
 			}
-			s.servers[len(s.servers)-1].isHttps = true
+			s.servers[len(s.servers)-1].SetIsHttps(true)
 		}
 	}
 	// HTTP
@@ -564,46 +571,48 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 		if fd > 0 {
 			s.servers = append(s.servers, s.newGracefulServer(itemFunc, fd))
 		} else {
-			s.servers = append(s.servers, s.newGracefulServer(itemFunc))
+			s.servers = append(s.servers, s.newGracefulServer(itemFunc, 0))
 		}
 	}
 	// Start listening asynchronously.
 	serverRunning.Add(1)
-	var wg = sync.WaitGroup{}
-	for _, v := range s.servers {
+	var wg = &sync.WaitGroup{}
+	for _, gs := range s.servers {
 		wg.Add(1)
-		go func(server *gracefulServer) {
-			s.serverCount.Add(1)
-			var err error
-			// Create listener.
-			if server.isHttps {
-				err = server.CreateListenerTLS(
-					s.config.HTTPSCertPath, s.config.HTTPSKeyPath, s.config.TLSConfig,
-				)
-			} else {
-				err = server.CreateListener()
-			}
-			if err != nil {
-				s.Logger().Fatalf(ctx, `%+v`, err)
-			}
-			wg.Done()
-			// Start listening and serving in blocking way.
-			err = server.Serve(ctx)
-			// The process exits if the server is closed with none closing error.
-			if err != nil && !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
-				s.Logger().Fatalf(ctx, `%+v`, err)
-			}
-			// If all the underlying servers' shutdown, the process exits.
-			if s.serverCount.Add(-1) < 1 {
-				s.closeChan <- struct{}{}
-				if serverRunning.Add(-1) < 1 {
-					serverMapping.Remove(s.instance)
-					allShutdownChan <- struct{}{}
-				}
-			}
-		}(v)
+		go s.startGracefulServer(ctx, wg, gs)
 	}
 	wg.Wait()
+}
+
+func (s *Server) startGracefulServer(ctx context.Context, wg *sync.WaitGroup, server *graceful.Server) {
+	s.serverCount.Add(1)
+	var err error
+	// Create listener.
+	if server.IsHttps() {
+		err = server.CreateListenerTLS(
+			s.config.HTTPSCertPath, s.config.HTTPSKeyPath, s.config.TLSConfig,
+		)
+	} else {
+		err = server.CreateListener()
+	}
+	if err != nil {
+		s.Logger().Fatalf(ctx, `%+v`, err)
+	}
+	wg.Done()
+	// Start listening and serving in blocking way.
+	err = server.Serve(ctx)
+	// The process exits if the server is closed with none closing error.
+	if err != nil && !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
+		s.Logger().Fatalf(ctx, `%+v`, err)
+	}
+	// If all the underlying servers' shutdown, the process exits.
+	if s.serverCount.Add(-1) < 1 {
+		s.closeChan <- struct{}{}
+		if serverRunning.Add(-1) < 1 {
+			serverMapping.Remove(s.instance)
+			allShutdownChan <- struct{}{}
+		}
+	}
 }
 
 // Status retrieves and returns the server status.
@@ -613,7 +622,7 @@ func (s *Server) Status() ServerStatus {
 	}
 	// If any underlying server is running, the server status is running.
 	for _, v := range s.servers {
-		if v.status.Val() == ServerStatusRunning {
+		if v.Status() == ServerStatusRunning {
 			return ServerStatusRunning
 		}
 	}
@@ -628,8 +637,8 @@ func (s *Server) getListenerFdMap() map[string]string {
 		"http":  "",
 	}
 	for _, v := range s.servers {
-		str := v.address + "#" + gconv.String(v.Fd()) + ","
-		if v.isHttps {
+		str := v.GetAddress() + "#" + gconv.String(v.Fd()) + ","
+		if v.IsHttps() {
 			if len(m["https"]) > 0 {
 				m["https"] += ","
 			}
@@ -644,13 +653,30 @@ func (s *Server) getListenerFdMap() map[string]string {
 	return m
 }
 
-// GetListenedPort retrieves and returns one port which is listened by current server.
+// GetListenedPort returns a port currently listened to by the server.
+// It prioritizes the HTTP port if both HTTP and HTTPS are enabled.
 func (s *Server) GetListenedPort() int {
-	ports := s.GetListenedPorts()
-	if len(ports) > 0 {
-		return ports[0]
+	for _, server := range s.servers {
+		if !server.IsHttps() {
+			return server.GetListenedPort()
+		}
 	}
-	return 0
+	for _, server := range s.servers {
+		if server.IsHttps() {
+			return server.GetListenedPort()
+		}
+	}
+	return -1
+}
+
+// GetListenedHTTPSPort retrieves and returns one port which is listened using TLS by current server.
+func (s *Server) GetListenedHTTPSPort() int {
+	for _, server := range s.servers {
+		if server.IsHttps() {
+			return server.GetListenedPort()
+		}
+	}
+	return -1
 }
 
 // GetListenedPorts retrieves and returns the ports which are listened by current server.

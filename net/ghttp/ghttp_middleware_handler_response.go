@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"mime"
 	"net/http"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -20,6 +21,17 @@ type DefaultHandlerResponse struct {
 	Data    interface{} `json:"data"    dc:"Result data for certain request according API definition"`
 }
 
+const (
+	contentTypeEventStream  = "text/event-stream"
+	contentTypeOctetStream  = "application/octet-stream"
+	contentTypeMixedReplace = "multipart/x-mixed-replace"
+)
+
+var (
+	// streamContentType is the content types for stream response.
+	streamContentType = []string{contentTypeEventStream, contentTypeOctetStream, contentTypeMixedReplace}
+)
+
 // MiddlewareHandlerResponse is the default middleware handling handler response object and its error.
 func MiddlewareHandlerResponse(r *Request) {
 	r.Middleware.Next()
@@ -27,6 +39,14 @@ func MiddlewareHandlerResponse(r *Request) {
 	// There's custom buffer content, it then exits current handler.
 	if r.Response.BufferLength() > 0 {
 		return
+	}
+
+	// It does not output common response content if it is stream response.
+	mediaType, _, _ := mime.ParseMediaType(r.Response.Header().Get("Content-Type"))
+	for _, ct := range streamContentType {
+		if mediaType == ct {
+			return
+		}
 	}
 
 	var (
@@ -51,7 +71,7 @@ func MiddlewareHandlerResponse(r *Request) {
 			default:
 				code = gcode.CodeUnknown
 			}
-			// It creates error as it can be retrieved by other middlewares.
+			// It creates an error as it can be retrieved by other middlewares.
 			err = gerror.NewCode(code, msg)
 			r.SetError(err)
 		} else {

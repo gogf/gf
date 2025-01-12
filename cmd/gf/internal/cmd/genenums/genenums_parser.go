@@ -9,6 +9,7 @@ package genenums
 import (
 	"go/constant"
 	"go/types"
+
 	"golang.org/x/tools/go/packages"
 
 	"github.com/gogf/gf/v2/encoding/gjson"

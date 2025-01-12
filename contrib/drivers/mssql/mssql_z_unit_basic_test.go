@@ -29,7 +29,7 @@ func TestTables(t *testing.T) {
 		}
 
 		result, err := db.Tables(context.Background())
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		for i := 0; i < len(tables); i++ {
 			find := false
@@ -42,8 +42,8 @@ func TestTables(t *testing.T) {
 			gtest.AssertEQ(find, true)
 		}
 
-		result, err = db.Tables(context.Background(), "test")
-		gtest.Assert(err, nil)
+		result, err = db.Tables(context.Background(), "master")
+		gtest.AssertNil(err)
 		for i := 0; i < len(tables); i++ {
 			find := false
 			for j := 0; j < len(result); j++ {
@@ -74,7 +74,7 @@ func TestTableFields(t *testing.T) {
 		}
 
 		res, err := db.TableFields(context.Background(), "t_user")
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		for k, v := range expect {
 			_, ok := res[k]
@@ -88,8 +88,8 @@ func TestTableFields(t *testing.T) {
 			gtest.AssertEQ(res[k].Comment, v[5])
 		}
 
-		res, err = db.TableFields(context.Background(), "t_user", "test")
-		gtest.Assert(err, nil)
+		res, err = db.TableFields(context.Background(), "t_user", "master")
+		gtest.AssertNil(err)
 
 		for k, v := range expect {
 			_, ok := res[k]
@@ -124,7 +124,7 @@ func TestDoInsert(t *testing.T) {
 			"create_time": gtime.Now(),
 		}
 		_, err := db.Insert(context.Background(), "t_user", data)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 	})
 
@@ -231,7 +231,6 @@ func Test_DB_Insert(t *testing.T) {
 
 		one, err := db.Model(table).Where("id", 3).One()
 		t.AssertNil(err)
-		fmt.Println(one)
 		t.Assert(one["ID"].Int(), 3)
 		t.Assert(one["PASSPORT"].String(), "user_3")
 		t.Assert(one["PASSWORD"].String(), "25d55ad283aa400af464c76d713c07ad")
@@ -794,7 +793,7 @@ func Test_DB_ToJson(t *testing.T) {
 		}
 
 		// ToJson
-		resultJson, err := gjson.LoadContent(result.Json())
+		resultJson, err := gjson.LoadContent([]byte(result.Json()))
 		if err != nil {
 			gtest.Fatal(err)
 		}

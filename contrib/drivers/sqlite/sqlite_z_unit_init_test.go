@@ -110,13 +110,9 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 	CREATE TABLE %s (
-		id          INTEGER       PRIMARY KEY AUTOINCREMENT
-									UNIQUE
-									NOT NULL,
-		passport    VARCHAR(45)  NOT NULL
-									DEFAULT passport,
-		password    VARCHAR(128) NOT NULL
-									DEFAULT password,
+		id          INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
+		passport    VARCHAR(45)  NOT NULL DEFAULT passport,
+		password    VARCHAR(128) NOT NULL DEFAULT password,
 		nickname    VARCHAR(45),
 		create_time DATETIME
 	);
@@ -124,7 +120,6 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 	)); err != nil {
 		gtest.Fatal(err)
 	}
-
 	return
 }
 

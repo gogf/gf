@@ -24,12 +24,6 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 			`Replace operation is not supported by pgsql driver`,
 		)
 
-	case gdb.InsertOptionIgnore:
-		return nil, gerror.NewCode(
-			gcode.CodeNotSupported,
-			`Insert ignore operation is not supported by pgsql driver`,
-		)
-
 	case gdb.InsertOptionDefault:
 		tableFields, err := d.GetCore().GetDB().TableFields(ctx, table)
 		if err == nil {

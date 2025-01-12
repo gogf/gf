@@ -108,11 +108,7 @@ func (s *GrpcServer) Run() {
 	}
 
 	// Start listening.
-	go func() {
-		if err = s.Server.Serve(s.listener); err != nil {
-			s.Logger().Fatalf(ctx, `%+v`, err)
-		}
-	}()
+	go s.doServeAsynchronously(ctx)
 
 	// Service register.
 	s.doServiceRegister()
@@ -122,6 +118,12 @@ func (s *GrpcServer) Run() {
 		gproc.Pid(), s.GetListenedAddress(),
 	)
 	s.doSignalListen()
+}
+
+func (s *GrpcServer) doServeAsynchronously(ctx context.Context) {
+	if err := s.Server.Serve(s.listener); err != nil {
+		s.Logger().Fatalf(ctx, `%+v`, err)
+	}
 }
 
 // doSignalListen does signal listening and handling for gracefully shutdown.
@@ -204,10 +206,12 @@ func (s *GrpcServer) doServiceDeregister() {
 // Start starts the server in no-blocking way.
 func (s *GrpcServer) Start() {
 	s.waitGroup.Add(1)
-	go func() {
-		defer s.waitGroup.Done()
-		s.Run()
-	}()
+	go s.doStartAsynchronously()
+}
+
+func (s *GrpcServer) doStartAsynchronously() {
+	defer s.waitGroup.Done()
+	s.Run()
 }
 
 // Wait works with Start, which blocks current goroutine until the server stops.
@@ -281,23 +285,23 @@ func (s *GrpcServer) calculateListenedEndpoints(ctx context.Context) gsvc.Endpoi
 				s.Logger().Errorf(ctx, `error retrieving intranet ip: %+v`, err)
 				return nil
 			}
-			// If no intranet ips found, it uses all ips that can be retrieved,
-			// it may include internet ip.
-			if len(intranetIps) == 0 {
-				allIps, err := gipv4.GetIpArray()
-				if err != nil {
-					s.Logger().Errorf(ctx, `error retrieving ip from current node: %+v`, err)
-					return nil
-				}
-				s.Logger().Noticef(
-					ctx,
-					`no intranet ip found, using internet ip to register service: %v`,
-					allIps,
-				)
-				listenedIps = allIps
+			if len(intranetIps) != 0 {
+				listenedIps = intranetIps
 				break
 			}
-			listenedIps = intranetIps
+			// If no intranet ips found, it uses all ips that can be retrieved,
+			// it may include internet ip.
+			allIps, err := gipv4.GetIpArray()
+			if err != nil {
+				s.Logger().Errorf(ctx, `error retrieving ip from current node: %+v`, err)
+				return nil
+			}
+			s.Logger().Noticef(
+				ctx,
+				`no intranet ip found, using internet ip to register service: %v`,
+				allIps,
+			)
+			listenedIps = allIps
 		default:
 			listenedIps = []string{addrArray[0]}
 		}

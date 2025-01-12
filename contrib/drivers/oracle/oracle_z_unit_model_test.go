@@ -132,27 +132,27 @@ func Test_Page(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	result, err := db.Model(table).Page(1, 2).Order("ID").All()
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 	fmt.Println("page:1--------", result)
 	gtest.Assert(len(result), 2)
 	gtest.Assert(result[0]["ID"], 1)
 	gtest.Assert(result[1]["ID"], 2)
 
 	result, err = db.Model(table).Page(2, 2).Order("ID").All()
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 	fmt.Println("page: 2--------", result)
 	gtest.Assert(len(result), 2)
 	gtest.Assert(result[0]["ID"], 3)
 	gtest.Assert(result[1]["ID"], 4)
 
 	result, err = db.Model(table).Page(3, 2).Order("ID").All()
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 	fmt.Println("page:3 --------", result)
 	gtest.Assert(len(result), 2)
 	gtest.Assert(result[0]["ID"], 5)
 
 	result, err = db.Model(table).Page(2, 3).All()
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 	gtest.Assert(len(result), 3)
 	gtest.Assert(result[0]["ID"], 4)
 	gtest.Assert(result[1]["ID"], 5)
@@ -458,6 +458,19 @@ func Test_Model_Count(t *testing.T) {
 		t.Assert(count, int64(TableSize))
 	})
 
+}
+
+func Test_Model_Exist(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		exist, err := db.Model(table).Exist()
+		t.AssertNil(err)
+		t.Assert(exist, TableSize > 0)
+		exist, err = db.Model(table).Where("id", -1).Exist()
+		t.AssertNil(err)
+		t.Assert(exist, false)
+	})
 }
 
 func Test_Model_Select(t *testing.T) {
@@ -1174,6 +1187,17 @@ func Test_Model_Replace(t *testing.T) {
 			"create_time": "2018-10-24 10:00:00",
 		}).Replace()
 		t.Assert(err, "Replace operation is not supported by oracle driver")
+	})
+}
+
+func Test_OrderRandom(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).OrderRandom().All()
+		t.AssertNil(err)
+		t.Assert(len(result), TableSize)
 	})
 }
 

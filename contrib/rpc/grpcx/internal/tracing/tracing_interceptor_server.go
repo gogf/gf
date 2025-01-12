@@ -19,11 +19,11 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/grpcctx"
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/utils"
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/util/gconv"
+
+	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/grpcctx"
 )
 
 // UnaryServerInterceptor returns a grpc.UnaryServerInterceptor suitable
@@ -58,24 +58,9 @@ func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.Una
 	span.AddEvent(tracingEventGrpcRequest, trace.WithAttributes(
 		attribute.String(tracingEventGrpcRequestBaggage, gconv.String(gtrace.GetBaggageMap(ctx))),
 		attribute.String(tracingEventGrpcMetadataIncoming, gconv.String(grpcctx.Ctx{}.IncomingMap(ctx))),
-		attribute.String(
-			tracingEventGrpcRequestMessage,
-			utils.MarshalMessageToJsonStringForTracing(
-				req, "Request", tracingMaxContentLogSize,
-			),
-		),
 	))
 
 	res, err := handler(ctx, req)
-
-	span.AddEvent(tracingEventGrpcResponse, trace.WithAttributes(
-		attribute.String(
-			tracingEventGrpcResponseMessage,
-			utils.MarshalMessageToJsonStringForTracing(
-				res, "Response", tracingMaxContentLogSize,
-			),
-		),
-	))
 
 	if err != nil {
 		s, _ := status.FromError(err)

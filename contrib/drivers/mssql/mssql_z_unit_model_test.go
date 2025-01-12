@@ -12,14 +12,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/util/gconv"
-
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gutil"
 )
@@ -27,30 +26,31 @@ import (
 func Test_Page(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	// db.SetDebug(true)
-	result, err := db.Model(table).Page(1, 2).Order("id").All()
-	gtest.Assert(err, nil)
-	fmt.Println("page:1--------", result)
-	gtest.Assert(len(result), 2)
-	gtest.Assert(result[0]["ID"], 1)
-	gtest.Assert(result[1]["ID"], 2)
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Page(1, 2).Order("id").All()
+		t.AssertNil(err)
+		fmt.Println("page:1--------", result)
+		gtest.Assert(len(result), 2)
+		gtest.Assert(result[0]["ID"], 1)
+		gtest.Assert(result[1]["ID"], 2)
 
-	result, err = db.Model(table).Page(2, 2).Order("id").All()
-	gtest.Assert(err, nil)
-	fmt.Println("page: 2--------", result)
-	gtest.Assert(len(result), 2)
-	gtest.Assert(result[0]["ID"], 3)
-	gtest.Assert(result[1]["ID"], 4)
+		result, err = db.Model(table).Page(2, 2).Order("id").All()
+		t.AssertNil(err)
+		fmt.Println("page: 2--------", result)
+		gtest.Assert(len(result), 2)
+		gtest.Assert(result[0]["ID"], 3)
+		gtest.Assert(result[1]["ID"], 4)
 
-	result, err = db.Model(table).Page(3, 2).Order("id").All()
-	gtest.Assert(err, nil)
-	fmt.Println("page:3 --------", result)
-	gtest.Assert(len(result), 2)
-	gtest.Assert(result[0]["ID"], 5)
+		result, err = db.Model(table).Page(3, 2).Order("id").All()
+		t.AssertNil(err)
+		fmt.Println("page:3 --------", result)
+		gtest.Assert(len(result), 2)
+		gtest.Assert(result[0]["ID"], 5)
 
-	result, err = db.Model(table).Page(2, 3).All()
-	gtest.Assert(err, nil)
-	gtest.Assert(len(result), 3)
+		result, err = db.Model(table).Page(2, 3).All()
+		t.AssertNil(err)
+		gtest.Assert(len(result), 3)
+	})
 }
 
 func Test_Model_Insert(t *testing.T) {
@@ -519,7 +519,19 @@ func Test_Model_Count(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(count, int64(TableSize))
 	})
+}
 
+func Test_Model_Exist(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		exist, err := db.Model(table).Exist()
+		t.AssertNil(err)
+		t.Assert(exist, TableSize > 0)
+		exist, err = db.Model(table).Where("id", -1).Exist()
+		t.AssertNil(err)
+		t.Assert(exist, false)
+	})
 }
 
 func Test_Model_Select(t *testing.T) {

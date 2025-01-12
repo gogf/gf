@@ -7,6 +7,7 @@
 package mysql_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gogf/gf/v2/database/gdb"
@@ -14,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func Test_Insert_Raw(t *testing.T) {
+func Test_Raw_Insert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -33,7 +34,7 @@ func Test_Insert_Raw(t *testing.T) {
 	})
 }
 
-func Test_BatchInsert_Raw(t *testing.T) {
+func Test_Raw_BatchInsert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -63,7 +64,7 @@ func Test_BatchInsert_Raw(t *testing.T) {
 	})
 }
 
-func Test_Update_Raw(t *testing.T) {
+func Test_Raw_Update(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -82,5 +83,47 @@ func Test_Update_Raw(t *testing.T) {
 		n, err := user.Where("id", 101).Count()
 		t.AssertNil(err)
 		t.Assert(n, 1)
+	})
+}
+
+func Test_Raw_Where(t *testing.T) {
+	table1 := createTable("Test_Raw_Where_Table1")
+	table2 := createTable("Test_Raw_Where_Table2")
+	defer dropTable(table1)
+	defer dropTable(table2)
+
+	// https://github.com/gogf/gf/issues/3922
+	gtest.C(t, func(t *gtest.T) {
+		expectSql := "SELECT * FROM `Test_Raw_Where_Table1` AS A WHERE NOT EXISTS (SELECT B.id FROM `Test_Raw_Where_Table2` AS B WHERE `B`.`id`=A.id) LIMIT 1"
+		sql, err := gdb.ToSQL(ctx, func(ctx context.Context) error {
+			s := db.Model(table2).As("B").Ctx(ctx).Fields("B.id").Where("B.id", gdb.Raw("A.id"))
+			m := db.Model(table1).As("A").Ctx(ctx).Where("NOT EXISTS ?", s).Limit(1)
+			_, err := m.All()
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(expectSql, sql)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		expectSql := "SELECT * FROM `Test_Raw_Where_Table1` AS A WHERE NOT EXISTS (SELECT B.id FROM `Test_Raw_Where_Table2` AS B WHERE B.id=A.id) LIMIT 1"
+		sql, err := gdb.ToSQL(ctx, func(ctx context.Context) error {
+			s := db.Model(table2).As("B").Ctx(ctx).Fields("B.id").Where(gdb.Raw("B.id=A.id"))
+			m := db.Model(table1).As("A").Ctx(ctx).Where("NOT EXISTS ?", s).Limit(1)
+			_, err := m.All()
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(expectSql, sql)
+	})
+	// https://github.com/gogf/gf/issues/3915
+	gtest.C(t, func(t *gtest.T) {
+		expectSql := "SELECT * FROM `Test_Raw_Where_Table1` WHERE `passport` < `nickname`"
+		sql, err := gdb.ToSQL(ctx, func(ctx context.Context) error {
+			m := db.Model(table1).Ctx(ctx).WhereLT("passport", gdb.Raw("`nickname`"))
+			_, err := m.All()
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(expectSql, sql)
 	})
 }

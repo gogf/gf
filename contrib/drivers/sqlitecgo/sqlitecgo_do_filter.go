@@ -10,13 +10,13 @@ import (
 	"context"
 
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
-func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+func (d *Driver) DoFilter(
+	ctx context.Context, link gdb.Link, sql string, args []interface{},
+) (newSql string, newArgs []interface{}, err error) {
 	// Special insert/ignore operation for sqlite.
 	switch {
 	case gstr.HasPrefix(sql, gdb.InsertOperationIgnore):
@@ -24,14 +24,6 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args [
 
 	case gstr.HasPrefix(sql, gdb.InsertOperationReplace):
 		sql = "INSERT OR REPLACE" + sql[len(gdb.InsertOperationReplace):]
-
-	default:
-		if gstr.Contains(sql, gdb.InsertOnDuplicateKeyUpdate) {
-			return sql, args, gerror.NewCode(
-				gcode.CodeNotSupported,
-				`Save operation is not supported by sqlite driver`,
-			)
-		}
 	}
 	return d.Core.DoFilter(ctx, link, sql, args)
 }

@@ -17,10 +17,10 @@ const (
 	dumpIndent = `    `
 )
 
-// Keys retrieves and returns the keys from given map or struct.
-func Keys(mapOrStruct interface{}) (keysOrAttrs []string) {
+// Keys retrieves and returns the keys from the given map or struct.
+func Keys(mapOrStruct any) (keysOrAttrs []string) {
 	keysOrAttrs = make([]string, 0)
-	if m, ok := mapOrStruct.(map[string]interface{}); ok {
+	if m, ok := mapOrStruct.(map[string]any); ok {
 		for k := range m {
 			keysOrAttrs = append(keysOrAttrs, k)
 		}
@@ -63,11 +63,12 @@ func Keys(mapOrStruct interface{}) (keysOrAttrs []string) {
 				keysOrAttrs = append(keysOrAttrs, fieldType.Name)
 			}
 		}
+	default:
 	}
 	return
 }
 
-// Values retrieves and returns the values from given map or struct.
+// Values retrieves and returns the values from the given map or struct.
 func Values(mapOrStruct interface{}) (values []interface{}) {
 	values = make([]interface{}, 0)
 	if m, ok := mapOrStruct.(map[string]interface{}); ok {
@@ -108,6 +109,7 @@ func Values(mapOrStruct interface{}) (values []interface{}) {
 				values = append(values, reflectValue.Field(i).Interface())
 			}
 		}
+	default:
 	}
 	return
 }

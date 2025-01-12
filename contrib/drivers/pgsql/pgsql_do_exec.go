@@ -9,6 +9,7 @@ package pgsql
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
@@ -55,19 +56,13 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 	// check if it is an insert operation.
 	if !isUseCoreDoExec && pkField.Name != "" && strings.Contains(sql, "INSERT INTO") {
 		primaryKey = pkField.Name
-		sql += " RETURNING " + primaryKey
+		sql += fmt.Sprintf(` RETURNING "%s"`, primaryKey)
 	} else {
 		// use default DoExec
 		return d.Core.DoExec(ctx, link, sql, args...)
 	}
 
 	// Only the insert operation with primary key can execute the following code
-
-	if d.GetConfig().ExecTimeout > 0 {
-		var cancelFunc context.CancelFunc
-		ctx, cancelFunc = context.WithTimeout(ctx, d.GetConfig().ExecTimeout)
-		defer cancelFunc()
-	}
 
 	// Sql filtering.
 	sql, args = d.FormatSqlBeforeExecuting(sql, args)

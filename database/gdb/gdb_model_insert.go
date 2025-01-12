@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -44,11 +45,11 @@ func (m *Model) Data(data ...interface{}) *Model {
 			model.data = s
 			model.extraArgs = data[1:]
 		} else {
-			m := make(map[string]interface{})
+			newData := make(map[string]interface{})
 			for i := 0; i < len(data); i += 2 {
-				m[gconv.String(data[i])] = data[i+1]
+				newData[gconv.String(data[i])] = data[i+1]
 			}
-			model.data = m
+			model.data = newData
 		}
 	} else if len(data) == 1 {
 		switch value := data[0].(type) {
@@ -284,21 +285,29 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 	}
 
 	// Automatic handling for creating/updating time.
-	if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
+	if fieldNameCreate != "" && m.isFieldInFieldsEx(fieldNameCreate) {
+		fieldNameCreate = ""
+	}
+	if fieldNameUpdate != "" && m.isFieldInFieldsEx(fieldNameUpdate) {
+		fieldNameUpdate = ""
+	}
+	var isSoftTimeFeatureEnabled = fieldNameCreate != "" || fieldNameUpdate != ""
+	if !m.unscoped && isSoftTimeFeatureEnabled {
 		for k, v := range list {
-			if fieldNameCreate != "" {
+			if fieldNameCreate != "" && empty.IsNil(v[fieldNameCreate]) {
 				fieldCreateValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeCreate, false)
 				if fieldCreateValue != nil {
 					v[fieldNameCreate] = fieldCreateValue
 				}
 			}
-			if fieldNameUpdate != "" {
+			if fieldNameUpdate != "" && empty.IsNil(v[fieldNameUpdate]) {
 				fieldUpdateValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate, false)
 				if fieldUpdateValue != nil {
 					v[fieldNameUpdate] = fieldUpdateValue
 				}
 			}
-			if fieldNameDelete != "" {
+			// for timestamp field that should initialize the delete_at field with value, for example 0.
+			if fieldNameDelete != "" && empty.IsNil(v[fieldNameDelete]) {
 				fieldDeleteValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeDelete, true)
 				if fieldDeleteValue != nil {
 					v[fieldNameDelete] = fieldDeleteValue
@@ -326,6 +335,7 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 		},
 		Model:  m,
 		Table:  m.tables,
+		Schema: m.schema,
 		Data:   list,
 		Option: doInsertOption,
 	}

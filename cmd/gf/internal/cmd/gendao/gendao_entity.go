@@ -36,7 +36,7 @@ func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
 			structDefinition, appendImports = generateStructDefinition(ctx, generateStructDefinitionInput{
 				CGenDaoInternalInput: in,
 				TableName:            tableName,
-				StructName:           gstr.CaseCamel(newTableName),
+				StructName:           formatFieldName(newTableName, FieldNameCaseCamel),
 				FieldMap:             fieldMap,
 				IsDo:                 false,
 			})
@@ -44,7 +44,7 @@ func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
 				ctx,
 				in,
 				newTableName,
-				gstr.CaseCamel(newTableName),
+				formatFieldName(newTableName, FieldNameCaseCamel),
 				structDefinition,
 				appendImports,
 			)
@@ -55,7 +55,7 @@ func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
 			mlog.Fatalf("writing content to '%s' failed: %v", entityFilePath, err)
 		} else {
 			utils.GoFmt(entityFilePath)
-			mlog.Print("generated:", entityFilePath)
+			mlog.Print("generated:", gfile.RealPath(entityFilePath))
 		}
 	}
 }
@@ -70,6 +70,7 @@ func generateEntityContent(
 			tplVarPackageImports:     getImportPartContent(ctx, structDefine, false, appendImports),
 			tplVarTableNameCamelCase: tableNameCamelCase,
 			tplVarStructDefine:       structDefine,
+			tplVarPackageName:        filepath.Base(in.EntityPath),
 		},
 	)
 	entityContent = replaceDefaultVar(in, entityContent)

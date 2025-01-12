@@ -1267,3 +1267,133 @@ CREATE TABLE %s (
 		t.Assert(one["delete_at"].Int64(), 1)
 	})
 }
+
+func Test_SoftTime_CreateUpdateDelete_Specified(t *testing.T) {
+	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+CREATE TABLE %s (
+  id        int(11) NOT NULL,
+  name      varchar(45) DEFAULT NULL,
+  create_at datetime(0) DEFAULT NULL,
+  update_at datetime(0) DEFAULT NULL,
+  delete_at datetime(0) DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, table)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Insert
+		dataInsert := g.Map{
+			"id":        1,
+			"name":      "name_1",
+			"create_at": gtime.NewFromStr("2024-05-30 20:00:00"),
+			"update_at": gtime.NewFromStr("2024-05-30 20:00:00"),
+		}
+		r, err := db.Model(table).Data(dataInsert).Insert()
+		t.AssertNil(err)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 1)
+
+		oneInsert, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(oneInsert["id"].Int(), 1)
+		t.Assert(oneInsert["name"].String(), "name_1")
+		t.Assert(oneInsert["delete_at"].String(), "")
+		t.Assert(oneInsert["create_at"].String(), "2024-05-30 20:00:00")
+		t.Assert(oneInsert["update_at"].String(), "2024-05-30 20:00:00")
+
+		// For time asserting purpose.
+		time.Sleep(2 * time.Second)
+
+		// Save
+		dataSave := g.Map{
+			"id":        1,
+			"name":      "name_10",
+			"update_at": gtime.NewFromStr("2024-05-30 20:15:00"),
+		}
+		r, err = db.Model(table).Data(dataSave).Save()
+		t.AssertNil(err)
+		n, _ = r.RowsAffected()
+		t.Assert(n, 2)
+
+		oneSave, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(oneSave["id"].Int(), 1)
+		t.Assert(oneSave["name"].String(), "name_10")
+		t.Assert(oneSave["delete_at"].String(), "")
+		t.Assert(oneSave["create_at"].String(), "2024-05-30 20:00:00")
+		t.Assert(oneSave["update_at"].String(), "2024-05-30 20:15:00")
+
+		// For time asserting purpose.
+		time.Sleep(2 * time.Second)
+
+		// Update
+		dataUpdate := g.Map{
+			"name":      "name_1000",
+			"update_at": gtime.NewFromStr("2024-05-30 20:30:00"),
+		}
+		r, err = db.Model(table).Data(dataUpdate).WherePri(1).Update()
+		t.AssertNil(err)
+		n, _ = r.RowsAffected()
+		t.Assert(n, 1)
+
+		oneUpdate, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(oneUpdate["id"].Int(), 1)
+		t.Assert(oneUpdate["name"].String(), "name_1000")
+		t.Assert(oneUpdate["delete_at"].String(), "")
+		t.Assert(oneUpdate["create_at"].String(), "2024-05-30 20:00:00")
+		t.Assert(oneUpdate["update_at"].String(), "2024-05-30 20:30:00")
+
+		// Replace
+		dataReplace := g.Map{
+			"id":        1,
+			"name":      "name_100",
+			"create_at": gtime.NewFromStr("2024-05-30 21:00:00"),
+			"update_at": gtime.NewFromStr("2024-05-30 21:00:00"),
+		}
+		r, err = db.Model(table).Data(dataReplace).Replace()
+		t.AssertNil(err)
+		n, _ = r.RowsAffected()
+		t.Assert(n, 2)
+
+		oneReplace, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(oneReplace["id"].Int(), 1)
+		t.Assert(oneReplace["name"].String(), "name_100")
+		t.Assert(oneReplace["delete_at"].String(), "")
+		t.Assert(oneReplace["create_at"].String(), "2024-05-30 21:00:00")
+		t.Assert(oneReplace["update_at"].String(), "2024-05-30 21:00:00")
+
+		// For time asserting purpose.
+		time.Sleep(2 * time.Second)
+
+		// Insert with delete_at
+		dataInsertDelete := g.Map{
+			"id":        2,
+			"name":      "name_2",
+			"create_at": gtime.NewFromStr("2024-05-30 20:00:00"),
+			"update_at": gtime.NewFromStr("2024-05-30 20:00:00"),
+			"delete_at": gtime.NewFromStr("2024-05-30 20:00:00"),
+		}
+		r, err = db.Model(table).Data(dataInsertDelete).Insert()
+		t.AssertNil(err)
+		n, _ = r.RowsAffected()
+		t.Assert(n, 1)
+
+		// Delete Select
+		oneDelete, err := db.Model(table).WherePri(2).One()
+		t.AssertNil(err)
+		t.Assert(len(oneDelete), 0)
+		oneDeleteUnscoped, err := db.Model(table).Unscoped().WherePri(2).One()
+		t.AssertNil(err)
+		t.Assert(oneDeleteUnscoped["id"].Int(), 2)
+		t.Assert(oneDeleteUnscoped["name"].String(), "name_2")
+		t.Assert(oneDeleteUnscoped["delete_at"].String(), "2024-05-30 20:00:00")
+		t.Assert(oneDeleteUnscoped["create_at"].String(), "2024-05-30 20:00:00")
+		t.Assert(oneDeleteUnscoped["update_at"].String(), "2024-05-30 20:00:00")
+	})
+}

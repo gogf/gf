@@ -11,10 +11,10 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/gogf/gf/v2/internal/intlog"
-
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -45,44 +45,43 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		return nil, gerror.NewCode(gcode.CodeMissingParameter, "updating table with empty data")
 	}
 	var (
+		newData                                       interface{}
 		stm                                           = m.softTimeMaintainer()
-		updateData                                    = m.data
-		reflectInfo                                   = reflection.OriginTypeAndKind(updateData)
+		reflectInfo                                   = reflection.OriginTypeAndKind(m.data)
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(ctx, false, false)
 		conditionStr                                  = conditionWhere + conditionExtra
 		fieldNameUpdate, fieldTypeUpdate              = stm.GetFieldNameAndTypeForUpdate(
 			ctx, "", m.tablesInit,
 		)
 	)
-	if m.unscoped {
+	if fieldNameUpdate != "" && (m.unscoped || m.isFieldInFieldsEx(fieldNameUpdate)) {
 		fieldNameUpdate = ""
+	}
+
+	newData, err = m.filterDataForInsertOrUpdate(m.data)
+	if err != nil {
+		return nil, err
 	}
 
 	switch reflectInfo.OriginKind {
 	case reflect.Map, reflect.Struct:
-		var dataMap = anyValueToMapBeforeToRecord(m.data)
+		var dataMap = anyValueToMapBeforeToRecord(newData)
 		// Automatically update the record updating time.
-		if fieldNameUpdate != "" {
+		if fieldNameUpdate != "" && empty.IsNil(dataMap[fieldNameUpdate]) {
 			dataValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate, false)
 			dataMap[fieldNameUpdate] = dataValue
 		}
-		updateData = dataMap
+		newData = dataMap
 
 	default:
-		updates := gconv.String(m.data)
+		var updateStr = gconv.String(newData)
 		// Automatically update the record updating time.
-		if fieldNameUpdate != "" {
+		if fieldNameUpdate != "" && !gstr.Contains(updateStr, fieldNameUpdate) {
 			dataValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate, false)
-			if fieldNameUpdate != "" && !gstr.Contains(updates, fieldNameUpdate) {
-				updates += fmt.Sprintf(`,%s=?`, fieldNameUpdate)
-				conditionArgs = append([]interface{}{dataValue}, conditionArgs...)
-			}
+			updateStr += fmt.Sprintf(`,%s=?`, fieldNameUpdate)
+			conditionArgs = append([]interface{}{dataValue}, conditionArgs...)
 		}
-		updateData = updates
-	}
-	newData, err := m.filterDataForInsertOrUpdate(updateData)
-	if err != nil {
-		return nil, err
+		newData = updateStr
 	}
 
 	if !gstr.ContainsI(conditionStr, " WHERE ") {
@@ -106,6 +105,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		},
 		Model:     m,
 		Table:     m.tables,
+		Schema:    m.schema,
 		Data:      newData,
 		Condition: conditionStr,
 		Args:      m.mergeArguments(conditionArgs),

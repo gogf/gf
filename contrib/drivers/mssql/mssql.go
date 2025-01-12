@@ -12,7 +12,7 @@
 package mssql
 
 import (
-	_ "github.com/denisenkom/go-mssqldb"
+	_ "github.com/microsoft/go-mssqldb"
 
 	"github.com/gogf/gf/v2/database/gdb"
 )
@@ -23,7 +23,8 @@ type Driver struct {
 }
 
 const (
-	quoteChar = `"`
+	rowNumberAliasForSelect = `ROW_NUMBER__`
+	quoteChar               = `"`
 )
 
 func init() {

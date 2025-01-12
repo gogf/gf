@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/encoding/ghash"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/intlog"
@@ -58,12 +59,13 @@ type iTableName interface {
 }
 
 const (
-	OrmTagForStruct    = "orm"
-	OrmTagForTable     = "table"
-	OrmTagForWith      = "with"
-	OrmTagForWithWhere = "where"
-	OrmTagForWithOrder = "order"
-	OrmTagForDo        = "do"
+	OrmTagForStruct       = "orm"
+	OrmTagForTable        = "table"
+	OrmTagForWith         = "with"
+	OrmTagForWithWhere    = "where"
+	OrmTagForWithOrder    = "order"
+	OrmTagForWithUnscoped = "unscoped"
+	OrmTagForDo           = "do"
 )
 
 var (
@@ -342,8 +344,8 @@ func doQuoteString(s, charLeft, charRight string) string {
 	return gstr.Join(array1, ",")
 }
 
-func getFieldsFromStructOrMap(structOrMap interface{}) (fields []string) {
-	fields = []string{}
+func getFieldsFromStructOrMap(structOrMap any) (fields []any) {
+	fields = []any{}
 	if utils.IsStruct(structOrMap) {
 		structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 			Pointer:         structOrMap,
@@ -360,7 +362,7 @@ func getFieldsFromStructOrMap(structOrMap interface{}) (fields []string) {
 			}
 		}
 	} else {
-		fields = gutil.Keys(structOrMap)
+		fields = gconv.Interfaces(gutil.Keys(structOrMap))
 	}
 	return
 }
@@ -606,7 +608,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 			// ===============================================================
 			if subModel, ok := in.Args[i].(*Model); ok {
 				index := -1
-				whereStr, _ = gregex.ReplaceStringFunc(`(\?)`, whereStr, func(s string) string {
+				whereStr = gstr.ReplaceFunc(whereStr, `?`, func(s string) string {
 					index++
 					if i+len(newArgs) == index {
 						sqlWithHolder, holderArgs := subModel.getHolderAndArgsAsSubModel(ctx)
@@ -775,11 +777,7 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []interface{}) {
 			} else {
 				in.Buffer.WriteString(quotedKey)
 			}
-			if s, ok := in.Value.(Raw); ok {
-				in.Buffer.WriteString(gconv.String(s))
-			} else {
-				in.Args = append(in.Args, in.Value)
-			}
+			in.Args = append(in.Args, in.Value)
 		}
 	}
 	return in.Args
@@ -845,7 +843,7 @@ func handleSliceAndStructArgsForSql(
 				counter  = 0
 				replaced = false
 			)
-			newSql, _ = gregex.ReplaceStringFunc(`\?`, newSql, func(s string) string {
+			newSql = gstr.ReplaceFunc(newSql, `?`, func(s string) string {
 				if replaced {
 					return s
 				}
@@ -858,7 +856,7 @@ func handleSliceAndStructArgsForSql(
 				return s
 			})
 
-		// Special struct handling.
+			// Special struct handling.
 		case reflect.Struct:
 			switch oldArg.(type) {
 			// The underlying driver supports time.Time/*time.Time types.
@@ -885,6 +883,21 @@ func handleSliceAndStructArgsForSql(
 			newArgs = append(newArgs, oldArg)
 
 		default:
+			switch oldArg.(type) {
+			// Do not append Raw arg to args but directly into the sql.
+			case Raw, *Raw:
+				var counter = 0
+				newSql = gstr.ReplaceFunc(newSql, `?`, func(s string) string {
+					counter++
+					if counter == index+insertHolderCount+1 {
+						return gconv.String(oldArg)
+					}
+					return s
+				})
+				continue
+
+			default:
+			}
 			newArgs = append(newArgs, oldArg)
 		}
 	}
@@ -943,4 +956,27 @@ func FormatMultiLineSqlToSingle(sql string) (string, error) {
 		return "", err
 	}
 	return sql, nil
+}
+
+func genTableFieldsCacheKey(group, schema, table string) string {
+	return fmt.Sprintf(
+		`%s%s@%s#%s`,
+		cachePrefixTableFields,
+		group,
+		schema,
+		table,
+	)
+}
+
+func genSelectCacheKey(table, group, schema, name, sql string, args ...interface{}) string {
+	if name == "" {
+		name = fmt.Sprintf(
+			`%s@%s#%s:%d`,
+			table,
+			group,
+			schema,
+			ghash.BKDR64([]byte(sql+", @PARAMS:"+gconv.String(args))),
+		)
+	}
+	return fmt.Sprintf(`%s%s`, cachePrefixSelectCache, name)
 }

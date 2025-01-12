@@ -11,7 +11,7 @@ const TemplateGenDaoDoContent = `
 // Code generated and maintained by GoFrame CLI tool. DO NOT EDIT. {TplCreatedAtDatetimeStr}
 // =================================================================================
 
-package do
+package {TplPackageName}
 
 {TplPackageImports}
 
