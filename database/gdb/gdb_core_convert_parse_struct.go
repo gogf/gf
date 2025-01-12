@@ -33,9 +33,6 @@ func EnableCacheTableExperiment(b bool) {
 	useCacheTableExperiment = b
 }
 
-type structTypeName = string
-type structFieldName = string
-
 type convertTableInfo struct {
 	// key   = go type
 	// value = *Table
@@ -185,6 +182,7 @@ func (t *Table) getStructFields(ctx context.Context, db DB, fieldsConvertInfoMap
 			continue
 		}
 		if field.Type.Kind() == reflect.Interface {
+			// todo  empty interface ?
 			continue
 		}
 		// gmeta.Meta

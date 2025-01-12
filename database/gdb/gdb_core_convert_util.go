@@ -59,6 +59,8 @@ const (
 	timestamptzFormat3 = "2006-01-02 15:04:05.999999999-07"
 )
 
+// This function is directly copied from the source code of [bun]
+// bun: https://github.com/uptrace/bun/blob/master/internal/time.go#L20
 func parseTime(s string) (time.Time, error) {
 	l := len(s)
 
