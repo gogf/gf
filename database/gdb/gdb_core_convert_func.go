@@ -33,6 +33,7 @@ var (
 	timeType            = timePtrType.Elem()
 	jsonRawMessageType  = reflect.TypeOf((*json.RawMessage)(nil)).Elem()
 	jsonUnmarshalerType = reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()
+	unmarshalValueType  = reflect.TypeOf((*iUnmarshalValue)(nil)).Elem()
 	scannerType         = reflect.TypeOf((*sql.Scanner)(nil)).Elem()
 	gtimePtrType        = reflect.TypeOf((*gtime.Time)(nil))
 	gtimeType           = gtimePtrType.Elem()

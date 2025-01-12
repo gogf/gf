@@ -9,6 +9,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"reflect"
 	"strings"
 	"sync"
@@ -25,9 +26,6 @@ var (
 	//
 	useCacheTableExperiment = true
 )
-
-func SetTestEnvironment(b bool) {
-}
 
 func EnableCacheTableExperiment(b bool) {
 	useCacheTableExperiment = b
@@ -77,12 +75,94 @@ type scanPointer struct {
 type Table struct {
 	// tableFields
 	fields []*fieldConvertInfo
+	// Check if the [iUnmanshalValue] interface is implemented.
+	// If it is, call it directly
+	unmarshalValue fieldConvertFunc
+}
+
+func (t *Table) ScanToSlice(elemType, sliceType reflect.Type, records []Record, structIsPtr bool) (sliceValue reflect.Value, err error) {
+	sliceValue = reflect.MakeSlice(sliceType, 0, len(records))
+	for _, record := range records {
+		var structValue reflect.Value
+		structValue, err = t.ScanToStruct(elemType, record, structIsPtr)
+		if err != nil {
+			return
+		}
+		sliceValue = reflect.Append(sliceValue, structValue)
+	}
+	return
+}
+
+func (t *Table) ScanToStruct(elemType reflect.Type, record Record, secondPtr bool) (structValue reflect.Value, err error) {
+	structValue = reflect.New(elemType)
+	if t.unmarshalValue != nil {
+		err = t.unmarshalValue(structValue, record)
+		if err != nil {
+			return
+		}
+		if secondPtr == false {
+			structValue = structValue.Elem()
+		}
+		return
+	}
+	structValue = structValue.Elem()
+	for _, field := range t.fields {
+		// This field does not exist in the structure, for example,
+		// when querying some databases, an additional column may be added, such as MSSQL or Oracle
+		if field.convertFunc == nil {
+			continue
+		}
+		fieldValue := field.GetReflectValue(structValue)
+		value := record[field.ColumnFieldName]
+		if value == nil {
+			continue
+		}
+		fieldValue.Set(reflect.ValueOf(value.Val()))
+	}
+	// If the user passes a second level pointer dst=[**struct],
+	// then when creating the struct,
+	// a layer of reference has already been resolved,
+	// which is a value type and needs to be converted to [*struct] again.
+	// Then dst resolves a layer of reference to become a first level pointer
+	// that matches the current struct exactly
+	if secondPtr {
+		structValue = structValue.Addr()
+	}
+	return
 }
 
 func (t *Table) GetFieldInfo(fieldName string) *fieldConvertInfo {
 	for _, field := range t.fields {
 		if field.StructField.Name == fieldName {
 			return field
+		}
+	}
+	return nil
+}
+
+func checkTypeImplUnmarshalValue(typ reflect.Type) fieldConvertFunc {
+	// 1.[]*struct
+	// 2.[]struct
+	// 3.*struct
+	switch typ.Kind() {
+	case reflect.Slice, reflect.Array:
+		// 1.[]*struct  => *struct
+		// 2.[]struct   => struct
+		typ = typ.Elem()
+	case reflect.Ptr:
+		// 3.*struct    => struct
+		typ = typ.Elem()
+	}
+	if typ.Kind() != reflect.Ptr {
+		typ = reflect.PointerTo(typ)
+	}
+	if typ.Implements(unmarshalValueType) {
+		return func(dest reflect.Value, src any) error {
+			fn, ok := dest.Interface().(iUnmarshalValue)
+			if !ok {
+				return fmt.Errorf("not implements iUnmarshalValue")
+			}
+			return fn.UnmarshalValue(src)
 		}
 	}
 	return nil
@@ -115,6 +195,10 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 	} else {
 		pointerType = reflect.TypeOf(val.pointer).Elem()
 	}
+	// Used to check whether the type implements the interface.
+	// If it does, the interface can be directly called during subsequent assignment
+	unmarshalValueFunc := checkTypeImplUnmarshalValue(pointerType)
+
 	switch pointerType.Kind() {
 	case reflect.Array, reflect.Slice:
 		// 1.[]*struct => *struct
@@ -145,7 +229,9 @@ func parseStruct(ctx context.Context, db DB, columnTypes []*sql.ColumnType) *Tab
 	}
 
 	var (
-		table         = &Table{}
+		table = &Table{
+			unmarshalValue: unmarshalValueFunc,
+		}
 		matchedColumn = make(map[string]struct{})
 		matchedCount  = table.getStructFields(ctx, db, fieldsConvertInfoMap, pointerType, []int{}, matchedColumn)
 	)

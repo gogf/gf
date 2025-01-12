@@ -250,33 +250,10 @@ func (m *Model) doScanStruct(pointer any, record Record) (err error) {
 	// TODO: Add a parameter to determine if it is in the testing environment. If it is not, do not delete it
 	// defer convTableInfo.Delete(elemType)
 
-	var structValue = reflect.New(elemType)
-	// UnmarshalValue
-	fn, ok := structValue.Interface().(iUnmarshalValue)
-	if ok {
-		err = fn.UnmarshalValue(record)
-		if err != nil {
-			return err
-		}
-		structValue = structValue.Elem()
-	} else {
-		structValue = structValue.Elem()
-		for _, field := range table.fields {
-			// This field does not exist in the structure, for example,
-			// when querying some databases, an additional column may be added, such as MSSQL or Oracle
-			if field.convertFunc == nil {
-				continue
-			}
-			fieldValue := field.GetReflectValue(structValue)
-			value := record[field.ColumnFieldName]
-			if value == nil {
-				continue
-			}
-			fieldValue.Set(reflect.ValueOf(value.Val()))
-		}
-	}
-	if secondPtr {
-		structValue = structValue.Addr()
+	var structValue reflect.Value
+	structValue, err = table.ScanToStruct(elemType, record, secondPtr)
+	if err != nil {
+		return err
 	}
 	if structPointerValue.IsNil() {
 		structPointerValue.Set(reflect.New(structPointerValue.Type().Elem()))
@@ -403,38 +380,10 @@ func (m *Model) doScanStructs(pointer any, records Result) (err error) {
 	// TODO: Add a parameter to determine if it is in the testing environment. If it is not, do not delete it
 	// defer convTableInfo.Delete(elemType)
 
-	sliceValue := reflect.MakeSlice(sliceType, 0, len(records))
-
-	for _, record := range records {
-		var structValue = reflect.New(elemType)
-		// UnmarshalValue
-		fn, ok := structValue.Interface().(iUnmarshalValue)
-		if ok {
-			err = fn.UnmarshalValue(record)
-			if err != nil {
-				return err
-			}
-			structValue = structValue.Elem()
-		} else {
-			structValue = structValue.Elem()
-			for _, field := range table.fields {
-				// This field does not exist in the structure, for example,
-				// when querying some databases, an additional column may be added, such as MSSQL or Oracle
-				if field.convertFunc == nil {
-					continue
-				}
-				fieldValue := field.GetReflectValue(structValue)
-				val := record[field.ColumnFieldName]
-				if val == nil {
-					continue
-				}
-				fieldValue.Set(reflect.ValueOf(val.Val()))
-			}
-		}
-		if structIsPtr {
-			structValue = structValue.Addr()
-		}
-		sliceValue = reflect.Append(sliceValue, structValue)
+	var sliceValue reflect.Value
+	sliceValue, err = table.ScanToSlice(elemType, sliceType, records, structIsPtr)
+	if err != nil {
+		return err
 	}
 	slicePointerValue.Elem().Set(sliceValue)
 	return nil
