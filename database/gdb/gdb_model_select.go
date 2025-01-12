@@ -248,7 +248,7 @@ func (m *Model) doScanStruct(pointer any, record Record) (err error) {
 	// It needs to be deleted, otherwise it will cause
 	// conflicts as long as the struct name is the same within different functions during testing
 	// TODO: Add a parameter to determine if it is in the testing environment. If it is not, do not delete it
-	defer convTableInfo.Delete(elemType)
+	// defer convTableInfo.Delete(elemType)
 
 	var structValue = reflect.New(elemType)
 	// UnmarshalValue
@@ -401,7 +401,7 @@ func (m *Model) doScanStructs(pointer any, records Result) (err error) {
 	// It needs to be deleted, otherwise it will cause
 	// conflicts as long as the struct name is the same within different functions during testing
 	// TODO: Add a parameter to determine if it is in the testing environment. If it is not, do not delete it
-	defer convTableInfo.Delete(elemType)
+	// defer convTableInfo.Delete(elemType)
 
 	sliceValue := reflect.MakeSlice(sliceType, 0, len(records))
 

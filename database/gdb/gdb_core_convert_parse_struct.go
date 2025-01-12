@@ -24,20 +24,9 @@ var (
 	convTableInfo = &convertTableInfo{}
 	//
 	useCacheTableExperiment = true
-	// Mainly used to call the [convTableInfo.Delete] function
-	// Due to the large number of declared structures within functions in the testing environment,
-	// For example:
-	// 		Declare an A structure within the A function, regardless of any fields
-	// 		Then declare a structure inside the B function, regardless of any fields
-	// 		So the go language believes that the names of the structures within these two functions are the same
-	// Will result in duplicate names when storing structures in [convTableInfo]
-	// So during testing, after testing a function, it is necessary to delete the registered ones
-	// During formal development, there is no need to delete it
-	isTestEnvironment = false
 )
 
 func SetTestEnvironment(b bool) {
-	isTestEnvironment = true
 }
 
 func EnableCacheTableExperiment(b bool) {
@@ -48,7 +37,7 @@ type structTypeName = string
 type structFieldName = string
 
 type convertTableInfo struct {
-	// key   = string
+	// key   = go type
 	// value = *Table
 	tablesMap sync.Map
 }
@@ -72,16 +61,14 @@ func (c *convertTableInfo) Add(structType reflect.Type, table *Table) {
 }
 
 func (c *convertTableInfo) Delete(structType reflect.Type) {
-	if isTestEnvironment {
-		c.tablesMap.Delete(getTableName(structType))
-	}
+	c.tablesMap.Delete(getTableName(structType))
 }
 
-func getTableName(pointerType reflect.Type) string {
+func getTableName(pointerType reflect.Type) reflect.Type {
 	if pointerType.Kind() == reflect.Ptr {
 		pointerType = pointerType.Elem()
 	}
-	return pointerType.PkgPath() + "." + pointerType.Name()
+	return pointerType
 }
 
 type scanPointer struct {
