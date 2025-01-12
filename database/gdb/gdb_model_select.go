@@ -292,8 +292,8 @@ func (m *Model) one(pointer any, where ...any) (Record, error) {
 		scan:    true,
 		pointer: pointer,
 	})
-	sqlWithHolder, holderArgs := m.getFormattedSqlAndArgs(ctx, queryTypeNormal, true)
-	all, err := m.doGetAllBySql(ctx, queryTypeNormal, sqlWithHolder, holderArgs...)
+	sqlWithHolder, holderArgs := m.getFormattedSqlAndArgs(ctx, SelectTypeDefault, true)
+	all, err := m.doGetAllBySql(ctx, SelectTypeDefault, sqlWithHolder, holderArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -418,8 +418,8 @@ func (m *Model) all(pointer any, where ...interface{}) (Result, error) {
 		scan:    true,
 		pointer: pointer,
 	})
-	sqlWithHolder, holderArgs := m.getFormattedSqlAndArgs(ctx, queryTypeNormal, false)
-	return m.doGetAllBySql(ctx, queryTypeNormal, sqlWithHolder, holderArgs...)
+	sqlWithHolder, holderArgs := m.getFormattedSqlAndArgs(ctx, SelectTypeDefault, false)
+	return m.doGetAllBySql(ctx, SelectTypeDefault, sqlWithHolder, holderArgs...)
 }
 
 // Scan automatically calls Struct or Structs function according to the type of parameter `pointer`.
