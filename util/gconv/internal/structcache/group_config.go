@@ -32,7 +32,19 @@ func (cf *ConvertConfig) RegisterTypeConvertFunc(typ reflect.Type, f convertFn) 
 		typ = typ.Elem()
 	}
 	cf.parseConvertFuncs[typ] = f
+}
 
+// RegisterDefaultConvertFuncs
+// Register some commonly used type conversion functions,
+// Example:
+// 1.int,int8,int16,int32,int64
+// 2.uint,uint8,uint16,uint32,uint64
+// 3.float32, float64
+// 4.bool
+// 5.string,[]byte
+// 6.time.Time,gtime.Time
+func (cf *ConvertConfig) RegisterDefaultConvertFuncs() {
+	registerDefaultConvertFuncs(cf)
 }
 
 func (cf *ConvertConfig) getCachedConvertStructInfo(structType reflect.Type) (*CachedStructInfo, bool) {

@@ -43,20 +43,23 @@ func RegisterCommonConverter(commonConverter CommonConverter) {
 }
 
 func init() {
-
-	registerManyTypesConvertFn(intConvertFunc, intType, int8Type, int16Type, int32Type, int64Type)
-	registerManyTypesConvertFn(uintConvertFunc, uintType, uint8Type, uint16Type, uint32Type, uint64Type)
-	registerManyTypesConvertFn(floatConvertFunc, float32Type, float64Type)
-	registerManyTypesConvertFn(stringConvertFunc, stringType)
-	registerManyTypesConvertFn(boolConvertFunc, boolType)
-	registerManyTypesConvertFn(bytesConvertFunc, bytesType)
-	registerManyTypesConvertFn(timeConvertFunc, timeType)
-	registerManyTypesConvertFn(gtimeConvertFunc, gtimeType)
+	registerDefaultConvertFuncs(defaultConfig)
 }
 
-func registerManyTypesConvertFn(fn convertFn, typs ...reflect.Type) {
+func registerDefaultConvertFuncs(cfg *ConvertConfig) {
+	registerManyTypesConvertFn(cfg, intConvertFunc, intType, int8Type, int16Type, int32Type, int64Type)
+	registerManyTypesConvertFn(cfg, uintConvertFunc, uintType, uint8Type, uint16Type, uint32Type, uint64Type)
+	registerManyTypesConvertFn(cfg, floatConvertFunc, float32Type, float64Type)
+	registerManyTypesConvertFn(cfg, stringConvertFunc, stringType)
+	registerManyTypesConvertFn(cfg, boolConvertFunc, boolType)
+	registerManyTypesConvertFn(cfg, bytesConvertFunc, bytesType)
+	registerManyTypesConvertFn(cfg, timeConvertFunc, timeType)
+	registerManyTypesConvertFn(cfg, gtimeConvertFunc, gtimeType)
+}
+
+func registerManyTypesConvertFn(cfg *ConvertConfig, fn convertFn, typs ...reflect.Type) {
 	for _, typ := range typs {
-		defaultConfig.RegisterTypeConvertFunc(typ, fn)
+		cfg.RegisterTypeConvertFunc(typ, fn)
 	}
 }
 
