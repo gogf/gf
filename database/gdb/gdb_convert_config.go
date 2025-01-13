@@ -20,16 +20,20 @@ var (
 	convertConfig = gconv.NewConvertConfig("gf.orm")
 )
 
+func reflectTypeFor[T any]() reflect.Type {
+	return reflect.TypeOf((*T)(nil)).Elem()
+}
+
 func init() {
 	convertConfig.RegisterDefaultConvertFuncs()
 
-	convertConfig.RegisterTypeConvertFunc(reflect.TypeFor[[]string](), convertToSliceFunc)
-	convertConfig.RegisterTypeConvertFunc(reflect.TypeFor[[]float32](), convertToSliceFunc)
-	convertConfig.RegisterTypeConvertFunc(reflect.TypeFor[[]float32](), convertToSliceFunc)
-	convertConfig.RegisterTypeConvertFunc(reflect.TypeFor[[]int64](), convertToSliceFunc)
-	convertConfig.RegisterTypeConvertFunc(reflect.TypeFor[map[string]any](), convertToSliceFunc)
+	convertConfig.RegisterTypeConvertFunc(reflectTypeFor[[]string](), convertToSliceFunc)
+	convertConfig.RegisterTypeConvertFunc(reflectTypeFor[[]float32](), convertToSliceFunc)
+	convertConfig.RegisterTypeConvertFunc(reflectTypeFor[[]float32](), convertToSliceFunc)
+	convertConfig.RegisterTypeConvertFunc(reflectTypeFor[[]int64](), convertToSliceFunc)
+	convertConfig.RegisterTypeConvertFunc(reflectTypeFor[map[string]any](), convertToSliceFunc)
 
-	convertConfig.RegisterInterfaceTypeConvertFunc(reflect.TypeFor[sql.Scanner](), sqlScanner)
+	convertConfig.RegisterInterfaceTypeConvertFunc(reflectTypeFor[sql.Scanner](), sqlScanner)
 }
 
 func convertToSliceFunc(from any, to reflect.Value) error {
