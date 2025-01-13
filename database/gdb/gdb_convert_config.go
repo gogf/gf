@@ -36,10 +36,25 @@ func init() {
 	convertConfig.RegisterInterfaceTypeConvertFunc(reflectTypeFor[sql.Scanner](), sqlScanner)
 }
 
-func convertToSliceFunc(from any, to reflect.Value) error {
-	dst := to.Addr().Interface()
-	sv := from.(*gvar.Var).Bytes()
-	err := json.Unmarshal(sv, dst)
+func convertToSliceFunc(from any, to reflect.Value) (err error) {
+	fromVal := from.(*gvar.Var).Val()
+	switch x := fromVal.(type) {
+	case []byte:
+		dst := to.Addr().Interface()
+		err = json.Unmarshal(x, dst)
+	case string:
+		dst := to.Addr().Interface()
+		err = json.Unmarshal([]byte(x), dst)
+	default:
+		sv := reflect.ValueOf(fromVal)
+		switch sv.Kind() {
+		case reflect.Slice:
+			dv := gconv.Convert(fromVal, to.Type().String())
+			to.Set(reflect.ValueOf(dv))
+		default:
+			err = fmt.Errorf("conversion from `%v(%T)` to `%v(%T)` is not supported", fromVal, fromVal, to, to)
+		}
+	}
 	return err
 }
 
