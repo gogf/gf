@@ -50,9 +50,10 @@ func (cf *ConvertConfig) RegisterInterfaceTypeConvertFunc(typ reflect.Type, f co
 		panic("Parameter cannot be empty")
 	}
 	if typ.Kind() != reflect.Interface {
-		if typ.NumMethod() == 0 {
-			panic("Please register using the [RegisterTypeConvertFunc] function")
-		}
+		panic("Please register using the [RegisterTypeConvertFunc] function")
+	}
+	if typ.NumMethod() == 0 {
+		panic("Please register using the [RegisterTypeConvertFunc] function")
 	}
 	cf.interfaceConvertFuncs[typ] = f
 }
