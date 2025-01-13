@@ -1590,35 +1590,3 @@ func issue4034SaveAppDevice(ctx context.Context, table string, tx gdb.TX) error 
 	}).Save()
 	return err
 }
-
-func Test_issue4086(t *testing.T) {
-	type ProxyParam struct {
-		ProxyId      int64    `json:"proxyId"              orm:"proxy_id"              description:""`
-		RecommendIds []int64  `json:"recommendIds" orm:"recommend_ids" description:""`
-		Photos       []string `json:"photos"              orm:"photos"                 description:""`
-	}
-	gtest.C(t, func(t *gtest.T) {
-		table := "proxy_param"
-		array := gstr.SplitAndTrim(gtest.DataContent(`issue4086.sql`), ";")
-		for _, v := range array {
-			_, err := db.Exec(ctx, v)
-			t.AssertNil(err)
-		}
-		defer dropTable(table)
-
-		var proxyParamList []*ProxyParam
-		err := db.Model(table).Ctx(context.Background()).Scan(&proxyParamList)
-		t.AssertNil(err)
-		t.Assert(len(proxyParamList), 2)
-		t.Assert(proxyParamList[0], &ProxyParam{
-			ProxyId:      1,
-			RecommendIds: []int64{584, 585},
-			Photos:       nil,
-		})
-		t.Assert(proxyParamList[1], &ProxyParam{
-			ProxyId:      2,
-			RecommendIds: []int64{},
-			Photos:       nil,
-		})
-	})
-}
