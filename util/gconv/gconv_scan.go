@@ -20,6 +20,10 @@ import (
 //
 // TODO change `paramKeyToAttrMap` to `ScanOption` to be more scalable; add `DeepCopy` option for `ScanOption`.
 func Scan(srcValue interface{}, dstPointer interface{}, paramKeyToAttrMap ...map[string]string) (err error) {
+	return scan(defaultConfig, srcValue, dstPointer, paramKeyToAttrMap...)
+}
+
+func scan(config *ConvertConfig, srcValue interface{}, dstPointer interface{}, paramKeyToAttrMap ...map[string]string) (err error) {
 	if srcValue == nil {
 		// If `srcValue` is nil, no conversion.
 		return nil
@@ -109,10 +113,10 @@ func Scan(srcValue interface{}, dstPointer interface{}, paramKeyToAttrMap ...map
 		if sliceElemKind == reflect.Map {
 			return doMapToMaps(srcValue, dstPointer, paramKeyToAttrMap...)
 		}
-		return doStructs(srcValue, dstPointer, keyToAttributeNameMapping, "")
+		return doStructs(srcValue, dstPointer, keyToAttributeNameMapping, "", config)
 
 	default:
-		return doStruct(srcValue, dstPointer, keyToAttributeNameMapping, "")
+		return doStruct(srcValue, dstPointer, keyToAttributeNameMapping, "", config)
 	}
 }
 

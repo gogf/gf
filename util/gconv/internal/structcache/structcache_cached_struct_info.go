@@ -9,10 +9,8 @@ package structcache
 import (
 	"reflect"
 	"strings"
-	"time"
 
 	"github.com/gogf/gf/v2/internal/utils"
-	"github.com/gogf/gf/v2/os/gtime"
 )
 
 // CachedStructInfo holds the cached info for certain struct.
@@ -38,12 +36,17 @@ func (csi *CachedStructInfo) GetFieldInfo(fieldName string) *CachedFieldInfo {
 	return csi.tagOrFiledNameToFieldInfoMap[fieldName]
 }
 
-func (csi *CachedStructInfo) AddField(field reflect.StructField, fieldIndexes []int, priorityTags []string) {
+func (csi *CachedStructInfo) AddField(
+	field reflect.StructField, config *ConvertConfig,
+	fieldIndexes []int, priorityTags []string) {
+
 	tagOrFieldNameArray := csi.genPriorityTagAndFieldName(field, priorityTags)
 	for _, tagOrFieldName := range tagOrFieldNameArray {
 		cachedFieldInfo, found := csi.tagOrFiledNameToFieldInfoMap[tagOrFieldName]
 		newFieldInfo := csi.makeOrCopyCachedInfo(
-			field, fieldIndexes, priorityTags, cachedFieldInfo, tagOrFieldName,
+			field,
+			fieldIndexes, priorityTags,
+			cachedFieldInfo, tagOrFieldName, config,
 		)
 		if newFieldInfo.IsField {
 			csi.FieldConvertInfos = append(csi.FieldConvertInfos, newFieldInfo)
@@ -59,19 +62,21 @@ func (csi *CachedStructInfo) AddField(field reflect.StructField, fieldIndexes []
 }
 
 func (csi *CachedStructInfo) makeOrCopyCachedInfo(
-	field reflect.StructField, fieldIndexes []int, priorityTags []string,
+	field reflect.StructField,
+	fieldIndexes []int, priorityTags []string,
 	cachedFieldInfo *CachedFieldInfo,
 	currTagOrFieldName string,
+	config *ConvertConfig,
 ) (newFieldInfo *CachedFieldInfo) {
 	if cachedFieldInfo == nil {
 		// If the field is not cached, it creates a new one.
-		newFieldInfo = csi.makeCachedFieldInfo(field, fieldIndexes, priorityTags)
+		newFieldInfo = csi.makeCachedFieldInfo(field, fieldIndexes, priorityTags, config)
 		newFieldInfo.IsField = currTagOrFieldName == field.Name
 		return
 	}
 	if cachedFieldInfo.StructField.Type != field.Type {
 		// If the types are different, some information needs to be reset.
-		newFieldInfo = csi.makeCachedFieldInfo(field, fieldIndexes, priorityTags)
+		newFieldInfo = csi.makeCachedFieldInfo(field, fieldIndexes, priorityTags, config)
 	} else {
 		// If the field types are the same.
 		newFieldInfo = csi.copyCachedInfoWithFieldIndexes(cachedFieldInfo, fieldIndexes)
@@ -92,13 +97,15 @@ func (csi *CachedStructInfo) copyCachedInfoWithFieldIndexes(cfi *CachedFieldInfo
 }
 
 func (csi *CachedStructInfo) makeCachedFieldInfo(
-	field reflect.StructField, fieldIndexes []int, priorityTags []string,
+	field reflect.StructField,
+	fieldIndexes []int, priorityTags []string,
+	config *ConvertConfig,
 ) *CachedFieldInfo {
 	base := &CachedFieldInfoBase{
 		IsCommonInterface:       checkTypeIsCommonInterface(field),
 		StructField:             field,
 		FieldIndexes:            fieldIndexes,
-		ConvertFunc:             csi.genFieldConvertFunc(field.Type.String()),
+		ConvertFunc:             csi.genFieldConvertFunc(field.Type, config),
 		IsCustomConvert:         csi.checkTypeHasCustomConvert(field.Type),
 		PriorityTagAndFieldName: csi.genPriorityTagAndFieldName(field, priorityTags),
 		RemoveSymbolsFieldName:  utils.RemoveSymbols(field.Name),
@@ -109,59 +116,9 @@ func (csi *CachedStructInfo) makeCachedFieldInfo(
 	}
 }
 
-func (csi *CachedStructInfo) genFieldConvertFunc(fieldType string) (convertFunc func(from any, to reflect.Value)) {
-	if fieldType[0] == '*' {
-		convertFunc = csi.genFieldConvertFunc(fieldType[1:])
-		if convertFunc == nil {
-			return nil
-		}
-		return csi.genPtrConvertFunc(convertFunc)
-	}
-	switch fieldType {
-	case "int", "int8", "int16", "int32", "int64":
-		convertFunc = func(from any, to reflect.Value) {
-			to.SetInt(localCommonConverter.Int64(from))
-		}
-	case "uint", "uint8", "uint16", "uint32", "uint64":
-		convertFunc = func(from any, to reflect.Value) {
-			to.SetUint(localCommonConverter.Uint64(from))
-		}
-	case "string":
-		convertFunc = func(from any, to reflect.Value) {
-			to.SetString(localCommonConverter.String(from))
-		}
-	case "float32":
-		convertFunc = func(from any, to reflect.Value) {
-			to.SetFloat(float64(localCommonConverter.Float32(from)))
-		}
-	case "float64":
-		convertFunc = func(from any, to reflect.Value) {
-			to.SetFloat(localCommonConverter.Float64(from))
-		}
-	case "Time", "time.Time":
-		convertFunc = func(from any, to reflect.Value) {
-			*to.Addr().Interface().(*time.Time) = localCommonConverter.Time(from)
-		}
-	case "GTime", "gtime.Time":
-		convertFunc = func(from any, to reflect.Value) {
-			v := localCommonConverter.GTime(from)
-			if v == nil {
-				v = gtime.New()
-			}
-			*to.Addr().Interface().(*gtime.Time) = *v
-		}
-	case "bool":
-		convertFunc = func(from any, to reflect.Value) {
-			to.SetBool(localCommonConverter.Bool(from))
-		}
-	case "[]byte":
-		convertFunc = func(from any, to reflect.Value) {
-			to.SetBytes(localCommonConverter.Bytes(from))
-		}
-	default:
-		return nil
-	}
-	return convertFunc
+func (csi *CachedStructInfo) genFieldConvertFunc(fieldType reflect.Type, config *ConvertConfig) (convertFunc convertFn) {
+	f := config.getTypeConvertFunc(fieldType)
+	return f
 }
 
 func (csi *CachedStructInfo) genPriorityTagAndFieldName(

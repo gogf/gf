@@ -40,12 +40,14 @@ func Struct(params interface{}, pointer interface{}, paramKeyToAttrMap ...map[st
 // specified priorityTagAndFieldName for `params` key-value items to struct attribute names mapping.
 // The parameter `priorityTag` supports multiple priorityTagAndFieldName that can be joined with char ','.
 func StructTag(params interface{}, pointer interface{}, priorityTag string) (err error) {
-	return doStruct(params, pointer, nil, priorityTag)
+	return doStruct(params, pointer, nil, priorityTag, defaultConfig)
 }
 
 // doStruct is the core internal converting function for any data to struct.
 func doStruct(
-	params interface{}, pointer interface{}, paramKeyToAttrMap map[string]string, priorityTag string,
+	params interface{}, pointer interface{},
+	paramKeyToAttrMap map[string]string, priorityTag string,
+	config *ConvertConfig,
 ) (err error) {
 	if params == nil {
 		// If `params` is nil, no conversion.
@@ -168,7 +170,7 @@ func doStruct(
 		return nil
 	}
 	// Get struct info from cache or parse struct and cache the struct info.
-	cachedStructInfo := structcache.GetCachedStructInfo(
+	cachedStructInfo := config.GetCachedStructInfo(
 		pointerElemReflectValue.Type(), priorityTag,
 	)
 	// Nothing to be converted.
@@ -382,8 +384,8 @@ func bindVarToStructField(
 	}
 	// Common types use fast assignment logic
 	if cachedFieldInfo.ConvertFunc != nil {
-		cachedFieldInfo.ConvertFunc(srcValue, fieldValue)
-		return nil
+		err = cachedFieldInfo.ConvertFunc(srcValue, fieldValue)
+		return err
 	}
 	doConvertWithReflectValueSet(fieldValue, doConvertInput{
 		FromValue:  srcValue,
@@ -489,7 +491,7 @@ func bindVarToReflectValue(
 
 	case reflect.Struct:
 		// Recursively converting for struct attribute.
-		if err = doStruct(value, structFieldValue, nil, ""); err != nil {
+		if err = doStruct(value, structFieldValue, nil, "", defaultConfig); err != nil {
 			// Note there's reflect conversion mechanism here.
 			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
 		}
@@ -522,7 +524,7 @@ func bindVarToReflectValue(
 						elem = reflect.New(elemType).Elem()
 					}
 					if elem.Kind() == reflect.Struct {
-						if err = doStruct(reflectValue.Index(i).Interface(), elem, nil, ""); err == nil {
+						if err = doStruct(reflectValue.Index(i).Interface(), elem, nil, "", defaultConfig); err == nil {
 							converted = true
 						}
 					}
@@ -572,7 +574,7 @@ func bindVarToReflectValue(
 				elem = reflect.New(elemType).Elem()
 			}
 			if elem.Kind() == reflect.Struct {
-				if err = doStruct(value, elem, nil, ""); err == nil {
+				if err = doStruct(value, elem, nil, "", defaultConfig); err == nil {
 					converted = true
 				}
 			}

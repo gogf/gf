@@ -28,7 +28,7 @@ func SliceStruct(params interface{}, pointer interface{}, mapping ...map[string]
 // specified priorityTagAndFieldName for `params` key-value items to struct attribute names mapping.
 // The parameter `priorityTag` supports multiple priorityTagAndFieldName that can be joined with char ','.
 func StructsTag(params interface{}, pointer interface{}, priorityTag string) (err error) {
-	return doStructs(params, pointer, nil, priorityTag)
+	return doStructs(params, pointer, nil, priorityTag, defaultConfig)
 }
 
 // doStructs converts any slice to given struct slice.
@@ -39,7 +39,9 @@ func StructsTag(params interface{}, pointer interface{}, priorityTag string) (er
 // Note that if `pointer` is a pointer to another pointer of type of slice of struct,
 // it will create the struct/pointer internally.
 func doStructs(
-	params interface{}, pointer interface{}, paramKeyToAttrMap map[string]string, priorityTag string,
+	params interface{}, pointer interface{},
+	paramKeyToAttrMap map[string]string, priorityTag string,
+	config *ConvertConfig,
 ) (err error) {
 	defer func() {
 		// Catch the panic, especially the reflection operation panics.
@@ -108,7 +110,7 @@ func doStructs(
 			if !tempReflectValue.IsValid() {
 				tempReflectValue = reflect.New(itemType.Elem()).Elem()
 			}
-			if err = doStruct(paramsList[i], tempReflectValue, paramKeyToAttrMap, priorityTag); err != nil {
+			if err = doStruct(paramsList[i], tempReflectValue, paramKeyToAttrMap, priorityTag, config); err != nil {
 				return err
 			}
 			reflectElemArray.Index(i).Set(tempReflectValue.Addr())
@@ -122,7 +124,7 @@ func doStructs(
 			} else {
 				tempReflectValue = reflect.New(itemType).Elem()
 			}
-			if err = doStruct(paramsList[i], tempReflectValue, paramKeyToAttrMap, priorityTag); err != nil {
+			if err = doStruct(paramsList[i], tempReflectValue, paramKeyToAttrMap, priorityTag, config); err != nil {
 				return err
 			}
 			reflectElemArray.Index(i).Set(tempReflectValue)
