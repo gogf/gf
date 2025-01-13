@@ -29,3 +29,7 @@ func StructByConfig(config *ConvertConfig, params interface{}, pointer interface
 func StructTagByConfig(config *ConvertConfig, params interface{}, pointer interface{}, priorityTag string) (err error) {
 	return doStruct(params, pointer, nil, priorityTag, config)
 }
+
+func StructsTagByConfig(config *ConvertConfig, params interface{}, pointer interface{}, priorityTag string) (err error) {
+	return doStructs(params, pointer, nil, priorityTag, config)
+}
