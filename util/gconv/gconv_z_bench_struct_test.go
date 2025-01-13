@@ -92,7 +92,7 @@ func Benchmark_Struct_Basic(b *testing.B) {
 
 func Benchmark_doStruct_Fields8_Basic_MapToStruct(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		doStruct(structMapFields8, structPointer8, map[string]string{}, "")
+		doStruct(structMapFields8, structPointer8, map[string]string{}, "", defaultConfig)
 	}
 }
 
