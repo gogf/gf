@@ -14,24 +14,56 @@ import (
 type convertFn = func(from any, to reflect.Value) error
 
 type ConvertConfig struct {
-	name              string
-	parseConvertFuncs map[reflect.Type]convertFn
+	name                  string
+	parseConvertFuncs     map[reflect.Type]convertFn
+	interfaceConvertFuncs map[reflect.Type]convertFn
 	// map[reflect.Type]*CachedStructInfo
 	cachedStructsInfoMap sync.Map
 }
 
 func NewConvertConfig(name string) *ConvertConfig {
 	return &ConvertConfig{
-		name:              name,
-		parseConvertFuncs: make(map[reflect.Type]convertFn),
+		name:                  name,
+		parseConvertFuncs:     make(map[reflect.Type]convertFn),
+		interfaceConvertFuncs: make(map[reflect.Type]convertFn),
 	}
 }
 
 func (cf *ConvertConfig) RegisterTypeConvertFunc(typ reflect.Type, f convertFn) {
+	if typ == nil || f == nil {
+		panic("Parameter cannot be empty")
+	}
+	if typ.Kind() == reflect.Interface && typ.NumMethod() > 0 {
+		panic("Please register using the [RegisterInterfaceTypeConvertFunc] function")
+	}
 	for typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()
 	}
 	cf.parseConvertFuncs[typ] = f
+}
+
+// RegisterInterfaceTypeConvertFunc
+// typ.Kind == reflect.Interface
+// [typ] must be an interface type and cannot be an empty interface
+func (cf *ConvertConfig) RegisterInterfaceTypeConvertFunc(typ reflect.Type, f convertFn) {
+	if typ == nil || f == nil {
+		panic("Parameter cannot be empty")
+	}
+	if typ.Kind() != reflect.Interface {
+		if typ.NumMethod() == 0 {
+			panic("Please register using the [RegisterTypeConvertFunc] function")
+		}
+	}
+	cf.interfaceConvertFuncs[typ] = f
+}
+
+func (cf *ConvertConfig) checkTypeImplInterface(typ reflect.Type) convertFn {
+	for inter, fn := range cf.interfaceConvertFuncs {
+		if typ.Implements(inter) {
+			return fn
+		}
+	}
+	return nil
 }
 
 // RegisterDefaultConvertFuncs
@@ -69,10 +101,23 @@ func (cf *ConvertConfig) getTypeConvertFunc(typ reflect.Type) (fn convertFn) {
 	}
 	fn = cf.parseConvertFuncs[typ]
 	if fn == nil {
-		return nil
+		// TODO is value type  typ.Addr
+		typ = reflect.PointerTo(typ)
+		fn = cf.checkTypeImplInterface(typ)
+		if fn != nil {
+			return ptrConvertFunc(ptr, fn)
+		}
+
 	}
-	for i := 0; i < ptr; i++ {
-		fn = getPtrConvertFunc(fn)
+	if fn != nil {
+		fn = ptrConvertFunc(ptr, fn)
+	}
+	return fn
+}
+
+func ptrConvertFunc(ptr int, fn convertFn) convertFn {
+	if ptr > 0 {
+		return ptrConvertFunc(ptr-1, getPtrConvertFunc(fn))
 	}
 	return fn
 }
