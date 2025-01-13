@@ -40,8 +40,7 @@ func convertToSliceFunc(from any, to reflect.Value) error {
 }
 
 func sqlScanner(from any, to reflect.Value) error {
-	var dv any
-	dv = to.Addr().Interface()
+	dv := to.Addr().Interface()
 	scanner, ok := dv.(sql.Scanner)
 	if ok {
 		return scanner.Scan(from)

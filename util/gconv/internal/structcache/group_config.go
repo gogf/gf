@@ -108,7 +108,6 @@ func (cf *ConvertConfig) getTypeConvertFunc(typ reflect.Type) (fn convertFn) {
 		if fn != nil {
 			return ptrConvertFunc(ptr, fn)
 		}
-
 	}
 	if fn != nil {
 		fn = ptrConvertFunc(ptr, fn)
