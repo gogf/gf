@@ -46,8 +46,8 @@ func convertToSliceFunc(from any, to reflect.Value) (err error) {
 		dst := to.Addr().Interface()
 		err = json.Unmarshal([]byte(x), dst)
 	default:
-		sv := reflect.ValueOf(fromVal)
-		switch sv.Kind() {
+		fromType := reflect.TypeOf(fromVal)
+		switch fromType.Kind() {
 		case reflect.Slice:
 			dv := gconv.Convert(fromVal, to.Type().String())
 			to.Set(reflect.ValueOf(dv))
