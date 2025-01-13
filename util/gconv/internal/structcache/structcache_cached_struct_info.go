@@ -36,10 +36,7 @@ func (csi *CachedStructInfo) GetFieldInfo(fieldName string) *CachedFieldInfo {
 	return csi.tagOrFiledNameToFieldInfoMap[fieldName]
 }
 
-func (csi *CachedStructInfo) AddField(
-	field reflect.StructField, config *ConvertConfig,
-	fieldIndexes []int, priorityTags []string) {
-
+func (csi *CachedStructInfo) AddField(field reflect.StructField, config *ConvertConfig, fieldIndexes []int, priorityTags []string) {
 	tagOrFieldNameArray := csi.genPriorityTagAndFieldName(field, priorityTags)
 	for _, tagOrFieldName := range tagOrFieldNameArray {
 		cachedFieldInfo, found := csi.tagOrFiledNameToFieldInfoMap[tagOrFieldName]
