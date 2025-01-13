@@ -71,7 +71,7 @@ func generateStructFieldDefinition(
 		err              error
 		localTypeName    gdb.LocalType
 		localTypeNameStr string
-		jsonTag          = gstr.CaseConvert(field.Name, gstr.CaseTypeMatch(in.JsonCase))
+		jsonTag          = gstr.CaseConvert(strings.TrimPrefix(field.Name, in.RemoveFieldPrefix), gstr.CaseTypeMatch(in.JsonCase))
 	)
 
 	if in.TypeMapping != nil && len(in.TypeMapping) > 0 {
