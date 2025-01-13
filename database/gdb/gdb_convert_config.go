@@ -20,6 +20,10 @@ var (
 	convertConfig = gconv.NewConvertConfig("gf.orm")
 )
 
+func ConvertConfig() *gconv.ConvertConfig {
+	return convertConfig
+}
+
 func reflectTypeFor[T any]() reflect.Type {
 	return reflect.TypeOf((*T)(nil)).Elem()
 }
