@@ -14,6 +14,10 @@ type ConvertConfig = structcache.ConvertConfig
 
 var defaultConfig = structcache.GetDefaultConfig()
 
+func DefaultConvertConfig() *ConvertConfig {
+	return defaultConfig
+}
+
 func NewConvertConfig(name string) *ConvertConfig {
 	return structcache.NewConvertConfig(name)
 }

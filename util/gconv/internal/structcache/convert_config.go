@@ -13,19 +13,23 @@ import (
 
 type convertFn = func(from any, to reflect.Value) error
 
+type interfaceTypeConvert struct {
+	typ reflect.Type
+	fn  convertFn
+}
+
 type ConvertConfig struct {
 	name                  string
 	parseConvertFuncs     map[reflect.Type]convertFn
-	interfaceConvertFuncs map[reflect.Type]convertFn
+	interfaceConvertFuncs []interfaceTypeConvert
 	// map[reflect.Type]*CachedStructInfo
 	cachedStructsInfoMap sync.Map
 }
 
 func NewConvertConfig(name string) *ConvertConfig {
 	return &ConvertConfig{
-		name:                  name,
-		parseConvertFuncs:     make(map[reflect.Type]convertFn),
-		interfaceConvertFuncs: make(map[reflect.Type]convertFn),
+		name:              name,
+		parseConvertFuncs: make(map[reflect.Type]convertFn),
 	}
 }
 
@@ -55,13 +59,18 @@ func (cf *ConvertConfig) RegisterInterfaceTypeConvertFunc(typ reflect.Type, f co
 	if typ.NumMethod() == 0 {
 		panic("Please register using the [RegisterTypeConvertFunc] function")
 	}
-	cf.interfaceConvertFuncs[typ] = f
+	cf.interfaceConvertFuncs = append(cf.interfaceConvertFuncs,
+		interfaceTypeConvert{
+			typ: typ,
+			fn:  f,
+		},
+	)
 }
 
 func (cf *ConvertConfig) checkTypeImplInterface(typ reflect.Type) convertFn {
-	for inter, fn := range cf.interfaceConvertFuncs {
-		if typ.Implements(inter) {
-			return fn
+	for _, inter := range cf.interfaceConvertFuncs {
+		if typ.Implements(inter.typ) {
+			return inter.fn
 		}
 	}
 	return nil
@@ -105,9 +114,6 @@ func (cf *ConvertConfig) getTypeConvertFunc(typ reflect.Type) (fn convertFn) {
 		// TODO is value type  typ.Addr
 		typ = reflect.PointerTo(typ)
 		fn = cf.checkTypeImplInterface(typ)
-		if fn != nil {
-			return ptrConvertFunc(ptr, fn)
-		}
 	}
 	if fn != nil {
 		fn = ptrConvertFunc(ptr, fn)
@@ -116,16 +122,14 @@ func (cf *ConvertConfig) getTypeConvertFunc(typ reflect.Type) (fn convertFn) {
 }
 
 func ptrConvertFunc(ptr int, fn convertFn) convertFn {
-	if ptr > 0 {
-		return ptrConvertFunc(ptr-1, getPtrConvertFunc(fn))
+	for i := 0; i < ptr; i++ {
+		fn = getPtrConvertFunc(fn)
 	}
 	return fn
 }
 
-func getPtrConvertFunc(
-	convertFunc convertFn,
-) convertFn {
-	if convertFunc == nil {
+func getPtrConvertFunc(fn convertFn) convertFn {
+	if fn == nil {
 		panic("The conversion function cannot be empty")
 	}
 	return func(from any, to reflect.Value) error {
@@ -134,6 +138,6 @@ func getPtrConvertFunc(
 		}
 		// from = nil
 		// to = nil ??
-		return convertFunc(from, to.Elem())
+		return fn(from, to.Elem())
 	}
 }

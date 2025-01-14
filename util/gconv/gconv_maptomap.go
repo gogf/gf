@@ -100,7 +100,7 @@ func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]s
 		switch pointerValueKind {
 		case reflect.Map, reflect.Struct:
 			if err = doStruct(
-				paramsRv.MapIndex(key).Interface(), mapValue, keyToAttributeNameMapping, "", defaultConfig,
+				paramsRv.MapIndex(key).Interface(), mapValue, keyToAttributeNameMapping, "", DefaultConvertConfig(),
 			); err != nil {
 				return err
 			}

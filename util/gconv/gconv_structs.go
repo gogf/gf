@@ -28,7 +28,7 @@ func SliceStruct(params interface{}, pointer interface{}, mapping ...map[string]
 // specified priorityTagAndFieldName for `params` key-value items to struct attribute names mapping.
 // The parameter `priorityTag` supports multiple priorityTagAndFieldName that can be joined with char ','.
 func StructsTag(params interface{}, pointer interface{}, priorityTag string) (err error) {
-	return doStructs(params, pointer, nil, priorityTag, defaultConfig)
+	return doStructs(params, pointer, nil, priorityTag, DefaultConvertConfig())
 }
 
 // doStructs converts any slice to given struct slice.

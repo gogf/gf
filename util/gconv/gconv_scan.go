@@ -20,7 +20,7 @@ import (
 //
 // TODO change `paramKeyToAttrMap` to `ScanOption` to be more scalable; add `DeepCopy` option for `ScanOption`.
 func Scan(srcValue interface{}, dstPointer interface{}, paramKeyToAttrMap ...map[string]string) (err error) {
-	return scan(defaultConfig, srcValue, dstPointer, paramKeyToAttrMap...)
+	return scan(DefaultConvertConfig(), srcValue, dstPointer, paramKeyToAttrMap...)
 }
 
 func scan(config *ConvertConfig, srcValue interface{}, dstPointer interface{}, paramKeyToAttrMap ...map[string]string) (err error) {
