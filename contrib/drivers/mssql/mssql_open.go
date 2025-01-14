@@ -16,6 +16,10 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
+var (
+	version string
+)
+
 // Open creates and returns an underlying sql.DB object for mssql.
 func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	source, err := configNodeToSource(config)
@@ -27,6 +31,13 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 		err = gerror.WrapCodef(
 			gcode.CodeDbOperationError, err,
 			`sql.Open failed for driver "%s" by source "%s"`, underlyingDriverName, source,
+		)
+		return nil, err
+	}
+	if err = db.QueryRow("SELECT @@VERSION").Scan(&version); err != nil {
+		err = gerror.WrapCodef(
+			gcode.CodeDbOperationError, err,
+			`Error querying version: SELECT @@VERSION`,
 		)
 		return nil, err
 	}
