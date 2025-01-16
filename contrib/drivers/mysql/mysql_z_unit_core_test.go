@@ -1634,6 +1634,7 @@ func Test_Types(t *testing.T) {
 			Bit       int8
 			TinyInt   bool
 		}
+
 		var obj *T
 		err = db.Model("types").Scan(&obj)
 		t.AssertNil(err)

@@ -59,7 +59,6 @@ func init() {
 	nodePrefix.Prefix = TableNamePrefix
 
 	nodeInvalid := configNode
-
 	gdb.AddConfigNode(DBGroupTest, configNode)
 	gdb.AddConfigNode(DBGroupPrefix, nodePrefix)
 	gdb.AddConfigNode(DBGroupInvalid, nodeInvalid)

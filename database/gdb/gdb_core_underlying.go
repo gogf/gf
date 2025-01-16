@@ -456,38 +456,45 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 			internalData.FirstResultColumn = columnTypes[0].Name()
 		}
 	}
-	var (
-		values   = make([]interface{}, len(columnTypes))
-		result   = make(Result, 0)
-		scanArgs = make([]interface{}, len(values))
-	)
-	for i := range values {
-		scanArgs[i] = &values[i]
+
+	table := parseStruct(ctx, c.GetDB(), columnTypes)
+	if table != nil {
+		return c.scanRowsToMap(rows, table, len(columnTypes))
 	}
+
+	scanArgs := make([]interface{}, len(columnTypes))
+	for i := 0; i < len(scanArgs); i++ {
+		scanArgs[i] = new(any)
+	}
+	return c.scanRowsToResult(ctx, scanArgs, rows, columnTypes)
+}
+
+func (c *Core) scanRowsToResult(ctx context.Context, scanArgs []any, rows *sql.Rows, columnTypes []*sql.ColumnType) (result Result, err error) {
 	for {
 		if err = rows.Scan(scanArgs...); err != nil {
 			return result, err
 		}
 		record := Record{}
-		for i, value := range values {
-			if value == nil {
+		for i, value := range scanArgs {
+			arg := *value.(*any)
+			if arg == nil {
 				// DO NOT use `gvar.New(nil)` here as it creates an initialized object
 				// which will cause struct converting issue.
 				record[columnTypes[i].Name()] = nil
-			} else {
-				var convertedValue interface{}
-				if convertedValue, err = c.columnValueToLocalValue(ctx, value, columnTypes[i]); err != nil {
-					return nil, err
-				}
-				record[columnTypes[i].Name()] = gvar.New(convertedValue)
+				continue
 			}
+			var convertedValue interface{}
+			if convertedValue, err = c.columnValueToLocalValue(ctx, arg, columnTypes[i]); err != nil {
+				return nil, err
+			}
+			record[columnTypes[i].Name()] = gvar.New(convertedValue)
 		}
 		result = append(result, record)
 		if !rows.Next() {
 			break
 		}
 	}
-	return result, nil
+	return
 }
 
 // OrderRandomFunction returns the SQL function for random ordering.
