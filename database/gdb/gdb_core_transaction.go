@@ -257,12 +257,14 @@ func WithTX(ctx context.Context, tx TX) context.Context {
 	}
 	// Inject transaction object and id into context.
 	ctx = context.WithValue(ctx, transactionKeyForContext(group), tx)
+	ctx = context.WithValue(ctx, transactionIdForLoggerCtx, tx.GetCtx().Value(transactionIdForLoggerCtx))
 	return ctx
 }
 
 // WithoutTX removed transaction object from context and returns a new context.
 func WithoutTX(ctx context.Context, group string) context.Context {
 	ctx = context.WithValue(ctx, transactionKeyForContext(group), nil)
+	ctx = context.WithValue(ctx, transactionIdForLoggerCtx, nil)
 	return ctx
 }
 
