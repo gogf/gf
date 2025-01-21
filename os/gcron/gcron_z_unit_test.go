@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
@@ -287,12 +288,17 @@ func TestCron_JobWaiter(t *testing.T) {
 		var err error
 		s1 := garray.New(true)
 		s2 := garray.New(true)
+		var firstJobWaitGroup, secondJobWaitGroup sync.WaitGroup
+		firstJobWaitGroup.Add(4)
+		secondJobWaitGroup.Add(2)
 		_, err = gcron.Add(ctx, "* * * * * *", func(ctx context.Context) {
+			firstJobWaitGroup.Done()
 			g.Log().Debug(ctx, "Every second")
 			s1.Append(struct{}{})
 		}, "MyFirstCronJob")
 		t.Assert(err, nil)
 		_, err = gcron.Add(ctx, "*/2 * * * * *", func(ctx context.Context) {
+			secondJobWaitGroup.Done()
 			g.Log().Debug(ctx, "Every 2s job start")
 			time.Sleep(3 * time.Second)
 			s2.Append(struct{}{})
@@ -305,6 +311,8 @@ func TestCron_JobWaiter(t *testing.T) {
 
 		go func() {
 			time.Sleep(4 * time.Second) // Ensure that the job is triggered twice
+			firstJobWaitGroup.Wait()
+			secondJobWaitGroup.Wait()
 			glog.Print(ctx, "Sending SIGINT")
 			quit <- syscall.SIGINT // Send SIGINT
 		}()
