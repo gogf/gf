@@ -2,8 +2,9 @@ package gtime_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/os/gtime"
 	"time"
+
+	"github.com/gogf/gf/v2/os/gtime"
 )
 
 func ExampleSetStringLayout() {
