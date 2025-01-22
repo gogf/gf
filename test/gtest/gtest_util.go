@@ -249,6 +249,14 @@ func AssertIN(value, expect interface{}) {
 			expectStr = gconv.String(expect)
 		)
 		passed = gstr.Contains(expectStr, valueStr)
+	case reflect.Map:
+		expectMap := gconv.Map(expect)
+		for _, v1 := range gconv.Strings(value) {
+			if _, exists := expectMap[v1]; !exists {
+				passed = false
+				break
+			}
+		}
 	default:
 		panic(fmt.Sprintf(`[ASSERT] INVALID EXPECT VALUE TYPE: %v`, expectKind))
 	}
