@@ -10,8 +10,6 @@ import (
 	"context"
 
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
@@ -26,14 +24,6 @@ func (d *Driver) DoFilter(
 
 	case gstr.HasPrefix(sql, gdb.InsertOperationReplace):
 		sql = "INSERT OR REPLACE" + sql[len(gdb.InsertOperationReplace):]
-
-	default:
-		if gstr.Contains(sql, gdb.InsertOnDuplicateKeyUpdate) {
-			return sql, args, gerror.NewCode(
-				gcode.CodeNotSupported,
-				`Save operation is not supported by sqlite driver`,
-			)
-		}
 	}
 	return d.Core.DoFilter(ctx, link, sql, args)
 }

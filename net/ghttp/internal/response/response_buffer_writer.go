@@ -82,7 +82,7 @@ func (w *BufferWriter) Flush() {
 		w.Writer.WriteHeader(w.Status)
 	}
 	// Default status text output.
-	if w.Status != http.StatusOK && w.buffer.Len() == 0 {
+	if w.Status != http.StatusOK && w.buffer.Len() == 0 && w.Writer.BytesWritten() == 0 {
 		w.buffer.WriteString(http.StatusText(w.Status))
 	}
 	if w.buffer.Len() > 0 {
