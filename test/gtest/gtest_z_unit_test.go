@@ -322,6 +322,18 @@ func TestAssertIN(t *testing.T) {
 	})
 }
 
+func TestAssertIN_Map(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertIN("k1", map[string]string{"k1": "v1", "k2": "v2"})
+	})
+}
+
+func TestAssertNI_Map(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNI("k3", map[string]string{"k1": "v1", "k2": "v2"})
+	})
+}
+
 func TestAssertNI(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertNI("d", []string{"a", "b", "c"})
