@@ -850,3 +850,25 @@ func TestArray_Walk(t *testing.T) {
 		}), g.Slice{"key-1", "key-2"})
 	})
 }
+
+func TestArray_MarshalJSON(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewArrayFrom([]interface{}{1, 2, 3}, true)
+
+		go func() {
+			time.Sleep(1 * time.Second)
+			array.Append(4)
+		}()
+
+		// MarshalJSON code here, just replace:
+		//func (a Array) MarshalJSON() ([]byte, error) {
+		//	fmt.Println(fmt.Sprintf("before=%+v", a.array))
+		//	time.Sleep(2 * time.Second)
+		//	fmt.Println(fmt.Sprintf("after=%+v", a.array))
+		//	return json.Marshal(a.array)
+		//}
+		data, err := array.MarshalJSON()
+		t.AssertNil(err)
+		t.Assert(data, []byte(`[1,2,3]`))
+	})
+}
