@@ -7,12 +7,12 @@
 package utils
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
+
+	"github.com/schollz/progressbar/v3"
 
 	"github.com/gogf/gf/v2/errors/gerror"
 
@@ -34,26 +34,16 @@ func HTTPDownloadFileWithPercent(url string, localSaveFilePath string) error {
 	}
 	defer headResp.Body.Close()
 
-	size, err := strconv.Atoi(headResp.Header.Get("Content-Length"))
-	if err != nil {
-		return gerror.Wrap(err, "retrieve Content-Length failed")
-	}
-	doneCh := make(chan int64)
-
-	go doPrintDownloadPercent(doneCh, localSaveFilePath, int64(size))
-
 	resp, err := http.Get(url)
 	if err != nil {
 		return gerror.Wrapf(err, `download "%s" to "%s" failed`, url, localSaveFilePath)
 	}
 	defer resp.Body.Close()
 
-	wroteBytesCount, err := io.Copy(out, resp.Body)
-	if err != nil {
-		return gerror.Wrapf(err, `download "%s" to "%s" failed`, url, localSaveFilePath)
-	}
+	bar := progressbar.NewOptions(int(resp.ContentLength), progressbar.OptionShowBytes(true), progressbar.OptionShowCount())
+	writer := io.MultiWriter(out, bar)
+	_, err = io.Copy(writer, resp.Body)
 
-	doneCh <- wroteBytesCount
 	elapsed := time.Since(start)
 	if elapsed > time.Minute {
 		mlog.Printf(`download completed in %.0fm`, float64(elapsed)/float64(time.Minute))
@@ -62,46 +52,4 @@ func HTTPDownloadFileWithPercent(url string, localSaveFilePath string) error {
 	}
 
 	return nil
-}
-
-func doPrintDownloadPercent(doneCh chan int64, localSaveFilePath string, total int64) {
-	var (
-		stop           = false
-		lastPercentFmt string
-	)
-	file, err := os.Open(localSaveFilePath)
-	if err != nil {
-		mlog.Fatal(err)
-	}
-	defer file.Close()
-
-	for {
-		select {
-		case <-doneCh:
-			stop = true
-
-		default:
-			fi, err := file.Stat()
-			if err != nil {
-				mlog.Fatal(err)
-			}
-			size := fi.Size()
-			if size == 0 {
-				size = 1
-			}
-			var (
-				percent    = float64(size) / float64(total) * 100
-				percentFmt = fmt.Sprintf(`%.0f`, percent) + "%"
-			)
-			if lastPercentFmt != percentFmt {
-				lastPercentFmt = percentFmt
-				mlog.Print(percentFmt)
-			}
-		}
-
-		if stop {
-			break
-		}
-		time.Sleep(time.Second)
-	}
 }
