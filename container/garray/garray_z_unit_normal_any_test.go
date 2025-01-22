@@ -851,17 +851,17 @@ func TestArray_Walk(t *testing.T) {
 	})
 }
 
-func TestArray_MarshalJSON(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		//array := garray.NewArrayFrom([]interface{}{1, 2, 3}, true)
-		//
-		//go func() {
-		//	time.Sleep(1 * time.Second)
-		//	array.Append(4)
-		//}()
-		//
-		//data, err := array.MarshalJSON()
-		//t.AssertNil(err)
-		//t.Assert(data, []byte(`[1,2,3]`))
-	})
-}
+//func TestArray_MarshalJSON(t *testing.T) {
+//	gtest.C(t, func(t *gtest.T) {
+//		array := garray.NewArrayFrom([]interface{}{1, 2, 3}, true)
+//
+//		go func() {
+//			time.Sleep(1 * time.Second)
+//			array.Append(4)
+//		}()
+//
+//		data, err := array.MarshalJSON()
+//		t.AssertNil(err)
+//		t.Assert(data, []byte(`[1,2,3]`))
+//	})
+//}
