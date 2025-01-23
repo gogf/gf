@@ -220,7 +220,6 @@ func AssertLE(value, expect interface{}) {
 // AssertIN checks `value` is IN `expect`.
 // The `expect` should be a slice,
 // but the `value` can be a slice or a basic type variable.
-// TODO map support.
 // TODO: gconv.Strings(0) is not [0]
 func AssertIN(value, expect interface{}) {
 	var (
@@ -249,6 +248,14 @@ func AssertIN(value, expect interface{}) {
 			expectStr = gconv.String(expect)
 		)
 		passed = gstr.Contains(expectStr, valueStr)
+	case reflect.Map:
+		expectMap := gconv.Map(expect)
+		for _, v1 := range gconv.Strings(value) {
+			if _, exists := expectMap[v1]; !exists {
+				passed = false
+				break
+			}
+		}
 	default:
 		panic(fmt.Sprintf(`[ASSERT] INVALID EXPECT VALUE TYPE: %v`, expectKind))
 	}
@@ -260,7 +267,6 @@ func AssertIN(value, expect interface{}) {
 // AssertNI checks `value` is NOT IN `expect`.
 // The `expect` should be a slice,
 // but the `value` can be a slice or a basic type variable.
-// TODO map support.
 func AssertNI(value, expect interface{}) {
 	var (
 		passed     = true
@@ -287,6 +293,14 @@ func AssertNI(value, expect interface{}) {
 			expectStr = gconv.String(expect)
 		)
 		passed = !gstr.Contains(expectStr, valueStr)
+	case reflect.Map:
+		expectMap := gconv.Map(expect)
+		for _, v1 := range gconv.Strings(value) {
+			if _, exists := expectMap[v1]; exists {
+				passed = false
+				break
+			}
+		}
 	default:
 		panic(fmt.Sprintf(`[ASSERT] INVALID EXPECT VALUE TYPE: %v`, expectKind))
 	}
