@@ -8,6 +8,7 @@ tidy:
 	for file in ${files}; do \
 		goModPath=$$(dirname $$file); \
 		if ! echo $$goModPath | grep -q "testdata"; then \
+			echo "handle: $$goModPath"; \
 			cd $$goModPath; \
 			go mod tidy; \
 			cd -; \
