@@ -24,14 +24,18 @@ type Command struct {
 	Arguments     []Argument    // Argument array, configuring how this command act.
 	Func          Function      // Custom function.
 	FuncWithValue FuncWithValue // Custom function with output parameters that can interact with command caller.
-	HelpFunc      Function      // Custom help function
+	HelpFunc      Function      // Custom help function.
 	Examples      string        // Usage examples.
 	Additional    string        // Additional info about this command, which will be appended to the end of help info.
 	Strict        bool          // Strict parsing options, which means it returns error if invalid option given.
 	CaseSensitive bool          // CaseSensitive parsing options, which means it parses input options in case-sensitive way.
 	Config        string        // Config node name, which also retrieves the values from config component along with command line.
-	parent        *Command      // Parent command for internal usage.
-	commands      []*Command    // Sub commands of this command.
+	internalCommandAttributes
+}
+
+type internalCommandAttributes struct {
+	parent   *Command   // Parent command for internal usage.
+	commands []*Command // Sub commands of this command.
 }
 
 // Function is a custom command callback function that is bound to a certain argument.
@@ -42,11 +46,12 @@ type FuncWithValue func(ctx context.Context, parser *Parser) (out interface{}, e
 
 // Argument is the command value that are used by certain command.
 type Argument struct {
-	Name   string // Option name.
-	Short  string // Option short.
-	Brief  string // Brief info about this Option, which is used in help info.
-	IsArg  bool   // IsArg marks this argument taking value from command line argument instead of option.
-	Orphan bool   // Whether this Option having or having no value bound to it.
+	Name    string // Option name.
+	Short   string // Option short.
+	Default string // Option default value.
+	Brief   string // Brief info about this Option, which is used in help info.
+	IsArg   bool   // IsArg marks this argument taking value from command line argument instead of option.
+	Orphan  bool   // Whether this Option having or having no value bound to it.
 }
 
 var (

@@ -50,9 +50,7 @@ func (f *Field) TagStr() string {
 
 // TagMap returns all the tag of the field along with its value string as map.
 func (f *Field) TagMap() map[string]string {
-	var (
-		data = ParseTag(f.TagStr())
-	)
+	data := ParseTag(f.TagStr())
 	for k, v := range data {
 		data[k] = utils.StripSlashes(gtag.Parse(v))
 	}
@@ -92,7 +90,24 @@ func (f *Field) OriginalKind() reflect.Kind {
 		reflectType = reflectType.Elem()
 		reflectKind = reflectType.Kind()
 	}
+
 	return reflectKind
+}
+
+// OriginalValue retrieves and returns the original reflect.Value of Field `f`.
+func (f *Field) OriginalValue() reflect.Value {
+	var (
+		reflectValue = f.Value
+		reflectType  = reflectValue.Type()
+		reflectKind  = reflectType.Kind()
+	)
+
+	for reflectKind == reflect.Ptr && !f.IsNil() {
+		reflectValue = reflectValue.Elem()
+		reflectKind = reflectValue.Type().Kind()
+	}
+
+	return reflectValue
 }
 
 // IsEmpty checks and returns whether the value of this Field is empty.

@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -32,10 +33,20 @@ func (m *Model) QuoteWord(s string) string {
 // Also see DriverMysql.TableFields.
 func (m *Model) TableFields(tableStr string, schema ...string) (fields map[string]*TableField, err error) {
 	var (
-		table      = m.db.GetCore().guessPrimaryTableName(tableStr)
+		ctx        = m.GetCtx()
+		usedTable  = m.db.GetCore().guessPrimaryTableName(tableStr)
 		usedSchema = gutil.GetOrDefaultStr(m.schema, schema...)
 	)
-	return m.db.TableFields(m.GetCtx(), table, usedSchema)
+	// Sharding feature.
+	usedSchema, err = m.getActualSchema(ctx, usedSchema)
+	if err != nil {
+		return nil, err
+	}
+	usedTable, err = m.getActualTable(ctx, usedTable)
+	if err != nil {
+		return nil, err
+	}
+	return m.db.TableFields(ctx, usedTable, usedSchema)
 }
 
 // getModel creates and returns a cloned model of current model if `safe` is true, or else it returns
@@ -52,7 +63,7 @@ func (m *Model) getModel() *Model {
 // Eg:
 // ID        -> id
 // NICK_Name -> nickname.
-func (m *Model) mappingAndFilterToTableFields(table string, fields []string, filter bool) []string {
+func (m *Model) mappingAndFilterToTableFields(table string, fields []any, filter bool) []any {
 	var fieldsTable = table
 	if fieldsTable != "" {
 		hasTable, _ := m.db.GetCore().HasTable(fieldsTable)
@@ -68,30 +79,46 @@ func (m *Model) mappingAndFilterToTableFields(table string, fields []string, fil
 	if len(fieldsMap) == 0 {
 		return fields
 	}
-	var (
-		inputFieldsArray  = gstr.SplitAndTrim(gstr.Join(fields, ","), ",")
-		outputFieldsArray = make([]string, 0, len(inputFieldsArray))
-	)
+	var outputFieldsArray = make([]any, 0)
 	fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
 	for k := range fieldsMap {
 		fieldsKeyMap[k] = nil
 	}
-	for _, field := range inputFieldsArray {
-		if _, ok := fieldsKeyMap[field]; !ok {
-			if !gregex.IsMatchString(regularFieldNameWithoutDotRegPattern, field) {
-				// Eg: user.id, user.name
-				outputFieldsArray = append(outputFieldsArray, field)
+	for _, field := range fields {
+		var (
+			fieldStr         = gconv.String(field)
+			inputFieldsArray []string
+		)
+		switch {
+		case gregex.IsMatchString(regularFieldNameWithoutDotRegPattern, fieldStr):
+			inputFieldsArray = append(inputFieldsArray, fieldStr)
+
+		case gregex.IsMatchString(regularFieldNameWithCommaRegPattern, fieldStr):
+			inputFieldsArray = gstr.SplitAndTrim(fieldStr, ",")
+
+		default:
+			// Example:
+			// user.id, user.name
+			// replace(concat_ws(',',lpad(s.id, 6, '0'),s.name),',','') `code`
+			outputFieldsArray = append(outputFieldsArray, field)
+			continue
+		}
+		for _, inputField := range inputFieldsArray {
+			if !gregex.IsMatchString(regularFieldNameWithoutDotRegPattern, inputField) {
+				outputFieldsArray = append(outputFieldsArray, inputField)
 				continue
-			} else {
-				// Eg: id, name
-				if foundKey, _ := gutil.MapPossibleItemByKey(fieldsKeyMap, field); foundKey != "" {
+			}
+			if _, ok := fieldsKeyMap[inputField]; !ok {
+				// Example:
+				// id, name
+				if foundKey, _ := gutil.MapPossibleItemByKey(fieldsKeyMap, inputField); foundKey != "" {
 					outputFieldsArray = append(outputFieldsArray, foundKey)
 				} else if !filter {
-					outputFieldsArray = append(outputFieldsArray, field)
+					outputFieldsArray = append(outputFieldsArray, inputField)
 				}
+			} else {
+				outputFieldsArray = append(outputFieldsArray, inputField)
 			}
-		} else {
-			outputFieldsArray = append(outputFieldsArray, field)
 		}
 	}
 	return outputFieldsArray
@@ -126,9 +153,24 @@ func (m *Model) filterDataForInsertOrUpdate(data interface{}) (interface{}, erro
 // doMappingAndFilterForInsertOrUpdateDataMap does the filter features for map.
 // Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
 func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(data Map, allowOmitEmpty bool) (Map, error) {
-	var err error
-	data, err = m.db.GetCore().mappingAndFilterData(
-		m.GetCtx(), m.schema, m.tablesInit, data, m.filter,
+	var (
+		err    error
+		ctx    = m.GetCtx()
+		core   = m.db.GetCore()
+		schema = m.schema
+		table  = m.tablesInit
+	)
+	// Sharding feature.
+	schema, err = m.getActualSchema(ctx, schema)
+	if err != nil {
+		return nil, err
+	}
+	table, err = m.getActualTable(ctx, table)
+	if err != nil {
+		return nil, err
+	}
+	data, err = core.mappingAndFilterData(
+		ctx, schema, table, data, m.filter,
 	)
 	if err != nil {
 		return nil, err
@@ -176,26 +218,26 @@ func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(data Map, allowOmitEm
 		data = tempMap
 	}
 
-	if len(m.fields) > 0 && m.fields != "*" {
+	if len(m.fields) > 0 {
 		// Keep specified fields.
 		var (
-			set          = gset.NewStrSetFrom(gstr.SplitAndTrim(m.fields, ","))
+			fieldSet     = gset.NewStrSetFrom(gconv.Strings(m.fields))
 			charL, charR = m.db.GetChars()
 			chars        = charL + charR
 		)
-		set.Walk(func(item string) string {
+		fieldSet.Walk(func(item string) string {
 			return gstr.Trim(item, chars)
 		})
 		for k := range data {
 			k = gstr.Trim(k, chars)
-			if !set.Contains(k) {
+			if !fieldSet.Contains(k) {
 				delete(data, k)
 			}
 		}
 	} else if len(m.fieldsEx) > 0 {
 		// Filter specified fields.
-		for _, v := range gstr.SplitAndTrim(m.fieldsEx, ",") {
-			delete(data, v)
+		for _, v := range m.fieldsEx {
+			delete(data, gconv.String(v))
 		}
 	}
 	return data, nil

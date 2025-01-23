@@ -252,11 +252,34 @@ func Glob(pattern string, onlyNames ...bool) ([]string, error) {
 // If parameter `path` is directory, it deletes it recursively.
 //
 // It does nothing if given `path` does not exist or is empty.
+//
+// Deprecated:
+// As the name Remove for files deleting is ambiguous,
+// please use RemoveFile or RemoveAll for explicit usage instead.
 func Remove(path string) (err error) {
 	// It does nothing if `path` is empty.
 	if path == "" {
 		return nil
 	}
+	if err = os.RemoveAll(path); err != nil {
+		err = gerror.Wrapf(err, `os.RemoveAll failed for path "%s"`, path)
+	}
+	return
+}
+
+// RemoveFile removes the named file or (empty) directory.
+func RemoveFile(path string) (err error) {
+	if err = os.Remove(path); err != nil {
+		err = gerror.Wrapf(err, `os.Remove failed for path "%s"`, path)
+	}
+	return
+}
+
+// RemoveAll removes path and any children it contains.
+// It removes everything it can but returns the first error
+// it encounters. If the path does not exist, RemoveAll
+// returns nil (no error).
+func RemoveAll(path string) (err error) {
 	if err = os.RemoveAll(path); err != nil {
 		err = gerror.Wrapf(err, `os.RemoveAll failed for path "%s"`, path)
 	}
@@ -270,7 +293,9 @@ func IsReadable(path string) bool {
 	if err != nil {
 		result = false
 	}
-	file.Close()
+	if file != nil {
+		_ = file.Close()
+	}
 	return result
 }
 
@@ -294,7 +319,9 @@ func IsWritable(path string) bool {
 		if err != nil {
 			result = false
 		}
-		_ = file.Close()
+		if file != nil {
+			_ = file.Close()
+		}
 	}
 	return result
 }
@@ -352,17 +379,19 @@ func SelfDir() string {
 // Trailing path separators are removed before extracting the last element.
 // If the path is empty, Base returns ".".
 // If the path consists entirely of separators, Basename returns a single separator.
+//
 // Example:
-// /var/www/file.js -> file.js
-// file.js          -> file.js
+// Basename("/var/www/file.js") -> file.js
+// Basename("file.js")          -> file.js
 func Basename(path string) string {
 	return filepath.Base(path)
 }
 
 // Name returns the last element of path without file extension.
+//
 // Example:
-// /var/www/file.js -> file
-// file.js          -> file
+// Name("/var/www/file.js") -> file
+// Name("file.js")          -> file
 func Name(path string) string {
 	base := filepath.Base(path)
 	if i := strings.LastIndexByte(base, '.'); i != -1 {
@@ -378,6 +407,10 @@ func Name(path string) string {
 // If the `path` is ".", Dir treats the path as current working directory.
 // If the `path` consists entirely of separators, Dir returns a single separator.
 // The returned path does not end in a separator unless it is the root directory.
+//
+// Example:
+// Dir("/var/www/file.js") -> "/var/www"
+// Dir("file.js")          -> "."
 func Dir(path string) string {
 	if path == "." {
 		return filepath.Dir(RealPath(path))
@@ -400,15 +433,17 @@ func IsEmpty(path string) bool {
 		if err != nil {
 			return true
 		}
+		if file == nil {
+			return true
+		}
 		defer file.Close()
 		names, err := file.Readdirnames(-1)
 		if err != nil {
 			return true
 		}
 		return len(names) == 0
-	} else {
-		return stat.Size() == 0
 	}
+	return stat.Size() == 0
 }
 
 // Ext returns the file name extension used by path.
@@ -416,9 +451,10 @@ func IsEmpty(path string) bool {
 // in the final element of path; it is empty if there is
 // no dot.
 // Note: the result contains symbol '.'.
-// Eg:
-// main.go  => .go
-// api.json => .json
+//
+// Example:
+// Ext("main.go")  => .go
+// Ext("api.json") => .json
 func Ext(path string) string {
 	ext := filepath.Ext(path)
 	if p := strings.IndexByte(ext, '?'); p != -1 {
@@ -429,9 +465,10 @@ func Ext(path string) string {
 
 // ExtName is like function Ext, which returns the file name extension used by path,
 // but the result does not contain symbol '.'.
-// Eg:
-// main.go  => go
-// api.json => json
+//
+// Example:
+// ExtName("main.go")  => go
+// ExtName("api.json") => json
 func ExtName(path string) string {
 	return strings.TrimLeft(Ext(path), ".")
 }

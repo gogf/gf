@@ -138,7 +138,7 @@ func (c *Client) doUpdate(ctx context.Context, namespace string) (err error) {
 		)
 	}
 	var j *gjson.Json
-	if j, err = gjson.LoadContent(cm.Data[c.config.DataItem]); err != nil {
+	if j, err = gjson.LoadContent([]byte(cm.Data[c.config.DataItem])); err != nil {
 		return gerror.Wrapf(
 			err,
 			`parse config map item from %s[%s] failed`, c.config.ConfigMap, c.config.DataItem,
@@ -164,14 +164,16 @@ func (c *Client) doWatch(ctx context.Context, namespace string) (err error) {
 			c.config.ConfigMap, namespace,
 		)
 	}
-	go func() {
-		for {
-			event := <-watchHandler.ResultChan()
-			switch event.Type {
-			case watch.Modified:
-				_ = c.doUpdate(ctx, namespace)
-			}
-		}
-	}()
+	go c.startAsynchronousWatch(ctx, namespace, watchHandler)
 	return nil
+}
+
+func (c *Client) startAsynchronousWatch(ctx context.Context, namespace string, watchHandler watch.Interface) {
+	for {
+		event := <-watchHandler.ResultChan()
+		switch event.Type {
+		case watch.Modified:
+			_ = c.doUpdate(ctx, namespace)
+		}
+	}
 }

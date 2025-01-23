@@ -156,6 +156,9 @@ func (c *Command) PrintTo(writer io.Writer) {
 				spaceLength    = maxSpaceLength - len(nameStr)
 				wordwrapPrefix = gstr.Repeat(" ", len(prefix+nameStr)+spaceLength+4)
 			)
+			if arg.Default != "" {
+				brief = fmt.Sprintf("%s (default: \"%s\")", brief, arg.Default)
+			}
 			c.printLineBrief(printLineBriefInput{
 				Buffer:         buffer,
 				Name:           nameStr,

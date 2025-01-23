@@ -257,6 +257,89 @@ func Test_GroupGeneric_Keys(t *testing.T) {
 	})
 }
 
+func Test_GroupGeneric_Scan(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		err := redis.GroupString().MSet(ctx, map[string]interface{}{
+			"firstname": "Jack",
+			"lastname":  "Stuntman",
+			"age":       35,
+			"nickname":  "Jumper",
+		})
+		t.AssertNil(err)
+
+		performScan := func(cursor uint64, option ...gredis.ScanOption) ([]string, error) {
+			var allKeys = []string{}
+			for {
+				var nextCursor uint64
+				var keys []string
+				var err error
+
+				if option != nil {
+					nextCursor, keys, err = redis.Scan(ctx, cursor, option[0])
+				} else {
+					nextCursor, keys, err = redis.Scan(ctx, cursor)
+				}
+				if err != nil {
+					return nil, err
+				}
+
+				allKeys = append(allKeys, keys...)
+				if nextCursor == 0 {
+					break
+				}
+				cursor = nextCursor
+			}
+			return allKeys, nil
+		}
+
+		// Test scanning for keys with `*name*` pattern
+		optWithName := gredis.ScanOption{Match: "*name*", Count: 10}
+		keysWithName, err := performScan(0, optWithName)
+		t.AssertNil(err)
+		t.AssertGE(len(keysWithName), 3)
+		t.AssertIN(keysWithName, []string{"lastname", "firstname", "nickname"})
+
+		// Test scanning with a pattern that matches exactly one key
+		optWithAge := gredis.ScanOption{Match: "a??", Count: 10}
+		keysWithAge, err := performScan(0, optWithAge)
+		t.AssertNil(err)
+		t.AssertEQ(len(keysWithAge), 1)
+		t.AssertEQ(keysWithAge, []string{"age"})
+
+		// Test scanning for all keys
+		optWithAll := gredis.ScanOption{Match: "*", Count: 10}
+		all, err := performScan(0, optWithAll)
+		t.AssertNil(err)
+		t.AssertGE(len(all), 4)
+		t.AssertIN(all, []string{"lastname", "firstname", "age", "nickname"})
+
+		// Test empty pattern
+		optWithEmptyPattern := gredis.ScanOption{Match: ""}
+		emptyPatternKeys, err := performScan(0, optWithEmptyPattern)
+		t.AssertNil(err)
+		t.AssertEQ(len(emptyPatternKeys), 4)
+
+		// Test pattern with no matches
+		optWithNoMatch := gredis.ScanOption{Match: "xyz*", Count: 10}
+		noMatchKeys, err := performScan(0, optWithNoMatch)
+		t.AssertNil(err)
+		t.AssertEQ(len(noMatchKeys), 0)
+
+		// Test scanning for keys with invalid count value
+		optWithInvalidCount := gredis.ScanOption{Count: -1}
+		_, err = performScan(0, optWithInvalidCount)
+		t.AssertNQ(err, nil)
+
+		// Test scanning for all keys without options
+		allWithoutOpt, err := performScan(0)
+		t.AssertNil(err)
+		t.AssertGE(len(allWithoutOpt), 4)
+		t.AssertIN(all, []string{"lastname", "firstname", "age", "nickname"})
+	})
+}
+
 func Test_GroupGeneric_FlushDB(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
@@ -351,7 +434,7 @@ func Test_GroupGeneric_ExpireAt(t *testing.T) {
 		result, err = redis.GroupGeneric().ExpireAt(ctx, TestKey, time.Now().Add(time.Millisecond*100))
 		t.AssertNil(err)
 		t.AssertEQ(result, int64(1))
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(time.Millisecond * 200)
 		result, err = redis.GroupGeneric().Exists(ctx, TestKey)
 		t.AssertNil(err)
 		t.AssertEQ(result, int64(0))

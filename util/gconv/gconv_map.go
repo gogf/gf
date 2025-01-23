@@ -13,6 +13,8 @@ import (
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 type recursiveType string
@@ -29,7 +31,7 @@ type MapOption struct {
 	// a map[string]interface{} type variable.
 	Deep bool
 
-	// OmitEmpty ignores the attributes that has json omitempty tag.
+	// OmitEmpty ignores the attributes that has json `omitempty` tag.
 	OmitEmpty bool
 
 	// Tags specifies the converted map key name by struct tag name.
@@ -39,8 +41,8 @@ type MapOption struct {
 // Map converts any variable `value` to map[string]interface{}. If the parameter `value` is not a
 // map/struct/*struct type, then the conversion will fail and returns nil.
 //
-// If `value` is a struct/*struct object, the second parameter `tags` specifies the most priority
-// tags that will be detected, otherwise it detects the tags in order of:
+// If `value` is a struct/*struct object, the second parameter `priorityTagAndFieldName` specifies the most priority
+// priorityTagAndFieldName that will be detected, otherwise it detects the priorityTagAndFieldName in order of:
 // gconv, json, field name.
 func Map(value interface{}, option ...MapOption) map[string]interface{} {
 	return doMapConvert(value, recursiveTypeAuto, false, option...)
@@ -52,6 +54,7 @@ func Map(value interface{}, option ...MapOption) map[string]interface{} {
 // Deprecated: used Map instead.
 func MapDeep(value interface{}, tags ...string) map[string]interface{} {
 	return doMapConvert(value, recursiveTypeTrue, false, MapOption{
+		Deep: true,
 		Tags: tags,
 	})
 }
@@ -64,15 +67,24 @@ func doMapConvert(value interface{}, recursive recursiveType, mustMapReturn bool
 	if value == nil {
 		return nil
 	}
-	var usedOption = getUsedMapOption(option...)
-	newTags := StructTagPriority
+	// It redirects to its underlying value if it has implemented interface iVal.
+	if v, ok := value.(localinterface.IVal); ok {
+		value = v.Val()
+	}
+	var (
+		usedOption = getUsedMapOption(option...)
+		newTags    = gtag.StructTagPriority
+	)
+	if usedOption.Deep {
+		recursive = recursiveTypeTrue
+	}
 	switch len(usedOption.Tags) {
 	case 0:
 		// No need handling.
 	case 1:
-		newTags = append(strings.Split(usedOption.Tags[0], ","), StructTagPriority...)
+		newTags = append(strings.Split(usedOption.Tags[0], ","), gtag.StructTagPriority...)
 	default:
-		newTags = append(usedOption.Tags, StructTagPriority...)
+		newTags = append(usedOption.Tags, gtag.StructTagPriority...)
 	}
 	// Assert the common combination of types, and finally it uses reflection.
 	dataMap := make(map[string]interface{})
@@ -286,17 +298,17 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 	switch reflectKind {
 	case reflect.Map:
 		var (
-			mapKeys = reflectValue.MapKeys()
+			mapIter = reflectValue.MapRange()
 			dataMap = make(map[string]interface{})
 		)
-		for _, k := range mapKeys {
+		for mapIter.Next() {
 			var (
-				mapKeyValue = reflectValue.MapIndex(k)
+				mapKeyValue = mapIter.Value()
 				mapValue    interface{}
 			)
 			switch {
 			case mapKeyValue.IsZero():
-				if mapKeyValue.IsNil() {
+				if utils.CanCallIsNil(mapKeyValue) && mapKeyValue.IsNil() {
 					// quick check for nil value.
 					mapValue = nil
 				} else {
@@ -307,7 +319,7 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 			default:
 				mapValue = mapKeyValue.Interface()
 			}
-			dataMap[String(k.Interface())] = doMapConvertForMapOrStructValue(
+			dataMap[String(mapIter.Key().Interface())] = doMapConvertForMapOrStructValue(
 				doMapConvertForMapOrStructValueInput{
 					IsRoot:          false,
 					Value:           mapValue,
@@ -322,7 +334,7 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 	case reflect.Struct:
 		var dataMap = make(map[string]interface{})
 		// Map converting interface check.
-		if v, ok := in.Value.(iMapStrAny); ok {
+		if v, ok := in.Value.(localinterface.IMapStrAny); ok {
 			// Value copy, in case of concurrent safety.
 			for mapK, mapV := range v.MapStrAny() {
 				if in.RecursiveOption {
@@ -474,14 +486,14 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 					dataMap[mapKey] = array
 				case reflect.Map:
 					var (
-						mapKeys   = rvAttrField.MapKeys()
+						mapIter   = rvAttrField.MapRange()
 						nestedMap = make(map[string]interface{})
 					)
-					for _, k := range mapKeys {
-						nestedMap[String(k.Interface())] = doMapConvertForMapOrStructValue(
+					for mapIter.Next() {
+						nestedMap[String(mapIter.Key().Interface())] = doMapConvertForMapOrStructValue(
 							doMapConvertForMapOrStructValueInput{
 								IsRoot:          false,
-								Value:           rvAttrField.MapIndex(k).Interface(),
+								Value:           mapIter.Value().Interface(),
 								RecursiveType:   in.RecursiveType,
 								RecursiveOption: in.RecursiveType == recursiveTypeTrue,
 								Option:          in.Option,

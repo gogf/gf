@@ -1,3 +1,9 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package main
 
 import (
@@ -7,14 +13,16 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/gogf/gf/contrib/registry/file/v2"
-	"github.com/gogf/gf/example/rpc/grpcx/rawgrpc/helloworld"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
+
+	"github.com/gogf/gf/contrib/registry/file/v2"
+
+	"github.com/gogf/gf/example/rpc/grpcx/rawgrpc/helloworld"
 )
 
 type GreetingServer struct {

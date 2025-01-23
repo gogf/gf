@@ -99,7 +99,7 @@ func generateStructFieldDefinition(
 		}
 		localTypeNameStr = string(localTypeName)
 		switch localTypeName {
-		case gdb.LocalTypeDate, gdb.LocalTypeDatetime:
+		case gdb.LocalTypeDate, gdb.LocalTypeTime, gdb.LocalTypeDatetime:
 			if in.StdTime {
 				localTypeNameStr = "time.Time"
 			} else {
@@ -126,13 +126,31 @@ func generateStructFieldDefinition(
 		tagKey         = "`"
 		descriptionTag = gstr.Replace(formatComment(field.Comment), `"`, `\"`)
 	)
+	removeFieldPrefixArray := gstr.SplitAndTrim(in.RemoveFieldPrefix, ",")
+	newFiledName := field.Name
+	for _, v := range removeFieldPrefixArray {
+		newFiledName = gstr.TrimLeftStr(newFiledName, v, 1)
+	}
+
+	if in.FieldMapping != nil && len(in.FieldMapping) > 0 {
+		if typeMapping, ok := in.FieldMapping[fmt.Sprintf("%s.%s", in.TableName, newFiledName)]; ok {
+			localTypeNameStr = typeMapping.Type
+			appendImport = typeMapping.Import
+		}
+	}
+
 	attrLines = []string{
-		"    #" + gstr.CaseCamel(field.Name),
+		"    #" + formatFieldName(newFiledName, FieldNameCaseCamel),
 		" #" + localTypeNameStr,
 	}
-	attrLines = append(attrLines, " #"+fmt.Sprintf(tagKey+`json:"%s"`, jsonTag))
-	attrLines = append(attrLines, " #"+fmt.Sprintf(`description:"%s"`+tagKey, descriptionTag))
-	attrLines = append(attrLines, " #"+fmt.Sprintf(`// %s`, formatComment(field.Comment)))
+	attrLines = append(attrLines, fmt.Sprintf(` #%sjson:"%s"`, tagKey, jsonTag))
+	// orm tag
+	if !in.IsDo {
+		// entity
+		attrLines = append(attrLines, fmt.Sprintf(` #orm:"%s"`, field.Name))
+	}
+	attrLines = append(attrLines, fmt.Sprintf(` #description:"%s"%s`, descriptionTag, tagKey))
+	attrLines = append(attrLines, fmt.Sprintf(` #// %s`, formatComment(field.Comment)))
 
 	for k, v := range attrLines {
 		if in.NoJsonTag {
@@ -147,6 +165,43 @@ func generateStructFieldDefinition(
 		attrLines[k] = v
 	}
 	return attrLines, appendImport
+}
+
+type FieldNameCase string
+
+const (
+	FieldNameCaseCamel      FieldNameCase = "CaseCamel"
+	FieldNameCaseCamelLower FieldNameCase = "CaseCamelLower"
+)
+
+// formatFieldName formats and returns a new field name that is used for golang codes generating.
+func formatFieldName(fieldName string, nameCase FieldNameCase) string {
+	// For normal databases like mysql, pgsql, sqlite,
+	// field/table names of that are in normal case.
+	var newFieldName = fieldName
+	if isAllUpper(fieldName) {
+		// For special databases like dm, oracle,
+		// field/table names of that are in upper case.
+		newFieldName = strings.ToLower(fieldName)
+	}
+	switch nameCase {
+	case FieldNameCaseCamel:
+		return gstr.CaseCamel(newFieldName)
+	case FieldNameCaseCamelLower:
+		return gstr.CaseCamelLower(newFieldName)
+	default:
+		return ""
+	}
+}
+
+// isAllUpper checks and returns whether given `fieldName` all letters are upper case.
+func isAllUpper(fieldName string) bool {
+	for _, b := range fieldName {
+		if b >= 'a' && b <= 'z' {
+			return false
+		}
+	}
+	return true
 }
 
 // formatComment formats the comment string to fit the golang code without any lines.

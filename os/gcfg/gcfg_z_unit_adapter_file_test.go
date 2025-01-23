@@ -155,14 +155,14 @@ func TestAdapterFile_Set(t *testing.T) {
 			path = gcfg.DefaultConfigFileName
 			err  = gfile.PutContents(path, config)
 		)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		defer gfile.Remove(path)
 
 		c, err := gcfg.New()
 		t.Assert(c.MustGet(ctx, "log-path").String(), "logs")
 
 		err = c.GetAdapter().(*gcfg.AdapterFile).Set("log-path", "custom-logs")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(c.MustGet(ctx, "log-path").String(), "custom-logs")
 	})
 }

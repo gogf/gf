@@ -138,7 +138,7 @@ func Test_Struct1(t *testing.T) {
 		type UserCollectionAddReq struct {
 			BaseInfo []BaseInfoItem `db:"_" json:"baseInfo" field:"_"`
 		}
-		jsonContent := `{
+		jsonContent := []byte(`{
 	"baseInfo": [{
 		"idCardNumber": "520101199412141111",
 		"isHouseholder": true,
@@ -195,7 +195,8 @@ func Test_Struct1(t *testing.T) {
 		"incomeInfo": [],
 		"liabilityInfo": []
 	}]
-}`
+}
+`)
 		data := new(UserCollectionAddReq)
 		j, err := gjson.LoadJson(jsonContent, true)
 		t.AssertNil(err)
@@ -218,12 +219,14 @@ func Test_Struct(t *testing.T) {
 			Items []*Item                `json:"items"`
 		}
 
-		txt := `{
-		  "id":"88888",
-		  "me":{"name":"mikey","day":"20009"},
-		  "txt":"hello",
-		  "items":null
-		 }`
+		txt := []byte(`
+{
+	"id":"88888",
+	"me":{"name":"mikey","day":"20009"},
+	"txt":"hello",
+	"items":null
+}
+`)
 
 		j, err := gjson.LoadContent(txt)
 		t.AssertNil(err)
@@ -281,13 +284,15 @@ func Test_Struct_Complicated(t *testing.T) {
 	}
 
 	gtest.C(t, func(t *gtest.T) {
-		jsonContent := `{
+		jsonContent := []byte(`
+{
 "certList":[
 {"certId":"2023313","certInfo":"{\"address\":\"xxxxxxx\",\"phoneNumber\":\"15084890\",\"companyName\":\"dddd\",\"communityCreditCode\":\"91110111MBE1G2B\",\"operateRange\":\"fff\",\"registerNo\":\"91110111MA00G2B\",\"legalPersonName\":\"rrr\"}","srcType":"1","statusCode":"2"},
 {"certId":"2023314","certInfo":"{\"identNo\":\"342224196507051\",\"userRealname\":\"xxxx\",\"identType\":\"01\"}","srcType":"8","statusCode":"0"},
 {"certId":"2023322","certInfo":"{\"businessLicense\":\"91110111MA00BE1G\",\"companyName\":\"sssss\",\"communityCreditCode\":\"91110111MA00BE1\"}","srcType":"2","statusCode":"0"}
 ]
-}`
+}
+`)
 		j, err := gjson.LoadContent(jsonContent)
 		t.AssertNil(err)
 		var response = new(Response)

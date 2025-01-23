@@ -83,12 +83,20 @@ func FillStructWithDefault(structPtr interface{}) error {
 	}
 	fields, err := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         reflectValue,
-		RecursiveOption: gstructs.RecursiveOptionNone,
+		RecursiveOption: gstructs.RecursiveOptionEmbedded,
 	})
 	if err != nil {
 		return err
 	}
 	for _, field := range fields {
+		if field.OriginalKind() == reflect.Struct {
+			err := FillStructWithDefault(field.OriginalValue().Addr())
+			if err != nil {
+				return err
+			}
+			continue
+		}
+
 		if defaultValue := field.TagDefault(); defaultValue != "" {
 			if field.IsEmpty() {
 				field.Value.Set(reflect.ValueOf(
@@ -97,5 +105,6 @@ func FillStructWithDefault(structPtr interface{}) error {
 			}
 		}
 	}
+
 	return nil
 }

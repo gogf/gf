@@ -1,19 +1,10 @@
-# Tencent is pleased to support the open source community by making Polaris available.
+# Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 #
-# Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-#
-# Licensed under the BSD 3-Clause License (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# https://opensource.org/licenses/BSD-3-Clause
-#
-# Unless required by applicable law or agreed to in writing, software distributed
-# under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-# CONDITIONS OF ANY KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations under the License.
+# This Source Code Form is subject to the terms of the MIT License.
+# If a copy of the MIT was not distributed with this file,
+# You can obtain one at https://github.com/gogf/gf.
 
-name: GolangCI-Lint
+name: GolangCI Lint
 on:
   push:
     branches:
@@ -23,6 +14,7 @@ on:
       - feature/**
       - enhance/**
       - fix/**
+      - feat/**
   pull_request:
     branches:
       - master
@@ -31,24 +23,28 @@ on:
       - feature/**
       - enhance/**
       - fix/**
+      - feat/**
 
 jobs:
-  golangci:
+  golang-ci:
     strategy:
       matrix:
-        go-version: [ '1.18','1.19','1.20','1.21' ]
-    name: golangci-lint
+        go-version: [ 'stable' ]
+    name: golang-ci-lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup Golang ${{ matrix.go-version }}
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+      - name: golang-ci-lint
+        uses: golangci/golangci-lint-action@v6
         with:
-          # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
-          version: v1.52.2
-          args: --timeout 3m0s
+          # Required: specify the golangci-lint version without the patch version to always use the latest patch.
+          version: v1.62.2
+          only-new-issues: true
+          skip-cache: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          args: --timeout 3m0s --config=.golangci.yml -v

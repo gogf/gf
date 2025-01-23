@@ -24,18 +24,26 @@ var (
 )
 
 // Chr return the ascii string of a number(0-255).
+//
+// Example:
+// Chr(65) -> "A"
 func Chr(ascii int) string {
 	return string([]byte{byte(ascii % 256)})
 }
 
 // Ord converts the first byte of a string to a value between 0 and 255.
+//
+// Example:
+// Chr("A") -> 65
 func Ord(char string) int {
 	return int(char[0])
 }
 
 // OctStr converts string container octal string to its original string,
 // for example, to Chinese string.
-// Eg: `\346\200\241` -> 怡
+//
+// Example:
+// OctStr("\346\200\241") -> 怡
 func OctStr(str string) string {
 	return octReg.ReplaceAllStringFunc(
 		str,
@@ -47,6 +55,9 @@ func OctStr(str string) string {
 }
 
 // Reverse returns a string which is the reverse of `str`.
+//
+// Example:
+// Reverse("123456") -> "654321"
 func Reverse(str string) string {
 	runes := []rune(str)
 	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
@@ -56,10 +67,14 @@ func Reverse(str string) string {
 }
 
 // NumberFormat formats a number with grouped thousands.
-// `decimals`: Sets the number of decimal points.
-// `decPoint`: Sets the separator for the decimal point.
-// `thousandsSep`: Sets the thousands' separator.
+// Parameter `decimals`: Sets the number of decimal points.
+// Parameter `decPoint`: Sets the separator for the decimal point.
+// Parameter `thousandsSep`: Sets the thousands' separator.
 // See http://php.net/manual/en/function.number-format.php.
+//
+// Example:
+// NumberFormat(1234.56, 2, ".", "")  -> 1234,56
+// NumberFormat(1234.56, 2, ",", " ") -> 1 234,56
 func NumberFormat(number float64, decimals int, decPoint, thousandsSep string) string {
 	neg := false
 	if number < 0 {
@@ -103,6 +118,11 @@ func NumberFormat(number float64, decimals int, decPoint, thousandsSep string) s
 
 // Shuffle randomly shuffles a string.
 // It considers parameter `str` as unicode string.
+//
+// Example:
+// Shuffle("123456") -> "325164"
+// Shuffle("123456") -> "231546"
+// ...
 func Shuffle(str string) string {
 	runes := []rune(str)
 	s := make([]rune, len(runes))

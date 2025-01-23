@@ -8,6 +8,7 @@ package grpcx
 
 import (
 	"fmt"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -31,11 +32,11 @@ func (c modClient) NewGrpcClientConn(serviceNameOrAddress string, opts ...grpc.D
 	autoLoadAndRegisterFileRegistry()
 
 	var (
-		dialAddress       = serviceNameOrAddress
+		target            = serviceNameOrAddress
 		grpcClientOptions = make([]grpc.DialOption, 0)
 	)
 	if isServiceName(serviceNameOrAddress) {
-		dialAddress = fmt.Sprintf(
+		target = fmt.Sprintf(
 			`%s://%s`,
 			gsvc.Schema, gsvc.NewServiceWithName(serviceNameOrAddress).GetKey(),
 		)
@@ -69,7 +70,7 @@ func (c modClient) NewGrpcClientConn(serviceNameOrAddress string, opts ...grpc.D
 	grpcClientOptions = append(grpcClientOptions, c.ChainStream(
 		c.StreamTracing,
 	))
-	conn, err := grpc.Dial(dialAddress, grpcClientOptions...)
+	conn, err := grpc.NewClient(target, grpcClientOptions...)
 	if err != nil {
 		return nil, err
 	}
@@ -104,6 +105,8 @@ func (c modClient) ChainStream(interceptors ...grpc.StreamClientInterceptor) grp
 
 // isServiceName checks and returns whether given input parameter is service name or not.
 // It checks by whether the parameter is address by containing port delimiter character ':'.
+//
+// It does not contain any port number if using service discovery.
 func isServiceName(serviceNameOrAddress string) bool {
 	return !gstr.Contains(serviceNameOrAddress, gsvc.EndpointHostPortDelimiter)
 }

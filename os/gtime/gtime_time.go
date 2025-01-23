@@ -26,7 +26,11 @@ type iUnixNano interface {
 }
 
 // New creates and returns a Time object with given parameter.
-// The optional parameter can be type of: time.Time/*time.Time, string or integer.
+// The optional parameter is the time object which can be type of: time.Time/*time.Time, string or integer.
+// Example:
+// New("2024-10-29")
+// New(1390876568)
+// New(t) // The t is type of time.Time.
 func New(param ...interface{}) *Time {
 	if len(param) > 0 {
 		switch r := param[0].(type) {

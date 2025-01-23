@@ -7,17 +7,19 @@
 package main
 
 import (
-	"github.com/gogf/gf/cmd/gf/v2/gfcmd"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gctx"
+
+	"github.com/gogf/gf/cmd/gf/v2/gfcmd"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 func main() {
 	var (
-		ctx = gctx.GetInitCtx()
+		ctx          = gctx.GetInitCtx()
+		command, err = gfcmd.GetCommand(ctx)
 	)
-	command, err := gfcmd.GetCommand(ctx)
+
 	if err != nil {
 		mlog.Fatalf(`%+v`, err)
 	}

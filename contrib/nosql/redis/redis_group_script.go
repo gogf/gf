@@ -16,13 +16,13 @@ import (
 
 // GroupScript provides script functions for redis.
 type GroupScript struct {
-	redis *Redis
+	Operation gredis.AdapterOperation
 }
 
 // GroupScript creates and returns GroupScript.
 func (r *Redis) GroupScript() gredis.IGroupScript {
 	return GroupScript{
-		redis: r,
+		Operation: r.AdapterOperation,
 	}
 }
 
@@ -33,7 +33,7 @@ func (r GroupScript) Eval(ctx context.Context, script string, numKeys int64, key
 	var s = []interface{}{script, numKeys}
 	s = append(s, gconv.Interfaces(keys)...)
 	s = append(s, args...)
-	v, err := r.redis.Do(ctx, "Eval", s...)
+	v, err := r.Operation.Do(ctx, "Eval", s...)
 	return v, err
 }
 
@@ -47,7 +47,7 @@ func (r GroupScript) EvalSha(ctx context.Context, sha1 string, numKeys int64, ke
 	var s = []interface{}{sha1, numKeys}
 	s = append(s, gconv.Interfaces(keys)...)
 	s = append(s, args...)
-	v, err := r.redis.Do(ctx, "EvalSha", s...)
+	v, err := r.Operation.Do(ctx, "EvalSha", s...)
 	return v, err
 }
 
@@ -57,7 +57,7 @@ func (r GroupScript) EvalSha(ctx context.Context, sha1 string, numKeys int64, ke
 //
 // https://redis.io/commands/script-load/
 func (r GroupScript) ScriptLoad(ctx context.Context, script string) (string, error) {
-	v, err := r.redis.Do(ctx, "Script", "Load", script)
+	v, err := r.Operation.Do(ctx, "Script", "Load", script)
 	return v.String(), err
 }
 
@@ -75,7 +75,10 @@ func (r GroupScript) ScriptExists(ctx context.Context, sha1 string, sha1s ...str
 	)
 	s = append(s, "Exists")
 	s = append(s, sha1Array...)
-	result, err := r.redis.Do(ctx, "Script", s...)
+	result, err := r.Operation.Do(ctx, "Script", s...)
+	if err != nil {
+		return nil, err
+	}
 	var (
 		m           = make(map[string]bool)
 		resultArray = result.Vars()
@@ -99,7 +102,7 @@ func (r GroupScript) ScriptFlush(ctx context.Context, option ...gredis.ScriptFlu
 	s = append(s, mustMergeOptionToArgs(
 		[]interface{}{}, usedOption,
 	)...)
-	_, err := r.redis.Do(ctx, "Script", s...)
+	_, err := r.Operation.Do(ctx, "Script", s...)
 	return err
 }
 
@@ -108,6 +111,6 @@ func (r GroupScript) ScriptFlush(ctx context.Context, option ...gredis.ScriptFlu
 //
 // https://redis.io/commands/script-kill/
 func (r GroupScript) ScriptKill(ctx context.Context) error {
-	_, err := r.redis.Do(ctx, "Script", "Kill")
+	_, err := r.Operation.Do(ctx, "Script", "Kill")
 	return err
 }

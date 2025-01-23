@@ -1,0 +1,25 @@
+# https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository#creating-issue-forms
+# https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-githubs-form-schema
+name: Questions
+description: I want to ask a question
+title: "os/gtime: issue title"
+labels:
+  - question
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please read the document carefully. 请先仔细阅读文档
+  
+        The issue title uses the format of the package name goes before the colon. Thanks!
+
+        标题使用包名在冒号前的格式！谢谢！ 
+
+  - type: textarea
+    id: ask
+    attributes:
+      label: "What do you want to ask?"
+      description: "Please describe the details of your questions. 请详细描述你的问题。"
+    validations:
+      required: true

@@ -25,10 +25,10 @@ import (
 
 // AdapterFile implements interface Adapter using file.
 type AdapterFile struct {
-	defaultName   string           // Default configuration file name.
-	searchPaths   *garray.StrArray // Searching path array.
-	jsonMap       *gmap.StrAnyMap  // The pared JSON objects for configuration files.
-	violenceCheck bool             // Whether it does violence check in value index searching. It affects the performance when set true(false in default).
+	defaultFileNameOrPath string           // Default configuration file name or file path.
+	searchPaths           *garray.StrArray // Searching the path array.
+	jsonMap               *gmap.StrAnyMap  // The pared JSON objects for configuration files.
+	violenceCheck         bool             // Whether it does violence check in value index searching. It affects the performance when set true(false in default).
 }
 
 const (
@@ -47,29 +47,29 @@ var (
 		"manifest/config/", "manifest/config", "/manifest/config", "/manifest/config/",
 	}
 
-	// Prefix array for trying searching in local system.
+	// Prefix array for trying searching in the local system.
 	localSystemTryFolders = []string{"", "config/", "manifest/config"}
 )
 
 // NewAdapterFile returns a new configuration management object.
 // The parameter `file` specifies the default configuration file name for reading.
-func NewAdapterFile(file ...string) (*AdapterFile, error) {
+func NewAdapterFile(fileNameOrPath ...string) (*AdapterFile, error) {
 	var (
-		err  error
-		name = DefaultConfigFileName
+		err                error
+		usedFileNameOrPath = DefaultConfigFileName
 	)
-	if len(file) > 0 {
-		name = file[0]
+	if len(fileNameOrPath) > 0 {
+		usedFileNameOrPath = fileNameOrPath[0]
 	} else {
 		// Custom default configuration file name from command line or environment.
 		if customFile := command.GetOptWithEnv(commandEnvKeyForFile); customFile != "" {
-			name = customFile
+			usedFileNameOrPath = customFile
 		}
 	}
 	config := &AdapterFile{
-		defaultName: name,
-		searchPaths: garray.NewStrArray(true),
-		jsonMap:     gmap.NewStrAnyMap(true),
+		defaultFileNameOrPath: usedFileNameOrPath,
+		searchPaths:           garray.NewStrArray(true),
+		jsonMap:               gmap.NewStrAnyMap(true),
 	}
 	// Customized dir path from env/cmd.
 	if customPath := command.GetOptWithEnv(commandEnvKeyForPath); customPath != "" {
@@ -91,7 +91,7 @@ func NewAdapterFile(file ...string) (*AdapterFile, error) {
 			intlog.Errorf(context.TODO(), `%+v`, err)
 		}
 
-		// Dir path of main package.
+		// Dir path of the main package.
 		if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
 			if err = config.AddPath(mainPath); err != nil {
 				intlog.Errorf(context.TODO(), `%+v`, err)
@@ -112,7 +112,7 @@ func NewAdapterFile(file ...string) (*AdapterFile, error) {
 // This feature needs to be enabled when there is a level symbol in the key name.
 // It is off in default.
 //
-// Note that, turning on this feature is quite expensive, and it is not recommended
+// Note that turning on this feature is quite expensive, and it is not recommended
 // allowing separators in the key names. It is best to avoid this on the application side.
 func (a *AdapterFile) SetViolenceCheck(check bool) {
 	a.violenceCheck = check
@@ -120,17 +120,17 @@ func (a *AdapterFile) SetViolenceCheck(check bool) {
 }
 
 // SetFileName sets the default configuration file name.
-func (a *AdapterFile) SetFileName(name string) {
-	a.defaultName = name
+func (a *AdapterFile) SetFileName(fileNameOrPath string) {
+	a.defaultFileNameOrPath = fileNameOrPath
 }
 
 // GetFileName returns the default configuration file name.
 func (a *AdapterFile) GetFileName() string {
-	return a.defaultName
+	return a.defaultFileNameOrPath
 }
 
 // Get retrieves and returns value by specified `pattern`.
-// It returns all values of current Json object if `pattern` is given empty or string ".".
+// It returns all values of the current JSON object if `pattern` is given empty or string ".".
 // It returns nil if no value found by `pattern`.
 //
 // We can also access slice item by its index number in `pattern` like:
@@ -150,9 +150,9 @@ func (a *AdapterFile) Get(ctx context.Context, pattern string) (value interface{
 
 // Set sets value with specified `pattern`.
 // It supports hierarchical data access by char separator, which is '.' in default.
-// It is commonly used for updates certain configuration value in runtime.
-// Note that, it is not recommended using `Set` configuration at runtime as the configuration would be
-// automatically refreshed if underlying configuration file changed.
+// It is commonly used to update certain configuration values in runtime.
+// Note that it is not recommended using `Set` configuration at runtime as the configuration would be
+// automatically refreshed if the underlying configuration file changed.
 func (a *AdapterFile) Set(pattern string, value interface{}) error {
 	j, err := a.getJson()
 	if err != nil {
@@ -176,7 +176,7 @@ func (a *AdapterFile) Data(ctx context.Context) (data map[string]interface{}, er
 	return nil, nil
 }
 
-// MustGet acts as function Get, but it panics if error occurs.
+// MustGet acts as a function, but it panics if error occurs.
 func (a *AdapterFile) MustGet(ctx context.Context, pattern string) *gvar.Var {
 	v, err := a.Get(ctx, pattern)
 	if err != nil {
@@ -186,12 +186,12 @@ func (a *AdapterFile) MustGet(ctx context.Context, pattern string) *gvar.Var {
 }
 
 // Clear removes all parsed configuration files content cache,
-// which will force reload configuration content from file.
+// which will force reload configuration content from the file.
 func (a *AdapterFile) Clear() {
 	a.jsonMap.Clear()
 }
 
-// Dump prints current Json object with more manually readable.
+// Dump prints current JSON object with more manually readable.
 func (a *AdapterFile) Dump() {
 	if j, _ := a.getJson(); j != nil {
 		j.Dump()
@@ -200,20 +200,20 @@ func (a *AdapterFile) Dump() {
 
 // Available checks and returns whether configuration of given `file` is available.
 func (a *AdapterFile) Available(ctx context.Context, fileName ...string) bool {
-	checkFileName := gutil.GetOrDefaultStr(a.defaultName, fileName...)
+	checkFileName := gutil.GetOrDefaultStr(a.defaultFileNameOrPath, fileName...)
 	// Custom configuration content exists.
 	if a.GetContent(checkFileName) != "" {
 		return true
 	}
-	// Configuration file exists in system path.
+	// Configuration file exists in the system path.
 	if path, _ := a.GetFilePath(checkFileName); path != "" {
 		return true
 	}
 	return false
 }
 
-// autoCheckAndAddMainPkgPathToSearchPaths automatically checks and adds directory path of package main
-// to the searching path list if it's currently in development environment.
+// autoCheckAndAddMainPkgPathToSearchPaths automatically checks and adds the directory path of package main
+// to the searching path list if it's currently in the development environment.
 func (a *AdapterFile) autoCheckAndAddMainPkgPathToSearchPaths() {
 	if gmode.IsDevelop() {
 		mainPkgPath := gfile.MainPkgPath()
@@ -227,26 +227,26 @@ func (a *AdapterFile) autoCheckAndAddMainPkgPathToSearchPaths() {
 
 // getJson returns a *gjson.Json object for the specified `file` content.
 // It would print error if file reading fails. It returns nil if any error occurs.
-func (a *AdapterFile) getJson(fileName ...string) (configJson *gjson.Json, err error) {
+func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json, err error) {
 	var (
-		usedFileName = a.defaultName
+		usedFileNameOrPath = a.defaultFileNameOrPath
 	)
-	if len(fileName) > 0 && fileName[0] != "" {
-		usedFileName = fileName[0]
+	if len(fileNameOrPath) > 0 && fileNameOrPath[0] != "" {
+		usedFileNameOrPath = fileNameOrPath[0]
 	} else {
-		usedFileName = a.defaultName
+		usedFileNameOrPath = a.defaultFileNameOrPath
 	}
-	// It uses json map to cache specified configuration file content.
-	result := a.jsonMap.GetOrSetFuncLock(usedFileName, func() interface{} {
+	// It uses JSON map to cache specified configuration file content.
+	result := a.jsonMap.GetOrSetFuncLock(usedFileNameOrPath, func() interface{} {
 		var (
 			content  string
 			filePath string
 		)
 		// The configured content can be any kind of data type different from its file type.
 		isFromConfigContent := true
-		if content = a.GetContent(usedFileName); content == "" {
+		if content = a.GetContent(usedFileNameOrPath); content == "" {
 			isFromConfigContent = false
-			filePath, err = a.GetFilePath(usedFileName)
+			filePath, err = a.GetFilePath(usedFileNameOrPath)
 			if err != nil {
 				return nil
 			}
@@ -259,12 +259,12 @@ func (a *AdapterFile) getJson(fileName ...string) (configJson *gjson.Json, err e
 				content = gfile.GetContents(filePath)
 			}
 		}
-		// Note that the underlying configuration json object operations are concurrent safe.
+		// Note that the underlying configuration JSON object operations are concurrent safe.
 		dataType := gjson.ContentType(gfile.ExtName(filePath))
 		if gjson.IsValidDataType(dataType) && !isFromConfigContent {
-			configJson, err = gjson.LoadContentType(dataType, content, true)
+			configJson, err = gjson.LoadContentType(dataType, []byte(content), true)
 		} else {
-			configJson, err = gjson.LoadContent(content, true)
+			configJson, err = gjson.LoadContent([]byte(content), true)
 		}
 		if err != nil {
 			if filePath != "" {
@@ -276,10 +276,10 @@ func (a *AdapterFile) getJson(fileName ...string) (configJson *gjson.Json, err e
 		}
 		configJson.SetViolenceCheck(a.violenceCheck)
 		// Add monitor for this configuration file,
-		// any changes of this file will refresh its cache in Config object.
+		// any changes of this file will refresh its cache in the Config object.
 		if filePath != "" && !gres.Contains(filePath) {
 			_, err = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
-				a.jsonMap.Remove(usedFileName)
+				a.jsonMap.Remove(usedFileNameOrPath)
 			})
 			if err != nil {
 				return nil

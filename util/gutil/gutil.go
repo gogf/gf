@@ -10,7 +10,6 @@ package gutil
 import (
 	"reflect"
 
-	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -18,17 +17,10 @@ const (
 	dumpIndent = `    `
 )
 
-// IsEmpty checks given `value` empty or not.
-// It returns false if `value` is: integer(0), bool(false), slice/map(len=0), nil;
-// or else returns true.
-func IsEmpty(value interface{}) bool {
-	return empty.IsEmpty(value)
-}
-
-// Keys retrieves and returns the keys from given map or struct.
-func Keys(mapOrStruct interface{}) (keysOrAttrs []string) {
+// Keys retrieves and returns the keys from the given map or struct.
+func Keys(mapOrStruct any) (keysOrAttrs []string) {
 	keysOrAttrs = make([]string, 0)
-	if m, ok := mapOrStruct.(map[string]interface{}); ok {
+	if m, ok := mapOrStruct.(map[string]any); ok {
 		for k := range m {
 			keysOrAttrs = append(keysOrAttrs, k)
 		}
@@ -71,11 +63,12 @@ func Keys(mapOrStruct interface{}) (keysOrAttrs []string) {
 				keysOrAttrs = append(keysOrAttrs, fieldType.Name)
 			}
 		}
+	default:
 	}
 	return
 }
 
-// Values retrieves and returns the values from given map or struct.
+// Values retrieves and returns the values from the given map or struct.
 func Values(mapOrStruct interface{}) (values []interface{}) {
 	values = make([]interface{}, 0)
 	if m, ok := mapOrStruct.(map[string]interface{}); ok {
@@ -116,6 +109,7 @@ func Values(mapOrStruct interface{}) (values []interface{}) {
 				values = append(values, reflectValue.Field(i).Interface())
 			}
 		}
+	default:
 	}
 	return
 }

@@ -19,7 +19,7 @@ import (
 )
 
 type (
-	Ctx    = context.Context // Ctx is short name alias for context.Context.
+	Ctx    = context.Context // Ctx is a short name alias for context.Context.
 	StrKey string            // StrKey is a type for warps basic type string as context key.
 )
 
@@ -44,21 +44,35 @@ func init() {
 		context.Background(),
 		propagation.MapCarrier(m),
 	)
-	initCtx = WithCtx(initCtx)
 }
 
 // New creates and returns a context which contains context id.
 func New() context.Context {
-	return WithCtx(context.Background())
+	return WithSpan(context.Background(), "gctx.New")
 }
 
 // WithCtx creates and returns a context containing context id upon given parent context `ctx`.
+// Deprecated: use WithSpan instead.
 func WithCtx(ctx context.Context) context.Context {
 	if CtxId(ctx) != "" {
 		return ctx
 	}
 	var span *gtrace.Span
 	ctx, span = gtrace.NewSpan(ctx, "gctx.WithCtx")
+	defer span.End()
+	return ctx
+}
+
+// WithSpan creates and returns a context containing span upon given parent context `ctx`.
+func WithSpan(ctx context.Context, spanName string) context.Context {
+	if CtxId(ctx) != "" {
+		return ctx
+	}
+	if spanName == "" {
+		spanName = "gctx.WithSpan"
+	}
+	var span *gtrace.Span
+	ctx, span = gtrace.NewSpan(ctx, spanName)
 	defer span.End()
 	return ctx
 }

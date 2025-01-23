@@ -10,7 +10,11 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"sync"
+	"sync/atomic"
 
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gset"
@@ -21,9 +25,6 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gtag"
-
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
 const (
@@ -93,6 +94,20 @@ const (
 	genServiceFileLockSeconds = 10
 )
 
+type fileInfo struct {
+	PkgItems  []pkgItem
+	FuncItems []funcItem
+}
+
+type folderInfo struct {
+	SrcPackageName      string
+	SrcImportedPackages *garray.SortedStrArray
+	SrcStructFunctions  *gmap.ListMap
+	DstFilePath         string
+
+	FileInfos []*fileInfo
+}
+
 func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGenServiceOutput, err error) {
 	in.SrcFolder = filepath.ToSlash(in.SrcFolder)
 	in.SrcFolder = gstr.TrimRight(in.SrcFolder, `/`)
@@ -113,7 +128,7 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 				return
 			}
 		}
-		defer gfile.Remove(flockFilePath)
+		defer gfile.RemoveFile(flockFilePath)
 		_ = gfile.PutContents(flockFilePath, gtime.TimestampStr())
 
 		// It works only if given WatchFile is in SrcFolder.
@@ -147,19 +162,27 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 	}
 
 	var (
-		isDirty                 bool                                         // Temp boolean.
+		isDirty                 atomic.Value                                 // Temp boolean.
 		files                   []string                                     // Temp file array.
-		fileContent             string                                       // Temp file content for handling go file.
 		initImportSrcPackages   []string                                     // Used for generating logic.go.
 		inputPackages           = in.Packages                                // Custom packages.
 		dstPackageName          = gstr.ToLower(gfile.Basename(in.DstFolder)) // Package name for generated go files.
 		generatedDstFilePathSet = gset.NewStrSet()                           // All generated file path set.
 	)
+	isDirty.Store(false)
+
 	// The first level folders.
 	srcFolderPaths, err := gfile.ScanDir(in.SrcFolder, "*", false)
 	if err != nil {
 		return nil, err
 	}
+	// it will use goroutine to generate service files for each package.
+	var (
+		folderInfos    []folderInfo
+		wg             = sync.WaitGroup{}
+		allStructItems = make(map[string][]string)
+	)
+
 	for _, srcFolderPath := range srcFolderPaths {
 		if !gfile.IsDir(srcFolderPath) {
 			continue
@@ -171,113 +194,64 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		if len(files) == 0 {
 			continue
 		}
-		// Parse single logic package folder.
+
 		var (
-			// StructName => FunctionDefinitions
-			srcPkgInterfaceMap   = make(map[string]*garray.StrArray)
-			srcImportedPackages  = garray.NewSortedStrArray().SetUnique(true)
-			importAliasToPathMap = gmap.NewStrStrMap() // for conflict imports check. alias => import path(with `"`)
-			importPathToAliasMap = gmap.NewStrStrMap() // for conflict imports check. import path(with `"`) => alias
-			srcPackageName       = gfile.Basename(srcFolderPath)
-			ok                   bool
-			dstFilePath          = gfile.Join(in.DstFolder,
+			srcPackageName      = gfile.Basename(srcFolderPath)
+			srcImportedPackages = garray.NewSortedStrArray().SetUnique(true)
+			srcStructFunctions  = gmap.NewListMap()
+			dstFilePath         = gfile.Join(in.DstFolder,
 				c.getDstFileNameCase(srcPackageName, in.DstFileNameCase)+".go",
 			)
-			srcCodeCommentedMap = make(map[string]string)
+		)
+
+		folder := folderInfo{
+			SrcPackageName:      srcPackageName,
+			SrcImportedPackages: srcImportedPackages,
+			SrcStructFunctions:  srcStructFunctions,
+			DstFilePath:         dstFilePath,
+		}
+
+		for _, file := range files {
+			pkgItems, structItems, funcItems, err := c.parseItemsInSrc(file)
+			if err != nil {
+				return nil, err
+			}
+			for k, v := range structItems {
+				allStructItems[k] = v
+			}
+			folder.FileInfos = append(folder.FileInfos, &fileInfo{
+				PkgItems:  pkgItems,
+				FuncItems: funcItems,
+			})
+		}
+
+		folderInfos = append(folderInfos, folder)
+	}
+
+	folderInfos = c.calculateStructEmbeddedFuncInfos(folderInfos, allStructItems)
+
+	for _, folder := range folderInfos {
+		// Parse single logic package folder.
+		var (
+			srcPackageName      = folder.SrcPackageName
+			srcImportedPackages = folder.SrcImportedPackages
+			srcStructFunctions  = folder.SrcStructFunctions
+			dstFilePath         = folder.DstFilePath
 		)
 		generatedDstFilePathSet.Add(dstFilePath)
-		for _, file := range files {
-			var packageItems []packageItem
-			fileContent = gfile.GetContents(file)
-			// Calculate code comments in source Go files.
-			err = c.calculateCodeCommented(in, fileContent, srcCodeCommentedMap)
+		// if it were to use goroutine,
+		// it would cause the order of the generated functions in the file to be disordered.
+		for _, file := range folder.FileInfos {
+			pkgItems, funcItems := file.PkgItems, file.FuncItems
+
+			// Calculate imported packages for service generating.
+			err = c.calculateImportedItems(in, pkgItems, funcItems, srcImportedPackages)
 			if err != nil {
 				return nil, err
-			}
-			// remove all comments.
-			fileContent, err = gregex.ReplaceString(`(//.*)|((?s)/\*.*?\*/)`, "", fileContent)
-			if err != nil {
-				return nil, err
-			}
-
-			// Calculate imported packages of source go files.
-			packageItems, err = c.calculateImportedPackages(fileContent)
-			if err != nil {
-				return nil, err
-			}
-			// try finding the conflicts imports between files.
-			for _, item := range packageItems {
-				var alias = item.Alias
-				if alias == "" {
-					alias = gfile.Basename(gstr.Trim(item.Path, `"`))
-				}
-
-				// ignore unused import paths, which do not exist in function definitions.
-				if !gregex.IsMatchString(fmt.Sprintf(`func .+?([^\w])%s(\.\w+).+?{`, alias), fileContent) {
-					mlog.Debugf(`ignore unused package: %s`, item.RawImport)
-					continue
-				}
-
-				// find the exist alias with the same import path.
-				var existAlias = importPathToAliasMap.Get(item.Path)
-				if existAlias != "" {
-					fileContent, err = gregex.ReplaceStringFuncMatch(
-						fmt.Sprintf(`([^\w])%s(\.\w+)`, alias), fileContent,
-						func(match []string) string {
-							return match[1] + existAlias + match[2]
-						},
-					)
-					if err != nil {
-						return nil, err
-					}
-					continue
-				}
-
-				// resolve alias conflicts.
-				var importPath = importAliasToPathMap.Get(alias)
-				if importPath == "" {
-					importAliasToPathMap.Set(alias, item.Path)
-					importPathToAliasMap.Set(item.Path, alias)
-					srcImportedPackages.Add(item.RawImport)
-					continue
-				}
-				if importPath != item.Path {
-					// update the conflicted alias for import path with suffix.
-					// eg:
-					// v1  -> v10
-					// v11 -> v110
-					for aliasIndex := 0; ; aliasIndex++ {
-						item.Alias = fmt.Sprintf(`%s%d`, alias, aliasIndex)
-						var existPathForAlias = importAliasToPathMap.Get(item.Alias)
-						if existPathForAlias != "" {
-							if existPathForAlias == item.Path {
-								break
-							}
-							continue
-						}
-						break
-					}
-					importPathToAliasMap.Set(item.Path, item.Alias)
-					importAliasToPathMap.Set(item.Alias, item.Path)
-					// reformat the import path with alias.
-					item.RawImport = fmt.Sprintf(`%s %s`, item.Alias, item.Path)
-
-					// update the file content with new alias import.
-					fileContent, err = gregex.ReplaceStringFuncMatch(
-						fmt.Sprintf(`([^\w])%s(\.\w+)`, alias), fileContent,
-						func(match []string) string {
-							return match[1] + item.Alias + match[2]
-						},
-					)
-					if err != nil {
-						return nil, err
-					}
-					srcImportedPackages.Add(item.RawImport)
-				}
 			}
 
 			// Calculate functions and interfaces for service generating.
-			err = c.calculateInterfaceFunctions(in, fileContent, srcPkgInterfaceMap)
+			err = c.calculateFuncItems(in, funcItems, srcStructFunctions)
 			if err != nil {
 				return nil, err
 			}
@@ -295,22 +269,28 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 			)
 			continue
 		}
+
 		// Generating service go file for single logic package.
-		if ok, err = c.generateServiceFile(generateServiceFilesInput{
+		wg.Add(1)
+		go func(generateServiceFilesInput generateServiceFilesInput) {
+			defer wg.Done()
+			ok, err := c.generateServiceFile(generateServiceFilesInput)
+			if err != nil {
+				mlog.Printf(`error generating service file "%s": %v`, generateServiceFilesInput.DstFilePath, err)
+			}
+			if !isDirty.Load().(bool) && ok {
+				isDirty.Store(true)
+			}
+		}(generateServiceFilesInput{
 			CGenServiceInput:    in,
-			SrcStructFunctions:  srcPkgInterfaceMap,
-			SrcImportedPackages: srcImportedPackages.Slice(),
 			SrcPackageName:      srcPackageName,
+			SrcImportedPackages: srcImportedPackages.Slice(),
+			SrcStructFunctions:  srcStructFunctions,
 			DstPackageName:      dstPackageName,
 			DstFilePath:         dstFilePath,
-			SrcCodeCommentedMap: srcCodeCommentedMap,
-		}); err != nil {
-			return
-		}
-		if ok {
-			isDirty = true
-		}
+		})
 	}
+	wg.Wait()
 
 	if in.Clear {
 		files, err = gfile.ScanDirFile(in.DstFolder, "*.go", false)
@@ -320,16 +300,18 @@ func (c CGenService) Service(ctx context.Context, in CGenServiceInput) (out *CGe
 		var relativeFilePath string
 		for _, file := range files {
 			relativeFilePath = gstr.SubStrFromR(file, in.DstFolder)
-			if !generatedDstFilePathSet.Contains(relativeFilePath) && utils.IsFileDoNotEdit(relativeFilePath) {
+			if !generatedDstFilePathSet.Contains(relativeFilePath) &&
+				utils.IsFileDoNotEdit(relativeFilePath) {
+
 				mlog.Printf(`remove no longer used service file: %s`, relativeFilePath)
-				if err = gfile.Remove(file); err != nil {
+				if err = gfile.RemoveFile(file); err != nil {
 					return nil, err
 				}
 			}
 		}
 	}
 
-	if isDirty {
+	if isDirty.Load().(bool) {
 		// Generate initialization go file.
 		if len(initImportSrcPackages) > 0 {
 			if err = c.generateInitializationFile(in, initImportSrcPackages); err != nil {
@@ -358,7 +340,7 @@ func (c CGenService) checkAndUpdateMain(srcFolder string) (err error) {
 	var (
 		logicPackageName = gstr.ToLower(gfile.Basename(srcFolder))
 		logicFilePath    = gfile.Join(srcFolder, logicPackageName+".go")
-		importPath       = utils.GetImportPath(logicFilePath)
+		importPath       = utils.GetImportPath(srcFolder)
 		importStr        = fmt.Sprintf(`_ "%s"`, importPath)
 		mainFilePath     = gfile.Join(gfile.Dir(gfile.Dir(gfile.Dir(logicFilePath))), "main.go")
 		mainFileContent  = gfile.GetContents(mainFilePath)

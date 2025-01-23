@@ -103,6 +103,11 @@ func (p *Process) Start(ctx context.Context) (int, error) {
 	p.Env = append(p.Env, fmt.Sprintf("%s=%d", envKeyPPid, p.PPid))
 	p.Env = genv.Filter(p.Env)
 
+	// On Windows, this works and doesn't work on other platforms
+	if runtime.GOOS == "windows" {
+		joinProcessArgs(p)
+	}
+
 	if err := p.Cmd.Start(); err == nil {
 		if p.Manager != nil {
 			p.Manager.processes.Set(p.Process.Pid, p)

@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	pkgHeaderSizeDefault = 2 // Header size for simple package protocol.
-	pkgHeaderSizeMax     = 4 // Max header size for simple package protocol.
+	_                    = iota << 1
+	pkgHeaderSizeDefault // Header size for simple package protocol.
+	pkgHeaderSizeMax     // Max header size for simple package protocol.
 )
 
 // PkgOption is package option for simple protocol.

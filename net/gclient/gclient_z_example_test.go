@@ -581,7 +581,7 @@ func ExampleClient_SetProxy() {
 	// true
 }
 
-// ExampleClientChain_Proxy a chain version of example for `gclient.Client.Proxy` method.
+// ExampleClient_Proxy a chain version of example for `gclient.Client.Proxy` method.
 // please prepare two proxy server before running this example.
 // http proxy server listening on `127.0.0.1:1081`
 // socks5 proxy server listening on `127.0.0.1:1080`

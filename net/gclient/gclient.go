@@ -76,7 +76,7 @@ func New() *Client {
 	}
 	c.header[httpHeaderUserAgent] = defaultClientAgent
 	// It enables OpenTelemetry for client in default.
-	c.Use(internalMiddlewareTracing, internalMiddlewareDiscovery)
+	c.Use(internalMiddlewareObservability, internalMiddlewareDiscovery)
 	return c
 }
 
@@ -84,17 +84,13 @@ func New() *Client {
 func (c *Client) Clone() *Client {
 	newClient := New()
 	*newClient = *c
-	if len(c.header) > 0 {
-		newClient.header = make(map[string]string)
-		for k, v := range c.header {
-			newClient.header[k] = v
-		}
+	newClient.header = make(map[string]string, len(c.header))
+	for k, v := range c.header {
+		newClient.header[k] = v
 	}
-	if len(c.cookies) > 0 {
-		newClient.cookies = make(map[string]string)
-		for k, v := range c.cookies {
-			newClient.cookies[k] = v
-		}
+	newClient.cookies = make(map[string]string, len(c.cookies))
+	for k, v := range c.cookies {
+		newClient.cookies[k] = v
 	}
 	return newClient
 }

@@ -9,10 +9,11 @@ package nacos
 import (
 	"context"
 
+	"github.com/nacos-group/nacos-sdk-go/v2/model"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/joy999/nacos-sdk-go/model"
 )
 
 // Watcher used to mange service event such as update.

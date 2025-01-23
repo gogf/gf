@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/internal/json"
 )
 
 // CacheOption is options for model cache control in query.
@@ -67,14 +66,14 @@ func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args .
 		return
 	}
 	var (
-		ok        bool
 		cacheItem *selectCacheItem
 		cacheKey  = m.makeSelectCacheKey(sql, args...)
 		cacheObj  = m.db.GetCache()
+		core      = m.db.GetCore()
 	)
 	defer func() {
 		if cacheItem != nil {
-			if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
+			if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
 				if cacheItem.FirstResultColumn != "" {
 					internalData.FirstResultColumn = cacheItem.FirstResultColumn
 				}
@@ -82,12 +81,7 @@ func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args .
 		}
 	}()
 	if v, _ := cacheObj.Get(ctx, cacheKey); !v.IsNil() {
-		if cacheItem, ok = v.Val().(*selectCacheItem); ok {
-			// In-memory cache.
-			return cacheItem.Result, nil
-		}
-		// Other cache, it needs conversion.
-		if err = json.UnmarshalUseNumber(v.Bytes(), &cacheItem); err != nil {
+		if err = v.Scan(&cacheItem); err != nil {
 			return nil, err
 		}
 		return cacheItem.Result, nil
@@ -96,7 +90,7 @@ func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args .
 }
 
 func (m *Model) saveSelectResultToCache(
-	ctx context.Context, queryType queryType, result Result, sql string, args ...interface{},
+	ctx context.Context, selectType SelectType, result Result, sql string, args ...interface{},
 ) (err error) {
 	if !m.cacheEnabled || m.tx != nil {
 		return
@@ -113,28 +107,33 @@ func (m *Model) saveSelectResultToCache(
 	}
 	// Special handler for Value/Count operations result.
 	if len(result) > 0 {
-		switch queryType {
-		case queryTypeValue, queryTypeCount:
-			if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
+		var core = m.db.GetCore()
+		switch selectType {
+		case SelectTypeValue, SelectTypeArray, SelectTypeCount:
+			if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
 				if result[0][internalData.FirstResultColumn].IsEmpty() {
 					result = nil
 				}
 			}
+		default:
 		}
 	}
 
 	// In case of Cache Penetration.
-	if result.IsEmpty() {
+	if result != nil && result.IsEmpty() {
 		if m.cacheOption.Force {
 			result = Result{}
 		} else {
 			result = nil
 		}
 	}
-	var cacheItem = &selectCacheItem{
-		Result: result,
-	}
-	if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
+	var (
+		core      = m.db.GetCore()
+		cacheItem = &selectCacheItem{
+			Result: result,
+		}
+	)
+	if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
 		cacheItem.FirstResultColumn = internalData.FirstResultColumn
 	}
 	if errCache := cacheObj.Set(ctx, cacheKey, cacheItem, m.cacheOption.Duration); errCache != nil {
@@ -144,10 +143,17 @@ func (m *Model) saveSelectResultToCache(
 }
 
 func (m *Model) makeSelectCacheKey(sql string, args ...interface{}) string {
-	return m.db.GetCore().makeSelectCacheKey(
-		m.cacheOption.Name,
-		m.db.GetSchema(),
-		m.db.GetCore().guessPrimaryTableName(m.tables),
+	var (
+		table      = m.db.GetCore().guessPrimaryTableName(m.tables)
+		group      = m.db.GetGroup()
+		schema     = m.db.GetSchema()
+		customName = m.cacheOption.Name
+	)
+	return genSelectCacheKey(
+		table,
+		group,
+		schema,
+		customName,
 		sql,
 		args...,
 	)

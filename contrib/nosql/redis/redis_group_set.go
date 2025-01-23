@@ -16,13 +16,13 @@ import (
 
 // GroupSet provides set functions for redis.
 type GroupSet struct {
-	redis *Redis
+	Operation gredis.AdapterOperation
 }
 
 // GroupSet creates and returns GroupSet.
 func (r *Redis) GroupSet() gredis.IGroupSet {
 	return GroupSet{
-		redis: r,
+		Operation: r.AdapterOperation,
 	}
 }
 
@@ -40,7 +40,7 @@ func (r GroupSet) SAdd(ctx context.Context, key string, member interface{}, memb
 	var s = []interface{}{key}
 	s = append(s, member)
 	s = append(s, members...)
-	v, err := r.redis.Do(ctx, "SAdd", s...)
+	v, err := r.Operation.Do(ctx, "SAdd", s...)
 	return v.Int64(), err
 }
 
@@ -52,7 +52,7 @@ func (r GroupSet) SAdd(ctx context.Context, key string, member interface{}, memb
 //
 // https://redis.io/commands/sismember/
 func (r GroupSet) SIsMember(ctx context.Context, key string, member interface{}) (int64, error) {
-	v, err := r.redis.Do(ctx, "SIsMember", key, member)
+	v, err := r.Operation.Do(ctx, "SIsMember", key, member)
 	return v.Int64(), err
 }
 
@@ -73,7 +73,7 @@ func (r GroupSet) SIsMember(ctx context.Context, key string, member interface{})
 func (r GroupSet) SPop(ctx context.Context, key string, count ...int) (*gvar.Var, error) {
 	var s = []interface{}{key}
 	s = append(s, gconv.Interfaces(count)...)
-	v, err := r.redis.Do(ctx, "SPop", s...)
+	v, err := r.Operation.Do(ctx, "SPop", s...)
 	return v, err
 }
 
@@ -95,7 +95,7 @@ func (r GroupSet) SPop(ctx context.Context, key string, count ...int) (*gvar.Var
 func (r GroupSet) SRandMember(ctx context.Context, key string, count ...int) (*gvar.Var, error) {
 	var s = []interface{}{key}
 	s = append(s, gconv.Interfaces(count)...)
-	v, err := r.redis.Do(ctx, "SRandMember", s...)
+	v, err := r.Operation.Do(ctx, "SRandMember", s...)
 	return v, err
 }
 
@@ -112,7 +112,7 @@ func (r GroupSet) SRem(ctx context.Context, key string, member interface{}, memb
 	var s = []interface{}{key}
 	s = append(s, member)
 	s = append(s, members...)
-	v, err := r.redis.Do(ctx, "SRem", s...)
+	v, err := r.Operation.Do(ctx, "SRem", s...)
 	return v.Int64(), err
 }
 
@@ -131,7 +131,7 @@ func (r GroupSet) SRem(ctx context.Context, key string, member interface{}, memb
 //
 // https://redis.io/commands/smove/
 func (r GroupSet) SMove(ctx context.Context, source, destination string, member interface{}) (int64, error) {
-	v, err := r.redis.Do(ctx, "SMove", source, destination, member)
+	v, err := r.Operation.Do(ctx, "SMove", source, destination, member)
 	return v.Int64(), err
 }
 
@@ -141,7 +141,7 @@ func (r GroupSet) SMove(ctx context.Context, source, destination string, member 
 //
 // https://redis.io/commands/scard/
 func (r GroupSet) SCard(ctx context.Context, key string) (int64, error) {
-	v, err := r.redis.Do(ctx, "SCard", key)
+	v, err := r.Operation.Do(ctx, "SCard", key)
 	return v.Int64(), err
 }
 
@@ -152,7 +152,7 @@ func (r GroupSet) SCard(ctx context.Context, key string) (int64, error) {
 //
 // https://redis.io/commands/smembers/
 func (r GroupSet) SMembers(ctx context.Context, key string) (gvar.Vars, error) {
-	v, err := r.redis.Do(ctx, "SMembers", key)
+	v, err := r.Operation.Do(ctx, "SMembers", key)
 	return v.Vars(), err
 }
 
@@ -167,7 +167,7 @@ func (r GroupSet) SMembers(ctx context.Context, key string) (gvar.Vars, error) {
 func (r GroupSet) SMIsMember(ctx context.Context, key, member interface{}, members ...interface{}) ([]int, error) {
 	var s = []interface{}{key, member}
 	s = append(s, members...)
-	v, err := r.redis.Do(ctx, "SMIsMember", s...)
+	v, err := r.Operation.Do(ctx, "SMIsMember", s...)
 	return v.Ints(), err
 }
 
@@ -179,7 +179,7 @@ func (r GroupSet) SMIsMember(ctx context.Context, key, member interface{}, membe
 func (r GroupSet) SInter(ctx context.Context, key string, keys ...string) (gvar.Vars, error) {
 	var s = []interface{}{key}
 	s = append(s, gconv.Interfaces(keys)...)
-	v, err := r.redis.Do(ctx, "SInter", s...)
+	v, err := r.Operation.Do(ctx, "SInter", s...)
 	return v.Vars(), err
 }
 
@@ -194,7 +194,7 @@ func (r GroupSet) SInter(ctx context.Context, key string, keys ...string) (gvar.
 func (r GroupSet) SInterStore(ctx context.Context, destination string, key string, keys ...string) (int64, error) {
 	var s = []interface{}{destination, key}
 	s = append(s, gconv.Interfaces(keys)...)
-	v, err := r.redis.Do(ctx, "SInterStore", s...)
+	v, err := r.Operation.Do(ctx, "SInterStore", s...)
 	return v.Int64(), err
 }
 
@@ -206,7 +206,7 @@ func (r GroupSet) SInterStore(ctx context.Context, destination string, key strin
 func (r GroupSet) SUnion(ctx context.Context, key string, keys ...string) (gvar.Vars, error) {
 	var s = []interface{}{key}
 	s = append(s, gconv.Interfaces(keys)...)
-	v, err := r.redis.Do(ctx, "SUnion", s...)
+	v, err := r.Operation.Do(ctx, "SUnion", s...)
 	return v.Vars(), err
 }
 
@@ -220,7 +220,7 @@ func (r GroupSet) SUnion(ctx context.Context, key string, keys ...string) (gvar.
 func (r GroupSet) SUnionStore(ctx context.Context, destination, key string, keys ...string) (int64, error) {
 	var s = []interface{}{destination, key}
 	s = append(s, gconv.Interfaces(keys)...)
-	v, err := r.redis.Do(ctx, "SUnionStore", s...)
+	v, err := r.Operation.Do(ctx, "SUnionStore", s...)
 	return v.Int64(), err
 }
 
@@ -233,7 +233,7 @@ func (r GroupSet) SUnionStore(ctx context.Context, destination, key string, keys
 func (r GroupSet) SDiff(ctx context.Context, key string, keys ...string) (gvar.Vars, error) {
 	var s = []interface{}{key}
 	s = append(s, gconv.Interfaces(keys)...)
-	v, err := r.redis.Do(ctx, "SDiff", s...)
+	v, err := r.Operation.Do(ctx, "SDiff", s...)
 	return v.Vars(), err
 }
 
@@ -247,6 +247,6 @@ func (r GroupSet) SDiff(ctx context.Context, key string, keys ...string) (gvar.V
 func (r GroupSet) SDiffStore(ctx context.Context, destination string, key string, keys ...string) (int64, error) {
 	var s = []interface{}{destination, key}
 	s = append(s, gconv.Interfaces(keys)...)
-	v, err := r.redis.Do(ctx, "SDiffStore", s...)
+	v, err := r.Operation.Do(ctx, "SDiffStore", s...)
 	return v.Int64(), err
 }

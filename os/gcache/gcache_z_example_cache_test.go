@@ -97,7 +97,7 @@ func ExampleCache_SetIfNotExist() {
 	// true <nil>
 	// false <nil>
 	// [k1]
-	// [<nil>]
+	// []
 }
 
 func ExampleCache_SetMap() {
@@ -459,6 +459,23 @@ func ExampleCache_Removes() {
 
 	// Output:
 	// map[k4:v4]
+}
+
+func ExampleCache_Clear() {
+	// Create a cache object,
+	// Of course, you can also easily use the gcache package method directly
+	c := gcache.New()
+
+	c.SetMap(ctx, g.MapAnyAny{"k1": "v1", "k2": "v2", "k3": "v3", "k4": "v4"}, 0)
+
+	// clears all data of the cache.
+	c.Clear(ctx)
+
+	data, _ := c.Data(ctx)
+	fmt.Println(data)
+
+	// Output:
+	// map[]
 }
 
 func ExampleCache_MustGet() {

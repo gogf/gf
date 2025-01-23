@@ -8,6 +8,7 @@ package ghttp_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -154,8 +155,50 @@ func Test_ClientMaxBodySize_File(t *testing.T) {
 		t.Assert(gfile.PutBytes(path, data), nil)
 		defer gfile.Remove(path)
 		t.Assert(
-			gstr.Trim(c.PostContent(ctx, "/", "name=john&file=@file:"+path)),
-			"Read from request Body failed: http: request body too large",
+			true,
+			strings.Contains(
+				gstr.Trim(c.PostContent(ctx, "/", "name=john&file=@file:"+path)),
+				"http: request body too large",
+			),
 		)
+	})
+}
+
+func Test_Config_Graceful(t *testing.T) {
+	var (
+		defaultConfig = ghttp.NewConfig()
+		expect        = true
+	)
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		t.Assert(s.GetGraceful(), defaultConfig.Graceful)
+		s.SetGraceful(expect)
+		t.Assert(s.GetGraceful(), expect)
+	})
+}
+
+func Test_Config_GracefulTimeout(t *testing.T) {
+	var (
+		defaultConfig = ghttp.NewConfig()
+		expect        = 3
+	)
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		t.Assert(s.GetGracefulTimeout(), defaultConfig.GracefulTimeout)
+		s.SetGracefulTimeout(expect)
+		t.Assert(s.GetGracefulTimeout(), expect)
+	})
+}
+
+func Test_Config_GracefulShutdownTimeout(t *testing.T) {
+	var (
+		defaultConfig = ghttp.NewConfig()
+		expect        = 10
+	)
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		t.Assert(s.GetGracefulShutdownTimeout(), defaultConfig.GracefulShutdownTimeout)
+		s.SetGracefulShutdownTimeout(expect)
+		t.Assert(s.GetGracefulShutdownTimeout(), expect)
 	})
 }

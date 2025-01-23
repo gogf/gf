@@ -17,40 +17,44 @@ import (
 
 // Model is core struct implementing the DAO for ORM.
 type Model struct {
-	db            DB                // Underlying DB interface.
-	tx            TX                // Underlying TX interface.
-	rawSql        string            // rawSql is the raw SQL string which marks a raw SQL based Model not a table based Model.
-	schema        string            // Custom database schema.
-	linkType      int               // Mark for operation on master or slave.
-	tablesInit    string            // Table names when model initialization.
-	tables        string            // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
-	fields        string            // Operation fields, multiple fields joined using char ','.
-	fieldsEx      string            // Excluded operation fields, multiple fields joined using char ','.
-	withArray     []interface{}     // Arguments for With feature.
-	withAll       bool              // Enable model association operations on all objects that have "with" tag in the struct.
-	extraArgs     []interface{}     // Extra custom arguments for sql, which are prepended to the arguments before sql committed to underlying driver.
-	whereBuilder  *WhereBuilder     // Condition builder for where operation.
-	groupBy       string            // Used for "group by" statement.
-	orderBy       string            // Used for "order by" statement.
-	having        []interface{}     // Used for "having..." statement.
-	start         int               // Used for "select ... start, limit ..." statement.
-	limit         int               // Used for "select ... start, limit ..." statement.
-	option        int               // Option for extra operation features.
-	offset        int               // Offset statement for some databases grammar.
-	partition     string            // Partition table partition name.
-	data          interface{}       // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
-	batch         int               // Batch number for batch Insert/Replace/Save operations.
-	filter        bool              // Filter data and where key-value pairs according to the fields of the table.
-	distinct      string            // Force the query to only return distinct results.
-	lockInfo      string            // Lock for update or in shared lock.
-	cacheEnabled  bool              // Enable sql result cache feature, which is mainly for indicating cache duration(especially 0) usage.
-	cacheOption   CacheOption       // Cache option for query statement.
-	hookHandler   HookHandler       // Hook functions for model hook feature.
-	unscoped      bool              // Disables soft deleting features when select/delete operations.
-	safe          bool              // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
-	onDuplicate   interface{}       // onDuplicate is used for ON "DUPLICATE KEY UPDATE" statement.
-	onDuplicateEx interface{}       // onDuplicateEx is used for excluding some columns ON "DUPLICATE KEY UPDATE" statement.
-	tableAliasMap map[string]string // Table alias to true table name, usually used in join statements.
+	db             DB                // Underlying DB interface.
+	tx             TX                // Underlying TX interface.
+	rawSql         string            // rawSql is the raw SQL string which marks a raw SQL based Model not a table based Model.
+	schema         string            // Custom database schema.
+	linkType       int               // Mark for operation on master or slave.
+	tablesInit     string            // Table names when model initialization.
+	tables         string            // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
+	fields         []any             // Operation fields, multiple fields joined using char ','.
+	fieldsEx       []any             // Excluded operation fields, it here uses slice instead of string type for quick filtering.
+	withArray      []interface{}     // Arguments for With feature.
+	withAll        bool              // Enable model association operations on all objects that have "with" tag in the struct.
+	extraArgs      []interface{}     // Extra custom arguments for sql, which are prepended to the arguments before sql committed to underlying driver.
+	whereBuilder   *WhereBuilder     // Condition builder for where operation.
+	groupBy        string            // Used for "group by" statement.
+	orderBy        string            // Used for "order by" statement.
+	having         []interface{}     // Used for "having..." statement.
+	start          int               // Used for "select ... start, limit ..." statement.
+	limit          int               // Used for "select ... start, limit ..." statement.
+	option         int               // Option for extra operation features.
+	offset         int               // Offset statement for some databases grammar.
+	partition      string            // Partition table partition name.
+	data           interface{}       // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
+	batch          int               // Batch number for batch Insert/Replace/Save operations.
+	filter         bool              // Filter data and where key-value pairs according to the fields of the table.
+	distinct       string            // Force the query to only return distinct results.
+	lockInfo       string            // Lock for update or in shared lock.
+	cacheEnabled   bool              // Enable sql result cache feature, which is mainly for indicating cache duration(especially 0) usage.
+	cacheOption    CacheOption       // Cache option for query statement.
+	hookHandler    HookHandler       // Hook functions for model hook feature.
+	unscoped       bool              // Disables soft deleting features when select/delete operations.
+	safe           bool              // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
+	onDuplicate    interface{}       // onDuplicate is used for on Upsert clause.
+	onDuplicateEx  interface{}       // onDuplicateEx is used for excluding some columns on Upsert clause.
+	onConflict     interface{}       // onConflict is used for conflict keys on Upsert clause.
+	tableAliasMap  map[string]string // Table alias to true table name, usually used in join statements.
+	softTimeOption SoftTimeOption    // SoftTimeOption is the option to customize soft time feature for Model.
+	shardingConfig ShardingConfig    // ShardingConfig for database/table sharding feature.
+	shardingValue  any               // Sharding value for sharding feature.
 }
 
 // ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
@@ -63,7 +67,7 @@ type ChunkHandler func(result Result, err error) bool
 const (
 	linkTypeMaster           = 1
 	linkTypeSlave            = 2
-	defaultFields            = "*"
+	defaultField             = "*"
 	whereHolderOperatorWhere = 1
 	whereHolderOperatorAnd   = 2
 	whereHolderOperatorOr    = 3
@@ -130,7 +134,6 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 		schema:        c.schema,
 		tablesInit:    tableStr,
 		tables:        tableStr,
-		fields:        defaultFields,
 		start:         -1,
 		offset:        -1,
 		filter:        true,
@@ -279,6 +282,14 @@ func (m *Model) Clone() *Model {
 	newModel.whereBuilder = m.whereBuilder.Clone()
 	newModel.whereBuilder.model = newModel
 	// Shallow copy slice attributes.
+	if n := len(m.fields); n > 0 {
+		newModel.fields = make([]any, n)
+		copy(newModel.fields, m.fields)
+	}
+	if n := len(m.fieldsEx); n > 0 {
+		newModel.fieldsEx = make([]any, n)
+		copy(newModel.fieldsEx, m.fieldsEx)
+	}
 	if n := len(m.extraArgs); n > 0 {
 		newModel.extraArgs = make([]interface{}, n)
 		copy(newModel.extraArgs, m.extraArgs)
@@ -286,6 +297,10 @@ func (m *Model) Clone() *Model {
 	if n := len(m.withArray); n > 0 {
 		newModel.withArray = make([]interface{}, n)
 		copy(newModel.withArray, m.withArray)
+	}
+	if n := len(m.having); n > 0 {
+		newModel.having = make([]interface{}, n)
+		copy(newModel.having, m.having)
 	}
 	return newModel
 }

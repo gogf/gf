@@ -62,12 +62,6 @@ func Test_TryCatch(t *testing.T) {
 	})
 }
 
-func Test_IsEmpty(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gutil.IsEmpty(1), false)
-	})
-}
-
 func Test_Throw(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer func() {
@@ -210,5 +204,7 @@ func Test_GetOrDefaultAny(t *testing.T) {
 		t.Assert(gutil.GetOrDefaultAny("a", "b"), "b")
 		t.Assert(gutil.GetOrDefaultAny("a", "b", "c"), "b")
 		t.Assert(gutil.GetOrDefaultAny("a"), "a")
+		t.Assert(gutil.GetOrDefaultAny("a", nil), "a")
+		t.Assert(gutil.GetOrDefaultAny("a", ""), "")
 	})
 }

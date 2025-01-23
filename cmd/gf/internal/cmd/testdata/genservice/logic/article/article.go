@@ -8,6 +8,11 @@ package article
 
 import (
 	"context"
+	"go/ast"
+	t "time"
+
+	gdbalias "github.com/gogf/gf/v2/database/gdb"
+
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genservice/service"
 )
 
@@ -29,5 +34,15 @@ func (s *sArticle) Get(ctx context.Context, id uint) (info struct{}, err error) 
  * @author oldme
  */
 func (s *sArticle) Create(ctx context.Context, info struct{}) (id uint, err error) {
+	// Use time package to test alias import.
+	t.Now()
 	return id, err
+}
+
+func (s *sArticle) A1o2(ctx context.Context, str string, a, b *ast.GoStmt) error {
+	return nil
+}
+
+func (s *sArticle) B_2(ctx context.Context, db gdbalias.Raw) (err error) {
+	return nil
 }

@@ -8,6 +8,7 @@ package gcron
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -17,11 +18,13 @@ import (
 	"github.com/gogf/gf/v2/os/gtimer"
 )
 
+// Cron stores all the cron job entries.
 type Cron struct {
-	idGen   *gtype.Int64    // Used for unique name generation.
-	status  *gtype.Int      // Timed task status(0: Not Start; 1: Running; 2: Stopped; -1: Closed)
-	entries *gmap.StrAnyMap // All timed task entries.
-	logger  glog.ILogger    // Logger, it is nil in default.
+	idGen     *gtype.Int64    // Used for unique name generation.
+	status    *gtype.Int      // Timed task status(0: Not Start; 1: Running; 2: Stopped; -1: Closed)
+	entries   *gmap.StrAnyMap // All timed task entries.
+	logger    glog.ILogger    // Logger, it is nil in default.
+	jobWaiter sync.WaitGroup  // Graceful shutdown when cron jobs are stopped.
 }
 
 // New returns a new Cron object with default settings.
@@ -44,7 +47,14 @@ func (c *Cron) GetLogger() glog.ILogger {
 }
 
 // AddEntry creates and returns a new Entry object.
-func (c *Cron) AddEntry(ctx context.Context, pattern string, job JobFunc, times int, isSingleton bool, name ...string) (*Entry, error) {
+func (c *Cron) AddEntry(
+	ctx context.Context,
+	pattern string,
+	job JobFunc,
+	times int,
+	isSingleton bool,
+	name ...string,
+) (*Entry, error) {
 	var (
 		entryName = ""
 		infinite  = false
@@ -179,6 +189,12 @@ func (c *Cron) Stop(name ...string) {
 	}
 }
 
+// StopGracefully Blocks and waits all current running jobs done.
+func (c *Cron) StopGracefully() {
+	c.status.Set(StatusStopped)
+	c.jobWaiter.Wait()
+}
+
 // Remove deletes scheduled task which named `name`.
 func (c *Cron) Remove(name string) {
 	if v := c.entries.Get(name); v != nil {
@@ -201,7 +217,7 @@ func (c *Cron) Entries() []*Entry {
 	array := garray.NewSortedArraySize(c.entries.Size(), func(v1, v2 interface{}) int {
 		entry1 := v1.(*Entry)
 		entry2 := v2.(*Entry)
-		if entry1.Time.Nanosecond() > entry2.Time.Nanosecond() {
+		if entry1.RegisterTime.Nanosecond() > entry2.RegisterTime.Nanosecond() {
 			return 1
 		}
 		return -1

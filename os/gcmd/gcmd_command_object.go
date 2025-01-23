@@ -251,6 +251,9 @@ func newCommandFromMethod(
 		return
 	}
 
+	// For input struct converting using priority tag.
+	var priorityTag = gstr.Join([]string{tagNameName, tagNameShort}, ",")
+
 	// =============================================================================================
 	// Create function that has value return.
 	// =============================================================================================
@@ -259,9 +262,12 @@ func newCommandFromMethod(
 		var (
 			data        = gconv.Map(parser.GetOptAll())
 			argIndex    = 0
-			arguments   = gconv.Strings(ctx.Value(CtxKeyArguments))
+			arguments   = parser.GetArgAll()
 			inputValues = []reflect.Value{reflect.ValueOf(ctx)}
 		)
+		if value := ctx.Value(CtxKeyArgumentsIndex); value != nil {
+			argIndex = value.(int)
+		}
 		if data == nil {
 			data = map[string]interface{}{}
 		}
@@ -278,8 +284,11 @@ func newCommandFromMethod(
 				if arg.Orphan {
 					if orphanValue := parser.GetOpt(arg.Name); orphanValue != nil {
 						if orphanValue.String() == "" {
-							// Eg: gf -f
+							// Example: gf -f
 							data[arg.Name] = "true"
+							if arg.Short != "" {
+								data[arg.Short] = "true"
+							}
 						} else {
 							// Adapter with common user habits.
 							// Eg:
@@ -301,9 +310,9 @@ func newCommandFromMethod(
 				return fmt.Sprintf(`input command data map: %s`, gjson.MustEncode(data))
 			})
 			if inputObject.Kind() == reflect.Ptr {
-				err = gconv.Scan(data, inputObject.Interface())
+				err = gconv.StructTag(data, inputObject.Interface(), priorityTag)
 			} else {
-				err = gconv.Struct(data, inputObject.Addr().Interface())
+				err = gconv.StructTag(data, inputObject.Addr().Interface(), priorityTag)
 			}
 			intlog.PrintFunc(ctx, func() string {
 				return fmt.Sprintf(`input object assigned data: %s`, gjson.MustEncode(inputObject.Interface()))
@@ -368,6 +377,9 @@ func newArgumentsFromInput(object interface{}) (args []Argument, err error) {
 		}
 		if arg.Brief == "" {
 			arg.Brief = field.TagDescription()
+		}
+		if arg.Default == "" {
+			arg.Default = field.TagDefault()
 		}
 		if v, ok := metaData[gtag.Arg]; ok {
 			arg.IsArg = gconv.Bool(v)

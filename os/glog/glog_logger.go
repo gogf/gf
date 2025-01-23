@@ -355,11 +355,19 @@ func (l *Logger) getFpFromPool(ctx context.Context, path string) *gfpool.File {
 
 // printStd prints content `s` without stack.
 func (l *Logger) printStd(ctx context.Context, level int, values ...interface{}) {
+	// nil logger, print nothing
+	if l == nil {
+		return
+	}
 	l.print(ctx, level, "", values...)
 }
 
-// printStd prints content `s` with stack check.
+// printErr prints content `s` with stack check.
 func (l *Logger) printErr(ctx context.Context, level int, values ...interface{}) {
+	// nil logger, print nothing
+	if l == nil {
+		return
+	}
 	var stack string
 	if l.config.StStatus == 1 {
 		stack = l.GetStack()

@@ -9,13 +9,15 @@ package genctrl
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 type controllerGenerator struct{}
@@ -42,8 +44,16 @@ func (c *controllerGenerator) Generate(dstModuleFolderPath string, apiModuleApiI
 		); err != nil {
 			return
 		}
+
+		// use -merge
+		if merge {
+			err = c.doGenerateCtrlMergeItem(dstModuleFolderPath, subItems, doneApiItemSet)
+			continue
+		}
+
 		for _, subItem := range subItems {
-			if err = c.doGenerateCtrlItem(dstModuleFolderPath, subItem, merge); err != nil {
+			err = c.doGenerateCtrlItem(dstModuleFolderPath, subItem)
+			if err != nil {
 				return
 			}
 			doneApiItemSet.Add(subItem.String())
@@ -80,7 +90,7 @@ func (c *controllerGenerator) doGenerateCtrlNewByModuleAndVersion(
 		if err = gfile.PutContents(moduleFilePath, gstr.TrimLeft(content)); err != nil {
 			return err
 		}
-		mlog.Printf(`generated: %s`, moduleFilePath)
+		mlog.Printf(`generated: %s`, gfile.RealPath(moduleFilePath))
 	}
 	if !gfile.Exists(moduleFilePathNew) {
 		content := gstr.ReplaceByMap(consts.TemplateGenCtrlControllerNewEmpty, g.MapStrStr{
@@ -90,7 +100,7 @@ func (c *controllerGenerator) doGenerateCtrlNewByModuleAndVersion(
 		if err = gfile.PutContents(moduleFilePathNew, gstr.TrimLeft(content)); err != nil {
 			return err
 		}
-		mlog.Printf(`generated: %s`, moduleFilePathNew)
+		mlog.Printf(`generated: %s`, gfile.RealPath(moduleFilePathNew))
 	}
 	filePaths, err := gfile.ScanDir(dstModuleFolderPath, "*.go", false)
 	if err != nil {
@@ -116,7 +126,7 @@ func (c *controllerGenerator) doGenerateCtrlNewByModuleAndVersion(
 	return
 }
 
-func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, item apiItem, merge bool) (err error) {
+func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, item apiItem) (err error) {
 	var (
 		methodNameSnake = gstr.CaseSnake(item.MethodName)
 		ctrlName        = fmt.Sprintf(`Controller%s`, gstr.UcFirst(item.Version))
@@ -126,13 +136,6 @@ func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, ite
 	)
 	var content string
 
-	if merge {
-		methodFilePath = gfile.Join(dstModuleFolderPath, fmt.Sprintf(
-			`%s_%s_%s.go`, item.Module, item.Version, item.FileName,
-		))
-
-	}
-
 	if gfile.Exists(methodFilePath) {
 		content = gstr.ReplaceByMap(consts.TemplateGenCtrlControllerMethodFuncMerge, g.MapStrStr{
 			"{Module}":     item.Module,
@@ -141,7 +144,7 @@ func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, ite
 			"{MethodName}": item.MethodName,
 		})
 
-		if gstr.Contains(gfile.GetContents(methodFilePath), fmt.Sprintf(`func (c *%v) %v`, ctrlName, item.MethodName)) {
+		if gstr.Contains(gfile.GetContents(methodFilePath), fmt.Sprintf(`func (c *%v) %v(`, ctrlName, item.MethodName)) {
 			return
 		}
 		if err = gfile.PutContentsAppend(methodFilePath, gstr.TrimLeft(content)); err != nil {
@@ -159,6 +162,67 @@ func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, ite
 			return err
 		}
 	}
-	mlog.Printf(`generated: %s`, methodFilePath)
+	mlog.Printf(`generated: %s`, gfile.RealPath(methodFilePath))
+	return
+}
+
+// use -merge
+func (c *controllerGenerator) doGenerateCtrlMergeItem(dstModuleFolderPath string, apiItems []apiItem, doneApiSet *gset.StrSet) (err error) {
+
+	type controllerFileItem struct {
+		module     string
+		version    string
+		importPath string
+		// Each ctrlFileItem has multiple CTRLs
+		controllers strings.Builder
+	}
+	// It is possible that there are multiple files under one module
+	ctrlFileItemMap := make(map[string]*controllerFileItem)
+
+	for _, api := range apiItems {
+		ctrlFileItem, found := ctrlFileItemMap[api.FileName]
+		if !found {
+			ctrlFileItem = &controllerFileItem{
+				module:      api.Module,
+				version:     api.Version,
+				controllers: strings.Builder{},
+				importPath:  api.Import,
+			}
+			ctrlFileItemMap[api.FileName] = ctrlFileItem
+		}
+
+		ctrl := gstr.TrimLeft(gstr.ReplaceByMap(consts.TemplateGenCtrlControllerMethodFuncMerge, g.MapStrStr{
+			"{Module}":     api.Module,
+			"{CtrlName}":   fmt.Sprintf(`Controller%s`, gstr.UcFirst(api.Version)),
+			"{Version}":    api.Version,
+			"{MethodName}": api.MethodName,
+		}))
+		ctrlFileItem.controllers.WriteString(ctrl)
+		doneApiSet.Add(api.String())
+	}
+
+	for ctrlFileName, ctrlFileItem := range ctrlFileItemMap {
+		ctrlFilePath := gfile.Join(dstModuleFolderPath, fmt.Sprintf(
+			`%s_%s_%s.go`, ctrlFileItem.module, ctrlFileItem.version, ctrlFileName,
+		))
+
+		// This logic is only followed when a new ctrlFileItem is generated
+		// Most of the rest of the time, the following logic is followed
+		if !gfile.Exists(ctrlFilePath) {
+			ctrlFileHeader := gstr.TrimLeft(gstr.ReplaceByMap(consts.TemplateGenCtrlControllerHeader, g.MapStrStr{
+				"{Module}":     ctrlFileItem.module,
+				"{ImportPath}": ctrlFileItem.importPath,
+			}))
+			err = gfile.PutContents(ctrlFilePath, ctrlFileHeader)
+			if err != nil {
+				return err
+			}
+		}
+
+		if err = gfile.PutContentsAppend(ctrlFilePath, ctrlFileItem.controllers.String()); err != nil {
+			return err
+		}
+		mlog.Printf(`generated: %s`, gfile.RealPath(ctrlFilePath))
+	}
 	return
 }

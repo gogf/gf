@@ -8,16 +8,16 @@ package ghttp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/encoding/gxml"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/os/gview"
 	"net/http"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/encoding/gxml"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 )
@@ -300,6 +300,8 @@ func Test_Response_Write(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/Writefln", "name=john"), "john\n")
 		t.Assert(client.GetContent(ctx, "/WriteJson"), "{\"name\":\"john\"}")
 		t.Assert(client.GetContent(ctx, "/WriteJsonP"), "{\"name\":\"john\"}")
+		resp, _ := client.DoRequest(ctx, http.MethodGet, "/WriteJsonP", "{\"name\":\"john\"}", nil)
+		t.Assert(resp.Header.Get("Content-Type"), "application/javascript")
 		t.Assert(client.GetContent(ctx, "/WriteJsonPWithStruct"), "{\"name\":\"john\"}")
 		t.Assert(client.GetContent(ctx, "/WriteJsonPWithStruct", "callback=callback"),
 			"callback({\"name\":\"john\"})")

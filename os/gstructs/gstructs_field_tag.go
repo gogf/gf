@@ -94,3 +94,16 @@ func (f *Field) TagIn() string {
 	v := f.Tag(gtag.In)
 	return v
 }
+
+// TagPriorityName checks and returns tag name that matches the name item in `gtag.StructTagPriority`.
+// It or else returns attribute field Name if it doesn't have a tag name by `gtag.StructsTagPriority`.
+func (f *Field) TagPriorityName() string {
+	name := f.Name()
+	for _, tagName := range gtag.StructTagPriority {
+		if tagValue := f.Tag(tagName); tagValue != "" {
+			name = tagValue
+			break
+		}
+	}
+	return name
+}

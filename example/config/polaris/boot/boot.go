@@ -7,9 +7,10 @@
 package boot
 
 import (
-	"github.com/gogf/gf/contrib/config/polaris/v2"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
+
+	"github.com/gogf/gf/contrib/config/polaris/v2"
 )
 
 func init() {

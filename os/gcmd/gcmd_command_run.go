@@ -29,13 +29,13 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-// Run calls custom function that bound to this command.
+// Run calls custom function in os.Args that bound to this command.
 // It exits this process with exit code 1 if any error occurs.
 func (c *Command) Run(ctx context.Context) {
 	_ = c.RunWithValue(ctx)
 }
 
-// RunWithValue calls custom function that bound to this command with value output.
+// RunWithValue calls custom function in os.Args that bound to this command with value output.
 // It exits this process with exit code 1 if any error occurs.
 func (c *Command) RunWithValue(ctx context.Context) (value interface{}) {
 	value, err := c.RunWithValueError(ctx)
@@ -64,45 +64,55 @@ func (c *Command) RunWithValue(ctx context.Context) (value interface{}) {
 	return value
 }
 
-// RunWithError calls custom function that bound to this command with error output.
+// RunWithError calls custom function in os.Args that bound to this command with error output.
 func (c *Command) RunWithError(ctx context.Context) (err error) {
 	_, err = c.RunWithValueError(ctx)
 	return
 }
 
-// RunWithValueError calls custom function that bound to this command with value and error output.
+// RunWithValueError calls custom function in os.Args that bound to this command with value and error output.
 func (c *Command) RunWithValueError(ctx context.Context) (value interface{}, err error) {
-	// Parse command arguments and options using default algorithm.
-	parser, err := Parse(nil)
+	return c.RunWithSpecificArgs(ctx, os.Args)
+}
+
+// RunWithSpecificArgs calls custom function in specific args that bound to this command with value and error output.
+func (c *Command) RunWithSpecificArgs(ctx context.Context, args []string) (value interface{}, err error) {
+	if len(args) == 0 {
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "args can not be empty!")
+	}
+	parser, err := ParseArgs(args, nil)
 	if err != nil {
 		return nil, err
 	}
-	args := parser.GetArgAll()
-	if len(args) == 1 {
-		return c.doRun(ctx, parser)
-	}
+	parsedArgs := parser.GetArgAll()
 
 	// Exclude the root binary name.
-	args = args[1:]
+	parsedArgs = parsedArgs[1:]
+
+	// If no args or no sub command, it runs standalone.
+	if len(parsedArgs) == 0 || len(c.commands) == 0 {
+		return c.doRun(ctx, args, parser)
+	}
 
 	// Find the matched command and run it.
-	lastCmd, foundCmd, newCtx := c.searchCommand(ctx, args)
+	// It here `fromArgIndex` set to 1 to calculate the argument index in to `newCtx`.
+	lastCmd, foundCmd, newCtx := c.searchCommand(ctx, parsedArgs, 1)
 	if foundCmd != nil {
-		return foundCmd.doRun(newCtx, parser)
+		return foundCmd.doRun(newCtx, args, parser)
 	}
 
 	// Print error and help command if no command found.
 	err = gerror.NewCodef(
 		gcode.WithCode(gcode.CodeNotFound, lastCmd),
 		`command "%s" not found for command "%s", command line: %s`,
-		gstr.Join(args, " "),
+		gstr.Join(parsedArgs, " "),
 		c.Name,
-		gstr.Join(os.Args, " "),
+		gstr.Join(args, " "),
 	)
 	return
 }
 
-func (c *Command) doRun(ctx context.Context, parser *Parser) (value interface{}, err error) {
+func (c *Command) doRun(ctx context.Context, args []string, parser *Parser) (value interface{}, err error) {
 	defer func() {
 		if exception := recover(); exception != nil {
 			if v, ok := exception.(error); ok && gerror.HasStack(v) {
@@ -121,6 +131,7 @@ func (c *Command) doRun(ctx context.Context, parser *Parser) (value interface{},
 		}
 		return nil, c.defaultHelpFunc(ctx, parser)
 	}
+
 	// OpenTelemetry for command.
 	var (
 		span trace.Span
@@ -139,8 +150,8 @@ func (c *Command) doRun(ctx context.Context, parser *Parser) (value interface{},
 	)
 	defer span.End()
 	span.SetAttributes(gtrace.CommonLabels()...)
-	// Reparse the arguments for current command configuration.
-	parser, err = c.reParse(ctx, parser)
+	// Reparse the original arguments for current command configuration.
+	parser, err = c.reParse(ctx, args, parser)
 	if err != nil {
 		return nil, err
 	}
@@ -158,8 +169,8 @@ func (c *Command) doRun(ctx context.Context, parser *Parser) (value interface{},
 	return nil, c.defaultHelpFunc(ctx, parser)
 }
 
-// reParse parses the arguments using option configuration of current command.
-func (c *Command) reParse(ctx context.Context, parser *Parser) (*Parser, error) {
+// reParse parses the original arguments using option configuration of current command.
+func (c *Command) reParse(ctx context.Context, args []string, parser *Parser) (*Parser, error) {
 	if len(c.Arguments) == 0 {
 		return parser, nil
 	}
@@ -178,7 +189,7 @@ func (c *Command) reParse(ctx context.Context, parser *Parser) (*Parser, error) 
 		}
 		supportedOptions[optionKey] = !arg.Orphan
 	}
-	parser, err := Parse(supportedOptions, ParserOption{
+	parser, err := ParseArgs(args, supportedOptions, ParserOption{
 		CaseSensitive: c.CaseSensitive,
 		Strict:        c.Strict,
 	})
@@ -208,25 +219,27 @@ func (c *Command) reParse(ctx context.Context, parser *Parser) (*Parser, error) 
 }
 
 // searchCommand recursively searches the command according given arguments.
-func (c *Command) searchCommand(ctx context.Context, args []string) (lastCmd, foundCmd *Command, newCtx context.Context) {
+func (c *Command) searchCommand(
+	ctx context.Context, args []string, fromArgIndex int,
+) (lastCmd, foundCmd *Command, newCtx context.Context) {
 	if len(args) == 0 {
 		return c, nil, ctx
 	}
 	for _, cmd := range c.commands {
 		// Recursively searching the command.
+		// String comparison case-sensitive.
 		if cmd.Name == args[0] {
 			leftArgs := args[1:]
 			// If this command needs argument,
-			// it then gives all its left arguments to it.
-			if cmd.hasArgumentFromIndex() {
-				ctx = context.WithValue(ctx, CtxKeyArguments, leftArgs)
+			// it then gives all its left arguments to it using arg index marks.
+			//
+			// Note that the args here (using default args parsing) could be different with the args
+			// that are parsed in command.
+			if cmd.hasArgumentFromIndex() || len(leftArgs) == 0 {
+				ctx = context.WithValue(ctx, CtxKeyArgumentsIndex, fromArgIndex+1)
 				return c, cmd, ctx
 			}
-			// Recursively searching.
-			if len(leftArgs) == 0 {
-				return c, cmd, ctx
-			}
-			return cmd.searchCommand(ctx, leftArgs)
+			return cmd.searchCommand(ctx, leftArgs, fromArgIndex+1)
 		}
 	}
 	return c, nil, ctx

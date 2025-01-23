@@ -3,7 +3,7 @@ version: '3.7'
 services:
 
   consul-server:
-    image: loads/consul:1.15
+    image: consul:1.15
     container_name: consul-server
     restart: always
     volumes:
@@ -17,7 +17,7 @@ services:
     command: "agent"
 
   consul-client:
-    image: loads/consul:1.15
+    image: consul:1.15
     container_name: consul-client
     restart: always
     volumes:
