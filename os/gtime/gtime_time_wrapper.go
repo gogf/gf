@@ -13,7 +13,7 @@ import (
 
 var (
 	setStringLayoutMu sync.Mutex
-	setStringLayout   = "2006-01-02 15:04:05"
+	setStringLayout   = "2006-01-02T15:04:05-07:00"
 )
 
 // SetStringLayout sets the default string layout for function String.
