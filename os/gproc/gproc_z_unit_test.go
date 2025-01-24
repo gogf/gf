@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 	"os"
 	"path/filepath"
 	"testing"
@@ -123,5 +124,23 @@ func Test_SearchBinaryPath_NotFound(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		result := gproc.SearchBinaryPath("nonexistentbinary")
 		t.Assert(result, "")
+	})
+}
+
+func Test_PPidOS(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		ppid := gproc.PPidOS()
+		expectedPpid := os.Getppid()
+		t.Assert(ppid, expectedPpid)
+	})
+}
+
+func Test_PPid(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		customPPid := 12345
+		os.Setenv("GPROC_PPID", gconv.String(customPPid))
+		defer os.Unsetenv("GPROC_PPID")
+
+		t.Assert(gproc.PPid(), customPPid)
 	})
 }
