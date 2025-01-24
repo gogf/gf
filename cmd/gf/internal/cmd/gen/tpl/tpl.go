@@ -14,6 +14,7 @@ import (
 	_ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
 
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -67,7 +68,7 @@ type (
 	CGenTplInput struct {
 		g.Meta            `name:"tpl" config:"{CGenTplConfig}" usage:"{CGenTplUsage}" brief:"{CGenTplBrief}" eg:"{CGenTplEg}" ad:"{CGenTplAd}"`
 		Path              string `name:"path"                short:"p"  brief:"{CGenTplBriefPath}" d:"./output"`
-		TplPath           string `name:"tplPath"             short:"tp" brief:"模板目录路径" d:"./template"`
+		TplPath           string `name:"tplPath"             short:"tp" brief:"模板目录路径"`
 		Link              string `name:"link"                short:"l"  brief:"{CGenDaoBriefLink}"`
 		Tables            string `name:"tables"              short:"t"  brief:"{CGenDaoBriefTables}"`
 		TablesEx          string `name:"tablesEx"            short:"x"  brief:"{CGenDaoBriefTablesEx}"`
@@ -144,25 +145,32 @@ func GetTables(ctx context.Context, db gdb.DB) Tables {
 }
 
 func (c CGenTpl) Tpl(ctx context.Context, in CGenTplInput) (out *CGenTplOutput, err error) {
+	if in.TplPath == "" {
+		return nil, gerror.New("tplPath is required")
+	}
+
 	// Clear old files
-	// if in.Clear {
-	// 	if err := gfile.Remove(in.Path); err != nil {
-	// 		return nil, gerror.Wrapf(err, "clear output path failed")
-	// 	}
-	// }
+	if in.Clear {
+		if err := gfile.Remove(in.Path); err != nil {
+			return nil, gerror.Wrapf(err, "clear output path failed")
+		}
+	}
 
 	// Create output directory
-	// if !gfile.Exists(in.Path) {
-	// 	if err := gfile.Mkdir(in.Path); err != nil {
-	// 		return nil, gerror.Wrapf(err, "create output directory failed")
-	// 	}
-	// }
+	if !gfile.Exists(in.Path) {
+		if err := gfile.Mkdir(in.Path); err != nil {
+			return nil, gerror.Wrapf(err, "create output directory failed")
+		}
+	}
+
 	db, err := in.GetDB()
 	if err != nil {
 		return nil, err
 	}
 	outputDir := in.Path
 	tplRootDir := in.TplPath
+	mlog.Print("output directory:", outputDir)
+	mlog.Print("template directory:", tplRootDir)
 	tplRootDir = gfile.Abs(tplRootDir)
 	fmt.Println(tplRootDir)
 	tplList, err := gfile.ScanDirFile(tplRootDir, "*.tpl", true)
