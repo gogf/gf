@@ -37,7 +37,7 @@ func MiddlewareHandlerResponse(r *Request) {
 	r.Middleware.Next()
 
 	// There's custom buffer content, it then exits current handler.
-	if r.Response.BufferLength() > 0 {
+	if r.Response.BufferLength() > 0 || r.Response.Writer.BytesWritten() > 0 {
 		return
 	}
 
