@@ -35,6 +35,7 @@ type (
 		g.Meta            `name:"pbentity" config:"{CGenPbEntityConfig}" brief:"{CGenPbEntityBrief}" eg:"{CGenPbEntityEg}" ad:"{CGenPbEntityAd}"`
 		Path              string `name:"path"              short:"p"  brief:"{CGenPbEntityBriefPath}" d:"manifest/protobuf/pbentity"`
 		Package           string `name:"package"           short:"k"  brief:"{CGenPbEntityBriefPackage}"`
+		GoPackage         string `name:"goPackage"           short:"g"  brief:"{CGenPbEntityBriefGoPackage}"`
 		Link              string `name:"link"              short:"l"  brief:"{CGenPbEntityBriefLink}"`
 		Tables            string `name:"tables"            short:"t"  brief:"{CGenPbEntityBriefTables}"`
 		Prefix            string `name:"prefix"            short:"f"  brief:"{CGenPbEntityBriefPrefix}"`
@@ -91,6 +92,7 @@ CONFIGURATION SUPPORT
 `
 	CGenPbEntityBriefPath              = `directory path for generated files storing`
 	CGenPbEntityBriefPackage           = `package path for all entity proto files`
+	CGenPbEntityBriefGoPackage         = `go package path for all entity proto files`
 	CGenPbEntityBriefLink              = `database configuration, the same as the ORM configuration of GoFrame`
 	CGenPbEntityBriefTables            = `generate models only for given tables, multiple table names separated with ','`
 	CGenPbEntityBriefPrefix            = `add specified prefix for all entity names and entity proto files`
@@ -129,6 +131,7 @@ func init() {
 		`CGenPbEntityAd`:                     CGenPbEntityAd,
 		`CGenPbEntityBriefPath`:              CGenPbEntityBriefPath,
 		`CGenPbEntityBriefPackage`:           CGenPbEntityBriefPackage,
+		`CGenPbEntityBriefGoPackage`:         CGenPbEntityBriefGoPackage,
 		`CGenPbEntityBriefLink`:              CGenPbEntityBriefLink,
 		`CGenPbEntityBriefTables`:            CGenPbEntityBriefTables,
 		`CGenPbEntityBriefPrefix`:            CGenPbEntityBriefPrefix,
@@ -244,10 +247,13 @@ func generatePbEntityContentFile(ctx context.Context, in CGenPbEntityInternalInp
 	if gstr.Contains(entityMessageDefine, "google.protobuf.Timestamp") {
 		imports = `import "google/protobuf/timestamp.proto";`
 	}
+	if in.GoPackage == "" {
+		in.GoPackage = in.Package
+	}
 	entityContent := gstr.ReplaceByMap(getTplPbEntityContent(""), g.MapStrStr{
 		"{Imports}":       imports,
 		"{PackageName}":   gfile.Basename(in.Package),
-		"{GoPackage}":     in.Package,
+		"{GoPackage}":     in.GoPackage,
 		"{OptionContent}": in.Option,
 		"{EntityMessage}": entityMessageDefine,
 	})
