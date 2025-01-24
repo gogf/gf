@@ -10,31 +10,6 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-var (
-	defaultTypeMapping = map[DBFieldTypeName]CustomAttributeType{
-		"decimal": {
-			Type: "float64",
-		},
-		"money": {
-			Type: "float64",
-		},
-		"numeric": {
-			Type: "float64",
-		},
-		"smallmoney": {
-			Type: "float64",
-		},
-	}
-)
-
-type (
-	DBFieldTypeName     = string
-	CustomAttributeType struct {
-		Type   string `brief:"custom attribute type name"`
-		Import string `brief:"custom import for this type"`
-	}
-)
-
 // Table description
 type Table struct {
 	Name         string

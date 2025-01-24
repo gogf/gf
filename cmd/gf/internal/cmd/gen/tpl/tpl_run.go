@@ -21,19 +21,6 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
-// init description
-//
-// createTime: 2023-10-23 15:42:14
-//
-// author: hailaz
-func init() {
-	nodeDefault := gdb.ConfigNode{
-		Link: fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3306)/focus?loc=Local&parseTime=true", "root123"),
-	}
-
-	gdb.AddConfigNode("test", nodeDefault)
-}
-
 // GetTables description
 //
 // createTime: 2023-12-11 16:21:43
