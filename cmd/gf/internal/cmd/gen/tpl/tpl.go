@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	_ "github.com/gogf/gf/contrib/drivers/clickhouse/v2"
 	_ "github.com/gogf/gf/contrib/drivers/mssql/v2"
@@ -20,6 +19,8 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/util/gtag"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 const (
@@ -64,7 +65,7 @@ type (
 	CGenTpl      struct{}
 	CGenTplInput struct {
 		g.Meta            `name:"tpl" config:"{CGenTplConfig}" usage:"{CGenTplUsage}" brief:"{CGenTplBrief}" eg:"{CGenTplEg}" ad:"{CGenTplAd}"`
-		Path              string `name:"path"                short:"p"  brief:"{CGenTplBriefPath}" d:"./template"`
+		Path              string `name:"path"                short:"p"  brief:"{CGenTplBriefPath}" d:"./output"`
 		Link              string `name:"link"                short:"l"  brief:"{CGenDaoBriefLink}"`
 		Tables            string `name:"tables"              short:"t"  brief:"{CGenDaoBriefTables}"`
 		TablesEx          string `name:"tablesEx"            short:"x"  brief:"{CGenDaoBriefTablesEx}"`
