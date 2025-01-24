@@ -2,117 +2,73 @@ package tpl
 
 import (
 	"context"
-	"fmt"
-	"path/filepath"
-	"strings"
 
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	_ "github.com/gogf/gf/contrib/drivers/clickhouse/v2"
 	_ "github.com/gogf/gf/contrib/drivers/mssql/v2"
 	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
 	_ "github.com/gogf/gf/contrib/drivers/oracle/v2"
 	_ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
 	_ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
-
-	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gview"
-
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
-// init description
-//
-// createTime: 2023-10-23 15:42:14
-//
-// author: hailaz
+const (
+	CGenTplConfig = `gfcli.gen.tpl`
+	CGenTplUsage  = `gf gen tpl [OPTION]`
+	CGenTplBrief  = `automatically generate template files`
+	CGenTplEg     = `
+gf gen tpl
+gf gen tpl -t default -p ./template
+`
+	CGenTplAd = `
+CONFIGURATION SUPPORT
+    Options are also supported by configuration file.
+    It's suggested using configuration file instead of command line arguments.
+    The configuration node name is "gfcli.gen.tpl" 
+`
+
+	CGenTplBriefPath = `output directory path (default: "./template")`
+)
+
 func init() {
-	nodeDefault := gdb.ConfigNode{
-		Link: fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3306)/focus?loc=Local&parseTime=true", "root123"),
-	}
-
-	gdb.AddConfigNode("test", nodeDefault)
+	gtag.Sets(g.MapStrStr{
+		`CGenTplConfig`: CGenTplConfig,
+		`CGenTplUsage`:  CGenTplUsage,
+		`CGenTplBrief`:  CGenTplBrief,
+		`CGenTplEg`:     CGenTplEg,
+		`CGenTplAd`:     CGenTplAd,
+	})
 }
 
-// GetTables description
-//
-// createTime: 2023-12-11 16:21:43
-//
-// author: hailaz
-func GetTables(ctx context.Context, db gdb.DB) Tables {
-	tablesName, err := db.Tables(ctx)
-	if err != nil {
-		panic(err)
+type (
+	CGenTpl      struct{}
+	CGenTplInput struct {
+		g.Meta `name:"tpl" config:"{CGenTplConfig}" usage:"{CGenTplUsage}" brief:"{CGenTplBrief}" eg:"{CGenTplEg}" ad:"{CGenTplAd}"`
+		Path   string `name:"path"    short:"p" brief:"{CGenTplBriefPath}" d:"./template"`
+		Clear  bool   `name:"clear"   short:"c" brief:"delete old files before generation"`
 	}
-	fmt.Println(tablesName)
-	tables := make(Tables, 0)
-	for _, v := range tablesName {
-		t, err := NewTable(ctx, db, v)
-		if err != nil {
-			panic(err)
+	CGenTplOutput struct{}
+)
+
+func (c CGenTpl) Tpl(ctx context.Context, in CGenTplInput) (out *CGenTplOutput, err error) {
+	// Clear old files
+	if in.Clear {
+		if err := gfile.Remove(in.Path); err != nil {
+			return nil, gerror.Wrapf(err, "clear output path failed")
 		}
-		t.SortFields(true)
-		tables = append(tables, t)
 	}
-	return tables
-}
 
-func Tpl() {
-	ctx := context.TODO()
-	db, _ := gdb.Instance("test")
-	outputDir := "./output"
-	tplRootDir := "./testdata"
-	tplRootDir = gfile.Abs(tplRootDir)
-	fmt.Println(tplRootDir)
-	tplList, err := gfile.ScanDirFile(tplRootDir, "*.tpl", true)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(tplList)
-
-	fmt.Printf("%#v\n", Table{})
-	fmt.Printf("%#v\n", TableField{})
-
-	tables := GetTables(ctx, db)
-	view := gview.New()
-
-	for _, table := range tables {
-		table.PackageName = "github.com/gogf/gf/cmd/gf/v2"
-		tplData := g.Map{
-			"table":  table,
-			"tables": tables,
+	// Create output directory
+	if !gfile.Exists(in.Path) {
+		if err := gfile.Mkdir(in.Path); err != nil {
+			return nil, gerror.Wrapf(err, "create output directory failed")
 		}
-		fmt.Println(table.FieldsJsonStr("Snake"))
-		for _, tpl := range tplList {
-			tplDir := gfile.Dir(tpl)
-
-			res, err := view.Parse(ctx, tpl, tplData)
-			if err != nil {
-				panic(err)
-			}
-			// fmt.Println(res, err)
-			filePath := filepath.FromSlash(fmt.Sprintf(outputDir+"%s/%s.go", strings.TrimPrefix(tplDir, tplRootDir), table.Name))
-			err = gfile.PutContents(filePath, res)
-			if err != nil {
-				panic(err)
-			}
-			utils.GoFmt(filePath)
-		}
-
 	}
 
-	return
-	// 	res, err := view.ParseContent(ctx, `{{range $i,$v := .tables}}{{$i}} ---- {{$v}} {{$v.Name}}
-	// {{$v.FieldsJsonStr}}
-	// 	{{range $k,$vv := $v.Fields}}{{$k}} ---- {{$vv}}
-	// 	{{end}}
-	// {{end}}
-
-	// `, g.Map{"tables": tables})
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-
-	// 	fmt.Println(res, err)
-
+	mlog.Print("template files generated successfully!")
+	return &CGenTplOutput{}, nil
 }

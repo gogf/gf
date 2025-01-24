@@ -23,6 +23,7 @@ type cGen struct {
 	cGenPb
 	cGenPbEntity
 	cGenService
+	cGenTpl
 }
 
 const (
