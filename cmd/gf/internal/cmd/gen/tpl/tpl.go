@@ -66,6 +66,7 @@ type (
 	CGenTplInput struct {
 		g.Meta            `name:"tpl" config:"{CGenTplConfig}" usage:"{CGenTplUsage}" brief:"{CGenTplBrief}" eg:"{CGenTplEg}" ad:"{CGenTplAd}"`
 		Path              string `name:"path"                short:"p"  brief:"{CGenTplBriefPath}" d:"./output"`
+		TplPath           string `name:"tplPath"             short:"tp" brief:"模板目录路径" d:"./template"`
 		Link              string `name:"link"                short:"l"  brief:"{CGenDaoBriefLink}"`
 		Tables            string `name:"tables"              short:"t"  brief:"{CGenDaoBriefTables}"`
 		TablesEx          string `name:"tablesEx"            short:"x"  brief:"{CGenDaoBriefTablesEx}"`
@@ -122,6 +123,25 @@ type (
 	DBFieldTypeName = string
 )
 
+// GetTables 获取数据库表结构信息
+func GetTables(ctx context.Context, db gdb.DB) Tables {
+	tablesName, err := db.Tables(ctx)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(tablesName)
+	tables := make(Tables, 0)
+	for _, v := range tablesName {
+		t, err := NewTable(ctx, db, v)
+		if err != nil {
+			panic(err)
+		}
+		t.SortFields(true)
+		tables = append(tables, t)
+	}
+	return tables
+}
+
 func (c CGenTpl) Tpl(ctx context.Context, in CGenTplInput) (out *CGenTplOutput, err error) {
 	// Clear old files
 	// if in.Clear {
@@ -136,13 +156,12 @@ func (c CGenTpl) Tpl(ctx context.Context, in CGenTplInput) (out *CGenTplOutput, 
 	// 		return nil, gerror.Wrapf(err, "create output directory failed")
 	// 	}
 	// }
-
 	db, err := in.GetDB()
 	if err != nil {
 		return nil, err
 	}
-	outputDir := "./output"
-	tplRootDir := "./testdata"
+	outputDir := in.Path
+	tplRootDir := in.TplPath
 	tplRootDir = gfile.Abs(tplRootDir)
 	fmt.Println(tplRootDir)
 	tplList, err := gfile.ScanDirFile(tplRootDir, "*.tpl", true)
