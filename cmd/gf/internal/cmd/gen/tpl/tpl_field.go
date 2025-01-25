@@ -13,12 +13,18 @@ import (
 type TableField struct {
 	gdb.TableField
 	LocalType string
+	JsonCase  string
 }
 
 type TableFields []*TableField
 
-func (s TableFields) Len() int      { return len(s) }
+// Len returns the length of TableFields slice
+func (s TableFields) Len() int { return len(s) }
+
+// Swap swaps the elements with indexes i and j
 func (s TableFields) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+
+// Less reports whether the element with index i should sort before the element with index j
 func (s TableFields) Less(i, j int) bool {
 	return strings.Compare(s[i].Name, s[j].Name) < 0
 }
@@ -94,27 +100,34 @@ func (field *TableField) GetLocalTypeName(ctx context.Context, db gdb.DB, in Inp
 	return
 }
 
-// NameCase description
-func (f *TableField) NameCase(caseName string) string {
+// NameJsonCase description
+//
+// createTime: 2025-01-25 15:27:01
+func (f *TableField) NameJsonCase() string {
+	return gstr.CaseConvert(f.Name, gstr.CaseTypeMatch(f.JsonCase))
+}
+
+// NameCaseConvert 字段名转换
+func (f *TableField) NameCaseConvert(caseName string) string {
 	return gstr.CaseConvert(f.Name, gstr.CaseTypeMatch(caseName))
 }
 
-// CaseCamel description
-func (f *TableField) CaseCamel() string {
+// NameCaseCamel returns the field name in camel case format
+func (f *TableField) NameCaseCamel() string {
 	return gstr.CaseCamel(f.Name)
 }
 
-// CaseCamelLower description
-func (f *TableField) CaseCamelLower() string {
+// NameCaseCamelLower returns the field name in lower camel case format
+func (f *TableField) NameCaseCamelLower() string {
 	return gstr.CaseCamelLower(f.Name)
 }
 
-// CaseSnake description
-func (f *TableField) CaseSnake() string {
+// NameCaseSnake returns the field name in snake case format
+func (f *TableField) NameCaseSnake() string {
 	return gstr.CaseSnake(f.Name)
 }
 
-// CaseKebabScreaming description
-func (f *TableField) CaseKebabScreaming() string {
+// NameCaseKebabScreaming returns the field name in screaming kebab case format
+func (f *TableField) NameCaseKebabScreaming() string {
 	return gstr.CaseKebabScreaming(f.Name)
 }

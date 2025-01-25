@@ -5,22 +5,22 @@
 package dao
 
 import (
-	"{{.table.PackageName}}/internal/cmd/gen/tpl/output/dao/internal"
+	"{{.table.PackageName}}/internal"
 )
 
-// internal{{.table.CaseCamel}}Dao is internal type for wrapping internal DAO implements.
-type internal{{.table.CaseCamel}}Dao = *internal.{{.table.CaseCamel}}Dao
+// internal{{.table.NameCaseCamel}}Dao is internal type for wrapping internal DAO implements.
+type internal{{.table.NameCaseCamel}}Dao = *internal.{{.table.NameCaseCamel}}Dao
 
-// {{.table.CaseCamelLower}}Dao is the data access object for table {{.table.Name}}.
+// {{.table.NameCaseCamelLower}}Dao is the data access object for table {{.table.Name}}.
 // You can define custom methods on it to extend its functionality as you wish.
-type {{.table.CaseCamelLower}}Dao struct {
-	internal{{.table.CaseCamel}}Dao
+type {{.table.NameCaseCamelLower}}Dao struct {
+	internal{{.table.NameCaseCamel}}Dao
 }
 
 var (
-	// {{.table.CaseCamel}} is globally public accessible object for table {{.table.Name}} operations.
-	{{.table.CaseCamel}} = {{.table.CaseCamelLower}}Dao{
-		internal.New{{.table.CaseCamel}}Dao(),
+	// {{.table.NameCaseCamel}} is globally public accessible object for table {{.table.Name}} operations.
+	{{.table.NameCaseCamel}} = {{.table.NameCaseCamelLower}}Dao{
+		internal.New{{.table.NameCaseCamel}}Dao(),
 	}
 )
 
