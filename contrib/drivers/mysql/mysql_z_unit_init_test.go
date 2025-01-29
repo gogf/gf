@@ -66,7 +66,6 @@ func init() {
 	gdb.AddConfigNode("nodeinvalid", nodeInvalid)
 	gdb.AddConfigNode("partition", partitionDefault)
 	gdb.AddConfigNode(gdb.DefaultGroupName, nodeDefault)
-
 	// Default db.
 	if r, err := gdb.NewByGroup(); err != nil {
 		gtest.Error(err)
