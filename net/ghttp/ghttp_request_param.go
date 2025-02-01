@@ -268,27 +268,27 @@ func (r *Request) parseForm() {
 	if r.ContentLength == 0 {
 		return
 	}
+
 	if contentType := r.Header.Get("Content-Type"); contentType != "" {
-		var (
-			err            error
-			repeatableRead = true
-		)
-		if gstr.Contains(contentType, "multipart/") {
+		var isMultiPartRequest = gstr.Contains(contentType, "multipart/")
+		var isFormRequest = gstr.Contains(contentType, "form")
+		var err error
+
+		if !isMultiPartRequest {
 			// To avoid big memory consuming.
 			// The `multipart/` type form always contains binary data, which is not necessary read twice.
-			repeatableRead = false
+			r.MakeBodyRepeatableRead(true)
+		}
+		if isMultiPartRequest {
 			// multipart/form-data, multipart/mixed
 			if err = r.ParseMultipartForm(r.Server.config.FormParsingMemory); err != nil {
 				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, "r.ParseMultipartForm failed"))
 			}
-		} else if gstr.Contains(contentType, "form") {
+		} else if isFormRequest {
 			// application/x-www-form-urlencoded
 			if err = r.Request.ParseForm(); err != nil {
 				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, "r.Request.ParseForm failed"))
 			}
-		}
-		if repeatableRead {
-			r.MakeBodyRepeatableRead(true)
 		}
 		if len(r.PostForm) > 0 {
 			// Parse the form data using united parsing way.
