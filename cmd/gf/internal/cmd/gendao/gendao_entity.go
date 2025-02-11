@@ -11,8 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/text/gstr"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
@@ -63,16 +63,23 @@ func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
 func generateEntityContent(
 	ctx context.Context, in CGenDaoInternalInput, tableName, tableNameCamelCase, structDefine string, appendImports []string,
 ) string {
-	entityContent := gstr.ReplaceByMap(
-		getTemplateFromPathOrDefault(in.TplDaoEntityPath, consts.TemplateGenDaoEntityContent),
-		g.MapStrStr{
-			tplVarTableName:          tableName,
-			tplVarPackageImports:     getImportPartContent(ctx, structDefine, false, appendImports),
-			tplVarTableNameCamelCase: tableNameCamelCase,
-			tplVarStructDefine:       structDefine,
-			tplVarPackageName:        filepath.Base(in.EntityPath),
-		},
+	var (
+		tplContent = getTemplateFromPathOrDefault(
+			in.TplDaoEntityPath, consts.TemplateGenDaoEntityContent,
+		)
 	)
-	entityContent = replaceDefaultVar(in, entityContent)
+	tplView.ClearAssigns()
+	tplView.Assigns(gview.Params{
+		tplVarTableName:          tableName,
+		tplVarPackageImports:     getImportPartContent(ctx, structDefine, false, appendImports),
+		tplVarTableNameCamelCase: tableNameCamelCase,
+		tplVarStructDefine:       structDefine,
+		tplVarPackageName:        filepath.Base(in.EntityPath),
+	})
+	assignDefaultVar(tplView, in)
+	entityContent, err := tplView.ParseContent(ctx, tplContent)
+	if err != nil {
+		mlog.Fatalf("parsing template content failed: %v", err)
+	}
 	return entityContent
 }

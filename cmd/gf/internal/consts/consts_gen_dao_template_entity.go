@@ -8,13 +8,13 @@ package consts
 
 const TemplateGenDaoEntityContent = `
 // =================================================================================
-// Code generated and maintained by GoFrame CLI tool. DO NOT EDIT. {TplCreatedAtDatetimeStr}
+// Code generated and maintained by GoFrame CLI tool. DO NOT EDIT. {{.TplCreatedAtDatetimeStr}}
 // =================================================================================
 
-package {TplPackageName}
+package {{.TplPackageName}}
 
-{TplPackageImports}
+{{.TplPackageImports}}
 
-// {TplTableNameCamelCase} is the golang structure for table {TplTableName}.
-{TplStructDefine}
+// {{.TplTableNameCamelCase}} is the golang structure for table {{.TplTableName}}.
+{{.TplStructDefine}}
 `
