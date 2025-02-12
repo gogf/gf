@@ -61,8 +61,8 @@ func MiddlewareHandlerResponse(r *Request) {
 		}
 		msg = err.Error()
 	} else {
+		msg = http.StatusText(r.Response.Status)
 		if r.Response.Status > 0 && r.Response.Status != http.StatusOK {
-			msg = http.StatusText(r.Response.Status)
 			switch r.Response.Status {
 			case http.StatusNotFound:
 				code = gcode.CodeNotFound
