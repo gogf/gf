@@ -53,7 +53,7 @@ func (r Record) Struct(pointer interface{}) error {
 		}
 		return nil
 	}
-	return gconv.StructTag(r, pointer, OrmTagForStruct)
+	return gconv.StructTagByConfig(convertConfig, r, pointer, OrmTagForStruct)
 }
 
 // IsEmpty checks and returns whether `r` is empty.
