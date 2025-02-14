@@ -33,7 +33,8 @@ func (r *Registry) Search(_ context.Context, in gsvc.SearchInput) ([]gsvc.Servic
 		items := make([]gsvc.Service, 0, len(servicesID))
 		for _, service := range servicesID {
 			servicePath := path.Join(serviceNamePath, service)
-			byteData, _, err := r.conn.Get(servicePath)
+			byteData, _, err := r.conn.Get(path.Join(servicePath, in.Name))
+
 			if err != nil {
 				return nil, gerror.Wrapf(
 					err,
