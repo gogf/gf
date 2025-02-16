@@ -421,6 +421,7 @@ func parseConfigNodeLink(node *ConfigNode) (*ConfigNode, error) {
 		if len(match) > 6 && match[7] != "" {
 			node.Extra = match[7]
 		}
+		node.Link = ""
 	}
 	if node.Extra != "" {
 		if m, _ := gstr.Parse(node.Extra); len(m) > 0 {
