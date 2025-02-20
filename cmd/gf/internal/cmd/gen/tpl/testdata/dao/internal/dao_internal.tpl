@@ -21,7 +21,7 @@ type {{.table.NameCaseCamel}}Columns struct { {{range $i,$v := .table.Fields}}
 
 // {{.table.NameCaseCamelLower}}Columns holds the columns for table {{.table.Name}}.
 var {{.table.NameCaseCamelLower}}Columns = {{.table.NameCaseCamel}}Columns{ {{range $i,$v := .table.Fields}}
-	{{$v.NameCaseCamel}}: "{{$v.NameCaseCamelLower}}",{{end}}
+	{{$v.NameCaseCamel}}: "{{$v.NameJsonCase}}",{{end}}
 }
 
 // New{{.table.NameCaseCamel}}Dao creates and returns a new DAO object for table data access.

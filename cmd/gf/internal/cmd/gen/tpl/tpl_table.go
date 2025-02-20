@@ -31,16 +31,16 @@ type Tables []*Table
 // createTime: 2023-12-11 16:17:33
 //
 // author: hailaz
-func NewTable(ctx context.Context, db gdb.DB, tableName string, tableOutputName string) (*Table, error) {
-	fields, err := db.TableFields(ctx, tableName)
+func NewTable(t *TplObj, tableName string) (*Table, error) {
+	fields, err := t.db.TableFields(t.ctx, tableName)
 	if err != nil {
 		return nil, err
 	}
 	table := Table{
 		Name:         tableName,
-		OutputName:   tableOutputName,
+		OutputName:   t.TableOutputName(tableName),
 		FieldsSource: fields,
-		db:           db,
+		db:           t.db,
 		Imports:      make(map[string]struct{}),
 	}
 	table.toTableFields()
@@ -159,7 +159,7 @@ func (t *TplObj) GetTables() (Tables, error) {
 
 	tables := make(Tables, 0, len(nameList))
 	for _, v := range nameList {
-		t, err := NewTable(t.ctx, t.db, v, t.TableOutputName(v))
+		t, err := NewTable(t, v)
 		if err != nil {
 			continue
 		}
