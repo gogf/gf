@@ -200,5 +200,5 @@ func (r Result) Structs(pointer interface{}) (err error) {
 		}
 		return nil
 	}
-	return gconv.StructsTag(r, pointer, OrmTagForStruct)
+	return gconv.StructsTagByConfig(convertConfig, r, pointer, OrmTagForStruct)
 }
