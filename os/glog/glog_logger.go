@@ -40,6 +40,7 @@ type Logger struct {
 
 const (
 	defaultFileFormat                 = `{Y-m-d}.log`
+	defaultTimeFormat                 = "2006-01-02T15:04:05.000Z07:00"
 	defaultFileFlags                  = os.O_CREATE | os.O_WRONLY | os.O_APPEND
 	defaultFilePerm                   = os.FileMode(0666)
 	defaultFileExpire                 = time.Minute

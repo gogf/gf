@@ -38,14 +38,14 @@ func (i *CGenDaoInternalGenItems) SetClear(clear bool) {
 	i.Items[i.index].Clear = clear
 }
 
-func (i CGenDaoInternalGenItems) AppendDirPath(storageDirPath string) {
+func (i *CGenDaoInternalGenItems) AppendDirPath(storageDirPath string) {
 	i.Items[i.index].StorageDirPaths = append(
 		i.Items[i.index].StorageDirPaths,
 		storageDirPath,
 	)
 }
 
-func (i CGenDaoInternalGenItems) AppendGeneratedFilePath(generatedFilePath string) {
+func (i *CGenDaoInternalGenItems) AppendGeneratedFilePath(generatedFilePath string) {
 	i.Items[i.index].GeneratedFilePaths = append(
 		i.Items[i.index].GeneratedFilePaths,
 		generatedFilePath,

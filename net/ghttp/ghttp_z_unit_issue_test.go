@@ -620,18 +620,6 @@ func Test_Issue3789(t *testing.T) {
 	})
 }
 
-// https://github.com/gogf/gf/issues/4047
-func Test_Issue4047(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		s := g.Server(guid.S())
-		err := s.SetConfigWithMap(g.Map{
-			"logger": nil,
-		})
-		t.AssertNil(err)
-		t.Assert(s.Logger(), nil)
-	})
-}
-
 // https://github.com/gogf/gf/issues/4108
 func Test_Issue4108(t *testing.T) {
 	s := g.Server(guid.S())
@@ -676,5 +664,17 @@ func Test_Issue4115(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(rsp.StatusCode, http.StatusOK)
 		t.Assert(rsp.ReadAllString(), "hello")
+	})
+}
+
+// https://github.com/gogf/gf/issues/4047
+func Test_Issue4047(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		err := s.SetConfigWithMap(g.Map{
+			"logger": nil,
+		})
+		t.AssertNil(err)
+		t.Assert(s.Logger(), nil)
 	})
 }
