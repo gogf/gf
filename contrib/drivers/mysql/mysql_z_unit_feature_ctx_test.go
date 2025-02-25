@@ -63,3 +63,31 @@ func Test_Ctx_Model(t *testing.T) {
 		db.Model(table).All()
 	})
 }
+
+type implScanner struct {
+	v int
+}
+
+func (t *implScanner) Scan(src any) error {
+	t.v = 10
+	return nil
+}
+
+type testImplSqlScanner struct {
+	Id       implScanner
+	Passport *implScanner
+	Password string
+}
+
+func Test_CustomConvertFunc(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		var impl testImplSqlScanner
+		err := db.Model(table).Scan(&impl)
+		t.AssertNil(err)
+		t.Assert(impl.Id, implScanner{v: 10})
+		t.Assert(impl.Password, "pass_1")
+		t.Assert(impl.Passport, &implScanner{v: 10})
+	})
+}

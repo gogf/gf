@@ -50,8 +50,8 @@ type CachedFieldInfoBase struct {
 	// Purpose: reduce the interface asserting cost in runtime.
 	IsCommonInterface bool
 
-	// IsCustomConvert marks there custom converting function for this field type.
-	IsCustomConvert bool
+	// MayBeCustomConvert marks there custom converting function for this field type.
+	MayBeCustomConvert bool
 
 	// StructField is the type info of this field.
 	StructField reflect.StructField
@@ -74,7 +74,7 @@ type CachedFieldInfoBase struct {
 	OtherSameNameField []*CachedFieldInfo
 
 	// ConvertFunc is the converting function for this field.
-	ConvertFunc func(from any, to reflect.Value)
+	ConvertFunc func(from any, to reflect.Value) error
 
 	// The last fuzzy matching key for this field.
 	// The fuzzy matching occurs only if there are no direct tag and field name matching in the params map.
