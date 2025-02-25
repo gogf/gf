@@ -14,22 +14,6 @@ import (
 )
 
 var (
-	// customConvertTypeMap is used to store whether field types are registered to custom conversions
-	// For example:
-	// func (src *TypeA) (dst *TypeB,err error)
-	// This map will store `TypeB` for quick judgment during assignment.
-	customConvertTypeMap = map[reflect.Type]struct{}{}
-)
-
-// RegisterCustomConvertType registers custom
-func RegisterCustomConvertType(fieldType reflect.Type) {
-	if fieldType.Kind() == reflect.Ptr {
-		fieldType = fieldType.Elem()
-	}
-	customConvertTypeMap[fieldType] = struct{}{}
-}
-
-var (
 	implUnmarshalText  = reflect.TypeOf((*localinterface.IUnmarshalText)(nil)).Elem()
 	implUnmarshalJson  = reflect.TypeOf((*localinterface.IUnmarshalJSON)(nil)).Elem()
 	implUnmarshalValue = reflect.TypeOf((*localinterface.IUnmarshalValue)(nil)).Elem()

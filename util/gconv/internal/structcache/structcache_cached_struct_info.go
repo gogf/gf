@@ -103,7 +103,7 @@ func (csi *CachedStructInfo) makeCachedFieldInfo(
 		StructField:             field,
 		FieldIndexes:            fieldIndexes,
 		ConvertFunc:             csi.genFieldConvertFunc(field.Type, config),
-		IsCustomConvert:         csi.checkTypeHasCustomConvert(field.Type),
+		MayBeCustomConvert:      config.checkTypeMaybeCustomConvert(field.Type),
 		PriorityTagAndFieldName: csi.genPriorityTagAndFieldName(field, priorityTags),
 		RemoveSymbolsFieldName:  utils.RemoveSymbols(field.Name),
 	}
@@ -140,14 +140,6 @@ func (csi *CachedStructInfo) genPriorityTagAndFieldName(
 	}
 	priorityTagAndFieldName = append(priorityTagAndFieldName, field.Name)
 	return
-}
-
-func (csi *CachedStructInfo) checkTypeHasCustomConvert(fieldType reflect.Type) bool {
-	if fieldType.Kind() == reflect.Ptr {
-		fieldType = fieldType.Elem()
-	}
-	_, ok := customConvertTypeMap[fieldType]
-	return ok
 }
 
 func (csi *CachedStructInfo) genPtrConvertFunc(

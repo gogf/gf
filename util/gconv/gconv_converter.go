@@ -8,10 +8,6 @@ package gconv
 
 import (
 	"reflect"
-
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/util/gconv/internal/structcache"
 )
 
 type (
@@ -19,9 +15,6 @@ type (
 	converterOutType = reflect.Type
 	converterFunc    = reflect.Value
 )
-
-// customConverters for internal converter storing.
-var customConverters = make(map[converterInType]map[converterOutType]converterFunc)
 
 // RegisterConverter to register custom converter.
 // It must be registered before you use this custom converting feature.
@@ -32,65 +25,14 @@ var customConverters = make(map[converterInType]map[converterOutType]converterFu
 //     It will convert type `T1` to type `T2`.
 //  2. The `T1` should not be type of pointer, but the `T2` should be type of pointer.
 func RegisterConverter(fn interface{}) (err error) {
-	var (
-		fnReflectType = reflect.TypeOf(fn)
-		errType       = reflect.TypeOf((*error)(nil)).Elem()
-	)
-	if fnReflectType.Kind() != reflect.Func ||
-		fnReflectType.NumIn() != 1 || fnReflectType.NumOut() != 2 ||
-		!fnReflectType.Out(1).Implements(errType) {
-		err = gerror.NewCodef(
-			gcode.CodeInvalidParameter,
-			"parameter must be type of converter function and defined as pattern `func(T1) (T2, error)`, but defined as `%s`",
-			fnReflectType.String(),
-		)
-		return
-	}
-
-	// The Key and Value of the converter map should not be pointer.
-	var (
-		inType  = fnReflectType.In(0)
-		outType = fnReflectType.Out(0)
-	)
-	if inType.Kind() == reflect.Pointer {
-		err = gerror.NewCodef(
-			gcode.CodeInvalidParameter,
-			"invalid converter function `%s`: invalid input parameter type `%s`, should not be type of pointer",
-			fnReflectType.String(), inType.String(),
-		)
-		return
-	}
-	if outType.Kind() != reflect.Pointer {
-		err = gerror.NewCodef(
-			gcode.CodeInvalidParameter,
-			"invalid converter function `%s`: invalid output parameter type `%s` should be type of pointer",
-			fnReflectType.String(), outType.String(),
-		)
-		return
-	}
-
-	registeredOutTypeMap, ok := customConverters[inType]
-	if !ok {
-		registeredOutTypeMap = make(map[converterOutType]converterFunc)
-		customConverters[inType] = registeredOutTypeMap
-	}
-	if _, ok = registeredOutTypeMap[outType]; ok {
-		err = gerror.NewCodef(
-			gcode.CodeInvalidOperation,
-			"the converter parameter type `%s` to type `%s` has already been registered",
-			inType.String(), outType.String(),
-		)
-		return
-	}
-	registeredOutTypeMap[outType] = reflect.ValueOf(fn)
-	structcache.RegisterCustomConvertType(outType)
+	err = defaultConfig.RegisterConverter(fn)
 	return
 }
 
 func getRegisteredConverterFuncAndSrcType(
 	srcReflectValue, dstReflectValueForRefer reflect.Value,
 ) (f converterFunc, srcType reflect.Type, ok bool) {
-	if len(customConverters) == 0 {
+	if defaultConfig.HasNoCustomConverters() {
 		return reflect.Value{}, nil, false
 	}
 	srcType = srcReflectValue.Type()
@@ -99,7 +41,7 @@ func getRegisteredConverterFuncAndSrcType(
 	}
 	var registeredOutTypeMap map[converterOutType]converterFunc
 	// firstly, it searches the map by input parameter type.
-	registeredOutTypeMap, ok = customConverters[srcType]
+	registeredOutTypeMap, ok = defaultConfig.GetCustomConverters(srcType)
 	if !ok {
 		return reflect.Value{}, nil, false
 	}

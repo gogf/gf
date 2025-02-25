@@ -369,7 +369,7 @@ func bindVarToStructField(
 		customConverterInput reflect.Value
 		ok                   bool
 	)
-	if cachedFieldInfo.IsCustomConvert {
+	if cachedFieldInfo.MayBeCustomConvert {
 		if customConverterInput, ok = srcValue.(reflect.Value); !ok {
 			customConverterInput = reflect.ValueOf(srcValue)
 		}

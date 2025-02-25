@@ -24,12 +24,21 @@ type ConvertConfig struct {
 	interfaceConvertFuncs []interfaceTypeConvert
 	// map[reflect.Type]*CachedStructInfo
 	cachedStructsInfoMap sync.Map
+
+	customConverters map[converterInType]map[converterOutType]converterFunc
+	// customConvertTypeMap is used to store whether field types are registered to custom conversions
+	// For example:
+	// func (src *TypeA) (dst *TypeB,err error)
+	// This map will store `TypeB` for quick judgment during assignment.
+	customConvertersOutTypes map[reflect.Type]struct{}
 }
 
 func NewConvertConfig(name string) *ConvertConfig {
 	return &ConvertConfig{
-		name:              name,
-		parseConvertFuncs: make(map[reflect.Type]convertFn),
+		name:                     name,
+		parseConvertFuncs:        make(map[reflect.Type]convertFn),
+		customConverters:         make(map[converterInType]map[converterOutType]converterFunc),
+		customConvertersOutTypes: make(map[reflect.Type]struct{}),
 	}
 }
 
@@ -136,6 +145,7 @@ func getPtrConvertFunc(fn convertFn) convertFn {
 		if to.IsNil() {
 			to.Set(reflect.New(to.Type().Elem()))
 		}
+		// TODO:
 		// from = nil
 		// to = nil ??
 		return fn(from, to.Elem())
