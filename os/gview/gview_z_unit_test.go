@@ -621,6 +621,10 @@ func init() {
 	if err := gres.Add("H4sIAAAAAAAC/wrwZmYRYeBg4GBIFA0LY0ACEgycDCWpuQU5iSWp+ullmanl8SWpxSV6GSW5OaEhrAyM5o1fk095n/HdumrdNeaLW7c2MDAw/P8f4M3OoZ+9QESIgYGBj4GBAWYBA0MTmgUcSBaADSxt/JoM0o6sKMCbkUmEGeFCZKNBLoSBbY0gkqB7EcZhdw8ECDD8d0xEMg7JdaxsIAVMDEwMfQwMDAvAygEBAAD//0d6jptEAQAA"); err != nil {
 		panic("add binary content to resource manager failed: " + err.Error())
 	}
+
+	if err := gres.Add("H4sIAAAAAAAC/wrwZmYRYeBg4GBIFA0LY0ACEgycDCWpuQU5iSWp+ullmanl8SWpxSV6GSW5OaEhrAyM5o1fk095n/HdumrdNeaLW7c2MDAw/P8f4M3OoZ+9QESIgYGBj4GBAWYBA0MTmgUcSBaADSxt/JoM0o6sKMCbkUmEGeFCZKNBLoSBbY0gkqB7EcZhdw8ECDD8d0xEMg7JdaxsIAVMDEwMfQwMDAvAygEBAAD//0d6jptEAQAA", "assets/"); err != nil {
+		panic("add binary content to resource manager failed: " + err.Error())
+	}
 }
 
 func Test_GviewInGres(t *testing.T) {
@@ -633,5 +637,25 @@ func Test_GviewInGres(t *testing.T) {
 		})
 		t.AssertNil(err)
 		t.Assert(result, "name:john")
+	})
+}
+
+func Test_GviewSearchFileInGres(t *testing.T) {
+	gres.Dump()
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		v.SetPath("assets/template")
+		result, err := v.Parse(context.TODO(), "gview_test.html", g.Map{
+			"name": "john",
+		})
+		t.AssertNil(err)
+		t.Assert(result, "name:john")
+
+		v1 := gview.New("assets/template")
+		result1, err1 := v1.Parse(context.TODO(), "gview_test.html", g.Map{
+			"name": "john",
+		})
+		t.AssertNil(err1)
+		t.Assert(result1, "name:john")
 	})
 }

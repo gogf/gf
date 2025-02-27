@@ -1,4 +1,0 @@
-logger:
-  Level:   "all"
-  Stdout:  true
-  CtxKeys: ["RequestId", "UserId"]

@@ -8,20 +8,15 @@ import (
 	"for-gendao-test/pkg/dao/internal"
 )
 
-// internalTableUserDao is an internal type for wrapping the internal DAO implementation.
-type internalTableUserDao = *internal.TableUserDao
-
 // tableUserDao is the data access object for the table table_user.
 // You can define custom methods on it to extend its functionality as needed.
 type tableUserDao struct {
-	internalTableUserDao
+	*internal.TableUserDao
 }
 
 var (
 	// TableUser is a globally accessible object for table table_user operations.
-	TableUser = tableUserDao{
-		internal.NewTableUserDao(),
-	}
+	TableUser = tableUserDao{internal.NewTableUserDao()}
 )
 
 // Add your custom methods and functionality below.

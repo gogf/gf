@@ -81,7 +81,7 @@ func (i *implementer) {ImplementerName}() {Module}.I{ImplementerName} {
 
 `
 
-const TemplateGenCtrlSdkImplementerFunc = `
+const TemplateGenCtrlSdkImplementerFunc = `{MethodComment}
 func (i *implementer{ImplementerName}) {MethodName}(ctx context.Context, req *{Version}.{MethodName}Req) (res *{Version}.{MethodName}Res, err error) {
 	err = i.Request(ctx, req, &res)
 	return

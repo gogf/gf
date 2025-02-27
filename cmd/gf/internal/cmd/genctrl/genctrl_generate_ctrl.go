@@ -138,10 +138,11 @@ func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, ite
 
 	if gfile.Exists(methodFilePath) {
 		content = gstr.ReplaceByMap(consts.TemplateGenCtrlControllerMethodFuncMerge, g.MapStrStr{
-			"{Module}":     item.Module,
-			"{CtrlName}":   ctrlName,
-			"{Version}":    item.Version,
-			"{MethodName}": item.MethodName,
+			"{Module}":        item.Module,
+			"{CtrlName}":      ctrlName,
+			"{Version}":       item.Version,
+			"{MethodName}":    item.MethodName,
+			"{MethodComment}": item.GetComment(),
 		})
 
 		if gstr.Contains(gfile.GetContents(methodFilePath), fmt.Sprintf(`func (c *%v) %v(`, ctrlName, item.MethodName)) {
@@ -152,11 +153,12 @@ func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, ite
 		}
 	} else {
 		content = gstr.ReplaceByMap(consts.TemplateGenCtrlControllerMethodFunc, g.MapStrStr{
-			"{Module}":     item.Module,
-			"{ImportPath}": item.Import,
-			"{CtrlName}":   ctrlName,
-			"{Version}":    item.Version,
-			"{MethodName}": item.MethodName,
+			"{Module}":        item.Module,
+			"{ImportPath}":    item.Import,
+			"{CtrlName}":      ctrlName,
+			"{Version}":       item.Version,
+			"{MethodName}":    item.MethodName,
+			"{MethodComment}": item.GetComment(),
 		})
 		if err = gfile.PutContents(methodFilePath, gstr.TrimLeft(content)); err != nil {
 			return err
@@ -192,10 +194,11 @@ func (c *controllerGenerator) doGenerateCtrlMergeItem(dstModuleFolderPath string
 		}
 
 		ctrl := gstr.TrimLeft(gstr.ReplaceByMap(consts.TemplateGenCtrlControllerMethodFuncMerge, g.MapStrStr{
-			"{Module}":     api.Module,
-			"{CtrlName}":   fmt.Sprintf(`Controller%s`, gstr.UcFirst(api.Version)),
-			"{Version}":    api.Version,
-			"{MethodName}": api.MethodName,
+			"{Module}":        api.Module,
+			"{CtrlName}":      fmt.Sprintf(`Controller%s`, gstr.UcFirst(api.Version)),
+			"{Version}":       api.Version,
+			"{MethodName}":    api.MethodName,
+			"{MethodComment}": api.GetComment(),
 		}))
 		ctrlFileItem.controllers.WriteString(ctrl)
 		doneApiSet.Add(api.String())

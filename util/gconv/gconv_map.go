@@ -539,6 +539,8 @@ func doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) in
 			})
 		}
 		return array
+
+	default:
 	}
 	return in.Value
 }
