@@ -165,7 +165,7 @@ func Test_Issue1653(t *testing.T) {
 }
 `
 		resContent := c.PostContent(ctx, "/boot/test", dataReq)
-		t.Assert(resContent, `{"code":0,"message":"","data":{"uuid":"28ee701c-7daf-4cdc-9a62-6d6704e6112b","feed_back":"P00001"}}`)
+		t.Assert(resContent, `{"code":0,"message":"OK","data":{"uuid":"28ee701c-7daf-4cdc-9a62-6d6704e6112b","feed_back":"P00001"}}`)
 	})
 }
 
@@ -261,7 +261,7 @@ func Test_Issue2172(t *testing.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		dataReq := `{"data":{"asd":1}}`
-		t.Assert(c.PostContent(ctx, "/demo", dataReq), `{"code":0,"message":"","data":{"Content":"{\"asd\":1}"}}`)
+		t.Assert(c.PostContent(ctx, "/demo", dataReq), `{"code":0,"message":"OK","data":{"Content":"{\"asd\":1}"}}`)
 	})
 }
 
@@ -365,7 +365,7 @@ func Test_Issue2482(t *testing.T) {
     ]
   }
 `
-		t.Assert(c.PutContent(ctx, "/api/v2/order", content), `{"code":0,"message":"","data":null}`)
+		t.Assert(c.PutContent(ctx, "/api/v2/order", content), `{"code":0,"message":"OK","data":null}`)
 	})
 }
 
@@ -522,7 +522,7 @@ func Test_Issue2457(t *testing.T) {
 
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-		t.Assert(c.GetContent(ctx, "/list"), `{"code":0,"message":"","data":{"Code":100,"Data":{"Title":"title","Content":"hello"},"Msg":""}}`)
+		t.Assert(c.GetContent(ctx, "/list"), `{"code":0,"message":"OK","data":{"Code":100,"Data":{"Title":"title","Content":"hello"},"Msg":""}}`)
 	})
 }
 
@@ -565,7 +565,7 @@ func Test_Issue3245(t *testing.T) {
 		c.SetHeader("Header-Name", "oldme")
 		c.SetCookie("Header-Age", "25")
 
-		expect := `{"code":0,"message":"","data":{"Reply":{"name":"oldme","X-Header-Name":"oldme","X-Header-Age":25}}}`
+		expect := `{"code":0,"message":"OK","data":{"Reply":{"name":"oldme","X-Header-Name":"oldme","X-Header-Age":25}}}`
 		t.Assert(c.GetContent(ctx, "/hello?nickname=oldme"), expect)
 	})
 }
@@ -615,20 +615,8 @@ func Test_Issue3789(t *testing.T) {
 
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-		expect := `{"code":0,"message":"","data":{"id":"0","secondId":"2","thirdId":"3"}}`
+		expect := `{"code":0,"message":"OK","data":{"id":"0","secondId":"2","thirdId":"3"}}`
 		t.Assert(c.GetContent(ctx, "/hello?id=&secondId=2&thirdId=3"), expect)
-	})
-}
-
-// https://github.com/gogf/gf/issues/4047
-func Test_Issue4047(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		s := g.Server(guid.S())
-		err := s.SetConfigWithMap(g.Map{
-			"logger": nil,
-		})
-		t.AssertNil(err)
-		t.Assert(s.Logger(), nil)
 	})
 }
 
@@ -676,5 +664,17 @@ func Test_Issue4115(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(rsp.StatusCode, http.StatusOK)
 		t.Assert(rsp.ReadAllString(), "hello")
+	})
+}
+
+// https://github.com/gogf/gf/issues/4047
+func Test_Issue4047(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		err := s.SetConfigWithMap(g.Map{
+			"logger": nil,
+		})
+		t.AssertNil(err)
+		t.Assert(s.Logger(), nil)
 	})
 }

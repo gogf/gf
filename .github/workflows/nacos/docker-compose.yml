@@ -17,7 +17,7 @@ services:
       retries: 10
 
   initializer:
-    image: loads/curl:latest
+    image: alpine/curl:latest
     depends_on:
       nacos:
         condition: service_healthy
