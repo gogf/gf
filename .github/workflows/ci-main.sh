@@ -2,6 +2,9 @@
 
 coverage=$1
 
+# update code of submodules
+make subup
+
 # find all path that contains go.mod.
 for file in `find . -name go.mod`; do
     dirpath=$(dirname $file)
@@ -18,16 +21,16 @@ for file in `find . -name go.mod`; do
         continue 1
     fi
 
-    # Check if it's a contrib directory or example directory
-    if [[ $dirpath =~ "/contrib/" ]] || [ "example" = $(basename $dirpath) ]; then
+    # Check if it's a contrib directory or examples directory
+    if [[ $dirpath =~ "/contrib/" ]] || [ "examples" = $(basename $dirpath) ]; then
         # Check if go version meets the requirement
         if ! go version | grep -qE "go${LATEST_GO_VERSION}"; then
             echo "ignore path $dirpath as go version is not ${LATEST_GO_VERSION}: $(go version)"
             continue 1
         fi
-        # If it's example directory, only build without tests
-        if [ "example" = $(basename $dirpath) ]; then
-            echo "the example directory only needs to be built, not unit tests and coverage tests."
+        # If it's examples directory, only build without tests
+        if [ "examples" = $(basename $dirpath) ]; then
+            echo "the examples directory only needs to be built, not unit tests and coverage tests."
             cd $dirpath
             go mod tidy
             go build ./...

@@ -1,8 +1,0 @@
-grpc:
-  name:            "demo"
-  logPath:          "./log"
-  logStdout:        true
-  errorLogEnabled:  true
-  accessLogEnabled: true
-  errorStack:       true
-
