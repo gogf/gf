@@ -9,6 +9,7 @@ package v1
 import "github.com/gogf/gf/v2/frame/g"
 
 type (
+	// CreateReq add title.
 	CreateReq struct {
 		g.Meta `path:"/article/create" method:"post" tags:"ArticleService"`
 		Title  string `v:"required"`

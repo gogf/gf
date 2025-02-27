@@ -39,15 +39,16 @@ func (c CGenCtrl) getApiItemsInSrc(apiModuleFolderPath string) (items []apiItem,
 			if err != nil {
 				return nil, err
 			}
-			for _, methodName := range structsInfo {
+			for _, s := range structsInfo {
 				// remove end "Req"
-				methodName = gstr.TrimRightStr(methodName, "Req", 1)
+				methodName := gstr.TrimRightStr(s.structName, "Req", 1)
 				item := apiItem{
 					Import:     gstr.Trim(importPath, `"`),
 					FileName:   gfile.Name(apiFileFolderPath),
 					Module:     gfile.Basename(apiModuleFolderPath),
 					Version:    gfile.Basename(apiVersionFolderPath),
 					MethodName: methodName,
+					Comment:    s.comment,
 				}
 				items = append(items, item)
 			}
