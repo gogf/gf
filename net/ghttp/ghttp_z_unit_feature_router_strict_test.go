@@ -56,7 +56,7 @@ func Test_Router_Handler_Strict_WithObject(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		t.Assert(client.GetContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18,"Name":"john"}}`)
+		t.Assert(client.GetContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"OK","data":{"Id":1,"Age":18,"Name":"john"}}`)
 		t.Assert(client.GetContent(ctx, "/test/error"), `{"code":50,"message":"error","data":{"Id":1,"Age":0,"Name":""}}`)
 	})
 }
@@ -153,8 +153,8 @@ func Test_Router_Handler_Strict_WithObjectAndMeta(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), `{"code":65,"message":"Not Found","data":null}`)
-		t.Assert(client.GetContent(ctx, "/custom-test1?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18}}`)
-		t.Assert(client.GetContent(ctx, "/custom-test2?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Name":"john"}}`)
+		t.Assert(client.GetContent(ctx, "/custom-test1?age=18&name=john"), `{"code":0,"message":"OK","data":{"Id":1,"Age":18}}`)
+		t.Assert(client.GetContent(ctx, "/custom-test2?age=18&name=john"), `{"code":0,"message":"OK","data":{"Id":1,"Name":"john"}}`)
 		t.Assert(client.PostContent(ctx, "/custom-test2?age=18&name=john"), `{"code":65,"message":"Not Found","data":null}`)
 	})
 }
@@ -184,17 +184,17 @@ func Test_Router_Handler_Strict_Group_Bind(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		t.Assert(client.GetContent(ctx, "/"), `{"code":65,"message":"Not Found","data":null}`)
-		t.Assert(client.GetContent(ctx, "/api/v1/custom-test1?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18}}`)
-		t.Assert(client.GetContent(ctx, "/api/v1/custom-test2?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Name":"john"}}`)
+		t.Assert(client.GetContent(ctx, "/api/v1/custom-test1?age=18&name=john"), `{"code":0,"message":"OK","data":{"Id":1,"Age":18}}`)
+		t.Assert(client.GetContent(ctx, "/api/v1/custom-test2?age=18&name=john"), `{"code":0,"message":"OK","data":{"Id":1,"Name":"john"}}`)
 		t.Assert(client.PostContent(ctx, "/api/v1/custom-test2?age=18&name=john"), `{"code":65,"message":"Not Found","data":null}`)
 
-		t.Assert(client.GetContent(ctx, "/api/v1/custom-test3?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18}}`)
-		t.Assert(client.GetContent(ctx, "/api/v1/custom-test4?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Name":"john"}}`)
+		t.Assert(client.GetContent(ctx, "/api/v1/custom-test3?age=18&name=john"), `{"code":0,"message":"OK","data":{"Id":1,"Age":18}}`)
+		t.Assert(client.GetContent(ctx, "/api/v1/custom-test4?age=18&name=john"), `{"code":0,"message":"OK","data":{"Id":1,"Name":"john"}}`)
 
-		t.Assert(client.GetContent(ctx, "/api/v2/custom-test1?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18}}`)
-		t.Assert(client.GetContent(ctx, "/api/v2/custom-test2?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Name":"john"}}`)
-		t.Assert(client.GetContent(ctx, "/api/v2/custom-test3?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18}}`)
-		t.Assert(client.GetContent(ctx, "/api/v2/custom-test4?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Name":"john"}}`)
+		t.Assert(client.GetContent(ctx, "/api/v2/custom-test1?age=18&name=john"), `{"code":0,"message":"OK","data":{"Id":1,"Age":18}}`)
+		t.Assert(client.GetContent(ctx, "/api/v2/custom-test2?age=18&name=john"), `{"code":0,"message":"OK","data":{"Id":1,"Name":"john"}}`)
+		t.Assert(client.GetContent(ctx, "/api/v2/custom-test3?age=18&name=john"), `{"code":0,"message":"OK","data":{"Id":1,"Age":18}}`)
+		t.Assert(client.GetContent(ctx, "/api/v2/custom-test4?age=18&name=john"), `{"code":0,"message":"OK","data":{"Id":1,"Name":"john"}}`)
 	})
 }
 
@@ -251,7 +251,7 @@ func Test_Issue1708(t *testing.T) {
 `
 		t.Assert(
 			client.PostContent(ctx, "/test", content),
-			`{"code":0,"message":"","data":{"page":0,"size":0,"targetType":"topic","targetId":10785,"test":[[{"name":"123"}]]}}`,
+			`{"code":0,"message":"OK","data":{"page":0,"size":0,"targetType":"topic","targetId":10785,"test":[[{"name":"123"}]]}}`,
 		)
 	})
 }
@@ -295,7 +295,7 @@ func Test_Custom_Slice_Type_Attribute(t *testing.T) {
 `
 		t.Assert(
 			client.PostContent(ctx, "/test", content),
-			`{"code":0,"message":"","data":{"Content":"{\"Id\":1,\"List\":{\"key\":[\"a\",\"b\",\"c\"]}}"}}`,
+			`{"code":0,"message":"OK","data":{"Content":"{\"Id\":1,\"List\":{\"key\":[\"a\",\"b\",\"c\"]}}"}}`,
 		)
 	})
 }
@@ -370,12 +370,12 @@ func Test_Router_Handler_Strict_WithGeneric(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		t.Assert(client.GetContent(ctx, "/test1?age=1"), `{"code":0,"message":"","data":{"Age":{"Test":1}}}`)
-		t.Assert(client.GetContent(ctx, "/test1_slice?age=1"), `{"code":0,"message":"","data":[{"Age":{"Test":1}}]}`)
-		t.Assert(client.GetContent(ctx, "/test2?age=2"), `{"code":0,"message":"","data":{"Test":2}}`)
-		t.Assert(client.GetContent(ctx, "/test2_slice?age=2"), `{"code":0,"message":"","data":[{"Test":2}]}`)
-		t.Assert(client.GetContent(ctx, "/test3?age=3"), `{"code":0,"message":"","data":{"Test":3}}`)
-		t.Assert(client.GetContent(ctx, "/test3_slice?age=3"), `{"code":0,"message":"","data":[{"Test":3}]}`)
+		t.Assert(client.GetContent(ctx, "/test1?age=1"), `{"code":0,"message":"OK","data":{"Age":{"Test":1}}}`)
+		t.Assert(client.GetContent(ctx, "/test1_slice?age=1"), `{"code":0,"message":"OK","data":[{"Age":{"Test":1}}]}`)
+		t.Assert(client.GetContent(ctx, "/test2?age=2"), `{"code":0,"message":"OK","data":{"Test":2}}`)
+		t.Assert(client.GetContent(ctx, "/test2_slice?age=2"), `{"code":0,"message":"OK","data":[{"Test":2}]}`)
+		t.Assert(client.GetContent(ctx, "/test3?age=3"), `{"code":0,"message":"OK","data":{"Test":3}}`)
+		t.Assert(client.GetContent(ctx, "/test3_slice?age=3"), `{"code":0,"message":"OK","data":[{"Test":3}]}`)
 	})
 }
 
@@ -415,7 +415,7 @@ func Test_Router_Handler_Strict_ParameterCaseSensitive(t *testing.T) {
 		for i := 0; i < 1000; i++ {
 			t.Assert(
 				client.PostContent(ctx, "/api/111", `{"Path":"222"}`),
-				`{"code":0,"message":"","data":{"Path":"222"}}`,
+				`{"code":0,"message":"OK","data":{"Path":"222"}}`,
 			)
 		}
 	})
@@ -474,10 +474,10 @@ func Test_JsonRawMessage_Issue3449(t *testing.T) {
 			},
 		}
 
-		expect1 := `{"code":0,"message":"","data":{"name":"test","jsonRaw":[{"jkey1":"11","jkey2":"12"},{"jkey1":"21","jkey2":"22"}]}}`
+		expect1 := `{"code":0,"message":"OK","data":{"name":"test","jsonRaw":[{"jkey1":"11","jkey2":"12"},{"jkey1":"21","jkey2":"22"}]}}`
 		t.Assert(client.PostContent(ctx, "/test", data), expect1)
 
-		expect2 := `{"code":0,"message":"","data":{"name":"test","jsonRaw":{"jkey1":"11","jkey2":"12"}}}`
+		expect2 := `{"code":0,"message":"OK","data":{"name":"test","jsonRaw":{"jkey1":"11","jkey2":"12"}}}`
 		t.Assert(client.PostContent(ctx, "/test", map[string]any{
 			"Name":    "test",
 			"jsonRaw": v1,
@@ -524,13 +524,13 @@ func Test_NullString_Issue3465(t *testing.T) {
 			"name": "null",
 		}
 
-		expect1 := `{"code":0,"message":"","data":{"name":["null"]}}`
+		expect1 := `{"code":0,"message":"OK","data":{"name":["null"]}}`
 		t.Assert(client.GetContent(ctx, "/test", data1), expect1)
 
 		data2 := map[string]any{
 			"name": []string{"null", "null"},
 		}
-		expect2 := `{"code":0,"message":"","data":{"name":["null","null"]}}`
+		expect2 := `{"code":0,"message":"OK","data":{"name":["null","null"]}}`
 		t.Assert(client.GetContent(ctx, "/test", data2), expect2)
 
 	})

@@ -183,7 +183,7 @@ func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]
 		return data, nil
 	}
 	// `in` Tag Struct values.
-	if err = r.mergeInTagStructValue(data, pointer); err != nil {
+	if err = r.mergeInTagStructValue(data); err != nil {
 		return data, nil
 	}
 
@@ -239,7 +239,7 @@ func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer i
 }
 
 // mergeInTagStructValue merges the request parameters with header or cookie values from struct `in` tag definition.
-func (r *Request) mergeInTagStructValue(data map[string]interface{}, pointer interface{}) error {
+func (r *Request) mergeInTagStructValue(data map[string]interface{}) error {
 	fields := r.serveHandler.Handler.Info.ReqStructFields
 	if len(fields) > 0 {
 		var (

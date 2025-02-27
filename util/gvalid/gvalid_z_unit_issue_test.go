@@ -110,7 +110,7 @@ func Test_Issue3636(t *testing.T) {
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(
 			c.PostContent(ctx, "/hello", `{"name": "t", "s" : []}`),
-			`{"code":0,"message":"","data":{"name":"t","s":[]}}`,
+			`{"code":0,"message":"OK","data":{"name":"t","s":[]}}`,
 		)
 	})
 }
