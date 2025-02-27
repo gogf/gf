@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -29,7 +30,7 @@ func Test_Model_Hook_Select(t *testing.T) {
 					return
 				}
 				for i, record := range result {
-					record["test"] = gdb.NewValue(100 + record["id"].Int())
+					record["test"] = gvar.New(100 + record["id"].Int())
 					result[i] = record
 				}
 				return

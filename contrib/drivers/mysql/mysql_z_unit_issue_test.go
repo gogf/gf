@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -1508,7 +1509,7 @@ func Test_Issue3968(t *testing.T) {
 				}
 				if result != nil {
 					for i, _ := range result {
-						result[i]["location"] = gdb.NewValue("ny")
+						result[i]["location"] = gvar.New("ny")
 					}
 				}
 				return

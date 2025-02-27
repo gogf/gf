@@ -10,6 +10,7 @@ import (
 	"database/sql"
 	"math"
 
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -102,13 +103,11 @@ func (r Result) MapKeyValue(key string) map[string]Value {
 		s              string
 		m              = make(map[string]Value)
 		tempMap        = make(map[string][]interface{})
-		localType      LocalType
 		hasMultiValues bool
 	)
 	for _, item := range r {
 		if k, ok := item[key]; ok {
 			s = k.String()
-			localType = k.LocalType()
 			tempMap[s] = append(tempMap[s], item)
 			if len(tempMap[s]) > 1 {
 				hasMultiValues = true
@@ -117,9 +116,9 @@ func (r Result) MapKeyValue(key string) map[string]Value {
 	}
 	for k, v := range tempMap {
 		if hasMultiValues {
-			m[k] = NewValue(v)
+			m[k] = gvar.New(v)
 		} else {
-			m[k] = NewValueWithType(v[0], localType)
+			m[k] = gvar.New(v[0])
 		}
 	}
 	return m

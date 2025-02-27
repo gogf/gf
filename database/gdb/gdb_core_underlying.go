@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/gogf/gf/v2/container/gvar"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 
@@ -480,16 +481,11 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 				var (
 					convertedValue interface{}
 					columnType     = columnTypes[i]
-					localType      = LocalTypeUndefined
 				)
 				if convertedValue, err = c.columnValueToLocalValue(ctx, value, columnType); err != nil {
 					return nil, err
 				}
-				localType, err = c.getLocalTypeForFieldWithCache(ctx, columnType.DatabaseTypeName(), convertedValue)
-				if err != nil {
-					return nil, err
-				}
-				record[columnTypes[i].Name()] = NewValueWithType(convertedValue, localType)
+				record[columnTypes[i].Name()] = gvar.New(convertedValue)
 			}
 		}
 		result = append(result, record)

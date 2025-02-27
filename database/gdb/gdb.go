@@ -17,8 +17,7 @@ import (
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/database/gdb/internal/defines"
-	"github.com/gogf/gf/v2/database/gdb/internal/fieldvar"
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gcache"
@@ -669,7 +668,7 @@ type (
 	Raw string
 
 	// Value is the field value type.
-	Value = *fieldvar.Var
+	Value = *gvar.Var
 
 	// Record is the row record of the table.
 	Record map[string]Value
@@ -770,30 +769,32 @@ const (
 	SqlTypeStmtQueryRowContext SqlType = "DB.Statement.QueryRowContext"
 )
 
-type LocalType = defines.LocalType
+// LocalType is a type that defines the local storage type of a field value.
+// It is used to specify how the field value should be processed locally.
+type LocalType string
 
 const (
-	LocalTypeUndefined   = defines.LocalTypeUndefined
-	LocalTypeString      = defines.LocalTypeString
-	LocalTypeTime        = defines.LocalTypeTime
-	LocalTypeDate        = defines.LocalTypeDate
-	LocalTypeDatetime    = defines.LocalTypeDatetime
-	LocalTypeInt         = defines.LocalTypeInt
-	LocalTypeUint        = defines.LocalTypeUint
-	LocalTypeInt64       = defines.LocalTypeInt64
-	LocalTypeUint64      = defines.LocalTypeUint64
-	LocalTypeIntSlice    = defines.LocalTypeIntSlice
-	LocalTypeInt64Slice  = defines.LocalTypeInt64Slice
-	LocalTypeUint64Slice = defines.LocalTypeUint64Slice
-	LocalTypeStringSlice = defines.LocalTypeStringSlice
-	LocalTypeInt64Bytes  = defines.LocalTypeInt64Bytes
-	LocalTypeUint64Bytes = defines.LocalTypeUint64Bytes
-	LocalTypeFloat32     = defines.LocalTypeFloat32
-	LocalTypeFloat64     = defines.LocalTypeFloat64
-	LocalTypeBytes       = defines.LocalTypeBytes
-	LocalTypeBool        = defines.LocalTypeBool
-	LocalTypeJson        = defines.LocalTypeJson
-	LocalTypeJsonb       = defines.LocalTypeJsonb
+	LocalTypeUndefined   LocalType = ""
+	LocalTypeString      LocalType = "string"
+	LocalTypeTime        LocalType = "time"
+	LocalTypeDate        LocalType = "date"
+	LocalTypeDatetime    LocalType = "datetime"
+	LocalTypeInt         LocalType = "int"
+	LocalTypeUint        LocalType = "uint"
+	LocalTypeInt64       LocalType = "int64"
+	LocalTypeUint64      LocalType = "uint64"
+	LocalTypeIntSlice    LocalType = "[]int"
+	LocalTypeInt64Slice  LocalType = "[]int64"
+	LocalTypeUint64Slice LocalType = "[]uint64"
+	LocalTypeStringSlice LocalType = "[]string"
+	LocalTypeInt64Bytes  LocalType = "int64-bytes"
+	LocalTypeUint64Bytes LocalType = "uint64-bytes"
+	LocalTypeFloat32     LocalType = "float32"
+	LocalTypeFloat64     LocalType = "float64"
+	LocalTypeBytes       LocalType = "[]byte"
+	LocalTypeBool        LocalType = "bool"
+	LocalTypeJson        LocalType = "json"
+	LocalTypeJsonb       LocalType = "jsonb"
 )
 
 const (
