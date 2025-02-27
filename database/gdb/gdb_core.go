@@ -585,24 +585,8 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 	switch kind {
 	case reflect.Map, reflect.Struct:
 		var (
-			fields         []string
-			dataMap        map[string]interface{}
-			counterHandler = func(column string, counter Counter) {
-				if counter.Value != 0 {
-					column = c.QuoteWord(column)
-					var (
-						columnRef = c.QuoteWord(counter.Field)
-						columnVal = counter.Value
-						operator  = "+"
-					)
-					if columnVal < 0 {
-						operator = "-"
-						columnVal = -columnVal
-					}
-					fields = append(fields, fmt.Sprintf("%s=%s%s?", column, columnRef, operator))
-					params = append(params, columnVal)
-				}
-			}
+			fields  []string
+			dataMap map[string]interface{}
 		)
 		dataMap, err = c.ConvertDataForRecord(ctx, data, table)
 		if err != nil {
@@ -622,13 +606,21 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 		}
 		for _, k := range keysInSequence {
 			v := dataMap[k]
-			switch value := v.(type) {
-			case *Counter:
-				counterHandler(k, *value)
-
-			case Counter:
-				counterHandler(k, value)
-
+			switch v.(type) {
+			case Counter, *Counter:
+				var counter Counter
+				switch value := v.(type) {
+				case Counter:
+					counter = value
+				case *Counter:
+					counter = *value
+				}
+				if counter.Value == 0 {
+					continue
+				}
+				operator, columnVal := c.getCounterAlter(counter)
+				fields = append(fields, fmt.Sprintf("%s=%s%s?", c.QuoteWord(k), c.QuoteWord(counter.Field), operator))
+				params = append(params, columnVal)
 			default:
 				if s, ok := v.(Raw); ok {
 					fields = append(fields, c.QuoteWord(k)+"="+gconv.String(s))
@@ -798,4 +790,13 @@ func (c *Core) IsSoftCreatedFieldName(fieldName string) bool {
 // but do not worry about it, it's safe and efficient.
 func (c *Core) FormatSqlBeforeExecuting(sql string, args []interface{}) (newSql string, newArgs []interface{}) {
 	return handleSliceAndStructArgsForSql(sql, args)
+}
+
+// getCounterAlter
+func (c *Core) getCounterAlter(counter Counter) (operator string, columnVal float64) {
+	operator, columnVal = "+", counter.Value
+	if columnVal < 0 {
+		operator, columnVal = "-", -columnVal
+	}
+	return
 }

@@ -179,14 +179,17 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 			formattedSql, in.TxOptions.Isolation.String(), in.TxOptions.ReadOnly,
 		)
 		if sqlTx, err = in.Db.BeginTx(ctx, &in.TxOptions); err == nil {
-			out.Tx = &TXCore{
+			tx := &TXCore{
 				db:            c.db,
 				tx:            sqlTx,
-				ctx:           context.WithValue(ctx, transactionIdForLoggerCtx, transactionIdGenerator.Add(1)),
+				ctx:           ctx,
 				master:        in.Db,
 				transactionId: guid.S(),
 				cancelFunc:    cancelFuncForTimeout,
 			}
+			tx.ctx = context.WithValue(ctx, transactionKeyForContext(tx.db.GetGroup()), tx)
+			tx.ctx = context.WithValue(tx.ctx, transactionIdForLoggerCtx, transactionIdGenerator.Add(1))
+			out.Tx = tx
 			ctx = out.Tx.GetCtx()
 		}
 		out.RawResult = sqlTx
@@ -386,6 +389,22 @@ func (c *Core) FormatUpsert(columns []string, list List, option DoInsertOption) 
 					"%s=%s",
 					c.QuoteWord(k),
 					v,
+				)
+			case Counter, *Counter:
+				var counter Counter
+				switch value := v.(type) {
+				case Counter:
+					counter = value
+				case *Counter:
+					counter = *value
+				}
+				operator, columnVal := c.getCounterAlter(counter)
+				onDuplicateStr += fmt.Sprintf(
+					"%s=%s%s%s",
+					c.QuoteWord(k),
+					c.QuoteWord(counter.Field),
+					operator,
+					gconv.String(columnVal),
 				)
 			default:
 				onDuplicateStr += fmt.Sprintf(
