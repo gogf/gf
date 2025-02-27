@@ -7,7 +7,6 @@
 .settings/
 .vscode/
 vendor/
-pkg/
 bin/
 **/.DS_Store
 .test/

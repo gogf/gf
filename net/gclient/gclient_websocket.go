@@ -15,11 +15,15 @@ import (
 
 // WebSocketClient wraps the underlying websocket client connection
 // and provides convenient functions.
+//
+// Deprecated: please use third-party library for websocket client instead.
 type WebSocketClient struct {
 	*websocket.Dialer
 }
 
 // NewWebSocket creates and returns a new WebSocketClient object.
+//
+// Deprecated: please use third-party library for websocket client instead.
 func NewWebSocket() *WebSocketClient {
 	return &WebSocketClient{
 		&websocket.Dialer{
