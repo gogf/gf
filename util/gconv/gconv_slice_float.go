@@ -11,6 +11,7 @@ import (
 
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/reflection"
+	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
@@ -43,11 +44,6 @@ func Float32s(any interface{}) []float32 {
 		array []float32 = nil
 	)
 	switch value := any.(type) {
-	case string:
-		if value == "" {
-			return []float32{}
-		}
-		return []float32{Float32(value)}
 	case []string:
 		array = make([]float32, len(value))
 		for k, v := range value {
@@ -84,12 +80,26 @@ func Float32s(any interface{}) []float32 {
 		}
 	case []uint8:
 		if json.Valid(value) {
-			_ = json.UnmarshalUseNumber(value, &array)
-		} else {
-			array = make([]float32, len(value))
-			for k, v := range value {
-				array[k] = Float32(v)
+			if _ = json.UnmarshalUseNumber(value, &array); array != nil {
+				return array
 			}
+		}
+		array = make([]float32, len(value))
+		for k, v := range value {
+			array[k] = Float32(v)
+		}
+	case string:
+		byteValue := []byte(value)
+		if json.Valid(byteValue) {
+			if _ = json.UnmarshalUseNumber(byteValue, &array); array != nil {
+				return array
+			}
+		}
+		if value == "" {
+			return []float32{}
+		}
+		if utils.IsNumeric(value) {
+			return []float32{Float32(value)}
 		}
 	case []uint16:
 		array = make([]float32, len(value))
@@ -133,10 +143,6 @@ func Float32s(any interface{}) []float32 {
 	if v, ok := any.(localinterface.IInterfaces); ok {
 		return Float32s(v.Interfaces())
 	}
-	// JSON format string value converting.
-	if checkJsonAndUnmarshalUseNumber(any, &array) {
-		return array
-	}
 	// Not a common type, it then uses reflection for conversion.
 	originValueAndKind := reflection.OriginValueAndKind(any)
 	switch originValueAndKind.OriginKind {
@@ -167,11 +173,6 @@ func Float64s(any interface{}) []float64 {
 		array []float64 = nil
 	)
 	switch value := any.(type) {
-	case string:
-		if value == "" {
-			return []float64{}
-		}
-		return []float64{Float64(value)}
 	case []string:
 		array = make([]float64, len(value))
 		for k, v := range value {
@@ -208,12 +209,26 @@ func Float64s(any interface{}) []float64 {
 		}
 	case []uint8:
 		if json.Valid(value) {
-			_ = json.UnmarshalUseNumber(value, &array)
-		} else {
-			array = make([]float64, len(value))
-			for k, v := range value {
-				array[k] = Float64(v)
+			if _ = json.UnmarshalUseNumber(value, &array); array != nil {
+				return array
 			}
+		}
+		array = make([]float64, len(value))
+		for k, v := range value {
+			array[k] = Float64(v)
+		}
+	case string:
+		byteValue := []byte(value)
+		if json.Valid(byteValue) {
+			if _ = json.UnmarshalUseNumber(byteValue, &array); array != nil {
+				return array
+			}
+		}
+		if value == "" {
+			return []float64{}
+		}
+		if utils.IsNumeric(value) {
+			return []float64{Float64(value)}
 		}
 	case []uint16:
 		array = make([]float64, len(value))
@@ -256,10 +271,6 @@ func Float64s(any interface{}) []float64 {
 	}
 	if v, ok := any.(localinterface.IInterfaces); ok {
 		return Floats(v.Interfaces())
-	}
-	// JSON format string value converting.
-	if checkJsonAndUnmarshalUseNumber(any, &array) {
-		return array
 	}
 	// Not a common type, it then uses reflection for conversion.
 	originValueAndKind := reflection.OriginValueAndKind(any)

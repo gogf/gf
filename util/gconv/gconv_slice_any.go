@@ -65,13 +65,22 @@ func Interfaces(any interface{}) []interface{} {
 		}
 	case []uint8:
 		if json.Valid(value) {
-			_ = json.UnmarshalUseNumber(value, &array)
-		} else {
-			array = make([]interface{}, len(value))
-			for k, v := range value {
-				array[k] = v
+			if _ = json.UnmarshalUseNumber(value, &array); array != nil {
+				return array
 			}
 		}
+		array = make([]interface{}, len(value))
+		for k, v := range value {
+			array[k] = v
+		}
+	case string:
+		byteValue := []byte(value)
+		if json.Valid(byteValue) {
+			if _ = json.UnmarshalUseNumber(byteValue, &array); array != nil {
+				return array
+			}
+		}
+
 	case []uint16:
 		array = make([]interface{}, len(value))
 		for k, v := range value {
@@ -108,10 +117,7 @@ func Interfaces(any interface{}) []interface{} {
 	if v, ok := any.(localinterface.IInterfaces); ok {
 		return v.Interfaces()
 	}
-	// JSON format string value converting.
-	if checkJsonAndUnmarshalUseNumber(any, &array) {
-		return array
-	}
+
 	// Not a common type, it then uses reflection for conversion.
 	originValueAndKind := reflection.OriginValueAndKind(any)
 	switch originValueAndKind.OriginKind {
