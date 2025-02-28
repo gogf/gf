@@ -505,7 +505,6 @@ func (t *testNullStringIssue3465) Test(ctx context.Context, req *testNullStringI
 
 // https://github.com/gogf/gf/issues/3465
 func Test_NullString_Issue3465(t *testing.T) {
-
 	s := g.Server(guid.S())
 	s.Use(ghttp.MiddlewareHandlerResponse)
 	s.Group("/", func(group *ghttp.RouterGroup) {
@@ -524,7 +523,7 @@ func Test_NullString_Issue3465(t *testing.T) {
 			"name": "null",
 		}
 
-		expect1 := `{"code":0,"message":"OK","data":{"name":["null"]}}`
+		expect1 := `{"code":0,"message":"OK","data":{"name":null}}`
 		t.Assert(client.GetContent(ctx, "/test", data1), expect1)
 
 		data2 := map[string]any{
