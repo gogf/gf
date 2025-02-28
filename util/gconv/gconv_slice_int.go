@@ -7,8 +7,11 @@
 package gconv
 
 import (
+	"bytes"
 	"reflect"
+	"strings"
 
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/internal/utils"
@@ -32,7 +35,7 @@ func SliceInt64(any interface{}) []int64 {
 
 // Ints converts `any` to []int.
 func Ints(any interface{}) []int {
-	if any == nil {
+	if empty.IsNil(any) {
 		return nil
 	}
 	var (
@@ -76,6 +79,9 @@ func Ints(any interface{}) []int {
 			if _ = json.UnmarshalUseNumber(value, &array); array != nil {
 				return array
 			}
+			if bytes.EqualFold([]byte("null"), value) {
+				return nil
+			}
 		}
 		array = make([]int, len(value))
 		for k, v := range value {
@@ -86,6 +92,9 @@ func Ints(any interface{}) []int {
 		if json.Valid(byteValue) {
 			if _ = json.UnmarshalUseNumber(byteValue, &array); array != nil {
 				return array
+			}
+			if strings.EqualFold(value, "null") {
+				return nil
 			}
 		}
 		if value == "" {
@@ -171,7 +180,7 @@ func Ints(any interface{}) []int {
 
 // Int32s converts `any` to []int32.
 func Int32s(any interface{}) []int32 {
-	if any == nil {
+	if empty.IsNil(any) {
 		return nil
 	}
 	var (
@@ -215,6 +224,9 @@ func Int32s(any interface{}) []int32 {
 			if _ = json.UnmarshalUseNumber(value, &array); array != nil {
 				return array
 			}
+			if bytes.EqualFold([]byte("null"), value) {
+				return nil
+			}
 		}
 		array = make([]int32, len(value))
 		for k, v := range value {
@@ -225,6 +237,9 @@ func Int32s(any interface{}) []int32 {
 		if json.Valid(byteValue) {
 			if _ = json.UnmarshalUseNumber(byteValue, &array); array != nil {
 				return array
+			}
+			if strings.EqualFold(value, "null") {
+				return nil
 			}
 		}
 		if value == "" {
@@ -310,7 +325,7 @@ func Int32s(any interface{}) []int32 {
 
 // Int64s converts `any` to []int64.
 func Int64s(any interface{}) []int64 {
-	if any == nil {
+	if empty.IsNil(any) {
 		return nil
 	}
 	var (
@@ -354,6 +369,9 @@ func Int64s(any interface{}) []int64 {
 			if _ = json.UnmarshalUseNumber(value, &array); array != nil {
 				return array
 			}
+			if bytes.EqualFold([]byte("null"), value) {
+				return nil
+			}
 		}
 		array = make([]int64, len(value))
 		for k, v := range value {
@@ -364,6 +382,9 @@ func Int64s(any interface{}) []int64 {
 		if json.Valid(byteValue) {
 			if _ = json.UnmarshalUseNumber(byteValue, &array); array != nil {
 				return array
+			}
+			if strings.EqualFold(value, "null") {
+				return nil
 			}
 		}
 		if value == "" {

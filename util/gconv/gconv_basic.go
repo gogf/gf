@@ -17,6 +17,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gbinary"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -43,7 +44,7 @@ func Bytes(any any) []byte {
 }
 
 func doBytes(any any) ([]byte, error) {
-	if any == nil {
+	if empty.IsNil(any) {
 		return nil, nil
 	}
 	switch value := any.(type) {
@@ -133,7 +134,7 @@ func String(any any) string {
 }
 
 func doString(any any) (string, error) {
-	if any == nil {
+	if empty.IsNil(any) {
 		return "", nil
 	}
 	switch value := any.(type) {
@@ -254,7 +255,7 @@ func Bool(any any) bool {
 }
 
 func doBool(any any) (bool, error) {
-	if any == nil {
+	if empty.IsNil(any) {
 		return false, nil
 	}
 	switch value := any.(type) {

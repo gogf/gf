@@ -1719,9 +1719,9 @@ func Test_Issue4086(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		type ProxyParam struct {
-			ProxyId      int64    `json:"proxyId" orm:"proxy_id"`
-			RecommendIds []int64  `json:"recommendIds" orm:"recommend_ids"`
-			Photos       []string `json:"photos" orm:"photos"`
+			ProxyId      int64   `json:"proxyId" orm:"proxy_id"`
+			RecommendIds []int64 `json:"recommendIds" orm:"recommend_ids"`
+			Photos       []int64 `json:"photos" orm:"photos"`
 		}
 
 		var proxyParamList []*ProxyParam
@@ -1744,9 +1744,34 @@ func Test_Issue4086(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		type ProxyParam struct {
-			ProxyId      int64   `json:"proxyId" orm:"proxy_id"`
-			RecommendIds []int64 `json:"recommendIds" orm:"recommend_ids"`
-			Photos       []int64 `json:"photos" orm:"photos"`
+			ProxyId      int64     `json:"proxyId" orm:"proxy_id"`
+			RecommendIds []int64   `json:"recommendIds" orm:"recommend_ids"`
+			Photos       []float32 `json:"photos" orm:"photos"`
+		}
+
+		var proxyParamList []*ProxyParam
+		err := db.Model(table).Ctx(ctx).Scan(&proxyParamList)
+		t.AssertNil(err)
+		t.Assert(len(proxyParamList), 2)
+		t.Assert(proxyParamList, []*ProxyParam{
+			{
+				ProxyId:      1,
+				RecommendIds: []int64{584, 585},
+				Photos:       nil,
+			},
+			{
+				ProxyId:      2,
+				RecommendIds: []int64{},
+				Photos:       nil,
+			},
+		})
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		type ProxyParam struct {
+			ProxyId      int64    `json:"proxyId" orm:"proxy_id"`
+			RecommendIds []int64  `json:"recommendIds" orm:"recommend_ids"`
+			Photos       []string `json:"photos" orm:"photos"`
 		}
 
 		var proxyParamList []*ProxyParam

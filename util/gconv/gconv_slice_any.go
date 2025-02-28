@@ -7,8 +7,11 @@
 package gconv
 
 import (
+	"bytes"
 	"reflect"
+	"strings"
 
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
@@ -21,7 +24,7 @@ func SliceAny(any interface{}) []interface{} {
 
 // Interfaces converts `any` to []interface{}.
 func Interfaces(any interface{}) []interface{} {
-	if any == nil {
+	if empty.IsNil(any) {
 		return nil
 	}
 	var array []interface{}
@@ -68,6 +71,9 @@ func Interfaces(any interface{}) []interface{} {
 			if _ = json.UnmarshalUseNumber(value, &array); array != nil {
 				return array
 			}
+			if bytes.EqualFold([]byte("null"), value) {
+				return nil
+			}
 		}
 		array = make([]interface{}, len(value))
 		for k, v := range value {
@@ -78,6 +84,9 @@ func Interfaces(any interface{}) []interface{} {
 		if json.Valid(byteValue) {
 			if _ = json.UnmarshalUseNumber(byteValue, &array); array != nil {
 				return array
+			}
+			if strings.EqualFold(value, "null") {
+				return nil
 			}
 		}
 

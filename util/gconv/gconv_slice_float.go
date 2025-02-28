@@ -7,8 +7,11 @@
 package gconv
 
 import (
+	"bytes"
 	"reflect"
+	"strings"
 
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/internal/utils"
@@ -37,7 +40,7 @@ func Floats(any interface{}) []float64 {
 
 // Float32s converts `any` to []float32.
 func Float32s(any interface{}) []float32 {
-	if any == nil {
+	if empty.IsNil(any) {
 		return nil
 	}
 	var (
@@ -83,6 +86,9 @@ func Float32s(any interface{}) []float32 {
 			if _ = json.UnmarshalUseNumber(value, &array); array != nil {
 				return array
 			}
+			if bytes.EqualFold([]byte("null"), value) {
+				return nil
+			}
 		}
 		array = make([]float32, len(value))
 		for k, v := range value {
@@ -93,6 +99,9 @@ func Float32s(any interface{}) []float32 {
 		if json.Valid(byteValue) {
 			if _ = json.UnmarshalUseNumber(byteValue, &array); array != nil {
 				return array
+			}
+			if strings.EqualFold(value, "null") {
+				return nil
 			}
 		}
 		if value == "" {
@@ -166,7 +175,7 @@ func Float32s(any interface{}) []float32 {
 
 // Float64s converts `any` to []float64.
 func Float64s(any interface{}) []float64 {
-	if any == nil {
+	if empty.IsNil(any) {
 		return nil
 	}
 	var (
@@ -212,6 +221,9 @@ func Float64s(any interface{}) []float64 {
 			if _ = json.UnmarshalUseNumber(value, &array); array != nil {
 				return array
 			}
+			if bytes.EqualFold([]byte("null"), value) {
+				return nil
+			}
 		}
 		array = make([]float64, len(value))
 		for k, v := range value {
@@ -222,6 +234,9 @@ func Float64s(any interface{}) []float64 {
 		if json.Valid(byteValue) {
 			if _ = json.UnmarshalUseNumber(byteValue, &array); array != nil {
 				return array
+			}
+			if strings.EqualFold(value, "null") {
+				return nil
 			}
 		}
 		if value == "" {

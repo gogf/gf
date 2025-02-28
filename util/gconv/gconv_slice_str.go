@@ -7,8 +7,11 @@
 package gconv
 
 import (
+	"bytes"
 	"reflect"
+	"strings"
 
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
@@ -21,7 +24,7 @@ func SliceStr(any interface{}) []string {
 
 // Strings converts `any` to []string.
 func Strings(any interface{}) []string {
-	if any == nil {
+	if empty.IsNil(any) {
 		return nil
 	}
 	var (
@@ -63,6 +66,9 @@ func Strings(any interface{}) []string {
 			if _ = json.UnmarshalUseNumber(value, &array); array != nil {
 				return array
 			}
+			if bytes.EqualFold([]byte("null"), value) {
+				return nil
+			}
 		}
 		array = make([]string, len(value))
 		for k, v := range value {
@@ -74,6 +80,9 @@ func Strings(any interface{}) []string {
 		if json.Valid(byteValue) {
 			if _ = json.UnmarshalUseNumber(byteValue, &array); array != nil {
 				return array
+			}
+			if strings.EqualFold(value, "null") {
+				return nil
 			}
 		}
 		if value == "" {

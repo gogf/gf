@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gbinary"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
@@ -24,7 +25,7 @@ func Uint(any any) uint {
 }
 
 func doUint(any any) (uint, error) {
-	if any == nil {
+	if empty.IsNil(any) {
 		return 0, nil
 	}
 	if v, ok := any.(uint); ok {
@@ -41,7 +42,7 @@ func Uint8(any any) uint8 {
 }
 
 func doUint8(any any) (uint8, error) {
-	if any == nil {
+	if empty.IsNil(any) {
 		return 0, nil
 	}
 	if v, ok := any.(uint8); ok {
@@ -58,7 +59,7 @@ func Uint16(any any) uint16 {
 }
 
 func doUint16(any any) (uint16, error) {
-	if any == nil {
+	if empty.IsNil(any) {
 		return 0, nil
 	}
 	if v, ok := any.(uint16); ok {
@@ -75,7 +76,7 @@ func Uint32(any any) uint32 {
 }
 
 func doUint32(any any) (uint32, error) {
-	if any == nil {
+	if empty.IsNil(any) {
 		return 0, nil
 	}
 	if v, ok := any.(uint32); ok {
@@ -92,7 +93,7 @@ func Uint64(any any) uint64 {
 }
 
 func doUint64(any any) (uint64, error) {
-	if any == nil {
+	if empty.IsNil(any) {
 		return 0, nil
 	}
 	if v, ok := any.(uint64); ok {

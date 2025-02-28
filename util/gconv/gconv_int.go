@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gbinary"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
@@ -92,7 +93,7 @@ func Int64(any any) int64 {
 }
 
 func doInt64(any any) (int64, error) {
-	if any == nil {
+	if empty.IsNil(any) {
 		return 0, nil
 	}
 	if v, ok := any.(int64); ok {

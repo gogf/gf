@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gbinary"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
@@ -23,7 +24,7 @@ func Float32(any any) float32 {
 }
 
 func doFloat32(any any) (float32, error) {
-	if any == nil {
+	if empty.IsNil(any) {
 		return 0, nil
 	}
 	switch value := any.(type) {
@@ -86,7 +87,7 @@ func Float64(any any) float64 {
 }
 
 func doFloat64(any any) (float64, error) {
-	if any == nil {
+	if empty.IsNil(any) {
 		return 0, nil
 	}
 	switch value := any.(type) {
