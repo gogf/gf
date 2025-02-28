@@ -9,6 +9,7 @@ package ghttp_test
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -616,5 +617,42 @@ func Test_Issue3789(t *testing.T) {
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		expect := `{"code":0,"message":"","data":{"id":"0","secondId":"2","thirdId":"3"}}`
 		t.Assert(c.GetContent(ctx, "/hello?id=&secondId=2&thirdId=3"), expect)
+	})
+}
+
+// https://github.com/gogf/gf/issues/4047
+func Test_Issue4047(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		err := s.SetConfigWithMap(g.Map{
+			"logger": nil,
+		})
+		t.AssertNil(err)
+		t.Assert(s.Logger(), nil)
+	})
+}
+
+// https://github.com/gogf/gf/issues/4108
+func Test_Issue4108(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareHandlerResponse)
+		group.GET("/", func(r *ghttp.Request) {
+			r.Response.Writer.Write([]byte("hello"))
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		rsp, err := client.Get(ctx, "/")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusOK)
+		t.Assert(rsp.ReadAllString(), "hello")
 	})
 }

@@ -528,24 +528,53 @@ type dynamicConfig struct {
 
 // DoCommitInput is the input parameters for function DoCommit.
 type DoCommitInput struct {
-	Db            *sql.DB
-	Tx            *sql.Tx
-	Stmt          *sql.Stmt
-	Link          Link
-	Sql           string
-	Args          []interface{}
-	Type          SqlType
-	TxOptions     sql.TxOptions
+	// Db is the underlying database connection object.
+	Db *sql.DB
+
+	// Tx is the underlying transaction object.
+	Tx *sql.Tx
+
+	// Stmt is the prepared statement object.
+	Stmt *sql.Stmt
+
+	// Link is the common database function wrapper interface.
+	Link Link
+
+	// Sql is the SQL string to be executed.
+	Sql string
+
+	// Args is the arguments for SQL placeholders.
+	Args []interface{}
+
+	// Type indicates the type of SQL operation.
+	Type SqlType
+
+	// TxOptions specifies the transaction options.
+	TxOptions sql.TxOptions
+
+	// TxCancelFunc is the context cancel function for transaction.
+	TxCancelFunc context.CancelFunc
+
+	// IsTransaction indicates whether current operation is in transaction.
 	IsTransaction bool
 }
 
 // DoCommitOutput is the output parameters for function DoCommit.
 type DoCommitOutput struct {
-	Result    sql.Result  // Result is the result of exec statement.
-	Records   []Record    // Records is the result of query statement.
-	Stmt      *Stmt       // Stmt is the Statement object result for Prepare.
-	Tx        TX          // Tx is the transaction object result for Begin.
-	RawResult interface{} // RawResult is the underlying result, which might be sql.Result/*sql.Rows/*sql.Row.
+	// Result is the result of exec statement.
+	Result sql.Result
+
+	// Records is the result of query statement.
+	Records []Record
+
+	// Stmt is the Statement object result for Prepare.
+	Stmt *Stmt
+
+	// Tx is the transaction object result for Begin.
+	Tx TX
+
+	// RawResult is the underlying result, which might be sql.Result/*sql.Rows/*sql.Row.
+	RawResult interface{}
 }
 
 // Driver is the interface for integrating sql drivers into package gdb.
@@ -581,43 +610,84 @@ type Sql struct {
 
 // DoInsertOption is the input struct for function DoInsert.
 type DoInsertOption struct {
-	OnDuplicateStr string                 // Custom string for `on duplicated` statement.
-	OnDuplicateMap map[string]interface{} // Custom key-value map from `OnDuplicateEx` function for `on duplicated` statement.
-	OnConflict     []string               // Custom conflict key of upsert clause, if the database needs it.
-	InsertOption   InsertOption           // Insert operation in constant value.
-	BatchCount     int                    // Batch count for batch inserting.
+	// OnDuplicateStr is the custom string for `on duplicated` statement.
+	OnDuplicateStr string
+
+	// OnDuplicateMap is the custom key-value map from `OnDuplicateEx` function for `on duplicated` statement.
+	OnDuplicateMap map[string]interface{}
+
+	// OnConflict is the custom conflict key of upsert clause, if the database needs it.
+	OnConflict []string
+
+	// InsertOption is the insert operation in constant value.
+	InsertOption InsertOption
+
+	// BatchCount is the batch count for batch inserting.
+	BatchCount int
 }
 
 // TableField is the struct for table field.
 type TableField struct {
-	Index   int         // For ordering purpose as map is unordered.
-	Name    string      // Field name.
-	Type    string      // Field type. Eg: 'int(10) unsigned', 'varchar(64)'.
-	Null    bool        // Field can be null or not.
-	Key     string      // The index information(empty if it's not an index). Eg: PRI, MUL.
-	Default interface{} // Default value for the field.
-	Extra   string      // Extra information. Eg: auto_increment.
-	Comment string      // Field comment.
+	// Index is for ordering purpose as map is unordered.
+	Index int
+
+	// Name is the field name.
+	Name string
+
+	// Type is the field type. Eg: 'int(10) unsigned', 'varchar(64)'.
+	Type string
+
+	// Null is whether the field can be null or not.
+	Null bool
+
+	// Key is the index information(empty if it's not an index). Eg: PRI, MUL.
+	Key string
+
+	// Default is the default value for the field.
+	Default interface{}
+
+	// Extra is the extra information. Eg: auto_increment.
+	Extra string
+
+	// Comment is the field comment.
+	Comment string
 }
 
-// Counter  is the type for update count.
+// Counter is the type for update count.
 type Counter struct {
+	// Field is the field name.
 	Field string
+
+	// Value is the value.
 	Value float64
 }
 
 type (
-	Raw    string                   // Raw is a raw sql that will not be treated as argument but as a direct sql part.
-	Value  = *gvar.Var              // Value is the field value type.
-	Record map[string]Value         // Record is the row record of the table.
-	Result []Record                 // Result is the row record array.
-	Map    = map[string]interface{} // Map is alias of map[string]interface{}, which is the most common usage map type.
-	List   = []Map                  // List is type of map array.
+	// Raw is a raw sql that will not be treated as argument but as a direct sql part.
+	Raw string
+
+	// Value is the field value type.
+	Value = *gvar.Var
+
+	// Record is the row record of the table.
+	Record map[string]Value
+
+	// Result is the row record array.
+	Result []Record
+
+	// Map is alias of map[string]interface{}, which is the most common usage map type.
+	Map = map[string]interface{}
+
+	// List is type of map array.
+	List = []Map
 )
 
 type CatchSQLManager struct {
+	// SQLArray is the array of sql.
 	SQLArray *garray.StrArray
-	DoCommit bool // DoCommit marks it will be committed to underlying driver or not.
+
+	// DoCommit marks it will be committed to underlying driver or not.
+	DoCommit bool
 }
 
 const (
@@ -638,7 +708,7 @@ const (
 	ctxKeyCatchSQL            gctx.StrKey = `CtxKeyCatchSQL`
 	ctxKeyInternalProducedSQL gctx.StrKey = `CtxKeyInternalProducedSQL`
 
-	linkPattern            = `(\w+):([\w\-\$]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*)`
+	linkPattern            = `^(\w+):(.*?):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*?)$`
 	linkPatternDescription = `type:username:password@protocol(host:port)/dbname?param1=value1&...&paramN=valueN`
 )
 

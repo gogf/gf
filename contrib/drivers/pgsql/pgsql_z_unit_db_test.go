@@ -282,7 +282,7 @@ func Test_DB_Tables(t *testing.T) {
 			createTable(v)
 		}
 		result, err := db.Tables(ctx)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		for i := 0; i < len(tables); i++ {
 			find := false
 			for j := 0; j < len(result); j++ {
@@ -312,7 +312,7 @@ func Test_DB_TableFields(t *testing.T) {
 		}
 
 		res, err := db.TableFields(ctx, table)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		for k, v := range expect {
 			_, ok := res[k]

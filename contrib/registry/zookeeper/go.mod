@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/go-zookeeper/zk v1.0.3
-	github.com/gogf/gf/v2 v2.8.2
+	github.com/gogf/gf/v2 v2.8.3
 	golang.org/x/sync v0.10.0
 )
 
@@ -28,7 +28,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
-	golang.org/x/net v0.32.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
