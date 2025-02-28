@@ -496,22 +496,6 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 	return result, nil
 }
 
-func (c *Core) getLocalTypeForFieldWithCache(
-	ctx context.Context, fieldType string, fieldValue any,
-) (localType LocalType, err error) {
-	v := c.localTypeMap.GetOrSetFuncLock(fieldType, func() any {
-		localType, err = c.db.CheckLocalTypeForField(ctx, fieldType, fieldValue)
-		if err != nil {
-			return nil
-		}
-		return localType
-	})
-	if err != nil {
-		return LocalTypeUndefined, err
-	}
-	return v.(LocalType), nil
-}
-
 // OrderRandomFunction returns the SQL function for random ordering.
 func (c *Core) OrderRandomFunction() string {
 	return "RAND()"
