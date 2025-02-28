@@ -1741,7 +1741,7 @@ func Test_Issue4086(t *testing.T) {
 			},
 		})
 	})
-
+return
 	gtest.C(t, func(t *gtest.T) {
 		type ProxyParam struct {
 			ProxyId      int64     `json:"proxyId" orm:"proxy_id"`

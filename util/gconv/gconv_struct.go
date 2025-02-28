@@ -336,6 +336,7 @@ func fuzzyMatchingFieldName(
 }
 
 // bindVarToStructField sets value to struct object attribute by name.
+// each value to attribute converting comes into in this function.
 func bindVarToStructField(
 	fieldValue reflect.Value,
 	srcValue interface{},
