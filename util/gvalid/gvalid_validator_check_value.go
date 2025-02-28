@@ -293,8 +293,6 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 		case reflect.Struct, reflect.Map:
 			loop = true
 		case reflect.Ptr:
-			// []*struct
-			// []*int
 			loop = true
 		}
 		// When it is a base type array,
