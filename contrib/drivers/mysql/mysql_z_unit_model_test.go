@@ -758,7 +758,7 @@ func Test_Model_Value_WithCache(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(value.Int(), 0)
 	})
-	return
+
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).Data(g.MapStrAny{
 			"id":       1,
