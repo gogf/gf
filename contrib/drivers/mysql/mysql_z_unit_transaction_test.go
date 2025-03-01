@@ -1708,3 +1708,44 @@ func Test_Transaction_Isolation(t *testing.T) {
 		t.AssertNil(err)
 	})
 }
+
+func Test_Transaction_Spread(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	db.SetDebug(true)
+	defer db.SetDebug(false)
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			ctx = context.TODO()
+		)
+		tx, err := db.Begin(ctx)
+		t.AssertNil(err)
+		err = db.Transaction(tx.GetCtx(), func(ctx context.Context, tx gdb.TX) error {
+			_, err = db.Model(table).Ctx(ctx).Data(g.Map{
+				"id":          1,
+				"passport":    "USER_1",
+				"password":    "PASS_1",
+				"nickname":    "NAME_1",
+				"create_time": gtime.Now().String(),
+			}).Insert()
+			return err
+		})
+		t.AssertNil(err)
+
+		all, err := tx.Model(table).All()
+		t.AssertNil(err)
+
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 1)
+
+		err = tx.Rollback()
+		t.AssertNil(err)
+
+		all, err = db.Ctx(ctx).Model(table).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 0)
+	})
+}
