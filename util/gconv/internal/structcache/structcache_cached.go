@@ -40,7 +40,7 @@ func (cf *ConvertConfig) GetCachedStructInfo(structType reflect.Type, priorityTa
 		priorityTagArray = gtag.StructTagPriority
 	}
 	cf.parseStructToCachedStructInfo(structType, parentIndex, cachedStructInfo, priorityTagArray)
-	cf.storeCachedStructInfo(structType, cachedStructInfo)
+	cf.setCachedConvertStructInfo(structType, cachedStructInfo)
 	return cachedStructInfo
 }
 

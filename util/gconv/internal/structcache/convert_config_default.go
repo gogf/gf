@@ -29,9 +29,9 @@ type CommonConverter struct {
 var (
 	// localCommonConverter holds some converting functions of common types for internal usage.
 	localCommonConverter CommonConverter
+	// defaultConfig is the default config for struct converting.
+	defaultConfig = NewConvertConfig("gconv.convert.default")
 )
-
-var defaultConfig = NewConvertConfig("gconv.convert.default")
 
 func GetDefaultConfig() *ConvertConfig {
 	return defaultConfig
@@ -46,6 +46,8 @@ func init() {
 	registerDefaultConvertFuncs(defaultConfig)
 }
 
+// registerDefaultConvertFuncs
+// 注册一些常用类型的转换函数
 func registerDefaultConvertFuncs(cfg *ConvertConfig) {
 	registerManyTypesConvertFn(cfg, intConvertFunc, intType, int8Type, int16Type, int32Type, int64Type)
 	registerManyTypesConvertFn(cfg, uintConvertFunc, uintType, uint8Type, uint16Type, uint32Type, uint64Type)

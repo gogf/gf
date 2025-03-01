@@ -37,7 +37,7 @@ func init() {
 	convertConfig.RegisterTypeConvertFunc(reflectTypeFor[[]int64](), convertToSliceFunc)
 	convertConfig.RegisterTypeConvertFunc(reflectTypeFor[map[string]any](), convertToSliceFunc)
 
-	convertConfig.RegisterInterfaceTypeConvertFunc(reflectTypeFor[sql.Scanner](), sqlScanner)
+	convertConfig.RegisterTypeConvertFunc(reflectTypeFor[sql.Scanner](), sqlScanner)
 }
 
 func convertToSliceFunc(from any, to reflect.Value) (err error) {
