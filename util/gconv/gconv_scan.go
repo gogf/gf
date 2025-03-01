@@ -146,7 +146,7 @@ func scan(config *ConvertConfig, srcValue interface{}, dstPointer interface{}, p
 		}
 		// Special handling for struct or map slice elements
 		if dstElemKind == reflect.Struct || dstElemKind == reflect.Map {
-			return doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, paramKeyToAttrMap...)
+			return doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, config, paramKeyToAttrMap...)
 		}
 		// Handle basic type slice conversions
 		var srcValueReflectValueKind = srcValueReflectValue.Kind()
@@ -177,11 +177,11 @@ func scan(config *ConvertConfig, srcValue interface{}, dstPointer interface{}, p
 			dstPointerReflectValueElem.Set(newSlice)
 			return nil
 		}
-		return doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, paramKeyToAttrMap...)
+		return doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, config, paramKeyToAttrMap...)
 
 	default:
 		// Handle complex types (structs, maps, etc.)
-		return doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, paramKeyToAttrMap...)
+		return doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, config, paramKeyToAttrMap...)
 	}
 }
 
@@ -199,6 +199,7 @@ func scan(config *ConvertConfig, srcValue interface{}, dstPointer interface{}, p
 func doScanForComplicatedTypes(
 	srcValue, dstPointer any,
 	dstPointerReflectType reflect.Type,
+	config *ConvertConfig,
 	paramKeyToAttrMap ...map[string]string,
 ) error {
 	// Try JSON conversion first
