@@ -32,6 +32,17 @@ var (
 type IUnmarshalValue = localinterface.IUnmarshalValue
 
 var (
-	// defaultConvertConfig is the default configuration for type converting.
-	defaultConvertConfig = NewConvertConfig()
+	// defaultConverter is the default management object converting.
+	defaultConverter = NewConverter()
 )
+
+// RegisterConverter registers custom converter.
+// Deprecated: use RegisterTypeConverterFunc instead for clear
+func RegisterConverter(fn any) (err error) {
+	return defaultConverter.RegisterTypeConverterFunc(fn)
+}
+
+// RegisterTypeConverterFunc registers custom converter.
+func RegisterTypeConverterFunc(fn any) (err error) {
+	return defaultConverter.RegisterTypeConverterFunc(fn)
+}

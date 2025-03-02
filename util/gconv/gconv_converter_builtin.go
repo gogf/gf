@@ -13,8 +13,8 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 )
 
-func builtInAnyConvertFuncForInt64(from any, to reflect.Value) error {
-	v, err := doInt64(from)
+func (c *Converter) builtInAnyConvertFuncForInt64(from any, to reflect.Value) error {
+	v, err := c.Int64(from)
 	if err != nil {
 		return err
 	}
@@ -22,8 +22,8 @@ func builtInAnyConvertFuncForInt64(from any, to reflect.Value) error {
 	return nil
 }
 
-func builtInAnyConvertFuncForUint64(from any, to reflect.Value) error {
-	v, err := doUint64(from)
+func (c *Converter) builtInAnyConvertFuncForUint64(from any, to reflect.Value) error {
+	v, err := c.Uint64(from)
 	if err != nil {
 		return err
 	}
@@ -31,8 +31,8 @@ func builtInAnyConvertFuncForUint64(from any, to reflect.Value) error {
 	return nil
 }
 
-func builtInAnyConvertFuncForString(from any, to reflect.Value) error {
-	v, err := doString(from)
+func (c *Converter) builtInAnyConvertFuncForString(from any, to reflect.Value) error {
+	v, err := c.String(from)
 	if err != nil {
 		return err
 	}
@@ -40,8 +40,8 @@ func builtInAnyConvertFuncForString(from any, to reflect.Value) error {
 	return nil
 }
 
-func builtInAnyConvertFuncForFloat64(from any, to reflect.Value) error {
-	v, err := doFloat64(from)
+func (c *Converter) builtInAnyConvertFuncForFloat64(from any, to reflect.Value) error {
+	v, err := c.Float64(from)
 	if err != nil {
 		return err
 	}
@@ -49,8 +49,8 @@ func builtInAnyConvertFuncForFloat64(from any, to reflect.Value) error {
 	return nil
 }
 
-func builtInAnyConvertFuncForBool(from any, to reflect.Value) error {
-	v, err := doBool(from)
+func (c *Converter) builtInAnyConvertFuncForBool(from any, to reflect.Value) error {
+	v, err := c.Bool(from)
 	if err != nil {
 		return err
 	}
@@ -58,8 +58,8 @@ func builtInAnyConvertFuncForBool(from any, to reflect.Value) error {
 	return nil
 }
 
-func builtInAnyConvertFuncForBytes(from any, to reflect.Value) error {
-	v, err := doBytes(from)
+func (c *Converter) builtInAnyConvertFuncForBytes(from any, to reflect.Value) error {
+	v, err := c.Bytes(from)
 	if err != nil {
 		return err
 	}
@@ -67,13 +67,20 @@ func builtInAnyConvertFuncForBytes(from any, to reflect.Value) error {
 	return nil
 }
 
-func builtInAnyConvertFuncForTime(from any, to reflect.Value) error {
-	*to.Addr().Interface().(*time.Time) = Time(from)
+func (c *Converter) builtInAnyConvertFuncForTime(from any, to reflect.Value) error {
+	t, err := c.Time(from)
+	if err != nil {
+		return err
+	}
+	*to.Addr().Interface().(*time.Time) = t
 	return nil
 }
 
-func builtInAnyConvertFuncForGTime(from any, to reflect.Value) error {
-	v := GTime(from)
+func (c *Converter) builtInAnyConvertFuncForGTime(from any, to reflect.Value) error {
+	v, err := c.GTime(from)
+	if err != nil {
+		return err
+	}
 	if v == nil {
 		v = gtime.New()
 	}

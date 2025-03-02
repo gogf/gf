@@ -18,11 +18,9 @@ type CachedStructInfo struct {
 	// All sub attributes field info slice.
 	fieldConvertInfos []*CachedFieldInfo
 
-	// customConvertTypeMap is used to store whether field types are registered to custom conversions
-	// For example:
-	// func (src *TypeA) (dst *TypeB,err error)
-	// This map will store `TypeB` for quick judgment during assignment.
-	customConvertTypeMap map[reflect.Type]struct{}
+	// typeConverterFuncMap is used to store whether field types are registered to custom conversions,
+	// for enhance converting performance in runtime.
+	typeConverterFuncMap map[reflect.Type]struct{}
 
 	// anyToTypeConvertMap for custom type converting from any to its reflect.Value.
 	anyToTypeConvertMap map[reflect.Type]AnyConvertFunc
@@ -39,13 +37,13 @@ type CachedStructInfo struct {
 
 // NewCachedStructInfo creates and returns a new CachedStructInfo object.
 func NewCachedStructInfo(
-	customConvertTypeMap map[reflect.Type]struct{},
+	typeConverterFuncMap map[reflect.Type]struct{},
 	anyToTypeConvertMap map[reflect.Type]AnyConvertFunc,
 ) *CachedStructInfo {
 	return &CachedStructInfo{
 		tagOrFiledNameToFieldInfoMap: make(map[string]*CachedFieldInfo),
 		fieldConvertInfos:            make([]*CachedFieldInfo, 0),
-		customConvertTypeMap:         customConvertTypeMap,
+		typeConverterFuncMap:         typeConverterFuncMap,
 		anyToTypeConvertMap:          anyToTypeConvertMap,
 	}
 }
@@ -188,6 +186,6 @@ func (csi *CachedStructInfo) checkTypeHasCustomConvert(fieldType reflect.Type) b
 	if fieldType.Kind() == reflect.Ptr {
 		fieldType = fieldType.Elem()
 	}
-	_, ok := csi.customConvertTypeMap[fieldType]
+	_, ok := csi.typeConverterFuncMap[fieldType]
 	return ok
 }

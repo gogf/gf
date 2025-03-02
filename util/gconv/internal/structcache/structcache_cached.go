@@ -29,7 +29,7 @@ func (cf *ConvertConfig) GetCachedStructInfo(structType reflect.Type, priorityTa
 	// else create one.
 
 	// it parses and generates a cache info for given struct type.
-	cachedStructInfo = NewCachedStructInfo(cf.customConvertTypeMap, cf.anyToTypeConvertMap)
+	cachedStructInfo = NewCachedStructInfo(cf.typeConverterFuncMap, cf.anyToTypeConvertMap)
 	var (
 		priorityTagArray []string
 		parentIndex      = make([]int, 0)
