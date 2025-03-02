@@ -30,9 +30,9 @@ type MapOption struct {
 	// Tags specifies the converted map key name by struct tag name.
 	Tags []string
 
-	// FailBreak specifies whether to break converting the next element
+	// BreakOnError specifies whether to break converting the next element
 	// if one element conversion fails in map.
-	FailBreak bool
+	BreakOnError bool
 }
 
 // Map converts any variable `value` to map[string]any. If the parameter `value` is not a
@@ -52,7 +52,7 @@ func (c *impConverter) MapStrStr(value any, option MapOption) (map[string]string
 		return r, nil
 	}
 	m, err := c.Map(value, option)
-	if err != nil && option.FailBreak {
+	if err != nil && option.BreakOnError {
 		return nil, err
 	}
 	if len(m) > 0 {
@@ -62,7 +62,7 @@ func (c *impConverter) MapStrStr(value any, option MapOption) (map[string]string
 		)
 		for k, v := range m {
 			s, err = c.String(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			vMap[k] = s
@@ -127,7 +127,7 @@ func (c *impConverter) doMapConvert(
 		recursiveOption.Tags = newTags
 		for k, v := range r {
 			s, err := c.String(k)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			dataMap[s], err = c.doMapConvertForMapOrStructValue(
@@ -139,14 +139,14 @@ func (c *impConverter) doMapConvert(
 					Option:          recursiveOption,
 				},
 			)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 		}
 	case map[interface{}]string:
 		for k, v := range r {
 			s, err := c.String(k)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			dataMap[s] = v
@@ -154,7 +154,7 @@ func (c *impConverter) doMapConvert(
 	case map[interface{}]int:
 		for k, v := range r {
 			s, err := c.String(k)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			dataMap[s] = v
@@ -162,7 +162,7 @@ func (c *impConverter) doMapConvert(
 	case map[interface{}]uint:
 		for k, v := range r {
 			s, err := c.String(k)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			dataMap[s] = v
@@ -170,7 +170,7 @@ func (c *impConverter) doMapConvert(
 	case map[interface{}]float32:
 		for k, v := range r {
 			s, err := c.String(k)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			dataMap[s] = v
@@ -178,7 +178,7 @@ func (c *impConverter) doMapConvert(
 	case map[interface{}]float64:
 		for k, v := range r {
 			s, err := c.String(k)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			dataMap[s] = v
@@ -222,7 +222,7 @@ func (c *impConverter) doMapConvert(
 						Option:          recursiveOption,
 					},
 				)
-				if err != nil && option.FailBreak {
+				if err != nil && option.BreakOnError {
 					return nil, err
 				}
 			}
@@ -235,7 +235,7 @@ func (c *impConverter) doMapConvert(
 		recursiveOption.Tags = newTags
 		for k, v := range r {
 			s, err := c.String(k)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			dataMap[s], err = c.doMapConvertForMapOrStructValue(
@@ -247,14 +247,14 @@ func (c *impConverter) doMapConvert(
 					Option:          recursiveOption,
 				},
 			)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 		}
 	case map[int]string:
 		for k, v := range r {
 			s, err := c.String(k)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			dataMap[s] = v
@@ -262,7 +262,7 @@ func (c *impConverter) doMapConvert(
 	case map[uint]string:
 		for k, v := range r {
 			s, err := c.String(k)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			dataMap[s] = v
@@ -291,7 +291,7 @@ func (c *impConverter) doMapConvert(
 			length := reflectValue.Len()
 			for i := 0; i < length; i += 2 {
 				s, err := c.String(String(reflectValue.Index(i).Interface()))
-				if err != nil && option.FailBreak {
+				if err != nil && option.BreakOnError {
 					return nil, err
 				}
 				if i+1 < length {
@@ -313,7 +313,7 @@ func (c *impConverter) doMapConvert(
 					MustMapReturn:   mustMapReturn,
 				},
 			)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			if m, ok := convertedValue.(map[string]interface{}); ok {
@@ -390,7 +390,7 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 				mapValue = mapKeyValue.Interface()
 			}
 			s, err := c.String(mapIter.Key().Interface())
-			if err != nil && in.Option.FailBreak {
+			if err != nil && in.Option.BreakOnError {
 				return nil, err
 			}
 			dataMap[s], err = c.doMapConvertForMapOrStructValue(
@@ -402,7 +402,7 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 					Option:          in.Option,
 				},
 			)
-			if err != nil && in.Option.FailBreak {
+			if err != nil && in.Option.BreakOnError {
 				return nil, err
 			}
 		}
@@ -424,7 +424,7 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 							Option:          in.Option,
 						},
 					)
-					if err != nil && in.Option.FailBreak {
+					if err != nil && in.Option.BreakOnError {
 						return nil, err
 					}
 				} else {
@@ -518,7 +518,7 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 								Option:          in.Option,
 							},
 						)
-						if err != nil && in.Option.FailBreak {
+						if err != nil && in.Option.BreakOnError {
 							return nil, err
 						}
 						if m, ok := anonymousValue.(map[string]interface{}); ok {
@@ -540,7 +540,7 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 								Option:          in.Option,
 							},
 						)
-						if err != nil && in.Option.FailBreak {
+						if err != nil && in.Option.BreakOnError {
 							return nil, err
 						}
 
@@ -554,7 +554,7 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 								Option:          in.Option,
 							},
 						)
-						if err != nil && in.Option.FailBreak {
+						if err != nil && in.Option.BreakOnError {
 							return nil, err
 						}
 					}
@@ -577,7 +577,7 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 								Option:          in.Option,
 							},
 						)
-						if err != nil && in.Option.FailBreak {
+						if err != nil && in.Option.BreakOnError {
 							return nil, err
 						}
 					}
@@ -589,7 +589,7 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 					)
 					for mapIter.Next() {
 						s, err := c.String(mapIter.Key().Interface())
-						if err != nil && in.Option.FailBreak {
+						if err != nil && in.Option.BreakOnError {
 							return nil, err
 						}
 						nestedMap[s], err = c.doMapConvertForMapOrStructValue(
@@ -601,7 +601,7 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 								Option:          in.Option,
 							},
 						)
-						if err != nil && in.Option.FailBreak {
+						if err != nil && in.Option.BreakOnError {
 							return nil, err
 						}
 					}
@@ -642,7 +642,7 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 				RecursiveOption: in.RecursiveType == recursiveTypeTrue,
 				Option:          in.Option,
 			})
-			if err != nil && in.Option.FailBreak {
+			if err != nil && in.Option.BreakOnError {
 				return nil, err
 			}
 		}

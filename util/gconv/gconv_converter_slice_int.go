@@ -31,7 +31,7 @@ func (c *impConverter) SliceInt(any any, option SliceOption) ([]int, error) {
 		array = make([]int, len(value))
 		for k, v := range value {
 			ii, err = c.Int(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ii
@@ -85,7 +85,7 @@ func (c *impConverter) SliceInt(any any, option SliceOption) ([]int, error) {
 		}
 		if utils.IsNumeric(value) {
 			ii, err = c.Int(value)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			return []int{ii}, err
@@ -118,7 +118,7 @@ func (c *impConverter) SliceInt(any any, option SliceOption) ([]int, error) {
 		array = make([]int, len(value))
 		for k, v := range value {
 			ii, err = c.Int(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ii
@@ -127,7 +127,7 @@ func (c *impConverter) SliceInt(any any, option SliceOption) ([]int, error) {
 		array = make([]int, len(value))
 		for k, v := range value {
 			ii, err = c.Int(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ii
@@ -136,7 +136,7 @@ func (c *impConverter) SliceInt(any any, option SliceOption) ([]int, error) {
 		array = make([]int, len(value))
 		for k, v := range value {
 			ii, err = c.Int(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ii
@@ -145,7 +145,7 @@ func (c *impConverter) SliceInt(any any, option SliceOption) ([]int, error) {
 		array = make([]int, len(value))
 		for k, v := range value {
 			ii, err = c.Int(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ii
@@ -170,7 +170,7 @@ func (c *impConverter) SliceInt(any any, option SliceOption) ([]int, error) {
 		)
 		for i := 0; i < length; i++ {
 			ii, err = c.Int(originValueAndKind.OriginValue.Index(i).Interface())
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			slice[i] = ii
@@ -182,7 +182,7 @@ func (c *impConverter) SliceInt(any any, option SliceOption) ([]int, error) {
 			return []int{}, err
 		}
 		ii, err = c.Int(any)
-		if err != nil && option.FailBreak {
+		if err != nil && option.BreakOnError {
 			return nil, err
 		}
 		return []int{ii}, err
@@ -204,7 +204,7 @@ func (c *impConverter) SliceInt32(any any, option SliceOption) ([]int32, error) 
 		array = make([]int32, len(value))
 		for k, v := range value {
 			ii, err = c.Int32(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ii
@@ -258,7 +258,7 @@ func (c *impConverter) SliceInt32(any any, option SliceOption) ([]int32, error) 
 		}
 		if utils.IsNumeric(value) {
 			ii, err = c.Int32(value)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			return []int32{ii}, err
@@ -291,7 +291,7 @@ func (c *impConverter) SliceInt32(any any, option SliceOption) ([]int32, error) 
 		array = make([]int32, len(value))
 		for k, v := range value {
 			ii, err = c.Int32(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ii
@@ -300,7 +300,7 @@ func (c *impConverter) SliceInt32(any any, option SliceOption) ([]int32, error) 
 		array = make([]int32, len(value))
 		for k, v := range value {
 			ii, err = c.Int32(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ii
@@ -309,7 +309,7 @@ func (c *impConverter) SliceInt32(any any, option SliceOption) ([]int32, error) 
 		array = make([]int32, len(value))
 		for k, v := range value {
 			ii, err = c.Int32(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ii
@@ -318,7 +318,7 @@ func (c *impConverter) SliceInt32(any any, option SliceOption) ([]int32, error) 
 		array = make([]int32, len(value))
 		for k, v := range value {
 			ii, err = c.Int32(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ii
@@ -343,7 +343,7 @@ func (c *impConverter) SliceInt32(any any, option SliceOption) ([]int32, error) 
 		)
 		for i := 0; i < length; i++ {
 			ii, err = c.Int32(originValueAndKind.OriginValue.Index(i).Interface())
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			slice[i] = ii
@@ -355,7 +355,7 @@ func (c *impConverter) SliceInt32(any any, option SliceOption) ([]int32, error) 
 			return []int32{}, err
 		}
 		ii, err = c.Int32(any)
-		if err != nil && option.FailBreak {
+		if err != nil && option.BreakOnError {
 			return nil, err
 		}
 		return []int32{ii}, err
@@ -377,7 +377,7 @@ func (c *impConverter) SliceInt64(any any, option SliceOption) ([]int64, error) 
 		array = make([]int64, len(value))
 		for k, v := range value {
 			ii, err = c.Int64(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ii
@@ -431,7 +431,7 @@ func (c *impConverter) SliceInt64(any any, option SliceOption) ([]int64, error) 
 		}
 		if utils.IsNumeric(value) {
 			ii, err = c.Int64(value)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			return []int64{ii}, err
@@ -464,7 +464,7 @@ func (c *impConverter) SliceInt64(any any, option SliceOption) ([]int64, error) 
 		array = make([]int64, len(value))
 		for k, v := range value {
 			ii, err = c.Int64(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ii
@@ -473,7 +473,7 @@ func (c *impConverter) SliceInt64(any any, option SliceOption) ([]int64, error) 
 		array = make([]int64, len(value))
 		for k, v := range value {
 			ii, err = c.Int64(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ii
@@ -482,7 +482,7 @@ func (c *impConverter) SliceInt64(any any, option SliceOption) ([]int64, error) 
 		array = make([]int64, len(value))
 		for k, v := range value {
 			ii, err = c.Int64(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ii
@@ -491,7 +491,7 @@ func (c *impConverter) SliceInt64(any any, option SliceOption) ([]int64, error) 
 		array = make([]int64, len(value))
 		for k, v := range value {
 			ii, err = c.Int64(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ii
@@ -516,7 +516,7 @@ func (c *impConverter) SliceInt64(any any, option SliceOption) ([]int64, error) 
 		)
 		for i := 0; i < length; i++ {
 			ii, err = c.Int64(originValueAndKind.OriginValue.Index(i).Interface())
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			slice[i] = ii
@@ -528,7 +528,7 @@ func (c *impConverter) SliceInt64(any any, option SliceOption) ([]int64, error) 
 			return []int64{}, err
 		}
 		ii, err = c.Int64(any)
-		if err != nil && option.FailBreak {
+		if err != nil && option.BreakOnError {
 			return nil, err
 		}
 		return []int64{ii}, err

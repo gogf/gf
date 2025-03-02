@@ -31,7 +31,7 @@ func (c *impConverter) SliceUint(any interface{}, option SliceOption) ([]uint, e
 		array = make([]uint, len(value))
 		for k, v := range value {
 			ui, err = c.Uint(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -80,7 +80,7 @@ func (c *impConverter) SliceUint(any interface{}, option SliceOption) ([]uint, e
 		}
 		if utils.IsNumeric(value) {
 			ui, err = c.Uint(value)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			return []uint{ui}, err
@@ -113,7 +113,7 @@ func (c *impConverter) SliceUint(any interface{}, option SliceOption) ([]uint, e
 		array = make([]uint, len(value))
 		for k, v := range value {
 			ui, err = c.Uint(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -122,7 +122,7 @@ func (c *impConverter) SliceUint(any interface{}, option SliceOption) ([]uint, e
 		array = make([]uint, len(value))
 		for k, v := range value {
 			ui, err = c.Uint(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -131,7 +131,7 @@ func (c *impConverter) SliceUint(any interface{}, option SliceOption) ([]uint, e
 		array = make([]uint, len(value))
 		for k, v := range value {
 			ui, err = c.Uint(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -140,7 +140,7 @@ func (c *impConverter) SliceUint(any interface{}, option SliceOption) ([]uint, e
 		array = make([]uint, len(value))
 		for k, v := range value {
 			ui, err = c.Uint(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -168,7 +168,7 @@ func (c *impConverter) SliceUint(any interface{}, option SliceOption) ([]uint, e
 		)
 		for i := 0; i < length; i++ {
 			ui, err = c.Uint(originValueAndKind.OriginValue.Index(i).Interface())
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			slice[i] = ui
@@ -180,7 +180,7 @@ func (c *impConverter) SliceUint(any interface{}, option SliceOption) ([]uint, e
 			return []uint{}, err
 		}
 		ui, err = c.Uint(any)
-		if err != nil && option.FailBreak {
+		if err != nil && option.BreakOnError {
 			return nil, err
 		}
 		return []uint{ui}, err
@@ -202,7 +202,7 @@ func (c *impConverter) SliceUint32(any interface{}, option SliceOption) ([]uint3
 		array = make([]uint32, len(value))
 		for k, v := range value {
 			ui, err = c.Uint32(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -254,7 +254,7 @@ func (c *impConverter) SliceUint32(any interface{}, option SliceOption) ([]uint3
 		}
 		if utils.IsNumeric(value) {
 			ui, err = c.Uint32(value)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			return []uint32{ui}, err
@@ -284,7 +284,7 @@ func (c *impConverter) SliceUint32(any interface{}, option SliceOption) ([]uint3
 		array = make([]uint32, len(value))
 		for k, v := range value {
 			ui, err = c.Uint32(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -293,7 +293,7 @@ func (c *impConverter) SliceUint32(any interface{}, option SliceOption) ([]uint3
 		array = make([]uint32, len(value))
 		for k, v := range value {
 			ui, err = c.Uint32(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -302,7 +302,7 @@ func (c *impConverter) SliceUint32(any interface{}, option SliceOption) ([]uint3
 		array = make([]uint32, len(value))
 		for k, v := range value {
 			ui, err = c.Uint32(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -311,7 +311,7 @@ func (c *impConverter) SliceUint32(any interface{}, option SliceOption) ([]uint3
 		array = make([]uint32, len(value))
 		for k, v := range value {
 			ui, err = c.Uint32(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -338,7 +338,7 @@ func (c *impConverter) SliceUint32(any interface{}, option SliceOption) ([]uint3
 		)
 		for i := 0; i < length; i++ {
 			ui, err = c.Uint32(originValueAndKind.OriginValue.Index(i).Interface())
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			slice[i] = ui
@@ -350,7 +350,7 @@ func (c *impConverter) SliceUint32(any interface{}, option SliceOption) ([]uint3
 			return []uint32{}, err
 		}
 		ui, err = c.Uint32(any)
-		if err != nil && option.FailBreak {
+		if err != nil && option.BreakOnError {
 			return nil, err
 		}
 		return []uint32{ui}, err
@@ -372,7 +372,7 @@ func (c *impConverter) SliceUint64(any interface{}, option SliceOption) ([]uint6
 		array = make([]uint64, len(value))
 		for k, v := range value {
 			ui, err = c.Uint64(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -424,7 +424,7 @@ func (c *impConverter) SliceUint64(any interface{}, option SliceOption) ([]uint6
 		}
 		if utils.IsNumeric(value) {
 			ui, err = c.Uint64(value)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			return []uint64{ui}, err
@@ -454,7 +454,7 @@ func (c *impConverter) SliceUint64(any interface{}, option SliceOption) ([]uint6
 		array = make([]uint64, len(value))
 		for k, v := range value {
 			ui, err = c.Uint64(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -463,7 +463,7 @@ func (c *impConverter) SliceUint64(any interface{}, option SliceOption) ([]uint6
 		array = make([]uint64, len(value))
 		for k, v := range value {
 			ui, err = c.Uint64(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -472,7 +472,7 @@ func (c *impConverter) SliceUint64(any interface{}, option SliceOption) ([]uint6
 		array = make([]uint64, len(value))
 		for k, v := range value {
 			ui, err = c.Uint64(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -481,7 +481,7 @@ func (c *impConverter) SliceUint64(any interface{}, option SliceOption) ([]uint6
 		array = make([]uint64, len(value))
 		for k, v := range value {
 			ui, err = c.Uint64(v)
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -507,7 +507,7 @@ func (c *impConverter) SliceUint64(any interface{}, option SliceOption) ([]uint6
 		)
 		for i := 0; i < length; i++ {
 			ui, err = c.Uint64(originValueAndKind.OriginValue.Index(i).Interface())
-			if err != nil && option.FailBreak {
+			if err != nil && option.BreakOnError {
 				return nil, err
 			}
 			slice[i] = ui
@@ -519,7 +519,7 @@ func (c *impConverter) SliceUint64(any interface{}, option SliceOption) ([]uint6
 			return []uint64{}, err
 		}
 		ui, err = c.Uint64(any)
-		if err != nil && option.FailBreak {
+		if err != nil && option.BreakOnError {
 			return nil, err
 		}
 		return []uint64{ui}, err

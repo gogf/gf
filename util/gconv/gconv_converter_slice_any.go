@@ -16,9 +16,9 @@ import (
 )
 
 type SliceOption struct {
-	// FailBreak specifies whether to break converting the next element
+	// BreakOnError specifies whether to break converting the next element
 	// if one element conversion fails in slice.
-	FailBreak bool
+	BreakOnError bool
 }
 
 // SliceAny converts `any` to []any.

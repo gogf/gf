@@ -30,10 +30,10 @@ func Map(value any, option ...MapOption) map[string]any {
 // Deprecated: used Map instead.
 func MapDeep(value any, tags ...string) map[string]any {
 	result, _ := defaultConverter.Map(value, MapOption{
-		Deep:      true,
-		OmitEmpty: false,
-		Tags:      tags,
-		FailBreak: false,
+		Deep:         true,
+		OmitEmpty:    false,
+		Tags:         tags,
+		BreakOnError: false,
 	})
 	return result
 }
