@@ -87,6 +87,7 @@ func (c *impConverter) doMapConvert(
 		value = v.Val()
 	}
 	var (
+		err     error
 		newTags = gtag.StructTagPriority
 	)
 	if option.Deep {
@@ -106,7 +107,7 @@ func (c *impConverter) doMapConvert(
 	case string:
 		// If it is a JSON string, automatically unmarshal it!
 		if len(r) > 0 && r[0] == '{' && r[len(r)-1] == '}' {
-			if err := json.UnmarshalUseNumber([]byte(r), &dataMap); err != nil {
+			if err = json.UnmarshalUseNumber([]byte(r), &dataMap); err != nil {
 				return nil, err
 			}
 		} else {
@@ -115,7 +116,7 @@ func (c *impConverter) doMapConvert(
 	case []byte:
 		// If it is a JSON string, automatically unmarshal it!
 		if len(r) > 0 && r[0] == '{' && r[len(r)-1] == '}' {
-			if err := json.UnmarshalUseNumber(r, &dataMap); err != nil {
+			if err = json.UnmarshalUseNumber(r, &dataMap); err != nil {
 				return nil, err
 			}
 		} else {
@@ -125,7 +126,11 @@ func (c *impConverter) doMapConvert(
 		recursiveOption := option
 		recursiveOption.Tags = newTags
 		for k, v := range r {
-			dataMap[String(k)] = c.doMapConvertForMapOrStructValue(
+			s, err := c.String(k)
+			if err != nil && option.FailBreak {
+				return nil, err
+			}
+			dataMap[s], err = c.doMapConvertForMapOrStructValue(
 				doMapConvertForMapOrStructValueInput{
 					IsRoot:          false,
 					Value:           v,
@@ -134,26 +139,49 @@ func (c *impConverter) doMapConvert(
 					Option:          recursiveOption,
 				},
 			)
+			if err != nil && option.FailBreak {
+				return nil, err
+			}
 		}
 	case map[interface{}]string:
 		for k, v := range r {
-			dataMap[String(k)] = v
+			s, err := c.String(k)
+			if err != nil && option.FailBreak {
+				return nil, err
+			}
+			dataMap[s] = v
 		}
 	case map[interface{}]int:
 		for k, v := range r {
-			dataMap[String(k)] = v
+			s, err := c.String(k)
+			if err != nil && option.FailBreak {
+				return nil, err
+			}
+			dataMap[s] = v
 		}
 	case map[interface{}]uint:
 		for k, v := range r {
-			dataMap[String(k)] = v
+			s, err := c.String(k)
+			if err != nil && option.FailBreak {
+				return nil, err
+			}
+			dataMap[s] = v
 		}
 	case map[interface{}]float32:
 		for k, v := range r {
-			dataMap[String(k)] = v
+			s, err := c.String(k)
+			if err != nil && option.FailBreak {
+				return nil, err
+			}
+			dataMap[s] = v
 		}
 	case map[interface{}]float64:
 		for k, v := range r {
-			dataMap[String(k)] = v
+			s, err := c.String(k)
+			if err != nil && option.FailBreak {
+				return nil, err
+			}
+			dataMap[s] = v
 		}
 	case map[string]bool:
 		for k, v := range r {
@@ -185,7 +213,7 @@ func (c *impConverter) doMapConvert(
 			recursiveOption.Tags = newTags
 			// A copy of current map.
 			for k, v := range r {
-				dataMap[k] = c.doMapConvertForMapOrStructValue(
+				dataMap[k], err = c.doMapConvertForMapOrStructValue(
 					doMapConvertForMapOrStructValueInput{
 						IsRoot:          false,
 						Value:           v,
@@ -194,6 +222,9 @@ func (c *impConverter) doMapConvert(
 						Option:          recursiveOption,
 					},
 				)
+				if err != nil && option.FailBreak {
+					return nil, err
+				}
 			}
 		} else {
 			// It returns the map directly without any changing.
@@ -203,7 +234,11 @@ func (c *impConverter) doMapConvert(
 		recursiveOption := option
 		recursiveOption.Tags = newTags
 		for k, v := range r {
-			dataMap[String(k)] = c.doMapConvertForMapOrStructValue(
+			s, err := c.String(k)
+			if err != nil && option.FailBreak {
+				return nil, err
+			}
+			dataMap[s], err = c.doMapConvertForMapOrStructValue(
 				doMapConvertForMapOrStructValueInput{
 					IsRoot:          false,
 					Value:           v,
@@ -212,14 +247,25 @@ func (c *impConverter) doMapConvert(
 					Option:          recursiveOption,
 				},
 			)
+			if err != nil && option.FailBreak {
+				return nil, err
+			}
 		}
 	case map[int]string:
 		for k, v := range r {
-			dataMap[String(k)] = v
+			s, err := c.String(k)
+			if err != nil && option.FailBreak {
+				return nil, err
+			}
+			dataMap[s] = v
 		}
 	case map[uint]string:
 		for k, v := range r {
-			dataMap[String(k)] = v
+			s, err := c.String(k)
+			if err != nil && option.FailBreak {
+				return nil, err
+			}
+			dataMap[s] = v
 		}
 
 	default:
@@ -244,16 +290,20 @@ func (c *impConverter) doMapConvert(
 		case reflect.Slice, reflect.Array:
 			length := reflectValue.Len()
 			for i := 0; i < length; i += 2 {
+				s, err := c.String(String(reflectValue.Index(i).Interface()))
+				if err != nil && option.FailBreak {
+					return nil, err
+				}
 				if i+1 < length {
-					dataMap[String(reflectValue.Index(i).Interface())] = reflectValue.Index(i + 1).Interface()
+					dataMap[s] = reflectValue.Index(i + 1).Interface()
 				} else {
-					dataMap[String(reflectValue.Index(i).Interface())] = nil
+					dataMap[s] = nil
 				}
 			}
 		case reflect.Map, reflect.Struct, reflect.Interface:
 			recursiveOption := option
 			recursiveOption.Tags = newTags
-			convertedValue := c.doMapConvertForMapOrStructValue(
+			convertedValue, err := c.doMapConvertForMapOrStructValue(
 				doMapConvertForMapOrStructValueInput{
 					IsRoot:          true,
 					Value:           value,
@@ -263,6 +313,9 @@ func (c *impConverter) doMapConvert(
 					MustMapReturn:   mustMapReturn,
 				},
 			)
+			if err != nil && option.FailBreak {
+				return nil, err
+			}
 			if m, ok := convertedValue.(map[string]interface{}); ok {
 				return m, nil
 			}
@@ -291,12 +344,15 @@ type doMapConvertForMapOrStructValueInput struct {
 	MustMapReturn   bool          // Must return map instead of Value when empty.
 }
 
-func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) interface{} {
+func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) (any, error) {
 	if !in.IsRoot && !in.RecursiveOption {
-		return in.Value
+		return in.Value, nil
 	}
 
-	var reflectValue reflect.Value
+	var (
+		err          error
+		reflectValue reflect.Value
+	)
 	if v, ok := in.Value.(reflect.Value); ok {
 		reflectValue = v
 		in.Value = v.Interface()
@@ -333,7 +389,11 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 			default:
 				mapValue = mapKeyValue.Interface()
 			}
-			dataMap[String(mapIter.Key().Interface())] = c.doMapConvertForMapOrStructValue(
+			s, err := c.String(mapIter.Key().Interface())
+			if err != nil && in.Option.FailBreak {
+				return nil, err
+			}
+			dataMap[s], err = c.doMapConvertForMapOrStructValue(
 				doMapConvertForMapOrStructValueInput{
 					IsRoot:          false,
 					Value:           mapValue,
@@ -342,8 +402,11 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 					Option:          in.Option,
 				},
 			)
+			if err != nil && in.Option.FailBreak {
+				return nil, err
+			}
 		}
-		return dataMap
+		return dataMap, nil
 
 	case reflect.Struct:
 		var dataMap = make(map[string]interface{})
@@ -352,7 +415,7 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 			// Value copy, in case of concurrent safety.
 			for mapK, mapV := range v.MapStrAny() {
 				if in.RecursiveOption {
-					dataMap[mapK] = c.doMapConvertForMapOrStructValue(
+					dataMap[mapK], err = c.doMapConvertForMapOrStructValue(
 						doMapConvertForMapOrStructValueInput{
 							IsRoot:          false,
 							Value:           mapV,
@@ -361,12 +424,15 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 							Option:          in.Option,
 						},
 					)
+					if err != nil && in.Option.FailBreak {
+						return nil, err
+					}
 				} else {
 					dataMap[mapK] = mapV
 				}
 			}
 			if len(dataMap) > 0 {
-				return dataMap
+				return dataMap, nil
 			}
 		}
 		// Using reflect for converting.
@@ -443,13 +509,18 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 					case hasNoTag && rtField.Anonymous:
 						// It means this attribute field has no tag.
 						// Overwrite the attribute with sub-struct attribute fields.
-						anonymousValue := c.doMapConvertForMapOrStructValue(doMapConvertForMapOrStructValueInput{
-							IsRoot:          false,
-							Value:           rvInterface,
-							RecursiveType:   in.RecursiveType,
-							RecursiveOption: true,
-							Option:          in.Option,
-						})
+						anonymousValue, err := c.doMapConvertForMapOrStructValue(
+							doMapConvertForMapOrStructValueInput{
+								IsRoot:          false,
+								Value:           rvInterface,
+								RecursiveType:   in.RecursiveType,
+								RecursiveOption: true,
+								Option:          in.Option,
+							},
+						)
+						if err != nil && in.Option.FailBreak {
+							return nil, err
+						}
 						if m, ok := anonymousValue.(map[string]interface{}); ok {
 							for k, v := range m {
 								dataMap[k] = v
@@ -460,22 +531,32 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 
 					// It means this attribute field has desired tag.
 					case !hasNoTag && rtField.Anonymous:
-						dataMap[mapKey] = c.doMapConvertForMapOrStructValue(doMapConvertForMapOrStructValueInput{
-							IsRoot:          false,
-							Value:           rvInterface,
-							RecursiveType:   in.RecursiveType,
-							RecursiveOption: true,
-							Option:          in.Option,
-						})
+						dataMap[mapKey], err = c.doMapConvertForMapOrStructValue(
+							doMapConvertForMapOrStructValueInput{
+								IsRoot:          false,
+								Value:           rvInterface,
+								RecursiveType:   in.RecursiveType,
+								RecursiveOption: true,
+								Option:          in.Option,
+							},
+						)
+						if err != nil && in.Option.FailBreak {
+							return nil, err
+						}
 
 					default:
-						dataMap[mapKey] = c.doMapConvertForMapOrStructValue(doMapConvertForMapOrStructValueInput{
-							IsRoot:          false,
-							Value:           rvInterface,
-							RecursiveType:   in.RecursiveType,
-							RecursiveOption: in.RecursiveType == recursiveTypeTrue,
-							Option:          in.Option,
-						})
+						dataMap[mapKey], err = c.doMapConvertForMapOrStructValue(
+							doMapConvertForMapOrStructValueInput{
+								IsRoot:          false,
+								Value:           rvInterface,
+								RecursiveType:   in.RecursiveType,
+								RecursiveOption: in.RecursiveType == recursiveTypeTrue,
+								Option:          in.Option,
+							},
+						)
+						if err != nil && in.Option.FailBreak {
+							return nil, err
+						}
 					}
 
 				// The struct attribute is type of slice.
@@ -487,7 +568,7 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 					}
 					array := make([]interface{}, length)
 					for arrayIndex := 0; arrayIndex < length; arrayIndex++ {
-						array[arrayIndex] = c.doMapConvertForMapOrStructValue(
+						array[arrayIndex], err = c.doMapConvertForMapOrStructValue(
 							doMapConvertForMapOrStructValueInput{
 								IsRoot:          false,
 								Value:           rvAttrField.Index(arrayIndex).Interface(),
@@ -496,6 +577,9 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 								Option:          in.Option,
 							},
 						)
+						if err != nil && in.Option.FailBreak {
+							return nil, err
+						}
 					}
 					dataMap[mapKey] = array
 				case reflect.Map:
@@ -504,7 +588,11 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 						nestedMap = make(map[string]interface{})
 					)
 					for mapIter.Next() {
-						nestedMap[String(mapIter.Key().Interface())] = c.doMapConvertForMapOrStructValue(
+						s, err := c.String(mapIter.Key().Interface())
+						if err != nil && in.Option.FailBreak {
+							return nil, err
+						}
+						nestedMap[s], err = c.doMapConvertForMapOrStructValue(
 							doMapConvertForMapOrStructValueInput{
 								IsRoot:          false,
 								Value:           mapIter.Value().Interface(),
@@ -513,6 +601,9 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 								Option:          in.Option,
 							},
 						)
+						if err != nil && in.Option.FailBreak {
+							return nil, err
+						}
 					}
 					dataMap[mapKey] = nestedMap
 				default:
@@ -532,9 +623,9 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 			}
 		}
 		if !in.MustMapReturn && len(dataMap) == 0 {
-			return in.Value
+			return in.Value, nil
 		}
-		return dataMap
+		return dataMap, nil
 
 	// The given value is type of slice.
 	case reflect.Array, reflect.Slice:
@@ -544,17 +635,20 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 		}
 		array := make([]interface{}, reflectValue.Len())
 		for i := 0; i < length; i++ {
-			array[i] = c.doMapConvertForMapOrStructValue(doMapConvertForMapOrStructValueInput{
+			array[i], err = c.doMapConvertForMapOrStructValue(doMapConvertForMapOrStructValueInput{
 				IsRoot:          false,
 				Value:           reflectValue.Index(i).Interface(),
 				RecursiveType:   in.RecursiveType,
 				RecursiveOption: in.RecursiveType == recursiveTypeTrue,
 				Option:          in.Option,
 			})
+			if err != nil && in.Option.FailBreak {
+				return nil, err
+			}
 		}
-		return array
+		return array, nil
 
 	default:
 	}
-	return in.Value
+	return in.Value, nil
 }
