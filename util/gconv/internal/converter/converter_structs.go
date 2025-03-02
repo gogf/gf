@@ -81,6 +81,10 @@ func (c *impConverter) Structs(
 		itemTypeKind     = itemType.Kind()
 		pointerRvElem    = pointerRv.Elem()
 		pointerRvLength  = pointerRvElem.Len()
+		structOption     = StructOption{
+			ParamKeyToAttrMap: paramKeyToAttrMap,
+			PriorityTag:       priorityTag,
+		}
 	)
 	if itemTypeKind == reflect.Ptr {
 		// Pointer element.
@@ -93,7 +97,7 @@ func (c *impConverter) Structs(
 			if !tempReflectValue.IsValid() {
 				tempReflectValue = reflect.New(itemType.Elem()).Elem()
 			}
-			if err = c.Struct(paramsList[i], tempReflectValue, paramKeyToAttrMap, priorityTag); err != nil {
+			if err = c.Struct(paramsList[i], tempReflectValue, structOption); err != nil {
 				return err
 			}
 			reflectElemArray.Index(i).Set(tempReflectValue.Addr())
@@ -107,7 +111,7 @@ func (c *impConverter) Structs(
 			} else {
 				tempReflectValue = reflect.New(itemType).Elem()
 			}
-			if err = c.Struct(paramsList[i], tempReflectValue, paramKeyToAttrMap, priorityTag); err != nil {
+			if err = c.Struct(paramsList[i], tempReflectValue, structOption); err != nil {
 				return err
 			}
 			reflectElemArray.Index(i).Set(tempReflectValue)

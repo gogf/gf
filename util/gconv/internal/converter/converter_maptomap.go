@@ -94,9 +94,11 @@ func (c *impConverter) MapToMap(
 		mapValue := reflect.New(pointerValueType).Elem()
 		switch pointerValueKind {
 		case reflect.Map, reflect.Struct:
-			if err = c.Struct(
-				paramsRv.MapIndex(key).Interface(), mapValue, mapping, "",
-			); err != nil {
+			structOption := StructOption{
+				ParamKeyToAttrMap: mapping,
+				PriorityTag:       "",
+			}
+			if err = c.Struct(paramsRv.MapIndex(key).Interface(), mapValue, structOption); err != nil {
 				return err
 			}
 		default:

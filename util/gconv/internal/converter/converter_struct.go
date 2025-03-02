@@ -19,13 +19,13 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/structcache"
 )
 
+type StructOption struct {
+	ParamKeyToAttrMap map[string]string
+	PriorityTag       string
+}
+
 // Struct is the core internal converting function for any data to struct.
-func (c *impConverter) Struct(
-	params any,
-	pointer any,
-	paramKeyToAttrMap map[string]string,
-	priorityTag string,
-) (err error) {
+func (c *impConverter) Struct(params, pointer any, option StructOption) (err error) {
 	if params == nil {
 		// If `params` is nil, no conversion.
 		return nil
@@ -151,7 +151,7 @@ func (c *impConverter) Struct(
 	}
 	// Get struct info from cache or parse struct and cache the struct info.
 	cachedStructInfo := c.internalConverter.GetCachedStructInfo(
-		pointerElemReflectValue.Type(), priorityTag,
+		pointerElemReflectValue.Type(), option.PriorityTag,
 	)
 	// Nothing to be converted.
 	if cachedStructInfo == nil {
@@ -172,7 +172,7 @@ func (c *impConverter) Struct(
 
 	// Firstly, search according to custom mapping rules.
 	// If a possible direct assignment is found, reduce the number of subsequent map searches.
-	for paramKey, fieldName := range paramKeyToAttrMap {
+	for paramKey, fieldName := range option.ParamKeyToAttrMap {
 		paramsValue, ok = paramsMap[paramKey]
 		if !ok {
 			continue
@@ -184,13 +184,13 @@ func (c *impConverter) Struct(
 				cachedFieldInfo,
 				fieldValue,
 				paramsValue,
-				paramKeyToAttrMap,
+				option.ParamKeyToAttrMap,
 			); err != nil {
 				return err
 			}
 			if len(cachedFieldInfo.OtherSameNameField) > 0 {
 				if err = c.setOtherSameNameField(
-					cachedFieldInfo, paramsValue, pointerReflectValue, paramKeyToAttrMap,
+					cachedFieldInfo, paramsValue, pointerReflectValue, option.ParamKeyToAttrMap,
 				); err != nil {
 					return err
 				}
@@ -203,7 +203,8 @@ func (c *impConverter) Struct(
 		return nil
 	}
 	return c.bindStructWithLoopFieldInfos(
-		paramsMap, pointerElemReflectValue, paramKeyToAttrMap, usedParamsKeyOrTagNameMap, cachedStructInfo,
+		paramsMap, pointerElemReflectValue, option.ParamKeyToAttrMap,
+		usedParamsKeyOrTagNameMap, cachedStructInfo,
 	)
 }
 
@@ -367,14 +368,14 @@ func (c *impConverter) bindVarToStructField(
 	if cachedFieldInfo.ConvertFunc != nil {
 		return cachedFieldInfo.ConvertFunc(srcValue, fieldValue)
 	}
-	c.doConvertWithReflectValueSet(
+	err = c.doConvertWithReflectValueSet(
 		fieldValue, doConvertInput{
 			FromValue:  srcValue,
 			ToTypeName: cachedFieldInfo.StructField.Type.String(),
 			ReferValue: fieldValue,
 		},
 	)
-	return nil
+	return err
 }
 
 // bindVarToReflectValueWithInterfaceCheck does bind using common interfaces checks.
@@ -474,7 +475,7 @@ func (c *impConverter) bindVarToReflectValue(
 
 	case reflect.Struct:
 		// Recursively converting for struct attribute.
-		if err = c.Struct(value, structFieldValue, nil, ""); err != nil {
+		if err = c.Struct(value, structFieldValue, StructOption{}); err != nil {
 			// Note there's reflect conversion mechanism here.
 			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
 		}
@@ -507,7 +508,7 @@ func (c *impConverter) bindVarToReflectValue(
 						elem = reflect.New(elemType).Elem()
 					}
 					if elem.Kind() == reflect.Struct {
-						if err = c.Struct(reflectValue.Index(i).Interface(), elem, nil, ""); err == nil {
+						if err = c.Struct(reflectValue.Index(i).Interface(), elem, StructOption{}); err == nil {
 							converted = true
 						}
 					}
@@ -564,7 +565,7 @@ func (c *impConverter) bindVarToReflectValue(
 				elem = reflect.New(elemType).Elem()
 			}
 			if elem.Kind() == reflect.Struct {
-				if err = c.Struct(value, elem, nil, ""); err == nil {
+				if err = c.Struct(value, elem, StructOption{}); err == nil {
 					converted = true
 				}
 			}

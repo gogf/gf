@@ -27,5 +27,8 @@ func Struct(params any, pointer any, paramKeyToAttrMap ...map[string]string) (er
 // specified priorityTagAndFieldName for `params` key-value items to struct attribute names mapping.
 // The parameter `priorityTag` supports multiple priorityTagAndFieldName that can be joined with char ','.
 func StructTag(params any, pointer any, priorityTag string) (err error) {
-	return defaultConverter.Struct(params, pointer, nil, priorityTag)
+	option := StructOption{
+		PriorityTag: priorityTag,
+	}
+	return defaultConverter.Struct(params, pointer, option)
 }

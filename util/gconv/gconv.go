@@ -20,6 +20,7 @@ type (
 	MapOption      = converter.MapOption
 	ScanOption     = converter.ScanOption
 	SliceOption    = converter.SliceOption
+	StructOption   = converter.StructOption
 )
 
 // IUnmarshalValue is the interface for custom defined types customizing value assignment.

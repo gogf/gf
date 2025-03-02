@@ -15,11 +15,17 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
+// ScanOption is the option for the Scan function.
 type ScanOption struct {
+	// ParamKeyToAttrMap specifies the mapping between parameter keys and struct attribute names.
 	ParamKeyToAttrMap map[string]string
-	BreakOnError      bool
+
+	// BreakOnError specifies whether to break converting the next element
+	// if one element conversion fails.
+	BreakOnError bool
 }
 
+// Scan automatically checks the type of `pointer` and converts `params` to `pointer`.
 func (c *impConverter) Scan(srcValue any, dstPointer any, option ScanOption) (err error) {
 	// Check if srcValue is nil, in which case no conversion is needed
 	if srcValue == nil {
@@ -266,8 +272,11 @@ func (c *impConverter) doScanForComplicatedTypes(
 		return c.Structs(srcValue, dstPointer, keyToAttributeNameMapping, "")
 
 	default:
-		// Convert to single struct
-		return c.Struct(srcValue, dstPointer, keyToAttributeNameMapping, "")
+		structOption := StructOption{
+			ParamKeyToAttrMap: keyToAttributeNameMapping,
+			PriorityTag:       "",
+		}
+		return c.Struct(srcValue, dstPointer, structOption)
 	}
 }
 
