@@ -21,12 +21,15 @@ import (
 // The optional parameter `extraParams` is used for additional necessary parameter for this conversion.
 // It supports common basic types conversion as its conversion based on type name string.
 func Convert(fromValue interface{}, toTypeName string, extraParams ...interface{}) interface{} {
-	return doConvert(doConvertInput{
-		FromValue:  fromValue,
-		ToTypeName: toTypeName,
-		ReferValue: nil,
-		Extra:      extraParams,
-	})
+	return doConvert(
+		defaultConvertConfig,
+		doConvertInput{
+			FromValue:  fromValue,
+			ToTypeName: toTypeName,
+			ReferValue: nil,
+			Extra:      extraParams,
+		},
+	)
 }
 
 // ConvertWithRefer converts the variable `fromValue` to the type referred by value `referValue`.
@@ -40,12 +43,15 @@ func ConvertWithRefer(fromValue interface{}, referValue interface{}, extraParams
 	} else {
 		referValueRf = reflect.ValueOf(referValue)
 	}
-	return doConvert(doConvertInput{
-		FromValue:  fromValue,
-		ToTypeName: referValueRf.Type().String(),
-		ReferValue: referValue,
-		Extra:      extraParams,
-	})
+	return doConvert(
+		defaultConvertConfig,
+		doConvertInput{
+			FromValue:  fromValue,
+			ToTypeName: referValueRf.Type().String(),
+			ReferValue: referValue,
+			Extra:      extraParams,
+		},
+	)
 }
 
 type doConvertInput struct {
@@ -53,13 +59,14 @@ type doConvertInput struct {
 	ToTypeName string        // Target value type name in string.
 	ReferValue interface{}   // Referred value, a value in type `ToTypeName`. Note that its type might be reflect.Value.
 	Extra      []interface{} // Extra values for implementing the converting.
+
 	// Marks that the value is already converted and set to `ReferValue`. Caller can ignore the returned result.
 	// It is an attribute for internal usage purpose.
 	alreadySetToReferValue bool
 }
 
 // doConvert does commonly use types converting.
-func doConvert(in doConvertInput) (convertedValue interface{}) {
+func doConvert(cf *ConvertConfig, in doConvertInput) (convertedValue interface{}) {
 	switch in.ToTypeName {
 	case "int":
 		return Int(in.FromValue)
@@ -296,14 +303,14 @@ func doConvert(in doConvertInput) (convertedValue interface{}) {
 			}
 
 			// custom converter.
-			if dstReflectValue, ok, _ := callCustomConverterWithRefer(fromReflectValue, referReflectValue); ok {
+			if dstReflectValue, ok, _ := cf.callCustomConverterWithRefer(fromReflectValue, referReflectValue); ok {
 				return dstReflectValue.Interface()
 			}
 
 			defer func() {
 				if recover() != nil {
 					in.alreadySetToReferValue = false
-					if err := bindVarToReflectValue(referReflectValue, in.FromValue, nil); err == nil {
+					if err := bindVarToReflectValue(cf, referReflectValue, in.FromValue, nil); err == nil {
 						in.alreadySetToReferValue = true
 						convertedValue = referReflectValue.Interface()
 					}
@@ -326,7 +333,7 @@ func doConvert(in doConvertInput) (convertedValue interface{}) {
 				default:
 					in.ToTypeName = originType.Kind().String()
 					in.ReferValue = nil
-					refElementValue := reflect.ValueOf(doConvert(in))
+					refElementValue := reflect.ValueOf(doConvert(cf, in))
 					originTypeValue := reflect.New(refElementValue.Type()).Elem()
 					originTypeValue.Set(refElementValue)
 					in.alreadySetToReferValue = true
@@ -335,7 +342,7 @@ func doConvert(in doConvertInput) (convertedValue interface{}) {
 
 			case reflect.Map:
 				var targetValue = reflect.New(referReflectValue.Type()).Elem()
-				if err := doMapToMap(in.FromValue, targetValue); err == nil {
+				if err := doMapToMap(cf, in.FromValue, targetValue); err == nil {
 					in.alreadySetToReferValue = true
 				}
 				return targetValue.Interface()
@@ -343,15 +350,15 @@ func doConvert(in doConvertInput) (convertedValue interface{}) {
 			in.ToTypeName = referReflectValue.Kind().String()
 			in.ReferValue = nil
 			in.alreadySetToReferValue = true
-			convertedValue = reflect.ValueOf(doConvert(in)).Convert(referReflectValue.Type()).Interface()
+			convertedValue = reflect.ValueOf(doConvert(cf, in)).Convert(referReflectValue.Type()).Interface()
 			return convertedValue
 		}
 		return in.FromValue
 	}
 }
 
-func doConvertWithReflectValueSet(reflectValue reflect.Value, in doConvertInput) {
-	convertedValue := doConvert(in)
+func doConvertWithReflectValueSet(cf *ConvertConfig, reflectValue reflect.Value, in doConvertInput) {
+	convertedValue := doConvert(cf, in)
 	if !in.alreadySetToReferValue {
 		reflectValue.Set(reflect.ValueOf(convertedValue))
 	}

@@ -11,19 +11,14 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/util/gconv/internal/structcache"
 )
 
-type (
-	converterInType  = reflect.Type
-	converterOutType = reflect.Type
-	converterFunc    = reflect.Value
-)
+// RegisterConverter registers custom converter.
+func RegisterConverter(fn any) (err error) {
+	return defaultConvertConfig.RegisterConverter(fn)
+}
 
-// customConverters for internal converter storing.
-var customConverters = make(map[converterInType]map[converterOutType]converterFunc)
-
-// RegisterConverter to register custom converter.
+// RegisterConverter registers custom converter.
 // It must be registered before you use this custom converting feature.
 // It is suggested to do it in boot procedure of the process.
 //
@@ -31,7 +26,7 @@ var customConverters = make(map[converterInType]map[converterOutType]converterFu
 //  1. The parameter `fn` must be defined as pattern `func(T1) (T2, error)`.
 //     It will convert type `T1` to type `T2`.
 //  2. The `T1` should not be type of pointer, but the `T2` should be type of pointer.
-func RegisterConverter(fn interface{}) (err error) {
+func (cf *ConvertConfig) RegisterConverter(fn any) (err error) {
 	var (
 		fnReflectType = reflect.TypeOf(fn)
 		errType       = reflect.TypeOf((*error)(nil)).Elem()
@@ -41,7 +36,8 @@ func RegisterConverter(fn interface{}) (err error) {
 		!fnReflectType.Out(1).Implements(errType) {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
-			"parameter must be type of converter function and defined as pattern `func(T1) (T2, error)`, but defined as `%s`",
+			"parameter must be type of converter function and defined as pattern `func(T1) (T2, error)`, "+
+				"but defined as `%s`",
 			fnReflectType.String(),
 		)
 		return
@@ -69,10 +65,10 @@ func RegisterConverter(fn interface{}) (err error) {
 		return
 	}
 
-	registeredOutTypeMap, ok := customConverters[inType]
+	registeredOutTypeMap, ok := cf.customConverters[inType]
 	if !ok {
 		registeredOutTypeMap = make(map[converterOutType]converterFunc)
-		customConverters[inType] = registeredOutTypeMap
+		cf.customConverters[inType] = registeredOutTypeMap
 	}
 	if _, ok = registeredOutTypeMap[outType]; ok {
 		err = gerror.NewCodef(
@@ -83,14 +79,14 @@ func RegisterConverter(fn interface{}) (err error) {
 		return
 	}
 	registeredOutTypeMap[outType] = reflect.ValueOf(fn)
-	structcache.RegisterCustomConvertType(outType)
+	cf.internalConvertConfig.RegisterCustomConvertType(outType)
 	return
 }
 
-func getRegisteredConverterFuncAndSrcType(
+func (cf *ConvertConfig) getRegisteredConverterFuncAndSrcType(
 	srcReflectValue, dstReflectValueForRefer reflect.Value,
 ) (f converterFunc, srcType reflect.Type, ok bool) {
-	if len(customConverters) == 0 {
+	if len(cf.customConverters) == 0 {
 		return reflect.Value{}, nil, false
 	}
 	srcType = srcReflectValue.Type()
@@ -99,7 +95,7 @@ func getRegisteredConverterFuncAndSrcType(
 	}
 	var registeredOutTypeMap map[converterOutType]converterFunc
 	// firstly, it searches the map by input parameter type.
-	registeredOutTypeMap, ok = customConverters[srcType]
+	registeredOutTypeMap, ok = cf.customConverters[srcType]
 	if !ok {
 		return reflect.Value{}, nil, false
 	}
@@ -123,28 +119,28 @@ func getRegisteredConverterFuncAndSrcType(
 	return
 }
 
-func callCustomConverterWithRefer(
+func (cf *ConvertConfig) callCustomConverterWithRefer(
 	srcReflectValue, referReflectValue reflect.Value,
 ) (dstReflectValue reflect.Value, converted bool, err error) {
-	registeredConverterFunc, srcType, ok := getRegisteredConverterFuncAndSrcType(srcReflectValue, referReflectValue)
+	registeredConverterFunc, srcType, ok := cf.getRegisteredConverterFuncAndSrcType(srcReflectValue, referReflectValue)
 	if !ok {
 		return reflect.Value{}, false, nil
 	}
 	dstReflectValue = reflect.New(referReflectValue.Type()).Elem()
-	converted, err = doCallCustomConverter(srcReflectValue, dstReflectValue, registeredConverterFunc, srcType)
+	converted, err = cf.doCallCustomConverter(srcReflectValue, dstReflectValue, registeredConverterFunc, srcType)
 	return
 }
 
 // callCustomConverter call the custom converter. It will try some possible type.
-func callCustomConverter(srcReflectValue, dstReflectValue reflect.Value) (converted bool, err error) {
-	registeredConverterFunc, srcType, ok := getRegisteredConverterFuncAndSrcType(srcReflectValue, dstReflectValue)
+func (cf *ConvertConfig) callCustomConverter(srcReflectValue, dstReflectValue reflect.Value) (converted bool, err error) {
+	registeredConverterFunc, srcType, ok := cf.getRegisteredConverterFuncAndSrcType(srcReflectValue, dstReflectValue)
 	if !ok {
 		return false, nil
 	}
-	return doCallCustomConverter(srcReflectValue, dstReflectValue, registeredConverterFunc, srcType)
+	return cf.doCallCustomConverter(srcReflectValue, dstReflectValue, registeredConverterFunc, srcType)
 }
 
-func doCallCustomConverter(
+func (cf *ConvertConfig) doCallCustomConverter(
 	srcReflectValue reflect.Value,
 	dstReflectValue reflect.Value,
 	registeredConverterFunc converterFunc,

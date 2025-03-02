@@ -16,7 +16,7 @@ import (
 // MapToMap converts any map type variable `params` to another map type variable `pointer`
 // using reflect.
 // See doMapToMap.
-func MapToMap(params interface{}, pointer interface{}, mapping ...map[string]string) error {
+func MapToMap(params any, pointer any, mapping ...map[string]string) error {
 	return Scan(params, pointer, mapping...)
 }
 
@@ -30,7 +30,7 @@ func MapToMap(params interface{}, pointer interface{}, mapping ...map[string]str
 //
 // The optional parameter `mapping` is used for struct attribute to map key mapping, which makes
 // sense only if the items of original map `params` is type struct.
-func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
+func doMapToMap(cf *ConvertConfig, params any, pointer any, mapping ...map[string]string) (err error) {
 	var (
 		paramsRv                  reflect.Value
 		paramsKind                reflect.Kind
@@ -50,7 +50,7 @@ func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]s
 		paramsKind = paramsRv.Kind()
 	}
 	if paramsKind != reflect.Map {
-		return doMapToMap(Map(params), pointer, mapping...)
+		return doMapToMap(cf, Map(params), pointer, mapping...)
 	}
 	// Empty params map, no need continue.
 	if paramsRv.Len() == 0 {
@@ -107,22 +107,26 @@ func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]s
 		default:
 			mapValue.Set(
 				reflect.ValueOf(
-					doConvert(doConvertInput{
-						FromValue:  paramsRv.MapIndex(key).Interface(),
-						ToTypeName: pointerValueType.String(),
-						ReferValue: mapValue,
-						Extra:      nil,
-					}),
+					doConvert(
+						cf, doConvertInput{
+							FromValue:  paramsRv.MapIndex(key).Interface(),
+							ToTypeName: pointerValueType.String(),
+							ReferValue: mapValue,
+							Extra:      nil,
+						}),
 				),
 			)
 		}
 		var mapKey = reflect.ValueOf(
-			doConvert(doConvertInput{
-				FromValue:  key.Interface(),
-				ToTypeName: pointerKeyType.Name(),
-				ReferValue: reflect.New(pointerKeyType).Elem().Interface(),
-				Extra:      nil,
-			}),
+			doConvert(
+				cf,
+				doConvertInput{
+					FromValue:  key.Interface(),
+					ToTypeName: pointerKeyType.Name(),
+					ReferValue: reflect.New(pointerKeyType).Elem().Interface(),
+					Extra:      nil,
+				},
+			),
 		)
 		dataMap.SetMapIndex(mapKey, mapValue)
 	}

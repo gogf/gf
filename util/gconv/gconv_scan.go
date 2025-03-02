@@ -26,6 +26,10 @@ import (
 // The `paramKeyToAttrMap` parameter is used for mapping between attribute names and parameter keys.
 // TODO: change `paramKeyToAttrMap` to `ScanOption` to be more scalable; add `DeepCopy` option for `ScanOption`.
 func Scan(srcValue any, dstPointer any, paramKeyToAttrMap ...map[string]string) (err error) {
+	return ScanWithConfig(defaultConvertConfig, srcValue, dstPointer, paramKeyToAttrMap...)
+}
+
+func ScanWithConfig(cf *ConvertConfig, srcValue any, dstPointer any, paramKeyToAttrMap ...map[string]string) (err error) {
 	// Check if srcValue is nil, in which case no conversion is needed
 	if srcValue == nil {
 		return nil
@@ -142,7 +146,7 @@ func Scan(srcValue any, dstPointer any, paramKeyToAttrMap ...map[string]string) 
 		}
 		// Special handling for struct or map slice elements
 		if dstElemKind == reflect.Struct || dstElemKind == reflect.Map {
-			return doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, paramKeyToAttrMap...)
+			return doScanForComplicatedTypes(cf, srcValue, dstPointer, dstPointerReflectType, paramKeyToAttrMap...)
 		}
 		// Handle basic type slice conversions
 		var srcValueReflectValueKind = srcValueReflectValue.Kind()
@@ -173,11 +177,11 @@ func Scan(srcValue any, dstPointer any, paramKeyToAttrMap ...map[string]string) 
 			dstPointerReflectValueElem.Set(newSlice)
 			return nil
 		}
-		return doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, paramKeyToAttrMap...)
+		return doScanForComplicatedTypes(cf, srcValue, dstPointer, dstPointerReflectType, paramKeyToAttrMap...)
 
 	default:
 		// Handle complex types (structs, maps, etc.)
-		return doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, paramKeyToAttrMap...)
+		return doScanForComplicatedTypes(cf, srcValue, dstPointer, dstPointerReflectType, paramKeyToAttrMap...)
 	}
 }
 
@@ -193,6 +197,7 @@ func Scan(srcValue any, dstPointer any, paramKeyToAttrMap ...map[string]string) 
 // - dstPointerReflectType: The reflection type of the destination pointer
 // - paramKeyToAttrMap: Optional mapping between parameter keys and struct attribute names
 func doScanForComplicatedTypes(
+	cf *ConvertConfig,
 	srcValue, dstPointer any,
 	dstPointerReflectType reflect.Type,
 	paramKeyToAttrMap ...map[string]string,
@@ -220,7 +225,7 @@ func doScanForComplicatedTypes(
 	switch dstPointerReflectTypeElemKind {
 	case reflect.Map:
 		// Convert map to map
-		return doMapToMap(srcValue, dstPointer, paramKeyToAttrMap...)
+		return doMapToMap(cf, srcValue, dstPointer, paramKeyToAttrMap...)
 
 	case reflect.Array, reflect.Slice:
 		var (

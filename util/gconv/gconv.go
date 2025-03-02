@@ -14,6 +14,8 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/structcache"
 )
 
+type AnyConvertFunc = structcache.AnyConvertFunc
+
 var (
 	// Empty strings.
 	emptyStringMap = map[string]struct{}{
@@ -29,17 +31,7 @@ var (
 // Note that only pointer can implement interface IUnmarshalValue.
 type IUnmarshalValue = localinterface.IUnmarshalValue
 
-func init() {
-	// register common converters for internal usage.
-	structcache.RegisterCommonConverter(structcache.CommonConverter{
-		Int64:   Int64,
-		Uint64:  Uint64,
-		String:  String,
-		Float32: Float32,
-		Float64: Float64,
-		Time:    Time,
-		GTime:   GTime,
-		Bytes:   Bytes,
-		Bool:    Bool,
-	})
-}
+var (
+	// defaultConvertConfig is the default configuration for type converting.
+	defaultConvertConfig = NewConvertConfig()
+)

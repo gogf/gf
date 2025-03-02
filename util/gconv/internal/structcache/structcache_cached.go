@@ -8,48 +8,19 @@ package structcache
 
 import (
 	"reflect"
-	"sync"
-	"time"
 
 	"github.com/gogf/gf/v2/internal/utils"
-	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/util/gtag"
 )
 
-// CommonConverter holds some converting functions of common types for internal usage.
-type CommonConverter struct {
-	Int64   func(any interface{}) int64
-	Uint64  func(any interface{}) uint64
-	String  func(any interface{}) string
-	Float32 func(any interface{}) float32
-	Float64 func(any interface{}) float64
-	Time    func(any interface{}, format ...string) time.Time
-	GTime   func(any interface{}, format ...string) *gtime.Time
-	Bytes   func(any interface{}) []byte
-	Bool    func(any interface{}) bool
-}
-
-var (
-	// map[reflect.Type]*CachedStructInfo
-	cachedStructsInfoMap = sync.Map{}
-
-	// localCommonConverter holds some converting functions of common types for internal usage.
-	localCommonConverter CommonConverter
-)
-
-// RegisterCommonConverter registers the CommonConverter for local usage.
-func RegisterCommonConverter(commonConverter CommonConverter) {
-	localCommonConverter = commonConverter
-}
-
 // GetCachedStructInfo retrieves or parses and returns a cached info for certain struct type.
 // The given `structType` should be type of struct.
-func GetCachedStructInfo(structType reflect.Type, priorityTag string) *CachedStructInfo {
+func (cf *ConvertConfig) GetCachedStructInfo(structType reflect.Type, priorityTag string) *CachedStructInfo {
 	if structType.Kind() != reflect.Struct {
 		return nil
 	}
 	// check if it has been cached.
-	cachedStructInfo, ok := getCachedConvertStructInfo(structType)
+	cachedStructInfo, ok := cf.getCachedConvertStructInfo(structType)
 	if ok {
 		// directly returns the cached struct info if already exists.
 		return cachedStructInfo
@@ -58,9 +29,7 @@ func GetCachedStructInfo(structType reflect.Type, priorityTag string) *CachedStr
 	// else create one.
 
 	// it parses and generates a cache info for given struct type.
-	cachedStructInfo = &CachedStructInfo{
-		tagOrFiledNameToFieldInfoMap: make(map[string]*CachedFieldInfo),
-	}
+	cachedStructInfo = NewCachedStructInfo(cf.customConvertTypeMap, cf.anyToTypeConvertMap)
 	var (
 		priorityTagArray []string
 		parentIndex      = make([]int, 0)
@@ -70,19 +39,19 @@ func GetCachedStructInfo(structType reflect.Type, priorityTag string) *CachedStr
 	} else {
 		priorityTagArray = gtag.StructTagPriority
 	}
-	parseStructToCachedStructInfo(structType, parentIndex, cachedStructInfo, priorityTagArray)
-	storeCachedStructInfo(structType, cachedStructInfo)
+	cf.parseStructToCachedStructInfo(structType, parentIndex, cachedStructInfo, priorityTagArray)
+	cf.storeCachedStructInfo(structType, cachedStructInfo)
 	return cachedStructInfo
 }
 
-func storeCachedStructInfo(structType reflect.Type, cachedStructInfo *CachedStructInfo) {
+func (cf *ConvertConfig) storeCachedStructInfo(structType reflect.Type, cachedStructInfo *CachedStructInfo) {
 	// Temporarily enabled as an experimental feature
-	cachedStructsInfoMap.Store(structType, cachedStructInfo)
+	cf.cachedStructsInfoMap.Store(structType, cachedStructInfo)
 }
 
-func getCachedConvertStructInfo(structType reflect.Type) (*CachedStructInfo, bool) {
+func (cf *ConvertConfig) getCachedConvertStructInfo(structType reflect.Type) (*CachedStructInfo, bool) {
 	// Temporarily enabled as an experimental feature
-	v, ok := cachedStructsInfoMap.Load(structType)
+	v, ok := cf.cachedStructsInfoMap.Load(structType)
 	if ok {
 		return v.(*CachedStructInfo), ok
 	}
@@ -91,7 +60,7 @@ func getCachedConvertStructInfo(structType reflect.Type) (*CachedStructInfo, boo
 
 // parseStructToCachedStructInfo parses given struct reflection type and stores its fields info into given CachedStructInfo.
 // It stores nothing into CachedStructInfo if given struct reflection type has no fields.
-func parseStructToCachedStructInfo(
+func (cf *ConvertConfig) parseStructToCachedStructInfo(
 	structType reflect.Type,
 	fieldIndexes []int,
 	cachedStructInfo *CachedStructInfo,
@@ -136,7 +105,7 @@ func parseStructToCachedStructInfo(
 				// Do not add anonymous structures without tags
 				cachedStructInfo.AddField(structField, append(copyFieldIndexes, i), priorityTagArray)
 			}
-			parseStructToCachedStructInfo(fieldType, append(copyFieldIndexes, i), cachedStructInfo, priorityTagArray)
+			cf.parseStructToCachedStructInfo(fieldType, append(copyFieldIndexes, i), cachedStructInfo, priorityTagArray)
 			continue
 		}
 		// Do not directly use append(fieldIndexes, i)

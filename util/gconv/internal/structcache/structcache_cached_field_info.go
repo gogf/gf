@@ -76,7 +76,7 @@ type CachedFieldInfoBase struct {
 	OtherSameNameField []*CachedFieldInfo
 
 	// ConvertFunc is the converting function for this field.
-	ConvertFunc func(from any, to reflect.Value)
+	ConvertFunc AnyConvertFunc
 
 	// The last fuzzy matching key for this field.
 	// The fuzzy matching occurs only if there are no direct tag and field name matching in the params map.
