@@ -188,7 +188,7 @@ func (c *impConverter) doScanForComplicatedTypes(
 	paramKeyToAttrMap ...map[string]string,
 ) error {
 	// Try JSON conversion first
-	ok, err := doConvertWithJsonCheck(srcValue, dstPointer)
+	ok, err := c.doConvertWithJsonCheck(srcValue, dstPointer)
 	if err != nil {
 		return err
 	}
@@ -292,7 +292,7 @@ func doConvertWithTypeCheck(srcValueReflectValue, dstPointerReflectValueElem ref
 // Returns:
 // - bool: true if JSON conversion was successful
 // - error: any error that occurred during conversion
-func doConvertWithJsonCheck(srcValue any, dstPointer any) (ok bool, err error) {
+func (c *impConverter) doConvertWithJsonCheck(srcValue any, dstPointer any) (ok bool, err error) {
 	switch valueResult := srcValue.(type) {
 	case []byte:
 		if json.Valid(valueResult) {
@@ -329,7 +329,7 @@ func doConvertWithJsonCheck(srcValue any, dstPointer any) (ok bool, err error) {
 	default:
 		// The `params` might be struct that implements interface function Interface, eg: gvar.Var.
 		if v, ok := srcValue.(localinterface.IInterface); ok {
-			return doConvertWithJsonCheck(v.Interface(), dstPointer)
+			return c.doConvertWithJsonCheck(v.Interface(), dstPointer)
 		}
 	}
 	return false, nil

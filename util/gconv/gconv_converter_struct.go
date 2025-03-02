@@ -35,7 +35,7 @@ func (c *impConverter) Struct(
 	}
 
 	// JSON content converting.
-	ok, err := doConvertWithJsonCheck(params, pointer)
+	ok, err := c.doConvertWithJsonCheck(params, pointer)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,10 @@ func (c *impConverter) Struct(
 	if !ok {
 		// paramsMap is the map[string]any type variable for params.
 		// DO NOT use MapDeep here.
-		paramsMap = c.doMapConvert(paramsInterface, recursiveTypeAuto, true)
+		paramsMap, err = c.doMapConvert(paramsInterface, recursiveTypeAuto, true, MapOption{})
+		if err != nil {
+			return err
+		}
 		if paramsMap == nil {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
@@ -443,7 +446,7 @@ func (c *impConverter) bindVarToReflectValue(
 	structFieldValue reflect.Value, value any, paramKeyToAttrMap map[string]string,
 ) (err error) {
 	// JSON content converting.
-	ok, err := doConvertWithJsonCheck(value, structFieldValue)
+	ok, err := c.doConvertWithJsonCheck(value, structFieldValue)
 	if err != nil {
 		return err
 	}

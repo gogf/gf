@@ -13,20 +13,6 @@ const (
 	recursiveTypeTrue recursiveType = "true"
 )
 
-// MapOption specifies the option for map converting.
-type MapOption struct {
-	// Deep marks doing Map function recursively, which means if the attribute of given converting value
-	// is also a struct/*struct, it automatically calls Map function on this attribute converting it to
-	// a map[string]any type variable.
-	Deep bool
-
-	// OmitEmpty ignores the attributes that has json `omitempty` tag.
-	OmitEmpty bool
-
-	// Tags specifies the converted map key name by struct tag name.
-	Tags []string
-}
-
 // Map converts any variable `value` to map[string]any. If the parameter `value` is not a
 // map/struct/*struct type, then the conversion will fail and returns nil.
 //
@@ -34,7 +20,8 @@ type MapOption struct {
 // priorityTagAndFieldName that will be detected, otherwise it detects the priorityTagAndFieldName in order of:
 // gconv, json, field name.
 func Map(value any, option ...MapOption) map[string]any {
-	return defaultConverter.doMapConvert(value, recursiveTypeAuto, false, option...)
+	result, _ := defaultConverter.Map(value, getUsedMapOption(option...))
+	return result
 }
 
 // MapDeep does Map function recursively, which means if the attribute of `value`
@@ -42,27 +29,20 @@ func Map(value any, option ...MapOption) map[string]any {
 // a map[string]any type variable.
 // Deprecated: used Map instead.
 func MapDeep(value any, tags ...string) map[string]any {
-	return defaultConverter.doMapConvert(value, recursiveTypeTrue, false, MapOption{
-		Deep: true,
-		Tags: tags,
+	result, _ := defaultConverter.Map(value, MapOption{
+		Deep:      true,
+		OmitEmpty: false,
+		Tags:      tags,
+		FailBreak: false,
 	})
+	return result
 }
 
 // MapStrStr converts `value` to map[string]string.
 // Note that there might be data copy for this map type converting.
 func MapStrStr(value any, option ...MapOption) map[string]string {
-	if r, ok := value.(map[string]string); ok {
-		return r
-	}
-	m := Map(value, option...)
-	if len(m) > 0 {
-		vMap := make(map[string]string, len(m))
-		for k, v := range m {
-			vMap[k] = String(v)
-		}
-		return vMap
-	}
-	return nil
+	result, _ := defaultConverter.MapStrStr(value, getUsedMapOption(option...))
+	return result
 }
 
 // MapStrStrDeep converts `value` to map[string]string recursively.
