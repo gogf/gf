@@ -48,10 +48,10 @@ func (c *impConverter) SliceMap(value any, sliceOption SliceOption, mapOption Ma
 		}
 		list := make([]map[string]any, len(array))
 		for k, v := range array {
-			m := Map(v, mapOption)
-			//if err != nil {
-			//	return nil, err
-			//}
+			m, err := c.Map(v, mapOption)
+			if err != nil && sliceOption.BreakOnError {
+				return nil, err
+			}
 			list[k] = m
 		}
 		return list, nil

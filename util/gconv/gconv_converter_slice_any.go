@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
+// SliceOption is the option for Slice type converting.
 type SliceOption struct {
 	// BreakOnError specifies whether to break converting the next element
 	// if one element conversion fails in slice.

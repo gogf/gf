@@ -103,13 +103,13 @@ func (c *impConverter) MapToMaps(params any, pointer any, paramKeyToAttrMap ...m
 		var item reflect.Value
 		if pointerElemType.Kind() == reflect.Ptr {
 			item = reflect.New(pointerElemType.Elem())
-			if err = MapToMap(paramsRv.Index(i).Interface(), item, paramKeyToAttrMap...); err != nil {
+			if err = c.MapToMap(paramsRv.Index(i).Interface(), item, paramKeyToAttrMap...); err != nil {
 				return err
 			}
 			pointerSlice.Index(i).Set(item)
 		} else {
 			item = reflect.New(pointerElemType)
-			if err = MapToMap(paramsRv.Index(i).Interface(), item, paramKeyToAttrMap...); err != nil {
+			if err = c.MapToMap(paramsRv.Index(i).Interface(), item, paramKeyToAttrMap...); err != nil {
 				return err
 			}
 			pointerSlice.Index(i).Set(item.Elem())

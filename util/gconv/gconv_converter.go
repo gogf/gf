@@ -33,9 +33,6 @@ type Converter interface {
 	Float32(any any) (float32, error)
 	Float64(any any) (float64, error)
 
-	doMapConvert(
-		value any, recursive recursiveType, mustMapReturn bool, option ...MapOption,
-	) map[string]any
 	MapToMap(params any, pointer any, mapping ...map[string]string) (err error)
 	MapToMaps(params any, pointer any, paramKeyToAttrMap ...map[string]string) (err error)
 	Rune(any any) (rune, error)

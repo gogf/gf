@@ -310,10 +310,10 @@ func (c *impConverter) doConvert(in doConvertInput) (convertedValue any, err err
 		return &v, nil
 
 	case "map[string]string":
-		return MapStrStr(in.FromValue), nil
+		return c.MapStrStr(in.FromValue, MapOption{})
 
 	case "map[string]interface {}":
-		return Map(in.FromValue, MapOption{}), nil
+		return c.Map(in.FromValue, MapOption{})
 
 	case "[]map[string]interface {}":
 		return c.SliceMap(in.FromValue, SliceOption{}, MapOption{})
