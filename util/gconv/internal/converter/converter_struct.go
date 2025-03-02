@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gconv
+package converter
 
 import (
 	"reflect"
@@ -133,7 +133,7 @@ func (c *impConverter) Struct(
 	if !ok {
 		// paramsMap is the map[string]any type variable for params.
 		// DO NOT use MapDeep here.
-		paramsMap, err = c.doMapConvert(paramsInterface, recursiveTypeAuto, true, MapOption{})
+		paramsMap, err = c.doMapConvert(paramsInterface, RecursiveTypeAuto, true, MapOption{})
 		if err != nil {
 			return err
 		}
@@ -470,7 +470,7 @@ func (c *impConverter) bindVarToReflectValue(
 	// Converting using reflection by kind.
 	switch kind {
 	case reflect.Map:
-		return c.MapToMap(value, structFieldValue, paramKeyToAttrMap)
+		return c.MapToMap(value, structFieldValue, paramKeyToAttrMap, MapOption{})
 
 	case reflect.Struct:
 		// Recursively converting for struct attribute.
@@ -512,13 +512,16 @@ func (c *impConverter) bindVarToReflectValue(
 						}
 					}
 					if !converted {
-						c.doConvertWithReflectValueSet(
+						err = c.doConvertWithReflectValueSet(
 							elem, doConvertInput{
 								FromValue:  reflectValue.Index(i).Interface(),
 								ToTypeName: elemTypeName,
 								ReferValue: elem,
 							},
 						)
+						if err != nil {
+							return err
+						}
 					}
 					if elemType.Kind() == reflect.Ptr {
 						// Before it sets the `elem` to array, do pointer converting if necessary.
@@ -566,13 +569,16 @@ func (c *impConverter) bindVarToReflectValue(
 				}
 			}
 			if !converted {
-				c.doConvertWithReflectValueSet(
+				err = c.doConvertWithReflectValueSet(
 					elem, doConvertInput{
 						FromValue:  value,
 						ToTypeName: elemTypeName,
 						ReferValue: elem,
 					},
 				)
+				if err != nil {
+					return err
+				}
 			}
 			if elemType.Kind() == reflect.Ptr {
 				// Before it sets the `elem` to array, do pointer converting if necessary.

@@ -17,5 +17,9 @@ package gconv
 // The `paramKeyToAttrMap` parameter is used for mapping between attribute names and parameter keys.
 // TODO: change `paramKeyToAttrMap` to `ScanOption` to be more scalable; add `DeepCopy` option for `ScanOption`.
 func Scan(srcValue any, dstPointer any, paramKeyToAttrMap ...map[string]string) (err error) {
-	return defaultConverter.Scan(srcValue, dstPointer, paramKeyToAttrMap...)
+	option := ScanOption{}
+	if len(paramKeyToAttrMap) > 0 {
+		option.ParamKeyToAttrMap = paramKeyToAttrMap[0]
+	}
+	return defaultConverter.Scan(srcValue, dstPointer, option)
 }

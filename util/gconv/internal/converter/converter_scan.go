@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gconv
+package converter
 
 import (
 	"reflect"
@@ -15,7 +15,12 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
-func (c *impConverter) Scan(srcValue any, dstPointer any, paramKeyToAttrMap ...map[string]string) (err error) {
+type ScanOption struct {
+	ParamKeyToAttrMap map[string]string
+	BreakOnError      bool
+}
+
+func (c *impConverter) Scan(srcValue any, dstPointer any, option ScanOption) (err error) {
 	// Check if srcValue is nil, in which case no conversion is needed
 	if srcValue == nil {
 		return nil
@@ -79,12 +84,12 @@ func (c *impConverter) Scan(srcValue any, dstPointer any, paramKeyToAttrMap ...m
 			// Create a new value for the pointer dereference
 			nextLevelPtr := reflect.New(dstPointerReflectValueElem.Type().Elem())
 			// Recursively scan into the dereferenced pointer
-			if err = Scan(srcValueReflectValue, nextLevelPtr, paramKeyToAttrMap...); err == nil {
+			if err = c.Scan(srcValueReflectValue, nextLevelPtr, option); err == nil {
 				dstPointerReflectValueElem.Set(nextLevelPtr)
 			}
 			return
 		}
-		return Scan(srcValueReflectValue, dstPointerReflectValueElem, paramKeyToAttrMap...)
+		return c.Scan(srcValueReflectValue, dstPointerReflectValueElem, option)
 	}
 
 	// Check if srcValue and dstPointer are the same type, in which case direct assignment can be performed
@@ -95,28 +100,43 @@ func (c *impConverter) Scan(srcValue any, dstPointer any, paramKeyToAttrMap ...m
 	// Handle different destination types
 	switch dstPointerReflectValueElemKind {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		// Convert to int type
-		dstPointerReflectValueElem.SetInt(Int64(srcValue))
+		v, err := c.Int64(srcValue)
+		if err != nil && option.BreakOnError {
+			return err
+		}
+		dstPointerReflectValueElem.SetInt(v)
 		return nil
 
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		// Convert to uint type
-		dstPointerReflectValueElem.SetUint(Uint64(srcValue))
+		v, err := c.Uint64(srcValue)
+		if err != nil && option.BreakOnError {
+			return err
+		}
+		dstPointerReflectValueElem.SetUint(v)
 		return nil
 
 	case reflect.Float32, reflect.Float64:
-		// Convert to float type
-		dstPointerReflectValueElem.SetFloat(Float64(srcValue))
+		v, err := c.Float64(srcValue)
+		if err != nil && option.BreakOnError {
+			return err
+		}
+		dstPointerReflectValueElem.SetFloat(v)
 		return nil
 
 	case reflect.String:
-		// Convert to string type
-		dstPointerReflectValueElem.SetString(String(srcValue))
+		v, err := c.String(srcValue)
+		if err != nil && option.BreakOnError {
+			return err
+		}
+		dstPointerReflectValueElem.SetString(v)
 		return nil
 
 	case reflect.Bool:
-		// Convert to bool type
-		dstPointerReflectValueElem.SetBool(Bool(srcValue))
+		v, err := c.Bool(srcValue)
+		if err != nil && option.BreakOnError {
+			return err
+		}
+		dstPointerReflectValueElem.SetBool(v)
 		return nil
 
 	case reflect.Slice:
@@ -132,7 +152,7 @@ func (c *impConverter) Scan(srcValue any, dstPointer any, paramKeyToAttrMap ...m
 		}
 		// Special handling for struct or map slice elements
 		if dstElemKind == reflect.Struct || dstElemKind == reflect.Map {
-			return c.doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, paramKeyToAttrMap...)
+			return c.doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, option)
 		}
 		// Handle basic type slice conversions
 		var srcValueReflectValueKind = srcValueReflectValue.Kind()
@@ -145,29 +165,49 @@ func (c *impConverter) Scan(srcValue any, dstPointer any, paramKeyToAttrMap ...m
 				srcElem := srcValueReflectValue.Index(i).Interface()
 				switch dstElemType.Kind() {
 				case reflect.String:
-					newSlice.Index(i).SetString(String(srcElem))
+					v, err := c.String(srcElem)
+					if err != nil && option.BreakOnError {
+						return err
+					}
+					newSlice.Index(i).SetString(v)
 				case reflect.Int:
-					newSlice.Index(i).SetInt(Int64(srcElem))
+					v, err := c.Int64(srcElem)
+					if err != nil && option.BreakOnError {
+						return err
+					}
+					newSlice.Index(i).SetInt(v)
 				case reflect.Int64:
-					newSlice.Index(i).SetInt(Int64(srcElem))
+					v, err := c.Int64(srcElem)
+					if err != nil && option.BreakOnError {
+						return err
+					}
+					newSlice.Index(i).SetInt(v)
 				case reflect.Float64:
-					newSlice.Index(i).SetFloat(Float64(srcElem))
+					v, err := c.Float64(srcElem)
+					if err != nil && option.BreakOnError {
+						return err
+					}
+					newSlice.Index(i).SetFloat(v)
 				case reflect.Bool:
-					newSlice.Index(i).SetBool(Bool(srcElem))
+					v, err := c.Bool(srcElem)
+					if err != nil && option.BreakOnError {
+						return err
+					}
+					newSlice.Index(i).SetBool(v)
 				default:
-					return Scan(
-						srcElem, newSlice.Index(i).Addr().Interface(), paramKeyToAttrMap...,
+					return c.Scan(
+						srcElem, newSlice.Index(i).Addr().Interface(), option,
 					)
 				}
 			}
 			dstPointerReflectValueElem.Set(newSlice)
 			return nil
 		}
-		return c.doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, paramKeyToAttrMap...)
+		return c.doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, option)
 
 	default:
 		// Handle complex types (structs, maps, etc.)
-		return c.doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, paramKeyToAttrMap...)
+		return c.doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, option)
 	}
 }
 
@@ -185,7 +225,7 @@ func (c *impConverter) Scan(srcValue any, dstPointer any, paramKeyToAttrMap ...m
 func (c *impConverter) doScanForComplicatedTypes(
 	srcValue, dstPointer any,
 	dstPointerReflectType reflect.Type,
-	paramKeyToAttrMap ...map[string]string,
+	option ScanOption,
 ) error {
 	// Try JSON conversion first
 	ok, err := c.doConvertWithJsonCheck(srcValue, dstPointer)
@@ -200,17 +240,13 @@ func (c *impConverter) doScanForComplicatedTypes(
 	var (
 		dstPointerReflectTypeElem     = dstPointerReflectType.Elem()
 		dstPointerReflectTypeElemKind = dstPointerReflectTypeElem.Kind()
-		keyToAttributeNameMapping     map[string]string
+		keyToAttributeNameMapping     = option.ParamKeyToAttrMap
 	)
-	if len(paramKeyToAttrMap) > 0 {
-		keyToAttributeNameMapping = paramKeyToAttrMap[0]
-	}
-
 	// Handle different destination types
 	switch dstPointerReflectTypeElemKind {
 	case reflect.Map:
 		// Convert map to map
-		return c.MapToMap(srcValue, dstPointer, paramKeyToAttrMap...)
+		return c.MapToMap(srcValue, dstPointer, keyToAttributeNameMapping, MapOption{})
 
 	case reflect.Array, reflect.Slice:
 		var (
@@ -224,7 +260,7 @@ func (c *impConverter) doScanForComplicatedTypes(
 		}
 		if sliceElemKind == reflect.Map {
 			// Convert to slice of maps
-			return c.MapToMaps(srcValue, dstPointer, paramKeyToAttrMap...)
+			return c.MapToMaps(srcValue, dstPointer, keyToAttributeNameMapping)
 		}
 		// Convert to slice of structs
 		return c.Structs(srcValue, dstPointer, keyToAttributeNameMapping, "")

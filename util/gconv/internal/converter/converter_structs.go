@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gconv
+package converter
 
 import (
 	"reflect"
@@ -62,7 +62,10 @@ func (c *impConverter) Structs(
 			paramsList[i] = paramsRv.Index(i).Interface()
 		}
 	default:
-		var paramsMaps = Maps(params)
+		paramsMaps, err := c.SliceMap(params, SliceOption{}, MapOption{})
+		if err != nil {
+			return err
+		}
 		paramsList = make([]any, len(paramsMaps))
 		for i := 0; i < len(paramsMaps); i++ {
 			paramsList[i] = paramsMaps[i]

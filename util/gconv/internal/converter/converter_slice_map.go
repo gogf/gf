@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gconv
+package converter
 
 import "github.com/gogf/gf/v2/internal/json"
 

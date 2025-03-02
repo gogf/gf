@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gconv
+package converter
 
 import (
 	"reflect"
@@ -23,15 +23,13 @@ import (
 //
 // The optional parameter `mapping` is used for struct attribute to map key mapping, which makes
 // sense only if the items of original map `params` is type struct.
-func (c *impConverter) MapToMap(params any, pointer any, mapping ...map[string]string) (err error) {
+func (c *impConverter) MapToMap(
+	params, pointer any, mapping map[string]string, option MapOption,
+) (err error) {
 	var (
-		paramsRv                  reflect.Value
-		paramsKind                reflect.Kind
-		keyToAttributeNameMapping map[string]string
+		paramsRv   reflect.Value
+		paramsKind reflect.Kind
 	)
-	if len(mapping) > 0 {
-		keyToAttributeNameMapping = mapping[0]
-	}
 	if v, ok := params.(reflect.Value); ok {
 		paramsRv = v
 	} else {
@@ -43,7 +41,11 @@ func (c *impConverter) MapToMap(params any, pointer any, mapping ...map[string]s
 		paramsKind = paramsRv.Kind()
 	}
 	if paramsKind != reflect.Map {
-		return c.MapToMap(Map(params), pointer, mapping...)
+		m, err := c.Map(params, option)
+		if err != nil {
+			return err
+		}
+		return c.MapToMap(m, pointer, mapping, option)
 	}
 	// Empty params map, no need continue.
 	if paramsRv.Len() == 0 {
@@ -93,7 +95,7 @@ func (c *impConverter) MapToMap(params any, pointer any, mapping ...map[string]s
 		switch pointerValueKind {
 		case reflect.Map, reflect.Struct:
 			if err = c.Struct(
-				paramsRv.MapIndex(key).Interface(), mapValue, keyToAttributeNameMapping, "",
+				paramsRv.MapIndex(key).Interface(), mapValue, mapping, "",
 			); err != nil {
 				return err
 			}

@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gconv
+package converter
 
 import (
 	"math"
@@ -44,7 +44,7 @@ func (c *impConverter) Int16(any any) (int16, error) {
 	if v, ok := any.(int16); ok {
 		return v, nil
 	}
-	v, err := defaultConverter.Int64(any)
+	v, err := c.Int64(any)
 	if err != nil {
 		return 0, err
 	}

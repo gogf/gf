@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gconv
+package converter
 
 import (
 	"reflect"
@@ -42,7 +42,7 @@ type MapOption struct {
 // priorityTagAndFieldName that will be detected, otherwise it detects the priorityTagAndFieldName in order of:
 // gconv, json, field name.
 func (c *impConverter) Map(value any, option MapOption) (map[string]any, error) {
-	return c.doMapConvert(value, recursiveTypeAuto, false, option)
+	return c.doMapConvert(value, RecursiveTypeAuto, false, option)
 }
 
 // MapStrStr converts `value` to map[string]string.
@@ -77,7 +77,7 @@ func (c *impConverter) MapStrStr(value any, option MapOption) (map[string]string
 //
 // TODO completely implement the recursive converting for all types, especially the map.
 func (c *impConverter) doMapConvert(
-	value any, recursive recursiveType, mustMapReturn bool, option MapOption,
+	value any, recursive RecursiveType, mustMapReturn bool, option MapOption,
 ) (map[string]any, error) {
 	if value == nil {
 		return nil, nil
@@ -91,7 +91,7 @@ func (c *impConverter) doMapConvert(
 		newTags = gtag.StructTagPriority
 	)
 	if option.Deep {
-		recursive = recursiveTypeTrue
+		recursive = RecursiveTypeTrue
 	}
 	switch len(option.Tags) {
 	case 0:
@@ -135,7 +135,7 @@ func (c *impConverter) doMapConvert(
 					IsRoot:          false,
 					Value:           v,
 					RecursiveType:   recursive,
-					RecursiveOption: recursive == recursiveTypeTrue,
+					RecursiveOption: recursive == RecursiveTypeTrue,
 					Option:          recursiveOption,
 				},
 			)
@@ -208,7 +208,7 @@ func (c *impConverter) doMapConvert(
 			dataMap[k] = v
 		}
 	case map[string]interface{}:
-		if recursive == recursiveTypeTrue {
+		if recursive == RecursiveTypeTrue {
 			recursiveOption := option
 			recursiveOption.Tags = newTags
 			// A copy of current map.
@@ -218,7 +218,7 @@ func (c *impConverter) doMapConvert(
 						IsRoot:          false,
 						Value:           v,
 						RecursiveType:   recursive,
-						RecursiveOption: recursive == recursiveTypeTrue,
+						RecursiveOption: recursive == RecursiveTypeTrue,
 						Option:          recursiveOption,
 					},
 				)
@@ -243,7 +243,7 @@ func (c *impConverter) doMapConvert(
 					IsRoot:          false,
 					Value:           v,
 					RecursiveType:   recursive,
-					RecursiveOption: recursive == recursiveTypeTrue,
+					RecursiveOption: recursive == RecursiveTypeTrue,
 					Option:          recursiveOption,
 				},
 			)
@@ -290,7 +290,7 @@ func (c *impConverter) doMapConvert(
 		case reflect.Slice, reflect.Array:
 			length := reflectValue.Len()
 			for i := 0; i < length; i += 2 {
-				s, err := c.String(String(reflectValue.Index(i).Interface()))
+				s, err := c.String(reflectValue.Index(i).Interface())
 				if err != nil && option.BreakOnError {
 					return nil, err
 				}
@@ -308,7 +308,7 @@ func (c *impConverter) doMapConvert(
 					IsRoot:          true,
 					Value:           value,
 					RecursiveType:   recursive,
-					RecursiveOption: recursive == recursiveTypeTrue,
+					RecursiveOption: recursive == RecursiveTypeTrue,
 					Option:          recursiveOption,
 					MustMapReturn:   mustMapReturn,
 				},
@@ -327,18 +327,10 @@ func (c *impConverter) doMapConvert(
 	return dataMap, nil
 }
 
-func getUsedMapOption(option ...MapOption) MapOption {
-	var usedOption MapOption
-	if len(option) > 0 {
-		usedOption = option[0]
-	}
-	return usedOption
-}
-
 type doMapConvertForMapOrStructValueInput struct {
 	IsRoot          bool          // It returns directly if it is not root and with no recursive converting.
 	Value           interface{}   // Current operation value.
-	RecursiveType   recursiveType // The type from top function entry.
+	RecursiveType   RecursiveType // The type from top function entry.
 	RecursiveOption bool          // Whether convert recursively for `current` operation.
 	Option          MapOption     // Map converting option.
 	MustMapReturn   bool          // Must return map instead of Value when empty.
@@ -398,7 +390,7 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 					IsRoot:          false,
 					Value:           mapValue,
 					RecursiveType:   in.RecursiveType,
-					RecursiveOption: in.RecursiveType == recursiveTypeTrue,
+					RecursiveOption: in.RecursiveType == RecursiveTypeTrue,
 					Option:          in.Option,
 				},
 			)
@@ -420,7 +412,7 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 							IsRoot:          false,
 							Value:           mapV,
 							RecursiveType:   in.RecursiveType,
-							RecursiveOption: in.RecursiveType == recursiveTypeTrue,
+							RecursiveOption: in.RecursiveType == RecursiveTypeTrue,
 							Option:          in.Option,
 						},
 					)
@@ -550,7 +542,7 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 								IsRoot:          false,
 								Value:           rvInterface,
 								RecursiveType:   in.RecursiveType,
-								RecursiveOption: in.RecursiveType == recursiveTypeTrue,
+								RecursiveOption: in.RecursiveType == RecursiveTypeTrue,
 								Option:          in.Option,
 							},
 						)
@@ -573,7 +565,7 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 								IsRoot:          false,
 								Value:           rvAttrField.Index(arrayIndex).Interface(),
 								RecursiveType:   in.RecursiveType,
-								RecursiveOption: in.RecursiveType == recursiveTypeTrue,
+								RecursiveOption: in.RecursiveType == RecursiveTypeTrue,
 								Option:          in.Option,
 							},
 						)
@@ -597,7 +589,7 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 								IsRoot:          false,
 								Value:           mapIter.Value().Interface(),
 								RecursiveType:   in.RecursiveType,
-								RecursiveOption: in.RecursiveType == recursiveTypeTrue,
+								RecursiveOption: in.RecursiveType == RecursiveTypeTrue,
 								Option:          in.Option,
 							},
 						)
@@ -639,7 +631,7 @@ func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrSt
 				IsRoot:          false,
 				Value:           reflectValue.Index(i).Interface(),
 				RecursiveType:   in.RecursiveType,
-				RecursiveOption: in.RecursiveType == recursiveTypeTrue,
+				RecursiveOption: in.RecursiveType == RecursiveTypeTrue,
 				Option:          in.Option,
 			})
 			if err != nil && in.Option.BreakOnError {

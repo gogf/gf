@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gconv
+package converter
 
 import (
 	"reflect"
@@ -21,7 +21,7 @@ import (
 //
 // The optional parameter `mapping` is used for struct attribute to map key mapping, which makes
 // sense only if the item of `params` is type struct.
-func (c *impConverter) MapToMaps(params any, pointer any, paramKeyToAttrMap ...map[string]string) (err error) {
+func (c *impConverter) MapToMaps(params any, pointer any, paramKeyToAttrMap map[string]string) (err error) {
 	// Params and its element type check.
 	var (
 		paramsRv   reflect.Value
@@ -103,13 +103,13 @@ func (c *impConverter) MapToMaps(params any, pointer any, paramKeyToAttrMap ...m
 		var item reflect.Value
 		if pointerElemType.Kind() == reflect.Ptr {
 			item = reflect.New(pointerElemType.Elem())
-			if err = c.MapToMap(paramsRv.Index(i).Interface(), item, paramKeyToAttrMap...); err != nil {
+			if err = c.MapToMap(paramsRv.Index(i).Interface(), item, paramKeyToAttrMap, MapOption{}); err != nil {
 				return err
 			}
 			pointerSlice.Index(i).Set(item)
 		} else {
 			item = reflect.New(pointerElemType)
-			if err = c.MapToMap(paramsRv.Index(i).Interface(), item, paramKeyToAttrMap...); err != nil {
+			if err = c.MapToMap(paramsRv.Index(i).Interface(), item, paramKeyToAttrMap, MapOption{}); err != nil {
 				return err
 			}
 			pointerSlice.Index(i).Set(item.Elem())

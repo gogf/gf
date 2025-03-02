@@ -6,13 +6,6 @@
 
 package gconv
 
-type recursiveType string
-
-const (
-	recursiveTypeAuto recursiveType = "auto"
-	recursiveTypeTrue recursiveType = "true"
-)
-
 // Map converts any variable `value` to map[string]any. If the parameter `value` is not a
 // map/struct/*struct type, then the conversion will fail and returns nil.
 //
@@ -61,4 +54,12 @@ func MapStrStrDeep(value any, tags ...string) map[string]string {
 		return vMap
 	}
 	return nil
+}
+
+func getUsedMapOption(option ...MapOption) MapOption {
+	var usedOption MapOption
+	if len(option) > 0 {
+		usedOption = option[0]
+	}
+	return usedOption
 }

@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gconv
+package converter
 
 import (
 	"reflect"
@@ -13,6 +13,40 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gtime"
 )
+
+// ConvertWithTypeName converts the variable `fromValue` to the type `toTypeName`, the type `toTypeName` is specified by string.
+//
+// The optional parameter `extraParams` is used for additional necessary parameter for this conversion.
+// It supports common basic types conversion as its conversion based on type name string.
+func (c *impConverter) ConvertWithTypeName(fromValue any, toTypeName string, extraParams ...any) (any, error) {
+	return c.doConvert(
+		doConvertInput{
+			FromValue:  fromValue,
+			ToTypeName: toTypeName,
+			ReferValue: nil,
+			Extra:      extraParams,
+		},
+	)
+}
+
+// ConvertWithRefer converts the variable `fromValue` to the type referred by value `referValue`.
+//
+// The optional parameter `extraParams` is used for additional necessary parameter for this conversion.
+// It supports common basic types conversion as its conversion based on type name string.
+func (c *impConverter) ConvertWithRefer(fromValue, referValue any, extraParams ...any) (any, error) {
+	var referValueRf reflect.Value
+	if v, ok := referValue.(reflect.Value); ok {
+		referValueRf = v
+	} else {
+		referValueRf = reflect.ValueOf(referValue)
+	}
+	return c.doConvert(doConvertInput{
+		FromValue:  fromValue,
+		ToTypeName: referValueRf.Type().String(),
+		ReferValue: referValue,
+		Extra:      extraParams,
+	})
+}
 
 type doConvertInput struct {
 	FromValue  any    // Value that is converted from.
@@ -389,7 +423,7 @@ func (c *impConverter) doConvert(in doConvertInput) (convertedValue any, err err
 
 			case reflect.Map:
 				var targetValue = reflect.New(referReflectValue.Type()).Elem()
-				if err = c.MapToMap(in.FromValue, targetValue); err == nil {
+				if err = c.MapToMap(in.FromValue, targetValue, nil, MapOption{}); err == nil {
 					in.alreadySetToReferValue = true
 				}
 				return targetValue.Interface(), nil

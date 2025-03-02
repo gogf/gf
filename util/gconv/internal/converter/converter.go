@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gconv
+package converter
 
 import (
 	"reflect"
@@ -14,6 +14,15 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/util/gconv/internal/structcache"
+)
+
+type AnyConvertFunc = structcache.AnyConvertFunc
+
+type RecursiveType string
+
+const (
+	RecursiveTypeAuto RecursiveType = "auto"
+	RecursiveTypeTrue RecursiveType = "true"
 )
 
 type (
@@ -66,6 +75,15 @@ type impConverter struct {
 }
 
 var (
+	// Empty strings.
+	emptyStringMap = map[string]struct{}{
+		"":      {},
+		"0":     {},
+		"no":    {},
+		"off":   {},
+		"false": {},
+	}
+
 	intType   = reflect.TypeOf(0)
 	int8Type  = reflect.TypeOf(int8(0))
 	int16Type = reflect.TypeOf(int16(0))

@@ -10,21 +10,16 @@
 package gconv
 
 import (
+	"github.com/gogf/gf/v2/util/gconv/internal/converter"
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 	"github.com/gogf/gf/v2/util/gconv/internal/structcache"
 )
 
-type AnyConvertFunc = structcache.AnyConvertFunc
-
-var (
-	// Empty strings.
-	emptyStringMap = map[string]struct{}{
-		"":      {},
-		"0":     {},
-		"no":    {},
-		"off":   {},
-		"false": {},
-	}
+type (
+	AnyConvertFunc = structcache.AnyConvertFunc
+	MapOption      = converter.MapOption
+	ScanOption     = converter.ScanOption
+	SliceOption    = converter.SliceOption
 )
 
 // IUnmarshalValue is the interface for custom defined types customizing value assignment.
@@ -33,7 +28,7 @@ type IUnmarshalValue = localinterface.IUnmarshalValue
 
 var (
 	// defaultConverter is the default management object converting.
-	defaultConverter = NewConverter()
+	defaultConverter = converter.NewConverter()
 )
 
 // RegisterConverter registers custom converter.
