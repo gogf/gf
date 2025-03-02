@@ -18,7 +18,7 @@ import (
 //
 // The optional parameter `extraParams` is used for additional necessary parameter for this conversion.
 // It supports common basic types conversion as its conversion based on type name string.
-func (c *impConverter) ConvertWithTypeName(fromValue any, toTypeName string, extraParams ...any) (any, error) {
+func (c *Converter) ConvertWithTypeName(fromValue any, toTypeName string, extraParams ...any) (any, error) {
 	return c.doConvert(
 		doConvertInput{
 			FromValue:  fromValue,
@@ -33,7 +33,7 @@ func (c *impConverter) ConvertWithTypeName(fromValue any, toTypeName string, ext
 //
 // The optional parameter `extraParams` is used for additional necessary parameter for this conversion.
 // It supports common basic types conversion as its conversion based on type name string.
-func (c *impConverter) ConvertWithRefer(fromValue, referValue any, extraParams ...any) (any, error) {
+func (c *Converter) ConvertWithRefer(fromValue, referValue any, extraParams ...any) (any, error) {
 	var referValueRf reflect.Value
 	if v, ok := referValue.(reflect.Value); ok {
 		referValueRf = v
@@ -60,7 +60,7 @@ type doConvertInput struct {
 }
 
 // doConvert does commonly use types converting.
-func (c *impConverter) doConvert(in doConvertInput) (convertedValue any, err error) {
+func (c *Converter) doConvert(in doConvertInput) (convertedValue any, err error) {
 	switch in.ToTypeName {
 	case "int":
 		return c.Int(in.FromValue)
@@ -445,7 +445,7 @@ func (c *impConverter) doConvert(in doConvertInput) (convertedValue any, err err
 	}
 }
 
-func (c *impConverter) doConvertWithReflectValueSet(reflectValue reflect.Value, in doConvertInput) error {
+func (c *Converter) doConvertWithReflectValueSet(reflectValue reflect.Value, in doConvertInput) error {
 	convertedValue, err := c.doConvert(in)
 	if err != nil {
 		return err
@@ -456,7 +456,7 @@ func (c *impConverter) doConvertWithReflectValueSet(reflectValue reflect.Value, 
 	return err
 }
 
-func (c *impConverter) getRegisteredConverterFuncAndSrcType(
+func (c *Converter) getRegisteredConverterFuncAndSrcType(
 	srcReflectValue, dstReflectValueForRefer reflect.Value,
 ) (f converterFunc, srcType reflect.Type, ok bool) {
 	if len(c.typeConverterFuncMap) == 0 {
@@ -492,7 +492,7 @@ func (c *impConverter) getRegisteredConverterFuncAndSrcType(
 	return
 }
 
-func (c *impConverter) callCustomConverterWithRefer(
+func (c *Converter) callCustomConverterWithRefer(
 	srcReflectValue, referReflectValue reflect.Value,
 ) (dstReflectValue reflect.Value, converted bool, err error) {
 	registeredConverterFunc, srcType, ok := c.getRegisteredConverterFuncAndSrcType(srcReflectValue, referReflectValue)
@@ -505,7 +505,7 @@ func (c *impConverter) callCustomConverterWithRefer(
 }
 
 // callCustomConverter call the custom converter. It will try some possible type.
-func (c *impConverter) callCustomConverter(srcReflectValue, dstReflectValue reflect.Value) (converted bool, err error) {
+func (c *Converter) callCustomConverter(srcReflectValue, dstReflectValue reflect.Value) (converted bool, err error) {
 	registeredConverterFunc, srcType, ok := c.getRegisteredConverterFuncAndSrcType(srcReflectValue, dstReflectValue)
 	if !ok {
 		return false, nil
@@ -513,7 +513,7 @@ func (c *impConverter) callCustomConverter(srcReflectValue, dstReflectValue refl
 	return c.doCallCustomConverter(srcReflectValue, dstReflectValue, registeredConverterFunc, srcType)
 }
 
-func (c *impConverter) doCallCustomConverter(
+func (c *Converter) doCallCustomConverter(
 	srcReflectValue reflect.Value,
 	dstReflectValue reflect.Value,
 	registeredConverterFunc converterFunc,

@@ -17,7 +17,7 @@ import (
 )
 
 // SliceUint converts `any` to []uint.
-func (c *impConverter) SliceUint(any interface{}, option SliceOption) ([]uint, error) {
+func (c *Converter) SliceUint(any interface{}, option SliceOption) ([]uint, error) {
 	if empty.IsNil(any) {
 		return nil, nil
 	}
@@ -188,7 +188,7 @@ func (c *impConverter) SliceUint(any interface{}, option SliceOption) ([]uint, e
 }
 
 // SliceUint32 converts `any` to []uint32.
-func (c *impConverter) SliceUint32(any interface{}, option SliceOption) ([]uint32, error) {
+func (c *Converter) SliceUint32(any interface{}, option SliceOption) ([]uint32, error) {
 	if empty.IsNil(any) {
 		return nil, nil
 	}
@@ -358,7 +358,7 @@ func (c *impConverter) SliceUint32(any interface{}, option SliceOption) ([]uint3
 }
 
 // SliceUint64 converts `any` to []uint64.
-func (c *impConverter) SliceUint64(any interface{}, option SliceOption) ([]uint64, error) {
+func (c *Converter) SliceUint64(any interface{}, option SliceOption) ([]uint64, error) {
 	if empty.IsNil(any) {
 		return nil, nil
 	}

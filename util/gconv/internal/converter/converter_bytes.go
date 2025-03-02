@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
-func (c *impConverter) Bytes(any any) ([]byte, error) {
+func (c *Converter) Bytes(any any) ([]byte, error) {
 	if empty.IsNil(any) {
 		return nil, nil
 	}

@@ -26,7 +26,7 @@ type ScanOption struct {
 }
 
 // Scan automatically checks the type of `pointer` and converts `params` to `pointer`.
-func (c *impConverter) Scan(srcValue any, dstPointer any, option ScanOption) (err error) {
+func (c *Converter) Scan(srcValue any, dstPointer any, option ScanOption) (err error) {
 	// Check if srcValue is nil, in which case no conversion is needed
 	if srcValue == nil {
 		return nil
@@ -228,7 +228,7 @@ func (c *impConverter) Scan(srcValue any, dstPointer any, option ScanOption) (er
 // - dstPointer: The destination pointer to convert to
 // - dstPointerReflectType: The reflection type of the destination pointer
 // - paramKeyToAttrMap: Optional mapping between parameter keys and struct attribute names
-func (c *impConverter) doScanForComplicatedTypes(
+func (c *Converter) doScanForComplicatedTypes(
 	srcValue, dstPointer any,
 	dstPointerReflectType reflect.Type,
 	option ScanOption,
@@ -339,7 +339,7 @@ func doConvertWithTypeCheck(srcValueReflectValue, dstPointerReflectValueElem ref
 // Returns:
 // - bool: true if JSON conversion was successful
 // - error: any error that occurred during conversion
-func (c *impConverter) doConvertWithJsonCheck(srcValue any, dstPointer any) (ok bool, err error) {
+func (c *Converter) doConvertWithJsonCheck(srcValue any, dstPointer any) (ok bool, err error) {
 	switch valueResult := srcValue.(type) {
 	case []byte:
 		if json.Valid(valueResult) {

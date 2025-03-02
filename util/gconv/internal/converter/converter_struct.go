@@ -19,13 +19,17 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/structcache"
 )
 
+// StructOption is the option for Struct converting.
 type StructOption struct {
+	// ParamKeyToAttrMap is the map for custom parameter key to attribute name mapping.
 	ParamKeyToAttrMap map[string]string
-	PriorityTag       string
+
+	// PriorityTag is the priority tag for struct converting.
+	PriorityTag string
 }
 
 // Struct is the core internal converting function for any data to struct.
-func (c *impConverter) Struct(params, pointer any, option StructOption) (err error) {
+func (c *Converter) Struct(params, pointer any, option StructOption) (err error) {
 	if params == nil {
 		// If `params` is nil, no conversion.
 		return nil
@@ -208,7 +212,7 @@ func (c *impConverter) Struct(params, pointer any, option StructOption) (err err
 	)
 }
 
-func (c *impConverter) setOtherSameNameField(
+func (c *Converter) setOtherSameNameField(
 	cachedFieldInfo *structcache.CachedFieldInfo,
 	srcValue any,
 	structValue reflect.Value,
@@ -224,7 +228,7 @@ func (c *impConverter) setOtherSameNameField(
 	return nil
 }
 
-func (c *impConverter) bindStructWithLoopFieldInfos(
+func (c *Converter) bindStructWithLoopFieldInfos(
 	paramsMap map[string]any,
 	structValue reflect.Value,
 	paramKeyToAttrMap map[string]string,
@@ -320,7 +324,7 @@ func fuzzyMatchingFieldName(
 
 // bindVarToStructField sets value to struct object attribute by name.
 // each value to attribute converting comes into in this function.
-func (c *impConverter) bindVarToStructField(
+func (c *Converter) bindVarToStructField(
 	cachedFieldInfo *structcache.CachedFieldInfo,
 	fieldValue reflect.Value,
 	srcValue any,
@@ -443,7 +447,7 @@ func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value a
 }
 
 // bindVarToReflectValue sets `value` to reflect value object `structFieldValue`.
-func (c *impConverter) bindVarToReflectValue(
+func (c *Converter) bindVarToReflectValue(
 	structFieldValue reflect.Value, value any, paramKeyToAttrMap map[string]string,
 ) (err error) {
 	// JSON content converting.

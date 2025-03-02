@@ -23,7 +23,7 @@ import (
 //
 // The optional parameter `mapping` is used for struct attribute to map key mapping, which makes
 // sense only if the items of original map `params` is type struct.
-func (c *impConverter) MapToMap(
+func (c *Converter) MapToMap(
 	params, pointer any, mapping map[string]string, option MapOption,
 ) (err error) {
 	var (

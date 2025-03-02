@@ -15,7 +15,7 @@ import (
 )
 
 // Bool converts `any` to bool.
-func (c *impConverter) Bool(any any) (bool, error) {
+func (c *Converter) Bool(any any) (bool, error) {
 	if empty.IsNil(any) {
 		return false, nil
 	}

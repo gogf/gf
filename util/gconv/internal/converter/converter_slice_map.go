@@ -10,7 +10,7 @@ import "github.com/gogf/gf/v2/internal/json"
 
 // SliceMap converts `value` to []map[string]any.
 // Note that it automatically checks and converts json string to []map if `value` is string/[]byte.
-func (c *impConverter) SliceMap(value any, sliceOption SliceOption, mapOption MapOption) ([]map[string]any, error) {
+func (c *Converter) SliceMap(value any, sliceOption SliceOption, mapOption MapOption) ([]map[string]any, error) {
 	if value == nil {
 		return nil, nil
 	}

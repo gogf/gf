@@ -41,13 +41,13 @@ type MapOption struct {
 // If `value` is a struct/*struct object, the second parameter `priorityTagAndFieldName` specifies the most priority
 // priorityTagAndFieldName that will be detected, otherwise it detects the priorityTagAndFieldName in order of:
 // gconv, json, field name.
-func (c *impConverter) Map(value any, option MapOption) (map[string]any, error) {
+func (c *Converter) Map(value any, option MapOption) (map[string]any, error) {
 	return c.doMapConvert(value, RecursiveTypeAuto, false, option)
 }
 
 // MapStrStr converts `value` to map[string]string.
 // Note that there might be data copy for this map type converting.
-func (c *impConverter) MapStrStr(value any, option MapOption) (map[string]string, error) {
+func (c *Converter) MapStrStr(value any, option MapOption) (map[string]string, error) {
 	if r, ok := value.(map[string]string); ok {
 		return r, nil
 	}
@@ -76,7 +76,7 @@ func (c *impConverter) MapStrStr(value any, option MapOption) (map[string]string
 // It automatically checks and converts json string to map if `value` is string/[]byte.
 //
 // TODO completely implement the recursive converting for all types, especially the map.
-func (c *impConverter) doMapConvert(
+func (c *Converter) doMapConvert(
 	value any, recursive RecursiveType, mustMapReturn bool, option MapOption,
 ) (map[string]any, error) {
 	if value == nil {
@@ -336,7 +336,7 @@ type doMapConvertForMapOrStructValueInput struct {
 	MustMapReturn   bool          // Must return map instead of Value when empty.
 }
 
-func (c *impConverter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) (any, error) {
+func (c *Converter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrStructValueInput) (any, error) {
 	if !in.IsRoot && !in.RecursiveOption {
 		return in.Value, nil
 	}

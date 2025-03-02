@@ -17,7 +17,7 @@ import (
 )
 
 // SliceFloat32 converts `any` to []float32.
-func (c *impConverter) SliceFloat32(any interface{}, option SliceOption) ([]float32, error) {
+func (c *Converter) SliceFloat32(any interface{}, option SliceOption) ([]float32, error) {
 	if empty.IsNil(any) {
 		return nil, nil
 	}
@@ -217,7 +217,7 @@ func (c *impConverter) SliceFloat32(any interface{}, option SliceOption) ([]floa
 }
 
 // SliceFloat64 converts `any` to []float64.
-func (c *impConverter) SliceFloat64(any interface{}, option SliceOption) ([]float64, error) {
+func (c *Converter) SliceFloat64(any interface{}, option SliceOption) ([]float64, error) {
 	if empty.IsNil(any) {
 		return nil, nil
 	}

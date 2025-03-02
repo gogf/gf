@@ -23,7 +23,7 @@ type SliceOption struct {
 }
 
 // SliceAny converts `any` to []any.
-func (c *impConverter) SliceAny(any interface{}, option SliceOption) ([]any, error) {
+func (c *Converter) SliceAny(any interface{}, option SliceOption) ([]any, error) {
 	if empty.IsNil(any) {
 		return nil, nil
 	}

@@ -21,7 +21,7 @@ import (
 //
 // The optional parameter `mapping` is used for struct attribute to map key mapping, which makes
 // sense only if the item of `params` is type struct.
-func (c *impConverter) MapToMaps(params any, pointer any, paramKeyToAttrMap map[string]string) (err error) {
+func (c *Converter) MapToMaps(params any, pointer any, paramKeyToAttrMap map[string]string) (err error) {
 	// Params and its element type check.
 	var (
 		paramsRv   reflect.Value

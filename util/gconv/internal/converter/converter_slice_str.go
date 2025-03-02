@@ -16,7 +16,7 @@ import (
 )
 
 // SliceStr converts `any` to []string.
-func (c *impConverter) SliceStr(any interface{}, option SliceOption) ([]string, error) {
+func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, error) {
 	if empty.IsNil(any) {
 		return nil, nil
 	}

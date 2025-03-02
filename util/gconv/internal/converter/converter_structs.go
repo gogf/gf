@@ -20,7 +20,7 @@ import (
 // The parameter `pointer` should be type of pointer to slice of struct.
 // Note that if `pointer` is a pointer to another pointer of type of slice of struct,
 // it will create the struct/pointer internally.
-func (c *impConverter) Structs(
+func (c *Converter) Structs(
 	params any, pointer any, sliceOption SliceOption, structOption StructOption,
 ) (err error) {
 	defer func() {

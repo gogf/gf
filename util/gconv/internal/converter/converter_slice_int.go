@@ -17,7 +17,7 @@ import (
 )
 
 // SliceInt converts `any` to []int.
-func (c *impConverter) SliceInt(any any, option SliceOption) ([]int, error) {
+func (c *Converter) SliceInt(any any, option SliceOption) ([]int, error) {
 	if empty.IsNil(any) {
 		return nil, nil
 	}
@@ -190,7 +190,7 @@ func (c *impConverter) SliceInt(any any, option SliceOption) ([]int, error) {
 }
 
 // SliceInt32 converts `any` to []int32.
-func (c *impConverter) SliceInt32(any any, option SliceOption) ([]int32, error) {
+func (c *Converter) SliceInt32(any any, option SliceOption) ([]int32, error) {
 	if empty.IsNil(any) {
 		return nil, nil
 	}
@@ -363,7 +363,7 @@ func (c *impConverter) SliceInt32(any any, option SliceOption) ([]int32, error) 
 }
 
 // SliceInt64 converts `any` to []int64.
-func (c *impConverter) SliceInt64(any any, option SliceOption) ([]int64, error) {
+func (c *Converter) SliceInt64(any any, option SliceOption) ([]int64, error) {
 	if empty.IsNil(any) {
 		return nil, nil
 	}

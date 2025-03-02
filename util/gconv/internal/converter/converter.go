@@ -32,45 +32,8 @@ type (
 	converterFunc    = reflect.Value
 )
 
-// Converter is the manager for type converting.
-type Converter interface {
-	RegisterTypeConverterFunc(fn any) (err error)
-	ConverterForInt
-	ConverterForUint
-	String(any any) (string, error)
-	Bool(any any) (bool, error)
-	Bytes(any any) ([]byte, error)
-	Float32(any any) (float32, error)
-	Float64(any any) (float64, error)
-
-	MapToMap(params any, pointer any, mapping ...map[string]string) (err error)
-	MapToMaps(params any, pointer any, paramKeyToAttrMap ...map[string]string) (err error)
-	Rune(any any) (rune, error)
-	Runes(any any) ([]rune, error)
-	Scan(srcValue any, dstPointer any, paramKeyToAttrMap ...map[string]string) (err error)
-	Time(any interface{}, format ...string) (time.Time, error)
-	Duration(any interface{}) (time.Duration, error)
-	GTime(any interface{}, format ...string) (*gtime.Time, error)
-}
-
-type ConverterForInt interface {
-	Int(any any) (int, error)
-	Int8(any any) (int8, error)
-	Int16(any any) (int16, error)
-	Int32(any any) (int32, error)
-	Int64(any any) (int64, error)
-}
-
-type ConverterForUint interface {
-	Uint(any any) (uint, error)
-	Uint8(any any) (uint8, error)
-	Uin16(any any) (uint16, error)
-	Uint32(any any) (uint32, error)
-	Uint64(any any) (uint64, error)
-}
-
-// impConverter implements the interface Converter.
-type impConverter struct {
+// Converter implements the interface Converter.
+type Converter struct {
 	internalConverter    *structcache.Converter
 	typeConverterFuncMap map[converterInType]map[converterOutType]converterFunc
 }
@@ -110,8 +73,8 @@ var (
 )
 
 // NewConverter creates and returns management object for type converting.
-func NewConverter() *impConverter {
-	cf := &impConverter{
+func NewConverter() *Converter {
+	cf := &Converter{
 		internalConverter:    structcache.NewConverter(),
 		typeConverterFuncMap: make(map[converterInType]map[converterOutType]converterFunc),
 	}
@@ -127,7 +90,7 @@ func NewConverter() *impConverter {
 //  1. The parameter `fn` must be defined as pattern `func(T1) (T2, error)`.
 //     It will convert type `T1` to type `T2`.
 //  2. The `T1` should not be type of pointer, but the `T2` should be type of pointer.
-func (c *impConverter) RegisterTypeConverterFunc(fn any) (err error) {
+func (c *Converter) RegisterTypeConverterFunc(fn any) (err error) {
 	var (
 		fnReflectType = reflect.TypeOf(fn)
 		errType       = reflect.TypeOf((*error)(nil)).Elem()
@@ -184,7 +147,7 @@ func (c *impConverter) RegisterTypeConverterFunc(fn any) (err error) {
 	return
 }
 
-func (c *impConverter) registerBuiltInConverter() {
+func (c *Converter) registerBuiltInConverter() {
 	c.registerAnyConvertFuncForTypes(
 		c.builtInAnyConvertFuncForInt64, intType, int8Type, int16Type, int32Type, int64Type,
 	)
@@ -211,7 +174,7 @@ func (c *impConverter) registerBuiltInConverter() {
 	)
 }
 
-func (c *impConverter) registerAnyConvertFuncForTypes(convertFunc AnyConvertFunc, types ...reflect.Type) {
+func (c *Converter) registerAnyConvertFuncForTypes(convertFunc AnyConvertFunc, types ...reflect.Type) {
 	for _, t := range types {
 		c.internalConverter.RegisterAnyConvertFunc(t, convertFunc)
 	}
