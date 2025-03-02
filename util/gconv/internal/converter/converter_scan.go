@@ -269,7 +269,9 @@ func (c *impConverter) doScanForComplicatedTypes(
 			return c.MapToMaps(srcValue, dstPointer, keyToAttributeNameMapping)
 		}
 		// Convert to slice of structs
-		return c.Structs(srcValue, dstPointer, keyToAttributeNameMapping, "")
+		return c.Structs(srcValue, dstPointer, SliceOption{}, StructOption{
+			ParamKeyToAttrMap: keyToAttributeNameMapping,
+		})
 
 	default:
 		structOption := StructOption{

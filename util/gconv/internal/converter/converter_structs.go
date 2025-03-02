@@ -21,7 +21,7 @@ import (
 // Note that if `pointer` is a pointer to another pointer of type of slice of struct,
 // it will create the struct/pointer internally.
 func (c *impConverter) Structs(
-	params any, pointer any, paramKeyToAttrMap map[string]string, priorityTag string,
+	params any, pointer any, sliceOption SliceOption, structOption StructOption,
 ) (err error) {
 	defer func() {
 		// Catch the panic, especially the reflection operation panics.
@@ -62,7 +62,7 @@ func (c *impConverter) Structs(
 			paramsList[i] = paramsRv.Index(i).Interface()
 		}
 	default:
-		paramsMaps, err := c.SliceMap(params, SliceOption{}, MapOption{})
+		paramsMaps, err := c.SliceMap(params, sliceOption, MapOption{})
 		if err != nil {
 			return err
 		}
@@ -81,10 +81,6 @@ func (c *impConverter) Structs(
 		itemTypeKind     = itemType.Kind()
 		pointerRvElem    = pointerRv.Elem()
 		pointerRvLength  = pointerRvElem.Len()
-		structOption     = StructOption{
-			ParamKeyToAttrMap: paramKeyToAttrMap,
-			PriorityTag:       priorityTag,
-		}
 	)
 	if itemTypeKind == reflect.Ptr {
 		// Pointer element.
