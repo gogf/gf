@@ -14,10 +14,8 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
-type AnyConvertFunc func(from any, to reflect.Value) error
-
-// ConvertConfig is the configuration for type converting.
-type ConvertConfig struct {
+// Converter is the configuration for type converting.
+type Converter struct {
 	// map[reflect.Type]*CachedStructInfo
 	cachedStructsInfoMap sync.Map
 
@@ -28,9 +26,12 @@ type ConvertConfig struct {
 	anyToTypeConvertMap map[reflect.Type]AnyConvertFunc
 }
 
-// NewConvertConfig creates and returns a new ConvertConfig object.
-func NewConvertConfig() *ConvertConfig {
-	return &ConvertConfig{
+// AnyConvertFunc is the function type for converting any to specified type.
+type AnyConvertFunc func(from any, to reflect.Value) error
+
+// NewConverter creates and returns a new Converter object.
+func NewConverter() *Converter {
+	return &Converter{
 		cachedStructsInfoMap: sync.Map{},
 		typeConverterFuncMap: make(map[reflect.Type]struct{}),
 		anyToTypeConvertMap:  make(map[reflect.Type]AnyConvertFunc),
@@ -38,7 +39,7 @@ func NewConvertConfig() *ConvertConfig {
 }
 
 // RegisterTypeConvertFunc registers converting function for custom type.
-func (cf *ConvertConfig) RegisterTypeConvertFunc(fieldType reflect.Type) {
+func (cf *Converter) RegisterTypeConvertFunc(fieldType reflect.Type) {
 	if fieldType.Kind() == reflect.Ptr {
 		fieldType = fieldType.Elem()
 	}
@@ -46,7 +47,7 @@ func (cf *ConvertConfig) RegisterTypeConvertFunc(fieldType reflect.Type) {
 }
 
 // RegisterAnyConvertFunc registers custom type converting function for specified type.
-func (cf *ConvertConfig) RegisterAnyConvertFunc(t reflect.Type, convertFunc AnyConvertFunc) {
+func (cf *Converter) RegisterAnyConvertFunc(t reflect.Type, convertFunc AnyConvertFunc) {
 	cf.anyToTypeConvertMap[t] = convertFunc
 }
 

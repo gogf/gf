@@ -15,7 +15,7 @@ import (
 
 // GetCachedStructInfo retrieves or parses and returns a cached info for certain struct type.
 // The given `structType` should be type of struct.
-func (cf *ConvertConfig) GetCachedStructInfo(structType reflect.Type, priorityTag string) *CachedStructInfo {
+func (cf *Converter) GetCachedStructInfo(structType reflect.Type, priorityTag string) *CachedStructInfo {
 	if structType.Kind() != reflect.Struct {
 		return nil
 	}
@@ -44,12 +44,12 @@ func (cf *ConvertConfig) GetCachedStructInfo(structType reflect.Type, priorityTa
 	return cachedStructInfo
 }
 
-func (cf *ConvertConfig) storeCachedStructInfo(structType reflect.Type, cachedStructInfo *CachedStructInfo) {
+func (cf *Converter) storeCachedStructInfo(structType reflect.Type, cachedStructInfo *CachedStructInfo) {
 	// Temporarily enabled as an experimental feature
 	cf.cachedStructsInfoMap.Store(structType, cachedStructInfo)
 }
 
-func (cf *ConvertConfig) getCachedConvertStructInfo(structType reflect.Type) (*CachedStructInfo, bool) {
+func (cf *Converter) getCachedConvertStructInfo(structType reflect.Type) (*CachedStructInfo, bool) {
 	// Temporarily enabled as an experimental feature
 	v, ok := cf.cachedStructsInfoMap.Load(structType)
 	if ok {
@@ -60,7 +60,7 @@ func (cf *ConvertConfig) getCachedConvertStructInfo(structType reflect.Type) (*C
 
 // parseStructToCachedStructInfo parses given struct reflection type and stores its fields info into given CachedStructInfo.
 // It stores nothing into CachedStructInfo if given struct reflection type has no fields.
-func (cf *ConvertConfig) parseStructToCachedStructInfo(
+func (cf *Converter) parseStructToCachedStructInfo(
 	structType reflect.Type,
 	fieldIndexes []int,
 	cachedStructInfo *CachedStructInfo,

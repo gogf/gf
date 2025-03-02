@@ -6,7 +6,7 @@
 
 package gconv
 
-func (c *Converter) Rune(any any) (rune, error) {
+func (c *impConverter) Rune(any any) (rune, error) {
 	if v, ok := any.(rune); ok {
 		return v, nil
 	}
@@ -17,7 +17,7 @@ func (c *Converter) Rune(any any) (rune, error) {
 	return v, nil
 }
 
-func (c *Converter) Runes(any any) ([]rune, error) {
+func (c *impConverter) Runes(any any) ([]rune, error) {
 	if v, ok := any.([]rune); ok {
 		return v, nil
 	}

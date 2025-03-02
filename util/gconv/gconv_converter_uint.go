@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
-func (c *Converter) Uint(any any) (uint, error) {
+func (c *impConverter) Uint(any any) (uint, error) {
 	if empty.IsNil(any) {
 		return 0, nil
 	}
@@ -29,7 +29,7 @@ func (c *Converter) Uint(any any) (uint, error) {
 	return uint(v), err
 }
 
-func (c *Converter) Uint8(any any) (uint8, error) {
+func (c *impConverter) Uint8(any any) (uint8, error) {
 	if empty.IsNil(any) {
 		return 0, nil
 	}
@@ -40,7 +40,7 @@ func (c *Converter) Uint8(any any) (uint8, error) {
 	return uint8(v), err
 }
 
-func (c *Converter) Uint16(any any) (uint16, error) {
+func (c *impConverter) Uint16(any any) (uint16, error) {
 	if empty.IsNil(any) {
 		return 0, nil
 	}
@@ -51,7 +51,7 @@ func (c *Converter) Uint16(any any) (uint16, error) {
 	return uint16(v), err
 }
 
-func (c *Converter) Uint32(any any) (uint32, error) {
+func (c *impConverter) Uint32(any any) (uint32, error) {
 	if empty.IsNil(any) {
 		return 0, nil
 	}
@@ -62,7 +62,7 @@ func (c *Converter) Uint32(any any) (uint32, error) {
 	return uint32(v), err
 }
 
-func (c *Converter) Uint64(any any) (uint64, error) {
+func (c *impConverter) Uint64(any any) (uint64, error) {
 	if empty.IsNil(any) {
 		return 0, nil
 	}

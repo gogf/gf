@@ -15,7 +15,7 @@ import (
 // The optional parameter `extraParams` is used for additional necessary parameter for this conversion.
 // It supports common basic types conversion as its conversion based on type name string.
 func Convert(fromValue any, toTypeName string, extraParams ...any) any {
-	return defaultConverter.doConvert(
+	result, _ := defaultConverter.doConvert(
 		doConvertInput{
 			FromValue:  fromValue,
 			ToTypeName: toTypeName,
@@ -23,6 +23,7 @@ func Convert(fromValue any, toTypeName string, extraParams ...any) any {
 			Extra:      extraParams,
 		},
 	)
+	return result
 }
 
 // ConvertWithRefer converts the variable `fromValue` to the type referred by value `referValue`.
@@ -36,12 +37,11 @@ func ConvertWithRefer(fromValue any, referValue any, extraParams ...any) any {
 	} else {
 		referValueRf = reflect.ValueOf(referValue)
 	}
-	return defaultConverter.doConvert(
-		doConvertInput{
-			FromValue:  fromValue,
-			ToTypeName: referValueRf.Type().String(),
-			ReferValue: referValue,
-			Extra:      extraParams,
-		},
-	)
+	result, _ := defaultConverter.doConvert(doConvertInput{
+		FromValue:  fromValue,
+		ToTypeName: referValueRf.Type().String(),
+		ReferValue: referValue,
+		Extra:      extraParams,
+	})
+	return result
 }

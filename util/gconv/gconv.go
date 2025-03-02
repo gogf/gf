@@ -39,7 +39,7 @@ var (
 // RegisterConverter registers custom converter.
 // Deprecated: use RegisterTypeConverterFunc instead for clear
 func RegisterConverter(fn any) (err error) {
-	return defaultConverter.RegisterTypeConverterFunc(fn)
+	return RegisterTypeConverterFunc(fn)
 }
 
 // RegisterTypeConverterFunc registers custom converter.

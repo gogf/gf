@@ -14,7 +14,8 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
-func (c *Converter) Bool(any any) (bool, error) {
+// Bool converts `any` to bool.
+func (c *impConverter) Bool(any any) (bool, error) {
 	if empty.IsNil(any) {
 		return false, nil
 	}

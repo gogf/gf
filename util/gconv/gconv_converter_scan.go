@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
-func (c *Converter) Scan(srcValue any, dstPointer any, paramKeyToAttrMap ...map[string]string) (err error) {
+func (c *impConverter) Scan(srcValue any, dstPointer any, paramKeyToAttrMap ...map[string]string) (err error) {
 	// Check if srcValue is nil, in which case no conversion is needed
 	if srcValue == nil {
 		return nil
@@ -182,7 +182,7 @@ func (c *Converter) Scan(srcValue any, dstPointer any, paramKeyToAttrMap ...map[
 // - dstPointer: The destination pointer to convert to
 // - dstPointerReflectType: The reflection type of the destination pointer
 // - paramKeyToAttrMap: Optional mapping between parameter keys and struct attribute names
-func (c *Converter) doScanForComplicatedTypes(
+func (c *impConverter) doScanForComplicatedTypes(
 	srcValue, dstPointer any,
 	dstPointerReflectType reflect.Type,
 	paramKeyToAttrMap ...map[string]string,

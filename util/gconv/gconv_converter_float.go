@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
-func (c *Converter) Float32(any any) (float32, error) {
+func (c *impConverter) Float32(any any) (float32, error) {
 	if empty.IsNil(any) {
 		return 0, nil
 	}
@@ -78,7 +78,7 @@ func (c *Converter) Float32(any any) (float32, error) {
 	}
 }
 
-func (c *Converter) Float64(any any) (float64, error) {
+func (c *impConverter) Float64(any any) (float64, error) {
 	if empty.IsNil(any) {
 		return 0, nil
 	}

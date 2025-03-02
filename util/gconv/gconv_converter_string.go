@@ -20,7 +20,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
-func (c *Converter) String(any any) (string, error) {
+func (c *impConverter) String(any any) (string, error) {
 	if empty.IsNil(any) {
 		return "", nil
 	}

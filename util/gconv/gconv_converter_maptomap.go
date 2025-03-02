@@ -23,7 +23,7 @@ import (
 //
 // The optional parameter `mapping` is used for struct attribute to map key mapping, which makes
 // sense only if the items of original map `params` is type struct.
-func (c *Converter) MapToMap(params any, pointer any, mapping ...map[string]string) (err error) {
+func (c *impConverter) MapToMap(params any, pointer any, mapping ...map[string]string) (err error) {
 	var (
 		paramsRv                  reflect.Value
 		paramsKind                reflect.Kind
@@ -98,27 +98,27 @@ func (c *Converter) MapToMap(params any, pointer any, mapping ...map[string]stri
 				return err
 			}
 		default:
-			mapValue.Set(
-				reflect.ValueOf(
-					c.doConvert(doConvertInput{
-						FromValue:  paramsRv.MapIndex(key).Interface(),
-						ToTypeName: pointerValueType.String(),
-						ReferValue: mapValue,
-						Extra:      nil,
-					}),
-				),
-			)
+			convertResult, err := c.doConvert(doConvertInput{
+				FromValue:  paramsRv.MapIndex(key).Interface(),
+				ToTypeName: pointerValueType.String(),
+				ReferValue: mapValue,
+				Extra:      nil,
+			})
+			if err != nil {
+				return err
+			}
+			mapValue.Set(reflect.ValueOf(convertResult))
 		}
-		var mapKey = reflect.ValueOf(
-			c.doConvert(
-				doConvertInput{
-					FromValue:  key.Interface(),
-					ToTypeName: pointerKeyType.Name(),
-					ReferValue: reflect.New(pointerKeyType).Elem().Interface(),
-					Extra:      nil,
-				},
-			),
-		)
+		convertResult, err := c.doConvert(doConvertInput{
+			FromValue:  key.Interface(),
+			ToTypeName: pointerKeyType.Name(),
+			ReferValue: reflect.New(pointerKeyType).Elem().Interface(),
+			Extra:      nil,
+		})
+		if err != nil {
+			return err
+		}
+		var mapKey = reflect.ValueOf(convertResult)
 		dataMap.SetMapIndex(mapKey, mapValue)
 	}
 	pointerRv.Set(dataMap)

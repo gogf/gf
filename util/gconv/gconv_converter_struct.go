@@ -20,7 +20,7 @@ import (
 )
 
 // Struct is the core internal converting function for any data to struct.
-func (c *Converter) Struct(
+func (c *impConverter) Struct(
 	params any,
 	pointer any,
 	paramKeyToAttrMap map[string]string,
@@ -147,7 +147,7 @@ func (c *Converter) Struct(
 		return nil
 	}
 	// Get struct info from cache or parse struct and cache the struct info.
-	cachedStructInfo := c.internalConvertConfig.GetCachedStructInfo(
+	cachedStructInfo := c.internalConverter.GetCachedStructInfo(
 		pointerElemReflectValue.Type(), priorityTag,
 	)
 	// Nothing to be converted.
@@ -204,7 +204,7 @@ func (c *Converter) Struct(
 	)
 }
 
-func (c *Converter) setOtherSameNameField(
+func (c *impConverter) setOtherSameNameField(
 	cachedFieldInfo *structcache.CachedFieldInfo,
 	srcValue any,
 	structValue reflect.Value,
@@ -220,7 +220,7 @@ func (c *Converter) setOtherSameNameField(
 	return nil
 }
 
-func (c *Converter) bindStructWithLoopFieldInfos(
+func (c *impConverter) bindStructWithLoopFieldInfos(
 	paramsMap map[string]any,
 	structValue reflect.Value,
 	paramKeyToAttrMap map[string]string,
@@ -316,7 +316,7 @@ func fuzzyMatchingFieldName(
 
 // bindVarToStructField sets value to struct object attribute by name.
 // each value to attribute converting comes into in this function.
-func (c *Converter) bindVarToStructField(
+func (c *impConverter) bindVarToStructField(
 	cachedFieldInfo *structcache.CachedFieldInfo,
 	fieldValue reflect.Value,
 	srcValue any,
@@ -439,7 +439,7 @@ func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value a
 }
 
 // bindVarToReflectValue sets `value` to reflect value object `structFieldValue`.
-func (c *Converter) bindVarToReflectValue(
+func (c *impConverter) bindVarToReflectValue(
 	structFieldValue reflect.Value, value any, paramKeyToAttrMap map[string]string,
 ) (err error) {
 	// JSON content converting.
