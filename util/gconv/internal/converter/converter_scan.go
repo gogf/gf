@@ -99,7 +99,7 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ScanOption) (err e
 	}
 
 	// Check if srcValue and dstPointer are the same type, in which case direct assignment can be performed
-	if ok := doConvertWithTypeCheck(srcValueReflectValue, dstPointerReflectValueElem); ok {
+	if ok := c.doConvertWithTypeCheck(srcValueReflectValue, dstPointerReflectValueElem); ok {
 		return nil
 	}
 
@@ -266,7 +266,9 @@ func (c *Converter) doScanForComplicatedTypes(
 		}
 		if sliceElemKind == reflect.Map {
 			// Convert to slice of maps
-			return c.MapToMaps(srcValue, dstPointer, keyToAttributeNameMapping)
+			return c.MapToMaps(srcValue, dstPointer, keyToAttributeNameMapping, MapOption{
+				BreakOnError: option.BreakOnError,
+			})
 		}
 		// Convert to slice of structs
 		return c.Structs(srcValue, dstPointer, SliceOption{}, StructOption{
@@ -284,7 +286,7 @@ func (c *Converter) doScanForComplicatedTypes(
 
 // doConvertWithTypeCheck supports `pointer` in type of `*map/*[]map/*[]*map/*struct/**struct/*[]struct/*[]*struct`
 // for converting.
-func doConvertWithTypeCheck(srcValueReflectValue, dstPointerReflectValueElem reflect.Value) (ok bool) {
+func (c *Converter) doConvertWithTypeCheck(srcValueReflectValue, dstPointerReflectValueElem reflect.Value) (ok bool) {
 	if !dstPointerReflectValueElem.IsValid() || !srcValueReflectValue.IsValid() {
 		return false
 	}

@@ -96,7 +96,7 @@ func (c *Converter) Struct(params, pointer any, option StructOption) (err error)
 
 	// If `params` and `pointer` are the same type, the do directly assignment.
 	// For performance enhancement purpose.
-	if ok = doConvertWithTypeCheck(paramsReflectValue, pointerElemReflectValue); ok {
+	if ok = c.doConvertWithTypeCheck(paramsReflectValue, pointerElemReflectValue); ok {
 		return nil
 	}
 

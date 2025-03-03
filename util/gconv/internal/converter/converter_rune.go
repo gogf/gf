@@ -6,6 +6,7 @@
 
 package converter
 
+// Rune converts `any` to rune.
 func (c *Converter) Rune(any any) (rune, error) {
 	if v, ok := any.(rune); ok {
 		return v, nil
@@ -17,6 +18,7 @@ func (c *Converter) Rune(any any) (rune, error) {
 	return v, nil
 }
 
+// Runes converts `any` to []rune.
 func (c *Converter) Runes(any any) ([]rune, error) {
 	if v, ok := any.([]rune); ok {
 		return v, nil

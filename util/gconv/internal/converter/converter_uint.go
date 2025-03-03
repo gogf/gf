@@ -18,6 +18,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
+// Uint converts `any` to uint.
 func (c *Converter) Uint(any any) (uint, error) {
 	if empty.IsNil(any) {
 		return 0, nil
@@ -29,6 +30,7 @@ func (c *Converter) Uint(any any) (uint, error) {
 	return uint(v), err
 }
 
+// Uint8 converts `any` to uint8.
 func (c *Converter) Uint8(any any) (uint8, error) {
 	if empty.IsNil(any) {
 		return 0, nil
@@ -40,6 +42,7 @@ func (c *Converter) Uint8(any any) (uint8, error) {
 	return uint8(v), err
 }
 
+// Uint16 converts `any` to uint16.
 func (c *Converter) Uint16(any any) (uint16, error) {
 	if empty.IsNil(any) {
 		return 0, nil
@@ -51,6 +54,7 @@ func (c *Converter) Uint16(any any) (uint16, error) {
 	return uint16(v), err
 }
 
+// Uint32 converts `any` to uint32.
 func (c *Converter) Uint32(any any) (uint32, error) {
 	if empty.IsNil(any) {
 		return 0, nil
@@ -62,6 +66,7 @@ func (c *Converter) Uint32(any any) (uint32, error) {
 	return uint32(v), err
 }
 
+// Uint64 converts `any` to uint64.
 func (c *Converter) Uint64(any any) (uint64, error) {
 	if empty.IsNil(any) {
 		return 0, nil

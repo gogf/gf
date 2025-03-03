@@ -17,6 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
+// Float32 converts `any` to float32.
 func (c *Converter) Float32(any any) (float32, error) {
 	if empty.IsNil(any) {
 		return 0, nil
@@ -78,6 +79,7 @@ func (c *Converter) Float32(any any) (float32, error) {
 	}
 }
 
+// Float64 converts `any` to float64.
 func (c *Converter) Float64(any any) (float64, error) {
 	if empty.IsNil(any) {
 		return 0, nil

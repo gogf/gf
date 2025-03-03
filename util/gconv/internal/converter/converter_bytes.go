@@ -17,6 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
+// Bytes converts `any` to []byte.
 func (c *Converter) Bytes(any any) ([]byte, error) {
 	if empty.IsNil(any) {
 		return nil, nil

@@ -39,6 +39,11 @@ func init() {
 	)
 }
 
+// GetConverter returns the internal type converter for gdb.
+func GetConverter() gconv.Converter {
+	return converter
+}
+
 func sliceTypeConverterFunc(from any, to reflect.Value) (err error) {
 	v, ok := from.(iVal)
 	if !ok {
@@ -63,8 +68,8 @@ func sliceTypeConverterFunc(from any, to reflect.Value) (err error) {
 			to.Set(reflect.ValueOf(dv))
 		default:
 			err = gerror.Newf(
-				`unsupported type converting from "%v(%T)" to "%v(%T)"`,
-				fromVal, fromVal, to, to,
+				`unsupported type converting from type "%T" to type "%T"`,
+				fromVal, to,
 			)
 		}
 	}

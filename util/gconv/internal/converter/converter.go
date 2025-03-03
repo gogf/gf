@@ -17,8 +17,10 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/structcache"
 )
 
+// AnyConvertFunc is the type for any type converting function.
 type AnyConvertFunc = structcache.AnyConvertFunc
 
+// RecursiveType is the type for converting recursively.
 type RecursiveType string
 
 const (
@@ -47,29 +49,6 @@ var (
 		"off":   {},
 		"false": {},
 	}
-
-	intType   = reflect.TypeOf(0)
-	int8Type  = reflect.TypeOf(int8(0))
-	int16Type = reflect.TypeOf(int16(0))
-	int32Type = reflect.TypeOf(int32(0))
-	int64Type = reflect.TypeOf(int64(0))
-
-	uintType   = reflect.TypeOf(uint(0))
-	uint8Type  = reflect.TypeOf(uint8(0))
-	uint16Type = reflect.TypeOf(uint16(0))
-	uint32Type = reflect.TypeOf(uint32(0))
-	uint64Type = reflect.TypeOf(uint64(0))
-
-	float32Type = reflect.TypeOf(float32(0))
-	float64Type = reflect.TypeOf(float64(0))
-
-	stringType = reflect.TypeOf("")
-	bytesType  = reflect.TypeOf([]byte{})
-
-	boolType = reflect.TypeOf(false)
-
-	timeType  = reflect.TypeOf((*time.Time)(nil)).Elem()
-	gtimeType = reflect.TypeOf((*gtime.Time)(nil)).Elem()
 )
 
 // NewConverter creates and returns management object for type converting.
@@ -155,6 +134,25 @@ func (c *Converter) RegisterAnyConverterFunc(convertFunc AnyConvertFunc, types .
 }
 
 func (c *Converter) registerBuiltInAnyConvertFunc() {
+	var (
+		intType     = reflect.TypeOf(0)
+		int8Type    = reflect.TypeOf(int8(0))
+		int16Type   = reflect.TypeOf(int16(0))
+		int32Type   = reflect.TypeOf(int32(0))
+		int64Type   = reflect.TypeOf(int64(0))
+		uintType    = reflect.TypeOf(uint(0))
+		uint8Type   = reflect.TypeOf(uint8(0))
+		uint16Type  = reflect.TypeOf(uint16(0))
+		uint32Type  = reflect.TypeOf(uint32(0))
+		uint64Type  = reflect.TypeOf(uint64(0))
+		float32Type = reflect.TypeOf(float32(0))
+		float64Type = reflect.TypeOf(float64(0))
+		stringType  = reflect.TypeOf("")
+		bytesType   = reflect.TypeOf([]byte{})
+		boolType    = reflect.TypeOf(false)
+		timeType    = reflect.TypeOf((*time.Time)(nil)).Elem()
+		gtimeType   = reflect.TypeOf((*gtime.Time)(nil)).Elem()
+	)
 	c.RegisterAnyConverterFunc(
 		c.builtInAnyConvertFuncForInt64, intType, int8Type, int16Type, int32Type, int64Type,
 	)
