@@ -28,7 +28,8 @@ func Struct(params any, pointer any, paramKeyToAttrMap ...map[string]string) (er
 // The parameter `priorityTag` supports multiple priorityTagAndFieldName that can be joined with char ','.
 func StructTag(params any, pointer any, priorityTag string) (err error) {
 	option := StructOption{
-		PriorityTag: priorityTag,
+		PriorityTag:     priorityTag,
+		ContinueOnError: true,
 	}
 	return defaultConverter.Struct(params, pointer, option)
 }

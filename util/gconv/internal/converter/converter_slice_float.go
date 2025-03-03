@@ -31,7 +31,7 @@ func (c *Converter) SliceFloat32(any interface{}, option SliceOption) ([]float32
 		array = make([]float32, len(value))
 		for k, v := range value {
 			f, err = c.Float32(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -40,7 +40,7 @@ func (c *Converter) SliceFloat32(any interface{}, option SliceOption) ([]float32
 		array = make([]float32, len(value))
 		for k, v := range value {
 			f, err = c.Float32(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -49,7 +49,7 @@ func (c *Converter) SliceFloat32(any interface{}, option SliceOption) ([]float32
 		array = make([]float32, len(value))
 		for k, v := range value {
 			f, err = c.Float32(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -58,7 +58,7 @@ func (c *Converter) SliceFloat32(any interface{}, option SliceOption) ([]float32
 		array = make([]float32, len(value))
 		for k, v := range value {
 			f, err = c.Float32(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -67,7 +67,7 @@ func (c *Converter) SliceFloat32(any interface{}, option SliceOption) ([]float32
 		array = make([]float32, len(value))
 		for k, v := range value {
 			f, err = c.Float32(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -76,7 +76,7 @@ func (c *Converter) SliceFloat32(any interface{}, option SliceOption) ([]float32
 		array = make([]float32, len(value))
 		for k, v := range value {
 			f, err = c.Float32(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -85,7 +85,7 @@ func (c *Converter) SliceFloat32(any interface{}, option SliceOption) ([]float32
 		array = make([]float32, len(value))
 		for k, v := range value {
 			f, err = c.Float32(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -99,7 +99,7 @@ func (c *Converter) SliceFloat32(any interface{}, option SliceOption) ([]float32
 		array = make([]float32, len(value))
 		for k, v := range value {
 			f, err = c.Float32(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -116,7 +116,7 @@ func (c *Converter) SliceFloat32(any interface{}, option SliceOption) ([]float32
 		}
 		if utils.IsNumeric(value) {
 			f, err = c.Float32(value)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			return []float32{f}, err
@@ -125,7 +125,7 @@ func (c *Converter) SliceFloat32(any interface{}, option SliceOption) ([]float32
 		array = make([]float32, len(value))
 		for k, v := range value {
 			f, err = c.Float32(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -134,7 +134,7 @@ func (c *Converter) SliceFloat32(any interface{}, option SliceOption) ([]float32
 		array = make([]float32, len(value))
 		for k, v := range value {
 			f, err = c.Float32(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -143,7 +143,7 @@ func (c *Converter) SliceFloat32(any interface{}, option SliceOption) ([]float32
 		array = make([]float32, len(value))
 		for k, v := range value {
 			f, err = c.Float32(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -152,7 +152,7 @@ func (c *Converter) SliceFloat32(any interface{}, option SliceOption) ([]float32
 		array = make([]float32, len(value))
 		for k, v := range value {
 			f, err = c.Float32(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -163,7 +163,7 @@ func (c *Converter) SliceFloat32(any interface{}, option SliceOption) ([]float32
 		array = make([]float32, len(value))
 		for k, v := range value {
 			f, err = c.Float32(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -172,7 +172,7 @@ func (c *Converter) SliceFloat32(any interface{}, option SliceOption) ([]float32
 		array = make([]float32, len(value))
 		for k, v := range value {
 			f, err = c.Float32(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -197,7 +197,7 @@ func (c *Converter) SliceFloat32(any interface{}, option SliceOption) ([]float32
 		)
 		for i := 0; i < length; i++ {
 			f, err = c.Float32(originValueAndKind.OriginValue.Index(i).Interface())
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			slice[i] = f
@@ -209,7 +209,7 @@ func (c *Converter) SliceFloat32(any interface{}, option SliceOption) ([]float32
 			return []float32{}, err
 		}
 		f, err = c.Float32(any)
-		if err != nil && option.BreakOnError {
+		if err != nil && !option.ContinueOnError {
 			return nil, err
 		}
 		return []float32{f}, err
@@ -231,7 +231,7 @@ func (c *Converter) SliceFloat64(any interface{}, option SliceOption) ([]float64
 		array = make([]float64, len(value))
 		for k, v := range value {
 			f, err = c.Float64(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -240,7 +240,7 @@ func (c *Converter) SliceFloat64(any interface{}, option SliceOption) ([]float64
 		array = make([]float64, len(value))
 		for k, v := range value {
 			f, err = c.Float64(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -249,7 +249,7 @@ func (c *Converter) SliceFloat64(any interface{}, option SliceOption) ([]float64
 		array = make([]float64, len(value))
 		for k, v := range value {
 			f, err = c.Float64(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -258,7 +258,7 @@ func (c *Converter) SliceFloat64(any interface{}, option SliceOption) ([]float64
 		array = make([]float64, len(value))
 		for k, v := range value {
 			f, err = c.Float64(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -267,7 +267,7 @@ func (c *Converter) SliceFloat64(any interface{}, option SliceOption) ([]float64
 		array = make([]float64, len(value))
 		for k, v := range value {
 			f, err = c.Float64(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -276,7 +276,7 @@ func (c *Converter) SliceFloat64(any interface{}, option SliceOption) ([]float64
 		array = make([]float64, len(value))
 		for k, v := range value {
 			f, err = c.Float64(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -285,7 +285,7 @@ func (c *Converter) SliceFloat64(any interface{}, option SliceOption) ([]float64
 		array = make([]float64, len(value))
 		for k, v := range value {
 			f, err = c.Float64(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -299,7 +299,7 @@ func (c *Converter) SliceFloat64(any interface{}, option SliceOption) ([]float64
 		array = make([]float64, len(value))
 		for k, v := range value {
 			f, err = c.Float64(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -316,7 +316,7 @@ func (c *Converter) SliceFloat64(any interface{}, option SliceOption) ([]float64
 		}
 		if utils.IsNumeric(value) {
 			f, err = c.Float64(value)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			return []float64{f}, err
@@ -325,7 +325,7 @@ func (c *Converter) SliceFloat64(any interface{}, option SliceOption) ([]float64
 		array = make([]float64, len(value))
 		for k, v := range value {
 			f, err = c.Float64(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -334,7 +334,7 @@ func (c *Converter) SliceFloat64(any interface{}, option SliceOption) ([]float64
 		array = make([]float64, len(value))
 		for k, v := range value {
 			f, err = c.Float64(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -343,7 +343,7 @@ func (c *Converter) SliceFloat64(any interface{}, option SliceOption) ([]float64
 		array = make([]float64, len(value))
 		for k, v := range value {
 			f, err = c.Float64(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -352,7 +352,7 @@ func (c *Converter) SliceFloat64(any interface{}, option SliceOption) ([]float64
 		array = make([]float64, len(value))
 		for k, v := range value {
 			f, err = c.Float64(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -361,7 +361,7 @@ func (c *Converter) SliceFloat64(any interface{}, option SliceOption) ([]float64
 		array = make([]float64, len(value))
 		for k, v := range value {
 			f, err = c.Float64(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -372,7 +372,7 @@ func (c *Converter) SliceFloat64(any interface{}, option SliceOption) ([]float64
 		array = make([]float64, len(value))
 		for k, v := range value {
 			f, err = c.Float64(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = f
@@ -397,7 +397,7 @@ func (c *Converter) SliceFloat64(any interface{}, option SliceOption) ([]float64
 		)
 		for i := 0; i < length; i++ {
 			f, err = c.Float64(originValueAndKind.OriginValue.Index(i).Interface())
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			slice[i] = f
@@ -409,7 +409,7 @@ func (c *Converter) SliceFloat64(any interface{}, option SliceOption) ([]float64
 			return []float64{}, err
 		}
 		f, err = c.Float64(any)
-		if err != nil && option.BreakOnError {
+		if err != nil && !option.ContinueOnError {
 			return nil, err
 		}
 		return []float64{f}, err

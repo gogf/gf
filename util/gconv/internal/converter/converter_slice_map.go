@@ -49,7 +49,7 @@ func (c *Converter) SliceMap(value any, sliceOption SliceOption, mapOption MapOp
 		list := make([]map[string]any, len(array))
 		for k, v := range array {
 			m, err := c.Map(v, mapOption)
-			if err != nil && sliceOption.BreakOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			list[k] = m

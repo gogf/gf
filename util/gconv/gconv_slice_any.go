@@ -13,6 +13,8 @@ func SliceAny(any interface{}) []interface{} {
 
 // Interfaces converts `any` to []interface{}.
 func Interfaces(any interface{}) []interface{} {
-	result, _ := defaultConverter.SliceAny(any, SliceOption{})
+	result, _ := defaultConverter.SliceAny(any, SliceOption{
+		ContinueOnError: true,
+	})
 	return result
 }

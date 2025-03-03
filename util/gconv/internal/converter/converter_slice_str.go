@@ -30,7 +30,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -39,7 +39,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -48,7 +48,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -57,7 +57,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -66,7 +66,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -75,7 +75,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -89,7 +89,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -110,7 +110,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -119,7 +119,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -128,7 +128,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -137,7 +137,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -146,7 +146,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -155,7 +155,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -164,7 +164,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -175,7 +175,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -200,7 +200,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		)
 		for i := 0; i < length; i++ {
 			s, err = c.String(originValueAndKind.OriginValue.Index(i).Interface())
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			slice[i] = s
@@ -212,7 +212,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 			return []string{}, err
 		}
 		s, err = c.String(any)
-		if err != nil && option.BreakOnError {
+		if err != nil && !option.ContinueOnError {
 			return nil, err
 		}
 		return []string{s}, err

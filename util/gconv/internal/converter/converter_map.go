@@ -30,9 +30,9 @@ type MapOption struct {
 	// Tags specifies the converted map key name by struct tag name.
 	Tags []string
 
-	// BreakOnError specifies whether to break converting the next element
-	// if one element conversion fails in map.
-	BreakOnError bool
+	// ContinueOnError specifies whether to continue converting the next element
+	// if one element converting fails.
+	ContinueOnError bool
 }
 
 // Map converts any variable `value` to map[string]any. If the parameter `value` is not a
@@ -52,7 +52,7 @@ func (c *Converter) MapStrStr(value any, option MapOption) (map[string]string, e
 		return r, nil
 	}
 	m, err := c.Map(value, option)
-	if err != nil && option.BreakOnError {
+	if err != nil && !option.ContinueOnError {
 		return nil, err
 	}
 	if len(m) > 0 {
@@ -62,7 +62,7 @@ func (c *Converter) MapStrStr(value any, option MapOption) (map[string]string, e
 		)
 		for k, v := range m {
 			s, err = c.String(v)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			vMap[k] = s
@@ -127,7 +127,7 @@ func (c *Converter) doMapConvert(
 		recursiveOption.Tags = newTags
 		for k, v := range r {
 			s, err := c.String(k)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			dataMap[s], err = c.doMapConvertForMapOrStructValue(
@@ -139,14 +139,14 @@ func (c *Converter) doMapConvert(
 					Option:          recursiveOption,
 				},
 			)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 		}
 	case map[interface{}]string:
 		for k, v := range r {
 			s, err := c.String(k)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			dataMap[s] = v
@@ -154,7 +154,7 @@ func (c *Converter) doMapConvert(
 	case map[interface{}]int:
 		for k, v := range r {
 			s, err := c.String(k)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			dataMap[s] = v
@@ -162,7 +162,7 @@ func (c *Converter) doMapConvert(
 	case map[interface{}]uint:
 		for k, v := range r {
 			s, err := c.String(k)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			dataMap[s] = v
@@ -170,7 +170,7 @@ func (c *Converter) doMapConvert(
 	case map[interface{}]float32:
 		for k, v := range r {
 			s, err := c.String(k)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			dataMap[s] = v
@@ -178,7 +178,7 @@ func (c *Converter) doMapConvert(
 	case map[interface{}]float64:
 		for k, v := range r {
 			s, err := c.String(k)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			dataMap[s] = v
@@ -222,7 +222,7 @@ func (c *Converter) doMapConvert(
 						Option:          recursiveOption,
 					},
 				)
-				if err != nil && option.BreakOnError {
+				if err != nil && !option.ContinueOnError {
 					return nil, err
 				}
 			}
@@ -235,7 +235,7 @@ func (c *Converter) doMapConvert(
 		recursiveOption.Tags = newTags
 		for k, v := range r {
 			s, err := c.String(k)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			dataMap[s], err = c.doMapConvertForMapOrStructValue(
@@ -247,14 +247,14 @@ func (c *Converter) doMapConvert(
 					Option:          recursiveOption,
 				},
 			)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 		}
 	case map[int]string:
 		for k, v := range r {
 			s, err := c.String(k)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			dataMap[s] = v
@@ -262,7 +262,7 @@ func (c *Converter) doMapConvert(
 	case map[uint]string:
 		for k, v := range r {
 			s, err := c.String(k)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			dataMap[s] = v
@@ -291,7 +291,7 @@ func (c *Converter) doMapConvert(
 			length := reflectValue.Len()
 			for i := 0; i < length; i += 2 {
 				s, err := c.String(reflectValue.Index(i).Interface())
-				if err != nil && option.BreakOnError {
+				if err != nil && !option.ContinueOnError {
 					return nil, err
 				}
 				if i+1 < length {
@@ -313,7 +313,7 @@ func (c *Converter) doMapConvert(
 					MustMapReturn:   mustMapReturn,
 				},
 			)
-			if err != nil && option.BreakOnError {
+			if err != nil && !option.ContinueOnError {
 				return nil, err
 			}
 			if m, ok := convertedValue.(map[string]interface{}); ok {
@@ -382,7 +382,7 @@ func (c *Converter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrStruc
 				mapValue = mapKeyValue.Interface()
 			}
 			s, err := c.String(mapIter.Key().Interface())
-			if err != nil && in.Option.BreakOnError {
+			if err != nil && !in.Option.ContinueOnError {
 				return nil, err
 			}
 			dataMap[s], err = c.doMapConvertForMapOrStructValue(
@@ -394,7 +394,7 @@ func (c *Converter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrStruc
 					Option:          in.Option,
 				},
 			)
-			if err != nil && in.Option.BreakOnError {
+			if err != nil && !in.Option.ContinueOnError {
 				return nil, err
 			}
 		}
@@ -416,7 +416,7 @@ func (c *Converter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrStruc
 							Option:          in.Option,
 						},
 					)
-					if err != nil && in.Option.BreakOnError {
+					if err != nil && !in.Option.ContinueOnError {
 						return nil, err
 					}
 				} else {
@@ -510,7 +510,7 @@ func (c *Converter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrStruc
 								Option:          in.Option,
 							},
 						)
-						if err != nil && in.Option.BreakOnError {
+						if err != nil && !in.Option.ContinueOnError {
 							return nil, err
 						}
 						if m, ok := anonymousValue.(map[string]interface{}); ok {
@@ -532,7 +532,7 @@ func (c *Converter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrStruc
 								Option:          in.Option,
 							},
 						)
-						if err != nil && in.Option.BreakOnError {
+						if err != nil && !in.Option.ContinueOnError {
 							return nil, err
 						}
 
@@ -546,7 +546,7 @@ func (c *Converter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrStruc
 								Option:          in.Option,
 							},
 						)
-						if err != nil && in.Option.BreakOnError {
+						if err != nil && !in.Option.ContinueOnError {
 							return nil, err
 						}
 					}
@@ -569,7 +569,7 @@ func (c *Converter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrStruc
 								Option:          in.Option,
 							},
 						)
-						if err != nil && in.Option.BreakOnError {
+						if err != nil && !in.Option.ContinueOnError {
 							return nil, err
 						}
 					}
@@ -581,7 +581,7 @@ func (c *Converter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrStruc
 					)
 					for mapIter.Next() {
 						s, err := c.String(mapIter.Key().Interface())
-						if err != nil && in.Option.BreakOnError {
+						if err != nil && !in.Option.ContinueOnError {
 							return nil, err
 						}
 						nestedMap[s], err = c.doMapConvertForMapOrStructValue(
@@ -593,7 +593,7 @@ func (c *Converter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrStruc
 								Option:          in.Option,
 							},
 						)
-						if err != nil && in.Option.BreakOnError {
+						if err != nil && !in.Option.ContinueOnError {
 							return nil, err
 						}
 					}
@@ -634,7 +634,7 @@ func (c *Converter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrStruc
 				RecursiveOption: in.RecursiveType == RecursiveTypeTrue,
 				Option:          in.Option,
 			})
-			if err != nil && in.Option.BreakOnError {
+			if err != nil && !in.Option.ContinueOnError {
 				return nil, err
 			}
 		}

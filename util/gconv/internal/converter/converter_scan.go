@@ -20,9 +20,9 @@ type ScanOption struct {
 	// ParamKeyToAttrMap specifies the mapping between parameter keys and struct attribute names.
 	ParamKeyToAttrMap map[string]string
 
-	// BreakOnError specifies whether to break converting the next element
-	// if one element conversion fails.
-	BreakOnError bool
+	// ContinueOnError specifies whether to continue converting the next element
+	// if one element converting fails.
+	ContinueOnError bool
 }
 
 // Scan automatically checks the type of `pointer` and converts `params` to `pointer`.
@@ -107,7 +107,7 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ScanOption) (err e
 	switch dstPointerReflectValueElemKind {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		v, err := c.Int64(srcValue)
-		if err != nil && option.BreakOnError {
+		if err != nil && !option.ContinueOnError {
 			return err
 		}
 		dstPointerReflectValueElem.SetInt(v)
@@ -115,7 +115,7 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ScanOption) (err e
 
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		v, err := c.Uint64(srcValue)
-		if err != nil && option.BreakOnError {
+		if err != nil && !option.ContinueOnError {
 			return err
 		}
 		dstPointerReflectValueElem.SetUint(v)
@@ -123,7 +123,7 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ScanOption) (err e
 
 	case reflect.Float32, reflect.Float64:
 		v, err := c.Float64(srcValue)
-		if err != nil && option.BreakOnError {
+		if err != nil && !option.ContinueOnError {
 			return err
 		}
 		dstPointerReflectValueElem.SetFloat(v)
@@ -131,7 +131,7 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ScanOption) (err e
 
 	case reflect.String:
 		v, err := c.String(srcValue)
-		if err != nil && option.BreakOnError {
+		if err != nil && !option.ContinueOnError {
 			return err
 		}
 		dstPointerReflectValueElem.SetString(v)
@@ -139,7 +139,7 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ScanOption) (err e
 
 	case reflect.Bool:
 		v, err := c.Bool(srcValue)
-		if err != nil && option.BreakOnError {
+		if err != nil && !option.ContinueOnError {
 			return err
 		}
 		dstPointerReflectValueElem.SetBool(v)
@@ -172,31 +172,31 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ScanOption) (err e
 				switch dstElemType.Kind() {
 				case reflect.String:
 					v, err := c.String(srcElem)
-					if err != nil && option.BreakOnError {
+					if err != nil && !option.ContinueOnError {
 						return err
 					}
 					newSlice.Index(i).SetString(v)
 				case reflect.Int:
 					v, err := c.Int64(srcElem)
-					if err != nil && option.BreakOnError {
+					if err != nil && !option.ContinueOnError {
 						return err
 					}
 					newSlice.Index(i).SetInt(v)
 				case reflect.Int64:
 					v, err := c.Int64(srcElem)
-					if err != nil && option.BreakOnError {
+					if err != nil && !option.ContinueOnError {
 						return err
 					}
 					newSlice.Index(i).SetInt(v)
 				case reflect.Float64:
 					v, err := c.Float64(srcElem)
-					if err != nil && option.BreakOnError {
+					if err != nil && !option.ContinueOnError {
 						return err
 					}
 					newSlice.Index(i).SetFloat(v)
 				case reflect.Bool:
 					v, err := c.Bool(srcElem)
-					if err != nil && option.BreakOnError {
+					if err != nil && !option.ContinueOnError {
 						return err
 					}
 					newSlice.Index(i).SetBool(v)
@@ -267,7 +267,7 @@ func (c *Converter) doScanForComplicatedTypes(
 		if sliceElemKind == reflect.Map {
 			// Convert to slice of maps
 			return c.MapToMaps(srcValue, dstPointer, keyToAttributeNameMapping, MapOption{
-				BreakOnError: option.BreakOnError,
+				ContinueOnError: option.ContinueOnError,
 			})
 		}
 		// Convert to slice of structs
@@ -279,6 +279,7 @@ func (c *Converter) doScanForComplicatedTypes(
 		structOption := StructOption{
 			ParamKeyToAttrMap: keyToAttributeNameMapping,
 			PriorityTag:       "",
+			ContinueOnError:   option.ContinueOnError,
 		}
 		return c.Struct(srcValue, dstPointer, structOption)
 	}

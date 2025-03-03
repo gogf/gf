@@ -22,11 +22,15 @@ func SliceMapDeep(any any) []map[string]any {
 // Maps converts `value` to []map[string]any.
 // Note that it automatically checks and converts json string to []map if `value` is string/[]byte.
 func Maps(value any, option ...MapOption) []map[string]any {
-	mapOption := MapOption{}
+	mapOption := MapOption{
+		ContinueOnError: true,
+	}
 	if len(option) > 0 {
 		mapOption = option[0]
 	}
-	result, _ := defaultConverter.SliceMap(value, SliceOption{}, mapOption)
+	result, _ := defaultConverter.SliceMap(value, SliceOption{
+		ContinueOnError: true,
+	}, mapOption)
 	return result
 }
 

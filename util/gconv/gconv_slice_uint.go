@@ -23,18 +23,24 @@ func SliceUint64(any interface{}) []uint64 {
 
 // Uints converts `any` to []uint.
 func Uints(any interface{}) []uint {
-	result, _ := defaultConverter.SliceUint(any, SliceOption{})
+	result, _ := defaultConverter.SliceUint(any, SliceOption{
+		ContinueOnError: true,
+	})
 	return result
 }
 
 // Uint32s converts `any` to []uint32.
 func Uint32s(any interface{}) []uint32 {
-	result, _ := defaultConverter.SliceUint32(any, SliceOption{})
+	result, _ := defaultConverter.SliceUint32(any, SliceOption{
+		ContinueOnError: true,
+	})
 	return result
 }
 
 // Uint64s converts `any` to []uint64.
 func Uint64s(any interface{}) []uint64 {
-	result, _ := defaultConverter.SliceUint64(any, SliceOption{})
+	result, _ := defaultConverter.SliceUint64(any, SliceOption{
+		ContinueOnError: true,
+	})
 	return result
 }

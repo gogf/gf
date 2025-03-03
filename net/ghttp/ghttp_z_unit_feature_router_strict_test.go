@@ -523,7 +523,7 @@ func Test_NullString_Issue3465(t *testing.T) {
 			"name": "null",
 		}
 
-		expect1 := `{"code":0,"message":"OK","data":{"name":null}}`
+		expect1 := `{"code":0,"message":"OK","data":{"name":["null"]}}`
 		t.Assert(client.GetContent(ctx, "/test", data1), expect1)
 
 		data2 := map[string]any{

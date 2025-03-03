@@ -97,6 +97,7 @@ func (c *Converter) MapToMap(
 			structOption := StructOption{
 				ParamKeyToAttrMap: mapping,
 				PriorityTag:       "",
+				ContinueOnError:   option.ContinueOnError,
 			}
 			if err = c.Struct(paramsRv.MapIndex(key).Interface(), mapValue, structOption); err != nil {
 				return err

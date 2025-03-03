@@ -23,18 +23,24 @@ func SliceInt64(any any) []int64 {
 
 // Ints converts `any` to []int.
 func Ints(any any) []int {
-	result, _ := defaultConverter.SliceInt(any, SliceOption{})
+	result, _ := defaultConverter.SliceInt(any, SliceOption{
+		ContinueOnError: true,
+	})
 	return result
 }
 
 // Int32s converts `any` to []int32.
 func Int32s(any any) []int32 {
-	result, _ := defaultConverter.SliceInt32(any, SliceOption{})
+	result, _ := defaultConverter.SliceInt32(any, SliceOption{
+		ContinueOnError: true,
+	})
 	return result
 }
 
 // Int64s converts `any` to []int64.
 func Int64s(any any) []int64 {
-	result, _ := defaultConverter.SliceInt64(any, SliceOption{})
+	result, _ := defaultConverter.SliceInt64(any, SliceOption{
+		ContinueOnError: true,
+	})
 	return result
 }

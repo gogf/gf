@@ -28,12 +28,16 @@ func Floats(any interface{}) []float64 {
 
 // Float32s converts `any` to []float32.
 func Float32s(any interface{}) []float32 {
-	result, _ := defaultConverter.SliceFloat32(any, SliceOption{})
+	result, _ := defaultConverter.SliceFloat32(any, SliceOption{
+		ContinueOnError: true,
+	})
 	return result
 }
 
 // Float64s converts `any` to []float64.
 func Float64s(any interface{}) []float64 {
-	result, _ := defaultConverter.SliceFloat64(any, SliceOption{})
+	result, _ := defaultConverter.SliceFloat64(any, SliceOption{
+		ContinueOnError: true,
+	})
 	return result
 }

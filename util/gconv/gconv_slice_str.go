@@ -13,6 +13,8 @@ func SliceStr(any interface{}) []string {
 
 // Strings converts `any` to []string.
 func Strings(any interface{}) []string {
-	result, _ := defaultConverter.SliceStr(any, SliceOption{})
+	result, _ := defaultConverter.SliceStr(any, SliceOption{
+		ContinueOnError: true,
+	})
 	return result
 }

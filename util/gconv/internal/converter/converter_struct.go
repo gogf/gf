@@ -26,6 +26,10 @@ type StructOption struct {
 
 	// PriorityTag is the priority tag for struct converting.
 	PriorityTag string
+
+	// ContinueOnError specifies whether to continue converting the next element
+	// if one element converting fails.
+	ContinueOnError bool
 }
 
 // Struct is the core internal converting function for any data to struct.
@@ -207,8 +211,9 @@ func (c *Converter) Struct(params, pointer any, option StructOption) (err error)
 		return nil
 	}
 	return c.bindStructWithLoopFieldInfos(
-		paramsMap, pointerElemReflectValue, option.ParamKeyToAttrMap,
+		paramsMap, pointerElemReflectValue,
 		usedParamsKeyOrTagNameMap, cachedStructInfo,
+		option,
 	)
 }
 
@@ -231,9 +236,9 @@ func (c *Converter) setOtherSameNameField(
 func (c *Converter) bindStructWithLoopFieldInfos(
 	paramsMap map[string]any,
 	structValue reflect.Value,
-	paramKeyToAttrMap map[string]string,
 	usedParamsKeyOrTagNameMap map[string]struct{},
 	cachedStructInfo *structcache.CachedStructInfo,
+	option StructOption,
 ) (err error) {
 	var (
 		cachedFieldInfo *structcache.CachedFieldInfo
@@ -251,15 +256,15 @@ func (c *Converter) bindStructWithLoopFieldInfos(
 			}
 			fieldValue = cachedFieldInfo.GetFieldReflectValueFrom(structValue)
 			if err = c.bindVarToStructField(
-				cachedFieldInfo, fieldValue, paramValue, paramKeyToAttrMap,
-			); err != nil {
+				cachedFieldInfo, fieldValue, paramValue, option.ParamKeyToAttrMap,
+			); err != nil && !option.ContinueOnError {
 				return err
 			}
 			// handle same field name in nested struct.
 			if len(cachedFieldInfo.OtherSameNameField) > 0 {
 				if err = c.setOtherSameNameField(
-					cachedFieldInfo, paramValue, structValue, paramKeyToAttrMap,
-				); err != nil {
+					cachedFieldInfo, paramValue, structValue, option.ParamKeyToAttrMap,
+				); err != nil && !option.ContinueOnError {
 					return err
 				}
 			}
@@ -284,15 +289,15 @@ func (c *Converter) bindStructWithLoopFieldInfos(
 			fieldValue = cachedFieldInfo.GetFieldReflectValueFrom(structValue)
 			if paramValue != nil {
 				if err = c.bindVarToStructField(
-					cachedFieldInfo, fieldValue, paramValue, paramKeyToAttrMap,
-				); err != nil {
+					cachedFieldInfo, fieldValue, paramValue, option.ParamKeyToAttrMap,
+				); err != nil && !option.ContinueOnError {
 					return err
 				}
 				// handle same field name in nested struct.
 				if len(cachedFieldInfo.OtherSameNameField) > 0 {
 					if err = c.setOtherSameNameField(
-						cachedFieldInfo, paramValue, structValue, paramKeyToAttrMap,
-					); err != nil {
+						cachedFieldInfo, paramValue, structValue, option.ParamKeyToAttrMap,
+					); err != nil && !option.ContinueOnError {
 						return err
 					}
 				}
