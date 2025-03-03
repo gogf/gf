@@ -50,10 +50,10 @@ type CachedFieldInfoBase struct {
 	// Purpose: reduce the interface asserting cost in runtime.
 	IsCommonInterface bool
 
-	// IsCustomConvert marks there custom converting function for this field type.
+	// HasCustomConvert marks there custom converting function for this field type.
 	// A custom converting function is a function that user defined for converting specified type
 	// to another type.
-	IsCustomConvert bool
+	HasCustomConvert bool
 
 	// StructField is the type info of this field.
 	StructField reflect.StructField
