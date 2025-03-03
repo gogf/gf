@@ -454,17 +454,9 @@ func (s *Server) Run() {
 
 	// Blocking using the channel for graceful restart.
 	<-s.closeChan
-	// Remove plugins.
-	if len(s.plugins) > 0 {
-		for _, p := range s.plugins {
-			intlog.Printf(ctx, `remove plugin: %s`, p.Name())
-			if err := p.Remove(); err != nil {
-				intlog.Errorf(ctx, "%+v", err)
-			}
-		}
-	}
-	s.doServiceDeregister()
-	s.Logger().Infof(ctx, "pid[%d]: all servers shutdown", gproc.Pid())
+
+	// Shutdown the server
+	_ = s.Shutdown()
 }
 
 // Wait blocks to wait for all servers done.
