@@ -365,88 +365,91 @@ func (c *Converter) doConvert(in doConvertInput, option ConvertOption) (converte
 		return bytes, nil
 
 	default:
-		if in.ReferValue != nil {
-			var referReflectValue reflect.Value
-			if v, ok := in.ReferValue.(reflect.Value); ok {
-				referReflectValue = v
-			} else {
-				referReflectValue = reflect.ValueOf(in.ReferValue)
-			}
-			var fromReflectValue reflect.Value
-			if v, ok := in.FromValue.(reflect.Value); ok {
-				fromReflectValue = v
-			} else {
-				fromReflectValue = reflect.ValueOf(in.FromValue)
-			}
-
-			// custom converter.
-			dstReflectValue, ok, err := c.callCustomConverterWithRefer(fromReflectValue, referReflectValue)
-			if err != nil {
-				return nil, err
-			}
-			if ok {
-				return dstReflectValue.Interface(), nil
-			}
-
-			defer func() {
-				if recover() != nil {
-					in.alreadySetToReferValue = false
-					if err = c.bindVarToReflectValue(referReflectValue, in.FromValue, option.StructOption); err == nil {
-						in.alreadySetToReferValue = true
-						convertedValue = referReflectValue.Interface()
-					}
-				}
-			}()
-			switch referReflectValue.Kind() {
-			case reflect.Ptr:
-				// Type converting for custom type pointers.
-				// Eg:
-				// type PayMode int
-				// type Req struct{
-				//     Mode *PayMode
-				// }
-				//
-				// Struct(`{"Mode": 1000}`, &req)
-				originType := referReflectValue.Type().Elem()
-				switch originType.Kind() {
-				case reflect.Struct:
-					// Not support some kinds.
-				default:
-					in.ToTypeName = originType.Kind().String()
-					in.ReferValue = nil
-					result, err := c.doConvert(in, option)
-					if err != nil {
-						return nil, err
-					}
-					refElementValue := reflect.ValueOf(result)
-					originTypeValue := reflect.New(refElementValue.Type()).Elem()
-					originTypeValue.Set(refElementValue)
-					in.alreadySetToReferValue = true
-					return originTypeValue.Addr().Convert(referReflectValue.Type()).Interface(), nil
-				}
-
-			case reflect.Map:
-				var targetValue = reflect.New(referReflectValue.Type()).Elem()
-				if err = c.MapToMap(in.FromValue, targetValue, nil, option.MapOption); err == nil {
-					in.alreadySetToReferValue = true
-				}
-				return targetValue.Interface(), nil
-
-			default:
-
-			}
-			in.ToTypeName = referReflectValue.Kind().String()
-			in.ReferValue = nil
-			in.alreadySetToReferValue = true
-			result, err := c.doConvert(in, option)
-			if err != nil {
-				return nil, err
-			}
-			convertedValue = reflect.ValueOf(result).Convert(referReflectValue.Type()).Interface()
-			return convertedValue, nil
-		}
-		return in.FromValue, nil
+		return c.doConvertForDefault(in, option)
 	}
+}
+
+func (c *Converter) doConvertForDefault(in doConvertInput, option ConvertOption) (convertedValue any, err error) {
+	if in.ReferValue != nil {
+		var referReflectValue reflect.Value
+		if v, ok := in.ReferValue.(reflect.Value); ok {
+			referReflectValue = v
+		} else {
+			referReflectValue = reflect.ValueOf(in.ReferValue)
+		}
+		var fromReflectValue reflect.Value
+		if v, ok := in.FromValue.(reflect.Value); ok {
+			fromReflectValue = v
+		} else {
+			fromReflectValue = reflect.ValueOf(in.FromValue)
+		}
+
+		// custom converter.
+		dstReflectValue, ok, err := c.callCustomConverterWithRefer(fromReflectValue, referReflectValue)
+		if err != nil {
+			return nil, err
+		}
+		if ok {
+			return dstReflectValue.Interface(), nil
+		}
+
+		defer func() {
+			if recover() != nil {
+				in.alreadySetToReferValue = false
+				if err = c.bindVarToReflectValue(referReflectValue, in.FromValue, option.StructOption); err == nil {
+					in.alreadySetToReferValue = true
+					convertedValue = referReflectValue.Interface()
+				}
+			}
+		}()
+		switch referReflectValue.Kind() {
+		case reflect.Ptr:
+			// Type converting for custom type pointers.
+			// Eg:
+			// type PayMode int
+			// type Req struct{
+			//     Mode *PayMode
+			// }
+			//
+			// Struct(`{"Mode": 1000}`, &req)
+			originType := referReflectValue.Type().Elem()
+			switch originType.Kind() {
+			case reflect.Struct:
+				// Not support some kinds.
+			default:
+				in.ToTypeName = originType.Kind().String()
+				in.ReferValue = nil
+				result, err := c.doConvert(in, option)
+				if err != nil {
+					return nil, err
+				}
+				refElementValue := reflect.ValueOf(result)
+				originTypeValue := reflect.New(refElementValue.Type()).Elem()
+				originTypeValue.Set(refElementValue)
+				in.alreadySetToReferValue = true
+				return originTypeValue.Addr().Convert(referReflectValue.Type()).Interface(), nil
+			}
+
+		case reflect.Map:
+			var targetValue = reflect.New(referReflectValue.Type()).Elem()
+			if err = c.MapToMap(in.FromValue, targetValue, nil, option.MapOption); err == nil {
+				in.alreadySetToReferValue = true
+			}
+			return targetValue.Interface(), nil
+
+		default:
+		}
+		in.ToTypeName = referReflectValue.Kind().String()
+		in.ReferValue = nil
+		in.alreadySetToReferValue = true
+		result, err := c.doConvert(in, option)
+		if err != nil {
+			return nil, err
+		}
+		convertedValue = reflect.ValueOf(result).Convert(referReflectValue.Type()).Interface()
+		return convertedValue, nil
+	}
+	return in.FromValue, nil
 }
 
 func (c *Converter) doConvertWithReflectValueSet(reflectValue reflect.Value, in doConvertInput, option ConvertOption) error {

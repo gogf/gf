@@ -225,7 +225,6 @@ func (c *Core) GetScan(ctx context.Context, pointer interface{}, sql string, arg
 		return c.db.GetCore().doGetStruct(ctx, pointer, sql, args...)
 
 	default:
-
 	}
 	return gerror.NewCodef(
 		gcode.CodeInvalidParameter,
