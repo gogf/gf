@@ -10,6 +10,7 @@
 package gconv
 
 import (
+	"reflect"
 	"time"
 
 	"github.com/gogf/gf/v2/os/gtime"
@@ -103,11 +104,13 @@ type ConverterForStruct interface {
 // ConverterForConvert is the converting interface for custom converting.
 type ConverterForConvert interface {
 	ConvertWithRefer(fromValue, referValue any, extraParams ...any) (any, error)
+	ConvertWithTypeName(fromValue any, toTypeName string, extraParams ...any) (any, error)
 }
 
 // ConverterForRegister is the converting interface for custom converter registration.
 type ConverterForRegister interface {
-	RegisterTypeConverterFunc(fn any) (err error)
+	RegisterTypeConverterFunc(f any) error
+	RegisterAnyConverterFunc(f AnyConvertFunc, types ...reflect.Type)
 }
 
 type (

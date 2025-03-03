@@ -78,7 +78,7 @@ func NewConverter() *Converter {
 		internalConverter:    structcache.NewConverter(),
 		typeConverterFuncMap: make(map[converterInType]map[converterOutType]converterFunc),
 	}
-	cf.registerBuiltInConverter()
+	cf.registerBuiltInAnyConvertFunc()
 	return cf
 }
 
@@ -90,33 +90,33 @@ func NewConverter() *Converter {
 //  1. The parameter `fn` must be defined as pattern `func(T1) (T2, error)`.
 //     It will convert type `T1` to type `T2`.
 //  2. The `T1` should not be type of pointer, but the `T2` should be type of pointer.
-func (c *Converter) RegisterTypeConverterFunc(fn any) (err error) {
+func (c *Converter) RegisterTypeConverterFunc(f any) (err error) {
 	var (
-		fnReflectType = reflect.TypeOf(fn)
-		errType       = reflect.TypeOf((*error)(nil)).Elem()
+		fReflectType = reflect.TypeOf(f)
+		errType      = reflect.TypeOf((*error)(nil)).Elem()
 	)
-	if fnReflectType.Kind() != reflect.Func ||
-		fnReflectType.NumIn() != 1 || fnReflectType.NumOut() != 2 ||
-		!fnReflectType.Out(1).Implements(errType) {
+	if fReflectType.Kind() != reflect.Func ||
+		fReflectType.NumIn() != 1 || fReflectType.NumOut() != 2 ||
+		!fReflectType.Out(1).Implements(errType) {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			"parameter must be type of converter function and defined as pattern `func(T1) (T2, error)`, "+
 				"but defined as `%s`",
-			fnReflectType.String(),
+			fReflectType.String(),
 		)
 		return
 	}
 
 	// The Key and Value of the converter map should not be pointer.
 	var (
-		inType  = fnReflectType.In(0)
-		outType = fnReflectType.Out(0)
+		inType  = fReflectType.In(0)
+		outType = fReflectType.Out(0)
 	)
 	if inType.Kind() == reflect.Pointer {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			"invalid converter function `%s`: invalid input parameter type `%s`, should not be type of pointer",
-			fnReflectType.String(), inType.String(),
+			fReflectType.String(), inType.String(),
 		)
 		return
 	}
@@ -124,7 +124,7 @@ func (c *Converter) RegisterTypeConverterFunc(fn any) (err error) {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			"invalid converter function `%s`: invalid output parameter type `%s` should be type of pointer",
-			fnReflectType.String(), outType.String(),
+			fReflectType.String(), outType.String(),
 		)
 		return
 	}
@@ -142,40 +142,41 @@ func (c *Converter) RegisterTypeConverterFunc(fn any) (err error) {
 		)
 		return
 	}
-	registeredOutTypeMap[outType] = reflect.ValueOf(fn)
+	registeredOutTypeMap[outType] = reflect.ValueOf(f)
 	c.internalConverter.RegisterTypeConvertFunc(outType)
 	return
 }
 
-func (c *Converter) registerBuiltInConverter() {
-	c.registerAnyConvertFuncForTypes(
-		c.builtInAnyConvertFuncForInt64, intType, int8Type, int16Type, int32Type, int64Type,
-	)
-	c.registerAnyConvertFuncForTypes(
-		c.builtInAnyConvertFuncForUint64, uintType, uint8Type, uint16Type, uint32Type, uint64Type,
-	)
-	c.registerAnyConvertFuncForTypes(
-		c.builtInAnyConvertFuncForString, stringType,
-	)
-	c.registerAnyConvertFuncForTypes(
-		c.builtInAnyConvertFuncForFloat64, float32Type, float64Type,
-	)
-	c.registerAnyConvertFuncForTypes(
-		c.builtInAnyConvertFuncForBool, boolType,
-	)
-	c.registerAnyConvertFuncForTypes(
-		c.builtInAnyConvertFuncForBytes, bytesType,
-	)
-	c.registerAnyConvertFuncForTypes(
-		c.builtInAnyConvertFuncForTime, timeType,
-	)
-	c.registerAnyConvertFuncForTypes(
-		c.builtInAnyConvertFuncForGTime, gtimeType,
-	)
-}
-
-func (c *Converter) registerAnyConvertFuncForTypes(convertFunc AnyConvertFunc, types ...reflect.Type) {
+// RegisterAnyConverterFunc registers custom type converting function for specified types.
+func (c *Converter) RegisterAnyConverterFunc(convertFunc AnyConvertFunc, types ...reflect.Type) {
 	for _, t := range types {
 		c.internalConverter.RegisterAnyConvertFunc(t, convertFunc)
 	}
+}
+
+func (c *Converter) registerBuiltInAnyConvertFunc() {
+	c.RegisterAnyConverterFunc(
+		c.builtInAnyConvertFuncForInt64, intType, int8Type, int16Type, int32Type, int64Type,
+	)
+	c.RegisterAnyConverterFunc(
+		c.builtInAnyConvertFuncForUint64, uintType, uint8Type, uint16Type, uint32Type, uint64Type,
+	)
+	c.RegisterAnyConverterFunc(
+		c.builtInAnyConvertFuncForString, stringType,
+	)
+	c.RegisterAnyConverterFunc(
+		c.builtInAnyConvertFuncForFloat64, float32Type, float64Type,
+	)
+	c.RegisterAnyConverterFunc(
+		c.builtInAnyConvertFuncForBool, boolType,
+	)
+	c.RegisterAnyConverterFunc(
+		c.builtInAnyConvertFuncForBytes, bytesType,
+	)
+	c.RegisterAnyConverterFunc(
+		c.builtInAnyConvertFuncForTime, timeType,
+	)
+	c.RegisterAnyConverterFunc(
+		c.builtInAnyConvertFuncForGTime, gtimeType,
+	)
 }

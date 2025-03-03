@@ -12,7 +12,7 @@ import (
 )
 
 // Val returns the current value of `v`.
-func (v *Var) Val() interface{} {
+func (v *Var) Val() any {
 	if v == nil {
 		return nil
 	}
@@ -25,7 +25,7 @@ func (v *Var) Val() interface{} {
 }
 
 // Interface is alias of Val.
-func (v *Var) Interface() interface{} {
+func (v *Var) Interface() any {
 	return v.Val()
 }
 
