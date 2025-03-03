@@ -16,7 +16,6 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/net/gsel"
 	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/text/gstr"
 )
 
 type discoveryNode struct {
@@ -39,7 +38,7 @@ var clientSelectorMap = gmap.New(true)
 
 // internalMiddlewareDiscovery is a client middleware that enables service discovery feature for client.
 func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response, err error) {
-	if c.discovery == nil && !isServiceName(r.URL.Host) {
+	if c.discovery == nil {
 		return c.Next(r)
 	}
 	var (
@@ -106,12 +105,4 @@ func updateSelectorNodesByService(ctx context.Context, selector gsel.Selector, s
 		})
 	}
 	return selector.Update(ctx, nodes)
-}
-
-// isServiceName checks and returns whether given input parameter is service name or not.
-// It checks by whether the parameter is address by containing port delimiter character ':'.
-//
-// It does not contain any port number if using service discovery.
-func isServiceName(serviceNameOrAddress string) bool {
-	return !gstr.Contains(serviceNameOrAddress, gsvc.EndpointHostPortDelimiter)
 }

@@ -45,6 +45,7 @@ func Test_HTTP_Registry(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
+		client.SetDiscovery(gsvc.GetRegistry())
 		client.SetPrefix(fmt.Sprintf("http://%s", svcName))
 		// GET
 		t.Assert(client.GetContent(ctx, "/http-registry"), svcName)
@@ -71,6 +72,7 @@ func Test_HTTP_Discovery_Disable(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
+		client.SetDiscovery(gsvc.GetRegistry())
 		client.SetPrefix(fmt.Sprintf("http://%s", svcName))
 		result, err := client.Get(ctx, "/http-registry")
 		defer result.Close()
