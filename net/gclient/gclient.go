@@ -72,7 +72,7 @@ func New() *Client {
 		header:    make(map[string]string),
 		cookies:   make(map[string]string),
 		builder:   gsel.GetBuilder(),
-		discovery: gsvc.GetRegistry(),
+		discovery: nil,
 	}
 	c.header[httpHeaderUserAgent] = defaultClientAgent
 	// It enables OpenTelemetry for client in default.

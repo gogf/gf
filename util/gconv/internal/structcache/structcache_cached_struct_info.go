@@ -99,7 +99,7 @@ func (csi *CachedStructInfo) makeCachedFieldInfo(
 		StructField:             field,
 		FieldIndexes:            fieldIndexes,
 		ConvertFunc:             csi.genFieldConvertFunc(field.Type.String()),
-		IsCustomConvert:         csi.checkTypeHasCustomConvert(field.Type),
+		HasCustomConvert:        csi.checkTypeHasCustomConvert(field.Type),
 		PriorityTagAndFieldName: csi.genPriorityTagAndFieldName(field, priorityTags),
 		RemoveSymbolsFieldName:  utils.RemoveSymbols(field.Name),
 	}

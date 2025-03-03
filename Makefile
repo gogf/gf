@@ -33,9 +33,8 @@ version:
 .PHONY: subup
 subup:
 	@set -e; \
-	cd examples; \
 	echo "Updating submodules..."; \
-	git pull origin; \
+	cd examples && git pull origin main; \
 	cd ..;
 
 # update and commit submodules
