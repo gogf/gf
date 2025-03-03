@@ -34,8 +34,8 @@ version:
 subup:
 	@set -e; \
 	echo "Updating submodules..."; \
-	cd examples && git pull origin main; \
-	cd ..;
+	git submodule init;\
+	git submodule update;
 
 # update and commit submodules
 .PHONY: subsync

@@ -9,24 +9,46 @@ package structcache
 
 import (
 	"reflect"
+	"sync"
 
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
-var (
-	// customConvertTypeMap is used to store whether field types are registered to custom conversions
-	// For example:
-	// func (src *TypeA) (dst *TypeB,err error)
-	// This map will store `TypeB` for quick judgment during assignment.
-	customConvertTypeMap = map[reflect.Type]struct{}{}
-)
+// Converter is the configuration for type converting.
+type Converter struct {
+	// map[reflect.Type]*CachedStructInfo
+	cachedStructsInfoMap sync.Map
 
-// RegisterCustomConvertType registers custom
-func RegisterCustomConvertType(fieldType reflect.Type) {
+	// anyToTypeConvertMap for custom type converting from any to its reflect.Value.
+	anyToTypeConvertMap map[reflect.Type]AnyConvertFunc
+
+	// typeConverterFuncMarkMap is used to store whether field types are registered to custom conversions
+	typeConverterFuncMarkMap map[reflect.Type]struct{}
+}
+
+// AnyConvertFunc is the function type for converting any to specified type.
+type AnyConvertFunc func(from any, to reflect.Value) error
+
+// NewConverter creates and returns a new Converter object.
+func NewConverter() *Converter {
+	return &Converter{
+		cachedStructsInfoMap:     sync.Map{},
+		typeConverterFuncMarkMap: make(map[reflect.Type]struct{}),
+		anyToTypeConvertMap:      make(map[reflect.Type]AnyConvertFunc),
+	}
+}
+
+// MarkTypeConvertFunc marks converting function registered for custom type.
+func (cf *Converter) MarkTypeConvertFunc(fieldType reflect.Type) {
 	if fieldType.Kind() == reflect.Ptr {
 		fieldType = fieldType.Elem()
 	}
-	customConvertTypeMap[fieldType] = struct{}{}
+	cf.typeConverterFuncMarkMap[fieldType] = struct{}{}
+}
+
+// RegisterAnyConvertFunc registers custom type converting function for specified type.
+func (cf *Converter) RegisterAnyConvertFunc(t reflect.Type, convertFunc AnyConvertFunc) {
+	cf.anyToTypeConvertMap[t] = convertFunc
 }
 
 var (
