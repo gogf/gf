@@ -54,7 +54,8 @@ func (r Record) Struct(pointer interface{}) error {
 		return nil
 	}
 	return converter.Struct(r, pointer, gconv.StructOption{
-		PriorityTag: OrmTagForStruct,
+		PriorityTag:     OrmTagForStruct,
+		ContinueOnError: true,
 	})
 }
 
