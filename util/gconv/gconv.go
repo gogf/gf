@@ -103,8 +103,8 @@ type ConverterForStruct interface {
 
 // ConverterForConvert is the converting interface for custom converting.
 type ConverterForConvert interface {
-	ConvertWithRefer(fromValue, referValue any, extraParams ...any) (any, error)
-	ConvertWithTypeName(fromValue any, toTypeName string, extraParams ...any) (any, error)
+	ConvertWithRefer(fromValue, referValue any, option ConvertOption) (any, error)
+	ConvertWithTypeName(fromValue any, toTypeName string, option ConvertOption) (any, error)
 }
 
 // ConverterForRegister is the converting interface for custom converter registration.
@@ -128,6 +128,9 @@ type (
 
 	// StructOption is the option for Struct converting.
 	StructOption = converter.StructOption
+
+	// ConvertOption is the option for converting.
+	ConvertOption = converter.ConvertOption
 )
 
 // IUnmarshalValue is the interface for custom defined types customizing value assignment.

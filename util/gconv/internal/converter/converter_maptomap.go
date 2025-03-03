@@ -85,6 +85,11 @@ func (c *Converter) MapToMap(
 		pointerValueType = pointerRv.Type().Elem()
 		pointerValueKind = pointerValueType.Kind()
 		dataMap          = reflect.MakeMapWithSize(pointerRv.Type(), len(paramsKeys))
+		convertOption    = ConvertOption{
+			StructOption: StructOption{ContinueOnError: option.ContinueOnError},
+			SliceOption:  SliceOption{ContinueOnError: option.ContinueOnError},
+			MapOption:    option,
+		}
 	)
 	// Retrieve the true element type of target map.
 	if pointerValueKind == reflect.Ptr {
@@ -103,23 +108,27 @@ func (c *Converter) MapToMap(
 				return err
 			}
 		default:
-			convertResult, err := c.doConvert(doConvertInput{
-				FromValue:  paramsRv.MapIndex(key).Interface(),
-				ToTypeName: pointerValueType.String(),
-				ReferValue: mapValue,
-				Extra:      nil,
-			})
+			convertResult, err := c.doConvert(
+				doConvertInput{
+					FromValue:  paramsRv.MapIndex(key).Interface(),
+					ToTypeName: pointerValueType.String(),
+					ReferValue: mapValue,
+				},
+				convertOption,
+			)
 			if err != nil {
 				return err
 			}
 			mapValue.Set(reflect.ValueOf(convertResult))
 		}
-		convertResult, err := c.doConvert(doConvertInput{
-			FromValue:  key.Interface(),
-			ToTypeName: pointerKeyType.Name(),
-			ReferValue: reflect.New(pointerKeyType).Elem().Interface(),
-			Extra:      nil,
-		})
+		convertResult, err := c.doConvert(
+			doConvertInput{
+				FromValue:  key.Interface(),
+				ToTypeName: pointerKeyType.Name(),
+				ReferValue: reflect.New(pointerKeyType).Elem().Interface(),
+			},
+			convertOption,
+		)
 		if err != nil {
 			return err
 		}

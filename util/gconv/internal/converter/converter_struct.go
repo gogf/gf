@@ -192,13 +192,13 @@ func (c *Converter) Struct(params, pointer any, option StructOption) (err error)
 				cachedFieldInfo,
 				fieldValue,
 				paramsValue,
-				option.ParamKeyToAttrMap,
+				option,
 			); err != nil {
 				return err
 			}
 			if len(cachedFieldInfo.OtherSameNameField) > 0 {
 				if err = c.setOtherSameNameField(
-					cachedFieldInfo, paramsValue, pointerReflectValue, option.ParamKeyToAttrMap,
+					cachedFieldInfo, paramsValue, pointerReflectValue, option,
 				); err != nil {
 					return err
 				}
@@ -221,12 +221,12 @@ func (c *Converter) setOtherSameNameField(
 	cachedFieldInfo *structcache.CachedFieldInfo,
 	srcValue any,
 	structValue reflect.Value,
-	paramKeyToAttrMap map[string]string,
+	option StructOption,
 ) (err error) {
 	// loop the same field name of all sub attributes.
 	for _, otherFieldInfo := range cachedFieldInfo.OtherSameNameField {
 		fieldValue := cachedFieldInfo.GetOtherFieldReflectValueFrom(structValue, otherFieldInfo.FieldIndexes)
-		if err = c.bindVarToStructField(otherFieldInfo, fieldValue, srcValue, paramKeyToAttrMap); err != nil {
+		if err = c.bindVarToStructField(otherFieldInfo, fieldValue, srcValue, option); err != nil {
 			return err
 		}
 	}
@@ -256,14 +256,14 @@ func (c *Converter) bindStructWithLoopFieldInfos(
 			}
 			fieldValue = cachedFieldInfo.GetFieldReflectValueFrom(structValue)
 			if err = c.bindVarToStructField(
-				cachedFieldInfo, fieldValue, paramValue, option.ParamKeyToAttrMap,
+				cachedFieldInfo, fieldValue, paramValue, option,
 			); err != nil && !option.ContinueOnError {
 				return err
 			}
 			// handle same field name in nested struct.
 			if len(cachedFieldInfo.OtherSameNameField) > 0 {
 				if err = c.setOtherSameNameField(
-					cachedFieldInfo, paramValue, structValue, option.ParamKeyToAttrMap,
+					cachedFieldInfo, paramValue, structValue, option,
 				); err != nil && !option.ContinueOnError {
 					return err
 				}
@@ -289,14 +289,14 @@ func (c *Converter) bindStructWithLoopFieldInfos(
 			fieldValue = cachedFieldInfo.GetFieldReflectValueFrom(structValue)
 			if paramValue != nil {
 				if err = c.bindVarToStructField(
-					cachedFieldInfo, fieldValue, paramValue, option.ParamKeyToAttrMap,
+					cachedFieldInfo, fieldValue, paramValue, option,
 				); err != nil && !option.ContinueOnError {
 					return err
 				}
 				// handle same field name in nested struct.
 				if len(cachedFieldInfo.OtherSameNameField) > 0 {
 					if err = c.setOtherSameNameField(
-						cachedFieldInfo, paramValue, structValue, option.ParamKeyToAttrMap,
+						cachedFieldInfo, paramValue, structValue, option,
 					); err != nil && !option.ContinueOnError {
 						return err
 					}
@@ -333,7 +333,7 @@ func (c *Converter) bindVarToStructField(
 	cachedFieldInfo *structcache.CachedFieldInfo,
 	fieldValue reflect.Value,
 	srcValue any,
-	paramKeyToAttrMap map[string]string,
+	option StructOption,
 ) (err error) {
 	if !fieldValue.IsValid() {
 		return nil
@@ -344,7 +344,7 @@ func (c *Converter) bindVarToStructField(
 	}
 	defer func() {
 		if exception := recover(); exception != nil {
-			if err = c.bindVarToReflectValue(fieldValue, srcValue, paramKeyToAttrMap); err != nil {
+			if err = c.bindVarToReflectValue(fieldValue, srcValue, option); err != nil {
 				err = gerror.Wrapf(err, `error binding srcValue to attribute "%s"`, cachedFieldInfo.FieldName())
 			}
 		}
@@ -377,12 +377,18 @@ func (c *Converter) bindVarToStructField(
 	if cachedFieldInfo.ConvertFunc != nil {
 		return cachedFieldInfo.ConvertFunc(srcValue, fieldValue)
 	}
+	convertOption := ConvertOption{
+		StructOption: option,
+		SliceOption:  SliceOption{ContinueOnError: option.ContinueOnError},
+		MapOption:    MapOption{ContinueOnError: option.ContinueOnError},
+	}
 	err = c.doConvertWithReflectValueSet(
 		fieldValue, doConvertInput{
 			FromValue:  srcValue,
 			ToTypeName: cachedFieldInfo.StructField.Type.String(),
 			ReferValue: fieldValue,
 		},
+		convertOption,
 	)
 	return err
 }
@@ -452,9 +458,7 @@ func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value a
 }
 
 // bindVarToReflectValue sets `value` to reflect value object `structFieldValue`.
-func (c *Converter) bindVarToReflectValue(
-	structFieldValue reflect.Value, value any, paramKeyToAttrMap map[string]string,
-) (err error) {
+func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value any, option StructOption) (err error) {
 	// JSON content converting.
 	ok, err := c.doConvertWithJsonCheck(value, structFieldValue)
 	if err != nil {
@@ -480,7 +484,9 @@ func (c *Converter) bindVarToReflectValue(
 	// Converting using reflection by kind.
 	switch kind {
 	case reflect.Map:
-		return c.MapToMap(value, structFieldValue, paramKeyToAttrMap, MapOption{})
+		return c.MapToMap(value, structFieldValue, option.ParamKeyToAttrMap, MapOption{
+			ContinueOnError: option.ContinueOnError,
+		})
 
 	case reflect.Struct:
 		// Recursively converting for struct attribute.
@@ -493,8 +499,13 @@ func (c *Converter) bindVarToReflectValue(
 	// so it uses Struct function doing the converting internally.
 	case reflect.Slice, reflect.Array:
 		var (
-			reflectArray reflect.Value
-			reflectValue = reflect.ValueOf(value)
+			reflectArray  reflect.Value
+			reflectValue  = reflect.ValueOf(value)
+			convertOption = ConvertOption{
+				StructOption: option,
+				SliceOption:  SliceOption{ContinueOnError: option.ContinueOnError},
+				MapOption:    MapOption{ContinueOnError: option.ContinueOnError},
+			}
 		)
 		if reflectValue.Kind() == reflect.Slice || reflectValue.Kind() == reflect.Array {
 			reflectArray = reflect.MakeSlice(structFieldValue.Type(), reflectValue.Len(), reflectValue.Len())
@@ -528,6 +539,7 @@ func (c *Converter) bindVarToReflectValue(
 								ToTypeName: elemTypeName,
 								ReferValue: elem,
 							},
+							convertOption,
 						)
 						if err != nil {
 							return err
@@ -585,6 +597,7 @@ func (c *Converter) bindVarToReflectValue(
 						ToTypeName: elemTypeName,
 						ReferValue: elem,
 					},
+					convertOption,
 				)
 				if err != nil {
 					return err
@@ -608,12 +621,12 @@ func (c *Converter) bindVarToReflectValue(
 				return err
 			}
 			elem := item.Elem()
-			if err = c.bindVarToReflectValue(elem, value, paramKeyToAttrMap); err == nil {
+			if err = c.bindVarToReflectValue(elem, value, option); err == nil {
 				structFieldValue.Set(elem.Addr())
 			}
 		} else {
 			// Not empty pointer, it assigns values to it.
-			return c.bindVarToReflectValue(structFieldValue.Elem(), value, paramKeyToAttrMap)
+			return c.bindVarToReflectValue(structFieldValue.Elem(), value, option)
 		}
 
 	// It mainly and specially handles the interface of nil value.

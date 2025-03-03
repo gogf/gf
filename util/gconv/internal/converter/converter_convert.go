@@ -14,45 +14,49 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 )
 
+// ConvertOption is the option for converting.
+type ConvertOption struct {
+	// ExtraParams are extra values for implementing the converting.
+	ExtraParams  []any
+	SliceOption  SliceOption
+	MapOption    MapOption
+	StructOption StructOption
+}
+
 // ConvertWithTypeName converts the variable `fromValue` to the type `toTypeName`, the type `toTypeName` is specified by string.
-//
-// The optional parameter `extraParams` is used for additional necessary parameter for this conversion.
-// It supports common basic types conversion as its conversion based on type name string.
-func (c *Converter) ConvertWithTypeName(fromValue any, toTypeName string, extraParams ...any) (any, error) {
+func (c *Converter) ConvertWithTypeName(fromValue any, toTypeName string, option ConvertOption) (any, error) {
 	return c.doConvert(
 		doConvertInput{
 			FromValue:  fromValue,
 			ToTypeName: toTypeName,
 			ReferValue: nil,
-			Extra:      extraParams,
 		},
+		option,
 	)
 }
 
 // ConvertWithRefer converts the variable `fromValue` to the type referred by value `referValue`.
-//
-// The optional parameter `extraParams` is used for additional necessary parameter for this conversion.
-// It supports common basic types conversion as its conversion based on type name string.
-func (c *Converter) ConvertWithRefer(fromValue, referValue any, extraParams ...any) (any, error) {
+func (c *Converter) ConvertWithRefer(fromValue, referValue any, option ConvertOption) (any, error) {
 	var referValueRf reflect.Value
 	if v, ok := referValue.(reflect.Value); ok {
 		referValueRf = v
 	} else {
 		referValueRf = reflect.ValueOf(referValue)
 	}
-	return c.doConvert(doConvertInput{
-		FromValue:  fromValue,
-		ToTypeName: referValueRf.Type().String(),
-		ReferValue: referValue,
-		Extra:      extraParams,
-	})
+	return c.doConvert(
+		doConvertInput{
+			FromValue:  fromValue,
+			ToTypeName: referValueRf.Type().String(),
+			ReferValue: referValue,
+		},
+		option,
+	)
 }
 
 type doConvertInput struct {
 	FromValue  any    // Value that is converted from.
 	ToTypeName string // Target value type name in string.
 	ReferValue any    // Referred value, a value in type `ToTypeName`. Note that its type might be reflect.Value.
-	Extra      []any  // Extra values for implementing the converting.
 
 	// Marks that the value is already converted and set to `ReferValue`. Caller can ignore the returned result.
 	// It is an attribute for internal usage purpose.
@@ -60,7 +64,7 @@ type doConvertInput struct {
 }
 
 // doConvert does commonly use types converting.
-func (c *Converter) doConvert(in doConvertInput) (convertedValue any, err error) {
+func (c *Converter) doConvert(in doConvertInput, option ConvertOption) (convertedValue any, err error) {
 	switch in.ToTypeName {
 	case "int":
 		return c.Int(in.FromValue)
@@ -233,29 +237,29 @@ func (c *Converter) doConvert(in doConvertInput) (convertedValue any, err error)
 	case "[]byte":
 		return c.Bytes(in.FromValue)
 	case "[]int":
-		return c.SliceInt(in.FromValue, SliceOption{})
+		return c.SliceInt(in.FromValue, option.SliceOption)
 	case "[]int32":
-		return c.SliceInt32(in.FromValue, SliceOption{})
+		return c.SliceInt32(in.FromValue, option.SliceOption)
 	case "[]int64":
-		return c.SliceInt64(in.FromValue, SliceOption{})
+		return c.SliceInt64(in.FromValue, option.SliceOption)
 	case "[]uint":
-		return c.SliceUint(in.FromValue, SliceOption{})
+		return c.SliceUint(in.FromValue, option.SliceOption)
 	case "[]uint8":
 		return c.Bytes(in.FromValue)
 	case "[]uint32":
-		return c.SliceUint32(in.FromValue, SliceOption{})
+		return c.SliceUint32(in.FromValue, option.SliceOption)
 	case "[]uint64":
-		return c.SliceUint64(in.FromValue, SliceOption{})
+		return c.SliceUint64(in.FromValue, option.SliceOption)
 	case "[]float32":
-		return c.SliceFloat32(in.FromValue, SliceOption{})
+		return c.SliceFloat32(in.FromValue, option.SliceOption)
 	case "[]float64":
-		return c.SliceFloat64(in.FromValue, SliceOption{})
+		return c.SliceFloat64(in.FromValue, option.SliceOption)
 	case "[]string":
-		return c.SliceStr(in.FromValue, SliceOption{})
+		return c.SliceStr(in.FromValue, option.SliceOption)
 
 	case "Time", "time.Time":
-		if len(in.Extra) > 0 {
-			s, err := c.String(in.Extra[0])
+		if len(option.ExtraParams) > 0 {
+			s, err := c.String(option.ExtraParams[0])
 			if err != nil {
 				return nil, err
 			}
@@ -264,8 +268,8 @@ func (c *Converter) doConvert(in doConvertInput) (convertedValue any, err error)
 		return c.Time(in.FromValue)
 	case "*time.Time":
 		var v time.Time
-		if len(in.Extra) > 0 {
-			s, err := c.String(in.Extra[0])
+		if len(option.ExtraParams) > 0 {
+			s, err := c.String(option.ExtraParams[0])
 			if err != nil {
 				return time.Time{}, err
 			}
@@ -285,8 +289,8 @@ func (c *Converter) doConvert(in doConvertInput) (convertedValue any, err error)
 		return &v, nil
 
 	case "GTime", "gtime.Time":
-		if len(in.Extra) > 0 {
-			s, err := c.String(in.Extra[0])
+		if len(option.ExtraParams) > 0 {
+			s, err := c.String(option.ExtraParams[0])
 			if err != nil {
 				return *gtime.New(), err
 			}
@@ -308,8 +312,8 @@ func (c *Converter) doConvert(in doConvertInput) (convertedValue any, err error)
 		}
 		return *gtime.New(), nil
 	case "*gtime.Time":
-		if len(in.Extra) > 0 {
-			s, err := c.String(in.Extra[0])
+		if len(option.ExtraParams) > 0 {
+			s, err := c.String(option.ExtraParams[0])
 			if err != nil {
 				return gtime.New(), err
 			}
@@ -344,13 +348,13 @@ func (c *Converter) doConvert(in doConvertInput) (convertedValue any, err error)
 		return &v, nil
 
 	case "map[string]string":
-		return c.MapStrStr(in.FromValue, MapOption{})
+		return c.MapStrStr(in.FromValue, option.MapOption)
 
 	case "map[string]interface {}":
-		return c.Map(in.FromValue, MapOption{})
+		return c.Map(in.FromValue, option.MapOption)
 
 	case "[]map[string]interface {}":
-		return c.SliceMap(in.FromValue, SliceOption{}, MapOption{})
+		return c.SliceMap(in.FromValue, option.SliceOption, option.MapOption)
 
 	case "RawMessage", "json.RawMessage":
 		// issue 3449
@@ -387,7 +391,7 @@ func (c *Converter) doConvert(in doConvertInput) (convertedValue any, err error)
 			defer func() {
 				if recover() != nil {
 					in.alreadySetToReferValue = false
-					if err := c.bindVarToReflectValue(referReflectValue, in.FromValue, nil); err == nil {
+					if err = c.bindVarToReflectValue(referReflectValue, in.FromValue, option.StructOption); err == nil {
 						in.alreadySetToReferValue = true
 						convertedValue = referReflectValue.Interface()
 					}
@@ -410,7 +414,7 @@ func (c *Converter) doConvert(in doConvertInput) (convertedValue any, err error)
 				default:
 					in.ToTypeName = originType.Kind().String()
 					in.ReferValue = nil
-					result, err := c.doConvert(in)
+					result, err := c.doConvert(in, option)
 					if err != nil {
 						return nil, err
 					}
@@ -423,7 +427,7 @@ func (c *Converter) doConvert(in doConvertInput) (convertedValue any, err error)
 
 			case reflect.Map:
 				var targetValue = reflect.New(referReflectValue.Type()).Elem()
-				if err = c.MapToMap(in.FromValue, targetValue, nil, MapOption{}); err == nil {
+				if err = c.MapToMap(in.FromValue, targetValue, nil, option.MapOption); err == nil {
 					in.alreadySetToReferValue = true
 				}
 				return targetValue.Interface(), nil
@@ -434,7 +438,7 @@ func (c *Converter) doConvert(in doConvertInput) (convertedValue any, err error)
 			in.ToTypeName = referReflectValue.Kind().String()
 			in.ReferValue = nil
 			in.alreadySetToReferValue = true
-			result, err := c.doConvert(in)
+			result, err := c.doConvert(in, option)
 			if err != nil {
 				return nil, err
 			}
@@ -445,8 +449,8 @@ func (c *Converter) doConvert(in doConvertInput) (convertedValue any, err error)
 	}
 }
 
-func (c *Converter) doConvertWithReflectValueSet(reflectValue reflect.Value, in doConvertInput) error {
-	convertedValue, err := c.doConvert(in)
+func (c *Converter) doConvertWithReflectValueSet(reflectValue reflect.Value, in doConvertInput, option ConvertOption) error {
+	convertedValue, err := c.doConvert(in, option)
 	if err != nil {
 		return err
 	}

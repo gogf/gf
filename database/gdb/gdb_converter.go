@@ -61,7 +61,12 @@ func sliceTypeConverterFunc(from any, to reflect.Value) (err error) {
 		fromType := reflect.TypeOf(fromVal)
 		switch fromType.Kind() {
 		case reflect.Slice:
-			dv, err := converter.ConvertWithTypeName(fromVal, to.Type().String())
+			convertOption := gconv.ConvertOption{
+				SliceOption:  gconv.SliceOption{ContinueOnError: true},
+				MapOption:    gconv.MapOption{ContinueOnError: true},
+				StructOption: gconv.StructOption{ContinueOnError: true},
+			}
+			dv, err := converter.ConvertWithTypeName(fromVal, to.Type().String(), convertOption)
 			if err != nil {
 				return err
 			}
