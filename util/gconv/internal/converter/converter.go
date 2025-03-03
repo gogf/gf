@@ -122,7 +122,7 @@ func (c *Converter) RegisterTypeConverterFunc(f any) (err error) {
 		return
 	}
 	registeredOutTypeMap[outType] = reflect.ValueOf(f)
-	c.internalConverter.RegisterTypeConvertFunc(outType)
+	c.internalConverter.MarkTypeConvertFunc(outType)
 	return
 }
 
