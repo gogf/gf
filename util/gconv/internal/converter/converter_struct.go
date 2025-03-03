@@ -141,7 +141,9 @@ func (c *Converter) Struct(params, pointer any, option StructOption) (err error)
 	if !ok {
 		// paramsMap is the map[string]any type variable for params.
 		// DO NOT use MapDeep here.
-		paramsMap, err = c.doMapConvert(paramsInterface, RecursiveTypeAuto, true, MapOption{})
+		paramsMap, err = c.doMapConvert(paramsInterface, RecursiveTypeAuto, true, MapOption{
+			ContinueOnError: option.ContinueOnError,
+		})
 		if err != nil {
 			return err
 		}
@@ -490,7 +492,7 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 
 	case reflect.Struct:
 		// Recursively converting for struct attribute.
-		if err = c.Struct(value, structFieldValue, StructOption{}); err != nil {
+		if err = c.Struct(value, structFieldValue, option); err != nil {
 			// Note there's reflect conversion mechanism here.
 			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
 		}
@@ -528,7 +530,7 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 						elem = reflect.New(elemType).Elem()
 					}
 					if elem.Kind() == reflect.Struct {
-						if err = c.Struct(reflectValue.Index(i).Interface(), elem, StructOption{}); err == nil {
+						if err = c.Struct(reflectValue.Index(i).Interface(), elem, option); err == nil {
 							converted = true
 						}
 					}
@@ -586,7 +588,7 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 				elem = reflect.New(elemType).Elem()
 			}
 			if elem.Kind() == reflect.Struct {
-				if err = c.Struct(value, elem, StructOption{}); err == nil {
+				if err = c.Struct(value, elem, option); err == nil {
 					converted = true
 				}
 			}

@@ -62,7 +62,9 @@ func (c *Converter) Structs(
 			paramsList[i] = paramsRv.Index(i).Interface()
 		}
 	default:
-		paramsMaps, err := c.SliceMap(params, sliceOption, MapOption{})
+		paramsMaps, err := c.SliceMap(params, sliceOption, MapOption{
+			ContinueOnError: structOption.ContinueOnError,
+		})
 		if err != nil {
 			return err
 		}

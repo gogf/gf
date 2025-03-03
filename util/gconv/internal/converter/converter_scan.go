@@ -252,7 +252,9 @@ func (c *Converter) doScanForComplicatedTypes(
 	switch dstPointerReflectTypeElemKind {
 	case reflect.Map:
 		// Convert map to map
-		return c.MapToMap(srcValue, dstPointer, keyToAttributeNameMapping, MapOption{})
+		return c.MapToMap(srcValue, dstPointer, keyToAttributeNameMapping, MapOption{
+			ContinueOnError: option.ContinueOnError,
+		})
 
 	case reflect.Array, reflect.Slice:
 		var (
@@ -271,9 +273,16 @@ func (c *Converter) doScanForComplicatedTypes(
 			})
 		}
 		// Convert to slice of structs
-		return c.Structs(srcValue, dstPointer, SliceOption{}, StructOption{
-			ParamKeyToAttrMap: keyToAttributeNameMapping,
-		})
+		var (
+			sliceOption = SliceOption{
+				ContinueOnError: option.ContinueOnError,
+			}
+			mapOption = StructOption{
+				ParamKeyToAttrMap: keyToAttributeNameMapping,
+				ContinueOnError:   option.ContinueOnError,
+			}
+		)
+		return c.Structs(srcValue, dstPointer, sliceOption, mapOption)
 
 	default:
 		structOption := StructOption{
