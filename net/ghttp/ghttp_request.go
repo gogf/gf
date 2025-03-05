@@ -9,6 +9,7 @@ package ghttp
 import (
 	"fmt"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 
@@ -287,4 +288,22 @@ func (r *Request) GetHandlerResponse() interface{} {
 // GetServeHandler retrieves and returns the user defined handler used to serve this request.
 func (r *Request) GetServeHandler() *HandlerItemParsed {
 	return r.serveHandler
+}
+
+func (r *Request) GetMetaTag(key string) string {
+	if r.serveHandler == nil || r.serveHandler.Handler == nil {
+		return ""
+	}
+	reqType := r.serveHandler.Handler.Info.Type.In(1)
+	if reqType.Kind() == reflect.Ptr {
+		reqType = reqType.Elem()
+	}
+
+	for i := 0; i < reqType.NumField(); i++ {
+		field := reqType.Field(i)
+		if field.Anonymous && field.Type.String() == "gmeta.Meta" {
+			return field.Tag.Get(key)
+		}
+	}
+	return ""
 }
