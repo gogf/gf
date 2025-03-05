@@ -14,6 +14,11 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
+type interfaceTypeConverter struct {
+	interfaceType reflect.Type
+	convertFunc   AnyConvertFunc
+}
+
 // Converter is the configuration for type converting.
 type Converter struct {
 	// map[reflect.Type]*CachedStructInfo
@@ -21,6 +26,10 @@ type Converter struct {
 
 	// anyToTypeConvertMap for custom type converting from any to its reflect.Value.
 	anyToTypeConvertMap map[reflect.Type]AnyConvertFunc
+
+	// interfaceToTypeConvertMap used for converting any interface type
+	// the reason why map is not used is because interface types cannot be instantiated
+	interfaceToTypeConvertMap []interfaceTypeConverter
 
 	// typeConverterFuncMarkMap is used to store whether field types are registered to custom conversions
 	typeConverterFuncMarkMap map[reflect.Type]struct{}
@@ -48,7 +57,32 @@ func (cf *Converter) MarkTypeConvertFunc(fieldType reflect.Type) {
 
 // RegisterAnyConvertFunc registers custom type converting function for specified type.
 func (cf *Converter) RegisterAnyConvertFunc(t reflect.Type, convertFunc AnyConvertFunc) {
+	if t == nil || convertFunc == nil {
+		panic("cannot register nil convertFunc")
+	}
+	for t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	if t.Kind() == reflect.Interface {
+		cf.interfaceToTypeConvertMap = append(cf.interfaceToTypeConvertMap, interfaceTypeConverter{
+			interfaceType: t,
+			convertFunc:   convertFunc,
+		})
+		return
+	}
 	cf.anyToTypeConvertMap[t] = convertFunc
+}
+
+func (cf *Converter) checkTypeImplInterface(t reflect.Type) AnyConvertFunc {
+	if t.Kind() != reflect.Ptr {
+		t = reflect.PointerTo(t)
+	}
+	for _, inter := range cf.interfaceToTypeConvertMap {
+		if t.Implements(inter.interfaceType) {
+			return inter.convertFunc
+		}
+	}
+	return nil
 }
 
 var (

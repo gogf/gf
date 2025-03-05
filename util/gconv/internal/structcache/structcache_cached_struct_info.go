@@ -18,12 +18,7 @@ type CachedStructInfo struct {
 	// All sub attributes field info slice.
 	fieldConvertInfos []*CachedFieldInfo
 
-	// anyToTypeConvertMap for custom type converting from any to its reflect.Value.
-	anyToTypeConvertMap map[reflect.Type]AnyConvertFunc
-
-	// typeConverterFuncMarkMap is used to store whether field types are registered to custom conversions,
-	// for enhance converting performance in runtime.
-	typeConverterFuncMarkMap map[reflect.Type]struct{}
+	converter *Converter
 
 	// This map field is mainly used in the bindStructWithLoopParamsMap method
 	// key = field's name
@@ -36,15 +31,11 @@ type CachedStructInfo struct {
 }
 
 // NewCachedStructInfo creates and returns a new CachedStructInfo object.
-func NewCachedStructInfo(
-	typeConverterFuncMarkMap map[reflect.Type]struct{},
-	anyToTypeConvertMap map[reflect.Type]AnyConvertFunc,
-) *CachedStructInfo {
+func NewCachedStructInfo(converter *Converter) *CachedStructInfo {
 	return &CachedStructInfo{
 		tagOrFiledNameToFieldInfoMap: make(map[string]*CachedFieldInfo),
 		fieldConvertInfos:            make([]*CachedFieldInfo, 0),
-		typeConverterFuncMarkMap:     typeConverterFuncMarkMap,
-		anyToTypeConvertMap:          anyToTypeConvertMap,
+		converter:                    converter,
 	}
 }
 
@@ -134,19 +125,27 @@ func (csi *CachedStructInfo) makeCachedFieldInfo(
 }
 
 func (csi *CachedStructInfo) genFieldConvertFunc(fieldType reflect.Type) (convertFunc AnyConvertFunc) {
-	if v := csi.anyToTypeConvertMap[fieldType]; v != nil {
-		return v
+	ptr := 0
+	for fieldType.Kind() == reflect.Ptr {
+		fieldType = fieldType.Elem()
+		ptr++
 	}
-
-	var fieldTypeKind = fieldType.Kind()
-	if fieldTypeKind == reflect.Ptr {
-		convertFunc = csi.genFieldConvertFunc(fieldType.Elem())
-		if convertFunc == nil {
-			return nil
-		}
-		return csi.genPtrConvertFunc(convertFunc)
+	convertFunc = csi.converter.anyToTypeConvertMap[fieldType]
+	if convertFunc == nil {
+		// If the registered custom implementation cannot be found,
+		// try to check if there is an implementation interface
+		convertFunc = csi.converter.checkTypeImplInterface(fieldType)
 	}
-	return nil
+	// if the registered type is not found and
+	// the corresponding interface is not implemented, return directly
+	if convertFunc == nil {
+		return nil
+	}
+	for i := 0; i < ptr; i++ {
+		// If it is a pointer type, it needs to be packaged
+		convertFunc = genPtrConvertFunc(convertFunc)
+	}
+	return convertFunc
 }
 
 func (csi *CachedStructInfo) genPriorityTagAndFieldName(
@@ -173,7 +172,7 @@ func (csi *CachedStructInfo) genPriorityTagAndFieldName(
 	return
 }
 
-func (csi *CachedStructInfo) genPtrConvertFunc(convertFunc AnyConvertFunc) AnyConvertFunc {
+func genPtrConvertFunc(convertFunc AnyConvertFunc) AnyConvertFunc {
 	return func(from any, to reflect.Value) error {
 		if to.IsNil() {
 			to.Set(reflect.New(to.Type().Elem()))
@@ -186,6 +185,6 @@ func (csi *CachedStructInfo) checkTypeHasCustomConvert(fieldType reflect.Type) b
 	if fieldType.Kind() == reflect.Ptr {
 		fieldType = fieldType.Elem()
 	}
-	_, ok := csi.typeConverterFuncMarkMap[fieldType]
+	_, ok := csi.converter.typeConverterFuncMarkMap[fieldType]
 	return ok
 }
