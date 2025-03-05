@@ -8,7 +8,6 @@ package ghttp
 
 import (
 	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -178,12 +177,14 @@ func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]
 	if data == nil {
 		data = map[string]interface{}{}
 	}
-	// Default struct values.
-	if err = r.mergeDefaultStructValue(data, pointer); err != nil {
-		return data, nil
-	}
+
 	// `in` Tag Struct values.
 	if err = r.mergeInTagStructValue(data); err != nil {
+		return data, nil
+	}
+
+	// Default struct values.
+	if err = r.mergeDefaultStructValue(data, pointer); err != nil {
 		return data, nil
 	}
 
@@ -194,21 +195,9 @@ func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]
 func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) error {
 	fields := r.serveHandler.Handler.Info.ReqStructFields
 	if len(fields) > 0 {
-		var (
-			foundKey   string
-			foundValue interface{}
-		)
 		for _, field := range fields {
 			if tagValue := field.TagDefault(); tagValue != "" {
-				foundKey, foundValue = gutil.MapPossibleItemByKey(data, field.Name())
-				if foundKey == "" {
-					data[field.Name()] = tagValue
-				} else {
-					// Check parameter existence to determine using default or front-end value.
-					if foundValue == nil {
-						data[foundKey] = tagValue
-					}
-				}
+				mergeFieldValue(data, false, field.Name(), field.Name(), tagValue)
 			}
 		}
 		return nil
@@ -220,20 +209,8 @@ func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer i
 		return err
 	}
 	if len(tagFields) > 0 {
-		var (
-			foundKey   string
-			foundValue interface{}
-		)
 		for _, field := range tagFields {
-			foundKey, foundValue = gutil.MapPossibleItemByKey(data, field.Name())
-			if foundKey == "" {
-				data[field.Name()] = field.TagValue
-			} else {
-				// Check parameter existence to determine using default or front-end value.
-				if foundValue == nil {
-					data[foundKey] = field.TagValue
-				}
-			}
+			mergeFieldValue(data, false, field.Name(), field.Name(), field.TagValue)
 		}
 	}
 
@@ -263,34 +240,31 @@ func (r *Request) mergeInTagStructValue(data map[string]interface{}) error {
 
 		for _, field := range fields {
 			if tagValue := field.TagIn(); tagValue != "" {
+				findKey := field.TagPriorityName()
 				switch tagValue {
 				case goai.ParameterInHeader:
-					foundHeaderKey, foundHeaderValue := gutil.MapPossibleItemByKey(headerMap, field.TagPriorityName())
-					if foundHeaderKey != "" {
-						foundKey, foundValue = gutil.MapPossibleItemByKey(data, foundHeaderKey)
-						if foundKey == "" {
-							data[field.Name()] = foundHeaderValue
-						} else {
-							if empty.IsEmpty(foundValue) {
-								data[foundKey] = foundHeaderValue
-							}
-						}
-					}
+					foundKey, foundValue = gutil.MapPossibleItemByKey(headerMap, findKey)
 				case goai.ParameterInCookie:
-					foundCookieKey, foundCookieValue := gutil.MapPossibleItemByKey(cookieMap, field.TagPriorityName())
-					if foundCookieKey != "" {
-						foundKey, foundValue = gutil.MapPossibleItemByKey(data, foundCookieKey)
-						if foundKey == "" {
-							data[field.Name()] = foundCookieValue
-						} else {
-							if empty.IsEmpty(foundValue) {
-								data[foundKey] = foundCookieValue
-							}
-						}
-					}
+					foundKey, foundValue = gutil.MapPossibleItemByKey(cookieMap, findKey)
+				}
+				if foundKey != "" {
+					mergeFieldValue(data, true, foundKey, field.Name(), foundValue)
 				}
 			}
 		}
 	}
 	return nil
+}
+
+// mergeFieldValue merges the request parameters when the key does not exist in the map or isCover is true or the value is nil.
+//
+// createTime: 2025-03-05 17:50:32
+func mergeFieldValue(data map[string]interface{}, isCover bool, findKey string, fieldName string, tagValue interface{}) {
+	if foundKey, foundValue := gutil.MapPossibleItemByKey(data, findKey); foundKey == "" {
+		data[fieldName] = tagValue
+	} else {
+		if isCover || foundValue == nil {
+			data[foundKey] = tagValue
+		}
+	}
 }

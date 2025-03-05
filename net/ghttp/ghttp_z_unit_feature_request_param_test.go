@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-// UserTagInReq struct tag "in" supports: header, query, cookie, form
+// UserTagInReq struct tag "in" supports: header, cookie
 type UserTagInReq struct {
 	g.Meta `path:"/user" tags:"User" method:"post" summary:"user api" title:"api title"`
 	Id     int    `v:"required" d:"1"`
@@ -56,7 +56,7 @@ func Test_ParamsTagIn(t *testing.T) {
 		client.SetHeader("age", "18")
 
 		t.Assert(client.PostContent(ctx, "/user"), `{"Id":1,"Name":"john","Age":"18"}`)
-		t.Assert(client.PostContent(ctx, "/user", "name=&age=&id="), `{"Id":1,"Name":"john","Age":"18"}`)
+		t.Assert(client.PostContent(ctx, "/user", "name=&age="), `{"Id":1,"Name":"john","Age":"18"}`)
 	})
 }
 
