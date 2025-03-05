@@ -207,8 +207,6 @@ func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer i
 					// Check parameter existence to determine using default or front-end value.
 					if foundValue == nil {
 						data[foundKey] = tagValue
-					} else {
-						data[foundKey] = foundValue
 					}
 				}
 			}
@@ -232,10 +230,8 @@ func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer i
 				data[field.Name()] = field.TagValue
 			} else {
 				// Check parameter existence to determine using default or front-end value.
-				if foundValue == nil || foundValue == "" {
+				if foundValue == nil {
 					data[foundKey] = field.TagValue
-				} else {
-					data[foundKey] = foundValue
 				}
 			}
 		}
