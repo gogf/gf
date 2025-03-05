@@ -142,6 +142,11 @@ var (
 	defaultConverter = converter.NewConverter()
 )
 
+// RegisterAnyConverterFunc registers custom type converting function for specified type.
+func RegisterAnyConverterFunc(f AnyConvertFunc, types ...reflect.Type) {
+	defaultConverter.RegisterAnyConverterFunc(f, types...)
+}
+
 // NewConverter creates and returns management object for type converting.
 func NewConverter() Converter {
 	return converter.NewConverter()
