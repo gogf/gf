@@ -140,13 +140,22 @@ func TestNewConverter(t *testing.T) {
 			B sql.Null[float32]
 			C sql.NullInt64
 			D sql.NullString
+
+			E *sql.Null[int]
+			F *sql.Null[float32]
+			G *sql.NullInt64
+			H *sql.NullString
 		}
 		var dst sqlNullDst
 		err := conv.Struct(map[string]any{
 			"a": 12,
 			"b": 34,
 			"c": 56,
-			"d": "sqlNull",
+			"d": "sqlNullString",
+			"e": 12,
+			"f": 34,
+			"g": 56,
+			"h": "sqlNullString",
 		}, &dst, gconv.StructOption{})
 		t.AssertNil(err)
 		t.Assert(dst, sqlNullDst{
@@ -154,6 +163,11 @@ func TestNewConverter(t *testing.T) {
 			B: sql.Null[float32]{V: 123456, Valid: true},
 			C: sql.NullInt64{Int64: 123456, Valid: true},
 			D: sql.NullString{String: "123456", Valid: true},
+
+			E: &sql.Null[int]{V: 123456, Valid: true},
+			F: &sql.Null[float32]{V: 123456, Valid: true},
+			G: &sql.NullInt64{Int64: 123456, Valid: true},
+			H: &sql.NullString{String: "123456", Valid: true},
 		})
 	})
 }
