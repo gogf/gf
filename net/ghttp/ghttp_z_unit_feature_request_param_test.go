@@ -13,34 +13,34 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-type UserReq struct {
+type UserTagInReq struct {
 	g.Meta `path:"/user" tags:"User" method:"post" summary:"user api" title:"api title"`
 	Id     int    `v:"required" d:"1"`
 	Name   string `v:"required" in:"cookie"`
 	Age    string `v:"required" in:"header"`
-	// header,query,cookie,form
+	// struct tag in:header,query,cookie,form
 }
 
-type UserRes struct {
+type UserTagInRes struct {
 	g.Meta `mime:"text/html" example:"string"`
 }
 
 var (
-	User = cUser{}
+	UserTagIn = cUserTagIn{}
 )
 
-type cUser struct{}
+type cUserTagIn struct{}
 
-func (c *cUser) User(ctx context.Context, req *UserReq) (res *UserRes, err error) {
+func (c *cUserTagIn) User(ctx context.Context, req *UserTagInReq) (res *UserTagInRes, err error) {
 	g.RequestFromCtx(ctx).Response.WriteJson(req)
 	return
 }
 
-func Test_Params_Tag(t *testing.T) {
+func Test_ParamsTagIn(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(ghttp.MiddlewareHandlerResponse)
-		group.Bind(User)
+		group.Bind(UserTagIn)
 	})
 	s.SetDumpRouterMap(false)
 	s.Start()
@@ -60,13 +60,13 @@ func Test_Params_Tag(t *testing.T) {
 	})
 }
 
-func Benchmark_ParamTag(b *testing.B) {
+func Benchmark_ParamTagIn(b *testing.B) {
 	b.StopTimer()
 
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(ghttp.MiddlewareHandlerResponse)
-		group.Bind(User)
+		group.Bind(UserTagIn)
 	})
 	s.SetDumpRouterMap(false)
 	s.SetAccessLogEnabled(false)
