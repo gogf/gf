@@ -167,11 +167,6 @@ func Float64s(any interface{}) []float64 {
 		array []float64 = nil
 	)
 	switch value := any.(type) {
-	case string:
-		if value == "" {
-			return []float64{}
-		}
-		return []float64{Float64(value)}
 	case []string:
 		array = make([]float64, len(value))
 		for k, v := range value {

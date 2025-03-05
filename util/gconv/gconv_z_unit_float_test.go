@@ -223,3 +223,10 @@ func TestFloats(t *testing.T) {
 		}
 	})
 }
+
+// test string to []floats uses gconv.Floats.
+func TestStringToFloats(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Floats("[1,2,3,4]"), []float64{1, 2, 3, 4})
+	})
+}
