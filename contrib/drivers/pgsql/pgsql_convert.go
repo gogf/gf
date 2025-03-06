@@ -124,7 +124,7 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 
 	// String slice.
 	case "_varchar", "_text":
-		var result pq.StringArray
+		var result = make(pq.StringArray, 0)
 		if err := result.Scan(fieldValue); err != nil {
 			return nil, err
 		}
