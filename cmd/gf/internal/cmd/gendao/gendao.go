@@ -36,7 +36,7 @@ type (
 		Link               string   `name:"link"                short:"l"  brief:"{CGenDaoBriefLink}"`
 		Tables             string   `name:"tables"              short:"t"  brief:"{CGenDaoBriefTables}"`
 		TablesEx           string   `name:"tablesEx"            short:"x"  brief:"{CGenDaoBriefTablesEx}"`
-		ShardingPattern    []string `name:"ShardingPattern"     short:"sp" brief:"{CGenDaoBriefShardingPattern}"`
+		ShardingPattern    []string `name:"shardingPattern"     short:"sp" brief:"{CGenDaoBriefShardingPattern}"`
 		Group              string   `name:"group"               short:"g"  brief:"{CGenDaoBriefGroup}" d:"default"`
 		Prefix             string   `name:"prefix"              short:"f"  brief:"{CGenDaoBriefPrefix}"`
 		RemovePrefix       string   `name:"removePrefix"        short:"r"  brief:"{CGenDaoBriefRemovePrefix}"`

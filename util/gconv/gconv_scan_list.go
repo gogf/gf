@@ -93,7 +93,9 @@ import (
 // given `relation` parameter.
 //
 // See the example or unit testing cases for clear understanding for this function.
-func ScanList(structSlice interface{}, structSlicePointer interface{}, bindToAttrName string, relationAttrNameAndFields ...string) (err error) {
+func ScanList(
+	structSlice any, structSlicePointer any, bindToAttrName string, relationAttrNameAndFields ...string,
+) (err error) {
 	var (
 		relationAttrName string
 		relationFields   string
@@ -111,7 +113,7 @@ func ScanList(structSlice interface{}, structSlicePointer interface{}, bindToAtt
 // doScanList converts `structSlice` to struct slice which contains other complex struct attributes recursively.
 // Note that the parameter `structSlicePointer` should be type of *[]struct/*[]*struct.
 func doScanList(
-	structSlice interface{}, structSlicePointer interface{}, bindToAttrName, relationAttrName, relationFields string,
+	structSlice any, structSlicePointer any, bindToAttrName, relationAttrName, relationFields string,
 ) (err error) {
 	var (
 		maps    = Maps(structSlice)
@@ -169,7 +171,7 @@ func doScanList(
 
 	// Relation variables.
 	var (
-		relationDataMap         map[string]interface{}
+		relationDataMap         map[string]any
 		relationFromFieldName   string // Eg: relationKV: id:uid  -> id
 		relationBindToFieldName string // Eg: relationKV: id:uid  -> uid
 	)
@@ -315,7 +317,7 @@ func doScanList(
 				relationFromAttrField = relationFromAttrValue.FieldByName(relationBindToFieldName)
 				if relationFromAttrField.IsValid() {
 					// results := make(Result, 0)
-					results := make([]interface{}, 0)
+					results := make([]any, 0)
 					for _, v := range SliceAny(relationDataMap[String(relationFromAttrField.Interface())]) {
 						item := v
 						results = append(results, item)
