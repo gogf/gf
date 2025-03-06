@@ -28,7 +28,7 @@ type Converter struct {
 	anyToTypeConvertMap map[reflect.Type]AnyConvertFunc
 
 	// interfaceToTypeConvertMap used for converting any interface type
-	// the reason why map is not used is because interface types cannot be instantiated
+	// the reason why map is not used here, is because interface types cannot be instantiated
 	interfaceToTypeConvertMap []interfaceTypeConverter
 
 	// typeConverterFuncMarkMap is used to store whether field types are registered to custom conversions
@@ -58,7 +58,7 @@ func (cf *Converter) MarkTypeConvertFunc(fieldType reflect.Type) {
 // RegisterAnyConvertFunc registers custom type converting function for specified type.
 func (cf *Converter) RegisterAnyConvertFunc(t reflect.Type, convertFunc AnyConvertFunc) {
 	if t == nil || convertFunc == nil {
-		panic("cannot register nil convertFunc")
+		return
 	}
 	for t.Kind() == reflect.Ptr {
 		t = t.Elem()
