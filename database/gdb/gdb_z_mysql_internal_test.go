@@ -14,6 +14,15 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 )
 
+func Test_GetConverter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		c := GetConverter()
+		s, err := c.String(1)
+		t.AssertNil(err)
+		t.AssertEQ(s, "1")
+	})
+}
+
 func Test_HookSelect_Regex(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (

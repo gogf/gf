@@ -478,8 +478,11 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 				// which will cause struct converting issue.
 				record[columnTypes[i].Name()] = nil
 			} else {
-				var convertedValue interface{}
-				if convertedValue, err = c.columnValueToLocalValue(ctx, value, columnTypes[i]); err != nil {
+				var (
+					convertedValue interface{}
+					columnType     = columnTypes[i]
+				)
+				if convertedValue, err = c.columnValueToLocalValue(ctx, value, columnType); err != nil {
 					return nil, err
 				}
 				record[columnTypes[i].Name()] = gvar.New(convertedValue)
@@ -498,7 +501,9 @@ func (c *Core) OrderRandomFunction() string {
 	return "RAND()"
 }
 
-func (c *Core) columnValueToLocalValue(ctx context.Context, value interface{}, columnType *sql.ColumnType) (interface{}, error) {
+func (c *Core) columnValueToLocalValue(
+	ctx context.Context, value interface{}, columnType *sql.ColumnType,
+) (interface{}, error) {
 	var scanType = columnType.ScanType()
 	if scanType != nil {
 		// Common basic builtin types.

@@ -30,15 +30,15 @@ func Test_ConfigFromMap(t *testing.T) {
 			"readTimeout":     "60s",
 			"indexFiles":      g.Slice{"index.php", "main.php"},
 			"errorLogEnabled": true,
-			"cookieMaxAge":    "1y",
+			"cookieMaxAge":    "1d",
 			"cookieSameSite":  "lax",
 			"cookieSecure":    true,
 			"cookieHttpOnly":  true,
 		}
 		config, err := ghttp.ConfigFromMap(m)
 		t.AssertNil(err)
-		d1, _ := time.ParseDuration(gconv.String(m["readTimeout"]))
-		d2, _ := time.ParseDuration(gconv.String(m["cookieMaxAge"]))
+		d1, _ := gtime.ParseDuration(gconv.String(m["readTimeout"]))
+		d2, _ := gtime.ParseDuration(gconv.String(m["cookieMaxAge"]))
 		t.Assert(config.Address, m["address"])
 		t.Assert(config.ReadTimeout, d1)
 		t.Assert(config.CookieMaxAge, d2)
