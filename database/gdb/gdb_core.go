@@ -223,6 +223,8 @@ func (c *Core) GetScan(ctx context.Context, pointer interface{}, sql string, arg
 
 	case reflect.Struct:
 		return c.db.GetCore().doGetStruct(ctx, pointer, sql, args...)
+
+	default:
 	}
 	return gerror.NewCodef(
 		gcode.CodeInvalidParameter,
@@ -735,6 +737,7 @@ func (c *Core) HasTable(name string) (bool, error) {
 	return false, nil
 }
 
+// GetInnerMemCache retrieves and returns the inner memory cache object.
 func (c *Core) GetInnerMemCache() *gcache.Cache {
 	return c.innerMemCache
 }

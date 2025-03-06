@@ -223,7 +223,9 @@ Default:
 }
 
 // CheckLocalTypeForField checks and returns corresponding type for given db type.
-func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (LocalType, error) {
+// The `fieldType` is retrieved from ColumnTypes of db driver, example:
+// UNSIGNED INT
+func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ interface{}) (LocalType, error) {
 	var (
 		typeName    string
 		typePattern string
@@ -233,7 +235,12 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 		typeName = gstr.Trim(match[1])
 		typePattern = gstr.Trim(match[2])
 	} else {
-		typeName = gstr.Split(fieldType, " ")[0]
+		var array = gstr.SplitAndTrim(fieldType, " ")
+		if len(array) > 1 && gstr.Equal(array[0], "unsigned") {
+			typeName = array[1]
+		} else if len(array) > 0 {
+			typeName = array[0]
+		}
 	}
 
 	typeName = strings.ToLower(typeName)
@@ -289,11 +296,6 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, fie
 		fieldTypeBit:
 		// It is suggested using bit(1) as boolean.
 		if typePattern == "1" {
-			return LocalTypeBool, nil
-		}
-		s := gconv.String(fieldValue)
-		// mssql is true|false string.
-		if strings.EqualFold(s, "true") || strings.EqualFold(s, "false") {
 			return LocalTypeBool, nil
 		}
 		if gstr.ContainsI(fieldType, "unsigned") {
