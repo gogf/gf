@@ -287,26 +287,40 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 		}
 
 	case reflect.Slice, reflect.Array:
-		var array []interface{}
-		if gjson.Valid(in.Value) {
-			array = gconv.Interfaces(gconv.Bytes(in.Value))
-		} else {
-			array = gconv.Interfaces(in.Value)
+		loop := false
+		switch in.Type.Elem().Kind() {
+		// []struct []map
+		case reflect.Struct, reflect.Map:
+			loop = true
+		case reflect.Ptr:
+			loop = true
 		}
-		if len(array) == 0 {
-			return
-		}
-		for _, item := range array {
-			v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
-				Value:               item,
-				Type:                in.Type.Elem(),
-				Kind:                in.Type.Elem().Kind(),
-				ErrorMaps:           in.ErrorMaps,
-				ResultSequenceRules: in.ResultSequenceRules,
-			})
-			// Bail feature.
-			if v.bail && len(in.ErrorMaps) > 0 {
-				break
+		// When it is a base type array,
+		// there is no need for recursive loop validation,
+		// otherwise it will cause memory leakage
+		// https://github.com/gogf/gf/issues/4092
+		if loop {
+			var array []interface{}
+			if gjson.Valid(in.Value) {
+				array = gconv.Interfaces(gconv.Bytes(in.Value))
+			} else {
+				array = gconv.Interfaces(in.Value)
+			}
+			if len(array) == 0 {
+				return
+			}
+			for _, item := range array {
+				v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
+					Value:               item,
+					Type:                in.Type.Elem(),
+					Kind:                in.Type.Elem().Kind(),
+					ErrorMaps:           in.ErrorMaps,
+					ResultSequenceRules: in.ResultSequenceRules,
+				})
+				// Bail feature.
+				if v.bail && len(in.ErrorMaps) > 0 {
+					break
+				}
 			}
 		}
 	}
