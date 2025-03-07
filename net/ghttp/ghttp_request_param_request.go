@@ -197,7 +197,7 @@ func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer i
 	if len(fields) > 0 {
 		for _, field := range fields {
 			if tagValue := field.TagDefault(); tagValue != "" {
-				mergeFieldValue(data, false, field.Name(), field.Name(), tagValue)
+				mergeTagValueWithFoundKey(data, false, field.Name(), field.Name(), tagValue)
 			}
 		}
 		return nil
@@ -210,7 +210,7 @@ func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer i
 	}
 	if len(tagFields) > 0 {
 		for _, field := range tagFields {
-			mergeFieldValue(data, false, field.Name(), field.Name(), field.TagValue)
+			mergeTagValueWithFoundKey(data, false, field.Name(), field.Name(), field.TagValue)
 		}
 	}
 
@@ -248,7 +248,7 @@ func (r *Request) mergeInTagStructValue(data map[string]interface{}) error {
 					foundKey, foundValue = gutil.MapPossibleItemByKey(cookieMap, findKey)
 				}
 				if foundKey != "" {
-					mergeFieldValue(data, true, foundKey, field.Name(), foundValue)
+					mergeTagValueWithFoundKey(data, true, foundKey, field.Name(), foundValue)
 				}
 			}
 		}
@@ -256,14 +256,12 @@ func (r *Request) mergeInTagStructValue(data map[string]interface{}) error {
 	return nil
 }
 
-// mergeFieldValue merges the request parameters when the key does not exist in the map or isCover is true or the value is nil.
-//
-// createTime: 2025-03-05 17:50:32
-func mergeFieldValue(data map[string]interface{}, isCover bool, findKey string, fieldName string, tagValue interface{}) {
+// mergeTagValueWithFoundKey merges the request parameters when the key does not exist in the map or overwritten is true or the value is nil.
+func mergeTagValueWithFoundKey(data map[string]interface{}, overwritten bool, findKey string, fieldName string, tagValue interface{}) {
 	if foundKey, foundValue := gutil.MapPossibleItemByKey(data, findKey); foundKey == "" {
 		data[fieldName] = tagValue
 	} else {
-		if isCover || foundValue == nil {
+		if overwritten || foundValue == nil {
 			data[foundKey] = tagValue
 		}
 	}
