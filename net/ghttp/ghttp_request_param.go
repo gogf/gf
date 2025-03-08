@@ -107,7 +107,6 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 				return err
 			}
 		}
-		// TODO: https://github.com/gogf/gf/pull/2450
 		// Validation.
 		if err = gvalid.New().
 			Bail().
