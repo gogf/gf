@@ -3,7 +3,7 @@
 coverage=$1
 
 # update code of submodules
-make subup
+git clone https://github.com/gogf/examples
 
 # find all path that contains go.mod.
 for file in `find . -name go.mod`; do
