@@ -8,7 +8,6 @@ package ghttp
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/util/gmeta"
 	"net/http"
 	"reflect"
 	"strings"
@@ -21,6 +20,7 @@ import (
 	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gmeta"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
