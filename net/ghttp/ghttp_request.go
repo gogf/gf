@@ -9,6 +9,7 @@ package ghttp
 import (
 	"fmt"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gmeta"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -287,4 +289,19 @@ func (r *Request) GetHandlerResponse() interface{} {
 // GetServeHandler retrieves and returns the user defined handler used to serve this request.
 func (r *Request) GetServeHandler() *HandlerItemParsed {
 	return r.serveHandler
+}
+
+// GetMetaTag retrieves and returns the metadata value associated with the given key from the request struct.
+func (r *Request) GetMetaTag(key string) string {
+	if r.serveHandler == nil || r.serveHandler.Handler == nil {
+		return ""
+	}
+
+	reqValue := reflect.New(r.serveHandler.Handler.Info.Type.In(1)).Interface()
+
+	metaValue := gmeta.Get(reqValue, key)
+	if metaValue != nil {
+		return metaValue.String()
+	}
+	return ""
 }
