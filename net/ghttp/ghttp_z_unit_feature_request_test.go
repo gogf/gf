@@ -8,7 +8,9 @@ package ghttp_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/util/gmeta"
 	"io"
 	"testing"
 	"time"
@@ -859,5 +861,35 @@ func Test_Params_GetRequestMapStrVar(t *testing.T) {
 
 		t.Assert(client.GetContent(ctx, "/GetRequestMapStrVar"), "")
 		t.Assert(client.GetContent(ctx, "/GetRequestMapStrVar", "id=1"), 1)
+	})
+}
+
+func Test_GetMetaTag(t *testing.T) {
+	type TestReq struct {
+		gmeta.Meta `method:"get" summary:"Test" tags:"Test" customTag:"Hello"`
+	}
+	type TestRes struct {
+		MetaValue string
+	}
+
+	s := g.Server(guid.S()) // 创建唯一服务器实例
+	s.Use(ghttp.MiddlewareHandlerResponse)
+	s.BindHandler("/test", func(ctx context.Context, req *TestReq) (res *TestRes, err error) {
+		metaValue := g.RequestFromCtx(ctx).GetMetaTag("customTag")
+		return &TestRes{
+			MetaValue: metaValue,
+		}, nil
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(c.GetContent(ctx, "/test"), `{"code":0,"message":"OK","data":{"MetaValue":"Hello"}}`)
 	})
 }

@@ -20,6 +20,7 @@ import (
 	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gmeta"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -290,20 +291,17 @@ func (r *Request) GetServeHandler() *HandlerItemParsed {
 	return r.serveHandler
 }
 
+// GetMetaTag retrieves and returns the metadata value associated with the given key from the request struct.
 func (r *Request) GetMetaTag(key string) string {
 	if r.serveHandler == nil || r.serveHandler.Handler == nil {
 		return ""
 	}
-	reqType := r.serveHandler.Handler.Info.Type.In(1)
-	if reqType.Kind() == reflect.Ptr {
-		reqType = reqType.Elem()
-	}
 
-	for i := 0; i < reqType.NumField(); i++ {
-		field := reqType.Field(i)
-		if field.Anonymous && field.Type.String() == "gmeta.Meta" {
-			return field.Tag.Get(key)
-		}
+	reqValue := reflect.New(r.serveHandler.Handler.Info.Type.In(1)).Interface()
+
+	metaValue := gmeta.Get(reqValue, key)
+	if metaValue != nil {
+		return metaValue.String()
 	}
 	return ""
 }
