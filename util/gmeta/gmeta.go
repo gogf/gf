@@ -24,7 +24,7 @@ const metaAttributeName = "Meta"
 var metaType = reflect.TypeOf(Meta{})
 
 // Data retrieves and returns all metadata from `object`.
-func Data(object interface{}) map[string]string {
+func Data(object any) map[string]string {
 	reflectType, err := gstructs.StructType(object)
 	if err != nil {
 		return nil
@@ -38,7 +38,7 @@ func Data(object interface{}) map[string]string {
 }
 
 // Get retrieves and returns specified metadata by `key` from `object`.
-func Get(object interface{}, key string) *gvar.Var {
+func Get(object any, key string) *gvar.Var {
 	v, ok := Data(object)[key]
 	if !ok {
 		return nil
