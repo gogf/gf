@@ -2,10 +2,8 @@ module github.com/gogf/gf/contrib/config/kubecm/v2
 
 go 1.22
 
-toolchain go1.22.0
-
 require (
-	github.com/gogf/gf/v2 v2.8.3
+	github.com/gogf/gf/v2 v2.9.0-beta
 	k8s.io/api v0.27.4
 	k8s.io/apimachinery v0.27.4
 	k8s.io/client-go v0.27.4
