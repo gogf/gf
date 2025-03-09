@@ -2,10 +2,8 @@ module github.com/gogf/gf/contrib/nosql/redis/v2
 
 go 1.22
 
-toolchain go1.22.0
-
 require (
-	github.com/gogf/gf/v2 v2.8.3
+	github.com/gogf/gf/v2 v2.9.0-beta
 	github.com/redis/go-redis/v9 v9.7.0
 	go.opentelemetry.io/otel v1.32.0
 	go.opentelemetry.io/otel/trace v1.32.0

@@ -3,17 +3,7 @@ SHELL := /bin/bash
 # execute "go mod tidy" on all folders that have go.mod file
 .PHONY: tidy
 tidy:
-	$(eval files=$(shell find . -name go.mod))
-	@set -e; \
-	for file in ${files}; do \
-		goModPath=$$(dirname $$file); \
-		if ! echo $$goModPath | grep -q "testdata"; then \
-			echo "handle: $$goModPath"; \
-			cd $$goModPath; \
-			go mod tidy; \
-			cd -; \
-		fi \
-	done
+	./.make_tidy.sh
 
 # execute "golangci-lint" to check code style
 .PHONY: lint
@@ -25,7 +15,7 @@ lint:
 version:
 	@set -e; \
 	newVersion=$(to); \
-	./.set_version.sh ./ $$newVersion; \
+	./.make_version.sh ./ $$newVersion; \
 	echo "make version to=$(to) done"
 
 

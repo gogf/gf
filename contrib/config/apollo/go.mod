@@ -2,11 +2,9 @@ module github.com/gogf/gf/contrib/config/apollo/v2
 
 go 1.22
 
-toolchain go1.22.0
-
 require (
 	github.com/apolloconfig/agollo/v4 v4.3.1
-	github.com/gogf/gf/v2 v2.8.3
+	github.com/gogf/gf/v2 v2.9.0-beta
 )
 
 require (

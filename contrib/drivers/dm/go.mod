@@ -2,13 +2,11 @@ module github.com/gogf/gf/contrib/drivers/dm/v2
 
 go 1.22
 
-toolchain go1.22.0
-
 replace github.com/gogf/gf/v2 => ../../../
 
 require (
 	gitee.com/chunanyong/dm v1.8.12
-	github.com/gogf/gf/v2 v2.8.3
+	github.com/gogf/gf/v2 v2.9.0-beta
 )
 
 require (

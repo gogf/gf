@@ -5,6 +5,9 @@ coverage=$1
 # update code of submodules
 git clone https://github.com/gogf/examples
 
+# update go.mod in examples directory to replace github.com/gogf/gf packages with local directory
+bash .github/workflows/scripts/replace_examples_gomod.sh
+
 # find all path that contains go.mod.
 for file in `find . -name go.mod`; do
     dirpath=$(dirname $file)
