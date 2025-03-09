@@ -64,9 +64,9 @@ jobs:
         cache-dependency-path: '**/go.sum' 
 
     - name: Before Script
-      run:  bash .github/workflows/before_script.sh
+      run:  bash .github/workflows/scripts/before_script.sh
 
     - name: Build & Test
-      run: bash .github/workflows/ci-sub.sh
+      run: bash .github/workflows/scripts/ci-sub.sh
 
 
