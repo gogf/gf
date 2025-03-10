@@ -19,6 +19,7 @@ import (
 	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gmeta"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -40,7 +41,7 @@ type Request struct {
 	// =================================================================================================================
 
 	handlers        []*HandlerItemParsed   // All matched handlers containing handler, hook and middleware for this request.
-	serveHandler    *HandlerItemParsed     // Real handler serving for this request, not hook or middleware.
+	serveHandler    *HandlerItemParsed     // Real business handler serving for this request, not hook or middleware handler.
 	handlerResponse interface{}            // Handler response object for Request/Response handler.
 	hasHookHandler  bool                   // A bool marking whether there's hook handler in the handlers for performance purpose.
 	hasServeHandler bool                   // A bool marking whether there's serving handler in the handlers for performance purpose.
@@ -287,4 +288,26 @@ func (r *Request) GetHandlerResponse() interface{} {
 // GetServeHandler retrieves and returns the user defined handler used to serve this request.
 func (r *Request) GetServeHandler() *HandlerItemParsed {
 	return r.serveHandler
+}
+
+// GetMetaTag retrieves and returns the metadata value associated with the given key from the request struct.
+// The meta value is from struct tags from g.Meta/gmeta.Meta type.
+// For example:
+//
+//	type GetMetaTagReq struct {
+//	    g.Meta `path:"/test" method:"post" summary:"meta_tag" tags:"meta"`
+//	    // ...
+//	}
+//
+// r.GetMetaTag("summary") // returns "meta_tag"
+// r.GetMetaTag("method")  // returns "post"
+func (r *Request) GetMetaTag(key string) string {
+	if r.serveHandler == nil || r.serveHandler.Handler == nil {
+		return ""
+	}
+	metaValue := gmeta.Get(r.serveHandler.Handler.Info.Type.In(1), key)
+	if metaValue != nil {
+		return metaValue.String()
+	}
+	return ""
 }

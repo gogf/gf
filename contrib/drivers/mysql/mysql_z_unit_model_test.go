@@ -682,6 +682,7 @@ func Test_Model_Array(t *testing.T) {
 		t.Assert(all.Array("id"), g.Slice{1, 2, 3})
 		t.Assert(all.Array("nickname"), g.Slice{"name_1", "name_2", "name_3"})
 	})
+
 	gtest.C(t, func(t *gtest.T) {
 		array, err := db.Model(table).Fields("nickname").Where("id", g.Slice{1, 2, 3}).Array()
 		t.AssertNil(err)
@@ -757,6 +758,7 @@ func Test_Model_Value_WithCache(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(value.Int(), 0)
 	})
+
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).Data(g.MapStrAny{
 			"id":       1,
@@ -1437,6 +1439,7 @@ func Test_Model_Option_Map(t *testing.T) {
 		t.AssertNE(one["nickname"].String(), "1")
 		t.Assert(one["passport"].String(), "1")
 	})
+
 	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
 		defer dropTable(table)

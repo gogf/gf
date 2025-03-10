@@ -678,3 +678,51 @@ func Test_Issue4047(t *testing.T) {
 		t.Assert(s.Logger(), nil)
 	})
 }
+
+// Issue4093Req
+type Issue4093Req struct {
+	g.Meta     `path:"/test" method:"post"`
+	Page       int    `json:"page" example:"10" d:"1" v:"min:1#页码最小值不能低于1"  dc:"当前页码"`
+	PerPage    int    `json:"pageSize" example:"1" d:"10" v:"min:1|max:200#每页数量最小值不能低于1|最大值不能大于200" dc:"每页数量"`
+	Pagination bool   `json:"pagination" d:"true" dc:"是否需要进行分页"`
+	Name       string `json:"name" d:"john"`
+	Number     int    `json:"number" d:"1"`
+}
+
+type Issue4093Res struct {
+	g.Meta `mime:"text/html" example:"string"`
+}
+
+var (
+	Issue4093 = cIssue4093{}
+)
+
+type cIssue4093 struct{}
+
+func (c *cIssue4093) User(ctx context.Context, req *Issue4093Req) (res *Issue4093Res, err error) {
+	g.RequestFromCtx(ctx).Response.WriteJson(req)
+	return
+}
+
+// https://github.com/gogf/gf/issues/4093
+func Test_Issue4093(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareHandlerResponse)
+		group.Bind(Issue4093)
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		client := g.Client().ContentJson()
+		client.SetPrefix(prefix)
+
+		t.Assert(client.PostContent(ctx, "/test", `{"pagination":false,"name":"","number":0}`), `{"page":1,"pageSize":10,"pagination":false,"name":"","number":0}`)
+		t.Assert(client.PostContent(ctx, "/test"), `{"page":1,"pageSize":10,"pagination":true,"name":"john","number":1}`)
+	})
+}

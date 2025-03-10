@@ -2,10 +2,8 @@ module github.com/gogf/gf/contrib/config/consul/v2
 
 go 1.22
 
-toolchain go1.22.0
-
 require (
-	github.com/gogf/gf/v2 v2.8.3
+	github.com/gogf/gf/v2 v2.9.0-beta
 	github.com/hashicorp/consul/api v1.24.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 )

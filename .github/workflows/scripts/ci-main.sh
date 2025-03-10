@@ -3,7 +3,10 @@
 coverage=$1
 
 # update code of submodules
-make subup
+git clone https://github.com/gogf/examples
+
+# update go.mod in examples directory to replace github.com/gogf/gf packages with local directory
+bash .github/workflows/scripts/replace_examples_gomod.sh
 
 # find all path that contains go.mod.
 for file in `find . -name go.mod`; do
@@ -22,14 +25,14 @@ for file in `find . -name go.mod`; do
     fi
 
     # Check if it's a contrib directory or examples directory
-    if [[ $dirpath =~ "/contrib/" ]] || [ "examples" = $(basename $dirpath) ]; then
+    if [[ $dirpath =~ "/contrib/" ]] || [[ $dirpath =~ "/examples/" ]]; then
         # Check if go version meets the requirement
         if ! go version | grep -qE "go${LATEST_GO_VERSION}"; then
             echo "ignore path $dirpath as go version is not ${LATEST_GO_VERSION}: $(go version)"
             continue 1
         fi
         # If it's examples directory, only build without tests
-        if [ "examples" = $(basename $dirpath) ]; then
+        if [[ $dirpath =~ "/examples/" ]]; then
             echo "the examples directory only needs to be built, not unit tests and coverage tests."
             cd $dirpath
             go mod tidy

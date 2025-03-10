@@ -239,15 +239,15 @@ jobs:
         export PATH="$PATH:$(go env GOPATH)/bin"
 
     - name: Before Script
-      run:  bash .github/workflows/before_script.sh
+      run:  bash .github/workflows/scripts/before_script.sh
 
     - name: Build & Test
       if: ${{ (github.event_name == 'push' && github.ref != 'refs/heads/master') || github.event_name == 'pull_request' }}
-      run: bash .github/workflows/ci-main.sh
+      run: bash .github/workflows/scripts/ci-main.sh
 
     - name: Build & Test & Coverage
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-      run: bash .github/workflows/ci-main.sh coverage
+      run: bash .github/workflows/scripts/ci-main.sh coverage
 
     - name: Stop Redis Cluster Containers
       run:  docker compose -f ".github/workflows/redis/docker-compose.yml" down
