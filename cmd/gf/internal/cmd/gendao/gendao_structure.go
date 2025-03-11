@@ -71,7 +71,7 @@ func generateStructFieldDefinition(
 		err              error
 		localTypeName    gdb.LocalType
 		localTypeNameStr string
-		jsonTag          = gstr.CaseConvert(field.Name, gstr.CaseTypeMatch(in.JsonCase))
+		jsonTag          = gstr.CaseConvert(strings.TrimPrefix(field.Name, in.RemoveFieldPrefix), gstr.CaseTypeMatch(in.JsonCase))
 	)
 
 	if in.TypeMapping != nil && len(in.TypeMapping) > 0 {
@@ -145,10 +145,10 @@ func generateStructFieldDefinition(
 	}
 	attrLines = append(attrLines, fmt.Sprintf(` #%sjson:"%s"`, tagKey, jsonTag))
 	// orm tag
-	if !in.IsDo {
-		// entity
-		attrLines = append(attrLines, fmt.Sprintf(` #orm:"%s"`, field.Name))
-	}
+	//if !in.IsDo {
+	// entity
+	attrLines = append(attrLines, fmt.Sprintf(` #orm:"%s"`, field.Name))
+	//}
 	attrLines = append(attrLines, fmt.Sprintf(` #description:"%s"%s`, descriptionTag, tagKey))
 	attrLines = append(attrLines, fmt.Sprintf(` #// %s`, formatComment(field.Comment)))
 
