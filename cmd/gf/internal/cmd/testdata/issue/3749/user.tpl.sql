@@ -1,4 +1,4 @@
-CREATE TABLE `%s` (
+CREATE TABLE if not exists `%s` (
     `Id`        int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'User ID',
     `parentId`  varchar(45) NOT NULL COMMENT '',
     `PASSPORT`  varchar(45) NOT NULL COMMENT 'User Passport',

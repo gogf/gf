@@ -17,7 +17,7 @@ import (
 var (
 	ctx    = context.Background()
 	testDB gdb.DB
-	link   = "mysql:root:12345678@tcp(127.0.0.1:3306)/test?loc=Local&parseTime=true"
+	link   = "mysql:root:Abcd_1234@tcp(127.0.0.1:3306)/test?loc=Local&parseTime=true"
 )
 
 func init() {
