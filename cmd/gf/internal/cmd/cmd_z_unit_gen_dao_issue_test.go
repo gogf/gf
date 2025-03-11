@@ -43,7 +43,7 @@ func Test_Gen_Dao_Issue2572(t *testing.T) {
 			group = "test"
 			in    = gendao.CGenDaoInput{
 				Path:               path,
-				Link:               "",
+				Link:               link,
 				Tables:             "",
 				TablesEx:           "",
 				Group:              group,
@@ -89,7 +89,7 @@ func Test_Gen_Dao_Issue2572(t *testing.T) {
 
 		generatedFiles, err := gfile.ScanDir(path, "*.go", true)
 		t.AssertNil(err)
-		t.Assert(len(generatedFiles), 8)
+		t.Assert(len(generatedFiles), 16)
 		for i, generatedFile := range generatedFiles {
 			generatedFiles[i] = gstr.TrimLeftStr(generatedFile, path)
 		}
@@ -132,7 +132,7 @@ func Test_Gen_Dao_Issue2616(t *testing.T) {
 			group = "test"
 			in    = gendao.CGenDaoInput{
 				Path:               path,
-				Link:               "",
+				Link:               link,
 				Tables:             "",
 				TablesEx:           "",
 				Group:              group,
@@ -178,7 +178,7 @@ func Test_Gen_Dao_Issue2616(t *testing.T) {
 
 		generatedFiles, err := gfile.ScanDir(path, "*.go", true)
 		t.AssertNil(err)
-		t.Assert(len(generatedFiles), 8)
+		t.Assert(len(generatedFiles), 16)
 		for i, generatedFile := range generatedFiles {
 			generatedFiles[i] = gstr.TrimLeftStr(generatedFile, path)
 		}
@@ -208,7 +208,7 @@ func Test_Gen_Dao_Issue2616(t *testing.T) {
 			daoUser2Content = gfile.GetContents(path + "/dao/user_2.go")
 		)
 		t.Assert(gstr.Contains(daoUser1Content, keyStr), true)
-		t.Assert(gstr.Contains(daoUser2Content, keyStr), false)
+		t.Assert(gstr.Contains(daoUser2Content, keyStr), true)
 	})
 }
 
