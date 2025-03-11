@@ -875,7 +875,7 @@ func (r GetMetaTagSt) PostTest(ctx context.Context, req *GetMetaTagReq) (*GetMet
 	return &GetMetaTagRes{}, nil
 }
 
-func TestRequest_GetServeHandler(t *testing.T) {
+func TestRequest_GetServeHandler_GetMetaTag(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Use(func(r *ghttp.Request) {
 		r.Response.Writef(
