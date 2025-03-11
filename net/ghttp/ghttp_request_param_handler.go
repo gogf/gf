@@ -27,8 +27,8 @@ func (r *Request) GetServeHandler() *HandlerItemParsed {
 //	    // ...
 //	}
 //
-// r.GetMetaTag("summary") // returns "meta_tag"
-// r.GetMetaTag("method")  // returns "post"
+// r.GetServeHandler().GetMetaTag("summary") // returns "meta_tag"
+// r.GetServeHandler().GetMetaTag("method")  // returns "post"
 func (h *HandlerItemParsed) GetMetaTag(key string) string {
 	if h == nil || h.Handler == nil {
 		return ""
