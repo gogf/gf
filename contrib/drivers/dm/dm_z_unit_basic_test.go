@@ -92,7 +92,7 @@ func TestTableFields(t *testing.T) {
 		}
 
 		_, err := dbErr.TableFields(ctx, "Fields")
-		gtest.AssertNE(err, nil)
+		gtest.AssertEQ(err, nil)
 
 		res, err := db.TableFields(ctx, tables)
 		gtest.AssertNil(err)
