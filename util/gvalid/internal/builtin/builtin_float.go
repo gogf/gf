@@ -30,7 +30,7 @@ func (r RuleFloat) Message() string {
 }
 
 func (r RuleFloat) Run(in RunInput) error {
-	if _, err := strconv.ParseFloat(in.Value.String(), 10); err == nil {
+	if _, err := strconv.ParseFloat(in.Value.String(), 64); err == nil {
 		return nil
 	}
 	return errors.New(in.Message)

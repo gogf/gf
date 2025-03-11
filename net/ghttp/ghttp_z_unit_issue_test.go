@@ -9,6 +9,7 @@ package ghttp_test
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -164,7 +165,7 @@ func Test_Issue1653(t *testing.T) {
 }
 `
 		resContent := c.PostContent(ctx, "/boot/test", dataReq)
-		t.Assert(resContent, `{"code":0,"message":"","data":{"uuid":"28ee701c-7daf-4cdc-9a62-6d6704e6112b","feed_back":"P00001"}}`)
+		t.Assert(resContent, `{"code":0,"message":"OK","data":{"uuid":"28ee701c-7daf-4cdc-9a62-6d6704e6112b","feed_back":"P00001"}}`)
 	})
 }
 
@@ -260,7 +261,7 @@ func Test_Issue2172(t *testing.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		dataReq := `{"data":{"asd":1}}`
-		t.Assert(c.PostContent(ctx, "/demo", dataReq), `{"code":0,"message":"","data":{"Content":"{\"asd\":1}"}}`)
+		t.Assert(c.PostContent(ctx, "/demo", dataReq), `{"code":0,"message":"OK","data":{"Content":"{\"asd\":1}"}}`)
 	})
 }
 
@@ -364,7 +365,7 @@ func Test_Issue2482(t *testing.T) {
     ]
   }
 `
-		t.Assert(c.PutContent(ctx, "/api/v2/order", content), `{"code":0,"message":"","data":null}`)
+		t.Assert(c.PutContent(ctx, "/api/v2/order", content), `{"code":0,"message":"OK","data":null}`)
 	})
 }
 
@@ -521,7 +522,7 @@ func Test_Issue2457(t *testing.T) {
 
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-		t.Assert(c.GetContent(ctx, "/list"), `{"code":0,"message":"","data":{"Code":100,"Data":{"Title":"title","Content":"hello"},"Msg":""}}`)
+		t.Assert(c.GetContent(ctx, "/list"), `{"code":0,"message":"OK","data":{"Code":100,"Data":{"Title":"title","Content":"hello"},"Msg":""}}`)
 	})
 }
 
@@ -564,7 +565,7 @@ func Test_Issue3245(t *testing.T) {
 		c.SetHeader("Header-Name", "oldme")
 		c.SetCookie("Header-Age", "25")
 
-		expect := `{"code":0,"message":"","data":{"Reply":{"name":"oldme","X-Header-Name":"oldme","X-Header-Age":25}}}`
+		expect := `{"code":0,"message":"OK","data":{"Reply":{"name":"oldme","X-Header-Name":"oldme","X-Header-Age":25}}}`
 		t.Assert(c.GetContent(ctx, "/hello?nickname=oldme"), expect)
 	})
 }
@@ -614,8 +615,55 @@ func Test_Issue3789(t *testing.T) {
 
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-		expect := `{"code":0,"message":"","data":{"id":"0","secondId":"2","thirdId":"3"}}`
+		expect := `{"code":0,"message":"OK","data":{"id":"0","secondId":"2","thirdId":"3"}}`
 		t.Assert(c.GetContent(ctx, "/hello?id=&secondId=2&thirdId=3"), expect)
+	})
+}
+
+// https://github.com/gogf/gf/issues/4108
+func Test_Issue4108(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareHandlerResponse)
+		group.GET("/", func(r *ghttp.Request) {
+			r.Response.Writer.Write([]byte("hello"))
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		rsp, err := client.Get(ctx, "/")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusOK)
+		t.Assert(rsp.ReadAllString(), "hello")
+	})
+}
+
+// https://github.com/gogf/gf/issues/4115
+func Test_Issue4115(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Use(func(r *ghttp.Request) {
+		r.Response.Writer.Write([]byte("hello"))
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		rsp, err := client.Get(ctx, "/")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusOK)
+		t.Assert(rsp.ReadAllString(), "hello")
 	})
 }
 
@@ -628,5 +676,53 @@ func Test_Issue4047(t *testing.T) {
 		})
 		t.AssertNil(err)
 		t.Assert(s.Logger(), nil)
+	})
+}
+
+// Issue4093Req
+type Issue4093Req struct {
+	g.Meta     `path:"/test" method:"post"`
+	Page       int    `json:"page" example:"10" d:"1" v:"min:1#页码最小值不能低于1"  dc:"当前页码"`
+	PerPage    int    `json:"pageSize" example:"1" d:"10" v:"min:1|max:200#每页数量最小值不能低于1|最大值不能大于200" dc:"每页数量"`
+	Pagination bool   `json:"pagination" d:"true" dc:"是否需要进行分页"`
+	Name       string `json:"name" d:"john"`
+	Number     int    `json:"number" d:"1"`
+}
+
+type Issue4093Res struct {
+	g.Meta `mime:"text/html" example:"string"`
+}
+
+var (
+	Issue4093 = cIssue4093{}
+)
+
+type cIssue4093 struct{}
+
+func (c *cIssue4093) User(ctx context.Context, req *Issue4093Req) (res *Issue4093Res, err error) {
+	g.RequestFromCtx(ctx).Response.WriteJson(req)
+	return
+}
+
+// https://github.com/gogf/gf/issues/4093
+func Test_Issue4093(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareHandlerResponse)
+		group.Bind(Issue4093)
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		client := g.Client().ContentJson()
+		client.SetPrefix(prefix)
+
+		t.Assert(client.PostContent(ctx, "/test", `{"pagination":false,"name":"","number":0}`), `{"page":1,"pageSize":10,"pagination":false,"name":"","number":0}`)
+		t.Assert(client.PostContent(ctx, "/test"), `{"page":1,"pageSize":10,"pagination":true,"name":"john","number":1}`)
 	})
 }

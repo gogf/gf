@@ -17,6 +17,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 
 	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -38,11 +39,13 @@ type (
 		g.Meta            `name:"pbentity" config:"{CGenPbEntityConfig}" brief:"{CGenPbEntityBrief}" eg:"{CGenPbEntityEg}" ad:"{CGenPbEntityAd}"`
 		Path              string `name:"path"              short:"p"  brief:"{CGenPbEntityBriefPath}" d:"manifest/protobuf/pbentity"`
 		Package           string `name:"package"           short:"k"  brief:"{CGenPbEntityBriefPackage}"`
+		GoPackage         string `name:"goPackage"           short:"g"  brief:"{CGenPbEntityBriefGoPackage}"`
 		Link              string `name:"link"              short:"l"  brief:"{CGenPbEntityBriefLink}"`
 		Tables            string `name:"tables"            short:"t"  brief:"{CGenPbEntityBriefTables}"`
 		Prefix            string `name:"prefix"            short:"f"  brief:"{CGenPbEntityBriefPrefix}"`
 		RemovePrefix      string `name:"removePrefix"      short:"r"  brief:"{CGenPbEntityBriefRemovePrefix}"`
 		RemoveFieldPrefix string `name:"removeFieldPrefix" short:"rf" brief:"{CGenPbEntityBriefRemoveFieldPrefix}"`
+		TablesEx          string `name:"tablesEx"          short:"x"  brief:"{CGenDaoBriefTablesEx}"`
 		NameCase          string `name:"nameCase"          short:"n"  brief:"{CGenPbEntityBriefNameCase}" d:"Camel"`
 		JsonCase          string `name:"jsonCase"          short:"j"  brief:"{CGenPbEntityBriefJsonCase}" d:"none"`
 		Option            string `name:"option"            short:"o"  brief:"{CGenPbEntityBriefOption}"`
@@ -111,10 +114,12 @@ CONFIGURATION SUPPORT
 `
 	CGenPbEntityBriefPath              = `directory path for generated files storing`
 	CGenPbEntityBriefPackage           = `package path for all entity proto files`
+	CGenPbEntityBriefGoPackage         = `go package path for all entity proto files`
 	CGenPbEntityBriefLink              = `database configuration, the same as the ORM configuration of GoFrame`
 	CGenPbEntityBriefTables            = `generate models only for given tables, multiple table names separated with ','`
 	CGenPbEntityBriefPrefix            = `add specified prefix for all entity names and entity proto files`
 	CGenPbEntityBriefRemovePrefix      = `remove specified prefix of the table, multiple prefix separated with ','`
+	CGenPbEntityBriefTablesEx          = `generate all models exclude the specified tables, multiple prefix separated with ','`
 	CGenPbEntityBriefRemoveFieldPrefix = `remove specified prefix of the field, multiple prefix separated with ','`
 	CGenPbEntityBriefOption            = `extra protobuf options`
 	CGenPbEntityBriefGroup             = `
@@ -236,10 +241,12 @@ func init() {
 		`CGenPbEntityAd`:                     CGenPbEntityAd,
 		`CGenPbEntityBriefPath`:              CGenPbEntityBriefPath,
 		`CGenPbEntityBriefPackage`:           CGenPbEntityBriefPackage,
+		`CGenPbEntityBriefGoPackage`:         CGenPbEntityBriefGoPackage,
 		`CGenPbEntityBriefLink`:              CGenPbEntityBriefLink,
 		`CGenPbEntityBriefTables`:            CGenPbEntityBriefTables,
 		`CGenPbEntityBriefPrefix`:            CGenPbEntityBriefPrefix,
 		`CGenPbEntityBriefRemovePrefix`:      CGenPbEntityBriefRemovePrefix,
+		`CGenPbEntityBriefTablesEx`:          CGenPbEntityBriefTablesEx,
 		`CGenPbEntityBriefRemoveFieldPrefix`: CGenPbEntityBriefRemoveFieldPrefix,
 		`CGenPbEntityBriefGroup`:             CGenPbEntityBriefGroup,
 		`CGenPbEntityBriefNameCase`:          CGenPbEntityBriefNameCase,
@@ -290,6 +297,9 @@ func doGenPbEntityForArray(ctx context.Context, index int, in CGenPbEntityInput)
 		in.Package = modName + "/" + defaultPackageSuffix
 	}
 	removePrefixArray := gstr.SplitAndTrim(in.RemovePrefix, ",")
+
+	excludeTables := gset.NewStrSetFrom(gstr.SplitAndTrim(in.TablesEx, ","))
+
 	// It uses user passed database configuration.
 	if in.Link != "" {
 		var (
@@ -331,6 +341,9 @@ func doGenPbEntityForArray(ctx context.Context, index int, in CGenPbEntityInput)
 	}
 
 	for _, tableName := range tableNames {
+		if excludeTables.Contains(tableName) {
+			continue
+		}
 		newTableName := tableName
 		for _, v := range removePrefixArray {
 			newTableName = gstr.TrimLeftStr(newTableName, v, 1)
@@ -369,10 +382,13 @@ func generatePbEntityContentFile(ctx context.Context, in CGenPbEntityInternalInp
 			}
 		}
 	}
+	if in.GoPackage == "" {
+		in.GoPackage = in.Package
+	}
 	entityContent := gstr.ReplaceByMap(getTplPbEntityContent(""), g.MapStrStr{
 		"{Imports}":       packageImportsArray.Join("\n"),
 		"{PackageName}":   gfile.Basename(in.Package),
-		"{GoPackage}":     in.Package,
+		"{GoPackage}":     in.GoPackage,
 		"{OptionContent}": in.Option,
 		"{EntityMessage}": entityMessageDefine,
 	})
