@@ -875,12 +875,13 @@ func (r GetMetaTagSt) PostTest(ctx context.Context, req *GetMetaTagReq) (*GetMet
 	return &GetMetaTagRes{}, nil
 }
 
-func TestRequest_GetMetaTag(t *testing.T) {
+func TestRequest_GetServeHandler_GetMetaTag(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Use(func(r *ghttp.Request) {
 		r.Response.Writef(
 			"summary:%s,method:%s",
-			r.GetMetaTag("summary"), r.GetMetaTag("method"),
+			r.GetServeHandler().GetMetaTag("summary"),
+			r.GetServeHandler().GetMetaTag("method"),
 		)
 	})
 	s.Group("/", func(grp *ghttp.RouterGroup) {

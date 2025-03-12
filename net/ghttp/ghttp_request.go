@@ -19,7 +19,6 @@ import (
 	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gmeta"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -278,36 +277,4 @@ func (r *Request) ReloadParam() {
 	r.parsedForm = false
 	r.parsedQuery = false
 	r.bodyContent = nil
-}
-
-// GetHandlerResponse retrieves and returns the handler response object and its error.
-func (r *Request) GetHandlerResponse() interface{} {
-	return r.handlerResponse
-}
-
-// GetServeHandler retrieves and returns the user defined handler used to serve this request.
-func (r *Request) GetServeHandler() *HandlerItemParsed {
-	return r.serveHandler
-}
-
-// GetMetaTag retrieves and returns the metadata value associated with the given key from the request struct.
-// The meta value is from struct tags from g.Meta/gmeta.Meta type.
-// For example:
-//
-//	type GetMetaTagReq struct {
-//	    g.Meta `path:"/test" method:"post" summary:"meta_tag" tags:"meta"`
-//	    // ...
-//	}
-//
-// r.GetMetaTag("summary") // returns "meta_tag"
-// r.GetMetaTag("method")  // returns "post"
-func (r *Request) GetMetaTag(key string) string {
-	if r.serveHandler == nil || r.serveHandler.Handler == nil {
-		return ""
-	}
-	metaValue := gmeta.Get(r.serveHandler.Handler.Info.Type.In(1), key)
-	if metaValue != nil {
-		return metaValue.String()
-	}
-	return ""
 }
