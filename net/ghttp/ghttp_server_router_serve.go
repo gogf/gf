@@ -286,6 +286,6 @@ func (item HandlerItem) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (item HandlerItemParsed) MarshalJSON() ([]byte, error) {
-	return json.Marshal(item.Handler)
+func (h *HandlerItemParsed) MarshalJSON() ([]byte, error) {
+	return json.Marshal(h.Handler)
 }
