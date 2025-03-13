@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"mime"
 	"mime/multipart"
 	"net/http"
 	"reflect"
@@ -238,6 +239,12 @@ func (r *Request) parseBody() {
 	if gstr.Contains(contentType, "multipart/") {
 		return
 	}
+
+	// Skip binary content types, which should not be parsed.
+	if r.isBinaryContentType(contentType) {
+		return
+	}
+
 	if body := r.GetBody(); len(body) > 0 {
 		// Trim space/new line characters.
 		body = bytes.TrimSpace(body)
@@ -400,4 +407,43 @@ func (r *Request) GetMultipartFiles(name string) []*multipart.FileHeader {
 		return files
 	}
 	return nil
+}
+
+// isBinaryContentType check the content type is binary or not.
+func (r *Request) isBinaryContentType(contentType string) bool {
+	// parseMediaType
+	mimeType, _, err := mime.ParseMediaType(contentType)
+	// If the content type is invalid, it's treated as binary.
+	if err != nil {
+		return true
+	}
+
+	// Lowercase the MIME type for easier comparison
+	mimeType = strings.ToLower(mimeType)
+
+	// if the MIME type is text, then it's definitely not binary
+	if strings.HasPrefix(mimeType, "text/") {
+		return false
+	}
+
+	// defined non-binary MIME types
+	nonBinaryTypes := map[string]struct{}{
+		"application/json":                  {},
+		"application/xml":                   {},
+		"application/x-www-form-urlencoded": {},
+		"application/javascript":            {},
+		"application/xhtml+xml":             {},
+	}
+	if _, ok := nonBinaryTypes[mimeType]; ok {
+		return false
+	}
+
+	// if the MIME type is JSON or XML, it's definitely not binary
+	if strings.HasSuffix(mimeType, "+json") || strings.HasSuffix(mimeType, "+xml") {
+		return false
+	}
+
+	// otherwise, it's binary
+	// (this includes application/octet-stream、image/*、video/*、audio/*)
+	return true
 }
