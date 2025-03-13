@@ -446,13 +446,8 @@ func (c *Converter) doConvertForDefault(in doConvertInput, option ConvertOption)
 		if err != nil {
 			return nil, err
 		}
-		resultValue := reflect.ValueOf(result)
-		if resultValue.Type().AssignableTo(referReflectValue.Type()) {
-			convertedValue = resultValue.Convert(referReflectValue.Type()).Interface()
-		} else {
-			convertedValue = reflect.Zero(referReflectValue.Type()).Interface()
-		}
-
+		convertedValue = reflect.ValueOf(result).Convert(referReflectValue.Type()).Interface()
+		return convertedValue, nil
 	}
 	return in.FromValue, nil
 }
@@ -463,12 +458,7 @@ func (c *Converter) doConvertWithReflectValueSet(reflectValue reflect.Value, in 
 		return err
 	}
 	if !in.alreadySetToReferValue {
-		convertedValueValue := reflect.ValueOf(convertedValue)
-		if convertedValueValue.Type().AssignableTo(reflectValue.Type()) {
-			reflectValue.Set(convertedValueValue)
-		} else {
-			reflectValue.Set(reflect.Zero(reflectValue.Type()))
-		}
+		reflectValue.Set(reflect.ValueOf(convertedValue))
 	}
 	return err
 }
