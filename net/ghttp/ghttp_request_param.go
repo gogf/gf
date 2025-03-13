@@ -233,22 +233,40 @@ func (r *Request) parseBody() {
 	if r.ContentLength == 0 {
 		return
 	}
+	// If it's a multipart request, it does not parse the body content.
+	contentType := r.Header.Get("Content-Type")
+	if gstr.Contains(contentType, "multipart/") {
+		return
+	}
 	if body := r.GetBody(); len(body) > 0 {
 		// Trim space/new line characters.
 		body = bytes.TrimSpace(body)
-		// JSON format checks.
-		if body[0] == '{' && body[len(body)-1] == '}' {
+
+		// json/xml content type checks.
+		if gstr.Contains(contentType, "/json") {
 			_ = json.UnmarshalUseNumber(body, &r.bodyMap)
+			return
 		}
-		// XML format checks.
-		if len(body) > 5 && bytes.EqualFold(body[:5], xmlHeaderBytes) {
+		if gstr.Contains(contentType, "/xml") {
 			r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
+			return
 		}
-		if body[0] == '<' && body[len(body)-1] == '>' {
-			r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
+		// Auto decoding body content.
+		if r.Server.config.AutoDecodingBody {
+			// JSON format checks.
+			if body[0] == '{' && body[len(body)-1] == '}' {
+				_ = json.UnmarshalUseNumber(body, &r.bodyMap)
+			}
+			// XML format checks.
+			if len(body) > 5 && bytes.EqualFold(body[:5], xmlHeaderBytes) {
+				r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
+			}
+			if body[0] == '<' && body[len(body)-1] == '>' {
+				r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
+			}
 		}
 		// Default parameters decoding.
-		if contentType := r.Header.Get("Content-Type"); (contentType == "" || !gstr.Contains(contentType, "multipart/")) && r.bodyMap == nil {
+		if r.bodyMap == nil {
 			r.bodyMap, _ = gstr.Parse(r.GetBodyString())
 		}
 	}
