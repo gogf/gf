@@ -1369,6 +1369,51 @@ func Test_Transaction_Propagation(t *testing.T) {
 	})
 }
 
+func Test_Transaction_Propagation_PropagationSupports(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		// scenario1: when in a transaction, use PropagationSupports to execute a transaction
+		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			// insert in outer tx.
+			_, err := tx.Insert(table, g.Map{
+				"id": 1,
+			})
+			if err != nil {
+				return err
+			}
+			err = tx.TransactionWithOptions(ctx, gdb.TxOptions{
+				Propagation: gdb.PropagationSupports,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err = tx2.Insert(table, g.Map{
+					"id": 2,
+				})
+				return gerror.New("error")
+			})
+			return err
+		})
+		t.AssertNE(err, nil)
+
+		// scenario2: when not in a transaction, do not use transaction but direct db link.
+		err = db.TransactionWithOptions(ctx, gdb.TxOptions{
+			Propagation: gdb.PropagationSupports,
+		}, func(ctx context.Context, tx gdb.TX) error {
+			_, err = tx.Insert(table, g.Map{
+				"id": 3,
+			})
+			return err
+		})
+		t.AssertNil(err)
+
+		// 查询结果
+		result, err := db.Model(table).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 1)
+		t.Assert(result[0]["id"], 3)
+	})
+}
+
 func Test_Transaction_Propagation_Complex(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table1 := createTable()
