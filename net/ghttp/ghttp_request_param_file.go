@@ -25,7 +25,7 @@ import (
 
 // init initializes the type converters for *UploadFile.
 func init() {
-	gconv.RegisterTypeConverterFunc(stringToUploadFile)
+	_ = gconv.RegisterTypeConverterFunc(stringToUploadFile)
 }
 
 // UploadFile wraps the multipart uploading file with more and convenient features.
