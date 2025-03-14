@@ -25,8 +25,15 @@ type ScanOption struct {
 	ContinueOnError bool
 }
 
+func (c *Converter) getScanOption(option ...ScanOption) ScanOption {
+	if len(option) > 0 {
+		return option[0]
+	}
+	return ScanOption{}
+}
+
 // Scan automatically checks the type of `pointer` and converts `params` to `pointer`.
-func (c *Converter) Scan(srcValue any, dstPointer any, option ScanOption) (err error) {
+func (c *Converter) Scan(srcValue any, dstPointer any, option ...ScanOption) (err error) {
 	// Check if srcValue is nil, in which case no conversion is needed
 	if srcValue == nil {
 		return nil
@@ -90,12 +97,12 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ScanOption) (err e
 			// Create a new value for the pointer dereference
 			nextLevelPtr := reflect.New(dstPointerReflectValueElem.Type().Elem())
 			// Recursively scan into the dereferenced pointer
-			if err = c.Scan(srcValueReflectValue, nextLevelPtr, option); err == nil {
+			if err = c.Scan(srcValueReflectValue, nextLevelPtr, option...); err == nil {
 				dstPointerReflectValueElem.Set(nextLevelPtr)
 			}
 			return
 		}
-		return c.Scan(srcValueReflectValue, dstPointerReflectValueElem, option)
+		return c.Scan(srcValueReflectValue, dstPointerReflectValueElem, option...)
 	}
 
 	// Check if srcValue and dstPointer are the same type, in which case direct assignment can be performed
@@ -103,11 +110,12 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ScanOption) (err e
 		return nil
 	}
 
+	scanOption := c.getScanOption(option...)
 	// Handle different destination types
 	switch dstPointerReflectValueElemKind {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		v, err := c.Int64(srcValue)
-		if err != nil && !option.ContinueOnError {
+		if err != nil && !scanOption.ContinueOnError {
 			return err
 		}
 		dstPointerReflectValueElem.SetInt(v)
@@ -115,7 +123,7 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ScanOption) (err e
 
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		v, err := c.Uint64(srcValue)
-		if err != nil && !option.ContinueOnError {
+		if err != nil && !scanOption.ContinueOnError {
 			return err
 		}
 		dstPointerReflectValueElem.SetUint(v)
@@ -123,7 +131,7 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ScanOption) (err e
 
 	case reflect.Float32, reflect.Float64:
 		v, err := c.Float64(srcValue)
-		if err != nil && !option.ContinueOnError {
+		if err != nil && !scanOption.ContinueOnError {
 			return err
 		}
 		dstPointerReflectValueElem.SetFloat(v)
@@ -131,7 +139,7 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ScanOption) (err e
 
 	case reflect.String:
 		v, err := c.String(srcValue)
-		if err != nil && !option.ContinueOnError {
+		if err != nil && !scanOption.ContinueOnError {
 			return err
 		}
 		dstPointerReflectValueElem.SetString(v)
@@ -139,7 +147,7 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ScanOption) (err e
 
 	case reflect.Bool:
 		v, err := c.Bool(srcValue)
-		if err != nil && !option.ContinueOnError {
+		if err != nil && !scanOption.ContinueOnError {
 			return err
 		}
 		dstPointerReflectValueElem.SetBool(v)
@@ -158,7 +166,7 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ScanOption) (err e
 		}
 		// Special handling for struct or map slice elements
 		if dstElemKind == reflect.Struct || dstElemKind == reflect.Map {
-			return c.doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, option)
+			return c.doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, scanOption)
 		}
 		// Handle basic type slice conversions
 		var srcValueReflectValueKind = srcValueReflectValue.Kind()
@@ -172,48 +180,48 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ScanOption) (err e
 				switch dstElemType.Kind() {
 				case reflect.String:
 					v, err := c.String(srcElem)
-					if err != nil && !option.ContinueOnError {
+					if err != nil && !scanOption.ContinueOnError {
 						return err
 					}
 					newSlice.Index(i).SetString(v)
 				case reflect.Int:
 					v, err := c.Int64(srcElem)
-					if err != nil && !option.ContinueOnError {
+					if err != nil && !scanOption.ContinueOnError {
 						return err
 					}
 					newSlice.Index(i).SetInt(v)
 				case reflect.Int64:
 					v, err := c.Int64(srcElem)
-					if err != nil && !option.ContinueOnError {
+					if err != nil && !scanOption.ContinueOnError {
 						return err
 					}
 					newSlice.Index(i).SetInt(v)
 				case reflect.Float64:
 					v, err := c.Float64(srcElem)
-					if err != nil && !option.ContinueOnError {
+					if err != nil && !scanOption.ContinueOnError {
 						return err
 					}
 					newSlice.Index(i).SetFloat(v)
 				case reflect.Bool:
 					v, err := c.Bool(srcElem)
-					if err != nil && !option.ContinueOnError {
+					if err != nil && !scanOption.ContinueOnError {
 						return err
 					}
 					newSlice.Index(i).SetBool(v)
 				default:
 					return c.Scan(
-						srcElem, newSlice.Index(i).Addr().Interface(), option,
+						srcElem, newSlice.Index(i).Addr().Interface(), option...,
 					)
 				}
 			}
 			dstPointerReflectValueElem.Set(newSlice)
 			return nil
 		}
-		return c.doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, option)
+		return c.doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, scanOption)
 
 	default:
 		// Handle complex types (structs, maps, etc.)
-		return c.doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, option)
+		return c.doScanForComplicatedTypes(srcValue, dstPointer, dstPointerReflectType, scanOption)
 	}
 }
 
@@ -282,7 +290,10 @@ func (c *Converter) doScanForComplicatedTypes(
 				ContinueOnError:   option.ContinueOnError,
 			}
 		)
-		return c.Structs(srcValue, dstPointer, sliceOption, mapOption)
+		return c.Structs(srcValue, dstPointer, StructsOption{
+			SliceOption:  sliceOption,
+			StructOption: mapOption,
+		})
 
 	default:
 		structOption := StructOption{
