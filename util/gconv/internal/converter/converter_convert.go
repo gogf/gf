@@ -473,7 +473,53 @@ func (c *Converter) doConvertWithReflectValueSet(reflectValue reflect.Value, in 
 	return err
 }
 
-func (c *Converter) getRegisteredConverterFuncAndSrcType(
+// callCustomConverter call the custom converter. It will try some possible type.
+func (c *Converter) callCustomConverter(srcReflectValue, dstReflectValue reflect.Value) (converted bool, err error) {
+	// search type converter function.
+	registeredConverterFunc, srcType, ok := c.getRegisteredTypeConverterFuncAndSrcType(srcReflectValue, dstReflectValue)
+	if ok {
+		return c.doCallCustomTypeConverter(srcReflectValue, dstReflectValue, registeredConverterFunc, srcType)
+	}
+
+	// search any converter function.
+	anyConverterFunc := c.getRegisteredAnyConverterFunc(dstReflectValue)
+	if anyConverterFunc == nil {
+		return false, nil
+	}
+	err = anyConverterFunc(srcReflectValue.Interface(), dstReflectValue)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (c *Converter) callCustomConverterWithRefer(
+	srcReflectValue, referReflectValue reflect.Value,
+) (dstReflectValue reflect.Value, converted bool, err error) {
+	// search type converter function.
+	registeredConverterFunc, srcType, ok := c.getRegisteredTypeConverterFuncAndSrcType(
+		srcReflectValue, referReflectValue,
+	)
+	if ok {
+		dstReflectValue = reflect.New(referReflectValue.Type()).Elem()
+		converted, err = c.doCallCustomTypeConverter(srcReflectValue, dstReflectValue, registeredConverterFunc, srcType)
+		return
+	}
+
+	// search any converter function.
+	anyConverterFunc := c.getRegisteredAnyConverterFunc(referReflectValue)
+	if anyConverterFunc == nil {
+		return reflect.Value{}, false, nil
+	}
+	dstReflectValue = reflect.New(referReflectValue.Type()).Elem()
+	err = anyConverterFunc(srcReflectValue.Interface(), dstReflectValue)
+	if err != nil {
+		return reflect.Value{}, false, err
+	}
+	return dstReflectValue, true, nil
+}
+
+func (c *Converter) getRegisteredTypeConverterFuncAndSrcType(
 	srcReflectValue, dstReflectValueForRefer reflect.Value,
 ) (f converterFunc, srcType reflect.Type, ok bool) {
 	if len(c.typeConverterFuncMap) == 0 {
@@ -509,28 +555,28 @@ func (c *Converter) getRegisteredConverterFuncAndSrcType(
 	return
 }
 
-func (c *Converter) callCustomConverterWithRefer(
-	srcReflectValue, referReflectValue reflect.Value,
-) (dstReflectValue reflect.Value, converted bool, err error) {
-	registeredConverterFunc, srcType, ok := c.getRegisteredConverterFuncAndSrcType(srcReflectValue, referReflectValue)
-	if !ok {
-		return reflect.Value{}, false, nil
+func (c *Converter) getRegisteredAnyConverterFunc(dstReflectValueForRefer reflect.Value) (f AnyConvertFunc) {
+	if c.internalConverter.IsAnyConvertFuncEmpty() {
+		return nil
 	}
-	dstReflectValue = reflect.New(referReflectValue.Type()).Elem()
-	converted, err = c.doCallCustomConverter(srcReflectValue, dstReflectValue, registeredConverterFunc, srcType)
-	return
+	if !dstReflectValueForRefer.IsValid() {
+		return nil
+	}
+	var dstType = dstReflectValueForRefer.Type()
+	if dstType.Kind() == reflect.Pointer {
+		// Might be **struct, which is support as designed.
+		if dstType.Elem().Kind() == reflect.Pointer {
+			dstType = dstType.Elem()
+		}
+	} else if dstReflectValueForRefer.IsValid() && dstReflectValueForRefer.CanAddr() {
+		dstType = dstReflectValueForRefer.Addr().Type()
+	} else {
+		dstType = reflect.PointerTo(dstType)
+	}
+	return c.internalConverter.GetAnyConvertFuncByType(dstType)
 }
 
-// callCustomConverter call the custom converter. It will try some possible type.
-func (c *Converter) callCustomConverter(srcReflectValue, dstReflectValue reflect.Value) (converted bool, err error) {
-	registeredConverterFunc, srcType, ok := c.getRegisteredConverterFuncAndSrcType(srcReflectValue, dstReflectValue)
-	if !ok {
-		return false, nil
-	}
-	return c.doCallCustomConverter(srcReflectValue, dstReflectValue, registeredConverterFunc, srcType)
-}
-
-func (c *Converter) doCallCustomConverter(
+func (c *Converter) doCallCustomTypeConverter(
 	srcReflectValue reflect.Value,
 	dstReflectValue reflect.Value,
 	registeredConverterFunc converterFunc,

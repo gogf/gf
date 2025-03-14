@@ -70,6 +70,7 @@ func (c *Converter) Struct(params, pointer any, option ...StructOption) (err err
 	}()
 
 	var (
+		structOption            = c.getStructOption(option...)
 		paramsReflectValue      reflect.Value
 		paramsInterface         any // DO NOT use `params` directly as it might be type `reflect.Value`
 		pointerReflectValue     reflect.Value
@@ -112,8 +113,12 @@ func (c *Converter) Struct(params, pointer any, option ...StructOption) (err err
 	}
 
 	// custom convert.
-	if ok, err = c.callCustomConverter(paramsReflectValue, pointerReflectValue); ok {
+	ok, err = c.callCustomConverter(paramsReflectValue, pointerReflectValue)
+	if err != nil && !structOption.ContinueOnError {
 		return err
+	}
+	if ok {
+		return nil
 	}
 
 	// Normal unmarshalling interfaces checks.
@@ -144,7 +149,6 @@ func (c *Converter) Struct(params, pointer any, option ...StructOption) (err err
 		// Retrieve its element, may be struct at last.
 		pointerElemReflectValue = pointerElemReflectValue.Elem()
 	}
-	structOption := c.getStructOption(option...)
 	paramsMap, ok := paramsInterface.(map[string]any)
 	if !ok {
 		// paramsMap is the map[string]any type variable for params.
