@@ -103,7 +103,7 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 			return nil, err
 		}
 	} else if !link.IsTransaction() {
-		// If current link is not transaction link, it checks and retrieves transaction from context.
+		// If current link is not transaction link, it tries retrieving transaction object from context.
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
 			link = &txLink{tx.GetSqlTX()}
 		}

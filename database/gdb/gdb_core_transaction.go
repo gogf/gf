@@ -19,9 +19,15 @@ import (
 type Propagation string
 
 const (
+	// PropagationNested starts a nested transaction if already in a transaction,
+	// or behaves like PropagationRequired if not in a transaction.
+	//
+	// It is the default behavior.
+	PropagationNested Propagation = "NESTED"
+
 	// PropagationRequired starts a new transaction if not in a transaction,
 	// or uses the existing transaction if already in a transaction.
-	PropagationRequired Propagation = "" // REQUIRED
+	PropagationRequired Propagation = "REQUIRED"
 
 	// PropagationSupports executes within the existing transaction if present,
 	// otherwise executes without transaction.
@@ -29,10 +35,6 @@ const (
 
 	// PropagationRequiresNew starts a new transaction, and suspends the current transaction if one exists.
 	PropagationRequiresNew Propagation = "REQUIRES_NEW"
-
-	// PropagationNested starts a nested transaction if already in a transaction,
-	// or behaves like PropagationRequired if not in a transaction.
-	PropagationNested Propagation = "NESTED"
 
 	// PropagationNotSupported executes non-transactional, suspends any existing transaction.
 	PropagationNotSupported Propagation = "NOT_SUPPORTED"
@@ -66,7 +68,8 @@ var transactionIdGenerator = gtype.NewUint64()
 // DefaultTxOptions returns the default transaction options.
 func DefaultTxOptions() TxOptions {
 	return TxOptions{
-		Propagation: PropagationRequired,
+		// Note the default propagation type is PropagationNested not PropagationRequired.
+		Propagation: PropagationNested,
 	}
 }
 
@@ -138,11 +141,14 @@ func (c *Core) TransactionWithOptions(
 	switch opts.Propagation {
 	case PropagationRequired:
 		if currentTx != nil {
-			return currentTx.Transaction(ctx, f)
+			return f(ctx, currentTx)
 		}
 		return c.createNewTransaction(ctx, opts, f)
 
 	case PropagationSupports:
+		if currentTx == nil {
+			currentTx = c.newEmptyTX()
+		}
 		return f(ctx, currentTx)
 
 	case PropagationMandatory:
@@ -160,7 +166,7 @@ func (c *Core) TransactionWithOptions(
 
 	case PropagationNotSupported:
 		ctx = WithoutTX(ctx, group)
-		return f(ctx, nil)
+		return f(ctx, c.newEmptyTX())
 
 	case PropagationNever:
 		if currentTx != nil {
@@ -169,22 +175,12 @@ func (c *Core) TransactionWithOptions(
 				"transaction propagation NEVER cannot run within an existing transaction",
 			)
 		}
-		return f(ctx, nil)
+		ctx = WithoutTX(ctx, group)
+		return f(ctx, c.newEmptyTX())
 
 	case PropagationNested:
 		if currentTx != nil {
-			// Create savepoint for nested transaction
-			if err = currentTx.Begin(); err != nil {
-				return err
-			}
-			defer func() {
-				if err != nil {
-					if rbErr := currentTx.Rollback(); rbErr != nil {
-						err = gerror.Wrap(err, rbErr.Error())
-					}
-				}
-			}()
-			return f(ctx, currentTx)
+			return currentTx.Transaction(ctx, f)
 		}
 		return c.createNewTransaction(ctx, opts, f)
 
@@ -278,6 +274,10 @@ func TXFromCtx(ctx context.Context, group string) TX {
 	if v != nil {
 		tx := v.(TX)
 		if tx.IsClosed() {
+			return nil
+		}
+		// no underlying sql tx.
+		if tx.GetSqlTX() == nil {
 			return nil
 		}
 		tx = tx.Ctx(ctx)
