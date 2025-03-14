@@ -23,20 +23,27 @@ type ConvertOption struct {
 	StructOption StructOption
 }
 
+func (c *Converter) getConvertOption(option ...ConvertOption) ConvertOption {
+	if len(option) > 0 {
+		return option[0]
+	}
+	return ConvertOption{}
+}
+
 // ConvertWithTypeName converts the variable `fromValue` to the type `toTypeName`, the type `toTypeName` is specified by string.
-func (c *Converter) ConvertWithTypeName(fromValue any, toTypeName string, option ConvertOption) (any, error) {
+func (c *Converter) ConvertWithTypeName(fromValue any, toTypeName string, option ...ConvertOption) (any, error) {
 	return c.doConvert(
 		doConvertInput{
 			FromValue:  fromValue,
 			ToTypeName: toTypeName,
 			ReferValue: nil,
 		},
-		option,
+		c.getConvertOption(option...),
 	)
 }
 
 // ConvertWithRefer converts the variable `fromValue` to the type referred by value `referValue`.
-func (c *Converter) ConvertWithRefer(fromValue, referValue any, option ConvertOption) (any, error) {
+func (c *Converter) ConvertWithRefer(fromValue, referValue any, option ...ConvertOption) (any, error) {
 	var referValueRf reflect.Value
 	if v, ok := referValue.(reflect.Value); ok {
 		referValueRf = v
@@ -49,7 +56,7 @@ func (c *Converter) ConvertWithRefer(fromValue, referValue any, option ConvertOp
 			ToTypeName: referValueRf.Type().String(),
 			ReferValue: referValue,
 		},
-		option,
+		c.getConvertOption(option...),
 	)
 }
 
@@ -354,7 +361,10 @@ func (c *Converter) doConvert(in doConvertInput, option ConvertOption) (converte
 		return c.Map(in.FromValue, option.MapOption)
 
 	case "[]map[string]interface {}":
-		return c.SliceMap(in.FromValue, option.SliceOption, option.MapOption)
+		return c.SliceMap(in.FromValue, SliceMapOption{
+			SliceOption: option.SliceOption,
+			MapOption:   option.MapOption,
+		})
 
 	case "RawMessage", "json.RawMessage":
 		// issue 3449
@@ -463,7 +473,53 @@ func (c *Converter) doConvertWithReflectValueSet(reflectValue reflect.Value, in 
 	return err
 }
 
-func (c *Converter) getRegisteredConverterFuncAndSrcType(
+// callCustomConverter call the custom converter. It will try some possible type.
+func (c *Converter) callCustomConverter(srcReflectValue, dstReflectValue reflect.Value) (converted bool, err error) {
+	// search type converter function.
+	registeredConverterFunc, srcType, ok := c.getRegisteredTypeConverterFuncAndSrcType(srcReflectValue, dstReflectValue)
+	if ok {
+		return c.doCallCustomTypeConverter(srcReflectValue, dstReflectValue, registeredConverterFunc, srcType)
+	}
+
+	// search any converter function.
+	anyConverterFunc := c.getRegisteredAnyConverterFunc(dstReflectValue)
+	if anyConverterFunc == nil {
+		return false, nil
+	}
+	err = anyConverterFunc(srcReflectValue.Interface(), dstReflectValue)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (c *Converter) callCustomConverterWithRefer(
+	srcReflectValue, referReflectValue reflect.Value,
+) (dstReflectValue reflect.Value, converted bool, err error) {
+	// search type converter function.
+	registeredConverterFunc, srcType, ok := c.getRegisteredTypeConverterFuncAndSrcType(
+		srcReflectValue, referReflectValue,
+	)
+	if ok {
+		dstReflectValue = reflect.New(referReflectValue.Type()).Elem()
+		converted, err = c.doCallCustomTypeConverter(srcReflectValue, dstReflectValue, registeredConverterFunc, srcType)
+		return
+	}
+
+	// search any converter function.
+	anyConverterFunc := c.getRegisteredAnyConverterFunc(referReflectValue)
+	if anyConverterFunc == nil {
+		return reflect.Value{}, false, nil
+	}
+	dstReflectValue = reflect.New(referReflectValue.Type()).Elem()
+	err = anyConverterFunc(srcReflectValue.Interface(), dstReflectValue)
+	if err != nil {
+		return reflect.Value{}, false, err
+	}
+	return dstReflectValue, true, nil
+}
+
+func (c *Converter) getRegisteredTypeConverterFuncAndSrcType(
 	srcReflectValue, dstReflectValueForRefer reflect.Value,
 ) (f converterFunc, srcType reflect.Type, ok bool) {
 	if len(c.typeConverterFuncMap) == 0 {
@@ -499,28 +555,28 @@ func (c *Converter) getRegisteredConverterFuncAndSrcType(
 	return
 }
 
-func (c *Converter) callCustomConverterWithRefer(
-	srcReflectValue, referReflectValue reflect.Value,
-) (dstReflectValue reflect.Value, converted bool, err error) {
-	registeredConverterFunc, srcType, ok := c.getRegisteredConverterFuncAndSrcType(srcReflectValue, referReflectValue)
-	if !ok {
-		return reflect.Value{}, false, nil
+func (c *Converter) getRegisteredAnyConverterFunc(dstReflectValueForRefer reflect.Value) (f AnyConvertFunc) {
+	if c.internalConverter.IsAnyConvertFuncEmpty() {
+		return nil
 	}
-	dstReflectValue = reflect.New(referReflectValue.Type()).Elem()
-	converted, err = c.doCallCustomConverter(srcReflectValue, dstReflectValue, registeredConverterFunc, srcType)
-	return
+	if !dstReflectValueForRefer.IsValid() {
+		return nil
+	}
+	var dstType = dstReflectValueForRefer.Type()
+	if dstType.Kind() == reflect.Pointer {
+		// Might be **struct, which is support as designed.
+		if dstType.Elem().Kind() == reflect.Pointer {
+			dstType = dstType.Elem()
+		}
+	} else if dstReflectValueForRefer.IsValid() && dstReflectValueForRefer.CanAddr() {
+		dstType = dstReflectValueForRefer.Addr().Type()
+	} else {
+		dstType = reflect.PointerTo(dstType)
+	}
+	return c.internalConverter.GetAnyConvertFuncByType(dstType)
 }
 
-// callCustomConverter call the custom converter. It will try some possible type.
-func (c *Converter) callCustomConverter(srcReflectValue, dstReflectValue reflect.Value) (converted bool, err error) {
-	registeredConverterFunc, srcType, ok := c.getRegisteredConverterFuncAndSrcType(srcReflectValue, dstReflectValue)
-	if !ok {
-		return false, nil
-	}
-	return c.doCallCustomConverter(srcReflectValue, dstReflectValue, registeredConverterFunc, srcType)
-}
-
-func (c *Converter) doCallCustomConverter(
+func (c *Converter) doCallCustomTypeConverter(
 	srcReflectValue reflect.Value,
 	dstReflectValue reflect.Value,
 	registeredConverterFunc converterFunc,

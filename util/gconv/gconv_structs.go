@@ -6,6 +6,8 @@
 
 package gconv
 
+import "github.com/gogf/gf/v2/util/gconv/internal/converter"
+
 // Structs converts any slice to given struct slice.
 // Also see Scan, Struct.
 func Structs(params any, pointer any, paramKeyToAttrMap ...map[string]string) (err error) {
@@ -21,10 +23,13 @@ func SliceStruct(params any, pointer any, mapping ...map[string]string) (err err
 // specified priorityTagAndFieldName for `params` key-value items to struct attribute names mapping.
 // The parameter `priorityTag` supports multiple priorityTagAndFieldName that can be joined with char ','.
 func StructsTag(params any, pointer any, priorityTag string) (err error) {
-	return defaultConverter.Structs(params, pointer, SliceOption{
-		ContinueOnError: true,
-	}, StructOption{
-		PriorityTag:     priorityTag,
-		ContinueOnError: true,
+	return defaultConverter.Structs(params, pointer, StructsOption{
+		SliceOption: converter.SliceOption{
+			ContinueOnError: true,
+		},
+		StructOption: converter.StructOption{
+			PriorityTag:     priorityTag,
+			ContinueOnError: true,
+		},
 	})
 }

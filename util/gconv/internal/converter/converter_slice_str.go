@@ -16,21 +16,22 @@ import (
 )
 
 // SliceStr converts `any` to []string.
-func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, error) {
+func (c *Converter) SliceStr(any interface{}, option ...SliceOption) ([]string, error) {
 	if empty.IsNil(any) {
 		return nil, nil
 	}
 	var (
-		err   error
-		s     string
-		array []string = nil
+		err         error
+		s           string
+		array       []string = nil
+		sliceOption          = c.getSliceOption(option...)
 	)
 	switch value := any.(type) {
 	case []int:
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -39,7 +40,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -48,7 +49,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -57,7 +58,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -66,7 +67,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -75,7 +76,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -89,7 +90,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -110,7 +111,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -119,7 +120,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -128,7 +129,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -137,7 +138,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -146,7 +147,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -155,7 +156,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -164,7 +165,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -175,7 +176,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = s
@@ -188,7 +189,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		return v.Strings(), err
 	}
 	if v, ok := any.(localinterface.IInterfaces); ok {
-		return c.SliceStr(v.Interfaces(), option)
+		return c.SliceStr(v.Interfaces(), option...)
 	}
 	// Not a common type, it then uses reflection for conversion.
 	originValueAndKind := reflection.OriginValueAndKind(any)
@@ -200,7 +201,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 		)
 		for i := 0; i < length; i++ {
 			s, err = c.String(originValueAndKind.OriginValue.Index(i).Interface())
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			slice[i] = s
@@ -212,7 +213,7 @@ func (c *Converter) SliceStr(any interface{}, option SliceOption) ([]string, err
 			return []string{}, err
 		}
 		s, err = c.String(any)
-		if err != nil && !option.ContinueOnError {
+		if err != nil && !sliceOption.ContinueOnError {
 			return nil, err
 		}
 		return []string{s}, err
