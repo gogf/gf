@@ -6,7 +6,10 @@
 
 package gconv
 
-import "github.com/gogf/gf/v2/internal/json"
+import (
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/util/gconv/internal/converter"
+)
 
 // SliceMap is alias of Maps.
 func SliceMap(any any, option ...MapOption) []map[string]any {
@@ -28,9 +31,12 @@ func Maps(value any, option ...MapOption) []map[string]any {
 	if len(option) > 0 {
 		mapOption = option[0]
 	}
-	result, _ := defaultConverter.SliceMap(value, SliceOption{
-		ContinueOnError: true,
-	}, mapOption)
+	result, _ := defaultConverter.SliceMap(value, SliceMapOption{
+		MapOption: mapOption,
+		SliceOption: converter.SliceOption{
+			ContinueOnError: true,
+		},
+	})
 	return result
 }
 

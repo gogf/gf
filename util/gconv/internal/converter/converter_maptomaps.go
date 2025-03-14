@@ -22,7 +22,7 @@ import (
 // The optional parameter `mapping` is used for struct attribute to map key mapping, which makes
 // sense only if the item of `params` is type struct.
 func (c *Converter) MapToMaps(
-	params any, pointer any, paramKeyToAttrMap map[string]string, option MapOption,
+	params any, pointer any, paramKeyToAttrMap map[string]string, option ...MapOption,
 ) (err error) {
 	// Params and its element type check.
 	var (
@@ -105,13 +105,13 @@ func (c *Converter) MapToMaps(
 		var item reflect.Value
 		if pointerElemType.Kind() == reflect.Ptr {
 			item = reflect.New(pointerElemType.Elem())
-			if err = c.MapToMap(paramsRv.Index(i).Interface(), item, paramKeyToAttrMap, option); err != nil {
+			if err = c.MapToMap(paramsRv.Index(i).Interface(), item, paramKeyToAttrMap, option...); err != nil {
 				return err
 			}
 			pointerSlice.Index(i).Set(item)
 		} else {
 			item = reflect.New(pointerElemType)
-			if err = c.MapToMap(paramsRv.Index(i).Interface(), item, paramKeyToAttrMap, option); err != nil {
+			if err = c.MapToMap(paramsRv.Index(i).Interface(), item, paramKeyToAttrMap, option...); err != nil {
 				return err
 			}
 			pointerSlice.Index(i).Set(item.Elem())

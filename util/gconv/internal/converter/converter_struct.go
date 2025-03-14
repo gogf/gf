@@ -32,8 +32,15 @@ type StructOption struct {
 	ContinueOnError bool
 }
 
+func (c *Converter) getStructOption(option ...StructOption) StructOption {
+	if len(option) > 0 {
+		return option[0]
+	}
+	return StructOption{}
+}
+
 // Struct is the core internal converting function for any data to struct.
-func (c *Converter) Struct(params, pointer any, option StructOption) (err error) {
+func (c *Converter) Struct(params, pointer any, option ...StructOption) (err error) {
 	if params == nil {
 		// If `params` is nil, no conversion.
 		return nil
@@ -63,6 +70,7 @@ func (c *Converter) Struct(params, pointer any, option StructOption) (err error)
 	}()
 
 	var (
+		structOption            = c.getStructOption(option...)
 		paramsReflectValue      reflect.Value
 		paramsInterface         any // DO NOT use `params` directly as it might be type `reflect.Value`
 		pointerReflectValue     reflect.Value
@@ -105,8 +113,12 @@ func (c *Converter) Struct(params, pointer any, option StructOption) (err error)
 	}
 
 	// custom convert.
-	if ok, err = c.callCustomConverter(paramsReflectValue, pointerReflectValue); ok {
+	ok, err = c.callCustomConverter(paramsReflectValue, pointerReflectValue)
+	if err != nil && !structOption.ContinueOnError {
 		return err
+	}
+	if ok {
+		return nil
 	}
 
 	// Normal unmarshalling interfaces checks.
@@ -142,7 +154,7 @@ func (c *Converter) Struct(params, pointer any, option StructOption) (err error)
 		// paramsMap is the map[string]any type variable for params.
 		// DO NOT use MapDeep here.
 		paramsMap, err = c.doMapConvert(paramsInterface, RecursiveTypeAuto, true, MapOption{
-			ContinueOnError: option.ContinueOnError,
+			ContinueOnError: structOption.ContinueOnError,
 		})
 		if err != nil {
 			return err
@@ -161,7 +173,7 @@ func (c *Converter) Struct(params, pointer any, option StructOption) (err error)
 	}
 	// Get struct info from cache or parse struct and cache the struct info.
 	cachedStructInfo := c.internalConverter.GetCachedStructInfo(
-		pointerElemReflectValue.Type(), option.PriorityTag,
+		pointerElemReflectValue.Type(), structOption.PriorityTag,
 	)
 	// Nothing to be converted.
 	if cachedStructInfo == nil {
@@ -182,7 +194,7 @@ func (c *Converter) Struct(params, pointer any, option StructOption) (err error)
 
 	// Firstly, search according to custom mapping rules.
 	// If a possible direct assignment is found, reduce the number of subsequent map searches.
-	for paramKey, fieldName := range option.ParamKeyToAttrMap {
+	for paramKey, fieldName := range structOption.ParamKeyToAttrMap {
 		paramsValue, ok = paramsMap[paramKey]
 		if !ok {
 			continue
@@ -194,13 +206,13 @@ func (c *Converter) Struct(params, pointer any, option StructOption) (err error)
 				cachedFieldInfo,
 				fieldValue,
 				paramsValue,
-				option,
+				structOption,
 			); err != nil {
 				return err
 			}
 			if len(cachedFieldInfo.OtherSameNameField) > 0 {
 				if err = c.setOtherSameNameField(
-					cachedFieldInfo, paramsValue, pointerReflectValue, option,
+					cachedFieldInfo, paramsValue, pointerReflectValue, structOption,
 				); err != nil {
 					return err
 				}
@@ -215,7 +227,7 @@ func (c *Converter) Struct(params, pointer any, option StructOption) (err error)
 	return c.bindStructWithLoopFieldInfos(
 		paramsMap, pointerElemReflectValue,
 		usedParamsKeyOrTagNameMap, cachedStructInfo,
-		option,
+		structOption,
 	)
 }
 

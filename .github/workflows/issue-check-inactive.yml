@@ -23,6 +23,6 @@ jobs:
         with:
           actions: 'check-inactive'
           inactive-label: 'inactive'
-          inactive-day: 7
+          inactive-day: 30
           issue-state: open
           exclude-labels: 'bug,planned,$exclude-empty'

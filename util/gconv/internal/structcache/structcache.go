@@ -8,9 +8,12 @@
 package structcache
 
 import (
+	"context"
 	"reflect"
+	"runtime"
 	"sync"
 
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
@@ -36,6 +39,7 @@ type Converter struct {
 }
 
 // AnyConvertFunc is the function type for converting any to specified type.
+// Note that the parameter `to` is usually a pointer type.
 type AnyConvertFunc func(from any, to reflect.Value) error
 
 // NewConverter creates and returns a new Converter object.
@@ -56,21 +60,39 @@ func (cf *Converter) MarkTypeConvertFunc(fieldType reflect.Type) {
 }
 
 // RegisterAnyConvertFunc registers custom type converting function for specified type.
-func (cf *Converter) RegisterAnyConvertFunc(t reflect.Type, convertFunc AnyConvertFunc) {
-	if t == nil || convertFunc == nil {
+func (cf *Converter) RegisterAnyConvertFunc(dstType reflect.Type, convertFunc AnyConvertFunc) {
+	if dstType == nil || convertFunc == nil {
 		return
 	}
-	for t.Kind() == reflect.Ptr {
-		t = t.Elem()
+	for dstType.Kind() == reflect.Ptr {
+		dstType = dstType.Elem()
 	}
-	if t.Kind() == reflect.Interface {
+	if dstType.Kind() == reflect.Interface {
 		cf.interfaceToTypeConvertMap = append(cf.interfaceToTypeConvertMap, interfaceTypeConverter{
-			interfaceType: t,
+			interfaceType: dstType,
 			convertFunc:   convertFunc,
 		})
 		return
 	}
-	cf.anyToTypeConvertMap[t] = convertFunc
+	cf.anyToTypeConvertMap[dstType] = convertFunc
+	intlog.Printf(
+		context.Background(),
+		`RegisterAnyConvertFunc: %s -> %s`,
+		dstType.String(), runtime.FuncForPC(reflect.ValueOf(convertFunc).Pointer()).Name(),
+	)
+}
+
+// GetAnyConvertFuncByType retrieves and returns the converting function for specified type.
+func (cf *Converter) GetAnyConvertFuncByType(dstType reflect.Type) AnyConvertFunc {
+	if dstType.Kind() == reflect.Ptr {
+		dstType = dstType.Elem()
+	}
+	return cf.anyToTypeConvertMap[dstType]
+}
+
+// IsAnyConvertFuncEmpty checks whether there's any converting function registered.
+func (cf *Converter) IsAnyConvertFuncEmpty() bool {
+	return len(cf.anyToTypeConvertMap) == 0
 }
 
 func (cf *Converter) checkTypeImplInterface(t reflect.Type) AnyConvertFunc {
