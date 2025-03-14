@@ -22,8 +22,15 @@ type SliceOption struct {
 	ContinueOnError bool
 }
 
+func (c *Converter) getSliceOption(option ...SliceOption) SliceOption {
+	if len(option) > 0 {
+		return option[0]
+	}
+	return SliceOption{}
+}
+
 // SliceAny converts `any` to []any.
-func (c *Converter) SliceAny(any interface{}, option SliceOption) ([]any, error) {
+func (c *Converter) SliceAny(any interface{}, _ ...SliceOption) ([]any, error) {
 	if empty.IsNil(any) {
 		return nil, nil
 	}

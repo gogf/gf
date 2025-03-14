@@ -35,34 +35,42 @@ type MapOption struct {
 	ContinueOnError bool
 }
 
+func (c *Converter) getMapOption(option ...MapOption) MapOption {
+	if len(option) > 0 {
+		return option[0]
+	}
+	return MapOption{}
+}
+
 // Map converts any variable `value` to map[string]any. If the parameter `value` is not a
 // map/struct/*struct type, then the conversion will fail and returns nil.
 //
 // If `value` is a struct/*struct object, the second parameter `priorityTagAndFieldName` specifies the most priority
 // priorityTagAndFieldName that will be detected, otherwise it detects the priorityTagAndFieldName in order of:
 // gconv, json, field name.
-func (c *Converter) Map(value any, option MapOption) (map[string]any, error) {
-	return c.doMapConvert(value, RecursiveTypeAuto, false, option)
+func (c *Converter) Map(value any, option ...MapOption) (map[string]any, error) {
+	return c.doMapConvert(value, RecursiveTypeAuto, false, c.getMapOption(option...))
 }
 
 // MapStrStr converts `value` to map[string]string.
 // Note that there might be data copy for this map type converting.
-func (c *Converter) MapStrStr(value any, option MapOption) (map[string]string, error) {
+func (c *Converter) MapStrStr(value any, option ...MapOption) (map[string]string, error) {
 	if r, ok := value.(map[string]string); ok {
 		return r, nil
 	}
-	m, err := c.Map(value, option)
-	if err != nil && !option.ContinueOnError {
+	m, err := c.Map(value, option...)
+	if err != nil {
 		return nil, err
 	}
 	if len(m) > 0 {
 		var (
-			s    string
-			vMap = make(map[string]string, len(m))
+			s         string
+			vMap      = make(map[string]string, len(m))
+			mapOption = c.getMapOption(option...)
 		)
 		for k, v := range m {
 			s, err = c.String(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !mapOption.ContinueOnError {
 				return nil, err
 			}
 			vMap[k] = s

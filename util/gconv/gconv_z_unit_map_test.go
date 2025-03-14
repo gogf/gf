@@ -345,7 +345,7 @@ func TestMapToMapExtra(t *testing.T) {
 			expect = make(map[string]interface{})
 		)
 		err = gconv.MapToMap(value, &expect)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(value["k1"], expect["k1"])
 	})
 
