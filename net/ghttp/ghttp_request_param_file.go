@@ -19,8 +19,14 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/grand"
 )
+
+// init initializes the type converters for *UploadFile.
+func init() {
+	gconv.RegisterTypeConverterFunc(stringToUploadFile)
+}
 
 // UploadFile wraps the multipart uploading file with more and convenient features.
 type UploadFile struct {
@@ -36,13 +42,18 @@ func (f UploadFile) MarshalJSON() ([]byte, error) {
 // UploadFiles is an array type of *UploadFile.
 type UploadFiles []*UploadFile
 
+// stringToUploadFile is a custom type converter for converting string to *ghttp.UploadFile.
+func stringToUploadFile(in string) (*UploadFile, error) {
+	return &UploadFile{}, nil
+}
+
 // Save saves the single uploading file to directory path and returns the saved file name.
 //
 // The parameter `dirPath` should be a directory path, or it returns error.
 //
 // Note that it will OVERWRITE the target file if there's already a same name file exist.
 func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename string, err error) {
-	if f == nil {
+	if f == nil || f.FileHeader == nil {
 		return "", gerror.NewCode(
 			gcode.CodeMissingParameter,
 			"file is empty, maybe you retrieve it from invalid field name or form enctype",
