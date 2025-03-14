@@ -2,8 +2,6 @@ module github.com/gogf/gf/cmd/gf/cmd/gf/testdata/vardump/v2
 
 go 1.22
 
-toolchain go1.23.6
-
 require github.com/gogf/gf/v2 v2.8.2
 
 require (
