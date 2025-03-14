@@ -35,7 +35,7 @@ type Converter interface {
 
 // ConverterForBasic is the basic converting interface.
 type ConverterForBasic interface {
-	Scan(srcValue, dstPointer any, option ScanOption) (err error)
+	Scan(srcValue, dstPointer any, option ...ScanOption) (err error)
 	String(any any) (string, error)
 	Bool(any any) (bool, error)
 	Rune(any any) (rune, error)
@@ -74,37 +74,37 @@ type ConverterForFloat interface {
 
 // ConverterForMap is the converting interface for map.
 type ConverterForMap interface {
-	Map(v any, option MapOption) (map[string]any, error)
-	MapStrStr(v any, option MapOption) (map[string]string, error)
+	Map(v any, option ...MapOption) (map[string]any, error)
+	MapStrStr(v any, option ...MapOption) (map[string]string, error)
 }
 
 // ConverterForSlice is the converting interface for slice.
 type ConverterForSlice interface {
 	Bytes(v any) ([]byte, error)
 	Runes(v any) ([]rune, error)
-	SliceAny(v any, option SliceOption) ([]any, error)
-	SliceFloat32(v any, option SliceOption) ([]float32, error)
-	SliceFloat64(v any, option SliceOption) ([]float64, error)
-	SliceInt(v any, option SliceOption) ([]int, error)
-	SliceInt32(v any, option SliceOption) ([]int32, error)
-	SliceInt64(v any, option SliceOption) ([]int64, error)
-	SliceUint(v any, option SliceOption) ([]uint, error)
-	SliceUint32(v any, option SliceOption) ([]uint32, error)
-	SliceUint64(v any, option SliceOption) ([]uint64, error)
-	SliceStr(v any, option SliceOption) ([]string, error)
-	SliceMap(v any, sliceOption SliceOption, mapOption MapOption) ([]map[string]any, error)
+	SliceAny(v any, option ...SliceOption) ([]any, error)
+	SliceFloat32(v any, option ...SliceOption) ([]float32, error)
+	SliceFloat64(v any, option ...SliceOption) ([]float64, error)
+	SliceInt(v any, option ...SliceOption) ([]int, error)
+	SliceInt32(v any, option ...SliceOption) ([]int32, error)
+	SliceInt64(v any, option ...SliceOption) ([]int64, error)
+	SliceUint(v any, option ...SliceOption) ([]uint, error)
+	SliceUint32(v any, option ...SliceOption) ([]uint32, error)
+	SliceUint64(v any, option ...SliceOption) ([]uint64, error)
+	SliceStr(v any, option ...SliceOption) ([]string, error)
+	SliceMap(v any, sliceMapOption ...SliceMapOption) ([]map[string]any, error)
 }
 
 // ConverterForStruct is the converting interface for struct.
 type ConverterForStruct interface {
-	Struct(params, pointer any, option StructOption) (err error)
-	Structs(params, pointer any, sliceOption SliceOption, structOption StructOption) (err error)
+	Struct(params, pointer any, option ...StructOption) (err error)
+	Structs(params, pointer any, structsOption ...StructsOption) (err error)
 }
 
 // ConverterForConvert is the converting interface for custom converting.
 type ConverterForConvert interface {
-	ConvertWithRefer(fromValue, referValue any, option ConvertOption) (any, error)
-	ConvertWithTypeName(fromValue any, toTypeName string, option ConvertOption) (any, error)
+	ConvertWithRefer(fromValue, referValue any, option ...ConvertOption) (any, error)
+	ConvertWithTypeName(fromValue any, toTypeName string, option ...ConvertOption) (any, error)
 }
 
 // ConverterForRegister is the converting interface for custom converter registration.
@@ -123,11 +123,17 @@ type (
 	// SliceOption is the option for Slice type converting.
 	SliceOption = converter.SliceOption
 
+	// SliceMapOption is the option for SliceMap function.
+	SliceMapOption = converter.SliceMapOption
+
 	// ScanOption is the option for the Scan function.
 	ScanOption = converter.ScanOption
 
 	// StructOption is the option for Struct converting.
 	StructOption = converter.StructOption
+
+	// StructsOption is the option for Structs function.
+	StructsOption = converter.StructsOption
 
 	// ConvertOption is the option for converting.
 	ConvertOption = converter.ConvertOption

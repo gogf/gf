@@ -17,21 +17,22 @@ import (
 )
 
 // SliceUint converts `any` to []uint.
-func (c *Converter) SliceUint(any interface{}, option SliceOption) ([]uint, error) {
+func (c *Converter) SliceUint(any interface{}, option ...SliceOption) ([]uint, error) {
 	if empty.IsNil(any) {
 		return nil, nil
 	}
 	var (
-		err   error
-		ui    uint
-		array []uint = nil
+		err         error
+		ui          uint
+		array       []uint = nil
+		sliceOption        = c.getSliceOption(option...)
 	)
 	switch value := any.(type) {
 	case []string:
 		array = make([]uint, len(value))
 		for k, v := range value {
 			ui, err = c.Uint(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -80,7 +81,7 @@ func (c *Converter) SliceUint(any interface{}, option SliceOption) ([]uint, erro
 		}
 		if utils.IsNumeric(value) {
 			ui, err = c.Uint(value)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			return []uint{ui}, err
@@ -113,7 +114,7 @@ func (c *Converter) SliceUint(any interface{}, option SliceOption) ([]uint, erro
 		array = make([]uint, len(value))
 		for k, v := range value {
 			ui, err = c.Uint(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -122,7 +123,7 @@ func (c *Converter) SliceUint(any interface{}, option SliceOption) ([]uint, erro
 		array = make([]uint, len(value))
 		for k, v := range value {
 			ui, err = c.Uint(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -131,7 +132,7 @@ func (c *Converter) SliceUint(any interface{}, option SliceOption) ([]uint, erro
 		array = make([]uint, len(value))
 		for k, v := range value {
 			ui, err = c.Uint(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -140,7 +141,7 @@ func (c *Converter) SliceUint(any interface{}, option SliceOption) ([]uint, erro
 		array = make([]uint, len(value))
 		for k, v := range value {
 			ui, err = c.Uint(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -156,7 +157,7 @@ func (c *Converter) SliceUint(any interface{}, option SliceOption) ([]uint, erro
 		return v.Uints(), err
 	}
 	if v, ok := any.(localinterface.IInterfaces); ok {
-		return c.SliceUint(v.Interfaces(), option)
+		return c.SliceUint(v.Interfaces(), option...)
 	}
 	// Not a common type, it then uses reflection for conversion.
 	originValueAndKind := reflection.OriginValueAndKind(any)
@@ -168,7 +169,7 @@ func (c *Converter) SliceUint(any interface{}, option SliceOption) ([]uint, erro
 		)
 		for i := 0; i < length; i++ {
 			ui, err = c.Uint(originValueAndKind.OriginValue.Index(i).Interface())
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			slice[i] = ui
@@ -180,7 +181,7 @@ func (c *Converter) SliceUint(any interface{}, option SliceOption) ([]uint, erro
 			return []uint{}, err
 		}
 		ui, err = c.Uint(any)
-		if err != nil && !option.ContinueOnError {
+		if err != nil && !sliceOption.ContinueOnError {
 			return nil, err
 		}
 		return []uint{ui}, err
@@ -188,21 +189,22 @@ func (c *Converter) SliceUint(any interface{}, option SliceOption) ([]uint, erro
 }
 
 // SliceUint32 converts `any` to []uint32.
-func (c *Converter) SliceUint32(any interface{}, option SliceOption) ([]uint32, error) {
+func (c *Converter) SliceUint32(any interface{}, option ...SliceOption) ([]uint32, error) {
 	if empty.IsNil(any) {
 		return nil, nil
 	}
 	var (
-		err   error
-		ui    uint32
-		array []uint32 = nil
+		err         error
+		ui          uint32
+		array       []uint32 = nil
+		sliceOption          = c.getSliceOption(option...)
 	)
 	switch value := any.(type) {
 	case []string:
 		array = make([]uint32, len(value))
 		for k, v := range value {
 			ui, err = c.Uint32(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -254,7 +256,7 @@ func (c *Converter) SliceUint32(any interface{}, option SliceOption) ([]uint32, 
 		}
 		if utils.IsNumeric(value) {
 			ui, err = c.Uint32(value)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			return []uint32{ui}, err
@@ -284,7 +286,7 @@ func (c *Converter) SliceUint32(any interface{}, option SliceOption) ([]uint32, 
 		array = make([]uint32, len(value))
 		for k, v := range value {
 			ui, err = c.Uint32(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -293,7 +295,7 @@ func (c *Converter) SliceUint32(any interface{}, option SliceOption) ([]uint32, 
 		array = make([]uint32, len(value))
 		for k, v := range value {
 			ui, err = c.Uint32(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -302,7 +304,7 @@ func (c *Converter) SliceUint32(any interface{}, option SliceOption) ([]uint32, 
 		array = make([]uint32, len(value))
 		for k, v := range value {
 			ui, err = c.Uint32(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -311,7 +313,7 @@ func (c *Converter) SliceUint32(any interface{}, option SliceOption) ([]uint32, 
 		array = make([]uint32, len(value))
 		for k, v := range value {
 			ui, err = c.Uint32(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -323,10 +325,10 @@ func (c *Converter) SliceUint32(any interface{}, option SliceOption) ([]uint32, 
 
 	// Default handler.
 	if v, ok := any.(localinterface.IUints); ok {
-		return c.SliceUint32(v.Uints(), option)
+		return c.SliceUint32(v.Uints(), option...)
 	}
 	if v, ok := any.(localinterface.IInterfaces); ok {
-		return c.SliceUint32(v.Interfaces(), option)
+		return c.SliceUint32(v.Interfaces(), option...)
 	}
 	// Not a common type, it then uses reflection for conversion.
 	originValueAndKind := reflection.OriginValueAndKind(any)
@@ -338,7 +340,7 @@ func (c *Converter) SliceUint32(any interface{}, option SliceOption) ([]uint32, 
 		)
 		for i := 0; i < length; i++ {
 			ui, err = c.Uint32(originValueAndKind.OriginValue.Index(i).Interface())
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			slice[i] = ui
@@ -350,7 +352,7 @@ func (c *Converter) SliceUint32(any interface{}, option SliceOption) ([]uint32, 
 			return []uint32{}, err
 		}
 		ui, err = c.Uint32(any)
-		if err != nil && !option.ContinueOnError {
+		if err != nil && !sliceOption.ContinueOnError {
 			return nil, err
 		}
 		return []uint32{ui}, err
@@ -358,21 +360,22 @@ func (c *Converter) SliceUint32(any interface{}, option SliceOption) ([]uint32, 
 }
 
 // SliceUint64 converts `any` to []uint64.
-func (c *Converter) SliceUint64(any interface{}, option SliceOption) ([]uint64, error) {
+func (c *Converter) SliceUint64(any interface{}, option ...SliceOption) ([]uint64, error) {
 	if empty.IsNil(any) {
 		return nil, nil
 	}
 	var (
-		err   error
-		ui    uint64
-		array []uint64 = nil
+		err         error
+		ui          uint64
+		array       []uint64 = nil
+		sliceOption          = c.getSliceOption(option...)
 	)
 	switch value := any.(type) {
 	case []string:
 		array = make([]uint64, len(value))
 		for k, v := range value {
 			ui, err = c.Uint64(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -424,7 +427,7 @@ func (c *Converter) SliceUint64(any interface{}, option SliceOption) ([]uint64, 
 		}
 		if utils.IsNumeric(value) {
 			ui, err = c.Uint64(value)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			return []uint64{ui}, err
@@ -454,7 +457,7 @@ func (c *Converter) SliceUint64(any interface{}, option SliceOption) ([]uint64, 
 		array = make([]uint64, len(value))
 		for k, v := range value {
 			ui, err = c.Uint64(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -463,7 +466,7 @@ func (c *Converter) SliceUint64(any interface{}, option SliceOption) ([]uint64, 
 		array = make([]uint64, len(value))
 		for k, v := range value {
 			ui, err = c.Uint64(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -472,7 +475,7 @@ func (c *Converter) SliceUint64(any interface{}, option SliceOption) ([]uint64, 
 		array = make([]uint64, len(value))
 		for k, v := range value {
 			ui, err = c.Uint64(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -481,7 +484,7 @@ func (c *Converter) SliceUint64(any interface{}, option SliceOption) ([]uint64, 
 		array = make([]uint64, len(value))
 		for k, v := range value {
 			ui, err = c.Uint64(v)
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			array[k] = ui
@@ -492,10 +495,10 @@ func (c *Converter) SliceUint64(any interface{}, option SliceOption) ([]uint64, 
 	}
 	// Default handler.
 	if v, ok := any.(localinterface.IUints); ok {
-		return c.SliceUint64(v.Uints(), option)
+		return c.SliceUint64(v.Uints(), option...)
 	}
 	if v, ok := any.(localinterface.IInterfaces); ok {
-		return c.SliceUint64(v.Interfaces(), option)
+		return c.SliceUint64(v.Interfaces(), option...)
 	}
 	// Not a common type, it then uses reflection for conversion.
 	originValueAndKind := reflection.OriginValueAndKind(any)
@@ -507,7 +510,7 @@ func (c *Converter) SliceUint64(any interface{}, option SliceOption) ([]uint64, 
 		)
 		for i := 0; i < length; i++ {
 			ui, err = c.Uint64(originValueAndKind.OriginValue.Index(i).Interface())
-			if err != nil && !option.ContinueOnError {
+			if err != nil && !sliceOption.ContinueOnError {
 				return nil, err
 			}
 			slice[i] = ui
@@ -519,7 +522,7 @@ func (c *Converter) SliceUint64(any interface{}, option SliceOption) ([]uint64, 
 			return []uint64{}, err
 		}
 		ui, err = c.Uint64(any)
-		if err != nil && !option.ContinueOnError {
+		if err != nil && !sliceOption.ContinueOnError {
 			return nil, err
 		}
 		return []uint64{ui}, err

@@ -24,7 +24,7 @@ import (
 // The optional parameter `mapping` is used for struct attribute to map key mapping, which makes
 // sense only if the items of original map `params` is type struct.
 func (c *Converter) MapToMap(
-	params, pointer any, mapping map[string]string, option MapOption,
+	params, pointer any, mapping map[string]string, option ...MapOption,
 ) (err error) {
 	var (
 		paramsRv   reflect.Value
@@ -41,11 +41,11 @@ func (c *Converter) MapToMap(
 		paramsKind = paramsRv.Kind()
 	}
 	if paramsKind != reflect.Map {
-		m, err := c.Map(params, option)
+		m, err := c.Map(params, option...)
 		if err != nil {
 			return err
 		}
-		return c.MapToMap(m, pointer, mapping, option)
+		return c.MapToMap(m, pointer, mapping, option...)
 	}
 	// Empty params map, no need continue.
 	if paramsRv.Len() == 0 {
@@ -85,10 +85,11 @@ func (c *Converter) MapToMap(
 		pointerValueType = pointerRv.Type().Elem()
 		pointerValueKind = pointerValueType.Kind()
 		dataMap          = reflect.MakeMapWithSize(pointerRv.Type(), len(paramsKeys))
+		mapOption        = c.getMapOption(option...)
 		convertOption    = ConvertOption{
-			StructOption: StructOption{ContinueOnError: option.ContinueOnError},
-			SliceOption:  SliceOption{ContinueOnError: option.ContinueOnError},
-			MapOption:    option,
+			StructOption: StructOption{ContinueOnError: mapOption.ContinueOnError},
+			SliceOption:  SliceOption{ContinueOnError: mapOption.ContinueOnError},
+			MapOption:    mapOption,
 		}
 	)
 	// Retrieve the true element type of target map.
@@ -102,7 +103,7 @@ func (c *Converter) MapToMap(
 			structOption := StructOption{
 				ParamKeyToAttrMap: mapping,
 				PriorityTag:       "",
-				ContinueOnError:   option.ContinueOnError,
+				ContinueOnError:   mapOption.ContinueOnError,
 			}
 			if err = c.Struct(paramsRv.MapIndex(key).Interface(), mapValue, structOption); err != nil {
 				return err

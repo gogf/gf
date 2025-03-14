@@ -201,11 +201,14 @@ func (r Result) Structs(pointer interface{}) (err error) {
 		return nil
 	}
 	var (
-		sliceOption = gconv.SliceOption{ContinueOnError: true}
-		mapOption   = gconv.StructOption{
+		sliceOption  = gconv.SliceOption{ContinueOnError: true}
+		structOption = gconv.StructOption{
 			PriorityTag:     OrmTagForStruct,
 			ContinueOnError: true,
 		}
 	)
-	return converter.Structs(r, pointer, sliceOption, mapOption)
+	return converter.Structs(r, pointer, gconv.StructsOption{
+		SliceOption:  sliceOption,
+		StructOption: structOption,
+	})
 }

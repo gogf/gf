@@ -23,20 +23,27 @@ type ConvertOption struct {
 	StructOption StructOption
 }
 
+func (c *Converter) getConvertOption(option ...ConvertOption) ConvertOption {
+	if len(option) > 0 {
+		return option[0]
+	}
+	return ConvertOption{}
+}
+
 // ConvertWithTypeName converts the variable `fromValue` to the type `toTypeName`, the type `toTypeName` is specified by string.
-func (c *Converter) ConvertWithTypeName(fromValue any, toTypeName string, option ConvertOption) (any, error) {
+func (c *Converter) ConvertWithTypeName(fromValue any, toTypeName string, option ...ConvertOption) (any, error) {
 	return c.doConvert(
 		doConvertInput{
 			FromValue:  fromValue,
 			ToTypeName: toTypeName,
 			ReferValue: nil,
 		},
-		option,
+		c.getConvertOption(option...),
 	)
 }
 
 // ConvertWithRefer converts the variable `fromValue` to the type referred by value `referValue`.
-func (c *Converter) ConvertWithRefer(fromValue, referValue any, option ConvertOption) (any, error) {
+func (c *Converter) ConvertWithRefer(fromValue, referValue any, option ...ConvertOption) (any, error) {
 	var referValueRf reflect.Value
 	if v, ok := referValue.(reflect.Value); ok {
 		referValueRf = v
@@ -49,7 +56,7 @@ func (c *Converter) ConvertWithRefer(fromValue, referValue any, option ConvertOp
 			ToTypeName: referValueRf.Type().String(),
 			ReferValue: referValue,
 		},
-		option,
+		c.getConvertOption(option...),
 	)
 }
 
@@ -354,7 +361,10 @@ func (c *Converter) doConvert(in doConvertInput, option ConvertOption) (converte
 		return c.Map(in.FromValue, option.MapOption)
 
 	case "[]map[string]interface {}":
-		return c.SliceMap(in.FromValue, option.SliceOption, option.MapOption)
+		return c.SliceMap(in.FromValue, SliceMapOption{
+			SliceOption: option.SliceOption,
+			MapOption:   option.MapOption,
+		})
 
 	case "RawMessage", "json.RawMessage":
 		// issue 3449
