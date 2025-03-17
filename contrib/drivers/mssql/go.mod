@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/drivers/mssql/v2
 go 1.22
 
 require (
-	github.com/gogf/gf/v2 v2.9.0-beta
+	github.com/gogf/gf/v2 v2.9.0
 	github.com/microsoft/go-mssqldb v1.7.1
 )
 
