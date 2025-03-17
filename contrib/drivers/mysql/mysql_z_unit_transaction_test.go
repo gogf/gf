@@ -1286,8 +1286,7 @@ func Test_Transaction_Propagation(t *testing.T) {
 				Propagation: gdb.PropagationNotSupported,
 			}, func(ctx context.Context, tx2 gdb.TX) error {
 				// Should execute without transaction
-				t.Assert(tx2, nil)
-				_, err := db.Insert(ctx, table, g.Map{
+				_, err = db.Insert(ctx, table, g.Map{
 					"id":       9,
 					"passport": "non_tx_record",
 				})
@@ -1346,8 +1345,6 @@ func Test_Transaction_Propagation(t *testing.T) {
 		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
 			Propagation: gdb.PropagationNever,
 		}, func(ctx context.Context, tx gdb.TX) error {
-			// Should execute without transaction
-			t.Assert(tx, nil)
 			_, err := db.Insert(ctx, table, g.Map{
 				"id":       11,
 				"passport": "never",
@@ -1366,6 +1363,51 @@ func Test_Transaction_Propagation(t *testing.T) {
 		})
 		// Should fail because transaction exists
 		t.AssertNE(err, nil)
+	})
+}
+
+func Test_Transaction_Propagation_PropagationSupports(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		// scenario1: when in a transaction, use PropagationSupports to execute a transaction
+		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			// insert in outer tx.
+			_, err := tx.Insert(table, g.Map{
+				"id": 1,
+			})
+			if err != nil {
+				return err
+			}
+			err = tx.TransactionWithOptions(ctx, gdb.TxOptions{
+				Propagation: gdb.PropagationSupports,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err = tx2.Insert(table, g.Map{
+					"id": 2,
+				})
+				return gerror.New("error")
+			})
+			return err
+		})
+		t.AssertNE(err, nil)
+
+		// scenario2: when not in a transaction, do not use transaction but direct db link.
+		err = db.TransactionWithOptions(ctx, gdb.TxOptions{
+			Propagation: gdb.PropagationSupports,
+		}, func(ctx context.Context, tx gdb.TX) error {
+			_, err = tx.Insert(table, g.Map{
+				"id": 3,
+			})
+			return err
+		})
+		t.AssertNil(err)
+
+		// 查询结果
+		result, err := db.Model(table).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 1)
+		t.Assert(result[0]["id"], 3)
 	})
 }
 
@@ -1389,7 +1431,7 @@ func Test_Transaction_Propagation_Complex(t *testing.T) {
 			err = tx1.TransactionWithOptions(ctx, gdb.TxOptions{
 				Propagation: gdb.PropagationNested,
 			}, func(ctx context.Context, tx2 gdb.TX) error {
-				_, err := tx2.Insert(table1, g.Map{
+				_, err = tx2.Insert(table1, g.Map{
 					"id":       2,
 					"passport": "nested1",
 				})
@@ -1427,10 +1469,7 @@ func Test_Transaction_Propagation_Complex(t *testing.T) {
 			err = tx1.TransactionWithOptions(ctx, gdb.TxOptions{
 				Propagation: gdb.PropagationNotSupported,
 			}, func(ctx context.Context, tx2 gdb.TX) error {
-				// Should execute without transaction
-				t.Assert(tx2, nil)
-
-				_, err := db.Insert(ctx, table2, g.Map{
+				_, err = db.Insert(ctx, table2, g.Map{
 					"id":       5,
 					"passport": "not_supported",
 				})
@@ -1489,9 +1528,6 @@ func Test_Transaction_Propagation_Complex(t *testing.T) {
 			err = tx1.TransactionWithOptions(ctx, gdb.TxOptions{
 				Propagation: gdb.PropagationNotSupported,
 			}, func(ctx context.Context, tx2 gdb.TX) error {
-				// Should execute without transaction
-				t.Assert(tx2, nil)
-
 				// Start a new independent transaction
 				return db.Transaction(ctx, func(ctx context.Context, tx3 gdb.TX) error {
 					_, err := tx3.Insert(table, g.Map{
