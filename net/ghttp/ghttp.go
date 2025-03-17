@@ -64,11 +64,11 @@ type (
 		Handler          *HandlerItem // The handler.
 		Server           string       // Server name.
 		Address          string       // Listening address.
-		Domain           string       // Bound domain.
+		Domain           string       // Bound domain, eg: example.com
 		Type             HandlerType  // Route handler type.
 		Middleware       string       // Bound middleware.
-		Method           string       // Handler method name.
-		Route            string       // Route URI.
+		Method           string       // Handler method name, eg: get, post.
+		Route            string       // Route URI, eg: /api/v1/user/{id}.
 		Priority         int          // Just for reference.
 		IsServiceHandler bool         // Is a service handler.
 	}
