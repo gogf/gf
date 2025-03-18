@@ -1,4 +1,3 @@
-
 <div align=center>
 <img src="https://goframe.org/img/logo_full.png" width="300" alt="goframe gf logo"/>
 
@@ -24,10 +23,12 @@ A powerful framework for faster, easier, and more efficient project development.
 
 # Documentation
 
-- GoFrame Official Site: [https://goframe.org](https://goframe.org)
-- GoFrame Official Site(en): [https://goframe.org/en](https://goframe.org/en)
-- GoFrame Mirror Site(中文): [https://goframe.org.cn](https://goframe.org.cn)
-- GoFrame Mirror Site(github pages): [https://pages.goframe.org](https://pages.goframe.org)
+- Official Site: [https://goframe.org](https://goframe.org)
+- Official Site(en): [https://goframe.org/en](https://goframe.org/en)
+- Official Mirror Site: 
+  - [Mainland China](https://goframe.org.cn)
+  - [Github Pages](https://pages.goframe.org)
+  - [Offline Docs](https://github.com/gogf/goframe.org-pdf/releases)
 - GoDoc API: [https://pkg.go.dev/github.com/gogf/gf/v2](https://pkg.go.dev/github.com/gogf/gf/v2)
 
 
