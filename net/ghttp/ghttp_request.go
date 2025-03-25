@@ -151,8 +151,13 @@ func (r *Request) IsExited() bool {
 }
 
 // GetHeader retrieves and returns the header value with given `key`.
-func (r *Request) GetHeader(key string) string {
-	return r.Header.Get(key)
+// It returns the optional `def` parameter if the header does not exist.
+func (r *Request) GetHeader(key string, def ...string) string {
+	value := r.Header.Get(key)
+	if value == "" && len(def) > 0 {
+		value = def[0]
+	}
+	return value
 }
 
 // GetHost returns current request host name, which might be a domain or an IP without port.
