@@ -125,6 +125,7 @@ func (c *Converter) doMapConvert(
 			if len(r) == 0 && mustMapReturn {
 				return map[string]any{}, nil
 			}
+			// if r is not empty, which means it fails converting to map.
 			return nil, nil
 		}
 	case []byte:
@@ -137,6 +138,7 @@ func (c *Converter) doMapConvert(
 			if len(r) == 0 && mustMapReturn {
 				return map[string]any{}, nil
 			}
+			// if r is not empty, which means it fails converting to map.
 			return nil, nil
 		}
 	case map[interface{}]interface{}:
