@@ -88,6 +88,9 @@ func (c *Converter) doMapConvert(
 	value any, recursive RecursiveType, mustMapReturn bool, option MapOption,
 ) (map[string]any, error) {
 	if value == nil {
+		if mustMapReturn {
+			return map[string]any{}, nil
+		}
 		return nil, nil
 	}
 	// It redirects to its underlying value if it has implemented interface iVal.
@@ -119,6 +122,9 @@ func (c *Converter) doMapConvert(
 				return nil, err
 			}
 		} else {
+			if len(r) == 0 && mustMapReturn {
+				return map[string]any{}, nil
+			}
 			return nil, nil
 		}
 	case []byte:
@@ -128,6 +134,9 @@ func (c *Converter) doMapConvert(
 				return nil, err
 			}
 		} else {
+			if len(r) == 0 && mustMapReturn {
+				return map[string]any{}, nil
+			}
 			return nil, nil
 		}
 	case map[interface{}]interface{}:
@@ -327,8 +336,14 @@ func (c *Converter) doMapConvert(
 			if m, ok := convertedValue.(map[string]interface{}); ok {
 				return m, nil
 			}
+			if mustMapReturn {
+				return map[string]any{}, nil
+			}
 			return nil, nil
 		default:
+			if mustMapReturn {
+				return map[string]any{}, nil
+			}
 			return nil, nil
 		}
 	}

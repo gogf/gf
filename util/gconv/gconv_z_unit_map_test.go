@@ -164,6 +164,7 @@ var mapTests = []struct {
 func TestMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range mapTests {
+			// t.Log(test.value, test.expect)
 			t.Assert(gconv.Map(test.value), test.expect)
 		}
 	})

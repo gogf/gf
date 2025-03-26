@@ -395,7 +395,11 @@ func (c *Converter) doConvertForDefault(in doConvertInput, option ConvertOption)
 		}
 
 		// custom converter.
-		dstReflectValue, ok, err := c.callCustomConverterWithRefer(fromReflectValue, referReflectValue)
+		var (
+			ok              bool
+			dstReflectValue reflect.Value
+		)
+		dstReflectValue, ok, err = c.callCustomConverterWithRefer(fromReflectValue, referReflectValue)
 		if err != nil {
 			return nil, err
 		}
@@ -415,7 +419,7 @@ func (c *Converter) doConvertForDefault(in doConvertInput, option ConvertOption)
 		switch referReflectValue.Kind() {
 		case reflect.Ptr:
 			// Type converting for custom type pointers.
-			// Eg:
+			// Example:
 			// type PayMode int
 			// type Req struct{
 			//     Mode *PayMode

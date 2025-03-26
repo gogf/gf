@@ -225,7 +225,6 @@ func TestStructErr(t *testing.T) {
 		type User struct {
 			Score Score
 		}
-
 		user := new(User)
 		scores := map[string]interface{}{
 			"Score": 1,

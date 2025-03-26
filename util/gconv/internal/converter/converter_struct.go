@@ -160,10 +160,11 @@ func (c *Converter) Struct(params, pointer any, option ...StructOption) (err err
 			return err
 		}
 		if paramsMap == nil {
+			// fails converting params to map, it so cannot be converted to struct pointer.
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
-				`convert params from "%#v" to "map[string]any" failed`,
-				params,
+				`convert params "%v" to "%s" failed`,
+				params, pointerReflectValue.Type(),
 			)
 		}
 	}
@@ -505,8 +506,7 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 	case reflect.Struct:
 		// Recursively converting for struct attribute.
 		if err = c.Struct(value, structFieldValue, option); err != nil {
-			// Note there's reflect conversion mechanism here.
-			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
+			return err
 		}
 
 	// Note that the slice element might be type of struct,
@@ -637,6 +637,8 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 			elem := item.Elem()
 			if err = c.bindVarToReflectValue(elem, value, option); err == nil {
 				structFieldValue.Set(elem.Addr())
+			} else {
+				return err
 			}
 		} else {
 			// Not empty pointer, it assigns values to it.
