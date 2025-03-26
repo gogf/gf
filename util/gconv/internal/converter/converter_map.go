@@ -338,14 +338,9 @@ func (c *Converter) doMapConvert(
 			if m, ok := convertedValue.(map[string]interface{}); ok {
 				return m, nil
 			}
-			if mustMapReturn {
-				return map[string]any{}, nil
-			}
 			return nil, nil
+
 		default:
-			if mustMapReturn {
-				return map[string]any{}, nil
-			}
 			return nil, nil
 		}
 	}
