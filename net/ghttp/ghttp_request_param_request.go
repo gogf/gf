@@ -226,6 +226,7 @@ func (r *Request) mergeInTagStructValue(data map[string]interface{}) error {
 			foundValue interface{}
 			headerMap  = make(map[string]interface{})
 			cookieMap  = make(map[string]interface{})
+			queryMap   = make(map[string]interface{})
 		)
 
 		for k, v := range r.Header {
@@ -238,6 +239,12 @@ func (r *Request) mergeInTagStructValue(data map[string]interface{}) error {
 			cookieMap[cookie.Name] = cookie.Value
 		}
 
+		for k, v := range r.GetQueryMap() {
+			if v != nil {
+				queryMap[k] = v
+			}
+		}
+
 		for _, field := range fields {
 			if tagValue := field.TagIn(); tagValue != "" {
 				findKey := field.TagPriorityName()
@@ -247,7 +254,7 @@ func (r *Request) mergeInTagStructValue(data map[string]interface{}) error {
 				case goai.ParameterInCookie:
 					foundKey, foundValue = gutil.MapPossibleItemByKey(cookieMap, findKey)
 				case goai.ParameterInQuery:
-					foundKey, foundValue = gutil.MapPossibleItemByKey(r.queryMap, findKey)
+					foundKey, foundValue = gutil.MapPossibleItemByKey(queryMap, findKey)
 				}
 				if foundKey != "" {
 					mergeTagValueWithFoundKey(data, true, foundKey, field.Name(), foundValue)
