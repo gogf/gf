@@ -246,6 +246,8 @@ func (r *Request) mergeInTagStructValue(data map[string]interface{}) error {
 					foundKey, foundValue = gutil.MapPossibleItemByKey(headerMap, findKey)
 				case goai.ParameterInCookie:
 					foundKey, foundValue = gutil.MapPossibleItemByKey(cookieMap, findKey)
+				case goai.ParameterInQuery:
+					foundKey, foundValue = gutil.MapPossibleItemByKey(r.queryMap, findKey)
 				}
 				if foundKey != "" {
 					mergeTagValueWithFoundKey(data, true, foundKey, field.Name(), foundValue)
