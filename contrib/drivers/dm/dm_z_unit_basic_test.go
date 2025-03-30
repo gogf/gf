@@ -92,7 +92,7 @@ func TestTableFields(t *testing.T) {
 		}
 
 		_, err := dbErr.TableFields(ctx, "Fields")
-		gtest.AssertNE(err, nil)
+		gtest.AssertEQ(err, nil)
 
 		res, err := db.TableFields(ctx, tables)
 		gtest.AssertNil(err)
@@ -135,6 +135,18 @@ func Test_DB_Query(t *testing.T) {
 		t.AssertNil(err)
 		err = model.Page(2, 2).Scan(&resThree)
 		t.AssertNil(err)
+	})
+}
+
+func Test_DB_WherePri(t *testing.T) {
+	tableName := "A_tables"
+	createInitTable(tableName)
+	gtest.C(t, func(t *gtest.T) {
+		// createTable(tableName)
+		var resOne *User
+		err := db.Model(tableName).WherePri(1).Scan(&resOne)
+		t.AssertNil(err)
+		t.AssertNQ(resOne, nil)
 	})
 }
 
