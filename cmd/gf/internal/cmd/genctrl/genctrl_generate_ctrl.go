@@ -193,13 +193,22 @@ func (c *controllerGenerator) doGenerateCtrlMergeItem(dstModuleFolderPath string
 			ctrlFileItemMap[api.FileName] = ctrlFileItem
 		}
 
+		ctrlName := fmt.Sprintf(`Controller%s`, gstr.UcFirst(api.Version))
 		ctrl := gstr.TrimLeft(gstr.ReplaceByMap(consts.TemplateGenCtrlControllerMethodFuncMerge, g.MapStrStr{
 			"{Module}":        api.Module,
-			"{CtrlName}":      fmt.Sprintf(`Controller%s`, gstr.UcFirst(api.Version)),
+			"{CtrlName}":      ctrlName,
 			"{Version}":       api.Version,
 			"{MethodName}":    api.MethodName,
 			"{MethodComment}": api.GetComment(),
 		}))
+
+		ctrlFilePath := gfile.Join(dstModuleFolderPath, fmt.Sprintf(
+			`%s_%s_%s.go`, ctrlFileItem.module, ctrlFileItem.version, api.FileName,
+		))
+		if gstr.Contains(gfile.GetContents(ctrlFilePath), fmt.Sprintf(`func (c *%v) %v(`, ctrlName, api.MethodName)) {
+			return
+		}
+		
 		ctrlFileItem.controllers.WriteString(ctrl)
 		doneApiSet.Add(api.String())
 	}
