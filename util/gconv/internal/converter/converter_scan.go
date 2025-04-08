@@ -242,7 +242,7 @@ func (c *Converter) doScanForComplicatedTypes(
 	option ScanOption,
 ) error {
 	// Try JSON conversion first
-	ok, err := c.doConvertWithJsonCheck(srcValue, dstPointer)
+	ok, err := c.doConvertWithJSONCheck(srcValue, dstPointer)
 	if err != nil {
 		return err
 	}
@@ -351,7 +351,7 @@ func (c *Converter) doConvertWithTypeCheck(srcValueReflectValue, dstPointerRefle
 	}
 }
 
-// doConvertWithJsonCheck attempts to convert the source value to the destination
+// doConvertWithJSONCheck attempts to convert the source value to the destination
 // using JSON marshaling and unmarshaling. This is particularly useful for complex
 // types that can be represented as JSON.
 //
@@ -362,7 +362,7 @@ func (c *Converter) doConvertWithTypeCheck(srcValueReflectValue, dstPointerRefle
 // Returns:
 // - bool: true if JSON conversion was successful
 // - error: any error that occurred during conversion
-func (c *Converter) doConvertWithJsonCheck(srcValue any, dstPointer any) (ok bool, err error) {
+func (c *Converter) doConvertWithJSONCheck(srcValue any, dstPointer any) (ok bool, err error) {
 	switch valueResult := srcValue.(type) {
 	case []byte:
 		if json.Valid(valueResult) {
@@ -399,7 +399,7 @@ func (c *Converter) doConvertWithJsonCheck(srcValue any, dstPointer any) (ok boo
 	default:
 		// The `params` might be struct that implements interface function Interface, eg: gvar.Var.
 		if v, ok := srcValue.(localinterface.IInterface); ok {
-			return c.doConvertWithJsonCheck(v.Interface(), dstPointer)
+			return c.doConvertWithJSONCheck(v.Interface(), dstPointer)
 		}
 	}
 	return false, nil
