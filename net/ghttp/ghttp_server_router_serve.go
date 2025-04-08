@@ -18,6 +18,7 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/util/gmeta"
 )
 
 // handlerCacheItem is an item just for internal router searching cache.
@@ -252,40 +253,71 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*Han
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (item HandlerItem) MarshalJSON() ([]byte, error) {
-	switch item.Type {
+func (h *HandlerItem) MarshalJSON() ([]byte, error) {
+	switch h.Type {
 	case HandlerTypeHook:
 		return json.Marshal(
 			fmt.Sprintf(
 				`%s %s:%s (%s)`,
-				item.Router.Uri,
-				item.Router.Domain,
-				item.Router.Method,
-				item.HookName,
+				h.Router.Uri,
+				h.Router.Domain,
+				h.Router.Method,
+				h.HookName,
 			),
 		)
 	case HandlerTypeMiddleware:
 		return json.Marshal(
 			fmt.Sprintf(
 				`%s %s:%s (MIDDLEWARE)`,
-				item.Router.Uri,
-				item.Router.Domain,
-				item.Router.Method,
+				h.Router.Uri,
+				h.Router.Domain,
+				h.Router.Method,
 			),
 		)
 	default:
 		return json.Marshal(
 			fmt.Sprintf(
 				`%s %s:%s`,
-				item.Router.Uri,
-				item.Router.Domain,
-				item.Router.Method,
+				h.Router.Uri,
+				h.Router.Domain,
+				h.Router.Method,
 			),
 		)
 	}
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (item HandlerItemParsed) MarshalJSON() ([]byte, error) {
-	return json.Marshal(item.Handler)
+func (h *HandlerItemParsed) MarshalJSON() ([]byte, error) {
+	return json.Marshal(h.Handler)
+}
+
+// GetMetaTag retrieves and returns the metadata value associated with the given key from the request struct.
+// The meta value is from struct tags from g.Meta/gmeta.Meta type.
+func (h *HandlerItem) GetMetaTag(key string) string {
+	if h == nil {
+		return ""
+	}
+	metaValue := gmeta.Get(h.Info.Type.In(1), key)
+	if metaValue != nil {
+		return metaValue.String()
+	}
+	return ""
+}
+
+// GetMetaTag retrieves and returns the metadata value associated with the given key from the request struct.
+// The meta value is from struct tags from g.Meta/gmeta.Meta type.
+// For example:
+//
+//	type GetMetaTagReq struct {
+//	    g.Meta `path:"/test" method:"post" summary:"meta_tag" tags:"meta"`
+//	    // ...
+//	}
+//
+// r.GetServeHandler().GetMetaTag("summary") // returns "meta_tag"
+// r.GetServeHandler().GetMetaTag("method")  // returns "post"
+func (h *HandlerItemParsed) GetMetaTag(key string) string {
+	if h == nil || h.Handler == nil {
+		return ""
+	}
+	return h.Handler.GetMetaTag(key)
 }

@@ -46,6 +46,12 @@ type TXCore struct {
 	cancelFunc context.CancelFunc
 }
 
+func (c *Core) newEmptyTX() TX {
+	return &TXCore{
+		db: c.db,
+	}
+}
+
 // transactionKeyForNestedPoint forms and returns the transaction key at current save point.
 func (tx *TXCore) transactionKeyForNestedPoint() string {
 	return tx.db.GetCore().QuoteWord(
@@ -427,5 +433,5 @@ func (tx *TXCore) IsOnMaster() bool {
 
 // IsTransaction implements interface function Link.IsTransaction.
 func (tx *TXCore) IsTransaction() bool {
-	return true
+	return tx != nil
 }

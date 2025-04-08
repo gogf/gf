@@ -21,7 +21,7 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-func Test_Router_Handler_Strict_WithObject(t *testing.T) {
+func Test_Router_Handler_Standard_WithObject(t *testing.T) {
 	type TestReq struct {
 		Age  int
 		Name string
@@ -137,7 +137,7 @@ func (ControllerForHandlerWithObjectAndMeta2) Test4(ctx context.Context, req *Te
 	}, nil
 }
 
-func Test_Router_Handler_Strict_WithObjectAndMeta(t *testing.T) {
+func Test_Router_Handler_Standard_WithObjectAndMeta(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Use(ghttp.MiddlewareHandlerResponse)
 	s.Group("/", func(group *ghttp.RouterGroup) {
@@ -159,7 +159,7 @@ func Test_Router_Handler_Strict_WithObjectAndMeta(t *testing.T) {
 	})
 }
 
-func Test_Router_Handler_Strict_Group_Bind(t *testing.T) {
+func Test_Router_Handler_Standard_Group_Bind(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Use(ghttp.MiddlewareHandlerResponse)
 	s.Group("/api/v1", func(group *ghttp.RouterGroup) {
@@ -300,7 +300,7 @@ func Test_Custom_Slice_Type_Attribute(t *testing.T) {
 	})
 }
 
-func Test_Router_Handler_Strict_WithGeneric(t *testing.T) {
+func Test_Router_Handler_Standard_WithGeneric(t *testing.T) {
 	type TestReq struct {
 		Age int
 	}
@@ -397,7 +397,7 @@ func (c *ParameterCaseSensitiveController) Path(
 	return &ParameterCaseSensitiveControllerPathRes{Path: req.Path}, nil
 }
 
-func Test_Router_Handler_Strict_ParameterCaseSensitive(t *testing.T) {
+func Test_Router_Handler_Standard_ParameterCaseSensitive(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Use(ghttp.MiddlewareHandlerResponse)
 	s.Group("/", func(group *ghttp.RouterGroup) {
@@ -532,5 +532,42 @@ func Test_NullString_Issue3465(t *testing.T) {
 		expect2 := `{"code":0,"message":"OK","data":{"name":["null","null"]}}`
 		t.Assert(client.GetContent(ctx, "/test", data2), expect2)
 
+	})
+}
+
+type testHandlerItemGetMetaTagReq struct {
+	g.Meta `path:"/test" method:"get" sm:"hello" tags:"示例"`
+}
+type testHandlerItemGetMetaTagRes struct{}
+
+type testHandlerItemGetMetaTag struct {
+}
+
+func (t *testHandlerItemGetMetaTag) Test(ctx context.Context, req *testHandlerItemGetMetaTagReq) (res *testHandlerItemGetMetaTagRes, err error) {
+	return nil, nil
+}
+
+func TestHandlerItem_GetMetaTag(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Use(ghttp.MiddlewareHandlerResponse)
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Bind(new(testHandlerItemGetMetaTag))
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		routes := s.GetRoutes()
+		for _, route := range routes {
+			if !route.IsServiceHandler {
+				continue
+			}
+			t.Assert(route.Handler.GetMetaTag("path"), "/test")
+			t.Assert(route.Handler.GetMetaTag("method"), "get")
+			t.Assert(route.Handler.GetMetaTag("sm"), "hello")
+			t.Assert(route.Handler.GetMetaTag("tags"), "示例")
+		}
 	})
 }

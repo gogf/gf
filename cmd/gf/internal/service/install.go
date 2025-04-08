@@ -162,8 +162,14 @@ func (s serviceInstall) getGoPathBin() string {
 func (s serviceInstall) getAvailablePaths() []serviceInstallAvailablePath {
 	var (
 		folderPaths    []serviceInstallAvailablePath
-		binaryFileName = "gf" + gfile.Ext(gfile.SelfPath())
+		binaryFileName = "gf"
 	)
+
+	// Windows binary file name suffix.
+	if runtime.GOOS == "windows" {
+		binaryFileName += ".exe"
+	}
+
 	// $GOPATH/bin
 	if goPathBin := s.getGoPathBin(); goPathBin != "" {
 		folderPaths = s.checkAndAppendToAvailablePath(

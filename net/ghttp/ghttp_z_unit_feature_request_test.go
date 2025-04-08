@@ -363,7 +363,11 @@ func Test_Params_Basic(t *testing.T) {
 func Test_Params_Header(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/header", func(r *ghttp.Request) {
-		r.Response.Write(r.GetHeader("test"))
+		r.Response.Write(map[string]interface{}{
+			"without-def":   r.GetHeader("no-header"),
+			"with-def":      r.GetHeader("no-header", "my-default"),
+			"x-custom-with": r.GetHeader("x-custom", "my-default"),
+		})
 	})
 	s.SetDumpRouterMap(false)
 	s.Start()
@@ -374,8 +378,14 @@ func Test_Params_Header(t *testing.T) {
 		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
 		client := g.Client()
 		client.SetPrefix(prefix)
+		client.SetHeader("x-custom", "custom-value")
 
-		t.Assert(client.Header(g.MapStrStr{"test": "123456"}).GetContent(ctx, "/header"), "123456")
+		resp := client.GetContent(ctx, "/header")
+		t.Assert(gjson.New(resp).Map(), g.Map{
+			"without-def":   "",
+			"with-def":      "my-default",
+			"x-custom-with": "custom-value",
+		})
 	})
 }
 
@@ -875,12 +885,13 @@ func (r GetMetaTagSt) PostTest(ctx context.Context, req *GetMetaTagReq) (*GetMet
 	return &GetMetaTagRes{}, nil
 }
 
-func TestRequest_GetMetaTag(t *testing.T) {
+func TestRequest_GetServeHandler_GetMetaTag(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Use(func(r *ghttp.Request) {
 		r.Response.Writef(
 			"summary:%s,method:%s",
-			r.GetMetaTag("summary"), r.GetMetaTag("method"),
+			r.GetServeHandler().GetMetaTag("summary"),
+			r.GetServeHandler().GetMetaTag("method"),
 		)
 	})
 	s.Group("/", func(grp *ghttp.RouterGroup) {

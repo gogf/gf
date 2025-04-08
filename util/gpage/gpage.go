@@ -5,6 +5,8 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gpage provides useful paging functionality for web pages.
+//
+// Deprecated: wrap this pagination html content in business layer.
 package gpage
 
 import (
@@ -18,6 +20,8 @@ import (
 
 // Page is the pagination implementer.
 // All the attributes are public, you can change them when necessary.
+//
+// Deprecated: wrap this pagination html content in business layer.
 type Page struct {
 	TotalSize      int    // Total size.
 	TotalPage      int    // Total page, which is automatically calculated.
@@ -48,6 +52,8 @@ const (
 // /user/list/{.page}, /user/list/{.page}.html, /user/list?page={.page}&type=1, etc.
 // The build-in variable in `urlTemplate` "{.page}" specifies the page number, which will be replaced by certain
 // page number when producing.
+//
+// Deprecated: wrap this pagination html content in business layer.
 func New(totalSize, pageSize, currentPage int, urlTemplate string) *Page {
 	p := &Page{
 		LinkStyle:    "GPageLink",

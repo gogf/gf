@@ -8,9 +8,22 @@ package converter
 
 import "github.com/gogf/gf/v2/internal/json"
 
+// SliceMapOption is the option for SliceMap function.
+type SliceMapOption struct {
+	SliceOption SliceOption
+	MapOption   MapOption
+}
+
+func (c *Converter) getSliceMapOption(option ...SliceMapOption) SliceMapOption {
+	if len(option) > 0 {
+		return option[0]
+	}
+	return SliceMapOption{}
+}
+
 // SliceMap converts `value` to []map[string]any.
 // Note that it automatically checks and converts json string to []map if `value` is string/[]byte.
-func (c *Converter) SliceMap(value any, sliceOption SliceOption, mapOption MapOption) ([]map[string]any, error) {
+func (c *Converter) SliceMap(value any, option ...SliceMapOption) ([]map[string]any, error) {
 	if value == nil {
 		return nil, nil
 	}
@@ -39,7 +52,8 @@ func (c *Converter) SliceMap(value any, sliceOption SliceOption, mapOption MapOp
 		return r, nil
 
 	default:
-		array, err := c.SliceAny(value, sliceOption)
+		sliceMapOption := c.getSliceMapOption(option...)
+		array, err := c.SliceAny(value, sliceMapOption.SliceOption)
 		if err != nil {
 			return nil, err
 		}
@@ -48,8 +62,8 @@ func (c *Converter) SliceMap(value any, sliceOption SliceOption, mapOption MapOp
 		}
 		list := make([]map[string]any, len(array))
 		for k, v := range array {
-			m, err := c.Map(v, mapOption)
-			if err != nil && !sliceOption.ContinueOnError {
+			m, err := c.Map(v, sliceMapOption.MapOption)
+			if err != nil && !sliceMapOption.SliceOption.ContinueOnError {
 				return nil, err
 			}
 			list[k] = m

@@ -171,3 +171,72 @@ func TestNewConverter(t *testing.T) {
 		})
 	})
 }
+
+type UserInput struct {
+	Name     string
+	Age      int
+	IsActive bool
+}
+
+type UserModel struct {
+	ID       int
+	FullName string
+	Age      int
+	Status   int
+}
+
+func userInput2Model(in any, out reflect.Value) error {
+	if out.Type() == reflect.TypeOf(&UserModel{}) {
+		if input, ok := in.(UserInput); ok {
+			model := UserModel{
+				ID:       1,
+				FullName: input.Name,
+				Age:      input.Age,
+				Status:   0,
+			}
+			if input.IsActive {
+				model.Status = 1
+			}
+			out.Elem().Set(reflect.ValueOf(model))
+			return nil
+		}
+		return fmt.Errorf("unsupported type %T to UserModel", in)
+	}
+	return fmt.Errorf("unsupported type %s", out.Type())
+}
+
+func TestConverter_RegisterAnyConverterFunc(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		converter := gconv.NewConverter()
+		converter.RegisterAnyConverterFunc(userInput2Model, reflect.TypeOf(UserModel{}))
+		var (
+			model UserModel
+			input = UserInput{Name: "sam", Age: 30, IsActive: true}
+		)
+		err := converter.Scan(input, &model)
+		t.AssertNil(err)
+		t.Assert(model, UserModel{
+			ID:       1,
+			FullName: "sam",
+			Age:      30,
+			Status:   1,
+		})
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		converter := gconv.NewConverter()
+		converter.RegisterAnyConverterFunc(userInput2Model, reflect.TypeOf(&UserModel{}))
+		var (
+			model UserModel
+			input = UserInput{Name: "sam", Age: 30, IsActive: true}
+		)
+		err := converter.Scan(input, &model)
+		t.AssertNil(err)
+		t.Assert(model, UserModel{
+			ID:       1,
+			FullName: "sam",
+			Age:      30,
+			Status:   1,
+		})
+	})
+}
