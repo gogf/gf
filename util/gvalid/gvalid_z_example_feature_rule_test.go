@@ -785,7 +785,7 @@ func ExampleValidator_domain() {
 
 func ExampleValidator_size() {
 	type BizReq struct {
-		Size1 string `v:"size:10"`
+		Size1 string `v:"size:11"`
 		Size2 string `v:"size:5"`
 	}
 
@@ -806,7 +806,7 @@ func ExampleValidator_size() {
 
 func ExampleValidator_length() {
 	type BizReq struct {
-		Length1 string `v:"length:5,10"`
+		Length1 string `v:"length:5,12"`
 		Length2 string `v:"length:10,15"`
 	}
 
@@ -848,7 +848,7 @@ func ExampleValidator_minLength() {
 
 func ExampleValidator_maxLength() {
 	type BizReq struct {
-		MaxLength1 string `v:"max-length:10"`
+		MaxLength1 string `v:"max-length:11"`
 		MaxLength2 string `v:"max-length:5"`
 	}
 

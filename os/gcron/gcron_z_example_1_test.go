@@ -26,7 +26,7 @@ func ExampleCron_AddSingleton() {
 	select {}
 }
 
-func ExampleCron_GracefulShutdown() {
+func ExampleCron_gracefulShutdown() {
 	_, err := gcron.Add(ctx, "*/2 * * * * *", func(ctx context.Context) {
 		g.Log().Debug(ctx, "Every 2s job start")
 		time.Sleep(5 * time.Second)
