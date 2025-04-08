@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/os/glog"
 )
 
-func ExampleCronAddSingleton() {
+func ExampleCron_AddSingleton() {
 	gcron.AddSingleton(ctx, "* * * * * *", func(ctx context.Context) {
 		glog.Print(context.TODO(), "doing")
 		time.Sleep(2 * time.Second)
@@ -26,7 +26,7 @@ func ExampleCronAddSingleton() {
 	select {}
 }
 
-func ExampleCronGracefulShutdown() {
+func ExampleCron_GracefulShutdown() {
 	_, err := gcron.Add(ctx, "*/2 * * * * *", func(ctx context.Context) {
 		g.Log().Debug(ctx, "Every 2s job start")
 		time.Sleep(5 * time.Second)
