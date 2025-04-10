@@ -12,10 +12,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gproc"
-	"github.com/gogf/gf/v2/os/gtimer"
-	"github.com/gogf/gf/v2/os/gview"
+	"github.com/gogf/gf/v3/os/gfile"
+	"github.com/gogf/gf/v3/os/gproc"
+	"github.com/gogf/gf/v3/os/gtimer"
+	"github.com/gogf/gf/v3/os/gview"
 )
 
 // utilAdmin is the controller for administration.

@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v3/internal/utils"
 )
 
 var (

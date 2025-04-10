@@ -9,7 +9,7 @@ package redis
 import (
 	"reflect"
 
-	"github.com/gogf/gf/v2/os/gstructs"
+	"github.com/gogf/gf/v3/os/gstructs"
 )
 
 func mustMergeOptionToArgs(args []interface{}, option interface{}) []interface{} {

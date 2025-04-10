@@ -11,9 +11,9 @@ package gcfg_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gcfg"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gcfg"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 func TestAdapterContent_Available_Get_Data(t *testing.T) {

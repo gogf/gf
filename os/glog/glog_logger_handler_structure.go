@@ -13,7 +13,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 type structuredBuffer struct {

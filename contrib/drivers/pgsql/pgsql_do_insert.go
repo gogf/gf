@@ -10,9 +10,9 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v3/database/gdb"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
 )
 
 // DoInsert inserts or updates data for given table.

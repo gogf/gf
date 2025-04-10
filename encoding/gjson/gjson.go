@@ -12,13 +12,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/reflection"
-	"github.com/gogf/gf/v2/internal/rwmutex"
-	"github.com/gogf/gf/v2/internal/utils"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/reflection"
+	"github.com/gogf/gf/v3/internal/rwmutex"
+	"github.com/gogf/gf/v3/internal/utils"
+	"github.com/gogf/gf/v3/text/gstr"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 type ContentType string

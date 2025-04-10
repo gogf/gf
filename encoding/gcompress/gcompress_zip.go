@@ -15,10 +15,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/intlog"
+	"github.com/gogf/gf/v3/os/gfile"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // ZipPath compresses `fileOrFolderPaths` to `dstFilePath` using zip compressing algorithm.

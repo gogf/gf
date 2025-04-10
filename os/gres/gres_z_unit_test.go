@@ -10,13 +10,13 @@ import (
 	"strings"
 	"testing"
 
-	_ "github.com/gogf/gf/v2/os/gres/testdata/data"
+	_ "github.com/gogf/gf/v3/os/gres/testdata/data"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gres"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gfile"
+	"github.com/gogf/gf/v3/os/gres"
+	"github.com/gogf/gf/v3/os/gtime"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 func Test_PackFolderToGoFile(t *testing.T) {

@@ -10,10 +10,10 @@ package gset
 import (
 	"bytes"
 
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/rwmutex"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/internal/json"
+	"github.com/gogf/gf/v3/internal/rwmutex"
+	"github.com/gogf/gf/v3/text/gstr"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 // Set is consisted of interface{} items.

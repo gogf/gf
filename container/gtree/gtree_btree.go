@@ -11,10 +11,10 @@ import (
 
 	"github.com/emirpasic/gods/trees/btree"
 
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/internal/rwmutex"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/container/gvar"
+	"github.com/gogf/gf/v3/internal/rwmutex"
+	"github.com/gogf/gf/v3/text/gstr"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 var _ iTree = (*BTree)(nil)

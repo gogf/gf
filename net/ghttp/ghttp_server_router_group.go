@@ -11,11 +11,11 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
-	"github.com/gogf/gf/v2/internal/consts"
-	"github.com/gogf/gf/v2/internal/reflection"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/debug/gdebug"
+	"github.com/gogf/gf/v3/internal/consts"
+	"github.com/gogf/gf/v3/internal/reflection"
+	"github.com/gogf/gf/v3/text/gstr"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 type (

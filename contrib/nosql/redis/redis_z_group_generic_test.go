@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/database/gredis"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/guid"
+	"github.com/gogf/gf/v3/database/gredis"
+	"github.com/gogf/gf/v3/os/gtime"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/util/guid"
 )
 
 var (

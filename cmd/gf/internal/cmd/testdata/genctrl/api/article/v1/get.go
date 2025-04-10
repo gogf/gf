@@ -6,7 +6,7 @@
 
 package v1
 
-import "github.com/gogf/gf/v2/frame/g"
+import "github.com/gogf/gf/v3/frame/g"
 
 type GetListReq struct {
 	g.Meta `path:"/article/list" method:"get" tags:"ArticleService"`

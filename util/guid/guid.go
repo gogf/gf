@@ -12,12 +12,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/encoding/ghash"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/net/gipv4"
-	"github.com/gogf/gf/v2/util/grand"
+	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/encoding/ghash"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/net/gipv4"
+	"github.com/gogf/gf/v3/util/grand"
 )
 
 const (

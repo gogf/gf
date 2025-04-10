@@ -10,8 +10,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/gogf/gf/v3/database/gdb"
+	"github.com/gogf/gf/v3/util/gutil"
 )
 
 var (

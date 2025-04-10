@@ -10,7 +10,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v3/os/gtime"
 )
 
 // ConvertValueForField converts value to the type of the record field.

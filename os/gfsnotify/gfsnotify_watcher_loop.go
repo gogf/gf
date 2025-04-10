@@ -9,10 +9,10 @@ package gfsnotify
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/container/glist"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v3/container/glist"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/intlog"
 )
 
 // watchLoop starts the loop for event listening from underlying inotify monitor.

@@ -11,10 +11,10 @@ package gcmd
 import (
 	"os"
 
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/internal/command"
-	"github.com/gogf/gf/v2/internal/utils"
-	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v3/container/gvar"
+	"github.com/gogf/gf/v3/internal/command"
+	"github.com/gogf/gf/v3/internal/utils"
+	"github.com/gogf/gf/v3/os/gctx"
 )
 
 const (
@@ -27,7 +27,7 @@ const (
 	helpOptionName        = "help"
 	helpOptionNameShort   = "h"
 	maxLineChars          = 120
-	tracingInstrumentName = "github.com/gogf/gf/v2/os/gcmd.Command"
+	tracingInstrumentName = "github.com/gogf/gf/v3/os/gcmd.Command"
 	tagNameName           = "name"
 	tagNameShort          = "short"
 )

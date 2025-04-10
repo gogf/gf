@@ -11,10 +11,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/json"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 // customError is used to test As function

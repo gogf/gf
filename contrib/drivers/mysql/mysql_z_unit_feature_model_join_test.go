@@ -9,9 +9,9 @@ package mysql_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gtime"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 func Test_Model_LeftJoinOnField(t *testing.T) {

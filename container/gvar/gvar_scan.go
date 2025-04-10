@@ -7,7 +7,7 @@
 package gvar
 
 import (
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 // Scan automatically checks the type of `pointer` and converts value of Var to `pointer`.

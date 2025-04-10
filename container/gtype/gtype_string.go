@@ -10,7 +10,7 @@ import (
 	"bytes"
 	"sync/atomic"
 
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 // String is a struct for concurrent-safe operation for type string.

@@ -12,9 +12,9 @@ import (
 	"google.golang.org/grpc/balancer"
 	"google.golang.org/grpc/balancer/base"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/gsel"
-	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/net/gsel"
+	"github.com/gogf/gf/v3/net/gsvc"
 )
 
 // Builder implements grpc balancer base.PickerBuilder,

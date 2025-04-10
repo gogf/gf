@@ -9,11 +9,11 @@ package mysql_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/gmeta"
+	"github.com/gogf/gf/v3/encoding/gjson"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gtime"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/util/gmeta"
 )
 
 func Test_Model_Builder(t *testing.T) {

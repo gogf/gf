@@ -10,14 +10,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogf/gf/v2/database/gredis"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/consts"
-	"github.com/gogf/gf/v2/internal/instance"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/gogf/gf/v3/database/gredis"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/consts"
+	"github.com/gogf/gf/v3/internal/instance"
+	"github.com/gogf/gf/v3/internal/intlog"
+	"github.com/gogf/gf/v3/util/gconv"
+	"github.com/gogf/gf/v3/util/gutil"
 )
 
 // Redis returns an instance of redis client with specified configuration group name.

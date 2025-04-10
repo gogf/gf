@@ -9,10 +9,10 @@ package redis_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/crypto/gsha1"
-	"github.com/gogf/gf/v2/database/gredis"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/crypto/gsha1"
+	"github.com/gogf/gf/v3/database/gredis"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 func Test_GroupScript_Eval(t *testing.T) {

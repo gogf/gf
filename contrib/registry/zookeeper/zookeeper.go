@@ -13,8 +13,8 @@ import (
 	"github.com/go-zookeeper/zk"
 	"golang.org/x/sync/singleflight"
 
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/net/gsvc"
 )
 
 var _ gsvc.Registry = &Registry{}

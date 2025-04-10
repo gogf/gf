@@ -12,8 +12,8 @@ package gring
 import (
 	"container/ring"
 
-	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/internal/rwmutex"
 )
 
 // Ring is a struct of ring structure.

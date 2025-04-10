@@ -9,7 +9,7 @@ package mysql
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v3/database/gdb"
 )
 
 // Tables retrieves and returns the tables of current schema.

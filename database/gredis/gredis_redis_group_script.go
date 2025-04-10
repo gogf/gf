@@ -9,7 +9,7 @@ package gredis
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v3/container/gvar"
 )
 
 // IGroupScript manages redis script operations.

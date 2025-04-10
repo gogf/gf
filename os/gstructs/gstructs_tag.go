@@ -10,9 +10,9 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/util/gtag"
 )
 
 // ParseTag parses tag string into map.

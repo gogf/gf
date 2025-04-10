@@ -9,7 +9,7 @@ package builtin
 import (
 	"errors"
 
-	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v3/text/gregex"
 )
 
 // RulePassword2 implements `password2` rule:

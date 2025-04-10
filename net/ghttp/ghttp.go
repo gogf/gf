@@ -15,18 +15,18 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/net/ghttp/internal/graceful"
-	"github.com/gogf/gf/v2/net/goai"
-	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/os/gcache"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/os/gsession"
-	"github.com/gogf/gf/v2/os/gstructs"
-	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/gogf/gf/v3/container/gmap"
+	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/net/ghttp/internal/graceful"
+	"github.com/gogf/gf/v3/net/goai"
+	"github.com/gogf/gf/v3/net/gsvc"
+	"github.com/gogf/gf/v3/os/gcache"
+	"github.com/gogf/gf/v3/os/gctx"
+	"github.com/gogf/gf/v3/os/gsession"
+	"github.com/gogf/gf/v3/os/gstructs"
+	"github.com/gogf/gf/v3/util/gtag"
 )
 
 type (

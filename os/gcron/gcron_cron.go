@@ -11,11 +11,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/os/glog"
-	"github.com/gogf/gf/v2/os/gtimer"
+	"github.com/gogf/gf/v3/container/garray"
+	"github.com/gogf/gf/v3/container/gmap"
+	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/os/glog"
+	"github.com/gogf/gf/v3/os/gtimer"
 )
 
 // Cron stores all the cron job entries.

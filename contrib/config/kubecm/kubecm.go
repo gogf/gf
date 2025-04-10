@@ -16,11 +16,11 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gcfg"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/gogf/gf/v3/encoding/gjson"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gcfg"
+	"github.com/gogf/gf/v3/util/gutil"
 )
 
 // Client implements gcfg.Adapter.

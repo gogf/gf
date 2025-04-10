@@ -10,7 +10,7 @@ package gutil
 import (
 	"reflect"
 
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 const (

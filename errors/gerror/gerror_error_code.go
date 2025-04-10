@@ -7,7 +7,7 @@
 package gerror
 
 import (
-	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gcode"
 )
 
 // Code returns the error code.

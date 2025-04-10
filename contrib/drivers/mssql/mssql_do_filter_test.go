@@ -11,8 +11,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/database/gdb"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 func TestDriver_DoFilter(t *testing.T) {

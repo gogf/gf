@@ -9,7 +9,7 @@ package gredis
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v3/container/gvar"
 )
 
 // Adapter is an interface for universal redis operations.

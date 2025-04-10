@@ -6,7 +6,7 @@
 
 package gjson
 
-import "github.com/gogf/gf/v2/os/gfile"
+import "github.com/gogf/gf/v3/os/gfile"
 
 // Load loads content from specified file `path`, and creates a Json object from its content.
 // Deprecated: use LoadPath instead.

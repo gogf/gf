@@ -14,13 +14,13 @@ import (
 	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/guid"
+	"github.com/gogf/gf/v3/encoding/gjson"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gctx"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/util/guid"
 
-	"github.com/gogf/gf/contrib/config/nacos/v2"
+	"github.com/gogf/gf/contrib/config/nacos/v3"
 )
 
 var (

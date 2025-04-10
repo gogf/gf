@@ -6,7 +6,7 @@
 
 package gstr
 
-import "github.com/gogf/gf/v2/internal/utils"
+import "github.com/gogf/gf/v3/internal/utils"
 
 // IsNumeric tests whether the given string s is numeric.
 func IsNumeric(s string) bool {

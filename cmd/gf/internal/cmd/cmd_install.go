@@ -9,9 +9,9 @@ package cmd
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v3/frame/g"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/service"
+	"github.com/gogf/gf/cmd/gf/v3/internal/service"
 )
 
 var (

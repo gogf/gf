@@ -7,7 +7,7 @@
 package gtag
 
 import (
-	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v3/internal/json"
 )
 
 // Type name => enums json.
@@ -29,7 +29,7 @@ func GetGlobalEnums() (string, error) {
 }
 
 // GetEnumsByType retrieves and returns the stored enums json by type name.
-// The type name is like: github.com/gogf/gf/v2/encoding/gjson.ContentType
+// The type name is like: github.com/gogf/gf/v3/encoding/gjson.ContentType
 func GetEnumsByType(typeName string) string {
 	return string(enumsMap[typeName])
 }

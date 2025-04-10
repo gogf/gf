@@ -12,12 +12,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/empty"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/empty"
+	"github.com/gogf/gf/v3/internal/json"
+	"github.com/gogf/gf/v3/os/gtime"
+	"github.com/gogf/gf/v3/util/gconv/internal/localinterface"
 )
 
 func (c *Converter) String(any any) (string, error) {

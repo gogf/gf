@@ -11,7 +11,7 @@ import (
 
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/gogf/gf/v2/internal/tracing"
+	"github.com/gogf/gf/v3/internal/tracing"
 )
 
 // IDGenerator is a trace ID generator.

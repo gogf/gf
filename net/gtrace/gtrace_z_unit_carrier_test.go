@@ -13,8 +13,8 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/gogf/gf/v2/net/gtrace"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/net/gtrace"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 const (

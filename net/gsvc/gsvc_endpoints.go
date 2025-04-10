@@ -8,7 +8,7 @@
 package gsvc
 
 import (
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // NewEndpoints creates and returns Endpoints from multiple addresses like:

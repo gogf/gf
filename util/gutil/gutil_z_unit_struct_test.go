@@ -9,9 +9,9 @@ package gutil_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/util/gutil"
 )
 
 func Test_StructToSlice(t *testing.T) {

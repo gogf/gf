@@ -1,9 +1,9 @@
-module github.com/gogf/gf/contrib/metric/otelmetric/v2
+module github.com/gogf/gf/contrib/metric/otelmetric/v3
 
 go 1.22
 
 require (
-	github.com/gogf/gf/v2 v2.9.0
+	github.com/gogf/gf/v3 v3.0.0-alpha
 	github.com/prometheus/client_golang v1.19.1
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.49.0
 	go.opentelemetry.io/otel v1.32.0
@@ -44,4 +44,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/gogf/gf/v2 => ../../../
+replace github.com/gogf/gf/v3 => ../../../

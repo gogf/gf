@@ -10,11 +10,11 @@ import (
 	"math"
 	"reflect"
 
-	"github.com/gogf/gf/v2/encoding/gbinary"
-	"github.com/gogf/gf/v2/internal/empty"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/reflection"
-	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
+	"github.com/gogf/gf/v3/encoding/gbinary"
+	"github.com/gogf/gf/v3/internal/empty"
+	"github.com/gogf/gf/v3/internal/json"
+	"github.com/gogf/gf/v3/internal/reflection"
+	"github.com/gogf/gf/v3/util/gconv/internal/localinterface"
 )
 
 // Bytes converts `any` to []byte.

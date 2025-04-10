@@ -13,14 +13,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/encoding/gxml"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/container/garray"
+	"github.com/gogf/gf/v3/database/gdb"
+	"github.com/gogf/gf/v3/encoding/gjson"
+	"github.com/gogf/gf/v3/encoding/gxml"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gtime"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 func Test_New(t *testing.T) {

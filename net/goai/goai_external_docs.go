@@ -7,9 +7,9 @@
 package goai
 
 import (
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/internal/json"
+	"github.com/gogf/gf/v3/text/gstr"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 // ExternalDocs is specified by OpenAPI/Swagger standard version 3.0.

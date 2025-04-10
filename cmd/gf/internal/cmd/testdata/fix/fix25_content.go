@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/guid"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/net/ghttp"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/util/guid"
 )
 
 func Test_Router_Hook_Multi(t *testing.T) {

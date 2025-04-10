@@ -9,7 +9,7 @@ package article
 // import (
 //	"context"
 //
-//	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genservice/service"
+//	"github.com/gogf/gf/cmd/gf/v3/internal/cmd/testdata/genservice/service"
 // )
 import (
 	"context"
@@ -17,10 +17,10 @@ import (
 	/**
 	 *
 	 */
-	_ "github.com/gogf/gf/v2/os/gfile"
+	_ "github.com/gogf/gf/v3/os/gfile"
 
 	// This is a random comment
-	gdbas "github.com/gogf/gf/v2/database/gdb"
+	gdbas "github.com/gogf/gf/v3/database/gdb"
 )
 
 // T1 random comment
@@ -54,7 +54,7 @@ func (s *sArticle) T3(ctx context.Context, b *gdbas.Model) (c, d *gdbas.Model, e
 	/* import (
 	*	"context"
 	*
-	*	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genservice/service"
+	*	"github.com/gogf/gf/cmd/gf/v3/internal/cmd/testdata/genservice/service"
 	 */
 	return nil, nil, nil
 }

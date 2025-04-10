@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 const (

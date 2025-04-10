@@ -10,7 +10,7 @@ package gstructs
 import (
 	"reflect"
 
-	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v3/errors/gerror"
 )
 
 // Type wraps reflect.Type for additional features.

@@ -9,9 +9,9 @@ package gconv_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/container/gvar"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 var runeTests = []struct {

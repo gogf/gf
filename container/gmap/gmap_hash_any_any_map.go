@@ -9,12 +9,12 @@ package gmap
 import (
 	"reflect"
 
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/internal/deepcopy"
-	"github.com/gogf/gf/v2/internal/empty"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/rwmutex"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/container/gvar"
+	"github.com/gogf/gf/v3/internal/deepcopy"
+	"github.com/gogf/gf/v3/internal/empty"
+	"github.com/gogf/gf/v3/internal/json"
+	"github.com/gogf/gf/v3/internal/rwmutex"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 // AnyAnyMap wraps map type `map[interface{}]interface{}` and provides more map features.

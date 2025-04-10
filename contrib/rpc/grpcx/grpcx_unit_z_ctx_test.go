@@ -12,10 +12,10 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/test/gtest"
 
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
+	"github.com/gogf/gf/contrib/rpc/grpcx/v3"
 )
 
 func Test_Ctx_Basic(t *testing.T) {

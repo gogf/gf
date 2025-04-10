@@ -10,11 +10,11 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/gogf/gf/v2/encoding/gbinary"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/empty"
-	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
+	"github.com/gogf/gf/v3/encoding/gbinary"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/empty"
+	"github.com/gogf/gf/v3/util/gconv/internal/localinterface"
 )
 
 // Float32 converts `any` to float32.

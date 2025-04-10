@@ -13,9 +13,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/gogf/gf/v3/internal/intlog"
+	"github.com/gogf/gf/v3/text/gregex"
+	"github.com/gogf/gf/v3/util/gtag"
 )
 
 // CustomMsg is the custom error message type,

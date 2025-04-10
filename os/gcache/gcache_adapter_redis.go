@@ -10,9 +10,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/database/gredis"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/container/gvar"
+	"github.com/gogf/gf/v3/database/gredis"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 // AdapterRedis is the gcache adapter implements using Redis server.

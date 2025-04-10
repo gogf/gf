@@ -9,7 +9,7 @@ package glog_test
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v3/frame/g"
 )
 
 func ExampleContext() {

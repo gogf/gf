@@ -10,10 +10,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/os/gsession"
+	"github.com/gogf/gf/v3/container/gmap"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gctx"
+	"github.com/gogf/gf/v3/os/gsession"
 )
 
 func ExampleNew() {

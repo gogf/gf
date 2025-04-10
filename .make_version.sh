@@ -57,13 +57,13 @@ for file in `find ${workdir} -name go.mod`; do
     cd $goModPath
     if [ $goModPath = "./cmd/gf" ]; then
         mv go.work go.work.version.bak
-        go mod edit -replace github.com/gogf/gf/v2=../../
-        go mod edit -replace github.com/gogf/gf/contrib/drivers/clickhouse/v2=../../contrib/drivers/clickhouse
-        go mod edit -replace github.com/gogf/gf/contrib/drivers/mssql/v2=../../contrib/drivers/mssql
-        go mod edit -replace github.com/gogf/gf/contrib/drivers/mysql/v2=../../contrib/drivers/mysql
-        go mod edit -replace github.com/gogf/gf/contrib/drivers/oracle/v2=../../contrib/drivers/oracle
-        go mod edit -replace github.com/gogf/gf/contrib/drivers/pgsql/v2=../../contrib/drivers/pgsql
-        go mod edit -replace github.com/gogf/gf/contrib/drivers/sqlite/v2=../../contrib/drivers/sqlite
+        go mod edit -replace github.com/gogf/gf/v3=../../
+        go mod edit -replace github.com/gogf/gf/contrib/drivers/clickhouse/v3=../../contrib/drivers/clickhouse
+        go mod edit -replace github.com/gogf/gf/contrib/drivers/mssql/v3=../../contrib/drivers/mssql
+        go mod edit -replace github.com/gogf/gf/contrib/drivers/mysql/v3=../../contrib/drivers/mysql
+        go mod edit -replace github.com/gogf/gf/contrib/drivers/oracle/v3=../../contrib/drivers/oracle
+        go mod edit -replace github.com/gogf/gf/contrib/drivers/pgsql/v3=../../contrib/drivers/pgsql
+        go mod edit -replace github.com/gogf/gf/contrib/drivers/sqlite/v3=../../contrib/drivers/sqlite
     fi
     go mod tidy
     # Remove toolchain line if exists
@@ -77,13 +77,13 @@ for file in `find ${workdir} -name go.mod`; do
     # Remove toolchain line if exists
     sed -i '' '/^toolchain/d' go.mod
     if [ $goModPath = "./cmd/gf" ]; then
-        go mod edit -dropreplace github.com/gogf/gf/v2
-        go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/clickhouse/v2
-        go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/mssql/v2
-        go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/mysql/v2
-        go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/oracle/v2
-        go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/pgsql/v2
-        go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/sqlite/v2
+        go mod edit -dropreplace github.com/gogf/gf/v3
+        go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/clickhouse/v3
+        go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/mssql/v3
+        go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/mysql/v3
+        go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/oracle/v3
+        go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/pgsql/v3
+        go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/sqlite/v3
         mv go.work.version.bak go.work
     fi
     cd -

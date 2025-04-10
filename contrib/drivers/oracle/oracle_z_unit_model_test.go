@@ -13,13 +13,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/guid"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/gogf/gf/v3/container/gmap"
+	"github.com/gogf/gf/v3/database/gdb"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gtime"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/util/guid"
+	"github.com/gogf/gf/v3/util/gutil"
 )
 
 func Test_Model_InnerJoin(t *testing.T) {

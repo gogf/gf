@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/container/garray"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 func TestTimer_Proceed(t *testing.T) {

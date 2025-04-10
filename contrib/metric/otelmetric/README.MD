@@ -27,10 +27,10 @@ import (
 	"go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/gogf/gf/contrib/metric/otelmetric/v2"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/os/gmetric"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/net/ghttp"
+	"github.com/gogf/gf/v3/os/gctx"
+	"github.com/gogf/gf/v3/os/gmetric"
 )
 
 var (

@@ -9,8 +9,8 @@ import (
 	"context"
 	"go/ast"
 
-	gdbalias "github.com/gogf/gf/v2/database/gdb"
-	gdbas "github.com/gogf/gf/v2/database/gdb"
+	gdbalias "github.com/gogf/gf/v3/database/gdb"
+	gdbas "github.com/gogf/gf/v3/database/gdb"
 )
 
 type (

@@ -11,8 +11,8 @@ package gpage_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/gpage"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/util/gpage"
 )
 
 func Test_New(t *testing.T) {

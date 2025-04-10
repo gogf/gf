@@ -11,9 +11,9 @@ import (
 
 	etcd3 "go.etcd.io/etcd/client/v3"
 
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/container/gmap"
+	"github.com/gogf/gf/v3/net/gsvc"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // Search searches and returns services with specified condition.

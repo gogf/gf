@@ -17,7 +17,7 @@ import (
 	// do not add dm in cli pre-compilation,
 	// the dm driver does not support certain target platforms.
 	// _ "github.com/gogf/gf/contrib/drivers/dm/v2"
-	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/gendao"
+	"github.com/gogf/gf/cmd/gf/v3/internal/cmd/gendao"
 )
 
 type (

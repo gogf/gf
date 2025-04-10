@@ -9,11 +9,11 @@ package goai
 import (
 	"reflect"
 
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/os/gstructs"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gmeta"
-	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/gogf/gf/v3/internal/json"
+	"github.com/gogf/gf/v3/os/gstructs"
+	"github.com/gogf/gf/v3/text/gstr"
+	"github.com/gogf/gf/v3/util/gmeta"
+	"github.com/gogf/gf/v3/util/gtag"
 )
 
 type ResponseRef struct {

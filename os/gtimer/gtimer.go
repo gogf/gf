@@ -24,10 +24,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/command"
+	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/command"
 )
 
 // Timer is the timer manager, which uses ticks to calculate the timing interval.

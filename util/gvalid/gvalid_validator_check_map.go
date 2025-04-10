@@ -12,9 +12,9 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/internal/reflection"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/internal/reflection"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {

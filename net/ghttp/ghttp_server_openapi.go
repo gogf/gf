@@ -9,8 +9,8 @@ package ghttp
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/net/goai"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/net/goai"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // initOpenApi generates api specification using OpenApiV3 protocol.

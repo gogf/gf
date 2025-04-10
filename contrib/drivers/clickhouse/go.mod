@@ -1,10 +1,10 @@
-module github.com/gogf/gf/contrib/drivers/clickhouse/v2
+module github.com/gogf/gf/contrib/drivers/clickhouse/v3
 
 go 1.22
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.0.15
-	github.com/gogf/gf/v2 v2.9.0
+	github.com/gogf/gf/v3 v3.0.0-alpha
 	github.com/google/uuid v1.6.0
 	github.com/shopspring/decimal v1.3.1
 )
@@ -40,5 +40,5 @@ require (
 
 replace (
 	github.com/ClickHouse/clickhouse-go/v2 => github.com/gogf/clickhouse-go/v2 v2.0.15-compatible
-	github.com/gogf/gf/v2 => ../../../
+	github.com/gogf/gf/v3 => ../../../
 )

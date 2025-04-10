@@ -9,7 +9,7 @@ package garray_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v3/container/garray"
 )
 
 type anySortedArrayItem struct {

@@ -12,8 +12,8 @@ import (
 	"reflect"
 	"runtime"
 
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v3/container/gvar"
+	"github.com/gogf/gf/v3/internal/intlog"
 )
 
 // RuleFunc is the custom function for data validation.

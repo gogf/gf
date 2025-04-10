@@ -57,7 +57,7 @@ for file in `find ${workdir} -name go.mod`; do
             [ -z "$dep" ] && continue
             
             # Calculate the relative path for the replacement
-            if [[ "$dep" == "github.com/gogf/gf/v2" ]]; then
+            if [[ "$dep" == "github.com/gogf/gf/v3" ]]; then
                 replacement="$relativePath"
             else
                 # Extract the path after v2 and remove trailing version

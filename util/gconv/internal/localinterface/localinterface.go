@@ -7,7 +7,7 @@
 // Package localinterface defines some interfaces for converting usage.
 package localinterface
 
-import "github.com/gogf/gf/v2/os/gtime"
+import "github.com/gogf/gf/v3/os/gtime"
 
 // IVal is used for type assert api for Val().
 type IVal interface {

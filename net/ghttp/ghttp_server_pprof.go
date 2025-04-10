@@ -11,8 +11,8 @@ import (
 	runpprof "runtime/pprof"
 	"strings"
 
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/os/gview"
+	"github.com/gogf/gf/v3/internal/intlog"
+	"github.com/gogf/gf/v3/os/gview"
 )
 
 // utilPProf is the PProf interface implementer.

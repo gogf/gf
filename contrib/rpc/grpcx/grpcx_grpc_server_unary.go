@@ -15,8 +15,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // UnaryLogger is the default unary interceptor for logging purpose.

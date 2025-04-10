@@ -9,13 +9,13 @@ package genctrl
 import (
 	"context"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
-	"github.com/gogf/gf/v2/container/gset"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/gogf/gf/cmd/gf/v3/internal/utility/mlog"
+	"github.com/gogf/gf/v3/container/gset"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gfile"
+	"github.com/gogf/gf/v3/os/gtime"
+	"github.com/gogf/gf/v3/util/gconv"
+	"github.com/gogf/gf/v3/util/gtag"
 )
 
 const (

@@ -13,9 +13,9 @@ import (
 	"github.com/polarismesh/polaris-go"
 	"github.com/polarismesh/polaris-go/pkg/config"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/net/gsvc"
+	"github.com/gogf/gf/v3/os/glog"
 )
 
 var (

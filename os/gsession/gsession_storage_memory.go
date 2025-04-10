@@ -10,9 +10,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/os/gcache"
+	"github.com/gogf/gf/v3/container/gmap"
+	"github.com/gogf/gf/v3/container/gvar"
+	"github.com/gogf/gf/v3/os/gcache"
 )
 
 // StorageMemory implements the Session Storage interface with memory.

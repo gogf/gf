@@ -12,10 +12,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/gogf/gf/v3/container/garray"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/util/gconv"
+	"github.com/gogf/gf/v3/util/gutil"
 )
 
 func Test_Array_Var(t *testing.T) {

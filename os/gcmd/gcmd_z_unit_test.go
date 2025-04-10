@@ -15,13 +15,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gcmd"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/os/genv"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gcmd"
+	"github.com/gogf/gf/v3/os/gctx"
+	"github.com/gogf/gf/v3/os/genv"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 func Test_Default(t *testing.T) {

@@ -10,12 +10,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gogf/gf/v2/container/gset"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/os/gstructs"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/container/gset"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/json"
+	"github.com/gogf/gf/v3/os/gstructs"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // Parameters is specified by OpenAPI/Swagger 3.0 standard.

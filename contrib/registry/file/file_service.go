@@ -7,8 +7,8 @@
 package file
 
 import (
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v3/encoding/gjson"
+	"github.com/gogf/gf/v3/net/gsvc"
 )
 
 // Service wrapper.

@@ -9,7 +9,7 @@ package glog
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v3/internal/json"
 )
 
 // HandlerOutputJson is the structure outputting logging content as single json.

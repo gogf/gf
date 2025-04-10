@@ -9,8 +9,8 @@ package ghash_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/encoding/ghash"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/encoding/ghash"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 var (

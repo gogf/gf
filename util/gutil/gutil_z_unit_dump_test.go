@@ -10,14 +10,14 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gmeta"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/net/ghttp"
+	"github.com/gogf/gf/v3/os/gtime"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/text/gstr"
+	"github.com/gogf/gf/v3/util/gmeta"
+	"github.com/gogf/gf/v3/util/gutil"
 )
 
 func Test_Dump(t *testing.T) {

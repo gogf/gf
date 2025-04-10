@@ -9,7 +9,7 @@ package ghttp
 import (
 	"time"
 
-	"github.com/gogf/gf/v2/os/gsession"
+	"github.com/gogf/gf/v3/os/gsession"
 )
 
 // SetSessionMaxAge sets the SessionMaxAge for server.

@@ -9,7 +9,7 @@ package balancer
 import (
 	"google.golang.org/grpc/balancer"
 
-	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v3/net/gsvc"
 )
 
 // Node is the node for the balancer.

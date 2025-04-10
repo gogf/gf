@@ -10,10 +10,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogf/gf/v2/internal/consts"
-	"github.com/gogf/gf/v2/internal/instance"
-	"github.com/gogf/gf/v2/os/glog"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/gogf/gf/v3/internal/consts"
+	"github.com/gogf/gf/v3/internal/instance"
+	"github.com/gogf/gf/v3/os/glog"
+	"github.com/gogf/gf/v3/util/gutil"
 )
 
 // Log returns an instance of glog.Logger.

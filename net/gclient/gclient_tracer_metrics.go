@@ -12,7 +12,7 @@ import (
 	"net/http/httptrace"
 	"net/textproto"
 
-	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v3/os/gtime"
 )
 
 type clientTracerMetrics struct {

@@ -13,11 +13,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gogf/gf/v2/container/gtree"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/container/gtree"
+	"github.com/gogf/gf/v3/internal/intlog"
+	"github.com/gogf/gf/v3/os/gfile"
+	"github.com/gogf/gf/v3/os/gtime"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // Resource is the resource manager for the file system.

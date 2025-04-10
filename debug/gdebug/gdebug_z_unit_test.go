@@ -10,14 +10,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/debug/gdebug"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 func Test_CallerPackage(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gdebug.CallerPackage(), "github.com/gogf/gf/v2/test/gtest")
+		t.Assert(gdebug.CallerPackage(), "github.com/gogf/gf/v3/test/gtest")
 	})
 }
 
@@ -54,7 +54,7 @@ func Test_CallerFileLineShort(t *testing.T) {
 
 func Test_FuncPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gdebug.FuncPath(Test_FuncPath), "github.com/gogf/gf/v2/debug/gdebug_test.Test_FuncPath")
+		t.Assert(gdebug.FuncPath(Test_FuncPath), "github.com/gogf/gf/v3/debug/gdebug_test.Test_FuncPath")
 	})
 }
 

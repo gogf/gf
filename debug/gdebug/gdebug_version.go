@@ -13,8 +13,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/gogf/gf/v2/encoding/ghash"
-	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v3/encoding/ghash"
+	"github.com/gogf/gf/v3/errors/gerror"
 )
 
 // BinVersion returns the version of current running binary.

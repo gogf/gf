@@ -9,8 +9,8 @@ package mysql
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/database/gdb"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 func Test_configNodeToSource(t *testing.T) {

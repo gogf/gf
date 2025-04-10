@@ -7,10 +7,10 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/httputil"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/httputil"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // SupportedMethods returns all supported HTTP methods.

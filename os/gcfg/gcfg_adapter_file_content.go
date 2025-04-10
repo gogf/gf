@@ -9,7 +9,7 @@ package gcfg
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v3/internal/intlog"
 )
 
 // SetContent sets customized configuration content for specified `file`.

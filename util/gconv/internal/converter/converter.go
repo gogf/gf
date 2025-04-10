@@ -11,10 +11,10 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/util/gconv/internal/structcache"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/os/gtime"
+	"github.com/gogf/gf/v3/util/gconv/internal/structcache"
 )
 
 // AnyConvertFunc is the type for any type converting function.

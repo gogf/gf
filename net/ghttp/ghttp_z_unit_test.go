@@ -15,13 +15,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/encoding/gurl"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/internal/httputil"
-	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/os/genv"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/guid"
+	"github.com/gogf/gf/v3/encoding/gurl"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/internal/httputil"
+	"github.com/gogf/gf/v3/net/ghttp"
+	"github.com/gogf/gf/v3/os/genv"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/util/guid"
 )
 
 var (

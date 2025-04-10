@@ -10,7 +10,7 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v3/debug/gdebug"
 )
 
 const (

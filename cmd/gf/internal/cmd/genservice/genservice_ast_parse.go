@@ -12,15 +12,15 @@ import (
 	"go/token"
 	"strings"
 
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gstructs"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/os/gfile"
+	"github.com/gogf/gf/v3/os/gstructs"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 type pkgItem struct {
 	Alias     string `eg:"gdbas"`
-	Path      string `eg:"github.com/gogf/gf/v2/database/gdb"`
-	RawImport string `eg:"gdbas github.com/gogf/gf/v2/database/gdb"`
+	Path      string `eg:"github.com/gogf/gf/v3/database/gdb"`
+	RawImport string `eg:"gdbas github.com/gogf/gf/v3/database/gdb"`
 }
 
 type funcItem struct {
@@ -199,7 +199,7 @@ func (c CGenService) parseImportPackages(node *ast.ImportSpec) (packages pkgItem
 
 // getRealAlias retrieves the real alias of the package.
 // If package is "github.com/gogf/gf", the alias is "gf".
-// If package is "github.com/gogf/gf/v2", the alias is "gf" instead of "v2".
+// If package is "github.com/gogf/gf/v3", the alias is "gf" instead of "v2".
 func (c CGenService) getRealAlias(importPath string) (pkgName string) {
 	importPath = gstr.Trim(importPath, `"`)
 	parts := gstr.Split(importPath, "/")

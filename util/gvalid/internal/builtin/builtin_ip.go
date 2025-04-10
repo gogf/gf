@@ -9,8 +9,8 @@ package builtin
 import (
 	"errors"
 
-	"github.com/gogf/gf/v2/net/gipv4"
-	"github.com/gogf/gf/v2/net/gipv6"
+	"github.com/gogf/gf/v3/net/gipv4"
+	"github.com/gogf/gf/v3/net/gipv6"
 )
 
 // RuleIp implements `ip` rule:

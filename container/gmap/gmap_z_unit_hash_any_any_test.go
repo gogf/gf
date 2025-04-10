@@ -10,12 +10,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/container/garray"
+	"github.com/gogf/gf/v3/container/gmap"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/internal/json"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 func Test_AnyAnyMap_Var(t *testing.T) {

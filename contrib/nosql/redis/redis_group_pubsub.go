@@ -9,7 +9,7 @@ package redis
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v3/database/gredis"
 )
 
 // GroupPubSub provides pub/sub functions for redis.

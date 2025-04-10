@@ -14,9 +14,9 @@ import (
 	"google.golang.org/grpc/attributes"
 	"google.golang.org/grpc/resolver"
 
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v3/encoding/gjson"
+	"github.com/gogf/gf/v3/net/gsvc"
+	"github.com/gogf/gf/v3/os/glog"
 )
 
 // Resolver implements grpc resolver.Resolver,

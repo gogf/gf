@@ -12,14 +12,14 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/goai"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/gmeta"
-	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/gogf/gf/v3/encoding/gjson"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/internal/json"
+	"github.com/gogf/gf/v3/net/ghttp"
+	"github.com/gogf/gf/v3/net/goai"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/util/gmeta"
+	"github.com/gogf/gf/v3/util/gtag"
 )
 
 func Test_Basic(t *testing.T) {
@@ -1297,7 +1297,7 @@ func Test_Enums(t *testing.T) {
 			req = new(Req)
 		)
 		err = gtag.SetGlobalEnums(gjson.MustEncodeString(g.Map{
-			"github.com/gogf/gf/v2/net/goai_test.Status": []interface{}{StatusA, StatusB},
+			"github.com/gogf/gf/v3/net/goai_test.Status": []interface{}{StatusA, StatusB},
 		}))
 		t.AssertNil(err)
 

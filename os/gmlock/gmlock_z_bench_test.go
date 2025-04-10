@@ -9,7 +9,7 @@ package gmlock_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/os/gmlock"
+	"github.com/gogf/gf/v3/os/gmlock"
 )
 
 var (

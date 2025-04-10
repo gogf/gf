@@ -10,13 +10,13 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/i18n/gi18n"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gview"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/debug/gdebug"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/i18n/gi18n"
+	"github.com/gogf/gf/v3/os/gctx"
+	"github.com/gogf/gf/v3/os/gfile"
+	"github.com/gogf/gf/v3/os/gview"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 func Test_I18n(t *testing.T) {

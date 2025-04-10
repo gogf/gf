@@ -9,7 +9,7 @@ package gtcp_test
 import (
 	"fmt"
 
-	"github.com/gogf/gf/v2/net/gtcp"
+	"github.com/gogf/gf/v3/net/gtcp"
 )
 
 func ExampleGetFreePort() {

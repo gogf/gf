@@ -13,7 +13,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/gogf/gf/v2/os/gproc"
+	"github.com/gogf/gf/v3/os/gproc"
 )
 
 // handleProcessSignal handles all signals from system in blocking way.

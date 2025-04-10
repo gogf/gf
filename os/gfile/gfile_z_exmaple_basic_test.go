@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v3/os/gfile"
 )
 
 func ExampleMkdir() {

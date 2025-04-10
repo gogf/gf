@@ -9,8 +9,8 @@ package sqlitecgo
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/database/gdb"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.

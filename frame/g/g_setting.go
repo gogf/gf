@@ -7,7 +7,7 @@
 package g
 
 import (
-	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v3/internal/utils"
 )
 
 // SetDebug enables/disables the GoFrame internal logging manually.

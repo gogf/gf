@@ -9,7 +9,7 @@ package gtime_test
 import (
 	"fmt"
 
-	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v3/os/gtime"
 )
 
 // New creates and returns a Time object with given parameter.

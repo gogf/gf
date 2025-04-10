@@ -9,7 +9,7 @@ package gdb
 import (
 	"fmt"
 
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // doWhereType sets the condition statement for the model. The parameter `where` can be type of

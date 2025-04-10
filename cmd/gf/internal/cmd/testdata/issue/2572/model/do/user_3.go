@@ -5,8 +5,8 @@
 package do
 
 import (
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gtime"
 )
 
 // User1 is the golang structure of table user1 for DAO operations like Where/Data.

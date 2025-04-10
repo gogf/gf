@@ -11,7 +11,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v3/internal/intlog"
 )
 
 // Response is the struct for client request response.

@@ -11,10 +11,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gcmd"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gcmd"
+	"github.com/gogf/gf/v3/os/gctx"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 type TestParamsCase struct {

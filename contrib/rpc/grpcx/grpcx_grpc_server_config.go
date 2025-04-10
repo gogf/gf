@@ -12,9 +12,9 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/glog"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/glog"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 // GrpcServerConfig is the configuration for server.

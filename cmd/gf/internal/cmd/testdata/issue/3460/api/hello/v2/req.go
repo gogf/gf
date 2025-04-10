@@ -6,7 +6,7 @@
 
 package v2
 
-import "github.com/gogf/gf/v2/frame/g"
+import "github.com/gogf/gf/v3/frame/g"
 
 type DictTypeAddPageReq struct {
 	g.Meta `path:"/dict/type/add" tags:"字典管理" method:"get" summary:"字典类型添加页面"`

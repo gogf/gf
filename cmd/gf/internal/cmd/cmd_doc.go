@@ -16,11 +16,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/gogf/gf/v2/encoding/gcompress"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v3/encoding/gcompress"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gfile"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/cmd/gf/v3/internal/utility/mlog"
 )
 
 const (

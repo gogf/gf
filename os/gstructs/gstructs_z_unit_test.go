@@ -9,9 +9,9 @@ package gstructs_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gstructs"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gstructs"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 func Test_Basic(t *testing.T) {
@@ -273,7 +273,7 @@ func Test_StructType(t *testing.T) {
 		}
 		r, err := gstructs.StructType(new(A))
 		t.AssertNil(err)
-		t.Assert(r.Signature(), `github.com/gogf/gf/v2/os/gstructs_test/gstructs_test.A`)
+		t.Assert(r.Signature(), `github.com/gogf/gf/v3/os/gstructs_test/gstructs_test.A`)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
@@ -284,7 +284,7 @@ func Test_StructType(t *testing.T) {
 		}
 		r, err := gstructs.StructType(new(A).B)
 		t.AssertNil(err)
-		t.Assert(r.Signature(), `github.com/gogf/gf/v2/os/gstructs_test/gstructs_test.B`)
+		t.Assert(r.Signature(), `github.com/gogf/gf/v3/os/gstructs_test/gstructs_test.B`)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
@@ -321,7 +321,7 @@ func Test_StructTypeBySlice(t *testing.T) {
 		}
 		r, err := gstructs.StructType(new(A).Array)
 		t.AssertNil(err)
-		t.Assert(r.Signature(), `github.com/gogf/gf/v2/os/gstructs_test/gstructs_test.B`)
+		t.Assert(r.Signature(), `github.com/gogf/gf/v3/os/gstructs_test/gstructs_test.B`)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
@@ -332,7 +332,7 @@ func Test_StructTypeBySlice(t *testing.T) {
 		}
 		r, err := gstructs.StructType(new(A).Array)
 		t.AssertNil(err)
-		t.Assert(r.Signature(), `github.com/gogf/gf/v2/os/gstructs_test/gstructs_test.B`)
+		t.Assert(r.Signature(), `github.com/gogf/gf/v3/os/gstructs_test/gstructs_test.B`)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
@@ -343,7 +343,7 @@ func Test_StructTypeBySlice(t *testing.T) {
 		}
 		r, err := gstructs.StructType(new(A).Array)
 		t.AssertNil(err)
-		t.Assert(r.Signature(), `github.com/gogf/gf/v2/os/gstructs_test/gstructs_test.B`)
+		t.Assert(r.Signature(), `github.com/gogf/gf/v3/os/gstructs_test/gstructs_test.B`)
 	})
 }
 

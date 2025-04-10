@@ -1,10 +1,10 @@
-module github.com/gogf/gf/contrib/drivers/mysql/v2
+module github.com/gogf/gf/contrib/drivers/mysql/v3
 
 go 1.22
 
 require (
 	github.com/go-sql-driver/mysql v1.7.1
-	github.com/gogf/gf/v2 v2.9.0
+	github.com/gogf/gf/v3 v3.0.0-alpha
 )
 
 require (
@@ -35,4 +35,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/gogf/gf/v2 => ../../../
+replace github.com/gogf/gf/v3 => ../../../

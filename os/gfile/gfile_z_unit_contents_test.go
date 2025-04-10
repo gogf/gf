@@ -12,11 +12,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/debug/gdebug"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/os/gfile"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 func createTestFile(filename, content string) error {

@@ -10,8 +10,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gogf/gf/v2/encoding/gcompress"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/encoding/gcompress"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // SafeContentForHttp cuts and returns given content by `MaxContentLogSize`.

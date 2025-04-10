@@ -9,7 +9,7 @@ package gstructs
 import (
 	"strings"
 
-	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/gogf/gf/v3/util/gtag"
 )
 
 // TagJsonName returns the `json` tag name string of the field.

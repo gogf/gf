@@ -5,7 +5,7 @@
 package entity
 
 import (
-	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v3/os/gtime"
 )
 
 // User2 is the golang structure for table user2.

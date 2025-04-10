@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/os/glog"
-	"github.com/gogf/gf/v2/os/gmutex"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/container/garray"
+	"github.com/gogf/gf/v3/os/glog"
+	"github.com/gogf/gf/v3/os/gmutex"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 func Test_RWMutex_RUnlock(t *testing.T) {

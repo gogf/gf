@@ -9,7 +9,7 @@ package gerror
 import (
 	"fmt"
 
-	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gcode"
 )
 
 // New creates and returns an error which is formatted from given text.

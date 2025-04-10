@@ -9,8 +9,8 @@ package gvar
 import (
 	"time"
 
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/os/gtime"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 // Time converts and returns `v` as time.Time.

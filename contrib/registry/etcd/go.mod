@@ -1,9 +1,9 @@
-module github.com/gogf/gf/contrib/registry/etcd/v2
+module github.com/gogf/gf/contrib/registry/etcd/v3
 
 go 1.22
 
 require (
-	github.com/gogf/gf/v2 v2.9.0
+	github.com/gogf/gf/v3 v3.0.0-alpha
 	go.etcd.io/etcd/client/v3 v3.5.17
 	google.golang.org/grpc v1.59.0
 )
@@ -49,4 +49,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/gogf/gf/v2 => ../../../
+replace github.com/gogf/gf/v3 => ../../../

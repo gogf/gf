@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/consul/api"
 	"github.com/hashicorp/go-cleanhttp"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/guid"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gctx"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/util/guid"
 
-	consul "github.com/gogf/gf/contrib/config/consul/v2"
+	consul "github.com/gogf/gf/contrib/config/consul/v3"
 )
 
 func TestConsul(t *testing.T) {

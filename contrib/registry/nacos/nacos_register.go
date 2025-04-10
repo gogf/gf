@@ -11,8 +11,8 @@ import (
 
 	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 
-	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/net/gsvc"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 // Register registers `service` to Registry.

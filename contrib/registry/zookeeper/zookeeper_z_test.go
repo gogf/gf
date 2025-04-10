@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/net/gsvc"
+	"github.com/gogf/gf/v3/os/gctx"
 )
 
 // TestRegistry TestRegistryManyService

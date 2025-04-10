@@ -10,12 +10,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/command"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/os/gcache"
-	"github.com/gogf/gf/v2/os/gfsnotify"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/command"
+	"github.com/gogf/gf/v3/internal/intlog"
+	"github.com/gogf/gf/v3/os/gcache"
+	"github.com/gogf/gf/v3/os/gfsnotify"
 )
 
 const (

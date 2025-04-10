@@ -12,9 +12,9 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/os/gfile"
+	"github.com/gogf/gf/v3/text/gregex"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // BindObject registers object to server routes with a given pattern.

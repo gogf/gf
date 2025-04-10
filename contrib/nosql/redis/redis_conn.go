@@ -17,16 +17,16 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/gogf/gf/v2"
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/database/gredis"
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/net/gtrace"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/gogf/gf/v3"
+	"github.com/gogf/gf/v3/container/gvar"
+	"github.com/gogf/gf/v3/database/gredis"
+	"github.com/gogf/gf/v3/encoding/gjson"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/net/gtrace"
+	"github.com/gogf/gf/v3/os/gtime"
+	"github.com/gogf/gf/v3/text/gstr"
+	"github.com/gogf/gf/v3/util/gconv"
+	"github.com/gogf/gf/v3/util/gutil"
 )
 
 // Conn manages the connection operations.
@@ -44,7 +44,7 @@ type traceItem struct {
 }
 
 const (
-	traceInstrumentName               = "github.com/gogf/gf/v2/database/gredis"
+	traceInstrumentName               = "github.com/gogf/gf/v3/database/gredis"
 	traceAttrRedisAddress             = "redis.address"
 	traceAttrRedisDb                  = "redis.db"
 	traceEventRedisExecution          = "redis.execution"

@@ -9,9 +9,9 @@ package ghttp
 import (
 	"fmt"
 
-	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gpage"
+	"github.com/gogf/gf/v3/text/gregex"
+	"github.com/gogf/gf/v3/text/gstr"
+	"github.com/gogf/gf/v3/util/gpage"
 )
 
 // GetPage creates and returns the pagination object for given `totalSize` and `pageSize`.

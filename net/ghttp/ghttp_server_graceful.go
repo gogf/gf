@@ -6,7 +6,7 @@
 
 package ghttp
 
-import "github.com/gogf/gf/v2/net/ghttp/internal/graceful"
+import "github.com/gogf/gf/v3/net/ghttp/internal/graceful"
 
 // newGracefulServer creates and returns a graceful http server with a given address.
 // The optional parameter `fd` specifies the file descriptor which is passed from parent server.

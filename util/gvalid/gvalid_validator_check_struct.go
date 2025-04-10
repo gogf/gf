@@ -11,12 +11,12 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/internal/empty"
-	"github.com/gogf/gf/v2/os/gstructs"
-	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/gmeta"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/internal/empty"
+	"github.com/gogf/gf/v3/os/gstructs"
+	"github.com/gogf/gf/v3/util/gconv"
+	"github.com/gogf/gf/v3/util/gmeta"
+	"github.com/gogf/gf/v3/util/gutil"
 )
 
 func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error {

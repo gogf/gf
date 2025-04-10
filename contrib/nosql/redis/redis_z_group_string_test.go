@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/database/gredis"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/guid"
+	"github.com/gogf/gf/v3/database/gredis"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/util/gconv"
+	"github.com/gogf/gf/v3/util/guid"
 )
 
 func Test_GroupString_Set(t *testing.T) {

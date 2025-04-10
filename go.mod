@@ -1,4 +1,4 @@
-module github.com/gogf/gf/v2
+module github.com/gogf/gf/v3
 
 go 1.22
 

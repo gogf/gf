@@ -10,7 +10,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v3/container/gmap"
 )
 
 // Storage is the interface definition for session storage.

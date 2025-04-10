@@ -6,7 +6,7 @@
 
 package ghttp
 
-import "github.com/gogf/gf/v2/container/gvar"
+import "github.com/gogf/gf/v3/container/gvar"
 
 // SetParam sets custom parameter with key-value pairs.
 func (r *Request) SetParam(key string, value interface{}) {

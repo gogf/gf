@@ -1,9 +1,9 @@
-module github.com/gogf/gf/contrib/config/consul/v2
+module github.com/gogf/gf/contrib/config/consul/v3
 
 go 1.22
 
 require (
-	github.com/gogf/gf/v2 v2.9.0
+	github.com/gogf/gf/v3 v3.0.0-alpha
 	github.com/hashicorp/consul/api v1.24.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 )
@@ -44,4 +44,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/gogf/gf/v2 => ../../../
+replace github.com/gogf/gf/v3 => ../../../

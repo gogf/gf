@@ -15,8 +15,8 @@ import (
 	"github.com/polarismesh/polaris-go/api"
 	"github.com/polarismesh/polaris-go/pkg/config"
 
-	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/net/gsvc"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // TestRegistry_Register TestRegistryManyService

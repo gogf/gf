@@ -12,17 +12,17 @@ import (
 	"os"
 	"time"
 
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/container/gset"
-	"github.com/gogf/gf/v2/crypto/gaes"
-	"github.com/gogf/gf/v2/encoding/gbinary"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/os/gtimer"
+	"github.com/gogf/gf/v3/container/gmap"
+	"github.com/gogf/gf/v3/container/gset"
+	"github.com/gogf/gf/v3/crypto/gaes"
+	"github.com/gogf/gf/v3/encoding/gbinary"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/intlog"
+	"github.com/gogf/gf/v3/internal/json"
+	"github.com/gogf/gf/v3/os/gfile"
+	"github.com/gogf/gf/v3/os/gtime"
+	"github.com/gogf/gf/v3/os/gtimer"
 )
 
 // StorageFile implements the Session Storage interface with file system.

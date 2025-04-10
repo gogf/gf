@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/text/gregex"
 )
 
 func Test_GetConverter(t *testing.T) {

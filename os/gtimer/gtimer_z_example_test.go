@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gogf/gf/v2/os/gtimer"
+	"github.com/gogf/gf/v3/os/gtimer"
 )
 
 func ExampleAdd() {

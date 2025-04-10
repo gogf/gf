@@ -12,14 +12,14 @@ import (
 	"math"
 	"sort"
 
-	"github.com/gogf/gf/v2/internal/deepcopy"
-	"github.com/gogf/gf/v2/internal/empty"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/rwmutex"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/grand"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/gogf/gf/v3/internal/deepcopy"
+	"github.com/gogf/gf/v3/internal/empty"
+	"github.com/gogf/gf/v3/internal/json"
+	"github.com/gogf/gf/v3/internal/rwmutex"
+	"github.com/gogf/gf/v3/text/gstr"
+	"github.com/gogf/gf/v3/util/gconv"
+	"github.com/gogf/gf/v3/util/grand"
+	"github.com/gogf/gf/v3/util/gutil"
 )
 
 // SortedArray is a golang sorted array with rich features.

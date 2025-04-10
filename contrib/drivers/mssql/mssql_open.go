@@ -10,10 +10,10 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/database/gdb"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // Open creates and returns an underlying sql.DB object for mssql.

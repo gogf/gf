@@ -14,7 +14,7 @@ import (
 	mathRand "math/rand"
 	"testing"
 
-	"github.com/gogf/gf/v2/util/grand"
+	"github.com/gogf/gf/v3/util/grand"
 )
 
 var (

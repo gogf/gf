@@ -9,7 +9,7 @@ package balancer
 import (
 	"google.golang.org/grpc/balancer"
 
-	"github.com/gogf/gf/v2/net/gsel"
+	"github.com/gogf/gf/v3/net/gsel"
 )
 
 // Picker implements grpc balancer.Picker,

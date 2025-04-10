@@ -9,7 +9,7 @@ package gstr
 import (
 	"strings"
 
-	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v3/internal/utils"
 )
 
 // Replace returns a copy of the string `origin`

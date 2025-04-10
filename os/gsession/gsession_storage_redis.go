@@ -10,11 +10,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/database/gredis"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/os/gtimer"
+	"github.com/gogf/gf/v3/container/gmap"
+	"github.com/gogf/gf/v3/database/gredis"
+	"github.com/gogf/gf/v3/internal/intlog"
+	"github.com/gogf/gf/v3/internal/json"
+	"github.com/gogf/gf/v3/os/gtimer"
 )
 
 // StorageRedis implements the Session Storage interface with redis.

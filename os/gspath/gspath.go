@@ -17,13 +17,13 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/container/garray"
+	"github.com/gogf/gf/v3/container/gmap"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/intlog"
+	"github.com/gogf/gf/v3/os/gfile"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // SPath manages the path searching feature.

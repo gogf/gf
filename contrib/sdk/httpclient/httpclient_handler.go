@@ -10,12 +10,12 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/gclient"
-	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/net/gclient"
+	"github.com/gogf/gf/v3/net/ghttp"
+	"github.com/gogf/gf/v3/os/glog"
 )
 
 // Handler is the interface for http response handling.

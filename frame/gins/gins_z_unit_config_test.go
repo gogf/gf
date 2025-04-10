@@ -12,11 +12,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/frame/gins"
-	"github.com/gogf/gf/v2/os/gcfg"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/frame/gins"
+	"github.com/gogf/gf/v3/os/gcfg"
+	"github.com/gogf/gf/v3/os/gfile"
+	"github.com/gogf/gf/v3/os/gtime"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 var (

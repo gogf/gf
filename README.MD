@@ -2,9 +2,9 @@
 <div align=center>
 <img src="https://goframe.org/img/logo_full.png" width="300" alt="goframe gf logo"/>
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/gogf/gf/v2.svg)](https://pkg.go.dev/github.com/gogf/gf/v2)
+[![Go Reference](https://pkg.go.dev/badge/github.com/gogf/gf/v3.svg)](https://pkg.go.dev/github.com/gogf/gf/v3)
 [![GoFrame CI](https://github.com/gogf/gf/actions/workflows/ci-main.yml/badge.svg)](https://github.com/gogf/gf/actions/workflows/ci-main.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/gogf/gf/v2)](https://goreportcard.com/report/github.com/gogf/gf/v2)
+[![Go Report Card](https://goreportcard.com/badge/github.com/gogf/gf/v3)](https://goreportcard.com/report/github.com/gogf/gf/v3)
 [![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf)
 [![Production Ready](https://img.shields.io/badge/production-ready-blue.svg?style=flat)](https://github.com/gogf/gf)
 [![License](https://img.shields.io/github/license/gogf/gf.svg?style=flat)](https://github.com/gogf/gf)
@@ -28,7 +28,7 @@ A powerful framework for faster, easier, and more efficient project development.
 - GoFrame Official Site(en): [https://goframe.org/en](https://goframe.org/en)
 - GoFrame Mirror Site(中文): [https://goframe.org.cn](https://goframe.org.cn)
 - GoFrame Mirror Site(github pages): [https://pages.goframe.org](https://pages.goframe.org)
-- GoDoc API: [https://pkg.go.dev/github.com/gogf/gf/v2](https://pkg.go.dev/github.com/gogf/gf/v2)
+- GoDoc API: [https://pkg.go.dev/github.com/gogf/gf/v3](https://pkg.go.dev/github.com/gogf/gf/v3)
 
 
 # Contributors

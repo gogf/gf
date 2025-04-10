@@ -116,7 +116,7 @@ linters-settings:
     # A comma-separated list of prefixes, which, if set, checks import paths
     # with the given prefixes are grouped after 3rd-party packages.
     # Default: ""
-    local-prefixes: github.com/gogf/gf/v2
+    local-prefixes: github.com/gogf/gf/v3
   gci:
     # Section configuration to compare against.
     # Section names are case-insensitive and may contain parameters in ().

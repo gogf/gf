@@ -9,7 +9,7 @@ package gstr
 import (
 	"strings"
 
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 // IsGNUVersion checks and returns whether given `version` is valid GNU version string.

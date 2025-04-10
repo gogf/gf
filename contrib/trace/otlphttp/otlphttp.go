@@ -20,8 +20,8 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/gipv4"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/net/gipv4"
 )
 
 const (

@@ -11,14 +11,14 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/gogf/gf/v2/container/gqueue"
-	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/net/gtcp"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/glog"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/container/gqueue"
+	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/json"
+	"github.com/gogf/gf/v3/net/gtcp"
+	"github.com/gogf/gf/v3/os/gfile"
+	"github.com/gogf/gf/v3/os/glog"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 var (

@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v3/database/gdb"
 )
 
 // DoInsert inserts or updates data for given table.

@@ -12,11 +12,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gtrace"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/net/ghttp"
+	"github.com/gogf/gf/v3/net/gtrace"
+	"github.com/gogf/gf/v3/os/gctx"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 func Test_Client_Server_Tracing(t *testing.T) {

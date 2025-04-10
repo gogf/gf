@@ -9,7 +9,7 @@ package gutil
 import (
 	"reflect"
 
-	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v3/internal/empty"
 )
 
 // IsEmpty checks given `value` empty or not.

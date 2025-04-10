@@ -12,10 +12,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/command"
-	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v3/container/gvar"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/command"
+	"github.com/gogf/gf/v3/internal/utils"
 )
 
 // All returns a copy of strings representing the environment,

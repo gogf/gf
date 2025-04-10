@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 func Test_SetConfigWithMap(t *testing.T) {

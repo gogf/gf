@@ -9,10 +9,10 @@ package gdb
 import (
 	"database/sql"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/intlog"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // Delete does "DELETE FROM ... " statement for the model.

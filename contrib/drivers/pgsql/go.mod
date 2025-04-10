@@ -1,9 +1,9 @@
-module github.com/gogf/gf/contrib/drivers/pgsql/v2
+module github.com/gogf/gf/contrib/drivers/pgsql/v3
 
 go 1.22
 
 require (
-	github.com/gogf/gf/v2 v2.9.0
+	github.com/gogf/gf/v3 v3.0.0-alpha
 	github.com/lib/pq v1.10.9
 )
 
@@ -35,4 +35,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/gogf/gf/v2 => ../../../
+replace github.com/gogf/gf/v3 => ../../../

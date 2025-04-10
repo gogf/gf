@@ -24,9 +24,9 @@ package main
 
 import (
 	"github.com/gogf/gf/contrib/registry/nacos/v2"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/net/ghttp"
+	"github.com/gogf/gf/v3/net/gsvc"
 )
 
 func main() {
@@ -52,10 +52,10 @@ import (
 	"time"
 
 	"github.com/gogf/gf/contrib/registry/nacos/v2"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/gsel"
-	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/net/gsel"
+	"github.com/gogf/gf/v3/net/gsvc"
+	"github.com/gogf/gf/v3/os/gctx"
 )
 
 func main() {

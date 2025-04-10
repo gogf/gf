@@ -9,7 +9,7 @@ package gvalid
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/util/gvalid/internal/builtin"
+	"github.com/gogf/gf/v3/util/gvalid/internal/builtin"
 )
 
 // getErrorMessageByRule retrieves and returns the error message for specified rule.

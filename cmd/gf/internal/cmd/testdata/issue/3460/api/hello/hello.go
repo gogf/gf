@@ -7,8 +7,8 @@ package hello
 import (
 	"context"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/issue/3460/api/hello/v1"
-	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/issue/3460/api/hello/v2"
+	"github.com/gogf/gf/cmd/gf/v3/internal/cmd/testdata/issue/3460/api/hello/v1"
+	"github.com/gogf/gf/cmd/gf/v3/internal/cmd/testdata/issue/3460/api/hello/v2"
 )
 
 type IHelloV1 interface {

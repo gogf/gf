@@ -12,15 +12,15 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gogf/gf/v2/encoding/gurl"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/net/gclient"
-	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/gmeta"
-	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/gogf/gf/v3/encoding/gurl"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/net/gclient"
+	"github.com/gogf/gf/v3/net/ghttp"
+	"github.com/gogf/gf/v3/text/gregex"
+	"github.com/gogf/gf/v3/text/gstr"
+	"github.com/gogf/gf/v3/util/gconv"
+	"github.com/gogf/gf/v3/util/gmeta"
+	"github.com/gogf/gf/v3/util/gtag"
 )
 
 // Client is a http client for SDK.

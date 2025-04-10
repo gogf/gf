@@ -9,7 +9,7 @@ package oracle
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v3/database/gdb"
 )
 
 const (

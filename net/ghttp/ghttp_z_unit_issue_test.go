@@ -13,14 +13,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/encoding/gurl"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gtag"
-	"github.com/gogf/gf/v2/util/guid"
+	"github.com/gogf/gf/v3/encoding/gjson"
+	"github.com/gogf/gf/v3/encoding/gurl"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/net/ghttp"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/text/gstr"
+	"github.com/gogf/gf/v3/util/gtag"
+	"github.com/gogf/gf/v3/util/guid"
 )
 
 // https://github.com/gogf/gf/issues/1609
@@ -397,7 +397,7 @@ func Test_Issue2890(t *testing.T) {
 		t.AssertNil(err)
 		defer t.AssertNil(gtag.SetGlobalEnums(oldEnumsJson))
 
-		err = gtag.SetGlobalEnums(`{"github.com/gogf/gf/v2/net/ghttp_test.Issue2890Enum": ["a","b"]}`)
+		err = gtag.SetGlobalEnums(`{"github.com/gogf/gf/v3/net/ghttp_test.Issue2890Enum": ["a","b"]}`)
 		t.AssertNil(err)
 
 		s := g.Server(guid.S())

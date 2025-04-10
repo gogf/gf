@@ -14,13 +14,13 @@ import (
 
 	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/guid"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/net/gsvc"
+	"github.com/gogf/gf/v3/os/gctx"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/util/guid"
 
-	"github.com/gogf/gf/contrib/registry/nacos/v2"
+	"github.com/gogf/gf/contrib/registry/nacos/v3"
 )
 
 const (

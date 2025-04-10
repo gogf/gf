@@ -10,12 +10,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogf/gf/v2/internal/consts"
-	"github.com/gogf/gf/v2/internal/instance"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/gogf/gf/v3/internal/consts"
+	"github.com/gogf/gf/v3/internal/instance"
+	"github.com/gogf/gf/v3/internal/intlog"
+	"github.com/gogf/gf/v3/net/ghttp"
+	"github.com/gogf/gf/v3/util/gconv"
+	"github.com/gogf/gf/v3/util/gutil"
 )
 
 // Server returns an instance of http server with specified name.

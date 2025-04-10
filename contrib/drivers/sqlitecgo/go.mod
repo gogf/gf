@@ -1,9 +1,9 @@
-module github.com/gogf/gf/contrib/drivers/sqlitecgo/v2
+module github.com/gogf/gf/contrib/drivers/sqlitecgo/v3
 
 go 1.22
 
 require (
-	github.com/gogf/gf/v2 v2.9.0
+	github.com/gogf/gf/v3 v3.0.0-alpha
 	github.com/mattn/go-sqlite3 v1.14.17
 )
 
@@ -35,4 +35,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/gogf/gf/v2 => ../../../
+replace github.com/gogf/gf/v3 => ../../../

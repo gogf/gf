@@ -12,10 +12,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/container/gvar"
+	"github.com/gogf/gf/v3/database/gdb"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 func Test_Model_Hook_Select(t *testing.T) {

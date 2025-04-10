@@ -9,8 +9,8 @@ package gredis
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v3/container/gmap"
+	"github.com/gogf/gf/v3/internal/intlog"
 )
 
 var (

@@ -7,7 +7,7 @@
 // Package gipv6 provides useful API for IPv6 address handling.
 package gipv6
 
-import "github.com/gogf/gf/v2/text/gregex"
+import "github.com/gogf/gf/v3/text/gregex"
 
 // Validate checks whether given `ip` a valid IPv6 address.
 func Validate(ip string) bool {

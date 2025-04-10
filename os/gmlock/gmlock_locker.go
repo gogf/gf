@@ -9,7 +9,7 @@ package gmlock
 import (
 	"sync"
 
-	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v3/container/gmap"
 )
 
 // Locker is a memory based locker.

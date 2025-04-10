@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gogf/gf/v2/encoding/gbase64"
+	"github.com/gogf/gf/v3/encoding/gbase64"
 )
 
 // BasicAuth enables the http basic authentication feature with a given passport and password

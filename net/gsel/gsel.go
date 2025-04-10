@@ -10,7 +10,7 @@ package gsel
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v3/net/gsvc"
 )
 
 // Builder creates and returns selector in runtime.

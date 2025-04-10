@@ -21,9 +21,9 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/gogf/gf/v2/internal/utils"
-	"github.com/gogf/gf/v2/net/gtrace"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/internal/utils"
+	"github.com/gogf/gf/v3/net/gtrace"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 // clientTracerTracing is used for implementing httptrace.ClientTrace.

@@ -10,7 +10,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gogf/gf/v2/os/gstructs"
+	"github.com/gogf/gf/v3/os/gstructs"
 )
 
 type User struct {

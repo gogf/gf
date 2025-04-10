@@ -8,7 +8,7 @@
 package errors
 
 import (
-	"github.com/gogf/gf/v2/internal/command"
+	"github.com/gogf/gf/v3/internal/command"
 )
 
 // StackMode is the mode that printing stack information in StackModeBrief or StackModeDetail mode.

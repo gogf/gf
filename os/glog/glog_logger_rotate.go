@@ -12,14 +12,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/encoding/gcompress"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gmlock"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/os/gtimer"
-	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v3/container/garray"
+	"github.com/gogf/gf/v3/encoding/gcompress"
+	"github.com/gogf/gf/v3/internal/intlog"
+	"github.com/gogf/gf/v3/os/gfile"
+	"github.com/gogf/gf/v3/os/gmlock"
+	"github.com/gogf/gf/v3/os/gtime"
+	"github.com/gogf/gf/v3/os/gtimer"
+	"github.com/gogf/gf/v3/text/gregex"
 )
 
 const (

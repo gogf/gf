@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genservice/service"
+	"github.com/gogf/gf/cmd/gf/v3/internal/cmd/testdata/genservice/service"
 )
 
 func init() {

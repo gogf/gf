@@ -9,7 +9,7 @@ package mutex_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/internal/mutex"
+	"github.com/gogf/gf/v3/internal/mutex"
 )
 
 var (

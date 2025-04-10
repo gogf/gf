@@ -11,10 +11,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/encoding/gproperties"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/encoding/gjson"
+	"github.com/gogf/gf/v3/encoding/gproperties"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 var pStr string = `

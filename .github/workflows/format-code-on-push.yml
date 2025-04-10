@@ -28,7 +28,7 @@ jobs:
           -s blank \
           -s default \
           -s dot \
-          -s "prefix(github.com/gogf/gf/v2)" \
+          -s "prefix(github.com/gogf/gf/v3)" \
           -s "prefix(github.com/gogf/gf/cmd)" \
           -s "prefix(github.com/gogf/gf/contrib)" \
           -s "prefix(github.com/gogf/gf/example)" \

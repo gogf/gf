@@ -9,7 +9,7 @@ package gfile
 import (
 	"strings"
 
-	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v3/container/garray"
 )
 
 // fileSortFunc is the comparison function for files.

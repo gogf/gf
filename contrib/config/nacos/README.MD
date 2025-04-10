@@ -21,8 +21,8 @@ package boot
 
 import (
 	"github.com/gogf/gf/contrib/config/nacos/v2"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gctx"
 	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 )
@@ -69,8 +69,8 @@ package main
 import (
     _ "github.com/gogf/gf/example/config/nacos/boot"
 
-    "github.com/gogf/gf/v2/frame/g"
-    "github.com/gogf/gf/v2/os/gctx"
+    "github.com/gogf/gf/v3/frame/g"
+    "github.com/gogf/gf/v3/os/gctx"
 )
 
 func main() {

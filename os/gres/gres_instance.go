@@ -6,7 +6,7 @@
 
 package gres
 
-import "github.com/gogf/gf/v2/container/gmap"
+import "github.com/gogf/gf/v3/container/gmap"
 
 const (
 	// DefaultName default group name for instance usage.

@@ -6,7 +6,7 @@
 
 package ghttp
 
-import "github.com/gogf/gf/v2/os/gsession"
+import "github.com/gogf/gf/v3/os/gsession"
 
 // Session is actually an alias of gsession.Session,
 // which is bound to a single request.

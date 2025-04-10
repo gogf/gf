@@ -6,7 +6,7 @@
 
 package v2
 
-import "github.com/gogf/gf/v2/frame/g"
+import "github.com/gogf/gf/v3/frame/g"
 
 type CreateReq struct {
 	g.Meta `path:"/article/create" method:"post" tags:"ArticleService"`

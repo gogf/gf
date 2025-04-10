@@ -11,7 +11,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v3/errors/gerror"
 )
 
 // localConn provides common operations for udp connection.

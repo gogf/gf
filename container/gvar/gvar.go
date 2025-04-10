@@ -8,8 +8,8 @@
 package gvar
 
 import (
-	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/internal/json"
 )
 
 // Var is an universal variable type implementer.

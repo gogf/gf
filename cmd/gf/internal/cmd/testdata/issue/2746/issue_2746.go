@@ -5,7 +5,7 @@
 package entity
 
 import (
-	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v3/encoding/gjson"
 )
 
 // Issue2746 is the golang structure for table issue2746.

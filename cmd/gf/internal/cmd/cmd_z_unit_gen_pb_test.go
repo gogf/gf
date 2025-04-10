@@ -10,12 +10,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/guid"
+	"github.com/gogf/gf/v3/os/gfile"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/text/gstr"
+	"github.com/gogf/gf/v3/util/guid"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/genpb"
+	"github.com/gogf/gf/cmd/gf/v3/internal/cmd/genpb"
 )
 
 func TestGenPbIssue3882(t *testing.T) {

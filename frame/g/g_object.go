@@ -7,19 +7,19 @@
 package g
 
 import (
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/database/gredis"
-	"github.com/gogf/gf/v2/frame/gins"
-	"github.com/gogf/gf/v2/i18n/gi18n"
-	"github.com/gogf/gf/v2/net/gclient"
-	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gtcp"
-	"github.com/gogf/gf/v2/net/gudp"
-	"github.com/gogf/gf/v2/os/gcfg"
-	"github.com/gogf/gf/v2/os/glog"
-	"github.com/gogf/gf/v2/os/gres"
-	"github.com/gogf/gf/v2/os/gview"
-	"github.com/gogf/gf/v2/util/gvalid"
+	"github.com/gogf/gf/v3/database/gdb"
+	"github.com/gogf/gf/v3/database/gredis"
+	"github.com/gogf/gf/v3/frame/gins"
+	"github.com/gogf/gf/v3/i18n/gi18n"
+	"github.com/gogf/gf/v3/net/gclient"
+	"github.com/gogf/gf/v3/net/ghttp"
+	"github.com/gogf/gf/v3/net/gtcp"
+	"github.com/gogf/gf/v3/net/gudp"
+	"github.com/gogf/gf/v3/os/gcfg"
+	"github.com/gogf/gf/v3/os/glog"
+	"github.com/gogf/gf/v3/os/gres"
+	"github.com/gogf/gf/v3/os/gview"
+	"github.com/gogf/gf/v3/util/gvalid"
 )
 
 // Client is a convenience function, which creates and returns a new HTTP client.

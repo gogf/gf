@@ -14,7 +14,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // Print prints help info to stdout for current command.

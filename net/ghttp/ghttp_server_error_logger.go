@@ -10,7 +10,7 @@ import (
 	"bytes"
 	"context"
 
-	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v3/os/glog"
 )
 
 // errorLogger is the error logging logger for underlying net/http.Server.

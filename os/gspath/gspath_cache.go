@@ -13,9 +13,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gfsnotify"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/os/gfile"
+	"github.com/gogf/gf/v3/os/gfsnotify"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // updateCacheByPath adds all files under `path` recursively.

@@ -9,12 +9,12 @@ package etcd_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/guid"
+	"github.com/gogf/gf/v3/net/gsvc"
+	"github.com/gogf/gf/v3/os/gctx"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/util/guid"
 
-	"github.com/gogf/gf/contrib/registry/etcd/v2"
+	"github.com/gogf/gf/contrib/registry/etcd/v3"
 )
 
 func TestRegistry(t *testing.T) {

@@ -9,9 +9,9 @@ package mlog
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/os/gcmd"
-	"github.com/gogf/gf/v2/os/genv"
-	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v3/os/gcmd"
+	"github.com/gogf/gf/v3/os/genv"
+	"github.com/gogf/gf/v3/os/glog"
 )
 
 const (

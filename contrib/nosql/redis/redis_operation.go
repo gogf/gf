@@ -9,9 +9,9 @@ package redis
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/database/gredis"
-	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v3/container/gvar"
+	"github.com/gogf/gf/v3/database/gredis"
+	"github.com/gogf/gf/v3/errors/gerror"
 )
 
 // Do send a command to the server and returns the received reply.

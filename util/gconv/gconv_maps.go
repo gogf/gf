@@ -7,8 +7,8 @@
 package gconv
 
 import (
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/util/gconv/internal/converter"
+	"github.com/gogf/gf/v3/internal/json"
+	"github.com/gogf/gf/v3/util/gconv/internal/converter"
 )
 
 // SliceMap is alias of Maps.

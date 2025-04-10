@@ -10,10 +10,10 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/gogf/gf/v2"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/os/gmetric"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/os/gmetric"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 type localMetricManager struct {

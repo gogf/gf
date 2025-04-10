@@ -10,8 +10,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v3/container/gvar"
+	"github.com/gogf/gf/v3/internal/intlog"
 )
 
 // GetVar sends a GET request, retrieves and converts the result content to *gvar.Var.

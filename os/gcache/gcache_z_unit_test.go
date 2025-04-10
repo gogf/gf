@@ -14,12 +14,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/container/gset"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gcache"
-	"github.com/gogf/gf/v2/os/grpool"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/guid"
+	"github.com/gogf/gf/v3/container/gset"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gcache"
+	"github.com/gogf/gf/v3/os/grpool"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/util/guid"
 )
 
 var (

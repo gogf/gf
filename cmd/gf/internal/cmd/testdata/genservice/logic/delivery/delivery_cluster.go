@@ -9,7 +9,7 @@ package delivery
 import (
 	"context"
 
-	gdbas "github.com/gogf/gf/v2/database/gdb"
+	gdbas "github.com/gogf/gf/v3/database/gdb"
 )
 
 type sDeliveryCluster struct{}

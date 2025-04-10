@@ -7,8 +7,8 @@
 package redis_test
 
 import (
-	"github.com/gogf/gf/v2/database/gredis"
-	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v3/database/gredis"
+	"github.com/gogf/gf/v3/os/gctx"
 )
 
 var (

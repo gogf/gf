@@ -10,7 +10,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v3/internal/intlog"
 )
 
 // getAndUpdateLastCheckTimestamp checks fixes and returns the last timestamp that have delay fix in some seconds.

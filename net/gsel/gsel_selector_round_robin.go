@@ -10,7 +10,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v3/internal/intlog"
 )
 
 type selectorRoundRobin struct {

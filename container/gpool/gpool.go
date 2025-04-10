@@ -11,12 +11,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogf/gf/v2/container/glist"
-	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/os/gtimer"
+	"github.com/gogf/gf/v3/container/glist"
+	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/os/gtime"
+	"github.com/gogf/gf/v3/os/gtimer"
 )
 
 // Pool is an Object-Reusable Pool.

@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/os/gctx"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 func Test_NeverDone(t *testing.T) {

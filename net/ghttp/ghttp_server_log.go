@@ -9,10 +9,10 @@ package ghttp
 import (
 	"fmt"
 
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/instance"
-	"github.com/gogf/gf/v2/os/glog"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/instance"
+	"github.com/gogf/gf/v3/os/glog"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // handleAccessLog handles the access logging for server.

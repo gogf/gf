@@ -10,7 +10,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v3/internal/utils"
 )
 
 // CachedStructInfo holds the cached info for certain struct.

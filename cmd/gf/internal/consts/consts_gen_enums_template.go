@@ -14,7 +14,7 @@ const TemplateGenEnums = `
 package {PackageName}
 
 import (
-	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/gogf/gf/v3/util/gtag"
 )
 
 func init() {

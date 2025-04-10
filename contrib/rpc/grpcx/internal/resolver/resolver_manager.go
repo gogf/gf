@@ -9,7 +9,7 @@ package resolver
 import (
 	"google.golang.org/grpc/resolver"
 
-	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v3/net/gsvc"
 )
 
 // Manager for Builder creating.

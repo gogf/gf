@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/net/gsvc"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/net/gsvc"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 const (

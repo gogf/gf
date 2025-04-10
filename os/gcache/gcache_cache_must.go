@@ -10,7 +10,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v3/container/gvar"
 )
 
 // MustGet acts like Get, but it panics if any error occurs.

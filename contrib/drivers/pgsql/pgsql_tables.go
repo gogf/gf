@@ -11,10 +11,10 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/gogf/gf/v3/database/gdb"
+	"github.com/gogf/gf/v3/text/gregex"
+	"github.com/gogf/gf/v3/text/gstr"
+	"github.com/gogf/gf/v3/util/gutil"
 )
 
 var (

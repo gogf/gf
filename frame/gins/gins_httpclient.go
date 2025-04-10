@@ -9,8 +9,8 @@ package gins
 import (
 	"fmt"
 
-	"github.com/gogf/gf/v2/internal/instance"
-	"github.com/gogf/gf/v2/net/gclient"
+	"github.com/gogf/gf/v3/internal/instance"
+	"github.com/gogf/gf/v3/net/gclient"
 )
 
 // HttpClient returns an instance of http client with specified name.

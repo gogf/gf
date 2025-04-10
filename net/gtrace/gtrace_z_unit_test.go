@@ -12,10 +12,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gogf/gf/v2/encoding/gcompress"
-	"github.com/gogf/gf/v2/net/gtrace"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/encoding/gcompress"
+	"github.com/gogf/gf/v3/net/gtrace"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 func TestWithTraceID(t *testing.T) {

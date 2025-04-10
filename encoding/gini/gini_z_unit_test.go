@@ -9,9 +9,9 @@ package gini_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/encoding/gini"
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/encoding/gini"
+	"github.com/gogf/gf/v3/encoding/gjson"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 var iniContent = `

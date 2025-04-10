@@ -7,7 +7,7 @@
 package gvar
 
 import (
-	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v3/container/gtype"
 )
 
 // Set sets `value` to `v`, and returns the old value.

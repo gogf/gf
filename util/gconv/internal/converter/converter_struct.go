@@ -10,13 +10,13 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/empty"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/utils"
-	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
-	"github.com/gogf/gf/v2/util/gconv/internal/structcache"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/empty"
+	"github.com/gogf/gf/v3/internal/json"
+	"github.com/gogf/gf/v3/internal/utils"
+	"github.com/gogf/gf/v3/util/gconv/internal/localinterface"
+	"github.com/gogf/gf/v3/util/gconv/internal/structcache"
 )
 
 // StructOption is the option for Struct converting.

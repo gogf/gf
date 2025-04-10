@@ -12,9 +12,9 @@ import (
 
 	"github.com/clbanning/mxj/v2"
 
-	"github.com/gogf/gf/v2/encoding/gcharset"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v3/encoding/gcharset"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/text/gregex"
 )
 
 // Decode parses `content` into and returns as map.

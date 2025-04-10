@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/os/gtimer"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/container/garray"
+	"github.com/gogf/gf/v3/os/gtimer"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 func TestTimer_Add_Close(t *testing.T) {

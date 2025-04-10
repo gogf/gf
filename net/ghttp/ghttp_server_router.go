@@ -13,16 +13,16 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/gogf/gf/v2/container/glist"
-	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/debug/gdebug"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/consts"
-	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gmeta"
-	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/gogf/gf/v3/container/glist"
+	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/debug/gdebug"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/consts"
+	"github.com/gogf/gf/v3/text/gregex"
+	"github.com/gogf/gf/v3/text/gstr"
+	"github.com/gogf/gf/v3/util/gmeta"
+	"github.com/gogf/gf/v3/util/gtag"
 )
 
 var (

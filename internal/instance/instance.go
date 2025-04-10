@@ -10,8 +10,8 @@
 package instance
 
 import (
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/encoding/ghash"
+	"github.com/gogf/gf/v3/container/gmap"
+	"github.com/gogf/gf/v3/encoding/ghash"
 )
 
 const (

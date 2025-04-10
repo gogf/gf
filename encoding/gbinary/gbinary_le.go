@@ -13,8 +13,8 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/intlog"
 )
 
 // LeEncode encodes one or multiple `values` into bytes using LittleEndian.

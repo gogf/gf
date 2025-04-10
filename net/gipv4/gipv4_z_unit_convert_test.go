@@ -9,8 +9,8 @@ package gipv4_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/net/gipv4"
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/net/gipv4"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 const (

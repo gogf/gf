@@ -14,9 +14,9 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/v2/internal/reflection"
-	"github.com/gogf/gf/v2/os/gstructs"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/internal/reflection"
+	"github.com/gogf/gf/v3/os/gstructs"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // iString is used for type assert api for String().

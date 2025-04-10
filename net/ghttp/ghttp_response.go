@@ -14,10 +14,10 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/gogf/gf/v2/net/ghttp/internal/response"
-	"github.com/gogf/gf/v2/net/gtrace"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gres"
+	"github.com/gogf/gf/v3/net/ghttp/internal/response"
+	"github.com/gogf/gf/v3/net/gtrace"
+	"github.com/gogf/gf/v3/os/gfile"
+	"github.com/gogf/gf/v3/os/gres"
 )
 
 // Response is the http response manager.

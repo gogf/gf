@@ -9,8 +9,8 @@ package redis
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v3/container/gvar"
+	"github.com/gogf/gf/v3/database/gredis"
 )
 
 // GroupSortedSet provides sorted set functions for redis.

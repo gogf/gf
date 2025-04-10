@@ -11,7 +11,7 @@ package guid_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/util/guid"
+	"github.com/gogf/gf/v3/util/guid"
 )
 
 func Benchmark_S(b *testing.B) {

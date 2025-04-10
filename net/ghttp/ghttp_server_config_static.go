@@ -12,10 +12,10 @@ import (
 	"context"
 	"strings"
 
-	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gres"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/container/garray"
+	"github.com/gogf/gf/v3/os/gfile"
+	"github.com/gogf/gf/v3/os/gres"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 // staticPathItem is the item struct for static path configuration.

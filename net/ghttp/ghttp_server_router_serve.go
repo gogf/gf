@@ -12,13 +12,13 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gogf/gf/v2/container/glist"
-	"github.com/gogf/gf/v2/encoding/gurl"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/util/gmeta"
+	"github.com/gogf/gf/v3/container/glist"
+	"github.com/gogf/gf/v3/encoding/gurl"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/internal/intlog"
+	"github.com/gogf/gf/v3/internal/json"
+	"github.com/gogf/gf/v3/text/gregex"
+	"github.com/gogf/gf/v3/util/gmeta"
 )
 
 // handlerCacheItem is an item just for internal router searching cache.

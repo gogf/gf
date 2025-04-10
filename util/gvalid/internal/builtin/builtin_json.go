@@ -9,7 +9,7 @@ package builtin
 import (
 	"errors"
 
-	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v3/internal/json"
 )
 
 // RuleJson implements `json` rule:

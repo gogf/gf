@@ -11,13 +11,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/i18n/gi18n"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/gvalid"
+	"github.com/gogf/gf/v3/container/gvar"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/i18n/gi18n"
+	"github.com/gogf/gf/v3/os/gctx"
+	"github.com/gogf/gf/v3/test/gtest"
+	"github.com/gogf/gf/v3/util/gconv"
+	"github.com/gogf/gf/v3/util/gvalid"
 )
 
 func ExampleNew() {

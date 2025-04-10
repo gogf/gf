@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v3/test/gtest"
 )
 
 var ctx = context.TODO()

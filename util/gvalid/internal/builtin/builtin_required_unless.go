@@ -10,8 +10,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/gogf/gf/v3/util/gconv"
+	"github.com/gogf/gf/v3/util/gutil"
 )
 
 // RuleRequiredUnless implements `required-unless` rule:

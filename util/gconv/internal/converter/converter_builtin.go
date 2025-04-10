@@ -10,7 +10,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v3/os/gtime"
 )
 
 func (c *Converter) builtInAnyConvertFuncForInt64(from any, to reflect.Value) error {

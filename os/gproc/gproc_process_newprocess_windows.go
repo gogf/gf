@@ -11,7 +11,7 @@ package gproc
 import (
 	"syscall"
 
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 // Set the underlying parameters directly on the Windows platform

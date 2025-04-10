@@ -10,7 +10,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v3/text/gregex"
 )
 
 // RuleDate implements `date` rule:

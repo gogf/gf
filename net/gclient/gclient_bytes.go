@@ -10,7 +10,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v3/internal/intlog"
 )
 
 // GetBytes sends a GET request, retrieves and returns the result content as bytes.

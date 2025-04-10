@@ -22,8 +22,8 @@ package boot
 import (
 	consul "github.com/gogf/gf/contrib/config/consul/v2"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gctx"
 	"github.com/hashicorp/consul/api"
 	"github.com/hashicorp/go-cleanhttp"
 )
@@ -66,8 +66,8 @@ package main
 import (
 	_ "github.com/gogf/gf/example/config/consul/boot"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gctx"
 )
 
 func main() {

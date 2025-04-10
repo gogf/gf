@@ -9,7 +9,7 @@
 // Some implements are from: https://github.com/emirpasic/gods
 package gtree
 
-import "github.com/gogf/gf/v2/container/gvar"
+import "github.com/gogf/gf/v3/container/gvar"
 
 // iTree defines the interface for basic operations of a tree.
 type iTree interface {

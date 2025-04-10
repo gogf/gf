@@ -12,17 +12,17 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gcmd"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gproc"
-	"github.com/gogf/gf/v2/os/gres"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/os/gcmd"
+	"github.com/gogf/gf/v3/os/gfile"
+	"github.com/gogf/gf/v3/os/gproc"
+	"github.com/gogf/gf/v3/os/gres"
+	"github.com/gogf/gf/v3/text/gstr"
+	"github.com/gogf/gf/v3/util/gtag"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/allyes"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
+	"github.com/gogf/gf/cmd/gf/v3/internal/utility/allyes"
+	"github.com/gogf/gf/cmd/gf/v3/internal/utility/mlog"
+	"github.com/gogf/gf/cmd/gf/v3/internal/utility/utils"
 )
 
 var (
@@ -152,8 +152,8 @@ func (c cInit) Index(ctx context.Context, in cInitInput) (out *cInitOutput, err 
 	// Update the GoFrame version.
 	if in.Update {
 		mlog.Print("update goframe...")
-		// go get -u github.com/gogf/gf/v2@latest
-		updateCommand := `go get -u github.com/gogf/gf/v2@latest`
+		// go get -u github.com/gogf/gf/v3@latest
+		updateCommand := `go get -u github.com/gogf/gf/v3@latest`
 		if in.Name != "." {
 			updateCommand = fmt.Sprintf(`cd %s && %s`, in.Name, updateCommand)
 		}

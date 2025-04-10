@@ -9,8 +9,8 @@ package glog
 import (
 	"strings"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
 )
 
 // Note that the LEVEL_PANI and LEVEL_FATA levels are not used for logging output,

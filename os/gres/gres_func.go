@@ -12,18 +12,18 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/gogf/gf/v2/encoding/gbase64"
-	"github.com/gogf/gf/v2/encoding/gcompress"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/encoding/gbase64"
+	"github.com/gogf/gf/v3/encoding/gcompress"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/os/gfile"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 const (
 	packedGoSourceTemplate = `
 package %s
 
-import "github.com/gogf/gf/v2/os/gres"
+import "github.com/gogf/gf/v3/os/gres"
 
 func init() {
 	if err := gres.Add("%s"); err != nil {

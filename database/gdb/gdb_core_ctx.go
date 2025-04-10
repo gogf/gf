@@ -10,9 +10,9 @@ import (
 	"context"
 	"sync"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v3/errors/gcode"
+	"github.com/gogf/gf/v3/errors/gerror"
+	"github.com/gogf/gf/v3/os/gctx"
 )
 
 // internalCtxData stores data in ctx for internal usage purpose.

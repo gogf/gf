@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/container/gpool"
+	"github.com/gogf/gf/v3/container/gpool"
 )
 
 var pool = gpool.New(time.Hour, nil)

@@ -10,8 +10,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v3/frame/g"
+	"github.com/gogf/gf/v3/text/gstr"
 )
 
 func ExampleRule_Required() {

@@ -9,10 +9,10 @@ package gdb
 import (
 	"database/sql"
 
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/internal/empty"
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v3/container/gmap"
+	"github.com/gogf/gf/v3/encoding/gjson"
+	"github.com/gogf/gf/v3/internal/empty"
+	"github.com/gogf/gf/v3/util/gconv"
 )
 
 // Json converts `r` to JSON format content.
