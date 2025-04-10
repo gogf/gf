@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	github.com/gogf/gf/v2 v2.9.0
-	github.com/polarismesh/polaris-go v1.5.8
+	github.com/polarismesh/polaris-go v1.6.1
 )
 
 require (
@@ -34,7 +34,7 @@ require (
 	github.com/natefinch/lumberjack v2.0.0+incompatible // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/polarismesh/specification v1.5.1 // indirect
+	github.com/polarismesh/specification v1.5.5-alpha.1 // indirect
 	github.com/prometheus/client_golang v1.19.1 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.55.0 // indirect
