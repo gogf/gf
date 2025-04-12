@@ -84,16 +84,18 @@ var (
 
 // SoftTime sets the SoftTimeOption to customize soft time feature for Model.
 func (m *Model) SoftTime(option SoftTimeOption) *Model {
-	model := m.getModel()
-	model.softTimeOption = option
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.softTimeOption = option
+		return model
+	})
 }
 
 // Unscoped disables the soft time feature for insert, update and delete operations.
 func (m *Model) Unscoped() *Model {
-	model := m.getModel()
-	model.unscoped = true
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.unscoped = true
+		return model
+	})
 }
 
 func (m *Model) softTimeMaintainer() iSoftTimeMaintainer {
@@ -195,9 +197,9 @@ func (m *softTimeMaintainer) getSoftFieldNameAndType(
 			schema, table, strings.Join(checkFiledNames, "_"),
 		)
 		cacheDuration = gcache.DurationNoExpire
-		cacheFunc     = func(ctx context.Context) (value interface{}, err error) {
+		cacheFunc     = func(ctx context.Context) (value any, err error) {
 			// Ignore the error from TableFields.
-			fieldsMap, err := m.TableFields(table, schema)
+			fieldsMap, err := m.TableFields(ctx, table, schema)
 			if err != nil {
 				return nil, err
 			}

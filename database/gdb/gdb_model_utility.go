@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"context"
 	"time"
 
 	"github.com/gogf/gf/v3/container/gset"
@@ -31,9 +32,8 @@ func (m *Model) QuoteWord(s string) string {
 // schema.
 //
 // Also see DriverMysql.TableFields.
-func (m *Model) TableFields(tableStr string, schema ...string) (fields map[string]*TableField, err error) {
+func (m *Model) TableFields(ctx context.Context, tableStr string, schema ...string) (fields map[string]*TableField, err error) {
 	var (
-		ctx        = m.GetCtx()
 		usedTable  = m.db.GetCore().guessPrimaryTableName(tableStr)
 		usedSchema = gutil.GetOrDefaultStr(m.schema, schema...)
 	)
@@ -49,24 +49,14 @@ func (m *Model) TableFields(tableStr string, schema ...string) (fields map[strin
 	return m.db.TableFields(ctx, usedTable, usedSchema)
 }
 
-// getModel creates and returns a cloned model of current model if `safe` is true, or else it returns
-// the current model.
-func (m *Model) getModel() *Model {
-	if !m.safe {
-		return m
-	} else {
-		return m.Clone()
-	}
-}
-
 // mappingAndFilterToTableFields mappings and changes given field name to really table field name.
 // Eg:
 // ID        -> id
 // NICK_Name -> nickname.
-func (m *Model) mappingAndFilterToTableFields(table string, fields []any, filter bool) []any {
+func (m *Model) mappingAndFilterToTableFields(ctx context.Context, table string, fields []any, filter bool) []any {
 	var fieldsTable = table
 	if fieldsTable != "" {
-		hasTable, _ := m.db.GetCore().HasTable(fieldsTable)
+		hasTable, _ := m.db.GetCore().HasTable(ctx, fieldsTable)
 		if !hasTable {
 			fieldsTable = m.tablesInit
 		}
@@ -75,12 +65,12 @@ func (m *Model) mappingAndFilterToTableFields(table string, fields []any, filter
 		fieldsTable = m.tablesInit
 	}
 
-	fieldsMap, _ := m.TableFields(fieldsTable)
+	fieldsMap, _ := m.TableFields(ctx, fieldsTable)
 	if len(fieldsMap) == 0 {
 		return fields
 	}
 	var outputFieldsArray = make([]any, 0)
-	fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
+	fieldsKeyMap := make(map[string]any, len(fieldsMap))
 	for k := range fieldsMap {
 		fieldsKeyMap[k] = nil
 	}
@@ -126,7 +116,7 @@ func (m *Model) mappingAndFilterToTableFields(table string, fields []any, filter
 
 // filterDataForInsertOrUpdate does filter feature with data for inserting/updating operations.
 // Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
-func (m *Model) filterDataForInsertOrUpdate(data interface{}) (interface{}, error) {
+func (m *Model) filterDataForInsertOrUpdate(ctx context.Context, data any) (any, error) {
 	var err error
 	switch value := data.(type) {
 	case List:
@@ -135,7 +125,7 @@ func (m *Model) filterDataForInsertOrUpdate(data interface{}) (interface{}, erro
 			omitEmpty = true
 		}
 		for k, item := range value {
-			value[k], err = m.doMappingAndFilterForInsertOrUpdateDataMap(item, omitEmpty)
+			value[k], err = m.doMappingAndFilterForInsertOrUpdateDataMap(ctx, item, omitEmpty)
 			if err != nil {
 				return nil, err
 			}
@@ -143,7 +133,7 @@ func (m *Model) filterDataForInsertOrUpdate(data interface{}) (interface{}, erro
 		return value, nil
 
 	case Map:
-		return m.doMappingAndFilterForInsertOrUpdateDataMap(value, true)
+		return m.doMappingAndFilterForInsertOrUpdateDataMap(ctx, value, true)
 
 	default:
 		return data, nil
@@ -152,10 +142,9 @@ func (m *Model) filterDataForInsertOrUpdate(data interface{}) (interface{}, erro
 
 // doMappingAndFilterForInsertOrUpdateDataMap does the filter features for map.
 // Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
-func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(data Map, allowOmitEmpty bool) (Map, error) {
+func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(ctx context.Context, data Map, allowOmitEmpty bool) (Map, error) {
 	var (
 		err    error
-		ctx    = m.GetCtx()
 		core   = m.db.GetCore()
 		schema = m.schema
 		table  = m.tablesInit
@@ -279,9 +268,9 @@ func (m *Model) getLink(master bool) Link {
 // getPrimaryKey retrieves and returns the primary key name of the model table.
 // It parses m.tables to retrieve the primary table name, supporting m.tables like:
 // "user", "user u", "user as u, user_detail as ud".
-func (m *Model) getPrimaryKey() string {
+func (m *Model) getPrimaryKey(ctx context.Context) string {
 	table := gstr.SplitAndTrim(m.tablesInit, " ")[0]
-	tableFields, err := m.TableFields(table)
+	tableFields, err := m.TableFields(ctx, table)
 	if err != nil {
 		return ""
 	}
@@ -294,9 +283,9 @@ func (m *Model) getPrimaryKey() string {
 }
 
 // mergeArguments creates and returns new arguments by merging `m.extraArgs` and given `args`.
-func (m *Model) mergeArguments(args []interface{}) []interface{} {
+func (m *Model) mergeArguments(args []any) []any {
 	if len(m.extraArgs) > 0 {
-		newArgs := make([]interface{}, len(m.extraArgs)+len(args))
+		newArgs := make([]any, len(m.extraArgs)+len(args))
 		copy(newArgs, m.extraArgs)
 		copy(newArgs[len(m.extraArgs):], args)
 		return newArgs

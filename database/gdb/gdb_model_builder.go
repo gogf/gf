@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"context"
 	"fmt"
 )
 
@@ -18,11 +19,11 @@ type WhereBuilder struct {
 
 // WhereHolder is the holder for where condition preparing.
 type WhereHolder struct {
-	Type     string        // Type of this holder.
-	Operator int           // Operator for this holder.
-	Where    interface{}   // Where parameter, which can commonly be type of string/map/struct.
-	Args     []interface{} // Arguments for where parameter.
-	Prefix   string        // Field prefix, eg: "user.", "order.".
+	Type     string // Type of this holder.
+	Operator int    // Operator for this holder.
+	Where    any    // Where parameter, which can commonly be type of string/map/struct.
+	Args     []any  // Arguments for where parameter.
+	Prefix   string // Field prefix, eg: "user.", "order.".
 }
 
 // Builder creates and returns a WhereBuilder. Please note that the builder is chain-safe.
@@ -48,9 +49,8 @@ func (b *WhereBuilder) Clone() *WhereBuilder {
 }
 
 // Build builds current WhereBuilder and returns the condition string and parameters.
-func (b *WhereBuilder) Build() (conditionWhere string, conditionArgs []interface{}) {
+func (b *WhereBuilder) Build(ctx context.Context) (conditionWhere string, conditionArgs []any) {
 	var (
-		ctx                         = b.model.GetCtx()
 		autoPrefix                  = b.model.getAutoPrefix()
 		tableForMappingAndFiltering = b.model.tables
 	)
@@ -104,7 +104,7 @@ func (b *WhereBuilder) Build() (conditionWhere string, conditionArgs []interface
 }
 
 // convertWhereBuilder converts parameter `where` to condition string and parameters if `where` is also a WhereBuilder.
-func (b *WhereBuilder) convertWhereBuilder(where interface{}, args []interface{}) (newWhere interface{}, newArgs []interface{}) {
+func (b *WhereBuilder) convertWhereBuilder(ctx context.Context, where any, args []any) (newWhere any, newArgs []any) {
 	var builder *WhereBuilder
 	switch v := where.(type) {
 	case WhereBuilder:
@@ -114,7 +114,7 @@ func (b *WhereBuilder) convertWhereBuilder(where interface{}, args []interface{}
 		builder = v
 	}
 	if builder != nil {
-		conditionWhere, conditionArgs := builder.Build()
+		conditionWhere, conditionArgs := builder.Build(ctx)
 		if conditionWhere != "" && (len(b.whereHolder) == 0 || len(builder.whereHolder) > 1) {
 			conditionWhere = "(" + conditionWhere + ")"
 		}

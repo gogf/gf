@@ -81,10 +81,6 @@ func WithDB(ctx context.Context, db DB) context.Context {
 	if db == nil {
 		return ctx
 	}
-	dbCtx := db.GetCtx()
-	if ctxDb := DBFromCtx(dbCtx); ctxDb != nil {
-		return dbCtx
-	}
 	ctx = context.WithValue(ctx, ctxKeyForDB, db)
 	return ctx
 }
@@ -512,7 +508,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 		)
 		// If `Prefix` is given, it checks and retrieves the table name.
 		if in.Prefix != "" {
-			hasTable, _ := db.GetCore().HasTable(in.Prefix)
+			hasTable, _ := db.GetCore().HasTable(ctx, in.Prefix)
 			if hasTable {
 				in.Table = in.Prefix
 			} else {

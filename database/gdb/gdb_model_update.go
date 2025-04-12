@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"reflect"
@@ -25,17 +26,7 @@ import (
 // If the optional parameter `dataAndWhere` is given, the dataAndWhere[0] is the updated data field,
 // and dataAndWhere[1:] is treated as where condition fields.
 // Also see Model.Data and Model.Where functions.
-func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err error) {
-	var ctx = m.GetCtx()
-	if len(dataAndWhere) > 0 {
-		if len(dataAndWhere) > 2 {
-			return m.Data(dataAndWhere[0]).Where(dataAndWhere[1], dataAndWhere[2:]...).Update()
-		} else if len(dataAndWhere) == 2 {
-			return m.Data(dataAndWhere[0]).Where(dataAndWhere[1]).Update()
-		} else {
-			return m.Data(dataAndWhere[0]).Update()
-		}
-	}
+func (m *Model) Update(ctx context.Context) (result sql.Result, err error) {
 	defer func() {
 		if err == nil {
 			m.checkAndRemoveSelectCache(ctx)
@@ -45,7 +36,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		return nil, gerror.NewCode(gcode.CodeMissingParameter, "updating table with empty data")
 	}
 	var (
-		newData                                       interface{}
+		newData                                       any
 		stm                                           = m.softTimeMaintainer()
 		reflectInfo                                   = reflection.OriginTypeAndKind(m.data)
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(ctx, false, false)
@@ -58,7 +49,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		fieldNameUpdate = ""
 	}
 
-	newData, err = m.filterDataForInsertOrUpdate(m.data)
+	newData, err = m.filterDataForInsertOrUpdate(ctx, m.data)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +70,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		if fieldNameUpdate != "" && !gstr.Contains(updateStr, fieldNameUpdate) {
 			dataValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate, false)
 			updateStr += fmt.Sprintf(`,%s=?`, fieldNameUpdate)
-			conditionArgs = append([]interface{}{dataValue}, conditionArgs...)
+			conditionArgs = append([]any{dataValue}, conditionArgs...)
 		}
 		newData = updateStr
 	}
@@ -114,8 +105,8 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 }
 
 // UpdateAndGetAffected performs update statement and returns the affected rows number.
-func (m *Model) UpdateAndGetAffected(dataAndWhere ...interface{}) (affected int64, err error) {
-	result, err := m.Update(dataAndWhere...)
+func (m *Model) UpdateAndGetAffected(ctx context.Context) (affected int64, err error) {
+	result, err := m.Update(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -124,18 +115,18 @@ func (m *Model) UpdateAndGetAffected(dataAndWhere ...interface{}) (affected int6
 
 // Increment increments a column's value by a given amount.
 // The parameter `amount` can be type of float or integer.
-func (m *Model) Increment(column string, amount interface{}) (sql.Result, error) {
-	return m.getModel().Data(column, &Counter{
+func (m *Model) Increment(ctx context.Context, column string, amount any) (sql.Result, error) {
+	return m.Data(column, &Counter{
 		Field: column,
 		Value: gconv.Float64(amount),
-	}).Update()
+	}).Update(ctx)
 }
 
 // Decrement decrements a column's value by a given amount.
 // The parameter `amount` can be type of float or integer.
-func (m *Model) Decrement(column string, amount interface{}) (sql.Result, error) {
-	return m.getModel().Data(column, &Counter{
+func (m *Model) Decrement(ctx context.Context, column string, amount any) (sql.Result, error) {
+	return m.Data(column, &Counter{
 		Field: column,
 		Value: -gconv.Float64(amount),
-	}).Update()
+	}).Update(ctx)
 }

@@ -183,15 +183,11 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 			tx := &TXCore{
 				db:            c.db,
 				tx:            sqlTx,
-				ctx:           ctx,
 				master:        in.Db,
 				transactionId: guid.S(),
 				cancelFunc:    cancelFuncForTimeout,
 			}
-			tx.ctx = context.WithValue(ctx, transactionKeyForContext(tx.db.GetGroup()), tx)
-			tx.ctx = context.WithValue(tx.ctx, transactionIdForLoggerCtx, transactionIdGenerator.Add(1))
 			out.Tx = tx
-			ctx = out.Tx.GetCtx()
 		}
 		out.RawResult = sqlTx
 

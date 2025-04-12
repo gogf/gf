@@ -6,6 +6,8 @@
 
 package gdb
 
+import "context"
+
 const (
 	optionOmitNil             = optionOmitNilWhere | optionOmitNilData
 	optionOmitEmpty           = optionOmitEmptyWhere | optionOmitEmptyData
@@ -20,9 +22,10 @@ const (
 // OmitEmpty sets optionOmitEmpty option for the model, which automatically filers
 // the data and where parameters for `empty` values.
 func (m *Model) OmitEmpty() *Model {
-	model := m.getModel()
-	model.option = model.option | optionOmitEmpty
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.option = model.option | optionOmitEmpty
+		return model
+	})
 }
 
 // OmitEmptyWhere sets optionOmitEmptyWhere option for the model, which automatically filers
@@ -35,39 +38,45 @@ func (m *Model) OmitEmpty() *Model {
 //	OmitEmpty().Where("id", []int{}).All() -> SELECT xxx FROM xxx
 //	OmitEmpty().("name", "").All()         -> SELECT xxx FROM xxx.
 func (m *Model) OmitEmptyWhere() *Model {
-	model := m.getModel()
-	model.option = model.option | optionOmitEmptyWhere
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.option = model.option | optionOmitEmptyWhere
+		return model
+	})
 }
 
 // OmitEmptyData sets optionOmitEmptyData option for the model, which automatically filers
 // the Data parameters for `empty` values.
 func (m *Model) OmitEmptyData() *Model {
-	model := m.getModel()
-	model.option = model.option | optionOmitEmptyData
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.option = model.option | optionOmitEmptyData
+		return model
+	})
 }
 
 // OmitNil sets optionOmitNil option for the model, which automatically filers
 // the data and where parameters for `nil` values.
 func (m *Model) OmitNil() *Model {
-	model := m.getModel()
-	model.option = model.option | optionOmitNil
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.option = model.option | optionOmitNil
+		return model
+	})
 }
 
 // OmitNilWhere sets optionOmitNilWhere option for the model, which automatically filers
 // the Where/Having parameters for `nil` values.
 func (m *Model) OmitNilWhere() *Model {
-	model := m.getModel()
-	model.option = model.option | optionOmitNilWhere
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.option = model.option | optionOmitNilWhere
+		return model
+	})
 }
 
 // OmitNilData sets optionOmitNilData option for the model, which automatically filers
 // the Data parameters for `nil` values.
 func (m *Model) OmitNilData() *Model {
-	model := m.getModel()
-	model.option = model.option | optionOmitNilData
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.option = model.option | optionOmitNilData
+		return model
+	})
+
 }

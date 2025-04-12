@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"context"
 	"strings"
 
 	"github.com/gogf/gf/v3/text/gstr"
@@ -26,32 +27,32 @@ func (m *Model) Order(orderBy ...interface{}) *Model {
 	if len(orderBy) == 0 {
 		return m
 	}
-	var (
-		core  = m.db.GetCore()
-		model = m.getModel()
-	)
-	for _, v := range orderBy {
-		if model.orderBy != "" {
-			model.orderBy += ","
-		}
-		switch v.(type) {
-		case Raw, *Raw:
-			model.orderBy += gconv.String(v)
-		default:
-			orderByStr := gconv.String(v)
-			if gstr.Contains(orderByStr, " ") {
-				model.orderBy += core.QuoteString(orderByStr)
-			} else {
-				if gstr.Equal(orderByStr, "ASC") || gstr.Equal(orderByStr, "DESC") {
-					model.orderBy = gstr.TrimRight(model.orderBy, ",")
-					model.orderBy += " " + orderByStr
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		var core = m.db.GetCore()
+		for _, v := range orderBy {
+			if model.orderBy != "" {
+				model.orderBy += ","
+			}
+			switch v.(type) {
+			case Raw, *Raw:
+				model.orderBy += gconv.String(v)
+			default:
+				orderByStr := gconv.String(v)
+				if gstr.Contains(orderByStr, " ") {
+					model.orderBy += core.QuoteString(orderByStr)
 				} else {
-					model.orderBy += core.QuoteWord(orderByStr)
+					if gstr.Equal(orderByStr, "ASC") || gstr.Equal(orderByStr, "DESC") {
+						model.orderBy = gstr.TrimRight(model.orderBy, ",")
+						model.orderBy += " " + orderByStr
+					} else {
+						model.orderBy += core.QuoteWord(orderByStr)
+					}
 				}
 			}
 		}
-	}
-	return model
+		return model
+	})
+
 }
 
 // OrderAsc sets the "ORDER BY xxx ASC" statement for the model.
@@ -72,9 +73,10 @@ func (m *Model) OrderDesc(column string) *Model {
 
 // OrderRandom sets the "ORDER BY RANDOM()" statement for the model.
 func (m *Model) OrderRandom() *Model {
-	model := m.getModel()
-	model.orderBy = m.db.OrderRandomFunction()
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.orderBy = m.db.OrderRandomFunction()
+		return model
+	})
 }
 
 // Group sets the "GROUP BY" statement for the model.
@@ -82,14 +84,12 @@ func (m *Model) Group(groupBy ...string) *Model {
 	if len(groupBy) == 0 {
 		return m
 	}
-	var (
-		core  = m.db.GetCore()
-		model = m.getModel()
-	)
-
-	if model.groupBy != "" {
-		model.groupBy += ","
-	}
-	model.groupBy += core.QuoteString(strings.Join(groupBy, ","))
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		var core = m.db.GetCore()
+		if model.groupBy != "" {
+			model.groupBy += ","
+		}
+		model.groupBy += core.QuoteString(strings.Join(groupBy, ","))
+		return model
+	})
 }

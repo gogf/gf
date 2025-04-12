@@ -63,16 +63,18 @@ type DefaultShardingRule struct {
 
 // Sharding creates a sharding model with given sharding configuration.
 func (m *Model) Sharding(config ShardingConfig) *Model {
-	model := m.getModel()
-	model.shardingConfig = config
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.shardingConfig = config
+		return model
+	})
 }
 
 // ShardingValue sets the sharding value for routing
 func (m *Model) ShardingValue(value any) *Model {
-	model := m.getModel()
-	model.shardingValue = value
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.shardingValue = value
+		return model
+	})
 }
 
 // getActualSchema returns the actual schema based on sharding configuration.

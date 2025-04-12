@@ -23,9 +23,10 @@ import (
 
 // Batch sets the batch operation number for the model.
 func (m *Model) Batch(batch int) *Model {
-	model := m.getModel()
-	model.batch = batch
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.batch = batch
+		return model
+	})
 }
 
 // Data sets the operation data for the model.
@@ -38,100 +39,102 @@ func (m *Model) Batch(batch int) *Model {
 // Data("uid=? AND name=?", 10000, "john")
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"}).
-func (m *Model) Data(data ...interface{}) *Model {
-	var model = m.getModel()
-	if len(data) > 1 {
-		if s := gconv.String(data[0]); gstr.Contains(s, "?") {
-			model.data = s
-			model.extraArgs = data[1:]
-		} else {
-			newData := make(map[string]interface{})
-			for i := 0; i < len(data); i += 2 {
-				newData[gconv.String(data[i])] = data[i+1]
-			}
-			model.data = newData
-		}
-	} else if len(data) == 1 {
-		switch value := data[0].(type) {
-		case Result:
-			model.data = value.List()
-
-		case Record:
-			model.data = value.Map()
-
-		case List:
-			list := make(List, len(value))
-			for k, v := range value {
-				list[k] = gutil.MapCopy(v)
-			}
-			model.data = list
-
-		case Map:
-			model.data = gutil.MapCopy(value)
-
-		default:
-			reflectInfo := reflection.OriginValueAndKind(value)
-			switch reflectInfo.OriginKind {
-			case reflect.Slice, reflect.Array:
-				if reflectInfo.OriginValue.Len() > 0 {
-					// If the `data` parameter is a DO struct,
-					// it then adds `OmitNilData` option for this condition,
-					// which will filter all nil parameters in `data`.
-					if isDoStruct(reflectInfo.OriginValue.Index(0).Interface()) {
-						model = model.OmitNilData()
-						model.option |= optionOmitNilDataInternal
-					}
+func (m *Model) Data(data ...any) *Model {
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		if len(data) > 1 {
+			if s := gconv.String(data[0]); gstr.Contains(s, "?") {
+				model.data = s
+				model.extraArgs = data[1:]
+			} else {
+				newData := make(map[string]any)
+				for i := 0; i < len(data); i += 2 {
+					newData[gconv.String(data[i])] = data[i+1]
 				}
-				list := make(List, reflectInfo.OriginValue.Len())
-				for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
-					list[i] = anyValueToMapBeforeToRecord(reflectInfo.OriginValue.Index(i).Interface())
+				model.data = newData
+			}
+		} else if len(data) == 1 {
+			switch value := data[0].(type) {
+			case Result:
+				model.data = value.List()
+
+			case Record:
+				model.data = value.Map()
+
+			case List:
+				list := make(List, len(value))
+				for k, v := range value {
+					list[k] = gutil.MapCopy(v)
 				}
 				model.data = list
 
-			case reflect.Struct:
-				// If the `data` parameter is a DO struct,
-				// it then adds `OmitNilData` option for this condition,
-				// which will filter all nil parameters in `data`.
-				if isDoStruct(value) {
-					model = model.OmitNilData()
-				}
-				if v, ok := data[0].(iInterfaces); ok {
-					var (
-						array = v.Interfaces()
-						list  = make(List, len(array))
-					)
-					for i := 0; i < len(array); i++ {
-						list[i] = anyValueToMapBeforeToRecord(array[i])
-					}
-					model.data = list
-				} else {
-					model.data = anyValueToMapBeforeToRecord(data[0])
-				}
-
-			case reflect.Map:
-				model.data = anyValueToMapBeforeToRecord(data[0])
+			case Map:
+				model.data = gutil.MapCopy(value)
 
 			default:
-				model.data = data[0]
+				reflectInfo := reflection.OriginValueAndKind(value)
+				switch reflectInfo.OriginKind {
+				case reflect.Slice, reflect.Array:
+					if reflectInfo.OriginValue.Len() > 0 {
+						// If the `data` parameter is a DO struct,
+						// it then adds `OmitNilData` option for this condition,
+						// which will filter all nil parameters in `data`.
+						if isDoStruct(reflectInfo.OriginValue.Index(0).Interface()) {
+							model = model.OmitNilData()
+							model.option |= optionOmitNilDataInternal
+						}
+					}
+					list := make(List, reflectInfo.OriginValue.Len())
+					for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
+						list[i] = anyValueToMapBeforeToRecord(reflectInfo.OriginValue.Index(i).Interface())
+					}
+					model.data = list
+
+				case reflect.Struct:
+					// If the `data` parameter is a DO struct,
+					// it then adds `OmitNilData` option for this condition,
+					// which will filter all nil parameters in `data`.
+					if isDoStruct(value) {
+						model = model.OmitNilData()
+					}
+					if v, ok := data[0].(iInterfaces); ok {
+						var (
+							array = v.Interfaces()
+							list  = make(List, len(array))
+						)
+						for i := 0; i < len(array); i++ {
+							list[i] = anyValueToMapBeforeToRecord(array[i])
+						}
+						model.data = list
+					} else {
+						model.data = anyValueToMapBeforeToRecord(data[0])
+					}
+
+				case reflect.Map:
+					model.data = anyValueToMapBeforeToRecord(data[0])
+
+				default:
+					model.data = data[0]
+				}
 			}
 		}
-	}
-	return model
+		return model
+	})
 }
 
 // OnConflict sets the primary key or index when columns conflicts occurs.
 // It's not necessary for MySQL driver.
-func (m *Model) OnConflict(onConflict ...interface{}) *Model {
+func (m *Model) OnConflict(onConflict ...any) *Model {
 	if len(onConflict) == 0 {
 		return m
 	}
-	model := m.getModel()
-	if len(onConflict) > 1 {
-		model.onConflict = onConflict
-	} else if len(onConflict) == 1 {
-		model.onConflict = onConflict[0]
-	}
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		if len(onConflict) > 1 {
+			model.onConflict = onConflict
+		} else if len(onConflict) == 1 {
+			model.onConflict = onConflict[0]
+		}
+		return model
+	})
 }
 
 // OnDuplicate sets the operations when columns conflicts occurs.
@@ -150,17 +153,18 @@ func (m *Model) OnConflict(onConflict ...interface{}) *Model {
 //	OnDuplicate(g.Map{
 //		  "nickname": "passport",
 //	}).
-func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
+func (m *Model) OnDuplicate(onDuplicate ...any) *Model {
 	if len(onDuplicate) == 0 {
 		return m
 	}
-	model := m.getModel()
-	if len(onDuplicate) > 1 {
-		model.onDuplicate = onDuplicate
-	} else if len(onDuplicate) == 1 {
-		model.onDuplicate = onDuplicate[0]
-	}
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		if len(onDuplicate) > 1 {
+			model.onDuplicate = onDuplicate
+		} else if len(onDuplicate) == 1 {
+			model.onDuplicate = onDuplicate[0]
+		}
+		return model
+	})
 }
 
 // OnDuplicateEx sets the excluding columns for operations when columns conflict occurs.
@@ -176,36 +180,29 @@ func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
 //		  "passport": "",
 //		  "password": "",
 //	}).
-func (m *Model) OnDuplicateEx(onDuplicateEx ...interface{}) *Model {
+func (m *Model) OnDuplicateEx(onDuplicateEx ...any) *Model {
 	if len(onDuplicateEx) == 0 {
 		return m
 	}
-	model := m.getModel()
-	if len(onDuplicateEx) > 1 {
-		model.onDuplicateEx = onDuplicateEx
-	} else if len(onDuplicateEx) == 1 {
-		model.onDuplicateEx = onDuplicateEx[0]
-	}
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		if len(onDuplicateEx) > 1 {
+			model.onDuplicateEx = onDuplicateEx
+		} else if len(onDuplicateEx) == 1 {
+			model.onDuplicateEx = onDuplicateEx[0]
+		}
+		return model
+	})
 }
 
 // Insert does "INSERT INTO ..." statement for the model.
 // The optional parameter `data` is the same as the parameter of Model.Data function,
 // see Model.Data.
-func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
-	var ctx = m.GetCtx()
-	if len(data) > 0 {
-		return m.Data(data...).Insert()
-	}
+func (m *Model) Insert(ctx context.Context) (result sql.Result, err error) {
 	return m.doInsertWithOption(ctx, InsertOptionDefault)
 }
 
 // InsertAndGetId performs action Insert and returns the last insert id that automatically generated.
-func (m *Model) InsertAndGetId(data ...interface{}) (lastInsertId int64, err error) {
-	var ctx = m.GetCtx()
-	if len(data) > 0 {
-		return m.Data(data...).InsertAndGetId()
-	}
+func (m *Model) InsertAndGetId(ctx context.Context) (lastInsertId int64, err error) {
 	result, err := m.doInsertWithOption(ctx, InsertOptionDefault)
 	if err != nil {
 		return 0, err
@@ -216,22 +213,14 @@ func (m *Model) InsertAndGetId(data ...interface{}) (lastInsertId int64, err err
 // InsertIgnore does "INSERT IGNORE INTO ..." statement for the model.
 // The optional parameter `data` is the same as the parameter of Model.Data function,
 // see Model.Data.
-func (m *Model) InsertIgnore(data ...interface{}) (result sql.Result, err error) {
-	var ctx = m.GetCtx()
-	if len(data) > 0 {
-		return m.Data(data...).InsertIgnore()
-	}
+func (m *Model) InsertIgnore(ctx context.Context) (result sql.Result, err error) {
 	return m.doInsertWithOption(ctx, InsertOptionIgnore)
 }
 
 // Replace does "REPLACE INTO ..." statement for the model.
 // The optional parameter `data` is the same as the parameter of Model.Data function,
 // see Model.Data.
-func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
-	var ctx = m.GetCtx()
-	if len(data) > 0 {
-		return m.Data(data...).Replace()
-	}
+func (m *Model) Replace(ctx context.Context) (result sql.Result, err error) {
 	return m.doInsertWithOption(ctx, InsertOptionReplace)
 }
 
@@ -241,11 +230,7 @@ func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
 //
 // It updates the record if there's primary or unique index in the saving data,
 // or else it inserts a new record into the table.
-func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
-	var ctx = m.GetCtx()
-	if len(data) > 0 {
-		return m.Data(data...).Save()
-	}
+func (m *Model) Save(ctx context.Context) (result sql.Result, err error) {
 	return m.doInsertWithOption(ctx, InsertOptionSave)
 }
 
@@ -267,7 +252,7 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 		fieldNameDelete, fieldTypeDelete = stm.GetFieldNameAndTypeForDelete(ctx, "", m.tablesInit)
 	)
 	// m.data was already converted to type List/Map by function Data
-	newData, err := m.filterDataForInsertOrUpdate(m.data)
+	newData, err := m.filterDataForInsertOrUpdate(ctx, m.data)
 	if err != nil {
 		return nil, err
 	}
@@ -371,7 +356,7 @@ func (m *Model) formatDoInsertOption(insertOption InsertOption, columnNames []st
 			reflectInfo := reflection.OriginValueAndKind(m.onDuplicate)
 			switch reflectInfo.OriginKind {
 			case reflect.String:
-				option.OnDuplicateMap = make(map[string]interface{})
+				option.OnDuplicateMap = make(map[string]any)
 				for _, v := range gstr.SplitAndTrim(reflectInfo.OriginValue.String(), ",") {
 					if onDuplicateExKeySet.Contains(v) {
 						continue
@@ -380,7 +365,7 @@ func (m *Model) formatDoInsertOption(insertOption InsertOption, columnNames []st
 				}
 
 			case reflect.Map:
-				option.OnDuplicateMap = make(map[string]interface{})
+				option.OnDuplicateMap = make(map[string]any)
 				for k, v := range gconv.Map(m.onDuplicate) {
 					if onDuplicateExKeySet.Contains(k) {
 						continue
@@ -389,7 +374,7 @@ func (m *Model) formatDoInsertOption(insertOption InsertOption, columnNames []st
 				}
 
 			case reflect.Slice, reflect.Array:
-				option.OnDuplicateMap = make(map[string]interface{})
+				option.OnDuplicateMap = make(map[string]any)
 				for _, v := range gconv.Strings(m.onDuplicate) {
 					if onDuplicateExKeySet.Contains(v) {
 						continue
@@ -406,7 +391,7 @@ func (m *Model) formatDoInsertOption(insertOption InsertOption, columnNames []st
 			}
 		}
 	} else if onDuplicateExKeySet.Size() > 0 {
-		option.OnDuplicateMap = make(map[string]interface{})
+		option.OnDuplicateMap = make(map[string]any)
 		for _, v := range columnNames {
 			if onDuplicateExKeySet.Contains(v) {
 				continue
@@ -417,7 +402,7 @@ func (m *Model) formatDoInsertOption(insertOption InsertOption, columnNames []st
 	return
 }
 
-func (m *Model) formatOnDuplicateExKeys(onDuplicateEx interface{}) ([]string, error) {
+func (m *Model) formatOnDuplicateExKeys(onDuplicateEx any) ([]string, error) {
 	if onDuplicateEx == nil {
 		return nil, nil
 	}
@@ -442,7 +427,7 @@ func (m *Model) formatOnDuplicateExKeys(onDuplicateEx interface{}) ([]string, er
 	}
 }
 
-func (m *Model) formatOnConflictKeys(onConflict interface{}) ([]string, error) {
+func (m *Model) formatOnConflictKeys(onConflict any) ([]string, error) {
 	if onConflict == nil {
 		return nil, nil
 	}

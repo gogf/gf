@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"context"
 	"database/sql"
 
 	"github.com/gogf/gf/v3/errors/gcode"
@@ -18,11 +19,7 @@ import (
 // Delete does "DELETE FROM ... " statement for the model.
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
-func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
-	var ctx = m.GetCtx()
-	if len(where) > 0 {
-		return m.Where(where[0], where[1:]...).Delete()
-	}
+func (m *Model) Delete(ctx context.Context) (result sql.Result, err error) {
 	defer func() {
 		if err == nil {
 			m.checkAndRemoveSelectCache(ctx)

@@ -9,16 +9,15 @@ package gdb
 // callWhereBuilder creates and returns a new Model, and sets its WhereBuilder if current Model is safe.
 // It sets the WhereBuilder and returns current Model directly if it is not safe.
 func (m *Model) callWhereBuilder(builder *WhereBuilder) *Model {
-	model := m.getModel()
-	model.whereBuilder = builder
-	return model
+	m.whereBuilder = builder
+	return m
 }
 
 // Where sets the condition statement for the builder. The parameter `where` can be type of
 // string/map/gmap/slice/struct/*struct, etc. Note that, if it's called more than one times,
 // multiple conditions will be joined into where statement using "AND".
 // See WhereBuilder.Where.
-func (m *Model) Where(where interface{}, args ...interface{}) *Model {
+func (m *Model) Where(where any, args ...any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.Where(where, args...))
 }
 
@@ -26,7 +25,7 @@ func (m *Model) Where(where interface{}, args ...interface{}) *Model {
 // Note that if the number of `args` is more than the placeholder in `format`,
 // the extra `args` will be used as the where condition arguments of the Model.
 // See WhereBuilder.Wheref.
-func (m *Model) Wheref(format string, args ...interface{}) *Model {
+func (m *Model) Wheref(format string, args ...any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.Wheref(format, args...))
 }
 
@@ -36,37 +35,37 @@ func (m *Model) Wheref(format string, args ...interface{}) *Model {
 // WherePri function treats the condition as "id=123", but Model.Where treats the condition
 // as string "123".
 // See WhereBuilder.WherePri.
-func (m *Model) WherePri(where interface{}, args ...interface{}) *Model {
+func (m *Model) WherePri(where any, args ...any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WherePri(where, args...))
 }
 
 // WhereLT builds `column < value` statement.
 // See WhereBuilder.WhereLT.
-func (m *Model) WhereLT(column string, value interface{}) *Model {
+func (m *Model) WhereLT(column string, value any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereLT(column, value))
 }
 
 // WhereLTE builds `column <= value` statement.
 // See WhereBuilder.WhereLTE.
-func (m *Model) WhereLTE(column string, value interface{}) *Model {
+func (m *Model) WhereLTE(column string, value any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereLTE(column, value))
 }
 
 // WhereGT builds `column > value` statement.
 // See WhereBuilder.WhereGT.
-func (m *Model) WhereGT(column string, value interface{}) *Model {
+func (m *Model) WhereGT(column string, value any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereGT(column, value))
 }
 
 // WhereGTE builds `column >= value` statement.
 // See WhereBuilder.WhereGTE.
-func (m *Model) WhereGTE(column string, value interface{}) *Model {
+func (m *Model) WhereGTE(column string, value any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereGTE(column, value))
 }
 
 // WhereBetween builds `column BETWEEN min AND max` statement.
 // See WhereBuilder.WhereBetween.
-func (m *Model) WhereBetween(column string, min, max interface{}) *Model {
+func (m *Model) WhereBetween(column string, min, max any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereBetween(column, min, max))
 }
 
@@ -78,7 +77,7 @@ func (m *Model) WhereLike(column string, like string) *Model {
 
 // WhereIn builds `column IN (in)` statement.
 // See WhereBuilder.WhereIn.
-func (m *Model) WhereIn(column string, in interface{}) *Model {
+func (m *Model) WhereIn(column string, in any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereIn(column, in))
 }
 
@@ -90,25 +89,25 @@ func (m *Model) WhereNull(columns ...string) *Model {
 
 // WhereNotBetween builds `column NOT BETWEEN min AND max` statement.
 // See WhereBuilder.WhereNotBetween.
-func (m *Model) WhereNotBetween(column string, min, max interface{}) *Model {
+func (m *Model) WhereNotBetween(column string, min, max any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereNotBetween(column, min, max))
 }
 
 // WhereNotLike builds `column NOT LIKE like` statement.
 // See WhereBuilder.WhereNotLike.
-func (m *Model) WhereNotLike(column string, like interface{}) *Model {
+func (m *Model) WhereNotLike(column string, like any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereNotLike(column, like))
 }
 
 // WhereNot builds `column != value` statement.
 // See WhereBuilder.WhereNot.
-func (m *Model) WhereNot(column string, value interface{}) *Model {
+func (m *Model) WhereNot(column string, value any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereNot(column, value))
 }
 
 // WhereNotIn builds `column NOT IN (in)` statement.
 // See WhereBuilder.WhereNotIn.
-func (m *Model) WhereNotIn(column string, in interface{}) *Model {
+func (m *Model) WhereNotIn(column string, in any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereNotIn(column, in))
 }
 
