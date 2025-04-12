@@ -13,9 +13,13 @@ import (
 
 // WhereBuilder holds multiple where conditions in a group.
 type WhereBuilder struct {
-	model       *Model        // A WhereBuilder should be bound to certain Model.
-	whereHolder []WhereHolder // Condition strings for where operation.
+	model       *Model           // A WhereBuilder should be bound to certain Model.
+	whereHolder []WhereHolder    // Condition strings for where operation.
+	handlers    []BuilderHandler // Handlers for where operation.
 }
+
+// BuilderHandler is the handler for where operation.
+type BuilderHandler func(ctx context.Context, builder *WhereBuilder) *WhereBuilder
 
 // WhereHolder is the holder for where condition preparing.
 type WhereHolder struct {
@@ -26,30 +30,39 @@ type WhereHolder struct {
 	Prefix   string // Field prefix, eg: "user.", "order.".
 }
 
-// Builder creates and returns a WhereBuilder. Please note that the builder is chain-safe.
+// Builder creates and returns a WhereBuilder.
 func (m *Model) Builder() *WhereBuilder {
 	b := &WhereBuilder{
-		model:       m,
-		whereHolder: make([]WhereHolder, 0),
+		model:    m,
+		handlers: make([]BuilderHandler, 0),
 	}
 	return b
 }
 
-// getBuilder creates and returns a cloned WhereBuilder of current WhereBuilder
-func (b *WhereBuilder) getBuilder() *WhereBuilder {
-	return b.Clone()
+// Handler registers handlers for where operation.
+func (b *WhereBuilder) Handler(handlers ...BuilderHandler) *WhereBuilder {
+	b.handlers = append(b.handlers, handlers...)
+	return b
+}
+
+func (b *WhereBuilder) execHandlers(ctx context.Context) {
+	for _, handler := range b.handlers {
+		handler(ctx, b)
+	}
 }
 
 // Clone clones and returns a WhereBuilder that is a copy of current one.
 func (b *WhereBuilder) Clone() *WhereBuilder {
 	newBuilder := b.model.Builder()
-	newBuilder.whereHolder = make([]WhereHolder, len(b.whereHolder))
-	copy(newBuilder.whereHolder, b.whereHolder)
+	copy(newBuilder.handlers, b.handlers)
 	return newBuilder
 }
 
 // Build builds current WhereBuilder and returns the condition string and parameters.
 func (b *WhereBuilder) Build(ctx context.Context) (conditionWhere string, conditionArgs []any) {
+	// use Clone here to guarantee repeatable build.
+	b.Clone().execHandlers(ctx)
+
 	var (
 		autoPrefix                  = b.model.getAutoPrefix()
 		tableForMappingAndFiltering = b.model.tables

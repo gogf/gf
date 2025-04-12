@@ -135,14 +135,14 @@ func Test_Table_Relation_With_Scan(t *testing.T) {
 			user := User{
 				Name: fmt.Sprintf(`name_%d`, i),
 			}
-			lastInsertId, err := db.Model(user).Data(user).OmitEmpty().InsertAndGetId()
+			lastInsertId, err := db.Model(user).Data(user).OmitEmpty().InsertAndGetId(ctx)
 			t.AssertNil(err)
 			// Detail.
 			userDetail := UserDetail{
 				Uid:     int(lastInsertId),
 				Address: fmt.Sprintf(`address_%d`, lastInsertId),
 			}
-			_, err = db.Model(userDetail).Data(userDetail).OmitEmpty().Insert()
+			_, err = db.Model(userDetail).Data(userDetail).OmitEmpty().Insert(ctx)
 			t.AssertNil(err)
 			// Scores.
 			for j := 1; j <= 5; j++ {
@@ -150,7 +150,7 @@ func Test_Table_Relation_With_Scan(t *testing.T) {
 					Uid:   int(lastInsertId),
 					Score: j,
 				}
-				_, err = db.Model(userScore).Data(userScore).OmitEmpty().Insert()
+				_, err = db.Model(userScore).Data(userScore).OmitEmpty().Insert(ctx)
 				t.AssertNil(err)
 			}
 		}
@@ -160,14 +160,14 @@ func Test_Table_Relation_With_Scan(t *testing.T) {
 		user := User{
 			Name: fmt.Sprintf(`name_%d`, i),
 		}
-		lastInsertId, err := db.Model(user).Data(user).OmitEmpty().InsertAndGetId()
+		lastInsertId, err := db.Model(user).Data(user).OmitEmpty().InsertAndGetId(ctx)
 		gtest.AssertNil(err)
 		// Detail.
 		userDetail := UserDetail{
 			Uid:     int(lastInsertId),
 			Address: fmt.Sprintf(`address_%d`, lastInsertId),
 		}
-		_, err = db.Model(userDetail).Data(userDetail).Insert()
+		_, err = db.Model(userDetail).Data(userDetail).Insert(ctx)
 		gtest.AssertNil(err)
 		// Scores.
 		for j := 1; j <= 5; j++ {
@@ -175,7 +175,7 @@ func Test_Table_Relation_With_Scan(t *testing.T) {
 				Uid:   int(lastInsertId),
 				Score: j,
 			}
-			_, err = db.Model(userScore).Data(userScore).Insert()
+			_, err = db.Model(userScore).Data(userScore).Insert(ctx)
 			gtest.AssertNil(err)
 		}
 	}
@@ -185,7 +185,7 @@ func Test_Table_Relation_With_Scan(t *testing.T) {
 			With(User{}.UserDetail).
 			With(User{}.UserScores).
 			Where("id", 3).
-			Scan(&user)
+			Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 3)
 		t.AssertNE(user.UserDetail, nil)
@@ -203,7 +203,7 @@ func Test_Table_Relation_With_Scan(t *testing.T) {
 			With(user.UserDetail).
 			With(user.UserScores).
 			Where("id", 4).
-			Scan(&user)
+			Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 4)
 		t.AssertNE(user.UserDetail, nil)
@@ -221,7 +221,7 @@ func Test_Table_Relation_With_Scan(t *testing.T) {
 			With(UserDetail{}).
 			With(UserScore{}).
 			Where("id", 4).
-			Scan(&user)
+			Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 4)
 		t.AssertNE(user.UserDetail, nil)
@@ -239,7 +239,7 @@ func Test_Table_Relation_With_Scan(t *testing.T) {
 		err := db.With(user).
 			With(user.UserDetail).
 			Where("id", 4).
-			Scan(&user)
+			Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 4)
 		t.AssertNE(user.UserDetail, nil)
@@ -253,7 +253,7 @@ func Test_Table_Relation_With_Scan(t *testing.T) {
 		err := db.With(user).
 			With(user.UserScores).
 			Where("id", 4).
-			Scan(&user)
+			Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 4)
 		t.Assert(user.UserDetail, nil)
@@ -338,7 +338,7 @@ func Test_Table_Relation_With(t *testing.T) {
 			With(User{}.UserDetail).
 			With(User{}.UserScores).
 			Where("id", []int{3, 4}).
-			Scan(&users)
+			Scan(ctx, &users)
 		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(users[0].Id, 3)
@@ -369,7 +369,7 @@ func Test_Table_Relation_With(t *testing.T) {
 			With(User{}.UserDetail).
 			With(User{}.UserScores).
 			Where("id", []int{3, 4}).
-			Scan(&users)
+			Scan(ctx, &users)
 		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(users[0].Id, 3)
@@ -400,7 +400,7 @@ func Test_Table_Relation_With(t *testing.T) {
 		err := db.With(User{}).
 			With(User{}.UserDetail).
 			Where("id", []int{3, 4}).
-			Scan(&users)
+			Scan(ctx, &users)
 		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(users[0].Id, 3)
@@ -423,7 +423,7 @@ func Test_Table_Relation_With(t *testing.T) {
 		err := db.With(User{}).
 			With(User{}.UserScores).
 			Where("id", []int{3, 4}).
-			Scan(&users)
+			Scan(ctx, &users)
 		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(users[0].Id, 3)
@@ -514,7 +514,7 @@ func Test_Table_Relation_WithAll(t *testing.T) {
 	}
 	gtest.C(t, func(t *gtest.T) {
 		var user *User
-		err := db.Model(tableUser).WithAll().Where("id", 3).Scan(&user)
+		err := db.Model(tableUser).WithAll().Where("id", 3).Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 3)
 		t.AssertNE(user.UserDetail, nil)
@@ -528,7 +528,7 @@ func Test_Table_Relation_WithAll(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var user User
-		err := db.Model(tableUser).WithAll().Where("id", 4).Scan(&user)
+		err := db.Model(tableUser).WithAll().Where("id", 4).Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 4)
 		t.AssertNE(user.UserDetail, nil)
@@ -610,7 +610,7 @@ func Test_Table_Relation_WithAll_List(t *testing.T) {
 	}
 	gtest.C(t, func(t *gtest.T) {
 		var users []*User
-		err := db.Model(tableUser).WithAll().Where("id", []int{3, 4}).Scan(&users)
+		err := db.Model(tableUser).WithAll().Where("id", []int{3, 4}).Scan(ctx, &users)
 		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(users[0].Id, 3)
@@ -637,7 +637,7 @@ func Test_Table_Relation_WithAll_List(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var users []User
-		err := db.Model(tableUser).WithAll().Where("id", []int{3, 4}).Scan(&users)
+		err := db.Model(tableUser).WithAll().Where("id", []int{3, 4}).Scan(ctx, &users)
 		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(users[0].Id, 3)
@@ -736,7 +736,7 @@ func Test_Table_Relation_WithAllCondition_List(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		var users []*User
-		err := db.Model(tableUser).WithAll().Where("id", []int{3, 4}).Scan(&users)
+		err := db.Model(tableUser).WithAll().Where("id", []int{3, 4}).Scan(ctx, &users)
 		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(users[0].Id, 3)
@@ -755,7 +755,7 @@ func Test_Table_Relation_WithAllCondition_List(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var users []User
-		err := db.Model(tableUser).WithAll().Where("id", []int{3, 4}).Scan(&users)
+		err := db.Model(tableUser).WithAll().Where("id", []int{3, 4}).Scan(ctx, &users)
 		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(users[0].Id, 3)
@@ -849,7 +849,7 @@ func Test_Table_Relation_WithAll_Embedded_With_SelfMaintained_Attributes(t *test
 	}
 	gtest.C(t, func(t *gtest.T) {
 		var user *User
-		err := db.Model(tableUser).WithAll().Where("id", 3).Scan(&user)
+		err := db.Model(tableUser).WithAll().Where("id", 3).Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 3)
 		t.AssertNE(user.UserDetail, nil)
@@ -863,7 +863,7 @@ func Test_Table_Relation_WithAll_Embedded_With_SelfMaintained_Attributes(t *test
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var user User
-		err := db.Model(tableUser).WithAll().Where("id", 4).Scan(&user)
+		err := db.Model(tableUser).WithAll().Where("id", 4).Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 4)
 		t.AssertNE(user.UserDetail, nil)
@@ -953,7 +953,7 @@ func Test_Table_Relation_WithAll_Embedded_Without_SelfMaintained_Attributes(t *t
 
 	gtest.C(t, func(t *gtest.T) {
 		var user *User
-		err := db.Model(tableUser).WithAll().Where("id", 3).Scan(&user)
+		err := db.Model(tableUser).WithAll().Where("id", 3).Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 3)
 		t.AssertNE(user.UserDetail, nil)
@@ -967,7 +967,7 @@ func Test_Table_Relation_WithAll_Embedded_Without_SelfMaintained_Attributes(t *t
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var user User
-		err := db.Model(tableUser).WithAll().Where("id", 4).Scan(&user)
+		err := db.Model(tableUser).WithAll().Where("id", 4).Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 4)
 		t.AssertNE(user.UserDetail, nil)
@@ -1050,7 +1050,7 @@ func Test_Table_Relation_WithAll_Embedded_WithoutMeta(t *testing.T) {
 	}
 	gtest.C(t, func(t *gtest.T) {
 		var user *User
-		err := db.Model(tableUser).WithAll().Where("id", 3).Scan(&user)
+		err := db.Model(tableUser).WithAll().Where("id", 3).Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 3)
 		t.AssertNE(user.UserDetail, nil)
@@ -1064,7 +1064,7 @@ func Test_Table_Relation_WithAll_Embedded_WithoutMeta(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var user User
-		err := db.Model(tableUser).WithAll().Where("id", 4).Scan(&user)
+		err := db.Model(tableUser).WithAll().Where("id", 4).Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 4)
 		t.AssertNE(user.UserDetail, nil)
@@ -1147,7 +1147,7 @@ func Test_Table_Relation_WithAll_AttributeStructAlsoHasWithTag(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		var user *User
-		err := db.Model(tableUser).WithAll().Where("id", 3).Scan(&user)
+		err := db.Model(tableUser).WithAll().Where("id", 3).Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 3)
 		t.AssertNE(user.UserDetail, nil)
@@ -1161,7 +1161,7 @@ func Test_Table_Relation_WithAll_AttributeStructAlsoHasWithTag(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var user User
-		err := db.Model(tableUser).WithAll().Where("id", 4).Scan(&user)
+		err := db.Model(tableUser).WithAll().Where("id", 4).Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 4)
 		t.AssertNE(user.UserDetail, nil)
@@ -1268,7 +1268,7 @@ func Test_Table_Relation_WithAll_AttributeStructAlsoHasWithTag_MoreDeep(t *testi
 
 	gtest.C(t, func(t *gtest.T) {
 		var user *User
-		err := db.Model(tableUser).WithAll().Where("id", 3).Scan(&user)
+		err := db.Model(tableUser).WithAll().Where("id", 3).Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 3)
 		t.AssertNE(user.UserDetail, nil)
@@ -1285,7 +1285,7 @@ func Test_Table_Relation_WithAll_AttributeStructAlsoHasWithTag_MoreDeep(t *testi
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var user User
-		err := db.Model(tableUser).WithAll().Where("id", 4).Scan(&user)
+		err := db.Model(tableUser).WithAll().Where("id", 4).Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 4)
 		t.AssertNE(user.UserDetail, nil)
@@ -1395,7 +1395,7 @@ func Test_Table_Relation_With_AttributeStructAlsoHasWithTag_MoreDeep(t *testing.
 
 	gtest.C(t, func(t *gtest.T) {
 		var user *User
-		err := db.Model(tableUser).With(UserDetail{}, UserDetail2{}, UserDetail3{}, UserScores{}).Where("id", 3).Scan(&user)
+		err := db.Model(tableUser).With(UserDetail{}, UserDetail2{}, UserDetail3{}, UserScores{}).Where("id", 3).Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 3)
 		t.AssertNE(user.UserDetail, nil)
@@ -1412,7 +1412,7 @@ func Test_Table_Relation_With_AttributeStructAlsoHasWithTag_MoreDeep(t *testing.
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var user User
-		err := db.Model(tableUser).With(UserDetail{}, UserDetail2{}, UserDetail3{}, UserScores{}).Where("id", 4).Scan(&user)
+		err := db.Model(tableUser).With(UserDetail{}, UserDetail2{}, UserDetail3{}, UserScores{}).Where("id", 4).Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 4)
 		t.AssertNE(user.UserDetail, nil)
@@ -1466,7 +1466,7 @@ func Test_Table_Relation_With_MultipleDepends1(t *testing.T) {
 	// Struct.
 	gtest.C(t, func(t *gtest.T) {
 		var tableA *TableA
-		err := db.Model("table_a").WithAll().Scan(&tableA)
+		err := db.Model("table_a").WithAll().Scan(ctx, &tableA)
 		// g.Dump(tableA)
 		t.AssertNil(err)
 		t.AssertNE(tableA, nil)
@@ -1482,7 +1482,7 @@ func Test_Table_Relation_With_MultipleDepends1(t *testing.T) {
 	// Structs
 	gtest.C(t, func(t *gtest.T) {
 		var tableA []*TableA
-		err := db.Model("table_a").WithAll().OrderAsc("id").Scan(&tableA)
+		err := db.Model("table_a").WithAll().OrderAsc("id").Scan(ctx, &tableA)
 		// g.Dump(tableA)
 		t.AssertNil(err)
 		t.Assert(len(tableA), 2)
@@ -1538,7 +1538,7 @@ func Test_Table_Relation_With_MultipleDepends2(t *testing.T) {
 	// Struct.
 	gtest.C(t, func(t *gtest.T) {
 		var tableA *TableA
-		err := db.Model("table_a").WithAll().Scan(&tableA)
+		err := db.Model("table_a").WithAll().Scan(ctx, &tableA)
 		// g.Dump(tableA)
 		t.AssertNil(err)
 		t.AssertNE(tableA, nil)
@@ -1561,7 +1561,7 @@ func Test_Table_Relation_With_MultipleDepends2(t *testing.T) {
 	// Structs
 	gtest.C(t, func(t *gtest.T) {
 		var tableA []*TableA
-		err := db.Model("table_a").WithAll().OrderAsc("id").Scan(&tableA)
+		err := db.Model("table_a").WithAll().OrderAsc("id").Scan(ctx, &tableA)
 		// g.Dump(tableA)
 		t.AssertNil(err)
 		t.Assert(len(tableA), 2)
@@ -1625,7 +1625,7 @@ func Test_Table_Relation_With_MultipleDepends_Embedded(t *testing.T) {
 	// Struct.
 	gtest.C(t, func(t *gtest.T) {
 		var tableA *TableA
-		err := db.Model("table_a").WithAll().Scan(&tableA)
+		err := db.Model("table_a").WithAll().Scan(ctx, &tableA)
 		// g.Dump(tableA)
 		t.AssertNil(err)
 		t.AssertNE(tableA, nil)
@@ -1641,7 +1641,7 @@ func Test_Table_Relation_With_MultipleDepends_Embedded(t *testing.T) {
 	// Structs
 	gtest.C(t, func(t *gtest.T) {
 		var tableA []*TableA
-		err := db.Model("table_a").WithAll().OrderAsc("id").Scan(&tableA)
+		err := db.Model("table_a").WithAll().OrderAsc("id").Scan(ctx, &tableA)
 		// g.Dump(tableA)
 		t.AssertNil(err)
 		t.Assert(len(tableA), 2)
@@ -1753,7 +1753,7 @@ PRIMARY KEY (id)
 
 	// gtest.C(t, func(t *gtest.T) {
 	//	var user *User
-	//	err := db.Model(tableUser).WithAll().Where("id", 3).Scan(&user)
+	//	err := db.Model(tableUser).WithAll().Where("id", 3).Scan(ctx, &user)
 	//	t.AssertNil(err)
 	//	t.Assert(user.ID, 3)
 	//	t.AssertNE(user.UserDetail, nil)
@@ -1767,7 +1767,7 @@ PRIMARY KEY (id)
 	// })
 	gtest.C(t, func(t *gtest.T) {
 		var user User
-		err := db.Model(tableUser).WithAll().Where("id", 4).Scan(&user)
+		err := db.Model(tableUser).WithAll().Where("id", 4).Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.ID, 4)
 		t.AssertNE(user.UserDetail, nil)
@@ -1857,7 +1857,7 @@ PRIMARY KEY (user_id)
 	}
 	gtest.C(t, func(t *gtest.T) {
 		var user0 User
-		err := db.Model(tableUser).WithAll().Where("id", 4).Scan(&user0)
+		err := db.Model(tableUser).WithAll().Where("id", 4).Scan(ctx, &user0)
 		t.AssertNil(err)
 		t.Assert(user0.ID, 4)
 		t.AssertNE(user0.UserDetail, nil)
@@ -1866,13 +1866,13 @@ PRIMARY KEY (user_id)
 		t.Assert(user0.UserDetail.Address, `address_4`)
 
 		var user1 User
-		err = db.Model(tableUser).WithAll().Where("id", 3).Scan(&user1)
+		err = db.Model(tableUser).WithAll().Where("id", 3).Scan(ctx, &user1)
 		t.AssertNil(err)
 		t.Assert(user1.ID, 3)
 		t.AssertNil(user1.UserDetail)
 
 		var user2 UserWithDeletedDetail
-		err = db.Model(tableUser).WithAll().Where("id", 3).Scan(&user2)
+		err = db.Model(tableUser).WithAll().Where("id", 3).Scan(ctx, &user2)
 		t.AssertNil(err)
 		t.Assert(user2.ID, 3)
 		t.AssertNE(user2.UserDetail, nil)
@@ -1882,7 +1882,7 @@ PRIMARY KEY (user_id)
 
 		// Unscoped outside test
 		var user3 User
-		err = db.Model(tableUser).Unscoped().WithAll().Where("id", 3).Scan(&user3)
+		err = db.Model(tableUser).Unscoped().WithAll().Where("id", 3).Scan(ctx, &user3)
 		t.AssertNil(err)
 		t.Assert(user3.ID, 3)
 		t.AssertNil(user3.UserDetail)

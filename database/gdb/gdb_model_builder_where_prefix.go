@@ -6,25 +6,27 @@
 
 package gdb
 
+import "context"
+
 // WherePrefix performs as Where, but it adds prefix to each field in where statement.
 // Eg:
 // WherePrefix("order", "status", "paid")                        => WHERE `order`.`status`='paid'
 // WherePrefix("order", struct{Status:"paid", "channel":"bank"}) => WHERE `order`.`status`='paid' AND `order`.`channel`='bank'
 func (b *WhereBuilder) WherePrefix(prefix string, where any, args ...any) *WhereBuilder {
-	where, args = b.convertWhereBuilder(where, args)
-
-	builder := b.getBuilder()
-	if builder.whereHolder == nil {
-		builder.whereHolder = make([]WhereHolder, 0)
-	}
-	builder.whereHolder = append(builder.whereHolder, WhereHolder{
-		Type:     whereHolderTypeDefault,
-		Operator: whereHolderOperatorWhere,
-		Where:    where,
-		Args:     args,
-		Prefix:   prefix,
+	return b.Handler(func(ctx context.Context, builder *WhereBuilder) *WhereBuilder {
+		where, args = builder.convertWhereBuilder(ctx, where, args)
+		if builder.whereHolder == nil {
+			builder.whereHolder = make([]WhereHolder, 0)
+		}
+		builder.whereHolder = append(builder.whereHolder, WhereHolder{
+			Type:     whereHolderTypeDefault,
+			Operator: whereHolderOperatorWhere,
+			Where:    where,
+			Args:     args,
+			Prefix:   prefix,
+		})
+		return builder
 	})
-	return builder
 }
 
 // WherePrefixLT builds `prefix.column < value` statement.
@@ -59,7 +61,12 @@ func (b *WhereBuilder) WherePrefixLike(prefix string, column string, like any) *
 
 // WherePrefixIn builds `prefix.column IN (in)` statement.
 func (b *WhereBuilder) WherePrefixIn(prefix string, column string, in any) *WhereBuilder {
-	return b.doWherefType(whereHolderTypeIn, `%s.%s IN (?)`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), in)
+	return b.Handler(func(ctx context.Context, builder *WhereBuilder) *WhereBuilder {
+		return builder.doWherefType(
+			ctx, whereHolderTypeIn, `%s.%s IN (?)`,
+			builder.model.QuoteWord(prefix), builder.model.QuoteWord(column), in,
+		)
+	})
 }
 
 // WherePrefixNull builds `prefix.columns[0] IS NULL AND prefix.columns[1] IS NULL ...` statement.
@@ -88,7 +95,12 @@ func (b *WhereBuilder) WherePrefixNot(prefix string, column string, value any) *
 
 // WherePrefixNotIn builds `prefix.column NOT IN (in)` statement.
 func (b *WhereBuilder) WherePrefixNotIn(prefix string, column string, in any) *WhereBuilder {
-	return b.doWherefType(whereHolderTypeIn, `%s.%s NOT IN (?)`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), in)
+	return b.Handler(func(ctx context.Context, builder *WhereBuilder) *WhereBuilder {
+		return builder.doWherefType(
+			ctx, whereHolderTypeIn, `%s.%s NOT IN (?)`,
+			builder.model.QuoteWord(prefix), builder.model.QuoteWord(column), in,
+		)
+	})
 }
 
 // WherePrefixNotNull builds `prefix.columns[0] IS NOT NULL AND prefix.columns[1] IS NOT NULL ...` statement.

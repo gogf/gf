@@ -234,13 +234,16 @@ func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(ctx context.Context, 
 
 // getLink returns the underlying database link object with configured `linkType` attribute.
 // The parameter `master` specifies whether using the master node if master-slave configured.
-func (m *Model) getLink(master bool) Link {
+func (m *Model) getLink(ctx context.Context, master bool) Link {
 	if m.tx != nil {
 		if sqlTx := m.tx.GetSqlTX(); sqlTx != nil {
 			return &txLink{sqlTx}
 		}
 	}
-	linkType := m.linkType
+	var (
+		core     = m.db.GetCore()
+		linkType = m.linkType
+	)
 	if linkType == 0 {
 		if master {
 			linkType = linkTypeMaster
@@ -250,13 +253,13 @@ func (m *Model) getLink(master bool) Link {
 	}
 	switch linkType {
 	case linkTypeMaster:
-		link, err := m.db.GetCore().MasterLink(m.schema)
+		link, err := core.MasterLink(m.schema)
 		if err != nil {
 			panic(err)
 		}
 		return link
 	case linkTypeSlave:
-		link, err := m.db.GetCore().SlaveLink(m.schema)
+		link, err := core.SlaveLink(m.schema)
 		if err != nil {
 			panic(err)
 		}

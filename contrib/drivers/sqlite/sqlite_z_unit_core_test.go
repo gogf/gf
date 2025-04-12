@@ -152,7 +152,7 @@ func Test_DB_Insert(t *testing.T) {
 		n, _ = result.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table).Where("id", 3).One()
+		one, err := db.Model(table).Where("id", 3).One(ctx)
 		t.AssertNil(err)
 
 		t.Assert(one["id"].Int(), 3)
@@ -174,7 +174,7 @@ func Test_DB_Insert(t *testing.T) {
 		n, _ = result.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err = db.Model(table).Where("id", 4).One()
+		one, err = db.Model(table).Where("id", 4).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 4)
 		t.Assert(one["passport"].String(), "t4")
@@ -204,7 +204,7 @@ func Test_DB_Insert(t *testing.T) {
 		n, _ = r.RowsAffected()
 		t.Assert(n, 2)
 
-		one, err = db.Model(table).Where("id", 200).One()
+		one, err = db.Model(table).Where("id", 200).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 200)
 		t.Assert(one["passport"].String(), "t200")
@@ -459,7 +459,7 @@ func Test_DB_Replace(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		one, err := db.Model(table).Where("id", 1).One()
+		one, err := db.Model(table).Where("id", 1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 1)
 		t.Assert(one["passport"].String(), "t1")
@@ -479,7 +479,7 @@ func Test_DB_Update(t *testing.T) {
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table).Where("id", 3).One()
+		one, err := db.Model(table).Where("id", 3).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 3)
 		t.Assert(one["passport"].String(), "user_3")
@@ -807,7 +807,7 @@ func Test_DB_ToJson(t *testing.T) {
 	gtest.AssertNil(err)
 
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).Fields("*").Where("id =? ", 1).All()
+		result, err := db.Model(table).Fields("*").Where("id =? ", 1).All(ctx)
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -847,7 +847,7 @@ func Test_DB_ToJson(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).Fields("*").Where("id =? ", 1).One()
+		result, err := db.Model(table).Fields("*").Where("id =? ", 1).One(ctx)
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -880,7 +880,7 @@ func Test_DB_ToXml(t *testing.T) {
 	gtest.AssertNil(err)
 
 	gtest.C(t, func(t *gtest.T) {
-		record, err := db.Model(table).Fields("*").Where("id = ?", 1).One()
+		record, err := db.Model(table).Fields("*").Where("id = ?", 1).One(ctx)
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -944,7 +944,7 @@ func Test_DB_ToStringMap(t *testing.T) {
 	gtest.AssertNil(err)
 	gtest.C(t, func(t *gtest.T) {
 		id := "1"
-		result, err := db.Model(table).Fields("*").Where("id = ?", 1).All()
+		result, err := db.Model(table).Fields("*").Where("id = ?", 1).All(ctx)
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -980,7 +980,7 @@ func Test_DB_ToIntMap(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
-		result, err := db.Model(table).Fields("*").Where("id = ?", id).All()
+		result, err := db.Model(table).Fields("*").Where("id = ?", id).All(ctx)
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -1016,7 +1016,7 @@ func Test_DB_ToUintMap(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
-		result, err := db.Model(table).Fields("*").Where("id = ?", id).All()
+		result, err := db.Model(table).Fields("*").Where("id = ?", id).All(ctx)
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -1053,7 +1053,7 @@ func Test_DB_ToStringRecord(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
 		ids := "1"
-		result, err := db.Model(table).Fields("*").Where("id = ?", id).All()
+		result, err := db.Model(table).Fields("*").Where("id = ?", id).All(ctx)
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -1089,7 +1089,7 @@ func Test_DB_ToIntRecord(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
-		result, err := db.Model(table).Fields("*").Where("id = ?", id).All()
+		result, err := db.Model(table).Fields("*").Where("id = ?", id).All(ctx)
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -1125,7 +1125,7 @@ func Test_DB_ToUintRecord(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
-		result, err := db.Model(table).Fields("*").Where("id = ?", id).All()
+		result, err := db.Model(table).Fields("*").Where("id = ?", id).All(ctx)
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -1183,7 +1183,7 @@ func Test_DB_TableField(t *testing.T) {
 		"field_varchar":   "abc",
 		"field_varbinary": "aaa",
 	}
-	res, err := db.Model(name).Data(data).Insert()
+	res, err := db.Model(name).Data(data).Insert(ctx)
 	if err != nil {
 		gtest.Fatal(err)
 	}
@@ -1195,7 +1195,7 @@ func Test_DB_TableField(t *testing.T) {
 		gtest.Assert(n, 1)
 	}
 
-	result, err := db.Model(name).Fields("*").Where("field_int = ?", 2).All()
+	result, err := db.Model(name).Fields("*").Where("field_int = ?", 2).All(ctx)
 	if err != nil {
 		gtest.Fatal(err)
 	}
@@ -1297,7 +1297,7 @@ func Test_Model_InnerJoin(t *testing.T) {
 		defer dropTable(table1)
 		defer dropTable(table2)
 
-		res, err := db.Model(table1).Where("id > ?", 5).Delete()
+		res, err := db.Model(table1).Where("id > ?", 5).Delete(ctx)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1309,14 +1309,14 @@ func Test_Model_InnerJoin(t *testing.T) {
 
 		t.Assert(n, 5)
 
-		result, err := db.Model(table1+" u1").InnerJoin(table2+" u2", "u1.id = u2.id").Order("u1.id").All()
+		result, err := db.Model(table1+" u1").InnerJoin(table2+" u2", "u1.id = u2.id").Order("u1.id").All(ctx)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		t.Assert(len(result), 5)
 
-		result, err = db.Model(table1+" u1").InnerJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > ?", 1).Order("u1.id").All()
+		result, err = db.Model(table1+" u1").InnerJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > ?", 1).Order("u1.id").All(ctx)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1333,7 +1333,7 @@ func Test_Model_LeftJoin(t *testing.T) {
 		defer dropTable(table1)
 		defer dropTable(table2)
 
-		res, err := db.Model(table2).Where("id > ?", 3).Delete()
+		res, err := db.Model(table2).Where("id > ?", 3).Delete(ctx)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1345,14 +1345,14 @@ func Test_Model_LeftJoin(t *testing.T) {
 			t.Assert(n, 7)
 		}
 
-		result, err := db.Model(table1+" u1").LeftJoin(table2+" u2", "u1.id = u2.id").All()
+		result, err := db.Model(table1+" u1").LeftJoin(table2+" u2", "u1.id = u2.id").All(ctx)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		t.Assert(len(result), 10)
 
-		result, err = db.Model(table1+" u1").LeftJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > ? ", 2).All()
+		result, err = db.Model(table1+" u1").LeftJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > ? ", 2).All(ctx)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1410,7 +1410,7 @@ func Test_DB_UpdateCounter(t *testing.T) {
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
-		one, err := db.Model(tableName).Where("id", 1).One()
+		one, err := db.Model(tableName).Where("id", 1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 1)
 		t.Assert(one["views"].Int(), 2)
@@ -1429,7 +1429,7 @@ func Test_DB_UpdateCounter(t *testing.T) {
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
-		one, err := db.Model(tableName).Where("id", 1).One()
+		one, err := db.Model(tableName).Where("id", 1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 1)
 		t.Assert(one["views"].Int(), 1)
@@ -1493,12 +1493,12 @@ func Test_Types(t *testing.T) {
 			"tinyint":   true,
 			"bool":      false,
 		}
-		r, err := db.Model(tableName).Data(data).Insert()
+		r, err := db.Model(tableName).Data(data).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model(tableName).One()
+		one, err := db.Model(tableName).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 1)
 		t.Assert(one["blob"].String(), data["blob"])
@@ -1523,7 +1523,7 @@ func Test_Types(t *testing.T) {
 			TinyInt   bool
 		}
 		var obj *T
-		err = db.Model(tableName).Scan(&obj)
+		err = db.Model(tableName).Scan(ctx, &obj)
 		t.AssertNil(err)
 		t.Assert(obj.Id, 1)
 		t.Assert(obj.Blob, data["blob"])
@@ -1583,7 +1583,7 @@ func Test_TableNameIsKeyword(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
-		result, err := db.Model(table).Fields("*").Where("id = ?", id).All()
+		result, err := db.Model(table).Fields("*").Where("id = ?", id).All(ctx)
 		if err != nil {
 			gtest.Fatal(err)
 		}

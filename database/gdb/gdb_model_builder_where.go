@@ -7,47 +7,11 @@
 package gdb
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gogf/gf/v3/text/gstr"
 )
-
-// doWhereType sets the condition statement for the model. The parameter `where` can be type of
-// string/map/gmap/slice/struct/*struct, etc. Note that, if it's called more than one times,
-// multiple conditions will be joined into where statement using "AND".
-func (b *WhereBuilder) doWhereType(whereType string, where any, args ...any) *WhereBuilder {
-	where, args = b.convertWhereBuilder(where, args)
-
-	builder := b.getBuilder()
-	if builder.whereHolder == nil {
-		builder.whereHolder = make([]WhereHolder, 0)
-	}
-	if whereType == "" {
-		if len(args) == 0 {
-			whereType = whereHolderTypeNoArgs
-		} else {
-			whereType = whereHolderTypeDefault
-		}
-	}
-	builder.whereHolder = append(builder.whereHolder, WhereHolder{
-		Type:     whereType,
-		Operator: whereHolderOperatorWhere,
-		Where:    where,
-		Args:     args,
-	})
-	return builder
-}
-
-// doWherefType builds condition string using fmt.Sprintf and arguments.
-// Note that if the number of `args` is more than the placeholder in `format`,
-// the extra `args` will be used as the where condition arguments of the Model.
-func (b *WhereBuilder) doWherefType(t string, format string, args ...any) *WhereBuilder {
-	var (
-		placeHolderCount = gstr.Count(format, "?")
-		conditionStr     = fmt.Sprintf(format, args[:len(args)-placeHolderCount]...)
-	)
-	return b.doWhereType(t, conditionStr, args[len(args)-placeHolderCount:]...)
-}
 
 // Where sets the condition statement for the builder. The parameter `where` can be type of
 // string/map/gmap/slice/struct/*struct, etc. Note that, if it's called more than one times,
@@ -61,17 +25,22 @@ func (b *WhereBuilder) doWherefType(t string, format string, args ...any) *Where
 // Where("age IN(?,?)", 18, 50)
 // Where(User{ Id : 1, UserName : "john"}).
 func (b *WhereBuilder) Where(where any, args ...any) *WhereBuilder {
-	return b.doWhereType(``, where, args...)
+	return b.Handler(func(ctx context.Context, builder *WhereBuilder) *WhereBuilder {
+		return builder.doWhereType(ctx, ``, where, args...)
+	})
 }
 
 // Wheref builds condition string using fmt.Sprintf and arguments.
 // Note that if the number of `args` is more than the placeholder in `format`,
 // the extra `args` will be used as the where condition arguments of the Model.
-// Eg:
+//
+// Example:
 // Wheref(`amount<? and status=%s`, "paid", 100)  => WHERE `amount`<100 and status='paid'
 // Wheref(`amount<%d and status=%s`, 100, "paid") => WHERE `amount`<100 and status='paid'
 func (b *WhereBuilder) Wheref(format string, args ...any) *WhereBuilder {
-	return b.doWherefType(``, format, args...)
+	return b.Handler(func(ctx context.Context, builder *WhereBuilder) *WhereBuilder {
+		return builder.doWherefType(ctx, ``, format, args...)
+	})
 }
 
 // WherePri does the same logic as Model.Where except that if the parameter `where`
@@ -79,12 +48,14 @@ func (b *WhereBuilder) Wheref(format string, args ...any) *WhereBuilder {
 // key value. That is, if primary key is "id" and given `where` parameter as "123", the
 // WherePri function treats the condition as "id=123", but Model.Where treats the condition
 // as string "123".
-func (b *WhereBuilder) WherePri(where any, args ...any) *WhereBuilder {
-	if len(args) > 0 {
-		return b.Where(where, args...)
-	}
-	newWhere := GetPrimaryKeyCondition(b.model.getPrimaryKey(), where)
-	return b.Where(newWhere[0], newWhere[1:]...)
+func (b *WhereBuilder) WherePri(arg any) *WhereBuilder {
+	return b.Handler(func(ctx context.Context, builder *WhereBuilder) *WhereBuilder {
+		primaryKey := builder.model.getPrimaryKey(ctx)
+		if primaryKey == "" {
+			return builder
+		}
+		return builder.Where(primaryKey, arg)
+	})
 }
 
 // WhereLT builds `column < value` statement.
@@ -119,7 +90,11 @@ func (b *WhereBuilder) WhereLike(column string, like string) *WhereBuilder {
 
 // WhereIn builds `column IN (in)` statement.
 func (b *WhereBuilder) WhereIn(column string, in any) *WhereBuilder {
-	return b.doWherefType(whereHolderTypeIn, `%s IN (?)`, b.model.QuoteWord(column), in)
+	return b.Handler(func(ctx context.Context, builder *WhereBuilder) *WhereBuilder {
+		return builder.doWherefType(
+			ctx, whereHolderTypeIn, `%s IN (?)`, b.model.QuoteWord(column), in,
+		)
+	})
 }
 
 // WhereNull builds `columns[0] IS NULL AND columns[1] IS NULL ...` statement.
@@ -148,7 +123,12 @@ func (b *WhereBuilder) WhereNot(column string, value any) *WhereBuilder {
 
 // WhereNotIn builds `column NOT IN (in)` statement.
 func (b *WhereBuilder) WhereNotIn(column string, in any) *WhereBuilder {
-	return b.doWherefType(whereHolderTypeIn, `%s NOT IN (?)`, b.model.QuoteWord(column), in)
+	return b.Handler(func(ctx context.Context, builder *WhereBuilder) *WhereBuilder {
+		return builder.doWherefType(
+			ctx, whereHolderTypeIn, `%s NOT IN (?)`,
+			b.model.QuoteWord(column), in,
+		)
+	})
 }
 
 // WhereNotNull builds `columns[0] IS NOT NULL AND columns[1] IS NOT NULL ...` statement.
@@ -168,4 +148,39 @@ func (b *WhereBuilder) WhereExists(subQuery *Model) *WhereBuilder {
 // WhereNotExists builds `NOT EXISTS (subQuery)` statement.
 func (b *WhereBuilder) WhereNotExists(subQuery *Model) *WhereBuilder {
 	return b.Wheref(`NOT EXISTS (?)`, subQuery)
+}
+
+// doWhereType sets the condition statement for the model. The parameter `where` can be type of
+// string/map/gmap/slice/struct/*struct, etc. Note that, if it's called more than one times,
+// multiple conditions will be joined into where statement using "AND".
+func (b *WhereBuilder) doWhereType(ctx context.Context, whereType string, where any, args ...any) *WhereBuilder {
+	where, args = b.convertWhereBuilder(ctx, where, args)
+	if b.whereHolder == nil {
+		b.whereHolder = make([]WhereHolder, 0)
+	}
+	if whereType == "" {
+		if len(args) == 0 {
+			whereType = whereHolderTypeNoArgs
+		} else {
+			whereType = whereHolderTypeDefault
+		}
+	}
+	b.whereHolder = append(b.whereHolder, WhereHolder{
+		Type:     whereType,
+		Operator: whereHolderOperatorWhere,
+		Where:    where,
+		Args:     args,
+	})
+	return b
+}
+
+// doWherefType builds condition string using fmt.Sprintf and arguments.
+// Note that if the number of `args` is more than the placeholder in `format`,
+// the extra `args` will be used as the where condition arguments of the Model.
+func (b *WhereBuilder) doWherefType(ctx context.Context, t string, format string, args ...any) *WhereBuilder {
+	var (
+		placeHolderCount = gstr.Count(format, "?")
+		conditionStr     = fmt.Sprintf(format, args[:len(args)-placeHolderCount]...)
+	)
+	return b.doWhereType(ctx, t, conditionStr, args[len(args)-placeHolderCount:]...)
 }

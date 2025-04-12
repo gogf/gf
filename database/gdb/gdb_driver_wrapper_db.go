@@ -29,8 +29,7 @@ type DriverWrapperDB struct {
 // Open creates and returns an underlying sql.DB object for pgsql.
 // https://pkg.go.dev/github.com/lib/pq
 func (d *DriverWrapperDB) Open(node *ConfigNode) (db *sql.DB, err error) {
-	var ctx = d.GetCtx()
-	intlog.PrintFunc(ctx, func() string {
+	intlog.PrintFunc(context.Background(), func() string {
 		return fmt.Sprintf(`open new connection:%s`, gjson.MustEncode(node))
 	})
 	return d.DB.Open(node)

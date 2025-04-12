@@ -222,7 +222,14 @@ type DB interface {
 
 	// Begin starts a new transaction and returns a TX interface.
 	// The returned TX must be committed or rolled back to release resources.
-	Begin(ctx context.Context, opts ...TxOptions) (TX, error)
+	Begin(ctx context.Context) (TX, error)
+
+	// BeginWithOptions starts and returns the transaction object with given options.
+	// The options allow specifying the isolation level and read-only mode.
+	// You should call Commit or Rollback functions of the transaction object
+	// if you no longer use the transaction. Commit or Rollback functions will also
+	// close the transaction automatically.
+	BeginWithOptions(ctx context.Context, opts TxOptions) (tx TX, err error)
 
 	// Transaction executes a function within a transaction.
 	// It automatically handles commit/rollback based on whether f returns an error.
@@ -1024,7 +1031,7 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 // getSqlDb retrieves and returns an underlying database connection object.
 // The parameter `master` specifies whether retrieves master node connection if
 // master-slave nodes are configured.
-func (c *Core) getSqlDb(ctx context.Context, master bool, schema ...string) (sqlDb *sql.DB, err error) {
+func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error) {
 	var node *ConfigNode
 	if c.group != "" {
 		// Load balance.
@@ -1049,11 +1056,6 @@ func (c *Core) getSqlDb(ctx context.Context, master bool, schema ...string) (sql
 	if nodeSchema != "" {
 		node.Name = nodeSchema
 	}
-	// Update the configuration object in internal data.
-	if err = c.setConfigNodeToCtx(ctx, node); err != nil {
-		return
-	}
-
 	// Cache the underlying connection pool object by node.
 	var (
 		instanceCacheFunc = func() any {

@@ -180,11 +180,11 @@ func Test_PartitionTable(t *testing.T) {
 
 	//defer dropShopDBTable()
 	gtest.C(t, func(t *gtest.T) {
-		data, err := db3.Ctx(ctx).Model("dbx_order").Partition("p3", "p4").All()
+		data, err := db3.Model("dbx_order").Partition("p3", "p4").All(ctx)
 		t.AssertNil(err)
 		dataLen := len(data)
 		t.Assert(dataLen, 5)
-		data, err = db3.Ctx(ctx).Model("dbx_order").Partition("p3").All()
+		data, err = db3.Model("dbx_order").Partition("p3").All(ctx)
 		t.AssertNil(err)
 		dataLen = len(data)
 		t.Assert(dataLen, 5)
@@ -217,7 +217,7 @@ func insertShopDBData() {
 			"amount":     fmt.Sprintf("1%d.21", i),
 		})
 	}
-	_, err := db3.Model("dbx_order").Ctx(ctx).Data(data).Insert()
+	_, err := db3.Model("dbx_order").Data(data).Insert(ctx)
 	if err != nil {
 		gtest.Error(err)
 	}

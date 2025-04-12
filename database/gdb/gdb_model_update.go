@@ -90,7 +90,7 @@ func (m *Model) Update(ctx context.Context) (result sql.Result, err error) {
 	in := &HookUpdateInput{
 		internalParamHookUpdate: internalParamHookUpdate{
 			internalParamHook: internalParamHook{
-				link: m.getLink(true),
+				link: m.getLink(ctx, true),
 			},
 			handler: m.hookHandler.Update,
 		},

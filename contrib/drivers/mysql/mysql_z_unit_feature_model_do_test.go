@@ -33,12 +33,12 @@ func Test_Model_Insert_Data_DO(t *testing.T) {
 			Passport: "user_1",
 			Password: "pass_1",
 		}
-		result, err := db.Model(table).Data(data).Insert()
+		result, err := db.Model(table).Data(data).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := result.LastInsertId()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table).WherePri(1).One()
+		one, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one[`id`], `1`)
 		t.Assert(one[`passport`], `user_1`)
@@ -73,12 +73,12 @@ func Test_Model_Insert_Data_List_DO(t *testing.T) {
 				Password: "pass_2",
 			},
 		}
-		result, err := db.Model(table).Data(data).Insert()
+		result, err := db.Model(table).Data(data).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := result.LastInsertId()
 		t.Assert(n, 2)
 
-		one, err := db.Model(table).WherePri(1).One()
+		one, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one[`id`], `1`)
 		t.Assert(one[`passport`], `user_1`)
@@ -86,7 +86,7 @@ func Test_Model_Insert_Data_List_DO(t *testing.T) {
 		t.Assert(one[`nickname`], ``)
 		t.Assert(one[`create_time`], ``)
 
-		one, err = db.Model(table).WherePri(2).One()
+		one, err = db.Model(table).WherePri(2).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one[`id`], `2`)
 		t.Assert(one[`passport`], `user_2`)
@@ -114,10 +114,10 @@ func Test_Model_Update_Data_DO(t *testing.T) {
 			Passport: "user_100",
 			Password: "pass_100",
 		}
-		_, err := db.Model(table).Data(data).WherePri(1).Update()
+		_, err := db.Model(table).Data(data).WherePri(1).Update(ctx)
 		t.AssertNil(err)
 
-		one, err := db.Model(table).WherePri(1).One()
+		one, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one[`id`], `1`)
 		t.Assert(one[`passport`], `user_100`)
@@ -159,10 +159,10 @@ func Test_Model_Update_Pointer_Data_DO(t *testing.T) {
 			}
 		)
 
-		_, err := db.Model(table).Data(data).WherePri(1).Update()
+		_, err := db.Model(table).Data(data).WherePri(1).Update(ctx)
 		t.AssertNil(err)
 
-		one, err := db.Model(table).WherePri(1).One()
+		one, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one[`id`], `1`)
 		t.Assert(one[`password`], `12345678`)
@@ -188,7 +188,7 @@ func Test_Model_Where_DO(t *testing.T) {
 			Passport: "user_1",
 			Password: "pass_1",
 		}
-		one, err := db.Model(table).Where(where).One()
+		one, err := db.Model(table).Where(where).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one[`id`], `1`)
 		t.Assert(one[`passport`], `user_1`)
@@ -214,12 +214,12 @@ func Test_Model_Insert_Data_ForDao(t *testing.T) {
 			Passport: "user_1",
 			Password: "pass_1",
 		}
-		result, err := db.Model(table).Data(data).Insert()
+		result, err := db.Model(table).Data(data).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := result.LastInsertId()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table).WherePri(1).One()
+		one, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one[`id`], `1`)
 		t.Assert(one[`passport`], `user_1`)
@@ -253,12 +253,12 @@ func Test_Model_Insert_Data_List_ForDao(t *testing.T) {
 				Password: "pass_2",
 			},
 		}
-		result, err := db.Model(table).Data(data).Insert()
+		result, err := db.Model(table).Data(data).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := result.LastInsertId()
 		t.Assert(n, 2)
 
-		one, err := db.Model(table).WherePri(1).One()
+		one, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one[`id`], `1`)
 		t.Assert(one[`passport`], `user_1`)
@@ -266,7 +266,7 @@ func Test_Model_Insert_Data_List_ForDao(t *testing.T) {
 		t.Assert(one[`nickname`], ``)
 		t.Assert(one[`create_time`], ``)
 
-		one, err = db.Model(table).WherePri(2).One()
+		one, err = db.Model(table).WherePri(2).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one[`id`], `2`)
 		t.Assert(one[`passport`], `user_2`)
@@ -293,10 +293,10 @@ func Test_Model_Update_Data_ForDao(t *testing.T) {
 			Passport: "user_100",
 			Password: "pass_100",
 		}
-		_, err := db.Model(table).Data(data).WherePri(1).Update()
+		_, err := db.Model(table).Data(data).WherePri(1).Update(ctx)
 		t.AssertNil(err)
 
-		one, err := db.Model(table).WherePri(1).One()
+		one, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one[`id`], `1`)
 		t.Assert(one[`passport`], `user_100`)
@@ -322,7 +322,7 @@ func Test_Model_Where_ForDao(t *testing.T) {
 			Passport: "user_1",
 			Password: "pass_1",
 		}
-		one, err := db.Model(table).Where(where).One()
+		one, err := db.Model(table).Where(where).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one[`id`], `1`)
 		t.Assert(one[`passport`], `user_1`)
@@ -353,7 +353,7 @@ func Test_Model_Where_FieldPrefix(t *testing.T) {
 		var instance *Instance
 		err := db.Model("instance").Where(InstanceDo{
 			ID: 1,
-		}).Scan(&instance)
+		}).Scan(ctx, &instance)
 		t.AssertNil(err)
 		t.AssertNE(instance, nil)
 		t.Assert(instance.ID, 1)
@@ -381,7 +381,7 @@ func Test_Model_Where_FieldPrefix(t *testing.T) {
 		var instance *Instance
 		err := db.Model("instance").Where(InstanceDo{
 			ID: 1,
-		}).Scan(&instance)
+		}).Scan(ctx, &instance)
 		t.AssertNil(err)
 		t.AssertNE(instance, nil)
 		t.Assert(instance.ID, 1)

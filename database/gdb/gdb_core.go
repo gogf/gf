@@ -128,22 +128,22 @@ func (c *Core) Close(ctx context.Context) (err error) {
 
 // Master creates and returns a connection from master node if master-slave configured.
 // It returns the default connection if master-slave not configured.
-func (c *Core) Master(ctx context.Context, schema ...string) (*sql.DB, error) {
+func (c *Core) Master(schema ...string) (*sql.DB, error) {
 	var (
 		usedSchema   = gutil.GetOrDefaultStr(c.schema, schema...)
 		charL, charR = c.db.GetChars()
 	)
-	return c.getSqlDb(ctx, true, gstr.Trim(usedSchema, charL+charR))
+	return c.getSqlDb(true, gstr.Trim(usedSchema, charL+charR))
 }
 
 // Slave creates and returns a connection from slave node if master-slave configured.
 // It returns the default connection if master-slave not configured.
-func (c *Core) Slave(ctx context.Context, schema ...string) (*sql.DB, error) {
+func (c *Core) Slave(schema ...string) (*sql.DB, error) {
 	var (
 		usedSchema   = gutil.GetOrDefaultStr(c.schema, schema...)
 		charL, charR = c.db.GetChars()
 	)
-	return c.getSqlDb(ctx, false, gstr.Trim(usedSchema, charL+charR))
+	return c.getSqlDb(false, gstr.Trim(usedSchema, charL+charR))
 }
 
 // GetAll queries and returns data records from database.
@@ -258,16 +258,16 @@ func (c *Core) GetCount(ctx context.Context, sql string, args ...any) (int, erro
 }
 
 // Union does "(SELECT xxx FROM xxx) UNION (SELECT xxx FROM xxx) ..." statement.
-func (c *Core) Union(ctx context.Context, unions ...*Model) *Model {
-	return c.doUnion(ctx, unionTypeNormal, unions...)
+func (c *Core) Union(unions ...*Model) *Model {
+	return c.doUnion(unionTypeNormal, unions...)
 }
 
 // UnionAll does "(SELECT xxx FROM xxx) UNION ALL (SELECT xxx FROM xxx) ..." statement.
-func (c *Core) UnionAll(ctx context.Context, unions ...*Model) *Model {
-	return c.doUnion(ctx, unionTypeAll, unions...)
+func (c *Core) UnionAll(unions ...*Model) *Model {
+	return c.doUnion(unionTypeAll, unions...)
 }
 
-func (c *Core) doUnion(ctx context.Context, unionType int, unions ...*Model) *Model {
+func (c *Core) doUnion(unionType int, unions ...*Model) *Model {
 	var (
 		unionTypeStr   string
 		composedSqlStr string
@@ -278,24 +278,27 @@ func (c *Core) doUnion(ctx context.Context, unionType int, unions ...*Model) *Mo
 	} else {
 		unionTypeStr = "UNION"
 	}
-	for _, v := range unions {
-		sqlWithHolder, holderArgs := v.getFormattedSqlAndArgs(ctx, SelectTypeDefault, false)
-		if composedSqlStr == "" {
-			composedSqlStr += fmt.Sprintf(`(%s)`, sqlWithHolder)
-		} else {
-			composedSqlStr += fmt.Sprintf(` %s (%s)`, unionTypeStr, sqlWithHolder)
+	newModel := c.db.Model()
+	return newModel.Handler(func(ctx context.Context, model *Model) *Model {
+		for _, v := range unions {
+			sqlWithHolder, holderArgs := v.getFormattedSqlAndArgs(ctx, SelectTypeDefault, false)
+			if composedSqlStr == "" {
+				composedSqlStr += fmt.Sprintf(`(%s)`, sqlWithHolder)
+			} else {
+				composedSqlStr += fmt.Sprintf(` %s (%s)`, unionTypeStr, sqlWithHolder)
+			}
+			composedArgs = append(composedArgs, holderArgs...)
 		}
-		composedArgs = append(composedArgs, holderArgs...)
-	}
-	return c.db.Raw(composedSqlStr, composedArgs...)
+		return c.db.Raw(composedSqlStr, composedArgs...)
+	})
 }
 
 // PingMaster pings the master node to check authentication or keeps the connection alive.
-func (c *Core) PingMaster(ctx context.Context) error {
+func (c *Core) PingMaster() error {
 	if master, err := c.db.Master(); err != nil {
 		return err
 	} else {
-		if err = master.PingContext(ctx); err != nil {
+		if err = master.Ping(); err != nil {
 			err = gerror.WrapCode(gcode.CodeDbOperationError, err, `master.Ping failed`)
 		}
 		return err
@@ -303,11 +306,11 @@ func (c *Core) PingMaster(ctx context.Context) error {
 }
 
 // PingSlave pings the slave node to check authentication or keeps the connection alive.
-func (c *Core) PingSlave(ctx context.Context) error {
+func (c *Core) PingSlave() error {
 	if slave, err := c.db.Slave(); err != nil {
 		return err
 	} else {
-		if err = slave.PingContext(ctx); err != nil {
+		if err = slave.Ping(); err != nil {
 			err = gerror.WrapCode(gcode.CodeDbOperationError, err, `slave.Ping failed`)
 		}
 		return err

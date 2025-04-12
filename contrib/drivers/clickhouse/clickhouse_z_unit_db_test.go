@@ -265,7 +265,7 @@ func Test_DB_Update(t *testing.T) {
 		_, err := db.Update(ctx, table, "password='123456'", "id=3")
 		t.AssertNE(err, nil)
 
-		one, err := db.Model(table).Where("id", 3).One()
+		one, err := db.Model(table).Where("id", 3).One(ctx)
 		t.AssertNil(err)
 		t.AssertNE(one["password"].String(), "123456")
 
@@ -281,7 +281,7 @@ func Test_DB_Delete(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		//db.SetDebug(true)
-		count, err := db.Model(table).Ctx(ctx).Count()
+		count, err := db.Model(table).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 10)
 
@@ -289,7 +289,7 @@ func Test_DB_Delete(t *testing.T) {
 		t.AssertNil(err)
 		t.AssertNil(result)
 
-		count, err = db.Model(table).Ctx(ctx).Count()
+		count, err = db.Model(table).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 3)
 	})

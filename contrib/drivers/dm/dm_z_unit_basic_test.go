@@ -123,7 +123,7 @@ func Test_DB_Query(t *testing.T) {
 		t.AssertNil(err)
 
 		resTwo := make([]User, 0)
-		err = db.Model(tableName).Scan(&resTwo)
+		err = db.Model(tableName).Scan(ctx, &resTwo)
 		t.AssertNil(err)
 
 		resThree := make([]User, 0)
@@ -131,9 +131,9 @@ func Test_DB_Query(t *testing.T) {
 		model.Where("id", g.Slice{1, 2, 3, 4})
 		// model.Where("account_name like ?", "%"+"list"+"%")
 		model.Where("deleted", 0).Order("pwd_reset desc")
-		_, err = model.Count()
+		_, err = model.Count(ctx)
 		t.AssertNil(err)
-		err = model.Page(2, 2).Scan(&resThree)
+		err = model.Page(2, 2).Scan(ctx, &resThree)
 		t.AssertNil(err)
 	})
 }
@@ -159,13 +159,13 @@ func TestModelSave(t *testing.T) {
 			"id":          1,
 			"accountName": "ac1",
 			"attrIndex":   100,
-		}).OnConflict("id").Save()
+		}).OnConflict("id").Save(ctx)
 
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 
-		err = db.Model(table).Scan(&user)
+		err = db.Model(table).Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 1)
 		t.Assert(user.AccountName, "ac1")
@@ -175,15 +175,15 @@ func TestModelSave(t *testing.T) {
 			"id":          1,
 			"accountName": "ac2",
 			"attrIndex":   200,
-		}).OnConflict("id").Save()
+		}).OnConflict("id").Save(ctx)
 		t.AssertNil(err)
 
-		err = db.Model(table).Scan(&user)
+		err = db.Model(table).Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.AccountName, "ac2")
 		t.Assert(user.AttrIndex, 200)
 
-		count, err = db.Model(table).Count()
+		count, err = db.Model(table).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 1)
 	})
@@ -203,7 +203,7 @@ func TestModelInsert(t *testing.T) {
 			CreatedTime: time.Now(),
 			UpdatedTime: time.Now(),
 		}
-		// _, err := db.Schema(TestDBName).Model(table).Data(data).Insert()
+		// _, err := db.Schema(TestDBName).Model(table).Data(data).Insert(ctx)
 		_, err := db.Model(table).Insert(&data)
 		gtest.AssertNil(err)
 	})
@@ -218,8 +218,8 @@ func TestModelInsert(t *testing.T) {
 			AttrIndex:   98,
 			UpdatedTime: time.Now(),
 		}
-		// _, err := db.Schema(TestDBName).Model(table).Data(data).Insert()
-		_, err := db.Model(table).Data(&data).Insert()
+		// _, err := db.Schema(TestDBName).Model(table).Data(data).Insert(ctx)
+		_, err := db.Model(table).Data(&data).Insert(ctx)
 		gtest.AssertNil(err)
 	})
 }
@@ -298,7 +298,7 @@ func Test_DB_Insert(t *testing.T) {
 		n, _ = result.RowsAffected()
 		t.Assert(n, 1)
 
-		ones, err := db.Model(table).Where("ID", 4000).All()
+		ones, err := db.Model(table).Where("ID", 4000).All(ctx)
 		t.AssertNil(err)
 		t.Assert(ones[0]["ID"].Int(), 4000)
 		t.Assert(ones[0]["ACCOUNT_NAME"].String(), "struct_4")
@@ -317,7 +317,7 @@ func Test_DB_Insert(t *testing.T) {
 		n, _ = result.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table).Where("ID", 5000).One()
+		one, err := db.Model(table).Where("ID", 5000).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["ID"].Int(), 5000)
 		t.Assert(one["ACCOUNT_NAME"].String(), "struct_5")
@@ -341,7 +341,7 @@ func Test_DB_Insert(t *testing.T) {
 		n, _ = r.RowsAffected()
 		t.Assert(n, 2)
 
-		one, err = db.Model(table).Where("ID", 6000).One()
+		one, err = db.Model(table).Where("ID", 6000).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["ID"].Int(), 6000)
 		t.Assert(one["ACCOUNT_NAME"].String(), "t6000")
@@ -435,7 +435,7 @@ func Test_DB_Update(t *testing.T) {
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table).Where("ID", 7).One()
+		one, err := db.Model(table).Where("ID", 7).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["ID"].Int(), 7)
 		t.Assert(one["ACCOUNT_NAME"].String(), "name_7")
@@ -595,7 +595,7 @@ func Test_DB_Delete(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).Where("id", 33).Delete()
+		result, err := db.Model(table).Where("id", 33).Delete(ctx)
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 0)

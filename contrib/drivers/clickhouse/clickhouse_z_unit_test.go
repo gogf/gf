@@ -259,7 +259,7 @@ func TestDriverClickhouse_InsertOne(t *testing.T) {
 		"duration": float64(grand.Intn(999)),
 		"url":      gconv.String(grand.Intn(999)),
 		"created":  time.Now(),
-	}).Insert()
+	}).Insert(ctx)
 	gtest.AssertNil(err)
 }
 
@@ -281,10 +281,10 @@ func TestDriverClickhouse_InsertOneAutoDateTimeWrite(t *testing.T) {
 	_, err = connect.Model("visits").Data(g.Map{
 		"duration": float64(grand.Intn(999)),
 		"url":      gconv.String(grand.Intn(999)),
-	}).Insert()
+	}).Insert(ctx)
 	gtest.AssertNil(err)
 	// Query the inserted data to get the time field value
-	data, err := connect.Model("visits").One()
+	data, err := connect.Model("visits").One(ctx)
 	gtest.AssertNil(err)
 	// Get the time value from the inserted data
 	createdTime := data["created"].Time()
@@ -320,11 +320,11 @@ func TestDriverClickhouse_Insert(t *testing.T) {
 			Created:  time.Now(),
 		}
 	)
-	_, err := connect.Model("visits").Data(item).Insert()
+	_, err := connect.Model("visits").Data(item).Insert(ctx)
 	gtest.AssertNil(err)
-	_, err = connect.Model("visits").Data(item).Save()
+	_, err = connect.Model("visits").Data(item).Save(ctx)
 	gtest.AssertNil(err)
-	total, err = connect.Model("visits").Count()
+	total, err = connect.Model("visits").Count(ctx)
 	gtest.AssertNil(err)
 	gtest.AssertEQ(total, 2)
 	var list []*insertItem
@@ -335,11 +335,11 @@ func TestDriverClickhouse_Insert(t *testing.T) {
 			Created:  time.Now(),
 		})
 	}
-	_, err = connect.Model("visits").Data(list).Insert()
+	_, err = connect.Model("visits").Data(list).Insert(ctx)
 	gtest.AssertNil(err)
-	_, err = connect.Model("visits").Data(list).Save()
+	_, err = connect.Model("visits").Data(list).Save(ctx)
 	gtest.AssertNil(err)
-	total, err = connect.Model("visits").Count()
+	total, err = connect.Model("visits").Count(ctx)
 	gtest.AssertNil(err)
 	gtest.AssertEQ(total, 102)
 }
@@ -356,7 +356,7 @@ func TestDriverClickhouse_Delete(t *testing.T) {
 	connect := clickhouseConfigDB()
 	gtest.AssertEQ(createClickhouseTableVisits(connect), nil)
 	defer dropClickhouseTableVisits(connect)
-	_, err := connect.Model("visits").Where("created >", "2021-01-01 00:00:00").Delete()
+	_, err := connect.Model("visits").Where("created >", "2021-01-01 00:00:00").Delete(ctx)
 	gtest.AssertNil(err)
 	_, err = connect.Model("visits").
 		Where("created >", "2021-01-01 00:00:00").
@@ -372,7 +372,7 @@ func TestDriverClickhouse_Update(t *testing.T) {
 	defer dropClickhouseTableVisits(connect)
 	_, err := connect.Model("visits").Where("created > ", "2021-01-01 15:15:15").Data(g.Map{
 		"created": time.Now().Format("2006-01-02 15:04:05"),
-	}).Update()
+	}).Update(ctx)
 	gtest.AssertNil(err)
 	_, err = connect.Model("visits").
 		Where("created > ", "2021-01-01 15:15:15").
@@ -380,7 +380,7 @@ func TestDriverClickhouse_Update(t *testing.T) {
 		Where("url is not null").
 		Data(g.Map{
 			"created": time.Now().Format("2006-01-02 15:04:05"),
-		}).Update()
+		}).Update(ctx)
 }
 
 func TestDriverClickhouse_Replace(t *testing.T) {
@@ -425,17 +425,17 @@ func TestDriverClickhouse_Select(t *testing.T) {
 	_, err := connect.Model("visits").Data(g.Map{
 		"url":      "goframe.org",
 		"duration": float64(1),
-	}).Insert()
+	}).Insert(ctx)
 	gtest.AssertNil(err)
-	temp, err := connect.Model("visits").Where("url", "goframe.org").Where("duration >= ", 1).One()
+	temp, err := connect.Model("visits").Where("url", "goframe.org").Where("duration >= ", 1).One(ctx)
 	gtest.AssertNil(err)
 	gtest.AssertEQ(temp.IsEmpty(), false)
 	_, err = connect.Model("visits").Data(g.Map{
 		"url":      "goframe.org",
 		"duration": float64(2),
-	}).Insert()
+	}).Insert(ctx)
 	gtest.AssertNil(err)
-	data, err := connect.Model("visits").Where("url", "goframe.org").Where("duration >= ", 1).All()
+	data, err := connect.Model("visits").Where("url", "goframe.org").Where("duration >= ", 1).All(ctx)
 	gtest.AssertNil(err)
 	gtest.AssertEQ(len(data), 2)
 }
@@ -492,13 +492,13 @@ func TestDriverClickhouse_NilTime(t *testing.T) {
 			Col12: &strMoney,
 		})
 	}
-	_, err := connect.Model("data_type").Data(insertData).Insert()
+	_, err := connect.Model("data_type").Data(insertData).Insert(ctx)
 	gtest.AssertNil(err)
-	count, err := connect.Model("data_type").Where("Col4", "Inc.").Count()
+	count, err := connect.Model("data_type").Where("Col4", "Inc.").Count(ctx)
 	gtest.AssertNil(err)
 	gtest.AssertEQ(count, 10000)
 
-	data, err := connect.Model("data_type").Where("Col4", "Inc.").One()
+	data, err := connect.Model("data_type").Where("Col4", "Inc.").One(ctx)
 	gtest.AssertNil(err)
 	gtest.AssertNE(data, nil)
 	g.Dump(data)
@@ -533,9 +533,9 @@ func TestDriverClickhouse_BatchInsert(t *testing.T) {
 			"Col10": nil,
 		})
 	}
-	_, err := connect.Model("data_type").Data(insertData).Insert()
+	_, err := connect.Model("data_type").Data(insertData).Insert(ctx)
 	gtest.AssertNil(err)
-	count, err := connect.Model("data_type").Where("Col2", "ClickHouse").Where("Col3", "Inc").Count()
+	count, err := connect.Model("data_type").Where("Col2", "ClickHouse").Where("Col3", "Inc").Count(ctx)
 	gtest.AssertNil(err)
 	gtest.AssertEQ(count, 10000)
 }

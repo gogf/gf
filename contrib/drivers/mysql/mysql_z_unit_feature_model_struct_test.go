@@ -45,11 +45,11 @@ func Test_Model_Embedded_Insert(t *testing.T) {
 				Uid:        100,
 				CreateTime: gtime.Now().String(),
 			},
-		}).Insert()
+		}).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
-		value, err := db.Model(table).Fields("passport").Where("id=100").Value()
+		value, err := db.Model(table).Fields("passport").Where("id=100").Value(ctx)
 		t.AssertNil(err)
 		t.Assert(value.String(), "john-test")
 	})
@@ -82,12 +82,12 @@ func Test_Model_Embedded_MapToStruct(t *testing.T) {
 			"nickname":    "T1",
 			"create_time": gtime.Now().String(),
 		}
-		result, err := db.Model(table).Data(data).Insert()
+		result, err := db.Model(table).Data(data).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table).Where("id=100").One()
+		one, err := db.Model(table).Where("id=100").One(ctx)
 		t.AssertNil(err)
 
 		user := new(User)
@@ -113,7 +113,7 @@ func Test_Struct_Pointer_Attribute(t *testing.T) {
 	}
 
 	gtest.C(t, func(t *gtest.T) {
-		one, err := db.Model(table).WherePri(1).One()
+		one, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		user := new(User)
 		err = one.Struct(user)
@@ -125,7 +125,7 @@ func Test_Struct_Pointer_Attribute(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
-		err := db.Model(table).Scan(user, "id=1")
+		err := db.Model(table).Where("id=1").Scan(ctx, user)
 		t.AssertNil(err)
 		t.Assert(*user.Id, 1)
 		t.Assert(*user.Passport, "user_1")
@@ -134,7 +134,7 @@ func Test_Struct_Pointer_Attribute(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var user *User
-		err := db.Model(table).Scan(&user, "id=1")
+		err := db.Model(table).Where("id=1").Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(*user.Id, 1)
 		t.Assert(*user.Passport, "user_1")
@@ -155,7 +155,7 @@ func Test_Structs_Pointer_Attribute(t *testing.T) {
 	}
 	// All
 	gtest.C(t, func(t *gtest.T) {
-		one, err := db.Model(table).All("id < 3")
+		one, err := db.Model(table).Where("id < 3").All(ctx)
 		t.AssertNil(err)
 		users := make([]User, 0)
 		err = one.Structs(&users)
@@ -167,7 +167,7 @@ func Test_Structs_Pointer_Attribute(t *testing.T) {
 		t.Assert(users[0].Nickname, "name_1")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		one, err := db.Model(table).All("id < 3")
+		one, err := db.Model(table).Where("id < 3").All(ctx)
 		t.AssertNil(err)
 		users := make([]*User, 0)
 		err = one.Structs(&users)
@@ -180,7 +180,7 @@ func Test_Structs_Pointer_Attribute(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var users []User
-		one, err := db.Model(table).All("id < 3")
+		one, err := db.Model(table).Where("id < 3").All(ctx)
 		t.AssertNil(err)
 		err = one.Structs(&users)
 		t.AssertNil(err)
@@ -192,7 +192,7 @@ func Test_Structs_Pointer_Attribute(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var users []*User
-		one, err := db.Model(table).All("id < 3")
+		one, err := db.Model(table).Where("id < 3").All(ctx)
 		t.AssertNil(err)
 		err = one.Structs(&users)
 		t.AssertNil(err)
@@ -205,7 +205,7 @@ func Test_Structs_Pointer_Attribute(t *testing.T) {
 	// Structs
 	gtest.C(t, func(t *gtest.T) {
 		users := make([]User, 0)
-		err := db.Model(table).Scan(&users, "id < 3")
+		err := db.Model(table).Where("id < 3").Scan(ctx, &users)
 		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(*users[0].Id, 1)
@@ -215,7 +215,7 @@ func Test_Structs_Pointer_Attribute(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		users := make([]*User, 0)
-		err := db.Model(table).Scan(&users, "id < 3")
+		err := db.Model(table).Where("id < 3").Scan(ctx, &users)
 		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(*users[0].Id, 1)
@@ -225,7 +225,7 @@ func Test_Structs_Pointer_Attribute(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var users []User
-		err := db.Model(table).Scan(&users, "id < 3")
+		err := db.Model(table).Where("id < 3").Scan(ctx, &users)
 		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(*users[0].Id, 1)
@@ -235,7 +235,7 @@ func Test_Structs_Pointer_Attribute(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var users []*User
-		err := db.Model(table).Scan(&users, "id < 3")
+		err := db.Model(table).Where("id < 3").Scan(ctx, &users)
 		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(*users[0].Id, 1)
@@ -258,13 +258,13 @@ func Test_Struct_Empty(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
-		err := db.Model(table).Where("id=100").Scan(user)
+		err := db.Model(table).Where("id=100").Scan(ctx, user)
 		t.Assert(err, sql.ErrNoRows)
 		t.AssertNE(user, nil)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		one, err := db.Model(table).Where("id=100").One()
+		one, err := db.Model(table).Where("id=100").One(ctx)
 		t.AssertNil(err)
 		var user *User
 		t.Assert(one.Struct(&user), nil)
@@ -273,7 +273,7 @@ func Test_Struct_Empty(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		var user *User
-		err := db.Model(table).Where("id=100").Scan(&user)
+		err := db.Model(table).Where("id=100").Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user, nil)
 	})
@@ -291,38 +291,38 @@ func Test_Structs_Empty(t *testing.T) {
 	}
 
 	gtest.C(t, func(t *gtest.T) {
-		all, err := db.Model(table).Where("id>100").All()
+		all, err := db.Model(table).Where("id>100").All(ctx)
 		t.AssertNil(err)
 		users := make([]User, 0)
 		t.Assert(all.Structs(&users), nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		all, err := db.Model(table).Where("id>100").All()
+		all, err := db.Model(table).Where("id>100").All(ctx)
 		t.AssertNil(err)
 		users := make([]User, 10)
 		t.Assert(all.Structs(&users), sql.ErrNoRows)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		all, err := db.Model(table).Where("id>100").All()
+		all, err := db.Model(table).Where("id>100").All(ctx)
 		t.AssertNil(err)
 		var users []User
 		t.Assert(all.Structs(&users), nil)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		all, err := db.Model(table).Where("id>100").All()
+		all, err := db.Model(table).Where("id>100").All(ctx)
 		t.AssertNil(err)
 		users := make([]*User, 0)
 		t.Assert(all.Structs(&users), nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		all, err := db.Model(table).Where("id>100").All()
+		all, err := db.Model(table).Where("id>100").All(ctx)
 		t.AssertNil(err)
 		users := make([]*User, 10)
 		t.Assert(all.Structs(&users), sql.ErrNoRows)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		all, err := db.Model(table).Where("id>100").All()
+		all, err := db.Model(table).Where("id>100").All(ctx)
 		t.AssertNil(err)
 		var users []*User
 		t.Assert(all.Structs(&users), nil)
@@ -352,13 +352,13 @@ func Test_Model_Scan_CustomType_Time(t *testing.T) {
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
 		st := new(MyTimeSt)
-		err := db.Model(table).Fields("create_time").Scan(st)
+		err := db.Model(table).Fields("create_time").Scan(ctx, st)
 		t.AssertNil(err)
 		t.Assert(st.CreateTime.String(), "2018-10-24 10:00:00")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var stSlice []*MyTimeSt
-		err := db.Model(table).Fields("create_time").Scan(&stSlice)
+		err := db.Model(table).Fields("create_time").Scan(ctx, &stSlice)
 		t.AssertNil(err)
 		t.Assert(len(stSlice), TableSize)
 		t.Assert(stSlice[0].CreateTime.String(), "2018-10-24 10:00:00")
@@ -377,13 +377,13 @@ func Test_Model_Scan_CustomType_String(t *testing.T) {
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
 		st := new(MyStringSt)
-		err := db.Model(table).Fields("Passport").WherePri(1).Scan(st)
+		err := db.Model(table).Fields("Passport").WherePri(1).Scan(ctx, st)
 		t.AssertNil(err)
 		t.Assert(st.Passport, "user_1")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var sts []MyStringSt
-		err := db.Model(table).Fields("Passport").Order("id asc").Scan(&sts)
+		err := db.Model(table).Fields("Passport").Order("id asc").Scan(ctx, &sts)
 		t.AssertNil(err)
 		t.Assert(len(sts), TableSize)
 		t.Assert(sts[0].Passport, "user_1")
@@ -417,7 +417,7 @@ func Test_Model_Scan_UnmarshalValue(t *testing.T) {
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
 		var users []*User
-		err := db.Model(table).Order("id asc").Scan(&users)
+		err := db.Model(table).Order("id asc").Scan(ctx, &users)
 		t.AssertNil(err)
 		t.Assert(len(users), TableSize)
 		t.Assert(users[0].Id, 1)
@@ -440,7 +440,7 @@ func Test_Model_Scan_Map(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		var users []*User
-		err := db.Model(table).Order("id asc").Scan(&users)
+		err := db.Model(table).Order("id asc").Scan(ctx, &users)
 		t.AssertNil(err)
 		t.Assert(len(users), TableSize)
 		t.Assert(users[0].Id, 1)
@@ -468,13 +468,13 @@ func Test_Scan_AutoFilteringByStructAttributes(t *testing.T) {
 	// db.SetDebug(true)
 	gtest.C(t, func(t *gtest.T) {
 		var user *User
-		err := db.Model(table).OrderAsc("id").Scan(&user)
+		err := db.Model(table).OrderAsc("id").Scan(ctx, &user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 1)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var users []User
-		err := db.Model(table).OrderAsc("id").Scan(&users)
+		err := db.Model(table).OrderAsc("id").Scan(ctx, &users)
 		t.AssertNil(err)
 		t.Assert(len(users), TableSize)
 		t.Assert(users[0].Id, 1)

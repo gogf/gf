@@ -6,22 +6,24 @@
 
 package gdb
 
+import "context"
+
 // WhereOrPrefix performs as WhereOr, but it adds prefix to each field in where statement.
 // Eg:
 // WhereOrPrefix("order", "status", "paid")                        => WHERE xxx OR (`order`.`status`='paid')
 // WhereOrPrefix("order", struct{Status:"paid", "channel":"bank"}) => WHERE xxx OR (`order`.`status`='paid' AND `order`.`channel`='bank')
 func (b *WhereBuilder) WhereOrPrefix(prefix string, where interface{}, args ...interface{}) *WhereBuilder {
-	where, args = b.convertWhereBuilder(where, args)
-
-	builder := b.getBuilder()
-	builder.whereHolder = append(builder.whereHolder, WhereHolder{
-		Type:     whereHolderTypeDefault,
-		Operator: whereHolderOperatorOr,
-		Where:    where,
-		Args:     args,
-		Prefix:   prefix,
+	return b.Handler(func(ctx context.Context, builder *WhereBuilder) *WhereBuilder {
+		where, args = b.convertWhereBuilder(ctx, where, args)
+		builder.whereHolder = append(builder.whereHolder, WhereHolder{
+			Type:     whereHolderTypeDefault,
+			Operator: whereHolderOperatorOr,
+			Where:    where,
+			Args:     args,
+			Prefix:   prefix,
+		})
+		return builder
 	})
-	return builder
 }
 
 // WhereOrPrefixNot builds `prefix.column != value` statement in `OR` conditions.
@@ -61,7 +63,12 @@ func (b *WhereBuilder) WhereOrPrefixLike(prefix string, column string, like inte
 
 // WhereOrPrefixIn builds `prefix.column IN (in)` statement in `OR` conditions.
 func (b *WhereBuilder) WhereOrPrefixIn(prefix string, column string, in interface{}) *WhereBuilder {
-	return b.doWhereOrfType(whereHolderTypeIn, `%s.%s IN (?)`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), in)
+	return b.Handler(func(ctx context.Context, builder *WhereBuilder) *WhereBuilder {
+		return builder.doWhereOrfType(
+			ctx, whereHolderTypeIn, `%s.%s IN (?)`,
+			b.model.QuoteWord(prefix), b.model.QuoteWord(column), in,
+		)
+	})
 }
 
 // WhereOrPrefixNull builds `prefix.columns[0] IS NULL OR prefix.columns[1] IS NULL ...` statement in `OR` conditions.
@@ -85,7 +92,12 @@ func (b *WhereBuilder) WhereOrPrefixNotLike(prefix string, column string, like i
 
 // WhereOrPrefixNotIn builds `prefix.column NOT IN (in)` statement.
 func (b *WhereBuilder) WhereOrPrefixNotIn(prefix string, column string, in interface{}) *WhereBuilder {
-	return b.doWhereOrfType(whereHolderTypeIn, `%s.%s NOT IN (?)`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), in)
+	return b.Handler(func(ctx context.Context, builder *WhereBuilder) *WhereBuilder {
+		return builder.doWhereOrfType(
+			ctx, whereHolderTypeIn, `%s.%s NOT IN (?)`,
+			b.model.QuoteWord(prefix), b.model.QuoteWord(column), in,
+		)
+	})
 }
 
 // WhereOrPrefixNotNull builds `prefix.columns[0] IS NOT NULL OR prefix.columns[1] IS NOT NULL ...` statement in `OR` conditions.

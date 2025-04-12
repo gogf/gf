@@ -35,8 +35,8 @@ func (m *Model) Wheref(format string, args ...any) *Model {
 // WherePri function treats the condition as "id=123", but Model.Where treats the condition
 // as string "123".
 // See WhereBuilder.WherePri.
-func (m *Model) WherePri(where any, args ...any) *Model {
-	return m.callWhereBuilder(m.whereBuilder.WherePri(where, args...))
+func (m *Model) WherePri(arg any) *Model {
+	return m.callWhereBuilder(m.whereBuilder.WherePri(arg))
 }
 
 // WhereLT builds `column < value` statement.

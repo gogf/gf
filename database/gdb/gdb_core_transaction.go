@@ -109,6 +109,9 @@ func (c *Core) doBeginCtx(ctx context.Context, opts sql.TxOptions) (TX, error) {
 		TxOptions:     opts,
 		IsTransaction: true,
 	})
+	if err != nil {
+		return nil, err
+	}
 	return out.Tx, err
 }
 

@@ -29,7 +29,7 @@ func Test_Model_LeftJoinOnField(t *testing.T) {
 			FieldsPrefix(table1, "*").
 			LeftJoinOnField(table2, "id").
 			WhereIn("id", g.Slice{1, 2}).
-			Order("id asc").All()
+			Order("id asc").All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
 		t.Assert(r[0]["id"], "1")
@@ -52,7 +52,7 @@ func Test_Model_RightJoinOnField(t *testing.T) {
 			FieldsPrefix(table1, "*").
 			RightJoinOnField(table2, "id").
 			WhereIn("id", g.Slice{1, 2}).
-			Order("id asc").All()
+			Order("id asc").All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
 		t.Assert(r[0]["id"], "1")
@@ -75,7 +75,7 @@ func Test_Model_InnerJoinOnField(t *testing.T) {
 			FieldsPrefix(table1, "*").
 			InnerJoinOnField(table2, "id").
 			WhereIn("id", g.Slice{1, 2}).
-			Order("id asc").All()
+			Order("id asc").All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
 		t.Assert(r[0]["id"], "1")
@@ -98,7 +98,7 @@ func Test_Model_LeftJoinOnFields(t *testing.T) {
 			FieldsPrefix(table1, "*").
 			LeftJoinOnFields(table2, "id", "=", "id").
 			WhereIn("id", g.Slice{1, 2}).
-			Order("id asc").All()
+			Order("id asc").All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
 		t.Assert(r[0]["id"], "1")
@@ -121,7 +121,7 @@ func Test_Model_RightJoinOnFields(t *testing.T) {
 			FieldsPrefix(table1, "*").
 			RightJoinOnFields(table2, "id", "=", "id").
 			WhereIn("id", g.Slice{1, 2}).
-			Order("id asc").All()
+			Order("id asc").All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
 		t.Assert(r[0]["id"], "1")
@@ -144,7 +144,7 @@ func Test_Model_InnerJoinOnFields(t *testing.T) {
 			FieldsPrefix(table1, "*").
 			InnerJoinOnFields(table2, "id", "=", "id").
 			WhereIn("id", g.Slice{1, 2}).
-			Order("id asc").All()
+			Order("id asc").All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
 		t.Assert(r[0]["id"], "1")
@@ -168,7 +168,7 @@ func Test_Model_FieldsPrefix(t *testing.T) {
 			FieldsPrefix(table2, "nickname").
 			LeftJoinOnField(table2, "id").
 			WhereIn("id", g.Slice{1, 2}).
-			Order("id asc").All()
+			Order("id asc").All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
 		t.Assert(r[0]["id"], "1")

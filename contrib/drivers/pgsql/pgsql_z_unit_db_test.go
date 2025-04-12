@@ -254,7 +254,7 @@ func Test_DB_Update(t *testing.T) {
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table).Where("id", 3).One()
+		one, err := db.Model(table).Where("id", 3).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 3)
 		t.Assert(one["passport"].String(), "user_3")
@@ -350,16 +350,16 @@ int_col INT);`
 			Id:     2,
 			IntCol: 2,
 		}
-		_, err = db.Model(tableName).Data(data).Insert()
+		_, err = db.Model(tableName).Data(data).Insert(ctx)
 		t.Assert(err, errStr)
 
 		// Insert a piece of test data using lowercase
-		_, err = db.Model(strings.ToLower(tableName)).Data(data).Insert()
+		_, err = db.Model(strings.ToLower(tableName)).Data(data).Insert(ctx)
 		t.AssertNil(err)
 
 		_, err = db.Model(tableName).Where("id", 1).Data(g.Map{
 			"int_col": 9999,
-		}).Update()
+		}).Update(ctx)
 		t.Assert(err, errStr)
 
 	})
@@ -369,16 +369,16 @@ int_col INT);`
 			"id1":        22,
 			"int_col_22": 11111,
 		}
-		_, err = db.Model(tableName).Data(data).Insert()
+		_, err = db.Model(tableName).Data(data).Insert(ctx)
 		t.Assert(err, errStr)
 
 		lowerTableName := strings.ToLower(tableName)
-		_, err = db.Model(lowerTableName).Data(data).Insert()
+		_, err = db.Model(lowerTableName).Data(data).Insert(ctx)
 		t.Assert(err, fmt.Errorf(`input data match no fields in table "%s"`, lowerTableName))
 
 		_, err = db.Model(lowerTableName).Where("id", 1).Data(g.Map{
 			"int_col-2": 9999,
-		}).Update()
+		}).Update(ctx)
 		t.Assert(err, fmt.Errorf(`input data match no fields in table "%s"`, lowerTableName))
 	})
 

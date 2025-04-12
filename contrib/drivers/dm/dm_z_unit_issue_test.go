@@ -64,7 +64,7 @@ func Test_Issue2594(t *testing.T) {
 		t.AssertNil(err)
 
 		var h2 HandleInfoMysql
-		err = db.Model(table).Scan(&h2)
+		err = db.Model(table).Scan(ctx, &h2)
 		t.AssertNil(err)
 
 		h1.Id = 1

@@ -58,7 +58,7 @@ type Model struct {
 }
 
 // ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
-type ModelHandler func(ctx context.Context, m *Model) *Model
+type ModelHandler func(ctx context.Context, model *Model) *Model
 
 // ChunkHandler is a function that is used in function Chunk, which handles given Result and error.
 // It returns true if it wants to continue chunking, or else it returns false to stop chunking.

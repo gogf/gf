@@ -22,7 +22,7 @@ func Test_Union(t *testing.T) {
 			db.Model(table).Where("id", 1),
 			db.Model(table).Where("id", 2),
 			db.Model(table).WhereIn("id", g.Slice{1, 2, 3}).OrderDesc("id"),
-		).OrderDesc("id").All()
+		).OrderDesc("id").All(ctx)
 
 		t.AssertNil(err)
 
@@ -37,7 +37,7 @@ func Test_Union(t *testing.T) {
 			db.Model(table).Where("id", 1),
 			db.Model(table).Where("id", 2),
 			db.Model(table).WhereIn("id", g.Slice{1, 2, 3}).OrderDesc("id"),
-		).OrderDesc("id").One()
+		).OrderDesc("id").One(ctx)
 
 		t.AssertNil(err)
 
@@ -54,7 +54,7 @@ func Test_UnionAll(t *testing.T) {
 			db.Model(table).Where("id", 1),
 			db.Model(table).Where("id", 2),
 			db.Model(table).WhereIn("id", g.Slice{1, 2, 3}).OrderDesc("id"),
-		).OrderDesc("id").All()
+		).OrderDesc("id").All(ctx)
 
 		t.AssertNil(err)
 
@@ -71,7 +71,7 @@ func Test_UnionAll(t *testing.T) {
 			db.Model(table).Where("id", 1),
 			db.Model(table).Where("id", 2),
 			db.Model(table).WhereIn("id", g.Slice{1, 2, 3}).OrderDesc("id"),
-		).OrderDesc("id").One()
+		).OrderDesc("id").One(ctx)
 
 		t.AssertNil(err)
 
@@ -88,7 +88,7 @@ func Test_Model_Union(t *testing.T) {
 			db.Model(table).Where("id", 1),
 			db.Model(table).Where("id", 2),
 			db.Model(table).WhereIn("id", g.Slice{1, 2, 3}).OrderDesc("id"),
-		).OrderDesc("id").All()
+		).OrderDesc("id").All(ctx)
 
 		t.AssertNil(err)
 
@@ -103,7 +103,7 @@ func Test_Model_Union(t *testing.T) {
 			db.Model(table).Where("id", 1),
 			db.Model(table).Where("id", 2),
 			db.Model(table).WhereIn("id", g.Slice{1, 2, 3}).OrderDesc("id"),
-		).OrderDesc("id").One()
+		).OrderDesc("id").One(ctx)
 
 		t.AssertNil(err)
 
@@ -120,7 +120,7 @@ func Test_Model_UnionAll(t *testing.T) {
 			db.Model(table).Where("id", 1),
 			db.Model(table).Where("id", 2),
 			db.Model(table).WhereIn("id", g.Slice{1, 2, 3}).OrderDesc("id"),
-		).OrderDesc("id").All()
+		).OrderDesc("id").All(ctx)
 
 		t.AssertNil(err)
 
@@ -137,7 +137,7 @@ func Test_Model_UnionAll(t *testing.T) {
 			db.Model(table).Where("id", 1),
 			db.Model(table).Where("id", 2),
 			db.Model(table).WhereIn("id", g.Slice{1, 2, 3}).OrderDesc("id"),
-		).OrderDesc("id").One()
+		).OrderDesc("id").One(ctx)
 
 		t.AssertNil(err)
 

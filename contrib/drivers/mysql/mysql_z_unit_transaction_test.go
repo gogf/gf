@@ -129,7 +129,7 @@ func Test_TX_Insert(t *testing.T) {
 			"password":    "25d55ad283aa400af464c76d713c07ad",
 			"nickname":    "T1",
 			"create_time": gtime.Now().String(),
-		}).Insert()
+		}).Insert(ctx)
 		t.AssertNil(err)
 
 		_, err = tx.Insert(table, g.Map{
@@ -141,7 +141,7 @@ func Test_TX_Insert(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		n, err := tx.Model(table).Count()
+		n, err := tx.Model(table).Count(ctx)
 		t.AssertNil(err)
 
 		t.Assert(n, int64(2))
@@ -181,7 +181,7 @@ func Test_TX_BatchInsert(t *testing.T) {
 		err = tx.Commit()
 		t.AssertNil(err)
 
-		n, err := db.Model(table).Count()
+		n, err := db.Model(table).Count(ctx)
 		t.AssertNil(err)
 
 		t.Assert(n, int64(2))
@@ -217,12 +217,12 @@ func Test_TX_BatchReplace(t *testing.T) {
 		err = tx.Commit()
 		t.AssertNil(err)
 
-		n, err := db.Model(table).Count()
+		n, err := db.Model(table).Count(ctx)
 		t.AssertNil(err)
 
 		t.Assert(n, int64(TableSize))
 
-		value, err := db.Model(table).Fields("password").Where("id", 2).Value()
+		value, err := db.Model(table).Fields("password").Where("id", 2).Value(ctx)
 		t.AssertNil(err)
 
 		t.Assert(value.String(), "PASS_2")
@@ -251,12 +251,12 @@ func Test_TX_BatchSave(t *testing.T) {
 		err = tx.Commit()
 		t.AssertNil(err)
 
-		n, err := db.Model(table).Count()
+		n, err := db.Model(table).Count(ctx)
 		t.AssertNil(err)
 
 		t.Assert(n, int64(TableSize))
 
-		value, err := db.Model(table).Fields("password").Where("id", 4).Value()
+		value, err := db.Model(table).Fields("password").Where("id", 4).Value(ctx)
 		t.AssertNil(err)
 
 		t.Assert(value.String(), "PASS_4")
@@ -283,7 +283,7 @@ func Test_TX_Replace(t *testing.T) {
 		err = tx.Rollback()
 		t.AssertNil(err)
 
-		value, err := db.Model(table).Fields("nickname").Where("id", 1).Value()
+		value, err := db.Model(table).Fields("nickname").Where("id", 1).Value(ctx)
 		t.AssertNil(err)
 
 		t.Assert(value.String(), "name_1")
@@ -310,7 +310,7 @@ func Test_TX_Save(t *testing.T) {
 		err = tx.Commit()
 		t.AssertNil(err)
 
-		value, err := db.Model(table).Fields("nickname").Where("id", 1).Value()
+		value, err := db.Model(table).Fields("nickname").Where("id", 1).Value(ctx)
 		t.AssertNil(err)
 
 		t.Assert(value.String(), "NAME_1")
@@ -334,10 +334,10 @@ func Test_TX_Update(t *testing.T) {
 		err = tx.Commit()
 		t.AssertNil(err)
 
-		_, err = tx.Model(table).Fields("create_time").Where("id", 3).Value()
+		_, err = tx.Model(table).Fields("create_time").Where("id", 3).Value(ctx)
 		t.AssertNE(err, nil)
 
-		value, err := db.Model(table).Fields("create_time").Where("id", 3).Value()
+		value, err := db.Model(table).Fields("create_time").Where("id", 3).Value(ctx)
 		t.AssertNil(err)
 
 		t.Assert(value.String(), "2019-10-24 10:00:00")
@@ -649,7 +649,7 @@ func Test_TX_Delete(t *testing.T) {
 		err = tx.Commit()
 		t.AssertNil(err)
 
-		n, err := db.Model(table).Count()
+		n, err := db.Model(table).Count(ctx)
 		t.AssertNil(err)
 
 		t.Assert(n, int64(0))
@@ -665,14 +665,14 @@ func Test_TX_Delete(t *testing.T) {
 		_, err = tx.Delete(table, 1)
 		t.AssertNil(err)
 
-		n, err := tx.Model(table).Count()
+		n, err := tx.Model(table).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(n, int64(0))
 
 		err = tx.Rollback()
 		t.AssertNil(err)
 
-		n, err = db.Model(table).Count()
+		n, err = db.Model(table).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(n, int64(TableSize))
 		t.AssertNE(n, int64(0))
@@ -687,7 +687,7 @@ func Test_Transaction(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		ctx := context.TODO()
 		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
-			_, err := tx.Ctx(ctx).Replace(table, g.Map{
+			_, err := tx.Replace(table, g.Map{
 				"id":          1,
 				"passport":    "USER_1",
 				"password":    "PASS_1",
@@ -701,7 +701,7 @@ func Test_Transaction(t *testing.T) {
 		})
 		t.AssertNE(err, nil)
 
-		value, err := db.Model(table).Ctx(ctx).Fields("nickname").Where("id", 1).Value()
+		value, err := db.Model(table).Fields("nickname").Where("id", 1).Value(ctx)
 		t.AssertNil(err)
 		t.Assert(value.String(), "name_1")
 	})
@@ -721,7 +721,7 @@ func Test_Transaction(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		value, err := db.Model(table).Fields("nickname").Where("id", 1).Value()
+		value, err := db.Model(table).Fields("nickname").Where("id", 1).Value(ctx)
 		t.AssertNil(err)
 		t.Assert(value.String(), "NAME_1")
 	})
@@ -747,7 +747,7 @@ func Test_Transaction_Panic(t *testing.T) {
 		})
 		t.AssertNE(err, nil)
 
-		value, err := db.Model(table).Fields("nickname").Where("id", 1).Value()
+		value, err := db.Model(table).Fields("nickname").Where("id", 1).Value(ctx)
 		t.AssertNil(err)
 		t.Assert(value.String(), "name_1")
 	})
@@ -771,7 +771,7 @@ func Test_Transaction_Nested_Begin_Rollback_Commit(t *testing.T) {
 			"passport": "user_1",
 			"password": "pass_1",
 			"nickname": "name_1",
-		}).Insert()
+		}).Insert(ctx)
 		err = tx.Rollback()
 		t.AssertNil(err)
 
@@ -781,12 +781,12 @@ func Test_Transaction_Nested_Begin_Rollback_Commit(t *testing.T) {
 			"passport": "user_2",
 			"password": "pass_2",
 			"nickname": "name_2",
-		}).Insert()
+		}).Insert(ctx)
 		err = tx.Commit()
 		t.AssertNil(err)
 
 		// check data.
-		all, err := db.Model(table).All()
+		all, err := db.Model(table).All(ctx)
 		t.AssertNil(err)
 
 		t.Assert(len(all), 1)
@@ -819,7 +819,7 @@ func Test_Transaction_Nested_TX_Transaction_UseTX(t *testing.T) {
 									"password":    "PASS_1",
 									"nickname":    "NAME_1",
 									"create_time": gtime.Now().String(),
-								}).Insert()
+								}).Insert(ctx)
 								t.AssertNil(err)
 
 								return err
@@ -850,7 +850,7 @@ func Test_Transaction_Nested_TX_Transaction_UseTX(t *testing.T) {
 					"password":    "PASS_2",
 					"nickname":    "NAME_2",
 					"create_time": gtime.Now().String(),
-				}).Insert()
+				}).Insert(ctx)
 				t.AssertNil(err)
 
 				panic("error")
@@ -861,7 +861,7 @@ func Test_Transaction_Nested_TX_Transaction_UseTX(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		all, err := db.Ctx(ctx).Model(table).All()
+		all, err := db.Model(table).All(ctx)
 		t.AssertNil(err)
 
 		t.Assert(len(all), 1)
@@ -881,7 +881,7 @@ func Test_Transaction_Nested_TX_Transaction_UseTX(t *testing.T) {
 									"password":    "PASS_1",
 									"nickname":    "NAME_1",
 									"create_time": gtime.Now().String(),
-								}).Insert()
+								}).Insert(ctx)
 								t.AssertNil(err)
 
 								return err
@@ -912,7 +912,7 @@ func Test_Transaction_Nested_TX_Transaction_UseTX(t *testing.T) {
 					"password":    "PASS_2",
 					"nickname":    "NAME_2",
 					"create_time": gtime.Now().String(),
-				}).Insert()
+				}).Insert(ctx)
 				t.AssertNil(err)
 
 				panic("error")
@@ -923,7 +923,7 @@ func Test_Transaction_Nested_TX_Transaction_UseTX(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		all, err = db.Ctx(ctx).Model(table).All()
+		all, err = db.Model(table).All(ctx)
 		t.AssertNil(err)
 
 		t.Assert(len(all), 2)
@@ -951,13 +951,13 @@ func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
 					err = db.Transaction(ctx, func(ctx context.Context, tx2 gdb.TX) error {
 						err = db.Transaction(ctx, func(ctx context.Context, tx2 gdb.TX) error {
 							err = db.Transaction(ctx, func(ctx context.Context, tx2 gdb.TX) error {
-								_, err = db.Model(table).Ctx(ctx).Data(g.Map{
+								_, err = db.Model(table).Data(g.Map{
 									"id":          1,
 									"passport":    "USER_1",
 									"password":    "PASS_1",
 									"nickname":    "NAME_1",
 									"create_time": gtime.Now().String(),
-								}).Insert()
+								}).Insert(ctx)
 								t.AssertNil(err)
 
 								return err
@@ -982,13 +982,13 @@ func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
 
 			// rollback
 			err = db.Transaction(ctx, func(ctx context.Context, tx2 gdb.TX) error {
-				_, err = tx2.Model(table).Ctx(ctx).Data(g.Map{
+				_, err = tx2.Model(table).Data(g.Map{
 					"id":          2,
 					"passport":    "USER_2",
 					"password":    "PASS_2",
 					"nickname":    "NAME_2",
 					"create_time": gtime.Now().String(),
-				}).Insert()
+				}).Insert(ctx)
 				t.AssertNil(err)
 
 				// panic makes this transaction rollback.
@@ -1000,7 +1000,7 @@ func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		all, err := db.Model(table).All()
+		all, err := db.Model(table).All(ctx)
 		t.AssertNil(err)
 
 		t.Assert(len(all), 1)
@@ -1013,13 +1013,13 @@ func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
 					err = db.Transaction(ctx, func(ctx context.Context, tx2 gdb.TX) error {
 						err = db.Transaction(ctx, func(ctx context.Context, tx2 gdb.TX) error {
 							err = db.Transaction(ctx, func(ctx context.Context, tx2 gdb.TX) error {
-								_, err = db.Model(table).Ctx(ctx).Data(g.Map{
+								_, err = db.Model(table).Data(g.Map{
 									"id":          3,
 									"passport":    "USER_1",
 									"password":    "PASS_1",
 									"nickname":    "NAME_1",
 									"create_time": gtime.Now().String(),
-								}).Insert()
+								}).Insert(ctx)
 								t.AssertNil(err)
 
 								return err
@@ -1044,13 +1044,13 @@ func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
 
 			// rollback
 			err = db.Transaction(ctx, func(ctx context.Context, tx2 gdb.TX) error {
-				_, err = tx2.Model(table).Ctx(ctx).Data(g.Map{
+				_, err = tx2.Model(table).Data(g.Map{
 					"id":          4,
 					"passport":    "USER_2",
 					"password":    "PASS_2",
 					"nickname":    "NAME_2",
 					"create_time": gtime.Now().String(),
-				}).Insert()
+				}).Insert(ctx)
 				t.AssertNil(err)
 
 				// panic makes this transaction rollback.
@@ -1062,7 +1062,7 @@ func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		all, err = db.Model(table).All()
+		all, err = db.Model(table).All(ctx)
 		t.AssertNil(err)
 
 		t.Assert(len(all), 2)
@@ -1085,7 +1085,7 @@ func Test_Transaction_Nested_SavePoint_RollbackTo(t *testing.T) {
 			"passport": "user_1",
 			"password": "pass_1",
 			"nickname": "name_1",
-		}).Insert()
+		}).Insert(ctx)
 		err = tx.SavePoint("MyPoint")
 		t.AssertNil(err)
 
@@ -1094,7 +1094,7 @@ func Test_Transaction_Nested_SavePoint_RollbackTo(t *testing.T) {
 			"passport": "user_2",
 			"password": "pass_2",
 			"nickname": "name_2",
-		}).Insert()
+		}).Insert(ctx)
 		// tx rollback to.
 		err = tx.RollbackTo("MyPoint")
 		t.AssertNil(err)
@@ -1104,7 +1104,7 @@ func Test_Transaction_Nested_SavePoint_RollbackTo(t *testing.T) {
 		t.AssertNil(err)
 
 		// check data.
-		all, err := db.Model(table).All()
+		all, err := db.Model(table).All(ctx)
 		t.AssertNil(err)
 
 		t.Assert(len(all), 1)
@@ -1119,16 +1119,16 @@ func Test_Transaction_Method(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var err error
 		err = db.Transaction(gctx.New(), func(ctx context.Context, tx gdb.TX) error {
-			_, err = db.Model(table).Ctx(ctx).Data(g.Map{
+			_, err = db.Model(table).Data(g.Map{
 				"id":          1,
 				"passport":    "t1",
 				"password":    "25d55ad283aa400af464c76d713c07ad",
 				"nickname":    "T1",
 				"create_time": gtime.Now().String(),
-			}).Insert()
+			}).Insert(ctx)
 			t.AssertNil(err)
 
-			_, err = db.Ctx(ctx).Exec(ctx, fmt.Sprintf(
+			_, err = db.Exec(ctx, fmt.Sprintf(
 				"insert into %s(`passport`,`password`,`nickname`,`create_time`,`id`) "+
 					"VALUES('t2','25d55ad283aa400af464c76d713c07ad','T2','2021-08-25 21:53:00',2) ",
 				table))
@@ -1138,7 +1138,7 @@ func Test_Transaction_Method(t *testing.T) {
 		})
 		t.AssertNE(err, nil)
 
-		count, err := db.Model(table).Count()
+		count, err := db.Model(table).Count(ctx)
 		t.AssertNil(err)
 
 		t.Assert(count, int64(0))
@@ -1177,7 +1177,7 @@ func Test_Transaction_Propagation(t *testing.T) {
 		t.AssertNil(err)
 
 		// Verify both records exist
-		count, err := db.Model(table).Count()
+		count, err := db.Model(table).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, int64(2))
 	})
@@ -1215,7 +1215,7 @@ func Test_Transaction_Propagation(t *testing.T) {
 		t.AssertNil(err)
 
 		// Verify only outer transaction record exists
-		count, err := db.Model(table).Where("passport", "outer").Count()
+		count, err := db.Model(table).Where("passport", "outer").Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, int64(1))
 	})
@@ -1258,12 +1258,12 @@ func Test_Transaction_Propagation(t *testing.T) {
 		t.AssertNil(err)
 
 		// Verify outer transaction records exist, but nested transaction record doesn't
-		count, err := db.Model(table).Where("passport", "nested_inner").Count()
+		count, err := db.Model(table).Where("passport", "nested_inner").Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, int64(0))
 
 		count, err = db.Model(table).Where("passport IN(?,?)",
-			"nested_outer", "nested_after").Count()
+			"nested_outer", "nested_after").Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, int64(2))
 	})
@@ -1299,11 +1299,11 @@ func Test_Transaction_Propagation(t *testing.T) {
 		t.AssertNE(err, nil)
 
 		// Verify transactional record is rolled back but non-transactional record exists
-		count, err := db.Model(table).Where("passport", "tx_record").Count()
+		count, err := db.Model(table).Where("passport", "tx_record").Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, int64(0))
 
-		count, err = db.Model(table).Where("passport", "non_tx_record").Count()
+		count, err = db.Model(table).Where("passport", "non_tx_record").Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, int64(1))
 	})
@@ -1404,7 +1404,7 @@ func Test_Transaction_Propagation_PropagationSupports(t *testing.T) {
 		t.AssertNil(err)
 
 		// 查询结果
-		result, err := db.Model(table).OrderAsc("id").All()
+		result, err := db.Model(table).OrderAsc("id").All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(result), 1)
 		t.Assert(result[0]["id"], 3)
@@ -1483,27 +1483,27 @@ func Test_Transaction_Propagation_Complex(t *testing.T) {
 
 		// Verify final state
 		// 1. "outer" should exist (committed)
-		count, err := db.Model(table1).Where("passport", "outer").Count()
+		count, err := db.Model(table1).Where("passport", "outer").Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, int64(1))
 
 		// 2. "nested1" should not exist (rolled back due to error)
-		count, err = db.Model(table1).Where("passport", "nested1").Count()
+		count, err = db.Model(table1).Where("passport", "nested1").Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, int64(0))
 
 		// 3. "new1" should not exist (rolled back independently)
-		count, err = db.Model(table1).Where("passport", "new1").Count()
+		count, err = db.Model(table1).Where("passport", "new1").Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, int64(0))
 
 		// 4. "nested2" should not exist (rolled back to savepoint)
-		count, err = db.Model(table1).Where("passport", "nested2").Count()
+		count, err = db.Model(table1).Where("passport", "nested2").Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, int64(0))
 
 		// 5. "not_supported" should exist (non-transactional)
-		count, err = db.Model(table2).Where("passport", "not_supported").Count()
+		count, err = db.Model(table2).Where("passport", "not_supported").Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, int64(1))
 	})
@@ -1560,12 +1560,12 @@ func Test_Transaction_Propagation_Complex(t *testing.T) {
 		// Verify final state
 		// 1. "suspend_outer" and "suspend_resume" should not exist (rolled back)
 		count, err := db.Model(table).Where("passport IN(?,?)",
-			"suspend_outer", "suspend_resume").Count()
+			"suspend_outer", "suspend_resume").Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, int64(0))
 
 		// 2. "independent" should exist (committed independently)
-		count, err = db.Model(table).Where("passport", "independent").Count()
+		count, err = db.Model(table).Where("passport", "independent").Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, int64(1))
 	})
@@ -1691,7 +1691,7 @@ func Test_Transaction_Isolation(t *testing.T) {
 			Isolation:   sql.LevelSerializable,
 		}, func(ctx context.Context, tx1 gdb.TX) error {
 			// Read all records
-			_, err := tx1.Model(table).All()
+			_, err := tx1.Model(table).All(ctx)
 			t.AssertNil(err)
 
 			// Try concurrent insert in another transaction
@@ -1760,18 +1760,18 @@ func Test_Transaction_Spread(t *testing.T) {
 		tx, err := db.Begin(ctx)
 		t.AssertNil(err)
 		err = db.Transaction(tx.GetCtx(), func(ctx context.Context, tx gdb.TX) error {
-			_, err = db.Model(table).Ctx(ctx).Data(g.Map{
+			_, err = db.Model(table).Data(g.Map{
 				"id":          1,
 				"passport":    "USER_1",
 				"password":    "PASS_1",
 				"nickname":    "NAME_1",
 				"create_time": gtime.Now().String(),
-			}).Insert()
+			}).Insert(ctx)
 			return err
 		})
 		t.AssertNil(err)
 
-		all, err := tx.Model(table).All()
+		all, err := tx.Model(table).All(ctx)
 		t.AssertNil(err)
 
 		t.Assert(len(all), 1)
@@ -1780,7 +1780,7 @@ func Test_Transaction_Spread(t *testing.T) {
 		err = tx.Rollback()
 		t.AssertNil(err)
 
-		all, err = db.Ctx(ctx).Model(table).All()
+		all, err = db.Model(table).All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(all), 0)
 	})

@@ -26,7 +26,7 @@ func Test_Model_Builder(t *testing.T) {
 
 		all, err := m.Where(
 			b.Where("id", g.Slice{1, 2, 3}).WhereOr("id", g.Slice{4, 5, 6}),
-		).All()
+		).All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(all), 6)
 	})
@@ -42,7 +42,7 @@ func Test_Model_Builder(t *testing.T) {
 			b.Where("id", g.Slice{2, 3}).WhereOr("id", g.Slice{5, 6}),
 		).Where(
 			b.Where("id", g.Slice{3}).Where("id", g.Slice{1, 2, 3}),
-		).All()
+		).All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(all), 1)
 	})
@@ -58,7 +58,7 @@ func Test_Model_Builder(t *testing.T) {
 			b.Where("id", g.Slice{2, 3}).WhereOr("id", g.Slice{5, 6}),
 		).WhereOr(
 			b.Where("id", g.Slice{3}).Where("id", g.Slice{1, 2, 3}),
-		).All()
+		).All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(all), 6)
 	})
@@ -73,7 +73,7 @@ func Test_Model_Builder(t *testing.T) {
 			Nickname *gtime.Time
 		}
 
-		where, args := b.Where(&Query{Id: 1}).Build()
+		where, args := b.Where(&Query{Id: 1}).Build(ctx)
 		t.Assert(where, "`id`=? AND `nickname` IS NULL")
 		t.Assert(args, []interface{}{1})
 	})
@@ -88,7 +88,7 @@ func Test_Model_Builder(t *testing.T) {
 			Nickname *gjson.Json
 		}
 
-		where, args := b.Where(&Query{Id: 1}).Build()
+		where, args := b.Where(&Query{Id: 1}).Build(ctx)
 		t.Assert(where, "`id`=? AND `nickname` IS NULL")
 		t.Assert(args, []interface{}{1})
 	})
@@ -104,7 +104,7 @@ func Test_Model_Builder(t *testing.T) {
 			Nickname   *gtime.Time
 		}
 
-		where, args := b.Where(&Query{Id: 1}).Build()
+		where, args := b.Where(&Query{Id: 1}).Build(ctx)
 		t.Assert(where, "`id`=?")
 		t.Assert(args, []interface{}{1})
 	})
@@ -120,7 +120,7 @@ func Test_Model_Builder(t *testing.T) {
 			Nickname   *gjson.Json
 		}
 
-		where, args := b.Where(&Query{Id: 1}).Build()
+		where, args := b.Where(&Query{Id: 1}).Build(ctx)
 		t.Assert(where, "`id`=?")
 		t.Assert(args, []interface{}{1})
 	})
@@ -131,11 +131,11 @@ func Test_Safe_Builder(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		b := db.Model().Builder()
 		b.Where("id", 1)
-		_, args := b.Build()
+		_, args := b.Build(ctx)
 		t.AssertNil(args)
 
 		b = b.Where("id", 1)
-		_, args = b.Build()
+		_, args = b.Build(ctx)
 		t.Assert(args, g.Slice{1})
 	})
 }

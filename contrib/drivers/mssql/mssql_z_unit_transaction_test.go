@@ -96,7 +96,7 @@ func Test_TX_Prepare(t *testing.T) {
 
 		var value int
 		if rows.Next() {
-			err = rows.Scan(&value)
+			err = rows.Scan(ctx, &value)
 			t.AssertNil(err)
 
 		}
@@ -125,7 +125,7 @@ func Test_TX_Insert(t *testing.T) {
 			"password":    "25d55ad283aa400af464c76d713c07ad",
 			"nickname":    "T1",
 			"create_time": gtime.Now().String(),
-		}).Insert()
+		}).Insert(ctx)
 		t.AssertNil(err)
 
 		_, err = tx.Insert(table, g.Map{
@@ -137,7 +137,7 @@ func Test_TX_Insert(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		n, err := tx.Model(table).Count()
+		n, err := tx.Model(table).Count(ctx)
 		t.AssertNil(err)
 
 		t.Assert(n, int64(2))
@@ -176,7 +176,7 @@ func Test_TX_BatchInsert(t *testing.T) {
 		err = tx.Commit()
 		t.AssertNil(err)
 
-		n, err := db.Model(table).Count()
+		n, err := db.Model(table).Count(ctx)
 		t.AssertNil(err)
 
 		t.Assert(n, int64(2))
@@ -199,10 +199,10 @@ func Test_TX_Update(t *testing.T) {
 		err = tx.Commit()
 		t.AssertNil(err)
 
-		_, err = tx.Model(table).Fields("create_time").Where("id", 3).Value()
+		_, err = tx.Model(table).Fields("create_time").Where("id", 3).Value(ctx)
 		t.AssertNE(err, nil)
 
-		value, err := db.Model(table).Fields("create_time").Where("id", 3).Value()
+		value, err := db.Model(table).Fields("create_time").Where("id", 3).Value(ctx)
 		t.AssertNil(err)
 
 		t.Assert(value.String(), "2019-10-24 10:00:00")
@@ -497,7 +497,7 @@ func Test_TX_Delete(t *testing.T) {
 		err = tx.Commit()
 		t.AssertNil(err)
 
-		n, err := db.Model(table).Count()
+		n, err := db.Model(table).Count(ctx)
 		t.AssertNil(err)
 
 		t.Assert(n, int64(0))
@@ -514,14 +514,14 @@ func Test_TX_Delete(t *testing.T) {
 		_, err = tx.Delete(table, "1=1")
 		t.AssertNil(err)
 
-		n, err := tx.Model(table).Count()
+		n, err := tx.Model(table).Count(ctx)
 		t.AssertNil(err)
 
 		t.Assert(n, int64(0))
 		err = tx.Rollback()
 		t.AssertNil(err)
 
-		n, err = db.Model(table).Count()
+		n, err = db.Model(table).Count(ctx)
 		t.AssertNil(err)
 
 		t.Assert(n, int64(TableSize))
@@ -537,7 +537,7 @@ func Test_Transaction(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		ctx := context.TODO()
 		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
-			_, err := tx.Ctx(ctx).Replace(table, g.Map{
+			_, err := tx.Replace(table, g.Map{
 				"id":          1,
 				"passport":    "USER_1",
 				"password":    "PASS_1",
@@ -551,7 +551,7 @@ func Test_Transaction(t *testing.T) {
 		})
 		t.AssertNE(err, nil)
 
-		value, err := db.Model(table).Ctx(ctx).Fields("nickname").Where("id", 1).Value()
+		value, err := db.Model(table).Fields("nickname").Where("id", 1).Value(ctx)
 		t.AssertNil(err)
 		t.Assert(value.String(), "name_1")
 	})
@@ -578,7 +578,7 @@ func Test_Transaction_Panic(t *testing.T) {
 		})
 		t.AssertNE(err, nil)
 
-		value, err := db.Model(table).Fields("nickname").Where("id", 1).Value()
+		value, err := db.Model(table).Fields("nickname").Where("id", 1).Value(ctx)
 		t.AssertNil(err)
 
 		t.Assert(value.String(), "name_1")
@@ -608,7 +608,7 @@ func Test_Transaction_Panic(t *testing.T) {
 // 			"passport": "user_1",
 // 			"password": "pass_1",
 // 			"nickname": "name_1",
-// 		}).Insert()
+// 		}).Insert(ctx)
 // 		err = tx.Rollback()
 // 		t.AssertNil(err)
 //
@@ -618,12 +618,12 @@ func Test_Transaction_Panic(t *testing.T) {
 // 			"passport": "user_2",
 // 			"password": "pass_2",
 // 			"nickname": "name_2",
-// 		}).Insert()
+// 		}).Insert(ctx)
 // 		err = tx.Commit()
 // 		t.AssertNil(err)
 //
 // 		// check data.
-// 		all, err := db.Model(table).All()
+// 		all, err := db.Model(table).All(ctx)
 // 		t.AssertNil(err)
 //
 // 		t.Assert(len(all), 1)
@@ -656,7 +656,7 @@ func Test_Transaction_Panic(t *testing.T) {
 // 									"password":    "PASS_1",
 // 									"nickname":    "NAME_1",
 // 									"create_time": gtime.Now().String(),
-// 								}).Insert()
+// 								}).Insert(ctx)
 // 								t.AssertNil(err)
 //
 // 								return err
@@ -687,7 +687,7 @@ func Test_Transaction_Panic(t *testing.T) {
 // 					"password":    "PASS_2",
 // 					"nickname":    "NAME_2",
 // 					"create_time": gtime.Now().String(),
-// 				}).Insert()
+// 				}).Insert(ctx)
 // 				t.AssertNil(err)
 //
 // 				panic("error")
@@ -698,7 +698,7 @@ func Test_Transaction_Panic(t *testing.T) {
 // 		})
 // 		t.AssertNil(err)
 //
-// 		all, err := db.Ctx(ctx).Model(table).All()
+// 		all, err := db.Model(table).All(ctx)
 // 		t.AssertNil(err)
 //
 // 		t.Assert(len(all), 1)
@@ -718,7 +718,7 @@ func Test_Transaction_Panic(t *testing.T) {
 // 									"password":    "PASS_1",
 // 									"nickname":    "NAME_1",
 // 									"create_time": gtime.Now().String(),
-// 								}).Insert()
+// 								}).Insert(ctx)
 // 								t.AssertNil(err)
 //
 // 								return err
@@ -749,7 +749,7 @@ func Test_Transaction_Panic(t *testing.T) {
 // 					"password":    "PASS_2",
 // 					"nickname":    "NAME_2",
 // 					"create_time": gtime.Now().String(),
-// 				}).Insert()
+// 				}).Insert(ctx)
 // 				t.AssertNil(err)
 //
 // 				panic("error")
@@ -760,7 +760,7 @@ func Test_Transaction_Panic(t *testing.T) {
 // 		})
 // 		t.AssertNil(err)
 //
-// 		all, err = db.Ctx(ctx).Model(table).All()
+// 		all, err = db.Model(table).All(ctx)
 // 		t.AssertNil(err)
 //
 // 		t.Assert(len(all), 2)
@@ -788,13 +788,13 @@ func Test_Transaction_Panic(t *testing.T) {
 // 					err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 // 						err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 // 							err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
-// 								_, err = db.Model(table).Ctx(ctx).Data(g.Map{
+// 								_, err = db.Model(table).Data(g.Map{
 // 									"id":          1,
 // 									"passport":    "USER_1",
 // 									"password":    "PASS_1",
 // 									"nickname":    "NAME_1",
 // 									"create_time": gtime.Now().String(),
-// 								}).Insert()
+// 								}).Insert(ctx)
 // 								t.AssertNil(err)
 //
 // 								return err
@@ -819,13 +819,13 @@ func Test_Transaction_Panic(t *testing.T) {
 //
 // 			// rollback
 // 			err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
-// 				_, err = tx.Model(table).Ctx(ctx).Data(g.Map{
+// 				_, err = tx.Model(table).Data(g.Map{
 // 					"id":          2,
 // 					"passport":    "USER_2",
 // 					"password":    "PASS_2",
 // 					"nickname":    "NAME_2",
 // 					"create_time": gtime.Now().String(),
-// 				}).Insert()
+// 				}).Insert(ctx)
 // 				t.AssertNil(err)
 //
 // 				// panic makes this transaction rollback.
@@ -837,7 +837,7 @@ func Test_Transaction_Panic(t *testing.T) {
 // 		})
 // 		t.AssertNil(err)
 //
-// 		all, err := db.Model(table).All()
+// 		all, err := db.Model(table).All(ctx)
 // 		t.AssertNil(err)
 //
 // 		t.Assert(len(all), 1)
@@ -850,13 +850,13 @@ func Test_Transaction_Panic(t *testing.T) {
 // 					err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 // 						err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 // 							err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
-// 								_, err = db.Model(table).Ctx(ctx).Data(g.Map{
+// 								_, err = db.Model(table).Data(g.Map{
 // 									"id":          3,
 // 									"passport":    "USER_1",
 // 									"password":    "PASS_1",
 // 									"nickname":    "NAME_1",
 // 									"create_time": gtime.Now().String(),
-// 								}).Insert()
+// 								}).Insert(ctx)
 // 								t.AssertNil(err)
 //
 // 								return err
@@ -881,13 +881,13 @@ func Test_Transaction_Panic(t *testing.T) {
 //
 // 			// rollback
 // 			err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
-// 				_, err = tx.Model(table).Ctx(ctx).Data(g.Map{
+// 				_, err = tx.Model(table).Data(g.Map{
 // 					"id":          4,
 // 					"passport":    "USER_2",
 // 					"password":    "PASS_2",
 // 					"nickname":    "NAME_2",
 // 					"create_time": gtime.Now().String(),
-// 				}).Insert()
+// 				}).Insert(ctx)
 // 				t.AssertNil(err)
 //
 // 				// panic makes this transaction rollback.
@@ -899,7 +899,7 @@ func Test_Transaction_Panic(t *testing.T) {
 // 		})
 // 		t.AssertNil(err)
 //
-// 		all, err = db.Model(table).All()
+// 		all, err = db.Model(table).All(ctx)
 // 		t.AssertNil(err)
 //
 // 		t.Assert(len(all), 2)
@@ -922,7 +922,7 @@ func Test_Transaction_Panic(t *testing.T) {
 // 			"passport": "user_1",
 // 			"password": "pass_1",
 // 			"nickname": "name_1",
-// 		}).Insert()
+// 		}).Insert(ctx)
 // 		err = tx.SavePoint("MyPoint")
 // 		t.AssertNil(err)
 //
@@ -931,7 +931,7 @@ func Test_Transaction_Panic(t *testing.T) {
 // 			"passport": "user_2",
 // 			"password": "pass_2",
 // 			"nickname": "name_2",
-// 		}).Insert()
+// 		}).Insert(ctx)
 // 		// tx rollback to.
 // 		err = tx.RollbackTo("MyPoint")
 // 		t.AssertNil(err)
@@ -941,7 +941,7 @@ func Test_Transaction_Panic(t *testing.T) {
 // 		t.AssertNil(err)
 //
 // 		// check data.
-// 		all, err := db.Model(table).All()
+// 		all, err := db.Model(table).All(ctx)
 // 		t.AssertNil(err)
 //
 // 		t.Assert(len(all), 1)
@@ -956,16 +956,16 @@ func Test_Transaction_Method(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var err error
 		err = db.Transaction(gctx.New(), func(ctx context.Context, tx gdb.TX) error {
-			_, err = db.Model(table).Ctx(ctx).Data(g.Map{
+			_, err = db.Model(table).Data(g.Map{
 				"id":          1,
 				"passport":    "t1",
 				"password":    "25d55ad283aa400af464c76d713c07ad",
 				"nickname":    "T1",
 				"create_time": gtime.Now().String(),
-			}).Insert()
+			}).Insert(ctx)
 			t.AssertNil(err)
 
-			_, err = db.Ctx(ctx).Exec(ctx, fmt.Sprintf(
+			_, err = db.Exec(ctx, fmt.Sprintf(
 				"insert into %s(passport , password , nickname , create_time , id ) "+
 					"VALUES('t2','25d55ad283aa400af464c76d713c07ad','T2','2021-08-25 21:53:00',2) ",
 				table))
@@ -975,7 +975,7 @@ func Test_Transaction_Method(t *testing.T) {
 		})
 		t.AssertNE(err, nil)
 
-		count, err := db.Model(table).Count()
+		count, err := db.Model(table).Count(ctx)
 		t.AssertNil(err)
 
 		t.Assert(count, int64(0))

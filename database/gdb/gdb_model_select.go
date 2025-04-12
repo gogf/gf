@@ -193,7 +193,7 @@ func (m *Model) doStruct(ctx context.Context, pointer any) error {
 	if err = one.Struct(pointer); err != nil {
 		return err
 	}
-	return m.doWithScanStruct(pointer)
+	return m.doWithScanStruct(ctx, pointer)
 }
 
 // Structs retrieves records from table and converts them into given struct slice.
@@ -236,7 +236,7 @@ func (m *Model) doStructs(ctx context.Context, pointer any) error {
 	if err = all.Structs(pointer); err != nil {
 		return err
 	}
-	return m.doWithScanStructs(pointer)
+	return m.doWithScanStructs(ctx, pointer)
 }
 
 // Scan automatically calls Struct or Structs function according to the type of parameter `pointer`.
@@ -366,7 +366,7 @@ func (m *Model) ScanList(ctx context.Context, structSlicePointer any, bindToAttr
 	case 1:
 		relationFields = relationAttrNameAndFields[0]
 	}
-	return doScanList(doScanListInput{
+	return doScanList(ctx, doScanListInput{
 		Model:              m,
 		Result:             result,
 		StructSlicePointer: structSlicePointer,
@@ -646,7 +646,7 @@ func (m *Model) doGetAllBySql(
 	in := &HookSelectInput{
 		internalParamHookSelect: internalParamHookSelect{
 			internalParamHook: internalParamHook{
-				link: m.getLink(false),
+				link: m.getLink(ctx, false),
 			},
 			handler: m.hookHandler.Select,
 		},

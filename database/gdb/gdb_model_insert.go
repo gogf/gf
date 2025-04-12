@@ -314,7 +314,7 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 	in := &HookInsertInput{
 		internalParamHookInsert: internalParamHookInsert{
 			internalParamHook: internalParamHook{
-				link: m.getLink(true),
+				link: m.getLink(ctx, true),
 			},
 			handler: m.hookHandler.Insert,
 		},

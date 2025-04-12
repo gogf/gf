@@ -55,7 +55,7 @@ func (m *Model) Delete(ctx context.Context) (result sql.Result, err error) {
 		in := &HookUpdateInput{
 			internalParamHookUpdate: internalParamHookUpdate{
 				internalParamHook: internalParamHook{
-					link: m.getLink(true),
+					link: m.getLink(ctx, true),
 				},
 				handler: m.hookHandler.Update,
 			},
@@ -72,7 +72,7 @@ func (m *Model) Delete(ctx context.Context) (result sql.Result, err error) {
 	in := &HookDeleteInput{
 		internalParamHookDelete: internalParamHookDelete{
 			internalParamHook: internalParamHook{
-				link: m.getLink(true),
+				link: m.getLink(ctx, true),
 			},
 			handler: m.hookHandler.Delete,
 		},
