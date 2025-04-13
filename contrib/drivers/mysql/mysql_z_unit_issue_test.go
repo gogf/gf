@@ -1302,7 +1302,7 @@ func Test_Issue3238(t *testing.T) {
 						go func(record gdb.Record) {
 							defer wg.Done()
 							id, _ := db.Model(table).WherePri(1).Fields(`id`).Value(ctx)
-							nickname, _ := db.Model(table).WherePri(1).Value(`nickname`)
+							nickname, _ := db.Model(table).WherePri(1).Fields(`nickname`).Value(ctx)
 							t.Assert(id.Int(), 1)
 							t.Assert(nickname.String(), "name_1")
 						}(record)
@@ -1324,8 +1324,10 @@ func Test_Issue3649(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		sql, err := gdb.CatchSQL(context.Background(), func(ctx context.Context) (err error) {
-			user := db.Model(table).Ctx(ctx)
-			_, err = user.Where("create_time = ?", gdb.Raw("now()")).WhereLT("create_time", gdb.Raw("now()")).Count(ctx)
+			user := db.Model(table)
+			_, err = user.Where("create_time = ?", gdb.Raw("now()")).
+				WhereLT("create_time", gdb.Raw("now()")).
+				Count(ctx)
 			return
 		})
 		t.AssertNil(err)
@@ -1431,7 +1433,7 @@ func Test_Issue3626(t *testing.T) {
 				Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
 					get, err := db.GetCache().Get(ctx, cacheKey)
 					if err == nil && !get.IsEmpty() {
-						err = get.Scan(ctx, &result)
+						err = get.Scan(&result)
 						if err == nil {
 							return result, nil
 						}
@@ -1519,7 +1521,7 @@ func Test_Issue3968(t *testing.T) {
 			count  int
 			result gdb.Result
 		)
-		err := db.Model(table).Hook(hook).ScanAndCount(&result, &count, false)
+		err := db.Model(table).Hook(hook).ScanAndCount(ctx, &result, &count, false)
 		t.AssertNil(err)
 		t.Assert(count, 10)
 		t.Assert(len(result), 10)
@@ -1622,7 +1624,7 @@ func Test_Issue2119(t *testing.T) {
 			t.AssertNil(err)
 		}
 		roles := make([]*Role, 0)
-		err := db.Ctx(context.Background()).Model(&Role{}).WithAll().Scan(ctx, &roles)
+		err := db.Model(&Role{}).WithAll().Scan(ctx, &roles)
 		t.AssertNil(err)
 		expectStatus := []*Status{
 			{
@@ -1699,7 +1701,7 @@ func issue4034SaveDeviceAndToken(ctx context.Context, table string) error {
 }
 
 func issue4034SaveAppDevice(ctx context.Context, table string, tx gdb.TX) error {
-	_, err := db.Model(table).Safe().TX(tx).Data(g.Map{
+	_, err := db.Model(table).TX(tx).Data(g.Map{
 		"passport": "111",
 		"password": "222",
 		"nickname": "333",

@@ -43,9 +43,9 @@ func (d *Driver) DoInsert(
 	// It here uses defer to guarantee transaction be committed or roll-backed.
 	defer func() {
 		if err == nil {
-			_ = tx.Commit()
+			_ = tx.Commit(ctx)
 		} else {
-			_ = tx.Rollback()
+			_ = tx.Rollback(ctx)
 		}
 	}()
 	stmt, err = tx.Prepare(fmt.Sprintf(

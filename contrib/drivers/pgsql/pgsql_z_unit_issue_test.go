@@ -167,7 +167,7 @@ func Test_Issue3668(t *testing.T) {
 		)
 		_, err := dao.
 			Data(data).
-			Insert()
+			Insert(tx)
 		t.AssertNil(err)
 	})
 }

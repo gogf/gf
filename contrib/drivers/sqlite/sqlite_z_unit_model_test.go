@@ -262,7 +262,7 @@ func Test_Model_InsertIgnore(t *testing.T) {
 			"password":    "25d55ad283aa400af464c76d713c07ad",
 			"nickname":    "name_1",
 			"create_time": CreateTime,
-		}).InsertIgnore()
+		}).InsertIgnore(ctx)
 		t.AssertNil(err)
 	})
 }
@@ -477,7 +477,7 @@ func Test_Model_UpdateAndGetAffected(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		n, err := db.Model(table).Data("nickname", "T100").
 			Where(1).
-			UpdateAndGetAffected()
+			UpdateAndGetAffected(ctx)
 		t.AssertNil(err)
 		t.Assert(n, TableSize)
 	})
@@ -488,14 +488,14 @@ func Test_Model_Clone(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		md := db.Model(table).Safe(true).Where("id IN(?)", g.Slice{1, 3})
+		md := db.Model(table).Where("id IN(?)", g.Slice{1, 3})
 		count, err := md.Count(ctx)
 		t.AssertNil(err)
 
-		record, err := md.Safe(true).Order("id DESC").One(ctx)
+		record, err := md.Order("id DESC").One(ctx)
 		t.AssertNil(err)
 
-		result, err := md.Safe(true).Order("id ASC").All(ctx)
+		result, err := md.Order("id ASC").All(ctx)
 		t.AssertNil(err)
 
 		t.Assert(count, int64(2))
@@ -511,7 +511,7 @@ func Test_Model_Safe(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		md := db.Model(table).Safe(false).Where("id IN(?)", g.Slice{1, 3})
+		md := db.Model(table).Where("id IN(?)", g.Slice{1, 3})
 		count, err := md.Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, int64(2))
@@ -522,7 +522,7 @@ func Test_Model_Safe(t *testing.T) {
 		t.Assert(count, int64(1))
 	})
 	gtest.C(t, func(t *gtest.T) {
-		md := db.Model(table).Safe(true).Where("id IN(?)", g.Slice{1, 3})
+		md := db.Model(table).Where("id IN(?)", g.Slice{1, 3})
 		count, err := md.Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, int64(2))
@@ -534,7 +534,7 @@ func Test_Model_Safe(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		md := db.Model(table).Safe().Where("id IN(?)", g.Slice{1, 3})
+		md := db.Model(table).Where("id IN(?)", g.Slice{1, 3})
 		count, err := md.Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, int64(2))
@@ -545,7 +545,7 @@ func Test_Model_Safe(t *testing.T) {
 		t.Assert(count, int64(2))
 	})
 	gtest.C(t, func(t *gtest.T) {
-		md1 := db.Model(table).Safe()
+		md1 := db.Model(table)
 		md2 := md1.Where("id in (?)", g.Slice{1, 3})
 		count, err := md2.Count(ctx)
 		t.AssertNil(err)
@@ -564,7 +564,7 @@ func Test_Model_Safe(t *testing.T) {
 		table := createInitTable()
 		defer dropTable(table)
 
-		md1 := db.Model(table).Where("id>", 0).Safe()
+		md1 := db.Model(table).Where("id>", 0)
 		md2 := md1.Where("id in (?)", g.Slice{1, 3})
 		md3 := md1.Where("id in (?)", g.Slice{4, 5, 6})
 
@@ -751,7 +751,7 @@ func Test_Model_Fields(t *testing.T) {
 			LeftJoin(tableName1, "u2", "u2.id=u1.id").
 			Fields("u1.passport,u1.id,u2.id AS u2id").
 			Where("u1.id<2").
-			All()
+			All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(all), 1)
 		t.Assert(len(all[0]), 3)
@@ -761,7 +761,7 @@ func Test_Model_Fields(t *testing.T) {
 			LeftJoin(tableName2, "u2", "u2.id=u1.id").
 			Fields("u1.passport,u1.id,u2.name,u2.age").
 			Where("u1.id<2").
-			All()
+			All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(all), 1)
 		t.Assert(len(all[0]), 4)
@@ -869,10 +869,10 @@ func Test_Model_Exist(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		exist, err := db.Model(table).Exist()
+		exist, err := db.Model(table).Exist(ctx)
 		t.AssertNil(err)
 		t.Assert(exist, TableSize > 0)
-		exist, err = db.Model(table).Where("id", -1).Exist()
+		exist, err = db.Model(table).Where("id", -1).Exist(ctx)
 		t.AssertNil(err)
 		t.Assert(exist, false)
 	})
@@ -1846,14 +1846,14 @@ func Test_Model_WherePri(t *testing.T) {
 
 	// string
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id=? and nickname=?", 3, "name_3").One(ctx)
+		result, err := db.Model(table).Where("id=? and nickname=?", 3, "name_3").One(ctx)
 		t.AssertNil(err)
 		t.AssertGT(len(result), 0)
 		t.Assert(result["id"].Int(), 3)
 	})
 	// slice parameter
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id=? and nickname=?", g.Slice{3, "name_3"}).One(ctx)
+		result, err := db.Model(table).Where("id=? and nickname=?", g.Slice{3, "name_3"}).One(ctx)
 		t.AssertNil(err)
 		t.AssertGT(len(result), 0)
 		t.Assert(result["id"].Int(), 3)
@@ -1900,49 +1900,49 @@ func Test_Model_WherePri(t *testing.T) {
 		t.Assert(result["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id", 3).One(ctx)
+		result, err := db.Model(table).WherePri(3).One(ctx)
 		t.AssertNil(err)
 		t.AssertGT(len(result), 0)
 		t.Assert(result["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id", 3).WherePri("nickname", "name_3").One(ctx)
+		result, err := db.Model(table).WherePri(3).Where("nickname", "name_3").One(ctx)
 		t.AssertNil(err)
 		t.Assert(result["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id", 3).Where("nickname", "name_3").One(ctx)
+		result, err := db.Model(table).WherePri(3).Where("nickname", "name_3").One(ctx)
 		t.AssertNil(err)
 		t.Assert(result["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id", 30).WhereOr("nickname", "name_3").One(ctx)
+		result, err := db.Model(table).WherePri(30).WhereOr("nickname", "name_3").One(ctx)
 		t.AssertNil(err)
 		t.Assert(result["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id", 30).WhereOr("nickname", "name_3").Where("id>?", 1).One(ctx)
+		result, err := db.Model(table).WherePri(30).WhereOr("nickname", "name_3").Where("id>?", 1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(result["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id", 30).WhereOr("nickname", "name_3").Where("id>", 1).One(ctx)
+		result, err := db.Model(table).WherePri(30).WhereOr("nickname", "name_3").Where("id>", 1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(result["id"].Int(), 3)
 	})
 	// slice
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id=? AND nickname=?", g.Slice{3, "name_3"}...).One(ctx)
+		result, err := db.Model(table).Where("id=? AND nickname=?", g.Slice{3, "name_3"}...).One(ctx)
 		t.AssertNil(err)
 		t.Assert(result["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id=? AND nickname=?", g.Slice{3, "name_3"}).One(ctx)
+		result, err := db.Model(table).Where("id=? AND nickname=?", g.Slice{3, "name_3"}).One(ctx)
 		t.AssertNil(err)
 		t.Assert(result["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("passport like ? and nickname like ?", g.Slice{"user_3", "name_3"}).One(ctx)
+		result, err := db.Model(table).Where("passport like ? and nickname like ?", g.Slice{"user_3", "name_3"}).One(ctx)
 		t.AssertNil(err)
 		t.Assert(result["id"].Int(), 3)
 	})
@@ -2044,7 +2044,7 @@ func Test_Model_WherePri(t *testing.T) {
 	})
 	// slice single
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id IN(?)", g.Slice{1, 3}).Order("id ASC").All(ctx)
+		result, err := db.Model(table).WherePri(g.Slice{1, 3}).Order("id ASC").All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(result), 2)
 		t.Assert(result[0]["id"].Int(), 1)
@@ -2052,7 +2052,7 @@ func Test_Model_WherePri(t *testing.T) {
 	})
 	// slice + string
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("nickname=? AND id IN(?)", "name_3", g.Slice{1, 3}).Order("id ASC").All(ctx)
+		result, err := db.Model(table).Where("nickname=? AND id IN(?)", "name_3", g.Slice{1, 3}).Order("id ASC").All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(result), 1)
 		t.Assert(result[0]["id"].Int(), 3)
@@ -2129,7 +2129,7 @@ func Test_Model_Page(t *testing.T) {
 		t.Assert(result[1]["id"], 8)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		model := db.Model(table).Safe().Order("id")
+		model := db.Model(table).Order("id")
 		all, err := model.Page(3, 3).All(ctx)
 		t.AssertNil(err)
 		count, err := model.Count(ctx)
@@ -2409,7 +2409,7 @@ func Test_Model_FieldsExStruct(t *testing.T) {
 			OmitEmpty().
 			Batch(2).
 			Data(users).
-			Insert()
+			Insert(tx)
 		t.AssertNil(err)
 		n, err := r.RowsAffected()
 		t.AssertNil(err)
@@ -3370,22 +3370,22 @@ func Test_Model_Min_Max_Avg_Sum(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).Min("id")
+		result, err := db.Model(table).Min(ctx, "id")
 		t.AssertNil(err)
 		t.Assert(result, 1)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).Max("id")
+		result, err := db.Model(table).Max(ctx, "id")
 		t.AssertNil(err)
 		t.Assert(result, TableSize)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).Avg("id")
+		result, err := db.Model(table).Avg(ctx, "id")
 		t.AssertNil(err)
 		t.Assert(result, 5.5)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).Sum("id")
+		result, err := db.Model(table).Sum(ctx, "id")
 		t.AssertNil(err)
 		t.Assert(result, 55)
 	})
@@ -3396,12 +3396,12 @@ func Test_Model_CountColumn(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).CountColumn("id")
+		result, err := db.Model(table).CountColumn(ctx, "id")
 		t.AssertNil(err)
 		t.Assert(result, TableSize)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WhereIn("id", g.Slice{1, 2, 3}).CountColumn("id")
+		result, err := db.Model(table).WhereIn("id", g.Slice{1, 2, 3}).CountColumn(ctx, "id")
 		t.AssertNil(err)
 		t.Assert(result, 3)
 	})
@@ -3437,13 +3437,13 @@ func Test_Model_Increment_Decrement(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).Where("id", 1).Increment("id", 100)
+		result, err := db.Model(table).Where("id", 1).Increment(ctx, "id", 100)
 		t.AssertNil(err)
 		rows, _ := result.RowsAffected()
 		t.Assert(rows, 1)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).Where("id", 101).Decrement("id", 10)
+		result, err := db.Model(table).Where("id", 101).Decrement(ctx, "id", 10)
 		t.AssertNil(err)
 		rows, _ := result.RowsAffected()
 		t.Assert(rows, 1)
@@ -3466,7 +3466,7 @@ func Test_Model_Raw(t *testing.T) {
 			WhereIn("id", g.Slice{1, 2, 3, 4, 5, 6, 7}).
 			OrderDesc("id").
 			Limit(2).
-			All()
+			All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(all), 2)
 		t.Assert(all[0]["id"], 7)
@@ -3480,7 +3480,7 @@ func Test_Model_Raw(t *testing.T) {
 			WhereIn("id", g.Slice{1, 2, 3, 4, 5, 6, 7}).
 			OrderDesc("id").
 			Limit(2).
-			Count()
+			Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, int64(6))
 	})
@@ -3491,14 +3491,14 @@ func Test_Model_Handler(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		m := db.Model(table).Safe().Handler(
-			func(m *gdb.Model) *gdb.Model {
+		m := db.Model(table).Handler(
+			func(ctx context.Context, m *gdb.Model) *gdb.Model {
 				return m.Page(0, 3)
 			},
-			func(m *gdb.Model) *gdb.Model {
+			func(ctx context.Context, m *gdb.Model) *gdb.Model {
 				return m.Where("id", g.Slice{1, 2, 3, 4, 5, 6})
 			},
-			func(m *gdb.Model) *gdb.Model {
+			func(ctx context.Context, m *gdb.Model) *gdb.Model {
 				return m.OrderDesc("id")
 			},
 		)
@@ -3818,10 +3818,10 @@ func Test_Model_Fields_AutoFilterInJoinStatement(t *testing.T) {
 			t.AssertNil(err)
 		}
 		defer dropTable(table1)
-		_, err = db.Model(table1).Insert(g.Map{
+		_, err = db.Model(table1).Data(g.Map{
 			"id":   1,
 			"name": "john",
-		})
+		}).Insert(ctx)
 		t.AssertNil(err)
 
 		if _, err := db.Exec(ctx, fmt.Sprintf(`
@@ -3837,11 +3837,11 @@ func Test_Model_Fields_AutoFilterInJoinStatement(t *testing.T) {
 			t.AssertNil(err)
 		}
 		defer dropTable(table2)
-		_, err = db.Model(table2).Insert(g.Map{
+		_, err = db.Model(table2).Data(g.Map{
 			"id":      1,
 			"user_id": 1,
 			"number":  "n",
-		})
+		}).Insert(ctx)
 		t.AssertNil(err)
 
 		if _, err := db.Exec(ctx, fmt.Sprintf(`
@@ -3857,11 +3857,11 @@ func Test_Model_Fields_AutoFilterInJoinStatement(t *testing.T) {
 			t.AssertNil(err)
 		}
 		defer dropTable(table3)
-		_, err = db.Model(table3).Insert(g.Map{
+		_, err = db.Model(table3).Data(g.Map{
 			"id":          1,
 			"user_id":     1,
 			"description": "brief",
-		})
+		}).Insert(ctx)
 		t.AssertNil(err)
 
 		one, err := db.Model("user").
@@ -3870,7 +3870,7 @@ func Test_Model_Fields_AutoFilterInJoinStatement(t *testing.T) {
 			LeftJoin("score", "user.id=score.user_id").
 			LeftJoin("info", "info.id=info.user_id").
 			Order("user.id asc").
-			One()
+			One(ctx)
 		t.AssertNil(err)
 		t.Assert(len(one), 2)
 		t.Assert(one["name"].String(), "john")
@@ -3880,7 +3880,7 @@ func Test_Model_Fields_AutoFilterInJoinStatement(t *testing.T) {
 			LeftJoin("score", "user.id=score.user_id").
 			LeftJoin("info", "info.id=info.user_id").
 			Fields("score.number,user.name").
-			One()
+			One(ctx)
 		t.AssertNil(err)
 		t.Assert(len(one), 2)
 		t.Assert(one["name"].String(), "john")

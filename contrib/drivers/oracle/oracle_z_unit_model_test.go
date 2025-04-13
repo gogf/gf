@@ -464,10 +464,10 @@ func Test_Model_Exist(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		exist, err := db.Model(table).Exist()
+		exist, err := db.Model(table).Exist(ctx)
 		t.AssertNil(err)
 		t.Assert(exist, TableSize > 0)
-		exist, err = db.Model(table).Where("id", -1).Exist()
+		exist, err = db.Model(table).Where("id", -1).Exist(ctx)
 		t.AssertNil(err)
 		t.Assert(exist, false)
 	})
@@ -1212,7 +1212,7 @@ func Test_Model_Raw(t *testing.T) {
 			WhereLT("ID", 8).
 			WhereIn("ID", g.Slice{1, 2, 3, 4, 5, 6, 7}).
 			OrderDesc("ID").
-			All()
+			All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(all), 3)
 		t.Assert(all[0]["ID"], 7)
@@ -1225,7 +1225,7 @@ func Test_Model_Raw(t *testing.T) {
 			WhereLT("ID", 8).
 			WhereIn("ID", g.Slice{1, 2, 3, 4, 5, 6, 7}).
 			OrderDesc("ID").
-			Count()
+			Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 6)
 	})

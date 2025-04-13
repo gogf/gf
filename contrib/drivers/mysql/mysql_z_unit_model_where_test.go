@@ -424,14 +424,14 @@ func Test_Model_WherePri(t *testing.T) {
 
 	// string
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id=? and nickname=?", 3, "name_3").One(ctx)
+		result, err := db.Model(table).Where("id=? and nickname=?", 3, "name_3").One(ctx)
 		t.AssertNil(err)
 		t.AssertGT(len(result), 0)
 		t.Assert(result["id"].Int(), 3)
 	})
 	// slice parameter
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id=? and nickname=?", g.Slice{3, "name_3"}).One(ctx)
+		result, err := db.Model(table).Where("id=? and nickname=?", g.Slice{3, "name_3"}).One(ctx)
 		t.AssertNil(err)
 		t.AssertGT(len(result), 0)
 		t.Assert(result["id"].Int(), 3)
@@ -466,61 +466,61 @@ func Test_Model_WherePri(t *testing.T) {
 		t.Assert(result["id"].Int(), 2)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id=3", g.Slice{}).One(ctx)
+		result, err := db.Model(table).WherePri("3").One(ctx)
 		t.AssertNil(err)
 		t.AssertGT(len(result), 0)
 		t.Assert(result["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id=?", g.Slice{3}).One(ctx)
+		result, err := db.Model(table).WherePri(3).One(ctx)
 		t.AssertNil(err)
 		t.AssertGT(len(result), 0)
 		t.Assert(result["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id", 3).One(ctx)
+		result, err := db.Model(table).WherePri(3).One(ctx)
 		t.AssertNil(err)
 		t.AssertGT(len(result), 0)
 		t.Assert(result["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id", 3).WherePri("nickname", "name_3").One(ctx)
+		result, err := db.Model(table).WherePri(3).Where("nickname", "name_3").One(ctx)
 		t.AssertNil(err)
 		t.Assert(result["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id", 3).Where("nickname", "name_3").One(ctx)
+		result, err := db.Model(table).WherePri(3).Where("nickname", "name_3").One(ctx)
 		t.AssertNil(err)
 		t.Assert(result["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id", 30).WhereOr("nickname", "name_3").One(ctx)
+		result, err := db.Model(table).WherePri(30).WhereOr("nickname", "name_3").One(ctx)
 		t.AssertNil(err)
 		t.Assert(result["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id", 30).WhereOr("nickname", "name_3").Where("id>?", 1).One(ctx)
+		result, err := db.Model(table).WherePri(30).WhereOr("nickname", "name_3").Where("id>?", 1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(result["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id", 30).WhereOr("nickname", "name_3").Where("id>", 1).One(ctx)
+		result, err := db.Model(table).WherePri(30).WhereOr("nickname", "name_3").Where("id>", 1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(result["id"].Int(), 3)
 	})
 	// slice
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id=? AND nickname=?", g.Slice{3, "name_3"}...).One(ctx)
+		result, err := db.Model(table).Where("id=? AND nickname=?", g.Slice{3, "name_3"}...).One(ctx)
 		t.AssertNil(err)
 		t.Assert(result["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id=? AND nickname=?", g.Slice{3, "name_3"}).One(ctx)
+		result, err := db.Model(table).Where("id=? AND nickname=?", g.Slice{3, "name_3"}).One(ctx)
 		t.AssertNil(err)
 		t.Assert(result["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("passport like ? and nickname like ?", g.Slice{"user_3", "name_3"}).One(ctx)
+		result, err := db.Model(table).Where("passport like ? and nickname like ?", g.Slice{"user_3", "name_3"}).One(ctx)
 		t.AssertNil(err)
 		t.Assert(result["id"].Int(), 3)
 	})
@@ -622,7 +622,7 @@ func Test_Model_WherePri(t *testing.T) {
 	})
 	// slice single
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("id IN(?)", g.Slice{1, 3}).Order("id ASC").All(ctx)
+		result, err := db.Model(table).WherePri(g.Slice{1, 3}).Order("id ASC").All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(result), 2)
 		t.Assert(result[0]["id"].Int(), 1)
@@ -630,7 +630,7 @@ func Test_Model_WherePri(t *testing.T) {
 	})
 	// slice + string
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).WherePri("nickname=? AND id IN(?)", "name_3", g.Slice{1, 3}).Order("id ASC").All(ctx)
+		result, err := db.Model(table).Where("nickname=? AND id IN(?)", "name_3", g.Slice{1, 3}).Order("id ASC").All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(result), 1)
 		t.Assert(result[0]["id"].Int(), 3)
@@ -1073,10 +1073,10 @@ CREATE TABLE %s (
 		defer dropTable(table2)
 
 		// Insert test data
-		_, err := db.Model(table2).Insert(g.List{
+		_, err := db.Model(table2).Data(g.List{
 			{"uid": 1},
 			{"uid": 2},
-		})
+		}).Insert(ctx)
 		t.AssertNil(err)
 
 		// Test WhereExists with subquery
@@ -1087,7 +1087,7 @@ CREATE TABLE %s (
 		r, err := db.Model(table + " as user").
 			WhereExists(subQuery1).
 			Order("id asc").
-			All()
+			All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
 		t.Assert(r[0]["id"].Int(), 1)
@@ -1097,7 +1097,7 @@ CREATE TABLE %s (
 		r, err = db.Model(table + " as user").
 			WhereNotExists(subQuery1).
 			Order("id asc").
-			All()
+			All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(r), 8)
 		t.Assert(r[0]["id"].Int(), 3)
@@ -1108,14 +1108,14 @@ CREATE TABLE %s (
 			Where("uid = -1")
 		r, err = db.Model(table).
 			WhereExists(subQuery2).
-			All()
+			All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(r), 0)
 
 		// Test WhereNotExists with all results
 		r, err = db.Model(table).
 			WhereNotExists(subQuery2).
-			All()
+			All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(r), 10)
 
@@ -1124,7 +1124,7 @@ CREATE TABLE %s (
 			Where("id>?", 3).
 			WhereExists(subQuery1).
 			Order("id asc").
-			All()
+			All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(r), 0)
 
@@ -1136,7 +1136,7 @@ CREATE TABLE %s (
 		r, err = db.Model(table + " as user").
 			WhereExists(subQuery3).
 			Order("id asc").
-			All()
+			All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
 		t.Assert(r[0]["id"].Int(), 1)
@@ -1147,7 +1147,7 @@ CREATE TABLE %s (
 			Fields("id,passport").
 			WhereExists(subQuery1).
 			Order("id asc").
-			All()
+			All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
 		t.Assert(r[0]["id"].Int(), 1)
@@ -1158,7 +1158,7 @@ CREATE TABLE %s (
 			WhereExists(subQuery1).
 			Group("id").
 			Order("id asc").
-			All()
+			All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
 		t.Assert(r[0]["id"].Int(), 1)
@@ -1170,7 +1170,7 @@ CREATE TABLE %s (
 			Group("id").
 			Having("id > ?", 1).
 			Order("id asc").
-			All()
+			All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(r), 1)
 		t.Assert(r[0]["id"].Int(), 2)
@@ -1197,10 +1197,10 @@ CREATE TABLE %s (
 		defer dropTable(table2)
 
 		// Insert test data
-		_, err := db.Model(table2).Insert(g.List{
+		_, err := db.Model(table2).Data(g.List{
 			{"uid": 1},
 			{"uid": 2},
-		})
+		}).Insert(ctx)
 		t.AssertNil(err)
 
 		// Test WhereNotExists with subquery
@@ -1211,7 +1211,7 @@ CREATE TABLE %s (
 		r, err := db.Model(table + " as user").
 			WhereNotExists(subQuery1).
 			Order("id asc").
-			All()
+			All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(r), 8)           // Should be 8 because records with id 1 and 2 exist in table2
 		t.Assert(r[0]["id"].Int(), 3) // First record should be id 3
@@ -1224,7 +1224,7 @@ CREATE TABLE %s (
 		r, err = db.Model(table + " as user").
 			WhereNotExists(subQuery2).
 			Order("id asc").
-			All()
+			All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(r), 10) // Should return all records when subquery is empty
 
@@ -1236,7 +1236,7 @@ CREATE TABLE %s (
 		r, err = db.Model(table + " as user").
 			WhereNotExists(subQuery3).
 			Order("id asc").
-			All()
+			All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(r), 9)           // Should only exclude the record with id 2
 		t.Assert(r[0]["id"].Int(), 1) // Should include id 1
