@@ -44,7 +44,7 @@ jobs:
         uses: golangci/golangci-lint-action@v7
         with:
           # Required: specify the golangci-lint version without the patch version to always use the latest patch.
-          version: v2.0
+          version: v2.1.1
           only-new-issues: true
           skip-cache: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
