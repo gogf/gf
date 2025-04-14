@@ -20,19 +20,20 @@ import (
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) Delete(ctx context.Context) (result sql.Result, err error) {
+	model := m.callHandlers(ctx)
 	defer func() {
 		if err == nil {
-			m.checkAndRemoveSelectCache(ctx)
+			model.checkAndRemoveSelectCache(ctx)
 		}
 	}()
 	var (
-		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(ctx, false, false)
+		conditionWhere, conditionExtra, conditionArgs = model.formatCondition(ctx, false, false)
 		conditionStr                                  = conditionWhere + conditionExtra
-		fieldNameDelete, fieldTypeDelete              = m.softTimeMaintainer().GetFieldNameAndTypeForDelete(
-			ctx, "", m.tablesInit,
+		fieldNameDelete, fieldTypeDelete              = model.softTimeMaintainer().GetFieldNameAndTypeForDelete(
+			ctx, "", model.tablesInit,
 		)
 	)
-	if m.unscoped {
+	if model.unscoped {
 		fieldNameDelete = ""
 	}
 	if !gstr.ContainsI(conditionStr, " WHERE ") || (fieldNameDelete != "" && !gstr.ContainsI(conditionStr, " AND ")) {
@@ -49,19 +50,19 @@ func (m *Model) Delete(ctx context.Context) (result sql.Result, err error) {
 
 	// Soft deleting.
 	if fieldNameDelete != "" {
-		dataHolder, dataValue := m.softTimeMaintainer().GetDataByFieldNameAndTypeForDelete(
+		dataHolder, dataValue := model.softTimeMaintainer().GetDataByFieldNameAndTypeForDelete(
 			ctx, "", fieldNameDelete, fieldTypeDelete,
 		)
 		in := &HookUpdateInput{
 			internalParamHookUpdate: internalParamHookUpdate{
 				internalParamHook: internalParamHook{
-					link: m.getLink(ctx, true),
+					link: model.getLink(ctx, true),
 				},
-				handler: m.hookHandler.Update,
+				handler: model.hookHandler.Update,
 			},
-			Model:     m,
-			Table:     m.tables,
-			Schema:    m.schema,
+			Model:     model,
+			Table:     model.tables,
+			Schema:    model.schema,
 			Data:      dataHolder,
 			Condition: conditionStr,
 			Args:      append([]interface{}{dataValue}, conditionArgs...),
@@ -72,13 +73,13 @@ func (m *Model) Delete(ctx context.Context) (result sql.Result, err error) {
 	in := &HookDeleteInput{
 		internalParamHookDelete: internalParamHookDelete{
 			internalParamHook: internalParamHook{
-				link: m.getLink(ctx, true),
+				link: model.getLink(ctx, true),
 			},
-			handler: m.hookHandler.Delete,
+			handler: model.hookHandler.Delete,
 		},
-		Model:     m,
-		Table:     m.tables,
-		Schema:    m.schema,
+		Model:     model,
+		Table:     model.tables,
+		Schema:    model.schema,
 		Condition: conditionStr,
 		Args:      conditionArgs,
 	}

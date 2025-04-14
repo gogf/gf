@@ -125,17 +125,3 @@ func Test_Model_Builder(t *testing.T) {
 		t.Assert(args, []interface{}{1})
 	})
 }
-
-func Test_Safe_Builder(t *testing.T) {
-	// test whether m.Builder() is chain safe
-	gtest.C(t, func(t *gtest.T) {
-		b := db.Model().Builder()
-		b.Where("id", 1)
-		_, args := b.Build(ctx)
-		t.AssertNil(args)
-
-		b = b.Where("id", 1)
-		_, args = b.Build(ctx)
-		t.Assert(args, g.Slice{1})
-	})
-}

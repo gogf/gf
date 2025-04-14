@@ -168,6 +168,8 @@ func (m *Model) FieldAvg(column string, as ...string) *Model {
 // GetFieldsStr retrieves and returns all fields from the table, joined with char ','.
 // The optional parameter `prefix` specifies the prefix for each field, eg: GetFieldsStr("u.").
 func (m *Model) GetFieldsStr(ctx context.Context, prefix ...string) string {
+	m.callHandlers(ctx)
+
 	prefixStr := ""
 	if len(prefix) > 0 {
 		prefixStr = prefix[0]
@@ -199,6 +201,8 @@ func (m *Model) GetFieldsStr(ctx context.Context, prefix ...string) string {
 // The parameter `fields` specifies the fields that are excluded.
 // The optional parameter `prefix` specifies the prefix for each field, eg: FieldsExStr("id", "u.").
 func (m *Model) GetFieldsExStr(ctx context.Context, fields string, prefix ...string) (string, error) {
+	m.callHandlers(ctx)
+
 	prefixStr := ""
 	if len(prefix) > 0 {
 		prefixStr = prefix[0]
@@ -231,6 +235,7 @@ func (m *Model) GetFieldsExStr(ctx context.Context, fields string, prefix ...str
 
 // HasField determine whether the field exists in the table.
 func (m *Model) HasField(ctx context.Context, field string) (bool, error) {
+	m.callHandlers(ctx)
 	return m.db.GetCore().HasField(ctx, m.tablesInit, field)
 }
 

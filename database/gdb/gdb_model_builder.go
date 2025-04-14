@@ -13,9 +13,10 @@ import (
 
 // WhereBuilder holds multiple where conditions in a group.
 type WhereBuilder struct {
-	model       *Model           // A WhereBuilder should be bound to certain Model.
-	whereHolder []WhereHolder    // Condition strings for where operation.
-	handlers    []BuilderHandler // Handlers for where operation.
+	model        *Model           // A WhereBuilder should be bound to certain Model.
+	whereHolder  []WhereHolder    // Condition strings for where operation.
+	handlers     []BuilderHandler // Handlers for where operation.
+	handlerIndex int
 }
 
 // BuilderHandler is the handler for where operation.
@@ -39,29 +40,36 @@ func (m *Model) Builder() *WhereBuilder {
 	return b
 }
 
+// Clone clones and returns a WhereBuilder that is a copy of current one.
+func (b *WhereBuilder) Clone() *WhereBuilder {
+	newBuilder := &WhereBuilder{
+		model:    b.model,
+		handlers: make([]BuilderHandler, len(b.handlers)),
+	}
+	copy(newBuilder.handlers, b.handlers)
+	return newBuilder
+}
+
 // Handler registers handlers for where operation.
 func (b *WhereBuilder) Handler(handlers ...BuilderHandler) *WhereBuilder {
 	b.handlers = append(b.handlers, handlers...)
 	return b
 }
 
-func (b *WhereBuilder) execHandlers(ctx context.Context) {
-	for _, handler := range b.handlers {
-		handler(ctx, b)
+func (b *WhereBuilder) callHandlers(ctx context.Context) *WhereBuilder {
+	if len(b.handlers) == 0 {
+		return b
 	}
-}
-
-// Clone clones and returns a WhereBuilder that is a copy of current one.
-func (b *WhereBuilder) Clone() *WhereBuilder {
-	newBuilder := b.model.Builder()
-	copy(newBuilder.handlers, b.handlers)
-	return newBuilder
+	for b.handlerIndex < len(b.handlers) {
+		b.handlers[b.handlerIndex](ctx, b)
+		b.handlerIndex++
+	}
+	return b
 }
 
 // Build builds current WhereBuilder and returns the condition string and parameters.
 func (b *WhereBuilder) Build(ctx context.Context) (conditionWhere string, conditionArgs []any) {
-	// use Clone here to guarantee repeatable build.
-	b.Clone().execHandlers(ctx)
+	b.callHandlers(ctx)
 
 	var (
 		autoPrefix                  = b.model.getAutoPrefix()

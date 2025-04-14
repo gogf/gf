@@ -28,7 +28,7 @@ func (m *Model) Order(orderBy ...interface{}) *Model {
 		return m
 	}
 	return m.Handler(func(ctx context.Context, model *Model) *Model {
-		var core = m.db.GetCore()
+		var core = model.db.GetCore()
 		for _, v := range orderBy {
 			if model.orderBy != "" {
 				model.orderBy += ","
@@ -52,7 +52,6 @@ func (m *Model) Order(orderBy ...interface{}) *Model {
 		}
 		return model
 	})
-
 }
 
 // OrderAsc sets the "ORDER BY xxx ASC" statement for the model.
@@ -74,7 +73,7 @@ func (m *Model) OrderDesc(column string) *Model {
 // OrderRandom sets the "ORDER BY RANDOM()" statement for the model.
 func (m *Model) OrderRandom() *Model {
 	return m.Handler(func(ctx context.Context, model *Model) *Model {
-		model.orderBy = m.db.OrderRandomFunction()
+		model.orderBy = model.db.OrderRandomFunction()
 		return model
 	})
 }
@@ -85,7 +84,7 @@ func (m *Model) Group(groupBy ...string) *Model {
 		return m
 	}
 	return m.Handler(func(ctx context.Context, model *Model) *Model {
-		var core = m.db.GetCore()
+		var core = model.db.GetCore()
 		if model.groupBy != "" {
 			model.groupBy += ","
 		}

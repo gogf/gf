@@ -52,7 +52,9 @@ func (m *Model) Data(data ...any) *Model {
 				}
 				model.data = newData
 			}
-		} else if len(data) == 1 {
+			return model
+		}
+		if len(data) == 1 {
 			switch value := data[0].(type) {
 			case Result:
 				model.data = value.List()
@@ -141,6 +143,7 @@ func (m *Model) OnConflict(onConflict ...any) *Model {
 // In MySQL, this is used for "ON DUPLICATE KEY UPDATE" statement.
 // In PgSQL, this is used for "ON CONFLICT (id) DO UPDATE SET" statement.
 // The parameter `onDuplicate` can be type of string/Raw/*Raw/map/slice.
+//
 // Example:
 //
 // OnDuplicate("nickname, age")
@@ -234,25 +237,26 @@ func (m *Model) Save(ctx context.Context) (result sql.Result, err error) {
 	return m.doInsertWithOption(ctx, InsertOptionSave)
 }
 
-// doInsertWithOption inserts data with option parameter.
+// doInsertWithOption is the core function for insert operation, which inserts data with option parameter.
 func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOption) (result sql.Result, err error) {
+	model := m.callHandlers(ctx)
 	defer func() {
 		if err == nil {
-			m.checkAndRemoveSelectCache(ctx)
+			model.checkAndRemoveSelectCache(ctx)
 		}
 	}()
-	if m.data == nil {
+	if model.data == nil {
 		return nil, gerror.NewCode(gcode.CodeMissingParameter, "inserting into table with empty data")
 	}
 	var (
 		list                             List
-		stm                              = m.softTimeMaintainer()
-		fieldNameCreate, fieldTypeCreate = stm.GetFieldNameAndTypeForCreate(ctx, "", m.tablesInit)
-		fieldNameUpdate, fieldTypeUpdate = stm.GetFieldNameAndTypeForUpdate(ctx, "", m.tablesInit)
-		fieldNameDelete, fieldTypeDelete = stm.GetFieldNameAndTypeForDelete(ctx, "", m.tablesInit)
+		stm                              = model.softTimeMaintainer()
+		fieldNameCreate, fieldTypeCreate = stm.GetFieldNameAndTypeForCreate(ctx, "", model.tablesInit)
+		fieldNameUpdate, fieldTypeUpdate = stm.GetFieldNameAndTypeForUpdate(ctx, "", model.tablesInit)
+		fieldNameDelete, fieldTypeDelete = stm.GetFieldNameAndTypeForDelete(ctx, "", model.tablesInit)
 	)
-	// m.data was already converted to type List/Map by function Data
-	newData, err := m.filterDataForInsertOrUpdate(ctx, m.data)
+	// model.data was already converted to type List/Map by function Data
+	newData, err := model.filterDataForInsertOrUpdate(ctx, model.data)
 	if err != nil {
 		return nil, err
 	}
@@ -270,14 +274,14 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 	}
 
 	// Automatic handling for creating/updating time.
-	if fieldNameCreate != "" && m.isFieldInFieldsEx(fieldNameCreate) {
+	if fieldNameCreate != "" && model.isFieldInFieldsEx(fieldNameCreate) {
 		fieldNameCreate = ""
 	}
-	if fieldNameUpdate != "" && m.isFieldInFieldsEx(fieldNameUpdate) {
+	if fieldNameUpdate != "" && model.isFieldInFieldsEx(fieldNameUpdate) {
 		fieldNameUpdate = ""
 	}
 	var isSoftTimeFeatureEnabled = fieldNameCreate != "" || fieldNameUpdate != ""
-	if !m.unscoped && isSoftTimeFeatureEnabled {
+	if !model.unscoped && isSoftTimeFeatureEnabled {
 		for k, v := range list {
 			if fieldNameCreate != "" && empty.IsNil(v[fieldNameCreate]) {
 				fieldCreateValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeCreate, false)
@@ -306,7 +310,7 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 	for k := range list[0] {
 		columnNames = append(columnNames, k)
 	}
-	doInsertOption, err := m.formatDoInsertOption(insertOption, columnNames)
+	doInsertOption, err := model.formatDoInsertOption(insertOption, columnNames)
 	if err != nil {
 		return result, err
 	}
@@ -314,13 +318,13 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 	in := &HookInsertInput{
 		internalParamHookInsert: internalParamHookInsert{
 			internalParamHook: internalParamHook{
-				link: m.getLink(ctx, true),
+				link: model.getLink(ctx, true),
 			},
-			handler: m.hookHandler.Insert,
+			handler: model.hookHandler.Insert,
 		},
-		Model:  m,
-		Table:  m.tables,
-		Schema: m.schema,
+		Model:  model,
+		Table:  model.tables,
+		Schema: model.schema,
 		Data:   list,
 		Option: doInsertOption,
 	}

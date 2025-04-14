@@ -33,8 +33,6 @@ func Test_Model_Insert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
-	db.SetDebug(true)
-
 	gtest.C(t, func(t *gtest.T) {
 		user := db.Model(table)
 		result, err := user.Data(g.Map{
@@ -454,13 +452,13 @@ func Test_Model_Clone(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		md := db.Model(table).Where("id IN(?)", g.Slice{1, 3})
-		count, err := md.Count(ctx)
+		count, err := md.Clone().Count(ctx)
 		t.AssertNil(err)
 
-		record, err := md.Order("id DESC").One(ctx)
+		record, err := md.Clone().Order("id DESC").One(ctx)
 		t.AssertNil(err)
 
-		result, err := md.Order("id ASC").All(ctx)
+		result, err := md.Clone().Order("id ASC").All(ctx)
 		t.AssertNil(err)
 
 		t.Assert(count, int64(2))
@@ -468,101 +466,6 @@ func Test_Model_Clone(t *testing.T) {
 		t.Assert(len(result), 2)
 		t.Assert(result[0]["id"].Int(), 1)
 		t.Assert(result[1]["id"].Int(), 3)
-	})
-}
-
-func Test_Model_Safe(t *testing.T) {
-	table := createInitTable()
-	defer dropTable(table)
-
-	gtest.C(t, func(t *gtest.T) {
-		md := db.Model(table).Where("id IN(?)", g.Slice{1, 3})
-		count, err := md.Count(ctx)
-		t.AssertNil(err)
-		t.Assert(count, int64(2))
-
-		md.Where("id = ?", 1)
-		count, err = md.Count(ctx)
-		t.AssertNil(err)
-		t.Assert(count, int64(1))
-	})
-	gtest.C(t, func(t *gtest.T) {
-		md := db.Model(table).Where("id IN(?)", g.Slice{1, 3})
-		count, err := md.Count(ctx)
-		t.AssertNil(err)
-		t.Assert(count, int64(2))
-
-		md.Where("id = ?", 1)
-		count, err = md.Count(ctx)
-		t.AssertNil(err)
-		t.Assert(count, int64(2))
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		md := db.Model(table).Where("id IN(?)", g.Slice{1, 3})
-		count, err := md.Count(ctx)
-		t.AssertNil(err)
-		t.Assert(count, int64(2))
-
-		md.Where("id = ?", 1)
-		count, err = md.Count(ctx)
-		t.AssertNil(err)
-		t.Assert(count, int64(2))
-	})
-	gtest.C(t, func(t *gtest.T) {
-		md1 := db.Model(table)
-		md2 := md1.Where("id in (?)", g.Slice{1, 3})
-		count, err := md2.Count(ctx)
-		t.AssertNil(err)
-		t.Assert(count, int64(2))
-
-		all, err := md2.All(ctx)
-		t.AssertNil(err)
-		t.Assert(len(all), 2)
-
-		all, err = md2.Page(1, 10).All(ctx)
-		t.AssertNil(err)
-		t.Assert(len(all), 2)
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		table := createInitTable()
-		defer dropTable(table)
-
-		md1 := db.Model(table).Where("id>", 0)
-		md2 := md1.Where("id in (?)", g.Slice{1, 3})
-		md3 := md1.Where("id in (?)", g.Slice{4, 5, 6})
-
-		// 1,3
-		count, err := md2.Count(ctx)
-		t.AssertNil(err)
-		t.Assert(count, int64(2))
-
-		all, err := md2.Order("id asc").All(ctx)
-		t.AssertNil(err)
-		t.Assert(len(all), 2)
-		t.Assert(all[0]["id"].Int(), 1)
-		t.Assert(all[1]["id"].Int(), 3)
-
-		all, err = md2.Page(1, 10).All(ctx)
-		t.AssertNil(err)
-		t.Assert(len(all), 2)
-
-		// 4,5,6
-		count, err = md3.Count(ctx)
-		t.AssertNil(err)
-		t.Assert(count, int64(3))
-
-		all, err = md3.Order("id asc").All(ctx)
-		t.AssertNil(err)
-		t.Assert(len(all), 3)
-		t.Assert(all[0]["id"].Int(), 4)
-		t.Assert(all[1]["id"].Int(), 5)
-		t.Assert(all[2]["id"].Int(), 6)
-
-		all, err = md3.Page(1, 10).All(ctx)
-		t.AssertNil(err)
-		t.Assert(len(all), 3)
 	})
 }
 

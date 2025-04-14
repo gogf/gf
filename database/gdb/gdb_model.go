@@ -54,7 +54,8 @@ type Model struct {
 	softTimeOption SoftTimeOption    // SoftTimeOption is the option to customize soft time feature for Model.
 	shardingConfig ShardingConfig    // ShardingConfig for database/table sharding feature.
 	shardingValue  any               // Sharding value for sharding feature.
-	handlers       []ModelHandler
+	handlers       []ModelHandler    // Chaining handlers for model operations.
+	handlerIndex   int
 }
 
 // ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
@@ -76,6 +77,19 @@ const (
 	whereHolderTypeIn        = "In"
 )
 
+func newEmptyModel(db DB, schema string) *Model {
+	newModel := &Model{
+		db:            db,
+		schema:        schema,
+		start:         -1,
+		offset:        -1,
+		filter:        true,
+		tableAliasMap: make(map[string]string),
+	}
+	newModel.whereBuilder = newModel.Builder()
+	return newModel
+}
+
 // Model creates and returns a new ORM model from given schema.
 // The parameter `tableNameQueryOrStruct` can be more than one table names, and also alias name, like:
 //  1. Model names:
@@ -88,7 +102,7 @@ const (
 //  3. Model name with sub-query:
 //     db.Model("? AS a, ? AS b", subQuery1, subQuery2)
 func (c *Core) Model(tableNameQueryOrStruct ...any) *Model {
-	newModel := &Model{}
+	newModel := newEmptyModel(c.db, c.schema)
 	return newModel.Handler(func(ctx context.Context, model *Model) *Model {
 		var (
 			tableStr  string
@@ -130,21 +144,22 @@ func (c *Core) Model(tableNameQueryOrStruct ...any) *Model {
 				tableStr = c.QuotePrefixTableName(tableNames[0])
 			}
 		}
-		m := &Model{
-			db:            c.db,
-			schema:        c.schema,
-			tablesInit:    tableStr,
-			tables:        tableStr,
-			start:         -1,
-			offset:        -1,
-			filter:        true,
-			extraArgs:     extraArgs,
-			tableAliasMap: make(map[string]string),
-		}
-		m.whereBuilder = m.Builder()
-		return m
+		model.tables = tableStr
+		model.tablesInit = tableStr
+		model.extraArgs = extraArgs
+		return model
 	})
+}
 
+// Clone creates and returns a new model which is a Clone of current model.
+// It uses chaining handlers design for high performance of model clone.
+func (m *Model) Clone() *Model {
+	newModel := newEmptyModel(m.db, m.schema)
+	newModel.handlers = make([]ModelHandler, len(m.handlers))
+	if len(newModel.handlers) > 0 {
+		copy(newModel.handlers, m.handlers)
+	}
+	return newModel
 }
 
 // Raw creates and returns a model based on a raw sql not a table.
@@ -161,6 +176,7 @@ func (c *Core) Raw(rawSql string, args ...any) *Model {
 }
 
 // Raw sets current model as a raw sql model.
+//
 // Example:
 //
 //	db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)
@@ -175,6 +191,7 @@ func (m *Model) Raw(rawSql string, args ...any) *Model {
 	})
 }
 
+// Raw creates and returns a model based on a raw sql not a table.
 func (tx *TXCore) Raw(rawSql string, args ...any) *Model {
 	return tx.Model().Raw(rawSql, args...)
 }
@@ -185,6 +202,7 @@ func (c *Core) With(objects ...any) *Model {
 }
 
 // Partition sets Partition name.
+//
 // Example:
 // dao.User.Partition（"p1","p2","p3").All()
 func (m *Model) Partition(partitions ...string) *Model {
@@ -259,16 +277,6 @@ func (m *Model) Schema(schema string) *Model {
 	})
 }
 
-// Clone creates and returns a new model which is a Clone of current model.
-// Note that it uses deep-copy for the Clone.
-func (m *Model) Clone() *Model {
-	newModel := &Model{
-		handlers: make([]ModelHandler, len(m.handlers)),
-	}
-	copy(newModel.handlers, m.handlers)
-	return newModel
-}
-
 // Master marks the following operation on master node.
 func (m *Model) Master() *Model {
 	return m.Handler(func(ctx context.Context, model *Model) *Model {
@@ -298,5 +306,23 @@ func (m *Model) Args(args ...any) *Model {
 // ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
 func (m *Model) Handler(handlers ...ModelHandler) *Model {
 	m.handlers = append(m.handlers, handlers...)
+	return m
+}
+
+// callHandlers executes all handlers for current Model.
+func (m *Model) callHandlers(ctx context.Context) *Model {
+	// to avoid recursively calling.
+	ctxKey := "InCallHandlers"
+	if ctx.Value(ctxKey) != nil {
+		return m
+	}
+	ctx = context.WithValue(ctx, ctxKey, 1)
+	if len(m.handlers) == 0 {
+		return m
+	}
+	for m.handlerIndex < len(m.handlers) {
+		m.handlers[m.handlerIndex](ctx, m)
+		m.handlerIndex++
+	}
 	return m
 }

@@ -32,21 +32,24 @@ func (m *Model) QuoteWord(s string) string {
 // schema.
 //
 // Also see DriverMysql.TableFields.
-func (m *Model) TableFields(ctx context.Context, tableStr string, schema ...string) (fields map[string]*TableField, err error) {
+func (m *Model) TableFields(
+	ctx context.Context, tableStr string, schema ...string,
+) (fields map[string]*TableField, err error) {
 	var (
-		usedTable  = m.db.GetCore().guessPrimaryTableName(tableStr)
-		usedSchema = gutil.GetOrDefaultStr(m.schema, schema...)
+		model      = m.callHandlers(ctx)
+		usedTable  = model.db.GetCore().guessPrimaryTableName(tableStr)
+		usedSchema = gutil.GetOrDefaultStr(model.schema, schema...)
 	)
 	// Sharding feature.
-	usedSchema, err = m.getActualSchema(ctx, usedSchema)
+	usedSchema, err = model.getActualSchema(ctx, usedSchema)
 	if err != nil {
 		return nil, err
 	}
-	usedTable, err = m.getActualTable(ctx, usedTable)
+	usedTable, err = model.getActualTable(ctx, usedTable)
 	if err != nil {
 		return nil, err
 	}
-	return m.db.TableFields(ctx, usedTable, usedSchema)
+	return model.db.TableFields(ctx, usedTable, usedSchema)
 }
 
 // mappingAndFilterToTableFields mappings and changes given field name to really table field name.

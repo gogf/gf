@@ -27,7 +27,7 @@ import (
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) All(ctx context.Context) (Result, error) {
-	return m.doGetAll(ctx, SelectTypeDefault, false)
+	return m.callHandlers(ctx).doGetAll(ctx, SelectTypeDefault, false)
 }
 
 // AllAndCount retrieves all records and the total count of records from the model.
@@ -48,8 +48,10 @@ func (m *Model) All(ctx context.Context) (Result, error) {
 //	}
 //	fmt.Println(result, count)
 func (m *Model) AllAndCount(ctx context.Context, useFieldForCount bool) (result Result, totalCount int, err error) {
-	// Clone the model for counting
-	countModel := m.Clone()
+	var (
+		model      = m.callHandlers(ctx)
+		countModel = model.Clone()
+	)
 
 	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
 	if !useFieldForCount {
@@ -68,19 +70,21 @@ func (m *Model) AllAndCount(ctx context.Context, useFieldForCount bool) (result 
 	}
 
 	// Retrieve all records
-	result, err = m.doGetAll(ctx, SelectTypeDefault, false)
+	result, err = model.doGetAll(ctx, SelectTypeDefault, false)
 	return
 }
 
 // Chunk iterates the query result with given `size` and `handler` function.
 func (m *Model) Chunk(ctx context.Context, size int, handler ChunkHandler) {
-	page := m.start
+	var (
+		model = m.callHandlers(ctx)
+		page  = model.start
+	)
 	if page <= 0 {
 		page = 1
 	}
-	model := m
 	for {
-		model = model.Page(page, size)
+		model = model.Clone().Page(page, size)
 		data, err := model.All(ctx)
 		if err != nil {
 			handler(nil, err)
@@ -105,7 +109,7 @@ func (m *Model) Chunk(ctx context.Context, size int, handler ChunkHandler) {
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) One(ctx context.Context) (Record, error) {
-	all, err := m.doGetAll(ctx, SelectTypeDefault, true)
+	all, err := m.callHandlers(ctx).doGetAll(ctx, SelectTypeDefault, true)
 	if err != nil {
 		return nil, err
 	}
@@ -124,10 +128,11 @@ func (m *Model) One(ctx context.Context) (Record, error) {
 func (m *Model) Array(ctx context.Context) ([]Value, error) {
 	var (
 		field string
-		core  = m.db.GetCore()
+		model = m.callHandlers(ctx)
+		core  = model.db.GetCore()
 	)
 	ctx = core.injectInternalColumn(ctx)
-	all, err := m.doGetAll(ctx, SelectTypeArray, false)
+	all, err := model.doGetAll(ctx, SelectTypeArray, false)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +149,7 @@ func (m *Model) Array(ctx context.Context) ([]Value, error) {
 		field = internalData.FirstResultColumn
 		if field == "" {
 			// Fields number check.
-			var recordFields = m.getRecordFields(all[0])
+			var recordFields = model.getRecordFields(all[0])
 			if len(recordFields) == 1 {
 				field = recordFields[0]
 			} else {
@@ -159,84 +164,6 @@ func (m *Model) Array(ctx context.Context) ([]Value, error) {
 		}
 	}
 	return all.Array(field), nil
-}
-
-// Struct retrieves one record from table and converts it into given struct.
-// The parameter `pointer` should be type of *struct/**struct. If type **struct is given,
-// it can create the struct internally during converting.
-//
-// The optional parameter `where` is the same as the parameter of Model.Where function,
-// see Model.Where.
-//
-// Note that it returns sql.ErrNoRows if the given parameter `pointer` pointed to a variable that has
-// default value and there's no record retrieved with the given conditions from table.
-//
-// Example:
-// user := new(User)
-// err  := db.Model("user").Where("id", 1).Scan(user)
-//
-// user := (*User)(nil)
-// err  := db.Model("user").Where("id", 1).Scan(&user).
-func (m *Model) doStruct(ctx context.Context, pointer any) error {
-	// Auto selecting fields by struct attributes.
-	if len(m.fieldsEx) == 0 && len(m.fields) == 0 {
-		if v, ok := pointer.(reflect.Value); ok {
-			m.Fields(v.Interface())
-		} else {
-			m.Fields(pointer)
-		}
-	}
-	one, err := m.One(ctx)
-	if err != nil {
-		return err
-	}
-	if err = one.Struct(pointer); err != nil {
-		return err
-	}
-	return m.doWithScanStruct(ctx, pointer)
-}
-
-// Structs retrieves records from table and converts them into given struct slice.
-// The parameter `pointer` should be type of *[]struct/*[]*struct. It can create and fill the struct
-// slice internally during converting.
-//
-// The optional parameter `where` is the same as the parameter of Model.Where function,
-// see Model.Where.
-//
-// Note that it returns sql.ErrNoRows if the given parameter `pointer` pointed to a variable that has
-// default value and there's no record retrieved with the given conditions from table.
-//
-// Example:
-// users := ([]User)(nil)
-// err   := db.Model("user").Scan(&users)
-//
-// users := ([]*User)(nil)
-// err   := db.Model("user").Scan(&users).
-func (m *Model) doStructs(ctx context.Context, pointer any) error {
-	// Auto selecting fields by struct attributes.
-	if len(m.fieldsEx) == 0 && len(m.fields) == 0 {
-		if v, ok := pointer.(reflect.Value); ok {
-			m.Fields(
-				reflect.New(
-					v.Type().Elem(),
-				).Interface(),
-			)
-		} else {
-			m.Fields(
-				reflect.New(
-					reflect.ValueOf(pointer).Elem().Type().Elem(),
-				).Interface(),
-			)
-		}
-	}
-	all, err := m.All(ctx)
-	if err != nil {
-		return err
-	}
-	if err = all.Structs(pointer); err != nil {
-		return err
-	}
-	return m.doWithScanStructs(ctx, pointer)
 }
 
 // Scan automatically calls Struct or Structs function according to the type of parameter `pointer`.
@@ -268,12 +195,13 @@ func (m *Model) Scan(ctx context.Context, pointer any) error {
 			`the parameter "pointer" for function Scan should type of pointer`,
 		)
 	}
+
 	switch reflectInfo.OriginKind {
 	case reflect.Slice, reflect.Array:
-		return m.doStructs(ctx, pointer)
+		return m.callHandlers(ctx).doStructs(ctx, pointer)
 
 	case reflect.Struct, reflect.Invalid:
-		return m.doStruct(ctx, pointer)
+		return m.callHandlers(ctx).doStruct(ctx, pointer)
 
 	default:
 		return gerror.NewCode(
@@ -315,14 +243,17 @@ func (m *Model) Scan(ctx context.Context, pointer any) error {
 //		ScanAndCount(&users, &count, false)
 func (m *Model) ScanAndCount(ctx context.Context, pointer any, totalCount *int, useFieldForCount bool) (err error) {
 	// support Fields with *, example: .Fields("a.*, b.name"). Count sql is select count(1) from xxx
-	countModel := m.Clone()
+	var (
+		model      = m.callHandlers(ctx)
+		countModel = model.Clone()
+	)
 	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
 	if !useFieldForCount {
 		countModel.fields = []any{Raw("1")}
 	}
 
 	// Get the total count of records
-	*totalCount, err = countModel.Count(ctx)
+	*totalCount, err = countModel.Clone().Count(ctx)
 	if err != nil {
 		return err
 	}
@@ -331,7 +262,7 @@ func (m *Model) ScanAndCount(ctx context.Context, pointer any, totalCount *int, 
 	if *totalCount == 0 {
 		return
 	}
-	err = m.Scan(ctx, pointer)
+	err = model.Scan(ctx, pointer)
 	return
 }
 
@@ -340,17 +271,20 @@ func (m *Model) ScanAndCount(ctx context.Context, pointer any, totalCount *int, 
 //
 // See Result.ScanList.
 func (m *Model) ScanList(ctx context.Context, structSlicePointer any, bindToAttrName string, relationAttrNameAndFields ...string) (err error) {
-	var result Result
+	var (
+		result Result
+		model  = m.callHandlers(ctx)
+	)
 	out, err := checkGetSliceElementInfoForScanList(structSlicePointer, bindToAttrName)
 	if err != nil {
 		return err
 	}
-	if len(m.fields) > 0 || len(m.fieldsEx) != 0 {
+	if len(model.fields) > 0 || len(model.fieldsEx) != 0 {
 		// There are custom fields.
-		result, err = m.All(ctx)
+		result, err = model.All(ctx)
 	} else {
 		// Filter fields using temporary created struct using reflect.New.
-		result, err = m.Fields(reflect.New(out.BindToAttrType).Interface()).All(ctx)
+		result, err = model.Fields(reflect.New(out.BindToAttrType).Interface()).All(ctx)
 	}
 	if err != nil {
 		return err
@@ -367,7 +301,7 @@ func (m *Model) ScanList(ctx context.Context, structSlicePointer any, bindToAttr
 		relationFields = relationAttrNameAndFields[0]
 	}
 	return doScanList(ctx, doScanListInput{
-		Model:              m,
+		Model:              model,
 		Result:             result,
 		StructSlicePointer: structSlicePointer,
 		StructSliceValue:   out.SliceReflectValue,
@@ -384,12 +318,15 @@ func (m *Model) ScanList(ctx context.Context, structSlicePointer any, bindToAttr
 // and fieldsAndWhere[1:] is treated as where condition fields.
 // Also see Model.Fields and Model.Where functions.
 func (m *Model) Value(ctx context.Context) (Value, error) {
-	var core = m.db.GetCore()
+	var (
+		model = m.callHandlers(ctx)
+		core  = model.db.GetCore()
+	)
 	ctx = core.injectInternalColumn(ctx)
 
 	var (
-		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(ctx, SelectTypeValue, true)
-		all, err                  = m.doGetAllBySql(ctx, SelectTypeValue, sqlWithHolder, holderArgs...)
+		sqlWithHolder, holderArgs = model.getFormattedSqlAndArgs(ctx, SelectTypeValue, true)
+		all, err                  = model.doGetAllBySql(ctx, SelectTypeValue, sqlWithHolder, holderArgs...)
 	)
 	if err != nil {
 		return nil, err
@@ -408,7 +345,7 @@ func (m *Model) Value(ctx context.Context) (Value, error) {
 			return v, nil
 		}
 		// Fields number check.
-		var recordFields = m.getRecordFields(all[0])
+		var recordFields = model.getRecordFields(all[0])
 		if len(recordFields) == 1 {
 			for _, v := range all[0] {
 				return v, nil
@@ -440,6 +377,8 @@ func (m *Model) getRecordFields(record Record) []string {
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) Count(ctx context.Context) (int, error) {
+	m.callHandlers(ctx)
+
 	var core = m.db.GetCore()
 	ctx = core.injectInternalColumn(ctx)
 
@@ -485,7 +424,7 @@ func (m *Model) Count(ctx context.Context) (int, error) {
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) Exist(ctx context.Context) (bool, error) {
-	one, err := m.Fields(Raw("1")).One(ctx)
+	one, err := m.callHandlers(ctx).Fields(Raw("1")).One(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -502,7 +441,7 @@ func (m *Model) CountColumn(ctx context.Context, column string) (int, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
-	return m.Fields(column).Count(ctx)
+	return m.callHandlers(ctx).Fields(column).Count(ctx)
 }
 
 // Min does "SELECT MIN(x) FROM ..." statement for the model.
@@ -510,7 +449,10 @@ func (m *Model) Min(ctx context.Context, column string) (float64, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
-	value, err := m.Fields(fmt.Sprintf(`MIN(%s)`, m.QuoteWord(column))).Value(ctx)
+	model := m.callHandlers(ctx)
+	value, err := model.
+		Fields(fmt.Sprintf(`MIN(%s)`, model.QuoteWord(column))).
+		Value(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -522,7 +464,10 @@ func (m *Model) Max(ctx context.Context, column string) (float64, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
-	value, err := m.Fields(fmt.Sprintf(`MAX(%s)`, m.QuoteWord(column))).Value(ctx)
+	model := m.callHandlers(ctx)
+	value, err := model.
+		Fields(fmt.Sprintf(`MAX(%s)`, model.QuoteWord(column))).
+		Value(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -534,7 +479,10 @@ func (m *Model) Avg(ctx context.Context, column string) (float64, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
-	value, err := m.Fields(fmt.Sprintf(`AVG(%s)`, m.QuoteWord(column))).Value(ctx)
+	model := m.callHandlers(ctx)
+	value, err := model.
+		Fields(fmt.Sprintf(`AVG(%s)`, model.QuoteWord(column))).
+		Value(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -546,7 +494,10 @@ func (m *Model) Sum(ctx context.Context, column string) (float64, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
-	value, err := m.Fields(fmt.Sprintf(`SUM(%s)`, m.QuoteWord(column))).Value(ctx)
+	model := m.callHandlers(ctx)
+	value, err := model.
+		Fields(fmt.Sprintf(`SUM(%s)`, model.QuoteWord(column))).
+		Value(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -642,7 +593,6 @@ func (m *Model) doGetAllBySql(
 	if result, err = m.getSelectResultFromCache(ctx, sql, args...); err != nil || result != nil {
 		return
 	}
-
 	in := &HookSelectInput{
 		internalParamHookSelect: internalParamHookSelect{
 			internalParamHook: internalParamHook{
@@ -880,4 +830,82 @@ func (m *Model) formatCondition(
 		conditionExtra += " " + m.lockInfo
 	}
 	return
+}
+
+// Struct retrieves one record from table and converts it into given struct.
+// The parameter `pointer` should be type of *struct/**struct. If type **struct is given,
+// it can create the struct internally during converting.
+//
+// The optional parameter `where` is the same as the parameter of Model.Where function,
+// see Model.Where.
+//
+// Note that it returns sql.ErrNoRows if the given parameter `pointer` pointed to a variable that has
+// default value and there's no record retrieved with the given conditions from table.
+//
+// Example:
+// user := new(User)
+// err  := db.Model("user").Where("id", 1).Scan(user)
+//
+// user := (*User)(nil)
+// err  := db.Model("user").Where("id", 1).Scan(&user).
+func (m *Model) doStruct(ctx context.Context, pointer any) error {
+	// Auto selecting fields by struct attributes.
+	if len(m.fieldsEx) == 0 && len(m.fields) == 0 {
+		if v, ok := pointer.(reflect.Value); ok {
+			m.Fields(v.Interface())
+		} else {
+			m.Fields(pointer)
+		}
+	}
+	one, err := m.One(ctx)
+	if err != nil {
+		return err
+	}
+	if err = one.Struct(pointer); err != nil {
+		return err
+	}
+	return m.doWithScanStruct(ctx, pointer)
+}
+
+// Structs retrieves records from table and converts them into given struct slice.
+// The parameter `pointer` should be type of *[]struct/*[]*struct. It can create and fill the struct
+// slice internally during converting.
+//
+// The optional parameter `where` is the same as the parameter of Model.Where function,
+// see Model.Where.
+//
+// Note that it returns sql.ErrNoRows if the given parameter `pointer` pointed to a variable that has
+// default value and there's no record retrieved with the given conditions from table.
+//
+// Example:
+// users := ([]User)(nil)
+// err   := db.Model("user").Scan(&users)
+//
+// users := ([]*User)(nil)
+// err   := db.Model("user").Scan(&users).
+func (m *Model) doStructs(ctx context.Context, pointer any) error {
+	// Auto selecting fields by struct attributes.
+	if len(m.fieldsEx) == 0 && len(m.fields) == 0 {
+		if v, ok := pointer.(reflect.Value); ok {
+			m.Fields(
+				reflect.New(
+					v.Type().Elem(),
+				).Interface(),
+			)
+		} else {
+			m.Fields(
+				reflect.New(
+					reflect.ValueOf(pointer).Elem().Type().Elem(),
+				).Interface(),
+			)
+		}
+	}
+	all, err := m.All(ctx)
+	if err != nil {
+		return err
+	}
+	if err = all.Structs(pointer); err != nil {
+		return err
+	}
+	return m.doWithScanStructs(ctx, pointer)
 }

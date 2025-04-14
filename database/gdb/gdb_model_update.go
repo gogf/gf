@@ -27,6 +27,8 @@ import (
 // and dataAndWhere[1:] is treated as where condition fields.
 // Also see Model.Data and Model.Where functions.
 func (m *Model) Update(ctx context.Context) (result sql.Result, err error) {
+	m.callHandlers(ctx)
+
 	defer func() {
 		if err == nil {
 			m.checkAndRemoveSelectCache(ctx)
