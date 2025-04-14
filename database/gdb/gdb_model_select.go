@@ -660,6 +660,8 @@ func (m *Model) getFormattedSqlAndArgs(
 }
 
 func (m *Model) getHolderAndArgsAsSubModel(ctx context.Context) (holder string, args []any) {
+	m.callHandlers(ctx)
+
 	holder, args = m.getFormattedSqlAndArgs(
 		ctx, SelectTypeDefault, false,
 	)

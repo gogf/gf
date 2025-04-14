@@ -17,8 +17,6 @@ func Test_Model_SubQuery_Where(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	db.SetDebug(true)
-
 	gtest.C(t, func(t *gtest.T) {
 		r, err := db.Model(table).Where(
 			"id in ?",
