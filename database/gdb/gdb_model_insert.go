@@ -33,7 +33,7 @@ func (m *Model) Batch(batch int) *Model {
 // The parameter `data` can be type of string/map/gmap/slice/struct/*struct, etc.
 // Note that, it uses shallow value copying for `data` if `data` is type of map/slice
 // to avoid changing it inside function.
-// Eg:
+// Example:
 // Data("uid=10000")
 // Data("uid", 10000)
 // Data("uid=? AND name=?", 10000, "john")

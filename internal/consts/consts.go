@@ -16,6 +16,6 @@ const (
 	ConfigNodeNameServerSecondary = "httpserver" // New version configuration item name support from v2.
 
 	// StackFilterKeyForGoFrame is the stack filtering key for all GoFrame module paths.
-	// Eg: .../pkg/mod/github.com/gogf/gf/v3@v2.0.0-20211011134327-54dd11f51122/debug/gdebug/gdebug_caller.go
+	// Example: .../pkg/mod/github.com/gogf/gf/v3@v2.0.0-20211011134327-54dd11f51122/debug/gdebug/gdebug_caller.go
 	StackFilterKeyForGoFrame = "github.com/gogf/gf/"
 )

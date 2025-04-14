@@ -246,8 +246,8 @@ func doScanList(ctx context.Context, in doScanListInput) (err error) {
 	// Relation variables.
 	var (
 		relationDataMap         map[string]Value
-		relationFromFieldName   string // Eg: relationKV: id:uid  -> id
-		relationBindToFieldName string // Eg: relationKV: id:uid  -> uid
+		relationFromFieldName   string // Example: relationKV: id:uid  -> id
+		relationBindToFieldName string // Example: relationKV: id:uid  -> uid
 	)
 	if len(in.RelationFields) > 0 {
 		// The relation key string of table field name and attribute name

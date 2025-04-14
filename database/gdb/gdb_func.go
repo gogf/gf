@@ -375,7 +375,7 @@ func isKeyValueCanBeOmitEmpty(omitEmpty bool, whereType string, key, value any) 
 	if !omitEmpty {
 		return false
 	}
-	// Eg:
+	// Example:
 	// Where("id", []int{}).All()             -> SELECT xxx FROM xxx WHERE 0=1
 	// Where("name", "").All()                -> SELECT xxx FROM xxx WHERE `name`=''
 	// OmitEmpty().Where("id", []int{}).All() -> SELECT xxx FROM xxx
@@ -428,6 +428,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 	case reflect.Struct:
 		// If the `where` parameter is `DO` struct, it then adds `OmitNil` option for this condition,
 		// which will filter all nil parameters in `where`.
+		// TODO remove this in basic package, move this logic to generated codes.
 		if isDoStruct(in.Where) {
 			in.OmitNil = true
 		}
@@ -525,7 +526,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 		// Usually a string.
 		whereStr := gstr.Trim(gconv.String(in.Where))
 		// Is `whereStr` a field name which composed as a key-value condition?
-		// Eg:
+		// Example:
 		// Where("id", 1)
 		// Where("id", g.Slice{1,2,3})
 		if gregex.IsMatchString(regularFieldNameWithoutDotRegPattern, whereStr) && len(in.Args) == 1 {
@@ -550,7 +551,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 			}
 		}
 		// Regular string and parameter place holder handling.
-		// Eg:
+		// Example:
 		// Where("id in(?) and name=?", g.Slice{1,2,3}, "john")
 		i := 0
 		for {
@@ -590,24 +591,24 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 	if len(newArgs) > 0 {
 		if gstr.Pos(newWhere, "?") == -1 {
 			if gregex.IsMatchString(lastOperatorRegPattern, newWhere) {
-				// Eg: Where/And/Or("uid>=", 1)
+				// Example: Where/And/Or("uid>=", 1)
 				newWhere += "?"
 			} else if gregex.IsMatchString(regularFieldNameRegPattern, newWhere) {
 				newWhere = db.GetCore().QuoteString(newWhere)
 				if len(newArgs) > 0 {
 					if utils.IsArray(newArgs[0]) {
-						// Eg:
+						// Example:
 						// Where("id", []int{1,2,3})
 						// Where("user.id", []int{1,2,3})
 						newWhere += " IN (?)"
 					} else if empty.IsNil(newArgs[0]) {
-						// Eg:
+						// Example:
 						// Where("id", nil)
 						// Where("user.id", nil)
 						newWhere += " IS NULL"
 						newArgs = nil
 					} else {
-						// Eg:
+						// Example:
 						// Where/And/Or("uid", 1)
 						// Where/And/Or("user.uid", 1)
 						newWhere += "=?"
@@ -709,17 +710,17 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []any) {
 			if gstr.Pos(quotedKey, "?") == -1 {
 				like := " LIKE"
 				if len(quotedKey) > len(like) && gstr.Equal(quotedKey[len(quotedKey)-len(like):], like) {
-					// Eg: Where(g.Map{"name like": "john%"})
+					// Example: Where(g.Map{"name like": "john%"})
 					in.Buffer.WriteString(quotedKey + " ?")
 				} else if gregex.IsMatchString(lastOperatorRegPattern, quotedKey) {
-					// Eg: Where(g.Map{"age > ": 16})
+					// Example: Where(g.Map{"age > ": 16})
 					in.Buffer.WriteString(quotedKey + " ?")
 				} else if gregex.IsMatchString(regularFieldNameRegPattern, in.Key) {
 					// The key is a regular field name.
 					in.Buffer.WriteString(quotedKey + "=?")
 				} else {
 					// The key is not a regular field name.
-					// Eg: Where(g.Map{"age > 16": nil})
+					// Example: Where(g.Map{"age > 16": nil})
 					// Issue: https://github.com/gogf/gf/issues/765
 					if empty.IsEmpty(in.Value) {
 						in.Buffer.WriteString(quotedKey)
@@ -754,7 +755,7 @@ func handleSliceAndStructArgsForSql(
 		switch argReflectInfo.OriginKind {
 		case reflect.Slice, reflect.Array:
 			// It does not split the type of []byte.
-			// Eg: table.Where("name = ?", []byte("john"))
+			// Example: table.Where("name = ?", []byte("john"))
 			if _, ok := oldArg.([]byte); ok {
 				newArgs = append(newArgs, oldArg)
 				continue
@@ -787,7 +788,7 @@ func handleSliceAndStructArgsForSql(
 
 			// If the '?' holder count equals the length of the slice,
 			// it does not implement the arguments splitting logic.
-			// Eg: db.Query("SELECT ?+?", g.Slice{1, 2})
+			// Example: db.Query("SELECT ?+?", g.Slice{1, 2})
 			if len(oldArgs) == 1 && valueHolderCount == argSliceLength {
 				break
 			}

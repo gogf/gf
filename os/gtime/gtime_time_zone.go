@@ -25,7 +25,7 @@ var (
 
 // SetTimeZone sets the time zone for current whole process.
 // The parameter `zone` is an area string specifying corresponding time zone,
-// eg: Asia/Shanghai.
+// Example: Asia/Shanghai.
 //
 // PLEASE VERY NOTE THAT:
 // 1. This should be called before package "time" import.

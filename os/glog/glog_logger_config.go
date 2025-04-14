@@ -213,7 +213,7 @@ func (l *Logger) GetCtxKeys() []interface{} {
 // SetWriter sets the customized logging `writer` for logging.
 // The `writer` object should implement the io.Writer interface.
 // Developer can use customized logging `writer` to redirect logging output to another service,
-// eg: kafka, mysql, mongodb, etc.
+// Example: kafka, mysql, mongodb, etc.
 func (l *Logger) SetWriter(writer io.Writer) {
 	l.config.Writer = writer
 }

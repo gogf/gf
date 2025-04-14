@@ -9,7 +9,7 @@ package gdb
 import "context"
 
 // WhereOrPrefix performs as WhereOr, but it adds prefix to each field in where statement.
-// Eg:
+// Example:
 // WhereOrPrefix("order", "status", "paid")                        => WHERE xxx OR (`order`.`status`='paid')
 // WhereOrPrefix("order", struct{Status:"paid", "channel":"bank"}) => WHERE xxx OR (`order`.`status`='paid' AND `order`.`channel`='bank')
 func (b *WhereBuilder) WhereOrPrefix(prefix string, where interface{}, args ...interface{}) *WhereBuilder {

@@ -196,7 +196,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 	needCompressFileArray := garray.NewStrArray()
 	if l.config.RotateBackupCompress > 0 {
 		for _, file := range files {
-			// Eg: access.20200326101301899002.log.gz
+			// Example: access.20200326101301899002.log.gz
 			if gfile.ExtName(file) == "gz" {
 				continue
 			}
@@ -205,7 +205,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 			if !gregex.IsMatchString(fileNameRegexPattern, originalLoggingFilePath) {
 				continue
 			}
-			// Eg:
+			// Example:
 			// access.20200326101301899002.log
 			if gregex.IsMatchString(`.+\.\d{20}\.log`, gfile.Basename(file)) {
 				needCompressFileArray.Append(file)

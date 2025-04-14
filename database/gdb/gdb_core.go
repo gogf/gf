@@ -321,7 +321,7 @@ func (c *Core) PingSlave() error {
 // If there's already one unique record of the data in the table, it returns error.
 //
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
-// Eg:
+// Example:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
@@ -337,7 +337,7 @@ func (c *Core) Insert(ctx context.Context, table string, data any, batch ...int)
 // If there's already one unique record of the data in the table, it ignores the inserting.
 //
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
-// Eg:
+// Example:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
@@ -362,7 +362,7 @@ func (c *Core) InsertAndGetId(ctx context.Context, table string, data any, batch
 // and inserts a new one.
 //
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
-// Eg:
+// Example:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
@@ -381,7 +381,7 @@ func (c *Core) Replace(ctx context.Context, table string, data any, batch ...int
 // or else it inserts a new record into the table.
 //
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
-// Eg:
+// Example:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
@@ -420,7 +420,7 @@ func (c *Core) fieldsToSequence(ctx context.Context, table string, fields []stri
 // DoInsert inserts or updates data for given table.
 // This function is usually used for custom interface definition, you do not need call it manually.
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
-// Eg:
+// Example:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
@@ -546,11 +546,11 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 // Update does "UPDATE ... " statement for the table.
 //
 // The parameter `data` can be type of string/map/gmap/struct/*struct, etc.
-// Eg: "uid=10000", "uid", 10000, g.Map{"uid": 10000, "name":"john"}
+// Example: "uid=10000", "uid", 10000, g.Map{"uid": 10000, "name":"john"}
 //
 // The parameter `condition` can be type of string/map/gmap/slice/struct/*struct, etc.
 // It is commonly used with parameter `args`.
-// Eg:
+// Example:
 // "uid=10000",
 // "uid", 10000
 // "money>? AND name like ?", 99999, "vip_%"
@@ -654,7 +654,7 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data any, 
 //
 // The parameter `condition` can be type of string/map/gmap/slice/struct/*struct, etc.
 // It is commonly used with parameter `args`.
-// Eg:
+// Example:
 // "uid=10000",
 // "uid", 10000
 // "money>? AND name like ?", 99999, "vip_%"

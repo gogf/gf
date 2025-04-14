@@ -37,7 +37,7 @@ type CopyOption struct {
 // If `src` is file, but `dst` already exists and is a folder,
 // it then creates a same name file of `src` in folder `dst`.
 //
-// Eg:
+// Example:
 // Copy("/tmp/file1", "/tmp/file2") => /tmp/file1 copied to /tmp/file2
 // Copy("/tmp/dir1",  "/tmp/dir2")  => /tmp/dir1  copied to /tmp/dir2
 // Copy("/tmp/file1", "/tmp/dir2")  => /tmp/file1 copied to /tmp/dir2/file1

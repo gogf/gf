@@ -64,7 +64,7 @@ func SliceDelete(slice []interface{}, index int) (newSlice []interface{}) {
 
 // SliceToMap converts slice type variable `slice` to `map[string]interface{}`.
 // Note that if the length of `slice` is not an even number, it returns nil.
-// Eg:
+// Example:
 // ["K1", "v1", "K2", "v2"] => {"K1": "v1", "K2": "v2"}
 // ["K1", "v1", "K2"]       => nil
 func SliceToMap(slice interface{}) map[string]interface{} {
@@ -93,7 +93,7 @@ func SliceToMap(slice interface{}) map[string]interface{} {
 
 // SliceToMapWithColumnAsKey converts slice type variable `slice` to `map[interface{}]interface{}`
 // The value of specified column use as the key for returned map.
-// Eg:
+// Example:
 // SliceToMapWithColumnAsKey([{"K1": "v1", "K2": 1}, {"K1": "v2", "K2": 2}], "K1") => {"v1": {"K1": "v1", "K2": 1}, "v2": {"K1": "v2", "K2": 2}}
 // SliceToMapWithColumnAsKey([{"K1": "v1", "K2": 1}, {"K1": "v2", "K2": 2}], "K2") => {1: {"K1": "v1", "K2": 1}, 2: {"K1": "v2", "K2": 2}}
 func SliceToMapWithColumnAsKey(slice interface{}, key interface{}) map[interface{}]interface{} {

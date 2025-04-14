@@ -285,7 +285,7 @@ func (tx *TXCore) GetCount(ctx context.Context, sql string, args ...interface{})
 // If there's already one unique record of the data in the table, it returns error.
 //
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
-// Eg:
+// Example:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
@@ -301,7 +301,7 @@ func (tx *TXCore) Insert(ctx context.Context, table string, data interface{}, ba
 // If there's already one unique record of the data in the table, it ignores the inserting.
 //
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
-// Eg:
+// Example:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
@@ -326,7 +326,7 @@ func (tx *TXCore) InsertAndGetId(ctx context.Context, table string, data interfa
 // and inserts a new one.
 //
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
-// Eg:
+// Example:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
@@ -345,7 +345,7 @@ func (tx *TXCore) Replace(ctx context.Context, table string, data interface{}, b
 // or else it inserts a new record into the table.
 //
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
-// Eg:
+// Example:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
@@ -361,11 +361,11 @@ func (tx *TXCore) Save(ctx context.Context, table string, data interface{}, batc
 // Update does "UPDATE ... " statement for the table.
 //
 // The parameter `data` can be type of string/map/gmap/struct/*struct, etc.
-// Eg: "uid=10000", "uid", 10000, g.Map{"uid": 10000, "name":"john"}
+// Example: "uid=10000", "uid", 10000, g.Map{"uid": 10000, "name":"john"}
 //
 // The parameter `condition` can be type of string/map/gmap/slice/struct/*struct, etc.
 // It is commonly used with parameter `args`.
-// Eg:
+// Example:
 // "uid=10000",
 // "uid", 10000
 // "money>? AND name like ?", 99999, "vip_%"
@@ -380,7 +380,7 @@ func (tx *TXCore) Update(ctx context.Context, table string, data interface{}, co
 //
 // The parameter `condition` can be type of string/map/gmap/slice/struct/*struct, etc.
 // It is commonly used with parameter `args`.
-// Eg:
+// Example:
 // "uid=10000",
 // "uid", 10000
 // "money>? AND name like ?", 99999, "vip_%"

@@ -16,7 +16,7 @@ import (
 // Where sets the condition statement for the builder. The parameter `where` can be type of
 // string/map/gmap/slice/struct/*struct, etc. Note that, if it's called more than one times,
 // multiple conditions will be joined into where statement using "AND".
-// Eg:
+// Example:
 // Where("uid=10000")
 // Where("uid", 10000)
 // Where("money>? AND name like ?", 99999, "vip_%")

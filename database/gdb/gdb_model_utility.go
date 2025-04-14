@@ -53,7 +53,7 @@ func (m *Model) TableFields(
 }
 
 // mappingAndFilterToTableFields mappings and changes given field name to really table field name.
-// Eg:
+// Example:
 // ID        -> id
 // NICK_Name -> nickname.
 func (m *Model) mappingAndFilterToTableFields(ctx context.Context, table string, fields []any, filter bool) []any {

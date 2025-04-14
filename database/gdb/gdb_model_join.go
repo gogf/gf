@@ -17,7 +17,7 @@ import (
 // The parameter `table` can be joined table and its joined condition,
 // and also with its alias name.
 //
-// Eg:
+// Example:
 // Model("user").LeftJoin("user_detail", "user_detail.uid=user.uid")
 // Model("user", "u").LeftJoin("user_detail", "ud", "ud.uid=u.uid")
 // Model("user", "u").LeftJoin("SELECT xxx FROM xxx","a", "a.uid=u.uid").
@@ -31,7 +31,7 @@ func (m *Model) LeftJoin(tableOrSubQueryAndJoinConditions ...string) *Model {
 // The parameter `table` can be joined table and its joined condition,
 // and also with its alias name.
 //
-// Eg:
+// Example:
 // Model("user").RightJoin("user_detail", "user_detail.uid=user.uid")
 // Model("user", "u").RightJoin("user_detail", "ud", "ud.uid=u.uid")
 // Model("user", "u").RightJoin("SELECT xxx FROM xxx","a", "a.uid=u.uid").
@@ -45,7 +45,7 @@ func (m *Model) RightJoin(tableOrSubQueryAndJoinConditions ...string) *Model {
 // The parameter `table` can be joined table and its joined condition,
 // and also with its alias name。
 //
-// Eg:
+// Example:
 // Model("user").InnerJoin("user_detail", "user_detail.uid=user.uid")
 // Model("user", "u").InnerJoin("user_detail", "ud", "ud.uid=u.uid")
 // Model("user", "u").InnerJoin("SELECT xxx FROM xxx","a", "a.uid=u.uid").
@@ -57,7 +57,7 @@ func (m *Model) InnerJoin(tableOrSubQueryAndJoinConditions ...string) *Model {
 
 // LeftJoinOnField performs as LeftJoin, but it joins both tables with the `same field name`.
 //
-// Eg:
+// Example:
 // Model("order").LeftJoinOnField("user", "user_id")
 // Model("order").LeftJoinOnField("product", "product_id").
 func (m *Model) LeftJoinOnField(table, field string) *Model {
@@ -74,7 +74,7 @@ func (m *Model) LeftJoinOnField(table, field string) *Model {
 
 // RightJoinOnField performs as RightJoin, but it joins both tables with the `same field name`.
 //
-// Eg:
+// Example:
 // Model("order").InnerJoinOnField("user", "user_id")
 // Model("order").InnerJoinOnField("product", "product_id").
 func (m *Model) RightJoinOnField(table, field string) *Model {
@@ -91,7 +91,7 @@ func (m *Model) RightJoinOnField(table, field string) *Model {
 
 // InnerJoinOnField performs as InnerJoin, but it joins both tables with the `same field name`.
 //
-// Eg:
+// Example:
 // Model("order").InnerJoinOnField("user", "user_id")
 // Model("order").InnerJoinOnField("product", "product_id").
 func (m *Model) InnerJoinOnField(table, field string) *Model {
@@ -108,7 +108,7 @@ func (m *Model) InnerJoinOnField(table, field string) *Model {
 
 // LeftJoinOnFields performs as LeftJoin. It specifies different fields and comparison operator.
 //
-// Eg:
+// Example:
 // Model("user").LeftJoinOnFields("order", "id", "=", "user_id")
 // Model("user").LeftJoinOnFields("order", "id", ">", "user_id")
 // Model("user").LeftJoinOnFields("order", "id", "<", "user_id")
@@ -127,7 +127,7 @@ func (m *Model) LeftJoinOnFields(table, firstField, operator, secondField string
 
 // RightJoinOnFields performs as RightJoin. It specifies different fields and comparison operator.
 //
-// Eg:
+// Example:
 // Model("user").RightJoinOnFields("order", "id", "=", "user_id")
 // Model("user").RightJoinOnFields("order", "id", ">", "user_id")
 // Model("user").RightJoinOnFields("order", "id", "<", "user_id")
@@ -146,7 +146,7 @@ func (m *Model) RightJoinOnFields(table, firstField, operator, secondField strin
 
 // InnerJoinOnFields performs as InnerJoin. It specifies different fields and comparison operator.
 //
-// Eg:
+// Example:
 // Model("user").InnerJoinOnFields("order", "id", "=", "user_id")
 // Model("user").InnerJoinOnFields("order", "id", ">", "user_id")
 // Model("user").InnerJoinOnFields("order", "id", "<", "user_id")
@@ -167,7 +167,7 @@ func (m *Model) InnerJoinOnFields(table, firstField, operator, secondField strin
 // The parameter `tableOrSubQueryAndJoinConditions` can be joined table and its joined condition,
 // and also with its alias name.
 //
-// Eg:
+// Example:
 // Model("user").InnerJoin("user_detail", "user_detail.uid=user.uid")
 // Model("user", "u").InnerJoin("user_detail", "ud", "ud.uid=u.uid")
 // Model("user", "u").InnerJoin("user_detail", "ud", "ud.uid>u.uid")
