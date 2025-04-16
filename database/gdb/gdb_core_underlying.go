@@ -10,6 +10,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"reflect"
 
@@ -292,7 +293,7 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 	if c.db.GetDebug() {
 		c.writeSqlToLogger(ctx, sqlObj)
 	}
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		err = gerror.WrapCode(
 			gcode.CodeDbOperationError,
 			err,

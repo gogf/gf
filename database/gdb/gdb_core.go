@@ -281,7 +281,8 @@ func (c *Core) doUnion(unionType int, unions ...*Model) *Model {
 	newModel := c.db.Model()
 	return newModel.Handler(func(ctx context.Context, model *Model) *Model {
 		for _, v := range unions {
-			sqlWithHolder, holderArgs := v.getFormattedSqlAndArgs(ctx, SelectTypeDefault, false)
+			unionModel := v.callHandlers(ctx)
+			sqlWithHolder, holderArgs := unionModel.getFormattedSqlAndArgs(ctx, SelectTypeDefault, false)
 			if composedSqlStr == "" {
 				composedSqlStr += fmt.Sprintf(`(%s)`, sqlWithHolder)
 			} else {
@@ -289,7 +290,9 @@ func (c *Core) doUnion(unionType int, unions ...*Model) *Model {
 			}
 			composedArgs = append(composedArgs, holderArgs...)
 		}
-		return c.db.Raw(composedSqlStr, composedArgs...)
+		model.rawSql = composedSqlStr
+		model.extraArgs = composedArgs
+		return model
 	})
 }
 

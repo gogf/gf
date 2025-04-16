@@ -52,41 +52,43 @@ func (b *WhereBuilder) Clone() *WhereBuilder {
 
 // Handler registers handlers for where operation.
 func (b *WhereBuilder) Handler(handlers ...BuilderHandler) *WhereBuilder {
-	b.handlers = append(b.handlers, handlers...)
-	return b
+	newBuilder := b.Clone()
+	newBuilder.handlers = append(newBuilder.handlers, handlers...)
+	return newBuilder
 }
 
 func (b *WhereBuilder) callHandlers(ctx context.Context) *WhereBuilder {
 	if len(b.handlers) == 0 {
 		return b
 	}
-	for b.handlerIndex < len(b.handlers) {
-		b.handlers[b.handlerIndex](ctx, b)
-		b.handlerIndex++
+	builder := b
+	for builder.handlerIndex < len(builder.handlers) {
+		builder = builder.handlers[builder.handlerIndex](ctx, builder)
+		builder.handlerIndex++
 	}
-	return b
+	return builder
 }
 
 // Build builds current WhereBuilder and returns the condition string and parameters.
 func (b *WhereBuilder) Build(ctx context.Context) (conditionWhere string, conditionArgs []any) {
-	b.callHandlers(ctx)
-
 	var (
-		autoPrefix                  = b.model.getAutoPrefix()
-		tableForMappingAndFiltering = b.model.tables
+		model                       = b.model.callHandlers(ctx)
+		builder                     = b.callHandlers(ctx)
+		autoPrefix                  = model.getAutoPrefix()
+		tableForMappingAndFiltering = model.tables
 	)
-	if len(b.whereHolder) > 0 {
-		for _, holder := range b.whereHolder {
+	if len(builder.whereHolder) > 0 {
+		for _, holder := range builder.whereHolder {
 			if holder.Prefix == "" {
 				holder.Prefix = autoPrefix
 			}
 			switch holder.Operator {
 			case whereHolderOperatorWhere, whereHolderOperatorAnd:
-				newWhere, newArgs := formatWhereHolder(ctx, b.model.db, formatWhereHolderInput{
+				newWhere, newArgs := formatWhereHolder(ctx, model.db, formatWhereHolderInput{
 					WhereHolder: holder,
-					OmitNil:     b.model.option&optionOmitNilWhere > 0,
-					OmitEmpty:   b.model.option&optionOmitEmptyWhere > 0,
-					Schema:      b.model.schema,
+					OmitNil:     model.option&optionOmitNilWhere > 0,
+					OmitEmpty:   model.option&optionOmitEmptyWhere > 0,
+					Schema:      model.schema,
 					Table:       tableForMappingAndFiltering,
 				})
 				if len(newWhere) > 0 {
@@ -101,11 +103,11 @@ func (b *WhereBuilder) Build(ctx context.Context) (conditionWhere string, condit
 				}
 
 			case whereHolderOperatorOr:
-				newWhere, newArgs := formatWhereHolder(ctx, b.model.db, formatWhereHolderInput{
+				newWhere, newArgs := formatWhereHolder(ctx, model.db, formatWhereHolderInput{
 					WhereHolder: holder,
-					OmitNil:     b.model.option&optionOmitNilWhere > 0,
-					OmitEmpty:   b.model.option&optionOmitEmptyWhere > 0,
-					Schema:      b.model.schema,
+					OmitNil:     model.option&optionOmitNilWhere > 0,
+					OmitEmpty:   model.option&optionOmitEmptyWhere > 0,
+					Schema:      model.schema,
 					Table:       tableForMappingAndFiltering,
 				})
 				if len(newWhere) > 0 {

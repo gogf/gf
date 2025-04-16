@@ -313,16 +313,18 @@ func (m *Model) Handler(handlers ...ModelHandler) *Model {
 func (m *Model) callHandlers(ctx context.Context) *Model {
 	// to avoid recursively calling.
 	ctxKey := "InCallHandlers"
-	if ctx.Value(ctxKey) != nil {
+	// pointer address comparison.
+	if ctx.Value(ctxKey) == m {
 		return m
 	}
-	ctx = context.WithValue(ctx, ctxKey, 1)
+	ctx = context.WithValue(ctx, ctxKey, m)
 	if len(m.handlers) == 0 {
 		return m
 	}
-	for m.handlerIndex < len(m.handlers) {
-		m.handlers[m.handlerIndex](ctx, m)
-		m.handlerIndex++
+	model := m
+	for model.handlerIndex < len(model.handlers) {
+		model = model.handlers[model.handlerIndex](ctx, model)
+		model.handlerIndex++
 	}
-	return m
+	return model
 }

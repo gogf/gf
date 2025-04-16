@@ -25,7 +25,6 @@ func Test_Union(t *testing.T) {
 		).OrderDesc("id").All(ctx)
 
 		t.AssertNil(err)
-
 		t.Assert(len(r), 3)
 		t.Assert(r[0]["id"], 3)
 		t.Assert(r[1]["id"], 2)
@@ -40,7 +39,6 @@ func Test_Union(t *testing.T) {
 		).OrderDesc("id").One(ctx)
 
 		t.AssertNil(err)
-
 		t.Assert(r["id"], 3)
 	})
 }

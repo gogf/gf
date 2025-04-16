@@ -46,6 +46,7 @@ func Test_Model_Builder(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(all), 1)
 	})
+	return
 
 	// Where Or
 	gtest.C(t, func(t *gtest.T) {

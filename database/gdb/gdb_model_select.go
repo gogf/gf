@@ -27,7 +27,8 @@ import (
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) All(ctx context.Context) (Result, error) {
-	return m.callHandlers(ctx).doGetAll(ctx, SelectTypeDefault, false)
+	model := m.callHandlers(ctx)
+	return model.doGetAll(ctx, SelectTypeDefault, false)
 }
 
 // AllAndCount retrieves all records and the total count of records from the model.
@@ -109,7 +110,8 @@ func (m *Model) Chunk(ctx context.Context, size int, handler ChunkHandler) {
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) One(ctx context.Context) (Record, error) {
-	all, err := m.callHandlers(ctx).doGetAll(ctx, SelectTypeDefault, true)
+	model := m.callHandlers(ctx)
+	all, err := model.doGetAll(ctx, SelectTypeDefault, true)
 	if err != nil {
 		return nil, err
 	}
@@ -377,14 +379,14 @@ func (m *Model) getRecordFields(record Record) []string {
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) Count(ctx context.Context) (int, error) {
-	m.callHandlers(ctx)
+	model := m.callHandlers(ctx)
 
-	var core = m.db.GetCore()
+	var core = model.db.GetCore()
 	ctx = core.injectInternalColumn(ctx)
 
 	var (
-		sqlWithHolder, holderArgs = m.getFormattedSqlAndArgs(ctx, SelectTypeCount, false)
-		all, err                  = m.doGetAllBySql(ctx, SelectTypeCount, sqlWithHolder, holderArgs...)
+		sqlWithHolder, holderArgs = model.getFormattedSqlAndArgs(ctx, SelectTypeCount, false)
+		all, err                  = model.doGetAllBySql(ctx, SelectTypeCount, sqlWithHolder, holderArgs...)
 	)
 	if err != nil {
 		return 0, err
@@ -403,7 +405,7 @@ func (m *Model) Count(ctx context.Context) (int, error) {
 			return v.Int(), nil
 		}
 		// Fields number check.
-		var recordFields = m.getRecordFields(all[0])
+		var recordFields = model.getRecordFields(all[0])
 		if len(recordFields) == 1 {
 			for _, v := range all[0] {
 				return v.Int(), nil
@@ -424,7 +426,8 @@ func (m *Model) Count(ctx context.Context) (int, error) {
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) Exist(ctx context.Context) (bool, error) {
-	one, err := m.callHandlers(ctx).Fields(Raw("1")).One(ctx)
+	model := m.callHandlers(ctx)
+	one, err := model.Fields(Raw("1")).One(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -441,7 +444,8 @@ func (m *Model) CountColumn(ctx context.Context, column string) (int, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
-	return m.callHandlers(ctx).Fields(column).Count(ctx)
+	model := m.callHandlers(ctx)
+	return model.Fields(column).Count(ctx)
 }
 
 // Min does "SELECT MIN(x) FROM ..." statement for the model.
@@ -660,12 +664,12 @@ func (m *Model) getFormattedSqlAndArgs(
 }
 
 func (m *Model) getHolderAndArgsAsSubModel(ctx context.Context) (holder string, args []any) {
-	m.callHandlers(ctx)
+	model := m.callHandlers(ctx)
 
-	holder, args = m.getFormattedSqlAndArgs(
+	holder, args = model.getFormattedSqlAndArgs(
 		ctx, SelectTypeDefault, false,
 	)
-	args = m.mergeArguments(args)
+	args = model.mergeArguments(args)
 	return
 }
 

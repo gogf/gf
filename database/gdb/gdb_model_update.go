@@ -27,31 +27,31 @@ import (
 // and dataAndWhere[1:] is treated as where condition fields.
 // Also see Model.Data and Model.Where functions.
 func (m *Model) Update(ctx context.Context) (result sql.Result, err error) {
-	m.callHandlers(ctx)
+	model := m.callHandlers(ctx)
 
 	defer func() {
 		if err == nil {
-			m.checkAndRemoveSelectCache(ctx)
+			model.checkAndRemoveSelectCache(ctx)
 		}
 	}()
-	if m.data == nil {
+	if model.data == nil {
 		return nil, gerror.NewCode(gcode.CodeMissingParameter, "updating table with empty data")
 	}
 	var (
 		newData                                       any
-		stm                                           = m.softTimeMaintainer()
-		reflectInfo                                   = reflection.OriginTypeAndKind(m.data)
-		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(ctx, false, false)
+		stm                                           = model.softTimeMaintainer()
+		reflectInfo                                   = reflection.OriginTypeAndKind(model.data)
+		conditionWhere, conditionExtra, conditionArgs = model.formatCondition(ctx, false, false)
 		conditionStr                                  = conditionWhere + conditionExtra
 		fieldNameUpdate, fieldTypeUpdate              = stm.GetFieldNameAndTypeForUpdate(
-			ctx, "", m.tablesInit,
+			ctx, "", model.tablesInit,
 		)
 	)
-	if fieldNameUpdate != "" && (m.unscoped || m.isFieldInFieldsEx(fieldNameUpdate)) {
+	if fieldNameUpdate != "" && (model.unscoped || model.isFieldInFieldsEx(fieldNameUpdate)) {
 		fieldNameUpdate = ""
 	}
 
-	newData, err = m.filterDataForInsertOrUpdate(ctx, m.data)
+	newData, err = model.filterDataForInsertOrUpdate(ctx, model.data)
 	if err != nil {
 		return nil, err
 	}
@@ -92,16 +92,16 @@ func (m *Model) Update(ctx context.Context) (result sql.Result, err error) {
 	in := &HookUpdateInput{
 		internalParamHookUpdate: internalParamHookUpdate{
 			internalParamHook: internalParamHook{
-				link: m.getLink(ctx, true),
+				link: model.getLink(ctx, true),
 			},
-			handler: m.hookHandler.Update,
+			handler: model.hookHandler.Update,
 		},
-		Model:     m,
-		Table:     m.tables,
-		Schema:    m.schema,
+		Model:     model,
+		Table:     model.tables,
+		Schema:    model.schema,
 		Data:      newData,
 		Condition: conditionStr,
-		Args:      m.mergeArguments(conditionArgs),
+		Args:      model.mergeArguments(conditionArgs),
 	}
 	return in.Next(ctx)
 }

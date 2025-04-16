@@ -168,18 +168,18 @@ func (m *Model) FieldAvg(column string, as ...string) *Model {
 // GetFieldsStr retrieves and returns all fields from the table, joined with char ','.
 // The optional parameter `prefix` specifies the prefix for each field, eg: GetFieldsStr("u.").
 func (m *Model) GetFieldsStr(ctx context.Context, prefix ...string) string {
-	m.callHandlers(ctx)
+	model := m.callHandlers(ctx)
 
 	prefixStr := ""
 	if len(prefix) > 0 {
 		prefixStr = prefix[0]
 	}
-	tableFields, err := m.TableFields(ctx, m.tablesInit)
+	tableFields, err := model.TableFields(ctx, model.tablesInit)
 	if err != nil {
 		panic(err)
 	}
 	if len(tableFields) == 0 {
-		panic(fmt.Sprintf(`empty table fields for table "%s"`, m.tables))
+		panic(fmt.Sprintf(`empty table fields for table "%s"`, model.tables))
 	}
 	fieldsArray := make([]string, len(tableFields))
 	for k, v := range tableFields {
@@ -192,7 +192,7 @@ func (m *Model) GetFieldsStr(ctx context.Context, prefix ...string) string {
 		}
 		newFields += prefixStr + k
 	}
-	newFields = m.db.GetCore().QuoteString(newFields)
+	newFields = model.db.GetCore().QuoteString(newFields)
 	return newFields
 }
 
@@ -201,18 +201,18 @@ func (m *Model) GetFieldsStr(ctx context.Context, prefix ...string) string {
 // The parameter `fields` specifies the fields that are excluded.
 // The optional parameter `prefix` specifies the prefix for each field, eg: FieldsExStr("id", "u.").
 func (m *Model) GetFieldsExStr(ctx context.Context, fields string, prefix ...string) (string, error) {
-	m.callHandlers(ctx)
+	model := m.callHandlers(ctx)
 
 	prefixStr := ""
 	if len(prefix) > 0 {
 		prefixStr = prefix[0]
 	}
-	tableFields, err := m.TableFields(ctx, m.tablesInit)
+	tableFields, err := model.TableFields(ctx, model.tablesInit)
 	if err != nil {
 		return "", err
 	}
 	if len(tableFields) == 0 {
-		return "", gerror.Newf(`empty table fields for table "%s"`, m.tables)
+		return "", gerror.Newf(`empty table fields for table "%s"`, model.tables)
 	}
 	fieldsExSet := gset.NewStrSetFrom(gstr.SplitAndTrim(fields, ","))
 	fieldsArray := make([]string, len(tableFields))
@@ -229,14 +229,14 @@ func (m *Model) GetFieldsExStr(ctx context.Context, fields string, prefix ...str
 		}
 		newFields += prefixStr + k
 	}
-	newFields = m.db.GetCore().QuoteString(newFields)
+	newFields = model.db.GetCore().QuoteString(newFields)
 	return newFields, nil
 }
 
 // HasField determine whether the field exists in the table.
 func (m *Model) HasField(ctx context.Context, field string) (bool, error) {
-	m.callHandlers(ctx)
-	return m.db.GetCore().HasField(ctx, m.tablesInit, field)
+	model := m.callHandlers(ctx)
+	return model.db.GetCore().HasField(ctx, model.tablesInit, field)
 }
 
 // getFieldsFrom retrieves, filters and returns fields name from table `table`.
