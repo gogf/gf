@@ -172,8 +172,8 @@ func doScanList(
 	// Relation variables.
 	var (
 		relationDataMap         map[string]any
-		relationFromFieldName   string // Eg: relationKV: id:uid  -> id
-		relationBindToFieldName string // Eg: relationKV: id:uid  -> uid
+		relationFromFieldName   string // Example: relationKV: id:uid  -> id
+		relationBindToFieldName string // Example: relationKV: id:uid  -> uid
 	)
 	if len(relationFields) > 0 {
 		// The relation key string of table field name and attribute name

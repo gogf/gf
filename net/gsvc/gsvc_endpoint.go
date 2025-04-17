@@ -23,7 +23,7 @@ type LocalEndpoint struct {
 }
 
 // NewEndpoint creates and returns an Endpoint from address string of pattern "host:port",
-// eg: "192.168.1.100:80".
+// Example: "192.168.1.100:80".
 func NewEndpoint(address string) Endpoint {
 	array := gstr.SplitAndTrim(address, EndpointHostPortDelimiter)
 	if len(array) != 2 {

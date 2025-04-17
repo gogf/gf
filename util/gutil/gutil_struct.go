@@ -16,7 +16,7 @@ import (
 )
 
 // StructToSlice converts struct to slice of which all keys and values are its items.
-// Eg: {"K1": "v1", "K2": "v2"} => ["K1", "v1", "K2", "v2"]
+// Example: {"K1": "v1", "K2": "v2"} => ["K1", "v1", "K2", "v2"]
 func StructToSlice(data interface{}) []interface{} {
 	var (
 		reflectValue = reflect.ValueOf(data)

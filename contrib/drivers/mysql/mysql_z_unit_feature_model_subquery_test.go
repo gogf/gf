@@ -21,7 +21,7 @@ func Test_Model_SubQuery_Where(t *testing.T) {
 		r, err := db.Model(table).Where(
 			"id in ?",
 			db.Model(table).Fields("id").Where("id", g.Slice{1, 3, 5}),
-		).OrderAsc("id").All()
+		).OrderAsc("id").All(ctx)
 		t.AssertNil(err)
 
 		t.Assert(len(r), 3)
@@ -42,7 +42,7 @@ func Test_Model_SubQuery_Having(t *testing.T) {
 		).Having(
 			"id > ?",
 			db.Model(table).Fields("MAX(id)").Where("id", g.Slice{1, 3}),
-		).OrderAsc("id").All()
+		).OrderAsc("id").All(ctx)
 		t.AssertNil(err)
 
 		t.Assert(len(r), 1)
@@ -57,7 +57,7 @@ func Test_Model_SubQuery_Model(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		subQuery1 := db.Model(table).Where("id", g.Slice{1, 3, 5})
 		subQuery2 := db.Model(table).Where("id", g.Slice{5, 7, 9})
-		r, err := db.Model("? AS a, ? AS b", subQuery1, subQuery2).Fields("a.id").Where("a.id=b.id").OrderAsc("id").All()
+		r, err := db.Model("? AS a, ? AS b", subQuery1, subQuery2).Fields("a.id").Where("a.id=b.id").OrderAsc("id").All(ctx)
 		t.AssertNil(err)
 
 		t.Assert(len(r), 1)

@@ -28,7 +28,7 @@ type Pool struct {
 	// ExpireFunc is the function for expired items destruction.
 	// This function needs to be defined when the pool items
 	// need to perform additional destruction operations.
-	// Eg: net.Conn, os.File, etc.
+	// Example: net.Conn, os.File, etc.
 	ExpireFunc func(interface{})
 }
 

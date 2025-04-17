@@ -82,7 +82,7 @@ func doZipPathWriter(srcPath string, zipWriter *zip.Writer, option ...Option) er
 	headerPrefix = strings.ReplaceAll(headerPrefix, `//`, `/`)
 	for _, file := range files {
 		// It here calculates the file name prefix, especially packing the directory.
-		// Eg:
+		// Example:
 		// path: dir1
 		// file: dir1/dir2/file
 		// file[len(absolutePath):] => /dir2/file

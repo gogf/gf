@@ -27,7 +27,7 @@ func Test_Raw_Insert(t *testing.T) {
 			"password":    "pass_1",
 			"nickname":    "name_1",
 			"create_time": gdb.Raw("now()"),
-		}).Insert()
+		}).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := result.LastInsertId()
 		t.Assert(n, 2)
@@ -57,7 +57,7 @@ func Test_Raw_BatchInsert(t *testing.T) {
 					"create_time": gdb.Raw("now()"),
 				},
 			},
-		).Insert()
+		).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := result.LastInsertId()
 		t.Assert(n, 4)
@@ -73,14 +73,14 @@ func Test_Raw_Update(t *testing.T) {
 		result, err := user.Data(g.Map{
 			"id":          gdb.Raw("id+100"),
 			"create_time": gdb.Raw("now()"),
-		}).Where("id", 1).Update()
+		}).Where("id", 1).Update(ctx)
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		user := db.Model(table)
-		n, err := user.Where("id", 101).Count()
+		n, err := user.Where("id", 101).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(n, 1)
 	})
@@ -96,9 +96,9 @@ func Test_Raw_Where(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expectSql := "SELECT * FROM `Test_Raw_Where_Table1` AS A WHERE NOT EXISTS (SELECT B.id FROM `Test_Raw_Where_Table2` AS B WHERE `B`.`id`=A.id) LIMIT 1"
 		sql, err := gdb.ToSQL(ctx, func(ctx context.Context) error {
-			s := db.Model(table2).As("B").Ctx(ctx).Fields("B.id").Where("B.id", gdb.Raw("A.id"))
-			m := db.Model(table1).As("A").Ctx(ctx).Where("NOT EXISTS ?", s).Limit(1)
-			_, err := m.All()
+			s := db.Model(table2).As("B").Fields("B.id").Where("B.id", gdb.Raw("A.id"))
+			m := db.Model(table1).As("A").Where("NOT EXISTS ?", s).Limit(1)
+			_, err := m.All(ctx)
 			return err
 		})
 		t.AssertNil(err)
@@ -107,9 +107,9 @@ func Test_Raw_Where(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expectSql := "SELECT * FROM `Test_Raw_Where_Table1` AS A WHERE NOT EXISTS (SELECT B.id FROM `Test_Raw_Where_Table2` AS B WHERE B.id=A.id) LIMIT 1"
 		sql, err := gdb.ToSQL(ctx, func(ctx context.Context) error {
-			s := db.Model(table2).As("B").Ctx(ctx).Fields("B.id").Where(gdb.Raw("B.id=A.id"))
-			m := db.Model(table1).As("A").Ctx(ctx).Where("NOT EXISTS ?", s).Limit(1)
-			_, err := m.All()
+			s := db.Model(table2).As("B").Fields("B.id").Where(gdb.Raw("B.id=A.id"))
+			m := db.Model(table1).As("A").Where("NOT EXISTS ?", s).Limit(1)
+			_, err := m.All(ctx)
 			return err
 		})
 		t.AssertNil(err)
@@ -119,8 +119,8 @@ func Test_Raw_Where(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expectSql := "SELECT * FROM `Test_Raw_Where_Table1` WHERE `passport` < `nickname`"
 		sql, err := gdb.ToSQL(ctx, func(ctx context.Context) error {
-			m := db.Model(table1).Ctx(ctx).WhereLT("passport", gdb.Raw("`nickname`"))
-			_, err := m.All()
+			m := db.Model(table1).WhereLT("passport", gdb.Raw("`nickname`"))
+			_, err := m.All(ctx)
 			return err
 		})
 		t.AssertNil(err)

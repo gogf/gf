@@ -287,7 +287,8 @@ func (h *HookDeleteInput) Next(ctx context.Context) (result sql.Result, err erro
 
 // Hook sets the hook functions for current model.
 func (m *Model) Hook(hook HookHandler) *Model {
-	model := m.getModel()
-	model.hookHandler = hook
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.hookHandler = hook
+		return model
+	})
 }

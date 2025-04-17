@@ -15,7 +15,7 @@ import (
 // to match the rules of regular expression pattern.
 // And returns the copy.
 //
-// Eg: Quote(`[foo]`) returns `\[foo\]`.
+// Example: Quote(`[foo]`) returns `\[foo\]`.
 func Quote(s string) string {
 	return regexp.QuoteMeta(s)
 }

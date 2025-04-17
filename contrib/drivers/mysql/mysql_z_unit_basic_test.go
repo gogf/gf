@@ -59,7 +59,7 @@ func Test_Func_FormatSqlWithArgs(t *testing.T) {
 func Test_Func_ToSQL(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		sql, err := gdb.ToSQL(ctx, func(ctx context.Context) error {
-			value, err := db.Ctx(ctx).Model(TableName).Fields("nickname").Where("id", 1).Value()
+			value, err := db.Model(TableName).Fields("nickname").Where("id", 1).Value(ctx)
 			t.Assert(value, nil)
 			return err
 		})
@@ -73,7 +73,7 @@ func Test_Func_CatchSQL(t *testing.T) {
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
 		array, err := gdb.CatchSQL(ctx, func(ctx context.Context) error {
-			value, err := db.Ctx(ctx).Model(table).Fields("nickname").Where("id", 1).Value()
+			value, err := db.Model(table).Fields("nickname").Where("id", 1).Value(ctx)
 			t.Assert(value, "name_1")
 			return err
 		})

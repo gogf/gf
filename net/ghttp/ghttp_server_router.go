@@ -378,14 +378,14 @@ func (s *Server) compareRouterPriority(newItem *HandlerItem, oldItem *HandlerIte
 
 	// If the counts of their fuzzy rules are equal.
 
-	// Eg: /name/{act} > /name/:act
+	// Example: /name/{act} > /name/:act
 	if fuzzyCountFieldNew > fuzzyCountFieldOld {
 		return true
 	}
 	if fuzzyCountFieldNew < fuzzyCountFieldOld {
 		return false
 	}
-	// Eg: /name/:act > /name/*act
+	// Example: /name/:act > /name/*act
 	if fuzzyCountNameNew > fuzzyCountNameOld {
 		return true
 	}

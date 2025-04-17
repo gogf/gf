@@ -21,22 +21,22 @@ import (
 func Test_LastInsertId(t *testing.T) {
 	// err not nil
 	gtest.C(t, func(t *gtest.T) {
-		_, err := db.Model("notexist").Insert(g.List{
+		_, err := db.Model("notexist").Data(g.List{
 			{"name": "user1"},
 			{"name": "user2"},
 			{"name": "user3"},
-		})
+		}).Insert(ctx)
 		t.AssertNE(err, nil)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
 		tableName := createTable()
 		defer dropTable(tableName)
-		res, err := db.Model(tableName).Insert(g.List{
+		res, err := db.Model(tableName).Data(g.List{
 			{"passport": "user1", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
 			{"passport": "user2", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
 			{"passport": "user3", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
-		})
+		}).Insert(ctx)
 		t.AssertNil(err)
 		lastInsertId, err := res.LastInsertId()
 		t.AssertNil(err)
@@ -53,11 +53,11 @@ func Test_TxLastInsertId(t *testing.T) {
 		defer dropTable(tableName)
 		err := db.Transaction(context.TODO(), func(ctx context.Context, tx gdb.TX) error {
 			// user
-			res, err := tx.Model(tableName).Insert(g.List{
+			res, err := tx.Model(tableName).Data(g.List{
 				{"passport": "user1", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
 				{"passport": "user2", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
 				{"passport": "user3", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
-			})
+			}).Insert(ctx)
 			t.AssertNil(err)
 			lastInsertId, err := res.LastInsertId()
 			t.AssertNil(err)
@@ -66,10 +66,10 @@ func Test_TxLastInsertId(t *testing.T) {
 			t.AssertNil(err)
 			t.AssertEQ(rowsAffected, int64(3))
 
-			res1, err := tx.Model(tableName).Insert(g.List{
+			res1, err := tx.Model(tableName).Data(g.List{
 				{"passport": "user4", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
 				{"passport": "user5", "password": "pwd", "nickname": "nickname", "create_time": CreateTime},
-			})
+			}).Insert(ctx)
 			t.AssertNil(err)
 			lastInsertId1, err := res1.LastInsertId()
 			t.AssertNil(err)

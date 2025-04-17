@@ -25,7 +25,7 @@ func Test_Raw_Insert(t *testing.T) {
 			"password":    "pass_1",
 			"nickname":    "name_1",
 			"create_time": gdb.Raw("now()"),
-		}).Insert()
+		}).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
@@ -53,7 +53,7 @@ func Test_Raw_BatchInsert(t *testing.T) {
 					"create_time": gdb.Raw("now()"),
 				},
 			},
-		).Insert()
+		).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 2)
@@ -68,7 +68,7 @@ func Test_Raw_Delete(t *testing.T) {
 		user := db.Model(table)
 		result, err := user.Data(g.Map{
 			"id": gdb.Raw("id"),
-		}).Where("id", 1).Delete()
+		}).Where("id", 1).Delete(ctx)
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
@@ -84,7 +84,7 @@ func Test_Raw_Update(t *testing.T) {
 		result, err := user.Data(g.Map{
 			"id":          gdb.Raw("id+100"),
 			"create_time": gdb.Raw("now()"),
-		}).Where("id", 1).Update()
+		}).Where("id", 1).Update(ctx)
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
@@ -92,7 +92,7 @@ func Test_Raw_Update(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		user := db.Model(table)
-		n, err := user.Where("id", 101).Count()
+		n, err := user.Where("id", 101).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(n, int64(1))
 	})

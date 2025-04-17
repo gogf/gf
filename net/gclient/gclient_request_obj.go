@@ -83,7 +83,7 @@ func (c *Client) DoRequestObj(ctx context.Context, req, res interface{}) error {
 }
 
 // handlePathForObjRequest replaces parameters in `path` with parameters from request object.
-// Eg:
+// Example:
 // /order/{id}  -> /order/1
 // /user/{name} -> /order/john
 func (c *Client) handlePathForObjRequest(path string, req interface{}) string {

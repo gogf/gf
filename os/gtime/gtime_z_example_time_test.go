@@ -106,7 +106,7 @@ func ExampleNewFromStrLayout() {
 
 // NewFromTimeStamp creates and returns a Time object with given timestamp,
 // which can be in seconds to nanoseconds.
-// Eg: 1600443866 and 1600443866199266000 are both considered as valid timestamp number.
+// Example: 1600443866 and 1600443866199266000 are both considered as valid timestamp number.
 func ExampleNewFromTimeStamp() {
 	t1 := gtime.NewFromTimeStamp(1533686888)
 	t2 := gtime.NewFromTimeStamp(1533686888000)

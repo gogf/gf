@@ -36,7 +36,7 @@ func Test_Model_Hook_Select(t *testing.T) {
 				return
 			},
 		})
-		all, err := m.Where(`id > 6`).OrderAsc(`id`).All()
+		all, err := m.Where(`id > 6`).OrderAsc(`id`).All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(all), 4)
 		t.Assert(all[0]["id"].Int(), 7)
@@ -62,12 +62,12 @@ func Test_Model_Hook_Insert(t *testing.T) {
 				return in.Next(ctx)
 			},
 		})
-		_, err := m.Insert(g.Map{
+		_, err := m.Data(g.Map{
 			"id":       1,
 			"nickname": "name_1",
-		})
+		}).Insert(ctx)
 		t.AssertNil(err)
-		one, err := m.One()
+		one, err := m.One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 1)
 		t.Assert(one["passport"], `test_port_1`)
@@ -101,10 +101,10 @@ func Test_Model_Hook_Update(t *testing.T) {
 		})
 		_, err := m.Data(g.Map{
 			"nickname": "name_1",
-		}).WherePri(1).Update()
+		}).WherePri(1).Update(ctx)
 		t.AssertNil(err)
 
-		one, err := m.One()
+		one, err := m.One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 1)
 		t.Assert(one["passport"], `port`)
@@ -121,13 +121,13 @@ func Test_Model_Hook_Delete(t *testing.T) {
 			Delete: func(ctx context.Context, in *gdb.HookDeleteInput) (result sql.Result, err error) {
 				return db.Model(table).Data(g.Map{
 					"nickname": `deleted`,
-				}).Where(in.Condition).Update()
+				}).Where(in.Condition).Update(ctx)
 			},
 		})
-		_, err := m.Where(1).Delete()
+		_, err := m.Where(1).Delete(ctx)
 		t.AssertNil(err)
 
-		all, err := m.All()
+		all, err := m.All(ctx)
 		t.AssertNil(err)
 		for _, item := range all {
 			t.Assert(item["nickname"].String(), `deleted`)

@@ -291,7 +291,7 @@ func newCommandFromMethod(
 							}
 						} else {
 							// Adapter with common user habits.
-							// Eg:
+							// Example:
 							// `gf -f=0`: which parameter `f` is parsed as false
 							// `gf -f=1`: which parameter `f` is parsed as true
 							data[arg.Name] = orphanValue.Bool()

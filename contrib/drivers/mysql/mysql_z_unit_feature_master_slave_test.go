@@ -78,22 +78,22 @@ func Test_Master_Slave(t *testing.T) {
 				"create_time": gtime.NewFromStr(CreateTime).String(),
 			})
 		}
-		_, err = masterSlaveDB.Model(table).Data(array).Insert()
+		_, err = masterSlaveDB.Model(table).Data(array).Insert(ctx)
 		t.AssertNil(err)
 
 		var count int
 		// Auto slave.
-		count, err = masterSlaveDB.Model(table).Count()
+		count, err = masterSlaveDB.Model(table).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, int64(0))
 
 		// slave.
-		count, err = masterSlaveDB.Model(table).Slave().Count()
+		count, err = masterSlaveDB.Model(table).Slave().Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, int64(0))
 
 		// master.
-		count, err = masterSlaveDB.Model(table).Master().Count()
+		count, err = masterSlaveDB.Model(table).Master().Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, int64(TableSize))
 	})

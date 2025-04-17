@@ -52,7 +52,7 @@ func GetLevel() int {
 // SetWriter sets the customized logging `writer` for logging.
 // The `writer` object should implements the io.Writer interface.
 // Developer can use customized logging `writer` to redirect logging output to another service,
-// eg: kafka, mysql, mongodb, etc.
+// Example: kafka, mysql, mongodb, etc.
 func SetWriter(writer io.Writer) {
 	defaultLogger.SetWriter(writer)
 }

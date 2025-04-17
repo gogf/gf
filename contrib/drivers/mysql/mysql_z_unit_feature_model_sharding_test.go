@@ -107,16 +107,15 @@ func Test_Sharding_Basic(t *testing.T) {
 
 		model := db.Model(TestTableName).
 			Sharding(shardingConfig).
-			ShardingValue(user.Id).
-			Safe()
+			ShardingValue(user.Id)
 
 		// Test Insert
-		_, err := model.Data(user).Insert()
+		_, err := model.Data(user).Insert(ctx)
 		t.AssertNil(err)
 
 		// Test Select
 		var result ShardingUser
-		err = model.Where("id", user.Id).Scan(&result)
+		err = model.Where("id", user.Id).Scan(ctx, &result)
 		t.AssertNil(err)
 		t.Assert(result.Id, user.Id)
 		t.Assert(result.Name, user.Name)
@@ -124,20 +123,20 @@ func Test_Sharding_Basic(t *testing.T) {
 		// Test Update
 		_, err = model.Data(g.Map{"name": "John Doe"}).
 			Where("id", user.Id).
-			Update()
+			Update(ctx)
 		t.AssertNil(err)
 
 		// Verify Update
-		err = model.Where("id", user.Id).Scan(&result)
+		err = model.Where("id", user.Id).Scan(ctx, &result)
 		t.AssertNil(err)
 		t.Assert(result.Name, "John Doe")
 
 		// Test Delete
-		_, err = model.Where("id", user.Id).Delete()
+		_, err = model.Where("id", user.Id).Delete(ctx)
 		t.AssertNil(err)
 
 		// Verify Delete
-		count, err := model.Where("id", user.Id).Count()
+		count, err := model.Where("id", user.Id).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 0)
 	})
@@ -159,9 +158,9 @@ func Test_Sharding_Error(t *testing.T) {
 					Prefix: "user_",
 					Rule:   &gdb.DefaultShardingRule{TableCount: 4},
 				},
-			}).Safe()
+			})
 
-		_, err := model.Insert(g.Map{"id": 1, "name": "test"})
+		_, err := model.Clone().Data(g.Map{"id": 1, "name": "test"}).Insert(ctx)
 		t.AssertNE(err, nil)
 		t.Assert(err.Error(), "sharding value is required when sharding feature enabled")
 
@@ -175,7 +174,7 @@ func Test_Sharding_Error(t *testing.T) {
 			}).
 			ShardingValue(1)
 
-		_, err = model.Insert(g.Map{"id": 1, "name": "test"})
+		_, err = model.Clone().Data(g.Map{"id": 1, "name": "test"}).Insert(ctx)
 		t.AssertNE(err, nil)
 		t.Assert(err.Error(), "sharding rule is required when sharding feature enabled")
 	})
@@ -211,10 +210,9 @@ func Test_Sharding_Complex(t *testing.T) {
 		for _, user := range users {
 			model := db.Model(TestTableName).
 				Sharding(shardingConfig).
-				ShardingValue(user.Id).
-				Safe()
+				ShardingValue(user.Id)
 
-			_, err := model.Data(user).Insert()
+			_, err := model.Clone().Data(user).Insert(ctx)
 			t.AssertNil(err)
 		}
 
@@ -222,11 +220,10 @@ func Test_Sharding_Complex(t *testing.T) {
 		for _, user := range users {
 			model := db.Model(TestTableName).
 				Sharding(shardingConfig).
-				ShardingValue(user.Id).
-				Safe()
+				ShardingValue(user.Id)
 
 			var result ShardingUser
-			err := model.Where("id", user.Id).Scan(&result)
+			err := model.Clone().Where("id", user.Id).Scan(ctx, &result)
 			t.AssertNil(err)
 			t.Assert(result.Id, user.Id)
 			t.Assert(result.Name, user.Name)
@@ -236,10 +233,9 @@ func Test_Sharding_Complex(t *testing.T) {
 		for _, user := range users {
 			model := db.Model(TestTableName).
 				Sharding(shardingConfig).
-				ShardingValue(user.Id).
-				Safe()
+				ShardingValue(user.Id)
 
-			_, err := model.Where("id", user.Id).Delete()
+			_, err := model.Clone().Where("id", user.Id).Delete(ctx)
 			t.AssertNil(err)
 		}
 	})
@@ -274,28 +270,28 @@ func Test_Model_Sharding_Table_Using_Hook(t *testing.T) {
 		},
 	})
 	gtest.C(t, func(t *gtest.T) {
-		r, err := shardingModel.Insert(g.Map{
+		r, err := shardingModel.Data(g.Map{
 			"id":          1,
 			"passport":    fmt.Sprintf(`user_%d`, 1),
 			"password":    fmt.Sprintf(`pass_%d`, 1),
 			"nickname":    fmt.Sprintf(`name_%d`, 1),
 			"create_time": gtime.NewFromStr(CreateTime).String(),
-		})
+		}).Insert(ctx)
 		t.AssertNil(err)
 		n, err := r.RowsAffected()
 		t.AssertNil(err)
 		t.Assert(n, 1)
 
 		var count int
-		count, err = shardingModel.Count()
+		count, err = shardingModel.Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 1)
 
-		count, err = db.Model(table1).Count()
+		count, err = db.Model(table1).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 0)
 
-		count, err = db.Model(table2).Count()
+		count, err = db.Model(table2).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 1)
 	})
@@ -307,7 +303,7 @@ func Test_Model_Sharding_Table_Using_Hook(t *testing.T) {
 			"passport": fmt.Sprintf(`user_%d`, 2),
 			"password": fmt.Sprintf(`pass_%d`, 2),
 			"nickname": fmt.Sprintf(`name_%d`, 2),
-		}).Update()
+		}).Update(ctx)
 		t.AssertNil(err)
 		n, err := r.RowsAffected()
 		t.AssertNil(err)
@@ -317,15 +313,15 @@ func Test_Model_Sharding_Table_Using_Hook(t *testing.T) {
 			count int
 			where = g.Map{"passport": fmt.Sprintf(`user_%d`, 2)}
 		)
-		count, err = shardingModel.Where(where).Count()
+		count, err = shardingModel.Where(where).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 1)
 
-		count, err = db.Model(table1).Where(where).Count()
+		count, err = db.Model(table1).Where(where).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 0)
 
-		count, err = db.Model(table2).Where(where).Count()
+		count, err = db.Model(table2).Where(where).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 1)
 	})
@@ -333,22 +329,22 @@ func Test_Model_Sharding_Table_Using_Hook(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		r, err := shardingModel.Where(g.Map{
 			"id": 1,
-		}).Delete()
+		}).Delete(ctx)
 		t.AssertNil(err)
 		n, err := r.RowsAffected()
 		t.AssertNil(err)
 		t.Assert(n, 1)
 
 		var count int
-		count, err = shardingModel.Count()
+		count, err = shardingModel.Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 0)
 
-		count, err = db.Model(table1).Count()
+		count, err = db.Model(table1).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 0)
 
-		count, err = db.Model(table2).Count()
+		count, err = db.Model(table2).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 0)
 	})
@@ -386,28 +382,28 @@ func Test_Model_Sharding_Schema_Using_Hook(t *testing.T) {
 		},
 	})
 	gtest.C(t, func(t *gtest.T) {
-		r, err := shardingModel.Insert(g.Map{
+		r, err := shardingModel.Data(g.Map{
 			"id":          1,
 			"passport":    fmt.Sprintf(`user_%d`, 1),
 			"password":    fmt.Sprintf(`pass_%d`, 1),
 			"nickname":    fmt.Sprintf(`name_%d`, 1),
 			"create_time": gtime.NewFromStr(CreateTime).String(),
-		})
+		}).Insert(ctx)
 		t.AssertNil(err)
 		n, err := r.RowsAffected()
 		t.AssertNil(err)
 		t.Assert(n, 1)
 
 		var count int
-		count, err = shardingModel.Count()
+		count, err = shardingModel.Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 1)
 
-		count, err = db.Model(table).Count()
+		count, err = db.Model(table).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 0)
 
-		count, err = db2.Model(table).Count()
+		count, err = db2.Model(table).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 1)
 	})
@@ -419,7 +415,7 @@ func Test_Model_Sharding_Schema_Using_Hook(t *testing.T) {
 			"passport": fmt.Sprintf(`user_%d`, 2),
 			"password": fmt.Sprintf(`pass_%d`, 2),
 			"nickname": fmt.Sprintf(`name_%d`, 2),
-		}).Update()
+		}).Update(ctx)
 		t.AssertNil(err)
 		n, err := r.RowsAffected()
 		t.AssertNil(err)
@@ -429,15 +425,15 @@ func Test_Model_Sharding_Schema_Using_Hook(t *testing.T) {
 			count int
 			where = g.Map{"passport": fmt.Sprintf(`user_%d`, 2)}
 		)
-		count, err = shardingModel.Where(where).Count()
+		count, err = shardingModel.Where(where).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 1)
 
-		count, err = db.Model(table).Where(where).Count()
+		count, err = db.Model(table).Where(where).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 0)
 
-		count, err = db2.Model(table).Where(where).Count()
+		count, err = db2.Model(table).Where(where).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 1)
 	})
@@ -445,22 +441,22 @@ func Test_Model_Sharding_Schema_Using_Hook(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		r, err := shardingModel.Where(g.Map{
 			"id": 1,
-		}).Delete()
+		}).Delete(ctx)
 		t.AssertNil(err)
 		n, err := r.RowsAffected()
 		t.AssertNil(err)
 		t.Assert(n, 1)
 
 		var count int
-		count, err = shardingModel.Count()
+		count, err = shardingModel.Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 0)
 
-		count, err = db.Model(table).Count()
+		count, err = db.Model(table).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 0)
 
-		count, err = db2.Model(table).Count()
+		count, err = db2.Model(table).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 0)
 	})

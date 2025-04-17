@@ -44,10 +44,11 @@ type selectCacheItem struct {
 // Note that, the cache feature is disabled if the model is performing select statement
 // on a transaction.
 func (m *Model) Cache(option CacheOption) *Model {
-	model := m.getModel()
-	model.cacheOption = option
-	model.cacheEnabled = true
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.cacheOption = option
+		model.cacheEnabled = true
+		return model
+	})
 }
 
 // checkAndRemoveSelectCache checks and removes the cache in insert/update/delete statement if

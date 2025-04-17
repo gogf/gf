@@ -14,7 +14,7 @@ import (
 
 // Prefix is a chaining function,
 // which sets the URL prefix for next request of this client.
-// Eg:
+// Example:
 // Prefix("http://127.0.0.1:8199/api/v1")
 // Prefix("http://127.0.0.1:8199/api/v2")
 func (c *Client) Prefix(prefix string) *Client {
