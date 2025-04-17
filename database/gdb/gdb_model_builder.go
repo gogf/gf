@@ -52,16 +52,66 @@ func (b *WhereBuilder) Clone() *WhereBuilder {
 
 // Handler registers handlers for where operation.
 func (b *WhereBuilder) Handler(handlers ...BuilderHandler) *WhereBuilder {
-	newBuilder := b.Clone()
-	newBuilder.handlers = append(newBuilder.handlers, handlers...)
-	return newBuilder
+	b.handlers = append(b.handlers, handlers...)
+	return b
 }
 
 func (b *WhereBuilder) callHandlers(ctx context.Context) *WhereBuilder {
-	if len(b.handlers) == 0 {
-		return b
+	var (
+		builder           = b
+		oldHandlersLength = len(builder.handlers)
+		newHandlersLength = oldHandlersLength
+	)
+	for {
+		// Exit the loop if all handlers have been processed
+		if builder.handlerIndex >= len(builder.handlers) {
+			break
+		}
+
+		// Record the current length of handlers
+		oldHandlersLength = len(builder.handlers)
+
+		// Execute the current handler
+		builder = builder.handlers[builder.handlerIndex](ctx, builder)
+
+		// Check if new handlers were added
+		newHandlersLength = len(builder.handlers)
+		if newHandlersLength > oldHandlersLength {
+			var (
+				addedCount = newHandlersLength - oldHandlersLength
+				targetPos  = builder.handlerIndex + 1
+			)
+
+			// Insert newly added handlers into the target position using element swapping technique
+			// Example of the swapping logic:
+			// 1. We have an array of digits: 123456
+			// 2. We're at position 2 and add two new digits 7,8 at the end: 12345678
+			// 3. We want to insert these new digits after position 2, so we perform these swaps:
+			//    - Swap 3 and 7: 12745638
+			//    - Swap 4 and 8: 12785634
+			//    - Swap 5 and 3: 12783654
+			//    - Swap 6 and 4: 12783456
+			// 4. Result: 12783456 - new elements are inserted after position 2
+			for i := 0; i < addedCount; i++ {
+				// Start from each new element and swap it with preceding elements until it reaches target position
+				newItemPos := oldHandlersLength + i
+				for j := newItemPos; j > targetPos+i; j-- {
+					// Swap elements at positions j and j-1
+					builder.handlers[j], builder.handlers[j-1] = builder.handlers[j-1], builder.handlers[j]
+				}
+			}
+		}
+
+		// Move to the next handler
+		builder.handlerIndex++
 	}
-	builder := b
+	return builder
+}
+
+func (b *WhereBuilder) doCallHandlers(ctx context.Context, builder *WhereBuilder, handlers []BuilderHandler) *WhereBuilder {
+	if len(builder.handlers) == 0 {
+		return builder
+	}
 	for builder.handlerIndex < len(builder.handlers) {
 		builder = builder.handlers[builder.handlerIndex](ctx, builder)
 		builder.handlerIndex++

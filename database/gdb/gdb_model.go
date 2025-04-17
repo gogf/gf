@@ -321,9 +321,52 @@ func (m *Model) callHandlers(ctx context.Context) *Model {
 	if len(m.handlers) == 0 {
 		return m
 	}
-	model := m
-	for model.handlerIndex < len(model.handlers) {
+	var (
+		model             = m
+		oldHandlersLength = len(model.handlers)
+		newHandlersLength = oldHandlersLength
+	)
+	for {
+		// Exit the loop if all handlers have been processed
+		if model.handlerIndex >= len(model.handlers) {
+			break
+		}
+
+		// Record the current length of handlers
+		oldHandlersLength = len(model.handlers)
+
+		// Execute the current handler
 		model = model.handlers[model.handlerIndex](ctx, model)
+
+		// Check if new handlers were added
+		newHandlersLength = len(model.handlers)
+		if newHandlersLength > oldHandlersLength {
+			var (
+				addedCount = newHandlersLength - oldHandlersLength
+				targetPos  = model.handlerIndex + 1
+			)
+
+			// Insert newly added handlers into the target position using element swapping technique
+			// Example of the swapping logic:
+			// 1. We have an array of digits: 123456
+			// 2. We're at position 2 and add two new digits 7,8 at the end: 12345678
+			// 3. We want to insert these new digits after position 2, so we perform these swaps:
+			//    - Swap 3 and 7: 12745638
+			//    - Swap 4 and 8: 12785634
+			//    - Swap 5 and 3: 12783654
+			//    - Swap 6 and 4: 12783456
+			// 4. Result: 12783456 - new elements are inserted after position 2
+			for i := 0; i < addedCount; i++ {
+				// Start from each new element and swap it with preceding elements until it reaches target position
+				newItemPos := oldHandlersLength + i
+				for j := newItemPos; j > targetPos+i; j-- {
+					// Swap elements at positions j and j-1
+					model.handlers[j], model.handlers[j-1] = model.handlers[j-1], model.handlers[j]
+				}
+			}
+		}
+
+		// Move to the next handler
 		model.handlerIndex++
 	}
 	return model
