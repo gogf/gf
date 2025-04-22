@@ -116,13 +116,14 @@ func (tx *TXCore) IsClosed() bool {
 }
 
 // Begin starts a nested transaction procedure.
-func (tx *TXCore) Begin(ctx context.Context) error {
+func (tx *TXCore) Begin(ctx context.Context) (TX, context.Context, error) {
 	_, err := tx.Exec(ctx, "SAVEPOINT "+tx.transactionKeyForNestedPoint())
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	tx.transactionCount++
-	return nil
+	newCtx := WithTX(ctx, tx)
+	return tx, newCtx, nil
 }
 
 // SavePoint performs `SAVEPOINT xxx` SQL statement that saves transaction at current point.
@@ -152,10 +153,13 @@ func (tx *TXCore) Transaction(ctx context.Context, f func(ctx context.Context, t
 		// Inject transaction object into context.
 		ctx = WithTX(ctx, tx)
 	}
-	if err = tx.Begin(ctx); err != nil {
+	// Begin a nested transaction
+	_, newCtx, err := tx.Begin(ctx)
+	if err != nil {
 		return err
 	}
-	err = callTxFunc(ctx, tx, f)
+	// Use the new context that contains the transaction
+	err = callTxFunc(newCtx, tx, f)
 	return
 }
 

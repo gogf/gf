@@ -222,14 +222,14 @@ type DB interface {
 
 	// Begin starts a new transaction and returns a TX interface.
 	// The returned TX must be committed or rolled back to release resources.
-	Begin(ctx context.Context) (TX, error)
+	Begin(ctx context.Context) (tx TX, newCtx context.Context, err error)
 
 	// BeginWithOptions starts and returns the transaction object with given options.
 	// The options allow specifying the isolation level and read-only mode.
 	// You should call Commit or Rollback functions of the transaction object
 	// if you no longer use the transaction. Commit or Rollback functions will also
 	// close the transaction automatically.
-	BeginWithOptions(ctx context.Context, opts TxOptions) (tx TX, err error)
+	BeginWithOptions(ctx context.Context, opts TxOptions) (tx TX, newCtx context.Context, err error)
 
 	// Transaction executes a function within a transaction.
 	// It automatically handles commit/rollback based on whether f returns an error.
@@ -355,7 +355,8 @@ type TX interface {
 
 	// Begin starts a nested transaction.
 	// It creates a new savepoint for current transaction.
-	Begin(ctx context.Context) error
+	// It returns the transaction object and a new context containing the transaction.
+	Begin(ctx context.Context) (TX, context.Context, error)
 
 	// Commit commits current transaction/savepoint.
 	// For nested transactions, it releases the current savepoint.
