@@ -133,7 +133,7 @@ func (m *Model) Array(ctx context.Context) ([]Value, error) {
 		model = m.callHandlers(ctx)
 		core  = model.db.GetCore()
 	)
-	ctx = core.injectInternalColumn(ctx)
+	ctx = core.injectInternalColumnIntoCtx(ctx)
 	all, err := model.doGetAll(ctx, SelectTypeArray, false)
 	if err != nil {
 		return nil, err
@@ -324,7 +324,7 @@ func (m *Model) Value(ctx context.Context) (Value, error) {
 		model = m.callHandlers(ctx)
 		core  = model.db.GetCore()
 	)
-	ctx = core.injectInternalColumn(ctx)
+	ctx = core.injectInternalColumnIntoCtx(ctx)
 
 	var (
 		sqlWithHolder, holderArgs = model.getFormattedSqlAndArgs(ctx, SelectTypeValue, true)
@@ -382,7 +382,7 @@ func (m *Model) Count(ctx context.Context) (int, error) {
 	model := m.callHandlers(ctx)
 
 	var core = model.db.GetCore()
-	ctx = core.injectInternalColumn(ctx)
+	ctx = core.injectInternalColumnIntoCtx(ctx)
 
 	var (
 		sqlWithHolder, holderArgs = model.getFormattedSqlAndArgs(ctx, SelectTypeCount, false)

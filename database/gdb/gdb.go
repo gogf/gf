@@ -33,14 +33,16 @@ type DB interface {
 	// ===========================================================================
 
 	// Model creates and returns a new ORM model from given schema.
-	// The parameter `table` can be more than one table names, and also alias name, like:
-	// 1. Model names:
-	//    Model("user")
-	//    Model("user u")
-	//    Model("user, user_detail")
-	//    Model("user u, user_detail ud")
-	// 2. Model name with alias: Model("user", "u")
-	// Also see Core.Model.
+	// The parameter `tableNameQueryOrStruct` can be more than one table names, and also alias name, like:
+	//  1. Model names:
+	//     db.Model("user")
+	//     db.Model("user u")
+	//     db.Model("user, user_detail")
+	//     db.Model("user u, user_detail ud")
+	//  2. Model name with alias:
+	//     db.Model("user", "u")
+	//  3. Model name with sub-query:
+	//     db.Model("? AS a, ? AS b", subQuery1, subQuery2)
 	Model(tableNameOrStruct ...any) *Model
 
 	// Raw creates and returns a model based on a raw sql not a table.
@@ -660,6 +662,8 @@ type (
 	List = []Map
 )
 
+// CatchSQLManager is the manager for catching SQL.
+// It is used for debugging and testing.
 type CatchSQLManager struct {
 	// SQLArray is the array of sql.
 	SQLArray *garray.StrArray
@@ -731,6 +735,8 @@ const (
 	InsertOnDuplicateKeyUpdate = "ON DUPLICATE KEY UPDATE"
 )
 
+// SqlType is the type of SQL.
+// It is used to identify the type of SQL.
 type SqlType string
 
 const (
@@ -850,8 +856,8 @@ func Register(name string, driver Driver) error {
 }
 
 // New creates and returns an ORM object with given configuration node.
-func New(node ConfigNode) (db DB, err error) {
-	return newDBByConfigNode(&node, "")
+func New(node *ConfigNode) (db DB, err error) {
+	return newDBByConfigNode(node, "")
 }
 
 // NewByGroup creates and returns an ORM object with global configurations.
@@ -1039,7 +1045,8 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		configs.RLock()
 		defer configs.RUnlock()
 		// Value COPY for node.
-		// The returned node is a clone of configuration node, which is safe for later modification.
+		// The returned node is a clone of configuration node,
+		// which is safe for later modification.
 		node, err = getConfigNodeByGroup(c.group, master)
 		if err != nil {
 			return nil, err

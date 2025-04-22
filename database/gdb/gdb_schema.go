@@ -15,7 +15,7 @@ type Schema struct {
 func (c *Core) Schema(schema string) *Schema {
 	// Do not change the schema of the original db,
 	// it here creates a new db and changes its schema.
-	db, err := NewByGroup(c.GetGroup())
+	db, err := New(c.GetConfig())
 	if err != nil {
 		panic(err)
 	}

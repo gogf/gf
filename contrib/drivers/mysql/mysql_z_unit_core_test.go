@@ -25,7 +25,7 @@ import (
 
 func Test_New(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		node := gdb.ConfigNode{
+		node := &gdb.ConfigNode{
 			Host: "127.0.0.1",
 			Port: "3306",
 			User: TestDbUser,
