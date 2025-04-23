@@ -51,9 +51,11 @@ func sliceTypeConverterFunc(from any, to reflect.Value) (err error) {
 	}
 	fromVal := v.Val()
 	switch x := fromVal.(type) {
+	// bytes field value to slice.
 	case []byte:
 		dst := to.Addr().Interface()
 		err = json.Unmarshal(x, dst)
+	// string field value to slice.
 	case string:
 		dst := to.Addr().Interface()
 		err = json.Unmarshal([]byte(x), dst)

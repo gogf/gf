@@ -111,8 +111,9 @@ func (m *Model) saveSelectResultToCache(
 		var core = m.db.GetCore()
 		switch selectType {
 		case SelectTypeValue, SelectTypeArray, SelectTypeCount:
-			if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
-				if result[0][internalData.FirstResultColumn].IsEmpty() {
+			if internalColumn := core.getInternalColumnFromCtx(ctx); internalColumn != nil {
+				// No field value found in result, it so should not cache the result.
+				if result[0][internalColumn.FirstResultColumn].IsEmpty() {
 					result = nil
 				}
 			}
