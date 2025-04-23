@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gogf/gf/v3/os/gctx"
 	"github.com/gogf/gf/v3/text/gregex"
 	"github.com/gogf/gf/v3/text/gstr"
 	"github.com/gogf/gf/v3/util/gconv"
@@ -75,6 +76,9 @@ const (
 	whereHolderTypeDefault   = "Default"
 	whereHolderTypeNoArgs    = "NoArgs"
 	whereHolderTypeIn        = "In"
+
+	// inCallHandlersKey is the context key for in call handlers to avoid recursively calling.
+	inCallHandlersKey = gctx.StrKey("InCallHandler")
 )
 
 func newEmptyModel(db DB, schema string) *Model {
@@ -311,13 +315,11 @@ func (m *Model) Handler(handlers ...ModelHandler) *Model {
 
 // callHandlers executes all handlers for current Model.
 func (m *Model) callHandlers(ctx context.Context) *Model {
-	// to avoid recursively calling.
-	ctxKey := "InCallHandlers"
 	// pointer address comparison.
-	if ctx.Value(ctxKey) == m {
+	if ctx.Value(inCallHandlersKey) == m {
 		return m
 	}
-	ctx = context.WithValue(ctx, ctxKey, m)
+	ctx = context.WithValue(ctx, inCallHandlersKey, m)
 	if len(m.handlers) == 0 {
 		return m
 	}

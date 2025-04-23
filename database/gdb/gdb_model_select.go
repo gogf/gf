@@ -134,21 +134,22 @@ func (m *Model) Array(ctx context.Context) ([]Value, error) {
 		core  = model.db.GetCore()
 	)
 	ctx = core.injectInternalColumnIntoCtx(ctx)
+
 	all, err := model.doGetAll(ctx, SelectTypeArray, false)
 	if err != nil {
 		return nil, err
 	}
 	if len(all) > 0 {
-		internalData := core.getInternalColumnFromCtx(ctx)
-		if internalData == nil {
+		internalColumn := core.getInternalColumnFromCtx(ctx)
+		if internalColumn == nil {
 			return nil, gerror.NewCode(
 				gcode.CodeInternalError,
 				`query count error: the internal context data is missing. there's internal issue should be fixed`,
 			)
 		}
 		// If FirstResultColumn present, it returns the value of the first record of the first field.
-		// It means it use no cache mechanism, while cache mechanism makes `internalData` missing.
-		field = internalData.FirstResultColumn
+		// It means it use no cache mechanism, while cache mechanism makes `internalColumnData` missing.
+		field = internalColumn.FirstResultColumn
 		if field == "" {
 			// Fields number check.
 			var recordFields = model.getRecordFields(all[0])
@@ -334,16 +335,16 @@ func (m *Model) Value(ctx context.Context) (Value, error) {
 		return nil, err
 	}
 	if len(all) > 0 {
-		internalData := core.getInternalColumnFromCtx(ctx)
-		if internalData == nil {
+		internalColumn := core.getInternalColumnFromCtx(ctx)
+		if internalColumn == nil {
 			return nil, gerror.NewCode(
 				gcode.CodeInternalError,
 				`query count error: the internal context data is missing. there's internal issue should be fixed`,
 			)
 		}
-		// If FirstResultColumn present, it returns the value of the first record of the first field.
-		// It means it use no cache mechanism, while cache mechanism makes `internalData` missing.
-		if v, ok := all[0][internalData.FirstResultColumn]; ok {
+		// If `FirstResultColumn` present, it returns the value of the first record of the first field.
+		// It means it use no cache mechanism, while cache mechanism makes `internalColumnData` missing.
+		if v, ok := all[0][internalColumn.FirstResultColumn]; ok {
 			return v, nil
 		}
 		// Fields number check.
