@@ -208,7 +208,7 @@ func (c *controllerGenerator) doGenerateCtrlMergeItem(dstModuleFolderPath string
 		if gstr.Contains(gfile.GetContents(ctrlFilePath), fmt.Sprintf(`func (c *%v) %v(`, ctrlName, api.MethodName)) {
 			return
 		}
-		
+
 		ctrlFileItem.controllers.WriteString(ctrl)
 		doneApiSet.Add(api.String())
 	}
