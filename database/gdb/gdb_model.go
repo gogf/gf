@@ -141,9 +141,6 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 		tableAliasMap: make(map[string]string),
 	}
 	m.whereBuilder = m.Builder()
-	if defaultModelSafe {
-		m.safe = true
-	}
 	return m
 }
 

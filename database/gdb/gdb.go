@@ -692,7 +692,6 @@ type CatchSQLManager struct {
 }
 
 const (
-	defaultModelSafe                      = false
 	defaultCharset                        = `utf8`
 	defaultProtocol                       = `tcp`
 	unionTypeNormal                       = 0
