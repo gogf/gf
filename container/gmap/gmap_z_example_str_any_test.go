@@ -660,3 +660,40 @@ func ExampleStrAnyMap_UnmarshalValue() {
 	// Output:
 	// map[string]interface {}{"echo":"https://echo.labstack.com/", "gin":"https://gin-gonic.com/", "goframe":"https://goframe.org"}
 }
+
+func ExampleStrAnyMap_Upsert() {
+	m := gmap.NewStrAnyMap()
+
+	// Create a new key
+	v := m.Upsert("key1", 10, func(exist bool, valueInMap, newValue interface{}) interface{} {
+		return newValue
+	})
+	fmt.Println("New key result:", v)
+	fmt.Println("Map value:", m.Get("key1"))
+
+	// Update existing key
+	v = m.Upsert("key1", 20, func(exist bool, valueInMap, newValue interface{}) interface{} {
+		return newValue
+	})
+	fmt.Println("Update result:", v)
+	fmt.Println("Map value after update:", m.Get("key1"))
+
+	// Custom logic: add values if key exists, otherwise set directly
+	m.Set("key2", 5)
+	v = m.Upsert("key2", 7, func(exist bool, valueInMap, newValue interface{}) interface{} {
+		if exist {
+			return valueInMap.(int) + newValue.(int)
+		}
+		return newValue
+	})
+	fmt.Println("Custom logic result:", v)
+	fmt.Println("key2 value:", m.Get("key2"))
+
+	// Output:
+	// New key result: 10
+	// Map value: 10
+	// Update result: 20
+	// Map value after update: 20
+	// Custom logic result: 12
+	// key2 value: 12
+}
