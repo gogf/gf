@@ -435,3 +435,58 @@ func Test_StrAnyMap_Diff(t *testing.T) {
 		t.Assert(updatedKeys, []string{"3"})
 	})
 }
+
+// Test_StrAnyMap_Upsert
+func Test_StrAnyMap_Upsert(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewStrAnyMap()
+
+		// test new key
+		v := m.Upsert("key1", 10, func(exist bool, valueInMap, newValue interface{}) interface{} {
+			t.Assert(exist, false)
+			t.Assert(valueInMap, nil)
+			t.Assert(newValue, 10)
+			return newValue
+		})
+		t.Assert(v, 10)
+		t.Assert(m.Get("key1"), 10)
+
+		// test existing key
+		v = m.Upsert("key1", 20, func(exist bool, valueInMap, newValue interface{}) interface{} {
+			t.Assert(exist, true)
+			t.Assert(valueInMap, 10)
+			t.Assert(newValue, 20)
+			return newValue
+		})
+		t.Assert(v, 20)
+		t.Assert(m.Get("key1"), 20)
+
+		// Test custom logic: if it already exists, add it, otherwise set it directly
+		m.Set("key2", 5)
+		v = m.Upsert("key2", 7, func(exist bool, valueInMap, newValue interface{}) interface{} {
+			if exist {
+				return valueInMap.(int) + newValue.(int)
+			}
+			return newValue
+		})
+		t.Assert(v, 12)
+		t.Assert(m.Get("key2"), 12)
+
+		// Testing custom logic: Using default values ​​for new keys
+		v = m.Upsert("key3", 9, func(exist bool, valueInMap, newValue interface{}) interface{} {
+			if exist {
+				return valueInMap
+			}
+			return 999
+		})
+		t.Assert(v, 999)
+		t.Assert(m.Get("key3"), 999)
+
+		// Testing different types of processing
+		v = m.Upsert("key4", "value", func(exist bool, valueInMap, newValue interface{}) interface{} {
+			return newValue
+		})
+		t.Assert(v, "value")
+		t.Assert(m.Get("key4"), "value")
+	})
+}
