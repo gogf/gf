@@ -51,14 +51,16 @@ func sliceTypeConverterFunc(from any, to reflect.Value) (err error) {
 	}
 	fromVal := v.Val()
 	switch x := fromVal.(type) {
-	// bytes field value to slice.
+	// it treats bytes field value as json format, when converting to slice.
 	case []byte:
 		dst := to.Addr().Interface()
 		err = json.Unmarshal(x, dst)
-	// string field value to slice.
+
+	// it treats string field value as json format, when converting to slice.
 	case string:
 		dst := to.Addr().Interface()
 		err = json.Unmarshal([]byte(x), dst)
+
 	default:
 		fromType := reflect.TypeOf(fromVal)
 		switch fromType.Kind() {
