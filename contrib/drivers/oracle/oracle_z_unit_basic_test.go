@@ -696,7 +696,7 @@ func Test_Empty_Slice_Argument(t *testing.T) {
 // fix #3226
 func Test_Extra(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		nodeLink := gdb.ConfigNode{
+		nodeLink := &gdb.ConfigNode{
 			Type: TestDbType,
 			Name: TestDbName,
 			Link: fmt.Sprintf("%s:%s:%s@tcp(%s:%s)/%s?lob fetch=post&SSL VERIFY=false",

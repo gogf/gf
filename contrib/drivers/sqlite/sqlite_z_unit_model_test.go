@@ -2873,7 +2873,7 @@ func Test_Model_HasTable(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertNil(db.GetCore().ClearCacheAll(ctx))
-		result, err := db.GetCore().HasTable("table12321")
+		result, err := db.GetCore().HasTable(ctx, "table12321")
 		t.Assert(result, false)
 		t.AssertNil(err)
 	})
@@ -2884,13 +2884,13 @@ func Test_Model_HasField(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).HasField("id")
+		result, err := db.Model(table).HasField(ctx, "id")
 		t.Assert(result, true)
 		t.AssertNil(err)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).HasField("id123")
+		result, err := db.Model(table).HasField(ctx, "id123")
 		t.Assert(result, false)
 		t.AssertNil(err)
 	})

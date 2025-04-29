@@ -270,7 +270,7 @@ func Test_Model_Insert_Time(t *testing.T) {
 		_, err := db.Model(table).Data(data).Insert(ctx)
 		t.AssertNil(err)
 
-		one, err := db.Model(table).One("ID", 1)
+		one, err := db.Model(table).Where("ID", 1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["PASSPORT"].String(), data["PASSPORT"])
 		t.Assert(one["CREATE_TIME"].String(), "2020-10-10 20:09:18")
@@ -415,7 +415,7 @@ func Test_Model_Array(t *testing.T) {
 		t.Assert(array, g.Slice{"name_1", "name_2", "name_3"})
 	})
 	gtest.C(t, func(t *gtest.T) {
-		array, err := db.Model(table).Array("NICKNAME", "ID", g.Slice{1, 2, 3})
+		array, err := db.Model(table).Fields("NICKNAME").Where("ID", g.Slice{1, 2, 3}).Array(ctx)
 		t.AssertNil(err)
 		t.Assert(array, g.Slice{"name_1", "name_2", "name_3"})
 	})
@@ -984,14 +984,14 @@ func Test_Model_HasTable(t *testing.T) {
 	// db.SetDebug(true)
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertNil(db.GetCore().ClearCacheAll(ctx))
-		result, err := db.GetCore().HasTable(strings.ToUpper(table))
+		result, err := db.GetCore().HasTable(ctx, strings.ToUpper(table))
 		t.Assert(result, true)
 		t.AssertNil(err)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertNil(db.GetCore().ClearCacheAll(ctx))
-		result, err := db.GetCore().HasTable("table12321")
+		result, err := db.GetCore().HasTable(ctx, "table12321")
 		t.Assert(result, false)
 		t.AssertNil(err)
 	})
@@ -1002,13 +1002,13 @@ func Test_Model_HasField(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).HasField("ID")
+		result, err := db.Model(table).HasField(ctx, "ID")
 		t.Assert(result, true)
 		t.AssertNil(err)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).HasField("id123")
+		result, err := db.Model(table).HasField(ctx, "id123")
 		t.Assert(result, false)
 		t.AssertNil(err)
 	})
