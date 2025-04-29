@@ -665,35 +665,44 @@ func ExampleStrAnyMap_Upsert() {
 	m := gmap.NewStrAnyMap()
 
 	// Create a new key
-	v := m.Upsert("key1", 10, func(exist bool, valueInMap, newValue interface{}) interface{} {
-		return newValue
+	v, updated := m.Upsert("key1", 10, func(exist bool, valueInMap, newValue interface{}) (interface{}, bool) {
+		return newValue, true // New key, returns true to indicate update
 	})
-	fmt.Println("New key result:", v)
+	fmt.Println("New key result:", v, "Updated:", updated)
 	fmt.Println("Map value:", m.Get("key1"))
 
 	// Update existing key
-	v = m.Upsert("key1", 20, func(exist bool, valueInMap, newValue interface{}) interface{} {
-		return newValue
+	v, updated = m.Upsert("key1", 20, func(exist bool, valueInMap, newValue interface{}) (interface{}, bool) {
+		return newValue, true // Update an existing key, return true to indicate update
 	})
-	fmt.Println("Update result:", v)
+	fmt.Println("Update result:", v, "Updated:", updated)
 	fmt.Println("Map value after update:", m.Get("key1"))
 
 	// Custom logic: add values if key exists, otherwise set directly
 	m.Set("key2", 5)
-	v = m.Upsert("key2", 7, func(exist bool, valueInMap, newValue interface{}) interface{} {
+	v, updated = m.Upsert("key2", 7, func(exist bool, valueInMap, newValue interface{}) (interface{}, bool) {
 		if exist {
-			return valueInMap.(int) + newValue.(int)
+			return valueInMap.(int) + newValue.(int), true // Accumulate values ​​and mark as updated
 		}
-		return newValue
+		return newValue, true
 	})
-	fmt.Println("Custom logic result:", v)
+	fmt.Println("Custom logic result:", v, "Updated:", updated)
 	fmt.Println("key2 value:", m.Get("key2"))
 
+	// No update case: returning same value with updated=false
+	v, updated = m.Upsert("key3", 30, func(exist bool, valueInMap, newValue interface{}) (interface{}, bool) {
+		return newValue, false // Although the value is set, it is marked as not updated
+	})
+	fmt.Println("No update case:", v, "Updated:", updated)
+	fmt.Println("key3 value:", m.Get("key3"))
+
 	// Output:
-	// New key result: 10
+	// New key result: 10 Updated: true
 	// Map value: 10
-	// Update result: 20
+	// Update result: 20 Updated: true
 	// Map value after update: 20
-	// Custom logic result: 12
+	// Custom logic result: 12 Updated: true
 	// key2 value: 12
+	// No update case: 30 Updated: false
+	// key3 value: 30
 }
