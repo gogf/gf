@@ -40,7 +40,7 @@ func init() {
 	//pgsql only permit to connect to the designation database.
 	//so you need to create the pgsql database before you use orm
 	gdb.AddConfigNode(gdb.DefaultGroupName, configNode)
-	if r, err := gdb.New(configNode); err != nil {
+	if r, err := gdb.New(&configNode); err != nil {
 		gtest.Fatal(err)
 	} else {
 		db = r

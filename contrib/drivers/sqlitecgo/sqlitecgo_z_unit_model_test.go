@@ -780,7 +780,7 @@ func Test_Model_Array(t *testing.T) {
 		t.Assert(array, g.Slice{"name_1", "name_2", "name_3"})
 	})
 	gtest.C(t, func(t *gtest.T) {
-		array, err := db.Model(table).Array("nickname", "id", g.Slice{1, 2, 3})
+		array, err := db.Model(table).Fields("nickname").Where("id", g.Slice{1, 2, 3}).Array(ctx)
 		t.AssertNil(err)
 		t.Assert(array, g.Slice{"name_1", "name_2", "name_3"})
 	})
@@ -2368,7 +2368,7 @@ func Test_Model_FieldsExStruct(t *testing.T) {
 			OmitEmpty().
 			Batch(2).
 			Data(users).
-			Insert(tx)
+			Insert(ctx)
 		t.AssertNil(err)
 		n, err := r.RowsAffected()
 		t.AssertNil(err)
