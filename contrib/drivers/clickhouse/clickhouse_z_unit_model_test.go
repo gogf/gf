@@ -27,7 +27,7 @@ func Test_New(t *testing.T) {
 			Type:  "clickhouse",
 			Debug: false,
 		}
-		newDb, err := gdb.New(node)
+		newDb, err := gdb.New(&node)
 		t.AssertNil(err)
 		value, err := newDb.GetValue(ctx, `select 1`)
 		t.AssertNil(err)

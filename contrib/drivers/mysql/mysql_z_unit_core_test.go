@@ -25,14 +25,14 @@ import (
 
 func Test_New(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		node := &gdb.ConfigNode{
+		node := gdb.ConfigNode{
 			Host: "127.0.0.1",
 			Port: "3306",
 			User: TestDbUser,
 			Pass: TestDbPass,
 			Type: "mysql",
 		}
-		newDb, err := gdb.New(node)
+		newDb, err := gdb.New(&node)
 		t.AssertNil(err)
 		value, err := newDb.GetValue(ctx, `select 1`)
 		t.AssertNil(err)

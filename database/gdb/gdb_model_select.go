@@ -50,8 +50,8 @@ func (m *Model) All(ctx context.Context) (Result, error) {
 //	fmt.Println(result, count)
 func (m *Model) AllAndCount(ctx context.Context, useFieldForCount bool) (result Result, totalCount int, err error) {
 	var (
-		model      = m.callHandlers(ctx)
-		countModel = model.Clone()
+		allModel   = m.callHandlers(ctx)
+		countModel = m.Clone().callHandlers(ctx)
 	)
 
 	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
@@ -71,7 +71,7 @@ func (m *Model) AllAndCount(ctx context.Context, useFieldForCount bool) (result 
 	}
 
 	// Retrieve all records
-	result, err = model.doGetAll(ctx, SelectTypeDefault, false)
+	result, err = allModel.doGetAll(ctx, SelectTypeDefault, false)
 	return
 }
 
@@ -247,8 +247,8 @@ func (m *Model) Scan(ctx context.Context, pointer any) error {
 func (m *Model) ScanAndCount(ctx context.Context, pointer any, totalCount *int, useFieldForCount bool) (err error) {
 	// support Fields with *, example: .Fields("a.*, b.name"). Count sql is select count(1) from xxx
 	var (
-		model      = m.callHandlers(ctx)
-		countModel = model.Clone()
+		scanModel  = m.callHandlers(ctx)
+		countModel = m.Clone().callHandlers(ctx)
 	)
 	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
 	if !useFieldForCount {
@@ -256,7 +256,7 @@ func (m *Model) ScanAndCount(ctx context.Context, pointer any, totalCount *int, 
 	}
 
 	// Get the total count of records
-	*totalCount, err = countModel.Clone().Count(ctx)
+	*totalCount, err = countModel.Count(ctx)
 	if err != nil {
 		return err
 	}
@@ -265,7 +265,7 @@ func (m *Model) ScanAndCount(ctx context.Context, pointer any, totalCount *int, 
 	if *totalCount == 0 {
 		return
 	}
-	err = model.Scan(ctx, pointer)
+	err = scanModel.Scan(ctx, pointer)
 	return
 }
 

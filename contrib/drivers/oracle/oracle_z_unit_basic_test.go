@@ -703,7 +703,7 @@ func Test_Extra(t *testing.T) {
 				TestDbType, TestDbUser, TestDbPass, TestDbIP, TestDbPort, TestDbName,
 			),
 		}
-		if r, err := gdb.New(nodeLink); err != nil {
+		if r, err := gdb.New(&nodeLink); err != nil {
 			gtest.Fatal(err)
 		} else {
 			err1 := r.PingMaster()

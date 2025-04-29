@@ -22,7 +22,7 @@ import (
 
 func Test_TX_Query(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		_, err = tx.Query(newCtx, "SELECT ?", 1)
@@ -45,7 +45,7 @@ func Test_TX_Query(t *testing.T) {
 
 func Test_TX_Exec(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		_, err = tx.Exec(newCtx, "SELECT ?", 1)
@@ -68,7 +68,7 @@ func Test_TX_Exec(t *testing.T) {
 
 func Test_TX_Commit(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		err = tx.Commit(newCtx)
@@ -79,7 +79,7 @@ func Test_TX_Commit(t *testing.T) {
 
 func Test_TX_Rollback(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		err = tx.Rollback(newCtx)
@@ -90,7 +90,7 @@ func Test_TX_Rollback(t *testing.T) {
 
 func Test_TX_Prepare(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		st, err := tx.Prepare(newCtx, "SELECT 100")
@@ -118,7 +118,7 @@ func Test_TX_Insert(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		user := tx.Model(table)
@@ -157,7 +157,7 @@ func Test_TX_BatchInsert(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		_, err = tx.Insert(newCtx, table, g.List{
@@ -193,7 +193,7 @@ func Test_TX_BatchReplace(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		_, err = tx.Replace(newCtx, table, g.List{
@@ -234,7 +234,7 @@ func Test_TX_BatchSave(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		_, err = tx.Save(newCtx, table, g.List{
@@ -268,7 +268,7 @@ func Test_TX_Replace(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		_, err = tx.Replace(newCtx, table, g.Map{
@@ -295,7 +295,7 @@ func Test_TX_Save(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		_, err = tx.Save(newCtx, table, g.Map{
@@ -322,7 +322,7 @@ func Test_TX_Update(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		result, err := tx.Update(newCtx, table, "create_time='2019-10-24 10:00:00'", "id=3")
@@ -349,7 +349,7 @@ func Test_TX_GetAll(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		result, err := tx.GetAll(newCtx, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 1)
@@ -368,7 +368,7 @@ func Test_TX_GetOne(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		record, err := tx.GetOne(newCtx, fmt.Sprintf("SELECT * FROM %s WHERE passport=?", table), "user_2")
@@ -388,7 +388,7 @@ func Test_TX_GetValue(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		value, err := tx.GetValue(newCtx, fmt.Sprintf("SELECT id FROM %s WHERE passport=?", table), "user_3")
@@ -407,7 +407,7 @@ func Test_TX_GetCount(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		count, err := tx.GetCount(newCtx, "SELECT * FROM "+table)
@@ -426,7 +426,7 @@ func Test_TX_GetStruct(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		type User struct {
@@ -449,7 +449,7 @@ func Test_TX_GetStruct(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		type User struct {
@@ -476,7 +476,7 @@ func Test_TX_GetStructs(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		type User struct {
@@ -504,7 +504,7 @@ func Test_TX_GetStructs(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		type User struct {
@@ -537,7 +537,7 @@ func Test_TX_GetScan(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		type User struct {
@@ -558,7 +558,7 @@ func Test_TX_GetScan(t *testing.T) {
 
 	})
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		type User struct {
@@ -580,7 +580,7 @@ func Test_TX_GetScan(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		type User struct {
@@ -608,7 +608,7 @@ func Test_TX_GetScan(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		type User struct {
@@ -640,7 +640,7 @@ func Test_TX_Delete(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitTable()
 		defer dropTable(table)
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		_, err = tx.Delete(newCtx, table, 1)
@@ -659,7 +659,7 @@ func Test_TX_Delete(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitTable()
 		defer dropTable(table)
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		_, err = tx.Delete(newCtx, table, 1)
@@ -758,7 +758,7 @@ func Test_Transaction_Nested_Begin_Rollback_Commit(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		// tx begin.
@@ -1076,7 +1076,7 @@ func Test_Transaction_Nested_SavePoint_RollbackTo(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		// tx save point.
@@ -1753,7 +1753,7 @@ func Test_Transaction_Spread(t *testing.T) {
 	defer db.SetDebug(false)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, newCtx, err := db.Begin(ctx)
+		tx, newCtx, ctx, err := db.Begin(ctx)
 		t.AssertNil(err)
 		err = db.Transaction(newCtx, func(ctx context.Context, tx gdb.TX) error {
 			_, err = db.Model(table).Data(g.Map{

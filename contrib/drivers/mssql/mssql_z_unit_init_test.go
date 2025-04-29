@@ -62,21 +62,21 @@ func init() {
 	}
 
 	gdb.AddConfigNode(gdb.DefaultGroupName, node)
-	if r, err := gdb.New(node); err != nil {
+	if r, err := gdb.New(&node); err != nil {
 		gtest.Fatal(err)
 	} else {
 		db = r
 	}
 
 	gdb.AddConfigNode("dblink", nodeLink)
-	if r, err := gdb.New(nodeLink); err != nil {
+	if r, err := gdb.New(&nodeLink); err != nil {
 		gtest.Fatal(err)
 	} else {
 		dblink = r
 	}
 
 	gdb.AddConfigNode("dbErr", nodeErr)
-	if r, err := gdb.New(nodeErr); err != nil {
+	if r, err := gdb.New(&nodeErr); err != nil {
 		gtest.Fatal(err)
 	} else {
 		dbErr = r

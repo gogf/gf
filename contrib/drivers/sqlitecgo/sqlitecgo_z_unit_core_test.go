@@ -30,7 +30,7 @@ func Test_New(t *testing.T) {
 			Name:    gfile.Join(dbDir, "test.db"),
 			Charset: "utf8",
 		}
-		newDb, err := gdb.New(node)
+		newDb, err := gdb.New(&node)
 		t.AssertNil(err)
 		value, err := newDb.GetValue(ctx, `select 1`)
 		t.AssertNil(err)
@@ -51,7 +51,7 @@ func Test_New_Path_With_Colon(t *testing.T) {
 			Link:    fmt.Sprintf(`sqlite::@file(%s)`, gfile.Join(dbFilePathWithColon, "test.db")),
 			Charset: "utf8",
 		}
-		newDb, err := gdb.New(node)
+		newDb, err := gdb.New(&node)
 		t.AssertNil(err)
 		value, err := newDb.GetValue(ctx, `select 1`)
 		t.AssertNil(err)

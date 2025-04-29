@@ -37,7 +37,7 @@ func init() {
 		Debug: false,
 	}
 	var err error
-	db, err = gdb.New(node)
+	db, err = gdb.New(&node)
 	gtest.AssertNil(err)
 	gtest.AssertNil(db.PingMaster())
 }
