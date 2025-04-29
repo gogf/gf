@@ -301,13 +301,13 @@ func Test_Model_Clone(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		md := db.Model(table).Where("id IN(?)", g.Slice{1, 3})
-		count, err := md.Count(ctx)
+		count, err := md.Clone().Count(ctx)
 		t.AssertNil(err)
 
-		record, err := md.Order("id DESC").One(ctx)
+		record, err := md.Clone().Order("id DESC").One(ctx)
 		t.AssertNil(err)
 
-		result, err := md.Order("id ASC").All(ctx)
+		result, err := md.Clone().Order("id ASC").All(ctx)
 		t.AssertNil(err)
 
 		t.Assert(count, int64(2))
