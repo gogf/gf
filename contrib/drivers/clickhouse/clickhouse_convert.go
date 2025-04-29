@@ -75,7 +75,7 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 		if !ok {
 			return itemValue, nil
 		}
-		convertedValue, err := valuer.Value(ctx)
+		convertedValue, err := valuer.Value()
 		if err != nil {
 			return nil, err
 		}

@@ -123,7 +123,7 @@ const (
 )
 
 func clickhouseConfigDB() gdb.DB {
-	connect, err := gdb.New(gdb.ConfigNode{
+	connect, err := gdb.New(&gdb.ConfigNode{
 		Host:  "127.0.0.1",
 		Port:  "9000",
 		User:  "default",
@@ -137,7 +137,7 @@ func clickhouseConfigDB() gdb.DB {
 }
 
 func clickhouseLink() gdb.DB {
-	connect, err := gdb.New(gdb.ConfigNode{
+	connect, err := gdb.New(&gdb.ConfigNode{
 		Link: "clickhouse:default:@tcp(127.0.0.1:9000)/default?dial_timeout=200ms&max_execution_time=60",
 	})
 	gtest.AssertNil(err)
@@ -264,7 +264,7 @@ func TestDriverClickhouse_InsertOne(t *testing.T) {
 }
 
 func TestDriverClickhouse_InsertOneAutoDateTimeWrite(t *testing.T) {
-	connect, err := gdb.New(gdb.ConfigNode{
+	connect, err := gdb.New(&gdb.ConfigNode{
 		Host:      "127.0.0.1",
 		Port:      "9000",
 		User:      "default",
@@ -296,7 +296,7 @@ func TestDriverClickhouse_InsertMany(t *testing.T) {
 	connect := clickhouseConfigDB()
 	gtest.AssertEQ(createClickhouseTableVisits(connect), nil)
 	defer dropClickhouseTableVisits(connect)
-	tx, err := connect.Begin(context.Background())
+	tx, _, err := connect.Begin(context.Background())
 	gtest.AssertEQ(err, errUnsupportedBegin)
 	gtest.AssertNil(tx)
 }
@@ -362,7 +362,7 @@ func TestDriverClickhouse_Delete(t *testing.T) {
 		Where("created >", "2021-01-01 00:00:00").
 		Where("duration > ", 0).
 		Where("url is not null").
-		Delete()
+		Delete(ctx)
 	gtest.AssertNil(err)
 }
 
@@ -545,7 +545,7 @@ func TestDriverClickhouse_Open(t *testing.T) {
 	// DSM
 	// clickhouse://username:password@host1:9000,host2:9000/database?dial_timeout=200ms&max_execution_time=60
 	link := "clickhouse:default:@tcp(127.0.0.1:9000)/default?dial_timeout=200ms&max_execution_time=60"
-	db, err := gdb.New(gdb.ConfigNode{
+	db, err := gdb.New(&gdb.ConfigNode{
 		Link: link,
 		Type: "clickhouse",
 	})

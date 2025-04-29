@@ -204,7 +204,7 @@ func TestModelInsert(t *testing.T) {
 			UpdatedTime: time.Now(),
 		}
 		// _, err := db.Schema(TestDBName).Model(table).Data(data).Insert(ctx)
-		_, err := db.Model(table).Insert(&data)
+		_, err := db.Model(table).Data(&data).Insert(ctx)
 		gtest.AssertNil(err)
 	})
 
@@ -418,7 +418,7 @@ func Test_DB_BatchInsert_Struct(t *testing.T) {
 			CreatedTime: time.Now(),
 			UpdatedTime: time.Now(),
 		}
-		result, err := db.Model(table).Insert(user)
+		result, err := db.Model(table).Data(user).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)

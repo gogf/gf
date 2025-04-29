@@ -60,7 +60,7 @@ func Test_Issue2594(t *testing.T) {
 				},
 			},
 		}
-		_, err := db.Model(table).OmitEmptyData().Insert(h1)
+		_, err := db.Model(table).OmitEmptyData().Data(h1).Insert(ctx)
 		t.AssertNil(err)
 
 		var h2 HandleInfoMysql

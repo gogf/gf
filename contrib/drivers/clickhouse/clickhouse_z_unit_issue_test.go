@@ -7,6 +7,7 @@
 package clickhouse
 
 import (
+	"context"
 	"testing"
 
 	"github.com/shopspring/decimal"
@@ -17,6 +18,8 @@ import (
 	"github.com/gogf/gf/v3/util/gconv"
 )
 
+var ctx = context.Background()
+
 func Test_Issue2584(t *testing.T) {
 	type TDecimal struct {
 		F1 *decimal.Decimal `json:"f1"`
@@ -26,7 +29,7 @@ func Test_Issue2584(t *testing.T) {
 		var (
 			p1    = TDecimal{}
 			data1 = g.Map{"f1": gvar.New(1111.111)}
-			err   = gconv.Scan(ctx, data1, &p1)
+			err   = gconv.Scan(data1, &p1)
 		)
 		t.AssertNil(err)
 		t.Assert(p1.F1, 1111.111)
@@ -36,7 +39,7 @@ func Test_Issue2584(t *testing.T) {
 		var (
 			p2    = TDecimal{}
 			data2 = g.Map{"f1": gvar.New("2222.222")}
-			err   = gconv.Scan(ctx, data2, &p2)
+			err   = gconv.Scan(data2, &p2)
 		)
 		t.AssertNil(err)
 		t.Assert(p2.F1, 2222.222)
