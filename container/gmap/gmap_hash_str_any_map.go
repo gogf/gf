@@ -553,14 +553,14 @@ func (m *StrAnyMap) Diff(other *StrAnyMap) (addedKeys, removedKeys, updatedKeys 
 // - exist: whether the key exists in the map
 // - valueInMap: the current value in the map (nil if key doesn't exist)
 // - newValue: the new value being proposed for insertion
-// The function returns the value that will actually be stored in the map.
-type UpsertCb func(exist bool, valueInMap interface{}, newValue interface{}) interface{}
+// The function returns the value that will actually be stored in the map, and a bool that show the value if updated.
+type UpsertCb func(exist bool, valueInMap interface{}, newValue interface{}) (interface{}, bool)
 
 // Upsert inserts or updates an element with the given key and value.
 // The callback function determines what value should be stored based on
 // whether the key already exists and what the old and new values are.
-// It returns the value that was actually stored in the map.
-func (m *StrAnyMap) Upsert(key string, value interface{}, cb UpsertCb) interface{} {
+// It returns the value that was actually stored in the map, and a bool that show the value if updated.
+func (m *StrAnyMap) Upsert(key string, value interface{}, cb UpsertCb) (interface{}, bool) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -569,8 +569,8 @@ func (m *StrAnyMap) Upsert(key string, value interface{}, cb UpsertCb) interface
 	}
 
 	v, ok := m.data[key]
-	res := cb(ok, v, value)
+	res, isUpdated := cb(ok, v, value)
 	m.data[key] = res
 
-	return res
+	return res, isUpdated
 }
