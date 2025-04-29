@@ -78,5 +78,4 @@ func (m *Model) OmitNilData() *Model {
 		model.option = model.option | optionOmitNilData
 		return model
 	})
-
 }

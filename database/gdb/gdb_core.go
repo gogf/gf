@@ -34,43 +34,6 @@ func (c *Core) GetCore() *Core {
 	return c
 }
 
-// Ctx is a chaining function, which creates and returns a new DB that is a shallow copy
-// of current DB object and with given context in it.
-// Note that this returned DB object can be used only once, so do not assign it to
-// a global or package variable for long using.
-//func (c *Core) Ctx(ctx context.Context) DB {
-//	if ctx == nil {
-//		return c.db
-//	}
-//	// It makes a shallow copy of current db and changes its context for next chaining operation.
-//	var (
-//		err        error
-//		newCore    = &Core{}
-//		configNode = c.db.GetConfig()
-//	)
-//	*newCore = *c
-//	// It creates a new DB object(NOT NEW CONNECTION), which is commonly a wrapper for object `Core`.
-//	newCore.db, err = driverMap[configNode.Type].New(newCore, configNode)
-//	if err != nil {
-//		// It is really a serious error here.
-//		// Do not let it continue.
-//		panic(err)
-//	}
-//	newCore.ctx = WithDB(ctx, newCore.db)
-//	newCore.ctx = c.injectInternalCtxData(newCore.ctx)
-//	return newCore.db
-//}
-
-// GetCtx returns the context for current DB.
-// It returns `context.Background()` is there's no context previously set.
-//func (c *Core) GetCtx() context.Context {
-//	ctx := c.ctx
-//	if ctx == nil {
-//		ctx = context.TODO()
-//	}
-//	return c.injectInternalCtxData(ctx)
-//}
-
 // GetCtxTimeout returns the context and cancel function for specified timeout type.
 func (c *Core) GetCtxTimeout(ctx context.Context, timeoutType ctxTimeoutType) (context.Context, context.CancelFunc) {
 	ctx = context.WithValue(ctx, "WrappedByGetCtxTimeout", nil)
