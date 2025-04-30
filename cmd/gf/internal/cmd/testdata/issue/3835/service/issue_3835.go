@@ -8,7 +8,7 @@ package service
 import (
 	"context"
 
-	"github.com/gogf/gf/contrib/drivers/mysql/v2"
+	"github.com/gogf/gf/contrib/drivers/mysql/v3"
 )
 
 type (

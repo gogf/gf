@@ -348,7 +348,7 @@ func Test_Gen_Dao_Sqlite3(t *testing.T) {
 		t.AssertNil(err)
 		defer gfile.Remove(path)
 
-		dbSqlite3, err := gdb.New(gdb.ConfigNode{
+		dbSqlite3, err := gdb.New(&gdb.ConfigNode{
 			Link: linkSqlite3,
 		})
 		t.AssertNil(err)

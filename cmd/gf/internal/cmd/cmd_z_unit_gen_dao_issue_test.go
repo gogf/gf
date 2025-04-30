@@ -225,7 +225,7 @@ func Test_Gen_Dao_Issue2746(t *testing.T) {
 				table,
 			)
 		)
-		mdb, err = gdb.New(gdb.ConfigNode{
+		mdb, err = gdb.New(&gdb.ConfigNode{
 			Link: link2746,
 		})
 		t.AssertNil(err)
