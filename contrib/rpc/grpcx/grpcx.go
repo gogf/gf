@@ -8,9 +8,9 @@
 package grpcx
 
 import (
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/balancer"
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/grpcctx"
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/resolver"
+	"github.com/gogf/gf/contrib/rpc/grpcx/v3/internal/balancer"
+	"github.com/gogf/gf/contrib/rpc/grpcx/v3/internal/grpcctx"
+	"github.com/gogf/gf/contrib/rpc/grpcx/v3/internal/resolver"
 )
 
 type (

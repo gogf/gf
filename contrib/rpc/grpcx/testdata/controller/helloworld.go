@@ -9,8 +9,8 @@ package controller
 import (
 	"context"
 
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2/testdata/protobuf"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v3"
+	"github.com/gogf/gf/contrib/rpc/grpcx/v3/testdata/protobuf"
 )
 
 type Controller struct {

@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v3/frame/g"
 	"github.com/gogf/gf/v3/util/gutil"
 
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/tracing"
+	"github.com/gogf/gf/contrib/rpc/grpcx/v3/internal/tracing"
 )
 
 // ChainUnary returns a ServerOption that specifies the chained interceptor

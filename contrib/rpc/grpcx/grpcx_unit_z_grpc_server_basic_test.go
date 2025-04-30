@@ -17,9 +17,9 @@ import (
 	"github.com/gogf/gf/v3/test/gtest"
 	"github.com/gogf/gf/v3/util/guid"
 
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2/testdata/controller"
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2/testdata/protobuf"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v3"
+	"github.com/gogf/gf/contrib/rpc/grpcx/v3/testdata/controller"
+	"github.com/gogf/gf/contrib/rpc/grpcx/v3/testdata/protobuf"
 )
 
 func Test_Grpcx_Grpc_Server_Basic(t *testing.T) {
