@@ -111,7 +111,7 @@ func Test_Issue3135(t *testing.T) {
 
 		var (
 			api           = s.GetOpenApi()
-			reqPath       = "github.com.gogf.gf.v2.net.goai_test.Issue3135DefaultReq"
+			reqPath       = "github.com.gogf.gf.v3.net.goai_test.Issue3135DefaultReq"
 			rgbType       = api.Components.Schemas.Get(reqPath).Value.Properties.Get("rgba").Value.Type
 			requiredArray = api.Components.Schemas.Get(reqPath).Value.Required
 		)
@@ -238,8 +238,8 @@ func Test_Issue3889(t *testing.T) {
 		commonResponseSchema := `{"properties":{"code":{"format":"int","type":"integer"},"data":{"properties":{},"type":"object"},"message":{"format":"string","type":"string"}},"type":"object"}`
 		Status201ExamplesContent := `{"code 1":{"value":{"code":1,"data":"Good","message":"Aha, 201 - 1"}},"code 2":{"value":{"code":2,"data":"Not Bad","message":"Aha, 201 - 2"}}}`
 		Status401ExamplesContent := `{"example 1":{"value":{"code":1,"data":null,"message":"Aha, 401 - 1"}},"example 2":{"value":{"code":2,"data":null,"message":"Aha, 401 - 2"}}}`
-		Status402SchemaContent := `{"$ref":"#/components/schemas/github.com.gogf.gf.v2.net.goai_test.Issue3889Res402","description":""}`
-		Issue3889Res403Ref := `{"$ref":"#/components/schemas/github.com.gogf.gf.v2.net.goai_test.Issue3889Res403","description":""}`
+		Status402SchemaContent := `{"$ref":"#/components/schemas/github.com.gogf.gf.v3.net.goai_test.Issue3889Res402","description":""}`
+		Issue3889Res403Ref := `{"$ref":"#/components/schemas/github.com.gogf.gf.v3.net.goai_test.Issue3889Res403","description":""}`
 
 		t.Assert(j.Get(`paths./default.post.responses.201.content.application/json.examples`).String(), Status201ExamplesContent)
 		t.Assert(j.Get(`paths./default.post.responses.401.content.application/json.examples`).String(), Status401ExamplesContent)
@@ -249,7 +249,7 @@ func Test_Issue3889(t *testing.T) {
 		t.Assert(j.Get(`paths./default.post.responses.500.content.application/json.schema`).String(), commonResponseSchema)
 
 		api := s.GetOpenApi()
-		reqPath := "github.com.gogf.gf.v2.net.goai_test.Issue3889Res403"
+		reqPath := "github.com.gogf.gf.v3.net.goai_test.Issue3889Res403"
 		schema := api.Components.Schemas.Get(reqPath).Value
 
 		Issue3889Res403Schema := `{"properties":{"code":{"format":"int","type":"integer"},"message":{"format":"string","type":"string"}},"type":"object"}`
@@ -295,7 +295,7 @@ func Test_Issue3930(t *testing.T) {
 
 		var (
 			api     = s.GetOpenApi()
-			reqPath = "github.com.gogf.gf.v2.net.goai_test.Issue3930DefaultRes"
+			reqPath = "github.com.gogf.gf.v3.net.goai_test.Issue3930DefaultRes"
 		)
 		t.AssertNE(api.Components.Schemas.Get(reqPath).Value.Properties.Get("id"), nil)
 	})
@@ -340,7 +340,7 @@ func Test_Issue3235(t *testing.T) {
 
 		var (
 			api     = s.GetOpenApi()
-			reqPath = "github.com.gogf.gf.v2.net.goai_test.Issue3235DefaultRes"
+			reqPath = "github.com.gogf.gf.v3.net.goai_test.Issue3235DefaultRes"
 		)
 
 		t.Assert(api.Components.Schemas.Get(reqPath).Value.Properties.Get("Name").Value.Description,

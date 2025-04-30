@@ -55,8 +55,8 @@ func Test_Basic(t *testing.T) {
 		// Schema asserts.
 		t.Assert(len(oai.Components.Schemas.Map()), 2)
 		var (
-			schemaCreate      = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`)
-			schemaSetSpecInfo = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.SetSpecInfo`)
+			schemaCreate      = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.CreateResourceReq`)
+			schemaSetSpecInfo = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.SetSpecInfo`)
 		)
 
 		t.Assert(schemaCreate.Value.Type, goai.TypeObject)
@@ -124,8 +124,8 @@ func TestOpenApiV3_Add(t *testing.T) {
 		t.Assert(len(oai.Components.Schemas.Map()), 3)
 
 		var (
-			schemaCreate      = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`)
-			schemaSetSpecInfo = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.SetSpecInfo`)
+			schemaCreate      = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.CreateResourceReq`)
+			schemaSetSpecInfo = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.SetSpecInfo`)
 			schemaTest1       = oai.Paths["/test1/{appId}"].Put.RequestBody.Value.Content["application/json"].Schema
 		)
 		t.Assert(schemaCreate.Value.Type, goai.TypeObject)
@@ -186,7 +186,7 @@ func TestOpenApiV3_Add_Recursive(t *testing.T) {
 		// Schema asserts.
 		t.Assert(len(oai.Components.Schemas.Map()), 3)
 		var (
-			schemaCategoryTreeItem = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CategoryTreeItem`)
+			schemaCategoryTreeItem = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.CategoryTreeItem`)
 		)
 		t.Assert(schemaCategoryTreeItem.Value.Type, goai.TypeObject)
 		t.Assert(len(schemaCategoryTreeItem.Value.Properties.Map()), 3)
@@ -307,8 +307,8 @@ func TestOpenApiV3_CommonRequest(t *testing.T) {
 		t.Assert(len(oai.Paths), 1)
 		var (
 			schemaPut = oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema
-			schemaReq = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Req`)
-			schemaRes = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Res`)
+			schemaReq = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.Req`)
+			schemaRes = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.Res`)
 		)
 		t.Assert(len(schemaPut.Value.Properties.Map()), 3)
 
@@ -379,8 +379,8 @@ func TestOpenApiV3_CommonRequest_WithoutDataField_Setting(t *testing.T) {
 		var (
 			schemaIndexPut  = oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema
 			schemaIndexPost = oai.Paths["/index"].Post.RequestBody.Value.Content["application/json"].Schema
-			schemaPutReq    = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.PutReq`)
-			schemaRes       = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Res`)
+			schemaPutReq    = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.PutReq`)
+			schemaRes       = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.Res`)
 		)
 
 		t.Assert(len(oai.Paths["/index"].Put.Parameters), 2)
@@ -433,7 +433,7 @@ func TestOpenApiV3_CommonRequest_EmptyRequest(t *testing.T) {
 		t.Assert(len(oai.Paths), 1)
 		var (
 			schemaIndex = oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema
-			schemaReq   = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Req`)
+			schemaReq   = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.Req`)
 		)
 		t.Assert(len(schemaIndex.Value.Properties.Map()), 3)
 
@@ -512,8 +512,8 @@ func TestOpenApiV3_CommonRequest_SubDataField(t *testing.T) {
 		var (
 			schemaIndexPut  = oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema
 			schemaIndexPost = oai.Paths["/index"].Post.RequestBody.Value.Content["application/json"].Schema
-			schemaPutReq    = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.PutReq`)
-			schemaRes       = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Res`)
+			schemaPutReq    = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.PutReq`)
+			schemaRes       = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.Res`)
 		)
 		t.Assert(len(schemaIndexPut.Value.Properties.Map()), 1)
 		t.Assert(len(schemaIndexPut.Value.Properties.Get(`Request`).Value.Properties.Map()), 2)
@@ -552,7 +552,7 @@ func TestOpenApiV3_CommonRequest_Files(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		var schemaReq = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Req`)
+		var schemaReq = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.Req`)
 		t.Assert(schemaReq.Value.Properties.Get("files").Value.Type, goai.TypeArray)
 		t.Assert(schemaReq.Value.Properties.Get("file").Value.Type, goai.TypeFile)
 	})
@@ -602,8 +602,8 @@ func TestOpenApiV3_CommonResponse(t *testing.T) {
 		t.Assert(len(oai.Paths), 1)
 		var (
 			schemaIndexGet = oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema
-			schemaReq      = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Req`)
-			schemaRes      = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Res`)
+			schemaReq      = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.Req`)
+			schemaRes      = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.Res`)
 		)
 		t.Assert(len(schemaIndexGet.Value.Properties.Map()), 3)
 		t.Assert(
@@ -660,8 +660,8 @@ func TestOpenApiV3_CommonResponse_WithoutDataField_Setting(t *testing.T) {
 		t.Assert(len(oai.Paths), 1)
 		var (
 			schemaIndexGet = oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema
-			schemaReq      = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Req`)
-			schemaRes      = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Res`)
+			schemaReq      = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.Req`)
+			schemaRes      = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.Res`)
 		)
 		t.Assert(len(schemaIndexGet.Value.Properties.Map()), 8)
 
@@ -710,9 +710,9 @@ func TestOpenApiV3_CommonResponse_EmptyResponse(t *testing.T) {
 		var (
 			schemaIndexPut    = oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema
 			schemeIndexPut200 = oai.Paths["/index"].Put.Responses["200"].Value.Content["application/json"].Schema
-			schemaReq         = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Req`)
+			schemaReq         = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.Req`)
 		)
-		t.Assert(schemaIndexPut.Ref, `github.com.gogf.gf.v2.net.goai_test.Req`)
+		t.Assert(schemaIndexPut.Ref, `github.com.gogf.gf.v3.net.goai_test.Req`)
 		t.Assert(len(schemeIndexPut200.Value.Properties.Map()), 3)
 
 		// Schema Required.
@@ -773,8 +773,8 @@ func TestOpenApiV3_CommonResponse_SubDataField(t *testing.T) {
 		t.Assert(len(oai.Paths), 1)
 		var (
 			schemaGet = oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema
-			schemaReq = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Req`)
-			schemaRes = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Res`)
+			schemaReq = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.Req`)
+			schemaRes = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.Res`)
 		)
 		t.Assert(len(schemaGet.Value.Properties.Map()), 1)
 		t.Assert(len(schemaGet.Value.Properties.Get(`Response`).Value.Properties.Map()), 7)
@@ -841,7 +841,7 @@ func TestOpenApiV3_ShortTags(t *testing.T) {
 		t.Assert(oai.Paths[`/test1/{appId}`].Put.Description, `CreateResourceReq des`)
 		t.Assert(oai.Paths[`/test1/{appId}`].Put.Parameters[1].Value.Schema.Value.Description, `资源Id`)
 		var (
-			schemaReq = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`)
+			schemaReq = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.CreateResourceReq`)
 		)
 		t.Assert(schemaReq.Value.Properties.Get(`Name`).Value.Description, `实例名称`)
 
@@ -876,7 +876,7 @@ func TestOpenApiV3_HtmlResponse(t *testing.T) {
 		t.AssertNil(err)
 
 		// fmt.Println(oai.String())
-		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Res`).Value.Type, goai.TypeString)
+		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.Res`).Value.Type, goai.TypeString)
 	})
 }
 
@@ -923,7 +923,7 @@ func TestOpenApiV3_HtmlResponseWithCommonResponse(t *testing.T) {
 		t.AssertNil(err)
 
 		// fmt.Println(oai.String())
-		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Res`).Value.Type, goai.TypeString)
+		t.Assert(oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.Res`).Value.Type, goai.TypeString)
 	})
 }
 
@@ -958,8 +958,8 @@ func Test_Required_In_Schema(t *testing.T) {
 		})
 		t.AssertNil(err)
 		var (
-			schemaKey1 = `github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`
-			schemaKey2 = `github.com.gogf.gf.v2.net.goai_test.SetSpecInfo`
+			schemaKey1 = `github.com.gogf.gf.v3.net.goai_test.CreateResourceReq`
+			schemaKey2 = `github.com.gogf.gf.v3.net.goai_test.SetSpecInfo`
 		)
 		t.Assert(oai.Components.Schemas.Map()[schemaKey1].Value.Required, g.Slice{
 			"appId",
@@ -977,7 +977,7 @@ func Test_Required_In_Schema(t *testing.T) {
 		})
 
 		// Schema Required.
-		var schemaReq = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`)
+		var schemaReq = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.CreateResourceReq`)
 		t.AssertEQ(schemaReq.Value.Required, []string{"appId", "Region", "SetMap", "SetSlice"})
 	})
 }
@@ -1012,7 +1012,7 @@ func Test_Properties_In_Sequence(t *testing.T) {
 		t.AssertNil(err)
 
 		// Schema Required.
-		var schemaReq = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.ResourceCreateReq`)
+		var schemaReq = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.ResourceCreateReq`)
 		t.AssertEQ(schemaReq.Value.Required, []string{
 			"AppId", "Uin", "CreateUin", "Product", "Region", "Zone", "Tenant",
 		})
@@ -1081,7 +1081,7 @@ func Test_EnumOfSchemaItems(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		var schemaReq = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`)
+		var schemaReq = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.CreateResourceReq`)
 		t.Assert(
 			schemaReq.Value.
 				Properties.Get(`Members`).Value.
@@ -1112,7 +1112,7 @@ func Test_AliasNameOfAttribute(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		var schemaReq = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.CreateResourceReq`)
+		var schemaReq = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.CreateResourceReq`)
 		t.Assert(schemaReq.Value.Properties.Get(`Name`), nil)
 		t.Assert(schemaReq.Value.Properties.Get(`Age`), nil)
 		t.AssertNE(schemaReq.Value.Properties.Get(`n`), nil)
@@ -1242,7 +1242,7 @@ func TestOpenApiV3_PathSecurity(t *testing.T) {
 		t.Assert(len(oai.Paths), 1)
 		var (
 			schemaIndex = oai.Paths["/index"].Put.Responses["200"].Value.Content["application/json"].Schema
-			schemaReq   = oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Req`)
+			schemaReq   = oai.Components.Schemas.Get(`github.com.gogf.gf.v3.net.goai_test.Req`)
 		)
 		t.Assert(len(schemaIndex.Value.Properties.Map()), 3)
 
@@ -1268,7 +1268,7 @@ func Test_EmptyJsonNameWithOmitEmpty(t *testing.T) {
 			Object: req,
 		})
 		t.AssertNil(err)
-		var reqKey = "github.com.gogf.gf.v2.net.goai_test.CreateResourceReq"
+		var reqKey = "github.com.gogf.gf.v3.net.goai_test.CreateResourceReq"
 		t.AssertNE(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Name"), nil)
 		t.AssertNE(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Product"), nil)
 		t.Assert(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("None"), nil)
@@ -1305,7 +1305,7 @@ func Test_Enums(t *testing.T) {
 			Object: req,
 		})
 		t.AssertNil(err)
-		var reqKey = "github.com.gogf.gf.v2.net.goai_test.Req"
+		var reqKey = "github.com.gogf.gf.v3.net.goai_test.Req"
 		t.AssertNE(oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Name"), nil)
 		t.Assert(
 			oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Status1").Value.Enum,
@@ -1366,7 +1366,7 @@ func Test_ValidationRules(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		schema := oai.Components.Schemas.Get("github.com.gogf.gf.v2.net.goai_test.Req").Value
+		schema := oai.Components.Schemas.Get("github.com.gogf.gf.v3.net.goai_test.Req").Value
 		t.Assert(schema.Properties.Get("Name").Value.MinLength, 3)
 		t.Assert(schema.Properties.Get("Name").Value.MaxLength, 32)
 		t.Assert(schema.Properties.Get("Age").Value.Min, 1.0)
