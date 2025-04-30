@@ -6,7 +6,7 @@ import (
 	"github.com/gogf/gf/v3/errors/gcode"
 	"github.com/gogf/gf/v3/errors/gerror"
 
-	"github.com/gogf/gf/cmd/gf/v3/internal/cmd/testdata/issue/3460/api/hello/v3"
+	"github.com/gogf/gf/cmd/gf/v3/internal/cmd/testdata/issue/3460/api/hello/v2"
 )
 
 func (c *ControllerV2) DictTypeAddPage(ctx context.Context, req *v2.DictTypeAddPageReq) (res *v2.DictTypeAddPageRes, err error) {
