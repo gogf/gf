@@ -4,18 +4,18 @@ Use `zookeeper` as service registration and discovery management.
 
 ## Installation
 ```
-go get -u -v github.com/gogf/gf/contrib/registry/zookeeper/v2
+go get -u -v github.com/gogf/gf/contrib/registry/zookeeper/v3
 ```
 suggested using `go.mod`:
 ```
-require github.com/gogf/gf/contrib/registry/zookeeper/v2 latest
+require github.com/gogf/gf/contrib/registry/zookeeper/v3 latest
 ```
 
 ```go
 package main
 
 import (
-	"github.com/gogf/gf/contrib/registry/zookeeper/v2"
+	"github.com/gogf/gf/contrib/registry/zookeeper/v3"
 	"github.com/gogf/gf/v3/frame/g"
 	"github.com/gogf/gf/v3/net/ghttp"
 	"github.com/gogf/gf/v3/net/gsvc"
@@ -42,7 +42,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gogf/gf/contrib/registry/zookeeper/v2"
+	"github.com/gogf/gf/contrib/registry/zookeeper/v3"
 	"github.com/gogf/gf/v3/frame/g"
 	"github.com/gogf/gf/v3/net/gsel"
 	"github.com/gogf/gf/v3/net/gsvc"
