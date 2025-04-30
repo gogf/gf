@@ -33,6 +33,8 @@ func (d *Driver) DoInsert(
 			gcode.CodeNotSupported,
 			`Replace operation is not supported by oracle driver`,
 		)
+
+	default:
 	}
 	var (
 		keys   []string
