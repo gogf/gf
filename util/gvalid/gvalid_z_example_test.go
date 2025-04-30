@@ -509,7 +509,7 @@ func ExampleValidator_RegisterRule() {
 			id   = in.Data.Val().(*User).Id
 			name = gconv.String(in.Value)
 		)
-		n, err := g.Model("user").Where("id != ? and name = ?", id, name).Count()
+		n, err := g.Model("user").Where("id != ? and name = ?", id, name).Count(ctx)
 		if err != nil {
 			return err
 		}
