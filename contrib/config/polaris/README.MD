@@ -5,7 +5,7 @@ Package `polaris` implements GoFrame `gcfg.Adapter` using polaris service.
 # Installation
 
 ```
-go get -u github.com/gogf/gf/contrib/config/polaris/v2
+go get -u github.com/gogf/gf/contrib/config/polaris/v3
 ```
 
 # Usage
@@ -20,7 +20,7 @@ which sets the Adapter of default configuration instance before any other packag
 package boot
 
 import (
-    "github.com/gogf/gf/contrib/config/polaris/v2"
+    "github.com/gogf/gf/contrib/config/polaris/v3"
     "github.com/gogf/gf/v3/frame/g"
     "github.com/gogf/gf/v3/os/gctx"
 )

@@ -5,7 +5,7 @@ Package `consul` implements GoFrame `gcfg.Adapter` using consul service.
 # Installation
 
 ```
-go get -u github.com/gogf/gf/contrib/config/consul/v2
+go get -u github.com/gogf/gf/contrib/config/consul/v3
 ```
 
 # Usage
@@ -20,7 +20,7 @@ which sets the Adapter of default configuration instance before any other packag
 package boot
 
 import (
-	consul "github.com/gogf/gf/contrib/config/consul/v2"
+	consul "github.com/gogf/gf/contrib/config/consul/v3"
 
 	"github.com/gogf/gf/v3/frame/g"
 	"github.com/gogf/gf/v3/os/gctx"

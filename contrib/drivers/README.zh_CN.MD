@@ -7,21 +7,21 @@
 以 `mysql` 为例。
 
 ```shell
-go get -u github.com/gogf/gf/contrib/drivers/mysql/v2
+go get -u github.com/gogf/gf/contrib/drivers/mysql/v3
 # 方便复制
-go get -u github.com/gogf/gf/contrib/drivers/clickhouse/v2
-go get -u github.com/gogf/gf/contrib/drivers/dm/v2
-go get -u github.com/gogf/gf/contrib/drivers/mssql/v2
-go get -u github.com/gogf/gf/contrib/drivers/oracle/v2
-go get -u github.com/gogf/gf/contrib/drivers/pgsql/v2
-go get -u github.com/gogf/gf/contrib/drivers/sqlite/v2
-go get -u github.com/gogf/gf/contrib/drivers/sqlitecgo/v2
+go get -u github.com/gogf/gf/contrib/drivers/clickhouse/v3
+go get -u github.com/gogf/gf/contrib/drivers/dm/v3
+go get -u github.com/gogf/gf/contrib/drivers/mssql/v3
+go get -u github.com/gogf/gf/contrib/drivers/oracle/v3
+go get -u github.com/gogf/gf/contrib/drivers/pgsql/v3
+go get -u github.com/gogf/gf/contrib/drivers/sqlite/v3
+go get -u github.com/gogf/gf/contrib/drivers/sqlitecgo/v3
 ```
 
 选择并将驱动程序导入到您的项目中：
 
 ```go
-import _ "github.com/gogf/gf/contrib/drivers/mysql/v2"
+import _ "github.com/gogf/gf/contrib/drivers/mysql/v3"
 ```
 
 通常在 `main.go` 的顶部导入：
@@ -30,7 +30,7 @@ import _ "github.com/gogf/gf/contrib/drivers/mysql/v2"
 package main
 
 import (
-	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
+	_ "github.com/gogf/gf/contrib/drivers/mysql/v3"
 
 	// 其他导入的包。
 )
@@ -45,13 +45,13 @@ func main() {
 ### MySQL/MariaDB/TiDB
 
 ```go
-import _ "github.com/gogf/gf/contrib/drivers/mysql/v2"
+import _ "github.com/gogf/gf/contrib/drivers/mysql/v3"
 ```
 
 ### SQLite
 
 ```go
-import _ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
+import _ "github.com/gogf/gf/contrib/drivers/sqlite/v3"
 ```
 
 #### cgo 版本
@@ -59,13 +59,13 @@ import _ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
 32位Windows请使用cgo版本
 
 ```go
-import _ "github.com/gogf/gf/contrib/drivers/sqlitecgo/v2"
+import _ "github.com/gogf/gf/contrib/drivers/sqlitecgo/v3"
 ```
 
 ### PostgreSQL
 
 ```go
-import _ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
+import _ "github.com/gogf/gf/contrib/drivers/pgsql/v3"
 ```
 
 注意：
@@ -75,7 +75,7 @@ import _ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
 ### SQL Server
 
 ```go
-import _ "github.com/gogf/gf/contrib/drivers/mssql/v2"
+import _ "github.com/gogf/gf/contrib/drivers/mssql/v3"
 ```
 
 注意：
@@ -88,7 +88,7 @@ import _ "github.com/gogf/gf/contrib/drivers/mssql/v2"
 ### Oracle
 
 ```go
-import _ "github.com/gogf/gf/contrib/drivers/oracle/v2"
+import _ "github.com/gogf/gf/contrib/drivers/oracle/v3"
 ```
 
 注意：
@@ -99,7 +99,7 @@ import _ "github.com/gogf/gf/contrib/drivers/oracle/v2"
 ### ClickHouse
 
 ```go
-import _ "github.com/gogf/gf/contrib/drivers/clickhouse/v2"
+import _ "github.com/gogf/gf/contrib/drivers/clickhouse/v3"
 ```
 
 注意：
@@ -112,7 +112,7 @@ import _ "github.com/gogf/gf/contrib/drivers/clickhouse/v2"
 ### DM
 
 ```go
-import _ "github.com/gogf/gf/contrib/drivers/dm/v2"
+import _ "github.com/gogf/gf/contrib/drivers/dm/v3"
 ```
 
 注意：

@@ -3,7 +3,7 @@ GoFrame `gredis.Adapter` implements using `go-redis`.
 
 # Installation
 ```
-go get -u github.com/gogf/gf/contrib/nosql/redis/v2
+go get -u github.com/gogf/gf/contrib/nosql/redis/v3
 ```
 
 Commonly imported at top of `main.go`:
@@ -11,7 +11,7 @@ Commonly imported at top of `main.go`:
 package main
 
 import (
-	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
+	_ "github.com/gogf/gf/contrib/nosql/redis/v3"
 
 	// Other imported packages.
 )
