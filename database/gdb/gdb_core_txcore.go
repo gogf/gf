@@ -26,9 +26,6 @@ type TXCore struct {
 	// tx is the underlying SQL transaction object from database/sql package,
 	// which manages the actual transaction operations.
 	tx *sql.Tx
-	// ctx is the context specific to this transaction,
-	// which can be used for timeout control and cancellation.
-	ctx context.Context
 	// master is the underlying master database connection pool,
 	// used for direct database operations when needed.
 	master *sql.DB
@@ -59,20 +56,6 @@ func (tx *TXCore) transactionKeyForNestedPoint() string {
 	)
 }
 
-// Ctx sets the context for current transaction.
-func (tx *TXCore) Ctx(ctx context.Context) TX {
-	tx.ctx = ctx
-	if tx.ctx != nil {
-		tx.ctx = tx.db.GetCore().injectInternalCtxData(tx.ctx)
-	}
-	return tx
-}
-
-// GetCtx returns the context for current transaction.
-func (tx *TXCore) GetCtx() context.Context {
-	return tx.ctx
-}
-
 // GetDB returns the DB for current transaction.
 func (tx *TXCore) GetDB() DB {
 	return tx.db
@@ -86,13 +69,13 @@ func (tx *TXCore) GetSqlTX() *sql.Tx {
 // Commit commits current transaction.
 // Note that it releases previous saved transaction point if it's in a nested transaction procedure,
 // or else it commits the hole transaction.
-func (tx *TXCore) Commit() error {
+func (tx *TXCore) Commit(ctx context.Context) error {
 	if tx.transactionCount > 0 {
 		tx.transactionCount--
-		_, err := tx.Exec("RELEASE SAVEPOINT " + tx.transactionKeyForNestedPoint())
+		_, err := tx.Exec(ctx, "RELEASE SAVEPOINT "+tx.transactionKeyForNestedPoint())
 		return err
 	}
-	_, err := tx.db.DoCommit(tx.ctx, DoCommitInput{
+	_, err := tx.db.DoCommit(ctx, DoCommitInput{
 		Tx:            tx.tx,
 		Sql:           "COMMIT",
 		Type:          SqlTypeTXCommit,
@@ -108,13 +91,13 @@ func (tx *TXCore) Commit() error {
 // Rollback aborts current transaction.
 // Note that it aborts current transaction if it's in a nested transaction procedure,
 // or else it aborts the hole transaction.
-func (tx *TXCore) Rollback() error {
+func (tx *TXCore) Rollback(ctx context.Context) error {
 	if tx.transactionCount > 0 {
 		tx.transactionCount--
-		_, err := tx.Exec("ROLLBACK TO SAVEPOINT " + tx.transactionKeyForNestedPoint())
+		_, err := tx.Exec(ctx, "ROLLBACK TO SAVEPOINT "+tx.transactionKeyForNestedPoint())
 		return err
 	}
-	_, err := tx.db.DoCommit(tx.ctx, DoCommitInput{
+	_, err := tx.db.DoCommit(ctx, DoCommitInput{
 		Tx:            tx.tx,
 		Sql:           "ROLLBACK",
 		Type:          SqlTypeTXRollback,
@@ -133,26 +116,27 @@ func (tx *TXCore) IsClosed() bool {
 }
 
 // Begin starts a nested transaction procedure.
-func (tx *TXCore) Begin() error {
-	_, err := tx.Exec("SAVEPOINT " + tx.transactionKeyForNestedPoint())
+func (tx *TXCore) Begin(ctx context.Context) (TX, context.Context, error) {
+	_, err := tx.Exec(ctx, "SAVEPOINT "+tx.transactionKeyForNestedPoint())
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	tx.transactionCount++
-	return nil
+	newCtx := WithTX(ctx, tx)
+	return tx, newCtx, nil
 }
 
 // SavePoint performs `SAVEPOINT xxx` SQL statement that saves transaction at current point.
 // The parameter `point` specifies the point name that will be saved to server.
-func (tx *TXCore) SavePoint(point string) error {
-	_, err := tx.Exec("SAVEPOINT " + tx.db.GetCore().QuoteWord(point))
+func (tx *TXCore) SavePoint(ctx context.Context, point string) error {
+	_, err := tx.Exec(ctx, "SAVEPOINT "+tx.db.GetCore().QuoteWord(point))
 	return err
 }
 
 // RollbackTo performs `ROLLBACK TO SAVEPOINT xxx` SQL statement that rollbacks to specified saved transaction.
 // The parameter `point` specifies the point name that was saved previously.
-func (tx *TXCore) RollbackTo(point string) error {
-	_, err := tx.Exec("ROLLBACK TO SAVEPOINT " + tx.db.GetCore().QuoteWord(point))
+func (tx *TXCore) RollbackTo(ctx context.Context, point string) error {
+	_, err := tx.Exec(ctx, "ROLLBACK TO SAVEPOINT "+tx.db.GetCore().QuoteWord(point))
 	return err
 }
 
@@ -164,18 +148,18 @@ func (tx *TXCore) RollbackTo(point string) error {
 // Note that, you should not Commit or Rollback the transaction in function `f`
 // as it is automatically handled by this function.
 func (tx *TXCore) Transaction(ctx context.Context, f func(ctx context.Context, tx TX) error) (err error) {
-	if ctx != nil {
-		tx.ctx = ctx
-	}
 	// Check transaction object from context.
-	if TXFromCtx(tx.ctx, tx.db.GetGroup()) == nil {
+	if TXFromCtx(ctx, tx.db.GetGroup()) == nil {
 		// Inject transaction object into context.
-		tx.ctx = WithTX(tx.ctx, tx)
+		ctx = WithTX(ctx, tx)
 	}
-	if err = tx.Begin(); err != nil {
+	// Begin a nested transaction
+	_, newCtx, err := tx.Begin(ctx)
+	if err != nil {
 		return err
 	}
-	err = callTxFunc(tx, f)
+	// Use the new context that contains the transaction
+	err = callTxFunc(newCtx, tx, f)
 	return
 }
 
@@ -188,14 +172,14 @@ func (tx *TXCore) TransactionWithOptions(
 
 // Query does query operation on transaction.
 // See Core.Query.
-func (tx *TXCore) Query(sql string, args ...interface{}) (result Result, err error) {
-	return tx.db.DoQuery(tx.ctx, &txLink{tx.tx}, sql, args...)
+func (tx *TXCore) Query(ctx context.Context, sql string, args ...interface{}) (result Result, err error) {
+	return tx.db.DoQuery(ctx, &txLink{tx.tx}, sql, args...)
 }
 
 // Exec does none query operation on transaction.
 // See Core.Exec.
-func (tx *TXCore) Exec(sql string, args ...interface{}) (sql.Result, error) {
-	return tx.db.DoExec(tx.ctx, &txLink{tx.tx}, sql, args...)
+func (tx *TXCore) Exec(ctx context.Context, sql string, args ...interface{}) (sql.Result, error) {
+	return tx.db.DoExec(ctx, &txLink{tx.tx}, sql, args...)
 }
 
 // Prepare creates a prepared statement for later queries or executions.
@@ -203,18 +187,18 @@ func (tx *TXCore) Exec(sql string, args ...interface{}) (sql.Result, error) {
 // returned statement.
 // The caller must call the statement's Close method
 // when the statement is no longer needed.
-func (tx *TXCore) Prepare(sql string) (*Stmt, error) {
-	return tx.db.DoPrepare(tx.ctx, &txLink{tx.tx}, sql)
+func (tx *TXCore) Prepare(ctx context.Context, sql string) (*Stmt, error) {
+	return tx.db.DoPrepare(ctx, &txLink{tx.tx}, sql)
 }
 
 // GetAll queries and returns data records from database.
-func (tx *TXCore) GetAll(sql string, args ...interface{}) (Result, error) {
-	return tx.Query(sql, args...)
+func (tx *TXCore) GetAll(ctx context.Context, sql string, args ...interface{}) (Result, error) {
+	return tx.Query(ctx, sql, args...)
 }
 
 // GetOne queries and returns one record from database.
-func (tx *TXCore) GetOne(sql string, args ...interface{}) (Record, error) {
-	list, err := tx.GetAll(sql, args...)
+func (tx *TXCore) GetOne(ctx context.Context, sql string, args ...interface{}) (Record, error) {
+	list, err := tx.GetAll(ctx, sql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -226,8 +210,8 @@ func (tx *TXCore) GetOne(sql string, args ...interface{}) (Record, error) {
 
 // GetStruct queries one record from database and converts it to given struct.
 // The parameter `pointer` should be a pointer to struct.
-func (tx *TXCore) GetStruct(obj interface{}, sql string, args ...interface{}) error {
-	one, err := tx.GetOne(sql, args...)
+func (tx *TXCore) GetStruct(ctx context.Context, obj interface{}, sql string, args ...interface{}) error {
+	one, err := tx.GetOne(ctx, sql, args...)
 	if err != nil {
 		return err
 	}
@@ -236,8 +220,8 @@ func (tx *TXCore) GetStruct(obj interface{}, sql string, args ...interface{}) er
 
 // GetStructs queries records from database and converts them to given struct.
 // The parameter `pointer` should be type of struct slice: []struct/[]*struct.
-func (tx *TXCore) GetStructs(objPointerSlice interface{}, sql string, args ...interface{}) error {
-	all, err := tx.GetAll(sql, args...)
+func (tx *TXCore) GetStructs(ctx context.Context, objPointerSlice interface{}, sql string, args ...interface{}) error {
+	all, err := tx.GetAll(ctx, sql, args...)
 	if err != nil {
 		return err
 	}
@@ -250,7 +234,7 @@ func (tx *TXCore) GetStructs(objPointerSlice interface{}, sql string, args ...in
 // If parameter `pointer` is type of struct pointer, it calls GetStruct internally for
 // the conversion. If parameter `pointer` is type of slice, it calls GetStructs internally
 // for conversion.
-func (tx *TXCore) GetScan(pointer interface{}, sql string, args ...interface{}) error {
+func (tx *TXCore) GetScan(ctx context.Context, pointer interface{}, sql string, args ...interface{}) error {
 	reflectInfo := reflection.OriginTypeAndKind(pointer)
 	if reflectInfo.InputKind != reflect.Ptr {
 		return gerror.NewCodef(
@@ -261,10 +245,10 @@ func (tx *TXCore) GetScan(pointer interface{}, sql string, args ...interface{}) 
 	}
 	switch reflectInfo.OriginKind {
 	case reflect.Array, reflect.Slice:
-		return tx.GetStructs(pointer, sql, args...)
+		return tx.GetStructs(ctx, pointer, sql, args...)
 
 	case reflect.Struct:
-		return tx.GetStruct(pointer, sql, args...)
+		return tx.GetStruct(ctx, pointer, sql, args...)
 
 	default:
 	}
@@ -278,8 +262,8 @@ func (tx *TXCore) GetScan(pointer interface{}, sql string, args ...interface{}) 
 // GetValue queries and returns the field value from database.
 // The sql should query only one field from database, or else it returns only one
 // field of the result.
-func (tx *TXCore) GetValue(sql string, args ...interface{}) (Value, error) {
-	one, err := tx.GetOne(sql, args...)
+func (tx *TXCore) GetValue(ctx context.Context, sql string, args ...interface{}) (Value, error) {
+	one, err := tx.GetOne(ctx, sql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -290,11 +274,11 @@ func (tx *TXCore) GetValue(sql string, args ...interface{}) (Value, error) {
 }
 
 // GetCount queries and returns the count from database.
-func (tx *TXCore) GetCount(sql string, args ...interface{}) (int64, error) {
+func (tx *TXCore) GetCount(ctx context.Context, sql string, args ...interface{}) (int64, error) {
 	if !gregex.IsMatchString(`(?i)SELECT\s+COUNT\(.+\)\s+FROM`, sql) {
 		sql, _ = gregex.ReplaceString(`(?i)(SELECT)\s+(.+)\s+(FROM)`, `$1 COUNT($2) $3`, sql)
 	}
-	value, err := tx.GetValue(sql, args...)
+	value, err := tx.GetValue(ctx, sql, args...)
 	if err != nil {
 		return 0, err
 	}
@@ -305,40 +289,40 @@ func (tx *TXCore) GetCount(sql string, args ...interface{}) (int64, error) {
 // If there's already one unique record of the data in the table, it returns error.
 //
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
-// Eg:
+// Example:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
 // The parameter `batch` specifies the batch operation count when given data is slice.
-func (tx *TXCore) Insert(table string, data interface{}, batch ...int) (sql.Result, error) {
+func (tx *TXCore) Insert(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
-		return tx.Model(table).Ctx(tx.ctx).Data(data).Batch(batch[0]).Insert()
+		return tx.Model(table).Data(data).Batch(batch[0]).Insert(ctx)
 	}
-	return tx.Model(table).Ctx(tx.ctx).Data(data).Insert()
+	return tx.Model(table).Data(data).Insert(ctx)
 }
 
 // InsertIgnore does "INSERT IGNORE INTO ..." statement for the table.
 // If there's already one unique record of the data in the table, it ignores the inserting.
 //
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
-// Eg:
+// Example:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
 // The parameter `batch` specifies the batch operation count when given data is slice.
-func (tx *TXCore) InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error) {
+func (tx *TXCore) InsertIgnore(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
-		return tx.Model(table).Ctx(tx.ctx).Data(data).Batch(batch[0]).InsertIgnore()
+		return tx.Model(table).Data(data).Batch(batch[0]).InsertIgnore(ctx)
 	}
-	return tx.Model(table).Ctx(tx.ctx).Data(data).InsertIgnore()
+	return tx.Model(table).Data(data).InsertIgnore(ctx)
 }
 
 // InsertAndGetId performs action Insert and returns the last insert id that automatically generated.
-func (tx *TXCore) InsertAndGetId(table string, data interface{}, batch ...int) (int64, error) {
+func (tx *TXCore) InsertAndGetId(ctx context.Context, table string, data interface{}, batch ...int) (int64, error) {
 	if len(batch) > 0 {
-		return tx.Model(table).Ctx(tx.ctx).Data(data).Batch(batch[0]).InsertAndGetId()
+		return tx.Model(table).Data(data).Batch(batch[0]).InsertAndGetId(ctx)
 	}
-	return tx.Model(table).Ctx(tx.ctx).Data(data).InsertAndGetId()
+	return tx.Model(table).Data(data).InsertAndGetId(ctx)
 }
 
 // Replace does "REPLACE INTO ..." statement for the table.
@@ -346,18 +330,18 @@ func (tx *TXCore) InsertAndGetId(table string, data interface{}, batch ...int) (
 // and inserts a new one.
 //
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
-// Eg:
+// Example:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
 // If given data is type of slice, it then does batch replacing, and the optional parameter
 // `batch` specifies the batch operation count.
-func (tx *TXCore) Replace(table string, data interface{}, batch ...int) (sql.Result, error) {
+func (tx *TXCore) Replace(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
-		return tx.Model(table).Ctx(tx.ctx).Data(data).Batch(batch[0]).Replace()
+		return tx.Model(table).Data(data).Batch(batch[0]).Replace(ctx)
 	}
-	return tx.Model(table).Ctx(tx.ctx).Data(data).Replace()
+	return tx.Model(table).Data(data).Replace(ctx)
 }
 
 // Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the table.
@@ -365,50 +349,50 @@ func (tx *TXCore) Replace(table string, data interface{}, batch ...int) (sql.Res
 // or else it inserts a new record into the table.
 //
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
-// Eg:
+// Example:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
 // If given data is type of slice, it then does batch saving, and the optional parameter
 // `batch` specifies the batch operation count.
-func (tx *TXCore) Save(table string, data interface{}, batch ...int) (sql.Result, error) {
+func (tx *TXCore) Save(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
-		return tx.Model(table).Ctx(tx.ctx).Data(data).Batch(batch[0]).Save()
+		return tx.Model(table).Data(data).Batch(batch[0]).Save(ctx)
 	}
-	return tx.Model(table).Ctx(tx.ctx).Data(data).Save()
+	return tx.Model(table).Data(data).Save(ctx)
 }
 
 // Update does "UPDATE ... " statement for the table.
 //
 // The parameter `data` can be type of string/map/gmap/struct/*struct, etc.
-// Eg: "uid=10000", "uid", 10000, g.Map{"uid": 10000, "name":"john"}
+// Example: "uid=10000", "uid", 10000, g.Map{"uid": 10000, "name":"john"}
 //
 // The parameter `condition` can be type of string/map/gmap/slice/struct/*struct, etc.
 // It is commonly used with parameter `args`.
-// Eg:
+// Example:
 // "uid=10000",
 // "uid", 10000
 // "money>? AND name like ?", 99999, "vip_%"
 // "status IN (?)", g.Slice{1,2,3}
 // "age IN(?,?)", 18, 50
 // User{ Id : 1, UserName : "john"}.
-func (tx *TXCore) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
-	return tx.Model(table).Ctx(tx.ctx).Data(data).Where(condition, args...).Update()
+func (tx *TXCore) Update(ctx context.Context, table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
+	return tx.Model(table).Data(data).Where(condition, args...).Update(ctx)
 }
 
 // Delete does "DELETE FROM ... " statement for the table.
 //
 // The parameter `condition` can be type of string/map/gmap/slice/struct/*struct, etc.
 // It is commonly used with parameter `args`.
-// Eg:
+// Example:
 // "uid=10000",
 // "uid", 10000
 // "money>? AND name like ?", 99999, "vip_%"
 // "status IN (?)", g.Slice{1,2,3}
 // "age IN(?,?)", 18, 50
 // User{ Id : 1, UserName : "john"}.
-func (tx *TXCore) Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error) {
-	return tx.Model(table).Ctx(tx.ctx).Where(condition, args...).Delete()
+func (tx *TXCore) Delete(ctx context.Context, table string, condition interface{}, args ...interface{}) (sql.Result, error) {
+	return tx.Model(table).Where(condition, args...).Delete(ctx)
 }
 
 // QueryContext implements interface function Link.QueryContext.

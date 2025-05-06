@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"context"
 	"database/sql"
 	"reflect"
 
@@ -91,7 +92,9 @@ import (
 // given `relation` parameter.
 //
 // See the example or unit testing cases for clear understanding for this function.
-func (r Result) ScanList(structSlicePointer interface{}, bindToAttrName string, relationAttrNameAndFields ...string) (err error) {
+func (r Result) ScanList(
+	ctx context.Context, structSlicePointer any, bindToAttrName string, relationAttrNameAndFields ...string,
+) (err error) {
 	out, err := checkGetSliceElementInfoForScanList(structSlicePointer, bindToAttrName)
 	if err != nil {
 		return err
@@ -108,7 +111,7 @@ func (r Result) ScanList(structSlicePointer interface{}, bindToAttrName string, 
 	case 1:
 		relationFields = relationAttrNameAndFields[0]
 	}
-	return doScanList(doScanListInput{
+	return doScanList(ctx, doScanListInput{
 		Model:              nil,
 		Result:             r,
 		StructSlicePointer: structSlicePointer,
@@ -124,7 +127,7 @@ type checkGetSliceElementInfoForScanListOutput struct {
 	BindToAttrType    reflect.Type
 }
 
-func checkGetSliceElementInfoForScanList(structSlicePointer interface{}, bindToAttrName string) (out *checkGetSliceElementInfoForScanListOutput, err error) {
+func checkGetSliceElementInfoForScanList(structSlicePointer any, bindToAttrName string) (out *checkGetSliceElementInfoForScanListOutput, err error) {
 	// Necessary checks for parameters.
 	if structSlicePointer == nil {
 		return nil, gerror.NewCode(gcode.CodeInvalidParameter, `structSlicePointer cannot be nil`)
@@ -194,7 +197,7 @@ func checkGetSliceElementInfoForScanList(structSlicePointer interface{}, bindToA
 type doScanListInput struct {
 	Model              *Model
 	Result             Result
-	StructSlicePointer interface{}
+	StructSlicePointer any
 	StructSliceValue   reflect.Value
 	BindToAttrName     string
 	RelationAttrName   string
@@ -205,7 +208,7 @@ type doScanListInput struct {
 // The parameter `model` is used for recursively scanning purpose, which means, it can scan the attribute struct/structs recursively,
 // but it needs the Model for database accessing.
 // Note that the parameter `structSlicePointer` should be type of *[]struct/*[]*struct.
-func doScanList(in doScanListInput) (err error) {
+func doScanList(ctx context.Context, in doScanListInput) (err error) {
 	if in.Result.IsEmpty() {
 		return nil
 	}
@@ -243,8 +246,8 @@ func doScanList(in doScanListInput) (err error) {
 	// Relation variables.
 	var (
 		relationDataMap         map[string]Value
-		relationFromFieldName   string // Eg: relationKV: id:uid  -> id
-		relationBindToFieldName string // Eg: relationKV: id:uid  -> uid
+		relationFromFieldName   string // Example: relationKV: id:uid  -> id
+		relationBindToFieldName string // Example: relationKV: id:uid  -> uid
 	)
 	if len(in.RelationFields) > 0 {
 		// The relation key string of table field name and attribute name
@@ -394,7 +397,7 @@ func doScanList(in doScanListInput) (err error) {
 					}
 					// Recursively Scan.
 					if in.Model != nil {
-						if err = in.Model.doWithScanStructs(bindToAttrValue.Addr()); err != nil {
+						if err = in.Model.doWithScanStructs(ctx, bindToAttrValue.Addr()); err != nil {
 							return nil
 						}
 					}
@@ -436,7 +439,10 @@ func doScanList(in doScanListInput) (err error) {
 					}
 				} else {
 					// Maybe the attribute does not exist yet.
-					return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid relation fields specified: "%v"`, in.RelationFields)
+					return gerror.NewCodef(
+						gcode.CodeInvalidParameter, `invalid relation fields specified: "%v"`,
+						in.RelationFields,
+					)
 				}
 			} else {
 				if i >= len(in.Result) {
@@ -454,7 +460,7 @@ func doScanList(in doScanListInput) (err error) {
 			}
 			// Recursively Scan.
 			if in.Model != nil {
-				if err = in.Model.doWithScanStruct(element); err != nil {
+				if err = in.Model.doWithScanStruct(ctx, element); err != nil {
 					return err
 				}
 			}
@@ -498,7 +504,7 @@ func doScanList(in doScanListInput) (err error) {
 			}
 			// Recursively Scan.
 			if in.Model != nil {
-				if err = in.Model.doWithScanStruct(bindToAttrValue); err != nil {
+				if err = in.Model.doWithScanStruct(ctx, bindToAttrValue); err != nil {
 					return err
 				}
 			}

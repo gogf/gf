@@ -92,7 +92,7 @@ func MapOmitEmpty(data map[string]interface{}) {
 }
 
 // MapToSlice converts map to slice of which all keys and values are its items.
-// Eg: {"K1": "v1", "K2": "v2"} => ["K1", "v1", "K2", "v2"]
+// Example: {"K1": "v1", "K2": "v2"} => ["K1", "v1", "K2", "v2"]
 func MapToSlice(data interface{}) []interface{} {
 	var (
 		reflectValue = reflect.ValueOf(data)

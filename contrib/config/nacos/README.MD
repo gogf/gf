@@ -5,7 +5,7 @@ Package `nacos` implements GoFrame `gcfg.Adapter` using nacos service.
 # Installation
 
 ```
-go get -u github.com/gogf/gf/contrib/config/nacos/v2
+go get -u github.com/gogf/gf/contrib/config/nacos/v3
 ```
 
 # Usage
@@ -20,7 +20,7 @@ which sets the Adapter of default configuration instance before any other packag
 package boot
 
 import (
-	"github.com/gogf/gf/contrib/config/nacos/v2"
+	"github.com/gogf/gf/contrib/config/nacos/v3"
 	"github.com/gogf/gf/v3/frame/g"
 	"github.com/gogf/gf/v3/os/gctx"
 	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"

@@ -22,7 +22,7 @@ func Validate(ip string) bool {
 }
 
 // ParseAddress parses `address` to its ip and port.
-// Eg: 192.168.1.1:80 -> 192.168.1.1, 80
+// Example: 192.168.1.1:80 -> 192.168.1.1, 80
 func ParseAddress(address string) (string, int) {
 	host, port, err := net.SplitHostPort(address)
 	if err != nil {
@@ -36,7 +36,7 @@ func ParseAddress(address string) (string, int) {
 }
 
 // GetSegment returns the segment of given ip address.
-// Eg: 192.168.2.102 -> 192.168.2
+// Example: 192.168.2.102 -> 192.168.2
 func GetSegment(ip string) string {
 	if !Validate(ip) {
 		return ""

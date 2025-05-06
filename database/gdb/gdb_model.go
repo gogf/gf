@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gogf/gf/v3/os/gctx"
 	"github.com/gogf/gf/v3/text/gregex"
 	"github.com/gogf/gf/v3/text/gstr"
 	"github.com/gogf/gf/v3/util/gconv"
@@ -26,19 +27,19 @@ type Model struct {
 	tables         string            // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
 	fields         []any             // Operation fields, multiple fields joined using char ','.
 	fieldsEx       []any             // Excluded operation fields, it here uses slice instead of string type for quick filtering.
-	withArray      []interface{}     // Arguments for With feature.
+	withArray      []any             // Arguments for With feature.
 	withAll        bool              // Enable model association operations on all objects that have "with" tag in the struct.
-	extraArgs      []interface{}     // Extra custom arguments for sql, which are prepended to the arguments before sql committed to underlying driver.
+	extraArgs      []any             // Extra custom arguments for sql, which are prepended to the arguments before sql committed to underlying driver.
 	whereBuilder   *WhereBuilder     // Condition builder for where operation.
 	groupBy        string            // Used for "group by" statement.
 	orderBy        string            // Used for "order by" statement.
-	having         []interface{}     // Used for "having..." statement.
+	having         []any             // Used for "having..." statement.
 	start          int               // Used for "select ... start, limit ..." statement.
 	limit          int               // Used for "select ... start, limit ..." statement.
 	option         int               // Option for extra operation features.
 	offset         int               // Offset statement for some databases grammar.
 	partition      string            // Partition table partition name.
-	data           interface{}       // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
+	data           any               // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
 	batch          int               // Batch number for batch Insert/Replace/Save operations.
 	filter         bool              // Filter data and where key-value pairs according to the fields of the table.
 	distinct       string            // Force the query to only return distinct results.
@@ -47,18 +48,19 @@ type Model struct {
 	cacheOption    CacheOption       // Cache option for query statement.
 	hookHandler    HookHandler       // Hook functions for model hook feature.
 	unscoped       bool              // Disables soft deleting features when select/delete operations.
-	safe           bool              // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
-	onDuplicate    interface{}       // onDuplicate is used for on Upsert clause.
-	onDuplicateEx  interface{}       // onDuplicateEx is used for excluding some columns on Upsert clause.
-	onConflict     interface{}       // onConflict is used for conflict keys on Upsert clause.
+	onDuplicate    any               // onDuplicate is used for on Upsert clause.
+	onDuplicateEx  any               // onDuplicateEx is used for excluding some columns on Upsert clause.
+	onConflict     any               // onConflict is used for conflict keys on Upsert clause.
 	tableAliasMap  map[string]string // Table alias to true table name, usually used in join statements.
 	softTimeOption SoftTimeOption    // SoftTimeOption is the option to customize soft time feature for Model.
 	shardingConfig ShardingConfig    // ShardingConfig for database/table sharding feature.
 	shardingValue  any               // Sharding value for sharding feature.
+	handlers       []ModelHandler    // Chaining handlers for model operations.
+	handlerIndex   int
 }
 
 // ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
-type ModelHandler func(m *Model) *Model
+type ModelHandler func(ctx context.Context, model *Model) *Model
 
 // ChunkHandler is a function that is used in function Chunk, which handles given Result and error.
 // It returns true if it wants to continue chunking, or else it returns false to stop chunking.
@@ -74,7 +76,23 @@ const (
 	whereHolderTypeDefault   = "Default"
 	whereHolderTypeNoArgs    = "NoArgs"
 	whereHolderTypeIn        = "In"
+
+	// inCallHandlersKey is the context key for in call handlers to avoid recursively calling.
+	inCallHandlersKey = gctx.StrKey("InCallHandler")
 )
+
+func newEmptyModel(db DB, schema string) *Model {
+	newModel := &Model{
+		db:            db,
+		schema:        schema,
+		start:         -1,
+		offset:        -1,
+		filter:        true,
+		tableAliasMap: make(map[string]string),
+	}
+	newModel.whereBuilder = newModel.Builder()
+	return newModel
+}
 
 // Model creates and returns a new ORM model from given schema.
 // The parameter `tableNameQueryOrStruct` can be more than one table names, and also alias name, like:
@@ -87,263 +105,271 @@ const (
 //     db.Model("user", "u")
 //  3. Model name with sub-query:
 //     db.Model("? AS a, ? AS b", subQuery1, subQuery2)
-func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
-	var (
-		ctx       = c.db.GetCtx()
-		tableStr  string
-		tableName string
-		extraArgs []interface{}
-	)
-	// Model creation with sub-query.
-	if len(tableNameQueryOrStruct) > 1 {
-		conditionStr := gconv.String(tableNameQueryOrStruct[0])
-		if gstr.Contains(conditionStr, "?") {
-			whereHolder := WhereHolder{
-				Where: conditionStr,
-				Args:  tableNameQueryOrStruct[1:],
-			}
-			tableStr, extraArgs = formatWhereHolder(ctx, c.db, formatWhereHolderInput{
-				WhereHolder: whereHolder,
-				OmitNil:     false,
-				OmitEmpty:   false,
-				Schema:      "",
-				Table:       "",
-			})
-		}
-	}
-	// Normal model creation.
-	if tableStr == "" {
-		tableNames := make([]string, len(tableNameQueryOrStruct))
-		for k, v := range tableNameQueryOrStruct {
-			if s, ok := v.(string); ok {
-				tableNames[k] = s
-			} else if tableName = getTableNameFromOrmTag(v); tableName != "" {
-				tableNames[k] = tableName
+func (c *Core) Model(tableNameQueryOrStruct ...any) *Model {
+	newModel := newEmptyModel(c.db, c.schema)
+	return newModel.Handler(func(ctx context.Context, model *Model) *Model {
+		var (
+			tableStr  string
+			tableName string
+			extraArgs []any
+		)
+		// Model creation with sub-query.
+		if len(tableNameQueryOrStruct) > 1 {
+			conditionStr := gconv.String(tableNameQueryOrStruct[0])
+			if gstr.Contains(conditionStr, "?") {
+				whereHolder := WhereHolder{
+					Where: conditionStr,
+					Args:  tableNameQueryOrStruct[1:],
+				}
+				tableStr, extraArgs = formatWhereHolder(ctx, c.db, formatWhereHolderInput{
+					WhereHolder: whereHolder,
+					OmitNil:     false,
+					OmitEmpty:   false,
+					Schema:      "",
+					Table:       "",
+				})
 			}
 		}
-		if len(tableNames) > 1 {
-			tableStr = fmt.Sprintf(
-				`%s AS %s`, c.QuotePrefixTableName(tableNames[0]), c.QuoteWord(tableNames[1]),
-			)
-		} else if len(tableNames) == 1 {
-			tableStr = c.QuotePrefixTableName(tableNames[0])
+		// Normal model creation.
+		if tableStr == "" {
+			tableNames := make([]string, len(tableNameQueryOrStruct))
+			for k, v := range tableNameQueryOrStruct {
+				if s, ok := v.(string); ok {
+					tableNames[k] = s
+				} else if tableName = getTableNameFromOrmTag(v); tableName != "" {
+					tableNames[k] = tableName
+				}
+			}
+			if len(tableNames) > 1 {
+				tableStr = fmt.Sprintf(
+					`%s AS %s`, c.QuotePrefixTableName(tableNames[0]), c.QuoteWord(tableNames[1]),
+				)
+			} else if len(tableNames) == 1 {
+				tableStr = c.QuotePrefixTableName(tableNames[0])
+			}
 		}
+		model.tables = tableStr
+		model.tablesInit = tableStr
+		model.extraArgs = extraArgs
+		return model
+	})
+}
+
+// Clone creates and returns a new model which is a Clone of current model.
+// It uses chaining handlers design for high performance of model clone.
+func (m *Model) Clone() *Model {
+	newModel := newEmptyModel(m.db, m.schema)
+	newModel.handlers = make([]ModelHandler, len(m.handlers))
+	if len(newModel.handlers) > 0 {
+		copy(newModel.handlers, m.handlers)
 	}
-	m := &Model{
-		db:            c.db,
-		schema:        c.schema,
-		tablesInit:    tableStr,
-		tables:        tableStr,
-		start:         -1,
-		offset:        -1,
-		filter:        true,
-		extraArgs:     extraArgs,
-		tableAliasMap: make(map[string]string),
-	}
-	m.whereBuilder = m.Builder()
-	if defaultModelSafe {
-		m.safe = true
-	}
-	return m
+	return newModel
 }
 
 // Raw creates and returns a model based on a raw sql not a table.
 // Example:
 //
 //	db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)
-func (c *Core) Raw(rawSql string, args ...interface{}) *Model {
-	model := c.Model()
-	model.rawSql = rawSql
-	model.extraArgs = args
-	return model
+func (c *Core) Raw(rawSql string, args ...any) *Model {
+	newModel := c.Model()
+	return newModel.Handler(func(ctx context.Context, model *Model) *Model {
+		model.rawSql = rawSql
+		model.extraArgs = args
+		return model
+	})
 }
 
 // Raw sets current model as a raw sql model.
+//
 // Example:
 //
 //	db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)
 //
 // See Core.Raw.
-func (m *Model) Raw(rawSql string, args ...interface{}) *Model {
-	model := m.db.Raw(rawSql, args...)
-	model.db = m.db
-	model.tx = m.tx
-	return model
+func (m *Model) Raw(rawSql string, args ...any) *Model {
+	newModel := m.db.Raw(rawSql, args...)
+	return newModel.Handler(func(ctx context.Context, model *Model) *Model {
+		model.db = m.db
+		model.tx = m.tx
+		return model
+	})
 }
 
-func (tx *TXCore) Raw(rawSql string, args ...interface{}) *Model {
+// Raw creates and returns a model based on a raw sql not a table.
+func (tx *TXCore) Raw(rawSql string, args ...any) *Model {
 	return tx.Model().Raw(rawSql, args...)
 }
 
 // With creates and returns an ORM model based on metadata of given object.
-func (c *Core) With(objects ...interface{}) *Model {
+func (c *Core) With(objects ...any) *Model {
 	return c.db.Model().With(objects...)
 }
 
 // Partition sets Partition name.
+//
 // Example:
-// dao.User.Ctx(ctx).Partition（"p1","p2","p3").All()
+// dao.User.Partition（"p1","p2","p3").All()
 func (m *Model) Partition(partitions ...string) *Model {
-	model := m.getModel()
-	model.partition = gstr.Join(partitions, ",")
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.partition = gstr.Join(partitions, ",")
+		return model
+	})
 }
 
 // Model acts like Core.Model except it operates on transaction.
 // See Core.Model.
-func (tx *TXCore) Model(tableNameQueryOrStruct ...interface{}) *Model {
-	model := tx.db.Model(tableNameQueryOrStruct...)
-	model.db = tx.db
-	model.tx = tx
-	return model
+func (tx *TXCore) Model(tableNameQueryOrStruct ...any) *Model {
+	newModel := tx.db.Model(tableNameQueryOrStruct...)
+	return newModel.Handler(func(ctx context.Context, model *Model) *Model {
+		model.db = tx.db
+		model.tx = tx
+		return model
+	})
 }
 
 // With acts like Core.With except it operates on transaction.
 // See Core.With.
-func (tx *TXCore) With(object interface{}) *Model {
+func (tx *TXCore) With(object any) *Model {
 	return tx.Model().With(object)
-}
-
-// Ctx sets the context for current operation.
-func (m *Model) Ctx(ctx context.Context) *Model {
-	if ctx == nil {
-		return m
-	}
-	model := m.getModel()
-	model.db = model.db.Ctx(ctx)
-	if m.tx != nil {
-		model.tx = model.tx.Ctx(ctx)
-	}
-	return model
-}
-
-// GetCtx returns the context for current Model.
-// It returns `context.Background()` is there's no context previously set.
-func (m *Model) GetCtx() context.Context {
-	if m.tx != nil && m.tx.GetCtx() != nil {
-		return m.tx.GetCtx()
-	}
-	return m.db.GetCtx()
 }
 
 // As sets an alias name for current table.
 func (m *Model) As(as string) *Model {
-	if m.tables != "" {
-		model := m.getModel()
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		if model.tables == "" {
+			return model
+		}
 		split := " JOIN "
 		if gstr.ContainsI(model.tables, split) {
 			// For join table.
 			array := gstr.Split(model.tables, split)
-			array[len(array)-1], _ = gregex.ReplaceString(`(.+) ON`, fmt.Sprintf(`$1 AS %s ON`, as), array[len(array)-1])
+			array[len(array)-1], _ = gregex.ReplaceString(
+				`(.+) ON`,
+				fmt.Sprintf(`$1 AS %s ON`, as), array[len(array)-1],
+			)
 			model.tables = gstr.Join(array, split)
 		} else {
 			// For base table.
 			model.tables = gstr.TrimRight(model.tables) + " AS " + as
 		}
 		return model
-	}
-	return m
+	})
 }
 
 // DB sets/changes the db object for current operation.
 func (m *Model) DB(db DB) *Model {
-	model := m.getModel()
-	model.db = db
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.db = db
+		return model
+	})
 }
 
 // TX sets/changes the transaction for current operation.
 func (m *Model) TX(tx TX) *Model {
-	model := m.getModel()
-	model.db = tx.GetDB()
-	model.tx = tx
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.db = tx.GetDB()
+		model.tx = tx
+		return model
+	})
 }
 
 // Schema sets the schema for current operation.
 func (m *Model) Schema(schema string) *Model {
-	model := m.getModel()
-	model.schema = schema
-	return model
-}
-
-// Clone creates and returns a new model which is a Clone of current model.
-// Note that it uses deep-copy for the Clone.
-func (m *Model) Clone() *Model {
-	newModel := (*Model)(nil)
-	if m.tx != nil {
-		newModel = m.tx.Model(m.tablesInit)
-	} else {
-		newModel = m.db.Model(m.tablesInit)
-	}
-	// Basic attributes copy.
-	*newModel = *m
-	// WhereBuilder copy, note the attribute pointer.
-	newModel.whereBuilder = m.whereBuilder.Clone()
-	newModel.whereBuilder.model = newModel
-	// Shallow copy slice attributes.
-	if n := len(m.fields); n > 0 {
-		newModel.fields = make([]any, n)
-		copy(newModel.fields, m.fields)
-	}
-	if n := len(m.fieldsEx); n > 0 {
-		newModel.fieldsEx = make([]any, n)
-		copy(newModel.fieldsEx, m.fieldsEx)
-	}
-	if n := len(m.extraArgs); n > 0 {
-		newModel.extraArgs = make([]interface{}, n)
-		copy(newModel.extraArgs, m.extraArgs)
-	}
-	if n := len(m.withArray); n > 0 {
-		newModel.withArray = make([]interface{}, n)
-		copy(newModel.withArray, m.withArray)
-	}
-	if n := len(m.having); n > 0 {
-		newModel.having = make([]interface{}, n)
-		copy(newModel.having, m.having)
-	}
-	return newModel
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.schema = schema
+		return model
+	})
 }
 
 // Master marks the following operation on master node.
 func (m *Model) Master() *Model {
-	model := m.getModel()
-	model.linkType = linkTypeMaster
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.linkType = linkTypeMaster
+		return model
+	})
 }
 
 // Slave marks the following operation on slave node.
 // Note that it makes sense only if there's any slave node configured.
 func (m *Model) Slave() *Model {
-	model := m.getModel()
-	model.linkType = linkTypeSlave
-	return model
-}
-
-// Safe marks this model safe or unsafe. If safe is true, it clones and returns a new model object
-// whenever the operation done, or else it changes the attribute of current model.
-func (m *Model) Safe(safe ...bool) *Model {
-	if len(safe) > 0 {
-		m.safe = safe[0]
-	} else {
-		m.safe = true
-	}
-	return m
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.linkType = linkTypeSlave
+		return model
+	})
 }
 
 // Args sets custom arguments for model operation.
-func (m *Model) Args(args ...interface{}) *Model {
-	model := m.getModel()
-	model.extraArgs = append(model.extraArgs, args)
-	return model
+func (m *Model) Args(args ...any) *Model {
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.extraArgs = append(model.extraArgs, args)
+		return model
+	})
 }
 
 // Handler calls each of `handlers` on current Model and returns a new Model.
 // ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
 func (m *Model) Handler(handlers ...ModelHandler) *Model {
-	model := m.getModel()
-	for _, handler := range handlers {
-		model = handler(model)
+	m.handlers = append(m.handlers, handlers...)
+	return m
+}
+
+// callHandlers executes all handlers for current Model.
+func (m *Model) callHandlers(ctx context.Context) *Model {
+	// pointer address comparison.
+	if ctx.Value(inCallHandlersKey) == m {
+		return m
+	}
+	ctx = context.WithValue(ctx, inCallHandlersKey, m)
+	if len(m.handlers) == 0 {
+		return m
+	}
+	var (
+		model             = m
+		oldHandlersLength = len(model.handlers)
+		newHandlersLength = oldHandlersLength
+	)
+	for {
+		// Exit the loop if all handlers have been processed
+		if model.handlerIndex >= len(model.handlers) {
+			break
+		}
+
+		// Record the current length of handlers
+		oldHandlersLength = len(model.handlers)
+
+		// Execute the current handler
+		model = model.handlers[model.handlerIndex](ctx, model)
+
+		// Check if new handlers were added
+		newHandlersLength = len(model.handlers)
+		if newHandlersLength > oldHandlersLength {
+			var (
+				addedCount = newHandlersLength - oldHandlersLength
+				targetPos  = model.handlerIndex + 1
+			)
+
+			// Insert newly added handlers into the target position using element swapping technique
+			// Example of the swapping logic:
+			// 1. We have an array of digits: 123456
+			// 2. We're at position 2 and add two new digits 7,8 at the end: 12345678
+			// 3. We want to insert these new digits after position 2, so we perform these swaps:
+			//    - Swap 3 and 7: 12745638
+			//    - Swap 4 and 8: 12785634
+			//    - Swap 5 and 3: 12783654
+			//    - Swap 6 and 4: 12783456
+			// 4. Result: 12783456 - new elements are inserted after position 2
+			for i := 0; i < addedCount; i++ {
+				// Start from each new element and swap it with preceding elements until it reaches target position
+				newItemPos := oldHandlersLength + i
+				for j := newItemPos; j > targetPos+i; j-- {
+					// Swap elements at positions j and j-1
+					model.handlers[j], model.handlers[j-1] = model.handlers[j-1], model.handlers[j]
+				}
+			}
+		}
+
+		// Move to the next handler
+		model.handlerIndex++
 	}
 	return model
 }

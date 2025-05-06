@@ -8,5 +8,5 @@ package oracle
 
 // OrderRandomFunction returns the SQL function for random ordering.
 func (d *Driver) OrderRandomFunction() string {
-	return "DBMS_RANDOM.VALUE()"
+	return "DBMS_RANDOM.Value()"
 }

@@ -52,7 +52,7 @@ func Get(name string) string {
 
 // Parse parses and returns the content by replacing all tag name variable to
 // its content for given `content`.
-// Eg:
+// Example:
 // gtag.Set("demo", "content")
 // Parse(`This is {demo}`) -> `This is content`.
 func Parse(content string) string {

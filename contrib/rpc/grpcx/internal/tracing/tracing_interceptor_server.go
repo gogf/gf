@@ -23,7 +23,7 @@ import (
 	"github.com/gogf/gf/v3/net/gtrace"
 	"github.com/gogf/gf/v3/util/gconv"
 
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/grpcctx"
+	"github.com/gogf/gf/contrib/rpc/grpcx/v3/internal/grpcctx"
 )
 
 // UnaryServerInterceptor returns a grpc.UnaryServerInterceptor suitable

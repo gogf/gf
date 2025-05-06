@@ -110,7 +110,7 @@ func Test_OpenApi_Multiple_Methods_Swagger(t *testing.T) {
 
 		t.Assert(len(openapi.Paths["/test"].Get.Parameters), 2)
 		t.Assert(len(openapi.Paths["/test/error"].Get.Parameters), 2)
-		t.Assert(len(openapi.Components.Schemas.Get(`github.com.gogf.gf.v2.net.ghttp_test.TestReq`).Value.Properties.Map()), 2)
+		t.Assert(len(openapi.Components.Schemas.Get(`github.com.gogf.gf.v3.net.ghttp_test.TestReq`).Value.Properties.Map()), 2)
 
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))

@@ -22,7 +22,7 @@ var (
 
 func init() {
 	var err error
-	testDB, err = gdb.New(gdb.ConfigNode{
+	testDB, err = gdb.New(&gdb.ConfigNode{
 		Link: link,
 	})
 	if err != nil {

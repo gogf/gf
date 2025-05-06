@@ -4,11 +4,11 @@ Use `consul` as service registration and discovery management.
 
 ## Installation
 ```bash
-go get -u github.com/gogf/gf/contrib/registry/consul/v2
+go get -u github.com/gogf/gf/contrib/registry/consul/v3
 ```
 suggested using `go.mod`:
 ```bash
-require github.com/gogf/gf/contrib/registry/consul/v2 latest
+require github.com/gogf/gf/contrib/registry/consul/v3 latest
 ```
 
 ## Example
@@ -20,7 +20,7 @@ package main
 import (
     "context"
     
-    "github.com/gogf/gf/contrib/registry/consul/v2"
+    "github.com/gogf/gf/contrib/registry/consul/v3"
     "github.com/gogf/gf/v3/frame/g"
     "github.com/gogf/gf/v3/net/ghttp"
     "github.com/gogf/gf/v3/net/gsvc"
@@ -51,7 +51,7 @@ import (
     "fmt"
     "time"
 
-    "github.com/gogf/gf/contrib/registry/consul/v2"
+    "github.com/gogf/gf/contrib/registry/consul/v3"
     "github.com/gogf/gf/v3/frame/g"
     "github.com/gogf/gf/v3/net/gsel"
     "github.com/gogf/gf/v3/net/gsvc"

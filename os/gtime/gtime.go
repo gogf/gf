@@ -36,7 +36,7 @@ const (
 	NS = time.Nanosecond
 
 	// Regular expression1(datetime separator supports '-', '/', '.').
-	// Eg:
+	// Example:
 	// "2017-12-14 04:51:34 +0805 LMT",
 	// "2017-12-14 04:51:34 +0805 LMT",
 	// "2006-01-02T15:04:05Z07:00",
@@ -51,7 +51,7 @@ const (
 	timeRegexPattern1 = `(\d{4}[-/\.]\d{1,2}[-/\.]\d{1,2})[:\sT-]*(\d{0,2}:{0,1}\d{0,2}:{0,1}\d{0,2}){0,1}\.{0,1}(\d{0,9})([\sZ]{0,1})([\+-]{0,1})([:\d]*)`
 
 	// Regular expression2(datetime separator supports '-', '/', '.').
-	// Eg:
+	// Example:
 	// 01-Nov-2018 11:50:28
 	// 01/Nov/2018 11:50:28
 	// 01.Nov.2018 11:50:28
@@ -59,7 +59,7 @@ const (
 	timeRegexPattern2 = `(\d{1,2}[-/\.][A-Za-z]{3,}[-/\.]\d{4})[:\sT-]*(\d{0,2}:{0,1}\d{0,2}:{0,1}\d{0,2}){0,1}\.{0,1}(\d{0,9})([\sZ]{0,1})([\+-]{0,1})([:\d]*)`
 
 	// Regular expression3(time).
-	// Eg:
+	// Example:
 	// 11:50:28
 	// 11:50:28.897
 	timeRegexPattern3 = `(\d{2}):(\d{2}):(\d{2})\.{0,1}(\d{0,9})`

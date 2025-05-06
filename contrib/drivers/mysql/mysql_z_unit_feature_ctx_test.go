@@ -10,25 +10,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gogf/gf/v3/database/gdb"
 	"github.com/gogf/gf/v3/os/glog"
 	"github.com/gogf/gf/v3/test/gtest"
 )
-
-func Test_Ctx(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		db, err := gdb.Instance()
-		t.AssertNil(err)
-
-		err1 := db.PingMaster()
-		err2 := db.PingSlave()
-		t.Assert(err1, nil)
-		t.Assert(err2, nil)
-
-		newDb := db.Ctx(context.Background())
-		t.AssertNE(newDb, nil)
-	})
-}
 
 func Test_Ctx_Query(t *testing.T) {
 	db.GetLogger().(*glog.Logger).SetCtxKeys("SpanId", "TraceId")
@@ -55,11 +39,11 @@ func Test_Ctx_Model(t *testing.T) {
 		defer db.SetDebug(false)
 		ctx := context.WithValue(context.Background(), "TraceId", "12345678")
 		ctx = context.WithValue(ctx, "SpanId", "0.1")
-		db.Model(table).Ctx(ctx).All()
+		db.Model(table).All(ctx)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		db.SetDebug(true)
 		defer db.SetDebug(false)
-		db.Model(table).All()
+		db.Model(table).All(ctx)
 	})
 }

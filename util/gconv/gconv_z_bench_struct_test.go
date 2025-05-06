@@ -86,13 +86,19 @@ var (
 
 func Benchmark_Struct_Basic(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		Struct(structMap, structPointer)
+		err := Struct(structMap, structPointer)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
 func Benchmark_doStruct_Fields8_Basic_MapToStruct(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		defaultConverter.Struct(structMapFields8, structPointer8, StructOption{})
+		err := defaultConverter.Struct(structMapFields8, structPointer8, StructOption{})
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -112,7 +118,10 @@ func Benchmark_Reflect_PPStruct_PStruct(b *testing.B) {
 
 func Benchmark_Struct_PPStruct_PStruct(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		Struct(structPointer, &structPointerNil)
+		err := Struct(structPointer, &structPointerNil)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 

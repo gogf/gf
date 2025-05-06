@@ -60,11 +60,11 @@ func Test_Issue3330(t *testing.T) {
 			})
 		}
 
-		_, err = db.Model(table).Data(list).Insert()
+		_, err = db.Model(table).Data(list).Insert(ctx)
 		t.AssertNil(err)
 
 		for i := 1; i <= 10; i++ {
-			one, err = db.Model(table).WherePri(i).One()
+			one, err = db.Model(table).WherePri(i).One(ctx)
 			t.AssertNil(err)
 			t.Assert(one["id"], list[i-1]["id"])
 			t.Assert(one["passport"], list[i-1]["passport"])
@@ -98,7 +98,7 @@ func Test_Issue3632(t *testing.T) {
 			}
 		)
 
-		_, err := dao.Ctx(ctx).Data(&member).Insert()
+		_, err := dao.Data(&member).Insert(ctx)
 		t.AssertNil(err)
 	})
 }
@@ -137,7 +137,7 @@ func Test_Issue3671(t *testing.T) {
 			}
 		)
 
-		_, err := dao.Ctx(ctx).Data(&member).Insert()
+		_, err := dao.Data(&member).Insert(ctx)
 		t.AssertNil(err)
 	})
 }
@@ -165,9 +165,9 @@ func Test_Issue3668(t *testing.T) {
 				Number: nil,
 			}
 		)
-		_, err := dao.Ctx(ctx).
+		_, err := dao.
 			Data(data).
-			Insert()
+			Insert(ctx)
 		t.AssertNil(err)
 	})
 }
@@ -201,7 +201,7 @@ func Test_Issue4033(t *testing.T) {
 		query := g.Map{
 			"status": g.Slice{Issue4033StatusA},
 		}
-		_, err := db.Model(table).Ctx(ctx).Where(query).All()
+		_, err := db.Model(table).Where(query).All(ctx)
 		t.AssertNil(err)
 	})
 }

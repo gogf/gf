@@ -6,11 +6,11 @@ Use `etcd` as service registration and discovery management.
 
 ## Installation
 ```
-go get -u -v github.com/gogf/gf/contrib/registry/etcd/v2
+go get -u -v github.com/gogf/gf/contrib/registry/etcd/v3
 ```
 suggested using `go.mod`:
 ```
-require github.com/gogf/gf/contrib/registry/etcd/v2 latest
+require github.com/gogf/gf/contrib/registry/etcd/v3 latest
 ```
 
 
@@ -23,7 +23,7 @@ require github.com/gogf/gf/contrib/registry/etcd/v2 latest
 package main
 
 import (
-	"github.com/gogf/gf/contrib/registry/etcd/v2"
+	"github.com/gogf/gf/contrib/registry/etcd/v3"
 	"github.com/gogf/gf/v3/frame/g"
 	"github.com/gogf/gf/v3/net/ghttp"
 	"github.com/gogf/gf/v3/net/gsvc"
@@ -49,7 +49,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gogf/gf/contrib/registry/etcd/v2"
+	"github.com/gogf/gf/contrib/registry/etcd/v3"
 	"github.com/gogf/gf/v3/frame/g"
 	"github.com/gogf/gf/v3/net/gsel"
 	"github.com/gogf/gf/v3/net/gsvc"

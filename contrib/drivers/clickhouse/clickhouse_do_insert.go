@@ -36,19 +36,19 @@ func (d *Driver) DoInsert(
 		tx           gdb.TX
 		stmt         *gdb.Stmt
 	)
-	tx, err = d.Core.Begin(ctx)
+	tx, ctx, err = d.Core.Begin(ctx)
 	if err != nil {
 		return
 	}
 	// It here uses defer to guarantee transaction be committed or roll-backed.
 	defer func() {
 		if err == nil {
-			_ = tx.Commit()
+			_ = tx.Commit(ctx)
 		} else {
-			_ = tx.Rollback()
+			_ = tx.Rollback(ctx)
 		}
 	}()
-	stmt, err = tx.Prepare(fmt.Sprintf(
+	stmt, err = tx.Prepare(ctx, fmt.Sprintf(
 		"INSERT INTO %s(%s) VALUES (%s)",
 		d.QuotePrefixTableName(table), keysStr,
 		holderStr,

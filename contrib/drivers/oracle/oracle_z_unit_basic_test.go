@@ -231,7 +231,7 @@ func Test_DB_Insert(t *testing.T) {
 		n, _ = result.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table).Where("ID", 3).One()
+		one, err := db.Model(table).Where("ID", 3).One(ctx)
 		t.AssertNil(err)
 		fmt.Println(one)
 		t.Assert(one["ID"].Int(), 3)
@@ -255,7 +255,7 @@ func Test_DB_Insert(t *testing.T) {
 		n, _ = result.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err = db.Model(table).Where("ID", 4).One()
+		one, err = db.Model(table).Where("ID", 4).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["ID"].Int(), 4)
 		t.Assert(one["PASSPORT"].String(), "t4")
@@ -288,7 +288,7 @@ func Test_DB_Insert(t *testing.T) {
 		n, _ = r.RowsAffected()
 		t.Assert(n, 2)
 
-		one, err = db.Model(table).Where("ID", 200).One()
+		one, err = db.Model(table).Where("ID", 200).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["ID"].Int(), 200)
 		t.Assert(one["PASSPORT"].String(), "t200")
@@ -414,7 +414,7 @@ func Test_DB_Update(t *testing.T) {
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table).Where("ID", 3).One()
+		one, err := db.Model(table).Where("ID", 3).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["ID"].Int(), 3)
 		t.Assert(one["PASSPORT"].String(), "user_3")
@@ -703,7 +703,7 @@ func Test_Extra(t *testing.T) {
 				TestDbType, TestDbUser, TestDbPass, TestDbIP, TestDbPort, TestDbName,
 			),
 		}
-		if r, err := gdb.New(nodeLink); err != nil {
+		if r, err := gdb.New(&nodeLink); err != nil {
 			gtest.Fatal(err)
 		} else {
 			err1 := r.PingMaster()

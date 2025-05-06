@@ -7,6 +7,7 @@
 package clickhouse
 
 import (
+	"context"
 	"testing"
 
 	"github.com/shopspring/decimal"
@@ -16,6 +17,8 @@ import (
 	"github.com/gogf/gf/v3/test/gtest"
 	"github.com/gogf/gf/v3/util/gconv"
 )
+
+var ctx = context.Background()
 
 func Test_Issue2584(t *testing.T) {
 	type TDecimal struct {

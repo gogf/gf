@@ -34,50 +34,9 @@ func (c *Core) GetCore() *Core {
 	return c
 }
 
-// Ctx is a chaining function, which creates and returns a new DB that is a shallow copy
-// of current DB object and with given context in it.
-// Note that this returned DB object can be used only once, so do not assign it to
-// a global or package variable for long using.
-func (c *Core) Ctx(ctx context.Context) DB {
-	if ctx == nil {
-		return c.db
-	}
-	// It makes a shallow copy of current db and changes its context for next chaining operation.
-	var (
-		err        error
-		newCore    = &Core{}
-		configNode = c.db.GetConfig()
-	)
-	*newCore = *c
-	// It creates a new DB object(NOT NEW CONNECTION), which is commonly a wrapper for object `Core`.
-	newCore.db, err = driverMap[configNode.Type].New(newCore, configNode)
-	if err != nil {
-		// It is really a serious error here.
-		// Do not let it continue.
-		panic(err)
-	}
-	newCore.ctx = WithDB(ctx, newCore.db)
-	newCore.ctx = c.injectInternalCtxData(newCore.ctx)
-	return newCore.db
-}
-
-// GetCtx returns the context for current DB.
-// It returns `context.Background()` is there's no context previously set.
-func (c *Core) GetCtx() context.Context {
-	ctx := c.ctx
-	if ctx == nil {
-		ctx = context.TODO()
-	}
-	return c.injectInternalCtxData(ctx)
-}
-
 // GetCtxTimeout returns the context and cancel function for specified timeout type.
 func (c *Core) GetCtxTimeout(ctx context.Context, timeoutType ctxTimeoutType) (context.Context, context.CancelFunc) {
-	if ctx == nil {
-		ctx = c.db.GetCtx()
-	} else {
-		ctx = context.WithValue(ctx, "WrappedByGetCtxTimeout", nil)
-	}
+	ctx = context.WithValue(ctx, "WrappedByGetCtxTimeout", nil)
 	var config = c.db.GetConfig()
 	switch timeoutType {
 	case ctxTimeoutTypeExec:
@@ -151,17 +110,17 @@ func (c *Core) Slave(schema ...string) (*sql.DB, error) {
 }
 
 // GetAll queries and returns data records from database.
-func (c *Core) GetAll(ctx context.Context, sql string, args ...interface{}) (Result, error) {
+func (c *Core) GetAll(ctx context.Context, sql string, args ...any) (Result, error) {
 	return c.db.DoSelect(ctx, nil, sql, args...)
 }
 
 // DoSelect queries and returns data records from database.
-func (c *Core) DoSelect(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error) {
+func (c *Core) DoSelect(ctx context.Context, link Link, sql string, args ...any) (result Result, err error) {
 	return c.db.DoQuery(ctx, link, sql, args...)
 }
 
 // GetOne queries and returns one record from database.
-func (c *Core) GetOne(ctx context.Context, sql string, args ...interface{}) (Record, error) {
+func (c *Core) GetOne(ctx context.Context, sql string, args ...any) (Record, error) {
 	list, err := c.db.GetAll(ctx, sql, args...)
 	if err != nil {
 		return nil, err
@@ -174,7 +133,7 @@ func (c *Core) GetOne(ctx context.Context, sql string, args ...interface{}) (Rec
 
 // GetArray queries and returns data values as slice from database.
 // Note that if there are multiple columns in the result, it returns just one column values randomly.
-func (c *Core) GetArray(ctx context.Context, sql string, args ...interface{}) ([]Value, error) {
+func (c *Core) GetArray(ctx context.Context, sql string, args ...any) ([]Value, error) {
 	all, err := c.db.DoSelect(ctx, nil, sql, args...)
 	if err != nil {
 		return nil, err
@@ -184,7 +143,7 @@ func (c *Core) GetArray(ctx context.Context, sql string, args ...interface{}) ([
 
 // doGetStruct queries one record from database and converts it to given struct.
 // The parameter `pointer` should be a pointer to struct.
-func (c *Core) doGetStruct(ctx context.Context, pointer interface{}, sql string, args ...interface{}) error {
+func (c *Core) doGetStruct(ctx context.Context, pointer any, sql string, args ...any) error {
 	one, err := c.db.GetOne(ctx, sql, args...)
 	if err != nil {
 		return err
@@ -194,7 +153,7 @@ func (c *Core) doGetStruct(ctx context.Context, pointer interface{}, sql string,
 
 // doGetStructs queries records from database and converts them to given struct.
 // The parameter `pointer` should be type of struct slice: []struct/[]*struct.
-func (c *Core) doGetStructs(ctx context.Context, pointer interface{}, sql string, args ...interface{}) error {
+func (c *Core) doGetStructs(ctx context.Context, pointer any, sql string, args ...any) error {
 	all, err := c.db.GetAll(ctx, sql, args...)
 	if err != nil {
 		return err
@@ -208,7 +167,7 @@ func (c *Core) doGetStructs(ctx context.Context, pointer interface{}, sql string
 // If parameter `pointer` is type of struct pointer, it calls GetStruct internally for
 // the conversion. If parameter `pointer` is type of slice, it calls GetStructs internally
 // for conversion.
-func (c *Core) GetScan(ctx context.Context, pointer interface{}, sql string, args ...interface{}) error {
+func (c *Core) GetScan(ctx context.Context, pointer any, sql string, args ...any) error {
 	reflectInfo := reflection.OriginTypeAndKind(pointer)
 	if reflectInfo.InputKind != reflect.Ptr {
 		return gerror.NewCodef(
@@ -236,7 +195,7 @@ func (c *Core) GetScan(ctx context.Context, pointer interface{}, sql string, arg
 // GetValue queries and returns the field value from database.
 // The sql should query only one field from database, or else it returns only one
 // field of the result.
-func (c *Core) GetValue(ctx context.Context, sql string, args ...interface{}) (Value, error) {
+func (c *Core) GetValue(ctx context.Context, sql string, args ...any) (Value, error) {
 	one, err := c.db.GetOne(ctx, sql, args...)
 	if err != nil {
 		return gvar.New(nil), err
@@ -248,7 +207,7 @@ func (c *Core) GetValue(ctx context.Context, sql string, args ...interface{}) (V
 }
 
 // GetCount queries and returns the count from database.
-func (c *Core) GetCount(ctx context.Context, sql string, args ...interface{}) (int, error) {
+func (c *Core) GetCount(ctx context.Context, sql string, args ...any) (int, error) {
 	// If the query fields do not contain function "COUNT",
 	// it replaces the sql string and adds the "COUNT" function to the fields.
 	if !gregex.IsMatchString(`(?i)SELECT\s+COUNT\(.+\)\s+FROM`, sql) {
@@ -263,46 +222,49 @@ func (c *Core) GetCount(ctx context.Context, sql string, args ...interface{}) (i
 
 // Union does "(SELECT xxx FROM xxx) UNION (SELECT xxx FROM xxx) ..." statement.
 func (c *Core) Union(unions ...*Model) *Model {
-	var ctx = c.db.GetCtx()
-	return c.doUnion(ctx, unionTypeNormal, unions...)
+	return c.doUnion(unionTypeNormal, unions...)
 }
 
 // UnionAll does "(SELECT xxx FROM xxx) UNION ALL (SELECT xxx FROM xxx) ..." statement.
 func (c *Core) UnionAll(unions ...*Model) *Model {
-	var ctx = c.db.GetCtx()
-	return c.doUnion(ctx, unionTypeAll, unions...)
+	return c.doUnion(unionTypeAll, unions...)
 }
 
-func (c *Core) doUnion(ctx context.Context, unionType int, unions ...*Model) *Model {
+func (c *Core) doUnion(unionType int, unions ...*Model) *Model {
 	var (
 		unionTypeStr   string
 		composedSqlStr string
-		composedArgs   = make([]interface{}, 0)
+		composedArgs   = make([]any, 0)
 	)
 	if unionType == unionTypeAll {
 		unionTypeStr = "UNION ALL"
 	} else {
 		unionTypeStr = "UNION"
 	}
-	for _, v := range unions {
-		sqlWithHolder, holderArgs := v.getFormattedSqlAndArgs(ctx, SelectTypeDefault, false)
-		if composedSqlStr == "" {
-			composedSqlStr += fmt.Sprintf(`(%s)`, sqlWithHolder)
-		} else {
-			composedSqlStr += fmt.Sprintf(` %s (%s)`, unionTypeStr, sqlWithHolder)
+	newModel := c.db.Model()
+	return newModel.Handler(func(ctx context.Context, model *Model) *Model {
+		for _, v := range unions {
+			unionModel := v.callHandlers(ctx)
+			sqlWithHolder, holderArgs := unionModel.getFormattedSqlAndArgs(ctx, SelectTypeDefault, false)
+			if composedSqlStr == "" {
+				composedSqlStr += fmt.Sprintf(`(%s)`, sqlWithHolder)
+			} else {
+				composedSqlStr += fmt.Sprintf(` %s (%s)`, unionTypeStr, sqlWithHolder)
+			}
+			composedArgs = append(composedArgs, holderArgs...)
 		}
-		composedArgs = append(composedArgs, holderArgs...)
-	}
-	return c.db.Raw(composedSqlStr, composedArgs...)
+		model.rawSql = composedSqlStr
+		model.extraArgs = composedArgs
+		return model
+	})
 }
 
 // PingMaster pings the master node to check authentication or keeps the connection alive.
 func (c *Core) PingMaster() error {
-	var ctx = c.db.GetCtx()
 	if master, err := c.db.Master(); err != nil {
 		return err
 	} else {
-		if err = master.PingContext(ctx); err != nil {
+		if err = master.Ping(); err != nil {
 			err = gerror.WrapCode(gcode.CodeDbOperationError, err, `master.Ping failed`)
 		}
 		return err
@@ -311,11 +273,10 @@ func (c *Core) PingMaster() error {
 
 // PingSlave pings the slave node to check authentication or keeps the connection alive.
 func (c *Core) PingSlave() error {
-	var ctx = c.db.GetCtx()
 	if slave, err := c.db.Slave(); err != nil {
 		return err
 	} else {
-		if err = slave.PingContext(ctx); err != nil {
+		if err = slave.Ping(); err != nil {
 			err = gerror.WrapCode(gcode.CodeDbOperationError, err, `slave.Ping failed`)
 		}
 		return err
@@ -326,40 +287,40 @@ func (c *Core) PingSlave() error {
 // If there's already one unique record of the data in the table, it returns error.
 //
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
-// Eg:
+// Example:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
 // The parameter `batch` specifies the batch operation count when given data is slice.
-func (c *Core) Insert(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
+func (c *Core) Insert(ctx context.Context, table string, data any, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
-		return c.Model(table).Ctx(ctx).Data(data).Batch(batch[0]).Insert()
+		return c.Model(table).Data(data).Batch(batch[0]).Insert(ctx)
 	}
-	return c.Model(table).Ctx(ctx).Data(data).Insert()
+	return c.Model(table).Data(data).Insert(ctx)
 }
 
 // InsertIgnore does "INSERT IGNORE INTO ..." statement for the table.
 // If there's already one unique record of the data in the table, it ignores the inserting.
 //
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
-// Eg:
+// Example:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
 // The parameter `batch` specifies the batch operation count when given data is slice.
-func (c *Core) InsertIgnore(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
+func (c *Core) InsertIgnore(ctx context.Context, table string, data any, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
-		return c.Model(table).Ctx(ctx).Data(data).Batch(batch[0]).InsertIgnore()
+		return c.Model(table).Data(data).Batch(batch[0]).InsertIgnore(ctx)
 	}
-	return c.Model(table).Ctx(ctx).Data(data).InsertIgnore()
+	return c.Model(table).Data(data).InsertIgnore(ctx)
 }
 
 // InsertAndGetId performs action Insert and returns the last insert id that automatically generated.
-func (c *Core) InsertAndGetId(ctx context.Context, table string, data interface{}, batch ...int) (int64, error) {
+func (c *Core) InsertAndGetId(ctx context.Context, table string, data any, batch ...int) (int64, error) {
 	if len(batch) > 0 {
-		return c.Model(table).Ctx(ctx).Data(data).Batch(batch[0]).InsertAndGetId()
+		return c.Model(table).Data(data).Batch(batch[0]).InsertAndGetId(ctx)
 	}
-	return c.Model(table).Ctx(ctx).Data(data).InsertAndGetId()
+	return c.Model(table).Data(data).InsertAndGetId(ctx)
 }
 
 // Replace does "REPLACE INTO ..." statement for the table.
@@ -367,18 +328,18 @@ func (c *Core) InsertAndGetId(ctx context.Context, table string, data interface{
 // and inserts a new one.
 //
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
-// Eg:
+// Example:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
 // If given data is type of slice, it then does batch replacing, and the optional parameter
 // `batch` specifies the batch operation count.
-func (c *Core) Replace(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
+func (c *Core) Replace(ctx context.Context, table string, data any, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
-		return c.Model(table).Ctx(ctx).Data(data).Batch(batch[0]).Replace()
+		return c.Model(table).Data(data).Batch(batch[0]).Replace(ctx)
 	}
-	return c.Model(table).Ctx(ctx).Data(data).Replace()
+	return c.Model(table).Data(data).Replace(ctx)
 }
 
 // Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the table.
@@ -386,17 +347,17 @@ func (c *Core) Replace(ctx context.Context, table string, data interface{}, batc
 // or else it inserts a new record into the table.
 //
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
-// Eg:
+// Example:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
 // If given data is type of slice, it then does batch saving, and the optional parameter
 // `batch` specifies the batch operation count.
-func (c *Core) Save(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
+func (c *Core) Save(ctx context.Context, table string, data any, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
-		return c.Model(table).Ctx(ctx).Data(data).Batch(batch[0]).Save()
+		return c.Model(table).Data(data).Batch(batch[0]).Save(ctx)
 	}
-	return c.Model(table).Ctx(ctx).Data(data).Save()
+	return c.Model(table).Data(data).Save(ctx)
 }
 
 func (c *Core) fieldsToSequence(ctx context.Context, table string, fields []string) ([]string, error) {
@@ -425,7 +386,7 @@ func (c *Core) fieldsToSequence(ctx context.Context, table string, fields []stri
 // DoInsert inserts or updates data for given table.
 // This function is usually used for custom interface definition, you do not need call it manually.
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
-// Eg:
+// Example:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
@@ -436,10 +397,10 @@ func (c *Core) fieldsToSequence(ctx context.Context, table string, fields []stri
 // InsertOptionIgnore:  if there's unique/primary key in the data, it ignores the inserting;
 func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption) (result sql.Result, err error) {
 	var (
-		keys           []string      // Field names.
-		values         []string      // Value holder string array, like: (?,?,?)
-		params         []interface{} // Values that will be committed to underlying database driver.
-		onDuplicateStr string        // onDuplicateStr is used in "ON DUPLICATE KEY UPDATE" statement.
+		keys           []string // Field names.
+		values         []string // Value holder string array, like: (?,?,?)
+		params         []any    // Values that will be committed to underlying database driver.
+		onDuplicateStr string   // onDuplicateStr is used in "ON DUPLICATE KEY UPDATE" statement.
 	)
 	// ============================================================================================
 	// Group the list by fields. Different fields to different list.
@@ -472,7 +433,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 			sqlResult    SqlResult
 			rowsAffected int64
 		)
-		keyListMap.Iterator(func(key, value interface{}) bool {
+		keyListMap.Iterator(func(key, value any) bool {
 			tmpResult, err = c.DoInsert(ctx, link, table, value.(List), option)
 			if err != nil {
 				return false
@@ -551,24 +512,24 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 // Update does "UPDATE ... " statement for the table.
 //
 // The parameter `data` can be type of string/map/gmap/struct/*struct, etc.
-// Eg: "uid=10000", "uid", 10000, g.Map{"uid": 10000, "name":"john"}
+// Example: "uid=10000", "uid", 10000, g.Map{"uid": 10000, "name":"john"}
 //
 // The parameter `condition` can be type of string/map/gmap/slice/struct/*struct, etc.
 // It is commonly used with parameter `args`.
-// Eg:
+// Example:
 // "uid=10000",
 // "uid", 10000
 // "money>? AND name like ?", 99999, "vip_%"
 // "status IN (?)", g.Slice{1,2,3}
 // "age IN(?,?)", 18, 50
 // User{ Id : 1, UserName : "john"}.
-func (c *Core) Update(ctx context.Context, table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
-	return c.Model(table).Ctx(ctx).Data(data).Where(condition, args...).Update()
+func (c *Core) Update(ctx context.Context, table string, data any, condition any, args ...any) (sql.Result, error) {
+	return c.Model(table).Data(data).Where(condition, args...).Update(ctx)
 }
 
 // DoUpdate does "UPDATE ... " statement for the table.
 // This function is usually used for custom interface definition, you do not need to call it manually.
-func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
+func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data any, condition string, args ...any) (result sql.Result, err error) {
 	table = c.QuotePrefixTableName(table)
 	var (
 		rv   = reflect.ValueOf(data)
@@ -579,14 +540,14 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 		kind = rv.Kind()
 	}
 	var (
-		params  []interface{}
+		params  []any
 		updates string
 	)
 	switch kind {
 	case reflect.Map, reflect.Struct:
 		var (
 			fields  []string
-			dataMap map[string]interface{}
+			dataMap map[string]any
 		)
 		dataMap, err = c.ConvertDataForRecord(ctx, data, table)
 		if err != nil {
@@ -659,20 +620,20 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 //
 // The parameter `condition` can be type of string/map/gmap/slice/struct/*struct, etc.
 // It is commonly used with parameter `args`.
-// Eg:
+// Example:
 // "uid=10000",
 // "uid", 10000
 // "money>? AND name like ?", 99999, "vip_%"
 // "status IN (?)", g.Slice{1,2,3}
 // "age IN(?,?)", 18, 50
 // User{ Id : 1, UserName : "john"}.
-func (c *Core) Delete(ctx context.Context, table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
-	return c.Model(table).Ctx(ctx).Where(condition, args...).Delete()
+func (c *Core) Delete(ctx context.Context, table string, condition any, args ...any) (result sql.Result, err error) {
+	return c.Model(table).Where(condition, args...).Delete(ctx)
 }
 
 // DoDelete does "DELETE FROM ... " statement for the table.
 // This function is usually used for custom interface definition, you do not need call it manually.
-func (c *Core) DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error) {
+func (c *Core) DoDelete(ctx context.Context, link Link, table string, condition string, args ...any) (result sql.Result, err error) {
 	if link == nil {
 		if link, err = c.MasterLink(); err != nil {
 			return nil, err
@@ -722,8 +683,8 @@ func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
 }
 
 // HasTable determine whether the table name exists in the database.
-func (c *Core) HasTable(name string) (bool, error) {
-	tables, err := c.GetTablesWithCache()
+func (c *Core) HasTable(ctx context.Context, name string) (bool, error) {
+	tables, err := c.GetTablesWithCache(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -743,16 +704,15 @@ func (c *Core) GetInnerMemCache() *gcache.Cache {
 }
 
 // GetTablesWithCache retrieves and returns the table names of current database with cache.
-func (c *Core) GetTablesWithCache() ([]string, error) {
+func (c *Core) GetTablesWithCache(ctx context.Context) ([]string, error) {
 	var (
-		ctx           = c.db.GetCtx()
 		cacheKey      = fmt.Sprintf(`Tables:%s`, c.db.GetGroup())
 		cacheDuration = gcache.DurationNoExpire
 		innerMemCache = c.GetInnerMemCache()
 	)
 	result, err := innerMemCache.GetOrSetFuncLock(
 		ctx, cacheKey,
-		func(ctx context.Context) (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			tableList, err := c.db.Tables(ctx)
 			if err != nil {
 				return nil, err
@@ -788,7 +748,7 @@ func (c *Core) IsSoftCreatedFieldName(fieldName string) bool {
 // FormatSqlBeforeExecuting formats the sql string and its arguments before executing.
 // The internal handleArguments function might be called twice during the SQL procedure,
 // but do not worry about it, it's safe and efficient.
-func (c *Core) FormatSqlBeforeExecuting(sql string, args []interface{}) (newSql string, newArgs []interface{}) {
+func (c *Core) FormatSqlBeforeExecuting(sql string, args []any) (newSql string, newArgs []any) {
 	return handleSliceAndStructArgsForSql(sql, args)
 }
 

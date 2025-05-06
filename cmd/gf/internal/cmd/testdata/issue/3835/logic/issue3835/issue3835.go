@@ -5,7 +5,7 @@ import (
 
 	"github.com/gogf/gf/cmd/gf/v3/internal/cmd/testdata/issue/3835/service"
 
-	"github.com/gogf/gf/contrib/drivers/mysql/v2"
+	"github.com/gogf/gf/contrib/drivers/mysql/v3"
 )
 
 func init() {

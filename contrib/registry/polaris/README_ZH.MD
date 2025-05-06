@@ -7,13 +7,13 @@
 ## 安装
 
 ```
-go get -u -v github.com/gogf/gf/contrib/registry/polaris/v2
+go get -u -v github.com/gogf/gf/contrib/registry/polaris/v3
 ```
 
 suggested using `go.mod`:
 
 ```
-require github.com/gogf/gf/contrib/registry/polaris/v2 latest
+require github.com/gogf/gf/contrib/registry/polaris/v3 latest
 ```
 
 ## Golang版本限制
@@ -34,7 +34,7 @@ package main
 import (
     "github.com/polarismesh/polaris-go/pkg/config"
     
-    "github.com/gogf/gf/contrib/registry/polaris/v2"
+    "github.com/gogf/gf/contrib/registry/polaris/v3"
     "github.com/gogf/gf/v3/frame/g"
     "github.com/gogf/gf/v3/net/ghttp"
     "github.com/gogf/gf/v3/net/gsvc"
@@ -67,7 +67,7 @@ import (
     
     "github.com/polarismesh/polaris-go/pkg/config"
     
-    "github.com/gogf/gf/contrib/registry/polaris/v2"
+    "github.com/gogf/gf/contrib/registry/polaris/v3"
     
     "github.com/gogf/gf/v3/frame/g"
     "github.com/gogf/gf/v3/net/gsvc"

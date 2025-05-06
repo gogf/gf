@@ -61,7 +61,7 @@ for file in `find ${workdir} -name go.mod`; do
                 replacement="$relativePath"
             else
                 # Extract the path after v2 and remove trailing version
-                subpath=$(echo "$dep" | sed -E 's/github\.com\/gogf\/gf\/(contrib\/[^/]+\/[^/]+)\/v2.*/\1/')
+                subpath=$(echo "$dep" | sed -E 's/github\.com\/gogf\/gf\/(contrib\/[^/]+\/[^/]+)\/v3.*/\1/')
                 replacement="$relativePath/$subpath"
             fi
             

@@ -16,7 +16,7 @@ package {PkgName}
 import (
 	"fmt"
 
-	"github.com/gogf/gf/contrib/sdk/httpclient/v2"
+	"github.com/gogf/gf/contrib/sdk/httpclient/v3"
 	"github.com/gogf/gf/v3/frame/g"
 	"github.com/gogf/gf/v3/text/gstr"
 )
@@ -57,7 +57,7 @@ package {PkgName}
 import (
 	"context"
 
-	"github.com/gogf/gf/contrib/sdk/httpclient/v2"
+	"github.com/gogf/gf/contrib/sdk/httpclient/v3"
 	"github.com/gogf/gf/v3/text/gstr"
 
 {ImportPaths}

@@ -26,8 +26,8 @@ const (
 
 const (
 	tracingMaxContentLogSize         = 256 * 1024 // Max log size for request and response body.
-	tracingInstrumentGrpcClient      = "github.com/gogf/gf/contrib/rpc/grpcx/v2/krpc.GrpcClient"
-	tracingInstrumentGrpcServer      = "github.com/gogf/gf/contrib/rpc/grpcx/v2/krpc.GrpcServer"
+	tracingInstrumentGrpcClient      = "github.com/gogf/gf/contrib/rpc/grpcx/v3/krpc.GrpcClient"
+	tracingInstrumentGrpcServer      = "github.com/gogf/gf/contrib/rpc/grpcx/v3/krpc.GrpcServer"
 	tracingEventGrpcRequest          = "grpc.request"
 	tracingEventGrpcRequestBaggage   = "grpc.request.baggage"
 	tracingEventGrpcMetadataOutgoing = "grpc.metadata.outgoing"

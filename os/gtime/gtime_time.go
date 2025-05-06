@@ -129,7 +129,7 @@ func NewFromStrLayout(str string, layout string) *Time {
 
 // NewFromTimeStamp creates and returns a Time object with given timestamp,
 // which can be in seconds to nanoseconds.
-// Eg: 1600443866 and 1600443866199266000 are both considered as valid timestamp number.
+// Example: 1600443866 and 1600443866199266000 are both considered as valid timestamp number.
 func NewFromTimeStamp(timestamp int64) *Time {
 	if timestamp == 0 {
 		return &Time{}

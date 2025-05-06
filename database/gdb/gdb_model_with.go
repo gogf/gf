@@ -7,7 +7,9 @@
 package gdb
 
 import (
+	"context"
 	"database/sql"
+	"errors"
 	"reflect"
 
 	"github.com/gogf/gf/v3/errors/gcode"
@@ -43,30 +45,32 @@ import (
 // Or:
 //
 //	db.With(UserDetail{}, UserScores{}).Scan(xxx)
-func (m *Model) With(objects ...interface{}) *Model {
-	model := m.getModel()
-	for _, object := range objects {
-		if m.tables == "" {
-			m.tablesInit = m.db.GetCore().QuotePrefixTableName(
-				getTableNameFromOrmTag(object),
-			)
-			m.tables = m.tablesInit
-			return model
+func (m *Model) With(objects ...any) *Model {
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		for _, object := range objects {
+			if model.tables == "" {
+				model.tablesInit = model.db.GetCore().QuotePrefixTableName(
+					getTableNameFromOrmTag(object),
+				)
+				model.tables = model.tablesInit
+				return model
+			}
+			model.withArray = append(model.withArray, object)
 		}
-		model.withArray = append(model.withArray, object)
-	}
-	return model
+		return model
+	})
 }
 
 // WithAll enables model association operations on all objects that have "with" tag in the struct.
 func (m *Model) WithAll() *Model {
-	model := m.getModel()
-	model.withAll = true
-	return model
+	return m.Handler(func(ctx context.Context, model *Model) *Model {
+		model.withAll = true
+		return model
+	})
 }
 
 // doWithScanStruct handles model association operations feature for single struct.
-func (m *Model) doWithScanStruct(pointer interface{}) error {
+func (m *Model) doWithScanStruct(ctx context.Context, pointer any) error {
 	if len(m.withArray) == 0 && m.withAll == false {
 		return nil
 	}
@@ -124,7 +128,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 			fieldKeys          []string
 			relatedSourceName  = array[0]
 			relatedTargetName  = array[1]
-			relatedTargetValue interface{}
+			relatedTargetValue any
 		)
 		// Find the value of related attribute from `pointer`.
 		for attributeName, attributeValue := range currentStructFieldMap {
@@ -178,9 +182,9 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		}
 		err = model.Fields(fieldKeys).
 			Where(relatedSourceName, relatedTargetValue).
-			Scan(bindToReflectValue)
+			Scan(ctx, bindToReflectValue)
 		// It ignores sql.ErrNoRows in with feature.
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return err
 		}
 	}
@@ -189,7 +193,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 
 // doWithScanStructs handles model association operations feature for struct slice.
 // Also see doWithScanStruct.
-func (m *Model) doWithScanStructs(pointer interface{}) error {
+func (m *Model) doWithScanStructs(ctx context.Context, pointer any) error {
 	if len(m.withArray) == 0 && m.withAll == false {
 		return nil
 	}
@@ -251,7 +255,7 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 			fieldKeys          []string
 			relatedSourceName  = array[0]
 			relatedTargetName  = array[1]
-			relatedTargetValue interface{}
+			relatedTargetValue any
 		)
 		// Find the value slice of related attribute from `pointer`.
 		for attributeName := range currentStructFieldMap {
@@ -304,9 +308,9 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 		}
 		err = model.Fields(fieldKeys).
 			Where(relatedSourceName, relatedTargetValue).
-			ScanList(pointer, fieldName, parsedTagOutput.With)
+			ScanList(ctx, pointer, fieldName, parsedTagOutput.With)
 		// It ignores sql.ErrNoRows in with feature.
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return err
 		}
 	}

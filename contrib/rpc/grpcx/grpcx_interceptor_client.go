@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v3/errors/gcode"
 	"github.com/gogf/gf/v3/errors/gerror"
 
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/tracing"
+	"github.com/gogf/gf/contrib/rpc/grpcx/v3/internal/tracing"
 )
 
 // UnaryError handles the error types converting between grpc and gerror.

@@ -29,8 +29,7 @@ type DriverWrapperDB struct {
 // Open creates and returns an underlying sql.DB object for pgsql.
 // https://pkg.go.dev/github.com/lib/pq
 func (d *DriverWrapperDB) Open(node *ConfigNode) (db *sql.DB, err error) {
-	var ctx = d.GetCtx()
-	intlog.PrintFunc(ctx, func() string {
+	intlog.PrintFunc(context.Background(), func() string {
 		return fmt.Sprintf(`open new connection:%s`, gjson.MustEncode(node))
 	})
 	return d.DB.Open(node)
@@ -100,7 +99,7 @@ func (d *DriverWrapperDB) TableFields(
 // DoInsert inserts or updates data for given table.
 // This function is usually used for custom interface definition, you do not need call it manually.
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
-// Eg:
+// Example:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //

@@ -66,11 +66,11 @@ func (c CGenService) calculateFuncItems(
 
 	for _, item := range funcItems {
 		var (
-			// eg: "sArticle"
+			// Example: "sArticle"
 			receiverName  string
 			receiverMatch []string
 
-			// eg: "GetList(ctx context.Context, req *v1.ArticleListReq) (list []*v1.Article, err error)"
+			// Example: "GetList(ctx context.Context, req *v1.ArticleListReq) (list []*v1.Article, err error)"
 			funcHead string
 		)
 

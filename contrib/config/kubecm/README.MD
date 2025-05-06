@@ -9,7 +9,7 @@ glang version >= v.18
 
 # Installation
 ```
-go get -u github.com/gogf/gf/contrib/config/kubecm/v2
+go get -u github.com/gogf/gf/contrib/config/kubecm/v3
 ```
 
 # Example
@@ -44,7 +44,7 @@ which sets the Adapter of default configuration instance before any other packag
 package boot
 
 import (
-	"github.com/gogf/gf/contrib/config/kubecm/v2"
+	"github.com/gogf/gf/contrib/config/kubecm/v3"
 	"github.com/gogf/gf/v3/frame/g"
 	"github.com/gogf/gf/v3/os/gctx"
 )
@@ -78,7 +78,7 @@ func init() {
 package boot
 
 import (
-	"github.com/gogf/gf/contrib/config/kubecm/v2"
+	"github.com/gogf/gf/contrib/config/kubecm/v3"
 	"github.com/gogf/gf/v3/frame/g"
 	"github.com/gogf/gf/v3/os/gctx"
 	"k8s.io/client-go/kubernetes"

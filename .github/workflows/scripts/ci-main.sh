@@ -55,8 +55,8 @@ for file in `find . -name go.mod`; do
     if [ "${coverage}" = "coverage" ]; then
       go test ./... -race -coverprofile=coverage.out -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
 
-      if grep -q "/gogf/gf/.*/v2" go.mod; then
-        sed -i "s/gogf\/gf\(\/.*\)\/v2/gogf\/gf\/v2\1/g" coverage.out
+      if grep -q "/gogf/gf/.*/v3" go.mod; then
+        sed -i "s/gogf\/gf\(\/.*\)\/v3/gogf\/gf\/v3\1/g" coverage.out
       fi
     else
       go test ./... -race || exit 1

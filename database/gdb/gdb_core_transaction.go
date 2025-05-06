@@ -50,9 +50,11 @@ const (
 type TxOptions struct {
 	// Propagation specifies the propagation behavior.
 	Propagation Propagation
+
 	// Isolation is the transaction isolation level.
 	// If zero, the driver or database's default level is used.
 	Isolation sql.IsolationLevel
+
 	// ReadOnly is used to mark the transaction as read-only.
 	ReadOnly bool
 }
@@ -77,7 +79,7 @@ func DefaultTxOptions() TxOptions {
 // You should call Commit or Rollback functions of the transaction object
 // if you no longer use the transaction. Commit or Rollback functions will also
 // close the transaction automatically.
-func (c *Core) Begin(ctx context.Context) (tx TX, err error) {
+func (c *Core) Begin(ctx context.Context) (tx TX, newCtx context.Context, err error) {
 	return c.BeginWithOptions(ctx, DefaultTxOptions())
 }
 
@@ -86,10 +88,7 @@ func (c *Core) Begin(ctx context.Context) (tx TX, err error) {
 // You should call Commit or Rollback functions of the transaction object
 // if you no longer use the transaction. Commit or Rollback functions will also
 // close the transaction automatically.
-func (c *Core) BeginWithOptions(ctx context.Context, opts TxOptions) (tx TX, err error) {
-	if ctx == nil {
-		ctx = c.db.GetCtx()
-	}
+func (c *Core) BeginWithOptions(ctx context.Context, opts TxOptions) (tx TX, newCtx context.Context, err error) {
 	ctx = c.injectInternalCtxData(ctx)
 	return c.doBeginCtx(ctx, sql.TxOptions{
 		Isolation: opts.Isolation,
@@ -97,11 +96,13 @@ func (c *Core) BeginWithOptions(ctx context.Context, opts TxOptions) (tx TX, err
 	})
 }
 
-func (c *Core) doBeginCtx(ctx context.Context, opts sql.TxOptions) (TX, error) {
+func (c *Core) doBeginCtx(ctx context.Context, opts sql.TxOptions) (TX, context.Context, error) {
 	master, err := c.db.Master()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+	// inject transaction id into context for logger.
+	ctx = context.WithValue(ctx, transactionIdForLoggerCtx, transactionIdGenerator.Add(1))
 	var out DoCommitOutput
 	out, err = c.db.DoCommit(ctx, DoCommitInput{
 		Db:            master,
@@ -110,7 +111,10 @@ func (c *Core) doBeginCtx(ctx context.Context, opts sql.TxOptions) (TX, error) {
 		TxOptions:     opts,
 		IsTransaction: true,
 	})
-	return out.Tx, err
+	if err != nil {
+		return nil, nil, err
+	}
+	return out.Tx, WithTX(ctx, out.Tx), err
 }
 
 // Transaction wraps the transaction logic using function `f`.
@@ -128,9 +132,6 @@ func (c *Core) Transaction(ctx context.Context, f func(ctx context.Context, tx T
 func (c *Core) TransactionWithOptions(
 	ctx context.Context, opts TxOptions, f func(ctx context.Context, tx TX) error,
 ) (err error) {
-	if ctx == nil {
-		ctx = c.db.GetCtx()
-	}
 	ctx = c.injectInternalCtxData(ctx)
 
 	// Check current transaction from context
@@ -197,8 +198,8 @@ func (c *Core) TransactionWithOptions(
 func (c *Core) createNewTransaction(
 	ctx context.Context, opts TxOptions, f func(ctx context.Context, tx TX) error,
 ) (err error) {
-	// Begin transaction with options
-	tx, err := c.doBeginCtx(ctx, sql.TxOptions{
+	// begin transaction with options
+	tx, newCtx, err := c.doBeginCtx(ctx, sql.TxOptions{
 		Isolation: opts.Isolation,
 		ReadOnly:  opts.ReadOnly,
 	})
@@ -206,13 +207,12 @@ func (c *Core) createNewTransaction(
 		return err
 	}
 
-	// Inject transaction object into context
-	ctx = WithTX(tx.GetCtx(), tx)
-	err = callTxFunc(tx.Ctx(ctx), f)
+	// inject transaction object into context
+	err = callTxFunc(newCtx, tx, f)
 	return
 }
 
-func callTxFunc(tx TX, f func(ctx context.Context, tx TX) error) (err error) {
+func callTxFunc(ctx context.Context, tx TX, f func(ctx context.Context, tx TX) error) (err error) {
 	defer func() {
 		if err == nil {
 			if exception := recover(); exception != nil {
@@ -224,16 +224,16 @@ func callTxFunc(tx TX, f func(ctx context.Context, tx TX) error) (err error) {
 			}
 		}
 		if err != nil {
-			if e := tx.Rollback(); e != nil {
+			if e := tx.Rollback(ctx); e != nil {
 				err = e
 			}
 		} else {
-			if e := tx.Commit(); e != nil {
+			if e := tx.Commit(ctx); e != nil {
 				err = e
 			}
 		}
 	}()
-	err = f(tx.GetCtx(), tx)
+	err = f(ctx, tx)
 	return
 }
 
@@ -242,25 +242,25 @@ func WithTX(ctx context.Context, tx TX) context.Context {
 	if tx == nil {
 		return ctx
 	}
-	// Check repeat injection from given.
+	// check repeat injection from given.
 	group := tx.GetDB().GetGroup()
-	if ctxTx := TXFromCtx(ctx, group); ctxTx != nil && ctxTx.GetDB().GetGroup() == group {
+	if txCtx := TXFromCtx(ctx, group); txCtx != nil && txCtx.GetDB().GetGroup() == group {
 		return ctx
 	}
-	dbCtx := tx.GetDB().GetCtx()
-	if ctxTx := TXFromCtx(dbCtx, group); ctxTx != nil && ctxTx.GetDB().GetGroup() == group {
-		return dbCtx
-	}
-	// Inject transaction object and id into context.
+	// inject transaction object and id into context.
 	ctx = context.WithValue(ctx, transactionKeyForContext(group), tx)
-	ctx = context.WithValue(ctx, transactionIdForLoggerCtx, tx.GetCtx().Value(transactionIdForLoggerCtx))
 	return ctx
 }
 
 // WithoutTX removed transaction object from context and returns a new context.
 func WithoutTX(ctx context.Context, group string) context.Context {
-	ctx = context.WithValue(ctx, transactionKeyForContext(group), nil)
-	ctx = context.WithValue(ctx, transactionIdForLoggerCtx, nil)
+	var txKeyInCtx = transactionKeyForContext(group)
+	if ctx.Value(txKeyInCtx) != nil {
+		ctx = context.WithValue(ctx, transactionKeyForContext(group), nil)
+	}
+	if ctx.Value(transactionIdForLoggerCtx) != nil {
+		ctx = context.WithValue(ctx, transactionIdForLoggerCtx, nil)
+	}
 	return ctx
 }
 
@@ -280,7 +280,6 @@ func TXFromCtx(ctx context.Context, group string) TX {
 		if tx.GetSqlTX() == nil {
 			return nil
 		}
-		tx = tx.Ctx(ctx)
 		return tx
 	}
 	return nil

@@ -3,13 +3,13 @@
 ## Installation
 
 ```
-go get -u -v github.com/gogf/gf/contrib/metric/otelmetric/v2
+go get -u -v github.com/gogf/gf/contrib/metric/otelmetric/v3
 ```
 
 suggested using `go.mod`:
 
 ```
-require github.com/gogf/gf/contrib/metric/otelmetric/v2 latest
+require github.com/gogf/gf/contrib/metric/otelmetric/v3 latest
 ```
 
 ## Example
@@ -26,7 +26,7 @@ import (
 	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/sdk/metric"
 
-	"github.com/gogf/gf/contrib/metric/otelmetric/v2"
+	"github.com/gogf/gf/contrib/metric/otelmetric/v3"
 	"github.com/gogf/gf/v3/frame/g"
 	"github.com/gogf/gf/v3/net/ghttp"
 	"github.com/gogf/gf/v3/os/gctx"

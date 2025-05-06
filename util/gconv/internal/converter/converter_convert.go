@@ -415,7 +415,7 @@ func (c *Converter) doConvertForDefault(in doConvertInput, option ConvertOption)
 		switch referReflectValue.Kind() {
 		case reflect.Ptr:
 			// Type converting for custom type pointers.
-			// Eg:
+			// Example:
 			// type PayMode int
 			// type Req struct{
 			//     Mode *PayMode

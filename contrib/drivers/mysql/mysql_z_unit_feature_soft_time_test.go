@@ -40,12 +40,12 @@ CREATE TABLE %s (
 			"id":   1,
 			"name": "name_1",
 		}
-		r, err := db.Model(table).Data(dataInsert).Insert()
+		r, err := db.Model(table).Data(dataInsert).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		oneInsert, err := db.Model(table).WherePri(1).One()
+		oneInsert, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneInsert["id"].Int(), 1)
 		t.Assert(oneInsert["name"].String(), "name_1")
@@ -61,12 +61,12 @@ CREATE TABLE %s (
 			"id":   1,
 			"name": "name_10",
 		}
-		r, err = db.Model(table).Data(dataSave).Save()
+		r, err = db.Model(table).Data(dataSave).Save(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 2)
 
-		oneSave, err := db.Model(table).WherePri(1).One()
+		oneSave, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneSave["id"].Int(), 1)
 		t.Assert(oneSave["name"].String(), "name_10")
@@ -82,12 +82,12 @@ CREATE TABLE %s (
 		dataUpdate := g.Map{
 			"name": "name_1000",
 		}
-		r, err = db.Model(table).Data(dataUpdate).WherePri(1).Update()
+		r, err = db.Model(table).Data(dataUpdate).WherePri(1).Update(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
 
-		oneUpdate, err := db.Model(table).WherePri(1).One()
+		oneUpdate, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneUpdate["id"].Int(), 1)
 		t.Assert(oneUpdate["name"].String(), "name_1000")
@@ -100,12 +100,12 @@ CREATE TABLE %s (
 			"id":   1,
 			"name": "name_100",
 		}
-		r, err = db.Model(table).Data(dataReplace).Replace()
+		r, err = db.Model(table).Data(dataReplace).Replace(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 2)
 
-		oneReplace, err := db.Model(table).WherePri(1).One()
+		oneReplace, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneReplace["id"].Int(), 1)
 		t.Assert(oneReplace["name"].String(), "name_100")
@@ -117,35 +117,35 @@ CREATE TABLE %s (
 		time.Sleep(2 * time.Second)
 
 		// Delete
-		r, err = db.Model(table).Delete("id", 1)
+		r, err = db.Model(table).Where("id", 1).Delete(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
 		// Delete Select
-		one4, err := db.Model(table).WherePri(1).One()
+		one4, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(len(one4), 0)
-		one5, err := db.Model(table).Unscoped().WherePri(1).One()
+		one5, err := db.Model(table).Unscoped().WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one5["id"].Int(), 1)
 		t.AssertGE(one5["delete_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 		// Delete Count
-		i, err := db.Model(table).Count()
+		i, err := db.Model(table).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(i, 0)
-		i, err = db.Model(table).Unscoped().Count()
+		i, err = db.Model(table).Unscoped().Count(ctx)
 		t.AssertNil(err)
 		t.Assert(i, 1)
 
 		// Delete Unscoped
-		r, err = db.Model(table).Unscoped().Delete("id", 1)
+		r, err = db.Model(table).Unscoped().Where("id", 1).Delete(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
-		one6, err := db.Model(table).Unscoped().WherePri(1).One()
+		one6, err := db.Model(table).Unscoped().WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(len(one6), 0)
-		i, err = db.Model(table).Unscoped().Count()
+		i, err = db.Model(table).Unscoped().Count(ctx)
 		t.AssertNil(err)
 		t.Assert(i, 0)
 	})
@@ -174,12 +174,12 @@ CREATE TABLE %s (
 			"id":   1,
 			"name": "name_1",
 		}
-		r, err := db.Model(table).Data(dataInsert).Insert()
+		r, err := db.Model(table).Data(dataInsert).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		oneInsert, err := db.Model(table).WherePri(1).One()
+		oneInsert, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneInsert["id"].Int(), 1)
 		t.Assert(oneInsert["name"].String(), "name_1")
@@ -195,12 +195,12 @@ CREATE TABLE %s (
 			"id":   1,
 			"name": "name_10",
 		}
-		r, err = db.Model(table).Data(dataSave).Save()
+		r, err = db.Model(table).Data(dataSave).Save(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 2)
 
-		oneSave, err := db.Model(table).WherePri(1).One()
+		oneSave, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneSave["id"].Int(), 1)
 		t.Assert(oneSave["name"].String(), "name_10")
@@ -216,12 +216,12 @@ CREATE TABLE %s (
 		dataUpdate := g.Map{
 			"name": "name_1000",
 		}
-		r, err = db.Model(table).Data(dataUpdate).WherePri(1).Update()
+		r, err = db.Model(table).Data(dataUpdate).WherePri(1).Update(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
 
-		oneUpdate, err := db.Model(table).WherePri(1).One()
+		oneUpdate, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneUpdate["id"].Int(), 1)
 		t.Assert(oneUpdate["name"].String(), "name_1000")
@@ -234,12 +234,12 @@ CREATE TABLE %s (
 			"id":   1,
 			"name": "name_100",
 		}
-		r, err = db.Model(table).Data(dataReplace).Replace()
+		r, err = db.Model(table).Data(dataReplace).Replace(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 2)
 
-		oneReplace, err := db.Model(table).WherePri(1).One()
+		oneReplace, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneReplace["id"].Int(), 1)
 		t.Assert(oneReplace["name"].String(), "name_100")
@@ -251,35 +251,35 @@ CREATE TABLE %s (
 		time.Sleep(2 * time.Second)
 
 		// Delete
-		r, err = db.Model(table).Delete("id", 1)
+		r, err = db.Model(table).Where("id", 1).Delete(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
 		// Delete Select
-		one4, err := db.Model(table).WherePri(1).One()
+		one4, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(len(one4), 0)
-		one5, err := db.Model(table).Unscoped().WherePri(1).One()
+		one5, err := db.Model(table).Unscoped().WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one5["id"].Int(), 1)
 		t.AssertGE(one5["delete_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 		// Delete Count
-		i, err := db.Model(table).Count()
+		i, err := db.Model(table).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(i, 0)
-		i, err = db.Model(table).Unscoped().Count()
+		i, err = db.Model(table).Unscoped().Count(ctx)
 		t.AssertNil(err)
 		t.Assert(i, 1)
 
 		// Delete Unscoped
-		r, err = db.Model(table).Unscoped().Delete("id", 1)
+		r, err = db.Model(table).Unscoped().Where("id", 1).Delete(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
-		one6, err := db.Model(table).Unscoped().WherePri(1).One()
+		one6, err := db.Model(table).Unscoped().WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(len(one6), 0)
-		i, err = db.Model(table).Unscoped().Count()
+		i, err = db.Model(table).Unscoped().Count(ctx)
 		t.AssertNil(err)
 		t.Assert(i, 0)
 	})
@@ -308,12 +308,12 @@ CREATE TABLE %s (
 			"id":   1,
 			"name": "name_1",
 		}
-		r, err := db.Model(table).Data(dataInsert).Insert()
+		r, err := db.Model(table).Data(dataInsert).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		oneInsert, err := db.Model(table).WherePri(1).One()
+		oneInsert, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneInsert["id"].Int(), 1)
 		t.Assert(oneInsert["name"].String(), "name_1")
@@ -329,12 +329,12 @@ CREATE TABLE %s (
 			"id":   1,
 			"name": "name_10",
 		}
-		r, err = db.Model(table).Data(dataSave).Save()
+		r, err = db.Model(table).Data(dataSave).Save(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 2)
 
-		oneSave, err := db.Model(table).WherePri(1).One()
+		oneSave, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneSave["id"].Int(), 1)
 		t.Assert(oneSave["name"].String(), "name_10")
@@ -350,12 +350,12 @@ CREATE TABLE %s (
 		dataUpdate := g.Map{
 			"name": "name_1000",
 		}
-		r, err = db.Model(table).Data(dataUpdate).WherePri(1).Update()
+		r, err = db.Model(table).Data(dataUpdate).WherePri(1).Update(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
 
-		oneUpdate, err := db.Model(table).WherePri(1).One()
+		oneUpdate, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneUpdate["id"].Int(), 1)
 		t.Assert(oneUpdate["name"].String(), "name_1000")
@@ -368,12 +368,12 @@ CREATE TABLE %s (
 			"id":   1,
 			"name": "name_100",
 		}
-		r, err = db.Model(table).Data(dataReplace).Replace()
+		r, err = db.Model(table).Data(dataReplace).Replace(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 2)
 
-		oneReplace, err := db.Model(table).WherePri(1).One()
+		oneReplace, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneReplace["id"].Int(), 1)
 		t.Assert(oneReplace["name"].String(), "name_100")
@@ -385,35 +385,35 @@ CREATE TABLE %s (
 		time.Sleep(2 * time.Second)
 
 		// Delete
-		r, err = db.Model(table).Delete("id", 1)
+		r, err = db.Model(table).Where("id", 1).Delete(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
 		// Delete Select
-		one4, err := db.Model(table).WherePri(1).One()
+		one4, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(len(one4), 0)
-		one5, err := db.Model(table).Unscoped().WherePri(1).One()
+		one5, err := db.Model(table).Unscoped().WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one5["id"].Int(), 1)
 		t.AssertGE(one5["deleted_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 		// Delete Count
-		i, err := db.Model(table).Count()
+		i, err := db.Model(table).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(i, 0)
-		i, err = db.Model(table).Unscoped().Count()
+		i, err = db.Model(table).Unscoped().Count(ctx)
 		t.AssertNil(err)
 		t.Assert(i, 1)
 
 		// Delete Unscoped
-		r, err = db.Model(table).Unscoped().Delete("id", 1)
+		r, err = db.Model(table).Unscoped().Where("id", 1).Delete(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
-		one6, err := db.Model(table).Unscoped().WherePri(1).One()
+		one6, err := db.Model(table).Unscoped().WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(len(one6), 0)
-		i, err = db.Model(table).Unscoped().Count()
+		i, err = db.Model(table).Unscoped().Count(ctx)
 		t.AssertNil(err)
 		t.Assert(i, 0)
 	})
@@ -449,12 +449,12 @@ CREATE TABLE %s (
 			Id:   1,
 			Name: "name_1",
 		}
-		r, err := db.Model(table).Data(dataInsert).Insert()
+		r, err := db.Model(table).Data(dataInsert).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		oneInsert, err := db.Model(table).WherePri(1).One()
+		oneInsert, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneInsert["id"].Int(), 1)
 		t.Assert(oneInsert["name"].String(), "name_1")
@@ -470,12 +470,12 @@ CREATE TABLE %s (
 			Id:   1,
 			Name: "name_10",
 		}
-		r, err = db.Model(table).Data(dataSave).OmitEmpty().Save()
+		r, err = db.Model(table).Data(dataSave).OmitEmpty().Save(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 2)
 
-		oneSave, err := db.Model(table).WherePri(1).One()
+		oneSave, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneSave["id"].Int(), 1)
 		t.Assert(oneSave["name"].String(), "name_10")
@@ -491,12 +491,12 @@ CREATE TABLE %s (
 		dataUpdate := User{
 			Name: "name_1000",
 		}
-		r, err = db.Model(table).Data(dataUpdate).OmitEmpty().WherePri(1).Update()
+		r, err = db.Model(table).Data(dataUpdate).OmitEmpty().WherePri(1).Update(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
 
-		oneUpdate, err := db.Model(table).WherePri(1).One()
+		oneUpdate, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneUpdate["id"].Int(), 1)
 		t.Assert(oneUpdate["name"].String(), "name_1000")
@@ -509,12 +509,12 @@ CREATE TABLE %s (
 			Id:   1,
 			Name: "name_100",
 		}
-		r, err = db.Model(table).Data(dataReplace).OmitEmpty().Replace()
+		r, err = db.Model(table).Data(dataReplace).OmitEmpty().Replace(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 2)
 
-		oneReplace, err := db.Model(table).WherePri(1).One()
+		oneReplace, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneReplace["id"].Int(), 1)
 		t.Assert(oneReplace["name"].String(), "name_100")
@@ -526,35 +526,35 @@ CREATE TABLE %s (
 		time.Sleep(2 * time.Second)
 
 		// Delete
-		r, err = db.Model(table).Delete("id", 1)
+		r, err = db.Model(table).Where("id", 1).Delete(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
 		// Delete Select
-		one4, err := db.Model(table).WherePri(1).One()
+		one4, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(len(one4), 0)
-		one5, err := db.Model(table).Unscoped().WherePri(1).One()
+		one5, err := db.Model(table).Unscoped().WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one5["id"].Int(), 1)
 		t.AssertGE(one5["deleted_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 		// Delete Count
-		i, err := db.Model(table).Count()
+		i, err := db.Model(table).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(i, 0)
-		i, err = db.Model(table).Unscoped().Count()
+		i, err = db.Model(table).Unscoped().Count(ctx)
 		t.AssertNil(err)
 		t.Assert(i, 1)
 
 		// Delete Unscoped
-		r, err = db.Model(table).Unscoped().Delete("id", 1)
+		r, err = db.Model(table).Unscoped().Where("id", 1).Delete(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
-		one6, err := db.Model(table).Unscoped().WherePri(1).One()
+		one6, err := db.Model(table).Unscoped().WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(len(one6), 0)
-		i, err = db.Model(table).Unscoped().Count()
+		i, err = db.Model(table).Unscoped().Count(ctx)
 		t.AssertNil(err)
 		t.Assert(i, 0)
 	})
@@ -582,18 +582,18 @@ CREATE TABLE %s (
 			"id":  1,
 			"num": 10,
 		}
-		r, err := db.Model(table).Data(dataInsert).Insert()
+		r, err := db.Model(table).Data(dataInsert).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		oneInsert, err := db.Model(table).WherePri(1).One()
+		oneInsert, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneInsert["id"].Int(), 1)
 		t.Assert(oneInsert["num"].Int(), 10)
 
 		// Update.
-		r, err = db.Model(table).Data("num=num+1").Where("id=?", 1).Update()
+		r, err = db.Model(table).Data("num=num+1").Where("id=?", 1).Update(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
@@ -622,12 +622,12 @@ CREATE TABLE %s (
 			"id":  1,
 			"num": 10,
 		}
-		r, err := db.Model(table).Data(dataInsert).Insert()
+		r, err := db.Model(table).Data(dataInsert).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		oneInserted, err := db.Model(table).WherePri(1).One()
+		oneInserted, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneInserted["id"].Int(), 1)
 		t.Assert(oneInserted["num"].Int(), 10)
@@ -644,12 +644,12 @@ CREATE TABLE %s (
 		}
 		r, err = db.Model(table).Data(User{
 			Num: 100,
-		}).Where("id=?", 1).Update()
+		}).Where("id=?", 1).Update(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
 
-		oneUpdated, err := db.Model(table).WherePri(1).One()
+		oneUpdated, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneUpdated["num"].Int(), 100)
 		t.Assert(oneUpdated["created_at"].String(), oneInserted["created_at"].String())
@@ -679,21 +679,21 @@ CREATE TABLE %s (
 				"id":   i,
 				"name": fmt.Sprintf("name_%d", i),
 			}
-			r, err := db.Model(table).Data(data).Insert()
+			r, err := db.Model(table).Data(data).Insert(ctx)
 			t.AssertNil(err)
 			n, _ := r.RowsAffected()
 			t.Assert(n, 1)
 		}
 	})
 	gtest.C(t, func(t *gtest.T) {
-		one, err := db.Model(table).WherePri(1).One()
+		one, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.AssertNE(one["create_at"].String(), "")
 		t.AssertNE(one["update_at"].String(), "")
 		t.Assert(one["delete_at"].String(), "")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		one, err := db.Model(table).WherePri(10).One()
+		one, err := db.Model(table).WherePri(10).One(ctx)
 		t.AssertNil(err)
 		t.AssertNE(one["create_at"].String(), "")
 		t.AssertNE(one["update_at"].String(), "")
@@ -701,16 +701,16 @@ CREATE TABLE %s (
 	})
 	gtest.C(t, func(t *gtest.T) {
 		ids := g.SliceInt{1, 3, 5}
-		r, err := db.Model(table).Where("id", ids).Delete()
+		r, err := db.Model(table).Where("id", ids).Delete(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 3)
 
-		count, err := db.Model(table).Where("id", ids).Count()
+		count, err := db.Model(table).Where("id", ids).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 0)
 
-		all, err := db.Model(table).Unscoped().Where("id", ids).All()
+		all, err := db.Model(table).Unscoped().Where("id", ids).All(ctx)
 		t.AssertNil(err)
 		t.Assert(len(all), 3)
 		t.AssertNE(all[0]["create_at"].String(), "")
@@ -762,7 +762,7 @@ CREATE TABLE %s (
 			"id":   1,
 			"name": "name_1",
 		}
-		r, err := db.Model(table1).Data(dataInsert1).Insert()
+		r, err := db.Model(table1).Data(dataInsert1).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
@@ -771,26 +771,26 @@ CREATE TABLE %s (
 			"id":   1,
 			"name": "name_2",
 		}
-		r, err = db.Model(table2).Data(dataInsert2).Insert()
+		r, err = db.Model(table2).Data(dataInsert2).Insert(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table1, "t1").LeftJoin(table2, "t2", "t2.id=t1.id").Fields("t1.name").One()
+		one, err := db.Model(table1, "t1").LeftJoin(table2, "t2", "t2.id=t1.id").Fields("t1.name").One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["name"], "name_1")
 
 		// Soft deleting.
-		r, err = db.Model(table1).Where(1).Delete()
+		r, err = db.Model(table1).Where(1).Delete(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err = db.Model(table1, "t1").LeftJoin(table2, "t2", "t2.id=t1.id").Fields("t1.name").One()
+		one, err = db.Model(table1, "t1").LeftJoin(table2, "t2", "t2.id=t1.id").Fields("t1.name").One(ctx)
 		t.AssertNil(err)
 		t.Assert(one.IsEmpty(), true)
 
-		one, err = db.Model(table2, "t2").LeftJoin(table1, "t1", "t2.id=t1.id").Fields("t2.name").One()
+		one, err = db.Model(table2, "t2").LeftJoin(table1, "t1", "t2.id=t1.id").Fields("t2.name").One(ctx)
 		t.AssertNil(err)
 		t.Assert(one.IsEmpty(), true)
 	})
@@ -819,7 +819,7 @@ CREATE TABLE %s (
 				"id":   i,
 				"name": fmt.Sprintf("name_%d", i),
 			}
-			r, err := db.Model(table).Data(data).Insert()
+			r, err := db.Model(table).Data(data).Insert(ctx)
 			t.AssertNil(err)
 			n, _ := r.RowsAffected()
 			t.Assert(n, 1)
@@ -827,12 +827,12 @@ CREATE TABLE %s (
 	})
 	gtest.C(t, func(t *gtest.T) {
 		ids := g.SliceInt{1, 3, 5}
-		r, err := db.Model(table).Where("id", ids).Delete()
+		r, err := db.Model(table).Where("id", ids).Delete(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 3)
 
-		count, err := db.Model(table).Where("id", 1).WhereOr("id", 3).Count()
+		count, err := db.Model(table).Where("id", 1).WhereOr("id", 3).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(count, 0)
 	})
@@ -873,12 +873,12 @@ CREATE TABLE %s (
 			UpdateAt: nil,
 			DeleteAt: nil,
 		}
-		r, err := db.Model(table).Data(dataInsert).OmitEmpty().Insert()
+		r, err := db.Model(table).Data(dataInsert).OmitEmpty().Insert(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		oneInsert, err := db.Model(table).WherePri(1).One()
+		oneInsert, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneInsert["id"].Int(), 1)
 		t.Assert(oneInsert["name"].String(), "name_1")
@@ -896,12 +896,12 @@ CREATE TABLE %s (
 			UpdateAt: nil,
 			DeleteAt: nil,
 		}
-		r, err = db.Model(table).Data(dataSave).OmitEmpty().Save()
+		r, err = db.Model(table).Data(dataSave).OmitEmpty().Save(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 2)
 
-		oneSave, err := db.Model(table).WherePri(1).One()
+		oneSave, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneSave["id"].Int(), 1)
 		t.Assert(oneSave["name"].String(), "name_10")
@@ -920,12 +920,12 @@ CREATE TABLE %s (
 			UpdateAt: nil,
 			DeleteAt: nil,
 		}
-		r, err = db.Model(table).Data(dataUpdate).WherePri(1).OmitEmpty().Update()
+		r, err = db.Model(table).Data(dataUpdate).WherePri(1).OmitEmpty().Update(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
 
-		oneUpdate, err := db.Model(table).WherePri(1).One()
+		oneUpdate, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneUpdate["id"].Int(), 1)
 		t.Assert(oneUpdate["name"].String(), "name_1000")
@@ -941,12 +941,12 @@ CREATE TABLE %s (
 			UpdateAt: nil,
 			DeleteAt: nil,
 		}
-		r, err = db.Model(table).Data(dataReplace).OmitEmpty().Replace()
+		r, err = db.Model(table).Data(dataReplace).OmitEmpty().Replace(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 2)
 
-		oneReplace, err := db.Model(table).WherePri(1).One()
+		oneReplace, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneReplace["id"].Int(), 1)
 		t.Assert(oneReplace["name"].String(), "name_100")
@@ -957,35 +957,35 @@ CREATE TABLE %s (
 		time.Sleep(2 * time.Second)
 
 		// Delete
-		r, err = db.Model(table).Delete("id", 1)
+		r, err = db.Model(table).Where("id", 1).Delete(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
 		// Delete Select
-		one4, err := db.Model(table).WherePri(1).One()
+		one4, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(len(one4), 0)
-		one5, err := db.Model(table).Unscoped().WherePri(1).One()
+		one5, err := db.Model(table).Unscoped().WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one5["id"].Int(), 1)
 		t.AssertGE(one5["delete_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 		// Delete Count
-		i, err := db.Model(table).Count()
+		i, err := db.Model(table).Count(ctx)
 		t.AssertNil(err)
 		t.Assert(i, 0)
-		i, err = db.Model(table).Unscoped().Count()
+		i, err = db.Model(table).Unscoped().Count(ctx)
 		t.AssertNil(err)
 		t.Assert(i, 1)
 
 		// Delete Unscoped
-		r, err = db.Model(table).Unscoped().Delete("id", 1)
+		r, err = db.Model(table).Unscoped().Where("id", 1).Delete(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
-		one6, err := db.Model(table).Unscoped().WherePri(1).One()
+		one6, err := db.Model(table).Unscoped().WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(len(one6), 0)
-		i, err = db.Model(table).Unscoped().Count()
+		i, err = db.Model(table).Unscoped().Count(ctx)
 		t.AssertNil(err)
 		t.Assert(i, 0)
 	})
@@ -1013,12 +1013,12 @@ CREATE TABLE %s (
 			"id":   1,
 			"name": "name_1",
 		}
-		r, err := db.Model(table).Data(dataInsert).Insert()
+		r, err := db.Model(table).Data(dataInsert).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table).WherePri(1).One()
+		one, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["name"].String(), "name_1")
 		t.AssertGT(one["create_at"].Int64(), 0)
@@ -1037,12 +1037,12 @@ CREATE TABLE %s (
 		dataInsert := g.Map{
 			"name": "name_11",
 		}
-		r, err := db.Model(table).Data(dataInsert).WherePri(1).Update()
+		r, err := db.Model(table).Data(dataInsert).WherePri(1).Update(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table).WherePri(1).One()
+		one, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["name"].String(), "name_11")
 		t.AssertGT(one["create_at"].Int64(), 0)
@@ -1059,12 +1059,12 @@ CREATE TABLE %s (
 		time.Sleep(2 * time.Second)
 
 		// update: string
-		r, err = db.Model(table).Data("name='name_111'").WherePri(1).Update()
+		r, err = db.Model(table).Data("name='name_111'").WherePri(1).Update(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err = db.Model(table).WherePri(1).One()
+		one, err = db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["name"].String(), "name_111")
 		t.Assert(one["create_at"].Int64(), lastCreateTime)
@@ -1074,16 +1074,16 @@ CREATE TABLE %s (
 
 	// delete
 	gtest.C(t, func(t *gtest.T) {
-		r, err := db.Model(table).WherePri(1).Delete()
+		r, err := db.Model(table).WherePri(1).Delete(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table).WherePri(1).One()
+		one, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(len(one), 0)
 
-		one, err = db.Model(table).Unscoped().WherePri(1).One()
+		one, err = db.Model(table).Unscoped().WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["name"].String(), "name_111")
 		t.AssertGT(one["create_at"].Int64(), 0)
@@ -1115,12 +1115,12 @@ CREATE TABLE %s (
 			"id":   1,
 			"name": "name_1",
 		}
-		r, err := db.Model(table).Data(dataInsert).Insert()
+		r, err := db.Model(table).Data(dataInsert).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table).WherePri(1).One()
+		one, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["name"].String(), "name_1")
 		t.AssertGT(one["create_at"].Int64(), 0)
@@ -1132,16 +1132,16 @@ CREATE TABLE %s (
 
 	// delete
 	gtest.C(t, func(t *gtest.T) {
-		r, err := db.Model(table).WherePri(1).Delete()
+		r, err := db.Model(table).WherePri(1).Delete(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table).WherePri(1).One()
+		one, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(len(one), 0)
 
-		one, err = db.Model(table).Unscoped().WherePri(1).One()
+		one, err = db.Model(table).Unscoped().WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["name"].String(), "name_1")
 		t.AssertGT(one["create_at"].Int64(), 0)
@@ -1176,12 +1176,12 @@ CREATE TABLE %s (
 			"id":   1,
 			"name": "name_1",
 		}
-		r, err := db.Model(table).SoftTime(softTimeOption).Data(dataInsert).Insert()
+		r, err := db.Model(table).SoftTime(softTimeOption).Data(dataInsert).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table).SoftTime(softTimeOption).WherePri(1).One()
+		one, err := db.Model(table).SoftTime(softTimeOption).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["name"].String(), "name_1")
 		t.Assert(len(one["create_at"].String()), 13)
@@ -1191,16 +1191,16 @@ CREATE TABLE %s (
 
 	// delete
 	gtest.C(t, func(t *gtest.T) {
-		r, err := db.Model(table).SoftTime(softTimeOption).WherePri(1).Delete()
+		r, err := db.Model(table).SoftTime(softTimeOption).WherePri(1).Delete(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table).SoftTime(softTimeOption).WherePri(1).One()
+		one, err := db.Model(table).SoftTime(softTimeOption).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(len(one), 0)
 
-		one, err = db.Model(table).Unscoped().WherePri(1).One()
+		one, err = db.Model(table).Unscoped().WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["name"].String(), "name_1")
 		t.AssertGT(one["create_at"].Int64(), 0)
@@ -1235,12 +1235,12 @@ CREATE TABLE %s (
 			"id":   1,
 			"name": "name_1",
 		}
-		r, err := db.Model(table).SoftTime(softTimeOption).Data(dataInsert).Insert()
+		r, err := db.Model(table).SoftTime(softTimeOption).Data(dataInsert).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table).SoftTime(softTimeOption).WherePri(1).One()
+		one, err := db.Model(table).SoftTime(softTimeOption).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["name"].String(), "name_1")
 		t.Assert(len(one["create_at"].String()), 19)
@@ -1250,16 +1250,16 @@ CREATE TABLE %s (
 
 	// delete
 	gtest.C(t, func(t *gtest.T) {
-		r, err := db.Model(table).SoftTime(softTimeOption).WherePri(1).Delete()
+		r, err := db.Model(table).SoftTime(softTimeOption).WherePri(1).Delete(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Model(table).SoftTime(softTimeOption).WherePri(1).One()
+		one, err := db.Model(table).SoftTime(softTimeOption).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(len(one), 0)
 
-		one, err = db.Model(table).Unscoped().WherePri(1).One()
+		one, err = db.Model(table).Unscoped().WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(one["name"].String(), "name_1")
 		t.AssertGT(one["create_at"].Int64(), 0)
@@ -1292,12 +1292,12 @@ CREATE TABLE %s (
 			"create_at": gtime.NewFromStr("2024-05-30 20:00:00"),
 			"update_at": gtime.NewFromStr("2024-05-30 20:00:00"),
 		}
-		r, err := db.Model(table).Data(dataInsert).Insert()
+		r, err := db.Model(table).Data(dataInsert).Insert(ctx)
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		oneInsert, err := db.Model(table).WherePri(1).One()
+		oneInsert, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneInsert["id"].Int(), 1)
 		t.Assert(oneInsert["name"].String(), "name_1")
@@ -1314,12 +1314,12 @@ CREATE TABLE %s (
 			"name":      "name_10",
 			"update_at": gtime.NewFromStr("2024-05-30 20:15:00"),
 		}
-		r, err = db.Model(table).Data(dataSave).Save()
+		r, err = db.Model(table).Data(dataSave).Save(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 2)
 
-		oneSave, err := db.Model(table).WherePri(1).One()
+		oneSave, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneSave["id"].Int(), 1)
 		t.Assert(oneSave["name"].String(), "name_10")
@@ -1335,12 +1335,12 @@ CREATE TABLE %s (
 			"name":      "name_1000",
 			"update_at": gtime.NewFromStr("2024-05-30 20:30:00"),
 		}
-		r, err = db.Model(table).Data(dataUpdate).WherePri(1).Update()
+		r, err = db.Model(table).Data(dataUpdate).WherePri(1).Update(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
 
-		oneUpdate, err := db.Model(table).WherePri(1).One()
+		oneUpdate, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneUpdate["id"].Int(), 1)
 		t.Assert(oneUpdate["name"].String(), "name_1000")
@@ -1355,12 +1355,12 @@ CREATE TABLE %s (
 			"create_at": gtime.NewFromStr("2024-05-30 21:00:00"),
 			"update_at": gtime.NewFromStr("2024-05-30 21:00:00"),
 		}
-		r, err = db.Model(table).Data(dataReplace).Replace()
+		r, err = db.Model(table).Data(dataReplace).Replace(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 2)
 
-		oneReplace, err := db.Model(table).WherePri(1).One()
+		oneReplace, err := db.Model(table).WherePri(1).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneReplace["id"].Int(), 1)
 		t.Assert(oneReplace["name"].String(), "name_100")
@@ -1379,16 +1379,16 @@ CREATE TABLE %s (
 			"update_at": gtime.NewFromStr("2024-05-30 20:00:00"),
 			"delete_at": gtime.NewFromStr("2024-05-30 20:00:00"),
 		}
-		r, err = db.Model(table).Data(dataInsertDelete).Insert()
+		r, err = db.Model(table).Data(dataInsertDelete).Insert(ctx)
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
 
 		// Delete Select
-		oneDelete, err := db.Model(table).WherePri(2).One()
+		oneDelete, err := db.Model(table).WherePri(2).One(ctx)
 		t.AssertNil(err)
 		t.Assert(len(oneDelete), 0)
-		oneDeleteUnscoped, err := db.Model(table).Unscoped().WherePri(2).One()
+		oneDeleteUnscoped, err := db.Model(table).Unscoped().WherePri(2).One(ctx)
 		t.AssertNil(err)
 		t.Assert(oneDeleteUnscoped["id"].Int(), 2)
 		t.Assert(oneDeleteUnscoped["name"].String(), "name_2")

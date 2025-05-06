@@ -75,10 +75,12 @@ func (c *Core) getConfigNodeFromCtx(ctx context.Context) *ConfigNode {
 	return nil
 }
 
-func (c *Core) injectInternalColumn(ctx context.Context) context.Context {
+// injectInternalColumnIntoCtx injects internal data into context.
+func (c *Core) injectInternalColumnIntoCtx(ctx context.Context) context.Context {
 	return context.WithValue(ctx, internalColumnDataKeyInCtx, &internalColumnData{})
 }
 
+// getInternalColumnFromCtx returns the internal data from context.
 func (c *Core) getInternalColumnFromCtx(ctx context.Context) *internalColumnData {
 	if v := ctx.Value(internalColumnDataKeyInCtx); v != nil {
 		return v.(*internalColumnData)
@@ -86,6 +88,7 @@ func (c *Core) getInternalColumnFromCtx(ctx context.Context) *internalColumnData
 	return nil
 }
 
+// InjectIgnoreResult injects ignore result mark into context.
 func (c *Core) InjectIgnoreResult(ctx context.Context) context.Context {
 	if ctx.Value(ignoreResultKeyInCtx) != nil {
 		return ctx
@@ -93,6 +96,7 @@ func (c *Core) InjectIgnoreResult(ctx context.Context) context.Context {
 	return context.WithValue(ctx, ignoreResultKeyInCtx, true)
 }
 
+// GetIgnoreResultFromCtx returns the ignore result mark from context.
 func (c *Core) GetIgnoreResultFromCtx(ctx context.Context) bool {
 	return ctx.Value(ignoreResultKeyInCtx) != nil
 }
