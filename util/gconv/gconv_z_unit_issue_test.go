@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/container/gvar"
 	"github.com/gogf/gf/v3/encoding/gjson"
 	"github.com/gogf/gf/v3/frame/g"
@@ -152,7 +152,7 @@ func Test_Issue1607(t *testing.T) {
 func Test_Issue1946(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
-			init *gtype.Bool
+			init *gatomic.Bool
 			Name string
 		}
 		type A struct {
@@ -160,7 +160,7 @@ func Test_Issue1946(t *testing.T) {
 		}
 		a := &A{
 			B: &B{
-				init: gtype.NewBool(true),
+				init: gatomic.NewBool(true),
 			},
 		}
 		err := gconv.Struct(g.Map{
@@ -175,7 +175,7 @@ func Test_Issue1946(t *testing.T) {
 	// It cannot change private attribute.
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
-			init *gtype.Bool
+			init *gatomic.Bool
 			Name string
 		}
 		type A struct {
@@ -183,7 +183,7 @@ func Test_Issue1946(t *testing.T) {
 		}
 		a := &A{
 			B: &B{
-				init: gtype.NewBool(true),
+				init: gatomic.NewBool(true),
 			},
 		}
 		err := gconv.Struct(g.Map{
@@ -199,7 +199,7 @@ func Test_Issue1946(t *testing.T) {
 	// It can change public attribute.
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
-			Init *gtype.Bool
+			Init *gatomic.Bool
 			Name string
 		}
 		type A struct {
@@ -207,7 +207,7 @@ func Test_Issue1946(t *testing.T) {
 		}
 		a := &A{
 			B: &B{
-				Init: gtype.NewBool(),
+				Init: gatomic.NewBool(),
 			},
 		}
 		err := gconv.Struct(g.Map{
@@ -733,12 +733,12 @@ func Test_Issue3821(t *testing.T) {
 
 		type User struct {
 			InnerUser
-			UserId     int        `orm:"user_id"`
-			UserIdBool gtype.Bool `orm:"user_id"`
-			Username   string     `orm:"user_name"`
-			Username2  string     `orm:"user_name"`
-			Username3  *string    `orm:"user_name"`
-			Username4  string     `orm:"username"` // empty string
+			UserId     int          `orm:"user_id"`
+			UserIdBool gatomic.Bool `orm:"user_id"`
+			Username   string       `orm:"user_name"`
+			Username2  string       `orm:"user_name"`
+			Username3  *string      `orm:"user_name"`
+			Username4  string       `orm:"username"` // empty string
 		}
 		var user = &User{}
 		err := gconv.StructTag(record, user, "orm")

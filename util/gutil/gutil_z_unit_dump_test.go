@@ -10,7 +10,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/frame/g"
 	"github.com/gogf/gf/v3/net/ghttp"
 	"github.com/gogf/gf/v3/os/gtime"
@@ -76,7 +76,7 @@ func Test_Dump(t *testing.T) {
 		gutil.Dump(make(chan int))
 		gutil.Dump(func() {})
 		gutil.Dump(nil)
-		gutil.Dump(gtype.NewInt(1))
+		gutil.Dump(gatomic.NewInt(1))
 	})
 }
 

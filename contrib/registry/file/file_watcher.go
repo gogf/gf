@@ -9,7 +9,7 @@ package file
 import (
 	"context"
 
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/errors/gerror"
 	"github.com/gogf/gf/v3/net/gsvc"
 )
@@ -19,7 +19,7 @@ type Watcher struct {
 	prefix    string            // Watched prefix key, not file name prefix.
 	discovery gsvc.Discovery    // Service discovery.
 	ch        chan gsvc.Service // Changes that caused by inotify.
-	closed    *gtype.Bool       // Whether the channel has been closed
+	closed    *gatomic.Bool     // Whether the channel has been closed
 }
 
 // Proceed proceeds watch in blocking way.

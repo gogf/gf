@@ -13,7 +13,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/errors/gcode"
 	"github.com/gogf/gf/v3/errors/gerror"
 	"github.com/gogf/gf/v3/os/glog"
@@ -30,8 +30,8 @@ type Entry struct {
 	timerEntry   *gtimer.Entry // Associated timer Entry.
 	schedule     *cronSchedule // Timed schedule object.
 	jobName      string        // Callback function name(address info).
-	times        *gtype.Int    // Running times limit.
-	infinite     *gtype.Bool   // No times limit.
+	times        *gatomic.Int  // Running times limit.
+	infinite     *gatomic.Bool // No times limit.
 	Name         string        // Entry name.
 	RegisterTime time.Time     // Registered time.
 	Job          JobFunc       `json:"-"` // Callback function.
@@ -67,8 +67,8 @@ func (c *Cron) doAddEntry(in doAddEntryInput) (*Entry, error) {
 		cron:         c,
 		schedule:     schedule,
 		jobName:      runtime.FuncForPC(reflect.ValueOf(in.Job).Pointer()).Name(),
-		times:        gtype.NewInt(in.Times),
-		infinite:     gtype.NewBool(in.Infinite),
+		times:        gatomic.NewInt(in.Times),
+		infinite:     gatomic.NewBool(in.Infinite),
 		RegisterTime: time.Now(),
 		Job:          in.Job,
 	}

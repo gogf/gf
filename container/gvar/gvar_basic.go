@@ -7,7 +7,7 @@
 package gvar
 
 import (
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/util/gconv"
 )
 
@@ -17,7 +17,7 @@ func (v *Var) Val() any {
 		return nil
 	}
 	if v.safe {
-		if t, ok := v.value.(*gtype.Interface); ok {
+		if t, ok := v.value.(*gatomic.Interface); ok {
 			return t.Val()
 		}
 	}

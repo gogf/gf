@@ -24,7 +24,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/errors/gcode"
 	"github.com/gogf/gf/v3/errors/gerror"
 	"github.com/gogf/gf/v3/internal/command"
@@ -34,8 +34,8 @@ import (
 type Timer struct {
 	mu      sync.RWMutex
 	queue   *priorityQueue // queue is a priority queue based on heap structure.
-	status  *gtype.Int     // status is the current timer status.
-	ticks   *gtype.Int64   // ticks is the proceeded interval number by the timer.
+	status  *gatomic.Int   // status is the current timer status.
+	ticks   *gatomic.Int64 // ticks is the proceeded interval number by the timer.
 	options TimerOptions   // timer options is used for timer configuration.
 }
 

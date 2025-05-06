@@ -11,8 +11,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/container/glist"
-	"github.com/gogf/gf/v3/container/gtype"
 	"github.com/gogf/gf/v3/errors/gcode"
 	"github.com/gogf/gf/v3/errors/gerror"
 	"github.com/gogf/gf/v3/os/gtime"
@@ -22,7 +22,7 @@ import (
 // Pool is an Object-Reusable Pool.
 type Pool struct {
 	list    *glist.List                 // Available/idle items list.
-	closed  *gtype.Bool                 // Whether the pool is closed.
+	closed  *gatomic.Bool               // Whether the pool is closed.
 	TTL     time.Duration               // Time To Live for pool items.
 	NewFunc func() (interface{}, error) // Callback function to create pool item.
 	// ExpireFunc is the function for expired items destruction.
@@ -54,7 +54,7 @@ type ExpireFunc func(interface{})
 func New(ttl time.Duration, newFunc NewFunc, expireFunc ...ExpireFunc) *Pool {
 	r := &Pool{
 		list:    glist.New(true),
-		closed:  gtype.NewBool(),
+		closed:  gatomic.NewBool(),
 		TTL:     ttl,
 		NewFunc: newFunc,
 	}

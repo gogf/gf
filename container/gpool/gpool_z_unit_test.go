@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/container/gpool"
-	"github.com/gogf/gf/v3/container/gtype"
 	"github.com/gogf/gf/v3/frame/g"
 	"github.com/gogf/gf/v3/test/gtest"
 )
@@ -21,7 +21,7 @@ var nf gpool.NewFunc = func() (i interface{}, e error) {
 	return "hello", nil
 }
 
-var assertIndex = gtype.NewInt(0)
+var assertIndex = gatomic.NewInt(0)
 
 var ef gpool.ExpireFunc = func(i interface{}) {
 	assertIndex.Add(1)

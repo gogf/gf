@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v3/container/garray"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/container/gmap"
-	"github.com/gogf/gf/v3/container/gtype"
 	"github.com/gogf/gf/v3/container/gvar"
 	"github.com/gogf/gf/v3/errors/gcode"
 	"github.com/gogf/gf/v3/errors/gerror"
@@ -490,7 +490,7 @@ type Core struct {
 	db            DB              // DB interface object.
 	group         string          // Configuration group name.
 	schema        string          // Custom schema for this object.
-	debug         *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
+	debug         *gatomic.Bool   // Enable debug mode for the database, which can be changed in runtime.
 	cache         *gcache.Cache   // Cache manager, SQL result cache only.
 	links         *gmap.Map       // links caches all created links by node.
 	logger        glog.ILogger    // Logger for logging functionality.
@@ -905,7 +905,7 @@ func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 	}
 	c := &Core{
 		group:         group,
-		debug:         gtype.NewBool(),
+		debug:         gatomic.NewBool(),
 		cache:         gcache.New(),
 		links:         gmap.New(true),
 		logger:        glog.New(),

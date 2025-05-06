@@ -13,8 +13,8 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/container/glist"
-	"github.com/gogf/gf/v3/container/gtype"
 	"github.com/gogf/gf/v3/debug/gdebug"
 	"github.com/gogf/gf/v3/errors/gcode"
 	"github.com/gogf/gf/v3/errors/gerror"
@@ -27,7 +27,7 @@ import (
 
 var (
 	// handlerIdGenerator is handler item id generator.
-	handlerIdGenerator = gtype.NewInt()
+	handlerIdGenerator = gatomic.NewInt()
 )
 
 // routerMapKey creates and returns a unique router key for given parameters.

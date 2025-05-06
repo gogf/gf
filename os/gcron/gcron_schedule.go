@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/errors/gcode"
 	"github.com/gogf/gf/v3/errors/gerror"
 	"github.com/gogf/gf/v3/os/gtime"
@@ -32,10 +32,10 @@ type cronSchedule struct {
 	monthMap        map[int]struct{} // Job can run in these moth numbers.
 
 	// This field stores the timestamp that meets schedule latest.
-	lastMeetTimestamp *gtype.Int64
+	lastMeetTimestamp *gatomic.Int64
 
 	// Last timestamp number, for timestamp fix in some latency.
-	lastCheckTimestamp *gtype.Int64
+	lastCheckTimestamp *gatomic.Int64
 }
 
 type patternItemType int
@@ -134,8 +134,8 @@ func newSchedule(pattern string) (*cronSchedule, error) {
 				createTimestamp:    currentTimestamp,
 				everySeconds:       int64(d.Seconds()),
 				pattern:            pattern,
-				lastMeetTimestamp:  gtype.NewInt64(currentTimestamp),
-				lastCheckTimestamp: gtype.NewInt64(currentTimestamp),
+				lastMeetTimestamp:  gatomic.NewInt64(currentTimestamp),
+				lastCheckTimestamp: gatomic.NewInt64(currentTimestamp),
 			}, nil
 		} else {
 			return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid pattern: "%s"`, pattern)
@@ -152,8 +152,8 @@ func newSchedule(pattern string) (*cronSchedule, error) {
 			createTimestamp:    currentTimestamp,
 			everySeconds:       0,
 			pattern:            pattern,
-			lastMeetTimestamp:  gtype.NewInt64(currentTimestamp),
-			lastCheckTimestamp: gtype.NewInt64(currentTimestamp),
+			lastMeetTimestamp:  gatomic.NewInt64(currentTimestamp),
+			lastCheckTimestamp: gatomic.NewInt64(currentTimestamp),
 		}
 	)
 

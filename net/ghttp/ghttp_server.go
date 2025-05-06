@@ -20,8 +20,8 @@ import (
 	"github.com/olekukonko/tablewriter"
 
 	"github.com/gogf/gf/v3/container/garray"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/container/gset"
-	"github.com/gogf/gf/v3/container/gtype"
 	"github.com/gogf/gf/v3/debug/gdebug"
 	"github.com/gogf/gf/v3/errors/gcode"
 	"github.com/gogf/gf/v3/errors/gerror"
@@ -100,7 +100,7 @@ func GetServer(name ...interface{}) *Server {
 			plugins:          make([]Plugin, 0),
 			servers:          make([]*graceful.Server, 0),
 			closeChan:        make(chan struct{}, 10000),
-			serverCount:      gtype.NewInt(),
+			serverCount:      gatomic.NewInt(),
 			statusHandlerMap: make(map[string][]HandlerFunc),
 			serveTree:        make(map[string]interface{}),
 			serveCache:       gcache.New(),

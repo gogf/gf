@@ -11,7 +11,7 @@ import (
 	"math"
 	"sync"
 
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 )
 
 // priorityQueue is an abstract data type similar to a regular queue or stack data structure in which
@@ -21,7 +21,7 @@ import (
 type priorityQueue struct {
 	mu           sync.Mutex
 	heap         *priorityQueueHeap // the underlying queue items manager using heap.
-	nextPriority *gtype.Int64       // nextPriority stores the next priority value of the heap, which is used to check if necessary to call the Pop of heap by Timer.
+	nextPriority *gatomic.Int64     // nextPriority stores the next priority value of the heap, which is used to check if necessary to call the Pop of heap by Timer.
 }
 
 // priorityQueueHeap is a heap manager, of which the underlying `array` is an array implementing a heap structure.
@@ -39,7 +39,7 @@ type priorityQueueItem struct {
 func newPriorityQueue() *priorityQueue {
 	queue := &priorityQueue{
 		heap:         &priorityQueueHeap{array: make([]priorityQueueItem, 0)},
-		nextPriority: gtype.NewInt64(math.MaxInt64),
+		nextPriority: gatomic.NewInt64(math.MaxInt64),
 	}
 	heap.Init(queue.heap)
 	return queue

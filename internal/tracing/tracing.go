@@ -13,14 +13,14 @@ import (
 
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/encoding/gbinary"
 	"github.com/gogf/gf/v3/util/grand"
 )
 
 var (
 	randomInitSequence = int32(grand.Intn(math.MaxInt32))
-	sequence           = gtype.NewInt32(randomInitSequence)
+	sequence           = gatomic.NewInt32(randomInitSequence)
 )
 
 // NewIDs creates and returns a new trace and span ID.

@@ -15,8 +15,8 @@ import (
 
 	"github.com/gorilla/websocket"
 
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/container/gmap"
-	"github.com/gogf/gf/v3/container/gtype"
 	"github.com/gogf/gf/v3/errors/gcode"
 	"github.com/gogf/gf/v3/errors/gerror"
 	"github.com/gogf/gf/v3/net/ghttp/internal/graceful"
@@ -36,7 +36,7 @@ type (
 		config           ServerConfig              // Server configuration.
 		plugins          []Plugin                  // Plugin array to extend server functionality.
 		servers          []*graceful.Server        // Underlying http.Server array.
-		serverCount      *gtype.Int                // Underlying http.Server number for internal usage.
+		serverCount      *gatomic.Int              // Underlying http.Server number for internal usage.
 		closeChan        chan struct{}             // Used for underlying server closing event notification.
 		serveTree        map[string]interface{}    // The route maps tree.
 		serveCache       *gcache.Cache             // Server caches for internal usage.
@@ -182,7 +182,7 @@ var (
 
 	// serverRunning marks the running server counts.
 	// If there is no successful server running or all servers' shutdown, this value is 0.
-	serverRunning = gtype.NewInt()
+	serverRunning = gatomic.NewInt()
 
 	// wsUpGrader is the default up-grader configuration for websocket.
 	wsUpGrader = websocket.Upgrader{
@@ -197,7 +197,7 @@ var (
 
 	// serverProcessInitialized is used for lazy initialization for server.
 	// The process can only be initialized once.
-	serverProcessInitialized = gtype.NewBool()
+	serverProcessInitialized = gatomic.NewBool()
 
 	// gracefulEnabled is used for a graceful reload feature, which is false in default.
 	gracefulEnabled = false

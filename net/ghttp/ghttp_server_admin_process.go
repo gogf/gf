@@ -16,7 +16,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/encoding/gjson"
 	"github.com/gogf/gf/v3/errors/gcode"
 	"github.com/gogf/gf/v3/errors/gerror"
@@ -46,10 +46,10 @@ var (
 	serverActionLocker sync.Mutex
 
 	// serverActionLastTime is timestamp in milliseconds of last administration operation.
-	serverActionLastTime = gtype.NewInt64(gtime.TimestampMilli())
+	serverActionLastTime = gatomic.NewInt64(gtime.TimestampMilli())
 
 	// serverProcessStatus is the server status for operation of current process.
-	serverProcessStatus = gtype.NewInt()
+	serverProcessStatus = gatomic.NewInt()
 )
 
 // RestartAllServer restarts all the servers of the process gracefully.
