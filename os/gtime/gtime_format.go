@@ -17,7 +17,7 @@ import (
 
 var (
 	// Refer: http://php.net/manual/en/function.date.php
-	formats = map[byte]string{
+	layouts = map[byte]string{
 		'd': "02",                        // Day: Day of the month, 2 digits with leading zeros. Eg: 01 to 31.
 		'D': "Mon",                       // Day: A textual representation of a day, three letters. Eg: Mon through Sun.
 		'w': "Monday",                    // Day: Numeric representation of the day of the week. Eg: 0 (for Sunday) through 6 (for Saturday).
@@ -36,10 +36,10 @@ var (
 		'y': "06",                        // Year: A two-digit representation of a year. Eg: 99 or 03.
 		'a': "pm",                        // Time: Lowercase Ante meridiem and Post meridiem. Eg: am or pm.
 		'A': "PM",                        // Time: Uppercase Ante meridiem and Post meridiem. Eg: AM or PM.
-		'g': "3",                         // Time: 12-hour format of an hour without leading zeros. Eg: 1 through 12.
-		'G': "=G=15",                     // Time: 24-hour format of an hour without leading zeros. Eg: 0 through 23.
-		'h': "03",                        // Time: 12-hour format of an hour with leading zeros. Eg: 01 through 12.
-		'H': "15",                        // Time: 24-hour format of an hour with leading zeros. Eg: 00 through 23.
+		'g': "3",                         // Time: 12-hour layout of an hour without leading zeros. Eg: 1 through 12.
+		'G': "=G=15",                     // Time: 24-hour layout of an hour without leading zeros. Eg: 0 through 23.
+		'h': "03",                        // Time: 12-hour layout of an hour with leading zeros. Eg: 01 through 12.
+		'H': "15",                        // Time: 24-hour layout of an hour with leading zeros. Eg: 00 through 23.
 		'i': "04",                        // Time: Minutes with leading zeros. Eg: 00 to 59.
 		's': "05",                        // Time: Seconds with leading zeros. Eg: 00 through 59.
 		'u': "=u=.000",                   // Time: Milliseconds. Eg: 234, 678.
@@ -47,8 +47,8 @@ var (
 		'O': "-0700",                     // Zone: Difference to Greenwich time (GMT) in hours. Eg: +0200.
 		'P': "-07:00",                    // Zone: Difference to Greenwich time (GMT) with colon between hours and minutes. Eg: +02:00.
 		'T': "MST",                       // Zone: Timezone abbreviation. Eg: UTC, EST, MDT ...
-		'c': "2006-01-02T15:04:05-07:00", // Format: ISO 8601 date. Eg: 2004-02-12T15:19:21+00:00.
-		'r': "Mon, 02 Jan 06 15:04 MST",  // Format: RFC 2822 formatted date. Eg: Thu, 21 Dec 2000 16:01:07 +0200.
+		'c': "2006-01-02T15:04:05-07:00", // Layout: ISO 8601 date. Eg: 2004-02-12T15:19:21+00:00.
+		'r': "Mon, 02 Jan 06 15:04 MST",  // Layout: RFC 2822 layoutted date. Eg: Thu, 21 Dec 2000 16:01:07 +0200.
 	}
 
 	// Week to number mapping.
@@ -66,13 +66,13 @@ var (
 	dayOfMonth = []int{0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334}
 )
 
-// Format formats and returns the formatted result with custom `format`.
-// Refer method Layout if you want to follow stdlib layout.
-func (t *Time) Format(format string) string {
+// Layout layouts and returns the layoutted result with custom `layout`.
+// Refer method Format if you want to follow stdlib format.
+func (t *Time) Layout(layout string) string {
 	if t == nil {
 		return ""
 	}
-	runes := []rune(format)
+	runes := []rune(layout)
 	buffer := bytes.NewBuffer(nil)
 	for i := 0; i < len(runes); {
 		switch runes[i] {
@@ -97,7 +97,7 @@ func (t *Time) Format(format string) string {
 				buffer.WriteRune(runes[i])
 				break
 			}
-			if f, ok := formats[byte(runes[i])]; ok {
+			if f, ok := layouts[byte(runes[i])]; ok {
 				result := t.Time.Format(f)
 				// Particular chars should be handled here.
 				switch runes[i] {
@@ -118,7 +118,7 @@ func (t *Time) Format(format string) string {
 				case 'N':
 					buffer.WriteString(strings.ReplaceAll(weekMap[result], "0", "7"))
 				case 'S':
-					buffer.WriteString(formatMonthDaySuffixMap(result))
+					buffer.WriteString(layoutMonthDaySuffixMap(result))
 				default:
 					buffer.WriteString(result)
 				}
@@ -131,49 +131,49 @@ func (t *Time) Format(format string) string {
 	return buffer.String()
 }
 
-// FormatNew formats and returns a new Time object with given custom `format`.
-func (t *Time) FormatNew(format string) *Time {
-	if t == nil {
-		return nil
-	}
-	return NewFromStr(t.Format(format))
-}
-
-// FormatTo formats `t` with given custom `format`.
-func (t *Time) FormatTo(format string) *Time {
-	if t == nil {
-		return nil
-	}
-	t.Time = NewFromStr(t.Format(format)).Time
-	return t
-}
-
-// Layout formats the time with stdlib layout and returns the formatted result.
-func (t *Time) Layout(layout string) string {
-	if t == nil {
-		return ""
-	}
-	return t.Time.Format(layout)
-}
-
-// LayoutNew formats the time with stdlib layout and returns the new Time object.
+// LayoutNew layouts and returns a new Time object with given custom `layout`.
 func (t *Time) LayoutNew(layout string) *Time {
 	if t == nil {
 		return nil
 	}
-	newTime, err := StrToTimeLayout(t.Layout(layout), layout)
+	return NewFromStr(t.Layout(layout))
+}
+
+// LayoutTo layouts `t` with given custom `layout`.
+func (t *Time) LayoutTo(layout string) *Time {
+	if t == nil {
+		return nil
+	}
+	t.Time = NewFromStr(t.Layout(layout)).Time
+	return t
+}
+
+// Format layouts the time with stdlib format and returns the layoutted result.
+func (t *Time) Format(format string) string {
+	if t == nil {
+		return ""
+	}
+	return t.Time.Format(format)
+}
+
+// FormatNew layouts the time with stdlib format and returns the new Time object.
+func (t *Time) FormatNew(format string) *Time {
+	if t == nil {
+		return nil
+	}
+	newTime, err := StrToTimeFormat(t.Format(format), format)
 	if err != nil {
 		panic(err)
 	}
 	return newTime
 }
 
-// LayoutTo formats `t` with stdlib layout.
-func (t *Time) LayoutTo(layout string) *Time {
+// FormatTo layouts `t` with stdlib format.
+func (t *Time) FormatTo(format string) *Time {
 	if t == nil {
 		return nil
 	}
-	newTime, err := StrToTimeLayout(t.Layout(layout), layout)
+	newTime, err := StrToTimeFormat(t.Format(format), format)
 	if err != nil {
 		panic(err)
 	}
@@ -225,14 +225,14 @@ func (t *Time) WeeksOfYear() int {
 	return week
 }
 
-// formatToStdLayout converts the custom format to stdlib layout.
-func formatToStdLayout(format string) string {
+// layoutToStdFormat converts the custom layout to stdlib format.
+func layoutToStdFormat(layout string) string {
 	b := bytes.NewBuffer(nil)
-	for i := 0; i < len(format); {
-		switch format[i] {
+	for i := 0; i < len(layout); {
+		switch layout[i] {
 		case '\\':
-			if i < len(format)-1 {
-				b.WriteByte(format[i+1])
+			if i < len(layout)-1 {
+				b.WriteByte(layout[i+1])
 				i += 2
 				continue
 			} else {
@@ -240,15 +240,15 @@ func formatToStdLayout(format string) string {
 			}
 
 		default:
-			if f, ok := formats[format[i]]; ok {
+			if f, ok := layouts[layout[i]]; ok {
 				// Handle particular chars.
-				switch format[i] {
+				switch layout[i] {
 				case 'j':
 					b.WriteString("2")
 				case 'G':
 					b.WriteString("15")
 				case 'u':
-					if i > 0 && format[i-1] == '.' {
+					if i > 0 && layout[i-1] == '.' {
 						b.WriteString("000")
 					} else {
 						b.WriteString(".000")
@@ -258,7 +258,7 @@ func formatToStdLayout(format string) string {
 					b.WriteString(f)
 				}
 			} else {
-				b.WriteByte(format[i])
+				b.WriteByte(layout[i])
 			}
 			i++
 		}
@@ -266,17 +266,17 @@ func formatToStdLayout(format string) string {
 	return b.String()
 }
 
-// formatToRegexPattern converts the custom format to its corresponding regular expression.
-func formatToRegexPattern(format string) string {
-	s := regexp.QuoteMeta(formatToStdLayout(format))
+// layoutToRegexPattern converts the custom layout to its corresponding regular expression.
+func layoutToRegexPattern(layout string) string {
+	s := regexp.QuoteMeta(layoutToStdFormat(layout))
 	s, _ = gregex.ReplaceString(`[0-9]`, `[0-9]`, s)
 	s, _ = gregex.ReplaceString(`[A-Za-z]`, `[A-Za-z]`, s)
 	s, _ = gregex.ReplaceString(`\s+`, `\s+`, s)
 	return s
 }
 
-// formatMonthDaySuffixMap returns the short english word for current day.
-func formatMonthDaySuffixMap(day string) string {
+// layoutMonthDaySuffixMap returns the short english word for current day.
+func layoutMonthDaySuffixMap(day string) string {
 	switch day {
 	case "01", "21", "31":
 		return "st"

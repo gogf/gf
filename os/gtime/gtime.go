@@ -155,12 +155,12 @@ func Datetime() string {
 	return time.Now().Format("2006-01-02 15:04:05")
 }
 
-// ISO8601 returns current datetime in ISO8601 format like "2006-01-02T15:04:05-07:00".
+// ISO8601 returns current datetime in ISO8601 layout like "2006-01-02T15:04:05-07:00".
 func ISO8601() string {
 	return time.Now().Format("2006-01-02T15:04:05-07:00")
 }
 
-// RFC822 returns current datetime in RFC822 format like "Mon, 02 Jan 06 15:04 MST".
+// RFC822 returns current datetime in RFC822 layout like "Mon, 02 Jan 06 15:04 MST".
 func RFC822() string {
 	return time.Now().Format("Mon, 02 Jan 06 15:04 MST")
 }
@@ -196,16 +196,16 @@ func parseDateStr(s string) (year, month, day int) {
 }
 
 // StrToTime converts string to *Time object. It also supports timestamp string.
-// The parameter `format` is unnecessary, which specifies the format for converting like "Y-m-d H:i:s".
-// If `format` is given, it acts as same as function StrToTimeFormat.
-// If `format` is not given, it converts string as a "standard" datetime string.
+// The parameter `layout` is unnecessary, which specifies the layout for converting like "Y-m-d H:i:s".
+// If `layout` is given, it acts as same as function StrToTimeLayout.
+// If `layout` is not given, it converts string as a "standard" datetime string.
 // Note that, it fails and returns error if there's no date string in `str`.
-func StrToTime(str string, format ...string) (*Time, error) {
+func StrToTime(str string, layout ...string) (*Time, error) {
 	if str == "" {
 		return &Time{wrapper{time.Time{}}}, nil
 	}
-	if len(format) > 0 {
-		return StrToTimeFormat(str, format[0])
+	if len(layout) > 0 {
+		return StrToTimeLayout(str, layout[0])
 	}
 	if isTimestampStr(str) {
 		timestamp, _ := strconv.ParseInt(str, 10, 64)
@@ -255,7 +255,7 @@ func StrToTime(str string, format ...string) (*Time, error) {
 			nsec *= 10
 		}
 	}
-	// If there's zone information in the string,
+	// If there's zone inlayoution in the string,
 	// it then performs time zone conversion, which converts the time zone to UTC.
 	if match[4] != "" && match[6] == "" {
 		match[6] = "000000"
@@ -318,43 +318,43 @@ func ConvertZone(strTime string, toZone string, fromZone ...string) (*Time, erro
 	}
 }
 
-// StrToTimeFormat parses string `str` to *Time object with given format `format`.
-// The parameter `format` is like "Y-m-d H:i:s".
-func StrToTimeFormat(str string, format string) (*Time, error) {
-	return StrToTimeLayout(str, formatToStdLayout(format))
+// StrToTimeLayout parses string `str` to *Time object with given layout `layout`.
+// The parameter `layout` is like "Y-m-d H:i:s".
+func StrToTimeLayout(str string, layout string) (*Time, error) {
+	return StrToTimeFormat(str, layoutToStdFormat(layout))
 }
 
-// StrToTimeLayout parses string `str` to *Time object with given format `layout`.
-// The parameter `layout` is in stdlib format like "2006-01-02 15:04:05".
-func StrToTimeLayout(str string, layout string) (*Time, error) {
-	if t, err := time.ParseInLocation(layout, str, time.Local); err == nil {
+// StrToTimeFormat parses string `str` to *Time object with given layout `format`.
+// The parameter `format` is in stdlib layout like "2006-01-02 15:04:05".
+func StrToTimeFormat(str string, format string) (*Time, error) {
+	if t, err := time.ParseInLocation(format, str, time.Local); err == nil {
 		return NewFromTime(t), nil
 	} else {
 		return nil, gerror.WrapCodef(
 			gcode.CodeInvalidParameter, err,
-			`time.ParseInLocation failed for layout "%s" and value "%s"`,
-			layout, str,
+			`time.ParseInLocation failed for format "%s" and value "%s"`,
+			format, str,
 		)
 	}
 }
 
-// ParseTimeFromContent retrieves time information for content string, it then parses and returns it
+// ParseTimeFromContent retrieves time inlayoution for content string, it then parses and returns it
 // as *Time object.
-// It returns the first time information if there are more than one time string in the content.
-// It only retrieves and parses the time information with given first matched `format` if it's passed.
-func ParseTimeFromContent(content string, format ...string) *Time {
+// It returns the first time inlayoution if there are more than one time string in the content.
+// It only retrieves and parses the time inlayoution with given first matched `layout` if it's passed.
+func ParseTimeFromContent(content string, layout ...string) *Time {
 	var (
 		err   error
 		match []string
 	)
-	if len(format) > 0 {
-		for _, item := range format {
-			match, err = gregex.MatchString(formatToRegexPattern(item), content)
+	if len(layout) > 0 {
+		for _, item := range layout {
+			match, err = gregex.MatchString(layoutToRegexPattern(item), content)
 			if err != nil {
 				intlog.Errorf(context.TODO(), `%+v`, err)
 			}
 			if len(match) > 0 {
-				return NewFromStrFormat(match[0], item)
+				return NewFromStrLayout(match[0], item)
 			}
 		}
 	} else {

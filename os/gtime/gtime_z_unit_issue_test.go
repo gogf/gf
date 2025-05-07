@@ -27,7 +27,7 @@ func Test_Issue1681(t *testing.T) {
 // https://github.com/gogf/gf/issues/2803
 func Test_Issue2803(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		newTime := gtime.New("2023-07-26").LayoutTo("2006-01")
+		newTime := gtime.New("2023-07-26").FormatTo("2006-01")
 		t.Assert(newTime.Year(), 2023)
 		t.Assert(newTime.Month(), 7)
 		t.Assert(newTime.Day(), 1)
@@ -51,9 +51,9 @@ func Test_Issue3558(t *testing.T) {
 
 		stdTime, err := time.Parse(time.RFC3339, timeStr)
 		t.AssertNil(err)
-		stdTimeFormat := stdTime.Format("2006-01-02 15:04:05")
-		gfTimeFormat := gfTime.Format("Y-m-d H:i:s")
-		t.Assert(gfTimeFormat, stdTimeFormat)
+		stdTimeLayout := stdTime.Format("2006-01-02 15:04:05")
+		gfTimeLayout := gfTime.Layout("Y-m-d H:i:s")
+		t.Assert(gfTimeLayout, stdTimeLayout)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		timeStr := "1880-10-24T00:00:00-08:05"
@@ -66,8 +66,8 @@ func Test_Issue3558(t *testing.T) {
 		t.Assert(gfTime.Second(), 0)
 		stdTime, err := time.Parse(time.RFC3339, timeStr)
 		t.AssertNil(err)
-		stdTimeFormat := stdTime.Format("2006-01-02 15:04:05")
-		gfTimeFormat := gfTime.Format("Y-m-d H:i:s")
-		t.Assert(gfTimeFormat, stdTimeFormat)
+		stdTimeLayout := stdTime.Format("2006-01-02 15:04:05")
+		gfTimeLayout := gfTime.Layout("Y-m-d H:i:s")
+		t.Assert(gfTimeLayout, stdTimeLayout)
 	})
 }

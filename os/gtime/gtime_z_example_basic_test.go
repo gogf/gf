@@ -100,16 +100,16 @@ func ExampleConvertZone() {
 	// 2006-01-02 16:04:05
 }
 
-func ExampleStrToTimeFormat() {
-	res, _ := gtime.StrToTimeFormat("2006-01-02 15:04:05", "Y-m-d H:i:s")
+func ExampleStrToTimeLayout() {
+	res, _ := gtime.StrToTimeLayout("2006-01-02 15:04:05", "Y-m-d H:i:s")
 	fmt.Println(res)
 
 	// Output:
 	// 2006-01-02 15:04:05
 }
 
-func ExampleStrToTimeLayout() {
-	res, _ := gtime.StrToTimeLayout("2018-08-08", "2006-01-02")
+func ExampleStrToTimeFormat() {
+	res, _ := gtime.StrToTimeFormat("2018-08-08", "2006-01-02")
 	fmt.Println(res)
 
 	// Output:
@@ -131,15 +131,15 @@ func ExampleParseDuration() {
 	// 10h0m0s
 }
 
-func ExampleTime_Format() {
+func ExampleTime_Layout() {
 	gt1 := gtime.New("2018-08-08 08:08:08")
 
-	fmt.Println(gt1.Format("Y-m-d"))
-	fmt.Println(gt1.Format("l"))
-	fmt.Println(gt1.Format("F j, Y, g:i a"))
-	fmt.Println(gt1.Format("j, n, Y"))
-	fmt.Println(gt1.Format("h-i-s, j-m-y, it is w Day z"))
-	fmt.Println(gt1.Format("D M j G:i:s T Y"))
+	fmt.Println(gt1.Layout("Y-m-d"))
+	fmt.Println(gt1.Layout("l"))
+	fmt.Println(gt1.Layout("F j, Y, g:i a"))
+	fmt.Println(gt1.Layout("j, n, Y"))
+	fmt.Println(gt1.Layout("h-i-s, j-m-y, it is w Day z"))
+	fmt.Println(gt1.Layout("D M j G:i:s T Y"))
 
 	// Output:
 	// 2018-08-08
@@ -150,48 +150,48 @@ func ExampleTime_Format() {
 	// Wed Aug 8 8:08:08 CST 2018
 }
 
-func ExampleTime_FormatNew() {
+func ExampleTime_LayoutNew() {
 	gt1 := gtime.New("2018-08-08 08:08:08")
 
-	fmt.Println(gt1.FormatNew("Y-m-d"))
-	fmt.Println(gt1.FormatNew("Y-m-d H:i"))
+	fmt.Println(gt1.LayoutNew("Y-m-d"))
+	fmt.Println(gt1.LayoutNew("Y-m-d H:i"))
 
 	// Output:
 	// 2018-08-08 00:00:00
 	// 2018-08-08 08:08:00
 }
 
-func ExampleTime_FormatTo() {
+func ExampleTime_LayoutTo() {
 	gt1 := gtime.New("2018-08-08 08:08:08")
 
-	fmt.Println(gt1.FormatTo("Y-m-d"))
+	fmt.Println(gt1.LayoutTo("Y-m-d"))
 
 	// Output:
 	// 2018-08-08 00:00:00
 }
 
-func ExampleTime_Layout() {
+func ExampleTime_Format() {
 	gt1 := gtime.New("2018-08-08 08:08:08")
 
-	fmt.Println(gt1.Layout("2006-01-02"))
+	fmt.Println(gt1.Format("2006-01-02"))
 
 	// Output:
 	// 2018-08-08
 }
 
-func ExampleTime_LayoutNew() {
+func ExampleTime_FormatNew() {
 	gt1 := gtime.New("2018-08-08 08:08:08")
 
-	fmt.Println(gt1.LayoutNew("2006-01-02"))
+	fmt.Println(gt1.FormatNew("2006-01-02"))
 
 	// Output:
 	// 2018-08-08 00:00:00
 }
 
-func ExampleTime_LayoutTo() {
+func ExampleTime_FormatTo() {
 	gt1 := gtime.New("2018-08-08 08:08:08")
 
-	fmt.Println(gt1.LayoutTo("2006-01-02"))
+	fmt.Println(gt1.FormatTo("2006-01-02"))
 
 	// Output:
 	// 2018-08-08 00:00:00
