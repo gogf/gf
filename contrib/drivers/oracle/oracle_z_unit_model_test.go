@@ -1128,7 +1128,7 @@ func Test_Model_Save(t *testing.T) {
 			user       User
 			count      int
 			result     sql.Result
-			createTime = gtime.Now().Format("Y-m-d")
+			createTime = gtime.Now().Layout("Y-m-d")
 			err        error
 		)
 
@@ -1150,7 +1150,7 @@ func Test_Model_Save(t *testing.T) {
 		t.Assert(user.Passport, "p1")
 		t.Assert(user.Password, "15d55ad283aa400af464c76d713c07ad")
 		t.Assert(user.NickName, "n1")
-		t.Assert(user.CreateTime.Format("Y-m-d"), createTime)
+		t.Assert(user.CreateTime.Layout("Y-m-d"), createTime)
 
 		_, err = db.Model(table).Data(g.Map{
 			"id":          1,
@@ -1166,7 +1166,7 @@ func Test_Model_Save(t *testing.T) {
 		t.Assert(user.Passport, "p1")
 		t.Assert(user.Password, "25d55ad283aa400af464c76d713c07ad")
 		t.Assert(user.NickName, "n2")
-		t.Assert(user.CreateTime.Format("Y-m-d"), createTime)
+		t.Assert(user.CreateTime.Layout("Y-m-d"), createTime)
 
 		count, err = db.Model(table).Count(ctx)
 		t.AssertNil(err)

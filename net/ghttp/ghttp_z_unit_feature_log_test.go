@@ -47,17 +47,17 @@ func Test_Log(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/error"), "exception recovered: custom error")
 
 		var (
-			logPath1 = gfile.Join(logDir, gtime.Now().Format("Y-m-d")+".log")
+			logPath1 = gfile.Join(logDir, gtime.Now().Layout("Y-m-d")+".log")
 			content  = gfile.GetContents(logPath1)
 		)
 		t.Assert(gstr.Contains(content, "http server started listening on"), true)
 		t.Assert(gstr.Contains(content, "HANDLER"), true)
 
-		logPath2 := gfile.Join(logDir, "access-"+gtime.Now().Format("Ymd")+".log")
+		logPath2 := gfile.Join(logDir, "access-"+gtime.Now().Layout("Ymd")+".log")
 		// fmt.Println(gfile.GetContents(logPath2))
 		t.Assert(gstr.Contains(gfile.GetContents(logPath2), " /hello "), true)
 
-		logPath3 := gfile.Join(logDir, "error-"+gtime.Now().Format("Ymd")+".log")
+		logPath3 := gfile.Join(logDir, "error-"+gtime.Now().Layout("Ymd")+".log")
 		// fmt.Println(gfile.GetContents(logPath3))
 		t.Assert(gstr.Contains(gfile.GetContents(logPath3), "custom error"), true)
 	})
