@@ -159,6 +159,7 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ...ScanOption) (er
 			dstElemType = dstPointerReflectValueElem.Type().Elem()
 			dstElemKind = dstElemType.Kind()
 		)
+
 		// The slice element might be a pointer type
 		if dstElemKind == reflect.Ptr {
 			dstElemType = dstElemType.Elem()
@@ -209,9 +210,12 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ...ScanOption) (er
 					}
 					newSlice.Index(i).SetBool(v)
 				default:
-					return c.Scan(
+					err = c.Scan(
 						srcElem, newSlice.Index(i).Addr().Interface(), option...,
 					)
+					if err != nil && !scanOption.ContinueOnError {
+						return err
+					}
 				}
 			}
 			dstPointerReflectValueElem.Set(newSlice)
