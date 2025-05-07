@@ -99,7 +99,7 @@ func Test_Layout(t *testing.T) {
 		t.Assert(ti.LayoutTo("Y-m-d h:i:s"), nil)
 		t.Assert(ti.Format("Y-m-d h:i:s"), "")
 		t.Assert(ti.FormatNew("Y-m-d h:i:s"), nil)
-		t.Assert(ti.FormatTo("Y-m-d h:i:s"), nil)
+		t.Assert(ti.LayoutTo("Y-m-d h:i:s"), nil)
 	})
 }
 
