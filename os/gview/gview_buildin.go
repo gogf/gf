@@ -169,7 +169,7 @@ func (view *View) buildInFuncDate(format interface{}, timestamp ...interface{}) 
 	if t == 0 {
 		t = gtime.Timestamp()
 	}
-	return gtime.NewFromTimeStamp(t).Format(gconv.String(format))
+	return gtime.NewFromTimeStamp(t).Layout(gconv.String(format))
 }
 
 // buildInFuncCompare implements build-in template function: compare
