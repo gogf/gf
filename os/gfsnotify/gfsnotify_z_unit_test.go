@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v3/container/garray"
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/os/gfile"
 	"github.com/gogf/gf/v3/os/gfsnotify"
 	"github.com/gogf/gf/v3/os/gtime"
@@ -21,7 +21,7 @@ import (
 
 func TestWatcher_AddOnce(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		value := gtype.New()
+		value := gatomic.New()
 		path := gfile.Temp(gconv.String(gtime.TimestampNano()))
 		err := gfile.PutContents(path, "init")
 		t.AssertNil(err)
@@ -64,7 +64,7 @@ func TestWatcher_AddRemove(t *testing.T) {
 			gfile.Remove(path1)
 			gfile.Remove(path2)
 		}()
-		v := gtype.NewInt(1)
+		v := gatomic.NewInt(1)
 		callback, err := gfsnotify.Add(path1, func(event *gfsnotify.Event) {
 			if event.IsWrite() {
 				v.Set(2)
@@ -94,7 +94,7 @@ func TestWatcher_AddRemove(t *testing.T) {
 		defer func() {
 			gfile.Remove(path1)
 		}()
-		v := gtype.NewInt(1)
+		v := gatomic.NewInt(1)
 		callback, err := gfsnotify.Add(path1, func(event *gfsnotify.Event) {
 			if event.IsWrite() {
 				v.Set(2)
@@ -129,7 +129,7 @@ func TestWatcher_Callback1(t *testing.T) {
 		defer func() {
 			gfile.Remove(path1)
 		}()
-		v := gtype.NewInt(1)
+		v := gatomic.NewInt(1)
 		callback, err := gfsnotify.Add(path1, func(event *gfsnotify.Event) {
 			if event.IsWrite() {
 				v.Set(2)
@@ -159,8 +159,8 @@ func TestWatcher_Callback2(t *testing.T) {
 		defer func() {
 			gfile.Remove(path1)
 		}()
-		v1 := gtype.NewInt(1)
-		v2 := gtype.NewInt(1)
+		v1 := gatomic.NewInt(1)
+		v2 := gatomic.NewInt(1)
 		callback1, err1 := gfsnotify.Add(path1, func(event *gfsnotify.Event) {
 			if event.IsWrite() {
 				v1.Set(2)

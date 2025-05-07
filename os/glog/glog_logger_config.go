@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/errors/gcode"
 	"github.com/gogf/gf/v3/errors/gerror"
 	"github.com/gogf/gf/v3/internal/intlog"
@@ -51,7 +51,7 @@ type Config struct {
 }
 
 type internalConfig struct {
-	rotatedHandlerInitialized *gtype.Bool // Whether the rotation feature initialized.
+	rotatedHandlerInitialized *gatomic.Bool // Whether the rotation feature initialized.
 }
 
 // DefaultConfig returns the default configuration for logger.
@@ -69,7 +69,7 @@ func DefaultConfig() Config {
 		LevelPrefixes:       make(map[int]string, len(defaultLevelPrefixes)),
 		RotateCheckInterval: time.Hour,
 		internalConfig: internalConfig{
-			rotatedHandlerInitialized: gtype.NewBool(),
+			rotatedHandlerInitialized: gatomic.NewBool(),
 		},
 	}
 	for k, v := range defaultLevelPrefixes {

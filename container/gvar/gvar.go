@@ -8,7 +8,7 @@
 package gvar
 
 import (
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/internal/json"
 )
 
@@ -24,7 +24,7 @@ type Var struct {
 func New(value interface{}, safe ...bool) *Var {
 	if len(safe) > 0 && safe[0] {
 		return &Var{
-			value: gtype.NewInterface(value),
+			value: gatomic.NewInterface(value),
 			safe:  true,
 		}
 	}

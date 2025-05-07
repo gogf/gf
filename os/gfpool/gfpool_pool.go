@@ -10,8 +10,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/container/gpool"
-	"github.com/gogf/gf/v3/container/gtype"
 	"github.com/gogf/gf/v3/errors/gerror"
 	"github.com/gogf/gf/v3/os/gfsnotify"
 )
@@ -29,9 +29,9 @@ func New(path string, flag int, perm os.FileMode, ttl ...time.Duration) *Pool {
 		fpTTL = ttl[0]
 	}
 	p := &Pool{
-		id:   gtype.NewInt(),
+		id:   gatomic.NewInt(),
 		ttl:  fpTTL,
-		init: gtype.NewBool(),
+		init: gatomic.NewBool(),
 	}
 	p.pool = newFilePool(p, path, flag, perm, fpTTL)
 	return p

@@ -11,8 +11,8 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/container/gqueue"
-	"github.com/gogf/gf/v3/container/gtype"
 	"github.com/gogf/gf/v3/errors/gerror"
 	"github.com/gogf/gf/v3/internal/json"
 	"github.com/gogf/gf/v3/net/gtcp"
@@ -23,7 +23,7 @@ import (
 
 var (
 	// tcpListened marks whether the receiving listening service started.
-	tcpListened = gtype.NewBool()
+	tcpListened = gatomic.NewBool()
 )
 
 // Receive blocks and receives message from other process using local TCP listening.

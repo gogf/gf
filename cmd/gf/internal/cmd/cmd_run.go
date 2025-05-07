@@ -14,7 +14,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/frame/g"
 	"github.com/gogf/gf/v3/os/gfile"
 	"github.com/gogf/gf/v3/os/gfsnotify"
@@ -116,7 +116,7 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		Args:       in.Args,
 		WatchPaths: in.WatchPaths,
 	}
-	dirty := gtype.NewBool()
+	dirty := gatomic.NewBool()
 
 	var outputPath = app.genOutputPath()
 	callbackFunc := func(event *gfsnotify.Event) {

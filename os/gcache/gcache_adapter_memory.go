@@ -11,9 +11,9 @@ import (
 	"math"
 	"time"
 
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/container/glist"
 	"github.com/gogf/gf/v3/container/gset"
-	"github.com/gogf/gf/v3/container/gtype"
 	"github.com/gogf/gf/v3/container/gvar"
 	"github.com/gogf/gf/v3/os/gtime"
 	"github.com/gogf/gf/v3/os/gtimer"
@@ -26,7 +26,7 @@ type AdapterMemory struct {
 	expireSets  *memoryExpireSets  // expireSets is the expiring timestamp to its key set mapping, which is used for quick indexing and deleting.
 	lru         *memoryLru         // lru is the LRU manager, which is enabled when attribute cap > 0.
 	eventList   *glist.List        // eventList is the asynchronous event list for internal data synchronization.
-	closed      *gtype.Bool        // closed controls the cache closed or not.
+	closed      *gatomic.Bool      // closed controls the cache closed or not.
 }
 
 // Internal event item.
@@ -60,7 +60,7 @@ func doNewAdapterMemory() *AdapterMemory {
 		expireTimes: newMemoryExpireTimes(),
 		expireSets:  newMemoryExpireSets(),
 		eventList:   glist.New(true),
-		closed:      gtype.NewBool(),
+		closed:      gatomic.NewBool(),
 	}
 	// Here may be a "timer leak" if adapter is manually changed from adapter_memory adapter.
 	// Do not worry about this, as adapter is less changed, and it does nothing if it's not used.

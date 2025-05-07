@@ -30,7 +30,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/errors/gcode"
 	"github.com/gogf/gf/v3/errors/gerror"
 	"github.com/gogf/gf/v3/os/glog"
@@ -60,7 +60,7 @@ type Server struct {
 	rawLnMu     sync.RWMutex // Concurrent safety mutex for rawListener.
 	listener    net.Listener // Wrapped net.Listener with TLS support if necessary.
 	isHttps     bool         // Whether server is running in HTTPS mode.
-	status      *gtype.Int   // Server status using gtype for concurrent safety.
+	status      *gatomic.Int // Server status using gtype for concurrent safety.
 	config      ServerConfig // Server configuration.
 }
 
@@ -127,7 +127,7 @@ func New(
 	gs := &Server{
 		address:    address,
 		httpServer: newHttpServer(address, loggerWriter, config),
-		status:     gtype.NewInt(),
+		status:     gatomic.NewInt(),
 		config:     config,
 	}
 	if fd != 0 {

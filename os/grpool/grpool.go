@@ -11,8 +11,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/container/glist"
-	"github.com/gogf/gf/v3/container/gtype"
 	"github.com/gogf/gf/v3/os/gtimer"
 	"github.com/gogf/gf/v3/util/grand"
 )
@@ -25,10 +25,10 @@ type RecoverFunc func(ctx context.Context, exception error)
 
 // Pool manages the goroutines using pool.
 type Pool struct {
-	limit  int         // Max goroutine count limit.
-	count  *gtype.Int  // Current running goroutine count.
-	list   *glist.List // List for asynchronous job adding purpose.
-	closed *gtype.Bool // Is pool closed or not.
+	limit  int           // Max goroutine count limit.
+	count  *gatomic.Int  // Current running goroutine count.
+	list   *glist.List   // List for asynchronous job adding purpose.
+	closed *gatomic.Bool // Is pool closed or not.
 }
 
 // localPoolItem is the job item storing in job list.
@@ -54,9 +54,9 @@ func New(limit ...int) *Pool {
 	var (
 		pool = &Pool{
 			limit:  -1,
-			count:  gtype.NewInt(),
+			count:  gatomic.NewInt(),
 			list:   glist.New(true),
-			closed: gtype.NewBool(),
+			closed: gatomic.NewBool(),
 		}
 		timerDuration = grand.D(
 			minSupervisorTimerDuration,

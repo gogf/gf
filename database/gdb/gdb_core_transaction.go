@@ -10,7 +10,7 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/errors/gcode"
 	"github.com/gogf/gf/v3/errors/gerror"
 )
@@ -65,7 +65,7 @@ const (
 	transactionIdForLoggerCtx   = "TransactionId"
 )
 
-var transactionIdGenerator = gtype.NewUint64()
+var transactionIdGenerator = gatomic.NewUint64()
 
 // DefaultTxOptions returns the default transaction options.
 func DefaultTxOptions() TxOptions {

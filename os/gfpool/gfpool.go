@@ -11,16 +11,16 @@ import (
 	"os"
 	"time"
 
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/container/gmap"
 	"github.com/gogf/gf/v3/container/gpool"
-	"github.com/gogf/gf/v3/container/gtype"
 )
 
 // Pool pointer pool.
 type Pool struct {
-	id   *gtype.Int    // Pool id, which is used to mark this pool whether recreated.
+	id   *gatomic.Int  // Pool id, which is used to mark this pool whether recreated.
 	pool *gpool.Pool   // Underlying pool.
-	init *gtype.Bool   // Whether initialized, used for marking this file added to fsnotify, and it can only be added just once.
+	init *gatomic.Bool // Whether initialized, used for marking this file added to fsnotify, and it can only be added just once.
 	ttl  time.Duration // Time to live for file pointer items.
 }
 

@@ -10,7 +10,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/internal/intlog"
 )
 
@@ -21,7 +21,7 @@ type selectorLeastConnection struct {
 
 type leastConnectionNode struct {
 	Node
-	inflight *gtype.Int
+	inflight *gatomic.Int
 }
 
 func NewSelectorLeastConnection() Selector {
@@ -37,7 +37,7 @@ func (s *selectorLeastConnection) Update(ctx context.Context, nodes Nodes) error
 		node := v
 		newNodes = append(newNodes, &leastConnectionNode{
 			Node:     node,
-			inflight: gtype.NewInt(),
+			inflight: gatomic.NewInt(),
 		})
 	}
 	s.mu.Lock()

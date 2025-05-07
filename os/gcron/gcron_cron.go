@@ -12,16 +12,16 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v3/container/garray"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/container/gmap"
-	"github.com/gogf/gf/v3/container/gtype"
 	"github.com/gogf/gf/v3/os/glog"
 	"github.com/gogf/gf/v3/os/gtimer"
 )
 
 // Cron stores all the cron job entries.
 type Cron struct {
-	idGen     *gtype.Int64    // Used for unique name generation.
-	status    *gtype.Int      // Timed task status(0: Not Start; 1: Running; 2: Stopped; -1: Closed)
+	idGen     *gatomic.Int64  // Used for unique name generation.
+	status    *gatomic.Int    // Timed task status(0: Not Start; 1: Running; 2: Stopped; -1: Closed)
 	entries   *gmap.StrAnyMap // All timed task entries.
 	logger    glog.ILogger    // Logger, it is nil in default.
 	jobWaiter sync.WaitGroup  // Graceful shutdown when cron jobs are stopped.
@@ -30,8 +30,8 @@ type Cron struct {
 // New returns a new Cron object with default settings.
 func New() *Cron {
 	return &Cron{
-		idGen:   gtype.NewInt64(),
-		status:  gtype.NewInt(StatusRunning),
+		idGen:   gatomic.NewInt64(),
+		status:  gatomic.NewInt(StatusRunning),
 		entries: gmap.NewStrAnyMap(true),
 	}
 }

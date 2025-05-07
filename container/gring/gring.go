@@ -12,7 +12,7 @@ package gring
 import (
 	"container/ring"
 
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/internal/rwmutex"
 )
 
@@ -21,10 +21,10 @@ import (
 // Deprecated.
 type Ring struct {
 	mu    *rwmutex.RWMutex
-	ring  *ring.Ring  // Underlying ring.
-	len   *gtype.Int  // Length(already used size).
-	cap   *gtype.Int  // Capability(>=len).
-	dirty *gtype.Bool // Dirty, which means the len and cap should be recalculated. It's marked dirty when the size of ring changes.
+	ring  *ring.Ring    // Underlying ring.
+	len   *gatomic.Int  // Length(already used size).
+	cap   *gatomic.Int  // Capability(>=len).
+	dirty *gatomic.Bool // Dirty, which means the len and cap should be recalculated. It's marked dirty when the size of ring changes.
 }
 
 // internalRingItem stores the ring element value.
@@ -41,9 +41,9 @@ func New(cap int, safe ...bool) *Ring {
 	return &Ring{
 		mu:    rwmutex.New(safe...),
 		ring:  ring.New(cap),
-		len:   gtype.NewInt(),
-		cap:   gtype.NewInt(cap),
-		dirty: gtype.NewBool(),
+		len:   gatomic.NewInt(),
+		cap:   gatomic.NewInt(cap),
+		dirty: gatomic.NewBool(),
 	}
 }
 

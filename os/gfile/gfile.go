@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/errors/gerror"
 	"github.com/gogf/gf/v3/text/gstr"
 	"github.com/gogf/gf/v3/util/gconv"
@@ -36,7 +36,7 @@ const (
 var (
 	// The absolute file path for main package.
 	// It can be only checked and set once.
-	mainPkgPath = gtype.NewString()
+	mainPkgPath = gatomic.NewString()
 
 	// selfPath is the current running binary path.
 	// As it is most commonly used, it is so defined as an internal package variable.

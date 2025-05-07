@@ -14,11 +14,11 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/container/glist"
 	"github.com/gogf/gf/v3/container/gmap"
 	"github.com/gogf/gf/v3/container/gqueue"
 	"github.com/gogf/gf/v3/container/gset"
-	"github.com/gogf/gf/v3/container/gtype"
 	"github.com/gogf/gf/v3/errors/gcode"
 	"github.com/gogf/gf/v3/errors/gerror"
 	"github.com/gogf/gf/v3/internal/intlog"
@@ -85,7 +85,7 @@ var (
 	mu                  sync.Mutex                // Mutex for concurrent safety of defaultWatcher.
 	defaultWatcher      *Watcher                  // Default watcher.
 	callbackIdMap       = gmap.NewIntAnyMap(true) // Global callback id to callback function mapping.
-	callbackIdGenerator = gtype.NewInt()          // Atomic id generator for callback.
+	callbackIdGenerator = gatomic.NewInt()        // Atomic id generator for callback.
 )
 
 // New creates and returns a new watcher.

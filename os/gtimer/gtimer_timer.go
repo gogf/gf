@@ -10,15 +10,15 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 )
 
 // New creates and returns a Timer.
 func New(options ...TimerOptions) *Timer {
 	t := &Timer{
 		queue:  newPriorityQueue(),
-		status: gtype.NewInt(StatusRunning),
-		ticks:  gtype.NewInt64(),
+		status: gatomic.NewInt(StatusRunning),
+		ticks:  gatomic.NewInt64(),
 	}
 	if len(options) > 0 {
 		t.options = options[0]
@@ -196,11 +196,11 @@ func (t *Timer) createEntry(in createEntryInput) *Entry {
 			ctx:         in.Ctx,
 			timer:       t,
 			ticks:       intervalTicksOfJob,
-			times:       gtype.NewInt(in.Times),
-			status:      gtype.NewInt(in.Status),
-			isSingleton: gtype.NewBool(in.IsSingleton),
-			nextTicks:   gtype.NewInt64(nextTicks),
-			infinite:    gtype.NewBool(infinite),
+			times:       gatomic.NewInt(in.Times),
+			status:      gatomic.NewInt(in.Status),
+			isSingleton: gatomic.NewBool(in.IsSingleton),
+			nextTicks:   gatomic.NewInt64(nextTicks),
+			infinite:    gatomic.NewBool(infinite),
 		}
 	)
 	t.queue.Push(entry, nextTicks)

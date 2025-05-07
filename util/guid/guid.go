@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/encoding/ghash"
 	"github.com/gogf/gf/v3/errors/gcode"
 	"github.com/gogf/gf/v3/errors/gerror"
@@ -26,9 +26,9 @@ const (
 )
 
 var (
-	sequence     gtype.Uint32 // Sequence for unique purpose of the current process.
-	macAddrStr   = "0000000"  // Hash result of MAC addresses in 7 bytes.
-	processIdStr = "0000"     // Process id in 4 bytes.
+	sequence     gatomic.Uint32 // Sequence for unique purpose of the current process.
+	macAddrStr   = "0000000"    // Hash result of MAC addresses in 7 bytes.
+	processIdStr = "0000"       // Process id in 4 bytes.
 )
 
 // init initializes several fixed local variable.

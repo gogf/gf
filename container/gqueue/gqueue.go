@@ -20,15 +20,15 @@ package gqueue
 import (
 	"math"
 
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/container/glist"
-	"github.com/gogf/gf/v3/container/gtype"
 )
 
 // Queue is a concurrent-safe queue built on doubly linked list and channel.
 type Queue struct {
 	limit  int              // Limit for queue size.
 	list   *glist.List      // Underlying list structure for data maintaining.
-	closed *gtype.Bool      // Whether queue is closed.
+	closed *gatomic.Bool    // Whether queue is closed.
 	events chan struct{}    // Events for data writing.
 	C      chan interface{} // Underlying channel for data reading.
 }
@@ -43,7 +43,7 @@ const (
 // When `limit` is given, the queue will be static and high performance which is comparable with stdlib channel.
 func New(limit ...int) *Queue {
 	q := &Queue{
-		closed: gtype.NewBool(),
+		closed: gatomic.NewBool(),
 	}
 	if len(limit) > 0 && limit[0] > 0 {
 		q.limit = limit[0]

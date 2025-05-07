@@ -9,7 +9,7 @@ package gtimer
 import (
 	"context"
 
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 	"github.com/gogf/gf/v3/errors/gcode"
 	"github.com/gogf/gf/v3/errors/gerror"
 )
@@ -20,11 +20,11 @@ type Entry struct {
 	ctx         context.Context // The context for the job, for READ ONLY.
 	timer       *Timer          // Belonged timer.
 	ticks       int64           // The job runs every tick.
-	times       *gtype.Int      // Limit running times.
-	status      *gtype.Int      // Job status.
-	isSingleton *gtype.Bool     // Singleton mode.
-	nextTicks   *gtype.Int64    // Next run ticks of the job.
-	infinite    *gtype.Bool     // No times limit.
+	times       *gatomic.Int    // Limit running times.
+	status      *gatomic.Int    // Job status.
+	isSingleton *gatomic.Bool   // Singleton mode.
+	nextTicks   *gatomic.Int64  // Next run ticks of the job.
+	infinite    *gatomic.Bool   // No times limit.
 }
 
 // JobFunc is the timing called job function in timer.

@@ -7,13 +7,13 @@
 package gvar
 
 import (
-	"github.com/gogf/gf/v3/container/gtype"
+	"github.com/gogf/gf/v3/container/gatomic"
 )
 
 // Set sets `value` to `v`, and returns the old value.
 func (v *Var) Set(value interface{}) (old interface{}) {
 	if v.safe {
-		if t, ok := v.value.(*gtype.Interface); ok {
+		if t, ok := v.value.(*gatomic.Interface); ok {
 			old = t.Set(value)
 			return
 		}
