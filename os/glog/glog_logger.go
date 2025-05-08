@@ -87,7 +87,7 @@ func (l *Logger) Clone() *Logger {
 func (l *Logger) getFilePath(now time.Time) string {
 	// Content containing "{}" in the file name is formatted using gtime.
 	file, _ := gregex.ReplaceStringFunc(`{.+?}`, l.config.File, func(s string) string {
-		return gtime.New(now).Format(strings.Trim(s, "{}"))
+		return gtime.New(now).Layout(strings.Trim(s, "{}"))
 	})
 	file = gfile.Join(l.config.Path, file)
 	return file
