@@ -435,3 +435,73 @@ func Test_StrAnyMap_Diff(t *testing.T) {
 		t.Assert(updatedKeys, []string{"3"})
 	})
 }
+
+// Test_StrAnyMap_Upsert
+func Test_StrAnyMap_Upsert(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewStrAnyMap()
+
+		// test new key
+		v, updated := m.Upsert("key1", 10, func(exist bool, valueInMap, newValue interface{}) (interface{}, bool) {
+			t.Assert(exist, false)
+			t.Assert(valueInMap, nil)
+			t.Assert(newValue, 10)
+			return newValue, true // value has been updated
+		})
+		t.Assert(v, 10)
+		t.Assert(updated, true)
+		t.Assert(m.Get("key1"), 10)
+
+		// test existing key
+		v, updated = m.Upsert("key1", 20, func(exist bool, valueInMap, newValue interface{}) (interface{}, bool) {
+			t.Assert(exist, true)
+			t.Assert(valueInMap, 10)
+			t.Assert(newValue, 20)
+			return newValue, true // value has been updated
+		})
+		t.Assert(v, 20)
+		t.Assert(updated, true)
+		t.Assert(m.Get("key1"), 20)
+
+		// Test custom logic: if it already exists, add it, otherwise set it directly
+		m.Set("key2", 5)
+		v, updated = m.Upsert("key2", 7, func(exist bool, valueInMap, newValue interface{}) (interface{}, bool) {
+			if exist {
+				return valueInMap.(int) + newValue.(int), true
+			}
+			return newValue, true
+		})
+		t.Assert(v, 12)
+		t.Assert(updated, true)
+		t.Assert(m.Get("key2"), 12)
+
+		// test no update
+		v, updated = m.Upsert("key3", 100, func(exist bool, valueInMap, newValue interface{}) (interface{}, bool) {
+			return newValue, false // value not updated even there is a new value
+		})
+		t.Assert(v, 100)
+		t.Assert(updated, false)
+		t.Assert(m.Get("key3"), 100) // The value will still be set, bool just indicates whether it is updated semantically
+
+		// Testing conditional updates
+		v, updated = m.Upsert("key4", 200, func(exist bool, valueInMap, newValue interface{}) (interface{}, bool) {
+			if exist {
+				return valueInMap, false // If it already exists, do not update
+			}
+			return newValue, true // If it does not exist, update
+		})
+		t.Assert(v, 200)
+		t.Assert(updated, true)
+
+		// Try to update key4 again, it should return false indicating that it has not been updated
+		v, updated = m.Upsert("key4", 300, func(exist bool, valueInMap, newValue interface{}) (interface{}, bool) {
+			if exist {
+				return valueInMap, false // Already exists, do not update
+			}
+			return newValue, true
+		})
+		t.Assert(v, 200)             // Return the original value
+		t.Assert(updated, false)     // Indicates not updated
+		t.Assert(m.Get("key4"), 200) // The value remains unchanged
+	})
+}
