@@ -31,7 +31,7 @@ type iUnixNano interface {
 // New("2024-10-29")
 // New(1390876568)
 // New(t) // The t is type of time.Time.
-func New(param ...interface{}) *Time {
+func New(param ...any) *Time {
 	if len(param) > 0 {
 		switch r := param[0].(type) {
 		case time.Time:
@@ -49,9 +49,9 @@ func New(param ...interface{}) *Time {
 			if len(param) > 1 {
 				switch t := param[1].(type) {
 				case string:
-					return NewFromStrFormat(r, t)
+					return NewFromStrLayout(r, t)
 				case []byte:
-					return NewFromStrFormat(r, string(t))
+					return NewFromStrLayout(r, string(t))
 				}
 			}
 			return NewFromStr(r)
@@ -60,9 +60,9 @@ func New(param ...interface{}) *Time {
 			if len(param) > 1 {
 				switch t := param[1].(type) {
 				case string:
-					return NewFromStrFormat(string(r), t)
+					return NewFromStrLayout(string(r), t)
 				case []byte:
-					return NewFromStrFormat(string(r), string(t))
+					return NewFromStrLayout(string(r), string(t))
 				}
 			}
 			return NewFromStr(string(r))
@@ -107,21 +107,21 @@ func NewFromStr(str string) *Time {
 	return nil
 }
 
-// NewFromStrFormat creates and returns a Time object with given string and
-// custom format like: Y-m-d H:i:s.
+// NewFromStrLayout creates and returns a Time object with given string and
+// custom layout like: Y-m-d H:i:s.
 // Note that it returns nil if there's error occurs.
-func NewFromStrFormat(str string, format string) *Time {
-	if t, err := StrToTimeFormat(str, format); err == nil {
+func NewFromStrLayout(str string, layout string) *Time {
+	if t, err := StrToTimeLayout(str, layout); err == nil {
 		return t
 	}
 	return nil
 }
 
-// NewFromStrLayout creates and returns a Time object with given string and
-// stdlib layout like: 2006-01-02 15:04:05.
+// NewFromStrFormat creates and returns a Time object with given string and
+// stdlib format like: 2006-01-02 15:04:05.
 // Note that it returns nil if there's error occurs.
-func NewFromStrLayout(str string, layout string) *Time {
-	if t, err := StrToTimeLayout(str, layout); err == nil {
+func NewFromStrFormat(str string, format string) *Time {
+	if t, err := StrToTimeFormat(str, format); err == nil {
 		return t
 	}
 	return nil
@@ -307,14 +307,14 @@ func (t *Time) UTC() *Time {
 	return newTime
 }
 
-// ISO8601 formats the time as ISO8601 and returns it as string.
+// ISO8601 layouts the time as ISO8601 and returns it as string.
 func (t *Time) ISO8601() string {
-	return t.Layout("2006-01-02T15:04:05-07:00")
+	return t.Format("2006-01-02T15:04:05-07:00")
 }
 
-// RFC822 formats the time as RFC822 and returns it as string.
+// RFC822 layouts the time as RFC822 and returns it as string.
 func (t *Time) RFC822() string {
-	return t.Layout("Mon, 02 Jan 06 15:04 MST")
+	return t.Format("Mon, 02 Jan 06 15:04 MST")
 }
 
 // AddDate adds year, month and day to the time.
@@ -550,7 +550,7 @@ func (t *Time) UnmarshalText(data []byte) error {
 func (t *Time) NoValidation() {}
 
 // DeepCopy implements interface for deep copy of current type.
-func (t *Time) DeepCopy() interface{} {
+func (t *Time) DeepCopy() any {
 	if t == nil {
 		return nil
 	}

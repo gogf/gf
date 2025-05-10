@@ -400,7 +400,7 @@ func Test_Convert2(t *testing.T) {
 		t.Assert(j.Get("name").IsNil(), false)
 		t.Assert(j.Len("name1"), -1)
 		t.Assert(j.Get("time").Time().Format("2006-01-02"), "2019-06-12")
-		t.Assert(j.Get("time").GTime().Format("Y-m-d"), "2019-06-12")
+		t.Assert(j.Get("time").GTime().Layout("Y-m-d"), "2019-06-12")
 		t.Assert(j.Get("time").Duration().String(), "0s")
 
 		err := j.Var().Scan(&name)

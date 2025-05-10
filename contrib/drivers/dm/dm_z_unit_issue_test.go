@@ -45,8 +45,8 @@ func Test_Issue2594(t *testing.T) {
 			SubPrefix:  "p_",
 			Prefix:     "m_",
 			HandleName: "name",
-			CreateTime: gtime.Now().FormatTo("Y-m-d H:i:s").Time,
-			UpdateTime: gtime.Now().FormatTo("Y-m-d H:i:s").Time,
+			CreateTime: gtime.Now().LayoutTo("Y-m-d H:i:s").Time,
+			UpdateTime: gtime.Now().LayoutTo("Y-m-d H:i:s").Time,
 			Value: []HandleValueMysql{
 				{
 					Index: 10,

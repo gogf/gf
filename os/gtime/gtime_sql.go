@@ -6,7 +6,7 @@ import (
 
 // Scan implements interface used by Scan in package database/sql for Scanning value
 // from database to local golang variable.
-func (t *Time) Scan(value interface{}) error {
+func (t *Time) Scan(value any) error {
 	if t == nil {
 		return nil
 	}
@@ -27,7 +27,7 @@ func (t *Time) Value() (driver.Value, error) {
 
 	if t.Year() == 0 {
 		// Only time.
-		return t.Format("15:04:05"), nil
+		return t.Layout("15:04:05"), nil
 	}
 
 	return t.Time, nil

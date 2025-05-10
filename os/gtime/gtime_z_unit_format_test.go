@@ -13,43 +13,43 @@ import (
 	"github.com/gogf/gf/v3/test/gtest"
 )
 
-func Test_Format(t *testing.T) {
+func Test_Layout(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp, err := gtime.StrToTime("2006-01-11 15:04:05", "Y-m-d H:i:s")
 		timeTemp.ToZone("Asia/Shanghai")
 		if err != nil {
 			t.Error("test fail")
 		}
-		t.Assert(timeTemp.Format("\\T\\i\\m\\e中文Y-m-j G:i:s.u\\"), "Time中文2006-01-11 15:04:05.000")
+		t.Assert(timeTemp.Layout("\\T\\i\\m\\e中文Y-m-j G:i:s.u\\"), "Time中文2006-01-11 15:04:05.000")
 
-		t.Assert(timeTemp.Format("d D j l"), "11 Wed 11 Wednesday")
+		t.Assert(timeTemp.Layout("d D j l"), "11 Wed 11 Wednesday")
 
-		t.Assert(timeTemp.Format("F m M n"), "January 01 Jan 1")
+		t.Assert(timeTemp.Layout("F m M n"), "January 01 Jan 1")
 
-		t.Assert(timeTemp.Format("Y y"), "2006 06")
+		t.Assert(timeTemp.Layout("Y y"), "2006 06")
 
-		t.Assert(timeTemp.Format("a A g G h H i s u .u"), "pm PM 3 15 03 15 04 05 000 .000")
+		t.Assert(timeTemp.Layout("a A g G h H i s u .u"), "pm PM 3 15 03 15 04 05 000 .000")
 
-		t.Assert(timeTemp.Format("O P T"), "+0800 +08:00 CST")
+		t.Assert(timeTemp.Layout("O P T"), "+0800 +08:00 CST")
 
-		t.Assert(timeTemp.Format("r"), "Wed, 11 Jan 06 15:04 CST")
+		t.Assert(timeTemp.Layout("r"), "Wed, 11 Jan 06 15:04 CST")
 
-		t.Assert(timeTemp.Format("c"), "2006-01-11T15:04:05+08:00")
+		t.Assert(timeTemp.Layout("c"), "2006-01-11T15:04:05+08:00")
 
 		//补零
 		timeTemp1, err := gtime.StrToTime("2006-01-02 03:04:05", "Y-m-d H:i:s")
 		if err != nil {
 			t.Error("test fail")
 		}
-		t.Assert(timeTemp1.Format("Y-m-d h:i:s"), "2006-01-02 03:04:05")
+		t.Assert(timeTemp1.Layout("Y-m-d h:i:s"), "2006-01-02 03:04:05")
 		//不补零
 		timeTemp2, err := gtime.StrToTime("2006-01-02 03:04:05", "Y-m-d H:i:s")
 		if err != nil {
 			t.Error("test fail")
 		}
-		t.Assert(timeTemp2.Format("Y-n-j G:i:s"), "2006-1-2 3:04:05")
+		t.Assert(timeTemp2.Layout("Y-n-j G:i:s"), "2006-1-2 3:04:05")
 
-		t.Assert(timeTemp2.Format("U"), "1136142245")
+		t.Assert(timeTemp2.Layout("U"), "1136142245")
 
 		// 测试数字型的星期
 		times := []map[string]string{
@@ -88,22 +88,22 @@ func Test_Format(t *testing.T) {
 		for _, v := range times {
 			t1, err1 := gtime.StrToTime(v["k"], "Y-m-d")
 			t.Assert(err1, nil)
-			t.Assert(t1.Format(v["f"]), v["r"])
+			t.Assert(t1.Layout(v["f"]), v["r"])
 		}
 
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var ti *gtime.Time = nil
-		t.Assert(ti.Format("Y-m-d h:i:s"), "")
-		t.Assert(ti.FormatNew("Y-m-d h:i:s"), nil)
-		t.Assert(ti.FormatTo("Y-m-d h:i:s"), nil)
 		t.Assert(ti.Layout("Y-m-d h:i:s"), "")
 		t.Assert(ti.LayoutNew("Y-m-d h:i:s"), nil)
+		t.Assert(ti.LayoutTo("Y-m-d h:i:s"), nil)
+		t.Assert(ti.Format("Y-m-d h:i:s"), "")
+		t.Assert(ti.FormatNew("Y-m-d h:i:s"), nil)
 		t.Assert(ti.LayoutTo("Y-m-d h:i:s"), nil)
 	})
 }
 
-func Test_Format_ZeroString(t *testing.T) {
+func Test_Layout_ZeroString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp, err := gtime.StrToTime("0000-00-00 00:00:00")
 		t.AssertNE(err, nil)
@@ -111,23 +111,23 @@ func Test_Format_ZeroString(t *testing.T) {
 	})
 }
 
-func Test_FormatTo(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		timeTemp := gtime.Now()
-		t.Assert(timeTemp.FormatTo("Y-m-01 00:00:01"), timeTemp.Time.Format("2006-01")+"-01 00:00:01")
-	})
-}
-
-func Test_Layout(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		timeTemp := gtime.Now()
-		t.Assert(timeTemp.Layout("2006-01-02 15:04:05"), timeTemp.Time.Format("2006-01-02 15:04:05"))
-	})
-}
-
 func Test_LayoutTo(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.Now()
-		t.Assert(timeTemp.LayoutTo("2006-01-02 00:00:00"), timeTemp.Time.Format("2006-01-02 00:00:00"))
+		t.Assert(timeTemp.LayoutTo("Y-m-01 00:00:01"), timeTemp.Time.Format("2006-01")+"-01 00:00:01")
+	})
+}
+
+func Test_Format(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		timeTemp := gtime.Now()
+		t.Assert(timeTemp.Format("2006-01-02 15:04:05"), timeTemp.Time.Format("2006-01-02 15:04:05"))
+	})
+}
+
+func Test_FormatTo(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		timeTemp := gtime.Now()
+		t.Assert(timeTemp.FormatTo("2006-01-02 00:00:00"), timeTemp.Time.Format("2006-01-02 00:00:00"))
 	})
 }

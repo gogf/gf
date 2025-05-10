@@ -41,8 +41,8 @@ func ExampleNew_Basic() {
 	// 08:08:08
 }
 
-func ExampleNew_WithFormat() {
-	fmt.Println(gtime.New("20220629133225", "YmdHis").Format("Y-m-d H:i:s"))
+func ExampleNew_WithLayout() {
+	fmt.Println(gtime.New("20220629133225", "YmdHis").Layout("Y-m-d H:i:s"))
 
 	// Output:
 	// 2022-06-29 13:32:25
@@ -82,22 +82,22 @@ func ExampleNewFromStr() {
 	// 08:08:08
 }
 
-// NewFromStrFormat creates and returns a Time object with given string and
-// custom format like: Y-m-d H:i:s.
+// NewFromStrLayout creates and returns a Time object with given string and
+// custom layout like: Y-m-d H:i:s.
 // Note that it returns nil if there's error occurs.
-func ExampleNewFromStrFormat() {
-	t := gtime.NewFromStrFormat("2018-08-08 08:08:08", "Y-m-d H:i:s")
+func ExampleNewFromStrLayout() {
+	t := gtime.NewFromStrLayout("2018-08-08 08:08:08", "Y-m-d H:i:s")
 	fmt.Println(t)
 
 	// Output:
 	// 2018-08-08 08:08:08
 }
 
-// NewFromStrLayout creates and returns a Time object with given string and
-// stdlib layout like: 2006-01-02 15:04:05.
+// NewFromStrFormat creates and returns a Time object with given string and
+// stdlib format like: 2006-01-02 15:04:05.
 // Note that it returns nil if there's error occurs.
-func ExampleNewFromStrLayout() {
-	t := gtime.NewFromStrLayout("2018-08-08 08:08:08", "2006-01-02 15:04:05")
+func ExampleNewFromStrFormat() {
+	t := gtime.NewFromStrFormat("2018-08-08 08:08:08", "2006-01-02 15:04:05")
 	fmt.Println(t)
 
 	// Output:

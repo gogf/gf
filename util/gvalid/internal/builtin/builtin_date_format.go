@@ -43,7 +43,7 @@ func (r RuleDateFormat) Run(in RunInput) error {
 		}
 		return nil
 	}
-	if _, err := gtime.StrToTimeFormat(in.Value.String(), in.RulePattern); err != nil {
+	if _, err := gtime.StrToTimeLayout(in.Value.String(), in.RulePattern); err != nil {
 		return errors.New(in.Message)
 	}
 	return nil

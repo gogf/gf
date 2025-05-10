@@ -90,7 +90,7 @@ func Test_Grpcx_Grpc_Server_Config_Logger(t *testing.T) {
 		time.Sleep(time.Millisecond * 100)
 		defer s.Stop()
 
-		var logFilePath = fmt.Sprintf("/tmp/log/%s.log", gtime.Now().Format("Y-m-d"))
+		var logFilePath = fmt.Sprintf("/tmp/log/%s.log", gtime.Now().Layout("Y-m-d"))
 		defer gfile.RemoveFile(logFilePath)
 		t.Assert(gfile.Exists(logFilePath), true)
 		t.Assert(s.Logger().GetConfig().Prefix, "TestLogger")

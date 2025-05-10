@@ -170,11 +170,11 @@ Default:
 			} else {
 				switch fieldType {
 				case fieldTypeYear:
-					convertedValue = r.Layout("2006")
+					convertedValue = r.Format("2006")
 				case fieldTypeDate:
-					convertedValue = r.Layout("2006-01-02")
+					convertedValue = r.Format("2006-01-02")
 				case fieldTypeTime:
-					convertedValue = r.Layout("15:04:05")
+					convertedValue = r.Format("15:04:05")
 				default:
 					convertedValue = r.Time
 				}
@@ -186,11 +186,11 @@ Default:
 			} else {
 				switch fieldType {
 				case fieldTypeYear:
-					convertedValue = r.Layout("2006")
+					convertedValue = r.Format("2006")
 				case fieldTypeDate:
-					convertedValue = r.Layout("2006-01-02")
+					convertedValue = r.Format("2006-01-02")
 				case fieldTypeTime:
-					convertedValue = r.Layout("15:04:05")
+					convertedValue = r.Format("15:04:05")
 				default:
 					convertedValue = r.Time
 				}
@@ -422,17 +422,17 @@ func (c *Core) ConvertValueForLocal(
 
 	case LocalTypeDate:
 		if t, ok := fieldValue.(time.Time); ok {
-			return gtime.NewFromTime(t).Format("Y-m-d"), nil
+			return gtime.NewFromTime(t).Layout("Y-m-d"), nil
 		}
 		t, _ := gtime.StrToTime(gconv.String(fieldValue))
-		return t.Format("Y-m-d"), nil
+		return t.Layout("Y-m-d"), nil
 
 	case LocalTypeTime:
 		if t, ok := fieldValue.(time.Time); ok {
-			return gtime.NewFromTime(t).Format("H:i:s"), nil
+			return gtime.NewFromTime(t).Layout("H:i:s"), nil
 		}
 		t, _ := gtime.StrToTime(gconv.String(fieldValue))
-		return t.Format("H:i:s"), nil
+		return t.Layout("H:i:s"), nil
 
 	case LocalTypeDatetime:
 		if t, ok := fieldValue.(time.Time); ok {

@@ -83,14 +83,14 @@ func Test_Datetime(t *testing.T) {
 func Test_ISO8601(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		iso8601 := gtime.ISO8601()
-		t.Assert(iso8601, gtime.Now().Format("c"))
+		t.Assert(iso8601, gtime.Now().Layout("c"))
 	})
 }
 
 func Test_RFC822(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rfc822 := gtime.RFC822()
-		t.Assert(rfc822, gtime.Now().Format("r"))
+		t.Assert(rfc822, gtime.Now().Layout("r"))
 	})
 }
 
@@ -145,8 +145,8 @@ func Test_StrToTime(t *testing.T) {
 			t.Assert(time1.Time, time2)
 		}
 
-		// formatToStdLayout
-		var testDateFormats = []string{
+		// layoutToStdFormat
+		var testDateLayouts = []string{
 			"Y-m-d H:i:s",
 			"\\T\\i\\m\\e Y-m-d H:i:s",
 			"Y-m-d H:i:s\\",
@@ -154,7 +154,7 @@ func Test_StrToTime(t *testing.T) {
 			"Y-m-j G:i:su",
 		}
 
-		var testDateFormatsResult = []string{
+		var testDateLayoutsResult = []string{
 			"2007-01-02 15:04:05",
 			"Time 2007-01-02 15:04:05",
 			"2007-01-02 15:04:05",
@@ -162,8 +162,8 @@ func Test_StrToTime(t *testing.T) {
 			"2007-01-02 15:04:05.000",
 		}
 
-		for index, item := range testDateFormats {
-			timeTemp, err := gtime.StrToTime(testDateFormatsResult[index], item)
+		for index, item := range testDateLayouts {
+			timeTemp, err := gtime.StrToTime(testDateLayoutsResult[index], item)
 			if err != nil {
 				t.Error("test fail")
 			}

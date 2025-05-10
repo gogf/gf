@@ -91,7 +91,7 @@ func (l *Logger) doRotateFile(ctx context.Context, filePath string) error {
 			dirPath,
 			fmt.Sprintf(
 				`%s.%s%d.%s`,
-				fileName, now.Format("YmdHisu"), micro, fileExtName,
+				fileName, now.Layout("YmdHisu"), micro, fileExtName,
 			),
 		)
 		if !gfile.Exists(newFilePath) {
