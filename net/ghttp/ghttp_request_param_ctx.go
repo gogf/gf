@@ -31,7 +31,7 @@ func (r *Request) Context() context.Context {
 		// Inject Request object into context.
 		ctx = context.WithValue(ctx, ctxKeyForRequest, r)
 		// Update the values of the original HTTP request.
-		*r.Request = *r.Request.WithContext(ctx)
+		*r.Request = *r.WithContext(ctx)
 	}
 	return ctx
 }
@@ -72,5 +72,5 @@ func (r *Request) GetCtxVar(key interface{}, def ...interface{}) *gvar.Var {
 func (r *Request) SetCtxVar(key interface{}, value interface{}) {
 	var ctx = r.Context()
 	ctx = context.WithValue(ctx, key, value)
-	*r.Request = *r.Request.WithContext(ctx)
+	*r.Request = *r.WithContext(ctx)
 }
