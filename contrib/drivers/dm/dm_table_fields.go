@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	tableFieldsSqlTmp = `SELECT * FROM ALL_TAB_COLUMNS WHERE Table_Name= '%s' AND OWNER = '%s'`
+	tableFieldsSqlTmp = `SELECT c.COLUMN_NAME, c.DATA_TYPE, c.DATA_DEFAULT, cc.COMMENTS FROM ALL_TAB_COLUMNS c LEFT JOIN ALL_COL_COMMENTS cc ON c.COLUMN_NAME=cc.COLUMN_NAME AND c.TABLE_NAME=cc.TABLE_NAME AND c.OWNER=cc.OWNER WHERE c.TABLE_NAME= '%s' AND OWNER= '%s'`
 )
 
 // TableFields retrieves and returns the fields' information of specified table of current schema.
@@ -62,7 +62,7 @@ func (d *Driver) TableFields(
 			Default: m["DATA_DEFAULT"].Val(),
 			// Key:     m["Key"].String(),
 			// Extra:   m["Extra"].String(),
-			// Comment: m["Comment"].String(),
+			Comment: m["COMMENTS"].String(),
 		}
 	}
 	return fields, nil
