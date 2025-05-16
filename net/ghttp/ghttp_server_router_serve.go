@@ -294,12 +294,11 @@ func (h *HandlerItemParsed) MarshalJSON() ([]byte, error) {
 // GetMetaTag retrieves and returns the metadata value associated with the given key from the request struct.
 // The meta value is from struct tags from g.Meta/gmeta.Meta type.
 func (h *HandlerItem) GetMetaTag(key string) string {
-	if h == nil {
-		return ""
-	}
-	metaValue := gmeta.Get(h.Info.Type.In(1), key)
-	if metaValue != nil {
-		return metaValue.String()
+	if h != nil && h.Info.Type != nil && h.Info.Type.NumIn() == 2 {
+		metaValue := gmeta.Get(h.Info.Type.In(1), key)
+		if metaValue != nil {
+			return metaValue.String()
+		}
 	}
 	return ""
 }
