@@ -557,3 +557,277 @@ func Test_PostgreSQL_ConnectionStringVariations(t *testing.T) {
 		}
 	})
 }
+
+// Test_PostgreSQL_Returning_BuildClause tests the buildReturningClause function
+func Test_PostgreSQL_Returning_BuildClause(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test basic Returning fields
+		model := &Model{
+			returningFields: []string{"id", "name", "email"},
+		}
+		clause, err := model.buildReturningClause(nil)
+		t.AssertNil(err)
+		t.Assert(clause, ` RETURNING "id", "name", "email"`)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test empty returning fields
+		model := &Model{}
+		clause, err := model.buildReturningClause(nil)
+		t.AssertNil(err)
+		t.Assert(clause, "")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test single field
+		model := &Model{
+			returningFields: []string{"id"},
+		}
+		clause, err := model.buildReturningClause(nil)
+		t.AssertNil(err)
+		t.Assert(clause, ` RETURNING "id"`)
+	})
+}
+
+// Test_PostgreSQL_Returning_HasReturning tests the hasReturning function
+func Test_PostgreSQL_Returning_HasReturning(t *testing.T) {
+	testCases := []struct {
+		name            string
+		returningFields []string
+		returningAll    bool
+		expected        bool
+	}{
+		{
+			name:            "no returning fields",
+			returningFields: nil,
+			returningAll:    false,
+			expected:        false,
+		},
+		{
+			name:            "has returning fields",
+			returningFields: []string{"id", "name"},
+			returningAll:    false,
+			expected:        true,
+		},
+		{
+			name:            "returning all",
+			returningFields: nil,
+			returningAll:    true,
+			expected:        true,
+		},
+		{
+			name:            "empty returning fields slice",
+			returningFields: []string{},
+			returningAll:    false,
+			expected:        false,
+		},
+	}
+
+	for _, tc := range testCases {
+		gtest.C(t, func(t *gtest.T) {
+			model := &Model{
+				returningFields: tc.returningFields,
+				returningAll:    tc.returningAll,
+			}
+			result := model.hasReturning()
+			t.Assert(result, tc.expected)
+		})
+	}
+}
+
+// Test_PostgreSQL_Returning_ContextKey tests the InternalReturningInCtx context key
+func Test_PostgreSQL_Returning_ContextKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test context key constant
+		t.Assert(string(InternalReturningInCtx), "returning_clause")
+	})
+}
+
+// Test_PostgreSQL_Returning_ModelChaining tests RETURNING method chaining
+func Test_PostgreSQL_Returning_ModelChaining(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Create a mock model
+		model := &Model{}
+
+		// Test Returning method
+		result := model.Returning("id", "name")
+		t.AssertNE(result, nil)
+		t.Assert(len(result.returningFields), 2)
+		t.Assert(result.returningFields[0], "id")
+		t.Assert(result.returningFields[1], "name")
+		t.Assert(result.returningAll, false)
+		t.Assert(len(result.returningExcept), 0)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		model := &Model{}
+
+		// Test ReturningAll method
+		result := model.ReturningAll()
+		t.AssertNE(result, nil)
+		t.Assert(result.returningAll, true)
+		t.Assert(len(result.returningFields), 0)
+		t.Assert(len(result.returningExcept), 0)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		model := &Model{}
+
+		// Test ReturningExcept method
+		result := model.ReturningExcept("password", "secret")
+		t.AssertNE(result, nil)
+		t.Assert(result.returningAll, true)
+		t.Assert(len(result.returningFields), 0)
+		t.Assert(len(result.returningExcept), 2)
+		t.Assert(result.returningExcept[0], "password")
+		t.Assert(result.returningExcept[1], "secret")
+	})
+}
+
+// Test_PostgreSQL_Returning_FieldQuoting tests field name quoting in RETURNING clause
+func Test_PostgreSQL_Returning_FieldQuoting(t *testing.T) {
+	testCases := []struct {
+		name     string
+		fields   []string
+		expected string
+	}{
+		{
+			name:     "single field",
+			fields:   []string{"id"},
+			expected: ` RETURNING "id"`,
+		},
+		{
+			name:     "multiple fields",
+			fields:   []string{"id", "name", "email"},
+			expected: ` RETURNING "id", "name", "email"`,
+		},
+		{
+			name:     "field with underscore",
+			fields:   []string{"user_id", "created_at"},
+			expected: ` RETURNING "user_id", "created_at"`,
+		},
+		{
+			name:     "field with special characters",
+			fields:   []string{"user-name", "email@domain"},
+			expected: ` RETURNING "user-name", "email@domain"`,
+		},
+	}
+
+	for _, tc := range testCases {
+		gtest.C(t, func(t *gtest.T) {
+			model := &Model{
+				returningFields: tc.fields,
+			}
+			clause, err := model.buildReturningClause(nil)
+			t.AssertNil(err)
+			t.Assert(clause, tc.expected)
+		})
+	}
+}
+
+// Test_PostgreSQL_Returning_EdgeCases tests edge cases for RETURNING functionality
+func Test_PostgreSQL_Returning_EdgeCases(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test with nil returningFields
+		model := &Model{
+			returningFields: nil,
+			returningAll:    false,
+		}
+		clause, err := model.buildReturningClause(nil)
+		t.AssertNil(err)
+		t.Assert(clause, "")
+		t.Assert(model.hasReturning(), false)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test with empty string field
+		model := &Model{
+			returningFields: []string{""},
+		}
+		clause, err := model.buildReturningClause(nil)
+		t.AssertNil(err)
+		t.Assert(clause, ` RETURNING ""`)
+		t.Assert(model.hasReturning(), true)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test with duplicate fields
+		model := &Model{
+			returningFields: []string{"id", "id", "name"},
+		}
+		clause, err := model.buildReturningClause(nil)
+		t.AssertNil(err)
+		t.Assert(clause, ` RETURNING "id", "id", "name"`)
+	})
+}
+
+// Test_PostgreSQL_Returning_StateTransitions tests state transitions between different RETURNING modes
+func Test_PostgreSQL_Returning_StateTransitions(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		model := &Model{}
+
+		// Start with Returning
+		model = model.Returning("id", "name")
+		t.Assert(len(model.returningFields), 2)
+		t.Assert(model.returningAll, false)
+		t.Assert(len(model.returningExcept), 0)
+
+		// Switch to ReturningAll
+		model = model.ReturningAll()
+		t.Assert(len(model.returningFields), 0)
+		t.Assert(model.returningAll, true)
+		t.Assert(len(model.returningExcept), 0)
+
+		// Switch to ReturningExcept
+		model = model.ReturningExcept("password")
+		t.Assert(len(model.returningFields), 0)
+		t.Assert(model.returningAll, true)
+		t.Assert(len(model.returningExcept), 1)
+
+		// Switch back to Returning
+		model = model.Returning("email")
+		t.Assert(len(model.returningFields), 1)
+		t.Assert(model.returningAll, false)
+		t.Assert(len(model.returningExcept), 0)
+	})
+}
+
+// Test_PostgreSQL_Returning_MethodChainCompatibility tests compatibility with other model methods
+func Test_PostgreSQL_Returning_MethodChainCompatibility(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test that RETURNING methods return proper Model type for chaining
+		model := &Model{}
+
+		// Chain with other hypothetical methods (testing interface compatibility)
+		result := model.Returning("id").ReturningAll().ReturningExcept("password")
+		t.AssertNE(result, nil)
+		t.Assert(result.returningAll, true)
+		t.Assert(len(result.returningExcept), 1)
+		t.Assert(result.returningExcept[0], "password")
+	})
+}
+
+// Test_PostgreSQL_Returning_PerformanceConsiderations tests performance-related aspects
+func Test_PostgreSQL_Returning_PerformanceConsiderations(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test with large number of fields
+		var fields []string
+		for i := 0; i < 100; i++ {
+			fields = append(fields, fmt.Sprintf("field_%d", i))
+		}
+
+		model := &Model{
+			returningFields: fields,
+		}
+
+		clause, err := model.buildReturningClause(nil)
+		t.AssertNil(err)
+		t.Assert(strings.HasPrefix(clause, " RETURNING "), true)
+		t.Assert(strings.Contains(clause, `"field_0"`), true)
+		t.Assert(strings.Contains(clause, `"field_99"`), true)
+
+		// Verify all fields are quoted
+		fieldCount := strings.Count(clause, `"`)
+		t.Assert(fieldCount, 200) // 100 fields * 2 quotes each
+	})
+}

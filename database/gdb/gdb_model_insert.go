@@ -326,6 +326,15 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 		return result, err
 	}
 
+	// Handle RETURNING
+	if m.hasReturning() {
+		returningClause, err := m.buildReturningClause(ctx)
+		if err != nil {
+			return nil, err
+		}
+		ctx = context.WithValue(ctx, InternalReturningInCtx, returningClause)
+	}
+
 	in := &HookInsertInput{
 		internalParamHookInsert: internalParamHookInsert{
 			internalParamHook: internalParamHook{
