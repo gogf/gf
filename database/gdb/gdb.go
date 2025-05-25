@@ -709,6 +709,10 @@ const (
 	ctxKeyCatchSQL            gctx.StrKey = `CtxKeyCatchSQL`
 	ctxKeyInternalProducedSQL gctx.StrKey = `CtxKeyInternalProducedSQL`
 
+	// InternalReturningInCtx is the context key for RETURNING clause.
+	// Used to pass custom RETURNING SQL clause from model layer to driver layer.
+	InternalReturningInCtx gctx.StrKey = "returning_clause"
+
 	linkPattern            = `^(\w+):(.*?):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*?)$`
 	linkPatternDescription = `type:username:password@protocol(host:port)/dbname?param1=value1&...&paramN=valueN`
 )
