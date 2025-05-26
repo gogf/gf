@@ -16,4 +16,7 @@ type TableUser struct {
 	Nickname  string      `json:"nickname"  orm:"nickname"   ` //
 	CreatedAt *gtime.Time `json:"createdAt" orm:"created_at" ` //
 	UpdatedAt *gtime.Time `json:"updatedAt" orm:"updated_at" ` //
+	Email     string      `json:"email"     orm:"email"      ` //
+	Status    int         `json:"status"    orm:"status"     ` //
+	Height    float32     `json:"height"    orm:"height"     ` //
 }

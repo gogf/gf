@@ -27,6 +27,9 @@ type TableUserColumns struct {
 	Nickname  string //
 	CreatedAt string //
 	UpdatedAt string //
+	Email     string //
+	Status    string //
+	Height    string //
 }
 
 // tableUserColumns holds the columns for the table table_user.
@@ -37,6 +40,9 @@ var tableUserColumns = TableUserColumns{
 	Nickname:  "nickname",
 	CreatedAt: "created_at",
 	UpdatedAt: "updated_at",
+	Email:     "email",
+	Status:    "status",
+	Height:    "height",
 }
 
 // NewTableUserDao creates and returns a new DAO object for table data access.
