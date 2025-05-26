@@ -18,4 +18,7 @@ type TableUser struct {
 	Score    decimal.Decimal `json:"score"    orm:"score"     ` // Total score amount.
 	CreateAt *gtime.Time     `json:"createAt" orm:"create_at" ` // Created Time
 	UpdateAt *gtime.Time     `json:"updateAt" orm:"update_at" ` // Updated Time
+	Email    string          `json:"email"    orm:"email"     ` // User Email
+	Status   int64           `json:"status"   orm:"status"    ` // User Status
+	Height   float64         `json:"height"   orm:"height"    ` // User Height
 }
