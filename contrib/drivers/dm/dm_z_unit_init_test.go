@@ -175,7 +175,7 @@ func createInitTable(table ...string) (name string) {
 			"account_name": fmt.Sprintf(`name_%d`, i),
 			"pwd_reset":    0,
 			"attr_index":   i,
-			"create_time":  gtime.Now().String(),
+			"created_time": gtime.Now(),
 		})
 	}
 	result, err := db.Schema(TestDBName).Insert(context.Background(), name, array.Slice())
