@@ -17,7 +17,8 @@ import (
 )
 
 const (
-	tableFieldsSqlTmp         = `SELECT * FROM ALL_TAB_COLUMNS WHERE Table_Name= '%s' AND OWNER = '%s'`
+	tableFieldsSqlTmp = `SELECT c.COLUMN_NAME, c.DATA_TYPE, c.DATA_DEFAULT,c.NULLABLE, cc.COMMENTS FROM ALL_TAB_COLUMNS c LEFT JOIN 
+                                     ALL_COL_COMMENTS cc ON c.COLUMN_NAME=cc.COLUMN_NAME AND c.TABLE_NAME=cc.TABLE_NAME AND c.OWNER=cc.OWNER WHERE c.TABLE_NAME= '%s' AND c.OWNER= '%s'`
 	tableFieldsPkSqlSchemaTmp = `SELECT COLS.COLUMN_NAME AS PRIMARY_KEY_COLUMN FROM USER_CONSTRAINTS CONS 
 									JOIN USER_CONS_COLUMNS COLS ON CONS.CONSTRAINT_NAME = COLS.CONSTRAINT_NAME WHERE 
 							   		CONS.TABLE_NAME = '%s' AND CONS.CONSTRAINT_TYPE = 'P'`
@@ -91,7 +92,7 @@ func (d *Driver) TableFields(
 			Default: m["DATA_DEFAULT"].Val(),
 			Key:     pkFields.Get(m["COLUMN_NAME"].String()),
 			// Extra:   m["Extra"].String(),
-			// Comment: m["Comment"].String(),
+			Comment: m["COMMENTS"].String(),
 		}
 	}
 	return fields, nil

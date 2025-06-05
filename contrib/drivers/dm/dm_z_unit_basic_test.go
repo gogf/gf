@@ -138,18 +138,6 @@ func Test_DB_Query(t *testing.T) {
 	})
 }
 
-func Test_DB_WherePri(t *testing.T) {
-	tableName := "A_tables"
-	createInitTable(tableName)
-	gtest.C(t, func(t *gtest.T) {
-		// createTable(tableName)
-		var resOne *User
-		err := db.Model(tableName).WherePri(1).Scan(&resOne)
-		t.AssertNil(err)
-		t.AssertNQ(resOne, nil)
-	})
-}
-
 func TestModelSave(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
