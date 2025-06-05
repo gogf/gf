@@ -7,8 +7,9 @@
 package dm_test
 
 import (
-	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
+
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 // pr4157 WherePri
