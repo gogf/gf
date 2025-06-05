@@ -23,3 +23,15 @@ func Test_pr4157(t *testing.T) {
 		t.AssertNQ(resOne, nil)
 	})
 }
+
+// pr 4157 get table comments
+func Test_pr4157_4293(t *testing.T) {
+	tableName := "A_tables"
+	schema := "SYSDBA"
+	createInitTable(tableName)
+	gtest.C(t, func(t *gtest.T) {
+		fields, err := db.Model().TableFields(tableName, schema)
+		t.AssertNil(err)
+		t.AssertEQ(fields["ACCOUNT_NAME"].Comment, "账号名称")
+	})
+}

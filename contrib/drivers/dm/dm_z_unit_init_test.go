@@ -157,6 +157,12 @@ NOT CLUSTER PRIMARY KEY("ID")) STORAGE(ON "MAIN", CLUSTERBTR) ;
 		gtest.Fatal(err)
 	}
 
+	//添加字段注释
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+	COMMENT ON COLUMN "%s"."ACCOUNT_NAME" IS '账号名称';
+	`, name)); err != nil {
+		gtest.Fatal(err)
+	}
 	return
 }
 
