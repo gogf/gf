@@ -390,3 +390,13 @@ func Test_Auto_MarshalSlice(t *testing.T) {
 		t.Assert(users2, users1)
 	})
 }
+
+func Test_Pipeline(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		pipeline := redis.Pipeline()
+		pipeline.Set(ctx, "key", 0, 10)
+		pipeline.Get(ctx, "key")
+		_, err := pipeline.Exec(ctx)
+		t.AssertNil(err)
+	})
+}
