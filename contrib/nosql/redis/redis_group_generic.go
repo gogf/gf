@@ -8,6 +8,7 @@ package redis
 
 import (
 	"context"
+	"github.com/redis/go-redis/v9"
 	"time"
 
 	"github.com/gogf/gf/v2/container/gvar"
@@ -19,12 +20,14 @@ import (
 // GroupGeneric provides generic functions of redis.
 type GroupGeneric struct {
 	Operation gredis.AdapterOperation
+	client    redis.UniversalClient
 }
 
 // GroupGeneric creates and returns GroupGeneric.
 func (r *Redis) GroupGeneric() gredis.IGroupGeneric {
 	return GroupGeneric{
 		Operation: r.AdapterOperation,
+		client:    r.client,
 	}
 }
 
@@ -365,4 +368,13 @@ func (r GroupGeneric) PExpireTime(ctx context.Context, key string) (*gvar.Var, e
 func (r GroupGeneric) PTTL(ctx context.Context, key string) (int64, error) {
 	v, err := r.Operation.Do(ctx, "PTTL", key)
 	return v.Int64(), err
+}
+
+// Pipeline creates and returns a new Redis pipeline.
+// Pipelines allow you to queue multiple commands and execute them in a single operation,
+// which can help reduce network latency and improve performance.
+// This method returns a redis.Pipeliner, which can be used to add commands
+// to the pipeline and execute them together.
+func (r GroupGeneric) Pipeline() redis.Pipeliner {
+	return r.client.Pipeline()
 }
