@@ -8,6 +8,7 @@ package redis
 
 import (
 	"context"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gredis"
@@ -42,4 +43,13 @@ func (r *Redis) Conn(ctx context.Context) (gredis.Conn, error) {
 	return &Conn{
 		redis: r,
 	}, nil
+}
+
+// Pipeline creates and returns a new Redis pipeline.
+// Pipelines allow you to queue multiple commands and execute them in a single operation,
+// which can help reduce network latency and improve performance.
+// This method returns a redis.Pipeliner, which can be used to add commands
+// to the pipeline and execute them together.
+func (r *Redis) Pipeline() redis.Pipeliner {
+	return r.client.Pipeline()
 }
