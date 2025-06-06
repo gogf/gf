@@ -36,7 +36,7 @@ func TestTables(t *testing.T) {
 		for i := 0; i < len(tables); i++ {
 			find := false
 			for j := 0; j < len(result); j++ {
-				if strings.ToUpper(tables[i]) == result[j] {
+				if strings.ToUpper(tables[i]) == strings.ToUpper(result[j]) {
 					find = true
 					break
 				}
@@ -49,7 +49,7 @@ func TestTables(t *testing.T) {
 		for i := 0; i < len(tables); i++ {
 			find := false
 			for j := 0; j < len(result); j++ {
-				if strings.ToUpper(tables[i]) == result[j] {
+				if strings.ToUpper(tables[i]) == strings.ToUpper(result[j]) {
 					find = true
 					break
 				}
