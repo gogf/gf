@@ -20,7 +20,7 @@ func (d *Driver) DoFilter(
 	ctx context.Context, link gdb.Link, sql string, args []interface{},
 ) (newSql string, newArgs []interface{}, err error) {
 	// There should be no need to capitalize, because it has been done from field processing before
-	newSql, _ = gregex.ReplaceString(`[\n\t]`, "", sql)
+	newSql, _ = gregex.ReplaceString(`["\n\t]`, "", sql)
 	newSql = gstr.ReplaceI(gstr.ReplaceI(newSql, "GROUP_CONCAT", "LISTAGG"), "SEPARATOR", ",")
 
 	// TODO The current approach is too rough. We should deal with the GROUP_CONCAT function and the
