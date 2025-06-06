@@ -12,6 +12,7 @@ require (
 	github.com/grokify/html-strip-tags-go v0.1.0
 	github.com/magiconair/properties v1.8.9
 	github.com/olekukonko/tablewriter v0.0.5
+	github.com/redis/go-redis/v9 v9.9.0
 	go.opentelemetry.io/otel v1.32.0
 	go.opentelemetry.io/otel/sdk v1.32.0
 	go.opentelemetry.io/otel/trace v1.32.0
@@ -21,6 +22,8 @@ require (
 )
 
 require (
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
