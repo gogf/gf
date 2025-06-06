@@ -28,10 +28,7 @@ func Test_DB_Ping(t *testing.T) {
 }
 
 func TestTables(t *testing.T) {
-	tables := []string{"A_tables", "A_tables2"}
-	for _, v := range tables {
-		createInitTable(v)
-	}
+	tables := createInitTables(2)
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Tables(ctx)
 		gtest.AssertNil(err)

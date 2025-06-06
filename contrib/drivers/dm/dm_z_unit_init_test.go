@@ -218,3 +218,11 @@ NOT CLUSTER PRIMARY KEY("ID")) STORAGE(ON "MAIN", CLUSTERBTR) ;
 
 	return name, nil
 }
+
+func createInitTables(len int) []string {
+	tables := make([]string, 0, len)
+	for range len {
+		tables = append(tables, createInitTable())
+	}
+	return tables
+}
