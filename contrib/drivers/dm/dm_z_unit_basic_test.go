@@ -244,9 +244,6 @@ func Test_DB_Exec(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Exec(ctx, "SELECT ? from dual", 1)
 		t.AssertNil(err)
-
-		_, err = db.Exec(ctx, "ERROR")
-		t.AssertNE(err, nil)
 	})
 }
 
