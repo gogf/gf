@@ -76,7 +76,9 @@ func (c *Converter) GTime(any interface{}, format ...string) (*gtime.Time, error
 			return gtime.New(t), nil
 		}
 		if t, ok := any.(*time.Time); ok {
-			return gtime.New(t), nil
+			if t != nil {
+				return gtime.New(t), nil
+			}
 		}
 	}
 	s, err := c.String(any)
