@@ -45,7 +45,6 @@ func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args [
 	if err != nil {
 		return
 	}
-
 	newSql, err = d.parseSql(newSql)
 	if err != nil {
 		return
