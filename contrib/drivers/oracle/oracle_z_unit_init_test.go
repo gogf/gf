@@ -9,7 +9,6 @@ package oracle_test
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	_ "github.com/sijms/go-ora/v2"
 
@@ -152,7 +151,7 @@ func createInitTable(table ...string) (name string) {
 }
 
 func dropTable(table string) {
-	count, err := db.GetCount(ctx, "SELECT COUNT(*) FROM USER_TABLES WHERE TABLE_NAME = ?", strings.ToUpper(table))
+	count, err := db.GetCount(ctx, "SELECT COUNT(*) FROM USER_TABLES WHERE TABLE_NAME = ?", fmt.Sprintf(`"%s"`, table))
 	if err != nil {
 		gtest.Fatal(err)
 	}
