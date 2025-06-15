@@ -160,7 +160,7 @@ func dropTable(table string) {
 	if count == 0 {
 		return
 	}
-	if _, err = db.Exec(ctx, fmt.Sprintf("DROP TABLE %s", table)); err != nil {
+	if _, err = db.Exec(ctx, fmt.Sprintf(`DROP TABLE "%s"`, table)); err != nil {
 		gtest.Fatal(err)
 	}
 }
