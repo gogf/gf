@@ -114,7 +114,7 @@ func createTable(table ...string) (name string) {
 	dropTable(name)
 
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
-	CREATE TABLE %s (
+	CREATE TABLE "%s" (
 		ID NUMBER(10) NOT NULL,
 		PASSPORT VARCHAR(45) NOT NULL,
 		PASSWORD CHAR(32) NOT NULL,
