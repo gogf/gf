@@ -125,7 +125,6 @@ func (h *HookSelectInput) Next(ctx context.Context) (result Result, err error) {
 
 	// Sharding feature.
 	h.Schema, err = h.Model.getActualSchema(ctx, h.Schema)
-	h.Model.db.GetCore().SetSchema(h.Schema)
 	if err != nil {
 		return nil, err
 	}
@@ -160,6 +159,7 @@ func (h *HookSelectInput) Next(ctx context.Context) (result Result, err error) {
 		if err != nil {
 			return
 		}
+		h.Model.db.GetCore().SetSchema(h.Schema)
 	}
 	return h.Model.db.DoSelect(ctx, h.link, toBeCommittedSql, h.Args...)
 }
@@ -175,7 +175,6 @@ func (h *HookInsertInput) Next(ctx context.Context) (result sql.Result, err erro
 
 	// Sharding feature.
 	h.Schema, err = h.Model.getActualSchema(ctx, h.Schema)
-	h.Model.db.GetCore().SetSchema(h.Schema)
 	if err != nil {
 		return nil, err
 	}
@@ -197,6 +196,7 @@ func (h *HookInsertInput) Next(ctx context.Context) (result sql.Result, err erro
 		if err != nil {
 			return
 		}
+		h.Model.db.GetCore().SetSchema(h.Schema)
 	}
 	return h.Model.db.DoInsert(ctx, h.link, h.Table, h.Data, h.Option)
 }
@@ -212,7 +212,6 @@ func (h *HookUpdateInput) Next(ctx context.Context) (result sql.Result, err erro
 
 	// Sharding feature.
 	h.Schema, err = h.Model.getActualSchema(ctx, h.Schema)
-	h.Model.db.GetCore().SetSchema(h.Schema)
 	if err != nil {
 		return nil, err
 	}
@@ -241,6 +240,7 @@ func (h *HookUpdateInput) Next(ctx context.Context) (result sql.Result, err erro
 		if err != nil {
 			return
 		}
+		h.Model.db.GetCore().SetSchema(h.Schema)
 	}
 	return h.Model.db.DoUpdate(ctx, h.link, h.Table, h.Data, h.Condition, h.Args...)
 }
@@ -256,7 +256,6 @@ func (h *HookDeleteInput) Next(ctx context.Context) (result sql.Result, err erro
 
 	// Sharding feature.
 	h.Schema, err = h.Model.getActualSchema(ctx, h.Schema)
-	h.Model.db.GetCore().SetSchema(h.Schema)
 	if err != nil {
 		return nil, err
 	}
@@ -285,6 +284,7 @@ func (h *HookDeleteInput) Next(ctx context.Context) (result sql.Result, err erro
 		if err != nil {
 			return
 		}
+		h.Model.db.GetCore().SetSchema(h.Schema)
 	}
 	return h.Model.db.DoDelete(ctx, h.link, h.Table, h.Condition, h.Args...)
 }
