@@ -381,6 +381,13 @@ func (c *Core) GetSchema() string {
 	return schema
 }
 
+// SetSchema set the schema configured.
+func (c *Core) SetSchema(schema string) {
+	if schema != "" {
+		c.schema = schema
+	}
+}
+
 func parseConfigNodeLink(node *ConfigNode) (*ConfigNode, error) {
 	var (
 		link  = node.Link

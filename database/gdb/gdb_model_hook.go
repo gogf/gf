@@ -125,6 +125,7 @@ func (h *HookSelectInput) Next(ctx context.Context) (result Result, err error) {
 
 	// Sharding feature.
 	h.Schema, err = h.Model.getActualSchema(ctx, h.Schema)
+	h.Model.db.GetCore().SetSchema(h.Schema)
 	if err != nil {
 		return nil, err
 	}
@@ -174,6 +175,7 @@ func (h *HookInsertInput) Next(ctx context.Context) (result sql.Result, err erro
 
 	// Sharding feature.
 	h.Schema, err = h.Model.getActualSchema(ctx, h.Schema)
+	h.Model.db.GetCore().SetSchema(h.Schema)
 	if err != nil {
 		return nil, err
 	}
@@ -210,6 +212,7 @@ func (h *HookUpdateInput) Next(ctx context.Context) (result sql.Result, err erro
 
 	// Sharding feature.
 	h.Schema, err = h.Model.getActualSchema(ctx, h.Schema)
+	h.Model.db.GetCore().SetSchema(h.Schema)
 	if err != nil {
 		return nil, err
 	}
@@ -253,6 +256,7 @@ func (h *HookDeleteInput) Next(ctx context.Context) (result sql.Result, err erro
 
 	// Sharding feature.
 	h.Schema, err = h.Model.getActualSchema(ctx, h.Schema)
+	h.Model.db.GetCore().SetSchema(h.Schema)
 	if err != nil {
 		return nil, err
 	}
