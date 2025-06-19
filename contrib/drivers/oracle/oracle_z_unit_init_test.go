@@ -151,16 +151,5 @@ func createInitTable(table ...string) (name string) {
 }
 
 func dropTable(table string) {
-	count, err := db.GetCount(ctx, "SELECT COUNT(*) FROM USER_TABLES WHERE TABLE_NAME = \"%s\"", table)
-	if err != nil {
-		gtest.Fatal(err)
-	}
-
-	if count == 0 {
-		return
-	}
-
-	if _, err = db.Exec(ctx, fmt.Sprintf(`DROP TABLE "%s"`, table)); err != nil {
-		gtest.Fatal(err)
-	}
+	db.Exec(ctx, fmt.Sprintf(`DROP TABLE "%s"`, table))
 }
