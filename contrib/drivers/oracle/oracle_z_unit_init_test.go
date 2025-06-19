@@ -157,6 +157,7 @@ func dropTable(table string) {
 	}
 
 	if count == 0 {
+		fmt.Println("[DEBUG] %s", fmt.Sprint("count = %d", count))
 		return
 	}
 	if _, err = db.Exec(ctx, fmt.Sprintf(`DROP TABLE "%s"`, table)); err != nil {
