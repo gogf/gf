@@ -24,9 +24,9 @@ import (
 type ContentType string
 
 const (
-	ContentTypeJson       ContentType = `json`
+	ContentTypeJSON       ContentType = `json`
 	ContentTypeJs         ContentType = `js`
-	ContentTypeXml        ContentType = `xml`
+	ContentTypeXML        ContentType = `xml`
 	ContentTypeIni        ContentType = `ini`
 	ContentTypeYaml       ContentType = `yaml`
 	ContentTypeYml        ContentType = `yml`
@@ -92,7 +92,7 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 	}
 	var (
 		pparent *interface{} = nil // Parent pointer.
-		pointer *interface{} = j.p // Current pointer.
+		pointer              = j.p // Current pointer.
 	)
 	j.mu.Lock()
 	defer j.mu.Unlock()
