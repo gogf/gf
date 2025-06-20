@@ -21,9 +21,11 @@ import (
 // through given link object and returns the execution result.
 func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...interface{}) (result sql.Result, err error) {
 	var (
-		isUseCoreDoExec bool   = false // Check whether the default method needs to be used
-		primaryKey      string = ""
-		pkField         gdb.TableField
+		isUseCoreDoExec    bool   = false // Check whether the default method needs to be used
+		primaryKey         string = ""
+		pkField            gdb.TableField
+		returningClause    string = ""
+		hasCustomReturning bool   = false
 	)
 
 	// Transaction checks.
@@ -42,7 +44,13 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 		}
 	}
 
-	// Check if it is an insert operation with primary key.
+	if value := ctx.Value(gdb.InternalReturningInCtx); value != nil {
+		if clause, ok := value.(string); ok && clause != "" {
+			returningClause = clause
+			hasCustomReturning = true
+		}
+	}
+
 	if value := ctx.Value(internalPrimaryKeyInCtx); value != nil {
 		var ok bool
 		pkField, ok = value.(gdb.TableField)
@@ -53,8 +61,9 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 		isUseCoreDoExec = true
 	}
 
-	// check if it is an insert operation.
-	if !isUseCoreDoExec && pkField.Name != "" && strings.Contains(sql, "INSERT INTO") {
+	if hasCustomReturning {
+		sql += returningClause
+	} else if !isUseCoreDoExec && pkField.Name != "" && strings.Contains(sql, "INSERT INTO") {
 		primaryKey = pkField.Name
 		sql += fmt.Sprintf(` RETURNING "%s"`, primaryKey)
 	} else {
@@ -86,6 +95,20 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 		return nil, err
 	}
 	affected := len(out.Records)
+
+	if hasCustomReturning {
+		var lastInsertId int64 = 0
+		if affected > 0 && pkField.Name != "" && out.Records[affected-1][pkField.Name] != nil {
+			if strings.Contains(pkField.Type, "int") {
+				lastInsertId = out.Records[affected-1][pkField.Name].Int64()
+			}
+		}
+		return Result{
+			affected:         int64(affected),
+			lastInsertId:     lastInsertId,
+			returningRecords: out.Records,
+		}, nil
+	}
 	if affected > 0 {
 		if !strings.Contains(pkField.Type, "int") {
 			return Result{
@@ -94,14 +117,16 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 				lastInsertIdError: gerror.NewCodef(
 					gcode.CodeNotSupported,
 					"LastInsertId is not supported by primary key type: %s", pkField.Type),
+				returningRecords: out.Records,
 			}, nil
 		}
 
 		if out.Records[affected-1][primaryKey] != nil {
 			lastInsertId := out.Records[affected-1][primaryKey].Int64()
 			return Result{
-				affected:     int64(affected),
-				lastInsertId: lastInsertId,
+				affected:         int64(affected),
+				lastInsertId:     lastInsertId,
+				returningRecords: out.Records,
 			}, nil
 		}
 	}
