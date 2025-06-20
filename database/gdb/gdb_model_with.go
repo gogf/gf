@@ -333,7 +333,12 @@ func (m *Model) parseWithTagInFieldStruct(field gstructs.Field) (output parseWit
 			key = array[0]
 			data[key] = gstr.Trim(array[1])
 		} else {
-			data[key] += " " + gstr.Trim(v)
+			if key == OrmTagForWithOrder {
+				// supporting multiple order fields
+				data[key] += "," + gstr.Trim(v)
+			} else {
+				data[key] += " " + gstr.Trim(v)
+			}
 		}
 	}
 	output.With = data[OrmTagForWith]
