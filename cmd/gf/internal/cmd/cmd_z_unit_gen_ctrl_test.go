@@ -22,7 +22,7 @@ func Test_Gen_Ctrl_Default(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			path      = gfile.Temp(guid.S())
-			apiFolder = gtest.DataPath("genctrl", "single", "api")
+			apiFolder = gtest.DataPath("genctrl", "default", "api")
 			in        = genctrl.CGenCtrlInput{
 				SrcFolder:     apiFolder,
 				DstFolder:     path,
@@ -67,7 +67,7 @@ func Test_Gen_Ctrl_Default(t *testing.T) {
 		})
 
 		// content
-		testPath := gtest.DataPath("genctrl", "single", "controller")
+		testPath := gtest.DataPath("genctrl", "default", "controller")
 		expectFiles := []string{
 			testPath + filepath.FromSlash("/article/article.go"),
 			testPath + filepath.FromSlash("/article/article_new.go"),

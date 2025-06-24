@@ -7,8 +7,8 @@ package article
 import (
 	"context"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genctrl/single/api/article/v1"
-	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genctrl/single/api/article/v2"
+	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genctrl/default/api/article/v1"
+	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genctrl/default/api/article/v2"
 )
 
 type IArticleV1 interface {

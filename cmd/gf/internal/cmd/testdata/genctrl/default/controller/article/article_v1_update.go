@@ -6,7 +6,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genctrl/single/api/article/v1"
+	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genctrl/default/api/article/v1"
 )
 
 func (c *ControllerV1) Update(ctx context.Context, req *v1.UpdateReq) (res *v1.UpdateRes, err error) {

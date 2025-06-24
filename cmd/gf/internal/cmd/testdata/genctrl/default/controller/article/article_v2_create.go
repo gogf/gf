@@ -6,7 +6,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genctrl/single/api/article/v2"
+	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genctrl/default/api/article/v2"
 )
 
 func (c *ControllerV2) Create(ctx context.Context, req *v2.CreateReq) (res *v2.CreateRes, err error) {
