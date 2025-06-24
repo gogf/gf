@@ -57,7 +57,7 @@ func (r *Response) ReadAll() []byte {
 	if r == nil || r.Response == nil {
 		return []byte{}
 	}
-	body, err := io.ReadAll(r.Response.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		intlog.Errorf(r.request.Context(), `%+v`, err)
 		return nil
@@ -82,5 +82,5 @@ func (r *Response) Close() error {
 	if r == nil || r.Response == nil {
 		return nil
 	}
-	return r.Response.Body.Close()
+	return r.Body.Close()
 }

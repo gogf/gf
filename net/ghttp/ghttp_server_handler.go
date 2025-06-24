@@ -204,7 +204,7 @@ func (s *Server) handleAfterRequestDone(request *Request) {
 
 	// Close the request and response body
 	// to release the file descriptor in time.
-	err := request.Request.Body.Close()
+	err := request.Body.Close()
 	if err != nil {
 		intlog.Errorf(request.Context(), `%+v`, err)
 	}

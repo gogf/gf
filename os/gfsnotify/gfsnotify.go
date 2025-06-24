@@ -149,19 +149,19 @@ func Remove(path string) error {
 }
 
 // RemoveCallback removes specified callback with given id from watcher.
-func RemoveCallback(callbackId int) error {
+func RemoveCallback(callbackID int) error {
 	w, err := getDefaultWatcher()
 	if err != nil {
 		return err
 	}
 	callback := (*Callback)(nil)
-	if r := callbackIdMap.Get(callbackId); r != nil {
+	if r := callbackIdMap.Get(callbackID); r != nil {
 		callback = r.(*Callback)
 	}
 	if callback == nil {
-		return gerror.NewCodef(gcode.CodeInvalidParameter, `callback for id %d not found`, callbackId)
+		return gerror.NewCodef(gcode.CodeInvalidParameter, `callback for id %d not found`, callbackID)
 	}
-	w.RemoveCallback(callbackId)
+	w.RemoveCallback(callbackID)
 	return nil
 }
 
