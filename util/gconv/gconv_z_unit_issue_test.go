@@ -805,3 +805,38 @@ func Test_Issue3903(t *testing.T) {
 		t.Assert(a.UserId, 100)
 	})
 }
+
+// https://github.com/gogf/gf/issues/4218
+func Test_Issue4218(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type SysMenuVo struct {
+			MenuId   int64        `json:"menuId"     orm:"menu_id"`
+			MenuName string       `json:"menuName"   orm:"menu_name"`
+			Children []*SysMenuVo `json:"children"   orm:"children"`
+			ParentId int64        `json:"parentId"   orm:"parent_id"`
+		}
+		menus := []*SysMenuVo{
+			{
+				MenuId:   1,
+				MenuName: "系统管理",
+				ParentId: 0,
+			},
+			{
+				MenuId:   2,
+				MenuName: "字典查询",
+				ParentId: 1,
+			},
+		}
+		var parent *SysMenuVo
+		err := gconv.Scan(menus[0], &parent)
+		t.AssertNil(err)
+		t.Assert(parent.MenuId, 1)
+		t.Assert(parent.ParentId, 0)
+
+		parent.Children = append(parent.Children, menus[1])
+
+		t.Assert(len(menus[0].Children), 1)
+		t.Assert(menus[0].Children[0].MenuId, 2)
+		t.Assert(menus[0].Children[0].ParentId, 1)
+	})
+}
