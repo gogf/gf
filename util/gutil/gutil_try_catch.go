@@ -20,9 +20,12 @@ func Throw(exception interface{}) {
 
 // Try implements try... logistics using internal panic...recover.
 // It returns error if any exception occurs, or else it returns nil.
-func Try(ctx context.Context, try func(ctx context.Context)) (err error) {
+func Try(ctx context.Context, try func(ctx context.Context), finally ...func(ctx context.Context)) (err error) {
 	if try == nil {
 		return
+	}
+	if len(finally) > 0 && finally[0] != nil {
+		defer finally[0](ctx)
 	}
 	defer func() {
 		if exception := recover(); exception != nil {
@@ -42,9 +45,12 @@ func Try(ctx context.Context, try func(ctx context.Context)) (err error) {
 // If `catch` is given nil, it ignores the panic from `try` and no panic will throw to parent goroutine.
 //
 // But, note that, if function `catch` also throws panic, the current goroutine will panic.
-func TryCatch(ctx context.Context, try func(ctx context.Context), catch func(ctx context.Context, exception error)) {
+func TryCatch(ctx context.Context, try func(ctx context.Context), catch func(ctx context.Context, exception error), finally ...func(ctx context.Context)) {
 	if try == nil {
 		return
+	}
+	if len(finally) > 0 && finally[0] != nil {
+		defer finally[0](ctx)
 	}
 	if exception := Try(ctx, try); exception != nil && catch != nil {
 		catch(ctx, exception)
