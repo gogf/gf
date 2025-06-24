@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS `user2`;
 CREATE TABLE `user2` (
     `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'User ID',
     `passport` varchar(45) NOT NULL COMMENT 'User Passport',
