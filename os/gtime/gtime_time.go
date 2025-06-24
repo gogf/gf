@@ -36,8 +36,11 @@ func New(param ...interface{}) *Time {
 		switch r := param[0].(type) {
 		case time.Time:
 			return NewFromTime(r)
+
 		case *time.Time:
-			return NewFromTime(*r)
+			if r != nil {
+				return NewFromTime(*r)
+			}
 
 		case Time:
 			return &r
