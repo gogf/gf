@@ -18,4 +18,7 @@ type TableUser struct {
 	Nickname  interface{} //
 	CreatedAt *gtime.Time //
 	UpdatedAt *gtime.Time //
+	Email     interface{} //
+	Status    interface{} //
+	Height    interface{} //
 }

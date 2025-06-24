@@ -19,4 +19,7 @@ type TableUser struct {
 	Score    interface{} // Total score amount.
 	CreateAt *gtime.Time // Created Time
 	UpdateAt *gtime.Time // Updated Time
+	Email    interface{} // User Email
+	Status   interface{} // User Status
+	Height   interface{} // User Height
 }
