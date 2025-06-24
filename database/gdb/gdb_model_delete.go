@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"context"
 	"database/sql"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -48,6 +49,15 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 			gcode.CodeMissingParameter,
 			"there should be WHERE condition statement for DELETE operation",
 		)
+	}
+
+	// Handle RETURNING
+	if m.hasReturning() {
+		returningClause, err := m.buildReturningClause(ctx)
+		if err != nil {
+			return nil, err
+		}
+		ctx = context.WithValue(ctx, InternalReturningInCtx, returningClause)
 	}
 
 	// Soft deleting.

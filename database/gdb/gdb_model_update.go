@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"reflect"
@@ -94,6 +95,15 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 			gcode.CodeMissingParameter,
 			"there should be WHERE condition statement for UPDATE operation",
 		)
+	}
+
+	// Handle RETURNING
+	if m.hasReturning() {
+		returningClause, err := m.buildReturningClause(ctx)
+		if err != nil {
+			return nil, err
+		}
+		ctx = context.WithValue(ctx, InternalReturningInCtx, returningClause)
 	}
 
 	in := &HookUpdateInput{
