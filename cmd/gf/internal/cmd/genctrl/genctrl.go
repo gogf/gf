@@ -88,27 +88,10 @@ func (c CGenCtrl) Ctrl(ctx context.Context, in CGenCtrlInput) (out *CGenCtrlOutp
 	if !gfile.Exists(in.SrcFolder) {
 		mlog.Fatalf(`source folder path "%s" does not exist`, in.SrcFolder)
 	}
-	// retrieve all api modules.
-	apiModuleFolderPaths, err := gfile.ScanDir(in.SrcFolder, "*", false)
+
+	err = c.generateByModules(in)
 	if err != nil {
 		return nil, err
-	}
-	for _, apiModuleFolderPath := range apiModuleFolderPaths {
-		if !gfile.IsDir(apiModuleFolderPath) {
-			continue
-		}
-		// generate go files by api module.
-		var (
-			module              = gfile.Basename(apiModuleFolderPath)
-			dstModuleFolderPath = gfile.Join(in.DstFolder, module)
-		)
-		err = c.generateByModule(
-			apiModuleFolderPath, dstModuleFolderPath, in.SdkPath,
-			in.SdkStdVersion, in.SdkNoV1, in.Clear, in.Merge,
-		)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	mlog.Print(`done!`)
@@ -160,6 +143,56 @@ func (c CGenCtrl) generateByWatchFile(watchFile, sdkPath string, sdkStdVersion, 
 	return c.generateByModule(
 		apiModuleFolderPath, dstModuleFolderPath, sdkPath, sdkStdVersion, sdkNoV1, clear, merge,
 	)
+}
+
+// generateByModules recursively calls generateByModule for multi-level modules generation.
+func (c CGenCtrl) generateByModules(in CGenCtrlInput) (err error) {
+	// read root folder, example: api/user or api/app
+	moduleFolderPaths, err := gfile.ScanDir(in.SrcFolder, "*", false)
+	if err != nil {
+		return err
+	}
+	for _, moduleFolder := range moduleFolderPaths {
+		if !gfile.IsDir(moduleFolder) {
+			continue
+		}
+
+		// read children folder, example: api/user/v1 or api/app/user
+		childrenFolderPaths, err := gfile.ScanDir(moduleFolder, "*", false)
+		if err != nil {
+			return err
+		}
+		for _, childrenFolderPath := range childrenFolderPaths {
+			if !gfile.IsDir(childrenFolderPath) {
+				continue
+			}
+
+			var (
+				inCopy = in
+				module = gfile.Basename(moduleFolder)
+			)
+			inCopy.SrcFolder = gfile.Join(in.SrcFolder, module)
+			inCopy.DstFolder = gfile.Join(in.DstFolder, module)
+			err = c.generateByModules(inCopy)
+			if err != nil {
+				return err
+			}
+		}
+
+		// generate go files by api module.
+		var (
+			module              = gfile.Basename(moduleFolder)
+			dstModuleFolderPath = gfile.Join(in.DstFolder, module)
+		)
+		err = c.generateByModule(
+			moduleFolder, dstModuleFolderPath, in.SdkPath,
+			in.SdkStdVersion, in.SdkNoV1, in.Clear, in.Merge,
+		)
+		if err != nil {
+			return err
+		}
+	}
+	return
 }
 
 // parseApiModule parses certain api and generate associated go files by certain module, not all api modules.

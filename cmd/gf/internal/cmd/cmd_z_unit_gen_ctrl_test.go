@@ -22,7 +22,7 @@ func Test_Gen_Ctrl_Default(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			path      = gfile.Temp(guid.S())
-			apiFolder = gtest.DataPath("genctrl", "api")
+			apiFolder = gtest.DataPath("genctrl", "single", "api")
 			in        = genctrl.CGenCtrlInput{
 				SrcFolder:     apiFolder,
 				DstFolder:     path,
@@ -39,7 +39,7 @@ func Test_Gen_Ctrl_Default(t *testing.T) {
 
 		err = gfile.Mkdir(path)
 		t.AssertNil(err)
-		defer gfile.Remove(path)
+		defer gfile.RemoveAll(path)
 
 		_, err = genctrl.CGenCtrl{}.Ctrl(ctx, in)
 		t.AssertNil(err)
@@ -49,7 +49,7 @@ func Test_Gen_Ctrl_Default(t *testing.T) {
 			genApi       = apiFolder + filepath.FromSlash("/article/article.go")
 			genApiExpect = apiFolder + filepath.FromSlash("/article/article_expect.go")
 		)
-		defer gfile.Remove(genApi)
+		defer gfile.RemoveAll(genApi)
 		t.Assert(gfile.GetContents(genApi), gfile.GetContents(genApiExpect))
 
 		// files
@@ -67,7 +67,7 @@ func Test_Gen_Ctrl_Default(t *testing.T) {
 		})
 
 		// content
-		testPath := gtest.DataPath("genctrl", "controller")
+		testPath := gtest.DataPath("genctrl", "single", "controller")
 		expectFiles := []string{
 			testPath + filepath.FromSlash("/article/article.go"),
 			testPath + filepath.FromSlash("/article/article_new.go"),
@@ -77,6 +77,104 @@ func Test_Gen_Ctrl_Default(t *testing.T) {
 			testPath + filepath.FromSlash("/article/article_v1_update.go"),
 			testPath + filepath.FromSlash("/article/article_v2_create.go"),
 			testPath + filepath.FromSlash("/article/article_v2_update.go"),
+		}
+		for i := range files {
+			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
+		}
+	})
+}
+
+func Test_Gen_Ctrl_Default_Multi(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			path      = gfile.Temp(guid.S())
+			apiFolder = gtest.DataPath("genctrl", "multi", "api")
+			in        = genctrl.CGenCtrlInput{
+				SrcFolder:     apiFolder,
+				DstFolder:     path,
+				WatchFile:     "",
+				SdkPath:       "",
+				SdkStdVersion: false,
+				SdkNoV1:       false,
+				Clear:         false,
+				Merge:         false,
+			}
+		)
+
+		err := gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+		defer gfile.RemoveAll(path)
+
+		_, err = genctrl.CGenCtrl{}.Ctrl(ctx, in)
+		t.AssertNil(err)
+
+		// apiInterface file
+		var (
+			genApiSlice = []string{
+				apiFolder + filepath.FromSlash("/admin/article/article.go"),
+				apiFolder + filepath.FromSlash("/admin/user/user.go"),
+				apiFolder + filepath.FromSlash("/app/user/user.go"),
+				apiFolder + filepath.FromSlash("/app/user/user_ext/user_ext.go"),
+			}
+			genApiSliceExpect = []string{
+				apiFolder + filepath.FromSlash("/admin/article/article_expect.go"),
+				apiFolder + filepath.FromSlash("/admin/user/user_expect.go"),
+				apiFolder + filepath.FromSlash("/app/user/user_expect.go"),
+				apiFolder + filepath.FromSlash("/app/user/user_ext/user_ext_expect.go"),
+			}
+		)
+
+		for i := range genApiSlice {
+			t.Assert(gfile.GetContents(genApiSlice[i]), gfile.GetContents(genApiSliceExpect[i]))
+			gfile.RemoveAll(genApiSlice[i])
+		}
+
+		// files
+		files, err := gfile.ScanDir(path, "*.go", true)
+		t.AssertNil(err)
+		t.Assert(files, []string{
+			path + filepath.FromSlash("/admin/article/article.go"),
+			path + filepath.FromSlash("/admin/article/article_new.go"),
+			path + filepath.FromSlash("/admin/article/article_v1_create.go"),
+
+			path + filepath.FromSlash("/admin/user/user.go"),
+			path + filepath.FromSlash("/admin/user/user_new.go"),
+			path + filepath.FromSlash("/admin/user/user_v1_create.go"),
+
+			path + filepath.FromSlash("/app/user/user.go"),
+			path + filepath.FromSlash("/app/user/user_ext/user_ext.go"),
+			path + filepath.FromSlash("/app/user/user_ext/user_ext_new.go"),
+			path + filepath.FromSlash("/app/user/user_ext/user_ext_v1_create.go"),
+			path + filepath.FromSlash("/app/user/user_ext/user_ext_v1_update.go"),
+
+			path + filepath.FromSlash("/app/user/user_new.go"),
+			path + filepath.FromSlash("/app/user/user_v1_create.go"),
+			path + filepath.FromSlash("/app/user/user_v1_update.go"),
+		})
+
+		// content
+		testPath := gtest.DataPath("genctrl", "multi", "controller")
+		expectFiles := []string{
+			testPath + filepath.FromSlash("/admin/article/article.go"),
+			testPath + filepath.FromSlash("/admin/article/article_new.go"),
+			testPath + filepath.FromSlash("/admin/article/article_v1_create.go"),
+
+			testPath + filepath.FromSlash("/admin/user/user.go"),
+			testPath + filepath.FromSlash("/admin/user/user_new.go"),
+			testPath + filepath.FromSlash("/admin/user/user_v1_create.go"),
+
+			testPath + filepath.FromSlash("/app/user/user.go"),
+			testPath + filepath.FromSlash("/app/user/user_ext/user_ext.go"),
+			testPath + filepath.FromSlash("/app/user/user_ext/user_ext_new.go"),
+			testPath + filepath.FromSlash("/app/user/user_ext/user_ext_v1_create.go"),
+			testPath + filepath.FromSlash("/app/user/user_ext/user_ext_v1_update.go"),
+
+			testPath + filepath.FromSlash("/app/user/user_new.go"),
+			testPath + filepath.FromSlash("/app/user/user_v1_create.go"),
+			testPath + filepath.FromSlash("/app/user/user_v1_update.go"),
 		}
 		for i := range files {
 			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
@@ -98,8 +196,8 @@ func Test_Gen_Ctrl_UseMerge_AddNewFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctrlPath = gfile.Temp(guid.S())
-			//ctrlPath  = gtest.DataPath("issue", "3460", "controller")
-			apiFolder = gtest.DataPath("genctrl-merge", "add_new_file", "api")
+			// ctrlPath  = gtest.DataPath("issue", "3460", "controller")
+			apiFolder = gtest.DataPath("genctrl", "merge", "add_new_file", "api")
 			in        = genctrl.CGenCtrlInput{
 				SrcFolder: apiFolder,
 				DstFolder: ctrlPath,
@@ -118,7 +216,7 @@ type DictTypeAddRes struct {
 
 		err := gfile.Mkdir(ctrlPath)
 		t.AssertNil(err)
-		defer gfile.Remove(ctrlPath)
+		defer gfile.RemoveAll(ctrlPath)
 
 		_, err = genctrl.CGenCtrl{}.Ctrl(ctx, in)
 		t.AssertNil(err)
@@ -127,7 +225,7 @@ type DictTypeAddRes struct {
 			genApi       = filepath.Join(apiFolder, "/dict/dict.go")
 			genApiExpect = filepath.Join(apiFolder, "/dict/dict_expect.go")
 		)
-		defer gfile.Remove(genApi)
+		defer gfile.RemoveAll(genApi)
 		t.Assert(gfile.GetContents(genApi), gfile.GetContents(genApiExpect))
 
 		genCtrlFiles, err := gfile.ScanDir(ctrlPath, "*.go", true)
@@ -138,7 +236,7 @@ type DictTypeAddRes struct {
 			filepath.Join(ctrlPath, "/dict/dict_v1_dict_type.go"),
 		})
 
-		expectCtrlPath := gtest.DataPath("genctrl-merge", "add_new_file", "controller")
+		expectCtrlPath := gtest.DataPath("genctrl", "merge", "add_new_file", "controller")
 		expectFiles := []string{
 			filepath.Join(expectCtrlPath, "/dict/dict.go"),
 			filepath.Join(expectCtrlPath, "/dict/dict_new.go"),
@@ -152,7 +250,7 @@ type DictTypeAddRes struct {
 		newApiFilePath := filepath.Join(apiFolder, "/dict/v1/test_new.go")
 		err = gfile.PutContents(newApiFilePath, testNewApiFile)
 		t.AssertNil(err)
-		defer gfile.Remove(newApiFilePath)
+		defer gfile.RemoveAll(newApiFilePath)
 
 		// Then execute the command
 		_, err = genctrl.CGenCtrl{}.Ctrl(ctx, in)
@@ -179,8 +277,8 @@ func Test_Gen_Ctrl_UseMerge_AddNewCtrl(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctrlPath = gfile.Temp(guid.S())
-			//ctrlPath  = gtest.DataPath("issue", "3460", "controller")
-			apiFolder = gtest.DataPath("genctrl-merge", "add_new_ctrl", "api")
+			// ctrlPath  = gtest.DataPath("issue", "3460", "controller")
+			apiFolder = gtest.DataPath("genctrl", "merge", "add_new_ctrl", "api")
 			in        = genctrl.CGenCtrlInput{
 				SrcFolder: apiFolder,
 				DstFolder: ctrlPath,
@@ -190,7 +288,7 @@ func Test_Gen_Ctrl_UseMerge_AddNewCtrl(t *testing.T) {
 
 		err := gfile.Mkdir(ctrlPath)
 		t.AssertNil(err)
-		defer gfile.Remove(ctrlPath)
+		defer gfile.RemoveAll(ctrlPath)
 
 		_, err = genctrl.CGenCtrl{}.Ctrl(ctx, in)
 		t.AssertNil(err)
@@ -199,7 +297,7 @@ func Test_Gen_Ctrl_UseMerge_AddNewCtrl(t *testing.T) {
 			genApi       = filepath.Join(apiFolder, "/dict/dict.go")
 			genApiExpect = filepath.Join(apiFolder, "/dict/dict_expect.go")
 		)
-		defer gfile.Remove(genApi)
+		defer gfile.RemoveAll(genApi)
 		t.Assert(gfile.GetContents(genApi), gfile.GetContents(genApiExpect))
 
 		genCtrlFiles, err := gfile.ScanDir(ctrlPath, "*.go", true)
@@ -210,7 +308,7 @@ func Test_Gen_Ctrl_UseMerge_AddNewCtrl(t *testing.T) {
 			filepath.Join(ctrlPath, "/dict/dict_v1_dict_type.go"),
 		})
 
-		expectCtrlPath := gtest.DataPath("genctrl-merge", "add_new_ctrl", "controller")
+		expectCtrlPath := gtest.DataPath("genctrl", "merge", "add_new_ctrl", "controller")
 		expectFiles := []string{
 			filepath.Join(expectCtrlPath, "/dict/dict.go"),
 			filepath.Join(expectCtrlPath, "/dict/dict_new.go"),
@@ -236,7 +334,7 @@ type DictTypeAddRes struct {
 		err = gfile.PutContentsAppend(dictModuleFileName, testNewApiFile)
 		t.AssertNil(err)
 
-		//==================================
+		// ==================================
 		// Then execute the command
 		_, err = genctrl.CGenCtrl{}.Ctrl(ctx, in)
 		t.AssertNil(err)
@@ -262,7 +360,7 @@ func Test_Gen_Ctrl_UseMerge_Issue3460(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctrlPath = gfile.Temp(guid.S())
-			//ctrlPath  = gtest.DataPath("issue", "3460", "controller")
+			// ctrlPath  = gtest.DataPath("issue", "3460", "controller")
 			apiFolder = gtest.DataPath("issue", "3460", "api")
 			in        = genctrl.CGenCtrlInput{
 				SrcFolder:     apiFolder,
@@ -278,7 +376,7 @@ func Test_Gen_Ctrl_UseMerge_Issue3460(t *testing.T) {
 
 		err := gfile.Mkdir(ctrlPath)
 		t.AssertNil(err)
-		defer gfile.Remove(ctrlPath)
+		defer gfile.RemoveAll(ctrlPath)
 
 		_, err = genctrl.CGenCtrl{}.Ctrl(ctx, in)
 		t.AssertNil(err)
