@@ -45,7 +45,11 @@ func (c *Converter) Float32(any any) (float32, error) {
 			}
 			return 0, nil
 		case reflect.String:
-			f, err := strconv.ParseFloat(rv.String(), 32)
+			s := rv.String()
+			if s == "" {
+				return 0, nil
+			}
+			f, err := strconv.ParseFloat(s, 32)
 			if err != nil {
 				return 0, gerror.WrapCodef(
 					gcode.CodeInvalidParameter, err, "converting string to float32 failed for: %v", any,
@@ -67,6 +71,9 @@ func (c *Converter) Float32(any any) (float32, error) {
 			s, err := c.String(any)
 			if err != nil {
 				return 0, err
+			}
+			if s == "" {
+				return 0, nil
 			}
 			v, err := strconv.ParseFloat(s, 32)
 			if err != nil {
@@ -112,7 +119,11 @@ func (c *Converter) Float64(any any) (float64, error) {
 			}
 			return 0, nil
 		case reflect.String:
-			f, err := strconv.ParseFloat(rv.String(), 64)
+			s := rv.String()
+			if s == "" {
+				return 0, nil
+			}
+			f, err := strconv.ParseFloat(s, 64)
 			if err != nil {
 				return 0, gerror.WrapCodef(
 					gcode.CodeInvalidParameter, err, "converting string to float64 failed for: %v", any,
@@ -134,6 +145,9 @@ func (c *Converter) Float64(any any) (float64, error) {
 			s, err := c.String(any)
 			if err != nil {
 				return 0, err
+			}
+			if s == "" {
+				return 0, nil
 			}
 			v, err := strconv.ParseFloat(s, 64)
 			if err != nil {
