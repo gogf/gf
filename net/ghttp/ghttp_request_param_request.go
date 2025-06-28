@@ -222,10 +222,8 @@ func (r *Request) mergeInTagStructValue(data map[string]interface{}) error {
 	fields := r.serveHandler.Handler.Info.ReqStructFields
 	if len(fields) > 0 {
 		var (
-			foundKey   string
-			foundValue interface{}
-			headerMap  = make(map[string]interface{})
-			cookieMap  = make(map[string]interface{})
+			headerMap = make(map[string]interface{})
+			cookieMap = make(map[string]interface{})
 		)
 
 		for k, v := range r.Header {
@@ -239,6 +237,10 @@ func (r *Request) mergeInTagStructValue(data map[string]interface{}) error {
 		}
 
 		for _, field := range fields {
+			var (
+				foundKey   string
+				foundValue interface{}
+			)
 			if tagValue := field.TagIn(); tagValue != "" {
 				findKey := field.TagPriorityName()
 				switch tagValue {
