@@ -23,11 +23,11 @@ import (
 
 // Config is the configuration object for nacos client.
 type Config struct {
-	ServerConfigs  []constant.ServerConfig                                         `v:"required"` // See constant.ServerConfig
-	ClientConfig   constant.ClientConfig                                           `v:"required"` // See constant.ClientConfig
-	ConfigParam    vo.ConfigParam                                                  `v:"required"` // See vo.ConfigParam
-	Watch          bool                                                            // Watch watches remote configuration updates, which updates local configuration in memory immediately when remote configuration changes.
-	OnConfigChange func(beforeValue *g.Var, namespace, group, dataId, data string) // Configure change callback function
+	ServerConfigs  []constant.ServerConfig                                       `v:"required"` // See constant.ServerConfig
+	ClientConfig   constant.ClientConfig                                         `v:"required"` // See constant.ClientConfig
+	ConfigParam    vo.ConfigParam                                                `v:"required"` // See vo.ConfigParam
+	Watch          bool                                                          // Watch watches remote configuration updates, which updates local configuration in memory immediately when remote configuration changes.
+	OnConfigChange func(beforeCfg *g.Var, namespace, group, dataId, data string) // Configure change callback function
 }
 
 // Client implements gcfg.Adapter implementing using nacos service.
@@ -128,9 +128,9 @@ func (c *Client) addWatcher() error {
 	}
 	c.config.ConfigParam.OnChange = func(namespace, group, dataId, data string) {
 		if c.config.OnConfigChange != nil {
-			beforeValue := g.NewVar(gjson.New(c.value.Val().(*gjson.Json).String()))
+			beforeCfg := g.NewVar(gjson.New(c.value.Val().(*gjson.Json).String()))
 			c.doUpdate(data)
-			go c.config.OnConfigChange(beforeValue, namespace, group, dataId, data)
+			go c.config.OnConfigChange(beforeCfg, namespace, group, dataId, data)
 		} else {
 			_ = c.doUpdate(data)
 		}

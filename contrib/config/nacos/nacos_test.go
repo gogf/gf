@@ -69,7 +69,7 @@ func TestNacosOnConfigChangeFunc(t *testing.T) {
 			ClientConfig:  clientConfig,
 			ConfigParam:   configParam,
 			Watch:         true,
-			OnConfigChange: func(beforeValue *g.Var, namespace, group, dataId, data string) {
+			OnConfigChange: func(beforeCfg *g.Var, namespace, group, dataId, data string) {
 				gtest.Assert("public", namespace)
 				gtest.Assert("test", group)
 				gtest.Assert("config.toml", dataId)
