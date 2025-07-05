@@ -12,7 +12,7 @@ import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
 message TableUser {
-    int32                     Id       = 1; // User ID
+    uint32                    Id       = 1; // User ID
     string                    Passport = 2; // User Passport
     string                    Password = 3; // User Password
     string                    Nickname = 4; // User Nickname

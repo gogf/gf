@@ -442,24 +442,24 @@ func generateMessageFieldForPbEntity(index int, field *gdb.TableField, in CGenPb
 		ctx              = gctx.GetInitCtx()
 	)
 	if in.TypeMapping != nil && len(in.TypeMapping) > 0 {
-		// priority match typeMapping by field db type.
-		// eg : decimal => double
-		formattedFieldType, _ := in.DB.GetFormattedDBTypeNameForField(field.Type)
-		if typeMapping, ok := in.TypeMapping[strings.ToLower(formattedFieldType)]; ok {
-			localTypeNameStr = typeMapping.Type
-			appendImport = typeMapping.Import
-		} else {
-			// match typeMapping after local type transform.
-			// eg: double => string, varchar => string etc.
-			localTypeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
-			if err != nil {
-				panic(err)
+		// match typeMapping after local type transform.
+		// eg: double => string, varchar => string etc.
+		localTypeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
+		if err != nil {
+			panic(err)
+		}
+		if localTypeName != "" {
+			if typeMappingLocal, localOk := in.TypeMapping[strings.ToLower(string(localTypeName))]; localOk {
+				localTypeNameStr = typeMappingLocal.Type
+				appendImport = typeMappingLocal.Import
 			}
-			if localTypeName != "" {
-				if typeMappingLocal, localOk := in.TypeMapping[strings.ToLower(string(localTypeName))]; localOk {
-					localTypeNameStr = typeMappingLocal.Type
-					appendImport = typeMappingLocal.Import
-				}
+		}
+		// Try match unknown / string localTypeName with db type.
+		if localTypeName == "" || localTypeName == gdb.LocalTypeString {
+			formattedFieldType, _ := in.DB.GetFormattedDBTypeNameForField(field.Type)
+			if typeMapping, ok := in.TypeMapping[strings.ToLower(formattedFieldType)]; ok {
+				localTypeNameStr = typeMapping.Type
+				appendImport = typeMapping.Import
 			}
 		}
 	}
