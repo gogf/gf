@@ -441,16 +441,25 @@ func generateMessageFieldForPbEntity(index int, field *gdb.TableField, in CGenPb
 		err              error
 		ctx              = gctx.GetInitCtx()
 	)
-
 	if in.TypeMapping != nil && len(in.TypeMapping) > 0 {
-		localTypeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
-		if err != nil {
-			panic(err)
-		}
-		if localTypeName != "" {
-			if typeMapping, ok := in.TypeMapping[strings.ToLower(string(localTypeName))]; ok {
-				localTypeNameStr = typeMapping.Type
-				appendImport = typeMapping.Import
+		// priority match typeMapping by field db type.
+		// eg : decimal => double
+		formattedFieldType, _ := in.DB.GetFormattedDBTypeNameForField(field.Type)
+		if typeMapping, ok := in.TypeMapping[strings.ToLower(formattedFieldType)]; ok {
+			localTypeNameStr = typeMapping.Type
+			appendImport = typeMapping.Import
+		} else {
+			// match typeMapping after local type transform.
+			// eg: double => string, varchar => string etc.
+			localTypeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
+			if err != nil {
+				panic(err)
+			}
+			if localTypeName != "" {
+				if typeMappingLocal, localOk := in.TypeMapping[strings.ToLower(string(localTypeName))]; localOk {
+					localTypeNameStr = typeMappingLocal.Type
+					appendImport = typeMappingLocal.Import
+				}
 			}
 		}
 	}
