@@ -702,6 +702,7 @@ const (
 	defaultMaxConnLifeTime                = 30 * time.Second // Max lifetime for per connection in pool in seconds.
 	cachePrefixTableFields                = `TableFields:`
 	cachePrefixSelectCache                = `SelectCache:`
+	cachePrefixCountCache                 = `CountCache:`
 	commandEnvKeyForDryRun                = "gf.gdb.dryrun"
 	modelForDaoSuffix                     = `ForDao`
 	dbRoleSlave                           = `slave`
