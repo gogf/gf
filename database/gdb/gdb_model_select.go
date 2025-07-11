@@ -56,7 +56,9 @@ func (m *Model) AllAndCount(useFieldForCount bool) (result Result, totalCount in
 	if !useFieldForCount {
 		countModel.fields = []any{Raw("1")}
 	}
-
+	if countModel.cacheEnabled && m.cacheOption.Name != "" {
+		countModel.cacheOption.Name = fmt.Sprintf(`%s%s`, cachePrefixCountCache, m.cacheOption.Name)
+	}
 	// Get the total count of records
 	totalCount, err = countModel.Count()
 	if err != nil {
@@ -337,7 +339,9 @@ func (m *Model) ScanAndCount(pointer interface{}, totalCount *int, useFieldForCo
 	if !useFieldForCount {
 		countModel.fields = []any{Raw("1")}
 	}
-
+	if countModel.cacheEnabled && m.cacheOption.Name != "" {
+		countModel.cacheOption.Name = fmt.Sprintf(`%s%s`, cachePrefixCountCache, m.cacheOption.Name)
+	}
 	// Get the total count of records
 	*totalCount, err = countModel.Count()
 	if err != nil {
