@@ -133,6 +133,9 @@ func (m *Model) saveSelectResultToCache(
 			result = nil
 		}
 	}
+	if !m.cacheOption.Force && result == nil {
+		return
+	}
 	var (
 		core      = m.db.GetCore()
 		cacheItem = &selectCacheItem{
