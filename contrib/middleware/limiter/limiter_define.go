@@ -1,9 +1,10 @@
 package limiter
 
 import (
-	"github.com/gogf/gf/v2/net/ghttp"
 	"net/http"
 	"time"
+
+	"github.com/gogf/gf/v2/net/ghttp"
 )
 
 const (
