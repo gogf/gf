@@ -29,8 +29,8 @@ const (
 	DefaultExpire   = 10 * time.Second // DefaultExpire is the default expiration time for cached entries
 )
 
-// RateLimiterOption defines the configuration options for the rate limiter
-type RateLimiterOption struct {
+// MemoryRateLimiterOption defines the configuration options for the rate limiter
+type MemoryRateLimiterOption struct {
 	Shards       int                           // Shards is the number of shards for concurrent access optimization
 	LruCapacity  int                           // LruCapacity is the LRU cache capacity
 	Capacity     int64                         // Capacity is the maximum number of tokens in the bucket
@@ -60,7 +60,7 @@ func DefaultDenyHandler(r *ghttp.Request) {
 // memoryTokenBucketRateLimiter implements a thread-safe token bucket rate limiter using memory storage
 type memoryTokenBucketRateLimiter struct {
 	cache   *gcache.Cache
-	option  RateLimiterOption
+	option  MemoryRateLimiterOption
 	mutexes []sync.Mutex
 	shards  int
 }
@@ -130,7 +130,7 @@ func (t *memoryTokenBucketRateLimiter) AllowN(ctx context.Context, key string, n
 }
 
 // newMemoryTokenBucketRateLimiter creates a new memory-based token bucket rate limiter
-func newMemoryTokenBucketRateLimiter(option RateLimiterOption) *memoryTokenBucketRateLimiter {
+func newMemoryTokenBucketRateLimiter(option MemoryRateLimiterOption) *memoryTokenBucketRateLimiter {
 	shards := 16
 	if option.Shards <= 0 {
 		shards = DefaultShards
@@ -169,7 +169,7 @@ func newMemoryTokenBucketRateLimiter(option RateLimiterOption) *memoryTokenBucke
 
 // MemoryTokenBucketRateLimiter returns one HTTP middleware function that implements rate limiting
 // using the token bucket algorithm with in-memory storage
-func MemoryTokenBucketRateLimiter(option RateLimiterOption) ghttp.HandlerFunc {
+func MemoryTokenBucketRateLimiter(option MemoryRateLimiterOption) ghttp.HandlerFunc {
 	limiter := newMemoryTokenBucketRateLimiter(option)
 	return func(r *ghttp.Request) {
 		key := option.KeyFunc(r)
