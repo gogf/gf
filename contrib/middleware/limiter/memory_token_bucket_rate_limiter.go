@@ -10,7 +10,6 @@ package limiter
 import (
 	"context"
 	"hash/fnv"
-	"net/http"
 	"sync"
 	"time"
 
@@ -20,41 +19,17 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-const (
-	Tokens          = "tokens"         // Tokens represents the key for token count in the rate limiter bucket
-	LastTime        = "last_time"      // LastTime represents the key for last update time in the rate limiter bucket
-	DefaultRate     = 100              // DefaultRate is the default rate of token generation per second
-	DefaultShards   = 16               // DefaultShards is the default number of shards for concurrent access
-	DefaultCapacity = 1024             // DefaultCapacity is the default capacity of the token bucket
-	DefaultExpire   = 10 * time.Second // DefaultExpire is the default expiration time for cached entries
-)
-
 // MemoryRateLimiterOption defines the configuration options for the rate limiter
 type MemoryRateLimiterOption struct {
+	KeyFunc      func(r *ghttp.Request) string // KeyFunc generates the key used for rate limiting based on the request
+	AllowHandler func(r *ghttp.Request)        // AllowHandler is called when a request is allowed to proceed
+	DenyHandler  func(r *ghttp.Request)        // DenyHandler is called when a request is denied due to rate limiting
 	Shards       int                           // Shards is the number of shards for concurrent access optimization
 	LruCapacity  int                           // LruCapacity is the LRU cache capacity
 	Capacity     int64                         // Capacity is the maximum number of tokens in the bucket
 	Rate         int64                         // Rate is the rate at which tokens are added to the bucket per second
 	Expire       time.Duration                 // Expire is the expiration time for cached entries
-	KeyFunc      func(r *ghttp.Request) string // KeyFunc generates the key used for rate limiting based on the request
-	AllowHandler func(r *ghttp.Request)        // AllowHandler is called when a request is allowed to proceed
-	DenyHandler  func(r *ghttp.Request)        // DenyHandler is called when a request is denied due to rate limiting
-}
-
-// DefaultKeyFunc is the default function to generate key from request, using client IP
-func DefaultKeyFunc(r *ghttp.Request) string {
-	return r.GetClientIp()
-}
-
-// DefaultAllowHandler is the default handler for allowed requests, continues to next middleware
-func DefaultAllowHandler(r *ghttp.Request) {
-	r.Middleware.Next()
-}
-
-// DefaultDenyHandler is the default handler for denied requests, returns 429 status
-func DefaultDenyHandler(r *ghttp.Request) {
-	r.Response.WriteStatus(http.StatusTooManyRequests, "Too Many Requests")
-	r.ExitAll()
+	DenyUpdate   bool                          // DenyUpdate indicates whether to update the cache when a request is denied
 }
 
 // memoryTokenBucketRateLimiter implements a thread-safe token bucket rate limiter using memory storage
@@ -81,8 +56,11 @@ func (t *memoryTokenBucketRateLimiter) getShards(ctx context.Context, key string
 
 // AllowN checks if n tokens can be consumed, and consumes them if possible
 func (t *memoryTokenBucketRateLimiter) AllowN(ctx context.Context, key string, n int64) bool {
-	if n <= 0 {
+	if n < 0 {
 		return false
+	}
+	if n == 0 {
+		return true
 	}
 	shard := t.getShards(ctx, key)
 	t.mutexes[shard].Lock()
@@ -126,6 +104,17 @@ func (t *memoryTokenBucketRateLimiter) AllowN(ctx context.Context, key string, n
 		}
 		return true
 	}
+	if t.option.DenyUpdate {
+		bucket := map[string]any{
+			Tokens:   tokens,
+			LastTime: time.Now(),
+		}
+		err = t.cache.Set(ctx, key, bucket, t.option.Expire)
+		if err != nil {
+			glog.Errorf(ctx, "[Token Bucket Rate limiter] cache set [%s]: [%s]error: %+v", key, gconv.String(bucket), err)
+			return false
+		}
+	}
 	return false
 }
 
@@ -138,7 +127,7 @@ func newMemoryTokenBucketRateLimiter(option MemoryRateLimiterOption) *memoryToke
 	if option.Rate <= 0 {
 		option.Rate = DefaultRate
 	}
-	if option.Capacity < 0 {
+	if option.Capacity <= 0 {
 		option.Capacity = DefaultCapacity
 	}
 	if option.Expire <= 0 {
@@ -172,11 +161,11 @@ func newMemoryTokenBucketRateLimiter(option MemoryRateLimiterOption) *memoryToke
 func MemoryTokenBucketRateLimiter(option MemoryRateLimiterOption) ghttp.HandlerFunc {
 	limiter := newMemoryTokenBucketRateLimiter(option)
 	return func(r *ghttp.Request) {
-		key := option.KeyFunc(r)
+		key := limiter.option.KeyFunc(r)
 		if !limiter.AllowN(r.GetCtx(), key, 1) {
-			option.DenyHandler(r)
+			limiter.option.DenyHandler(r)
 			return
 		}
-		option.AllowHandler(r)
+		limiter.option.AllowHandler(r)
 	}
 }
