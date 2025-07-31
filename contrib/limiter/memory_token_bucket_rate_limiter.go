@@ -32,8 +32,8 @@ type MemoryRateLimiterOption struct {
 	DenyUpdate   bool                          // DenyUpdate indicates whether to update the cache when a request is denied
 }
 
-// memoryTokenBucketRateLimiter implements a thread-safe token bucket rate limiter using memory storage
-type memoryTokenBucketRateLimiter struct {
+// MemoryTokenBucketRateLimiter implements a thread-safe token bucket rate limiter using memory storage
+type MemoryTokenBucketRateLimiter struct {
 	cache   *gcache.Cache
 	option  MemoryRateLimiterOption
 	mutexes []sync.Mutex
@@ -41,7 +41,7 @@ type memoryTokenBucketRateLimiter struct {
 }
 
 // getShards calculates which shard a key belongs to using FNV-1a hash
-func (t *memoryTokenBucketRateLimiter) getShards(ctx context.Context, key string) int {
+func (m *MemoryTokenBucketRateLimiter) getShards(ctx context.Context, key string) int {
 	var hash uint64
 	h := fnv.New64a()
 	_, err := h.Write([]byte(key))
@@ -51,21 +51,21 @@ func (t *memoryTokenBucketRateLimiter) getShards(ctx context.Context, key string
 	} else {
 		hash = h.Sum64()
 	}
-	return int(hash % uint64(t.shards))
+	return int(hash % uint64(m.shards))
 }
 
 // AllowN checks if n tokens can be consumed, and consumes them if possible
-func (t *memoryTokenBucketRateLimiter) AllowN(ctx context.Context, key string, n int64) bool {
+func (m *MemoryTokenBucketRateLimiter) AllowN(ctx context.Context, key string, n int64) bool {
 	if n < 0 {
 		return false
 	}
 	if n == 0 {
 		return true
 	}
-	shard := t.getShards(ctx, key)
-	t.mutexes[shard].Lock()
-	defer t.mutexes[shard].Unlock()
-	val, err := t.cache.Get(ctx, key)
+	shard := m.getShards(ctx, key)
+	m.mutexes[shard].Lock()
+	defer m.mutexes[shard].Unlock()
+	val, err := m.cache.Get(ctx, key)
 	if err != nil {
 		glog.Errorf(ctx, "[Token Bucket Rate limiter] cache get [%s] error: %+v", key, err)
 		return false
@@ -79,17 +79,18 @@ func (t *memoryTokenBucketRateLimiter) AllowN(ctx context.Context, key string, n
 		tokens = data[Tokens].(int64)
 		lastTime = data[LastTime].(time.Time)
 	} else {
-		tokens = t.option.Capacity
+		tokens = m.option.Capacity
 		lastTime = time.Now()
 	}
 	delta := time.Since(lastTime)
 	if delta < 0 {
+		glog.Errorf(ctx, "[Memory Token Bucket Rate limiter] delta: [%s] < 0", delta)
 		delta = 0
 	}
-	incr := delta.Nanoseconds() * t.option.Rate / 1e9
+	incr := delta.Nanoseconds() * m.option.Rate / 1e9
 	tokens += incr
-	if tokens > t.option.Capacity {
-		tokens = t.option.Capacity
+	if tokens > m.option.Capacity {
+		tokens = m.option.Capacity
 	}
 	if tokens >= n {
 		tokens -= n
@@ -97,29 +98,47 @@ func (t *memoryTokenBucketRateLimiter) AllowN(ctx context.Context, key string, n
 			Tokens:   tokens,
 			LastTime: time.Now(),
 		}
-		err = t.cache.Set(ctx, key, bucket, t.option.Expire)
+		err = m.cache.Set(ctx, key, bucket, m.option.Expire)
 		if err != nil {
-			glog.Errorf(ctx, "[Token Bucket Rate limiter] cache set [%s]: [%s]error: %+v", key, gconv.String(bucket), err)
+			glog.Errorf(ctx, "[Memory Token Bucket Rate limiter] cache set [%s]: [%s]error: %+v", key, gconv.String(bucket), err)
 			return false
 		}
 		return true
 	}
-	if t.option.DenyUpdate {
+	if m.option.DenyUpdate {
 		bucket := map[string]any{
 			Tokens:   tokens,
 			LastTime: time.Now(),
 		}
-		err = t.cache.Set(ctx, key, bucket, t.option.Expire)
+		err = m.cache.Set(ctx, key, bucket, m.option.Expire)
 		if err != nil {
-			glog.Errorf(ctx, "[Token Bucket Rate limiter] cache set [%s]: [%s]error: %+v", key, gconv.String(bucket), err)
+			glog.Errorf(ctx, "[Memory Token Bucket Rate limiter] cache set [%s]: [%s]error: %+v", key, gconv.String(bucket), err)
 			return false
 		}
 	}
 	return false
 }
 
-// newMemoryTokenBucketRateLimiter creates a new memory-based token bucket rate limiter
-func newMemoryTokenBucketRateLimiter(option MemoryRateLimiterOption) *memoryTokenBucketRateLimiter {
+// Allow checks if a single token can be consumed
+func (m *MemoryTokenBucketRateLimiter) Allow(ctx context.Context, key string) bool {
+	return m.AllowN(ctx, key, 1)
+}
+
+// Middleware returns one HTTP middleware function that implements rate limiting
+func (m *MemoryTokenBucketRateLimiter) Middleware() ghttp.HandlerFunc {
+	return func(r *ghttp.Request) {
+		key := m.option.KeyFunc(r)
+		if !m.AllowN(r.GetCtx(), key, 1) {
+			m.option.DenyHandler(r)
+			return
+		}
+		m.option.AllowHandler(r)
+	}
+}
+
+// NewMemoryTokenBucketRateLimiter creates a new memory-based token bucket rate limiter
+// It sets default values for any unset options
+func NewMemoryTokenBucketRateLimiter(option MemoryRateLimiterOption) *MemoryTokenBucketRateLimiter {
 	shards := 16
 	if option.Shards <= 0 {
 		shards = DefaultShards
@@ -148,7 +167,7 @@ func newMemoryTokenBucketRateLimiter(option MemoryRateLimiterOption) *memoryToke
 	} else {
 		cache = gcache.New()
 	}
-	return &memoryTokenBucketRateLimiter{
+	return &MemoryTokenBucketRateLimiter{
 		cache:   cache,
 		option:  option,
 		mutexes: make([]sync.Mutex, shards),
@@ -156,16 +175,13 @@ func newMemoryTokenBucketRateLimiter(option MemoryRateLimiterOption) *memoryToke
 	}
 }
 
-// MemoryTokenBucketRateLimiter returns one HTTP middleware function that implements rate limiting
-// using the token bucket algorithm with in-memory storage
-func MemoryTokenBucketRateLimiter(option MemoryRateLimiterOption) ghttp.HandlerFunc {
-	limiter := newMemoryTokenBucketRateLimiter(option)
-	return func(r *ghttp.Request) {
-		key := limiter.option.KeyFunc(r)
-		if !limiter.AllowN(r.GetCtx(), key, 1) {
-			limiter.option.DenyHandler(r)
-			return
-		}
-		limiter.option.AllowHandler(r)
-	}
+// NewMemoryTokenBucketRateLimiterAndMiddleware creates a new memory-based token bucket rate limiter and returns a middleware function
+func NewMemoryTokenBucketRateLimiterAndMiddleware(option MemoryRateLimiterOption) (*MemoryTokenBucketRateLimiter, ghttp.HandlerFunc) {
+	limiter := NewMemoryTokenBucketRateLimiter(option)
+	return limiter, limiter.Middleware()
+}
+
+// NewMemoryTokenBucketRateLimiterMiddleware creates a new memory-based token bucket rate limiter and returns a middleware function
+func NewMemoryTokenBucketRateLimiterMiddleware(option MemoryRateLimiterOption) ghttp.HandlerFunc {
+	return NewMemoryTokenBucketRateLimiter(option).Middleware()
 }

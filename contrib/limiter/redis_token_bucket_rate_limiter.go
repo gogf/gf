@@ -31,7 +31,7 @@ local last_time = tonumber(bucket[2]) or now_milliseconds
 local tokens = tonumber(bucket[1]) or capacity
 
 local delta = now_milliseconds - last_time
-local incr = delta * rate
+local incr = delta * rate / 1000
 tokens = math.min(capacity, tokens + incr)
 
 last_time = now_milliseconds
@@ -62,15 +62,15 @@ type RedisRateLimiterOption struct {
 	DenyUpdate   bool                          // DenyUpdate indicates whether to update the cache when a request is denied
 }
 
-// redisTokenBucketRateLimiter implements a Redis-based token bucket rate limiter
-type redisTokenBucketRateLimiter struct {
+// RedisTokenBucketRateLimiter implements a Redis-based token bucket rate limiter
+type RedisTokenBucketRateLimiter struct {
 	redis  *gredis.Redis
 	option RedisRateLimiterOption
 }
 
 // AllowN checks if n requests are allowed to proceed based on the token bucket algorithm
 // Returns true if allowed, false otherwise
-func (r *redisTokenBucketRateLimiter) AllowN(ctx context.Context, key string, n int64) bool {
+func (l *RedisTokenBucketRateLimiter) AllowN(ctx context.Context, key string, n int64) bool {
 	if n < 0 {
 		return false
 	}
@@ -78,11 +78,10 @@ func (r *redisTokenBucketRateLimiter) AllowN(ctx context.Context, key string, n 
 		return true
 	}
 	denyUpdate := 0
-	if r.option.DenyUpdate {
+	if l.option.DenyUpdate {
 		denyUpdate = 1
 	}
-	rate := float64(r.option.Rate) / 1000.0
-	val, err := r.redis.Eval(ctx, RedisLimiterLuaScript, 1, []string{key}, []any{r.option.Capacity, rate, n, int(r.option.Expire.Seconds()), time.Now().UnixMilli(), denyUpdate})
+	val, err := l.redis.Eval(ctx, RedisLimiterLuaScript, 1, []string{key}, []any{l.option.Capacity, l.option.Rate, n, int(l.option.Expire.Seconds()), time.Now().UnixMilli(), denyUpdate})
 	if err != nil {
 		glog.Errorf(ctx, "[Redis Token Bucket Rate limiter] eval error: %+v", err)
 		return false
@@ -90,9 +89,14 @@ func (r *redisTokenBucketRateLimiter) AllowN(ctx context.Context, key string, n 
 	return val.Int() == 1
 }
 
-// newRedisTokenBucketRateLimiter creates a new Redis token bucket rate limiter with the given options
+// Allow checks if a single request is allowed to proceed based on the token bucket algorithm
+func (l *RedisTokenBucketRateLimiter) Allow(ctx context.Context, key string) bool {
+	return l.AllowN(ctx, key, 1)
+}
+
+// NewRedisTokenBucketRateLimiter creates a new Redis token bucket rate limiter with the given options
 // It sets default values for any unset options
-func newRedisTokenBucketRateLimiter(option RedisRateLimiterOption) *redisTokenBucketRateLimiter {
+func NewRedisTokenBucketRateLimiter(option RedisRateLimiterOption) *RedisTokenBucketRateLimiter {
 	if option.Redis == nil {
 		panic("[Redis Token Bucket Rate limiter] redis client is nil")
 	}
@@ -114,22 +118,32 @@ func newRedisTokenBucketRateLimiter(option RedisRateLimiterOption) *redisTokenBu
 	if option.DenyHandler == nil {
 		option.DenyHandler = DefaultDenyHandler
 	}
-	return &redisTokenBucketRateLimiter{
+	return &RedisTokenBucketRateLimiter{
 		redis:  option.Redis,
 		option: option,
 	}
 }
 
-// RedisTokenBucketRateLimiter returns a middleware function that implements rate limiting
-// using the Redis token bucket algorithm
-func RedisTokenBucketRateLimiter(option RedisRateLimiterOption) ghttp.HandlerFunc {
-	limiter := newRedisTokenBucketRateLimiter(option)
+// Middleware returns a middleware function that implements rate limiting using the Redis token bucket algorithm
+func (l *RedisTokenBucketRateLimiter) Middleware() ghttp.HandlerFunc {
 	return func(r *ghttp.Request) {
-		key := limiter.option.KeyFunc(r)
-		if limiter.AllowN(r.Context(), key, 1) {
-			limiter.option.AllowHandler(r)
-		} else {
-			limiter.option.DenyHandler(r)
+		key := l.option.KeyFunc(r)
+		if !l.AllowN(r.GetCtx(), key, 1) {
+			l.option.DenyHandler(r)
+			return
 		}
+		l.option.AllowHandler(r)
 	}
+}
+
+// NewRedisTokenBucketRateLimiterAndMiddleware creates a new Redis token bucket rate limiter and returns a middleware function
+func NewRedisTokenBucketRateLimiterAndMiddleware(option RedisRateLimiterOption) (*RedisTokenBucketRateLimiter, ghttp.HandlerFunc) {
+	limiter := NewRedisTokenBucketRateLimiter(option)
+	return limiter, limiter.Middleware()
+}
+
+// NewRedisTokenBucketRateLimiterMiddleware returns a middleware function that implements rate limiting
+// using the Redis token bucket algorithm
+func NewRedisTokenBucketRateLimiterMiddleware(option RedisRateLimiterOption) ghttp.HandlerFunc {
+	return NewRedisTokenBucketRateLimiter(option).Middleware()
 }
