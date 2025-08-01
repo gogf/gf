@@ -19,6 +19,12 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// TokenBucket represents the token bucket structure
+type TokenBucket struct {
+	Tokens   int64     // Tokens represents the number of tokens in the bucket
+	LastTime time.Time // LastTime represents the last time the bucket was updated
+}
+
 // MemoryTokenBucketRateLimiterOption defines the configuration options for the rate limiter
 type MemoryTokenBucketRateLimiterOption struct {
 	KeyFunc      func(r *ghttp.Request) string // KeyFunc generates the key used for rate limiting based on the request
@@ -75,10 +81,10 @@ func (m *MemoryTokenBucketRateLimiter) AllowN(ctx context.Context, key string, n
 		tokens   int64
 		lastTime time.Time
 	)
-	if val != nil {
-		data := val.Map()
-		tokens = data[Tokens].(int64)
-		lastTime = data[LastTime].(time.Time)
+	if !val.IsNil() {
+		data := val.Val().(*TokenBucket)
+		tokens = data.Tokens
+		lastTime = data.LastTime
 	} else {
 		tokens = m.option.Capacity
 		lastTime = time.Now()
@@ -95,7 +101,7 @@ func (m *MemoryTokenBucketRateLimiter) AllowN(ctx context.Context, key string, n
 	}
 	if tokens >= n {
 		tokens -= n
-		bucket := map[string]any{
+		bucket := &TokenBucket{
 			Tokens:   tokens,
 			LastTime: time.Now(),
 		}
@@ -107,7 +113,7 @@ func (m *MemoryTokenBucketRateLimiter) AllowN(ctx context.Context, key string, n
 		return true
 	}
 	if m.option.DenyUpdate {
-		bucket := map[string]any{
+		bucket := &TokenBucket{
 			Tokens:   tokens,
 			LastTime: time.Now(),
 		}
