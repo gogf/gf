@@ -1,4 +1,4 @@
-module github.com/gogf/gf/contrib/middleware/limiter/v2
+module github.com/gogf/gf/contrib/limiter/v2
 
 go 1.22
 
