@@ -15,8 +15,6 @@ import (
 )
 
 const (
-	Tokens           = "tokens"         // Tokens represents the key for token count in the rate limiter bucket
-	LastTime         = "last_time"      // LastTime represents the key for last update time in the rate limiter bucket
 	DefaultRate      = 100              // DefaultRate is the default rate of token generation per second
 	DefaultShards    = 16               // DefaultShards is the default number of shards for concurrent access
 	DefaultCapacity  = 1024             // DefaultCapacity is the default capacity of the token bucket
