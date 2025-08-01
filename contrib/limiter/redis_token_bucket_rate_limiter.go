@@ -33,6 +33,7 @@ local tokens = tonumber(bucket[1]) or capacity
 local delta = now_milliseconds - last_time
 local incr = delta * rate / 1000
 tokens = math.min(capacity, tokens + incr)
+tokens = math.floor(tokens)
 
 last_time = now_milliseconds
 
