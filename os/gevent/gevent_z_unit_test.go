@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/os/gevent"
 	"github.com/gogf/gf/v2/test/gtest"
 )
@@ -296,9 +297,9 @@ func TestEvent_RecoverFuncAsync(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		event := gevent.New()
 
-		var panicHandled bool
+		panicHandled := gtype.NewBool()
 		recoverFunc := func(topic string, message any) {
-			panicHandled = true
+			panicHandled.Set(true)
 		}
 
 		handler := func(topic string, message any) {
@@ -312,7 +313,7 @@ func TestEvent_RecoverFuncAsync(t *testing.T) {
 		t.AssertNil(err)
 
 		time.Sleep(10 * time.Millisecond)
-		t.Assert(panicHandled, true)
+		t.Assert(panicHandled.Val(), true)
 	})
 }
 
