@@ -18,147 +18,167 @@ func TestEvent_New(t *testing.T) {
 func TestEvent_SubscribeAndPublish(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		event := gevent.New()
-		received := make(chan string, 1)
 
-		// Subscribe to a topic
-		subscriber := event.Subscribe("test.topic", func(topic string, message any) {
-			received <- message.(string)
-		})
-
-		// Publish a message
-		event.Publish("test.topic", "Hello World")
-
-		// Wait for the message to be received
-		select {
-		case msg := <-received:
-			t.Assert(msg, "Hello World")
-		case <-time.After(time.Second):
-			t.Error("Message not received within timeout")
+		var result string
+		handler := func(topic string, message any) {
+			result = message.(string)
 		}
 
-		// Test unsubscribe
-		subscriber.Unsubscribe()
-		t.Assert(event.SubscribersCount("test.topic"), 0)
+		sub, err := event.Subscribe("test", handler)
+		t.AssertNil(err)
+		t.AssertNE(sub, nil)
+
+		err = event.Publish("test", "Hello World")
+		t.AssertNil(err)
+
+		time.Sleep(10 * time.Millisecond)
+		t.Assert(result, "Hello World")
 	})
 }
 
-func TestEvent_SubscribeFunc(t *testing.T) {
+func TestEvent_SubscribeSync(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		event := gevent.New()
-		received := make(chan string, 1)
 
-		// Subscribe using SubscribeFunc
-		event.SubscribeFunc("test.topic", func(topic string, message any) {
-			received <- message.(string)
-		})
-
-		// Publish a message
-		event.Publish("test.topic", "Hello from SubscribeFunc")
-
-		// Wait for the message to be received
-		select {
-		case msg := <-received:
-			t.Assert(msg, "Hello from SubscribeFunc")
-		case <-time.After(time.Second):
-			t.Error("Message not received within timeout")
+		var result string
+		handler := func(topic string, message any) {
+			result = message.(string)
 		}
-	})
-}
 
-func TestEvent_PublishSync(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		event := gevent.New()
-		executionOrder := make([]int, 0)
+		sub, err := event.Subscribe("test", handler)
+		t.AssertNil(err)
+		t.AssertNE(sub, nil)
 
-		// Subscribe multiple handlers
-		event.Subscribe("sync.topic", func(topic string, message any) {
-			executionOrder = append(executionOrder, 1)
-		})
+		err = event.PublishSync("test", "Hello Sync")
+		t.AssertNil(err)
 
-		event.Subscribe("sync.topic", func(topic string, message any) {
-			executionOrder = append(executionOrder, 2)
-		})
-
-		// Publish synchronously
-		event.PublishSync("sync.topic", "test message")
-
-		// Check that execution order is deterministic
-		t.Assert(len(executionOrder), 2)
-		t.Assert(executionOrder[0], 1)
-		t.Assert(executionOrder[1], 2)
+		t.Assert(result, "Hello Sync")
 	})
 }
 
 func TestEvent_Priority(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		event := gevent.New()
-		executionOrder := make([]int, 0)
 
-		// Subscribe handlers with different priorities
-		event.Subscribe("priority.topic", func(topic string, message any) {
-			executionOrder = append(executionOrder, 3) // Normal priority
-		}, gevent.PriorityNormal)
+		var results []string
+		handlerLow := func(topic string, message any) {
+			results = append(results, "low")
+		}
+		handlerNormal := func(topic string, message any) {
+			results = append(results, "normal")
+		}
+		handlerHigh := func(topic string, message any) {
+			results = append(results, "high")
+		}
+		handlerUrgent := func(topic string, message any) {
+			results = append(results, "urgent")
+		}
+		handlerImmediate := func(topic string, message any) {
+			results = append(results, "immediate")
+		}
 
-		event.Subscribe("priority.topic", func(topic string, message any) {
-			executionOrder = append(executionOrder, 1) // High priority
-		}, gevent.PriorityHigh)
+		_, err := event.Subscribe("test", handlerLow, gevent.PriorityLow)
+		t.AssertNil(err)
 
-		event.Subscribe("priority.topic", func(topic string, message any) {
-			executionOrder = append(executionOrder, 2) // Medium priority
-		}, gevent.PriorityUrgent)
+		_, err = event.Subscribe("test", handlerNormal, gevent.PriorityNormal)
+		t.AssertNil(err)
 
-		event.Subscribe("priority.topic", func(topic string, message any) {
-			executionOrder = append(executionOrder, 4) // Low priority
-		}, gevent.PriorityLow)
+		_, err = event.Subscribe("test", handlerHigh, gevent.PriorityHigh)
+		t.AssertNil(err)
 
-		// Publish synchronously to ensure order
-		event.PublishSync("priority.topic", "test")
+		_, err = event.Subscribe("test", handlerUrgent, gevent.PriorityUrgent)
+		t.AssertNil(err)
 
-		// Check execution order (high priority should execute first)
-		expectedOrder := []int{2, 1, 3, 4}
-		t.Assert(executionOrder, expectedOrder)
+		_, err = event.Subscribe("test", handlerImmediate, gevent.PriorityImmediate)
+		t.AssertNil(err)
+
+		err = event.PublishSync("test", "message")
+		t.AssertNil(err)
+
+		t.Assert(results, []string{"immediate", "urgent", "high", "normal", "low"})
 	})
 }
 
-func TestEvent_MultipleTopics(t *testing.T) {
+// 添加一个新的测试用例，测试相同优先级下的执行顺序
+func TestEvent_PrioritySameLevel(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		event := gevent.New()
-		topic1Received := make(chan string, 1)
-		topic2Received := make(chan string, 1)
 
-		// Subscribe to multiple topics
-		event.Subscribe("topic1", func(topic string, message any) {
-			topic1Received <- message.(string)
-		})
-
-		event.Subscribe("topic2", func(topic string, message any) {
-			topic2Received <- message.(string)
-		})
-
-		// Publish to both topics
-		event.Publish("topic1", "Message for topic 1")
-		event.Publish("topic2", "Message for topic 2")
-
-		// Check received messages
-		select {
-		case msg := <-topic1Received:
-			t.Assert(msg, "Message for topic 1")
-		case <-time.After(time.Second):
-			t.Error("Message for topic1 not received within timeout")
+		var results []int
+		handler1 := func(topic string, message any) {
+			results = append(results, 1)
+		}
+		handler2 := func(topic string, message any) {
+			results = append(results, 2)
+		}
+		handler3 := func(topic string, message any) {
+			results = append(results, 3)
 		}
 
-		select {
-		case msg := <-topic2Received:
-			t.Assert(msg, "Message for topic 2")
-		case <-time.After(time.Second):
-			t.Error("Message for topic2 not received within timeout")
+		// 按顺序订阅相同优先级的处理器
+		_, err := event.Subscribe("test", handler1, gevent.PriorityHigh)
+		t.AssertNil(err)
+
+		_, err = event.Subscribe("test", handler2, gevent.PriorityHigh)
+		t.AssertNil(err)
+
+		_, err = event.Subscribe("test", handler3, gevent.PriorityHigh)
+		t.AssertNil(err)
+
+		err = event.PublishSync("test", "message")
+		t.AssertNil(err)
+
+		t.Assert(results, []int{1, 2, 3})
+	})
+}
+
+func TestEvent_Unsubscribe(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		event := gevent.New()
+
+		var count int
+		handler := func(topic string, message any) {
+			count++
 		}
 
-		// Check topics list
-		topics := event.Topics()
-		t.Assert(len(topics), 2)
-		t.AssertIN("topic1", topics)
-		t.AssertIN("topic2", topics)
+		sub, err := event.Subscribe("test", handler)
+		t.AssertNil(err)
+
+		err = event.PublishSync("test", "message")
+		t.AssertNil(err)
+		t.Assert(count, 1)
+
+		sub.Unsubscribe()
+
+		err = event.PublishSync("test", "message")
+		t.AssertNil(err)
+		t.Assert(count, 1)
+	})
+}
+
+func TestEvent_UnsubscribeMultipleTimes(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		event := gevent.New()
+
+		var count int
+		handler := func(topic string, message any) {
+			count++
+		}
+
+		sub, err := event.Subscribe("test", handler)
+		t.AssertNil(err)
+
+		err = event.PublishSync("test", "message")
+		t.AssertNil(err)
+		t.Assert(count, 1)
+
+		sub.Unsubscribe()
+		sub.Unsubscribe()
+		sub.Unsubscribe()
+
+		err = event.PublishSync("test", "message")
+		t.AssertNil(err)
+		t.Assert(count, 1)
 	})
 }
 
@@ -166,88 +186,158 @@ func TestEvent_SubscribersCount(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		event := gevent.New()
 
-		// Initially no subscribers
-		t.Assert(event.SubscribersCount("count.topic"), 0)
+		handler := func(topic string, message any) {}
 
-		// Add subscribers
-		event.Subscribe("count.topic", func(topic string, message any) {})
-		t.Assert(event.SubscribersCount("count.topic"), 1)
+		t.Assert(event.SubscribersCount("test"), 0)
 
-		event.Subscribe("count.topic", func(topic string, message any) {}, gevent.PriorityHigh)
-		t.Assert(event.SubscribersCount("count.topic"), 2)
+		sub1, err := event.Subscribe("test", handler)
+		t.AssertNil(err)
+		t.Assert(event.SubscribersCount("test"), 1)
 
-		// Add subscriber to another topic
-		event.Subscribe("another.topic", func(topic string, message any) {})
-		t.Assert(event.SubscribersCount("count.topic"), 2)
-		t.Assert(event.SubscribersCount("another.topic"), 1)
+		sub2, err := event.Subscribe("test", handler)
+		t.AssertNil(err)
+		t.Assert(event.SubscribersCount("test"), 2)
 
-		// Unsubscribe one handler
-		subscriber := event.Subscribe("count.topic", func(topic string, message any) {})
-		t.Assert(event.SubscribersCount("count.topic"), 3)
+		sub1.Unsubscribe()
+		t.Assert(event.SubscribersCount("test"), 1)
 
-		subscriber.Unsubscribe()
-		t.Assert(event.SubscribersCount("count.topic"), 2)
+		sub2.Unsubscribe()
+		t.Assert(event.SubscribersCount("test"), 0)
 	})
 }
 
-func TestEvent_Unsubscribe(t *testing.T) {
+func TestEvent_Topics(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		event := gevent.New()
-		messageReceived := false
 
-		// Subscribe and immediately unsubscribe
-		subscriber := event.Subscribe("test.topic", func(topic string, message any) {
-			messageReceived = true
-		})
+		handler := func(topic string, message any) {}
 
-		subscriber.Unsubscribe()
+		t.Assert(len(event.Topics()), 0)
 
-		// Publish message
-		event.Publish("test.topic", "test message")
+		_, err := event.Subscribe("test1", handler)
+		t.AssertNil(err)
 
-		// Give some time for async processing
-		time.Sleep(100 * time.Millisecond)
+		_, err = event.Subscribe("test2", handler)
+		t.AssertNil(err)
 
-		// Message should not be received as subscriber was unsubscribed
-		t.Assert(messageReceived, false)
+		topics := event.Topics()
+		t.Assert(len(topics), 2)
+		t.AssertIN("test1", topics)
+		t.AssertIN("test2", topics)
 	})
 }
 
-func TestEvent_UnsubscribeMultipleTimes(t *testing.T) {
+func TestEvent_Clear(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		event := gevent.New()
-		messageReceived := false
 
-		// Subscribe
-		subscriber := event.Subscribe("test.topic", func(topic string, message any) {
-			messageReceived = true
-		})
+		var count int
+		handler := func(topic string, message any) {
+			count++
+		}
 
-		// Unsubscribe multiple times (should not panic)
-		subscriber.Unsubscribe()
-		subscriber.Unsubscribe()
-		subscriber.Unsubscribe()
+		_, err := event.Subscribe("test", handler)
+		t.AssertNil(err)
 
-		// Publish message
-		event.Publish("test.topic", "test message")
+		err = event.PublishSync("test", "message")
+		t.AssertNil(err)
+		t.Assert(count, 1)
 
-		// Give some time for async processing
-		time.Sleep(100 * time.Millisecond)
+		event.Clear()
 
-		// Message should not be received
-		t.Assert(messageReceived, false)
+		err = event.PublishSync("test", "message")
+		t.AssertNil(err)
+		t.Assert(count, 1)
+		t.Assert(event.SubscribersCount("test"), 0)
 	})
 }
 
-func TestEvent_NoSubscribers(t *testing.T) {
+func TestEvent_Close(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		event := gevent.New()
 
-		// Publish to topic with no subscribers (should not panic)
-		event.Publish("no.subscribers", "test message")
-		event.PublishSync("no.subscribers", "test message")
+		event.Close()
 
-		// Check subscribers count
-		t.Assert(event.SubscribersCount("no.subscribers"), 0)
+		handler := func(topic string, message any) {}
+
+		_, err := event.Subscribe("test", handler)
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "event manager is closed")
+
+		err = event.Publish("test", "message")
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "event manager is closed")
+	})
+}
+
+func TestEvent_RecoverFunc(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		event := gevent.New()
+
+		var panicHandled bool
+		recoverFunc := func(topic string, message any) {
+			panicHandled = true
+		}
+
+		handler := func(topic string, message any) {
+			panic("test panic")
+		}
+
+		_, err := event.SubscribeWithRecover("test", handler, recoverFunc)
+		t.AssertNil(err)
+
+		err = event.PublishSync("test", "message")
+		t.AssertNil(err)
+		t.Assert(panicHandled, true)
+	})
+}
+
+func TestEvent_RecoverFuncAsync(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		event := gevent.New()
+
+		var panicHandled bool
+		recoverFunc := func(topic string, message any) {
+			panicHandled = true
+		}
+
+		handler := func(topic string, message any) {
+			panic("test panic")
+		}
+
+		_, err := event.SubscribeWithRecover("test", handler, recoverFunc)
+		t.AssertNil(err)
+
+		err = event.Publish("test", "message")
+		t.AssertNil(err)
+
+		time.Sleep(10 * time.Millisecond)
+		t.Assert(panicHandled, true)
+	})
+}
+
+func TestEvent_SubscribeAndPublishWithoutTimeDependency(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		event := gevent.New()
+
+		resultChan := make(chan string, 1)
+		handler := func(topic string, message any) {
+			resultChan <- message.(string)
+		}
+
+		sub, err := event.Subscribe("test", handler)
+		t.AssertNil(err)
+		t.AssertNE(sub, nil)
+
+		err = event.Publish("test", "Hello World")
+		t.AssertNil(err)
+
+		// 使用通道等待异步处理完成，而不是固定的时间等待
+		select {
+		case result := <-resultChan:
+			t.Assert(result, "Hello World")
+		case <-time.After(1 * time.Second):
+			t.Error("Event handler was not called within timeout")
+		}
 	})
 }
