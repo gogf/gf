@@ -1,10 +1,11 @@
 package gevent_test
 
 import (
-	"github.com/gogf/gf/v2/os/gevent"
-	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/v2/os/gevent"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func TestEvent_New(t *testing.T) {

@@ -9,9 +9,10 @@
 package gevent
 
 import (
+	"sync"
+
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/util/gutil"
-	"sync"
 )
 
 // Handler is a function type for handling events.
