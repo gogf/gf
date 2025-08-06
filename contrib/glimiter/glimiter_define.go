@@ -4,8 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package limiter implements rate limiting functionality for HTTP requests.
-package limiter
+// Package glimiter implements rate limiting functionality for HTTP requests.
+package glimiter
 
 import (
 	"net/http"
