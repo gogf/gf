@@ -20,7 +20,9 @@ import (
 // It receives the topic name and message data as parameters.
 type Handler func(topic string, message any)
 
-type RecoverFunc func(topic string, message any)
+// RecoverFunc is a function type for recovering from panic in event handlers.
+// It receives the handler ID, topic name, message data, and the panic error as parameters.
+type RecoverFunc func(id int64, topic string, message any, err any)
 
 // handlerInfo stores information about an event handler.
 type handlerInfo struct {
@@ -41,10 +43,10 @@ type Event struct {
 
 // Subscriber represents a subscription to an event topic.
 type Subscriber struct {
-	id    int64     // Subscription ID
-	topic string    // Topic name
-	event *Event    // Reference to the event manager
-	once  sync.Once // Ensures unsubscribe is called only once
+	Id           int64     // Subscription ID
+	Topic        string    // Topic name
+	EventManager *Event    // Reference to the event manager
+	once         sync.Once // Ensures unsubscribe is called only once
 }
 
 var EventClosedError = gerror.New("event manager is closed")
@@ -53,7 +55,7 @@ var EventClosedError = gerror.New("event manager is closed")
 // It can be called multiple times safely, but only the first call will take effect.
 func (s *Subscriber) Unsubscribe() {
 	s.once.Do(func() {
-		s.event.UnSubscribe(s.topic, s.id)
+		s.EventManager.UnSubscribe(s.Topic, s.Id)
 	})
 }
 
@@ -94,10 +96,10 @@ func (e *Event) SubscribeWithRecover(topic string, handler Handler, recoverFunc 
 	handlers = append(handlers, h)
 	m.Set(level, handlers)
 	return &Subscriber{
-		id:    e.counter,
-		topic: topic,
-		event: e,
-		once:  sync.Once{},
+		Id:           e.counter,
+		Topic:        topic,
+		EventManager: e,
+		once:         sync.Once{},
 	}, nil
 }
 
@@ -145,7 +147,7 @@ func (e *Event) executeHandlerWithRecover(info *handlerInfo, topic string, messa
 	wrapper := func() {
 		defer func() {
 			if err := recover(); err != nil {
-				recoverFunc(topic, message)
+				recoverFunc(info.id, topic, message, err)
 			}
 		}()
 		handler(topic, message)

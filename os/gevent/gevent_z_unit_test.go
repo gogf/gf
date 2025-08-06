@@ -275,9 +275,9 @@ func TestEvent_RecoverFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		event := gevent.New()
 
-		var panicHandled bool
-		recoverFunc := func(topic string, message any) {
-			panicHandled = true
+		panicHandled := gtype.NewBool()
+		recoverFunc := func(id int64, topic string, message any, err any) {
+			panicHandled.Set(true)
 		}
 
 		handler := func(topic string, message any) {
@@ -298,7 +298,7 @@ func TestEvent_RecoverFuncAsync(t *testing.T) {
 		event := gevent.New()
 
 		panicHandled := gtype.NewBool()
-		recoverFunc := func(topic string, message any) {
+		recoverFunc := func(id int64, topic string, message any, err any) {
 			panicHandled.Set(true)
 		}
 
