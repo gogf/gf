@@ -11,8 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/contrib/glimiter/v2"
 	"github.com/gogf/gf/v2/test/gtest"
+
+	"github.com/gogf/gf/contrib/glimiter/v2"
 )
 
 func TestMemoryTokenBucketRateLimiter_Allow(t *testing.T) {

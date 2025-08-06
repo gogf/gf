@@ -2,6 +2,7 @@ package glimiter_test
 
 import (
 	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
+
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/os/gctx"
 )
