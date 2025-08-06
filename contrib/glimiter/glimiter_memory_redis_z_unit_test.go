@@ -45,7 +45,6 @@ func TestRedisMemoryTokenBucketRateLimiter_Allow(t *testing.T) {
 
 		time.Sleep(time.Second * 2)
 
-		// 再次测试允许通过的请求
 		allowed = limiterInstance.AllowN(ctx, key, 10)
 		t.Assert(allowed, true)
 	})

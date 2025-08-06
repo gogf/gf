@@ -68,8 +68,6 @@ func TestRedisTokenBucketRateLimiter_AllowN(t *testing.T) {
 
 func TestRedisTokenBucketRateLimiter_Middleware(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-
-		// 创建限流器和中间件
 		limiterInstance := glimiter.NewRedisTokenBucketRateLimiter(glimiter.RedisTokenBucketRateLimiterOption{
 			Redis:    re,
 			Rate:     1,
