@@ -14,6 +14,8 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 )
 
+type lockContextKey struct{}
+
 type memoryData struct {
 	mu   sync.RWMutex                   // dataMu ensures the concurrent safety of underlying data map.
 	data map[interface{}]memoryDataItem // data is the underlying cache data which is stored in a hash table.
@@ -181,9 +183,21 @@ func (d *memoryData) SetMap(data map[interface{}]interface{}, expireTime int64) 
 	return nil
 }
 
+// GetWithLock retrieves the value for the given key, acquiring the lock if not already held via context
+func (d *memoryData) GetWithLock(ctx context.Context, key interface{}) (item memoryDataItem, ok bool) {
+	if ctx.Value(lockContextKey{}) == nil {
+		d.mu.Lock()
+		defer d.mu.Unlock()
+	}
+	item, ok = d.data[key]
+	return
+}
+
 func (d *memoryData) SetWithLock(ctx context.Context, key interface{}, value interface{}, expireTimestamp int64) (interface{}, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	if ctx.Value(lockContextKey{}) == nil {
+		d.mu.Lock()
+		defer d.mu.Unlock()
+	}
 	var (
 		err error
 	)
@@ -196,7 +210,7 @@ func (d *memoryData) SetWithLock(ctx context.Context, key interface{}, value int
 		f, ok = value.(func(ctx context.Context) (value interface{}, err error))
 	}
 	if ok {
-		if value, err = f(ctx); err != nil {
+		if value, err = f(context.WithValue(ctx, lockContextKey{}, struct{}{})); err != nil {
 			return nil, err
 		}
 		if value == nil {
