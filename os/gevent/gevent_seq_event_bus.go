@@ -172,9 +172,9 @@ func (tp *topicProcessor) asyncProcess() {
 				for _, processor := range handlerProcessors {
 					wg.Add(1)
 					go func(e Event, processor *handlerProcessor) {
-						defer wg.Done()
 						semaphore <- struct{}{}
 						defer func() { <-semaphore }()
+						defer wg.Done()
 						err := tp.execute(e, processor)
 						if err != nil {
 							if event.GetErrorModel() == Stop {
@@ -272,7 +272,7 @@ func (s *SeqEventBus) Publish(topic string, params map[string]any, errModel Erro
 
 // initTopicProcessor initializes a topic processor for a new topic
 func (s *SeqEventBus) initTopicProcessor(topic string) *topicProcessor {
-	processor := &topicProcessor{
+	return &topicProcessor{
 		topic:    topic,
 		eventBus: s,
 		ch:       make(chan Event, s.option.QueueSize),
@@ -287,8 +287,6 @@ func (s *SeqEventBus) initTopicProcessor(topic string) *topicProcessor {
 			}
 		}, true),
 	}
-	processor.startOnce.Do(processor.asyncProcess)
-	return processor
 }
 
 // PublishEvent publishes a pre-created event
@@ -338,6 +336,7 @@ func (s *SeqEventBus) Subscribe(topic string, handlerFunc HandlerFunc, errorFunc
 		return s.initTopicProcessor(topic)
 	})
 	processor := value.(*topicProcessor)
+	processor.startOnce.Do(processor.asyncProcess)
 	if processor.closed.Val() {
 		return nil, EventBusClosedError
 	}
