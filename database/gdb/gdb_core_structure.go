@@ -9,6 +9,7 @@ package gdb
 import (
 	"context"
 	"database/sql/driver"
+	"math/big"
 	"reflect"
 	"strings"
 	"time"
@@ -278,6 +279,13 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ i
 		return LocalTypeInt64, nil
 
 	case
+		fieldTypeInt128,
+		fieldTypeInt256,
+		fieldTypeUint128,
+		fieldTypeUint256:
+		return LocalTypeBigInt, nil
+
+	case
 		fieldTypeReal:
 		return LocalTypeFloat32, nil
 
@@ -402,6 +410,16 @@ func (c *Core) ConvertValueForLocal(
 
 	case LocalTypeUint64Bytes:
 		return gbinary.BeDecodeToUint64(gconv.Bytes(fieldValue)), nil
+
+	case LocalTypeBigInt:
+		switch v := fieldValue.(type) {
+		case big.Int:
+			return v.String(), nil
+		case *big.Int:
+			return v.String(), nil
+		default:
+			return gconv.String(fieldValue), nil
+		}
 
 	case LocalTypeFloat32:
 		return gconv.Float32(gconv.String(fieldValue)), nil
