@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -367,10 +368,10 @@ func TestScan(t *testing.T) {
 			t.Assert(test["Name"], scanExpects.structSub.Place)
 			t.Assert(test["Place"], scanExpects.structSub.Name)
 
-			//t.Logf("%#v", test)
+			// t.Logf("%#v", test)
 			err = gconv.Scan(test, &scanExpects.structSubPtr, mapParameter)
 			t.AssertNil(err)
-			//t.Logf("%#v", scanExpects.structSubPtr)
+			// t.Logf("%#v", scanExpects.structSubPtr)
 			t.Assert(test["Name"], scanExpects.structSubPtr.Place)
 			t.Assert(test["Place"], scanExpects.structSubPtr.Name)
 		}
@@ -419,5 +420,24 @@ func TestScanEmptyStringToCustomType(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(req.Statuses), 0)
 		t.Assert(len(req.Types), 0)
+	})
+}
+
+func TestScanDeepSlice(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			req   [][]int
+			req2  [][][]int
+			data1 = gjson.New("[[1,2,3],[4,5,6]]")
+			data2 = gjson.New("[[[1,2,3]],[[4,5,6]]]")
+		)
+		err := data1.Scan(&req)
+		t.AssertNil(err)
+		err = gconv.Scan(data1.String(), &req)
+		t.AssertNil(err)
+		err = data2.Scan(&req2)
+		t.AssertNil(err)
+		t.Assert(len(req), 2)
+		t.Assert(len(req2), 2)
 	})
 }
