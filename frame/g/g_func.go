@@ -28,8 +28,9 @@ func Go(
 	ctx context.Context,
 	goroutineFunc func(ctx context.Context),
 	recoverFunc func(ctx context.Context, exception error),
+	finallyFunc ...func(ctx context.Context),
 ) {
-	gutil.Go(ctx, goroutineFunc, recoverFunc)
+	gutil.Go(ctx, goroutineFunc, recoverFunc, finallyFunc...)
 }
 
 // NewVar returns a gvar.Var.
@@ -83,16 +84,16 @@ func Throw(exception interface{}) {
 
 // Try implements try... logistics using internal panic...recover.
 // It returns error if any exception occurs, or else it returns nil.
-func Try(ctx context.Context, try func(ctx context.Context)) (err error) {
-	return gutil.Try(ctx, try)
+func Try(ctx context.Context, try func(ctx context.Context), finally ...func(ctx context.Context)) (err error) {
+	return gutil.Try(ctx, try, finally...)
 }
 
 // TryCatch implements try...catch... logistics using internal panic...recover.
 // It automatically calls function `catch` if any exception occurs and passes the exception as an error.
 //
 // But, note that, if function `catch` also throws panic, the current goroutine will panic.
-func TryCatch(ctx context.Context, try func(ctx context.Context), catch func(ctx context.Context, exception error)) {
-	gutil.TryCatch(ctx, try, catch)
+func TryCatch(ctx context.Context, try func(ctx context.Context), catch func(ctx context.Context, exception error), finally ...func(ctx context.Context)) {
+	gutil.TryCatch(ctx, try, catch, finally...)
 }
 
 // IsNil checks whether given `value` is nil.
