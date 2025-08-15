@@ -140,11 +140,10 @@ func (tp *topicProcessor) close() {
 
 // cloneEvent clones the event if necessary
 func (tp *topicProcessor) cloneEvent(event Event) Event {
-	cloneEvent := event
-	if tp.eventBus.option.CloneEvent {
-		cloneEvent = event.Clone()
+	if !tp.eventBus.option.CloneEvent {
+		return event
 	}
-	return cloneEvent
+	return event.Clone()
 }
 
 // asyncProcess processes events asynchronously from the channel
