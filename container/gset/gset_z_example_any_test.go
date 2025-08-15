@@ -153,7 +153,7 @@ func ExampleSet_Contains() {
 	// true
 }
 
-func ExampleSet_ContainsI() {
+func ExampleSet_containsI() {
 	var set gset.StrSet
 	set.Add("a")
 	fmt.Println(set.Contains("a"))

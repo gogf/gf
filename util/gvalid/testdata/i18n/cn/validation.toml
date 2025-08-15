@@ -31,7 +31,7 @@
 "gf.gvalid.rule.max-length"           = "{field}字段值`{value}`字段最大长度应当为{max}"
 "gf.gvalid.rule.size"                 = "{field}字段值`{value}`字段长度必须应当为{size}"
 "gf.gvalid.rule.between"              = "{field}字段值`{value}`字段大小应当为{min}到{max}"
-"gf.gvalid.rule.min"                  = "{field}字段值`{value}`字段最小值应当为{min}"
+"gf.gvalid.rule.min"                  = "{field}字段值`{value}`字段最小值应当为 {min}"
 "gf.gvalid.rule.max"                  = "{field}字段值`{value}`字段最大值应当为{max}"
 "gf.gvalid.rule.json"                 = "{field}字段值`{value}`字段应当为JSON格式"
 "gf.gvalid.rule.xml"                  = "{field}字段值`{value}`字段应当为XML格式"

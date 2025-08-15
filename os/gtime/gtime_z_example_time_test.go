@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 )
 
-func ExampleNew_Basic() {
+func ExampleNew_curTime() {
 	curTime := "2018-08-08 08:08:08"
 	timer, _ := time.Parse("2006-01-02 15:04:05", curTime)
 	t1 := gtime.New(&timer)
@@ -41,7 +41,7 @@ func ExampleNew_Basic() {
 	// 08:08:08
 }
 
-func ExampleNew_WithFormat() {
+func ExampleNew_format() {
 	fmt.Println(gtime.New("20220629133225", "YmdHis").Format("Y-m-d H:i:s"))
 
 	// Output:
