@@ -414,6 +414,43 @@ func (s *SeqEventBus) IsClosed() bool {
 	return s.closed.Val()
 }
 
+// TopicSize returns the number of topics
+func (s *SeqEventBus) TopicSize() int {
+	if s.IsClosed() {
+		return 0
+	}
+	return s.topics.Size()
+}
+
+// Topics returns a list of topics
+func (s *SeqEventBus) Topics() []string {
+	if s.IsClosed() {
+		return []string{}
+	}
+	return s.topics.Keys()
+}
+
+// ContainsTopic checks if a topic exists
+func (s *SeqEventBus) ContainsTopic(topic string) bool {
+	if s.IsClosed() {
+		return false
+	}
+	return s.topics.Contains(topic)
+}
+
+// TopicSubscriberSize returns the number of subscribers for a topic
+func (s *SeqEventBus) TopicSubscriberSize(topic string) int {
+	if s.IsClosed() {
+		return 0
+	}
+	value := s.topics.Get(topic)
+	if value == nil {
+		return 0
+	}
+	processor := value.(*topicProcessor)
+	return processor.processors.Len()
+}
+
 // SeqEventBusSubscriber represents a subscription to a topic
 type SeqEventBusSubscriber struct {
 	topic        string            // Topic name
