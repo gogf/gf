@@ -40,8 +40,9 @@ type handlerProcessor struct {
 
 // SeqEventBusOption defines configuration options for SeqEventBus
 type SeqEventBusOption struct {
-	QueueSize  int // Size of the event queue channel
-	WorkerSize int // Number of workers for parallel execution
+	QueueSize  int  // Size of the event queue channel
+	WorkerSize int  // Number of workers for parallel execution
+	CloneEvent bool // Whether to clone event for each handler execution
 }
 
 // SeqEventBus is a sequential event bus implementation
@@ -137,6 +138,15 @@ func (tp *topicProcessor) close() {
 	})
 }
 
+// cloneEvent clones the event if necessary
+func (tp *topicProcessor) cloneEvent(event Event) Event {
+	cloneEvent := event
+	if tp.eventBus.option.CloneEvent {
+		cloneEvent = event.Clone()
+	}
+	return cloneEvent
+}
+
 // asyncProcess processes events asynchronously from the channel
 func (tp *topicProcessor) asyncProcess() {
 	tp.eventBus.wg.Add(1)
@@ -151,9 +161,9 @@ func (tp *topicProcessor) asyncProcess() {
 			}
 			handlerProcessors := tp.filterHandlerProcessors()
 			if event.GetExecModel() == Seq {
-				// Sequential execution
 				for _, processor := range handlerProcessors {
-					err := tp.execute(event, processor)
+					cloneEvent := tp.cloneEvent(event)
+					err := tp.execute(cloneEvent, processor)
 					if err != nil {
 						if event.GetErrorModel() == Stop {
 							return
@@ -171,17 +181,18 @@ func (tp *topicProcessor) asyncProcess() {
 
 				for _, processor := range handlerProcessors {
 					wg.Add(1)
-					go func(e Event, processor *handlerProcessor) {
+					cloneEvent := tp.cloneEvent(event)
+					go func(e Event, p *handlerProcessor) {
 						semaphore <- struct{}{}
 						defer func() { <-semaphore }()
 						defer wg.Done()
-						err := tp.execute(e, processor)
+						err := tp.execute(e, p)
 						if err != nil {
 							if event.GetErrorModel() == Stop {
 								return
 							}
 						}
-					}(event, processor)
+					}(cloneEvent, processor)
 				}
 				wg.Wait()
 			}
@@ -192,8 +203,9 @@ func (tp *topicProcessor) asyncProcess() {
 // NewSeqEventBus creates a new sequential event bus with optional configuration
 func NewSeqEventBus(options ...SeqEventBusOption) *SeqEventBus {
 	option := SeqEventBusOption{
-		QueueSize:  100, // Default queue size
-		WorkerSize: 10,  // Default worker size for parallel execution
+		QueueSize:  100,   // Default queue size
+		WorkerSize: 10,    // Default worker size for parallel execution
+		CloneEvent: false, // Default behavior is not to clone events
 	}
 	if len(options) > 0 {
 		option = options[0]
