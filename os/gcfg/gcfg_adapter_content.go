@@ -51,10 +51,7 @@ func (a *AdapterContent) SetContent(content string) error {
 // Note that this function does not return error as it just does simply check for
 // backend configuration service.
 func (a *AdapterContent) Available(ctx context.Context, resource ...string) (ok bool) {
-	if a.jsonVar.IsNil() {
-		return false
-	}
-	return true
+	return !a.jsonVar.IsNil()
 }
 
 // Get retrieves and returns value by specified `pattern` in current resource.
