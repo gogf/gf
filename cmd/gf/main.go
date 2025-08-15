@@ -7,6 +7,8 @@
 package main
 
 import (
+	_ "time/tzdata"
+
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gctx"
 
