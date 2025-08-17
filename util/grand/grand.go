@@ -30,7 +30,7 @@ func Intn(max int) int {
 		return max
 	}
 	n := int(binary.LittleEndian.Uint32(<-bufferChan)) % max
-	if (max > 0 && n < 0) || (max < 0 && n > 0) {
+	if n < 0 {
 		return -n
 	}
 	return n
@@ -62,14 +62,11 @@ func N(min, max int) int {
 	if min >= 0 {
 		return Intn(max-min+1) + min
 	}
-	if min < 0 {
-		// As `Intn` dose not support negative number,
-		// so we should first shift the value to right,
-		// then call `Intn` to produce the random number,
-		// and finally shift the result back to left.
-		return Intn(max+(0-min)+1) - (0 - min)
-	}
-	return 0
+	// As `Intn` dose not support negative number,
+	// so we should first shift the value to right,
+	// then call `Intn` to produce the random number,
+	// and finally shift the result back to left.
+	return Intn(max+(0-min)+1) - (0 - min)
 }
 
 // S returns a random string which contains digits and letters, and its length is `n`.

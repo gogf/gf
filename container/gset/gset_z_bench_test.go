@@ -16,10 +16,15 @@ import (
 )
 
 var intSet = gset.NewIntSet(true)
+
 var anySet = gset.NewSet(true)
+
 var strSet = gset.NewStrSet(true)
+
 var intSetUnsafe = gset.NewIntSet()
+
 var anySetUnsafe = gset.NewSet()
+
 var strSetUnsafe = gset.NewStrSet()
 
 func Benchmark_IntSet_Add(b *testing.B) {

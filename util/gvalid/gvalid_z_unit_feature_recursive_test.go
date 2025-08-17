@@ -34,8 +34,8 @@ func Test_CheckStruct_Recursive_Struct(t *testing.T) {
 		err := g.Validator().Data(user).Run(ctx)
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], g.Map{"required": "The Name field is required"})
-		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `1` must be the same as field Pass2"})
-		t.Assert(err.Maps()["Pass2"], g.Map{"same": "The Pass2 value `2` must be the same as field Pass1"})
+		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `1` must be the same as field Pass2 value `2`"})
+		t.Assert(err.Maps()["Pass2"], g.Map{"same": "The Pass2 value `2` must be the same as field Pass1 value `1`"})
 	})
 }
 
@@ -61,8 +61,8 @@ func Test_CheckStruct_Recursive_Struct_WithData(t *testing.T) {
 		err := g.Validator().Data(user).Assoc(data).Run(ctx)
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], nil)
-		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `100` must be the same as field Pass2"})
-		t.Assert(err.Maps()["Pass2"], g.Map{"same": "The Pass2 value `200` must be the same as field Pass1"})
+		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `100` must be the same as field Pass2 value `200`"})
+		t.Assert(err.Maps()["Pass2"], g.Map{"same": "The Pass2 value `200` must be the same as field Pass1 value `100`"})
 	})
 }
 
@@ -94,8 +94,8 @@ func Test_CheckStruct_Recursive_SliceStruct(t *testing.T) {
 		g.Dump(err.Items())
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], g.Map{"required": "The Name field is required"})
-		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `3` must be the same as field Pass2"})
-		t.Assert(err.Maps()["Pass2"], g.Map{"same": "The Pass2 value `4` must be the same as field Pass1"})
+		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `3` must be the same as field Pass2 value `4`"})
+		t.Assert(err.Maps()["Pass2"], g.Map{"same": "The Pass2 value `4` must be the same as field Pass1 value `3`"})
 	})
 }
 
@@ -127,7 +127,7 @@ func Test_CheckStruct_Recursive_SliceStruct_Bail(t *testing.T) {
 		g.Dump(err.Items())
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], nil)
-		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `1` must be the same as field Pass2"})
+		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `1` must be the same as field Pass2 value `2`"})
 		t.Assert(err.Maps()["Pass2"], nil)
 	})
 }
@@ -209,8 +209,8 @@ func Test_CheckMap_Recursive_SliceStruct(t *testing.T) {
 		g.Dump(err.Items())
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], nil)
-		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `3` must be the same as field Pass2"})
-		t.Assert(err.Maps()["Pass2"], g.Map{"same": "The Pass2 value `4` must be the same as field Pass1"})
+		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `3` must be the same as field Pass2 value `4`"})
+		t.Assert(err.Maps()["Pass2"], g.Map{"same": "The Pass2 value `4` must be the same as field Pass1 value `3`"})
 	})
 }
 
@@ -339,5 +339,108 @@ func Test_CheckStruct_Recursively_MapAttribute(t *testing.T) {
 		)
 		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
 		t.Assert(err, `Student Name is required`)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1983
+func Test_Issue1983(t *testing.T) {
+	// Error as the attribute Student in Teacher is an initialized struct, which has default value.
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string `v:"required"`
+			Age  int
+		}
+		type Teacher struct {
+			Students Student
+		}
+		var (
+			teacher = Teacher{}
+			data    = g.Map{
+				"students": nil,
+			}
+		)
+		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
+		t.Assert(err, `The Name field is required`)
+	})
+	// The same as upper, it is not affected by association values.
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string `v:"required"`
+			Age  int
+		}
+		type Teacher struct {
+			Students Student
+		}
+		var (
+			teacher = Teacher{}
+			data    = g.Map{
+				"name":     "john",
+				"students": nil,
+			}
+		)
+		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
+		t.Assert(err, `The Name field is required`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string `v:"required"`
+			Age  int
+		}
+		type Teacher struct {
+			Students *Student
+		}
+		var (
+			teacher = Teacher{}
+			data    = g.Map{
+				"students": nil,
+			}
+		)
+		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
+		t.AssertNil(err)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1921
+func Test_Issue1921(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type SearchOption struct {
+			Size int `v:"max:100"`
+		}
+		type SearchReq struct {
+			Option *SearchOption `json:"option,omitempty"`
+		}
+
+		var (
+			req = SearchReq{
+				Option: &SearchOption{
+					Size: 10000,
+				},
+			}
+		)
+		err := g.Validator().Data(req).Run(ctx)
+		t.Assert(err, "The Size value `10000` must be equal or lesser than 100")
+	})
+}
+
+// https://github.com/gogf/gf/issues/2011
+func Test_Issue2011(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string `v:"required|min-length:6"`
+			Age  int
+		}
+		type Teacher struct {
+			Student *Student
+		}
+		var (
+			teacher = Teacher{}
+			data    = g.Map{
+				"student": g.Map{
+					"name": "john",
+				},
+			}
+		)
+		err := g.Validator().Assoc(data).Data(teacher).Run(ctx)
+		t.Assert(err, "The Name value `john` length must be equal or greater than 6")
 	})
 }

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/container/gpool"
+	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 )
@@ -20,9 +21,10 @@ var nf gpool.NewFunc = func() (i interface{}, e error) {
 	return "hello", nil
 }
 
-var assertIndex int = 0
+var assertIndex = gtype.NewInt(0)
+
 var ef gpool.ExpireFunc = func(i interface{}) {
-	assertIndex++
+	assertIndex.Add(1)
 	gtest.Assert(i, assertIndex)
 }
 
@@ -82,9 +84,10 @@ func Test_Gpool(t *testing.T) {
 		v2, err2 = p2.Get()
 		t.Assert(err2, nil)
 		t.Assert(v2, 0)
-		assertIndex = 0
+		assertIndex.Set(0)
 		p2.Close()
 		time.Sleep(3 * time.Second)
+		t.AssertNE(p2.Put(1), nil)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -94,5 +97,28 @@ func Test_Gpool(t *testing.T) {
 		v3, err3 := p3.Get()
 		t.Assert(err3, errors.New("pool is empty"))
 		t.Assert(v3, nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		p := gpool.New(time.Millisecond*200, nil, func(i interface{}) {})
+		p.Put(1)
+		time.Sleep(time.Millisecond * 100)
+		p.Put(2)
+		time.Sleep(time.Millisecond * 200)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		s := make([]int, 0)
+		p := gpool.New(time.Millisecond*200, nil, func(i interface{}) {
+			s = append(s, i.(int))
+		})
+		for i := 0; i < 5; i++ {
+			p.Put(i)
+			time.Sleep(time.Millisecond * 50)
+		}
+		val, err := p.Get()
+		t.Assert(val, 2)
+		t.AssertNil(err)
+		t.Assert(p.Size(), 2)
 	})
 }

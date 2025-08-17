@@ -1,0 +1,23 @@
+# RULE DESCRIPTION: EXECUTED ONCE A DAY AT 4 A.M. (GMT+8) TO CLOSE NON-BUG ISSUES THAT HAVE NOT BEEN ACTIVE IN THE LAST 30 DAYS
+name: Issue Close Inactive
+
+on:
+  schedule:
+    - cron: "0 20 * * *"
+
+env: # Set environment variables
+  TZ: Asia/Shanghai #Time zone (setting the time zone allows the 'Last Updated' on the page to use the time zone)
+
+jobs:
+  close-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: need close
+        uses: actions-cool/issues-helper@v3
+        with:
+          actions: "close-issues"
+#          token: ${{ secrets.GF_TOKEN }}
+          labels: 'inactive'
+          inactive-day: 30
+          exclude-labels: 'bug,$exclude-empty'
+          close-reason: 'not active'

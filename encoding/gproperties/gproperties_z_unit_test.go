@@ -28,6 +28,7 @@ sql.mysql.0.type = mysql
 sql.mysql.0.ip = 127.0.0.1
 sql.mysql.0.user = root
 `
+
 var errorTests = []struct {
 	input, msg string
 }{
@@ -75,6 +76,7 @@ func TestDecode(t *testing.T) {
 		}
 	})
 }
+
 func TestEncode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := make(map[string]interface{})

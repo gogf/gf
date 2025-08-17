@@ -26,14 +26,18 @@ type TestCmdObject struct {
 type TestCmdObjectEnvInput struct {
 	g.Meta `name:"env" usage:"root env" brief:"root env command" dc:"root env command description" ad:"root env command ad"`
 }
+
 type TestCmdObjectEnvOutput struct{}
 
 type TestCmdObjectTestInput struct {
-	g.Meta `name:"test" usage:"root test" brief:"root test command" dc:"root test command description" ad:"root test command ad"`
-	Name   string `v:"required" short:"n" orphan:"false" brief:"name for test command"`
+	g.Meta  `name:"test" usage:"root test" brief:"root test command" dc:"root test command description" ad:"root test command ad"`
+	Name    string `name:"yourname" v:"required" short:"n" orphan:"false" brief:"name for test command" d:"tom"`
+	Version bool   `name:"version" short:"v" orphan:"true" brief:"show version"`
 }
+
 type TestCmdObjectTestOutput struct {
-	Content string
+	Name    string
+	Version bool
 }
 
 func (TestCmdObject) Env(ctx context.Context, in TestCmdObjectEnvInput) (out *TestCmdObjectEnvOutput, err error) {
@@ -42,7 +46,8 @@ func (TestCmdObject) Env(ctx context.Context, in TestCmdObjectEnvInput) (out *Te
 
 func (TestCmdObject) Test(ctx context.Context, in TestCmdObjectTestInput) (out *TestCmdObjectTestOutput, err error) {
 	out = &TestCmdObjectTestOutput{
-		Content: in.Name,
+		Name:    in.Name,
+		Version: in.Version,
 	}
 	return
 }
@@ -87,10 +92,69 @@ func Test_Command_NewFromObject_RunWithValue(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(cmd.Name, "root")
 
+		// test short name
 		os.Args = []string{"root", "test", "-n=john"}
 		value, err := cmd.RunWithValueError(ctx)
 		t.AssertNil(err)
-		t.Assert(value, `{"Content":"john"}`)
+		t.Assert(value, `{"Name":"john","Version":false}`)
+
+		// test name tag name
+		os.Args = []string{"root", "test", "-yourname=hailaz"}
+		value1, err1 := cmd.RunWithValueError(ctx)
+		t.AssertNil(err1)
+		t.Assert(value1, `{"Name":"hailaz","Version":false}`)
+
+		// test default tag value
+		os.Args = []string{"root", "test"}
+		value2, err2 := cmd.RunWithValueError(ctx)
+		t.AssertNil(err2)
+		t.Assert(value2, `{"Name":"tom","Version":false}`)
+
+		// test name tag and orphan tag true
+		os.Args = []string{"root", "test", "-v"}
+		value3, err3 := cmd.RunWithValueError(ctx)
+		t.AssertNil(err3)
+		t.Assert(value3, `{"Name":"tom","Version":true}`)
+	})
+}
+
+func Test_Command_NewFromObject_RunWithSpecificArgs(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx      = gctx.New()
+			cmd, err = gcmd.NewFromObject(&TestCmdObject{})
+		)
+		t.AssertNil(err)
+		t.Assert(cmd.Name, "root")
+
+		// test short name
+		args := []string{"root", "test", "-n=john"}
+		value, err := cmd.RunWithSpecificArgs(ctx, args)
+		t.AssertNil(err)
+		t.Assert(value, `{"Name":"john","Version":false}`)
+
+		// test name tag name
+		args = []string{"root", "test", "-yourname=hailaz"}
+		value1, err1 := cmd.RunWithSpecificArgs(ctx, args)
+		t.AssertNil(err1)
+		t.Assert(value1, `{"Name":"hailaz","Version":false}`)
+
+		// test default tag value
+		args = []string{"root", "test"}
+		value2, err2 := cmd.RunWithSpecificArgs(ctx, args)
+		t.AssertNil(err2)
+		t.Assert(value2, `{"Name":"tom","Version":false}`)
+
+		// test name tag and orphan tag true
+		args = []string{"root", "test", "-v"}
+		value3, err3 := cmd.RunWithSpecificArgs(ctx, args)
+		t.AssertNil(err3)
+		t.Assert(value3, `{"Name":"tom","Version":true}`)
+
+		// test empty args
+		value4, err4 := cmd.RunWithSpecificArgs(ctx, nil)
+		t.Assert(err4, "args can not be empty!")
+		t.Assert(value4, nil)
 	})
 }
 
@@ -108,7 +172,7 @@ func Test_Command_AddObject(t *testing.T) {
 		os.Args = []string{"start", "root", "test", "-n=john"}
 		value, err := command.RunWithValueError(ctx)
 		t.AssertNil(err)
-		t.Assert(value, `{"Content":"john"}`)
+		t.Assert(value, `{"Name":"john","Version":false}`)
 	})
 }
 
@@ -119,12 +183,14 @@ type TestObjectForRootTag struct {
 type TestObjectForRootTagEnvInput struct {
 	g.Meta `name:"env" usage:"root env" brief:"root env command" dc:"root env command description" ad:"root env command ad"`
 }
+
 type TestObjectForRootTagEnvOutput struct{}
 
 type TestObjectForRootTagTestInput struct {
 	g.Meta `name:"root"`
 	Name   string `v:"required" short:"n" orphan:"false" brief:"name for test command"`
 }
+
 type TestObjectForRootTagTestOutput struct {
 	Content string
 }
@@ -175,6 +241,7 @@ type TestObjectForNeedArgs struct {
 type TestObjectForNeedArgsEnvInput struct {
 	g.Meta `name:"env" usage:"root env" brief:"root env command" dc:"root env command description" ad:"root env command ad"`
 }
+
 type TestObjectForNeedArgsEnvOutput struct{}
 
 type TestObjectForNeedArgsTestInput struct {
@@ -183,6 +250,7 @@ type TestObjectForNeedArgsTestInput struct {
 	Arg2   string `arg:"true" brief:"arg2 for test command"`
 	Name   string `v:"required" short:"n" orphan:"false" brief:"name for test command"`
 }
+
 type TestObjectForNeedArgsTestOutput struct {
 	Args []string
 }
@@ -224,12 +292,14 @@ type TestObjectPointerTag struct {
 type TestObjectPointerTagEnvInput struct {
 	g.Meta `name:"env" usage:"root env" brief:"root env command" dc:"root env command description" ad:"root env command ad"`
 }
+
 type TestObjectPointerTagEnvOutput struct{}
 
 type TestObjectPointerTagTestInput struct {
 	g.Meta `name:"root"`
 	Name   string `v:"required" short:"n" orphan:"false" brief:"name for test command"`
 }
+
 type TestObjectPointerTagTestOutput struct {
 	Content string
 }
@@ -283,6 +353,7 @@ type TestCommandOrphanIndexInput struct {
 	Orphan2 bool `short:"n2" orphan:"true"`
 	Orphan3 bool `short:"n3" orphan:"true"`
 }
+
 type TestCommandOrphanIndexOutput struct {
 	Orphan1 bool
 	Orphan2 bool
@@ -297,6 +368,7 @@ func (c *TestCommandOrphan) Index(ctx context.Context, in TestCommandOrphanIndex
 	}
 	return
 }
+
 func Test_Command_Orphan_Parameter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var ctx = gctx.New()

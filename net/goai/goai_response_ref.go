@@ -12,6 +12,8 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gmeta"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 type ResponseRef struct {
@@ -21,6 +23,98 @@ type ResponseRef struct {
 
 // Responses is specified by OpenAPI/Swagger 3.0 standard.
 type Responses map[string]ResponseRef
+
+// object could be someObject.Interface()
+// There may be some difference between someObject.Type() and reflect.TypeOf(object).
+func (oai *OpenApiV3) getResponseFromObject(data interface{}, isDefault bool) (*Response, error) {
+	var object interface{}
+	enhancedResponse, isEnhanced := data.(EnhancedStatusType)
+	if isEnhanced {
+		object = enhancedResponse.Response
+	} else {
+		object = data
+	}
+	// Add object schema to oai
+	if err := oai.addSchema(object); err != nil {
+		return nil, err
+	}
+	var (
+		metaMap  = gmeta.Data(object)
+		response = &Response{
+			Content:     map[string]MediaType{},
+			XExtensions: make(XExtensions),
+		}
+	)
+	if len(metaMap) > 0 {
+		if err := oai.tagMapToResponse(metaMap, response); err != nil {
+			return nil, err
+		}
+	}
+	// Supported mime types of response.
+	var (
+		contentTypes = oai.Config.ReadContentTypes
+		tagMimeValue = gmeta.Get(object, gtag.Mime).String()
+		refInput     = getResponseSchemaRefInput{
+			BusinessStructName:      oai.golangTypeToSchemaName(reflect.TypeOf(object)),
+			CommonResponseObject:    oai.Config.CommonResponse,
+			CommonResponseDataField: oai.Config.CommonResponseDataField,
+		}
+	)
+
+	// If customized response mime type, it then ignores common response feature.
+	if tagMimeValue != "" {
+		contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
+		refInput.CommonResponseObject = nil
+		refInput.CommonResponseDataField = ""
+	}
+
+	// If it is not default status, check if it has any fields.
+	// If so, it would override the common response.
+	if !isDefault {
+		fields, _ := gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         object,
+			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+		})
+		if len(fields) > 0 {
+			refInput.CommonResponseObject = nil
+			refInput.CommonResponseDataField = ""
+		}
+	}
+
+	// Generate response example from meta data.
+	responseExamplePath := metaMap[gtag.ResponseExampleShort]
+	if responseExamplePath == "" {
+		responseExamplePath = metaMap[gtag.ResponseExample]
+	}
+	examples := make(Examples)
+	if responseExamplePath != "" {
+		if err := examples.applyExamplesFile(responseExamplePath); err != nil {
+			return nil, err
+		}
+	}
+
+	// Override examples from enhanced response.
+	if isEnhanced {
+		err := examples.applyExamplesData(enhancedResponse.Examples)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Generate response schema from input.
+	schemaRef, err := oai.getResponseSchemaRef(refInput)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, contentType := range contentTypes {
+		response.Content[contentType] = MediaType{
+			Schema:   schemaRef,
+			Examples: examples,
+		}
+	}
+	return response, nil
+}
 
 func (r ResponseRef) MarshalJSON() ([]byte, error) {
 	if r.Ref != "" {

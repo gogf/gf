@@ -16,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Test_IsDir(t *testing.T) {
@@ -71,6 +72,15 @@ func Test_Create(t *testing.T) {
 			fileobj.Close()
 			t.AssertNil(err)
 		}
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		tmpPath := gfile.Join(gfile.Temp(), "test/testfile_cc1.txt")
+		fileobj, err := gfile.Create(tmpPath)
+		defer gfile.Remove(tmpPath)
+		t.AssertNE(fileobj, nil)
+		t.AssertNil(err)
+		fileobj.Close()
 	})
 }
 
@@ -204,7 +214,6 @@ func Test_OpenWithFlagPerm(t *testing.T) {
 }
 
 func Test_Exists(t *testing.T) {
-
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			flag  bool
@@ -610,11 +619,7 @@ func Test_ExtName(t *testing.T) {
 
 func Test_TempDir(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		if gfile.Separator != "/" || !gfile.Exists("/tmp") {
-			t.Assert(gfile.Temp(), os.TempDir())
-		} else {
-			t.Assert(gfile.Temp(), "/tmp")
-		}
+		t.Assert(gfile.Temp(), os.TempDir())
 	})
 }
 
@@ -678,5 +683,45 @@ func Test_SelfName(t *testing.T) {
 func Test_MTimestamp(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gfile.MTimestamp(gfile.Temp()) > 0, true)
+	})
+}
+
+func Test_RemoveFile_RemoveAll(t *testing.T) {
+	// safe deleting single file.
+	gtest.C(t, func(t *gtest.T) {
+		path := gfile.Temp(guid.S())
+		err := gfile.PutContents(path, "1")
+		t.AssertNil(err)
+		t.Assert(gfile.Exists(path), true)
+
+		err = gfile.RemoveFile(path)
+		t.AssertNil(err)
+		t.Assert(gfile.Exists(path), false)
+	})
+	// error deleting dir which is not empty.
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err       error
+			dirPath   = gfile.Temp(guid.S())
+			filePath1 = gfile.Join(dirPath, guid.S())
+			filePath2 = gfile.Join(dirPath, guid.S())
+		)
+		err = gfile.PutContents(filePath1, "1")
+		t.AssertNil(err)
+		t.Assert(gfile.Exists(filePath1), true)
+
+		err = gfile.PutContents(filePath2, "2")
+		t.AssertNil(err)
+		t.Assert(gfile.Exists(filePath2), true)
+
+		err = gfile.RemoveFile(dirPath)
+		t.AssertNE(err, nil)
+		t.Assert(gfile.Exists(filePath1), true)
+		t.Assert(gfile.Exists(filePath2), true)
+
+		err = gfile.RemoveAll(dirPath)
+		t.AssertNil(err)
+		t.Assert(gfile.Exists(filePath1), false)
+		t.Assert(gfile.Exists(filePath2), false)
 	})
 }

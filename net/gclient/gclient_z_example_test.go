@@ -15,13 +15,12 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gclient"
-	"github.com/gogf/gf/v2/net/gtcp"
+	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
-
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 var (
@@ -525,12 +524,12 @@ func ExampleClient_GetVar() {
 	// &{1 john}
 }
 
-// ExampleClient_SetProxy a example for `gclient.Client.SetProxy` method.
+// ExampleClient_SetProxy an example for `gclient.Client.SetProxy` method.
 // please prepare two proxy server before running this example.
 // http proxy server listening on `127.0.0.1:1081`
 // socks5 proxy server listening on `127.0.0.1:1080`
 func ExampleClient_SetProxy() {
-	// connect to a http proxy server
+	// connect to an http proxy server
 	client := g.Client()
 	client.SetProxy("http://127.0.0.1:1081")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
@@ -542,7 +541,7 @@ func ExampleClient_SetProxy() {
 	fmt.Println(err != nil)
 	resp.Close()
 
-	// connect to a http proxy server which needs auth
+	// connect to an http proxy server which needs auth
 	client.SetProxy("http://user:password:127.0.0.1:1081")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
 	resp, err = client.Get(ctx, "http://127.0.0.1:8999")
@@ -582,7 +581,7 @@ func ExampleClient_SetProxy() {
 	// true
 }
 
-// ExampleClientChain_Proxy a chain version of example for `gclient.Client.Proxy` method.
+// ExampleClient_Proxy a chain version of example for `gclient.Client.Proxy` method.
 // please prepare two proxy server before running this example.
 // http proxy server listening on `127.0.0.1:1081`
 // socks5 proxy server listening on `127.0.0.1:1080`
@@ -616,14 +615,11 @@ func ExampleClient_Proxy() {
 }
 
 func ExampleClient_Prefix() {
-	p := gtcp.MustGetFreePort()
-
 	var (
-		ctx    = gctx.New()
-		prefix = fmt.Sprintf("http://127.0.0.1:%d/api/v1/", p)
+		ctx = gctx.New()
 	)
 
-	s := g.Server(p)
+	s := g.Server(guid.S())
 	// HTTP method handlers.
 	s.Group("/api", func(group *ghttp.RouterGroup) {
 		group.GET("/v1/prefix", func(r *ghttp.Request) {
@@ -635,12 +631,13 @@ func ExampleClient_Prefix() {
 	})
 	s.SetAccessLogEnabled(false)
 	s.SetDumpRouterMap(false)
-	s.SetPort(p)
 	s.Start()
 	time.Sleep(time.Millisecond * 100)
 
 	// Add Client URI Prefix
-	client := g.Client().Prefix(prefix)
+	client := g.Client().Prefix(fmt.Sprintf(
+		"http://127.0.0.1:%d/api/v1/", s.GetListenedPort(),
+	))
 
 	fmt.Println(string(client.GetBytes(ctx, "prefix")))
 	fmt.Println(string(client.GetBytes(ctx, "hello")))

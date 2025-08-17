@@ -1,9 +1,14 @@
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package cmd
 
 import (
 	"context"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
@@ -11,6 +16,8 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/gogf/gf/v2/util/gutil"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 var (
@@ -32,7 +39,7 @@ like json/xml/yaml/toml/ini.
 	cTplParseEg    = `
 gf tpl parse -p ./template -v values.json -r
 gf tpl parse -p ./template -v values.json -n *.tpl -r
-gf tpl parse -p ./template -v values.json -d '${,}}' -r
+gf tpl parse -p ./template -v values.json -d '${{,}}' -r
 gf tpl parse -p ./template -v values.json -o ./template.parsed
 `
 	cTplSupportValuesFilePattern = `*.json,*.xml,*.yaml,*.yml,*.toml,*.ini`
@@ -40,7 +47,7 @@ gf tpl parse -p ./template -v values.json -o ./template.parsed
 
 type (
 	cTplParseInput struct {
-		g.Meta     `name:"parse" brief:"{cTplParseBrief}" eg:"{cTplParseEg}"`
+		g.Meta     `name:"parse" config:"gfcli.tpl.parse" brief:"{cTplParseBrief}" eg:"{cTplParseEg}"`
 		Path       string `name:"path"       short:"p" brief:"template file or folder path" v:"required"`
 		Pattern    string `name:"pattern"    short:"n" brief:"template file pattern when path is a folder, default is:*" d:"*"`
 		Recursive  bool   `name:"recursive"  short:"c" brief:"recursively parsing files if path is folder, default is:true" d:"true"`
@@ -62,7 +69,7 @@ func init() {
 }
 
 func (c *cTpl) Parse(ctx context.Context, in cTplParseInput) (out *cTplParseOutput, err error) {
-	if in.Output == "" && in.Replace == false {
+	if in.Output == "" && !in.Replace {
 		return nil, gerror.New(`parameter output and replace should not be both empty`)
 	}
 	delimiters := gstr.SplitAndTrim(in.Delimiters, ",")

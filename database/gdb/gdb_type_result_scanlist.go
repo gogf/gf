@@ -22,25 +22,30 @@ import (
 // Note that the parameter `structSlicePointer` should be type of *[]struct/*[]*struct.
 //
 // Usage example 1: Normal attribute struct relation:
-// type EntityUser struct {
-// 	   Uid  int
-// 	   Name string
-// }
-// type EntityUserDetail struct {
-// 	   Uid     int
-// 	   Address string
-// }
-// type EntityUserScores struct {
-// 	   Id     int
-// 	   Uid    int
-// 	   Score  int
-// 	   Course string
-// }
-// type Entity struct {
-//     User       *EntityUser
-// 	   UserDetail *EntityUserDetail
-// 	   UserScores []*EntityUserScores
-// }
+//
+//	type EntityUser struct {
+//		   Uid  int
+//		   Name string
+//	}
+//
+//	type EntityUserDetail struct {
+//		   Uid     int
+//		   Address string
+//	}
+//
+//	type EntityUserScores struct {
+//		   Id     int
+//		   Uid    int
+//		   Score  int
+//		   Course string
+//	}
+//
+//	type Entity struct {
+//	    User       *EntityUser
+//		   UserDetail *EntityUserDetail
+//		   UserScores []*EntityUserScores
+//	}
+//
 // var users []*Entity
 // ScanList(&users, "User")
 // ScanList(&users, "User", "uid")
@@ -48,32 +53,34 @@ import (
 // ScanList(&users, "UserScores", "User", "uid:Uid")
 // ScanList(&users, "UserScores", "User", "uid")
 //
-//
 // Usage example 2: Embedded attribute struct relation:
-// type EntityUser struct {
-// 	   Uid  int
-// 	   Name string
-// }
-// type EntityUserDetail struct {
-// 	   Uid     int
-// 	   Address string
-// }
-// type EntityUserScores struct {
-// 	   Id    int
-// 	   Uid   int
-// 	   Score int
-// }
-// type Entity struct {
-// 	   EntityUser
-// 	   UserDetail EntityUserDetail
-// 	   UserScores []EntityUserScores
-// }
+//
+//	type EntityUser struct {
+//		   Uid  int
+//		   Name string
+//	}
+//
+//	type EntityUserDetail struct {
+//		   Uid     int
+//		   Address string
+//	}
+//
+//	type EntityUserScores struct {
+//		   Id    int
+//		   Uid   int
+//		   Score int
+//	}
+//
+//	type Entity struct {
+//		   EntityUser
+//		   UserDetail EntityUserDetail
+//		   UserScores []EntityUserScores
+//	}
 //
 // var users []*Entity
 // ScanList(&users)
 // ScanList(&users, "UserDetail", "uid")
 // ScanList(&users, "UserScores", "uid")
-//
 //
 // The parameters "User/UserDetail/UserScores" in the example codes specify the target attribute struct
 // that current result will be bound to.
@@ -240,7 +247,7 @@ func doScanList(in doScanListInput) (err error) {
 		relationBindToFieldName string // Eg: relationKV: id:uid  -> uid
 	)
 	if len(in.RelationFields) > 0 {
-		// The relation key string of table filed name and attribute name
+		// The relation key string of table field name and attribute name
 		// can be joined with char '=' or ':'.
 		array := gstr.SplitAndTrim(in.RelationFields, "=")
 		if len(array) == 1 {
@@ -356,11 +363,11 @@ func doScanList(in doScanListInput) (err error) {
 		if in.RelationFields != "" && !relationBindToFieldNameChecked {
 			relationFromAttrField = relationFromAttrValue.FieldByName(relationBindToFieldName)
 			if !relationFromAttrField.IsValid() {
-				filedMap, _ := gstructs.FieldMap(gstructs.FieldMapInput{
+				fieldMap, _ := gstructs.FieldMap(gstructs.FieldMapInput{
 					Pointer:         relationFromAttrValue,
 					RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 				})
-				if key, _ := gutil.MapPossibleItemByKey(gconv.Map(filedMap), relationBindToFieldName); key == "" {
+				if key, _ := gutil.MapPossibleItemByKey(gconv.Map(fieldMap), relationBindToFieldName); key == "" {
 					return gerror.NewCodef(
 						gcode.CodeInvalidParameter,
 						`cannot find possible related attribute name "%s" from given relation fields "%s"`,

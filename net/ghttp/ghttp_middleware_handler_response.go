@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"mime"
 	"net/http"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -20,13 +21,32 @@ type DefaultHandlerResponse struct {
 	Data    interface{} `json:"data"    dc:"Result data for certain request according API definition"`
 }
 
+const (
+	contentTypeEventStream  = "text/event-stream"
+	contentTypeOctetStream  = "application/octet-stream"
+	contentTypeMixedReplace = "multipart/x-mixed-replace"
+)
+
+var (
+	// streamContentType is the content types for stream response.
+	streamContentType = []string{contentTypeEventStream, contentTypeOctetStream, contentTypeMixedReplace}
+)
+
 // MiddlewareHandlerResponse is the default middleware handling handler response object and its error.
 func MiddlewareHandlerResponse(r *Request) {
 	r.Middleware.Next()
 
 	// There's custom buffer content, it then exits current handler.
-	if r.Response.BufferLength() > 0 {
+	if r.Response.BufferLength() > 0 || r.Response.Writer.BytesWritten() > 0 {
 		return
+	}
+
+	// It does not output common response content if it is stream response.
+	mediaType, _, _ := mime.ParseMediaType(r.Response.Header().Get("Content-Type"))
+	for _, ct := range streamContentType {
+		if mediaType == ct {
+			return
+		}
 	}
 
 	var (
@@ -40,19 +60,25 @@ func MiddlewareHandlerResponse(r *Request) {
 			code = gcode.CodeInternalError
 		}
 		msg = err.Error()
-	} else if r.Response.Status > 0 && r.Response.Status != http.StatusOK {
-		msg = http.StatusText(r.Response.Status)
-		switch r.Response.Status {
-		case http.StatusNotFound:
-			code = gcode.CodeNotFound
-		case http.StatusForbidden:
-			code = gcode.CodeNotAuthorized
-		default:
-			code = gcode.CodeUnknown
-		}
 	} else {
-		code = gcode.CodeOK
+		if r.Response.Status > 0 && r.Response.Status != http.StatusOK {
+			switch r.Response.Status {
+			case http.StatusNotFound:
+				code = gcode.CodeNotFound
+			case http.StatusForbidden:
+				code = gcode.CodeNotAuthorized
+			default:
+				code = gcode.CodeUnknown
+			}
+			// It creates an error as it can be retrieved by other middlewares.
+			err = gerror.NewCode(code, msg)
+			r.SetError(err)
+		} else {
+			code = gcode.CodeOK
+		}
+		msg = code.Message()
 	}
+
 	r.Response.WriteJson(DefaultHandlerResponse{
 		Code:    code.Code(),
 		Message: msg,

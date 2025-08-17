@@ -17,6 +17,7 @@ import (
 )
 
 var pool = gpool.New(time.Hour, nil)
+
 var syncp = sync.Pool{}
 
 func BenchmarkGPoolPut(b *testing.B) {

@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-func TestRwmutexIsSafe(t *testing.T) {
+func TestRWMutexIsSafe(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		lock := rwmutex.New()
 		t.Assert(lock.IsSafe(), false)
@@ -37,103 +37,107 @@ func TestRwmutexIsSafe(t *testing.T) {
 	})
 }
 
-func TestSafeRwmutex(t *testing.T) {
+func TestSafeRWMutex(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		safeLock := rwmutex.New(true)
-		array := garray.New(true)
+		var (
+			localSafeLock = rwmutex.New(true)
+			array         = garray.New(true)
+		)
 
 		go func() {
-			safeLock.Lock()
+			localSafeLock.Lock()
 			array.Append(1)
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(1000 * time.Millisecond)
 			array.Append(1)
-			safeLock.Unlock()
+			localSafeLock.Unlock()
 		}()
 		go func() {
-			time.Sleep(10 * time.Millisecond)
-			safeLock.Lock()
+			time.Sleep(100 * time.Millisecond)
+			localSafeLock.Lock()
 			array.Append(1)
-			time.Sleep(200 * time.Millisecond)
+			time.Sleep(2000 * time.Millisecond)
 			array.Append(1)
-			safeLock.Unlock()
+			localSafeLock.Unlock()
 		}()
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(500 * time.Millisecond)
 		t.Assert(array.Len(), 1)
-		time.Sleep(80 * time.Millisecond)
+		time.Sleep(800 * time.Millisecond)
 		t.Assert(array.Len(), 3)
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
 		t.Assert(array.Len(), 3)
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
 		t.Assert(array.Len(), 4)
 	})
 }
 
-func TestSafeReaderRwmutex(t *testing.T) {
+func TestSafeReaderRWMutex(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		safeLock := rwmutex.New(true)
-		array := garray.New(true)
-
+		var (
+			localSafeLock = rwmutex.New(true)
+			array         = garray.New(true)
+		)
 		go func() {
-			safeLock.RLock()
+			localSafeLock.RLock()
 			array.Append(1)
+			time.Sleep(1000 * time.Millisecond)
+			array.Append(1)
+			localSafeLock.RUnlock()
+		}()
+		go func() {
 			time.Sleep(100 * time.Millisecond)
+			localSafeLock.RLock()
 			array.Append(1)
-			safeLock.RUnlock()
+			time.Sleep(2000 * time.Millisecond)
+			array.Append(1)
+			time.Sleep(1000 * time.Millisecond)
+			array.Append(1)
+			localSafeLock.RUnlock()
 		}()
 		go func() {
-			time.Sleep(10 * time.Millisecond)
-			safeLock.RLock()
+			time.Sleep(500 * time.Millisecond)
+			localSafeLock.Lock()
 			array.Append(1)
-			time.Sleep(200 * time.Millisecond)
-			array.Append(1)
-			time.Sleep(100 * time.Millisecond)
-			array.Append(1)
-			safeLock.RUnlock()
+			localSafeLock.Unlock()
 		}()
-		go func() {
-			time.Sleep(50 * time.Millisecond)
-			safeLock.Lock()
-			array.Append(1)
-			safeLock.Unlock()
-		}()
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(500 * time.Millisecond)
 		t.Assert(array.Len(), 2)
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
 		t.Assert(array.Len(), 3)
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
 		t.Assert(array.Len(), 4)
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
 		t.Assert(array.Len(), 6)
 	})
 }
 
-func TestUnsafeRwmutex(t *testing.T) {
+func TestUnsafeRWMutex(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		unsafeLock := rwmutex.New()
-		array := garray.New(true)
-
+		var (
+			localUnsafeLock = rwmutex.New()
+			array           = garray.New(true)
+		)
 		go func() {
-			unsafeLock.Lock()
+			localUnsafeLock.Lock()
 			array.Append(1)
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(2000 * time.Millisecond)
 			array.Append(1)
-			unsafeLock.Unlock()
+			localUnsafeLock.Unlock()
 		}()
 		go func() {
-			time.Sleep(10 * time.Millisecond)
-			unsafeLock.Lock()
+			time.Sleep(500 * time.Millisecond)
+			localUnsafeLock.Lock()
 			array.Append(1)
-			time.Sleep(200 * time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 			array.Append(1)
-			unsafeLock.Unlock()
+			localUnsafeLock.Unlock()
 		}()
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(800 * time.Millisecond)
 		t.Assert(array.Len(), 2)
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(800 * time.Millisecond)
 		t.Assert(array.Len(), 3)
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(200 * time.Millisecond)
 		t.Assert(array.Len(), 3)
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(500 * time.Millisecond)
 		t.Assert(array.Len(), 4)
 	})
 }

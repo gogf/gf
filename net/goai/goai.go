@@ -19,6 +19,7 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 // OpenApiV3 is the structure defined from:
@@ -37,23 +38,12 @@ type OpenApiV3 struct {
 }
 
 const (
-	HttpMethodGet     = `GET`
-	HttpMethodPut     = `PUT`
-	HttpMethodPost    = `POST`
-	HttpMethodDelete  = `DELETE`
-	HttpMethodConnect = `CONNECT`
-	HttpMethodHead    = `HEAD`
-	HttpMethodOptions = `OPTIONS`
-	HttpMethodPatch   = `PATCH`
-	HttpMethodTrace   = `TRACE`
-)
-
-const (
 	TypeInteger    = `integer`
 	TypeNumber     = `number`
 	TypeBoolean    = `boolean`
 	TypeArray      = `array`
 	TypeString     = `string`
+	TypeFile       = `file`
 	TypeObject     = `object`
 	FormatInt32    = `int32`
 	FormatInt64    = `int64`
@@ -73,35 +63,32 @@ const (
 )
 
 const (
-	TagNamePath     = `path`
-	TagNameMethod   = `method`
-	TagNameMime     = `mime`
-	TagNameConsumes = `consumes`
-	TagNameType     = `type`
-	TagNameDomain   = `domain`
-)
-
-const (
-	validationRuleKeyForRequired = `required`
-	validationRuleKeyForIn       = `in:`
+	validationRuleKeyForRequired  = `required`
+	validationRuleKeyForIn        = `in:`
+	validationRuleKeyForMax       = `max:`
+	validationRuleKeyForMin       = `min:`
+	validationRuleKeyForLength    = `length:`
+	validationRuleKeyForMaxLength = `max-length:`
+	validationRuleKeyForMinLength = `min-length:`
+	validationRuleKeyForBetween   = `between:`
 )
 
 var (
 	defaultReadContentTypes  = []string{`application/json`}
 	defaultWriteContentTypes = []string{`application/json`}
 	shortTypeMapForTag       = map[string]string{
-		"d":   "Default",
-		"sum": "Summary",
-		"sm":  "Summary",
-		"des": "Description",
-		"dc":  "Description",
-		"eg":  "Example",
-		"egs": "Examples",
-		"ed":  "ExternalDocs",
+		gtag.DefaultShort:      gtag.Default,
+		gtag.SummaryShort:      gtag.Summary,
+		gtag.SummaryShort2:     gtag.Summary,
+		gtag.DescriptionShort:  gtag.Description,
+		gtag.DescriptionShort2: gtag.Description,
+		gtag.ExampleShort:      gtag.Example,
+		gtag.ExamplesShort:     gtag.Examples,
+		gtag.ExternalDocsShort: gtag.ExternalDocs,
 	}
 )
 
-// New creates and returns a OpenApiV3 implements object.
+// New creates and returns an OpenApiV3 implements object.
 func New() *OpenApiV3 {
 	oai := &OpenApiV3{}
 	oai.fillWithDefaultValue()
@@ -165,6 +152,8 @@ func (oai *OpenApiV3) golangTypeToOAIType(t reflect.Type) string {
 		switch t.String() {
 		case `time.Time`, `gtime.Time`:
 			return TypeString
+		case `ghttp.UploadFile`:
+			return TypeFile
 		}
 		return TypeObject
 
@@ -202,13 +191,16 @@ func (oai *OpenApiV3) golangTypeToOAIFormat(t reflect.Type) string {
 		return FormatBinary
 
 	default:
+		if oai.isEmbeddedStructDefinition(t) {
+			return `EmbeddedStructDefinition`
+		}
 		return format
 	}
 }
 
 func (oai *OpenApiV3) golangTypeToSchemaName(t reflect.Type) string {
 	var (
-		pkgPath    = ""
+		pkgPath    string
 		schemaName = gstr.TrimLeft(t.String(), "*")
 	)
 	// Pointer type has no PkgPath.
@@ -228,7 +220,7 @@ func (oai *OpenApiV3) golangTypeToSchemaName(t reflect.Type) string {
 	return schemaName
 }
 
-func (oai *OpenApiV3) fileMapWithShortTags(m map[string]string) map[string]string {
+func (oai *OpenApiV3) fillMapWithShortTags(m map[string]string) map[string]string {
 	for k, v := range shortTypeMapForTag {
 		if m[v] == "" && m[k] != "" {
 			m[v] = m[k]
@@ -241,9 +233,10 @@ func formatRefToBytes(ref string) []byte {
 	return []byte(fmt.Sprintf(`{"$ref":"#/components/schemas/%s"}`, ref))
 }
 
+func formatRefAndDescToBytes(ref, desc string) []byte {
+	return []byte(fmt.Sprintf(`{"$ref":"#/components/schemas/%s","description":"%s"}`, ref, desc))
+}
+
 func isValidParameterName(key string) bool {
-	if key == "-" {
-		return false
-	}
-	return true
+	return key != "-"
 }

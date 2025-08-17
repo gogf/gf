@@ -24,28 +24,10 @@ const (
 	stackFilterKey = "/internal/intlog"
 )
 
-var (
-	// isGFDebug marks whether printing GoFrame debug information.
-	isGFDebug = false
-)
-
-func init() {
-	isGFDebug = utils.IsDebugEnabled()
-}
-
-// SetEnabled enables/disables the internal logging manually.
-// Note that this function is not concurrent safe, be aware of the DATA RACE.
-func SetEnabled(enabled bool) {
-	// If they're the same, it does not write the `isGFDebug` but only reading operation.
-	if isGFDebug != enabled {
-		isGFDebug = enabled
-	}
-}
-
 // Print prints `v` with newline using fmt.Println.
 // The parameter `v` can be multiple variables.
 func Print(ctx context.Context, v ...interface{}) {
-	if !isGFDebug {
+	if !utils.IsDebugEnabled() {
 		return
 	}
 	doPrint(ctx, fmt.Sprint(v...), false)
@@ -54,7 +36,7 @@ func Print(ctx context.Context, v ...interface{}) {
 // Printf prints `v` with format `format` using fmt.Printf.
 // The parameter `v` can be multiple variables.
 func Printf(ctx context.Context, format string, v ...interface{}) {
-	if !isGFDebug {
+	if !utils.IsDebugEnabled() {
 		return
 	}
 	doPrint(ctx, fmt.Sprintf(format, v...), false)
@@ -63,7 +45,7 @@ func Printf(ctx context.Context, format string, v ...interface{}) {
 // Error prints `v` with newline using fmt.Println.
 // The parameter `v` can be multiple variables.
 func Error(ctx context.Context, v ...interface{}) {
-	if !isGFDebug {
+	if !utils.IsDebugEnabled() {
 		return
 	}
 	doPrint(ctx, fmt.Sprint(v...), true)
@@ -71,7 +53,7 @@ func Error(ctx context.Context, v ...interface{}) {
 
 // Errorf prints `v` with format `format` using fmt.Printf.
 func Errorf(ctx context.Context, format string, v ...interface{}) {
-	if !isGFDebug {
+	if !utils.IsDebugEnabled() {
 		return
 	}
 	doPrint(ctx, fmt.Sprintf(format, v...), true)
@@ -80,7 +62,7 @@ func Errorf(ctx context.Context, format string, v ...interface{}) {
 // PrintFunc prints the output from function `f`.
 // It only calls function `f` if debug mode is enabled.
 func PrintFunc(ctx context.Context, f func() string) {
-	if !isGFDebug {
+	if !utils.IsDebugEnabled() {
 		return
 	}
 	s := f()
@@ -93,7 +75,7 @@ func PrintFunc(ctx context.Context, f func() string) {
 // ErrorFunc prints the output from function `f`.
 // It only calls function `f` if debug mode is enabled.
 func ErrorFunc(ctx context.Context, f func() string) {
-	if !isGFDebug {
+	if !utils.IsDebugEnabled() {
 		return
 	}
 	s := f()
@@ -104,7 +86,7 @@ func ErrorFunc(ctx context.Context, f func() string) {
 }
 
 func doPrint(ctx context.Context, content string, stack bool) {
-	if !isGFDebug {
+	if !utils.IsDebugEnabled() {
 		return
 	}
 	buffer := bytes.NewBuffer(nil)
@@ -118,6 +100,7 @@ func doPrint(ctx context.Context, content string, stack bool) {
 	buffer.WriteString(content)
 	buffer.WriteString("\n")
 	if stack {
+		buffer.WriteString("Caller Stack:\n")
 		buffer.WriteString(gdebug.StackWithFilter([]string{stackFilterKey}))
 	}
 	fmt.Print(buffer.String())

@@ -215,3 +215,36 @@ func Test_ZipPathWriter(t *testing.T) {
 		)
 	})
 }
+
+func Test_ZipPathContent(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			srcPath  = gtest.DataPath("zip")
+			srcPath1 = gtest.DataPath("zip", "path1")
+			srcPath2 = gtest.DataPath("zip", "path2")
+		)
+		pwd := gfile.Pwd()
+		err := gfile.Chdir(srcPath)
+		defer gfile.Chdir(pwd)
+		t.AssertNil(err)
+
+		tempDirPath := gfile.Temp(gtime.TimestampNanoStr())
+		err = gfile.Mkdir(tempDirPath)
+		t.AssertNil(err)
+
+		zipContent, err := gcompress.ZipPathContent(srcPath1 + ", " + srcPath2)
+		t.AssertGT(len(zipContent), 0)
+		err = gcompress.UnZipContent(zipContent, tempDirPath)
+		t.AssertNil(err)
+		defer gfile.Remove(tempDirPath)
+
+		t.Assert(
+			gfile.GetContents(gfile.Join(tempDirPath, "path1", "1.txt")),
+			gfile.GetContents(gfile.Join(srcPath, "path1", "1.txt")),
+		)
+		t.Assert(
+			gfile.GetContents(gfile.Join(tempDirPath, "path2", "2.txt")),
+			gfile.GetContents(gfile.Join(srcPath, "path2", "2.txt")),
+		)
+	})
+}

@@ -8,11 +8,8 @@
 package gutil
 
 import (
-	"context"
 	"reflect"
 
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -20,53 +17,10 @@ const (
 	dumpIndent = `    `
 )
 
-// Throw throws out an exception, which can be caught be TryCatch or recover.
-func Throw(exception interface{}) {
-	panic(exception)
-}
-
-// Try implements try... logistics using internal panic...recover.
-// It returns error if any exception occurs, or else it returns nil.
-func Try(ctx context.Context, try func(ctx context.Context)) (err error) {
-	defer func() {
-		if exception := recover(); exception != nil {
-			if v, ok := exception.(error); ok && gerror.HasStack(v) {
-				err = v
-			} else {
-				err = gerror.Newf(`%+v`, exception)
-			}
-		}
-	}()
-	try(ctx)
-	return
-}
-
-// TryCatch implements try...catch... logistics using internal panic...recover.
-// It automatically calls function `catch` if any exception occurs ans passes the exception as an error.
-func TryCatch(ctx context.Context, try func(ctx context.Context), catch ...func(ctx context.Context, exception error)) {
-	defer func() {
-		if exception := recover(); exception != nil && len(catch) > 0 {
-			if v, ok := exception.(error); ok && gerror.HasStack(v) {
-				catch[0](ctx, v)
-			} else {
-				catch[0](ctx, gerror.Newf(`%+v`, exception))
-			}
-		}
-	}()
-	try(ctx)
-}
-
-// IsEmpty checks given `value` empty or not.
-// It returns false if `value` is: integer(0), bool(false), slice/map(len=0), nil;
-// or else returns true.
-func IsEmpty(value interface{}) bool {
-	return empty.IsEmpty(value)
-}
-
-// Keys retrieves and returns the keys from given map or struct.
-func Keys(mapOrStruct interface{}) (keysOrAttrs []string) {
+// Keys retrieves and returns the keys from the given map or struct.
+func Keys(mapOrStruct any) (keysOrAttrs []string) {
 	keysOrAttrs = make([]string, 0)
-	if m, ok := mapOrStruct.(map[string]interface{}); ok {
+	if m, ok := mapOrStruct.(map[string]any); ok {
 		for k := range m {
 			keysOrAttrs = append(keysOrAttrs, k)
 		}
@@ -109,11 +63,12 @@ func Keys(mapOrStruct interface{}) (keysOrAttrs []string) {
 				keysOrAttrs = append(keysOrAttrs, fieldType.Name)
 			}
 		}
+	default:
 	}
 	return
 }
 
-// Values retrieves and returns the values from given map or struct.
+// Values retrieves and returns the values from the given map or struct.
 func Values(mapOrStruct interface{}) (values []interface{}) {
 	values = make([]interface{}, 0)
 	if m, ok := mapOrStruct.(map[string]interface{}); ok {
@@ -154,6 +109,7 @@ func Values(mapOrStruct interface{}) (values []interface{}) {
 				values = append(values, reflectValue.Field(i).Interface())
 			}
 		}
+	default:
 	}
 	return
 }

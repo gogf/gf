@@ -8,8 +8,9 @@ package gtype
 
 import (
 	"bytes"
-	"github.com/gogf/gf/v2/util/gconv"
 	"sync/atomic"
+
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // String is a struct for concurrent-safe operation for type string.
@@ -68,4 +69,12 @@ func (v *String) UnmarshalJSON(b []byte) error {
 func (v *String) UnmarshalValue(value interface{}) error {
 	v.Set(gconv.String(value))
 	return nil
+}
+
+// DeepCopy implements interface for deep copy of current type.
+func (v *String) DeepCopy() interface{} {
+	if v == nil {
+		return nil
+	}
+	return NewString(v.Val())
 }

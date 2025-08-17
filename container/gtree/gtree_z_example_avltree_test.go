@@ -8,6 +8,7 @@ package gtree_test
 
 import (
 	"fmt"
+
 	"github.com/gogf/gf/v2/container/gtree"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -442,7 +443,7 @@ func ExampleAVLTree_Right() {
 	fmt.Println(tree.Right().Key, tree.Right().Value)
 
 	emptyTree := gtree.NewAVLTree(gutil.ComparatorInt)
-	fmt.Println(emptyTree.Left())
+	fmt.Println(emptyTree.Right())
 
 	// Output:
 	// 99 99

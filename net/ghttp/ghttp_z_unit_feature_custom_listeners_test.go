@@ -8,29 +8,27 @@ package ghttp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/net/gtcp"
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/guid"
 	"net"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Test_SetSingleCustomListener(t *testing.T) {
-	p, _ := gtcp.GetFreePort()
-	ln, _ := net.Listen("tcp", fmt.Sprintf(":%d", p))
+	ln1, _ := net.Listen("tcp", ":0")
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.GET("/test", func(r *ghttp.Request) {
 			r.Response.Write("test")
 		})
 	})
-
-	s.SetListener(ln)
+	err := s.SetListener(ln1)
+	gtest.AssertNil(err)
 
 	s.Start()
 	defer s.Shutdown()
@@ -49,12 +47,8 @@ func Test_SetSingleCustomListener(t *testing.T) {
 }
 
 func Test_SetMultipleCustomListeners(t *testing.T) {
-	p1, _ := gtcp.GetFreePort()
-	p2, _ := gtcp.GetFreePort()
-
-	ln1, _ := net.Listen("tcp", fmt.Sprintf(":%d", p1))
-	ln2, _ := net.Listen("tcp", fmt.Sprintf(":%d", p2))
-
+	ln1, _ := net.Listen("tcp", ":0")
+	ln2, _ := net.Listen("tcp", ":0")
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.GET("/test", func(r *ghttp.Request) {
@@ -62,7 +56,8 @@ func Test_SetMultipleCustomListeners(t *testing.T) {
 		})
 	})
 
-	s.SetListener(ln1, ln2)
+	err := s.SetListener(ln1, ln2)
+	gtest.AssertNil(err)
 
 	s.Start()
 	defer s.Shutdown()
@@ -70,15 +65,18 @@ func Test_SetMultipleCustomListeners(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	gtest.C(t, func(t *gtest.T) {
+		ports := s.GetListenedPorts()
+		t.Assert(len(ports), 2)
+
 		c := g.Client()
-		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p1))
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", ports[0]))
 
 		t.Assert(
 			gstr.Trim(c.GetContent(ctx, "/test")),
 			"test",
 		)
 
-		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p2))
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", ports[1]))
 
 		t.Assert(
 			gstr.Trim(c.GetContent(ctx, "/test")),

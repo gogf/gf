@@ -17,13 +17,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Github Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Auto Creating Tags
+      - name: Auto Creating Tags For Contrib Packages
         run: |
           git config --global user.email "tagrobot@goframe.org"
           git config --global user.name  "TagRobot"
+          
+          # auto create tags for contrib packages.
           for file in `find contrib -name go.mod`; do
+              tag=$(dirname $file)/$GITHUB_REF_NAME
+              git tag $tag
+              git push origin $tag
+          done
+          
+          # auto create tag for cli tool
+          for file in `find cmd -name go.mod`; do
               tag=$(dirname $file)/$GITHUB_REF_NAME
               git tag $tag
               git push origin $tag

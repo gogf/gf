@@ -13,16 +13,10 @@ import (
 const (
 	// Debug key for checking if in debug mode.
 	commandEnvKeyForDebugKey = "gf.debug"
-
-	// StackFilterKeyForGoFrame is the stack filtering key for all GoFrame module paths.
-	// Eg: .../pkg/mod/github.com/gogf/gf/v2@v2.0.0-20211011134327-54dd11f51122/debug/gdebug/gdebug_caller.go
-	StackFilterKeyForGoFrame = "github.com/gogf/gf/"
 )
 
-var (
-	// isDebugEnabled marks whether GoFrame debug mode is enabled.
-	isDebugEnabled = false
-)
+// isDebugEnabled marks whether GoFrame debug mode is enabled.
+var isDebugEnabled = false
 
 func init() {
 	// Debugging configured.
@@ -38,4 +32,9 @@ func init() {
 // The debug mode is enabled when command argument "gf.debug" or environment "GF_DEBUG" is passed.
 func IsDebugEnabled() bool {
 	return isDebugEnabled
+}
+
+// SetDebugEnabled enables/disables the internal debug info.
+func SetDebugEnabled(enabled bool) {
+	isDebugEnabled = enabled
 }

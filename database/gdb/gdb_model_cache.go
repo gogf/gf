@@ -8,15 +8,12 @@ package gdb
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	"github.com/gogf/gf/v2/crypto/gmd5"
 	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// CacheOption is options for model cache control in query.
 type CacheOption struct {
 	// Duration is the TTL for the cache.
 	// If the parameter `Duration` < 0, which means it clear the cache with given `Name`.
@@ -57,7 +54,8 @@ func (m *Model) Cache(option CacheOption) *Model {
 // cache feature is enabled.
 func (m *Model) checkAndRemoveSelectCache(ctx context.Context) {
 	if m.cacheEnabled && m.cacheOption.Duration < 0 && len(m.cacheOption.Name) > 0 {
-		if _, err := m.db.GetCache().Remove(ctx, m.cacheOption.Name); err != nil {
+		var cacheKey = m.makeSelectCacheKey("")
+		if _, err := m.db.GetCache().Remove(ctx, cacheKey); err != nil {
 			intlog.Errorf(ctx, `%+v`, err)
 		}
 	}
@@ -68,14 +66,14 @@ func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args .
 		return
 	}
 	var (
-		ok        bool
 		cacheItem *selectCacheItem
 		cacheKey  = m.makeSelectCacheKey(sql, args...)
 		cacheObj  = m.db.GetCache()
+		core      = m.db.GetCore()
 	)
 	defer func() {
 		if cacheItem != nil {
-			if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
+			if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
 				if cacheItem.FirstResultColumn != "" {
 					internalData.FirstResultColumn = cacheItem.FirstResultColumn
 				}
@@ -83,21 +81,17 @@ func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args .
 		}
 	}()
 	if v, _ := cacheObj.Get(ctx, cacheKey); !v.IsNil() {
-		if cacheItem, ok = v.Val().(*selectCacheItem); ok {
-			// In-memory cache.
-			return cacheItem.Result, nil
-		} else {
-			// Other cache, it needs conversion.
-			if err = json.UnmarshalUseNumber(v.Bytes(), &cacheItem); err != nil {
-				return nil, err
-			}
-			return cacheItem.Result, nil
+		if err = v.Scan(&cacheItem); err != nil {
+			return nil, err
 		}
+		return cacheItem.Result, nil
 	}
 	return
 }
 
-func (m *Model) saveSelectResultToCache(ctx context.Context, result Result, sql string, args ...interface{}) (err error) {
+func (m *Model) saveSelectResultToCache(
+	ctx context.Context, selectType SelectType, result Result, sql string, args ...interface{},
+) (err error) {
 	if !m.cacheEnabled || m.tx != nil {
 		return
 	}
@@ -109,32 +103,58 @@ func (m *Model) saveSelectResultToCache(ctx context.Context, result Result, sql 
 		if _, errCache := cacheObj.Remove(ctx, cacheKey); errCache != nil {
 			intlog.Errorf(ctx, `%+v`, errCache)
 		}
-	} else {
-		// In case of Cache Penetration.
-		if result.IsEmpty() && m.cacheOption.Force {
-			result = Result{}
-		}
-		var cacheItem = &selectCacheItem{
-			Result: result,
-		}
-		if internalData := m.db.GetCore().GetInternalCtxDataFromCtx(ctx); internalData != nil {
-			cacheItem.FirstResultColumn = internalData.FirstResultColumn
-		}
-		if errCache := cacheObj.Set(ctx, cacheKey, cacheItem, m.cacheOption.Duration); errCache != nil {
-			intlog.Errorf(ctx, `%+v`, errCache)
+		return
+	}
+	// Special handler for Value/Count operations result.
+	if len(result) > 0 {
+		var core = m.db.GetCore()
+		switch selectType {
+		case SelectTypeValue, SelectTypeArray, SelectTypeCount:
+			if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
+				if result[0][internalData.FirstResultColumn].IsEmpty() {
+					result = nil
+				}
+			}
+		default:
 		}
 	}
-	return nil
+
+	// In case of Cache Penetration.
+	if result != nil && result.IsEmpty() {
+		if m.cacheOption.Force {
+			result = Result{}
+		} else {
+			result = nil
+		}
+	}
+	var (
+		core      = m.db.GetCore()
+		cacheItem = &selectCacheItem{
+			Result: result,
+		}
+	)
+	if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
+		cacheItem.FirstResultColumn = internalData.FirstResultColumn
+	}
+	if errCache := cacheObj.Set(ctx, cacheKey, cacheItem, m.cacheOption.Duration); errCache != nil {
+		intlog.Errorf(ctx, `%+v`, errCache)
+	}
+	return
 }
 
 func (m *Model) makeSelectCacheKey(sql string, args ...interface{}) string {
-	var cacheKey = m.cacheOption.Name
-	if len(cacheKey) == 0 {
-		cacheKey = fmt.Sprintf(
-			`GCache@Schema(%s):%s`,
-			m.db.GetSchema(),
-			gmd5.MustEncryptString(sql+", @PARAMS:"+gconv.String(args)),
-		)
-	}
-	return cacheKey
+	var (
+		table      = m.db.GetCore().guessPrimaryTableName(m.tables)
+		group      = m.db.GetGroup()
+		schema     = m.db.GetSchema()
+		customName = m.cacheOption.Name
+	)
+	return genSelectCacheKey(
+		table,
+		group,
+		schema,
+		customName,
+		sql,
+		args...,
+	)
 }

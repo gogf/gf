@@ -8,6 +8,8 @@ package gstr_test
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/gogf/gf/v2/text/gstr"
 )
@@ -1016,6 +1018,51 @@ func ExampleReplaceIByMap() {
 
 	// Output:
 	// goframe is very nice
+}
+
+func ExampleReplaceFunc() {
+	str := "hello gf 2018~2020!"
+	// Replace "gf" with a custom function that returns "GoFrame"
+	result := gstr.ReplaceFunc(str, "gf", func(s string) string {
+		return "GoFrame"
+	})
+	fmt.Println(result)
+
+	// Replace numbers with their doubled values
+	result = gstr.ReplaceFunc("1 2 3", "2", func(s string) string {
+		n, _ := strconv.Atoi(s)
+		return strconv.Itoa(n * 2)
+	})
+	fmt.Println(result)
+
+	// Output:
+	// hello GoFrame 2018~2020!
+	// 1 4 3
+}
+
+func ExampleReplaceIFunc() {
+	str := "Hello GF, hello gf, HELLO Gf!"
+	// Replace any case variation of "gf" with "GoFrame"
+	result := gstr.ReplaceIFunc(str, "gf", func(s string) string {
+		return "GoFrame"
+	})
+	fmt.Println(result)
+
+	// Preserve the original case of each match
+	result = gstr.ReplaceIFunc(str, "gf", func(s string) string {
+		if s == strings.ToUpper(s) {
+			return "GOFRAME"
+		}
+		if s == strings.ToLower(s) {
+			return "goframe"
+		}
+		return "GoFrame"
+	})
+	fmt.Println(result)
+
+	// Output:
+	// Hello GoFrame, hello GoFrame, HELLO GoFrame!
+	// Hello GOFRAME, hello goframe, HELLO GoFrame!
 }
 
 // similartext

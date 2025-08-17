@@ -288,3 +288,25 @@ func Test_CustomRule_Overwrite(t *testing.T) {
 	})
 	g.Dump(gvalid.GetRegisteredRuleMap())
 }
+
+func Test_Issue2499(t *testing.T) {
+	ruleName := "required"
+	ruleFunc := func(ctx context.Context, in gvalid.RuleFuncInput) error {
+		return errors.New(in.Message)
+	}
+	gtest.C(t, func(t *gtest.T) {
+		type T struct {
+			Value string `v:"uid@required"`
+			Data  string `p:"data"`
+		}
+		st := &T{
+			Value: "",
+			Data:  "123456",
+		}
+		err := g.Validator().
+			RuleFuncMap(map[string]gvalid.RuleFunc{
+				ruleName: ruleFunc,
+			}).Data(st).Run(ctx)
+		t.Assert(err.String(), `The uid field is required`)
+	})
+}

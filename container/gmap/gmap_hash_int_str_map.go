@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// IntStrMap implements map[int]string with RWMutex that has switch.
 type IntStrMap struct {
 	mu   rwmutex.RWMutex
 	data map[int]string
@@ -41,9 +42,7 @@ func NewIntStrMapFrom(data map[int]string, safe ...bool) *IntStrMap {
 // Iterator iterates the hash map readonly with custom callback function `f`.
 // If `f` returns true, then it continues iterating; or false to stop.
 func (m *IntStrMap) Iterator(f func(k int, v string) bool) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	for k, v := range m.data {
+	for k, v := range m.Map() {
 		if !f(k, v) {
 			break
 		}
@@ -143,7 +142,7 @@ func (m *IntStrMap) Search(key int) (value string, found bool) {
 func (m *IntStrMap) Get(key int) (value string) {
 	m.mu.RLock()
 	if m.data != nil {
-		value, _ = m.data[key]
+		value = m.data[key]
 	}
 	m.mu.RUnlock()
 	return
@@ -473,6 +472,9 @@ func (m *IntStrMap) UnmarshalValue(value interface{}) (err error) {
 
 // DeepCopy implements interface for deep copy of current type.
 func (m *IntStrMap) DeepCopy() interface{} {
+	if m == nil {
+		return nil
+	}
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	data := make(map[int]string, len(m.data))
@@ -480,4 +482,50 @@ func (m *IntStrMap) DeepCopy() interface{} {
 		data[k] = v
 	}
 	return NewIntStrMapFrom(data, m.mu.IsSafe())
+}
+
+// IsSubOf checks whether the current map is a sub-map of `other`.
+func (m *IntStrMap) IsSubOf(other *IntStrMap) bool {
+	if m == other {
+		return true
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	other.mu.RLock()
+	defer other.mu.RUnlock()
+	for key, value := range m.data {
+		otherValue, ok := other.data[key]
+		if !ok {
+			return false
+		}
+		if otherValue != value {
+			return false
+		}
+	}
+	return true
+}
+
+// Diff compares current map `m` with map `other` and returns their different keys.
+// The returned `addedKeys` are the keys that are in map `m` but not in map `other`.
+// The returned `removedKeys` are the keys that are in map `other` but not in map `m`.
+// The returned `updatedKeys` are the keys that are both in map `m` and `other` but their values and not equal (`!=`).
+func (m *IntStrMap) Diff(other *IntStrMap) (addedKeys, removedKeys, updatedKeys []int) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	other.mu.RLock()
+	defer other.mu.RUnlock()
+
+	for key := range m.data {
+		if _, ok := other.data[key]; !ok {
+			removedKeys = append(removedKeys, key)
+		} else if m.data[key] != other.data[key] {
+			updatedKeys = append(updatedKeys, key)
+		}
+	}
+	for key := range other.data {
+		if _, ok := m.data[key]; !ok {
+			addedKeys = append(addedKeys, key)
+		}
+	}
+	return
 }

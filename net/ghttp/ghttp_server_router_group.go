@@ -12,8 +12,8 @@ import (
 	"reflect"
 
 	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/internal/consts"
 	"github.com/gogf/gf/v2/internal/reflection"
-	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -169,14 +169,18 @@ func (g *RouterGroup) Bind(handlerOrObject ...interface{}) *RouterGroup {
 				"/",
 				item,
 			)
+
 		default:
-			g.server.Logger().Fatalf(ctx, "invalid bind parameter type: %v", originValueAndKind.InputValue.Type())
+			g.server.Logger().Fatalf(
+				ctx, "invalid bind parameter type: %v, should be route function or struct object",
+				originValueAndKind.InputValue.Type(),
+			)
 		}
 	}
 	return group
 }
 
-// ALL register a http handler to give the route pattern and all http methods.
+// ALL register an http handler to give the route pattern and all http methods.
 func (g *RouterGroup) ALL(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(
 		groupBindTypeHandler,
@@ -200,58 +204,58 @@ func (g *RouterGroup) Map(m map[string]interface{}) {
 	}
 }
 
-// GET registers a http handler to give the route pattern and the http method: GET.
+// GET registers an http handler to give the route pattern and the http method: GET.
 func (g *RouterGroup) GET(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "GET:"+pattern, object, params...)
 }
 
-// PUT registers a http handler to give the route pattern and the http method: PUT.
+// PUT registers an http handler to give the route pattern and the http method: PUT.
 func (g *RouterGroup) PUT(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "PUT:"+pattern, object, params...)
 }
 
-// POST registers a http handler to give the route pattern and the http method: POST.
+// POST registers an http handler to give the route pattern and the http method: POST.
 func (g *RouterGroup) POST(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "POST:"+pattern, object, params...)
 }
 
-// DELETE registers a http handler to give the route pattern and the http method: DELETE.
+// DELETE registers an http handler to give the route pattern and the http method: DELETE.
 func (g *RouterGroup) DELETE(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "DELETE:"+pattern, object, params...)
 }
 
-// PATCH registers a http handler to give the route pattern and the http method: PATCH.
+// PATCH registers an http handler to give the route pattern and the http method: PATCH.
 func (g *RouterGroup) PATCH(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "PATCH:"+pattern, object, params...)
 }
 
-// HEAD registers a http handler to give the route pattern and the http method: HEAD.
+// HEAD registers an http handler to give the route pattern and the http method: HEAD.
 func (g *RouterGroup) HEAD(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "HEAD:"+pattern, object, params...)
 }
 
-// CONNECT registers a http handler to give the route pattern and the http method: CONNECT.
+// CONNECT registers an http handler to give the route pattern and the http method: CONNECT.
 func (g *RouterGroup) CONNECT(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "CONNECT:"+pattern, object, params...)
 }
 
-// OPTIONS register a http handler to give the route pattern and the http method: OPTIONS.
+// OPTIONS register an http handler to give the route pattern and the http method: OPTIONS.
 func (g *RouterGroup) OPTIONS(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "OPTIONS:"+pattern, object, params...)
 }
 
-// TRACE registers a http handler to give the route pattern and the http method: TRACE.
+// TRACE registers an http handler to give the route pattern and the http method: TRACE.
 func (g *RouterGroup) TRACE(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "TRACE:"+pattern, object, params...)
 }
 
-// REST registers a http handler to give the route pattern according to REST rule.
+// REST registers an http handler to give the route pattern according to REST rule.
 func (g *RouterGroup) REST(pattern string, object interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeRest, pattern, object)
 }
 
 // Hook registers a hook to given route pattern.
-func (g *RouterGroup) Hook(pattern string, hook string, handler HandlerFunc) *RouterGroup {
+func (g *RouterGroup) Hook(pattern string, hook HookName, handler HandlerFunc) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, pattern, handler, hook)
 }
 
@@ -263,7 +267,7 @@ func (g *RouterGroup) Middleware(handlers ...HandlerFunc) *RouterGroup {
 
 // preBindToLocalArray adds the route registering parameters to an internal variable array for lazily registering feature.
 func (g *RouterGroup) preBindToLocalArray(bindType string, pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	_, file, line := gdebug.CallerWithFilter([]string{utils.StackFilterKeyForGoFrame})
+	_, file, line := gdebug.CallerWithFilter([]string{consts.StackFilterKeyForGoFrame})
 	preBindItems = append(preBindItems, &preBindItem{
 		group:    g,
 		bindType: bindType,
@@ -413,7 +417,7 @@ func (g *RouterGroup) doBindRoutersToServer(ctx context.Context, item *preBindIt
 			in := doBindHookHandlerInput{
 				Prefix:   prefix,
 				Pattern:  pattern,
-				HookName: extras[0],
+				HookName: HookName(extras[0]),
 				Handler:  handler,
 				Source:   source,
 			}

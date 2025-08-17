@@ -11,13 +11,10 @@ import (
 	"fmt"
 
 	"github.com/gogf/gf/v2/internal/consts"
+	"github.com/gogf/gf/v2/internal/instance"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/util/gutil"
-)
-
-const (
-	frameCoreComponentNameViewer = "gf.core.component.viewer"
 )
 
 // View returns an instance of View with default settings.
@@ -29,7 +26,7 @@ func View(name ...string) *gview.View {
 		instanceName = name[0]
 	}
 	instanceKey := fmt.Sprintf("%s.%s", frameCoreComponentNameViewer, instanceName)
-	return localInstances.GetOrSetFuncLock(instanceKey, func() interface{} {
+	return instance.GetOrSetFuncLock(instanceKey, func() interface{} {
 		return getViewInstance(instanceName)
 	}).(*gview.View)
 }

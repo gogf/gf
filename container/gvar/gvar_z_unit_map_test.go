@@ -80,3 +80,17 @@ func TestVar_MapToMap(t *testing.T) {
 		t.Assert(m2["k2"], m1["k2"])
 	})
 }
+
+func TestVar_MapStrVar(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := g.Map{
+			"k1": "v1",
+			"k2": "v2",
+		}
+		objOne := gvar.New(m, true)
+		t.Assert(objOne.MapStrVar(), "{\"k1\":\"v1\",\"k2\":\"v2\"}")
+
+		objEmpty := gvar.New(g.Map{})
+		t.Assert(objEmpty.MapStrVar(), "")
+	})
+}

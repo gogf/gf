@@ -74,7 +74,7 @@ func ParseTag(tag string) map[string]string {
 // The parameter `pointer` should be type of struct/*struct.
 //
 // Note that,
-// 1. It only retrieves the exported attributes with first letter up-case from struct.
+// 1. It only retrieves the exported attributes with first letter upper-case from struct.
 // 2. The parameter `priority` should be given, it only retrieves fields that has given tag.
 func TagFields(pointer interface{}, priority []string) ([]Field, error) {
 	return getFieldValuesByTagPriority(pointer, priority, map[string]struct{}{})
@@ -85,7 +85,7 @@ func TagFields(pointer interface{}, priority []string) ([]Field, error) {
 // The parameter `pointer` should be type of struct/*struct.
 //
 // Note that,
-// 1. It only retrieves the exported attributes with first letter up-case from struct.
+// 1. It only retrieves the exported attributes with first letter upper-case from struct.
 // 2. The parameter `priority` should be given, it only retrieves fields that has given tag.
 // 3. If one field has no specified tag, it uses its field name as result map key.
 func TagMapName(pointer interface{}, priority []string) (map[string]string, error) {
@@ -104,7 +104,7 @@ func TagMapName(pointer interface{}, priority []string) (map[string]string, erro
 // The parameter `object` should be either type of struct/*struct/[]struct/[]*struct.
 //
 // Note that,
-// 1. It only retrieves the exported attributes with first letter up-case from struct.
+// 1. It only retrieves the exported attributes with first letter upper-case from struct.
 // 2. The parameter `priority` should be given, it only retrieves fields that has given tag.
 // 3. If one field has no specified tag, it uses its field name as result map key.
 func TagMapField(object interface{}, priority []string) (map[string]Field, error) {
@@ -120,16 +120,16 @@ func TagMapField(object interface{}, priority []string) (map[string]Field, error
 	return tagMap, nil
 }
 
-func getFieldValues(value interface{}) ([]Field, error) {
+func getFieldValues(structObject interface{}) ([]Field, error) {
 	var (
 		reflectValue reflect.Value
 		reflectKind  reflect.Kind
 	)
-	if v, ok := value.(reflect.Value); ok {
+	if v, ok := structObject.(reflect.Value); ok {
 		reflectValue = v
 		reflectKind = reflectValue.Kind()
 	} else {
-		reflectValue = reflect.ValueOf(value)
+		reflectValue = reflect.ValueOf(structObject)
 		reflectKind = reflectValue.Kind()
 	}
 	for {

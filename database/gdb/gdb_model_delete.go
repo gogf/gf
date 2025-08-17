@@ -8,11 +8,10 @@ package gdb
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
@@ -30,11 +29,32 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 		}
 	}()
 	var (
-		fieldNameDelete                               = m.getSoftFieldNameDeleted()
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(ctx, false, false)
+		conditionStr                                  = conditionWhere + conditionExtra
+		fieldNameDelete, fieldTypeDelete              = m.softTimeMaintainer().GetFieldNameAndTypeForDelete(
+			ctx, "", m.tablesInit,
+		)
 	)
+	if m.unscoped {
+		fieldNameDelete = ""
+	}
+	if !gstr.ContainsI(conditionStr, " WHERE ") || (fieldNameDelete != "" && !gstr.ContainsI(conditionStr, " AND ")) {
+		intlog.Printf(
+			ctx,
+			`sql condition string "%s" has no WHERE for DELETE operation, fieldNameDelete: %s`,
+			conditionStr, fieldNameDelete,
+		)
+		return nil, gerror.NewCode(
+			gcode.CodeMissingParameter,
+			"there should be WHERE condition statement for DELETE operation",
+		)
+	}
+
 	// Soft deleting.
-	if !m.unscoped && fieldNameDelete != "" {
+	if fieldNameDelete != "" {
+		dataHolder, dataValue := m.softTimeMaintainer().GetDataByFieldNameAndTypeForDelete(
+			ctx, "", fieldNameDelete, fieldTypeDelete,
+		)
 		in := &HookUpdateInput{
 			internalParamHookUpdate: internalParamHookUpdate{
 				internalParamHook: internalParamHook{
@@ -44,18 +64,12 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 			},
 			Model:     m,
 			Table:     m.tables,
-			Data:      fmt.Sprintf(`%s=?`, m.db.GetCore().QuoteString(fieldNameDelete)),
-			Condition: conditionWhere + conditionExtra,
-			Args:      append([]interface{}{gtime.Now().String()}, conditionArgs...),
+			Schema:    m.schema,
+			Data:      dataHolder,
+			Condition: conditionStr,
+			Args:      append([]interface{}{dataValue}, conditionArgs...),
 		}
 		return in.Next(ctx)
-	}
-	conditionStr := conditionWhere + conditionExtra
-	if !gstr.ContainsI(conditionStr, " WHERE ") {
-		return nil, gerror.NewCode(
-			gcode.CodeMissingParameter,
-			"there should be WHERE condition statement for DELETE operation",
-		)
 	}
 
 	in := &HookDeleteInput{
@@ -67,6 +81,7 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 		},
 		Model:     m,
 		Table:     m.tables,
+		Schema:    m.schema,
 		Condition: conditionStr,
 		Args:      conditionArgs,
 	}

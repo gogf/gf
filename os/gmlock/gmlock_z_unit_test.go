@@ -160,7 +160,7 @@ func Test_Locker_TryLockFunc(t *testing.T) {
 
 func Test_Multiple_Goroutine(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		ch := make(chan struct{}, 0)
+		ch := make(chan struct{})
 		num := 1000
 		wait := sync.WaitGroup{}
 		wait.Add(num)
@@ -178,7 +178,7 @@ func Test_Multiple_Goroutine(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		ch := make(chan struct{}, 0)
+		ch := make(chan struct{})
 		num := 100
 		wait := sync.WaitGroup{}
 		wait.Add(num * 2)

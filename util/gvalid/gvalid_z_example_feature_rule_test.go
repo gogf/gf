@@ -9,11 +9,12 @@ package gvalid_test
 import (
 	"context"
 	"fmt"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-func Example_Rule_Required() {
+func ExampleRule_Required() {
 	type BizReq struct {
 		ID   uint   `v:"required"`
 		Name string `v:"required"`
@@ -32,7 +33,7 @@ func Example_Rule_Required() {
 	// The Name field is required
 }
 
-func Example_Rule_RequiredIf() {
+func ExampleRule_RequiredIf() {
 	type BizReq struct {
 		ID          uint   `v:"required" dc:"Your ID"`
 		Name        string `v:"required" dc:"Your name"`
@@ -56,7 +57,30 @@ func Example_Rule_RequiredIf() {
 	// The WifeName field is required
 }
 
-func Example_Rule_RequiredUnless() {
+func ExampleRule_RequiredIfAll() {
+	type BizReq struct {
+		ID       uint   `v:"required" dc:"Your ID"`
+		Name     string `v:"required" dc:"Your name"`
+		Age      int    `v:"required" dc:"Your age"`
+		MoreInfo string `v:"required-if-all:id,1,age,18" dc:"Your more info"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			ID:   1,
+			Name: "test",
+			Age:  18,
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The MoreInfo field is required
+}
+
+func ExampleRule_RequiredUnless() {
 	type BizReq struct {
 		ID          uint   `v:"required" dc:"Your ID"`
 		Name        string `v:"required" dc:"Your name"`
@@ -80,7 +104,7 @@ func Example_Rule_RequiredUnless() {
 	// The WifeName field is required; The HusbandName field is required
 }
 
-func Example_Rule_RequiredWith() {
+func ExampleRule_RequiredWith() {
 	type BizReq struct {
 		ID          uint   `v:"required" dc:"Your ID"`
 		Name        string `v:"required" dc:"Your name"`
@@ -105,7 +129,7 @@ func Example_Rule_RequiredWith() {
 	// The HusbandName field is required
 }
 
-func Example_Rule_RequiredWithAll() {
+func ExampleRule_RequiredWithAll() {
 	type BizReq struct {
 		ID          uint   `v:"required" dc:"Your ID"`
 		Name        string `v:"required" dc:"Your name"`
@@ -130,7 +154,7 @@ func Example_Rule_RequiredWithAll() {
 	// The HusbandName field is required
 }
 
-func Example_Rule_RequiredWithout() {
+func ExampleRule_RequiredWithout() {
 	type BizReq struct {
 		ID          uint   `v:"required" dc:"Your ID"`
 		Name        string `v:"required" dc:"Your name"`
@@ -154,7 +178,7 @@ func Example_Rule_RequiredWithout() {
 	// The HusbandName field is required
 }
 
-func Example_Rule_RequiredWithoutAll() {
+func ExampleRule_RequiredWithoutAll() {
 	type BizReq struct {
 		ID          uint   `v:"required" dc:"Your ID"`
 		Name        string `v:"required" dc:"Your name"`
@@ -177,7 +201,7 @@ func Example_Rule_RequiredWithoutAll() {
 	// The HusbandName field is required
 }
 
-func Example_Rule_Bail() {
+func ExampleRule_Bail() {
 	type BizReq struct {
 		Account   string `v:"bail|required|length:6,16|same:QQ"`
 		QQ        string
@@ -201,7 +225,7 @@ func Example_Rule_Bail() {
 	// The Account value `gf` length must be between 6 and 16
 }
 
-func Example_Rule_CaseInsensitive() {
+func ExampleRule_CaseInsensitive() {
 	type BizReq struct {
 		Account   string `v:"required"`
 		Password  string `v:"required|ci|same:Password2"`
@@ -222,7 +246,7 @@ func Example_Rule_CaseInsensitive() {
 	// output:
 }
 
-func Example_Rule_Date() {
+func ExampleRule_Date() {
 	type BizReq struct {
 		Date1 string `v:"date"`
 		Date2 string `v:"date"`
@@ -251,7 +275,7 @@ func Example_Rule_Date() {
 	// The Date5 value `2021/Oct/31` is not a valid date
 }
 
-func Example_Rule_Datetime() {
+func ExampleRule_Datetime() {
 	type BizReq struct {
 		Date1 string `v:"datetime"`
 		Date2 string `v:"datetime"`
@@ -278,7 +302,7 @@ func Example_Rule_Datetime() {
 	// The Date4 value `2021/Dec/01 23:00:00` is not a valid datetime
 }
 
-func Example_Rule_DateFormat() {
+func ExampleRule_DateFormat() {
 	type BizReq struct {
 		Date1 string `v:"date-format:Y-m-d"`
 		Date2 string `v:"date-format:Y-m-d"`
@@ -304,7 +328,7 @@ func Example_Rule_DateFormat() {
 	// The Date4 value `2021-11-01 23:00` does not match the format: Y-m-d H:i:s
 }
 
-func Example_Rule_Email() {
+func ExampleRule_Email() {
 	type BizReq struct {
 		MailAddr1 string `v:"email"`
 		MailAddr2 string `v:"email"`
@@ -330,7 +354,35 @@ func Example_Rule_Email() {
 	// The MailAddr4 value `gf#goframe.org` is not a valid email address
 }
 
-func Example_Rule_Phone() {
+func ExampleRule_Enums() {
+	type Status string
+	const (
+		StatusRunning Status = "Running"
+		StatusOffline Status = "Offline"
+	)
+	type BizReq struct {
+		Id     int    `v:"required"`
+		Name   string `v:"required"`
+		Status Status `v:"enums"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Id:     1,
+			Name:   "john",
+			Status: Status("Pending"),
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
+	}
+
+	// May Output:
+	// The Status value `Pending` should be in enums of: ["Running","Offline"]
+}
+
+func ExampleRule_Phone() {
 	type BizReq struct {
 		PhoneNumber1 string `v:"phone"`
 		PhoneNumber2 string `v:"phone"`
@@ -342,8 +394,8 @@ func Example_Rule_Phone() {
 		ctx = context.Background()
 		req = BizReq{
 			PhoneNumber1: "13578912345",
-			PhoneNumber2: "11578912345", // error 11x not exist
-			PhoneNumber3: "17178912345", // error 171 not exit
+			PhoneNumber2: "17178912345",
+			PhoneNumber3: "11578912345", // error 11x not exist
 			PhoneNumber4: "1357891234",  // error len must be 11
 		}
 	)
@@ -352,12 +404,11 @@ func Example_Rule_Phone() {
 	}
 
 	// Output:
-	// The PhoneNumber2 value `11578912345` is not a valid phone number
-	// The PhoneNumber3 value `17178912345` is not a valid phone number
+	// The PhoneNumber3 value `11578912345` is not a valid phone number
 	// The PhoneNumber4 value `1357891234` is not a valid phone number
 }
 
-func Example_Rule_PhoneLoose() {
+func ExampleRule_PhoneLoose() {
 	type BizReq struct {
 		PhoneNumber1 string `v:"phone-loose"`
 		PhoneNumber2 string `v:"phone-loose"`
@@ -379,11 +430,11 @@ func Example_Rule_PhoneLoose() {
 	}
 
 	// Output:
-	// The PhoneNumber2 value `11578912345` is invalid
-	// The PhoneNumber4 value `1357891234` is invalid
+	// The PhoneNumber2 value `11578912345` is not a valid phone number
+	// The PhoneNumber4 value `1357891234` is not a valid phone number
 }
 
-func Example_Rule_Telephone() {
+func ExampleRule_Telephone() {
 	type BizReq struct {
 		Telephone1 string `v:"telephone"`
 		Telephone2 string `v:"telephone"`
@@ -409,7 +460,7 @@ func Example_Rule_Telephone() {
 	// The Telephone4 value `775421451` is not a valid telephone number
 }
 
-func Example_Rule_Passport() {
+func ExampleRule_Passport() {
 	type BizReq struct {
 		Passport1 string `v:"passport"`
 		Passport2 string `v:"passport"`
@@ -436,7 +487,7 @@ func Example_Rule_Passport() {
 	// The Passport4 value `gf` is not a valid passport format
 }
 
-func Example_Rule_Password() {
+func ExampleRule_Password() {
 	type BizReq struct {
 		Password1 string `v:"password"`
 		Password2 string `v:"password"`
@@ -457,7 +508,7 @@ func Example_Rule_Password() {
 	// The Password2 value `gofra` is not a valid password format
 }
 
-func Example_Rule_Password2() {
+func ExampleRule_Password2() {
 	type BizReq struct {
 		Password1 string `v:"password2"`
 		Password2 string `v:"password2"`
@@ -479,12 +530,12 @@ func Example_Rule_Password2() {
 	}
 
 	// Output:
-	// The Password2 value `gofra` is not a valid password format
-	// The Password3 value `Goframe` is not a valid password format
-	// The Password4 value `goframe123` is not a valid password format
+	// The Password2 value `gofra` is not a valid password2 format
+	// The Password3 value `Goframe` is not a valid password2 format
+	// The Password4 value `goframe123` is not a valid password2 format
 }
 
-func Example_Rule_Password3() {
+func ExampleRule_Password3() {
 	type BizReq struct {
 		Password1 string `v:"password3"`
 		Password2 string `v:"password3"`
@@ -504,11 +555,11 @@ func Example_Rule_Password3() {
 	}
 
 	// Output:
-	// The Password2 value `gofra` is not a valid password format
-	// The Password3 value `Goframe123` is not a valid password format
+	// The Password2 value `gofra` is not a valid password3 format
+	// The Password3 value `Goframe123` is not a valid password3 format
 }
 
-func Example_Rule_Postcode() {
+func ExampleRule_Postcode() {
 	type BizReq struct {
 		Postcode1 string `v:"postcode"`
 		Postcode2 string `v:"postcode"`
@@ -532,7 +583,7 @@ func Example_Rule_Postcode() {
 	// The Postcode3 value `1000000` is not a valid postcode format
 }
 
-func Example_Rule_ResidentId() {
+func ExampleRule_ResidentId() {
 	type BizReq struct {
 		ResidentID1 string `v:"resident-id"`
 	}
@@ -551,7 +602,7 @@ func Example_Rule_ResidentId() {
 	// The ResidentID1 value `320107199506285482` is not a valid resident id number
 }
 
-func Example_Rule_BankCard() {
+func ExampleRule_BankCard() {
 	type BizReq struct {
 		BankCard1 string `v:"bank-card"`
 	}
@@ -570,7 +621,7 @@ func Example_Rule_BankCard() {
 	// The BankCard1 value `6225760079930218` is not a valid bank card number
 }
 
-func Example_Rule_QQ() {
+func ExampleRule_QQ() {
 	type BizReq struct {
 		QQ1 string `v:"qq"`
 		QQ2 string `v:"qq"`
@@ -594,7 +645,7 @@ func Example_Rule_QQ() {
 	// The QQ3 value `514258412a` is not a valid QQ number
 }
 
-func Example_Rule_IP() {
+func ExampleRule_IP() {
 	type BizReq struct {
 		IP1 string `v:"ip"`
 		IP2 string `v:"ip"`
@@ -620,7 +671,7 @@ func Example_Rule_IP() {
 	// The IP4 value `ze80::812b:1158:1f43:f0d1` is not a valid IP address
 }
 
-func Example_Rule_IPV4() {
+func ExampleRule_IPV4() {
 	type BizReq struct {
 		IP1 string `v:"ipv4"`
 		IP2 string `v:"ipv4"`
@@ -641,7 +692,7 @@ func Example_Rule_IPV4() {
 	// The IP2 value `520.255.255.255` is not a valid IPv4 address
 }
 
-func Example_Rule_IPV6() {
+func ExampleRule_IPV6() {
 	type BizReq struct {
 		IP1 string `v:"ipv6"`
 		IP2 string `v:"ipv6"`
@@ -662,7 +713,7 @@ func Example_Rule_IPV6() {
 	// The IP2 value `ze80::812b:1158:1f43:f0d1` is not a valid IPv6 address
 }
 
-func Example_Rule_Mac() {
+func ExampleRule_Mac() {
 	type BizReq struct {
 		Mac1 string `v:"mac"`
 		Mac2 string `v:"mac"`
@@ -683,7 +734,7 @@ func Example_Rule_Mac() {
 	// The Mac2 value `Z0-CC-6A-D6-B1-1A` is not a valid MAC address
 }
 
-func Example_Rule_Url() {
+func ExampleRule_Url() {
 	type BizReq struct {
 		URL1 string `v:"url"`
 		URL2 string `v:"url"`
@@ -706,7 +757,7 @@ func Example_Rule_Url() {
 	// The URL3 value `ws://goframe.org` is not a valid URL address
 }
 
-func Example_Rule_Domain() {
+func ExampleRule_Domain() {
 	type BizReq struct {
 		Domain1 string `v:"domain"`
 		Domain2 string `v:"domain"`
@@ -732,7 +783,7 @@ func Example_Rule_Domain() {
 	// The Domain4 value `1a.2b` is not a valid domain format
 }
 
-func Example_Rule_Size() {
+func ExampleRule_Size() {
 	type BizReq struct {
 		Size1 string `v:"size:10"`
 		Size2 string `v:"size:5"`
@@ -753,7 +804,7 @@ func Example_Rule_Size() {
 	// The Size2 value `goframe` length must be 5
 }
 
-func Example_Rule_Length() {
+func ExampleRule_Length() {
 	type BizReq struct {
 		Length1 string `v:"length:5,10"`
 		Length2 string `v:"length:10,15"`
@@ -774,7 +825,7 @@ func Example_Rule_Length() {
 	// The Length2 value `goframe` length must be between 10 and 15
 }
 
-func Example_Rule_MinLength() {
+func ExampleRule_MinLength() {
 	type BizReq struct {
 		MinLength1 string `v:"min-length:10"`
 		MinLength2 string `v:"min-length:8"`
@@ -795,7 +846,7 @@ func Example_Rule_MinLength() {
 	// The MinLength2 value `goframe` length must be equal or greater than 8
 }
 
-func Example_Rule_MaxLength() {
+func ExampleRule_MaxLength() {
 	type BizReq struct {
 		MaxLength1 string `v:"max-length:10"`
 		MaxLength2 string `v:"max-length:5"`
@@ -816,7 +867,7 @@ func Example_Rule_MaxLength() {
 	// The MaxLength2 value `goframe` length must be equal or lesser than 5
 }
 
-func Example_Rule_Between() {
+func ExampleRule_Between() {
 	type BizReq struct {
 		Age1   int     `v:"between:1,100"`
 		Age2   int     `v:"between:1,100"`
@@ -842,7 +893,7 @@ func Example_Rule_Between() {
 	// The Score2 value `-0.5` must be between 0 and 10
 }
 
-func Example_Rule_Min() {
+func ExampleRule_Min() {
 	type BizReq struct {
 		Age1   int     `v:"min:100"`
 		Age2   int     `v:"min:100"`
@@ -868,7 +919,7 @@ func Example_Rule_Min() {
 	// The Score1 value `9.8` must be equal or greater than 10
 }
 
-func Example_Rule_Max() {
+func ExampleRule_Max() {
 	type BizReq struct {
 		Age1   int     `v:"max:100"`
 		Age2   int     `v:"max:100"`
@@ -894,7 +945,7 @@ func Example_Rule_Max() {
 	// The Score2 value `10.1` must be equal or lesser than 10
 }
 
-func Example_Rule_Json() {
+func ExampleRule_Json() {
 	type BizReq struct {
 		JSON1 string `v:"json"`
 		JSON2 string `v:"json"`
@@ -915,7 +966,7 @@ func Example_Rule_Json() {
 	// The JSON2 value `{"name":"goframe","author":"郭强","test"}` is not a valid JSON string
 }
 
-func Example_Rule_Integer() {
+func ExampleRule_Integer() {
 	type BizReq struct {
 		Integer string `v:"integer"`
 		Float   string `v:"integer"`
@@ -939,7 +990,7 @@ func Example_Rule_Integer() {
 	// The Str value `goframe` is not an integer
 }
 
-func Example_Rule_Float() {
+func ExampleRule_Float() {
 	type BizReq struct {
 		Integer string `v:"float"`
 		Float   string `v:"float"`
@@ -959,10 +1010,10 @@ func Example_Rule_Float() {
 	}
 
 	// Output:
-	// The Str value `goframe` is invalid
+	// The Str value `goframe` is not of valid float type
 }
 
-func Example_Rule_Boolean() {
+func ExampleRule_Boolean() {
 	type BizReq struct {
 		Boolean bool    `v:"boolean"`
 		Integer int     `v:"boolean"`
@@ -992,7 +1043,7 @@ func Example_Rule_Boolean() {
 	// The Str3 value `goframe` field must be true or false
 }
 
-func Example_Rule_Same() {
+func ExampleRule_Same() {
 	type BizReq struct {
 		Name      string `v:"required"`
 		Password  string `v:"required|same:Password2"`
@@ -1011,10 +1062,10 @@ func Example_Rule_Same() {
 	}
 
 	// Output:
-	// The Password value `goframe.org` must be the same as field Password2
+	// The Password value `goframe.org` must be the same as field Password2 value `goframe.net`
 }
 
-func Example_Rule_Different() {
+func ExampleRule_Different() {
 	type BizReq struct {
 		Name          string `v:"required"`
 		MailAddr      string `v:"required"`
@@ -1033,10 +1084,10 @@ func Example_Rule_Different() {
 	}
 
 	// Output:
-	// The OtherMailAddr value `gf@goframe.org` must be different from field MailAddr
+	// The OtherMailAddr value `gf@goframe.org` must be different from field MailAddr value `gf@goframe.org`
 }
 
-func Example_Rule_In() {
+func ExampleRule_In() {
 	type BizReq struct {
 		ID     uint   `v:"required" dc:"Your Id"`
 		Name   string `v:"required" dc:"Your name"`
@@ -1058,7 +1109,7 @@ func Example_Rule_In() {
 	// The Gender value `3` is not in acceptable range: 0,1,2
 }
 
-func Example_Rule_NotIn() {
+func ExampleRule_NotIn() {
 	type BizReq struct {
 		ID           uint   `v:"required" dc:"Your Id"`
 		Name         string `v:"required" dc:"Your name"`
@@ -1080,7 +1131,7 @@ func Example_Rule_NotIn() {
 	// The InvalidIndex value `1` must not be in range: -1,0,1
 }
 
-func Example_Rule_Regex() {
+func ExampleRule_Regex() {
 	type BizReq struct {
 		Regex1 string `v:"regex:[1-9][0-9]{4,14}"`
 		Regex2 string `v:"regex:[1-9][0-9]{4,14}"`
@@ -1101,4 +1152,288 @@ func Example_Rule_Regex() {
 	// Output:
 	// The Regex1 value `1234` must be in regex of: [1-9][0-9]{4,14}
 	// The Regex2 value `01234` must be in regex of: [1-9][0-9]{4,14}
+}
+
+func ExampleRule_NotRegex() {
+	type BizReq struct {
+		Regex1 string `v:"regex:\\d{4}"`
+		Regex2 string `v:"not-regex:\\d{4}"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Regex1: "1234",
+			Regex2: "1234",
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
+	}
+
+	// Output:
+	// The Regex2 value `1234` should not be in regex of: \d{4}
+}
+
+func ExampleRule_After() {
+	type BizReq struct {
+		Time1 string
+		Time2 string `v:"after:Time1"`
+		Time3 string `v:"after:Time1"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Time1: "2022-09-01",
+			Time2: "2022-09-01",
+			Time3: "2022-09-02",
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err.String())
+	}
+
+	// Output:
+	// The Time2 value `2022-09-01` must be after field Time1 value `2022-09-01`
+}
+
+func ExampleRule_AfterEqual() {
+	type BizReq struct {
+		Time1 string
+		Time2 string `v:"after-equal:Time1"`
+		Time3 string `v:"after-equal:Time1"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Time1: "2022-09-02",
+			Time2: "2022-09-01",
+			Time3: "2022-09-02",
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
+	}
+
+	// Output:
+	// The Time2 value `2022-09-01` must be after or equal to field Time1 value `2022-09-02`
+}
+
+func ExampleRule_Before() {
+	type BizReq struct {
+		Time1 string `v:"before:Time3"`
+		Time2 string `v:"before:Time3"`
+		Time3 string
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Time1: "2022-09-02",
+			Time2: "2022-09-03",
+			Time3: "2022-09-03",
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err.String())
+	}
+
+	// Output:
+	// The Time2 value `2022-09-03` must be before field Time3 value `2022-09-03`
+}
+
+func ExampleRule_BeforeEqual() {
+	type BizReq struct {
+		Time1 string `v:"before-equal:Time3"`
+		Time2 string `v:"before-equal:Time3"`
+		Time3 string
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Time1: "2022-09-02",
+			Time2: "2022-09-01",
+			Time3: "2022-09-01",
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
+	}
+
+	// Output:
+	// The Time1 value `2022-09-02` must be before or equal to field Time3
+}
+
+func ExampleRule_Array() {
+	type BizReq struct {
+		Value1 string   `v:"array"`
+		Value2 string   `v:"array"`
+		Value3 string   `v:"array"`
+		Value4 []string `v:"array"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Value1: "1,2,3",
+			Value2: "[]",
+			Value3: "[1,2,3]",
+			Value4: []string{},
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
+	}
+
+	// Output:
+	// The Value1 value `1,2,3` is not of valid array type
+}
+
+func ExampleRule_EQ() {
+	type BizReq struct {
+		Name      string `v:"required"`
+		Password  string `v:"required|eq:Password2"`
+		Password2 string `v:"required"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Name:      "gf",
+			Password:  "goframe.org",
+			Password2: "goframe.net",
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The Password value `goframe.org` must be equal to field Password2 value `goframe.net`
+}
+
+func ExampleRule_NotEQ() {
+	type BizReq struct {
+		Name          string `v:"required"`
+		MailAddr      string `v:"required"`
+		OtherMailAddr string `v:"required|not-eq:MailAddr"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Name:          "gf",
+			MailAddr:      "gf@goframe.org",
+			OtherMailAddr: "gf@goframe.org",
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The OtherMailAddr value `gf@goframe.org` must not be equal to field MailAddr value `gf@goframe.org`
+}
+
+func ExampleRule_GT() {
+	type BizReq struct {
+		Value1 int
+		Value2 int `v:"gt:Value1"`
+		Value3 int `v:"gt:Value1"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Value1: 1,
+			Value2: 1,
+			Value3: 2,
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err.String())
+	}
+
+	// Output:
+	// The Value2 value `1` must be greater than field Value1 value `1`
+}
+
+func ExampleRule_GTE() {
+	type BizReq struct {
+		Value1 int
+		Value2 int `v:"gte:Value1"`
+		Value3 int `v:"gte:Value1"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Value1: 2,
+			Value2: 1,
+			Value3: 2,
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err.String())
+	}
+
+	// Output:
+	// The Value2 value `1` must be greater than or equal to field Value1 value `2`
+}
+
+func ExampleRule_LT() {
+	type BizReq struct {
+		Value1 int
+		Value2 int `v:"lt:Value1"`
+		Value3 int `v:"lt:Value1"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Value1: 2,
+			Value2: 1,
+			Value3: 2,
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err.String())
+	}
+
+	// Output:
+	// The Value3 value `2` must be lesser than field Value1 value `2`
+}
+
+func ExampleRule_LTE() {
+	type BizReq struct {
+		Value1 int
+		Value2 int `v:"lte:Value1"`
+		Value3 int `v:"lte:Value1"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Value1: 1,
+			Value2: 1,
+			Value3: 2,
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err.String())
+	}
+
+	// Output:
+	// The Value3 value `2` must be lesser than or equal to field Value1 value `1`
+}
+
+func ExampleRule_Foreach() {
+	type BizReq struct {
+		Value1 []int `v:"foreach|in:1,2,3"`
+		Value2 []int `v:"foreach|in:1,2,3"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Value1: []int{1, 2, 3},
+			Value2: []int{3, 4, 5},
+		}
+	)
+	if err := g.Validator().Bail().Data(req).Run(ctx); err != nil {
+		fmt.Println(err.String())
+	}
+
+	// Output:
+	// The Value2 value `4` is not in acceptable range: 1,2,3
 }

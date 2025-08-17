@@ -5,7 +5,8 @@
 // You can obtain one at https://github.com/gogf/gf.
 //
 
-// Package glist provides most commonly used doubly linked list container which also supports concurrent-safe/unsafe switch feature.
+// Package glist provides most commonly used doubly linked list container which also supports
+// concurrent-safe/unsafe switch feature.
 package glist
 
 import (
@@ -407,7 +408,6 @@ func (l *List) Removes(es []*Element) {
 	for _, e := range es {
 		l.list.Remove(e)
 	}
-	return
 }
 
 // RemoveAll removes all elements from list `l`.
@@ -550,6 +550,10 @@ func (l *List) UnmarshalValue(value interface{}) (err error) {
 
 // DeepCopy implements interface for deep copy of current type.
 func (l *List) DeepCopy() interface{} {
+	if l == nil {
+		return nil
+	}
+
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 

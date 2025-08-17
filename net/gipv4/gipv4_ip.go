@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 )
 
@@ -25,10 +24,11 @@ func GetIpArray() (ips []string, err error) {
 	}
 	for _, address := range interfaceAddr {
 		ipNet, isValidIpNet := address.(*net.IPNet)
-		if isValidIpNet && !ipNet.IP.IsLoopback() {
-			if ipNet.IP.To4() != nil {
-				ips = append(ips, ipNet.IP.String())
-			}
+		if !(isValidIpNet && !ipNet.IP.IsLoopback()) {
+			continue
+		}
+		if ipNet.IP.To4() != nil {
+			ips = append(ips, ipNet.IP.String())
 		}
 	}
 	return ips, nil
@@ -136,7 +136,6 @@ func IsIntranet(ip string) bool {
 	if array[0] == "172" {
 		second, err := strconv.ParseInt(array[1], 10, 64)
 		if err != nil {
-			err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `strconv.ParseInt failed for string "%s"`, array[1])
 			return false
 		}
 		if second >= 16 && second <= 31 {

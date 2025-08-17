@@ -14,14 +14,12 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/consts"
+	"github.com/gogf/gf/v2/internal/instance"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gcfg"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
-)
-
-const (
-	frameCoreComponentNameDatabase = "gf.core.component.database"
 )
 
 // Database returns an instance of database ORM object with specified configuration group name.
@@ -36,7 +34,7 @@ func Database(name ...string) gdb.DB {
 		group = name[0]
 	}
 	instanceKey := fmt.Sprintf("%s.%s", frameCoreComponentNameDatabase, group)
-	db := localInstances.GetOrSetFuncLock(instanceKey, func() interface{} {
+	db := instance.GetOrSetFuncLock(instanceKey, func() interface{} {
 		// It ignores returned error to avoid file no found error while it's not necessary.
 		var (
 			configMap     map[string]interface{}
@@ -58,7 +56,7 @@ func Database(name ...string) gdb.DB {
 			if fileConfig, ok := Config().GetAdapter().(*gcfg.AdapterFile); ok {
 				if _, err = fileConfig.GetFilePath(); err != nil {
 					panic(gerror.WrapCode(gcode.CodeMissingConfiguration, err,
-						`configuration not found, did you miss the configuration file or the misspell the configuration file name`,
+						`configuration not found, did you miss the configuration file or misspell the configuration file name`,
 					))
 				}
 			}
@@ -93,7 +91,9 @@ func Database(name ...string) gdb.DB {
 			if len(cg) > 0 {
 				if gdb.GetConfig(group) == nil {
 					intlog.Printf(ctx, "add configuration for group: %s, %#v", g, cg)
-					gdb.SetConfigGroup(g, cg)
+					if err := gdb.SetConfigGroup(g, cg); err != nil {
+						panic(err)
+					}
 				} else {
 					intlog.Printf(ctx, "ignore configuration as it already exists for group: %s, %#v", g, cg)
 					intlog.Printf(ctx, "%s, %#v", g, cg)
@@ -110,7 +110,9 @@ func Database(name ...string) gdb.DB {
 			if len(cg) > 0 {
 				if gdb.GetConfig(group) == nil {
 					intlog.Printf(ctx, "add configuration for group: %s, %#v", gdb.DefaultGroupName, cg)
-					gdb.SetConfigGroup(gdb.DefaultGroupName, cg)
+					if err := gdb.SetConfigGroup(gdb.DefaultGroupName, cg); err != nil {
+						panic(err)
+					}
 				} else {
 					intlog.Printf(
 						ctx,
@@ -138,8 +140,10 @@ func Database(name ...string) gdb.DB {
 				}
 			}
 			if len(loggerConfigMap) > 0 {
-				if err = db.GetLogger().SetConfigWithMap(loggerConfigMap); err != nil {
-					panic(err)
+				if logger, ok := db.GetLogger().(*glog.Logger); ok {
+					if err = logger.SetConfigWithMap(loggerConfigMap); err != nil {
+						panic(err)
+					}
 				}
 			}
 			return db

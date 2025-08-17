@@ -19,7 +19,7 @@ import (
 
 // Write writes `content` to the response buffer.
 func (r *Response) Write(content ...interface{}) {
-	if r.hijacked || len(content) == 0 {
+	if r.IsHijacked() || len(content) == 0 {
 		return
 	}
 	if r.Status == 0 {
@@ -28,11 +28,11 @@ func (r *Response) Write(content ...interface{}) {
 	for _, v := range content {
 		switch value := v.(type) {
 		case []byte:
-			r.buffer.Write(value)
+			_, _ = r.BufferWriter.Write(value)
 		case string:
-			r.buffer.WriteString(value)
+			_, _ = r.BufferWriter.WriteString(value)
 		default:
-			r.buffer.WriteString(gconv.String(v))
+			_, _ = r.BufferWriter.WriteString(gconv.String(v))
 		}
 	}
 }
@@ -131,7 +131,7 @@ func (r *Response) WriteJsonExit(content interface{}) {
 //
 // Note that there should be a "callback" parameter in the request for JSONP format.
 func (r *Response) WriteJsonP(content interface{}) {
-	r.Header().Set("Content-Type", contentTypeJson)
+	r.Header().Set("Content-Type", contentTypeJavascript)
 	// If given string/[]byte, response it directly to client.
 	switch content.(type) {
 	case string, []byte:

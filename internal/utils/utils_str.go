@@ -11,20 +11,18 @@ import (
 	"strings"
 )
 
-var (
-	// DefaultTrimChars are the characters which are stripped by Trim* functions in default.
-	DefaultTrimChars = string([]byte{
-		'\t', // Tab.
-		'\v', // Vertical tab.
-		'\n', // New line (line feed).
-		'\r', // Carriage return.
-		'\f', // New page.
-		' ',  // Ordinary space.
-		0x00, // NUL-byte.
-		0x85, // Delete.
-		0xA0, // Non-breaking space.
-	})
-)
+// DefaultTrimChars are the characters which are stripped by Trim* functions in default.
+var DefaultTrimChars = string([]byte{
+	'\t', // Tab.
+	'\v', // Vertical tab.
+	'\n', // New line (line feed).
+	'\r', // Carriage return.
+	'\f', // New page.
+	' ',  // Ordinary space.
+	0x00, // NUL-byte.
+	0x85, // Delete.
+	0xA0, // Non-breaking space.
+})
 
 // IsLetterUpper checks whether the given byte b is in upper case.
 func IsLetterUpper(b byte) bool {
@@ -58,7 +56,10 @@ func IsNumeric(s string) bool {
 		return false
 	}
 	for i := 0; i < length; i++ {
-		if s[i] == '-' && i == 0 {
+		if (s[i] == '-' || s[i] == '+') && i == 0 {
+			if length == 1 {
+				return false
+			}
 			continue
 		}
 		if s[i] == '.' {
@@ -73,10 +74,7 @@ func IsNumeric(s string) bool {
 			return false
 		}
 	}
-	if dotCount > 1 {
-		return false
-	}
-	return true
+	return dotCount <= 1
 }
 
 // UcFirst returns a copy of the string s with the first letter mapped to its upper case.
@@ -94,14 +92,14 @@ func UcFirst(s string) string {
 // which is replaced by a map in unordered way, case-sensitively.
 func ReplaceByMap(origin string, replaces map[string]string) string {
 	for k, v := range replaces {
-		origin = strings.Replace(origin, k, v, -1)
+		origin = strings.ReplaceAll(origin, k, v)
 	}
 	return origin
 }
 
 // RemoveSymbols removes all symbols from string and lefts only numbers and letters.
 func RemoveSymbols(s string) string {
-	var b = make([]rune, 0, len(s))
+	b := make([]rune, 0, len(s))
 	for _, c := range s {
 		if c > 127 {
 			b = append(b, c)
@@ -144,12 +142,12 @@ func Trim(str string, characterMask ...string) string {
 
 // FormatCmdKey formats string `s` as command key using uniformed format.
 func FormatCmdKey(s string) string {
-	return strings.ToLower(strings.Replace(s, "_", ".", -1))
+	return strings.ToLower(strings.ReplaceAll(s, "_", "."))
 }
 
 // FormatEnvKey formats string `s` as environment key using uniformed format.
 func FormatEnvKey(s string) string {
-	return strings.ToUpper(strings.Replace(s, ".", "_", -1))
+	return strings.ToUpper(strings.ReplaceAll(s, ".", "_"))
 }
 
 // StripSlashes un-quotes a quoted string by AddSlashes.

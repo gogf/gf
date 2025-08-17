@@ -8,6 +8,7 @@ package gtree_test
 
 import (
 	"fmt"
+
 	"github.com/gogf/gf/v2/container/gtree"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -591,6 +592,11 @@ func ExampleRedBlackTree_IteratorAscFrom_NoExistKeyAndMatchFalse() {
 	})
 
 	// Output:
+	// key: 1 , value: 10
+	// key: 2 , value: 20
+	// key: 3 , value: 30
+	// key: 4 , value: 40
+	// key: 5 , value: 50
 }
 
 func ExampleRedBlackTree_IteratorDesc() {

@@ -1,0 +1,5 @@
+gfcli:
+  gen:
+    dao:
+      - link: "pgsql:postgres:postgres@tcp(127.0.0.1:5432)/postgres"
+        tablesEx: "ex_table1,ex_table2"

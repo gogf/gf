@@ -104,7 +104,7 @@ func LeDecodeToString(b []byte) string {
 }
 
 func LeEncodeBool(b bool) []byte {
-	if b == true {
+	if b {
 		return []byte{1}
 	} else {
 		return []byte{0}
@@ -221,7 +221,7 @@ func LeDecodeToBool(b []byte) bool {
 	if len(b) == 0 {
 		return false
 	}
-	if bytes.Compare(b, make([]byte, len(b))) == 0 {
+	if bytes.Equal(b, make([]byte, len(b))) {
 		return false
 	}
 	return true

@@ -7,7 +7,6 @@
 package ghttp
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -31,8 +30,8 @@ type Request struct {
 	Session    *gsession.Session // Session.
 	Response   *Response         // Corresponding Response of this request.
 	Router     *Router           // Matched Router for this request. Note that it's not available in HOOK handler.
-	EnterTime  int64             // Request starting time in microseconds.
-	LeaveTime  int64             // Request to end time in microseconds.
+	EnterTime  *gtime.Time       // Request starting time in milliseconds.
+	LeaveTime  *gtime.Time       // Request to end time in milliseconds.
 	Middleware *middleware       // Middleware manager.
 	StaticFile *staticFile       // Static file object for static file serving.
 
@@ -40,8 +39,8 @@ type Request struct {
 	// Private attributes for internal usage purpose.
 	// =================================================================================================================
 
-	context         context.Context        // Custom context for internal usage purpose.
-	handlers        []*handlerParsedItem   // All matched handlers containing handler, hook and middleware for this request.
+	handlers        []*HandlerItemParsed   // All matched handlers containing handler, hook and middleware for this request.
+	serveHandler    *HandlerItemParsed     // Real business handler serving for this request, not hook or middleware handler.
 	handlerResponse interface{}            // Handler response object for Request/Response handler.
 	hasHookHandler  bool                   // A bool marking whether there's hook handler in the handlers for performance purpose.
 	hasServeHandler bool                   // A bool marking whether there's serving handler in the handlers for performance purpose.
@@ -64,11 +63,6 @@ type Request struct {
 	originUrlPath   string                 // Original URL path that passed from client.
 }
 
-type handlerResponse struct {
-	Object interface{}
-	Error  error
-}
-
 // staticFile is the file struct for static file service.
 type staticFile struct {
 	File  *gres.File // Resource file object.
@@ -82,7 +76,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 		Server:        s,
 		Request:       r,
 		Response:      newResponse(s, w),
-		EnterTime:     gtime.TimestampMilli(),
+		EnterTime:     gtime.Now(),
 		originUrlPath: r.URL.Path,
 	}
 	request.Cookie = GetCookie(request)
@@ -123,6 +117,8 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 // WebSocket upgrades current request as a websocket request.
 // It returns a new WebSocket object if success, or the error if failure.
 // Note that the request should be a websocket request, or it will surely fail upgrading.
+//
+// Deprecated: will be removed in the future, please use third-party websocket library instead.
 func (r *Request) WebSocket() (*WebSocket, error) {
 	if conn, err := wsUpGrader.Upgrade(r.Response.Writer, r.Request, nil); err == nil {
 		return &WebSocket{
@@ -155,8 +151,13 @@ func (r *Request) IsExited() bool {
 }
 
 // GetHeader retrieves and returns the header value with given `key`.
-func (r *Request) GetHeader(key string) string {
-	return r.Header.Get(key)
+// It returns the optional `def` parameter if the header does not exist.
+func (r *Request) GetHeader(key string, def ...string) string {
+	value := r.Header.Get(key)
+	if value == "" && len(def) > 0 {
+		value = def[0]
+	}
+	return value
 }
 
 // GetHost returns current request host name, which might be a domain or an IP without port.
@@ -223,6 +224,18 @@ func (r *Request) GetRemoteIp() string {
 	return r.RemoteAddr
 }
 
+// GetSchema returns the schema of this request.
+func (r *Request) GetSchema() string {
+	var (
+		scheme = "http"
+		proto  = r.Header.Get("X-Forwarded-Proto")
+	)
+	if r.TLS != nil || gstr.Equal(proto, "https") {
+		scheme = "https"
+	}
+	return scheme
+}
+
 // GetUrl returns current URL of this request.
 func (r *Request) GetUrl() string {
 	var (
@@ -263,15 +276,10 @@ func (r *Request) SetError(err error) {
 
 // ReloadParam is used for modifying request parameter.
 // Sometimes, we want to modify request parameters through middleware, but directly modifying Request.Body
-// is invalid, so it clears the parsed* marks to make the parameters re-parsed.
+// is invalid, so it clears the parsed* marks of Request to make the parameters reparsed.
 func (r *Request) ReloadParam() {
 	r.parsedBody = false
 	r.parsedForm = false
 	r.parsedQuery = false
 	r.bodyContent = nil
-}
-
-// GetHandlerResponse retrieves and returns the handler response object and its error.
-func (r *Request) GetHandlerResponse() interface{} {
-	return r.handlerResponse
 }

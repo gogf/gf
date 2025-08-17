@@ -76,9 +76,7 @@ func Test_Decode(t *testing.T) {
 		result, err := gyaml.Decode([]byte(yamlStr))
 		t.AssertNil(err)
 
-		m, ok := result.(map[string]interface{})
-		t.Assert(ok, true)
-		t.Assert(m, map[string]interface{}{
+		t.Assert(result, map[string]interface{}{
 			"url":      "https://goframe.org",
 			"server":   g.Slice{"120.168.117.21", "120.168.117.22"},
 			"pi":       3.14,

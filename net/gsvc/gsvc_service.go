@@ -141,10 +141,10 @@ func (s *LocalService) autoFillDefaultAttributes() {
 	if s.Namespace == "" {
 		s.Namespace = gcmd.GetOptWithEnv(EnvNamespace, DefaultNamespace).String()
 	}
-	if s.Version == "" {
-		s.Version = gcmd.GetOptWithEnv(EnvVersion, DefaultVersion).String()
-	}
 	if s.Name == "" {
 		s.Name = gcmd.GetOptWithEnv(EnvName).String()
+	}
+	if s.Version == "" {
+		s.Version = gcmd.GetOptWithEnv(EnvVersion, DefaultVersion).String()
 	}
 }

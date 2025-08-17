@@ -7,16 +7,338 @@
 package gdb
 
 import (
-	"context"
+	"fmt"
 	"testing"
 
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gregex"
 )
 
-var (
-	db  DB
-	ctx = context.TODO()
-)
+func Test_GetConverter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		c := GetConverter()
+		s, err := c.String(1)
+		t.AssertNil(err)
+		t.AssertEQ(s, "1")
+	})
+}
+
+func Test_HookSelect_Regex(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err              error
+			toBeCommittedSql = `select * from "user" where 1=1`
+		)
+		toBeCommittedSql, err = gregex.ReplaceStringFuncMatch(
+			`(?i) FROM ([\S]+)`,
+			toBeCommittedSql,
+			func(match []string) string {
+
+				return fmt.Sprintf(` FROM "%s"`, "user_1")
+			},
+		)
+		t.AssertNil(err)
+		t.Assert(toBeCommittedSql, `select * FROM "user_1" where 1=1`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err              error
+			toBeCommittedSql = `select * from user`
+		)
+		toBeCommittedSql, err = gregex.ReplaceStringFuncMatch(
+			`(?i) FROM ([\S]+)`,
+			toBeCommittedSql,
+			func(match []string) string {
+				return fmt.Sprintf(` FROM %s`, "user_1")
+			},
+		)
+		t.AssertNil(err)
+		t.Assert(toBeCommittedSql, `select * FROM user_1`)
+	})
+}
+
+func Test_parseConfigNodeLink_WithType(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/khaos_oss?loc=Local&parseTime=true&charset=latin`,
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Type, `mysql`)
+		t.Assert(newNode.User, `root`)
+		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
+		t.Assert(newNode.Host, `9.135.69.119`)
+		t.Assert(newNode.Port, `3306`)
+		t.Assert(newNode.Name, `khaos_oss`)
+		t.Assert(newNode.Extra, `loc=Local&parseTime=true&charset=latin`)
+		t.Assert(newNode.Charset, `latin`)
+		t.Assert(newNode.Protocol, `tcp`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/khaos_oss?`,
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Type, `mysql`)
+		t.Assert(newNode.User, `root`)
+		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
+		t.Assert(newNode.Host, `9.135.69.119`)
+		t.Assert(newNode.Port, `3306`)
+		t.Assert(newNode.Name, `khaos_oss`)
+		t.Assert(newNode.Extra, ``)
+		t.Assert(newNode.Charset, defaultCharset)
+		t.Assert(newNode.Protocol, `tcp`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/khaos_oss`,
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Type, `mysql`)
+		t.Assert(newNode.User, `root`)
+		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
+		t.Assert(newNode.Host, `9.135.69.119`)
+		t.Assert(newNode.Port, `3306`)
+		t.Assert(newNode.Name, `khaos_oss`)
+		t.Assert(newNode.Extra, ``)
+		t.Assert(newNode.Charset, defaultCharset)
+		t.Assert(newNode.Protocol, `tcp`)
+	})
+	// empty database preselect.
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/?loc=Local&parseTime=true&charset=latin`,
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Type, `mysql`)
+		t.Assert(newNode.User, `root`)
+		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
+		t.Assert(newNode.Host, `9.135.69.119`)
+		t.Assert(newNode.Port, `3306`)
+		t.Assert(newNode.Name, ``)
+		t.Assert(newNode.Extra, `loc=Local&parseTime=true&charset=latin`)
+		t.Assert(newNode.Charset, `latin`)
+		t.Assert(newNode.Protocol, `tcp`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)?loc=Local&parseTime=true&charset=latin`,
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Type, `mysql`)
+		t.Assert(newNode.User, `root`)
+		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
+		t.Assert(newNode.Host, `9.135.69.119`)
+		t.Assert(newNode.Port, `3306`)
+		t.Assert(newNode.Name, ``)
+		t.Assert(newNode.Extra, `loc=Local&parseTime=true&charset=latin`)
+		t.Assert(newNode.Charset, `latin`)
+		t.Assert(newNode.Protocol, `tcp`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)/`,
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Type, `mysql`)
+		t.Assert(newNode.User, `root`)
+		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
+		t.Assert(newNode.Host, `9.135.69.119`)
+		t.Assert(newNode.Port, `3306`)
+		t.Assert(newNode.Name, ``)
+		t.Assert(newNode.Extra, ``)
+		t.Assert(newNode.Charset, defaultCharset)
+		t.Assert(newNode.Protocol, `tcp`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: `mysql:root:CxzhD*624:27jh@tcp(9.135.69.119:3306)`,
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Type, `mysql`)
+		t.Assert(newNode.User, `root`)
+		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
+		t.Assert(newNode.Host, `9.135.69.119`)
+		t.Assert(newNode.Port, `3306`)
+		t.Assert(newNode.Name, ``)
+		t.Assert(newNode.Extra, ``)
+		t.Assert(newNode.Charset, defaultCharset)
+		t.Assert(newNode.Protocol, `tcp`)
+	})
+	// udp.
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: `mysql:root:CxzhD*624:27jh@udp(9.135.69.119:3306)`,
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Type, `mysql`)
+		t.Assert(newNode.User, `root`)
+		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
+		t.Assert(newNode.Host, `9.135.69.119`)
+		t.Assert(newNode.Port, `3306`)
+		t.Assert(newNode.Name, ``)
+		t.Assert(newNode.Extra, ``)
+		t.Assert(newNode.Charset, defaultCharset)
+		t.Assert(newNode.Protocol, `udp`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: `sqlite:root:CxzhD*624:27jh@file(/var/data/db.sqlite3)?local=Local&parseTime=true`,
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Type, `sqlite`)
+		t.Assert(newNode.User, `root`)
+		t.Assert(newNode.Pass, `CxzhD*624:27jh`)
+		t.Assert(newNode.Host, ``)
+		t.Assert(newNode.Port, ``)
+		t.Assert(newNode.Name, `/var/data/db.sqlite3`)
+		t.Assert(newNode.Extra, `local=Local&parseTime=true`)
+		t.Assert(newNode.Charset, defaultCharset)
+		t.Assert(newNode.Protocol, `file`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: `sqlite::CxzhD*624:2@7jh@file(/var/data/db.sqlite3)`,
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Type, `sqlite`)
+		t.Assert(newNode.User, ``)
+		t.Assert(newNode.Pass, `CxzhD*624:2@7jh`)
+		t.Assert(newNode.Host, ``)
+		t.Assert(newNode.Port, ``)
+		t.Assert(newNode.Name, `/var/data/db.sqlite3`)
+		t.Assert(newNode.Extra, ``)
+		t.Assert(newNode.Charset, defaultCharset)
+		t.Assert(newNode.Protocol, `file`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: `sqlite::@file(/var/data/db.sqlite3)`,
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Type, `sqlite`)
+		t.Assert(newNode.User, ``)
+		t.Assert(newNode.Pass, ``)
+		t.Assert(newNode.Host, ``)
+		t.Assert(newNode.Port, ``)
+		t.Assert(newNode.Name, `/var/data/db.sqlite3`)
+		t.Assert(newNode.Extra, ``)
+		t.Assert(newNode.Charset, defaultCharset)
+		t.Assert(newNode.Protocol, `file`)
+	})
+	// #3146
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: `pgsql:BASIC$xxxx:123456@tcp(xxxx.hologres.aliyuncs.com:80)/xxx`,
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Type, `pgsql`)
+		t.Assert(newNode.User, `BASIC$xxxx`)
+		t.Assert(newNode.Pass, `123456`)
+		t.Assert(newNode.Host, `xxxx.hologres.aliyuncs.com`)
+		t.Assert(newNode.Port, `80`)
+		t.Assert(newNode.Name, `xxx`)
+		t.Assert(newNode.Extra, ``)
+		t.Assert(newNode.Charset, defaultCharset)
+		t.Assert(newNode.Protocol, `tcp`)
+	})
+	// https://github.com/gogf/gf/issues/3755
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: "mysql:user:pwd@tcp(rdsid.mysql.rds.aliyuncs.com)/dbname?charset=utf8&loc=Local",
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Type, `mysql`)
+		t.Assert(newNode.User, `user`)
+		t.Assert(newNode.Pass, `pwd`)
+		t.Assert(newNode.Host, `rdsid.mysql.rds.aliyuncs.com`)
+		t.Assert(newNode.Port, ``)
+		t.Assert(newNode.Name, `dbname`)
+		t.Assert(newNode.Extra, `charset=utf8&loc=Local`)
+		t.Assert(newNode.Charset, `utf8`)
+		t.Assert(newNode.Protocol, `tcp`)
+	})
+	// https://github.com/gogf/gf/issues/3862
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: "mysql:username:password@unix(/tmp/mysql.sock)/dbname",
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Type, `mysql`)
+		t.Assert(newNode.User, `username`)
+		t.Assert(newNode.Pass, `password`)
+		t.Assert(newNode.Host, `/tmp/mysql.sock`)
+		t.Assert(newNode.Port, ``)
+		t.Assert(newNode.Name, `dbname`)
+		t.Assert(newNode.Extra, ``)
+		t.Assert(newNode.Charset, `utf8`)
+		t.Assert(newNode.Protocol, `unix`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Type: "mysql",
+			Link: "username:password@unix(/tmp/mysql.sock)/dbname",
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Type, `mysql`)
+		t.Assert(newNode.User, `username`)
+		t.Assert(newNode.Pass, `password`)
+		t.Assert(newNode.Host, `/tmp/mysql.sock`)
+		t.Assert(newNode.Port, ``)
+		t.Assert(newNode.Name, `dbname`)
+		t.Assert(newNode.Extra, ``)
+		t.Assert(newNode.Charset, `utf8`)
+		t.Assert(newNode.Protocol, `unix`)
+	})
+	// https://github.com/gogf/gf/issues/4059
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: "tidb:2hcmRccccxxx9Fizz.root:wP3xxxxPIDc@tcp(xxxx.tidbcloud.com:4000)/db_name?tls=true",
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Type, `tidb`)
+		t.Assert(newNode.User, `2hcmRccccxxx9Fizz.root`)
+		t.Assert(newNode.Pass, `wP3xxxxPIDc`)
+		t.Assert(newNode.Host, `xxxx.tidbcloud.com`)
+		t.Assert(newNode.Port, `4000`)
+		t.Assert(newNode.Name, `db_name`)
+		t.Assert(newNode.Extra, `tls=true`)
+		t.Assert(newNode.Charset, `utf8`)
+		t.Assert(newNode.Protocol, `tcp`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Type: "tidb",
+			Link: "2hcmRccccxxx9Fizz.root:wP3xxxxPIDc@tcp(xxxx.tidbcloud.com:4000)/db_name?tls=true",
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Type, `tidb`)
+		t.Assert(newNode.User, `2hcmRccccxxx9Fizz.root`)
+		t.Assert(newNode.Pass, `wP3xxxxPIDc`)
+		t.Assert(newNode.Host, `xxxx.tidbcloud.com`)
+		t.Assert(newNode.Port, `4000`)
+		t.Assert(newNode.Name, `db_name`)
+		t.Assert(newNode.Extra, `tls=true`)
+		t.Assert(newNode.Charset, `utf8`)
+		t.Assert(newNode.Protocol, `tcp`)
+	})
+}
 
 func Test_Func_doQuoteWord(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
@@ -72,7 +394,7 @@ func Test_Func_addTablePrefix(t *testing.T) {
 			"UserCenter..user as u, user_detail as ut": "`UserCenter`..`user` as u,`user_detail` as ut",
 		}
 		for k, v := range array {
-			t.Assert(doHandleTableName(k, prefix, "`", "`"), v)
+			t.Assert(doQuoteTableName(k, prefix, "`", "`"), v)
 		}
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -91,7 +413,7 @@ func Test_Func_addTablePrefix(t *testing.T) {
 			"UserCenter..user as u, user_detail as ut": "`UserCenter`..`gf_user` as u,`gf_user_detail` as ut",
 		}
 		for k, v := range array {
-			t.Assert(doHandleTableName(k, prefix, "`", "`"), v)
+			t.Assert(doQuoteTableName(k, prefix, "`", "`"), v)
 		}
 	})
 }

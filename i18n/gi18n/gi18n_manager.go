@@ -23,24 +23,41 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// pathType is the type for i18n file path.
+type pathType string
+
+const (
+	pathTypeNone   pathType = "none"
+	pathTypeNormal pathType = "normal"
+	pathTypeGres   pathType = "gres"
+)
+
 // Manager for i18n contents, it is concurrent safe, supporting hot reload.
 type Manager struct {
-	mu      sync.RWMutex
-	data    map[string]map[string]string // Translating map.
-	pattern string                       // Pattern for regex parsing.
-	options Options                      // configuration options.
+	mu       sync.RWMutex
+	data     map[string]map[string]string // Translating map.
+	pattern  string                       // Pattern for regex parsing.
+	pathType pathType                     // Path type for i18n files.
+	options  Options                      // configuration options.
 }
 
 // Options is used for i18n object configuration.
 type Options struct {
-	Path       string   // I18n files storage path.
-	Language   string   // Default local language.
-	Delimiters []string // Delimiters for variable parsing.
+	Path       string         // I18n files storage path.
+	Language   string         // Default local language.
+	Delimiters []string       // Delimiters for variable parsing.
+	Resource   *gres.Resource // Resource for i18n files.
 }
 
 var (
-	defaultLanguage   = "en"                // defaultDelimiters defines the default language if user does not specified in options.
-	defaultDelimiters = []string{"{#", "}"} // defaultDelimiters defines the default key variable delimiters.
+	// defaultLanguage defines the default language if user does not specify in options.
+	defaultLanguage = "en"
+
+	// defaultDelimiters defines the default key variable delimiters.
+	defaultDelimiters = []string{"{#", "}"}
+
+	// i18n files searching folders.
+	searchFolders = []string{"manifest/i18n", "manifest/config/i18n", "i18n"}
 )
 
 // New creates and returns a new i18n manager.
@@ -48,10 +65,25 @@ var (
 // It uses a default one if it's not passed.
 func New(options ...Options) *Manager {
 	var opts Options
+	var pathType = pathTypeNone
 	if len(options) > 0 {
 		opts = options[0]
+		pathType = opts.checkPathType(opts.Path)
 	} else {
-		opts = DefaultOptions()
+		opts = Options{}
+		for _, folder := range searchFolders {
+			pathType = opts.checkPathType(folder)
+			if pathType != pathTypeNone {
+				break
+			}
+		}
+		if opts.Path != "" {
+			// To avoid of the source path of GoFrame: github.com/gogf/i18n/gi18n
+			if gfile.Exists(opts.Path + gfile.Separator + "gi18n") {
+				opts.Path = ""
+				pathType = pathTypeNone
+			}
+		}
 	}
 	if len(opts.Language) == 0 {
 		opts.Language = defaultLanguage
@@ -62,47 +94,51 @@ func New(options ...Options) *Manager {
 	m := &Manager{
 		options: opts,
 		pattern: fmt.Sprintf(
-			`%s(\w+)%s`,
+			`%s(.+?)%s`,
 			gregex.Quote(opts.Delimiters[0]),
 			gregex.Quote(opts.Delimiters[1]),
 		),
+		pathType: pathType,
 	}
 	intlog.Printf(context.TODO(), `New: %#v`, m)
 	return m
 }
 
-// DefaultOptions creates and returns a default options for i18n manager.
-func DefaultOptions() Options {
-	var (
-		path        = "i18n"
-		realPath, _ = gfile.Search(path)
-	)
+// checkPathType checks and returns the path type for given directory path.
+func (o *Options) checkPathType(dirPath string) pathType {
+	if dirPath == "" {
+		return pathTypeNone
+	}
+
+	if o.Resource == nil {
+		o.Resource = gres.Instance()
+	}
+
+	if o.Resource.Contains(dirPath) {
+		o.Path = dirPath
+		return pathTypeGres
+	}
+
+	realPath, _ := gfile.Search(dirPath)
 	if realPath != "" {
-		path = realPath
-		// To avoid of the source path of GF: github.com/gogf/i18n/gi18n
-		if gfile.Exists(path + gfile.Separator + "gi18n") {
-			path = ""
-		}
+		o.Path = realPath
+		return pathTypeNormal
 	}
-	return Options{
-		Path:       path,
-		Language:   "en",
-		Delimiters: defaultDelimiters,
-	}
+
+	return pathTypeNone
 }
 
 // SetPath sets the directory path storing i18n files.
 func (m *Manager) SetPath(path string) error {
-	if gres.Contains(path) {
-		m.options.Path = path
-	} else {
-		realPath, _ := gfile.Search(path)
-		if realPath == "" {
-			return gerror.NewCodef(gcode.CodeInvalidParameter, `%s does not exist`, path)
-		}
-		m.options.Path = realPath
+	pathType := m.options.checkPathType(path)
+	if pathType == pathTypeNone {
+		return gerror.NewCodef(gcode.CodeInvalidParameter, `%s does not exist`, path)
 	}
-	intlog.Printf(context.TODO(), `SetPath: %s`, m.options.Path)
+
+	m.pathType = pathType
+	intlog.Printf(context.TODO(), `SetPath[%s]: %s`, m.pathType, m.options.Path)
+	// Reset the manager after path changed.
+	m.reset()
 	return nil
 }
 
@@ -114,7 +150,7 @@ func (m *Manager) SetLanguage(language string) {
 
 // SetDelimiters sets the delimiters for translator.
 func (m *Manager) SetDelimiters(left, right string) {
-	m.pattern = fmt.Sprintf(`%s(\w+)%s`, gregex.Quote(left), gregex.Quote(right))
+	m.pattern = fmt.Sprintf(`%s(.+?)%s`, gregex.Quote(left), gregex.Quote(right))
 	intlog.Printf(context.TODO(), `SetDelimiters: %v`, m.pattern)
 }
 
@@ -158,6 +194,8 @@ func (m *Manager) Translate(ctx context.Context, content string) string {
 			if v, ok := data[match[1]]; ok {
 				return v
 			}
+			// return match[1] will return the content between delimiters
+			// return match[0] will return the original content
 			return match[0]
 		})
 	intlog.Printf(ctx, `Translate for language: %s`, transLang)
@@ -180,6 +218,13 @@ func (m *Manager) GetContent(ctx context.Context, key string) string {
 	return ""
 }
 
+// reset reset data of the manager.
+func (m *Manager) reset() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.data = nil
+}
+
 // init initializes the manager for lazy initialization design.
 // The i18n manager is only initialized once.
 func (m *Manager) init(ctx context.Context) {
@@ -191,10 +236,17 @@ func (m *Manager) init(ctx context.Context) {
 	}
 	m.mu.RUnlock()
 
+	defer func() {
+		intlog.Printf(ctx, `Manager init finish: %#v`, m)
+	}()
+
+	intlog.Printf(ctx, `init path: %s`, m.options.Path)
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if gres.Contains(m.options.Path) {
-		files := gres.ScanDirFile(m.options.Path, "*.*", true)
+	switch m.pathType {
+	case pathTypeGres:
+		files := m.options.Resource.ScanDirFile(m.options.Path, "*.*", true)
 		if len(files) > 0 {
 			var (
 				path  string
@@ -209,7 +261,7 @@ func (m *Manager) init(ctx context.Context) {
 				array = strings.Split(path, "/")
 				if len(array) > 1 {
 					lang = array[0]
-				} else {
+				} else if len(array) == 1 {
 					lang = gfile.Name(array[0])
 				}
 				if m.data[lang] == nil {
@@ -224,7 +276,7 @@ func (m *Manager) init(ctx context.Context) {
 				}
 			}
 		}
-	} else if m.options.Path != "" {
+	case pathTypeNormal:
 		files, _ := gfile.ScanDirFile(m.options.Path, "*.*", true)
 		if len(files) == 0 {
 			return
@@ -240,7 +292,7 @@ func (m *Manager) init(ctx context.Context) {
 			array = strings.Split(path, gfile.Separator)
 			if len(array) > 1 {
 				lang = array[0]
-			} else {
+			} else if len(array) == 1 {
 				lang = gfile.Name(array[0])
 			}
 			if m.data[lang] == nil {
@@ -254,12 +306,12 @@ func (m *Manager) init(ctx context.Context) {
 				intlog.Errorf(ctx, "load i18n file '%s' failed: %+v", file, err)
 			}
 		}
+		intlog.Printf(ctx, "i18n files loaded in path: %s", m.options.Path)
 		// Monitor changes of i18n files for hot reload feature.
-		_, _ = gfsnotify.Add(path, func(event *gfsnotify.Event) {
+		_, _ = gfsnotify.Add(m.options.Path, func(event *gfsnotify.Event) {
+			intlog.Printf(ctx, `i18n file changed: %s`, event.Path)
 			// Any changes of i18n files, clear the data.
-			m.mu.Lock()
-			m.data = nil
-			m.mu.Unlock()
+			m.reset()
 			gfsnotify.Exit()
 		})
 	}

@@ -35,9 +35,22 @@ func Test_Int64(t *testing.T) {
 		wg.Wait()
 		t.AssertEQ(int64(addTimes), i.Val())
 
-		// 空参测试
+		// empty param test
 		i1 := gtype.NewInt64()
 		t.AssertEQ(i1.Val(), int64(0))
+
+		i2 := gtype.NewInt64(11)
+		t.AssertEQ(i2.Add(1), int64(12))
+		t.AssertEQ(i2.Cas(11, 13), false)
+		t.AssertEQ(i2.Cas(12, 13), true)
+		t.AssertEQ(i2.String(), "13")
+
+		copyVal := i2.DeepCopy()
+		i2.Set(14)
+		t.AssertNE(copyVal, iClone.Val())
+		i2 = nil
+		copyVal = i2.DeepCopy()
+		t.AssertNil(copyVal)
 	})
 }
 

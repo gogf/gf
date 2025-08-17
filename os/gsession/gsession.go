@@ -15,7 +15,7 @@ import (
 
 var (
 	// ErrorDisabled is used for marking certain interface function not used.
-	ErrorDisabled = gerror.NewOption(gerror.Option{
+	ErrorDisabled = gerror.NewWithOption(gerror.Option{
 		Text: "this feature is disabled in this storage",
 		Code: gcode.CodeNotSupported,
 	})

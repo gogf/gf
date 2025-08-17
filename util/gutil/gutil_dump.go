@@ -8,6 +8,7 @@ package gutil
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"reflect"
@@ -81,11 +82,16 @@ func DumpTo(writer io.Writer, value interface{}, option DumpOption) {
 }
 
 type doDumpOption struct {
-	WithType     bool
-	ExportedOnly bool
+	WithType         bool
+	ExportedOnly     bool
+	DumpedPointerSet map[string]struct{}
 }
 
 func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDumpOption) {
+	if option.DumpedPointerSet == nil {
+		option.DumpedPointerSet = map[string]struct{}{}
+	}
+
 	if value == nil {
 		buffer.WriteString(`<nil>`)
 		return
@@ -103,34 +109,37 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 	} else {
 		reflectValue = reflect.ValueOf(value)
 	}
+	var reflectKind = reflectValue.Kind()
 	// Double check nil value.
-	if value == nil {
+	if value == nil || reflectKind == reflect.Invalid {
 		buffer.WriteString(`<nil>`)
 		return
 	}
 	var (
-		reflectKind     = reflectValue.Kind()
 		reflectTypeName = reflectValue.Type().String()
+		ptrAddress      string
 		newIndent       = indent + dumpIndent
 	)
 	reflectTypeName = strings.ReplaceAll(reflectTypeName, `[]uint8`, `[]byte`)
-	if !option.WithType {
-		reflectTypeName = ""
-	}
 	for reflectKind == reflect.Ptr {
+		if ptrAddress == "" {
+			ptrAddress = fmt.Sprintf(`0x%x`, reflectValue.Pointer())
+		}
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
 	var (
 		exportInternalInput = doDumpInternalInput{
-			Value:           value,
-			Indent:          indent,
-			NewIndent:       newIndent,
-			Buffer:          buffer,
-			Option:          option,
-			ReflectValue:    reflectValue,
-			ReflectTypeName: reflectTypeName,
-			ExportedOnly:    option.ExportedOnly,
+			Value:            value,
+			Indent:           indent,
+			NewIndent:        newIndent,
+			Buffer:           buffer,
+			Option:           option,
+			PtrAddress:       ptrAddress,
+			ReflectValue:     reflectValue,
+			ReflectTypeName:  reflectTypeName,
+			ExportedOnly:     option.ExportedOnly,
+			DumpedPointerSet: option.DumpedPointerSet,
 		}
 	)
 	switch reflectKind {
@@ -185,14 +194,16 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 }
 
 type doDumpInternalInput struct {
-	Value           interface{}
-	Indent          string
-	NewIndent       string
-	Buffer          *bytes.Buffer
-	Option          doDumpOption
-	ReflectValue    reflect.Value
-	ReflectTypeName string
-	ExportedOnly    bool
+	Value            interface{}
+	Indent           string
+	NewIndent        string
+	Buffer           *bytes.Buffer
+	Option           doDumpOption
+	ReflectValue     reflect.Value
+	ReflectTypeName  string
+	PtrAddress       string
+	ExportedOnly     bool
+	DumpedPointerSet map[string]struct{}
 }
 
 func doDumpSlice(in doDumpInternalInput) {
@@ -295,6 +306,14 @@ func doDumpMap(in doDumpInternalInput) {
 }
 
 func doDumpStruct(in doDumpInternalInput) {
+	if in.PtrAddress != "" {
+		if _, ok := in.DumpedPointerSet[in.PtrAddress]; ok {
+			in.Buffer.WriteString(fmt.Sprintf(`<cycle dump %s>`, in.PtrAddress))
+			return
+		}
+	}
+	in.DumpedPointerSet[in.PtrAddress] = struct{}{}
+
 	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         in.Value,
 		RecursiveOption: gstructs.RecursiveOptionEmbedded,
@@ -446,8 +465,37 @@ func doDumpDefault(in doDumpInternalInput) {
 func addSlashesForString(s string) string {
 	return gstr.ReplaceByMap(s, map[string]string{
 		`"`:  `\"`,
+		`'`:  `\'`,
 		"\r": `\r`,
 		"\t": `\t`,
 		"\n": `\n`,
 	})
+}
+
+// DumpJson pretty dumps json content to stdout.
+func DumpJson(value any) {
+	switch result := value.(type) {
+	case []byte:
+		doDumpJson(result)
+	case string:
+		doDumpJson([]byte(result))
+	default:
+		jsonContent, err := json.Marshal(value)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		doDumpJson(jsonContent)
+	}
+}
+
+func doDumpJson(jsonContent []byte) {
+	var (
+		buffer    = bytes.NewBuffer(nil)
+		jsonBytes = jsonContent
+	)
+	if err := json.Indent(buffer, jsonBytes, "", "    "); err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(buffer.String())
 }

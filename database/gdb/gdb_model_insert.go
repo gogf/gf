@@ -14,8 +14,8 @@ import (
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/reflection"
-	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
@@ -39,23 +39,19 @@ func (m *Model) Batch(batch int) *Model {
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"}).
 func (m *Model) Data(data ...interface{}) *Model {
-	var (
-		err   error
-		ctx   = m.GetCtx()
-		model = m.getModel()
-	)
+	var model = m.getModel()
 	if len(data) > 1 {
 		if s := gconv.String(data[0]); gstr.Contains(s, "?") {
 			model.data = s
 			model.extraArgs = data[1:]
 		} else {
-			m := make(map[string]interface{})
+			newData := make(map[string]interface{})
 			for i := 0; i < len(data); i += 2 {
-				m[gconv.String(data[i])] = data[i+1]
+				newData[gconv.String(data[i])] = data[i+1]
 			}
-			model.data = m
+			model.data = newData
 		}
-	} else {
+	} else if len(data) == 1 {
 		switch value := data[0].(type) {
 		case Result:
 			model.data = value.List()
@@ -88,10 +84,7 @@ func (m *Model) Data(data ...interface{}) *Model {
 				}
 				list := make(List, reflectInfo.OriginValue.Len())
 				for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
-					list[i], err = m.db.ConvertDataForRecord(ctx, reflectInfo.OriginValue.Index(i).Interface())
-					if err != nil {
-						panic(err)
-					}
+					list[i] = anyValueToMapBeforeToRecord(reflectInfo.OriginValue.Index(i).Interface())
 				}
 				model.data = list
 
@@ -108,24 +101,15 @@ func (m *Model) Data(data ...interface{}) *Model {
 						list  = make(List, len(array))
 					)
 					for i := 0; i < len(array); i++ {
-						list[i], err = m.db.ConvertDataForRecord(ctx, array[i])
-						if err != nil {
-							panic(err)
-						}
+						list[i] = anyValueToMapBeforeToRecord(array[i])
 					}
 					model.data = list
 				} else {
-					model.data, err = m.db.ConvertDataForRecord(ctx, data[0])
-					if err != nil {
-						panic(err)
-					}
+					model.data = anyValueToMapBeforeToRecord(data[0])
 				}
 
 			case reflect.Map:
-				model.data, err = m.db.ConvertDataForRecord(ctx, data[0])
-				if err != nil {
-					panic(err)
-				}
+				model.data = anyValueToMapBeforeToRecord(data[0])
 
 			default:
 				model.data = data[0]
@@ -135,23 +119,45 @@ func (m *Model) Data(data ...interface{}) *Model {
 	return model
 }
 
+// OnConflict sets the primary key or index when columns conflicts occurs.
+// It's not necessary for MySQL driver.
+func (m *Model) OnConflict(onConflict ...interface{}) *Model {
+	if len(onConflict) == 0 {
+		return m
+	}
+	model := m.getModel()
+	if len(onConflict) > 1 {
+		model.onConflict = onConflict
+	} else if len(onConflict) == 1 {
+		model.onConflict = onConflict[0]
+	}
+	return model
+}
+
 // OnDuplicate sets the operations when columns conflicts occurs.
 // In MySQL, this is used for "ON DUPLICATE KEY UPDATE" statement.
+// In PgSQL, this is used for "ON CONFLICT (id) DO UPDATE SET" statement.
 // The parameter `onDuplicate` can be type of string/Raw/*Raw/map/slice.
 // Example:
+//
 // OnDuplicate("nickname, age")
 // OnDuplicate("nickname", "age")
-// OnDuplicate(g.Map{
-//     "nickname": gdb.Raw("CONCAT('name_', VALUES(`nickname`))"),
-// })
-// OnDuplicate(g.Map{
-//     "nickname": "passport",
-// }).
+//
+//	OnDuplicate(g.Map{
+//		  "nickname": gdb.Raw("CONCAT('name_', VALUES(`nickname`))"),
+//	})
+//
+//	OnDuplicate(g.Map{
+//		  "nickname": "passport",
+//	}).
 func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
+	if len(onDuplicate) == 0 {
+		return m
+	}
 	model := m.getModel()
 	if len(onDuplicate) > 1 {
 		model.onDuplicate = onDuplicate
-	} else {
+	} else if len(onDuplicate) == 1 {
 		model.onDuplicate = onDuplicate[0]
 	}
 	return model
@@ -159,19 +165,25 @@ func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
 
 // OnDuplicateEx sets the excluding columns for operations when columns conflict occurs.
 // In MySQL, this is used for "ON DUPLICATE KEY UPDATE" statement.
+// In PgSQL, this is used for "ON CONFLICT (id) DO UPDATE SET" statement.
 // The parameter `onDuplicateEx` can be type of string/map/slice.
 // Example:
+//
 // OnDuplicateEx("passport, password")
 // OnDuplicateEx("passport", "password")
-// OnDuplicateEx(g.Map{
-//     "passport": "",
-//     "password": "",
-// }).
+//
+//	OnDuplicateEx(g.Map{
+//		  "passport": "",
+//		  "password": "",
+//	}).
 func (m *Model) OnDuplicateEx(onDuplicateEx ...interface{}) *Model {
+	if len(onDuplicateEx) == 0 {
+		return m
+	}
 	model := m.getModel()
 	if len(onDuplicateEx) > 1 {
 		model.onDuplicateEx = onDuplicateEx
-	} else {
+	} else if len(onDuplicateEx) == 1 {
 		model.onDuplicateEx = onDuplicateEx[0]
 	}
 	return model
@@ -238,7 +250,7 @@ func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
 }
 
 // doInsertWithOption inserts data with option parameter.
-func (m *Model) doInsertWithOption(ctx context.Context, insertOption int) (result sql.Result, err error) {
+func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOption) (result sql.Result, err error) {
 	defer func() {
 		if err == nil {
 			m.checkAndRemoveSelectCache(ctx)
@@ -248,81 +260,24 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption int) (resul
 		return nil, gerror.NewCode(gcode.CodeMissingParameter, "inserting into table with empty data")
 	}
 	var (
-		list            List
-		nowString       = gtime.Now().String()
-		fieldNameCreate = m.getSoftFieldNameCreated()
-		fieldNameUpdate = m.getSoftFieldNameUpdated()
+		list                             List
+		stm                              = m.softTimeMaintainer()
+		fieldNameCreate, fieldTypeCreate = stm.GetFieldNameAndTypeForCreate(ctx, "", m.tablesInit)
+		fieldNameUpdate, fieldTypeUpdate = stm.GetFieldNameAndTypeForUpdate(ctx, "", m.tablesInit)
+		fieldNameDelete, fieldTypeDelete = stm.GetFieldNameAndTypeForDelete(ctx, "", m.tablesInit)
 	)
+	// m.data was already converted to type List/Map by function Data
 	newData, err := m.filterDataForInsertOrUpdate(m.data)
 	if err != nil {
 		return nil, err
 	}
 	// It converts any data to List type for inserting.
 	switch value := newData.(type) {
-	case Result:
-		list = value.List()
-
-	case Record:
-		list = List{value.Map()}
-
 	case List:
 		list = value
-		for i, v := range list {
-			list[i], err = m.db.ConvertDataForRecord(ctx, v)
-			if err != nil {
-				return nil, err
-			}
-		}
 
 	case Map:
-		var listItem map[string]interface{}
-		if listItem, err = m.db.ConvertDataForRecord(ctx, value); err != nil {
-			return nil, err
-		}
-		list = List{listItem}
-
-	default:
-		reflectInfo := reflection.OriginValueAndKind(newData)
-		switch reflectInfo.OriginKind {
-		// If it's slice type, it then converts it to List type.
-		case reflect.Slice, reflect.Array:
-			list = make(List, reflectInfo.OriginValue.Len())
-			for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
-				list[i], err = m.db.ConvertDataForRecord(ctx, reflectInfo.OriginValue.Index(i).Interface())
-			}
-
-		case reflect.Map:
-			var listItem map[string]interface{}
-			if listItem, err = m.db.ConvertDataForRecord(ctx, value); err != nil {
-				return nil, err
-			}
-			list = List{listItem}
-
-		case reflect.Struct:
-			if v, ok := value.(iInterfaces); ok {
-				array := v.Interfaces()
-				list = make(List, len(array))
-				for i := 0; i < len(array); i++ {
-					list[i], err = m.db.ConvertDataForRecord(ctx, array[i])
-					if err != nil {
-						return nil, err
-					}
-				}
-			} else {
-				var listItem map[string]interface{}
-				if listItem, err = m.db.ConvertDataForRecord(ctx, value); err != nil {
-					return nil, err
-				}
-				list = List{listItem}
-			}
-
-		default:
-			return result, gerror.NewCodef(
-				gcode.CodeInvalidParameter,
-				"unsupported data list type: %v",
-				reflectInfo.InputValue.Type(),
-			)
-		}
+		list = List{value}
 	}
 
 	if len(list) < 1 {
@@ -330,13 +285,33 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption int) (resul
 	}
 
 	// Automatic handling for creating/updating time.
-	if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
+	if fieldNameCreate != "" && m.isFieldInFieldsEx(fieldNameCreate) {
+		fieldNameCreate = ""
+	}
+	if fieldNameUpdate != "" && m.isFieldInFieldsEx(fieldNameUpdate) {
+		fieldNameUpdate = ""
+	}
+	var isSoftTimeFeatureEnabled = fieldNameCreate != "" || fieldNameUpdate != ""
+	if !m.unscoped && isSoftTimeFeatureEnabled {
 		for k, v := range list {
-			if fieldNameCreate != "" {
-				v[fieldNameCreate] = nowString
+			if fieldNameCreate != "" && empty.IsNil(v[fieldNameCreate]) {
+				fieldCreateValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeCreate, false)
+				if fieldCreateValue != nil {
+					v[fieldNameCreate] = fieldCreateValue
+				}
 			}
-			if fieldNameUpdate != "" {
-				v[fieldNameUpdate] = nowString
+			if fieldNameUpdate != "" && empty.IsNil(v[fieldNameUpdate]) {
+				fieldUpdateValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate, false)
+				if fieldUpdateValue != nil {
+					v[fieldNameUpdate] = fieldUpdateValue
+				}
+			}
+			// for timestamp field that should initialize the delete_at field with value, for example 0.
+			if fieldNameDelete != "" && empty.IsNil(v[fieldNameDelete]) {
+				fieldDeleteValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeDelete, true)
+				if fieldDeleteValue != nil {
+					v[fieldNameDelete] = fieldDeleteValue
+				}
 			}
 			list[k] = v
 		}
@@ -360,74 +335,83 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption int) (resul
 		},
 		Model:  m,
 		Table:  m.tables,
+		Schema: m.schema,
 		Data:   list,
 		Option: doInsertOption,
 	}
 	return in.Next(ctx)
 }
 
-func (m *Model) formatDoInsertOption(insertOption int, columnNames []string) (option DoInsertOption, err error) {
+func (m *Model) formatDoInsertOption(insertOption InsertOption, columnNames []string) (option DoInsertOption, err error) {
 	option = DoInsertOption{
 		InsertOption: insertOption,
 		BatchCount:   m.getBatch(),
 	}
-	if insertOption == InsertOptionSave {
-		onDuplicateExKeys, err := m.formatOnDuplicateExKeys(m.onDuplicateEx)
-		if err != nil {
-			return option, err
-		}
-		onDuplicateExKeySet := gset.NewStrSetFrom(onDuplicateExKeys)
-		if m.onDuplicate != nil {
-			switch m.onDuplicate.(type) {
-			case Raw, *Raw:
-				option.OnDuplicateStr = gconv.String(m.onDuplicate)
+	if insertOption != InsertOptionSave {
+		return
+	}
+
+	onConflictKeys, err := m.formatOnConflictKeys(m.onConflict)
+	if err != nil {
+		return option, err
+	}
+	option.OnConflict = onConflictKeys
+
+	onDuplicateExKeys, err := m.formatOnDuplicateExKeys(m.onDuplicateEx)
+	if err != nil {
+		return option, err
+	}
+	onDuplicateExKeySet := gset.NewStrSetFrom(onDuplicateExKeys)
+	if m.onDuplicate != nil {
+		switch m.onDuplicate.(type) {
+		case Raw, *Raw:
+			option.OnDuplicateStr = gconv.String(m.onDuplicate)
+
+		default:
+			reflectInfo := reflection.OriginValueAndKind(m.onDuplicate)
+			switch reflectInfo.OriginKind {
+			case reflect.String:
+				option.OnDuplicateMap = make(map[string]interface{})
+				for _, v := range gstr.SplitAndTrim(reflectInfo.OriginValue.String(), ",") {
+					if onDuplicateExKeySet.Contains(v) {
+						continue
+					}
+					option.OnDuplicateMap[v] = v
+				}
+
+			case reflect.Map:
+				option.OnDuplicateMap = make(map[string]interface{})
+				for k, v := range gconv.Map(m.onDuplicate) {
+					if onDuplicateExKeySet.Contains(k) {
+						continue
+					}
+					option.OnDuplicateMap[k] = v
+				}
+
+			case reflect.Slice, reflect.Array:
+				option.OnDuplicateMap = make(map[string]interface{})
+				for _, v := range gconv.Strings(m.onDuplicate) {
+					if onDuplicateExKeySet.Contains(v) {
+						continue
+					}
+					option.OnDuplicateMap[v] = v
+				}
 
 			default:
-				reflectInfo := reflection.OriginValueAndKind(m.onDuplicate)
-				switch reflectInfo.OriginKind {
-				case reflect.String:
-					option.OnDuplicateMap = make(map[string]interface{})
-					for _, v := range gstr.SplitAndTrim(reflectInfo.OriginValue.String(), ",") {
-						if onDuplicateExKeySet.Contains(v) {
-							continue
-						}
-						option.OnDuplicateMap[v] = v
-					}
-
-				case reflect.Map:
-					option.OnDuplicateMap = make(map[string]interface{})
-					for k, v := range gconv.Map(m.onDuplicate) {
-						if onDuplicateExKeySet.Contains(k) {
-							continue
-						}
-						option.OnDuplicateMap[k] = v
-					}
-
-				case reflect.Slice, reflect.Array:
-					option.OnDuplicateMap = make(map[string]interface{})
-					for _, v := range gconv.Strings(m.onDuplicate) {
-						if onDuplicateExKeySet.Contains(v) {
-							continue
-						}
-						option.OnDuplicateMap[v] = v
-					}
-
-				default:
-					return option, gerror.NewCodef(
-						gcode.CodeInvalidParameter,
-						`unsupported OnDuplicate parameter type "%s"`,
-						reflect.TypeOf(m.onDuplicate),
-					)
-				}
+				return option, gerror.NewCodef(
+					gcode.CodeInvalidParameter,
+					`unsupported OnDuplicate parameter type "%s"`,
+					reflect.TypeOf(m.onDuplicate),
+				)
 			}
-		} else if onDuplicateExKeySet.Size() > 0 {
-			option.OnDuplicateMap = make(map[string]interface{})
-			for _, v := range columnNames {
-				if onDuplicateExKeySet.Contains(v) {
-					continue
-				}
-				option.OnDuplicateMap[v] = v
+		}
+	} else if onDuplicateExKeySet.Size() > 0 {
+		option.OnDuplicateMap = make(map[string]interface{})
+		for _, v := range columnNames {
+			if onDuplicateExKeySet.Contains(v) {
+				continue
 			}
+			option.OnDuplicateMap[v] = v
 		}
 	}
 	return
@@ -454,6 +438,28 @@ func (m *Model) formatOnDuplicateExKeys(onDuplicateEx interface{}) ([]string, er
 			gcode.CodeInvalidParameter,
 			`unsupported OnDuplicateEx parameter type "%s"`,
 			reflect.TypeOf(onDuplicateEx),
+		)
+	}
+}
+
+func (m *Model) formatOnConflictKeys(onConflict interface{}) ([]string, error) {
+	if onConflict == nil {
+		return nil, nil
+	}
+
+	reflectInfo := reflection.OriginValueAndKind(onConflict)
+	switch reflectInfo.OriginKind {
+	case reflect.String:
+		return gstr.SplitAndTrim(reflectInfo.OriginValue.String(), ","), nil
+
+	case reflect.Slice, reflect.Array:
+		return gconv.Strings(onConflict), nil
+
+	default:
+		return nil, gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`unsupported onConflict parameter type "%s"`,
+			reflect.TypeOf(onConflict),
 		)
 	}
 }

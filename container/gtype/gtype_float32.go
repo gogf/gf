@@ -90,5 +90,8 @@ func (v *Float32) UnmarshalValue(value interface{}) error {
 
 // DeepCopy implements interface for deep copy of current type.
 func (v *Float32) DeepCopy() interface{} {
+	if v == nil {
+		return nil
+	}
 	return NewFloat32(v.Val())
 }

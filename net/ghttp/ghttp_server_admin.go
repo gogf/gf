@@ -8,6 +8,7 @@ package ghttp
 
 import (
 	"context"
+	"os"
 	"strings"
 	"time"
 
@@ -35,8 +36,14 @@ func (p *utilAdmin) Index(r *Request) {
             <body>
                 <p>Pid: {{.pid}}</p>
                 <p>File Path: {{.path}}</p>
-                <p><a href="{{$.uri}}/restart">Restart</a></p>
-                <p><a href="{{$.uri}}/shutdown">Shutdown</a></p>
+                <p>
+<a href="{{$.uri}}/restart">Restart</a>
+please make sure it is running using standalone binary not from IDE or "go run"
+</p>
+                <p>
+<a href="{{$.uri}}/shutdown">Shutdown</a>
+graceful shutdown the server
+</p>
             </body>
             </html>
     `, data)
@@ -52,14 +59,9 @@ func (p *utilAdmin) Restart(r *Request) {
 	// Custom start binary path when this process exits.
 	path := r.GetQuery("newExeFilePath").String()
 	if path == "" {
-		path = gfile.SelfPath()
+		path = os.Args[0]
 	}
-	if len(path) > 0 {
-		err = RestartAllServer(ctx, path)
-	} else {
-		err = RestartAllServer(ctx)
-	}
-	if err == nil {
+	if err = RestartAllServer(ctx, path); err == nil {
 		r.Response.WriteExit("server restarted")
 	} else {
 		r.Response.WriteExit(err.Error())
@@ -86,15 +88,25 @@ func (s *Server) EnableAdmin(pattern ...string) {
 	s.BindObject(p, &utilAdmin{})
 }
 
-// Shutdown shuts down current server.
+// Shutdown shuts the current server.
 func (s *Server) Shutdown() error {
-	var (
-		ctx = context.TODO()
-	)
+	var ctx = context.TODO()
+	// Remove plugins.
+	if len(s.plugins) > 0 {
+		for _, p := range s.plugins {
+			s.Logger().Printf(ctx, `remove plugin: %s`, p.Name())
+			if err := p.Remove(); err != nil {
+				s.Logger().Errorf(ctx, "%+v", err)
+			}
+		}
+	}
+
+	s.doServiceDeregister()
 	// Only shut down current servers.
 	// It may have multiple underlying http servers.
 	for _, v := range s.servers {
-		v.close(ctx)
+		v.Shutdown(ctx)
 	}
+	s.Logger().Infof(ctx, "pid[%d]: all servers shutdown", gproc.Pid())
 	return nil
 }

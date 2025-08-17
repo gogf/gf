@@ -8,9 +8,7 @@ package gcache
 
 import (
 	"context"
-	"time"
 
-	"github.com/gogf/gf/v2/os/gtimer"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -25,13 +23,15 @@ type localAdapter = Adapter
 // New creates and returns a new cache object using default memory adapter.
 // Note that the LRU feature is only available using memory adapter.
 func New(lruCap ...int) *Cache {
-	memAdapter := NewAdapterMemory(lruCap...)
-	c := &Cache{
-		localAdapter: memAdapter,
+	var adapter Adapter
+	if len(lruCap) == 0 {
+		adapter = NewAdapterMemory()
+	} else {
+		adapter = NewAdapterMemoryLru(lruCap[0])
 	}
-	// Here may be a "timer leak" if adapter is manually changed from memory adapter.
-	// Do not worry about this, as adapter is less changed, and it does nothing if it's not used.
-	gtimer.AddSingleton(context.Background(), time.Second, memAdapter.(*AdapterMemory).syncEventAndClearExpired)
+	c := &Cache{
+		localAdapter: adapter,
+	}
 	return c
 }
 

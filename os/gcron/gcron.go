@@ -27,13 +27,13 @@ var (
 	defaultCron = New()
 )
 
-// SetLogger sets the logger for cron.
-func SetLogger(logger *glog.Logger) {
+// SetLogger sets the global logger for cron.
+func SetLogger(logger glog.ILogger) {
 	defaultCron.SetLogger(logger)
 }
 
-// GetLogger returns the logger in the cron.
-func GetLogger() *glog.Logger {
+// GetLogger returns the global logger in the cron.
+func GetLogger() glog.ILogger {
 	return defaultCron.GetLogger()
 }
 
@@ -119,4 +119,9 @@ func Start(name ...string) {
 // If no`name` specified, it stops the entire cron.
 func Stop(name ...string) {
 	defaultCron.Stop(name...)
+}
+
+// StopGracefully Blocks and waits all current running jobs done.
+func StopGracefully() {
+	defaultCron.StopGracefully()
 }

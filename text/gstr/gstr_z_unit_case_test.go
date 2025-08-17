@@ -7,9 +7,9 @@
 package gstr_test
 
 import (
-	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 
+	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
@@ -18,6 +18,7 @@ func Test_CaseCamel(t *testing.T) {
 		{"test_case", "TestCase"},
 		{"test", "Test"},
 		{"TestCase", "TestCase"},
+		{"testCase", "TestCase"},
 		{" test  case ", "TestCase"},
 		{"userLogin_log.bak", "UserLoginLogBak"},
 		{"", ""},
@@ -189,6 +190,70 @@ func Test_CaseSnakeFirstUpper(t *testing.T) {
 		for _, item := range cases {
 			t.Assert(gstr.CaseSnakeFirstUpper(item[0]), item[1])
 		}
+
+		t.Assert(gstr.CaseSnakeFirstUpper("RGBCodeMd5", "."), "rgb.code.md5")
 	})
 
+}
+func Test_CaseTypeMatch(t *testing.T) {
+	caseTypes := []gstr.CaseType{
+		gstr.Camel,
+		gstr.CamelLower,
+		gstr.Snake,
+		gstr.SnakeFirstUpper,
+		gstr.SnakeScreaming,
+		gstr.Kebab,
+		gstr.KebabScreaming,
+		gstr.Lower,
+		"test", // invalid case type
+	}
+	testCaseTypes := []string{
+		"camel",
+		"camelLower",
+		"snake",
+		"snakeFirstUpper",
+		"snakeScreaming",
+		"kebab",
+		"kebabScreaming",
+		"lower",
+		"test",
+	}
+	gtest.C(t, func(t *gtest.T) {
+		for i := 0; i < len(caseTypes); i++ {
+			t.Assert(gstr.CaseTypeMatch(testCaseTypes[i]), caseTypes[i])
+		}
+	})
+}
+
+func Test_CaseConvert(t *testing.T) {
+	caseTypes := []gstr.CaseType{
+		gstr.Camel,
+		gstr.CamelLower,
+		gstr.Snake,
+		gstr.SnakeFirstUpper,
+		gstr.SnakeScreaming,
+		gstr.Kebab,
+		gstr.KebabScreaming,
+		gstr.Lower,
+		"test", // invalid case type
+		"",     // invalid case type
+	}
+	testCaseTypes := []string{
+		"AnyKindOfString",    // Camel
+		"anyKindOfString",    // CamelLower
+		"any_kind_of_string", // Snake
+		"any_kind_of_string", // SnakeFirstUpper
+		"ANY_KIND_OF_STRING", // SnakeScreaming
+		"any-kind-of-string", // Kebab
+		"ANY-KIND-OF-STRING", // KebabScreaming
+		"any_kind_of_string", // Lower
+		"any_kind_of_string", // invalid case type
+		"any_kind_of_string", // invalid case type
+	}
+	gtest.C(t, func(t *gtest.T) {
+		for i := 0; i < len(caseTypes); i++ {
+			t.Assert(gstr.CaseConvert("any_kind_of_string", caseTypes[i]), testCaseTypes[i])
+			t.Logf("test case: %s success", caseTypes[i])
+		}
+	})
 }

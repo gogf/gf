@@ -81,7 +81,7 @@ func (m *Model) WherePrefixNot(prefix string, column string, value interface{}) 
 // WherePrefixNotIn builds `prefix.column NOT IN (in)` statement.
 // See WhereBuilder.WherePrefixNotIn.
 func (m *Model) WherePrefixNotIn(prefix string, column string, in interface{}) *Model {
-	return m.callWhereBuilder(m.whereBuilder.WherePrefixNot(prefix, column, in))
+	return m.callWhereBuilder(m.whereBuilder.WherePrefixNotIn(prefix, column, in))
 }
 
 // WherePrefixNotNull builds `prefix.columns[0] IS NOT NULL AND prefix.columns[1] IS NOT NULL ...` statement.

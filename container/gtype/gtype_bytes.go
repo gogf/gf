@@ -86,6 +86,9 @@ func (v *Bytes) UnmarshalValue(value interface{}) error {
 
 // DeepCopy implements interface for deep copy of current type.
 func (v *Bytes) DeepCopy() interface{} {
+	if v == nil {
+		return nil
+	}
 	oldBytes := v.Val()
 	newBytes := make([]byte, len(oldBytes))
 	copy(newBytes, oldBytes)

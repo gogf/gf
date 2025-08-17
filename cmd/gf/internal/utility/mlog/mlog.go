@@ -1,3 +1,9 @@
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package mlog
 
 import (
@@ -18,15 +24,19 @@ var (
 )
 
 func init() {
-	logger.SetStack(false)
 	if genv.Get(headerPrintEnvName).String() == "1" {
 		logger.SetHeaderPrint(true)
 	} else {
 		logger.SetHeaderPrint(false)
 	}
+
 	if gcmd.GetOpt("debug") != nil || gcmd.GetOpt("gf.debug") != nil {
+		logger.SetHeaderPrint(true)
+		logger.SetStackSkip(4)
+		logger.SetFlags(logger.GetFlags() | glog.F_FILE_LONG)
 		logger.SetDebug(true)
 	} else {
+		logger.SetStack(false)
 		logger.SetDebug(false)
 	}
 }

@@ -8,12 +8,17 @@ package gcron_test
 
 import (
 	"context"
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcron"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -66,6 +71,22 @@ func TestCron_Basic(t *testing.T) {
 		t.AssertNE(entry1, nil)
 		t.Assert(entry2, nil)
 	})
+
+	// test @ error
+	gtest.C(t, func(t *gtest.T) {
+		cron := gcron.New()
+		defer cron.Close()
+		_, err := cron.Add(ctx, "@aaa", func(ctx context.Context) {}, "add")
+		t.AssertNE(err, nil)
+	})
+
+	// test @every error
+	gtest.C(t, func(t *gtest.T) {
+		cron := gcron.New()
+		defer cron.Close()
+		_, err := cron.Add(ctx, "@every xxx", func(ctx context.Context) {}, "add")
+		t.AssertNE(err, nil)
+	})
 }
 
 func TestCron_Remove(t *testing.T) {
@@ -82,6 +103,38 @@ func TestCron_Remove(t *testing.T) {
 		cron.Remove("add")
 		t.Assert(array.Len(), 1)
 		time.Sleep(1200 * time.Millisecond)
+		t.Assert(array.Len(), 1)
+	})
+}
+
+func TestCron_Add_FixedPattern(t *testing.T) {
+	for i := 0; i < 5; i++ {
+		doTestCronAddFixedPattern(t)
+	}
+}
+
+func doTestCronAddFixedPattern(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			now    = time.Now()
+			cron   = gcron.New()
+			array  = garray.New(true)
+			expect = now.Add(time.Second * 2)
+		)
+		defer cron.Close()
+
+		var pattern = fmt.Sprintf(
+			`%d %d %d %d %d %s`,
+			expect.Second(), expect.Minute(), expect.Hour(), expect.Day(), expect.Month(), expect.Weekday().String(),
+		)
+		cron.SetLogger(g.Log())
+		g.Log().Debugf(ctx, `pattern: %s`, pattern)
+		_, err := cron.Add(ctx, pattern, func(ctx context.Context) {
+			array.Append(1)
+		})
+		t.AssertNil(err)
+		time.Sleep(3500 * time.Millisecond)
+		g.Log().Debug(ctx, `current time`)
 		t.Assert(array.Len(), 1)
 	})
 }
@@ -154,7 +207,7 @@ func TestCron_AddTimes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cron := gcron.New()
 		array := garray.New(true)
-		cron.AddTimes(ctx, "* * * * * *", 2, func(ctx context.Context) {
+		_, _ = cron.AddTimes(ctx, "* * * * * *", 2, func(ctx context.Context) {
 			array.Append(1)
 		})
 		time.Sleep(3500 * time.Millisecond)
@@ -226,5 +279,43 @@ func TestCron_DelayAddTimes(t *testing.T) {
 		time.Sleep(3000 * time.Millisecond)
 		t.Assert(array.Len(), 2)
 		t.Assert(cron.Size(), 0)
+	})
+}
+
+func TestCron_JobWaiter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		s1 := garray.New(true)
+		s2 := garray.New(true)
+		_, err = gcron.Add(ctx, "* * * * * *", func(ctx context.Context) {
+			g.Log().Debug(ctx, "Every second")
+			s1.Append(struct{}{})
+		}, "MyFirstCronJob")
+		t.Assert(err, nil)
+		_, err = gcron.Add(ctx, "*/2 * * * * *", func(ctx context.Context) {
+			g.Log().Debug(ctx, "Every 2s job start")
+			time.Sleep(3 * time.Second)
+			s2.Append(struct{}{})
+			g.Log().Debug(ctx, "Every 2s job after 3 second end")
+		}, "MySecondCronJob")
+		t.Assert(err, nil)
+
+		quit := make(chan os.Signal, 1)
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+		go func() {
+			time.Sleep(4 * time.Second) // Ensure that the job is triggered twice
+			glog.Print(ctx, "Sending SIGINT")
+			quit <- syscall.SIGINT // Send SIGINT
+		}()
+
+		sig := <-quit
+		glog.Printf(ctx, "Signal received: %s, stopping cron", sig)
+
+		glog.Print(ctx, "Waiting for all cron jobs to complete...")
+		gcron.StopGracefully()
+		glog.Print(ctx, "All cron jobs completed")
+		t.Assert(s1.Len(), 4)
+		t.Assert(s2.Len(), 2)
 	})
 }

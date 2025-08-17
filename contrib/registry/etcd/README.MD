@@ -18,7 +18,7 @@ require github.com/gogf/gf/contrib/registry/etcd/v2 latest
 
 ### Reference example
 
-[server](example/registry/etcd/server/main.go)
+[server](../../../example/registry/etcd/http/server/server.go)
 ```go
 package main
 
@@ -41,7 +41,7 @@ func main() {
 }
 ```
 
-[client](example/registry/etcd/client/main.go)
+[client](../../../example/registry/etcd/http/client/client.go)
 ```go
 package main
 

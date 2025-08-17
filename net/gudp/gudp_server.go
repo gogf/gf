@@ -7,13 +7,20 @@
 package gudp
 
 import (
+	"fmt"
 	"net"
-
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
+	"sync"
 
 	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+)
+
+const (
+	// FreePortAddress marks the server listens using random free port.
+	FreePortAddress = ":0"
 )
 
 const (
@@ -22,17 +29,29 @@ const (
 
 // Server is the UDP server.
 type Server struct {
-	conn    *Conn       // UDP server connection object.
-	address string      // UDP server listening address.
-	handler func(*Conn) // Handler for UDP connection.
+	// Used for Server.listen concurrent safety.
+	// The golang test with data race checks this.
+	mu sync.Mutex
+
+	// UDP server connection object.
+	conn *ServerConn
+
+	// UDP server listening address.
+	address string
+
+	// Handler for UDP connection.
+	handler ServerHandler
 }
+
+// ServerHandler handles all server connections.
+type ServerHandler func(conn *ServerConn)
 
 var (
 	// serverMapping is used for instance name to its UDP server mappings.
 	serverMapping = gmap.NewStrAnyMap(true)
 )
 
-// GetServer creates and returns a UDP server instance with given name.
+// GetServer creates and returns an udp server instance with given name.
 func GetServer(name ...interface{}) *Server {
 	serverName := defaultServer
 	if len(name) > 0 && name[0] != "" {
@@ -46,10 +65,10 @@ func GetServer(name ...interface{}) *Server {
 	return s
 }
 
-// NewServer creates and returns a UDP server.
+// NewServer creates and returns an udp server.
 // The optional parameter `name` is used to specify its name, which can be used for
 // GetServer function to retrieve its instance.
-func NewServer(address string, handler func(*Conn), name ...string) *Server {
+func NewServer(address string, handler ServerHandler, name ...string) *Server {
 	s := &Server{
 		address: address,
 		handler: handler,
@@ -66,13 +85,15 @@ func (s *Server) SetAddress(address string) {
 }
 
 // SetHandler sets the connection handler for UDP server.
-func (s *Server) SetHandler(handler func(*Conn)) {
+func (s *Server) SetHandler(handler ServerHandler) {
 	s.handler = handler
 }
 
 // Close closes the connection.
 // It will make server shutdowns immediately.
 func (s *Server) Close() (err error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	err = s.conn.Close()
 	if err != nil {
 		err = gerror.Wrap(err, "connection failed")
@@ -83,20 +104,47 @@ func (s *Server) Close() (err error) {
 // Run starts listening UDP connection.
 func (s *Server) Run() error {
 	if s.handler == nil {
-		err := gerror.NewCode(gcode.CodeMissingConfiguration, "start running failed: socket handler not defined")
-		return err
+		return gerror.NewCode(
+			gcode.CodeMissingConfiguration,
+			"start running failed: socket handler not defined",
+		)
 	}
 	addr, err := net.ResolveUDPAddr("udp", s.address)
 	if err != nil {
 		err = gerror.Wrapf(err, `net.ResolveUDPAddr failed for address "%s"`, s.address)
 		return err
 	}
-	conn, err := net.ListenUDP("udp", addr)
+	listenedConn, err := net.ListenUDP("udp", addr)
 	if err != nil {
 		err = gerror.Wrapf(err, `net.ListenUDP failed for address "%s"`, s.address)
 		return err
 	}
-	s.conn = NewConnByNetConn(conn)
+	s.mu.Lock()
+	s.conn = NewServerConn(listenedConn)
+	s.mu.Unlock()
 	s.handler(s.conn)
 	return nil
+}
+
+// GetListenedAddress retrieves and returns the address string which are listened by current server.
+func (s *Server) GetListenedAddress() string {
+	if !gstr.Contains(s.address, FreePortAddress) {
+		return s.address
+	}
+	var (
+		address      = s.address
+		listenedPort = s.GetListenedPort()
+	)
+	address = gstr.Replace(address, FreePortAddress, fmt.Sprintf(`:%d`, listenedPort))
+	return address
+}
+
+// GetListenedPort retrieves and returns one port which is listened to by current server.
+func (s *Server) GetListenedPort() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if ln := s.conn; ln != nil {
+		return ln.LocalAddr().(*net.UDPAddr).Port
+	}
+	return -1
 }

@@ -93,7 +93,8 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 	)
 
 	// It checks the struct recursively if its attribute is an embedded struct.
-	// Ignore inputParamMap, rules and messages from parent.
+	// Ignore inputParamMap, assoc, rules and messages from parent.
+	validator.assoc = nil
 	validator.rules = nil
 	validator.messages = nil
 	for _, item := range inputParamMap {
@@ -127,12 +128,13 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 		}
 		// It checks each rule and its value in loop.
 		if validatedError := v.doCheckValue(ctx, doCheckValueInput{
-			Name:     checkRuleItem.Name,
-			Value:    value,
-			Rule:     checkRuleItem.Rule,
-			Messages: customMessage[checkRuleItem.Name],
-			DataRaw:  params,
-			DataMap:  inputParamMap,
+			Name:      checkRuleItem.Name,
+			Value:     value,
+			ValueType: reflect.TypeOf(value),
+			Rule:      checkRuleItem.Rule,
+			Messages:  customMessage[checkRuleItem.Name],
+			DataRaw:   params,
+			DataMap:   inputParamMap,
 		}); validatedError != nil {
 			_, errorItem := validatedError.FirstItem()
 			// ===========================================================
@@ -144,9 +146,7 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 				required := false
 				// rule => error
 				for ruleKey := range errorItem {
-					// Default required rules.
-					if _, ok := mustCheckRulesEvenValueEmpty[ruleKey]; ok {
-						required = true
+					if required = v.checkRuleRequired(ruleKey); required {
 						break
 					}
 				}

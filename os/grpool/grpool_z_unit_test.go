@@ -4,8 +4,6 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// go test *.go -bench=".*" -count=1
-
 package grpool_test
 
 import (
@@ -22,19 +20,23 @@ import (
 func Test_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
+			err   error
 			wg    = sync.WaitGroup{}
 			array = garray.NewArray(true)
 			size  = 100
 		)
 		wg.Add(size)
 		for i := 0; i < size; i++ {
-			grpool.Add(ctx, func(ctx context.Context) {
+			err = grpool.Add(ctx, func(ctx context.Context) {
 				array.Append(1)
 				wg.Done()
 			})
+			t.AssertNil(err)
 		}
 		wg.Wait()
+
 		time.Sleep(100 * time.Millisecond)
+
 		t.Assert(array.Len(), size)
 		t.Assert(grpool.Jobs(), 0)
 		t.Assert(grpool.Size(), 0)
@@ -64,6 +66,7 @@ func Test_Limit1(t *testing.T) {
 func Test_Limit2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
+			err   error
 			wg    = sync.WaitGroup{}
 			array = garray.NewArray(true)
 			size  = 100
@@ -71,10 +74,11 @@ func Test_Limit2(t *testing.T) {
 		)
 		wg.Add(size)
 		for i := 0; i < size; i++ {
-			pool.Add(ctx, func(ctx context.Context) {
+			err = pool.Add(ctx, func(ctx context.Context) {
 				defer wg.Done()
 				array.Append(1)
 			})
+			t.AssertNil(err)
 		}
 		wg.Wait()
 		t.Assert(array.Len(), size)
@@ -111,18 +115,25 @@ func Test_Limit3(t *testing.T) {
 
 func Test_AddWithRecover(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		array := garray.NewArray(true)
-		grpool.AddWithRecover(ctx, func(ctx context.Context) {
+		var (
+			err   error
+			array = garray.NewArray(true)
+		)
+		err = grpool.AddWithRecover(ctx, func(ctx context.Context) {
 			array.Append(1)
 			panic(1)
 		}, func(ctx context.Context, err error) {
 			array.Append(1)
 		})
-		grpool.AddWithRecover(ctx, func(ctx context.Context) {
+		t.AssertNil(err)
+		err = grpool.AddWithRecover(ctx, func(ctx context.Context) {
 			panic(1)
 			array.Append(1)
-		})
+		}, nil)
+		t.AssertNil(err)
+
 		time.Sleep(500 * time.Millisecond)
+
 		t.Assert(array.Len(), 2)
 	})
 }

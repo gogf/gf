@@ -9,36 +9,18 @@ package gdb
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
-// WithDB injects given db object into context and returns a new context.
-func WithDB(ctx context.Context, db DB) context.Context {
-	if db == nil {
-		return ctx
-	}
-	dbCtx := db.GetCtx()
-	if ctxDb := DBFromCtx(dbCtx); ctxDb != nil {
-		return dbCtx
-	}
-	ctx = context.WithValue(ctx, contextKeyForDB, db)
-	return ctx
-}
-
-// DBFromCtx retrieves and returns DB object from context.
-func DBFromCtx(ctx context.Context) DB {
-	if ctx == nil {
-		return nil
-	}
-	v := ctx.Value(contextKeyForDB)
-	if v != nil {
-		return v.(DB)
-	}
-	return nil
+// GetDB returns the underlying DB.
+func (c *Core) GetDB() DB {
+	return c.db
 }
 
 // GetLink creates and returns the underlying database link object with transaction checks.
@@ -46,7 +28,7 @@ func DBFromCtx(ctx context.Context) DB {
 func (c *Core) GetLink(ctx context.Context, master bool, schema string) (Link, error) {
 	tx := TXFromCtx(ctx, c.db.GetGroup())
 	if tx != nil {
-		return &txLink{tx.tx}, nil
+		return &txLink{tx.GetSqlTX()}, nil
 	}
 	if master {
 		link, err := c.db.GetCore().MasterLink(schema)
@@ -109,6 +91,9 @@ func (c *Core) QuoteWord(s string) string {
 //
 // The meaning of a `string` can be considered as part of a statement string including columns.
 func (c *Core) QuoteString(s string) string {
+	if !gregex.IsMatchString(regularFieldNameWithCommaRegPattern, s) {
+		return s
+	}
 	charLeft, charRight := c.db.GetChars()
 	return doQuoteString(s, charLeft, charRight)
 }
@@ -124,7 +109,7 @@ func (c *Core) QuoteString(s string) string {
 // if true it does nothing to the table name, or else adds the prefix to the table name.
 func (c *Core) QuotePrefixTableName(table string) string {
 	charLeft, charRight := c.db.GetChars()
-	return doHandleTableName(table, c.db.GetPrefix(), charLeft, charRight)
+	return doQuoteTableName(table, c.db.GetPrefix(), charLeft, charRight)
 }
 
 // GetChars returns the security char for current database.
@@ -152,6 +137,65 @@ func (c *Core) Tables(ctx context.Context, schema ...string) (tables []string, e
 // It's using cache feature to enhance the performance, which is never expired util the
 // process restarts.
 func (c *Core) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
+	return
+}
+
+// ClearTableFields removes certain cached table fields of current configuration group.
+func (c *Core) ClearTableFields(ctx context.Context, table string, schema ...string) (err error) {
+	tableFieldsCacheKey := genTableFieldsCacheKey(
+		c.db.GetGroup(),
+		gutil.GetOrDefaultStr(c.db.GetSchema(), schema...),
+		table,
+	)
+	_, err = c.innerMemCache.Remove(ctx, tableFieldsCacheKey)
+	return
+}
+
+// ClearTableFieldsAll removes all cached table fields of current configuration group.
+func (c *Core) ClearTableFieldsAll(ctx context.Context) (err error) {
+	var (
+		keys, _     = c.innerMemCache.KeyStrings(ctx)
+		cachePrefix = cachePrefixTableFields
+		removedKeys = make([]any, 0)
+	)
+	for _, key := range keys {
+		if gstr.HasPrefix(key, cachePrefix) {
+			removedKeys = append(removedKeys, key)
+		}
+	}
+
+	if len(removedKeys) > 0 {
+		err = c.innerMemCache.Removes(ctx, removedKeys)
+	}
+	return
+}
+
+// ClearCache removes cached sql result of certain table.
+func (c *Core) ClearCache(ctx context.Context, table string) (err error) {
+	var (
+		keys, _     = c.db.GetCache().KeyStrings(ctx)
+		cachePrefix = fmt.Sprintf(`%s%s@`, cachePrefixSelectCache, table)
+		removedKeys = make([]any, 0)
+	)
+	for _, key := range keys {
+		if gstr.HasPrefix(key, cachePrefix) {
+			removedKeys = append(removedKeys, key)
+		}
+	}
+	if len(removedKeys) > 0 {
+		err = c.db.GetCache().Removes(ctx, removedKeys)
+	}
+	return
+}
+
+// ClearCacheAll removes all cached sql result from cache
+func (c *Core) ClearCacheAll(ctx context.Context) (err error) {
+	if err = c.db.GetCache().Clear(ctx); err != nil {
+		return err
+	}
+	if err = c.GetInnerMemCache().Clear(ctx); err != nil {
+		return err
+	}
 	return
 }
 
@@ -188,7 +232,7 @@ func (c *Core) guessPrimaryTableName(tableStr string) string {
 		return ""
 	}
 	var (
-		guessedTableName = ""
+		guessedTableName string
 		array1           = gstr.SplitAndTrim(tableStr, ",")
 		array2           = gstr.SplitAndTrim(array1[0], " ")
 		array3           = gstr.SplitAndTrim(array2[0], ".")

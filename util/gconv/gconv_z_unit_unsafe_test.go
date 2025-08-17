@@ -7,19 +7,22 @@
 package gconv_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
-	"testing"
 )
 
-func Test_Unsafe(t *testing.T) {
+func TestUnsafeStrToBytes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		s := "I love 小泽玛利亚"
+		s := "equator"
 		t.AssertEQ(gconv.UnsafeStrToBytes(s), []byte(s))
 	})
+}
 
+func TestUnsafeBytesToStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		b := []byte("I love 小泽玛利亚")
+		b := []byte("ecliptic")
 		t.AssertEQ(gconv.UnsafeBytesToStr(b), string(b))
 	})
 }

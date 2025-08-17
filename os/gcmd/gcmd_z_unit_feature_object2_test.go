@@ -131,6 +131,7 @@ type commandBuildInput struct {
 	JsonCase string `short:"j" name:"jsonCase" brief:"{commandGenDaoBriefJsonCase}" d:"CamelLower"`
 	Pack     string `name:"pack" brief:"{commandBuildBriefPack}"`
 }
+
 type commandBuildOutput struct{}
 
 func (c commandBuild) Index(ctx context.Context, in commandBuildInput) (out *commandBuildOutput, err error) {

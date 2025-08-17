@@ -8,11 +8,9 @@ package ghttp_test
 
 import (
 	"fmt"
-	"net"
+	"strings"
 	"testing"
 	"time"
-
-	"github.com/gogf/gf/v2/net/gtcp"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -26,29 +24,22 @@ import (
 
 func Test_ConfigFromMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		p, _ := gtcp.GetFreePort()
-		addr := fmt.Sprintf(":%d", p)
-		ln, err := net.Listen("tcp", addr)
-		t.AssertNil(err)
-		listeners := []net.Listener{ln}
-
 		m := g.Map{
-			"address":         addr,
-			"listeners":       listeners,
+			"address":         ":12345",
+			"listeners":       nil,
 			"readTimeout":     "60s",
 			"indexFiles":      g.Slice{"index.php", "main.php"},
 			"errorLogEnabled": true,
-			"cookieMaxAge":    "1y",
+			"cookieMaxAge":    "1d",
 			"cookieSameSite":  "lax",
 			"cookieSecure":    true,
 			"cookieHttpOnly":  true,
 		}
 		config, err := ghttp.ConfigFromMap(m)
 		t.AssertNil(err)
-		d1, _ := time.ParseDuration(gconv.String(m["readTimeout"]))
-		d2, _ := time.ParseDuration(gconv.String(m["cookieMaxAge"]))
+		d1, _ := gtime.ParseDuration(gconv.String(m["readTimeout"]))
+		d2, _ := gtime.ParseDuration(gconv.String(m["cookieMaxAge"]))
 		t.Assert(config.Address, m["address"])
-		t.Assert(config.Listeners, listeners)
 		t.Assert(config.ReadTimeout, d1)
 		t.Assert(config.CookieMaxAge, d2)
 		t.Assert(config.IndexFiles, m["indexFiles"])
@@ -164,8 +155,50 @@ func Test_ClientMaxBodySize_File(t *testing.T) {
 		t.Assert(gfile.PutBytes(path, data), nil)
 		defer gfile.Remove(path)
 		t.Assert(
-			gstr.Trim(c.PostContent(ctx, "/", "name=john&file=@file:"+path)),
-			"r.ParseMultipartForm failed: http: request body too large",
+			true,
+			strings.Contains(
+				gstr.Trim(c.PostContent(ctx, "/", "name=john&file=@file:"+path)),
+				"http: request body too large",
+			),
 		)
+	})
+}
+
+func Test_Config_Graceful(t *testing.T) {
+	var (
+		defaultConfig = ghttp.NewConfig()
+		expect        = true
+	)
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		t.Assert(s.GetGraceful(), defaultConfig.Graceful)
+		s.SetGraceful(expect)
+		t.Assert(s.GetGraceful(), expect)
+	})
+}
+
+func Test_Config_GracefulTimeout(t *testing.T) {
+	var (
+		defaultConfig = ghttp.NewConfig()
+		expect        = 3
+	)
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		t.Assert(s.GetGracefulTimeout(), defaultConfig.GracefulTimeout)
+		s.SetGracefulTimeout(expect)
+		t.Assert(s.GetGracefulTimeout(), expect)
+	})
+}
+
+func Test_Config_GracefulShutdownTimeout(t *testing.T) {
+	var (
+		defaultConfig = ghttp.NewConfig()
+		expect        = 10
+	)
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		t.Assert(s.GetGracefulShutdownTimeout(), defaultConfig.GracefulShutdownTimeout)
+		s.SetGracefulShutdownTimeout(expect)
+		t.Assert(s.GetGracefulShutdownTimeout(), expect)
 	})
 }

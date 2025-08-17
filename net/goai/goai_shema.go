@@ -8,6 +8,7 @@ package goai
 
 import (
 	"reflect"
+	"strings"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gset"
@@ -54,13 +55,23 @@ type Schema struct {
 	MaxItems             *uint64        `json:"maxItems,omitempty"`
 	Items                *SchemaRef     `json:"items,omitempty"`
 	Required             []string       `json:"required,omitempty"`
-	Properties           Schemas        `json:"properties,omitempty"`
+	Properties           *Schemas       `json:"properties,omitempty"`
 	MinProps             uint64         `json:"minProperties,omitempty"`
 	MaxProps             *uint64        `json:"maxProperties,omitempty"`
 	AdditionalProperties *SchemaRef     `json:"additionalProperties,omitempty"`
 	Discriminator        *Discriminator `json:"discriminator,omitempty"`
 	XExtensions          XExtensions    `json:"-"`
 	ValidationRules      string         `json:"-"`
+}
+
+// Clone only clones necessary attributes.
+// TODO clone all attributes, or improve package deepcopy.
+func (s *Schema) Clone() *Schema {
+	newSchema := *s
+	newSchema.Required = make([]string, len(s.Required))
+	copy(newSchema.Required, s.Required)
+	newSchema.Properties = s.Properties.Clone()
+	return &newSchema
 }
 
 func (s Schema) MarshalJSON() ([]byte, error) {
@@ -166,16 +177,17 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 	// struct.
 	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         object,
-		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+		RecursiveOption: gstructs.RecursiveOptionEmbedded,
 	})
 	schema.Type = TypeObject
 	for _, structField := range structFields {
 		if !gstr.IsLetterUpper(structField.Name()[0]) {
 			continue
 		}
-		var fieldName = structField.Name()
-		if jsonName := structField.TagJsonName(); jsonName != "" {
-			fieldName = jsonName
+		var fieldName = structField.TagPriorityName()
+		fieldName = gstr.Split(gstr.Trim(fieldName), ",")[0]
+		if fieldName == "" {
+			fieldName = structField.Name()
 		}
 		schemaRef, err := oai.newSchemaRefWithGolangType(
 			structField.Type().Type,
@@ -193,6 +205,56 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 			if validationRuleSet.Contains(validationRuleKeyForRequired) {
 				schema.Required = append(schema.Required, key)
 			}
+
+			// Extract validation rules to schema. like min, max, length
+			lstRules := gstr.Split(ref.Value.ValidationRules, "|")
+			for _, rule := range lstRules {
+				if strings.HasPrefix(rule, validationRuleKeyForMax) {
+					if ref.Value.Type == "integer" || ref.Value.Type == "number" {
+						f := gconv.Float64(rule[4:])
+						ref.Value.Max = &f
+					}
+				}
+
+				if strings.HasPrefix(rule, validationRuleKeyForMaxLength) {
+					maxlength := gconv.Uint64(rule[11:])
+					ref.Value.MaxLength = &maxlength
+				}
+
+				if strings.HasPrefix(rule, validationRuleKeyForMin) {
+					if ref.Value.Type == "integer" || ref.Value.Type == "number" {
+						f := gconv.Float64(rule[4:])
+						ref.Value.Min = &f
+					}
+				}
+
+				if strings.HasPrefix(rule, validationRuleKeyForMinLength) {
+					minlength := gconv.Uint64(rule[11:])
+					ref.Value.MinLength = minlength
+				}
+
+				if strings.HasPrefix(rule, validationRuleKeyForLength) {
+					lengthRule := gstr.Split(rule[7:], ",")
+					if len(lengthRule) == 2 {
+						minlength := gconv.Uint64(lengthRule[0])
+						ref.Value.MinLength = minlength
+						maxlength := gconv.Uint64(lengthRule[1])
+						ref.Value.MaxLength = &maxlength
+					}
+				}
+
+				if strings.HasPrefix(rule, validationRuleKeyForBetween) {
+					if ref.Value.Type == "integer" || ref.Value.Type == "number" {
+						lengthRule := gstr.Split(rule[8:], ",")
+						if len(lengthRule) == 2 {
+							minimum := gconv.Float64(lengthRule[0])
+							ref.Value.Min = &minimum
+							maximum := gconv.Float64(lengthRule[1])
+							ref.Value.Max = &maximum
+						}
+					}
+				}
+			}
 		}
 		if !isValidParameterName(key) {
 			ignoreProperties = append(ignoreProperties, key)
@@ -208,7 +270,7 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 }
 
 func (oai *OpenApiV3) tagMapToSchema(tagMap map[string]string, schema *Schema) error {
-	var mergedTagMap = oai.fileMapWithShortTags(tagMap)
+	var mergedTagMap = oai.fillMapWithShortTags(tagMap)
 	if err := gconv.Struct(mergedTagMap, schema); err != nil {
 		return gerror.Wrap(err, `mapping struct tags to Schema failed`)
 	}

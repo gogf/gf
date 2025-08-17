@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcron"
 	"github.com/gogf/gf/v2/test/gtest"
 )
@@ -24,7 +23,6 @@ func TestCron_Entry_Operations(t *testing.T) {
 			array = garray.New(true)
 		)
 		cron.DelayAddTimes(ctx, 500*time.Millisecond, "* * * * * *", 2, func(ctx context.Context) {
-			g.Log().Print(ctx, "add times")
 			array.Append(1)
 		})
 		t.Assert(cron.Size(), 0)
@@ -42,7 +40,6 @@ func TestCron_Entry_Operations(t *testing.T) {
 			array = garray.New(true)
 		)
 		entry, err1 := cron.Add(ctx, "* * * * * *", func(ctx context.Context) {
-			g.Log().Print(ctx, "add")
 			array.Append(1)
 		})
 		t.Assert(err1, nil)
@@ -56,7 +53,6 @@ func TestCron_Entry_Operations(t *testing.T) {
 		t.Assert(array.Len(), 1)
 		t.Assert(cron.Size(), 1)
 		entry.Start()
-		g.Log().Print(ctx, "start")
 		time.Sleep(1000 * time.Millisecond)
 		t.Assert(array.Len(), 2)
 		t.Assert(cron.Size(), 1)

@@ -12,10 +12,8 @@ import (
 	"strconv"
 )
 
-var (
-	// gridRegex is the regular expression object for parsing goroutine id from stack information.
-	gridRegex = regexp.MustCompile(`^\w+\s+(\d+)\s+`)
-)
+// gridRegex is the regular expression object for parsing goroutine id from stack information.
+var gridRegex = regexp.MustCompile(`^\w+\s+(\d+)\s+`)
 
 // GoroutineId retrieves and returns the current goroutine id from stack information.
 // Be very aware that, it is with low performance as it uses runtime.Stack function.

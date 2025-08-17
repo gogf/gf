@@ -7,10 +7,16 @@
 package ghttp_test
 
 import (
+	"compress/gzip"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
@@ -205,8 +211,8 @@ func Test_Middleware_Status(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/user/list"), "200")
 
 		resp, err := client.Get(ctx, "/")
-		defer resp.Close()
 		t.AssertNil(err)
+		defer resp.Close()
 		t.Assert(resp.StatusCode, 404)
 	})
 }
@@ -590,6 +596,17 @@ func Test_Middleware_CORSAndAuth(t *testing.T) {
 		t.Assert(resp.Header["Access-Control-Max-Age"][0], "3628800")
 		resp.Close()
 	})
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		t.Assert(client.SetHeader("Access-Control-Request-Headers", "GF,GoFrame").GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.SetHeader("Origin", "GoFrame").GetContent(ctx, "/"), "Not Found")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		t.Assert(client.SetHeader("Referer", "Referer").PostContent(ctx, "/"), "Not Found")
+	})
 }
 
 func MiddlewareScope1(r *ghttp.Request) {
@@ -653,7 +670,7 @@ func Test_Middleware_Panic(t *testing.T) {
 			group.Middleware(func(r *ghttp.Request) {
 				i++
 				panic("error")
-				r.Middleware.Next()
+				// r.Middleware.Next()
 			}, func(r *ghttp.Request) {
 				i++
 				r.Middleware.Next()
@@ -673,4 +690,139 @@ func Test_Middleware_Panic(t *testing.T) {
 
 		t.Assert(client.GetContent(ctx, "/"), "exception recovered: error")
 	})
+}
+
+func Test_Middleware_JsonBody(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareJsonBody)
+		group.ALL("/", func(r *ghttp.Request) {
+			r.Response.Write("hello")
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(client.GetContent(ctx, "/"), "hello")
+		t.Assert(client.PutContent(ctx, "/"), "hello")
+		t.Assert(client.PutContent(ctx, "/", `{"name":"john"}`), "hello")
+		t.Assert(client.PutContent(ctx, "/", `{"name":}`), "the request body content should be JSON format")
+	})
+}
+
+func Test_MiddlewareHandlerResponse(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareHandlerResponse)
+		group.GET("/403", func(r *ghttp.Request) {
+			r.Response.WriteStatus(http.StatusForbidden, "")
+		})
+		group.GET("/default", func(r *ghttp.Request) {
+			r.Response.WriteStatus(http.StatusInternalServerError, "")
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		rsp, err := client.Get(ctx, "/403")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusForbidden)
+		rsp, err = client.Get(ctx, "/default")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusInternalServerError)
+	})
+}
+
+func Test_MiddlewareHandlerGzipResponse(t *testing.T) {
+	tp := testTracerProvider{}
+	otel.SetTracerProvider(&tp)
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.GET("/default", func(r *ghttp.Request) {
+			var buffer strings.Builder
+			gzipWriter := gzip.NewWriter(&buffer)
+			defer gzipWriter.Close()
+			_, _ = gzipWriter.Write([]byte("hello"))
+			// 设置响应头，表明内容使用 gzip 压缩
+			r.Response.Header().Set("Content-Encoding", "gzip")
+			r.Response.Header().Set("Content-Type", "text/plain")
+			r.Response.Header().Set("Content-Length", fmt.Sprint(buffer.Len()))
+			// 写入压缩后的内容
+			r.Response.Write(buffer.String())
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		rsp, err := client.Get(ctx, "/default")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusOK)
+	})
+}
+
+func Test_MiddlewareHandlerStreamResponse(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareHandlerResponse)
+
+		group.GET("/stream/event", func(r *ghttp.Request) {
+			r.Response.Header().Set("Content-Type", "text/event-stream")
+		})
+
+		group.GET("/stream/octet", func(r *ghttp.Request) {
+			r.Response.Header().Set("Content-Type", "application/octet-stream")
+		})
+
+		group.GET("/stream/mixed", func(r *ghttp.Request) {
+			r.Response.Header().Set("Content-Type", "multipart/x-mixed-replace")
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		rsp, err := client.Get(ctx, "/stream/event")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusOK)
+		t.Assert(rsp.ReadAllString(), "")
+
+		rsp, err = client.Get(ctx, "/stream/octet")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusOK)
+		t.Assert(rsp.ReadAllString(), "")
+
+		rsp, err = client.Get(ctx, "/stream/mixed")
+		t.AssertNil(err)
+		t.Assert(rsp.StatusCode, http.StatusOK)
+		t.Assert(rsp.ReadAllString(), "")
+	})
+}
+
+type testTracerProvider struct {
+	noop.TracerProvider
+}
+
+var _ trace.TracerProvider = &testTracerProvider{}
+
+func (*testTracerProvider) Tracer(_ string, _ ...trace.TracerOption) trace.Tracer {
+	return noop.NewTracerProvider().Tracer("")
 }

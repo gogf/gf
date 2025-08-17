@@ -92,6 +92,15 @@ func Test_Format(t *testing.T) {
 		}
 
 	})
+	gtest.C(t, func(t *gtest.T) {
+		var ti *gtime.Time = nil
+		t.Assert(ti.Format("Y-m-d h:i:s"), "")
+		t.Assert(ti.FormatNew("Y-m-d h:i:s"), nil)
+		t.Assert(ti.FormatTo("Y-m-d h:i:s"), nil)
+		t.Assert(ti.Layout("Y-m-d h:i:s"), "")
+		t.Assert(ti.LayoutNew("Y-m-d h:i:s"), nil)
+		t.Assert(ti.LayoutTo("Y-m-d h:i:s"), nil)
+	})
 }
 
 func Test_Format_ZeroString(t *testing.T) {

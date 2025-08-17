@@ -47,35 +47,41 @@ func Gzip(data []byte, level ...int) ([]byte, error) {
 }
 
 // GzipFile compresses the file `src` to `dst` using gzip algorithm.
-func GzipFile(src, dst string, level ...int) error {
-	var (
-		writer *gzip.Writer
-		err    error
-	)
-	srcFile, err := gfile.Open(src)
-	if err != nil {
-		return err
-	}
-	defer srcFile.Close()
-	dstFile, err := gfile.Create(dst)
+func GzipFile(srcFilePath, dstFilePath string, level ...int) (err error) {
+	dstFile, err := gfile.Create(dstFilePath)
 	if err != nil {
 		return err
 	}
 	defer dstFile.Close()
 
+	return GzipPathWriter(srcFilePath, dstFile, level...)
+}
+
+// GzipPathWriter compresses `filePath` to `writer` using gzip compressing algorithm.
+//
+// Note that the parameter `path` can be either a directory or a file.
+func GzipPathWriter(filePath string, writer io.Writer, level ...int) error {
+	var (
+		gzipWriter *gzip.Writer
+		err        error
+	)
+	srcFile, err := gfile.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
 	if len(level) > 0 {
-		writer, err = gzip.NewWriterLevel(dstFile, level[0])
+		gzipWriter, err = gzip.NewWriterLevel(writer, level[0])
 		if err != nil {
-			err = gerror.Wrap(err, `gzip.NewWriterLevel failed`)
-			return err
+			return gerror.Wrap(err, `gzip.NewWriterLevel failed`)
 		}
 	} else {
-		writer = gzip.NewWriter(dstFile)
+		gzipWriter = gzip.NewWriter(writer)
 	}
-	defer writer.Close()
+	defer gzipWriter.Close()
 
-	_, err = io.Copy(writer, srcFile)
-	if err != nil {
+	if _, err = io.Copy(gzipWriter, srcFile); err != nil {
 		err = gerror.Wrap(err, `io.Copy failed`)
 		return err
 	}
@@ -101,14 +107,14 @@ func UnGzip(data []byte) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// UnGzipFile decompresses file `src` to `dst` using gzip algorithm.
-func UnGzipFile(src, dst string) error {
-	srcFile, err := gfile.Open(src)
+// UnGzipFile decompresses srcFilePath `src` to `dst` using gzip algorithm.
+func UnGzipFile(srcFilePath, dstFilePath string) error {
+	srcFile, err := gfile.Open(srcFilePath)
 	if err != nil {
 		return err
 	}
 	defer srcFile.Close()
-	dstFile, err := gfile.Create(dst)
+	dstFile, err := gfile.Create(dstFilePath)
 	if err != nil {
 		return err
 	}

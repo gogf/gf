@@ -1,0 +1,1 @@
+{"openapi":"3.0.0","components":{"schemas":{"github.com.gogf.gf.v2.net.goai_test.CreateResourceReq":{"properties":{"Name":{"description":"This is name.","format":"string","type":"string"},"Embedded":{"properties":{"Age":{"description":"This is embedded age.","format":"uint","type":"integer"}},"type":"object"}},"type":"object"}}},"info":{"title":"","version":""},"paths":null}

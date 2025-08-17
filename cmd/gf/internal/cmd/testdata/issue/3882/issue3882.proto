@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package test;
+
+option go_package = "github.com/gogf/gf/cmd/gf/test";
+
+message SomeMessage {
+  // Some comment on field with "one" `two` 'three' in the comment.
+  string field = 1;
+}

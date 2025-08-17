@@ -86,6 +86,7 @@ func Test_GEnv_SetMap(t *testing.T) {
 		t.AssertEQ(os.Getenv("K2"), "TEST2")
 	})
 }
+
 func Test_GEnv_Build(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := genv.Build(map[string]string{

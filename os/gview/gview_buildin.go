@@ -240,7 +240,7 @@ func (view *View) buildInFuncXml(value interface{}, rootTag ...string) (string, 
 	return string(b), err
 }
 
-// buildInFuncXml implements build-in template function: ini ,
+// buildInFuncIni implements build-in template function: ini ,
 // which encodes and returns `value` as XML string.
 func (view *View) buildInFuncIni(value interface{}) (string, error) {
 	b, err := gjson.New(value).ToIni()

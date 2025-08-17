@@ -7,10 +7,14 @@
 // Package gi18n implements internationalization and localization.
 package gi18n
 
-import "context"
+import (
+	"context"
+
+	"github.com/gogf/gf/v2/os/gctx"
+)
 
 const (
-	ctxLanguage = "I18nLanguage"
+	ctxLanguage gctx.StrKey = "I18nLanguage"
 )
 
 // WithLanguage append language setting to the context and returns a new context.

@@ -1,0 +1,29 @@
+# Rule Description: For issues that need more details and are not yet closed, remove the "need more details" tag after the issue author comments
+name: Issue Remove Need More Details
+
+on:
+  issues:
+    types: [edited]
+  issue_comment:
+    types: [created, edited]
+
+env: # Set environment variables
+  TZ: Asia/Shanghai #Time zone (setting the time zone allows the 'Last Updated' on the page to use the time zone)
+
+permissions:
+  contents: read
+
+jobs:
+  issue-remove-need-more-details:
+    permissions:
+      issues: write # for actions-cool/issues-helper to update issues
+     # pull-requests: write # for actions-cool/issues-helper to update PRs
+    runs-on: ubuntu-latest
+    steps:
+      - name: remove need more details
+        if: github.event.issue.state == 'open' && github.actor == github.event.issue.user.login
+        uses: actions-cool/issues-helper@v3
+        with:
+          actions: 'remove-labels'
+          issue-number: ${{ github.event.issue.number }}
+          labels: 'need more details'

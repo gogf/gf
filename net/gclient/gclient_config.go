@@ -20,6 +20,8 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/net/gsel"
+	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 )
@@ -106,6 +108,7 @@ func (c *Client) SetBasicAuth(user, pass string) *Client {
 }
 
 // SetRetry sets retry count and interval.
+// TODO removed.
 func (c *Client) SetRetry(retryCount int, retryInterval time.Duration) *Client {
 	c.retryCount = retryCount
 	c.retryInterval = retryInterval
@@ -120,6 +123,12 @@ func (c *Client) SetRedirectLimit(redirectLimit int) *Client {
 		}
 		return nil
 	}
+	return c
+}
+
+// SetNoUrlEncode sets the mark that do not encode the parameters before sending request.
+func (c *Client) SetNoUrlEncode(noUrlEncode bool) *Client {
+	c.noUrlEncode = noUrlEncode
 	return c
 }
 
@@ -196,4 +205,14 @@ func (c *Client) SetTLSConfig(tlsConfig *tls.Config) error {
 		return nil
 	}
 	return gerror.New(`cannot set TLSClientConfig for custom Transport of the client`)
+}
+
+// SetBuilder sets the load balance builder for client.
+func (c *Client) SetBuilder(builder gsel.Builder) {
+	c.builder = builder
+}
+
+// SetDiscovery sets the load balance builder for client.
+func (c *Client) SetDiscovery(discovery gsvc.Discovery) {
+	c.discovery = discovery
 }

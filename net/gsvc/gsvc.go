@@ -24,7 +24,7 @@ type Registry interface {
 type Registrar interface {
 	// Register registers `service` to Registry.
 	// Note that it returns a new Service if it changes the input Service with custom one.
-	Register(ctx context.Context, service Service) (Service, error)
+	Register(ctx context.Context, service Service) (registered Service, err error)
 
 	// Deregister off-lines and removes `service` from the Registry.
 	Deregister(ctx context.Context, service Service) error
@@ -33,17 +33,18 @@ type Registrar interface {
 // Discovery interface for service discovery.
 type Discovery interface {
 	// Search searches and returns services with specified condition.
-	Search(ctx context.Context, in SearchInput) ([]Service, error)
+	Search(ctx context.Context, in SearchInput) (result []Service, err error)
 
 	// Watch watches specified condition changes.
-	Watch(ctx context.Context, key string) (Watcher, error)
+	// The `key` is the prefix of service key.
+	Watch(ctx context.Context, key string) (watcher Watcher, err error)
 }
 
 // Watcher interface for service.
 type Watcher interface {
 	// Proceed proceeds watch in blocking way.
 	// It returns all complete services that watched by `key` if any change.
-	Proceed() ([]Service, error)
+	Proceed() (services []Service, err error)
 
 	// Close closes the watcher.
 	Close() error
@@ -113,24 +114,24 @@ type SearchInput struct {
 }
 
 const (
-	Schema                    = `services`
-	DefaultHead               = `services`
-	DefaultDeployment         = `default`
-	DefaultNamespace          = `default`
-	DefaultVersion            = `latest`
-	EnvPrefix                 = `GF_GSVC_PREFIX`
-	EnvDeployment             = `GF_GSVC_DEPLOYMENT`
-	EnvNamespace              = `GF_GSVC_NAMESPACE`
-	EnvName                   = `GF_GSVC_Name`
-	EnvVersion                = `GF_GSVC_VERSION`
-	MDProtocol                = `protocol`
-	MDInsecure                = `insecure`
-	MDWeight                  = `weight`
-	DefaultProtocol           = `http`
-	DefaultSeparator          = "/"
-	defaultTimeout            = 5 * time.Second
-	endpointHostPortDelimiter = ":"
-	endpointsDelimiter        = ","
+	Schema                    = `service`            // Schema is the schema of service.
+	DefaultHead               = `service`            // DefaultHead is the default head of service.
+	DefaultDeployment         = `default`            // DefaultDeployment is the default deployment of service.
+	DefaultNamespace          = `default`            // DefaultNamespace is the default namespace of service.
+	DefaultVersion            = `latest`             // DefaultVersion is the default version of service.
+	EnvPrefix                 = `GF_GSVC_PREFIX`     // EnvPrefix is the environment variable prefix.
+	EnvDeployment             = `GF_GSVC_DEPLOYMENT` // EnvDeployment is the environment variable deployment.
+	EnvNamespace              = `GF_GSVC_NAMESPACE`  // EnvNamespace is the environment variable namespace.
+	EnvName                   = `GF_GSVC_Name`       // EnvName is the environment variable name.
+	EnvVersion                = `GF_GSVC_VERSION`    // EnvVersion is the environment variable version.
+	MDProtocol                = `protocol`           // MDProtocol is the metadata key for protocol.
+	MDInsecure                = `insecure`           // MDInsecure is the metadata key for insecure.
+	MDWeight                  = `weight`             // MDWeight is the metadata key for weight.
+	DefaultProtocol           = `http`               // DefaultProtocol is the default protocol of service.
+	DefaultSeparator          = "/"                  // DefaultSeparator is the default separator of service.
+	EndpointHostPortDelimiter = ":"                  // EndpointHostPortDelimiter is the delimiter of host and port.
+	defaultTimeout            = 5 * time.Second      // defaultTimeout is the default timeout for service registry.
+	EndpointsDelimiter        = ","                  // EndpointsDelimiter is the delimiter of endpoints.
 )
 
 var defaultRegistry Registry

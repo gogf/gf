@@ -8,6 +8,7 @@ package goai
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -28,13 +29,15 @@ type ParameterRef struct {
 func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path, method string) (*ParameterRef, error) {
 	var (
 		tagMap    = field.TagMap()
-		parameter = &Parameter{
-			Name:        field.TagJsonName(),
-			XExtensions: make(XExtensions),
-		}
+		fieldName = field.TagPriorityName()
 	)
-	if parameter.Name == "" {
-		parameter.Name = field.Name()
+	fieldName = gstr.Split(gstr.Trim(fieldName), ",")[0]
+	if fieldName == "" {
+		fieldName = field.Name()
+	}
+	var parameter = &Parameter{
+		Name:        fieldName,
+		XExtensions: make(XExtensions),
 	}
 	if len(tagMap) > 0 {
 		if err := oai.tagMapToParameter(tagMap, parameter); err != nil {
@@ -48,7 +51,7 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 		} else {
 			// Default the parameter input to "query" if method is "GET/DELETE".
 			switch gstr.ToUpper(method) {
-			case HttpMethodGet, HttpMethodDelete:
+			case http.MethodGet, http.MethodDelete:
 				parameter.In = ParameterInQuery
 
 			default:

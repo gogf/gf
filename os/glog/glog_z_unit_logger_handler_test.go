@@ -82,10 +82,28 @@ func TestLogger_SetHandlers_HandlerJson(t *testing.T) {
 		ctx = context.WithValue(ctx, "Span-Id", "abcdefg")
 
 		l.Debug(ctx, 1, 2, 3)
-		t.Assert(gstr.Count(w.String(), "1234567890"), 1)
-		t.Assert(gstr.Count(w.String(), "abcdefg"), 1)
-		t.Assert(gstr.Count(w.String(), `"1 2 3"`), 1)
-		t.Assert(gstr.Count(w.String(), `"DEBU"`), 1)
+		t.Assert(gstr.Count(w.String(), `"CtxStr":"1234567890, abcdefg"`), 1)
+		t.Assert(gstr.Count(w.String(), `"Content":"1 2 3"`), 1)
+		t.Assert(gstr.Count(w.String(), `"Level":"DEBU"`), 1)
+	})
+}
+
+func TestLogger_SetHandlers_HandlerStructure(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		w := bytes.NewBuffer(nil)
+		l := glog.NewWithWriter(w)
+		l.SetHandlers(glog.HandlerStructure)
+		l.SetCtxKeys("Trace-Id", "Span-Id", "Test")
+		ctx := context.WithValue(context.Background(), "Trace-Id", "1234567890")
+		ctx = context.WithValue(ctx, "Span-Id", "abcdefg")
+
+		l.Debug(ctx, "debug", "uid", 1000)
+		l.Info(ctx, "info", "' '", `"\n`)
+
+		t.Assert(gstr.Count(w.String(), "uid=1000"), 1)
+		t.Assert(gstr.Count(w.String(), "Content=debug"), 1)
+		t.Assert(gstr.Count(w.String(), `"' '"="\"\\n"`), 1)
+		t.Assert(gstr.Count(w.String(), `CtxStr="1234567890, abcdefg"`), 2)
 	})
 }
 

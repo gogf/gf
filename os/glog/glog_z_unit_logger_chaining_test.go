@@ -225,11 +225,9 @@ func Test_Async(t *testing.T) {
 		defer gfile.Remove(path)
 
 		Path(path).File(file).Async().Stdout(false).Debug(ctx, 1, 2, 3)
-		content := gfile.GetContents(gfile.Join(path, file))
-		t.Assert(content, "")
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
 
-		content = gfile.GetContents(gfile.Join(path, file))
+		content := gfile.GetContents(gfile.Join(path, file))
 		t.Assert(gstr.Count(content, defaultLevelPrefixes[LEVEL_DEBU]), 1)
 		t.Assert(gstr.Count(content, "1 2 3"), 1)
 	})

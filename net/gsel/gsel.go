@@ -15,6 +15,7 @@ import (
 
 // Builder creates and returns selector in runtime.
 type Builder interface {
+	Name() string
 	Build() Selector
 }
 

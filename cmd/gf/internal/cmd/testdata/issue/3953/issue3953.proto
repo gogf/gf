@@ -1,0 +1,16 @@
+syntax = "proto3";
+package account;
+
+option go_package = "account/v1";
+
+service Account {
+  rpc getUserByIds (Req) returns (Resp) {
+  }
+}
+
+message Req {
+  repeated int64 ids = 1; // v: required
+}
+message Resp {
+  repeated string data = 1;
+}

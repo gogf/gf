@@ -8,6 +8,7 @@ package gcron
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"runtime"
 	"time"
@@ -15,23 +16,25 @@ import (
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gtimer"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// JobFunc is the timing called job function in cron.
 type JobFunc = gtimer.JobFunc
 
 // Entry is timing task entry.
 type Entry struct {
-	cron       *Cron         // Cron object belonged to.
-	timerEntry *gtimer.Entry // Associated timer Entry.
-	schedule   *cronSchedule // Timed schedule object.
-	jobName    string        // Callback function name(address info).
-	times      *gtype.Int    // Running times limit.
-	infinite   *gtype.Bool   // No times limit.
-	Name       string        // Entry name.
-	Job        JobFunc       `json:"-"` // Callback function.
-	Time       time.Time     // Registered time.
+	cron         *Cron         // Cron object belonged to.
+	timerEntry   *gtimer.Entry // Associated timer Entry.
+	schedule     *cronSchedule // Timed schedule object.
+	jobName      string        // Callback function name(address info).
+	times        *gtype.Int    // Running times limit.
+	infinite     *gtype.Bool   // No times limit.
+	Name         string        // Entry name.
+	RegisterTime time.Time     // Registered time.
+	Job          JobFunc       `json:"-"` // Callback function.
 }
 
 type doAddEntryInput struct {
@@ -48,23 +51,26 @@ type doAddEntryInput struct {
 func (c *Cron) doAddEntry(in doAddEntryInput) (*Entry, error) {
 	if in.Name != "" {
 		if c.Search(in.Name) != nil {
-			return nil, gerror.NewCodef(gcode.CodeInvalidOperation, `cron job "%s" already exists`, in.Name)
+			return nil, gerror.NewCodef(
+				gcode.CodeInvalidOperation,
+				`duplicated cron job name "%s", already exists`,
+				in.Name,
+			)
 		}
 	}
-
 	schedule, err := newSchedule(in.Pattern)
 	if err != nil {
 		return nil, err
 	}
 	// No limit for `times`, for timer checking scheduling every second.
 	entry := &Entry{
-		cron:     c,
-		schedule: schedule,
-		jobName:  runtime.FuncForPC(reflect.ValueOf(in.Job).Pointer()).Name(),
-		times:    gtype.NewInt(in.Times),
-		infinite: gtype.NewBool(in.Infinite),
-		Job:      in.Job,
-		Time:     time.Now(),
+		cron:         c,
+		schedule:     schedule,
+		jobName:      runtime.FuncForPC(reflect.ValueOf(in.Job).Pointer()).Name(),
+		times:        gtype.NewInt(in.Times),
+		infinite:     gtype.NewBool(in.Infinite),
+		RegisterTime: time.Now(),
+		Job:          in.Job,
 	}
 	if in.Name != "" {
 		entry.Name = in.Name
@@ -89,102 +95,108 @@ func (c *Cron) doAddEntry(in doAddEntryInput) (*Entry, error) {
 }
 
 // IsSingleton return whether this entry is a singleton timed task.
-func (entry *Entry) IsSingleton() bool {
-	return entry.timerEntry.IsSingleton()
+func (e *Entry) IsSingleton() bool {
+	return e.timerEntry.IsSingleton()
 }
 
 // SetSingleton sets the entry running in singleton mode.
-func (entry *Entry) SetSingleton(enabled bool) {
-	entry.timerEntry.SetSingleton(enabled)
+func (e *Entry) SetSingleton(enabled bool) {
+	e.timerEntry.SetSingleton(enabled)
 }
 
 // SetTimes sets the times which the entry can run.
-func (entry *Entry) SetTimes(times int) {
-	entry.times.Set(times)
-	entry.infinite.Set(false)
+func (e *Entry) SetTimes(times int) {
+	e.times.Set(times)
+	e.infinite.Set(false)
 }
 
 // Status returns the status of entry.
-func (entry *Entry) Status() int {
-	return entry.timerEntry.Status()
+func (e *Entry) Status() int {
+	return e.timerEntry.Status()
 }
 
 // SetStatus sets the status of the entry.
-func (entry *Entry) SetStatus(status int) int {
-	return entry.timerEntry.SetStatus(status)
+func (e *Entry) SetStatus(status int) int {
+	return e.timerEntry.SetStatus(status)
 }
 
 // Start starts running the entry.
-func (entry *Entry) Start() {
-	entry.timerEntry.Start()
+func (e *Entry) Start() {
+	e.timerEntry.Start()
 }
 
 // Stop stops running the entry.
-func (entry *Entry) Stop() {
-	entry.timerEntry.Stop()
+func (e *Entry) Stop() {
+	e.timerEntry.Stop()
 }
 
 // Close stops and removes the entry from cron.
-func (entry *Entry) Close() {
-	entry.cron.entries.Remove(entry.Name)
-	entry.timerEntry.Close()
+func (e *Entry) Close() {
+	e.cron.entries.Remove(e.Name)
+	e.timerEntry.Close()
 }
 
 // checkAndRun is the core timing task check logic.
-// The running times limits feature is implemented by gcron.Entry and cannot be implemented by gtimer.Entry.
-// gcron.Entry relies on gtimer to implement a scheduled task check for gcron.Entry per second.
-func (entry *Entry) checkAndRun(ctx context.Context) {
-	if entry.schedule.meet(time.Now()) {
-		switch entry.cron.status.Val() {
-		case StatusStopped:
-			return
+// This function is called every second.
+func (e *Entry) checkAndRun(ctx context.Context) {
+	currentTime := time.Now()
+	if !e.schedule.checkMeetAndUpdateLastSeconds(ctx, currentTime) {
+		return
+	}
+	switch e.cron.status.Val() {
+	case StatusStopped:
+		return
 
-		case StatusClosed:
-			entry.logDebugf(ctx, "[gcron] %s %s removed", entry.schedule.pattern, entry.jobName)
-			entry.Close()
+	case StatusClosed:
+		e.logDebugf(ctx, `cron job "%s" is removed`, e.getJobNameWithPattern())
+		e.Close()
 
-		case StatusReady:
-			fallthrough
-		case StatusRunning:
-			defer func() {
-				if exception := recover(); exception != nil {
-					entry.logErrorf(ctx,
-						"[gcron] %s %s end with error: %+v",
-						entry.schedule.pattern, entry.jobName, exception,
-					)
-				} else {
-					entry.logDebugf(ctx, "[gcron] %s %s end", entry.schedule.pattern, entry.jobName)
-				}
+	case StatusReady, StatusRunning:
+		e.cron.jobWaiter.Add(1)
+		defer func() {
+			e.cron.jobWaiter.Done()
+			if exception := recover(); exception != nil {
+				// Exception caught, it logs the error content to logger in default behavior.
+				e.logErrorf(ctx,
+					`cron job "%s(%s)" end with error: %+v`,
+					e.jobName, e.schedule.pattern, exception,
+				)
+			} else {
+				e.logDebugf(ctx, `cron job "%s" ends`, e.getJobNameWithPattern())
+			}
+			if e.timerEntry.Status() == StatusClosed {
+				e.Close()
+			}
+		}()
 
-				if entry.timerEntry.Status() == StatusClosed {
-					entry.Close()
-				}
-			}()
-
-			// Running times check.
-			if !entry.infinite.Val() {
-				times := entry.times.Add(-1)
-				if times <= 0 {
-					if entry.timerEntry.SetStatus(StatusClosed) == StatusClosed || times < 0 {
-						return
-					}
+		// Running times check.
+		if !e.infinite.Val() {
+			times := e.times.Add(-1)
+			if times <= 0 {
+				if e.timerEntry.SetStatus(StatusClosed) == StatusClosed || times < 0 {
+					return
 				}
 			}
-			entry.logDebugf(ctx, "[gcron] %s %s start", entry.schedule.pattern, entry.jobName)
-
-			entry.Job(ctx)
 		}
+		e.logDebugf(ctx, `cron job "%s" starts`, e.getJobNameWithPattern())
+		e.Job(ctx)
 	}
 }
 
-func (entry *Entry) logDebugf(ctx context.Context, format string, v ...interface{}) {
-	if logger := entry.cron.GetLogger(); logger != nil {
+func (e *Entry) getJobNameWithPattern() string {
+	return fmt.Sprintf(`%s(%s)`, e.jobName, e.schedule.pattern)
+}
+
+func (e *Entry) logDebugf(ctx context.Context, format string, v ...interface{}) {
+	if logger := e.cron.GetLogger(); logger != nil {
 		logger.Debugf(ctx, format, v...)
 	}
 }
 
-func (entry *Entry) logErrorf(ctx context.Context, format string, v ...interface{}) {
-	if logger := entry.cron.GetLogger(); logger != nil {
-		logger.Errorf(ctx, format, v...)
+func (e *Entry) logErrorf(ctx context.Context, format string, v ...interface{}) {
+	logger := e.cron.GetLogger()
+	if logger == nil {
+		logger = glog.DefaultLogger()
 	}
+	logger.Errorf(ctx, format, v...)
 }

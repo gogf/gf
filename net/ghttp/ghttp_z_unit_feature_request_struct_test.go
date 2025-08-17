@@ -32,6 +32,11 @@ func Test_Params_Parse(t *testing.T) {
 		}
 		r.Response.WriteExit(user.Map["id"], user.Map["score"])
 	})
+	s.BindHandler("/parseErr", func(r *ghttp.Request) {
+		var user User
+		err := r.Parse(user)
+		r.Response.WriteExit(err != nil)
+	})
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -41,6 +46,7 @@ func Test_Params_Parse(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(client.PostContent(ctx, "/parse", `{"id":1,"name":"john","map":{"id":1,"score":100}}`), `1100`)
+		t.Assert(client.PostContent(ctx, "/parseErr", `{"id":1,"name":"john","map":{"id":1,"score":100}}`), true)
 	})
 }
 
@@ -106,6 +112,42 @@ func Test_Params_ParseForm(t *testing.T) {
 			"id":   1,
 			"name": "john",
 		}), `1john`)
+	})
+}
+
+// https://github.com/gogf/gf/pull/4143
+func Test_Params_ParseForm_FixMakeBodyRepeatableRead(t *testing.T) {
+	type User struct {
+		Id   int
+		Name string
+	}
+	s := g.Server(guid.S())
+	s.BindHandler("/parse-form", func(r *ghttp.Request) {
+		var user *User
+		if err := r.ParseForm(&user); err != nil {
+			r.Response.WriteExit(err)
+		}
+		hasBody := len(r.GetBody()) > 0
+		r.Response.WriteExit(hasBody)
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		t.Assert(c.GetContent(ctx, "/parse-form"), `false`)
+		t.Assert(c.GetContent(ctx, "/parse-form", g.Map{
+			"id":   1,
+			"name": "john",
+		}), false)
+		t.Assert(c.PostContent(ctx, "/parse-form"), `false`)
+		t.Assert(c.PostContent(ctx, "/parse-form", g.Map{
+			"id":   1,
+			"name": "john",
+		}), true)
 	})
 }
 

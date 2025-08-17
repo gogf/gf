@@ -14,7 +14,7 @@ import (
 func Benchmark_TrimRightCharWithStrings(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		path := "//////////"
-		path = strings.TrimRight(path, "/")
+		strings.TrimRight(path, "/")
 	}
 }
 

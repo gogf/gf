@@ -26,7 +26,7 @@ func Test_Set1(t *testing.T) {
 	p.Set("k1.k11", []int{1, 2, 3})
 	if c, err := p.ToJson(); err == nil {
 
-		if bytes.Compare(c, []byte(`{"k1":{"k11":[1,2,3]},"k2":"v2"}`)) != 0 {
+		if !bytes.Equal(c, []byte(`{"k1":{"k11":[1,2,3]},"k2":"v2"}`)) {
 			t.Error("expect:", string(e))
 		}
 	} else {
@@ -51,7 +51,7 @@ func Test_Set3(t *testing.T) {
 		"k1": "v1",
 	})
 	if c, err := p.ToJson(); err == nil {
-		if bytes.Compare(c, e) != 0 {
+		if !bytes.Equal(c, e) {
 			t.Error("expect:", string(e))
 		}
 	} else {
@@ -67,7 +67,7 @@ func Test_Set4(t *testing.T) {
 	})
 	if c, err := p.ToJson(); err == nil {
 
-		if bytes.Compare(c, e) != 0 {
+		if !bytes.Equal(c, e) {
 			t.Error("expect:", string(e))
 		}
 	} else {
@@ -81,7 +81,7 @@ func Test_Set5(t *testing.T) {
 	p.Set("0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0", []int{1, 2, 3})
 	if c, err := p.ToJson(); err == nil {
 
-		if bytes.Compare(c, e) != 0 {
+		if !bytes.Equal(c, e) {
 			t.Error("expect:", string(e))
 		}
 	} else {
@@ -95,7 +95,7 @@ func Test_Set6(t *testing.T) {
 	p.Set("1", []int{1, 2, 3})
 	if c, err := p.ToJson(); err == nil {
 
-		if bytes.Compare(c, e) != 0 {
+		if !bytes.Equal(c, e) {
 			t.Error("expect:", string(e))
 		}
 	} else {
@@ -112,7 +112,7 @@ func Test_Set7(t *testing.T) {
 	p.Set("0.1", []int{1, 2, 3})
 	if c, err := p.ToJson(); err == nil {
 
-		if bytes.Compare(c, e) != 0 {
+		if !bytes.Equal(c, e) {
 			t.Error("expect:", string(e))
 		}
 	} else {
@@ -129,7 +129,7 @@ func Test_Set8(t *testing.T) {
 	p.Set("0.0.0.0.0.0.1", []int{1, 2, 3})
 	if c, err := p.ToJson(); err == nil {
 
-		if bytes.Compare(c, e) != 0 {
+		if !bytes.Equal(c, e) {
 			t.Error("expect:", string(e))
 		}
 	} else {
@@ -146,7 +146,7 @@ func Test_Set9(t *testing.T) {
 	p.Set("k1.1", []int{1, 2, 3})
 	if c, err := p.ToJson(); err == nil {
 
-		if bytes.Compare(c, e) != 0 {
+		if !bytes.Equal(c, e) {
 			t.Error("expect:", string(e))
 		}
 	} else {
@@ -160,7 +160,7 @@ func Test_Set10(t *testing.T) {
 	p.Set("a.b.c", 1)
 	if c, err := p.ToJson(); err == nil {
 
-		if bytes.Compare(c, e) != 0 {
+		if !bytes.Equal(c, e) {
 			t.Error("expect:", string(e))
 		}
 	} else {
@@ -174,7 +174,7 @@ func Test_Set11(t *testing.T) {
 	p.Remove("a.b.c")
 	if c, err := p.ToJson(); err == nil {
 
-		if bytes.Compare(c, e) != 0 {
+		if !bytes.Equal(c, e) {
 			t.Error("expect:", string(e))
 		}
 	} else {
@@ -189,7 +189,7 @@ func Test_Set12(t *testing.T) {
 	p.Set("1", 1)
 	if c, err := p.ToJson(); err == nil {
 
-		if bytes.Compare(c, e) != 0 {
+		if !bytes.Equal(c, e) {
 			t.Error("expect:", string(e))
 		}
 	} else {
@@ -204,7 +204,7 @@ func Test_Set13(t *testing.T) {
 	p.Set("array.1", 1)
 	if c, err := p.ToJson(); err == nil {
 
-		if bytes.Compare(c, e) != 0 {
+		if !bytes.Equal(c, e) {
 			t.Error("expect:", string(e))
 		}
 	} else {
@@ -219,7 +219,7 @@ func Test_Set14(t *testing.T) {
 	p.Set("f.a", 1)
 	if c, err := p.ToJson(); err == nil {
 
-		if bytes.Compare(c, e) != 0 {
+		if !bytes.Equal(c, e) {
 			t.Error("expect:", string(e))
 		}
 	} else {

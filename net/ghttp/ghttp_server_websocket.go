@@ -10,6 +10,8 @@ import "github.com/gorilla/websocket"
 
 // WebSocket wraps the underlying websocket connection
 // and provides convenient functions.
+//
+// Deprecated: will be removed in the future, please use third-party websocket library instead.
 type WebSocket struct {
 	*websocket.Conn
 }

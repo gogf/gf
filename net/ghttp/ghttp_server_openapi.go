@@ -19,27 +19,29 @@ func (s *Server) initOpenApi() {
 		return
 	}
 	var (
-		ctx    = context.TODO()
-		err    error
-		method string
+		ctx     = context.TODO()
+		err     error
+		methods []string
 	)
 	for _, item := range s.GetRoutes() {
 		switch item.Type {
 		case HandlerTypeMiddleware, HandlerTypeHook:
 			continue
 		}
-		method = item.Method
-		if gstr.Equal(method, defaultMethod) {
-			method = ""
-		}
-		if item.Handler.Info.Func == nil {
-			err = s.openapi.Add(goai.AddInput{
-				Path:   item.Route,
-				Method: method,
-				Object: item.Handler.Info.Value.Interface(),
-			})
-			if err != nil {
-				s.Logger().Fatalf(ctx, `%+v`, err)
+		if item.Handler.Info.IsStrictRoute {
+			methods = []string{item.Method}
+			if gstr.Equal(item.Method, defaultMethod) {
+				methods = SupportedMethods()
+			}
+			for _, method := range methods {
+				err = s.openapi.Add(goai.AddInput{
+					Path:   item.Route,
+					Method: method,
+					Object: item.Handler.Info.Value.Interface(),
+				})
+				if err != nil {
+					s.Logger().Fatalf(ctx, `%+v`, err)
+				}
 			}
 		}
 	}

@@ -14,8 +14,6 @@ import (
 	"github.com/gogf/gf/v2/util/grand"
 )
 
-const SelectorRandom = "BalancerRandom"
-
 type selectorRandom struct {
 	mu    sync.RWMutex
 	nodes Nodes

@@ -10,29 +10,77 @@ import (
 	"bytes"
 	"context"
 	"time"
+
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Handler is function handler for custom logging content outputs.
 type Handler func(ctx context.Context, in *HandlerInput)
 
 // HandlerInput is the input parameter struct for logging Handler.
+//
+// The logging content is consisted in:
+// TimeFormat [LevelFormat] {TraceId} {CtxStr} Prefix CallerFunc CallerPath Content Values Stack
+//
+// The header in the logging content is:
+// TimeFormat [LevelFormat] {TraceId} {CtxStr} Prefix CallerFunc CallerPath
 type HandlerInput struct {
 	internalHandlerInfo
-	Logger      *Logger       // Logger.
-	Buffer      *bytes.Buffer // Buffer for logging content outputs.
-	Time        time.Time     // Logging time, which is the time that logging triggers.
-	TimeFormat  string        // Formatted time string, like "2016-01-09 12:00:00".
-	Color       int           // Using color, like COLOR_RED, COLOR_BLUE, etc. Eg: 34
-	Level       int           // Using level, like LEVEL_INFO, LEVEL_ERRO, etc. Eg: 256
-	LevelFormat string        // Formatted level string, like "DEBU", "ERRO", etc. Eg: ERRO
-	CallerFunc  string        // The source function name that calls logging, only available if F_CALLER_FN set.
-	CallerPath  string        // The source file path and its line number that calls logging, only available if F_FILE_SHORT or F_FILE_LONG set.
-	CtxStr      string        // The retrieved context value string from context, only available if Config.CtxKeys configured.
-	TraceId     string        // Trace id, only available if tracing is enabled.
-	Prefix      string        // Custom prefix string for logging content.
-	Content     string        // Content is the main logging content without error stack string produced by logger.
-	Stack       string        // Stack string produced by logger, only available if Config.StStatus configured.
-	IsAsync     bool          // IsAsync marks it is in asynchronous logging.
+
+	// Current Logger object.
+	Logger *Logger
+
+	// Buffer for logging content outputs.
+	Buffer *bytes.Buffer
+
+	// (ReadOnly) Logging time, which is the time that logging triggers.
+	Time time.Time
+
+	// Formatted time string for output, like "2016-01-09 12:00:00".
+	TimeFormat string
+
+	// (ReadOnly) Using color constant value, like COLOR_RED, COLOR_BLUE, etc.
+	// Example: 34
+	Color int
+
+	// (ReadOnly) Using level, like LEVEL_INFO, LEVEL_ERRO, etc.
+	// Example: 256
+	Level int
+
+	// Formatted level string for output, like "DEBU", "ERRO", etc.
+	// Example: ERRO
+	LevelFormat string
+
+	// The source function name that calls logging, only available if F_CALLER_FN set.
+	CallerFunc string
+
+	// The source file path and its line number that calls logging,
+	// only available if F_FILE_SHORT or F_FILE_LONG set.
+	CallerPath string
+
+	// The retrieved context value string from context, only available if Config.CtxKeys configured.
+	// It's empty if no Config.CtxKeys configured.
+	CtxStr string
+
+	// Trace id, only available if OpenTelemetry is enabled, or else it's an empty string.
+	TraceId string
+
+	// Custom prefix string in logging content header part.
+	// Note that, it takes no effect if HeaderPrint is disabled.
+	Prefix string
+
+	// Custom logging content for logging.
+	Content string
+
+	// The passed un-formatted values array to logger.
+	Values []any
+
+	// Stack string produced by logger, only available if Config.StStatus configured.
+	// Note that there are usually multiple lines in stack content.
+	Stack string
+
+	// IsAsync marks it is in asynchronous logging.
+	IsAsync bool
 }
 
 type internalHandlerInfo struct {
@@ -43,10 +91,10 @@ type internalHandlerInfo struct {
 // defaultHandler is the default handler for package.
 var defaultHandler Handler
 
-// defaultPrintHandler is a handler for logging content printing.
+// doFinalPrint is a handler for logging content printing.
 // This handler outputs logging content to file/stdout/write if any of them configured.
-func defaultPrintHandler(ctx context.Context, in *HandlerInput) {
-	buffer := in.Logger.doDefaultPrint(ctx, in)
+func doFinalPrint(ctx context.Context, in *HandlerInput) {
+	buffer := in.Logger.doFinalPrint(ctx, in)
 	if in.Buffer.Len() == 0 {
 		in.Buffer = buffer
 	}
@@ -79,23 +127,50 @@ func (in *HandlerInput) String(withColor ...bool) string {
 	return in.getDefaultBuffer(formatWithColor).String()
 }
 
+// ValuesContent converts and returns values as string content.
+func (in *HandlerInput) ValuesContent() string {
+	var (
+		buffer       = bytes.NewBuffer(nil)
+		valueContent string
+	)
+	for _, v := range in.Values {
+		valueContent = gconv.String(v)
+		if len(valueContent) == 0 {
+			continue
+		}
+		if buffer.Len() == 0 {
+			buffer.WriteString(valueContent)
+			continue
+		}
+		if buffer.Bytes()[buffer.Len()-1] != '\n' {
+			buffer.WriteString(" " + valueContent)
+			continue
+		}
+		// Remove one blank line(\n\n).
+		if valueContent[0] == '\n' {
+			valueContent = valueContent[1:]
+		}
+		buffer.WriteString(valueContent)
+	}
+	return buffer.String()
+}
+
 func (in *HandlerInput) getDefaultBuffer(withColor bool) *bytes.Buffer {
 	buffer := bytes.NewBuffer(nil)
-	if in.TimeFormat != "" {
-		buffer.WriteString(in.TimeFormat)
-	}
-	if in.LevelFormat != "" {
-		var levelStr = "[" + in.LevelFormat + "]"
-		if withColor {
-			in.addStringToBuffer(buffer, in.Logger.getColoredStr(
-				in.Logger.getColorByLevel(in.Level), levelStr,
-			))
-		} else {
-			in.addStringToBuffer(buffer, levelStr)
+	if in.Logger.config.HeaderPrint {
+		if in.TimeFormat != "" {
+			buffer.WriteString(in.TimeFormat)
 		}
-	}
-	if in.Prefix != "" {
-		in.addStringToBuffer(buffer, in.Prefix)
+		if in.Logger.config.LevelPrint && in.LevelFormat != "" {
+			var levelStr = "[" + in.LevelFormat + "]"
+			if withColor {
+				in.addStringToBuffer(buffer, in.Logger.getColoredStr(
+					in.Logger.getColorByLevel(in.Level), levelStr,
+				))
+			} else {
+				in.addStringToBuffer(buffer, levelStr)
+			}
+		}
 	}
 	if in.TraceId != "" {
 		in.addStringToBuffer(buffer, "{"+in.TraceId+"}")
@@ -103,18 +178,28 @@ func (in *HandlerInput) getDefaultBuffer(withColor bool) *bytes.Buffer {
 	if in.CtxStr != "" {
 		in.addStringToBuffer(buffer, "{"+in.CtxStr+"}")
 	}
-	if in.CallerFunc != "" {
-		in.addStringToBuffer(buffer, in.CallerFunc)
-	}
-	if in.CallerPath != "" {
-		in.addStringToBuffer(buffer, in.CallerPath)
-	}
-	if in.Content != "" {
-		if in.Stack != "" {
-			in.addStringToBuffer(buffer, in.Content+"\nStack:\n"+in.Stack)
-		} else {
-			in.addStringToBuffer(buffer, in.Content)
+	if in.Logger.config.HeaderPrint {
+		if in.Prefix != "" {
+			in.addStringToBuffer(buffer, in.Prefix)
 		}
+		if in.CallerFunc != "" {
+			in.addStringToBuffer(buffer, in.CallerFunc)
+		}
+		if in.CallerPath != "" {
+			in.addStringToBuffer(buffer, in.CallerPath)
+		}
+	}
+
+	if in.Content != "" {
+		in.addStringToBuffer(buffer, in.Content)
+	}
+
+	if len(in.Values) > 0 {
+		in.addStringToBuffer(buffer, in.ValuesContent())
+	}
+
+	if in.Stack != "" {
+		in.addStringToBuffer(buffer, "\nStack:\n"+in.Stack)
 	}
 	// avoid a single space at the end of a line.
 	buffer.WriteString("\n")

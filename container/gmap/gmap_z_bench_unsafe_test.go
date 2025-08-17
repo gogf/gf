@@ -16,11 +16,17 @@ import (
 )
 
 var anyAnyMapUnsafe = gmap.New()
+
 var intIntMapUnsafe = gmap.NewIntIntMap()
+
 var intAnyMapUnsafe = gmap.NewIntAnyMap()
+
 var intStrMapUnsafe = gmap.NewIntStrMap()
+
 var strIntMapUnsafe = gmap.NewStrIntMap()
+
 var strAnyMapUnsafe = gmap.NewStrAnyMap()
+
 var strStrMapUnsafe = gmap.NewStrStrMap()
 
 // Writing benchmarks.

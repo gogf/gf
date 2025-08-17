@@ -127,6 +127,22 @@ func Test_IntIntMap_Batch(t *testing.T) {
 	})
 }
 
+func Test_IntIntMap_Iterator_Deadlock(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewIntIntMapFrom(map[int]int{1: 1, 2: 2, 3: 3, 4: 4}, true)
+		m.Iterator(func(k int, _ int) bool {
+			if k%2 == 0 {
+				m.Remove(k)
+			}
+			return true
+		})
+		t.Assert(m.Map(), map[int]int{
+			1: 1,
+			3: 3,
+		})
+	})
+}
+
 func Test_IntIntMap_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[int]int{1: 1, 2: 2}
@@ -381,5 +397,41 @@ func Test_IntIntMap_DeepCopy(t *testing.T) {
 		n := m.DeepCopy().(*gmap.IntIntMap)
 		n.Set(1, 2)
 		t.AssertNE(m.Get(1), n.Get(1))
+	})
+}
+
+func Test_IntIntMap_IsSubOf(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m1 := gmap.NewIntAnyMapFrom(g.MapIntAny{
+			1: 1,
+			2: 2,
+		})
+		m2 := gmap.NewIntAnyMapFrom(g.MapIntAny{
+			2: 2,
+		})
+		t.Assert(m1.IsSubOf(m2), false)
+		t.Assert(m2.IsSubOf(m1), true)
+		t.Assert(m2.IsSubOf(m2), true)
+	})
+}
+
+func Test_IntIntMap_Diff(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m1 := gmap.NewIntIntMapFrom(g.MapIntInt{
+			0: 0,
+			1: 1,
+			2: 2,
+			3: 3,
+		})
+		m2 := gmap.NewIntIntMapFrom(g.MapIntInt{
+			0: 0,
+			2: 2,
+			3: 31,
+			4: 4,
+		})
+		addedKeys, removedKeys, updatedKeys := m1.Diff(m2)
+		t.Assert(addedKeys, []int{4})
+		t.Assert(removedKeys, []int{1})
+		t.Assert(updatedKeys, []int{3})
 	})
 }

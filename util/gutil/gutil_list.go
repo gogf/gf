@@ -122,10 +122,15 @@ func ListItemValuesUnique(list interface{}, key string, subKey ...interface{}) [
 			m  = make(map[interface{}]struct{}, len(values))
 		)
 		for i := 0; i < len(values); {
-			if _, ok = m[values[i]]; ok {
+			value := values[i]
+			if t, ok := value.([]byte); ok {
+				// make byte slice comparable
+				value = string(t)
+			}
+			if _, ok = m[value]; ok {
 				values = SliceDelete(values, i)
 			} else {
-				m[values[i]] = struct{}{}
+				m[value] = struct{}{}
 				i++
 			}
 		}

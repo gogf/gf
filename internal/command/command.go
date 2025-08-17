@@ -17,7 +17,7 @@ import (
 var (
 	defaultParsedArgs    = make([]string, 0)
 	defaultParsedOptions = make(map[string]string)
-	argumentRegex        = regexp.MustCompile(`^\-{1,2}([\w\?\.\-]+)(=){0,1}(.*)$`)
+	argumentOptionRegex  = regexp.MustCompile(`^\-{1,2}([\w\?\.\-]+)(=){0,1}(.*)$`)
 )
 
 // Init does custom initialization.
@@ -41,22 +41,22 @@ func ParseUsingDefaultAlgorithm(args ...string) (parsedArgs []string, parsedOpti
 	parsedArgs = make([]string, 0)
 	parsedOptions = make(map[string]string)
 	for i := 0; i < len(args); {
-		array := argumentRegex.FindStringSubmatch(args[i])
+		array := argumentOptionRegex.FindStringSubmatch(args[i])
 		if len(array) > 2 {
 			if array[2] == "=" {
 				parsedOptions[array[1]] = array[3]
 			} else if i < len(args)-1 {
 				if len(args[i+1]) > 0 && args[i+1][0] == '-' {
-					// Eg: gf gen -d -n 1
+					// Example: gf gen -d -n 1
 					parsedOptions[array[1]] = array[3]
 				} else {
-					// Eg: gf gen -n 2
+					// Example: gf gen -n 2
 					parsedOptions[array[1]] = args[i+1]
 					i += 2
 					continue
 				}
 			} else {
-				// Eg: gf gen -h
+				// Example: gf gen -h
 				parsedOptions[array[1]] = array[3]
 			}
 		} else {
@@ -118,11 +118,11 @@ func GetArgAll() []string {
 // 1. Command line arguments are in lowercase format, eg: gf.package.variable;
 // 2. Environment arguments are in uppercase format, eg: GF_PACKAGE_VARIABLE；
 func GetOptWithEnv(key string, def ...string) string {
-	cmdKey := strings.ToLower(strings.Replace(key, "_", ".", -1))
+	cmdKey := strings.ToLower(strings.ReplaceAll(key, "_", "."))
 	if ContainsOpt(cmdKey) {
 		return GetOpt(cmdKey)
 	} else {
-		envKey := strings.ToUpper(strings.Replace(key, ".", "_", -1))
+		envKey := strings.ToUpper(strings.ReplaceAll(key, ".", "_"))
 		if r, ok := os.LookupEnv(envKey); ok {
 			return r
 		} else {

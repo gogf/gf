@@ -14,6 +14,10 @@ import (
 	"runtime"
 	"strings"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -21,9 +25,6 @@ import (
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/text/gstr"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // Process is the struct for a single process.
@@ -101,6 +102,11 @@ func (p *Process) Start(ctx context.Context) (int, error) {
 	}
 	p.Env = append(p.Env, fmt.Sprintf("%s=%d", envKeyPPid, p.PPid))
 	p.Env = genv.Filter(p.Env)
+
+	// On Windows, this works and doesn't work on other platforms
+	if runtime.GOOS == "windows" {
+		joinProcessArgs(p)
+	}
 
 	if err := p.Cmd.Start(); err == nil {
 		if p.Manager != nil {

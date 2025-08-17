@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// Package httputil provides HTTP functions for internal usage only.
 package httputil
 
 import (
@@ -11,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/v2/encoding/gurl"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -36,7 +38,9 @@ func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr strin
 		}
 	}
 	// Else converts it to map and does the url encoding.
-	m, urlEncode := gconv.Map(params), true
+	m, urlEncode := gconv.Map(params, gconv.MapOption{
+		OmitEmpty: true,
+	}), true
 	if len(m) == 0 {
 		return gconv.String(params)
 	}
@@ -54,12 +58,20 @@ func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr strin
 	}
 	s := ""
 	for k, v := range m {
+		// Ignore nil attributes.
+		if empty.IsNil(v) {
+			continue
+		}
 		if len(encodedParamStr) > 0 {
 			encodedParamStr += "&"
 		}
 		s = gconv.String(v)
-		if urlEncode && len(s) > 6 && strings.Compare(s[0:6], fileUploadingKey) != 0 {
-			s = gurl.Encode(s)
+		if urlEncode {
+			if strings.HasPrefix(s, fileUploadingKey) && len(s) > len(fileUploadingKey) {
+				// No url encoding if uploading file.
+			} else {
+				s = gurl.Encode(s)
+			}
 		}
 		encodedParamStr += k + "=" + s
 	}
@@ -72,7 +84,7 @@ func HeaderToMap(header http.Header) map[string]interface{} {
 	for k, v := range header {
 		if len(v) > 1 {
 			m[k] = v
-		} else {
+		} else if len(v) == 1 {
 			m[k] = v[0]
 		}
 	}

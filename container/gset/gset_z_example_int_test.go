@@ -42,7 +42,7 @@ func ExampleIntSet_Add() {
 	fmt.Println(intSet.Slice())
 	fmt.Println(intSet.AddIfNotExist(1))
 
-	// Mya Output:
+	// May Output:
 	// [1 2 3]
 	// false
 }
@@ -56,7 +56,7 @@ func ExampleIntSet_AddIfNotExist() {
 	fmt.Println(intSet.Slice())
 	fmt.Println(intSet.AddIfNotExist(1))
 
-	// Mya Output:
+	// May Output:
 	// [1 2 3]
 	// false
 }
@@ -313,7 +313,7 @@ func ExampleIntSet_Size() {
 	// 4
 }
 
-// Slice returns the a of items of the set as slice.
+// Slice returns the an of items of the set as slice.
 func ExampleIntSet_Slice() {
 	s1 := gset.NewIntSet()
 	s1.Add([]int{1, 2, 3, 4}...)

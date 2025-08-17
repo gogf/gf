@@ -12,6 +12,24 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// EnhancedStatusCode is http status for response.
+type EnhancedStatusCode = int
+
+// EnhancedStatusType is the structure for certain response status.
+// Currently, it only supports `Response` and `Examples`.
+// `Response` is the response structure
+// `Examples` is the examples for the response, map[string]interface{}, []interface{} are supported.
+type EnhancedStatusType struct {
+	Response any
+	Examples any
+}
+
+// IEnhanceResponseStatus is used to enhance the documentation of the response.
+// Normal response structure could implement this interface to provide more information.
+type IEnhanceResponseStatus interface {
+	EnhanceResponseStatus() map[EnhancedStatusCode]EnhancedStatusType
+}
+
 // Response is specified by OpenAPI/Swagger 3.0 standard.
 type Response struct {
 	Description string      `json:"description"`
@@ -22,7 +40,7 @@ type Response struct {
 }
 
 func (oai *OpenApiV3) tagMapToResponse(tagMap map[string]string, response *Response) error {
-	var mergedTagMap = oai.fileMapWithShortTags(tagMap)
+	var mergedTagMap = oai.fillMapWithShortTags(tagMap)
 	if err := gconv.Struct(mergedTagMap, response); err != nil {
 		return gerror.Wrap(err, `mapping struct tags to Response failed`)
 	}

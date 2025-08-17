@@ -10,6 +10,7 @@ import (
 	"context"
 
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 )
 
@@ -26,7 +27,7 @@ type Entry struct {
 	infinite    *gtype.Bool     // No times limit.
 }
 
-// JobFunc is the job function.
+// JobFunc is the timing called job function in timer.
 type JobFunc = func(ctx context.Context)
 
 // Status returns the status of the job.
@@ -44,26 +45,29 @@ func (entry *Entry) Run() {
 			return
 		}
 	}
-	go func() {
-		defer func() {
-			if exception := recover(); exception != nil {
-				if exception != panicExit {
-					if v, ok := exception.(error); ok && gerror.HasStack(v) {
-						panic(v)
-					} else {
-						panic(gerror.Newf(`exception recovered: %+v`, exception))
-					}
+	go entry.callJobFunc()
+}
+
+// callJobFunc executes the job function in entry.
+func (entry *Entry) callJobFunc() {
+	defer func() {
+		if exception := recover(); exception != nil {
+			if exception != panicExit {
+				if v, ok := exception.(error); ok && gerror.HasStack(v) {
+					panic(v)
 				} else {
-					entry.Close()
-					return
+					panic(gerror.NewCodef(gcode.CodeInternalPanic, "exception recovered: %+v", exception))
 				}
+			} else {
+				entry.Close()
+				return
 			}
-			if entry.Status() == StatusRunning {
-				entry.SetStatus(StatusReady)
-			}
-		}()
-		entry.job(entry.ctx)
+		}
+		if entry.Status() == StatusRunning {
+			entry.SetStatus(StatusReady)
+		}
 	}()
+	entry.job(entry.ctx)
 }
 
 // doCheckAndRunByTicks checks the if job can run in given timer ticks,

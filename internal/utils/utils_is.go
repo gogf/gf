@@ -57,6 +57,7 @@ func IsSlice(value interface{}) bool {
 	)
 	for reflectKind == reflect.Ptr {
 		reflectValue = reflectValue.Elem()
+		reflectKind = reflectValue.Kind()
 	}
 	switch reflectKind {
 	case reflect.Slice, reflect.Array:
@@ -73,6 +74,7 @@ func IsMap(value interface{}) bool {
 	)
 	for reflectKind == reflect.Ptr {
 		reflectValue = reflectValue.Elem()
+		reflectKind = reflectValue.Kind()
 	}
 	switch reflectKind {
 	case reflect.Map:
@@ -83,11 +85,11 @@ func IsMap(value interface{}) bool {
 
 // IsStruct checks whether `value` is type of struct.
 func IsStruct(value interface{}) bool {
-	var reflectType = reflect.TypeOf(value)
+	reflectType := reflect.TypeOf(value)
 	if reflectType == nil {
 		return false
 	}
-	var reflectKind = reflectType.Kind()
+	reflectKind := reflectType.Kind()
 	for reflectKind == reflect.Ptr {
 		reflectType = reflectType.Elem()
 		reflectKind = reflectType.Kind()

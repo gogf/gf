@@ -106,6 +106,7 @@ func Test_ListMap_Batch(t *testing.T) {
 		t.Assert(m.Map(), map[interface{}]interface{}{"key2": "val2", "key3": "val3"})
 	})
 }
+
 func Test_ListMap_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[interface{}]interface{}{1: 1, "key1": "val1"}

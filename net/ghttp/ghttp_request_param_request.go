@@ -8,7 +8,7 @@ package ghttp
 
 import (
 	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
@@ -177,6 +177,12 @@ func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]
 	if data == nil {
 		data = map[string]interface{}{}
 	}
+
+	// `in` Tag Struct values.
+	if err = r.mergeInTagStructValue(data); err != nil {
+		return data, nil
+	}
+
 	// Default struct values.
 	if err = r.mergeDefaultStructValue(data, pointer); err != nil {
 		return data, nil
@@ -187,25 +193,76 @@ func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
 func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) error {
+	fields := r.serveHandler.Handler.Info.ReqStructFields
+	if len(fields) > 0 {
+		for _, field := range fields {
+			if tagValue := field.TagDefault(); tagValue != "" {
+				mergeTagValueWithFoundKey(data, false, field.Name(), field.Name(), tagValue)
+			}
+		}
+		return nil
+	}
+
+	// provide non strict routing
 	tagFields, err := gstructs.TagFields(pointer, defaultValueTags)
 	if err != nil {
 		return err
 	}
 	if len(tagFields) > 0 {
+		for _, field := range tagFields {
+			mergeTagValueWithFoundKey(data, false, field.Name(), field.Name(), field.TagValue)
+		}
+	}
+
+	return nil
+}
+
+// mergeInTagStructValue merges the request parameters with header or cookie values from struct `in` tag definition.
+func (r *Request) mergeInTagStructValue(data map[string]interface{}) error {
+	fields := r.serveHandler.Handler.Info.ReqStructFields
+	if len(fields) > 0 {
 		var (
 			foundKey   string
 			foundValue interface{}
+			headerMap  = make(map[string]interface{})
+			cookieMap  = make(map[string]interface{})
 		)
-		for _, field := range tagFields {
-			foundKey, foundValue = gutil.MapPossibleItemByKey(data, field.Name())
-			if foundKey == "" {
-				data[field.Name()] = field.TagValue
-			} else {
-				if empty.IsEmpty(foundValue) {
-					data[foundKey] = field.TagValue
+
+		for k, v := range r.Header {
+			if len(v) > 0 {
+				headerMap[k] = v[0]
+			}
+		}
+
+		for _, cookie := range r.Cookies() {
+			cookieMap[cookie.Name] = cookie.Value
+		}
+
+		for _, field := range fields {
+			if tagValue := field.TagIn(); tagValue != "" {
+				findKey := field.TagPriorityName()
+				switch tagValue {
+				case goai.ParameterInHeader:
+					foundKey, foundValue = gutil.MapPossibleItemByKey(headerMap, findKey)
+				case goai.ParameterInCookie:
+					foundKey, foundValue = gutil.MapPossibleItemByKey(cookieMap, findKey)
+				}
+				if foundKey != "" {
+					mergeTagValueWithFoundKey(data, true, foundKey, field.Name(), foundValue)
 				}
 			}
 		}
 	}
 	return nil
+}
+
+// mergeTagValueWithFoundKey merges the request parameters when the key does not exist in the map or overwritten is true or the value is nil.
+func mergeTagValueWithFoundKey(data map[string]interface{}, overwritten bool, findKey string, fieldName string, tagValue interface{}) {
+	if foundKey, foundValue := gutil.MapPossibleItemByKey(data, findKey); foundKey == "" {
+		data[fieldName] = tagValue
+	} else {
+		if overwritten || foundValue == nil {
+			data[foundKey] = tagValue
+		}
+	}
 }

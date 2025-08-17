@@ -1,0 +1,28 @@
+# Rule description: Execute the ISSUE once a day at 3 a.m. (GMT+8) and set the non-bug issue that has not been active in the last 7 days to inactive
+name: Issue Check Inactive
+
+on:
+  schedule:
+    - cron: "0 19 * * *"
+
+env: # Set environment variables
+  TZ: Asia/Shanghai #Time zone (setting the time zone allows the 'Last Updated' on the page to use the time zone)
+
+permissions:
+  contents: read
+
+jobs:
+  issue-check-inactive:
+    permissions:
+      issues: write # for actions-cool/issues-helper to update issues
+     # pull-requests: write # for actions-cool/issues-helper to update PRs
+    runs-on: ubuntu-latest
+    steps:
+      - name: check-inactive
+        uses: actions-cool/issues-helper@v3
+        with:
+          actions: 'check-inactive'
+          inactive-label: 'inactive'
+          inactive-day: 30
+          issue-state: open
+          exclude-labels: 'bug,planned,$exclude-empty'

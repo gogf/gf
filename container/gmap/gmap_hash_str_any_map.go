@@ -8,6 +8,8 @@
 package gmap
 
 import (
+	"reflect"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/deepcopy"
 	"github.com/gogf/gf/v2/internal/empty"
@@ -16,6 +18,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// StrAnyMap implements map[string]interface{} with RWMutex that has switch.
 type StrAnyMap struct {
 	mu   rwmutex.RWMutex
 	data map[string]interface{}
@@ -44,9 +47,7 @@ func NewStrAnyMapFrom(data map[string]interface{}, safe ...bool) *StrAnyMap {
 // Iterator iterates the hash map readonly with custom callback function `f`.
 // If `f` returns true, then it continues iterating; or false to stop.
 func (m *StrAnyMap) Iterator(f func(k string, v interface{}) bool) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	for k, v := range m.data {
+	for k, v := range m.Map() {
 		if !f(k, v) {
 			break
 		}
@@ -151,7 +152,7 @@ func (m *StrAnyMap) Search(key string) (value interface{}, found bool) {
 func (m *StrAnyMap) Get(key string) (value interface{}) {
 	m.mu.RLock()
 	if m.data != nil {
-		value, _ = m.data[key]
+		value = m.data[key]
 	}
 	m.mu.RUnlock()
 	return
@@ -489,6 +490,9 @@ func (m *StrAnyMap) UnmarshalValue(value interface{}) (err error) {
 
 // DeepCopy implements interface for deep copy of current type.
 func (m *StrAnyMap) DeepCopy() interface{} {
+	if m == nil {
+		return nil
+	}
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	data := make(map[string]interface{}, len(m.data))
@@ -496,4 +500,50 @@ func (m *StrAnyMap) DeepCopy() interface{} {
 		data[k] = deepcopy.Copy(v)
 	}
 	return NewStrAnyMapFrom(data, m.mu.IsSafe())
+}
+
+// IsSubOf checks whether the current map is a sub-map of `other`.
+func (m *StrAnyMap) IsSubOf(other *StrAnyMap) bool {
+	if m == other {
+		return true
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	other.mu.RLock()
+	defer other.mu.RUnlock()
+	for key, value := range m.data {
+		otherValue, ok := other.data[key]
+		if !ok {
+			return false
+		}
+		if otherValue != value {
+			return false
+		}
+	}
+	return true
+}
+
+// Diff compares current map `m` with map `other` and returns their different keys.
+// The returned `addedKeys` are the keys that are in map `m` but not in map `other`.
+// The returned `removedKeys` are the keys that are in map `other` but not in map `m`.
+// The returned `updatedKeys` are the keys that are both in map `m` and `other` but their values and not equal (`!=`).
+func (m *StrAnyMap) Diff(other *StrAnyMap) (addedKeys, removedKeys, updatedKeys []string) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	other.mu.RLock()
+	defer other.mu.RUnlock()
+
+	for key := range m.data {
+		if _, ok := other.data[key]; !ok {
+			removedKeys = append(removedKeys, key)
+		} else if !reflect.DeepEqual(m.data[key], other.data[key]) {
+			updatedKeys = append(updatedKeys, key)
+		}
+	}
+	for key := range other.data {
+		if _, ok := m.data[key]; !ok {
+			addedKeys = append(addedKeys, key)
+		}
+	}
+	return
 }

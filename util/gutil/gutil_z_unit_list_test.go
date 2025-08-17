@@ -22,6 +22,7 @@ func Test_ListItemValues_Map(t *testing.T) {
 			g.Map{"id": 3, "score": 99},
 		}
 		t.Assert(gutil.ListItemValues(listMap, "id"), g.Slice{1, 2, 3})
+		t.Assert(gutil.ListItemValues(&listMap, "id"), g.Slice{1, 2, 3})
 		t.Assert(gutil.ListItemValues(listMap, "score"), g.Slice{100, 99, 99})
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -32,6 +33,10 @@ func Test_ListItemValues_Map(t *testing.T) {
 		}
 		t.Assert(gutil.ListItemValues(listMap, "id"), g.Slice{1, 2, 3})
 		t.Assert(gutil.ListItemValues(listMap, "score"), g.Slice{100, nil, 0})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		listMap := g.List{}
+		t.Assert(len(gutil.ListItemValues(listMap, "id")), 0)
 	})
 }
 
@@ -239,5 +244,19 @@ func Test_ListItemValuesUnique_Map_Array_SubKey(t *testing.T) {
 		t.Assert(gutil.ListItemValuesUnique(listMap, "scores", "Math"), g.Slice{1, 5, 9, 11})
 		t.Assert(gutil.ListItemValuesUnique(listMap, "scores", "English"), g.Slice{2, 8, 10, 12})
 		t.Assert(gutil.ListItemValuesUnique(listMap, "scores", "PE"), g.Slice{})
+	})
+}
+
+func Test_ListItemValuesUnique_Binary_ID(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		listMap := g.List{
+			g.Map{"id": []byte{1}, "score": 100},
+			g.Map{"id": []byte{2}, "score": 100},
+			g.Map{"id": []byte{3}, "score": 100},
+			g.Map{"id": []byte{4}, "score": 100},
+			g.Map{"id": []byte{4}, "score": 100},
+		}
+		t.Assert(gutil.ListItemValuesUnique(listMap, "id"), g.Slice{[]byte{1}, []byte{2}, []byte{3}, []byte{4}})
+		t.Assert(gutil.ListItemValuesUnique(listMap, "score"), g.Slice{100})
 	})
 }

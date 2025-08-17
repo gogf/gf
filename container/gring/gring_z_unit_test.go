@@ -43,6 +43,7 @@ func TestRing_Val(t *testing.T) {
 		r.Set(&Student{3, "jack", true})
 	})
 }
+
 func TestRing_CapLen(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		r := gring.New(10)
@@ -182,4 +183,44 @@ func Test_Issue1394(t *testing.T) {
 		}
 	})
 
+}
+
+func TestRing_RLockIteratorNext(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		r := gring.New(10)
+		for i := 0; i < 10; i++ {
+			r.Set(i).Next()
+		}
+
+		iterVal := 0
+		r.RLockIteratorNext(func(value interface{}) bool {
+			if value.(int) == 0 {
+				iterVal = value.(int)
+				return false
+			}
+			return true
+		})
+
+		t.Assert(iterVal, 0)
+	})
+}
+
+func TestRing_RLockIteratorPrev(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		r := gring.New(10)
+		for i := 0; i < 10; i++ {
+			r.Set(i).Next()
+		}
+
+		iterVal := 0
+		r.RLockIteratorPrev(func(value interface{}) bool {
+			if value.(int) == 0 {
+				iterVal = value.(int)
+				return false
+			}
+			return true
+		})
+
+		t.Assert(iterVal, 0)
+	})
 }

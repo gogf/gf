@@ -7,14 +7,17 @@
 package ghttp_test
 
 import (
+	"bytes"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/net/gtcp"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -121,10 +124,8 @@ func Test_Router_Group_Methods(t *testing.T) {
 }
 
 func Test_Router_Group_MultiServer(t *testing.T) {
-	p1, _ := gtcp.GetFreePort()
-	p2, _ := gtcp.GetFreePort()
-	s1 := g.Server(p1)
-	s2 := g.Server(p2)
+	s1 := g.Server(guid.S())
+	s2 := g.Server(guid.S())
 	s1.Group("/", func(group *ghttp.RouterGroup) {
 		group.POST("/post", func(r *ghttp.Request) {
 			r.Response.Write("post1")
@@ -135,8 +136,6 @@ func Test_Router_Group_MultiServer(t *testing.T) {
 			r.Response.Write("post2")
 		})
 	})
-	s1.SetPort(p1)
-	s2.SetPort(p2)
 	s1.SetDumpRouterMap(false)
 	s2.SetDumpRouterMap(false)
 	gtest.Assert(s1.Start(), nil)
@@ -147,9 +146,9 @@ func Test_Router_Group_MultiServer(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		c1 := g.Client()
-		c1.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p1))
+		c1.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s1.GetListenedPort()))
 		c2 := g.Client()
-		c2.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p2))
+		c2.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s2.GetListenedPort()))
 		t.Assert(c1.PostContent(ctx, "/post"), "post1")
 		t.Assert(c2.PostContent(ctx, "/post"), "post2")
 	})
@@ -180,5 +179,57 @@ func Test_Router_Group_Map(t *testing.T) {
 
 		t.Assert(c.GetContent(ctx, "/test"), "get")
 		t.Assert(c.PostContent(ctx, "/test"), "post")
+	})
+}
+
+type SafeBuffer struct {
+	buffer *bytes.Buffer
+	mu     sync.Mutex
+}
+
+func (b *SafeBuffer) Write(p []byte) (n int, err error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buffer.Write(p)
+}
+
+func (b *SafeBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buffer.String()
+}
+
+func Test_Router_OverWritten(t *testing.T) {
+	var (
+		s   = g.Server(guid.S())
+		obj = new(GroupObject)
+		buf = &SafeBuffer{
+			buffer: bytes.NewBuffer(nil),
+			mu:     sync.Mutex{},
+		}
+		logger = glog.NewWithWriter(buf)
+	)
+	logger.SetStdoutPrint(false)
+	s.SetLogger(logger)
+	s.SetRouteOverWrite(true)
+	s.Group("/api", func(group *ghttp.RouterGroup) {
+		group.ALLMap(g.Map{
+			"/obj": obj,
+		})
+		group.ALLMap(g.Map{
+			"/obj": obj,
+		})
+	})
+	s.Start()
+	defer s.Shutdown()
+
+	dumpContent := buf.String()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.Count(dumpContent, `/api/obj `), 1)
+		t.Assert(gstr.Count(dumpContent, `/api/obj/index`), 1)
+		t.Assert(gstr.Count(dumpContent, `/api/obj/show`), 1)
+		t.Assert(gstr.Count(dumpContent, `/api/obj/delete`), 1)
 	})
 }

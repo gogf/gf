@@ -1,0 +1,72 @@
+# The sub codes build and unit testing running workflow.
+# It maintains the ci of unimportant packages.
+name: GoFrame Sub CI
+
+
+on:
+  push:
+    branches:
+    - master
+    - develop
+    - personal/**
+    - feature/**
+    - enhance/**
+    - fix/**
+
+  pull_request:
+    branches:
+    - master
+    - develop
+    - personal/**
+    - feature/**
+    - enhance/**
+    - fix/**
+
+# This allows a subsequently queued workflow run to interrupt previous runs
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+env:
+  TZ: "Asia/Shanghai"
+  # for unit testing cases of some components that only execute on the latest go version.
+  LATEST_GO_VERSION: "1.23"
+
+jobs:
+  code-test:
+    strategy:
+      matrix:
+        # 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+        # When adding new go version to the list, make sure:
+        # 1. Update the `LATEST_GO_VERSION` env variable.
+        # 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+        go-version: [ "1.22", "1.23" ]
+        goarch: [ "386", "amd64" ]
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Setup Timezone
+      uses: szenius/set-timezone@v2.0
+      with:
+        timezoneLinux: "Asia/Shanghai"
+
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Start Minikube
+      uses: medyagh/setup-minikube@master
+
+    - name: Setup Golang ${{ matrix.go-version }}
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go-version }}
+        cache-dependency-path: '**/go.sum' 
+
+    - name: Before Script
+      run:  bash .github/workflows/scripts/before_script.sh
+
+    - name: Build & Test
+      run: bash .github/workflows/scripts/ci-sub.sh
+
+

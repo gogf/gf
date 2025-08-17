@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/gogf/gf/v2/internal/instance"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -22,7 +23,7 @@ func Test_View(t *testing.T) {
 		t.AssertNE(View(), nil)
 		b, e := View().ParseContent(context.TODO(), `{{"我是中国人" | substr 2 -1}}`, nil)
 		t.Assert(e, nil)
-		t.Assert(b, "中国人")
+		t.Assert(b, "中国")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		tpl := "t.tpl"
@@ -32,7 +33,7 @@ func Test_View(t *testing.T) {
 
 		b, e := View().Parse(context.TODO(), "t.tpl", nil)
 		t.Assert(e, nil)
-		t.Assert(b, "中国人")
+		t.Assert(b, "中国")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		path := fmt.Sprintf(`%s/%d`, gfile.Temp(), gtime.TimestampNano())
@@ -45,7 +46,7 @@ func Test_View(t *testing.T) {
 
 		b, e := View().Parse(context.TODO(), "t.tpl", nil)
 		t.Assert(e, nil)
-		t.Assert(b, "中国人")
+		t.Assert(b, "中国")
 	})
 }
 
@@ -56,7 +57,7 @@ func Test_View_Config(t *testing.T) {
 		dirPath := gtest.DataPath("view1")
 		Config().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
 		defer Config().GetAdapter().(*gcfg.AdapterFile).ClearContent()
-		defer localInstances.Clear()
+		defer instance.Clear()
 
 		view := View("test1")
 		t.AssertNE(view, nil)
@@ -78,7 +79,7 @@ func Test_View_Config(t *testing.T) {
 		dirPath := gtest.DataPath("view1")
 		Config().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
 		defer Config().GetAdapter().(*gcfg.AdapterFile).ClearContent()
-		defer localInstances.Clear()
+		defer instance.Clear()
 
 		view := View("test2")
 		t.AssertNE(view, nil)
@@ -100,7 +101,7 @@ func Test_View_Config(t *testing.T) {
 		dirPath := gtest.DataPath("view2")
 		Config().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
 		defer Config().GetAdapter().(*gcfg.AdapterFile).ClearContent()
-		defer localInstances.Clear()
+		defer instance.Clear()
 
 		view := View()
 		t.AssertNE(view, nil)
@@ -122,7 +123,7 @@ func Test_View_Config(t *testing.T) {
 		dirPath := gtest.DataPath("view2")
 		Config().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
 		defer Config().GetAdapter().(*gcfg.AdapterFile).ClearContent()
-		defer localInstances.Clear()
+		defer instance.Clear()
 
 		view := View("test100")
 		t.AssertNE(view, nil)

@@ -37,10 +37,24 @@ func (j *Json) UnmarshalValue(value interface{}) error {
 
 // MapStrAny implements interface function MapStrAny().
 func (j *Json) MapStrAny() map[string]interface{} {
+	if j == nil {
+		return nil
+	}
 	return j.Map()
 }
 
 // Interfaces implements interface function Interfaces().
 func (j *Json) Interfaces() []interface{} {
+	if j == nil {
+		return nil
+	}
 	return j.Array()
+}
+
+// String returns current Json object as string.
+func (j *Json) String() string {
+	if j.IsNil() {
+		return ""
+	}
+	return j.MustToJsonString()
 }

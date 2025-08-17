@@ -8,6 +8,7 @@ package gtree_test
 
 import (
 	"fmt"
+
 	"github.com/gogf/gf/v2/container/gtree"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -452,7 +453,7 @@ func ExampleBTree_String() {
 	fmt.Println(tree.String())
 
 	// Output:
-	// key0
+	//     key0
 	// key1
 	//     key2
 	// key3
@@ -483,7 +484,7 @@ func ExampleBTree_Print() {
 	tree.Print()
 
 	// Output:
-	// key0
+	//     key0
 	// key1
 	//     key2
 	// key3

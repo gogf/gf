@@ -4,27 +4,30 @@
 
 使用`PolarisMesh`作为服务注册、发现管理和心跳上报。
 
+## 安装
 
-## Installation
 ```
 go get -u -v github.com/gogf/gf/contrib/registry/polaris/v2
 ```
+
 suggested using `go.mod`:
+
 ```
 require github.com/gogf/gf/contrib/registry/polaris/v2 latest
 ```
 
-## Limitation
-```
-golang version >= 1.15
-```
+## Golang版本限制
 
+```
+golang version >= 1.20
+```
 
 ## 示例
 
 ### 引用示例
 
 [服务端](example/registry/polaris/server/main.go)
+
 ```go
 package main
 
@@ -38,10 +41,10 @@ import (
 )
 
 func main() {
-    conf := config.NewDefaultConfiguration([]string{"192.168.100.222:8091"})
+    conf := config.NewDefaultConfiguration([]string{"183.47.111.80:8091"})
     
     // TTL egt 2*time.Second
-    gsvc.SetRegistry(polaris.NewRegistryWithConfig(conf, polaris.WithTTL(100)))
+    gsvc.SetRegistry(polaris.NewWithConfig(conf, polaris.WithTTL(10)))
     
     s := g.Server(`hello.svc`)
     s.BindHandler("/", func(r *ghttp.Request) {
@@ -54,6 +57,7 @@ func main() {
 ```
 
 [客户端](example/registry/polaris/client/main.go)
+
 ```go
 package main
 
@@ -71,9 +75,9 @@ import (
 )
 
 func main() {
-    conf := config.NewDefaultConfiguration([]string{"192.168.100.222:8091"})
+    conf := config.NewDefaultConfiguration([]string{"183.47.111.80:8091"})
     
-    gsvc.SetRegistry(polaris.NewRegistryWithConfig(conf, polaris.WithTTL(100)))
+    gsvc.SetRegistry(polaris.NewWithConfig(conf, polaris.WithTTL(10)))
     
     for i := 0; i < 100; i++ {
         res, err := g.Client().Get(gctx.New(), `http://hello.svc/`)

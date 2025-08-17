@@ -14,8 +14,6 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 )
 
-const SelectorLeastConnection = "BalancerLeastConnection"
-
 type selectorLeastConnection struct {
 	mu    sync.RWMutex
 	nodes []*leastConnectionNode

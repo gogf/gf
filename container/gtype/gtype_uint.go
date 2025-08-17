@@ -78,5 +78,8 @@ func (v *Uint) UnmarshalValue(value interface{}) error {
 
 // DeepCopy implements interface for deep copy of current type.
 func (v *Uint) DeepCopy() interface{} {
+	if v == nil {
+		return nil
+	}
 	return NewUint(v.Val())
 }

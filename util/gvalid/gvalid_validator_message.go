@@ -6,7 +6,11 @@
 
 package gvalid
 
-import "context"
+import (
+	"context"
+
+	"github.com/gogf/gf/v2/util/gvalid/internal/builtin"
+)
 
 // getErrorMessageByRule retrieves and returns the error message for specified rule.
 // It firstly retrieves the message from custom message map, and then checks i18n manager,
@@ -21,17 +25,25 @@ func (v *Validator) getErrorMessageByRule(ctx context.Context, ruleKey string, c
 		}
 		return content
 	}
+
 	// Retrieve default message according to certain rule.
 	content = v.i18nManager.GetContent(ctx, ruleMessagePrefixForI18n+ruleKey)
 	if content == "" {
-		content = defaultMessages[ruleKey]
+		content = defaultErrorMessages[ruleKey]
+	}
+	// Builtin rule message.
+	if content == "" {
+		if builtinRule := builtin.GetRule(ruleKey); builtinRule != nil {
+			content = builtinRule.Message()
+		}
 	}
 	// If there's no configured rule message, it uses default one.
 	if content == "" {
 		content = v.i18nManager.GetContent(ctx, ruleMessagePrefixForI18n+internalDefaultRuleName)
-		if content == "" {
-			content = defaultMessages[internalDefaultRuleName]
-		}
+	}
+	// If there's no configured rule message, it uses default one.
+	if content == "" {
+		content = defaultErrorMessages[internalDefaultRuleName]
 	}
 	return content
 }

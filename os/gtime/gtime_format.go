@@ -8,6 +8,7 @@ package gtime
 
 import (
 	"bytes"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -17,35 +18,35 @@ import (
 var (
 	// Refer: http://php.net/manual/en/function.date.php
 	formats = map[byte]string{
-		'd': "02",                        // Day:    Day of the month, 2 digits with leading zeros. Eg: 01 to 31.
-		'D': "Mon",                       // Day:    A textual representation of a day, three letters. Eg: Mon through Sun.
-		'w': "Monday",                    // Day:    Numeric representation of the day of the week. Eg: 0 (for Sunday) through 6 (for Saturday).
-		'N': "Monday",                    // Day:    ISO-8601 numeric representation of the day of the week. Eg: 1 (for Monday) through 7 (for Sunday).
-		'j': "=j=02",                     // Day:    Day of the month without leading zeros. Eg: 1 to 31.
-		'S': "02",                        // Day:    English ordinal suffix for the day of the month, 2 characters. Eg: st, nd, rd or th. Works well with j.
-		'l': "Monday",                    // Day:    A full textual representation of the day of the week. Eg: Sunday through Saturday.
-		'z': "",                          // Day:    The day of the year (starting from 0). Eg: 0 through 365.
-		'W': "",                          // Week:   ISO-8601 week number of year, weeks starting on Monday. Eg: 42 (the 42nd week in the year).
-		'F': "January",                   // Month:  A full textual representation of a month, such as January or March. Eg: January through December.
-		'm': "01",                        // Month:  Numeric representation of a month, with leading zeros. Eg: 01 through 12.
-		'M': "Jan",                       // Month:  A short textual representation of a month, three letters. Eg: Jan through Dec.
-		'n': "1",                         // Month:  Numeric representation of a month, without leading zeros. Eg: 1 through 12.
-		't': "",                          // Month:  Number of days in the given month. Eg: 28 through 31.
-		'Y': "2006",                      // Year:   A full numeric representation of a year, 4 digits. Eg: 1999 or 2003.
-		'y': "06",                        // Year:   A two digit representation of a year. Eg: 99 or 03.
-		'a': "pm",                        // Time:   Lowercase Ante meridiem and Post meridiem. Eg: am or pm.
-		'A': "PM",                        // Time:   Uppercase Ante meridiem and Post meridiem. Eg: AM or PM.
-		'g': "3",                         // Time:   12-hour format of an hour without leading zeros. Eg: 1 through 12.
-		'G': "=G=15",                     // Time:   24-hour format of an hour without leading zeros. Eg: 0 through 23.
-		'h': "03",                        // Time:   12-hour format of an hour with leading zeros. Eg: 01 through 12.
-		'H': "15",                        // Time:   24-hour format of an hour with leading zeros. Eg: 00 through 23.
-		'i': "04",                        // Time:   Minutes with leading zeros. Eg: 00 to 59.
-		's': "05",                        // Time:   Seconds with leading zeros. Eg: 00 through 59.
-		'u': "=u=.000",                   // Time:   Milliseconds. Eg: 234, 678.
-		'U': "",                          // Time:   Seconds since the Unix Epoch (January 1 1970 00:00:00 GMT).
-		'O': "-0700",                     // Zone:   Difference to Greenwich time (GMT) in hours. Eg: +0200.
-		'P': "-07:00",                    // Zone:   Difference to Greenwich time (GMT) with colon between hours and minutes. Eg: +02:00.
-		'T': "MST",                       // Zone:   Timezone abbreviation. Eg: UTC, EST, MDT ...
+		'd': "02",                        // Day: Day of the month, 2 digits with leading zeros. Eg: 01 to 31.
+		'D': "Mon",                       // Day: A textual representation of a day, three letters. Eg: Mon through Sun.
+		'w': "Monday",                    // Day: Numeric representation of the day of the week. Eg: 0 (for Sunday) through 6 (for Saturday).
+		'N': "Monday",                    // Day: ISO-8601 numeric representation of the day of the week. Eg: 1 (for Monday) through 7 (for Sunday).
+		'j': "=j=02",                     // Day: Day of the month without leading zeros. Eg: 1 to 31.
+		'S': "02",                        // Day: English ordinal suffix for the day of the month, 2 characters. Eg: st, nd, rd or th. Works well with j.
+		'l': "Monday",                    // Day: A full textual representation of the day of the week. Eg: Sunday through Saturday.
+		'z': "",                          // Day: The day of the year (starting from 0). Eg: 0 through 365.
+		'W': "",                          // Week: ISO-8601 week number of year, weeks starting on Monday. Eg: 42 (the 42nd week in the year).
+		'F': "January",                   // Month: A full textual representation of a month, such as January or March. Eg: January through December.
+		'm': "01",                        // Month: Numeric representation of a month, with leading zeros. Eg: 01 through 12.
+		'M': "Jan",                       // Month: A short textual representation of a month, three letters. Eg: Jan through Dec.
+		'n': "1",                         // Month: Numeric representation of a month, without leading zeros. Eg: 1 through 12.
+		't': "",                          // Month: Number of days in the given month. Eg: 28 through 31.
+		'Y': "2006",                      // Year: A full numeric representation of a year, 4 digits. Eg: 1999 or 2003.
+		'y': "06",                        // Year: A two-digit representation of a year. Eg: 99 or 03.
+		'a': "pm",                        // Time: Lowercase Ante meridiem and Post meridiem. Eg: am or pm.
+		'A': "PM",                        // Time: Uppercase Ante meridiem and Post meridiem. Eg: AM or PM.
+		'g': "3",                         // Time: 12-hour format of an hour without leading zeros. Eg: 1 through 12.
+		'G': "=G=15",                     // Time: 24-hour format of an hour without leading zeros. Eg: 0 through 23.
+		'h': "03",                        // Time: 12-hour format of an hour with leading zeros. Eg: 01 through 12.
+		'H': "15",                        // Time: 24-hour format of an hour with leading zeros. Eg: 00 through 23.
+		'i': "04",                        // Time: Minutes with leading zeros. Eg: 00 to 59.
+		's': "05",                        // Time: Seconds with leading zeros. Eg: 00 through 59.
+		'u': "=u=.000",                   // Time: Milliseconds. Eg: 234, 678.
+		'U': "",                          // Time: Seconds since the Unix Epoch (January 1 1970 00:00:00 GMT).
+		'O': "-0700",                     // Zone: Difference to Greenwich time (GMT) in hours. Eg: +0200.
+		'P': "-07:00",                    // Zone: Difference to Greenwich time (GMT) with colon between hours and minutes. Eg: +02:00.
+		'T': "MST",                       // Zone: Timezone abbreviation. Eg: UTC, EST, MDT ...
 		'c': "2006-01-02T15:04:05-07:00", // Format: ISO 8601 date. Eg: 2004-02-12T15:19:21+00:00.
 		'r': "Mon, 02 Jan 06 15:04 MST",  // Format: RFC 2822 formatted date. Eg: Thu, 21 Dec 2000 16:01:07 +0200.
 	}
@@ -66,6 +67,7 @@ var (
 )
 
 // Format formats and returns the formatted result with custom `format`.
+// Refer method Layout if you want to follow stdlib layout.
 func (t *Time) Format(format string) string {
 	if t == nil {
 		return ""
@@ -101,20 +103,20 @@ func (t *Time) Format(format string) string {
 				switch runes[i] {
 				case 'j':
 					for _, s := range []string{"=j=0", "=j="} {
-						result = strings.Replace(result, s, "", -1)
+						result = strings.ReplaceAll(result, s, "")
 					}
 					buffer.WriteString(result)
 				case 'G':
 					for _, s := range []string{"=G=0", "=G="} {
-						result = strings.Replace(result, s, "", -1)
+						result = strings.ReplaceAll(result, s, "")
 					}
 					buffer.WriteString(result)
 				case 'u':
-					buffer.WriteString(strings.Replace(result, "=u=.", "", -1))
+					buffer.WriteString(strings.ReplaceAll(result, "=u=.", ""))
 				case 'w':
 					buffer.WriteString(weekMap[result])
 				case 'N':
-					buffer.WriteString(strings.Replace(weekMap[result], "0", "7", -1))
+					buffer.WriteString(strings.ReplaceAll(weekMap[result], "0", "7"))
 				case 'S':
 					buffer.WriteString(formatMonthDaySuffixMap(result))
 				default:
@@ -159,7 +161,11 @@ func (t *Time) LayoutNew(layout string) *Time {
 	if t == nil {
 		return nil
 	}
-	return NewFromStr(t.Layout(layout))
+	newTime, err := StrToTimeLayout(t.Layout(layout), layout)
+	if err != nil {
+		panic(err)
+	}
+	return newTime
 }
 
 // LayoutTo formats `t` with stdlib layout.
@@ -167,7 +173,11 @@ func (t *Time) LayoutTo(layout string) *Time {
 	if t == nil {
 		return nil
 	}
-	t.Time = NewFromStr(t.Layout(layout)).Time
+	newTime, err := StrToTimeLayout(t.Layout(layout), layout)
+	if err != nil {
+		panic(err)
+	}
+	t.Time = newTime.Time
 	return t
 }
 
@@ -195,7 +205,7 @@ func (t *Time) DayOfYear() int {
 	return dayOfMonth[month-1] + day - 1
 }
 
-// DaysInMonth returns the day count of current month.
+// DaysInMonth returns the day count of the current month.
 func (t *Time) DaysInMonth() int {
 	switch t.Month() {
 	case 1, 3, 5, 7, 8, 10, 12:
@@ -215,7 +225,7 @@ func (t *Time) WeeksOfYear() int {
 	return week
 }
 
-// formatToStdLayout converts custom format to stdlib layout.
+// formatToStdLayout converts the custom format to stdlib layout.
 func formatToStdLayout(format string) string {
 	b := bytes.NewBuffer(nil)
 	for i := 0; i < len(format); {
@@ -258,7 +268,7 @@ func formatToStdLayout(format string) string {
 
 // formatToRegexPattern converts the custom format to its corresponding regular expression.
 func formatToRegexPattern(format string) string {
-	s := gregex.Quote(formatToStdLayout(format))
+	s := regexp.QuoteMeta(formatToStdLayout(format))
 	s, _ = gregex.ReplaceString(`[0-9]`, `[0-9]`, s)
 	s, _ = gregex.ReplaceString(`[A-Za-z]`, `[A-Za-z]`, s)
 	s, _ = gregex.ReplaceString(`\s+`, `\s+`, s)

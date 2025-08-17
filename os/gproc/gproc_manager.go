@@ -79,7 +79,7 @@ func (m *Manager) WaitAll() {
 	processes := m.Processes()
 	if len(processes) > 0 {
 		for _, p := range processes {
-			p.Wait()
+			_ = p.Wait()
 		}
 	}
 }

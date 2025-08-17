@@ -14,28 +14,52 @@ import (
 
 // SliceCopy does a shallow copy of slice `data` for most commonly used slice type
 // []interface{}.
-func SliceCopy(data []interface{}) []interface{} {
-	newData := make([]interface{}, len(data))
-	copy(newData, data)
-	return newData
+func SliceCopy(slice []interface{}) []interface{} {
+	newSlice := make([]interface{}, len(slice))
+	copy(newSlice, slice)
+	return newSlice
+}
+
+// SliceInsertBefore inserts the `values` to the front of `index` and returns a new slice.
+func SliceInsertBefore(slice []interface{}, index int, values ...interface{}) (newSlice []interface{}) {
+	if index < 0 || index >= len(slice) {
+		return slice
+	}
+	newSlice = make([]interface{}, len(slice)+len(values))
+	copy(newSlice, slice[0:index])
+	copy(newSlice[index:], values)
+	copy(newSlice[index+len(values):], slice[index:])
+	return
+}
+
+// SliceInsertAfter inserts the `values` to the back of `index` and returns a new slice.
+func SliceInsertAfter(slice []interface{}, index int, values ...interface{}) (newSlice []interface{}) {
+	if index < 0 || index >= len(slice) {
+		return slice
+	}
+	newSlice = make([]interface{}, len(slice)+len(values))
+	copy(newSlice, slice[0:index+1])
+	copy(newSlice[index+1:], values)
+	copy(newSlice[index+1+len(values):], slice[index+1:])
+	return
 }
 
 // SliceDelete deletes an element at `index` and returns the new slice.
 // It does nothing if the given `index` is invalid.
-func SliceDelete(data []interface{}, index int) (newSlice []interface{}) {
-	if index < 0 || index >= len(data) {
-		return data
+func SliceDelete(slice []interface{}, index int) (newSlice []interface{}) {
+	if index < 0 || index >= len(slice) {
+		return slice
 	}
 	// Determine array boundaries when deleting to improve deletion efficiency.
 	if index == 0 {
-		return data[1:]
-	} else if index == len(data)-1 {
-		return data[:index]
+		return slice[1:]
+	} else if index == len(slice)-1 {
+		return slice[:index]
 	}
 	// If it is a non-boundary delete,
 	// it will involve the creation of an array,
 	// then the deletion is less efficient.
-	return append(data[:index], data[index+1:]...)
+	return append(slice[:index], slice[index+1:]...)
 }
 
 // SliceToMap converts slice type variable `slice` to `map[string]interface{}`.

@@ -8,10 +8,11 @@
 package etcd
 
 import (
-	"reflect"
+	"strings"
 	"time"
 
 	etcd3 "go.etcd.io/etcd/client/v3"
+	"google.golang.org/grpc"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -31,33 +32,88 @@ type Registry struct {
 	kv           etcd3.KV
 	lease        etcd3.Lease
 	keepaliveTTL time.Duration
-	logger       *glog.Logger
+	logger       glog.ILogger
+	etcdConfig   etcd3.Config
 }
 
 // Option is the option for the etcd registry.
 type Option struct {
-	Logger       *glog.Logger
+	Logger       glog.ILogger
 	KeepaliveTTL time.Duration
+
+	// DialTimeout is the timeout for failing to establish a connection.
+	DialTimeout time.Duration
+
+	// AutoSyncInterval is the interval to update endpoints with its latest members.
+	AutoSyncInterval time.Duration
+
+	DialOptions []grpc.DialOption
 }
 
 const (
 	// DefaultKeepAliveTTL is the default keepalive TTL.
 	DefaultKeepAliveTTL = 10 * time.Second
+
+	// DefaultDialTimeout is the timeout for failing to establish a connection.
+	DefaultDialTimeout = time.Second * 5
 )
 
 // New creates and returns a new etcd registry.
+// Support Etcd Address format: ip:port,ip:port...,ip:port@username:password
 func New(address string, option ...Option) *Registry {
-	endpoints := gstr.SplitAndTrim(address, ",")
+	if address == "" {
+		panic(gerror.NewCode(gcode.CodeInvalidParameter, `invalid etcd address ""`))
+	}
+	addressAndAuth := gstr.SplitAndTrim(address, "@")
+	var (
+		endpoints          []string
+		userName, password string
+	)
+	switch len(addressAndAuth) {
+	case 1:
+		endpoints = gstr.SplitAndTrim(address, ",")
+	default:
+		endpoints = gstr.SplitAndTrim(addressAndAuth[0], ",")
+		parts := gstr.SplitAndTrim(strings.Join(addressAndAuth[1:], "@"), ":")
+		switch len(parts) {
+		case 2:
+			userName = parts[0]
+			password = parts[1]
+		default:
+			panic(gerror.NewCode(gcode.CodeInvalidParameter, `invalid etcd auth not support ":" at username or password `))
+		}
+	}
 	if len(endpoints) == 0 {
 		panic(gerror.NewCodef(gcode.CodeInvalidParameter, `invalid etcd address "%s"`, address))
 	}
-	client, err := etcd3.New(etcd3.Config{
-		Endpoints: endpoints,
-	})
+	cfg := etcd3.Config{Endpoints: endpoints}
+	if userName != "" {
+		cfg.Username = userName
+	}
+	if password != "" {
+		cfg.Password = password
+	}
+
+	cfg.DialTimeout = DefaultDialTimeout
+
+	var usedOption Option
+	if len(option) > 0 {
+		usedOption = option[0]
+	}
+	if usedOption.DialTimeout > 0 {
+		cfg.DialTimeout = usedOption.DialTimeout
+	}
+	if usedOption.AutoSyncInterval > 0 {
+		cfg.AutoSyncInterval = usedOption.AutoSyncInterval
+	}
+
+	client, err := etcd3.New(cfg)
 	if err != nil {
 		panic(gerror.Wrap(err, `create etcd client failed`))
 	}
-	return NewWithClient(client, option...)
+	r := NewWithClient(client, option...)
+	r.etcdConfig = cfg
+	return r
 }
 
 // NewWithClient creates and returns a new etcd registry with the given client.
@@ -85,31 +141,22 @@ func extractResponseToServices(res *etcd3.GetResponse) ([]gsvc.Service, error) {
 		return nil, nil
 	}
 	var (
-		services   []gsvc.Service
-		serviceKey string
-		serviceMap = make(map[string]*gsvc.LocalService)
+		services         []gsvc.Service
+		servicePrefixMap = make(map[string]*Service)
 	)
 	for _, kv := range res.Kvs {
-		service, err := gsvc.NewServiceWithKV(string(kv.Key), string(kv.Value))
+		service, err := gsvc.NewServiceWithKV(
+			string(kv.Key), string(kv.Value),
+		)
 		if err != nil {
 			return services, err
 		}
-		localService, ok := service.(*gsvc.LocalService)
-		if !ok {
-			return nil, gerror.Newf(
-				`service from "gsvc.NewServiceWithKV" is not "*gsvc.LocalService", but "%s"`,
-				reflect.TypeOf(service),
-			)
-		}
-		if localService != nil {
-			serviceKey = localService.GetPrefix()
-			var localServiceInMap *gsvc.LocalService
-			if localServiceInMap, ok = serviceMap[serviceKey]; ok {
-				localServiceInMap.Endpoints = append(localServiceInMap.Endpoints, localService.Endpoints...)
-			} else {
-				serviceMap[serviceKey] = localService
-				services = append(services, service)
-			}
+		s := NewService(service)
+		if v, ok := servicePrefixMap[service.GetPrefix()]; ok {
+			v.Endpoints = append(v.Endpoints, service.GetEndpoints()...)
+		} else {
+			servicePrefixMap[s.GetPrefix()] = s
+			services = append(services, s)
 		}
 	}
 	return services, nil

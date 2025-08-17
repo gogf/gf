@@ -62,7 +62,7 @@ func newFilePool(p *Pool, path string, flag int, perm os.FileMode, ttl time.Dura
 // File retrieves file item from the file pointer pool and returns it. It creates one if
 // the file pointer pool is empty.
 // Note that it should be closed when it will never be used. When it's closed, it is not
-// really closed the underlying file pointer but put back to the file pinter pool.
+// really closed the underlying file pointer but put back to the file pointer pool.
 func (p *Pool) File() (*File, error) {
 	if v, err := p.pool.Get(); err != nil {
 		return nil, err
@@ -99,7 +99,7 @@ func (p *Pool) File() (*File, error) {
 		}
 		// It firstly checks using !p.init.Val() for performance purpose.
 		if !p.init.Val() && p.init.Cas(false, true) {
-			_, _ = gfsnotify.Add(f.path, func(event *gfsnotify.Event) {
+			var watchCallback = func(event *gfsnotify.Event) {
 				// If the file is removed or renamed, recreates the pool by increasing the pool id.
 				if event.IsRemove() || event.IsRename() {
 					// It drops the old pool.
@@ -110,7 +110,8 @@ func (p *Pool) File() (*File, error) {
 					// Whenever the pool id changes, the pool will be recreated.
 					p.id.Add(1)
 				}
-			}, false)
+			}
+			_, _ = gfsnotify.Add(f.path, watchCallback, gfsnotify.WatchOption{NoRecursive: true})
 		}
 		return f, nil
 	}

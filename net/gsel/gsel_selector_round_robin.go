@@ -13,10 +13,8 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 )
 
-const SelectorRoundRobin = "BalancerRoundRobin"
-
 type selectorRoundRobin struct {
-	mu    sync.RWMutex
+	mu    sync.Mutex
 	nodes Nodes
 	next  int
 }
@@ -30,14 +28,18 @@ func NewSelectorRoundRobin() Selector {
 func (s *selectorRoundRobin) Update(ctx context.Context, nodes Nodes) error {
 	intlog.Printf(ctx, `Update nodes: %s`, nodes.String())
 	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.nodes = nodes
-	s.mu.Unlock()
+	s.next = 0
 	return nil
 }
 
 func (s *selectorRoundRobin) Pick(ctx context.Context) (node Node, done DoneFunc, err error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if len(s.nodes) == 0 {
+		return
+	}
 	node = s.nodes[s.next]
 	s.next = (s.next + 1) % len(s.nodes)
 	intlog.Printf(ctx, `Picked node: %s`, node.Address())

@@ -141,3 +141,25 @@ func Test_Middleware_CORS2(t *testing.T) {
 		resp.Close()
 	})
 }
+
+func Test_Middleware_CORS3(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareCORS)
+		group.GET("/user/list/{type}", func(r *ghttp.Request) {
+			r.Response.Write(r.Get("type"))
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		client.SetHeader("Access-Control-Request-Method", "POST")
+		resp, err := client.Get(ctx, "/api.v2/user/list/1")
+		t.AssertNil(err)
+		resp.Close()
+	})
+}

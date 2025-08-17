@@ -7,16 +7,12 @@
 package ghttp
 
 import (
-	"fmt"
-
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
 const (
-	swaggerUIDocName            = `redoc.standalone.js`
-	swaggerUIDocNamePlaceHolder = `{SwaggerUIDocName}`
-	swaggerUIDocURLPlaceHolder  = `{SwaggerUIDocUrl}`
-	swaggerUITemplate           = `
+	swaggerUIDocURLPlaceHolder = `{SwaggerUIDocUrl}`
+	swaggerUITemplate          = `
 <!DOCTYPE html>
 <html>
 	<head>
@@ -32,7 +28,7 @@ const (
 	</head>
 	<body>
 		<redoc spec-url="{SwaggerUIDocUrl}" show-object-schema-examples="true"></redoc>
-		<script src="https://unpkg.com/redoc@2.0.0-rc.70/bundles/redoc.standalone.js"> </script>
+		<script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"> </script>
 	</body>
 </html>
 `
@@ -44,10 +40,14 @@ func (s *Server) swaggerUI(r *Request) {
 	if s.config.OpenApiPath == "" {
 		return
 	}
+	var templateContent = swaggerUITemplate
+	if s.config.SwaggerUITemplate != "" {
+		templateContent = s.config.SwaggerUITemplate
+	}
+
 	if r.StaticFile != nil && r.StaticFile.File != nil && r.StaticFile.IsDir {
-		content := gstr.ReplaceByMap(swaggerUITemplate, map[string]string{
-			swaggerUIDocURLPlaceHolder:  s.config.OpenApiPath,
-			swaggerUIDocNamePlaceHolder: gstr.TrimRight(fmt.Sprintf(`//%s%s`, r.Host, r.Server.config.SwaggerPath), "/") + "/" + swaggerUIDocName,
+		content := gstr.ReplaceByMap(templateContent, map[string]string{
+			swaggerUIDocURLPlaceHolder: s.config.OpenApiPath,
 		})
 		r.Response.Write(content)
 		r.ExitAll()

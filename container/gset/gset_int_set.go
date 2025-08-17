@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// IntSet is consisted of int items.
 type IntSet struct {
 	mu   rwmutex.RWMutex
 	data map[int]struct{}
@@ -45,9 +46,7 @@ func NewIntSetFrom(items []int, safe ...bool) *IntSet {
 // Iterator iterates the set readonly with given callback function `f`,
 // if `f` returns true then continue iterating; or false to stop.
 func (set *IntSet) Iterator(f func(v int) bool) {
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	for k, _ := range set.data {
+	for _, k := range set.Slice() {
 		if !f(k) {
 			break
 		}
@@ -165,14 +164,14 @@ func (set *IntSet) Clear() {
 	set.mu.Unlock()
 }
 
-// Slice returns the a of items of the set as slice.
+// Slice returns the an of items of the set as slice.
 func (set *IntSet) Slice() []int {
 	set.mu.RLock()
 	var (
 		i   = 0
 		ret = make([]int, len(set.data))
 	)
-	for k, _ := range set.data {
+	for k := range set.data {
 		ret[i] = k
 		i++
 	}
@@ -192,7 +191,7 @@ func (set *IntSet) Join(glue string) string {
 		i      = 0
 		buffer = bytes.NewBuffer(nil)
 	)
-	for k, _ := range set.data {
+	for k := range set.data {
 		buffer.WriteString(gconv.String(k))
 		if i != l-1 {
 			buffer.WriteString(glue)
@@ -375,7 +374,7 @@ func (set *IntSet) Merge(others ...*IntSet) *IntSet {
 func (set *IntSet) Sum() (sum int) {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
-	for k, _ := range set.data {
+	for k := range set.data {
 		sum += k
 	}
 	return
@@ -385,7 +384,7 @@ func (set *IntSet) Sum() (sum int) {
 func (set *IntSet) Pop() int {
 	set.mu.Lock()
 	defer set.mu.Unlock()
-	for k, _ := range set.data {
+	for k := range set.data {
 		delete(set.data, k)
 		return k
 	}
@@ -405,7 +404,7 @@ func (set *IntSet) Pops(size int) []int {
 	}
 	index := 0
 	array := make([]int, size)
-	for k, _ := range set.data {
+	for k := range set.data {
 		delete(set.data, k)
 		array[index] = k
 		index++
@@ -472,6 +471,9 @@ func (set *IntSet) UnmarshalValue(value interface{}) (err error) {
 
 // DeepCopy implements interface for deep copy of current type.
 func (set *IntSet) DeepCopy() interface{} {
+	if set == nil {
+		return nil
+	}
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	var (
