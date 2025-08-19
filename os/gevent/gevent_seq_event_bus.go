@@ -24,8 +24,9 @@ type topicProcessor struct {
 	processors   *garray.SortedArray // Sorted array of event handlers
 	factoryFunc  EventFactoryFunc    // Custom event factory function
 	factoryMutex sync.RWMutex        // Mutex for factory function access
-	startOnce    sync.Once           // Ensures asyncProcess is started only once
+	startOnce    sync.Once           // Ensures asyncProcess/asyncProcessAll is started only once
 	closeOnce    sync.Once           // Ensures close is called only once
+	quitChan     chan struct{}       // Channel to signal when the event bus is closed
 }
 
 // handlerProcessor represents a registered event handler
@@ -43,6 +44,7 @@ type SeqEventBusOption struct {
 	QueueSize  int  // Size of the event queue channel
 	WorkerSize int  // Number of workers for parallel execution
 	CloneEvent bool // Whether to clone event for each handler execution
+	WaitExit   bool // Whether to wait for all events to be processed in the topic when closed
 }
 
 // SeqEventBus is a sequential event bus implementation
@@ -133,6 +135,7 @@ func (tp *topicProcessor) clear() {
 // close closes the topic processor and its event channel
 func (tp *topicProcessor) close() {
 	tp.closeOnce.Do(func() {
+		tp.quitChan <- struct{}{}
 		close(tp.ch)
 		tp.closed.Set(true)
 	})
@@ -146,54 +149,82 @@ func (tp *topicProcessor) cloneEvent(event Event) Event {
 	return event.Clone()
 }
 
+// processEvent processes an event
+func (tp *topicProcessor) processEvent(event Event) {
+	if tp.processors.IsEmpty() {
+		return
+	}
+	handlerProcessors := tp.filterHandlerProcessors()
+	if event.GetExecModel() == Seq {
+		for _, processor := range handlerProcessors {
+			cloneEvent := tp.cloneEvent(event)
+			err := tp.execute(cloneEvent, processor)
+			if err != nil {
+				if event.GetErrorModel() == Stop {
+					break
+				}
+			}
+		}
+	} else {
+		workerSize := tp.eventBus.option.WorkerSize
+		if workerSize <= 0 {
+			workerSize = len(handlerProcessors)
+		}
+		semaphore := make(chan struct{}, workerSize)
+		var wg sync.WaitGroup
+
+		for _, processor := range handlerProcessors {
+			wg.Add(1)
+			cloneEvent := tp.cloneEvent(event)
+			go func(e Event, p *handlerProcessor) {
+				semaphore <- struct{}{}
+				defer func() { <-semaphore }()
+				defer wg.Done()
+				err := tp.execute(e, p)
+				if err != nil {
+					if event.GetErrorModel() == Stop {
+						return
+					}
+				}
+			}(cloneEvent, processor)
+		}
+		wg.Wait()
+	}
+}
+
+// asyncProcessAll processes all events asynchronously from the channel
+func (tp *topicProcessor) asyncProcessAll() {
+	tp.eventBus.wg.Add(1)
+	go func() {
+		defer func() {
+			tp.clear()
+			close(tp.quitChan)
+			tp.eventBus.wg.Done()
+		}()
+		for event := range tp.ch {
+			tp.processEvent(event)
+		}
+	}()
+}
+
 // asyncProcess processes events asynchronously from the channel
 func (tp *topicProcessor) asyncProcess() {
 	tp.eventBus.wg.Add(1)
 	go func() {
 		defer func() {
 			tp.clear()
+			close(tp.quitChan)
 			tp.eventBus.wg.Done()
 		}()
-		for event := range tp.ch {
-			if tp.processors.IsEmpty() {
-				continue
-			}
-			handlerProcessors := tp.filterHandlerProcessors()
-			if event.GetExecModel() == Seq {
-				for _, processor := range handlerProcessors {
-					cloneEvent := tp.cloneEvent(event)
-					err := tp.execute(cloneEvent, processor)
-					if err != nil {
-						if event.GetErrorModel() == Stop {
-							return
-						}
-					}
+		for {
+			select {
+			case <-tp.quitChan:
+				return
+			case event, ok := <-tp.ch:
+				if !ok {
+					return
 				}
-			} else {
-				// Parallel execution
-				workerSize := tp.eventBus.option.WorkerSize
-				if workerSize <= 0 {
-					workerSize = len(handlerProcessors)
-				}
-				semaphore := make(chan struct{}, workerSize)
-				var wg sync.WaitGroup
-
-				for _, processor := range handlerProcessors {
-					wg.Add(1)
-					cloneEvent := tp.cloneEvent(event)
-					go func(e Event, p *handlerProcessor) {
-						semaphore <- struct{}{}
-						defer func() { <-semaphore }()
-						defer wg.Done()
-						err := tp.execute(e, p)
-						if err != nil {
-							if event.GetErrorModel() == Stop {
-								return
-							}
-						}
-					}(cloneEvent, processor)
-				}
-				wg.Wait()
+				tp.processEvent(event)
 			}
 		}
 	}()
@@ -205,6 +236,7 @@ func NewSeqEventBus(options ...SeqEventBusOption) *SeqEventBus {
 		QueueSize:  100,   // Default queue size
 		WorkerSize: 10,    // Default worker size for parallel execution
 		CloneEvent: false, // Default behavior is not to clone events
+		WaitExit:   true,  // Default behavior is to wait for all goroutines to exit
 	}
 	if len(options) > 0 {
 		option = options[0]
@@ -297,6 +329,7 @@ func (s *SeqEventBus) initTopicProcessor(topic string) *topicProcessor {
 				return int(hb.priority - ha.priority)
 			}
 		}, true),
+		quitChan: make(chan struct{}, 1),
 	}
 }
 
@@ -347,7 +380,13 @@ func (s *SeqEventBus) Subscribe(topic string, handlerFunc HandlerFunc, errorFunc
 		return s.initTopicProcessor(topic)
 	})
 	processor := value.(*topicProcessor)
-	processor.startOnce.Do(processor.asyncProcess)
+	processor.startOnce.Do(func() {
+		if s.option.WaitExit {
+			processor.asyncProcessAll()
+			return
+		}
+		processor.asyncProcess()
+	})
 	if processor.closed.Val() {
 		return nil, EventBusClosedError
 	}
