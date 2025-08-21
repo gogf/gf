@@ -15,6 +15,8 @@ import (
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/renderer"
+	"github.com/olekukonko/tablewriter/tw"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gset"
@@ -414,13 +416,22 @@ func generateEntityMessageDefinition(entityName string, fieldMap map[string]*gdb
 			appendImports = append(appendImports, imports)
 		}
 	}
-	tw := tablewriter.NewWriter(buffer)
-	tw.SetBorder(false)
-	tw.SetRowLine(false)
-	tw.SetAutoWrapText(false)
-	tw.SetColumnSeparator("")
-	tw.AppendBulk(array)
-	tw.Render()
+	table := tablewriter.NewTable(buffer,
+		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
+			Borders: tw.Border{Top: tw.Off, Bottom: tw.Off, Left: tw.On, Right: tw.Off},
+			Settings: tw.Settings{
+				Separators: tw.Separators{BetweenRows: tw.Off, BetweenColumns: tw.Off},
+			},
+			Symbols: tw.NewSymbolCustom("Proto").WithColumn(" "),
+		})),
+		tablewriter.WithConfig(tablewriter.Config{
+			Row: tw.CellConfig{
+				Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone},
+			},
+		}),
+	)
+	table.Bulk(array)
+	table.Render()
 	stContent := buffer.String()
 	// Let's do this hack of table writer for indent!
 	stContent = regexp.MustCompile(`\s+\n`).ReplaceAllString(gstr.Replace(stContent, "  #", ""), "\n")
