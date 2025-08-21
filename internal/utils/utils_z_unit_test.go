@@ -124,5 +124,7 @@ func Test_IsNumeric(t *testing.T) {
 		t.Assert(utils.IsNumeric("."), false)
 		t.Assert(utils.IsNumeric("-."), false)
 		t.Assert(utils.IsNumeric("+."), false)
+		t.Assert(utils.IsNumeric("-.1"), false)
+		t.Assert(utils.IsNumeric("+.1"), false)
 	})
 }
