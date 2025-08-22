@@ -94,7 +94,7 @@ func doPrint(ctx context.Context, content string, stack bool) {
 	buffer.WriteString(" [INTE] ")
 	buffer.WriteString(file())
 	buffer.WriteString(" ")
-	if s := traceIdStr(ctx); s != "" {
+	if s := traceIDStr(ctx); s != "" {
 		buffer.WriteString(s + " ")
 	}
 	buffer.WriteString(content)
@@ -106,14 +106,14 @@ func doPrint(ctx context.Context, content string, stack bool) {
 	fmt.Print(buffer.String())
 }
 
-// traceIdStr retrieves and returns the trace id string for logging output.
-func traceIdStr(ctx context.Context) string {
+// traceIDStr retrieves and returns the trace id string for logging output.
+func traceIDStr(ctx context.Context) string {
 	if ctx == nil {
 		return ""
 	}
 	spanCtx := trace.SpanContextFromContext(ctx)
-	if traceId := spanCtx.TraceID(); traceId.IsValid() {
-		return "{" + traceId.String() + "}"
+	if traceID := spanCtx.TraceID(); traceID.IsValid() {
+		return "{" + traceID.String() + "}"
 	}
 	return ""
 }

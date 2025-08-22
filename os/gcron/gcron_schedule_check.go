@@ -26,10 +26,7 @@ func (s *cronSchedule) checkMeetAndUpdateLastSeconds(ctx context.Context, curren
 			s.lastMeetTimestamp.Set(currentTime.Unix())
 		}
 	}()
-	if !s.checkMinIntervalAndItemMapMeet(lastMeetTime.Time, lastCheckTime.Time, currentTime) {
-		return false
-	}
-	return true
+	return s.checkMinIntervalAndItemMapMeet(lastMeetTime.Time, lastCheckTime.Time, currentTime)
 }
 
 func (s *cronSchedule) checkMinIntervalAndItemMapMeet(
@@ -83,38 +80,23 @@ func (s *cronSchedule) checkMeetSecond(lastMeetTime, currentTime time.Time) (ok 
 }
 
 func (s *cronSchedule) checkMeetMinute(currentTime time.Time) (ok bool) {
-	if !s.keyMatch(s.minuteMap, currentTime.Minute()) {
-		return false
-	}
-	return true
+	return s.keyMatch(s.minuteMap, currentTime.Minute())
 }
 
 func (s *cronSchedule) checkMeetHour(currentTime time.Time) (ok bool) {
-	if !s.keyMatch(s.hourMap, currentTime.Hour()) {
-		return false
-	}
-	return true
+	return s.keyMatch(s.hourMap, currentTime.Hour())
 }
 
 func (s *cronSchedule) checkMeetDay(currentTime time.Time) (ok bool) {
-	if !s.keyMatch(s.dayMap, currentTime.Day()) {
-		return false
-	}
-	return true
+	return s.keyMatch(s.dayMap, currentTime.Day())
 }
 
 func (s *cronSchedule) checkMeetMonth(currentTime time.Time) (ok bool) {
-	if !s.keyMatch(s.monthMap, int(currentTime.Month())) {
-		return false
-	}
-	return true
+	return s.keyMatch(s.monthMap, int(currentTime.Month()))
 }
 
 func (s *cronSchedule) checkMeetWeek(currentTime time.Time) (ok bool) {
-	if !s.keyMatch(s.weekMap, int(currentTime.Weekday())) {
-		return false
-	}
-	return true
+	return s.keyMatch(s.weekMap, int(currentTime.Weekday()))
 }
 
 func (s *cronSchedule) keyMatch(m map[int]struct{}, key int) bool {

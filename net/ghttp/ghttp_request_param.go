@@ -184,7 +184,7 @@ func (r *Request) GetBodyString() string {
 // Note that the request content is read from request BODY, not from any field of FORM.
 func (r *Request) GetJson() (*gjson.Json, error) {
 	return gjson.LoadWithOptions(r.GetBody(), gjson.Options{
-		Type:      gjson.ContentTypeJson,
+		Type:      gjson.ContentTypeJSON,
 		StrNumber: true,
 	})
 }

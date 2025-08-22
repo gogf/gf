@@ -14,7 +14,7 @@ func (j Json) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (j *Json) UnmarshalJSON(b []byte) error {
 	r, err := loadContentWithOptions(b, Options{
-		Type:      ContentTypeJson,
+		Type:      ContentTypeJSON,
 		StrNumber: true,
 	})
 	if r != nil {

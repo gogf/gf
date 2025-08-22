@@ -29,7 +29,7 @@ jobs:
   golang-ci:
     strategy:
       matrix:
-        go-version: [ 'stable' ]
+        go-version: [ "1.22", "1.23", "1.24" ]
 
     name: golang-ci-lint
     runs-on: ubuntu-latest
@@ -41,11 +41,11 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
       - name: golang-ci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           # Required: specify the golangci-lint version without the patch version to always use the latest patch.
-          version: v1.64.5
+          version: v2.1.1
           only-new-issues: true
           skip-cache: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          args: --timeout 3m0s --config=.golangci.yml -v
+          args: --config=.golangci.yml -v

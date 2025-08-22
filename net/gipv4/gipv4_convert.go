@@ -16,11 +16,11 @@ import (
 
 // IpToLongBigEndian converts ip address to an uint32 integer with big endian.
 func IpToLongBigEndian(ip string) uint32 {
-	netIp := net.ParseIP(ip)
-	if netIp == nil {
+	netIP := net.ParseIP(ip)
+	if netIP == nil {
 		return 0
 	}
-	return binary.BigEndian.Uint32(netIp.To4())
+	return binary.BigEndian.Uint32(netIP.To4())
 }
 
 // LongToIpBigEndian converts an uint32 integer ip address to its string type address with big endian.

@@ -76,9 +76,12 @@ func StrToSize(sizeStr string) int64 {
 
 // FormatSize formats size `raw` for more manually readable.
 func FormatSize(raw int64) string {
-	var r float64 = float64(raw)
-	var t float64 = 1024
-	var d float64 = 1
+	var (
+		r         = float64(raw)
+		t float64 = 1024
+		d float64 = 1
+	)
+
 	if r < t {
 		return fmt.Sprintf("%.2fB", r/d)
 	}
