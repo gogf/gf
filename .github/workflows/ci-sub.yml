@@ -40,7 +40,7 @@ jobs:
         # When adding new go version to the list, make sure:
         # 1. Update the `LATEST_GO_VERSION` env variable.
         # 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        go-version: [ "1.23", "1.24" ]
+        go-version: [ "1.23", "1.24","1.25" ]
         goarch: [ "386", "amd64" ]
 
     runs-on: ubuntu-latest
@@ -52,7 +52,7 @@ jobs:
         timezoneLinux: "Asia/Shanghai"
 
     - name: Checkout Repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Start Minikube
       uses: medyagh/setup-minikube@master

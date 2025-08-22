@@ -29,22 +29,22 @@ jobs:
   golang-ci:
     strategy:
       matrix:
-        go-version: [ "1.22", "1.23", "1.24" ]
+        go-version: [ "1.23", "1.24", "1.25" ]
 
     name: golang-ci-lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Setup Golang ${{ matrix.go-version }}
         uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
       - name: golang-ci-lint
-        uses: golangci/golangci-lint-action@v7
+        uses: golangci/golangci-lint-action@v8
         with:
           # Required: specify the golangci-lint version without the patch version to always use the latest patch.
-          version: v2.1.1
+          version: latest
           only-new-issues: true
           skip-cache: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
