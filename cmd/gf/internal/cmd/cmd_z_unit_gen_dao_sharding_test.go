@@ -26,25 +26,34 @@ func Test_Gen_Dao_Sharding(t *testing.T) {
 			tableSingle = "single_table"
 			table1      = "users_0001"
 			table2      = "users_0002"
-			table3      = "users_0003"
+			table3      = "orders_0001"
+			table4      = "orders_0002"
 			sqlFilePath = gtest.DataPath(`gendao`, `sharding`, `sharding.sql`)
 		)
+		dropTableWithDb(db, tableSingle)
+		dropTableWithDb(db, table1)
+		dropTableWithDb(db, table2)
+		dropTableWithDb(db, table3)
+		dropTableWithDb(db, table4)
 		t.AssertNil(execSqlFile(db, sqlFilePath))
 		defer dropTableWithDb(db, tableSingle)
 		defer dropTableWithDb(db, table1)
 		defer dropTableWithDb(db, table2)
 		defer dropTableWithDb(db, table3)
+		defer dropTableWithDb(db, table4)
 
 		var (
 			path = gfile.Temp(guid.S())
-			//path  = "/Users/john/Temp/gen_dao_sharding"
+			// path  = "/Users/john/Temp/gen_dao_sharding"
 			group = "test"
 			in    = gendao.CGenDaoInput{
-				Path:  path,
-				Link:  link,
-				Group: group,
+				Path:   path,
+				Link:   link,
+				Group:  group,
+				Prefix: "",
 				ShardingPattern: []string{
 					`users_?`,
+					`orders_?`,
 				},
 			}
 		)
@@ -65,13 +74,16 @@ func Test_Gen_Dao_Sharding(t *testing.T) {
 
 		generatedFiles, err := gfile.ScanDir(path, "*.go", true)
 		t.AssertNil(err)
-		t.Assert(len(generatedFiles), 8)
+		t.Assert(len(generatedFiles), 12)
 		var (
 			daoSingleTableContent = gfile.GetContents(gfile.Join(path, "dao", "single_table.go"))
 			daoUsersContent       = gfile.GetContents(gfile.Join(path, "dao", "users.go"))
+			daoOrdersContent      = gfile.GetContents(gfile.Join(path, "dao", "orders.go"))
 		)
 		t.Assert(gstr.Contains(daoSingleTableContent, "SingleTable = singleTableDao{internal.NewSingleTableDao()}"), true)
-		t.Assert(gstr.Contains(daoUsersContent, "Users = usersDao{internal.NewUsersDao(userShardingHandler)}"), true)
+		t.Assert(gstr.Contains(daoUsersContent, "Users = usersDao{internal.NewUsersDao(usersShardingHandler)}"), true)
 		t.Assert(gstr.Contains(daoUsersContent, "m.Sharding(gdb.ShardingConfig{"), true)
+		t.Assert(gstr.Contains(daoOrdersContent, "Orders = ordersDao{internal.NewOrdersDao(ordersShardingHandler)}"), true)
+		t.Assert(gstr.Contains(daoOrdersContent, "m.Sharding(gdb.ShardingConfig{"), true)
 	})
 }
