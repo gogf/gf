@@ -223,10 +223,13 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 			}
 		}
 		newTableName = in.Prefix + newTableName
-		newTableNames[i] = newTableName
+		if tableNames[i] != "" {
+			// if shardingNewTableSet contains newTableName ( tableName is empty), it should not be added to tableNames,make it empty and filter later.
+			newTableNames[i] = newTableName
+		}
 	}
 	tableNames = garray.NewStrArrayFrom(tableNames).FilterEmpty().Slice()
-
+	newTableNames = garray.NewStrArrayFrom(newTableNames).FilterEmpty().Slice() // Filter empty table names. make sure that newTableNames and tableNames have the same length.
 	in.genItems.Scale()
 
 	// Dao: index and internal.
