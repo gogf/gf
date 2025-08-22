@@ -222,14 +222,9 @@ Default:
 	return convertedValue, nil
 }
 
-// CheckLocalTypeForField checks and returns corresponding type for given db type.
-// The `fieldType` is retrieved from ColumnTypes of db driver, example:
-// UNSIGNED INT
-func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ interface{}) (LocalType, error) {
-	var (
-		typeName    string
-		typePattern string
-	)
+// GetFormattedDBTypeNameForField retrieves and returns the formatted database type name
+// eg. `int(10) unsigned` -> `int`, `varchar(100)` -> `varchar`, etc.
+func (c *Core) GetFormattedDBTypeNameForField(fieldType string) (typeName, typePattern string) {
 	match, _ := gregex.MatchString(`(.+?)\((.+)\)`, fieldType)
 	if len(match) == 3 {
 		typeName = gstr.Trim(match[1])
@@ -242,9 +237,19 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ i
 			typeName = array[0]
 		}
 	}
-
 	typeName = strings.ToLower(typeName)
+	return
+}
 
+// CheckLocalTypeForField checks and returns corresponding type for given db type.
+// The `fieldType` is retrieved from ColumnTypes of db driver, example:
+// UNSIGNED INT
+func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ interface{}) (LocalType, error) {
+	var (
+		typeName    string
+		typePattern string
+	)
+	typeName, typePattern = c.GetFormattedDBTypeNameForField(fieldType)
 	switch typeName {
 	case
 		fieldTypeBinary,

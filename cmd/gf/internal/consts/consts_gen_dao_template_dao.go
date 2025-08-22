@@ -27,7 +27,7 @@ var (
     // {{.TplTableNameCamelCase}} is a globally accessible object for table {{.TplTableName}} operations.
 	{{.TplTableNameCamelCase}} = {{.TplTableNameCamelLowerCase}}Dao{
 {{- if .TplTableSharding -}}
-    internal.New{{.TplTableNameCamelCase}}Dao(userShardingHandler),
+    internal.New{{.TplTableNameCamelCase}}Dao({{.TplTableNameCamelLowerCase}}ShardingHandler),
 {{- else -}}
     internal.New{{.TplTableNameCamelCase}}Dao(),
 {{- end -}}
@@ -35,13 +35,13 @@ var (
 )
 
 {{if .TplTableSharding -}}
-// userShardingHandler is the handler for sharding operations.
+// {{.TplTableNameCamelLowerCase}}ShardingHandler is the handler for sharding operations.
 // You can fill this sharding handler with your custom implementation.
-func userShardingHandler(m *gdb.Model) *gdb.Model {
+func {{.TplTableNameCamelLowerCase}}ShardingHandler(m *gdb.Model) *gdb.Model {
 	m = m.Sharding(gdb.ShardingConfig{
 		Table:  gdb.ShardingTableConfig{
 			Enable: true,
-			Prefix: "",
+			Prefix: "{{.TplTableShardingPrefix}}",
 			// Replace Rule field with your custom sharding rule.
 			// Or you can use "&gdb.DefaultShardingRule{}" for default sharding rule.
 			Rule: nil,
