@@ -80,9 +80,9 @@ func Test_Gen_Dao_Sharding(t *testing.T) {
 			daoOrdersContent      = gfile.GetContents(gfile.Join(path, "dao", "orders.go"))
 		)
 		t.Assert(gstr.Contains(daoSingleTableContent, "SingleTable = singleTableDao{internal.NewSingleTableDao()}"), true)
-		t.Assert(gstr.Contains(daoUsersContent, "Users = usersDao{internal.NewUsersDao(userShardingHandler)}"), true)
+		t.Assert(gstr.Contains(daoUsersContent, "Users = usersDao{internal.NewUsersDao(usersShardingHandler)}"), true)
 		t.Assert(gstr.Contains(daoUsersContent, "m.Sharding(gdb.ShardingConfig{"), true)
-		t.Assert(gstr.Contains(daoOrdersContent, "Orders = ordersDao{internal.NewOrdersDao(userShardingHandler)}"), true)
+		t.Assert(gstr.Contains(daoOrdersContent, "Orders = ordersDao{internal.NewOrdersDao(ordersShardingHandler)}"), true)
 		t.Assert(gstr.Contains(daoOrdersContent, "m.Sharding(gdb.ShardingConfig{"), true)
 	})
 }
