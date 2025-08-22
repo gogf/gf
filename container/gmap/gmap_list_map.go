@@ -537,9 +537,9 @@ func (m ListMap) MarshalJSON() (jsonBytes []byte, err error) {
 	buffer := bytes.NewBuffer(nil)
 	buffer.WriteByte('{')
 	m.Iterator(func(key, value interface{}) bool {
-		valueBytes, valueJsonErr := json.Marshal(value)
-		if valueJsonErr != nil {
-			err = valueJsonErr
+		valueBytes, valueJSONErr := json.Marshal(value)
+		if valueJSONErr != nil {
+			err = valueJSONErr
 			return false
 		}
 		if buffer.Len() > 1 {

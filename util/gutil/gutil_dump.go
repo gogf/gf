@@ -476,20 +476,20 @@ func addSlashesForString(s string) string {
 func DumpJson(value any) {
 	switch result := value.(type) {
 	case []byte:
-		doDumpJson(result)
+		doDumpJSON(result)
 	case string:
-		doDumpJson([]byte(result))
+		doDumpJSON([]byte(result))
 	default:
 		jsonContent, err := json.Marshal(value)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-		doDumpJson(jsonContent)
+		doDumpJSON(jsonContent)
 	}
 }
 
-func doDumpJson(jsonContent []byte) {
+func doDumpJSON(jsonContent []byte) {
 	var (
 		buffer    = bytes.NewBuffer(nil)
 		jsonBytes = jsonContent

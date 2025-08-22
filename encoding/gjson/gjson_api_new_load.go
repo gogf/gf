@@ -20,7 +20,7 @@ import (
 // The parameter `safe` specifies whether using this Json object in concurrent-safe context,
 // which is false in default.
 func New(data interface{}, safe ...bool) *Json {
-	return NewWithTag(data, string(ContentTypeJson), safe...)
+	return NewWithTag(data, string(ContentTypeJSON), safe...)
 }
 
 // NewWithTag creates a Json object with any variable type of `data`, but `data` should be a map

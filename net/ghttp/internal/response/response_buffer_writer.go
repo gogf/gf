@@ -74,15 +74,15 @@ func (w *BufferWriter) WriteHeader(status int) {
 
 // Flush outputs the buffer to clients and clears the buffer.
 func (w *BufferWriter) Flush() {
-	if w.Writer.IsHijacked() {
+	if w.IsHijacked() {
 		return
 	}
 
-	if w.Status != 0 && !w.Writer.IsHeaderWrote() {
+	if w.Status != 0 && !w.IsHeaderWrote() {
 		w.Writer.WriteHeader(w.Status)
 	}
 	// Default status text output.
-	if w.Status != http.StatusOK && w.buffer.Len() == 0 && w.Writer.BytesWritten() == 0 {
+	if w.Status != http.StatusOK && w.buffer.Len() == 0 && w.BytesWritten() == 0 {
 		w.buffer.WriteString(http.StatusText(w.Status))
 	}
 	if w.buffer.Len() > 0 {

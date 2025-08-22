@@ -29,7 +29,7 @@ func LoadWithOptions(data []byte, options Options) (*Json, error) {
 // LoadJson creates a Json object from given JSON format content.
 func LoadJson(data []byte, safe ...bool) (*Json, error) {
 	var option = Options{
-		Type: ContentTypeJson,
+		Type: ContentTypeJSON,
 	}
 	if len(safe) > 0 && safe[0] {
 		option.Safe = true
@@ -40,7 +40,7 @@ func LoadJson(data []byte, safe ...bool) (*Json, error) {
 // LoadXml creates a Json object from given XML format content.
 func LoadXml(data []byte, safe ...bool) (*Json, error) {
 	var option = Options{
-		Type: ContentTypeXml,
+		Type: ContentTypeXML,
 	}
 	if len(safe) > 0 && safe[0] {
 		option.Safe = true
@@ -126,9 +126,9 @@ func IsValidDataType(dataType ContentType) bool {
 	}
 	switch dataType {
 	case
-		ContentTypeJson,
+		ContentTypeJSON,
 		ContentTypeJs,
-		ContentTypeXml,
+		ContentTypeXML,
 		ContentTypeYaml,
 		ContentTypeYml,
 		ContentTypeToml,
@@ -171,9 +171,9 @@ func loadContentWithOptions(data []byte, options Options) (*Json, error) {
 		string(options.Type), "."),
 	)
 	switch options.Type {
-	case ContentTypeJson, ContentTypeJs:
+	case ContentTypeJSON, ContentTypeJs:
 
-	case ContentTypeXml:
+	case ContentTypeXML:
 		data, err = gxml.ToJson(data)
 
 	case ContentTypeYaml, ContentTypeYml:
@@ -221,10 +221,10 @@ func loadContentWithOptions(data []byte, options Options) (*Json, error) {
 func checkDataType(data []byte) (ContentType, error) {
 	switch {
 	case json.Valid(data):
-		return ContentTypeJson, nil
+		return ContentTypeJSON, nil
 
-	case isXmlContent(data):
-		return ContentTypeXml, nil
+	case isXMLContent(data):
+		return ContentTypeXML, nil
 
 	case isYamlContent(data):
 		return ContentTypeYaml, nil
@@ -247,7 +247,7 @@ func checkDataType(data []byte) (ContentType, error) {
 	}
 }
 
-func isXmlContent(data []byte) bool {
+func isXMLContent(data []byte) bool {
 	return gregex.IsMatch(`^\s*<.+>[\S\s]+<.+>\s*$`, data)
 }
 
