@@ -35,6 +35,12 @@ for file in `find . -name go.mod`; do
     dirpath=$(dirname $file)
     echo "Processing: $dirpath"
 
+    # Only process kubecm directory, skip others
+    if [ "kubecm" != $(basename $dirpath) ]; then
+        echo "  Skipping: not kubecm directory"
+        continue
+    fi
+
     cd $dirpath
 
     # Read Go version requirement from go.mod
