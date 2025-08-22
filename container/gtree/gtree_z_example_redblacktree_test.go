@@ -544,7 +544,7 @@ func ExampleRedBlackTree_IteratorAsc() {
 	// key: 9 , value: 1
 }
 
-func ExampleRedBlackTree_IteratorAscFrom_Normal() {
+func ExampleRedBlackTree_IteratorAscFrom_normal() {
 	m := make(map[interface{}]interface{})
 	for i := 1; i <= 5; i++ {
 		m[i] = i * 10
@@ -564,7 +564,7 @@ func ExampleRedBlackTree_IteratorAscFrom_Normal() {
 	// key: 5 , value: 50
 }
 
-func ExampleRedBlackTree_IteratorAscFrom_NoExistKey() {
+func ExampleRedBlackTree_IteratorAscFrom_noExistKey() {
 	m := make(map[interface{}]interface{})
 	for i := 1; i <= 5; i++ {
 		m[i] = i * 10
@@ -579,7 +579,7 @@ func ExampleRedBlackTree_IteratorAscFrom_NoExistKey() {
 	// Output:
 }
 
-func ExampleRedBlackTree_IteratorAscFrom_NoExistKeyAndMatchFalse() {
+func ExampleRedBlackTree_IteratorAscFrom_noExistKeyAndMatchFalse() {
 	m := make(map[interface{}]interface{})
 	for i := 1; i <= 5; i++ {
 		m[i] = i * 10
