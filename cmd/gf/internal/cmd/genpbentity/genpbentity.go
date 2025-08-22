@@ -470,14 +470,23 @@ func generateMessageFieldForPbEntity(index int, field *gdb.TableField, in CGenPb
 		err              error
 		ctx              = gctx.GetInitCtx()
 	)
-
 	if in.TypeMapping != nil && len(in.TypeMapping) > 0 {
+		// match typeMapping after local type transform.
+		// eg: double => string, varchar => string etc.
 		localTypeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
 		if err != nil {
 			panic(err)
 		}
 		if localTypeName != "" {
-			if typeMapping, ok := in.TypeMapping[strings.ToLower(string(localTypeName))]; ok {
+			if typeMappingLocal, localOk := in.TypeMapping[strings.ToLower(string(localTypeName))]; localOk {
+				localTypeNameStr = typeMappingLocal.Type
+				appendImport = typeMappingLocal.Import
+			}
+		}
+		// Try match unknown / string localTypeName with db type.
+		if localTypeName == "" || localTypeName == gdb.LocalTypeString {
+			formattedFieldType, _ := in.DB.GetFormattedDBTypeNameForField(field.Type)
+			if typeMapping, ok := in.TypeMapping[strings.ToLower(formattedFieldType)]; ok {
 				localTypeNameStr = typeMapping.Type
 				appendImport = typeMapping.Import
 			}
