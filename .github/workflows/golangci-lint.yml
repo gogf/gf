@@ -29,7 +29,7 @@ jobs:
   golang-ci:
     strategy:
       matrix:
-        go-version: [ "1.23", "1.24", "1.25" ]
+        go-version: [ "stable" ]
 
     name: golang-ci-lint
     runs-on: ubuntu-latest
@@ -44,7 +44,6 @@ jobs:
         uses: golangci/golangci-lint-action@v8
         with:
           # Required: specify the golangci-lint version without the patch version to always use the latest patch.
-          version: latest
           only-new-issues: true
           skip-cache: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
