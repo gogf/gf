@@ -97,6 +97,7 @@ generated json tag case for model struct, cases are as follows:
 	tplVarTableNameCamelCase      = `TplTableNameCamelCase`
 	tplVarTableNameCamelLowerCase = `TplTableNameCamelLowerCase`
 	tplVarTableSharding           = `TplTableSharding`
+	tplVarTableShardingPrefix     = `TplTableShardingPrefix`
 	tplVarPackageImports          = `TplPackageImports`
 	tplVarImportPrefix            = `TplImportPrefix`
 	tplVarStructDefine            = `TplStructDefine`
