@@ -219,7 +219,8 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 					tableNames[i] = ""
 					continue
 				}
-				shardingNewTableSet.Add(newTableName)
+				// Add prefix to sharding table name, if not, the isSharding check would not match.
+				shardingNewTableSet.Add(in.Prefix + newTableName)
 			}
 		}
 		newTableName = in.Prefix + newTableName

@@ -47,9 +47,10 @@ func Test_Gen_Dao_Sharding(t *testing.T) {
 			// path  = "/Users/john/Temp/gen_dao_sharding"
 			group = "test"
 			in    = gendao.CGenDaoInput{
-				Path:  path,
-				Link:  link,
-				Group: group,
+				Path:   path,
+				Link:   link,
+				Group:  group,
+				Prefix: "",
 				ShardingPattern: []string{
 					`users_?`,
 					`orders_?`,
