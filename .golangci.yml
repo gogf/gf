@@ -1,7 +1,7 @@
 version: "2"
 run:
   concurrency: 4
-  go: "1.22"
+  go: "1.23"
   modules-download-mode: readonly
   issues-exit-code: 2
   tests: false
