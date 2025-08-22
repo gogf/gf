@@ -141,7 +141,7 @@ func ExampleRing_Next() {
 	// Prev: 2
 }
 
-func ExampleRing_Link_Common() {
+func ExampleRing_Link_common() {
 	r := gring.New(10)
 	for i := 0; i < 5; i++ {
 		r.Set(i).Next()
@@ -167,7 +167,7 @@ func ExampleRing_Link_Common() {
 	// [5 6 7 8 9 10 11 12 13 14]
 }
 
-func ExampleRing_Link_SameRing() {
+func ExampleRing_Link_sameRing() {
 	r := gring.New(10)
 	for i := 0; i < 5; i++ {
 		r.Set(i).Next()
