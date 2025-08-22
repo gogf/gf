@@ -123,7 +123,7 @@ CONFIGURATION SUPPORT
 	CGenPbEntityBriefTablesEx          = `generate all models exclude the specified tables, multiple prefix separated with ','`
 	CGenPbEntityBriefRemoveFieldPrefix = `remove specified prefix of the field, multiple prefix separated with ','`
 	CGenPbEntityBriefOption            = `extra protobuf options`
-	CGenPbEntityBriefShardingPattern   = `sharding pattern for table name, e.g. "users_?" will be replace tables "users_001,users_002,..." to "users" pbentity`
+	CGenPbEntityBriefShardingPattern   = `sharding pattern for table name, e.g. "users_?" will replace tables "users_001,users_002,..." to "users" pbentity`
 	CGenPbEntityBriefGroup             = `
 specifying the configuration group name of database for generated ORM instance,
 it's not necessary and the default value is "default"
