@@ -80,7 +80,7 @@ func (c *Conn) Do(ctx context.Context, command string, args ...interface{}) (rep
 
 	// Trace span start.
 	tr := otel.GetTracerProvider().Tracer(traceInstrumentName, trace.WithInstrumentationVersion(gf.VERSION))
-	_, span := tr.Start(ctx, "Redis."+command, trace.WithSpanKind(trace.SpanKindInternal))
+	_, span := tr.Start(ctx, "Redis."+command, trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	timestampMilli1 := gtime.TimestampMilli()
