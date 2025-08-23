@@ -19,7 +19,7 @@ for file in `find . -name go.mod`; do
         continue 1
     fi
 
-    # package kuhecm was moved to sub ci procedure.
+    # package kubecm was moved to sub ci procedure.
     if [ "kubecm" = $(basename $dirpath) ]; then
         continue 1
     fi
