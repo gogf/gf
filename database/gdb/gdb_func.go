@@ -525,6 +525,24 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 		// Mapping and filtering fields if `Table` is given.
 		if in.Table != "" {
 			data, _ = db.GetCore().mappingAndFilterData(ctx, in.Schema, in.Table, data, true)
+			// Convert field values to types supported by table records (e.g., time to string)
+			for fieldName, fieldValue := range data {
+				switch fieldValue.(type) {
+				case time.Time, *time.Time, gtime.Time, *gtime.Time:
+					var fieldType = db.GetCore().GetFieldTypeStr(ctx, fieldName, in.Table, in.Schema)
+					convFieldValue, err := db.GetCore().ConvertValueForField(
+						ctx,
+						fieldType,
+						fieldValue,
+					)
+					if err != nil || convFieldValue == nil {
+						continue
+					}
+					data[fieldName] = convFieldValue
+				default:
+					continue
+				}
+			}
 		}
 		// Put the struct attributes in sequence in Where statement.
 		var ormTagValue string
