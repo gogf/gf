@@ -47,7 +47,7 @@ func Test_Gen_Dao_Default(t *testing.T) {
 			in    = gendao.CGenDaoInput{
 				Path:               path,
 				Link:               link,
-				Tables:             "",
+				Tables:             "table_user",
 				TablesEx:           "",
 				Group:              group,
 				Prefix:             "",
@@ -139,7 +139,7 @@ func Test_Gen_Dao_TypeMapping(t *testing.T) {
 			in    = gendao.CGenDaoInput{
 				Path:               path,
 				Link:               link,
-				Tables:             "",
+				Tables:             "table_user",
 				TablesEx:           "",
 				Group:              group,
 				Prefix:             "",
@@ -241,7 +241,7 @@ func Test_Gen_Dao_FieldMapping(t *testing.T) {
 			in    = gendao.CGenDaoInput{
 				Path:               path,
 				Link:               link,
-				Tables:             "",
+				Tables:             "table_user",
 				TablesEx:           "",
 				Group:              group,
 				Prefix:             "",
