@@ -374,7 +374,7 @@ func (c *Client) callRequest(req *http.Request) (resp *Response, err error) {
 			err = gerror.Wrapf(err, `request failed`)
 			// The response might not be nil when err != nil.
 			if resp.Response != nil {
-				_ = resp.Response.Body.Close()
+				_ = resp.Body.Close()
 			}
 			if c.retryCount > 0 {
 				c.retryCount--
