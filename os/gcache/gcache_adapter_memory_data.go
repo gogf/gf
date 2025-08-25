@@ -182,12 +182,13 @@ func (d *memoryData) SetMap(data map[interface{}]interface{}, expireTime int64) 
 }
 
 func (d *memoryData) SetWithLock(ctx context.Context, key interface{}, value interface{}, expireTimestamp int64) (interface{}, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
 	var (
 		err error
 	)
-	if v, ok := d.data[key]; ok && !v.IsExpired() {
+	d.mu.Lock()
+	v, ok := d.data[key]
+	d.mu.Unlock()
+	if ok && !v.IsExpired() {
 		return v.v, nil
 	}
 	f, ok := value.(Func)
@@ -203,7 +204,9 @@ func (d *memoryData) SetWithLock(ctx context.Context, key interface{}, value int
 			return nil, nil
 		}
 	}
+	d.mu.Lock()
 	d.data[key] = memoryDataItem{v: value, e: expireTimestamp}
+	d.mu.Unlock()
 	return value, nil
 }
 
