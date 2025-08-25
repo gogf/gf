@@ -187,7 +187,7 @@ func (c *AdapterMemory) SetIfNotExistFuncLock(ctx context.Context, key interface
 // It returns nil if it does not exist, or its value is nil, or it's expired.
 // If you would like to check if the `key` exists in the cache, it's better using function Contains.
 func (c *AdapterMemory) Get(ctx context.Context, key interface{}) (*gvar.Var, error) {
-	item, ok := c.data.Get(key)
+	item, ok := c.data.GetWithLock(ctx, key)
 	if ok && !item.IsExpired() {
 		c.handleLruKey(ctx, key)
 		return gvar.New(item.v), nil
