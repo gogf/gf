@@ -76,6 +76,10 @@ CONFIGURATION SUPPORT
 specifying the configuration group name of database for generated ORM instance,
 it's not necessary and the default value is "default"
 `
+	CGenDaoBriefNullFieldPattern = `
+pattern for table fields that are NULL by default, the generated entity struct attribute type 
+will be pointer type *T instead of T, e.g. "table_?"
+`
 	CGenDaoBriefJsonCase = `
 generated json tag case for model struct, cases are as follows:
 | Case            | Example            |
@@ -141,6 +145,7 @@ func init() {
 		`CGenDaoBriefFieldMapping`:       CGenDaoBriefFieldMapping,
 		`CGenDaoBriefShardingPattern`:    CGenDaoBriefShardingPattern,
 		`CGenDaoBriefGroup`:              CGenDaoBriefGroup,
+		`CGenDaoBriefNullFieldPattern`:   CGenDaoBriefNullFieldPattern,
 		`CGenDaoBriefJsonCase`:           CGenDaoBriefJsonCase,
 		`CGenDaoBriefTplDaoIndexPath`:    CGenDaoBriefTplDaoIndexPath,
 		`CGenDaoBriefTplDaoInternalPath`: CGenDaoBriefTplDaoInternalPath,
