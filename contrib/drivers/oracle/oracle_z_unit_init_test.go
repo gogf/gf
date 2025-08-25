@@ -9,7 +9,6 @@ package oracle_test
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	_ "github.com/sijms/go-ora/v2"
 
@@ -114,7 +113,7 @@ func createTable(table ...string) (name string) {
 	dropTable(name)
 
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
-	CREATE TABLE %s (
+	CREATE TABLE "%s" (
 		ID NUMBER(10) NOT NULL,
 		PASSPORT VARCHAR(45) NOT NULL,
 		PASSWORD CHAR(32) NOT NULL,
@@ -152,15 +151,5 @@ func createInitTable(table ...string) (name string) {
 }
 
 func dropTable(table string) {
-	count, err := db.GetCount(ctx, "SELECT COUNT(*) FROM USER_TABLES WHERE TABLE_NAME = ?", strings.ToUpper(table))
-	if err != nil {
-		gtest.Fatal(err)
-	}
-
-	if count == 0 {
-		return
-	}
-	if _, err = db.Exec(ctx, fmt.Sprintf("DROP TABLE %s", table)); err != nil {
-		gtest.Fatal(err)
-	}
+	db.Exec(ctx, fmt.Sprintf(`DROP TABLE "%s"`, table))
 }
