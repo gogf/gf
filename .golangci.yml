@@ -1,325 +1,207 @@
-## This file contains all available configuration options
-## with their default values.
-
-# See https://github.com/golangci/golangci-lint#config-file
-# See https://golangci-lint.run/usage/configuration/
-
-# Options for analysis running.
+version: "2"
 run:
-  # Timeout for analysis, e.g. 30s, 5m.
-  # Default: 1m
-  timeout: 5m
-  # Exit code when at least one issue was found.
-  # Default: 1
-  issues-exit-code: 2
-  # Include test files or not.
-  # Default: true
-  tests: false
-  # List of build tags, all linters use it.
-  # Default: []
-  build-tags: []
-  # If set, we pass it to "go list -mod={option}". From "go help modules":
-  # If invoked with -mod=readonly, the go command is disallowed from the implicit
-  # automatic updating of go.mod described above. Instead, it fails when any changes
-  # to go.mod are needed. This setting is most useful to check that go.mod does
-  # not need updates, such as in a continuous integration and testing system.
-  # If invoked with -mod=vendor, the go command assumes that the vendor
-  # directory holds the correct copies of dependencies and ignores
-  # the dependency descriptions in go.mod.
-  #
-  # Allowed values: readonly|vendor|mod
-  # Default: ""
-  modules-download-mode: readonly
-  # Allow multiple parallel golangci-lint instances running.
-  # If false, golangci-lint acquires file lock on start.
-  # Default: false
-  allow-parallel-runners: true
-  # Allow multiple golangci-lint instances running, but serialize them around a lock.
-  # If false, golangci-lint exits with an error if it fails to acquire file lock on start.
-  # Default: false
-  allow-serial-runners: true
-  # Define the Go version limit.
-  # Mainly related to generics support since go1.18.
-  # Default: use Go version from the go.mod file, fallback on the env var `GOVERSION`, fallback on 1.17
-  go: '1.20'
-  # Number of operating system threads (`GOMAXPROCS`) that can execute golangci-lint simultaneously.
-  # If it is explicitly set to 0 (i.e. not the default) then golangci-lint will automatically set the value to match Linux container CPU quota.
-  # Default: the number of logical CPUs in the machine
   concurrency: 4
-
-
-# Main linters configurations.
-# See https://golangci-lint.run/usage/linters
+  go: "1.23"
+  modules-download-mode: readonly
+  issues-exit-code: 2
+  tests: false
+  allow-parallel-runners: true
+  allow-serial-runners: true
 linters:
-  # Disable all default enabled linters.
-  disable-all: true
-  # Custom enable linters we want to use.
+  default: none
   enable:
-    - errcheck      # Errcheck is a program for checking for unchecked errors in go programs.
-    - errchkjson    # Checks types passed to the JSON encoding functions. Reports unsupported types and optionally reports occasions, where the check for the returned error can be omitted.
-    - funlen        # Tool for detection of long functions
-    - gofmt         # Gofmt checks whether code was gofmt-ed. By default this tool runs with -s option to check for code simplification
-    - goimports     # Check import statements are formatted according to the 'goimport' command. Reformat imports in autofix mode.
-    - gci           # Gci controls Go package import order and makes it always deterministic.
-    - goconst       # Finds repeated strings that could be replaced by a constant
-    - gocritic      # Provides diagnostics that check for bugs, performance and style issues.
-    - gosimple      # Linter for Go source code that specializes in simplifying code
-    - govet         # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string
-    - misspell      # Finds commonly misspelled English words in comments
-    - nolintlint    # Reports ill-formed or insufficient nolint directives
-    - revive        # Fast, configurable, extensible, flexible, and beautiful linter for Go. Drop-in replacement of golint.
-    - staticcheck   # It's a set of rules from staticcheck. It's not the same thing as the staticcheck binary.
-    - typecheck     # Like the front-end of a Go compiler, parses and type-checks Go code
-    - usestdlibvars # A linter that detect the possibility to use variables/constants from the Go standard library.
-    - whitespace    # Tool for detection of leading and trailing whitespace
-
-
-issues:
-  exclude-rules:
-    # helpers in tests often (rightfully) pass a *testing.T as their first argument
-    - path: _test\.go
-      text: "context.Context should be the first parameter of a function"
-      linters:
-        - revive
-    # Yes, they are, but it's okay in a test
-    - path: _test\.go
-      text: "exported func.*returns unexported type.*which can be annoying to use"
-      linters:
-        - revive
-    # https://github.com/go-critic/go-critic/issues/926
-    - linters:
-        - gocritic
-      text: "unnecessaryDefer:"
-
-
-# https://golangci-lint.run/usage/linters
-linters-settings:
-  # https://golangci-lint.run/usage/linters/#misspell
-  misspell:
-    locale: US
-    ignore-words:
-      - cancelled
-  # https://golangci-lint.run/usage/linters/#gofmt
-  gofmt:
-    # Simplify code: gofmt with `-s` option.
-    # Default: true
-    simplify: true
-    # Apply the rewrite rules to the source before reformatting.
-    # https://pkg.go.dev/cmd/gofmt
-    # Default: []
-    rewrite-rules: [ ]
-      # - pattern: 'interface{}'
-      #   replacement: 'any'
-      # - pattern: 'a[b:len(a)]'
-      #   replacement: 'a[b:]'
-  goimports:
-    # A comma-separated list of prefixes, which, if set, checks import paths
-    # with the given prefixes are grouped after 3rd-party packages.
-    # Default: ""
-    local-prefixes: github.com/gogf/gf/v2
-  gci:
-    # Section configuration to compare against.
-    # Section names are case-insensitive and may contain parameters in ().
-    # The default order of sections is `standard > default > custom > blank > dot > alias > localmodule`,
-    # If `custom-order` is `true`, it follows the order of `sections` option.
-    # Default: ["standard", "default"]
-    sections:
-      - standard # Standard section: captures all standard packages.
-      - blank # Blank section: contains all blank imports. This section is not present unless explicitly enabled.
-      - default # Default section: contains all imports that could not be matched to another section type.
-      - dot # Dot section: contains all dot imports. This section is not present unless explicitly enabled.
-      # - alias # Alias section: contains all alias imports. This section is not present unless explicitly enabled.
-      # - localmodule # Local module section: contains all local packages. This section is not present unless explicitly enabled.
-      - prefix(github.com/gogf/gf) # Custom section: groups all imports with the specified Prefix.
-      - prefix(github.com/gogf/gf/cmd) # Custom section: groups all imports with the specified Prefix.
-      - prefix(github.com/gogf/gfcontrib) # Custom section: groups all imports with the specified Prefix.
-      - prefix(github.com/gogf/gf/example) # Custom section: groups all imports with the specified Prefix.
-    # Skip generated files.
-    # Default: true
-    skip-generated: true
-    # Enable custom order of sections.
-    # If `true`, make the section order the same as the order of `sections`.
-    # Default: false
-    custom-order: true
-    # Drops lexical ordering for custom sections.
-    # Default: false
-    no-lex-order: false
-  # https://golangci-lint.run/usage/linters/#revive
-  # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md
-  revive:
-    ignore-generated-header: true
-    severity: error
+    - errcheck
+    - errchkjson
+    - funlen
+    - goconst
+    - gocritic
+    - govet
+    - misspell
+    - nolintlint
+    - revive
+    - staticcheck
+    - usestdlibvars
+    - whitespace
+  settings:
+    funlen:
+      lines: 340
+      statements: -1
+    goconst:
+      match-constant: false
+      min-len: 4
+      min-occurrences: 30
+      numbers: true
+      min: 5
+      max: 20
+      ignore-calls: false
+    gocritic:
+      disabled-checks:
+        - ifElseChain
+        - assignOp
+        - appendAssign
+        - singleCaseSwitch
+        - regexpMust
+        - typeSwitchVar
+        - elseif
+    govet:
+      disable:
+        - asmdecl
+        - assign
+        - atomic
+        - atomicalign
+        - bools
+        - buildtag
+        - cgocall
+        - composites
+        - copylocks
+        - deepequalerrors
+        - errorsas
+        - fieldalignment
+        - findcall
+        - framepointer
+        - httpresponse
+        - ifaceassert
+        - loopclosure
+        - lostcancel
+        - nilfunc
+        - nilness
+        - reflectvaluecompare
+        - shift
+        - shadow
+        - sigchanyzer
+        - sortslice
+        - stdmethods
+        - stringintconv
+        - structtag
+        - testinggoroutine
+        - tests
+        - unmarshal
+        - unreachable
+        - unsafeptr
+        - unusedwrite
+      enable-all: true
+      settings:
+        printf:
+          funcs:
+            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+        unusedresult:
+          funcs:
+            - pkg.MyFunc
+            - context.WithCancel
+          stringmethods:
+            - MyMethod
+    misspell:
+      locale: US
+      ignore-rules:
+        - cancelled
+    revive:
+      severity: error
+      rules:
+        - name: atomic
+        - name: line-length-limit
+          arguments:
+            - 380
+          severity: error
+        - name: unhandled-error
+          severity: warning
+          disabled: true
+        - name: var-naming
+          arguments:
+            - - ID
+              - URL
+              - IP
+              - HTTP
+              - JSON
+              - API
+              - UID
+              - Id
+              - Api
+              - Uid
+              - Http
+              - Json
+              - Ip
+              - Url
+            - - VM
+          severity: warning
+          disabled: true
+        - name: string-format
+          arguments:
+            - - core.WriteError[1].Message
+              - /^([^A-Z]|$)/
+              - must not start with a capital letter
+            - - fmt.Errorf[0]
+              - /(^|[^\.!?])$/
+              - must not end in punctuation
+            - - panic
+              - /^[^\n]*$/
+              - must not contain line breaks
+          severity: warning
+          disabled: false
+        - name: function-result-limit
+          arguments:
+            - 4
+          severity: warning
+          disabled: false
+    staticcheck:
+      checks: [ "all","-S1000","-S1009","-S1016","-S1023","-S1025","-S1029","-S1034","-S1040","-SA1016","-SA1019","-SA1029","-SA4006","-SA4015","-SA6003","-SA9003","-ST1003","-QF1001","-QF1002","-QF1003","-QF1006","-QF1007","-QF1008","-QF1011","-QF1012","-ST1011" ]
+      initialisms: [ "ACL", "API", "ASCII", "CPU", "CSS", "DNS", "EOF", "GUID", "HTML", "HTTP", "HTTPS", "ID", "IP", "JSON", "QPS", "RAM", "RPC", "SLA", "SMTP", "SQL", "SSH", "TCP", "TLS", "TTL", "UDP", "UI", "GID", "UID", "UUID", "URI", "URL", "UTF8", "VM", "XML", "XMPP", "XSRF", "XSS", "SIP", "RTP", "AMQP", "DB", "TS" ]
+      dot-import-whitelist: [ "fmt" ]
+      http-status-code-whitelist: [ "200", "400", "404", "500" ]
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
     rules:
-      - name: atomic
-      - name: line-length-limit
-        severity: error
-        arguments: [ 380 ]
-      - name: unhandled-error
-        severity: warning
-        disabled: true
-        arguments: []
-      - name: var-naming
-        severity: warning
-        disabled: true
-        arguments:
-          # AllowList
-          - [ "ID","URL","IP","HTTP","JSON","API","UID","Id","Api","Uid","Http","Json","Ip","Url" ]
-          # DenyList
-          - [ "VM" ]
-      - name: string-format
-        severity: warning
-        disabled: false
-        arguments:
-          - - 'core.WriteError[1].Message'
-            - '/^([^A-Z]|$)/'
-            - must not start with a capital letter
-          - - 'fmt.Errorf[0]'
-            - '/(^|[^\.!?])$/'
-            - must not end in punctuation
-          - - panic
-            - '/^[^\n]*$/'
-            - must not contain line breaks
-      - name: function-result-limit
-        severity: warning
-        disabled: false
-        arguments: [ 4 ]
-
-  # https://golangci-lint.run/usage/linters/#funlen
-  funlen:
-    # Checks the number of lines in a function.
-    # If lower than 0, disable the check.
-    # Default: 60
-    lines: 340
-    # Checks the number of statements in a function.
-    # If lower than 0, disable the check.
-    # Default: 40
-    statements: -1
-
-  # https://golangci-lint.run/usage/linters/#goconst
-  goconst:
-    # Minimal length of string constant.
-    # Default: 3
-    min-len: 4
-    # Minimum occurrences of constant string count to trigger issue.
-    # Default: 3
-    # For subsequent optimization, the value is reduced.
-    min-occurrences: 30
-    # Ignore test files.
-    # Default: false
-    ignore-tests: true
-    # Look for existing constants matching the values.
-    # Default: true
-    match-constant: false
-    # Search also for duplicated numbers.
-    # Default: false
-    numbers: true
-    # Minimum value, only works with goconst.numbers
-    # Default: 3
-    min: 5
-    # Maximum value, only works with goconst.numbers
-    # Default: 3
-    max: 20
-    # Ignore when constant is not used as function argument.
-    # Default: true
-    ignore-calls: false
-
-  # https://golangci-lint.run/usage/linters/#gocritic
-  gocritic:
-    disabled-checks:
-      - ifElseChain
-      - assignOp
-      - appendAssign
-      - singleCaseSwitch
-      - regexpMust
-      - typeSwitchVar
-      - elseif
-
-  # https://golangci-lint.run/usage/linters/#gosimple
-  gosimple:
-    # Sxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
-    # Default: ["*"]
-    checks: [
-      "all", "-S1000", "-S1001", "-S1002", "-S1008", "-S1009", "-S1016", "-S1023", "-S1025", "-S1029", "-S1034", "-S1040"
-    ]
-
-  # https://golangci-lint.run/usage/linters/#govet
-  govet:
-    # Report about shadowed variables.
-    # Default: false
-    # check-shadowing: true
-    # Settings per analyzer.
-    settings:
-      # Analyzer name, run `go tool vet help` to see all analyzers.
-      printf:
-        # Comma-separated list of print function names to check (in addition to default, see `go tool vet help printf`).
-        # Default: []
-        funcs:
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
-        # shadow:
-        # Whether to be strict about shadowing; can be noisy.
-        # Default: false
-        # strict: false
-      unusedresult:
-        # Comma-separated list of functions whose results must be used
-        # (in addition to defaults context.WithCancel,context.WithDeadline,context.WithTimeout,context.WithValue,
-        # errors.New,fmt.Errorf,fmt.Sprint,fmt.Sprintf,sort.Reverse)
-        # Default []
-        funcs:
-          - pkg.MyFunc
-          - context.WithCancel
-        # Comma-separated list of names of methods of type func() string whose results must be used
-        # (in addition to default Error,String)
-        # Default []
-        stringmethods:
-          - MyMethod
-    # Enable all analyzers.
-    # Default: false
-    enable-all: true
-    # Disable analyzers by name.
-    # Run `go tool vet help` to see all analyzers.
-    # Default: []
-    disable:
-      - asmdecl
-      - assign
-      - atomic
-      - atomicalign
-      - bools
-      - buildtag
-      - cgocall
-      - composites
-      - copylocks
-      - deepequalerrors
-      - errorsas
-      - fieldalignment
-      - findcall
-      - framepointer
-      - httpresponse
-      - ifaceassert
-      - loopclosure
-      - lostcancel
-      - nilfunc
-      - nilness
-      - reflectvaluecompare
-      - shift
-      - shadow
-      - sigchanyzer
-      - sortslice
-      - stdmethods
-      - stringintconv
-      - structtag
-      - testinggoroutine
-      - tests
-      - unmarshal
-      - unreachable
-      - unsafeptr
-      - unusedwrite
-
-  # https://golangci-lint.run/usage/linters/#staticcheck
-  staticcheck:
-    # SAxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
-    # Default: ["*"]
-    checks: [ "all","-SA1019","-SA4015","-SA1029","-SA1016","-SA9003","-SA4006","-SA6003" ]
-
+      - linters:
+          - revive
+        path: _test\.go
+        text: context.Context should be the first parameter of a function
+      - linters:
+          - revive
+        path: _test\.go
+        text: exported func.*returns unexported type.*which can be annoying to use
+      - linters:
+          - gocritic
+        text: 'unnecessaryDefer:'
+      - linters:
+          - goconst
+        path: (.+)_test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - goimports
+  settings:
+    gci:
+      sections:
+        - standard
+        - blank
+        - default
+        - dot
+        - prefix(github.com/gogf/gf)
+        - prefix(github.com/gogf/gf/cmd)
+        - prefix(github.com/gogf/gfcontrib)
+        - prefix(github.com/gogf/gf/example)
+      custom-order: true
+      no-lex-order: false
+    gofmt:
+      simplify: true
+    goimports:
+      local-prefixes:
+        - github.com/gogf/gf/v2
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

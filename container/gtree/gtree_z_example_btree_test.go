@@ -558,7 +558,7 @@ func ExampleBTree_IteratorAsc() {
 	// key: 9 , value: 1
 }
 
-func ExampleBTree_IteratorAscFrom_Normal() {
+func ExampleBTree_IteratorAscFrom_normal() {
 	m := make(map[interface{}]interface{})
 	for i := 1; i <= 5; i++ {
 		m[i] = i * 10
@@ -578,7 +578,7 @@ func ExampleBTree_IteratorAscFrom_Normal() {
 	// key: 5 , value: 50
 }
 
-func ExampleBTree_IteratorAscFrom_NoExistKey() {
+func ExampleBTree_IteratorAscFrom_noExistKey() {
 	m := make(map[interface{}]interface{})
 	for i := 1; i <= 5; i++ {
 		m[i] = i * 10
@@ -593,7 +593,7 @@ func ExampleBTree_IteratorAscFrom_NoExistKey() {
 	// Output:
 }
 
-func ExampleBTree_IteratorAscFrom_NoExistKeyAndMatchFalse() {
+func ExampleBTree_IteratorAscFrom_noExistKeyAndMatchFalse() {
 	m := make(map[interface{}]interface{})
 	for i := 1; i <= 5; i++ {
 		m[i] = i * 10

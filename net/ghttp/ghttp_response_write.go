@@ -30,9 +30,9 @@ func (r *Response) Write(content ...interface{}) {
 		case []byte:
 			_, _ = r.BufferWriter.Write(value)
 		case string:
-			_, _ = r.BufferWriter.WriteString(value)
+			_, _ = r.WriteString(value)
 		default:
-			_, _ = r.BufferWriter.WriteString(gconv.String(v))
+			_, _ = r.WriteString(gconv.String(v))
 		}
 	}
 }

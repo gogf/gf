@@ -15,7 +15,7 @@ import (
 )
 
 // New
-func ExampleVarNew() {
+func ExampleNew() {
 	v := gvar.New(400)
 	fmt.Println(v)
 

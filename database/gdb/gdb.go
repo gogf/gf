@@ -328,6 +328,9 @@ type DB interface {
 	// It handles type conversion from database-specific types to Go types.
 	ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error)
 
+	// GetFormattedDBTypeNameForField returns the formatted database type name and pattern for a field type.
+	GetFormattedDBTypeNameForField(fieldType string) (typeName, typePattern string)
+
 	// CheckLocalTypeForField checks if a Go value is compatible with a database field type.
 	// It returns the appropriate LocalType and any conversion errors.
 	CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (LocalType, error)
@@ -783,6 +786,7 @@ const (
 	LocalTypeUint        LocalType = "uint"
 	LocalTypeInt64       LocalType = "int64"
 	LocalTypeUint64      LocalType = "uint64"
+	LocalTypeBigInt      LocalType = "bigint"
 	LocalTypeIntSlice    LocalType = "[]int"
 	LocalTypeInt64Slice  LocalType = "[]int64"
 	LocalTypeUint64Slice LocalType = "[]uint64"
@@ -814,6 +818,10 @@ const (
 	fieldTypeBigInt     = "big_int"
 	fieldTypeBigint     = "bigint"
 	fieldTypeBigserial  = "bigserial"
+	fieldTypeInt128     = "int128"
+	fieldTypeInt256     = "int256"
+	fieldTypeUint128    = "uint128"
+	fieldTypeUint256    = "uint256"
 	fieldTypeReal       = "real"
 	fieldTypeFloat      = "float"
 	fieldTypeDouble     = "double"

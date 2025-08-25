@@ -50,7 +50,7 @@ func (c *Converter) Struct(params, pointer any, option ...StructOption) (err err
 	}
 
 	// JSON content converting.
-	ok, err := c.doConvertWithJsonCheck(params, pointer)
+	ok, err := c.doConvertWithJSONCheck(params, pointer)
 	if err != nil {
 		return err
 	}
@@ -474,7 +474,7 @@ func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value a
 // bindVarToReflectValue sets `value` to reflect value object `structFieldValue`.
 func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value any, option StructOption) (err error) {
 	// JSON content converting.
-	ok, err := c.doConvertWithJsonCheck(value, structFieldValue)
+	ok, err := c.doConvertWithJSONCheck(value, structFieldValue)
 	if err != nil {
 		return err
 	}
