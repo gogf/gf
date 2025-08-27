@@ -252,6 +252,13 @@ func GetConfig(group string) ConfigGroup {
 	return configs.config[group]
 }
 
+// GetConfig retrieves and returns the all configuration.
+func GetAllConfig() Config {
+	configs.RLock()
+	defer configs.RUnlock()
+	return configs.config
+}
+
 // SetDefaultGroup sets the group name for default configuration.
 func SetDefaultGroup(name string) {
 	defer instances.Clear()
