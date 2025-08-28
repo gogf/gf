@@ -35,14 +35,14 @@ type structType8 struct {
 }
 
 var (
-	structMap = map[string]interface{}{
+	structMap = map[string]any{
 		"name":  "gf",
 		"score": 100,
 		"Age":   98,
 		"ID":    199,
 	}
 
-	structMapFields8 = map[string]interface{}{
+	structMapFields8 = map[string]any{
 		"name":  "gf",
 		"score": 100,
 		"Age":   98,

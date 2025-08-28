@@ -20,8 +20,8 @@ type WhereBuilder struct {
 type WhereHolder struct {
 	Type     string        // Type of this holder.
 	Operator int           // Operator for this holder.
-	Where    interface{}   // Where parameter, which can commonly be type of string/map/struct.
-	Args     []interface{} // Arguments for where parameter.
+	Where    any   // Where parameter, which can commonly be type of string/map/struct.
+	Args     []any // Arguments for where parameter.
 	Prefix   string        // Field prefix, eg: "user.", "order.".
 }
 
@@ -48,7 +48,7 @@ func (b *WhereBuilder) Clone() *WhereBuilder {
 }
 
 // Build builds current WhereBuilder and returns the condition string and parameters.
-func (b *WhereBuilder) Build() (conditionWhere string, conditionArgs []interface{}) {
+func (b *WhereBuilder) Build() (conditionWhere string, conditionArgs []any) {
 	var (
 		ctx                         = b.model.GetCtx()
 		autoPrefix                  = b.model.getAutoPrefix()
@@ -104,7 +104,7 @@ func (b *WhereBuilder) Build() (conditionWhere string, conditionArgs []interface
 }
 
 // convertWhereBuilder converts parameter `where` to condition string and parameters if `where` is also a WhereBuilder.
-func (b *WhereBuilder) convertWhereBuilder(where interface{}, args []interface{}) (newWhere interface{}, newArgs []interface{}) {
+func (b *WhereBuilder) convertWhereBuilder(where any, args []any) (newWhere any, newArgs []any) {
 	var builder *WhereBuilder
 	switch v := where.(type) {
 	case WhereBuilder:

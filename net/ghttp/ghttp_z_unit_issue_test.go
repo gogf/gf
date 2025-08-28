@@ -117,7 +117,7 @@ type Issue1653TestReq struct {
 
 type Issue1653TestRes struct {
 	UUID     string      `json:"uuid"`
-	FeedBack interface{} `json:"feed_back"`
+	FeedBack any `json:"feed_back"`
 }
 
 type cIssue1653Foo struct{}

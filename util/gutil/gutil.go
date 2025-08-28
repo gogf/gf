@@ -69,9 +69,9 @@ func Keys(mapOrStruct any) (keysOrAttrs []string) {
 }
 
 // Values retrieves and returns the values from the given map or struct.
-func Values(mapOrStruct interface{}) (values []interface{}) {
-	values = make([]interface{}, 0)
-	if m, ok := mapOrStruct.(map[string]interface{}); ok {
+func Values(mapOrStruct any) (values []any) {
+	values = make([]any, 0)
+	if m, ok := mapOrStruct.(map[string]any); ok {
 		for _, v := range m {
 			values = append(values, v)
 		}

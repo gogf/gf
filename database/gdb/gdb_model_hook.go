@@ -70,7 +70,7 @@ type HookSelectInput struct {
 	Table      string        // The table name that to be used. Update this attribute to change target table name.
 	Schema     string        // The schema name that to be used. Update this attribute to change target schema name.
 	Sql        string        // The sql string that to be committed.
-	Args       []interface{} // The arguments of sql.
+	Args       []any // The arguments of sql.
 	SelectType SelectType    // The type of this SELECT operation.
 }
 
@@ -90,9 +90,9 @@ type HookUpdateInput struct {
 	Model     *Model        // Current operation Model.
 	Table     string        // The table name that to be used. Update this attribute to change target table name.
 	Schema    string        // The schema name that to be used. Update this attribute to change target schema name.
-	Data      interface{}   // Data can be type of: map[string]interface{}/string. You can use type assertion on `Data`.
+	Data      any   // Data can be type of: map[string]any/string. You can use type assertion on `Data`.
 	Condition string        // The where condition string for updating.
-	Args      []interface{} // The arguments for sql place-holders.
+	Args      []any // The arguments for sql place-holders.
 }
 
 // HookDeleteInput holds the parameters for delete hook operation.
@@ -102,7 +102,7 @@ type HookDeleteInput struct {
 	Table     string        // The table name that to be used. Update this attribute to change target table name.
 	Schema    string        // The schema name that to be used. Update this attribute to change target schema name.
 	Condition string        // The where condition string for deleting.
-	Args      []interface{} // The arguments for sql place-holders.
+	Args      []any // The arguments for sql place-holders.
 }
 
 const (

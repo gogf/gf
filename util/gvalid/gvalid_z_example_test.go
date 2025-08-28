@@ -35,7 +35,7 @@ func ExampleValidator_Run() {
 		fmt.Println("check value err:", err)
 	}
 	// check map mode
-	data := map[string]interface{}{
+	data := map[string]any{
 		"passport":  "",
 		"password":  "123456",
 		"password2": "1234567",
@@ -201,7 +201,7 @@ func ExampleValidator_Data_value() {
 }
 
 func ExampleValidator_Data_map1() {
-	params := map[string]interface{}{
+	params := map[string]any{
 		"passport":  "",
 		"password":  "123456",
 		"password2": "1234567",
@@ -223,7 +223,7 @@ func ExampleValidator_Data_map1() {
 }
 
 func ExampleValidator_Data_map2() {
-	params := map[string]interface{}{
+	params := map[string]any{
 		"passport":  "",
 		"password":  "123456",
 		"password2": "1234567",
@@ -245,7 +245,7 @@ func ExampleValidator_Data_map2() {
 }
 
 func ExampleValidator_Data_map3() {
-	params := map[string]interface{}{
+	params := map[string]any{
 		"passport":  "",
 		"password":  "123456",
 		"password2": "1234567",
@@ -255,7 +255,7 @@ func ExampleValidator_Data_map3() {
 		"password":  "required|length:6,16|same:password2",
 		"password2": "required|length:6,16",
 	}
-	messages := map[string]interface{}{
+	messages := map[string]any{
 		"passport": "账号不能为空 | 账号长度应当在{min}到{max}之间",
 		"password": map[string]string{
 			"required": "密码不能为空",

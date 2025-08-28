@@ -17,12 +17,12 @@ import (
 // or else it returns an empty slice.
 //
 // The parameter `list` supports types like:
-// []map[string]interface{}
+// []map[string]any
 // []map[string]sub-map
 // []struct
 // []struct:sub-struct
 // Note that the sub-map/sub-struct makes sense only if the optional parameter `subKey` is given.
-func ListItemValues(list interface{}, key interface{}, subKey ...interface{}) (values []interface{}) {
+func ListItemValues(list any, key any, subKey ...any) (values []any) {
 	var reflectValue reflect.Value
 	if v, ok := list.(reflect.Value); ok {
 		reflectValue = v
@@ -39,7 +39,7 @@ func ListItemValues(list interface{}, key interface{}, subKey ...interface{}) (v
 		if reflectValue.Len() == 0 {
 			return
 		}
-		values = []interface{}{}
+		values = []any{}
 		for i := 0; i < reflectValue.Len(); i++ {
 			if value, ok := ItemValue(reflectValue.Index(i), key); ok {
 				if len(subKey) > 0 && subKey[0] != nil {
@@ -49,7 +49,7 @@ func ListItemValues(list interface{}, key interface{}, subKey ...interface{}) (v
 						continue
 					}
 				}
-				if array, ok := value.([]interface{}); ok {
+				if array, ok := value.([]any); ok {
 					values = append(values, array...)
 				} else {
 					values = append(values, value)
@@ -62,7 +62,7 @@ func ListItemValues(list interface{}, key interface{}, subKey ...interface{}) (v
 
 // ItemValue retrieves and returns its value of which name/attribute specified by `key`.
 // The parameter `item` can be type of map/*map/struct/*struct.
-func ItemValue(item interface{}, key interface{}) (value interface{}, found bool) {
+func ItemValue(item any, key any) (value any, found bool) {
 	var reflectValue reflect.Value
 	if v, ok := item.(reflect.Value); ok {
 		reflectValue = v
@@ -114,12 +114,12 @@ func ItemValue(item interface{}, key interface{}) (value interface{}, found bool
 // ListItemValuesUnique retrieves and returns the unique elements of all struct/map with key `key`.
 // Note that the parameter `list` should be type of slice which contains elements of map or struct,
 // or else it returns an empty slice.
-func ListItemValuesUnique(list interface{}, key string, subKey ...interface{}) []interface{} {
+func ListItemValuesUnique(list any, key string, subKey ...any) []any {
 	values := ListItemValues(list, key, subKey...)
 	if len(values) > 0 {
 		var (
 			ok bool
-			m  = make(map[interface{}]struct{}, len(values))
+			m  = make(map[any]struct{}, len(values))
 		)
 		for i := 0; i < len(values); {
 			value := values[i]
@@ -138,8 +138,8 @@ func ListItemValuesUnique(list interface{}, key string, subKey ...interface{}) [
 	return values
 }
 
-// ListToMapByKey converts `list` to a map[string]interface{} of which key is specified by `key`.
+// ListToMapByKey converts `list` to a map[string]any of which key is specified by `key`.
 // Note that the item value may be type of slice.
-func ListToMapByKey(list []map[string]interface{}, key string) map[string]interface{} {
+func ListToMapByKey(list []map[string]any, key string) map[string]any {
 	return utils.ListToMapByKey(list, key)
 }

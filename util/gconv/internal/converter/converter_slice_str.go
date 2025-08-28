@@ -16,7 +16,7 @@ import (
 )
 
 // SliceStr converts `any` to []string.
-func (c *Converter) SliceStr(any interface{}, option ...SliceOption) ([]string, error) {
+func (c *Converter) SliceStr(any any, option ...SliceOption) ([]string, error) {
 	if empty.IsNil(any) {
 		return nil, nil
 	}
@@ -161,7 +161,7 @@ func (c *Converter) SliceStr(any interface{}, option ...SliceOption) ([]string, 
 			}
 			array[k] = s
 		}
-	case []interface{}:
+	case []any:
 		array = make([]string, len(value))
 		for k, v := range value {
 			s, err = c.String(v)

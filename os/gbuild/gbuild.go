@@ -25,7 +25,7 @@ type BuildInfo struct {
 	Git     string                 // Built used git repo. commit id and datetime.
 	Time    string                 // Built datetime.
 	Version string                 // Built version.
-	Data    map[string]interface{} // All custom built data key-value pairs.
+	Data    map[string]any // All custom built data key-value pairs.
 }
 
 const (
@@ -38,7 +38,7 @@ const (
 
 var (
 	builtInVarStr = ""                       // Raw variable base64 string, which is injected by go build flags.
-	builtInVarMap = map[string]interface{}{} // Binary custom variable map decoded.
+	builtInVarMap = map[string]any{} // Binary custom variable map decoded.
 )
 
 func init() {
@@ -71,7 +71,7 @@ func Info() BuildInfo {
 }
 
 // Get retrieves and returns the build-in binary variable with given name.
-func Get(name string, def ...interface{}) *gvar.Var {
+func Get(name string, def ...any) *gvar.Var {
 	if v, ok := builtInVarMap[name]; ok {
 		return gvar.New(v)
 	}
@@ -82,6 +82,6 @@ func Get(name string, def ...interface{}) *gvar.Var {
 }
 
 // Data returns the custom build-in variables as the map.
-func Data() map[string]interface{} {
+func Data() map[string]any {
 	return builtInVarMap
 }

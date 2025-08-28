@@ -7,27 +7,27 @@
 package gconv
 
 // SliceFloat is alias of Floats.
-func SliceFloat(any interface{}) []float64 {
+func SliceFloat(any any) []float64 {
 	return Floats(any)
 }
 
 // SliceFloat32 is alias of Float32s.
-func SliceFloat32(any interface{}) []float32 {
+func SliceFloat32(any any) []float32 {
 	return Float32s(any)
 }
 
 // SliceFloat64 is alias of Float64s.
-func SliceFloat64(any interface{}) []float64 {
+func SliceFloat64(any any) []float64 {
 	return Floats(any)
 }
 
 // Floats converts `any` to []float64.
-func Floats(any interface{}) []float64 {
+func Floats(any any) []float64 {
 	return Float64s(any)
 }
 
 // Float32s converts `any` to []float32.
-func Float32s(any interface{}) []float32 {
+func Float32s(any any) []float32 {
 	result, _ := defaultConverter.SliceFloat32(any, SliceOption{
 		ContinueOnError: true,
 	})
@@ -35,7 +35,7 @@ func Float32s(any interface{}) []float32 {
 }
 
 // Float64s converts `any` to []float64.
-func Float64s(any interface{}) []float64 {
+func Float64s(any any) []float64 {
 	result, _ := defaultConverter.SliceFloat64(any, SliceOption{
 		ContinueOnError: true,
 	})

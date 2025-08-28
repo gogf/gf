@@ -12,10 +12,10 @@ import (
 // TableUser is the golang structure of table table_user for DAO operations like Where/Data.
 type TableUser struct {
 	g.Meta    `orm:"table:table_user, do:true"`
-	Id        interface{} //
-	Passport  interface{} //
-	Password  interface{} //
-	Nickname  interface{} //
+	Id        any //
+	Passport  any //
+	Password  any //
+	Nickname  any //
 	CreatedAt *gtime.Time //
 	UpdatedAt *gtime.Time //
 }

@@ -20,7 +20,7 @@ import (
 type Example struct {
 	Summary       string      `json:"summary,omitempty"`
 	Description   string      `json:"description,omitempty"`
-	Value         interface{} `json:"value,omitempty"`
+	Value         any `json:"value,omitempty"`
 	ExternalValue string      `json:"externalValue,omitempty"`
 }
 
@@ -47,7 +47,7 @@ func (e *Examples) applyExamplesFile(path string) error {
 	if json == "" {
 		return nil
 	}
-	var data interface{}
+	var data any
 	err := gjson.Unmarshal([]byte(json), &data)
 	if err != nil {
 		return err
@@ -59,13 +59,13 @@ func (e *Examples) applyExamplesFile(path string) error {
 	return nil
 }
 
-func (e *Examples) applyExamplesData(data interface{}) error {
+func (e *Examples) applyExamplesData(data any) error {
 	if empty.IsNil(e) || empty.IsNil(data) {
 		return nil
 	}
 
 	switch v := data.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		for key, value := range v {
 			(*e)[key] = &ExampleRef{
 				Value: &Example{
@@ -73,7 +73,7 @@ func (e *Examples) applyExamplesData(data interface{}) error {
 				},
 			}
 		}
-	case []interface{}:
+	case []any:
 		for i, value := range v {
 			(*e)[fmt.Sprintf("example %d", i+1)] = &ExampleRef{
 				Value: &Example{

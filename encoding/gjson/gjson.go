@@ -41,7 +41,7 @@ const (
 // Json is the customized JSON struct.
 type Json struct {
 	mu rwmutex.RWMutex
-	p  *interface{} // Pointer for hierarchical data access, it's the root of data in default.
+	p  *any // Pointer for hierarchical data access, it's the root of data in default.
 	c  byte         // Char separator('.' in default).
 	vc bool         // Violence Check(false in default), which is used to access data when the hierarchical data key contains separator char.
 }
@@ -51,29 +51,29 @@ type Options struct {
 	Safe      bool        // Mark this object is for in concurrent-safe usage. This is especially for Json object creating.
 	Tags      string      // Custom priority tags for decoding, eg: "json,yaml,MyTag". This is especially for struct parsing into Json object.
 	Type      ContentType // Type specifies the data content type, eg: json, xml, yaml, toml, ini.
-	StrNumber bool        // StrNumber causes the Decoder to unmarshal a number into an interface{} as a string instead of as a float64.
+	StrNumber bool        // StrNumber causes the Decoder to unmarshal a number into an any as a string instead of as a float64.
 }
 
 // iInterfaces is used for type assert api for Interfaces().
 type iInterfaces interface {
-	Interfaces() []interface{}
+	Interfaces() []any
 }
 
 // iMapStrAny is the interface support for converting struct parameter to map.
 type iMapStrAny interface {
-	MapStrAny() map[string]interface{}
+	MapStrAny() map[string]any
 }
 
-// iVal is the interface for underlying interface{} retrieving.
+// iVal is the interface for underlying any retrieving.
 type iVal interface {
-	Val() interface{}
+	Val() any
 }
 
 // setValue sets `value` to `j` by `pattern`.
 // Note:
 // 1. If value is nil and removed is true, means deleting this value;
 // 2. It's quite complicated in hierarchical data search, node creating and data assignment;
-func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
+func (j *Json) setValue(pattern string, value any, removed bool) error {
 	var (
 		err    error
 		array  = strings.Split(pattern, string(j.c))
@@ -85,33 +85,33 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 	// Initialization checks.
 	if *j.p == nil {
 		if gstr.IsNumeric(array[0]) {
-			*j.p = make([]interface{}, 0)
+			*j.p = make([]any, 0)
 		} else {
-			*j.p = make(map[string]interface{})
+			*j.p = make(map[string]any)
 		}
 	}
 	var (
-		pparent *interface{} = nil // Parent pointer.
+		pparent *any = nil // Parent pointer.
 		pointer              = j.p // Current pointer.
 	)
 	j.mu.Lock()
 	defer j.mu.Unlock()
 	for i := 0; i < length; i++ {
 		switch (*pointer).(type) {
-		case map[string]interface{}:
+		case map[string]any:
 			if i == length-1 {
 				if removed && value == nil {
 					// Delete item from map.
-					delete((*pointer).(map[string]interface{}), array[i])
+					delete((*pointer).(map[string]any), array[i])
 				} else {
-					if (*pointer).(map[string]interface{}) == nil {
-						*pointer = map[string]interface{}{}
+					if (*pointer).(map[string]any) == nil {
+						*pointer = map[string]any{}
 					}
-					(*pointer).(map[string]interface{})[array[i]] = value
+					(*pointer).(map[string]any)[array[i]] = value
 				}
 			} else {
 				// If the key does not exit in the map.
-				if v, ok := (*pointer).(map[string]interface{})[array[i]]; !ok {
+				if v, ok := (*pointer).(map[string]any)[array[i]]; !ok {
 					if removed && value == nil {
 						goto done
 					}
@@ -119,12 +119,12 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 					if gstr.IsNumeric(array[i+1]) {
 						// Creating array node.
 						n, _ := strconv.Atoi(array[i+1])
-						var v interface{} = make([]interface{}, n+1)
+						var v any = make([]any, n+1)
 						pparent = j.setPointerWithValue(pointer, array[i], v)
 						pointer = &v
 					} else {
 						// Creating map node.
-						var v interface{} = make(map[string]interface{})
+						var v any = make(map[string]any)
 						pparent = j.setPointerWithValue(pointer, array[i], v)
 						pointer = &v
 					}
@@ -134,13 +134,13 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 				}
 			}
 
-		case []interface{}:
+		case []any:
 			// A string key.
 			if !gstr.IsNumeric(array[i]) {
 				if i == length-1 {
-					*pointer = map[string]interface{}{array[i]: value}
+					*pointer = map[string]any{array[i]: value}
 				} else {
-					var v interface{} = make(map[string]interface{})
+					var v any = make(map[string]any)
 					*pointer = v
 					pparent = pointer
 					pointer = &v
@@ -156,16 +156,16 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 
 			if i == length-1 {
 				// Leaf node.
-				if len((*pointer).([]interface{})) > valueNum {
+				if len((*pointer).([]any)) > valueNum {
 					if removed && value == nil {
 						// Deleting element.
 						if pparent == nil {
-							*pointer = append((*pointer).([]interface{})[:valueNum], (*pointer).([]interface{})[valueNum+1:]...)
+							*pointer = append((*pointer).([]any)[:valueNum], (*pointer).([]any)[valueNum+1:]...)
 						} else {
-							j.setPointerWithValue(pparent, array[i-1], append((*pointer).([]interface{})[:valueNum], (*pointer).([]interface{})[valueNum+1:]...))
+							j.setPointerWithValue(pparent, array[i-1], append((*pointer).([]any)[:valueNum], (*pointer).([]any)[valueNum+1:]...))
 						}
 					} else {
-						(*pointer).([]interface{})[valueNum] = value
+						(*pointer).([]any)[valueNum] = value
 					}
 				} else {
 					if removed && value == nil {
@@ -176,8 +176,8 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 						j.setPointerWithValue(pointer, array[i], value)
 					} else {
 						// It is not the root node.
-						s := make([]interface{}, valueNum+1)
-						copy(s, (*pointer).([]interface{}))
+						s := make([]any, valueNum+1)
+						copy(s, (*pointer).([]any))
 						s[valueNum] = value
 						j.setPointerWithValue(pparent, array[i-1], s)
 					}
@@ -186,10 +186,10 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 				// Branch node.
 				if gstr.IsNumeric(array[i+1]) {
 					n, _ := strconv.Atoi(array[i+1])
-					pSlice := (*pointer).([]interface{})
+					pSlice := (*pointer).([]any)
 					if len(pSlice) > valueNum {
 						item := pSlice[valueNum]
-						if s, ok := item.([]interface{}); ok {
+						if s, ok := item.([]any); ok {
 							for i := 0; i < n-len(s); i++ {
 								s = append(s, nil)
 							}
@@ -199,7 +199,7 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 							if removed && value == nil {
 								goto done
 							}
-							var v interface{} = make([]interface{}, n+1)
+							var v any = make([]any, n+1)
 							pparent = j.setPointerWithValue(pointer, array[i], v)
 							pointer = &v
 						}
@@ -207,19 +207,19 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 						if removed && value == nil {
 							goto done
 						}
-						var v interface{} = make([]interface{}, n+1)
+						var v any = make([]any, n+1)
 						pparent = j.setPointerWithValue(pointer, array[i], v)
 						pointer = &v
 					}
 				} else {
-					pSlice := (*pointer).([]interface{})
+					pSlice := (*pointer).([]any)
 					if len(pSlice) > valueNum {
 						pparent = pointer
-						pointer = &(*pointer).([]interface{})[valueNum]
+						pointer = &(*pointer).([]any)[valueNum]
 					} else {
-						s := make([]interface{}, valueNum+1)
+						s := make([]any, valueNum+1)
 						copy(s, pSlice)
-						s[valueNum] = make(map[string]interface{})
+						s[valueNum] = make(map[string]any)
 						if pparent != nil {
 							// i > 0
 							j.setPointerWithValue(pparent, array[i-1], s)
@@ -227,7 +227,7 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 							pointer = &s[valueNum]
 						} else {
 							// i = 0
-							var v interface{} = s
+							var v any = s
 							*pointer = v
 							pparent = pointer
 							pointer = &s[valueNum]
@@ -244,7 +244,7 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 			}
 			if gstr.IsNumeric(array[i]) {
 				n, _ := strconv.Atoi(array[i])
-				s := make([]interface{}, n+1)
+				s := make([]any, n+1)
 				if i == length-1 {
 					s[n] = value
 				}
@@ -255,13 +255,13 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 					pparent = pointer
 				}
 			} else {
-				var v1, v2 interface{}
+				var v1, v2 any
 				if i == length-1 {
-					v1 = map[string]interface{}{
+					v1 = map[string]any{
 						array[i]: value,
 					}
 				} else {
-					v1 = map[string]interface{}{
+					v1 = map[string]any{
 						array[i]: nil,
 					}
 				}
@@ -271,7 +271,7 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 					*pointer = v1
 					pparent = pointer
 				}
-				v2 = v1.(map[string]interface{})[array[i]]
+				v2 = v1.(map[string]any)[array[i]]
 				pointer = &v2
 			}
 		}
@@ -280,18 +280,18 @@ done:
 	return nil
 }
 
-// convertValue converts `value` to map[string]interface{} or []interface{},
+// convertValue converts `value` to map[string]any or []any,
 // which can be supported for hierarchical data access.
-func (j *Json) convertValue(value interface{}) (convertedValue interface{}, err error) {
+func (j *Json) convertValue(value any) (convertedValue any, err error) {
 	if value == nil {
 		return
 	}
 
 	switch value.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		return value, nil
 
-	case []interface{}:
+	case []any:
 		return value, nil
 
 	default:
@@ -333,19 +333,19 @@ func (j *Json) convertValue(value interface{}) (convertedValue interface{}, err 
 
 // setPointerWithValue sets `key`:`value` to `pointer`, the `key` may be a map key or slice index.
 // It returns the pointer to the new value set.
-func (j *Json) setPointerWithValue(pointer *interface{}, key string, value interface{}) *interface{} {
+func (j *Json) setPointerWithValue(pointer *any, key string, value any) *any {
 	switch (*pointer).(type) {
-	case map[string]interface{}:
-		(*pointer).(map[string]interface{})[key] = value
+	case map[string]any:
+		(*pointer).(map[string]any)[key] = value
 		return &value
-	case []interface{}:
+	case []any:
 		n, _ := strconv.Atoi(key)
-		if len((*pointer).([]interface{})) > n {
-			(*pointer).([]interface{})[n] = value
-			return &(*pointer).([]interface{})[n]
+		if len((*pointer).([]any)) > n {
+			(*pointer).([]any)[n] = value
+			return &(*pointer).([]any)[n]
 		} else {
-			s := make([]interface{}, n+1)
-			copy(s, (*pointer).([]interface{}))
+			s := make([]any, n+1)
+			copy(s, (*pointer).([]any))
 			s[n] = value
 			*pointer = s
 			return &s[n]
@@ -357,7 +357,7 @@ func (j *Json) setPointerWithValue(pointer *interface{}, key string, value inter
 }
 
 // getPointerByPattern returns a pointer to the value by specified `pattern`.
-func (j *Json) getPointerByPattern(pattern string) *interface{} {
+func (j *Json) getPointerByPattern(pattern string) *any {
 	if j.p == nil {
 		return nil
 	}
@@ -369,7 +369,7 @@ func (j *Json) getPointerByPattern(pattern string) *interface{} {
 }
 
 // getPointerByPatternWithViolenceCheck returns a pointer to the value of specified `pattern` with violence check.
-func (j *Json) getPointerByPatternWithViolenceCheck(pattern string) *interface{} {
+func (j *Json) getPointerByPatternWithViolenceCheck(pattern string) *any {
 	if !j.vc {
 		return j.getPointerByPatternWithoutViolenceCheck(pattern)
 	}
@@ -419,7 +419,7 @@ func (j *Json) getPointerByPatternWithViolenceCheck(pattern string) *interface{}
 }
 
 // getPointerByPatternWithoutViolenceCheck returns a pointer to the value of specified `pattern`, with no violence check.
-func (j *Json) getPointerByPatternWithoutViolenceCheck(pattern string) *interface{} {
+func (j *Json) getPointerByPatternWithoutViolenceCheck(pattern string) *any {
 	if j.vc {
 		return j.getPointerByPatternWithViolenceCheck(pattern)
 	}
@@ -454,17 +454,17 @@ func (j *Json) getPointerByPatternWithoutViolenceCheck(pattern string) *interfac
 
 // checkPatternByPointer checks whether there's value by `key` in specified `pointer`.
 // It returns a pointer to the value.
-func (j *Json) checkPatternByPointer(key string, pointer *interface{}) *interface{} {
+func (j *Json) checkPatternByPointer(key string, pointer *any) *any {
 	switch (*pointer).(type) {
-	case map[string]interface{}:
-		if v, ok := (*pointer).(map[string]interface{})[key]; ok {
+	case map[string]any:
+		if v, ok := (*pointer).(map[string]any)[key]; ok {
 			return &v
 		}
-	case []interface{}:
+	case []any:
 		if gstr.IsNumeric(key) {
 			n, err := strconv.Atoi(key)
-			if err == nil && len((*pointer).([]interface{})) > n {
-				return &(*pointer).([]interface{})[n]
+			if err == nil && len((*pointer).([]any)) > n {
+				return &(*pointer).([]any)[n]
 			}
 		}
 	}

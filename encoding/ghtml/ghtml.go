@@ -72,7 +72,7 @@ func SpecialCharsDecode(s string) string {
 // OK: SpecialCharsMapOrStruct(m)
 // OK: SpecialCharsMapOrStruct(&s)
 // Error: SpecialCharsMapOrStruct(s)
-func SpecialCharsMapOrStruct(mapOrStruct interface{}) error {
+func SpecialCharsMapOrStruct(mapOrStruct any) error {
 	var (
 		reflectValue = reflect.ValueOf(mapOrStruct)
 		reflectKind  = reflectValue.Kind()

@@ -41,17 +41,17 @@ type Request struct {
 
 	handlers        []*HandlerItemParsed   // All matched handlers containing handler, hook and middleware for this request.
 	serveHandler    *HandlerItemParsed     // Real business handler serving for this request, not hook or middleware handler.
-	handlerResponse interface{}            // Handler response object for Request/Response handler.
+	handlerResponse any            // Handler response object for Request/Response handler.
 	hasHookHandler  bool                   // A bool marking whether there's hook handler in the handlers for performance purpose.
 	hasServeHandler bool                   // A bool marking whether there's serving handler in the handlers for performance purpose.
 	parsedQuery     bool                   // A bool marking whether the GET parameters parsed.
 	parsedBody      bool                   // A bool marking whether the request body parsed.
 	parsedForm      bool                   // A bool marking whether request Form parsed for HTTP method PUT, POST, PATCH.
-	paramsMap       map[string]interface{} // Custom parameters map.
+	paramsMap       map[string]any // Custom parameters map.
 	routerMap       map[string]string      // Router parameters map, which might be nil if there are no router parameters.
-	queryMap        map[string]interface{} // Query parameters map, which is nil if there's no query string.
-	formMap         map[string]interface{} // Form parameters map, which is nil if there's no form of data from the client.
-	bodyMap         map[string]interface{} // Body parameters map, which might be nil if their nobody content.
+	queryMap        map[string]any // Query parameters map, which is nil if there's no query string.
+	formMap         map[string]any // Form parameters map, which is nil if there's no form of data from the client.
+	bodyMap         map[string]any // Body parameters map, which might be nil if their nobody content.
 	error           error                  // Current executing error of the request.
 	exitAll         bool                   // A bool marking whether current request is exited.
 	parsedHost      string                 // The parsed host name for current host used by GetHost function.

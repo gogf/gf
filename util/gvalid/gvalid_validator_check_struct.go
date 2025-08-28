@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error {
+func (v *Validator) doCheckStruct(ctx context.Context, object any) Error {
 	var (
 		errorMaps           = make(map[string]map[string]error) // Returning error.
 		fieldToAliasNameMap = make(map[string]string)           // Field names to alias name map.
@@ -47,7 +47,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 	}
 
 	var (
-		inputParamMap  map[string]interface{}
+		inputParamMap  map[string]any
 		checkRules     = make([]fieldRule, 0)
 		nameToRuleMap  = make(map[string]string) // just for internally searching index purpose.
 		customMessage  = make(CustomMsg)         // Custom rule error message map.
@@ -110,7 +110,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 	}
 	// Input parameter map handling.
 	if v.assoc == nil || !v.useAssocInsteadOfObjectAttributes {
-		inputParamMap = make(map[string]interface{})
+		inputParamMap = make(map[string]any)
 	} else {
 		inputParamMap = gconv.Map(v.assoc)
 	}
@@ -226,7 +226,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 	}
 
 	// Temporary variable for value.
-	var value interface{}
+	var value any
 
 	// It checks the struct recursively if its attribute is a struct/struct slice.
 	for _, field := range fieldMap {
@@ -359,7 +359,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 	return nil
 }
 
-func getPossibleValueFromMap(inputParamMap map[string]interface{}, fieldName, aliasName string) (value interface{}) {
+func getPossibleValueFromMap(inputParamMap map[string]any, fieldName, aliasName string) (value any) {
 	_, value = gutil.MapPossibleItemByKey(inputParamMap, fieldName)
 	if value == nil && aliasName != "" {
 		_, value = gutil.MapPossibleItemByKey(inputParamMap, aliasName)

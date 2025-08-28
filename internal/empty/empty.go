@@ -21,12 +21,12 @@ type iString interface {
 
 // iInterfaces is used for type assert api for Interfaces.
 type iInterfaces interface {
-	Interfaces() []interface{}
+	Interfaces() []any
 }
 
 // iMapStrAny is the interface support for converting struct parameter to map.
 type iMapStrAny interface {
-	MapStrAny() map[string]interface{}
+	MapStrAny() map[string]any
 }
 
 type iTime interface {
@@ -41,7 +41,7 @@ type iTime interface {
 // The parameter `traceSource` is used for tracing to the source variable if given `value` is type of pointer
 // that also points to a pointer. It returns true if the source is empty when `traceSource` is true.
 // Note that it might use reflect feature which affects performance a little.
-func IsEmpty(value interface{}, traceSource ...bool) bool {
+func IsEmpty(value any, traceSource ...bool) bool {
 	if value == nil {
 		return true
 	}
@@ -88,7 +88,7 @@ func IsEmpty(value interface{}, traceSource ...bool) bool {
 		return len(result) == 0
 	case []float64:
 		return len(result) == 0
-	case map[string]interface{}:
+	case map[string]any:
 		return len(result) == 0
 
 	default:
@@ -161,7 +161,7 @@ func IsEmpty(value interface{}, traceSource ...bool) bool {
 			return rv.Len() == 0
 
 		case reflect.Struct:
-			var fieldValueInterface interface{}
+			var fieldValueInterface any
 			for i := 0; i < rv.NumField(); i++ {
 				fieldValueInterface, _ = reflection.ValueToInterface(rv.Field(i))
 				if !IsEmpty(fieldValueInterface) {
@@ -198,11 +198,11 @@ func IsEmpty(value interface{}, traceSource ...bool) bool {
 	}
 }
 
-// IsNil checks whether given `value` is nil, especially for interface{} type value.
+// IsNil checks whether given `value` is nil, especially for any type value.
 // Parameter `traceSource` is used for tracing to the source variable if given `value` is type of pointer
 // that also points to a pointer. It returns nil if the source is nil when `traceSource` is true.
 // Note that it might use reflect feature which affects performance a little.
-func IsNil(value interface{}, traceSource ...bool) bool {
+func IsNil(value any, traceSource ...bool) bool {
 	if value == nil {
 		return true
 	}

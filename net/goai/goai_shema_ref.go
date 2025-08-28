@@ -65,7 +65,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 	// Type enums.
 	var typeId = fmt.Sprintf(`%s.%s`, pkgPath, typeName)
 	if enums := gtag.GetEnumsByType(typeId); enums != "" {
-		schema.Enum = make([]interface{}, 0)
+		schema.Enum = make([]any, 0)
 		if err = json.Unmarshal([]byte(enums), &schema.Enum); err != nil {
 			return nil, err
 		}

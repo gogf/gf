@@ -12,13 +12,13 @@ import (
 	"github.com/gogf/gf/v2/os/gstructs"
 )
 
-func mustMergeOptionToArgs(args []interface{}, option interface{}) []interface{} {
+func mustMergeOptionToArgs(args []any, option any) []any {
 	if option == nil {
 		return args
 	}
 	var (
 		err        error
-		optionArgs []interface{}
+		optionArgs []any
 	)
 	optionArgs, err = convertOptionToArgs(option)
 	if err != nil {
@@ -27,13 +27,13 @@ func mustMergeOptionToArgs(args []interface{}, option interface{}) []interface{}
 	return append(args, optionArgs...)
 }
 
-func convertOptionToArgs(option interface{}) ([]interface{}, error) {
+func convertOptionToArgs(option any) ([]any, error) {
 	if option == nil {
 		return nil, nil
 	}
 	var (
 		err       error
-		args      = make([]interface{}, 0)
+		args      = make([]any, 0)
 		fields    []gstructs.Field
 		subFields []gstructs.Field
 	)
