@@ -142,7 +142,7 @@ func HideStr(str string, percent int, hide string) string {
 	var (
 		rs       = []rune(str)
 		length   = len(rs)
-		mid      = math.Floor(float64(length / 2))
+		mid      = float64(length / 2)
 		hideLen  = int(math.Floor(float64(length) * (float64(percent) / 100)))
 		start    = int(mid - math.Floor(float64(hideLen)/2))
 		hideStr  = []rune("")
@@ -207,9 +207,8 @@ func WordWrap(str string, width int, br string) string {
 		wordBuf, spaceBuf bytes.Buffer
 		init              = make([]byte, 0, len(str))
 		buf               = bytes.NewBuffer(init)
-		strRunes          = []rune(str)
 	)
-	for _, char := range strRunes {
+	for _, char := range str {
 		switch {
 		case char == '\n':
 			if wordBuf.Len() == 0 {

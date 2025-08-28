@@ -598,11 +598,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 		// Regular string and parameter place holder handling.
 		// Eg:
 		// Where("id in(?) and name=?", g.Slice{1,2,3}, "john")
-		i := 0
-		for {
-			if i >= len(in.Args) {
-				break
-			}
+		for i := 0; i < len(in.Args); i++ {
 			// ===============================================================
 			// Sub query, which is always used along with a string condition.
 			// ===============================================================
@@ -621,7 +617,6 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 				in.Args = gutil.SliceDelete(in.Args, i)
 				continue
 			}
-			i++
 		}
 		buffer.WriteString(whereStr)
 	}
@@ -858,18 +853,18 @@ func handleSliceAndStructArgsForSql(
 
 			// Special struct handling.
 		case reflect.Struct:
-			switch oldArg.(type) {
+			switch v := oldArg.(type) {
 			// The underlying driver supports time.Time/*time.Time types.
 			case time.Time, *time.Time:
 				newArgs = append(newArgs, oldArg)
 				continue
 
 			case gtime.Time:
-				newArgs = append(newArgs, oldArg.(gtime.Time).Time)
+				newArgs = append(newArgs, v.Time)
 				continue
 
 			case *gtime.Time:
-				newArgs = append(newArgs, oldArg.(*gtime.Time).Time)
+				newArgs = append(newArgs, v.Time)
 				continue
 
 			default:

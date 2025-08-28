@@ -86,9 +86,9 @@ func (view *View) SetConfigWithMap(m map[string]interface{}) error {
 	_, v1 := gutil.MapPossibleItemByKey(m, "paths")
 	_, v2 := gutil.MapPossibleItemByKey(m, "path")
 	if v1 == nil && v2 != nil {
-		switch v2.(type) {
+		switch v2 := v2.(type) {
 		case string:
-			m["paths"] = []string{v2.(string)}
+			m["paths"] = []string{v2}
 		case []string:
 			m["paths"] = v2
 		}

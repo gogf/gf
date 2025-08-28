@@ -89,12 +89,12 @@ func Encode(data map[string]interface{}) (res []byte, err error) {
 	for section, item := range data {
 		// Section key-value pairs.
 		if m, ok = item.(map[string]interface{}); ok {
-			n, err = w.WriteString(fmt.Sprintf("[%s]\n", section))
+			n, err = fmt.Fprintf(w, "[%s]\n", section)
 			if err != nil || n == 0 {
 				return nil, gerror.Wrapf(err, "w.WriteString failed")
 			}
 			for k, v := range m {
-				if n, err = w.WriteString(fmt.Sprintf("%s=%v\n", k, v)); err != nil || n == 0 {
+				if n, err = fmt.Fprintf(w, "%s=%v\n", k, v); err != nil || n == 0 {
 					return nil, gerror.Wrapf(err, "w.WriteString failed")
 				}
 			}
@@ -102,7 +102,7 @@ func Encode(data map[string]interface{}) (res []byte, err error) {
 		}
 		// Simple key-value pairs.
 		for k, v := range data {
-			if n, err = w.WriteString(fmt.Sprintf("%s=%v\n", k, v)); err != nil || n == 0 {
+			if n, err = fmt.Fprintf(w, "%s=%v\n", k, v); err != nil || n == 0 {
 				return nil, gerror.Wrapf(err, "w.WriteString failed")
 			}
 		}

@@ -176,13 +176,13 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 		doDumpNumber(exportInternalInput)
 
 	case reflect.Chan:
-		buffer.WriteString(fmt.Sprintf(`<%s>`, reflectValue.Type().String()))
+		fmt.Fprintf(buffer, `<%s>`, reflectValue.Type().String())
 
 	case reflect.Func:
 		if reflectValue.IsNil() || !reflectValue.IsValid() {
 			buffer.WriteString(`<nil>`)
 		} else {
-			buffer.WriteString(fmt.Sprintf(`<%s>`, reflectValue.Type().String()))
+			fmt.Fprintf(buffer, `<%s>`, reflectValue.Type().String())
 		}
 
 	case reflect.Interface:
@@ -209,7 +209,7 @@ type doDumpInternalInput struct {
 func doDumpSlice(in doDumpInternalInput) {
 	if b, ok := in.Value.([]byte); ok {
 		if !in.Option.WithType {
-			in.Buffer.WriteString(fmt.Sprintf(`"%s"`, addSlashesForString(string(b))))
+			fmt.Fprintf(in.Buffer, `"%s"`, addSlashesForString(string(b)))
 		} else {
 			in.Buffer.WriteString(fmt.Sprintf(
 				`%s(%d) "%s"`,
@@ -224,14 +224,14 @@ func doDumpSlice(in doDumpInternalInput) {
 		if !in.Option.WithType {
 			in.Buffer.WriteString("[]")
 		} else {
-			in.Buffer.WriteString(fmt.Sprintf("%s(0) []", in.ReflectTypeName))
+			fmt.Fprintf(in.Buffer, "%s(0) []", in.ReflectTypeName)
 		}
 		return
 	}
 	if !in.Option.WithType {
 		in.Buffer.WriteString("[\n")
 	} else {
-		in.Buffer.WriteString(fmt.Sprintf("%s(%d) [\n", in.ReflectTypeName, in.ReflectValue.Len()))
+		fmt.Fprintf(in.Buffer, "%s(%d) [\n", in.ReflectTypeName, in.ReflectValue.Len())
 	}
 	for i := 0; i < in.ReflectValue.Len(); i++ {
 		in.Buffer.WriteString(in.NewIndent)

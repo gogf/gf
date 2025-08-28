@@ -56,20 +56,20 @@ func (a *AdapterFile) SetPath(directoryPath string) (err error) {
 	if realPath == "" {
 		buffer := bytes.NewBuffer(nil)
 		if a.searchPaths.Len() > 0 {
-			buffer.WriteString(fmt.Sprintf(
+			fmt.Fprintf(buffer,
 				`SetPath failed: cannot find directory "%s" in following paths:`,
 				directoryPath,
-			))
+			)
 			a.searchPaths.RLockFunc(func(array []string) {
 				for k, v := range array {
-					buffer.WriteString(fmt.Sprintf("\n%d. %s", k+1, v))
+					fmt.Fprintf(buffer, "\n%d. %s", k+1, v)
 				}
 			})
 		} else {
-			buffer.WriteString(fmt.Sprintf(
+			fmt.Fprintf(buffer,
 				`SetPath failed: path "%s" does not exist`,
 				directoryPath,
-			))
+			)
 		}
 		return gerror.New(buffer.String())
 	}

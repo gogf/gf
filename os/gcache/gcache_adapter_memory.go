@@ -472,7 +472,6 @@ func (c *AdapterMemory) handleLruKey(ctx context.Context, keys ...interface{}) {
 		_, _ = c.doRemove(ctx, evictedKeys...)
 		return
 	}
-	return
 }
 
 // clearByKey deletes the key-value pair with given `key`.

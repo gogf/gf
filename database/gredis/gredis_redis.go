@@ -52,14 +52,14 @@ const errorNilAdapter = `redis adapter is not set, missing configuration or adap
 // initGroup initializes the group object of redis.
 func (r *Redis) initGroup() *Redis {
 	r.localGroup = localGroup{
-		localGroupGeneric:   r.localAdapter.GroupGeneric(),
-		localGroupHash:      r.localAdapter.GroupHash(),
-		localGroupList:      r.localAdapter.GroupList(),
-		localGroupPubSub:    r.localAdapter.GroupPubSub(),
-		localGroupScript:    r.localAdapter.GroupScript(),
-		localGroupSet:       r.localAdapter.GroupSet(),
-		localGroupSortedSet: r.localAdapter.GroupSortedSet(),
-		localGroupString:    r.localAdapter.GroupString(),
+		localGroupGeneric:   r.GroupGeneric(),
+		localGroupHash:      r.GroupHash(),
+		localGroupList:      r.GroupList(),
+		localGroupPubSub:    r.GroupPubSub(),
+		localGroupScript:    r.GroupScript(),
+		localGroupSet:       r.GroupSet(),
+		localGroupSortedSet: r.GroupSortedSet(),
+		localGroupString:    r.GroupString(),
 	}
 	return r
 }
