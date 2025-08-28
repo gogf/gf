@@ -16,9 +16,9 @@ import (
 
 // DefaultHandlerResponse is the default implementation of HandlerResponse.
 type DefaultHandlerResponse struct {
-	Code    int         `json:"code"    dc:"Error code"`
-	Message string      `json:"message" dc:"Error message"`
-	Data    interface{} `json:"data"    dc:"Result data for certain request according API definition"`
+	Code    int    `json:"code"    dc:"Error code"`
+	Message string `json:"message" dc:"Error message"`
+	Data    any    `json:"data"    dc:"Result data for certain request according API definition"`
 }
 
 const (

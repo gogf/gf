@@ -246,19 +246,19 @@ func Test_Command_NotFound(t *testing.T) {
 		}
 		c1 := &gcmd.Command{
 			Name: "c1",
-			FuncWithValue: func(ctx context.Context, parser *gcmd.Parser) (interface{}, error) {
+			FuncWithValue: func(ctx context.Context, parser *gcmd.Parser) (any, error) {
 				return nil, nil
 			},
 		}
 		c21 := &gcmd.Command{
 			Name: "c21",
-			FuncWithValue: func(ctx context.Context, parser *gcmd.Parser) (interface{}, error) {
+			FuncWithValue: func(ctx context.Context, parser *gcmd.Parser) (any, error) {
 				return nil, nil
 			},
 		}
 		c22 := &gcmd.Command{
 			Name: "c22",
-			FuncWithValue: func(ctx context.Context, parser *gcmd.Parser) (interface{}, error) {
+			FuncWithValue: func(ctx context.Context, parser *gcmd.Parser) (any, error) {
 				return nil, nil
 			},
 		}

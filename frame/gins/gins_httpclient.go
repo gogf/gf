@@ -14,9 +14,9 @@ import (
 )
 
 // HttpClient returns an instance of http client with specified name.
-func HttpClient(name ...interface{}) *gclient.Client {
+func HttpClient(name ...any) *gclient.Client {
 	var instanceKey = fmt.Sprintf("%s.%v", frameCoreComponentNameHttpClient, name)
-	return instance.GetOrSetFuncLock(instanceKey, func() interface{} {
+	return instance.GetOrSetFuncLock(instanceKey, func() any {
 		return gclient.New()
 	}).(*gclient.Client)
 }

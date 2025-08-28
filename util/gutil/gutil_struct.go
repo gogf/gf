@@ -17,18 +17,18 @@ import (
 
 // StructToSlice converts struct to slice of which all keys and values are its items.
 // Eg: {"K1": "v1", "K2": "v2"} => ["K1", "v1", "K2", "v2"]
-func StructToSlice(data interface{}) []interface{} {
+func StructToSlice(data any) []any {
 	var (
 		reflectValue = reflect.ValueOf(data)
 		reflectKind  = reflectValue.Kind()
 	)
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
 	switch reflectKind {
 	case reflect.Struct:
-		array := make([]interface{}, 0)
+		array := make([]any, 0)
 		// Note that, it uses the gconv tag name instead of the attribute name if
 		// the gconv tag is fined in the struct attributes.
 		for k, v := range gconv.Map(reflectValue) {
@@ -42,7 +42,7 @@ func StructToSlice(data interface{}) []interface{} {
 
 // FillStructWithDefault fills  attributes of pointed struct with tag value from `default/d` tag .
 // The parameter `structPtr` should be either type of *struct/[]*struct.
-func FillStructWithDefault(structPtr interface{}) error {
+func FillStructWithDefault(structPtr any) error {
 	var (
 		reflectValue reflect.Value
 	)
@@ -52,10 +52,10 @@ func FillStructWithDefault(structPtr interface{}) error {
 		reflectValue = reflect.ValueOf(structPtr)
 	}
 	switch reflectValue.Kind() {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		// Nothing to do.
 	case reflect.Array, reflect.Slice:
-		if reflectValue.Elem().Kind() != reflect.Ptr {
+		if reflectValue.Elem().Kind() != reflect.Pointer {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid parameter "%s", the element of slice should be type of pointer of struct, but given "%s"`,

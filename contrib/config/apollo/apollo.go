@@ -100,7 +100,7 @@ func (c *Client) Available(ctx context.Context, resource ...string) (ok bool) {
 // Pattern like:
 // "x.y.z" for map item.
 // "x.0.y" for slice item.
-func (c *Client) Get(ctx context.Context, pattern string) (value interface{}, err error) {
+func (c *Client) Get(ctx context.Context, pattern string) (value any, err error) {
 	if c.value.IsNil() {
 		if err = c.updateLocalValue(ctx); err != nil {
 			return nil, err
@@ -112,7 +112,7 @@ func (c *Client) Get(ctx context.Context, pattern string) (value interface{}, er
 // Data retrieves and returns all configuration data in current resource as map.
 // Note that this function may lead lots of memory usage if configuration data is too large,
 // you can implement this function if necessary.
-func (c *Client) Data(ctx context.Context) (data map[string]interface{}, err error) {
+func (c *Client) Data(ctx context.Context) (data map[string]any, err error) {
 	if c.value.IsNil() {
 		if err = c.updateLocalValue(ctx); err != nil {
 			return nil, err
@@ -134,7 +134,7 @@ func (c *Client) OnNewestChange(event *storage.FullChangeEvent) {
 func (c *Client) updateLocalValue(ctx context.Context) (err error) {
 	var j = gjson.New(nil)
 	cache := c.client.GetConfigCache(c.config.NamespaceName)
-	cache.Range(func(key, value interface{}) bool {
+	cache.Range(func(key, value any) bool {
 		err = j.Set(gconv.String(key), value)
 		if err != nil {
 			return false

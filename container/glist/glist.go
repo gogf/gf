@@ -41,7 +41,7 @@ func New(safe ...bool) *List {
 // NewFrom creates and returns a list from a copy of given slice `array`.
 // The parameter `safe` is used to specify whether using list in concurrent-safety,
 // which is false in default.
-func NewFrom(array []interface{}, safe ...bool) *List {
+func NewFrom(array []any, safe ...bool) *List {
 	l := list.New()
 	for _, v := range array {
 		l.PushBack(v)
@@ -53,7 +53,7 @@ func NewFrom(array []interface{}, safe ...bool) *List {
 }
 
 // PushFront inserts a new element `e` with value `v` at the front of list `l` and returns `e`.
-func (l *List) PushFront(v interface{}) (e *Element) {
+func (l *List) PushFront(v any) (e *Element) {
 	l.mu.Lock()
 	if l.list == nil {
 		l.list = list.New()
@@ -64,7 +64,7 @@ func (l *List) PushFront(v interface{}) (e *Element) {
 }
 
 // PushBack inserts a new element `e` with value `v` at the back of list `l` and returns `e`.
-func (l *List) PushBack(v interface{}) (e *Element) {
+func (l *List) PushBack(v any) (e *Element) {
 	l.mu.Lock()
 	if l.list == nil {
 		l.list = list.New()
@@ -75,7 +75,7 @@ func (l *List) PushBack(v interface{}) (e *Element) {
 }
 
 // PushFronts inserts multiple new elements with values `values` at the front of list `l`.
-func (l *List) PushFronts(values []interface{}) {
+func (l *List) PushFronts(values []any) {
 	l.mu.Lock()
 	if l.list == nil {
 		l.list = list.New()
@@ -87,7 +87,7 @@ func (l *List) PushFronts(values []interface{}) {
 }
 
 // PushBacks inserts multiple new elements with values `values` at the back of list `l`.
-func (l *List) PushBacks(values []interface{}) {
+func (l *List) PushBacks(values []any) {
 	l.mu.Lock()
 	if l.list == nil {
 		l.list = list.New()
@@ -99,7 +99,7 @@ func (l *List) PushBacks(values []interface{}) {
 }
 
 // PopBack removes the element from back of `l` and returns the value of the element.
-func (l *List) PopBack() (value interface{}) {
+func (l *List) PopBack() (value any) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if l.list == nil {
@@ -113,7 +113,7 @@ func (l *List) PopBack() (value interface{}) {
 }
 
 // PopFront removes the element from front of `l` and returns the value of the element.
-func (l *List) PopFront() (value interface{}) {
+func (l *List) PopFront() (value any) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if l.list == nil {
@@ -128,7 +128,7 @@ func (l *List) PopFront() (value interface{}) {
 
 // PopBacks removes `max` elements from back of `l`
 // and returns values of the removed elements as slice.
-func (l *List) PopBacks(max int) (values []interface{}) {
+func (l *List) PopBacks(max int) (values []any) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if l.list == nil {
@@ -140,7 +140,7 @@ func (l *List) PopBacks(max int) (values []interface{}) {
 		if max > 0 && max < length {
 			length = max
 		}
-		values = make([]interface{}, length)
+		values = make([]any, length)
 		for i := 0; i < length; i++ {
 			values[i] = l.list.Remove(l.list.Back())
 		}
@@ -150,7 +150,7 @@ func (l *List) PopBacks(max int) (values []interface{}) {
 
 // PopFronts removes `max` elements from front of `l`
 // and returns values of the removed elements as slice.
-func (l *List) PopFronts(max int) (values []interface{}) {
+func (l *List) PopFronts(max int) (values []any) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if l.list == nil {
@@ -162,7 +162,7 @@ func (l *List) PopFronts(max int) (values []interface{}) {
 		if max > 0 && max < length {
 			length = max
 		}
-		values = make([]interface{}, length)
+		values = make([]any, length)
 		for i := 0; i < length; i++ {
 			values[i] = l.list.Remove(l.list.Front())
 		}
@@ -172,18 +172,18 @@ func (l *List) PopFronts(max int) (values []interface{}) {
 
 // PopBackAll removes all elements from back of `l`
 // and returns values of the removed elements as slice.
-func (l *List) PopBackAll() []interface{} {
+func (l *List) PopBackAll() []any {
 	return l.PopBacks(-1)
 }
 
 // PopFrontAll removes all elements from front of `l`
 // and returns values of the removed elements as slice.
-func (l *List) PopFrontAll() []interface{} {
+func (l *List) PopFrontAll() []any {
 	return l.PopFronts(-1)
 }
 
 // FrontAll copies and returns values of all elements from front of `l` as slice.
-func (l *List) FrontAll() (values []interface{}) {
+func (l *List) FrontAll() (values []any) {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	if l.list == nil {
@@ -191,7 +191,7 @@ func (l *List) FrontAll() (values []interface{}) {
 	}
 	length := l.list.Len()
 	if length > 0 {
-		values = make([]interface{}, length)
+		values = make([]any, length)
 		for i, e := 0, l.list.Front(); i < length; i, e = i+1, e.Next() {
 			values[i] = e.Value
 		}
@@ -200,7 +200,7 @@ func (l *List) FrontAll() (values []interface{}) {
 }
 
 // BackAll copies and returns values of all elements from back of `l` as slice.
-func (l *List) BackAll() (values []interface{}) {
+func (l *List) BackAll() (values []any) {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	if l.list == nil {
@@ -208,7 +208,7 @@ func (l *List) BackAll() (values []interface{}) {
 	}
 	length := l.list.Len()
 	if length > 0 {
-		values = make([]interface{}, length)
+		values = make([]any, length)
 		for i, e := 0, l.list.Back(); i < length; i, e = i+1, e.Prev() {
 			values[i] = e.Value
 		}
@@ -217,7 +217,7 @@ func (l *List) BackAll() (values []interface{}) {
 }
 
 // FrontValue returns value of the first element of `l` or nil if the list is empty.
-func (l *List) FrontValue() (value interface{}) {
+func (l *List) FrontValue() (value any) {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	if l.list == nil {
@@ -230,7 +230,7 @@ func (l *List) FrontValue() (value interface{}) {
 }
 
 // BackValue returns value of the last element of `l` or nil if the list is empty.
-func (l *List) BackValue() (value interface{}) {
+func (l *List) BackValue() (value any) {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 	if l.list == nil {
@@ -362,7 +362,7 @@ func (l *List) PushFrontList(other *List) {
 // InsertAfter inserts a new element `e` with value `v` immediately after `p` and returns `e`.
 // If `p` is not an element of `l`, the list is not modified.
 // The `p` must not be nil.
-func (l *List) InsertAfter(p *Element, v interface{}) (e *Element) {
+func (l *List) InsertAfter(p *Element, v any) (e *Element) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if l.list == nil {
@@ -375,7 +375,7 @@ func (l *List) InsertAfter(p *Element, v interface{}) (e *Element) {
 // InsertBefore inserts a new element `e` with value `v` immediately before `p` and returns `e`.
 // If `p` is not an element of `l`, the list is not modified.
 // The `p` must not be nil.
-func (l *List) InsertBefore(p *Element, v interface{}) (e *Element) {
+func (l *List) InsertBefore(p *Element, v any) (e *Element) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if l.list == nil {
@@ -388,7 +388,7 @@ func (l *List) InsertBefore(p *Element, v interface{}) (e *Element) {
 // Remove removes `e` from `l` if `e` is an element of list `l`.
 // It returns the element value e.Value.
 // The element must not be nil.
-func (l *List) Remove(e *Element) (value interface{}) {
+func (l *List) Remove(e *Element) (value any) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if l.list == nil {
@@ -522,7 +522,7 @@ func (l *List) UnmarshalJSON(b []byte) error {
 	if l.list == nil {
 		l.list = list.New()
 	}
-	var array []interface{}
+	var array []any
 	if err := json.UnmarshalUseNumber(b, &array); err != nil {
 		return err
 	}
@@ -531,13 +531,13 @@ func (l *List) UnmarshalJSON(b []byte) error {
 }
 
 // UnmarshalValue is an interface implement which sets any type of value for list.
-func (l *List) UnmarshalValue(value interface{}) (err error) {
+func (l *List) UnmarshalValue(value any) (err error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if l.list == nil {
 		l.list = list.New()
 	}
-	var array []interface{}
+	var array []any
 	switch value.(type) {
 	case string, []byte:
 		err = json.UnmarshalUseNumber(gconv.Bytes(value), &array)
@@ -549,7 +549,7 @@ func (l *List) UnmarshalValue(value interface{}) (err error) {
 }
 
 // DeepCopy implements interface for deep copy of current type.
-func (l *List) DeepCopy() interface{} {
+func (l *List) DeepCopy() any {
 	if l == nil {
 		return nil
 	}
@@ -562,7 +562,7 @@ func (l *List) DeepCopy() interface{} {
 	}
 	var (
 		length = l.list.Len()
-		values = make([]interface{}, length)
+		values = make([]any, length)
 	)
 	if length > 0 {
 		for i, e := 0, l.list.Front(); i < length; i, e = i+1, e.Next() {

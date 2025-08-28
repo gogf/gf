@@ -29,7 +29,7 @@ func (w *Watcher) watchLoop() {
 				return
 			}
 			// filter the repeated event in custom duration.
-			var cacheFunc = func(ctx context.Context) (value interface{}, err error) {
+			var cacheFunc = func(ctx context.Context) (value any, err error) {
 				w.events.Push(&Event{
 					event:   ev,
 					Path:    ev.Name,

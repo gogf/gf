@@ -160,13 +160,13 @@ func (m *Manager) T(ctx context.Context, content string) string {
 }
 
 // Tf is alias of TranslateFormat for convenience.
-func (m *Manager) Tf(ctx context.Context, format string, values ...interface{}) string {
+func (m *Manager) Tf(ctx context.Context, format string, values ...any) string {
 	return m.TranslateFormat(ctx, format, values...)
 }
 
 // TranslateFormat translates, formats and returns the `format` with configured language
 // and given `values`.
-func (m *Manager) TranslateFormat(ctx context.Context, format string, values ...interface{}) string {
+func (m *Manager) TranslateFormat(ctx context.Context, format string, values ...any) string {
 	return fmt.Sprintf(m.Translate(ctx, format), values...)
 }
 

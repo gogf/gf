@@ -257,7 +257,7 @@ func Test_UnmarshalJson(t *testing.T) {
 			Var  *gvar.Var
 		}
 		var v *V
-		err := gconv.Struct(map[string]interface{}{
+		err := gconv.Struct(map[string]any{
 			"name": "john",
 			"var":  "v",
 		}, &v)
@@ -271,7 +271,7 @@ func Test_UnmarshalJson(t *testing.T) {
 			Var  gvar.Var
 		}
 		var v *V
-		err := gconv.Struct(map[string]interface{}{
+		err := gconv.Struct(map[string]any{
 			"name": "john",
 			"var":  "v",
 		}, &v)
@@ -288,7 +288,7 @@ func Test_UnmarshalValue(t *testing.T) {
 			Var  *gvar.Var
 		}
 		var v *V
-		err := gconv.Struct(map[string]interface{}{
+		err := gconv.Struct(map[string]any{
 			"name": "john",
 			"var":  "v",
 		}, &v)
@@ -302,7 +302,7 @@ func Test_UnmarshalValue(t *testing.T) {
 			Var  gvar.Var
 		}
 		var v *V
-		err := gconv.Struct(map[string]interface{}{
+		err := gconv.Struct(map[string]any{
 			"name": "john",
 			"var":  "v",
 		}, &v)

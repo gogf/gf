@@ -7,39 +7,39 @@
 package gconv
 
 // Byte converts `any` to byte.
-func Byte(any any) byte {
-	v, _ := defaultConverter.Uint8(any)
+func Byte(anyInput any) byte {
+	v, _ := defaultConverter.Uint8(anyInput)
 	return v
 }
 
 // Bytes converts `any` to []byte.
-func Bytes(any any) []byte {
-	v, _ := defaultConverter.Bytes(any)
+func Bytes(anyInput any) []byte {
+	v, _ := defaultConverter.Bytes(anyInput)
 	return v
 }
 
 // Rune converts `any` to rune.
-func Rune(any any) rune {
-	v, _ := defaultConverter.Rune(any)
+func Rune(anyInput any) rune {
+	v, _ := defaultConverter.Rune(anyInput)
 	return v
 }
 
 // Runes converts `any` to []rune.
-func Runes(any any) []rune {
-	v, _ := defaultConverter.Runes(any)
+func Runes(anyInput any) []rune {
+	v, _ := defaultConverter.Runes(anyInput)
 	return v
 }
 
 // String converts `any` to string.
 // It's most commonly used converting function.
-func String(any any) string {
-	v, _ := defaultConverter.String(any)
+func String(anyInput any) string {
+	v, _ := defaultConverter.String(anyInput)
 	return v
 }
 
 // Bool converts `any` to bool.
 // It returns false if `any` is: false, "", 0, "false", "off", "no", empty slice/map.
-func Bool(any any) bool {
-	v, _ := defaultConverter.Bool(any)
+func Bool(anyInput any) bool {
+	v, _ := defaultConverter.Bool(anyInput)
 	return v
 }

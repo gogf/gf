@@ -39,6 +39,6 @@ func Test_Get(t *testing.T) {
 
 func Test_Map(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gbuild.Data(), map[string]interface{}{})
+		t.Assert(gbuild.Data(), map[string]any{})
 	})
 }

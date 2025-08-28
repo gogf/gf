@@ -34,8 +34,8 @@ func (r *Redis) GroupList() gredis.IGroupList {
 // It returns the length of the list after the push operations.
 //
 // https://redis.io/commands/lpush/
-func (r GroupList) LPush(ctx context.Context, key string, values ...interface{}) (int64, error) {
-	v, err := r.Operation.Do(ctx, "LPush", append([]interface{}{key}, values...)...)
+func (r GroupList) LPush(ctx context.Context, key string, values ...any) (int64, error) {
+	v, err := r.Operation.Do(ctx, "LPush", append([]any{key}, values...)...)
 	return v.Int64(), err
 }
 
@@ -47,8 +47,8 @@ func (r GroupList) LPush(ctx context.Context, key string, values ...interface{})
 // It returns the length of the list after the push operations.
 //
 // https://redis.io/commands/lpushx
-func (r GroupList) LPushX(ctx context.Context, key string, element interface{}, elements ...interface{}) (int64, error) {
-	v, err := r.Operation.Do(ctx, "LPushX", append([]interface{}{key, element}, elements...)...)
+func (r GroupList) LPushX(ctx context.Context, key string, element any, elements ...any) (int64, error) {
+	v, err := r.Operation.Do(ctx, "LPushX", append([]any{key, element}, elements...)...)
 	return v.Int64(), err
 }
 
@@ -66,8 +66,8 @@ func (r GroupList) LPushX(ctx context.Context, key string, element interface{}, 
 // It returns the length of the list after the push operation.
 //
 // https://redis.io/commands/rpush
-func (r GroupList) RPush(ctx context.Context, key string, values ...interface{}) (int64, error) {
-	v, err := r.Operation.Do(ctx, "RPush", append([]interface{}{key}, values...)...)
+func (r GroupList) RPush(ctx context.Context, key string, values ...any) (int64, error) {
+	v, err := r.Operation.Do(ctx, "RPush", append([]any{key}, values...)...)
 	return v.Int64(), err
 }
 
@@ -80,7 +80,7 @@ func (r GroupList) RPush(ctx context.Context, key string, values ...interface{})
 // It returns the length of the list after the push operation.
 //
 // https://redis.io/commands/rpushx
-func (r GroupList) RPushX(ctx context.Context, key string, value interface{}) (int64, error) {
+func (r GroupList) RPushX(ctx context.Context, key string, value any) (int64, error) {
 	v, err := r.Operation.Do(ctx, "RPushX", key, value)
 	return v.Int64(), err
 }
@@ -136,7 +136,7 @@ func (r GroupList) RPop(ctx context.Context, key string, count ...int) (*gvar.Va
 // It returns the number of removed elements.
 //
 // https://redis.io/commands/lrem/
-func (r GroupList) LRem(ctx context.Context, key string, count int64, value interface{}) (int64, error) {
+func (r GroupList) LRem(ctx context.Context, key string, count int64, value any) (int64, error) {
 	v, err := r.Operation.Do(ctx, "LRem", key, count, value)
 	return v.Int64(), err
 }
@@ -173,7 +173,7 @@ func (r GroupList) LIndex(ctx context.Context, key string, index int64) (*gvar.V
 // It returns the length of the list after the insert operation, or -1 when the value pivot was not found.
 //
 // https://redis.io/commands/linsert/
-func (r GroupList) LInsert(ctx context.Context, key string, op gredis.LInsertOp, pivot, value interface{}) (int64, error) {
+func (r GroupList) LInsert(ctx context.Context, key string, op gredis.LInsertOp, pivot, value any) (int64, error) {
 	v, err := r.Operation.Do(ctx, "LInsert", key, string(op), pivot, value)
 	return v.Int64(), err
 }
@@ -183,7 +183,7 @@ func (r GroupList) LInsert(ctx context.Context, key string, op gredis.LInsertOp,
 // An error is returned for out of range indexes.
 //
 // https://redis.io/commands/lset/
-func (r GroupList) LSet(ctx context.Context, key string, index int64, value interface{}) (*gvar.Var, error) {
+func (r GroupList) LSet(ctx context.Context, key string, index int64, value any) (*gvar.Var, error) {
 	return r.Operation.Do(ctx, "LSet", key, index, value)
 }
 

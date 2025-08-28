@@ -76,7 +76,7 @@ func ParseTag(tag string) map[string]string {
 // Note that,
 // 1. It only retrieves the exported attributes with first letter upper-case from struct.
 // 2. The parameter `priority` should be given, it only retrieves fields that has given tag.
-func TagFields(pointer interface{}, priority []string) ([]Field, error) {
+func TagFields(pointer any, priority []string) ([]Field, error) {
 	return getFieldValuesByTagPriority(pointer, priority, map[string]struct{}{})
 }
 
@@ -88,7 +88,7 @@ func TagFields(pointer interface{}, priority []string) ([]Field, error) {
 // 1. It only retrieves the exported attributes with first letter upper-case from struct.
 // 2. The parameter `priority` should be given, it only retrieves fields that has given tag.
 // 3. If one field has no specified tag, it uses its field name as result map key.
-func TagMapName(pointer interface{}, priority []string) (map[string]string, error) {
+func TagMapName(pointer any, priority []string) (map[string]string, error) {
 	fields, err := TagFields(pointer, priority)
 	if err != nil {
 		return nil, err
@@ -107,7 +107,7 @@ func TagMapName(pointer interface{}, priority []string) (map[string]string, erro
 // 1. It only retrieves the exported attributes with first letter upper-case from struct.
 // 2. The parameter `priority` should be given, it only retrieves fields that has given tag.
 // 3. If one field has no specified tag, it uses its field name as result map key.
-func TagMapField(object interface{}, priority []string) (map[string]Field, error) {
+func TagMapField(object any, priority []string) (map[string]Field, error) {
 	fields, err := TagFields(object, priority)
 	if err != nil {
 		return nil, err
@@ -120,7 +120,7 @@ func TagMapField(object interface{}, priority []string) (map[string]Field, error
 	return tagMap, nil
 }
 
-func getFieldValues(structObject interface{}) ([]Field, error) {
+func getFieldValues(structObject any) ([]Field, error) {
 	var (
 		reflectValue reflect.Value
 		reflectKind  reflect.Kind
@@ -134,7 +134,7 @@ func getFieldValues(structObject interface{}) ([]Field, error) {
 	}
 	for {
 		switch reflectKind {
-		case reflect.Ptr:
+		case reflect.Pointer:
 			if !reflectValue.IsValid() || reflectValue.IsNil() {
 				// If pointer is type of *struct and nil, then automatically create a temporary struct.
 				reflectValue = reflect.New(reflectValue.Type().Elem()).Elem()
@@ -152,7 +152,7 @@ func getFieldValues(structObject interface{}) ([]Field, error) {
 	}
 
 exitLoop:
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
@@ -177,7 +177,7 @@ exitLoop:
 }
 
 func getFieldValuesByTagPriority(
-	pointer interface{}, priority []string, repeatedTagFilteringMap map[string]struct{},
+	pointer any, priority []string, repeatedTagFilteringMap map[string]struct{},
 ) ([]Field, error) {
 	fields, err := getFieldValues(pointer)
 	if err != nil {

@@ -32,7 +32,7 @@ func Map() map[string]string {
 // Get creates and returns a Var with the value of the environment variable
 // named by the `key`. It uses the given `def` if the variable does not exist
 // in the environment.
-func Get(key string, def ...interface{}) *gvar.Var {
+func Get(key string, def ...any) *gvar.Var {
 	v, ok := os.LookupEnv(key)
 	if !ok {
 		if len(def) > 0 {
@@ -87,7 +87,7 @@ func Remove(key ...string) (err error) {
 // Fetching Rules:
 // 1. Environment arguments are in uppercase format, eg: GF_<package name>_<variable name>；
 // 2. Command line arguments are in lowercase format, eg: gf.<package name>.<variable name>;
-func GetWithCmd(key string, def ...interface{}) *gvar.Var {
+func GetWithCmd(key string, def ...any) *gvar.Var {
 	envKey := utils.FormatEnvKey(key)
 	if v := os.Getenv(envKey); v != "" {
 		return gvar.New(v)

@@ -18,7 +18,7 @@ import (
 )
 
 // ConvertValueForField converts value to the type of the record field.
-func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) {
+func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fieldValue any) (any, error) {
 	switch itemValue := fieldValue.(type) {
 	case time.Time:
 		// If the time is zero, it then updates it to nil,

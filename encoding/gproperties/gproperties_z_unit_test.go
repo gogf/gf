@@ -50,7 +50,7 @@ var errorTests = []struct {
 
 func TestDecode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		m["properties"] = pStr
 		res, err := gproperties.Encode(m)
 		if err != nil {
@@ -79,7 +79,7 @@ func TestDecode(t *testing.T) {
 
 func TestEncode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		m["properties"] = pStr
 		res, err := gproperties.Encode(m)
 		if err != nil {
@@ -97,7 +97,7 @@ func TestEncode(t *testing.T) {
 
 func TestToJson(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		res, err := gproperties.Encode(map[string]interface{}{
+		res, err := gproperties.Encode(map[string]any{
 			"sql": g.Map{
 				"userName": "admin",
 				"password": "123456",

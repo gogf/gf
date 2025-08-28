@@ -23,14 +23,14 @@ func TestDriver_DoFilter(t *testing.T) {
 		ctx  context.Context
 		link gdb.Link
 		sql  string
-		args []interface{}
+		args []any
 	}
 	var tests []struct {
 		name        string
 		fields      fields
 		args        args
 		wantNewSql  string
-		wantNewArgs []interface{}
+		wantNewArgs []any
 		wantErr     bool
 	}
 	for _, tt := range tests {

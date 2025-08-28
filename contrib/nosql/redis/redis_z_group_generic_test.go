@@ -239,7 +239,7 @@ func Test_GroupGeneric_Keys(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
-		err := redis.GroupString().MSet(ctx, map[string]interface{}{
+		err := redis.GroupString().MSet(ctx, map[string]any{
 			"firstname": "Jack",
 			"lastname":  "Stuntman",
 			"age":       35,
@@ -261,7 +261,7 @@ func Test_GroupGeneric_Scan(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		defer redis.FlushDB(ctx)
 
-		err := redis.GroupString().MSet(ctx, map[string]interface{}{
+		err := redis.GroupString().MSet(ctx, map[string]any{
 			"firstname": "Jack",
 			"lastname":  "Stuntman",
 			"age":       35,

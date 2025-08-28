@@ -15,13 +15,13 @@ import (
 // IGroupString manages redis string operations.
 // Implements see redis.GroupString.
 type IGroupString interface {
-	Set(ctx context.Context, key string, value interface{}, option ...SetOption) (*gvar.Var, error)
-	SetNX(ctx context.Context, key string, value interface{}) (bool, error)
-	SetEX(ctx context.Context, key string, value interface{}, ttlInSeconds int64) error
+	Set(ctx context.Context, key string, value any, option ...SetOption) (*gvar.Var, error)
+	SetNX(ctx context.Context, key string, value any) (bool, error)
+	SetEX(ctx context.Context, key string, value any, ttlInSeconds int64) error
 	Get(ctx context.Context, key string) (*gvar.Var, error)
 	GetDel(ctx context.Context, key string) (*gvar.Var, error)
 	GetEX(ctx context.Context, key string, option ...GetEXOption) (*gvar.Var, error)
-	GetSet(ctx context.Context, key string, value interface{}) (*gvar.Var, error)
+	GetSet(ctx context.Context, key string, value any) (*gvar.Var, error)
 	StrLen(ctx context.Context, key string) (int64, error)
 	Append(ctx context.Context, key string, value string) (int64, error)
 	SetRange(ctx context.Context, key string, offset int64, value string) (int64, error)
@@ -31,8 +31,8 @@ type IGroupString interface {
 	IncrByFloat(ctx context.Context, key string, increment float64) (float64, error)
 	Decr(ctx context.Context, key string) (int64, error)
 	DecrBy(ctx context.Context, key string, decrement int64) (int64, error)
-	MSet(ctx context.Context, keyValueMap map[string]interface{}) error
-	MSetNX(ctx context.Context, keyValueMap map[string]interface{}) (bool, error)
+	MSet(ctx context.Context, keyValueMap map[string]any) error
+	MSetNX(ctx context.Context, keyValueMap map[string]any) (bool, error)
 	MGet(ctx context.Context, keys ...string) (map[string]*gvar.Var, error)
 }
 

@@ -34,7 +34,7 @@ type Config struct {
 	StSkip               int            `json:"stSkip"`               // Skipping count for stack.
 	StStatus             int            `json:"stStatus"`             // Stack status(1: enabled - default; 0: disabled)
 	StFilter             string         `json:"stFilter"`             // Stack string filter.
-	CtxKeys              []interface{}  `json:"ctxKeys"`              // Context keys for logging, which is used for value retrieving from context.
+	CtxKeys              []any          `json:"ctxKeys"`              // Context keys for logging, which is used for value retrieving from context.
 	HeaderPrint          bool           `json:"header"`               // Print header or not(true in default).
 	StdoutPrint          bool           `json:"stdout"`               // Output to stdout or not(true in default).
 	LevelPrint           bool           `json:"levelPrint"`           // Print level format string or not(true in default).
@@ -61,7 +61,7 @@ func DefaultConfig() Config {
 		Flags:               F_TIME_STD,
 		TimeFormat:          defaultTimeFormat,
 		Level:               LEVEL_ALL,
-		CtxKeys:             []interface{}{},
+		CtxKeys:             []any{},
 		StStatus:            1,
 		HeaderPrint:         true,
 		StdoutPrint:         true,
@@ -101,7 +101,7 @@ func (l *Logger) SetConfig(config Config) error {
 }
 
 // SetConfigWithMap set configurations with map for the logger.
-func (l *Logger) SetConfigWithMap(m map[string]interface{}) error {
+func (l *Logger) SetConfigWithMap(m map[string]any) error {
 	if len(m) == 0 {
 		return gerror.NewCode(gcode.CodeInvalidParameter, "configuration cannot be empty")
 	}
@@ -183,13 +183,13 @@ func (l *Logger) SetStackFilter(filter string) {
 // from context and printing them to logging content.
 //
 // Note that multiple calls of this function will overwrite the previous set context keys.
-func (l *Logger) SetCtxKeys(keys ...interface{}) {
+func (l *Logger) SetCtxKeys(keys ...any) {
 	l.config.CtxKeys = keys
 }
 
 // AppendCtxKeys appends extra keys to logger.
 // It ignores the key if it is already appended to the logger previously.
-func (l *Logger) AppendCtxKeys(keys ...interface{}) {
+func (l *Logger) AppendCtxKeys(keys ...any) {
 	var isExist bool
 	for _, key := range keys {
 		isExist = false
@@ -206,7 +206,7 @@ func (l *Logger) AppendCtxKeys(keys ...interface{}) {
 }
 
 // GetCtxKeys retrieves and returns the context keys for logging.
-func (l *Logger) GetCtxKeys() []interface{} {
+func (l *Logger) GetCtxKeys() []any {
 	return l.config.CtxKeys
 }
 

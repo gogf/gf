@@ -379,7 +379,7 @@ func Test_GroupSortedSet_ZRange(t *testing.T) {
 		// ret, err = redis.GroupSortedSet().ZRange(ctx, k, 0, -1,
 		// 	gredis.ZRangeOption{WithScores: true})
 		// t.AssertNil(err)
-		// expectedScore := []interface{}{1, "one", 2, "two", 3, "three"}
+		// expectedScore := []any{1, "one", 2, "two", 3, "three"}
 		// for i := 0; i < len(ret); i++ {
 		// 	t.AssertEQ(ret[i].String(), expectedScore[i])
 		// }
@@ -405,12 +405,12 @@ func Test_GroupSortedSet_ZRevRange(t *testing.T) {
 
 		ret, err := redis.GroupSortedSet().ZRevRange(ctx, k, 0, -1)
 		t.AssertNil(err)
-		expected := []interface{}{"three", "two", "one"}
+		expected := []any{"three", "two", "one"}
 		t.AssertEQ(ret.Slice(), expected)
 
 		ret, err = redis.GroupSortedSet().ZRevRange(ctx, k, 0, 1)
 		t.AssertNil(err)
-		expected = []interface{}{"three", "two"}
+		expected = []any{"three", "two"}
 		t.AssertEQ(ret.Slice(), expected)
 	})
 }

@@ -35,7 +35,7 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]gsvc.Serv
 		}
 
 		// Parse metadata
-		var metadata map[string]interface{}
+		var metadata map[string]any
 		if metaStr, ok := service.Service.Meta["metadata"]; ok && metaStr != "" {
 			if err = json.Unmarshal([]byte(metaStr), &metadata); err != nil {
 				return nil, gerror.Wrap(err, "failed to unmarshal service metadata")

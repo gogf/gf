@@ -222,7 +222,7 @@ func ExampleRing_RLockIteratorNext() {
 		r.Set(i).Next()
 	}
 
-	r.RLockIteratorNext(func(value interface{}) bool {
+	r.RLockIteratorNext(func(value any) bool {
 		if value.(int) < 5 {
 			fmt.Println("IteratorNext Success, Value:", value)
 			return true
@@ -248,7 +248,7 @@ func ExampleRing_RLockIteratorPrev() {
 	// move r to pos 9
 	r.Prev()
 
-	r.RLockIteratorPrev(func(value interface{}) bool {
+	r.RLockIteratorPrev(func(value any) bool {
 		if value.(int) >= 5 {
 			fmt.Println("IteratorPrev Success, Value:", value)
 			return true

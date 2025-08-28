@@ -210,7 +210,7 @@ func FieldMap(in FieldMapInput) (map[string]Field, error) {
 func StructType(object any) (*Type, error) {
 	// if already reflect.Type
 	if reflectType, ok := object.(reflect.Type); ok {
-		for reflectType.Kind() == reflect.Ptr {
+		for reflectType.Kind() == reflect.Pointer {
 			reflectType = reflectType.Elem()
 		}
 		if reflectType.Kind() == reflect.Struct {
@@ -233,7 +233,7 @@ func StructType(object any) (*Type, error) {
 	reflectKind = reflectValue.Kind()
 	for {
 		switch reflectKind {
-		case reflect.Ptr:
+		case reflect.Pointer:
 			if !reflectValue.IsValid() || reflectValue.IsNil() {
 				// If pointer is type of *struct and nil, then automatically create a temporary struct.
 				reflectValue = reflect.New(reflectValue.Type().Elem()).Elem()

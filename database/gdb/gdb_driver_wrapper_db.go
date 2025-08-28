@@ -77,7 +77,7 @@ func (d *DriverWrapperDB) TableFields(
 			gutil.GetOrDefaultStr(d.GetSchema(), schema...),
 			table,
 		)
-		cacheFunc = func(ctx context.Context) (interface{}, error) {
+		cacheFunc = func(ctx context.Context) (any, error) {
 			return d.DB.TableFields(
 				context.WithValue(ctx, ctxKeyInternalProducedSQL, struct{}{}),
 				table, schema...,

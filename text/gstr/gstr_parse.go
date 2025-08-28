@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 )
 
-// Parse parses the string into map[string]interface{}.
+// Parse parses the string into map[string]any.
 //
 // v1=m&v2=n           -> map[v1:m v2:n]
 // v[a]=m&v[b]=n       -> map[v:map[a:m b:n]]
@@ -24,11 +24,11 @@ import (
 // v[][]=m&v[][]=n     -> map[v:[map[]]] // Currently does not support nested slice.
 // v=m&v[a]=n          -> error
 // a .[[b=c            -> map[a___[b:c]
-func Parse(s string) (result map[string]interface{}, err error) {
+func Parse(s string) (result map[string]any, err error) {
 	if s == "" {
 		return nil, nil
 	}
-	result = make(map[string]interface{})
+	result = make(map[string]any)
 	parts := strings.Split(s, "&")
 	for _, part := range parts {
 		pos := strings.Index(part, "=")
@@ -99,7 +99,7 @@ func Parse(s string) (result map[string]interface{}, err error) {
 }
 
 // build nested map.
-func build(result map[string]interface{}, keys []string, value interface{}) error {
+func build(result map[string]any, keys []string, value any) error {
 	var (
 		length = len(keys)
 		key    = strings.Trim(keys[0], "'\"")
@@ -117,14 +117,14 @@ func build(result map[string]interface{}, keys []string, value interface{}) erro
 		}
 		val, ok := result[key]
 		if !ok {
-			result[key] = []interface{}{value}
+			result[key] = []any{value}
 			return nil
 		}
-		children, ok := val.([]interface{})
+		children, ok := val.([]any)
 		if !ok {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
-				"expected type '[]interface{}' for key '%s', but got '%T'",
+				"expected type '[]any' for key '%s', but got '%T'",
 				key, val,
 			)
 		}
@@ -135,26 +135,26 @@ func build(result map[string]interface{}, keys []string, value interface{}) erro
 	if keys[1] == "" && length > 2 && keys[2] != "" {
 		val, ok := result[key]
 		if !ok {
-			result[key] = []interface{}{}
+			result[key] = []any{}
 			val = result[key]
 		}
-		children, ok := val.([]interface{})
+		children, ok := val.([]any)
 		if !ok {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
-				"expected type '[]interface{}' for key '%s', but got '%T'",
+				"expected type '[]any' for key '%s', but got '%T'",
 				key, val,
 			)
 		}
 		if l := len(children); l > 0 {
-			if child, ok := children[l-1].(map[string]interface{}); ok {
+			if child, ok := children[l-1].(map[string]any); ok {
 				if _, ok := child[keys[2]]; !ok {
 					_ = build(child, keys[2:], value)
 					return nil
 				}
 			}
 		}
-		child := map[string]interface{}{}
+		child := map[string]any{}
 		_ = build(child, keys[2:], value)
 		result[key] = append(children, child)
 		return nil
@@ -163,14 +163,14 @@ func build(result map[string]interface{}, keys []string, value interface{}) erro
 	// map, like v[a], v[a][b]
 	val, ok := result[key]
 	if !ok {
-		result[key] = map[string]interface{}{}
+		result[key] = map[string]any{}
 		val = result[key]
 	}
-	children, ok := val.(map[string]interface{})
+	children, ok := val.(map[string]any)
 	if !ok {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
-			"expected type 'map[string]interface{}' for key '%s', but got '%T'",
+			"expected type 'map[string]any' for key '%s', but got '%T'",
 			key, val,
 		)
 	}

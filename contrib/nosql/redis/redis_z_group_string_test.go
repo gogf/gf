@@ -353,7 +353,7 @@ func Test_GroupString_MSet(t *testing.T) {
 			k2 = guid.S()
 			v2 = guid.S()
 		)
-		err := redis.GroupString().MSet(ctx, map[string]interface{}{
+		err := redis.GroupString().MSet(ctx, map[string]any{
 			k1: v1,
 			k2: v2,
 		})
@@ -378,13 +378,13 @@ func Test_GroupString_MSetNX(t *testing.T) {
 			k2 = guid.S()
 			v2 = guid.S()
 		)
-		ok, err := redis.GroupString().MSetNX(ctx, map[string]interface{}{
+		ok, err := redis.GroupString().MSetNX(ctx, map[string]any{
 			k1: v1,
 		})
 		t.AssertNil(err)
 		t.Assert(ok, true)
 
-		ok, err = redis.GroupString().MSetNX(ctx, map[string]interface{}{
+		ok, err = redis.GroupString().MSetNX(ctx, map[string]any{
 			k1: v1,
 			k2: v2,
 		})
@@ -410,7 +410,7 @@ func Test_GroupString_MGet(t *testing.T) {
 			k2 = guid.S()
 			v2 = guid.S()
 		)
-		err := redis.GroupString().MSet(ctx, map[string]interface{}{
+		err := redis.GroupString().MSet(ctx, map[string]any{
 			k1: v1,
 			k2: v2,
 		})

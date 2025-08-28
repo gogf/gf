@@ -480,7 +480,7 @@ func (set *StrSet) UnmarshalJSON(b []byte) error {
 }
 
 // UnmarshalValue is an interface implement which sets any type of value for set.
-func (set *StrSet) UnmarshalValue(value interface{}) (err error) {
+func (set *StrSet) UnmarshalValue(value any) (err error) {
 	set.mu.Lock()
 	defer set.mu.Unlock()
 	if set.data == nil {
@@ -500,7 +500,7 @@ func (set *StrSet) UnmarshalValue(value interface{}) (err error) {
 }
 
 // DeepCopy implements interface for deep copy of current type.
-func (set *StrSet) DeepCopy() interface{} {
+func (set *StrSet) DeepCopy() any {
 	if set == nil {
 		return nil
 	}

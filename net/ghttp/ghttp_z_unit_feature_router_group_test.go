@@ -163,7 +163,7 @@ func Test_Router_Group_Map(t *testing.T) {
 	}
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
-		group.Map(map[string]interface{}{
+		group.Map(map[string]any{
 			"Get: /test": testFuncGet,
 			"Post:/test": testFuncPost,
 		})

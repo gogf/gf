@@ -36,8 +36,8 @@ func (r *Redis) GroupSet() gredis.IGroupSet {
 // not including all the elements already present in the set.
 //
 // https://redis.io/commands/sadd/
-func (r GroupSet) SAdd(ctx context.Context, key string, member interface{}, members ...interface{}) (int64, error) {
-	var s = []interface{}{key}
+func (r GroupSet) SAdd(ctx context.Context, key string, member any, members ...any) (int64, error) {
+	var s = []any{key}
 	s = append(s, member)
 	s = append(s, members...)
 	v, err := r.Operation.Do(ctx, "SAdd", s...)
@@ -51,7 +51,7 @@ func (r GroupSet) SAdd(ctx context.Context, key string, member interface{}, memb
 // - 0 if the element is not a member of the set, or if key does not exist.
 //
 // https://redis.io/commands/sismember/
-func (r GroupSet) SIsMember(ctx context.Context, key string, member interface{}) (int64, error) {
+func (r GroupSet) SIsMember(ctx context.Context, key string, member any) (int64, error) {
 	v, err := r.Operation.Do(ctx, "SIsMember", key, member)
 	return v.Int64(), err
 }
@@ -71,7 +71,7 @@ func (r GroupSet) SIsMember(ctx context.Context, key string, member interface{})
 //
 // https://redis.io/commands/spop/
 func (r GroupSet) SPop(ctx context.Context, key string, count ...int) (*gvar.Var, error) {
-	var s = []interface{}{key}
+	var s = []any{key}
 	s = append(s, gconv.Interfaces(count)...)
 	v, err := r.Operation.Do(ctx, "SPop", s...)
 	return v, err
@@ -93,7 +93,7 @@ func (r GroupSet) SPop(ctx context.Context, key string, count ...int) (*gvar.Var
 //
 // https://redis.io/commands/srandmember/
 func (r GroupSet) SRandMember(ctx context.Context, key string, count ...int) (*gvar.Var, error) {
-	var s = []interface{}{key}
+	var s = []any{key}
 	s = append(s, gconv.Interfaces(count)...)
 	v, err := r.Operation.Do(ctx, "SRandMember", s...)
 	return v, err
@@ -108,8 +108,8 @@ func (r GroupSet) SRandMember(ctx context.Context, key string, count ...int) (*g
 // It returns the number of members that were removed from the set, not including non existing members.
 //
 // https://redis.io/commands/srem/
-func (r GroupSet) SRem(ctx context.Context, key string, member interface{}, members ...interface{}) (int64, error) {
-	var s = []interface{}{key}
+func (r GroupSet) SRem(ctx context.Context, key string, member any, members ...any) (int64, error) {
+	var s = []any{key}
 	s = append(s, member)
 	s = append(s, members...)
 	v, err := r.Operation.Do(ctx, "SRem", s...)
@@ -130,7 +130,7 @@ func (r GroupSet) SRem(ctx context.Context, key string, member interface{}, memb
 // - 0 if the element is not a member of source and no operation was performed.
 //
 // https://redis.io/commands/smove/
-func (r GroupSet) SMove(ctx context.Context, source, destination string, member interface{}) (int64, error) {
+func (r GroupSet) SMove(ctx context.Context, source, destination string, member any) (int64, error) {
 	v, err := r.Operation.Do(ctx, "SMove", source, destination, member)
 	return v.Int64(), err
 }
@@ -164,8 +164,8 @@ func (r GroupSet) SMembers(ctx context.Context, key string) (gvar.Vars, error) {
 // It returns list representing the membership of the given elements, in the same order as they are requested.
 //
 // https://redis.io/commands/smismember/
-func (r GroupSet) SMIsMember(ctx context.Context, key, member interface{}, members ...interface{}) ([]int, error) {
-	var s = []interface{}{key, member}
+func (r GroupSet) SMIsMember(ctx context.Context, key, member any, members ...any) ([]int, error) {
+	var s = []any{key, member}
 	s = append(s, members...)
 	v, err := r.Operation.Do(ctx, "SMIsMember", s...)
 	return v.Ints(), err
@@ -177,7 +177,7 @@ func (r GroupSet) SMIsMember(ctx context.Context, key, member interface{}, membe
 //
 // https://redis.io/commands/sinter/
 func (r GroupSet) SInter(ctx context.Context, key string, keys ...string) (gvar.Vars, error) {
-	var s = []interface{}{key}
+	var s = []any{key}
 	s = append(s, gconv.Interfaces(keys)...)
 	v, err := r.Operation.Do(ctx, "SInter", s...)
 	return v.Vars(), err
@@ -192,7 +192,7 @@ func (r GroupSet) SInter(ctx context.Context, key string, keys ...string) (gvar.
 //
 // https://redis.io/commands/sinterstore/
 func (r GroupSet) SInterStore(ctx context.Context, destination string, key string, keys ...string) (int64, error) {
-	var s = []interface{}{destination, key}
+	var s = []any{destination, key}
 	s = append(s, gconv.Interfaces(keys)...)
 	v, err := r.Operation.Do(ctx, "SInterStore", s...)
 	return v.Int64(), err
@@ -204,7 +204,7 @@ func (r GroupSet) SInterStore(ctx context.Context, destination string, key strin
 //
 // https://redis.io/commands/sunion/
 func (r GroupSet) SUnion(ctx context.Context, key string, keys ...string) (gvar.Vars, error) {
-	var s = []interface{}{key}
+	var s = []any{key}
 	s = append(s, gconv.Interfaces(keys)...)
 	v, err := r.Operation.Do(ctx, "SUnion", s...)
 	return v.Vars(), err
@@ -218,7 +218,7 @@ func (r GroupSet) SUnion(ctx context.Context, key string, keys ...string) (gvar.
 //
 // https://redis.io/commands/sunionstore/
 func (r GroupSet) SUnionStore(ctx context.Context, destination, key string, keys ...string) (int64, error) {
-	var s = []interface{}{destination, key}
+	var s = []any{destination, key}
 	s = append(s, gconv.Interfaces(keys)...)
 	v, err := r.Operation.Do(ctx, "SUnionStore", s...)
 	return v.Int64(), err
@@ -231,7 +231,7 @@ func (r GroupSet) SUnionStore(ctx context.Context, destination, key string, keys
 //
 // https://redis.io/commands/sdiff/
 func (r GroupSet) SDiff(ctx context.Context, key string, keys ...string) (gvar.Vars, error) {
-	var s = []interface{}{key}
+	var s = []any{key}
 	s = append(s, gconv.Interfaces(keys)...)
 	v, err := r.Operation.Do(ctx, "SDiff", s...)
 	return v.Vars(), err
@@ -245,7 +245,7 @@ func (r GroupSet) SDiff(ctx context.Context, key string, keys ...string) (gvar.V
 //
 // https://redis.io/commands/sdiffstore/
 func (r GroupSet) SDiffStore(ctx context.Context, destination string, key string, keys ...string) (int64, error) {
-	var s = []interface{}{destination, key}
+	var s = []any{destination, key}
 	s = append(s, gconv.Interfaces(keys)...)
 	v, err := r.Operation.Do(ctx, "SDiffStore", s...)
 	return v.Int64(), err

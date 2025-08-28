@@ -14,10 +14,10 @@ import (
 )
 
 // SetQuery sets custom query value with key-value pairs.
-func (r *Request) SetQuery(key string, value interface{}) {
+func (r *Request) SetQuery(key string, value any) {
 	r.parseQuery()
 	if r.queryMap == nil {
-		r.queryMap = make(map[string]interface{})
+		r.queryMap = make(map[string]any)
 	}
 	r.queryMap[key] = value
 }
@@ -28,7 +28,7 @@ func (r *Request) SetQuery(key string, value interface{}) {
 //
 // Note that if there are multiple parameters with the same name, the parameters are retrieved
 // and overwrote in order of priority: query > body.
-func (r *Request) GetQuery(key string, def ...interface{}) *gvar.Var {
+func (r *Request) GetQuery(key string, def ...any) *gvar.Var {
 	r.parseQuery()
 	if len(r.queryMap) > 0 {
 		if value, ok := r.queryMap[key]; ok {
@@ -55,17 +55,17 @@ func (r *Request) GetQuery(key string, def ...interface{}) *gvar.Var {
 //
 // Note that if there are multiple parameters with the same name, the parameters are retrieved and overwrote
 // in order of priority: query > body.
-func (r *Request) GetQueryMap(kvMap ...map[string]interface{}) map[string]interface{} {
+func (r *Request) GetQueryMap(kvMap ...map[string]any) map[string]any {
 	r.parseQuery()
 	if r.Method == http.MethodGet {
 		r.parseBody()
 	}
-	var m map[string]interface{}
+	var m map[string]any
 	if len(kvMap) > 0 && kvMap[0] != nil {
 		if len(r.queryMap) == 0 && len(r.bodyMap) == 0 {
 			return kvMap[0]
 		}
-		m = make(map[string]interface{}, len(kvMap[0]))
+		m = make(map[string]any, len(kvMap[0]))
 		if len(r.bodyMap) > 0 {
 			for k, v := range kvMap[0] {
 				if postValue, ok := r.bodyMap[k]; ok {
@@ -85,7 +85,7 @@ func (r *Request) GetQueryMap(kvMap ...map[string]interface{}) map[string]interf
 			}
 		}
 	} else {
-		m = make(map[string]interface{}, len(r.queryMap)+len(r.bodyMap))
+		m = make(map[string]any, len(r.queryMap)+len(r.bodyMap))
 		for k, v := range r.bodyMap {
 			m[k] = v
 		}
@@ -102,7 +102,7 @@ func (r *Request) GetQueryMap(kvMap ...map[string]interface{}) map[string]interf
 //
 // retrieving from client parameters, the associated values are the default values if the client
 // does not pass.
-func (r *Request) GetQueryMapStrStr(kvMap ...map[string]interface{}) map[string]string {
+func (r *Request) GetQueryMapStrStr(kvMap ...map[string]any) map[string]string {
 	queryMap := r.GetQueryMap(kvMap...)
 	if len(queryMap) > 0 {
 		m := make(map[string]string, len(queryMap))
@@ -118,7 +118,7 @@ func (r *Request) GetQueryMapStrStr(kvMap ...map[string]interface{}) map[string]
 // as map[string]*gvar.Var. The parameter `kvMap` specifies the keys
 // retrieving from client parameters, the associated values are the default values if the client
 // does not pass.
-func (r *Request) GetQueryMapStrVar(kvMap ...map[string]interface{}) map[string]*gvar.Var {
+func (r *Request) GetQueryMapStrVar(kvMap ...map[string]any) map[string]*gvar.Var {
 	queryMap := r.GetQueryMap(kvMap...)
 	if len(queryMap) > 0 {
 		m := make(map[string]*gvar.Var, len(queryMap))
@@ -134,16 +134,16 @@ func (r *Request) GetQueryMapStrVar(kvMap ...map[string]interface{}) map[string]
 // and converts them to a given struct object. Note that the parameter `pointer` is a pointer
 // to the struct object. The optional parameter `mapping` is used to specify the key to
 // attribute mapping.
-func (r *Request) GetQueryStruct(pointer interface{}, mapping ...map[string]string) error {
+func (r *Request) GetQueryStruct(pointer any, mapping ...map[string]string) error {
 	_, err := r.doGetQueryStruct(pointer, mapping...)
 	return err
 }
 
-func (r *Request) doGetQueryStruct(pointer interface{}, mapping ...map[string]string) (data map[string]interface{}, err error) {
+func (r *Request) doGetQueryStruct(pointer any, mapping ...map[string]string) (data map[string]any, err error) {
 	r.parseQuery()
 	data = r.GetQueryMap()
 	if data == nil {
-		data = map[string]interface{}{}
+		data = map[string]any{}
 	}
 	if err = r.mergeDefaultStructValue(data, pointer); err != nil {
 		return data, nil

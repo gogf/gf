@@ -41,7 +41,7 @@ func Test_StrAnyMap_Var(t *testing.T) {
 		t.AssertIN(1, m.Values())
 
 		m.Flip()
-		t.Assert(m.Map(), map[string]interface{}{"1": "a", "3": "c"})
+		t.Assert(m.Map(), map[string]any{"1": "a", "3": "c"})
 
 		m.Clear()
 		t.Assert(m.Size(), 0)
@@ -72,14 +72,14 @@ func Test_StrAnyMap_Basic(t *testing.T) {
 		t.AssertIN(1, m.Values())
 
 		m.Flip()
-		t.Assert(m.Map(), map[string]interface{}{"1": "a", "3": "c"})
+		t.Assert(m.Map(), map[string]any{"1": "a", "3": "c"})
 
 		m.Clear()
 		t.Assert(m.Size(), 0)
 		t.Assert(m.IsEmpty(), true)
 
-		m2 := gmap.NewStrAnyMapFrom(map[string]interface{}{"a": 1, "b": "2"})
-		t.Assert(m2.Map(), map[string]interface{}{"a": 1, "b": "2"})
+		m2 := gmap.NewStrAnyMapFrom(map[string]any{"a": 1, "b": "2"})
+		t.Assert(m2.Map(), map[string]any{"a": 1, "b": "2"})
 	})
 }
 
@@ -103,24 +103,24 @@ func Test_StrAnyMap_Batch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrAnyMap()
 
-		m.Sets(map[string]interface{}{"a": 1, "b": "2", "c": 3})
-		t.Assert(m.Map(), map[string]interface{}{"a": 1, "b": "2", "c": 3})
+		m.Sets(map[string]any{"a": 1, "b": "2", "c": 3})
+		t.Assert(m.Map(), map[string]any{"a": 1, "b": "2", "c": 3})
 		m.Removes([]string{"a", "b"})
-		t.Assert(m.Map(), map[string]interface{}{"c": 3})
+		t.Assert(m.Map(), map[string]any{"c": 3})
 	})
 }
 
 func Test_StrAnyMap_Iterator_Deadlock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		m := gmap.NewStrAnyMapFrom(map[string]interface{}{"1": "1", "2": "2", "3": "3", "4": "4"}, true)
-		m.Iterator(func(k string, _ interface{}) bool {
+		m := gmap.NewStrAnyMapFrom(map[string]any{"1": "1", "2": "2", "3": "3", "4": "4"}, true)
+		m.Iterator(func(k string, _ any) bool {
 			kInt, _ := strconv.Atoi(k)
 			if kInt%2 == 0 {
 				m.Remove(k)
 			}
 			return true
 		})
-		t.Assert(m.Map(), map[string]interface{}{
+		t.Assert(m.Map(), map[string]any{
 			"1": "1",
 			"3": "3",
 		})
@@ -129,20 +129,20 @@ func Test_StrAnyMap_Iterator_Deadlock(t *testing.T) {
 
 func Test_StrAnyMap_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		expect := map[string]interface{}{"a": true, "b": false}
+		expect := map[string]any{"a": true, "b": false}
 		m := gmap.NewStrAnyMapFrom(expect)
-		m.Iterator(func(k string, v interface{}) bool {
+		m.Iterator(func(k string, v any) bool {
 			t.Assert(expect[k], v)
 			return true
 		})
 		// 断言返回值对遍历控制
 		i := 0
 		j := 0
-		m.Iterator(func(k string, v interface{}) bool {
+		m.Iterator(func(k string, v any) bool {
 			i++
 			return true
 		})
-		m.Iterator(func(k string, v interface{}) bool {
+		m.Iterator(func(k string, v any) bool {
 			j++
 			return false
 		})
@@ -153,13 +153,13 @@ func Test_StrAnyMap_Iterator(t *testing.T) {
 
 func Test_StrAnyMap_Lock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		expect := map[string]interface{}{"a": true, "b": false}
+		expect := map[string]any{"a": true, "b": false}
 
 		m := gmap.NewStrAnyMapFrom(expect)
-		m.LockFunc(func(m map[string]interface{}) {
+		m.LockFunc(func(m map[string]any) {
 			t.Assert(m, expect)
 		})
-		m.RLockFunc(func(m map[string]interface{}) {
+		m.RLockFunc(func(m map[string]any) {
 			t.Assert(m, expect)
 		})
 	})
@@ -168,7 +168,7 @@ func Test_StrAnyMap_Lock(t *testing.T) {
 func Test_StrAnyMap_Clone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// clone 方法是深克隆
-		m := gmap.NewStrAnyMapFrom(map[string]interface{}{"a": 1, "b": "2"})
+		m := gmap.NewStrAnyMapFrom(map[string]any{"a": 1, "b": "2"})
 
 		m_clone := m.Clone()
 		m.Remove("a")
@@ -188,7 +188,7 @@ func Test_StrAnyMap_Merge(t *testing.T) {
 		m1.Set("a", 1)
 		m2.Set("b", "2")
 		m1.Merge(m2)
-		t.Assert(m1.Map(), map[string]interface{}{"a": 1, "b": "2"})
+		t.Assert(m1.Map(), map[string]any{"a": 1, "b": "2"})
 
 		m3 := gmap.NewStrAnyMapFrom(nil)
 		m3.Merge(m2)
@@ -358,7 +358,7 @@ func TestStrAnyMap_UnmarshalValue(t *testing.T) {
 	// JSON
 	gtest.C(t, func(t *gtest.T) {
 		var v *V
-		err := gconv.Struct(map[string]interface{}{
+		err := gconv.Struct(map[string]any{
 			"name": "john",
 			"map":  []byte(`{"k1":"v1","k2":"v2"}`),
 		}, &v)
@@ -371,7 +371,7 @@ func TestStrAnyMap_UnmarshalValue(t *testing.T) {
 	// Map
 	gtest.C(t, func(t *gtest.T) {
 		var v *V
-		err := gconv.Struct(map[string]interface{}{
+		err := gconv.Struct(map[string]any{
 			"name": "john",
 			"map": g.Map{
 				"k1": "v1",

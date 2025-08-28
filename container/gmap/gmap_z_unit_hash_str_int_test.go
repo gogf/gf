@@ -363,7 +363,7 @@ func TestStrIntMap_UnmarshalValue(t *testing.T) {
 	// JSON
 	gtest.C(t, func(t *gtest.T) {
 		var v *V
-		err := gconv.Struct(map[string]interface{}{
+		err := gconv.Struct(map[string]any{
 			"name": "john",
 			"map":  []byte(`{"k1":1,"k2":2}`),
 		}, &v)
@@ -376,7 +376,7 @@ func TestStrIntMap_UnmarshalValue(t *testing.T) {
 	// Map
 	gtest.C(t, func(t *gtest.T) {
 		var v *V
-		err := gconv.Struct(map[string]interface{}{
+		err := gconv.Struct(map[string]any{
 			"name": "john",
 			"map": g.Map{
 				"k1": 1,

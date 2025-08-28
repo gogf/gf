@@ -301,7 +301,7 @@ func Test_DB_TableFields(t *testing.T) {
 		table := createTable()
 		defer dropTable(table)
 
-		var expect = map[string][]interface{}{
+		var expect = map[string][]any{
 			//[]string: Index Type Null Key Default Comment
 			//id is bigserial so the default is a pgsql function
 			"id":          {0, "int8", false, "pri", fmt.Sprintf("nextval('%s_id_seq'::regclass)", table), ""},

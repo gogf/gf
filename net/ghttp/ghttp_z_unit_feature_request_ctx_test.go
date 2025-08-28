@@ -305,10 +305,10 @@ func Test_Request_Form(t *testing.T) {
 			r.Response.Write(r.GetForm("key", "defVal"))
 		})
 		group.ALL("/GetFormMap", func(r *ghttp.Request) {
-			r.Response.Write(r.GetFormMap(map[string]interface{}{"key": "val"}))
+			r.Response.Write(r.GetFormMap(map[string]any{"key": "val"}))
 		})
 		group.ALL("/GetFormMap1", func(r *ghttp.Request) {
-			r.Response.Write(r.GetFormMap(map[string]interface{}{"array": "val"}))
+			r.Response.Write(r.GetFormMap(map[string]any{"array": "val"}))
 		})
 		group.ALL("/GetFormMapStrVar", func(r *ghttp.Request) {
 			if r.Get("a") != nil {

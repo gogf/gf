@@ -43,12 +43,12 @@ var serverMapping = gmap.NewStrAnyMap(true)
 // GetServer returns the TCP server with specified `name`,
 // or it returns a new normal TCP server named `name` if it does not exist.
 // The parameter `name` is used to specify the TCP server
-func GetServer(name ...interface{}) *Server {
+func GetServer(name ...any) *Server {
 	serverName := defaultServer
 	if len(name) > 0 && name[0] != "" {
 		serverName = gconv.String(name[0])
 	}
-	return serverMapping.GetOrSetFuncLock(serverName, func() interface{} {
+	return serverMapping.GetOrSetFuncLock(serverName, func() any {
 		return NewServer("", nil)
 	}).(*Server)
 }

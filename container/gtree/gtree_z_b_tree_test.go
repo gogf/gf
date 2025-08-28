@@ -23,7 +23,7 @@ func Test_BTree_Basic(t *testing.T) {
 
 		t.Assert(m.Height(), 1)
 
-		t.Assert(m.Keys(), []interface{}{"key1"})
+		t.Assert(m.Keys(), []any{"key1"})
 
 		t.Assert(m.Get("key1"), "val1")
 		t.Assert(m.Size(), 1)
@@ -46,8 +46,8 @@ func Test_BTree_Basic(t *testing.T) {
 		t.Assert(m.Size(), 0)
 		t.Assert(m.IsEmpty(), true)
 
-		m2 := gtree.NewBTreeFrom(3, gutil.ComparatorString, map[interface{}]interface{}{1: 1, "key1": "val1"})
-		t.Assert(m2.Map(), map[interface{}]interface{}{1: 1, "key1": "val1"})
+		m2 := gtree.NewBTreeFrom(3, gutil.ComparatorString, map[any]any{1: 1, "key1": "val1"})
+		t.Assert(m2.Map(), map[any]any{1: 1, "key1": "val1"})
 	})
 }
 
@@ -96,10 +96,10 @@ func Test_BTree_Get_Set_Var(t *testing.T) {
 func Test_BTree_Batch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gtree.NewBTree(3, gutil.ComparatorString)
-		m.Sets(map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
-		t.Assert(m.Map(), map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
-		m.Removes([]interface{}{"key1", 1})
-		t.Assert(m.Map(), map[interface{}]interface{}{"key2": "val2", "key3": "val3"})
+		m.Sets(map[any]any{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
+		t.Assert(m.Map(), map[any]any{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
+		m.Removes([]any{"key1", 1})
+		t.Assert(m.Map(), map[any]any{"key2": "val2", "key3": "val3"})
 	})
 }
 
@@ -108,19 +108,19 @@ func Test_BTree_Iterator(t *testing.T) {
 	keyLen := len(keys)
 	index := 0
 
-	expect := map[interface{}]interface{}{"key4": "val4", 1: 1, "key1": "val1", "key2": "val2", "key3": "val3"}
+	expect := map[any]any{"key4": "val4", 1: 1, "key1": "val1", "key2": "val2", "key3": "val3"}
 
 	m := gtree.NewBTreeFrom(3, gutil.ComparatorString, expect)
 
 	gtest.C(t, func(t *gtest.T) {
-		m.Iterator(func(k interface{}, v interface{}) bool {
+		m.Iterator(func(k any, v any) bool {
 			t.Assert(k, keys[index])
 			index++
 			t.Assert(expect[k], v)
 			return true
 		})
 
-		m.IteratorDesc(func(k interface{}, v interface{}) bool {
+		m.IteratorDesc(func(k any, v any) bool {
 			index--
 			t.Assert(k, keys[index])
 			t.Assert(expect[k], v)
@@ -133,11 +133,11 @@ func Test_BTree_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		i := 0
 		j := 0
-		m.Iterator(func(k interface{}, v interface{}) bool {
+		m.Iterator(func(k any, v any) bool {
 			i++
 			return true
 		})
-		m.Iterator(func(k interface{}, v interface{}) bool {
+		m.Iterator(func(k any, v any) bool {
 			j++
 			return false
 		})
@@ -148,11 +148,11 @@ func Test_BTree_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		i := 0
 		j := 0
-		m.IteratorDesc(func(k interface{}, v interface{}) bool {
+		m.IteratorDesc(func(k any, v any) bool {
 			i++
 			return true
 		})
-		m.IteratorDesc(func(k interface{}, v interface{}) bool {
+		m.IteratorDesc(func(k any, v any) bool {
 			j++
 			return false
 		})
@@ -162,7 +162,7 @@ func Test_BTree_Iterator(t *testing.T) {
 }
 
 func Test_BTree_IteratorFrom(t *testing.T) {
-	m := make(map[interface{}]interface{})
+	m := make(map[any]any)
 	for i := 1; i <= 10; i++ {
 		m[i] = i * 10
 	}
@@ -170,7 +170,7 @@ func Test_BTree_IteratorFrom(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		n := 5
-		tree.IteratorFrom(5, true, func(key, value interface{}) bool {
+		tree.IteratorFrom(5, true, func(key, value any) bool {
 			t.Assert(n, key)
 			t.Assert(n*10, value)
 			n++
@@ -178,7 +178,7 @@ func Test_BTree_IteratorFrom(t *testing.T) {
 		})
 
 		i := 5
-		tree.IteratorAscFrom(5, true, func(key, value interface{}) bool {
+		tree.IteratorAscFrom(5, true, func(key, value any) bool {
 			t.Assert(i, key)
 			t.Assert(i*10, value)
 			i++
@@ -186,7 +186,7 @@ func Test_BTree_IteratorFrom(t *testing.T) {
 		})
 
 		j := 5
-		tree.IteratorDescFrom(5, true, func(key, value interface{}) bool {
+		tree.IteratorDescFrom(5, true, func(key, value any) bool {
 			t.Assert(j, key)
 			t.Assert(j*10, value)
 			j--
@@ -198,7 +198,7 @@ func Test_BTree_IteratorFrom(t *testing.T) {
 func Test_BTree_Clone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		//clone 方法是深克隆
-		m := gtree.NewBTreeFrom(3, gutil.ComparatorString, map[interface{}]interface{}{1: 1, "key1": "val1"})
+		m := gtree.NewBTreeFrom(3, gutil.ComparatorString, map[any]any{1: 1, "key1": "val1"})
 		m_clone := m.Clone()
 		m.Remove(1)
 		//修改原 map,clone 后的 map 不影响
@@ -211,7 +211,7 @@ func Test_BTree_Clone(t *testing.T) {
 }
 
 func Test_BTree_LRNode(t *testing.T) {
-	expect := map[interface{}]interface{}{"key4": "val4", "key1": "val1", "key2": "val2", "key3": "val3"}
+	expect := map[any]any{"key4": "val4", "key1": "val1", "key2": "val2", "key3": "val3"}
 	//safe
 	gtest.C(t, func(t *gtest.T) {
 		m := gtree.NewBTreeFrom(3, gutil.ComparatorString, expect)

@@ -105,7 +105,7 @@ func Is(err, target error) bool {
 // repeatedly calling Unwrap.
 //
 // An error matches target if the error's concrete value is assignable to the value
-// pointed to by target, or if the error has a method As(interface{}) bool such that
+// pointed to by target, or if the error has a method As(any) bool such that
 // As(target) returns true. In the latter case, the As method is responsible for
 // setting target.
 //

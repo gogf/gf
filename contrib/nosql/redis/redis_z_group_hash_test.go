@@ -19,7 +19,7 @@ func Test_GroupHash_HSet(t *testing.T) {
 			key         = "myhash"
 			field1      = "field1"
 			field1Value = "Hello"
-			fields      = map[string]interface{}{
+			fields      = map[string]any{
 				field1: field1Value,
 			}
 		)
@@ -59,7 +59,7 @@ func Test_GroupHash_HStrLen(t *testing.T) {
 			field1Value = "Hello"
 			field2      = "field2"
 			field2Value = "Hello World"
-			fields      = map[string]interface{}{
+			fields      = map[string]any{
 				field1: field1Value,
 			}
 		)
@@ -87,7 +87,7 @@ func Test_GroupHash_HExists(t *testing.T) {
 			key         = "myhash"
 			field1      = "field1"
 			field1Value = "Hello"
-			fields      = map[string]interface{}{
+			fields      = map[string]any{
 				field1: field1Value,
 			}
 		)
@@ -115,7 +115,7 @@ func Test_GroupHash_HDel(t *testing.T) {
 			v2     = "v2"
 			k3     = "k3"
 			v3     = "v3"
-			fields = map[string]interface{}{
+			fields = map[string]any{
 				k1: v1,
 				k2: v2,
 				k3: v3,
@@ -145,7 +145,7 @@ func Test_GroupHash_HLen(t *testing.T) {
 			key         = "myhash"
 			field1      = "field1"
 			field1Value = "Hello"
-			fields      = map[string]interface{}{
+			fields      = map[string]any{
 				field1: field1Value,
 			}
 		)
@@ -156,7 +156,7 @@ func Test_GroupHash_HLen(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(1, fieldLen)
 
-		fields = map[string]interface{}{
+		fields = map[string]any{
 			"k1": "v1",
 			"k2": "v2",
 		}
@@ -173,7 +173,7 @@ func Test_GroupHash_HIncrBy(t *testing.T) {
 			key         = "myhash"
 			field1      = "field1"
 			field1Value = 1
-			fields      = map[string]interface{}{
+			fields      = map[string]any{
 				field1: field1Value,
 			}
 		)
@@ -201,7 +201,7 @@ func Test_GroupHash_HIncrByFloat(t *testing.T) {
 			key         = "myhash"
 			field1      = "field1"
 			field1Value = 10.50
-			fields      = map[string]interface{}{
+			fields      = map[string]any{
 				field1: field1Value,
 			}
 		)
@@ -231,7 +231,7 @@ func Test_GroupHash_HMSet(t *testing.T) {
 			v1     = "v1"
 			k2     = "k2"
 			v2     = "v2"
-			fields = map[string]interface{}{
+			fields = map[string]any{
 				k1: v1,
 				k2: v2,
 			}
@@ -258,7 +258,7 @@ func Test_GroupHash_HMGet(t *testing.T) {
 			v1     = "v1"
 			k2     = "k2"
 			v2     = "v2"
-			fields = map[string]interface{}{
+			fields = map[string]any{
 				k1: v1,
 				k2: v2,
 			}
@@ -279,7 +279,7 @@ func Test_GroupHash_HKeys(t *testing.T) {
 			key    = "myhash"
 			k1     = "k1"
 			v1     = "v1"
-			fields = map[string]interface{}{
+			fields = map[string]any{
 				k1: v1,
 			}
 		)
@@ -299,7 +299,7 @@ func Test_GroupHash_HVals(t *testing.T) {
 			key    = "myhash"
 			k1     = "k1"
 			v1     = "v1"
-			fields = map[string]interface{}{
+			fields = map[string]any{
 				k1: v1,
 			}
 		)
@@ -321,7 +321,7 @@ func Test_GroupHash_HGetAll(t *testing.T) {
 			v1     = "v1"
 			k2     = "k2"
 			v2     = "v2"
-			fields = map[string]interface{}{
+			fields = map[string]any{
 				k1: v1,
 				k2: v2,
 			}

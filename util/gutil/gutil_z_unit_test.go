@@ -88,7 +88,7 @@ func Test_Keys(t *testing.T) {
 		t.AssertIN("1", keys)
 		t.AssertIN("2", keys)
 
-		strKeys := gutil.Keys(map[string]interface{}{
+		strKeys := gutil.Keys(map[string]any{
 			"key1": 1,
 			"key2": 2,
 		})
@@ -151,7 +151,7 @@ func Test_Values(t *testing.T) {
 		t.AssertIN(10, values)
 		t.AssertIN(20, values)
 
-		values = gutil.Values(map[string]interface{}{
+		values = gutil.Values(map[string]any{
 			"key1": 10,
 			"key2": 20,
 		})
@@ -183,7 +183,7 @@ func Test_Values(t *testing.T) {
 
 func TestListToMapByKey(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		listMap := []map[string]interface{}{
+		listMap := []map[string]any{
 			{"key1": 1, "key2": 2},
 			{"key3": 3, "key4": 4},
 		}

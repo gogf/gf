@@ -22,7 +22,7 @@ func Test_GroupScript_Eval(t *testing.T) {
 			script  = `return ARGV[1]`
 			numKeys int64
 			keys    = []string{"hello"}
-			args    = []interface{}(nil)
+			args    = []any(nil)
 		)
 		v, err := redis.GroupScript().Eval(ctx, script, numKeys, keys, args)
 		t.AssertNil(err)
@@ -37,7 +37,7 @@ func Test_GroupScript_EvalSha(t *testing.T) {
 			script  = gsha1.Encrypt(`return ARGV[1]`)
 			numKeys int64
 			keys    = []string{"hello"}
-			args    = []interface{}(nil)
+			args    = []any(nil)
 		)
 		v, err := redis.GroupScript().EvalSha(ctx, script, numKeys, keys, args)
 		t.AssertNil(err)

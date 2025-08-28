@@ -9,15 +9,15 @@
 // Note that package gbinary encodes the data using LittleEndian in default.
 package gbinary
 
-func Encode(values ...interface{}) []byte {
+func Encode(values ...any) []byte {
 	return LeEncode(values...)
 }
 
-func EncodeByLength(length int, values ...interface{}) []byte {
+func EncodeByLength(length int, values ...any) []byte {
 	return LeEncodeByLength(length, values...)
 }
 
-func Decode(b []byte, values ...interface{}) error {
+func Decode(b []byte, values ...any) error {
 	return LeDecode(b, values...)
 }
 

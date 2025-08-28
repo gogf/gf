@@ -33,7 +33,7 @@ func newMemoryLru(cap int) *memoryLru {
 }
 
 // Remove deletes the `key` FROM `lru`.
-func (l *memoryLru) Remove(keys ...interface{}) {
+func (l *memoryLru) Remove(keys ...any) {
 	if l == nil {
 		return
 	}
@@ -47,13 +47,13 @@ func (l *memoryLru) Remove(keys ...interface{}) {
 }
 
 // SaveAndEvict saves the keys into LRU, evicts and returns the spare keys.
-func (l *memoryLru) SaveAndEvict(keys ...interface{}) (evictedKeys []interface{}) {
+func (l *memoryLru) SaveAndEvict(keys ...any) (evictedKeys []any) {
 	if l == nil {
 		return
 	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	evictedKeys = make([]interface{}, 0)
+	evictedKeys = make([]any, 0)
 	for _, key := range keys {
 		if evictedKey := l.doSaveAndEvict(key); evictedKey != nil {
 			evictedKeys = append(evictedKeys, evictedKey)
@@ -62,7 +62,7 @@ func (l *memoryLru) SaveAndEvict(keys ...interface{}) (evictedKeys []interface{}
 	return
 }
 
-func (l *memoryLru) doSaveAndEvict(key interface{}) (evictedKey interface{}) {
+func (l *memoryLru) doSaveAndEvict(key any) (evictedKey any) {
 	var element *glist.Element
 	if v := l.data.Get(key); v != nil {
 		element = v.(*glist.Element)

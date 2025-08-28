@@ -7,11 +7,11 @@
 package converter
 
 // Rune converts `any` to rune.
-func (c *Converter) Rune(any any) (rune, error) {
-	if v, ok := any.(rune); ok {
+func (c *Converter) Rune(anyInput any) (rune, error) {
+	if v, ok := anyInput.(rune); ok {
 		return v, nil
 	}
-	v, err := c.Int32(any)
+	v, err := c.Int32(anyInput)
 	if err != nil {
 		return 0, err
 	}
@@ -19,11 +19,11 @@ func (c *Converter) Rune(any any) (rune, error) {
 }
 
 // Runes converts `any` to []rune.
-func (c *Converter) Runes(any any) ([]rune, error) {
-	if v, ok := any.([]rune); ok {
+func (c *Converter) Runes(anyInput any) ([]rune, error) {
+	if v, ok := anyInput.([]rune); ok {
 		return v, nil
 	}
-	s, err := c.String(any)
+	s, err := c.String(anyInput)
 	if err != nil {
 		return nil, err
 	}

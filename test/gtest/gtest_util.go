@@ -37,7 +37,7 @@ func C(t *testing.T, f func(t *T)) {
 }
 
 // Assert checks `value` and `expect` EQUAL.
-func Assert(value, expect interface{}) {
+func Assert(value, expect any) {
 	rvExpect := reflect.ValueOf(expect)
 	if empty.IsNil(value) {
 		value = nil
@@ -58,7 +58,7 @@ func Assert(value, expect interface{}) {
 }
 
 // AssertEQ checks `value` and `expect` EQUAL, including their TYPES.
-func AssertEQ(value, expect interface{}) {
+func AssertEQ(value, expect any) {
 	// Value assert.
 	rvExpect := reflect.ValueOf(expect)
 	if empty.IsNil(value) {
@@ -84,7 +84,7 @@ func AssertEQ(value, expect interface{}) {
 }
 
 // AssertNE checks `value` and `expect` NOT EQUAL.
-func AssertNE(value, expect interface{}) {
+func AssertNE(value, expect any) {
 	rvExpect := reflect.ValueOf(expect)
 	if empty.IsNil(value) {
 		value = nil
@@ -105,7 +105,7 @@ func AssertNE(value, expect interface{}) {
 }
 
 // AssertNQ checks `value` and `expect` NOT EQUAL, including their TYPES.
-func AssertNQ(value, expect interface{}) {
+func AssertNQ(value, expect any) {
 	// Type assert.
 	t1 := reflect.TypeOf(value)
 	t2 := reflect.TypeOf(expect)
@@ -124,7 +124,7 @@ func AssertNQ(value, expect interface{}) {
 // AssertGT checks `value` is GREATER THAN `expect`.
 // Notice that, only string, integer and float types can be compared by AssertGT,
 // others are invalid.
-func AssertGT(value, expect interface{}) {
+func AssertGT(value, expect any) {
 	passed := false
 	switch reflect.ValueOf(expect).Kind() {
 	case reflect.String:
@@ -147,7 +147,7 @@ func AssertGT(value, expect interface{}) {
 // AssertGE checks `value` is GREATER OR EQUAL THAN `expect`.
 // Notice that, only string, integer and float types can be compared by AssertGTE,
 // others are invalid.
-func AssertGE(value, expect interface{}) {
+func AssertGE(value, expect any) {
 	passed := false
 	switch reflect.ValueOf(expect).Kind() {
 	case reflect.String:
@@ -174,7 +174,7 @@ func AssertGE(value, expect interface{}) {
 // AssertLT checks `value` is LESS EQUAL THAN `expect`.
 // Notice that, only string, integer and float types can be compared by AssertLT,
 // others are invalid.
-func AssertLT(value, expect interface{}) {
+func AssertLT(value, expect any) {
 	passed := false
 	switch reflect.ValueOf(expect).Kind() {
 	case reflect.String:
@@ -197,7 +197,7 @@ func AssertLT(value, expect interface{}) {
 // AssertLE checks `value` is LESS OR EQUAL THAN `expect`.
 // Notice that, only string, integer and float types can be compared by AssertLTE,
 // others are invalid.
-func AssertLE(value, expect interface{}) {
+func AssertLE(value, expect any) {
 	passed := false
 	switch reflect.ValueOf(expect).Kind() {
 	case reflect.String:
@@ -221,7 +221,7 @@ func AssertLE(value, expect interface{}) {
 // The `expect` should be a slice,
 // but the `value` can be a slice or a basic type variable.
 // TODO: gconv.Strings(0) is not [0]
-func AssertIN(value, expect interface{}) {
+func AssertIN(value, expect any) {
 	var (
 		passed     = true
 		expectKind = reflect.ValueOf(expect).Kind()
@@ -267,7 +267,7 @@ func AssertIN(value, expect interface{}) {
 // AssertNI checks `value` is NOT IN `expect`.
 // The `expect` should be a slice,
 // but the `value` can be a slice or a basic type variable.
-func AssertNI(value, expect interface{}) {
+func AssertNI(value, expect any) {
 	var (
 		passed     = true
 		expectKind = reflect.ValueOf(expect).Kind()
@@ -310,12 +310,12 @@ func AssertNI(value, expect interface{}) {
 }
 
 // Error panics with given `message`.
-func Error(message ...interface{}) {
+func Error(message ...any) {
 	panic(fmt.Sprintf("[ERROR] %s", fmt.Sprint(message...)))
 }
 
 // Fatal prints `message` to stderr and exit the process.
-func Fatal(message ...interface{}) {
+func Fatal(message ...any) {
 	_, _ = fmt.Fprintf(
 		os.Stderr, "[FATAL] %s\n%s", fmt.Sprint(message...),
 		gdebug.StackWithFilter([]string{pathFilterKey}),
@@ -324,7 +324,7 @@ func Fatal(message ...interface{}) {
 }
 
 // compareMap compares two maps, returns nil if they are equal, or else returns error.
-func compareMap(value, expect interface{}) error {
+func compareMap(value, expect any) error {
 	var (
 		rvValue  = reflect.ValueOf(value)
 		rvExpect = reflect.ValueOf(expect)
@@ -371,7 +371,7 @@ func compareMap(value, expect interface{}) error {
 }
 
 // AssertNil asserts `value` is nil.
-func AssertNil(value interface{}) {
+func AssertNil(value any) {
 	if empty.IsNil(value) {
 		return
 	}

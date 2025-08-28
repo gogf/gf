@@ -102,7 +102,7 @@ func (s *Server) AddStaticPath(prefix string, path string) {
 	if len(s.config.StaticPaths) > 0 {
 		s.config.StaticPaths = append(s.config.StaticPaths, addItem)
 		// Sort the array by length of prefix from short to long.
-		array := garray.NewSortedArray(func(v1, v2 interface{}) int {
+		array := garray.NewSortedArray(func(v1, v2 any) int {
 			s1 := gconv.String(v1)
 			s2 := gconv.String(v2)
 			r := len(s2) - len(s1)

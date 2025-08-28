@@ -71,11 +71,11 @@ func (m *StrIntMap) Map() map[string]int {
 	return data
 }
 
-// MapStrAny returns a copy of the underlying data of the map as map[string]interface{}.
-func (m *StrIntMap) MapStrAny() map[string]interface{} {
+// MapStrAny returns a copy of the underlying data of the map as map[string]any.
+func (m *StrIntMap) MapStrAny() map[string]any {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	data := make(map[string]interface{}, len(m.data))
+	data := make(map[string]any, len(m.data))
 	for k, v := range m.data {
 		data[k] = v
 	}
@@ -457,7 +457,7 @@ func (m *StrIntMap) UnmarshalJSON(b []byte) error {
 }
 
 // UnmarshalValue is an interface implement which sets any type of value for map.
-func (m *StrIntMap) UnmarshalValue(value interface{}) (err error) {
+func (m *StrIntMap) UnmarshalValue(value any) (err error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.data == nil {
@@ -475,7 +475,7 @@ func (m *StrIntMap) UnmarshalValue(value interface{}) (err error) {
 }
 
 // DeepCopy implements interface for deep copy of current type.
-func (m *StrIntMap) DeepCopy() interface{} {
+func (m *StrIntMap) DeepCopy() any {
 	if m == nil {
 		return nil
 	}

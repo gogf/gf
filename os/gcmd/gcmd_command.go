@@ -42,7 +42,7 @@ type internalCommandAttributes struct {
 type Function func(ctx context.Context, parser *Parser) (err error)
 
 // FuncWithValue is similar like Func but with output parameters that can interact with command caller.
-type FuncWithValue func(ctx context.Context, parser *Parser) (out interface{}, err error)
+type FuncWithValue func(ctx context.Context, parser *Parser) (out any, err error)
 
 // Argument is the command value that are used by certain command.
 type Argument struct {
@@ -107,7 +107,7 @@ func (c *Command) doAddCommand(command *Command) error {
 }
 
 // AddObject adds one or more sub-commands to current command using struct object.
-func (c *Command) AddObject(objects ...interface{}) error {
+func (c *Command) AddObject(objects ...any) error {
 	var commands []*Command
 	for _, object := range objects {
 		rootCommand, err := NewFromObject(object)

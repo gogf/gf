@@ -23,7 +23,7 @@ import (
 // Note that the parameter `handler` can be type of:
 // 1. func(*ghttp.Request)
 // 2. func(context.Context, BizRequest)(BizResponse, error)
-func (s *Server) BindHandler(pattern string, handler interface{}) {
+func (s *Server) BindHandler(pattern string, handler any) {
 	var ctx = context.TODO()
 	funcInfo, err := s.checkAndCreateFuncInfo(handler, "", "", "")
 	if err != nil {
@@ -146,7 +146,7 @@ func (s *Server) nameToUri(name string) string {
 }
 
 func (s *Server) checkAndCreateFuncInfo(
-	f interface{}, pkgPath, structName, methodName string,
+	f any, pkgPath, structName, methodName string,
 ) (funcInfo handlerFuncInfo, err error) {
 	funcInfo = handlerFuncInfo{
 		Type:  reflect.TypeOf(f),
@@ -160,7 +160,7 @@ func (s *Server) checkAndCreateFuncInfo(
 	var (
 		reflectType    = funcInfo.Type
 		inputObject    reflect.Value
-		inputObjectPtr interface{}
+		inputObjectPtr any
 	)
 	if reflectType.NumIn() != 2 || reflectType.NumOut() != 2 {
 		if pkgPath != "" {
@@ -197,8 +197,8 @@ func (s *Server) checkAndCreateFuncInfo(
 		return
 	}
 
-	if reflectType.In(1).Kind() != reflect.Ptr ||
-		(reflectType.In(1).Kind() == reflect.Ptr && reflectType.In(1).Elem().Kind() != reflect.Struct) {
+	if reflectType.In(1).Kind() != reflect.Pointer ||
+		(reflectType.In(1).Kind() == reflect.Pointer && reflectType.In(1).Elem().Kind() != reflect.Struct) {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`invalid handler: defined as "%s", but the second input parameter should be type of pointer to struct like "*BizReq"`,
@@ -210,8 +210,8 @@ func (s *Server) checkAndCreateFuncInfo(
 	// Do not enable this logic, as many users are already using none struct pointer type
 	// as the first output parameter.
 	/*
-		if reflectType.Out(0).Kind() != reflect.Ptr ||
-			(reflectType.Out(0).Kind() == reflect.Ptr && reflectType.Out(0).Elem().Kind() != reflect.Struct) {
+		if reflectType.Out(0).Kind() != reflect.Pointer ||
+			(reflectType.Out(0).Kind() == reflect.Pointer && reflectType.Out(0).Elem().Kind() != reflect.Struct) {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid handler: defined as "%s", but the first output parameter should be type of pointer to struct like "*BizRes"`,
@@ -250,7 +250,7 @@ func createRouterFunc(funcInfo handlerFuncInfo) func(r *Request) {
 		)
 		if funcInfo.Type.NumIn() == 2 {
 			var inputObject reflect.Value
-			if funcInfo.Type.In(1).Kind() == reflect.Ptr {
+			if funcInfo.Type.In(1).Kind() == reflect.Pointer {
 				inputObject = reflect.New(funcInfo.Type.In(1).Elem())
 				r.error = r.Parse(inputObject.Interface())
 			} else {

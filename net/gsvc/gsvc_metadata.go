@@ -11,12 +11,12 @@ import (
 )
 
 // Set sets key-value pair into metadata.
-func (m Metadata) Set(key string, value interface{}) {
+func (m Metadata) Set(key string, value any) {
 	m[key] = value
 }
 
 // Sets sets key-value pairs into metadata.
-func (m Metadata) Sets(kvs map[string]interface{}) {
+func (m Metadata) Sets(kvs map[string]any) {
 	for k, v := range kvs {
 		m[k] = v
 	}

@@ -18,7 +18,7 @@ import (
 )
 
 var stringTests = []struct {
-	value  interface{}
+	value  any
 	expect string
 }{
 	{true, "true"},

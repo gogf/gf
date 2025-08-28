@@ -18,7 +18,7 @@ func Test_GroupSet_SAdd(t *testing.T) {
 		defer redis.FlushDB(ctx)
 		var (
 			k1      = guid.S()
-			members = []interface{}{
+			members = []any{
 				"v2",
 				"v3",
 			}
@@ -34,7 +34,7 @@ func Test_GroupSet_SIsMember(t *testing.T) {
 		defer redis.FlushDB(ctx)
 		var (
 			k1      = guid.S()
-			members = []interface{}{
+			members = []any{
 				"v2",
 				"v3",
 			}
@@ -54,7 +54,7 @@ func Test_GroupSet_SPop(t *testing.T) {
 		defer redis.FlushDB(ctx)
 		var (
 			k1      = guid.S()
-			members = []interface{}{
+			members = []any{
 				"v2",
 				"v3",
 			}
@@ -74,7 +74,7 @@ func Test_GroupSet_SRandMember(t *testing.T) {
 		defer redis.FlushDB(ctx)
 		var (
 			k1      = guid.S()
-			members = []interface{}{
+			members = []any{
 				"v2",
 				"v3",
 			}
@@ -94,7 +94,7 @@ func Test_GroupSet_SRem(t *testing.T) {
 		defer redis.FlushDB(ctx)
 		var (
 			k1      = guid.S()
-			members = []interface{}{
+			members = []any{
 				"v2",
 				"v3",
 			}
@@ -114,12 +114,12 @@ func Test_GroupSet_SMove(t *testing.T) {
 		defer redis.FlushDB(ctx)
 		var (
 			k1       = guid.S()
-			members1 = []interface{}{
+			members1 = []any{
 				"v2",
 				"v3",
 			}
 			k2       = guid.S()
-			members2 = []interface{}{
+			members2 = []any{
 				"v5",
 				"v6",
 			}
@@ -149,7 +149,7 @@ func Test_GroupSet_SCard(t *testing.T) {
 		defer redis.FlushDB(ctx)
 		var (
 			k1       = guid.S()
-			members1 = []interface{}{
+			members1 = []any{
 				"v2",
 				"v3",
 			}
@@ -169,7 +169,7 @@ func Test_GroupSet_SMembers(t *testing.T) {
 		defer redis.FlushDB(ctx)
 		var (
 			k1       = guid.S()
-			members1 = []interface{}{
+			members1 = []any{
 				"v2",
 				"v3",
 			}
@@ -189,7 +189,7 @@ func Test_GroupSet_SMIsMember(t *testing.T) {
 		defer redis.FlushDB(ctx)
 		var (
 			k1       = guid.S()
-			members1 = []interface{}{
+			members1 = []any{
 				"v2",
 				"v3",
 			}
@@ -209,13 +209,13 @@ func Test_GroupSet_SInter(t *testing.T) {
 		defer redis.FlushDB(ctx)
 		var (
 			k1       = guid.S()
-			members1 = []interface{}{
+			members1 = []any{
 				"v2",
 				"v3",
 			}
 
 			k2       = guid.S()
-			members2 = []interface{}{
+			members2 = []any{
 				"v3",
 				"v6",
 			}
@@ -240,13 +240,13 @@ func Test_GroupSet_SInterStore(t *testing.T) {
 		defer redis.FlushDB(ctx)
 		var (
 			k1       = guid.S()
-			members1 = []interface{}{
+			members1 = []any{
 				"v2",
 				"v3",
 			}
 
 			k2       = guid.S()
-			members2 = []interface{}{
+			members2 = []any{
 				"v4",
 				"v6",
 			}
@@ -274,13 +274,13 @@ func Test_GroupSet_SUnion(t *testing.T) {
 		defer redis.FlushDB(ctx)
 		var (
 			k1       = guid.S()
-			members1 = []interface{}{
+			members1 = []any{
 				"v2",
 				"v3",
 			}
 
 			k2       = guid.S()
-			members2 = []interface{}{
+			members2 = []any{
 				"v5",
 				"v6",
 			}
@@ -303,13 +303,13 @@ func Test_GroupSet_SUnionStore(t *testing.T) {
 		defer redis.FlushDB(ctx)
 		var (
 			k1       = guid.S()
-			members1 = []interface{}{
+			members1 = []any{
 				"v2",
 				"v3",
 			}
 
 			k2       = guid.S()
-			members2 = []interface{}{
+			members2 = []any{
 				"v5",
 				"v6",
 			}
@@ -337,13 +337,13 @@ func Test_GroupSet_SDiff(t *testing.T) {
 		defer redis.FlushDB(ctx)
 		var (
 			k1       = guid.S()
-			members1 = []interface{}{
+			members1 = []any{
 				"v2",
 				"v3",
 			}
 
 			k2       = guid.S()
-			members2 = []interface{}{
+			members2 = []any{
 				"v5",
 				"v6",
 			}
@@ -366,13 +366,13 @@ func Test_GroupSet_SDiffStore(t *testing.T) {
 		defer redis.FlushDB(ctx)
 		var (
 			k1       = guid.S()
-			members1 = []interface{}{
+			members1 = []any{
 				"v2",
 				"v3",
 			}
 
 			k2       = guid.S()
-			members2 = []interface{}{
+			members2 = []any{
 				"v5",
 				"v6",
 			}

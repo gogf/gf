@@ -16,15 +16,15 @@ import (
 
 func Test_mustMergeOptionToArgs(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var args []interface{}
+		var args []any
 		newArgs := mustMergeOptionToArgs(args, gredis.SetOption{
 			NX:  true,
 			Get: true,
 		})
-		t.Assert(newArgs, []interface{}{"NX", "Get"})
+		t.Assert(newArgs, []any{"NX", "Get"})
 	})
 	gtest.C(t, func(t *gtest.T) {
-		var args []interface{}
+		var args []any
 		newArgs := mustMergeOptionToArgs(args, gredis.SetOption{
 			NX:  true,
 			Get: true,
@@ -32,6 +32,6 @@ func Test_mustMergeOptionToArgs(t *testing.T) {
 				EX: gconv.PtrInt64(60),
 			},
 		})
-		t.Assert(newArgs, []interface{}{"EX", 60, "NX", "Get"})
+		t.Assert(newArgs, []any{"EX", 60, "NX", "Get"})
 	})
 }

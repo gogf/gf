@@ -66,7 +66,7 @@ func Test_HttpClient_With_Default_Handler(t *testing.T) {
 
 type CustomHandler struct{}
 
-func (c CustomHandler) HandleResponse(ctx context.Context, res *gclient.Response, out interface{}) error {
+func (c CustomHandler) HandleResponse(ctx context.Context, res *gclient.Response, out any) error {
 	defer res.Close()
 	if pointer, ok := out.(*string); ok {
 		*pointer = res.ReadAllString()

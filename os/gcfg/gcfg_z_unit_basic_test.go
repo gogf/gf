@@ -140,8 +140,8 @@ func Test_SetFileName(t *testing.T) {
 
 		t.AssertEQ(c.MustGet(ctx, "array").Ints(), []int{1, 2, 3})
 		t.AssertEQ(c.MustGet(ctx, "array").Strings(), []string{"1", "2", "3"})
-		t.AssertEQ(c.MustGet(ctx, "array").Interfaces(), []interface{}{1, 2, 3})
-		t.AssertEQ(c.MustGet(ctx, "redis").Map(), map[string]interface{}{
+		t.AssertEQ(c.MustGet(ctx, "array").Interfaces(), []any{1, 2, 3})
+		t.AssertEQ(c.MustGet(ctx, "redis").Map(), map[string]any{
 			"disk":  "127.0.0.1:6379,0",
 			"cache": "127.0.0.1:6379,1",
 		})

@@ -16,13 +16,13 @@ import (
 )
 
 // Scan prints `info` to stdout, reads and returns user input, which stops by '\n'.
-func Scan(info ...interface{}) string {
+func Scan(info ...any) string {
 	fmt.Print(info...)
 	return readline()
 }
 
 // Scanf prints `info` to stdout with `format`, reads and returns user input, which stops by '\n'.
-func Scanf(format string, info ...interface{}) string {
+func Scanf(format string, info ...any) string {
 	fmt.Printf(format, info...)
 	return readline()
 }

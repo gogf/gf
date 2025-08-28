@@ -103,7 +103,7 @@ func (s *Session) Close() error {
 }
 
 // Set sets key-value pair to this session.
-func (s *Session) Set(key string, value interface{}) (err error) {
+func (s *Session) Set(key string, value any) (err error) {
 	if err = s.init(); err != nil {
 		return err
 	}
@@ -118,7 +118,7 @@ func (s *Session) Set(key string, value interface{}) (err error) {
 }
 
 // SetMap batch sets the session using map.
-func (s *Session) SetMap(data map[string]interface{}) (err error) {
+func (s *Session) SetMap(data map[string]any) (err error) {
 	if err = s.init(); err != nil {
 		return err
 	}
@@ -204,9 +204,9 @@ func (s *Session) SetIdFunc(f func(ttl time.Duration) string) error {
 
 // Data returns all data as map.
 // Note that it's using value copy internally for concurrent-safe purpose.
-func (s *Session) Data() (sessionData map[string]interface{}, err error) {
+func (s *Session) Data() (sessionData map[string]any, err error) {
 	if s.id == "" {
-		return map[string]interface{}{}, nil
+		return map[string]any{}, nil
 	}
 	if err = s.init(); err != nil {
 		return nil, err
@@ -262,7 +262,7 @@ func (s *Session) IsDirty() bool {
 // Get retrieves session value with given key.
 // It returns `def` if the key does not exist in the session if `def` is given,
 // or else it returns nil.
-func (s *Session) Get(key string, def ...interface{}) (value *gvar.Var, err error) {
+func (s *Session) Get(key string, def ...any) (value *gvar.Var, err error) {
 	if s.id == "" {
 		return nil, nil
 	}
@@ -296,7 +296,7 @@ func (s *Session) MustId() string {
 }
 
 // MustGet performs as function Get, but it panics if any error occurs.
-func (s *Session) MustGet(key string, def ...interface{}) *gvar.Var {
+func (s *Session) MustGet(key string, def ...any) *gvar.Var {
 	v, err := s.Get(key, def...)
 	if err != nil {
 		panic(err)
@@ -305,7 +305,7 @@ func (s *Session) MustGet(key string, def ...interface{}) *gvar.Var {
 }
 
 // MustSet performs as function Set, but it panics if any error occurs.
-func (s *Session) MustSet(key string, value interface{}) {
+func (s *Session) MustSet(key string, value any) {
 	err := s.Set(key, value)
 	if err != nil {
 		panic(err)
@@ -313,7 +313,7 @@ func (s *Session) MustSet(key string, value interface{}) {
 }
 
 // MustSetMap performs as function SetMap, but it panics if any error occurs.
-func (s *Session) MustSetMap(data map[string]interface{}) {
+func (s *Session) MustSetMap(data map[string]any) {
 	err := s.SetMap(data)
 	if err != nil {
 		panic(err)
@@ -330,7 +330,7 @@ func (s *Session) MustContains(key string) bool {
 }
 
 // MustData performs as function Data, but it panics if any error occurs.
-func (s *Session) MustData() map[string]interface{} {
+func (s *Session) MustData() map[string]any {
 	m, err := s.Data()
 	if err != nil {
 		panic(err)

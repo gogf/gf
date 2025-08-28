@@ -193,7 +193,7 @@ func TestRing_RLockIteratorNext(t *testing.T) {
 		}
 
 		iterVal := 0
-		r.RLockIteratorNext(func(value interface{}) bool {
+		r.RLockIteratorNext(func(value any) bool {
 			if value.(int) == 0 {
 				iterVal = value.(int)
 				return false
@@ -213,7 +213,7 @@ func TestRing_RLockIteratorPrev(t *testing.T) {
 		}
 
 		iterVal := 0
-		r.RLockIteratorPrev(func(value interface{}) bool {
+		r.RLockIteratorPrev(func(value any) bool {
 			if value.(int) == 0 {
 				iterVal = value.(int)
 				return false
