@@ -151,7 +151,6 @@ func Database(name ...string) gdb.DB {
 			// If panics, often because it does not find its configuration for given group.
 			panic(err)
 		}
-		return nil
 	})
 	if db != nil {
 		return db.(gdb.DB)

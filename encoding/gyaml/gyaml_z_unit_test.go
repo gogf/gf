@@ -143,10 +143,6 @@ func Test_ToJson(t *testing.T) {
 		}
 
 		p := gjson.New(res)
-		if err != nil {
-			t.Errorf("parser failed. %v", err)
-			return
-		}
 		expectJson, err := p.ToJson()
 		if err != nil {
 			t.Errorf("parser ToJson failed. %v", err)

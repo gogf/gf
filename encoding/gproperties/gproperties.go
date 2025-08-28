@@ -121,9 +121,9 @@ func flattenAndMergeMap(shadow map[string]any, m map[string]any, prefix string, 
 	}
 	for k, val := range m {
 		fullKey := prefix + k
-		switch val.(type) {
+		switch val := val.(type) {
 		case map[string]any:
-			m2 = val.(map[string]any)
+			m2 = val
 		case map[any]any:
 			m2 = gconv.Map(val)
 		default:

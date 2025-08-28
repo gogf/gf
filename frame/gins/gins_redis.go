@@ -69,7 +69,6 @@ func Redis(name ...string) *gredis.Redis {
 			gcode.CodeMissingConfiguration,
 			`no configuration found for creating redis client`,
 		))
-		return nil
 	})
 	if result != nil {
 		return result.(*gredis.Redis)
