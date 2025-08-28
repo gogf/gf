@@ -70,7 +70,7 @@ func (c *Core) GetFieldType(ctx context.Context, fieldName, table, schema string
 //
 // The parameter `value` should be type of *map/map/*struct/struct.
 // It supports embedded struct definition for struct.
-func (c *Core) ConvertDataForRecord(ctx context.Context, value interface{}, table string) (map[string]interface{}, error) {
+func (c *Core) ConvertDataForRecord(ctx context.Context, value any, table string) (map[string]any, error) {
 	var (
 		err  error
 		data = MapOrStructToMapDeep(value, true)
@@ -92,7 +92,7 @@ func (c *Core) ConvertDataForRecord(ctx context.Context, value interface{}, tabl
 // ConvertValueForField converts value to the type of the record field.
 // The parameter `fieldType` is the target record field.
 // The parameter `fieldValue` is the value that to be committed to record field.
-func (c *Core) ConvertValueForField(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) {
+func (c *Core) ConvertValueForField(ctx context.Context, fieldType string, fieldValue any) (any, error) {
 	var (
 		err            error
 		convertedValue = fieldValue
@@ -245,7 +245,7 @@ func (c *Core) GetFormattedDBTypeNameForField(fieldType string) (typeName, typeP
 // CheckLocalTypeForField checks and returns corresponding type for given db type.
 // The `fieldType` is retrieved from ColumnTypes of db driver, example:
 // UNSIGNED INT
-func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ interface{}) (LocalType, error) {
+func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ any) (LocalType, error) {
 	var (
 		typeName    string
 		typePattern string
@@ -379,10 +379,10 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ i
 // The parameter `fieldType` is in lower case, like:
 // `float(5,2)`, `unsigned double(5,2)`, `decimal(10,2)`, `char(45)`, `varchar(100)`, etc.
 func (c *Core) ConvertValueForLocal(
-	ctx context.Context, fieldType string, fieldValue interface{},
-) (interface{}, error) {
+	ctx context.Context, fieldType string, fieldValue any,
+) (any, error) {
 	// If there's no type retrieved, it returns the `fieldValue` directly
-	// to use its original data type, as `fieldValue` is type of interface{}.
+	// to use its original data type, as `fieldValue` is type of any.
 	if fieldType == "" {
 		return fieldValue, nil
 	}
@@ -471,7 +471,7 @@ func (c *Core) ConvertValueForLocal(
 
 // mappingAndFilterData automatically mappings the map key to table field and removes
 // all key-value pairs that are not the field of given table.
-func (c *Core) mappingAndFilterData(ctx context.Context, schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error) {
+func (c *Core) mappingAndFilterData(ctx context.Context, schema, table string, data map[string]any, filter bool) (map[string]any, error) {
 	fieldsMap, err := c.db.TableFields(ctx, c.guessPrimaryTableName(table), schema)
 	if err != nil {
 		return nil, err
@@ -479,7 +479,7 @@ func (c *Core) mappingAndFilterData(ctx context.Context, schema, table string, d
 	if len(fieldsMap) == 0 {
 		return nil, gerror.Newf(`The table %s may not exist, or the table contains no fields`, table)
 	}
-	fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
+	fieldsKeyMap := make(map[string]any, len(fieldsMap))
 	for k := range fieldsMap {
 		fieldsKeyMap[k] = nil
 	}

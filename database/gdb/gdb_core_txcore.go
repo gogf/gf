@@ -188,13 +188,13 @@ func (tx *TXCore) TransactionWithOptions(
 
 // Query does query operation on transaction.
 // See Core.Query.
-func (tx *TXCore) Query(sql string, args ...interface{}) (result Result, err error) {
+func (tx *TXCore) Query(sql string, args ...any) (result Result, err error) {
 	return tx.db.DoQuery(tx.ctx, &txLink{tx.tx}, sql, args...)
 }
 
 // Exec does none query operation on transaction.
 // See Core.Exec.
-func (tx *TXCore) Exec(sql string, args ...interface{}) (sql.Result, error) {
+func (tx *TXCore) Exec(sql string, args ...any) (sql.Result, error) {
 	return tx.db.DoExec(tx.ctx, &txLink{tx.tx}, sql, args...)
 }
 
@@ -208,12 +208,12 @@ func (tx *TXCore) Prepare(sql string) (*Stmt, error) {
 }
 
 // GetAll queries and returns data records from database.
-func (tx *TXCore) GetAll(sql string, args ...interface{}) (Result, error) {
+func (tx *TXCore) GetAll(sql string, args ...any) (Result, error) {
 	return tx.Query(sql, args...)
 }
 
 // GetOne queries and returns one record from database.
-func (tx *TXCore) GetOne(sql string, args ...interface{}) (Record, error) {
+func (tx *TXCore) GetOne(sql string, args ...any) (Record, error) {
 	list, err := tx.GetAll(sql, args...)
 	if err != nil {
 		return nil, err
@@ -226,7 +226,7 @@ func (tx *TXCore) GetOne(sql string, args ...interface{}) (Record, error) {
 
 // GetStruct queries one record from database and converts it to given struct.
 // The parameter `pointer` should be a pointer to struct.
-func (tx *TXCore) GetStruct(obj interface{}, sql string, args ...interface{}) error {
+func (tx *TXCore) GetStruct(obj any, sql string, args ...any) error {
 	one, err := tx.GetOne(sql, args...)
 	if err != nil {
 		return err
@@ -236,7 +236,7 @@ func (tx *TXCore) GetStruct(obj interface{}, sql string, args ...interface{}) er
 
 // GetStructs queries records from database and converts them to given struct.
 // The parameter `pointer` should be type of struct slice: []struct/[]*struct.
-func (tx *TXCore) GetStructs(objPointerSlice interface{}, sql string, args ...interface{}) error {
+func (tx *TXCore) GetStructs(objPointerSlice any, sql string, args ...any) error {
 	all, err := tx.GetAll(sql, args...)
 	if err != nil {
 		return err
@@ -250,7 +250,7 @@ func (tx *TXCore) GetStructs(objPointerSlice interface{}, sql string, args ...in
 // If parameter `pointer` is type of struct pointer, it calls GetStruct internally for
 // the conversion. If parameter `pointer` is type of slice, it calls GetStructs internally
 // for conversion.
-func (tx *TXCore) GetScan(pointer interface{}, sql string, args ...interface{}) error {
+func (tx *TXCore) GetScan(pointer any, sql string, args ...any) error {
 	reflectInfo := reflection.OriginTypeAndKind(pointer)
 	if reflectInfo.InputKind != reflect.Ptr {
 		return gerror.NewCodef(
@@ -278,7 +278,7 @@ func (tx *TXCore) GetScan(pointer interface{}, sql string, args ...interface{}) 
 // GetValue queries and returns the field value from database.
 // The sql should query only one field from database, or else it returns only one
 // field of the result.
-func (tx *TXCore) GetValue(sql string, args ...interface{}) (Value, error) {
+func (tx *TXCore) GetValue(sql string, args ...any) (Value, error) {
 	one, err := tx.GetOne(sql, args...)
 	if err != nil {
 		return nil, err
@@ -290,7 +290,7 @@ func (tx *TXCore) GetValue(sql string, args ...interface{}) (Value, error) {
 }
 
 // GetCount queries and returns the count from database.
-func (tx *TXCore) GetCount(sql string, args ...interface{}) (int64, error) {
+func (tx *TXCore) GetCount(sql string, args ...any) (int64, error) {
 	if !gregex.IsMatchString(`(?i)SELECT\s+COUNT\(.+\)\s+FROM`, sql) {
 		sql, _ = gregex.ReplaceString(`(?i)(SELECT)\s+(.+)\s+(FROM)`, `$1 COUNT($2) $3`, sql)
 	}
@@ -310,7 +310,7 @@ func (tx *TXCore) GetCount(sql string, args ...interface{}) (int64, error) {
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
 // The parameter `batch` specifies the batch operation count when given data is slice.
-func (tx *TXCore) Insert(table string, data interface{}, batch ...int) (sql.Result, error) {
+func (tx *TXCore) Insert(table string, data any, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
 		return tx.Model(table).Ctx(tx.ctx).Data(data).Batch(batch[0]).Insert()
 	}
@@ -326,7 +326,7 @@ func (tx *TXCore) Insert(table string, data interface{}, batch ...int) (sql.Resu
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
 // The parameter `batch` specifies the batch operation count when given data is slice.
-func (tx *TXCore) InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error) {
+func (tx *TXCore) InsertIgnore(table string, data any, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
 		return tx.Model(table).Ctx(tx.ctx).Data(data).Batch(batch[0]).InsertIgnore()
 	}
@@ -334,7 +334,7 @@ func (tx *TXCore) InsertIgnore(table string, data interface{}, batch ...int) (sq
 }
 
 // InsertAndGetId performs action Insert and returns the last insert id that automatically generated.
-func (tx *TXCore) InsertAndGetId(table string, data interface{}, batch ...int) (int64, error) {
+func (tx *TXCore) InsertAndGetId(table string, data any, batch ...int) (int64, error) {
 	if len(batch) > 0 {
 		return tx.Model(table).Ctx(tx.ctx).Data(data).Batch(batch[0]).InsertAndGetId()
 	}
@@ -353,7 +353,7 @@ func (tx *TXCore) InsertAndGetId(table string, data interface{}, batch ...int) (
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
 // If given data is type of slice, it then does batch replacing, and the optional parameter
 // `batch` specifies the batch operation count.
-func (tx *TXCore) Replace(table string, data interface{}, batch ...int) (sql.Result, error) {
+func (tx *TXCore) Replace(table string, data any, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
 		return tx.Model(table).Ctx(tx.ctx).Data(data).Batch(batch[0]).Replace()
 	}
@@ -371,7 +371,7 @@ func (tx *TXCore) Replace(table string, data interface{}, batch ...int) (sql.Res
 //
 // If given data is type of slice, it then does batch saving, and the optional parameter
 // `batch` specifies the batch operation count.
-func (tx *TXCore) Save(table string, data interface{}, batch ...int) (sql.Result, error) {
+func (tx *TXCore) Save(table string, data any, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
 		return tx.Model(table).Ctx(tx.ctx).Data(data).Batch(batch[0]).Save()
 	}
@@ -392,7 +392,7 @@ func (tx *TXCore) Save(table string, data interface{}, batch ...int) (sql.Result
 // "status IN (?)", g.Slice{1,2,3}
 // "age IN(?,?)", 18, 50
 // User{ Id : 1, UserName : "john"}.
-func (tx *TXCore) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
+func (tx *TXCore) Update(table string, data any, condition any, args ...any) (sql.Result, error) {
 	return tx.Model(table).Ctx(tx.ctx).Data(data).Where(condition, args...).Update()
 }
 
@@ -407,17 +407,17 @@ func (tx *TXCore) Update(table string, data interface{}, condition interface{}, 
 // "status IN (?)", g.Slice{1,2,3}
 // "age IN(?,?)", 18, 50
 // User{ Id : 1, UserName : "john"}.
-func (tx *TXCore) Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error) {
+func (tx *TXCore) Delete(table string, condition any, args ...any) (sql.Result, error) {
 	return tx.Model(table).Ctx(tx.ctx).Where(condition, args...).Delete()
 }
 
 // QueryContext implements interface function Link.QueryContext.
-func (tx *TXCore) QueryContext(ctx context.Context, sql string, args ...interface{}) (*sql.Rows, error) {
+func (tx *TXCore) QueryContext(ctx context.Context, sql string, args ...any) (*sql.Rows, error) {
 	return tx.tx.QueryContext(ctx, sql, args...)
 }
 
 // ExecContext implements interface function Link.ExecContext.
-func (tx *TXCore) ExecContext(ctx context.Context, sql string, args ...interface{}) (sql.Result, error) {
+func (tx *TXCore) ExecContext(ctx context.Context, sql string, args ...any) (sql.Result, error) {
 	return tx.tx.ExecContext(ctx, sql, args...)
 }
 

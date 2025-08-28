@@ -151,17 +151,17 @@ func (c *Core) Slave(schema ...string) (*sql.DB, error) {
 }
 
 // GetAll queries and returns data records from database.
-func (c *Core) GetAll(ctx context.Context, sql string, args ...interface{}) (Result, error) {
+func (c *Core) GetAll(ctx context.Context, sql string, args ...any) (Result, error) {
 	return c.db.DoSelect(ctx, nil, sql, args...)
 }
 
 // DoSelect queries and returns data records from database.
-func (c *Core) DoSelect(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error) {
+func (c *Core) DoSelect(ctx context.Context, link Link, sql string, args ...any) (result Result, err error) {
 	return c.db.DoQuery(ctx, link, sql, args...)
 }
 
 // GetOne queries and returns one record from database.
-func (c *Core) GetOne(ctx context.Context, sql string, args ...interface{}) (Record, error) {
+func (c *Core) GetOne(ctx context.Context, sql string, args ...any) (Record, error) {
 	list, err := c.db.GetAll(ctx, sql, args...)
 	if err != nil {
 		return nil, err
@@ -174,7 +174,7 @@ func (c *Core) GetOne(ctx context.Context, sql string, args ...interface{}) (Rec
 
 // GetArray queries and returns data values as slice from database.
 // Note that if there are multiple columns in the result, it returns just one column values randomly.
-func (c *Core) GetArray(ctx context.Context, sql string, args ...interface{}) ([]Value, error) {
+func (c *Core) GetArray(ctx context.Context, sql string, args ...any) ([]Value, error) {
 	all, err := c.db.DoSelect(ctx, nil, sql, args...)
 	if err != nil {
 		return nil, err
@@ -184,7 +184,7 @@ func (c *Core) GetArray(ctx context.Context, sql string, args ...interface{}) ([
 
 // doGetStruct queries one record from database and converts it to given struct.
 // The parameter `pointer` should be a pointer to struct.
-func (c *Core) doGetStruct(ctx context.Context, pointer interface{}, sql string, args ...interface{}) error {
+func (c *Core) doGetStruct(ctx context.Context, pointer any, sql string, args ...any) error {
 	one, err := c.db.GetOne(ctx, sql, args...)
 	if err != nil {
 		return err
@@ -194,7 +194,7 @@ func (c *Core) doGetStruct(ctx context.Context, pointer interface{}, sql string,
 
 // doGetStructs queries records from database and converts them to given struct.
 // The parameter `pointer` should be type of struct slice: []struct/[]*struct.
-func (c *Core) doGetStructs(ctx context.Context, pointer interface{}, sql string, args ...interface{}) error {
+func (c *Core) doGetStructs(ctx context.Context, pointer any, sql string, args ...any) error {
 	all, err := c.db.GetAll(ctx, sql, args...)
 	if err != nil {
 		return err
@@ -208,7 +208,7 @@ func (c *Core) doGetStructs(ctx context.Context, pointer interface{}, sql string
 // If parameter `pointer` is type of struct pointer, it calls GetStruct internally for
 // the conversion. If parameter `pointer` is type of slice, it calls GetStructs internally
 // for conversion.
-func (c *Core) GetScan(ctx context.Context, pointer interface{}, sql string, args ...interface{}) error {
+func (c *Core) GetScan(ctx context.Context, pointer any, sql string, args ...any) error {
 	reflectInfo := reflection.OriginTypeAndKind(pointer)
 	if reflectInfo.InputKind != reflect.Ptr {
 		return gerror.NewCodef(
@@ -236,7 +236,7 @@ func (c *Core) GetScan(ctx context.Context, pointer interface{}, sql string, arg
 // GetValue queries and returns the field value from database.
 // The sql should query only one field from database, or else it returns only one
 // field of the result.
-func (c *Core) GetValue(ctx context.Context, sql string, args ...interface{}) (Value, error) {
+func (c *Core) GetValue(ctx context.Context, sql string, args ...any) (Value, error) {
 	one, err := c.db.GetOne(ctx, sql, args...)
 	if err != nil {
 		return gvar.New(nil), err
@@ -248,7 +248,7 @@ func (c *Core) GetValue(ctx context.Context, sql string, args ...interface{}) (V
 }
 
 // GetCount queries and returns the count from database.
-func (c *Core) GetCount(ctx context.Context, sql string, args ...interface{}) (int, error) {
+func (c *Core) GetCount(ctx context.Context, sql string, args ...any) (int, error) {
 	// If the query fields do not contain function "COUNT",
 	// it replaces the sql string and adds the "COUNT" function to the fields.
 	if !gregex.IsMatchString(`(?i)SELECT\s+COUNT\(.+\)\s+FROM`, sql) {
@@ -277,7 +277,7 @@ func (c *Core) doUnion(ctx context.Context, unionType int, unions ...*Model) *Mo
 	var (
 		unionTypeStr   string
 		composedSqlStr string
-		composedArgs   = make([]interface{}, 0)
+		composedArgs   = make([]any, 0)
 	)
 	if unionType == unionTypeAll {
 		unionTypeStr = "UNION ALL"
@@ -331,7 +331,7 @@ func (c *Core) PingSlave() error {
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
 // The parameter `batch` specifies the batch operation count when given data is slice.
-func (c *Core) Insert(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
+func (c *Core) Insert(ctx context.Context, table string, data any, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
 		return c.Model(table).Ctx(ctx).Data(data).Batch(batch[0]).Insert()
 	}
@@ -347,7 +347,7 @@ func (c *Core) Insert(ctx context.Context, table string, data interface{}, batch
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
 // The parameter `batch` specifies the batch operation count when given data is slice.
-func (c *Core) InsertIgnore(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
+func (c *Core) InsertIgnore(ctx context.Context, table string, data any, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
 		return c.Model(table).Ctx(ctx).Data(data).Batch(batch[0]).InsertIgnore()
 	}
@@ -355,7 +355,7 @@ func (c *Core) InsertIgnore(ctx context.Context, table string, data interface{},
 }
 
 // InsertAndGetId performs action Insert and returns the last insert id that automatically generated.
-func (c *Core) InsertAndGetId(ctx context.Context, table string, data interface{}, batch ...int) (int64, error) {
+func (c *Core) InsertAndGetId(ctx context.Context, table string, data any, batch ...int) (int64, error) {
 	if len(batch) > 0 {
 		return c.Model(table).Ctx(ctx).Data(data).Batch(batch[0]).InsertAndGetId()
 	}
@@ -374,7 +374,7 @@ func (c *Core) InsertAndGetId(ctx context.Context, table string, data interface{
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
 // If given data is type of slice, it then does batch replacing, and the optional parameter
 // `batch` specifies the batch operation count.
-func (c *Core) Replace(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
+func (c *Core) Replace(ctx context.Context, table string, data any, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
 		return c.Model(table).Ctx(ctx).Data(data).Batch(batch[0]).Replace()
 	}
@@ -392,7 +392,7 @@ func (c *Core) Replace(ctx context.Context, table string, data interface{}, batc
 //
 // If given data is type of slice, it then does batch saving, and the optional parameter
 // `batch` specifies the batch operation count.
-func (c *Core) Save(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
+func (c *Core) Save(ctx context.Context, table string, data any, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
 		return c.Model(table).Ctx(ctx).Data(data).Batch(batch[0]).Save()
 	}
@@ -436,10 +436,10 @@ func (c *Core) fieldsToSequence(ctx context.Context, table string, fields []stri
 // InsertOptionIgnore:  if there's unique/primary key in the data, it ignores the inserting;
 func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption) (result sql.Result, err error) {
 	var (
-		keys           []string      // Field names.
-		values         []string      // Value holder string array, like: (?,?,?)
-		params         []interface{} // Values that will be committed to underlying database driver.
-		onDuplicateStr string        // onDuplicateStr is used in "ON DUPLICATE KEY UPDATE" statement.
+		keys           []string // Field names.
+		values         []string // Value holder string array, like: (?,?,?)
+		params         []any    // Values that will be committed to underlying database driver.
+		onDuplicateStr string   // onDuplicateStr is used in "ON DUPLICATE KEY UPDATE" statement.
 	)
 	// ============================================================================================
 	// Group the list by fields. Different fields to different list.
@@ -472,7 +472,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 			sqlResult    SqlResult
 			rowsAffected int64
 		)
-		keyListMap.Iterator(func(key, value interface{}) bool {
+		keyListMap.Iterator(func(key, value any) bool {
 			tmpResult, err = c.DoInsert(ctx, link, table, value.(List), option)
 			if err != nil {
 				return false
@@ -562,13 +562,13 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 // "status IN (?)", g.Slice{1,2,3}
 // "age IN(?,?)", 18, 50
 // User{ Id : 1, UserName : "john"}.
-func (c *Core) Update(ctx context.Context, table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
+func (c *Core) Update(ctx context.Context, table string, data any, condition any, args ...any) (sql.Result, error) {
 	return c.Model(table).Ctx(ctx).Data(data).Where(condition, args...).Update()
 }
 
 // DoUpdate does "UPDATE ... " statement for the table.
 // This function is usually used for custom interface definition, you do not need to call it manually.
-func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
+func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data any, condition string, args ...any) (result sql.Result, err error) {
 	table = c.QuotePrefixTableName(table)
 	var (
 		rv   = reflect.ValueOf(data)
@@ -579,14 +579,14 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 		kind = rv.Kind()
 	}
 	var (
-		params  []interface{}
+		params  []any
 		updates string
 	)
 	switch kind {
 	case reflect.Map, reflect.Struct:
 		var (
 			fields  []string
-			dataMap map[string]interface{}
+			dataMap map[string]any
 		)
 		dataMap, err = c.ConvertDataForRecord(ctx, data, table)
 		if err != nil {
@@ -666,13 +666,13 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 // "status IN (?)", g.Slice{1,2,3}
 // "age IN(?,?)", 18, 50
 // User{ Id : 1, UserName : "john"}.
-func (c *Core) Delete(ctx context.Context, table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
+func (c *Core) Delete(ctx context.Context, table string, condition any, args ...any) (result sql.Result, err error) {
 	return c.Model(table).Ctx(ctx).Where(condition, args...).Delete()
 }
 
 // DoDelete does "DELETE FROM ... " statement for the table.
 // This function is usually used for custom interface definition, you do not need call it manually.
-func (c *Core) DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error) {
+func (c *Core) DoDelete(ctx context.Context, link Link, table string, condition string, args ...any) (result sql.Result, err error) {
 	if link == nil {
 		if link, err = c.MasterLink(); err != nil {
 			return nil, err
@@ -752,7 +752,7 @@ func (c *Core) GetTablesWithCache() ([]string, error) {
 	)
 	result, err := innerMemCache.GetOrSetFuncLock(
 		ctx, cacheKey,
-		func(ctx context.Context) (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			tableList, err := c.db.Tables(ctx)
 			if err != nil {
 				return nil, err
@@ -788,7 +788,7 @@ func (c *Core) IsSoftCreatedFieldName(fieldName string) bool {
 // FormatSqlBeforeExecuting formats the sql string and its arguments before executing.
 // The internal handleArguments function might be called twice during the SQL procedure,
 // but do not worry about it, it's safe and efficient.
-func (c *Core) FormatSqlBeforeExecuting(sql string, args []interface{}) (newSql string, newArgs []interface{}) {
+func (c *Core) FormatSqlBeforeExecuting(sql string, args []any) (newSql string, newArgs []any) {
 	return handleSliceAndStructArgsForSql(sql, args)
 }
 

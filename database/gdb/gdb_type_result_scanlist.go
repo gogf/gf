@@ -91,7 +91,7 @@ import (
 // given `relation` parameter.
 //
 // See the example or unit testing cases for clear understanding for this function.
-func (r Result) ScanList(structSlicePointer interface{}, bindToAttrName string, relationAttrNameAndFields ...string) (err error) {
+func (r Result) ScanList(structSlicePointer any, bindToAttrName string, relationAttrNameAndFields ...string) (err error) {
 	out, err := checkGetSliceElementInfoForScanList(structSlicePointer, bindToAttrName)
 	if err != nil {
 		return err
@@ -124,7 +124,7 @@ type checkGetSliceElementInfoForScanListOutput struct {
 	BindToAttrType    reflect.Type
 }
 
-func checkGetSliceElementInfoForScanList(structSlicePointer interface{}, bindToAttrName string) (out *checkGetSliceElementInfoForScanListOutput, err error) {
+func checkGetSliceElementInfoForScanList(structSlicePointer any, bindToAttrName string) (out *checkGetSliceElementInfoForScanListOutput, err error) {
 	// Necessary checks for parameters.
 	if structSlicePointer == nil {
 		return nil, gerror.NewCode(gcode.CodeInvalidParameter, `structSlicePointer cannot be nil`)
@@ -194,7 +194,7 @@ func checkGetSliceElementInfoForScanList(structSlicePointer interface{}, bindToA
 type doScanListInput struct {
 	Model              *Model
 	Result             Result
-	StructSlicePointer interface{}
+	StructSlicePointer any
 	StructSliceValue   reflect.Value
 	BindToAttrName     string
 	RelationAttrName   string
