@@ -122,9 +122,9 @@ func Test_Issue3135(t *testing.T) {
 
 type Issue3889CommonRes struct {
 	g.Meta  `mime:"application/json"`
-	Code    int         `json:"code"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    any    `json:"data"`
 }
 
 type Issue3889Req struct {
@@ -163,7 +163,7 @@ var Issue3889ErrorRes = map[int][]gcode.Code{
 func (r Issue3889Res) EnhanceResponseStatus() map[goai.EnhancedStatusCode]goai.EnhancedStatusType {
 	Codes401 := Issue3889ErrorRes[401]
 	// iterate Codes401 to generate Examples
-	var Examples401 []interface{}
+	var Examples401 []any
 	for _, code := range Codes401 {
 		example := Issue3889CommonRes{
 			Code:    code.Code(),

@@ -22,7 +22,7 @@ func SupportedMethods() []string {
 // string/[]byte/map/struct/*struct.
 //
 // The optional parameter `noUrlEncode` specifies whether to ignore the url encoding for the data.
-func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr string) {
+func BuildParams(params any, noUrlEncode ...bool) (encodedParamStr string) {
 	return httputil.BuildParams(params, noUrlEncode...)
 }
 

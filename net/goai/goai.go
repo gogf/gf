@@ -97,10 +97,10 @@ func New() *OpenApiV3 {
 
 // AddInput is the structured parameter for function OpenApiV3.Add.
 type AddInput struct {
-	Path   string      // Path specifies the custom path if this is not configured in Meta of struct tag.
-	Prefix string      // Prefix specifies the custom route path prefix, which will be added with the path tag in Meta of struct tag.
-	Method string      // Method specifies the custom HTTP method if this is not configured in Meta of struct tag.
-	Object interface{} // Object can be an instance of struct or a route function.
+	Path   string // Path specifies the custom path if this is not configured in Meta of struct tag.
+	Prefix string // Prefix specifies the custom route path prefix, which will be added with the path tag in Meta of struct tag.
+	Method string // Method specifies the custom HTTP method if this is not configured in Meta of struct tag.
+	Object any    // Object can be an instance of struct or a route function.
 }
 
 // Add adds an instance of struct or a route function to OpenApiV3 definition implements.

@@ -23,7 +23,7 @@ import (
 // Note that the parameter `handler` can be type of:
 // 1. func(*ghttp.Request)
 // 2. func(context.Context, BizRequest)(BizResponse, error)
-func (s *Server) BindHandler(pattern string, handler interface{}) {
+func (s *Server) BindHandler(pattern string, handler any) {
 	var ctx = context.TODO()
 	funcInfo, err := s.checkAndCreateFuncInfo(handler, "", "", "")
 	if err != nil {
@@ -146,7 +146,7 @@ func (s *Server) nameToUri(name string) string {
 }
 
 func (s *Server) checkAndCreateFuncInfo(
-	f interface{}, pkgPath, structName, methodName string,
+	f any, pkgPath, structName, methodName string,
 ) (funcInfo handlerFuncInfo, err error) {
 	funcInfo = handlerFuncInfo{
 		Type:  reflect.TypeOf(f),
@@ -160,7 +160,7 @@ func (s *Server) checkAndCreateFuncInfo(
 	var (
 		reflectType    = funcInfo.Type
 		inputObject    reflect.Value
-		inputObjectPtr interface{}
+		inputObjectPtr any
 	)
 	if reflectType.NumIn() != 2 || reflectType.NumOut() != 2 {
 		if pkgPath != "" {
