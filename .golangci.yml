@@ -1,9 +1,9 @@
 version: "2"
 run:
   concurrency: 4
-  go: "1.23"
+  go: "1.25"
   modules-download-mode: readonly
-  issues-exit-code: 2
+  issues-exit-code: 5
   tests: false
   allow-parallel-runners: true
   allow-serial-runners: true
