@@ -8,6 +8,7 @@ package gdb_test
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -40,4 +41,16 @@ func ExampleDB_Transaction() {
 		}
 		return nil
 	})
+}
+
+// Example_GetAllConfig
+func ExampleGetAllConfig() {
+	//add confignode by addconfignode
+	gdb.AddConfigNode("default", gdb.ConfigNode{
+		Link: "mysql://root:123456@tcp(127.0.0.1:3306)/test",
+	})
+
+	//get all config (addconfignode and defualt config)
+	configs := gdb.GetAllConfig()
+	fmt.Println(configs)
 }
