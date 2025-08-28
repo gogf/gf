@@ -726,3 +726,33 @@ func Test_Issue4093(t *testing.T) {
 		t.Assert(client.PostContent(ctx, "/test"), `{"page":1,"pageSize":10,"pagination":true,"name":"john","number":1}`)
 	})
 }
+
+// https://github.com/gogf/gf/issues/4193
+func Test_Issue4193(t *testing.T) {
+	type Req struct {
+		g.Meta `method:"post" mime:"multipart/form-data"`
+		File   *ghttp.UploadFile `v:"required" type:"file"` // File is required
+	}
+	type Res struct{}
+
+	s := g.Server(guid.S())
+	s.BindMiddlewareDefault(ghttp.MiddlewareHandlerResponse)
+	s.BindHandler("/upload", func(ctx context.Context, req *Req) (res *Res, err error) {
+		return
+	})
+	s.SetDumpRouterMap(false)
+	s.SetAccessLogEnabled(false)
+	s.SetErrorLogEnabled(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		content := client.PostContent(ctx, "/upload", g.Map{
+			"file": "",
+		})
+		t.Assert(content, `{"code":51,"message":"The File field is required","data":null}`)
+	})
+}
