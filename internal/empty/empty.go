@@ -177,7 +177,7 @@ func IsEmpty(value any, traceSource ...bool) bool {
 			reflect.Array:
 			return rv.Len() == 0
 
-		case reflect.Ptr:
+		case reflect.Pointer:
 			if len(traceSource) > 0 && traceSource[0] {
 				return IsEmpty(rv.Elem())
 			}
@@ -221,15 +221,15 @@ func IsNil(value any, traceSource ...bool) bool {
 		reflect.UnsafePointer:
 		return !rv.IsValid() || rv.IsNil()
 
-	case reflect.Ptr:
+	case reflect.Pointer:
 		if len(traceSource) > 0 && traceSource[0] {
-			for rv.Kind() == reflect.Ptr {
+			for rv.Kind() == reflect.Pointer {
 				rv = rv.Elem()
 			}
 			if !rv.IsValid() {
 				return true
 			}
-			if rv.Kind() == reflect.Ptr {
+			if rv.Kind() == reflect.Pointer {
 				return rv.IsNil()
 			}
 		} else {

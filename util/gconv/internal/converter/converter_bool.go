@@ -38,7 +38,7 @@ func (c *Converter) Bool(anyInput any) (bool, error) {
 		}
 		rv := reflect.ValueOf(anyInput)
 		switch rv.Kind() {
-		case reflect.Ptr:
+		case reflect.Pointer:
 			if rv.IsNil() {
 				return false, nil
 			}

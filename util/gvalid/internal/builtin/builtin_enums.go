@@ -49,7 +49,7 @@ func (r RuleEnums) Run(in RunInput) error {
 		typeName = in.ValueType.Name()
 		typeKind = in.ValueType.Kind()
 	)
-	if typeKind == reflect.Slice || typeKind == reflect.Ptr {
+	if typeKind == reflect.Slice || typeKind == reflect.Pointer {
 		pkgPath = in.ValueType.Elem().PkgPath()
 		typeName = in.ValueType.Elem().Name()
 	}

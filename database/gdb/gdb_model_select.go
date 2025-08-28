@@ -279,7 +279,7 @@ func (m *Model) doStructs(pointer any, where ...any) error {
 // err   := db.Model("user").Scan(&users).
 func (m *Model) Scan(pointer any, where ...any) error {
 	reflectInfo := reflection.OriginTypeAndKind(pointer)
-	if reflectInfo.InputKind != reflect.Ptr {
+	if reflectInfo.InputKind != reflect.Pointer {
 		return gerror.NewCode(
 			gcode.CodeInvalidParameter,
 			`the parameter "pointer" for function Scan should type of pointer`,

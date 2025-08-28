@@ -74,7 +74,7 @@ func convertOptionToArgs(option any) ([]any, error) {
 		// See TTLOption
 		default:
 			fieldValue := field.Value.Interface()
-			if field.Value.Kind() == reflect.Ptr {
+			if field.Value.Kind() == reflect.Pointer {
 				if field.Value.IsNil() {
 					continue
 				}

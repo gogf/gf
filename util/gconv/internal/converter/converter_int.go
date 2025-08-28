@@ -89,7 +89,7 @@ func (c *Converter) Int64(anyInput any) (int64, error) {
 			return 1, nil
 		}
 		return 0, nil
-	case reflect.Ptr:
+	case reflect.Pointer:
 		if rv.IsNil() {
 			return 0, nil
 		}

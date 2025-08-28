@@ -106,7 +106,7 @@ func (c *Converter) String(anyInput any) (string, error) {
 			}
 		case reflect.String:
 			return rv.String(), nil
-		case reflect.Ptr:
+		case reflect.Pointer:
 			if rv.IsNil() {
 				return "", nil
 			}

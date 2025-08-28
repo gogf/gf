@@ -391,7 +391,7 @@ func GetPrimaryKeyCondition(primary string, where ...any) (newWhereCondition []a
 			rv   = reflect.ValueOf(where[0])
 			kind = rv.Kind()
 		)
-		if kind == reflect.Ptr {
+		if kind == reflect.Pointer {
 			rv = rv.Elem()
 			kind = rv.Kind()
 		}
@@ -922,7 +922,7 @@ func FormatSqlWithArgs(sql string, args []any) string {
 					return gconv.String(v)
 				}
 				reflectInfo := reflection.OriginValueAndKind(args[index])
-				if reflectInfo.OriginKind == reflect.Ptr &&
+				if reflectInfo.OriginKind == reflect.Pointer &&
 					(reflectInfo.OriginValue.IsNil() || !reflectInfo.OriginValue.IsValid()) {
 					return "null"
 				}

@@ -141,7 +141,7 @@ func checkGetSliceElementInfoForScanList(structSlicePointer any, bindToAttrName 
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
-	if reflectKind != reflect.Ptr {
+	if reflectKind != reflect.Pointer {
 		return nil, gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			"structSlicePointer should be type of *[]struct/*[]*struct, but got: %s",
@@ -154,7 +154,7 @@ func checkGetSliceElementInfoForScanList(structSlicePointer any, bindToAttrName 
 	// Find the element struct type of the slice.
 	reflectType = reflectValue.Type().Elem().Elem()
 	reflectKind = reflectType.Kind()
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectType = reflectType.Elem()
 		reflectKind = reflectType.Kind()
 	}
@@ -179,7 +179,7 @@ func checkGetSliceElementInfoForScanList(structSlicePointer any, bindToAttrName 
 	// Find the attribute struct type for ORM fields filtering.
 	reflectType = structField.Type
 	reflectKind = reflectType.Kind()
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectType = reflectType.Elem()
 		reflectKind = reflectType.Kind()
 	}
@@ -219,7 +219,7 @@ func doScanList(in doScanListInput) (err error) {
 		if in.StructSliceValue.Len() > 0 {
 			// It here checks if it has struct item, which is already initialized.
 			// It then returns error to warn the developer its empty and no conversion.
-			if v := in.StructSliceValue.Index(0); v.Kind() != reflect.Ptr {
+			if v := in.StructSliceValue.Index(0); v.Kind() != reflect.Pointer {
 				return sql.ErrNoRows
 			}
 		}
@@ -301,7 +301,7 @@ func doScanList(in doScanListInput) (err error) {
 		bindToAttrType  reflect.Type
 		bindToAttrField reflect.StructField
 	)
-	if arrayItemType.Kind() == reflect.Ptr {
+	if arrayItemType.Kind() == reflect.Pointer {
 		if bindToAttrField, ok = arrayItemType.Elem().FieldByName(in.BindToAttrName); !ok {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
@@ -330,7 +330,7 @@ func doScanList(in doScanListInput) (err error) {
 	for i := 0; i < arrayValue.Len(); i++ {
 		arrayElemValue := arrayValue.Index(i)
 		// The FieldByName should be called on non-pointer reflect.Value.
-		if arrayElemValue.Kind() == reflect.Ptr {
+		if arrayElemValue.Kind() == reflect.Pointer {
 			// Like: []*Entity
 			arrayElemValue = arrayElemValue.Elem()
 			if !arrayElemValue.IsValid() {
@@ -349,7 +349,7 @@ func doScanList(in doScanListInput) (err error) {
 		if in.RelationAttrName != "" {
 			// Attribute value of current slice element.
 			relationFromAttrValue = arrayElemValue.FieldByName(in.RelationAttrName)
-			if relationFromAttrValue.Kind() == reflect.Ptr {
+			if relationFromAttrValue.Kind() == reflect.Pointer {
 				relationFromAttrValue = relationFromAttrValue.Elem()
 			}
 		} else {
@@ -410,7 +410,7 @@ func doScanList(in doScanListInput) (err error) {
 				)
 			}
 
-		case reflect.Ptr:
+		case reflect.Pointer:
 			var element reflect.Value
 			if bindToAttrValue.IsNil() {
 				element = reflect.New(bindToAttrType.Elem()).Elem()

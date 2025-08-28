@@ -36,7 +36,7 @@ func Keys(mapOrStruct any) (keysOrAttrs []string) {
 		reflectValue = reflect.ValueOf(mapOrStruct)
 	}
 	reflectKind = reflectValue.Kind()
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		if !reflectValue.IsValid() || reflectValue.IsNil() {
 			reflectValue = reflect.New(reflectValue.Type().Elem()).Elem()
 			reflectKind = reflectValue.Kind()
@@ -87,7 +87,7 @@ func Values(mapOrStruct any) (values []any) {
 		reflectValue = reflect.ValueOf(mapOrStruct)
 	}
 	reflectKind = reflectValue.Kind()
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}

@@ -72,7 +72,7 @@ func SliceToMap(slice any) map[string]any {
 		reflectValue = reflect.ValueOf(slice)
 		reflectKind  = reflectValue.Kind()
 	)
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
@@ -101,7 +101,7 @@ func SliceToMapWithColumnAsKey(slice any, key any) map[any]any {
 		reflectValue = reflect.ValueOf(slice)
 		reflectKind  = reflectValue.Kind()
 	)
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}

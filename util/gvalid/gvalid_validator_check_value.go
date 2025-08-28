@@ -233,7 +233,7 @@ type doCheckValueRecursivelyInput struct {
 
 func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValueRecursivelyInput) {
 	switch in.Kind {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
 			Value:               in.Value,
 			Type:                in.Type.Elem(),
@@ -248,7 +248,7 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 			validator           = v.Clone()
 			toBeValidatedObject any
 		)
-		if in.Type.Kind() == reflect.Ptr {
+		if in.Type.Kind() == reflect.Pointer {
 			toBeValidatedObject = reflect.New(in.Type.Elem()).Interface()
 		} else {
 			toBeValidatedObject = reflect.New(in.Type).Interface()
@@ -292,7 +292,7 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 		// []struct []map
 		case reflect.Struct, reflect.Map:
 			loop = true
-		case reflect.Ptr:
+		case reflect.Pointer:
 			loop = true
 		}
 		// When it is a base type array,

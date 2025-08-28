@@ -71,7 +71,7 @@ func (r *Request) doParse(pointer any, requestType int) error {
 		reflectVal1  = reflect.ValueOf(pointer)
 		reflectKind1 = reflectVal1.Kind()
 	)
-	if reflectKind1 != reflect.Ptr {
+	if reflectKind1 != reflect.Pointer {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`invalid parameter type "%v", of which kind should be of *struct/**struct/*[]struct/*[]*struct, but got: "%v"`,
@@ -87,7 +87,7 @@ func (r *Request) doParse(pointer any, requestType int) error {
 	// Single struct, post content like:
 	// 1. {"id":1, "name":"john"}
 	// 2. ?id=1&name=john
-	case reflect.Ptr, reflect.Struct:
+	case reflect.Pointer, reflect.Struct:
 		var (
 			err  error
 			data map[string]any

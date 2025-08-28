@@ -105,7 +105,7 @@ func (c *Converter) Uint64(anyInput any) (uint64, error) {
 			return 1, nil
 		}
 		return 0, nil
-	case reflect.Ptr:
+	case reflect.Pointer:
 		if rv.IsNil() {
 			return 0, nil
 		}

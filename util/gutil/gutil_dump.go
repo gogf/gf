@@ -121,7 +121,7 @@ func doDump(value any, indent string, buffer *bytes.Buffer, option doDumpOption)
 		newIndent       = indent + dumpIndent
 	)
 	reflectTypeName = strings.ReplaceAll(reflectTypeName, `[]uint8`, `[]byte`)
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		if ptrAddress == "" {
 			ptrAddress = fmt.Sprintf(`0x%x`, reflectValue.Pointer())
 		}

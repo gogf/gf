@@ -260,7 +260,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object any) Error {
 				)
 				if empty.IsNil(value) {
 					switch field.Kind() {
-					case reflect.Map, reflect.Ptr, reflect.Slice, reflect.Array:
+					case reflect.Map, reflect.Pointer, reflect.Slice, reflect.Array:
 						// Nothing to do.
 						continue
 					default:

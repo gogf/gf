@@ -40,7 +40,7 @@ func (r RuleRequired) Run(in RunInput) error {
 // Note that if given value is a zero integer, it will be considered as not empty.
 func isRequiredEmpty(value any) bool {
 	reflectValue := reflect.ValueOf(value)
-	for reflectValue.Kind() == reflect.Ptr {
+	for reflectValue.Kind() == reflect.Pointer {
 		reflectValue = reflectValue.Elem()
 	}
 	switch reflectValue.Kind() {

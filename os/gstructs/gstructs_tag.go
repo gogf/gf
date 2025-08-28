@@ -134,7 +134,7 @@ func getFieldValues(structObject any) ([]Field, error) {
 	}
 	for {
 		switch reflectKind {
-		case reflect.Ptr:
+		case reflect.Pointer:
 			if !reflectValue.IsValid() || reflectValue.IsNil() {
 				// If pointer is type of *struct and nil, then automatically create a temporary struct.
 				reflectValue = reflect.New(reflectValue.Type().Elem()).Elem()
@@ -152,7 +152,7 @@ func getFieldValues(structObject any) ([]Field, error) {
 	}
 
 exitLoop:
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}

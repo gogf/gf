@@ -114,7 +114,7 @@ Default:
 		rvValue = reflect.ValueOf(fieldValue)
 		rvKind  = rvValue.Kind()
 	)
-	for rvKind == reflect.Ptr {
+	for rvKind == reflect.Pointer {
 		rvValue = rvValue.Elem()
 		rvKind = rvValue.Kind()
 	}

@@ -78,7 +78,7 @@ func SpecialCharsMapOrStruct(mapOrStruct any) error {
 		reflectKind  = reflectValue.Kind()
 		originalKind = reflectKind
 	)
-	for reflectValue.IsValid() && (reflectKind == reflect.Ptr || reflectKind == reflect.Interface) {
+	for reflectValue.IsValid() && (reflectKind == reflect.Pointer || reflectKind == reflect.Interface) {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
@@ -106,7 +106,7 @@ func SpecialCharsMapOrStruct(mapOrStruct any) error {
 		}
 
 	case reflect.Struct:
-		if originalKind != reflect.Ptr {
+		if originalKind != reflect.Pointer {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid input parameter type "%s", should be type of pointer to struct`,

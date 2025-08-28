@@ -98,7 +98,7 @@ func MapToSlice(data any) []any {
 		reflectValue = reflect.ValueOf(data)
 		reflectKind  = reflectValue.Kind()
 	)
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}

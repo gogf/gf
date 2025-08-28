@@ -28,7 +28,7 @@ func OriginValueAndKind(value any) (out OriginValueAndKindOutput) {
 	out.InputKind = out.InputValue.Kind()
 	out.OriginValue = out.InputValue
 	out.OriginKind = out.InputKind
-	for out.OriginKind == reflect.Ptr {
+	for out.OriginKind == reflect.Pointer {
 		out.OriginValue = out.OriginValue.Elem()
 		out.OriginKind = out.OriginValue.Kind()
 	}
@@ -59,7 +59,7 @@ func OriginTypeAndKind(value any) (out OriginTypeAndKindOutput) {
 	out.InputKind = out.InputType.Kind()
 	out.OriginType = out.InputType
 	out.OriginKind = out.InputKind
-	for out.OriginKind == reflect.Ptr {
+	for out.OriginKind == reflect.Pointer {
 		out.OriginType = out.OriginType.Elem()
 		out.OriginKind = out.OriginType.Kind()
 	}
@@ -84,7 +84,7 @@ func ValueToInterface(v reflect.Value) (value any, ok bool) {
 		return v.Complex(), true
 	case reflect.String:
 		return v.String(), true
-	case reflect.Ptr:
+	case reflect.Pointer:
 		return ValueToInterface(v.Elem())
 	case reflect.Interface:
 		return ValueToInterface(v.Elem())

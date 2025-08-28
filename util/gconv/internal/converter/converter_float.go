@@ -52,7 +52,7 @@ func (c *Converter) Float32(anyInput any) (float32, error) {
 				)
 			}
 			return float32(f), nil
-		case reflect.Ptr:
+		case reflect.Pointer:
 			if rv.IsNil() {
 				return 0, nil
 			}
@@ -119,7 +119,7 @@ func (c *Converter) Float64(anyInput any) (float64, error) {
 				)
 			}
 			return f, nil
-		case reflect.Ptr:
+		case reflect.Pointer:
 			if rv.IsNil() {
 				return 0, nil
 			}

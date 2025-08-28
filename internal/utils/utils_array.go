@@ -13,7 +13,7 @@ import "reflect"
 func IsArray(value any) bool {
 	rv := reflect.ValueOf(value)
 	kind := rv.Kind()
-	if kind == reflect.Ptr {
+	if kind == reflect.Pointer {
 		rv = rv.Elem()
 		kind = rv.Kind()
 	}

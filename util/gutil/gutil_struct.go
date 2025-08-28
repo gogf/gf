@@ -22,7 +22,7 @@ func StructToSlice(data any) []any {
 		reflectValue = reflect.ValueOf(data)
 		reflectKind  = reflectValue.Kind()
 	)
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
@@ -52,10 +52,10 @@ func FillStructWithDefault(structPtr any) error {
 		reflectValue = reflect.ValueOf(structPtr)
 	}
 	switch reflectValue.Kind() {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		// Nothing to do.
 	case reflect.Array, reflect.Slice:
-		if reflectValue.Elem().Kind() != reflect.Ptr {
+		if reflectValue.Elem().Kind() != reflect.Pointer {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid parameter "%s", the element of slice should be type of pointer of struct, but given "%s"`,

@@ -141,7 +141,7 @@ func (m *Model) doWithScanStruct(pointer any) error {
 			)
 		}
 		bindToReflectValue := field.Value
-		if bindToReflectValue.Kind() != reflect.Ptr && bindToReflectValue.CanAddr() {
+		if bindToReflectValue.Kind() != reflect.Pointer && bindToReflectValue.CanAddr() {
 			bindToReflectValue = bindToReflectValue.Addr()
 		}
 

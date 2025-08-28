@@ -197,8 +197,8 @@ func (s *Server) checkAndCreateFuncInfo(
 		return
 	}
 
-	if reflectType.In(1).Kind() != reflect.Ptr ||
-		(reflectType.In(1).Kind() == reflect.Ptr && reflectType.In(1).Elem().Kind() != reflect.Struct) {
+	if reflectType.In(1).Kind() != reflect.Pointer ||
+		(reflectType.In(1).Kind() == reflect.Pointer && reflectType.In(1).Elem().Kind() != reflect.Struct) {
 		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`invalid handler: defined as "%s", but the second input parameter should be type of pointer to struct like "*BizReq"`,
@@ -210,8 +210,8 @@ func (s *Server) checkAndCreateFuncInfo(
 	// Do not enable this logic, as many users are already using none struct pointer type
 	// as the first output parameter.
 	/*
-		if reflectType.Out(0).Kind() != reflect.Ptr ||
-			(reflectType.Out(0).Kind() == reflect.Ptr && reflectType.Out(0).Elem().Kind() != reflect.Struct) {
+		if reflectType.Out(0).Kind() != reflect.Pointer ||
+			(reflectType.Out(0).Kind() == reflect.Pointer && reflectType.Out(0).Elem().Kind() != reflect.Struct) {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid handler: defined as "%s", but the first output parameter should be type of pointer to struct like "*BizRes"`,
@@ -250,7 +250,7 @@ func createRouterFunc(funcInfo handlerFuncInfo) func(r *Request) {
 		)
 		if funcInfo.Type.NumIn() == 2 {
 			var inputObject reflect.Value
-			if funcInfo.Type.In(1).Kind() == reflect.Ptr {
+			if funcInfo.Type.In(1).Kind() == reflect.Pointer {
 				inputObject = reflect.New(funcInfo.Type.In(1).Elem())
 				r.error = r.Parse(inputObject.Interface())
 			} else {

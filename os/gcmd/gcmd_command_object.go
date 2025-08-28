@@ -235,7 +235,7 @@ func newCommandFromMethod(
 	}
 
 	var inputObject reflect.Value
-	if methodType.In(1).Kind() == reflect.Ptr {
+	if methodType.In(1).Kind() == reflect.Pointer {
 		inputObject = reflect.New(methodType.In(1).Elem()).Elem()
 	} else {
 		inputObject = reflect.New(methodType.In(1)).Elem()
@@ -309,7 +309,7 @@ func newCommandFromMethod(
 			intlog.PrintFunc(ctx, func() string {
 				return fmt.Sprintf(`input command data map: %s`, gjson.MustEncode(data))
 			})
-			if inputObject.Kind() == reflect.Ptr {
+			if inputObject.Kind() == reflect.Pointer {
 				err = gconv.StructTag(data, inputObject.Interface(), priorityTag)
 			} else {
 				err = gconv.StructTag(data, inputObject.Addr().Interface(), priorityTag)

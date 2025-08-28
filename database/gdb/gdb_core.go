@@ -210,7 +210,7 @@ func (c *Core) doGetStructs(ctx context.Context, pointer any, sql string, args .
 // for conversion.
 func (c *Core) GetScan(ctx context.Context, pointer any, sql string, args ...any) error {
 	reflectInfo := reflection.OriginTypeAndKind(pointer)
-	if reflectInfo.InputKind != reflect.Ptr {
+	if reflectInfo.InputKind != reflect.Pointer {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			"params should be type of pointer, but got: %v",
@@ -574,7 +574,7 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data any, 
 		rv   = reflect.ValueOf(data)
 		kind = rv.Kind()
 	)
-	if kind == reflect.Ptr {
+	if kind == reflect.Pointer {
 		rv = rv.Elem()
 		kind = rv.Kind()
 	}

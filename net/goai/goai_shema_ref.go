@@ -55,7 +55,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 	)
 	if pkgPath == "" {
 		switch golangType.Kind() {
-		case reflect.Ptr, reflect.Array, reflect.Slice:
+		case reflect.Pointer, reflect.Array, reflect.Slice:
 			pkgPath = golangType.Elem().PkgPath()
 			typeName = golangType.Elem().Name()
 		default:
@@ -128,7 +128,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 		}
 
 	case TypeObject:
-		for golangType.Kind() == reflect.Ptr {
+		for golangType.Kind() == reflect.Pointer {
 			golangType = golangType.Elem()
 		}
 		switch golangType.Kind() {

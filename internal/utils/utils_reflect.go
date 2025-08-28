@@ -18,7 +18,7 @@ func CanCallIsNil(v any) bool {
 		return false
 	}
 	switch rv.Kind() {
-	case reflect.Interface, reflect.Chan, reflect.Func, reflect.Map, reflect.Ptr, reflect.Slice, reflect.UnsafePointer:
+	case reflect.Interface, reflect.Chan, reflect.Func, reflect.Map, reflect.Pointer, reflect.Slice, reflect.UnsafePointer:
 		return true
 	default:
 		return false

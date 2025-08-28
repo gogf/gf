@@ -55,7 +55,7 @@ func IsSlice(value any) bool {
 		reflectValue = reflect.ValueOf(value)
 		reflectKind  = reflectValue.Kind()
 	)
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
@@ -72,7 +72,7 @@ func IsMap(value any) bool {
 		reflectValue = reflect.ValueOf(value)
 		reflectKind  = reflectValue.Kind()
 	)
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
@@ -90,7 +90,7 @@ func IsStruct(value any) bool {
 		return false
 	}
 	reflectKind := reflectType.Kind()
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectType = reflectType.Elem()
 		reflectKind = reflectType.Kind()
 	}

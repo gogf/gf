@@ -30,7 +30,7 @@ func ListItemValues(list any, key any, subKey ...any) (values []any) {
 		reflectValue = reflect.ValueOf(list)
 	}
 	reflectKind := reflectValue.Kind()
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
@@ -74,7 +74,7 @@ func ItemValue(item any, key any) (value any, found bool) {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}

@@ -286,7 +286,7 @@ func (c *Converter) doMapConvert(
 		}
 		reflectKind := reflectValue.Kind()
 		// If it is a pointer, we should find its real data type.
-		for reflectKind == reflect.Ptr {
+		for reflectKind == reflect.Pointer {
 			reflectValue = reflectValue.Elem()
 			reflectKind = reflectValue.Kind()
 		}
@@ -361,7 +361,7 @@ func (c *Converter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrStruc
 	}
 	reflectKind := reflectValue.Kind()
 	// If it is a pointer, we should find its real data type.
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
@@ -488,7 +488,7 @@ func (c *Converter) doMapConvertForMapOrStructValue(in doMapConvertForMapOrStruc
 					rvAttrField = rvField
 					rvAttrKind  = rvField.Kind()
 				)
-				if rvAttrKind == reflect.Ptr {
+				if rvAttrKind == reflect.Pointer {
 					rvAttrField = rvField.Elem()
 					rvAttrKind = rvAttrField.Kind()
 				}

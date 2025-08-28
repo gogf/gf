@@ -101,7 +101,7 @@ func Benchmark_Reflect_PPStruct_PStruct(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		v1 := reflect.ValueOf(&structPointerNil)
 		v2 := reflect.ValueOf(structPointer)
-		//if v1.Kind() == reflect.Ptr {
+		//if v1.Kind() == reflect.Pointer {
 		//	if elem := v1.Elem(); elem.Type() == v2.Type() {
 		//		elem.Set(v2)
 		//	}
@@ -121,7 +121,7 @@ func Benchmark_Reflect_PStruct_Struct(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		v1 := reflect.ValueOf(structPointer)
 		v2 := reflect.ValueOf(structObj)
-		//if v1.Kind() == reflect.Ptr {
+		//if v1.Kind() == reflect.Pointer {
 		//	if elem := v1.Elem(); elem.Type() == v2.Type() {
 		//		elem.Set(v2)
 		//	}
@@ -141,7 +141,7 @@ func Benchmark_Reflect_PStructs_Structs(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		v1 := reflect.ValueOf(&structSliceNil)
 		v2 := reflect.ValueOf(structSlice)
-		//if v1.Kind() == reflect.Ptr {
+		//if v1.Kind() == reflect.Pointer {
 		//	if elem := v1.Elem(); elem.Type() == v2.Type() {
 		//		elem.Set(v2)
 		//	}
@@ -161,7 +161,7 @@ func Benchmark_Reflect_PPStructs_PStructs(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		v1 := reflect.ValueOf(&structPointerSliceNil)
 		v2 := reflect.ValueOf(structPointerSlice)
-		//if v1.Kind() == reflect.Ptr {
+		//if v1.Kind() == reflect.Pointer {
 		//	if elem := v1.Elem(); elem.Type() == v2.Type() {
 		//		elem.Set(v2)
 		//	}

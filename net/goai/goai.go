@@ -108,7 +108,7 @@ func (oai *OpenApiV3) Add(in AddInput) error {
 	var (
 		reflectValue = reflect.ValueOf(in.Object)
 	)
-	for reflectValue.Kind() == reflect.Ptr {
+	for reflectValue.Kind() == reflect.Pointer {
 		reflectValue = reflectValue.Elem()
 	}
 	switch reflectValue.Kind() {
@@ -141,7 +141,7 @@ func (oai OpenApiV3) String() string {
 }
 
 func (oai *OpenApiV3) golangTypeToOAIType(t reflect.Type) string {
-	for t.Kind() == reflect.Ptr {
+	for t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
 	switch t.Kind() {
@@ -204,7 +204,7 @@ func (oai *OpenApiV3) golangTypeToSchemaName(t reflect.Type) string {
 		schemaName = gstr.TrimLeft(t.String(), "*")
 	)
 	// Pointer type has no PkgPath.
-	for t.Kind() == reflect.Ptr {
+	for t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
 	if pkgPath = t.PkgPath(); pkgPath != "" && pkgPath != "." {

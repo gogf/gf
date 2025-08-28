@@ -252,7 +252,7 @@ func (tx *TXCore) GetStructs(objPointerSlice any, sql string, args ...any) error
 // for conversion.
 func (tx *TXCore) GetScan(pointer any, sql string, args ...any) error {
 	reflectInfo := reflection.OriginTypeAndKind(pointer)
-	if reflectInfo.InputKind != reflect.Ptr {
+	if reflectInfo.InputKind != reflect.Pointer {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			"params should be type of pointer, but got: %v",
