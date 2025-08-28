@@ -227,7 +227,7 @@ func TestStructErr(t *testing.T) {
 		}
 
 		user := new(User)
-		scores := map[string]interface{}{
+		scores := map[string]any{
 			"Score": 1,
 		}
 		err := gconv.Struct(scores, user)

@@ -81,13 +81,13 @@ func ExampleArray_Iterator() {
 	// Iterator is alias of IteratorAsc, which iterates the array readonly in ascending order
 	//  with given callback function `f`.
 	// If `f` returns true, then it continues iterating; or false to stop.
-	array.Iterator(func(k int, v interface{}) bool {
+	array.Iterator(func(k int, v any) bool {
 		fmt.Println(k, v)
 		return true
 	})
 	// IteratorDesc iterates the array readonly in descending order with given callback function `f`.
 	// If `f` returns true, then it continues iterating; or false to stop.
-	array.IteratorDesc(func(k int, v interface{}) bool {
+	array.IteratorDesc(func(k int, v any) bool {
 		fmt.Println(k, v)
 		return true
 	})
@@ -163,7 +163,7 @@ func ExampleArray_Chunk() {
 }
 
 func ExampleArray_PopLeft() {
-	array := garray.NewFrom([]interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9})
+	array := garray.NewFrom([]any{1, 2, 3, 4, 5, 6, 7, 8, 9})
 
 	// Any Pop* functions pick, delete and return the item from array.
 
@@ -180,7 +180,7 @@ func ExampleArray_PopLeft() {
 }
 
 func ExampleArray_PopLefts() {
-	array := garray.NewFrom([]interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9})
+	array := garray.NewFrom([]any{1, 2, 3, 4, 5, 6, 7, 8, 9})
 
 	// Any Pop* functions pick, delete and return the item from array.
 
@@ -197,7 +197,7 @@ func ExampleArray_PopLefts() {
 }
 
 func ExampleArray_PopRight() {
-	array := garray.NewFrom([]interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9})
+	array := garray.NewFrom([]any{1, 2, 3, 4, 5, 6, 7, 8, 9})
 
 	// Any Pop* functions pick, delete and return the item from array.
 
@@ -214,7 +214,7 @@ func ExampleArray_PopRight() {
 }
 
 func ExampleArray_PopRights() {
-	array := garray.NewFrom([]interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9})
+	array := garray.NewFrom([]any{1, 2, 3, 4, 5, 6, 7, 8, 9})
 
 	// Any Pop* functions pick, delete and return the item from array.
 
@@ -265,10 +265,10 @@ func ExampleArray_Merge() {
 func ExampleArray_Filter() {
 	array1 := garray.NewFrom(g.Slice{0, 1, 2, nil, "", g.Slice{}, "john"})
 	array2 := garray.NewFrom(g.Slice{0, 1, 2, nil, "", g.Slice{}, "john"})
-	fmt.Printf("%#v\n", array1.Filter(func(index int, value interface{}) bool {
+	fmt.Printf("%#v\n", array1.Filter(func(index int, value any) bool {
 		return empty.IsNil(value)
 	}).Slice())
-	fmt.Printf("%#v\n", array2.Filter(func(index int, value interface{}) bool {
+	fmt.Printf("%#v\n", array2.Filter(func(index int, value any) bool {
 		return empty.IsEmpty(value)
 	}).Slice())
 

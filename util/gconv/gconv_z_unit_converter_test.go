@@ -99,7 +99,7 @@ func testAnyToMyInt(from any, to reflect.Value) error {
 }
 
 func testAnyToSqlNullType(_ any, to reflect.Value) error {
-	if to.Kind() != reflect.Ptr {
+	if to.Kind() != reflect.Pointer {
 		to = to.Addr()
 	}
 	return to.Interface().(sql.Scanner).Scan(123456)

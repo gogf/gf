@@ -37,7 +37,7 @@ func TestRegistry_Register(t *testing.T) {
 	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-register-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 
@@ -69,7 +69,7 @@ func TestRegistry_Deregister(t *testing.T) {
 	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-deregister-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 
@@ -101,19 +101,19 @@ func TestRegistryMany(t *testing.T) {
 	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-1-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 	svc1 := &gsvc.LocalService{
 		Name:      "goframe-provider-2-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9001"),
 	}
 	svc2 := &gsvc.LocalService{
 		Name:      "goframe-provider-3-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9002"),
 	}
 
@@ -163,7 +163,7 @@ func TestRegistry_Search(t *testing.T) {
 	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-4-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 
@@ -207,7 +207,7 @@ func TestRegistry_Watch(t *testing.T) {
 	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-5-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 
@@ -279,7 +279,7 @@ func TestWatcher_Proceed(t *testing.T) {
 	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-5-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 
@@ -289,7 +289,7 @@ func TestWatcher_Proceed(t *testing.T) {
 	svc1 := &gsvc.LocalService{
 		Name:      "goframe-provider-5-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9001"),
 	}
 
@@ -408,7 +408,7 @@ func BenchmarkRegister(b *testing.B) {
 	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-0-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 	for i := 0; i < b.N; i++ {
@@ -449,21 +449,21 @@ func TestRegistryManyForEndpoints(t *testing.T) {
 	svc := &gsvc.LocalService{
 		Name:      serviceName,
 		Version:   version,
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints(endpointOne),
 	}
 
 	svc1 := &gsvc.LocalService{
 		Name:      serviceName,
 		Version:   version,
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints(endpointTwo),
 	}
 
 	svc2 := &gsvc.LocalService{
 		Name:      serviceName,
 		Version:   version,
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints(endpointThree),
 	}
 
@@ -541,7 +541,7 @@ func TestWatcher_Close(t *testing.T) {
 	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-close-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 
@@ -580,7 +580,7 @@ func TestGetKey(t *testing.T) {
 	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-key-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 
@@ -610,7 +610,7 @@ func TestService_GetPrefix(t *testing.T) {
 				Service: &gsvc.LocalService{
 					Name:      "goframe-provider-0-tcp",
 					Version:   "test",
-					Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+					Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 					Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 				},
 				ID: "test",
@@ -623,7 +623,7 @@ func TestService_GetPrefix(t *testing.T) {
 				Service: &gsvc.LocalService{
 					Name:      "goframe-provider-1-tcp",
 					Version:   "test",
-					Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+					Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 					Endpoints: gsvc.NewEndpoints("127.0.0.1:9001"),
 				},
 				ID: "test",
@@ -636,7 +636,7 @@ func TestService_GetPrefix(t *testing.T) {
 				Service: &gsvc.LocalService{
 					Name:      "goframe-provider-2-tcp",
 					Version:   "latest",
-					Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+					Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 					Endpoints: gsvc.NewEndpoints("127.0.0.1:9002"),
 				},
 				ID: "latest",
@@ -676,7 +676,7 @@ func TestService_GetKey(t *testing.T) {
 					Deployment: gsvc.DefaultDeployment,
 					Name:       "goframe-provider-0-tcp",
 					Version:    "test",
-					Metadata:   map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+					Metadata:   map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 					Endpoints:  gsvc.NewEndpoints("127.0.0.1:9000"),
 				},
 				ID: "test",
@@ -691,7 +691,7 @@ func TestService_GetKey(t *testing.T) {
 					Deployment: gsvc.DefaultDeployment,
 					Name:       "goframe-provider-1-tcp",
 					Version:    "latest",
-					Metadata:   map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+					Metadata:   map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 					Endpoints:  gsvc.NewEndpoints("127.0.0.1:9001"),
 				},
 				ID: "latest",
@@ -706,7 +706,7 @@ func TestService_GetKey(t *testing.T) {
 					Deployment: gsvc.DefaultDeployment,
 					Name:       "goframe-provider-2-tcp",
 					Version:    "latest",
-					Metadata:   map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+					Metadata:   map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 					Endpoints:  gsvc.NewEndpoints("127.0.0.1:9002"),
 				},
 				ID: "latest",

@@ -9,7 +9,7 @@ package goai
 // MediaType is specified by OpenAPI/Swagger 3.0 standard.
 type MediaType struct {
 	Schema   *SchemaRef           `json:"schema,omitempty"`
-	Example  interface{}          `json:"example,omitempty"`
+	Example  any                  `json:"example,omitempty"`
 	Examples Examples             `json:"examples,omitempty"`
 	Encoding map[string]*Encoding `json:"encoding,omitempty"`
 }

@@ -96,7 +96,7 @@ func New(opts ...Option) (gsvc.Registry, error) {
 func (r *Registry) Register(ctx context.Context, service gsvc.Service) (gsvc.Service, error) {
 	metadata := service.GetMetadata()
 	if metadata == nil {
-		metadata = make(map[string]interface{})
+		metadata = make(map[string]any)
 	}
 
 	// Convert metadata to string map

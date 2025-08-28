@@ -358,7 +358,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
 		defer dropTable(table)
-		// []interface{}
+		// []any
 		r, err := db.Insert(ctx, table, g.Slice{
 			g.Map{
 				"id":          2,
@@ -904,7 +904,7 @@ func Test_DB_ToXml(t *testing.T) {
 			gtest.Fatal(err)
 		}
 
-		resultXml := result["doc"].(map[string]interface{})
+		resultXml := result["doc"].(map[string]any)
 		if v, ok := resultXml["id"]; ok {
 			t.Assert(user.Id, v)
 		} else {
@@ -1543,7 +1543,7 @@ func Test_TableFields(t *testing.T) {
 		tableName := "fields_" + gtime.TimestampNanoStr()
 		createTable(tableName)
 		defer dropTable(tableName)
-		var expect = map[string][]interface{}{
+		var expect = map[string][]any{
 			// fields		type	null	key	default	extra	comment
 			"id":          {"INTEGER", false, "pri", nil, "", ""},
 			"passport":    {"VARCHAR(45)", false, "", "passport", "", ""},

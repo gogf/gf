@@ -16,7 +16,7 @@ import (
 
 // Do send a command to the server and returns the received reply.
 // It uses json.Marshal for struct/slice/map type values before committing them to redis.
-func (r *Redis) Do(ctx context.Context, command string, args ...interface{}) (*gvar.Var, error) {
+func (r *Redis) Do(ctx context.Context, command string, args ...any) (*gvar.Var, error) {
 	conn, err := r.Conn(ctx)
 	if err != nil {
 		return nil, err

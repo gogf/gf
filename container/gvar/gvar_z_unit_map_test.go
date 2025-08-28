@@ -46,7 +46,7 @@ func TestVar_MapToMap(t *testing.T) {
 		t.Assert(m2["1"], m1[1])
 		t.Assert(m2["2"], m1[2])
 	})
-	// map[string]interface{} -> map[string]string
+	// map[string]any -> map[string]string
 	gtest.C(t, func(t *gtest.T) {
 		m1 := g.Map{
 			"k1": "v1",
@@ -57,7 +57,7 @@ func TestVar_MapToMap(t *testing.T) {
 		t.Assert(m2["k1"], m1["k1"])
 		t.Assert(m2["k2"], m1["k2"])
 	})
-	// map[string]string -> map[string]interface{}
+	// map[string]string -> map[string]any
 	gtest.C(t, func(t *gtest.T) {
 		m1 := g.MapStrStr{
 			"k1": "v1",
@@ -68,7 +68,7 @@ func TestVar_MapToMap(t *testing.T) {
 		t.Assert(m2["k1"], m1["k1"])
 		t.Assert(m2["k2"], m1["k2"])
 	})
-	// map[string]interface{} -> map[interface{}]interface{}
+	// map[string]any -> map[any]any
 	gtest.C(t, func(t *gtest.T) {
 		m1 := g.MapStrStr{
 			"k1": "v1",

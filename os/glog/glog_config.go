@@ -17,7 +17,7 @@ func SetConfig(config Config) error {
 }
 
 // SetConfigWithMap set configurations with map for the defaultLogger.
-func SetConfigWithMap(m map[string]interface{}) error {
+func SetConfigWithMap(m map[string]any) error {
 	return defaultLogger.SetConfigWithMap(m)
 }
 
@@ -104,12 +104,12 @@ func GetFlags() int {
 // from context and printing them to logging content.
 //
 // Note that multiple calls of this function will overwrite the previous set context keys.
-func SetCtxKeys(keys ...interface{}) {
+func SetCtxKeys(keys ...any) {
 	defaultLogger.SetCtxKeys(keys...)
 }
 
 // GetCtxKeys retrieves and returns the context keys for logging.
-func GetCtxKeys() []interface{} {
+func GetCtxKeys() []any {
 	return defaultLogger.GetCtxKeys()
 }
 

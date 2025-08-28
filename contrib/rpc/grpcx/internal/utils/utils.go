@@ -26,7 +26,7 @@ func MarshalPbMessageToJsonString(msg proto.Message) string {
 	return protoJSONMarshaller.Format(msg)
 }
 
-func MarshalMessageToJsonStringForTracing(value interface{}, msgType string, maxBytes int) string {
+func MarshalMessageToJsonStringForTracing(value any, msgType string, maxBytes int) string {
 	var messageContent string
 	if msg, ok := value.(proto.Message); ok {
 		if proto.Size(msg) <= maxBytes {

@@ -61,7 +61,7 @@ func (m *Model) checkAndRemoveSelectCache(ctx context.Context) {
 	}
 }
 
-func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args ...interface{}) (result Result, err error) {
+func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args ...any) (result Result, err error) {
 	if !m.cacheEnabled || m.tx != nil {
 		return
 	}
@@ -90,7 +90,7 @@ func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args .
 }
 
 func (m *Model) saveSelectResultToCache(
-	ctx context.Context, selectType SelectType, result Result, sql string, args ...interface{},
+	ctx context.Context, selectType SelectType, result Result, sql string, args ...any,
 ) (err error) {
 	if !m.cacheEnabled || m.tx != nil {
 		return
@@ -142,7 +142,7 @@ func (m *Model) saveSelectResultToCache(
 	return
 }
 
-func (m *Model) makeSelectCacheKey(sql string, args ...interface{}) string {
+func (m *Model) makeSelectCacheKey(sql string, args ...any) string {
 	var (
 		table      = m.db.GetCore().guessPrimaryTableName(m.tables)
 		group      = m.db.GetGroup()

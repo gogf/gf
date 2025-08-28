@@ -337,7 +337,7 @@ type MyTimeSt struct {
 	CreateTime MyTime
 }
 
-func (st *MyTimeSt) UnmarshalValue(v interface{}) error {
+func (st *MyTimeSt) UnmarshalValue(v any) error {
 	m := gconv.Map(v)
 	t, err := gtime.StrToTime(gconv.String(m["create_time"]))
 	if err != nil {
@@ -398,7 +398,7 @@ type User struct {
 	CreateTime *gtime.Time
 }
 
-func (user *User) UnmarshalValue(value interface{}) error {
+func (user *User) UnmarshalValue(value any) error {
 	if record, ok := value.(gdb.Record); ok {
 		*user = User{
 			Id:         record["id"].Int(),

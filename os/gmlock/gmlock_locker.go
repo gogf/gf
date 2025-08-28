@@ -128,7 +128,7 @@ func (l *Locker) Clear() {
 // getOrNewMutex returns the mutex of given `key` if it exists,
 // or else creates and returns a new one.
 func (l *Locker) getOrNewMutex(key string) *sync.RWMutex {
-	return l.m.GetOrSetFuncLock(key, func() interface{} {
+	return l.m.GetOrSetFuncLock(key, func() any {
 		return &sync.RWMutex{}
 	}).(*sync.RWMutex)
 }

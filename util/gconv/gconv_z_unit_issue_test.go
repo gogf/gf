@@ -30,7 +30,7 @@ func Test_Issue1227(t *testing.T) {
 		}
 		tests := []struct {
 			name   string
-			origin interface{}
+			origin any
 			want   string
 		}{
 			{
@@ -75,7 +75,7 @@ func Test_Issue1227(t *testing.T) {
 		}
 		tests := []struct {
 			name   string
-			origin interface{}
+			origin any
 			want   string
 		}{
 			{
@@ -123,7 +123,7 @@ func Test_Issue1227(t *testing.T) {
 // https://github.com/gogf/gf/issues/1607
 type issue1607Float64 float64
 
-func (f *issue1607Float64) UnmarshalValue(value interface{}) error {
+func (f *issue1607Float64) UnmarshalValue(value any) error {
 	if v, ok := value.(*big.Rat); ok {
 		f64, _ := v.Float64()
 		*f = issue1607Float64(f64)
@@ -140,7 +140,7 @@ func Test_Issue1607(t *testing.T) {
 		rat.SetFloat64(1.5)
 
 		var demos = make([]Demo, 1)
-		err := gconv.Scan([]map[string]interface{}{
+		err := gconv.Scan([]map[string]any{
 			{"A": 1, "B": rat},
 		}, &demos)
 		t.AssertNil(err)
@@ -307,7 +307,7 @@ func Test_Issue2395(t *testing.T) {
 		}
 		var ()
 		obj := Test{Num: 0}
-		t.Assert(gconv.Interfaces(obj), []interface{}{obj})
+		t.Assert(gconv.Interfaces(obj), []any{obj})
 	})
 }
 
@@ -318,7 +318,7 @@ func Test_Issue2371(t *testing.T) {
 			s = struct {
 				Time time.Time `json:"time"`
 			}{}
-			jsonMap = map[string]interface{}{"time": "2022-12-15 16:11:34"}
+			jsonMap = map[string]any{"time": "2022-12-15 16:11:34"}
 		)
 
 		err := gconv.Struct(jsonMap, &s)
@@ -333,7 +333,7 @@ func Test_Issue2901(t *testing.T) {
 		ForceUpdateTime *time.Time
 	}
 	gtest.C(t, func(t *gtest.T) {
-		src := map[string]interface{}{
+		src := map[string]any{
 			"FORCE_UPDATE_TIME": time.Now(),
 		}
 		m := GameApp2{}
@@ -372,7 +372,7 @@ func Test_Issue3006(t *testing.T) {
 // https://github.com/gogf/gf/issues/3731
 func Test_Issue3731(t *testing.T) {
 	type Data struct {
-		Doc map[string]interface{} `json:"doc"`
+		Doc map[string]any `json:"doc"`
 	}
 
 	gtest.C(t, func(t *gtest.T) {
@@ -434,7 +434,7 @@ func Test_Issue3789(t *testing.T) {
 		ItemInput
 	}
 	gtest.C(t, func(t *gtest.T) {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"id":       1,
 			"secondId": 2,
 			"thirdId":  3,
@@ -713,7 +713,7 @@ func doTestIssue3800(t *testing.T) {
 func Test_Issue3821(t *testing.T) {
 	// Scan
 	gtest.C(t, func(t *gtest.T) {
-		var record = map[string]interface{}{
+		var record = map[string]any{
 			`user_id`:   1,
 			`user_name`: "teemo",
 		}
@@ -795,7 +795,7 @@ func Test_Issue3903(t *testing.T) {
 			TestA
 			UserId int `json:"NewUserId"  description:""`
 		}
-		var input = map[string]interface{}{
+		var input = map[string]any{
 			"user_id": gvar.New(100, true),
 		}
 		var a TestB

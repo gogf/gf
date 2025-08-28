@@ -89,12 +89,12 @@ func serverProcessInit() {
 // GetServer creates and returns a server instance using given name and default configurations.
 // Note that the parameter `name` should be unique for different servers. It returns an existing
 // server instance if given `name` is already existing in the server mapping.
-func GetServer(name ...interface{}) *Server {
+func GetServer(name ...any) *Server {
 	serverName := DefaultServerName
 	if len(name) > 0 && name[0] != "" {
 		serverName = gconv.String(name[0])
 	}
-	v := serverMapping.GetOrSetFuncLock(serverName, func() interface{} {
+	v := serverMapping.GetOrSetFuncLock(serverName, func() any {
 		s := &Server{
 			instance:         serverName,
 			plugins:          make([]Plugin, 0),
@@ -102,7 +102,7 @@ func GetServer(name ...interface{}) *Server {
 			closeChan:        make(chan struct{}, 10000),
 			serverCount:      gtype.NewInt(),
 			statusHandlerMap: make(map[string][]HandlerFunc),
-			serveTree:        make(map[string]interface{}),
+			serveTree:        make(map[string]any),
 			serveCache:       gcache.New(),
 			routesMap:        make(map[string][]*HandlerItem),
 			openapi:          goai.New(),
@@ -407,7 +407,7 @@ func (s *Server) GetRoutes() []RouterItem {
 			// The value of the map is a custom sorted array.
 			if _, ok := m[item.Domain]; !ok {
 				// Sort in ASC order.
-				m[item.Domain] = garray.NewSortedArray(func(v1, v2 interface{}) int {
+				m[item.Domain] = garray.NewSortedArray(func(v1, v2 any) int {
 					item1 := v1.(RouterItem)
 					item2 := v2.(RouterItem)
 					r := 0
@@ -470,7 +470,7 @@ func Wait() {
 	<-allShutdownChan
 
 	// Remove plugins.
-	serverMapping.Iterator(func(k string, v interface{}) bool {
+	serverMapping.Iterator(func(k string, v any) bool {
 		s := v.(*Server)
 		if len(s.plugins) > 0 {
 			for _, p := range s.plugins {

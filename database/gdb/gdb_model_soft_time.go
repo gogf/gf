@@ -195,7 +195,7 @@ func (m *softTimeMaintainer) getSoftFieldNameAndType(
 			schema, table, strings.Join(checkFiledNames, "_"),
 		)
 		cacheDuration = gcache.DurationNoExpire
-		cacheFunc     = func(ctx context.Context) (value interface{}, err error) {
+		cacheFunc     = func(ctx context.Context) (value any, err error) {
 			// Ignore the error from TableFields.
 			fieldsMap, err := m.TableFields(table, schema)
 			if err != nil {

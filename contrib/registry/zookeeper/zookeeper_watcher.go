@@ -69,7 +69,7 @@ func (w *watcher) Proceed() ([]gsvc.Service, error) {
 func (w *watcher) getServicesByPrefix() ([]gsvc.Service, error) {
 	prefix := strings.Trim(strings.ReplaceAll(w.prefix, "/", "-"), "-")
 	serviceNamePath := path.Join(w.nameSpace, prefix)
-	instances, err, _ := w.group.Do(serviceNamePath, func() (interface{}, error) {
+	instances, err, _ := w.group.Do(serviceNamePath, func() (any, error) {
 		servicesID, _, err := w.conn.Children(serviceNamePath)
 		if err != nil {
 			return nil, gerror.Wrapf(

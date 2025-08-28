@@ -108,7 +108,7 @@ func (w *Watcher) addWithCallbackFunc(
 		recursive: !watchOption.NoRecursive,
 	}
 	// Register the callback to watcher.
-	w.callbacks.LockFunc(func(m map[string]interface{}) {
+	w.callbacks.LockFunc(func(m map[string]any) {
 		list := (*glist.List)(nil)
 		if v, ok := m[path]; !ok {
 			list = glist.New(true)

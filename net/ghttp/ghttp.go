@@ -38,7 +38,7 @@ type (
 		servers          []*graceful.Server        // Underlying http.Server array.
 		serverCount      *gtype.Int                // Underlying http.Server number for internal usage.
 		closeChan        chan struct{}             // Used for underlying server closing event notification.
-		serveTree        map[string]interface{}    // The route maps tree.
+		serveTree        map[string]any            // The route maps tree.
 		serveCache       *gcache.Cache             // Server caches for internal usage.
 		routesMap        map[string][]*HandlerItem // Route map mainly for route dumps and repeated route checks.
 		statusHandlerMap map[string][]HandlerFunc  // Custom status handler map.

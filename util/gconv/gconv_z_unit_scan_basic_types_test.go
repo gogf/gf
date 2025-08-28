@@ -68,7 +68,7 @@ func TestScanBasicTypes(t *testing.T) {
 
 		// Map conversion
 		{
-			map[string]interface{}{"name": "john", "age": 18},
+			map[string]any{"name": "john", "age": 18},
 			new(User),
 			&User{Name: "john", Age: 18},
 		},
@@ -78,21 +78,21 @@ func TestScanBasicTypes(t *testing.T) {
 			&User{Name: "john", Age: 18},
 		},
 		{
-			map[string]interface{}{"name": "john", "age": 18},
+			map[string]any{"name": "john", "age": 18},
 			new(UserWithTag),
 			&UserWithTag{Name: "john", Age: 18},
 		},
 		{
 			map[string]string{"name": "john", "age": "18"},
-			new(map[string]interface{}),
-			&map[string]interface{}{"name": "john", "age": "18"},
+			new(map[string]any),
+			&map[string]any{"name": "john", "age": "18"},
 		},
 
 		// Struct conversion
 		{
 			User{Name: "john", Age: 18},
-			new(map[string]interface{}),
-			&map[string]interface{}{"Name": "john", "Age": 18},
+			new(map[string]any),
+			&map[string]any{"Name": "john", "Age": 18},
 		},
 		{
 			&User{Name: "john", Age: 18},
@@ -101,7 +101,7 @@ func TestScanBasicTypes(t *testing.T) {
 		},
 
 		// Special cases
-		{nil, new(interface{}), nil},
+		{nil, new(any), nil},
 		{nil, new(*int), (*int)(nil)},
 		{[]byte(nil), new(string), ""},
 		{"", new(int), 0},

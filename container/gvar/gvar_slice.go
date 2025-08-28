@@ -49,17 +49,17 @@ func (v *Var) Strings() []string {
 }
 
 // Interfaces converts and returns `v` as []interfaces{}.
-func (v *Var) Interfaces() []interface{} {
+func (v *Var) Interfaces() []any {
 	return gconv.Interfaces(v.Val())
 }
 
 // Slice is alias of Interfaces.
-func (v *Var) Slice() []interface{} {
+func (v *Var) Slice() []any {
 	return v.Interfaces()
 }
 
 // Array is alias of Interfaces.
-func (v *Var) Array() []interface{} {
+func (v *Var) Array() []any {
 	return v.Interfaces()
 }
 

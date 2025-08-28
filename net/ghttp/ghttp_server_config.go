@@ -318,7 +318,7 @@ func NewConfig() ServerConfig {
 
 // ConfigFromMap creates and returns a ServerConfig object with given map and
 // default configuration object.
-func ConfigFromMap(m map[string]interface{}) (ServerConfig, error) {
+func ConfigFromMap(m map[string]any) (ServerConfig, error) {
 	config := NewConfig()
 	if err := gconv.Struct(m, &config); err != nil {
 		return config, err
@@ -327,7 +327,7 @@ func ConfigFromMap(m map[string]interface{}) (ServerConfig, error) {
 }
 
 // SetConfigWithMap sets the configuration for the server using map.
-func (s *Server) SetConfigWithMap(m map[string]interface{}) error {
+func (s *Server) SetConfigWithMap(m map[string]any) error {
 	// The m now is a shallow copy of m.
 	// Any changes to m does not affect the original one.
 	// A little tricky, isn't it?

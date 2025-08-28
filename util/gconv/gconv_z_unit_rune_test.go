@@ -15,7 +15,7 @@ import (
 )
 
 var runeTests = []struct {
-	value   interface{}
+	value   any
 	expect  rune
 	expects []rune
 }{

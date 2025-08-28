@@ -35,7 +35,7 @@ func (c *Converter) MapToMaps(
 		paramsRv = reflect.ValueOf(params)
 	}
 	paramsKind = paramsRv.Kind()
-	if paramsKind == reflect.Ptr {
+	if paramsKind == reflect.Pointer {
 		paramsRv = paramsRv.Elem()
 		paramsKind = paramsRv.Kind()
 	}
@@ -49,7 +49,7 @@ func (c *Converter) MapToMaps(
 		paramsElem     = paramsRv.Type().Elem()
 		paramsElemKind = paramsElem.Kind()
 	)
-	if paramsElemKind == reflect.Ptr {
+	if paramsElemKind == reflect.Pointer {
 		paramsElem = paramsElem.Elem()
 		paramsElemKind = paramsElem.Kind()
 	}
@@ -71,7 +71,7 @@ func (c *Converter) MapToMaps(
 		pointerRv   = reflect.ValueOf(pointer)
 		pointerKind = pointerRv.Kind()
 	)
-	for pointerKind == reflect.Ptr {
+	for pointerKind == reflect.Pointer {
 		pointerRv = pointerRv.Elem()
 		pointerKind = pointerRv.Kind()
 	}
@@ -82,7 +82,7 @@ func (c *Converter) MapToMaps(
 		pointerElemType = pointerRv.Type().Elem()
 		pointerElemKind = pointerElemType.Kind()
 	)
-	if pointerElemKind == reflect.Ptr {
+	if pointerElemKind == reflect.Pointer {
 		pointerElemKind = pointerElemType.Elem().Kind()
 	}
 	if pointerElemKind != reflect.Map {
@@ -103,7 +103,7 @@ func (c *Converter) MapToMaps(
 	)
 	for i := 0; i < paramsRv.Len(); i++ {
 		var item reflect.Value
-		if pointerElemType.Kind() == reflect.Ptr {
+		if pointerElemType.Kind() == reflect.Pointer {
 			item = reflect.New(pointerElemType.Elem())
 			if err = c.MapToMap(paramsRv.Index(i).Interface(), item, paramKeyToAttrMap, option...); err != nil {
 				return err

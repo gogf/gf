@@ -91,7 +91,7 @@ func (cf *Converter) parseStructToCachedStructInfo(
 		// normal basic attributes.
 		if structField.Anonymous {
 			// handle struct attributes, it might be struct/*struct embedded..
-			if fieldType.Kind() == reflect.Ptr {
+			if fieldType.Kind() == reflect.Pointer {
 				fieldType = fieldType.Elem()
 			}
 			if fieldType.Kind() != reflect.Struct {

@@ -22,7 +22,7 @@ func ExampleAnyAnyMap_Iterator() {
 	}
 
 	var totalKey, totalValue int
-	m.Iterator(func(k interface{}, v interface{}) bool {
+	m.Iterator(func(k any, v any) bool {
 		totalKey += k.(int)
 		totalValue += v.(int)
 
@@ -149,7 +149,7 @@ func ExampleAnyAnyMap_Set() {
 func ExampleAnyAnyMap_Sets() {
 	m := gmap.New()
 
-	addMap := make(map[interface{}]interface{})
+	addMap := make(map[any]any)
 	addMap["key1"] = "val1"
 	addMap["key2"] = "val2"
 	addMap["key3"] = "val3"
@@ -252,10 +252,10 @@ func ExampleAnyAnyMap_GetOrSetFunc() {
 	m := gmap.New()
 	m.Set("key1", "val1")
 
-	fmt.Println(m.GetOrSetFunc("key1", func() interface{} {
+	fmt.Println(m.GetOrSetFunc("key1", func() any {
 		return "NotExistValue"
 	}))
-	fmt.Println(m.GetOrSetFunc("key2", func() interface{} {
+	fmt.Println(m.GetOrSetFunc("key2", func() any {
 		return "NotExistValue"
 	}))
 
@@ -268,10 +268,10 @@ func ExampleAnyAnyMap_GetOrSetFuncLock() {
 	m := gmap.New()
 	m.Set("key1", "val1")
 
-	fmt.Println(m.GetOrSetFuncLock("key1", func() interface{} {
+	fmt.Println(m.GetOrSetFuncLock("key1", func() any {
 		return "NotExistValue"
 	}))
-	fmt.Println(m.GetOrSetFuncLock("key2", func() interface{} {
+	fmt.Println(m.GetOrSetFuncLock("key2", func() any {
 		return "NotExistValue"
 	}))
 
@@ -308,10 +308,10 @@ func ExampleAnyAnyMap_GetVarOrSetFunc() {
 	m := gmap.New()
 	m.Set("key1", "val1")
 
-	fmt.Println(m.GetVarOrSetFunc("key1", func() interface{} {
+	fmt.Println(m.GetVarOrSetFunc("key1", func() any {
 		return "NotExistValue"
 	}))
-	fmt.Println(m.GetVarOrSetFunc("key2", func() interface{} {
+	fmt.Println(m.GetVarOrSetFunc("key2", func() any {
 		return "NotExistValue"
 	}))
 
@@ -324,10 +324,10 @@ func ExampleAnyAnyMap_GetVarOrSetFuncLock() {
 	m := gmap.New()
 	m.Set("key1", "val1")
 
-	fmt.Println(m.GetVarOrSetFuncLock("key1", func() interface{} {
+	fmt.Println(m.GetVarOrSetFuncLock("key1", func() any {
 		return "NotExistValue"
 	}))
-	fmt.Println(m.GetVarOrSetFuncLock("key2", func() interface{} {
+	fmt.Println(m.GetVarOrSetFuncLock("key2", func() any {
 		return "NotExistValue"
 	}))
 
@@ -350,10 +350,10 @@ func ExampleAnyAnyMap_SetIfNotExist() {
 
 func ExampleAnyAnyMap_SetIfNotExistFunc() {
 	var m gmap.Map
-	fmt.Println(m.SetIfNotExistFunc("k1", func() interface{} {
+	fmt.Println(m.SetIfNotExistFunc("k1", func() any {
 		return "v1"
 	}))
-	fmt.Println(m.SetIfNotExistFunc("k1", func() interface{} {
+	fmt.Println(m.SetIfNotExistFunc("k1", func() any {
 		return "v2"
 	}))
 	fmt.Println(m.Map())
@@ -366,10 +366,10 @@ func ExampleAnyAnyMap_SetIfNotExistFunc() {
 
 func ExampleAnyAnyMap_SetIfNotExistFuncLock() {
 	var m gmap.Map
-	fmt.Println(m.SetIfNotExistFuncLock("k1", func() interface{} {
+	fmt.Println(m.SetIfNotExistFuncLock("k1", func() any {
 		return "v1"
 	}))
-	fmt.Println(m.SetIfNotExistFuncLock("k1", func() interface{} {
+	fmt.Println(m.SetIfNotExistFuncLock("k1", func() any {
 		return "v2"
 	}))
 	fmt.Println(m.Map())
@@ -403,7 +403,7 @@ func ExampleAnyAnyMap_Removes() {
 		"k4": "v4",
 	})
 
-	removeList := make([]interface{}, 2)
+	removeList := make([]any, 2)
 	removeList = append(removeList, "k1")
 	removeList = append(removeList, "k2")
 
@@ -538,7 +538,7 @@ func ExampleAnyAnyMap_LockFunc() {
 		"k4": 4,
 	})
 
-	m.LockFunc(func(m map[interface{}]interface{}) {
+	m.LockFunc(func(m map[any]any) {
 		totalValue := 0
 		for _, v := range m {
 			totalValue += v.(int)
@@ -559,7 +559,7 @@ func ExampleAnyAnyMap_RLockFunc() {
 		"k4": 4,
 	})
 
-	m.RLockFunc(func(m map[interface{}]interface{}) {
+	m.RLockFunc(func(m map[any]any) {
 		totalValue := 0
 		for _, v := range m {
 			totalValue += v.(int)

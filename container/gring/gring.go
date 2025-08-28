@@ -29,7 +29,7 @@ type Ring struct {
 
 // internalRingItem stores the ring element value.
 type internalRingItem struct {
-	Value interface{}
+	Value any
 }
 
 // New creates and returns a Ring structure of `cap` elements.
@@ -48,8 +48,8 @@ func New(cap int, safe ...bool) *Ring {
 }
 
 // Val returns the item's value of current position.
-func (r *Ring) Val() interface{} {
-	var value interface{}
+func (r *Ring) Val() any {
+	var value any
 	r.mu.RLock()
 	if r.ring.Value != nil {
 		value = r.ring.Value.(internalRingItem).Value
@@ -97,7 +97,7 @@ func (r *Ring) checkAndUpdateLenAndCap() {
 }
 
 // Set sets value to the item of current position.
-func (r *Ring) Set(value interface{}) *Ring {
+func (r *Ring) Set(value any) *Ring {
 	r.mu.Lock()
 	if r.ring.Value == nil {
 		r.len.Add(1)
@@ -108,7 +108,7 @@ func (r *Ring) Set(value interface{}) *Ring {
 }
 
 // Put sets `value` to current item of ring and moves position to next item.
-func (r *Ring) Put(value interface{}) *Ring {
+func (r *Ring) Put(value any) *Ring {
 	r.mu.Lock()
 	if r.ring.Value == nil {
 		r.len.Add(1)
@@ -187,7 +187,7 @@ func (r *Ring) Unlink(n int) *Ring {
 // RLockIteratorNext iterates and locks reading forward
 // with given callback function `f` within RWMutex.RLock.
 // If `f` returns true, then it continues iterating; or false to stop.
-func (r *Ring) RLockIteratorNext(f func(value interface{}) bool) {
+func (r *Ring) RLockIteratorNext(f func(value any) bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	if r.ring.Value != nil && !f(r.ring.Value.(internalRingItem).Value) {
@@ -203,7 +203,7 @@ func (r *Ring) RLockIteratorNext(f func(value interface{}) bool) {
 // RLockIteratorPrev iterates and locks writing backward
 // with given callback function `f` within RWMutex.RLock.
 // If `f` returns true, then it continues iterating; or false to stop.
-func (r *Ring) RLockIteratorPrev(f func(value interface{}) bool) {
+func (r *Ring) RLockIteratorPrev(f func(value any) bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	if r.ring.Value != nil && !f(r.ring.Value.(internalRingItem).Value) {
@@ -217,8 +217,8 @@ func (r *Ring) RLockIteratorPrev(f func(value interface{}) bool) {
 }
 
 // SliceNext returns a copy of all item values as slice forward from current position.
-func (r *Ring) SliceNext() []interface{} {
-	s := make([]interface{}, 0)
+func (r *Ring) SliceNext() []any {
+	s := make([]any, 0)
 	r.mu.RLock()
 	if r.ring.Value != nil {
 		s = append(s, r.ring.Value.(internalRingItem).Value)
@@ -234,8 +234,8 @@ func (r *Ring) SliceNext() []interface{} {
 }
 
 // SlicePrev returns a copy of all item values as slice backward from current position.
-func (r *Ring) SlicePrev() []interface{} {
-	s := make([]interface{}, 0)
+func (r *Ring) SlicePrev() []any {
+	s := make([]any, 0)
 	r.mu.RLock()
 	if r.ring.Value != nil {
 		s = append(s, r.ring.Value.(internalRingItem).Value)

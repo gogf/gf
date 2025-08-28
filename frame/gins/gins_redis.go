@@ -32,14 +32,14 @@ func Redis(name ...string) *gredis.Redis {
 		group = name[0]
 	}
 	instanceKey := fmt.Sprintf("%s.%s", frameCoreComponentNameRedis, group)
-	result := instance.GetOrSetFuncLock(instanceKey, func() interface{} {
+	result := instance.GetOrSetFuncLock(instanceKey, func() any {
 		// If already configured, it returns the redis instance.
 		if _, ok := gredis.GetConfig(group); ok {
 			return gredis.Instance(group)
 		}
 		if Config().Available(ctx) {
 			var (
-				configMap   map[string]interface{}
+				configMap   map[string]any
 				redisConfig *gredis.Config
 				redisClient *gredis.Redis
 			)
@@ -69,7 +69,6 @@ func Redis(name ...string) *gredis.Redis {
 			gcode.CodeMissingConfiguration,
 			`no configuration found for creating redis client`,
 		))
-		return nil
 	})
 	if result != nil {
 		return result.(*gredis.Redis)

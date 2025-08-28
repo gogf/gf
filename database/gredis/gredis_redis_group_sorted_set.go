@@ -16,15 +16,15 @@ import (
 // Implements see redis.GroupSortedSet.
 type IGroupSortedSet interface {
 	ZAdd(ctx context.Context, key string, option *ZAddOption, member ZAddMember, members ...ZAddMember) (*gvar.Var, error)
-	ZScore(ctx context.Context, key string, member interface{}) (float64, error)
-	ZIncrBy(ctx context.Context, key string, increment float64, member interface{}) (float64, error)
+	ZScore(ctx context.Context, key string, member any) (float64, error)
+	ZIncrBy(ctx context.Context, key string, increment float64, member any) (float64, error)
 	ZCard(ctx context.Context, key string) (int64, error)
 	ZCount(ctx context.Context, key string, min, max string) (int64, error)
 	ZRange(ctx context.Context, key string, start, stop int64, option ...ZRangeOption) (gvar.Vars, error)
 	ZRevRange(ctx context.Context, key string, start, stop int64, option ...ZRevRangeOption) (*gvar.Var, error)
-	ZRank(ctx context.Context, key string, member interface{}) (int64, error)
-	ZRevRank(ctx context.Context, key string, member interface{}) (int64, error)
-	ZRem(ctx context.Context, key string, member interface{}, members ...interface{}) (int64, error)
+	ZRank(ctx context.Context, key string, member any) (int64, error)
+	ZRevRank(ctx context.Context, key string, member any) (int64, error)
+	ZRem(ctx context.Context, key string, member any, members ...any) (int64, error)
 	ZRemRangeByRank(ctx context.Context, key string, start, stop int64) (int64, error)
 	ZRemRangeByScore(ctx context.Context, key string, min, max string) (int64, error)
 	ZRemRangeByLex(ctx context.Context, key string, min, max string) (int64, error)
@@ -56,7 +56,7 @@ type ZAddOption struct {
 // ZAddMember is element struct for set.
 type ZAddMember struct {
 	Score  float64
-	Member interface{}
+	Member any
 }
 
 // ZRangeOption provides extra option for ZRange function.

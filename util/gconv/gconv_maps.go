@@ -12,14 +12,14 @@ import (
 )
 
 // SliceMap is alias of Maps.
-func SliceMap(any any, option ...MapOption) []map[string]any {
-	return Maps(any, option...)
+func SliceMap(anyInput any, option ...MapOption) []map[string]any {
+	return Maps(anyInput, option...)
 }
 
 // SliceMapDeep is alias of MapsDeep.
 // Deprecated: used SliceMap instead.
-func SliceMapDeep(any any) []map[string]any {
-	return MapsDeep(any)
+func SliceMapDeep(anyInput any) []map[string]any {
+	return MapsDeep(anyInput)
 }
 
 // Maps converts `value` to []map[string]any.

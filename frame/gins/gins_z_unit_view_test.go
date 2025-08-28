@@ -65,7 +65,7 @@ func Test_View_Config(t *testing.T) {
 		t.AssertNil(err)
 
 		str := `hello ${.name},version:${.version}`
-		view.Assigns(map[string]interface{}{"version": "1.9.0"})
+		view.Assigns(map[string]any{"version": "1.9.0"})
 		result, err := view.ParseContent(ctx, str, nil)
 		t.AssertNil(err)
 		t.Assert(result, "hello test1,version:1.9.0")
@@ -87,7 +87,7 @@ func Test_View_Config(t *testing.T) {
 		t.AssertNil(err)
 
 		str := `hello #{.name},version:#{.version}`
-		view.Assigns(map[string]interface{}{"version": "1.9.0"})
+		view.Assigns(map[string]any{"version": "1.9.0"})
 		result, err := view.ParseContent(context.TODO(), str, nil)
 		t.AssertNil(err)
 		t.Assert(result, "hello test2,version:1.9.0")
@@ -109,7 +109,7 @@ func Test_View_Config(t *testing.T) {
 		t.AssertNil(err)
 
 		str := `hello {.name},version:{.version}`
-		view.Assigns(map[string]interface{}{"version": "1.9.0"})
+		view.Assigns(map[string]any{"version": "1.9.0"})
 		result, err := view.ParseContent(context.TODO(), str, nil)
 		t.AssertNil(err)
 		t.Assert(result, "hello test,version:1.9.0")
@@ -131,7 +131,7 @@ func Test_View_Config(t *testing.T) {
 		t.AssertNil(err)
 
 		str := `hello {.name},version:{.version}`
-		view.Assigns(map[string]interface{}{"version": "1.9.0"})
+		view.Assigns(map[string]any{"version": "1.9.0"})
 		result, err := view.ParseContent(context.TODO(), str, nil)
 		t.AssertNil(err)
 		t.Assert(result, "hello test,version:1.9.0")

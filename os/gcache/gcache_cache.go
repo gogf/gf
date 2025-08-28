@@ -55,7 +55,7 @@ func (c *Cache) GetAdapter() Adapter {
 }
 
 // Removes deletes `keys` in the cache.
-func (c *Cache) Removes(ctx context.Context, keys []interface{}) error {
+func (c *Cache) Removes(ctx context.Context, keys []any) error {
 	_, err := c.Remove(ctx, keys...)
 	return err
 }

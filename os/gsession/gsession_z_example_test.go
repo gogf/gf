@@ -65,7 +65,7 @@ func ExampleSession_SetMap() {
 	storage := gsession.NewStorageFile("", time.Second)
 	manager := gsession.New(time.Second, storage)
 	s := manager.New(gctx.New())
-	fmt.Println(s.SetMap(map[string]interface{}{}) == nil)
+	fmt.Println(s.SetMap(map[string]any{}) == nil)
 
 	// Output:
 	// true

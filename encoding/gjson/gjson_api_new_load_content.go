@@ -155,7 +155,7 @@ func trimBOM(data []byte) []byte {
 func loadContentWithOptions(data []byte, options Options) (*Json, error) {
 	var (
 		err    error
-		result interface{}
+		result any
 	)
 	data = trimBOM(data)
 	if len(data) == 0 {

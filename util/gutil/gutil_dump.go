@@ -41,7 +41,7 @@ type DumpOption struct {
 }
 
 // Dump prints variables `values` to stdout with more manually readable.
-func Dump(values ...interface{}) {
+func Dump(values ...any) {
 	for _, value := range values {
 		DumpWithOption(value, DumpOption{
 			WithType:     false,
@@ -52,7 +52,7 @@ func Dump(values ...interface{}) {
 
 // DumpWithType acts like Dump, but with type information.
 // Also see Dump.
-func DumpWithType(values ...interface{}) {
+func DumpWithType(values ...any) {
 	for _, value := range values {
 		DumpWithOption(value, DumpOption{
 			WithType:     true,
@@ -62,7 +62,7 @@ func DumpWithType(values ...interface{}) {
 }
 
 // DumpWithOption returns variables `values` as a string with more manually readable.
-func DumpWithOption(value interface{}, option DumpOption) {
+func DumpWithOption(value any, option DumpOption) {
 	buffer := bytes.NewBuffer(nil)
 	DumpTo(buffer, value, DumpOption{
 		WithType:     option.WithType,
@@ -72,7 +72,7 @@ func DumpWithOption(value interface{}, option DumpOption) {
 }
 
 // DumpTo writes variables `values` as a string in to `writer` with more manually readable
-func DumpTo(writer io.Writer, value interface{}, option DumpOption) {
+func DumpTo(writer io.Writer, value any, option DumpOption) {
 	buffer := bytes.NewBuffer(nil)
 	doDump(value, "", buffer, doDumpOption{
 		WithType:     option.WithType,
@@ -87,7 +87,7 @@ type doDumpOption struct {
 	DumpedPointerSet map[string]struct{}
 }
 
-func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDumpOption) {
+func doDump(value any, indent string, buffer *bytes.Buffer, option doDumpOption) {
 	if option.DumpedPointerSet == nil {
 		option.DumpedPointerSet = map[string]struct{}{}
 	}
@@ -121,7 +121,7 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 		newIndent       = indent + dumpIndent
 	)
 	reflectTypeName = strings.ReplaceAll(reflectTypeName, `[]uint8`, `[]byte`)
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		if ptrAddress == "" {
 			ptrAddress = fmt.Sprintf(`0x%x`, reflectValue.Pointer())
 		}
@@ -194,7 +194,7 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 }
 
 type doDumpInternalInput struct {
-	Value            interface{}
+	Value            any
 	Indent           string
 	NewIndent        string
 	Buffer           *bytes.Buffer

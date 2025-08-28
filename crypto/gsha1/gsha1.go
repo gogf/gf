@@ -19,7 +19,7 @@ import (
 
 // Encrypt encrypts any type of variable using SHA1 algorithms.
 // It uses package gconv to convert `v` to its bytes type.
-func Encrypt(v interface{}) string {
+func Encrypt(v any) string {
 	r := sha1.Sum(gconv.Bytes(v))
 	return hex.EncodeToString(r[:])
 }

@@ -16,10 +16,10 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-// Set is consisted of interface{} items.
+// Set is consisted of any items.
 type Set struct {
 	mu   rwmutex.RWMutex
-	data map[interface{}]struct{}
+	data map[any]struct{}
 }
 
 // New create and returns a new set, which contains un-repeated items.
@@ -33,15 +33,15 @@ func New(safe ...bool) *Set {
 // Also see New.
 func NewSet(safe ...bool) *Set {
 	return &Set{
-		data: make(map[interface{}]struct{}),
+		data: make(map[any]struct{}),
 		mu:   rwmutex.Create(safe...),
 	}
 }
 
 // NewFrom returns a new set from `items`.
 // Parameter `items` can be either a variable of any type, or a slice.
-func NewFrom(items interface{}, safe ...bool) *Set {
-	m := make(map[interface{}]struct{})
+func NewFrom(items any, safe ...bool) *Set {
+	m := make(map[any]struct{})
 	for _, v := range gconv.Interfaces(items) {
 		m[v] = struct{}{}
 	}
@@ -53,7 +53,7 @@ func NewFrom(items interface{}, safe ...bool) *Set {
 
 // Iterator iterates the set readonly with given callback function `f`,
 // if `f` returns true then continue iterating; or false to stop.
-func (set *Set) Iterator(f func(v interface{}) bool) {
+func (set *Set) Iterator(f func(v any) bool) {
 	for _, k := range set.Slice() {
 		if !f(k) {
 			break
@@ -62,10 +62,10 @@ func (set *Set) Iterator(f func(v interface{}) bool) {
 }
 
 // Add adds one or multiple items to the set.
-func (set *Set) Add(items ...interface{}) {
+func (set *Set) Add(items ...any) {
 	set.mu.Lock()
 	if set.data == nil {
-		set.data = make(map[interface{}]struct{})
+		set.data = make(map[any]struct{})
 	}
 	for _, v := range items {
 		set.data[v] = struct{}{}
@@ -78,7 +78,7 @@ func (set *Set) Add(items ...interface{}) {
 // or else it does nothing and returns false.
 //
 // Note that, if `item` is nil, it does nothing and returns false.
-func (set *Set) AddIfNotExist(item interface{}) bool {
+func (set *Set) AddIfNotExist(item any) bool {
 	if item == nil {
 		return false
 	}
@@ -86,7 +86,7 @@ func (set *Set) AddIfNotExist(item interface{}) bool {
 		set.mu.Lock()
 		defer set.mu.Unlock()
 		if set.data == nil {
-			set.data = make(map[interface{}]struct{})
+			set.data = make(map[any]struct{})
 		}
 		if _, ok := set.data[item]; !ok {
 			set.data[item] = struct{}{}
@@ -102,7 +102,7 @@ func (set *Set) AddIfNotExist(item interface{}) bool {
 //
 // Note that, if `item` is nil, it does nothing and returns false. The function `f`
 // is executed without writing lock.
-func (set *Set) AddIfNotExistFunc(item interface{}, f func() bool) bool {
+func (set *Set) AddIfNotExistFunc(item any, f func() bool) bool {
 	if item == nil {
 		return false
 	}
@@ -111,7 +111,7 @@ func (set *Set) AddIfNotExistFunc(item interface{}, f func() bool) bool {
 			set.mu.Lock()
 			defer set.mu.Unlock()
 			if set.data == nil {
-				set.data = make(map[interface{}]struct{})
+				set.data = make(map[any]struct{})
 			}
 			if _, ok := set.data[item]; !ok {
 				set.data[item] = struct{}{}
@@ -128,7 +128,7 @@ func (set *Set) AddIfNotExistFunc(item interface{}, f func() bool) bool {
 //
 // Note that, if `item` is nil, it does nothing and returns false. The function `f`
 // is executed within writing lock.
-func (set *Set) AddIfNotExistFuncLock(item interface{}, f func() bool) bool {
+func (set *Set) AddIfNotExistFuncLock(item any, f func() bool) bool {
 	if item == nil {
 		return false
 	}
@@ -136,7 +136,7 @@ func (set *Set) AddIfNotExistFuncLock(item interface{}, f func() bool) bool {
 		set.mu.Lock()
 		defer set.mu.Unlock()
 		if set.data == nil {
-			set.data = make(map[interface{}]struct{})
+			set.data = make(map[any]struct{})
 		}
 		if f() {
 			if _, ok := set.data[item]; !ok {
@@ -149,7 +149,7 @@ func (set *Set) AddIfNotExistFuncLock(item interface{}, f func() bool) bool {
 }
 
 // Contains checks whether the set contains `item`.
-func (set *Set) Contains(item interface{}) bool {
+func (set *Set) Contains(item any) bool {
 	var ok bool
 	set.mu.RLock()
 	if set.data != nil {
@@ -160,7 +160,7 @@ func (set *Set) Contains(item interface{}) bool {
 }
 
 // Remove deletes `item` from set.
-func (set *Set) Remove(item interface{}) {
+func (set *Set) Remove(item any) {
 	set.mu.Lock()
 	if set.data != nil {
 		delete(set.data, item)
@@ -179,16 +179,16 @@ func (set *Set) Size() int {
 // Clear deletes all items of the set.
 func (set *Set) Clear() {
 	set.mu.Lock()
-	set.data = make(map[interface{}]struct{})
+	set.data = make(map[any]struct{})
 	set.mu.Unlock()
 }
 
 // Slice returns all items of the set as slice.
-func (set *Set) Slice() []interface{} {
+func (set *Set) Slice() []any {
 	set.mu.RLock()
 	var (
 		i   = 0
-		ret = make([]interface{}, len(set.data))
+		ret = make([]any, len(set.data))
 	)
 	for item := range set.data {
 		ret[i] = item
@@ -251,14 +251,14 @@ func (set *Set) String() string {
 }
 
 // LockFunc locks writing with callback function `f`.
-func (set *Set) LockFunc(f func(m map[interface{}]struct{})) {
+func (set *Set) LockFunc(f func(m map[any]struct{})) {
 	set.mu.Lock()
 	defer set.mu.Unlock()
 	f(set.data)
 }
 
 // RLockFunc locks reading with callback function `f`.
-func (set *Set) RLockFunc(f func(m map[interface{}]struct{})) {
+func (set *Set) RLockFunc(f func(m map[any]struct{})) {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	f(set.data)
@@ -422,7 +422,7 @@ func (set *Set) Sum() (sum int) {
 }
 
 // Pop randomly pops an item from set.
-func (set *Set) Pop() interface{} {
+func (set *Set) Pop() any {
 	set.mu.Lock()
 	defer set.mu.Unlock()
 	for k := range set.data {
@@ -434,7 +434,7 @@ func (set *Set) Pop() interface{} {
 
 // Pops randomly pops `size` items from set.
 // It returns all items if size == -1.
-func (set *Set) Pops(size int) []interface{} {
+func (set *Set) Pops(size int) []any {
 	set.mu.Lock()
 	defer set.mu.Unlock()
 	if size > len(set.data) || size == -1 {
@@ -444,7 +444,7 @@ func (set *Set) Pops(size int) []interface{} {
 		return nil
 	}
 	index := 0
-	array := make([]interface{}, size)
+	array := make([]any, size)
 	for k := range set.data {
 		delete(set.data, k)
 		array[index] = k
@@ -457,10 +457,10 @@ func (set *Set) Pops(size int) []interface{} {
 }
 
 // Walk applies a user supplied function `f` to every item of set.
-func (set *Set) Walk(f func(item interface{}) interface{}) *Set {
+func (set *Set) Walk(f func(item any) any) *Set {
 	set.mu.Lock()
 	defer set.mu.Unlock()
-	m := make(map[interface{}]struct{}, len(set.data))
+	m := make(map[any]struct{}, len(set.data))
 	for k, v := range set.data {
 		m[f(k)] = v
 	}
@@ -478,9 +478,9 @@ func (set *Set) UnmarshalJSON(b []byte) error {
 	set.mu.Lock()
 	defer set.mu.Unlock()
 	if set.data == nil {
-		set.data = make(map[interface{}]struct{})
+		set.data = make(map[any]struct{})
 	}
-	var array []interface{}
+	var array []any
 	if err := json.UnmarshalUseNumber(b, &array); err != nil {
 		return err
 	}
@@ -491,13 +491,13 @@ func (set *Set) UnmarshalJSON(b []byte) error {
 }
 
 // UnmarshalValue is an interface implement which sets any type of value for set.
-func (set *Set) UnmarshalValue(value interface{}) (err error) {
+func (set *Set) UnmarshalValue(value any) (err error) {
 	set.mu.Lock()
 	defer set.mu.Unlock()
 	if set.data == nil {
-		set.data = make(map[interface{}]struct{})
+		set.data = make(map[any]struct{})
 	}
-	var array []interface{}
+	var array []any
 	switch value.(type) {
 	case string, []byte:
 		err = json.UnmarshalUseNumber(gconv.Bytes(value), &array)
@@ -511,13 +511,13 @@ func (set *Set) UnmarshalValue(value interface{}) (err error) {
 }
 
 // DeepCopy implements interface for deep copy of current type.
-func (set *Set) DeepCopy() interface{} {
+func (set *Set) DeepCopy() any {
 	if set == nil {
 		return nil
 	}
 	set.mu.RLock()
 	defer set.mu.RUnlock()
-	data := make([]interface{}, 0)
+	data := make([]any, 0)
 	for k := range set.data {
 		data = append(data, k)
 	}

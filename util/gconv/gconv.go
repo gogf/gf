@@ -36,9 +36,9 @@ type Converter interface {
 // ConverterForBasic is the basic converting interface.
 type ConverterForBasic interface {
 	Scan(srcValue, dstPointer any, option ...ScanOption) (err error)
-	String(any any) (string, error)
-	Bool(any any) (bool, error)
-	Rune(any any) (rune, error)
+	String(anyInput any) (string, error)
+	Bool(anyInput any) (bool, error)
+	Rune(anyInput any) (rune, error)
 }
 
 // ConverterForTime is the converting interface for time.

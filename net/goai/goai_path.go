@@ -49,10 +49,10 @@ const (
 )
 
 type addPathInput struct {
-	Path     string      // Precise route path.
-	Prefix   string      // Route path prefix.
-	Method   string      // Route method.
-	Function interface{} // Uniformed function.
+	Path     string // Precise route path.
+	Prefix   string // Route path prefix.
+	Method   string // Route method.
+	Function any    // Uniformed function.
 }
 
 func (oai *OpenApiV3) addPath(in addPathInput) error {
@@ -73,12 +73,12 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		outputObject reflect.Value
 	)
 	// Create instance according input/output types.
-	if reflectType.In(1).Kind() == reflect.Ptr {
+	if reflectType.In(1).Kind() == reflect.Pointer {
 		inputObject = reflect.New(reflectType.In(1).Elem()).Elem()
 	} else {
 		inputObject = reflect.New(reflectType.In(1)).Elem()
 	}
-	if reflectType.Out(0).Kind() == reflect.Ptr {
+	if reflectType.Out(0).Kind() == reflect.Pointer {
 		outputObject = reflect.New(reflectType.Out(0).Elem()).Elem()
 	} else {
 		outputObject = reflect.New(reflectType.Out(0)).Elem()
@@ -324,7 +324,7 @@ func (oai *OpenApiV3) removeOperationDuplicatedProperties(operation Operation) {
 	}
 
 	var (
-		duplicatedParameterNames []interface{}
+		duplicatedParameterNames []any
 		dataField                string
 	)
 
@@ -372,7 +372,7 @@ func (oai *OpenApiV3) removeOperationDuplicatedProperties(operation Operation) {
 	}
 }
 
-func (oai *OpenApiV3) removeItemsFromArray(array []string, items []interface{}) []string {
+func (oai *OpenApiV3) removeItemsFromArray(array []string, items []any) []string {
 	arr := garray.NewStrArrayFrom(array)
 	for _, item := range items {
 		if value, ok := item.(string); ok {
@@ -382,7 +382,7 @@ func (oai *OpenApiV3) removeItemsFromArray(array []string, items []interface{}) 
 	return arr.Slice()
 }
 
-func (oai *OpenApiV3) doesStructHasNoFields(s interface{}) bool {
+func (oai *OpenApiV3) doesStructHasNoFields(s any) bool {
 	return reflect.TypeOf(s).NumField() == 0
 }
 

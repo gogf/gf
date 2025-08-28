@@ -29,7 +29,7 @@ type Stmt struct {
 
 // ExecContext executes a prepared statement with the given arguments and
 // returns a Result summarizing the effect of the statement.
-func (s *Stmt) ExecContext(ctx context.Context, args ...interface{}) (sql.Result, error) {
+func (s *Stmt) ExecContext(ctx context.Context, args ...any) (sql.Result, error) {
 	out, err := s.core.db.DoCommit(ctx, DoCommitInput{
 		Stmt:          s.Stmt,
 		Link:          s.link,
@@ -43,7 +43,7 @@ func (s *Stmt) ExecContext(ctx context.Context, args ...interface{}) (sql.Result
 
 // QueryContext executes a prepared query statement with the given arguments
 // and returns the query results as a *Rows.
-func (s *Stmt) QueryContext(ctx context.Context, args ...interface{}) (*sql.Rows, error) {
+func (s *Stmt) QueryContext(ctx context.Context, args ...any) (*sql.Rows, error) {
 	out, err := s.core.db.DoCommit(ctx, DoCommitInput{
 		Stmt:          s.Stmt,
 		Link:          s.link,
@@ -67,7 +67,7 @@ func (s *Stmt) QueryContext(ctx context.Context, args ...interface{}) (*sql.Rows
 // If the query selects no rows, the *Row's Scan will return ErrNoRows.
 // Otherwise, the *Row's Scan scans the first selected row and discards
 // the rest.
-func (s *Stmt) QueryRowContext(ctx context.Context, args ...interface{}) *sql.Row {
+func (s *Stmt) QueryRowContext(ctx context.Context, args ...any) *sql.Row {
 	out, err := s.core.db.DoCommit(ctx, DoCommitInput{
 		Stmt:          s.Stmt,
 		Link:          s.link,
@@ -87,13 +87,13 @@ func (s *Stmt) QueryRowContext(ctx context.Context, args ...interface{}) *sql.Ro
 
 // Exec executes a prepared statement with the given arguments and
 // returns a Result summarizing the effect of the statement.
-func (s *Stmt) Exec(args ...interface{}) (sql.Result, error) {
+func (s *Stmt) Exec(args ...any) (sql.Result, error) {
 	return s.ExecContext(context.Background(), args...)
 }
 
 // Query executes a prepared query statement with the given arguments
 // and returns the query results as a *Rows.
-func (s *Stmt) Query(args ...interface{}) (*sql.Rows, error) {
+func (s *Stmt) Query(args ...any) (*sql.Rows, error) {
 	return s.QueryContext(context.Background(), args...)
 }
 
@@ -108,7 +108,7 @@ func (s *Stmt) Query(args ...interface{}) (*sql.Rows, error) {
 //
 //	var name string
 //	err := nameByUseridStmt.QueryRow(id).Scan(&name)
-func (s *Stmt) QueryRow(args ...interface{}) *sql.Row {
+func (s *Stmt) QueryRow(args ...any) *sql.Row {
 	return s.QueryRowContext(context.Background(), args...)
 }
 

@@ -15,14 +15,14 @@ import (
 )
 
 // GetRequest retrieves and returns the parameter named `key` passed from the client and
-// custom params as interface{}, no matter what HTTP method the client is using. The
+// custom params as any, no matter what HTTP method the client is using. The
 // parameter `def` specifies the default value if the `key` does not exist.
 //
 // GetRequest is one of the most commonly used functions for retrieving parameters.
 //
 // Note that if there are multiple parameters with the same name, the parameters are
 // retrieved and overwrote in order of priority: router < query < body < form < custom.
-func (r *Request) GetRequest(key string, def ...interface{}) *gvar.Var {
+func (r *Request) GetRequest(key string, def ...any) *gvar.Var {
 	value := r.GetParam(key)
 	if value.IsNil() {
 		value = r.GetForm(key)
@@ -59,7 +59,7 @@ func (r *Request) GetRequest(key string, def ...interface{}) *gvar.Var {
 //
 // Note that if there are multiple parameters with the same name, the parameters are retrieved
 // and overwrote in order of priority: router < query < body < form < custom.
-func (r *Request) GetRequestMap(kvMap ...map[string]interface{}) map[string]interface{} {
+func (r *Request) GetRequestMap(kvMap ...map[string]any) map[string]any {
 	r.parseQuery()
 	r.parseForm()
 	r.parseBody()
@@ -69,7 +69,7 @@ func (r *Request) GetRequestMap(kvMap ...map[string]interface{}) map[string]inte
 	if len(kvMap) > 0 && kvMap[0] != nil {
 		filter = true
 	}
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 	for k, v := range r.routerMap {
 		if filter {
 			if _, ok = kvMap[0][k]; !ok {
@@ -135,7 +135,7 @@ func (r *Request) GetRequestMap(kvMap ...map[string]interface{}) map[string]inte
 // params as map[string]string, no matter what HTTP method the client is using. The parameter
 // `kvMap` specifies the keys retrieving from client parameters, the associated values are the
 // default values if the client does not pass.
-func (r *Request) GetRequestMapStrStr(kvMap ...map[string]interface{}) map[string]string {
+func (r *Request) GetRequestMapStrStr(kvMap ...map[string]any) map[string]string {
 	requestMap := r.GetRequestMap(kvMap...)
 	if len(requestMap) > 0 {
 		m := make(map[string]string, len(requestMap))
@@ -151,7 +151,7 @@ func (r *Request) GetRequestMapStrStr(kvMap ...map[string]interface{}) map[strin
 // params as map[string]*gvar.Var, no matter what HTTP method the client is using. The parameter
 // `kvMap` specifies the keys retrieving from client parameters, the associated values are the
 // default values if the client does not pass.
-func (r *Request) GetRequestMapStrVar(kvMap ...map[string]interface{}) map[string]*gvar.Var {
+func (r *Request) GetRequestMapStrVar(kvMap ...map[string]any) map[string]*gvar.Var {
 	requestMap := r.GetRequestMap(kvMap...)
 	if len(requestMap) > 0 {
 		m := make(map[string]*gvar.Var, len(requestMap))
@@ -167,15 +167,15 @@ func (r *Request) GetRequestMapStrVar(kvMap ...map[string]interface{}) map[strin
 // what HTTP method the client is using, and converts them to give the struct object. Note that
 // the parameter `pointer` is a pointer to the struct object.
 // The optional parameter `mapping` is used to specify the key to attribute mapping.
-func (r *Request) GetRequestStruct(pointer interface{}, mapping ...map[string]string) error {
+func (r *Request) GetRequestStruct(pointer any, mapping ...map[string]string) error {
 	_, err := r.doGetRequestStruct(pointer, mapping...)
 	return err
 }
 
-func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]string) (data map[string]interface{}, err error) {
+func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) (data map[string]any, err error) {
 	data = r.GetRequestMap()
 	if data == nil {
-		data = map[string]interface{}{}
+		data = map[string]any{}
 	}
 
 	// `in` Tag Struct values.
@@ -192,7 +192,7 @@ func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]
 }
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
-func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) error {
+func (r *Request) mergeDefaultStructValue(data map[string]any, pointer any) error {
 	fields := r.serveHandler.Handler.Info.ReqStructFields
 	if len(fields) > 0 {
 		for _, field := range fields {
@@ -218,14 +218,14 @@ func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer i
 }
 
 // mergeInTagStructValue merges the request parameters with header or cookie values from struct `in` tag definition.
-func (r *Request) mergeInTagStructValue(data map[string]interface{}) error {
+func (r *Request) mergeInTagStructValue(data map[string]any) error {
 	fields := r.serveHandler.Handler.Info.ReqStructFields
 	if len(fields) > 0 {
 		var (
 			foundKey   string
-			foundValue interface{}
-			headerMap  = make(map[string]interface{})
-			cookieMap  = make(map[string]interface{})
+			foundValue any
+			headerMap  = make(map[string]any)
+			cookieMap  = make(map[string]any)
 		)
 
 		for k, v := range r.Header {
@@ -257,7 +257,7 @@ func (r *Request) mergeInTagStructValue(data map[string]interface{}) error {
 }
 
 // mergeTagValueWithFoundKey merges the request parameters when the key does not exist in the map or overwritten is true or the value is nil.
-func mergeTagValueWithFoundKey(data map[string]interface{}, overwritten bool, findKey string, fieldName string, tagValue interface{}) {
+func mergeTagValueWithFoundKey(data map[string]any, overwritten bool, findKey string, fieldName string, tagValue any) {
 	if foundKey, foundValue := gutil.MapPossibleItemByKey(data, findKey); foundKey == "" {
 		data[fieldName] = tagValue
 	} else {

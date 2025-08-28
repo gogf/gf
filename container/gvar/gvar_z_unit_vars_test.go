@@ -22,7 +22,7 @@ func TestVars(t *testing.T) {
 			gvar.New(3),
 		}
 		t.AssertEQ(vs.Strings(), []string{"1", "2", "3"})
-		t.AssertEQ(vs.Interfaces(), []interface{}{1, 2, 3})
+		t.AssertEQ(vs.Interfaces(), []any{1, 2, 3})
 		t.AssertEQ(vs.Float32s(), []float32{1, 2, 3})
 		t.AssertEQ(vs.Float64s(), []float64{1, 2, 3})
 		t.AssertEQ(vs.Ints(), []int{1, 2, 3})

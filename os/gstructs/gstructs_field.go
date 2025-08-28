@@ -86,7 +86,7 @@ func (f *Field) OriginalKind() reflect.Kind {
 		reflectType = f.Value.Type()
 		reflectKind = reflectType.Kind()
 	)
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectType = reflectType.Elem()
 		reflectKind = reflectType.Kind()
 	}
@@ -102,7 +102,7 @@ func (f *Field) OriginalValue() reflect.Value {
 		reflectKind  = reflectType.Kind()
 	)
 
-	for reflectKind == reflect.Ptr && !f.IsNil() {
+	for reflectKind == reflect.Pointer && !f.IsNil() {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Type().Kind()
 	}

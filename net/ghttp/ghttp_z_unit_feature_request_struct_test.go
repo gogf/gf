@@ -22,7 +22,7 @@ func Test_Params_Parse(t *testing.T) {
 	type User struct {
 		Id   int
 		Name string
-		Map  map[string]interface{}
+		Map  map[string]any
 	}
 	s := g.Server(guid.S())
 	s.BindHandler("/parse", func(r *ghttp.Request) {

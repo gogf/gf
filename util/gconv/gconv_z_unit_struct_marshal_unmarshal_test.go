@@ -27,7 +27,7 @@ type MyTimeSt struct {
 	ServiceDate MyTime
 }
 
-func (st *MyTimeSt) UnmarshalValue(v interface{}) error {
+func (st *MyTimeSt) UnmarshalValue(v any) error {
 	m := gconv.Map(v)
 	t, err := gtime.StrToTime(gconv.String(m["ServiceDate"]))
 	if err != nil {
@@ -82,7 +82,7 @@ func (p *Pkg) Marshal() []byte {
 }
 
 // UnmarshalValue decodes bytes to protocol struct.
-func (p *Pkg) UnmarshalValue(v interface{}) error {
+func (p *Pkg) UnmarshalValue(v any) error {
 	b := gconv.Bytes(v)
 	if len(b) < 6 {
 		return gerror.New("invalid package length")

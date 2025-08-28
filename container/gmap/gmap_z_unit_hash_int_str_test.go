@@ -149,7 +149,7 @@ func Test_IntStrMap_Batch(t *testing.T) {
 		m.Sets(map[int]string{1: "a", 2: "b", 3: "c"})
 		t.Assert(m.Map(), map[int]string{1: "a", 2: "b", 3: "c"})
 		m.Removes([]int{1, 2})
-		t.Assert(m.Map(), map[int]interface{}{3: "c"})
+		t.Assert(m.Map(), map[int]any{3: "c"})
 	})
 }
 
@@ -384,7 +384,7 @@ func TestIntStrMap_UnmarshalValue(t *testing.T) {
 	// JSON
 	gtest.C(t, func(t *gtest.T) {
 		var v *V
-		err := gconv.Struct(map[string]interface{}{
+		err := gconv.Struct(map[string]any{
 			"name": "john",
 			"map":  []byte(`{"1":"v1","2":"v2"}`),
 		}, &v)
@@ -397,7 +397,7 @@ func TestIntStrMap_UnmarshalValue(t *testing.T) {
 	// Map
 	gtest.C(t, func(t *gtest.T) {
 		var v *V
-		err := gconv.Struct(map[string]interface{}{
+		err := gconv.Struct(map[string]any{
 			"name": "john",
 			"map": g.MapIntAny{
 				1: "v1",

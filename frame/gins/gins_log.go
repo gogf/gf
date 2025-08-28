@@ -28,11 +28,11 @@ func Log(name ...string) *glog.Logger {
 		instanceName = name[0]
 	}
 	instanceKey := fmt.Sprintf("%s.%s", frameCoreComponentNameLogger, instanceName)
-	return instance.GetOrSetFuncLock(instanceKey, func() interface{} {
+	return instance.GetOrSetFuncLock(instanceKey, func() any {
 		logger := glog.Instance(instanceName)
 		// To avoid file no found error while it's not necessary.
 		var (
-			configMap      map[string]interface{}
+			configMap      map[string]any
 			loggerNodeName = consts.ConfigNodeNameLogger
 		)
 		// Try to find possible `loggerNodeName` in case-insensitive way.
