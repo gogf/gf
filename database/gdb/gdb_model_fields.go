@@ -21,9 +21,9 @@ import (
 // Example:
 // Fields("id", "name", "age")
 // Fields([]string{"id", "name", "age"})
-// Fields(map[string]interface{}{"id":1, "name":"john", "age":18})
+// Fields(map[string]any{"id":1, "name":"john", "age":18})
 // Fields(User{Id: 1, Name: "john", Age: 18}).
-func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
+func (m *Model) Fields(fieldNamesOrMapStruct ...any) *Model {
 	length := len(fieldNamesOrMapStruct)
 	if length == 0 {
 		return m
@@ -37,7 +37,7 @@ func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 }
 
 // FieldsPrefix performs as function Fields but add extra prefix for each field.
-func (m *Model) FieldsPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...interface{}) *Model {
+func (m *Model) FieldsPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...any) *Model {
 	fields := m.filterFieldsFrom(
 		m.getTableNameByPrefixOrAlias(prefixOrAlias),
 		fieldNamesOrMapStruct...,
@@ -60,13 +60,13 @@ func (m *Model) FieldsPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...inte
 // Example:
 // FieldsEx("id", "name", "age")
 // FieldsEx([]string{"id", "name", "age"})
-// FieldsEx(map[string]interface{}{"id":1, "name":"john", "age":18})
+// FieldsEx(map[string]any{"id":1, "name":"john", "age":18})
 // FieldsEx(User{Id: 1, Name: "john", Age: 18}).
-func (m *Model) FieldsEx(fieldNamesOrMapStruct ...interface{}) *Model {
+func (m *Model) FieldsEx(fieldNamesOrMapStruct ...any) *Model {
 	return m.doFieldsEx(m.tablesInit, fieldNamesOrMapStruct...)
 }
 
-func (m *Model) doFieldsEx(table string, fieldNamesOrMapStruct ...interface{}) *Model {
+func (m *Model) doFieldsEx(table string, fieldNamesOrMapStruct ...any) *Model {
 	length := len(fieldNamesOrMapStruct)
 	if length == 0 {
 		return m
@@ -81,7 +81,7 @@ func (m *Model) doFieldsEx(table string, fieldNamesOrMapStruct ...interface{}) *
 }
 
 // FieldsExPrefix performs as function FieldsEx but add extra prefix for each field.
-func (m *Model) FieldsExPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...interface{}) *Model {
+func (m *Model) FieldsExPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...any) *Model {
 	model := m.doFieldsEx(
 		m.getTableNameByPrefixOrAlias(prefixOrAlias),
 		fieldNamesOrMapStruct...,

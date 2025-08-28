@@ -67,7 +67,7 @@ func (d *Driver) doSave(ctx context.Context,
 		// insertValues:	Handle values that need to be inserted
 		// updateValues:	Handle values that need to be updated
 		queryHolders = make([]string, oneLen)
-		queryValues  = make([]interface{}, oneLen)
+		queryValues  = make([]any, oneLen)
 		insertKeys   = make([]string, oneLen)
 		insertValues = make([]string, oneLen)
 		updateValues []string

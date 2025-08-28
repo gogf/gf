@@ -36,7 +36,7 @@ func Test_Issue3748(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := gclient.New()
 		client.SetHeader("Content-Type", "application/json")
-		data := map[string]interface{}{
+		data := map[string]any{
 			"name":  "@file:",
 			"value": "json",
 		}
@@ -48,7 +48,7 @@ func Test_Issue3748(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := gclient.New()
 		client.SetHeader("Content-Type", "application/xml")
-		data := map[string]interface{}{
+		data := map[string]any{
 			"name":  "@file:",
 			"value": "xml",
 		}
@@ -60,7 +60,7 @@ func Test_Issue3748(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := gclient.New()
 		client.SetHeader("Content-Type", "application/x-www-form-urlencoded")
-		data := map[string]interface{}{
+		data := map[string]any{
 			"name":  "@file:",
 			"value": "x-www-form-urlencoded",
 		}

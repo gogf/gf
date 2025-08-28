@@ -63,7 +63,7 @@ func ExampleRedBlackTree_Set() {
 func ExampleRedBlackTree_Sets() {
 	tree := gtree.NewRedBlackTree(gutil.ComparatorString)
 
-	tree.Sets(map[interface{}]interface{}{
+	tree.Sets(map[any]any{
 		"key1": "val1",
 		"key2": "val2",
 	})
@@ -110,10 +110,10 @@ func ExampleRedBlackTree_GetOrSetFunc() {
 		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(tree.GetOrSetFunc("key1", func() interface{} {
+	fmt.Println(tree.GetOrSetFunc("key1", func() any {
 		return "newVal1"
 	}))
-	fmt.Println(tree.GetOrSetFunc("key6", func() interface{} {
+	fmt.Println(tree.GetOrSetFunc("key6", func() any {
 		return "val6"
 	}))
 
@@ -128,10 +128,10 @@ func ExampleRedBlackTree_GetOrSetFuncLock() {
 		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(tree.GetOrSetFuncLock("key1", func() interface{} {
+	fmt.Println(tree.GetOrSetFuncLock("key1", func() any {
 		return "newVal1"
 	}))
-	fmt.Println(tree.GetOrSetFuncLock("key6", func() interface{} {
+	fmt.Println(tree.GetOrSetFuncLock("key6", func() any {
 		return "val6"
 	}))
 
@@ -172,10 +172,10 @@ func ExampleRedBlackTree_GetVarOrSetFunc() {
 		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(tree.GetVarOrSetFunc("key1", func() interface{} {
+	fmt.Println(tree.GetVarOrSetFunc("key1", func() any {
 		return "newVal1"
 	}))
-	fmt.Println(tree.GetVarOrSetFunc("key6", func() interface{} {
+	fmt.Println(tree.GetVarOrSetFunc("key6", func() any {
 		return "val6"
 	}))
 
@@ -190,10 +190,10 @@ func ExampleRedBlackTree_GetVarOrSetFuncLock() {
 		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(tree.GetVarOrSetFuncLock("key1", func() interface{} {
+	fmt.Println(tree.GetVarOrSetFuncLock("key1", func() any {
 		return "newVal1"
 	}))
-	fmt.Println(tree.GetVarOrSetFuncLock("key6", func() interface{} {
+	fmt.Println(tree.GetVarOrSetFuncLock("key6", func() any {
 		return "val6"
 	}))
 
@@ -222,10 +222,10 @@ func ExampleRedBlackTree_SetIfNotExistFunc() {
 		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(tree.SetIfNotExistFunc("key1", func() interface{} {
+	fmt.Println(tree.SetIfNotExistFunc("key1", func() any {
 		return "newVal1"
 	}))
-	fmt.Println(tree.SetIfNotExistFunc("key6", func() interface{} {
+	fmt.Println(tree.SetIfNotExistFunc("key6", func() any {
 		return "val6"
 	}))
 
@@ -240,10 +240,10 @@ func ExampleRedBlackTree_SetIfNotExistFuncLock() {
 		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(tree.SetIfNotExistFuncLock("key1", func() interface{} {
+	fmt.Println(tree.SetIfNotExistFuncLock("key1", func() any {
 		return "newVal1"
 	}))
-	fmt.Println(tree.SetIfNotExistFuncLock("key6", func() interface{} {
+	fmt.Println(tree.SetIfNotExistFuncLock("key6", func() any {
 		return "val6"
 	}))
 
@@ -288,7 +288,7 @@ func ExampleRedBlackTree_Removes() {
 		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	removeKeys := make([]interface{}, 2)
+	removeKeys := make([]any, 2)
 	removeKeys = append(removeKeys, "key1")
 	removeKeys = append(removeKeys, "key6")
 
@@ -485,7 +485,7 @@ func ExampleRedBlackTree_Iterator() {
 	}
 
 	var totalKey, totalValue int
-	tree.Iterator(func(key, value interface{}) bool {
+	tree.Iterator(func(key, value any) bool {
 		totalKey += key.(int)
 		totalValue += value.(int)
 
@@ -501,13 +501,13 @@ func ExampleRedBlackTree_Iterator() {
 }
 
 func ExampleRedBlackTree_IteratorFrom() {
-	m := make(map[interface{}]interface{})
+	m := make(map[any]any)
 	for i := 1; i <= 5; i++ {
 		m[i] = i * 10
 	}
 	tree := gtree.NewRedBlackTreeFrom(gutil.ComparatorInt, m)
 
-	tree.IteratorFrom(1, true, func(key, value interface{}) bool {
+	tree.IteratorFrom(1, true, func(key, value any) bool {
 		fmt.Println("key:", key, ", value:", value)
 		return true
 	})
@@ -526,7 +526,7 @@ func ExampleRedBlackTree_IteratorAsc() {
 		tree.Set(i, 10-i)
 	}
 
-	tree.IteratorAsc(func(key, value interface{}) bool {
+	tree.IteratorAsc(func(key, value any) bool {
 		fmt.Println("key:", key, ", value:", value)
 		return true
 	})
@@ -545,13 +545,13 @@ func ExampleRedBlackTree_IteratorAsc() {
 }
 
 func ExampleRedBlackTree_IteratorAscFrom_normal() {
-	m := make(map[interface{}]interface{})
+	m := make(map[any]any)
 	for i := 1; i <= 5; i++ {
 		m[i] = i * 10
 	}
 	tree := gtree.NewRedBlackTreeFrom(gutil.ComparatorInt, m)
 
-	tree.IteratorAscFrom(1, true, func(key, value interface{}) bool {
+	tree.IteratorAscFrom(1, true, func(key, value any) bool {
 		fmt.Println("key:", key, ", value:", value)
 		return true
 	})
@@ -565,13 +565,13 @@ func ExampleRedBlackTree_IteratorAscFrom_normal() {
 }
 
 func ExampleRedBlackTree_IteratorAscFrom_noExistKey() {
-	m := make(map[interface{}]interface{})
+	m := make(map[any]any)
 	for i := 1; i <= 5; i++ {
 		m[i] = i * 10
 	}
 	tree := gtree.NewRedBlackTreeFrom(gutil.ComparatorInt, m)
 
-	tree.IteratorAscFrom(0, true, func(key, value interface{}) bool {
+	tree.IteratorAscFrom(0, true, func(key, value any) bool {
 		fmt.Println("key:", key, ", value:", value)
 		return true
 	})
@@ -580,13 +580,13 @@ func ExampleRedBlackTree_IteratorAscFrom_noExistKey() {
 }
 
 func ExampleRedBlackTree_IteratorAscFrom_noExistKeyAndMatchFalse() {
-	m := make(map[interface{}]interface{})
+	m := make(map[any]any)
 	for i := 1; i <= 5; i++ {
 		m[i] = i * 10
 	}
 	tree := gtree.NewRedBlackTreeFrom(gutil.ComparatorInt, m)
 
-	tree.IteratorAscFrom(0, false, func(key, value interface{}) bool {
+	tree.IteratorAscFrom(0, false, func(key, value any) bool {
 		fmt.Println("key:", key, ", value:", value)
 		return true
 	})
@@ -605,7 +605,7 @@ func ExampleRedBlackTree_IteratorDesc() {
 		tree.Set(i, 10-i)
 	}
 
-	tree.IteratorDesc(func(key, value interface{}) bool {
+	tree.IteratorDesc(func(key, value any) bool {
 		fmt.Println("key:", key, ", value:", value)
 		return true
 	})
@@ -624,13 +624,13 @@ func ExampleRedBlackTree_IteratorDesc() {
 }
 
 func ExampleRedBlackTree_IteratorDescFrom() {
-	m := make(map[interface{}]interface{})
+	m := make(map[any]any)
 	for i := 1; i <= 5; i++ {
 		m[i] = i * 10
 	}
 	tree := gtree.NewRedBlackTreeFrom(gutil.ComparatorInt, m)
 
-	tree.IteratorDescFrom(5, true, func(key, value interface{}) bool {
+	tree.IteratorDescFrom(5, true, func(key, value any) bool {
 		fmt.Println("key:", key, ", value:", value)
 		return true
 	})
@@ -666,7 +666,7 @@ func ExampleRedBlackTree_Replace() {
 
 	fmt.Println(tree.Map())
 
-	data := map[interface{}]interface{}{
+	data := map[any]any{
 		"newKey0": "newVal0",
 		"newKey1": "newVal1",
 		"newKey2": "newVal2",

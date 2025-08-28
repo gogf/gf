@@ -45,14 +45,14 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 				IsDo:                 true,
 			})
 		)
-		// replace all types to interface{}.
+		// replace all types to any.
 		structDefinition, _ = gregex.ReplaceStringFuncMatch(
 			"([A-Z]\\w*?)\\s+([\\w\\*\\.]+?)\\s+(//)",
 			structDefinition,
 			func(match []string) string {
 				// If the type is already a pointer/slice/map, it does nothing.
 				if !gstr.HasPrefix(match[2], "*") && !gstr.HasPrefix(match[2], "[]") && !gstr.HasPrefix(match[2], "map") {
-					return fmt.Sprintf(`%s interface{} %s`, match[1], match[3])
+					return fmt.Sprintf(`%s any %s`, match[1], match[3])
 				}
 				return match[0]
 			},
