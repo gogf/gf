@@ -20,29 +20,41 @@ import (
 )
 
 // Decode converts properties format to map.
-func Decode(data []byte) (res map[string]interface{}, err error) {
-	res = make(map[string]interface{})
+func Decode(data []byte) (res map[string]any, err error) {
+	res = make(map[string]any)
 	pr, err := properties.Load(data, properties.UTF8)
 	if err != nil || pr == nil {
 		err = gerror.Wrapf(err, `Lib magiconair load Properties data failed.`)
 		return nil, err
 	}
 	for _, key := range pr.Keys() {
+		// ignore existence check: we know it's there
 		value, _ := pr.Get(key)
-		setNestedValue(res, key, value)
+		// recursively build nested maps
+		path := strings.Split(key, ".")
+		lastKey := strings.ToLower(path[len(path)-1])
+		deepestMap := deepSearch(res, path[0:len(path)-1])
+
+		// set innermost value
+		deepestMap[lastKey] = value
 	}
 	return res, nil
 }
 
 // Encode converts map to properties format.
-func Encode(data map[string]interface{}) (res []byte, err error) {
+func Encode(data map[string]any) (res []byte, err error) {
 	pr := properties.NewProperties()
-	flattened := flattenMap(data, ".", "")
+
+	flattened := map[string]any{}
+
+	flattened = flattenAndMergeMap(flattened, data, "", ".")
 
 	keys := make([]string, 0, len(flattened))
+
 	for key := range flattened {
 		keys = append(keys, key)
 	}
+
 	sort.Strings(keys)
 
 	for _, key := range keys {
@@ -54,11 +66,13 @@ func Encode(data map[string]interface{}) (res []byte, err error) {
 	}
 
 	var buf bytes.Buffer
+
 	_, err = pr.Write(&buf, properties.UTF8)
 	if err != nil {
 		err = gerror.Wrapf(err, `Properties Write buf failed.`)
 		return nil, err
 	}
+
 	return buf.Bytes(), nil
 }
 
@@ -71,42 +85,54 @@ func ToJson(data []byte) (res []byte, err error) {
 	return json.Marshal(prMap)
 }
 
-// setNestedValue sets a value in a nested map based on a dot-separated key.
-func setNestedValue(m map[string]interface{}, key string, value interface{}) {
-	path := strings.Split(key, ".")
-	lastKey := strings.ToLower(path[len(path)-1])
-	deepestMap := deepSearch(m, path[0:len(path)-1])
-	deepestMap[lastKey] = value
-}
-
 // deepSearch scans deep maps, following the key indexes listed in the sequence "path".
-func deepSearch(m map[string]interface{}, path []string) map[string]interface{} {
+// The last value is expected to be another map, and is returned.
+func deepSearch(m map[string]any, path []string) map[string]any {
 	for _, k := range path {
-		if m[k] == nil {
-			m[k] = make(map[string]interface{})
+		m2, ok := m[k]
+		if !ok {
+			// intermediate key does not exist
+			// => create it and continue from there
+			m3 := make(map[string]any)
+			m[k] = m3
+			m = m3
+			continue
 		}
-		m = m[k].(map[string]interface{})
+		m3, ok := m2.(map[string]any)
+		if !ok {
+			m3 = make(map[string]any)
+			m[k] = m3
+		}
+		// continue search from here
+		m = m3
 	}
 	return m
 }
 
-// flattenMap recursively flattens the given map into a new map.
-func flattenMap(m map[string]interface{}, delimiter, prefix string) map[string]interface{} {
-	shadow := make(map[string]interface{})
+// flattenAndMergeMap recursively flattens the given map into a new map
+func flattenAndMergeMap(shadow map[string]any, m map[string]any, prefix string, delimiter string) map[string]any {
+	if shadow != nil && prefix != "" && shadow[prefix] != nil {
+		return shadow
+	}
+
+	var m2 map[string]any
+	if prefix != "" {
+		prefix += delimiter
+	}
 	for k, val := range m {
 		fullKey := prefix + k
-		switch v := val.(type) {
-		case map[string]interface{}:
-			for subKey, subVal := range flattenMap(v, delimiter, fullKey+delimiter) {
-				shadow[subKey] = subVal
-			}
-		case map[interface{}]interface{}:
-			for subKey, subVal := range flattenMap(gconv.Map(v), delimiter, fullKey+delimiter) {
-				shadow[subKey] = subVal
-			}
+		switch val := val.(type) {
+		case map[string]any:
+			m2 = val
+		case map[any]any:
+			m2 = gconv.Map(val)
 		default:
-			shadow[strings.ToLower(fullKey)] = v
+			// immediate value
+			shadow[strings.ToLower(fullKey)] = val
+			continue
 		}
+		// recursively merge to shadow map
+		shadow = flattenAndMergeMap(shadow, m2, fullKey, delimiter)
 	}
 	return shadow
 }

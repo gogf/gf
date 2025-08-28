@@ -20,7 +20,7 @@ func (a *AdapterFile) SetContent(content string, fileNameOrPath ...string) {
 		usedFileNameOrPath = fileNameOrPath[0]
 	}
 	// Clear file cache for instances which cached `name`.
-	localInstances.LockFunc(func(m map[string]interface{}) {
+	localInstances.LockFunc(func(m map[string]any) {
 		if customConfigContentMap.Contains(usedFileNameOrPath) {
 			for _, v := range m {
 				if configInstance, ok := v.(*Config); ok {
@@ -52,7 +52,7 @@ func (a *AdapterFile) RemoveContent(fileNameOrPath ...string) {
 		usedFileNameOrPath = fileNameOrPath[0]
 	}
 	// Clear file cache for instances which cached `name`.
-	localInstances.LockFunc(func(m map[string]interface{}) {
+	localInstances.LockFunc(func(m map[string]any) {
 		if customConfigContentMap.Contains(usedFileNameOrPath) {
 			for _, v := range m {
 				if configInstance, ok := v.(*Config); ok {
@@ -72,7 +72,7 @@ func (a *AdapterFile) RemoveContent(fileNameOrPath ...string) {
 func (a *AdapterFile) ClearContent() {
 	customConfigContentMap.Clear()
 	// Clear cache for all instances.
-	localInstances.LockFunc(func(m map[string]interface{}) {
+	localInstances.LockFunc(func(m map[string]any) {
 		for _, v := range m {
 			if configInstance, ok := v.(*Config); ok {
 				if fileConfig, ok := configInstance.GetAdapter().(*AdapterFile); ok {

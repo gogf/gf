@@ -65,7 +65,7 @@ func Get(root string, cache bool) *SPath {
 	if root == "" {
 		root = "/"
 	}
-	return pathsMap.GetOrSetFuncLock(root, func() interface{} {
+	return pathsMap.GetOrSetFuncLock(root, func() any {
 		return New(root, cache)
 	}).(*SPath)
 }

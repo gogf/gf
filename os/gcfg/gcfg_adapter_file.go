@@ -137,7 +137,7 @@ func (a *AdapterFile) GetFileName() string {
 // "list.10", "array.0.name", "array.0.1.id".
 //
 // It returns a default value specified by `def` if value for `pattern` is not found.
-func (a *AdapterFile) Get(ctx context.Context, pattern string) (value interface{}, err error) {
+func (a *AdapterFile) Get(ctx context.Context, pattern string) (value any, err error) {
 	j, err := a.getJson()
 	if err != nil {
 		return nil, err
@@ -153,7 +153,7 @@ func (a *AdapterFile) Get(ctx context.Context, pattern string) (value interface{
 // It is commonly used to update certain configuration values in runtime.
 // Note that it is not recommended using `Set` configuration at runtime as the configuration would be
 // automatically refreshed if the underlying configuration file changed.
-func (a *AdapterFile) Set(pattern string, value interface{}) error {
+func (a *AdapterFile) Set(pattern string, value any) error {
 	j, err := a.getJson()
 	if err != nil {
 		return err
@@ -165,7 +165,7 @@ func (a *AdapterFile) Set(pattern string, value interface{}) error {
 }
 
 // Data retrieves and returns all configuration data as map type.
-func (a *AdapterFile) Data(ctx context.Context) (data map[string]interface{}, err error) {
+func (a *AdapterFile) Data(ctx context.Context) (data map[string]any, err error) {
 	j, err := a.getJson()
 	if err != nil {
 		return nil, err
@@ -237,7 +237,7 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 		usedFileNameOrPath = a.defaultFileNameOrPath
 	}
 	// It uses JSON map to cache specified configuration file content.
-	result := a.jsonMap.GetOrSetFuncLock(usedFileNameOrPath, func() interface{} {
+	result := a.jsonMap.GetOrSetFuncLock(usedFileNameOrPath, func() any {
 		var (
 			content  string
 			filePath string

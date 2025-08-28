@@ -79,14 +79,14 @@ func (r *Response) ParseTplContent(content string, params ...gview.Params) (stri
 
 // buildInVars merges build-in variables into `params` and returns the new template variables.
 // TODO performance improving.
-func (r *Response) buildInVars(params ...map[string]interface{}) map[string]interface{} {
+func (r *Response) buildInVars(params ...map[string]any) map[string]any {
 	m := gutil.MapMergeCopy(r.Request.viewParams)
 	if len(params) > 0 {
 		gutil.MapMerge(m, params[0])
 	}
 	// Retrieve custom template variables from request object.
 	sessionMap := gconv.MapDeep(r.Request.Session.MustData())
-	gutil.MapMerge(m, map[string]interface{}{
+	gutil.MapMerge(m, map[string]any{
 		"Form":    r.Request.GetFormMap(),
 		"Query":   r.Request.GetQueryMap(),
 		"Request": r.Request.GetMap(),

@@ -28,13 +28,13 @@ import (
 
 // Query commits one query SQL to underlying driver and returns the execution result.
 // It is most commonly used for data querying.
-func (c *Core) Query(ctx context.Context, sql string, args ...interface{}) (result Result, err error) {
+func (c *Core) Query(ctx context.Context, sql string, args ...any) (result Result, err error) {
 	return c.db.DoQuery(ctx, nil, sql, args...)
 }
 
 // DoQuery commits the sql string and its arguments to underlying driver
 // through given link object and returns the execution result.
-func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error) {
+func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...any) (result Result, err error) {
 	// Transaction checks.
 	if link == nil {
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
@@ -86,13 +86,13 @@ func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...inter
 
 // Exec commits one query SQL to underlying driver and returns the execution result.
 // It is most commonly used for data inserting and updating.
-func (c *Core) Exec(ctx context.Context, sql string, args ...interface{}) (result sql.Result, err error) {
+func (c *Core) Exec(ctx context.Context, sql string, args ...any) (result sql.Result, err error) {
 	return c.db.DoExec(ctx, nil, sql, args...)
 }
 
 // DoExec commits the sql string and its arguments to underlying driver
 // through given link object and returns the execution result.
-func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error) {
+func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...any) (result sql.Result, err error) {
 	// Transaction checks.
 	if link == nil {
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
@@ -146,8 +146,8 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 // The parameter `link` specifies the current database connection operation object. You can modify the sql
 // string `sql` and its arguments `args` as you wish before they're committed to driver.
 func (c *Core) DoFilter(
-	ctx context.Context, link Link, sql string, args []interface{},
-) (newSql string, newArgs []interface{}, err error) {
+	ctx context.Context, link Link, sql string, args []any,
+) (newSql string, newArgs []any, err error) {
 	return sql, args, nil
 }
 
@@ -460,9 +460,9 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 		}
 	}
 	var (
-		values   = make([]interface{}, len(columnTypes))
+		values   = make([]any, len(columnTypes))
 		result   = make(Result, 0)
-		scanArgs = make([]interface{}, len(values))
+		scanArgs = make([]any, len(values))
 	)
 	for i := range values {
 		scanArgs[i] = &values[i]
@@ -479,7 +479,7 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 				record[columnTypes[i].Name()] = nil
 			} else {
 				var (
-					convertedValue interface{}
+					convertedValue any
 					columnType     = columnTypes[i]
 				)
 				if convertedValue, err = c.columnValueToLocalValue(ctx, value, columnType); err != nil {
@@ -502,8 +502,8 @@ func (c *Core) OrderRandomFunction() string {
 }
 
 func (c *Core) columnValueToLocalValue(
-	ctx context.Context, value interface{}, columnType *sql.ColumnType,
-) (interface{}, error) {
+	ctx context.Context, value any, columnType *sql.ColumnType,
+) (any, error) {
 	var scanType = columnType.ScanType()
 	if scanType != nil {
 		// Common basic builtin types.

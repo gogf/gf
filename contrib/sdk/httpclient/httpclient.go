@@ -49,7 +49,7 @@ func New(config Config) *Client {
 }
 
 // Request sends request to service by struct object `req`, and receives response to struct object `res`.
-func (c *Client) Request(ctx context.Context, req, res interface{}) error {
+func (c *Client) Request(ctx context.Context, req, res any) error {
 	var (
 		method = gmeta.Get(req, gtag.Method).String()
 		path   = gmeta.Get(req, gtag.Path).String()
@@ -68,7 +68,7 @@ func (c *Client) Request(ctx context.Context, req, res interface{}) error {
 }
 
 // Get sends a request using GET method.
-func (c *Client) Get(ctx context.Context, path string, in, out interface{}) error {
+func (c *Client) Get(ctx context.Context, path string, in, out any) error {
 	// TODO: Path params will also be built in urlParams, not graceful now.
 	if urlParams := ghttp.BuildParams(in); urlParams != "" && urlParams != "{}" {
 		path += "?" + urlParams
@@ -80,7 +80,7 @@ func (c *Client) Get(ctx context.Context, path string, in, out interface{}) erro
 	return c.HandleResponse(ctx, res, out)
 }
 
-func (c *Client) handlePath(path string, in interface{}) string {
+func (c *Client) handlePath(path string, in any) string {
 	if gstr.Contains(path, "{") {
 		data := gconv.MapStrStr(in)
 		path, _ = gregex.ReplaceStringFuncMatch(`\{(\w+)\}`, path, func(match []string) string {
