@@ -62,12 +62,11 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ...ScanOption) (er
 
 	// Validate the kind of dstPointer
 	var dstPointerReflectKind = dstPointerReflectType.Kind()
-	if dstPointerReflectKind != reflect.Ptr {
+	if dstPointerReflectKind != reflect.Pointer {
 		// If dstPointer is not a pointer, try to get its address
 		if dstPointerReflectValue.CanAddr() {
 			dstPointerReflectValue = dstPointerReflectValue.Addr()
 			dstPointerReflectType = dstPointerReflectValue.Type()
-			dstPointerReflectKind = dstPointerReflectType.Kind()
 		} else {
 			// If dstPointer is not a pointer and cannot be addressed, return an error
 			return gerror.NewCodef(
@@ -92,7 +91,7 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ...ScanOption) (er
 		dstPointerReflectValueElemKind = dstPointerReflectValueElem.Kind()
 	)
 	// Handle multiple level pointers
-	if dstPointerReflectValueElemKind == reflect.Ptr {
+	if dstPointerReflectValueElemKind == reflect.Pointer {
 		if dstPointerReflectValueElem.IsNil() {
 			// Create a new value for the pointer dereference
 			nextLevelPtr := reflect.New(dstPointerReflectValueElem.Type().Elem())
@@ -159,8 +158,9 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ...ScanOption) (er
 			dstElemType = dstPointerReflectValueElem.Type().Elem()
 			dstElemKind = dstElemType.Kind()
 		)
+
 		// The slice element might be a pointer type
-		if dstElemKind == reflect.Ptr {
+		if dstElemKind == reflect.Pointer {
 			dstElemType = dstElemType.Elem()
 			dstElemKind = dstElemType.Kind()
 		}
@@ -209,9 +209,12 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ...ScanOption) (er
 					}
 					newSlice.Index(i).SetBool(v)
 				default:
-					return c.Scan(
+					err = c.Scan(
 						srcElem, newSlice.Index(i).Addr().Interface(), option...,
 					)
+					if err != nil && !scanOption.ContinueOnError {
+						return err
+					}
 				}
 			}
 			dstPointerReflectValueElem.Set(newSlice)
@@ -242,7 +245,7 @@ func (c *Converter) doScanForComplicatedTypes(
 	option ScanOption,
 ) error {
 	// Try JSON conversion first
-	ok, err := c.doConvertWithJsonCheck(srcValue, dstPointer)
+	ok, err := c.doConvertWithJSONCheck(srcValue, dstPointer)
 	if err != nil {
 		return err
 	}
@@ -270,7 +273,7 @@ func (c *Converter) doScanForComplicatedTypes(
 			sliceElemKind = sliceElem.Kind()
 		)
 		// Handle pointer elements
-		for sliceElemKind == reflect.Ptr {
+		for sliceElemKind == reflect.Pointer {
 			sliceElem = sliceElem.Elem()
 			sliceElemKind = sliceElem.Kind()
 		}
@@ -329,7 +332,7 @@ func (c *Converter) doConvertWithTypeCheck(srcValueReflectValue, dstPointerRefle
 	// []UploadFile    => *[]UploadFile
 	// map[int][int]   => *map[int][int]
 	// []map[int][int] => *[]map[int][int]
-	case dstPointerReflectValueElem.Kind() == reflect.Ptr &&
+	case dstPointerReflectValueElem.Kind() == reflect.Pointer &&
 		dstPointerReflectValueElem.Elem().IsValid() &&
 		dstPointerReflectValueElem.Elem().Type() == srcValueReflectValue.Type():
 		dstPointerReflectValueElem.Elem().Set(srcValueReflectValue)
@@ -340,7 +343,7 @@ func (c *Converter) doConvertWithTypeCheck(srcValueReflectValue, dstPointerRefle
 	// *[]UploadFile    => []UploadFile
 	// *map[int][int]   => map[int][int]
 	// *[]map[int][int] => []map[int][int]
-	case srcValueReflectValue.Kind() == reflect.Ptr &&
+	case srcValueReflectValue.Kind() == reflect.Pointer &&
 		srcValueReflectValue.Elem().IsValid() &&
 		dstPointerReflectValueElem.Type() == srcValueReflectValue.Elem().Type():
 		dstPointerReflectValueElem.Set(srcValueReflectValue.Elem())
@@ -351,7 +354,7 @@ func (c *Converter) doConvertWithTypeCheck(srcValueReflectValue, dstPointerRefle
 	}
 }
 
-// doConvertWithJsonCheck attempts to convert the source value to the destination
+// doConvertWithJSONCheck attempts to convert the source value to the destination
 // using JSON marshaling and unmarshaling. This is particularly useful for complex
 // types that can be represented as JSON.
 //
@@ -362,12 +365,12 @@ func (c *Converter) doConvertWithTypeCheck(srcValueReflectValue, dstPointerRefle
 // Returns:
 // - bool: true if JSON conversion was successful
 // - error: any error that occurred during conversion
-func (c *Converter) doConvertWithJsonCheck(srcValue any, dstPointer any) (ok bool, err error) {
+func (c *Converter) doConvertWithJSONCheck(srcValue any, dstPointer any) (ok bool, err error) {
 	switch valueResult := srcValue.(type) {
 	case []byte:
 		if json.Valid(valueResult) {
 			if dstPointerReflectType, ok := dstPointer.(reflect.Value); ok {
-				if dstPointerReflectType.Kind() == reflect.Ptr {
+				if dstPointerReflectType.Kind() == reflect.Pointer {
 					if dstPointerReflectType.IsNil() {
 						return false, nil
 					}
@@ -383,7 +386,7 @@ func (c *Converter) doConvertWithJsonCheck(srcValue any, dstPointer any) (ok boo
 	case string:
 		if valueBytes := []byte(valueResult); json.Valid(valueBytes) {
 			if dstPointerReflectType, ok := dstPointer.(reflect.Value); ok {
-				if dstPointerReflectType.Kind() == reflect.Ptr {
+				if dstPointerReflectType.Kind() == reflect.Pointer {
 					if dstPointerReflectType.IsNil() {
 						return false, nil
 					}
@@ -399,7 +402,7 @@ func (c *Converter) doConvertWithJsonCheck(srcValue any, dstPointer any) (ok boo
 	default:
 		// The `params` might be struct that implements interface function Interface, eg: gvar.Var.
 		if v, ok := srcValue.(localinterface.IInterface); ok {
-			return c.doConvertWithJsonCheck(v.Interface(), dstPointer)
+			return c.doConvertWithJSONCheck(v.Interface(), dstPointer)
 		}
 	}
 	return false, nil

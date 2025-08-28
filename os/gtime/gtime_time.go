@@ -31,13 +31,16 @@ type iUnixNano interface {
 // New("2024-10-29")
 // New(1390876568)
 // New(t) // The t is type of time.Time.
-func New(param ...interface{}) *Time {
+func New(param ...any) *Time {
 	if len(param) > 0 {
 		switch r := param[0].(type) {
 		case time.Time:
 			return NewFromTime(r)
+
 		case *time.Time:
-			return NewFromTime(*r)
+			if r != nil {
+				return NewFromTime(*r)
+			}
 
 		case Time:
 			return &r
@@ -408,7 +411,7 @@ func (t *Time) StartOfMinute() *Time {
 func (t *Time) StartOfHour() *Time {
 	y, m, d := t.Date()
 	newTime := t.Clone()
-	newTime.Time = time.Date(y, m, d, newTime.Time.Hour(), 0, 0, 0, newTime.Time.Location())
+	newTime.Time = time.Date(y, m, d, newTime.Hour(), 0, 0, 0, newTime.Location())
 	return newTime
 }
 
@@ -416,7 +419,7 @@ func (t *Time) StartOfHour() *Time {
 func (t *Time) StartOfDay() *Time {
 	y, m, d := t.Date()
 	newTime := t.Clone()
-	newTime.Time = time.Date(y, m, d, 0, 0, 0, 0, newTime.Time.Location())
+	newTime.Time = time.Date(y, m, d, 0, 0, 0, 0, newTime.Location())
 	return newTime
 }
 
@@ -432,7 +435,7 @@ func (t *Time) StartOfWeek() *Time {
 func (t *Time) StartOfMonth() *Time {
 	y, m, _ := t.Date()
 	newTime := t.Clone()
-	newTime.Time = time.Date(y, m, 1, 0, 0, 0, 0, newTime.Time.Location())
+	newTime.Time = time.Date(y, m, 1, 0, 0, 0, 0, newTime.Location())
 	return newTime
 }
 
@@ -550,7 +553,7 @@ func (t *Time) UnmarshalText(data []byte) error {
 func (t *Time) NoValidation() {}
 
 // DeepCopy implements interface for deep copy of current type.
-func (t *Time) DeepCopy() interface{} {
+func (t *Time) DeepCopy() any {
 	if t == nil {
 		return nil
 	}

@@ -29,7 +29,7 @@ concurrency:
 env:
   TZ: "Asia/Shanghai"
   # for unit testing cases of some components that only execute on the latest go version.
-  LATEST_GO_VERSION: "1.23"
+  LATEST_GO_VERSION: "1.25"
 
 jobs:
   code-test:
@@ -40,10 +40,10 @@ jobs:
         # 1. Update the `LATEST_GO_VERSION` env variable.
         # 2. Update the `Report Coverage` action.
         # 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        go-version: [ "1.22", "1.23" ]
+        go-version: [ "1.23", "1.24", "1.25" ]
         goarch: [ "386", "amd64" ]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     # Service containers to run with `code-test`
     services:
@@ -206,7 +206,7 @@ jobs:
         timezoneLinux: "Asia/Shanghai"
 
     - name: Checkout Repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Start Apollo Containers
       run:  docker compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
@@ -227,9 +227,9 @@ jobs:
         cache-dependency-path: '**/go.sum'
 
     - name: Install Protoc
-      uses: arduino/setup-protoc@v2
+      uses: arduino/setup-protoc@v3
       with:
-        version: "29.x"
+        version: "31.x"
         repo-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Install the protocol compiler plugins for Go
