@@ -27,11 +27,11 @@ import (
 const (
 	// Short writes for common usage durations.
 
-	D  = 24 * time.Hour
-	H  = time.Hour
-	M  = time.Minute
-	S  = time.Second
-    //nolint:staticcheck
+	D = 24 * time.Hour
+	H = time.Hour
+	M = time.Minute
+	S = time.Second
+	//nolint:staticcheck
 	MS = time.Millisecond
 	US = time.Microsecond
 	NS = time.Nanosecond
