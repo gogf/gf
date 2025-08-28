@@ -24,7 +24,7 @@ import (
 )
 
 // buildInFuncDump implements build-in template function: dump
-func (view *View) buildInFuncDump(values ...interface{}) string {
+func (view *View) buildInFuncDump(values ...any) string {
 	buffer := bytes.NewBuffer(nil)
 	buffer.WriteString("\n")
 	buffer.WriteString("<!--\n")
@@ -41,23 +41,23 @@ func (view *View) buildInFuncDump(values ...interface{}) string {
 }
 
 // buildInFuncMap implements build-in template function: map
-func (view *View) buildInFuncMap(value ...interface{}) map[string]interface{} {
+func (view *View) buildInFuncMap(value ...any) map[string]any {
 	if len(value) > 0 {
 		return gconv.Map(value[0])
 	}
-	return map[string]interface{}{}
+	return map[string]any{}
 }
 
 // buildInFuncMaps implements build-in template function: maps
-func (view *View) buildInFuncMaps(value ...interface{}) []map[string]interface{} {
+func (view *View) buildInFuncMaps(value ...any) []map[string]any {
 	if len(value) > 0 {
 		return gconv.Maps(value[0])
 	}
-	return []map[string]interface{}{}
+	return []map[string]any{}
 }
 
 // buildInFuncEq implements build-in template function: eq
-func (view *View) buildInFuncEq(value interface{}, others ...interface{}) bool {
+func (view *View) buildInFuncEq(value any, others ...any) bool {
 	s := gconv.String(value)
 	for _, v := range others {
 		if strings.Compare(s, gconv.String(v)) == 0 {
@@ -68,12 +68,12 @@ func (view *View) buildInFuncEq(value interface{}, others ...interface{}) bool {
 }
 
 // buildInFuncNe implements build-in template function: ne
-func (view *View) buildInFuncNe(value, other interface{}) bool {
+func (view *View) buildInFuncNe(value, other any) bool {
 	return strings.Compare(gconv.String(value), gconv.String(other)) != 0
 }
 
 // buildInFuncLt implements build-in template function: lt
-func (view *View) buildInFuncLt(value, other interface{}) bool {
+func (view *View) buildInFuncLt(value, other any) bool {
 	s1 := gconv.String(value)
 	s2 := gconv.String(other)
 	if gstr.IsNumeric(s1) && gstr.IsNumeric(s2) {
@@ -83,7 +83,7 @@ func (view *View) buildInFuncLt(value, other interface{}) bool {
 }
 
 // buildInFuncLe implements build-in template function: le
-func (view *View) buildInFuncLe(value, other interface{}) bool {
+func (view *View) buildInFuncLe(value, other any) bool {
 	s1 := gconv.String(value)
 	s2 := gconv.String(other)
 	if gstr.IsNumeric(s1) && gstr.IsNumeric(s2) {
@@ -93,7 +93,7 @@ func (view *View) buildInFuncLe(value, other interface{}) bool {
 }
 
 // buildInFuncGt implements build-in template function: gt
-func (view *View) buildInFuncGt(value, other interface{}) bool {
+func (view *View) buildInFuncGt(value, other any) bool {
 	s1 := gconv.String(value)
 	s2 := gconv.String(other)
 	if gstr.IsNumeric(s1) && gstr.IsNumeric(s2) {
@@ -103,7 +103,7 @@ func (view *View) buildInFuncGt(value, other interface{}) bool {
 }
 
 // buildInFuncGe implements build-in template function: ge
-func (view *View) buildInFuncGe(value, other interface{}) bool {
+func (view *View) buildInFuncGe(value, other any) bool {
 	s1 := gconv.String(value)
 	s2 := gconv.String(other)
 	if gstr.IsNumeric(s1) && gstr.IsNumeric(s2) {
@@ -114,8 +114,8 @@ func (view *View) buildInFuncGe(value, other interface{}) bool {
 
 // buildInFuncInclude implements build-in template function: include
 // Note that configuration AutoEncode does not affect the output of this function.
-func (view *View) buildInFuncInclude(file interface{}, data ...map[string]interface{}) htmltpl.HTML {
-	var m map[string]interface{} = nil
+func (view *View) buildInFuncInclude(file any, data ...map[string]any) htmltpl.HTML {
+	var m map[string]any = nil
 	if len(data) > 0 {
 		m = data[0]
 	}
@@ -132,27 +132,27 @@ func (view *View) buildInFuncInclude(file interface{}, data ...map[string]interf
 }
 
 // buildInFuncText implements build-in template function: text
-func (view *View) buildInFuncText(html interface{}) string {
+func (view *View) buildInFuncText(html any) string {
 	return ghtml.StripTags(gconv.String(html))
 }
 
 // buildInFuncHtmlEncode implements build-in template function: html
-func (view *View) buildInFuncHtmlEncode(html interface{}) string {
+func (view *View) buildInFuncHtmlEncode(html any) string {
 	return ghtml.Entities(gconv.String(html))
 }
 
 // buildInFuncHtmlDecode implements build-in template function: htmldecode
-func (view *View) buildInFuncHtmlDecode(html interface{}) string {
+func (view *View) buildInFuncHtmlDecode(html any) string {
 	return ghtml.EntitiesDecode(gconv.String(html))
 }
 
 // buildInFuncUrlEncode implements build-in template function: url
-func (view *View) buildInFuncUrlEncode(url interface{}) string {
+func (view *View) buildInFuncUrlEncode(url any) string {
 	return gurl.Encode(gconv.String(url))
 }
 
 // buildInFuncUrlDecode implements build-in template function: urldecode
-func (view *View) buildInFuncUrlDecode(url interface{}) string {
+func (view *View) buildInFuncUrlDecode(url any) string {
 	if content, err := gurl.Decode(gconv.String(url)); err == nil {
 		return content
 	} else {
@@ -161,7 +161,7 @@ func (view *View) buildInFuncUrlDecode(url interface{}) string {
 }
 
 // buildInFuncDate implements build-in template function: date
-func (view *View) buildInFuncDate(format interface{}, timestamp ...interface{}) string {
+func (view *View) buildInFuncDate(format any, timestamp ...any) string {
 	t := int64(0)
 	if len(timestamp) > 0 {
 		t = gconv.Int64(timestamp[0])
@@ -173,22 +173,22 @@ func (view *View) buildInFuncDate(format interface{}, timestamp ...interface{}) 
 }
 
 // buildInFuncCompare implements build-in template function: compare
-func (view *View) buildInFuncCompare(value1, value2 interface{}) int {
+func (view *View) buildInFuncCompare(value1, value2 any) int {
 	return strings.Compare(gconv.String(value1), gconv.String(value2))
 }
 
 // buildInFuncSubStr implements build-in template function: substr
-func (view *View) buildInFuncSubStr(start, end, str interface{}) string {
+func (view *View) buildInFuncSubStr(start, end, str any) string {
 	return gstr.SubStrRune(gconv.String(str), gconv.Int(start), gconv.Int(end))
 }
 
 // buildInFuncStrLimit implements build-in template function: strlimit
-func (view *View) buildInFuncStrLimit(length, suffix, str interface{}) string {
+func (view *View) buildInFuncStrLimit(length, suffix, str any) string {
 	return gstr.StrLimitRune(gconv.String(str), gconv.Int(length), gconv.String(suffix))
 }
 
 // buildInFuncConcat implements build-in template function: concat
-func (view *View) buildInFuncConcat(str ...interface{}) string {
+func (view *View) buildInFuncConcat(str ...any) string {
 	var s string
 	for _, v := range str {
 		s += gconv.String(v)
@@ -197,80 +197,80 @@ func (view *View) buildInFuncConcat(str ...interface{}) string {
 }
 
 // buildInFuncReplace implements build-in template function: replace
-func (view *View) buildInFuncReplace(search, replace, str interface{}) string {
+func (view *View) buildInFuncReplace(search, replace, str any) string {
 	return gstr.Replace(gconv.String(str), gconv.String(search), gconv.String(replace), -1)
 }
 
 // buildInFuncHighlight implements build-in template function: highlight
-func (view *View) buildInFuncHighlight(key, color, str interface{}) string {
+func (view *View) buildInFuncHighlight(key, color, str any) string {
 	return gstr.Replace(gconv.String(str), gconv.String(key), fmt.Sprintf(`<span style="color:%v;">%v</span>`, color, key))
 }
 
 // buildInFuncHideStr implements build-in template function: hidestr
-func (view *View) buildInFuncHideStr(percent, hide, str interface{}) string {
+func (view *View) buildInFuncHideStr(percent, hide, str any) string {
 	return gstr.HideStr(gconv.String(str), gconv.Int(percent), gconv.String(hide))
 }
 
 // buildInFuncToUpper implements build-in template function: toupper
-func (view *View) buildInFuncToUpper(str interface{}) string {
+func (view *View) buildInFuncToUpper(str any) string {
 	return gstr.ToUpper(gconv.String(str))
 }
 
 // buildInFuncToLower implements build-in template function: toupper
-func (view *View) buildInFuncToLower(str interface{}) string {
+func (view *View) buildInFuncToLower(str any) string {
 	return gstr.ToLower(gconv.String(str))
 }
 
 // buildInFuncNl2Br implements build-in template function: nl2br
-func (view *View) buildInFuncNl2Br(str interface{}) string {
+func (view *View) buildInFuncNl2Br(str any) string {
 	return gstr.Nl2Br(gconv.String(str))
 }
 
 // buildInFuncJson implements build-in template function: json ,
 // which encodes and returns `value` as JSON string.
-func (view *View) buildInFuncJson(value interface{}) (string, error) {
+func (view *View) buildInFuncJson(value any) (string, error) {
 	b, err := gjson.Marshal(value)
 	return string(b), err
 }
 
 // buildInFuncXml implements build-in template function: xml ,
 // which encodes and returns `value` as XML string.
-func (view *View) buildInFuncXml(value interface{}, rootTag ...string) (string, error) {
+func (view *View) buildInFuncXml(value any, rootTag ...string) (string, error) {
 	b, err := gjson.New(value).ToXml(rootTag...)
 	return string(b), err
 }
 
 // buildInFuncIni implements build-in template function: ini ,
 // which encodes and returns `value` as XML string.
-func (view *View) buildInFuncIni(value interface{}) (string, error) {
+func (view *View) buildInFuncIni(value any) (string, error) {
 	b, err := gjson.New(value).ToIni()
 	return string(b), err
 }
 
 // buildInFuncYaml implements build-in template function: yaml ,
 // which encodes and returns `value` as YAML string.
-func (view *View) buildInFuncYaml(value interface{}) (string, error) {
+func (view *View) buildInFuncYaml(value any) (string, error) {
 	b, err := gjson.New(value).ToYaml()
 	return string(b), err
 }
 
 // buildInFuncYamlIndent implements build-in template function: yamli ,
 // which encodes and returns `value` as YAML string with custom indent string.
-func (view *View) buildInFuncYamlIndent(value, indent interface{}) (string, error) {
+func (view *View) buildInFuncYamlIndent(value, indent any) (string, error) {
 	b, err := gjson.New(value).ToYamlIndent(gconv.String(indent))
 	return string(b), err
 }
 
 // buildInFuncToml implements build-in template function: toml ,
 // which encodes and returns `value` as TOML string.
-func (view *View) buildInFuncToml(value interface{}) (string, error) {
+func (view *View) buildInFuncToml(value any) (string, error) {
 	b, err := gjson.New(value).ToToml()
 	return string(b), err
 }
 
 // buildInFuncPlus implements build-in template function: plus ,
 // which returns the result that pluses all `deltas` to `value`.
-func (view *View) buildInFuncPlus(value interface{}, deltas ...interface{}) string {
+func (view *View) buildInFuncPlus(value any, deltas ...any) string {
 	result := gconv.Float64(value)
 	for _, v := range deltas {
 		result += gconv.Float64(v)
@@ -280,7 +280,7 @@ func (view *View) buildInFuncPlus(value interface{}, deltas ...interface{}) stri
 
 // buildInFuncMinus implements build-in template function: minus ,
 // which returns the result that subtracts all `deltas` from `value`.
-func (view *View) buildInFuncMinus(value interface{}, deltas ...interface{}) string {
+func (view *View) buildInFuncMinus(value any, deltas ...any) string {
 	result := gconv.Float64(value)
 	for _, v := range deltas {
 		result -= gconv.Float64(v)
@@ -290,7 +290,7 @@ func (view *View) buildInFuncMinus(value interface{}, deltas ...interface{}) str
 
 // buildInFuncTimes implements build-in template function: times ,
 // which returns the result that multiplies `value` by all of `values`.
-func (view *View) buildInFuncTimes(value interface{}, values ...interface{}) string {
+func (view *View) buildInFuncTimes(value any, values ...any) string {
 	result := gconv.Float64(value)
 	for _, v := range values {
 		result *= gconv.Float64(v)
@@ -300,7 +300,7 @@ func (view *View) buildInFuncTimes(value interface{}, values ...interface{}) str
 
 // buildInFuncDivide implements build-in template function: divide ,
 // which returns the result that divides `value` by all of `values`.
-func (view *View) buildInFuncDivide(value interface{}, values ...interface{}) string {
+func (view *View) buildInFuncDivide(value any, values ...any) string {
 	result := gconv.Float64(value)
 	for _, v := range values {
 		value2Float64 := gconv.Float64(v)

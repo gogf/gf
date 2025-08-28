@@ -34,7 +34,7 @@ var (
 )
 
 // NewFromObject creates and returns a root command object using given object.
-func NewFromObject(object interface{}) (rootCmd *Command, err error) {
+func NewFromObject(object any) (rootCmd *Command, err error) {
 	switch c := object.(type) {
 	case Command:
 		return &c, nil
@@ -139,7 +139,7 @@ func methodToRootCmdWhenNameEqual(rootCmd *Command, methodCmd *Command) {
 
 // The `object` is the Meta attribute from business object, and the `name` is the command name,
 // commonly from method name, which is used when no name tag is defined in Meta.
-func newCommandFromObjectMeta(object interface{}, name string) (command *Command, err error) {
+func newCommandFromObjectMeta(object any, name string) (command *Command, err error) {
 	var metaData = gmeta.Data(object)
 	if err = gconv.Scan(metaData, &command); err != nil {
 		return
@@ -180,7 +180,7 @@ func newCommandFromObjectMeta(object interface{}, name string) (command *Command
 }
 
 func newCommandFromMethod(
-	object interface{}, method reflect.Method, methodValue reflect.Value, methodType reflect.Type,
+	object any, method reflect.Method, methodValue reflect.Value, methodType reflect.Type,
 ) (command *Command, err error) {
 	// Necessary validation for input/output parameters and naming.
 	if methodType.NumIn() != 2 || methodType.NumOut() != 2 {
@@ -257,7 +257,7 @@ func newCommandFromMethod(
 	// =============================================================================================
 	// Create function that has value return.
 	// =============================================================================================
-	command.FuncWithValue = func(ctx context.Context, parser *Parser) (out interface{}, err error) {
+	command.FuncWithValue = func(ctx context.Context, parser *Parser) (out any, err error) {
 		ctx = context.WithValue(ctx, CtxKeyParser, parser)
 		var (
 			data        = gconv.Map(parser.GetOptAll())
@@ -269,7 +269,7 @@ func newCommandFromMethod(
 			argIndex = value.(int)
 		}
 		if data == nil {
-			data = map[string]interface{}{}
+			data = map[string]any{}
 		}
 		// Handle orphan options.
 		for _, arg := range command.Arguments {
@@ -342,7 +342,7 @@ func newCommandFromMethod(
 	return
 }
 
-func newArgumentsFromInput(object interface{}) (args []Argument, err error) {
+func newArgumentsFromInput(object any) (args []Argument, err error) {
 	var (
 		fields   []gstructs.Field
 		nameSet  = gset.NewStrSet()
@@ -409,7 +409,7 @@ func newArgumentsFromInput(object interface{}) (args []Argument, err error) {
 }
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
-func mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) error {
+func mergeDefaultStructValue(data map[string]any, pointer any) error {
 	tagFields, err := gstructs.TagFields(pointer, defaultValueTags)
 	if err != nil {
 		return err
@@ -417,7 +417,7 @@ func mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) e
 	if len(tagFields) > 0 {
 		var (
 			foundKey   string
-			foundValue interface{}
+			foundValue any
 		)
 		for _, field := range tagFields {
 			var (
