@@ -19,62 +19,62 @@ import (
 )
 
 // Uint converts `any` to uint.
-func (c *Converter) Uint(any any) (uint, error) {
-	if empty.IsNil(any) {
+func (c *Converter) Uint(anyInput any) (uint, error) {
+	if empty.IsNil(anyInput) {
 		return 0, nil
 	}
-	if v, ok := any.(uint); ok {
+	if v, ok := anyInput.(uint); ok {
 		return v, nil
 	}
-	v, err := c.Uint64(any)
+	v, err := c.Uint64(anyInput)
 	return uint(v), err
 }
 
 // Uint8 converts `any` to uint8.
-func (c *Converter) Uint8(any any) (uint8, error) {
-	if empty.IsNil(any) {
+func (c *Converter) Uint8(anyInput any) (uint8, error) {
+	if empty.IsNil(anyInput) {
 		return 0, nil
 	}
-	if v, ok := any.(uint8); ok {
+	if v, ok := anyInput.(uint8); ok {
 		return v, nil
 	}
-	v, err := c.Uint64(any)
+	v, err := c.Uint64(anyInput)
 	return uint8(v), err
 }
 
 // Uint16 converts `any` to uint16.
-func (c *Converter) Uint16(any any) (uint16, error) {
-	if empty.IsNil(any) {
+func (c *Converter) Uint16(anyInput any) (uint16, error) {
+	if empty.IsNil(anyInput) {
 		return 0, nil
 	}
-	if v, ok := any.(uint16); ok {
+	if v, ok := anyInput.(uint16); ok {
 		return v, nil
 	}
-	v, err := c.Uint64(any)
+	v, err := c.Uint64(anyInput)
 	return uint16(v), err
 }
 
 // Uint32 converts `any` to uint32.
-func (c *Converter) Uint32(any any) (uint32, error) {
-	if empty.IsNil(any) {
+func (c *Converter) Uint32(anyInput any) (uint32, error) {
+	if empty.IsNil(anyInput) {
 		return 0, nil
 	}
-	if v, ok := any.(uint32); ok {
+	if v, ok := anyInput.(uint32); ok {
 		return v, nil
 	}
-	v, err := c.Uint64(any)
+	v, err := c.Uint64(anyInput)
 	return uint32(v), err
 }
 
 // Uint64 converts `any` to uint64.
-func (c *Converter) Uint64(any any) (uint64, error) {
-	if empty.IsNil(any) {
+func (c *Converter) Uint64(anyInput any) (uint64, error) {
+	if empty.IsNil(anyInput) {
 		return 0, nil
 	}
-	if v, ok := any.(uint64); ok {
+	if v, ok := anyInput.(uint64); ok {
 		return v, nil
 	}
-	rv := reflect.ValueOf(any)
+	rv := reflect.ValueOf(anyInput)
 	switch rv.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		val := rv.Int()
@@ -109,7 +109,7 @@ func (c *Converter) Uint64(any any) (uint64, error) {
 		if rv.IsNil() {
 			return 0, nil
 		}
-		if f, ok := any.(localinterface.IUint64); ok {
+		if f, ok := anyInput.(localinterface.IUint64); ok {
 			return f.Uint64(), nil
 		}
 		return c.Uint64(rv.Elem().Interface())
@@ -142,20 +142,20 @@ func (c *Converter) Uint64(any any) (uint64, error) {
 			return v, nil
 		}
 		// Float64
-		if v, err := c.Float64(any); err == nil {
+		if v, err := c.Float64(anyInput); err == nil {
 			if math.IsNaN(v) {
 				return 0, nil
 			}
 			return uint64(v), nil
 		}
 	default:
-		if f, ok := any.(localinterface.IUint64); ok {
+		if f, ok := anyInput.(localinterface.IUint64); ok {
 			return f.Uint64(), nil
 		}
 	}
 	return 0, gerror.NewCodef(
 		gcode.CodeInvalidParameter,
 		`unsupport value type "%s" for converting to uint64`,
-		reflect.TypeOf(any).String(),
+		reflect.TypeOf(anyInput).String(),
 	)
 }

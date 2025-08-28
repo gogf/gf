@@ -7,13 +7,13 @@
 package gconv
 
 // SliceStr is alias of Strings.
-func SliceStr(any interface{}) []string {
-	return Strings(any)
+func SliceStr(anyInput interface{}) []string {
+	return Strings(anyInput)
 }
 
 // Strings converts `any` to []string.
-func Strings(any interface{}) []string {
-	result, _ := defaultConverter.SliceStr(any, SliceOption{
+func Strings(anyInput interface{}) []string {
+	result, _ := defaultConverter.SliceStr(anyInput, SliceOption{
 		ContinueOnError: true,
 	})
 	return result

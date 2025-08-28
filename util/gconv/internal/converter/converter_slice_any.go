@@ -29,16 +29,16 @@ func (c *Converter) getSliceOption(option ...SliceOption) SliceOption {
 	return SliceOption{}
 }
 
-// SliceAny converts `any` to []any.
-func (c *Converter) SliceAny(any interface{}, _ ...SliceOption) ([]any, error) {
-	if empty.IsNil(any) {
+// SliceAny converts `any` to []interface{}.
+func (c *Converter) SliceAny(anyInput interface{}, _ ...SliceOption) ([]interface{}, error) {
+	if empty.IsNil(anyInput) {
 		return nil, nil
 	}
 	var (
 		err   error
 		array []interface{}
 	)
-	switch value := any.(type) {
+	switch value := anyInput.(type) {
 	case []interface{}:
 		array = value
 	case []string:
@@ -127,12 +127,12 @@ func (c *Converter) SliceAny(any interface{}, _ ...SliceOption) ([]any, error) {
 	if array != nil {
 		return array, err
 	}
-	if v, ok := any.(localinterface.IInterfaces); ok {
+	if v, ok := anyInput.(localinterface.IInterfaces); ok {
 		return v.Interfaces(), err
 	}
 
 	// Not a common type, it then uses reflection for conversion.
-	originValueAndKind := reflection.OriginValueAndKind(any)
+	originValueAndKind := reflection.OriginValueAndKind(anyInput)
 	switch originValueAndKind.OriginKind {
 	case reflect.Slice, reflect.Array:
 		var (
@@ -145,6 +145,6 @@ func (c *Converter) SliceAny(any interface{}, _ ...SliceOption) ([]any, error) {
 		return slice, err
 
 	default:
-		return []interface{}{any}, err
+		return []interface{}{anyInput}, err
 	}
 }
