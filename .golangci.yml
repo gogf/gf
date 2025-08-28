@@ -188,7 +188,7 @@ formatters:
         - blank
         - default
         - dot
-        - prefix(github.com/gogf/gf)
+        - prefix(github.com/gogf/gf/v2)
         - prefix(github.com/gogf/gf/cmd)
         - prefix(github.com/gogf/gfcontrib)
         - prefix(github.com/gogf/gf/example)

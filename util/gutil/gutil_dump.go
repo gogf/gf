@@ -211,12 +211,7 @@ func doDumpSlice(in doDumpInternalInput) {
 		if !in.Option.WithType {
 			fmt.Fprintf(in.Buffer, `"%s"`, addSlashesForString(string(b)))
 		} else {
-			in.Buffer.WriteString(fmt.Sprintf(
-				`%s(%d) "%s"`,
-				in.ReflectTypeName,
-				len(string(b)),
-				string(b),
-			))
+			fmt.Fprintf(in.Buffer, "%s(%d) [\n", in.ReflectTypeName, in.ReflectValue.Len())
 		}
 		return
 	}
@@ -238,7 +233,7 @@ func doDumpSlice(in doDumpInternalInput) {
 		doDump(in.ReflectValue.Index(i), in.NewIndent, in.Buffer, in.Option)
 		in.Buffer.WriteString(",\n")
 	}
-	in.Buffer.WriteString(fmt.Sprintf("%s]", in.Indent))
+	fmt.Fprintf(in.Buffer, "%s]", in.Indent)
 }
 
 func doDumpMap(in doDumpInternalInput) {
@@ -254,7 +249,7 @@ func doDumpMap(in doDumpInternalInput) {
 		if !in.Option.WithType {
 			in.Buffer.WriteString("{}")
 		} else {
-			in.Buffer.WriteString(fmt.Sprintf("%s(0) {}", in.ReflectTypeName))
+			fmt.Fprintf(in.Buffer, "%s(0) {}", in.ReflectTypeName)
 		}
 		return
 	}
@@ -272,7 +267,7 @@ func doDumpMap(in doDumpInternalInput) {
 	if !in.Option.WithType {
 		in.Buffer.WriteString("{\n")
 	} else {
-		in.Buffer.WriteString(fmt.Sprintf("%s(%d) {\n", in.ReflectTypeName, len(mapKeys)))
+		fmt.Fprintf(in.Buffer, "%s(%d) {\n", in.ReflectTypeName, len(mapKeys))
 	}
 	for _, mapKey := range mapKeys {
 		tmpSpaceNum = len(fmt.Sprintf(`%v`, mapKey.Interface()))
@@ -283,20 +278,22 @@ func doDumpMap(in doDumpInternalInput) {
 		}
 		// Map key and indent string dump.
 		if !in.Option.WithType {
-			in.Buffer.WriteString(fmt.Sprintf(
+			fmt.Fprintf(
+				in.Buffer,
 				"%s%v:%s",
 				in.NewIndent,
 				mapKeyStr,
 				strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
-			))
+			)
 		} else {
-			in.Buffer.WriteString(fmt.Sprintf(
+			fmt.Fprintf(
+				in.Buffer,
 				"%s%s(%v):%s",
 				in.NewIndent,
 				mapKey.Type().String(),
 				mapKeyStr,
 				strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
-			))
+			)
 		}
 		// Map value dump.
 		doDump(in.ReflectValue.MapIndex(mapKey), in.NewIndent, in.Buffer, in.Option)
