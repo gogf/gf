@@ -43,8 +43,8 @@ func ExampleDB_Transaction() {
 	})
 }
 
-// ExampleDB_GetAllConfig demonstrates the usage of GetAllConfig.
-func ExampleDB_GetAllConfig() {
+// ExampleGetAllConfig demonstrates the usage of GetAllConfig.
+func ExampleGetAllConfig() {
 	//add confignode by addconfignode
 	gdb.AddConfigNode("test", gdb.ConfigNode{
 		Link: "mysql://root:123456@tcp(127.0.0.1:3306)/test",
