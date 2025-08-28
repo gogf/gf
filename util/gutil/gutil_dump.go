@@ -211,7 +211,7 @@ func doDumpSlice(in doDumpInternalInput) {
 		if !in.Option.WithType {
 			fmt.Fprintf(in.Buffer, `"%s"`, addSlashesForString(string(b)))
 		} else {
-			fmt.Fprintf(in.Buffer, "%s(%d) [\n", in.ReflectTypeName, in.ReflectValue.Len())
+			fmt.Fprintf(in.Buffer, `%s(%d) "%s"`, in.ReflectTypeName, len(string(b)), string(b))
 		}
 		return
 	}
