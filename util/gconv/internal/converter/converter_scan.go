@@ -67,7 +67,6 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ...ScanOption) (er
 		if dstPointerReflectValue.CanAddr() {
 			dstPointerReflectValue = dstPointerReflectValue.Addr()
 			dstPointerReflectType = dstPointerReflectValue.Type()
-			dstPointerReflectKind = dstPointerReflectType.Kind()
 		} else {
 			// If dstPointer is not a pointer and cannot be addressed, return an error
 			return gerror.NewCodef(
