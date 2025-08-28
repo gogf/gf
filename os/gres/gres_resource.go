@@ -32,7 +32,7 @@ const (
 // New creates and returns a new resource object.
 func New() *Resource {
 	return &Resource{
-		tree: gtree.NewBTree(defaultTreeM, func(v1, v2 interface{}) int {
+		tree: gtree.NewBTree(defaultTreeM, func(v1, v2 any) int {
 			return strings.Compare(v1.(string), v2.(string))
 		}),
 	}
@@ -189,7 +189,7 @@ func (r *Resource) doScanDir(path string, pattern string, recursive bool, onlyFi
 	}
 	// Used for type checking for first entry.
 	first := true
-	r.tree.IteratorFrom(path, true, func(key, value interface{}) bool {
+	r.tree.IteratorFrom(path, true, func(key, value any) bool {
 		if first {
 			if !value.(*File).FileInfo().IsDir() {
 				return false
@@ -275,7 +275,7 @@ func (r *Resource) Export(src, dst string, option ...ExportOption) error {
 // Dump prints the files of current resource object.
 func (r *Resource) Dump() {
 	var info os.FileInfo
-	r.tree.Iterator(func(key, value interface{}) bool {
+	r.tree.Iterator(func(key, value any) bool {
 		info = value.(*File).FileInfo()
 		fmt.Printf(
 			"%v %8s %s\n",

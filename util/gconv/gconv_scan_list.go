@@ -139,7 +139,7 @@ func doScanList(
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
-	if reflectKind != reflect.Ptr {
+	if reflectKind != reflect.Pointer {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			"structSlicePointer should be type of *[]struct/*[]*struct, but got: %v",
@@ -230,7 +230,7 @@ func doScanList(
 		bindToAttrType  reflect.Type
 		bindToAttrField reflect.StructField
 	)
-	if arrayItemType.Kind() == reflect.Ptr {
+	if arrayItemType.Kind() == reflect.Pointer {
 		if bindToAttrField, ok = arrayItemType.Elem().FieldByName(bindToAttrName); !ok {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
@@ -259,7 +259,7 @@ func doScanList(
 	for i := 0; i < arrayValue.Len(); i++ {
 		arrayElemValue := arrayValue.Index(i)
 		// The FieldByName should be called on non-pointer reflect.Value.
-		if arrayElemValue.Kind() == reflect.Ptr {
+		if arrayElemValue.Kind() == reflect.Pointer {
 			// Like: []*Entity
 			arrayElemValue = arrayElemValue.Elem()
 			if !arrayElemValue.IsValid() {
@@ -278,7 +278,7 @@ func doScanList(
 		if relationAttrName != "" {
 			// Attribute value of current slice element.
 			relationFromAttrValue = arrayElemValue.FieldByName(relationAttrName)
-			if relationFromAttrValue.Kind() == reflect.Ptr {
+			if relationFromAttrValue.Kind() == reflect.Pointer {
 				relationFromAttrValue = relationFromAttrValue.Elem()
 			}
 		} else {
@@ -337,7 +337,7 @@ func doScanList(
 				)
 			}
 
-		case reflect.Ptr:
+		case reflect.Pointer:
 			var element reflect.Value
 			if bindToAttrValue.IsNil() {
 				element = reflect.New(bindToAttrType.Elem()).Elem()
