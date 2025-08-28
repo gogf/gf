@@ -31,8 +31,7 @@ const (
 	H  = time.Hour
 	M  = time.Minute
 	S  = time.Second
-    //nolint:staticcheck
-	MS = time.Millisecond
+	MS = time.Millisecond //nolint:staticcheck
 	US = time.Microsecond
 	NS = time.Nanosecond
 
