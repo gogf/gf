@@ -108,7 +108,7 @@ func ExampleValidator_I18n() {
 
 	// Output:
 	// The value `16` must be equal or greater than 18
-	// 字段值`16`字段最小值应当为 18
+	// 字段值`16`字段最小值应当为18
 }
 
 func ExampleValidator_Bail() {
@@ -207,8 +207,8 @@ func ExampleValidator_Data_map1() {
 		"password2": "1234567",
 	}
 	rules := []string{
-		"passport@required|length:6,16#账号不能为空 | 账号长度应当在{min}到{max}之间",
-		"password@required|length:6,16|same{password}2#密码不能为空 | 密码长度应当在{min}到{max}之间 | 两次密码输入不相等",
+		"passport@required|length:6,16#账号不能为空|账号长度应当在{min}到{max}之间",
+		"password@required|length:6,16|same{password}2#密码不能为空|密码长度应当在{min}到{max}之间|两次密码输入不相等",
 		"password2@required|length:6,16#",
 	}
 	if e := g.Validator().Data(params).Rules(rules).Run(gctx.New()); e != nil {
@@ -229,8 +229,8 @@ func ExampleValidator_Data_map2() {
 		"password2": "1234567",
 	}
 	rules := []string{
-		"passport@length:6,16#账号不能为空 | 账号长度应当在{min}到{max}之间",
-		"password@required|length:6,16|same:password2#密码不能为空 | 密码长度应当在{min}到{max}之间 | 两次密码输入不相等",
+		"passport@length:6,16#账号不能为空|账号长度应当在{min}到{max}之间",
+		"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在{min}到{max}之间|两次密码输入不相等",
 		"password2@required|length:6,16#",
 	}
 	if e := g.Validator().Data(params).Rules(rules).Run(gctx.New()); e != nil {
@@ -256,7 +256,7 @@ func ExampleValidator_Data_map3() {
 		"password2": "required|length:6,16",
 	}
 	messages := map[string]interface{}{
-		"passport": "账号不能为空 | 账号长度应当在{min}到{max}之间",
+		"passport": "账号不能为空|账号长度应当在{min}到{max}之间",
 		"password": map[string]string{
 			"required": "密码不能为空",
 			"same":     "两次密码输入不相等",
@@ -494,7 +494,7 @@ func ExampleValidator_RuleFuncMap() {
 func ExampleValidator_registerRule() {
 	type User struct {
 		Id   int
-		Name string `v:"required|unique-name # 请输入用户名称 | 用户名称已被占用"`
+		Name string `v:"required|unique-name # 请输入用户名称|用户名称已被占用"`
 		Pass string `v:"required|length:6,18"`
 	}
 	user := &User{
