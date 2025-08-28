@@ -20,8 +20,8 @@ import (
 )
 
 // Decode converts properties format to map.
-func Decode(data []byte) (res map[string]interface{}, err error) {
-	res = make(map[string]interface{})
+func Decode(data []byte) (res map[string]any, err error) {
+	res = make(map[string]any)
 	pr, err := properties.Load(data, properties.UTF8)
 	if err != nil || pr == nil {
 		err = gerror.Wrapf(err, `Lib magiconair load Properties data failed.`)
@@ -42,10 +42,10 @@ func Decode(data []byte) (res map[string]interface{}, err error) {
 }
 
 // Encode converts map to properties format.
-func Encode(data map[string]interface{}) (res []byte, err error) {
+func Encode(data map[string]any) (res []byte, err error) {
 	pr := properties.NewProperties()
 
-	flattened := map[string]interface{}{}
+	flattened := map[string]any{}
 
 	flattened = flattenAndMergeMap(flattened, data, "", ".")
 
@@ -87,20 +87,20 @@ func ToJson(data []byte) (res []byte, err error) {
 
 // deepSearch scans deep maps, following the key indexes listed in the sequence "path".
 // The last value is expected to be another map, and is returned.
-func deepSearch(m map[string]interface{}, path []string) map[string]interface{} {
+func deepSearch(m map[string]any, path []string) map[string]any {
 	for _, k := range path {
 		m2, ok := m[k]
 		if !ok {
 			// intermediate key does not exist
 			// => create it and continue from there
-			m3 := make(map[string]interface{})
+			m3 := make(map[string]any)
 			m[k] = m3
 			m = m3
 			continue
 		}
-		m3, ok := m2.(map[string]interface{})
+		m3, ok := m2.(map[string]any)
 		if !ok {
-			m3 = make(map[string]interface{})
+			m3 = make(map[string]any)
 			m[k] = m3
 		}
 		// continue search from here
@@ -110,21 +110,21 @@ func deepSearch(m map[string]interface{}, path []string) map[string]interface{} 
 }
 
 // flattenAndMergeMap recursively flattens the given map into a new map
-func flattenAndMergeMap(shadow map[string]interface{}, m map[string]interface{}, prefix string, delimiter string) map[string]interface{} {
+func flattenAndMergeMap(shadow map[string]any, m map[string]any, prefix string, delimiter string) map[string]any {
 	if shadow != nil && prefix != "" && shadow[prefix] != nil {
 		return shadow
 	}
 
-	var m2 map[string]interface{}
+	var m2 map[string]any
 	if prefix != "" {
 		prefix += delimiter
 	}
 	for k, val := range m {
 		fullKey := prefix + k
 		switch val.(type) {
-		case map[string]interface{}:
-			m2 = val.(map[string]interface{})
-		case map[interface{}]interface{}:
+		case map[string]any:
+			m2 = val.(map[string]any)
+		case map[any]any:
 			m2 = gconv.Map(val)
 		default:
 			// immediate value

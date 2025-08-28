@@ -17,7 +17,7 @@ import (
 
 // StructToSlice converts struct to slice of which all keys and values are its items.
 // Eg: {"K1": "v1", "K2": "v2"} => ["K1", "v1", "K2", "v2"]
-func StructToSlice(data interface{}) []interface{} {
+func StructToSlice(data any) []any {
 	var (
 		reflectValue = reflect.ValueOf(data)
 		reflectKind  = reflectValue.Kind()
@@ -28,7 +28,7 @@ func StructToSlice(data interface{}) []interface{} {
 	}
 	switch reflectKind {
 	case reflect.Struct:
-		array := make([]interface{}, 0)
+		array := make([]any, 0)
 		// Note that, it uses the gconv tag name instead of the attribute name if
 		// the gconv tag is fined in the struct attributes.
 		for k, v := range gconv.Map(reflectValue) {
@@ -42,7 +42,7 @@ func StructToSlice(data interface{}) []interface{} {
 
 // FillStructWithDefault fills  attributes of pointed struct with tag value from `default/d` tag .
 // The parameter `structPtr` should be either type of *struct/[]*struct.
-func FillStructWithDefault(structPtr interface{}) error {
+func FillStructWithDefault(structPtr any) error {
 	var (
 		reflectValue reflect.Value
 	)

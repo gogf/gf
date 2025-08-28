@@ -7,12 +7,12 @@
 package gconv
 
 // SliceAny is alias of Interfaces.
-func SliceAny(anyInput interface{}) []interface{} {
+func SliceAny(anyInput any) []any {
 	return Interfaces(anyInput)
 }
 
-// Interfaces converts `any` to []interface{}.
-func Interfaces(anyInput interface{}) []interface{} {
+// Interfaces converts `any` to []any.
+func Interfaces(anyInput any) []any {
 	result, _ := defaultConverter.SliceAny(anyInput, SliceOption{
 		ContinueOnError: true,
 	})

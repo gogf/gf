@@ -38,7 +38,7 @@ func (r RuleRequired) Run(in RunInput) error {
 
 // isRequiredEmpty checks and returns whether given value is empty string.
 // Note that if given value is a zero integer, it will be considered as not empty.
-func isRequiredEmpty(value interface{}) bool {
+func isRequiredEmpty(value any) bool {
 	reflectValue := reflect.ValueOf(value)
 	for reflectValue.Kind() == reflect.Ptr {
 		reflectValue = reflectValue.Elem()

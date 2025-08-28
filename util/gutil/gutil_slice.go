@@ -13,19 +13,19 @@ import (
 )
 
 // SliceCopy does a shallow copy of slice `data` for most commonly used slice type
-// []interface{}.
-func SliceCopy(slice []interface{}) []interface{} {
-	newSlice := make([]interface{}, len(slice))
+// []any.
+func SliceCopy(slice []any) []any {
+	newSlice := make([]any, len(slice))
 	copy(newSlice, slice)
 	return newSlice
 }
 
 // SliceInsertBefore inserts the `values` to the front of `index` and returns a new slice.
-func SliceInsertBefore(slice []interface{}, index int, values ...interface{}) (newSlice []interface{}) {
+func SliceInsertBefore(slice []any, index int, values ...any) (newSlice []any) {
 	if index < 0 || index >= len(slice) {
 		return slice
 	}
-	newSlice = make([]interface{}, len(slice)+len(values))
+	newSlice = make([]any, len(slice)+len(values))
 	copy(newSlice, slice[0:index])
 	copy(newSlice[index:], values)
 	copy(newSlice[index+len(values):], slice[index:])
@@ -33,11 +33,11 @@ func SliceInsertBefore(slice []interface{}, index int, values ...interface{}) (n
 }
 
 // SliceInsertAfter inserts the `values` to the back of `index` and returns a new slice.
-func SliceInsertAfter(slice []interface{}, index int, values ...interface{}) (newSlice []interface{}) {
+func SliceInsertAfter(slice []any, index int, values ...any) (newSlice []any) {
 	if index < 0 || index >= len(slice) {
 		return slice
 	}
-	newSlice = make([]interface{}, len(slice)+len(values))
+	newSlice = make([]any, len(slice)+len(values))
 	copy(newSlice, slice[0:index+1])
 	copy(newSlice[index+1:], values)
 	copy(newSlice[index+1+len(values):], slice[index+1:])
@@ -46,7 +46,7 @@ func SliceInsertAfter(slice []interface{}, index int, values ...interface{}) (ne
 
 // SliceDelete deletes an element at `index` and returns the new slice.
 // It does nothing if the given `index` is invalid.
-func SliceDelete(slice []interface{}, index int) (newSlice []interface{}) {
+func SliceDelete(slice []any, index int) (newSlice []any) {
 	if index < 0 || index >= len(slice) {
 		return slice
 	}
@@ -62,12 +62,12 @@ func SliceDelete(slice []interface{}, index int) (newSlice []interface{}) {
 	return append(slice[:index], slice[index+1:]...)
 }
 
-// SliceToMap converts slice type variable `slice` to `map[string]interface{}`.
+// SliceToMap converts slice type variable `slice` to `map[string]any`.
 // Note that if the length of `slice` is not an even number, it returns nil.
 // Eg:
 // ["K1", "v1", "K2", "v2"] => {"K1": "v1", "K2": "v2"}
 // ["K1", "v1", "K2"]       => nil
-func SliceToMap(slice interface{}) map[string]interface{} {
+func SliceToMap(slice any) map[string]any {
 	var (
 		reflectValue = reflect.ValueOf(slice)
 		reflectKind  = reflectValue.Kind()
@@ -82,7 +82,7 @@ func SliceToMap(slice interface{}) map[string]interface{} {
 		if length%2 != 0 {
 			return nil
 		}
-		data := make(map[string]interface{})
+		data := make(map[string]any)
 		for i := 0; i < reflectValue.Len(); i += 2 {
 			data[gconv.String(reflectValue.Index(i).Interface())] = reflectValue.Index(i + 1).Interface()
 		}
@@ -91,12 +91,12 @@ func SliceToMap(slice interface{}) map[string]interface{} {
 	return nil
 }
 
-// SliceToMapWithColumnAsKey converts slice type variable `slice` to `map[interface{}]interface{}`
+// SliceToMapWithColumnAsKey converts slice type variable `slice` to `map[any]any`
 // The value of specified column use as the key for returned map.
 // Eg:
 // SliceToMapWithColumnAsKey([{"K1": "v1", "K2": 1}, {"K1": "v2", "K2": 2}], "K1") => {"v1": {"K1": "v1", "K2": 1}, "v2": {"K1": "v2", "K2": 2}}
 // SliceToMapWithColumnAsKey([{"K1": "v1", "K2": 1}, {"K1": "v2", "K2": 2}], "K2") => {1: {"K1": "v1", "K2": 1}, 2: {"K1": "v2", "K2": 2}}
-func SliceToMapWithColumnAsKey(slice interface{}, key interface{}) map[interface{}]interface{} {
+func SliceToMapWithColumnAsKey(slice any, key any) map[any]any {
 	var (
 		reflectValue = reflect.ValueOf(slice)
 		reflectKind  = reflectValue.Kind()
@@ -105,7 +105,7 @@ func SliceToMapWithColumnAsKey(slice interface{}, key interface{}) map[interface
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
-	data := make(map[interface{}]interface{})
+	data := make(map[any]any)
 	switch reflectKind {
 	case reflect.Slice, reflect.Array:
 		for i := 0; i < reflectValue.Len(); i++ {

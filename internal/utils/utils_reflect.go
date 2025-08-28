@@ -12,7 +12,7 @@ import (
 
 // CanCallIsNil Can reflect.Value call reflect.Value.IsNil.
 // It can avoid reflect.Value.IsNil panics.
-func CanCallIsNil(v interface{}) bool {
+func CanCallIsNil(v any) bool {
 	rv, ok := v.(reflect.Value)
 	if !ok {
 		return false

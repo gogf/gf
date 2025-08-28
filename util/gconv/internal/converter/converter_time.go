@@ -16,7 +16,7 @@ import (
 )
 
 // Time converts `any` to time.Time.
-func (c *Converter) Time(anyInput interface{}, format ...string) (time.Time, error) {
+func (c *Converter) Time(anyInput any, format ...string) (time.Time, error) {
 	// It's already this type.
 	if len(format) == 0 {
 		if v, ok := anyInput.(time.Time); ok {
@@ -36,7 +36,7 @@ func (c *Converter) Time(anyInput interface{}, format ...string) (time.Time, err
 // Duration converts `any` to time.Duration.
 // If `any` is string, then it uses time.ParseDuration to convert it.
 // If `any` is numeric, then it converts `any` as nanoseconds.
-func (c *Converter) Duration(anyInput interface{}) (time.Duration, error) {
+func (c *Converter) Duration(anyInput any) (time.Duration, error) {
 	// It's already this type.
 	if v, ok := anyInput.(time.Duration); ok {
 		return v, nil
@@ -60,7 +60,7 @@ func (c *Converter) Duration(anyInput interface{}) (time.Duration, error) {
 // It returns the converted value that matched the first format of the formats slice.
 // If no `format` given, it converts `any` using gtime.NewFromTimeStamp if `any` is numeric,
 // or using gtime.StrToTime if `any` is string.
-func (c *Converter) GTime(anyInput interface{}, format ...string) (*gtime.Time, error) {
+func (c *Converter) GTime(anyInput any, format ...string) (*gtime.Time, error) {
 	if empty.IsNil(anyInput) {
 		return nil, nil
 	}
