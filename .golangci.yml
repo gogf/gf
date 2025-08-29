@@ -195,7 +195,10 @@ formatters:
       custom-order: true
       no-lex-order: false
     gofmt:
-      simplify: true
+      simplify: false
+      rewrite-rules:
+        - pattern: 'interface{}'
+          replacement: 'any'
     goimports:
       local-prefixes:
         - github.com/gogf/gf/v2
