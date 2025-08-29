@@ -30,7 +30,7 @@ concurrency:
 env:
   TZ: "Asia/Shanghai"
   # for unit testing cases of some components that only execute on the latest go version.
-  LATEST_GO_VERSION: "1.24"
+  LATEST_GO_VERSION: "1.25"
 
 jobs:
   code-test:
