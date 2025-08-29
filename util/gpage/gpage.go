@@ -7,6 +7,7 @@
 // Package gpage provides useful paging functionality for web pages.
 //
 // Deprecated: wrap this pagination html content in business layer.
+// Will be removed in version 3.0.
 package gpage
 
 import (

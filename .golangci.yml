@@ -196,6 +196,19 @@ formatters:
       no-lex-order: false
     gofmt:
       simplify: true
+      rewrite-rules:
+        - pattern: 'interface{}'
+          replacement: 'any'
+        - pattern: 'reflect.Ptr'
+          replacement: 'reflect.Pointer'
+        - pattern: 'ioutil.ReadAll'
+          replacement: 'io.ReadAll'
+        - pattern: 'ioutil.WriteFile'
+          replacement: 'os.WriteFile'
+        - pattern: 'ioutil.ReadFile'
+          replacement: 'os.ReadFile'
+        - pattern: 'ioutil.NopCloser'
+          replacement: 'io.NopCloser'
     goimports:
       local-prefixes:
         - github.com/gogf/gf/v2
