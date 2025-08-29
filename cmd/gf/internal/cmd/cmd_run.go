@@ -13,13 +13,13 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gfsnotify"
 	"github.com/gogf/gf/v2/os/gproc"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/os/gtimer"
 	"github.com/gogf/gf/v2/util/gtag"
 
@@ -130,7 +130,7 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		}
 
 		// With some delay in case of multiple code changes in very short interval.
-		gtimer.SetTimeout(ctx, 1500*time.Millisecond, func(ctx context.Context) {
+		gtimer.SetTimeout(ctx, 1500*gtime.MS, func(ctx context.Context) {
 			defer dirty.Set(false)
 			mlog.Printf(`watched file changes: %s`, event.String())
 			app.Run(ctx, outputPath)
