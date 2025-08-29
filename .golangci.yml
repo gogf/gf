@@ -210,11 +210,11 @@ formatters:
         - pattern: 'map[interface{}][]interface{}'
           replacement: 'map[any][]any'
         - pattern: 'map[interface{}]map[interface{}]interface{}'
-          replacement: map[any]map[any]any'
+          replacement: 'map[any]map[any]any'
         - pattern: 'map[string]map[string]interface{}'
           replacement: 'map[string]map[string]any'
-        - pattern: `reflect.Ptr`
-          replacement: `reflect.Pointer`
+        - pattern: 'reflect.Ptr'
+          replacement: 'reflect.Pointer'
         - pattern: 'ioutil.ReadAll'
           replacement: 'io.ReadAll'
         - pattern: 'ioutil.WriteFile'
