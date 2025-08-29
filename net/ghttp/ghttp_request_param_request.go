@@ -239,7 +239,7 @@ func (r *Request) mergeInTagStructValue(data map[string]any) error {
 		for _, field := range fields {
 			var (
 				foundKey   string
-				foundValue interface{}
+				foundValue any
 			)
 			if tagValue := field.TagIn(); tagValue != "" {
 				findKey := field.TagPriorityName()
