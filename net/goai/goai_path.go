@@ -275,7 +275,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	}
 
 	// Remove operation body duplicated properties.
-	oai.removeOperationDuplicatedProperties(operation)
+	oai.removeOperationDuplicatedProperties(&operation)
 
 	// Assign to certain operation attribute.
 	switch gstr.ToUpper(in.Method) {
@@ -317,7 +317,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	return nil
 }
 
-func (oai *OpenApiV3) removeOperationDuplicatedProperties(operation Operation) {
+func (oai *OpenApiV3) removeOperationDuplicatedProperties(operation *Operation) {
 	if len(operation.Parameters) == 0 {
 		// Nothing to do.
 		return
@@ -352,6 +352,10 @@ func (oai *OpenApiV3) removeOperationDuplicatedProperties(operation Operation) {
 				requestBodyContent.Schema.Value = newSchema
 				newSchema.Required = oai.removeItemsFromArray(newSchema.Required, duplicatedParameterNames)
 				newSchema.Properties.Removes(duplicatedParameterNames)
+				// remove request body if there are no properties left
+				if newSchema.Properties.refs.IsEmpty() {
+					operation.RequestBody = nil
+				}
 				continue
 			}
 		}
