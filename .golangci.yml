@@ -223,12 +223,6 @@ formatters:
           replacement: 'os.ReadFile'
         - pattern: 'ioutil.NopCloser'
           replacement: 'io.NopCloser'
-        - pattern: 'errors.New(fmt.Sprintf($1))'
-          replacement: 'fmt.Errorf($1)'
-        - pattern: 'fmt.Sprintf("%s", $1)'
-          replacement: '$1.Error()'
-        - pattern: 'bytes.Compare($1, $2) == 0'
-          replacement: 'bytes.Equal($1, $2)'
     goimports:
       local-prefixes:
         - github.com/gogf/gf/v2
