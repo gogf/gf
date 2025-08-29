@@ -326,7 +326,7 @@ func Test_Router_Handler_Standard_WithGeneric(t *testing.T) {
 	})
 	s.BindHandler("/test1_slice", func(ctx context.Context, req *TestReq) (res []Test1Res, err error) {
 		return []Test1Res{
-			Test1Res{
+			{
 				Age: TestGeneric[int]{
 					Test: req.Age,
 				},
@@ -341,7 +341,7 @@ func Test_Router_Handler_Standard_WithGeneric(t *testing.T) {
 
 	s.BindHandler("/test2_slice", func(ctx context.Context, req *TestReq) (res []Test2Res, err error) {
 		return []Test2Res{
-			Test2Res{
+			{
 				Test: req.Age,
 			},
 		}, nil
@@ -359,7 +359,7 @@ func Test_Router_Handler_Standard_WithGeneric(t *testing.T) {
 
 	s.BindHandler("/test3_slice", func(ctx context.Context, req *TestReq) (res []TestGenericRes[int], err error) {
 		return []TestGenericRes[int]{
-			TestGenericRes[int]{
+			{
 				Test: req.Age,
 			},
 		}, nil

@@ -496,13 +496,9 @@ func (a *SortedIntArray) Unique() *SortedIntArray {
 	if len(a.array) == 0 {
 		return a
 	}
-	i := 0
-	for {
-		if i == len(a.array)-1 {
-			break
-		}
+	for i := 0; i < len(a.array)-1; {
 		if a.getComparator()(a.array[i], a.array[i+1]) == 0 {
-			a.array = append(a.array[:i+1], a.array[i+1+1:]...)
+			a.array = append(a.array[:i+1], a.array[i+2:]...)
 		} else {
 			i++
 		}

@@ -444,22 +444,21 @@ func (view *View) searchFile(ctx context.Context, file string) (path string, fol
 	if path == "" {
 		buffer := bytes.NewBuffer(nil)
 		if view.searchPaths.Len() > 0 {
-			buffer.WriteString(fmt.Sprintf("cannot find template file \"%s\" in following paths:", file))
+			fmt.Fprintf(buffer, "cannot find template file \"%s\" in following paths:", file)
 			view.searchPaths.RLockFunc(func(array []string) {
 				index := 1
 				for _, searchPath := range array {
 					searchPath = gstr.TrimRight(searchPath, `\/`)
 					for _, tryFolder := range localSystemTryFolders {
-						buffer.WriteString(fmt.Sprintf(
+						fmt.Fprintf(buffer,
 							"\n%d. %s",
-							index, gfile.Join(searchPath, tryFolder),
-						))
+							index, gfile.Join(searchPath, tryFolder))
 						index++
 					}
 				}
 			})
 		} else {
-			buffer.WriteString(fmt.Sprintf("cannot find template file \"%s\" with no path set/add", file))
+			fmt.Fprintf(buffer, "cannot find template file \"%s\" with no path set/add", file)
 		}
 		if errorPrint() {
 			glog.Error(ctx, buffer.String())

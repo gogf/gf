@@ -111,7 +111,7 @@ func (p *Page) LastPage() string {
 
 // PageBar returns the HTML page bar content with link and span tags.
 func (p *Page) PageBar() string {
-	plus := int(math.Ceil(float64(p.PageBarNum / 2)))
+	plus := p.PageBarNum / 2
 	if p.PageBarNum-plus+p.CurrentPage > p.TotalPage {
 		plus = p.PageBarNum - p.TotalPage + p.CurrentPage
 	}

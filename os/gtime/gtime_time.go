@@ -460,7 +460,7 @@ func (t *Time) StartOfHalf() *Time {
 func (t *Time) StartOfYear() *Time {
 	y, _, _ := t.Date()
 	newTime := t.Clone()
-	newTime.Time = time.Date(y, time.January, 1, 0, 0, 0, 0, newTime.Time.Location())
+	newTime.Time = time.Date(y, time.January, 1, 0, 0, 0, 0, newTime.Location())
 	return newTime
 }
 
@@ -487,7 +487,7 @@ func (t *Time) EndOfDay(withNanoPrecision ...bool) *Time {
 	y, m, d := t.Date()
 	newTime := t.Clone()
 	newTime.Time = time.Date(
-		y, m, d, 23, 59, 59, int(time.Second-getPrecisionDelta(withNanoPrecision...)), newTime.Time.Location(),
+		y, m, d, 23, 59, 59, int(time.Second-getPrecisionDelta(withNanoPrecision...)), newTime.Location(),
 	)
 	return newTime
 }

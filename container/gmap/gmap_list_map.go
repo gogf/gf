@@ -545,7 +545,7 @@ func (m ListMap) MarshalJSON() (jsonBytes []byte, err error) {
 		if buffer.Len() > 1 {
 			buffer.WriteByte(',')
 		}
-		buffer.WriteString(fmt.Sprintf(`"%v":%s`, key, valueBytes))
+		fmt.Fprintf(buffer, `"%v":%s`, key, valueBytes)
 		return true
 	})
 	buffer.WriteByte('}')

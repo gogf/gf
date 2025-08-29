@@ -1508,7 +1508,7 @@ func Test_Issue3968(t *testing.T) {
 					return nil, err
 				}
 				if result != nil {
-					for i, _ := range result {
+					for i := range result {
 						result[i]["location"] = gvar.New("ny")
 					}
 				}

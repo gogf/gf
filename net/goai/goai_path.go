@@ -85,7 +85,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	}
 
 	var (
-		mime                string
+		// mime                string
 		path                = Path{XExtensions: make(XExtensions)}
 		inputMetaMap        = gmeta.Data(inputObject.Interface())
 		outputMetaMap       = gmeta.Data(outputObject.Interface())
@@ -152,9 +152,9 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			return err
 		}
 		// Allowed request mime.
-		if mime = inputMetaMap[gtag.Mime]; mime == "" {
-			mime = inputMetaMap[gtag.Consumes]
-		}
+		// if mime = inputMetaMap[gtag.Mime]; mime == "" {
+		// 	mime = inputMetaMap[gtag.Consumes]
+		// }
 	}
 
 	// path security

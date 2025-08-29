@@ -17,7 +17,7 @@ import (
 
 // Zlib compresses `data` with zlib algorithm.
 func Zlib(data []byte) ([]byte, error) {
-	if data == nil || len(data) < 13 {
+	if len(data) < 13 {
 		return data, nil
 	}
 	var (
@@ -39,7 +39,7 @@ func Zlib(data []byte) ([]byte, error) {
 
 // UnZlib decompresses `data` with zlib algorithm.
 func UnZlib(data []byte) ([]byte, error) {
-	if data == nil || len(data) < 13 {
+	if len(data) < 13 {
 		return data, nil
 	}
 	var (
