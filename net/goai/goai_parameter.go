@@ -25,7 +25,7 @@ type Parameter struct {
 	Deprecated      bool        `json:"deprecated,omitempty"`
 	Required        bool        `json:"required,omitempty"`
 	Schema          *SchemaRef  `json:"schema,omitempty"`
-	Example         interface{} `json:"example,omitempty"`
+	Example         any         `json:"example,omitempty"`
 	Examples        *Examples   `json:"examples,omitempty"`
 	Content         *Content    `json:"content,omitempty"`
 	XExtensions     XExtensions `json:"-"`
