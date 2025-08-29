@@ -52,9 +52,7 @@ func New(path string, cache bool) *SPath {
 		sp.cache = gmap.NewStrStrMap(true)
 	}
 	if len(path) > 0 {
-		if _, err := sp.Add(path); err != nil {
-			// intlog.Print(err)
-		}
+		_, _ = sp.Add(path)
 	}
 	return sp
 }

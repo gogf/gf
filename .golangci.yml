@@ -1,7 +1,7 @@
 version: "2"
 run:
   concurrency: 4
-  go: "1.23"
+  go: "1.25"
   modules-download-mode: readonly
   issues-exit-code: 2
   tests: false
@@ -188,7 +188,7 @@ formatters:
         - blank
         - default
         - dot
-        - prefix(github.com/gogf/gf)
+        - prefix(github.com/gogf/gf/v2)
         - prefix(github.com/gogf/gf/cmd)
         - prefix(github.com/gogf/gfcontrib)
         - prefix(github.com/gogf/gf/example)

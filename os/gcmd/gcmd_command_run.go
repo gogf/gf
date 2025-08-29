@@ -46,14 +46,14 @@ func (c *Command) RunWithValue(ctx context.Context) (value any) {
 			buffer = bytes.NewBuffer(nil)
 		)
 		if code.Code() == gcode.CodeNotFound.Code() {
-			buffer.WriteString(fmt.Sprintf("ERROR: %s\n", gstr.Trim(err.Error())))
+			fmt.Fprintf(buffer, "ERROR: %s\n", gstr.Trim(err.Error()))
 			if lastCmd, ok := detail.(*Command); ok {
 				lastCmd.PrintTo(buffer)
 			} else {
 				c.PrintTo(buffer)
 			}
 		} else {
-			buffer.WriteString(fmt.Sprintf("%+v\n", err))
+			fmt.Fprintf(buffer, "%+v\n", err)
 		}
 		if gtrace.GetTraceID(ctx) == "" {
 			fmt.Println(buffer.String())

@@ -176,13 +176,13 @@ func doDump(value any, indent string, buffer *bytes.Buffer, option doDumpOption)
 		doDumpNumber(exportInternalInput)
 
 	case reflect.Chan:
-		buffer.WriteString(fmt.Sprintf(`<%s>`, reflectValue.Type().String()))
+		fmt.Fprintf(buffer, `<%s>`, reflectValue.Type().String())
 
 	case reflect.Func:
 		if reflectValue.IsNil() || !reflectValue.IsValid() {
 			buffer.WriteString(`<nil>`)
 		} else {
-			buffer.WriteString(fmt.Sprintf(`<%s>`, reflectValue.Type().String()))
+			fmt.Fprintf(buffer, `<%s>`, reflectValue.Type().String())
 		}
 
 	case reflect.Interface:
@@ -209,14 +209,9 @@ type doDumpInternalInput struct {
 func doDumpSlice(in doDumpInternalInput) {
 	if b, ok := in.Value.([]byte); ok {
 		if !in.Option.WithType {
-			in.Buffer.WriteString(fmt.Sprintf(`"%s"`, addSlashesForString(string(b))))
+			fmt.Fprintf(in.Buffer, `"%s"`, addSlashesForString(string(b)))
 		} else {
-			in.Buffer.WriteString(fmt.Sprintf(
-				`%s(%d) "%s"`,
-				in.ReflectTypeName,
-				len(string(b)),
-				string(b),
-			))
+			fmt.Fprintf(in.Buffer, `%s(%d) "%s"`, in.ReflectTypeName, len(string(b)), string(b))
 		}
 		return
 	}
@@ -224,21 +219,21 @@ func doDumpSlice(in doDumpInternalInput) {
 		if !in.Option.WithType {
 			in.Buffer.WriteString("[]")
 		} else {
-			in.Buffer.WriteString(fmt.Sprintf("%s(0) []", in.ReflectTypeName))
+			fmt.Fprintf(in.Buffer, "%s(0) []", in.ReflectTypeName)
 		}
 		return
 	}
 	if !in.Option.WithType {
 		in.Buffer.WriteString("[\n")
 	} else {
-		in.Buffer.WriteString(fmt.Sprintf("%s(%d) [\n", in.ReflectTypeName, in.ReflectValue.Len()))
+		fmt.Fprintf(in.Buffer, "%s(%d) [\n", in.ReflectTypeName, in.ReflectValue.Len())
 	}
 	for i := 0; i < in.ReflectValue.Len(); i++ {
 		in.Buffer.WriteString(in.NewIndent)
 		doDump(in.ReflectValue.Index(i), in.NewIndent, in.Buffer, in.Option)
 		in.Buffer.WriteString(",\n")
 	}
-	in.Buffer.WriteString(fmt.Sprintf("%s]", in.Indent))
+	fmt.Fprintf(in.Buffer, "%s]", in.Indent)
 }
 
 func doDumpMap(in doDumpInternalInput) {
@@ -254,7 +249,7 @@ func doDumpMap(in doDumpInternalInput) {
 		if !in.Option.WithType {
 			in.Buffer.WriteString("{}")
 		} else {
-			in.Buffer.WriteString(fmt.Sprintf("%s(0) {}", in.ReflectTypeName))
+			fmt.Fprintf(in.Buffer, "%s(0) {}", in.ReflectTypeName)
 		}
 		return
 	}
@@ -272,7 +267,7 @@ func doDumpMap(in doDumpInternalInput) {
 	if !in.Option.WithType {
 		in.Buffer.WriteString("{\n")
 	} else {
-		in.Buffer.WriteString(fmt.Sprintf("%s(%d) {\n", in.ReflectTypeName, len(mapKeys)))
+		fmt.Fprintf(in.Buffer, "%s(%d) {\n", in.ReflectTypeName, len(mapKeys))
 	}
 	for _, mapKey := range mapKeys {
 		tmpSpaceNum = len(fmt.Sprintf(`%v`, mapKey.Interface()))
@@ -283,32 +278,34 @@ func doDumpMap(in doDumpInternalInput) {
 		}
 		// Map key and indent string dump.
 		if !in.Option.WithType {
-			in.Buffer.WriteString(fmt.Sprintf(
+			fmt.Fprintf(
+				in.Buffer,
 				"%s%v:%s",
 				in.NewIndent,
 				mapKeyStr,
 				strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
-			))
+			)
 		} else {
-			in.Buffer.WriteString(fmt.Sprintf(
+			fmt.Fprintf(
+				in.Buffer,
 				"%s%s(%v):%s",
 				in.NewIndent,
 				mapKey.Type().String(),
 				mapKeyStr,
 				strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
-			))
+			)
 		}
 		// Map value dump.
 		doDump(in.ReflectValue.MapIndex(mapKey), in.NewIndent, in.Buffer, in.Option)
 		in.Buffer.WriteString(",\n")
 	}
-	in.Buffer.WriteString(fmt.Sprintf("%s}", in.Indent))
+	fmt.Fprintf(in.Buffer, "%s}", in.Indent)
 }
 
 func doDumpStruct(in doDumpInternalInput) {
 	if in.PtrAddress != "" {
 		if _, ok := in.DumpedPointerSet[in.PtrAddress]; ok {
-			in.Buffer.WriteString(fmt.Sprintf(`<cycle dump %s>`, in.PtrAddress))
+			fmt.Fprintf(in.Buffer, `<cycle dump %s>`, in.PtrAddress)
 			return
 		}
 	}
@@ -355,12 +352,13 @@ func doDumpStruct(in doDumpInternalInput) {
 		if !in.Option.WithType {
 			in.Buffer.WriteString(structContentStr)
 		} else {
-			in.Buffer.WriteString(fmt.Sprintf(
+			fmt.Fprintf(
+				in.Buffer,
 				"%s(%s) %s",
 				in.ReflectTypeName,
 				attributeCountStr,
 				structContentStr,
-			))
+			)
 		}
 		return
 	}
@@ -382,37 +380,39 @@ dumpStructFields:
 	if !in.Option.WithType {
 		in.Buffer.WriteString("{\n")
 	} else {
-		in.Buffer.WriteString(fmt.Sprintf("%s(%d) {\n", in.ReflectTypeName, len(structFields)))
+		fmt.Fprintf(in.Buffer, "%s(%d) {\n", in.ReflectTypeName, len(structFields))
 	}
 	for _, field := range structFields {
 		if in.ExportedOnly && !field.IsExported() {
 			continue
 		}
 		tmpSpaceNum = len(fmt.Sprintf(`%v`, field.Name()))
-		in.Buffer.WriteString(fmt.Sprintf(
+		fmt.Fprintf(
+			in.Buffer,
 			"%s%s:%s",
 			in.NewIndent,
 			field.Name(),
 			strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
-		))
+		)
 		doDump(field.Value, in.NewIndent, in.Buffer, in.Option)
 		in.Buffer.WriteString(",\n")
 	}
-	in.Buffer.WriteString(fmt.Sprintf("%s}", in.Indent))
+	fmt.Fprintf(in.Buffer, "%s}", in.Indent)
 }
 
 func doDumpNumber(in doDumpInternalInput) {
 	if v, ok := in.Value.(iString); ok {
 		s := v.String()
 		if !in.Option.WithType {
-			in.Buffer.WriteString(fmt.Sprintf(`"%v"`, addSlashesForString(s)))
+			fmt.Fprintf(in.Buffer, `"%v"`, addSlashesForString(s))
 		} else {
-			in.Buffer.WriteString(fmt.Sprintf(
-				`%s(%d) "%v"`,
+			fmt.Fprintf(
+				in.Buffer,
+				"%s(%d) %s",
 				in.ReflectTypeName,
 				len(s),
-				addSlashesForString(s),
-			))
+				fmt.Sprintf(`"%v"`, addSlashesForString(s)),
+			)
 		}
 	} else {
 		doDumpDefault(in)
@@ -422,14 +422,15 @@ func doDumpNumber(in doDumpInternalInput) {
 func doDumpString(in doDumpInternalInput) {
 	s := in.ReflectValue.String()
 	if !in.Option.WithType {
-		in.Buffer.WriteString(fmt.Sprintf(`"%v"`, addSlashesForString(s)))
+		fmt.Fprintf(in.Buffer, `"%v"`, addSlashesForString(s))
 	} else {
-		in.Buffer.WriteString(fmt.Sprintf(
+		fmt.Fprintf(
+			in.Buffer,
 			`%s(%d) "%v"`,
 			in.ReflectTypeName,
 			len(s),
 			addSlashesForString(s),
-		))
+		)
 	}
 }
 
@@ -458,7 +459,7 @@ func doDumpDefault(in doDumpInternalInput) {
 	if !in.Option.WithType {
 		in.Buffer.WriteString(s)
 	} else {
-		in.Buffer.WriteString(fmt.Sprintf("%s(%s)", in.ReflectTypeName, s))
+		fmt.Fprintf(in.Buffer, "%s(%s)", in.ReflectTypeName, s)
 	}
 }
 

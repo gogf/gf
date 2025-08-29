@@ -9,7 +9,6 @@ package gstr
 import (
 	"bytes"
 	"fmt"
-	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -135,30 +134,57 @@ func Shuffle(str string) string {
 // HideStr replaces part of the string `str` to `hide` by `percentage` from the `middle`.
 // It considers parameter `str` as unicode string.
 func HideStr(str string, percent int, hide string) string {
-	array := strings.Split(str, "@")
-	if len(array) > 1 {
-		str = array[0]
+	// Handle email case
+	var suffix string
+	if idx := strings.IndexByte(str, '@'); idx >= 0 {
+		suffix = str[idx:]
+		str = str[:idx]
 	}
-	var (
-		rs       = []rune(str)
-		length   = len(rs)
-		mid      = math.Floor(float64(length / 2))
-		hideLen  = int(math.Floor(float64(length) * (float64(percent) / 100)))
-		start    = int(mid - math.Floor(float64(hideLen)/2))
-		hideStr  = []rune("")
-		hideRune = []rune(hide)
-	)
-	for i := 0; i < hideLen; i++ {
-		hideStr = append(hideStr, hideRune...)
+
+	// Early return for edge cases
+	if str == "" || percent <= 0 {
+		return str + suffix
 	}
-	buffer := bytes.NewBuffer(nil)
-	buffer.WriteString(string(rs[0:start]))
-	buffer.WriteString(string(hideStr))
-	buffer.WriteString(string(rs[start+hideLen:]))
-	if len(array) > 1 {
-		buffer.WriteString("@" + array[1])
+	if percent >= 100 {
+		return strings.Repeat(hide, len([]rune(str))) + suffix
 	}
-	return buffer.String()
+
+	rs := []rune(str)
+	length := len(rs)
+	if length == 0 {
+		return str + suffix
+	}
+
+	// Calculate hideLen using the same logic as original (with floor)
+	hideLen := (length * percent) / 100
+	if hideLen == 0 {
+		return str + suffix
+	}
+
+	// Calculate start position: mid - hideLen/2
+	// This matches the original algorithm behavior
+	mid := length / 2
+	start := max(mid-hideLen/2, 0)
+
+	end := start + hideLen
+	if end > length {
+		end = length
+		start = max(length-hideLen, 0)
+	}
+
+	// Pre-calculate capacity to avoid reallocations
+	var builder strings.Builder
+	builder.Grow(len(str) + len(hide)*hideLen + len(suffix))
+
+	// Build result string efficiently
+	builder.WriteString(string(rs[:start]))
+	if hide != "" {
+		builder.WriteString(strings.Repeat(hide, hideLen))
+	}
+	builder.WriteString(string(rs[end:]))
+	builder.WriteString(suffix)
+
+	return builder.String()
 }
 
 // Nl2Br inserts HTML line breaks(`br`|<br />) before all newlines in a string:
@@ -207,9 +233,8 @@ func WordWrap(str string, width int, br string) string {
 		wordBuf, spaceBuf bytes.Buffer
 		init              = make([]byte, 0, len(str))
 		buf               = bytes.NewBuffer(init)
-		strRunes          = []rune(str)
 	)
-	for _, char := range strRunes {
+	for _, char := range str {
 		switch {
 		case char == '\n':
 			if wordBuf.Len() == 0 {

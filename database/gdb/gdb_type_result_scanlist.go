@@ -185,7 +185,7 @@ func checkGetSliceElementInfoForScanList(structSlicePointer any, bindToAttrName 
 	}
 	if reflectKind == reflect.Slice || reflectKind == reflect.Array {
 		reflectType = reflectType.Elem()
-		reflectKind = reflectType.Kind()
+		// reflectKind = reflectType.Kind()
 	}
 	out.BindToAttrType = reflectType
 	return
@@ -342,7 +342,7 @@ func doScanList(in doScanListInput) (err error) {
 				arrayElemValue = reflect.New(arrayItemType.Elem()).Elem()
 				arrayValue.Index(i).Set(arrayElemValue.Addr())
 			}
-		} else {
+			// } else {
 			// Like: []Entity
 		}
 		bindToAttrValue = arrayElemValue.FieldByName(in.BindToAttrName)
