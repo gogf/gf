@@ -218,12 +218,12 @@ func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer i
 }
 
 // mergeInTagStructValue merges the request parameters with header or cookie values from struct `in` tag definition.
-func (r *Request) mergeInTagStructValue(data map[string]interface{}) error {
+func (r *Request) mergeInTagStructValue(data map[string]any) error {
 	fields := r.serveHandler.Handler.Info.ReqStructFields
 	if len(fields) > 0 {
 		var (
-			headerMap = make(map[string]interface{})
-			cookieMap = make(map[string]interface{})
+			headerMap = make(map[string]any)
+			cookieMap = make(map[string]any)
 		)
 
 		for k, v := range r.Header {
