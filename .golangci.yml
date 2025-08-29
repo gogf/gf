@@ -195,7 +195,7 @@ formatters:
       custom-order: true
       no-lex-order: false
     gofmt:
-      simplify: false
+      simplify: true
       rewrite-rules:
         - pattern: 'interface{}'
           replacement: 'any'
