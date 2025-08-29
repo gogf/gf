@@ -166,10 +166,7 @@ func (p *Pool) checkExpireItems(ctx context.Context) {
 	// by comparing with this timestamp. It is not accurate comparison for
 	// every item expired, but high performance.
 	var timestampMilli = gtime.TimestampMilli()
-	for {
-		if latestExpire > timestampMilli {
-			break
-		}
+	for latestExpire <= timestampMilli {
 		if r := p.list.PopFront(); r != nil {
 			item := r.(*poolItem)
 			latestExpire = item.expireAt
