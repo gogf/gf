@@ -14,7 +14,7 @@ import (
 )
 
 // DoUpdate does "UPDATE ... " statement for the table.
-func (d *Driver) DoUpdate(ctx context.Context, link gdb.Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
+func (d *Driver) DoUpdate(ctx context.Context, link gdb.Link, table string, data any, condition string, args ...any) (result sql.Result, err error) {
 	ctx = d.injectNeedParsedSql(ctx)
 	return d.Core.DoUpdate(ctx, link, table, data, condition, args...)
 }

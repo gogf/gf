@@ -36,9 +36,9 @@ type (
 		 * @author oldme
 		 */
 		T3(ctx context.Context, b *gdbas.Model) (c *gdbas.Model, d *gdbas.Model, err error)
-		// func (s *sArticle) T4(i interface{}) interface{}
+		// func (s *sArticle) T4(i any) any
 		// # $ % ^ & * ( ) _ + - = { } | [ ] \ : " ; ' < > ? , . /
-		T4(i interface{}) interface{}
+		T4(i any) any
 	}
 )
 

@@ -129,6 +129,7 @@ func generateDaoIndex(in generateDaoIndexInput) {
 		tplView.ClearAssigns()
 		tplView.Assigns(gview.Params{
 			tplVarTableSharding:           in.IsSharding,
+			tplVarTableShardingPrefix:     in.NewTableName + "_",
 			tplVarImportPrefix:            in.ImportPrefix,
 			tplVarTableName:               in.TableName,
 			tplVarTableNameCamelCase:      in.TableNameCamelCase,

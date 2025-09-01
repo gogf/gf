@@ -17,13 +17,13 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-var nf gpool.NewFunc = func() (i interface{}, e error) {
+var nf gpool.NewFunc = func() (i any, e error) {
 	return "hello", nil
 }
 
 var assertIndex = gtype.NewInt(0)
 
-var ef gpool.ExpireFunc = func(i interface{}) {
+var ef gpool.ExpireFunc = func(i any) {
 	assertIndex.Add(1)
 	gtest.Assert(i, assertIndex)
 }
@@ -100,7 +100,7 @@ func Test_Gpool(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		p := gpool.New(time.Millisecond*200, nil, func(i interface{}) {})
+		p := gpool.New(time.Millisecond*200, nil, func(i any) {})
 		p.Put(1)
 		time.Sleep(time.Millisecond * 100)
 		p.Put(2)
@@ -109,7 +109,7 @@ func Test_Gpool(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		s := make([]int, 0)
-		p := gpool.New(time.Millisecond*200, nil, func(i interface{}) {
+		p := gpool.New(time.Millisecond*200, nil, func(i any) {
 			s = append(s, i.(int))
 		})
 		for i := 0; i < 5; i++ {
