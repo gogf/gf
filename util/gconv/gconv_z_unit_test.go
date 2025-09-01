@@ -15,7 +15,7 @@ import (
 
 type impUnmarshalValue struct{}
 
-func (*impUnmarshalValue) UnmarshalValue(interface{}) error {
+func (*impUnmarshalValue) UnmarshalValue(any) error {
 	return nil
 }
 

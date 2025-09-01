@@ -48,6 +48,6 @@ func (i *Info) ModTime() time.Time {
 	return i.modTime
 }
 
-func (i *Info) Sys() interface{} {
+func (i *Info) Sys() any {
 	return nil
 }
