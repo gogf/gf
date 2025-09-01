@@ -18,6 +18,8 @@ import (
 	"time"
 
 	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/renderer"
+	"github.com/olekukonko/tablewriter/tw"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gset"
@@ -296,11 +298,16 @@ func (s *Server) doRouterMapDump() {
 	}
 	if len(routes) > 0 {
 		buffer := bytes.NewBuffer(nil)
-		table := tablewriter.NewWriter(buffer)
-		table.SetHeader(headers)
-		table.SetRowLine(true)
-		table.SetBorder(false)
-		table.SetCenterSeparator("|")
+		table := tablewriter.NewTable(buffer,
+			tablewriter.WithRenderer(renderer.NewBlueprint(
+				tw.Rendition{
+					Settings: tw.Settings{
+						Separators: tw.Separators{BetweenRows: tw.On},
+					},
+					Symbols: tw.NewSymbolCustom("HTTP").WithCenter("|"),
+				})),
+		)
+		table.Header(headers)
 
 		for _, item := range routes {
 			var (
