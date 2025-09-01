@@ -23,7 +23,7 @@ func NewCode(code gcode.Code, text ...string) error {
 }
 
 // NewCodef returns an error that has error code and formats as the given format and args.
-func NewCodef(code gcode.Code, format string, args ...interface{}) error {
+func NewCodef(code gcode.Code, format string, args ...any) error {
 	return &Error{
 		stack: callers(),
 		text:  fmt.Sprintf(format, args...),
@@ -43,7 +43,7 @@ func NewCodeSkip(code gcode.Code, skip int, text ...string) error {
 
 // NewCodeSkipf returns an error that has error code and formats as the given format and args.
 // The parameter `skip` specifies the stack callers skipped amount.
-func NewCodeSkipf(code gcode.Code, skip int, format string, args ...interface{}) error {
+func NewCodeSkipf(code gcode.Code, skip int, format string, args ...any) error {
 	return &Error{
 		stack: callers(skip),
 		text:  fmt.Sprintf(format, args...),
@@ -67,7 +67,7 @@ func WrapCode(code gcode.Code, err error, text ...string) error {
 
 // WrapCodef wraps error with code and format specifier.
 // It returns nil if given `err` is nil.
-func WrapCodef(code gcode.Code, err error, format string, args ...interface{}) error {
+func WrapCodef(code gcode.Code, err error, format string, args ...any) error {
 	if err == nil {
 		return nil
 	}
@@ -97,7 +97,7 @@ func WrapCodeSkip(code gcode.Code, skip int, err error, text ...string) error {
 // WrapCodeSkipf wraps error with code and text that is formatted with given format and args.
 // It returns nil if given err is nil.
 // The parameter `skip` specifies the stack callers skipped amount.
-func WrapCodeSkipf(code gcode.Code, skip int, err error, format string, args ...interface{}) error {
+func WrapCodeSkipf(code gcode.Code, skip int, err error, format string, args ...any) error {
 	if err == nil {
 		return nil
 	}

@@ -31,7 +31,7 @@ type iUnixNano interface {
 // New("2024-10-29")
 // New(1390876568)
 // New(t) // The t is type of time.Time.
-func New(param ...interface{}) *Time {
+func New(param ...any) *Time {
 	if len(param) > 0 {
 		switch r := param[0].(type) {
 		case time.Time:
@@ -460,7 +460,7 @@ func (t *Time) StartOfHalf() *Time {
 func (t *Time) StartOfYear() *Time {
 	y, _, _ := t.Date()
 	newTime := t.Clone()
-	newTime.Time = time.Date(y, time.January, 1, 0, 0, 0, 0, newTime.Time.Location())
+	newTime.Time = time.Date(y, time.January, 1, 0, 0, 0, 0, newTime.Location())
 	return newTime
 }
 
@@ -487,7 +487,7 @@ func (t *Time) EndOfDay(withNanoPrecision ...bool) *Time {
 	y, m, d := t.Date()
 	newTime := t.Clone()
 	newTime.Time = time.Date(
-		y, m, d, 23, 59, 59, int(time.Second-getPrecisionDelta(withNanoPrecision...)), newTime.Time.Location(),
+		y, m, d, 23, 59, 59, int(time.Second-getPrecisionDelta(withNanoPrecision...)), newTime.Location(),
 	)
 	return newTime
 }
@@ -553,7 +553,7 @@ func (t *Time) UnmarshalText(data []byte) error {
 func (t *Time) NoValidation() {}
 
 // DeepCopy implements interface for deep copy of current type.
-func (t *Time) DeepCopy() interface{} {
+func (t *Time) DeepCopy() any {
 	if t == nil {
 		return nil
 	}

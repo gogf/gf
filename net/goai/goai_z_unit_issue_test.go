@@ -122,9 +122,9 @@ func Test_Issue3135(t *testing.T) {
 
 type Issue3889CommonRes struct {
 	g.Meta  `mime:"application/json"`
-	Code    int         `json:"code"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    any    `json:"data"`
 }
 
 type Issue3889Req struct {
@@ -163,7 +163,7 @@ var Issue3889ErrorRes = map[int][]gcode.Code{
 func (r Issue3889Res) EnhanceResponseStatus() map[goai.EnhancedStatusCode]goai.EnhancedStatusType {
 	Codes401 := Issue3889ErrorRes[401]
 	// iterate Codes401 to generate Examples
-	var Examples401 []interface{}
+	var Examples401 []any
 	for _, code := range Codes401 {
 		example := Issue3889CommonRes{
 			Code:    code.Code(),
@@ -347,5 +347,61 @@ func Test_Issue3235(t *testing.T) {
 			"test name desc")
 		t.Assert(api.Components.Schemas.Get(reqPath).Value.Properties.Get("User").Description,
 			"test user desc")
+	})
+}
+
+type Issue4247NoBodyReq struct {
+	g.Meta    `path:"/cluster/{cluster_id}/node/{name}/drain" method:"post" tags:"节点管理" summary:"驱逐节点" dc:"该接口会先设置节点不可调度，再进行驱逐"`
+	ClusterId string `json:"cluster_id" v:"required" dc:"集群ID" `
+	Name      string `json:"name"       v:"required" dc:"节点名称"`
+}
+type Issue4247NoBodyRes struct{}
+
+type Issue4247HasBodyReq struct {
+	g.Meta    `path:"/cluster/{cluster_id}/node/{name}/join" method:"post" tags:"节点管理" summary:"增加节点" dc:"增加节点"`
+	ClusterId string `json:"cluster_id" v:"required" dc:"集群ID" `
+	Name      string `json:"name"       v:"required" dc:"节点名称"`
+	Type      string `json:"type"       v:"required" dc:"节点类型"`
+}
+type Issue4247HasBodyRes struct{}
+
+type Issue4247 struct{}
+
+func (Issue4247) Issue4247NoBody(ctx context.Context, req *Issue4247NoBodyReq) (res *Issue4247NoBodyRes, err error) {
+	res = &Issue4247NoBodyRes{}
+	return
+}
+
+func (Issue4247) Issue4247HasBody(ctx context.Context, req *Issue4247HasBodyReq) (res *Issue4247HasBodyRes, err error) {
+	res = &Issue4247HasBodyRes{}
+	return
+}
+
+// https://github.com/gogf/gf/issues/4247
+func Test_Issue4247(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		s.Use(ghttp.MiddlewareHandlerResponse)
+		s.Group("/", func(group *ghttp.RouterGroup) {
+			group.Bind(
+				new(Issue4247),
+			)
+		})
+		s.SetLogger(nil)
+		s.SetOpenApiPath("/api.json")
+		s.SetDumpRouterMap(false)
+		s.Start()
+
+		defer s.Shutdown()
+		time.Sleep(100 * time.Millisecond)
+
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		apiContent := c.GetBytes(ctx, "/api.json")
+		j, err := gjson.LoadJson(apiContent)
+		t.AssertNil(err)
+		requestBody := `{"content":{"application/json":{"schema":{"description":"增加节点","properties":{"type":{"description":"节点类型","format":"string","type":"string"}},"required":["type"],"type":"object"}}}}`
+		t.Assert(j.Get(`paths./cluster/{cluster_id}/node/{name}/drain.post.requestBody`).IsEmpty(), true)
+		t.Assert(j.Get(`paths./cluster/{cluster_id}/node/{name}/join.post.requestBody`).String(), requestBody)
 	})
 }

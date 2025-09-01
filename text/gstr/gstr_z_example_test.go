@@ -782,7 +782,7 @@ func ExampleParse() {
 	// map[v1:m v2:n]
 	// map[v:map[a:map[a:m b:n]]]
 	// map[v:map[]]
-	// Error: expected type 'map[string]interface{}' for key 'v', but got 'string'
+	// Error: expected type 'map[string]any' for key 'v', but got 'string'
 	// map[]
 	// map[a___[b:c]
 }

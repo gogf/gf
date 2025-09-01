@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/registry/polaris/v2
 go 1.23.0
 
 require (
-	github.com/gogf/gf/v2 v2.9.0
+	github.com/gogf/gf/v2 v2.9.1
 	github.com/polarismesh/polaris-go v1.6.1
 )
 
@@ -32,7 +32,9 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/natefinch/lumberjack v2.0.0+incompatible // indirect
-	github.com/olekukonko/tablewriter v0.0.5 // indirect
+	github.com/olekukonko/errors v1.1.0 // indirect
+	github.com/olekukonko/ll v0.0.9 // indirect
+	github.com/olekukonko/tablewriter v1.0.9 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/polarismesh/specification v1.5.5-alpha.1 // indirect
 	github.com/prometheus/client_golang v1.19.1 // indirect
