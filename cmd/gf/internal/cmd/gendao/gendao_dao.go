@@ -14,8 +14,6 @@ import (
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
-	"github.com/olekukonko/tablewriter/renderer"
-	"github.com/olekukonko/tablewriter/tw"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -213,20 +211,7 @@ func generateColumnNamesForDao(fieldMap map[string]*gdb.TableField, removeFieldP
 			fmt.Sprintf(` #"%s",`, field.Name),
 		}
 	}
-	table := tablewriter.NewTable(buffer,
-		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
-			Borders: tw.Border{Top: tw.Off, Bottom: tw.Off, Left: tw.Off, Right: tw.Off},
-			Settings: tw.Settings{
-				Separators: tw.Separators{BetweenRows: tw.Off, BetweenColumns: tw.Off},
-			},
-			Symbols: tw.NewSymbols(tw.StyleASCII),
-		})),
-		tablewriter.WithConfig(tablewriter.Config{
-			Row: tw.CellConfig{
-				Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone},
-			},
-		}),
-	)
+	table := tablewriter.NewTable(buffer, twRenderer, twConfig)
 	table.Bulk(array)
 	table.Render()
 	namesContent := buffer.String()
@@ -263,20 +248,7 @@ func generateColumnDefinitionForDao(fieldMap map[string]*gdb.TableField, removeF
 			" #" + fmt.Sprintf(`// %s`, comment),
 		}
 	}
-	table := tablewriter.NewTable(buffer,
-		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
-			Borders: tw.Border{Top: tw.Off, Bottom: tw.Off, Left: tw.Off, Right: tw.Off},
-			Settings: tw.Settings{
-				Separators: tw.Separators{BetweenRows: tw.Off, BetweenColumns: tw.Off},
-			},
-			Symbols: tw.NewSymbols(tw.StyleASCII),
-		})),
-		tablewriter.WithConfig(tablewriter.Config{
-			Row: tw.CellConfig{
-				Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone},
-			},
-		}),
-	)
+	table := tablewriter.NewTable(buffer, twRenderer, twConfig)
 	table.Bulk(array)
 	table.Render()
 	defineContent := buffer.String()

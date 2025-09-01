@@ -65,7 +65,6 @@ func (c cEnv) Index(ctx context.Context, in cEnvInput) (out *cEnvOutput, err err
 	}
 	table := tablewriter.NewTable(buffer,
 		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
-			Borders: tw.Border{Top: tw.On, Bottom: tw.On, Left: tw.On, Right: tw.On},
 			Settings: tw.Settings{
 				Separators: tw.Separators{BetweenRows: tw.Off, BetweenColumns: tw.On},
 			},

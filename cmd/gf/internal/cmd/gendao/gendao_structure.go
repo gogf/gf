@@ -13,8 +13,6 @@ import (
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
-	"github.com/olekukonko/tablewriter/renderer"
-	"github.com/olekukonko/tablewriter/tw"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -43,20 +41,7 @@ func generateStructDefinition(ctx context.Context, in generateStructDefinitionIn
 			appendImports = append(appendImports, imports)
 		}
 	}
-	table := tablewriter.NewTable(buffer,
-		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
-			Borders: tw.Border{Top: tw.Off, Bottom: tw.Off, Left: tw.Off, Right: tw.Off},
-			Settings: tw.Settings{
-				Separators: tw.Separators{BetweenRows: tw.Off, BetweenColumns: tw.Off},
-			},
-			Symbols: tw.NewSymbols(tw.StyleASCII),
-		})),
-		tablewriter.WithConfig(tablewriter.Config{
-			Row: tw.CellConfig{
-				Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone},
-			},
-		}),
-	)
+	table := tablewriter.NewTable(buffer, twRenderer, twConfig)
 	table.Bulk(array)
 	table.Render()
 	stContent := buffer.String()
@@ -65,9 +50,9 @@ func generateStructDefinition(ctx context.Context, in generateStructDefinitionIn
 	stContent = gstr.Replace(stContent, "` ", "`")
 	stContent = gstr.Replace(stContent, "``", "")
 	buffer.Reset()
-	buffer.WriteString(fmt.Sprintf("type %s struct {\n", in.StructName))
+	fmt.Fprintf(buffer, "type %s struct {\n", in.StructName)
 	if in.IsDo {
-		buffer.WriteString(fmt.Sprintf("g.Meta `orm:\"table:%s, do:true\"`\n", in.TableName))
+		fmt.Fprintf(buffer, "g.Meta `orm:\"table:%s, do:true\"`\n", in.TableName)
 	}
 	buffer.WriteString(stContent)
 	buffer.WriteString("}")
