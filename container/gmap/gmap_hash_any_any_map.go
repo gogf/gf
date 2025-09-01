@@ -17,10 +17,10 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-// AnyAnyMap wraps map type `map[interface{}]interface{}` and provides more map features.
+// AnyAnyMap wraps map type `map[any]any` and provides more map features.
 type AnyAnyMap struct {
 	mu   rwmutex.RWMutex
-	data map[interface{}]interface{}
+	data map[any]any
 }
 
 // NewAnyAnyMap creates and returns an empty hash map.
@@ -29,14 +29,14 @@ type AnyAnyMap struct {
 func NewAnyAnyMap(safe ...bool) *AnyAnyMap {
 	return &AnyAnyMap{
 		mu:   rwmutex.Create(safe...),
-		data: make(map[interface{}]interface{}),
+		data: make(map[any]any),
 	}
 }
 
 // NewAnyAnyMapFrom creates and returns a hash map from given map `data`.
 // Note that, the param `data` map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
-func NewAnyAnyMapFrom(data map[interface{}]interface{}, safe ...bool) *AnyAnyMap {
+func NewAnyAnyMapFrom(data map[any]any, safe ...bool) *AnyAnyMap {
 	return &AnyAnyMap{
 		mu:   rwmutex.Create(safe...),
 		data: data,
@@ -45,7 +45,7 @@ func NewAnyAnyMapFrom(data map[interface{}]interface{}, safe ...bool) *AnyAnyMap
 
 // Iterator iterates the hash map readonly with custom callback function `f`.
 // If `f` returns true, then it continues iterating; or false to stop.
-func (m *AnyAnyMap) Iterator(f func(k interface{}, v interface{}) bool) {
+func (m *AnyAnyMap) Iterator(f func(k any, v any) bool) {
 	for k, v := range m.Map() {
 		if !f(k, v) {
 			break
@@ -61,13 +61,13 @@ func (m *AnyAnyMap) Clone(safe ...bool) *AnyAnyMap {
 // Map returns the underlying data map.
 // Note that, if it's in concurrent-safe usage, it returns a copy of underlying data,
 // or else a pointer to the underlying data.
-func (m *AnyAnyMap) Map() map[interface{}]interface{} {
+func (m *AnyAnyMap) Map() map[any]any {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	if !m.mu.IsSafe() {
 		return m.data
 	}
-	data := make(map[interface{}]interface{}, len(m.data))
+	data := make(map[any]any, len(m.data))
 	for k, v := range m.data {
 		data[k] = v
 	}
@@ -75,21 +75,21 @@ func (m *AnyAnyMap) Map() map[interface{}]interface{} {
 }
 
 // MapCopy returns a shallow copy of the underlying data of the hash map.
-func (m *AnyAnyMap) MapCopy() map[interface{}]interface{} {
+func (m *AnyAnyMap) MapCopy() map[any]any {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	data := make(map[interface{}]interface{}, len(m.data))
+	data := make(map[any]any, len(m.data))
 	for k, v := range m.data {
 		data[k] = v
 	}
 	return data
 }
 
-// MapStrAny returns a copy of the underlying data of the map as map[string]interface{}.
-func (m *AnyAnyMap) MapStrAny() map[string]interface{} {
+// MapStrAny returns a copy of the underlying data of the map as map[string]any.
+func (m *AnyAnyMap) MapStrAny() map[string]any {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	data := make(map[string]interface{}, len(m.data))
+	data := make(map[string]any, len(m.data))
 	for k, v := range m.data {
 		data[gconv.String(k)] = v
 	}
@@ -120,17 +120,17 @@ func (m *AnyAnyMap) FilterNil() {
 }
 
 // Set sets key-value to the hash map.
-func (m *AnyAnyMap) Set(key interface{}, value interface{}) {
+func (m *AnyAnyMap) Set(key any, value any) {
 	m.mu.Lock()
 	if m.data == nil {
-		m.data = make(map[interface{}]interface{})
+		m.data = make(map[any]any)
 	}
 	m.data[key] = value
 	m.mu.Unlock()
 }
 
 // Sets batch sets key-values to the hash map.
-func (m *AnyAnyMap) Sets(data map[interface{}]interface{}) {
+func (m *AnyAnyMap) Sets(data map[any]any) {
 	m.mu.Lock()
 	if m.data == nil {
 		m.data = data
@@ -144,7 +144,7 @@ func (m *AnyAnyMap) Sets(data map[interface{}]interface{}) {
 
 // Search searches the map with given `key`.
 // Second return parameter `found` is true if key was found, otherwise false.
-func (m *AnyAnyMap) Search(key interface{}) (value interface{}, found bool) {
+func (m *AnyAnyMap) Search(key any) (value any, found bool) {
 	m.mu.RLock()
 	if m.data != nil {
 		value, found = m.data[key]
@@ -154,7 +154,7 @@ func (m *AnyAnyMap) Search(key interface{}) (value interface{}, found bool) {
 }
 
 // Get returns the value by given `key`.
-func (m *AnyAnyMap) Get(key interface{}) (value interface{}) {
+func (m *AnyAnyMap) Get(key any) (value any) {
 	m.mu.RLock()
 	if m.data != nil {
 		value = m.data[key]
@@ -164,7 +164,7 @@ func (m *AnyAnyMap) Get(key interface{}) (value interface{}) {
 }
 
 // Pop retrieves and deletes an item from the map.
-func (m *AnyAnyMap) Pop() (key, value interface{}) {
+func (m *AnyAnyMap) Pop() (key, value any) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	for key, value = range m.data {
@@ -176,7 +176,7 @@ func (m *AnyAnyMap) Pop() (key, value interface{}) {
 
 // Pops retrieves and deletes `size` items from the map.
 // It returns all items if size == -1.
-func (m *AnyAnyMap) Pops(size int) map[interface{}]interface{} {
+func (m *AnyAnyMap) Pops(size int) map[any]any {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if size > len(m.data) || size == -1 {
@@ -187,7 +187,7 @@ func (m *AnyAnyMap) Pops(size int) map[interface{}]interface{} {
 	}
 	var (
 		index  = 0
-		newMap = make(map[interface{}]interface{}, size)
+		newMap = make(map[any]any, size)
 	)
 	for k, v := range m.data {
 		delete(m.data, k)
@@ -209,16 +209,16 @@ func (m *AnyAnyMap) Pops(size int) map[interface{}]interface{} {
 // and its return value will be set to the map with `key`.
 //
 // It returns value with given `key`.
-func (m *AnyAnyMap) doSetWithLockCheck(key interface{}, value interface{}) interface{} {
+func (m *AnyAnyMap) doSetWithLockCheck(key any, value any) any {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.data == nil {
-		m.data = make(map[interface{}]interface{})
+		m.data = make(map[any]any)
 	}
 	if v, ok := m.data[key]; ok {
 		return v
 	}
-	if f, ok := value.(func() interface{}); ok {
+	if f, ok := value.(func() any); ok {
 		value = f()
 	}
 	if value != nil {
@@ -229,7 +229,7 @@ func (m *AnyAnyMap) doSetWithLockCheck(key interface{}, value interface{}) inter
 
 // GetOrSet returns the value by key,
 // or sets value with given `value` if it does not exist and then returns this value.
-func (m *AnyAnyMap) GetOrSet(key interface{}, value interface{}) interface{} {
+func (m *AnyAnyMap) GetOrSet(key any, value any) any {
 	if v, ok := m.Search(key); !ok {
 		return m.doSetWithLockCheck(key, value)
 	} else {
@@ -240,7 +240,7 @@ func (m *AnyAnyMap) GetOrSet(key interface{}, value interface{}) interface{} {
 // GetOrSetFunc returns the value by key,
 // or sets value with returned value of callback function `f` if it does not exist
 // and then returns this value.
-func (m *AnyAnyMap) GetOrSetFunc(key interface{}, f func() interface{}) interface{} {
+func (m *AnyAnyMap) GetOrSetFunc(key any, f func() any) any {
 	if v, ok := m.Search(key); !ok {
 		return m.doSetWithLockCheck(key, f())
 	} else {
@@ -254,7 +254,7 @@ func (m *AnyAnyMap) GetOrSetFunc(key interface{}, f func() interface{}) interfac
 //
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f`
 // with mutex.Lock of the hash map.
-func (m *AnyAnyMap) GetOrSetFuncLock(key interface{}, f func() interface{}) interface{} {
+func (m *AnyAnyMap) GetOrSetFuncLock(key any, f func() any) any {
 	if v, ok := m.Search(key); !ok {
 		return m.doSetWithLockCheck(key, f)
 	} else {
@@ -264,31 +264,31 @@ func (m *AnyAnyMap) GetOrSetFuncLock(key interface{}, f func() interface{}) inte
 
 // GetVar returns a Var with the value by given `key`.
 // The returned Var is un-concurrent safe.
-func (m *AnyAnyMap) GetVar(key interface{}) *gvar.Var {
+func (m *AnyAnyMap) GetVar(key any) *gvar.Var {
 	return gvar.New(m.Get(key))
 }
 
 // GetVarOrSet returns a Var with result from GetOrSet.
 // The returned Var is un-concurrent safe.
-func (m *AnyAnyMap) GetVarOrSet(key interface{}, value interface{}) *gvar.Var {
+func (m *AnyAnyMap) GetVarOrSet(key any, value any) *gvar.Var {
 	return gvar.New(m.GetOrSet(key, value))
 }
 
 // GetVarOrSetFunc returns a Var with result from GetOrSetFunc.
 // The returned Var is un-concurrent safe.
-func (m *AnyAnyMap) GetVarOrSetFunc(key interface{}, f func() interface{}) *gvar.Var {
+func (m *AnyAnyMap) GetVarOrSetFunc(key any, f func() any) *gvar.Var {
 	return gvar.New(m.GetOrSetFunc(key, f))
 }
 
 // GetVarOrSetFuncLock returns a Var with result from GetOrSetFuncLock.
 // The returned Var is un-concurrent safe.
-func (m *AnyAnyMap) GetVarOrSetFuncLock(key interface{}, f func() interface{}) *gvar.Var {
+func (m *AnyAnyMap) GetVarOrSetFuncLock(key any, f func() any) *gvar.Var {
 	return gvar.New(m.GetOrSetFuncLock(key, f))
 }
 
 // SetIfNotExist sets `value` to the map if the `key` does not exist, and then returns true.
 // It returns false if `key` exists, and `value` would be ignored.
-func (m *AnyAnyMap) SetIfNotExist(key interface{}, value interface{}) bool {
+func (m *AnyAnyMap) SetIfNotExist(key any, value any) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, value)
 		return true
@@ -298,7 +298,7 @@ func (m *AnyAnyMap) SetIfNotExist(key interface{}, value interface{}) bool {
 
 // SetIfNotExistFunc sets value with return value of callback function `f`, and then returns true.
 // It returns false if `key` exists, and `value` would be ignored.
-func (m *AnyAnyMap) SetIfNotExistFunc(key interface{}, f func() interface{}) bool {
+func (m *AnyAnyMap) SetIfNotExistFunc(key any, f func() any) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, f())
 		return true
@@ -311,7 +311,7 @@ func (m *AnyAnyMap) SetIfNotExistFunc(key interface{}, f func() interface{}) boo
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
 // it executes function `f` with mutex.Lock of the hash map.
-func (m *AnyAnyMap) SetIfNotExistFuncLock(key interface{}, f func() interface{}) bool {
+func (m *AnyAnyMap) SetIfNotExistFuncLock(key any, f func() any) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, f)
 		return true
@@ -320,7 +320,7 @@ func (m *AnyAnyMap) SetIfNotExistFuncLock(key interface{}, f func() interface{})
 }
 
 // Remove deletes value from map by given `key`, and return this deleted value.
-func (m *AnyAnyMap) Remove(key interface{}) (value interface{}) {
+func (m *AnyAnyMap) Remove(key any) (value any) {
 	m.mu.Lock()
 	if m.data != nil {
 		var ok bool
@@ -333,7 +333,7 @@ func (m *AnyAnyMap) Remove(key interface{}) (value interface{}) {
 }
 
 // Removes batch deletes values of the map by keys.
-func (m *AnyAnyMap) Removes(keys []interface{}) {
+func (m *AnyAnyMap) Removes(keys []any) {
 	m.mu.Lock()
 	if m.data != nil {
 		for _, key := range keys {
@@ -344,11 +344,11 @@ func (m *AnyAnyMap) Removes(keys []interface{}) {
 }
 
 // Keys returns all keys of the map as a slice.
-func (m *AnyAnyMap) Keys() []interface{} {
+func (m *AnyAnyMap) Keys() []any {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	var (
-		keys  = make([]interface{}, len(m.data))
+		keys  = make([]any, len(m.data))
 		index = 0
 	)
 	for key := range m.data {
@@ -359,11 +359,11 @@ func (m *AnyAnyMap) Keys() []interface{} {
 }
 
 // Values returns all values of the map as a slice.
-func (m *AnyAnyMap) Values() []interface{} {
+func (m *AnyAnyMap) Values() []any {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	var (
-		values = make([]interface{}, len(m.data))
+		values = make([]any, len(m.data))
 		index  = 0
 	)
 	for _, value := range m.data {
@@ -375,7 +375,7 @@ func (m *AnyAnyMap) Values() []interface{} {
 
 // Contains checks whether a key exists.
 // It returns true if the `key` exists, or else false.
-func (m *AnyAnyMap) Contains(key interface{}) bool {
+func (m *AnyAnyMap) Contains(key any) bool {
 	var ok bool
 	m.mu.RLock()
 	if m.data != nil {
@@ -402,26 +402,26 @@ func (m *AnyAnyMap) IsEmpty() bool {
 // Clear deletes all data of the map, it will remake a new underlying data map.
 func (m *AnyAnyMap) Clear() {
 	m.mu.Lock()
-	m.data = make(map[interface{}]interface{})
+	m.data = make(map[any]any)
 	m.mu.Unlock()
 }
 
 // Replace the data of the map with given `data`.
-func (m *AnyAnyMap) Replace(data map[interface{}]interface{}) {
+func (m *AnyAnyMap) Replace(data map[any]any) {
 	m.mu.Lock()
 	m.data = data
 	m.mu.Unlock()
 }
 
 // LockFunc locks writing with given callback function `f` within RWMutex.Lock.
-func (m *AnyAnyMap) LockFunc(f func(m map[interface{}]interface{})) {
+func (m *AnyAnyMap) LockFunc(f func(m map[any]any)) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	f(m.data)
 }
 
 // RLockFunc locks reading with given callback function `f` within RWMutex.RLock.
-func (m *AnyAnyMap) RLockFunc(f func(m map[interface{}]interface{})) {
+func (m *AnyAnyMap) RLockFunc(f func(m map[any]any)) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	f(m.data)
@@ -431,7 +431,7 @@ func (m *AnyAnyMap) RLockFunc(f func(m map[interface{}]interface{})) {
 func (m *AnyAnyMap) Flip() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	n := make(map[interface{}]interface{}, len(m.data))
+	n := make(map[any]any, len(m.data))
 	for k, v := range m.data {
 		n[v] = k
 	}
@@ -475,9 +475,9 @@ func (m *AnyAnyMap) UnmarshalJSON(b []byte) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.data == nil {
-		m.data = make(map[interface{}]interface{})
+		m.data = make(map[any]any)
 	}
-	var data map[string]interface{}
+	var data map[string]any
 	if err := json.UnmarshalUseNumber(b, &data); err != nil {
 		return err
 	}
@@ -488,11 +488,11 @@ func (m *AnyAnyMap) UnmarshalJSON(b []byte) error {
 }
 
 // UnmarshalValue is an interface implement which sets any type of value for map.
-func (m *AnyAnyMap) UnmarshalValue(value interface{}) (err error) {
+func (m *AnyAnyMap) UnmarshalValue(value any) (err error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.data == nil {
-		m.data = make(map[interface{}]interface{})
+		m.data = make(map[any]any)
 	}
 	for k, v := range gconv.Map(value) {
 		m.data[k] = v
@@ -501,14 +501,14 @@ func (m *AnyAnyMap) UnmarshalValue(value interface{}) (err error) {
 }
 
 // DeepCopy implements interface for deep copy of current type.
-func (m *AnyAnyMap) DeepCopy() interface{} {
+func (m *AnyAnyMap) DeepCopy() any {
 	if m == nil {
 		return nil
 	}
 
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	data := make(map[interface{}]interface{}, len(m.data))
+	data := make(map[any]any, len(m.data))
 	for k, v := range m.data {
 		data[k] = deepcopy.Copy(v)
 	}
@@ -540,7 +540,7 @@ func (m *AnyAnyMap) IsSubOf(other *AnyAnyMap) bool {
 // The returned `addedKeys` are the keys that are in map `m` but not in map `other`.
 // The returned `removedKeys` are the keys that are in map `other` but not in map `m`.
 // The returned `updatedKeys` are the keys that are both in map `m` and `other` but their values and not equal (`!=`).
-func (m *AnyAnyMap) Diff(other *AnyAnyMap) (addedKeys, removedKeys, updatedKeys []interface{}) {
+func (m *AnyAnyMap) Diff(other *AnyAnyMap) (addedKeys, removedKeys, updatedKeys []any) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	other.mu.RLock()

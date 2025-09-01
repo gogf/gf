@@ -10,9 +10,9 @@ import "fmt"
 
 // localCode is an implementer for interface Code for internal usage only.
 type localCode struct {
-	code    int         // Error code, usually an integer.
-	message string      // Brief message for this error code.
-	detail  interface{} // As type of interface, it is mainly designed as an extension field for error code.
+	code    int    // Error code, usually an integer.
+	message string // Brief message for this error code.
+	detail  any    // As type of interface, it is mainly designed as an extension field for error code.
 }
 
 // Code returns the integer number of current error code.
@@ -27,7 +27,7 @@ func (c localCode) Message() string {
 
 // Detail returns the detailed information of current error code,
 // which is mainly designed as an extension field for error code.
-func (c localCode) Detail() interface{} {
+func (c localCode) Detail() any {
 	return c.detail
 }
 

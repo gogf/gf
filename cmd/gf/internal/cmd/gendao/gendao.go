@@ -11,6 +11,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/renderer"
+	"github.com/olekukonko/tablewriter/tw"
 	"golang.org/x/mod/modfile"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -99,6 +102,20 @@ var (
 			Type: "float64",
 		},
 	}
+
+	// tablewriter Options
+	twRenderer = tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
+		Borders: tw.Border{Top: tw.Off, Bottom: tw.Off, Left: tw.Off, Right: tw.Off},
+		Settings: tw.Settings{
+			Separators: tw.Separators{BetweenRows: tw.Off, BetweenColumns: tw.Off},
+		},
+		Symbols: tw.NewSymbols(tw.StyleASCII),
+	}))
+	twConfig = tablewriter.WithConfig(tablewriter.Config{
+		Row: tw.CellConfig{
+			Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone},
+		},
+	})
 )
 
 func (c CGenDao) Dao(ctx context.Context, in CGenDaoInput) (out *CGenDaoOutput, err error) {
@@ -219,14 +236,18 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 					tableNames[i] = ""
 					continue
 				}
-				shardingNewTableSet.Add(newTableName)
+				// Add prefix to sharding table name, if not, the isSharding check would not match.
+				shardingNewTableSet.Add(in.Prefix + newTableName)
 			}
 		}
 		newTableName = in.Prefix + newTableName
-		newTableNames[i] = newTableName
+		if tableNames[i] != "" {
+			// If shardingNewTableSet contains newTableName (tableName is empty), it should not be added to tableNames, make it empty and filter later.
+			newTableNames[i] = newTableName
+		}
 	}
 	tableNames = garray.NewStrArrayFrom(tableNames).FilterEmpty().Slice()
-
+	newTableNames = garray.NewStrArrayFrom(newTableNames).FilterEmpty().Slice() // Filter empty table names. make sure that newTableNames and tableNames have the same length.
 	in.genItems.Scale()
 
 	// Dao: index and internal.
