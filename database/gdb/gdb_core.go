@@ -76,7 +76,7 @@ func (c *Core) GetCtxTimeout(ctx context.Context, timeoutType ctxTimeoutType) (c
 	if ctx == nil {
 		ctx = c.db.GetCtx()
 	} else {
-		ctx = context.WithValue(ctx, "WrappedByGetCtxTimeout", nil)
+		ctx = context.WithValue(ctx, ctxKeyWrappedByGetCtxTimeout, nil)
 	}
 	var config = c.db.GetConfig()
 	switch timeoutType {

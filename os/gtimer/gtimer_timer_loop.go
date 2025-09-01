@@ -15,24 +15,21 @@ func (t *Timer) loop() {
 		timerIntervalTicker = time.NewTicker(t.options.Interval)
 	)
 	defer timerIntervalTicker.Stop()
-	for {
-		select {
-		case <-timerIntervalTicker.C:
-			// Check the timer status.
-			switch t.status.Val() {
-			case StatusRunning:
-				// Timer proceeding.
-				if currentTimerTicks = t.ticks.Add(1); currentTimerTicks >= t.queue.NextPriority() {
-					t.proceed(currentTimerTicks)
-				}
-
-			case StatusStopped:
-				// Do nothing.
-
-			case StatusClosed:
-				// Timer exits.
-				return
+	for range timerIntervalTicker.C {
+		// Check the timer status.
+		switch t.status.Val() {
+		case StatusRunning:
+			// Timer proceeding.
+			if currentTimerTicks = t.ticks.Add(1); currentTimerTicks >= t.queue.NextPriority() {
+				t.proceed(currentTimerTicks)
 			}
+
+		case StatusStopped:
+			// Do nothing.
+
+		case StatusClosed:
+			// Timer exits.
+			return
 		}
 	}
 }
