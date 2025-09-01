@@ -345,9 +345,9 @@ func (s *Server) doRouterMapDump() {
 					item.Middleware,
 				)
 			}
-			table.Append(data)
+			_ = table.Append(data)
 		}
-		table.Render()
+		_ = table.Render()
 		s.config.Logger.Header(false).Printf(ctx, "\n%s", buffer.String())
 	}
 }

@@ -716,6 +716,13 @@ const (
 	linkPatternDescription = `type:username:password@protocol(host:port)/dbname?param1=value1&...&paramN=valueN`
 )
 
+// Context key types to avoid collisions
+type ctxKey string
+
+const (
+	ctxKeyWrappedByGetCtxTimeout ctxKey = "WrappedByGetCtxTimeout"
+)
+
 type ctxTimeoutType int
 
 const (
