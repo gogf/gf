@@ -4,7 +4,7 @@ go 1.23.0
 
 require (
 	github.com/go-sql-driver/mysql v1.7.1
-	github.com/gogf/gf/v2 v2.9.1
+	github.com/gogf/gf/v2 v2.9.2
 )
 
 require (
