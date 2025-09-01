@@ -16,7 +16,7 @@ import (
 )
 
 // Interface returns the json value.
-func (j *Json) Interface() interface{} {
+func (j *Json) Interface() any {
 	if j == nil {
 		return nil
 	}
@@ -51,7 +51,7 @@ func (j *Json) IsNil() bool {
 // "list.10", "array.0.name", "array.0.1.id".
 //
 // It returns a default value specified by `def` if value for `pattern` is not found.
-func (j *Json) Get(pattern string, def ...interface{}) *gvar.Var {
+func (j *Json) Get(pattern string, def ...any) *gvar.Var {
 	if j == nil {
 		return nil
 	}
@@ -75,13 +75,13 @@ func (j *Json) Get(pattern string, def ...interface{}) *gvar.Var {
 
 // GetJson gets the value by specified `pattern`,
 // and converts it to an un-concurrent-safe Json object.
-func (j *Json) GetJson(pattern string, def ...interface{}) *Json {
+func (j *Json) GetJson(pattern string, def ...any) *Json {
 	return New(j.Get(pattern, def...).Val())
 }
 
 // GetJsons gets the value by specified `pattern`,
 // and converts it to a slice of un-concurrent-safe Json object.
-func (j *Json) GetJsons(pattern string, def ...interface{}) []*Json {
+func (j *Json) GetJsons(pattern string, def ...any) []*Json {
 	array := j.Get(pattern, def...).Array()
 	if len(array) > 0 {
 		jsonSlice := make([]*Json, len(array))
@@ -95,7 +95,7 @@ func (j *Json) GetJsons(pattern string, def ...interface{}) []*Json {
 
 // GetJsonMap gets the value by specified `pattern`,
 // and converts it to a map of un-concurrent-safe Json object.
-func (j *Json) GetJsonMap(pattern string, def ...interface{}) map[string]*Json {
+func (j *Json) GetJsonMap(pattern string, def ...any) map[string]*Json {
 	m := j.Get(pattern, def...).Map()
 	if len(m) > 0 {
 		jsonMap := make(map[string]*Json, len(m))
@@ -109,12 +109,12 @@ func (j *Json) GetJsonMap(pattern string, def ...interface{}) map[string]*Json {
 
 // Set sets value with specified `pattern`.
 // It supports hierarchical data access by char separator, which is '.' in default.
-func (j *Json) Set(pattern string, value interface{}) error {
+func (j *Json) Set(pattern string, value any) error {
 	return j.setValue(pattern, value, false)
 }
 
 // MustSet performs as Set, but it panics if any error occurs.
-func (j *Json) MustSet(pattern string, value interface{}) {
+func (j *Json) MustSet(pattern string, value any) {
 	if err := j.Set(pattern, value); err != nil {
 		panic(err)
 	}
@@ -145,10 +145,10 @@ func (j *Json) Len(pattern string) int {
 	p := j.getPointerByPattern(pattern)
 	if p != nil {
 		switch (*p).(type) {
-		case map[string]interface{}:
-			return len((*p).(map[string]interface{}))
-		case []interface{}:
-			return len((*p).([]interface{}))
+		case map[string]any:
+			return len((*p).(map[string]any))
+		case []any:
+			return len((*p).([]any))
 		default:
 			return -1
 		}
@@ -158,7 +158,7 @@ func (j *Json) Len(pattern string) int {
 
 // Append appends value to the value by specified `pattern`.
 // The target value by `pattern` should be type of slice.
-func (j *Json) Append(pattern string, value interface{}) error {
+func (j *Json) Append(pattern string, value any) error {
 	p := j.getPointerByPattern(pattern)
 	if p == nil || *p == nil {
 		if pattern == "." {
@@ -167,37 +167,37 @@ func (j *Json) Append(pattern string, value interface{}) error {
 		return j.Set(fmt.Sprintf("%s.0", pattern), value)
 	}
 	switch (*p).(type) {
-	case []interface{}:
+	case []any:
 		if pattern == "." {
-			return j.Set(fmt.Sprintf("%d", len((*p).([]interface{}))), value)
+			return j.Set(fmt.Sprintf("%d", len((*p).([]any))), value)
 		}
-		return j.Set(fmt.Sprintf("%s.%d", pattern, len((*p).([]interface{}))), value)
+		return j.Set(fmt.Sprintf("%s.%d", pattern, len((*p).([]any))), value)
 	}
 	return gerror.NewCodef(gcode.CodeInvalidParameter, "invalid variable type of %s", pattern)
 }
 
 // MustAppend performs as Append, but it panics if any error occurs.
-func (j *Json) MustAppend(pattern string, value interface{}) {
+func (j *Json) MustAppend(pattern string, value any) {
 	if err := j.Append(pattern, value); err != nil {
 		panic(err)
 	}
 }
 
-// Map converts current Json object to map[string]interface{}.
+// Map converts current Json object to map[string]any.
 // It returns nil if fails.
-func (j *Json) Map() map[string]interface{} {
+func (j *Json) Map() map[string]any {
 	return j.Var().Map()
 }
 
-// Array converts current Json object to []interface{}.
+// Array converts current Json object to []any.
 // It returns nil if fails.
-func (j *Json) Array() []interface{} {
+func (j *Json) Array() []any {
 	return j.Var().Array()
 }
 
 // Scan automatically calls Struct or Structs function according to the type of parameter
 // `pointer` to implement the converting.
-func (j *Json) Scan(pointer interface{}, mapping ...map[string]string) error {
+func (j *Json) Scan(pointer any, mapping ...map[string]string) error {
 	return j.Var().Scan(pointer, mapping...)
 }
 

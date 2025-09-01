@@ -96,11 +96,11 @@ func Test_Params_Json_Response(t *testing.T) {
 			Error string `json:"error,omitempty"`
 		}
 		type ResponseJson struct {
-			Success  bool        `json:"success"`
-			Data     interface{} `json:"data,omitempty"`
-			ExtData  interface{} `json:"ext_data,omitempty"`
-			Paginate interface{} `json:"paginate,omitempty"`
-			Message  Message     `json:"message,omitempty"`
+			Success  bool    `json:"success"`
+			Data     any     `json:"data,omitempty"`
+			ExtData  any     `json:"ext_data,omitempty"`
+			Paginate any     `json:"paginate,omitempty"`
+			Message  Message `json:"message,omitempty"`
 		}
 		responseJson := &ResponseJson{
 			Success: true,
@@ -117,11 +117,11 @@ func Test_Params_Json_Response(t *testing.T) {
 			Error string `json:"error,omitempty"`
 		}
 		type ResponseJson struct {
-			Success  bool        `json:"success"`
-			Data     interface{} `json:"data,omitempty"`
-			ExtData  interface{} `json:"ext_data,omitempty"`
-			Paginate interface{} `json:"paginate,omitempty"`
-			Message  *Message    `json:"message,omitempty"`
+			Success  bool     `json:"success"`
+			Data     any      `json:"data,omitempty"`
+			ExtData  any      `json:"ext_data,omitempty"`
+			Paginate any      `json:"paginate,omitempty"`
+			Message  *Message `json:"message,omitempty"`
 		}
 		responseJson := ResponseJson{
 			Success: true,
@@ -140,7 +140,7 @@ func Test_Params_Json_Response(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		map1 := make(map[string]interface{})
+		map1 := make(map[string]any)
 		err1 := json.UnmarshalUseNumber([]byte(client.GetContent(ctx, "/json1")), &map1)
 		t.Assert(err1, nil)
 		t.Assert(len(map1), 4)
@@ -149,7 +149,7 @@ func Test_Params_Json_Response(t *testing.T) {
 		t.Assert(map1["password1"], "123")
 		t.Assert(map1["password2"], "456")
 
-		map2 := make(map[string]interface{})
+		map2 := make(map[string]any)
 		err2 := json.UnmarshalUseNumber([]byte(client.GetContent(ctx, "/json2")), &map2)
 		t.Assert(err2, nil)
 		t.Assert(len(map2), 4)
@@ -158,14 +158,14 @@ func Test_Params_Json_Response(t *testing.T) {
 		t.Assert(map2["password1"], "123")
 		t.Assert(map2["password2"], "456")
 
-		map3 := make(map[string]interface{})
+		map3 := make(map[string]any)
 		err3 := json.UnmarshalUseNumber([]byte(client.GetContent(ctx, "/json3")), &map3)
 		t.Assert(err3, nil)
 		t.Assert(len(map3), 2)
 		t.Assert(map3["success"], "true")
 		t.Assert(map3["message"], g.Map{"body": "测试", "code": 3, "error": "error"})
 
-		map4 := make(map[string]interface{})
+		map4 := make(map[string]any)
 		err4 := json.UnmarshalUseNumber([]byte(client.GetContent(ctx, "/json4")), &map4)
 		t.Assert(err4, nil)
 		t.Assert(len(map4), 2)

@@ -214,7 +214,7 @@ func (c *Cron) Size() int {
 
 // Entries return all timed tasks as slice(order by registered time asc).
 func (c *Cron) Entries() []*Entry {
-	array := garray.NewSortedArraySize(c.entries.Size(), func(v1, v2 interface{}) int {
+	array := garray.NewSortedArraySize(c.entries.Size(), func(v1, v2 any) int {
 		entry1 := v1.(*Entry)
 		entry2 := v2.(*Entry)
 		if entry1.RegisterTime.Nanosecond() > entry2.RegisterTime.Nanosecond() {
@@ -222,13 +222,13 @@ func (c *Cron) Entries() []*Entry {
 		}
 		return -1
 	}, true)
-	c.entries.RLockFunc(func(m map[string]interface{}) {
+	c.entries.RLockFunc(func(m map[string]any) {
 		for _, v := range m {
 			array.Add(v.(*Entry))
 		}
 	})
 	entries := make([]*Entry, array.Len())
-	array.RLockFunc(func(array []interface{}) {
+	array.RLockFunc(func(array []any) {
 		for k, v := range array {
 			entries[k] = v.(*Entry)
 		}
