@@ -12,16 +12,16 @@ import (
 )
 
 // InsertIgnore Other queries for modifying data parts are not supported: REPLACE, MERGE, UPSERT, INSERT UPDATE.
-func (d *Driver) InsertIgnore(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
+func (d *Driver) InsertIgnore(ctx context.Context, table string, data any, batch ...int) (sql.Result, error) {
 	return nil, errUnsupportedInsertIgnore
 }
 
 // InsertAndGetId Other queries for modifying data parts are not supported: REPLACE, MERGE, UPSERT, INSERT UPDATE.
-func (d *Driver) InsertAndGetId(ctx context.Context, table string, data interface{}, batch ...int) (int64, error) {
+func (d *Driver) InsertAndGetId(ctx context.Context, table string, data any, batch ...int) (int64, error) {
 	return 0, errUnsupportedInsertGetId
 }
 
 // Replace Other queries for modifying data parts are not supported: REPLACE, MERGE, UPSERT, INSERT UPDATE.
-func (d *Driver) Replace(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error) {
+func (d *Driver) Replace(ctx context.Context, table string, data any, batch ...int) (sql.Result, error) {
 	return nil, errUnsupportedReplace
 }

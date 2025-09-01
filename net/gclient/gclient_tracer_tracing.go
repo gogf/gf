@@ -32,7 +32,7 @@ type clientTracerTracing struct {
 	span        trace.Span
 	request     *http.Request
 	requestBody []byte
-	headers     map[string]interface{}
+	headers     map[string]any
 	mtx         sync.Mutex
 }
 
@@ -46,7 +46,7 @@ func newClientTracerTracing(
 		Context: ctx,
 		span:    span,
 		request: request,
-		headers: make(map[string]interface{}),
+		headers: make(map[string]any),
 	}
 
 	reqBodyContent, _ := io.ReadAll(ct.request.Body)
