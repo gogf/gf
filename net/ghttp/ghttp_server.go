@@ -299,13 +299,13 @@ func (s *Server) doRouterMapDump() {
 	if len(routes) > 0 {
 		buffer := bytes.NewBuffer(nil)
 		table := tablewriter.NewTable(buffer,
-			tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
-				Borders: tw.Border{Top: tw.Off, Bottom: tw.Off, Left: tw.Off, Right: tw.Off},
-				Settings: tw.Settings{
-					Separators: tw.Separators{BetweenRows: tw.On},
-				},
-				Symbols: tw.NewSymbolCustom("HTTP").WithCenter("|"),
-			})),
+			tablewriter.WithRenderer(renderer.NewBlueprint(
+				tw.Rendition{
+					Settings: tw.Settings{
+						Separators: tw.Separators{BetweenRows: tw.On},
+					},
+					Symbols: tw.NewSymbolCustom("HTTP").WithCenter("|"),
+				})),
 		)
 		table.Header(headers)
 
