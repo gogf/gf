@@ -64,7 +64,7 @@ func IsNumeric(s string) bool {
 		}
 		if s[i] == '.' {
 			dotCount++
-			if i > 0 && i < length-1 {
+			if i > 0 && i < length-1 && s[i-1] >= '0' && s[i-1] <= '9' {
 				continue
 			} else {
 				return false

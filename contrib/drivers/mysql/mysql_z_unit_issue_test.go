@@ -831,11 +831,11 @@ func Test_Issue2561(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			g.Meta     `orm:"do:true"`
-			Id         interface{}
-			Passport   interface{}
-			Password   interface{}
-			Nickname   interface{}
-			CreateTime interface{}
+			Id         any
+			Passport   any
+			Password   any
+			Nickname   any
+			CreateTime any
 		}
 		data := g.Slice{
 			User{
@@ -994,11 +994,11 @@ func Test_Issue3086(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			g.Meta     `orm:"do:true"`
-			Id         interface{}
-			Passport   interface{}
-			Password   interface{}
-			Nickname   interface{}
-			CreateTime interface{}
+			Id         any
+			Passport   any
+			Password   any
+			Nickname   any
+			CreateTime any
 		}
 		data := g.Slice{
 			User{
@@ -1016,11 +1016,11 @@ func Test_Issue3086(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			g.Meta     `orm:"do:true"`
-			Id         interface{}
-			Passport   interface{}
-			Password   interface{}
-			Nickname   interface{}
-			CreateTime interface{}
+			Id         any
+			Passport   any
+			Password   any
+			Nickname   any
+			CreateTime any
 		}
 		data := g.Slice{
 			User{
@@ -1049,11 +1049,11 @@ func Test_Issue3204(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			g.Meta     `orm:"do:true"`
-			Id         interface{} `orm:"id,omitempty"`
-			Passport   interface{} `orm:"passport,omitempty"`
-			Password   interface{} `orm:"password,omitempty"`
-			Nickname   interface{} `orm:"nickname,omitempty"`
-			CreateTime interface{} `orm:"create_time,omitempty"`
+			Id         any `orm:"id,omitempty"`
+			Passport   any `orm:"passport,omitempty"`
+			Password   any `orm:"password,omitempty"`
+			Nickname   any `orm:"nickname,omitempty"`
+			CreateTime any `orm:"create_time,omitempty"`
 		}
 		where := User{
 			Id:       2,
@@ -1068,11 +1068,11 @@ func Test_Issue3204(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			g.Meta     `orm:"do:true"`
-			Id         interface{} `orm:"id,omitempty"`
-			Passport   interface{} `orm:"passport,omitempty"`
-			Password   interface{} `orm:"password,omitempty"`
-			Nickname   interface{} `orm:"nickname,omitempty"`
-			CreateTime interface{} `orm:"create_time,omitempty"`
+			Id         any `orm:"id,omitempty"`
+			Passport   any `orm:"passport,omitempty"`
+			Password   any `orm:"password,omitempty"`
+			Nickname   any `orm:"nickname,omitempty"`
+			CreateTime any `orm:"create_time,omitempty"`
 		}
 		var (
 			err      error
@@ -1099,11 +1099,11 @@ func Test_Issue3204(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			g.Meta     `orm:"do:true"`
-			Id         interface{} `orm:"id,omitempty"`
-			Passport   interface{} `orm:"passport,omitempty"`
-			Password   interface{} `orm:"password,omitempty"`
-			Nickname   interface{} `orm:"nickname,omitempty"`
-			CreateTime interface{} `orm:"create_time,omitempty"`
+			Id         any `orm:"id,omitempty"`
+			Passport   any `orm:"passport,omitempty"`
+			Password   any `orm:"password,omitempty"`
+			Nickname   any `orm:"nickname,omitempty"`
+			CreateTime any `orm:"create_time,omitempty"`
 		}
 		var (
 			err      error
@@ -1508,7 +1508,7 @@ func Test_Issue3968(t *testing.T) {
 					return nil, err
 				}
 				if result != nil {
-					for i, _ := range result {
+					for i := range result {
 						result[i]["location"] = gvar.New("ny")
 					}
 				}

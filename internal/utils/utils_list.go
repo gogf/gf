@@ -8,13 +8,13 @@ package utils
 
 import "fmt"
 
-// ListToMapByKey converts `list` to a map[string]interface{} of which key is specified by `key`.
+// ListToMapByKey converts `list` to a map[string]any of which key is specified by `key`.
 // Note that the item value may be type of slice.
-func ListToMapByKey(list []map[string]interface{}, key string) map[string]interface{} {
+func ListToMapByKey(list []map[string]any, key string) map[string]any {
 	var (
 		s              = ""
-		m              = make(map[string]interface{})
-		tempMap        = make(map[string][]interface{})
+		m              = make(map[string]any)
+		tempMap        = make(map[string][]any)
 		hasMultiValues bool
 	)
 	for _, item := range list {

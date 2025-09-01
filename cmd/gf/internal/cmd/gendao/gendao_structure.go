@@ -41,22 +41,18 @@ func generateStructDefinition(ctx context.Context, in generateStructDefinitionIn
 			appendImports = append(appendImports, imports)
 		}
 	}
-	tw := tablewriter.NewWriter(buffer)
-	tw.SetBorder(false)
-	tw.SetRowLine(false)
-	tw.SetAutoWrapText(false)
-	tw.SetColumnSeparator("")
-	tw.AppendBulk(array)
-	tw.Render()
+	table := tablewriter.NewTable(buffer, twRenderer, twConfig)
+	table.Bulk(array)
+	table.Render()
 	stContent := buffer.String()
 	// Let's do this hack of table writer for indent!
 	stContent = gstr.Replace(stContent, "  #", "")
 	stContent = gstr.Replace(stContent, "` ", "`")
 	stContent = gstr.Replace(stContent, "``", "")
 	buffer.Reset()
-	buffer.WriteString(fmt.Sprintf("type %s struct {\n", in.StructName))
+	fmt.Fprintf(buffer, "type %s struct {\n", in.StructName)
 	if in.IsDo {
-		buffer.WriteString(fmt.Sprintf("g.Meta `orm:\"table:%s, do:true\"`\n", in.TableName))
+		fmt.Fprintf(buffer, "g.Meta `orm:\"table:%s, do:true\"`\n", in.TableName)
 	}
 	buffer.WriteString(stContent)
 	buffer.WriteString("}")
