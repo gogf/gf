@@ -11,6 +11,8 @@ import (
 	"context"
 
 	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/renderer"
+	"github.com/olekukonko/tablewriter/tw"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gproc"
@@ -61,10 +63,23 @@ func (c cEnv) Index(ctx context.Context, in cEnvInput) (out *cEnvOutput, err err
 		}
 		array = append(array, []string{gstr.Trim(match[1]), gstr.Trim(match[2])})
 	}
-	tw := tablewriter.NewWriter(buffer)
-	tw.SetColumnAlignment([]int{tablewriter.ALIGN_LEFT, tablewriter.ALIGN_LEFT})
-	tw.AppendBulk(array)
-	tw.Render()
+	table := tablewriter.NewTable(buffer,
+		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
+			Settings: tw.Settings{
+				Separators: tw.Separators{BetweenRows: tw.Off, BetweenColumns: tw.On},
+			},
+			Symbols: tw.NewSymbols(tw.StyleASCII),
+		})),
+		tablewriter.WithConfig(tablewriter.Config{
+			Row: tw.CellConfig{
+				Formatting:   tw.CellFormatting{AutoWrap: tw.WrapNone},
+				Alignment:    tw.CellAlignment{PerColumn: []tw.Align{tw.AlignLeft, tw.AlignLeft}},
+				ColMaxWidths: tw.CellWidth{Global: 84},
+			},
+		}),
+	)
+	table.Bulk(array)
+	table.Render()
 	mlog.Print(buffer.String())
 	return
 }

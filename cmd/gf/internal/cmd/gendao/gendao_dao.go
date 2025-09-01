@@ -211,13 +211,9 @@ func generateColumnNamesForDao(fieldMap map[string]*gdb.TableField, removeFieldP
 			fmt.Sprintf(` #"%s",`, field.Name),
 		}
 	}
-	tw := tablewriter.NewWriter(buffer)
-	tw.SetBorder(false)
-	tw.SetRowLine(false)
-	tw.SetAutoWrapText(false)
-	tw.SetColumnSeparator("")
-	tw.AppendBulk(array)
-	tw.Render()
+	table := tablewriter.NewTable(buffer, twRenderer, twConfig)
+	table.Bulk(array)
+	table.Render()
 	namesContent := buffer.String()
 	// Let's do this hack of table writer for indent!
 	namesContent = gstr.Replace(namesContent, "  #", "")
@@ -252,13 +248,9 @@ func generateColumnDefinitionForDao(fieldMap map[string]*gdb.TableField, removeF
 			" #" + fmt.Sprintf(`// %s`, comment),
 		}
 	}
-	tw := tablewriter.NewWriter(buffer)
-	tw.SetBorder(false)
-	tw.SetRowLine(false)
-	tw.SetAutoWrapText(false)
-	tw.SetColumnSeparator("")
-	tw.AppendBulk(array)
-	tw.Render()
+	table := tablewriter.NewTable(buffer, twRenderer, twConfig)
+	table.Bulk(array)
+	table.Render()
 	defineContent := buffer.String()
 	// Let's do this hack of table writer for indent!
 	defineContent = gstr.Replace(defineContent, "  #", "")

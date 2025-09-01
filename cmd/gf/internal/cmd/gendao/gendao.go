@@ -11,6 +11,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/renderer"
+	"github.com/olekukonko/tablewriter/tw"
 	"golang.org/x/mod/modfile"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -99,6 +102,20 @@ var (
 			Type: "float64",
 		},
 	}
+
+	// tablewriter Options
+	twRenderer = tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
+		Borders: tw.Border{Top: tw.Off, Bottom: tw.Off, Left: tw.Off, Right: tw.Off},
+		Settings: tw.Settings{
+			Separators: tw.Separators{BetweenRows: tw.Off, BetweenColumns: tw.Off},
+		},
+		Symbols: tw.NewSymbols(tw.StyleASCII),
+	}))
+	twConfig = tablewriter.WithConfig(tablewriter.Config{
+		Row: tw.CellConfig{
+			Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone},
+		},
+	})
 )
 
 func (c CGenDao) Dao(ctx context.Context, in CGenDaoInput) (out *CGenDaoOutput, err error) {

@@ -11,7 +11,7 @@ require (
 	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.9.1
 	github.com/gogf/gf/v2 v2.9.1
 	github.com/gogf/selfupdate v0.0.0-20231215043001-5c48c528462f
-	github.com/olekukonko/tablewriter v0.0.5
+	github.com/olekukonko/tablewriter v1.0.9
 	github.com/schollz/progressbar/v3 v3.15.0
 	golang.org/x/mod v0.26.0
 	golang.org/x/tools v0.35.0
@@ -42,6 +42,8 @@ require (
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/microsoft/go-mssqldb v1.7.1 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
+	github.com/olekukonko/errors v1.1.0 // indirect
+	github.com/olekukonko/ll v0.0.9 // indirect
 	github.com/paulmach/orb v0.7.1 // indirect
 	github.com/pierrec/lz4/v4 v4.1.14 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
