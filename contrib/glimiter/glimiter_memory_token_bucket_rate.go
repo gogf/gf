@@ -146,9 +146,9 @@ func (m *MemoryTokenBucketRateLimiter) Middleware() ghttp.HandlerFunc {
 // NewMemoryTokenBucketRateLimiter creates a new memory-based token bucket rate limiter
 // It sets default values for any unset options
 func NewMemoryTokenBucketRateLimiter(option MemoryTokenBucketRateLimiterOption) *MemoryTokenBucketRateLimiter {
-	shards := 16
-	if option.Shards <= 0 {
-		shards = DefaultShards
+	shards := DefaultShards
+	if option.Shards > 0 {
+		shards = option.Shards
 	}
 	if option.Rate <= 0 {
 		option.Rate = DefaultRate
