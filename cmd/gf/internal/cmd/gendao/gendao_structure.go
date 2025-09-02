@@ -67,7 +67,7 @@ func getTypeMappingInfo(
 		importStr = typeMapping.Import
 		return
 	}
-	tryTypeMatch, _ := gregex.MatchString(`(.+?)\(([^\(\)]+)\)(.*)`, fieldType)
+	tryTypeMatch, _ := gregex.MatchString(`(.+?)\(([^\(\)]+)\)([^\s]*)`, fieldType)
 	var (
 		tryTypeName string
 		moreTry     bool
