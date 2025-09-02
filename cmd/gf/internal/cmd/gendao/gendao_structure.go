@@ -70,14 +70,22 @@ func getTypeMappingInfo(
 	tryTypeMatch, _ := gregex.MatchString(`(.+?)\(([^\(\)]+)\)(.*)`, fieldType)
 	var (
 		tryTypeName string
+		moreTry     bool
 	)
 	if len(tryTypeMatch) == 4 {
-		tryTypeName = gstr.Trim(tryTypeMatch[1]) + gstr.Trim(tryTypeMatch[3])
+		tryTypeMatch3 := gstr.Trim(tryTypeMatch[3])
+		tryTypeName = gstr.Trim(tryTypeMatch[1]) + tryTypeMatch3
+		moreTry = tryTypeMatch3 != ""
 	} else {
 		tryTypeName = gstr.Split(fieldType, " ")[0]
 	}
 	if tryTypeName != "" {
-		typeNameStr, importStr = getTypeMappingInfo(ctx, tryTypeName, inTypeMapping)
+		if typeMapping, ok := inTypeMapping[strings.ToLower(tryTypeName)]; ok {
+			typeNameStr = typeMapping.Type
+			importStr = typeMapping.Import
+		} else if moreTry {
+			typeNameStr, importStr = getTypeMappingInfo(ctx, tryTypeName, inTypeMapping)
+		}
 	}
 	return
 }
