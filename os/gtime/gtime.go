@@ -222,14 +222,13 @@ func StrToTime(str string, format ...string) (*Time, error) {
 	} else if match = timeRegex2.FindStringSubmatch(str); len(match) > 0 && match[1] != "" {
 		year, month, day = parseDateStr(match[1])
 	} else if match = timeRegex3.FindStringSubmatch(str); len(match) > 0 && match[1] != "" {
-		s := strings.ReplaceAll(match[2], ":", "")
-		if len(s) < 6 {
-			s += strings.Repeat("0", 6-len(s))
-		}
 		hour, _ = strconv.Atoi(match[1])
 		min, _ = strconv.Atoi(match[2])
 		sec, _ = strconv.Atoi(match[3])
 		nsec, _ = strconv.Atoi(match[4])
+		if hour > 24 || min > 59 || sec > 59 {
+			return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid time string "%s"`, str)
+		}
 		for i := 0; i < 9-len(match[4]); i++ {
 			nsec *= 10
 		}
@@ -240,13 +239,19 @@ func StrToTime(str string, format ...string) (*Time, error) {
 
 	// Time
 	if len(match[2]) > 0 {
-		s := strings.ReplaceAll(match[2], ":", "")
-		if len(s) < 6 {
-			s += strings.Repeat("0", 6-len(s))
+		parts := strings.Split(match[2], ":")
+		if len(parts) >= 1 && parts[0] != "" {
+			hour, _ = strconv.Atoi(parts[0])
 		}
-		hour, _ = strconv.Atoi(s[0:2])
-		min, _ = strconv.Atoi(s[2:4])
-		sec, _ = strconv.Atoi(s[4:6])
+		if len(parts) >= 2 && parts[1] != "" {
+			min, _ = strconv.Atoi(parts[1])
+		}
+		if len(parts) >= 3 && parts[2] != "" {
+			sec, _ = strconv.Atoi(parts[2])
+		}
+		if hour > 24 || min > 59 || sec > 59 {
+			return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid time string "%s"`, str)
+		}
 	}
 	// Nanoseconds, check and perform bits filling
 	if len(match[3]) > 0 {
