@@ -252,10 +252,16 @@ func createRouterFunc(funcInfo handlerFuncInfo) func(r *Request) {
 			var inputObject reflect.Value
 			if funcInfo.Type.In(1).Kind() == reflect.Pointer {
 				inputObject = reflect.New(funcInfo.Type.In(1).Elem())
-				r.error = r.Parse(inputObject.Interface())
+				err = r.Parse(inputObject.Interface())
+				if r.error == nil {
+					r.error = err
+				}
 			} else {
 				inputObject = reflect.New(funcInfo.Type.In(1).Elem()).Elem()
-				r.error = r.Parse(inputObject.Addr().Interface())
+				err = r.Parse(inputObject.Addr().Interface())
+				if r.error == nil {
+					r.error = err
+				}
 			}
 			if r.error != nil {
 				return

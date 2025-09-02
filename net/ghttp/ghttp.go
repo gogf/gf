@@ -153,6 +153,7 @@ const (
 	routeCacheDuration                 = time.Hour
 	ctxKeyForRequest       gctx.StrKey = "gHttpRequestObject"
 	contentTypeXml                     = "text/xml"
+	contentTypeXml2                    = "application/xml"
 	contentTypeHtml                    = "text/html"
 	contentTypeJson                    = "application/json"
 	contentTypeJavascript              = "application/javascript"

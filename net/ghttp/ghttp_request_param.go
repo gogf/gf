@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"mime"
 	"mime/multipart"
 	"net/http"
 	"reflect"
@@ -167,7 +168,8 @@ func (r *Request) MakeBodyRepeatableRead(repeatableRead bool) []byte {
 			if gerror.Is(err, io.EOF) {
 				errMsg += `, the Body might be closed or read manually from middleware/hook/other package previously`
 			}
-			panic(gerror.WrapCode(gcode.CodeInternalError, err, errMsg))
+			r.SetError(gerror.WrapCode(gcode.CodeInternalError, err, errMsg))
+			return nil
 		}
 	}
 	r.Body = utils.NewReadCloser(r.bodyContent, repeatableRead)
@@ -217,7 +219,7 @@ func (r *Request) parseQuery() {
 		var err error
 		r.queryMap, err = gstr.Parse(r.URL.RawQuery)
 		if err != nil {
-			panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse Query failed"))
+			r.SetError(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse Query failed"))
 		}
 	}
 }
@@ -233,7 +235,20 @@ func (r *Request) parseBody() {
 	if r.ContentLength == 0 {
 		return
 	}
-	if body := r.GetBody(); len(body) > 0 {
+	body := r.GetBody()
+	if len(body) == 0 {
+		return
+	}
+	var err error
+	// Trim space/new line characters.
+	body = bytes.TrimSpace(body)
+	mediaType, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	switch mediaType {
+	case contentTypeJson:
+		err = json.UnmarshalUseNumber(body, &r.bodyMap)
+	case contentTypeXml, contentTypeXml2:
+		r.bodyMap, err = gxml.DecodeWithoutRoot(body)
+	default:
 		// Trim space/new line characters.
 		body = bytes.TrimSpace(body)
 		// JSON format checks.
@@ -252,6 +267,9 @@ func (r *Request) parseBody() {
 			r.bodyMap, _ = gstr.Parse(r.GetBodyString())
 		}
 	}
+	if err != nil {
+		r.SetError(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse Body failed"))
+	}
 }
 
 // parseForm parses the request form for HTTP method PUT, POST, PATCH.
@@ -268,7 +286,7 @@ func (r *Request) parseForm() {
 		return
 	}
 
-	if contentType := r.Header.Get("Content-Type"); contentType != "" {
+	if contentType, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type")); contentType != "" {
 		var isMultiPartRequest = gstr.Contains(contentType, "multipart/")
 		var isFormRequest = gstr.Contains(contentType, "form")
 		var err error
@@ -277,16 +295,21 @@ func (r *Request) parseForm() {
 			// To avoid big memory consuming.
 			// The `multipart/` type form always contains binary data, which is not necessary read twice.
 			r.MakeBodyRepeatableRead(true)
+			if r.error != nil {
+				return
+			}
 		}
 		if isMultiPartRequest {
 			// multipart/form-data, multipart/mixed
 			if err = r.ParseMultipartForm(r.Server.config.FormParsingMemory); err != nil {
-				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, "r.ParseMultipartForm failed"))
+				r.SetError(gerror.WrapCode(gcode.CodeInvalidRequest, err, "r.ParseMultipartForm failed"))
+				return
 			}
 		} else if isFormRequest {
 			// application/x-www-form-urlencoded
 			if err = r.Request.ParseForm(); err != nil {
-				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, "r.Request.ParseForm failed"))
+				r.SetError(gerror.WrapCode(gcode.CodeInvalidRequest, err, "r.Request.ParseForm failed"))
+				return
 			}
 		}
 		if len(r.PostForm) > 0 {
@@ -329,7 +352,8 @@ func (r *Request) parseForm() {
 			}
 			if params != "" {
 				if r.formMap, err = gstr.Parse(params); err != nil {
-					panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse request parameters failed"))
+					r.SetError(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse request parameters failed"))
+					return
 				}
 			}
 		}
