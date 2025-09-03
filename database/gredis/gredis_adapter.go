@@ -30,6 +30,10 @@ type AdapterGroup interface {
 	GroupString() IGroupString
 }
 
+// RedisRawClient is a type alias for any, representing the raw underlying redis client.
+// Implementations should return their concrete client type as this interface.
+type RedisRawClient any
+
 // AdapterOperation is the core operation functions for redis.
 // These functions can be easily overwritten by custom implements.
 type AdapterOperation interface {
@@ -47,7 +51,7 @@ type AdapterOperation interface {
 	// Client returns the underlying redis client instance.
 	// This method provides access to the raw redis client for advanced operations
 	// that are not covered by the standard redis adapter interface.
-	Client() any
+	Client() RedisRawClient
 }
 
 // Conn is an interface of a connection from universal redis client.

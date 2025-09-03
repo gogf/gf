@@ -47,6 +47,29 @@ func (r *Redis) Conn(ctx context.Context) (gredis.Conn, error) {
 // Client returns the underlying redis client instance.
 // This method provides access to the raw redis client for advanced operations
 // that are not covered by the standard Redis interface.
-func (r *Redis) Client() any {
+//
+// Example usage with type assertion:
+//
+//	import goredis "github.com/redis/go-redis/v9"
+//
+//	func ExampleUsage(ctx context.Context, redis *Redis) error {
+//		client := redis.Client()
+//		universalClient, ok := client.(goredis.UniversalClient)
+//		if !ok {
+//			return errors.New("failed to assert to UniversalClient")
+//		}
+//
+//		// Use universalClient for advanced operations like Pipeline
+//		pipe := universalClient.Pipeline()
+//		pipe.Set(ctx, "key1", "value1", 0)
+//		pipe.Set(ctx, "key2", "value2", 0)
+//		results, err := pipe.Exec(ctx)
+//		if err != nil {
+//			return err
+//		}
+//		// ... handle results
+//		return nil
+//	}
+func (r *Redis) Client() gredis.RedisRawClient {
 	return r.client
 }
