@@ -55,7 +55,7 @@ func TestGenPbIssue3882(t *testing.T) {
 func TestGenPbIssue3953(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			outputPath     = gfile.Temp(guid.S())
+			outputPath     = gfile.Temp("f" + guid.S())
 			outputApiPath  = filepath.Join(outputPath, "api")
 			outputCtrlPath = filepath.Join(outputPath, "controller")
 
