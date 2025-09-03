@@ -47,9 +47,9 @@ jobs:
     # Service containers to run with `code-test`
     services:
       # Etcd service.
-      # docker run -d --name etcd -p 2379:2379 -e ALLOW_NONE_AUTHENTICATION=yes bitnami/etcd:3.4.24
+      # docker run -d --name etcd -p 2379:2379 -e ALLOW_NONE_AUTHENTICATION=yes bitnamilegacy/etcd:3.4.24
       etcd:
-        image: bitnami/etcd:3.4.24
+        image: bitnamilegacy/etcd:3.4.24
         env:
           ALLOW_NONE_AUTHENTICATION: yes
         ports:
