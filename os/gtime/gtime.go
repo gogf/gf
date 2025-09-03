@@ -226,7 +226,7 @@ func StrToTime(str string, format ...string) (*Time, error) {
 		min, _ = strconv.Atoi(match[2])
 		sec, _ = strconv.Atoi(match[3])
 		nsec, _ = strconv.Atoi(match[4])
-		if hour > 24 || min > 59 || sec > 59 {
+		if hour > 23 || min > 59 || sec > 59 {
 			return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid time string "%s"`, str)
 		}
 		for i := 0; i < 9-len(match[4]); i++ {
@@ -249,7 +249,7 @@ func StrToTime(str string, format ...string) (*Time, error) {
 		if len(parts) >= 3 && parts[2] != "" {
 			sec, _ = strconv.Atoi(parts[2])
 		}
-		if hour > 24 || min > 59 || sec > 59 {
+		if hour > 23 || min > 59 || sec > 59 {
 			return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid time string "%s"`, str)
 		}
 	}
