@@ -46,7 +46,7 @@ jobs:
       - name: update dependencies
         run: |
           go env -w GOPRIVATE=github.com/gogf/gf
-          .github/workflows/scripts/update_version.sh ./cmd/gfly ${{ github.ref_name }}
+          .github/workflows/scripts/update_version.sh ./cmd/gf ${{ github.ref_name }}
       - name: Auto Creating Tags For cli tool
         run: |
           git config --global user.email "tagrobot@goframe.org"
