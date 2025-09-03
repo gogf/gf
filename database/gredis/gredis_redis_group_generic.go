@@ -10,8 +10,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/redis/go-redis/v9"
-
 	"github.com/gogf/gf/v2/container/gvar"
 )
 
@@ -41,7 +39,6 @@ type IGroupGeneric interface {
 	PExpireAt(ctx context.Context, key string, time time.Time, option ...ExpireOption) (int64, error)
 	PExpireTime(ctx context.Context, key string) (*gvar.Var, error)
 	PTTL(ctx context.Context, key string) (int64, error)
-	Pipeline() redis.Pipeliner
 }
 
 // CopyOption provides options for function Copy.

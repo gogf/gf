@@ -43,3 +43,10 @@ func (r *Redis) Conn(ctx context.Context) (gredis.Conn, error) {
 		redis: r,
 	}, nil
 }
+
+// Client returns the underlying redis client instance.
+// This method provides access to the raw redis client for advanced operations
+// that are not covered by the standard Redis interface.
+func (r *Redis) Client() any {
+	return r.client
+}

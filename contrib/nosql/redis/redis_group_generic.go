@@ -10,8 +10,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/redis/go-redis/v9"
-
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -21,14 +19,12 @@ import (
 // GroupGeneric provides generic functions of redis.
 type GroupGeneric struct {
 	Operation gredis.AdapterOperation
-	client    redis.UniversalClient
 }
 
 // GroupGeneric creates and returns GroupGeneric.
 func (r *Redis) GroupGeneric() gredis.IGroupGeneric {
 	return GroupGeneric{
 		Operation: r.AdapterOperation,
-		client:    r.client,
 	}
 }
 
@@ -369,8 +365,4 @@ func (r GroupGeneric) PExpireTime(ctx context.Context, key string) (*gvar.Var, e
 func (r GroupGeneric) PTTL(ctx context.Context, key string) (int64, error) {
 	v, err := r.Operation.Do(ctx, "PTTL", key)
 	return v.Int64(), err
-}
-
-func (r GroupGeneric) Pipeline() redis.Pipeliner {
-	return r.client.Pipeline()
 }

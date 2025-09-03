@@ -43,6 +43,11 @@ type AdapterOperation interface {
 
 	// Close closes current redis client, closes its connection pool and releases all its related resources.
 	Close(ctx context.Context) (err error)
+
+	// Client returns the underlying redis client instance.
+	// This method provides access to the raw redis client for advanced operations
+	// that are not covered by the standard redis adapter interface.
+	Client() any
 }
 
 // Conn is an interface of a connection from universal redis client.
