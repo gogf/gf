@@ -59,6 +59,37 @@ func generateStructDefinition(ctx context.Context, in generateStructDefinitionIn
 	return buffer.String(), appendImports
 }
 
+func getTypeMappingInfo(
+	ctx context.Context, fieldType string, inTypeMapping map[DBFieldTypeName]CustomAttributeType,
+) (typeNameStr, importStr string) {
+	if typeMapping, ok := inTypeMapping[strings.ToLower(fieldType)]; ok {
+		typeNameStr = typeMapping.Type
+		importStr = typeMapping.Import
+		return
+	}
+	tryTypeMatch, _ := gregex.MatchString(`(.+?)\(([^\(\)]+)\)([\s\)]*)`, fieldType)
+	var (
+		tryTypeName string
+		moreTry     bool
+	)
+	if len(tryTypeMatch) == 4 {
+		tryTypeMatch3, _ := gregex.ReplaceString(`\s+`, "", tryTypeMatch[3])
+		tryTypeName = gstr.Trim(tryTypeMatch[1]) + tryTypeMatch3
+		moreTry = tryTypeMatch3 != ""
+	} else {
+		tryTypeName = gstr.Split(fieldType, " ")[0]
+	}
+	if tryTypeName != "" {
+		if typeMapping, ok := inTypeMapping[strings.ToLower(tryTypeName)]; ok {
+			typeNameStr = typeMapping.Type
+			importStr = typeMapping.Import
+		} else if moreTry {
+			typeNameStr, importStr = getTypeMappingInfo(ctx, tryTypeName, inTypeMapping)
+		}
+	}
+	return
+}
+
 // generateStructFieldDefinition generates and returns the attribute definition for specified field.
 func generateStructFieldDefinition(
 	ctx context.Context, field *gdb.TableField, in generateStructDefinitionInput,
@@ -71,21 +102,7 @@ func generateStructFieldDefinition(
 	)
 
 	if in.TypeMapping != nil && len(in.TypeMapping) > 0 {
-		var (
-			tryTypeName string
-		)
-		tryTypeMatch, _ := gregex.MatchString(`(.+?)\((.+)\)`, field.Type)
-		if len(tryTypeMatch) == 3 {
-			tryTypeName = gstr.Trim(tryTypeMatch[1])
-		} else {
-			tryTypeName = gstr.Split(field.Type, " ")[0]
-		}
-		if tryTypeName != "" {
-			if typeMapping, ok := in.TypeMapping[strings.ToLower(tryTypeName)]; ok {
-				localTypeNameStr = typeMapping.Type
-				appendImport = typeMapping.Import
-			}
-		}
+		localTypeNameStr, appendImport = getTypeMappingInfo(ctx, field.Type, in.TypeMapping)
 	}
 
 	if localTypeNameStr == "" {
