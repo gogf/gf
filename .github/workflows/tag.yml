@@ -27,6 +27,10 @@ jobs:
               git tag $tag
               git push origin $tag
           done
+      - name: update dependencies
+        run: |
+          go env -w GOPRIVATE=github.com/gogf/gf
+          .github/workflows/scripts/update_version.sh ./cmd/gf ${{ github.ref_name }}
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         with:
@@ -43,16 +47,12 @@ jobs:
           author_name: TagRobot
           author_email: tagrobot@goframe.org
           message: 'fix: update gf cli to ${{ github.ref_name }}'
-      - name: update dependencies
-        run: |
-          go env -w GOPRIVATE=github.com/gogf/gf
-          .github/workflows/scripts/update_version.sh ./cmd/gf ${{ github.ref_name }}
       - name: Auto Creating Tags For cli tool
         run: |
           git config --global user.email "tagrobot@goframe.org"
           git config --global user.name  "TagRobot"
           # auto create tag for cli tool
-          for file in `find cmd -name go.mod`; do
+          for file in `find cmd -name go.mod -not -path "*/testdata/*"`; do
               tag=$(dirname $file)/${{ github.ref_name }}
               git tag $tag
               git push origin $tag
