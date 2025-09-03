@@ -18,7 +18,7 @@ func GetOrDefaultStr(def string, param ...string) string {
 
 // GetOrDefaultAny checks and returns value according whether parameter `param` available.
 // It returns `param[0]` if it is available, or else it returns `def`.
-func GetOrDefaultAny(def interface{}, param ...interface{}) interface{} {
+func GetOrDefaultAny(def any, param ...any) any {
 	value := def
 	if len(param) > 0 && param[0] != nil {
 		value = param[0]

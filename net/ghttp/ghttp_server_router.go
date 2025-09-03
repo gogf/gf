@@ -187,7 +187,7 @@ func (s *Server) doSetHandler(
 	handler.Router.RegRule, handler.Router.RegNames = s.patternToRegular(uri)
 
 	if _, ok := s.serveTree[domain]; !ok {
-		s.serveTree[domain] = make(map[string]interface{})
+		s.serveTree[domain] = make(map[string]any)
 	}
 	// List array, very important for router registering.
 	// There may be multiple lists adding into this array when searching from root to leaf.
@@ -223,28 +223,28 @@ func (s *Server) doSetHandler(
 			part = "*fuzz"
 			// If it's a fuzzy node, it creates a "*list" item - which is a list - in the hash map.
 			// All the sub router items from this fuzzy node will also be added to its "*list" item.
-			if v, ok := p.(map[string]interface{})["*list"]; !ok {
+			if v, ok := p.(map[string]any)["*list"]; !ok {
 				newListForFuzzy := glist.New()
-				p.(map[string]interface{})["*list"] = newListForFuzzy
+				p.(map[string]any)["*list"] = newListForFuzzy
 				lists = append(lists, newListForFuzzy)
 			} else {
 				lists = append(lists, v.(*glist.List))
 			}
 		}
 		// Make a new bucket for the current node.
-		if _, ok := p.(map[string]interface{})[part]; !ok {
-			p.(map[string]interface{})[part] = make(map[string]interface{})
+		if _, ok := p.(map[string]any)[part]; !ok {
+			p.(map[string]any)[part] = make(map[string]any)
 		}
 		// Loop to next bucket.
-		p = p.(map[string]interface{})[part]
+		p = p.(map[string]any)[part]
 		// The leaf is a hash map and must have an item named "*list", which contains the router item.
 		// The leaf can be furthermore extended by adding more ket-value pairs into its map.
 		// Note that the `v != "*fuzz"` comparison is required as the list might be added in the former
 		// fuzzy checks.
 		if i == len(array)-1 && part != "*fuzz" {
-			if v, ok := p.(map[string]interface{})["*list"]; !ok {
+			if v, ok := p.(map[string]any)["*list"]; !ok {
 				leafList := glist.New()
-				p.(map[string]interface{})["*list"] = leafList
+				p.(map[string]any)["*list"] = leafList
 				lists = append(lists, leafList)
 			} else {
 				lists = append(lists, v.(*glist.List))

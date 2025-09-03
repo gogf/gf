@@ -18,7 +18,7 @@ import (
 // Delete does "DELETE FROM ... " statement for the model.
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
-func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
+func (m *Model) Delete(where ...any) (result sql.Result, err error) {
 	var ctx = m.GetCtx()
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).Delete()
@@ -67,7 +67,7 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 			Schema:    m.schema,
 			Data:      dataHolder,
 			Condition: conditionStr,
-			Args:      append([]interface{}{dataValue}, conditionArgs...),
+			Args:      append([]any{dataValue}, conditionArgs...),
 		}
 		return in.Next(ctx)
 	}
