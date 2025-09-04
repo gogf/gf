@@ -75,7 +75,7 @@ func doNewAdapterMemory() *AdapterMemory {
 func (c *AdapterMemory) Set(ctx context.Context, key any, value any, duration time.Duration) error {
 	defer c.handleLruKey(ctx, key)
 	expireTime := c.getInternalExpire(duration)
-	c.data.Set(key, memoryDataItem{
+	c.data.Set(ctx, key, memoryDataItem{
 		v: value,
 		e: expireTime,
 	})
@@ -93,7 +93,7 @@ func (c *AdapterMemory) Set(ctx context.Context, key any, value any, duration ti
 func (c *AdapterMemory) SetMap(ctx context.Context, data map[any]any, duration time.Duration) error {
 	var (
 		expireTime = c.getInternalExpire(duration)
-		err        = c.data.SetMap(data, expireTime)
+		err        = c.data.SetMap(ctx, data, expireTime)
 	)
 	if err != nil {
 		return err
@@ -187,7 +187,7 @@ func (c *AdapterMemory) SetIfNotExistFuncLock(ctx context.Context, key any, f Fu
 // It returns nil if it does not exist, or its value is nil, or it's expired.
 // If you would like to check if the `key` exists in the cache, it's better using function Contains.
 func (c *AdapterMemory) Get(ctx context.Context, key any) (*gvar.Var, error) {
-	item, ok := c.data.GetWithLock(ctx, key)
+	item, ok := c.data.Get(ctx, key)
 	if ok && !item.IsExpired() {
 		c.handleLruKey(ctx, key)
 		return gvar.New(item.v), nil
@@ -277,7 +277,7 @@ func (c *AdapterMemory) Contains(ctx context.Context, key any) (bool, error) {
 // It returns 0 if the `key` does not expire.
 // It returns -1 if the `key` does not exist in the cache.
 func (c *AdapterMemory) GetExpire(ctx context.Context, key any) (time.Duration, error) {
-	if item, ok := c.data.Get(key); ok {
+	if item, ok := c.data.Get(ctx, key); ok {
 		c.handleLruKey(ctx, key)
 		return time.Duration(item.e-gtime.TimestampMilli()) * time.Millisecond, nil
 	}
@@ -291,9 +291,9 @@ func (c *AdapterMemory) Remove(ctx context.Context, keys ...any) (*gvar.Var, err
 	return c.doRemove(ctx, keys...)
 }
 
-func (c *AdapterMemory) doRemove(_ context.Context, keys ...any) (*gvar.Var, error) {
+func (c *AdapterMemory) doRemove(ctx context.Context, keys ...any) (*gvar.Var, error) {
 	var removedKeys []any
-	removedKeys, value, err := c.data.Remove(keys...)
+	removedKeys, value, err := c.data.Remove(ctx, keys...)
 	if err != nil {
 		return nil, err
 	}
@@ -312,7 +312,7 @@ func (c *AdapterMemory) doRemove(_ context.Context, keys ...any) (*gvar.Var, err
 // It deletes the `key` if given `value` is nil.
 // It does nothing if `key` does not exist in the cache.
 func (c *AdapterMemory) Update(ctx context.Context, key any, value any) (oldValue *gvar.Var, exist bool, err error) {
-	v, exist, err := c.data.Update(key, value)
+	v, exist, err := c.data.Update(ctx, key, value)
 	if exist {
 		c.handleLruKey(ctx, key)
 	}
@@ -325,7 +325,7 @@ func (c *AdapterMemory) Update(ctx context.Context, key any, value any) (oldValu
 // It deletes the `key` if `duration` < 0.
 func (c *AdapterMemory) UpdateExpire(ctx context.Context, key any, duration time.Duration) (oldDuration time.Duration, err error) {
 	newExpireTime := c.getInternalExpire(duration)
-	oldDuration, err = c.data.UpdateExpire(key, newExpireTime)
+	oldDuration, err = c.data.UpdateExpire(ctx, key, newExpireTime)
 	if err != nil {
 		return
 	}
@@ -341,28 +341,28 @@ func (c *AdapterMemory) UpdateExpire(ctx context.Context, key any, duration time
 
 // Size returns the size of the cache.
 func (c *AdapterMemory) Size(ctx context.Context) (size int, err error) {
-	return c.data.Size()
+	return c.data.Size(ctx)
 }
 
 // Data returns a copy of all key-value pairs in the cache as map type.
 func (c *AdapterMemory) Data(ctx context.Context) (map[any]any, error) {
-	return c.data.Data()
+	return c.data.Data(ctx)
 }
 
 // Keys returns all keys in the cache as slice.
 func (c *AdapterMemory) Keys(ctx context.Context) ([]any, error) {
-	return c.data.Keys()
+	return c.data.Keys(ctx)
 }
 
 // Values returns all values in the cache as slice.
 func (c *AdapterMemory) Values(ctx context.Context) ([]any, error) {
-	return c.data.Values()
+	return c.data.Values(ctx)
 }
 
 // Clear clears all data of the cache.
 // Note that this function is sensitive and should be carefully used.
 func (c *AdapterMemory) Clear(ctx context.Context) error {
-	c.data.Clear()
+	c.data.Clear(ctx)
 	c.lru.Clear()
 	return nil
 }
@@ -453,7 +453,7 @@ func (c *AdapterMemory) syncEventAndClearExpired(ctx context.Context) {
 		if expireSet = c.expireSets.Get(expireTime); expireSet != nil {
 			// Iterating the set to delete all keys in it.
 			expireSet.Iterator(func(key any) bool {
-				c.deleteExpiredKey(key)
+				c.deleteExpiredKey(ctx, key)
 				// remove auto expired key for lru.
 				c.lru.Remove(key)
 				return true
@@ -476,9 +476,9 @@ func (c *AdapterMemory) handleLruKey(ctx context.Context, keys ...any) {
 
 // clearByKey deletes the key-value pair with given `key`.
 // The parameter `force` specifies whether doing this deleting forcibly.
-func (c *AdapterMemory) deleteExpiredKey(key any) {
+func (c *AdapterMemory) deleteExpiredKey(ctx context.Context, key any) {
 	// Doubly check before really deleting it from cache.
-	c.data.Delete(key)
+	c.data.Delete(ctx, key)
 	// Deleting its expiration time from `expireTimes`.
 	c.expireTimes.Delete(key)
 }
