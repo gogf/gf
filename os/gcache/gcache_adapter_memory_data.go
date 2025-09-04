@@ -8,6 +8,9 @@ package gcache
 
 import (
 	"context"
+	"regexp"
+	"runtime"
+	"strconv"
 	"sync"
 	"time"
 
@@ -15,8 +18,6 @@ import (
 )
 
 type lockContextKey struct{}
-
-const lockContextValue = "gcache-memory-locked"
 
 type memoryData struct {
 	mu   sync.RWMutex           // dataMu ensures the concurrent safety of underlying data map.
@@ -41,7 +42,7 @@ func newMemoryData() *memoryData {
 // It deletes the `key` if given `value` is nil.
 // It does nothing if `key` does not exist in the cache.
 func (d *memoryData) Update(ctx context.Context, key any, value any) (oldValue any, exist bool, err error) {
-	if ctx.Value(lockContextKey{}) == nil {
+	if ctx.Value(lockContextKey{}) == nil || ctx.Value(lockContextKey{}).(int) != GoroutineID() {
 		d.mu.Lock()
 		defer d.mu.Unlock()
 	}
@@ -60,7 +61,7 @@ func (d *memoryData) Update(ctx context.Context, key any, value any) (oldValue a
 // It returns -1 and does nothing if the `key` does not exist in the cache.
 // It deletes the `key` if `duration` < 0.
 func (d *memoryData) UpdateExpire(ctx context.Context, key any, expireTime int64) (oldDuration time.Duration, err error) {
-	if ctx.Value(lockContextKey{}) == nil {
+	if ctx.Value(lockContextKey{}) == nil || ctx.Value(lockContextKey{}).(int) != GoroutineID() {
 		d.mu.Lock()
 		defer d.mu.Unlock()
 	}
@@ -77,7 +78,7 @@ func (d *memoryData) UpdateExpire(ctx context.Context, key any, expireTime int64
 // Remove deletes the one or more keys from cache, and returns its value.
 // If multiple keys are given, it returns the value of the deleted last item.
 func (d *memoryData) Remove(ctx context.Context, keys ...any) (removedKeys []any, value any, err error) {
-	if ctx.Value(lockContextKey{}) == nil {
+	if ctx.Value(lockContextKey{}) == nil || ctx.Value(lockContextKey{}).(int) != GoroutineID() {
 		d.mu.Lock()
 		defer d.mu.Unlock()
 	}
@@ -95,7 +96,7 @@ func (d *memoryData) Remove(ctx context.Context, keys ...any) (removedKeys []any
 
 // Data returns a copy of all key-value pairs in the cache as map type.
 func (d *memoryData) Data(ctx context.Context) (map[any]any, error) {
-	if ctx.Value(lockContextKey{}) == nil {
+	if ctx.Value(lockContextKey{}) == nil || ctx.Value(lockContextKey{}).(int) != GoroutineID() {
 		d.mu.Lock()
 		defer d.mu.Unlock()
 	}
@@ -113,7 +114,7 @@ func (d *memoryData) Data(ctx context.Context) (map[any]any, error) {
 
 // Keys returns all keys in the cache as slice.
 func (d *memoryData) Keys(ctx context.Context) ([]any, error) {
-	if ctx.Value(lockContextKey{}) == nil {
+	if ctx.Value(lockContextKey{}) == nil || ctx.Value(lockContextKey{}).(int) != GoroutineID() {
 		d.mu.Lock()
 		defer d.mu.Unlock()
 	}
@@ -131,7 +132,7 @@ func (d *memoryData) Keys(ctx context.Context) ([]any, error) {
 
 // Values returns all values in the cache as slice.
 func (d *memoryData) Values(ctx context.Context) ([]any, error) {
-	if ctx.Value(lockContextKey{}) == nil {
+	if ctx.Value(lockContextKey{}) == nil || ctx.Value(lockContextKey{}).(int) != GoroutineID() {
 		d.mu.Lock()
 		defer d.mu.Unlock()
 	}
@@ -149,7 +150,7 @@ func (d *memoryData) Values(ctx context.Context) ([]any, error) {
 
 // Size returns the size of the cache that not expired.
 func (d *memoryData) Size(ctx context.Context) (size int, err error) {
-	if ctx.Value(lockContextKey{}) == nil {
+	if ctx.Value(lockContextKey{}) == nil || ctx.Value(lockContextKey{}).(int) != GoroutineID() {
 		d.mu.Lock()
 		defer d.mu.Unlock()
 	}
@@ -165,7 +166,7 @@ func (d *memoryData) Size(ctx context.Context) (size int, err error) {
 // Clear clears all data of the cache.
 // Note that this function is sensitive and should be carefully used.
 func (d *memoryData) Clear(ctx context.Context) {
-	if ctx.Value(lockContextKey{}) == nil {
+	if ctx.Value(lockContextKey{}) == nil || ctx.Value(lockContextKey{}).(int) == GoroutineID() {
 		d.mu.Lock()
 		defer d.mu.Unlock()
 	}
@@ -173,7 +174,7 @@ func (d *memoryData) Clear(ctx context.Context) {
 }
 
 func (d *memoryData) Get(ctx context.Context, key any) (item memoryDataItem, ok bool) {
-	if ctx.Value(lockContextKey{}) == nil {
+	if ctx.Value(lockContextKey{}) == nil || ctx.Value(lockContextKey{}).(int) == GoroutineID() {
 		d.mu.Lock()
 		defer d.mu.Unlock()
 	}
@@ -182,7 +183,7 @@ func (d *memoryData) Get(ctx context.Context, key any) (item memoryDataItem, ok 
 }
 
 func (d *memoryData) Set(ctx context.Context, key any, value memoryDataItem) {
-	if ctx.Value(lockContextKey{}) == nil {
+	if ctx.Value(lockContextKey{}) == nil || ctx.Value(lockContextKey{}).(int) != GoroutineID() {
 		d.mu.Lock()
 		defer d.mu.Unlock()
 	}
@@ -194,7 +195,7 @@ func (d *memoryData) Set(ctx context.Context, key any, value memoryDataItem) {
 // It does not expire if `duration` == 0.
 // It deletes the keys of `data` if `duration` < 0 or given `value` is nil.
 func (d *memoryData) SetMap(ctx context.Context, data map[any]any, expireTime int64) error {
-	if ctx.Value(lockContextKey{}) == nil {
+	if ctx.Value(lockContextKey{}) == nil || ctx.Value(lockContextKey{}).(int) != GoroutineID() {
 		d.mu.Lock()
 		defer d.mu.Unlock()
 	}
@@ -208,7 +209,7 @@ func (d *memoryData) SetMap(ctx context.Context, data map[any]any, expireTime in
 }
 
 func (d *memoryData) SetWithLock(ctx context.Context, key any, value any, expireTimestamp int64) (any, error) {
-	if ctx.Value(lockContextKey{}) == nil {
+	if ctx.Value(lockContextKey{}) == nil || ctx.Value(lockContextKey{}).(int) != GoroutineID() {
 		d.mu.Lock()
 		defer d.mu.Unlock()
 	}
@@ -224,7 +225,7 @@ func (d *memoryData) SetWithLock(ctx context.Context, key any, value any, expire
 		f, ok = value.(func(ctx context.Context) (value any, err error))
 	}
 	if ok {
-		if value, err = f(context.WithValue(ctx, lockContextKey{}, lockContextValue)); err != nil {
+		if value, err = f(context.WithValue(ctx, lockContextKey{}, GoroutineID())); err != nil {
 			return nil, err
 		}
 		if value == nil {
@@ -236,9 +237,19 @@ func (d *memoryData) SetWithLock(ctx context.Context, key any, value any, expire
 }
 
 func (d *memoryData) Delete(ctx context.Context, key any) {
-	if ctx.Value(lockContextKey{}) == nil {
+	if ctx.Value(lockContextKey{}) == nil || ctx.Value(lockContextKey{}).(int) != GoroutineID() {
 		d.mu.Lock()
 		defer d.mu.Unlock()
 	}
 	delete(d.data, key)
+}
+
+var gridRegex = regexp.MustCompile(`^\w+\s+(\d+)\s+`)
+
+func GoroutineID() int {
+	buf := make([]byte, 26)
+	runtime.Stack(buf, false)
+	match := gridRegex.FindSubmatch(buf)
+	id, _ := strconv.Atoi(string(match[1]))
+	return id
 }
