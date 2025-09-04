@@ -173,7 +173,11 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 		allowFileUploading = true
 	)
 	if len(data) > 0 {
-		mediaType, _, _ := mime.ParseMediaType(c.header[httpHeaderContentType])
+		mediaType, _, err := mime.ParseMediaType(c.header[httpHeaderContentType])
+		if err != nil {
+			// Fallback: use the raw header value if parsing fails.
+			mediaType = c.header[httpHeaderContentType]
+		}
 		switch mediaType {
 		case httpHeaderContentTypeJson:
 			switch data[0].(type) {
@@ -208,7 +212,11 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 	if method == http.MethodGet {
 		var bodyBuffer *bytes.Buffer
 		if params != "" {
-			mediaType, _, _ := mime.ParseMediaType(c.header[httpHeaderContentType])
+			mediaType, _, err := mime.ParseMediaType(c.header[httpHeaderContentType])
+			if err != nil {
+				// Fallback: use the raw header value if parsing fails.
+				mediaType = c.header[httpHeaderContentType]
+			}
 			switch mediaType {
 			case
 				httpHeaderContentTypeJson,
