@@ -63,7 +63,7 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*HandlerItemPar
 	// Special http method OPTIONS handling.
 	// It searches the handler with the request method instead of OPTIONS method.
 	if method == http.MethodOptions {
-		if v := r.Request.Header.Get("Access-Control-Request-Method"); v != "" {
+		if v := r.Header.Get("Access-Control-Request-Method"); v != "" {
 			method = v
 		}
 	}
@@ -72,7 +72,7 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*HandlerItemPar
 		path = xUrlPath
 	}
 	var handlerCacheKey = s.serveHandlerKey(method, path, host)
-	value, err := s.serveCache.GetOrSetFunc(ctx, handlerCacheKey, func(ctx context.Context) (interface{}, error) {
+	value, err := s.serveCache.GetOrSetFunc(ctx, handlerCacheKey, func(ctx context.Context) (any, error) {
 		parsedItems, serveItem, hasHook, hasServe = s.searchHandlers(method, path, host)
 		if parsedItems != nil {
 			return &handlerCacheItem{parsedItems, serveItem, hasHook, hasServe}, nil
@@ -135,30 +135,30 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*Han
 		lists := make([]*glist.List, 0, 16)
 		for i, part := range array {
 			// Add all lists of each node to the list array.
-			if v, ok := p.(map[string]interface{})["*list"]; ok {
+			if v, ok := p.(map[string]any)["*list"]; ok {
 				lists = append(lists, v.(*glist.List))
 			}
-			if v, ok := p.(map[string]interface{})[part]; ok {
+			if v, ok := p.(map[string]any)[part]; ok {
 				// Loop to the next node by certain key name.
 				p = v
 				if i == len(array)-1 {
-					if v, ok := p.(map[string]interface{})["*list"]; ok {
+					if v, ok := p.(map[string]any)["*list"]; ok {
 						lists = append(lists, v.(*glist.List))
 						break
 					}
 				}
-			} else if v, ok := p.(map[string]interface{})["*fuzz"]; ok {
+			} else if v, ok := p.(map[string]any)["*fuzz"]; ok {
 				// Loop to the next node by fuzzy node item.
 				p = v
 			}
 			if i == len(array)-1 {
 				// It here also checks the fuzzy item,
 				// for rule case like: "/user/*action" matches to "/user".
-				if v, ok := p.(map[string]interface{})["*fuzz"]; ok {
+				if v, ok := p.(map[string]any)["*fuzz"]; ok {
 					p = v
 				}
 				// The leaf must have a list item. It adds the list to the list array.
-				if v, ok := p.(map[string]interface{})["*list"]; ok {
+				if v, ok := p.(map[string]any)["*list"]; ok {
 					lists = append(lists, v.(*glist.List))
 				}
 			}
@@ -294,12 +294,11 @@ func (h *HandlerItemParsed) MarshalJSON() ([]byte, error) {
 // GetMetaTag retrieves and returns the metadata value associated with the given key from the request struct.
 // The meta value is from struct tags from g.Meta/gmeta.Meta type.
 func (h *HandlerItem) GetMetaTag(key string) string {
-	if h == nil {
-		return ""
-	}
-	metaValue := gmeta.Get(h.Info.Type.In(1), key)
-	if metaValue != nil {
-		return metaValue.String()
+	if h != nil && h.Info.Type != nil && h.Info.Type.NumIn() == 2 {
+		metaValue := gmeta.Get(h.Info.Type.In(1), key)
+		if metaValue != nil {
+			return metaValue.String()
+		}
 	}
 	return ""
 }

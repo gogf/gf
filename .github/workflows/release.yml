@@ -16,12 +16,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Github Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Set Up Golang Environment
         uses: actions/setup-go@v5
         with:
-          go-version: 1.23.4
+          go-version: 1.25
       
       - name: Build CLI Binary
         run: |
@@ -52,7 +52,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name:     ${{ github.ref }}
-          name: GoFrame Release ${{ github.ref }}
+          name: GoFrame Release ${{ github.ref_name }}
           draft:        false
           prerelease:   false
       

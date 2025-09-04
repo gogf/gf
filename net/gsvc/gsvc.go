@@ -103,7 +103,7 @@ type Endpoint interface {
 type Endpoints []Endpoint
 
 // Metadata stores custom key-value pairs.
-type Metadata map[string]interface{}
+type Metadata map[string]any
 
 // SearchInput is the input for service searching.
 type SearchInput struct {
