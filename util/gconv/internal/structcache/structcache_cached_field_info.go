@@ -135,7 +135,7 @@ func (cfi *CachedFieldInfo) fieldReflectValue(v reflect.Value, fieldIndexes []in
 				// Compatible with previous code
 				// Interface => struct
 				v = v.Elem()
-				if v.Kind() == reflect.Ptr {
+				if v.Kind() == reflect.Pointer {
 					// maybe *struct or other types
 					v = v.Elem()
 				}

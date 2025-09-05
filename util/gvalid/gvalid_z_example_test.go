@@ -35,7 +35,7 @@ func ExampleValidator_Run() {
 		fmt.Println("check value err:", err)
 	}
 	// check map mode
-	data := map[string]interface{}{
+	data := map[string]any{
 		"passport":  "",
 		"password":  "123456",
 		"password2": "1234567",
@@ -190,7 +190,7 @@ func ExampleValidator_Data() {
 	// The Password2 value `gofra` is not a valid password format
 }
 
-func ExampleValidator_Data_Value() {
+func ExampleValidator_Data_value() {
 	err := g.Validator().Rules("min:18").
 		Messages("未成年人不允许注册哟").
 		Data(16).Run(gctx.New())
@@ -200,8 +200,8 @@ func ExampleValidator_Data_Value() {
 	// 未成年人不允许注册哟
 }
 
-func ExampleValidator_Data_Map1() {
-	params := map[string]interface{}{
+func ExampleValidator_Data_map1() {
+	params := map[string]any{
 		"passport":  "",
 		"password":  "123456",
 		"password2": "1234567",
@@ -217,13 +217,13 @@ func ExampleValidator_Data_Map1() {
 		fmt.Println(e.FirstError())
 	}
 	// May Output:
-	// map[required:账号不能为空 length:账号长度应当在6到16之间]
-	// passport map[required:账号不能为空 length:账号长度应当在6到16之间]
+	// map[required:账号不能为空 length:账号长度应当在 6 到 16 之间]
+	// passport map[required:账号不能为空 length:账号长度应当在 6 到 16 之间]
 	// 账号不能为空
 }
 
-func ExampleValidator_Data_Map2() {
-	params := map[string]interface{}{
+func ExampleValidator_Data_map2() {
+	params := map[string]any{
 		"passport":  "",
 		"password":  "123456",
 		"password2": "1234567",
@@ -244,8 +244,8 @@ func ExampleValidator_Data_Map2() {
 	// 两次密码输入不相等
 }
 
-func ExampleValidator_Data_Map3() {
-	params := map[string]interface{}{
+func ExampleValidator_Data_map3() {
+	params := map[string]any{
 		"passport":  "",
 		"password":  "123456",
 		"password2": "1234567",
@@ -255,7 +255,7 @@ func ExampleValidator_Data_Map3() {
 		"password":  "required|length:6,16|same:password2",
 		"password2": "required|length:6,16",
 	}
-	messages := map[string]interface{}{
+	messages := map[string]any{
 		"passport": "账号不能为空|账号长度应当在{min}到{max}之间",
 		"password": map[string]string{
 			"required": "密码不能为空",
@@ -273,7 +273,7 @@ func ExampleValidator_Data_Map3() {
 	// May Output:
 	// {
 	//	"passport": {
-	//	"length": "账号长度应当在6到16之间",
+	//	"length": "账号长度应当在 6 到 16 之间",
 	//		"required": "账号不能为空"
 	// },
 	//	"password": {
@@ -283,7 +283,7 @@ func ExampleValidator_Data_Map3() {
 }
 
 // Empty string attribute.
-func ExampleValidator_Data_Struct1() {
+func ExampleValidator_Data_struct1() {
 	type Params struct {
 		Page      int    `v:"required|min:1         # page is required"`
 		Size      int    `v:"required|between:1,100 # size is required"`
@@ -300,7 +300,7 @@ func ExampleValidator_Data_Struct1() {
 }
 
 // Empty pointer attribute.
-func ExampleValidator_Data_Struct2() {
+func ExampleValidator_Data_struct2() {
 	type Params struct {
 		Page      int       `v:"required|min:1         # page is required"`
 		Size      int       `v:"required|between:1,100 # size is required"`
@@ -317,7 +317,7 @@ func ExampleValidator_Data_Struct2() {
 }
 
 // Empty integer attribute.
-func ExampleValidator_Data_Struct3() {
+func ExampleValidator_Data_struct3() {
 	type Params struct {
 		Page      int `v:"required|min:1         # page is required"`
 		Size      int `v:"required|between:1,100 # size is required"`
@@ -333,7 +333,7 @@ func ExampleValidator_Data_Struct3() {
 	// project id must between 1, 10000
 }
 
-func ExampleValidator_Data_Struct4() {
+func ExampleValidator_Data_struct4() {
 	type User struct {
 		Name string `v:"required#请输入用户姓名"`
 		Type int    `v:"required#请选择用户类型"`
@@ -491,7 +491,7 @@ func ExampleValidator_RuleFuncMap() {
 	// Value Length Error!; Pass is not Same!
 }
 
-func ExampleValidator_RegisterRule() {
+func ExampleValidator_registerRule() {
 	type User struct {
 		Id   int
 		Name string `v:"required|unique-name # 请输入用户名称|用户名称已被占用"`

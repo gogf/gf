@@ -18,11 +18,11 @@ import (
 )
 
 // Bytes converts `any` to []byte.
-func (c *Converter) Bytes(any any) ([]byte, error) {
-	if empty.IsNil(any) {
+func (c *Converter) Bytes(anyInput any) ([]byte, error) {
+	if empty.IsNil(anyInput) {
 		return nil, nil
 	}
-	switch value := any.(type) {
+	switch value := anyInput.(type) {
 	case string:
 		return []byte(value), nil
 
@@ -33,10 +33,10 @@ func (c *Converter) Bytes(any any) ([]byte, error) {
 		if f, ok := value.(localinterface.IBytes); ok {
 			return f.Bytes(), nil
 		}
-		originValueAndKind := reflection.OriginValueAndKind(any)
+		originValueAndKind := reflection.OriginValueAndKind(anyInput)
 		switch originValueAndKind.OriginKind {
 		case reflect.Map:
-			bytes, err := json.Marshal(any)
+			bytes, err := json.Marshal(anyInput)
 			if err != nil {
 				return nil, err
 			}
@@ -63,6 +63,6 @@ func (c *Converter) Bytes(any any) ([]byte, error) {
 			}
 		default:
 		}
-		return gbinary.Encode(any), nil
+		return gbinary.Encode(anyInput), nil
 	}
 }
