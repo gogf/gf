@@ -190,9 +190,14 @@ func (c *Cron) Stop(name ...string) {
 }
 
 // StopGracefully Blocks and waits all current running jobs done.
-func (c *Cron) StopGracefully() {
+func (c *Cron) StopGracefully() context.Context {
 	c.status.Set(StatusStopped)
-	c.jobWaiter.Wait()
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		c.jobWaiter.Wait()
+		cancel()
+	}()
+	return ctx
 }
 
 // Remove deletes scheduled task which named `name`.

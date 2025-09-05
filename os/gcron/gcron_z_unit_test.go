@@ -284,38 +284,37 @@ func TestCron_DelayAddTimes(t *testing.T) {
 
 func TestCron_JobWaiter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var err error
-		s1 := garray.New(true)
-		s2 := garray.New(true)
-		_, err = gcron.Add(ctx, "* * * * * *", func(ctx context.Context) {
-			g.Log().Debug(ctx, "Every second")
-			s1.Append(struct{}{})
-		}, "MyFirstCronJob")
+		_, err := gcron.Add(ctx, "* * * * * *", func(ctx context.Context) {
+		})
 		t.Assert(err, nil)
-		_, err = gcron.Add(ctx, "*/2 * * * * *", func(ctx context.Context) {
-			g.Log().Debug(ctx, "Every 2s job start")
-			time.Sleep(3 * time.Second)
-			s2.Append(struct{}{})
-			g.Log().Debug(ctx, "Every 2s job after 3 second end")
-		}, "MySecondCronJob")
+		_, err = gcron.Add(ctx, "* * * * * *", func(ctx context.Context) { time.Sleep(2 * time.Second) })
 		t.Assert(err, nil)
 
 		quit := make(chan os.Signal, 1)
-		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-
 		go func() {
-			time.Sleep(4 * time.Second) // Ensure that the job is triggered twice
+			signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+			time.Sleep(1 * time.Second) // Ensure that the job is triggered twice
 			glog.Print(ctx, "Sending SIGINT")
 			quit <- syscall.SIGINT // Send SIGINT
 		}()
 
 		sig := <-quit
 		glog.Printf(ctx, "Signal received: %s, stopping cron", sig)
+		ctx := gcron.StopGracefully()
 
-		glog.Print(ctx, "Waiting for all cron jobs to complete...")
-		gcron.StopGracefully()
-		glog.Print(ctx, "All cron jobs completed")
-		t.Assert(s1.Len(), 4)
-		t.Assert(s2.Len(), 2)
+		select {
+		case <-ctx.Done():
+			t.Error("context done before all jobs completed")
+		case <-time.After(750 * time.Millisecond):
+			// expected
+		}
+
+		select {
+		case <-ctx.Done():
+			// expected
+		case <-time.After(1500 * time.Millisecond):
+			t.Error("context not done after job should have completed")
+		}
+
 	})
 }
