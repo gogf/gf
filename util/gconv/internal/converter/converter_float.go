@@ -18,11 +18,11 @@ import (
 )
 
 // Float32 converts `any` to float32.
-func (c *Converter) Float32(any any) (float32, error) {
-	if empty.IsNil(any) {
+func (c *Converter) Float32(anyInput any) (float32, error) {
+	if empty.IsNil(anyInput) {
 		return 0, nil
 	}
-	switch value := any.(type) {
+	switch value := anyInput.(type) {
 	case float32:
 		return value, nil
 	case float64:
@@ -31,7 +31,7 @@ func (c *Converter) Float32(any any) (float32, error) {
 		// TODO: It might panic here for these types.
 		return gbinary.DecodeToFloat32(value), nil
 	default:
-		rv := reflect.ValueOf(any)
+		rv := reflect.ValueOf(anyInput)
 		switch rv.Kind() {
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			return float32(rv.Int()), nil
@@ -52,11 +52,11 @@ func (c *Converter) Float32(any any) (float32, error) {
 			f, err := strconv.ParseFloat(s, 32)
 			if err != nil {
 				return 0, gerror.WrapCodef(
-					gcode.CodeInvalidParameter, err, "converting string to float32 failed for: %v", any,
+					gcode.CodeInvalidParameter, err, "converting string to float32 failed for: %v", anyInput,
 				)
 			}
 			return float32(f), nil
-		case reflect.Ptr:
+		case reflect.Pointer:
 			if rv.IsNil() {
 				return 0, nil
 			}
@@ -68,7 +68,7 @@ func (c *Converter) Float32(any any) (float32, error) {
 			if f, ok := value.(localinterface.IFloat32); ok {
 				return f.Float32(), nil
 			}
-			s, err := c.String(any)
+			s, err := c.String(anyInput)
 			if err != nil {
 				return 0, err
 			}
@@ -78,7 +78,7 @@ func (c *Converter) Float32(any any) (float32, error) {
 			v, err := strconv.ParseFloat(s, 32)
 			if err != nil {
 				return 0, gerror.WrapCodef(
-					gcode.CodeInvalidParameter, err, "converting string to float32 failed for: %v", any,
+					gcode.CodeInvalidParameter, err, "converting string to float32 failed for: %v", anyInput,
 				)
 			}
 			return float32(v), nil
@@ -87,11 +87,11 @@ func (c *Converter) Float32(any any) (float32, error) {
 }
 
 // Float64 converts `any` to float64.
-func (c *Converter) Float64(any any) (float64, error) {
-	if empty.IsNil(any) {
+func (c *Converter) Float64(anyInput any) (float64, error) {
+	if empty.IsNil(anyInput) {
 		return 0, nil
 	}
-	switch value := any.(type) {
+	switch value := anyInput.(type) {
 	case float32:
 		return float64(value), nil
 	case float64:
@@ -100,7 +100,7 @@ func (c *Converter) Float64(any any) (float64, error) {
 		// TODO: It might panic here for these types.
 		return gbinary.DecodeToFloat64(value), nil
 	default:
-		rv := reflect.ValueOf(any)
+		rv := reflect.ValueOf(anyInput)
 		switch rv.Kind() {
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			return float64(rv.Int()), nil
@@ -126,11 +126,11 @@ func (c *Converter) Float64(any any) (float64, error) {
 			f, err := strconv.ParseFloat(s, 64)
 			if err != nil {
 				return 0, gerror.WrapCodef(
-					gcode.CodeInvalidParameter, err, "converting string to float64 failed for: %v", any,
+					gcode.CodeInvalidParameter, err, "converting string to float64 failed for: %v", anyInput,
 				)
 			}
 			return f, nil
-		case reflect.Ptr:
+		case reflect.Pointer:
 			if rv.IsNil() {
 				return 0, nil
 			}
@@ -142,7 +142,7 @@ func (c *Converter) Float64(any any) (float64, error) {
 			if f, ok := value.(localinterface.IFloat64); ok {
 				return f.Float64(), nil
 			}
-			s, err := c.String(any)
+			s, err := c.String(anyInput)
 			if err != nil {
 				return 0, err
 			}
@@ -152,7 +152,7 @@ func (c *Converter) Float64(any any) (float64, error) {
 			v, err := strconv.ParseFloat(s, 64)
 			if err != nil {
 				return 0, gerror.WrapCodef(
-					gcode.CodeInvalidParameter, err, "converting string to float64 failed for: %v", any,
+					gcode.CodeInvalidParameter, err, "converting string to float64 failed for: %v", anyInput,
 				)
 			}
 			return v, nil

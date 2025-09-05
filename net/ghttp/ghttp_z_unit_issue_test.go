@@ -116,8 +116,8 @@ type Issue1653TestReq struct {
 }
 
 type Issue1653TestRes struct {
-	UUID     string      `json:"uuid"`
-	FeedBack interface{} `json:"feed_back"`
+	UUID     string `json:"uuid"`
+	FeedBack any    `json:"feed_back"`
 }
 
 type cIssue1653Foo struct{}
@@ -727,6 +727,7 @@ func Test_Issue4093(t *testing.T) {
 	})
 }
 
+
 // https://github.com/gogf/gf/issues/4193
 func Test_Issue4193(t *testing.T) {
 	type Req struct {
@@ -754,5 +755,62 @@ func Test_Issue4193(t *testing.T) {
 			"file": "",
 		})
 		t.Assert(content, `{"code":51,"message":"The File field is required","data":null}`)
+
+// Issue4227Req
+type Issue4227Req struct {
+	g.Meta      `path:"/hello/:path_param" method:"post"`
+	HeaderParam string `json:"Authorization" in:"header" default:"Bearer token123"`
+	QueryParam  bool   `json:"query_param" in:"query" default:"false"`
+	PathParam   int    `json:"path_param" in:"path" default:"123" v:"required"`
+	CookieParam bool   `json:"cookie_param" in:"cookie" default:"false"`
+	BodyParam   bool   `json:"body_param" default:"false"`
+}
+
+type Issue4227Res struct {
+	g.Meta `mime:"application/json"`
+}
+
+var (
+	Issue4227 = cIssue4227{}
+)
+
+type cIssue4227 struct{}
+
+func (c *cIssue4227) Feature(ctx context.Context, req *Issue4227Req) (res *Issue4227Res, err error) {
+	g.RequestFromCtx(ctx).Response.WriteJson(req)
+	return
+}
+
+// https://github.com/gogf/gf/issues/4227
+func Test_Issue4227(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareHandlerResponse)
+		group.Bind(Issue4227)
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		client := g.Client().ContentJson()
+		client.SetPrefix(prefix)
+
+		resp1 := client.PostContent(ctx, "/hello/123", `{}`)
+		t.Assert(resp1, `{"Authorization":"Bearer token123","query_param":false,"path_param":123,"cookie_param":false,"body_param":false}`)
+
+		client.SetHeader("Authorization", "Bearer token123")
+
+		resp2 := client.PostContent(ctx, "/hello/123", `{"body_param":"true"}`)
+		t.Assert(resp2, `{"Authorization":"Bearer token123","query_param":false,"path_param":123,"cookie_param":false,"body_param":true}`)
+
+		client.SetCookie("cookie_param", "true")
+		resp3 := client.PostContent(ctx, "/hello/123", `{}`)
+		t.Assert(resp3, `{"Authorization":"Bearer token123","query_param":false,"path_param":123,"cookie_param":true,"body_param":false}`)
+
+
 	})
 }

@@ -39,7 +39,7 @@ func Test_Issue3330(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			list []map[string]interface{}
+			list []map[string]any
 			one  gdb.Record
 			err  error
 		)
@@ -145,8 +145,8 @@ func Test_Issue3671(t *testing.T) {
 // https://github.com/gogf/gf/issues/3668
 func Test_Issue3668(t *testing.T) {
 	type Issue3668 struct {
-		Text   interface{}
-		Number interface{}
+		Text   any
+		Number any
 	}
 	var (
 		sqlText = gtest.DataContent("issues", "issue3668.sql")

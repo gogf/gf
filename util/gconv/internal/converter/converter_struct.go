@@ -50,7 +50,7 @@ func (c *Converter) Struct(params, pointer any, option ...StructOption) (err err
 	}
 
 	// JSON content converting.
-	ok, err := c.doConvertWithJsonCheck(params, pointer)
+	ok, err := c.doConvertWithJSONCheck(params, pointer)
 	if err != nil {
 		return err
 	}
@@ -89,14 +89,14 @@ func (c *Converter) Struct(params, pointer any, option ...StructOption) (err err
 	} else {
 		pointerReflectValue = reflect.ValueOf(pointer)
 		pointerReflectKind = pointerReflectValue.Kind()
-		if pointerReflectKind != reflect.Ptr {
+		if pointerReflectKind != reflect.Pointer {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				"destination pointer should be type of '*struct', but got '%v'",
 				pointerReflectKind,
 			)
 		}
-		// Using IsNil on reflect.Ptr variable is OK.
+		// Using IsNil on reflect.Pointer variable is OK.
 		if !pointerReflectValue.IsValid() || pointerReflectValue.IsNil() {
 			return gerror.NewCode(
 				gcode.CodeInvalidParameter,
@@ -128,7 +128,7 @@ func (c *Converter) Struct(params, pointer any, option ...StructOption) (err err
 
 	// It automatically creates struct object if necessary.
 	// For example, if `pointer` is **User, then `elem` is *User, which is a pointer to User.
-	if pointerElemReflectValue.Kind() == reflect.Ptr {
+	if pointerElemReflectValue.Kind() == reflect.Pointer {
 		if !pointerElemReflectValue.IsValid() || pointerElemReflectValue.IsNil() {
 			e := reflect.New(pointerElemReflectValue.Type().Elem())
 			pointerElemReflectValue.Set(e)
@@ -411,7 +411,7 @@ func (c *Converter) bindVarToStructField(
 // bindVarToReflectValueWithInterfaceCheck does bind using common interfaces checks.
 func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value any) (bool, error) {
 	var pointer any
-	if reflectValue.Kind() != reflect.Ptr && reflectValue.CanAddr() {
+	if reflectValue.Kind() != reflect.Pointer && reflectValue.CanAddr() {
 		reflectValueAddr := reflectValue.Addr()
 		if reflectValueAddr.IsNil() || !reflectValueAddr.IsValid() {
 			return false, nil
@@ -475,7 +475,7 @@ func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value a
 // bindVarToReflectValue sets `value` to reflect value object `structFieldValue`.
 func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value any, option StructOption) (err error) {
 	// JSON content converting.
-	ok, err := c.doConvertWithJsonCheck(value, structFieldValue)
+	ok, err := c.doConvertWithJSONCheck(value, structFieldValue)
 	if err != nil {
 		return err
 	}
@@ -486,7 +486,7 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 	kind := structFieldValue.Kind()
 	// Converting using `Set` interface implements, for some types.
 	switch kind {
-	case reflect.Slice, reflect.Array, reflect.Ptr, reflect.Interface:
+	case reflect.Slice, reflect.Array, reflect.Pointer, reflect.Interface:
 		if !structFieldValue.IsNil() {
 			if v, ok := structFieldValue.Interface().(localinterface.ISet); ok {
 				v.Set(value)
@@ -536,7 +536,7 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 						elemTypeName = elemType.String()
 					}
 					var elem reflect.Value
-					if elemType.Kind() == reflect.Ptr {
+					if elemType.Kind() == reflect.Pointer {
 						elem = reflect.New(elemType.Elem()).Elem()
 					} else {
 						elem = reflect.New(elemType).Elem()
@@ -559,7 +559,7 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 							return err
 						}
 					}
-					if elemType.Kind() == reflect.Ptr {
+					if elemType.Kind() == reflect.Pointer {
 						// Before it sets the `elem` to array, do pointer converting if necessary.
 						elem = elem.Addr()
 					}
@@ -579,7 +579,7 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 				if reflectValue.IsZero() {
 					var elemKind = elemType.Kind()
 					// Try to find the original type kind of the slice element.
-					if elemKind == reflect.Ptr {
+					if elemKind == reflect.Pointer {
 						elemKind = elemType.Elem().Kind()
 					}
 					switch elemKind {
@@ -594,7 +594,7 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 			if elemTypeName == "" {
 				elemTypeName = elemType.String()
 			}
-			if elemType.Kind() == reflect.Ptr {
+			if elemType.Kind() == reflect.Pointer {
 				elem = reflect.New(elemType.Elem()).Elem()
 			} else {
 				elem = reflect.New(elemType).Elem()
@@ -617,7 +617,7 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 					return err
 				}
 			}
-			if elemType.Kind() == reflect.Ptr {
+			if elemType.Kind() == reflect.Pointer {
 				// Before it sets the `elem` to array, do pointer converting if necessary.
 				elem = elem.Addr()
 			}
@@ -626,7 +626,7 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 		}
 		structFieldValue.Set(reflectArray)
 
-	case reflect.Ptr:
+	case reflect.Pointer:
 		if structFieldValue.IsNil() || structFieldValue.IsZero() {
 			// Nil or empty pointer, it creates a new one.
 			item := reflect.New(structFieldValue.Type().Elem())

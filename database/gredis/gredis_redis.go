@@ -52,14 +52,14 @@ const errorNilAdapter = `redis adapter is not set, missing configuration or adap
 // initGroup initializes the group object of redis.
 func (r *Redis) initGroup() *Redis {
 	r.localGroup = localGroup{
-		localGroupGeneric:   r.localAdapter.GroupGeneric(),
-		localGroupHash:      r.localAdapter.GroupHash(),
-		localGroupList:      r.localAdapter.GroupList(),
-		localGroupPubSub:    r.localAdapter.GroupPubSub(),
-		localGroupScript:    r.localAdapter.GroupScript(),
-		localGroupSet:       r.localAdapter.GroupSet(),
-		localGroupSortedSet: r.localAdapter.GroupSortedSet(),
-		localGroupString:    r.localAdapter.GroupString(),
+		localGroupGeneric:   r.GroupGeneric(),
+		localGroupHash:      r.GroupHash(),
+		localGroupList:      r.GroupList(),
+		localGroupPubSub:    r.GroupPubSub(),
+		localGroupScript:    r.GroupScript(),
+		localGroupSet:       r.GroupSet(),
+		localGroupSortedSet: r.GroupSortedSet(),
+		localGroupString:    r.GroupString(),
 	}
 	return r
 }
@@ -94,7 +94,7 @@ func (r *Redis) Conn(ctx context.Context) (Conn, error) {
 
 // Do send a command to the server and returns the received reply.
 // It uses json.Marshal for struct/slice/map type values before committing them to redis.
-func (r *Redis) Do(ctx context.Context, command string, args ...interface{}) (*gvar.Var, error) {
+func (r *Redis) Do(ctx context.Context, command string, args ...any) (*gvar.Var, error) {
 	if r == nil {
 		return nil, gerror.NewCode(gcode.CodeInvalidParameter, errorNilRedis)
 	}
@@ -114,7 +114,7 @@ func (r *Redis) MustConn(ctx context.Context) Conn {
 }
 
 // MustDo performs as function Do, but it panics if any error occurs internally.
-func (r *Redis) MustDo(ctx context.Context, command string, args ...interface{}) *gvar.Var {
+func (r *Redis) MustDo(ctx context.Context, command string, args ...any) *gvar.Var {
 	v, err := r.Do(ctx, command, args...)
 	if err != nil {
 		panic(err)

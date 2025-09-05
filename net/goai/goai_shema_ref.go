@@ -55,7 +55,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 	)
 	if pkgPath == "" {
 		switch golangType.Kind() {
-		case reflect.Ptr, reflect.Array, reflect.Slice:
+		case reflect.Pointer, reflect.Array, reflect.Slice:
 			pkgPath = golangType.Elem().PkgPath()
 			typeName = golangType.Elem().Name()
 		default:
@@ -65,7 +65,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 	// Type enums.
 	var typeId = fmt.Sprintf(`%s.%s`, pkgPath, typeName)
 	if enums := gtag.GetEnumsByType(typeId); enums != "" {
-		schema.Enum = make([]interface{}, 0)
+		schema.Enum = make([]any, 0)
 		if err = json.Unmarshal([]byte(enums), &schema.Enum); err != nil {
 			return nil, err
 		}
@@ -128,7 +128,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 		}
 
 	case TypeObject:
-		for golangType.Kind() == reflect.Ptr {
+		for golangType.Kind() == reflect.Pointer {
 			golangType = golangType.Elem()
 		}
 		switch golangType.Kind() {

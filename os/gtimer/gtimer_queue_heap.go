@@ -26,12 +26,12 @@ func (h *priorityQueueHeap) Swap(i, j int) {
 }
 
 // Push pushes an item to the heap.
-func (h *priorityQueueHeap) Push(x interface{}) {
+func (h *priorityQueueHeap) Push(x any) {
 	h.array = append(h.array, x.(priorityQueueItem))
 }
 
 // Pop retrieves, removes and returns the most high priority item from the heap.
-func (h *priorityQueueHeap) Pop() interface{} {
+func (h *priorityQueueHeap) Pop() any {
 	length := len(h.array)
 	if length == 0 {
 		return nil

@@ -39,7 +39,7 @@ func New(path string, flag int, perm os.FileMode, ttl ...time.Duration) *Pool {
 
 // newFilePool creates and returns a file pointer pool with given file path, flag and opening permission.
 func newFilePool(p *Pool, path string, flag int, perm os.FileMode, ttl time.Duration) *gpool.Pool {
-	pool := gpool.New(ttl, func() (interface{}, error) {
+	pool := gpool.New(ttl, func() (any, error) {
 		file, err := os.OpenFile(path, flag, perm)
 		if err != nil {
 			err = gerror.Wrapf(err, `os.OpenFile failed for file "%s", flag "%d", perm "%s"`, path, flag, perm)
@@ -53,7 +53,7 @@ func newFilePool(p *Pool, path string, flag int, perm os.FileMode, ttl time.Dura
 			perm: perm,
 			path: path,
 		}, nil
-	}, func(i interface{}) {
+	}, func(i any) {
 		_ = i.(*File).File.Close()
 	})
 	return pool
