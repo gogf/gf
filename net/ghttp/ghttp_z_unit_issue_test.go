@@ -727,7 +727,6 @@ func Test_Issue4093(t *testing.T) {
 	})
 }
 
-
 // https://github.com/gogf/gf/issues/4193
 func Test_Issue4193(t *testing.T) {
 	type Req struct {
@@ -755,6 +754,8 @@ func Test_Issue4193(t *testing.T) {
 			"file": "",
 		})
 		t.Assert(content, `{"code":51,"message":"The File field is required","data":null}`)
+	})
+}
 
 // Issue4227Req
 type Issue4227Req struct {
@@ -810,7 +811,6 @@ func Test_Issue4227(t *testing.T) {
 		client.SetCookie("cookie_param", "true")
 		resp3 := client.PostContent(ctx, "/hello/123", `{}`)
 		t.Assert(resp3, `{"Authorization":"Bearer token123","query_param":false,"path_param":123,"cookie_param":true,"body_param":false}`)
-
 
 	})
 }
