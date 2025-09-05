@@ -160,7 +160,7 @@ func (c *Converter) Struct(params, pointer any, option ...StructOption) (err err
 			return err
 		}
 		if paramsMap == nil {
-			// fails converting params to map, it so cannot be converted to struct pointer.
+			// fails converting params to map, so it cannot be converted to struct pointer.
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`convert params "%v" to "%s" failed`,
