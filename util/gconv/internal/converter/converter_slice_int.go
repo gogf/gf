@@ -17,8 +17,8 @@ import (
 )
 
 // SliceInt converts `any` to []int.
-func (c *Converter) SliceInt(any any, option ...SliceOption) ([]int, error) {
-	if empty.IsNil(any) {
+func (c *Converter) SliceInt(anyInput any, option ...SliceOption) ([]int, error) {
+	if empty.IsNil(anyInput) {
 		return nil, nil
 	}
 	var (
@@ -27,7 +27,7 @@ func (c *Converter) SliceInt(any any, option ...SliceOption) ([]int, error) {
 		array       []int = nil
 		sliceOption       = c.getSliceOption(option...)
 	)
-	switch value := any.(type) {
+	switch value := anyInput.(type) {
 	case []string:
 		array = make([]int, len(value))
 		for k, v := range value {
@@ -133,7 +133,7 @@ func (c *Converter) SliceInt(any any, option ...SliceOption) ([]int, error) {
 			}
 			array[k] = ii
 		}
-	case []interface{}:
+	case []any:
 		array = make([]int, len(value))
 		for k, v := range value {
 			ii, err = c.Int(v)
@@ -155,14 +155,14 @@ func (c *Converter) SliceInt(any any, option ...SliceOption) ([]int, error) {
 	if array != nil {
 		return array, err
 	}
-	if v, ok := any.(localinterface.IInts); ok {
+	if v, ok := anyInput.(localinterface.IInts); ok {
 		return v.Ints(), err
 	}
-	if v, ok := any.(localinterface.IInterfaces); ok {
+	if v, ok := anyInput.(localinterface.IInterfaces); ok {
 		return c.SliceInt(v.Interfaces(), option...)
 	}
 	// Not a common type, it then uses reflection for conversion.
-	originValueAndKind := reflection.OriginValueAndKind(any)
+	originValueAndKind := reflection.OriginValueAndKind(anyInput)
 	switch originValueAndKind.OriginKind {
 	case reflect.Slice, reflect.Array:
 		var (
@@ -182,7 +182,7 @@ func (c *Converter) SliceInt(any any, option ...SliceOption) ([]int, error) {
 		if originValueAndKind.OriginValue.IsZero() {
 			return []int{}, err
 		}
-		ii, err = c.Int(any)
+		ii, err = c.Int(anyInput)
 		if err != nil && !sliceOption.ContinueOnError {
 			return nil, err
 		}
@@ -191,8 +191,8 @@ func (c *Converter) SliceInt(any any, option ...SliceOption) ([]int, error) {
 }
 
 // SliceInt32 converts `any` to []int32.
-func (c *Converter) SliceInt32(any any, option ...SliceOption) ([]int32, error) {
-	if empty.IsNil(any) {
+func (c *Converter) SliceInt32(anyInput any, option ...SliceOption) ([]int32, error) {
+	if empty.IsNil(anyInput) {
 		return nil, nil
 	}
 	var (
@@ -201,7 +201,7 @@ func (c *Converter) SliceInt32(any any, option ...SliceOption) ([]int32, error) 
 		array       []int32 = nil
 		sliceOption         = c.getSliceOption(option...)
 	)
-	switch value := any.(type) {
+	switch value := anyInput.(type) {
 	case []string:
 		array = make([]int32, len(value))
 		for k, v := range value {
@@ -307,7 +307,7 @@ func (c *Converter) SliceInt32(any any, option ...SliceOption) ([]int32, error) 
 			}
 			array[k] = ii
 		}
-	case []interface{}:
+	case []any:
 		array = make([]int32, len(value))
 		for k, v := range value {
 			ii, err = c.Int32(v)
@@ -329,14 +329,14 @@ func (c *Converter) SliceInt32(any any, option ...SliceOption) ([]int32, error) 
 	if array != nil {
 		return array, err
 	}
-	if v, ok := any.(localinterface.IInts); ok {
+	if v, ok := anyInput.(localinterface.IInts); ok {
 		return c.SliceInt32(v.Ints(), option...)
 	}
-	if v, ok := any.(localinterface.IInterfaces); ok {
+	if v, ok := anyInput.(localinterface.IInterfaces); ok {
 		return c.SliceInt32(v.Interfaces(), option...)
 	}
 	// Not a common type, it then uses reflection for conversion.
-	originValueAndKind := reflection.OriginValueAndKind(any)
+	originValueAndKind := reflection.OriginValueAndKind(anyInput)
 	switch originValueAndKind.OriginKind {
 	case reflect.Slice, reflect.Array:
 		var (
@@ -356,7 +356,7 @@ func (c *Converter) SliceInt32(any any, option ...SliceOption) ([]int32, error) 
 		if originValueAndKind.OriginValue.IsZero() {
 			return []int32{}, err
 		}
-		ii, err = c.Int32(any)
+		ii, err = c.Int32(anyInput)
 		if err != nil && !sliceOption.ContinueOnError {
 			return nil, err
 		}
@@ -365,8 +365,8 @@ func (c *Converter) SliceInt32(any any, option ...SliceOption) ([]int32, error) 
 }
 
 // SliceInt64 converts `any` to []int64.
-func (c *Converter) SliceInt64(any any, option ...SliceOption) ([]int64, error) {
-	if empty.IsNil(any) {
+func (c *Converter) SliceInt64(anyInput any, option ...SliceOption) ([]int64, error) {
+	if empty.IsNil(anyInput) {
 		return nil, nil
 	}
 	var (
@@ -375,7 +375,7 @@ func (c *Converter) SliceInt64(any any, option ...SliceOption) ([]int64, error) 
 		array       []int64 = nil
 		sliceOption         = c.getSliceOption(option...)
 	)
-	switch value := any.(type) {
+	switch value := anyInput.(type) {
 	case []string:
 		array = make([]int64, len(value))
 		for k, v := range value {
@@ -481,7 +481,7 @@ func (c *Converter) SliceInt64(any any, option ...SliceOption) ([]int64, error) 
 			}
 			array[k] = ii
 		}
-	case []interface{}:
+	case []any:
 		array = make([]int64, len(value))
 		for k, v := range value {
 			ii, err = c.Int64(v)
@@ -503,14 +503,14 @@ func (c *Converter) SliceInt64(any any, option ...SliceOption) ([]int64, error) 
 	if array != nil {
 		return array, err
 	}
-	if v, ok := any.(localinterface.IInts); ok {
+	if v, ok := anyInput.(localinterface.IInts); ok {
 		return c.SliceInt64(v.Ints(), option...)
 	}
-	if v, ok := any.(localinterface.IInterfaces); ok {
+	if v, ok := anyInput.(localinterface.IInterfaces); ok {
 		return c.SliceInt64(v.Interfaces(), option...)
 	}
 	// Not a common type, it then uses reflection for conversion.
-	originValueAndKind := reflection.OriginValueAndKind(any)
+	originValueAndKind := reflection.OriginValueAndKind(anyInput)
 	switch originValueAndKind.OriginKind {
 	case reflect.Slice, reflect.Array:
 		var (
@@ -530,7 +530,7 @@ func (c *Converter) SliceInt64(any any, option ...SliceOption) ([]int64, error) 
 		if originValueAndKind.OriginValue.IsZero() {
 			return []int64{}, err
 		}
-		ii, err = c.Int64(any)
+		ii, err = c.Int64(anyInput)
 		if err != nil && !sliceOption.ContinueOnError {
 			return nil, err
 		}

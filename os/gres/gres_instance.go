@@ -25,7 +25,7 @@ func Instance(name ...string) *Resource {
 	if len(name) > 0 && name[0] != "" {
 		key = name[0]
 	}
-	return instances.GetOrSetFuncLock(key, func() interface{} {
+	return instances.GetOrSetFuncLock(key, func() any {
 		return New()
 	}).(*Resource)
 }

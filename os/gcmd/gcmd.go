@@ -73,7 +73,7 @@ func GetArgAll() []string {
 // Fetching Rules:
 // 1. Command line arguments are in lowercase format, eg: gf.`package name`.<variable name>;
 // 2. Environment arguments are in uppercase format, eg: GF_`package name`_<variable name>；
-func GetOptWithEnv(key string, def ...interface{}) *gvar.Var {
+func GetOptWithEnv(key string, def ...any) *gvar.Var {
 	cmdKey := utils.FormatCmdKey(key)
 	if command.ContainsOpt(cmdKey) {
 		return gvar.New(GetOpt(cmdKey))

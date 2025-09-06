@@ -15,8 +15,8 @@ var enumsMap = make(map[string]json.RawMessage)
 
 // SetGlobalEnums sets the global enums into package.
 // Note that this operation is not concurrent safety.
-func SetGlobalEnums(enumsJson string) error {
-	return json.Unmarshal([]byte(enumsJson), &enumsMap)
+func SetGlobalEnums(enumsJSON string) error {
+	return json.Unmarshal([]byte(enumsJSON), &enumsMap)
 }
 
 // GetGlobalEnums retrieves and returns the global enums.

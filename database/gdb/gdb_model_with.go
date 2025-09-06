@@ -43,7 +43,7 @@ import (
 // Or:
 //
 //	db.With(UserDetail{}, UserScores{}).Scan(xxx)
-func (m *Model) With(objects ...interface{}) *Model {
+func (m *Model) With(objects ...any) *Model {
 	model := m.getModel()
 	for _, object := range objects {
 		if m.tables == "" {
@@ -66,8 +66,8 @@ func (m *Model) WithAll() *Model {
 }
 
 // doWithScanStruct handles model association operations feature for single struct.
-func (m *Model) doWithScanStruct(pointer interface{}) error {
-	if len(m.withArray) == 0 && m.withAll == false {
+func (m *Model) doWithScanStruct(pointer any) error {
+	if len(m.withArray) == 0 && !m.withAll {
 		return nil
 	}
 	var (
@@ -124,7 +124,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 			fieldKeys          []string
 			relatedSourceName  = array[0]
 			relatedTargetName  = array[1]
-			relatedTargetValue interface{}
+			relatedTargetValue any
 		)
 		// Find the value of related attribute from `pointer`.
 		for attributeName, attributeValue := range currentStructFieldMap {
@@ -141,7 +141,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 			)
 		}
 		bindToReflectValue := field.Value
-		if bindToReflectValue.Kind() != reflect.Ptr && bindToReflectValue.CanAddr() {
+		if bindToReflectValue.Kind() != reflect.Pointer && bindToReflectValue.CanAddr() {
 			bindToReflectValue = bindToReflectValue.Addr()
 		}
 
@@ -189,8 +189,8 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 
 // doWithScanStructs handles model association operations feature for struct slice.
 // Also see doWithScanStruct.
-func (m *Model) doWithScanStructs(pointer interface{}) error {
-	if len(m.withArray) == 0 && m.withAll == false {
+func (m *Model) doWithScanStructs(pointer any) error {
+	if len(m.withArray) == 0 && !m.withAll {
 		return nil
 	}
 	if v, ok := pointer.(reflect.Value); ok {
@@ -251,7 +251,7 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 			fieldKeys          []string
 			relatedSourceName  = array[0]
 			relatedTargetName  = array[1]
-			relatedTargetValue interface{}
+			relatedTargetValue any
 		)
 		// Find the value slice of related attribute from `pointer`.
 		for attributeName := range currentStructFieldMap {
