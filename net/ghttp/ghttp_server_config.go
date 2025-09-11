@@ -244,6 +244,16 @@ type ServerConfig struct {
 	GracefulShutdownTimeout int `json:"gracefulShutdownTimeout"`
 
 	// ======================================================================================================
+	// OpenTelemetry Tracing.
+	// ======================================================================================================
+
+	// OtelTraceRequestEnabled enables tracing of HTTP request parameters.
+	OtelTraceRequestEnabled bool `json:"otelTraceRequestEnabled"`
+
+	// OtelTraceResponseEnabled enables tracing of HTTP response parameters.
+	OtelTraceResponseEnabled bool `json:"otelTraceResponseEnabled"`
+
+	// ======================================================================================================
 	// Other.
 	// ======================================================================================================
 
@@ -305,7 +315,9 @@ func NewConfig() ServerConfig {
 		ErrorLogEnabled:         true,
 		ErrorLogPattern:         "error-{Ymd}.log",
 		AccessLogEnabled:        false,
-		AccessLogPattern:        "access-{Ymd}.log",
+		AccessLogPattern:         "access-{Ymd}.log",
+		OtelTraceRequestEnabled:  false,
+		OtelTraceResponseEnabled: false,
 		DumpRouterMap:           true,
 		ClientMaxBodySize:       8 * 1024 * 1024, // 8MB
 		FormParsingMemory:       1024 * 1024,     // 1MB

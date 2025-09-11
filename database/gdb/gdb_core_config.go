@@ -66,6 +66,10 @@ type ConfigNode struct {
 	// Optional field
 	Debug bool `json:"debug"`
 
+	// OtelTraceSQLEnabled enables OpenTelemetry tracing for SQL operations
+	// Optional field
+	OtelTraceSQLEnabled bool `json:"otelTraceSQLEnabled"`
+
 	// Prefix specifies the table name prefix
 	// Optional field
 	Prefix string `json:"prefix"`

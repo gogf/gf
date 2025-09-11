@@ -20,6 +20,7 @@ import (
 	"github.com/gogf/gf/v2/internal/httputil"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -28,9 +29,12 @@ const (
 	tracingEventHttpRequest                     = "http.request"
 	tracingEventHttpRequestHeaders              = "http.request.headers"
 	tracingEventHttpRequestBaggage              = "http.request.baggage"
+	tracingEventHttpRequestParams               = "http.request.params"
 	tracingEventHttpResponse                    = "http.response"
 	tracingEventHttpResponseHeaders             = "http.response.headers"
+	tracingEventHttpResponseBody                = "http.response.body"
 	tracingEventHttpRequestUrl                  = "http.request.url"
+	tracingEventHttpMethod                      = "http.method"
 	tracingMiddlewareHandled        gctx.StrKey = `MiddlewareServerTracingHandled`
 )
 
@@ -75,11 +79,44 @@ func internalMiddlewareServerTracing(r *Request) {
 		return
 	}
 
-	span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
+	// Basic trace attributes for all requests
+	traceAttrs := []attribute.KeyValue{
 		attribute.String(tracingEventHttpRequestUrl, r.URL.String()),
+		attribute.String(tracingEventHttpMethod, r.Method),
 		attribute.String(tracingEventHttpRequestHeaders, gconv.String(httputil.HeaderToMap(r.Header))),
 		attribute.String(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ctx).String()),
-	))
+	}
+
+	// Add request parameters if configured
+	if r.Server != nil && r.Server.config.OtelTraceRequestEnabled {
+		// Get all request parameters (query + form + body)
+		requestParams := make(map[string]any)
+		
+		// Query parameters
+		for k, v := range r.URL.Query() {
+			requestParams[k] = v
+		}
+		
+		// Form parameters
+		if r.ContentLength > 0 && gtrace.MaxContentLogSize() > 0 {
+			contentType := r.Header.Get("Content-Type")
+			if gstr.Contains(contentType, "application/x-www-form-urlencoded") || gstr.Contains(contentType, "multipart/form-data") {
+				// Use GetFormMap() instead of ParseForm() to get form data
+				formData := r.GetFormMap()
+				for k, v := range formData {
+					requestParams[k] = v
+				}
+			}
+		}
+		
+		if len(requestParams) > 0 {
+			traceAttrs = append(traceAttrs, 
+				attribute.String(tracingEventHttpRequestParams, gconv.String(requestParams)),
+			)
+		}
+	}
+
+	span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(traceAttrs...))
 
 	// Continue executing.
 	r.Middleware.Next()
@@ -94,10 +131,27 @@ func internalMiddlewareServerTracing(r *Request) {
 		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, err))
 	}
 
-	span.AddEvent(tracingEventHttpResponse, trace.WithAttributes(
+	// Response tracing attributes
+	responseAttrs := []attribute.KeyValue{
 		attribute.String(
 			tracingEventHttpResponseHeaders,
 			gconv.String(httputil.HeaderToMap(r.Response.Header())),
 		),
-	))
+	}
+
+	// Add response body if configured
+	if r.Server != nil && r.Server.config.OtelTraceResponseEnabled {
+		if r.Response.BufferLength() > 0 {
+			responseBody := r.Response.BufferString()
+			// Limit response body size for tracing to avoid memory issues
+			if len(responseBody) > gtrace.MaxContentLogSize() {
+				responseBody = responseBody[:gtrace.MaxContentLogSize()] + "...[truncated]"
+			}
+			responseAttrs = append(responseAttrs,
+				attribute.String(tracingEventHttpResponseBody, responseBody),
+			)
+		}
+	}
+
+	span.AddEvent(tracingEventHttpResponse, trace.WithAttributes(responseAttrs...))
 }
