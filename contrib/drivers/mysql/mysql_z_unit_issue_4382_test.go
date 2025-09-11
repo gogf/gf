@@ -16,7 +16,7 @@ func Test_Issue4382_KeyLengthLimit(t *testing.T) {
 		// when using proper MySQL configuration
 		table := createTable("test_key_length")
 		defer dropTable(table)
-		
+
 		// Try to create a table with potentially long keys (using utf8mb4)
 		// This scenario could trigger the key length issue
 		longTableSQL := `
@@ -27,10 +27,10 @@ func Test_Issue4382_KeyLengthLimit(t *testing.T) {
 			KEY idx_long_composite (long_field_1, long_field_2)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
 		`
-		
+
 		_, err := db.Exec(ctx, "DROP TABLE IF EXISTS test_long_keys")
 		t.AssertNil(err)
-		
+
 		// This should not fail with key length error in GoFrame 2.9
 		// Our DoFilter enhancement should automatically add ROW_FORMAT=DYNAMIC
 		_, err = db.Exec(ctx, longTableSQL)
@@ -40,7 +40,7 @@ func Test_Issue4382_KeyLengthLimit(t *testing.T) {
 			t.Logf("Error creating table: %v", err)
 		}
 		t.AssertNil(err)
-		
+
 		// Clean up
 		db.Exec(ctx, "DROP TABLE IF EXISTS test_long_keys")
 	})

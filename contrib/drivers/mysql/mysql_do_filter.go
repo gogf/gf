@@ -15,7 +15,7 @@ import (
 
 // DoFilter handles the sql before posts it to database.
 // This method helps handle MySQL-specific issues including key length limitations.
-// 
+//
 // For MySQL tables using utf8mb4 charset, this method automatically adds ROW_FORMAT=DYNAMIC
 // to CREATE TABLE statements to prevent "Specified key was too long; max key length is 1000 bytes" errors.
 // This is particularly important for compatibility when upgrading from older GoFrame versions.
@@ -26,11 +26,11 @@ func (d *Driver) DoFilter(
 	if err != nil {
 		return newSql, newArgs, err
 	}
-	
+
 	// Handle MySQL-specific SQL filtering to prevent key length issues
 	// This is particularly important for compatibility between GoFrame versions
 	newSql = d.handleMySQLKeyLengthCompatibility(newSql)
-	
+
 	return newSql, newArgs, err
 }
 
@@ -41,9 +41,9 @@ func (d *Driver) handleMySQLKeyLengthCompatibility(sql string) string {
 	// This helps prevent "Specified key was too long; max key length is 1000 bytes" errors
 	sqlUpper := strings.ToUpper(sql)
 	sqlLower := strings.ToLower(sql)
-	
-	if strings.Contains(sqlUpper, "CREATE TABLE") && 
-	   (strings.Contains(sqlLower, "utf8mb4") || strings.Contains(sqlLower, "charset=utf8mb4")) {
+
+	if strings.Contains(sqlUpper, "CREATE TABLE") &&
+		(strings.Contains(sqlLower, "utf8mb4") || strings.Contains(sqlLower, "charset=utf8mb4")) {
 		// Add ROW_FORMAT=DYNAMIC to enable larger key prefixes when using utf8mb4
 		if !strings.Contains(sqlUpper, "ROW_FORMAT") {
 			// Insert ROW_FORMAT=DYNAMIC before ENGINE clause if it exists
@@ -62,6 +62,6 @@ func (d *Driver) handleMySQLKeyLengthCompatibility(sql string) string {
 			}
 		}
 	}
-	
+
 	return sql
 }

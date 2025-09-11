@@ -47,14 +47,14 @@ func configNodeToSource(config *gdb.ConfigNode) string {
 		"%s:%s@%s(%s%s)/%s?charset=%s",
 		config.User, config.Pass, config.Protocol, config.Host, portStr, config.Name, config.Charset,
 	)
-	
+
 	if config.Timezone != "" {
 		if strings.Contains(config.Timezone, "/") {
 			config.Timezone = url.QueryEscape(config.Timezone)
 		}
 		source = fmt.Sprintf("%s&loc=%s", source, config.Timezone)
 	}
-	
+
 	if config.Extra != "" {
 		source = fmt.Sprintf("%s&%s", source, config.Extra)
 	}
