@@ -19,6 +19,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/internal/otel"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/glog"
@@ -247,10 +248,15 @@ type ServerConfig struct {
 	// OpenTelemetry Tracing.
 	// ======================================================================================================
 
+	// Otel specifies the OpenTelemetry tracing configuration
+	Otel otel.Config `json:"otel"`
+
 	// OtelTraceRequestEnabled enables tracing of HTTP request parameters.
+	// Deprecated: Use Otel.TraceRequestEnabled instead. This field is kept for backward compatibility.
 	OtelTraceRequestEnabled bool `json:"otelTraceRequestEnabled"`
 
 	// OtelTraceResponseEnabled enables tracing of HTTP response parameters.
+	// Deprecated: Use Otel.TraceResponseEnabled instead. This field is kept for backward compatibility.
 	OtelTraceResponseEnabled bool `json:"otelTraceResponseEnabled"`
 
 	// ======================================================================================================
@@ -316,6 +322,7 @@ func NewConfig() ServerConfig {
 		ErrorLogPattern:         "error-{Ymd}.log",
 		AccessLogEnabled:        false,
 		AccessLogPattern:         "access-{Ymd}.log",
+		Otel:                    *otel.NewConfig(),
 		OtelTraceRequestEnabled:  false,
 		OtelTraceResponseEnabled: false,
 		DumpRouterMap:           true,
@@ -584,4 +591,33 @@ func (s *Server) SetRegistrar(registrar gsvc.Registrar) {
 // GetRegistrar returns the Registrar of server.
 func (s *Server) GetRegistrar() gsvc.Registrar {
 	return s.registrar
+}
+
+// GetConfig returns the configuration of current server.
+func (s *Server) GetConfig() ServerConfig {
+	return s.config
+}
+
+// IsOtelTraceRequestEnabled returns whether HTTP request tracing is enabled.
+// It checks both the new Otel.TraceRequestEnabled field and the deprecated OtelTraceRequestEnabled field
+// for backward compatibility.
+func (c ServerConfig) IsOtelTraceRequestEnabled() bool {
+	// Check new configuration first
+	if c.Otel.TraceRequestEnabled {
+		return true
+	}
+	// Fall back to deprecated field for backward compatibility
+	return c.OtelTraceRequestEnabled
+}
+
+// IsOtelTraceResponseEnabled returns whether HTTP response tracing is enabled.
+// It checks both the new Otel.TraceResponseEnabled field and the deprecated OtelTraceResponseEnabled field
+// for backward compatibility.
+func (c ServerConfig) IsOtelTraceResponseEnabled() bool {
+	// Check new configuration first
+	if c.Otel.TraceResponseEnabled {
+		return true
+	}
+	// Fall back to deprecated field for backward compatibility
+	return c.OtelTraceResponseEnabled
 }

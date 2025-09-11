@@ -2,33 +2,44 @@
 
 This example demonstrates the new configurable OpenTelemetry tracing features for SQL, HTTP requests, and HTTP responses.
 
+**Updated to OpenTelemetry v1.38.0 with Independent OTEL Parameters**
+
 ## HTTP Server Configuration
 
-### Enable Request Parameter Tracing
+### New Independent OTEL Configuration (Recommended)
 ```yaml
 server:
   address: ":8080"
-  otelTraceRequestEnabled: true  # Enable HTTP request parameter tracing
+  otel:
+    traceRequestEnabled: true   # Enable HTTP request parameter tracing
+    traceResponseEnabled: true  # Enable HTTP response body tracing
 ```
 
-### Enable Response Body Tracing
+### Legacy Configuration (Still Supported)
 ```yaml
 server:
   address: ":8080"
-  otelTraceResponseEnabled: true  # Enable HTTP response body tracing
-```
-
-### Enable Both Request and Response Tracing
-```yaml
-server:
-  address: ":8080" 
-  otelTraceRequestEnabled: true   # Enable HTTP request parameter tracing
+  otelTraceRequestEnabled: true   # Enable HTTP request parameter tracing  
   otelTraceResponseEnabled: true  # Enable HTTP response body tracing
 ```
 
 ## Database Configuration
 
-### Enable SQL Statement Tracing
+### New Independent OTEL Configuration (Recommended)
+```yaml
+database:
+  default:
+    type: "mysql"
+    host: "127.0.0.1"
+    port: "3306"
+    user: "your_user"
+    pass: "your_password"
+    name: "your_database"
+    otel:
+      traceSQLEnabled: true  # Enable SQL statement tracing
+```
+
+### Legacy Configuration (Still Supported)
 ```yaml
 database:
   default:
@@ -43,23 +54,27 @@ database:
 
 ## Programmatic Configuration
 
-### HTTP Server
+### HTTP Server - New Independent OTEL Configuration
 ```go
 package main
 
 import (
     "github.com/gogf/gf/v2/frame/g"
+    "github.com/gogf/gf/v2/internal/otel"
     "github.com/gogf/gf/v2/net/ghttp"
 )
 
 func main() {
     s := g.Server()
     
-    // Enable tracing via configuration map
-    s.SetConfigWithMap(g.Map{
-        "OtelTraceRequestEnabled":  true,
-        "OtelTraceResponseEnabled": true,
-    })
+    // Configure using new independent OTEL configuration
+    config := ghttp.NewConfig()
+    config.Address = ":8080"
+    config.Otel = otel.Config{
+        TraceRequestEnabled:  true,
+        TraceResponseEnabled: true,
+    }
+    s.SetConfig(config)
     
     s.BindHandler("/api/test", func(r *ghttp.Request) {
         // This handler will have its request parameters and response traced
@@ -73,18 +88,47 @@ func main() {
 }
 ```
 
-### Database
+### HTTP Server - Legacy Configuration (Still Supported)
 ```go
 package main
 
 import (
-    "context"
-    "github.com/gogf/gf/v2/database/gdb"
     "github.com/gogf/gf/v2/frame/g"
+    "github.com/gogf/gf/v2/net/ghttp"
 )
 
 func main() {
-    // Configure database with SQL tracing enabled
+    s := g.Server()
+    
+    // Enable tracing via configuration map (legacy approach)
+    s.SetConfigWithMap(g.Map{
+        "OtelTraceRequestEnabled":  true,
+        "OtelTraceResponseEnabled": true,
+    })
+    
+    s.BindHandler("/api/test", func(r *ghttp.Request) {
+        // This handler will have its request parameters and response traced
+        r.Response.WriteJson(g.Map{
+            "message": "Hello World",  
+            "input":   r.Get("input"),
+        })
+    })
+    
+    s.Run()
+}
+```
+
+### Database - New Independent OTEL Configuration
+```go
+package main
+
+import (
+    "github.com/gogf/gf/v2/database/gdb" 
+    "github.com/gogf/gf/v2/internal/otel"
+)
+
+func main() {
+    // Configure database with new independent OTEL configuration
     config := gdb.ConfigNode{
         Type: "mysql",
         Host: "127.0.0.1",
@@ -92,23 +136,50 @@ func main() {
         User: "your_user",
         Pass: "your_password",
         Name: "your_database",
-        OtelTraceSQLEnabled: true,  // Enable SQL tracing
+        Otel: otel.Config{
+            TraceSQLEnabled: true,
+        },
     }
     
     db, err := gdb.New(config)
     if err != nil {
-        g.Log().Fatal(context.TODO(), err)
+        panic(err)
     }
-    defer db.Close(context.TODO())
     
-    // SQL queries will now be traced
-    result, err := db.GetOne(context.TODO(), "SELECT * FROM users WHERE id = ?", 1)
+    // SQL statements will now be traced
+    result, err := db.Query("SELECT * FROM users WHERE id = ?", 1)
+    // ... handle result
+}
+```
+
+### Database - Legacy Configuration (Still Supported)  
+```go
+package main
+
+import (
+    "github.com/gogf/gf/v2/database/gdb"
+)
+
+func main() {
+    // Configure database with legacy OTEL configuration
+    config := gdb.ConfigNode{
+        Type: "mysql",
+        Host: "127.0.0.1", 
+        Port: "3306",
+        User: "your_user",
+        Pass: "your_password",
+        Name: "your_database",
+        OtelTraceSQLEnabled: true,  // Legacy field
+    }
+    
+    db, err := gdb.New(config)
     if err != nil {
-        g.Log().Error(context.TODO(), err)
-        return
+        panic(err)
     }
     
-    g.Log().Info(context.TODO(), "User:", result)
+    // SQL statements will now be traced
+    result, err := db.Query("SELECT * FROM users WHERE id = ?", 1)
+    // ... handle result
 }
 ```
 
@@ -154,8 +225,44 @@ All HTTP requests now include the HTTP method in traces:
 
 ## Benefits
 
-1. **Configurable**: All new tracing features are opt-in via configuration
-2. **Performance**: Only enabled features add overhead 
-3. **Backward Compatible**: Existing tracing continues to work unchanged
-4. **Comprehensive**: Covers SQL, HTTP requests, and HTTP responses
-5. **Size Aware**: Respects content size limits to prevent memory issues
+1. **OpenTelemetry v1.38.0**: Updated to the latest OpenTelemetry version with improved performance and features
+2. **Independent Configuration**: New modular OTEL configuration structure for better organization
+3. **Configurable**: All new tracing features are opt-in via configuration
+4. **Performance**: Only enabled features add overhead 
+5. **Backward Compatible**: Legacy configuration fields still work alongside new structure  
+6. **Comprehensive**: Covers SQL, HTTP requests, and HTTP responses
+7. **Size Aware**: Respects content size limits to prevent memory issues
+
+## Migration Guide
+
+### From Legacy to New Configuration
+
+#### HTTP Server
+```go
+// Legacy (still works)
+s.SetConfigWithMap(g.Map{
+    "OtelTraceRequestEnabled": true,
+})
+
+// New (recommended)
+config := ghttp.NewConfig()
+config.Otel.TraceRequestEnabled = true
+s.SetConfig(config)
+```
+
+#### Database
+```go
+// Legacy (still works)  
+config := gdb.ConfigNode{
+    OtelTraceSQLEnabled: true,
+}
+
+// New (recommended)
+config := gdb.ConfigNode{
+    Otel: otel.Config{
+        TraceSQLEnabled: true,
+    },
+}
+```
+
+The new configuration provides better organization and allows for future OTEL features to be grouped logically while maintaining full backward compatibility.

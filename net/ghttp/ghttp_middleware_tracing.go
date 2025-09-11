@@ -88,7 +88,7 @@ func internalMiddlewareServerTracing(r *Request) {
 	}
 
 	// Add request parameters if configured
-	if r.Server != nil && r.Server.config.OtelTraceRequestEnabled {
+	if r.Server != nil && r.Server.config.IsOtelTraceRequestEnabled() {
 		// Get all request parameters (query + form + body)
 		requestParams := make(map[string]any)
 		
@@ -140,7 +140,7 @@ func internalMiddlewareServerTracing(r *Request) {
 	}
 
 	// Add response body if configured
-	if r.Server != nil && r.Server.config.OtelTraceResponseEnabled {
+	if r.Server != nil && r.Server.config.IsOtelTraceResponseEnabled() {
 		if r.Response.BufferLength() > 0 {
 			responseBody := r.Response.BufferString()
 			// Limit response body size for tracing to avoid memory issues
