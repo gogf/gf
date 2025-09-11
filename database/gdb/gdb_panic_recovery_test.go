@@ -60,7 +60,7 @@ func Test_PanicRecoveryErrorWrapping(t *testing.T) {
 				} else {
 					err = gerror.WrapCodef(gcode.CodeDbOperationError, gerror.NewCodef(gcode.CodeInternalPanic, "%+v", exception), "test SQL")
 				}
-				
+
 				t.AssertNE(err, nil)
 				t.Assert(strings.Contains(err.Error(), "buffer too small"), true)
 				t.Assert(strings.Contains(err.Error(), "test SQL"), true)
@@ -81,7 +81,7 @@ func Test_PanicRecoveryErrorWrapping(t *testing.T) {
 				} else {
 					err = gerror.WrapCodef(gcode.CodeDbOperationError, gerror.NewCodef(gcode.CodeInternalPanic, "%+v", exception), "test SQL")
 				}
-				
+
 				t.AssertNE(err, nil)
 				// Since gerror has stack, it should preserve the original error
 				t.Assert(strings.Contains(err.Error(), "custom database error"), true)
@@ -100,7 +100,7 @@ func Test_DoCommit_StmtPanicRecovery(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// We'll test the panic recovery by triggering it in the defer function
 		// Since we can't easily mock sql.Stmt, we'll test the panic recovery mechanism directly
-		
+
 		testPanicRecovery := func(panicValue any, sqlText string) (err error) {
 			defer func() {
 				if exception := recover(); exception != nil {
@@ -113,11 +113,11 @@ func Test_DoCommit_StmtPanicRecovery(t *testing.T) {
 					}
 				}
 			}()
-			
+
 			// Simulate the panic that would occur in database operations
 			panic(panicValue)
 		}
-		
+
 		// Test different panic scenarios
 		testCases := []struct {
 			name       string
@@ -138,16 +138,16 @@ func Test_DoCommit_StmtPanicRecovery(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Log("Testing:", tc.name)
-			
+
 			// Test the panic recovery mechanism
 			err := testPanicRecovery(tc.panicValue, tc.sqlText)
-			
+
 			// After our fix, these should return errors instead of panicking
 			t.AssertNE(err, nil)
-			
+
 			// Verify the error contains information about the panic
 			errorMsg := err.Error()
-			
+
 			if tc.name == "String panic from math/big" {
 				t.Assert(strings.Contains(errorMsg, "buffer too small"), true)
 				t.Assert(strings.Contains(errorMsg, "INSERT INTO test VALUES"), true)
