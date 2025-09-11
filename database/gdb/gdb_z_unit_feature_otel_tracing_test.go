@@ -20,7 +20,7 @@ func Test_OTEL_SQLTracing_Default(t *testing.T) {
 			Type: "sqlite",
 			Name: ":memory:",
 		}
-		
+
 		// By default, SQL tracing should be disabled
 		t.Assert(config.IsOtelTraceSQLEnabled(), false)
 		t.Assert(config.OtelTraceSQLEnabled, false)
@@ -31,11 +31,11 @@ func Test_OTEL_SQLTracing_Default(t *testing.T) {
 func Test_OTEL_SQLTracing_Configuration(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		config := gdb.ConfigNode{
-			Type: "sqlite",
-			Name: ":memory:",
+			Type:                "sqlite",
+			Name:                ":memory:",
 			OtelTraceSQLEnabled: true,
 		}
-		
+
 		// SQL tracing should be configurable using legacy field
 		t.Assert(config.IsOtelTraceSQLEnabled(), true)
 		t.Assert(config.OtelTraceSQLEnabled, true)
@@ -52,7 +52,7 @@ func Test_OTEL_SQLTracing_NewConfiguration(t *testing.T) {
 				TraceSQLEnabled: true,
 			},
 		}
-		
+
 		// SQL tracing should be configurable using new configuration
 		t.Assert(config.IsOtelTraceSQLEnabled(), true)
 		t.Assert(config.OtelTraceSQLEnabled, false)
@@ -63,11 +63,11 @@ func Test_OTEL_SQLTracing_NewConfiguration(t *testing.T) {
 func Test_OTEL_SQLTracing_Enabled(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		config := gdb.ConfigNode{
-			Type: "mysql",
-			Name: "test_db",
+			Type:                "mysql",
+			Name:                "test_db",
 			OtelTraceSQLEnabled: true,
 		}
-		
+
 		// Test that the configuration field can be set and retrieved using legacy field
 		t.Assert(config.IsOtelTraceSQLEnabled(), true)
 	})
@@ -76,14 +76,14 @@ func Test_OTEL_SQLTracing_Enabled(t *testing.T) {
 func Test_OTEL_SQLTracing_BothFieldsEnabled(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		config := gdb.ConfigNode{
-			Type: "mysql",
-			Name: "test_db",
+			Type:                "mysql",
+			Name:                "test_db",
 			OtelTraceSQLEnabled: false,
 			Otel: otel.Config{
 				TraceSQLEnabled: true,
 			},
 		}
-		
+
 		// New field should take precedence over legacy field
 		t.Assert(config.IsOtelTraceSQLEnabled(), true)
 	})

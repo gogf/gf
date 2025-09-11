@@ -91,12 +91,12 @@ func internalMiddlewareServerTracing(r *Request) {
 	if r.Server != nil && r.Server.config.IsOtelTraceRequestEnabled() {
 		// Get all request parameters (query + form + body)
 		requestParams := make(map[string]any)
-		
+
 		// Query parameters
 		for k, v := range r.URL.Query() {
 			requestParams[k] = v
 		}
-		
+
 		// Form parameters
 		if r.ContentLength > 0 && gtrace.MaxContentLogSize() > 0 {
 			contentType := r.Header.Get("Content-Type")
@@ -108,9 +108,9 @@ func internalMiddlewareServerTracing(r *Request) {
 				}
 			}
 		}
-		
+
 		if len(requestParams) > 0 {
-			traceAttrs = append(traceAttrs, 
+			traceAttrs = append(traceAttrs,
 				attribute.String(tracingEventHttpRequestParams, gconv.String(requestParams)),
 			)
 		}

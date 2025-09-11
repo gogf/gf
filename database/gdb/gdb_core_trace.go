@@ -81,11 +81,11 @@ func (c *Core) traceSpanEnd(ctx context.Context, span trace.Span, sql *Sql) {
 		}
 	}
 	events = append(events, attribute.String(traceEventDbExecutionType, string(sql.Type)))
-	
+
 	// Add SQL statement to tracing if enabled
 	if c.db.GetConfig().IsOtelTraceSQLEnabled() {
 		events = append(events, attribute.String(traceEventDbExecutionSQL, sql.Format))
 	}
-	
+
 	span.AddEvent(traceEventDbExecution, trace.WithAttributes(events...))
 }

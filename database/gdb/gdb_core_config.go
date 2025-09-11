@@ -70,7 +70,7 @@ type ConfigNode struct {
 	// Otel specifies the OpenTelemetry tracing configuration
 	// Optional field
 	Otel otel.Config `json:"otel"`
-	
+
 	// OtelTraceSQLEnabled enables OpenTelemetry tracing for SQL operations
 	// Deprecated: Use Otel.TraceSQLEnabled instead. This field is kept for backward compatibility.
 	// Optional field
