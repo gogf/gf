@@ -32,6 +32,7 @@ func Test_Issue4382_KeyLengthLimit(t *testing.T) {
 		t.AssertNil(err)
 		
 		// This should not fail with key length error in GoFrame 2.9
+		// Our DoFilter enhancement should automatically add ROW_FORMAT=DYNAMIC
 		_, err = db.Exec(ctx, longTableSQL)
 		if err != nil {
 			// If we get the specific key length error, this confirms the issue
