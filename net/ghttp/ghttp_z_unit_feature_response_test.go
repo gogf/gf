@@ -271,7 +271,7 @@ func Test_Response_Write(t *testing.T) {
 		r.Response.WriteJsonP(user)
 	})
 	s.BindHandler("/WriteXml", func(r *ghttp.Request) {
-		m := map[string]interface{}{"name": "john"}
+		m := map[string]any{"name": "john"}
 		if bytes, err := gxml.Encode(m); err == nil {
 			r.Response.WriteXml(bytes)
 		}

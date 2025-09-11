@@ -7,6 +7,7 @@
 // Package gpage provides useful paging functionality for web pages.
 //
 // Deprecated: wrap this pagination html content in business layer.
+// Will be removed in version 3.0.
 package gpage
 
 import (
@@ -111,7 +112,7 @@ func (p *Page) LastPage() string {
 
 // PageBar returns the HTML page bar content with link and span tags.
 func (p *Page) PageBar() string {
-	plus := int(math.Ceil(float64(p.PageBarNum / 2)))
+	plus := p.PageBarNum / 2
 	if p.PageBarNum-plus+p.CurrentPage > p.TotalPage {
 		plus = p.PageBarNum - p.TotalPage + p.CurrentPage
 	}
