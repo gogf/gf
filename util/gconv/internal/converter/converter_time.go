@@ -142,11 +142,11 @@ func (c *Converter) GTime(anyInput any, format ...string) (*gtime.Time, error) {
 	// This helps preserve timezone when the original gtime had timezone information
 	result, err := gtime.StrToTime(s)
 	if err == nil && result != nil {
-		// If parsing succeeded but the result is in local timezone while 
-		// the string suggests it should be in a different timezone, 
+		// If parsing succeeded but the result is in local timezone while
+		// the string suggests it should be in a different timezone,
 		// we may need additional handling here in the future
 		return result, nil
 	}
-	
+
 	return gtime.StrToTime(s)
 }

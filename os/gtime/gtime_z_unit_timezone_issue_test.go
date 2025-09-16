@@ -95,12 +95,12 @@ func TestTime_Issue4429_TimezonePreservation(t1 *testing.T) {
 		gmtLocation, _ := time.LoadLocation("GMT")
 		gmtTime := time.Date(2025, 9, 16, 11, 32, 42, 878465000, gmtLocation)
 		gtimeGMT := gtime.NewFromTime(gmtTime)
-		
+
 		gmtResult := []map[string]interface{}{{"now": gtimeGMT}}
 		var gmtNowResult []time.Time
 		err = gconv.Structs(gmtResult, &gmtNowResult)
 		t.AssertNil(err)
-		
+
 		gmtFinalTime := gmtNowResult[0]
 		_, gmtFinalOffset := gmtFinalTime.Zone()
 		t.Assert(gmtFinalOffset, 0) // GMT should also be preserved as 0 offset
