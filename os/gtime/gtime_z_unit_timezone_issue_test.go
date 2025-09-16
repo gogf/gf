@@ -27,17 +27,20 @@ func TestTime_Issue4429_TimezonePreservation(t1 *testing.T) {
 		shanghaiLocation, _ := time.LoadLocation("Asia/Shanghai")
 		time.Local = shanghaiLocation
 
-		// Create a time with GMT timezone (like database result)
-		gmtLocation, _ := time.LoadLocation("GMT")
-		dbTime := time.Date(2025, 9, 15, 7, 45, 40, 0, gmtLocation)
-		gtimeVal := gtime.NewFromTime(dbTime)
+		// Create a time with GMT timezone (like database result with microseconds)
+		// This matches the exact scenario from the user's screenshot
+		utcTime := time.Date(2025, 9, 16, 11, 32, 42, 878465000, time.UTC)
+		gtimeVal := gtime.NewFromTime(utcTime)
+
+		// Verify the original has the expected timezone
+		originalName, originalOffset := gtimeVal.Zone()
+		t.Assert(originalOffset, 0) // UTC/GMT offset
+		t.Logf("Original: %s (timezone: %s, offset: %d)", gtimeVal.Time, originalName, originalOffset/3600)
 
 		// Test direct Time converter (should work after fix)
 		convertedTime := gconv.Time(gtimeVal)
-		originalName, originalOffset := gtimeVal.Zone()
 		convertedName, convertedOffset := convertedTime.Zone()
 		t.Assert(originalOffset, convertedOffset) // Offset must be preserved
-		t.Assert(originalOffset, 0)               // GMT offset
 		t.Assert(convertedOffset, 0)              // Converted offset should also be 0
 
 		// Test single struct conversion (should work after fix)
@@ -51,17 +54,24 @@ func TestTime_Issue4429_TimezonePreservation(t1 *testing.T) {
 		t.Assert(structOffset, 0) // Struct field should preserve timezone
 
 		// Test the main problematic case: ORM Result.Structs() conversion
+		// This is the exact scenario from the user's screenshot
 		result := []map[string]interface{}{{"now": gtimeVal}}
 		var nowResult []time.Time
 		err = gconv.Structs(result, &nowResult)
 		t.AssertNil(err)
 
 		structsTime := nowResult[0]
-		_, structsOffset := structsTime.Zone()
+		structsName, structsOffset := structsTime.Zone()
 
-		// This should now work with the optimized fix
-		t.Assert(structsOffset, 0)                       // Timezone offset should be preserved
+		// Log the actual results for debugging
+		t.Logf("Structs result: %s (timezone: %s, offset: %d)", structsTime, structsName, structsOffset/3600)
+
+		// This should now work with the enhanced fix
+		t.Assert(structsOffset, 0)                       // Timezone offset should be preserved (UTC/GMT = 0)
 		t.Assert(gtimeVal.Time.Equal(structsTime), true) // Same instant in time
+
+		// Test that precision is preserved
+		t.Assert(structsTime.Nanosecond(), utcTime.Nanosecond()) // Microsecond precision should be preserved
 
 		// Test edge cases for robustness
 
@@ -80,6 +90,21 @@ func TestTime_Issue4429_TimezonePreservation(t1 *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(nilTimeResult), 1)
 		t.Assert(nilTimeResult[0].IsZero(), true)
+
+		// Test with different timezone (not just UTC)
+		gmtLocation, _ := time.LoadLocation("GMT")
+		gmtTime := time.Date(2025, 9, 16, 11, 32, 42, 878465000, gmtLocation)
+		gtimeGMT := gtime.NewFromTime(gmtTime)
+		
+		gmtResult := []map[string]interface{}{{"now": gtimeGMT}}
+		var gmtNowResult []time.Time
+		err = gconv.Structs(gmtResult, &gmtNowResult)
+		t.AssertNil(err)
+		
+		gmtFinalTime := gmtNowResult[0]
+		_, gmtFinalOffset := gmtFinalTime.Zone()
+		t.Assert(gmtFinalOffset, 0) // GMT should also be preserved as 0 offset
+		t.Assert(gtimeGMT.Time.Equal(gmtFinalTime), true)
 
 		// Note: Timezone name might change but offset preservation is critical
 		_, _ = originalName, convertedName
