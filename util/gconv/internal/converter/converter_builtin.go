@@ -77,6 +77,22 @@ func (c *Converter) builtInAnyConvertFuncForTime(from any, to reflect.Value) err
 }
 
 func (c *Converter) builtInAnyConvertFuncForGTime(from any, to reflect.Value) error {
+	// Enhanced timezone preservation: handle gtime.Time types directly first
+	// before going through the general GTime converter to prevent timezone loss
+	switch v := from.(type) {
+	case *gtime.Time:
+		if v == nil {
+			v = gtime.New()
+		}
+		*to.Addr().Interface().(*gtime.Time) = *v
+		return nil
+	case gtime.Time:
+		// Direct assignment to preserve timezone information
+		*to.Addr().Interface().(*gtime.Time) = v
+		return nil
+	}
+	
+	// For other types, use the general GTime converter
 	v, err := c.GTime(from)
 	if err != nil {
 		return err

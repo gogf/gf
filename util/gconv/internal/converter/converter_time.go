@@ -93,11 +93,14 @@ func (c *Converter) GTime(anyInput any, format ...string) (*gtime.Time, error) {
 		return v.GTime(format...), nil
 	}
 
-	// Handle direct type matches when no format is specified
+	// Handle direct type matches when no format is specified - HIGHEST PRIORITY for timezone preservation
 	if len(format) == 0 {
 		switch v := anyInput.(type) {
 		case *gtime.Time:
 			return v, nil
+		case gtime.Time:
+			// Return a pointer to preserve the exact same gtime instance with timezone
+			return &v, nil
 		case time.Time:
 			return gtime.New(v), nil
 		case *time.Time:
