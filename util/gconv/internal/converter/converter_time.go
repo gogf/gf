@@ -17,6 +17,15 @@ import (
 
 // Time converts `any` to time.Time.
 func (c *Converter) Time(anyInput any, format ...string) (time.Time, error) {
+	// Handle map inputs by extracting the first value
+	if len(format) == 0 {
+		if mapData, ok := anyInput.(map[string]interface{}); ok && len(mapData) > 0 {
+			// Extract the first value from the map and convert it
+			for _, value := range mapData {
+				return c.Time(value, format...)
+			}
+		}
+	}
 	// It's already this type.
 	if len(format) == 0 {
 		if v, ok := anyInput.(time.Time); ok {
