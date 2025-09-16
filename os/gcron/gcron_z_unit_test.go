@@ -30,18 +30,23 @@ func TestCron_Add_Close(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cron := gcron.New()
 		array := garray.New(true)
-		_, err1 := cron.Add(ctx, "* * * * * *", func(ctx context.Context) {
-			g.Log().Print(ctx, "cron1")
-			array.Append(1)
-		})
-		_, err2 := cron.Add(ctx, "* * * * * *", func(ctx context.Context) {
-			g.Log().Print(ctx, "cron2")
-			array.Append(1)
-		}, "test")
-		t.Assert(err1, nil)
-		t.Assert(err2, nil)
-		t.Assert(cron.Size(), 2)
+		g.Log().Debugf(ctx, "TestCron_Add_Close Add begin  Start time %v ", time.Now().UnixMilli())
+		go func() {
+			_, err1 := cron.Add(ctx, "* * * * * *", func(ctx context.Context) {
+				g.Log().Print(ctx, "cron1")
+				array.Append(1)
+			})
+			t.Assert(err1, nil)
+		}()
+		go func() {
+			_, err2 := cron.Add(ctx, "* * * * * *", func(ctx context.Context) {
+				g.Log().Print(ctx, "cron2")
+				array.Append(1)
+			}, "test")
+			t.Assert(err2, nil)
+		}()
 		time.Sleep(1300 * time.Millisecond)
+		t.Assert(cron.Size(), 2)
 		t.Assert(array.Len(), 2)
 		time.Sleep(1300 * time.Millisecond)
 		t.Assert(array.Len(), 4)
@@ -56,8 +61,8 @@ func TestCron_Add_Close(t *testing.T) {
 func TestCron_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cron := gcron.New()
+		defer cron.Close()
 		cron.Add(ctx, "* * * * * *", func(ctx context.Context) {}, "add")
-		// fmt.Println("start", time.Now())
 		cron.DelayAdd(ctx, time.Second, "* * * * * *", func(ctx context.Context) {}, "delay_add")
 		t.Assert(cron.Size(), 1)
 		time.Sleep(1200 * time.Millisecond)
@@ -93,17 +98,25 @@ func TestCron_Remove(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cron := gcron.New()
 		array := garray.New(true)
-		cron.Add(ctx, "* * * * * *", func(ctx context.Context) {
-			array.Append(1)
-		}, "add")
-		t.Assert(array.Len(), 0)
+		go func() {
+			cron.Add(ctx, "* * * * * *", func(ctx context.Context) {
+				array.Append(1)
+			}, "add")
+			t.Assert(array.Len(), 0)
+		}()
 		time.Sleep(1200 * time.Millisecond)
 		t.Assert(array.Len(), 1)
-
 		cron.Remove("add")
 		t.Assert(array.Len(), 1)
 		time.Sleep(1200 * time.Millisecond)
 		t.Assert(array.Len(), 1)
+		time.Sleep(1200 * time.Millisecond)
+		t.Assert(array.Len(), 1)
+		time.Sleep(1200 * time.Millisecond)
+		t.Assert(array.Len(), 1)
+		time.Sleep(1200 * time.Millisecond)
+		t.Assert(array.Len(), 1)
+
 	})
 }
 
@@ -122,17 +135,19 @@ func doTestCronAddFixedPattern(t *testing.T) {
 			expect = now.Add(time.Second * 2)
 		)
 		defer cron.Close()
-
 		var pattern = fmt.Sprintf(
 			`%d %d %d %d %d %s`,
 			expect.Second(), expect.Minute(), expect.Hour(), expect.Day(), expect.Month(), expect.Weekday().String(),
 		)
 		cron.SetLogger(g.Log())
-		g.Log().Debugf(ctx, `pattern: %s`, pattern)
-		_, err := cron.Add(ctx, pattern, func(ctx context.Context) {
-			array.Append(1)
-		})
-		t.AssertNil(err)
+		go func() {
+			g.Log().Debugf(ctx, `pattern: %s`, pattern)
+			_, err := cron.Add(ctx, pattern, func(ctx context.Context) {
+				g.Log().Debugf(ctx, `receive job`)
+				array.Append(1)
+			})
+			t.AssertNil(err)
+		}()
 		time.Sleep(3500 * time.Millisecond)
 		g.Log().Debug(ctx, `current time`)
 		t.Assert(array.Len(), 1)
@@ -143,9 +158,12 @@ func TestCron_AddSingleton(t *testing.T) {
 	// un used, can be removed
 	gtest.C(t, func(t *gtest.T) {
 		cron := gcron.New()
-		cron.Add(ctx, "* * * * * *", func(ctx context.Context) {}, "add")
-		cron.DelayAdd(ctx, time.Second, "* * * * * *", func(ctx context.Context) {}, "delay_add")
-		t.Assert(cron.Size(), 1)
+		defer cron.Close()
+		go func() {
+			cron.Add(ctx, "* * * * * *", func(ctx context.Context) {}, "add")
+			cron.DelayAdd(ctx, time.Second, "* * * * * *", func(ctx context.Context) {}, "delay_add")
+			t.Assert(cron.Size(), 1)
+		}()
 		time.Sleep(1200 * time.Millisecond)
 		t.Assert(cron.Size(), 2)
 
@@ -160,12 +178,15 @@ func TestCron_AddSingleton(t *testing.T) {
 	// keep this
 	gtest.C(t, func(t *gtest.T) {
 		cron := gcron.New()
+		defer cron.Close()
 		array := garray.New(true)
-		cron.AddSingleton(ctx, "* * * * * *", func(ctx context.Context) {
-			array.Append(1)
-			time.Sleep(50 * time.Second)
-		})
-		t.Assert(cron.Size(), 1)
+		go func() {
+			cron.AddSingleton(ctx, "* * * * * *", func(ctx context.Context) {
+				array.Append(1)
+				time.Sleep(50 * time.Second)
+			})
+			t.Assert(cron.Size(), 1)
+		}()
 		time.Sleep(3500 * time.Millisecond)
 		t.Assert(array.Len(), 1)
 	})
@@ -175,14 +196,17 @@ func TestCron_AddSingleton(t *testing.T) {
 func TestCron_AddOnce1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cron := gcron.New()
+		defer cron.Close()
 		array := garray.New(true)
-		cron.AddOnce(ctx, "* * * * * *", func(ctx context.Context) {
-			array.Append(1)
-		})
-		cron.AddOnce(ctx, "* * * * * *", func(ctx context.Context) {
-			array.Append(1)
-		})
-		t.Assert(cron.Size(), 2)
+		go func() {
+			cron.AddOnce(ctx, "* * * * * *", func(ctx context.Context) {
+				array.Append(1)
+			})
+			cron.AddOnce(ctx, "* * * * * *", func(ctx context.Context) {
+				array.Append(1)
+			})
+			t.Assert(cron.Size(), 2)
+		}()
 		time.Sleep(2500 * time.Millisecond)
 		t.Assert(array.Len(), 2)
 		t.Assert(cron.Size(), 0)
@@ -192,11 +216,14 @@ func TestCron_AddOnce1(t *testing.T) {
 func TestCron_AddOnce2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cron := gcron.New()
+		defer cron.Close()
 		array := garray.New(true)
-		cron.AddOnce(ctx, "@every 2s", func(ctx context.Context) {
-			array.Append(1)
-		})
-		t.Assert(cron.Size(), 1)
+		go func() {
+			cron.AddOnce(ctx, "@every 2s", func(ctx context.Context) {
+				array.Append(1)
+			})
+			t.Assert(cron.Size(), 1)
+		}()
 		time.Sleep(3000 * time.Millisecond)
 		t.Assert(array.Len(), 1)
 		t.Assert(cron.Size(), 0)
@@ -206,10 +233,13 @@ func TestCron_AddOnce2(t *testing.T) {
 func TestCron_AddTimes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cron := gcron.New()
+		defer cron.Close()
 		array := garray.New(true)
-		_, _ = cron.AddTimes(ctx, "* * * * * *", 2, func(ctx context.Context) {
-			array.Append(1)
-		})
+		go func() {
+			_, _ = cron.AddTimes(ctx, "* * * * * *", 2, func(ctx context.Context) {
+				array.Append(1)
+			})
+		}()
 		time.Sleep(3500 * time.Millisecond)
 		t.Assert(array.Len(), 2)
 		t.Assert(cron.Size(), 0)
@@ -219,11 +249,14 @@ func TestCron_AddTimes(t *testing.T) {
 func TestCron_DelayAdd(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cron := gcron.New()
+		defer cron.Close()
 		array := garray.New(true)
-		cron.DelayAdd(ctx, 500*time.Millisecond, "* * * * * *", func(ctx context.Context) {
-			array.Append(1)
-		})
-		t.Assert(cron.Size(), 0)
+		go func() {
+			cron.DelayAdd(ctx, 500*time.Millisecond, "* * * * * *", func(ctx context.Context) {
+				array.Append(1)
+			})
+			t.Assert(cron.Size(), 0)
+		}()
 		time.Sleep(800 * time.Millisecond)
 		t.Assert(array.Len(), 0)
 		t.Assert(cron.Size(), 1)
@@ -236,12 +269,15 @@ func TestCron_DelayAdd(t *testing.T) {
 func TestCron_DelayAddSingleton(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cron := gcron.New()
+		defer cron.Close()
 		array := garray.New(true)
-		cron.DelayAddSingleton(ctx, 500*time.Millisecond, "* * * * * *", func(ctx context.Context) {
-			array.Append(1)
-			time.Sleep(10 * time.Second)
-		})
-		t.Assert(cron.Size(), 0)
+		go func() {
+			cron.DelayAddSingleton(ctx, 500*time.Millisecond, "* * * * * *", func(ctx context.Context) {
+				array.Append(1)
+				time.Sleep(10 * time.Second)
+			})
+			t.Assert(cron.Size(), 0)
+		}()
 		time.Sleep(2200 * time.Millisecond)
 		t.Assert(array.Len(), 1)
 		t.Assert(cron.Size(), 1)
@@ -251,11 +287,14 @@ func TestCron_DelayAddSingleton(t *testing.T) {
 func TestCron_DelayAddOnce(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cron := gcron.New()
+		defer cron.Close()
 		array := garray.New(true)
-		cron.DelayAddOnce(ctx, 500*time.Millisecond, "* * * * * *", func(ctx context.Context) {
-			array.Append(1)
-		})
-		t.Assert(cron.Size(), 0)
+		go func() {
+			cron.DelayAddOnce(ctx, 500*time.Millisecond, "* * * * * *", func(ctx context.Context) {
+				array.Append(1)
+			})
+			t.Assert(cron.Size(), 0)
+		}()
 		time.Sleep(800 * time.Millisecond)
 		t.Assert(array.Len(), 0)
 		t.Assert(cron.Size(), 1)
@@ -268,11 +307,14 @@ func TestCron_DelayAddOnce(t *testing.T) {
 func TestCron_DelayAddTimes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cron := gcron.New()
+		defer cron.Close()
 		array := garray.New(true)
-		cron.DelayAddTimes(ctx, 500*time.Millisecond, "* * * * * *", 2, func(ctx context.Context) {
-			array.Append(1)
-		})
-		t.Assert(cron.Size(), 0)
+		go func() {
+			cron.DelayAddTimes(ctx, 500*time.Millisecond, "* * * * * *", 2, func(ctx context.Context) {
+				array.Append(1)
+			})
+			t.Assert(cron.Size(), 0)
+		}()
 		time.Sleep(800 * time.Millisecond)
 		t.Assert(array.Len(), 0)
 		t.Assert(cron.Size(), 1)
@@ -284,37 +326,167 @@ func TestCron_DelayAddTimes(t *testing.T) {
 
 func TestCron_JobWaiter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		_, err := gcron.Add(ctx, "* * * * * *", func(ctx context.Context) {
-		})
-		t.Assert(err, nil)
-		_, err = gcron.Add(ctx, "* * * * * *", func(ctx context.Context) { time.Sleep(2 * time.Second) })
-		t.Assert(err, nil)
-
+		s1 := garray.New(true)
+		s2 := garray.New(true)
 		quit := make(chan os.Signal, 1)
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+		cron := gcron.New()
+		defer cron.Close()
 		go func() {
-			signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-			time.Sleep(1 * time.Second) // Ensure that the job is triggered twice
+			_, err := cron.Add(ctx, "* * * * * *", func(ctx context.Context) {
+				g.Log().Debug(ctx, "Every second")
+				s1.Append(struct{}{})
+			}, "TestCronJobWaiterMyFirstCronJob")
+			t.Assert(err, nil)
+		}()
+		go func() {
+			_, err := cron.Add(ctx, "*/2 * * * * *", func(ctx context.Context) {
+				g.Log().Debug(ctx, "Every 2s job start")
+				time.Sleep(3 * time.Second)
+				s2.Append(struct{}{})
+				g.Log().Debug(ctx, "Every 2s job after 3 second end")
+			}, "TestCronJobMySecondCronJob")
+			t.Assert(err, nil)
+		}()
+		go func() {
+			time.Sleep(4300 * time.Millisecond) // Ensure that the job is triggered twice
 			glog.Print(ctx, "Sending SIGINT")
 			quit <- syscall.SIGINT // Send SIGINT
 		}()
 
 		sig := <-quit
 		glog.Printf(ctx, "Signal received: %s, stopping cron", sig)
-		ctx := gcron.StopGracefully()
 
+		glog.Print(ctx, "TestCron_JobWaiter Waiting for all cron jobs to complete...")
+		cron.StopGracefully()
+		glog.Print(ctx, "All cron jobs completed")
+		t.Assert(s1.Len(), 4)
+		t.Assert(s2.Len(), 2)
+	})
+}
+
+func TestCron_JobWaiterNonBlocking(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s1 := garray.New(true)
+		s2 := garray.New(true)
+		quit := make(chan os.Signal, 1)
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+		cron := gcron.New()
+		defer cron.Close()
+		go func() {
+			_, err := cron.Add(ctx, "* * * * * *", func(ctx context.Context) {
+				g.Log().Debug(ctx, "Every second start")
+				s1.Append(struct{}{})
+				g.Log().Debug(ctx, "Every second end ")
+			})
+			t.Assert(err, nil)
+		}()
+		go func() {
+			_, err := cron.Add(ctx, "*/2 * * * * *", func(ctx context.Context) {
+				g.Log().Debug(ctx, "Every 2s job start ")
+				time.Sleep(3 * time.Second)
+				s2.Append(struct{}{})
+				g.Log().Debug(ctx, "Every 2s job after 3 second end ")
+			})
+			t.Assert(err, nil)
+
+		}()
+		go func() {
+			time.Sleep(4300 * time.Millisecond) // Ensure that the job is triggered twice
+			glog.Print(ctx, "Sending SIGINT")
+			quit <- syscall.SIGINT // Send SIGINT
+		}()
+
+		sig := <-quit
+		glog.Printf(ctx, "Signal received: %s, stopping cron", sig)
+		glog.Print(ctx, "TestCron_JobWaiterNonBlocking Waiting for all cron jobs to complete...")
+		ctx := cron.StopGracefullyNonBlocking()
+		<-ctx.Done()
+		glog.Print(ctx, "All cron jobs completed")
+		t.Assert(s1.Len(), 4)
+		t.Assert(s2.Len(), 2)
+	})
+}
+
+func TestCron_NoneJobsDoneImmediately(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		cron := gcron.New()
+		defer cron.Close()
+
+		ctx := cron.StopGracefullyNonBlocking()
 		select {
 		case <-ctx.Done():
-			t.Error("context done before all jobs completed")
-		case <-time.After(750 * time.Millisecond):
-			// expected
+		case <-time.After(110 * time.Millisecond):
+			t.Error("context was not done immediately")
 		}
+	})
+}
 
+func TestCron_RepeatedCallsStopGracefullyNonBlocking(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		cron := gcron.New()
+		defer cron.Close()
+
+		_ = cron.StopGracefullyNonBlocking()
+		ctx := cron.StopGracefullyNonBlocking()
 		select {
 		case <-ctx.Done():
-			// expected
-		case <-time.After(1500 * time.Millisecond):
-			t.Error("context not done after job should have completed")
+		case <-time.After(110 * time.Millisecond):
+			t.Error("context was not done immediately")
 		}
+	})
+}
 
+func TestCron_RepeatedCallsStopGracefullyNonBlocking2(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s1 := garray.New(true)
+		s2 := garray.New(true)
+		cron := gcron.New()
+		defer cron.Close()
+		g.Log().Debugf(ctx, "TestCron_RepeatedCallsStopGracefullyNonBlocking2 Add begin  Start time %v ", time.Now().UnixMilli())
+		go func() {
+			_, err := cron.Add(ctx, "* * * * * *", func(ctx context.Context) {
+				g.Log().Debug(ctx, "Every second")
+				s1.Append(struct{}{})
+			})
+			t.Assert(err, nil)
+
+		}()
+		go func() {
+			_, err := cron.Add(ctx, "*/2 * * * * *", func(ctx context.Context) {
+				g.Log().Debug(ctx, "Every 2s job start")
+				time.Sleep(3 * time.Second)
+				s2.Append(struct{}{})
+				g.Log().Debug(ctx, "Every 2s job after 3 second end")
+			})
+			t.Assert(err, nil)
+		}()
+		time.Sleep(4300 * time.Millisecond)
+		g.Log().Debugf(ctx, "TestCron_RepeatedCallsStopGracefullyNonBlocking2 end time %v ", time.Now().UnixMilli())
+		glog.Print(ctx, "Waiting for all cron jobs to complete...")
+		_ = cron.StopGracefullyNonBlocking()
+		ctx := cron.StopGracefullyNonBlocking()
+		<-ctx.Done()
+		glog.Print(ctx, "All cron jobs completed")
+		t.Assert(s1.Len(), 4)
+		t.Assert(s2.Len(), 2)
+	})
+}
+
+func TestCron_StopGracefullyWithStopStart(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		cron := gcron.New()
+		defer cron.Close()
+		go func() {
+			_, err := cron.Add(ctx, "* * * * * *", func(ctx context.Context) {
+				g.Log().Debug(ctx, "Every second")
+			})
+			t.Assert(err, nil)
+		}()
+		time.Sleep(1300 * time.Millisecond)
+		cron.Stop()
+		cron.Start()
+		ctx := cron.StopGracefullyNonBlocking()
+		<-ctx.Done()
 	})
 }

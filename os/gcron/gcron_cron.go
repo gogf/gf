@@ -14,17 +14,21 @@ import (
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gtimer"
 )
 
 // Cron stores all the cron job entries.
 type Cron struct {
-	idGen     *gtype.Int64    // Used for unique name generation.
-	status    *gtype.Int      // Timed task status(0: Not Start; 1: Running; 2: Stopped; -1: Closed)
-	entries   *gmap.StrAnyMap // All timed task entries.
-	logger    glog.ILogger    // Logger, it is nil in default.
-	jobWaiter sync.WaitGroup  // Graceful shutdown when cron jobs are stopped.
+	idGen       *gtype.Int64    // Used for unique name generation.
+	status      *gtype.Int      // Timed task status(0: Not Start; 1: Running; 2: Stopped; -1: Closed)
+	entries     *gmap.StrAnyMap // All timed task entries.
+	logger      glog.ILogger    // Logger, it is nil in default.
+	loggerMu    sync.RWMutex
+	jobWaiter   sync.WaitGroup // Graceful shutdown when cron jobs are stopped.
+	running     bool
+	runningLock sync.Mutex
 }
 
 // New returns a new Cron object with default settings.
@@ -33,16 +37,22 @@ func New() *Cron {
 		idGen:   gtype.NewInt64(),
 		status:  gtype.NewInt(StatusRunning),
 		entries: gmap.NewStrAnyMap(true),
+		running: true,
 	}
 }
 
 // SetLogger sets the logger for cron.
 func (c *Cron) SetLogger(logger glog.ILogger) {
+	c.loggerMu.Lock()
+	defer c.loggerMu.Unlock()
 	c.logger = logger
+
 }
 
 // GetLogger returns the logger in the cron.
 func (c *Cron) GetLogger() glog.ILogger {
+	c.loggerMu.RLock()
+	defer c.loggerMu.RUnlock()
 	return c.logger
 }
 
@@ -171,7 +181,10 @@ func (c *Cron) Start(name ...string) {
 			}
 		}
 	} else {
+		c.runningLock.Lock()
 		c.status.Set(StatusReady)
+		c.running = true
+		c.runningLock.Unlock()
 	}
 }
 
@@ -185,15 +198,28 @@ func (c *Cron) Stop(name ...string) {
 			}
 		}
 	} else {
+		c.runningLock.Lock()
 		c.status.Set(StatusStopped)
+		c.running = false
+		c.runningLock.Unlock()
 	}
 }
 
 // StopGracefully Blocks and waits all current running jobs done.
-func (c *Cron) StopGracefully() context.Context {
-	c.status.Set(StatusStopped)
+func (c *Cron) StopGracefully() {
+	ctx := c.StopGracefullyNonBlocking()
+	<-ctx.Done()
+}
+
+// StopGracefullyNonBlocking stops all running tasks gracefully without blocking,
+// returning a context that callers can use to wait for completion.
+func (c *Cron) StopGracefullyNonBlocking() context.Context {
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
+		c.runningLock.Lock()
+		defer c.runningLock.Unlock()
+		c.status.Set(StatusStopped)
+		c.running = false
 		c.jobWaiter.Wait()
 		cancel()
 	}()
@@ -209,7 +235,13 @@ func (c *Cron) Remove(name string) {
 
 // Close stops and closes current cron.
 func (c *Cron) Close() {
+	c.runningLock.Lock()
+	defer c.runningLock.Unlock()
 	c.status.Set(StatusClosed)
+	ctx := context.Background()
+	g.Log().Debugf(ctx, "Close 停掉了 ====")
+
+	c.running = false
 }
 
 // Size returns the size of the timed tasks.

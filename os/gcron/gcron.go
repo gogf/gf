@@ -122,6 +122,12 @@ func Stop(name ...string) {
 }
 
 // StopGracefully Blocks and waits all current running jobs done.
-func StopGracefully() context.Context {
-	return defaultCron.StopGracefully()
+func StopGracefully() {
+	defaultCron.StopGracefully()
+}
+
+// StopGracefullyNonBlocking stops all running tasks gracefully without blocking,
+// returning a context that callers can use to wait for completion.
+func StopGracefullyNonBlocking() context.Context {
+	return defaultCron.StopGracefullyNonBlocking()
 }
