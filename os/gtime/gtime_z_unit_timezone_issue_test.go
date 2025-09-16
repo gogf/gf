@@ -23,7 +23,7 @@ func TestTime_Issue4429_TimezonePreservation(t1 *testing.T) {
 		defer func() {
 			time.Local = originalLocation
 		}()
-		
+
 		shanghaiLocation, _ := time.LoadLocation("Asia/Shanghai")
 		time.Local = shanghaiLocation
 
@@ -37,9 +37,9 @@ func TestTime_Issue4429_TimezonePreservation(t1 *testing.T) {
 		originalName, originalOffset := gtimeVal.Zone()
 		convertedName, convertedOffset := convertedTime.Zone()
 		t.Assert(originalOffset, convertedOffset) // Offset must be preserved
-		t.Assert(originalOffset, 0) // GMT offset
-		t.Assert(convertedOffset, 0) // Converted offset should also be 0
-		
+		t.Assert(originalOffset, 0)               // GMT offset
+		t.Assert(convertedOffset, 0)              // Converted offset should also be 0
+
 		// Test single struct conversion (should work after fix)
 		type TestStruct struct {
 			Time time.Time
@@ -55,16 +55,16 @@ func TestTime_Issue4429_TimezonePreservation(t1 *testing.T) {
 		var nowResult []time.Time
 		err = gconv.Structs(result, &nowResult)
 		t.AssertNil(err)
-		
+
 		structsTime := nowResult[0]
 		_, structsOffset := structsTime.Zone()
-		
+
 		// This should now work with the optimized fix
-		t.Assert(structsOffset, 0) // Timezone offset should be preserved
+		t.Assert(structsOffset, 0)                       // Timezone offset should be preserved
 		t.Assert(gtimeVal.Time.Equal(structsTime), true) // Same instant in time
-		
+
 		// Test edge cases for robustness
-		
+
 		// Test empty map
 		emptyMapResult := []map[string]interface{}{{}}
 		var emptyResult []time.Time
@@ -72,7 +72,7 @@ func TestTime_Issue4429_TimezonePreservation(t1 *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(emptyResult), 1)
 		t.Assert(emptyResult[0].IsZero(), true)
-		
+
 		// Test nil gtime value
 		nilResult := []map[string]interface{}{{"time": (*gtime.Time)(nil)}}
 		var nilTimeResult []time.Time
@@ -80,7 +80,7 @@ func TestTime_Issue4429_TimezonePreservation(t1 *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(nilTimeResult), 1)
 		t.Assert(nilTimeResult[0].IsZero(), true)
-		
+
 		// Note: Timezone name might change but offset preservation is critical
 		_, _ = originalName, convertedName
 	})

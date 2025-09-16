@@ -30,9 +30,9 @@ func (c *Converter) Time(anyInput any, format ...string) (time.Time, error) {
 			}
 			return v.Time, nil
 		}
-		
+
 		// Handle map inputs by extracting the first value
-		// This is optimized for ORM scenarios where maps like {"now": gtimeVal} 
+		// This is optimized for ORM scenarios where maps like {"now": gtimeVal}
 		// need to be converted to a single time.Time value
 		if mapData, ok := anyInput.(map[string]interface{}); ok {
 			if len(mapData) == 0 {
@@ -44,7 +44,7 @@ func (c *Converter) Time(anyInput any, format ...string) (time.Time, error) {
 			}
 		}
 	}
-	
+
 	// Fall back to GTime conversion for complex cases
 	t, err := c.GTime(anyInput, format...)
 	if err != nil {
@@ -87,12 +87,12 @@ func (c *Converter) GTime(anyInput any, format ...string) (*gtime.Time, error) {
 	if empty.IsNil(anyInput) {
 		return nil, nil
 	}
-	
+
 	// Check for custom interfaces first
 	if v, ok := anyInput.(localinterface.IGTime); ok {
 		return v.GTime(format...), nil
 	}
-	
+
 	// Handle direct type matches when no format is specified
 	if len(format) == 0 {
 		switch v := anyInput.(type) {
@@ -104,7 +104,7 @@ func (c *Converter) GTime(anyInput any, format ...string) (*gtime.Time, error) {
 			return gtime.New(v), nil
 		}
 	}
-	
+
 	// Convert to string for parsing
 	s, err := c.String(anyInput)
 	if err != nil {
@@ -113,7 +113,7 @@ func (c *Converter) GTime(anyInput any, format ...string) (*gtime.Time, error) {
 	if len(s) == 0 {
 		return gtime.New(), nil
 	}
-	
+
 	// Handle format-specific conversion
 	if len(format) > 0 {
 		for _, item := range format {
@@ -127,7 +127,7 @@ func (c *Converter) GTime(anyInput any, format ...string) (*gtime.Time, error) {
 		}
 		return nil, nil
 	}
-	
+
 	// Handle numeric timestamps
 	if utils.IsNumeric(s) {
 		i, err := c.Int64(s)
@@ -136,7 +136,7 @@ func (c *Converter) GTime(anyInput any, format ...string) (*gtime.Time, error) {
 		}
 		return gtime.NewFromTimeStamp(i), nil
 	}
-	
+
 	// Parse as time string with timezone preservation
 	return gtime.StrToTime(s)
 }

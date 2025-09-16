@@ -20,22 +20,22 @@ func BenchmarkTime_TimezonePreservation(b *testing.B) {
 	gmtLocation, _ := time.LoadLocation("GMT")
 	dbTime := time.Date(2025, 9, 15, 7, 45, 40, 0, gmtLocation)
 	gtimeVal := gtime.NewFromTime(dbTime)
-	
+
 	b.ResetTimer()
-	
+
 	b.Run("DirectGTimeConversion", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			_ = gconv.Time(gtimeVal)
 		}
 	})
-	
+
 	b.Run("MapToTimeConversion", func(b *testing.B) {
 		mapData := map[string]interface{}{"now": gtimeVal}
 		for i := 0; i < b.N; i++ {
 			_ = gconv.Time(mapData)
 		}
 	})
-	
+
 	b.Run("StructsConversion", func(b *testing.B) {
 		result := []map[string]interface{}{{"now": gtimeVal}}
 		for i := 0; i < b.N; i++ {
@@ -51,21 +51,21 @@ func BenchmarkGTime_Optimization(b *testing.B) {
 	gmtLocation, _ := time.LoadLocation("GMT")
 	dbTime := time.Date(2025, 9, 15, 7, 45, 40, 0, gmtLocation)
 	gtimeVal := gtime.NewFromTime(dbTime)
-	
+
 	b.ResetTimer()
-	
+
 	b.Run("DirectGTimeToGTime", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			_ = gconv.GTime(gtimeVal)
 		}
 	})
-	
+
 	b.Run("TimeToGTime", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			_ = gconv.GTime(dbTime)
 		}
 	})
-	
+
 	b.Run("StringToGTime", func(b *testing.B) {
 		timeStr := "2025-09-15T07:45:40Z"
 		for i := 0; i < b.N; i++ {
