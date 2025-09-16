@@ -90,9 +90,30 @@ func (c *Converter) builtInAnyConvertFuncForGTime(from any, to reflect.Value) er
 		// Direct assignment to preserve timezone information
 		*to.Addr().Interface().(*gtime.Time) = v
 		return nil
+	case map[string]interface{}:
+		// Handle map inputs by extracting the first value and converting it directly
+		// This prevents timezone loss that occurs when map is converted to JSON string
+		if len(v) > 0 {
+			for _, value := range v {
+				// Convert the extracted value directly using c.GTime to preserve timezone
+				gtimeResult, err := c.GTime(value)
+				if err != nil {
+					return err
+				}
+				if gtimeResult == nil {
+					gtimeResult = gtime.New()
+				}
+				*to.Addr().Interface().(*gtime.Time) = *gtimeResult
+				return nil
+			}
+		}
+		// Empty map case
+		*to.Addr().Interface().(*gtime.Time) = *gtime.New()
+		return nil
 	}
 
 	// For other types, use the general GTime converter
+	// The c.GTime method already handles timezone preservation for known types
 	v, err := c.GTime(from)
 	if err != nil {
 		return err
