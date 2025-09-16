@@ -86,23 +86,23 @@ func (c *Converter) builtInAnyConvertFuncForTime(from any, to reflect.Value) err
 //
 // CORE PRINCIPLES:
 //
-// 1. DIRECT TYPE PRESERVATION PRINCIPLE
-//    When the source and target types are semantically equivalent (gtime.Time variants),
-//    use direct assignment to preserve all metadata including timezone, precision,
-//    and calendar information without any intermediate transformations.
+//  1. DIRECT TYPE PRESERVATION PRINCIPLE
+//     When the source and target types are semantically equivalent (gtime.Time variants),
+//     use direct assignment to preserve all metadata including timezone, precision,
+//     and calendar information without any intermediate transformations.
 //
-// 2. STRUCTURED DATA EXTRACTION PRINCIPLE  
-//    When the source is a structured container (map) containing temporal data,
-//    extract the actual temporal value and convert it directly rather than
-//    serializing the entire container, which would lose semantic context.
+//  2. STRUCTURED DATA EXTRACTION PRINCIPLE
+//     When the source is a structured container (map) containing temporal data,
+//     extract the actual temporal value and convert it directly rather than
+//     serializing the entire container, which would lose semantic context.
 //
-// 3. MINIMAL TRANSFORMATION PRINCIPLE
-//    Apply the least amount of transformation necessary to achieve type compatibility,
-//    reducing opportunities for information loss during conversion.
+//  3. MINIMAL TRANSFORMATION PRINCIPLE
+//     Apply the least amount of transformation necessary to achieve type compatibility,
+//     reducing opportunities for information loss during conversion.
 //
-// 4. FALLBACK WITH PRESERVATION PRINCIPLE
-//    For unknown types, use enhanced general conversion that attempts to preserve
-//    timezone information through improved string representations (RFC3339).
+//  4. FALLBACK WITH PRESERVATION PRINCIPLE
+//     For unknown types, use enhanced general conversion that attempts to preserve
+//     timezone information through improved string representations (RFC3339).
 //
 // CONVERSION PATHS AND RATIONALE:
 //
@@ -111,7 +111,7 @@ func (c *Converter) builtInAnyConvertFuncForTime(from any, to reflect.Value) err
 //   - Preserves: Timezone, precision, all temporal metadata
 //   - Performance: O(1) memory copy operation
 //
-// Path 2: *gtime.Time -> gtime.Time (Pointer Dereferencing)  
+// Path 2: *gtime.Time -> gtime.Time (Pointer Dereferencing)
 //   - Rationale: Pointer wrapper around same semantic type
 //   - Preserves: All temporal data after nil safety check
 //   - Performance: O(1) with nil check overhead
@@ -126,7 +126,6 @@ func (c *Converter) builtInAnyConvertFuncForTime(from any, to reflect.Value) err
 //   - Rationale: Fallback for unknown types with best-effort preservation
 //   - Uses: Enhanced c.GTime() with RFC3339 timezone support
 //   - Preserves: Timezone where possible through improved string handling
-//
 func (c *Converter) builtInAnyConvertFuncForGTime(from any, to reflect.Value) error {
 	// CONVERSION PATH 1: Direct gtime.Time Assignment
 	// Theoretical basis: Identity conversion preserves all semantic information
@@ -148,7 +147,7 @@ func (c *Converter) builtInAnyConvertFuncForGTime(from any, to reflect.Value) er
 			}
 		}
 		return nil
-		
+
 	case gtime.Time:
 		// Direct value assignment for non-pointer gtime types
 		// Preserves all temporal information without transformation
@@ -158,8 +157,8 @@ func (c *Converter) builtInAnyConvertFuncForGTime(from any, to reflect.Value) er
 			to.Set(reflect.ValueOf(v))
 		}
 		return nil
-		
-	// CONVERSION PATH 2: Structured Data Value Extraction  
+
+	// CONVERSION PATH 2: Structured Data Value Extraction
 	// Theoretical basis: Extract semantic content from containers rather than
 	// serializing containers themselves, which loses semantic context
 	case map[string]interface{}:
@@ -191,7 +190,7 @@ func (c *Converter) builtInAnyConvertFuncForGTime(from any, to reflect.Value) er
 		}
 		return nil
 	}
-	
+
 	// CONVERSION PATH 3: Enhanced General Conversion
 	// Theoretical basis: For unknown types, use enhanced converter that attempts
 	// timezone preservation through improved string representations and parsing
