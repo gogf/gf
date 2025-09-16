@@ -76,26 +76,98 @@ func (c *Converter) builtInAnyConvertFuncForTime(from any, to reflect.Value) err
 	return nil
 }
 
+// builtInAnyConvertFuncForGTime converts any type to *gtime.Time.
+//
+// THEORETICAL BASIS AND PRINCIPLES:
+//
+// This function implements a type-specific conversion strategy based on the principle
+// that different input types require different handling approaches to preserve semantic
+// meaning, particularly timezone information in temporal data.
+//
+// CORE PRINCIPLES:
+//
+// 1. DIRECT TYPE PRESERVATION PRINCIPLE
+//    When the source and target types are semantically equivalent (gtime.Time variants),
+//    use direct assignment to preserve all metadata including timezone, precision,
+//    and calendar information without any intermediate transformations.
+//
+// 2. STRUCTURED DATA EXTRACTION PRINCIPLE  
+//    When the source is a structured container (map) containing temporal data,
+//    extract the actual temporal value and convert it directly rather than
+//    serializing the entire container, which would lose semantic context.
+//
+// 3. MINIMAL TRANSFORMATION PRINCIPLE
+//    Apply the least amount of transformation necessary to achieve type compatibility,
+//    reducing opportunities for information loss during conversion.
+//
+// 4. FALLBACK WITH PRESERVATION PRINCIPLE
+//    For unknown types, use enhanced general conversion that attempts to preserve
+//    timezone information through improved string representations (RFC3339).
+//
+// CONVERSION PATHS AND RATIONALE:
+//
+// Path 1: gtime.Time -> gtime.Time (Direct Assignment)
+//   - Rationale: Same semantic type, zero transformation needed
+//   - Preserves: Timezone, precision, all temporal metadata
+//   - Performance: O(1) memory copy operation
+//
+// Path 2: *gtime.Time -> gtime.Time (Pointer Dereferencing)  
+//   - Rationale: Pointer wrapper around same semantic type
+//   - Preserves: All temporal data after nil safety check
+//   - Performance: O(1) with nil check overhead
+//
+// Path 3: map[string]interface{} -> gtime.Time (Value Extraction)
+//   - Rationale: ORM results typically contain temporal data in map structures
+//   - Problem Solved: Prevents lossy map->string->time conversion chain
+//   - Preserves: Timezone by extracting and converting actual gtime value
+//   - Performance: O(1) for single-entry maps (common case)
+//
+// Path 4: Other Types -> gtime.Time (Enhanced General Conversion)
+//   - Rationale: Fallback for unknown types with best-effort preservation
+//   - Uses: Enhanced c.GTime() with RFC3339 timezone support
+//   - Preserves: Timezone where possible through improved string handling
+//
 func (c *Converter) builtInAnyConvertFuncForGTime(from any, to reflect.Value) error {
-	// Enhanced timezone preservation: handle gtime.Time types directly first
-	// before going through the general GTime converter to prevent timezone loss
+	// CONVERSION PATH 1: Direct gtime.Time Assignment
+	// Theoretical basis: Identity conversion preserves all semantic information
 	switch v := from.(type) {
 	case *gtime.Time:
 		if v == nil {
-			v = gtime.New()
+			// Nil pointer safety: Create zero value rather than panic
+			if to.CanAddr() {
+				*to.Addr().Interface().(*gtime.Time) = *gtime.New()
+			} else {
+				to.Set(reflect.ValueOf(*gtime.New()))
+			}
+		} else {
+			// Direct memory copy preserves timezone, precision, and all metadata
+			if to.CanAddr() {
+				*to.Addr().Interface().(*gtime.Time) = *v
+			} else {
+				to.Set(reflect.ValueOf(*v))
+			}
 		}
-		*to.Addr().Interface().(*gtime.Time) = *v
 		return nil
+		
 	case gtime.Time:
-		// Direct assignment to preserve timezone information
-		*to.Addr().Interface().(*gtime.Time) = v
+		// Direct value assignment for non-pointer gtime types
+		// Preserves all temporal information without transformation
+		if to.CanAddr() {
+			*to.Addr().Interface().(*gtime.Time) = v
+		} else {
+			to.Set(reflect.ValueOf(v))
+		}
 		return nil
+		
+	// CONVERSION PATH 2: Structured Data Value Extraction  
+	// Theoretical basis: Extract semantic content from containers rather than
+	// serializing containers themselves, which loses semantic context
 	case map[string]interface{}:
-		// Handle map inputs by extracting the first value and converting it directly
-		// This prevents timezone loss that occurs when map is converted to JSON string
+		// Common in ORM scenarios: {"column_name": gtime_value}
+		// Instead of converting entire map to string (lossy), extract the gtime value
 		if len(v) > 0 {
 			for _, value := range v {
-				// Convert the extracted value directly using c.GTime to preserve timezone
+				// Convert the extracted gtime value directly, preserving timezone
 				gtimeResult, err := c.GTime(value)
 				if err != nil {
 					return err
@@ -103,17 +175,26 @@ func (c *Converter) builtInAnyConvertFuncForGTime(from any, to reflect.Value) er
 				if gtimeResult == nil {
 					gtimeResult = gtime.New()
 				}
-				*to.Addr().Interface().(*gtime.Time) = *gtimeResult
-				return nil
+				if to.CanAddr() {
+					*to.Addr().Interface().(*gtime.Time) = *gtimeResult
+				} else {
+					to.Set(reflect.ValueOf(*gtimeResult))
+				}
+				return nil // Process only first value (typical single-column case)
 			}
 		}
-		// Empty map case
-		*to.Addr().Interface().(*gtime.Time) = *gtime.New()
+		// Empty map case: Create zero value for consistency
+		if to.CanAddr() {
+			*to.Addr().Interface().(*gtime.Time) = *gtime.New()
+		} else {
+			to.Set(reflect.ValueOf(*gtime.New()))
+		}
 		return nil
 	}
-
-	// For other types, use the general GTime converter
-	// The c.GTime method already handles timezone preservation for known types
+	
+	// CONVERSION PATH 3: Enhanced General Conversion
+	// Theoretical basis: For unknown types, use enhanced converter that attempts
+	// timezone preservation through improved string representations and parsing
 	v, err := c.GTime(from)
 	if err != nil {
 		return err
@@ -121,6 +202,10 @@ func (c *Converter) builtInAnyConvertFuncForGTime(from any, to reflect.Value) er
 	if v == nil {
 		v = gtime.New()
 	}
-	*to.Addr().Interface().(*gtime.Time) = *v
+	if to.CanAddr() {
+		*to.Addr().Interface().(*gtime.Time) = *v
+	} else {
+		to.Set(reflect.ValueOf(*v))
+	}
 	return nil
 }
