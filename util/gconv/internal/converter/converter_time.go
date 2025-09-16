@@ -22,6 +22,10 @@ func (c *Converter) Time(anyInput any, format ...string) (time.Time, error) {
 		if v, ok := anyInput.(time.Time); ok {
 			return v, nil
 		}
+		// Handle *gtime.Time directly to preserve timezone
+		if v, ok := anyInput.(*gtime.Time); ok {
+			return v.Time, nil
+		}
 	}
 	t, err := c.GTime(anyInput, format...)
 	if err != nil {
