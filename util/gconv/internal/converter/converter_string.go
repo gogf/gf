@@ -72,12 +72,14 @@ func (c *Converter) String(anyInput any) (string, error) {
 			return "", nil
 		}
 		// Use RFC3339 format to preserve timezone information during conversion
+		// This ensures timezone data is maintained when gtime.Time values are serialized
 		return value.Time.Format(time.RFC3339), nil
 	case *gtime.Time:
-		if value == nil {
+		if value == nil || value.IsZero() {
 			return "", nil
 		}
 		// Use RFC3339 format to preserve timezone information during conversion
+		// This ensures timezone data is maintained when *gtime.Time values are serialized
 		return value.Time.Format(time.RFC3339), nil
 	default:
 		if f, ok := value.(localinterface.IString); ok {

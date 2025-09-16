@@ -50,8 +50,7 @@ func TestTime_Issue4429_TimezonePreservation(t1 *testing.T) {
 		_, structOffset := testStruct.Time.Zone()
 		t.Assert(structOffset, 0) // Struct field should preserve timezone
 
-		// Test the problematic case: ORM Result.Structs() conversion  
-		// Note: This test documents the current issue and should be updated when fixed
+		// Test the main problematic case: ORM Result.Structs() conversion
 		result := []map[string]interface{}{{"now": gtimeVal}}
 		var nowResult []time.Time
 		err = gconv.Structs(result, &nowResult)
@@ -60,16 +59,27 @@ func TestTime_Issue4429_TimezonePreservation(t1 *testing.T) {
 		structsTime := nowResult[0]
 		_, structsOffset := structsTime.Zone()
 		
-		// TODO: This should pass when the issue is fully fixed
-		// Currently documents the known issue
-		if structsOffset == 0 {
-			t.Logf("✅ Structs timezone preservation works!")
-		} else {
-			t.Logf("⚠️  Known issue: Structs loses timezone (offset: %d vs expected: 0)", structsOffset/3600)
-		}
+		// This should now work with the optimized fix
+		t.Assert(structsOffset, 0) // Timezone offset should be preserved
+		t.Assert(gtimeVal.Time.Equal(structsTime), true) // Same instant in time
 		
-		// The critical assertion: times should represent the same instant
-		t.Assert(gtimeVal.Time.Equal(structsTime), true)
+		// Test edge cases for robustness
+		
+		// Test empty map
+		emptyMapResult := []map[string]interface{}{{}}
+		var emptyResult []time.Time
+		err = gconv.Structs(emptyMapResult, &emptyResult)
+		t.AssertNil(err)
+		t.Assert(len(emptyResult), 1)
+		t.Assert(emptyResult[0].IsZero(), true)
+		
+		// Test nil gtime value
+		nilResult := []map[string]interface{}{{"time": (*gtime.Time)(nil)}}
+		var nilTimeResult []time.Time
+		err = gconv.Structs(nilResult, &nilTimeResult)
+		t.AssertNil(err)
+		t.Assert(len(nilTimeResult), 1)
+		t.Assert(nilTimeResult[0].IsZero(), true)
 		
 		// Note: Timezone name might change but offset preservation is critical
 		_, _ = originalName, convertedName
