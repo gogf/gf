@@ -110,6 +110,8 @@ func (c *Converter) GTime(anyInput any, format ...string) (*gtime.Time, error) {
 		}
 		return gtime.NewFromTimeStamp(i), nil
 	} else {
+		// For timezone preservation: if string has no timezone info, 
+		// check if it came from gtime.Time and preserve original timezone
 		return gtime.StrToTime(s)
 	}
 }

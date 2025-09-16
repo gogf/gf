@@ -71,12 +71,14 @@ func (c *Converter) String(anyInput any) (string, error) {
 		if value.IsZero() {
 			return "", nil
 		}
-		return value.String(), nil
+		// Use RFC3339 format to preserve timezone information during conversion
+		return value.Time.Format(time.RFC3339), nil
 	case *gtime.Time:
 		if value == nil {
 			return "", nil
 		}
-		return value.String(), nil
+		// Use RFC3339 format to preserve timezone information during conversion
+		return value.Time.Format(time.RFC3339), nil
 	default:
 		if f, ok := value.(localinterface.IString); ok {
 			// If the variable implements the String() interface,
