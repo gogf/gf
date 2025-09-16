@@ -14,7 +14,6 @@ import (
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gtimer"
 )
@@ -238,9 +237,6 @@ func (c *Cron) Close() {
 	c.runningLock.Lock()
 	defer c.runningLock.Unlock()
 	c.status.Set(StatusClosed)
-	ctx := context.Background()
-	g.Log().Debugf(ctx, "Close 停掉了 ====")
-
 	c.running = false
 }
 
