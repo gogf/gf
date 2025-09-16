@@ -91,7 +91,7 @@ func (c *Converter) builtInAnyConvertFuncForGTime(from any, to reflect.Value) er
 		*to.Addr().Interface().(*gtime.Time) = v
 		return nil
 	}
-	
+
 	// For other types, use the general GTime converter
 	v, err := c.GTime(from)
 	if err != nil {
