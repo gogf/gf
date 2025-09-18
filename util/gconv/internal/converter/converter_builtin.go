@@ -127,38 +127,39 @@ func (c *Converter) builtInAnyConvertFuncForTime(from any, to reflect.Value) err
 //   - Uses: Enhanced c.GTime() with RFC3339 timezone support
 //   - Preserves: Timezone where possible through improved string handling
 func (c *Converter) builtInAnyConvertFuncForGTime(from any, to reflect.Value) error {
-	// CONVERSION PATH 1: Direct gtime.Time Assignment
-	// Theoretical basis: Identity conversion preserves all semantic information
+	// Helper function to efficiently set gtime.Time value to reflect.Value
+	// Avoids repeated CanAddr() checks and optimizes assignment operations
+	setGTimeValue := func(gtimeVal gtime.Time) {
+		if to.CanAddr() {
+			*to.Addr().Interface().(*gtime.Time) = gtimeVal
+		} else {
+			to.Set(reflect.ValueOf(gtimeVal))
+		}
+	}
+
+	// Cached zero value to avoid repeated gtime.New() allocations
+	var zeroGTime = *gtime.New()
+
+	// CONVERSION PATH 1: Direct gtime.Time Assignment (Fast Path)
+	// Most common cases handled first for optimal performance
 	switch v := from.(type) {
 	case *gtime.Time:
-		if v == nil {
-			// Nil pointer safety: Create zero value rather than panic
-			if to.CanAddr() {
-				*to.Addr().Interface().(*gtime.Time) = *gtime.New()
-			} else {
-				to.Set(reflect.ValueOf(*gtime.New()))
-			}
-		} else {
+		if v != nil {
 			// Direct memory copy preserves timezone, precision, and all metadata
-			if to.CanAddr() {
-				*to.Addr().Interface().(*gtime.Time) = *v
-			} else {
-				to.Set(reflect.ValueOf(*v))
-			}
+			setGTimeValue(*v)
+		} else {
+			// Nil pointer safety: Use cached zero value
+			setGTimeValue(zeroGTime)
 		}
 		return nil
 
 	case gtime.Time:
 		// Direct value assignment for non-pointer gtime types
 		// Preserves all temporal information without transformation
-		if to.CanAddr() {
-			*to.Addr().Interface().(*gtime.Time) = v
-		} else {
-			to.Set(reflect.ValueOf(v))
-		}
+		setGTimeValue(v)
 		return nil
 
-	// CONVERSION PATH 2: Structured Data Value Extraction
+	// CONVERSION PATH 2: Structured Data Value Extraction (Optimized)
 	// Theoretical basis: Extract semantic content from containers rather than
 	// serializing containers themselves, which loses semantic context
 	case map[string]any:
@@ -166,45 +167,49 @@ func (c *Converter) builtInAnyConvertFuncForGTime(from any, to reflect.Value) er
 		// Instead of converting entire map to string (lossy), extract the gtime value
 		if len(v) > 0 {
 			for _, value := range v {
-				// Convert the extracted gtime value directly, preserving timezone
-				gtimeResult, err := c.GTime(value)
-				if err != nil {
-					return err
+				// Fast path for direct gtime types in map to avoid recursive c.GTime() call
+				switch gtimeVal := value.(type) {
+				case *gtime.Time:
+					if gtimeVal != nil {
+						setGTimeValue(*gtimeVal)
+					} else {
+						setGTimeValue(zeroGTime)
+					}
+					return nil
+				case gtime.Time:
+					setGTimeValue(gtimeVal)
+					return nil
+				default:
+					// Only fall back to c.GTime() for non-gtime types
+					gtimeResult, err := c.GTime(value)
+					if err != nil {
+						return err
+					}
+					if gtimeResult != nil {
+						setGTimeValue(*gtimeResult)
+					} else {
+						setGTimeValue(zeroGTime)
+					}
+					return nil
 				}
-				if gtimeResult == nil {
-					gtimeResult = gtime.New()
-				}
-				if to.CanAddr() {
-					*to.Addr().Interface().(*gtime.Time) = *gtimeResult
-				} else {
-					to.Set(reflect.ValueOf(*gtimeResult))
-				}
-				return nil // Process only first value (typical single-column case)
 			}
 		}
-		// Empty map case: Create zero value for consistency
-		if to.CanAddr() {
-			*to.Addr().Interface().(*gtime.Time) = *gtime.New()
-		} else {
-			to.Set(reflect.ValueOf(*gtime.New()))
-		}
+		// Empty map case: Use cached zero value
+		setGTimeValue(zeroGTime)
 		return nil
 	}
 
 	// CONVERSION PATH 3: Enhanced General Conversion
 	// Theoretical basis: For unknown types, use enhanced converter that attempts
 	// timezone preservation through improved string representations and parsing
-	v, err := c.GTime(from)
+	gtimeResult, err := c.GTime(from)
 	if err != nil {
 		return err
 	}
-	if v == nil {
-		v = gtime.New()
-	}
-	if to.CanAddr() {
-		*to.Addr().Interface().(*gtime.Time) = *v
+	if gtimeResult != nil {
+		setGTimeValue(*gtimeResult)
 	} else {
-		to.Set(reflect.ValueOf(*v))
+		setGTimeValue(zeroGTime)
 	}
 	return nil
 }
