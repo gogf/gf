@@ -143,13 +143,5 @@ func (c *Converter) GTime(anyInput any, format ...string) (*gtime.Time, error) {
 	// Parse as time string with timezone preservation
 	// Enhanced: if the string lacks timezone info, try to parse it with RFC3339 format first
 	// This helps preserve timezone when the original gtime had timezone information
-	result, err := gtime.StrToTime(s)
-	if err == nil && result != nil {
-		// If parsing succeeded but the result is in local timezone while
-		// the string suggests it should be in a different timezone,
-		// we may need additional handling here in the future
-		return result, nil
-	}
-
 	return gtime.StrToTime(s)
 }
