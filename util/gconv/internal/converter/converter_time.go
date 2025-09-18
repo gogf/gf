@@ -24,11 +24,9 @@ func (c *Converter) Time(anyInput any, format ...string) (time.Time, error) {
 			return v, nil
 		}
 		if v, ok := anyInput.(*gtime.Time); ok {
-			// Handle *gtime.Time directly to preserve timezone
-			if v == nil {
-				return time.Time{}, nil
+			if v != nil {
+				return v.Time, nil
 			}
-			return v.Time, nil
 		}
 
 		// Handle map inputs by extracting the first value
