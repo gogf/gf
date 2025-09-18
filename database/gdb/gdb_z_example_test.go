@@ -8,7 +8,6 @@ package gdb_test
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -41,24 +40,4 @@ func ExampleDB_Transaction() {
 		}
 		return nil
 	})
-}
-
-// ExampleGetAllConfig demonstrates the usage of GetAllConfig.
-func ExampleGetAllConfig() {
-	// Add confignode by addconfignode
-	gdb.AddConfigNode("test", gdb.ConfigNode{
-		Link: "mysql://root:123456@tcp(127.0.0.1:3306)/test",
-	})
-
-	// Get all config (addconfignode and test config)
-	configs := gdb.GetAllConfig()
-	fmt.Println(configs)
-
-	gdb.AddConfigNode("test2", gdb.ConfigNode{
-		Link: "mysql://root:123456@tcp(127.0.0.1:3306)/test",
-	})
-
-	// Get all config again
-	configs2 := gdb.GetAllConfig()
-	fmt.Println(configs2)
 }
