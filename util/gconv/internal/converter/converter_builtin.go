@@ -161,7 +161,7 @@ func (c *Converter) builtInAnyConvertFuncForGTime(from any, to reflect.Value) er
 	// CONVERSION PATH 2: Structured Data Value Extraction
 	// Theoretical basis: Extract semantic content from containers rather than
 	// serializing containers themselves, which loses semantic context
-	case map[string]interface{}:
+	case map[string]any:
 		// Common in ORM scenarios: {"column_name": gtime_value}
 		// Instead of converting entire map to string (lossy), extract the gtime value
 		if len(v) > 0 {

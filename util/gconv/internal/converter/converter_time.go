@@ -34,7 +34,10 @@ func (c *Converter) Time(anyInput any, format ...string) (time.Time, error) {
 		// Handle map inputs by extracting the first value
 		// This is optimized for ORM scenarios where maps like {"now": gtimeVal}
 		// need to be converted to a single time.Time value
-		if mapData, ok := anyInput.(map[string]interface{}); ok {
+		// If anyInput is a map with string keys, this block accesses its data directly.
+		// Timezone preservation is ensured by accessing the v.Time field directly,
+		// rather than converting time values to strings, which could lose timezone information.
+		if mapData, ok := anyInput.(map[string]any); ok {
 			if len(mapData) == 0 {
 				return time.Time{}, nil
 			}
