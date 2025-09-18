@@ -11,7 +11,7 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/grokify/html-strip-tags-go v0.1.0
 	github.com/magiconair/properties v1.8.10
-	github.com/olekukonko/tablewriter v0.0.5
+	github.com/olekukonko/tablewriter v1.0.9
 	go.opentelemetry.io/otel v1.37.0
 	go.opentelemetry.io/otel/sdk v1.37.0
 	go.opentelemetry.io/otel/trace v1.37.0
@@ -27,6 +27,8 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
+	github.com/olekukonko/errors v1.1.0 // indirect
+	github.com/olekukonko/ll v0.0.9 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect

@@ -271,7 +271,7 @@ func doScanList(
 				arrayElemValue = reflect.New(arrayItemType.Elem()).Elem()
 				arrayValue.Index(i).Set(arrayElemValue.Addr())
 			}
-		} else {
+			// } else {
 			// Like: []Entity
 		}
 		bindToAttrValue = arrayElemValue.FieldByName(bindToAttrName)

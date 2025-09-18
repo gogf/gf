@@ -108,10 +108,11 @@ func (c *Converter) Int64(anyInput any) (int64, error) {
 			isMinus = false
 		)
 		if len(s) > 0 {
-			if s[0] == '-' {
+			switch s[0] {
+			case '-':
 				isMinus = true
 				s = s[1:]
-			} else if s[0] == '+' {
+			case '+':
 				s = s[1:]
 			}
 		}
