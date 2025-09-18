@@ -252,7 +252,7 @@ func GetConfig(group string) ConfigGroup {
 	return configs.config[group]
 }
 
-// GetAllConfig retrieves and returns the all configuration.
+// GetAllConfig retrieves and returns all configurations.
 func GetAllConfig() Config {
 	configs.RLock()
 	defer configs.RUnlock()
