@@ -41,7 +41,7 @@ func (c *Converter) Time(anyInput any, format ...string) (time.Time, error) {
 			}
 			// Extract the first value efficiently without full iteration
 			for _, value := range mapData {
-				return c.Time(value, format...)
+				return c.Time(value)
 			}
 		}
 	}
@@ -54,6 +54,7 @@ func (c *Converter) Time(anyInput any, format ...string) (time.Time, error) {
 	if t != nil {
 		return t.Time, nil
 	}
+
 	return time.Time{}, nil
 }
 
