@@ -181,7 +181,7 @@ func (c cUp) doUpgradeVersion(ctx context.Context, in cUpInput) (out *doUpgradeV
 // doUpgradeCLI downloads the new version binary with process.
 func (c cUp) doUpgradeCLI(ctx context.Context, in cUpInput) (err error) {
 	mlog.Print(`start upgrading cli...`)
-	fmt.Println(`  cli upgrade method:`, in.CliDownloadingMethod)
+	fmt.Println(` cli upgrade method:`, in.CliDownloadingMethod)
 	switch in.CliDownloadingMethod {
 	case cliMethodHttpDownload:
 		return c.doUpgradeCLIWithHttpDownload(ctx)
@@ -194,7 +194,7 @@ func (c cUp) doUpgradeCLI(ctx context.Context, in cUpInput) (err error) {
 }
 
 func (c cUp) doUpgradeCLIWithHttpDownload(ctx context.Context) (err error) {
-	mlog.Print(`start upgrading cli with download...`)
+	mlog.Print(`start upgrading cli with http get download...`)
 	var (
 		downloadUrl = fmt.Sprintf(
 			`https://github.com/gogf/gf/releases/latest/download/gf_%s_%s`,
@@ -241,9 +241,34 @@ func (c cUp) doUpgradeCLIWithGoInstall(ctx context.Context, in cUpInput) (err er
 	if !genv.Contains("GOPATH") {
 		mlog.Fatal(`"GOPATH" environment variable does not exist, please check your go installation`)
 	}
+
 	command := fmt.Sprintf(`go install %s`, in.CliModulePath)
 	mlog.Printf(`running command: %s`, command)
-	return gproc.ShellRun(ctx, command)
+	err = gproc.ShellRun(ctx, command)
+	if err != nil {
+		return err
+	}
+
+	cliFilePath := gfile.Join(genv.Get("GOPATH").String(), "bin/gf")
+	if runtime.GOOS == "windows" {
+		cliFilePath += ".exe"
+	}
+
+	// It fails if file not exist or its size is less than 1MB.
+	if !gfile.Exists(cliFilePath) || gfile.Size(cliFilePath) < 1024*1024 {
+		mlog.Fatalf(`go install %s failed, "%s" does not exist or its size is less than 1MB`, in.CliModulePath, cliFilePath)
+	}
+
+	newFile, err := gfile.Open(cliFilePath)
+	if err != nil {
+		return err
+	}
+	// selfupdate
+	err = selfupdate.Apply(newFile, selfupdate.Options{})
+	if err != nil {
+		return err
+	}
+	return
 }
 
 func (c cUp) doAutoFixing(ctx context.Context, dirPath string, version string) (err error) {
