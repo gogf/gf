@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/frame/g"
@@ -207,8 +208,33 @@ func (app *cRunApp) End(ctx context.Context, sig os.Signal, outputPath string) {
 	// Delete the binary file.
 	// firstly, kill the process.
 	if process != nil {
-		if err := process.Kill(); err != nil {
-			mlog.Debugf("kill process error: %s", err.Error())
+		if sig != nil && runtime.GOOS != "windows" {
+			if err := process.Signal(sig); err != nil {
+				mlog.Debugf("send signal to process error: %s", err.Error())
+				if err := process.Kill(); err != nil {
+					mlog.Debugf("kill process error: %s", err.Error())
+				}
+			} else {
+				done := make(chan error, 1)
+				go func() {
+					done <- process.Wait()
+				}()
+				select {
+				case <-time.After(30 * time.Second):
+					mlog.Debug("process did not exit within 30 seconds, forcing kill")
+					if err := process.Kill(); err != nil {
+						mlog.Debugf("kill process error: %s", err.Error())
+					}
+				case err := <-done:
+					if err != nil {
+						mlog.Debugf("process wait error: %s", err.Error())
+					}
+				}
+			}
+		} else {
+			if err := process.Kill(); err != nil {
+				mlog.Debugf("kill process error: %s", err.Error())
+			}
 		}
 	}
 	if err := gfile.RemoveFile(outputPath); err != nil {
