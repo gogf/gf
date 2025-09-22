@@ -12,6 +12,7 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -446,25 +447,29 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 	// It here uses ListMap to keep sequence for data inserting.
 	// ============================================================================================
 	var keyListMap = gmap.NewListMap()
+	var tmpkeyListMap = make(map[string]List)
 	for _, item := range list {
-		var (
-			tmpKeys              = make([]string, 0)
-			tmpKeysInSequenceStr string
-		)
+		length := len(item)
+		tmpKeys := make([]string, 0, length)
 		for k := range item {
 			tmpKeys = append(tmpKeys, k)
 		}
-		keys, err = c.fieldsToSequence(ctx, table, tmpKeys)
+		if length > 0 {
+			sort.Strings(tmpKeys)
+		}
+		tmpKeysInSequenceStr := gstr.Join(tmpKeys, ",")
+		if tmpkeyListMapItem, ok := tmpkeyListMap[tmpKeysInSequenceStr]; ok {
+			tmpkeyListMap[tmpKeysInSequenceStr] = append(tmpkeyListMapItem, item)
+		} else {
+			tmpkeyListMap[tmpKeysInSequenceStr] = List{item}
+		}
+	}
+	for tmpKeysInSequenceStr, itemList := range tmpkeyListMap {
+		keys, err = c.fieldsToSequence(ctx, table, gstr.Split(tmpKeysInSequenceStr, ","))
 		if err != nil {
 			return nil, err
 		}
-		tmpKeysInSequenceStr = gstr.Join(keys, ",")
-		if !keyListMap.Contains(tmpKeysInSequenceStr) {
-			keyListMap.Set(tmpKeysInSequenceStr, make(List, 0))
-		}
-		tmpKeysInSequenceList := keyListMap.Get(tmpKeysInSequenceStr).(List)
-		tmpKeysInSequenceList = append(tmpKeysInSequenceList, item)
-		keyListMap.Set(tmpKeysInSequenceStr, tmpKeysInSequenceList)
+		keyListMap.Set(gstr.Join(keys, ","), itemList)
 	}
 	if keyListMap.Size() > 1 {
 		var (
