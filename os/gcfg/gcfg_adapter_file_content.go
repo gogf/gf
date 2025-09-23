@@ -32,6 +32,7 @@ func (a *AdapterFile) SetContent(content string, fileNameOrPath ...string) {
 		}
 		customConfigContentMap.Set(usedFileNameOrPath, content)
 	})
+	a.jsonMap.Remove(usedFileNameOrPath)
 	a.notifyWatchers()
 }
 
