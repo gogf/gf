@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -120,7 +120,7 @@ func TestWatcher_RemoveWatcher(t *testing.T) {
 func TestWatcher_SetContentNotify(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			count      = gvar.New(0, true)
+			count      = gtype.NewInt(0)
 			key        = "test-watcher"
 			configFile = guid.S() + ".toml"
 			content1   = `key = "value1"`
@@ -138,12 +138,12 @@ func TestWatcher_SetContentNotify(t *testing.T) {
 
 		// Add watcher.
 		c.AddWatcher(key, func() {
-			count.Set(count.Int() + 1)
+			count.Add(1)
 		})
 
 		// Check initial values.
 		t.Assert(c.MustGet(ctx, "key").String(), "value1")
-		t.Assert(count.Int(), 0)
+		t.Assert(count.Val(), 0)
 
 		// Set custom content.
 		c.SetContent(content2, configFile)
@@ -152,7 +152,7 @@ func TestWatcher_SetContentNotify(t *testing.T) {
 		time.Sleep(2 * time.Second)
 
 		// Check that watcher was notified
-		t.Assert(count.Int(), 1)
+		t.Assert(count.Val(), 1)
 		t.Assert(c.MustGet(ctx, "key").String(), "value2")
 	})
 }
@@ -160,7 +160,7 @@ func TestWatcher_SetContentNotify(t *testing.T) {
 func TestWatcher_RemoveContentNotify(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			count      = gvar.New(0, true)
+			count      = gtype.NewInt(0)
 			key        = "test-watcher"
 			configFile = guid.S() + ".toml"
 			content    = `key = "value1"`
@@ -177,12 +177,12 @@ func TestWatcher_RemoveContentNotify(t *testing.T) {
 
 		// Add watcher.
 		c.AddWatcher(key, func() {
-			count.Set(count.Int() + 1)
+			count.Add(1)
 		})
 
 		// Check initial values.
 		t.Assert(c.MustGet(ctx, "key").String(), "value1")
-		t.Assert(count.Int(), 0)
+		t.Assert(count.Val(), 0)
 
 		// Remove custom content.
 		c.RemoveContent(configFile)
@@ -191,7 +191,7 @@ func TestWatcher_RemoveContentNotify(t *testing.T) {
 		time.Sleep(1 * time.Second)
 
 		// Check that watcher was notified again
-		t.Assert(count.Int(), 1)
+		t.Assert(count.Val(), 1)
 		t.Assert(c.MustGet(ctx, "key").String(), "value1") // Back to file content
 	})
 }
@@ -199,7 +199,7 @@ func TestWatcher_RemoveContentNotify(t *testing.T) {
 func TestWatcher_ClearContentNotify(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			count      = gvar.New(0)
+			count      = gtype.NewInt(0)
 			key        = "test-watcher"
 			configFile = guid.S() + ".toml"
 			content    = `key = "value1"`
@@ -216,12 +216,12 @@ func TestWatcher_ClearContentNotify(t *testing.T) {
 
 		// Add watcher.
 		c.AddWatcher(key, func() {
-			count.Set(count.Int() + 1)
+			count.Add(1)
 		})
 
 		// Check initial values.
 		t.Assert(c.MustGet(ctx, "key").String(), "value1")
-		t.Assert(count.Int(), 0)
+		t.Assert(count.Val(), 0)
 
 		// Clear all custom content.
 		c.ClearContent()
@@ -230,7 +230,7 @@ func TestWatcher_ClearContentNotify(t *testing.T) {
 		time.Sleep(1 * time.Second)
 
 		// Check that watcher was notified again
-		t.Assert(count.Int(), 1)
+		t.Assert(count.Val(), 1)
 		t.Assert(c.MustGet(ctx, "key").String(), "value1") // Back to file content
 	})
 }
