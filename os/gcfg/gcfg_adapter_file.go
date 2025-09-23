@@ -8,7 +8,6 @@ package gcfg
 
 import (
 	"context"
-
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gvar"
@@ -29,6 +28,7 @@ type AdapterFile struct {
 	searchPaths           *garray.StrArray // Searching the path array.
 	jsonMap               *gmap.StrAnyMap  // The pared JSON objects for configuration files.
 	violenceCheck         bool             // Whether it does violence check in value index searching. It affects the performance when set true(false in default).
+	watchers              *gmap.StrAnyMap  // Watchers for watching file changes.
 }
 
 const (
@@ -70,6 +70,7 @@ func NewAdapterFile(fileNameOrPath ...string) (*AdapterFile, error) {
 		defaultFileNameOrPath: usedFileNameOrPath,
 		searchPaths:           garray.NewStrArray(true),
 		jsonMap:               gmap.NewStrAnyMap(true),
+		watchers:              gmap.NewStrAnyMap(true),
 	}
 	// Customized dir path from env/cmd.
 	if customPath := command.GetOptWithEnv(commandEnvKeyForPath); customPath != "" {
@@ -159,8 +160,12 @@ func (a *AdapterFile) Set(pattern string, value any) error {
 		return err
 	}
 	if j != nil {
-		return j.Set(pattern, value)
+		err = j.Set(pattern, value)
+		if err != nil {
+			return err
+		}
 	}
+	a.notifyWatchers()
 	return nil
 }
 
@@ -280,6 +285,9 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 		if filePath != "" && !gres.Contains(filePath) {
 			_, err = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
 				a.jsonMap.Remove(usedFileNameOrPath)
+				if event.IsWrite() || event.IsRemove() || event.IsCreate() || event.IsRename() {
+					a.notifyWatchers()
+				}
 			})
 			if err != nil {
 				return nil
@@ -291,4 +299,24 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 		return result.(*gjson.Json), err
 	}
 	return
+}
+
+// AddWatcher adds a watcher for the specified configuration file.
+func (a *AdapterFile) AddWatcher(name string, fn func()) {
+	a.watchers.Set(name, fn)
+}
+
+// RemoveWatcher removes the watcher for the specified configuration file.
+func (a *AdapterFile) RemoveWatcher(name string) {
+	a.watchers.Remove(name)
+}
+
+// notifyWatchers notifies all watchers.
+func (a *AdapterFile) notifyWatchers() {
+	a.watchers.Iterator(func(k string, v any) bool {
+		if fn, ok := v.(func()); ok {
+			go fn()
+		}
+		return true
+	})
 }

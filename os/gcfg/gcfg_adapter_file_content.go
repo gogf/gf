@@ -32,6 +32,7 @@ func (a *AdapterFile) SetContent(content string, fileNameOrPath ...string) {
 		}
 		customConfigContentMap.Set(usedFileNameOrPath, content)
 	})
+	a.notifyWatchers()
 }
 
 // GetContent returns customized configuration content for specified `file`.
@@ -64,7 +65,7 @@ func (a *AdapterFile) RemoveContent(fileNameOrPath ...string) {
 			customConfigContentMap.Remove(usedFileNameOrPath)
 		}
 	})
-
+	a.notifyWatchers()
 	intlog.Printf(context.TODO(), `RemoveContent: %s`, usedFileNameOrPath)
 }
 
@@ -81,5 +82,6 @@ func (a *AdapterFile) ClearContent() {
 			}
 		}
 	})
+	a.notifyWatchers()
 	intlog.Print(context.TODO(), `RemoveConfig`)
 }
