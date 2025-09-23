@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -20,7 +21,7 @@ import (
 func TestWatcher_AddWatcherAndNotify(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			m          = make(map[string]bool)
+			m          = gmap.NewStrAnyMap(true)
 			key1       = "test-watcher1"
 			key2       = "test-watcher2"
 			configFile = guid.S() + ".toml"
@@ -36,21 +37,21 @@ func TestWatcher_AddWatcherAndNotify(t *testing.T) {
 		// Create config instance.
 		c, err := gcfg.NewAdapterFile(configFile)
 		t.AssertNil(err)
-		m[key1] = true
-		m[key2] = true
+		m.Set(key1, true)
+		m.Set(key2, true)
 
 		// Add watchers.
 		c.AddWatcher(key1, func() {
-			m[key1] = false
+			m.Set(key1, false)
 		})
 		c.AddWatcher(key2, func() {
-			m[key2] = false
+			m.Set(key2, false)
 		})
 
 		// Check initial values.
 		t.Assert(c.MustGet(ctx, "key").String(), "value1")
-		t.Assert(m[key1], true)
-		t.Assert(m[key2], true)
+		t.Assert(m.Get(key1), true)
+		t.Assert(m.Get(key2), true)
 
 		// Update config file content.
 		err = gfile.PutContents(configFile, content2)
@@ -61,15 +62,15 @@ func TestWatcher_AddWatcherAndNotify(t *testing.T) {
 
 		// Check updated values.
 		t.Assert(c.MustGet(ctx, "key").String(), "value2")
-		t.AssertEQ(m[key1], false)
-		t.AssertEQ(m[key2], false)
+		t.AssertEQ(m.Get(key1), false)
+		t.AssertEQ(m.Get(key2), false)
 	})
 }
 
 func TestWatcher_RemoveWatcher(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			m          = make(map[string]bool)
+			m          = gmap.NewStrAnyMap(true)
 			key1       = "test-watcher1"
 			key2       = "test-watcher2"
 			configFile = guid.S() + ".toml"
@@ -83,21 +84,21 @@ func TestWatcher_RemoveWatcher(t *testing.T) {
 		// Create config instance.
 		c, err := gcfg.NewAdapterFile(configFile)
 		t.AssertNil(err)
-		m[key1] = true
-		m[key2] = true
+		m.Set(key1, true)
+		m.Set(key2, true)
 
 		// Add watchers.
 		c.AddWatcher(key1, func() {
-			m[key1] = false
+			m.Set(key1, false)
 		})
 		c.AddWatcher(key2, func() {
-			m[key2] = false
+			m.Set(key2, false)
 		})
 
 		// Check initial values.
 		t.Assert(c.MustGet(ctx, "key").String(), "value1")
-		t.Assert(m[key1], true)
-		t.Assert(m[key2], true)
+		t.Assert(m.Get(key1), true)
+		t.Assert(m.Get(key2), true)
 
 		// Remove one watcher.
 		c.RemoveWatcher(key2)
@@ -111,9 +112,9 @@ func TestWatcher_RemoveWatcher(t *testing.T) {
 
 		// Check updated values.
 		t.Assert(c.MustGet(ctx, "key").String(), "value2")
-		t.AssertEQ(m[key1], false)
+		t.AssertEQ(m.Get(key1), false)
 		// watcherName2 should not be notified as it was removed
-		t.AssertEQ(m[key2], true)
+		t.AssertEQ(m.Get(key2), true)
 	})
 }
 
