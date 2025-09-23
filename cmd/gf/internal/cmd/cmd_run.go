@@ -215,31 +215,24 @@ func (app *cRunApp) End(ctx context.Context, sig os.Signal, outputPath string) {
 					mlog.Debugf("kill process error: %s", err.Error())
 				}
 			} else {
+				waitCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+				defer cancel()
 				done := make(chan error, 1)
 				go func() {
-					defer close(done)
-					done <- process.Wait()
+					select {
+					case <-waitCtx.Done():
+						done <- waitCtx.Err()
+					case done <- process.Wait():
+					}
 				}()
-				select {
-				case <-time.After(30 * time.Second):
-					mlog.Debug("process did not exit within 30 seconds, forcing kill")
+				err := <-done
+				if err != nil {
+					mlog.Debugf("process wait error: %s", err.Error())
 					if err := process.Kill(); err != nil {
 						mlog.Debugf("kill process error: %s", err.Error())
 					}
-					select {
-					case err := <-done:
-						if err != nil {
-							mlog.Debugf("process wait error after kill: %s", err.Error())
-						}
-					case <-time.After(5 * time.Second):
-						mlog.Debug("timeout waiting for process.Wait() to complete after kill")
-					}
-				case err := <-done:
-					if err != nil {
-						mlog.Debugf("process wait error: %s", err.Error())
-					} else {
-						mlog.Debug("process exited gracefully")
-					}
+				} else {
+					mlog.Debug("process exited gracefully")
 				}
 			}
 		} else {
