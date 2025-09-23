@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/frame/g"
@@ -207,8 +208,37 @@ func (app *cRunApp) End(ctx context.Context, sig os.Signal, outputPath string) {
 	// Delete the binary file.
 	// firstly, kill the process.
 	if process != nil {
-		if err := process.Kill(); err != nil {
-			mlog.Debugf("kill process error: %s", err.Error())
+		if sig != nil && runtime.GOOS != "windows" {
+			if err := process.Signal(sig); err != nil {
+				mlog.Debugf("send signal to process error: %s", err.Error())
+				if err := process.Kill(); err != nil {
+					mlog.Debugf("kill process error: %s", err.Error())
+				}
+			} else {
+				waitCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+				defer cancel()
+				done := make(chan error, 1)
+				go func() {
+					select {
+					case <-waitCtx.Done():
+						done <- waitCtx.Err()
+					case done <- process.Wait():
+					}
+				}()
+				err := <-done
+				if err != nil {
+					mlog.Debugf("process wait error: %s", err.Error())
+					if err := process.Kill(); err != nil {
+						mlog.Debugf("kill process error: %s", err.Error())
+					}
+				} else {
+					mlog.Debug("process exited gracefully")
+				}
+			}
+		} else {
+			if err := process.Kill(); err != nil {
+				mlog.Debugf("kill process error: %s", err.Error())
+			}
 		}
 	}
 	if err := gfile.RemoveFile(outputPath); err != nil {
