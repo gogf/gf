@@ -173,7 +173,7 @@ func (m *Manager) Tm(ctx context.Context, context string, valMap map[string]inte
 // and given `values` using positional arguments (fmt.Sprintf).
 // For order-independent, key-based replacement, use TranslateMap instead.
 func (m *Manager) TranslateFormat(ctx context.Context, format string, values ...interface{}) string {
-  return fmt.Sprintf(m.Translate(ctx, format), values...)
+	return fmt.Sprintf(m.Translate(ctx, format), values...)
 }
 
 // TranslateMap parameter replacement is order-independent.
