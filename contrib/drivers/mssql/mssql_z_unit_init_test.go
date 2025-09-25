@@ -168,5 +168,6 @@ end
 	}
 
 	db.Schema(db.GetConfig().Name)
+	name = "ip_to_id"
 	return
 }
