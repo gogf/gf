@@ -97,7 +97,7 @@ func Test_TranslateMap(t *testing.T) {
 		})
 		i18n.SetLanguage("zh-CN")
 		str := i18n.Tm(context.Background(), "replace_map_test", map[string]interface{}{"name": "blue", "score": "3000"})
-		fmt.Println(str)
+		t.Log(str)
 		t.Assert(str, "hello 3000 blue is ok")
 	})
 }
