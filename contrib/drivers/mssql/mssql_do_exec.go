@@ -173,7 +173,7 @@ func (m *Driver) GetInsertOutputSql(ctx context.Context, table string) string {
 	incrNo := 0
 	if len(fds) > 0 {
 		for _, fd := range fds {
-			// has primary key and is auto-incement
+			// has primary key and is auto-increment
 			if fd.Extra == autoIncrementName && fd.Key == mssqlPrimaryKeyName && !fd.Null {
 				incrNoStr := ""
 				if incrNo == 0 { // fixed first field named id, convenient to get
