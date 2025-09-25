@@ -5,6 +5,9 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gpage provides useful paging functionality for web pages.
+//
+// Deprecated: wrap this pagination html content in business layer.
+// Will be removed in version 3.0.
 package gpage
 
 import (
@@ -18,6 +21,8 @@ import (
 
 // Page is the pagination implementer.
 // All the attributes are public, you can change them when necessary.
+//
+// Deprecated: wrap this pagination html content in business layer.
 type Page struct {
 	TotalSize      int    // Total size.
 	TotalPage      int    // Total page, which is automatically calculated.
@@ -48,6 +53,8 @@ const (
 // /user/list/{.page}, /user/list/{.page}.html, /user/list?page={.page}&type=1, etc.
 // The build-in variable in `urlTemplate` "{.page}" specifies the page number, which will be replaced by certain
 // page number when producing.
+//
+// Deprecated: wrap this pagination html content in business layer.
 func New(totalSize, pageSize, currentPage int, urlTemplate string) *Page {
 	p := &Page{
 		LinkStyle:    "GPageLink",
@@ -105,7 +112,7 @@ func (p *Page) LastPage() string {
 
 // PageBar returns the HTML page bar content with link and span tags.
 func (p *Page) PageBar() string {
-	plus := int(math.Ceil(float64(p.PageBarNum / 2)))
+	plus := p.PageBarNum / 2
 	if p.PageBarNum-plus+p.CurrentPage > p.TotalPage {
 		plus = p.PageBarNum - p.TotalPage + p.CurrentPage
 	}
@@ -164,7 +171,7 @@ func (p *Page) GetContent(mode int) string {
 		p.FirstPageTag = "首页"
 		p.LastPageTag = "尾页"
 		return fmt.Sprintf(
-			`%s%s<span class="current">[第%d页]</span>%s%s第%s页`,
+			`%s%s<span class="current">[第 %d 页]</span>%s%s第%s页`,
 			p.FirstPage(),
 			p.PrevPage(),
 			p.CurrentPage,
@@ -184,7 +191,7 @@ func (p *Page) GetContent(mode int) string {
 		pageStr += p.NextPage()
 		pageStr += p.LastPage()
 		pageStr += fmt.Sprintf(
-			`<span>当前页%d/%d</span> <span>共%d条</span>`,
+			`<span>当前页 %d/%d</span> <span>共 %d 条</span>`,
 			p.CurrentPage,
 			p.TotalPage,
 			p.TotalSize,
@@ -210,20 +217,24 @@ func (p *Page) GetContent(mode int) string {
 // The UrlTemplate attribute can be a URL or URI string containing the "{.page}" placeholder,
 // which will be replaced by the actual page number.
 func (p *Page) GetUrl(page int) string {
-	return gstr.Replace(p.UrlTemplate, DefaultPagePlaceHolder, gconv.String(page))
+	return html.EscapeString(gstr.Replace(p.UrlTemplate, DefaultPagePlaceHolder, gconv.String(page)))
 }
 
 // GetLink returns the HTML link tag `a` content for given page number.
 func (p *Page) GetLink(page int, text, title string) string {
+	var (
+		escapedTitle = html.EscapeString(title)
+		escapedText  = html.EscapeString(text)
+	)
 	if len(p.AjaxActionName) > 0 {
 		return fmt.Sprintf(
 			`<a class="%s" href="javascript:%s('%s')" title="%s">%s</a>`,
-			p.LinkStyle, p.AjaxActionName, p.GetUrl(page), html.EscapeString(title), text,
+			p.LinkStyle, p.AjaxActionName, p.GetUrl(page), escapedTitle, escapedText,
 		)
 	} else {
 		return fmt.Sprintf(
 			`<a class="%s" href="%s" title="%s">%s</a>`,
-			p.LinkStyle, p.GetUrl(page), html.EscapeString(title), text,
+			p.LinkStyle, p.GetUrl(page), escapedTitle, escapedText,
 		)
 	}
 }

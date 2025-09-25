@@ -58,7 +58,7 @@ func (d *Driver) DoInsert(
 	}
 	for i := 0; i < len(list); i++ {
 		// Values that will be committed to underlying database driver.
-		params := make([]interface{}, 0)
+		params := make([]any, 0)
 		for _, k := range keys {
 			params = append(params, list[i][k])
 		}

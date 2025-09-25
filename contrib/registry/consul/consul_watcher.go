@@ -59,7 +59,7 @@ func (w *Watcher) watch() {
 	w.mu.Unlock()
 
 	// Create watch plan
-	plan, err := watch.Parse(map[string]interface{}{
+	plan, err := watch.Parse(map[string]any{
 		"type":    "service",
 		"service": w.key,
 	})
@@ -72,7 +72,7 @@ func (w *Watcher) watch() {
 	w.mu.Unlock()
 
 	// Set handler
-	plan.Handler = func(idx uint64, data interface{}) {
+	plan.Handler = func(idx uint64, data any) {
 		// Check if watcher is closed
 		select {
 		case <-w.closeChan:
@@ -169,7 +169,7 @@ func (w *Watcher) Services() ([]gsvc.Service, error) {
 	var services []gsvc.Service
 	for _, entry := range entries {
 		if entry.Checks.AggregatedStatus() == api.HealthPassing {
-			metadata := make(map[string]interface{})
+			metadata := make(map[string]any)
 			if entry.Service.Meta != nil {
 				if metaStr, ok := entry.Service.Meta["metadata"]; ok {
 					if err := json.Unmarshal([]byte(metaStr), &metadata); err != nil {

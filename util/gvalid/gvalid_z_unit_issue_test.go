@@ -9,6 +9,7 @@ package gvalid_test
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"testing"
 	"time"
 
@@ -110,7 +111,41 @@ func Test_Issue3636(t *testing.T) {
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 		t.Assert(
 			c.PostContent(ctx, "/hello", `{"name": "t", "s" : []}`),
-			`{"code":0,"message":"","data":{"name":"t","s":[]}}`,
+			`{"code":0,"message":"OK","data":{"name":"t","s":[]}}`,
 		)
 	})
+}
+
+// https://github.com/gogf/gf/issues/4092
+func Test_Issue4092(t *testing.T) {
+	type Model struct {
+		Raw  []byte `v:"required"`
+		Test []byte `v:"foreach|in:1,2,3"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		const kb = 1024
+		const mb = 1024 * kb
+		raw := make([]byte, 50*mb)
+		in := &Model{
+			Raw:  raw,
+			Test: []byte{40, 5, 6},
+		}
+		err := g.Validator().
+			Data(in).
+			Run(context.Background())
+		t.Assert(err, "The Test value `6` is not in acceptable range: 1,2,3")
+		allocMb := getMemAlloc()
+		t.AssertLE(allocMb, 110)
+	})
+}
+
+func getMemAlloc() uint64 {
+	byteToMb := func(b uint64) uint64 {
+		return b / 1024 / 1024
+	}
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	// For info on each, see: https://golang.org/pkg/runtime/#MemStats
+	alloc := byteToMb(m.Alloc)
+	return alloc
 }

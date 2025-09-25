@@ -35,14 +35,14 @@ type structType8 struct {
 }
 
 var (
-	structMap = map[string]interface{}{
+	structMap = map[string]any{
 		"name":  "gf",
 		"score": 100,
 		"Age":   98,
 		"ID":    199,
 	}
 
-	structMapFields8 = map[string]interface{}{
+	structMapFields8 = map[string]any{
 		"name":  "gf",
 		"score": 100,
 		"Age":   98,
@@ -92,7 +92,7 @@ func Benchmark_Struct_Basic(b *testing.B) {
 
 func Benchmark_doStruct_Fields8_Basic_MapToStruct(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		doStruct(structMapFields8, structPointer8, map[string]string{}, "")
+		defaultConverter.Struct(structMapFields8, structPointer8, StructOption{})
 	}
 }
 
@@ -101,7 +101,7 @@ func Benchmark_Reflect_PPStruct_PStruct(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		v1 := reflect.ValueOf(&structPointerNil)
 		v2 := reflect.ValueOf(structPointer)
-		//if v1.Kind() == reflect.Ptr {
+		//if v1.Kind() == reflect.Pointer {
 		//	if elem := v1.Elem(); elem.Type() == v2.Type() {
 		//		elem.Set(v2)
 		//	}
@@ -121,7 +121,7 @@ func Benchmark_Reflect_PStruct_Struct(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		v1 := reflect.ValueOf(structPointer)
 		v2 := reflect.ValueOf(structObj)
-		//if v1.Kind() == reflect.Ptr {
+		//if v1.Kind() == reflect.Pointer {
 		//	if elem := v1.Elem(); elem.Type() == v2.Type() {
 		//		elem.Set(v2)
 		//	}
@@ -141,7 +141,7 @@ func Benchmark_Reflect_PStructs_Structs(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		v1 := reflect.ValueOf(&structSliceNil)
 		v2 := reflect.ValueOf(structSlice)
-		//if v1.Kind() == reflect.Ptr {
+		//if v1.Kind() == reflect.Pointer {
 		//	if elem := v1.Elem(); elem.Type() == v2.Type() {
 		//		elem.Set(v2)
 		//	}
@@ -161,7 +161,7 @@ func Benchmark_Reflect_PPStructs_PStructs(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		v1 := reflect.ValueOf(&structPointerSliceNil)
 		v2 := reflect.ValueOf(structPointerSlice)
-		//if v1.Kind() == reflect.Ptr {
+		//if v1.Kind() == reflect.Pointer {
 		//	if elem := v1.Elem(); elem.Type() == v2.Type() {
 		//		elem.Set(v2)
 		//	}

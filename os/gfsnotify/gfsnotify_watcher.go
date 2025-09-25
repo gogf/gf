@@ -108,7 +108,7 @@ func (w *Watcher) addWithCallbackFunc(
 		recursive: !watchOption.NoRecursive,
 	}
 	// Register the callback to watcher.
-	w.callbacks.LockFunc(func(m map[string]interface{}) {
+	w.callbacks.LockFunc(func(m map[string]any) {
 		list := (*glist.List)(nil)
 		if v, ok := m[path]; !ok {
 			list = glist.New(true)
@@ -182,16 +182,16 @@ func (w *Watcher) Remove(path string) error {
 // RemoveCallback removes callback with given callback id from watcher.
 //
 // Note that, it auto removes the path watching if there's no callback bound on it.
-func (w *Watcher) RemoveCallback(callbackId int) {
+func (w *Watcher) RemoveCallback(callbackID int) {
 	callback := (*Callback)(nil)
-	if r := callbackIdMap.Get(callbackId); r != nil {
+	if r := callbackIdMap.Get(callbackID); r != nil {
 		callback = r.(*Callback)
 	}
 	if callback != nil {
 		if r := w.callbacks.Get(callback.Path); r != nil {
 			r.(*glist.List).Remove(callback.elem)
 		}
-		callbackIdMap.Remove(callbackId)
+		callbackIdMap.Remove(callbackID)
 		if callback.name != "" {
 			w.nameSet.Remove(callback.name)
 		}

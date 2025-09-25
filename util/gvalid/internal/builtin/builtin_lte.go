@@ -37,8 +37,8 @@ func (r RuleLTE) Message() string {
 func (r RuleLTE) Run(in RunInput) error {
 	var (
 		fieldName, fieldValue = gutil.MapPossibleItemByKey(in.Data.Map(), in.RulePattern)
-		fieldValueN, err1     = strconv.ParseFloat(gconv.String(fieldValue), 10)
-		valueN, err2          = strconv.ParseFloat(in.Value.String(), 10)
+		fieldValueN, err1     = strconv.ParseFloat(gconv.String(fieldValue), 64)
+		valueN, err2          = strconv.ParseFloat(in.Value.String(), 64)
 	)
 
 	if valueN > fieldValueN || err1 != nil || err2 != nil {
