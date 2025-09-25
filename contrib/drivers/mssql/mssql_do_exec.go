@@ -16,7 +16,7 @@ const (
 	backIdInsertHeadDefault      = "INSERT INTO"
 	backIdInsertHeadInsertIgnore = "INSERT IGNORE INTO"
 
-	autoIncrementName    = "auto_increment"
+	autoIncrementName    = "identity"
 	mssqlOutPutKey       = "OUTPUT"
 	mssqlInsertedObjName = "INSERTED"
 	mssqlAffectFd        = " 1 as AffectCount"
