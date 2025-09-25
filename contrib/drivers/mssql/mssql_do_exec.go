@@ -21,7 +21,7 @@ const (
 	mssqlInsertedObjName = "INSERTED"
 	mssqlAffectFd        = " 1 as AffectCount"
 	affectCountFieldName = "AffectCount"
-	mssqlPrimaryKeyName  = "PRI"
+	mssqlPrimaryKeyName  = "PRIMARY KEY"
 	fdId                 = "ID"
 	positionInsertValues = ") VALUES" // find the position of the string "VALUES" in the INSERT SQL statement to embed output code for retrieving the last inserted ID
 )
