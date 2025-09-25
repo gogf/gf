@@ -177,8 +177,10 @@ func TestGetTableFromSql(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		okTable := "ip_to_id"
 		sqlStr := "INSERT INTO \"ip_to_id\"(\"ip\") VALUES(?)"
-		dbMssql, _ := db.GetCore().GetDB().(*gdb.DriverWrapperDB).DB.(*mssql.Driver)
-		//fmt.Println("db:", fmt.Sprintf("%T", dbMssql), " ok:", ok)
+		dbWrapper, ok := db.GetCore().GetDB().(*gdb.DriverWrapperDB)
+		t.Assert(ok, true)
+		dbMssql, ok := dbWrapper.DB.(*mssql.Driver)
+		t.Assert(ok, true)
 		table := dbMssql.GetTableNameFromSql(sqlStr)
 		// fmt.Println("default table:", table)
 		t.Assert(table, okTable)
