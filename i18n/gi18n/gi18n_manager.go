@@ -170,9 +170,8 @@ func (m *Manager) Tm(ctx context.Context, context string, valMap map[string]inte
 }
 
 // TranslateFormat translates, formats and returns the `format` with configured language
-// and given `values`.
-// When values[0] is of type map[string]string, parameter replacement is order-independent.
-// the values' format  :{key}
+// and given `values` using positional arguments (fmt.Sprintf).
+// For order-independent, key-based replacement, use TranslateMap instead.
 func (m *Manager) TranslateFormat(ctx context.Context, format string, values ...interface{}) string {
 	result := m.Translate(ctx, format)
 	return fmt.Sprintf(result, values...)
