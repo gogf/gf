@@ -33,8 +33,8 @@ func (r RuleMax) Message() string {
 
 func (r RuleMax) Run(in RunInput) error {
 	var (
-		max, err1    = strconv.ParseFloat(in.RulePattern, 10)
-		valueN, err2 = strconv.ParseFloat(in.Value.String(), 10)
+		max, err1    = strconv.ParseFloat(in.RulePattern, 64)
+		valueN, err2 = strconv.ParseFloat(in.Value.String(), 64)
 	)
 	if valueN > max || err1 != nil || err2 != nil {
 		return errors.New(gstr.Replace(in.Message, "{max}", strconv.FormatFloat(max, 'f', -1, 64)))

@@ -26,7 +26,7 @@ func Instance(name ...string) *Redis {
 	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
-	v := localInstances.GetOrSetFuncLock(group, func() interface{} {
+	v := localInstances.GetOrSetFuncLock(group, func() any {
 		if config, ok := GetConfig(group); ok {
 			r, err := New(config)
 			if err != nil {

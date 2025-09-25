@@ -27,9 +27,9 @@ func (r Record) Xml(rootTag ...string) string {
 	return content
 }
 
-// Map converts `r` to map[string]interface{}.
+// Map converts `r` to map[string]any.
 func (r Record) Map() Map {
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 	for k, v := range r {
 		m[k] = v.Val()
 	}
@@ -45,7 +45,7 @@ func (r Record) GMap() *gmap.StrAnyMap {
 // Note that the parameter `pointer` should be type of *struct/**struct.
 //
 // Note that it returns sql.ErrNoRows if `r` is empty.
-func (r Record) Struct(pointer interface{}) error {
+func (r Record) Struct(pointer any) error {
 	// If the record is empty, it returns error.
 	if r.IsEmpty() {
 		if !empty.IsNil(pointer, true) {
@@ -53,7 +53,10 @@ func (r Record) Struct(pointer interface{}) error {
 		}
 		return nil
 	}
-	return gconv.StructTag(r, pointer, OrmTagForStruct)
+	return converter.Struct(r, pointer, gconv.StructOption{
+		PriorityTag:     OrmTagForStruct,
+		ContinueOnError: true,
+	})
 }
 
 // IsEmpty checks and returns whether `r` is empty.

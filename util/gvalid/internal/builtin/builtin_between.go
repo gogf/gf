@@ -39,16 +39,16 @@ func (r RuleBetween) Run(in RunInput) error {
 		max   = float64(0)
 	)
 	if len(array) > 0 {
-		if v, err := strconv.ParseFloat(strings.TrimSpace(array[0]), 10); err == nil {
+		if v, err := strconv.ParseFloat(strings.TrimSpace(array[0]), 64); err == nil {
 			min = v
 		}
 	}
 	if len(array) > 1 {
-		if v, err := strconv.ParseFloat(strings.TrimSpace(array[1]), 10); err == nil {
+		if v, err := strconv.ParseFloat(strings.TrimSpace(array[1]), 64); err == nil {
 			max = v
 		}
 	}
-	valueF, err := strconv.ParseFloat(in.Value.String(), 10)
+	valueF, err := strconv.ParseFloat(in.Value.String(), 64)
 	if valueF < min || valueF > max || err != nil {
 		return errors.New(gstr.ReplaceByMap(in.Message, map[string]string{
 			"{min}": strconv.FormatFloat(min, 'f', -1, 64),

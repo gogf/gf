@@ -17,9 +17,14 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-// getStructsNameInSrc retrieves all struct names
+type structInfo struct {
+	structName string
+	comment    string
+}
+
+// getStructsNameInSrc retrieves all struct names and comment
 // that end in "Req" and have "g.Meta" in their body.
-func (c CGenCtrl) getStructsNameInSrc(filePath string) (structsName []string, err error) {
+func (c CGenCtrl) getStructsNameInSrc(filePath string) (structInfos []*structInfo, err error) {
 	var (
 		fileContent = gfile.GetContents(filePath)
 		fileSet     = token.NewFileSet()
@@ -32,8 +37,8 @@ func (c CGenCtrl) getStructsNameInSrc(filePath string) (structsName []string, er
 
 	ast.Inspect(node, func(n ast.Node) bool {
 		if typeSpec, ok := n.(*ast.TypeSpec); ok {
-			methodName := typeSpec.Name.Name
-			if !gstr.HasSuffix(methodName, "Req") {
+			structName := typeSpec.Name.Name
+			if !gstr.HasSuffix(structName, "Req") {
 				// ignore struct name that do not end in "Req"
 				return true
 			}
@@ -46,7 +51,19 @@ func (c CGenCtrl) getStructsNameInSrc(filePath string) (structsName []string, er
 				if !gstr.Contains(buf.String(), `g.Meta`) {
 					return true
 				}
-				structsName = append(structsName, methodName)
+
+				comment := typeSpec.Doc.Text()
+				// remove the struct name from the comment
+				if gstr.HasPrefix(comment, structName) {
+					comment = gstr.TrimLeftStr(comment, structName, 1)
+				}
+				// remove the comment \n or space
+				comment = gstr.Trim(comment)
+
+				structInfos = append(structInfos, &structInfo{
+					structName: structName,
+					comment:    comment,
+				})
 			}
 		}
 		return true

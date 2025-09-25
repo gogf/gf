@@ -102,7 +102,7 @@ func (r Result) MapKeyValue(key string) map[string]Value {
 	var (
 		s              string
 		m              = make(map[string]Value)
-		tempMap        = make(map[string][]interface{})
+		tempMap        = make(map[string][]any)
 		hasMultiValues bool
 	)
 	for _, item := range r {
@@ -192,7 +192,7 @@ func (r Result) RecordKeyUint(key string) map[uint]Record {
 
 // Structs converts `r` to struct slice.
 // Note that the parameter `pointer` should be type of *[]struct/*[]*struct.
-func (r Result) Structs(pointer interface{}) (err error) {
+func (r Result) Structs(pointer any) (err error) {
 	// If the result is empty and the target pointer is not empty, it returns error.
 	if r.IsEmpty() {
 		if !empty.IsEmpty(pointer, true) {
@@ -200,5 +200,15 @@ func (r Result) Structs(pointer interface{}) (err error) {
 		}
 		return nil
 	}
-	return gconv.StructsTag(r, pointer, OrmTagForStruct)
+	var (
+		sliceOption  = gconv.SliceOption{ContinueOnError: true}
+		structOption = gconv.StructOption{
+			PriorityTag:     OrmTagForStruct,
+			ContinueOnError: true,
+		}
+	)
+	return converter.Structs(r, pointer, gconv.StructsOption{
+		SliceOption:  sliceOption,
+		StructOption: structOption,
+	})
 }

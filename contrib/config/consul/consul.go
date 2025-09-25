@@ -90,7 +90,7 @@ func (c *Client) Available(ctx context.Context, resource ...string) (ok bool) {
 // Pattern like:
 // "x.y.z" for map item.
 // "x.0.y" for slice item.
-func (c *Client) Get(ctx context.Context, pattern string) (value interface{}, err error) {
+func (c *Client) Get(ctx context.Context, pattern string) (value any, err error) {
 	if c.value.IsNil() {
 		if err = c.updateLocalValue(); err != nil {
 			return nil, err
@@ -102,7 +102,7 @@ func (c *Client) Get(ctx context.Context, pattern string) (value interface{}, er
 // Data retrieves and returns all configuration data in current resource as map.
 // Note that this function may lead lots of memory usage if configuration data is too large,
 // you can implement this function if necessary.
-func (c *Client) Data(ctx context.Context) (data map[string]interface{}, err error) {
+func (c *Client) Data(ctx context.Context) (data map[string]any, err error) {
 	if c.value.IsNil() {
 		if err = c.updateLocalValue(); err != nil {
 			return nil, err
@@ -137,7 +137,7 @@ func (c *Client) addWatcher() (err error) {
 		return nil
 	}
 
-	plan, err := watch.Parse(map[string]interface{}{
+	plan, err := watch.Parse(map[string]any{
 		"type": "key",
 		"key":  c.config.Path,
 	})
@@ -145,7 +145,7 @@ func (c *Client) addWatcher() (err error) {
 		return gerror.Wrapf(err, `watch config from consul path %+v failed`, c.config.Path)
 	}
 
-	plan.Handler = func(idx uint64, raw interface{}) {
+	plan.Handler = func(idx uint64, raw any) {
 		var v *api.KVPair
 		if raw == nil {
 			// nil is a valid return value

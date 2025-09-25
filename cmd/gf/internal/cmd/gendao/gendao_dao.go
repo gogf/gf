@@ -18,6 +18,7 @@ import (
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/text/gstr"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
@@ -32,22 +33,30 @@ func generateDao(ctx context.Context, in CGenDaoInternalInput) {
 	)
 	in.genItems.AppendDirPath(dirPathDao)
 	for i := 0; i < len(in.TableNames); i++ {
+		var (
+			realTableName = in.TableNames[i]
+			newTableName  = in.NewTableNames[i]
+		)
 		generateDaoSingle(ctx, generateDaoSingleInput{
 			CGenDaoInternalInput: in,
-			TableName:            in.TableNames[i],
-			NewTableName:         in.NewTableNames[i],
+			TableName:            realTableName,
+			NewTableName:         newTableName,
 			DirPathDao:           dirPathDao,
 			DirPathDaoInternal:   dirPathDaoInternal,
+			IsSharding:           in.ShardingTableSet.Contains(newTableName),
 		})
 	}
 }
 
 type generateDaoSingleInput struct {
 	CGenDaoInternalInput
-	TableName          string // TableName specifies the table name of the table.
-	NewTableName       string // NewTableName specifies the prefix-stripped name of the table.
+	// TableName specifies the table name of the table.
+	TableName string
+	// NewTableName specifies the prefix-stripped or custom edited name of the table.
+	NewTableName       string
 	DirPathDao         string
 	DirPathDaoInternal string
+	IsSharding         bool
 }
 
 // generateDaoSingle generates the dao and model content of given table.
@@ -109,17 +118,27 @@ func generateDaoIndex(in generateDaoIndexInput) {
 	// It should add path to result slice whenever it would generate the path file or not.
 	in.genItems.AppendGeneratedFilePath(path)
 	if in.OverwriteDao || !gfile.Exists(path) {
-		indexContent := gstr.ReplaceByMap(
-			getTemplateFromPathOrDefault(in.TplDaoIndexPath, consts.TemplateGenDaoIndexContent),
-			g.MapStrStr{
-				tplVarImportPrefix:            in.ImportPrefix,
-				tplVarTableName:               in.TableName,
-				tplVarTableNameCamelCase:      in.TableNameCamelCase,
-				tplVarTableNameCamelLowerCase: in.TableNameCamelLowerCase,
-				tplVarPackageName:             filepath.Base(in.DaoPath),
-			})
-		indexContent = replaceDefaultVar(in.CGenDaoInternalInput, indexContent)
-		if err := gfile.PutContents(path, strings.TrimSpace(indexContent)); err != nil {
+		var (
+			ctx        = context.Background()
+			tplContent = getTemplateFromPathOrDefault(
+				in.TplDaoIndexPath, consts.TemplateGenDaoIndexContent,
+			)
+		)
+		tplView.ClearAssigns()
+		tplView.Assigns(gview.Params{
+			tplVarTableSharding:           in.IsSharding,
+			tplVarTableShardingPrefix:     in.NewTableName + "_",
+			tplVarImportPrefix:            in.ImportPrefix,
+			tplVarTableName:               in.TableName,
+			tplVarTableNameCamelCase:      in.TableNameCamelCase,
+			tplVarTableNameCamelLowerCase: in.TableNameCamelLowerCase,
+			tplVarPackageName:             filepath.Base(in.DaoPath),
+		})
+		indexContent, err := tplView.ParseContent(ctx, tplContent)
+		if err != nil {
+			mlog.Fatalf("parsing template content failed: %v", err)
+		}
+		if err = gfile.PutContents(path, strings.TrimSpace(indexContent)); err != nil {
 			mlog.Fatalf("writing content to '%s' failed: %v", path, err)
 		} else {
 			utils.GoFmt(path)
@@ -138,20 +157,29 @@ type generateDaoInternalInput struct {
 }
 
 func generateDaoInternal(in generateDaoInternalInput) {
+	var (
+		ctx                    = context.Background()
+		removeFieldPrefixArray = gstr.SplitAndTrim(in.RemoveFieldPrefix, ",")
+		tplContent             = getTemplateFromPathOrDefault(
+			in.TplDaoInternalPath, consts.TemplateGenDaoInternalContent,
+		)
+	)
+	tplView.ClearAssigns()
+	tplView.Assigns(gview.Params{
+		tplVarImportPrefix:            in.ImportPrefix,
+		tplVarTableName:               in.TableName,
+		tplVarGroupName:               in.Group,
+		tplVarTableNameCamelCase:      in.TableNameCamelCase,
+		tplVarTableNameCamelLowerCase: in.TableNameCamelLowerCase,
+		tplVarColumnDefine:            gstr.Trim(generateColumnDefinitionForDao(in.FieldMap, removeFieldPrefixArray)),
+		tplVarColumnNames:             gstr.Trim(generateColumnNamesForDao(in.FieldMap, removeFieldPrefixArray)),
+	})
+	assignDefaultVar(tplView, in.CGenDaoInternalInput)
+	modelContent, err := tplView.ParseContent(ctx, tplContent)
+	if err != nil {
+		mlog.Fatalf("parsing template content failed: %v", err)
+	}
 	path := filepath.FromSlash(gfile.Join(in.DirPathDaoInternal, in.FileName+".go"))
-	removeFieldPrefixArray := gstr.SplitAndTrim(in.RemoveFieldPrefix, ",")
-	modelContent := gstr.ReplaceByMap(
-		getTemplateFromPathOrDefault(in.TplDaoInternalPath, consts.TemplateGenDaoInternalContent),
-		g.MapStrStr{
-			tplVarImportPrefix:            in.ImportPrefix,
-			tplVarTableName:               in.TableName,
-			tplVarGroupName:               in.Group,
-			tplVarTableNameCamelCase:      in.TableNameCamelCase,
-			tplVarTableNameCamelLowerCase: in.TableNameCamelLowerCase,
-			tplVarColumnDefine:            gstr.Trim(generateColumnDefinitionForDao(in.FieldMap, removeFieldPrefixArray)),
-			tplVarColumnNames:             gstr.Trim(generateColumnNamesForDao(in.FieldMap, removeFieldPrefixArray)),
-		})
-	modelContent = replaceDefaultVar(in.CGenDaoInternalInput, modelContent)
 	in.genItems.AppendGeneratedFilePath(path)
 	if err := gfile.PutContents(path, strings.TrimSpace(modelContent)); err != nil {
 		mlog.Fatalf("writing content to '%s' failed: %v", path, err)
@@ -183,13 +211,9 @@ func generateColumnNamesForDao(fieldMap map[string]*gdb.TableField, removeFieldP
 			fmt.Sprintf(` #"%s",`, field.Name),
 		}
 	}
-	tw := tablewriter.NewWriter(buffer)
-	tw.SetBorder(false)
-	tw.SetRowLine(false)
-	tw.SetAutoWrapText(false)
-	tw.SetColumnSeparator("")
-	tw.AppendBulk(array)
-	tw.Render()
+	table := tablewriter.NewTable(buffer, twRenderer, twConfig)
+	table.Bulk(array)
+	table.Render()
 	namesContent := buffer.String()
 	// Let's do this hack of table writer for indent!
 	namesContent = gstr.Replace(namesContent, "  #", "")
@@ -224,13 +248,9 @@ func generateColumnDefinitionForDao(fieldMap map[string]*gdb.TableField, removeF
 			" #" + fmt.Sprintf(`// %s`, comment),
 		}
 	}
-	tw := tablewriter.NewWriter(buffer)
-	tw.SetBorder(false)
-	tw.SetRowLine(false)
-	tw.SetAutoWrapText(false)
-	tw.SetColumnSeparator("")
-	tw.AppendBulk(array)
-	tw.Render()
+	table := tablewriter.NewTable(buffer, twRenderer, twConfig)
+	table.Bulk(array)
+	table.Render()
 	defineContent := buffer.String()
 	// Let's do this hack of table writer for indent!
 	defineContent = gstr.Replace(defineContent, "  #", "")
