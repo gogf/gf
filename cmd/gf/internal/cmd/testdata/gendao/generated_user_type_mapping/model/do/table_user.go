@@ -19,4 +19,7 @@ type TableUser struct {
 	Score    any         // Total score amount.
 	CreateAt *gtime.Time // Created Time
 	UpdateAt *gtime.Time // Updated Time
+	Email    any         // User Email
+	Status   any         // User Status
+	Height   any         // User Height
 }
