@@ -466,6 +466,35 @@ func Test_DB_BatchInsert(t *testing.T) {
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 	})
+
+	// different fields
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+		r, err := db.Insert(ctx, table, g.List{
+			{
+				"id":          2,
+				"passport":    "t2",
+				"password":    "25d55ad283aa400af464c76d713c07ac",
+				"create_time": gtime.Now().String(),
+			},
+			{
+				"id":          3,
+				"passport":    "user_3",
+				"password":    "25d55ad283aa400af464c76d713c07ad",
+				"nickname":    "name_3",
+				"create_time": gtime.Now().String(),
+			},
+		}, 1)
+		t.AssertNil(err)
+		n, err := r.RowsAffected()
+		t.AssertNil(err)
+		t.Assert(n, 2)
+
+		n, err = r.LastInsertId()
+		t.AssertNil(err)
+		t.Assert(n, 3)
+	})
 }
 
 func Test_DB_BatchInsert_Struct(t *testing.T) {
