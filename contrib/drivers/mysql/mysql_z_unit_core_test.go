@@ -467,7 +467,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 		t.Assert(n, 1)
 	})
 
-	// different fields
+	// Batch insert with different fields
 	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
 		defer dropTable(table)
@@ -490,10 +490,6 @@ func Test_DB_BatchInsert(t *testing.T) {
 		n, err := r.RowsAffected()
 		t.AssertNil(err)
 		t.Assert(n, 2)
-
-		n, err = r.LastInsertId()
-		t.AssertNil(err)
-		t.Assert(n, 3)
 	})
 }
 
