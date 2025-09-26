@@ -4,7 +4,7 @@
 # If a copy of the MIT was not distributed with this file,
 # You can obtain one at https://github.com/gogf/gf.
 
-name: GolangCI Lint
+name: golangci-lint
 on:
   push:
     branches:
@@ -29,22 +29,24 @@ jobs:
   golang-ci:
     strategy:
       matrix:
-        go-version: [ 'stable' ]
+        go-version: [ "stable" ]
+
     name: golang-ci-lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - name: Setup Golang ${{ matrix.go-version }}
         uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
       - name: golang-ci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
         with:
           # Required: specify the golangci-lint version without the patch version to always use the latest patch.
-          version: v1.62.2
           only-new-issues: true
           skip-cache: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          args: --timeout 3m0s --config=.golangci.yml -v
+          args: --config=.golangci.yml -v

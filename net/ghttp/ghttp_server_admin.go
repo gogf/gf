@@ -23,7 +23,7 @@ type utilAdmin struct{}
 
 // Index shows the administration page.
 func (p *utilAdmin) Index(r *Request) {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"pid":  gproc.Pid(),
 		"path": gfile.SelfPath(),
 		"uri":  strings.TrimRight(r.URL.Path, "/"),
@@ -88,14 +88,25 @@ func (s *Server) EnableAdmin(pattern ...string) {
 	s.BindObject(p, &utilAdmin{})
 }
 
-// Shutdown shuts down current server.
+// Shutdown shuts the current server.
 func (s *Server) Shutdown() error {
 	var ctx = context.TODO()
+	// Remove plugins.
+	if len(s.plugins) > 0 {
+		for _, p := range s.plugins {
+			s.Logger().Printf(ctx, `remove plugin: %s`, p.Name())
+			if err := p.Remove(); err != nil {
+				s.Logger().Errorf(ctx, "%+v", err)
+			}
+		}
+	}
+
 	s.doServiceDeregister()
 	// Only shut down current servers.
 	// It may have multiple underlying http servers.
 	for _, v := range s.servers {
 		v.Shutdown(ctx)
 	}
+	s.Logger().Infof(ctx, "pid[%d]: all servers shutdown", gproc.Pid())
 	return nil
 }

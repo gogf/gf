@@ -395,6 +395,19 @@ func Test_Json(t *testing.T) {
 		t.Assert(e, nil)
 		t.Assert(string(b), `"2: 1"`)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		errNormal := gerror.New("test")
+		b, e := json.Marshal(errNormal)
+		t.Assert(e, nil)
+		t.Assert(string(b), `"test"`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The string contains special characters.
+		errWithSign := gerror.New(`test ""`)
+		b, e := json.Marshal(errWithSign)
+		t.Assert(e, nil)
+		t.Assert(string(b), `"test \"\""`)
+	})
 }
 
 func Test_HasStack(t *testing.T) {

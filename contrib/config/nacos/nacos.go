@@ -50,7 +50,7 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 		value:  g.NewVar(nil, true),
 	}
 
-	client.client, err = clients.CreateConfigClient(map[string]interface{}{
+	client.client, err = clients.CreateConfigClient(map[string]any{
 		"serverConfigs": config.ServerConfigs,
 		"clientConfig":  config.ClientConfig,
 	})
@@ -83,7 +83,7 @@ func (c *Client) Available(ctx context.Context, resource ...string) (ok bool) {
 // Pattern like:
 // "x.y.z" for map item.
 // "x.0.y" for slice item.
-func (c *Client) Get(ctx context.Context, pattern string) (value interface{}, err error) {
+func (c *Client) Get(ctx context.Context, pattern string) (value any, err error) {
 	if c.value.IsNil() {
 		if err = c.updateLocalValue(); err != nil {
 			return nil, err
@@ -95,7 +95,7 @@ func (c *Client) Get(ctx context.Context, pattern string) (value interface{}, er
 // Data retrieves and returns all configuration data in current resource as map.
 // Note that this function may lead lots of memory usage if configuration data is too large,
 // you can implement this function if necessary.
-func (c *Client) Data(ctx context.Context) (data map[string]interface{}, err error) {
+func (c *Client) Data(ctx context.Context) (data map[string]any, err error) {
 	if c.value.IsNil() {
 		if err = c.updateLocalValue(); err != nil {
 			return nil, err

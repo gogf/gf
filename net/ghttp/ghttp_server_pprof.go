@@ -61,7 +61,7 @@ func (p *utilPProf) Index(r *Request) {
 		ctx      = r.Context()
 		profiles = runpprof.Profiles()
 		action   = r.Get("action").String()
-		data     = map[string]interface{}{
+		data     = map[string]any{
 			"uri":      strings.TrimRight(r.URL.Path, "/") + "/",
 			"profiles": profiles,
 		}

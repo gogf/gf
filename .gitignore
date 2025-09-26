@@ -7,7 +7,6 @@
 .settings/
 .vscode/
 vendor/
-pkg/
 bin/
 **/.DS_Store
 .test/
@@ -24,3 +23,5 @@ go.work.sum
 node_modules
 .docusaurus
 output
+.example/
+.golangci.bck.yml

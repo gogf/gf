@@ -93,7 +93,9 @@ import (
 // given `relation` parameter.
 //
 // See the example or unit testing cases for clear understanding for this function.
-func ScanList(structSlice interface{}, structSlicePointer interface{}, bindToAttrName string, relationAttrNameAndFields ...string) (err error) {
+func ScanList(
+	structSlice any, structSlicePointer any, bindToAttrName string, relationAttrNameAndFields ...string,
+) (err error) {
 	var (
 		relationAttrName string
 		relationFields   string
@@ -111,7 +113,7 @@ func ScanList(structSlice interface{}, structSlicePointer interface{}, bindToAtt
 // doScanList converts `structSlice` to struct slice which contains other complex struct attributes recursively.
 // Note that the parameter `structSlicePointer` should be type of *[]struct/*[]*struct.
 func doScanList(
-	structSlice interface{}, structSlicePointer interface{}, bindToAttrName, relationAttrName, relationFields string,
+	structSlice any, structSlicePointer any, bindToAttrName, relationAttrName, relationFields string,
 ) (err error) {
 	var (
 		maps    = Maps(structSlice)
@@ -137,7 +139,7 @@ func doScanList(
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
-	if reflectKind != reflect.Ptr {
+	if reflectKind != reflect.Pointer {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			"structSlicePointer should be type of *[]struct/*[]*struct, but got: %v",
@@ -169,7 +171,7 @@ func doScanList(
 
 	// Relation variables.
 	var (
-		relationDataMap         map[string]interface{}
+		relationDataMap         map[string]any
 		relationFromFieldName   string // Eg: relationKV: id:uid  -> id
 		relationBindToFieldName string // Eg: relationKV: id:uid  -> uid
 	)
@@ -228,7 +230,7 @@ func doScanList(
 		bindToAttrType  reflect.Type
 		bindToAttrField reflect.StructField
 	)
-	if arrayItemType.Kind() == reflect.Ptr {
+	if arrayItemType.Kind() == reflect.Pointer {
 		if bindToAttrField, ok = arrayItemType.Elem().FieldByName(bindToAttrName); !ok {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
@@ -257,7 +259,7 @@ func doScanList(
 	for i := 0; i < arrayValue.Len(); i++ {
 		arrayElemValue := arrayValue.Index(i)
 		// The FieldByName should be called on non-pointer reflect.Value.
-		if arrayElemValue.Kind() == reflect.Ptr {
+		if arrayElemValue.Kind() == reflect.Pointer {
 			// Like: []*Entity
 			arrayElemValue = arrayElemValue.Elem()
 			if !arrayElemValue.IsValid() {
@@ -269,14 +271,14 @@ func doScanList(
 				arrayElemValue = reflect.New(arrayItemType.Elem()).Elem()
 				arrayValue.Index(i).Set(arrayElemValue.Addr())
 			}
-		} else {
+			// } else {
 			// Like: []Entity
 		}
 		bindToAttrValue = arrayElemValue.FieldByName(bindToAttrName)
 		if relationAttrName != "" {
 			// Attribute value of current slice element.
 			relationFromAttrValue = arrayElemValue.FieldByName(relationAttrName)
-			if relationFromAttrValue.Kind() == reflect.Ptr {
+			if relationFromAttrValue.Kind() == reflect.Pointer {
 				relationFromAttrValue = relationFromAttrValue.Elem()
 			}
 		} else {
@@ -315,7 +317,7 @@ func doScanList(
 				relationFromAttrField = relationFromAttrValue.FieldByName(relationBindToFieldName)
 				if relationFromAttrField.IsValid() {
 					// results := make(Result, 0)
-					results := make([]interface{}, 0)
+					results := make([]any, 0)
 					for _, v := range SliceAny(relationDataMap[String(relationFromAttrField.Interface())]) {
 						item := v
 						results = append(results, item)
@@ -335,7 +337,7 @@ func doScanList(
 				)
 			}
 
-		case reflect.Ptr:
+		case reflect.Pointer:
 			var element reflect.Value
 			if bindToAttrValue.IsNil() {
 				element = reflect.New(bindToAttrType.Elem()).Elem()

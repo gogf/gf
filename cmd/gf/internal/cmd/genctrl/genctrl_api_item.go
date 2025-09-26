@@ -6,7 +6,11 @@
 
 package genctrl
 
-import "github.com/gogf/gf/v2/text/gstr"
+import (
+	"fmt"
+
+	"github.com/gogf/gf/v2/text/gstr"
+)
 
 type apiItem struct {
 	Import     string `eg:"demo.com/api/user/v1"`
@@ -14,10 +18,20 @@ type apiItem struct {
 	Module     string `eg:"user"`
 	Version    string `eg:"v1"`
 	MethodName string `eg:"GetList"`
+	Comment    string `eg:"GetList get list"`
 }
 
 func (a apiItem) String() string {
 	return gstr.Join([]string{
 		a.Import, a.Module, a.Version, a.MethodName,
 	}, ",")
+}
+
+// GetComment returns the comment of apiItem.
+func (a apiItem) GetComment() string {
+	if a.Comment == "" {
+		return ""
+	}
+	// format for handling comments
+	return fmt.Sprintf("\n// %s %s", a.MethodName, a.Comment)
 }

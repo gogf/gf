@@ -28,17 +28,17 @@ func Client() *gclient.Client {
 }
 
 // Server returns an instance of http server with specified name.
-func Server(name ...interface{}) *ghttp.Server {
+func Server(name ...any) *ghttp.Server {
 	return gins.Server(name...)
 }
 
 // TCPServer returns an instance of tcp server with specified name.
-func TCPServer(name ...interface{}) *gtcp.Server {
+func TCPServer(name ...any) *gtcp.Server {
 	return gtcp.GetServer(name...)
 }
 
 // UDPServer returns an instance of udp server with specified name.
-func UDPServer(name ...interface{}) *gudp.Server {
+func UDPServer(name ...any) *gudp.Server {
 	return gudp.GetServer(name...)
 }
 
@@ -88,12 +88,12 @@ func DB(name ...string) gdb.DB {
 }
 
 // Model creates and returns a model based on configuration of default database group.
-func Model(tableNameOrStruct ...interface{}) *gdb.Model {
+func Model(tableNameOrStruct ...any) *gdb.Model {
 	return DB().Model(tableNameOrStruct...)
 }
 
 // ModelRaw creates and returns a model based on a raw sql not a table.
-func ModelRaw(rawSql string, args ...interface{}) *gdb.Model {
+func ModelRaw(rawSql string, args ...any) *gdb.Model {
 	return DB().Raw(rawSql, args...)
 }
 

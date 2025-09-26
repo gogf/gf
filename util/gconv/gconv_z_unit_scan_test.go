@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -25,14 +26,14 @@ type scanStructTest struct {
 
 type scanExpectTest struct {
 	mapStrStr map[string]string
-	mapStrAny map[string]interface{}
-	mapAnyAny map[interface{}]interface{}
+	mapStrAny map[string]any
+	mapAnyAny map[any]any
 
 	structSub    scanStructTest
 	structSubPtr *scanStructTest
 }
 
-var scanValueMapsTest = []map[string]interface{}{
+var scanValueMapsTest = []map[string]any{
 	{"Name": false, "Place": true},
 	{"Name": int(0), "Place": int(1)},
 	{"Name": int8(0), "Place": int8(1)},
@@ -50,7 +51,7 @@ var scanValueMapsTest = []map[string]interface{}{
 	{"Name": []byte("Saturn"), "Place": []byte("土星环")},
 	{"Name": complex64(0), "Place": complex64(1 + 2i)},
 	{"Name": complex128(0), "Place": complex128(1 + 2i)},
-	{"Name": interface{}(0), "Place": interface{}("1")},
+	{"Name": any(0), "Place": any("1")},
 	{"Name": gvar.New("Jupiter"), "Place": gvar.New("大红斑")},
 	{"Name": gtime.New("2024-01-01 01:01:01"), "Place": gtime.New("2021-01-01 01:01:01")},
 	{"Name": map[string]string{"Name": "Sun"}, "Place": map[string]string{"Place": "太阳黑子"}},
@@ -67,8 +68,8 @@ var scanValueJsonTest = []string{
 
 var scanExpects = scanExpectTest{
 	mapStrStr: make(map[string]string),
-	mapStrAny: make(map[string]interface{}),
-	mapAnyAny: make(map[interface{}]interface{}),
+	mapStrAny: make(map[string]any),
+	mapAnyAny: make(map[any]any),
 
 	structSub:    scanStructTest{},
 	structSubPtr: &scanStructTest{},
@@ -119,32 +120,32 @@ func TestScan(t *testing.T) {
 			var (
 				err         error
 				scanExpects = scanExpects
-				maps        = []map[string]interface{}{test, test}
+				maps        = []map[string]any{test, test}
 			)
 
 			var mss = []map[string]string{scanExpects.mapStrStr, scanExpects.mapStrStr}
 			err = gconv.Scan(maps, &mss)
 			t.AssertNil(err)
 			t.Assert(len(mss), len(maps))
-			for k, _ := range maps {
+			for k := range maps {
 				t.Assert(maps[k]["Name"], mss[k]["Name"])
 				t.Assert(maps[k]["Place"], mss[k]["Place"])
 			}
 
-			var msa = []map[string]interface{}{scanExpects.mapStrAny, scanExpects.mapStrAny}
+			var msa = []map[string]any{scanExpects.mapStrAny, scanExpects.mapStrAny}
 			err = gconv.Scan(maps, &msa)
 			t.AssertNil(err)
 			t.Assert(len(msa), len(maps))
-			for k, _ := range maps {
+			for k := range maps {
 				t.Assert(maps[k]["Name"], msa[k]["Name"])
 				t.Assert(maps[k]["Place"], msa[k]["Place"])
 			}
 
-			var maa = []map[interface{}]interface{}{scanExpects.mapAnyAny, scanExpects.mapAnyAny}
+			var maa = []map[any]any{scanExpects.mapAnyAny, scanExpects.mapAnyAny}
 			err = gconv.Scan(maps, &maa)
 			t.AssertNil(err)
 			t.Assert(len(maa), len(maps))
-			for k, _ := range maps {
+			for k := range maps {
 				t.Assert(maps[k]["Name"], maa[k]["Name"])
 				t.Assert(maps[k]["Place"], maa[k]["Place"])
 			}
@@ -153,7 +154,7 @@ func TestScan(t *testing.T) {
 			err = gconv.Scan(maps, &ss)
 			t.AssertNil(err)
 			t.Assert(len(ss), len(maps))
-			for k, _ := range maps {
+			for k := range maps {
 				t.Assert(maps[k]["Name"], ss[k].Name)
 				t.Assert(maps[k]["Place"], ss[k].Place)
 			}
@@ -162,7 +163,7 @@ func TestScan(t *testing.T) {
 			err = gconv.Scan(maps, &ssp)
 			t.AssertNil(err)
 			t.Assert(len(ssp), len(maps))
-			for k, _ := range maps {
+			for k := range maps {
 				t.Assert(maps[k]["Name"], ssp[k].Name)
 				t.Assert(maps[k]["Place"], ssp[k].Place)
 			}
@@ -219,25 +220,25 @@ func TestScan(t *testing.T) {
 			err = gconv.Scan(structs, &mss)
 			t.AssertNil(err)
 			t.Assert(len(mss), len(structs))
-			for k, _ := range structs {
+			for k := range structs {
 				t.Assert(structs[k].Name, mss[k]["Name"])
 				t.Assert(structs[k].Place, mss[k]["Place"])
 			}
 
-			var msa = []map[string]interface{}{scanExpects.mapStrAny, scanExpects.mapStrAny}
+			var msa = []map[string]any{scanExpects.mapStrAny, scanExpects.mapStrAny}
 			err = gconv.Scan(structs, &msa)
 			t.AssertNil(err)
 			t.Assert(len(msa), len(structs))
-			for k, _ := range structs {
+			for k := range structs {
 				t.Assert(structs[k].Name, msa[k]["Name"])
 				t.Assert(structs[k].Place, msa[k]["Place"])
 			}
 
-			var maa = []map[interface{}]interface{}{scanExpects.mapAnyAny, scanExpects.mapAnyAny}
+			var maa = []map[any]any{scanExpects.mapAnyAny, scanExpects.mapAnyAny}
 			err = gconv.Scan(structs, &maa)
 			t.AssertNil(err)
 			t.Assert(len(maa), len(structs))
-			for k, _ := range structs {
+			for k := range structs {
 				t.Assert(structs[k].Name, maa[k]["Name"])
 				t.Assert(structs[k].Place, maa[k]["Place"])
 			}
@@ -246,7 +247,7 @@ func TestScan(t *testing.T) {
 			err = gconv.Scan(structs, &ss)
 			t.AssertNil(err)
 			t.Assert(len(ss), len(structs))
-			for k, _ := range structs {
+			for k := range structs {
 				t.Assert(structs[k].Name, ss[k].Name)
 				t.Assert(structs[k].Place, ss[k].Place)
 			}
@@ -255,7 +256,7 @@ func TestScan(t *testing.T) {
 			err = gconv.Scan(structs, &ssp)
 			t.AssertNil(err)
 			t.Assert(len(ssp), len(structs))
-			for k, _ := range structs {
+			for k := range structs {
 				t.Assert(structs[k].Name, ssp[k].Name)
 				t.Assert(structs[k].Place, ssp[k].Place)
 			}
@@ -312,21 +313,21 @@ func TestScan(t *testing.T) {
 			err = gconv.Scan(jsons, &mss)
 			t.AssertNil(err)
 			t.Assert(len(mss), 2)
-			for k, _ := range mss {
+			for k := range mss {
 				t.Assert("Mars", mss[k]["Name"])
 				t.Assert("奥林帕斯山", mss[k]["Place"])
 			}
 
-			var msa = []map[string]interface{}{scanExpects.mapStrAny, scanExpects.mapStrAny}
+			var msa = []map[string]any{scanExpects.mapStrAny, scanExpects.mapStrAny}
 			err = gconv.Scan(jsons, &msa)
 			t.AssertNil(err)
 			t.Assert(len(msa), 2)
-			for k, _ := range msa {
+			for k := range msa {
 				t.Assert("Mars", msa[k]["Name"])
 				t.Assert("奥林帕斯山", msa[k]["Place"])
 			}
 
-			var maa = []map[interface{}]interface{}{scanExpects.mapAnyAny, scanExpects.mapAnyAny}
+			var maa = []map[any]any{scanExpects.mapAnyAny, scanExpects.mapAnyAny}
 			err = gconv.Scan(jsons, &maa)
 			t.Assert(err, gerror.New(
 				"json.UnmarshalUseNumber failed: json: cannot unmarshal object into Go value of type map[interface {}]interface {}",
@@ -336,7 +337,7 @@ func TestScan(t *testing.T) {
 			err = gconv.Scan(jsons, &ss)
 			t.AssertNil(err)
 			t.Assert(len(ss), 2)
-			for k, _ := range ss {
+			for k := range ss {
 				t.Assert("Mars", ss[k].Name)
 				t.Assert("奥林帕斯山", ss[k].Place)
 			}
@@ -345,7 +346,7 @@ func TestScan(t *testing.T) {
 			err = gconv.Scan(jsons, &ssp)
 			t.AssertNil(err)
 			t.Assert(len(ssp), 2)
-			for k, _ := range ssp {
+			for k := range ssp {
 				t.Assert("Mars", ssp[k].Name)
 				t.Assert("奥林帕斯山", ssp[k].Place)
 			}
@@ -362,29 +363,15 @@ func TestScan(t *testing.T) {
 				mapParameter = map[string]string{"Name": "Place", "Place": "Name"}
 			)
 
-			// TODO: The following test cases should be working, but they are not.
-			//err = gconv.Scan(test, &scanExpects.mapStrStr, mapParameter)
-			//t.AssertNil(err)
-			//t.Assert(test["Name"], scanExpects.mapStrStr["Place"])
-			//t.Assert(test["Place"], scanExpects.mapStrStr["Name"])
-			//
-			//err = gconv.Scan(test, &scanExpects.mapStrAny, mapParameter)
-			//t.AssertNil(err)
-			//t.Assert(test["Name"], scanExpects.mapStrAny["Place"])
-			//t.Assert(test["Place"], scanExpects.mapStrAny["Name"])
-			//
-			//err = gconv.Scan(test, &scanExpects.mapAnyAny, mapParameter)
-			//t.AssertNil(err)
-			//t.Assert(test["Name"], scanExpects.mapAnyAny["Place"])
-			//t.Assert(test["Place"], scanExpects.mapAnyAny["Name"])
-
 			err = gconv.Scan(test, &scanExpects.structSub, mapParameter)
 			t.AssertNil(err)
 			t.Assert(test["Name"], scanExpects.structSub.Place)
 			t.Assert(test["Place"], scanExpects.structSub.Name)
 
+			// t.Logf("%#v", test)
 			err = gconv.Scan(test, &scanExpects.structSubPtr, mapParameter)
 			t.AssertNil(err)
+			// t.Logf("%#v", scanExpects.structSubPtr)
 			t.Assert(test["Name"], scanExpects.structSubPtr.Place)
 			t.Assert(test["Place"], scanExpects.structSubPtr.Name)
 		}
@@ -433,5 +420,24 @@ func TestScanEmptyStringToCustomType(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(req.Statuses), 0)
 		t.Assert(len(req.Types), 0)
+	})
+}
+
+func TestScanDeepSlice(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			req   [][]int
+			req2  [][][]int
+			data1 = gjson.New("[[1,2,3],[4,5,6]]")
+			data2 = gjson.New("[[[1,2,3]],[[4,5,6]]]")
+		)
+		err := data1.Scan(&req)
+		t.AssertNil(err)
+		err = gconv.Scan(data1.String(), &req)
+		t.AssertNil(err)
+		err = data2.Scan(&req2)
+		t.AssertNil(err)
+		t.Assert(len(req), 2)
+		t.Assert(len(req2), 2)
 	})
 }
