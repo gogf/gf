@@ -12,9 +12,9 @@ require (
 	github.com/grokify/html-strip-tags-go v0.1.0
 	github.com/magiconair/properties v1.8.10
 	github.com/olekukonko/tablewriter v1.0.9
-	go.opentelemetry.io/otel v1.37.0
-	go.opentelemetry.io/otel/sdk v1.37.0
-	go.opentelemetry.io/otel/trace v1.37.0
+	go.opentelemetry.io/otel v1.38.0
+	go.opentelemetry.io/otel/sdk v1.38.0
+	go.opentelemetry.io/otel/trace v1.38.0
 	golang.org/x/net v0.43.0
 	golang.org/x/text v0.28.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -32,6 +32,6 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
-	go.opentelemetry.io/otel/metric v1.37.0 // indirect
+	go.opentelemetry.io/otel/metric v1.38.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
 )
