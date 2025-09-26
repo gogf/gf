@@ -6,11 +6,12 @@
 
 package gerror
 
-import "html"
+import (
+	"encoding/json"
+)
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 // Note that do not use pointer as its receiver here.
 func (err Error) MarshalJSON() ([]byte, error) {
-	errMsg := html.EscapeString(err.Error())
-	return []byte(`"` + errMsg + `"`), nil
+	return json.Marshal(err.Error())
 }

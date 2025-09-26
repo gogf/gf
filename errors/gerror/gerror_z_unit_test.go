@@ -541,3 +541,20 @@ func Test_As(t *testing.T) {
 		gerror.As(errors.New("error"), nil)
 	})
 }
+
+func TestError_MarshalJSON(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		errNormal := gerror.New("test")
+		b, e := json.Marshal(errNormal)
+		t.Assert(e, nil)
+		t.Assert(string(b), `"test"`)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// The string contains special characters.
+		errWithSign := gerror.New(`test ""`)
+		b, e := json.Marshal(errWithSign)
+		t.Assert(e, nil)
+		t.Assert(string(b), `"test \"\""`)
+	})
+}
