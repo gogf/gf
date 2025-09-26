@@ -12,6 +12,7 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -446,25 +447,30 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 	// It here uses ListMap to keep sequence for data inserting.
 	// ============================================================================================
 	var keyListMap = gmap.NewListMap()
+	var tmpkeyListMap = make(map[string]List)
 	for _, item := range list {
-		var (
-			tmpKeys              = make([]string, 0)
-			tmpKeysInSequenceStr string
-		)
+		mapLen := len(item)
+		if mapLen == 0 {
+			continue
+		}
+		tmpKeys := make([]string, 0, mapLen)
 		for k := range item {
 			tmpKeys = append(tmpKeys, k)
 		}
-		keys, err = c.fieldsToSequence(ctx, table, tmpKeys)
-		if err != nil {
-			return nil, err
+		if mapLen > 1 {
+			sort.Strings(tmpKeys)
 		}
-		tmpKeysInSequenceStr = gstr.Join(keys, ",")
-		if !keyListMap.Contains(tmpKeysInSequenceStr) {
-			keyListMap.Set(tmpKeysInSequenceStr, make(List, 0))
+		keys = tmpKeys // for fieldsToSequence
+
+		tmpKeysInSequenceStr := gstr.Join(tmpKeys, ",")
+		if tmpkeyListMapItem, ok := tmpkeyListMap[tmpKeysInSequenceStr]; ok {
+			tmpkeyListMap[tmpKeysInSequenceStr] = append(tmpkeyListMapItem, item)
+		} else {
+			tmpkeyListMap[tmpKeysInSequenceStr] = List{item}
 		}
-		tmpKeysInSequenceList := keyListMap.Get(tmpKeysInSequenceStr).(List)
-		tmpKeysInSequenceList = append(tmpKeysInSequenceList, item)
-		keyListMap.Set(tmpKeysInSequenceStr, tmpKeysInSequenceList)
+	}
+	for tmpKeysInSequenceStr, itemList := range tmpkeyListMap {
+		keyListMap.Set(tmpKeysInSequenceStr, itemList)
 	}
 	if keyListMap.Size() > 1 {
 		var (
@@ -486,6 +492,15 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 			return true
 		})
 		return &sqlResult, err
+	}
+
+	keys, err = c.fieldsToSequence(ctx, table, keys)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(keys) == 0 {
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "no valid data fields found in table")
 	}
 
 	// Prepare the batch result pointer.
