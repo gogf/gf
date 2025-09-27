@@ -32,6 +32,8 @@ func (a *AdapterFile) SetContent(content string, fileNameOrPath ...string) {
 		}
 		customConfigContentMap.Set(usedFileNameOrPath, content)
 	})
+	adapterFileCtx := NewAdapterFileCtx().WithFileName(usedFileNameOrPath).WithOperation(OperationSet).WithSetContent(content)
+	a.notifyWatchers(adapterFileCtx.Ctx)
 }
 
 // GetContent returns customized configuration content for specified `file`.
@@ -64,7 +66,8 @@ func (a *AdapterFile) RemoveContent(fileNameOrPath ...string) {
 			customConfigContentMap.Remove(usedFileNameOrPath)
 		}
 	})
-
+	adapterFileCtx := NewAdapterFileCtx().WithFileName(usedFileNameOrPath).WithOperation(OperationRemove)
+	a.notifyWatchers(adapterFileCtx.Ctx)
 	intlog.Printf(context.TODO(), `RemoveContent: %s`, usedFileNameOrPath)
 }
 
@@ -81,5 +84,7 @@ func (a *AdapterFile) ClearContent() {
 			}
 		}
 	})
+	adapterFileCtx := NewAdapterFileCtx().WithOperation(OperationClear)
+	a.notifyWatchers(adapterFileCtx.Ctx)
 	intlog.Print(context.TODO(), `RemoveConfig`)
 }
