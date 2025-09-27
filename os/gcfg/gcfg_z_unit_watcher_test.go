@@ -7,6 +7,7 @@
 package gcfg_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -17,6 +18,43 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 )
+
+func TestWatcher_File_Ctx(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			key1       = "test-ctx"
+			configFile = guid.S() + ".toml"
+			content1   = `key = "value1"`
+			content2   = `key = "value2"`
+		)
+		// Create config file.
+		err := gfile.PutContents(configFile, content1)
+		t.AssertNil(err)
+		defer gfile.RemoveFile(configFile)
+
+		// Create config instance.
+		c, err := gcfg.NewAdapterFile(configFile)
+		c.Data(context.Background())
+		t.AssertNil(err)
+		c.AddWatcher(key1, func(ctx context.Context) {
+			fileCtx := gcfg.GetAdapterFileCtx(ctx)
+			t.Assert(fileCtx.GetOperation(), gcfg.OperationWrite)
+			t.Assert(fileCtx.GetFileName(), configFile)
+			t.Assert(fileCtx.GetFilePath(), gfile.Abs(configFile))
+		})
+		gfile.PutContents(configFile, content2)
+		time.Sleep(1 * time.Second)
+		c.AddWatcher(key1, func(ctx context.Context) {
+			fileCtx := gcfg.GetAdapterFileCtx(ctx)
+			t.Assert(fileCtx.GetOperation(), gcfg.OperationSet)
+			t.Assert(fileCtx.GetSetKey(), "key")
+			t.Assert(fileCtx.GetSetValue().String(), "value2")
+		})
+		c.Set("key", "value2")
+		time.Sleep(1 * time.Second)
+		c.RemoveWatcher(key1)
+	})
+}
 
 func TestWatcher_AddWatcherAndNotify(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
@@ -41,10 +79,10 @@ func TestWatcher_AddWatcherAndNotify(t *testing.T) {
 		m.Set(key2, true)
 
 		// Add watchers.
-		c.AddWatcher(key1, func() {
+		c.AddWatcher(key1, func(ctx context.Context) {
 			m.Set(key1, false)
 		})
-		c.AddWatcher(key2, func() {
+		c.AddWatcher(key2, func(ctx context.Context) {
 			m.Set(key2, false)
 		})
 
@@ -88,10 +126,10 @@ func TestWatcher_RemoveWatcher(t *testing.T) {
 		m.Set(key2, true)
 
 		// Add watchers.
-		c.AddWatcher(key1, func() {
+		c.AddWatcher(key1, func(ctx context.Context) {
 			m.Set(key1, false)
 		})
-		c.AddWatcher(key2, func() {
+		c.AddWatcher(key2, func(ctx context.Context) {
 			m.Set(key2, false)
 		})
 
@@ -132,7 +170,7 @@ func TestWatcher_SetContentNotify(t *testing.T) {
 		t.AssertNil(err)
 
 		// Add watcher.
-		c.AddWatcher(key, func() {
+		c.AddWatcher(key, func(ctx context.Context) {
 			count.Add(1)
 		})
 
@@ -175,7 +213,7 @@ func TestWatcher_RemoveContentNotify(t *testing.T) {
 		t.AssertNil(err)
 
 		// Add watcher.
-		c.AddWatcher(key, func() {
+		c.AddWatcher(key, func(ctx context.Context) {
 			count.Add(1)
 		})
 
@@ -214,7 +252,7 @@ func TestWatcher_ClearContentNotify(t *testing.T) {
 		t.AssertNil(err)
 
 		// Add watcher.
-		c.AddWatcher(key, func() {
+		c.AddWatcher(key, func(ctx context.Context) {
 			count.Add(1)
 		})
 

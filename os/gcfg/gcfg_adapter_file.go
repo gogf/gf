@@ -11,6 +11,7 @@ import (
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -25,7 +26,7 @@ import (
 
 // AdapterFile implements interface Adapter using file.
 type AdapterFile struct {
-	defaultFileNameOrPath string           // Default configuration file name or file path.
+	defaultFileNameOrPath *gtype.String    // Default configuration file name or file path.
 	searchPaths           *garray.StrArray // Searching the path array.
 	jsonMap               *gmap.StrAnyMap  // The pared JSON objects for configuration files.
 	violenceCheck         bool             // Whether it does violence check in value index searching. It affects the performance when set true(false in default).
@@ -68,7 +69,7 @@ func NewAdapterFile(fileNameOrPath ...string) (*AdapterFile, error) {
 		}
 	}
 	config := &AdapterFile{
-		defaultFileNameOrPath: usedFileNameOrPath,
+		defaultFileNameOrPath: gtype.NewString(usedFileNameOrPath),
 		searchPaths:           garray.NewStrArray(true),
 		jsonMap:               gmap.NewStrAnyMap(true),
 		watchers:              gmap.NewStrAnyMap(true),
@@ -123,12 +124,12 @@ func (a *AdapterFile) SetViolenceCheck(check bool) {
 
 // SetFileName sets the default configuration file name.
 func (a *AdapterFile) SetFileName(fileNameOrPath string) {
-	a.defaultFileNameOrPath = fileNameOrPath
+	a.defaultFileNameOrPath.Set(fileNameOrPath)
 }
 
 // GetFileName returns the default configuration file name.
 func (a *AdapterFile) GetFileName() string {
-	return a.defaultFileNameOrPath
+	return a.defaultFileNameOrPath.String()
 }
 
 // Get retrieves and returns value by specified `pattern`.
@@ -166,7 +167,11 @@ func (a *AdapterFile) Set(pattern string, value any) error {
 			return err
 		}
 	}
-	a.notifyWatchers()
+	fileName := a.GetFileName()
+	filePath, _ := a.GetFilePath(fileName)
+	fileType := gfile.ExtName(fileName)
+	adapterFileCtx := NewAdapterFileCtx().WithOperation(OperationSet).WithSetKey(pattern).WithSetValue(value).WithFileName(fileName).WithFilePath(filePath).WithFileType(fileType)
+	a.notifyWatchers(adapterFileCtx.Ctx)
 	return nil
 }
 
@@ -195,6 +200,11 @@ func (a *AdapterFile) MustGet(ctx context.Context, pattern string) *gvar.Var {
 // which will force reload configuration content from the file.
 func (a *AdapterFile) Clear() {
 	a.jsonMap.Clear()
+	fileName := a.GetFileName()
+	filePath, _ := a.GetFilePath(fileName)
+	fileType := gfile.ExtName(fileName)
+	adapterFileCtx := NewAdapterFileCtx().WithOperation(OperationClear).WithFileName(fileName).WithFilePath(filePath).WithFileType(fileType)
+	a.notifyWatchers(adapterFileCtx.Ctx)
 }
 
 // Dump prints current JSON object with more manually readable.
@@ -206,7 +216,7 @@ func (a *AdapterFile) Dump() {
 
 // Available checks and returns whether configuration of given `file` is available.
 func (a *AdapterFile) Available(ctx context.Context, fileName ...string) bool {
-	checkFileName := gutil.GetOrDefaultStr(a.defaultFileNameOrPath, fileName...)
+	checkFileName := gutil.GetOrDefaultStr(a.defaultFileNameOrPath.String(), fileName...)
 	// Custom configuration content exists.
 	if a.GetContent(checkFileName) != "" {
 		return true
@@ -234,13 +244,9 @@ func (a *AdapterFile) autoCheckAndAddMainPkgPathToSearchPaths() {
 // getJson returns a *gjson.Json object for the specified `file` content.
 // It would print error if file reading fails. It returns nil if any error occurs.
 func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json, err error) {
-	var (
-		usedFileNameOrPath = a.defaultFileNameOrPath
-	)
+	usedFileNameOrPath := a.defaultFileNameOrPath.String()
 	if len(fileNameOrPath) > 0 && fileNameOrPath[0] != "" {
 		usedFileNameOrPath = fileNameOrPath[0]
-	} else {
-		usedFileNameOrPath = a.defaultFileNameOrPath
 	}
 	// It uses JSON map to cache specified configuration file content.
 	result := a.jsonMap.GetOrSetFuncLock(usedFileNameOrPath, func() any {
@@ -286,8 +292,23 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 		if filePath != "" && !gres.Contains(filePath) {
 			_, err = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
 				a.jsonMap.Remove(usedFileNameOrPath)
-				if event.IsWrite() || event.IsRemove() || event.IsCreate() || event.IsRename() {
-					a.notifyWatchers()
+				if event.IsWrite() || event.IsRemove() || event.IsCreate() || event.IsRename() || event.IsChmod() {
+					fileName := a.GetFileName()
+					fileType := gfile.ExtName(fileName)
+					adapterFileCtx := NewAdapterFileCtx().WithFileName(fileName).WithFilePath(filePath).WithFileType(fileType)
+					switch {
+					case event.IsWrite():
+						adapterFileCtx.WithOperation(OperationWrite)
+					case event.IsRemove():
+						adapterFileCtx.WithOperation(OperationRemove)
+					case event.IsCreate():
+						adapterFileCtx.WithOperation(OperationCreate)
+					case event.IsRename():
+						adapterFileCtx.WithOperation(OperationRename)
+					case event.IsChmod():
+						adapterFileCtx.WithOperation(OperationChmod)
+					}
+					a.notifyWatchers(adapterFileCtx.Ctx)
 				}
 			})
 			if err != nil {
@@ -303,7 +324,7 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 }
 
 // AddWatcher adds a watcher for the specified configuration file.
-func (a *AdapterFile) AddWatcher(name string, fn func()) {
+func (a *AdapterFile) AddWatcher(name string, fn func(ctx context.Context)) {
 	a.watchers.Set(name, fn)
 }
 
@@ -312,11 +333,16 @@ func (a *AdapterFile) RemoveWatcher(name string) {
 	a.watchers.Remove(name)
 }
 
+// GetWatcherNames returns all watcher names.
+func (a *AdapterFile) GetWatcherNames() []string {
+	return a.watchers.Keys()
+}
+
 // notifyWatchers notifies all watchers.
-func (a *AdapterFile) notifyWatchers() {
+func (a *AdapterFile) notifyWatchers(ctx context.Context) {
 	a.watchers.Iterator(func(k string, v any) bool {
-		if fn, ok := v.(func()); ok {
-			go fn()
+		if fn, ok := v.(func(ctx context.Context)); ok {
+			go fn(ctx)
 		}
 		return true
 	})

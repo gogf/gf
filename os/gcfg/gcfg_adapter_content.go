@@ -45,7 +45,8 @@ func (a *AdapterContent) SetContent(content string) error {
 		return gerror.Wrap(err, `load configuration content failed`)
 	}
 	a.jsonVar.Set(j)
-	a.notifyWatchers()
+	adapterContentCtx := NewAdapterContentCtx().WithOperation(OperationSet).WithSetContent(content)
+	a.notifyWatchers(adapterContentCtx.Ctx)
 	return nil
 }
 
@@ -80,7 +81,7 @@ func (a *AdapterContent) Data(ctx context.Context) (data map[string]any, err err
 }
 
 // AddWatcher adds a watcher for the specified configuration file.
-func (a *AdapterContent) AddWatcher(name string, fn func()) {
+func (a *AdapterContent) AddWatcher(name string, fn func(ctx context.Context)) {
 	a.watchers.Set(name, fn)
 }
 
@@ -89,11 +90,16 @@ func (a *AdapterContent) RemoveWatcher(name string) {
 	a.watchers.Remove(name)
 }
 
+// GetWatcherNames returns all watcher names.
+func (a *AdapterContent) GetWatcherNames() []string {
+	return a.watchers.Keys()
+}
+
 // notifyWatchers notifies all watchers.
-func (a *AdapterContent) notifyWatchers() {
+func (a *AdapterContent) notifyWatchers(ctx context.Context) {
 	a.watchers.Iterator(func(k string, v any) bool {
-		if fn, ok := v.(func()); ok {
-			go fn()
+		if fn, ok := v.(func(ctx context.Context)); ok {
+			go fn(ctx)
 		}
 		return true
 	})
