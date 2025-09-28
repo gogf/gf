@@ -22,6 +22,7 @@ func TestVars(t *testing.T) {
 			gvar.New(3),
 		}
 		t.AssertEQ(vs.Strings(), []string{"1", "2", "3"})
+		t.AssertEQ(vs.Bools(), []bool{true, true, true})
 		t.AssertEQ(vs.Interfaces(), []any{1, 2, 3})
 		t.AssertEQ(vs.Float32s(), []float32{1, 2, 3})
 		t.AssertEQ(vs.Float64s(), []float64{1, 2, 3})
@@ -35,6 +36,46 @@ func TestVars(t *testing.T) {
 		t.AssertEQ(vs.Uint16s(), []uint16{1, 2, 3})
 		t.AssertEQ(vs.Uint32s(), []uint32{1, 2, 3})
 		t.AssertEQ(vs.Uint64s(), []uint64{1, 2, 3})
+	})
+}
+
+func TestVars_Bools(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test with various boolean-like values
+		var vs = gvar.Vars{
+			gvar.New(true),
+			gvar.New(false),
+			gvar.New(1),
+			gvar.New(0),
+			gvar.New("true"),
+			gvar.New("false"),
+			gvar.New("1"),
+			gvar.New("0"),
+		}
+		expected := []bool{true, false, true, false, true, false, true, false}
+		t.AssertEQ(vs.Bools(), expected)
+	})
+}
+
+func TestVars_Empty(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test with empty Vars
+		var vs = gvar.Vars{}
+		t.AssertEQ(vs.Strings(), []string{})
+		t.AssertEQ(vs.Bools(), []bool{})
+		t.AssertEQ(vs.Interfaces(), []any{})
+		t.AssertEQ(vs.Ints(), []int{})
+		t.AssertEQ(vs.Float64s(), []float64{})
+	})
+}
+
+func TestVars_SingleElement(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test with single element
+		var vs = gvar.Vars{gvar.New(42)}
+		t.AssertEQ(vs.Strings(), []string{"42"})
+		t.AssertEQ(vs.Bools(), []bool{true})
+		t.AssertEQ(vs.Ints(), []int{42})
 	})
 }
 

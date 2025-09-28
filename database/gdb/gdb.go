@@ -181,7 +181,7 @@ type DB interface {
 
 	// GetArray executes a query and returns the first column of all rows.
 	// It's useful for queries like SELECT id FROM table.
-	GetArray(ctx context.Context, sql string, args ...any) ([]Value, error)
+	GetArray(ctx context.Context, sql string, args ...any) (Array, error)
 
 	// GetCount executes a COUNT query and returns the result as an integer.
 	// It's a convenience method for counting rows.
@@ -672,6 +672,9 @@ type (
 
 	// Value is the field value type.
 	Value = *gvar.Var
+
+	// Array is the field value array type.
+	Array = gvar.Vars
 
 	// Record is the row record of the table.
 	Record map[string]Value
