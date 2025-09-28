@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/contrib/drivers/mssql/v2"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/encoding/gxml"
@@ -20,8 +22,6 @@ import (
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
-
-	"github.com/gogf/gf/contrib/drivers/mssql/v2"
 )
 
 func TestTables(t *testing.T) {

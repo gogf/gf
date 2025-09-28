@@ -10,12 +10,12 @@ import (
 	"context"
 	"testing"
 
+	"github.com/gogf/gf/contrib/drivers/pgsql/v2"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/test/gtest"
-
-	"github.com/gogf/gf/contrib/drivers/pgsql/v2"
 )
 
 func Test_LastInsertId(t *testing.T) {
