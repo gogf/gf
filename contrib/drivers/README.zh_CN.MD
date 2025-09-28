@@ -81,7 +81,6 @@ import _ "github.com/gogf/gf/contrib/drivers/mssql/v2"
 注意：
 
 - 不支持 `Replace` 功能。
-- 不支持 `LastInsertId`。
 - 仅支持服务器版本 >= `SQL Server2005`
 - 仅支持 datetime2 和 datetimeoffset 类型来自动处理 created_at/updated_at/deleted_at 列，因为 datetime 类型在将列值作为字符串传递时不支持微秒精度。
 
