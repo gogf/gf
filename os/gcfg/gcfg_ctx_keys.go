@@ -30,17 +30,17 @@ const (
 // Operation constants for configuration operations.
 const (
 	// OperationSet represents set operation
-	OperationSet gctx.StrKey = "set"
+	OperationSet = "set"
 	// OperationWrite represents write operation
-	OperationWrite gctx.StrKey = "write"
+	OperationWrite = "write"
 	// OperationRename represents rename operation
-	OperationRename gctx.StrKey = "rename"
+	OperationRename = "rename"
 	// OperationRemove represents remove operation
-	OperationRemove gctx.StrKey = "remove"
+	OperationRemove = "remove"
 	// OperationCreate represents create operation
-	OperationCreate gctx.StrKey = "create"
+	OperationCreate = "create"
 	// OperationChmod represents chmod operation
-	OperationChmod gctx.StrKey = "chmod"
+	OperationChmod = "chmod"
 	// OperationClear represents clear operation
-	OperationClear gctx.StrKey = "clear"
+	OperationClear = "clear"
 )
