@@ -83,7 +83,6 @@ import _ "github.com/gogf/gf/contrib/drivers/mssql/v2"
 Note:
 
 - It does not support `Replace` features.
-- It does not support `LastInsertId`.
 - It supports server version >= `SQL Server2005`
 - It ONLY supports datetime2 and datetimeoffset types for auto handling created_at/updated_at/deleted_at columns, because datetime type does not support microseconds precision when column value is passed as string.
 
