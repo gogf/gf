@@ -7,6 +7,8 @@
 package nacos_test
 
 import (
+	"context"
+	"github.com/gogf/gf/v2/os/gcfg"
 	"net/url"
 	"testing"
 	"time"
@@ -76,6 +78,15 @@ func TestNacosOnConfigChangeFunc(t *testing.T) {
 				gtest.Assert("gf", g.Cfg().MustGet(gctx.GetInitCtx(), "app.name").String())
 			},
 		})
+		if watcherAdapter, ok := adapter.(gcfg.WatcherAdapter); ok {
+			watcherAdapter.AddWatcher("test", func(ctx context.Context) {
+				adapterCtx := nacos.GetNacosAdapterCtx(ctx)
+				gtest.Assert("public", adapterCtx.GetNamespace())
+				gtest.Assert("test", adapterCtx.GetGroup())
+				gtest.Assert("config.toml", adapterCtx.GetDataId())
+				gtest.Assert("gf", g.Cfg().MustGet(gctx.GetInitCtx(), "app.name").String())
+			})
+		}
 		g.Cfg().SetAdapter(adapter)
 		t.Assert(g.Cfg().Available(ctx), true)
 		appName, err := g.Cfg().Get(ctx, "app.name")

@@ -170,8 +170,8 @@ func (a *AdapterFile) Set(pattern string, value any) error {
 	fileName := a.GetFileName()
 	filePath, _ := a.GetFilePath(fileName)
 	fileType := gfile.ExtName(fileName)
-	adapterFileCtx := NewAdapterFileCtx().WithOperation(OperationSet).WithSetKey(pattern).WithSetValue(value).WithFileName(fileName).WithFilePath(filePath).WithFileType(fileType)
-	a.notifyWatchers(adapterFileCtx.Ctx)
+	adapterCtx := NewAdapterFileCtx().WithOperation(OperationSet).WithSetKey(pattern).WithSetValue(value).WithFileName(fileName).WithFilePath(filePath).WithFileType(fileType)
+	a.notifyWatchers(adapterCtx.Ctx)
 	return nil
 }
 
@@ -295,20 +295,20 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 				if event.IsWrite() || event.IsRemove() || event.IsCreate() || event.IsRename() || event.IsChmod() {
 					fileName := a.GetFileName()
 					fileType := gfile.ExtName(fileName)
-					adapterFileCtx := NewAdapterFileCtx().WithFileName(fileName).WithFilePath(filePath).WithFileType(fileType)
+					adapterCtx := NewAdapterFileCtx().WithFileName(fileName).WithFilePath(filePath).WithFileType(fileType)
 					switch {
 					case event.IsWrite():
-						adapterFileCtx.WithOperation(OperationWrite)
+						adapterCtx.WithOperation(OperationWrite)
 					case event.IsRemove():
-						adapterFileCtx.WithOperation(OperationRemove)
+						adapterCtx.WithOperation(OperationRemove)
 					case event.IsCreate():
-						adapterFileCtx.WithOperation(OperationCreate)
+						adapterCtx.WithOperation(OperationCreate)
 					case event.IsRename():
-						adapterFileCtx.WithOperation(OperationRename)
+						adapterCtx.WithOperation(OperationRename)
 					case event.IsChmod():
-						adapterFileCtx.WithOperation(OperationChmod)
+						adapterCtx.WithOperation(OperationChmod)
 					}
-					a.notifyWatchers(adapterFileCtx.Ctx)
+					a.notifyWatchers(adapterCtx.Ctx)
 				}
 			})
 			if err != nil {

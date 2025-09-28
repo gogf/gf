@@ -9,8 +9,6 @@ package gcfg
 
 import (
 	"context"
-
-	"github.com/gogf/gf/v2/os/gctx"
 )
 
 // AdapterContentCtx is the context for AdapterContent.
@@ -37,7 +35,7 @@ func GetAdapterContentCtx(ctx context.Context) *AdapterContentCtx {
 
 // WithOperation sets the operation in the context and returns the updated AdapterContentCtx.
 // If operation is not provided, it does nothing.
-func (a *AdapterContentCtx) WithOperation(operation ...gctx.StrKey) *AdapterContentCtx {
+func (a *AdapterContentCtx) WithOperation(operation ...string) *AdapterContentCtx {
 	if len(operation) > 0 {
 		a.Ctx = context.WithValue(a.Ctx, KeyOperation, operation[0])
 	}

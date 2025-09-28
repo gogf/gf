@@ -45,8 +45,8 @@ func (a *AdapterContent) SetContent(content string) error {
 		return gerror.Wrap(err, `load configuration content failed`)
 	}
 	a.jsonVar.Set(j)
-	adapterContentCtx := NewAdapterContentCtx().WithOperation(OperationSet).WithSetContent(content)
-	a.notifyWatchers(adapterContentCtx.Ctx)
+	adapterCtx := NewAdapterContentCtx().WithOperation(OperationSet).WithSetContent(content)
+	a.notifyWatchers(adapterCtx.Ctx)
 	return nil
 }
 
