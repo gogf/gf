@@ -13,11 +13,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/encoding/gxml"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+
+	"github.com/gogf/gf/contrib/drivers/mssql/v2"
 )
 
 func TestTables(t *testing.T) {
@@ -145,6 +149,56 @@ func TestDoInsert(t *testing.T) {
 
 		_, err = db.Replace(context.Background(), "t_user", data, 10)
 		gtest.AssertNE(err, nil)
+	})
+}
+
+func TestDoInsertGetId(t *testing.T) {
+	// create test table
+	createInsertAndGetIdTableForTest()
+	gtest.C(t, func(t *gtest.T) {
+		table := "ip_to_id"
+		data := map[string]interface{}{
+			"ip": "192.168.179.1",
+		}
+		id, err := db.InsertAndGetId(gctx.New(), table, data)
+		t.AssertNil(err)
+		t.AssertGT(id, 0)
+		// fmt.Println("id:", id)
+
+		// multiple insert test
+		dataAry := []map[string]interface{}{{"ip": "192.168.5.9"}, {"ip": "192.168.5.10"}}
+		id1, err1 := db.InsertAndGetId(gctx.New(), table, dataAry)
+		t.AssertNil(err1)
+		t.AssertGT(id1, 0)
+	})
+}
+
+func TestGetTableFromSql(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		okTable := "ip_to_id"
+		sqlStr := "INSERT INTO \"ip_to_id\"(\"ip\") VALUES(?)"
+		dbWrapper, ok := db.GetCore().GetDB().(*gdb.DriverWrapperDB)
+		t.Assert(ok, true)
+		dbMssql, ok := dbWrapper.DB.(*mssql.Driver)
+		t.Assert(ok, true)
+		table := dbMssql.GetTableNameFromSql(sqlStr)
+		// fmt.Println("default table:", table)
+		t.Assert(table, okTable)
+
+		sqlStr = "INSERT INTO \"MyLogDb\".\"dbo\".\"ip_to_id\"(\"ip\") VALUES(?)"
+		table = dbMssql.GetTableNameFromSql(sqlStr)
+		// fmt.Println("MyLogDb.dbo.ip_to_id table:", table)
+		t.Assert(table, okTable)
+
+		sqlStr = "INSERT INTO \"ip_to_id\" as \"tt\" (\"ip\") VALUES(?)"
+		table = dbMssql.GetTableNameFromSql(sqlStr)
+		// fmt.Println("ip_to_id as tt table:", table)
+		t.Assert(table, okTable)
+
+		sqlStr = "INSERT INTO \"ip_to_id\" \"tt\" (\"ip\") VALUES(?)"
+		table = dbMssql.GetTableNameFromSql(sqlStr)
+		// fmt.Println("ip_to_id tt table:", table)
+		t.Assert(table, okTable)
 	})
 }
 
