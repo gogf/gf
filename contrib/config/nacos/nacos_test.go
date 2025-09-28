@@ -84,6 +84,7 @@ func TestNacosOnConfigChangeFunc(t *testing.T) {
 				gtest.Assert("public", adapterCtx.GetNamespace())
 				gtest.Assert("test", adapterCtx.GetGroup())
 				gtest.Assert("config.toml", adapterCtx.GetDataId())
+				gtest.Assert(nacos.OperationUpdate, adapterCtx.GetOperation())
 				gtest.Assert("gf", g.Cfg().MustGet(gctx.GetInitCtx(), "app.name").String())
 			})
 		}
