@@ -11,6 +11,7 @@ import (
 	"context"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/os/gctx"
 )
 
 // AdapterFileCtx is the context for AdapterFile.
@@ -62,7 +63,7 @@ func (a *AdapterFileCtx) WithFileType(fileType ...string) *AdapterFileCtx {
 
 // WithOperation sets the operation in the context and returns the updated AdapterFileCtx.
 // If operation is not provided, it does nothing.
-func (a *AdapterFileCtx) WithOperation(operation ...string) *AdapterFileCtx {
+func (a *AdapterFileCtx) WithOperation(operation ...gctx.StrKey) *AdapterFileCtx {
 	if len(operation) > 0 {
 		a.Ctx = context.WithValue(a.Ctx, KeyOperation, operation[0])
 	}
