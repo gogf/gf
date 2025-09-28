@@ -175,7 +175,7 @@ func (c *Core) GetOne(ctx context.Context, sql string, args ...any) (Record, err
 
 // GetArray queries and returns data values as slice from database.
 // Note that if there are multiple columns in the result, it returns just one column values randomly.
-func (c *Core) GetArray(ctx context.Context, sql string, args ...any) ([]Value, error) {
+func (c *Core) GetArray(ctx context.Context, sql string, args ...any) (Array, error) {
 	all, err := c.db.DoSelect(ctx, nil, sql, args...)
 	if err != nil {
 		return nil, err
