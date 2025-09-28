@@ -108,5 +108,8 @@ func TestNacosOnConfigChangeFunc(t *testing.T) {
 		t.AssertNil(err)
 		_, err = g.Client().Post(ctx, configPublishUrl+"&content="+url.QueryEscape(res2))
 		t.AssertNil(err)
+		if watcherAdapter, ok := adapter.(gcfg.WatcherAdapter); ok {
+			t.Assert(watcherAdapter.GetWatcherNames()[0], "test")
+		}
 	})
 }
