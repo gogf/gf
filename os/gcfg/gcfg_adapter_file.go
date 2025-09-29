@@ -24,6 +24,12 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
+var (
+	// Compile-time checking for interface implementation.
+	_ Adapter        = (*AdapterFile)(nil)
+	_ WatcherAdapter = (*AdapterFile)(nil)
+)
+
 // AdapterFile implements interface Adapter using file.
 type AdapterFile struct {
 	defaultFileNameOrPath *gtype.String    // Default configuration file name or file path.

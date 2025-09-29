@@ -15,6 +15,12 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 )
 
+var (
+	// Compile-time checking for interface implementation.
+	_ Adapter        = (*AdapterContent)(nil)
+	_ WatcherAdapter = (*AdapterContent)(nil)
+)
+
 // AdapterContent implements interface Adapter using content.
 // The configuration content supports the coding types as package `gjson`.
 type AdapterContent struct {
