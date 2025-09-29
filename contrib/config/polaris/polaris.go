@@ -14,11 +14,18 @@ import (
 	"github.com/polarismesh/polaris-go/api"
 	"github.com/polarismesh/polaris-go/pkg/model"
 
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/text/gstr"
+)
+
+var (
+	// Compile-time checking for interface implementation.
+	_ gcfg.Adapter        = (*Client)(nil)
+	_ gcfg.WatcherAdapter = (*Client)(nil)
 )
 
 // Config is the configuration for polaris.
@@ -39,9 +46,10 @@ type Config struct {
 
 // Client implements gcfg.Adapter implementing using polaris service.
 type Client struct {
-	config Config
-	client model.ConfigFile
-	value  *g.Var
+	config   Config
+	client   model.ConfigFile
+	value    *g.Var
+	watchers *gmap.StrAnyMap
 }
 
 const defaultLogDir = "/tmp/polaris/log"
@@ -54,8 +62,9 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 	}
 	var (
 		client = &Client{
-			config: config,
-			value:  g.NewVar(nil, true),
+			config:   config,
+			value:    g.NewVar(nil, true),
+			watchers: gmap.NewStrAnyMap(true),
 		}
 		configAPI polaris.ConfigAPI
 	)
@@ -142,18 +151,23 @@ func (c *Client) updateLocalValueAndWatch(ctx context.Context) (err error) {
 	return nil
 }
 
+// doUpdate retrieves and caches the configmap content.
 func (c *Client) doUpdate(ctx context.Context) (err error) {
 	if !c.client.HasContent() {
 		return gerror.New("config file is empty")
 	}
 	var j *gjson.Json
-	if j, err = gjson.LoadContent([]byte(c.client.GetContent())); err != nil {
+	content := c.client.GetContent()
+	if j, err = gjson.LoadContent([]byte(content)); err != nil {
 		return gerror.Wrap(err, `parse config map item from polaris failed`)
 	}
 	c.value.Set(j)
+	adapterCtx := NewPolarisAdapterCtx().WithNamespace(c.config.Namespace).WithFileGroup(c.config.FileGroup).WithFileName(c.config.FileName).WithOperation(OperationUpdate).WithSetContent(content)
+	c.notifyWatchers(adapterCtx.Ctx)
 	return nil
 }
 
+// doWatch watches the configmap content.
 func (c *Client) doWatch(ctx context.Context) (err error) {
 	if !c.config.Watch {
 		return nil
@@ -165,6 +179,7 @@ func (c *Client) doWatch(ctx context.Context) (err error) {
 	return nil
 }
 
+// startAsynchronousWatch starts the asynchronous watch for the specified configuration file.
 func (c *Client) startAsynchronousWatch(ctx context.Context, changeChan <-chan model.ConfigFileChangeEvent) {
 	for {
 		select {
@@ -172,4 +187,29 @@ func (c *Client) startAsynchronousWatch(ctx context.Context, changeChan <-chan m
 			_ = c.doUpdate(ctx)
 		}
 	}
+}
+
+// AddWatcher adds a watcher for the specified configuration file.
+func (c *Client) AddWatcher(name string, f func(ctx context.Context)) {
+	c.watchers.Set(name, f)
+}
+
+// RemoveWatcher removes the watcher for the specified configuration file.
+func (c *Client) RemoveWatcher(name string) {
+	c.watchers.Remove(name)
+}
+
+// GetWatcherNames returns all watcher names.
+func (c *Client) GetWatcherNames() []string {
+	return c.watchers.Keys()
+}
+
+// notifyWatchers notifies all watchers.
+func (c *Client) notifyWatchers(ctx context.Context) {
+	c.watchers.Iterator(func(k string, v any) bool {
+		if fn, ok := v.(func(ctx context.Context)); ok {
+			go fn(ctx)
+		}
+		return true
+	})
 }

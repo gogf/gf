@@ -136,7 +136,7 @@ func (c *Client) addWatcher() error {
 		return nil
 	}
 	c.config.ConfigParam.OnChange = func(namespace, group, dataId, data string) {
-		c.doUpdate(data)
+		_ = c.doUpdate(data)
 		if c.config.OnConfigChange != nil {
 			go c.config.OnConfigChange(namespace, group, dataId, data)
 		}
@@ -151,6 +151,7 @@ func (c *Client) addWatcher() error {
 	return nil
 }
 
+// AddWatcher adds a watcher for the specified configuration file.
 func (c *Client) AddWatcher(name string, f func(ctx context.Context)) {
 	c.watchers.Set(name, f)
 }

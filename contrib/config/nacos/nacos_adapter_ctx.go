@@ -1,3 +1,10 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+// Package nacos implements gcfg.Adapter using nacos service.
 package nacos
 
 import (
@@ -124,7 +131,7 @@ func (n *NacosAdapterCtx) GetSetContent() string {
 
 // GetOperation retrieves the operation from the context
 func (n *NacosAdapterCtx) GetOperation() string {
-	if v := n.Ctx.Value(OperationUpdate); v != nil {
+	if v := n.Ctx.Value(gcfg.KeyOperation); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}
