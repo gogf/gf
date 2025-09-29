@@ -55,7 +55,9 @@ func (a *AdapterContentCtx) WithSetContent(content ...string) *AdapterContentCtx
 // Returns empty string if not found.
 func (a *AdapterContentCtx) GetOperation() string {
 	if v := a.Ctx.Value(KeyOperation); v != nil {
-		return v.(string)
+		if s, ok := v.(string); ok {
+			return s
+		}
 	}
 	return ""
 }
@@ -64,7 +66,9 @@ func (a *AdapterContentCtx) GetOperation() string {
 // Returns empty string if not found.
 func (a *AdapterContentCtx) GetSetContent() string {
 	if v := a.Ctx.Value(KeySetContent); v != nil {
-		return v.(string)
+		if s, ok := v.(string); ok {
+			return s
+		}
 	}
 	return ""
 }

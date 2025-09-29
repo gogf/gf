@@ -45,7 +45,7 @@ func GetNacosAdapterCtx(ctx context.Context) *NacosAdapterCtx {
 // WithOperation sets the operation in the context
 func (n *NacosAdapterCtx) WithOperation(operation ...string) *NacosAdapterCtx {
 	if len(operation) > 0 {
-		n.Ctx = context.WithValue(n.Ctx, gcfg.OperationWrite, operation[0])
+		n.Ctx = context.WithValue(n.Ctx, gcfg.KeyOperation, operation[0])
 	}
 	return n
 }
@@ -85,7 +85,9 @@ func (n *NacosAdapterCtx) WithSetContent(content ...string) *NacosAdapterCtx {
 // GetNamespace retrieves the namespace from the context
 func (n *NacosAdapterCtx) GetNamespace() string {
 	if v := n.Ctx.Value(KeyNamespace); v != nil {
-		return v.(string)
+		if s, ok := v.(string); ok {
+			return s
+		}
 	}
 	return ""
 }
@@ -93,7 +95,9 @@ func (n *NacosAdapterCtx) GetNamespace() string {
 // GetGroup retrieves the group from the context
 func (n *NacosAdapterCtx) GetGroup() string {
 	if v := n.Ctx.Value(KeyGroup); v != nil {
-		return v.(string)
+		if s, ok := v.(string); ok {
+			return s
+		}
 	}
 	return ""
 }
@@ -101,7 +105,9 @@ func (n *NacosAdapterCtx) GetGroup() string {
 // GetDataId retrieves the dataId from the context
 func (n *NacosAdapterCtx) GetDataId() string {
 	if v := n.Ctx.Value(KeyDataId); v != nil {
-		return v.(string)
+		if s, ok := v.(string); ok {
+			return s
+		}
 	}
 	return ""
 }
@@ -109,7 +115,9 @@ func (n *NacosAdapterCtx) GetDataId() string {
 // GetSetContent retrieves the content from the context
 func (n *NacosAdapterCtx) GetSetContent() string {
 	if v := n.Ctx.Value(gcfg.KeySetContent); v != nil {
-		return v.(string)
+		if s, ok := v.(string); ok {
+			return s
+		}
 	}
 	return ""
 }
@@ -117,7 +125,9 @@ func (n *NacosAdapterCtx) GetSetContent() string {
 // GetOperation retrieves the operation from the context
 func (n *NacosAdapterCtx) GetOperation() string {
 	if v := n.Ctx.Value(OperationUpdate); v != nil {
-		return v.(string)
+		if s, ok := v.(string); ok {
+			return s
+		}
 	}
 	return ""
 }

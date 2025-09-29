@@ -100,7 +100,9 @@ func (a *AdapterFileCtx) WithSetContent(content ...any) *AdapterFileCtx {
 // Returns empty string if not found.
 func (a *AdapterFileCtx) GetFileName() string {
 	if v := a.Ctx.Value(KeyFileName); v != nil {
-		return v.(string)
+		if s, ok := v.(string); ok {
+			return s
+		}
 	}
 	return ""
 }
@@ -109,7 +111,9 @@ func (a *AdapterFileCtx) GetFileName() string {
 // Returns empty string if not found.
 func (a *AdapterFileCtx) GetFilePath() string {
 	if v := a.Ctx.Value(KeyFilePath); v != nil {
-		return v.(string)
+		if s, ok := v.(string); ok {
+			return s
+		}
 	}
 	return ""
 }
@@ -118,7 +122,9 @@ func (a *AdapterFileCtx) GetFilePath() string {
 // Returns empty string if not found.
 func (a *AdapterFileCtx) GetFileType() string {
 	if v := a.Ctx.Value(KeyFileType); v != nil {
-		return v.(string)
+		if s, ok := v.(string); ok {
+			return s
+		}
 	}
 	return ""
 }
@@ -127,7 +133,9 @@ func (a *AdapterFileCtx) GetFileType() string {
 // Returns empty string if not found.
 func (a *AdapterFileCtx) GetOperation() string {
 	if v := a.Ctx.Value(KeyOperation); v != nil {
-		return v.(string)
+		if s, ok := v.(string); ok {
+			return s
+		}
 	}
 	return ""
 }
@@ -136,7 +144,9 @@ func (a *AdapterFileCtx) GetOperation() string {
 // Returns empty string if not found.
 func (a *AdapterFileCtx) GetSetKey() string {
 	if v := a.Ctx.Value(KeySetKey); v != nil {
-		return v.(string)
+		if s, ok := v.(string); ok {
+			return s
+		}
 	}
 	return ""
 }
