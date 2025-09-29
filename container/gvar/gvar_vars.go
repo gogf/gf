@@ -15,14 +15,25 @@ type Vars []*Var
 
 // Strings converts and returns `vs` as []string.
 func (vs Vars) Strings() (s []string) {
+	s = make([]string, 0, len(vs))
 	for _, v := range vs {
 		s = append(s, v.String())
 	}
 	return s
 }
 
+// Bools converts and returns `vs` as []bool.
+func (vs Vars) Bools() (s []bool) {
+	s = make([]bool, 0, len(vs))
+	for _, v := range vs {
+		s = append(s, v.Bool())
+	}
+	return s
+}
+
 // Interfaces converts and returns `vs` as []any.
 func (vs Vars) Interfaces() (s []any) {
+	s = make([]any, 0, len(vs))
 	for _, v := range vs {
 		s = append(s, v.Val())
 	}
@@ -31,6 +42,7 @@ func (vs Vars) Interfaces() (s []any) {
 
 // Float32s converts and returns `vs` as []float32.
 func (vs Vars) Float32s() (s []float32) {
+	s = make([]float32, 0, len(vs))
 	for _, v := range vs {
 		s = append(s, v.Float32())
 	}
@@ -39,6 +51,7 @@ func (vs Vars) Float32s() (s []float32) {
 
 // Float64s converts and returns `vs` as []float64.
 func (vs Vars) Float64s() (s []float64) {
+	s = make([]float64, 0, len(vs))
 	for _, v := range vs {
 		s = append(s, v.Float64())
 	}
@@ -47,6 +60,7 @@ func (vs Vars) Float64s() (s []float64) {
 
 // Ints converts and returns `vs` as []Int.
 func (vs Vars) Ints() (s []int) {
+	s = make([]int, 0, len(vs))
 	for _, v := range vs {
 		s = append(s, v.Int())
 	}
@@ -55,6 +69,7 @@ func (vs Vars) Ints() (s []int) {
 
 // Int8s converts and returns `vs` as []int8.
 func (vs Vars) Int8s() (s []int8) {
+	s = make([]int8, 0, len(vs))
 	for _, v := range vs {
 		s = append(s, v.Int8())
 	}
@@ -63,6 +78,7 @@ func (vs Vars) Int8s() (s []int8) {
 
 // Int16s converts and returns `vs` as []int16.
 func (vs Vars) Int16s() (s []int16) {
+	s = make([]int16, 0, len(vs))
 	for _, v := range vs {
 		s = append(s, v.Int16())
 	}
@@ -71,6 +87,7 @@ func (vs Vars) Int16s() (s []int16) {
 
 // Int32s converts and returns `vs` as []int32.
 func (vs Vars) Int32s() (s []int32) {
+	s = make([]int32, 0, len(vs))
 	for _, v := range vs {
 		s = append(s, v.Int32())
 	}
@@ -79,6 +96,7 @@ func (vs Vars) Int32s() (s []int32) {
 
 // Int64s converts and returns `vs` as []int64.
 func (vs Vars) Int64s() (s []int64) {
+	s = make([]int64, 0, len(vs))
 	for _, v := range vs {
 		s = append(s, v.Int64())
 	}
@@ -87,6 +105,7 @@ func (vs Vars) Int64s() (s []int64) {
 
 // Uints converts and returns `vs` as []uint.
 func (vs Vars) Uints() (s []uint) {
+	s = make([]uint, 0, len(vs))
 	for _, v := range vs {
 		s = append(s, v.Uint())
 	}
@@ -95,6 +114,7 @@ func (vs Vars) Uints() (s []uint) {
 
 // Uint8s converts and returns `vs` as []uint8.
 func (vs Vars) Uint8s() (s []uint8) {
+	s = make([]uint8, 0, len(vs))
 	for _, v := range vs {
 		s = append(s, v.Uint8())
 	}
@@ -103,6 +123,7 @@ func (vs Vars) Uint8s() (s []uint8) {
 
 // Uint16s converts and returns `vs` as []uint16.
 func (vs Vars) Uint16s() (s []uint16) {
+	s = make([]uint16, 0, len(vs))
 	for _, v := range vs {
 		s = append(s, v.Uint16())
 	}
@@ -111,6 +132,7 @@ func (vs Vars) Uint16s() (s []uint16) {
 
 // Uint32s converts and returns `vs` as []uint32.
 func (vs Vars) Uint32s() (s []uint32) {
+	s = make([]uint32, 0, len(vs))
 	for _, v := range vs {
 		s = append(s, v.Uint32())
 	}
@@ -119,6 +141,7 @@ func (vs Vars) Uint32s() (s []uint32) {
 
 // Uint64s converts and returns `vs` as []uint64.
 func (vs Vars) Uint64s() (s []uint64) {
+	s = make([]uint64, 0, len(vs))
 	for _, v := range vs {
 		s = append(s, v.Uint64())
 	}

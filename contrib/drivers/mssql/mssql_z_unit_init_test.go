@@ -25,9 +25,14 @@ var (
 )
 
 const (
-	TableSize  = 10
-	TestDbUser = "sa"
-	TestDbPass = "LoremIpsum86"
+	TableSize        = 10
+	TableName        = "t_user"
+	TestSchema1      = "test1"
+	TestSchema2      = "test2"
+	TableNamePrefix1 = "gf_"
+	TestDbUser       = "sa"
+	TestDbPass       = "LoremIpsum86"
+	CreateTime       = "2018-10-24 10:00:00"
 )
 
 func init() {
@@ -36,7 +41,7 @@ func init() {
 		Port:             "1433",
 		User:             TestDbUser,
 		Pass:             TestDbPass,
-		Name:             "master",
+		Name:             "test",
 		Type:             "mssql",
 		Role:             "master",
 		Charset:          "utf8",
@@ -141,4 +146,28 @@ func dropTable(table string) {
 	`, table, table)); err != nil {
 		gtest.Fatal(err)
 	}
+}
+
+// createInsertAndGetIdTableForTest test for InsertAndGetId
+func createInsertAndGetIdTableForTest() (name string) {
+
+	if _, err := db.Exec(context.Background(), `
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='ip_to_id' and xtype='U')
+begin
+	CREATE TABLE [ip_to_id](
+		[id] [int] IDENTITY(1,1) NOT NULL,
+		[ip] [varchar](128) NULL,
+	 CONSTRAINT [PK_ip_to_id] PRIMARY KEY CLUSTERED 
+	(
+		[id] ASC
+	)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+	) ON [PRIMARY]
+end
+	`); err != nil {
+		gtest.Fatal(err)
+	}
+
+	db.Schema(db.GetConfig().Name)
+	name = "ip_to_id"
+	return
 }
