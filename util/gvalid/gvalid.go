@@ -20,7 +20,7 @@ import (
 
 // CustomMsg is the custom error message type,
 // like: map[field] => string|map[rule]string
-type CustomMsg = map[string]interface{}
+type CustomMsg = map[string]any
 
 // fieldRule defined the alias name and rule string for specified field.
 type fieldRule struct {

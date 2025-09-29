@@ -29,7 +29,7 @@ concurrency:
 env:
   TZ: "Asia/Shanghai"
   # for unit testing cases of some components that only execute on the latest go version.
-  LATEST_GO_VERSION: "1.23"
+  LATEST_GO_VERSION: "1.25"
 
 jobs:
   code-test:
@@ -38,19 +38,18 @@ jobs:
         # 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
         # When adding new go version to the list, make sure:
         # 1. Update the `LATEST_GO_VERSION` env variable.
-        # 2. Update the `Report Coverage` action.
         # 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        go-version: [ "1.20", "1.21", "1.22", "1.23" ]
+        go-version: [ "1.23", "1.24", "1.25" ]
         goarch: [ "386", "amd64" ]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     # Service containers to run with `code-test`
     services:
       # Etcd service.
-      # docker run -d --name etcd -p 2379:2379 -e ALLOW_NONE_AUTHENTICATION=yes bitnami/etcd:3.4.24
+      # docker run -d --name etcd -p 2379:2379 -e ALLOW_NONE_AUTHENTICATION=yes bitnamilegacy/etcd:3.4.24
       etcd:
-        image: bitnami/etcd:3.4.24
+        image: bitnamilegacy/etcd:3.4.24
         env:
           ALLOW_NONE_AUTHENTICATION: yes
         ports:
@@ -83,8 +82,13 @@ jobs:
           - 3306:3306
 
       # MariaDb backend server.
+      # docker run -d --name mariadb \
+      # -p 3307:3306 \
+      # -e MYSQL_DATABASE=test \
+      # -e MYSQL_ROOT_PASSWORD=12345678 \
+      # mariadb:11.4
       mariadb:
-        image: mariadb:10.4
+        image: mariadb:11.4
         env:
           MARIADB_DATABASE: test
           MARIADB_ROOT_PASSWORD: 12345678
@@ -141,9 +145,9 @@ jobs:
       # ClickHouse backend server.
       # docker run -d --name clickhouse \
       # -p 9000:9000 -p 8123:8123 -p 9001:9001 \
-      # loads/clickhouse-server:22.1.3.7
+      # clickhouse/clickhouse-server:24.11.1.2557-alpine
       clickhouse-server:
-        image: loads/clickhouse-server:22.1.3.7
+        image: clickhouse/clickhouse-server:24.11.1.2557-alpine
         ports:
           - 9000:9000
           - 8123:8123
@@ -152,13 +156,9 @@ jobs:
       # Polaris backend server.
       # docker run -d --name polaris \
       # -p 8090:8090 -p 8091:8091 -p 8093:8093 -p 9090:9090 -p 9091:9091 \
-      # loads/polaris-server-standalone:1.11.2
-      #
-      # docker run -d --name polaris \
-      # -p 8090:8090 -p 8091:8091 -p 8093:8093 -p 9090:9090 -p 9091:9091 \
-      # loads/polaris-standalone:v1.16.3
+      # polarismesh/polaris-standalone:v1.17.2
       polaris:
-        image: loads/polaris-standalone:v1.17.2
+        image: polarismesh/polaris-standalone:v1.17.2
         ports:
           - 8090:8090
           - 8091:8091
@@ -205,7 +205,7 @@ jobs:
         timezoneLinux: "Asia/Shanghai"
 
     - name: Checkout Repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Start Apollo Containers
       run:  docker compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
@@ -226,9 +226,9 @@ jobs:
         cache-dependency-path: '**/go.sum'
 
     - name: Install Protoc
-      uses: arduino/setup-protoc@v2
+      uses: arduino/setup-protoc@v3
       with:
-        version: "29.x"
+        version: "31.x"
         repo-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Install the protocol compiler plugins for Go
@@ -238,15 +238,15 @@ jobs:
         export PATH="$PATH:$(go env GOPATH)/bin"
 
     - name: Before Script
-      run:  bash .github/workflows/before_script.sh
+      run:  bash .github/workflows/scripts/before_script.sh
 
     - name: Build & Test
       if: ${{ (github.event_name == 'push' && github.ref != 'refs/heads/master') || github.event_name == 'pull_request' }}
-      run: bash .github/workflows/ci-main.sh
+      run: bash .github/workflows/scripts/ci-main.sh
 
     - name: Build & Test & Coverage
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-      run: bash .github/workflows/ci-main.sh coverage
+      run: bash .github/workflows/scripts/ci-main.sh coverage
 
     - name: Stop Redis Cluster Containers
       run:  docker compose -f ".github/workflows/redis/docker-compose.yml" down
@@ -262,8 +262,8 @@ jobs:
 
     - name: Report Coverage
       uses: codecov/codecov-action@v4
-      # Only report coverage on the latest go version and amd64 arch
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == '1.23' && matrix.goarch == 'amd64' }}
+      # Only report coverage on the latest go version
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION }}
       with:
         flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
         token: ${{ secrets.CODECOV_TOKEN }}

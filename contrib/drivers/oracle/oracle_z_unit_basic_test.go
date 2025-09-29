@@ -63,7 +63,7 @@ func Test_Table_Fields(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		createTable("t_user")
 		defer dropTable("t_user")
-		var expect = map[string][]interface{}{
+		var expect = map[string][]any{
 			"ID":          {"INT(10,0)", false},
 			"PASSPORT":    {"VARCHAR2(45)", false},
 			"PASSWORD":    {"CHAR(32)", false},
@@ -330,7 +330,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
 		defer dropTable(table)
-		// []interface{}
+		// []any
 		r, err := db.Insert(ctx, table, g.Slice{
 			g.Map{
 				"ID":          2,

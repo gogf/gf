@@ -45,7 +45,7 @@ import (
 
 	"{ImportPath}"
 )
-
+{MethodComment}
 func (c *{CtrlName}) {MethodName}(ctx context.Context, req *{Version}.{MethodName}Req) (res *{Version}.{MethodName}Res, err error) {
 	return nil, gerror.NewCode(gcode.CodeNotImplemented)
 }
@@ -66,7 +66,7 @@ import (
 `
 
 const TemplateGenCtrlControllerMethodFuncMerge = `
-
+{MethodComment}
 func (c *{CtrlName}) {MethodName}(ctx context.Context, req *{Version}.{MethodName}Req) (res *{Version}.{MethodName}Res, err error) {
 	return nil, gerror.NewCode(gcode.CodeNotImplemented)
 }
