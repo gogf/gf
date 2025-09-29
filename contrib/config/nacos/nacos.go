@@ -22,6 +22,12 @@ import (
 	"github.com/gogf/gf/v2/os/gcfg"
 )
 
+var (
+	// Compile-time checking for interface implementation.
+	_ gcfg.Adapter        = (*Client)(nil)
+	_ gcfg.WatcherAdapter = (*Client)(nil)
+)
+
 // Config is the configuration object for nacos client.
 type Config struct {
 	ServerConfigs  []constant.ServerConfig                     `v:"required"` // See constant.ServerConfig
@@ -134,13 +140,8 @@ func (c *Client) addWatcher() error {
 		if c.config.OnConfigChange != nil {
 			go c.config.OnConfigChange(namespace, group, dataId, data)
 		}
-		c.watchers.Iterator(func(k string, v any) bool {
-			if watcherFunc, ok := v.(func(ctx context.Context)); ok {
-				adapterCtx := NewNacosAdapterCtx().WithOperation(OperationUpdate).WithNamespace(namespace).WithGroup(group).WithDataId(dataId).WithSetContent(data)
-				go watcherFunc(adapterCtx.Ctx)
-			}
-			return true
-		})
+		adapterCtx := NewNacosAdapterCtx().WithOperation(OperationUpdate).WithNamespace(namespace).WithGroup(group).WithDataId(dataId).WithSetContent(data)
+		c.notifyWatchers(adapterCtx.Ctx)
 	}
 
 	if err := c.client.ListenConfig(c.config.ConfigParam); err != nil {
