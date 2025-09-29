@@ -118,7 +118,7 @@ func TestIssue4376(t *testing.T) {
 		cq := make(chan int, 100000)
 		defer close(cq)
 
-		for i := 1; i <= 11603; i++ {
+		for i := range 11603 {
 			gq.Push(i)
 			cq <- i
 		}
