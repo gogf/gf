@@ -24,7 +24,7 @@ func TestQueue_Len(t *testing.T) {
 		)
 		for n := 10; n < maxTries; n++ {
 			q1 := gqueue.New(maxNum)
-			for i := 0; i < maxNum; i++ {
+			for i := range maxNum {
 				q1.Push(i)
 			}
 			t.Assert(q1.Len(), maxNum)
@@ -38,7 +38,7 @@ func TestQueue_Len(t *testing.T) {
 		)
 		for n := 10; n < maxTries; n++ {
 			q1 := gqueue.New()
-			for i := 0; i < maxNum; i++ {
+			for i := range maxNum {
 				q1.Push(i)
 			}
 			t.AssertLE(q1.Len(), maxNum)
@@ -50,7 +50,8 @@ func TestQueue_Len(t *testing.T) {
 func TestQueue_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		q := gqueue.New()
-		for i := 0; i < 100; i++ {
+		defer q.Close()
+		for i := range 100 {
 			q.Push(i)
 		}
 		t.Assert(q.Pop(), 0)
@@ -61,6 +62,7 @@ func TestQueue_Basic(t *testing.T) {
 func TestQueue_Pop(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		q1 := gqueue.New()
+		defer q1.Close()
 		q1.Push(1)
 		q1.Push(2)
 		q1.Push(3)
@@ -73,27 +75,28 @@ func TestQueue_Pop(t *testing.T) {
 func TestQueue_Close(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		q1 := gqueue.New()
+		defer q1.Close()
 		q1.Push(1)
 		q1.Push(2)
 		// wait sync to channel
 		time.Sleep(10 * time.Millisecond)
 		t.Assert(q1.Len(), 2)
-		q1.Close()
 	})
 	gtest.C(t, func(t *gtest.T) {
 		q1 := gqueue.New(2)
+		defer q1.Close()
 		q1.Push(1)
 		q1.Push(2)
 		// wait sync to channel
 		time.Sleep(10 * time.Millisecond)
 		t.Assert(q1.Len(), 2)
-		q1.Close()
 	})
 }
 
 func Test_Issue2509(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		q := gqueue.New()
+		defer q.Close()
 		q.Push(1)
 		q.Push(2)
 		q.Push(3)
@@ -104,5 +107,24 @@ func Test_Issue2509(t *testing.T) {
 		t.AssertLE(q.Len(), 1)
 		t.Assert(<-q.C, 3)
 		t.Assert(q.Len(), 0)
+	})
+}
+
+// Issue #4376
+func TestIssue4376(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		gq := gqueue.New()
+		defer gq.Close()
+		cq := make(chan int, 100000)
+		defer close(cq)
+
+		for i := range 11603 {
+			gq.Push(i)
+			cq <- i
+		}
+		// May be not equal because of the async channel reading goroutine.
+		t.Log(gq.Len(), len(cq))
+		time.Sleep(50 * time.Millisecond)
+		t.Log(gq.Len(), len(cq))
 	})
 }
