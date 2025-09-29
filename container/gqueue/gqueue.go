@@ -89,7 +89,7 @@ func (q *Queue) Close() {
 	if q.limit > 0 {
 		close(q.C)
 	} else {
-		for i := 0; i < defaultBatchSize; i++ {
+		for range defaultBatchSize {
 			q.Pop()
 		}
 	}
@@ -102,6 +102,12 @@ func (q *Queue) Len() (length int64) {
 	bufferedSize := int64(len(q.C))
 	if q.limit > 0 {
 		return bufferedSize
+	}
+	// If the queue is unlimited and the buffered size is exactly the default size,
+	// it means there might be some data in the list not synchronized to channel yet.
+	// So we need to add 1 to the buffered size to make the result more accurate.
+	if bufferedSize == defaultQueueSize {
+		bufferedSize++
 	}
 	return int64(q.list.Size()) + bufferedSize
 }
@@ -126,7 +132,7 @@ func (q *Queue) asyncLoopFromListToChannel() {
 			if bufferLength := q.list.Len(); bufferLength > 0 {
 				// When q.C is closed, it will panic here, especially q.C is being blocked for writing.
 				// If any error occurs here, it will be caught by recover and be ignored.
-				for i := 0; i < bufferLength; i++ {
+				for range bufferLength {
 					q.C <- q.list.PopFront()
 				}
 			} else {
