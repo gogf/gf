@@ -11,6 +11,7 @@ on:
     - feature/**
     - enhance/**
     - fix/**
+    - copilot/**
 
   pull_request:
     branches:
@@ -20,6 +21,7 @@ on:
     - feature/**
     - enhance/**
     - fix/**
+    - copilot/**
 
 # This allows a subsequently queued workflow run to interrupt previous runs
 concurrency:
