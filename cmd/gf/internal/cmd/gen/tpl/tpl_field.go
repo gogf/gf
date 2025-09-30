@@ -248,9 +248,9 @@ func (f *TableField) BuildTags(in TagBuildInput) string {
 
 // TagBuildInput for building tags
 type TagBuildInput struct {
-	NoJsonTag        bool
-	JsonOmitempty    bool
+	NoJsonTag         bool
+	JsonOmitempty     bool
 	JsonOmitemptyAuto bool
-	WithOrmTag       bool
-	DescriptionTag   bool
+	WithOrmTag        bool
+	DescriptionTag    bool
 }
