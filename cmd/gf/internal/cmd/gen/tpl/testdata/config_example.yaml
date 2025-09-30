@@ -1,0 +1,82 @@
+# gf gen tpl 标签配置示例
+
+gfcli:
+  gen:
+    tpl:
+      # 数据库连接
+      link: "mysql:root:12345678@tcp(127.0.0.1:3306)/test"
+
+      # 输出路径
+      path: "./output"
+
+      # 模板路径
+      tplPath: "./testdata"
+
+      # JSON 命名规则
+      jsonCase: "CamelLower"
+
+      # 导入路径前缀
+      importPrefix: "github.com/example/project"
+
+      # ===== 标签配置选项 =====
+
+      # 方式1: 全局为所有字段添加 omitempty
+      jsonOmitempty: false
+
+      # 方式2: 自动为可空字段添加 omitempty (推荐)
+      jsonOmitemptyAuto: true
+
+      # 是否添加 orm 标签 (默认: true)
+      withOrmTag: true
+
+      # 是否添加 description 标签
+      descriptionTag: true
+
+      # 是否禁用 JSON 标签
+      noJsonTag: false
+
+      # ===== 类型映射 =====
+
+      typeMapping:
+        decimal:
+          type: decimal.Decimal
+          import: github.com/shopspring/decimal
+        numeric:
+          type: string
+
+      # ===== 字段级配置 (最灵活) =====
+
+      fieldMapping:
+        # 表名.字段名 格式
+        user.password:
+          type: string
+          tags:
+            json: "-"  # 不序列化密码字段
+
+        user.email:
+          type: string
+          tags:
+            json: "email,omitempty"
+            validate: "required,email"
+            binding: "required"
+
+        user.age:
+          type: int
+          tags:
+            json: "age"
+            validate: "gte=0,lte=150"
+
+        user.status:
+          type: int
+          tags:
+            json: "status,omitempty"
+            validate: "oneof=0 1 2"
+            example: "1"
+
+        # 自定义类型示例
+        order.total_amount:
+          type: decimal.Decimal
+          import: github.com/shopspring/decimal
+          tags:
+            json: "totalAmount,omitempty"
+            validate: "gt=0"

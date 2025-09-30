@@ -10,5 +10,5 @@ import ({{range $k,$v := .table.Imports}}
 {{end}}
 // {{.table.NameCaseCamel}} is the golang structure for table {{.table.Name}}.
 type {{.table.NameCaseCamel}} struct { {{range $i,$v := .table.Fields}}
-	{{$v.NameCaseCamel}} {{$v.LocalType}} `json:"{{$v.NameJsonCase}}" orm:"{{$v.Name}}" description:"{{$v.Comment}}"` // {{$v.Comment}}{{end}}
+	{{$v.NameCaseCamel}} {{$v.LocalType}} {{$v.BuildTags $.tagInput}} // {{$v.Comment}}{{end}}
 }

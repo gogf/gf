@@ -100,7 +100,10 @@ func (t *Table) toTableFields(in CGenTplInput) {
 		field := &TableField{
 			TableField: *v,
 			JsonCase:   in.JsonCase,
+			CustomTags: make(map[string]string),
 		}
+
+		// 设置字段类型
 		appendImport := field.GetLocalTypeName(context.Background(), t.db, Input{
 			TypeMapping:  in.TypeMapping,
 			FieldMapping: in.FieldMapping,
@@ -110,6 +113,18 @@ func (t *Table) toTableFields(in CGenTplInput) {
 		if appendImport != "" {
 			t.Imports[appendImport] = struct{}{}
 		}
+
+		// 从 FieldMapping 中提取自定义标签
+		if in.FieldMapping != nil {
+			if fieldMapping, ok := in.FieldMapping[v.Name]; ok {
+				if fieldMapping.Tags != nil {
+					for tagName, tagValue := range fieldMapping.Tags {
+						field.CustomTags[tagName] = tagValue
+					}
+				}
+			}
+		}
+
 		t.Fields[v.Index] = field
 	}
 }
@@ -142,6 +157,16 @@ func (t *Table) FieldsJsonStr(caseName string) string {
 		return ""
 	}
 	return string(b)
+}
+
+// TagInput holds input for tag generation
+type TagInput struct {
+	in CGenTplInput
+}
+
+// GetTagInput returns TagInput for template usage
+func (t *Table) GetTagInput(in CGenTplInput) TagInput {
+	return TagInput{in: in}
 }
 
 // GetTables 获取数据库表结构信息

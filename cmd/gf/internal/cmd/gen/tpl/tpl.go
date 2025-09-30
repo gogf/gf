@@ -61,6 +61,9 @@ CONFIGURATION SUPPORT
 			table_name.field_name:
 			  type:   decimal.Decimal
 			  import: github.com/shopspring/decimal
+			  tags:
+			    json: "field_name,omitempty"
+			    validate: "required"
 `
 	CGenTplBriefPath              = `directory path for generated files`
 	CGenTplBriefLink              = `database configuration, the same as the ORM configuration of GoFrame`
@@ -105,6 +108,9 @@ generated json tag case for model struct, cases are as follows:
 	CGenTplBriefTplDaoInternalPath = `template file path for dao internal file`
 	CGenTplBriefTplDaoDoPathPath   = `template file path for dao do file`
 	CGenTplBriefTplDaoEntityPath   = `template file path for dao entity file`
+	CGenTplBriefJsonOmitempty      = `add omitempty to all json tags`
+	CGenTplBriefJsonOmitemptyAuto  = `automatically add omitempty to json tags for nullable fields`
+	CGenTplBriefWithOrmTag         = `add orm tag for entity fields`
 )
 
 func init() {
@@ -143,6 +149,9 @@ func init() {
 		`CGenTplBriefTplDaoInternalPath`: CGenTplBriefTplDaoInternalPath,
 		`CGenTplBriefTplDaoDoPathPath`:   CGenTplBriefTplDaoDoPathPath,
 		`CGenTplBriefTplDaoEntityPath`:   CGenTplBriefTplDaoEntityPath,
+		`CGenTplBriefJsonOmitempty`:      CGenTplBriefJsonOmitempty,
+		`CGenTplBriefJsonOmitemptyAuto`:  CGenTplBriefJsonOmitemptyAuto,
+		`CGenTplBriefWithOrmTag`:         CGenTplBriefWithOrmTag,
 	})
 }
 
@@ -170,22 +179,26 @@ type (
 		// TplDaoInternalPath string                         `name:"tplDaoInternalPath"  short:"t2" brief:"{CGenTplBriefTplDaoInternalPath}"`
 		// TplDaoDoPath       string                         `name:"tplDaoDoPath"        short:"t3" brief:"{CGenTplBriefTplDaoDoPathPath}"`
 		// TplDaoEntityPath   string                         `name:"tplDaoEntityPath"    short:"t4" brief:"{CGenTplBriefTplDaoEntityPath}"`
-		StdTime        bool                           `name:"stdTime"             short:"s"  brief:"{CGenTplBriefStdTime}" orphan:"true"`
-		WithTime       bool                           `name:"withTime"            short:"w"  brief:"{CGenTplBriefWithTime}" orphan:"true"`
-		GJsonSupport   bool                           `name:"gJsonSupport"        short:"n"  brief:"{CGenTplBriefGJsonSupport}" orphan:"true"`
-		OverwriteDao   bool                           `name:"overwriteDao"        short:"v"  brief:"{CGenTplBriefOverwriteDao}" orphan:"true"`
-		DescriptionTag bool                           `name:"descriptionTag"      short:"c"  brief:"{CGenTplBriefDescriptionTag}" orphan:"true"`
-		NoJsonTag      bool                           `name:"noJsonTag"           short:"k"  brief:"{CGenTplBriefNoJsonTag}" orphan:"true"`
-		NoModelComment bool                           `name:"noModelComment"      short:"m"  brief:"{CGenTplBriefNoModelComment}" orphan:"true"`
-		Clear          bool                           `name:"clear"               short:"a"  brief:"{CGenTplBriefClear}" orphan:"true"`
-		TypeMapping    map[string]CustomAttributeType `name:"typeMapping"         short:"y"  brief:"{CGenTplBriefTypeMapping}"  orphan:"true"`
-		FieldMapping   map[string]CustomAttributeType `name:"fieldMapping"        short:"fm" brief:"{CGenTplBriefFieldMapping}" orphan:"true"`
+		StdTime           bool                           `name:"stdTime"             short:"s"  brief:"{CGenTplBriefStdTime}" orphan:"true"`
+		WithTime          bool                           `name:"withTime"            short:"w"  brief:"{CGenTplBriefWithTime}" orphan:"true"`
+		GJsonSupport      bool                           `name:"gJsonSupport"        short:"n"  brief:"{CGenTplBriefGJsonSupport}" orphan:"true"`
+		OverwriteDao      bool                           `name:"overwriteDao"        short:"v"  brief:"{CGenTplBriefOverwriteDao}" orphan:"true"`
+		DescriptionTag    bool                           `name:"descriptionTag"      short:"c"  brief:"{CGenTplBriefDescriptionTag}" orphan:"true"`
+		NoJsonTag         bool                           `name:"noJsonTag"           short:"k"  brief:"{CGenTplBriefNoJsonTag}" orphan:"true"`
+		NoModelComment    bool                           `name:"noModelComment"      short:"m"  brief:"{CGenTplBriefNoModelComment}" orphan:"true"`
+		Clear             bool                           `name:"clear"               short:"a"  brief:"{CGenTplBriefClear}" orphan:"true"`
+		JsonOmitempty     bool                           `name:"jsonOmitempty"       short:"jo" brief:"{CGenTplBriefJsonOmitempty}" orphan:"true"`
+		JsonOmitemptyAuto bool                           `name:"jsonOmitemptyAuto"   short:"ja" brief:"{CGenTplBriefJsonOmitemptyAuto}" orphan:"true"`
+		WithOrmTag        bool                           `name:"withOrmTag"          short:"wo" brief:"{CGenTplBriefWithOrmTag}" orphan:"false" d:"false"`
+		TypeMapping       map[string]CustomAttributeType `name:"typeMapping"         short:"y"  brief:"{CGenTplBriefTypeMapping}"  orphan:"true"`
+		FieldMapping      map[string]CustomAttributeType `name:"fieldMapping"        short:"fm" brief:"{CGenTplBriefFieldMapping}" orphan:"true"`
 	}
 	CGenTplOutput struct{}
 
 	CustomAttributeType struct {
-		Type   string `brief:"custom attribute type name"`
-		Import string `brief:"custom import for this type"`
+		Type   string            `brief:"custom attribute type name"`
+		Import string            `brief:"custom import for this type"`
+		Tags   map[string]string `brief:"custom tags for this field, e.g. json, validate, binding"`
 	}
 )
 
@@ -304,10 +317,19 @@ func (c CGenTpl) Tpl(ctx context.Context, in CGenTplInput) (out *CGenTplOutput, 
 	view := gview.New()
 
 	for _, table := range tables {
+		// Create tag input for this table
+		tagInput := TagBuildInput{
+			NoJsonTag:         in.NoJsonTag,
+			JsonOmitempty:     in.JsonOmitempty,
+			JsonOmitemptyAuto: in.JsonOmitemptyAuto,
+			WithOrmTag:        in.WithOrmTag,
+			DescriptionTag:    in.DescriptionTag,
+		}
 
 		tplData := g.Map{
-			"table":  table,
-			"tables": tables,
+			"table":    table,
+			"tables":   tables,
+			"tagInput": tagInput,
 		}
 		fmt.Println(table.FieldsJsonStr(in.JsonCase))
 		for _, tpl := range tplList {

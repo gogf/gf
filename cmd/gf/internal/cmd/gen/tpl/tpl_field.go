@@ -2,6 +2,8 @@ package tpl
 
 import (
 	"context"
+	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
@@ -12,8 +14,9 @@ import (
 // TableField description
 type TableField struct {
 	gdb.TableField
-	LocalType string
-	JsonCase  string
+	LocalType  string
+	JsonCase   string
+	CustomTags map[string]string // 自定义标签
 }
 
 type TableFields []*TableField
@@ -143,4 +146,111 @@ func (f *TableField) NameCaseSnake() string {
 // NameCaseKebabScreaming returns the field name in screaming kebab case format
 func (f *TableField) NameCaseKebabScreaming() string {
 	return gstr.CaseKebabScreaming(f.Name)
+}
+
+// IsNullable returns whether the field is nullable
+func (f *TableField) IsNullable() bool {
+	return f.Null
+}
+
+// JsonTag generates json tag for the field
+func (f *TableField) JsonTag(omitempty bool, omitemptyAuto bool) string {
+	if f.CustomTags != nil {
+		if jsonTag, ok := f.CustomTags["json"]; ok {
+			return jsonTag
+		}
+	}
+
+	name := f.NameJsonCase()
+	if omitempty || (omitemptyAuto && f.IsNullable()) {
+		return name + ",omitempty"
+	}
+	return name
+}
+
+// OrmTag generates orm tag for the field
+func (f *TableField) OrmTag() string {
+	if f.CustomTags != nil {
+		if ormTag, ok := f.CustomTags["orm"]; ok {
+			return ormTag
+		}
+	}
+	return f.Name
+}
+
+// DescriptionTag generates description tag for the field
+func (f *TableField) DescriptionTag() string {
+	if f.CustomTags != nil {
+		if descTag, ok := f.CustomTags["description"]; ok {
+			return descTag
+		}
+	}
+	// 转义双引号
+	comment := strings.ReplaceAll(f.Comment, `"`, `\"`)
+	return comment
+}
+
+// CustomTag returns custom tag value by name
+func (f *TableField) CustomTag(name string) string {
+	if f.CustomTags == nil {
+		return ""
+	}
+	return f.CustomTags[name]
+}
+
+// BuildTags builds all tags for the field
+func (f *TableField) BuildTags(in TagBuildInput) string {
+	var tags []string
+
+	// JSON tag
+	if !in.NoJsonTag {
+		jsonValue := f.JsonTag(in.JsonOmitempty, in.JsonOmitemptyAuto)
+		tags = append(tags, fmt.Sprintf(`json:"%s"`, jsonValue))
+	}
+
+	// ORM tag
+	if in.WithOrmTag {
+		ormValue := f.OrmTag()
+		tags = append(tags, fmt.Sprintf(`orm:"%s"`, ormValue))
+	}
+
+	// Description tag
+	if in.DescriptionTag {
+		descValue := f.DescriptionTag()
+		tags = append(tags, fmt.Sprintf(`description:"%s"`, descValue))
+	}
+
+	// Custom tags from CustomTags map
+	if f.CustomTags != nil {
+		// 按字母顺序遍历,确保输出稳定
+		var keys []string
+		for k := range f.CustomTags {
+			// 跳过已处理的标准标签
+			if k == "json" || k == "orm" || k == "description" {
+				continue
+			}
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		for _, k := range keys {
+			v := f.CustomTags[k]
+			tags = append(tags, fmt.Sprintf(`%s:"%s"`, k, v))
+		}
+	}
+
+	if len(tags) == 0 {
+		return ""
+	}
+
+	return "`" + strings.Join(tags, " ") + "`"
+}
+
+// TagBuildInput for building tags
+type TagBuildInput struct {
+	NoJsonTag        bool
+	JsonOmitempty    bool
+	JsonOmitemptyAuto bool
+	WithOrmTag       bool
+	DescriptionTag   bool
 }
