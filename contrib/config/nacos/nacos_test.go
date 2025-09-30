@@ -7,6 +7,7 @@
 package nacos_test
 
 import (
+	"context"
 	"net/url"
 	"testing"
 	"time"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
@@ -76,6 +78,16 @@ func TestNacosOnConfigChangeFunc(t *testing.T) {
 				gtest.Assert("gf", g.Cfg().MustGet(gctx.GetInitCtx(), "app.name").String())
 			},
 		})
+		if watcherAdapter, ok := adapter.(gcfg.WatcherAdapter); ok {
+			watcherAdapter.AddWatcher("test", func(ctx context.Context) {
+				adapterCtx := nacos.GetNacosAdapterCtx(ctx)
+				gtest.Assert("public", adapterCtx.GetNamespace())
+				gtest.Assert("test", adapterCtx.GetGroup())
+				gtest.Assert("config.toml", adapterCtx.GetDataId())
+				gtest.Assert(nacos.OperationUpdate, adapterCtx.GetOperation())
+				gtest.Assert("gf", g.Cfg().MustGet(gctx.GetInitCtx(), "app.name").String())
+			})
+		}
 		g.Cfg().SetAdapter(adapter)
 		t.Assert(g.Cfg().Available(ctx), true)
 		appName, err := g.Cfg().Get(ctx, "app.name")
@@ -97,5 +109,8 @@ func TestNacosOnConfigChangeFunc(t *testing.T) {
 		t.AssertNil(err)
 		_, err = g.Client().Post(ctx, configPublishUrl+"&content="+url.QueryEscape(res2))
 		t.AssertNil(err)
+		if watcherAdapter, ok := adapter.(gcfg.WatcherAdapter); ok {
+			t.Assert(watcherAdapter.GetWatcherNames()[0], "test")
+		}
 	})
 }

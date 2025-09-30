@@ -15,10 +15,17 @@ import (
 	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
+)
+
+var (
+	// Compile-time checking for interface implementation.
+	_ gcfg.Adapter        = (*Client)(nil)
+	_ gcfg.WatcherAdapter = (*Client)(nil)
 )
 
 // Config is the configuration object for nacos client.
@@ -32,9 +39,10 @@ type Config struct {
 
 // Client implements gcfg.Adapter implementing using nacos service.
 type Client struct {
-	config Config                      // Config object when created.
-	client config_client.IConfigClient // Nacos config client.
-	value  *g.Var                      // Configmap content cached. It is `*gjson.Json` value internally.
+	config   Config                      // Config object when created.
+	client   config_client.IConfigClient // Nacos config client.
+	value    *g.Var                      // Configmap content cached. It is `*gjson.Json` value internally.
+	watchers *gmap.StrAnyMap             // Watchers for watching file changes.
 }
 
 // New creates and returns gcfg.Adapter implementing using nacos service.
@@ -46,8 +54,9 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 	}
 
 	client := &Client{
-		config: config,
-		value:  g.NewVar(nil, true),
+		config:   config,
+		value:    g.NewVar(nil, true),
+		watchers: gmap.NewStrAnyMap(true),
 	}
 
 	client.client, err = clients.CreateConfigClient(map[string]any{
@@ -127,10 +136,12 @@ func (c *Client) addWatcher() error {
 		return nil
 	}
 	c.config.ConfigParam.OnChange = func(namespace, group, dataId, data string) {
-		c.doUpdate(data)
+		_ = c.doUpdate(data)
 		if c.config.OnConfigChange != nil {
 			go c.config.OnConfigChange(namespace, group, dataId, data)
 		}
+		adapterCtx := NewNacosAdapterCtx().WithOperation(OperationUpdate).WithNamespace(namespace).WithGroup(group).WithDataId(dataId).WithSetContent(data)
+		c.notifyWatchers(adapterCtx.Ctx)
 	}
 
 	if err := c.client.ListenConfig(c.config.ConfigParam); err != nil {
@@ -138,4 +149,29 @@ func (c *Client) addWatcher() error {
 	}
 
 	return nil
+}
+
+// AddWatcher adds a watcher for the specified configuration file.
+func (c *Client) AddWatcher(name string, f func(ctx context.Context)) {
+	c.watchers.Set(name, f)
+}
+
+// RemoveWatcher removes the watcher for the specified configuration file.
+func (c *Client) RemoveWatcher(name string) {
+	c.watchers.Remove(name)
+}
+
+// GetWatcherNames returns all watcher names.
+func (c *Client) GetWatcherNames() []string {
+	return c.watchers.Keys()
+}
+
+// notifyWatchers notifies all watchers.
+func (c *Client) notifyWatchers(ctx context.Context) {
+	c.watchers.Iterator(func(k string, v any) bool {
+		if fn, ok := v.(func(ctx context.Context)); ok {
+			go fn(ctx)
+		}
+		return true
+	})
 }
