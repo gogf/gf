@@ -43,7 +43,7 @@ func NewTable(t *TplObj, tableName string) (*Table, error) {
 		db:           t.db,
 		Imports:      make(map[string]struct{}),
 	}
-	table.toTableFields()
+	table.toTableFields(t.in)
 	return &table, nil
 }
 
@@ -91,7 +91,7 @@ func (t *Table) FileName() string {
 // createTime: 2023-10-23 17:22:40
 //
 // author: hailaz
-func (t *Table) toTableFields() {
+func (t *Table) toTableFields(in CGenTplInput) {
 	if len(t.Fields) > 0 {
 		return
 	}
@@ -99,10 +99,13 @@ func (t *Table) toTableFields() {
 	for _, v := range t.FieldsSource {
 		field := &TableField{
 			TableField: *v,
+			JsonCase:   in.JsonCase,
 		}
 		appendImport := field.GetLocalTypeName(context.Background(), t.db, Input{
-			TypeMapping: defaultTypeMapping,
-			StdTime:     false,
+			TypeMapping:  in.TypeMapping,
+			FieldMapping: in.FieldMapping,
+			StdTime:      in.StdTime,
+			GJsonSupport: in.GJsonSupport,
 		})
 		if appendImport != "" {
 			t.Imports[appendImport] = struct{}{}

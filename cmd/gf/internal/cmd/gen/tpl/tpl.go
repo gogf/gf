@@ -190,7 +190,7 @@ type (
 )
 
 var (
-	defaultTypeMapping = map[DBFieldTypeName]CustomAttributeType{
+	defaultTypeMapping = map[string]CustomAttributeType{
 		"decimal": {
 			Type: "float64",
 		},
@@ -256,6 +256,17 @@ func (t *TplObj) GetTplFileList() ([]string, error) {
 func (c CGenTpl) Tpl(ctx context.Context, in CGenTplInput) (out *CGenTplOutput, err error) {
 	if in.TplPath == "" {
 		return nil, gerror.New("tplPath is required")
+	}
+
+	// Merge default typeMapping to input typeMapping
+	if in.TypeMapping == nil {
+		in.TypeMapping = defaultTypeMapping
+	} else {
+		for key, typeMapping := range defaultTypeMapping {
+			if _, ok := in.TypeMapping[key]; !ok {
+				in.TypeMapping[key] = typeMapping
+			}
+		}
 	}
 
 	// Clear old files

@@ -33,7 +33,8 @@ func (s TableFields) Less(i, j int) bool {
 type Input struct {
 	StdTime      bool
 	GJsonSupport bool
-	TypeMapping  map[DBFieldTypeName]CustomAttributeType
+	TypeMapping  map[string]CustomAttributeType
+	FieldMapping map[string]CustomAttributeType
 }
 
 // GetLocalTypeName description
@@ -96,6 +97,18 @@ func (field *TableField) GetLocalTypeName(ctx context.Context, db gdb.DB, in Inp
 			}
 		}
 	}
+
+	// Check field-specific mapping (overrides type mapping)
+	if len(in.FieldMapping) > 0 {
+		fieldKey := field.Name
+		if typeMapping, ok := in.FieldMapping[fieldKey]; ok {
+			localTypeNameStr = typeMapping.Type
+			if typeMapping.Import != "" {
+				appendImport = typeMapping.Import
+			}
+		}
+	}
+
 	field.LocalType = localTypeNameStr
 	return
 }
