@@ -11,10 +11,8 @@ package otel
 type Config struct {
 	// TraceSQLEnabled enables OpenTelemetry tracing for SQL operations.
 	TraceSQLEnabled bool `json:"traceSQLEnabled"`
-	
 	// TraceRequestEnabled enables tracing of HTTP request parameters.
 	TraceRequestEnabled bool `json:"traceRequestEnabled"`
-	
 	// TraceResponseEnabled enables tracing of HTTP response parameters.
 	TraceResponseEnabled bool `json:"traceResponseEnabled"`
 }
