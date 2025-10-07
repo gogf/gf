@@ -205,7 +205,7 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 					"\r": ".*",
 					"\n": ".",
 				})
-				for _, v := range array.Slice() {
+				for _, v := range array.Clone().Slice() {
 					if gregex.IsMatchString(p, v) {
 						array.RemoveValue(v)
 					}
