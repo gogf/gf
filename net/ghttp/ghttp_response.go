@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/net/ghttp/internal/response"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -89,7 +90,12 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 	}
 	r.Header().Set("Content-Type", "application/force-download")
 	r.Header().Set("Accept-Ranges", "bytes")
-	r.Header().Set("Content-Disposition", fmt.Sprintf(`attachment;filename=%s`, url.QueryEscape(downloadName)))
+	if utils.IsASCII(downloadName) {
+		r.Header().Set("Content-Disposition", fmt.Sprintf(`attachment;filename=%s`, url.QueryEscape(downloadName)))
+	} else {
+		r.Header().Set("Content-Disposition", fmt.Sprintf(`attachment;filename*=UTF-8''%s`, url.QueryEscape(downloadName)))
+	}
+
 	r.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
 	r.Server.serveFile(r.Request, serveFile)
 }
