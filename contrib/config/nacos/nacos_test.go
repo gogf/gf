@@ -72,20 +72,20 @@ func TestNacosOnConfigChangeFunc(t *testing.T) {
 			ConfigParam:   configParam,
 			Watch:         true,
 			OnConfigChange: func(namespace, group, dataId, data string) {
-				gtest.Assert("public", namespace)
-				gtest.Assert("test", group)
-				gtest.Assert("config.toml", dataId)
-				gtest.Assert("gf", g.Cfg().MustGet(gctx.GetInitCtx(), "app.name").String())
+				t.Assert(namespace, "public")
+				t.Assert(group, "test")
+				t.Assert(dataId, "config.toml")
+				t.Assert(g.Cfg().MustGet(gctx.GetInitCtx(), "app.name").String(), "gf")
 			},
 		})
 		if watcherAdapter, ok := adapter.(gcfg.WatcherAdapter); ok {
 			watcherAdapter.AddWatcher("test", func(ctx context.Context) {
 				adapterCtx := nacos.GetAdapterCtx(ctx)
-				gtest.Assert("public", adapterCtx.GetNamespace())
-				gtest.Assert("test", adapterCtx.GetGroup())
-				gtest.Assert("config.toml", adapterCtx.GetDataId())
-				gtest.Assert(gcfg.OperationUpdate, adapterCtx.GetOperation())
-				gtest.Assert("gf", g.Cfg().MustGet(gctx.GetInitCtx(), "app.name").String())
+				t.Assert(adapterCtx.GetNamespace(), "public")
+				t.Assert(adapterCtx.GetGroup(), "test")
+				t.Assert(adapterCtx.GetDataId(), "config.toml")
+				t.Assert(adapterCtx.GetOperation(), gcfg.OperationUpdate)
+				t.Assert(g.Cfg().MustGet(gctx.GetInitCtx(), "app.name").String(), "gf")
 			})
 		}
 		g.Cfg().SetAdapter(adapter)
