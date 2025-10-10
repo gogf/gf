@@ -10,6 +10,8 @@ import (
 	"fmt"
 
 	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/json"
 )
 
 func ExampleJson_data() {
@@ -288,6 +290,26 @@ func ExampleDecodeToJson() {
 	jsonContent := `{"name":"john","score":100}"`
 	j, _ := gjson.DecodeToJson([]byte(jsonContent))
 	fmt.Println(j.Map())
+
+	// May Output:
+	// map[name:john score:100]
+}
+
+type MyTest struct {
+	Age    int `json:"age,omitempty"`
+	Height int `json:"height,omitempty"`
+}
+
+func ExampleDecodeToJson1() {
+	abc := MyTest{
+		Age: 1,
+	}
+
+	g.Dump("gjson:", gjson.New(abc).String())
+
+	jsonStr, _ := json.Marshal(abc)
+
+	g.Dump("json:", jsonStr)
 
 	// May Output:
 	// map[name:john score:100]
