@@ -30,20 +30,26 @@ type ConsulAdapterCtx struct {
 	Ctx context.Context
 }
 
-// NewConsulAdapterCtx creates and returns a new ConsulAdapterCtx.
-// If context is provided, it will be used; otherwise, a background context is created.
-func NewConsulAdapterCtx(ctx ...context.Context) *ConsulAdapterCtx {
-	if len(ctx) > 0 {
-		return &ConsulAdapterCtx{
-			Ctx: ctx[0],
-		}
+// NewAdapterCtxWithCtx creates and returns a new ConsulAdapterCtx with the given context.
+func NewAdapterCtxWithCtx(ctx context.Context) *ConsulAdapterCtx {
+	if ctx == nil {
+		ctx = context.Background()
 	}
-	return &ConsulAdapterCtx{Ctx: context.Background()}
+	return &ConsulAdapterCtx{Ctx: ctx}
 }
 
-// GetConsulAdapterCtx creates a new ConsulAdapterCtx with the given context
-func GetConsulAdapterCtx(ctx context.Context) *ConsulAdapterCtx {
-	return &ConsulAdapterCtx{Ctx: ctx}
+// NewAdapterCtx creates and returns a new ConsulAdapterCtx.
+// If context is provided, it will be used; otherwise, a background context is created.
+func NewAdapterCtx(ctx ...context.Context) *ConsulAdapterCtx {
+	if len(ctx) > 0 {
+		return NewAdapterCtxWithCtx(ctx[0])
+	}
+	return NewAdapterCtxWithCtx(context.Background())
+}
+
+// GetAdapterCtx creates a new ConsulAdapterCtx with the given context
+func GetAdapterCtx(ctx context.Context) *ConsulAdapterCtx {
+	return NewAdapterCtxWithCtx(ctx)
 }
 
 // WithOperation sets the operation in the context

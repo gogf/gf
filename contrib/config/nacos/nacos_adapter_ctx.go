@@ -33,20 +33,26 @@ type NacosAdapterCtx struct {
 	Ctx context.Context
 }
 
-// NewNacosAdapterCtx creates and returns a new NacosAdapterCtx.
-// If context is provided, it will be used; otherwise, a background context is created.
-func NewNacosAdapterCtx(ctx ...context.Context) *NacosAdapterCtx {
-	if len(ctx) > 0 {
-		return &NacosAdapterCtx{
-			Ctx: ctx[0],
-		}
+// NewAdapterCtxWithCtx creates and returns a new NacosAdapterCtx with the given context.
+func NewAdapterCtxWithCtx(ctx context.Context) *NacosAdapterCtx {
+	if ctx == nil {
+		ctx = context.Background()
 	}
-	return &NacosAdapterCtx{Ctx: context.Background()}
+	return &NacosAdapterCtx{Ctx: ctx}
 }
 
-// GetNacosAdapterCtx creates a new NacosAdapterCtx with the given context
-func GetNacosAdapterCtx(ctx context.Context) *NacosAdapterCtx {
-	return &NacosAdapterCtx{Ctx: ctx}
+// NewAdapterCtx creates and returns a new NacosAdapterCtx.
+// If context is provided, it will be used; otherwise, a background context is created.
+func NewAdapterCtx(ctx ...context.Context) *NacosAdapterCtx {
+	if len(ctx) > 0 {
+		return NewAdapterCtxWithCtx(ctx[0])
+	}
+	return NewAdapterCtxWithCtx(context.Background())
+}
+
+// GetAdapterCtx creates a new NacosAdapterCtx with the given context
+func GetAdapterCtx(ctx context.Context) *NacosAdapterCtx {
+	return NewAdapterCtxWithCtx(ctx)
 }
 
 // WithOperation sets the operation in the context

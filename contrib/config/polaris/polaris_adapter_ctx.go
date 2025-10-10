@@ -33,20 +33,26 @@ type PolarisAdapterCtx struct {
 	Ctx context.Context
 }
 
-// NewPolarisAdapterCtx creates and returns a new PolarisAdapterCtx.
-// If context is provided, it will be used; otherwise, a background context is created.
-func NewPolarisAdapterCtx(ctx ...context.Context) *PolarisAdapterCtx {
-	if len(ctx) > 0 {
-		return &PolarisAdapterCtx{
-			Ctx: ctx[0],
-		}
+// NewAdapterCtxWithCtx creates and returns a new PolarisAdapterCtx with the given context.
+func NewAdapterCtxWithCtx(ctx context.Context) *PolarisAdapterCtx {
+	if ctx == nil {
+		ctx = context.Background()
 	}
-	return &PolarisAdapterCtx{Ctx: context.Background()}
+	return &PolarisAdapterCtx{Ctx: ctx}
 }
 
-// GetPolarisAdapterCtx creates a new PolarisAdapterCtx with the given context
-func GetPolarisAdapterCtx(ctx context.Context) *PolarisAdapterCtx {
-	return &PolarisAdapterCtx{Ctx: ctx}
+// NewAdapterCtx creates and returns a new PolarisAdapterCtx.
+// If context is provided, it will be used; otherwise, a background context is created.
+func NewAdapterCtx(ctx ...context.Context) *PolarisAdapterCtx {
+	if len(ctx) > 0 {
+		return NewAdapterCtxWithCtx(ctx[0])
+	}
+	return NewAdapterCtxWithCtx(context.Background())
+}
+
+// GetAdapterCtx creates a new PolarisAdapterCtx with the given context
+func GetAdapterCtx(ctx context.Context) *PolarisAdapterCtx {
+	return NewAdapterCtxWithCtx(ctx)
 }
 
 // WithOperation sets the operation in the context

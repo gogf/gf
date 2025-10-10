@@ -80,7 +80,7 @@ func TestNacosOnConfigChangeFunc(t *testing.T) {
 		})
 		if watcherAdapter, ok := adapter.(gcfg.WatcherAdapter); ok {
 			watcherAdapter.AddWatcher("test", func(ctx context.Context) {
-				adapterCtx := nacos.GetNacosAdapterCtx(ctx)
+				adapterCtx := nacos.GetAdapterCtx(ctx)
 				gtest.Assert("public", adapterCtx.GetNamespace())
 				gtest.Assert("test", adapterCtx.GetGroup())
 				gtest.Assert("config.toml", adapterCtx.GetDataId())

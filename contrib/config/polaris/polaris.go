@@ -162,7 +162,7 @@ func (c *Client) doUpdate(ctx context.Context) (err error) {
 		return gerror.Wrap(err, `parse config map item from polaris failed`)
 	}
 	c.value.Set(j)
-	adapterCtx := NewPolarisAdapterCtx().WithNamespace(c.config.Namespace).WithFileGroup(c.config.FileGroup).WithFileName(c.config.FileName).WithOperation(OperationUpdate).WithSetContent(content)
+	adapterCtx := NewAdapterCtx(ctx).WithNamespace(c.config.Namespace).WithFileGroup(c.config.FileGroup).WithFileName(c.config.FileName).WithOperation(OperationUpdate).WithSetContent(content)
 	c.notifyWatchers(adapterCtx.Ctx)
 	return nil
 }
@@ -181,11 +181,8 @@ func (c *Client) doWatch(ctx context.Context) (err error) {
 
 // startAsynchronousWatch starts the asynchronous watch for the specified configuration file.
 func (c *Client) startAsynchronousWatch(ctx context.Context, changeChan <-chan model.ConfigFileChangeEvent) {
-	for {
-		select {
-		case <-changeChan:
-			_ = c.doUpdate(ctx)
-		}
+	for range changeChan {
+		_ = c.doUpdate(ctx)
 	}
 }
 

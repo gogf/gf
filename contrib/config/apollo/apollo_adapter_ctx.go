@@ -34,20 +34,26 @@ type ApolloAdapterCtx struct {
 	Ctx context.Context
 }
 
-// NewApolloAdapterCtx creates and returns a new ApolloAdapterCtx.
-// If context is provided, it will be used; otherwise, a background context is created.
-func NewApolloAdapterCtx(ctx ...context.Context) *ApolloAdapterCtx {
-	if len(ctx) > 0 {
-		return &ApolloAdapterCtx{
-			Ctx: ctx[0],
-		}
+// NewAdapterCtxWithCtx creates and returns a new ApolloAdapterCtx with the given context.
+func NewAdapterCtxWithCtx(ctx context.Context) *ApolloAdapterCtx {
+	if ctx == nil {
+		ctx = context.Background()
 	}
-	return &ApolloAdapterCtx{Ctx: context.Background()}
+	return &ApolloAdapterCtx{Ctx: ctx}
 }
 
-// GetApolloAdapterCtx creates a new ApolloAdapterCtx with the given context
-func GetApolloAdapterCtx(ctx context.Context) *ApolloAdapterCtx {
-	return &ApolloAdapterCtx{Ctx: ctx}
+// NewAdapterCtx creates and returns a new ApolloAdapterCtx.
+// If context is provided, it will be used; otherwise, a background context is created.
+func NewAdapterCtx(ctx ...context.Context) *ApolloAdapterCtx {
+	if len(ctx) > 0 {
+		return NewAdapterCtxWithCtx(ctx[0])
+	}
+	return NewAdapterCtxWithCtx(context.Background())
+}
+
+// GetAdapterCtx creates a new ApolloAdapterCtx with the given context
+func GetAdapterCtx(ctx context.Context) *ApolloAdapterCtx {
+	return NewAdapterCtxWithCtx(ctx)
 }
 
 // WithOperation sets the operation in the context

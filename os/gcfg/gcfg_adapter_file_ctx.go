@@ -19,18 +19,26 @@ type AdapterFileCtx struct {
 	Ctx context.Context
 }
 
+// NewAdapterFileCtxWithCtx creates and returns a new AdapterFileCtx with the given context.
+func NewAdapterFileCtxWithCtx(ctx context.Context) *AdapterFileCtx {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return &AdapterFileCtx{Ctx: ctx}
+}
+
 // NewAdapterFileCtx creates and returns a new AdapterFileCtx.
 // If ctx is provided, it uses that context, otherwise it creates a background context.
 func NewAdapterFileCtx(ctx ...context.Context) *AdapterFileCtx {
 	if len(ctx) > 0 {
-		return &AdapterFileCtx{Ctx: ctx[0]}
+		return NewAdapterFileCtxWithCtx(ctx[0])
 	}
-	return &AdapterFileCtx{Ctx: context.Background()}
+	return NewAdapterFileCtxWithCtx(context.Background())
 }
 
 // GetAdapterFileCtx creates and returns an AdapterFileCtx with the given context.
 func GetAdapterFileCtx(ctx context.Context) *AdapterFileCtx {
-	return &AdapterFileCtx{Ctx: ctx}
+	return NewAdapterFileCtxWithCtx(ctx)
 }
 
 // WithFileName sets the file name in the context and returns the updated AdapterFileCtx.

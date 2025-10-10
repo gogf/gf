@@ -17,20 +17,26 @@ type AdapterContentCtx struct {
 	Ctx context.Context
 }
 
+// NewAdapterContentCtxWithCtx creates and returns a new AdapterContentCtx with the given context.
+func NewAdapterContentCtxWithCtx(ctx context.Context) *AdapterContentCtx {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return &AdapterContentCtx{Ctx: ctx}
+}
+
 // NewAdapterContentCtx creates and returns a new AdapterContentCtx.
 // If ctx is provided, it uses that context, otherwise it creates a background context.
 func NewAdapterContentCtx(ctx ...context.Context) *AdapterContentCtx {
 	if len(ctx) > 0 {
-		return &AdapterContentCtx{
-			Ctx: ctx[0],
-		}
+		return NewAdapterContentCtxWithCtx(ctx[0])
 	}
-	return &AdapterContentCtx{Ctx: context.Background()}
+	return NewAdapterContentCtxWithCtx(context.Background())
 }
 
 // GetAdapterContentCtx creates and returns an AdapterContentCtx with the given context.
 func GetAdapterContentCtx(ctx context.Context) *AdapterContentCtx {
-	return &AdapterContentCtx{Ctx: ctx}
+	return NewAdapterContentCtxWithCtx(ctx)
 }
 
 // WithOperation sets the operation in the context and returns the updated AdapterContentCtx.
