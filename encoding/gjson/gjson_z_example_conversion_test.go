@@ -292,8 +292,3 @@ func ExampleDecodeToJson() {
 	// May Output:
 	// map[name:john score:100]
 }
-
-type MyTest struct {
-	Age    int `json:"age,omitempty"`
-	Height int `json:"height,omitempty"`
-}
