@@ -22,6 +22,12 @@ import (
 	"github.com/gogf/gf/v2/os/glog"
 )
 
+var (
+	// Compile-time checking for interface implementation.
+	_ gcfg.Adapter        = (*Client)(nil)
+	_ gcfg.WatcherAdapter = (*Client)(nil)
+)
+
 // Config is the configuration object for consul client.
 type Config struct {
 	// api.Config in consul package
