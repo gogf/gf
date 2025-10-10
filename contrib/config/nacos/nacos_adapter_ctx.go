@@ -15,17 +15,12 @@ import (
 )
 
 const (
-	// KeyNamespace is the context key for namespace
-	KeyNamespace gctx.StrKey = "namespace"
-	// KeyGroup is the context key for group
-	KeyGroup gctx.StrKey = "group"
-	// KeyDataId is the context key for dataId
-	KeyDataId gctx.StrKey = "dataId"
-)
-
-const (
-	// OperationUpdate represents the update operation
-	OperationUpdate = "update"
+	// ContextKeyNamespace is the context key for namespace
+	ContextKeyNamespace gctx.StrKey = "namespace"
+	// ContextKeyGroup is the context key for group
+	ContextKeyGroup gctx.StrKey = "group"
+	// ContextKeyDataId is the context key for dataId
+	ContextKeyDataId gctx.StrKey = "dataId"
 )
 
 // NacosAdapterCtx is the context adapter for Nacos configuration
@@ -56,38 +51,38 @@ func GetAdapterCtx(ctx context.Context) *NacosAdapterCtx {
 }
 
 // WithOperation sets the operation in the context
-func (n *NacosAdapterCtx) WithOperation(operation string) *NacosAdapterCtx {
-	n.Ctx = context.WithValue(n.Ctx, gcfg.KeyOperation, operation)
+func (n *NacosAdapterCtx) WithOperation(operation gcfg.OperationType) *NacosAdapterCtx {
+	n.Ctx = context.WithValue(n.Ctx, gcfg.ContextKeyOperation, operation)
 	return n
 }
 
 // WithNamespace sets the namespace in the context
 func (n *NacosAdapterCtx) WithNamespace(namespace string) *NacosAdapterCtx {
-	n.Ctx = context.WithValue(n.Ctx, KeyNamespace, namespace)
+	n.Ctx = context.WithValue(n.Ctx, ContextKeyNamespace, namespace)
 	return n
 }
 
 // WithGroup sets the group in the context
 func (n *NacosAdapterCtx) WithGroup(group string) *NacosAdapterCtx {
-	n.Ctx = context.WithValue(n.Ctx, KeyGroup, group)
+	n.Ctx = context.WithValue(n.Ctx, ContextKeyGroup, group)
 	return n
 }
 
 // WithDataId sets the dataId in the context
 func (n *NacosAdapterCtx) WithDataId(dataId string) *NacosAdapterCtx {
-	n.Ctx = context.WithValue(n.Ctx, KeyDataId, dataId)
+	n.Ctx = context.WithValue(n.Ctx, ContextKeyDataId, dataId)
 	return n
 }
 
 // WithContent sets the content in the context
 func (n *NacosAdapterCtx) WithContent(content string) *NacosAdapterCtx {
-	n.Ctx = context.WithValue(n.Ctx, gcfg.KeyContent, content)
+	n.Ctx = context.WithValue(n.Ctx, gcfg.ContextKeyContent, content)
 	return n
 }
 
 // GetNamespace retrieves the namespace from the context
 func (n *NacosAdapterCtx) GetNamespace() string {
-	if v := n.Ctx.Value(KeyNamespace); v != nil {
+	if v := n.Ctx.Value(ContextKeyNamespace); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}
@@ -97,7 +92,7 @@ func (n *NacosAdapterCtx) GetNamespace() string {
 
 // GetGroup retrieves the group from the context
 func (n *NacosAdapterCtx) GetGroup() string {
-	if v := n.Ctx.Value(KeyGroup); v != nil {
+	if v := n.Ctx.Value(ContextKeyGroup); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}
@@ -107,7 +102,7 @@ func (n *NacosAdapterCtx) GetGroup() string {
 
 // GetDataId retrieves the dataId from the context
 func (n *NacosAdapterCtx) GetDataId() string {
-	if v := n.Ctx.Value(KeyDataId); v != nil {
+	if v := n.Ctx.Value(ContextKeyDataId); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}
@@ -117,7 +112,7 @@ func (n *NacosAdapterCtx) GetDataId() string {
 
 // GetContent retrieves the content from the context
 func (n *NacosAdapterCtx) GetContent() string {
-	if v := n.Ctx.Value(gcfg.KeyContent); v != nil {
+	if v := n.Ctx.Value(gcfg.ContextKeyContent); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}
@@ -126,9 +121,9 @@ func (n *NacosAdapterCtx) GetContent() string {
 }
 
 // GetOperation retrieves the operation from the context
-func (n *NacosAdapterCtx) GetOperation() string {
-	if v := n.Ctx.Value(gcfg.KeyOperation); v != nil {
-		if s, ok := v.(string); ok {
+func (n *NacosAdapterCtx) GetOperation() gcfg.OperationType {
+	if v := n.Ctx.Value(gcfg.ContextKeyOperation); v != nil {
+		if s, ok := v.(gcfg.OperationType); ok {
 			return s
 		}
 	}

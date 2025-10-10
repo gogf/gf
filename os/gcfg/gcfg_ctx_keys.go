@@ -11,36 +11,41 @@ import "github.com/gogf/gf/v2/os/gctx"
 
 // Context key constants for configuration operations.
 const (
-	// KeyFileName is the context key for file name
-	KeyFileName gctx.StrKey = "fileName"
-	// KeyFilePath is the context key for file path
-	KeyFilePath gctx.StrKey = "filePath"
-	// KeyFileType is the context key for file type
-	KeyFileType gctx.StrKey = "fileType"
-	// KeyOperation is the context key for operation type
-	KeyOperation gctx.StrKey = "operation"
-	// KeyKey is the context key for key
-	KeyKey gctx.StrKey = "key"
-	// KeyValue is the context key for value
-	KeyValue gctx.StrKey = "value"
-	// KeyContent is the context key for set content
-	KeyContent gctx.StrKey = "content"
+	// ContextKeyFileName is the context key for file name
+	ContextKeyFileName gctx.StrKey = "fileName"
+	// ContextKeyFilePath is the context key for file path
+	ContextKeyFilePath gctx.StrKey = "filePath"
+	// ContextKeyFileType is the context key for file type
+	ContextKeyFileType gctx.StrKey = "fileType"
+	// ContextKeyOperation is the context key for operation type
+	ContextKeyOperation gctx.StrKey = "operation"
+	// ContextKeyKey is the context key for key
+	ContextKeyKey gctx.StrKey = "key"
+	// ContextKeyValue is the context key for value
+	ContextKeyValue gctx.StrKey = "value"
+	// ContextKeyContent is the context key for set content
+	ContextKeyContent gctx.StrKey = "content"
 )
+
+// OperationType defines the type for configuration operation.
+type OperationType string
 
 // Operation constants for configuration operations.
 const (
 	// OperationSet represents set operation
-	OperationSet = "set"
+	OperationSet OperationType = "set"
 	// OperationWrite represents write operation
-	OperationWrite = "write"
+	OperationWrite OperationType = "write"
 	// OperationRename represents rename operation
-	OperationRename = "rename"
+	OperationRename OperationType = "rename"
 	// OperationRemove represents remove operation
-	OperationRemove = "remove"
+	OperationRemove OperationType = "remove"
 	// OperationCreate represents create operation
-	OperationCreate = "create"
+	OperationCreate OperationType = "create"
 	// OperationChmod represents chmod operation
-	OperationChmod = "chmod"
+	OperationChmod OperationType = "chmod"
 	// OperationClear represents clear operation
-	OperationClear = "clear"
+	OperationClear OperationType = "clear"
+	// OperationUpdate represents update operation
+	OperationUpdate OperationType = "update"
 )

@@ -43,50 +43,50 @@ func GetAdapterFileCtx(ctx context.Context) *AdapterFileCtx {
 
 // WithFileName sets the file name in the context and returns the updated AdapterFileCtx.
 func (a *AdapterFileCtx) WithFileName(fileName string) *AdapterFileCtx {
-	a.Ctx = context.WithValue(a.Ctx, KeyFileName, fileName)
+	a.Ctx = context.WithValue(a.Ctx, ContextKeyFileName, fileName)
 	return a
 }
 
 // WithFilePath sets the file path in the context and returns the updated AdapterFileCtx.
 func (a *AdapterFileCtx) WithFilePath(filePath string) *AdapterFileCtx {
-	a.Ctx = context.WithValue(a.Ctx, KeyFilePath, filePath)
+	a.Ctx = context.WithValue(a.Ctx, ContextKeyFilePath, filePath)
 	return a
 }
 
 // WithFileType sets the file type in the context and returns the updated AdapterFileCtx.
 func (a *AdapterFileCtx) WithFileType(fileType string) *AdapterFileCtx {
-	a.Ctx = context.WithValue(a.Ctx, KeyFileType, fileType)
+	a.Ctx = context.WithValue(a.Ctx, ContextKeyFileType, fileType)
 	return a
 }
 
 // WithOperation sets the operation in the context and returns the updated AdapterFileCtx.
-func (a *AdapterFileCtx) WithOperation(operation string) *AdapterFileCtx {
-	a.Ctx = context.WithValue(a.Ctx, KeyOperation, operation)
+func (a *AdapterFileCtx) WithOperation(operation OperationType) *AdapterFileCtx {
+	a.Ctx = context.WithValue(a.Ctx, ContextKeyOperation, operation)
 	return a
 }
 
 // WithKey sets the key in the context and returns the updated AdapterFileCtx.
 func (a *AdapterFileCtx) WithKey(key string) *AdapterFileCtx {
-	a.Ctx = context.WithValue(a.Ctx, KeyKey, key)
+	a.Ctx = context.WithValue(a.Ctx, ContextKeyKey, key)
 	return a
 }
 
 // WithValue sets the value in the context and returns the updated AdapterFileCtx.
 func (a *AdapterFileCtx) WithValue(value any) *AdapterFileCtx {
-	a.Ctx = context.WithValue(a.Ctx, KeyValue, value)
+	a.Ctx = context.WithValue(a.Ctx, ContextKeyValue, value)
 	return a
 }
 
 // WithContent sets the content in the context and returns the updated AdapterFileCtx.
 func (a *AdapterFileCtx) WithContent(content any) *AdapterFileCtx {
-	a.Ctx = context.WithValue(a.Ctx, KeyContent, content)
+	a.Ctx = context.WithValue(a.Ctx, ContextKeyContent, content)
 	return a
 }
 
 // GetFileName retrieves the file name from the context.
 // Returns empty string if not found.
 func (a *AdapterFileCtx) GetFileName() string {
-	if v := a.Ctx.Value(KeyFileName); v != nil {
+	if v := a.Ctx.Value(ContextKeyFileName); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}
@@ -97,7 +97,7 @@ func (a *AdapterFileCtx) GetFileName() string {
 // GetFilePath retrieves the file path from the context.
 // Returns empty string if not found.
 func (a *AdapterFileCtx) GetFilePath() string {
-	if v := a.Ctx.Value(KeyFilePath); v != nil {
+	if v := a.Ctx.Value(ContextKeyFilePath); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}
@@ -108,7 +108,7 @@ func (a *AdapterFileCtx) GetFilePath() string {
 // GetFileType retrieves the file type from the context.
 // Returns empty string if not found.
 func (a *AdapterFileCtx) GetFileType() string {
-	if v := a.Ctx.Value(KeyFileType); v != nil {
+	if v := a.Ctx.Value(ContextKeyFileType); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}
@@ -118,9 +118,9 @@ func (a *AdapterFileCtx) GetFileType() string {
 
 // GetOperation retrieves the operation from the context.
 // Returns empty string if not found.
-func (a *AdapterFileCtx) GetOperation() string {
-	if v := a.Ctx.Value(KeyOperation); v != nil {
-		if s, ok := v.(string); ok {
+func (a *AdapterFileCtx) GetOperation() OperationType {
+	if v := a.Ctx.Value(ContextKeyOperation); v != nil {
+		if s, ok := v.(OperationType); ok {
 			return s
 		}
 	}
@@ -130,7 +130,7 @@ func (a *AdapterFileCtx) GetOperation() string {
 // GetKey retrieves the key from the context.
 // Returns empty string if not found.
 func (a *AdapterFileCtx) GetKey() string {
-	if v := a.Ctx.Value(KeyKey); v != nil {
+	if v := a.Ctx.Value(ContextKeyKey); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}
@@ -141,7 +141,7 @@ func (a *AdapterFileCtx) GetKey() string {
 // GetValue retrieves the value from the context.
 // Returns nil if not found.
 func (a *AdapterFileCtx) GetValue() *gvar.Var {
-	if v := a.Ctx.Value(KeyValue); v != nil {
+	if v := a.Ctx.Value(ContextKeyValue); v != nil {
 		return gvar.New(v)
 	}
 	return nil
@@ -150,7 +150,7 @@ func (a *AdapterFileCtx) GetValue() *gvar.Var {
 // GetContent retrieves the set content from the context.
 // Returns nil if not found.
 func (a *AdapterFileCtx) GetContent() *gvar.Var {
-	if v := a.Ctx.Value(KeyContent); v != nil {
+	if v := a.Ctx.Value(ContextKeyContent); v != nil {
 		return gvar.New(v)
 	}
 	return nil

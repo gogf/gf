@@ -158,7 +158,7 @@ func (c *Client) updateLocalValue(ctx context.Context) (err error) {
 	cache.Clear()
 	if err == nil {
 		c.value.Set(j)
-		adapterCtx := NewAdapterCtx(ctx).WithOperation(OperationUpdate).WithNamespace(c.config.NamespaceName).
+		adapterCtx := NewAdapterCtx(ctx).WithOperation(gcfg.OperationUpdate).WithNamespace(c.config.NamespaceName).
 			WithAppId(c.config.AppID).WithCluster(c.config.Cluster).WithContent(content)
 		c.notifyWatchers(adapterCtx.Ctx)
 	}

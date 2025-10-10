@@ -16,17 +16,12 @@ import (
 )
 
 const (
-	// KeyNamespace is the context key for namespace
-	KeyNamespace gctx.StrKey = "namespace"
-	// KeyAppId is the context key for appId
-	KeyAppId gctx.StrKey = "appId"
-	// KeyCluster is the context key for cluster
-	KeyCluster gctx.StrKey = "cluster"
-)
-
-const (
-	// OperationUpdate represents the update operation
-	OperationUpdate = "update"
+	// ContextKeyNamespace is the context key for namespace
+	ContextKeyNamespace gctx.StrKey = "namespace"
+	// ContextKeyAppId is the context key for appId
+	ContextKeyAppId gctx.StrKey = "appId"
+	// ContextKeyCluster is the context key for cluster
+	ContextKeyCluster gctx.StrKey = "cluster"
 )
 
 // ApolloAdapterCtx is the context adapter for Apollo configuration
@@ -57,38 +52,38 @@ func GetAdapterCtx(ctx context.Context) *ApolloAdapterCtx {
 }
 
 // WithOperation sets the operation in the context
-func (a *ApolloAdapterCtx) WithOperation(operation string) *ApolloAdapterCtx {
-	a.Ctx = context.WithValue(a.Ctx, gcfg.KeyOperation, operation)
+func (a *ApolloAdapterCtx) WithOperation(operation gcfg.OperationType) *ApolloAdapterCtx {
+	a.Ctx = context.WithValue(a.Ctx, gcfg.ContextKeyOperation, operation)
 	return a
 }
 
 // WithNamespace sets the namespace in the context
 func (a *ApolloAdapterCtx) WithNamespace(namespace string) *ApolloAdapterCtx {
-	a.Ctx = context.WithValue(a.Ctx, KeyNamespace, namespace)
+	a.Ctx = context.WithValue(a.Ctx, ContextKeyNamespace, namespace)
 	return a
 }
 
 // WithAppId sets the appId in the context
 func (a *ApolloAdapterCtx) WithAppId(appId string) *ApolloAdapterCtx {
-	a.Ctx = context.WithValue(a.Ctx, KeyAppId, appId)
+	a.Ctx = context.WithValue(a.Ctx, ContextKeyAppId, appId)
 	return a
 }
 
 // WithCluster sets the cluster in the context
 func (a *ApolloAdapterCtx) WithCluster(cluster string) *ApolloAdapterCtx {
-	a.Ctx = context.WithValue(a.Ctx, KeyCluster, cluster)
+	a.Ctx = context.WithValue(a.Ctx, ContextKeyCluster, cluster)
 	return a
 }
 
 // WithContent sets the content in the context
 func (a *ApolloAdapterCtx) WithContent(content *gjson.Json) *ApolloAdapterCtx {
-	a.Ctx = context.WithValue(a.Ctx, gcfg.KeyContent, content)
+	a.Ctx = context.WithValue(a.Ctx, gcfg.ContextKeyContent, content)
 	return a
 }
 
 // GetNamespace retrieves the namespace from the context
 func (a *ApolloAdapterCtx) GetNamespace() string {
-	if v := a.Ctx.Value(KeyNamespace); v != nil {
+	if v := a.Ctx.Value(ContextKeyNamespace); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}
@@ -98,7 +93,7 @@ func (a *ApolloAdapterCtx) GetNamespace() string {
 
 // GetAppId retrieves the appId from the context
 func (a *ApolloAdapterCtx) GetAppId() string {
-	if v := a.Ctx.Value(KeyAppId); v != nil {
+	if v := a.Ctx.Value(ContextKeyAppId); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}
@@ -108,7 +103,7 @@ func (a *ApolloAdapterCtx) GetAppId() string {
 
 // GetCluster retrieves the cluster from the context
 func (a *ApolloAdapterCtx) GetCluster() string {
-	if v := a.Ctx.Value(KeyCluster); v != nil {
+	if v := a.Ctx.Value(ContextKeyCluster); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}
@@ -118,7 +113,7 @@ func (a *ApolloAdapterCtx) GetCluster() string {
 
 // GetContent retrieves the content from the context
 func (a *ApolloAdapterCtx) GetContent() *gjson.Json {
-	if v := a.Ctx.Value(gcfg.KeyContent); v != nil {
+	if v := a.Ctx.Value(gcfg.ContextKeyContent); v != nil {
 		if s, ok := v.(*gjson.Json); ok {
 			return s
 		}
@@ -127,9 +122,9 @@ func (a *ApolloAdapterCtx) GetContent() *gjson.Json {
 }
 
 // GetOperation retrieves the operation from the context
-func (a *ApolloAdapterCtx) GetOperation() string {
-	if v := a.Ctx.Value(gcfg.KeyOperation); v != nil {
-		if s, ok := v.(string); ok {
+func (a *ApolloAdapterCtx) GetOperation() gcfg.OperationType {
+	if v := a.Ctx.Value(gcfg.ContextKeyOperation); v != nil {
+		if s, ok := v.(gcfg.OperationType); ok {
 			return s
 		}
 	}

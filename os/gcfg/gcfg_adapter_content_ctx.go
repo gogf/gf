@@ -40,22 +40,22 @@ func GetAdapterContentCtx(ctx context.Context) *AdapterContentCtx {
 }
 
 // WithOperation sets the operation in the context and returns the updated AdapterContentCtx.
-func (a *AdapterContentCtx) WithOperation(operation string) *AdapterContentCtx {
-	a.Ctx = context.WithValue(a.Ctx, KeyOperation, operation)
+func (a *AdapterContentCtx) WithOperation(operation OperationType) *AdapterContentCtx {
+	a.Ctx = context.WithValue(a.Ctx, ContextKeyOperation, operation)
 	return a
 }
 
 // WithContent sets the content in the context and returns the updated AdapterContentCtx.
 func (a *AdapterContentCtx) WithContent(content string) *AdapterContentCtx {
-	a.Ctx = context.WithValue(a.Ctx, KeyContent, content)
+	a.Ctx = context.WithValue(a.Ctx, ContextKeyContent, content)
 	return a
 }
 
 // GetOperation retrieves the operation from the context.
 // Returns empty string if not found.
-func (a *AdapterContentCtx) GetOperation() string {
-	if v := a.Ctx.Value(KeyOperation); v != nil {
-		if s, ok := v.(string); ok {
+func (a *AdapterContentCtx) GetOperation() OperationType {
+	if v := a.Ctx.Value(ContextKeyOperation); v != nil {
+		if s, ok := v.(OperationType); ok {
 			return s
 		}
 	}
@@ -65,7 +65,7 @@ func (a *AdapterContentCtx) GetOperation() string {
 // GetContent retrieves the content from the context.
 // Returns empty string if not found.
 func (a *AdapterContentCtx) GetContent() string {
-	if v := a.Ctx.Value(KeyContent); v != nil {
+	if v := a.Ctx.Value(ContextKeyContent); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}

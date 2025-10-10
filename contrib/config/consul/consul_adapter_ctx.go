@@ -16,13 +16,8 @@ import (
 )
 
 const (
-	// KeyPath is the context key for path
-	KeyPath gctx.StrKey = "path"
-)
-
-const (
-	// OperationUpdate represents the update operation
-	OperationUpdate = "update"
+	// ContextKeyPath is the context key for path
+	ContextKeyPath gctx.StrKey = "path"
 )
 
 // ConsulAdapterCtx is the context adapter for Consul configuration
@@ -53,26 +48,26 @@ func GetAdapterCtx(ctx context.Context) *ConsulAdapterCtx {
 }
 
 // WithOperation sets the operation in the context
-func (a *ConsulAdapterCtx) WithOperation(operation string) *ConsulAdapterCtx {
-	a.Ctx = context.WithValue(a.Ctx, gcfg.KeyOperation, operation)
+func (a *ConsulAdapterCtx) WithOperation(operation gcfg.OperationType) *ConsulAdapterCtx {
+	a.Ctx = context.WithValue(a.Ctx, gcfg.ContextKeyOperation, operation)
 	return a
 }
 
 // WithPath sets the path in the context
 func (a *ConsulAdapterCtx) WithPath(path string) *ConsulAdapterCtx {
-	a.Ctx = context.WithValue(a.Ctx, KeyPath, path)
+	a.Ctx = context.WithValue(a.Ctx, ContextKeyPath, path)
 	return a
 }
 
 // WithContent sets the content in the context
 func (a *ConsulAdapterCtx) WithContent(content *gjson.Json) *ConsulAdapterCtx {
-	a.Ctx = context.WithValue(a.Ctx, gcfg.KeyContent, content)
+	a.Ctx = context.WithValue(a.Ctx, gcfg.ContextKeyContent, content)
 	return a
 }
 
 // GetContent retrieves the content from the context
 func (a *ConsulAdapterCtx) GetContent() *gjson.Json {
-	if v := a.Ctx.Value(gcfg.KeyContent); v != nil {
+	if v := a.Ctx.Value(gcfg.ContextKeyContent); v != nil {
 		if s, ok := v.(*gjson.Json); ok {
 			return s
 		}
@@ -81,9 +76,9 @@ func (a *ConsulAdapterCtx) GetContent() *gjson.Json {
 }
 
 // GetOperation retrieves the operation from the context
-func (a *ConsulAdapterCtx) GetOperation() string {
-	if v := a.Ctx.Value(gcfg.KeyOperation); v != nil {
-		if s, ok := v.(string); ok {
+func (a *ConsulAdapterCtx) GetOperation() gcfg.OperationType {
+	if v := a.Ctx.Value(gcfg.ContextKeyOperation); v != nil {
+		if s, ok := v.(gcfg.OperationType); ok {
 			return s
 		}
 	}
@@ -92,7 +87,7 @@ func (a *ConsulAdapterCtx) GetOperation() string {
 
 // GetPath retrieves the path from the context
 func (a *ConsulAdapterCtx) GetPath() string {
-	if v := a.Ctx.Value(KeyPath); v != nil {
+	if v := a.Ctx.Value(ContextKeyPath); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}

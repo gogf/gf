@@ -15,17 +15,10 @@ import (
 )
 
 const (
-	// KeyNamespace is the context key for namespace
-	KeyNamespace gctx.StrKey = "namespace"
-	// KeyFileGroup is the context key for group
-	KeyFileGroup gctx.StrKey = "fileGroup"
-	// KeyFileName is the context key for file name
-	KeyFileName gctx.StrKey = "fileName"
-)
-
-const (
-	// OperationUpdate represents the update operation
-	OperationUpdate = "update"
+	// ContextKeyNamespace is the context key for namespace
+	ContextKeyNamespace gctx.StrKey = "namespace"
+	// ContextKeyFileGroup is the context key for group
+	ContextKeyFileGroup gctx.StrKey = "fileGroup"
 )
 
 // PolarisAdapterCtx is the context adapter for polaris configuration
@@ -56,38 +49,38 @@ func GetAdapterCtx(ctx context.Context) *PolarisAdapterCtx {
 }
 
 // WithOperation sets the operation in the context
-func (n *PolarisAdapterCtx) WithOperation(operation string) *PolarisAdapterCtx {
-	n.Ctx = context.WithValue(n.Ctx, gcfg.KeyOperation, operation)
+func (n *PolarisAdapterCtx) WithOperation(operation gcfg.OperationType) *PolarisAdapterCtx {
+	n.Ctx = context.WithValue(n.Ctx, gcfg.ContextKeyOperation, operation)
 	return n
 }
 
 // WithNamespace sets the namespace in the context
 func (n *PolarisAdapterCtx) WithNamespace(namespace string) *PolarisAdapterCtx {
-	n.Ctx = context.WithValue(n.Ctx, KeyNamespace, namespace)
+	n.Ctx = context.WithValue(n.Ctx, ContextKeyNamespace, namespace)
 	return n
 }
 
 // WithFileGroup sets the group in the context
 func (n *PolarisAdapterCtx) WithFileGroup(fileGroup string) *PolarisAdapterCtx {
-	n.Ctx = context.WithValue(n.Ctx, KeyFileGroup, fileGroup)
+	n.Ctx = context.WithValue(n.Ctx, ContextKeyFileGroup, fileGroup)
 	return n
 }
 
 // WithFileName sets the fileName in the context
 func (n *PolarisAdapterCtx) WithFileName(fileName string) *PolarisAdapterCtx {
-	n.Ctx = context.WithValue(n.Ctx, KeyFileName, fileName)
+	n.Ctx = context.WithValue(n.Ctx, gcfg.ContextKeyFileName, fileName)
 	return n
 }
 
 // WithContent sets the content in the context
 func (n *PolarisAdapterCtx) WithContent(content string) *PolarisAdapterCtx {
-	n.Ctx = context.WithValue(n.Ctx, gcfg.KeyContent, content)
+	n.Ctx = context.WithValue(n.Ctx, gcfg.ContextKeyContent, content)
 	return n
 }
 
 // GetNamespace retrieves the namespace from the context
 func (n *PolarisAdapterCtx) GetNamespace() string {
-	if v := n.Ctx.Value(KeyNamespace); v != nil {
+	if v := n.Ctx.Value(ContextKeyNamespace); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}
@@ -97,7 +90,7 @@ func (n *PolarisAdapterCtx) GetNamespace() string {
 
 // GetFileGroup retrieves the group from the context
 func (n *PolarisAdapterCtx) GetFileGroup() string {
-	if v := n.Ctx.Value(KeyFileGroup); v != nil {
+	if v := n.Ctx.Value(ContextKeyFileGroup); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}
@@ -107,7 +100,7 @@ func (n *PolarisAdapterCtx) GetFileGroup() string {
 
 // GetFileName retrieves the fileName from the context
 func (n *PolarisAdapterCtx) GetFileName() string {
-	if v := n.Ctx.Value(KeyFileName); v != nil {
+	if v := n.Ctx.Value(gcfg.ContextKeyFileName); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}
@@ -117,7 +110,7 @@ func (n *PolarisAdapterCtx) GetFileName() string {
 
 // GetContent retrieves the content from the context
 func (n *PolarisAdapterCtx) GetContent() string {
-	if v := n.Ctx.Value(gcfg.KeyContent); v != nil {
+	if v := n.Ctx.Value(gcfg.ContextKeyContent); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}
@@ -126,9 +119,9 @@ func (n *PolarisAdapterCtx) GetContent() string {
 }
 
 // GetOperation retrieves the operation from the context
-func (n *PolarisAdapterCtx) GetOperation() string {
-	if v := n.Ctx.Value(gcfg.KeyOperation); v != nil {
-		if s, ok := v.(string); ok {
+func (n *PolarisAdapterCtx) GetOperation() gcfg.OperationType {
+	if v := n.Ctx.Value(gcfg.ContextKeyOperation); v != nil {
+		if s, ok := v.(gcfg.OperationType); ok {
 			return s
 		}
 	}

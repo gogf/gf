@@ -140,7 +140,7 @@ func (c *Client) addWatcher() error {
 		if c.config.OnConfigChange != nil {
 			go c.config.OnConfigChange(namespace, group, dataId, data)
 		}
-		adapterCtx := NewAdapterCtx().WithOperation(OperationUpdate).WithNamespace(namespace).
+		adapterCtx := NewAdapterCtx().WithOperation(gcfg.OperationUpdate).WithNamespace(namespace).
 			WithGroup(group).WithDataId(dataId).WithContent(data)
 		c.notifyWatchers(adapterCtx.Ctx)
 	}

@@ -163,7 +163,7 @@ func (c *Client) doUpdate(ctx context.Context) (err error) {
 	}
 	c.value.Set(j)
 	adapterCtx := NewAdapterCtx(ctx).WithNamespace(c.config.Namespace).WithFileGroup(c.config.FileGroup).
-		WithFileName(c.config.FileName).WithOperation(OperationUpdate).WithContent(content)
+		WithFileName(c.config.FileName).WithOperation(gcfg.OperationUpdate).WithContent(content)
 	c.notifyWatchers(adapterCtx.Ctx)
 	return nil
 }
