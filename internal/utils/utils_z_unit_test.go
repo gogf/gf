@@ -128,3 +128,13 @@ func Test_IsNumeric(t *testing.T) {
 		t.Assert(utils.IsNumeric("+.1"), false)
 	})
 }
+
+func TestIsASCII(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(utils.IsASCII("test"), true)
+		t.AssertEQ(utils.IsASCII("测试"), false)
+		t.AssertEQ(utils.IsASCII("テスト"), false)
+		t.AssertEQ(utils.IsASCII("테스트"), false)
+		t.AssertEQ(utils.IsASCII("😁😭❤️😓"), false)
+	})
+}
