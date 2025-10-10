@@ -11,6 +11,7 @@ import (
 	"context"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
@@ -114,15 +115,15 @@ func generateTableFields(fields map[string]*gdb.TableField) string {
 	})
 	for index, fieldName := range fieldNames {
 		field := fields[fieldName]
-		buf.WriteString("    \"" + field.Name + "\": {\n")
+		buf.WriteString("    " + strconv.Quote(field.Name) + ": {\n")
 		buf.WriteString("        Index:   " + gconv.String(field.Index) + ",\n")
-		buf.WriteString("        Name:    \"" + field.Name + "\",\n")
-		buf.WriteString("        Type:    \"" + field.Type + "\",\n")
+		buf.WriteString("        Name:    " + strconv.Quote(field.Name) + ",\n")
+		buf.WriteString("        Type:    " + strconv.Quote(field.Type) + ",\n")
 		buf.WriteString("        Null:    " + gconv.String(field.Null) + ",\n")
-		buf.WriteString("        Key:     \"" + field.Key + "\",\n")
+		buf.WriteString("        Key:     " + strconv.Quote(field.Key) + ",\n")
 		buf.WriteString("        Default: " + generateDefaultValue(field.Default) + ",\n")
-		buf.WriteString("        Extra:   \"" + field.Extra + "\",\n")
-		buf.WriteString("        Comment: \"" + field.Comment + "\",\n")
+		buf.WriteString("        Extra:   " + strconv.Quote(field.Extra) + ",\n")
+		buf.WriteString("        Comment: " + strconv.Quote(field.Comment) + ",\n")
 		buf.WriteString("    },")
 		if index != len(fieldNames)-1 {
 			buf.WriteString("\n")
@@ -138,7 +139,7 @@ func generateDefaultValue(value interface{}) string {
 	}
 	switch v := value.(type) {
 	case string:
-		return "\"" + v + "\""
+		return strconv.Quote(v)
 	default:
 		return gconv.String(v)
 	}
