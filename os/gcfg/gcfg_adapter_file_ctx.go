@@ -34,65 +34,44 @@ func GetAdapterFileCtx(ctx context.Context) *AdapterFileCtx {
 }
 
 // WithFileName sets the file name in the context and returns the updated AdapterFileCtx.
-// If fileName is not provided, it does nothing.
-func (a *AdapterFileCtx) WithFileName(fileName ...string) *AdapterFileCtx {
-	if len(fileName) > 0 {
-		a.Ctx = context.WithValue(a.Ctx, KeyFileName, fileName[0])
-	}
+func (a *AdapterFileCtx) WithFileName(fileName string) *AdapterFileCtx {
+	a.Ctx = context.WithValue(a.Ctx, KeyFileName, fileName)
 	return a
 }
 
 // WithFilePath sets the file path in the context and returns the updated AdapterFileCtx.
-// If filePath is not provided, it does nothing.
-func (a *AdapterFileCtx) WithFilePath(filePath ...string) *AdapterFileCtx {
-	if len(filePath) > 0 {
-		a.Ctx = context.WithValue(a.Ctx, KeyFilePath, filePath[0])
-	}
+func (a *AdapterFileCtx) WithFilePath(filePath string) *AdapterFileCtx {
+	a.Ctx = context.WithValue(a.Ctx, KeyFilePath, filePath)
 	return a
 }
 
 // WithFileType sets the file type in the context and returns the updated AdapterFileCtx.
-// If fileType is not provided, it does nothing.
-func (a *AdapterFileCtx) WithFileType(fileType ...string) *AdapterFileCtx {
-	if len(fileType) > 0 {
-		a.Ctx = context.WithValue(a.Ctx, KeyFileType, fileType[0])
-	}
+func (a *AdapterFileCtx) WithFileType(fileType string) *AdapterFileCtx {
+	a.Ctx = context.WithValue(a.Ctx, KeyFileType, fileType)
 	return a
 }
 
 // WithOperation sets the operation in the context and returns the updated AdapterFileCtx.
-// If operation is not provided, it does nothing.
-func (a *AdapterFileCtx) WithOperation(operation ...string) *AdapterFileCtx {
-	if len(operation) > 0 {
-		a.Ctx = context.WithValue(a.Ctx, KeyOperation, operation[0])
-	}
+func (a *AdapterFileCtx) WithOperation(operation string) *AdapterFileCtx {
+	a.Ctx = context.WithValue(a.Ctx, KeyOperation, operation)
 	return a
 }
 
 // WithSetKey sets the set key in the context and returns the updated AdapterFileCtx.
-// If setKey is not provided, it does nothing.
-func (a *AdapterFileCtx) WithSetKey(setKey ...string) *AdapterFileCtx {
-	if len(setKey) > 0 {
-		a.Ctx = context.WithValue(a.Ctx, KeySetKey, setKey[0])
-	}
+func (a *AdapterFileCtx) WithSetKey(setKey string) *AdapterFileCtx {
+	a.Ctx = context.WithValue(a.Ctx, KeySetKey, setKey)
 	return a
 }
 
 // WithSetValue sets the value in the context and returns the updated AdapterFileCtx.
-// If value is not provided, it does nothing.
-func (a *AdapterFileCtx) WithSetValue(value ...any) *AdapterFileCtx {
-	if len(value) > 0 {
-		a.Ctx = context.WithValue(a.Ctx, KeySetValue, value[0])
-	}
+func (a *AdapterFileCtx) WithSetValue(value any) *AdapterFileCtx {
+	a.Ctx = context.WithValue(a.Ctx, KeySetValue, value)
 	return a
 }
 
 // WithSetContent sets the content in the context and returns the updated AdapterFileCtx.
-// If content is not provided, it does nothing.
-func (a *AdapterFileCtx) WithSetContent(content ...any) *AdapterFileCtx {
-	if len(content) > 0 {
-		a.Ctx = context.WithValue(a.Ctx, KeySetContent, content[0])
-	}
+func (a *AdapterFileCtx) WithSetContent(content any) *AdapterFileCtx {
+	a.Ctx = context.WithValue(a.Ctx, KeySetContent, content)
 	return a
 }
 

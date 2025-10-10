@@ -34,20 +34,14 @@ func GetAdapterContentCtx(ctx context.Context) *AdapterContentCtx {
 }
 
 // WithOperation sets the operation in the context and returns the updated AdapterContentCtx.
-// If operation is not provided, it does nothing.
-func (a *AdapterContentCtx) WithOperation(operation ...string) *AdapterContentCtx {
-	if len(operation) > 0 {
-		a.Ctx = context.WithValue(a.Ctx, KeyOperation, operation[0])
-	}
+func (a *AdapterContentCtx) WithOperation(operation string) *AdapterContentCtx {
+	a.Ctx = context.WithValue(a.Ctx, KeyOperation, operation)
 	return a
 }
 
 // WithSetContent sets the content in the context and returns the updated AdapterContentCtx.
-// If content is not provided, it does nothing.
-func (a *AdapterContentCtx) WithSetContent(content ...string) *AdapterContentCtx {
-	if len(content) > 0 {
-		a.Ctx = context.WithValue(a.Ctx, KeySetContent, content[0])
-	}
+func (a *AdapterContentCtx) WithSetContent(content string) *AdapterContentCtx {
+	a.Ctx = context.WithValue(a.Ctx, KeySetContent, content)
 	return a
 }
 

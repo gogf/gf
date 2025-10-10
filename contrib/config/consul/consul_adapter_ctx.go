@@ -47,26 +47,20 @@ func GetConsulAdapterCtx(ctx context.Context) *ConsulAdapterCtx {
 }
 
 // WithOperation sets the operation in the context
-func (a *ConsulAdapterCtx) WithOperation(operation ...string) *ConsulAdapterCtx {
-	if len(operation) > 0 {
-		a.Ctx = context.WithValue(a.Ctx, gcfg.KeyOperation, operation[0])
-	}
+func (a *ConsulAdapterCtx) WithOperation(operation string) *ConsulAdapterCtx {
+	a.Ctx = context.WithValue(a.Ctx, gcfg.KeyOperation, operation)
 	return a
 }
 
 // WithPath sets the path in the context
-func (a *ConsulAdapterCtx) WithPath(path ...string) *ConsulAdapterCtx {
-	if len(path) > 0 {
-		a.Ctx = context.WithValue(a.Ctx, KeyPath, path[0])
-	}
+func (a *ConsulAdapterCtx) WithPath(path string) *ConsulAdapterCtx {
+	a.Ctx = context.WithValue(a.Ctx, KeyPath, path)
 	return a
 }
 
 // WithSetContent sets the content in the context
-func (a *ConsulAdapterCtx) WithSetContent(content ...*gjson.Json) *ConsulAdapterCtx {
-	if len(content) > 0 {
-		a.Ctx = context.WithValue(a.Ctx, gcfg.KeySetContent, content[0])
-	}
+func (a *ConsulAdapterCtx) WithSetContent(content *gjson.Json) *ConsulAdapterCtx {
+	a.Ctx = context.WithValue(a.Ctx, gcfg.KeySetContent, content)
 	return a
 }
 

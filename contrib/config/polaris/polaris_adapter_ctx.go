@@ -50,42 +50,32 @@ func GetPolarisAdapterCtx(ctx context.Context) *PolarisAdapterCtx {
 }
 
 // WithOperation sets the operation in the context
-func (n *PolarisAdapterCtx) WithOperation(operation ...string) *PolarisAdapterCtx {
-	if len(operation) > 0 {
-		n.Ctx = context.WithValue(n.Ctx, gcfg.KeyOperation, operation[0])
-	}
+func (n *PolarisAdapterCtx) WithOperation(operation string) *PolarisAdapterCtx {
+	n.Ctx = context.WithValue(n.Ctx, gcfg.KeyOperation, operation)
 	return n
 }
 
 // WithNamespace sets the namespace in the context
-func (n *PolarisAdapterCtx) WithNamespace(namespace ...string) *PolarisAdapterCtx {
-	if len(namespace) > 0 {
-		n.Ctx = context.WithValue(n.Ctx, KeyNamespace, namespace[0])
-	}
+func (n *PolarisAdapterCtx) WithNamespace(namespace string) *PolarisAdapterCtx {
+	n.Ctx = context.WithValue(n.Ctx, KeyNamespace, namespace)
 	return n
 }
 
 // WithFileGroup sets the group in the context
-func (n *PolarisAdapterCtx) WithFileGroup(fileGroup ...string) *PolarisAdapterCtx {
-	if len(fileGroup) > 0 {
-		n.Ctx = context.WithValue(n.Ctx, KeyFileGroup, fileGroup[0])
-	}
+func (n *PolarisAdapterCtx) WithFileGroup(fileGroup string) *PolarisAdapterCtx {
+	n.Ctx = context.WithValue(n.Ctx, KeyFileGroup, fileGroup)
 	return n
 }
 
 // WithFileName sets the fileName in the context
-func (n *PolarisAdapterCtx) WithFileName(fileName ...string) *PolarisAdapterCtx {
-	if len(fileName) > 0 {
-		n.Ctx = context.WithValue(n.Ctx, KeyFileName, fileName[0])
-	}
+func (n *PolarisAdapterCtx) WithFileName(fileName string) *PolarisAdapterCtx {
+	n.Ctx = context.WithValue(n.Ctx, KeyFileName, fileName)
 	return n
 }
 
 // WithSetContent sets the content in the context
-func (n *PolarisAdapterCtx) WithSetContent(content ...string) *PolarisAdapterCtx {
-	if len(content) > 0 {
-		n.Ctx = context.WithValue(n.Ctx, gcfg.KeySetContent, content[0])
-	}
+func (n *PolarisAdapterCtx) WithSetContent(content string) *PolarisAdapterCtx {
+	n.Ctx = context.WithValue(n.Ctx, gcfg.KeySetContent, content)
 	return n
 }
 

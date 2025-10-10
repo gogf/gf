@@ -51,42 +51,32 @@ func GetApolloAdapterCtx(ctx context.Context) *ApolloAdapterCtx {
 }
 
 // WithOperation sets the operation in the context
-func (a *ApolloAdapterCtx) WithOperation(operation ...string) *ApolloAdapterCtx {
-	if len(operation) > 0 {
-		a.Ctx = context.WithValue(a.Ctx, gcfg.KeyOperation, operation[0])
-	}
+func (a *ApolloAdapterCtx) WithOperation(operation string) *ApolloAdapterCtx {
+	a.Ctx = context.WithValue(a.Ctx, gcfg.KeyOperation, operation)
 	return a
 }
 
 // WithNamespace sets the namespace in the context
-func (a *ApolloAdapterCtx) WithNamespace(namespace ...string) *ApolloAdapterCtx {
-	if len(namespace) > 0 {
-		a.Ctx = context.WithValue(a.Ctx, KeyNamespace, namespace[0])
-	}
+func (a *ApolloAdapterCtx) WithNamespace(namespace string) *ApolloAdapterCtx {
+	a.Ctx = context.WithValue(a.Ctx, KeyNamespace, namespace)
 	return a
 }
 
 // WithAppId sets the appId in the context
-func (a *ApolloAdapterCtx) WithAppId(appId ...string) *ApolloAdapterCtx {
-	if len(appId) > 0 {
-		a.Ctx = context.WithValue(a.Ctx, KeyAppId, appId[0])
-	}
+func (a *ApolloAdapterCtx) WithAppId(appId string) *ApolloAdapterCtx {
+	a.Ctx = context.WithValue(a.Ctx, KeyAppId, appId)
 	return a
 }
 
 // WithCluster sets the cluster in the context
-func (a *ApolloAdapterCtx) WithCluster(cluster ...string) *ApolloAdapterCtx {
-	if len(cluster) > 0 {
-		a.Ctx = context.WithValue(a.Ctx, KeyCluster, cluster[0])
-	}
+func (a *ApolloAdapterCtx) WithCluster(cluster string) *ApolloAdapterCtx {
+	a.Ctx = context.WithValue(a.Ctx, KeyCluster, cluster)
 	return a
 }
 
 // WithSetContent sets the content in the context
-func (a *ApolloAdapterCtx) WithSetContent(content ...*gjson.Json) *ApolloAdapterCtx {
-	if len(content) > 0 {
-		a.Ctx = context.WithValue(a.Ctx, gcfg.KeySetContent, content[0])
-	}
+func (a *ApolloAdapterCtx) WithSetContent(content *gjson.Json) *ApolloAdapterCtx {
+	a.Ctx = context.WithValue(a.Ctx, gcfg.KeySetContent, content)
 	return a
 }
 

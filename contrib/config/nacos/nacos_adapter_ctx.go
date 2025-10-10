@@ -50,42 +50,32 @@ func GetNacosAdapterCtx(ctx context.Context) *NacosAdapterCtx {
 }
 
 // WithOperation sets the operation in the context
-func (n *NacosAdapterCtx) WithOperation(operation ...string) *NacosAdapterCtx {
-	if len(operation) > 0 {
-		n.Ctx = context.WithValue(n.Ctx, gcfg.KeyOperation, operation[0])
-	}
+func (n *NacosAdapterCtx) WithOperation(operation string) *NacosAdapterCtx {
+	n.Ctx = context.WithValue(n.Ctx, gcfg.KeyOperation, operation)
 	return n
 }
 
 // WithNamespace sets the namespace in the context
-func (n *NacosAdapterCtx) WithNamespace(namespace ...string) *NacosAdapterCtx {
-	if len(namespace) > 0 {
-		n.Ctx = context.WithValue(n.Ctx, KeyNamespace, namespace[0])
-	}
+func (n *NacosAdapterCtx) WithNamespace(namespace string) *NacosAdapterCtx {
+	n.Ctx = context.WithValue(n.Ctx, KeyNamespace, namespace)
 	return n
 }
 
 // WithGroup sets the group in the context
-func (n *NacosAdapterCtx) WithGroup(group ...string) *NacosAdapterCtx {
-	if len(group) > 0 {
-		n.Ctx = context.WithValue(n.Ctx, KeyGroup, group[0])
-	}
+func (n *NacosAdapterCtx) WithGroup(group string) *NacosAdapterCtx {
+	n.Ctx = context.WithValue(n.Ctx, KeyGroup, group)
 	return n
 }
 
 // WithDataId sets the dataId in the context
-func (n *NacosAdapterCtx) WithDataId(dataId ...string) *NacosAdapterCtx {
-	if len(dataId) > 0 {
-		n.Ctx = context.WithValue(n.Ctx, KeyDataId, dataId[0])
-	}
+func (n *NacosAdapterCtx) WithDataId(dataId string) *NacosAdapterCtx {
+	n.Ctx = context.WithValue(n.Ctx, KeyDataId, dataId)
 	return n
 }
 
 // WithSetContent sets the content in the context
-func (n *NacosAdapterCtx) WithSetContent(content ...string) *NacosAdapterCtx {
-	if len(content) > 0 {
-		n.Ctx = context.WithValue(n.Ctx, gcfg.KeySetContent, content[0])
-	}
+func (n *NacosAdapterCtx) WithSetContent(content string) *NacosAdapterCtx {
+	n.Ctx = context.WithValue(n.Ctx, gcfg.KeySetContent, content)
 	return n
 }
 
