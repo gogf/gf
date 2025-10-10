@@ -47,8 +47,8 @@ func TestWatcher_File_Ctx(t *testing.T) {
 		c.AddWatcher(key1, func(ctx context.Context) {
 			fileCtx := gcfg.GetAdapterFileCtx(ctx)
 			t.Assert(fileCtx.GetOperation(), gcfg.OperationSet)
-			t.Assert(fileCtx.GetSetKey(), "key")
-			t.Assert(fileCtx.GetSetValue().String(), "value2")
+			t.Assert(fileCtx.GetKey(), "key")
+			t.Assert(fileCtx.GetValue().String(), "value2")
 		})
 		c.Set("key", "value2")
 		time.Sleep(1 * time.Second)

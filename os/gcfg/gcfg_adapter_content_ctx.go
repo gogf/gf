@@ -45,9 +45,9 @@ func (a *AdapterContentCtx) WithOperation(operation string) *AdapterContentCtx {
 	return a
 }
 
-// WithSetContent sets the content in the context and returns the updated AdapterContentCtx.
-func (a *AdapterContentCtx) WithSetContent(content string) *AdapterContentCtx {
-	a.Ctx = context.WithValue(a.Ctx, KeySetContent, content)
+// WithContent sets the content in the context and returns the updated AdapterContentCtx.
+func (a *AdapterContentCtx) WithContent(content string) *AdapterContentCtx {
+	a.Ctx = context.WithValue(a.Ctx, KeyContent, content)
 	return a
 }
 
@@ -62,10 +62,10 @@ func (a *AdapterContentCtx) GetOperation() string {
 	return ""
 }
 
-// GetSetContent retrieves the content from the context.
+// GetContent retrieves the content from the context.
 // Returns empty string if not found.
-func (a *AdapterContentCtx) GetSetContent() string {
-	if v := a.Ctx.Value(KeySetContent); v != nil {
+func (a *AdapterContentCtx) GetContent() string {
+	if v := a.Ctx.Value(KeyContent); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}

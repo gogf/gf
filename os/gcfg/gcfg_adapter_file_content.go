@@ -32,7 +32,7 @@ func (a *AdapterFile) SetContent(content string, fileNameOrPath ...string) {
 		}
 		customConfigContentMap.Set(usedFileNameOrPath, content)
 	})
-	adapterCtx := NewAdapterFileCtx().WithFileName(usedFileNameOrPath).WithOperation(OperationSet).WithSetContent(content)
+	adapterCtx := NewAdapterFileCtx().WithFileName(usedFileNameOrPath).WithOperation(OperationSet).WithContent(content)
 	a.notifyWatchers(adapterCtx.Ctx)
 }
 

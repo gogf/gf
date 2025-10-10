@@ -176,7 +176,8 @@ func (a *AdapterFile) Set(pattern string, value any) error {
 	fileName := a.GetFileName()
 	filePath, _ := a.GetFilePath(fileName)
 	fileType := gfile.ExtName(fileName)
-	adapterCtx := NewAdapterFileCtx().WithOperation(OperationSet).WithSetKey(pattern).WithSetValue(value).WithFileName(fileName).WithFilePath(filePath).WithFileType(fileType)
+	adapterCtx := NewAdapterFileCtx().WithOperation(OperationSet).WithKey(pattern).WithValue(value).
+		WithFileName(fileName).WithFilePath(filePath).WithFileType(fileType)
 	a.notifyWatchers(adapterCtx.Ctx)
 	return nil
 }

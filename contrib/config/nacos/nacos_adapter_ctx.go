@@ -79,9 +79,9 @@ func (n *NacosAdapterCtx) WithDataId(dataId string) *NacosAdapterCtx {
 	return n
 }
 
-// WithSetContent sets the content in the context
-func (n *NacosAdapterCtx) WithSetContent(content string) *NacosAdapterCtx {
-	n.Ctx = context.WithValue(n.Ctx, gcfg.KeySetContent, content)
+// WithContent sets the content in the context
+func (n *NacosAdapterCtx) WithContent(content string) *NacosAdapterCtx {
+	n.Ctx = context.WithValue(n.Ctx, gcfg.KeyContent, content)
 	return n
 }
 
@@ -115,9 +115,9 @@ func (n *NacosAdapterCtx) GetDataId() string {
 	return ""
 }
 
-// GetSetContent retrieves the content from the context
-func (n *NacosAdapterCtx) GetSetContent() string {
-	if v := n.Ctx.Value(gcfg.KeySetContent); v != nil {
+// GetContent retrieves the content from the context
+func (n *NacosAdapterCtx) GetContent() string {
+	if v := n.Ctx.Value(gcfg.KeyContent); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}

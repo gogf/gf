@@ -162,7 +162,8 @@ func (c *Client) doUpdate(ctx context.Context) (err error) {
 		return gerror.Wrap(err, `parse config map item from polaris failed`)
 	}
 	c.value.Set(j)
-	adapterCtx := NewAdapterCtx(ctx).WithNamespace(c.config.Namespace).WithFileGroup(c.config.FileGroup).WithFileName(c.config.FileName).WithOperation(OperationUpdate).WithSetContent(content)
+	adapterCtx := NewAdapterCtx(ctx).WithNamespace(c.config.Namespace).WithFileGroup(c.config.FileGroup).
+		WithFileName(c.config.FileName).WithOperation(OperationUpdate).WithContent(content)
 	c.notifyWatchers(adapterCtx.Ctx)
 	return nil
 }

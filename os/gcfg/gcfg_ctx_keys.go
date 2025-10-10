@@ -19,12 +19,12 @@ const (
 	KeyFileType gctx.StrKey = "fileType"
 	// KeyOperation is the context key for operation type
 	KeyOperation gctx.StrKey = "operation"
-	// KeySetKey is the context key for set key
-	KeySetKey gctx.StrKey = "setKey"
-	// KeySetValue is the context key for set value
-	KeySetValue gctx.StrKey = "setValue"
-	// KeySetContent is the context key for set content
-	KeySetContent gctx.StrKey = "setContent"
+	// KeyKey is the context key for key
+	KeyKey gctx.StrKey = "key"
+	// KeyValue is the context key for value
+	KeyValue gctx.StrKey = "value"
+	// KeyContent is the context key for set content
+	KeyContent gctx.StrKey = "content"
 )
 
 // Operation constants for configuration operations.

@@ -65,21 +65,21 @@ func (a *AdapterFileCtx) WithOperation(operation string) *AdapterFileCtx {
 	return a
 }
 
-// WithSetKey sets the set key in the context and returns the updated AdapterFileCtx.
-func (a *AdapterFileCtx) WithSetKey(setKey string) *AdapterFileCtx {
-	a.Ctx = context.WithValue(a.Ctx, KeySetKey, setKey)
+// WithKey sets the key in the context and returns the updated AdapterFileCtx.
+func (a *AdapterFileCtx) WithKey(key string) *AdapterFileCtx {
+	a.Ctx = context.WithValue(a.Ctx, KeyKey, key)
 	return a
 }
 
-// WithSetValue sets the value in the context and returns the updated AdapterFileCtx.
-func (a *AdapterFileCtx) WithSetValue(value any) *AdapterFileCtx {
-	a.Ctx = context.WithValue(a.Ctx, KeySetValue, value)
+// WithValue sets the value in the context and returns the updated AdapterFileCtx.
+func (a *AdapterFileCtx) WithValue(value any) *AdapterFileCtx {
+	a.Ctx = context.WithValue(a.Ctx, KeyValue, value)
 	return a
 }
 
-// WithSetContent sets the content in the context and returns the updated AdapterFileCtx.
-func (a *AdapterFileCtx) WithSetContent(content any) *AdapterFileCtx {
-	a.Ctx = context.WithValue(a.Ctx, KeySetContent, content)
+// WithContent sets the content in the context and returns the updated AdapterFileCtx.
+func (a *AdapterFileCtx) WithContent(content any) *AdapterFileCtx {
+	a.Ctx = context.WithValue(a.Ctx, KeyContent, content)
 	return a
 }
 
@@ -127,10 +127,10 @@ func (a *AdapterFileCtx) GetOperation() string {
 	return ""
 }
 
-// GetSetKey retrieves the set key from the context.
+// GetKey retrieves the key from the context.
 // Returns empty string if not found.
-func (a *AdapterFileCtx) GetSetKey() string {
-	if v := a.Ctx.Value(KeySetKey); v != nil {
+func (a *AdapterFileCtx) GetKey() string {
+	if v := a.Ctx.Value(KeyKey); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}
@@ -138,19 +138,19 @@ func (a *AdapterFileCtx) GetSetKey() string {
 	return ""
 }
 
-// GetSetValue retrieves the set value from the context.
+// GetValue retrieves the value from the context.
 // Returns nil if not found.
-func (a *AdapterFileCtx) GetSetValue() *gvar.Var {
-	if v := a.Ctx.Value(KeySetValue); v != nil {
+func (a *AdapterFileCtx) GetValue() *gvar.Var {
+	if v := a.Ctx.Value(KeyValue); v != nil {
 		return gvar.New(v)
 	}
 	return nil
 }
 
-// GetSetContent retrieves the set content from the context.
+// GetContent retrieves the set content from the context.
 // Returns nil if not found.
-func (a *AdapterFileCtx) GetSetContent() *gvar.Var {
-	if v := a.Ctx.Value(KeySetContent); v != nil {
+func (a *AdapterFileCtx) GetContent() *gvar.Var {
+	if v := a.Ctx.Value(KeyContent); v != nil {
 		return gvar.New(v)
 	}
 	return nil

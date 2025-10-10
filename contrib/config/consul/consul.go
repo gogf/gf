@@ -183,7 +183,7 @@ func (c *Client) addWatcher() (err error) {
 					c.config.Path, err,
 				)
 			} else {
-				adapterCtx := NewAdapterCtx().WithOperation(OperationUpdate).WithPath(c.config.Path).WithSetContent(m)
+				adapterCtx := NewAdapterCtx().WithOperation(OperationUpdate).WithPath(c.config.Path).WithContent(m)
 				c.notifyWatchers(adapterCtx.Ctx)
 			}
 		}

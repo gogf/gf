@@ -80,9 +80,9 @@ func (a *ApolloAdapterCtx) WithCluster(cluster string) *ApolloAdapterCtx {
 	return a
 }
 
-// WithSetContent sets the content in the context
-func (a *ApolloAdapterCtx) WithSetContent(content *gjson.Json) *ApolloAdapterCtx {
-	a.Ctx = context.WithValue(a.Ctx, gcfg.KeySetContent, content)
+// WithContent sets the content in the context
+func (a *ApolloAdapterCtx) WithContent(content *gjson.Json) *ApolloAdapterCtx {
+	a.Ctx = context.WithValue(a.Ctx, gcfg.KeyContent, content)
 	return a
 }
 
@@ -116,9 +116,9 @@ func (a *ApolloAdapterCtx) GetCluster() string {
 	return ""
 }
 
-// GetSetContent retrieves the content from the context
-func (a *ApolloAdapterCtx) GetSetContent() *gjson.Json {
-	if v := a.Ctx.Value(gcfg.KeySetContent); v != nil {
+// GetContent retrieves the content from the context
+func (a *ApolloAdapterCtx) GetContent() *gjson.Json {
+	if v := a.Ctx.Value(gcfg.KeyContent); v != nil {
 		if s, ok := v.(*gjson.Json); ok {
 			return s
 		}

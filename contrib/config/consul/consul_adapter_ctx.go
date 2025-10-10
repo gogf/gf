@@ -64,15 +64,15 @@ func (a *ConsulAdapterCtx) WithPath(path string) *ConsulAdapterCtx {
 	return a
 }
 
-// WithSetContent sets the content in the context
-func (a *ConsulAdapterCtx) WithSetContent(content *gjson.Json) *ConsulAdapterCtx {
-	a.Ctx = context.WithValue(a.Ctx, gcfg.KeySetContent, content)
+// WithContent sets the content in the context
+func (a *ConsulAdapterCtx) WithContent(content *gjson.Json) *ConsulAdapterCtx {
+	a.Ctx = context.WithValue(a.Ctx, gcfg.KeyContent, content)
 	return a
 }
 
-// GetSetContent retrieves the content from the context
-func (a *ConsulAdapterCtx) GetSetContent() *gjson.Json {
-	if v := a.Ctx.Value(gcfg.KeySetContent); v != nil {
+// GetContent retrieves the content from the context
+func (a *ConsulAdapterCtx) GetContent() *gjson.Json {
+	if v := a.Ctx.Value(gcfg.KeyContent); v != nil {
 		if s, ok := v.(*gjson.Json); ok {
 			return s
 		}
