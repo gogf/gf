@@ -220,32 +220,20 @@ func Test_Issue4375_MultiSchema_TableFields(t *testing.T) {
 	createDatabaseIfNotExists(db, schema1)
 	createDatabaseIfNotExists(db, schema2)
 
-	// Create same table name in schema1 with different structure
-	_, err = db.Exec(ctx, fmt.Sprintf(`
-		CREATE TABLE %s.%s (
+	gtest.C(t, func(t *gtest.T) {
+		// Test schema1 table fields
+		db1 := db.Schema(schema1)
+		// Create same table name in schema1 with different structure
+		_, err = db1.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE %s (
 			id bigserial PRIMARY KEY,
 			username varchar(50) NOT NULL,
 			email varchar(100),
 			age int,
 			created_at timestamp NOT NULL
-		)`, schema1, tableName))
-	gtest.AssertNil(err)
+		)`, tableName))
+		gtest.AssertNil(err)
 
-	// Create same table name in schema2 with different structure
-	_, err = db.Exec(ctx, fmt.Sprintf(`
-		CREATE TABLE %s.%s (
-			id bigserial PRIMARY KEY,
-			full_name varchar(100) NOT NULL,
-			phone varchar(20),
-			address text,
-			status int,
-			updated_at timestamp
-		)`, schema2, tableName))
-	gtest.AssertNil(err)
-
-	gtest.C(t, func(t *gtest.T) {
-		// Test schema1 table fields
-		db1 := db.Schema(schema1)
 		fields1, err := db1.TableFields(ctx, tableName)
 		t.AssertNil(err)
 		t.Assert(len(fields1), 5)
@@ -262,6 +250,17 @@ func Test_Issue4375_MultiSchema_TableFields(t *testing.T) {
 
 		// Test schema2 table fields
 		db2 := db.Schema(schema2)
+		// Create same table name in schema2 with different structure
+		_, err = db2.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE %s (
+			id bigserial PRIMARY KEY,
+			full_name varchar(100) NOT NULL,
+			phone varchar(20),
+			address text,
+			status int,
+			updated_at timestamp
+		)`, tableName))
+		gtest.AssertNil(err)
 		fields2, err := db2.TableFields(ctx, tableName)
 		t.AssertNil(err)
 		t.Assert(len(fields2), 6)
