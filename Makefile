@@ -15,9 +15,28 @@ lint:
 version:
 	@set -e; \
 	newVersion=$(to); \
+	branchName=fix/$$newVersion; \
+	echo "Switching to master branch..."; \
+	git checkout master; \
+	echo "Pulling latest changes from master..."; \
+	git pull origin master; \
+	echo "Creating and switching to branch $$branchName from master..."; \
+	git checkout -b $$branchName; \
 	./.make_version.sh ./ $$newVersion; \
-	echo "make version to=$(to) done"
+	echo "make version to=$(to) done on branch $$branchName"
 
+# make tag to=v2.4.0
+.PHONY: tag
+tag:
+	@set -e; \
+	newVersion=$(to); \
+	echo "Switching to master branch..."; \
+	git checkout master; \
+	echo "Creating tag $$newVersion..."; \
+	git tag $$newVersion; \
+	echo "Pushing tag $$newVersion..."; \
+	git push origin $$newVersion; \
+	echo "Tag $$newVersion created and pushed successfully!"
 
 # update submodules
 .PHONY: subup
