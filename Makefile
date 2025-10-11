@@ -15,6 +15,10 @@ lint:
 branch:
 	@set -e; \
 	newVersion=$(to); \
+	if [ -z "$$newVersion" ]; then \
+		echo "Error: 'to' variable is required. Usage: make branch to=vX.Y.Z"; \
+		exit 1; \
+	fi; \
 	branchName=fix/$$newVersion; \
 	echo "Switching to master branch..."; \
 	git checkout master; \
