@@ -207,24 +207,18 @@ func Test_Issue4033(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/4375
-// Test for multiple schemas with same table name
+// Test for multiple databases with same table name
 func Test_Issue4375_MultiSchema_TableFields(t *testing.T) {
 	var (
-		schema1   = "test_schema_1"
-		schema2   = "test_schema_2"
+		schema1   = "test_db_1"
+		schema2   = "test_db_2"
 		tableName = "user_info"
+		err       error
 	)
 
-	// Create two schemas
-	_, err := db.Exec(ctx, fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", schema1))
-	gtest.AssertNil(err)
-	_, err = db.Exec(ctx, fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", schema2))
-	gtest.AssertNil(err)
-
-	defer func() {
-		db.Exec(ctx, fmt.Sprintf("DROP SCHEMA IF EXISTS %s CASCADE", schema1))
-		db.Exec(ctx, fmt.Sprintf("DROP SCHEMA IF EXISTS %s CASCADE", schema2))
-	}()
+	// Create two databases
+	createDatabaseIfNotExists(db, schema1)
+	createDatabaseIfNotExists(db, schema2)
 
 	// Create same table name in schema1 with different structure
 	_, err = db.Exec(ctx, fmt.Sprintf(`
