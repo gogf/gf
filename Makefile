@@ -39,6 +39,8 @@ tag:
 	newVersion=$(to); \
 	echo "Switching to master branch..."; \
 	git checkout master; \
+	echo "Pulling latest changes from master..."; \
+	git pull origin master; \
 	echo "Creating tag $$newVersion..."; \
 	git tag $$newVersion; \
 	echo "Pushing tag $$newVersion..."; \
