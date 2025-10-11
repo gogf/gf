@@ -10,9 +10,9 @@ tidy:
 lint:
 	golangci-lint run -c .golangci.yml
 
-# make version to=v2.4.0
-.PHONY: version
-version:
+# make branch to=v2.4.0
+.PHONY: branch
+branch:
 	@set -e; \
 	newVersion=$(to); \
 	branchName=fix/$$newVersion; \
@@ -22,8 +22,15 @@ version:
 	git pull origin master; \
 	echo "Creating and switching to branch $$branchName from master..."; \
 	git checkout -b $$branchName; \
+	echo "Branch $$branchName created successfully!"
+
+# make version to=v2.4.0
+.PHONY: version
+version:
+	@set -e; \
+	newVersion=$(to); \
 	./.make_version.sh ./ $$newVersion; \
-	echo "make version to=$(to) done on branch $$branchName"
+	echo "make version to=$(to) done"
 
 # make tag to=v2.4.0
 .PHONY: tag
