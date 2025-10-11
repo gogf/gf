@@ -205,3 +205,91 @@ func Test_Issue4033(t *testing.T) {
 		t.AssertNil(err)
 	})
 }
+
+// https://github.com/gogf/gf/issues/4375
+// Test for multiple schemas with same table name
+func Test_Issue4375_MultiSchema_TableFields(t *testing.T) {
+	var (
+		schema1   = "test_schema_1"
+		schema2   = "test_schema_2"
+		tableName = "user_info"
+	)
+
+	// Create two schemas
+	_, err := db.Exec(ctx, fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", schema1))
+	gtest.AssertNil(err)
+	_, err = db.Exec(ctx, fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", schema2))
+	gtest.AssertNil(err)
+
+	defer func() {
+		db.Exec(ctx, fmt.Sprintf("DROP SCHEMA IF EXISTS %s CASCADE", schema1))
+		db.Exec(ctx, fmt.Sprintf("DROP SCHEMA IF EXISTS %s CASCADE", schema2))
+	}()
+
+	// Create same table name in schema1 with different structure
+	_, err = db.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE %s.%s (
+			id bigserial PRIMARY KEY,
+			username varchar(50) NOT NULL,
+			email varchar(100),
+			age int,
+			created_at timestamp NOT NULL
+		)`, schema1, tableName))
+	gtest.AssertNil(err)
+
+	// Create same table name in schema2 with different structure
+	_, err = db.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE %s.%s (
+			id bigserial PRIMARY KEY,
+			full_name varchar(100) NOT NULL,
+			phone varchar(20),
+			address text,
+			status int,
+			updated_at timestamp
+		)`, schema2, tableName))
+	gtest.AssertNil(err)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test schema1 table fields
+		db1 := db.Schema(schema1)
+		fields1, err := db1.TableFields(ctx, tableName)
+		t.AssertNil(err)
+		t.Assert(len(fields1), 5)
+		t.AssertNE(fields1["username"], nil)
+		t.AssertNE(fields1["email"], nil)
+		t.AssertNE(fields1["age"], nil)
+		t.AssertNE(fields1["created_at"], nil)
+		// Should not have fields from schema2
+		t.Assert(fields1["full_name"], nil)
+		t.Assert(fields1["phone"], nil)
+		t.Assert(fields1["address"], nil)
+		t.Assert(fields1["status"], nil)
+		t.Assert(fields1["updated_at"], nil)
+
+		// Test schema2 table fields
+		db2 := db.Schema(schema2)
+		fields2, err := db2.TableFields(ctx, tableName)
+		t.AssertNil(err)
+		t.Assert(len(fields2), 6)
+		t.AssertNE(fields2["full_name"], nil)
+		t.AssertNE(fields2["phone"], nil)
+		t.AssertNE(fields2["address"], nil)
+		t.AssertNE(fields2["status"], nil)
+		t.AssertNE(fields2["updated_at"], nil)
+		// Should not have fields from schema1
+		t.Assert(fields2["username"], nil)
+		t.Assert(fields2["email"], nil)
+		t.Assert(fields2["age"], nil)
+		t.Assert(fields2["created_at"], nil)
+
+		// Verify field types for schema1
+		t.Assert(fields1["username"].Type, "varchar")
+		t.Assert(fields1["email"].Type, "varchar")
+		t.Assert(fields1["age"].Type, "int4")
+
+		// Verify field types for schema2
+		t.Assert(fields2["full_name"].Type, "varchar")
+		t.Assert(fields2["phone"].Type, "varchar")
+		t.Assert(fields2["address"].Type, "text")
+	})
+}
