@@ -41,8 +41,8 @@ tag:
 	git checkout master; \
 	echo "Pulling latest changes from master..."; \
 	git pull origin master; \
-	echo "Creating tag $$newVersion..."; \
-	git tag $$newVersion; \
+	echo "Creating annotated tag $$newVersion..."; \
+	git tag -a $$newVersion -m "Release $$newVersion"; \
 	echo "Pushing tag $$newVersion..."; \
 	git push origin $$newVersion; \
 	echo "Tag $$newVersion created and pushed successfully!"
