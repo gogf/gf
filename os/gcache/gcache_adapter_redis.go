@@ -20,6 +20,8 @@ type AdapterRedis struct {
 	redis *gredis.Redis
 }
 
+var _ Adapter = (*AdapterRedis)(nil)
+
 // NewAdapterRedis creates and returns a new memory cache object.
 func NewAdapterRedis(redis *gredis.Redis) *AdapterRedis {
 	return &AdapterRedis{
