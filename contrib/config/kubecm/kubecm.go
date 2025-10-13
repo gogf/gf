@@ -16,6 +16,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
@@ -25,9 +26,10 @@ import (
 
 // Client implements gcfg.Adapter.
 type Client struct {
-	config Config                // Config object when created.
-	client *kubernetes.Clientset // Kubernetes client.
-	value  *g.Var                // Configmap content cached. It is `*gjson.Json` value internally.
+	config   Config                // Config object when created.
+	client   *kubernetes.Clientset // Kubernetes client.
+	value    *g.Var                // Configmap content cached. It is `*gjson.Json` value internally.
+	watchers *gmap.StrAnyMap       // Watchers for watching file changes.
 }
 
 // Config for Client.
@@ -145,6 +147,15 @@ func (c *Client) doUpdate(ctx context.Context, namespace string) (err error) {
 		)
 	}
 	c.value.Set(j)
+	var content *gjson.Json
+	if content, err = gjson.LoadContent([]byte(cm.Data[c.config.DataItem])); err != nil {
+		return gerror.Wrapf(
+			err,
+			`parse config map item from %s[%s] failed`, c.config.ConfigMap, c.config.DataItem,
+		)
+	}
+	adapterCtx := NewAdapterCtx(ctx).WithOperation(gcfg.OperationUpdate).WithNamespace(namespace).WithConfigMap(c.config.ConfigMap).WithDataItem(c.config.DataItem).WithContent(content)
+	c.notifyWatchers(adapterCtx.Ctx)
 	return nil
 }
 
@@ -168,6 +179,7 @@ func (c *Client) doWatch(ctx context.Context, namespace string) (err error) {
 	return nil
 }
 
+// startAsynchronousWatch starts an asynchronous watch for the specified configuration file.
 func (c *Client) startAsynchronousWatch(ctx context.Context, namespace string, watchHandler watch.Interface) {
 	for {
 		event := <-watchHandler.ResultChan()
@@ -176,4 +188,29 @@ func (c *Client) startAsynchronousWatch(ctx context.Context, namespace string, w
 			_ = c.doUpdate(ctx, namespace)
 		}
 	}
+}
+
+// AddWatcher adds a watcher for the specified configuration file.
+func (c *Client) AddWatcher(name string, f func(ctx context.Context)) {
+	c.watchers.Set(name, f)
+}
+
+// RemoveWatcher removes the watcher for the specified configuration file.
+func (c *Client) RemoveWatcher(name string) {
+	c.watchers.Remove(name)
+}
+
+// GetWatcherNames returns all watcher names.
+func (c *Client) GetWatcherNames() []string {
+	return c.watchers.Keys()
+}
+
+// notifyWatchers notifies all watchers.
+func (c *Client) notifyWatchers(ctx context.Context) {
+	c.watchers.Iterator(func(k string, v any) bool {
+		if fn, ok := v.(func(ctx context.Context)); ok {
+			go fn(ctx)
+		}
+		return true
+	})
 }
