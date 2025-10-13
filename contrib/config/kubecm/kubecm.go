@@ -24,6 +24,12 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
+var (
+	// Compile-time checking for interface implementation.
+	_ gcfg.Adapter        = (*Client)(nil)
+	_ gcfg.WatcherAdapter = (*Client)(nil)
+)
+
 // Client implements gcfg.Adapter.
 type Client struct {
 	config   Config                // Config object when created.
