@@ -69,9 +69,10 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 		}
 	}
 	adapter = &Client{
-		config: config,
-		client: config.KubeClient,
-		value:  g.NewVar(nil, true),
+		config:   config,
+		client:   config.KubeClient,
+		value:    g.NewVar(nil, true),
+		watchers: gmap.NewStrAnyMap(true),
 	}
 	return
 }
@@ -136,6 +137,7 @@ func (c *Client) updateLocalValueAndWatch(ctx context.Context) (err error) {
 	return nil
 }
 
+// doUpdate retrieves and caches the configmap content.
 func (c *Client) doUpdate(ctx context.Context, namespace string) (err error) {
 	cm, err := c.client.CoreV1().ConfigMaps(namespace).Get(ctx, c.config.ConfigMap, kubeMetaV1.GetOptions{})
 	if err != nil {
@@ -165,6 +167,7 @@ func (c *Client) doUpdate(ctx context.Context, namespace string) (err error) {
 	return nil
 }
 
+// doWatch watches the configmap content.
 func (c *Client) doWatch(ctx context.Context, namespace string) (err error) {
 	if !c.config.Watch {
 		return nil
