@@ -29,8 +29,8 @@ var {{.TplTableNameCamelCase}} = map[string]*gdb.TableField{
 // Set{{.TplTableNameCamelCase}}TableFields registers the table fields definition to the database instance.
 // db: database instance that implements gdb.DB interface.
 // schema: optional schema/namespace name, especially for databases that support schemas.
-func Set{{.TplTableNameCamelCase}}TableFields(db gdb.DB, schema ...string) error {
-	return db.GetCore().SetTableFields(context.Background(), "{{.TplTableName}}", {{.TplTableNameCamelCase}}, schema...)
+func Set{{.TplTableNameCamelCase}}TableFields(ctx context.Context, db gdb.DB, schema ...string) error {
+	return db.GetCore().SetTableFields(ctx, "{{.TplTableName}}", {{.TplTableNameCamelCase}}, schema...)
 }
 
 `
