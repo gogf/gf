@@ -57,14 +57,21 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 	}
 	fields = make(map[string]*gdb.TableField)
 	var (
-		index = 0
-		name  string
-		ok    bool
+		index         = 0
+		name          string
+		ok            bool
+		existingField *gdb.TableField
 	)
 	for _, m := range result {
 		name = m["field"].String()
-		// Filter duplicated fields.
-		if _, ok = fields[name]; ok {
+		// Merge duplicated fields, especially for key constraints.
+		// Priority: pri > uni > others
+		if existingField, ok = fields[name]; ok {
+			currentKey := m["key"].String()
+			// Merge key information with priority: pri > uni
+			if currentKey == "pri" || (currentKey == "uni" && existingField.Key != "pri") {
+				existingField.Key = currentKey
+			}
 			continue
 		}
 		fields[name] = &gdb.TableField{
