@@ -49,6 +49,7 @@ func generateTable(ctx context.Context, in CGenDaoInternalInput) {
 	}
 }
 
+// generateTableSingleInput is the input parameter for generateTableSingle.
 type generateTableSingleInput struct {
 	CGenDaoInternalInput
 	// TableName specifies the table name of the table.
