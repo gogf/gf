@@ -30,7 +30,7 @@ var {{.TplTableNameCamelCase}} = map[string]*gdb.TableField{
 // db: database instance that implements gdb.DB interface.
 // schema: optional schema/namespace name, especially for databases that support schemas.
 func Set{{.TplTableNameCamelCase}}TableFields(db gdb.DB, schema ...string) error {
-	return db.SetTableFields(context.Background(), "{{.TplTableName}}", {{.TplTableNameCamelCase}}, schema...)
+	return db.GetCore().SetTableFields(context.Background(), "{{.TplTableName}}", {{.TplTableNameCamelCase}}, schema...)
 }
 
 `

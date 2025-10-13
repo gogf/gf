@@ -320,9 +320,6 @@ type DB interface {
 	// The returned map keys are field names and values contain field metadata.
 	TableFields(ctx context.Context, table string, schema ...string) (map[string]*TableField, error)
 
-	// SetTableFields sets the table fields to cache.
-	SetTableFields(ctx context.Context, table string, fields map[string]*TableField, schema ...string) error
-
 	// ConvertValueForField converts a value to the appropriate type for a database field.
 	// It handles type conversion from Go types to database-specific types.
 	ConvertValueForField(ctx context.Context, fieldType string, fieldValue any) (any, error)
