@@ -67,3 +67,39 @@ func quickSortStr(values []string, comparator func(a, b string) int) {
 	quickSortStr(values[:head], comparator)
 	quickSortStr(values[head+1:], comparator)
 }
+
+// tToAnySlice is convert []T to []any
+func tToAnySlice[T comparable](values []T) []any {
+	anyValues := make([]any, len(values), cap(values))
+	for k, v := range values {
+		anyValues[k] = v
+	}
+	return anyValues
+}
+
+// tToAnySlice is convert []any to []T
+func anyToTSlice[T comparable](values []any) []T {
+	tValues := make([]T, len(values), cap(values))
+	for k, v := range values {
+		tValues[k], _ = v.(T)
+	}
+	return tValues
+}
+
+// tToAnySlice is convert [][]T to [][]any
+func tToAnySlices[T comparable](values [][]T) [][]any {
+	anyValues := make([][]any, len(values), cap(values))
+	for k, v := range values {
+		anyValues[k] = tToAnySlice(v)
+	}
+	return anyValues
+}
+
+// tToAnySlice is convert [][]any to [][]T
+func anyToTSlices[T comparable](values [][]any) [][]T {
+	tValues := make([][]T, len(values), cap(values))
+	for k, v := range values {
+		tValues[k] = anyToTSlice[T](v)
+	}
+	return tValues
+}
