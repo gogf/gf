@@ -315,6 +315,12 @@ func (a *TArray[T]) RLockFunc(f func(array []T)) *TArray[T] {
 // but Merge supports more parameter types.
 func (a *TArray[T]) Merge(array any) *TArray[T] {
 	switch v := array.(type) {
+	case *Array:
+		return a.Merge(v.Slice())
+	case *StrArray:
+		return a.Merge(v.Slice())
+	case *IntArray:
+		return a.Merge(v.Slice())
 	case *TArray[T]:
 		a.Array.Merge(&v.Array)
 	case []T:
@@ -323,12 +329,6 @@ func (a *TArray[T]) Merge(array any) *TArray[T] {
 		a.Append(v)
 	case TArray[T]:
 		a.Array.Merge(&v.Array)
-	case *Array:
-		return a.Merge(v.Slice())
-	case *StrArray:
-		return a.Merge(v.Slice())
-	case *IntArray:
-		return a.Merge(v.Slice())
 	default:
 		var vals []T
 		if err := gconv.Scan(v, &vals); err != nil {
