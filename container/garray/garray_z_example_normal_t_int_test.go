@@ -55,14 +55,6 @@ func ExampleNewTArrayIntSize() {
 	// [10 20 15] 3 5
 }
 
-func ExampleNewTArrayIntRange() {
-	s := garray.NewTArrayRange[int](1, 5, 1)
-	fmt.Println(s.Slice(), s.Len(), cap(s.Slice()))
-
-	// Output:
-	// [1 2 3 4 5] 5 8
-}
-
 func ExampleNewTArrayIntFrom() {
 	s := garray.NewTArrayFrom[int](g.SliceInt{10, 20, 15, 30})
 	fmt.Println(s.Slice(), s.Len(), cap(s.Slice()))

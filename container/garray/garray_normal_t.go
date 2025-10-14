@@ -38,14 +38,6 @@ func NewTArraySize[T comparable](size int, cap int, safe ...bool) *TArray[T] {
 	return ret
 }
 
-// NewTArrayRange creates and returns an array by a range from `start` to `end`
-// with step value `step`.
-func NewTArrayRange[T comparable](start, end, step int, safe ...bool) *TArray[T] {
-	return &TArray[T]{
-		Array: *NewArrayRange(start, end, step, safe...),
-	}
-}
-
 // NewTArrayFrom creates and returns an array with given slice `array`.
 // The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
