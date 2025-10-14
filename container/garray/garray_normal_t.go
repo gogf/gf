@@ -32,9 +32,9 @@ func NewTArray[T comparable](safe ...bool) *TArray[T] {
 // which is false in default.
 func NewTArraySize[T comparable](size int, cap int, safe ...bool) *TArray[T] {
 	arr := NewArraySize(size, cap, safe...)
-	ret := &TArray[T]{}
-	ret.Array.mu = arr.mu
-	ret.Array.array = arr.array
+	ret := &TArray[T]{
+		Array: *arr,
+	}
 	return ret
 }
 
