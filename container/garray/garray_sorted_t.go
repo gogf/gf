@@ -60,7 +60,7 @@ func NewSortedTArraySize[T comparable](cap int, comparator func(a, b T) int, saf
 	}
 }
 
-// NewSortedTArray[T]From creates and returns an sorted array with given slice `array`.
+// NewSortedTArrayFrom creates and returns an sorted array with given slice `array`.
 // The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedTArrayFrom[T comparable](array []T, comparator func(a, b T) int, safe ...bool) *SortedTArray[T] {
