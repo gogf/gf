@@ -152,7 +152,15 @@ func (e *Entry) checkAndRun(ctx context.Context) {
 		e.Close()
 
 	case StatusReady, StatusRunning:
-		e.cron.jobWaiter.Add(1)
+		e.cron.runningLock.Lock()
+		if e.cron.running {
+			e.cron.jobWaiter.Add(1)
+		} else {
+			e.cron.runningLock.Unlock()
+			e.logDebugf(ctx, `cron job "%s" stoped or closed`, e.getJobNameWithPattern())
+			return
+		}
+		e.cron.runningLock.Unlock()
 		defer func() {
 			e.cron.jobWaiter.Done()
 			if exception := recover(); exception != nil {
