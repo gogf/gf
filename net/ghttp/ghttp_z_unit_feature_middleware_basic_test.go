@@ -821,7 +821,7 @@ type testTracerProvider struct {
 	noop.TracerProvider
 }
 
-var _ trace.TracerProvider = &testTracerProvider{}
+var _ trace.TracerProvider = (*testTracerProvider)(nil)
 
 func (*testTracerProvider) Tracer(_ string, _ ...trace.TracerOption) trace.Tracer {
 	return noop.NewTracerProvider().Tracer("")
