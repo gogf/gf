@@ -349,7 +349,14 @@ func (a *AdapterFile) GetWatcherNames() []string {
 func (a *AdapterFile) notifyWatchers(ctx context.Context) {
 	a.watchers.Iterator(func(k string, v any) bool {
 		if fn, ok := v.(func(ctx context.Context)); ok {
-			go fn(ctx)
+			go func(k string, fn func(ctx context.Context), ctx context.Context) {
+				defer func() {
+					if r := recover(); r != nil {
+						intlog.Errorf(ctx, "watcher %s panic: %v", k, r)
+					}
+				}()
+				fn(ctx)
+			}(k, fn, ctx)
 		}
 		return true
 	})
