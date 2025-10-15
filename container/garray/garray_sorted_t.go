@@ -88,7 +88,7 @@ func NewSortedTArrayFromCopy[T comparable](array []T, comparator func(a, b T) in
 }
 
 // At returns the value by the specified index.
-// If the given `index` is out of range of the array, it returns `nil`.
+// If the given `index` is out of range of the array, it returns the zero value of type `T` (as `any`).
 func (a *SortedTArray[T]) At(index int) (value any) {
 	value, _ = a.Get(index)
 	return
