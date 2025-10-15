@@ -129,6 +129,9 @@ func NewRedisTokenBucketRateLimiter(option RedisTokenBucketRateLimiterOption) *R
 	if option.DenyHandler == nil {
 		option.DenyHandler = DefaultDenyHandler
 	}
+	if option.Logger == nil {
+		option.Logger = glog.DefaultLogger()
+	}
 	return &RedisTokenBucketRateLimiter{
 		redis:  option.Redis,
 		option: option,

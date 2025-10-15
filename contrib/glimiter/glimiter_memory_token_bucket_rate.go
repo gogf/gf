@@ -169,7 +169,7 @@ func NewMemoryTokenBucketRateLimiter(option MemoryTokenBucketRateLimiterOption) 
 		option.DenyHandler = DefaultDenyHandler
 	}
 	if option.Logger == nil {
-		option.Logger = glog.New()
+		option.Logger = glog.DefaultLogger()
 	}
 	var cache *gcache.Cache
 	if option.LruCapacity > 0 {
