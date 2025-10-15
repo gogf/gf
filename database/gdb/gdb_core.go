@@ -757,6 +757,30 @@ func (c *Core) GetInnerMemCache() *gcache.Cache {
 	return c.innerMemCache
 }
 
+func (c *Core) SetTableFields(ctx context.Context, table string, fields map[string]*TableField, schema ...string) error {
+	if table == "" {
+		return gerror.NewCode(gcode.CodeInvalidParameter, "table name cannot be empty")
+	}
+	charL, charR := c.db.GetChars()
+	table = gstr.Trim(table, charL+charR)
+	if gstr.Contains(table, " ") {
+		return gerror.NewCode(
+			gcode.CodeInvalidParameter,
+			"function TableFields supports only single table operations",
+		)
+	}
+	var (
+		innerMemCache = c.GetInnerMemCache()
+		// prefix:group@schema#table
+		cacheKey = genTableFieldsCacheKey(
+			c.db.GetGroup(),
+			gutil.GetOrDefaultStr(c.db.GetSchema(), schema...),
+			table,
+		)
+	)
+	return innerMemCache.Set(ctx, cacheKey, fields, gcache.DurationNoExpire)
+}
+
 // GetTablesWithCache retrieves and returns the table names of current database with cache.
 func (c *Core) GetTablesWithCache() ([]string, error) {
 	var (

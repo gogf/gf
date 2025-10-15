@@ -69,6 +69,7 @@ func Test_Gen_Dao_Default(t *testing.T) {
 				NoJsonTag:          false,
 				NoModelComment:     false,
 				Clear:              false,
+				GenTable:           false,
 				TypeMapping:        nil,
 				FieldMapping:       nil,
 			}
@@ -161,6 +162,7 @@ func Test_Gen_Dao_TypeMapping(t *testing.T) {
 				NoJsonTag:          false,
 				NoModelComment:     false,
 				Clear:              false,
+				GenTable:           false,
 				TypeMapping: map[gendao.DBFieldTypeName]gendao.CustomAttributeType{
 					"int": {
 						Type:   "int64",
@@ -263,6 +265,7 @@ func Test_Gen_Dao_FieldMapping(t *testing.T) {
 				NoJsonTag:          false,
 				NoModelComment:     false,
 				Clear:              false,
+				GenTable:           false,
 				TypeMapping: map[gendao.DBFieldTypeName]gendao.CustomAttributeType{
 					"int": {
 						Type:   "int64",
