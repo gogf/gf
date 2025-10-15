@@ -134,7 +134,7 @@ func (a *TArray[T]) RemoveValue(value T) bool {
 }
 
 // RemoveValues removes multiple items by `values`.
-func (a TArray[T]) RemoveValues(values ...T) {
+func (a *TArray[T]) RemoveValues(values ...T) {
 	a.Array.RemoveValues(tToAnySlice(values)...)
 }
 
@@ -317,8 +317,6 @@ func (a *TArray[T]) Merge(array any) *TArray[T] {
 		a.Array.Merge(&v.Array)
 	case []T:
 		a.Array.Merge(v)
-	case T:
-		a.Append(v)
 	case TArray[T]:
 		a.Array.Merge(&v.Array)
 	default:
@@ -423,6 +421,9 @@ func (a *TArray[T]) IteratorDesc(f func(k int, v T) bool) {
 
 // String returns current array as a string, which implements like json.Marshal does.
 func (a *TArray[T]) String() string {
+	if a == nil {
+		return ""
+	}
 	return a.Array.String()
 }
 

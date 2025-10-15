@@ -70,6 +70,9 @@ func quickSortStr(values []string, comparator func(a, b string) int) {
 
 // tToAnySlice is convert []T to []any
 func tToAnySlice[T comparable](values []T) []any {
+	if values == nil {
+		return nil
+	}
 	anyValues := make([]any, len(values), cap(values))
 	for k, v := range values {
 		anyValues[k] = v
@@ -79,6 +82,9 @@ func tToAnySlice[T comparable](values []T) []any {
 
 // tToAnySlice is convert []any to []T
 func anyToTSlice[T comparable](values []any) []T {
+	if values == nil {
+		return nil
+	}
 	tValues := make([]T, len(values), cap(values))
 	for k, v := range values {
 		tValues[k], _ = v.(T)
@@ -88,6 +94,9 @@ func anyToTSlice[T comparable](values []any) []T {
 
 // tToAnySlice is convert [][]T to [][]any
 func tToAnySlices[T comparable](values [][]T) [][]any {
+	if values == nil {
+		return nil
+	}
 	anyValues := make([][]any, len(values), cap(values))
 	for k, v := range values {
 		anyValues[k] = tToAnySlice(v)
@@ -97,6 +106,9 @@ func tToAnySlices[T comparable](values [][]T) [][]any {
 
 // tToAnySlice is convert [][]any to [][]T
 func anyToTSlices[T comparable](values [][]any) [][]T {
+	if values == nil {
+		return nil
+	}
 	tValues := make([][]T, len(values), cap(values))
 	for k, v := range values {
 		tValues[k] = anyToTSlice[T](v)
