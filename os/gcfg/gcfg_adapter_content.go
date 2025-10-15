@@ -14,17 +14,25 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 )
 
+var (
+	// Compile-time checking for interface implementation.
+	_ Adapter        = (*AdapterContent)(nil)
+	_ WatcherAdapter = (*AdapterContent)(nil)
+)
+
 // AdapterContent implements interface Adapter using content.
 // The configuration content supports the coding types as package `gjson`.
 type AdapterContent struct {
-	jsonVar *gvar.Var // The pared JSON object for configuration content, type: *gjson.Json.
+	jsonVar  *gvar.Var        // The pared JSON object for configuration content, type: *gjson.Json.
+	watchers *WatcherRegistry // Watchers for watching file changes.
 }
 
 // NewAdapterContent returns a new configuration management object using custom content.
 // The parameter `content` specifies the default configuration content for reading.
 func NewAdapterContent(content ...string) (*AdapterContent, error) {
 	a := &AdapterContent{
-		jsonVar: gvar.New(nil, true),
+		jsonVar:  gvar.New(nil, true),
+		watchers: NewWatcherRegistry(),
 	}
 	if len(content) > 0 {
 		if err := a.SetContent(content[0]); err != nil {
@@ -42,6 +50,8 @@ func (a *AdapterContent) SetContent(content string) error {
 		return gerror.Wrap(err, `load configuration content failed`)
 	}
 	a.jsonVar.Set(j)
+	adapterCtx := NewAdapterContentCtx().WithOperation(OperationSet).WithContent(content)
+	a.notifyWatchers(adapterCtx.Ctx)
 	return nil
 }
 
@@ -73,4 +83,24 @@ func (a *AdapterContent) Data(ctx context.Context) (data map[string]any, err err
 		return nil, nil
 	}
 	return a.jsonVar.Val().(*gjson.Json).Var().Map(), nil
+}
+
+// AddWatcher adds a watcher for the specified configuration file.
+func (a *AdapterContent) AddWatcher(name string, fn func(ctx context.Context)) {
+	a.watchers.Add(name, fn)
+}
+
+// RemoveWatcher removes the watcher for the specified configuration file.
+func (a *AdapterContent) RemoveWatcher(name string) {
+	a.watchers.Remove(name)
+}
+
+// GetWatcherNames returns all watcher names.
+func (a *AdapterContent) GetWatcherNames() []string {
+	return a.watchers.GetNames()
+}
+
+// notifyWatchers notifies all watchers.
+func (a *AdapterContent) notifyWatchers(ctx context.Context) {
+	a.watchers.Notify(ctx)
 }

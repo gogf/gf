@@ -22,6 +22,12 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+var (
+	// Compile-time checking for interface implementation.
+	_ gcfg.Adapter        = (*Client)(nil)
+	_ gcfg.WatcherAdapter = (*Client)(nil)
+)
+
 // Config is the configuration object for apollo client.
 type Config struct {
 	AppID             string `v:"required"` // See apolloConfig.Config.
@@ -38,9 +44,10 @@ type Config struct {
 
 // Client implements gcfg.Adapter implementing using apollo service.
 type Client struct {
-	config Config        // Config object when created.
-	client agollo.Client // Apollo client.
-	value  *g.Var        // Configmap content cached. It is `*gjson.Json` value internally.
+	config   Config                // Config object when created.
+	client   agollo.Client         // Apollo client.
+	value    *g.Var                // Configmap content cached. It is `*gjson.Json` value internally.
+	watchers *gcfg.WatcherRegistry // Watchers for watching file changes.
 }
 
 // New creates and returns gcfg.Adapter implementing using apollo service.
@@ -54,8 +61,9 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 		config.NamespaceName = storage.GetDefaultNamespace()
 	}
 	client := &Client{
-		config: config,
-		value:  g.NewVar(nil, true),
+		config:   config,
+		value:    g.NewVar(nil, true),
+		watchers: gcfg.NewWatcherRegistry(),
 	}
 	// Apollo client.
 	client.client, err = agollo.StartWithConfig(func() (*apolloConfig.AppConfig, error) {
@@ -89,7 +97,7 @@ func (c *Client) Available(ctx context.Context, resource ...string) (ok bool) {
 	if len(resource) == 0 && !c.value.IsNil() {
 		return true
 	}
-	var namespace = c.config.NamespaceName
+	namespace := c.config.NamespaceName
 	if len(resource) > 0 {
 		namespace = resource[0]
 	}
@@ -132,10 +140,15 @@ func (c *Client) OnNewestChange(event *storage.FullChangeEvent) {
 }
 
 func (c *Client) updateLocalValue(ctx context.Context) (err error) {
-	var j = gjson.New(nil)
+	j := gjson.New(nil)
+	content := gjson.New(nil, true)
 	cache := c.client.GetConfigCache(c.config.NamespaceName)
 	cache.Range(func(key, value any) bool {
 		err = j.Set(gconv.String(key), value)
+		if err != nil {
+			return false
+		}
+		err = content.Set(gconv.String(key), value)
 		if err != nil {
 			return false
 		}
@@ -144,6 +157,29 @@ func (c *Client) updateLocalValue(ctx context.Context) (err error) {
 	cache.Clear()
 	if err == nil {
 		c.value.Set(j)
+		adapterCtx := NewAdapterCtx(ctx).WithOperation(gcfg.OperationUpdate).WithNamespace(c.config.NamespaceName).
+			WithAppId(c.config.AppID).WithCluster(c.config.Cluster).WithContent(content)
+		c.notifyWatchers(adapterCtx.Ctx)
 	}
 	return
+}
+
+// AddWatcher adds a watcher for the specified configuration file.
+func (c *Client) AddWatcher(name string, f func(ctx context.Context)) {
+	c.watchers.Add(name, f)
+}
+
+// RemoveWatcher removes the watcher for the specified configuration file.
+func (c *Client) RemoveWatcher(name string) {
+	c.watchers.Remove(name)
+}
+
+// GetWatcherNames returns all watcher names.
+func (c *Client) GetWatcherNames() []string {
+	return c.watchers.GetNames()
+}
+
+// notifyWatchers notifies all watchers.
+func (c *Client) notifyWatchers(ctx context.Context) {
+	c.watchers.Notify(ctx)
 }
