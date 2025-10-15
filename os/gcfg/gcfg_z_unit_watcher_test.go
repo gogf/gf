@@ -34,8 +34,8 @@ func TestWatcher_File_Ctx(t *testing.T) {
 
 		// Create config instance.
 		c, err := gcfg.NewAdapterFile(configFile)
-		c.Data(context.Background())
 		t.AssertNil(err)
+		c.Data(context.Background())
 		c.AddWatcher(key1, func(ctx context.Context) {
 			fileCtx := gcfg.GetAdapterFileCtx(ctx)
 			t.Assert(fileCtx.GetOperation(), gcfg.OperationWrite)
