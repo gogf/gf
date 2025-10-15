@@ -67,7 +67,7 @@ It provides much more features for building binary:
 PLATFORMS
     darwin    amd64,arm64
     freebsd   386,amd64,arm
-    linux     386,amd64,arm,arm64,ppc64,ppc64le,mips,mipsle,mips64,mips64le
+    linux     386,amd64,arm,arm64,ppc64,ppc64le,mips,mipsle,mips64,mips64le,loong64
     netbsd    386,amd64,arm
     openbsd   386,amd64,arm
     windows   386,amd64
@@ -91,6 +91,7 @@ linux     mips
 linux     mipsle
 linux     mips64
 linux     mips64le
+linux     loong64
 netbsd    386
 netbsd    amd64
 netbsd    arm
