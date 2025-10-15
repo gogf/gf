@@ -190,8 +190,29 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 	// Table excluding.
 	if in.TablesEx != "" {
 		array := garray.NewStrArrayFrom(tableNames)
-		for _, v := range gstr.SplitAndTrim(in.TablesEx, ",") {
-			array.RemoveValue(v)
+		for _, p := range gstr.SplitAndTrim(in.TablesEx, ",") {
+			if gstr.Contains(p, "*") || gstr.Contains(p, "?") {
+				p = gstr.ReplaceByMap(p, map[string]string{
+					"\r": "",
+					"\n": "",
+				})
+				p = gstr.ReplaceByMap(p, map[string]string{
+					"*": "\r",
+					"?": "\n",
+				})
+				p = gregex.Quote(p)
+				p = gstr.ReplaceByMap(p, map[string]string{
+					"\r": ".*",
+					"\n": ".",
+				})
+				for _, v := range array.Clone().Slice() {
+					if gregex.IsMatchString(p, v) {
+						array.RemoveValue(v)
+					}
+				}
+			} else {
+				array.RemoveValue(p)
+			}
 		}
 		tableNames = array.Slice()
 	}
