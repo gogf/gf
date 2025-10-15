@@ -68,7 +68,7 @@ func quickSortStr(values []string, comparator func(a, b string) int) {
 	quickSortStr(values[head+1:], comparator)
 }
 
-// tToAnySlice is convert []T to []any
+// tToAnySlice converts []T to []any
 func tToAnySlice[T comparable](values []T) []any {
 	if values == nil {
 		return nil
