@@ -75,7 +75,7 @@ func NewSortedTArrayFrom[T comparable](array []T, comparator func(a, b T) int, s
 	return a
 }
 
-// NewSortedTArray[T]FromCopy creates and returns an sorted array from a copy of given slice `array`.
+// NewSortedTArrayFromCopy creates and returns an sorted array from a copy of given slice `array`.
 // The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedTArrayFromCopy[T comparable](array []T, comparator func(a, b T) int, safe ...bool) *SortedTArray[T] {
