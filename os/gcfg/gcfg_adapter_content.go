@@ -9,7 +9,6 @@ package gcfg
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -24,8 +23,8 @@ var (
 // AdapterContent implements interface Adapter using content.
 // The configuration content supports the coding types as package `gjson`.
 type AdapterContent struct {
-	jsonVar  *gvar.Var       // The pared JSON object for configuration content, type: *gjson.Json.
-	watchers *gmap.StrAnyMap // Watchers for watching file changes.
+	jsonVar  *gvar.Var        // The pared JSON object for configuration content, type: *gjson.Json.
+	watchers *WatcherRegistry // Watchers for watching file changes.
 }
 
 // NewAdapterContent returns a new configuration management object using custom content.
@@ -33,7 +32,7 @@ type AdapterContent struct {
 func NewAdapterContent(content ...string) (*AdapterContent, error) {
 	a := &AdapterContent{
 		jsonVar:  gvar.New(nil, true),
-		watchers: gmap.NewStrAnyMap(true),
+		watchers: NewWatcherRegistry(),
 	}
 	if len(content) > 0 {
 		if err := a.SetContent(content[0]); err != nil {
@@ -88,7 +87,7 @@ func (a *AdapterContent) Data(ctx context.Context) (data map[string]any, err err
 
 // AddWatcher adds a watcher for the specified configuration file.
 func (a *AdapterContent) AddWatcher(name string, fn func(ctx context.Context)) {
-	a.watchers.Set(name, fn)
+	a.watchers.Add(name, fn)
 }
 
 // RemoveWatcher removes the watcher for the specified configuration file.
@@ -98,15 +97,10 @@ func (a *AdapterContent) RemoveWatcher(name string) {
 
 // GetWatcherNames returns all watcher names.
 func (a *AdapterContent) GetWatcherNames() []string {
-	return a.watchers.Keys()
+	return a.watchers.GetNames()
 }
 
 // notifyWatchers notifies all watchers.
 func (a *AdapterContent) notifyWatchers(ctx context.Context) {
-	a.watchers.Iterator(func(k string, v any) bool {
-		if fn, ok := v.(func(ctx context.Context)); ok {
-			go fn(ctx)
-		}
-		return true
-	})
+	a.watchers.Notify(ctx)
 }

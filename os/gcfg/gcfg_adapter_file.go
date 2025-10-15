@@ -36,7 +36,7 @@ type AdapterFile struct {
 	searchPaths           *garray.StrArray // Searching the path array.
 	jsonMap               *gmap.StrAnyMap  // The pared JSON objects for configuration files.
 	violenceCheck         bool             // Whether it does violence check in value index searching. It affects the performance when set true(false in default).
-	watchers              *gmap.StrAnyMap  // Watchers for watching file changes.
+	watchers              *WatcherRegistry // Watchers for watching file changes.
 }
 
 const (
@@ -78,7 +78,7 @@ func NewAdapterFile(fileNameOrPath ...string) (*AdapterFile, error) {
 		defaultFileNameOrPath: gtype.NewString(usedFileNameOrPath),
 		searchPaths:           garray.NewStrArray(true),
 		jsonMap:               gmap.NewStrAnyMap(true),
-		watchers:              gmap.NewStrAnyMap(true),
+		watchers:              NewWatcherRegistry(),
 	}
 	// Customized dir path from env/cmd.
 	if customPath := command.GetOptWithEnv(commandEnvKeyForPath); customPath != "" {
@@ -251,7 +251,7 @@ func (a *AdapterFile) autoCheckAndAddMainPkgPathToSearchPaths() {
 // getJson returns a *gjson.Json object for the specified `file` content.
 // It would print error if file reading fails. It returns nil if any error occurs.
 func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json, err error) {
-	usedFileNameOrPath := a.defaultFileNameOrPath.String()
+	usedFileNameOrPath := a.GetFileName()
 	if len(fileNameOrPath) > 0 && fileNameOrPath[0] != "" {
 		usedFileNameOrPath = fileNameOrPath[0]
 	}
@@ -300,9 +300,8 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 			_, err = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
 				a.jsonMap.Remove(usedFileNameOrPath)
 				if event.IsWrite() || event.IsRemove() || event.IsCreate() || event.IsRename() || event.IsChmod() {
-					fileName := a.GetFileName()
-					fileType := gfile.ExtName(fileName)
-					adapterCtx := NewAdapterFileCtx().WithFileName(fileName).WithFilePath(filePath).WithFileType(fileType)
+					fileType := gfile.ExtName(usedFileNameOrPath)
+					adapterCtx := NewAdapterFileCtx().WithFileName(usedFileNameOrPath).WithFilePath(filePath).WithFileType(fileType)
 					switch {
 					case event.IsWrite():
 						adapterCtx.WithOperation(OperationWrite)
@@ -332,7 +331,7 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 
 // AddWatcher adds a watcher for the specified configuration file.
 func (a *AdapterFile) AddWatcher(name string, fn func(ctx context.Context)) {
-	a.watchers.Set(name, fn)
+	a.watchers.Add(name, fn)
 }
 
 // RemoveWatcher removes the watcher for the specified configuration file.
@@ -342,22 +341,10 @@ func (a *AdapterFile) RemoveWatcher(name string) {
 
 // GetWatcherNames returns all watcher names.
 func (a *AdapterFile) GetWatcherNames() []string {
-	return a.watchers.Keys()
+	return a.watchers.GetNames()
 }
 
 // notifyWatchers notifies all watchers.
 func (a *AdapterFile) notifyWatchers(ctx context.Context) {
-	a.watchers.Iterator(func(k string, v any) bool {
-		if fn, ok := v.(func(ctx context.Context)); ok {
-			go func(k string, fn func(ctx context.Context), ctx context.Context) {
-				defer func() {
-					if r := recover(); r != nil {
-						intlog.Errorf(ctx, "watcher %s panic: %v", k, r)
-					}
-				}()
-				fn(ctx)
-			}(k, fn, ctx)
-		}
-		return true
-	})
+	a.watchers.Notify(ctx)
 }

@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/consul/api"
 	"github.com/hashicorp/consul/api/watch"
 
-	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
@@ -49,7 +48,7 @@ type Client struct {
 	// Configmap content cached. It is `*gjson.Json` value internally.
 	value *g.Var
 	// Watchers for watching file changes.
-	watchers *gmap.StrAnyMap
+	watchers *gcfg.WatcherRegistry
 }
 
 // New creates and returns gcfg.Adapter implementing using consul service.
@@ -66,7 +65,7 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 	client := &Client{
 		config:   config,
 		value:    g.NewVar(nil, true),
-		watchers: gmap.NewStrAnyMap(true),
+		watchers: gcfg.NewWatcherRegistry(),
 	}
 
 	client.client, err = api.NewClient(&config.ConsulConfig)
@@ -209,7 +208,7 @@ func (c *Client) startAsynchronousWatch(plan *watch.Plan) {
 
 // AddWatcher adds a watcher for the specified configuration file.
 func (c *Client) AddWatcher(name string, f func(ctx context.Context)) {
-	c.watchers.Set(name, f)
+	c.watchers.Add(name, f)
 }
 
 // RemoveWatcher removes the watcher for the specified configuration file.
@@ -219,15 +218,10 @@ func (c *Client) RemoveWatcher(name string) {
 
 // GetWatcherNames returns all watcher names.
 func (c *Client) GetWatcherNames() []string {
-	return c.watchers.Keys()
+	return c.watchers.GetNames()
 }
 
 // notifyWatchers notifies all watchers.
 func (c *Client) notifyWatchers(ctx context.Context) {
-	c.watchers.Iterator(func(k string, v any) bool {
-		if fn, ok := v.(func(ctx context.Context)); ok {
-			go fn(ctx)
-		}
-		return true
-	})
+	c.watchers.Notify(ctx)
 }

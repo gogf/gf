@@ -14,7 +14,6 @@ import (
 	apolloConfig "github.com/apolloconfig/agollo/v4/env/config"
 	"github.com/apolloconfig/agollo/v4/storage"
 
-	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
@@ -45,10 +44,10 @@ type Config struct {
 
 // Client implements gcfg.Adapter implementing using apollo service.
 type Client struct {
-	config   Config          // Config object when created.
-	client   agollo.Client   // Apollo client.
-	value    *g.Var          // Configmap content cached. It is `*gjson.Json` value internally.
-	watchers *gmap.StrAnyMap // Watchers for watching file changes.
+	config   Config                // Config object when created.
+	client   agollo.Client         // Apollo client.
+	value    *g.Var                // Configmap content cached. It is `*gjson.Json` value internally.
+	watchers *gcfg.WatcherRegistry // Watchers for watching file changes.
 }
 
 // New creates and returns gcfg.Adapter implementing using apollo service.
@@ -64,7 +63,7 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 	client := &Client{
 		config:   config,
 		value:    g.NewVar(nil, true),
-		watchers: gmap.NewStrAnyMap(true),
+		watchers: gcfg.NewWatcherRegistry(),
 	}
 	// Apollo client.
 	client.client, err = agollo.StartWithConfig(func() (*apolloConfig.AppConfig, error) {
@@ -98,7 +97,7 @@ func (c *Client) Available(ctx context.Context, resource ...string) (ok bool) {
 	if len(resource) == 0 && !c.value.IsNil() {
 		return true
 	}
-	var namespace = c.config.NamespaceName
+	namespace := c.config.NamespaceName
 	if len(resource) > 0 {
 		namespace = resource[0]
 	}
@@ -141,8 +140,8 @@ func (c *Client) OnNewestChange(event *storage.FullChangeEvent) {
 }
 
 func (c *Client) updateLocalValue(ctx context.Context) (err error) {
-	var j = gjson.New(nil)
-	var content = gjson.New(nil, true)
+	j := gjson.New(nil)
+	content := gjson.New(nil, true)
 	cache := c.client.GetConfigCache(c.config.NamespaceName)
 	cache.Range(func(key, value any) bool {
 		err = j.Set(gconv.String(key), value)
@@ -167,7 +166,7 @@ func (c *Client) updateLocalValue(ctx context.Context) (err error) {
 
 // AddWatcher adds a watcher for the specified configuration file.
 func (c *Client) AddWatcher(name string, f func(ctx context.Context)) {
-	c.watchers.Set(name, f)
+	c.watchers.Add(name, f)
 }
 
 // RemoveWatcher removes the watcher for the specified configuration file.
@@ -177,15 +176,10 @@ func (c *Client) RemoveWatcher(name string) {
 
 // GetWatcherNames returns all watcher names.
 func (c *Client) GetWatcherNames() []string {
-	return c.watchers.Keys()
+	return c.watchers.GetNames()
 }
 
 // notifyWatchers notifies all watchers.
 func (c *Client) notifyWatchers(ctx context.Context) {
-	c.watchers.Iterator(func(k string, v any) bool {
-		if fn, ok := v.(func(ctx context.Context)); ok {
-			go fn(ctx)
-		}
-		return true
-	})
+	c.watchers.Notify(ctx)
 }
