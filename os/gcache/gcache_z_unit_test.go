@@ -453,11 +453,7 @@ func TestCache_SetConcurrency(t *testing.T) {
 				})
 			}
 		}()
-		select {
-		case <-time.After(2 * time.Second):
-			// t.Log("first part end")
-		}
-
+		time.Sleep(2 * time.Second)
 		go func() {
 			for {
 				pool.Add(ctx, func(ctx context.Context) {
@@ -465,10 +461,7 @@ func TestCache_SetConcurrency(t *testing.T) {
 				})
 			}
 		}()
-		select {
-		case <-time.After(2 * time.Second):
-			// t.Log("second part end")
-		}
+		time.Sleep(2 * time.Second)
 	})
 }
 
