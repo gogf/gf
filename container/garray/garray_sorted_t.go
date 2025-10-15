@@ -741,7 +741,9 @@ func (a *SortedTArray[T]) UnmarshalValue(value any) (err error) {
 	case string, []byte:
 		err = json.UnmarshalUseNumber(gconv.Bytes(value), &a.array)
 	default:
-		gconv.Scan(value, &a.array)
+		if err = gconv.Scan(value, &a.array); err != nil {
+			return
+		}
 	}
 	if a.comparator != nil && a.array != nil {
 		sort.Slice(a.array, func(i, j int) bool {
