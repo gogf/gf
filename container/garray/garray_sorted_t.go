@@ -760,14 +760,7 @@ func (a *SortedTArray[T]) FilterNil() *SortedTArray[T] {
 		if empty.IsNil(a.array[i]) {
 			a.array = append(a.array[:i], a.array[i+1:]...)
 		} else {
-			break
-		}
-	}
-	for i := len(a.array) - 1; i >= 0; {
-		if empty.IsNil(a.array[i]) {
-			a.array = append(a.array[:i], a.array[i+1:]...)
-		} else {
-			break
+			i++
 		}
 	}
 	return a
