@@ -97,6 +97,7 @@ func BenchmarkOldImplementation(b *testing.B) {
 
 func BenchmarkNewImplementation(b *testing.B) {
 	ctx := context.Background()
+	newDefaultCache()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = newDefaultCache().Set(ctx, "key", "value", time.Minute)

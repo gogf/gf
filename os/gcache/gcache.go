@@ -23,8 +23,7 @@ type Func = func(ctx context.Context) (value any, err error)
 // DurationNoExpire represents the cache key-value pair that never expires.
 const DurationNoExpire = time.Duration(0)
 
-// defaultCache is the default cache instance that is initialized once using sync.OnceValue.
-// It provides a global, concurrent-safe cache object.
+// defaultCache returns the lazily-initialized default cache instance using sync.OnceValue.
 var defaultCache = sync.OnceValue(func() *Cache {
 	return New()
 })
