@@ -112,7 +112,7 @@ func generateTableFields(fields map[string]*gdb.TableField) string {
 		fieldNames = append(fieldNames, fieldName)
 	}
 	sort.Slice(fieldNames, func(i, j int) bool {
-		return fields[fieldNames[i]].Index < fields[fieldNames[j]].Index // 升序
+		return fields[fieldNames[i]].Index < fields[fieldNames[j]].Index // asc
 	})
 	for index, fieldName := range fieldNames {
 		field := fields[fieldName]

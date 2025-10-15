@@ -17,7 +17,6 @@ import (
 	"context"
 
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/frame/g"
 )
 
 // {{.TplTableNameCamelCase}} defines the fields of table "{{.TplTableName}}" with their properties.
