@@ -127,7 +127,7 @@ func ComparatorTime(a, b any) int {
 	}
 }
 
-// ComparatorString provides a fast comparison on strings.
+// ComparatorT provides a generic comparison for ordered types.
 func ComparatorT[T cmp.Ordered](a, b T) int {
 	return cmp.Compare(a, b)
 }
