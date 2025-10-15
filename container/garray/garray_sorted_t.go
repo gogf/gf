@@ -89,7 +89,7 @@ func NewSortedTArrayFromCopy[T comparable](array []T, comparator func(a, b T) in
 
 // At returns the value by the specified index.
 // If the given `index` is out of range of the array, it returns the zero value of type `T` (as `any`).
-func (a *SortedTArray[T]) At(index int) (value any) {
+func (a *SortedTArray[T]) At(index int) (value T) {
 	value, _ = a.Get(index)
 	return
 }
@@ -163,27 +163,29 @@ func (a *SortedTArray[T]) Append(values ...T) *SortedTArray[T] {
 
 // Get returns the value by the specified index.
 // If the given `index` is out of range of the array, the `found` is false.
-func (a *SortedTArray[T]) Get(index int) (value any, found bool) {
+func (a *SortedTArray[T]) Get(index int) (value T, found bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	if index < 0 || index >= len(a.array) {
-		return nil, false
+		found = false
+		return
 	}
 	return a.array[index], true
 }
 
 // Remove removes an item by index.
 // If the given `index` is out of range of the array, the `found` is false.
-func (a *SortedTArray[T]) Remove(index int) (value any, found bool) {
+func (a *SortedTArray[T]) Remove(index int) (value T, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	return a.doRemoveWithoutLock(index)
 }
 
 // doRemoveWithoutLock removes an item by index without lock.
-func (a *SortedTArray[T]) doRemoveWithoutLock(index int) (value any, found bool) {
+func (a *SortedTArray[T]) doRemoveWithoutLock(index int) (value T, found bool) {
 	if index < 0 || index >= len(a.array) {
-		return nil, false
+		found = false
+		return
 	}
 	// Determine array boundaries when deleting to improve deletion efficiency.
 	if index == 0 {
@@ -228,11 +230,12 @@ func (a *SortedTArray[T]) RemoveValues(values ...T) {
 
 // PopLeft pops and returns an item from the beginning of array.
 // Note that if the array is empty, the `found` is false.
-func (a *SortedTArray[T]) PopLeft() (value any, found bool) {
+func (a *SortedTArray[T]) PopLeft() (value T, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if len(a.array) == 0 {
-		return nil, false
+		found = false
+		return
 	}
 	value = a.array[0]
 	a.array = a.array[1:]
@@ -241,12 +244,13 @@ func (a *SortedTArray[T]) PopLeft() (value any, found bool) {
 
 // PopRight pops and returns an item from the end of array.
 // Note that if the array is empty, the `found` is false.
-func (a *SortedTArray[T]) PopRight() (value any, found bool) {
+func (a *SortedTArray[T]) PopRight() (value T, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	index := len(a.array) - 1
 	if index < 0 {
-		return nil, false
+		found = false
+		return
 	}
 	value = a.array[index]
 	a.array = a.array[:index]
@@ -255,14 +259,14 @@ func (a *SortedTArray[T]) PopRight() (value any, found bool) {
 
 // PopRand randomly pops and return an item out of array.
 // Note that if the array is empty, the `found` is false.
-func (a *SortedTArray[T]) PopRand() (value any, found bool) {
+func (a *SortedTArray[T]) PopRand() (value T, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	return a.doRemoveWithoutLock(grand.Intn(len(a.array)))
 }
 
 // PopRands randomly pops and returns `size` items out of array.
-func (a *SortedTArray[T]) PopRands(size int) []any {
+func (a *SortedTArray[T]) PopRands(size int) []T {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if size <= 0 || len(a.array) == 0 {
@@ -271,7 +275,7 @@ func (a *SortedTArray[T]) PopRands(size int) []any {
 	if size >= len(a.array) {
 		size = len(a.array)
 	}
-	array := make([]any, size)
+	array := make([]T, size)
 	for i := 0; i < size; i++ {
 		array[i], _ = a.doRemoveWithoutLock(grand.Intn(len(a.array)))
 	}
@@ -595,11 +599,12 @@ func (a *SortedTArray[T]) Chunk(size int) [][]T {
 }
 
 // Rand randomly returns one item from array(no deleting).
-func (a *SortedTArray[T]) Rand() (value any, found bool) {
+func (a *SortedTArray[T]) Rand() (value T, found bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	if len(a.array) == 0 {
-		return nil, false
+		found = false
+		return
 	}
 	return a.array[grand.Intn(len(a.array))], true
 }

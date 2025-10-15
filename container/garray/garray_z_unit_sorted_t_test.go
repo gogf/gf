@@ -244,17 +244,17 @@ func TestSortedTArray_Empty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewSortedTArray[int](gutil.ComparatorT)
 		v, ok := array.PopLeft()
-		t.Assert(v, nil)
+		t.Assert(v, 0)
 		t.Assert(ok, false)
 		t.Assert(array.PopLefts(10), nil)
 
 		v, ok = array.PopRight()
-		t.Assert(v, nil)
+		t.Assert(v, 0)
 		t.Assert(ok, false)
 		t.Assert(array.PopRights(10), nil)
 
 		v, ok = array.PopRand()
-		t.Assert(v, nil)
+		t.Assert(v, 0)
 		t.Assert(ok, false)
 		t.Assert(array.PopRands(10), nil)
 	})
@@ -696,7 +696,7 @@ func TestSortedTArray_Json(t *testing.T) {
 		t.Assert(ok, true)
 
 		v, ok = user.Scores.PopLeft()
-		t.Assert(v, nil)
+		t.Assert(v, 0)
 		t.Assert(ok, false)
 	})
 	// array value
@@ -732,7 +732,7 @@ func TestSortedTArray_Json(t *testing.T) {
 		t.Assert(ok, true)
 
 		v, ok = user.Scores.PopLeft()
-		t.Assert(v, nil)
+		t.Assert(v, 0)
 		t.Assert(ok, false)
 	})
 }
