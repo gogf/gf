@@ -45,7 +45,6 @@ func (c *Cron) SetLogger(logger glog.ILogger) {
 	c.loggerMu.Lock()
 	defer c.loggerMu.Unlock()
 	c.logger = logger
-
 }
 
 // GetLogger returns the logger in the cron.
