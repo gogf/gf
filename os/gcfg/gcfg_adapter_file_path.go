@@ -244,7 +244,7 @@ func (a *AdapterFile) GetFilePath(fileNameOrPath ...string) (filePath string, er
 	var (
 		fileExtName        string
 		tempFileNameOrPath string
-		usedFileNameOrPath = a.defaultFileNameOrPath
+		usedFileNameOrPath = a.defaultFileNameOrPath.String()
 	)
 	if len(fileNameOrPath) > 0 {
 		usedFileNameOrPath = fileNameOrPath[0]
