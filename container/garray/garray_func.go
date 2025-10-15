@@ -104,7 +104,7 @@ func tToAnySlices[T comparable](values [][]T) [][]any {
 	return anyValues
 }
 
-// tToAnySlice is convert [][]any to [][]T
+// anyToTSlices converts [][]any to [][]T
 func anyToTSlices[T comparable](values [][]any) [][]T {
 	if values == nil {
 		return nil
