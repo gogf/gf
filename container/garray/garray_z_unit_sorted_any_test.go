@@ -951,12 +951,17 @@ func TestSortedArray_FilterNil(t *testing.T) {
 
 func TestSortedArray_FilterEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		array := garray.NewSortedArrayFrom(g.Slice{0, 1, 2, 3, 4, "", g.Slice{}}, gutil.ComparatorInt)
-		t.Assert(array.FilterEmpty(), g.Slice{1, 2, 3, 4})
+		array := garray.NewSortedArrayFrom(g.Slice{0, 1, 2, 0, -1, 3, 4, "", g.Slice{}}, gutil.ComparatorInt)
+		t.Assert(array.FilterEmpty(), g.Slice{-1, 1, 2, 3, 4})
 	})
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewSortedArrayFrom(g.Slice{1, 2, 3, 4}, gutil.ComparatorInt)
 		t.Assert(array.FilterEmpty(), g.Slice{1, 2, 3, 4})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		values := g.Slice{0, 1, 2, 3, 4, -1, -2, nil, []any{}, ""}
+		array := garray.NewSortedArrayFrom(values, gutil.ComparatorString)
+		t.Assert(array.FilterEmpty().Slice(), g.Slice{-1, -2, 1, 2, 3, 4})
 	})
 }
 

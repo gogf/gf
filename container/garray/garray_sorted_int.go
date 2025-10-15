@@ -729,14 +729,7 @@ func (a *SortedIntArray) FilterEmpty() *SortedIntArray {
 		if a.array[i] == 0 {
 			a.array = append(a.array[:i], a.array[i+1:]...)
 		} else {
-			break
-		}
-	}
-	for i := len(a.array) - 1; i >= 0; {
-		if a.array[i] == 0 {
-			a.array = append(a.array[:i], a.array[i+1:]...)
-		} else {
-			break
+			i++
 		}
 	}
 	return a

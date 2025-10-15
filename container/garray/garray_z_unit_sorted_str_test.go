@@ -806,7 +806,7 @@ func TestSortedStrArray_Filter(t *testing.T) {
 
 func TestSortedStrArray_FilterEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		array := garray.NewSortedStrArrayFrom(g.SliceStr{"", "1", "2", "0"})
+		array := garray.NewSortedStrArrayFrom(g.SliceStr{"", "1", "", "2", "0", ""})
 		t.Assert(array.FilterEmpty(), g.SliceStr{"0", "1", "2"})
 	})
 	gtest.C(t, func(t *gtest.T) {
