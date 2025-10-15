@@ -29,6 +29,8 @@ type AdapterMemory struct {
 	closed      *gtype.Bool        // closed controls the cache closed or not.
 }
 
+var _ Adapter = (*AdapterMemory)(nil)
+
 // Internal event item.
 type adapterMemoryEvent struct {
 	k any   // Key.
