@@ -131,3 +131,7 @@ func ComparatorTime(a, b any) int {
 func ComparatorT[T cmp.Ordered](a, b T) int {
 	return cmp.Compare(a, b)
 }
+
+func ComparatorTStr[T any](a, b T) int {
+	return cmp.Compare(gconv.String(a), gconv.String(b))
+}

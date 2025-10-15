@@ -8,7 +8,6 @@ package garray
 
 import (
 	"bytes"
-	"cmp"
 	"math"
 	"sort"
 
@@ -27,7 +26,7 @@ import (
 // setting it a custom comparator.
 // It contains a concurrent-safe/unsafe switch, which should be set
 // when its initialization and cannot be changed then.
-type SortedTArray[T cmp.Ordered] struct {
+type SortedTArray[T comparable] struct {
 	mu         rwmutex.RWMutex
 	array      []T
 	unique     bool             // Whether enable unique feature(false)
@@ -40,9 +39,9 @@ type SortedTArray[T cmp.Ordered] struct {
 // if it returns value < 0, means `a` < `b`; the `a` will be inserted before `b`;
 // if it returns value = 0, means `a` = `b`; the `a` will be replaced by     `b`;
 // if it returns value > 0, means `a` > `b`; the `a` will be inserted after  `b`;
-func NewSortedTArray[T cmp.Ordered](comparator func(a, b T) int, safe ...bool) *SortedTArray[T] {
+func NewSortedTArray[T comparable](comparator func(a, b T) int, safe ...bool) *SortedTArray[T] {
 	if comparator == nil {
-		comparator = gutil.ComparatorT
+		comparator = gutil.ComparatorTStr
 	}
 	return NewSortedTArraySize(0, comparator, safe...)
 }
@@ -50,9 +49,9 @@ func NewSortedTArray[T cmp.Ordered](comparator func(a, b T) int, safe ...bool) *
 // NewSortedTArraySize create and returns an sorted array with given size and cap.
 // The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewSortedTArraySize[T cmp.Ordered](cap int, comparator func(a, b T) int, safe ...bool) *SortedTArray[T] {
+func NewSortedTArraySize[T comparable](cap int, comparator func(a, b T) int, safe ...bool) *SortedTArray[T] {
 	if comparator == nil {
-		comparator = gutil.ComparatorT
+		comparator = gutil.ComparatorTStr
 	}
 	return &SortedTArray[T]{
 		mu:         rwmutex.Create(safe...),
@@ -64,9 +63,9 @@ func NewSortedTArraySize[T cmp.Ordered](cap int, comparator func(a, b T) int, sa
 // NewSortedTArray[T]From creates and returns an sorted array with given slice `array`.
 // The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewSortedTArrayFrom[T cmp.Ordered](array []T, comparator func(a, b T) int, safe ...bool) *SortedTArray[T] {
+func NewSortedTArrayFrom[T comparable](array []T, comparator func(a, b T) int, safe ...bool) *SortedTArray[T] {
 	if comparator == nil {
-		comparator = gutil.ComparatorT
+		comparator = gutil.ComparatorTStr
 	}
 	a := NewSortedTArraySize(0, comparator, safe...)
 	a.array = array
@@ -79,9 +78,9 @@ func NewSortedTArrayFrom[T cmp.Ordered](array []T, comparator func(a, b T) int, 
 // NewSortedTArray[T]FromCopy creates and returns an sorted array from a copy of given slice `array`.
 // The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewSortedTArrayFromCopy[T cmp.Ordered](array []T, comparator func(a, b T) int, safe ...bool) *SortedTArray[T] {
+func NewSortedTArrayFromCopy[T comparable](array []T, comparator func(a, b T) int, safe ...bool) *SortedTArray[T] {
 	if comparator == nil {
-		comparator = gutil.ComparatorT
+		comparator = gutil.ComparatorTStr
 	}
 	newArray := make([]T, len(array))
 	copy(newArray, array)
@@ -112,7 +111,7 @@ func (a *SortedTArray[T]) SetComparator(comparator func(a, b T) int) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if comparator == nil {
-		comparator = gutil.ComparatorT
+		comparator = gutil.ComparatorTStr
 	}
 	a.comparator = comparator
 	sort.Slice(a.array, func(i, j int) bool {
@@ -714,7 +713,7 @@ func (a SortedTArray[T]) MarshalJSON() ([]byte, error) {
 func (a *SortedTArray[T]) UnmarshalJSON(b []byte) error {
 	if a.comparator == nil {
 		a.array = make([]T, 0)
-		a.comparator = gutil.ComparatorT
+		a.comparator = gutil.ComparatorTStr
 	}
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -733,7 +732,7 @@ func (a *SortedTArray[T]) UnmarshalJSON(b []byte) error {
 // Note that the comparator is set as string comparator in default.
 func (a *SortedTArray[T]) UnmarshalValue(value any) (err error) {
 	if a.comparator == nil {
-		a.comparator = gutil.ComparatorT
+		a.comparator = gutil.ComparatorTStr
 	}
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -799,14 +798,7 @@ func (a *SortedTArray[T]) FilterEmpty() *SortedTArray[T] {
 		if empty.IsEmpty(a.array[i]) {
 			a.array = append(a.array[:i], a.array[i+1:]...)
 		} else {
-			break
-		}
-	}
-	for i := len(a.array) - 1; i >= 0; {
-		if empty.IsEmpty(a.array[i]) {
-			a.array = append(a.array[:i], a.array[i+1:]...)
-		} else {
-			break
+			i++
 		}
 	}
 	return a

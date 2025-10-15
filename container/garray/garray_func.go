@@ -69,7 +69,7 @@ func quickSortStr(values []string, comparator func(a, b string) int) {
 }
 
 // tToAnySlice converts []T to []any
-func tToAnySlice[T comparable](values []T) []any {
+func tToAnySlice[T any](values []T) []any {
 	if values == nil {
 		return nil
 	}
@@ -81,7 +81,7 @@ func tToAnySlice[T comparable](values []T) []any {
 }
 
 // anyToTSlice is convert []any to []T
-func anyToTSlice[T comparable](values []any) []T {
+func anyToTSlice[T any](values []any) []T {
 	if values == nil {
 		return nil
 	}
@@ -93,7 +93,7 @@ func anyToTSlice[T comparable](values []any) []T {
 }
 
 // tToAnySlices converts [][]T to [][]any
-func tToAnySlices[T comparable](values [][]T) [][]any {
+func tToAnySlices[T any](values [][]T) [][]any {
 	if values == nil {
 		return nil
 	}
@@ -105,7 +105,7 @@ func tToAnySlices[T comparable](values [][]T) [][]any {
 }
 
 // anyToTSlices converts [][]any to [][]T
-func anyToTSlices[T comparable](values [][]any) [][]T {
+func anyToTSlices[T any](values [][]any) [][]T {
 	if values == nil {
 		return nil
 	}
