@@ -53,7 +53,7 @@ func (l *RedisMemoryTokenBucketRateLimiter) Middleware() ghttp.HandlerFunc {
 		if err != nil {
 			l.RedisTokenBucketRateLimiter.option.Logger.Errorf(ctx, "[Redis Memory Token Bucket Rate limiter] redis eval error: %+v", err)
 			if !l.MemoryTokenBucketRateLimiter.AllowN(ctx, key, 1) {
-				l.RedisTokenBucketRateLimiter.option.DenyHandler(r)
+				l.MemoryTokenBucketRateLimiter.option.DenyHandler(r)
 			} else {
 				l.MemoryTokenBucketRateLimiter.option.AllowHandler(r)
 			}
