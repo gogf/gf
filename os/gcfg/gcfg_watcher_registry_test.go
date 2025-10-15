@@ -8,8 +8,8 @@ package gcfg_test
 
 import (
 	"context"
+	"sync"
 	"testing"
-	"time"
 
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -20,8 +20,13 @@ func TestWatcherRegistry_Basic(t *testing.T) {
 		registry := gcfg.NewWatcherRegistry()
 
 		// Test Add and GetNames
-		called := false
+		var (
+			wg     sync.WaitGroup
+			called bool
+		)
+		wg.Add(1)
 		registry.Add("test-watcher", func(ctx context.Context) {
+			defer wg.Done()
 			called = true
 		})
 
@@ -31,7 +36,7 @@ func TestWatcherRegistry_Basic(t *testing.T) {
 
 		// Test Notify
 		registry.Notify(context.Background())
-		time.Sleep(100 * time.Millisecond)
+		wg.Wait()
 		t.AssertEQ(called, true)
 
 		// Test Remove
@@ -45,14 +50,21 @@ func TestWatcherRegistry_MultipleWatchers(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		registry := gcfg.NewWatcherRegistry()
 
-		var count1, count2, count3 int
+		var (
+			wg                     sync.WaitGroup
+			count1, count2, count3 int
+		)
+		wg.Add(3)
 		registry.Add("watcher1", func(ctx context.Context) {
+			defer wg.Done()
 			count1++
 		})
 		registry.Add("watcher2", func(ctx context.Context) {
+			defer wg.Done()
 			count2++
 		})
 		registry.Add("watcher3", func(ctx context.Context) {
+			defer wg.Done()
 			count3++
 		})
 
@@ -60,7 +72,7 @@ func TestWatcherRegistry_MultipleWatchers(t *testing.T) {
 		t.AssertEQ(len(names), 3)
 
 		registry.Notify(context.Background())
-		time.Sleep(100 * time.Millisecond)
+		wg.Wait()
 		t.AssertEQ(count1, 1)
 		t.AssertEQ(count2, 1)
 		t.AssertEQ(count3, 1)
