@@ -825,7 +825,7 @@ func (a *SortedTArray[T]) IsEmpty() bool {
 // or else it panics.
 func (a *SortedTArray[T]) getComparator() func(a, b T) int {
 	if a.comparator == nil {
-		panic("comparator is missing for sorted array")
+		a.comparator = gutil.ComparatorTStr
 	}
 	return a.comparator
 }
