@@ -271,7 +271,7 @@ func TestSortedTArray_PopLefts(t *testing.T) {
 
 		i2 := array1.PopLefts(5)
 		t.Assert(len(i2), 4)
-		t.AssertIN(i1, []string{"a", "d", "c", "b", "e", "f"})
+		t.AssertIN(i2, []string{"a", "d", "c", "b", "e", "f"})
 		t.Assert(array1.Len(), 0)
 	})
 }
