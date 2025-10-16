@@ -271,6 +271,9 @@ func (s *Server) Start() error {
 	s.doServiceRegister()
 	s.doRouterMapDump()
 
+	// Execute after-start hooks once the server has started successfully.
+	s.executeAfterStartHooks()
+
 	return nil
 }
 
@@ -586,9 +589,6 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 		go s.startGracefulServer(ctx, wg, gs)
 	}
 	wg.Wait()
-
-	// Execute after-start hooks once all listeners are ready.
-	s.executeAfterStartHooks()
 }
 
 func (s *Server) startGracefulServer(ctx context.Context, wg *sync.WaitGroup, server *graceful.Server) {
