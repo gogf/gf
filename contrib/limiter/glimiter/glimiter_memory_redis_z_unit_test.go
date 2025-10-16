@@ -8,11 +8,12 @@ package glimiter_test
 
 import (
 	"context"
-	"github.com/gogf/gf/contrib/glimiter/v2"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/test/gtest"
+
+	"github.com/gogf/gf/contrib/glimiter/v2"
 )
 
 func TestRedisMemoryTokenBucketRateLimiter_Allow(t *testing.T) {
