@@ -19,7 +19,7 @@ const (
 	DefaultShards    = 16               // DefaultShards is the default number of shards for concurrent access
 	DefaultCapacity  = 1024             // DefaultCapacity is the default capacity of the token bucket
 	DefaultExpire    = 10 * time.Second // DefaultExpire is the default expiration time for cached entries
-	DefaultKeyPrefix = "Rate-limiter:"
+	DefaultKeyPrefix = "Rate-limiter:"  // DefaultKeyPrefix is the default prefix for cache keys
 )
 
 // DefaultKeyFunc is the default function to generate key from request, using client IP
