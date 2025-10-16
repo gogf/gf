@@ -12,6 +12,7 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -76,7 +77,7 @@ func (c *Core) GetCtxTimeout(ctx context.Context, timeoutType ctxTimeoutType) (c
 	if ctx == nil {
 		ctx = c.db.GetCtx()
 	} else {
-		ctx = context.WithValue(ctx, "WrappedByGetCtxTimeout", nil)
+		ctx = context.WithValue(ctx, ctxKeyWrappedByGetCtxTimeout, nil)
 	}
 	var config = c.db.GetConfig()
 	switch timeoutType {
@@ -174,7 +175,7 @@ func (c *Core) GetOne(ctx context.Context, sql string, args ...any) (Record, err
 
 // GetArray queries and returns data values as slice from database.
 // Note that if there are multiple columns in the result, it returns just one column values randomly.
-func (c *Core) GetArray(ctx context.Context, sql string, args ...any) ([]Value, error) {
+func (c *Core) GetArray(ctx context.Context, sql string, args ...any) (Array, error) {
 	all, err := c.db.DoSelect(ctx, nil, sql, args...)
 	if err != nil {
 		return nil, err
@@ -446,25 +447,30 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 	// It here uses ListMap to keep sequence for data inserting.
 	// ============================================================================================
 	var keyListMap = gmap.NewListMap()
+	var tmpkeyListMap = make(map[string]List)
 	for _, item := range list {
-		var (
-			tmpKeys              = make([]string, 0)
-			tmpKeysInSequenceStr string
-		)
+		mapLen := len(item)
+		if mapLen == 0 {
+			continue
+		}
+		tmpKeys := make([]string, 0, mapLen)
 		for k := range item {
 			tmpKeys = append(tmpKeys, k)
 		}
-		keys, err = c.fieldsToSequence(ctx, table, tmpKeys)
-		if err != nil {
-			return nil, err
+		if mapLen > 1 {
+			sort.Strings(tmpKeys)
 		}
-		tmpKeysInSequenceStr = gstr.Join(keys, ",")
-		if !keyListMap.Contains(tmpKeysInSequenceStr) {
-			keyListMap.Set(tmpKeysInSequenceStr, make(List, 0))
+		keys = tmpKeys // for fieldsToSequence
+
+		tmpKeysInSequenceStr := gstr.Join(tmpKeys, ",")
+		if tmpkeyListMapItem, ok := tmpkeyListMap[tmpKeysInSequenceStr]; ok {
+			tmpkeyListMap[tmpKeysInSequenceStr] = append(tmpkeyListMapItem, item)
+		} else {
+			tmpkeyListMap[tmpKeysInSequenceStr] = List{item}
 		}
-		tmpKeysInSequenceList := keyListMap.Get(tmpKeysInSequenceStr).(List)
-		tmpKeysInSequenceList = append(tmpKeysInSequenceList, item)
-		keyListMap.Set(tmpKeysInSequenceStr, tmpKeysInSequenceList)
+	}
+	for tmpKeysInSequenceStr, itemList := range tmpkeyListMap {
+		keyListMap.Set(tmpKeysInSequenceStr, itemList)
 	}
 	if keyListMap.Size() > 1 {
 		var (
@@ -486,6 +492,15 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 			return true
 		})
 		return &sqlResult, err
+	}
+
+	keys, err = c.fieldsToSequence(ctx, table, keys)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(keys) == 0 {
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "no valid data fields found in table")
 	}
 
 	// Prepare the batch result pointer.
@@ -740,6 +755,30 @@ func (c *Core) HasTable(name string) (bool, error) {
 // GetInnerMemCache retrieves and returns the inner memory cache object.
 func (c *Core) GetInnerMemCache() *gcache.Cache {
 	return c.innerMemCache
+}
+
+func (c *Core) SetTableFields(ctx context.Context, table string, fields map[string]*TableField, schema ...string) error {
+	if table == "" {
+		return gerror.NewCode(gcode.CodeInvalidParameter, "table name cannot be empty")
+	}
+	charL, charR := c.db.GetChars()
+	table = gstr.Trim(table, charL+charR)
+	if gstr.Contains(table, " ") {
+		return gerror.NewCode(
+			gcode.CodeInvalidParameter,
+			"function TableFields supports only single table operations",
+		)
+	}
+	var (
+		innerMemCache = c.GetInnerMemCache()
+		// prefix:group@schema#table
+		cacheKey = genTableFieldsCacheKey(
+			c.db.GetGroup(),
+			gutil.GetOrDefaultStr(c.db.GetSchema(), schema...),
+			table,
+		)
+	)
+	return innerMemCache.Set(ctx, cacheKey, fields, gcache.DurationNoExpire)
 }
 
 // GetTablesWithCache retrieves and returns the table names of current database with cache.

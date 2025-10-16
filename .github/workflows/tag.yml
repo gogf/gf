@@ -4,12 +4,11 @@ on:
   push:
     # Sequence of patterns matched against refs/tags
     tags:
-    - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 env:
   TZ: Asia/Shanghai
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
 
 jobs:
   build:
@@ -18,22 +17,43 @@ jobs:
     steps:
       - name: Checkout Github Code
         uses: actions/checkout@v5
-
       - name: Auto Creating Tags For Contrib Packages
         run: |
           git config --global user.email "tagrobot@goframe.org"
           git config --global user.name  "TagRobot"
-          
           # auto create tags for contrib packages.
           for file in `find contrib -name go.mod`; do
-              tag=$(dirname $file)/$GITHUB_REF_NAME
+              tag=$(dirname $file)/${{ github.ref_name }}
               git tag $tag
               git push origin $tag
           done
-          
+      - name: update dependencies
+        run: |
+          go env -w GOPRIVATE=github.com/gogf/gf
+          .github/workflows/scripts/update_version.sh ./cmd/gf ${{ github.ref_name }}
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          commit-message: 'update gf cli to ${{ github.ref_name }}'
+          title: 'fix: update gf cli to ${{ github.ref_name }}'
+          base: master
+          branch: fix/${{ github.ref_name }}
+          delete-branch: true
+      - name: Commit & Push changes
+        uses: actions-js/push@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: fix/${{ github.ref_name }}
+          author_name: TagRobot
+          author_email: tagrobot@goframe.org
+          message: 'fix: update gf cli to ${{ github.ref_name }}'
+      - name: Auto Creating Tags For cli tool
+        run: |
+          git config --global user.email "tagrobot@goframe.org"
+          git config --global user.name  "TagRobot"
           # auto create tag for cli tool
-          for file in `find cmd -name go.mod`; do
-              tag=$(dirname $file)/$GITHUB_REF_NAME
+          for file in `find cmd -name go.mod -not -path "*/testdata/*"`; do
+              tag=$(dirname $file)/${{ github.ref_name }}
               git tag $tag
               git push origin $tag
           done

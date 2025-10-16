@@ -134,7 +134,7 @@ func (m *Model) One(where ...any) (Record, error) {
 // If the optional parameter `fieldsAndWhere` is given, the fieldsAndWhere[0] is the selected fields
 // and fieldsAndWhere[1:] is treated as where condition fields.
 // Also see Model.Fields and Model.Where functions.
-func (m *Model) Array(fieldsAndWhere ...any) ([]Value, error) {
+func (m *Model) Array(fieldsAndWhere ...any) (Array, error) {
 	if len(fieldsAndWhere) > 0 {
 		if len(fieldsAndWhere) > 2 {
 			return m.Fields(gconv.String(fieldsAndWhere[0])).Where(fieldsAndWhere[1], fieldsAndWhere[2:]...).Array()

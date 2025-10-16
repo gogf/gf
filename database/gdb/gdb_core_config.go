@@ -241,15 +241,47 @@ func AddDefaultConfigNode(node ConfigNode) error {
 }
 
 // AddDefaultConfigGroup adds multiple node configurations to configuration of default group.
+//
+// Deprecated: Use SetDefaultConfigGroup instead.
 func AddDefaultConfigGroup(nodes ConfigGroup) error {
 	return SetConfigGroup(DefaultGroupName, nodes)
 }
 
+// SetDefaultConfigGroup sets multiple node configurations to configuration of default group.
+func SetDefaultConfigGroup(nodes ConfigGroup) error {
+	return SetConfigGroup(DefaultGroupName, nodes)
+}
+
 // GetConfig retrieves and returns the configuration of given group.
+//
+// Deprecated: Use GetConfigGroup instead.
 func GetConfig(group string) ConfigGroup {
+	configGroup, _ := GetConfigGroup(group)
+	return configGroup
+}
+
+// GetConfigGroup retrieves and returns the configuration of given group.
+// It returns an error if the group does not exist, or an empty slice if the group exists but has no nodes.
+func GetConfigGroup(group string) (ConfigGroup, error) {
 	configs.RLock()
 	defer configs.RUnlock()
-	return configs.config[group]
+
+	configGroup, exists := configs.config[group]
+	if !exists {
+		return nil, gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`configuration group "%s" not found`,
+			group,
+		)
+	}
+	return configGroup, nil
+}
+
+// GetAllConfig retrieves and returns all configurations.
+func GetAllConfig() Config {
+	configs.RLock()
+	defer configs.RUnlock()
+	return configs.config
 }
 
 // SetDefaultGroup sets the group name for default configuration.
