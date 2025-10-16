@@ -53,17 +53,11 @@ func (m *Model) Cache(option CacheOption) *Model {
 // PageCache sets the cache feature for pagination queries. It allows to configure
 // separate cache options for count query and data query in pagination.
 //
-// The first option is used for the count query, and the second option
-// is used for the actual data query. If only one option is provided, it will be
-// applied to count queries.
-//
 // Note that, the cache feature is disabled if the model is performing select statement
 // on a transaction.
-func (m *Model) PageCache(options ...CacheOption) *Model {
+func (m *Model) PageCache(countOption CacheOption, dataOption CacheOption) *Model {
 	model := m.getModel()
-	if len(options) > 0 {
-		model.pageCacheOption = options
-	}
+	model.pageCacheOption = []CacheOption{countOption, dataOption}
 	model.cacheEnabled = true
 	return model
 }
