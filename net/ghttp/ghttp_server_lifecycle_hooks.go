@@ -53,7 +53,7 @@ func (s *Server) executeBeforeStartHooks() error {
 // executeAfterStartHooks executes all registered after-start hooks.
 // Errors from hooks are logged but do not stop the server.
 func (s *Server) executeAfterStartHooks() {
-	var ctx = gctx.GetInitCtx()
+	ctx := gctx.GetInitCtx()
 	for _, hook := range s.afterStartHooks {
 		if err := hook(s); err != nil {
 			s.Logger().Errorf(ctx, `after-start hook error: %+v`, err)

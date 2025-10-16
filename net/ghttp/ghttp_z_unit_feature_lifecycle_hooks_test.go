@@ -21,10 +21,8 @@ func Test_Server_Lifecycle_BeforeStart(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			hookExecuted = false
-			p            = 8888
 		)
 		s := g.Server(gtest.DataPath("lifecycle-before-start"))
-		s.SetAddr(fmt.Sprintf(":%d", p))
 		s.BindHandler("/test", func(r *ghttp.Request) {
 			r.Response.Write("test")
 		})
@@ -47,10 +45,9 @@ func Test_Server_Lifecycle_BeforeStart(t *testing.T) {
 func Test_Server_Lifecycle_BeforeStart_Error(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			p = 8889
+			serverName = gtest.DataPath("lifecycle-before-start-error")
 		)
-		s := g.Server(gtest.DataPath("lifecycle-before-start-error"))
-		s.SetAddr(fmt.Sprintf(":%d", p))
+		s := g.Server(serverName)
 		s.BindHandler("/test", func(r *ghttp.Request) {
 			r.Response.Write("test")
 		})
@@ -61,7 +58,7 @@ func Test_Server_Lifecycle_BeforeStart_Error(t *testing.T) {
 
 		err := s.Start()
 		t.AssertNE(err, nil)
-		t.Assert(ghttp.GetServer(gtest.DataPath("lifecycle-before-start-error")).Status(), ghttp.ServerStatusStopped)
+		t.Assert(ghttp.GetServer(serverName).Status(), ghttp.ServerStatusStopped)
 	})
 }
 
@@ -69,17 +66,17 @@ func Test_Server_Lifecycle_AfterStart(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			hookExecuted = false
-			p            = 8890
+			listenedPort = 0
 		)
 		s := g.Server(gtest.DataPath("lifecycle-after-start"))
-		s.SetAddr(fmt.Sprintf(":%d", p))
 		s.BindHandler("/test", func(r *ghttp.Request) {
 			r.Response.Write("test")
 		})
 
 		s.SetAfterStart(func(s *ghttp.Server) error {
 			hookExecuted = true
-			t.Assert(s.GetListenedPort(), p) // Already started
+			listenedPort = s.GetListenedPort()
+			t.Assert(listenedPort > 0, true) // Already started, port assigned
 			return nil
 		})
 
@@ -89,6 +86,7 @@ func Test_Server_Lifecycle_AfterStart(t *testing.T) {
 
 		time.Sleep(100 * time.Millisecond)
 		t.Assert(hookExecuted, true)
+		t.Assert(listenedPort > 0, true)
 	})
 }
 
@@ -98,10 +96,8 @@ func Test_Server_Lifecycle_MultipleHooks(t *testing.T) {
 			beforeCount = 0
 			afterCount  = 0
 			mu          sync.Mutex
-			p           = 8891
 		)
 		s := g.Server(gtest.DataPath("lifecycle-multiple-hooks"))
-		s.SetAddr(fmt.Sprintf(":%d", p))
 		s.BindHandler("/test", func(r *ghttp.Request) {
 			r.Response.Write("test")
 		})
@@ -149,10 +145,8 @@ func Test_Server_Lifecycle_HooksOrder(t *testing.T) {
 		var (
 			executionOrder []string
 			mu             sync.Mutex
-			p              = 8892
 		)
 		s := g.Server(gtest.DataPath("lifecycle-hooks-order"))
-		s.SetAddr(fmt.Sprintf(":%d", p))
 		s.BindHandler("/test", func(r *ghttp.Request) {
 			r.Response.Write("test")
 		})
@@ -199,10 +193,8 @@ func Test_Server_Lifecycle_BeforeStart_StopOnError(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			secondHookExecuted = false
-			p                  = 8893
 		)
 		s := g.Server(gtest.DataPath("lifecycle-before-start-stop"))
-		s.SetAddr(fmt.Sprintf(":%d", p))
 		s.BindHandler("/test", func(r *ghttp.Request) {
 			r.Response.Write("test")
 		})
@@ -227,10 +219,8 @@ func Test_Server_Lifecycle_AfterStart_WithError(t *testing.T) {
 			firstHookExecuted  = false
 			secondHookExecuted = false
 			mu                 sync.Mutex
-			p                  = 8894
 		)
 		s := g.Server(gtest.DataPath("lifecycle-after-start-error"))
-		s.SetAddr(fmt.Sprintf(":%d", p))
 		s.BindHandler("/test", func(r *ghttp.Request) {
 			r.Response.Write("test")
 		})
