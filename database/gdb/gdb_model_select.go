@@ -56,9 +56,10 @@ func (m *Model) AllAndCount(useFieldForCount bool) (result Result, totalCount in
 	if !useFieldForCount {
 		countModel.fields = []any{Raw("1")}
 	}
-	if countModel.cacheEnabled && m.cacheOption.Name != "" {
-		countModel.cacheOption.Name = fmt.Sprintf(`%s%s`, cachePrefixCountCache, m.cacheOption.Name)
+	if len(m.pageCacheOption) > 0 {
+		countModel = countModel.Cache(m.pageCacheOption[0])
 	}
+
 	// Get the total count of records
 	totalCount, err = countModel.Count()
 	if err != nil {
@@ -70,8 +71,13 @@ func (m *Model) AllAndCount(useFieldForCount bool) (result Result, totalCount in
 		return
 	}
 
+	resultModel := m.Clone()
+	if len(m.pageCacheOption) > 1 {
+		resultModel = resultModel.Cache(m.pageCacheOption[1])
+	}
+
 	// Retrieve all records
-	result, err = m.doGetAll(m.GetCtx(), SelectTypeDefault, false)
+	result, err = resultModel.doGetAll(m.GetCtx(), SelectTypeDefault, false)
 	return
 }
 
@@ -339,8 +345,8 @@ func (m *Model) ScanAndCount(pointer any, totalCount *int, useFieldForCount bool
 	if !useFieldForCount {
 		countModel.fields = []any{Raw("1")}
 	}
-	if countModel.cacheEnabled && m.cacheOption.Name != "" {
-		countModel.cacheOption.Name = fmt.Sprintf(`%s%s`, cachePrefixCountCache, m.cacheOption.Name)
+	if len(m.pageCacheOption) > 0 {
+		countModel = countModel.Cache(m.pageCacheOption[0])
 	}
 	// Get the total count of records
 	*totalCount, err = countModel.Count()
@@ -352,7 +358,11 @@ func (m *Model) ScanAndCount(pointer any, totalCount *int, useFieldForCount bool
 	if *totalCount == 0 {
 		return
 	}
-	err = m.Scan(pointer)
+	scanModel := m.Clone()
+	if len(m.pageCacheOption) > 1 {
+		scanModel = scanModel.Cache(m.pageCacheOption[1])
+	}
+	err = scanModel.Scan(pointer)
 	return
 }
 
