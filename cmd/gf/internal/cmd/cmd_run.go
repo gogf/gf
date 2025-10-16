@@ -117,7 +117,7 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 
 	outputPath := app.genOutputPath()
 	callbackFunc := func(event *gfsnotify.Event) {
-		if !event.IsWrite() {
+		if !event.IsWrite() && !event.IsCreate() && !event.IsRemove() && !event.IsRename() {
 			return
 		}
 
