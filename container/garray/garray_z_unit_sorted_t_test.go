@@ -233,7 +233,7 @@ func TestSortedTArray_PopRands(t *testing.T) {
 		t.Assert(array1.Len(), 2)
 
 		i2 := array1.PopRands(3)
-		t.Assert(len(i1), 2)
+		t.Assert(len(i2), 2)
 		t.AssertIN(i2, []string{"a", "d", "c", "b"})
 		t.Assert(array1.Len(), 0)
 
