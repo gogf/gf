@@ -27,9 +27,7 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
-var (
-	Run = cRun{}
-)
+var Run = cRun{}
 
 type cRun struct {
 	g.Meta `name:"run" usage:"{cRunUsage}" brief:"{cRunBrief}" eg:"{cRunEg}" dc:"{cRunDc}"`
@@ -63,9 +61,7 @@ which compiles and runs the go codes asynchronously when codes change.
 	cRunWatchPathsBrief = `watch additional paths for live reload, separated by ",". i.e. "manifest/config/*.yaml"`
 )
 
-var (
-	process *gproc.Process
-)
+var process *gproc.Process
 
 func init() {
 	gtag.Sets(g.MapStrStr{
@@ -119,8 +115,12 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 	}
 	dirty := gtype.NewBool()
 
-	var outputPath = app.genOutputPath()
+	outputPath := app.genOutputPath()
 	callbackFunc := func(event *gfsnotify.Event) {
+		if !event.IsWrite() && !event.IsCreate() && !event.IsRemove() && !event.IsRename() {
+			return
+		}
+
 		if gfile.ExtName(event.Path) != "go" {
 			return
 		}
