@@ -85,7 +85,7 @@ func TestSortedTArray_Sort(t *testing.T) {
 		array1 := garray.NewSortedTArrayFrom(a1, gutil.ComparatorT)
 		array1.Sort()
 		t.Assert(array1.Len(), 3)
-		t.Assert(array1, []any{"a", "c", "f"})
+		t.Assert(array1, []string{"a", "c", "f"})
 	})
 
 }

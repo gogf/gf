@@ -347,9 +347,9 @@ func (a SortedIntArray) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (a *SortedIntArray) UnmarshalJSON(b []byte) error {
-	if a.sorter == nil || a.comparator == nil {
-		a.sorter = quickSortInt
+	if a.comparator == nil || a.sorter == nil {
 		a.comparator = defaultComparatorInt
+		a.sorter = quickSortInt
 		a.array = make([]int, 0)
 	}
 
@@ -358,9 +358,9 @@ func (a *SortedIntArray) UnmarshalJSON(b []byte) error {
 
 // UnmarshalValue is an interface implement which sets any type of value for array.
 func (a *SortedIntArray) UnmarshalValue(value any) (err error) {
-	if a.sorter == nil || a.comparator == nil {
-		a.sorter = quickSortInt
+	if a.comparator == nil || a.sorter == nil {
 		a.comparator = defaultComparatorInt
+		a.sorter = quickSortInt
 	}
 
 	return a.SortedTArray.UnmarshalValue(value)

@@ -359,9 +359,9 @@ func (a SortedStrArray) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (a *SortedStrArray) UnmarshalJSON(b []byte) error {
 	if a.comparator == nil || a.sorter == nil {
-		a.array = make([]string, 0)
 		a.comparator = defaultComparatorStr
 		a.sorter = quickSortStr
+		a.array = make([]string, 0)
 	}
 	return a.SortedTArray.UnmarshalJSON(b)
 }
@@ -386,7 +386,33 @@ func (a *SortedStrArray) Filter(filter func(index int, value string) bool) *Sort
 
 // FilterEmpty removes all empty string value of the array.
 func (a *SortedStrArray) FilterEmpty() *SortedStrArray {
-	a.SortedTArray.FilterEmpty()
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	if len(a.array) == 0 {
+		return a
+	}
+
+	if a.array[0] != "" && a.array[len(a.array)-1] != "" {
+		a.SortedTArray.FilterEmpty()
+		return a
+	}
+
+	for i := 0; i < len(a.array); {
+		if a.array[i] == "" {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			break
+		}
+	}
+	for i := len(a.array) - 1; i >= 0; {
+		if a.array[i] == "" {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+			i--
+		} else {
+			break
+		}
+	}
 	return a
 }
 

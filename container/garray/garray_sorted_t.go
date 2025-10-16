@@ -95,7 +95,7 @@ func (a *SortedTArray[T]) getSorter() func(values []T, comparator func(a, b T) i
 }
 
 // At returns the value by the specified index.
-// If the given `index` is out of range of the array, it returns the zero value of type `T` (as `any`).
+// If the given `index` is out of range of the array, it returns the zero value of type `T`
 func (a *SortedTArray[T]) At(index int) (value T) {
 	value, _ = a.Get(index)
 	return
