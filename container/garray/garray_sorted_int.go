@@ -8,9 +8,7 @@ package garray
 
 import (
 	"fmt"
-	"sort"
 
-	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -27,8 +25,10 @@ type SortedIntArray struct {
 // The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedIntArray(safe ...bool) *SortedIntArray {
+	o := NewSortedTArray(defaultComparatorInt, safe...)
+	o.SetSorter(quickSortInt)
 	return &SortedIntArray{
-		SortedTArray: *NewSortedTArray(defaultComparatorInt, safe...),
+		SortedTArray: *o,
 	}
 }
 
@@ -44,8 +44,10 @@ func NewSortedIntArrayComparator(comparator func(a, b int) int, safe ...bool) *S
 // The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedIntArraySize(cap int, safe ...bool) *SortedIntArray {
+	o := NewSortedTArraySize(cap, defaultComparatorInt, safe...)
+	o.SetSorter(quickSortInt)
 	return &SortedIntArray{
-		SortedTArray: *NewSortedTArraySize(cap, defaultComparatorInt, safe...),
+		SortedTArray: *o,
 	}
 }
 
@@ -70,7 +72,7 @@ func NewSortedIntArrayRange(start, end, step int, safe ...bool) *SortedIntArray 
 func NewSortedIntArrayFrom(array []int, safe ...bool) *SortedIntArray {
 	a := NewSortedIntArraySize(0, safe...)
 	a.array = array
-	sort.Ints(a.array)
+	a.sorter(a.array, defaultComparatorInt)
 	return a
 }
 
@@ -345,53 +347,30 @@ func (a SortedIntArray) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (a *SortedIntArray) UnmarshalJSON(b []byte) error {
-	if a.comparator == nil {
-		a.array = make([]int, 0)
+	if a.sorter == nil || a.comparator == nil {
+		a.sorter = quickSortInt
 		a.comparator = defaultComparatorInt
+		a.array = make([]int, 0)
 	}
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	if err := json.UnmarshalUseNumber(b, &a.array); err != nil {
-		return err
-	}
-	if a.array != nil {
-		sort.Ints(a.array)
-	}
-	return nil
+
+	return a.SortedTArray.UnmarshalJSON(b)
 }
 
 // UnmarshalValue is an interface implement which sets any type of value for array.
 func (a *SortedIntArray) UnmarshalValue(value any) (err error) {
-	if a.comparator == nil {
+	if a.sorter == nil || a.comparator == nil {
+		a.sorter = quickSortInt
 		a.comparator = defaultComparatorInt
 	}
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	switch value.(type) {
-	case string, []byte:
-		err = json.UnmarshalUseNumber(gconv.Bytes(value), &a.array)
-	default:
-		a.array = gconv.SliceInt(value)
-	}
-	if a.array != nil {
-		sort.Ints(a.array)
-	}
-	return err
+
+	return a.SortedTArray.UnmarshalValue(value)
 }
 
 // Filter iterates array and filters elements using custom callback function.
 // It removes the element from array if callback function `filter` returns true,
 // it or else does nothing and continues iterating.
 func (a *SortedIntArray) Filter(filter func(index int, value int) bool) *SortedIntArray {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	for i := 0; i < len(a.array); {
-		if filter(i, a.array[i]) {
-			a.array = append(a.array[:i], a.array[i+1:]...)
-		} else {
-			i++
-		}
-	}
+	a.SortedTArray.Filter(filter)
 	return a
 }
 
@@ -429,30 +408,13 @@ func (a *SortedIntArray) FilterEmpty() *SortedIntArray {
 
 // Walk applies a user supplied function `f` to every item of array.
 func (a *SortedIntArray) Walk(f func(value int) int) *SortedIntArray {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-
-	// Keep the array always sorted.
-	defer quickSortInt(a.array, a.getComparator())
-
-	for i, v := range a.array {
-		a.array[i] = f(v)
-	}
+	a.SortedTArray.Walk(f)
 	return a
 }
 
 // IsEmpty checks whether the array is empty.
 func (a *SortedIntArray) IsEmpty() bool {
-	return a.Len() == 0
-}
-
-// getComparator returns the comparator if it's previously set,
-// or else it returns a default comparator.
-func (a *SortedIntArray) getComparator() func(a, b int) int {
-	if a.comparator == nil {
-		return defaultComparatorInt
-	}
-	return a.comparator
+	return a.SortedTArray.IsEmpty()
 }
 
 // DeepCopy implements interface for deep copy of current type.

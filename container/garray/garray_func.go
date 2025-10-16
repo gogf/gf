@@ -6,7 +6,10 @@
 
 package garray
 
-import "strings"
+import (
+	"sort"
+	"strings"
+)
 
 // defaultComparatorInt for int comparison.
 func defaultComparatorInt(a, b int) int {
@@ -22,6 +25,12 @@ func defaultComparatorInt(a, b int) int {
 // defaultComparatorStr for string comparison.
 func defaultComparatorStr(a, b string) int {
 	return strings.Compare(a, b)
+}
+
+func defaultSorter[T comparable](values []T, comparator func(a T, b T) int) {
+	sort.Slice(values, func(i, j int) bool {
+		return comparator(values[i], values[j]) < 0
+	})
 }
 
 // quickSortInt is the quick-sorting algorithm implements for int.

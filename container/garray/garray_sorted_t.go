@@ -9,7 +9,6 @@ package garray
 import (
 	"bytes"
 	"math"
-	"sort"
 
 	"github.com/gogf/gf/v2/internal/deepcopy"
 	"github.com/gogf/gf/v2/internal/empty"
@@ -31,6 +30,7 @@ type SortedTArray[T comparable] struct {
 	array      []T
 	unique     bool             // Whether enable unique feature(false)
 	comparator func(a, b T) int // Comparison function(it returns -1: a < b; 0: a == b; 1: a > b)
+	sorter     func(values []T, comparator func(a, b T) int)
 }
 
 // NewSortedTArray creates and returns an empty sorted array.
@@ -57,6 +57,7 @@ func NewSortedTArraySize[T comparable](cap int, comparator func(a, b T) int, saf
 		mu:         rwmutex.Create(safe...),
 		array:      make([]T, 0, cap),
 		comparator: comparator,
+		sorter:     nil,
 	}
 }
 
@@ -69,9 +70,7 @@ func NewSortedTArrayFrom[T comparable](array []T, comparator func(a, b T) int, s
 	}
 	a := NewSortedTArraySize(0, comparator, safe...)
 	a.array = array
-	sort.Slice(a.array, func(i, j int) bool {
-		return a.getComparator()(a.array[i], a.array[j]) < 0
-	})
+	a.getSorter()(a.array, a.getComparator())
 	return a
 }
 
@@ -84,7 +83,15 @@ func NewSortedTArrayFromCopy[T comparable](array []T, comparator func(a, b T) in
 	}
 	newArray := make([]T, len(array))
 	copy(newArray, array)
-	return NewSortedTArrayFrom[T](newArray, comparator, safe...)
+	return NewSortedTArrayFrom(newArray, comparator, safe...)
+}
+
+func (a *SortedTArray[T]) getSorter() func(values []T, comparator func(a, b T) int) {
+	if a.sorter == nil {
+		return defaultSorter
+	} else {
+		return a.sorter
+	}
 }
 
 // At returns the value by the specified index.
@@ -99,10 +106,19 @@ func (a *SortedTArray[T]) SetArray(array []T) *SortedTArray[T] {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.array = array
-	sort.Slice(a.array, func(i, j int) bool {
-		return a.getComparator()(a.array[i], a.array[j]) < 0
-	})
+	a.getSorter()(a.array, a.getComparator())
+
 	return a
+}
+
+// SetSorter sets/changes the sorter for sorting.
+func (a *SortedTArray[T]) SetSorter(sorter func(values []T, comparator func(a, b T) int)) {
+	if sorter == nil {
+		a.sorter = defaultSorter
+	} else {
+		a.sorter = sorter
+	}
+	a.sorter(a.array, a.getComparator())
 }
 
 // SetComparator sets/changes the comparator for sorting.
@@ -114,9 +130,7 @@ func (a *SortedTArray[T]) SetComparator(comparator func(a, b T) int) {
 		comparator = gutil.ComparatorTStr
 	}
 	a.comparator = comparator
-	sort.Slice(a.array, func(i, j int) bool {
-		return a.getComparator()(a.array[i], a.array[j]) < 0
-	})
+	a.getSorter()(a.array, comparator)
 }
 
 // Sort sorts the array in increasing order.
@@ -125,9 +139,9 @@ func (a *SortedTArray[T]) SetComparator(comparator func(a, b T) int) {
 func (a *SortedTArray[T]) Sort() *SortedTArray[T] {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	sort.Slice(a.array, func(i, j int) bool {
-		return a.getComparator()(a.array[i], a.array[j]) < 0
-	})
+
+	a.getSorter()(a.array, a.getComparator())
+
 	return a
 }
 
@@ -536,9 +550,7 @@ func (a *SortedTArray[T]) LockFunc(f func(array []T)) *SortedTArray[T] {
 	defer a.mu.Unlock()
 
 	// Keep the array always sorted.
-	defer sort.Slice(a.array, func(i, j int) bool {
-		return a.getComparator()(a.array[i], a.array[j]) < 0
-	})
+	defer a.getSorter()(a.array, a.getComparator())
 
 	f(a.array)
 	return a
@@ -726,9 +738,7 @@ func (a *SortedTArray[T]) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	if a.comparator != nil && a.array != nil {
-		sort.Slice(a.array, func(i, j int) bool {
-			return a.comparator(a.array[i], a.array[j]) < 0
-		})
+		a.getSorter()(a.array, a.comparator)
 	}
 	return nil
 }
@@ -750,9 +760,7 @@ func (a *SortedTArray[T]) UnmarshalValue(value any) (err error) {
 		}
 	}
 	if a.comparator != nil && a.array != nil {
-		sort.Slice(a.array, func(i, j int) bool {
-			return a.comparator(a.array[i], a.array[j]) < 0
-		})
+		a.getSorter()(a.array, a.comparator)
 	}
 	return err
 }
@@ -807,9 +815,8 @@ func (a *SortedTArray[T]) Walk(f func(value T) T) *SortedTArray[T] {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	// Keep the array always sorted.
-	defer sort.Slice(a.array, func(i, j int) bool {
-		return a.getComparator()(a.array[i], a.array[j]) < 0
-	})
+	defer a.getSorter()(a.array, a.getComparator())
+
 	for i, v := range a.array {
 		a.array[i] = f(v)
 	}
