@@ -126,6 +126,11 @@ func GetServer(name ...any) *Server {
 func (s *Server) Start() error {
 	var ctx = gctx.GetInitCtx()
 
+	// Execute before-start hooks.
+	if err := s.executeBeforeStartHooks(); err != nil {
+		return gerror.Wrap(err, `before-start hook failed`)
+	}
+
 	// Swagger UI.
 	if s.config.SwaggerPath != "" {
 		swaggerui.Init()
@@ -581,6 +586,9 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 		go s.startGracefulServer(ctx, wg, gs)
 	}
 	wg.Wait()
+
+	// Execute after-start hooks once all listeners are ready.
+	s.executeAfterStartHooks()
 }
 
 func (s *Server) startGracefulServer(ctx context.Context, wg *sync.WaitGroup, server *graceful.Server) {
