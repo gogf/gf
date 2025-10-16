@@ -383,8 +383,7 @@ func (a *SortedIntArray) FilterEmpty() *SortedIntArray {
 		return a
 	}
 
-	if (a.array[0] < 0 && a.array[len(a.array)-1] > 0) ||
-		(a.array[0] > 0 && a.array[len(a.array)-1] < 0) {
+	if a.array[0] != 0 && a.array[len(a.array)-1] != 0 {
 		a.SortedTArray.FilterEmpty()
 		return a
 	}
@@ -399,6 +398,7 @@ func (a *SortedIntArray) FilterEmpty() *SortedIntArray {
 	for i := len(a.array) - 1; i >= 0; {
 		if a.array[i] == 0 {
 			a.array = append(a.array[:i], a.array[i+1:]...)
+			i--
 		} else {
 			break
 		}
