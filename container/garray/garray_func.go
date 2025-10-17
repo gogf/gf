@@ -6,7 +6,10 @@
 
 package garray
 
-import "strings"
+import (
+	"sort"
+	"strings"
+)
 
 // defaultComparatorInt for int comparison.
 func defaultComparatorInt(a, b int) int {
@@ -22,6 +25,14 @@ func defaultComparatorInt(a, b int) int {
 // defaultComparatorStr for string comparison.
 func defaultComparatorStr(a, b string) int {
 	return strings.Compare(a, b)
+}
+
+// defaultSorter is a generic sorting function that sorts a slice of comparable types
+// using the provided comparator function.
+func defaultSorter[T comparable](values []T, comparator func(a T, b T) int) {
+	sort.Slice(values, func(i, j int) bool {
+		return comparator(values[i], values[j]) < 0
+	})
 }
 
 // quickSortInt is the quick-sorting algorithm implements for int.
@@ -69,7 +80,7 @@ func quickSortStr(values []string, comparator func(a, b string) int) {
 }
 
 // tToAnySlice converts []T to []any
-func tToAnySlice[T comparable](values []T) []any {
+func tToAnySlice[T any](values []T) []any {
 	if values == nil {
 		return nil
 	}
@@ -81,7 +92,7 @@ func tToAnySlice[T comparable](values []T) []any {
 }
 
 // anyToTSlice is convert []any to []T
-func anyToTSlice[T comparable](values []any) []T {
+func anyToTSlice[T any](values []any) []T {
 	if values == nil {
 		return nil
 	}
@@ -93,7 +104,7 @@ func anyToTSlice[T comparable](values []any) []T {
 }
 
 // tToAnySlices converts [][]T to [][]any
-func tToAnySlices[T comparable](values [][]T) [][]any {
+func tToAnySlices[T any](values [][]T) [][]any {
 	if values == nil {
 		return nil
 	}
@@ -105,7 +116,7 @@ func tToAnySlices[T comparable](values [][]T) [][]any {
 }
 
 // anyToTSlices converts [][]any to [][]T
-func anyToTSlices[T comparable](values [][]any) [][]T {
+func anyToTSlices[T any](values [][]any) [][]T {
 	if values == nil {
 		return nil
 	}
