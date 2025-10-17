@@ -645,7 +645,7 @@ func TestSortedTArray_Json(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := []string{"a", "b", "d", "c"}
 		s2 := []string{"a", "b", "c", "d"}
-		a1 := *garray.NewSortedTArrayFrom(s1, nil)
+		a1 := garray.NewSortedTArrayFrom(s1, nil)
 		b1, err1 := json.Marshal(a1)
 		b2, err2 := json.Marshal(s1)
 		t.Assert(b1, b2)
@@ -703,7 +703,7 @@ func TestSortedTArray_Json(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Name   string
-			Scores garray.SortedTArray[int]
+			Scores *garray.SortedTArray[int]
 		}
 		data := g.Map{
 			"Name":   "john",

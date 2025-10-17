@@ -20,7 +20,15 @@ import (
 // It contains a concurrent-safe/unsafe switch, which should be set
 // when its initialization and cannot be changed then.
 type SortedStrArray struct {
-	SortedTArray[string]
+	*SortedTArray[string]
+}
+
+// lazyInit lazily initializes the array.
+func (a *SortedStrArray) lazyInit() {
+	if a.SortedTArray == nil {
+		a.SortedTArray = NewSortedTArraySize(0, defaultComparatorStr, false)
+		a.SetSorter(quickSortStr)
+	}
 }
 
 // NewSortedStrArray creates and returns an empty sorted array.
@@ -42,10 +50,10 @@ func NewSortedStrArrayComparator(comparator func(a, b string) int, safe ...bool)
 // The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedStrArraySize(cap int, safe ...bool) *SortedStrArray {
-	o := NewSortedTArraySize(cap, defaultComparatorStr, safe...)
-	o.SetSorter(quickSortStr)
+	a := NewSortedTArraySize(cap, defaultComparatorStr, safe...)
+	a.SetSorter(quickSortStr)
 	return &SortedStrArray{
-		SortedTArray: *o,
+		SortedTArray: a,
 	}
 }
 
@@ -70,6 +78,7 @@ func NewSortedStrArrayFromCopy(array []string, safe ...bool) *SortedStrArray {
 
 // SetArray sets the underlying slice array with the given `array`.
 func (a *SortedStrArray) SetArray(array []string) *SortedStrArray {
+	a.lazyInit()
 	a.SortedTArray.SetArray(array)
 	return a
 }
@@ -77,6 +86,7 @@ func (a *SortedStrArray) SetArray(array []string) *SortedStrArray {
 // At returns the value by the specified index.
 // If the given `index` is out of range of the array, it returns an empty string.
 func (a *SortedStrArray) At(index int) (value string) {
+	a.lazyInit()
 	return a.SortedTArray.At(index)
 }
 
@@ -84,6 +94,7 @@ func (a *SortedStrArray) At(index int) (value string) {
 // The parameter `reverse` controls whether sort
 // in increasing order(default) or decreasing order.
 func (a *SortedStrArray) Sort() *SortedStrArray {
+	a.lazyInit()
 	a.SortedTArray.Sort()
 	return a
 }
@@ -91,12 +102,14 @@ func (a *SortedStrArray) Sort() *SortedStrArray {
 // Add adds one or multiple values to sorted array, the array always keeps sorted.
 // It's alias of function Append, see Append.
 func (a *SortedStrArray) Add(values ...string) *SortedStrArray {
+	a.lazyInit()
 	a.SortedTArray.Add(values...)
 	return a
 }
 
 // Append adds one or multiple values to sorted array, the array always keeps sorted.
 func (a *SortedStrArray) Append(values ...string) *SortedStrArray {
+	a.lazyInit()
 	a.SortedTArray.Append(values...)
 	return a
 }
@@ -104,41 +117,48 @@ func (a *SortedStrArray) Append(values ...string) *SortedStrArray {
 // Get returns the value by the specified index.
 // If the given `index` is out of range of the array, the `found` is false.
 func (a *SortedStrArray) Get(index int) (value string, found bool) {
+	a.lazyInit()
 	return a.SortedTArray.Get(index)
 }
 
 // Remove removes an item by index.
 // If the given `index` is out of range of the array, the `found` is false.
 func (a *SortedStrArray) Remove(index int) (value string, found bool) {
+	a.lazyInit()
 	return a.SortedTArray.Remove(index)
 }
 
 // RemoveValue removes an item by value.
 // It returns true if value is found in the array, or else false if not found.
 func (a *SortedStrArray) RemoveValue(value string) bool {
+	a.lazyInit()
 	return a.SortedTArray.RemoveValue(value)
 }
 
 // RemoveValues removes an item by `values`.
 func (a *SortedStrArray) RemoveValues(values ...string) {
+	a.lazyInit()
 	a.SortedTArray.RemoveValues(values...)
 }
 
 // PopLeft pops and returns an item from the beginning of array.
 // Note that if the array is empty, the `found` is false.
 func (a *SortedStrArray) PopLeft() (value string, found bool) {
+	a.lazyInit()
 	return a.SortedTArray.PopLeft()
 }
 
 // PopRight pops and returns an item from the end of array.
 // Note that if the array is empty, the `found` is false.
 func (a *SortedStrArray) PopRight() (value string, found bool) {
+	a.lazyInit()
 	return a.SortedTArray.PopRight()
 }
 
 // PopRand randomly pops and return an item out of array.
 // Note that if the array is empty, the `found` is false.
 func (a *SortedStrArray) PopRand() (value string, found bool) {
+	a.lazyInit()
 	return a.SortedTArray.PopRand()
 }
 
@@ -146,6 +166,7 @@ func (a *SortedStrArray) PopRand() (value string, found bool) {
 // If the given `size` is greater than size of the array, it returns all elements of the array.
 // Note that if given `size` <= 0 or the array is empty, it returns nil.
 func (a *SortedStrArray) PopRands(size int) []string {
+	a.lazyInit()
 	return a.SortedTArray.PopRands(size)
 }
 
@@ -153,6 +174,7 @@ func (a *SortedStrArray) PopRands(size int) []string {
 // If the given `size` is greater than size of the array, it returns all elements of the array.
 // Note that if given `size` <= 0 or the array is empty, it returns nil.
 func (a *SortedStrArray) PopLefts(size int) []string {
+	a.lazyInit()
 	return a.SortedTArray.PopLefts(size)
 }
 
@@ -160,6 +182,7 @@ func (a *SortedStrArray) PopLefts(size int) []string {
 // If the given `size` is greater than size of the array, it returns all elements of the array.
 // Note that if given `size` <= 0 or the array is empty, it returns nil.
 func (a *SortedStrArray) PopRights(size int) []string {
+	a.lazyInit()
 	return a.SortedTArray.PopRights(size)
 }
 
@@ -171,6 +194,7 @@ func (a *SortedStrArray) PopRights(size int) []string {
 // If `end` is omitted, then the sequence will have everything from start up
 // until the end of the array.
 func (a *SortedStrArray) Range(start int, end ...int) []string {
+	a.lazyInit()
 	return a.SortedTArray.Range(start, end...)
 }
 
@@ -188,16 +212,19 @@ func (a *SortedStrArray) Range(start int, end ...int) []string {
 //
 // Any possibility crossing the left border of array, it will fail.
 func (a *SortedStrArray) SubSlice(offset int, length ...int) []string {
+	a.lazyInit()
 	return a.SortedTArray.SubSlice(offset, length...)
 }
 
 // Sum returns the sum of values in an array.
 func (a *SortedStrArray) Sum() (sum int) {
+	a.lazyInit()
 	return a.SortedTArray.Sum()
 }
 
 // Len returns the length of array.
 func (a *SortedStrArray) Len() int {
+	a.lazyInit()
 	return a.SortedTArray.Len()
 }
 
@@ -205,22 +232,26 @@ func (a *SortedStrArray) Len() int {
 // Note that, if it's in concurrent-safe usage, it returns a copy of underlying data,
 // or else a pointer to the underlying data.
 func (a *SortedStrArray) Slice() []string {
+	a.lazyInit()
 	return a.SortedTArray.Slice()
 }
 
 // Interfaces returns current array as []any.
 func (a *SortedStrArray) Interfaces() []any {
+	a.lazyInit()
 	return a.SortedTArray.Interfaces()
 }
 
 // Contains checks whether a value exists in the array.
 func (a *SortedStrArray) Contains(value string) bool {
+	a.lazyInit()
 	return a.SortedTArray.Contains(value)
 }
 
 // ContainsI checks whether a value exists in the array with case-insensitively.
 // Note that it internally iterates the whole array to do the comparison with case-insensitively.
 func (a *SortedStrArray) ContainsI(value string) bool {
+	a.lazyInit()
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	if len(a.array) == 0 {
@@ -237,6 +268,7 @@ func (a *SortedStrArray) ContainsI(value string) bool {
 // Search searches array by `value`, returns the index of `value`,
 // or returns -1 if not exists.
 func (a *SortedStrArray) Search(value string) (index int) {
+	a.lazyInit()
 	return a.SortedTArray.Search(value)
 }
 
@@ -244,37 +276,43 @@ func (a *SortedStrArray) Search(value string) (index int) {
 // which means it does not contain any repeated items.
 // It also do unique check, remove all repeated items.
 func (a *SortedStrArray) SetUnique(unique bool) *SortedStrArray {
+	a.lazyInit()
 	a.SortedTArray.SetUnique(unique)
 	return a
 }
 
 // Unique uniques the array, clear repeated items.
 func (a *SortedStrArray) Unique() *SortedStrArray {
+	a.lazyInit()
 	a.SortedTArray.Unique()
 	return a
 }
 
 // Clone returns a new array, which is a copy of current array.
 func (a *SortedStrArray) Clone() (newArray *SortedStrArray) {
+	a.lazyInit()
 	return &SortedStrArray{
-		SortedTArray: *a.SortedTArray.Clone(),
+		SortedTArray: a.SortedTArray.Clone(),
 	}
 }
 
 // Clear deletes all items of current array.
 func (a *SortedStrArray) Clear() *SortedStrArray {
+	a.lazyInit()
 	a.SortedTArray.Clear()
 	return a
 }
 
 // LockFunc locks writing by callback function `f`.
 func (a *SortedStrArray) LockFunc(f func(array []string)) *SortedStrArray {
+	a.lazyInit()
 	a.SortedTArray.LockFunc(f)
 	return a
 }
 
 // RLockFunc locks reading by callback function `f`.
 func (a *SortedStrArray) RLockFunc(f func(array []string)) *SortedStrArray {
+	a.lazyInit()
 	a.SortedTArray.RLockFunc(f)
 	return a
 }
@@ -284,6 +322,7 @@ func (a *SortedStrArray) RLockFunc(f func(array []string)) *SortedStrArray {
 // The difference between Merge and Append is Append supports only specified slice type,
 // but Merge supports more parameter types.
 func (a *SortedStrArray) Merge(array any) *SortedStrArray {
+	a.lazyInit()
 	return a.Add(gconv.Strings(array)...)
 }
 
@@ -291,43 +330,51 @@ func (a *SortedStrArray) Merge(array any) *SortedStrArray {
 // the size of each array is determined by `size`.
 // The last chunk may contain less than size elements.
 func (a *SortedStrArray) Chunk(size int) [][]string {
+	a.lazyInit()
 	return a.SortedTArray.Chunk(size)
 }
 
 // Rand randomly returns one item from array(no deleting).
 func (a *SortedStrArray) Rand() (value string, found bool) {
+	a.lazyInit()
 	return a.SortedTArray.Rand()
 }
 
 // Rands randomly returns `size` items from array(no deleting).
 func (a *SortedStrArray) Rands(size int) []string {
+	a.lazyInit()
 	return a.SortedTArray.Rands(size)
 }
 
 // Join joins array elements with a string `glue`.
 func (a *SortedStrArray) Join(glue string) string {
+	a.lazyInit()
 	return a.SortedTArray.Join(glue)
 }
 
 // CountValues counts the number of occurrences of all values in the array.
 func (a *SortedStrArray) CountValues() map[string]int {
+	a.lazyInit()
 	return a.SortedTArray.CountValues()
 }
 
 // Iterator is alias of IteratorAsc.
 func (a *SortedStrArray) Iterator(f func(k int, v string) bool) {
+	a.lazyInit()
 	a.SortedTArray.Iterator(f)
 }
 
 // IteratorAsc iterates the array readonly in ascending order with given callback function `f`.
 // If `f` returns true, then it continues iterating; or false to stop.
 func (a *SortedStrArray) IteratorAsc(f func(k int, v string) bool) {
+	a.lazyInit()
 	a.SortedTArray.IteratorAsc(f)
 }
 
 // IteratorDesc iterates the array readonly in descending order with given callback function `f`.
 // If `f` returns true, then it continues iterating; or false to stop.
 func (a *SortedStrArray) IteratorDesc(f func(k int, v string) bool) {
+	a.lazyInit()
 	a.SortedTArray.IteratorDesc(f)
 }
 
@@ -336,6 +383,7 @@ func (a *SortedStrArray) String() string {
 	if a == nil {
 		return ""
 	}
+	a.lazyInit()
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	buffer := bytes.NewBuffer(nil)
@@ -353,11 +401,13 @@ func (a *SortedStrArray) String() string {
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 // Note that do not use pointer as its receiver here.
 func (a SortedStrArray) MarshalJSON() ([]byte, error) {
+	a.lazyInit()
 	return a.SortedTArray.MarshalJSON()
 }
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (a *SortedStrArray) UnmarshalJSON(b []byte) error {
+	a.lazyInit()
 	if a.comparator == nil || a.sorter == nil {
 		a.comparator = defaultComparatorStr
 		a.sorter = quickSortStr
@@ -368,6 +418,7 @@ func (a *SortedStrArray) UnmarshalJSON(b []byte) error {
 
 // UnmarshalValue is an interface implement which sets any type of value for array.
 func (a *SortedStrArray) UnmarshalValue(value any) (err error) {
+	a.lazyInit()
 	if a.comparator == nil || a.sorter == nil {
 		a.comparator = defaultComparatorStr
 		a.sorter = quickSortStr
@@ -380,12 +431,14 @@ func (a *SortedStrArray) UnmarshalValue(value any) (err error) {
 // It removes the element from array if callback function `filter` returns true,
 // it or else does nothing and continues iterating.
 func (a *SortedStrArray) Filter(filter func(index int, value string) bool) *SortedStrArray {
+	a.lazyInit()
 	a.SortedTArray.Filter(filter)
 	return a
 }
 
 // FilterEmpty removes all empty string value of the array.
 func (a *SortedStrArray) FilterEmpty() *SortedStrArray {
+	a.lazyInit()
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -418,18 +471,21 @@ func (a *SortedStrArray) FilterEmpty() *SortedStrArray {
 
 // Walk applies a user supplied function `f` to every item of array.
 func (a *SortedStrArray) Walk(f func(value string) string) *SortedStrArray {
+	a.lazyInit()
 	a.SortedTArray.Walk(f)
 	return a
 }
 
 // IsEmpty checks whether the array is empty.
 func (a *SortedStrArray) IsEmpty() bool {
+	a.lazyInit()
 	return a.SortedTArray.IsEmpty()
 }
 
 // DeepCopy implements interface for deep copy of current type.
 func (a *SortedStrArray) DeepCopy() any {
+	a.lazyInit()
 	return &SortedStrArray{
-		SortedTArray: *(a.SortedTArray.DeepCopy().(*SortedTArray[string])),
+		SortedTArray: a.SortedTArray.DeepCopy().(*SortedTArray[string]),
 	}
 }

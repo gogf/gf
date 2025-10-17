@@ -27,6 +27,8 @@ func defaultComparatorStr(a, b string) int {
 	return strings.Compare(a, b)
 }
 
+// defaultSorter is a generic sorting function that sorts a slice of comparable types
+// using the provided comparator function.
 func defaultSorter[T comparable](values []T, comparator func(a T, b T) int) {
 	sort.Slice(values, func(i, j int) bool {
 		return comparator(values[i], values[j]) < 0
