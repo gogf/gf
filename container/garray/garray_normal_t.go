@@ -41,7 +41,7 @@ func NewTArray[T comparable](safe ...bool) *TArray[T] {
 // The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewTArraySize[T comparable](size int, cap int, safe ...bool) *TArray[T] {
-	return &Array{
+	return &TArray[T]{
 		mu:    rwmutex.Create(safe...),
 		array: make([]T, size, cap),
 	}
@@ -51,7 +51,7 @@ func NewTArraySize[T comparable](size int, cap int, safe ...bool) *TArray[T] {
 // The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewTArrayFrom[T comparable](array []T, safe ...bool) *TArray[T] {
-	return &Array{
+	return &TArray[T]{
 		mu:    rwmutex.Create(safe...),
 		array: array,
 	}
@@ -60,10 +60,10 @@ func NewTArrayFrom[T comparable](array []T, safe ...bool) *TArray[T] {
 // NewArrayFromCopy creates and returns an array from a copy of given slice `array`.
 // The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
-func NewTArrayFromCopy[T comparable](array []any, safe ...bool) *TArray[T] {
+func NewTArrayFromCopy[T comparable](array []T, safe ...bool) *TArray[T] {
 	newArray := make([]T, len(array))
 	copy(newArray, array)
-	return &Array{
+	return &TArray[T]{
 		mu:    rwmutex.Create(safe...),
 		array: newArray,
 	}
@@ -82,7 +82,8 @@ func (a *TArray[T]) Get(index int) (value T, found bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	if index < 0 || index >= len(a.array) {
-		return nil, false
+		found = false
+		return
 	}
 	return a.array[index], true
 }
@@ -147,7 +148,7 @@ func (a *TArray[T]) InsertBefore(index int, values ...T) error {
 	if index < 0 || index >= len(a.array) {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
-	rear := append([]any{}, a.array[index:]...)
+	rear := append([]T{}, a.array[index:]...)
 	a.array = append(a.array[0:index], values...)
 	a.array = append(a.array, rear...)
 	return nil
@@ -177,7 +178,8 @@ func (a *TArray[T]) Remove(index int) (value T, found bool) {
 // doRemoveWithoutLock removes an item by index without lock.
 func (a *TArray[T]) doRemoveWithoutLock(index int) (value T, found bool) {
 	if index < 0 || index >= len(a.array) {
-		return nil, false
+		found = false
+		return
 	}
 	// Determine array boundaries when deleting to improve deletion efficiency.
 	if index == 0 {
@@ -268,7 +270,8 @@ func (a *TArray[T]) PopLeft() (value T, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if len(a.array) == 0 {
-		return nil, false
+		found = false
+		return
 	}
 	value = a.array[0]
 	a.array = a.array[1:]
@@ -282,7 +285,8 @@ func (a *TArray[T]) PopRight() (value T, found bool) {
 	defer a.mu.Unlock()
 	index := len(a.array) - 1
 	if index < 0 {
-		return nil, false
+		found = false
+		return
 	}
 	value = a.array[index]
 	a.array = a.array[:index]
@@ -444,7 +448,7 @@ func (a *TArray[T]) Clone() (newArray *TArray[T]) {
 	array := make([]T, len(a.array))
 	copy(array, a.array)
 	a.mu.RUnlock()
-	return NewArrayFrom(array, a.mu.IsSafe())
+	return NewTArrayFrom(array, a.mu.IsSafe())
 }
 
 // Clear deletes all items of current array.
@@ -494,7 +498,7 @@ func (a *TArray[T]) Unique() *TArray[T] {
 	}
 	var (
 		ok          bool
-		temp        any
+		temp        T
 		uniqueSet   = make(map[T]struct{})
 		uniqueArray = make([]T, 0, len(a.array))
 	)
@@ -594,7 +598,7 @@ func (a *TArray[T]) Chunk(size int) [][]T {
 // If size is positive then the array is padded on the right, or negative on the left.
 // If the absolute value of `size` is less than or equal to the length of the array
 // then no padding takes place.
-func (a *TArray[T]) Pad(size int, val any) *TArray[T] {
+func (a *TArray[T]) Pad(size int, val T) *TArray[T] {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if size == 0 || (size > 0 && size < len(a.array)) || (size < 0 && size > -len(a.array)) {
@@ -622,7 +626,8 @@ func (a *TArray[T]) Rand() (value T, found bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	if len(a.array) == 0 {
-		return nil, false
+		found = false
+		return
 	}
 	return a.array[grand.Intn(len(a.array))], true
 }
@@ -745,7 +750,7 @@ func (a *TArray[T]) String() string {
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 // Note that do not use pointer as its receiver here.
-func (a Array) MarshalJSON() ([]byte, error) {
+func (a TArray[T]) MarshalJSON() ([]byte, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return json.Marshal(a.array)
@@ -772,7 +777,9 @@ func (a *TArray[T]) UnmarshalValue(value any) error {
 	case string, []byte:
 		return json.UnmarshalUseNumber(gconv.Bytes(value), &a.array)
 	default:
-		a.array = gconv.SliceAny(value)
+		if err := gconv.Scan(gconv.SliceAny(value), &a.array); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -846,7 +853,7 @@ func (a *TArray[T]) DeepCopy() any {
 	defer a.mu.RUnlock()
 	newSlice := make([]T, len(a.array))
 	for i, v := range a.array {
-		newSlice[i] = deepcopy.Copy(v)
+		newSlice[i] = deepcopy.Copy(v).(T)
 	}
 	return NewTArrayFrom(newSlice, a.mu.IsSafe())
 }
