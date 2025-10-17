@@ -47,7 +47,7 @@ func NewTArraySize[T comparable](size int, cap int, safe ...bool) *TArray[T] {
 	}
 }
 
-// NewArrayFrom creates and returns an array with given slice `array`.
+// NewTArrayFrom creates and returns an array with given slice `array`.
 // The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewTArrayFrom[T comparable](array []T, safe ...bool) *TArray[T] {
