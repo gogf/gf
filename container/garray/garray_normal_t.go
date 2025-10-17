@@ -57,7 +57,7 @@ func NewTArrayFrom[T comparable](array []T, safe ...bool) *TArray[T] {
 	}
 }
 
-// NewArrayFromCopy creates and returns an array from a copy of given slice `array`.
+// NewTArrayFromCopy creates and returns an array from a copy of given slice `array`.
 // The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewTArrayFromCopy[T comparable](array []T, safe ...bool) *TArray[T] {
