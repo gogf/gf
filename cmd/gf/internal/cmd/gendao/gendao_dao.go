@@ -26,17 +26,35 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
-func generateDao(ctx context.Context, in CGenDaoInternalInput) {
+func generateDao(ctx context.Context, in CGenDaoInternalInput, metadata *DaoGenMetadata) {
 	var (
 		dirPathDao         = gfile.Join(in.Path, in.DaoPath)
 		dirPathDaoInternal = gfile.Join(dirPathDao, "internal")
 	)
 	in.genItems.AppendDirPath(dirPathDao)
+
 	for i := 0; i < len(in.TableNames); i++ {
 		var (
 			realTableName = in.TableNames[i]
 			newTableName  = in.NewTableNames[i]
 		)
+
+		// Check if table should be generated (incremental logic)
+		shouldGenerate := true
+		if in.Incremental && metadata != nil {
+			var err error
+			shouldGenerate, _, err = shouldGenerateTable(ctx, in.DB, realTableName, metadata, true)
+			if err != nil {
+				mlog.Printf("Failed to check if table %s should be generated: %v, will generate anyway", realTableName, err)
+				shouldGenerate = true
+			}
+
+			if !shouldGenerate {
+				mlog.Printf("Skipping unchanged table: %s", realTableName)
+				continue
+			}
+		}
+
 		generateDaoSingle(ctx, generateDaoSingleInput{
 			CGenDaoInternalInput: in,
 			TableName:            realTableName,

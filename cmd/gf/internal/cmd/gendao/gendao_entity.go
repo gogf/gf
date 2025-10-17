@@ -20,11 +20,28 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
-func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
+func generateEntity(ctx context.Context, in CGenDaoInternalInput, metadata *DaoGenMetadata) {
 	var dirPathEntity = gfile.Join(in.Path, in.EntityPath)
 	in.genItems.AppendDirPath(dirPathEntity)
+
 	// Model content.
 	for i, tableName := range in.TableNames {
+		// Check if table should be generated (incremental logic)
+		shouldGenerate := true
+		if in.Incremental && metadata != nil {
+			var err error
+			shouldGenerate, _, err = shouldGenerateTable(ctx, in.DB, tableName, metadata, true)
+			if err != nil {
+				mlog.Printf("Failed to check if table %s should be generated: %v, will generate anyway", tableName, err)
+				shouldGenerate = true
+			}
+
+			if !shouldGenerate {
+				mlog.Printf("Skipping unchanged table (Entity): %s", tableName)
+				continue
+			}
+		}
+
 		fieldMap, err := in.DB.TableFields(ctx, tableName)
 		if err != nil {
 			mlog.Fatalf("fetching tables fields failed for table '%s':\n%v", tableName, err)

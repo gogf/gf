@@ -26,7 +26,7 @@ import (
 )
 
 // generateTable generates dao files for given tables.
-func generateTable(ctx context.Context, in CGenDaoInternalInput) {
+func generateTable(ctx context.Context, in CGenDaoInternalInput, metadata *DaoGenMetadata) {
 	dirPathTable := gfile.Join(in.Path, in.TablePath)
 	if !in.GenTable {
 		if gfile.Exists(dirPathTable) {
@@ -35,11 +35,29 @@ func generateTable(ctx context.Context, in CGenDaoInternalInput) {
 		return
 	}
 	in.genItems.AppendDirPath(dirPathTable)
+
 	for i := 0; i < len(in.TableNames); i++ {
 		var (
 			realTableName = in.TableNames[i]
 			newTableName  = in.NewTableNames[i]
 		)
+
+		// Check if table should be generated (incremental logic)
+		shouldGenerate := true
+		if in.Incremental && metadata != nil {
+			var err error
+			shouldGenerate, _, err = shouldGenerateTable(ctx, in.DB, realTableName, metadata, true)
+			if err != nil {
+				mlog.Printf("Failed to check if table %s should be generated: %v, will generate anyway", realTableName, err)
+				shouldGenerate = true
+			}
+
+			if !shouldGenerate {
+				mlog.Printf("Skipping unchanged table (Table): %s", realTableName)
+				continue
+			}
+		}
+
 		generateTableSingle(ctx, generateTableSingleInput{
 			CGenDaoInternalInput: in,
 			TableName:            realTableName,
@@ -76,31 +94,28 @@ func generateTableSingle(ctx context.Context, in generateTableSingleInput) {
 	}
 	path := filepath.FromSlash(gfile.Join(in.DirPathTable, fileName+".go"))
 	in.genItems.AppendGeneratedFilePath(path)
-	if in.OverwriteDao || !gfile.Exists(path) {
-		var (
-			ctx        = context.Background()
-			tplContent = getTemplateFromPathOrDefault(
-				in.TplDaoTablePath, consts.TemplateGenTableContent,
-			)
-		)
-		tplView.ClearAssigns()
-		tplView.Assigns(gview.Params{
-			tplVarGroupName:          in.Group,
-			tplVarTableName:          in.TableName,
-			tplVarTableNameCamelCase: formatFieldName(in.NewTableName, FieldNameCaseCamel),
-			tplVarPackageName:        filepath.Base(in.TablePath),
-			tplVarTableFields:        generateTableFields(fieldMap),
-		})
-		indexContent, err := tplView.ParseContent(ctx, tplContent)
-		if err != nil {
-			mlog.Fatalf("parsing template content failed: %v", err)
-		}
-		if err = gfile.PutContents(path, strings.TrimSpace(indexContent)); err != nil {
-			mlog.Fatalf("writing content to '%s' failed: %v", path, err)
-		} else {
-			utils.GoFmt(path)
-			mlog.Print("generated:", gfile.RealPath(path))
-		}
+
+	tplContent := getTemplateFromPathOrDefault(
+		in.TplDaoTablePath, consts.TemplateGenTableContent,
+	)
+
+	tplView.ClearAssigns()
+	tplView.Assigns(gview.Params{
+		tplVarGroupName:          in.Group,
+		tplVarTableName:          in.TableName,
+		tplVarTableNameCamelCase: formatFieldName(in.NewTableName, FieldNameCaseCamel),
+		tplVarPackageName:        filepath.Base(in.TablePath),
+		tplVarTableFields:        generateTableFields(fieldMap),
+	})
+	indexContent, err := tplView.ParseContent(ctx, tplContent)
+	if err != nil {
+		mlog.Fatalf("parsing template content failed: %v", err)
+	}
+	if err = gfile.PutContents(path, strings.TrimSpace(indexContent)); err != nil {
+		mlog.Fatalf("writing content to '%s' failed: %v", path, err)
+	} else {
+		utils.GoFmt(path)
+		mlog.Print("generated:", gfile.RealPath(path))
 	}
 }
 
