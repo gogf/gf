@@ -22,10 +22,12 @@ func TestCron_Entry_Operations(t *testing.T) {
 			cron  = gcron.New()
 			array = garray.New(true)
 		)
-		cron.DelayAddTimes(ctx, 500*time.Millisecond, "* * * * * *", 2, func(ctx context.Context) {
-			array.Append(1)
-		})
-		t.Assert(cron.Size(), 0)
+		go func() {
+			cron.DelayAddTimes(ctx, 500*time.Millisecond, "* * * * * *", 2, func(ctx context.Context) {
+				array.Append(1)
+			})
+			t.Assert(cron.Size(), 0)
+		}()
 		time.Sleep(800 * time.Millisecond)
 		t.Assert(array.Len(), 0)
 		t.Assert(cron.Size(), 1)
@@ -39,12 +41,16 @@ func TestCron_Entry_Operations(t *testing.T) {
 			cron  = gcron.New()
 			array = garray.New(true)
 		)
-		entry, err1 := cron.Add(ctx, "* * * * * *", func(ctx context.Context) {
-			array.Append(1)
-		})
-		t.Assert(err1, nil)
-		t.Assert(array.Len(), 0)
-		t.Assert(cron.Size(), 1)
+		var entry *gcron.Entry
+		go func() {
+			var err error
+			entry, err = cron.Add(ctx, "* * * * * *", func(ctx context.Context) {
+				array.Append(1)
+			})
+			t.Assert(err, nil)
+			t.Assert(array.Len(), 0)
+			t.Assert(cron.Size(), 1)
+		}()
 		time.Sleep(1300 * time.Millisecond)
 		t.Assert(array.Len(), 1)
 		t.Assert(cron.Size(), 1)
