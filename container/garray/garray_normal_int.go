@@ -124,8 +124,6 @@ func (a *IntArray) Sort(reverse ...bool) *IntArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
-	a.lazyInit()
-
 	if len(reverse) > 0 && reverse[0] {
 		sort.Slice(a.array, func(i, j int) bool {
 			return a.array[i] >= a.array[j]
