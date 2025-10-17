@@ -7,6 +7,7 @@
 package gutil
 
 import (
+	"cmp"
 	"strings"
 
 	"github.com/gogf/gf/v2/util/gconv"
@@ -124,4 +125,13 @@ func ComparatorTime(a, b any) int {
 	default:
 		return 0
 	}
+}
+
+// ComparatorT provides a generic comparison for ordered types.
+func ComparatorT[T cmp.Ordered](a, b T) int {
+	return cmp.Compare(a, b)
+}
+
+func ComparatorTStr[T any](a, b T) int {
+	return cmp.Compare(gconv.String(a), gconv.String(b))
 }

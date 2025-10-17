@@ -381,7 +381,7 @@ func ExampleSortedStrArray_LockFunc() {
 	fmt.Println(s)
 
 	// Output:
-	// ["a","b","GF fans"]
+	// ["GF fans","a","b"]
 }
 
 func ExampleSortedStrArray_RLockFunc() {
