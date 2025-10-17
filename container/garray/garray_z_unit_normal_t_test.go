@@ -84,7 +84,7 @@ func Test_TArray_Basic(t *testing.T) {
 		t.Assert(ok, true)
 
 		t.Assert(array.Contains(100), false)
-		array.Append(4) // 2, 2, 3 ,4
+		array.Append(4) // 2, 2, 3, 4
 		t.Assert(array.Slice(), []int{2, 2, 3, 4})
 		t.Assert(array.Len(), 4)
 		array.InsertBefore(0, 100) // 100, 2, 2, 3, 4
