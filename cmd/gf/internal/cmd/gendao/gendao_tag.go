@@ -20,6 +20,7 @@ gf gen dao
 gf gen dao -l "mysql:root:12345678@tcp(127.0.0.1:3306)/test"
 gf gen dao -p ./model -g user-center -t user,user_detail,user_login
 gf gen dao -r user_
+gf gen dao -inc
 `
 
 	CGenDaoAd = `
@@ -71,6 +72,7 @@ CONFIGURATION SUPPORT
 	CGenDaoBriefNoModelComment    = `no model comment will be added for each field`
 	CGenDaoBriefClear             = `delete all generated go files that do not exist in database`
 	CGenDaoBriefGenTable          = `generate table files`
+	CGenDaoBriefIncremental       = `enable incremental generation, only generate files for changed tables`
 	CGenDaoBriefTypeMapping       = `custom local type mapping for generated struct attributes relevant to fields of table`
 	CGenDaoBriefFieldMapping      = `custom local type mapping for generated struct attributes relevant to specific fields of table`
 	CGenDaoBriefShardingPattern   = `sharding pattern for table name, e.g. "users_?" will be replace tables "users_001,users_002,..." to "users" dao`
@@ -142,6 +144,7 @@ func init() {
 		`CGenDaoBriefNoModelComment`:     CGenDaoBriefNoModelComment,
 		`CGenDaoBriefClear`:              CGenDaoBriefClear,
 		`CGenDaoBriefGenTable`:           CGenDaoBriefGenTable,
+		`CGenDaoBriefIncremental`:        CGenDaoBriefIncremental,
 		`CGenDaoBriefTypeMapping`:        CGenDaoBriefTypeMapping,
 		`CGenDaoBriefFieldMapping`:       CGenDaoBriefFieldMapping,
 		`CGenDaoBriefShardingPattern`:    CGenDaoBriefShardingPattern,

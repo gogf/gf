@@ -64,6 +64,7 @@ type (
 		NoModelComment     bool     `name:"noModelComment"      short:"m"  brief:"{CGenDaoBriefNoModelComment}" orphan:"true"`
 		Clear              bool     `name:"clear"               short:"a"  brief:"{CGenDaoBriefClear}" orphan:"true"`
 		GenTable           bool     `name:"genTable"            short:"gt" brief:"{CGenDaoBriefGenTable}" orphan:"true"`
+		Incremental        bool     `name:"incremental"         short:"inc" brief:"enable incremental generation mode to improve generation efficiency" orphan:"true"`
 
 		TypeMapping  map[DBFieldTypeName]CustomAttributeType  `name:"typeMapping"  short:"y"  brief:"{CGenDaoBriefTypeMapping}"  orphan:"true"`
 		FieldMapping map[DBTableFieldName]CustomAttributeType `name:"fieldMapping" short:"fm" brief:"{CGenDaoBriefFieldMapping}" orphan:"true"`
@@ -164,7 +165,7 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 
 	// It uses user passed database configuration.
 	if in.Link != "" {
-		var tempGroup = gtime.TimestampNanoStr()
+		tempGroup := gtime.TimestampNanoStr()
 		err = gdb.AddConfigNode(tempGroup, gdb.ConfigNode{
 			Link: in.Link,
 		})
@@ -274,6 +275,17 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 	newTableNames = garray.NewStrArrayFrom(newTableNames).FilterEmpty().Slice() // Filter empty table names. make sure that newTableNames and tableNames have the same length.
 	in.genItems.Scale()
 
+	// Load metadata for incremental generation (shared across all generators)
+	var metadata *DaoGenMetadata
+	if in.Incremental {
+		var err error
+		metadata, err = loadMetadata(in.Path)
+		if err != nil {
+			mlog.Printf("Failed to load metadata: %v, disabling incremental generation", err)
+			in.Incremental = false
+		}
+	}
+
 	// Dao: index and internal.
 	generateDao(ctx, CGenDaoInternalInput{
 		CGenDaoInput:     in,
@@ -281,7 +293,7 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 		TableNames:       tableNames,
 		NewTableNames:    newTableNames,
 		ShardingTableSet: shardingNewTableSet,
-	})
+	}, metadata)
 	// Table: table fields.
 	generateTable(ctx, CGenDaoInternalInput{
 		CGenDaoInput:     in,
@@ -289,27 +301,51 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 		TableNames:       tableNames,
 		NewTableNames:    newTableNames,
 		ShardingTableSet: shardingNewTableSet,
-	})
+	}, metadata)
 	// Do.
 	generateDo(ctx, CGenDaoInternalInput{
 		CGenDaoInput:  in,
 		DB:            db,
 		TableNames:    tableNames,
 		NewTableNames: newTableNames,
-	})
+	}, metadata)
 	// Entity.
 	generateEntity(ctx, CGenDaoInternalInput{
 		CGenDaoInput:  in,
 		DB:            db,
 		TableNames:    tableNames,
 		NewTableNames: newTableNames,
-	})
+	}, metadata)
+
+	// Update metadata after all generations
+	if in.Incremental && metadata != nil {
+		// Collect all table hashes and update metadata
+		for _, tableName := range tableNames {
+			// Get table fields to calculate hash
+			fieldMap, err := db.TableFields(ctx, tableName)
+			if err != nil {
+				mlog.Printf("Failed to get table fields for %s: %v", tableName, err)
+				continue
+			}
+
+			// Calculate hash
+			hash := calculateTableHash(fieldMap)
+
+			// Update metadata
+			updateTableMetadata(metadata, tableName, hash)
+		}
+
+		// Save metadata
+		if err := saveMetadata(in.Path, metadata); err != nil {
+			mlog.Printf("Failed to save metadata: %v", err)
+		}
+	}
 
 	in.genItems.SetClear(in.Clear)
 }
 
 func getImportPartContent(ctx context.Context, source string, isDo bool, appendImports []string) string {
-	var packageImportsArray = garray.NewStrArray()
+	packageImportsArray := garray.NewStrArray()
 	if isDo {
 		packageImportsArray.Append(`"github.com/gogf/gf/v2/frame/g"`)
 	}
