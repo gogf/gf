@@ -437,8 +437,12 @@ func (m *KVMap[K, V]) Flip() {
 			k0 K
 			v0 V
 		)
-		gconv.Scan(v, &k0)
-		gconv.Scan(k, &v0)
+		if err := gconv.Scan(v, &k0); err != nil {
+			continue
+		}
+		if err := gconv.Scan(k, &v0); err != nil {
+			continue
+		}
 		n[k0] = v0
 	}
 	m.data = n
