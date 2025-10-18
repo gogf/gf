@@ -679,7 +679,7 @@ func ExampleTList_LockFunc() {
 }
 
 func ExampleTList_Join() {
-	var l glist.List
+	var l glist.TList[any]
 	l.PushBacks(g.Slice{"a", "b", "c", "d"})
 
 	fmt.Println(l.Join(","))
