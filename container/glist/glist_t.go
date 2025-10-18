@@ -129,7 +129,7 @@ func (l *TList[T]) PopBack() (value T) {
 }
 
 // PopFront removes the element from front of `l` and returns the value of the element.
-func (l *TList[T]) PopFront() (value any) {
+func (l *TList[T]) PopFront() (value T) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.lazyInit()
