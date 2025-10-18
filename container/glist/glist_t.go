@@ -51,7 +51,7 @@ func (e *TElement[T]) Prev() *TElement[T] {
 	return nil
 }
 
-// List is a doubly linked list containing a concurrent-safe/unsafe switch.
+// TList is a doubly linked list containing a concurrent-safe/unsafe switch.
 // The switch should be set when its initialization and cannot be changed then.
 
 type TList[T any] struct {
@@ -60,7 +60,7 @@ type TList[T any] struct {
 	len  int         // current list length excluding (this) sentinel element
 }
 
-// New creates and returns a new empty doubly linked list.
+// NewT creates and returns a new empty doubly linked list.
 func NewT[T any](safe ...bool) *TList[T] {
 	l := &TList[T]{
 		mu: rwmutex.Create(safe...),
@@ -68,7 +68,7 @@ func NewT[T any](safe ...bool) *TList[T] {
 	return l.init()
 }
 
-// NewFrom creates and returns a list from a copy of given slice `array`.
+// NewTFrom creates and returns a list from a copy of given slice `array`.
 // The parameter `safe` is used to specify whether using list in concurrent-safety,
 // which is false in default.
 func NewTFrom[T any](array []T, safe ...bool) *TList[T] {
