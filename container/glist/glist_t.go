@@ -351,7 +351,7 @@ func (l *TList[T]) PushBackList(other *TList[T]) {
 
 	l.lazyInit()
 
-	for i, e := other.Len(), other.Front(); i > 0; i, e = i-1, e.Next() {
+	for i, e := other.len, other.front(); i > 0; i, e = i-1, e.Next() {
 		l.insertValue(e.Value, l.root.prev)
 	}
 }
@@ -368,7 +368,7 @@ func (l *TList[T]) PushFrontList(other *TList[T]) {
 
 	l.lazyInit()
 
-	for i, e := other.Len(), other.Back(); i > 0; i, e = i-1, e.Prev() {
+	for i, e := other.len, other.back(); i > 0; i, e = i-1, e.Prev() {
 		l.insertValue(e.Value, &l.root)
 	}
 }
