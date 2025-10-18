@@ -109,8 +109,8 @@ func (a *StrArray) Sum() (sum int) {
 func (a *StrArray) Sort(reverse ...bool) *StrArray {
 	a.lazyInit()
 
-	a.TArray.mu.Lock()
-	defer a.TArray.mu.Unlock()
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	if len(reverse) > 0 && reverse[0] {
 		sort.Slice(a.array, func(i, j int) bool {
 			return strings.Compare(a.array[i], a.array[j]) >= 0
