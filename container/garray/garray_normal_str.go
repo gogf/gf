@@ -443,13 +443,13 @@ func (a *StrArray) String() string {
 
 	a.lazyInit()
 
-	a.TArray.mu.RLock()
-	defer a.TArray.mu.RUnlock()
+	a.mu.RLock()
+	defer a.mu.RUnlock()
 	buffer := bytes.NewBuffer(nil)
 	buffer.WriteByte('[')
-	for k, v := range a.TArray.array {
+	for k, v := range a.array {
 		buffer.WriteString(`"` + gstr.QuoteMeta(v, `"\`) + `"`)
-		if k != len(a.TArray.array)-1 {
+		if k != len(a.array)-1 {
 			buffer.WriteByte(',')
 		}
 	}
