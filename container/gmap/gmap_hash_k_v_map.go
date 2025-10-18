@@ -7,6 +7,7 @@
 package gmap
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/gogf/gf/v2/container/gvar"
@@ -209,45 +210,42 @@ func (m *KVMap[K, V]) Pops(size int) map[K]V {
 // and its return value will be set to the map with `key`.
 //
 // It returns value with given `key`.
-func (m *KVMap[K, V]) doSetWithLockCheck(key K, value any) V {
+func (m *KVMap[K, V]) doSetWithLockCheck(key K, value any) (val V) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
 	if m.data == nil {
 		m.data = make(map[K]V)
 	}
 	if v, ok := m.data[key]; ok {
 		return v
 	}
-	var retValue V
+
 	switch v := value.(type) {
 	case func() any:
-		switch v0 := v().(type) {
-		case V:
-			retValue = v0
-		case *V:
-			retValue = *v0
-		default:
-			if err := gconv.Scan(v0, &retValue); err != nil {
-				panic(err)
-			}
-		}
+		value = v()
 	case func() *V:
 		if p := v(); p != nil {
-			retValue = *p
+			value = *p
 		}
 	case func() V:
-		retValue = v()
+		value = v()
 	case V:
-		retValue = v
+		value = v
 	case *V:
-		retValue = *v
-	default:
-		if err := gconv.Scan(v, &retValue); err != nil {
-			panic(err)
+		if v != nil {
+			value = *v
 		}
 	}
-	m.data[key] = retValue
-	return retValue
+
+	val, ok := value.(V)
+	if !ok {
+		if err := gconv.ConvertWithRefer(value, &val); err != nil {
+			panic(fmt.Errorf("KVMap: unable to convert %T to %T: %v", value, val, err))
+		}
+	}
+	m.data[key] = val
+	return val
 }
 
 // GetOrSet returns the value by key,
