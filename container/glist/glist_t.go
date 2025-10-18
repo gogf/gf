@@ -530,9 +530,9 @@ func (l *TList[T]) Join(glue string) string {
 	l.lazyInit()
 
 	buffer := bytes.NewBuffer(nil)
-	length := l.Len()
+	length := l.len
 	if length > 0 {
-		for i, e := 0, l.Front(); i < length; i, e = i+1, e.Next() {
+		for i, e := 0, l.front(); i < length; i, e = i+1, e.Next() {
 			buffer.WriteString(gconv.String(e.Value))
 			if i != length-1 {
 				buffer.WriteString(glue)
