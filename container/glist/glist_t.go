@@ -221,7 +221,7 @@ func (l *TList[T]) BackAll() (values []T) {
 	return
 }
 
-// FrontValue returns value of the first element of `l` or nil if the list is empty.
+// FrontValue returns value of the first element of `l` or zero value of T if the list is empty.
 func (l *TList[T]) FrontValue() (value T) {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
@@ -232,7 +232,7 @@ func (l *TList[T]) FrontValue() (value T) {
 	return
 }
 
-// BackValue returns value of the last element of `l` or nil if the list is empty.
+// BackValue returns value of the last element of `l` or zero value of T if the list is empty.
 func (l *TList[T]) BackValue() (value T) {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
@@ -476,8 +476,9 @@ func (l *TList[T]) appendList(nl *list.List) {
 	l.lazyInit()
 
 	for e := nl.Front(); e != nil; e = e.Next() {
-		v, _ := e.Value.(T)
-		l.PushBack(v)
+		if v, ok := e.Value.(T); ok {
+			l.insertValue(v, l.root.prev)
+		}
 	}
 }
 
@@ -498,8 +499,9 @@ func (l *TList[T]) assignList(nl *list.List) {
 		return
 	}
 	for e := nl.Front(); e != nil; e = e.Next() {
-		v, _ := e.Value.(T)
-		l.insertValue(v, l.root.prev)
+		if v, ok := e.Value.(T); ok {
+			l.insertValue(v, l.root.prev)
+		}
 	}
 }
 
@@ -534,7 +536,7 @@ func (l *TList[T]) IteratorAsc(f func(e *TElement[T]) bool) {
 	l.lazyInit()
 	length := l.len
 	if length > 0 {
-		for i, e := 0, l.Front(); i < length; i, e = i+1, e.Next() {
+		for i, e := 0, l.front(); i < length; i, e = i+1, e.Next() {
 			if !f(e) {
 				break
 			}
@@ -550,7 +552,7 @@ func (l *TList[T]) IteratorDesc(f func(e *TElement[T]) bool) {
 	l.lazyInit()
 	length := l.len
 	if length > 0 {
-		for i, e := 0, l.Back(); i < length; i, e = i+1, e.Prev() {
+		for i, e := 0, l.back(); i < length; i, e = i+1, e.Prev() {
 			if !f(e) {
 				break
 			}
@@ -628,11 +630,11 @@ func (l *TList[T]) DeepCopy() any {
 	l.lazyInit()
 
 	var (
-		length  = l.Len()
+		length  = l.len
 		valuesT = make([]T, length)
 	)
 	if length > 0 {
-		for i, e := 0, l.Front(); i < length; i, e = i+1, e.Next() {
+		for i, e := 0, l.front(); i < length; i, e = i+1, e.Next() {
 			valuesT[i] = deepcopy.Copy(e.Value).(T)
 		}
 	}
@@ -699,7 +701,7 @@ func (l *TList[T]) move(e, at *TElement[T]) {
 	e.next.prev = e
 }
 
-// Front returns the first element of list l or nil if the list is empty.
+// front returns the first element of list l or nil if the list is empty.
 func (l *TList[T]) front() *TElement[T] {
 	if l.len == 0 {
 		return nil
@@ -707,7 +709,7 @@ func (l *TList[T]) front() *TElement[T] {
 	return l.root.next
 }
 
-// Back returns the last element of list l or nil if the list is empty.
+// back returns the last element of list l or nil if the list is empty.
 func (l *TList[T]) back() *TElement[T] {
 	if l.len == 0 {
 		return nil
