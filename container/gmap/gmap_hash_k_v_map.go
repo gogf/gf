@@ -18,7 +18,7 @@ import (
 )
 
 // KVMap wraps map type `map[K]V` and provides more map features.
-type KVMap[K, V comparable] struct {
+type KVMap[K comparable, V any] struct {
 	mu   rwmutex.RWMutex
 	data map[K]V
 }
@@ -26,7 +26,7 @@ type KVMap[K, V comparable] struct {
 // NewAnyAnyMap creates and returns an empty hash map.
 // The parameter `safe` is used to specify whether using map in concurrent-safety,
 // which is false in default.
-func NewKVMap[K, V comparable](safe ...bool) *KVMap[K, V] {
+func NewKVMap[K comparable, V any](safe ...bool) *KVMap[K, V] {
 	return &KVMap[K, V]{
 		mu:   rwmutex.Create(safe...),
 		data: make(map[K]V),
@@ -36,7 +36,7 @@ func NewKVMap[K, V comparable](safe ...bool) *KVMap[K, V] {
 // NewAnyAnyMapFrom creates and returns a hash map from given map `data`.
 // Note that, the param `data` map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
-func NewKVMapFrom[K, V comparable](data map[K]V, safe ...bool) *KVMap[K, V] {
+func NewKVMapFrom[K comparable, V any](data map[K]V, safe ...bool) *KVMap[K, V] {
 	return &KVMap[K, V]{
 		mu:   rwmutex.Create(safe...),
 		data: data,
@@ -563,7 +563,8 @@ func (m *KVMap[K, V]) IsSubOf(other *KVMap[K, V]) bool {
 		if !ok {
 			return false
 		}
-		if otherValue != value {
+
+		if !reflect.DeepEqual(otherValue, value) {
 			return false
 		}
 	}
