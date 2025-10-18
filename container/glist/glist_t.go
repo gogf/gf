@@ -601,14 +601,14 @@ func (l *TList[T]) DeepCopy() any {
 
 	var (
 		length = l.Len()
-		values = make([]any, length)
+		valuesT = make([]T, length)
 	)
 	if length > 0 {
 		for i, e := 0, l.Front(); i < length; i, e = i+1, e.Next() {
-			values[i] = deepcopy.Copy(e.Value)
+			valuesT[i] = deepcopy.Copy(e.Value).(T)
 		}
 	}
-	return NewTFrom(values, l.mu.IsSafe())
+	return NewTFrom(valuesT, l.mu.IsSafe())
 }
 
 // Init initializes or clears list l.
