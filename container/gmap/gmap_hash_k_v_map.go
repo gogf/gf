@@ -221,29 +221,12 @@ func (m *KVMap[K, V]) doSetWithLockCheck(key K, value any) (val V) {
 		return v
 	}
 
-	switch v := value.(type) {
-	case func() any:
-		value = v()
-	case func() *V:
-		if p := v(); p != nil {
-			value = *p
-		}
-	case func() V:
-		value = v()
-	case *V:
-		if v != nil {
-			value = *v
-		}
-	case V:
-		value = v
+	if f, ok := value.(func() V); ok {
+		val = f()
+	} else if val, ok = value.(V); !ok {
+		panic(fmt.Errorf("KVMap: unable to convert %T to %T", value, val))
 	}
 
-	val, ok := value.(V)
-	if !ok {
-		if err := gconv.ConvertWithRefer(value, &val); err != nil {
-			panic(fmt.Errorf("KVMap: unable to convert %T to %T: %v", value, val, err))
-		}
-	}
 	m.data[key] = val
 	return val
 }
