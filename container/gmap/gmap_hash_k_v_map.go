@@ -230,12 +230,12 @@ func (m *KVMap[K, V]) doSetWithLockCheck(key K, value any) (val V) {
 		}
 	case func() V:
 		value = v()
-	case V:
-		value = v
 	case *V:
 		if v != nil {
 			value = *v
 		}
+	case V:
+		value = v
 	}
 
 	val, ok := value.(V)
