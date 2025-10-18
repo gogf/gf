@@ -600,7 +600,7 @@ func (l *TList[T]) DeepCopy() any {
 	l.lazyInit()
 
 	var (
-		length = l.Len()
+		length  = l.Len()
 		valuesT = make([]T, length)
 	)
 	if length > 0 {
