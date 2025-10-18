@@ -218,13 +218,12 @@ func (m *KVMap[K, V]) doSetWithLockCheck(key K, value any) V {
 	if v, ok := m.data[key]; ok {
 		return v
 	}
+	var retValue V
 	if f, ok := value.(func() V); ok {
-		value = f()
+		retValue = f()
+		m.data[key] = retValue
 	}
-	if value != nil {
-		m.data[key] = value.(V)
-	}
-	return value.(V)
+	return retValue
 }
 
 // GetOrSet returns the value by key,
