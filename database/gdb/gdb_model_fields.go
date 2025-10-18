@@ -46,7 +46,7 @@ func (m *Model) FieldsPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...any)
 		return m
 	}
 	for i, field := range fields {
-		fields[i] = prefixOrAlias + "." + gconv.String(field)
+		fields[i] = fmt.Sprintf("%s.%s", m.QuoteWord(prefixOrAlias), m.QuoteWord(gconv.String(field)))
 	}
 	model := m.getModel()
 	return model.appendToFields(fields...)
@@ -87,7 +87,7 @@ func (m *Model) FieldsExPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...an
 		fieldNamesOrMapStruct...,
 	)
 	for i, field := range model.fieldsEx {
-		model.fieldsEx[i] = prefixOrAlias + "." + gconv.String(field)
+		model.fieldsEx[i] = fmt.Sprintf("%s.%s", m.QuoteWord(prefixOrAlias), m.QuoteWord(gconv.String(field)))
 	}
 	return model
 }
