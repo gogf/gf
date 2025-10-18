@@ -484,25 +484,32 @@ func (l *TList[T]) appendList(nl *list.List) {
 
 // AssignList assigns list.List to now TList[T].
 // It will clear TList[T] first, and append the list.List.
-func (l *TList[T]) AssignList(nl *list.List) {
+// Note: Elements in nl that are not assignable to T are silently skipped.
+// Returns the number of skipped (incompatible) elements.
+func (l *TList[T]) AssignList(nl *list.List) int {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	l.assignList(nl)
+	return l.assignList(nl)
 }
 
 // assignList assigns list.List to now TList[T].
 // It will clear TList[T] first, and append the list.List.
-func (l *TList[T]) assignList(nl *list.List) {
+// Returns the number of skipped (incompatible) elements.
+func (l *TList[T]) assignList(nl *list.List) int {
 	l.init()
 	if nl.Len() == 0 {
-		return
+		return 0
 	}
+	skipped := 0
 	for e := nl.Front(); e != nil; e = e.Next() {
 		if v, ok := e.Value.(T); ok {
 			l.insertValue(v, l.root.prev)
+		} else {
+			skipped++
 		}
 	}
+	return skipped
 }
 
 // RLockFunc locks reading with given callback function `f` within RWMutex.RLock.
