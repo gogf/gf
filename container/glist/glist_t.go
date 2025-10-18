@@ -557,10 +557,6 @@ func (l TList[T]) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (l *TList[T]) UnmarshalJSON(b []byte) error {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	l.lazyInit()
-
 	var array []T
 	if err := json.UnmarshalUseNumber(b, &array); err != nil {
 		return err
@@ -571,9 +567,6 @@ func (l *TList[T]) UnmarshalJSON(b []byte) error {
 
 // UnmarshalValue is an interface implement which sets any type of value for list.
 func (l *TList[T]) UnmarshalValue(value any) (err error) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	l.lazyInit()
 	var array []T
 	switch value.(type) {
 	case string, []byte:
