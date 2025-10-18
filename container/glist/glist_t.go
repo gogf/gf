@@ -605,6 +605,7 @@ func (l *TList[T]) UnmarshalJSON(b []byte) error {
 	if err := json.UnmarshalUseNumber(b, &array); err != nil {
 		return err
 	}
+	l.init()
 	l.PushBacks(array)
 	return nil
 }
@@ -621,6 +622,7 @@ func (l *TList[T]) UnmarshalValue(value any) (err error) {
 			return
 		}
 	}
+	l.init()
 	l.PushBacks(array)
 	return err
 }
