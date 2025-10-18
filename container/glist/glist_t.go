@@ -437,8 +437,14 @@ func (l *TList[T]) Clear() {
 
 // ToList converts TList[T] to list.List
 func (l *TList[T]) ToList() *list.List {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+
+	l.lazyInit()
+
 	nl := list.New()
-	for e := l.Front(); e != nil; e = e.Next() {
+
+	for e := l.front(); e != nil; e = e.Next() {
 		nl.PushBack(e.Value)
 	}
 	return nl
@@ -446,10 +452,15 @@ func (l *TList[T]) ToList() *list.List {
 
 // AppendList append list.List to the end
 func (l *TList[T]) AppendList(nl *list.List) {
-	l.lazyInit()
 	if nl.Len() == 0 {
 		return
 	}
+
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	l.lazyInit()
+
 	for e := nl.Front(); e != nil; e = e.Next() {
 		v, _ := e.Value.(T)
 		l.PushBack(v)
@@ -459,13 +470,16 @@ func (l *TList[T]) AppendList(nl *list.List) {
 // AssignList assigns list.List to now TList[T].
 // It will clear TList[T] first, and append the list.List.
 func (l *TList[T]) AssignList(nl *list.List) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
 	l.init()
 	if nl.Len() == 0 {
 		return
 	}
-	for e, p := nl.Front(), nl.Back(); e != p; e = e.Next() {
+	for e := nl.Front(); e != nil; e = e.Next() {
 		v, _ := e.Value.(T)
-		l.PushBack(v)
+		l.insertValue(v, l.root.prev)
 	}
 }
 
