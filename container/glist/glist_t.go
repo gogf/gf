@@ -438,7 +438,7 @@ func (l *TList[T]) Clear() {
 // ToList converts TList[T] to list.List
 func (l *TList[T]) ToList() *list.List {
 	nl := list.New()
-	for e, p := l.Front(), l.Back(); e != p; e = e.Next() {
+	for e := l.Front(); e != nil; e = e.Next() {
 		nl.PushBack(e.Value)
 	}
 	return nl
@@ -450,7 +450,7 @@ func (l *TList[T]) AppendList(nl *list.List) {
 	if nl.Len() == 0 {
 		return
 	}
-	for e, p := nl.Front(), nl.Back(); e != p; e = e.Next() {
+	for e := nl.Front(); e != nil; e = e.Next() {
 		v, _ := e.Value.(T)
 		l.PushBack(v)
 	}
