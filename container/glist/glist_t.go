@@ -440,6 +440,11 @@ func (l *TList[T]) ToList() *list.List {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 
+	return l.toList()
+}
+
+// toList converts TList[T] to list.List
+func (l *TList[T]) toList() *list.List {
 	l.lazyInit()
 
 	nl := list.New()
@@ -459,6 +464,15 @@ func (l *TList[T]) AppendList(nl *list.List) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
+	l.appendList(nl)
+}
+
+// appendList append list.List to the end
+func (l *TList[T]) appendList(nl *list.List) {
+	if nl.Len() == 0 {
+		return
+	}
+
 	l.lazyInit()
 
 	for e := nl.Front(); e != nil; e = e.Next() {
@@ -473,6 +487,12 @@ func (l *TList[T]) AssignList(nl *list.List) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
+	l.assignList(nl)
+}
+
+// assignList assigns list.List to now TList[T].
+// It will clear TList[T] first, and append the list.List.
+func (l *TList[T]) assignList(nl *list.List) {
 	l.init()
 	if nl.Len() == 0 {
 		return
@@ -488,16 +508,17 @@ func (l *TList[T]) RLockFunc(f func(list *list.List)) {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 
-	f(l.ToList())
+	f(l.toList())
 }
 
 // LockFunc locks writing with given callback function `f` within RWMutex.Lock.
 func (l *TList[T]) LockFunc(f func(list *list.List)) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	nl := l.ToList()
+
+	nl := l.toList()
 	f(nl)
-	l.AssignList(nl)
+	l.assignList(nl)
 }
 
 // Iterator is alias of IteratorAsc.
