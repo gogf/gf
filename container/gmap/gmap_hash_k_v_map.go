@@ -219,10 +219,30 @@ func (m *KVMap[K, V]) doSetWithLockCheck(key K, value any) V {
 		return v
 	}
 	var retValue V
-	if f, ok := value.(func() V); ok {
-		retValue = f()
-		m.data[key] = retValue
+	switch v := value.(type) {
+	case func() any:
+		switch v0 := v().(type) {
+		case V:
+			retValue = v0
+		case *V:
+			retValue = *v0
+		default:
+			if err := gconv.Scan(v0, &retValue); err != nil {
+				panic(err)
+			}
+		}
+	case func() V:
+		retValue = v()
+	case V:
+		retValue = v
+	case *V:
+		retValue = *v
+	default:
+		if err := gconv.Scan(v, &retValue); err != nil {
+			panic(err)
+		}
 	}
+	m.data[key] = retValue
 	return retValue
 }
 
