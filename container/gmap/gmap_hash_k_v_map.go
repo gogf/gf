@@ -231,6 +231,10 @@ func (m *KVMap[K, V]) doSetWithLockCheck(key K, value any) V {
 				panic(err)
 			}
 		}
+	case func() *V:
+		if p := v(); p != nil {
+			retValue = *p
+		}
 	case func() V:
 		retValue = v()
 	case V:
