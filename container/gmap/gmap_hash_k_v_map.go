@@ -24,9 +24,9 @@ type KVMap[K comparable, V any] struct {
 	data map[K]V
 }
 
-// NewAnyAnyMap creates and returns an empty hash map.
-// The parameter `safe` is used to specify whether using map in concurrent-safety,
-// which is false in default.
+// NewKVMap creates and returns an empty hash map.
+// The parameter `safe` is used to specify whether to use the map in concurrent-safety mode,
+// which is false by default.
 func NewKVMap[K comparable, V any](safe ...bool) *KVMap[K, V] {
 	return &KVMap[K, V]{
 		mu:   rwmutex.Create(safe...),
