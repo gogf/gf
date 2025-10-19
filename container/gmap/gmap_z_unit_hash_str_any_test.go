@@ -109,6 +109,29 @@ func Test_StrAnyMap_Set_Fun(t *testing.T) {
 		ta, ok := av.(*T)
 		t.Assert(ok, true)
 		t.Assert(ta.A, 1)
+
+		av = m.GetOrSetFunc("s1", func() any {
+			return &T{
+				A: 2,
+			}
+		})
+		ta, ok = av.(*T)
+		t.Assert(ok, true)
+		t.Assert(ta.A, 1)
+
+		av = m.GetOrSet("s1", &T{
+			A: 3,
+		})
+		ta, ok = av.(*T)
+		t.Assert(ok, true)
+		t.Assert(ta.A, 1)
+
+		av = m.GetOrSet("s2", &T{
+			A: 4,
+		})
+		ta, ok = av.(*T)
+		t.Assert(ok, true)
+		t.Assert(ta.A, 4)
 	})
 }
 
