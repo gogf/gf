@@ -34,8 +34,8 @@ func NewKVMap[K comparable, V any](safe ...bool) *KVMap[K, V] {
 	}
 }
 
-// NewAnyAnyMapFrom creates and returns a hash map from given map `data`.
-// Note that, the param `data` map will be set as the underlying data map(no deep copy),
+// NewKVMapFrom creates and returns a hash map from given map `data`.
+// Note that, the param `data` map will be set as the underlying data map (no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
 func NewKVMapFrom[K comparable, V any](data map[K]V, safe ...bool) *KVMap[K, V] {
 	return &KVMap[K, V]{
