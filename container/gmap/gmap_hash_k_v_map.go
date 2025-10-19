@@ -223,6 +223,10 @@ func (m *KVMap[K, V]) doSetWithLockCheck(key K, value any) (val V) {
 
 	if f, ok := value.(func() V); ok {
 		val = f()
+	} else if f, ok := value.(func() any); ok {
+		if val, ok = f().(V); !ok {
+			panic(fmt.Errorf("KVMap: unable to convert %T to %T", value, val))
+		}
 	} else if val, ok = value.(V); !ok {
 		panic(fmt.Errorf("KVMap: unable to convert %T to %T", value, val))
 	}
