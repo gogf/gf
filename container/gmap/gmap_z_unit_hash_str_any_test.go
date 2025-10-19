@@ -96,6 +96,19 @@ func Test_StrAnyMap_Set_Fun(t *testing.T) {
 
 		t.Assert(m.SetIfNotExistFuncLock("b", getAny), false)
 		t.Assert(m.SetIfNotExistFuncLock("d", getAny), true)
+
+		type T struct {
+			A int
+		}
+
+		av := m.GetOrSetFunc("s1", func() any {
+			return &T{
+				A: 1,
+			}
+		})
+		ta, ok := av.(*T)
+		t.Assert(ok, true)
+		t.Assert(ta.A, 1)
 	})
 }
 
