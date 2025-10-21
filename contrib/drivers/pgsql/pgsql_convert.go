@@ -20,6 +20,11 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+const (
+	LocalTypeIntSlice   gdb.LocalType = "pq.Int32Array"
+	LocalTypeInt64Slice gdb.LocalType = "pq.Int64Array"
+)
+
 // ConvertValueForField converts value to database acceptable value.
 func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fieldValue any) (any, error) {
 	if g.IsNil(fieldValue) {
@@ -68,11 +73,11 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 	case
 		"_int2",
 		"_int4":
-		return gdb.LocalTypeIntSlice, nil
+		return LocalTypeIntSlice, nil
 
 	case
 		"_int8":
-		return gdb.LocalTypeInt64Slice, nil
+		return LocalTypeInt64Slice, nil
 
 	case
 		"_varchar", "_text":
