@@ -45,9 +45,9 @@ func (m *StrStrMap) Iterator(f func(k string, v string) bool) {
 }
 
 // Clone returns a new hash map with copy of current map data.
-func (m *StrStrMap) Clone() *StrStrMap {
+func (m *StrStrMap) Clone(safe ...bool) *StrStrMap {
 	m.lazyInit()
-	return &StrStrMap{KVMap: m.KVMap.Clone()}
+	return &StrStrMap{KVMap: m.KVMap.Clone(safe...)}
 }
 
 // Map returns the underlying data map.

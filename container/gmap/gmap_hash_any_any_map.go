@@ -19,24 +19,29 @@ type AnyAnyMap struct {
 // The parameter `safe` is used to specify whether using map in concurrent-safety,
 // which is false in default.
 func NewAnyAnyMap(safe ...bool) *AnyAnyMap {
-	return &AnyAnyMap{
+	m := &AnyAnyMap{
 		KVMap: NewKVMap[any, any](safe...),
 	}
+	m.KVMap.doSetWithLockCheckFn = m.doSetWithLockCheck
+	return m
 }
 
 // NewAnyAnyMapFrom creates and returns a hash map from given map `data`.
 // Note that, the param `data` map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
 func NewAnyAnyMapFrom(data map[any]any, safe ...bool) *AnyAnyMap {
-	return &AnyAnyMap{
+	m := &AnyAnyMap{
 		KVMap: NewKVMapFrom(data, safe...),
 	}
+	m.KVMap.doSetWithLockCheckFn = m.doSetWithLockCheck
+	return m
 }
 
 // lazyInit lazily initializes the array.
 func (m *AnyAnyMap) lazyInit() {
 	if m.KVMap == nil {
 		m.KVMap = NewKVMap[any, any](false)
+		m.KVMap.doSetWithLockCheckFn = m.doSetWithLockCheck
 	}
 }
 
@@ -50,9 +55,7 @@ func (m *AnyAnyMap) Iterator(f func(k any, v any) bool) {
 // Clone returns a new hash map with copy of current map data.
 func (m *AnyAnyMap) Clone(safe ...bool) *AnyAnyMap {
 	m.lazyInit()
-	return &AnyAnyMap{
-		KVMap: NewKVMapFrom(m.MapCopy(), safe...),
-	}
+	return NewAnyAnyMapFrom(m.MapCopy(), safe...)
 }
 
 // Map returns the underlying data map.
@@ -337,4 +340,31 @@ func (m *AnyAnyMap) IsSubOf(other *AnyAnyMap) bool {
 func (m *AnyAnyMap) Diff(other *AnyAnyMap) (addedKeys, removedKeys, updatedKeys []any) {
 	m.lazyInit()
 	return m.KVMap.Diff(other.KVMap)
+}
+
+// doSetWithLockCheck checks whether value of the key exists with mutex.Lock,
+// if not exists, set value to the map with given `key`,
+// or else just return the existing value.
+//
+// When setting value, if `value` is type of `func() interface {}`,
+// it will be executed with mutex.Lock of the hash map,
+// and its return value will be set to the map with `key`.
+//
+// It returns value with given `key`.
+func (m *AnyAnyMap) doSetWithLockCheck(key any, value any) any {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = make(map[any]any)
+	}
+	if v, ok := m.data[key]; ok {
+		return v
+	}
+	if f, ok := value.(func() any); ok {
+		value = f()
+	}
+	if value != nil {
+		m.data[key] = value
+	}
+	return value
 }

@@ -7,7 +7,6 @@
 package gmap
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/gogf/gf/v2/container/gvar"
@@ -22,26 +21,32 @@ import (
 type KVMap[K comparable, V any] struct {
 	mu   rwmutex.RWMutex
 	data map[K]V
+
+	doSetWithLockCheckFn func(key K, value V) (val V)
 }
 
 // NewKVMap creates and returns an empty hash map.
 // The parameter `safe` is used to specify whether to use the map in concurrent-safety mode,
 // which is false by default.
 func NewKVMap[K comparable, V any](safe ...bool) *KVMap[K, V] {
-	return &KVMap[K, V]{
+	m := &KVMap[K, V]{
 		mu:   rwmutex.Create(safe...),
 		data: make(map[K]V),
 	}
+	m.doSetWithLockCheckFn = m.doSetWithLockCheckFn
+	return m
 }
 
 // NewKVMapFrom creates and returns a hash map from given map `data`.
 // Note that, the param `data` map will be set as the underlying data map (no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
 func NewKVMapFrom[K comparable, V any](data map[K]V, safe ...bool) *KVMap[K, V] {
-	return &KVMap[K, V]{
+	m := &KVMap[K, V]{
 		mu:   rwmutex.Create(safe...),
 		data: data,
 	}
+	m.doSetWithLockCheckFn = m.doSetWithLockCheckFn
+	return m
 }
 
 // Iterator iterates the hash map readonly with custom callback function `f`.
@@ -210,7 +215,7 @@ func (m *KVMap[K, V]) Pops(size int) map[K]V {
 // and its return value will be set to the map with `key`.
 //
 // It returns value with given `key`.
-func (m *KVMap[K, V]) doSetWithLockCheck(key K, value any) (val V) {
+func (m *KVMap[K, V]) doSetWithLockCheck(key K, value V) (val V) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -221,27 +226,15 @@ func (m *KVMap[K, V]) doSetWithLockCheck(key K, value any) (val V) {
 		return v
 	}
 
-	if f, ok := value.(func() V); ok {
-		val = f()
-	} else if f, ok := value.(func() any); ok {
-		if val, ok = f().(V); !ok {
-			panic(fmt.Errorf("KVMap: unable to convert %T to %T", value, val))
-		}
-	} else if val, ok = value.(V); !ok {
-		panic(fmt.Errorf("KVMap: unable to convert %T to %T", value, val))
-	}
-
-	if any(val) != nil { // if V is any type. it must not be nil.
-		m.data[key] = val
-	}
-	return val
+	m.data[key] = value
+	return value
 }
 
 // GetOrSet returns the value by key,
 // or sets value with given `value` if it does not exist and then returns this value.
 func (m *KVMap[K, V]) GetOrSet(key K, value V) V {
 	if v, ok := m.Search(key); !ok {
-		return m.doSetWithLockCheck(key, value)
+		return m.doSetWithLockCheckFn(key, value)
 	} else {
 		return v
 	}
@@ -252,7 +245,7 @@ func (m *KVMap[K, V]) GetOrSet(key K, value V) V {
 // and then returns this value.
 func (m *KVMap[K, V]) GetOrSetFunc(key K, f func() V) V {
 	if v, ok := m.Search(key); !ok {
-		return m.doSetWithLockCheck(key, f())
+		return m.doSetWithLockCheckFn(key, f())
 	} else {
 		return v
 	}
@@ -266,7 +259,7 @@ func (m *KVMap[K, V]) GetOrSetFunc(key K, f func() V) V {
 // with mutex.Lock of the hash map.
 func (m *KVMap[K, V]) GetOrSetFuncLock(key K, f func() V) V {
 	if v, ok := m.Search(key); !ok {
-		return m.doSetWithLockCheck(key, f)
+		return m.doSetWithLockCheckFn(key, f())
 	} else {
 		return v
 	}
@@ -300,7 +293,7 @@ func (m *KVMap[K, V]) GetVarOrSetFuncLock(key K, f func() V) *gvar.Var {
 // It returns false if `key` exists, and `value` would be ignored.
 func (m *KVMap[K, V]) SetIfNotExist(key K, value V) bool {
 	if !m.Contains(key) {
-		m.doSetWithLockCheck(key, value)
+		m.doSetWithLockCheckFn(key, value)
 		return true
 	}
 	return false
@@ -310,7 +303,7 @@ func (m *KVMap[K, V]) SetIfNotExist(key K, value V) bool {
 // It returns false if `key` exists, and `value` would be ignored.
 func (m *KVMap[K, V]) SetIfNotExistFunc(key K, f func() V) bool {
 	if !m.Contains(key) {
-		m.doSetWithLockCheck(key, f())
+		m.doSetWithLockCheckFn(key, f())
 		return true
 	}
 	return false
@@ -323,7 +316,7 @@ func (m *KVMap[K, V]) SetIfNotExistFunc(key K, f func() V) bool {
 // it executes function `f` with mutex.Lock of the hash map.
 func (m *KVMap[K, V]) SetIfNotExistFuncLock(key K, f func() V) bool {
 	if !m.Contains(key) {
-		m.doSetWithLockCheck(key, f)
+		m.doSetWithLockCheckFn(key, f())
 		return true
 	}
 	return false

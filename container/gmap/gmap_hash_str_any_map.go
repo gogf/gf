@@ -21,24 +21,29 @@ type StrAnyMap struct {
 // The parameter `safe` is used to specify whether using map in concurrent-safety,
 // which is false in default.
 func NewStrAnyMap(safe ...bool) *StrAnyMap {
-	return &StrAnyMap{
+	m := &StrAnyMap{
 		KVMap: NewKVMap[string, any](safe...),
 	}
+	m.doSetWithLockCheckFn = m.doSetWithLockCheck
+	return m
 }
 
 // NewStrAnyMapFrom creates and returns a hash map from given map `data`.
 // Note that, the param `data` map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
 func NewStrAnyMapFrom(data map[string]any, safe ...bool) *StrAnyMap {
-	return &StrAnyMap{
+	m := &StrAnyMap{
 		KVMap: NewKVMapFrom(data, safe...),
 	}
+	m.doSetWithLockCheckFn = m.doSetWithLockCheck
+	return m
 }
 
 // lazyInit lazily initializes the array.
 func (m *StrAnyMap) lazyInit() {
 	if m.KVMap == nil {
 		m.KVMap = NewKVMap[string, any](false)
+		m.doSetWithLockCheckFn = m.doSetWithLockCheck
 	}
 }
 
@@ -50,9 +55,9 @@ func (m *StrAnyMap) Iterator(f func(k string, v any) bool) {
 }
 
 // Clone returns a new hash map with copy of current map data.
-func (m *StrAnyMap) Clone() *StrAnyMap {
+func (m *StrAnyMap) Clone(safe ...bool) *StrAnyMap {
 	m.lazyInit()
-	return &StrAnyMap{KVMap: m.KVMap.Clone()}
+	return NewStrAnyMapFrom(m.MapCopy(), safe...)
 }
 
 // Map returns the underlying data map.
@@ -337,4 +342,31 @@ func (m *StrAnyMap) IsSubOf(other *StrAnyMap) bool {
 func (m *StrAnyMap) Diff(other *StrAnyMap) (addedKeys, removedKeys, updatedKeys []string) {
 	m.lazyInit()
 	return m.KVMap.Diff(other.KVMap)
+}
+
+// doSetWithLockCheck checks whether value of the key exists with mutex.Lock,
+// if not exists, set value to the map with given `key`,
+// or else just return the existing value.
+//
+// When setting value, if `value` is type of `func() interface {}`,
+// it will be executed with mutex.Lock of the hash map,
+// and its return value will be set to the map with `key`.
+//
+// It returns value with given `key`.
+func (m *StrAnyMap) doSetWithLockCheck(key string, value any) any {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = make(map[string]any)
+	}
+	if v, ok := m.data[key]; ok {
+		return v
+	}
+	if f, ok := value.(func() any); ok {
+		value = f()
+	}
+	if value != nil {
+		m.data[key] = value
+	}
+	return value
 }
