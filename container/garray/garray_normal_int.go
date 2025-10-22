@@ -440,7 +440,7 @@ func (a *IntArray) String() string {
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 // Note that do not use pointer as its receiver here.
-func (a IntArray) MarshalJSON() ([]byte, error) {
+func (a *IntArray) MarshalJSON() ([]byte, error) {
 	a.lazyInit()
 	return a.TArray.MarshalJSON()
 }
