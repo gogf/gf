@@ -750,7 +750,7 @@ func (a *TArray[T]) String() string {
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 // Note that do not use pointer as its receiver here.
-func (a TArray[T]) MarshalJSON() ([]byte, error) {
+func (a *TArray[T]) MarshalJSON() ([]byte, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return json.Marshal(a.array)
