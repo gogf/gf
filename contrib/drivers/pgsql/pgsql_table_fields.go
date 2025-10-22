@@ -27,7 +27,8 @@ FROM pg_attribute a
          left join pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid
          left join pg_type t ON a.atttypid = t.oid
          left join information_schema.columns ic on ic.column_name = a.attname and ic.table_name = c.relname
-WHERE c.relname = '%s' and a.attisdropped is false and a.attnum > 0
+         left join pg_namespace n on c.relnamespace = n.oid
+WHERE c.relname = '%s' and n.nspname = '%s' and a.attisdropped is false and a.attnum > 0
 ORDER BY a.attnum`
 )
 
@@ -45,8 +46,9 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 		result     gdb.Result
 		link       gdb.Link
 		usedSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		namespace  = gutil.GetOrDefaultStr(defaultSchema, d.GetConfig().Namespace)
 		// TODO duplicated `id` result?
-		structureSql = fmt.Sprintf(tableFieldsSqlTmp, table)
+		structureSql = fmt.Sprintf(tableFieldsSqlTmp, table, namespace)
 	)
 	if link, err = d.SlaveLink(usedSchema); err != nil {
 		return nil, err
