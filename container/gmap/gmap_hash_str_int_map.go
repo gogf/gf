@@ -34,7 +34,7 @@ func NewStrIntMapFrom(data map[string]int, safe ...bool) *StrIntMap {
 	}
 }
 
-// lazyInit lazily initializes the array.
+// lazyInit lazily initializes the map.
 func (m *StrIntMap) lazyInit() {
 	if m.KVMap == nil {
 		m.KVMap = NewKVMap[string, int](false)
