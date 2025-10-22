@@ -262,7 +262,7 @@ func (m *IntStrMap) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (m IntStrMap) MarshalJSON() ([]byte, error) {
+func (m *IntStrMap) MarshalJSON() ([]byte, error) {
 	m.lazyInit()
 	return m.KVMap.MarshalJSON()
 }

@@ -481,7 +481,7 @@ func (m *KVMap[K, V]) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (m KVMap[K, V]) MarshalJSON() ([]byte, error) {
+func (m *KVMap[K, V]) MarshalJSON() ([]byte, error) {
 	return json.Marshal(gconv.Map(m.Map()))
 }
 
