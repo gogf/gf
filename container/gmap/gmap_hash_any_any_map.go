@@ -22,7 +22,7 @@ func NewAnyAnyMap(safe ...bool) *AnyAnyMap {
 	m := &AnyAnyMap{
 		KVMap: NewKVMap[any, any](safe...),
 	}
-	m.KVMap.doSetWithLockCheckFn = m.doSetWithLockCheck
+	m.doSetWithLockCheckFn = m.doSetWithLockCheck
 	return m
 }
 
@@ -33,7 +33,7 @@ func NewAnyAnyMapFrom(data map[any]any, safe ...bool) *AnyAnyMap {
 	m := &AnyAnyMap{
 		KVMap: NewKVMapFrom(data, safe...),
 	}
-	m.KVMap.doSetWithLockCheckFn = m.doSetWithLockCheck
+	m.doSetWithLockCheckFn = m.doSetWithLockCheck
 	return m
 }
 
@@ -41,7 +41,7 @@ func NewAnyAnyMapFrom(data map[any]any, safe ...bool) *AnyAnyMap {
 func (m *AnyAnyMap) lazyInit() {
 	if m.KVMap == nil {
 		m.KVMap = NewKVMap[any, any](false)
-		m.KVMap.doSetWithLockCheckFn = m.doSetWithLockCheck
+		m.doSetWithLockCheckFn = m.doSetWithLockCheck
 	}
 }
 

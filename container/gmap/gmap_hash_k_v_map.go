@@ -33,7 +33,7 @@ func NewKVMap[K comparable, V any](safe ...bool) *KVMap[K, V] {
 		mu:   rwmutex.Create(safe...),
 		data: make(map[K]V),
 	}
-	m.doSetWithLockCheckFn = m.doSetWithLockCheckFn
+	m.doSetWithLockCheckFn = m.doSetWithLockCheck
 	return m
 }
 
@@ -45,7 +45,7 @@ func NewKVMapFrom[K comparable, V any](data map[K]V, safe ...bool) *KVMap[K, V] 
 		mu:   rwmutex.Create(safe...),
 		data: data,
 	}
-	m.doSetWithLockCheckFn = m.doSetWithLockCheckFn
+	m.doSetWithLockCheckFn = m.doSetWithLockCheck
 	return m
 }
 
