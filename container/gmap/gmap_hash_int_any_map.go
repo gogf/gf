@@ -39,7 +39,7 @@ func NewIntAnyMapFrom(data map[int]any, safe ...bool) *IntAnyMap {
 	return m
 }
 
-// lazyInit lazily initializes the array.
+// lazyInit lazily initializes the map.
 func (m *IntAnyMap) lazyInit() {
 	if m.KVMap == nil {
 		m.KVMap = NewKVMap[int, any](false)
