@@ -39,7 +39,7 @@ func NewStrAnyMapFrom(data map[string]any, safe ...bool) *StrAnyMap {
 	return m
 }
 
-// lazyInit lazily initializes the array.
+// lazyInit lazily initializes the map.
 func (m *StrAnyMap) lazyInit() {
 	if m.KVMap == nil {
 		m.KVMap = NewKVMap[string, any](false)
