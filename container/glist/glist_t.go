@@ -593,7 +593,7 @@ func (l *TList[T]) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (l TList[T]) MarshalJSON() ([]byte, error) {
+func (l *TList[T]) MarshalJSON() ([]byte, error) {
 	return json.Marshal(l.FrontAll())
 }
 
