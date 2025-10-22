@@ -226,7 +226,9 @@ func (m *KVMap[K, V]) doSetWithLockCheck(key K, value V) (val V) {
 		return v
 	}
 
-	m.data[key] = value
+	if any(value) != nil {
+		m.data[key] = value
+	}
 	return value
 }
 
