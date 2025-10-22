@@ -230,7 +230,8 @@ func (m *KVMap[K, V]) doSetWithLockCheck(key K, value any) (val V) {
 	} else if val, ok = value.(V); !ok {
 		panic(fmt.Errorf("KVMap: unable to convert %T to %T", value, val))
 	}
-	if !gvar.New(val).IsNil() {
+
+	if any(val) != nil { //if V is any type. it must not be nil.
 		m.data[key] = val
 	}
 	return val
