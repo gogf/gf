@@ -6,9 +6,12 @@
 
 package gmap
 
+import "sync"
+
 // IntIntMap implements map[int]int with RWMutex that has switch.
 type IntIntMap struct {
 	*KVMap[int, int]
+	once sync.Once
 }
 
 // NewIntIntMap returns an empty IntIntMap object.
@@ -31,9 +34,11 @@ func NewIntIntMapFrom(data map[int]int, safe ...bool) *IntIntMap {
 
 // lazyInit lazily initializes the map.
 func (m *IntIntMap) lazyInit() {
-	if m.KVMap == nil {
-		m.KVMap = NewKVMap[int, int](false)
-	}
+	m.once.Do(func() {
+		if m.KVMap == nil {
+			m.KVMap = NewKVMap[int, int](false)
+		}
+	})
 }
 
 // Iterator iterates the hash map readonly with custom callback function `f`.

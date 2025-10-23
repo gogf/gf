@@ -8,6 +8,8 @@
 package gmap
 
 import (
+	"sync"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -15,6 +17,7 @@ import (
 // StrAnyMap implements map[string]any with RWMutex that has switch.
 type StrAnyMap struct {
 	*KVMap[string, any]
+	once sync.Once
 }
 
 // NewStrAnyMap returns an empty StrAnyMap object.
@@ -41,10 +44,12 @@ func NewStrAnyMapFrom(data map[string]any, safe ...bool) *StrAnyMap {
 
 // lazyInit lazily initializes the map.
 func (m *StrAnyMap) lazyInit() {
-	if m.KVMap == nil {
-		m.KVMap = NewKVMap[string, any](false)
-		m.doSetWithLockCheckFn = m.doSetWithLockCheck
-	}
+	m.once.Do(func() {
+		if m.KVMap == nil {
+			m.KVMap = NewKVMap[string, any](false)
+			m.doSetWithLockCheckFn = m.doSetWithLockCheck
+		}
+	})
 }
 
 // Iterator iterates the hash map readonly with custom callback function `f`.

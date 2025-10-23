@@ -8,6 +8,8 @@
 package gmap
 
 import (
+	"sync"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -15,6 +17,7 @@ import (
 // IntAnyMap implements map[int]any with RWMutex that has switch.
 type IntAnyMap struct {
 	*KVMap[int, any]
+	once sync.Once
 }
 
 // NewIntAnyMap returns an empty IntAnyMap object.
@@ -41,10 +44,12 @@ func NewIntAnyMapFrom(data map[int]any, safe ...bool) *IntAnyMap {
 
 // lazyInit lazily initializes the map.
 func (m *IntAnyMap) lazyInit() {
-	if m.KVMap == nil {
-		m.KVMap = NewKVMap[int, any](false)
-		m.doSetWithLockCheckFn = m.doSetWithLockCheck
-	}
+	m.once.Do(func() {
+		if m.KVMap == nil {
+			m.KVMap = NewKVMap[int, any](false)
+			m.doSetWithLockCheckFn = m.doSetWithLockCheck
+		}
+	})
 }
 
 // Iterator iterates the hash map readonly with custom callback function `f`.

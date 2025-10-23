@@ -7,12 +7,15 @@
 package gmap
 
 import (
+	"sync"
+
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // IntStrMap implements map[int]string with RWMutex that has switch.
 type IntStrMap struct {
 	*KVMap[int, string]
+	once sync.Once
 }
 
 // NewIntStrMap returns an empty IntStrMap object.
@@ -35,9 +38,11 @@ func NewIntStrMapFrom(data map[int]string, safe ...bool) *IntStrMap {
 
 // lazyInit lazily initializes the map.
 func (m *IntStrMap) lazyInit() {
-	if m.KVMap == nil {
-		m.KVMap = NewKVMap[int, string](false)
-	}
+	m.once.Do(func() {
+		if m.KVMap == nil {
+			m.KVMap = NewKVMap[int, string](false)
+		}
+	})
 }
 
 // Iterator iterates the hash map readonly with custom callback function `f`.

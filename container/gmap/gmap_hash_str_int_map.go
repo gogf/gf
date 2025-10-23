@@ -8,12 +8,15 @@
 package gmap
 
 import (
+	"sync"
+
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // StrIntMap implements map[string]int with RWMutex that has switch.
 type StrIntMap struct {
 	*KVMap[string, int]
+	once sync.Once
 }
 
 // NewStrIntMap returns an empty StrIntMap object.
@@ -36,9 +39,11 @@ func NewStrIntMapFrom(data map[string]int, safe ...bool) *StrIntMap {
 
 // lazyInit lazily initializes the map.
 func (m *StrIntMap) lazyInit() {
-	if m.KVMap == nil {
-		m.KVMap = NewKVMap[string, int](false)
-	}
+	m.once.Do(func() {
+		if m.KVMap == nil {
+			m.KVMap = NewKVMap[string, int](false)
+		}
+	})
 }
 
 // Iterator iterates the hash map readonly with custom callback function `f`.

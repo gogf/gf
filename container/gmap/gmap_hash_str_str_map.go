@@ -7,9 +7,12 @@
 
 package gmap
 
+import "sync"
+
 // StrStrMap implements map[string]string with RWMutex that has switch.
 type StrStrMap struct {
 	*KVMap[string, string]
+	once sync.Once
 }
 
 // NewStrStrMap returns an empty StrStrMap object.
@@ -32,9 +35,11 @@ func NewStrStrMapFrom(data map[string]string, safe ...bool) *StrStrMap {
 
 // lazyInit lazily initializes the map.
 func (m *StrStrMap) lazyInit() {
-	if m.KVMap == nil {
-		m.KVMap = NewKVMap[string, string](false)
-	}
+	m.once.Do(func() {
+		if m.KVMap == nil {
+			m.KVMap = NewKVMap[string, string](false)
+		}
+	})
 }
 
 // Iterator iterates the hash map readonly with custom callback function `f`.

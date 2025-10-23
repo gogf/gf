@@ -7,12 +7,15 @@
 package gmap
 
 import (
+	"sync"
+
 	"github.com/gogf/gf/v2/container/gvar"
 )
 
 // AnyAnyMap wraps map type `map[any]any` and provides more map features.
 type AnyAnyMap struct {
 	*KVMap[any, any]
+	once sync.Once
 }
 
 // NewAnyAnyMap creates and returns an empty hash map.
@@ -39,10 +42,12 @@ func NewAnyAnyMapFrom(data map[any]any, safe ...bool) *AnyAnyMap {
 
 // lazyInit lazily initializes the map.
 func (m *AnyAnyMap) lazyInit() {
-	if m.KVMap == nil {
-		m.KVMap = NewKVMap[any, any](false)
-		m.doSetWithLockCheckFn = m.doSetWithLockCheck
-	}
+	m.once.Do(func() {
+		if m.KVMap == nil {
+			m.KVMap = NewKVMap[any, any](false)
+			m.doSetWithLockCheckFn = m.doSetWithLockCheck
+		}
+	})
 }
 
 // Iterator iterates the hash map readonly with custom callback function `f`.
