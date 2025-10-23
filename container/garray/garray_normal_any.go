@@ -8,6 +8,7 @@ package garray
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -17,6 +18,7 @@ import (
 // when its initialization and cannot be changed then.
 type Array struct {
 	*TArray[any]
+	once sync.Once
 }
 
 // New creates and returns an empty array.
@@ -87,9 +89,11 @@ func NewArrayFromCopy(array []any, safe ...bool) *Array {
 
 // lazyInit lazily initializes the array.
 func (a *Array) lazyInit() {
-	if a.TArray == nil {
-		a.TArray = NewTArray[any](false)
-	}
+	a.once.Do(func() {
+		if a.TArray == nil {
+			a.TArray = NewTArray[any](false)
+		}
+	})
 }
 
 // At returns the value by the specified index.

@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -20,6 +21,7 @@ import (
 // when its initialization and cannot be changed then.
 type StrArray struct {
 	*TArray[string]
+	once sync.Once
 }
 
 // NewStrArray creates and returns an empty array.
@@ -58,9 +60,11 @@ func NewStrArrayFromCopy(array []string, safe ...bool) *StrArray {
 
 // lazyInit lazily initializes the array.
 func (a *StrArray) lazyInit() {
-	if a.TArray == nil {
-		a.TArray = NewTArray[string](false)
-	}
+	a.once.Do(func() {
+		if a.TArray == nil {
+			a.TArray = NewTArray[string](false)
+		}
+	})
 }
 
 // At returns the value by the specified index.

@@ -9,6 +9,7 @@ package garray
 import (
 	"fmt"
 	"sort"
+	"sync"
 
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -18,6 +19,7 @@ import (
 // when its initialization and cannot be changed then.
 type IntArray struct {
 	*TArray[int]
+	once sync.Once
 }
 
 // NewIntArray creates and returns an empty array.
@@ -71,9 +73,11 @@ func NewIntArrayFromCopy(array []int, safe ...bool) *IntArray {
 
 // lazyInit lazily initializes the array.
 func (a *IntArray) lazyInit() {
-	if a.TArray == nil {
-		a.TArray = NewTArray[int](false)
-	}
+	a.once.Do(func() {
+		if a.TArray == nil {
+			a.TArray = NewTArray[int](false)
+		}
+	})
 }
 
 // At returns the value by the specified index.
