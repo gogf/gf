@@ -281,6 +281,7 @@ func (set *Set) DeepCopy() any {
 func (set *Set) toTSetSlice(sets []*Set) (tSets []*TSet[any]) {
 	tSets = make([]*TSet[any], len(sets))
 	for i, v := range sets {
+		v.lazyInit()
 		tSets[i] = v.TSet
 	}
 	return

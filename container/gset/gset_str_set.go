@@ -106,11 +106,8 @@ func (set *StrSet) ContainsI(item string) bool {
 
 // Remove deletes `item` from set.
 func (set *StrSet) Remove(item string) {
-	set.mu.Lock()
-	if set.data != nil {
-		delete(set.data, item)
-	}
-	set.mu.Unlock()
+	set.lazyInit()
+	set.TSet.Remove(item)
 }
 
 // Size returns the size of the set.
@@ -246,13 +243,8 @@ func (set *StrSet) Pops(size int) []string {
 
 // Walk applies a user supplied function `f` to every item of set.
 func (set *StrSet) Walk(f func(item string) string) *StrSet {
-	set.mu.Lock()
-	defer set.mu.Unlock()
-	m := make(map[string]struct{}, len(set.data))
-	for k, v := range set.data {
-		m[f(k)] = v
-	}
-	set.data = m
+	set.lazyInit()
+	set.TSet.Walk(f)
 	return set
 }
 
@@ -289,6 +281,7 @@ func (set *StrSet) DeepCopy() any {
 func (set *StrSet) toTSetSlice(sets []*StrSet) (tSets []*TSet[string]) {
 	tSets = make([]*TSet[string], len(sets))
 	for i, v := range sets {
+		v.lazyInit()
 		tSets[i] = v.TSet
 	}
 	return
