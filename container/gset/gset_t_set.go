@@ -495,14 +495,14 @@ func (set *TSet[T]) UnmarshalJSON(b []byte) error {
 }
 
 // UnmarshalValue is an interface implement which sets any type of value for set.
-func (set *TSet[T]) UnmarshalValue(value T) (err error) {
+func (set *TSet[T]) UnmarshalValue(value any) (err error) {
 	set.mu.Lock()
 	defer set.mu.Unlock()
 	if set.data == nil {
 		set.data = make(map[T]struct{})
 	}
 	var array []T
-	switch any(value).(type) {
+	switch value.(type) {
 	case string, []byte:
 		err = json.UnmarshalUseNumber(gconv.Bytes(value), &array)
 	default:

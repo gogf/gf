@@ -8,12 +8,15 @@
 package gset
 
 import (
+	"sync"
+
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Set is consisted of any items.
 type Set struct {
 	*TSet[any]
+	once sync.Once
 }
 
 // New create and returns a new set, which contains un-repeated items.
@@ -41,9 +44,11 @@ func NewFrom(items any, safe ...bool) *Set {
 
 // lazyInit lazily initializes the set.
 func (a *Set) lazyInit() {
-	if a.TSet == nil {
-		a.TSet = NewTSet[any]()
-	}
+	a.once.Do(func() {
+		if a.TSet == nil {
+			a.TSet = NewTSet[any]()
+		}
+	})
 }
 
 // Iterator iterates the set readonly with given callback function `f`,
