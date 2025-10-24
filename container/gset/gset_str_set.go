@@ -181,13 +181,8 @@ func (set *StrSet) IsSubsetOf(other *StrSet) bool {
 // Which means, all the items in `newSet` are in `set` or in `other`.
 func (set *StrSet) Union(others ...*StrSet) (newSet *StrSet) {
 	set.lazyInit()
-	tOthers := make([]*TSet[string], len(others))
-	for _, o := range others {
-		tOthers = append(tOthers, o.TSet)
-	}
-
 	return &StrSet{
-		TSet: set.TSet.Union(tOthers...),
+		TSet: set.TSet.Union(set.toTSetSlice(others)...),
 	}
 }
 
@@ -195,12 +190,8 @@ func (set *StrSet) Union(others ...*StrSet) (newSet *StrSet) {
 // Which means, all the items in `newSet` are in `set` but not in `other`.
 func (set *StrSet) Diff(others ...*StrSet) (newSet *StrSet) {
 	set.lazyInit()
-	tOthers := make([]*TSet[string], len(others))
-	for _, o := range others {
-		tOthers = append(tOthers, o.TSet)
-	}
 	return &StrSet{
-		TSet: set.TSet.Diff(tOthers...),
+		TSet: set.TSet.Diff(set.toTSetSlice(others)...),
 	}
 }
 
@@ -208,12 +199,8 @@ func (set *StrSet) Diff(others ...*StrSet) (newSet *StrSet) {
 // Which means, all the items in `newSet` are in `set` and also in `other`.
 func (set *StrSet) Intersect(others ...*StrSet) (newSet *StrSet) {
 	set.lazyInit()
-	tOthers := make([]*TSet[string], len(others))
-	for _, o := range others {
-		tOthers = append(tOthers, o.TSet)
-	}
 	return &StrSet{
-		TSet: set.TSet.Intersect(tOthers...),
+		TSet: set.TSet.Intersect(set.toTSetSlice(others)...),
 	}
 }
 
@@ -232,11 +219,7 @@ func (set *StrSet) Complement(full *StrSet) (newSet *StrSet) {
 // Merge adds items from `others` sets into `set`.
 func (set *StrSet) Merge(others ...*StrSet) *StrSet {
 	set.lazyInit()
-	tOthers := make([]*TSet[string], len(others))
-	for _, o := range others {
-		tOthers = append(tOthers, o.TSet)
-	}
-	set.TSet.Merge(tOthers...)
+	set.TSet.Merge(set.toTSetSlice(others)...)
 	return set
 }
 
@@ -300,4 +283,13 @@ func (set *StrSet) DeepCopy() any {
 	return &StrSet{
 		TSet: set.TSet.DeepCopy().(*TSet[string]),
 	}
+}
+
+// toTSetSlice converts []*StrSet to []*TSet[string]
+func (set *StrSet) toTSetSlice(sets []*StrSet) (tSets []*TSet[string]) {
+	tSets = make([]*TSet[string], len(sets))
+	for i, v := range sets {
+		tSets[i] = v.TSet
+	}
+	return
 }

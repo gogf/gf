@@ -176,13 +176,9 @@ func (set *Set) IsSubsetOf(other *Set) bool {
 // Which means, all the items in `newSet` are in `set` or in `others`.
 func (set *Set) Union(others ...*Set) (newSet *Set) {
 	set.lazyInit()
-	tOthers := make([]*TSet[any], len(others))
-	for _, o := range others {
-		tOthers = append(tOthers, o.TSet)
-	}
 
 	return &Set{
-		TSet: set.TSet.Union(tOthers...),
+		TSet: set.TSet.Union(set.toTSetSlice(others)...),
 	}
 }
 
@@ -190,12 +186,9 @@ func (set *Set) Union(others ...*Set) (newSet *Set) {
 // Which means, all the items in `newSet` are in `set` but not in `others`.
 func (set *Set) Diff(others ...*Set) (newSet *Set) {
 	set.lazyInit()
-	tOthers := make([]*TSet[any], len(others))
-	for _, o := range others {
-		tOthers = append(tOthers, o.TSet)
-	}
+
 	return &Set{
-		TSet: set.TSet.Diff(tOthers...),
+		TSet: set.TSet.Diff(set.toTSetSlice(others)...),
 	}
 }
 
@@ -203,12 +196,8 @@ func (set *Set) Diff(others ...*Set) (newSet *Set) {
 // Which means, all the items in `newSet` are in `set` and also in `others`.
 func (set *Set) Intersect(others ...*Set) (newSet *Set) {
 	set.lazyInit()
-	tOthers := make([]*TSet[any], len(others))
-	for _, o := range others {
-		tOthers = append(tOthers, o.TSet)
-	}
 	return &Set{
-		TSet: set.TSet.Intersect(tOthers...),
+		TSet: set.TSet.Intersect(set.toTSetSlice(others)...),
 	}
 }
 
@@ -227,11 +216,7 @@ func (set *Set) Complement(full *Set) (newSet *Set) {
 // Merge adds items from `others` sets into `set`.
 func (set *Set) Merge(others ...*Set) *Set {
 	set.lazyInit()
-	tOthers := make([]*TSet[any], len(others))
-	for _, o := range others {
-		tOthers = append(tOthers, o.TSet)
-	}
-	set.TSet.Merge(tOthers...)
+	set.TSet.Merge(set.toTSetSlice(others)...)
 	return set
 }
 
@@ -290,4 +275,13 @@ func (set *Set) DeepCopy() any {
 	return &Set{
 		TSet: set.TSet.DeepCopy().(*TSet[any]),
 	}
+}
+
+// toTSetSlice converts []*Set to []*TSet[any]
+func (set *Set) toTSetSlice(sets []*Set) (tSets []*TSet[any]) {
+	tSets = make([]*TSet[any], len(sets))
+	for i, v := range sets {
+		tSets[i] = v.TSet
+	}
+	return
 }

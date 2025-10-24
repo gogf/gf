@@ -165,13 +165,8 @@ func (set *IntSet) IsSubsetOf(other *IntSet) bool {
 // Which means, all the items in `newSet` are in `set` or in `other`.
 func (set *IntSet) Union(others ...*IntSet) (newSet *IntSet) {
 	set.lazyInit()
-	tOthers := make([]*TSet[int], len(others))
-	for _, o := range others {
-		tOthers = append(tOthers, o.TSet)
-	}
-
 	return &IntSet{
-		TSet: set.TSet.Union(tOthers...),
+		TSet: set.TSet.Union(set.toTSetSlice(others)...),
 	}
 }
 
@@ -179,12 +174,8 @@ func (set *IntSet) Union(others ...*IntSet) (newSet *IntSet) {
 // Which means, all the items in `newSet` are in `set` but not in `other`.
 func (set *IntSet) Diff(others ...*IntSet) (newSet *IntSet) {
 	set.lazyInit()
-	tOthers := make([]*TSet[int], len(others))
-	for _, o := range others {
-		tOthers = append(tOthers, o.TSet)
-	}
 	return &IntSet{
-		TSet: set.TSet.Diff(tOthers...),
+		TSet: set.TSet.Diff(set.toTSetSlice(others)...),
 	}
 }
 
@@ -192,12 +183,8 @@ func (set *IntSet) Diff(others ...*IntSet) (newSet *IntSet) {
 // Which means, all the items in `newSet` are in `set` and also in `other`.
 func (set *IntSet) Intersect(others ...*IntSet) (newSet *IntSet) {
 	set.lazyInit()
-	tOthers := make([]*TSet[int], len(others))
-	for _, o := range others {
-		tOthers = append(tOthers, o.TSet)
-	}
 	return &IntSet{
-		TSet: set.TSet.Intersect(tOthers...),
+		TSet: set.TSet.Intersect(set.toTSetSlice(others)...),
 	}
 }
 
@@ -216,11 +203,7 @@ func (set *IntSet) Complement(full *IntSet) (newSet *IntSet) {
 // Merge adds items from `others` sets into `set`.
 func (set *IntSet) Merge(others ...*IntSet) *IntSet {
 	set.lazyInit()
-	tOthers := make([]*TSet[int], len(others))
-	for _, o := range others {
-		tOthers = append(tOthers, o.TSet)
-	}
-	set.TSet.Merge(tOthers...)
+	set.TSet.Merge(set.toTSetSlice(others)...)
 	return set
 }
 
@@ -279,4 +262,13 @@ func (set *IntSet) DeepCopy() any {
 	return &IntSet{
 		TSet: set.TSet.DeepCopy().(*TSet[int]),
 	}
+}
+
+// toTSetSlice converts []*IntSet to []*TSet[int]
+func (set *IntSet) toTSetSlice(sets []*IntSet) (tSets []*TSet[int]) {
+	tSets = make([]*TSet[int], len(sets))
+	for i, v := range sets {
+		tSets[i] = v.TSet
+	}
+	return
 }
