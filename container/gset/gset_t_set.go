@@ -31,7 +31,7 @@ func NewTSet[T comparable](safe ...bool) *TSet[T] {
 }
 
 // NewTSetFrom returns a new set from `items`.
-// Parameter `items` is a T slice.
+// `items` - A slice of type T.
 func NewTSetFrom[T comparable](items []T, safe ...bool) *TSet[T] {
 	m := make(map[T]struct{})
 	for _, v := range items {
