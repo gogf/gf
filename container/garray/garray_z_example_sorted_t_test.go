@@ -14,10 +14,12 @@ import (
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func ExampleSortedStrArray_Walk() {
-	var array garray.SortedStrArray
+func ExampleSortedTArray_Walk() {
+	var array garray.SortedTArray[string]
+	array.SetComparator(gutil.ComparatorT)
 	tables := g.SliceStr{"user", "user_detail"}
 	prefix := "gf_"
 	array.Append(tables...)
@@ -31,8 +33,8 @@ func ExampleSortedStrArray_Walk() {
 	// [gf_user gf_user_detail]
 }
 
-func ExampleNewSortedStrArray() {
-	s := garray.NewSortedStrArray()
+func ExampleNewSortedTArray() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.Append("b")
 	s.Append("d")
 	s.Append("c")
@@ -43,8 +45,8 @@ func ExampleNewSortedStrArray() {
 	// [a b c d]
 }
 
-func ExampleNewSortedStrArraySize() {
-	s := garray.NewSortedStrArraySize(3)
+func ExampleNewSortedTArraySize() {
+	s := garray.NewSortedTArraySize[string](3, gutil.ComparatorT)
 	s.SetArray([]string{"b", "d", "a", "c"})
 	fmt.Println(s.Slice(), s.Len(), cap(s.Slice()))
 
@@ -52,16 +54,16 @@ func ExampleNewSortedStrArraySize() {
 	// [a b c d] 4 4
 }
 
-func ExampleNewStrArrayFromCopy() {
-	s := garray.NewSortedStrArrayFromCopy(g.SliceStr{"b", "d", "c", "a"})
+func ExampleNewSortedTArrayFromCopy() {
+	s := garray.NewSortedTArrayFromCopy(g.SliceStr{"b", "d", "c", "a"}, gutil.ComparatorT)
 	fmt.Println(s.Slice())
 
 	// Output:
 	// [a b c d]
 }
 
-func ExampleSortedStrArray_At() {
-	s := garray.NewSortedStrArrayFrom(g.SliceStr{"b", "d", "c", "a"})
+func ExampleSortedTArray_At() {
+	s := garray.NewSortedTArrayFrom(g.SliceStr{"b", "d", "c", "a"}, gutil.ComparatorT)
 	sAt := s.At(2)
 	fmt.Println(s)
 	fmt.Println(sAt)
@@ -72,8 +74,8 @@ func ExampleSortedStrArray_At() {
 
 }
 
-func ExampleSortedStrArray_Get() {
-	s := garray.NewSortedStrArrayFrom(g.SliceStr{"b", "d", "c", "a", "e"})
+func ExampleSortedTArray_Get() {
+	s := garray.NewSortedTArrayFrom(g.SliceStr{"b", "d", "c", "a", "e"}, gutil.ComparatorT)
 	sGet, sBool := s.Get(3)
 	fmt.Println(s)
 	fmt.Println(sGet, sBool)
@@ -83,8 +85,8 @@ func ExampleSortedStrArray_Get() {
 	// d true
 }
 
-func ExampleSortedStrArray_SetArray() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_SetArray() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray([]string{"b", "d", "a", "c"})
 	fmt.Println(s.Slice())
 
@@ -92,8 +94,8 @@ func ExampleSortedStrArray_SetArray() {
 	// [a b c d]
 }
 
-func ExampleSortedStrArray_SetUnique() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_SetUnique() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray([]string{"b", "d", "a", "c", "c", "a"})
 	fmt.Println(s.SetUnique(true))
 
@@ -101,20 +103,20 @@ func ExampleSortedStrArray_SetUnique() {
 	// ["a","b","c","d"]
 }
 
-func ExampleSortedStrArray_Sum() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_Sum() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray([]string{"5", "3", "2"})
 	fmt.Println(s)
 	a := s.Sum()
 	fmt.Println(a)
 
 	// Output:
-	// ["2","3","5"]
+	// [2,3,5]
 	// 10
 }
 
-func ExampleSortedStrArray_Sort() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_Sort() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray(g.SliceStr{"b", "d", "a", "c"})
 	fmt.Println(s)
 	a := s.Sort()
@@ -125,8 +127,8 @@ func ExampleSortedStrArray_Sort() {
 	// ["a","b","c","d"]
 }
 
-func ExampleSortedStrArray_Remove() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_Remove() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray(g.SliceStr{"b", "d", "c", "a"})
 	fmt.Println(s.Slice())
 	s.Remove(1)
@@ -137,8 +139,8 @@ func ExampleSortedStrArray_Remove() {
 	// [a c d]
 }
 
-func ExampleSortedStrArray_RemoveValue() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_RemoveValue() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray(g.SliceStr{"b", "d", "c", "a"})
 	fmt.Println(s.Slice())
 	s.RemoveValue("b")
@@ -149,8 +151,8 @@ func ExampleSortedStrArray_RemoveValue() {
 	// [a c d]
 }
 
-func ExampleSortedStrArray_PopLeft() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_PopLeft() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray(g.SliceStr{"b", "d", "c", "a"})
 	r, _ := s.PopLeft()
 	fmt.Println(r)
@@ -161,8 +163,8 @@ func ExampleSortedStrArray_PopLeft() {
 	// [b c d]
 }
 
-func ExampleSortedStrArray_PopRight() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_PopRight() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray(g.SliceStr{"b", "d", "c", "a"})
 	fmt.Println(s.Slice())
 	r, _ := s.PopRight()
@@ -175,8 +177,8 @@ func ExampleSortedStrArray_PopRight() {
 	// [a b c]
 }
 
-func ExampleSortedStrArray_PopRights() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_PopRights() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray(g.SliceStr{"c", "b", "a", "d", "f", "e", "h", "g"})
 	r := s.PopRights(2)
 	fmt.Println(r)
@@ -187,8 +189,8 @@ func ExampleSortedStrArray_PopRights() {
 	// ["a","b","c","d","e","f"]
 }
 
-func ExampleSortedStrArray_Rand() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_Rand() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray(g.SliceStr{"c", "b", "a", "d", "f", "e", "h", "g"})
 	r, _ := s.PopRand()
 	fmt.Println(r)
@@ -199,8 +201,8 @@ func ExampleSortedStrArray_Rand() {
 	// ["a","c","d","e","f","g","h"]
 }
 
-func ExampleSortedStrArray_PopRands() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_PopRands() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray(g.SliceStr{"c", "b", "a", "d", "f", "e", "h", "g"})
 	r := s.PopRands(2)
 	fmt.Println(r)
@@ -211,8 +213,8 @@ func ExampleSortedStrArray_PopRands() {
 	// ["b","c","e","f","g","h"]
 }
 
-func ExampleSortedStrArray_PopLefts() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_PopLefts() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray(g.SliceStr{"c", "b", "a", "d", "f", "e", "h", "g"})
 	r := s.PopLefts(2)
 	fmt.Println(r)
@@ -223,8 +225,8 @@ func ExampleSortedStrArray_PopLefts() {
 	// ["c","d","e","f","g","h"]
 }
 
-func ExampleSortedStrArray_Range() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_Range() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray(g.SliceStr{"c", "b", "a", "d", "f", "e", "h", "g"})
 	r := s.Range(2, 5)
 	fmt.Println(r)
@@ -233,8 +235,8 @@ func ExampleSortedStrArray_Range() {
 	// [c d e]
 }
 
-func ExampleSortedStrArray_SubSlice() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_SubSlice() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray(g.SliceStr{"c", "b", "a", "d", "f", "e", "h", "g"})
 	r := s.SubSlice(3, 4)
 	fmt.Println(s.Slice())
@@ -245,8 +247,8 @@ func ExampleSortedStrArray_SubSlice() {
 	// [d e f g]
 }
 
-func ExampleSortedStrArray_Add() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_Add() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.Add("b", "d", "c", "a")
 	fmt.Println(s)
 
@@ -254,8 +256,8 @@ func ExampleSortedStrArray_Add() {
 	// ["a","b","c","d"]
 }
 
-func ExampleSortedStrArray_Append() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_Append() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray(g.SliceStr{"b", "d", "c", "a"})
 	fmt.Println(s)
 	s.Append("f", "e", "g")
@@ -266,8 +268,8 @@ func ExampleSortedStrArray_Append() {
 	// ["a","b","c","d","e","f","g"]
 }
 
-func ExampleSortedStrArray_Len() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_Len() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray(g.SliceStr{"c", "b", "a", "d", "f", "e", "h", "g"})
 	fmt.Println(s)
 	fmt.Println(s.Len())
@@ -277,8 +279,8 @@ func ExampleSortedStrArray_Len() {
 	// 8
 }
 
-func ExampleSortedStrArray_Slice() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_Slice() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray(g.SliceStr{"c", "b", "a", "d", "f", "e", "h", "g"})
 	fmt.Println(s.Slice())
 
@@ -286,8 +288,8 @@ func ExampleSortedStrArray_Slice() {
 	// [a b c d e f g h]
 }
 
-func ExampleSortedStrArray_Interfaces() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_Interfaces() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray(g.SliceStr{"c", "b", "a", "d", "f", "e", "h", "g"})
 	r := s.Interfaces()
 	fmt.Println(r)
@@ -296,8 +298,8 @@ func ExampleSortedStrArray_Interfaces() {
 	// [a b c d e f g h]
 }
 
-func ExampleSortedStrArray_Clone() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_Clone() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray(g.SliceStr{"c", "b", "a", "d", "f", "e", "h", "g"})
 	r := s.Clone()
 	fmt.Println(r)
@@ -308,8 +310,8 @@ func ExampleSortedStrArray_Clone() {
 	// ["a","b","c","d","e","f","g","h"]
 }
 
-func ExampleSortedStrArray_Clear() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_Clear() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray(g.SliceStr{"c", "b", "a", "d", "f", "e", "h", "g"})
 	fmt.Println(s)
 	fmt.Println(s.Clear())
@@ -321,8 +323,8 @@ func ExampleSortedStrArray_Clear() {
 	// []
 }
 
-func ExampleSortedStrArray_Contains() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_Contains() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray(g.SliceStr{"c", "b", "a", "d", "f", "e", "h", "g"})
 	fmt.Println(s.Contains("e"))
 	fmt.Println(s.Contains("E"))
@@ -334,21 +336,8 @@ func ExampleSortedStrArray_Contains() {
 	// false
 }
 
-func ExampleSortedStrArray_ContainsI() {
-	s := garray.NewSortedStrArray()
-	s.SetArray(g.SliceStr{"c", "b", "a", "d", "f", "e", "h", "g"})
-	fmt.Println(s)
-	fmt.Println(s.ContainsI("E"))
-	fmt.Println(s.ContainsI("z"))
-
-	// Output:
-	// ["a","b","c","d","e","f","g","h"]
-	// true
-	// false
-}
-
-func ExampleSortedStrArray_Search() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_Search() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray(g.SliceStr{"c", "b", "a", "d", "f", "e", "h", "g"})
 	fmt.Println(s)
 	fmt.Println(s.Search("e"))
@@ -362,8 +351,8 @@ func ExampleSortedStrArray_Search() {
 	// -1
 }
 
-func ExampleSortedStrArray_Unique() {
-	s := garray.NewSortedStrArray()
+func ExampleSortedTArray_Unique() {
+	s := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s.SetArray(g.SliceStr{"a", "b", "c", "c", "c", "d", "d"})
 	fmt.Println(s)
 	fmt.Println(s.Unique())
@@ -373,8 +362,8 @@ func ExampleSortedStrArray_Unique() {
 	// ["a","b","c","d"]
 }
 
-func ExampleSortedStrArray_LockFunc() {
-	s := garray.NewSortedStrArrayFrom(g.SliceStr{"b", "c", "a"})
+func ExampleSortedTArray_LockFunc() {
+	s := garray.NewSortedTArrayFrom(g.SliceStr{"b", "c", "a"}, gutil.ComparatorT)
 	s.LockFunc(func(array []string) {
 		array[len(array)-1] = "GF fans"
 	})
@@ -384,8 +373,8 @@ func ExampleSortedStrArray_LockFunc() {
 	// ["GF fans","a","b"]
 }
 
-func ExampleSortedStrArray_RLockFunc() {
-	s := garray.NewSortedStrArrayFrom(g.SliceStr{"b", "c", "a"})
+func ExampleSortedTArray_RLockFunc() {
+	s := garray.NewSortedTArrayFrom(g.SliceStr{"b", "c", "a"}, gutil.ComparatorT)
 	s.RLockFunc(func(array []string) {
 		array[len(array)-1] = "GF fans"
 		fmt.Println(array[len(array)-1])
@@ -397,9 +386,9 @@ func ExampleSortedStrArray_RLockFunc() {
 	// ["a","b","GF fans"]
 }
 
-func ExampleSortedStrArray_Merge() {
-	s1 := garray.NewSortedStrArray()
-	s2 := garray.NewSortedStrArray()
+func ExampleSortedTArray_Merge() {
+	s1 := garray.NewSortedTArray[string](gutil.ComparatorT)
+	s2 := garray.NewSortedTArray[string](gutil.ComparatorT)
 	s1.SetArray(g.SliceStr{"b", "c", "a"})
 	s2.SetArray(g.SliceStr{"e", "d", "f"})
 	fmt.Println(s1)
@@ -413,8 +402,8 @@ func ExampleSortedStrArray_Merge() {
 	// ["a","b","c","d","e","f"]
 }
 
-func ExampleSortedStrArray_Chunk() {
-	s := garray.NewSortedStrArrayFrom(g.SliceStr{"c", "b", "a", "d", "f", "e", "h", "g"})
+func ExampleSortedTArray_Chunk() {
+	s := garray.NewSortedTArrayFrom(g.SliceStr{"c", "b", "a", "d", "f", "e", "h", "g"}, gutil.ComparatorT)
 	r := s.Chunk(3)
 	fmt.Println(r)
 
@@ -422,8 +411,8 @@ func ExampleSortedStrArray_Chunk() {
 	// [[a b c] [d e f] [g h]]
 }
 
-func ExampleSortedStrArray_Rands() {
-	s := garray.NewSortedStrArrayFrom(g.SliceStr{"c", "b", "a", "d", "f", "e", "h", "g"})
+func ExampleSortedTArray_Rands() {
+	s := garray.NewSortedTArrayFrom(g.SliceStr{"c", "b", "a", "d", "f", "e", "h", "g"}, gutil.ComparatorT)
 	fmt.Println(s)
 	fmt.Println(s.Rands(3))
 
@@ -432,24 +421,24 @@ func ExampleSortedStrArray_Rands() {
 	// [h g c]
 }
 
-func ExampleSortedStrArray_Join() {
-	s := garray.NewSortedStrArrayFrom(g.SliceStr{"c", "b", "a", "d", "f", "e", "h", "g"})
+func ExampleSortedTArray_Join() {
+	s := garray.NewSortedTArrayFrom(g.SliceStr{"c", "b", "a", "d", "f", "e", "h", "g"}, gutil.ComparatorT)
 	fmt.Println(s.Join(","))
 
 	// Output:
 	// a,b,c,d,e,f,g,h
 }
 
-func ExampleSortedStrArray_CountValues() {
-	s := garray.NewSortedStrArrayFrom(g.SliceStr{"a", "b", "c", "c", "c", "d", "d"})
+func ExampleSortedTArray_CountValues() {
+	s := garray.NewSortedTArrayFrom(g.SliceStr{"a", "b", "c", "c", "c", "d", "d"}, gutil.ComparatorT)
 	fmt.Println(s.CountValues())
 
 	// Output:
 	// map[a:1 b:1 c:3 d:2]
 }
 
-func ExampleSortedStrArray_Iterator() {
-	s := garray.NewSortedStrArrayFrom(g.SliceStr{"b", "c", "a"})
+func ExampleSortedTArray_Iterator() {
+	s := garray.NewSortedTArrayFrom(g.SliceStr{"b", "c", "a"}, gutil.ComparatorT)
 	s.Iterator(func(k int, v string) bool {
 		fmt.Println(k, v)
 		return true
@@ -461,8 +450,8 @@ func ExampleSortedStrArray_Iterator() {
 	// 2 c
 }
 
-func ExampleSortedStrArray_IteratorAsc() {
-	s := garray.NewSortedStrArrayFrom(g.SliceStr{"b", "c", "a"})
+func ExampleSortedTArray_IteratorAsc() {
+	s := garray.NewSortedTArrayFrom(g.SliceStr{"b", "c", "a"}, gutil.ComparatorT)
 	s.IteratorAsc(func(k int, v string) bool {
 		fmt.Println(k, v)
 		return true
@@ -474,8 +463,8 @@ func ExampleSortedStrArray_IteratorAsc() {
 	// 2 c
 }
 
-func ExampleSortedStrArray_IteratorDesc() {
-	s := garray.NewSortedStrArrayFrom(g.SliceStr{"b", "c", "a"})
+func ExampleSortedTArray_IteratorDesc() {
+	s := garray.NewSortedTArrayFrom(g.SliceStr{"b", "c", "a"}, gutil.ComparatorT)
 	s.IteratorDesc(func(k int, v string) bool {
 		fmt.Println(k, v)
 		return true
@@ -487,21 +476,21 @@ func ExampleSortedStrArray_IteratorDesc() {
 	// 0 a
 }
 
-func ExampleSortedStrArray_String() {
-	s := garray.NewSortedStrArrayFrom(g.SliceStr{"b", "c", "a"})
+func ExampleSortedTArray_String() {
+	s := garray.NewSortedTArrayFrom(g.SliceStr{"b", "c", "a"}, gutil.ComparatorT)
 	fmt.Println(s.String())
 
 	// Output:
 	// ["a","b","c"]
 }
 
-func ExampleSortedStrArray_MarshalJSON() {
+func ExampleSortedTArray_MarshalJSON() {
 	type Student struct {
 		ID     int
 		Name   string
-		Levels garray.SortedStrArray
+		Levels garray.SortedTArray[string]
 	}
-	r := garray.NewSortedStrArrayFrom(g.SliceStr{"b", "c", "a"})
+	r := garray.NewSortedTArrayFrom(g.SliceStr{"b", "c", "a"}, gutil.ComparatorT)
 	s := Student{
 		ID:     1,
 		Name:   "john",
@@ -514,7 +503,7 @@ func ExampleSortedStrArray_MarshalJSON() {
 	// {"ID":1,"Name":"john","Levels":["a","b","c"]}
 }
 
-func ExampleSortedStrArray_UnmarshalJSON() {
+func ExampleSortedTArray_UnmarshalJSON() {
 	b := []byte(`{"Id":1,"Name":"john","Lessons":["Math","English","Sport"]}`)
 	type Student struct {
 		Id      int
@@ -529,7 +518,7 @@ func ExampleSortedStrArray_UnmarshalJSON() {
 	// {1 john ["Math","English","Sport"]}
 }
 
-func ExampleSortedStrArray_UnmarshalValue() {
+func ExampleSortedTArray_UnmarshalValue() {
 	type Student struct {
 		Name    string
 		Lessons *garray.StrArray
@@ -553,8 +542,8 @@ func ExampleSortedStrArray_UnmarshalValue() {
 	// &{john ["Math","English","Sport"]}
 }
 
-func ExampleSortedStrArray_Filter() {
-	s := garray.NewSortedStrArrayFrom(g.SliceStr{"b", "a", "", "c", "", "", "d"})
+func ExampleSortedTArray_Filter() {
+	s := garray.NewSortedTArrayFrom(g.SliceStr{"b", "a", "", "c", "", "", "d"}, gutil.ComparatorT)
 	fmt.Println(s)
 	fmt.Println(s.Filter(func(index int, value string) bool {
 		return empty.IsEmpty(value)
@@ -565,8 +554,8 @@ func ExampleSortedStrArray_Filter() {
 	// ["a","b","c","d"]
 }
 
-func ExampleSortedStrArray_FilterEmpty() {
-	s := garray.NewSortedStrArrayFrom(g.SliceStr{"b", "a", "", "c", "", "", "d"})
+func ExampleSortedTArray_FilterEmpty() {
+	s := garray.NewSortedTArrayFrom(g.SliceStr{"b", "a", "", "c", "", "", "d"}, gutil.ComparatorT)
 	fmt.Println(s)
 	fmt.Println(s.FilterEmpty())
 
@@ -575,10 +564,10 @@ func ExampleSortedStrArray_FilterEmpty() {
 	// ["a","b","c","d"]
 }
 
-func ExampleSortedStrArray_IsEmpty() {
-	s := garray.NewSortedStrArrayFrom(g.SliceStr{"b", "a", "", "c", "", "", "d"})
+func ExampleSortedTArray_IsEmpty() {
+	s := garray.NewSortedTArrayFrom(g.SliceStr{"b", "a", "", "c", "", "", "d"}, gutil.ComparatorT)
 	fmt.Println(s.IsEmpty())
-	s1 := garray.NewSortedStrArray()
+	s1 := garray.NewSortedTArray[string](gutil.ComparatorT)
 	fmt.Println(s1.IsEmpty())
 
 	// Output:

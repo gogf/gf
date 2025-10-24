@@ -66,6 +66,7 @@ func Test_Gen_Dao_Issue2572(t *testing.T) {
 				NoJsonTag:          false,
 				NoModelComment:     false,
 				Clear:              false,
+				GenTable:           false,
 				TypeMapping:        nil,
 				FieldMapping:       nil,
 			}
@@ -155,6 +156,7 @@ func Test_Gen_Dao_Issue2616(t *testing.T) {
 				NoJsonTag:          false,
 				NoModelComment:     false,
 				Clear:              false,
+				GenTable:           false,
 				TypeMapping:        nil,
 				FieldMapping:       nil,
 			}
@@ -266,6 +268,7 @@ func Test_Gen_Dao_Issue2746(t *testing.T) {
 				NoJsonTag:          false,
 				NoModelComment:     false,
 				Clear:              false,
+				GenTable:           false,
 				TypeMapping:        nil,
 				FieldMapping:       nil,
 			}
@@ -338,6 +341,7 @@ func Test_Gen_Dao_Issue3459(t *testing.T) {
 				NoJsonTag:          false,
 				NoModelComment:     false,
 				Clear:              false,
+				GenTable:           false,
 				TypeMapping:        nil,
 			}
 		)
