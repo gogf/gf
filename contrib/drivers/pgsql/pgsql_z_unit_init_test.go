@@ -47,19 +47,16 @@ func init() {
 	}
 
 	if configNode.Name == "" {
-		createDatabaseIfNotExists(db, SchemaName)
+		schemaTemplate := "SELECT 'CREATE DATABASE %s' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '%s')"
+		if _, err := db.Exec(ctx, fmt.Sprintf(schemaTemplate, SchemaName, SchemaName)); err != nil {
+			gtest.Error(err)
+		}
+
 		db = db.Schema(SchemaName)
 	} else {
 		db = db.Schema(configNode.Name)
 	}
 
-}
-
-func createDatabaseIfNotExists(db gdb.DB, schemaName string) {
-	schemaTemplate := "SELECT 'CREATE DATABASE %s' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '%s')"
-	if _, err := db.Exec(ctx, fmt.Sprintf(schemaTemplate, schemaName, schemaName)); err != nil {
-		gtest.Error(err)
-	}
 }
 
 func createTable(table ...string) string {
