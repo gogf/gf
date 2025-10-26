@@ -193,7 +193,7 @@ func (r *TRing[T]) RLockIteratorNext(f func(value T) bool) {
 	}
 }
 
-// RLockIteratorPrev iterates and locks writing backward
+// RLockIteratorPrev iterates and locks reading backward
 // with given callback function `f` within RWMutex.RLock.
 // If `f` returns true, then it continues iterating; or false to stop.
 func (r *TRing[T]) RLockIteratorPrev(f func(value T) bool) {
