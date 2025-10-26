@@ -180,7 +180,7 @@ func (r *TRing[T]) Unlink(n int) *TRing[T] {
 // RLockIteratorNext iterates and locks reading forward
 // with given callback function `f` within RWMutex.RLock.
 // If `f` returns true, then it continues iterating; or false to stop.
-func (r *TRing[T]) RLockIteratorNext(f func(value any) bool) {
+func (r *TRing[T]) RLockIteratorNext(f func(value T) bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	if r.ring.Value != nil && !f(r.ring.Value.(internalTRingItem[T]).Value) {
