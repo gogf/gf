@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/v2/container/gtype"
 )
 
-// Queue is a concurrent-safe queue built on doubly linked list and channel.
+// TQueue is a concurrent-safe queue built on doubly linked list and channel.
 type TQueue[T any] struct {
 	limit  int           // Limit for queue size.
 	list   *glist.List   // Underlying list structure for data maintaining.
