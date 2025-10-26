@@ -16,9 +16,6 @@ type Ring struct {
 	*TRing[any]
 }
 
-// internalRingItem stores the ring element value.
-type internalRingItem = internalTRingItem[any]
-
 // New creates and returns a Ring structure of `cap` elements.
 // The optional parameter `safe` specifies whether using this structure in concurrent safety,
 // which is false in default.
