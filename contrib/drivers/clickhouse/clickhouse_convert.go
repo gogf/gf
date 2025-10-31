@@ -26,6 +26,7 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 		if itemValue.IsZero() {
 			return nil, nil
 		}
+		return itemValue, nil
 
 	case uuid.UUID:
 		return itemValue, nil
@@ -48,15 +49,13 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 		return itemValue.Time, nil
 
 	case *gtime.Time:
-		// for gtime type, needs to get time.Time
-		if itemValue != nil {
-			return itemValue.Time, nil
-		}
 		// If the time is zero, it then updates it to nil,
 		// which will insert/update the value to database as "null".
 		if itemValue == nil || itemValue.IsZero() {
 			return nil, nil
 		}
+		// for gtime type, needs to get time.Time
+		return itemValue.Time, nil
 
 	case decimal.Decimal:
 		return itemValue, nil
@@ -81,5 +80,4 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 		}
 		return convertedValue, nil
 	}
-	return fieldValue, nil
 }
