@@ -526,10 +526,11 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 		if in.Table != "" {
 			data, _ = db.GetCore().mappingAndFilterData(ctx, in.Schema, in.Table, data, true)
 			// Convert field values to types supported by table records (e.g., time to string)
+			fieldTypeMap := db.GetCore().GetFieldTypeStrMap(ctx, in.Table, in.Schema)
 			for fieldName, fieldValue := range data {
 				switch fieldValue.(type) {
 				case time.Time, *time.Time, gtime.Time, *gtime.Time:
-					var fieldType = db.GetCore().GetFieldTypeStr(ctx, fieldName, in.Table, in.Schema)
+					fieldType := fieldTypeMap[fieldName]
 					convFieldValue, err := db.GetCore().ConvertValueForField(
 						ctx,
 						fieldType,
