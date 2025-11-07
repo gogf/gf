@@ -23,11 +23,18 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
+var (
+	// Compile-time checking for interface implementation.
+	_ gcfg.Adapter        = (*Client)(nil)
+	_ gcfg.WatcherAdapter = (*Client)(nil)
+)
+
 // Client implements gcfg.Adapter.
 type Client struct {
-	config Config                // Config object when created.
-	client *kubernetes.Clientset // Kubernetes client.
-	value  *g.Var                // Configmap content cached. It is `*gjson.Json` value internally.
+	config   Config                // Config object when created.
+	client   *kubernetes.Clientset // Kubernetes client.
+	value    *g.Var                // Configmap content cached. It is `*gjson.Json` value internally.
+	watchers *gcfg.WatcherRegistry // Watchers for watching file changes.
 }
 
 // Config for Client.
@@ -61,9 +68,10 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 		}
 	}
 	adapter = &Client{
-		config: config,
-		client: config.KubeClient,
-		value:  g.NewVar(nil, true),
+		config:   config,
+		client:   config.KubeClient,
+		value:    g.NewVar(nil, true),
+		watchers: gcfg.NewWatcherRegistry(),
 	}
 	return
 }
@@ -128,6 +136,7 @@ func (c *Client) updateLocalValueAndWatch(ctx context.Context) (err error) {
 	return nil
 }
 
+// doUpdate retrieves and caches the configmap content.
 func (c *Client) doUpdate(ctx context.Context, namespace string) (err error) {
 	cm, err := c.client.CoreV1().ConfigMaps(namespace).Get(ctx, c.config.ConfigMap, kubeMetaV1.GetOptions{})
 	if err != nil {
@@ -145,9 +154,19 @@ func (c *Client) doUpdate(ctx context.Context, namespace string) (err error) {
 		)
 	}
 	c.value.Set(j)
+	var content *gjson.Json
+	if content, err = gjson.LoadContent([]byte(cm.Data[c.config.DataItem])); err != nil {
+		return gerror.Wrapf(
+			err,
+			`parse config map item from %s[%s] failed`, c.config.ConfigMap, c.config.DataItem,
+		)
+	}
+	adapterCtx := NewAdapterCtx(ctx).WithOperation(gcfg.OperationUpdate).WithNamespace(namespace).WithConfigMap(c.config.ConfigMap).WithDataItem(c.config.DataItem).WithContent(content)
+	c.notifyWatchers(adapterCtx.Ctx)
 	return nil
 }
 
+// doWatch watches the configmap content.
 func (c *Client) doWatch(ctx context.Context, namespace string) (err error) {
 	if !c.config.Watch {
 		return nil
@@ -168,6 +187,7 @@ func (c *Client) doWatch(ctx context.Context, namespace string) (err error) {
 	return nil
 }
 
+// startAsynchronousWatch starts an asynchronous watch for the specified configuration file.
 func (c *Client) startAsynchronousWatch(ctx context.Context, namespace string, watchHandler watch.Interface) {
 	for {
 		event := <-watchHandler.ResultChan()
@@ -176,4 +196,24 @@ func (c *Client) startAsynchronousWatch(ctx context.Context, namespace string, w
 			_ = c.doUpdate(ctx, namespace)
 		}
 	}
+}
+
+// AddWatcher adds a watcher for the specified configuration file.
+func (c *Client) AddWatcher(name string, f func(ctx context.Context)) {
+	c.watchers.Add(name, f)
+}
+
+// RemoveWatcher removes the watcher for the specified configuration file.
+func (c *Client) RemoveWatcher(name string) {
+	c.watchers.Remove(name)
+}
+
+// GetWatcherNames returns all watcher names.
+func (c *Client) GetWatcherNames() []string {
+	return c.watchers.GetNames()
+}
+
+// notifyWatchers notifies all watchers.
+func (c *Client) notifyWatchers(ctx context.Context) {
+	c.watchers.Notify(ctx)
 }
