@@ -40,18 +40,21 @@ func (v *Var) MapStrVar(option ...MapOption) map[string]*Var {
 }
 
 // MapDeep converts and returns `v` as map[string]any recursively.
+//
 // Deprecated: used Map instead.
 func (v *Var) MapDeep(tags ...string) map[string]any {
 	return gconv.MapDeep(v.Val(), tags...)
 }
 
 // MapStrStrDeep converts and returns `v` as map[string]string recursively.
+//
 // Deprecated: used MapStrStr instead.
 func (v *Var) MapStrStrDeep(tags ...string) map[string]string {
 	return gconv.MapStrStrDeep(v.Val(), tags...)
 }
 
 // MapStrVarDeep converts and returns `v` as map[string]*Var recursively.
+//
 // Deprecated: used MapStrVar instead.
 func (v *Var) MapStrVarDeep(tags ...string) map[string]*Var {
 	m := v.MapDeep(tags...)
@@ -72,6 +75,7 @@ func (v *Var) Maps(option ...MapOption) []map[string]any {
 }
 
 // MapsDeep converts `value` to []map[string]any recursively.
+//
 // Deprecated: used Maps instead.
 func (v *Var) MapsDeep(tags ...string) []map[string]any {
 	return gconv.MapsDeep(v.Val(), tags...)

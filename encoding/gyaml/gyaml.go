@@ -57,7 +57,12 @@ func Decode(content []byte) (map[string]any, error) {
 		err = gerror.Wrap(err, `yaml.Unmarshal failed`)
 		return nil, err
 	}
-	return gconv.MapDeep(result), nil
+	return gconv.Map(result,
+		gconv.MapOption{
+			Deep:            true,
+			OmitEmpty:       false,
+			ContinueOnError: true,
+		}), nil
 }
 
 // DecodeTo parses `content` into `result`.
