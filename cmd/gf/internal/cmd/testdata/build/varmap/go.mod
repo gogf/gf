@@ -4,7 +4,7 @@ go 1.23.0
 
 toolchain go1.24.6
 
-require github.com/gogf/gf/v2 v2.9.4
+require github.com/gogf/gf/v2 v2.9.5
 
 require (
 	go.opentelemetry.io/otel v1.38.0 // indirect
