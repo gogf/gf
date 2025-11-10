@@ -31,6 +31,7 @@ func NewWithOption(option Option) error {
 }
 
 // NewOption creates and returns a custom error with Option.
+//
 // Deprecated: use NewWithOption instead.
 func NewOption(option Option) error {
 	return NewWithOption(option)
