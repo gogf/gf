@@ -26,6 +26,8 @@ for file in `find ${workdir} -name go.mod`; do
     fi
 
     cd $goModPath
+    # Remove indirect dependencies
+    sed -i '/\/\/ indirect/d' go.mod
     go mod tidy
     # Remove toolchain line if exists
     sed -i '' '/^toolchain/d' go.mod

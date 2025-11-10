@@ -80,6 +80,8 @@ for file in `find ${workdir} -name go.mod`; do
         go mod edit -replace github.com/gogf/gf/contrib/drivers/pgsql/v2=../../contrib/drivers/pgsql
         go mod edit -replace github.com/gogf/gf/contrib/drivers/sqlite/v2=../../contrib/drivers/sqlite
     fi
+    # Remove indirect dependencies
+    sed -i '/\/\/ indirect/d' go.mod
     go mod tidy
     # Remove toolchain line if exists
     $SED_INPLACE '/^toolchain/d' go.mod
@@ -88,6 +90,8 @@ for file in `find ${workdir} -name go.mod`; do
     # it may not be possible to successfully upgrade. Please confirm before submitting the code
     go list -f "{{if and (not .Indirect) (not .Main)}}{{.Path}}@${newVersion}{{end}}" -m all | grep "^github.com/gogf/gf"
     go list -f "{{if and (not .Indirect) (not .Main)}}{{.Path}}@${newVersion}{{end}}" -m all | grep "^github.com/gogf/gf" | xargs -L1 go get -v 
+    # Remove indirect dependencies
+    sed -i '/\/\/ indirect/d' go.mod
     go mod tidy
     # Remove toolchain line if exists
     $SED_INPLACE '/^toolchain/d' go.mod
