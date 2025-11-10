@@ -154,6 +154,7 @@ func NewConverter() Converter {
 }
 
 // RegisterConverter registers custom converter.
+//
 // Deprecated: use RegisterTypeConverterFunc instead for clear
 func RegisterConverter(fn any) (err error) {
 	return RegisterTypeConverterFunc(fn)

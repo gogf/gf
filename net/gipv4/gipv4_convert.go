@@ -47,12 +47,14 @@ func LongToIpLittleEndian(long uint32) string {
 }
 
 // Ip2long converts ip address to an uint32 integer.
+//
 // Deprecated: Use IpToLongBigEndian instead.
 func Ip2long(ip string) uint32 {
 	return IpToLongBigEndian(ip)
 }
 
 // Long2ip converts an uint32 integer ip address to its string type address.
+//
 // Deprecated: Use LongToIpBigEndian instead.
 func Long2ip(long uint32) string {
 	return LongToIpBigEndian(long)

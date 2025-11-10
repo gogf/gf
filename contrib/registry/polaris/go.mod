@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/registry/polaris/v2
 go 1.23.0
 
 require (
-	github.com/gogf/gf/v2 v2.9.4
+	github.com/gogf/gf/v2 v2.9.5
 	github.com/polarismesh/polaris-go v1.6.1
 )
 
