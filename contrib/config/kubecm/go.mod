@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/config/kubecm/v2
 go 1.24.0
 
 require (
-	github.com/gogf/gf/v2 v2.9.4
+	github.com/gogf/gf/v2 v2.9.5
 	k8s.io/api v0.33.4
 	k8s.io/apimachinery v0.33.4
 	k8s.io/client-go v0.33.4
