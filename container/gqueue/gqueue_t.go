@@ -96,6 +96,7 @@ func (q *TQueue[T]) Len() (length int64) {
 }
 
 // Size is alias of Len.
+//
 // Deprecated: use Len instead.
 func (q *TQueue[T]) Size() int64 {
 	return q.Len()
