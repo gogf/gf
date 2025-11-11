@@ -63,6 +63,7 @@ func (q *Queue) Len() (length int64) {
 }
 
 // Size is alias of Len.
+//
 // Deprecated: use Len instead.
 func (q *Queue) Size() int64 {
 	return q.Len()
