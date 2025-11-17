@@ -37,8 +37,6 @@ for file in `find . -name go.mod`; do
             cd $dirpath
             go mod tidy
             go build ./...
-            # No space left on device error sometimes occurs in CI pipelines, so clean the cache before tests.
-            go clean -x
             cd -
             continue 1
         fi
@@ -49,11 +47,14 @@ for file in `find . -name go.mod`; do
         continue 1
     fi
 
+    if [[ $dirpath = "." ]]; then
+        # No space left on device error sometimes occurs in CI pipelines, so clean the cache before tests.
+        go clean -cache
+    fi
+
     cd $dirpath
     go mod tidy
     go build ./...
-    # No space left on device error sometimes occurs in CI pipelines, so clean the cache before tests.
-    go clean -x
 
     # test with coverage
     if [ "${coverage}" = "coverage" ]; then
