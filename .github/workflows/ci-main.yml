@@ -239,6 +239,12 @@ jobs:
         go-version: ${{ matrix.go-version }}
         cache-dependency-path: '**/go.sum'
 
+    - name: Modify GOPATH
+      run: |
+        mkdir -p /mnt/go
+        go env -w GOPATH=/mnt/go
+        echo "GOPATH=$(go env GOPATH)"
+
     - name: Install Protoc
       uses: arduino/setup-protoc@v3
       with:
