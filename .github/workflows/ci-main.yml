@@ -239,7 +239,6 @@ jobs:
         go-version: ${{ matrix.go-version }}
         cache-dependency-path: '**/go.sum'
 
-# docker image prune -a
     - name: Install Protoc
       uses: arduino/setup-protoc@v3
       with:
