@@ -692,3 +692,68 @@ func Test_ConvertSliceString(t *testing.T) {
 		t.Assert(len(user2.FavoriteMovie), 0)
 	})
 }
+
+func Test_ConvertSliceFloat64(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	type Args struct {
+		NumericValues []float64 `orm:"numeric_values"`
+		DecimalValues []float64 `orm:"decimal_values"`
+	}
+	type User struct {
+		Id         int         `orm:"id"`
+		Passport   string      `orm:"passport"`
+		Password   string      `json:"password"`
+		NickName   string      `json:"nickname"`
+		CreateTime *gtime.Time `json:"create_time"`
+		Args
+	}
+
+	tests := []struct {
+		name string
+		args Args
+	}{
+		{
+			name: "nil",
+			args: Args{
+				NumericValues: nil,
+				DecimalValues: nil,
+			},
+		},
+		{
+			name: "not nil",
+			args: Args{
+				NumericValues: []float64{1.1, 2.2, 3.3},
+				DecimalValues: []float64{1.1, 2.2, 3.3},
+			},
+		},
+		{
+			name: "not empty",
+			args: Args{
+				NumericValues: []float64{},
+				DecimalValues: []float64{},
+			},
+		},
+	}
+	now := gtime.New(CreateTime)
+	for i, tt := range tests {
+		gtest.C(t, func(t *gtest.T) {
+			user := User{
+				Id:         i + 1,
+				Passport:   "",
+				Password:   "",
+				NickName:   "",
+				CreateTime: now,
+				Args:       tt.args,
+			}
+
+			_, err := db.Model(table).OmitNilData().Insert(user)
+			t.AssertNil(err)
+			var got Args
+			err = db.Model(table).Where("id", user.Id).Limit(1).Scan(&got)
+			t.AssertNil(err)
+			t.AssertEQ(tt.args, got)
+		})
+	}
+}
