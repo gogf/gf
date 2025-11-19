@@ -454,11 +454,11 @@ func (a *StrArray) Slice() []string {
 	return array
 }
 
-// Interfaces returns current array as []interface{}.
-func (a *StrArray) Interfaces() []interface{} {
+// Interfaces returns current array as []any.
+func (a *StrArray) Interfaces() []any {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	array := make([]interface{}, len(a.array))
+	array := make([]any, len(a.array))
 	for k, v := range a.array {
 		array[k] = v
 	}
@@ -573,7 +573,7 @@ func (a *StrArray) RLockFunc(f func(array []string)) *StrArray {
 // The parameter `array` can be any garray or slice type.
 // The difference between Merge and Append is Append supports only specified slice type,
 // but Merge supports more parameter types.
-func (a *StrArray) Merge(array interface{}) *StrArray {
+func (a *StrArray) Merge(array any) *StrArray {
 	return a.Append(gconv.Strings(array)...)
 }
 
@@ -787,7 +787,7 @@ func (a *StrArray) UnmarshalJSON(b []byte) error {
 }
 
 // UnmarshalValue is an interface implement which sets any type of value for array.
-func (a *StrArray) UnmarshalValue(value interface{}) error {
+func (a *StrArray) UnmarshalValue(value any) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	switch value.(type) {
@@ -845,7 +845,7 @@ func (a *StrArray) IsEmpty() bool {
 }
 
 // DeepCopy implements interface for deep copy of current type.
-func (a *StrArray) DeepCopy() interface{} {
+func (a *StrArray) DeepCopy() any {
 	if a == nil {
 		return nil
 	}

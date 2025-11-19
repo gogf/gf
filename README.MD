@@ -4,6 +4,8 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/gogf/gf/v2.svg)](https://pkg.go.dev/github.com/gogf/gf/v2)
 [![GoFrame CI](https://github.com/gogf/gf/actions/workflows/ci-main.yml/badge.svg)](https://github.com/gogf/gf/actions/workflows/ci-main.yml)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/gogf/gf/badge)](https://scorecard.dev/viewer/?uri=github.com/gogf/gf)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/9233/badge)](https://bestpractices.coreinfrastructure.org/projects/9233)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gogf/gf/v2)](https://goreportcard.com/report/github.com/gogf/gf/v2)
 [![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf)
 [![Production Ready](https://img.shields.io/badge/production-ready-blue.svg?style=flat)](https://github.com/gogf/gf)
@@ -36,7 +38,7 @@ A powerful framework for faster, easier, and more efficient project development.
 💖 [Thanks to all the contributors who made GoFrame possible](https://github.com/gogf/gf/graphs/contributors) 💖
 
 <a href="https://github.com/gogf/gf/graphs/contributors">
-<img src="https://goframe.org/img/contributors.svg?version=v2.9.0" alt="goframe contributors"/>
+<img src="https://goframe.org/img/contributors.svg?version=v2.9.5" alt="goframe contributors"/>
 </a>
 
 # License

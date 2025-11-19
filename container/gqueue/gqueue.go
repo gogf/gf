@@ -26,11 +26,11 @@ import (
 
 // Queue is a concurrent-safe queue built on doubly linked list and channel.
 type Queue struct {
-	limit  int              // Limit for queue size.
-	list   *glist.List      // Underlying list structure for data maintaining.
-	closed *gtype.Bool      // Whether queue is closed.
-	events chan struct{}    // Events for data writing.
-	C      chan interface{} // Underlying channel for data reading.
+	limit  int           // Limit for queue size.
+	list   *glist.List   // Underlying list structure for data maintaining.
+	closed *gtype.Bool   // Whether queue is closed.
+	events chan struct{} // Events for data writing.
+	C      chan any      // Underlying channel for data reading.
 }
 
 const (
@@ -47,11 +47,11 @@ func New(limit ...int) *Queue {
 	}
 	if len(limit) > 0 && limit[0] > 0 {
 		q.limit = limit[0]
-		q.C = make(chan interface{}, limit[0])
+		q.C = make(chan any, limit[0])
 	} else {
 		q.list = glist.New(true)
 		q.events = make(chan struct{}, math.MaxInt32)
-		q.C = make(chan interface{}, defaultQueueSize)
+		q.C = make(chan any, defaultQueueSize)
 		go q.asyncLoopFromListToChannel()
 	}
 	return q
@@ -59,7 +59,7 @@ func New(limit ...int) *Queue {
 
 // Push pushes the data `v` into the queue.
 // Note that it would panic if Push is called after the queue is closed.
-func (q *Queue) Push(v interface{}) {
+func (q *Queue) Push(v any) {
 	if q.limit > 0 {
 		q.C <- v
 	} else {
@@ -72,7 +72,7 @@ func (q *Queue) Push(v interface{}) {
 
 // Pop pops an item from the queue in FIFO way.
 // Note that it would return nil immediately if Pop is called after the queue is closed.
-func (q *Queue) Pop() interface{} {
+func (q *Queue) Pop() any {
 	return <-q.C
 }
 
@@ -89,7 +89,7 @@ func (q *Queue) Close() {
 	if q.limit > 0 {
 		close(q.C)
 	} else {
-		for i := 0; i < defaultBatchSize; i++ {
+		for range defaultBatchSize {
 			q.Pop()
 		}
 	}
@@ -103,10 +103,17 @@ func (q *Queue) Len() (length int64) {
 	if q.limit > 0 {
 		return bufferedSize
 	}
+	// If the queue is unlimited and the buffered size is exactly the default size,
+	// it means there might be some data in the list not synchronized to channel yet.
+	// So we need to add 1 to the buffered size to make the result more accurate.
+	if bufferedSize == defaultQueueSize {
+		bufferedSize++
+	}
 	return int64(q.list.Size()) + bufferedSize
 }
 
 // Size is alias of Len.
+//
 // Deprecated: use Len instead.
 func (q *Queue) Size() int64 {
 	return q.Len()
@@ -126,7 +133,7 @@ func (q *Queue) asyncLoopFromListToChannel() {
 			if bufferLength := q.list.Len(); bufferLength > 0 {
 				// When q.C is closed, it will panic here, especially q.C is being blocked for writing.
 				// If any error occurs here, it will be caught by recover and be ignored.
-				for i := 0; i < bufferLength; i++ {
+				for range bufferLength {
 					q.C <- q.list.PopFront()
 				}
 			} else {

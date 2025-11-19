@@ -11,6 +11,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/renderer"
+	"github.com/olekukonko/tablewriter/tw"
 	"golang.org/x/mod/modfile"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -44,8 +47,10 @@ type (
 		JsonCase           string   `name:"jsonCase"            short:"j"  brief:"{CGenDaoBriefJsonCase}" d:"CamelLower"`
 		ImportPrefix       string   `name:"importPrefix"        short:"i"  brief:"{CGenDaoBriefImportPrefix}"`
 		DaoPath            string   `name:"daoPath"             short:"d"  brief:"{CGenDaoBriefDaoPath}" d:"dao"`
+		TablePath          string   `name:"tablePath"           short:"tp" brief:"{CGenDaoBriefTablePath}" d:"table"`
 		DoPath             string   `name:"doPath"              short:"o"  brief:"{CGenDaoBriefDoPath}" d:"model/do"`
 		EntityPath         string   `name:"entityPath"          short:"e"  brief:"{CGenDaoBriefEntityPath}" d:"model/entity"`
+		TplDaoTablePath    string   `name:"tplDaoTablePath"     short:"t0" brief:"{CGenDaoBriefTplDaoTablePath}"`
 		TplDaoIndexPath    string   `name:"tplDaoIndexPath"     short:"t1" brief:"{CGenDaoBriefTplDaoIndexPath}"`
 		TplDaoInternalPath string   `name:"tplDaoInternalPath"  short:"t2" brief:"{CGenDaoBriefTplDaoInternalPath}"`
 		TplDaoDoPath       string   `name:"tplDaoDoPath"        short:"t3" brief:"{CGenDaoBriefTplDaoDoPathPath}"`
@@ -58,6 +63,7 @@ type (
 		NoJsonTag          bool     `name:"noJsonTag"           short:"k"  brief:"{CGenDaoBriefNoJsonTag}" orphan:"true"`
 		NoModelComment     bool     `name:"noModelComment"      short:"m"  brief:"{CGenDaoBriefNoModelComment}" orphan:"true"`
 		Clear              bool     `name:"clear"               short:"a"  brief:"{CGenDaoBriefClear}" orphan:"true"`
+		GenTable           bool     `name:"genTable"            short:"gt" brief:"{CGenDaoBriefGenTable}" orphan:"true"`
 
 		TypeMapping  map[DBFieldTypeName]CustomAttributeType  `name:"typeMapping"  short:"y"  brief:"{CGenDaoBriefTypeMapping}"  orphan:"true"`
 		FieldMapping map[DBTableFieldName]CustomAttributeType `name:"fieldMapping" short:"fm" brief:"{CGenDaoBriefFieldMapping}" orphan:"true"`
@@ -99,6 +105,20 @@ var (
 			Type: "float64",
 		},
 	}
+
+	// tablewriter Options
+	twRenderer = tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
+		Borders: tw.Border{Top: tw.Off, Bottom: tw.Off, Left: tw.Off, Right: tw.Off},
+		Settings: tw.Settings{
+			Separators: tw.Separators{BetweenRows: tw.Off, BetweenColumns: tw.Off},
+		},
+		Symbols: tw.NewSymbols(tw.StyleASCII),
+	}))
+	twConfig = tablewriter.WithConfig(tablewriter.Config{
+		Row: tw.CellConfig{
+			Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone},
+		},
+	})
 )
 
 func (c CGenDao) Dao(ctx context.Context, in CGenDaoInput) (out *CGenDaoOutput, err error) {
@@ -173,8 +193,29 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 	// Table excluding.
 	if in.TablesEx != "" {
 		array := garray.NewStrArrayFrom(tableNames)
-		for _, v := range gstr.SplitAndTrim(in.TablesEx, ",") {
-			array.RemoveValue(v)
+		for _, p := range gstr.SplitAndTrim(in.TablesEx, ",") {
+			if gstr.Contains(p, "*") || gstr.Contains(p, "?") {
+				p = gstr.ReplaceByMap(p, map[string]string{
+					"\r": "",
+					"\n": "",
+				})
+				p = gstr.ReplaceByMap(p, map[string]string{
+					"*": "\r",
+					"?": "\n",
+				})
+				p = gregex.Quote(p)
+				p = gstr.ReplaceByMap(p, map[string]string{
+					"\r": ".*",
+					"\n": ".",
+				})
+				for _, v := range array.Clone().Slice() {
+					if gregex.IsMatchString(p, v) {
+						array.RemoveValue(v)
+					}
+				}
+			} else {
+				array.RemoveValue(p)
+			}
 		}
 		tableNames = array.Slice()
 	}
@@ -219,18 +260,30 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 					tableNames[i] = ""
 					continue
 				}
-				shardingNewTableSet.Add(newTableName)
+				// Add prefix to sharding table name, if not, the isSharding check would not match.
+				shardingNewTableSet.Add(in.Prefix + newTableName)
 			}
 		}
 		newTableName = in.Prefix + newTableName
-		newTableNames[i] = newTableName
+		if tableNames[i] != "" {
+			// If shardingNewTableSet contains newTableName (tableName is empty), it should not be added to tableNames, make it empty and filter later.
+			newTableNames[i] = newTableName
+		}
 	}
 	tableNames = garray.NewStrArrayFrom(tableNames).FilterEmpty().Slice()
-
+	newTableNames = garray.NewStrArrayFrom(newTableNames).FilterEmpty().Slice() // Filter empty table names. make sure that newTableNames and tableNames have the same length.
 	in.genItems.Scale()
 
 	// Dao: index and internal.
 	generateDao(ctx, CGenDaoInternalInput{
+		CGenDaoInput:     in,
+		DB:               db,
+		TableNames:       tableNames,
+		NewTableNames:    newTableNames,
+		ShardingTableSet: shardingNewTableSet,
+	})
+	// Table: table fields.
+	generateTable(ctx, CGenDaoInternalInput{
 		CGenDaoInput:     in,
 		DB:               db,
 		TableNames:       tableNames,

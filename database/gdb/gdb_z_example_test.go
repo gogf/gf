@@ -13,7 +13,8 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 )
 
-func ExampleTransaction() {
+// ExampleDB_Transaction demonstrates the usage of transaction in gdb.
+func ExampleDB_Transaction() {
 	g.DB().Transaction(context.TODO(), func(ctx context.Context, tx gdb.TX) error {
 		// user
 		result, err := tx.Insert("user", g.Map{

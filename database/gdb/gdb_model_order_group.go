@@ -22,7 +22,7 @@ import (
 // Order("id desc", "name asc")
 // Order("id desc").Order("name asc")
 // Order(gdb.Raw("field(id, 3,1,2)")).
-func (m *Model) Order(orderBy ...interface{}) *Model {
+func (m *Model) Order(orderBy ...any) *Model {
 	if len(orderBy) == 0 {
 		return m
 	}

@@ -22,7 +22,7 @@ func ExampleNew() {
 	// Print size.
 	fmt.Println(m.Size())
 
-	addMap := make(map[interface{}]interface{})
+	addMap := make(map[any]any)
 	addMap["key2"] = "val2"
 	addMap["key3"] = "val3"
 	addMap[1] = 1
@@ -46,7 +46,7 @@ func ExampleNew() {
 	fmt.Println(m.Keys())
 
 	// Batch remove keys.
-	m.Removes([]interface{}{"key1", 1})
+	m.Removes([]any{"key1", 1})
 	fmt.Println(m.Keys())
 
 	// Contains checks whether a key exists.
