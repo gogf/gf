@@ -41,10 +41,10 @@ for file in `find . -name go.mod`; do
     dirpath=$(dirname $file)
     echo "Processing: $dirpath"
 
-    # Only process kubecm and examples directories
+    # Only process examples and kubecm directories  
 
     # Process examples directory (only build, no tests)
-    if [[ $dirpath =~ "/examples" ]]; then
+    if [[ $dirpath =~ "/examples/" ]]; then
         echo "  the examples directory only needs to be built, not unit tests."
         cd $dirpath
         go mod tidy

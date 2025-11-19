@@ -24,7 +24,7 @@ on:
     inputs:
       debug:
         type: boolean
-        description: 'Enable TMate Debug'
+        description: 'Enable tmate Debug'
         required: false
         default: false
 
@@ -214,7 +214,7 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v5
 
-    - name: Setup TMate Session
+    - name: Setup tmate Session
       uses: mxschmitt/action-tmate@v3
       if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug }}
       with:
