@@ -9,6 +9,7 @@ package garray
 import (
 	"bytes"
 	"strings"
+	"sync"
 
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -21,14 +22,17 @@ import (
 // when its initialization and cannot be changed then.
 type SortedStrArray struct {
 	*SortedTArray[string]
+	once sync.Once
 }
 
 // lazyInit lazily initializes the array.
 func (a *SortedStrArray) lazyInit() {
-	if a.SortedTArray == nil {
-		a.SortedTArray = NewSortedTArraySize(0, defaultComparatorStr, false)
-		a.SetSorter(quickSortStr)
-	}
+	a.once.Do(func() {
+		if a.SortedTArray == nil {
+			a.SortedTArray = NewSortedTArraySize(0, defaultComparatorStr, false)
+			a.SetSorter(quickSortStr)
+		}
+	})
 }
 
 // NewSortedStrArray creates and returns an empty sorted array.
