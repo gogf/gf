@@ -77,6 +77,8 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 	case
 		"_varchar", "_text":
 		return gdb.LocalTypeStringSlice, nil
+	case "_numeric", "_decimal":
+		return gdb.LocalTypeFloat64Slice, nil
 
 	default:
 		return d.Core.CheckLocalTypeForField(ctx, fieldType, fieldValue)
@@ -130,6 +132,13 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 		}
 		return []string(result), nil
 
+	// Float64 slice.
+	case "_numeric", "_decimal":
+		var result pq.Float64Array
+		if err := result.Scan(fieldValue); err != nil {
+			return nil, err
+		}
+		return []float64(result), nil
 	default:
 		return d.Core.ConvertValueForLocal(ctx, fieldType, fieldValue)
 	}
