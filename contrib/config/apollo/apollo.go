@@ -9,7 +9,6 @@ package apollo
 
 import (
 	"context"
-	"strings"
 
 	"github.com/apolloconfig/agollo/v4"
 	apolloConfig "github.com/apolloconfig/agollo/v4/env/config"
@@ -20,6 +19,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -103,7 +103,7 @@ func (c *Client) Available(ctx context.Context, resource ...string) (ok bool) {
 		return true
 	}
 
-	namespaces := strings.Split(c.config.NamespaceName, apolloNamespaceDelimiter)
+	namespaces := gstr.SplitAndTrim(c.config.NamespaceName, apolloNamespaceDelimiter)
 	if len(resource) > 0 {
 		namespaces = resource
 	}
@@ -156,7 +156,7 @@ func (c *Client) updateLocalValue(ctx context.Context) (err error) {
 	j := gjson.New(nil)
 	content := gjson.New(nil, true)
 
-	for _, namespace := range strings.Split(c.config.NamespaceName, apolloNamespaceDelimiter) {
+	for _, namespace := range gstr.SplitAndTrim(c.config.NamespaceName, apolloNamespaceDelimiter) {
 		cache := c.client.GetConfigCache(namespace)
 		cache.Range(func(key, value any) bool {
 			err = j.Set(gconv.String(key), value)
@@ -164,15 +164,9 @@ func (c *Client) updateLocalValue(ctx context.Context) (err error) {
 				return false
 			}
 			err = content.Set(gconv.String(key), value)
-			if err != nil {
-				return false
-			}
-			return true
+			return err == nil
 		})
-
-		if err != nil {
-			break
-		}
+		cache.Clear()
 	}
 
 	if err == nil {
