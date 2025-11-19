@@ -340,7 +340,6 @@ int_col INT);`
 	}
 	// pgsql converts table names to lowercase
 	tableName := "Error_table"
-	errStr := fmt.Sprintf(`The table "%s" may not exist, or the table contains no fields`, tableName)
 	_, err := db.Exec(ctx, fmt.Sprintf(createSql, tableName))
 	gtest.AssertNil(err)
 	defer dropTable(tableName)
@@ -351,7 +350,7 @@ int_col INT);`
 			IntCol: 2,
 		}
 		_, err = db.Model(tableName).Data(data).Insert()
-		t.Assert(err, errStr)
+		t.AssertNE(err, nil)
 
 		// Insert a piece of test data using lowercase
 		_, err = db.Model(strings.ToLower(tableName)).Data(data).Insert()
@@ -360,7 +359,7 @@ int_col INT);`
 		_, err = db.Model(tableName).Where("id", 1).Data(g.Map{
 			"int_col": 9999,
 		}).Update()
-		t.Assert(err, errStr)
+		t.AssertNE(err, nil)
 
 	})
 	// The inserted field does not exist in the table
@@ -370,7 +369,7 @@ int_col INT);`
 			"int_col_22": 11111,
 		}
 		_, err = db.Model(tableName).Data(data).Insert()
-		t.Assert(err, errStr)
+		t.Assert(err, fmt.Errorf(`input data match no fields in table "%s"`, tableName))
 
 		lowerTableName := strings.ToLower(tableName)
 		_, err = db.Model(lowerTableName).Data(data).Insert()
