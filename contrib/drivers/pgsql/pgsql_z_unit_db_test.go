@@ -339,6 +339,7 @@ int_col INT);`
 		IntCol int64
 	}
 	// pgsql converts table names to lowercase
+	// mark: [c.oid = '%s'::regclass] is not case-sensitive
 	tableName := "Error_table"
 	_, err := db.Exec(ctx, fmt.Sprintf(createSql, tableName))
 	gtest.AssertNil(err)
