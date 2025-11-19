@@ -303,6 +303,8 @@ func Test_DB_Tables(t *testing.T) {
 			createTable(v)
 		}
 
+		defer dropTable(tables...)
+
 		result, err := db.Tables(ctx)
 		gtest.AssertNil(err)
 
