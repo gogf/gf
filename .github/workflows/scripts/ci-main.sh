@@ -40,9 +40,6 @@ for file in `find . -name go.mod`; do
     if [[ $dirpath = "." ]]; then
         # No space left on device error sometimes occurs in CI pipelines, so clean the cache before tests.
         go clean -cache
-        # docker stop $(docker ps -aq)
-        # docker rm $(docker ps -aq)
-        # docker rmi -f $(docker images -aq)
     fi
 
     cd $dirpath

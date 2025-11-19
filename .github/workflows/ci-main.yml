@@ -216,7 +216,7 @@ jobs:
 
     - name: Setup TMate Session
       uses: mxschmitt/action-tmate@v3
-      # if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug }}
+      if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug }}
       with:
         detached: true
         limit-access-to-actor: false
