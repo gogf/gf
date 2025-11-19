@@ -2,6 +2,12 @@
 
 coverage=$1
 
+# update code of submodules
+git clone https://github.com/gogf/examples
+
+# update go.mod in examples directory to replace github.com/gogf/gf packages with local directory
+bash .github/workflows/scripts/replace_examples_gomod.sh
+
 # Function to compare version numbers
 version_compare() {
     local ver1=$1
@@ -35,7 +41,19 @@ for file in `find . -name go.mod`; do
     dirpath=$(dirname $file)
     echo "Processing: $dirpath"
 
-    # Only process kubecm directory, skip others
+    # Only process examples and kubecm directories  
+
+    # Process examples directory (only build, no tests)
+    if [[ $dirpath =~ "/examples/" ]]; then
+        echo "  the examples directory only needs to be built, not unit tests."
+        cd $dirpath
+        go mod tidy
+        go build ./...
+        cd -
+        continue 1
+    fi
+    
+    # Process kubecm directory
     if [ "kubecm" != $(basename $dirpath) ]; then
         echo "  Skipping: not kubecm directory"
         continue
