@@ -19,6 +19,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -26,6 +27,10 @@ var (
 	// Compile-time checking for interface implementation.
 	_ gcfg.Adapter        = (*Client)(nil)
 	_ gcfg.WatcherAdapter = (*Client)(nil)
+)
+
+const (
+	apolloNamespaceDelimiter = ","
 )
 
 // Config is the configuration object for apollo client.
@@ -97,11 +102,19 @@ func (c *Client) Available(ctx context.Context, resource ...string) (ok bool) {
 	if len(resource) == 0 && !c.value.IsNil() {
 		return true
 	}
-	namespace := c.config.NamespaceName
+
+	namespaces := gstr.SplitAndTrim(c.config.NamespaceName, apolloNamespaceDelimiter)
 	if len(resource) > 0 {
-		namespace = resource[0]
+		namespaces = resource
 	}
-	return c.client.GetConfig(namespace) != nil
+
+	for _, namespace := range namespaces {
+		if c.client.GetConfig(namespace) == nil {
+			return false
+		}
+	}
+
+	return true
 }
 
 // Get retrieves and returns value by specified `pattern` in current resource.
@@ -142,19 +155,20 @@ func (c *Client) OnNewestChange(event *storage.FullChangeEvent) {
 func (c *Client) updateLocalValue(ctx context.Context) (err error) {
 	j := gjson.New(nil)
 	content := gjson.New(nil, true)
-	cache := c.client.GetConfigCache(c.config.NamespaceName)
-	cache.Range(func(key, value any) bool {
-		err = j.Set(gconv.String(key), value)
-		if err != nil {
-			return false
-		}
-		err = content.Set(gconv.String(key), value)
-		if err != nil {
-			return false
-		}
-		return true
-	})
-	cache.Clear()
+
+	for _, namespace := range gstr.SplitAndTrim(c.config.NamespaceName, apolloNamespaceDelimiter) {
+		cache := c.client.GetConfigCache(namespace)
+		cache.Range(func(key, value any) bool {
+			err = j.Set(gconv.String(key), value)
+			if err != nil {
+				return false
+			}
+			err = content.Set(gconv.String(key), value)
+			return err == nil
+		})
+		cache.Clear()
+	}
+
 	if err == nil {
 		c.value.Set(j)
 		adapterCtx := NewAdapterCtx(ctx).WithOperation(gcfg.OperationUpdate).WithNamespace(c.config.NamespaceName).
