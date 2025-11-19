@@ -63,14 +63,17 @@ func Test_TArray_Basic(t *testing.T) {
 		v, ok = array.Remove(0) // 1, 2, 3
 		t.Assert(v, 100)
 		t.Assert(ok, true)
+		t.Assert(array.Slice(), []int{1, 2, 3})
 
 		v, ok = array.Remove(-1)
 		t.Assert(v, 0)
 		t.Assert(ok, false)
+		t.Assert(array.Slice(), []int{1, 2, 3})
 
 		v, ok = array.Remove(100000)
 		t.Assert(v, 0)
 		t.Assert(ok, false)
+		t.Assert(array.Slice(), []int{1, 2, 3})
 
 		v, ok = array2.Remove(3) // 0 1 2
 		t.Assert(v, 3)
@@ -81,14 +84,16 @@ func Test_TArray_Basic(t *testing.T) {
 		t.Assert(ok, true)
 
 		t.Assert(array.Contains(100), false)
-		array.Append(4) // 1, 2, 3 ,4
+		array.Append(4) // 2, 2, 3, 4
+		t.Assert(array.Slice(), []int{2, 2, 3, 4})
 		t.Assert(array.Len(), 4)
-		array.InsertBefore(0, 100) // 100, 1, 2, 3, 4
-		array.InsertAfter(0, 200)  // 100, 200, 1, 2, 3, 4
-		t.Assert(array.Slice(), []int{100, 200, 1, 2, 3, 4})
+		array.InsertBefore(0, 100) // 100, 2, 2, 3, 4
+		t.Assert(array.Slice(), []int{100, 2, 2, 3, 4})
+		array.InsertAfter(0, 200) // 100, 200, 2, 2, 3, 4
+		t.Assert(array.Slice(), []int{100, 200, 2, 2, 3, 4})
 		array.InsertBefore(5, 300)
 		array.InsertAfter(6, 400)
-		t.Assert(array.Slice(), []int{100, 200, 1, 2, 3, 300, 4, 400})
+		t.Assert(array.Slice(), []int{100, 200, 2, 2, 3, 300, 4, 400})
 		t.Assert(array.Clear().Len(), 0)
 		err = array.InsertBefore(99, 9900)
 		t.AssertNE(err, nil)
@@ -588,15 +593,15 @@ func TestTArray_RLockFunc(t *testing.T) {
 		ch1 := make(chan int64, 3)
 		ch2 := make(chan int64, 1)
 		// go1
-		go a1.RLockFunc(func(n1 []any) { // 读锁
-			time.Sleep(2 * time.Second) // 暂停1秒
+		go a1.RLockFunc(func(n1 []any) { // read lock
+			time.Sleep(2 * time.Second) // sleep 2 s
 			n1[2] = "g"
 			ch2 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
 		})
 
 		// go2
 		go func() {
-			time.Sleep(100 * time.Millisecond) // 故意暂停0.01秒,等go1执行锁后，再开始执行.
+			time.Sleep(100 * time.Millisecond) // wait go1 do line lock for 0.01s. Then do.
 			ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
 			a1.Len()
 			ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
@@ -604,11 +609,11 @@ func TestTArray_RLockFunc(t *testing.T) {
 
 		t1 := <-ch1
 		t2 := <-ch1
-		<-ch2 // 等待go1完成
+		<-ch2 // wait for go1 done.
 
-		// 防止ci抖动,以豪秒为单位
-		t.AssertLT(t2-t1, 20) // go1加的读锁，所go2读的时候，并没有阻塞。
-		t.Assert(a1.Contains("g"), false)
+		//  Prevent CI jitter, in milliseconds.
+		t.AssertLT(t2-t1, 20) // Go1 acquired a read lock, so when Go2 reads, it is not blocked.
+		t.Assert(a1.Contains("g"), true)
 	})
 }
 
