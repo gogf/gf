@@ -8,7 +8,6 @@ package clickhouse
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -166,22 +165,22 @@ func createClickhouseExampleTable(connect gdb.DB) error {
 }
 
 func dropClickhouseTableVisits(conn gdb.DB) {
-	sqlStr := fmt.Sprintf("DROP TABLE IF EXISTS `visits`")
+	sqlStr := "DROP TABLE IF EXISTS `visits`"
 	_, _ = conn.Exec(context.Background(), sqlStr)
 }
 
 func dropClickhouseTableDim(conn gdb.DB) {
-	sqlStr := fmt.Sprintf("DROP TABLE IF EXISTS `dim`")
+	sqlStr := "DROP TABLE IF EXISTS `dim`"
 	_, _ = conn.Exec(context.Background(), sqlStr)
 }
 
 func dropClickhouseTableFact(conn gdb.DB) {
-	sqlStr := fmt.Sprintf("DROP TABLE IF EXISTS `fact`")
+	sqlStr := "DROP TABLE IF EXISTS `fact`"
 	_, _ = conn.Exec(context.Background(), sqlStr)
 }
 
 func dropClickhouseExampleTable(conn gdb.DB) {
-	sqlStr := fmt.Sprintf("DROP TABLE IF EXISTS `data_type`")
+	sqlStr := "DROP TABLE IF EXISTS `data_type`"
 	_, _ = conn.Exec(context.Background(), sqlStr)
 }
 

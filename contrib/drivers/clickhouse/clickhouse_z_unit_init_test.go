@@ -52,8 +52,10 @@ func createInitTable(table ...string) string {
 	return createInitTableWithDb(db, table...)
 }
 
-func dropTable(table string) {
-	dropTableWithDb(db, table)
+func dropTable(tables ...string) {
+	for _, table := range tables {
+		dropTableWithDb(db, table)
+	}
 }
 
 func createTableWithDb(db gdb.DB, table ...string) (name string) {
