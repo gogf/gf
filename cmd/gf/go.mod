@@ -1,6 +1,6 @@
 module github.com/gogf/gf/cmd/gf/v2
 
-go 1.23.0
+go 1.24.0
 
 require (
 	github.com/gogf/gf/contrib/drivers/clickhouse/v2 v2.9.5
@@ -13,8 +13,8 @@ require (
 	github.com/gogf/selfupdate v0.0.0-20231215043001-5c48c528462f
 	github.com/olekukonko/tablewriter v1.1.0
 	github.com/schollz/progressbar/v3 v3.15.0
-	golang.org/x/mod v0.25.0
-	golang.org/x/tools v0.26.0
+	golang.org/x/mod v0.29.0
+	golang.org/x/tools v0.38.0
 )
 
 require (
@@ -55,12 +55,12 @@ require (
 	go.opentelemetry.io/otel/metric v1.38.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.38.0 // indirect
 	go.opentelemetry.io/otel/trace v1.38.0 // indirect
-	golang.org/x/crypto v0.38.0 // indirect
-	golang.org/x/net v0.40.0 // indirect
-	golang.org/x/sync v0.14.0 // indirect
-	golang.org/x/sys v0.35.0 // indirect
-	golang.org/x/term v0.32.0 // indirect
-	golang.org/x/text v0.25.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
+	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/sync v0.18.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/term v0.37.0 // indirect
+	golang.org/x/text v0.31.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/libc v1.22.5 // indirect
 	modernc.org/mathutil v1.5.0 // indirect
