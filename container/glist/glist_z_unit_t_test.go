@@ -7,6 +7,7 @@
 package glist
 
 import (
+	"container/list"
 	"testing"
 
 	"github.com/gogf/gf/v2/internal/json"
@@ -757,5 +758,176 @@ func TestTList_DeepCopy(t *testing.T) {
 		cl := copyList.(*TList[any])
 		cl.PopBack()
 		t.AssertNE(l.Size(), cl.Size())
+	})
+	// Nil pointer deep copy
+	gtest.C(t, func(t *gtest.T) {
+		var l *TList[any]
+		copyList := l.DeepCopy()
+		t.AssertNil(copyList)
+	})
+}
+
+func TestTList_ToList(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := NewTFrom([]any{1, 2, 3, 4, 5})
+		nl := l.ToList()
+		t.Assert(nl.Len(), 5)
+
+		// Verify elements
+		i := 1
+		for e := nl.Front(); e != nil; e = e.Next() {
+			t.Assert(e.Value, i)
+			i++
+		}
+	})
+	// Empty list
+	gtest.C(t, func(t *gtest.T) {
+		l := NewT[any]()
+		nl := l.ToList()
+		t.Assert(nl.Len(), 0)
+	})
+}
+
+func TestTList_AppendList(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := NewTFrom([]any{1, 2, 3})
+		nl := list.New()
+		nl.PushBack(4)
+		nl.PushBack(5)
+
+		l.AppendList(nl)
+		t.Assert(l.Len(), 5)
+		t.Assert(l.FrontAll(), []any{1, 2, 3, 4, 5})
+	})
+	// Append empty list
+	gtest.C(t, func(t *gtest.T) {
+		l := NewTFrom([]any{1, 2, 3})
+		nl := list.New()
+		l.AppendList(nl)
+		t.Assert(l.Len(), 3)
+		t.Assert(l.FrontAll(), []any{1, 2, 3})
+	})
+	// Append with type mismatch (should skip)
+	gtest.C(t, func(t *gtest.T) {
+		l := NewT[int]()
+		nl := list.New()
+		nl.PushBack(1)
+		nl.PushBack("string") // type mismatch
+		nl.PushBack(2)
+
+		l.AppendList(nl)
+		t.Assert(l.Len(), 2)
+		t.Assert(l.FrontAll(), []int{1, 2})
+	})
+}
+
+func TestTList_AssignList(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := NewTFrom([]any{1, 2, 3})
+		nl := list.New()
+		nl.PushBack(4)
+		nl.PushBack(5)
+		nl.PushBack(6)
+
+		skipped := l.AssignList(nl)
+		t.Assert(skipped, 0)
+		t.Assert(l.Len(), 3)
+		t.Assert(l.FrontAll(), []any{4, 5, 6})
+	})
+	// Assign empty list
+	gtest.C(t, func(t *gtest.T) {
+		l := NewTFrom([]any{1, 2, 3})
+		nl := list.New()
+
+		skipped := l.AssignList(nl)
+		t.Assert(skipped, 0)
+		t.Assert(l.Len(), 0)
+	})
+	// Assign with type mismatch (should return skipped count)
+	gtest.C(t, func(t *gtest.T) {
+		l := NewT[int]()
+		nl := list.New()
+		nl.PushBack(1)
+		nl.PushBack("string") // type mismatch
+		nl.PushBack(2)
+		nl.PushBack("another") // type mismatch
+
+		skipped := l.AssignList(nl)
+		t.Assert(skipped, 2)
+		t.Assert(l.Len(), 2)
+		t.Assert(l.FrontAll(), []int{1, 2})
+	})
+}
+
+func TestTList_String_Nil(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var l *TList[any]
+		t.Assert(l.String(), "")
+	})
+}
+
+func TestTList_UnmarshalJSON_Error(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := NewT[any]()
+		err := l.UnmarshalJSON([]byte("invalid json"))
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestTList_UnmarshalValue_String(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := NewT[any]()
+		err := l.UnmarshalValue(`[1,2,3]`)
+		t.AssertNil(err)
+		t.Assert(l.FrontAll(), []any{1, 2, 3})
+	})
+}
+
+func TestTList_UnmarshalValue_Bytes(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := NewT[any]()
+		err := l.UnmarshalValue([]byte(`[1,2,3]`))
+		t.AssertNil(err)
+		t.Assert(l.FrontAll(), []any{1, 2, 3})
+	})
+}
+
+func TestTList_DeepCopy_Empty(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := NewT[any]()
+		copyList := l.DeepCopy()
+		cl := copyList.(*TList[any])
+		t.Assert(cl.Len(), 0)
+	})
+}
+
+func TestTList_AppendList_WithTypeMismatch(t *testing.T) {
+	// Test appendList internal function through AppendList with mixed types
+	gtest.C(t, func(t *gtest.T) {
+		l := NewT[int]()
+		nl := list.New()
+		// Only add non-matching types
+		nl.PushBack("string1")
+		nl.PushBack("string2")
+
+		l.AppendList(nl)
+		t.Assert(l.Len(), 0)
+	})
+}
+
+func TestTList_UnmarshalValue_Error(t *testing.T) {
+	// Test UnmarshalValue with data through default case
+	gtest.C(t, func(t *gtest.T) {
+		l := NewT[any]()
+		// Pass a slice directly through default case
+		_ = l.UnmarshalValue([]any{1, 2, 3})
+		t.Assert(l.Len(), 3)
+		t.Assert(l.FrontAll(), []any{1, 2, 3})
+	})
+	// Test UnmarshalValue error in string case
+	gtest.C(t, func(t *gtest.T) {
+		l := NewT[any]()
+		err := l.UnmarshalValue("invalid json")
+		t.AssertNE(err, nil)
 	})
 }

@@ -455,10 +455,6 @@ func (l *TList[T]) toList() *list.List {
 
 // AppendList append list.List to the end
 func (l *TList[T]) AppendList(nl *list.List) {
-	if nl.Len() == 0 {
-		return
-	}
-
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
