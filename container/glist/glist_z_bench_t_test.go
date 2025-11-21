@@ -6,75 +6,56 @@
 
 // go test *.go -bench=".*" -benchmem
 
-package gmap_test
+package glist
 
 import (
-	"sync"
 	"testing"
-
-	"github.com/gogf/gf/v2/container/gmap"
 )
 
-var gm = gmap.NewIntIntMap(true)
+var (
+	lt = NewT[any](true)
+)
 
-var sm = sync.Map{}
-
-func Benchmark_GMapSet(b *testing.B) {
+func Benchmark_T_PushBack(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		i := 0
 		for pb.Next() {
-			gm.Set(i, i)
+			lt.PushBack(i)
 			i++
 		}
 	})
 }
 
-func Benchmark_SyncMapSet(b *testing.B) {
+func Benchmark_T_PushFront(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		i := 0
 		for pb.Next() {
-			sm.Store(i, i)
+			lt.PushFront(i)
 			i++
 		}
 	})
 }
 
-func Benchmark_GMapGet(b *testing.B) {
+func Benchmark_T_Len(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
-		i := 0
 		for pb.Next() {
-			gm.Get(i)
-			i++
+			lt.Len()
 		}
 	})
 }
 
-func Benchmark_SyncMapGet(b *testing.B) {
+func Benchmark_T_PopFront(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
-		i := 0
 		for pb.Next() {
-			sm.Load(i)
-			i++
+			lt.PopFront()
 		}
 	})
 }
 
-func Benchmark_GMapRemove(b *testing.B) {
+func Benchmark_T_PopBack(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
-		i := 0
 		for pb.Next() {
-			gm.Remove(i)
-			i++
-		}
-	})
-}
-
-func Benchmark_SyncMapRmove(b *testing.B) {
-	b.RunParallel(func(pb *testing.PB) {
-		i := 0
-		for pb.Next() {
-			sm.Delete(i)
-			i++
+			lt.PopBack()
 		}
 	})
 }
