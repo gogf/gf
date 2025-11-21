@@ -21,6 +21,12 @@ import (
 	"github.com/gogf/gf/v2/os/glog"
 )
 
+var (
+	// Compile-time checking for interface implementation.
+	_ gcfg.Adapter        = (*Client)(nil)
+	_ gcfg.WatcherAdapter = (*Client)(nil)
+)
+
 // Config is the configuration object for consul client.
 type Config struct {
 	// api.Config in consul package
@@ -41,6 +47,8 @@ type Client struct {
 	client *api.Client
 	// Configmap content cached. It is `*gjson.Json` value internally.
 	value *g.Var
+	// Watchers for watching file changes.
+	watchers *gcfg.WatcherRegistry
 }
 
 // New creates and returns gcfg.Adapter implementing using consul service.
@@ -55,8 +63,9 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 	}
 
 	client := &Client{
-		config: config,
-		value:  g.NewVar(nil, true),
+		config:   config,
+		value:    g.NewVar(nil, true),
+		watchers: gcfg.NewWatcherRegistry(),
 	}
 
 	client.client, err = api.NewClient(&config.ConsulConfig)
@@ -156,13 +165,26 @@ func (c *Client) addWatcher() (err error) {
 		if v, ok = raw.(*api.KVPair); !ok {
 			return
 		}
-
-		if err = c.doUpdate(v.Value); err != nil {
+		err = c.doUpdate(v.Value)
+		if err != nil {
 			c.config.Logger.Errorf(
 				context.Background(),
 				"watch config from consul path %+v update failed: %s",
 				c.config.Path, err,
 			)
+		} else {
+			var m *gjson.Json
+			m, err = gjson.LoadContent(v.Value, true)
+			if err != nil {
+				c.config.Logger.Errorf(
+					context.Background(),
+					"watch config from consul path %+v parse failed: %s",
+					c.config.Path, err,
+				)
+			} else {
+				adapterCtx := NewAdapterCtx().WithOperation(gcfg.OperationUpdate).WithPath(c.config.Path).WithContent(m)
+				c.notifyWatchers(adapterCtx.Ctx)
+			}
 		}
 	}
 
@@ -173,6 +195,7 @@ func (c *Client) addWatcher() (err error) {
 	return nil
 }
 
+// startAsynchronousWatch starts the asynchronous watch.
 func (c *Client) startAsynchronousWatch(plan *watch.Plan) {
 	if err := plan.Run(c.config.ConsulConfig.Address); err != nil {
 		c.config.Logger.Errorf(
@@ -181,4 +204,24 @@ func (c *Client) startAsynchronousWatch(plan *watch.Plan) {
 			c.config.Path, err,
 		)
 	}
+}
+
+// AddWatcher adds a watcher for the specified configuration file.
+func (c *Client) AddWatcher(name string, f func(ctx context.Context)) {
+	c.watchers.Add(name, f)
+}
+
+// RemoveWatcher removes the watcher for the specified configuration file.
+func (c *Client) RemoveWatcher(name string) {
+	c.watchers.Remove(name)
+}
+
+// GetWatcherNames returns all watcher names.
+func (c *Client) GetWatcherNames() []string {
+	return c.watchers.GetNames()
+}
+
+// notifyWatchers notifies all watchers.
+func (c *Client) notifyWatchers(ctx context.Context) {
+	c.watchers.Notify(ctx)
 }
