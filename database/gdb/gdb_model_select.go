@@ -752,7 +752,7 @@ func (m *Model) getHolderAndArgsAsSubModel(ctx context.Context) (holder string, 
 func (m *Model) getAutoPrefix() string {
 	autoPrefix := ""
 	if gstr.Contains(m.tables, " JOIN ") {
-		autoPrefix = m.db.GetCore().QuoteWord(
+		autoPrefix = m.QuoteWord(
 			m.db.GetCore().guessPrimaryTableName(m.tablesInit),
 		)
 	}
@@ -762,7 +762,6 @@ func (m *Model) getAutoPrefix() string {
 func (m *Model) getFieldsAsStr() string {
 	var (
 		fieldsStr string
-		core      = m.db.GetCore()
 	)
 	for _, v := range m.fields {
 		field := gconv.String(v)
@@ -773,7 +772,7 @@ func (m *Model) getFieldsAsStr() string {
 			switch v.(type) {
 			case Raw, *Raw:
 			default:
-				field = core.QuoteString(field)
+				field = m.QuoteWord(field)
 			}
 		}
 		if fieldsStr != "" {
@@ -829,7 +828,7 @@ func (m *Model) getFieldsFiltered() string {
 		if len(newFields) > 0 {
 			newFields += ","
 		}
-		newFields += m.db.GetCore().QuoteWord(k)
+		newFields += m.QuoteWord(k)
 	}
 	return newFields
 }
