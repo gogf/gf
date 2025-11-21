@@ -266,10 +266,6 @@ func (m *ListKVMap[K, V]) Pops(size int) map[K]V {
 // if not exists, set value to the map with given `key`,
 // or else just return the existing value.
 //
-// When setting value, if `value` is type of `func() interface {}`,
-// it will be executed with mutex.Lock of the map,
-// and its return value will be set to the map with `key`.
-//
 // It returns value with given `key`.
 func (m *ListKVMap[K, V]) doSetWithLockCheck(key K, value V) V {
 	m.mu.Lock()
