@@ -8,7 +8,7 @@ package gcfg
 
 import (
 	"context"
-	"fmt"
+
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gvar"
@@ -278,14 +278,13 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 		// Add monitor for this configuration file,
 		// any changes of this file will refresh its cache in the Config object.
 		if filePath != "" && !gres.Contains(filePath) {
-			defer func() {
-				_, err := gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
-					a.jsonMap.Remove(usedFileNameOrPath)
-				})
-				if err != nil {
-					fmt.Printf("[warn] %v: failed listen file event: %v\n", filePath, err)
-				}
-			}()
+			_, err := gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
+				a.jsonMap.Remove(usedFileNameOrPath)
+				_ = event.Watcher.Remove(filePath)
+			})
+			if err != nil {
+				intlog.Errorf(context.TODO(), "failed listen config file event[%s]: %v", filePath, err)
+			}
 		}
 		return configJson
 	})
