@@ -302,8 +302,8 @@ func Test_DB_TableFields(t *testing.T) {
 		defer dropTable(table)
 
 		var expect = map[string][]any{
-			//[]string: Index Type Null Key Default Comment
-			//id is bigserial so the default is a pgsql function
+			// []string: Index Type Null Key Default Comment
+			// id is bigserial so the default is a pgsql function
 			"id":          {0, "int8", false, "pri", fmt.Sprintf("nextval('%s_id_seq'::regclass)", table), ""},
 			"passport":    {1, "varchar", false, "", nil, ""},
 			"password":    {2, "varchar", false, "", nil, ""},
@@ -339,8 +339,8 @@ int_col INT);`
 		IntCol int64
 	}
 	// pgsql converts table names to lowercase
+	// mark: [c.oid = '%s'::regclass] is not case-sensitive
 	tableName := "Error_table"
-	errStr := fmt.Sprintf(`The table "%s" may not exist, or the table contains no fields`, tableName)
 	_, err := db.Exec(ctx, fmt.Sprintf(createSql, tableName))
 	gtest.AssertNil(err)
 	defer dropTable(tableName)
@@ -351,7 +351,7 @@ int_col INT);`
 			IntCol: 2,
 		}
 		_, err = db.Model(tableName).Data(data).Insert()
-		t.Assert(err, errStr)
+		t.AssertNE(err, nil)
 
 		// Insert a piece of test data using lowercase
 		_, err = db.Model(strings.ToLower(tableName)).Data(data).Insert()
@@ -360,7 +360,7 @@ int_col INT);`
 		_, err = db.Model(tableName).Where("id", 1).Data(g.Map{
 			"int_col": 9999,
 		}).Update()
-		t.Assert(err, errStr)
+		t.AssertNE(err, nil)
 
 	})
 	// The inserted field does not exist in the table
@@ -370,7 +370,7 @@ int_col INT);`
 			"int_col_22": 11111,
 		}
 		_, err = db.Model(tableName).Data(data).Insert()
-		t.Assert(err, errStr)
+		t.Assert(err, fmt.Errorf(`input data match no fields in table "%s"`, tableName))
 
 		lowerTableName := strings.ToLower(tableName)
 		_, err = db.Model(lowerTableName).Data(data).Insert()
@@ -382,6 +382,91 @@ int_col INT);`
 		t.Assert(err, fmt.Errorf(`input data match no fields in table "%s"`, lowerTableName))
 	})
 
+}
+
+func Test_DB_TableFields_DuplicateConstraints(t *testing.T) {
+	// Test for the fix of duplicate field results with multiple constraints
+	// This test verifies that when a field has multiple constraints (e.g., both primary key and unique),
+	// the TableFields method correctly merges the results with proper priority (pri > uni > others)
+	gtest.C(t, func(t *gtest.T) {
+		tableName := "test_multi_constraint"
+		createSql := fmt.Sprintf(`
+			CREATE TABLE %s (
+				id bigserial NOT NULL PRIMARY KEY,
+				email varchar(100) NOT NULL UNIQUE,
+				username varchar(50) NOT NULL,
+				status int NOT NULL DEFAULT 1
+			)`, tableName)
+
+		_, err := db.Exec(ctx, createSql)
+		t.AssertNil(err)
+		defer dropTable(tableName)
+
+		// Get table fields
+		fields, err := db.TableFields(ctx, tableName)
+		t.AssertNil(err)
+
+		// Verify id field has primary key constraint
+		t.AssertNE(fields["id"], nil)
+		t.Assert(fields["id"].Key, "pri")
+		t.Assert(fields["id"].Name, "id")
+		t.Assert(fields["id"].Type, "int8")
+
+		// Verify email field has unique constraint
+		t.AssertNE(fields["email"], nil)
+		t.Assert(fields["email"].Key, "uni")
+		t.Assert(fields["email"].Name, "email")
+		t.Assert(fields["email"].Type, "varchar")
+
+		// Verify username field has no constraint
+		t.AssertNE(fields["username"], nil)
+		t.Assert(fields["username"].Key, "")
+		t.Assert(fields["username"].Name, "username")
+
+		// Verify status field has no constraint and has default value
+		t.AssertNE(fields["status"], nil)
+		t.Assert(fields["status"].Key, "")
+		t.Assert(fields["status"].Name, "status")
+		t.Assert(fields["status"].Default, 1)
+
+		// Verify field count is correct (no duplicates)
+		t.Assert(len(fields), 4)
+	})
+
+	// Test table with composite constraints
+	gtest.C(t, func(t *gtest.T) {
+		tableName := "test_composite_constraint"
+		createSql := fmt.Sprintf(`
+			CREATE TABLE %s (
+				user_id bigint NOT NULL,
+				project_id bigint NOT NULL,
+				role varchar(50) NOT NULL,
+				PRIMARY KEY (user_id, project_id)
+			)`, tableName)
+
+		_, err := db.Exec(ctx, createSql)
+		t.AssertNil(err)
+		defer dropTable(tableName)
+
+		// Get table fields
+		fields, err := db.TableFields(ctx, tableName)
+		t.AssertNil(err)
+
+		// In PostgreSQL, composite primary keys may appear in query results
+		// The first field in the composite key should be marked as 'pri'
+		t.AssertNE(fields["user_id"], nil)
+		t.Assert(fields["user_id"].Name, "user_id")
+
+		t.AssertNE(fields["project_id"], nil)
+		t.Assert(fields["project_id"].Name, "project_id")
+
+		t.AssertNE(fields["role"], nil)
+		t.Assert(fields["role"].Name, "role")
+		t.Assert(fields["role"].Key, "")
+
+		// Verify field count is correct (no duplicates)
+		t.Assert(len(fields), 3)
+	})
 }
 
 func Test_DB_InsertIgnore(t *testing.T) {

@@ -27,7 +27,7 @@ FROM pg_attribute a
          left join pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid
          left join pg_type t ON a.atttypid = t.oid
          left join information_schema.columns ic on ic.column_name = a.attname and ic.table_name = c.relname
-WHERE c.relname = '%s' and a.attisdropped is false and a.attnum > 0
+WHERE c.oid = '%s'::regclass and a.attisdropped is false and a.attnum > 0
 ORDER BY a.attnum`
 )
 
@@ -57,14 +57,21 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 	}
 	fields = make(map[string]*gdb.TableField)
 	var (
-		index = 0
-		name  string
-		ok    bool
+		index         = 0
+		name          string
+		ok            bool
+		existingField *gdb.TableField
 	)
 	for _, m := range result {
 		name = m["field"].String()
-		// Filter duplicated fields.
-		if _, ok = fields[name]; ok {
+		// Merge duplicated fields, especially for key constraints.
+		// Priority: pri > uni > others
+		if existingField, ok = fields[name]; ok {
+			currentKey := m["key"].String()
+			// Merge key information with priority: pri > uni
+			if currentKey == "pri" || (currentKey == "uni" && existingField.Key != "pri") {
+				existingField.Key = currentKey
+			}
 			continue
 		}
 		fields[name] = &gdb.TableField{

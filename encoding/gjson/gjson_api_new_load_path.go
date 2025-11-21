@@ -9,6 +9,7 @@ package gjson
 import "github.com/gogf/gf/v2/os/gfile"
 
 // Load loads content from specified file `path`, and creates a Json object from its content.
+//
 // Deprecated: use LoadPath instead.
 func Load(path string, safe ...bool) (*Json, error) {
 	var isSafe bool
