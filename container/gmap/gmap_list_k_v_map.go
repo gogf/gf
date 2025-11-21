@@ -23,7 +23,7 @@ import (
 //
 // It is backed by a hash table to store values and doubly-linked list to store ordering.
 //
-// Structure is not thread safe.
+// Thread-safety is optional and controlled by the `safe` parameter during initialization.
 //
 // Reference: http://en.wikipedia.org/wiki/Associative_array
 type ListKVMap[K comparable, V any] struct {
