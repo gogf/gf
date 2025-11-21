@@ -14,11 +14,11 @@ import (
 
 // TQueue is a concurrent-safe queue built on doubly linked list and channel.
 type TQueue[T any] struct {
-	limit  int           // Limit for queue size.
-	list   *glist.List   // Underlying list structure for data maintaining.
-	closed *gtype.Bool   // Whether queue is closed.
-	events chan struct{} // Events for data writing.
-	C      chan T        // Underlying channel for data reading.
+	limit  int             // Limit for queue size.
+	list   *glist.TList[T] // Underlying list structure for data maintaining.
+	closed *gtype.Bool     // Whether queue is closed.
+	events chan struct{}   // Events for data writing.
+	C      chan T          // Underlying channel for data reading.
 }
 
 // NewTQueue returns an empty queue object.
@@ -32,7 +32,7 @@ func NewTQueue[T any](limit ...int) *TQueue[T] {
 		q.limit = limit[0]
 		q.C = make(chan T, limit[0])
 	} else {
-		q.list = glist.New(true)
+		q.list = glist.NewT[T](true)
 		q.events = make(chan struct{}, math.MaxInt32)
 		q.C = make(chan T, defaultQueueSize)
 		go q.asyncLoopFromListToChannel()
@@ -117,7 +117,7 @@ func (q *TQueue[T]) asyncLoopFromListToChannel() {
 				// When q.C is closed, it will panic here, especially q.C is being blocked for writing.
 				// If any error occurs here, it will be caught by recover and be ignored.
 				for range bufferLength {
-					q.C <- q.list.PopFront().(T)
+					q.C <- q.list.PopFront()
 				}
 			} else {
 				break
