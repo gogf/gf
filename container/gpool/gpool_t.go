@@ -20,10 +20,10 @@ import (
 
 // TPool is an Object-Reusable Pool.
 type TPool[T any] struct {
-	list    *glist.List       // Available/idle items list.
-	closed  *gtype.Bool       // Whether the pool is closed.
-	TTL     time.Duration     // Time To Live for pool items.
-	NewFunc func() (T, error) // Callback function to create pool item.
+	list    *glist.TList[*tPoolItem[T]] // Available/idle items list.
+	closed  *gtype.Bool                 // Whether the pool is closed.
+	TTL     time.Duration               // Time To Live for pool items.
+	NewFunc func() (T, error)           // Callback function to create pool item.
 	// ExpireFunc is the function for expired items destruction.
 	// This function needs to be defined when the pool items
 	// need to perform additional destruction operations.
@@ -52,7 +52,7 @@ type TPoolExpireFunc[T any] func(T)
 // ttl > 0 : timeout expired;
 func NewTPool[T any](ttl time.Duration, newFunc TPoolNewFunc[T], expireFunc ...TPoolExpireFunc[T]) *TPool[T] {
 	r := &TPool[T]{
-		list:    glist.New(true),
+		list:    glist.NewT[*tPoolItem[T]](true),
 		closed:  gtype.NewBool(),
 		TTL:     ttl,
 		NewFunc: newFunc,
@@ -95,7 +95,7 @@ func (p *TPool[T]) Clear() {
 	if p.ExpireFunc != nil {
 		for {
 			if r := p.list.PopFront(); r != nil {
-				p.ExpireFunc(r.(*tPoolItem[T]).value)
+				p.ExpireFunc(r.value)
 			} else {
 				break
 			}
@@ -109,8 +109,7 @@ func (p *TPool[T]) Clear() {
 // it creates and returns one from NewFunc.
 func (p *TPool[T]) Get() (value T, err error) {
 	for !p.closed.Val() {
-		if r := p.list.PopFront(); r != nil {
-			f := r.(*tPoolItem[T])
+		if f := p.list.PopFront(); f != nil {
 			if f.expireAt == 0 || f.expireAt > gtime.TimestampMilli() {
 				return f.value, nil
 			} else if p.ExpireFunc != nil {
@@ -148,7 +147,7 @@ func (p *TPool[T]) checkExpireItems(ctx context.Context) {
 		if p.ExpireFunc != nil {
 			for {
 				if r := p.list.PopFront(); r != nil {
-					p.ExpireFunc(r.(*tPoolItem[T]).value)
+					p.ExpireFunc(r.value)
 				} else {
 					break
 				}
@@ -167,8 +166,7 @@ func (p *TPool[T]) checkExpireItems(ctx context.Context) {
 	// every item expired, but high performance.
 	var timestampMilli = gtime.TimestampMilli()
 	for latestExpire <= timestampMilli {
-		if r := p.list.PopFront(); r != nil {
-			item := r.(*tPoolItem[T])
+		if item := p.list.PopFront(); item != nil {
 			latestExpire = item.expireAt
 			// TODO improve the auto-expiration mechanism of the pool.
 			if item.expireAt > timestampMilli {
