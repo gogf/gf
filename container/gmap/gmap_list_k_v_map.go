@@ -106,11 +106,7 @@ func (m *ListKVMap[K, V]) Replace(data map[K]V) {
 	m.data = make(map[K]*glist.TElement[*gListKVMapNode[K, V]])
 	m.list = glist.NewT[*gListKVMapNode[K, V]]()
 	for key, value := range data {
-		if e, ok := m.data[key]; !ok {
-			m.data[key] = m.list.PushBack(&gListKVMapNode[K, V]{key, value})
-		} else {
-			e.Value = &gListKVMapNode[K, V]{key, value}
-		}
+		m.data[key] = m.list.PushBack(&gListKVMapNode[K, V]{key, value})
 	}
 	m.mu.Unlock()
 }
