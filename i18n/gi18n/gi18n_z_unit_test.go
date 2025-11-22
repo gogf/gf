@@ -8,6 +8,7 @@ package gi18n_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -86,6 +87,18 @@ func Test_TranslateFormat(t *testing.T) {
 
 		i18n.SetLanguage("ja")
 		t.Assert(i18n.Tf(context.Background(), "{#hello}{#world} %d", 2020), "こんにちは世界 2020")
+	})
+}
+
+func Test_TranslateMap(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		i18n := gi18n.New(gi18n.Options{
+			Path: gtest.DataPath("i18n-file"),
+		})
+		i18n.SetLanguage("zh-CN")
+		str := i18n.Tm(context.Background(), "replace_map_test", map[string]interface{}{"name": "blue", "score": "3000"})
+		t.Log(str)
+		t.Assert(str, "hello 3000 blue is ok")
 	})
 }
 
