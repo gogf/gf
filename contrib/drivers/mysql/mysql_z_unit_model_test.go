@@ -3783,6 +3783,7 @@ func Test_Model_FixGdbJoin(t *testing.T) {
 				FieldsPrefix(`rules_template`, "name").
 				FieldsPrefix(`common_resource`, `src_instance_id`, "database_kind", "source_type", "ip", "port")
 			all, err := orm.OrderAsc("src_instance_id").All()
+			t.Assert(err, nil)
 			t.Assert(len(all), 4)
 			t.Assert(all[0]["pay_mode"], 1)
 			t.Assert(all[0]["src_instance_id"], 2)
