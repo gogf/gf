@@ -208,6 +208,12 @@ func (set *Set) Intersect(others ...*Set) (newSet *Set) {
 // if the given set `full` is not the full set of `set`.
 func (set *Set) Complement(full *Set) (newSet *Set) {
 	set.lazyInit()
+	if full == nil {
+		return &Set{
+			TSet: NewTSet[any](true),
+		}
+	}
+	full.lazyInit()
 	return &Set{
 		TSet: set.TSet.Complement(full.TSet),
 	}

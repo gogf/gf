@@ -94,9 +94,9 @@ func (set *StrSet) Contains(item string) bool {
 // Note that it internally iterates the whole set to do the comparison with case-insensitively.
 func (set *StrSet) ContainsI(item string) bool {
 	set.lazyInit()
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	for k := range set.data {
+	set.TSet.mu.RLock()
+	defer set.TSet.mu.RUnlock()
+	for k := range set.TSet.data {
 		if strings.EqualFold(k, item) {
 			return true
 		}
@@ -208,6 +208,12 @@ func (set *StrSet) Intersect(others ...*StrSet) (newSet *StrSet) {
 // if the given set `full` is not the full set of `set`.
 func (set *StrSet) Complement(full *StrSet) (newSet *StrSet) {
 	set.lazyInit()
+	if full == nil {
+		return &StrSet{
+			TSet: NewTSet[string](),
+		}
+	}
+	full.lazyInit()
 	return &StrSet{
 		TSet: set.TSet.Complement(full.TSet),
 	}
