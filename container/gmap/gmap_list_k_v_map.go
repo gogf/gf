@@ -610,10 +610,10 @@ func (m *ListKVMap[K, V]) DeepCopy() any {
 	}
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	data := make(map[any]any, len(m.data))
+	data := make(map[K]V, len(m.data))
 	if m.list != nil {
 		m.list.IteratorAsc(func(e *glist.TElement[*gListKVMapNode[K, V]]) bool {
-			data[e.Value.key] = deepcopy.Copy(e.Value.value)
+			data[e.Value.key] = deepcopy.Copy(e.Value.value).(V)
 			return true
 		})
 	}
