@@ -6,6 +6,7 @@ dirpath=$1
 if [ -n "$dirpath" ]; then
     dirname=$(basename "$dirpath")
     echo "Cleaning Docker resources for path: $dirpath (pattern: $dirname)"
+    df -h
     
     # Process containers and images based on the directory
     case "$dirname" in
@@ -109,16 +110,16 @@ if [ -n "$dirpath" ]; then
         #     fi
         #     docker rmi -f $(docker images -q nacos/nacos-server 2>/dev/null) 2>/dev/null || true
         #     ;;
-        "polaris")
-            echo "Cleaning polaris resources..."
-            containers=$(docker ps -aq --filter "name=$dirname" 2>/dev/null)
-            if [ -n "$containers" ]; then
-                echo "Stopping and removing polaris containers..."
-                docker stop $containers 2>/dev/null || true
-                docker rm -f $containers 2>/dev/null || true
-            fi
-            docker rmi -f $(docker images -q polarismesh/polaris-standalone 2>/dev/null) 2>/dev/null || true
-            ;;
+        # "polaris")
+        #     echo "Cleaning polaris resources..."
+        #     containers=$(docker ps -aq --filter "name=$dirname" 2>/dev/null)
+        #     if [ -n "$containers" ]; then
+        #         echo "Stopping and removing polaris containers..."
+        #         docker stop $containers 2>/dev/null || true
+        #         docker rm -f $containers 2>/dev/null || true
+        #     fi
+        #     docker rmi -f $(docker images -q polarismesh/polaris-standalone 2>/dev/null) 2>/dev/null || true
+        #     ;;
         "zookeeper")
             echo "Cleaning zookeeper resources..."
             containers=$(docker ps -aq --filter "name=$dirname" 2>/dev/null)
@@ -152,6 +153,7 @@ if [ -n "$dirpath" ]; then
     
     echo "Docker cleanup completed for $dirname"
     docker system df
+    df -h
 fi
 
 # runner@runnervmg1sw1:~/work/gf/gf$ docker system df
