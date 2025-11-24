@@ -56,6 +56,8 @@ for file in `find . -name go.mod`; do
     else
       go test ./... -race || exit 1
     fi
+    # clean docker containers and images to free disk space
+    bash .github/workflows/scripts/ci-main-clean.sh "$dirpath"
 
     cd -
 done
