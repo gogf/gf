@@ -27,9 +27,8 @@ func (m *Model) Order(orderBy ...any) *Model {
 		return m
 	}
 	var (
-		core       = m.db.GetCore()
-		model      = m.getModel()
-		autoPrefix = m.getAutoPrefix()
+		core  = m.db.GetCore()
+		model = m.getModel()
 	)
 
 	for _, v := range orderBy {
@@ -52,10 +51,12 @@ func (m *Model) Order(orderBy ...any) *Model {
 					if gstr.Contains(columnPart, ".") {
 						model.orderBy += core.QuoteString(columnPart) + " " + orderPart
 					} else {
-						// Need to qualify with table prefix if there are joins
-						if autoPrefix != "" {
-							model.orderBy += core.QuoteString(fmt.Sprintf("%s.%s", autoPrefix, columnPart)) + " " + orderPart
+						// Try to get the correct prefix for this field
+						prefix := m.getPrefixByField(columnPart)
+						if prefix != "" {
+							model.orderBy += core.QuoteString(fmt.Sprintf("%s.%s", prefix, columnPart)) + " " + orderPart
 						} else {
+							// If we can't determine the table, just quote the field
 							model.orderBy += core.QuoteWord(columnPart) + " " + orderPart
 						}
 					}
@@ -72,10 +73,12 @@ func (m *Model) Order(orderBy ...any) *Model {
 					if gstr.Contains(orderByStr, ".") {
 						model.orderBy += core.QuoteString(orderByStr)
 					} else {
-						// Need to qualify with table prefix if there are joins
-						if autoPrefix != "" {
-							model.orderBy += core.QuoteString(fmt.Sprintf("%s.%s", autoPrefix, orderByStr))
+						// Try to get the correct prefix for this field
+						prefix := m.getPrefixByField(orderByStr)
+						if prefix != "" {
+							model.orderBy += core.QuoteString(fmt.Sprintf("%s.%s", prefix, orderByStr))
 						} else {
+							// If we can't determine the table, just quote the field
 							model.orderBy += core.QuoteWord(orderByStr)
 						}
 					}
@@ -115,9 +118,8 @@ func (m *Model) Group(groupBy ...any) *Model {
 		return m
 	}
 	var (
-		core       = m.db.GetCore()
-		model      = m.getModel()
-		autoPrefix = m.getAutoPrefix()
+		core  = m.db.GetCore()
+		model = m.getModel()
 	)
 
 	for _, v := range groupBy {
@@ -133,10 +135,12 @@ func (m *Model) Group(groupBy ...any) *Model {
 				// Already qualified (e.g., "table.column")
 				model.groupBy += core.QuoteString(groupByStr)
 			} else {
-				// Need to qualify with table prefix if there are joins
-				if autoPrefix != "" {
-					model.groupBy += core.QuoteString(fmt.Sprintf("%s.%s", autoPrefix, groupByStr))
+				// Try to get the correct prefix for this field
+				prefix := m.getPrefixByField(groupByStr)
+				if prefix != "" {
+					model.groupBy += core.QuoteString(fmt.Sprintf("%s.%s", prefix, groupByStr))
 				} else {
+					// If we can't determine the table, just quote the field
 					model.groupBy += core.QuoteWord(groupByStr)
 				}
 			}

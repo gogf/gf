@@ -789,6 +789,79 @@ func (m *Model) getAutoPrefix() string {
 	return autoPrefix
 }
 
+// getPrefixByField attempts to find the correct table prefix for a given field name
+// by checking which table in the JOIN contains this field. It returns:
+// - The quoted table prefix/alias if the field belongs to a specific joined table
+// - An empty string if the field cannot be determined or belongs to multiple tables
+//
+// This function searches through all tables involved in the query (main table and joined tables)
+// and checks their schema to find which table contains the specified field.
+func (m *Model) getPrefixByField(fieldName string) string {
+	// If there's no JOIN, no need to add prefix
+	if !gstr.Contains(m.tables, " JOIN ") {
+		return ""
+	}
+
+	// Get all table names and aliases involved in the query
+	var tables = make(map[string]string) // map[alias/tableName]realTableName
+
+	// Add main table
+	tableInitStr := m.tablesInit
+	parts := gstr.SplitAndTrim(tableInitStr, " ")
+	if len(parts) >= 2 {
+		if gstr.Equal(parts[1], "AS") && len(parts) >= 3 {
+			// Format: table AS alias
+			charL, charR := m.db.GetCore().GetChars()
+			alias := gstr.Trim(parts[2], charL+charR)
+			tableName := gstr.Trim(parts[0], charL+charR)
+			tables[alias] = tableName
+		} else if !gstr.Equal(parts[1], "AS") {
+			// Format: table alias
+			charL, charR := m.db.GetCore().GetChars()
+			alias := gstr.Trim(parts[1], charL+charR)
+			tableName := gstr.Trim(parts[0], charL+charR)
+			tables[alias] = tableName
+		}
+	} else if len(parts) == 1 {
+		// No alias, use table name directly
+		charL, charR := m.db.GetCore().GetChars()
+		tableName := gstr.Trim(parts[0], charL+charR)
+		tables[tableName] = tableName
+	}
+
+	// Add joined tables from tableAliasMap
+	for alias, tableName := range m.tableAliasMap {
+		tables[alias] = tableName
+	}
+
+	// Check which table contains this field
+	var matchedPrefix string
+	var matchCount int
+
+	for aliasOrTable, realTable := range tables {
+		tableFields, err := m.TableFields(realTable)
+		if err != nil {
+			// If we can't get table fields, skip this table
+			continue
+		}
+
+		// Check if this table contains the field
+		if _, exists := tableFields[fieldName]; exists {
+			matchedPrefix = aliasOrTable
+			matchCount++
+		}
+	}
+
+	// Only return prefix if field uniquely belongs to one table
+	if matchCount == 1 {
+		return m.QuoteWord(matchedPrefix)
+	}
+
+	// If field exists in multiple tables or not found, return empty
+	// to avoid ambiguity - user should specify the table explicitly
+	return ""
+}
+
 func (m *Model) getFieldsAsStr() string {
 	var (
 		fieldsStr string

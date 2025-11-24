@@ -26,8 +26,6 @@ func Test_Model_Group_WithJoin(t *testing.T) {
 	createInitTable(table2)
 	defer dropTable(table2)
 
-	db.SetDebug(true)
-
 	gtest.C(t, func(t *gtest.T) {
 		// Test basic GROUP BY with JOIN - unqualified column should be auto-prefixed
 		// This prevents "Column 'id' in group statement is ambiguous" error
