@@ -8,6 +8,8 @@ package gtree
 
 import (
 	"fmt"
+	"reflect"
+	"sync"
 
 	"github.com/emirpasic/gods/v2/trees/redblacktree"
 
@@ -24,6 +26,9 @@ type RedBlackKVTree[K comparable, V any] struct {
 	mu         rwmutex.RWMutex
 	comparator func(v1, v2 K) int
 	tree       *redblacktree.Tree[K, V]
+	once       sync.Once
+	kIsAny     bool
+	vIsAny     bool
 }
 
 // RedBlackKVTreeNode is a single element within the tree.
@@ -73,6 +78,13 @@ func RedBlackKVTreeInitFrom[K comparable, V any](tree *RedBlackKVTree[K, V], com
 	for k, v := range data {
 		tree.doSet(k, v)
 	}
+}
+
+func (tree *RedBlackKVTree[K, V]) init() {
+	tree.once.Do(func() {
+		tree.kIsAny = reflect.TypeOf((*K)(nil)).Kind() == reflect.Interface
+		tree.vIsAny = reflect.TypeOf((*V)(nil)).Kind() == reflect.Interface
+	})
 }
 
 // SetComparator sets/changes the comparator for sorting.

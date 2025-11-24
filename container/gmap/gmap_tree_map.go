@@ -6,14 +6,16 @@
 
 package gmap
 
+import "github.com/gogf/gf/v2/container/gtree"
+
 // TreeMap based on red-black tree, alias of TreeKVMap[any,any].
-type TreeMap = TreeKVMap[any, any]
+type TreeMap = gtree.RedBlackTree
 
 // NewTreeMap instantiates a tree map with the custom comparator.
 // The parameter `safe` is used to specify whether using tree in concurrent-safety,
 // which is false in default.
 func NewTreeMap(comparator func(v1, v2 any) int, safe ...bool) *TreeMap {
-	return NewTreeKVMap[any, any](comparator, safe...)
+	return gtree.NewRedBlackTree(comparator, safe...)
 }
 
 // NewTreeMapFrom instantiates a tree map with the custom comparator and `data` map.
@@ -22,5 +24,5 @@ func NewTreeMap(comparator func(v1, v2 any) int, safe ...bool) *TreeMap {
 // The parameter `safe` is used to specify whether using tree in concurrent-safety,
 // which is false in default.
 func NewTreeMapFrom(comparator func(v1, v2 any) int, data map[any]any, safe ...bool) *TreeMap {
-	return NewTreeKVMapFrom(comparator, data, safe...)
+	return gtree.NewRedBlackTreeFrom(comparator, data, safe...)
 }
