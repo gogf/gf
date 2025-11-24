@@ -54,6 +54,7 @@ func (tree *AVLTree) lazyInit() {
 
 // Clone clones and returns a new tree from current tree.
 func (tree *AVLTree) Clone() *AVLTree {
+	tree.lazyInit()
 	return &AVLTree{
 		AVLKVTree: tree.AVLKVTree.Clone(),
 	}
@@ -61,23 +62,27 @@ func (tree *AVLTree) Clone() *AVLTree {
 
 // Set sets key-value pair into the tree.
 func (tree *AVLTree) Set(key any, value any) {
+	tree.lazyInit()
 	tree.AVLKVTree.Set(key, value)
 }
 
 // Sets batch sets key-values to the tree.
 func (tree *AVLTree) Sets(data map[any]any) {
+	tree.lazyInit()
 	tree.AVLKVTree.Sets(data)
 }
 
 // SetIfNotExist sets `value` to the map if the `key` does not exist, and then returns true.
 // It returns false if `key` exists, and such setting key-value pair operation would be ignored.
 func (tree *AVLTree) SetIfNotExist(key any, value any) bool {
+	tree.lazyInit()
 	return tree.AVLKVTree.SetIfNotExist(key, value)
 }
 
 // SetIfNotExistFunc sets value with return value of callback function `f`, and then returns true.
 // It returns false if `key` exists, and such setting key-value pair operation would be ignored.
 func (tree *AVLTree) SetIfNotExistFunc(key any, f func() any) bool {
+	tree.lazyInit()
 	return tree.AVLKVTree.SetIfNotExistFunc(key, f)
 }
 
@@ -87,6 +92,7 @@ func (tree *AVLTree) SetIfNotExistFunc(key any, f func() any) bool {
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
 // it executes function `f` within mutex lock.
 func (tree *AVLTree) SetIfNotExistFuncLock(key any, f func() any) bool {
+	tree.lazyInit()
 	return tree.AVLKVTree.SetIfNotExistFuncLock(key, f)
 }
 
@@ -95,18 +101,21 @@ func (tree *AVLTree) SetIfNotExistFuncLock(key any, f func() any) bool {
 // Note that, the `nil` value from Get function cannot be used to determine key existence, please use Contains function
 // to do so.
 func (tree *AVLTree) Get(key any) (value any) {
+	tree.lazyInit()
 	return tree.AVLKVTree.Get(key)
 }
 
 // GetOrSet returns its `value` of `key`, or sets value with given `value` if it does not exist and then returns
 // this value.
 func (tree *AVLTree) GetOrSet(key any, value any) any {
+	tree.lazyInit()
 	return tree.AVLKVTree.GetOrSet(key, value)
 }
 
 // GetOrSetFunc returns its `value` of `key`, or sets value with returned value of callback function `f` if it does not
 // exist and then returns this value.
 func (tree *AVLTree) GetOrSetFunc(key any, f func() any) any {
+	tree.lazyInit()
 	return tree.AVLKVTree.GetOrSetFunc(key, f)
 }
 
@@ -115,6 +124,7 @@ func (tree *AVLTree) GetOrSetFunc(key any, f func() any) any {
 //
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f` within mutex lock.
 func (tree *AVLTree) GetOrSetFuncLock(key any, f func() any) any {
+	tree.lazyInit()
 	return tree.AVLKVTree.GetOrSetFuncLock(key, f)
 }
 
@@ -123,6 +133,7 @@ func (tree *AVLTree) GetOrSetFuncLock(key any, f func() any) any {
 //
 // Also see function Get.
 func (tree *AVLTree) GetVar(key any) *gvar.Var {
+	tree.lazyInit()
 	return tree.AVLKVTree.GetVar(key)
 }
 
@@ -131,6 +142,7 @@ func (tree *AVLTree) GetVar(key any) *gvar.Var {
 //
 // Also see function GetOrSet.
 func (tree *AVLTree) GetVarOrSet(key any, value any) *gvar.Var {
+	tree.lazyInit()
 	return tree.AVLKVTree.GetVarOrSet(key, value)
 }
 
@@ -139,6 +151,7 @@ func (tree *AVLTree) GetVarOrSet(key any, value any) *gvar.Var {
 //
 // Also see function GetOrSetFunc.
 func (tree *AVLTree) GetVarOrSetFunc(key any, f func() any) *gvar.Var {
+	tree.lazyInit()
 	return tree.AVLKVTree.GetVarOrSetFunc(key, f)
 }
 
@@ -147,83 +160,99 @@ func (tree *AVLTree) GetVarOrSetFunc(key any, f func() any) *gvar.Var {
 //
 // Also see function GetOrSetFuncLock.
 func (tree *AVLTree) GetVarOrSetFuncLock(key any, f func() any) *gvar.Var {
+	tree.lazyInit()
 	return tree.AVLKVTree.GetVarOrSetFuncLock(key, f)
 }
 
 // Search searches the tree with given `key`.
 // Second return parameter `found` is true if key was found, otherwise false.
 func (tree *AVLTree) Search(key any) (value any, found bool) {
+	tree.lazyInit()
 	return tree.AVLKVTree.Search(key)
 }
 
 // Contains checks and returns whether given `key` exists in the tree.
 func (tree *AVLTree) Contains(key any) bool {
+	tree.lazyInit()
 	return tree.AVLKVTree.Contains(key)
 }
 
 // Size returns number of nodes in the tree.
 func (tree *AVLTree) Size() int {
+	tree.lazyInit()
 	return tree.AVLKVTree.Size()
 }
 
 // IsEmpty returns true if the tree does not contain any nodes.
 func (tree *AVLTree) IsEmpty() bool {
+	tree.lazyInit()
 	return tree.AVLKVTree.IsEmpty()
 }
 
 // Remove removes the node from the tree by `key`, and returns its associated value of `key`.
 // The given `key` should adhere to the comparator's type assertion, otherwise method panics.
 func (tree *AVLTree) Remove(key any) (value any) {
+	tree.lazyInit()
 	return tree.AVLKVTree.Remove(key)
 }
 
 // Removes batch deletes key-value pairs from the tree by `keys`.
 func (tree *AVLTree) Removes(keys []any) {
+	tree.lazyInit()
 	tree.AVLKVTree.Removes(keys)
 }
 
 // Clear removes all nodes from the tree.
 func (tree *AVLTree) Clear() {
+	tree.lazyInit()
 	tree.AVLKVTree.Clear()
 }
 
 // Keys returns all keys from the tree in order by its comparator.
 func (tree *AVLTree) Keys() []any {
+	tree.lazyInit()
 	return tree.AVLKVTree.Keys()
 }
 
 // Values returns all values from the true in order by its comparator based on the key.
 func (tree *AVLTree) Values() []any {
+	tree.lazyInit()
 	return tree.AVLKVTree.Values()
 }
 
 // Replace clears the data of the tree and sets the nodes by given `data`.
 func (tree *AVLTree) Replace(data map[any]any) {
+	tree.lazyInit()
 	tree.AVLKVTree.Replace(data)
 }
 
 // Print prints the tree to stdout.
 func (tree *AVLTree) Print() {
+	tree.lazyInit()
 	tree.AVLKVTree.Print()
 }
 
 // String returns a string representation of container.
 func (tree *AVLTree) String() string {
+	tree.lazyInit()
 	return tree.AVLKVTree.String()
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (tree *AVLTree) MarshalJSON() (jsonBytes []byte, err error) {
+	tree.lazyInit()
 	return tree.AVLKVTree.MarshalJSON()
 }
 
 // Map returns all key-value pairs as map.
 func (tree *AVLTree) Map() map[any]any {
+	tree.lazyInit()
 	return tree.AVLKVTree.Map()
 }
 
 // MapStrAny returns all key-value items as map[string]any.
 func (tree *AVLTree) MapStrAny() map[string]any {
+	tree.lazyInit()
 	return tree.AVLKVTree.MapStrAny()
 }
 
@@ -244,6 +273,7 @@ func (tree *AVLTree) IteratorFrom(key any, match bool, f func(key, value any) bo
 // IteratorAsc iterates the tree readonly in ascending order with given callback function `f`.
 // If callback function `f` returns true, then it continues iterating; or false to stop.
 func (tree *AVLTree) IteratorAsc(f func(key, value any) bool) {
+	tree.lazyInit()
 	tree.AVLKVTree.IteratorAsc(f)
 }
 
@@ -254,6 +284,7 @@ func (tree *AVLTree) IteratorAsc(f func(key, value any) bool) {
 // searching iterating.
 // If callback function `f` returns true, then it continues iterating; or false to stop.
 func (tree *AVLTree) IteratorAscFrom(key any, match bool, f func(key, value any) bool) {
+	tree.lazyInit()
 	tree.AVLKVTree.IteratorAscFrom(key, match, f)
 }
 
@@ -261,6 +292,7 @@ func (tree *AVLTree) IteratorAscFrom(key any, match bool, f func(key, value any)
 //
 // If callback function `f` returns true, then it continues iterating; or false to stop.
 func (tree *AVLTree) IteratorDesc(f func(key, value any) bool) {
+	tree.lazyInit()
 	tree.AVLKVTree.IteratorDesc(f)
 }
 
@@ -271,16 +303,19 @@ func (tree *AVLTree) IteratorDesc(f func(key, value any) bool) {
 // searching iterating.
 // If callback function `f` returns true, then it continues iterating; or false to stop.
 func (tree *AVLTree) IteratorDescFrom(key any, match bool, f func(key, value any) bool) {
+	tree.lazyInit()
 	tree.AVLKVTree.IteratorDescFrom(key, match, f)
 }
 
 // Left returns the minimum element corresponding to the comparator of the tree or nil if the tree is empty.
 func (tree *AVLTree) Left() *AVLTreeNode {
+	tree.lazyInit()
 	return tree.AVLKVTree.Left()
 }
 
 // Right returns the maximum element corresponding to the comparator of the tree or nil if the tree is empty.
 func (tree *AVLTree) Right() *AVLTreeNode {
+	tree.lazyInit()
 	return tree.AVLKVTree.Right()
 }
 
@@ -293,6 +328,7 @@ func (tree *AVLTree) Right() *AVLTreeNode {
 //
 // Key should adhere to the comparator's type assertion, otherwise method panics.
 func (tree *AVLTree) Floor(key any) (floor *AVLTreeNode, found bool) {
+	tree.lazyInit()
 	return tree.AVLKVTree.Floor(key)
 }
 
@@ -305,6 +341,7 @@ func (tree *AVLTree) Floor(key any) (floor *AVLTreeNode, found bool) {
 //
 // Key should adhere to the comparator's type assertion, otherwise method panics.
 func (tree *AVLTree) Ceiling(key any) (ceiling *AVLTreeNode, found bool) {
+	tree.lazyInit()
 	return tree.AVLKVTree.Ceiling(key)
 }
 
@@ -314,6 +351,8 @@ func (tree *AVLTree) Ceiling(key any) (ceiling *AVLTreeNode, found bool) {
 //
 // If the type of value is different with key, you pass the new `comparator`.
 func (tree *AVLTree) Flip(comparator ...func(v1, v2 any) int) {
+	tree.lazyInit()
+
 	var t = new(AVLTree)
 	if len(comparator) > 0 {
 		t = NewAVLTree(comparator[0], tree.mu.IsSafe())
