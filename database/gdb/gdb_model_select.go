@@ -752,9 +752,39 @@ func (m *Model) getHolderAndArgsAsSubModel(ctx context.Context) (holder string, 
 func (m *Model) getAutoPrefix() string {
 	autoPrefix := ""
 	if gstr.Contains(m.tables, " JOIN ") {
-		autoPrefix = m.QuoteWord(
-			m.db.GetCore().guessPrimaryTableName(m.tablesInit),
-		)
+		// Try to get alias from tablesInit
+		// Format can be: `table` alias or `table` AS `alias` or just table alias
+		tableInitStr := m.tablesInit
+
+		// Split by space to separate table from alias
+		parts := gstr.SplitAndTrim(tableInitStr, " ")
+		if len(parts) >= 2 {
+			// Check if second part is "AS" keyword
+			if gstr.Equal(parts[1], "AS") && len(parts) >= 3 {
+				// Format: table AS alias
+				alias := parts[2]
+				charL, charR := m.db.GetCore().GetChars()
+				alias = gstr.Trim(alias, charL+charR)
+				if alias != "" {
+					autoPrefix = m.QuoteWord(alias)
+				}
+			} else if !gstr.Equal(parts[1], "AS") {
+				// Format: table alias (without AS keyword)
+				alias := parts[1]
+				charL, charR := m.db.GetCore().GetChars()
+				alias = gstr.Trim(alias, charL+charR)
+				if alias != "" {
+					autoPrefix = m.QuoteWord(alias)
+				}
+			}
+		}
+
+		// Fallback to table name if alias not found
+		if autoPrefix == "" {
+			autoPrefix = m.QuoteWord(
+				m.db.GetCore().guessPrimaryTableName(m.tablesInit),
+			)
+		}
 	}
 	return autoPrefix
 }

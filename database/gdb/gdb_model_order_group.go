@@ -27,9 +27,11 @@ func (m *Model) Order(orderBy ...any) *Model {
 		return m
 	}
 	var (
-		core  = m.db.GetCore()
-		model = m.getModel()
+		core       = m.db.GetCore()
+		model      = m.getModel()
+		autoPrefix = m.getAutoPrefix()
 	)
+
 	for _, v := range orderBy {
 		if model.orderBy != "" {
 			model.orderBy += ","
@@ -40,13 +42,43 @@ func (m *Model) Order(orderBy ...any) *Model {
 		default:
 			orderByStr := gconv.String(v)
 			if gstr.Contains(orderByStr, " ") {
-				model.orderBy += core.QuoteString(orderByStr)
+				// Handle "column asc/desc" format
+				parts := gstr.SplitAndTrim(orderByStr, " ")
+				if len(parts) >= 2 {
+					columnPart := parts[0]
+					orderPart := gstr.Join(parts[1:], " ")
+
+					// Check if column part is qualified
+					if gstr.Contains(columnPart, ".") {
+						model.orderBy += core.QuoteString(columnPart) + " " + orderPart
+					} else {
+						// Need to qualify with table prefix if there are joins
+						if autoPrefix != "" {
+							model.orderBy += core.QuoteString(fmt.Sprintf("%s.%s", autoPrefix, columnPart)) + " " + orderPart
+						} else {
+							model.orderBy += core.QuoteWord(columnPart) + " " + orderPart
+						}
+					}
+				} else {
+					// Fallback for complex expressions
+					model.orderBy += core.QuoteString(orderByStr)
+				}
 			} else {
 				if gstr.Equal(orderByStr, "ASC") || gstr.Equal(orderByStr, "DESC") {
 					model.orderBy = gstr.TrimRight(model.orderBy, ",")
 					model.orderBy += " " + orderByStr
 				} else {
-					model.orderBy += core.QuoteWord(orderByStr)
+					// Check if column is already qualified
+					if gstr.Contains(orderByStr, ".") {
+						model.orderBy += core.QuoteString(orderByStr)
+					} else {
+						// Need to qualify with table prefix if there are joins
+						if autoPrefix != "" {
+							model.orderBy += core.QuoteString(fmt.Sprintf("%s.%s", autoPrefix, orderByStr))
+						} else {
+							model.orderBy += core.QuoteWord(orderByStr)
+						}
+					}
 				}
 			}
 		}
