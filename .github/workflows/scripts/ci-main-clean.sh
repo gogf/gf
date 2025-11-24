@@ -9,16 +9,16 @@ if [ -n "$dirpath" ]; then
     
     # Process containers and images based on the directory
     case "$dirname" in
-        "mysql")
-            echo "Cleaning mysql resources..."
-            containers=$(docker ps -aq --filter "name=$dirname" 2>/dev/null)
-            if [ -n "$containers" ]; then
-                echo "Stopping and removing mysql containers..."
-                docker stop $containers 2>/dev/null || true
-                docker rm -f $containers 2>/dev/null || true
-            fi
-            docker rmi -f $(docker images -q mysql 2>/dev/null) 2>/dev/null || true
-            ;;
+        # "mysql")
+        #     echo "Cleaning mysql resources..."
+        #     containers=$(docker ps -aq --filter "name=$dirname" 2>/dev/null)
+        #     if [ -n "$containers" ]; then
+        #         echo "Stopping and removing mysql containers..."
+        #         docker stop $containers 2>/dev/null || true
+        #         docker rm -f $containers 2>/dev/null || true
+        #     fi
+        #     docker rmi -f $(docker images -q mysql 2>/dev/null) 2>/dev/null || true
+        #     ;;
         "mssql")
             echo "Cleaning mssql resources..."
             containers=$(docker ps -aq --filter "name=$dirname" 2>/dev/null)
