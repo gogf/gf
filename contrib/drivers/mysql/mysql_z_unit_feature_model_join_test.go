@@ -190,7 +190,7 @@ func Test_Model_Group_WithJoin(t *testing.T) {
 		// This test verifies that Group works with JOINs and generates qualified column names
 		// to avoid "Column 'id' in group statement is ambiguous" errors
 		r, err := db.Model(table1+" u").
-			Fields("u.id", "u.name", "COUNT(*) as count").
+			Fields("u.id", "u.nickname", "COUNT(*) as count").
 			LeftJoin(table2+" ud", "u.id = ud.id").
 			Where("u.id", g.Slice{1, 2}).
 			Group("u.id").

@@ -85,15 +85,8 @@ func (m *Model) Group(groupBy ...any) *Model {
 	var (
 		core       = m.db.GetCore()
 		model      = m.getModel()
-		autoPrefix = ""
+		autoPrefix = m.getAutoPrefix()
 	)
-
-	// Check if we need to auto-prefix columns when there are JOINs
-	if gstr.Contains(m.tables, " JOIN ") {
-		autoPrefix = m.QuoteWord(
-			core.guessPrimaryTableName(m.tablesInit),
-		)
-	}
 
 	for _, v := range groupBy {
 		if model.groupBy != "" {
@@ -110,7 +103,7 @@ func (m *Model) Group(groupBy ...any) *Model {
 			} else {
 				// Need to qualify with table prefix if there are joins
 				if autoPrefix != "" {
-					model.groupBy += fmt.Sprintf("%s.%s", autoPrefix, core.QuoteWord(groupByStr))
+					model.groupBy += core.QuoteString(fmt.Sprintf("%s.%s", autoPrefix, groupByStr))
 				} else {
 					model.groupBy += core.QuoteWord(groupByStr)
 				}
