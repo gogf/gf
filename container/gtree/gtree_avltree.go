@@ -57,6 +57,7 @@ func (tree *AVLTree) Clone() *AVLTree {
 	if tree == nil {
 		return nil
 	}
+	tree.lazyInit()
 	return &AVLTree{
 		AVLKVTree: tree.AVLKVTree.Clone(),
 	}

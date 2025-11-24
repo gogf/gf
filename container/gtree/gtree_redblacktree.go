@@ -62,6 +62,7 @@ func (tree *RedBlackTree) Clone() *RedBlackTree {
 	if tree == nil {
 		return nil
 	}
+	tree.lazyInit()
 	return &RedBlackTree{
 		RedBlackKVTree: tree.RedBlackKVTree.Clone(),
 	}
