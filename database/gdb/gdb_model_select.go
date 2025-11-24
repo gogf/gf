@@ -749,34 +749,41 @@ func (m *Model) getHolderAndArgsAsSubModel(ctx context.Context) (holder string, 
 	return
 }
 
+func (m *Model) parseTableAlias(tableInitStr string) (alias string, tableName string) {
+	// Split by space to separate table from alias
+	// Format can be: `table` alias or `table` AS `alias` or just table alias
+	parts := gstr.SplitAndTrim(tableInitStr, " ")
+	charL, charR := m.db.GetCore().GetChars()
+
+	if len(parts) >= 2 {
+		// Check if second part is "AS" keyword
+		if gstr.Equal(parts[1], "AS") && len(parts) >= 3 {
+			// Format: table AS alias
+			alias = gstr.Trim(parts[2], charL+charR)
+			tableName = gstr.Trim(parts[0], charL+charR)
+		} else if !gstr.Equal(parts[1], "AS") {
+			// Format: table alias (without AS keyword)
+			alias = gstr.Trim(parts[1], charL+charR)
+			tableName = gstr.Trim(parts[0], charL+charR)
+		} else {
+			// Only table name with "AS" keyword but no alias
+			tableName = gstr.Trim(parts[0], charL+charR)
+		}
+	} else if len(parts) == 1 {
+		// No alias, use table name directly
+		tableName = gstr.Trim(parts[0], charL+charR)
+	}
+
+	return alias, tableName
+}
+
 func (m *Model) getAutoPrefix() string {
 	autoPrefix := ""
 	if gstr.Contains(m.tables, " JOIN ") {
 		// Try to get alias from tablesInit
-		// Format can be: `table` alias or `table` AS `alias` or just table alias
-		tableInitStr := m.tablesInit
-
-		// Split by space to separate table from alias
-		parts := gstr.SplitAndTrim(tableInitStr, " ")
-		if len(parts) >= 2 {
-			// Check if second part is "AS" keyword
-			if gstr.Equal(parts[1], "AS") && len(parts) >= 3 {
-				// Format: table AS alias
-				alias := parts[2]
-				charL, charR := m.db.GetCore().GetChars()
-				alias = gstr.Trim(alias, charL+charR)
-				if alias != "" {
-					autoPrefix = m.QuoteWord(alias)
-				}
-			} else if !gstr.Equal(parts[1], "AS") {
-				// Format: table alias (without AS keyword)
-				alias := parts[1]
-				charL, charR := m.db.GetCore().GetChars()
-				alias = gstr.Trim(alias, charL+charR)
-				if alias != "" {
-					autoPrefix = m.QuoteWord(alias)
-				}
-			}
+		alias, _ := m.parseTableAlias(m.tablesInit)
+		if alias != "" {
+			autoPrefix = m.QuoteWord(alias)
 		}
 
 		// Fallback to table name if alias not found
@@ -806,26 +813,10 @@ func (m *Model) getPrefixByField(fieldName string) string {
 	var tables = make(map[string]string) // map[alias/tableName]realTableName
 
 	// Add main table
-	tableInitStr := m.tablesInit
-	parts := gstr.SplitAndTrim(tableInitStr, " ")
-	if len(parts) >= 2 {
-		if gstr.Equal(parts[1], "AS") && len(parts) >= 3 {
-			// Format: table AS alias
-			charL, charR := m.db.GetCore().GetChars()
-			alias := gstr.Trim(parts[2], charL+charR)
-			tableName := gstr.Trim(parts[0], charL+charR)
-			tables[alias] = tableName
-		} else if !gstr.Equal(parts[1], "AS") {
-			// Format: table alias
-			charL, charR := m.db.GetCore().GetChars()
-			alias := gstr.Trim(parts[1], charL+charR)
-			tableName := gstr.Trim(parts[0], charL+charR)
-			tables[alias] = tableName
-		}
-	} else if len(parts) == 1 {
-		// No alias, use table name directly
-		charL, charR := m.db.GetCore().GetChars()
-		tableName := gstr.Trim(parts[0], charL+charR)
+	alias, tableName := m.parseTableAlias(m.tablesInit)
+	if alias != "" {
+		tables[alias] = tableName
+	} else if tableName != "" {
 		tables[tableName] = tableName
 	}
 
