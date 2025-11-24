@@ -58,6 +58,9 @@ func NewBKVTreeFrom[K comparable, V any](m int, comparator func(v1, v2 K) int, d
 
 // Clone clones and returns a new tree from current tree.
 func (tree *BKVTree[K, V]) Clone() *BKVTree[K, V] {
+	if tree == nil {
+		return nil
+	}
 	newTree := NewBKVTree[K, V](tree.m, tree.comparator, tree.mu.IsSafe())
 	newTree.Sets(tree.Map())
 	return newTree

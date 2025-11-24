@@ -56,6 +56,9 @@ func NewAVLKVTreeFrom[K comparable, V any](comparator func(v1, v2 K) int, data m
 
 // Clone clones and returns a new tree from current tree.
 func (tree *AVLKVTree[K, V]) Clone() *AVLKVTree[K, V] {
+	if tree == nil {
+		return nil
+	}
 	newTree := NewAVLKVTree[K, V](tree.comparator, tree.mu.IsSafe())
 	newTree.Sets(tree.Map())
 	return newTree

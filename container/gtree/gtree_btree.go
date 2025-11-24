@@ -44,6 +44,9 @@ func NewBTreeFrom(m int, comparator func(v1, v2 any) int, data map[any]any, safe
 
 // Clone clones and returns a new tree from current tree.
 func (tree *BTree) Clone() *BTree {
+	if tree == nil {
+		return nil
+	}
 	return &BTree{
 		BKVTree: tree.BKVTree.Clone(),
 	}

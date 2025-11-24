@@ -90,6 +90,9 @@ func (tree *RedBlackKVTree[K, V]) SetComparator(comparator func(a, b K) int) {
 
 // Clone clones and returns a new tree from current tree.
 func (tree *RedBlackKVTree[K, V]) Clone() *RedBlackKVTree[K, V] {
+	if tree == nil {
+		return nil
+	}
 	newTree := NewRedBlackKVTree[K, V](tree.comparator, tree.mu.IsSafe())
 	newTree.Sets(tree.Map())
 	return newTree

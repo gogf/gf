@@ -59,7 +59,9 @@ func (tree *RedBlackTree) SetComparator(comparator func(a, b any) int) {
 
 // Clone clones and returns a new tree from current tree.
 func (tree *RedBlackTree) Clone() *RedBlackTree {
-	tree.lazyInit()
+	if tree == nil {
+		return nil
+	}
 	return &RedBlackTree{
 		RedBlackKVTree: tree.RedBlackKVTree.Clone(),
 	}
