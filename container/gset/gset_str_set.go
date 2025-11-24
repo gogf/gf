@@ -94,9 +94,9 @@ func (set *StrSet) Contains(item string) bool {
 // Note that it internally iterates the whole set to do the comparison with case-insensitively.
 func (set *StrSet) ContainsI(item string) bool {
 	set.lazyInit()
-	set.TSet.mu.RLock()
-	defer set.TSet.mu.RUnlock()
-	for k := range set.TSet.data {
+	set.mu.RLock()
+	defer set.mu.RUnlock()
+	for k := range set.data {
 		if strings.EqualFold(k, item) {
 			return true
 		}
