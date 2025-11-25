@@ -41,8 +41,6 @@ for file in `find . -name go.mod`; do
         fi
     fi
     
-    
-    
     # if [[ $dirpath = "." ]]; then
     #     # No space left on device error sometimes occurs in CI pipelines, so clean the cache before tests.
     #     go clean -cache
