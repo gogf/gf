@@ -6,7 +6,7 @@ dirpath=$1
 if [ -n "$dirpath" ]; then
     dirname=$(basename "$dirpath")
     echo "Cleaning Docker resources for path: $dirpath (pattern: $dirname)"
-    df -h
+    df -h /
     
     # Process containers and images based on the directory
     case "$dirname" in
@@ -29,7 +29,7 @@ if [ -n "$dirpath" ]; then
                 docker rm -f $containers 2>/dev/null || true
             fi
             docker rmi -f $(docker images -q mcr.microsoft.com/mssql/server 2>/dev/null) 2>/dev/null || true
-            ;;
+        ;;
         "pgsql")
             echo "Cleaning postgres resources..."
             containers=$(docker ps -aq --filter "name=$dirname" 2>/dev/null)
@@ -39,7 +39,7 @@ if [ -n "$dirpath" ]; then
                 docker rm -f $containers 2>/dev/null || true
             fi
             docker rmi -f $(docker images -q postgres 2>/dev/null) 2>/dev/null || true
-            ;;
+        ;;
         "oracle")
             echo "Cleaning oracle resources..."
             containers=$(docker ps -aq --filter "name=$dirname" 2>/dev/null)
@@ -49,7 +49,7 @@ if [ -n "$dirpath" ]; then
                 docker rm -f $containers 2>/dev/null || true
             fi
             docker rmi -f $(docker images -q loads/oracle-xe-11g-r2 2>/dev/null) 2>/dev/null || true
-            ;;
+        ;;
         "dm")
             echo "Cleaning dm resources..."
             containers=$(docker ps -aq --filter "name=$dirname" 2>/dev/null)
@@ -59,7 +59,7 @@ if [ -n "$dirpath" ]; then
                 docker rm -f $containers 2>/dev/null || true
             fi
             docker rmi -f $(docker images -q loads/dm 2>/dev/null) 2>/dev/null || true
-            ;;
+        ;;
         "clickhouse")
             echo "Cleaning clickhouse resources..."
             containers=$(docker ps -aq --filter "name=$dirname" 2>/dev/null)
@@ -69,7 +69,7 @@ if [ -n "$dirpath" ]; then
                 docker rm -f $containers 2>/dev/null || true
             fi
             docker rmi -f $(docker images -q clickhouse/clickhouse-server 2>/dev/null) 2>/dev/null || true
-            ;;
+        ;;
         # "redis")
         #     echo "Cleaning redis resources..."
         #     containers=$(docker ps -aq --filter "name=$dirname" 2>/dev/null)
@@ -89,7 +89,7 @@ if [ -n "$dirpath" ]; then
                 docker rm -f $containers 2>/dev/null || true
             fi
             docker rmi -f $(docker images -q bitnamilegacy/etcd 2>/dev/null) 2>/dev/null || true
-            ;;
+        ;;
         # "consul")
         #     echo "Cleaning consul resources..."
         #     containers=$(docker ps -aq --filter "name=$dirname" 2>/dev/null)
@@ -129,7 +129,7 @@ if [ -n "$dirpath" ]; then
                 docker rm -f $containers 2>/dev/null || true
             fi
             docker rmi -f $(docker images -q zookeeper 2>/dev/null) 2>/dev/null || true
-            ;;
+        ;;
         # "apollo")
         #     echo "Cleaning apollo resources..."
         #     containers=$(docker ps -aq --filter "name=$dirname" 2>/dev/null)
@@ -143,7 +143,7 @@ if [ -n "$dirpath" ]; then
         *)
             # No matching pattern, skip cleanup
             echo "No specific Docker cleanup rule for '$dirname', skipping cleanup"
-            ;;
+        ;;
     esac
     
     # Remove dangling images and volumes to free up space
@@ -153,8 +153,19 @@ if [ -n "$dirpath" ]; then
     
     echo "Docker cleanup completed for $dirname"
     docker system df
-    df -h
+    df -h /
 fi
+
+# df -h /
+# Filesystem      Size  Used Avail Use% Mounted on
+# /dev/root        72G   67G  5.4G  93% /
+# tmpfs           7.9G   84K  7.9G   1% /dev/shm
+# tmpfs           3.2G  2.6M  3.2G   1% /run
+# tmpfs           5.0M     0  5.0M   0% /run/lock
+# /dev/sdb16      881M   62M  758M   8% /boot
+# /dev/sdb15      105M  6.2M   99M   6% /boot/efi
+# /dev/sda1        74G  4.1G   66G   6% /mnt
+# tmpfs           1.6G   12K  1.6G   1% /run/user/1001
 
 # runner@runnervmg1sw1:~/work/gf/gf$ docker system df
 # TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE

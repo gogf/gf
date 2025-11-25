@@ -135,7 +135,6 @@ jobs:
       # -e MSSQL_PASSWORD=LoremIpsum86 \
       # mcr.microsoft.com/mssql/server:2022-latest
       
-      # TODO remove this ignoring codes after the mssql docker service OK
       mssql:
         image: mcr.microsoft.com/mssql/server:2022-latest
         env:
