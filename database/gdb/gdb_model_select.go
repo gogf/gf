@@ -939,9 +939,10 @@ func (m *Model) formatCondition(
 	if m.groupBy != "" {
 		conditionExtra += " GROUP BY " + m.groupBy
 	}
+	softDeletingCondition := m.softTimeMaintainer().GetWhereConditionForDelete(ctx)
+	m.tenantMaintainer().AppendTenantCondition(ctx)
 	// WHERE
 	conditionWhere, conditionArgs = m.whereBuilder.Build()
-	softDeletingCondition := m.softTimeMaintainer().GetWhereConditionForDelete(ctx)
 	if m.rawSql != "" && conditionWhere != "" {
 		if gstr.ContainsI(m.rawSql, " WHERE ") {
 			conditionWhere = " AND " + conditionWhere
