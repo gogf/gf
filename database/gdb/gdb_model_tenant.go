@@ -229,7 +229,6 @@ func (tm *TenantMaintainer) getConditionOfTableStringForTenant(ctx context.Conte
 		return tm.getConditionByFieldAndValue(array1[1], tenantIdField, t)
 	}
 	return tm.getConditionByFieldAndValue(table, tenantIdField, t)
-
 }
 
 // getConditionByFieldAndValue generates condition string based on field prefix, field name and value type
