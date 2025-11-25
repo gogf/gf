@@ -134,7 +134,6 @@ jobs:
       # -e MSSQL_USER=root \
       # -e MSSQL_PASSWORD=LoremIpsum86 \
       # mcr.microsoft.com/mssql/server:2022-latest
-      
       mssql:
         image: mcr.microsoft.com/mssql/server:2022-latest
         env:
