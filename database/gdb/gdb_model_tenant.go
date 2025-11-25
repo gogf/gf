@@ -23,10 +23,13 @@ const (
 	NullType         TenantValueType = "NilType"
 )
 
+// CtxKeyForTenant defines the context key for tenant ID field and value
+type CtxKeyForTenant string
+
 // Context keys for tenant ID field and value
 const (
-	CtxKeyForTenantIdField = "CtxKeyForTenantIdField"
-	CtxKeyForTenantIdValue = "CtxKeyForTenantIdValue"
+	CtxKeyForTenantIdField CtxKeyForTenant = "CtxKeyForTenantIdField"
+	CtxKeyForTenantIdValue CtxKeyForTenant = "CtxKeyForTenantIdValue"
 )
 
 // WithTenantIdField sets the tenant ID field name into context
