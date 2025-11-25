@@ -175,7 +175,16 @@ func (tm *TenantMaintainer) getWhereConditionForTenant(ctx context.Context) (*ga
 			}
 		}
 	}
-	conditionArray.FilterEmpty()
+	if conditionArray.Len() > 0 {
+		return conditionArray, argArray, tenantValueType
+	}
+	// Only one table
+	if c := tm.getConditionOfTableStringForTenant(ctx, tm.tablesInit, tenantIdField, tenantValueType); c != "" {
+		conditionArray.Append(c)
+		if tenantValueType != NullType {
+			argArray.Append(tenantIdValue)
+		}
+	}
 	return conditionArray, argArray, tenantValueType
 }
 
