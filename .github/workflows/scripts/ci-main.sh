@@ -28,6 +28,8 @@ for file in `find . -name go.mod`; do
         # Check if go version meets the requirement
         if ! go version | grep -qE "go${LATEST_GO_VERSION}"; then
             echo "ignore path $dirpath as go version is not ${LATEST_GO_VERSION}: $(go version)"
+            # clean docker containers and images to free disk space
+            bash .github/workflows/scripts/ci-main-clean.sh "$dirpath"
             continue 1
         fi
     fi
