@@ -47,9 +47,14 @@ func init() {
 	}
 
 	if configNode.Name == "" {
-		schemaTemplate := "SELECT 'CREATE DATABASE %s' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '%s')"
-		if _, err := db.Exec(ctx, fmt.Sprintf(schemaTemplate, SchemaName, SchemaName)); err != nil {
+		// openGauss does not support `CREATE DATABASE IF NOT EXISTS`, so check first then create.
+		exists, err := db.GetValue(ctx, "SELECT 1 FROM pg_database WHERE datname = ?", SchemaName)
+		if err != nil {
 			gtest.Error(err)
+		} else if exists == nil {
+			if _, err := db.Exec(ctx, fmt.Sprintf(`CREATE DATABASE "%s"`, SchemaName)); err != nil {
+				gtest.Error(err)
+			}
 		}
 
 		db = db.Schema(SchemaName)
