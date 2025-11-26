@@ -38,7 +38,7 @@ func init() {
 	}
 
 	// opengauss only permit to connect to the designation database.
-	// so you need to create the pgsql opengauss before you use orm
+	// so you need to create the opengauss database before you use orm
 	gdb.AddConfigNode(gdb.DefaultGroupName, configNode)
 	if r, err := gdb.New(configNode); err != nil {
 		gtest.Fatal(err)
