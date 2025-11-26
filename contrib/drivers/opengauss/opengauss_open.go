@@ -9,6 +9,7 @@ package opengauss
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -35,23 +36,28 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 }
 
 func configNodeToSource(config *gdb.ConfigNode) (string, error) {
-	var source string
-	source = fmt.Sprintf(
-		"user=%s password='%s' host=%s sslmode=disable",
-		config.User, config.Pass, config.Host,
+	var (
+		parts    []string
+		addParam = func(key string, value any) {
+			parts = append(parts, fmt.Sprintf(`%s=%s`, key, quoteConnectionValue(fmt.Sprint(value))))
+		}
+		addOptionalParam = func(key string, value any) {
+			valueStr := fmt.Sprint(value)
+			if valueStr == "" {
+				return
+			}
+			addParam(key, valueStr)
+		}
 	)
-	if config.Port != "" {
-		source = fmt.Sprintf("%s port=%s", source, config.Port)
-	}
-	if config.Name != "" {
-		source = fmt.Sprintf("%s dbname=%s", source, config.Name)
-	}
-	if config.Namespace != "" {
-		source = fmt.Sprintf("%s search_path=%s", source, config.Namespace)
-	}
-	if config.Timezone != "" {
-		source = fmt.Sprintf("%s timezone=%s", source, config.Timezone)
-	}
+
+	addParam("user", config.User)
+	addParam("password", config.Pass)
+	addParam("host", config.Host)
+	addParam("sslmode", "disable")
+	addOptionalParam("port", config.Port)
+	addOptionalParam("dbname", config.Name)
+	addOptionalParam("search_path", config.Namespace)
+	addOptionalParam("timezone", config.Timezone)
 	if config.Extra != "" {
 		extraMap, err := gstr.Parse(config.Extra)
 		if err != nil {
@@ -62,8 +68,14 @@ func configNodeToSource(config *gdb.ConfigNode) (string, error) {
 			)
 		}
 		for k, v := range extraMap {
-			source += fmt.Sprintf(` %s=%s`, k, v)
+			addOptionalParam(k, v)
 		}
 	}
-	return source, nil
+	return strings.Join(parts, " "), nil
+}
+
+func quoteConnectionValue(value string) string {
+	value = strings.ReplaceAll(value, `\`, `\\`)
+	value = strings.ReplaceAll(value, `'`, `\\'`)
+	return fmt.Sprintf(`'%s'`, value)
 }

@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"strings"
 
+	"gitee.com/opengauss/openGauss-connector-go-pq"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -56,7 +58,7 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 	// check if it is an insert operation.
 	if !isUseCoreDoExec && pkField.Name != "" && strings.Contains(sql, "INSERT INTO") {
 		primaryKey = pkField.Name
-		sql += fmt.Sprintf(` RETURNING "%s"`, primaryKey)
+		sql += fmt.Sprintf(` RETURNING %s`, pq.QuoteIdentifier(primaryKey))
 	} else {
 		// use default DoExec
 		return d.Core.DoExec(ctx, link, sql, args...)
