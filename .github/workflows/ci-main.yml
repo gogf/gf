@@ -134,9 +134,9 @@ jobs:
       # -e GS_USER_PASSWORD=openGauss@123 \
       # -e GS_DB=test \
       # -v postgres:/Users/john/Temp/opengauss/data \
-      # opengauss:7.0.0-RC2.B015
+      # opengauss/opengauss:7.0.0-RC2.B015
       opengauss:
-        image: opengauss:7.0.0-RC2.B015
+        image: opengauss/opengauss:7.0.0-RC2.B015
         env:
           GS_PASSWORD: openGauss@123
           GS_USERNAME: gaussdb
