@@ -34,7 +34,7 @@ var (
 
 func init() {
 	configNode = gdb.ConfigNode{
-		Link: `opengauss:gaussdb:openGauss@123@tcp(127.0.0.1:5432)`,
+		Link: `opengauss:gaussdb:openGauss@123@tcp(127.0.0.1:5433)`,
 	}
 
 	// opengauss only permit to connect to the designation database.
