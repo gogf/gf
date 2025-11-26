@@ -76,6 +76,7 @@ for file in `find ${workdir} -name go.mod`; do
         go mod edit -replace github.com/gogf/gf/contrib/drivers/clickhouse/v2=../../contrib/drivers/clickhouse
         go mod edit -replace github.com/gogf/gf/contrib/drivers/mssql/v2=../../contrib/drivers/mssql
         go mod edit -replace github.com/gogf/gf/contrib/drivers/mysql/v2=../../contrib/drivers/mysql
+        go mod edit -replace github.com/gogf/gf/contrib/drivers/opengauss/v2=../../contrib/drivers/opengauss
         go mod edit -replace github.com/gogf/gf/contrib/drivers/oracle/v2=../../contrib/drivers/oracle
         go mod edit -replace github.com/gogf/gf/contrib/drivers/pgsql/v2=../../contrib/drivers/pgsql
         go mod edit -replace github.com/gogf/gf/contrib/drivers/sqlite/v2=../../contrib/drivers/sqlite

@@ -40,6 +40,16 @@ if [ -n "$dirpath" ]; then
             fi
             docker rmi -f $(docker images -q postgres 2>/dev/null) 2>/dev/null || true
         ;;
+        "opengauss")
+            echo "Cleaning opengauss resources..."
+            containers=$(docker ps -aq --filter "name=$dirname" 2>/dev/null)
+            if [ -n "$containers" ]; then
+                echo "Stopping and removing opengauss containers..."
+                docker stop $containers 2>/dev/null || true
+                docker rm -f $containers 2>/dev/null || true
+            fi
+            docker rmi -f $(docker images -q opengauss 2>/dev/null) 2>/dev/null || true
+        ;;
         "oracle")
             echo "Cleaning oracle resources..."
             containers=$(docker ps -aq --filter "name=$dirname" 2>/dev/null)

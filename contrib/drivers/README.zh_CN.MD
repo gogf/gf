@@ -12,6 +12,7 @@ go get -u github.com/gogf/gf/contrib/drivers/mysql/v2
 go get -u github.com/gogf/gf/contrib/drivers/clickhouse/v2
 go get -u github.com/gogf/gf/contrib/drivers/dm/v2
 go get -u github.com/gogf/gf/contrib/drivers/mssql/v2
+go get -u github.com/gogf/gf/contrib/drivers/opengauss/v2
 go get -u github.com/gogf/gf/contrib/drivers/oracle/v2
 go get -u github.com/gogf/gf/contrib/drivers/pgsql/v2
 go get -u github.com/gogf/gf/contrib/drivers/sqlite/v2
@@ -66,6 +67,16 @@ import _ "github.com/gogf/gf/contrib/drivers/sqlitecgo/v2"
 
 ```go
 import _ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
+```
+
+注意：
+
+- 不支持 `Replace` 功能。
+
+### openGauss
+
+```go
+import _ "github.com/gogf/gf/contrib/drivers/opengauss/v2"
 ```
 
 注意：
