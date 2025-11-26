@@ -20,12 +20,12 @@ import (
 )
 
 const (
-	TableSize          = 10
-	TablePrefix        = "t_"
-	SchemaName         = "test"
-	defaultDatabase    = "gaussdb"
-	CreateTime         = "2018-10-24 10:00:00"
-	createSchemaTpl    = `CREATE SCHEMA IF NOT EXISTS "%s"`
+	TableSize       = 10
+	TablePrefix     = "t_"
+	SchemaName      = "test"
+	defaultDatabase = "gaussdb"
+	CreateTime      = "2018-10-24 10:00:00"
+	createSchemaTpl = `CREATE SCHEMA IF NOT EXISTS "%s"`
 )
 
 var (
