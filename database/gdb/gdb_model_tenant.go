@@ -42,6 +42,11 @@ func WithTenantIdValue(ctx context.Context, value any) context.Context {
 	return context.WithValue(ctx, CtxKeyForTenantIdValue, value)
 }
 
+// WithTenantIdFieldAndValue sets the tenant ID field and value into context
+func WithTenantIdFieldAndValue(ctx context.Context, field string, value any) context.Context {
+	return WithTenantIdField(WithTenantIdValue(ctx, value), field)
+}
+
 // DefaultGetTenantIdFieldValue retrieves tenant ID field and value from context
 func DefaultGetTenantIdFieldValue(ctx context.Context) (field string, value any) {
 	value = ctx.Value(CtxKeyForTenantIdValue)
