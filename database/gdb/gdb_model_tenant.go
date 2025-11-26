@@ -20,7 +20,7 @@ type TenantValueType string
 const (
 	ArrayOrSliceType TenantValueType = "ArrayOrSliceType"
 	BaseType         TenantValueType = "BaseType"
-	NullType         TenantValueType = "NilType"
+	NullType         TenantValueType = "NullType"
 )
 
 // CtxKeyForTenant defines the context key for tenant ID field and value
