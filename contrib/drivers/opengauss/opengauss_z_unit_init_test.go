@@ -20,10 +20,12 @@ import (
 )
 
 const (
-	TableSize   = 10
-	TablePrefix = "t_"
-	SchemaName  = "test"
-	CreateTime  = "2018-10-24 10:00:00"
+	TableSize          = 10
+	TablePrefix        = "t_"
+	SchemaName         = "test"
+	defaultDatabase    = "gaussdb"
+	CreateTime         = "2018-10-24 10:00:00"
+	createSchemaTpl    = `CREATE SCHEMA IF NOT EXISTS "%s"`
 )
 
 var (
@@ -36,6 +38,13 @@ func init() {
 	configNode = gdb.ConfigNode{
 		Link: `opengauss:gaussdb:openGauss@123@tcp(127.0.0.1:5433)`,
 	}
+	if configNode.Name == "" {
+		// Use default database created by the container to avoid CREATE DATABASE privilege issues.
+		configNode.Name = defaultDatabase
+	}
+	if configNode.Namespace == "" {
+		configNode.Namespace = SchemaName
+	}
 
 	// opengauss only permit to connect to the designation database.
 	// so you need to create the opengauss database before you use orm
@@ -46,22 +55,10 @@ func init() {
 		db = r
 	}
 
-	if configNode.Name == "" {
-		// openGauss does not support `CREATE DATABASE IF NOT EXISTS`, so check first then create.
-		exists, err := db.GetValue(ctx, "SELECT 1 FROM pg_database WHERE datname = ?", SchemaName)
-		if err != nil {
-			gtest.Error(err)
-		} else if exists == nil {
-			if _, err := db.Exec(ctx, fmt.Sprintf(`CREATE DATABASE "%s"`, SchemaName)); err != nil {
-				gtest.Error(err)
-			}
-		}
-
-		db = db.Schema(SchemaName)
-	} else {
-		db = db.Schema(configNode.Name)
+	if _, err := db.Exec(ctx, fmt.Sprintf(createSchemaTpl, SchemaName)); err != nil {
+		gtest.Fatal(err)
 	}
-
+	db = db.Schema(SchemaName)
 }
 
 func createTable(table ...string) string {
