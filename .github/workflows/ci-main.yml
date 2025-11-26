@@ -130,7 +130,6 @@ jobs:
       # docker run -d --name opengauss --privileged=true \
       # -p 5433:5432 \
       # -e GS_PASSWORD=openGauss@123 \
-      # -e GS_USERNAME=gaussdb \
       # -e GS_USER_PASSWORD=openGauss@123 \
       # -e GS_DB=test \
       # -v postgres:/Users/john/Temp/opengauss/data \
@@ -139,7 +138,6 @@ jobs:
         image: opengauss/opengauss:7.0.0-RC2.B015
         env:
           GS_PASSWORD: openGauss@123
-          GS_USERNAME: gaussdb
           GS_USER_PASSWORD: openGauss@123
           GS_DB: test
         ports:
