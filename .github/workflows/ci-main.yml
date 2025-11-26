@@ -130,7 +130,6 @@ jobs:
       # docker run -d --name opengauss --privileged=true \
       # -p 5433:5432 \
       # -e GS_PASSWORD=openGauss@123 \
-      # -e GS_USER_PASSWORD=openGauss@123 \
       # -e GS_DB=test \
       # -v postgres:/Users/john/Temp/opengauss/data \
       # opengauss/opengauss:7.0.0-RC2.B015
@@ -138,16 +137,9 @@ jobs:
         image: opengauss/opengauss:7.0.0-RC2.B015
         env:
           GS_PASSWORD: openGauss@123
-          GS_USER_PASSWORD: openGauss@123
           GS_DB: test
         ports:
           - 5433:5432
-        # Set health checks to wait until postgres has started
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
       # MSSQL backend server.
       # docker run \
