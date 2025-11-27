@@ -95,6 +95,7 @@ generated json tag case for model struct, cases are as follows:
 	CGenDaoBriefTplDaoDoPathPath   = `template file path for dao do file`
 	CGenDaoBriefTplDaoEntityPath   = `template file path for dao entity file`
 
+	tplVarTables                  = `TplTables`
 	tplVarTableName               = `TplTableName`
 	tplVarTableNameCamelCase      = `TplTableNameCamelCase`
 	tplVarTableNameCamelLowerCase = `TplTableNameCamelLowerCase`
