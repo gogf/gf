@@ -260,11 +260,12 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 		return nil, gerror.NewCode(gcode.CodeMissingParameter, "inserting into table with empty data")
 	}
 	var (
-		list                             List
-		stm                              = m.softTimeMaintainer()
-		fieldNameCreate, fieldTypeCreate = stm.GetFieldNameAndTypeForCreate(ctx, "", m.tablesInit)
-		fieldNameUpdate, fieldTypeUpdate = stm.GetFieldNameAndTypeForUpdate(ctx, "", m.tablesInit)
-		fieldNameDelete, fieldTypeDelete = stm.GetFieldNameAndTypeForDelete(ctx, "", m.tablesInit)
+		list                                          List
+		stm                                           = m.softTimeMaintainer()
+		fieldNameCreate, fieldTypeCreate              = stm.GetFieldNameAndTypeForCreate(ctx, "", m.tablesInit)
+		fieldNameUpdate, fieldTypeUpdate              = stm.GetFieldNameAndTypeForUpdate(ctx, "", m.tablesInit)
+		fieldNameDelete, fieldTypeDelete              = stm.GetFieldNameAndTypeForDelete(ctx, "", m.tablesInit)
+		tenantFieldNameCreate, tenantFieldValueCreate = m.tenantMaintainer().GetFieldNameAndValueForCreate(ctx, "", m.tablesInit)
 	)
 	// m.data was already converted to type List/Map by function Data
 	newData, err := m.filterDataForInsertOrUpdate(m.data)
@@ -291,26 +292,36 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 	if fieldNameUpdate != "" && m.isFieldInFieldsEx(fieldNameUpdate) {
 		fieldNameUpdate = ""
 	}
-	var isSoftTimeFeatureEnabled = fieldNameCreate != "" || fieldNameUpdate != ""
-	if !m.unscoped && isSoftTimeFeatureEnabled {
+	var (
+		isSoftTimeFeatureEnabled = !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "")
+		isTenantFeatureEnabled   = tenantFieldNameCreate != "" && m.tenantOption.Enable && (m.tenantOption.InsertNullValue || tenantFieldValueCreate != nil)
+	)
+	if isSoftTimeFeatureEnabled || isTenantFeatureEnabled {
 		for k, v := range list {
-			if fieldNameCreate != "" && empty.IsNil(v[fieldNameCreate]) {
-				fieldCreateValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeCreate, false)
-				if fieldCreateValue != nil {
-					v[fieldNameCreate] = fieldCreateValue
+			if !m.unscoped && isSoftTimeFeatureEnabled {
+				if fieldNameCreate != "" && empty.IsNil(v[fieldNameCreate]) {
+					fieldCreateValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeCreate, false)
+					if fieldCreateValue != nil {
+						v[fieldNameCreate] = fieldCreateValue
+					}
+				}
+				if fieldNameUpdate != "" && empty.IsNil(v[fieldNameUpdate]) {
+					fieldUpdateValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate, false)
+					if fieldUpdateValue != nil {
+						v[fieldNameUpdate] = fieldUpdateValue
+					}
+				}
+				// for timestamp field that should initialize the delete_at field with value, for example 0.
+				if fieldNameDelete != "" && empty.IsNil(v[fieldNameDelete]) {
+					fieldDeleteValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeDelete, true)
+					if fieldDeleteValue != nil {
+						v[fieldNameDelete] = fieldDeleteValue
+					}
 				}
 			}
-			if fieldNameUpdate != "" && empty.IsNil(v[fieldNameUpdate]) {
-				fieldUpdateValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate, false)
-				if fieldUpdateValue != nil {
-					v[fieldNameUpdate] = fieldUpdateValue
-				}
-			}
-			// for timestamp field that should initialize the delete_at field with value, for example 0.
-			if fieldNameDelete != "" && empty.IsNil(v[fieldNameDelete]) {
-				fieldDeleteValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeDelete, true)
-				if fieldDeleteValue != nil {
-					v[fieldNameDelete] = fieldDeleteValue
+			if m.tenantOption.Enable && isTenantFeatureEnabled {
+				if empty.IsNil(v[tenantFieldNameCreate]) {
+					v[tenantFieldNameCreate] = tenantFieldValueCreate
 				}
 			}
 			list[k] = v

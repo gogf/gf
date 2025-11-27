@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"strings"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/internal/reflection"
@@ -62,6 +61,7 @@ func DefaultGetTenantIdFieldValue(ctx context.Context) (field string, value any)
 type TenantOption struct {
 	Enable                    bool                                                // Enable controls whether the tenant feature is enabled.
 	PropagateToJoins          bool                                                // PropagateToJoins determines whether tenant conditions should be applied to joined tables.
+	InsertNullValue           bool                                                // InsertNullValue  refers to whether to insert a null value for the tenant ID field if the value is nil at insert
 	GetTenantIdFieldValueFunc func(ctx context.Context) (field string, value any) // GetTenantIdFieldValueFunc is a function that retrieves the tenant ID field and value for a given context.
 }
 
@@ -150,7 +150,7 @@ func (tm *TenantMaintainer) getWhereConditionForTenant(ctx context.Context) (*ga
 	if gstr.Contains(tm.tables, " JOIN ") {
 		// Extract main table from JOIN query
 		tableMatch, _ := gregex.MatchString(`(.+?) [A-Z]+ JOIN`, tm.tables)
-		if c := tm.getConditionOfTableStringForTenant(ctx, tableMatch[1], tenantIdField, tenantValueType); c != "" {
+		if c := tm.getCondition(ctx, tableMatch[1], tenantIdField, tenantValueType); c != "" {
 			conditionArray.Append(c)
 			if tenantValueType != NullType {
 				argArray.Append(tenantIdValue)
@@ -160,7 +160,7 @@ func (tm *TenantMaintainer) getWhereConditionForTenant(ctx context.Context) (*ga
 		if tm.tenantOption.PropagateToJoins {
 			tableMatches, _ := gregex.MatchAllString(`JOIN ([^()]+?) ON`, tm.tables)
 			for _, match := range tableMatches {
-				if c := tm.getConditionOfTableStringForTenant(ctx, match[1], tenantIdField, tenantValueType); c != "" {
+				if c := tm.getCondition(ctx, match[1], tenantIdField, tenantValueType); c != "" {
 					conditionArray.Append(c)
 					if tenantValueType != NullType {
 						argArray.Append(tenantIdValue)
@@ -172,7 +172,7 @@ func (tm *TenantMaintainer) getWhereConditionForTenant(ctx context.Context) (*ga
 	// Handle comma-separated multiple tables
 	if conditionArray.Len() == 0 && gstr.Contains(tm.tables, ",") {
 		for _, s := range gstr.SplitAndTrim(tm.tables, ",") {
-			if c := tm.getConditionOfTableStringForTenant(ctx, s, tenantIdField, tenantValueType); c != "" {
+			if c := tm.getCondition(ctx, s, tenantIdField, tenantValueType); c != "" {
 				conditionArray.Append(c)
 				if tenantValueType != NullType {
 					argArray.Append(tenantIdValue)
@@ -184,7 +184,7 @@ func (tm *TenantMaintainer) getWhereConditionForTenant(ctx context.Context) (*ga
 		return conditionArray, argArray, tenantValueType
 	}
 	// Only one table
-	if c := tm.getConditionOfTableStringForTenant(ctx, tm.tablesInit, tenantIdField, tenantValueType); c != "" {
+	if c := tm.getCondition(ctx, tm.tablesInit, tenantIdField, tenantValueType); c != "" {
 		conditionArray.Append(c)
 		if tenantValueType != NullType {
 			argArray.Append(tenantIdValue)
@@ -207,12 +207,12 @@ func (tm *TenantMaintainer) getTenantValueType(value any) TenantValueType {
 	}
 }
 
-// getConditionOfTableStringForTenant generates tenant condition for a specific table string
-func (tm *TenantMaintainer) getConditionOfTableStringForTenant(ctx context.Context, s string, tenantIdField string, t TenantValueType) string {
+// getCondition generates tenant condition field name for a specific table string
+func (tm *TenantMaintainer) getCondition(ctx context.Context, tableName string, tenantIdField string, tenantValueType TenantValueType) string {
 	var (
 		table  string
 		schema string
-		array1 = gstr.SplitAndTrim(s, " ")
+		array1 = gstr.SplitAndTrim(tableName, " ")
 		array2 = gstr.SplitAndTrim(array1[0], ".")
 	)
 	// Parse schema and table name
@@ -228,16 +228,16 @@ func (tm *TenantMaintainer) getConditionOfTableStringForTenant(ctx context.Conte
 	}
 	// Generate condition with appropriate field prefix
 	if len(array1) >= 3 {
-		return tm.getConditionByFieldAndValue(array1[2], tenantIdField, t)
+		return tm.getFieldNameCondition(array1[2], tenantIdField, tenantValueType)
 	}
 	if len(array1) >= 2 {
-		return tm.getConditionByFieldAndValue(array1[1], tenantIdField, t)
+		return tm.getFieldNameCondition(array1[1], tenantIdField, tenantValueType)
 	}
-	return tm.getConditionByFieldAndValue(table, tenantIdField, t)
+	return tm.getFieldNameCondition(table, tenantIdField, tenantValueType)
 }
 
-// getConditionByFieldAndValue generates condition string based on field prefix, field name and value type
-func (tm *TenantMaintainer) getConditionByFieldAndValue(fieldPrefix, fieldName string, t TenantValueType) string {
+// getFieldNameCondition generates condition field string based on field prefix and field name
+func (tm *TenantMaintainer) getFieldNameCondition(fieldPrefix, fieldName string, tenantValueType TenantValueType) string {
 	var (
 		quotedFieldPrefix = tm.db.GetCore().QuoteWord(fieldPrefix)
 		quotedFieldName   = tm.db.GetCore().QuoteWord(fieldName)
@@ -247,7 +247,7 @@ func (tm *TenantMaintainer) getConditionByFieldAndValue(fieldPrefix, fieldName s
 		quotedFieldName = fmt.Sprintf(`%s.%s`, quotedFieldPrefix, quotedFieldName)
 	}
 	// Generate condition based on value type
-	switch t {
+	switch tenantValueType {
 	case BaseType:
 		return fmt.Sprintf(`%s = ?`, quotedFieldName)
 	default:
@@ -258,7 +258,8 @@ func (tm *TenantMaintainer) getConditionByFieldAndValue(fieldPrefix, fieldName s
 // existFieldName checks if a field exists in the specified table
 func (tm *TenantMaintainer) existFieldName(ctx context.Context, schema string, table string, tenantIdField string) bool {
 	group := tm.db.GetGroup()
-	key := genTableFieldsCacheKey(group, gutil.GetOrDefaultStr(tm.db.GetSchema(), schema), strings.Trim(table, "`"))
+	charL, charR := tm.db.GetChars()
+	key := genTableFieldsCacheKey(group, gutil.GetOrDefaultStr(tm.db.GetSchema(), schema), gstr.Trim(table, charL+charR))
 	v, err := tm.db.GetCore().GetInnerMemCache().Get(ctx, key)
 	if err != nil {
 		return false
@@ -271,4 +272,29 @@ func (tm *TenantMaintainer) existFieldName(ctx context.Context, schema string, t
 		}
 	}
 	return false
+}
+
+// GetFieldNameAndValueForCreate returns the field name and value for creating a record
+func (tm *TenantMaintainer) GetFieldNameAndValueForCreate(ctx context.Context, schema string, table string) (string, any) {
+	if !tm.tenantOption.Enable {
+		return "", nil
+	}
+	var (
+		tenantIdField string
+		tenantIdValue any
+	)
+	// Get tenant ID field and value using custom function or default function
+	if tm.tenantOption.GetTenantIdFieldValueFunc == nil {
+		tenantIdField, tenantIdValue = DefaultGetTenantIdFieldValue(ctx)
+	} else {
+		tenantIdField, tenantIdValue = tm.tenantOption.GetTenantIdFieldValueFunc(ctx)
+	}
+	if tenantIdField == "" {
+		return "", nil
+	}
+	if tm.existFieldName(ctx, schema, table, tenantIdField) {
+		charL, charR := tm.db.GetChars()
+		return gstr.Trim(tenantIdField, charL+charR), tenantIdValue
+	}
+	return "", nil
 }
