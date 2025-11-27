@@ -208,3 +208,43 @@ fi
 # 27ba1904ba3a   mysql:5.7                                          "docker-entrypoint.s…"   7 minutes ago   Up 7 minutes             0.0.0.0:3306->3306/tcp, [::]:3306->3306/tcp, 33060/tcp                                                                                                                                                                        ea6d7a4c207d427a95b5ae0db91fdf56_mysql57_c21053                                     4B (virtual 501MB)
 # 518e785d1bb6   redis:7.0                                          "docker-entrypoint.s…"   7 minutes ago   Up 7 minutes (healthy)   0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp                                                                                                                                                                                   af6044fc849e441bbc6c48f7a5ec5fec_redis70_b11994                                     0B (virtual 109MB)
 # 7495ec2cd8e3   bitnamilegacy/etcd:3.4.24                          "/opt/bitnami/script…"   7 minutes ago   Up 7 minutes             0.0.0.0:2379->2379/tcp, [::]:2379->2379/tcp, 2380/tcp                                                                                                                                                                         49f2a2a6bf3a4fae842cc950bbc3658a_bitnamilegacyetcd3424_1265e1                       145MB (virtual 279MB)
+
+# runner@runnervmg1sw1:~/work/gf/gf$ du -ah --max-depth=1 /usr | sort -n
+# 4.0K    /usr/games
+# 4.0K    /usr/lib64
+# 6.6G    /usr/lib
+# 9.3G    /usr/share
+# 15M     /usr/lib32
+# 24G     /usr/local
+# 41G     /usr
+# 95M     /usr/sbin
+# 156M    /usr/include
+# 158M    /usr/src
+# 402M    /usr/libexec
+# 841M    /usr/bin
+
+# runner@runnervmg1sw1:~/work/gf/gf$ du -ah --max-depth=1 /opt | sort -n                                                                        
+# 4.0K    /opt/pipx_bin
+# 5.8G    /opt/hostedtoolcache
+# 8.5G    /opt
+# 12K     /opt/containerd
+# 14M     /opt/hca
+# 16K     /opt/post-generation
+# 217M    /opt/runner-cache
+# 243M    /opt/actionarchivecache
+# 374M    /opt/google
+# 515M    /opt/pipx
+# 655M    /opt/az
+# 783M    /opt/microsoft
+
+# runner@runnervmg1sw1:~/work/gf/gf$ du -ah --max-depth=1 /opt/hostedtoolcache/ | sort -n
+# 1.1G    /opt/hostedtoolcache/go
+# 1.6G    /opt/hostedtoolcache/CodeQL
+# 1.9G    /opt/hostedtoolcache/Python
+# 5.8G    /opt/hostedtoolcache/
+# 9.9M    /opt/hostedtoolcache/protoc
+# 24K     /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk
+# 217M    /opt/hostedtoolcache/Ruby
+# 520M    /opt/hostedtoolcache/PyPy
+# 574M    /opt/hostedtoolcache/node
+
