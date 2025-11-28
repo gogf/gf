@@ -61,6 +61,9 @@ func (m *KVMap[K, V]) Iterator(f func(k K, v V) bool) {
 
 // Clone returns a new hash map with copy of current map data.
 func (m *KVMap[K, V]) Clone(safe ...bool) *KVMap[K, V] {
+	if len(safe) == 0 {
+		return NewKVMapFrom(m.MapCopy(), m.mu.IsSafe())
+	}
 	return NewKVMapFrom(m.MapCopy(), safe...)
 }
 
