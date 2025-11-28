@@ -109,7 +109,7 @@ func (r *Ring) RLockIteratorNext(f func(value any) bool) {
 	r.TRing.RLockIteratorNext(f)
 }
 
-// RLockIteratorPrev iterates and locks writing backward
+// RLockIteratorPrev iterates and locks reading backward
 // with given callback function `f` within RWMutex.RLock.
 // If `f` returns true, then it continues iterating; or false to stop.
 func (r *Ring) RLockIteratorPrev(f func(value any) bool) {

@@ -211,7 +211,7 @@ func (r *TRing[T]) RLockIteratorPrev(f func(value T) bool) {
 
 // SliceNext returns a copy of all item values as slice forward from current position.
 func (r *TRing[T]) SliceNext() []T {
-	s := make([]T, 0)
+	s := make([]T, 0, r.Len())
 	r.mu.RLock()
 	if r.ring.Value != nil {
 		s = append(s, r.ring.Value.(internalTRingItem[T]).Value)
@@ -228,7 +228,7 @@ func (r *TRing[T]) SliceNext() []T {
 
 // SlicePrev returns a copy of all item values as slice backward from current position.
 func (r *TRing[T]) SlicePrev() []T {
-	s := make([]T, 0)
+	s := make([]T, 0, r.Len())
 	r.mu.RLock()
 	if r.ring.Value != nil {
 		s = append(s, r.ring.Value.(internalTRingItem[T]).Value)
