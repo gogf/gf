@@ -27,7 +27,6 @@ func NewStrAnyMap(safe ...bool) *StrAnyMap {
 	m := &StrAnyMap{
 		KVMap: NewKVMap[string, any](safe...),
 	}
-	m.doSetWithLockCheckFn = m.doSetWithLockCheck
 	return m
 }
 
@@ -38,7 +37,6 @@ func NewStrAnyMapFrom(data map[string]any, safe ...bool) *StrAnyMap {
 	m := &StrAnyMap{
 		KVMap: NewKVMapFrom(data, safe...),
 	}
-	m.doSetWithLockCheckFn = m.doSetWithLockCheck
 	return m
 }
 
@@ -47,7 +45,6 @@ func (m *StrAnyMap) lazyInit() {
 	m.once.Do(func() {
 		if m.KVMap == nil {
 			m.KVMap = NewKVMap[string, any](false)
-			m.doSetWithLockCheckFn = m.doSetWithLockCheck
 		}
 	})
 }
@@ -347,31 +344,4 @@ func (m *StrAnyMap) IsSubOf(other *StrAnyMap) bool {
 func (m *StrAnyMap) Diff(other *StrAnyMap) (addedKeys, removedKeys, updatedKeys []string) {
 	m.lazyInit()
 	return m.KVMap.Diff(other.KVMap)
-}
-
-// doSetWithLockCheck checks whether value of the key exists with mutex.Lock,
-// if not exists, set value to the map with given `key`,
-// or else just return the existing value.
-//
-// When setting value, if `value` is type of `func() interface {}`,
-// it will be executed with mutex.Lock of the hash map,
-// and its return value will be set to the map with `key`.
-//
-// It returns value with given `key`.
-func (m *StrAnyMap) doSetWithLockCheck(key string, value any) any {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if m.data == nil {
-		m.data = make(map[string]any)
-	}
-	if v, ok := m.data[key]; ok {
-		return v
-	}
-	if f, ok := value.(func() any); ok {
-		value = f()
-	}
-	if value != nil {
-		m.data[key] = value
-	}
-	return value
 }

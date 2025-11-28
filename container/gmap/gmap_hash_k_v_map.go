@@ -314,7 +314,6 @@ func (m *KVMap[K, V]) SetIfNotExistFunc(key K, f func() V) bool {
 	if !m.Contains(key) {
 		return m.SetIfNotExist(key, f())
 	}
-
 	return false
 }
 

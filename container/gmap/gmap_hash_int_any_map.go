@@ -27,7 +27,6 @@ func NewIntAnyMap(safe ...bool) *IntAnyMap {
 	m := &IntAnyMap{
 		KVMap: NewKVMap[int, any](safe...),
 	}
-	m.doSetWithLockCheckFn = m.doSetWithLockCheck
 	return m
 }
 
@@ -38,7 +37,6 @@ func NewIntAnyMapFrom(data map[int]any, safe ...bool) *IntAnyMap {
 	m := &IntAnyMap{
 		KVMap: NewKVMapFrom(data, safe...),
 	}
-	m.doSetWithLockCheckFn = m.doSetWithLockCheck
 	return m
 }
 
@@ -47,7 +45,6 @@ func (m *IntAnyMap) lazyInit() {
 	m.once.Do(func() {
 		if m.KVMap == nil {
 			m.KVMap = NewKVMap[int, any](false)
-			m.doSetWithLockCheckFn = m.doSetWithLockCheck
 		}
 	})
 }
@@ -346,31 +343,4 @@ func (m *IntAnyMap) IsSubOf(other *IntAnyMap) bool {
 func (m *IntAnyMap) Diff(other *IntAnyMap) (addedKeys, removedKeys, updatedKeys []int) {
 	m.lazyInit()
 	return m.KVMap.Diff(other.KVMap)
-}
-
-// doSetWithLockCheck checks whether value of the key exists with mutex.Lock,
-// if not exists, set value to the map with given `key`,
-// or else just return the existing value.
-//
-// When setting value, if `value` is type of `func() interface {}`,
-// it will be executed with mutex.Lock of the hash map,
-// and its return value will be set to the map with `key`.
-//
-// It returns value with given `key`.
-func (m *IntAnyMap) doSetWithLockCheck(key int, value any) any {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if m.data == nil {
-		m.data = make(map[int]any)
-	}
-	if v, ok := m.data[key]; ok {
-		return v
-	}
-	if f, ok := value.(func() any); ok {
-		value = f()
-	}
-	if value != nil {
-		m.data[key] = value
-	}
-	return value
 }
