@@ -17,44 +17,45 @@ import (
 
 // Model is core struct implementing the DAO for ORM.
 type Model struct {
-	db             DB                // Underlying DB interface.
-	tx             TX                // Underlying TX interface.
-	rawSql         string            // rawSql is the raw SQL string which marks a raw SQL based Model not a table based Model.
-	schema         string            // Custom database schema.
-	linkType       int               // Mark for operation on master or slave.
-	tablesInit     string            // Table names when model initialization.
-	tables         string            // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
-	fields         []any             // Operation fields, multiple fields joined using char ','.
-	fieldsEx       []any             // Excluded operation fields, it here uses slice instead of string type for quick filtering.
-	withArray      []any             // Arguments for With feature.
-	withAll        bool              // Enable model association operations on all objects that have "with" tag in the struct.
-	extraArgs      []any             // Extra custom arguments for sql, which are prepended to the arguments before sql committed to underlying driver.
-	whereBuilder   *WhereBuilder     // Condition builder for where operation.
-	groupBy        string            // Used for "group by" statement.
-	orderBy        string            // Used for "order by" statement.
-	having         []any             // Used for "having..." statement.
-	start          int               // Used for "select ... start, limit ..." statement.
-	limit          int               // Used for "select ... start, limit ..." statement.
-	option         int               // Option for extra operation features.
-	offset         int               // Offset statement for some databases grammar.
-	partition      string            // Partition table partition name.
-	data           any               // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
-	batch          int               // Batch number for batch Insert/Replace/Save operations.
-	filter         bool              // Filter data and where key-value pairs according to the fields of the table.
-	distinct       string            // Force the query to only return distinct results.
-	lockInfo       string            // Lock for update or in shared lock.
-	cacheEnabled   bool              // Enable sql result cache feature, which is mainly for indicating cache duration(especially 0) usage.
-	cacheOption    CacheOption       // Cache option for query statement.
-	hookHandler    HookHandler       // Hook functions for model hook feature.
-	unscoped       bool              // Disables soft deleting features when select/delete operations.
-	safe           bool              // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
-	onDuplicate    any               // onDuplicate is used for on Upsert clause.
-	onDuplicateEx  any               // onDuplicateEx is used for excluding some columns on Upsert clause.
-	onConflict     any               // onConflict is used for conflict keys on Upsert clause.
-	tableAliasMap  map[string]string // Table alias to true table name, usually used in join statements.
-	softTimeOption SoftTimeOption    // SoftTimeOption is the option to customize soft time feature for Model.
-	shardingConfig ShardingConfig    // ShardingConfig for database/table sharding feature.
-	shardingValue  any               // Sharding value for sharding feature.
+	db              DB                // Underlying DB interface.
+	tx              TX                // Underlying TX interface.
+	rawSql          string            // rawSql is the raw SQL string which marks a raw SQL based Model not a table based Model.
+	schema          string            // Custom database schema.
+	linkType        int               // Mark for operation on master or slave.
+	tablesInit      string            // Table names when model initialization.
+	tables          string            // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
+	fields          []any             // Operation fields, multiple fields joined using char ','.
+	fieldsEx        []any             // Excluded operation fields, it here uses slice instead of string type for quick filtering.
+	withArray       []any             // Arguments for With feature.
+	withAll         bool              // Enable model association operations on all objects that have "with" tag in the struct.
+	extraArgs       []any             // Extra custom arguments for sql, which are prepended to the arguments before sql committed to underlying driver.
+	whereBuilder    *WhereBuilder     // Condition builder for where operation.
+	groupBy         string            // Used for "group by" statement.
+	orderBy         string            // Used for "order by" statement.
+	having          []any             // Used for "having..." statement.
+	start           int               // Used for "select ... start, limit ..." statement.
+	limit           int               // Used for "select ... start, limit ..." statement.
+	option          int               // Option for extra operation features.
+	offset          int               // Offset statement for some databases grammar.
+	partition       string            // Partition table partition name.
+	data            any               // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
+	batch           int               // Batch number for batch Insert/Replace/Save operations.
+	filter          bool              // Filter data and where key-value pairs according to the fields of the table.
+	distinct        string            // Force the query to only return distinct results.
+	lockInfo        string            // Lock for update or in shared lock.
+	cacheEnabled    bool              // Enable sql result cache feature, which is mainly for indicating cache duration(especially 0) usage.
+	cacheOption     CacheOption       // Cache option for query statement.
+	pageCacheOption []CacheOption     // Cache option for paging query statement.
+	hookHandler     HookHandler       // Hook functions for model hook feature.
+	unscoped        bool              // Disables soft deleting features when select/delete operations.
+	safe            bool              // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
+	onDuplicate     any               // onDuplicate is used for on Upsert clause.
+	onDuplicateEx   any               // onDuplicateEx is used for excluding some columns on Upsert clause.
+	onConflict      any               // onConflict is used for conflict keys on Upsert clause.
+	tableAliasMap   map[string]string // Table alias to true table name, usually used in join statements.
+	softTimeOption  SoftTimeOption    // SoftTimeOption is the option to customize soft time feature for Model.
+	shardingConfig  ShardingConfig    // ShardingConfig for database/table sharding feature.
+	shardingValue   any               // Sharding value for sharding feature.
 }
 
 // ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
