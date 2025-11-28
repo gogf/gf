@@ -281,7 +281,7 @@ func (m *ListMap) Pops(size int) map[any]any {
 // if not exists, set value to the map with given `key`,
 // or else just return the existing value.
 //
-// When setting value, if `value` is type of `func() interface {}`,
+// When setting value, if `value` is type of `func() any`,
 // it will be executed with mutex.Lock of the map,
 // and its return value will be set to the map with `key`.
 //
