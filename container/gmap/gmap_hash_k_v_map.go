@@ -29,12 +29,7 @@ type KVMap[K comparable, V any] struct {
 // The parameter `safe` is used to specify whether to use the map in concurrent-safety mode,
 // which is false by default.
 func NewKVMap[K comparable, V any](safe ...bool) *KVMap[K, V] {
-	m := &KVMap[K, V]{
-		mu:   rwmutex.Create(safe...),
-		data: make(map[K]V),
-	}
-	m.doSetWithLockCheckFn = m.doSetWithLockCheck
-	return m
+	return NewKVMapFrom(make(map[K]V), safe...)
 }
 
 // NewKVMapFrom creates and returns a hash map from given map `data`.
@@ -213,10 +208,6 @@ func (m *KVMap[K, V]) Pops(size int) map[K]V {
 // if not exists, set value to the map with given `key`,
 // or else just return the existing value.
 //
-// When setting value, if `value` is type of `func() interface {}`,
-// it will be executed with mutex.Lock of the hash map,
-// and its return value will be set to the map with `key`.
-//
 // It returns value with given `key`.
 func (m *KVMap[K, V]) doSetWithLockCheck(key K, value V) (val V) {
 	m.mu.Lock()
@@ -263,11 +254,19 @@ func (m *KVMap[K, V]) GetOrSetFunc(key K, f func() V) V {
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f`
 // with mutex.Lock of the hash map.
 func (m *KVMap[K, V]) GetOrSetFuncLock(key K, f func() V) V {
-	if v, ok := m.Search(key); !ok {
-		return m.doSetWithLockCheckFn(key, f())
-	} else {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = make(map[K]V)
+	}
+	if v, ok := m.data[key]; ok {
 		return v
 	}
+	value := f()
+	if any(value) != nil {
+		m.data[key] = value
+	}
+	return value
 }
 
 // GetVar returns a Var with the value by given `key`.
@@ -297,8 +296,13 @@ func (m *KVMap[K, V]) GetVarOrSetFuncLock(key K, f func() V) *gvar.Var {
 // SetIfNotExist sets `value` to the map if the `key` does not exist, and then returns true.
 // It returns false if `key` exists, and `value` would be ignored.
 func (m *KVMap[K, V]) SetIfNotExist(key K, value V) bool {
-	if !m.Contains(key) {
-		m.doSetWithLockCheckFn(key, value)
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = make(map[K]V)
+	}
+	if _, ok := m.data[key]; !ok {
+		m.data[key] = value
 		return true
 	}
 	return false
@@ -308,9 +312,9 @@ func (m *KVMap[K, V]) SetIfNotExist(key K, value V) bool {
 // It returns false if `key` exists, and `value` would be ignored.
 func (m *KVMap[K, V]) SetIfNotExistFunc(key K, f func() V) bool {
 	if !m.Contains(key) {
-		m.doSetWithLockCheckFn(key, f())
-		return true
+		return m.SetIfNotExist(key, f())
 	}
+
 	return false
 }
 
@@ -320,8 +324,13 @@ func (m *KVMap[K, V]) SetIfNotExistFunc(key K, f func() V) bool {
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
 // it executes function `f` with mutex.Lock of the hash map.
 func (m *KVMap[K, V]) SetIfNotExistFuncLock(key K, f func() V) bool {
-	if !m.Contains(key) {
-		m.doSetWithLockCheckFn(key, f())
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = make(map[K]V)
+	}
+	if _, ok := m.data[key]; !ok {
+		m.data[key] = f()
 		return true
 	}
 	return false
