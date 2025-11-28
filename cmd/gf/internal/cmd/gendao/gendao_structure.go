@@ -133,6 +133,18 @@ func generateStructFieldDefinition(
 				localTypeNameStr = "string"
 			}
 		}
+
+		// convert null filed in the database to pointer in package entity.
+		if !in.IsDo && field.Null && !strings.HasPrefix(localTypeNameStr, "*") && len(in.NullFieldPattern) > 0 {
+			for _, pattern := range in.NullFieldPattern {
+				regPattern := gstr.Replace(pattern, "?", `(.+)`)
+				match := gregex.IsMatchString(regPattern, in.TableName)
+				if match {
+					localTypeNameStr = "*" + localTypeNameStr
+					break
+				}
+			}
+		}
 	}
 
 	var (
