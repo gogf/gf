@@ -221,6 +221,12 @@ jobs:
         detached: true
         limit-access-to-actor: false
 
+    - name: Free Disk Space
+      run: |
+        df -h /
+        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/hostedtoolcache/CodeQL /opt/hostedtoolcache/Python || true
+        df -h /
+
     - name: Start Apollo Containers
       run:  docker compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
       
