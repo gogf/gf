@@ -21,8 +21,6 @@ import (
 type KVMap[K comparable, V any] struct {
 	mu   rwmutex.RWMutex
 	data map[K]V
-
-	doSetWithLockCheckFn func(key K, value V) (val V)
 }
 
 // NewKVMap creates and returns an empty hash map.
@@ -40,7 +38,6 @@ func NewKVMapFrom[K comparable, V any](data map[K]V, safe ...bool) *KVMap[K, V] 
 		mu:   rwmutex.Create(safe...),
 		data: data,
 	}
-	m.doSetWithLockCheckFn = m.doSetWithLockCheck
 	return m
 }
 
@@ -209,42 +206,37 @@ func (m *KVMap[K, V]) Pops(size int) map[K]V {
 // or else just return the existing value.
 //
 // It returns value with given `key`.
-func (m *KVMap[K, V]) doSetWithLockCheck(key K, value V) (val V) {
+func (m *KVMap[K, V]) doSetWithLockCheck(key K, value V) (val V, ok bool) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	if m.data == nil {
 		m.data = make(map[K]V)
 	}
+
 	if v, ok := m.data[key]; ok {
-		return v
+		return v, true
 	}
 
 	if any(value) != nil {
 		m.data[key] = value
 	}
-	return value
+	return value, false
 }
 
 // GetOrSet returns the value by key,
 // or sets value with given `value` if it does not exist and then returns this value.
 func (m *KVMap[K, V]) GetOrSet(key K, value V) V {
-	if v, ok := m.Search(key); !ok {
-		return m.doSetWithLockCheckFn(key, value)
-	} else {
-		return v
-	}
+	v, _ := m.doSetWithLockCheck(key, value)
+	return v
 }
 
 // GetOrSetFunc returns the value by key,
 // or sets value with returned value of callback function `f` if it does not exist
 // and then returns this value.
 func (m *KVMap[K, V]) GetOrSetFunc(key K, f func() V) V {
-	if v, ok := m.Search(key); !ok {
-		return m.doSetWithLockCheckFn(key, f())
-	} else {
-		return v
-	}
+	v, _ := m.doSetWithLockCheck(key, f())
+	return v
 }
 
 // GetOrSetFuncLock returns the value by key,
