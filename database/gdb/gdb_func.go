@@ -953,6 +953,10 @@ func FormatMultiLineSqlToSingle(sql string) (string, error) {
 	return sql, nil
 }
 
+func genTableCacheKey(group string) string {
+	return fmt.Sprintf(`Tables:%s`, group)
+}
+
 func genTableFieldsCacheKey(group, schema, table string) string {
 	return fmt.Sprintf(
 		`%s%s@%s#%s`,

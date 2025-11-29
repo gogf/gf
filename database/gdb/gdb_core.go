@@ -757,6 +757,33 @@ func (c *Core) GetInnerMemCache() *gcache.Cache {
 	return c.innerMemCache
 }
 
+// SetTables customizes and sets the table name list of current database into memory cache.
+func (c *Core) SetTables(ctx context.Context, tables []string) error {
+	if len(tables) == 0 {
+		return gerror.NewCode(gcode.CodeInvalidParameter, "table name cannot be empty")
+	}
+	charL, charR := c.db.GetChars()
+	newTables := make([]string, 0, len(tables))
+	for _, table := range tables {
+		newTables = append(newTables, gstr.Trim(table, charL+charR))
+	}
+	for _, table := range newTables {
+		if gstr.Contains(table, " ") {
+			return gerror.NewCode(
+				gcode.CodeInvalidParameter,
+				"The function SetTables does not allow spaces in the table name",
+			)
+		}
+	}
+	var (
+		innerMemCache = c.GetInnerMemCache()
+		// prefix:group
+		cacheKey = genTableCacheKey(c.db.GetGroup())
+	)
+	return innerMemCache.Set(ctx, cacheKey, tables, gcache.DurationNoExpire)
+}
+
+// SetTableFields customizes and sets the field information of the specified table into memory cache.
 func (c *Core) SetTableFields(ctx context.Context, table string, fields map[string]*TableField, schema ...string) error {
 	if table == "" {
 		return gerror.NewCode(gcode.CodeInvalidParameter, "table name cannot be empty")
@@ -785,7 +812,7 @@ func (c *Core) SetTableFields(ctx context.Context, table string, fields map[stri
 func (c *Core) GetTablesWithCache() ([]string, error) {
 	var (
 		ctx           = c.db.GetCtx()
-		cacheKey      = fmt.Sprintf(`Tables:%s`, c.db.GetGroup())
+		cacheKey      = genTableCacheKey(c.db.GetGroup())
 		cacheDuration = gcache.DurationNoExpire
 		innerMemCache = c.GetInnerMemCache()
 	)
