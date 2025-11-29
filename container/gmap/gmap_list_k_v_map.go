@@ -360,21 +360,40 @@ func (m *ListKVMap[K, V]) GetVarOrSetFuncLock(key K, f func() V) *gvar.Var {
 // SetIfNotExist sets `value` to the map if the `key` does not exist, and then returns true.
 // It returns false if `key` exists, and `value` would be ignored.
 func (m *ListKVMap[K, V]) SetIfNotExist(key K, value V) bool {
-	if !m.Contains(key) {
-		m.doSetWithLockCheck(key, value)
-		return true
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.data == nil {
+		m.data = make(map[K]*glist.TElement[*gListKVMapNode[K, V]])
+		m.list = glist.NewT[*gListKVMapNode[K, V]]()
 	}
-	return false
+	if _, ok := m.data[key]; ok {
+		return false
+	}
+	if any(value) != nil {
+		m.data[key] = m.list.PushBack(&gListKVMapNode[K, V]{key, value})
+	}
+	return true
 }
 
 // SetIfNotExistFunc sets value with return value of callback function `f`, and then returns true.
 // It returns false if `key` exists, and `value` would be ignored.
 func (m *ListKVMap[K, V]) SetIfNotExistFunc(key K, f func() V) bool {
-	if !m.Contains(key) {
-		m.doSetWithLockCheck(key, f())
-		return true
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.data == nil {
+		m.data = make(map[K]*glist.TElement[*gListKVMapNode[K, V]])
+		m.list = glist.NewT[*gListKVMapNode[K, V]]()
 	}
-	return false
+	if _, ok := m.data[key]; ok {
+		return false
+	}
+	value := f()
+	if any(value) != nil {
+		m.data[key] = m.list.PushBack(&gListKVMapNode[K, V]{key, value})
+	}
+	return true
 }
 
 // SetIfNotExistFuncLock sets value with return value of callback function `f`, and then returns true.
@@ -549,7 +568,7 @@ func (m *ListKVMap[K, V]) String() string {
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (m ListKVMap[K, V]) MarshalJSON() (jsonBytes []byte, err error) {
 	if m.data == nil {
-		return []byte("null"), nil
+		return []byte("{}"), nil
 	}
 	buffer := bytes.NewBuffer(nil)
 	buffer.WriteByte('{')

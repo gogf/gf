@@ -920,7 +920,7 @@ func Test_ListKVMap_Map_NilList(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListKVMapFrom[string, string](nil)
 		data := m.Map()
-		t.Assert(data, "{}")
+		t.Assert(len(data), 0)
 	})
 }
 
@@ -929,7 +929,7 @@ func Test_ListKVMap_MapStrAny_NilList(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListKVMapFrom[string, string](nil)
 		data := m.MapStrAny()
-		t.Assert(data, "{}")
+		t.Assert(len(data), 0)
 	})
 }
 
