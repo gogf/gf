@@ -50,8 +50,8 @@ func NewListKVMap[K comparable, V any](safe ...bool) *ListKVMap[K, V] {
 }
 
 // NewListKVMapFrom returns a link map from given map `data`.
-// Note that, the param `data` map will be set as the underlying data map(no deep copy),
-// there might be some concurrent-safe issues when changing the map outside.
+// Note that, the param `data` map will be copied to the underlying data structure,
+// so changes to the original map will not affect the link map.
 func NewListKVMapFrom[K comparable, V any](data map[K]V, safe ...bool) *ListKVMap[K, V] {
 	m := NewListKVMap[K, V](safe...)
 	m.Sets(data)
@@ -316,14 +316,21 @@ func (m *ListKVMap[K, V]) GetOrSetFunc(key K, f func() V) V {
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f`
 // with mutex.Lock of the map.
 func (m *ListKVMap[K, V]) GetOrSetFuncLock(key K, f func() V) V {
-	if v, ok := m.Search(key); !ok {
-		m.mu.Lock()
-		defer m.mu.Unlock()
+	m.mu.Lock()
+	defer m.mu.Unlock()
 
-		return m.doSetWithLockCheckWithoutLock(key, f())
-	} else {
-		return v
+	if m.data == nil {
+		m.data = make(map[K]*glist.TElement[*gListKVMapNode[K, V]])
+		m.list = glist.NewT[*gListKVMapNode[K, V]]()
 	}
+	if e, ok := m.data[key]; ok {
+		return e.Value.value
+	}
+	value := f()
+	if any(value) != nil {
+		m.data[key] = m.list.PushBack(&gListKVMapNode[K, V]{key, value})
+	}
+	return value
 }
 
 // GetVar returns a Var with the value by given `key`.
@@ -376,14 +383,21 @@ func (m *ListKVMap[K, V]) SetIfNotExistFunc(key K, f func() V) bool {
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
 // it executes function `f` with mutex.Lock of the map.
 func (m *ListKVMap[K, V]) SetIfNotExistFuncLock(key K, f func() V) bool {
-	if !m.Contains(key) {
-		m.mu.Lock()
-		defer m.mu.Unlock()
+	m.mu.Lock()
+	defer m.mu.Unlock()
 
-		m.doSetWithLockCheckWithoutLock(key, f())
-		return true
+	if m.data == nil {
+		m.data = make(map[K]*glist.TElement[*gListKVMapNode[K, V]])
+		m.list = glist.NewT[*gListKVMapNode[K, V]]()
 	}
-	return false
+	if _, ok := m.data[key]; ok {
+		return false
+	}
+	value := f()
+	if any(value) != nil {
+		m.data[key] = m.list.PushBack(&gListKVMapNode[K, V]{key, value})
+	}
+	return true
 }
 
 // Remove deletes value from map by given `key`, and return this deleted value.
