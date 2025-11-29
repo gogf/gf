@@ -6,9 +6,11 @@
 
 package gmap
 
-import "github.com/gogf/gf/v2/container/gtree"
+import (
+	"github.com/gogf/gf/v2/container/gtree"
+)
 
-// TreeMap based on red-black tree, alias of TreeKVMap[any,any].
+// TreeMap based on red-black tree, alias of RedBlackTree.
 type TreeMap = gtree.RedBlackTree
 
 // NewTreeMap instantiates a tree map with the custom comparator.
