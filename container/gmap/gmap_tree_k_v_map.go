@@ -11,17 +11,13 @@ import (
 )
 
 // TreeKVMap based on red-black tree, alias of RedBlackKVTree.
-type TreeKVMap[K comparable, V any] struct {
-	gtree.RedBlackKVTree[K, V]
-}
+type TreeKVMap[K comparable, V any] = gtree.RedBlackKVTree[K, V]
 
 // NewTreeKVMap instantiates a tree map with the custom comparator.
 // The parameter `safe` is used to specify whether using tree in concurrent-safety,
 // which is false in default.
 func NewTreeKVMap[K comparable, V any](comparator func(v1, v2 K) int, safe ...bool) *TreeKVMap[K, V] {
-	var m TreeKVMap[K, V]
-	gtree.RedBlackKVTreeInit(&m.RedBlackKVTree, comparator, safe...)
-	return &m
+	return gtree.NewRedBlackKVTree[K, V](comparator, safe...)
 }
 
 // NewTreeKVMapFrom instantiates a tree map with the custom comparator and `data` map.
@@ -30,7 +26,5 @@ func NewTreeKVMap[K comparable, V any](comparator func(v1, v2 K) int, safe ...bo
 // The parameter `safe` is used to specify whether using tree in concurrent-safety,
 // which is false in default.
 func NewTreeKVMapFrom[K comparable, V any](comparator func(v1, v2 K) int, data map[K]V, safe ...bool) *TreeKVMap[K, V] {
-	var m TreeKVMap[K, V]
-	gtree.RedBlackKVTreeInitFrom(&m.RedBlackKVTree, comparator, data, safe...)
-	return &m
+	return gtree.NewRedBlackKVTreeFrom(comparator, data, safe...)
 }
