@@ -31,12 +31,16 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 	if fieldValueKind == reflect.Slice {
 		// For pgsql, json or jsonb require '[]'
 		if !gstr.Contains(fieldType, "json") {
-			fieldValue = gstr.ReplaceByMap(gconv.String(fieldValue),
-				map[string]string{
-					"[": "{",
-					"]": "}",
-				},
-			)
+			if fileBytes, ok := fieldValue.([]byte); ok && fieldType == "bytea" {
+				fieldValue = fileBytes
+			} else {
+				fieldValue = gstr.ReplaceByMap(gconv.String(fieldValue),
+					map[string]string{
+						"[": "{",
+						"]": "}",
+					},
+				)
+			}
 		}
 	}
 	return d.Core.ConvertValueForField(ctx, fieldType, fieldValue)
