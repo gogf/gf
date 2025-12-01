@@ -1,3 +1,5 @@
+[English](README.MD) | 简体中文
+
 # 数据库驱动程序
 
 用于gdb包的数据库驱动程序。
@@ -7,15 +9,15 @@
 以 `mysql` 为例。
 
 ```shell
-go get -u github.com/gogf/gf/contrib/drivers/mysql/v2
+go get github.com/gogf/gf/contrib/drivers/mysql/v2@latest
 # 方便复制
-go get -u github.com/gogf/gf/contrib/drivers/clickhouse/v2
-go get -u github.com/gogf/gf/contrib/drivers/dm/v2
-go get -u github.com/gogf/gf/contrib/drivers/mssql/v2
-go get -u github.com/gogf/gf/contrib/drivers/oracle/v2
-go get -u github.com/gogf/gf/contrib/drivers/pgsql/v2
-go get -u github.com/gogf/gf/contrib/drivers/sqlite/v2
-go get -u github.com/gogf/gf/contrib/drivers/sqlitecgo/v2
+go get github.com/gogf/gf/contrib/drivers/clickhouse/v2@latest
+go get github.com/gogf/gf/contrib/drivers/dm/v2@latest
+go get github.com/gogf/gf/contrib/drivers/mssql/v2@latest
+go get github.com/gogf/gf/contrib/drivers/oracle/v2@latest
+go get github.com/gogf/gf/contrib/drivers/pgsql/v2@latest
+go get github.com/gogf/gf/contrib/drivers/sqlite/v2@latest
+go get github.com/gogf/gf/contrib/drivers/sqlitecgo/v2@latest
 ```
 
 选择并将驱动程序导入到您的项目中：
