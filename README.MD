@@ -1,3 +1,4 @@
+English | [简体中文](README.zh_CN.MD)
 
 <div align=center>
 <img src="https://goframe.org/img/logo_full.png" width="300" alt="goframe gf logo"/>

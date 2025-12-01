@@ -1,4 +1,4 @@
-[简体中文](README.zh_CN.MD)
+English | [简体中文](README.zh_CN.MD)
 
 # Database drivers
 
@@ -9,15 +9,15 @@ Powerful database drivers for package gdb.
 Let's take `mysql` for example.
 
 ```shell
-go get -u github.com/gogf/gf/contrib/drivers/mysql/v2
+go get github.com/gogf/gf/contrib/drivers/mysql/v2@latest
 # Easy to copy
-go get -u github.com/gogf/gf/contrib/drivers/clickhouse/v2
-go get -u github.com/gogf/gf/contrib/drivers/dm/v2
-go get -u github.com/gogf/gf/contrib/drivers/mssql/v2
-go get -u github.com/gogf/gf/contrib/drivers/oracle/v2
-go get -u github.com/gogf/gf/contrib/drivers/pgsql/v2
-go get -u github.com/gogf/gf/contrib/drivers/sqlite/v2
-go get -u github.com/gogf/gf/contrib/drivers/sqlitecgo/v2
+go get github.com/gogf/gf/contrib/drivers/clickhouse/v2@latest
+go get github.com/gogf/gf/contrib/drivers/dm/v2@latest
+go get github.com/gogf/gf/contrib/drivers/mssql/v2@latest
+go get github.com/gogf/gf/contrib/drivers/oracle/v2@latest
+go get github.com/gogf/gf/contrib/drivers/pgsql/v2@latest
+go get github.com/gogf/gf/contrib/drivers/sqlite/v2@latest
+go get github.com/gogf/gf/contrib/drivers/sqlitecgo/v2@latest
 ```
 
 Choose and import the driver to your project:
