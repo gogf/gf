@@ -83,13 +83,14 @@ generated json tag case for model struct, cases are as follows:
 | Case            | Example            |
 |---------------- |--------------------|
 | Camel           | AnyKindOfString    |
-| CamelLower      | anyKindOfString    | default
+| CamelLower      | anyKindOfString    |
 | Snake           | any_kind_of_string |
 | SnakeScreaming  | ANY_KIND_OF_STRING |
 | SnakeFirstUpper | rgb_code_md5       |
 | Kebab           | any-kind-of-string |
 | KebabScreaming  | ANY-KIND-OF-STRING |
 `
+	CGenDaoBriefTplDaoTablePath    = `template file path for dao table file`
 	CGenDaoBriefTplDaoIndexPath    = `template file path for dao index file`
 	CGenDaoBriefTplDaoInternalPath = `template file path for dao internal file`
 	CGenDaoBriefTplDaoDoPathPath   = `template file path for dao do file`
@@ -148,6 +149,7 @@ func init() {
 		`CGenDaoBriefShardingPattern`:    CGenDaoBriefShardingPattern,
 		`CGenDaoBriefGroup`:              CGenDaoBriefGroup,
 		`CGenDaoBriefJsonCase`:           CGenDaoBriefJsonCase,
+		`CGenDaoBriefTplDaoTablePath`:    CGenDaoBriefTplDaoTablePath,
 		`CGenDaoBriefTplDaoIndexPath`:    CGenDaoBriefTplDaoIndexPath,
 		`CGenDaoBriefTplDaoInternalPath`: CGenDaoBriefTplDaoInternalPath,
 		`CGenDaoBriefTplDaoDoPathPath`:   CGenDaoBriefTplDaoDoPathPath,
