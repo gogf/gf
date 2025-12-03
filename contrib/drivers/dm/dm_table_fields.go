@@ -16,6 +16,12 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
+// escapeSingleQuote escapes single quotes in the string to prevent SQL injection.
+// In SQL, single quotes are escaped by doubling them: ' -> ”
+func escapeSingleQuote(s string) string {
+	return strings.ReplaceAll(s, "'", "''")
+}
+
 const (
 	tableFieldsSqlTmp         = `SELECT c.COLUMN_NAME, c.DATA_TYPE, c.DATA_DEFAULT, c.NULLABLE, cc.COMMENTS FROM ALL_TAB_COLUMNS c LEFT JOIN ALL_COL_COMMENTS cc ON c.COLUMN_NAME = cc.COLUMN_NAME AND c.TABLE_NAME = cc.TABLE_NAME AND c.OWNER = cc.OWNER WHERE c.TABLE_NAME = '%s' AND c.OWNER = '%s'`
 	tableFieldsPkSqlSchemaTmp = `SELECT COLS.COLUMN_NAME AS PRIMARY_KEY_COLUMN FROM USER_CONSTRAINTS CONS JOIN USER_CONS_COLUMNS COLS ON CONS.CONSTRAINT_NAME = COLS.CONSTRAINT_NAME WHERE CONS.TABLE_NAME = '%s' AND CONS.CONSTRAINT_TYPE = 'P'`
@@ -42,8 +48,8 @@ func (d *Driver) TableFields(
 		ctx, link,
 		fmt.Sprintf(
 			tableFieldsSqlTmp,
-			strings.ToUpper(table),
-			strings.ToUpper(d.GetSchema()),
+			escapeSingleQuote(strings.ToUpper(table)),
+			escapeSingleQuote(strings.ToUpper(d.GetSchema())),
 		),
 	)
 	if err != nil {
@@ -52,7 +58,7 @@ func (d *Driver) TableFields(
 	// Query the primary key field
 	pkResult, err = d.DoSelect(
 		ctx, link,
-		fmt.Sprintf(tableFieldsPkSqlSchemaTmp, strings.ToUpper(table)),
+		fmt.Sprintf(tableFieldsPkSqlSchemaTmp, escapeSingleQuote(strings.ToUpper(table))),
 	)
 	if err != nil {
 		return nil, err
@@ -60,7 +66,7 @@ func (d *Driver) TableFields(
 	if pkResult.IsEmpty() {
 		pkResult, err = d.DoSelect(
 			ctx, link,
-			fmt.Sprintf(tableFieldsPkSqlDBATmp, strings.ToUpper(table), strings.ToUpper(d.GetSchema())),
+			fmt.Sprintf(tableFieldsPkSqlDBATmp, escapeSingleQuote(strings.ToUpper(table)), escapeSingleQuote(strings.ToUpper(d.GetSchema()))),
 		)
 		if err != nil {
 			return nil, err
