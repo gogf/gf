@@ -2668,3 +2668,82 @@ func Test_Model_Replace(t *testing.T) {
 		t.Assert(err, "Replace operation is not supported by mssql driver")
 	})
 }
+
+// Test_Model_Insert_RowsAffected tests the RowsAffected result for INSERT operations.
+// This test ensures that the rowsAffected value is correctly returned from the database,
+// especially for batch INSERT statements.
+func Test_Model_Insert_RowsAffected(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	// Test single insert - rowsAffected should be 1
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.Map{
+			"id":          1,
+			"passport":    "user_1",
+			"password":    "pass_1",
+			"nickname":    "name_1",
+			"create_time": gtime.Now().String(),
+		}).Insert()
+		t.AssertNil(err)
+
+		n, err := result.RowsAffected()
+		t.AssertNil(err)
+		t.Assert(n, 1)
+	})
+
+	// Test batch insert with 3 rows - rowsAffected should be 3
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.List{
+			{
+				"id":          2,
+				"passport":    "user_2",
+				"password":    "pass_2",
+				"nickname":    "name_2",
+				"create_time": gtime.Now().String(),
+			},
+			{
+				"id":          3,
+				"passport":    "user_3",
+				"password":    "pass_3",
+				"nickname":    "name_3",
+				"create_time": gtime.Now().String(),
+			},
+			{
+				"id":          4,
+				"passport":    "user_4",
+				"password":    "pass_4",
+				"nickname":    "name_4",
+				"create_time": gtime.Now().String(),
+			},
+		}).Insert()
+		t.AssertNil(err)
+
+		n, err := result.RowsAffected()
+		t.AssertNil(err)
+		t.Assert(n, 3)
+	})
+
+	// Test batch insert with 5 rows - rowsAffected should be 5
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.List{
+			{"id": 5, "passport": "user_5", "password": "pass_5", "nickname": "name_5", "create_time": gtime.Now().String()},
+			{"id": 6, "passport": "user_6", "password": "pass_6", "nickname": "name_6", "create_time": gtime.Now().String()},
+			{"id": 7, "passport": "user_7", "password": "pass_7", "nickname": "name_7", "create_time": gtime.Now().String()},
+			{"id": 8, "passport": "user_8", "password": "pass_8", "nickname": "name_8", "create_time": gtime.Now().String()},
+			{"id": 9, "passport": "user_9", "password": "pass_9", "nickname": "name_9", "create_time": gtime.Now().String()},
+		}).Insert()
+		t.AssertNil(err)
+
+		n, err := result.RowsAffected()
+		t.AssertNil(err)
+		t.Assert(n, 5)
+	})
+
+	// Verify total count in table
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 9)
+	})
+}
