@@ -29,21 +29,21 @@ func Test_Page(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).Page(1, 2).Order("id").All()
 		t.AssertNil(err)
-		fmt.Println("page:1--------", result)
+		// fmt.Println("page:1--------", result)
 		gtest.Assert(len(result), 2)
 		gtest.Assert(result[0]["ID"], 1)
 		gtest.Assert(result[1]["ID"], 2)
 
 		result, err = db.Model(table).Page(2, 2).Order("id").All()
 		t.AssertNil(err)
-		fmt.Println("page: 2--------", result)
+		// fmt.Println("page: 2--------", result)
 		gtest.Assert(len(result), 2)
 		gtest.Assert(result[0]["ID"], 3)
 		gtest.Assert(result[1]["ID"], 4)
 
 		result, err = db.Model(table).Page(3, 2).Order("id").All()
 		t.AssertNil(err)
-		fmt.Println("page:3 --------", result)
+		// fmt.Println("page:3 --------", result)
 		gtest.Assert(len(result), 2)
 		gtest.Assert(result[0]["ID"], 5)
 

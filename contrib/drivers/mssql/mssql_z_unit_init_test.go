@@ -35,7 +35,7 @@ const (
 )
 
 func init() {
-	// 先连接 master 数据库来创建 test 数据库
+	// First connect to master database to create test database
 	nodemaster := gdb.ConfigNode{
 		Host:             "127.0.0.1",
 		Port:             "1433",
@@ -55,7 +55,7 @@ func init() {
 		gtest.Fatal(err)
 	}
 
-	// 创建 test 数据库
+	// Create test database
 	if _, err := tempDb.Exec(context.Background(), fmt.Sprintf(`
 		IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = '%s')
 		CREATE DATABASE %s
@@ -174,7 +174,7 @@ func dropTable(table string) {
 	}
 }
 
-// createInsertAndGetIdTableForTest test for InsertAndGetId
+// createInsertAndGetIdTableForTest tests InsertAndGetId functionality
 func createInsertAndGetIdTableForTest() (name string) {
 
 	if _, err := db.Exec(context.Background(), `

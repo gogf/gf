@@ -41,7 +41,7 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args 
 		if tx := gdb.TXFromCtx(ctx, d.GetGroup()); tx != nil {
 			// Firstly, check and retrieve transaction link from context.
 			link = &txLinkMssql{tx.GetSqlTX()}
-		} else if link, err = d.MasterLink(); err != nil {
+		} else if link, err = d.Core.MasterLink(); err != nil {
 			// Or else it creates one from master node.
 			return nil, err
 		}
@@ -53,16 +53,16 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args 
 	}
 
 	// SQL filtering.
-	sqlStr, args = d.FormatSqlBeforeExecuting(sqlStr, args)
+	sqlStr, args = d.Core.FormatSqlBeforeExecuting(sqlStr, args)
 	sqlStr, args, err = d.DoFilter(ctx, link, sqlStr, args)
 	if err != nil {
 		return nil, err
 	}
 
 	if !strings.HasPrefix(sqlStr, insertPrefixDefault) && !strings.HasPrefix(sqlStr, insertPrefixIgnore) {
-		return d.DoExec(ctx, link, sqlStr, args)
+		return d.Core.DoExec(ctx, link, sqlStr, args)
 	}
-	// find the first pos
+	// Find the first position of VALUES marker in the INSERT statement.
 	pos := strings.Index(sqlStr, insertValuesMarker)
 
 	table := d.GetTableNameFromSql(sqlStr)
