@@ -89,20 +89,17 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args 
 	if err != nil {
 		return &InsertResult{lastInsertId: 0, rowsAffected: 0, err: err}, err
 	}
-	var (
-		lId int64 // last insert id
-	)
 	stdSqlResult := out.Records
 	if len(stdSqlResult) == 0 {
 		err = gerror.WrapCode(gcode.CodeDbOperationError, gerror.New("affectcount is zero"), `sql.Result.RowsAffected failed`)
 		return &InsertResult{lastInsertId: 0, rowsAffected: 0, err: err}, err
 	}
 	// get affect count from the number of returned rows
-	aCount := int64(len(stdSqlResult))
+	rowsAffected := int64(len(stdSqlResult))
 	// get last_insert_id from the first returned row
-	lId = stdSqlResult[0].GMap().GetVar(lastInsertIdFieldAlias).Int64()
+	lastInsertId := stdSqlResult[0].GMap().GetVar(lastInsertIdFieldAlias).Int64()
 
-	return &InsertResult{lastInsertId: lId, rowsAffected: aCount}, err
+	return &InsertResult{lastInsertId: lastInsertId, rowsAffected: rowsAffected}, err
 }
 
 // GetTableNameFromSql get table name from sql statement
