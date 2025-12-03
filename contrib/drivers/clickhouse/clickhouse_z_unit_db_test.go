@@ -280,9 +280,18 @@ func Test_DB_Delete(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		_, err := db.Delete(ctx, table, "id>3")
-		t.AssertNE(err, nil)
+		//db.SetDebug(true)
+		count, err := db.Model(table).Ctx(ctx).Count()
+		t.AssertNil(err)
+		t.Assert(count, 10)
 
+		result, err := db.Delete(ctx, table, "id>3")
+		t.AssertNil(err)
+		t.AssertNil(result)
+
+		count, err = db.Model(table).Ctx(ctx).Count()
+		t.AssertNil(err)
+		t.Assert(count, 3)
 	})
 }
 
@@ -293,6 +302,8 @@ func Test_DB_Tables(t *testing.T) {
 		for _, v := range tables {
 			createTable(v)
 		}
+
+		defer dropTable(tables...)
 
 		result, err := db.Tables(ctx)
 		gtest.AssertNil(err)

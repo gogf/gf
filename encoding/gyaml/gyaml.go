@@ -19,7 +19,7 @@ import (
 )
 
 // Encode encodes `value` to an YAML format content as bytes.
-func Encode(value interface{}) (out []byte, err error) {
+func Encode(value any) (out []byte, err error) {
 	if out, err = yaml.Marshal(value); err != nil {
 		err = gerror.Wrap(err, `yaml.Marshal failed`)
 	}
@@ -27,7 +27,7 @@ func Encode(value interface{}) (out []byte, err error) {
 }
 
 // EncodeIndent encodes `value` to an YAML format content with indent as bytes.
-func EncodeIndent(value interface{}, indent string) (out []byte, err error) {
+func EncodeIndent(value any, indent string) (out []byte, err error) {
 	out, err = Encode(value)
 	if err != nil {
 		return
@@ -48,20 +48,25 @@ func EncodeIndent(value interface{}, indent string) (out []byte, err error) {
 }
 
 // Decode parses `content` into and returns as map.
-func Decode(content []byte) (map[string]interface{}, error) {
+func Decode(content []byte) (map[string]any, error) {
 	var (
-		result map[string]interface{}
+		result map[string]any
 		err    error
 	)
 	if err = yaml.Unmarshal(content, &result); err != nil {
 		err = gerror.Wrap(err, `yaml.Unmarshal failed`)
 		return nil, err
 	}
-	return gconv.MapDeep(result), nil
+	return gconv.Map(result,
+		gconv.MapOption{
+			Deep:            true,
+			OmitEmpty:       false,
+			ContinueOnError: true,
+		}), nil
 }
 
 // DecodeTo parses `content` into `result`.
-func DecodeTo(value []byte, result interface{}) (err error) {
+func DecodeTo(value []byte, result any) (err error) {
 	err = yaml.Unmarshal(value, result)
 	if err != nil {
 		err = gerror.Wrap(err, `yaml.Unmarshal failed`)
@@ -72,7 +77,7 @@ func DecodeTo(value []byte, result interface{}) (err error) {
 // ToJson converts `content` to JSON format content.
 func ToJson(content []byte) (out []byte, err error) {
 	var (
-		result interface{}
+		result any
 	)
 	if result, err = Decode(content); err != nil {
 		return nil, err

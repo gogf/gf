@@ -21,9 +21,9 @@ import (
 // Example:
 // Fields("id", "name", "age")
 // Fields([]string{"id", "name", "age"})
-// Fields(map[string]interface{}{"id":1, "name":"john", "age":18})
+// Fields(map[string]any{"id":1, "name":"john", "age":18})
 // Fields(User{Id: 1, Name: "john", Age: 18}).
-func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
+func (m *Model) Fields(fieldNamesOrMapStruct ...any) *Model {
 	length := len(fieldNamesOrMapStruct)
 	if length == 0 {
 		return m
@@ -37,7 +37,7 @@ func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 }
 
 // FieldsPrefix performs as function Fields but add extra prefix for each field.
-func (m *Model) FieldsPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...interface{}) *Model {
+func (m *Model) FieldsPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...any) *Model {
 	fields := m.filterFieldsFrom(
 		m.getTableNameByPrefixOrAlias(prefixOrAlias),
 		fieldNamesOrMapStruct...,
@@ -45,8 +45,9 @@ func (m *Model) FieldsPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...inte
 	if len(fields) == 0 {
 		return m
 	}
+	prefixOrAlias = m.QuoteWord(prefixOrAlias)
 	for i, field := range fields {
-		fields[i] = prefixOrAlias + "." + gconv.String(field)
+		fields[i] = fmt.Sprintf("%s.%s", prefixOrAlias, m.QuoteWord(gconv.String(field)))
 	}
 	model := m.getModel()
 	return model.appendToFields(fields...)
@@ -60,13 +61,13 @@ func (m *Model) FieldsPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...inte
 // Example:
 // FieldsEx("id", "name", "age")
 // FieldsEx([]string{"id", "name", "age"})
-// FieldsEx(map[string]interface{}{"id":1, "name":"john", "age":18})
+// FieldsEx(map[string]any{"id":1, "name":"john", "age":18})
 // FieldsEx(User{Id: 1, Name: "john", Age: 18}).
-func (m *Model) FieldsEx(fieldNamesOrMapStruct ...interface{}) *Model {
+func (m *Model) FieldsEx(fieldNamesOrMapStruct ...any) *Model {
 	return m.doFieldsEx(m.tablesInit, fieldNamesOrMapStruct...)
 }
 
-func (m *Model) doFieldsEx(table string, fieldNamesOrMapStruct ...interface{}) *Model {
+func (m *Model) doFieldsEx(table string, fieldNamesOrMapStruct ...any) *Model {
 	length := len(fieldNamesOrMapStruct)
 	if length == 0 {
 		return m
@@ -81,14 +82,21 @@ func (m *Model) doFieldsEx(table string, fieldNamesOrMapStruct ...interface{}) *
 }
 
 // FieldsExPrefix performs as function FieldsEx but add extra prefix for each field.
-func (m *Model) FieldsExPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...interface{}) *Model {
-	model := m.doFieldsEx(
+// Note that this function must be used together with FieldsPrefix, otherwise it will be invalid.
+func (m *Model) FieldsExPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...any) *Model {
+	fields := m.filterFieldsFrom(
 		m.getTableNameByPrefixOrAlias(prefixOrAlias),
 		fieldNamesOrMapStruct...,
 	)
-	for i, field := range model.fieldsEx {
-		model.fieldsEx[i] = prefixOrAlias + "." + gconv.String(field)
+	if len(fields) == 0 {
+		return m
 	}
+	prefixOrAlias = m.QuoteWord(prefixOrAlias)
+	for i, field := range fields {
+		fields[i] = fmt.Sprintf("%s.%s", prefixOrAlias, m.QuoteWord(gconv.String(field)))
+	}
+	model := m.getModel()
+	model.fieldsEx = append(model.fieldsEx, fields...)
 	return model
 }
 
@@ -96,7 +104,7 @@ func (m *Model) FieldsExPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...in
 func (m *Model) FieldCount(column string, as ...string) *Model {
 	asStr := ""
 	if len(as) > 0 && as[0] != "" {
-		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
+		asStr = fmt.Sprintf(` AS %s`, m.QuoteWord(as[0]))
 	}
 	model := m.getModel()
 	return model.appendToFields(
@@ -108,7 +116,7 @@ func (m *Model) FieldCount(column string, as ...string) *Model {
 func (m *Model) FieldSum(column string, as ...string) *Model {
 	asStr := ""
 	if len(as) > 0 && as[0] != "" {
-		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
+		asStr = fmt.Sprintf(` AS %s`, m.QuoteWord(as[0]))
 	}
 	model := m.getModel()
 	return model.appendToFields(
@@ -120,7 +128,7 @@ func (m *Model) FieldSum(column string, as ...string) *Model {
 func (m *Model) FieldMin(column string, as ...string) *Model {
 	asStr := ""
 	if len(as) > 0 && as[0] != "" {
-		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
+		asStr = fmt.Sprintf(` AS %s`, m.QuoteWord(as[0]))
 	}
 	model := m.getModel()
 	return model.appendToFields(
@@ -132,7 +140,7 @@ func (m *Model) FieldMin(column string, as ...string) *Model {
 func (m *Model) FieldMax(column string, as ...string) *Model {
 	asStr := ""
 	if len(as) > 0 && as[0] != "" {
-		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
+		asStr = fmt.Sprintf(` AS %s`, m.QuoteWord(as[0]))
 	}
 	model := m.getModel()
 	return model.appendToFields(
@@ -144,7 +152,7 @@ func (m *Model) FieldMax(column string, as ...string) *Model {
 func (m *Model) FieldAvg(column string, as ...string) *Model {
 	asStr := ""
 	if len(as) > 0 && as[0] != "" {
-		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
+		asStr = fmt.Sprintf(` AS %s`, m.QuoteWord(as[0]))
 	}
 	model := m.getModel()
 	return model.appendToFields(

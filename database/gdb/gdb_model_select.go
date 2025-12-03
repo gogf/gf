@@ -26,7 +26,7 @@ import (
 //
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
-func (m *Model) All(where ...interface{}) (Result, error) {
+func (m *Model) All(where ...any) (Result, error) {
 	var ctx = m.GetCtx()
 	return m.doGetAll(ctx, SelectTypeDefault, false, where...)
 }
@@ -42,7 +42,7 @@ func (m *Model) All(where ...interface{}) (Result, error) {
 //	var model Model
 //	var result Result
 //	var count int
-//	where := []interface{}{"name = ?", "John"}
+//	where := []any{"name = ?", "John"}
 //	result, count, err := model.AllAndCount(true)
 //	if err != nil {
 //	    // Handle error.
@@ -105,7 +105,7 @@ func (m *Model) Chunk(size int, handler ChunkHandler) {
 //
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
-func (m *Model) One(where ...interface{}) (Record, error) {
+func (m *Model) One(where ...any) (Record, error) {
 	var ctx = m.GetCtx()
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).One()
@@ -126,7 +126,7 @@ func (m *Model) One(where ...interface{}) (Record, error) {
 // If the optional parameter `fieldsAndWhere` is given, the fieldsAndWhere[0] is the selected fields
 // and fieldsAndWhere[1:] is treated as where condition fields.
 // Also see Model.Fields and Model.Where functions.
-func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
+func (m *Model) Array(fieldsAndWhere ...any) (Array, error) {
 	if len(fieldsAndWhere) > 0 {
 		if len(fieldsAndWhere) > 2 {
 			return m.Fields(gconv.String(fieldsAndWhere[0])).Where(fieldsAndWhere[1], fieldsAndWhere[2:]...).Array()
@@ -192,7 +192,7 @@ func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 //
 // user := (*User)(nil)
 // err  := db.Model("user").Where("id", 1).Scan(&user).
-func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
+func (m *Model) doStruct(pointer any, where ...any) error {
 	model := m
 	// Auto selecting fields by struct attributes.
 	if len(model.fieldsEx) == 0 && len(model.fields) == 0 {
@@ -228,7 +228,7 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 //
 // users := ([]*User)(nil)
 // err   := db.Model("user").Scan(&users).
-func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
+func (m *Model) doStructs(pointer any, where ...any) error {
 	model := m
 	// Auto selecting fields by struct attributes.
 	if len(model.fieldsEx) == 0 && len(model.fields) == 0 {
@@ -277,9 +277,9 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 //
 // users := ([]*User)(nil)
 // err   := db.Model("user").Scan(&users).
-func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
+func (m *Model) Scan(pointer any, where ...any) error {
 	reflectInfo := reflection.OriginTypeAndKind(pointer)
-	if reflectInfo.InputKind != reflect.Ptr {
+	if reflectInfo.InputKind != reflect.Pointer {
 		return gerror.NewCode(
 			gcode.CodeInvalidParameter,
 			`the parameter "pointer" for function Scan should type of pointer`,
@@ -330,7 +330,7 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 //		Fields("u1.passport,u1.id,u2.name,u2.age").
 //		Where("u1.id<2").
 //		ScanAndCount(&users, &count, false)
-func (m *Model) ScanAndCount(pointer interface{}, totalCount *int, useFieldForCount bool) (err error) {
+func (m *Model) ScanAndCount(pointer any, totalCount *int, useFieldForCount bool) (err error) {
 	// support Fields with *, example: .Fields("a.*, b.name"). Count sql is select count(1) from xxx
 	countModel := m.Clone()
 	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
@@ -356,7 +356,7 @@ func (m *Model) ScanAndCount(pointer interface{}, totalCount *int, useFieldForCo
 // Note that the parameter `listPointer` should be type of *[]struct/*[]*struct.
 //
 // See Result.ScanList.
-func (m *Model) ScanList(structSlicePointer interface{}, bindToAttrName string, relationAttrNameAndFields ...string) (err error) {
+func (m *Model) ScanList(structSlicePointer any, bindToAttrName string, relationAttrNameAndFields ...string) (err error) {
 	var result Result
 	out, err := checkGetSliceElementInfoForScanList(structSlicePointer, bindToAttrName)
 	if err != nil {
@@ -400,7 +400,7 @@ func (m *Model) ScanList(structSlicePointer interface{}, bindToAttrName string, 
 // If the optional parameter `fieldsAndWhere` is given, the fieldsAndWhere[0] is the selected fields
 // and fieldsAndWhere[1:] is treated as where condition fields.
 // Also see Model.Fields and Model.Where functions.
-func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
+func (m *Model) Value(fieldsAndWhere ...any) (Value, error) {
 	var (
 		core = m.db.GetCore()
 		ctx  = core.injectInternalColumn(m.GetCtx())
@@ -466,7 +466,7 @@ func (m *Model) getRecordFields(record Record) []string {
 // Count does "SELECT COUNT(x) FROM ..." statement for the model.
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
-func (m *Model) Count(where ...interface{}) (int, error) {
+func (m *Model) Count(where ...any) (int, error) {
 	var (
 		core = m.db.GetCore()
 		ctx  = core.injectInternalColumn(m.GetCtx())
@@ -515,7 +515,7 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 // Exist does "SELECT 1 FROM ... LIMIT 1" statement for the model.
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
-func (m *Model) Exist(where ...interface{}) (bool, error) {
+func (m *Model) Exist(where ...any) (bool, error) {
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).Exist()
 	}
@@ -644,9 +644,9 @@ func (m *Model) Page(page, limit int) *Model {
 // Having sets the having statement for the model.
 // The parameters of this function usage are as the same as function Where.
 // See Where.
-func (m *Model) Having(having interface{}, args ...interface{}) *Model {
+func (m *Model) Having(having any, args ...any) *Model {
 	model := m.getModel()
-	model.having = []interface{}{
+	model.having = []any{
 		having, args,
 	}
 	return model
@@ -659,7 +659,7 @@ func (m *Model) Having(having interface{}, args ...interface{}) *Model {
 // The parameter `limit1` specifies whether limits querying only one record if m.limit is not set.
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
-func (m *Model) doGetAll(ctx context.Context, selectType SelectType, limit1 bool, where ...interface{}) (Result, error) {
+func (m *Model) doGetAll(ctx context.Context, selectType SelectType, limit1 bool, where ...any) (Result, error) {
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).All()
 	}
@@ -669,7 +669,7 @@ func (m *Model) doGetAll(ctx context.Context, selectType SelectType, limit1 bool
 
 // doGetAllBySql does the select statement on the database.
 func (m *Model) doGetAllBySql(
-	ctx context.Context, selectType SelectType, sql string, args ...interface{},
+	ctx context.Context, selectType SelectType, sql string, args ...any,
 ) (result Result, err error) {
 	if result, err = m.getSelectResultFromCache(ctx, sql, args...); err != nil || result != nil {
 		return
@@ -699,7 +699,7 @@ func (m *Model) doGetAllBySql(
 
 func (m *Model) getFormattedSqlAndArgs(
 	ctx context.Context, selectType SelectType, limit1 bool,
-) (sqlWithHolder string, holderArgs []interface{}) {
+) (sqlWithHolder string, holderArgs []any) {
 	switch selectType {
 	case SelectTypeCount:
 		queryFields := "COUNT(1)"
@@ -741,7 +741,7 @@ func (m *Model) getFormattedSqlAndArgs(
 	}
 }
 
-func (m *Model) getHolderAndArgsAsSubModel(ctx context.Context) (holder string, args []interface{}) {
+func (m *Model) getHolderAndArgsAsSubModel(ctx context.Context) (holder string, args []any) {
 	holder, args = m.getFormattedSqlAndArgs(
 		ctx, SelectTypeDefault, false,
 	)
@@ -749,20 +749,113 @@ func (m *Model) getHolderAndArgsAsSubModel(ctx context.Context) (holder string, 
 	return
 }
 
+func (m *Model) parseTableAlias(tableInitStr string) (alias string, tableName string) {
+	// Split by space to separate table from alias
+	// Format can be: `table` alias or `table` AS `alias` or just table alias
+	parts := gstr.SplitAndTrim(tableInitStr, " ")
+	charL, charR := m.db.GetCore().GetChars()
+
+	if len(parts) >= 2 {
+		// Check if second part is "AS" keyword
+		if gstr.Equal(parts[1], "AS") && len(parts) >= 3 {
+			// Format: table AS alias
+			alias = gstr.Trim(parts[2], charL+charR)
+			tableName = gstr.Trim(parts[0], charL+charR)
+		} else if !gstr.Equal(parts[1], "AS") {
+			// Format: table alias (without AS keyword)
+			alias = gstr.Trim(parts[1], charL+charR)
+			tableName = gstr.Trim(parts[0], charL+charR)
+		} else {
+			// Only table name with "AS" keyword but no alias
+			tableName = gstr.Trim(parts[0], charL+charR)
+		}
+	} else if len(parts) == 1 {
+		// No alias, use table name directly
+		tableName = gstr.Trim(parts[0], charL+charR)
+	}
+
+	return alias, tableName
+}
+
 func (m *Model) getAutoPrefix() string {
 	autoPrefix := ""
 	if gstr.Contains(m.tables, " JOIN ") {
-		autoPrefix = m.db.GetCore().QuoteWord(
-			m.db.GetCore().guessPrimaryTableName(m.tablesInit),
-		)
+		// Try to get alias from tablesInit
+		alias, _ := m.parseTableAlias(m.tablesInit)
+		if alias != "" {
+			autoPrefix = m.QuoteWord(alias)
+		}
+
+		// Fallback to table name if alias not found
+		if autoPrefix == "" {
+			autoPrefix = m.QuoteWord(
+				m.db.GetCore().guessPrimaryTableName(m.tablesInit),
+			)
+		}
 	}
 	return autoPrefix
+}
+
+// getPrefixByField attempts to find the correct table prefix for a given field name
+// by checking which table in the JOIN contains this field. It returns:
+// - The quoted table prefix/alias if the field belongs to a specific joined table
+// - An empty string if the field cannot be determined or belongs to multiple tables
+//
+// This function searches through all tables involved in the query (main table and joined tables)
+// and checks their schema to find which table contains the specified field.
+func (m *Model) getPrefixByField(fieldName string) string {
+	// If there's no JOIN, no need to add prefix
+	if !gstr.Contains(m.tables, " JOIN ") {
+		return ""
+	}
+
+	// Get all table names and aliases involved in the query
+	var tables = make(map[string]string) // map[alias/tableName]realTableName
+
+	// Add main table
+	alias, tableName := m.parseTableAlias(m.tablesInit)
+	if alias != "" {
+		tables[alias] = tableName
+	} else if tableName != "" {
+		tables[tableName] = tableName
+	}
+
+	// Add joined tables from tableAliasMap
+	for alias, tableName := range m.tableAliasMap {
+		tables[alias] = tableName
+	}
+
+	// Check which table contains this field
+	var matchedPrefix string
+	var matchCount int
+
+	for aliasOrTable, realTable := range tables {
+		tableFields, err := m.TableFields(realTable)
+		if err != nil {
+			// If we can't get table fields, skip this table
+			continue
+		}
+
+		// Check if this table contains the field
+		if _, exists := tableFields[fieldName]; exists {
+			matchedPrefix = aliasOrTable
+			matchCount++
+		}
+	}
+
+	// Only return prefix if field uniquely belongs to one table
+	if matchCount == 1 {
+		return m.QuoteWord(matchedPrefix)
+	}
+
+	// If field exists in multiple tables or not found, return empty
+	// to avoid ambiguity - user should specify the table explicitly
+	return ""
 }
 
 func (m *Model) getFieldsAsStr() string {
 	var (
 		fieldsStr string
-		core      = m.db.GetCore()
 	)
 	for _, v := range m.fields {
 		field := gconv.String(v)
@@ -773,7 +866,7 @@ func (m *Model) getFieldsAsStr() string {
 			switch v.(type) {
 			case Raw, *Raw:
 			default:
-				field = core.QuoteString(field)
+				field = m.QuoteWord(field)
 			}
 		}
 		if fieldsStr != "" {
@@ -829,7 +922,7 @@ func (m *Model) getFieldsFiltered() string {
 		if len(newFields) > 0 {
 			newFields += ","
 		}
-		newFields += m.db.GetCore().QuoteWord(k)
+		newFields += m.QuoteWord(k)
 	}
 	return newFields
 }
@@ -840,7 +933,7 @@ func (m *Model) getFieldsFiltered() string {
 // The parameter `limit1` specifies whether limits querying only one record if m.limit is not set.
 func (m *Model) formatCondition(
 	ctx context.Context, limit1 bool, isCountStatement bool,
-) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
+) (conditionWhere string, conditionExtra string, conditionArgs []any) {
 	var autoPrefix = m.getAutoPrefix()
 	// GROUP BY.
 	if m.groupBy != "" {

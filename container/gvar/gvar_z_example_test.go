@@ -15,7 +15,7 @@ import (
 )
 
 // New
-func ExampleVarNew() {
+func ExampleNew() {
 	v := gvar.New(400)
 	fmt.Println(v)
 
@@ -173,7 +173,7 @@ func ExampleVar_UnmarshalJSON() {
 	     "Price":         300,
 	     "OnSale":        true
 	}`)
-	var v = gvar.New(map[string]interface{}{})
+	var v = gvar.New(map[string]any{})
 	if err := json.Unmarshal(tmp, &v); err != nil {
 		panic(err)
 	}
@@ -193,7 +193,7 @@ func ExampleVar_UnmarshalValue() {
 		"sale":  true,
 	}
 
-	var v = gvar.New(map[string]interface{}{})
+	var v = gvar.New(map[string]any{})
 	if err := v.UnmarshalValue(tmp); err != nil {
 		panic(err)
 	}

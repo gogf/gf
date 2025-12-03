@@ -51,27 +51,27 @@ var (
 // 2. Multiple struct, post content like: [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
 //
 // TODO: Improve the performance by reducing duplicated reflect usage on the same variable across packages.
-func (r *Request) Parse(pointer interface{}) error {
+func (r *Request) Parse(pointer any) error {
 	return r.doParse(pointer, parseTypeRequest)
 }
 
 // ParseQuery performs like function Parse, but only parses the query parameters.
-func (r *Request) ParseQuery(pointer interface{}) error {
+func (r *Request) ParseQuery(pointer any) error {
 	return r.doParse(pointer, parseTypeQuery)
 }
 
 // ParseForm performs like function Parse, but only parses the form parameters or the body content.
-func (r *Request) ParseForm(pointer interface{}) error {
+func (r *Request) ParseForm(pointer any) error {
 	return r.doParse(pointer, parseTypeForm)
 }
 
 // doParse parses the request data to struct/structs according to request type.
-func (r *Request) doParse(pointer interface{}, requestType int) error {
+func (r *Request) doParse(pointer any, requestType int) error {
 	var (
 		reflectVal1  = reflect.ValueOf(pointer)
 		reflectKind1 = reflectVal1.Kind()
 	)
-	if reflectKind1 != reflect.Ptr {
+	if reflectKind1 != reflect.Pointer {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`invalid parameter type "%v", of which kind should be of *struct/**struct/*[]struct/*[]*struct, but got: "%v"`,
@@ -87,10 +87,10 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 	// Single struct, post content like:
 	// 1. {"id":1, "name":"john"}
 	// 2. ?id=1&name=john
-	case reflect.Ptr, reflect.Struct:
+	case reflect.Pointer, reflect.Struct:
 		var (
 			err  error
-			data map[string]interface{}
+			data map[string]any
 		)
 		// Converting.
 		switch requestType {
@@ -107,7 +107,6 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 				return err
 			}
 		}
-		// TODO: https://github.com/gogf/gf/pull/2450
 		// Validation.
 		if err = gvalid.New().
 			Bail().
@@ -145,7 +144,7 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 // Get is alias of GetRequest, which is one of the most commonly used functions for
 // retrieving parameter.
 // See r.GetRequest.
-func (r *Request) Get(key string, def ...interface{}) *gvar.Var {
+func (r *Request) Get(key string, def ...any) *gvar.Var {
 	return r.GetRequest(key, def...)
 }
 
@@ -185,26 +184,26 @@ func (r *Request) GetBodyString() string {
 // Note that the request content is read from request BODY, not from any field of FORM.
 func (r *Request) GetJson() (*gjson.Json, error) {
 	return gjson.LoadWithOptions(r.GetBody(), gjson.Options{
-		Type:      gjson.ContentTypeJson,
+		Type:      gjson.ContentTypeJSON,
 		StrNumber: true,
 	})
 }
 
 // GetMap is an alias and convenient function for GetRequestMap.
 // See GetRequestMap.
-func (r *Request) GetMap(def ...map[string]interface{}) map[string]interface{} {
+func (r *Request) GetMap(def ...map[string]any) map[string]any {
 	return r.GetRequestMap(def...)
 }
 
 // GetMapStrStr is an alias and convenient function for GetRequestMapStrStr.
 // See GetRequestMapStrStr.
-func (r *Request) GetMapStrStr(def ...map[string]interface{}) map[string]string {
+func (r *Request) GetMapStrStr(def ...map[string]any) map[string]string {
 	return r.GetRequestMapStrStr(def...)
 }
 
 // GetStruct is an alias and convenient function for GetRequestStruct.
 // See GetRequestStruct.
-func (r *Request) GetStruct(pointer interface{}, mapping ...map[string]string) error {
+func (r *Request) GetStruct(pointer any, mapping ...map[string]string) error {
 	return r.GetRequestStruct(pointer, mapping...)
 }
 

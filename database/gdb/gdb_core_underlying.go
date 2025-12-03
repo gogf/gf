@@ -28,13 +28,13 @@ import (
 
 // Query commits one query SQL to underlying driver and returns the execution result.
 // It is most commonly used for data querying.
-func (c *Core) Query(ctx context.Context, sql string, args ...interface{}) (result Result, err error) {
+func (c *Core) Query(ctx context.Context, sql string, args ...any) (result Result, err error) {
 	return c.db.DoQuery(ctx, nil, sql, args...)
 }
 
 // DoQuery commits the sql string and its arguments to underlying driver
 // through given link object and returns the execution result.
-func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error) {
+func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...any) (result Result, err error) {
 	// Transaction checks.
 	if link == nil {
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
@@ -86,13 +86,13 @@ func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...inter
 
 // Exec commits one query SQL to underlying driver and returns the execution result.
 // It is most commonly used for data inserting and updating.
-func (c *Core) Exec(ctx context.Context, sql string, args ...interface{}) (result sql.Result, err error) {
+func (c *Core) Exec(ctx context.Context, sql string, args ...any) (result sql.Result, err error) {
 	return c.db.DoExec(ctx, nil, sql, args...)
 }
 
 // DoExec commits the sql string and its arguments to underlying driver
 // through given link object and returns the execution result.
-func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error) {
+func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...any) (result sql.Result, err error) {
 	// Transaction checks.
 	if link == nil {
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
@@ -103,7 +103,7 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 			return nil, err
 		}
 	} else if !link.IsTransaction() {
-		// If current link is not transaction link, it checks and retrieves transaction from context.
+		// If current link is not transaction link, it tries retrieving transaction object from context.
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
 			link = &txLink{tx.GetSqlTX()}
 		}
@@ -146,8 +146,8 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 // The parameter `link` specifies the current database connection operation object. You can modify the sql
 // string `sql` and its arguments `args` as you wish before they're committed to driver.
 func (c *Core) DoFilter(
-	ctx context.Context, link Link, sql string, args []interface{},
-) (newSql string, newArgs []interface{}, err error) {
+	ctx context.Context, link Link, sql string, args []any,
+) (newSql string, newArgs []any, err error) {
 	return sql, args, nil
 }
 
@@ -168,7 +168,7 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 
 	// Trace span start.
 	tr := otel.GetTracerProvider().Tracer(traceInstrumentName, trace.WithInstrumentationVersion(gf.VERSION))
-	ctx, span := tr.Start(ctx, string(in.Type), trace.WithSpanKind(trace.SpanKindInternal))
+	ctx, span := tr.Start(ctx, string(in.Type), trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	// Execution by type.
@@ -180,14 +180,17 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 			formattedSql, in.TxOptions.Isolation.String(), in.TxOptions.ReadOnly,
 		)
 		if sqlTx, err = in.Db.BeginTx(ctx, &in.TxOptions); err == nil {
-			out.Tx = &TXCore{
+			tx := &TXCore{
 				db:            c.db,
 				tx:            sqlTx,
-				ctx:           context.WithValue(ctx, transactionIdForLoggerCtx, transactionIdGenerator.Add(1)),
+				ctx:           ctx,
 				master:        in.Db,
 				transactionId: guid.S(),
 				cancelFunc:    cancelFuncForTimeout,
 			}
+			tx.ctx = context.WithValue(ctx, transactionKeyForContext(tx.db.GetGroup()), tx)
+			tx.ctx = context.WithValue(tx.ctx, transactionIdForLoggerCtx, transactionIdGenerator.Add(1))
+			out.Tx = tx
 			ctx = out.Tx.GetCtx()
 		}
 		out.RawResult = sqlTx
@@ -457,9 +460,9 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 		}
 	}
 	var (
-		values   = make([]interface{}, len(columnTypes))
+		values   = make([]any, len(columnTypes))
 		result   = make(Result, 0)
-		scanArgs = make([]interface{}, len(values))
+		scanArgs = make([]any, len(values))
 	)
 	for i := range values {
 		scanArgs[i] = &values[i]
@@ -475,8 +478,11 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 				// which will cause struct converting issue.
 				record[columnTypes[i].Name()] = nil
 			} else {
-				var convertedValue interface{}
-				if convertedValue, err = c.columnValueToLocalValue(ctx, value, columnTypes[i]); err != nil {
+				var (
+					convertedValue any
+					columnType     = columnTypes[i]
+				)
+				if convertedValue, err = c.columnValueToLocalValue(ctx, value, columnType); err != nil {
 					return nil, err
 				}
 				record[columnTypes[i].Name()] = gvar.New(convertedValue)
@@ -495,7 +501,9 @@ func (c *Core) OrderRandomFunction() string {
 	return "RAND()"
 }
 
-func (c *Core) columnValueToLocalValue(ctx context.Context, value interface{}, columnType *sql.ColumnType) (interface{}, error) {
+func (c *Core) columnValueToLocalValue(
+	ctx context.Context, value any, columnType *sql.ColumnType,
+) (any, error) {
 	var scanType = columnType.ScanType()
 	if scanType != nil {
 		// Common basic builtin types.

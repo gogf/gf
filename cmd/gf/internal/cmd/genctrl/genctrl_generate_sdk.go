@@ -180,6 +180,7 @@ func (c *apiSdkGenerator) doGenerateSdkImplementer(
 			"{Version}":         item.Version,
 			"{MethodName}":      item.MethodName,
 			"{ImplementerName}": implementerName,
+			"{MethodComment}":   item.GetComment(),
 		}))
 		implementerFileContent += "\n"
 	}

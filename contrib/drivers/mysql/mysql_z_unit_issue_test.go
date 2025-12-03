@@ -8,6 +8,7 @@ package mysql_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"testing"
@@ -23,6 +24,121 @@ import (
 	"github.com/gogf/gf/v2/util/gmeta"
 	"github.com/gogf/gf/v2/util/guid"
 )
+
+// https://github.com/gogf/gf/issues/1380
+func Test_Issue1380(t *testing.T) {
+	type GiftImage struct {
+		Uid    string `json:"uid"`
+		Url    string `json:"url"`
+		Status string `json:"status"`
+		Name   string `json:"name"`
+	}
+
+	type GiftComment struct {
+		Name     string `json:"name"`
+		Field    string `json:"field"`
+		Required bool   `json:"required"`
+	}
+
+	type Prop struct {
+		Name   string   `json:"name"`
+		Values []string `json:"values"`
+	}
+
+	type Sku struct {
+		GiftId      int64  `json:"gift_id"`
+		Name        string `json:"name"`
+		ScorePrice  int    `json:"score_price"`
+		MarketPrice int    `json:"market_price"`
+		CostPrice   int    `json:"cost_price"`
+		Stock       int    `json:"stock"`
+	}
+
+	type Covers struct {
+		List []GiftImage `json:"list"`
+	}
+
+	type GiftEntity struct {
+		Id                   int64         `json:"id"`
+		StoreId              int64         `json:"store_id"`
+		GiftType             int           `json:"gift_type"`
+		GiftName             string        `json:"gift_name"`
+		Description          string        `json:"description"`
+		Covers               Covers        `json:"covers"`
+		Cover                string        `json:"cover"`
+		GiftCategoryId       []int64       `json:"gift_category_id"`
+		HasProps             bool          `json:"has_props"`
+		OutSn                string        `json:"out_sn"`
+		IsLimitSell          bool          `json:"is_limit_sell"`
+		LimitSellType        int           `json:"limit_sell_type"`
+		LimitSellCycle       string        `json:"limit_sell_cycle"`
+		LimitSellCycleCount  int           `json:"limit_sell_cycle_count"`
+		LimitSellCustom      bool          `json:"limit_sell_custom"`   // 只允许特定会员兑换
+		LimitCustomerTags    []int64       `json:"limit_customer_tags"` // 允许兑换的成员
+		ScorePrice           int           `json:"score_price"`
+		MarketPrice          float64       `json:"market_price"`
+		CostPrice            int           `json:"cost_price"`
+		Stock                int           `json:"stock"`
+		Props                []Prop        `json:"props"`
+		Skus                 []Sku         `json:"skus"`
+		ExpressType          []string      `json:"express_type"`
+		Comments             []GiftComment `json:"comments"`
+		Content              string        `json:"content"`
+		AtLeastRechargeCount int           `json:"at_least_recharge_count"`
+		Status               int           `json:"status"`
+	}
+
+	type User struct {
+		Id       int
+		Passport string
+	}
+
+	table := "jfy_gift"
+	array := gstr.SplitAndTrim(gtest.DataContent(`issues`, `1380.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			entity = new(GiftEntity)
+			err    = db.Model(table).Where("id", 17).Scan(entity)
+		)
+		t.AssertNil(err)
+		t.Assert(len(entity.Skus), 2)
+
+		t.Assert(entity.Skus[0].Name, "red")
+		t.Assert(entity.Skus[0].Stock, 10)
+		t.Assert(entity.Skus[0].GiftId, 1)
+		t.Assert(entity.Skus[0].CostPrice, 80)
+		t.Assert(entity.Skus[0].ScorePrice, 188)
+		t.Assert(entity.Skus[0].MarketPrice, 388)
+
+		t.Assert(entity.Skus[1].Name, "blue")
+		t.Assert(entity.Skus[1].Stock, 100)
+		t.Assert(entity.Skus[1].GiftId, 2)
+		t.Assert(entity.Skus[1].CostPrice, 81)
+		t.Assert(entity.Skus[1].ScorePrice, 200)
+		t.Assert(entity.Skus[1].MarketPrice, 288)
+
+		t.Assert(entity.Id, 17)
+		t.Assert(entity.StoreId, 100004)
+		t.Assert(entity.GiftType, 1)
+		t.Assert(entity.GiftName, "GIFT")
+		t.Assert(entity.Description, "支持个性定制的父亲节老师长辈的专属礼物")
+		t.Assert(len(entity.Covers.List), 3)
+		t.Assert(entity.OutSn, "259402")
+		t.Assert(entity.LimitCustomerTags, "[]")
+		t.Assert(entity.ScorePrice, 10)
+		t.Assert(len(entity.Props), 1)
+		t.Assert(len(entity.Comments), 2)
+		t.Assert(entity.Status, 99)
+		t.Assert(entity.Content, `<p>礼品详情</p>`)
+	})
+}
 
 // https://github.com/gogf/gf/issues/1934
 func Test_Issue1934(t *testing.T) {
@@ -170,7 +286,7 @@ func Test_Issue1401(t *testing.T) {
 		table1 = "parcels"
 		table2 = "parcel_items"
 	)
-	array := gstr.SplitAndTrim(gtest.DataContent(`issue1401.sql`), ";")
+	array := gstr.SplitAndTrim(gtest.DataContent(`issues`, `1401.sql`), ";")
 	for _, v := range array {
 		if _, err := db.Exec(ctx, v); err != nil {
 			gtest.Error(err)
@@ -212,7 +328,7 @@ func Test_Issue1412(t *testing.T) {
 		table1 = "parcels"
 		table2 = "items"
 	)
-	array := gstr.SplitAndTrim(gtest.DataContent(`issue1412.sql`), ";")
+	array := gstr.SplitAndTrim(gtest.DataContent(`issues`, `1412.sql`), ";")
 	for _, v := range array {
 		if _, err := db.Exec(ctx, v); err != nil {
 			gtest.Error(err)
@@ -474,7 +590,7 @@ func Test_Issue2012(t *testing.T) {
 // https://github.com/gogf/gf/issues/2105
 func Test_Issue2105(t *testing.T) {
 	table := "issue2105"
-	array := gstr.SplitAndTrim(gtest.DataContent(`issue2105.sql`), ";")
+	array := gstr.SplitAndTrim(gtest.DataContent(`issues`, `2105.sql`), ";")
 	for _, v := range array {
 		if _, err := db.Exec(ctx, v); err != nil {
 			gtest.Error(err)
@@ -715,11 +831,11 @@ func Test_Issue2561(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			g.Meta     `orm:"do:true"`
-			Id         interface{}
-			Passport   interface{}
-			Password   interface{}
-			Nickname   interface{}
-			CreateTime interface{}
+			Id         any
+			Passport   any
+			Password   any
+			Nickname   any
+			CreateTime any
 		}
 		data := g.Slice{
 			User{
@@ -737,8 +853,8 @@ func Test_Issue2561(t *testing.T) {
 		}
 		result, err := db.Model(table).Data(data).Insert()
 		t.AssertNil(err)
-		m, _ := result.LastInsertId()
-		t.Assert(m, 3)
+		// m, _ := result.LastInsertId() // TODO: The order of LastInsertId cannot be guaranteed
+		// t.Assert(m, 3)
 
 		n, _ := result.RowsAffected()
 		t.Assert(n, 3)
@@ -772,7 +888,7 @@ func Test_Issue2561(t *testing.T) {
 // https://github.com/gogf/gf/issues/2439
 func Test_Issue2439(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		array := gstr.SplitAndTrim(gtest.DataContent(`issue2439.sql`), ";")
+		array := gstr.SplitAndTrim(gtest.DataContent(`issues`, `2439.sql`), ";")
 		for _, v := range array {
 			if _, err := db.Exec(ctx, v); err != nil {
 				gtest.Error(err)
@@ -868,7 +984,7 @@ func Test_Issue2907(t *testing.T) {
 // https://github.com/gogf/gf/issues/3086
 func Test_Issue3086(t *testing.T) {
 	table := "issue3086_user"
-	array := gstr.SplitAndTrim(gtest.DataContent(`issue3086.sql`), ";")
+	array := gstr.SplitAndTrim(gtest.DataContent(`issues`, `3086.sql`), ";")
 	for _, v := range array {
 		if _, err := db.Exec(ctx, v); err != nil {
 			gtest.Error(err)
@@ -878,19 +994,19 @@ func Test_Issue3086(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			g.Meta     `orm:"do:true"`
-			Id         interface{}
-			Passport   interface{}
-			Password   interface{}
-			Nickname   interface{}
-			CreateTime interface{}
+			Id         any
+			Passport   any
+			Password   any
+			Nickname   any
+			CreateTime any
 		}
 		data := g.Slice{
 			User{
-				Id:       nil,
+				Id:       1,
 				Passport: "user_1",
 			},
 			User{
-				Id:       2,
+				Id:       1,
 				Passport: "user_2",
 			},
 		}
@@ -900,19 +1016,19 @@ func Test_Issue3086(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			g.Meta     `orm:"do:true"`
-			Id         interface{}
-			Passport   interface{}
-			Password   interface{}
-			Nickname   interface{}
-			CreateTime interface{}
+			Id         any
+			Passport   any
+			Password   any
+			Nickname   any
+			CreateTime any
 		}
 		data := g.Slice{
 			User{
-				Id:       1,
+				Id:       3,
 				Passport: "user_1",
 			},
 			User{
-				Id:       2,
+				Id:       4,
 				Passport: "user_2",
 			},
 		}
@@ -933,11 +1049,11 @@ func Test_Issue3204(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			g.Meta     `orm:"do:true"`
-			Id         interface{} `orm:"id,omitempty"`
-			Passport   interface{} `orm:"passport,omitempty"`
-			Password   interface{} `orm:"password,omitempty"`
-			Nickname   interface{} `orm:"nickname,omitempty"`
-			CreateTime interface{} `orm:"create_time,omitempty"`
+			Id         any `orm:"id,omitempty"`
+			Passport   any `orm:"passport,omitempty"`
+			Password   any `orm:"password,omitempty"`
+			Nickname   any `orm:"nickname,omitempty"`
+			CreateTime any `orm:"create_time,omitempty"`
 		}
 		where := User{
 			Id:       2,
@@ -952,11 +1068,11 @@ func Test_Issue3204(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			g.Meta     `orm:"do:true"`
-			Id         interface{} `orm:"id,omitempty"`
-			Passport   interface{} `orm:"passport,omitempty"`
-			Password   interface{} `orm:"password,omitempty"`
-			Nickname   interface{} `orm:"nickname,omitempty"`
-			CreateTime interface{} `orm:"create_time,omitempty"`
+			Id         any `orm:"id,omitempty"`
+			Passport   any `orm:"passport,omitempty"`
+			Password   any `orm:"password,omitempty"`
+			Nickname   any `orm:"nickname,omitempty"`
+			CreateTime any `orm:"create_time,omitempty"`
 		}
 		var (
 			err      error
@@ -983,11 +1099,11 @@ func Test_Issue3204(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			g.Meta     `orm:"do:true"`
-			Id         interface{} `orm:"id,omitempty"`
-			Passport   interface{} `orm:"passport,omitempty"`
-			Password   interface{} `orm:"password,omitempty"`
-			Nickname   interface{} `orm:"nickname,omitempty"`
-			CreateTime interface{} `orm:"create_time,omitempty"`
+			Id         any `orm:"id,omitempty"`
+			Passport   any `orm:"passport,omitempty"`
+			Password   any `orm:"password,omitempty"`
+			Nickname   any `orm:"nickname,omitempty"`
+			CreateTime any `orm:"create_time,omitempty"`
 		}
 		var (
 			err      error
@@ -1013,7 +1129,7 @@ func Test_Issue3204(t *testing.T) {
 // https://github.com/gogf/gf/issues/3218
 func Test_Issue3218(t *testing.T) {
 	table := "issue3218_sys_config"
-	array := gstr.SplitAndTrim(gtest.DataContent(`issue3218.sql`), ";")
+	array := gstr.SplitAndTrim(gtest.DataContent(`issues`, `3218.sql`), ";")
 	for _, v := range array {
 		if _, err := db.Exec(ctx, v); err != nil {
 			gtest.Error(err)
@@ -1136,7 +1252,7 @@ func Test_Issue2552_ClearTableFields(t *testing.T) {
 // https://github.com/gogf/gf/issues/2643
 func Test_Issue2643(t *testing.T) {
 	table := "issue2643"
-	array := gstr.SplitAndTrim(gtest.DataContent(`issue2643.sql`), ";")
+	array := gstr.SplitAndTrim(gtest.DataContent(`issues`, `2643.sql`), ";")
 	for _, v := range array {
 		if _, err := db.Exec(ctx, v); err != nil {
 			gtest.Error(err)
@@ -1221,7 +1337,7 @@ func Test_Issue3649(t *testing.T) {
 // https://github.com/gogf/gf/issues/3754
 func Test_Issue3754(t *testing.T) {
 	table := "issue3754"
-	array := gstr.SplitAndTrim(gtest.DataContent(`issue3754.sql`), ";")
+	array := gstr.SplitAndTrim(gtest.DataContent(`issues`, `3754.sql`), ";")
 	for _, v := range array {
 		if _, err := db.Exec(ctx, v); err != nil {
 			gtest.Error(err)
@@ -1283,7 +1399,7 @@ func Test_Issue3754(t *testing.T) {
 // https://github.com/gogf/gf/issues/3626
 func Test_Issue3626(t *testing.T) {
 	table := "issue3626"
-	array := gstr.SplitAndTrim(gtest.DataContent(`issue3626.sql`), ";")
+	array := gstr.SplitAndTrim(gtest.DataContent(`issues`, `3626.sql`), ";")
 	defer dropTable(table)
 	for _, v := range array {
 		if _, err := db.Exec(ctx, v); err != nil {
@@ -1392,7 +1508,7 @@ func Test_Issue3968(t *testing.T) {
 					return nil, err
 				}
 				if result != nil {
-					for i, _ := range result {
+					for i := range result {
 						result[i]["location"] = gvar.New("ny")
 					}
 				}
@@ -1413,7 +1529,7 @@ func Test_Issue3968(t *testing.T) {
 // https://github.com/gogf/gf/issues/3915
 func Test_Issue3915(t *testing.T) {
 	table := "issue3915"
-	array := gstr.SplitAndTrim(gtest.DataContent(`issue3915.sql`), ";")
+	array := gstr.SplitAndTrim(gtest.DataContent(`issues`, `3915.sql`), ";")
 	for _, v := range array {
 		if _, err := db.Exec(ctx, v); err != nil {
 			gtest.Error(err)
@@ -1500,7 +1616,7 @@ func Test_Issue2119(t *testing.T) {
 		defer dropTable(tables[0])
 		defer dropTable(tables[1])
 		_ = tables
-		array := gstr.SplitAndTrim(gtest.DataContent(`issue2119.sql`), ";")
+		array := gstr.SplitAndTrim(gtest.DataContent(`issues`, `2119.sql`), ";")
 		for _, v := range array {
 			_, err := db.Exec(ctx, v)
 			t.AssertNil(err)
@@ -1561,7 +1677,7 @@ func Test_Issue2119(t *testing.T) {
 func Test_Issue4034(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := "issue4034"
-		array := gstr.SplitAndTrim(gtest.DataContent(`issue4034.sql`), ";")
+		array := gstr.SplitAndTrim(gtest.DataContent(`issues`, `4034.sql`), ";")
 		for _, v := range array {
 			_, err := db.Exec(ctx, v)
 			t.AssertNil(err)
@@ -1589,4 +1705,163 @@ func issue4034SaveAppDevice(ctx context.Context, table string, tx gdb.TX) error 
 		"nickname": "333",
 	}).Save()
 	return err
+}
+
+// https://github.com/gogf/gf/issues/4086
+func Test_Issue4086(t *testing.T) {
+	table := "issue4086"
+	defer dropTable(table)
+	array := gstr.SplitAndTrim(gtest.DataContent(`issues`, `4086.sql`), ";")
+	for _, v := range array {
+		_, err := db.Exec(ctx, v)
+		gtest.AssertNil(err)
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		type ProxyParam struct {
+			ProxyId      int64   `json:"proxyId" orm:"proxy_id"`
+			RecommendIds []int64 `json:"recommendIds" orm:"recommend_ids"`
+			Photos       []int64 `json:"photos" orm:"photos"`
+		}
+
+		var proxyParamList []*ProxyParam
+		err := db.Model(table).Ctx(ctx).Scan(&proxyParamList)
+		t.AssertNil(err)
+		t.Assert(len(proxyParamList), 2)
+		t.Assert(proxyParamList, []*ProxyParam{
+			{
+				ProxyId:      1,
+				RecommendIds: []int64{584, 585},
+				Photos:       nil,
+			},
+			{
+				ProxyId:      2,
+				RecommendIds: []int64{},
+				Photos:       nil,
+			},
+		})
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		type ProxyParam struct {
+			ProxyId      int64     `json:"proxyId" orm:"proxy_id"`
+			RecommendIds []int64   `json:"recommendIds" orm:"recommend_ids"`
+			Photos       []float32 `json:"photos" orm:"photos"`
+		}
+
+		var proxyParamList []*ProxyParam
+		err := db.Model(table).Ctx(ctx).Scan(&proxyParamList)
+		t.AssertNil(err)
+		t.Assert(len(proxyParamList), 2)
+		t.Assert(proxyParamList, []*ProxyParam{
+			{
+				ProxyId:      1,
+				RecommendIds: []int64{584, 585},
+				Photos:       nil,
+			},
+			{
+				ProxyId:      2,
+				RecommendIds: []int64{},
+				Photos:       nil,
+			},
+		})
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		type ProxyParam struct {
+			ProxyId      int64    `json:"proxyId" orm:"proxy_id"`
+			RecommendIds []int64  `json:"recommendIds" orm:"recommend_ids"`
+			Photos       []string `json:"photos" orm:"photos"`
+		}
+
+		var proxyParamList []*ProxyParam
+		err := db.Model(table).Ctx(ctx).Scan(&proxyParamList)
+		t.AssertNil(err)
+		t.Assert(len(proxyParamList), 2)
+		t.Assert(proxyParamList, []*ProxyParam{
+			{
+				ProxyId:      1,
+				RecommendIds: []int64{584, 585},
+				Photos:       nil,
+			},
+			{
+				ProxyId:      2,
+				RecommendIds: []int64{},
+				Photos:       nil,
+			},
+		})
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		type ProxyParam struct {
+			ProxyId      int64   `json:"proxyId" orm:"proxy_id"`
+			RecommendIds []int64 `json:"recommendIds" orm:"recommend_ids"`
+			Photos       []any   `json:"photos" orm:"photos"`
+		}
+
+		var proxyParamList []*ProxyParam
+		err := db.Model(table).Ctx(ctx).Scan(&proxyParamList)
+		t.AssertNil(err)
+		t.Assert(len(proxyParamList), 2)
+		t.Assert(proxyParamList, []*ProxyParam{
+			{
+				ProxyId:      1,
+				RecommendIds: []int64{584, 585},
+				Photos:       nil,
+			},
+			{
+				ProxyId:      2,
+				RecommendIds: []int64{},
+				Photos:       nil,
+			},
+		})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type ProxyParam struct {
+			ProxyId      int64   `json:"proxyId" orm:"proxy_id"`
+			RecommendIds []int64 `json:"recommendIds" orm:"recommend_ids"`
+			Photos       string  `json:"photos" orm:"photos"`
+		}
+
+		var proxyParamList []*ProxyParam
+		err := db.Model(table).Ctx(ctx).Scan(&proxyParamList)
+		t.AssertNil(err)
+		t.Assert(len(proxyParamList), 2)
+		t.Assert(proxyParamList, []*ProxyParam{
+			{
+				ProxyId:      1,
+				RecommendIds: []int64{584, 585},
+				Photos:       "null",
+			},
+			{
+				ProxyId:      2,
+				RecommendIds: []int64{},
+				Photos:       "",
+			},
+		})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type ProxyParam struct {
+			ProxyId      int64           `json:"proxyId" orm:"proxy_id"`
+			RecommendIds string          `json:"recommendIds" orm:"recommend_ids"`
+			Photos       json.RawMessage `json:"photos" orm:"photos"`
+		}
+
+		var proxyParamList []*ProxyParam
+		err := db.Model(table).Ctx(ctx).Scan(&proxyParamList)
+		t.AssertNil(err)
+		t.Assert(len(proxyParamList), 2)
+		t.Assert(proxyParamList, []*ProxyParam{
+			{
+				ProxyId:      1,
+				RecommendIds: "[584, 585]",
+				Photos:       json.RawMessage("null"),
+			},
+			{
+				ProxyId:      2,
+				RecommendIds: "[]",
+				Photos:       json.RawMessage("null"),
+			},
+		})
+	})
 }

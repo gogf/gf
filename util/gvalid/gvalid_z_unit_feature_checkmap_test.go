@@ -18,7 +18,7 @@ import (
 
 func Test_CheckMap1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		data := map[string]interface{}{
+		data := map[string]any{
 			"id":   "0",
 			"name": "john",
 		}
@@ -37,14 +37,14 @@ func Test_CheckMap1(t *testing.T) {
 }
 
 func Test_CheckMap2(t *testing.T) {
-	var params interface{}
+	var params any
 	gtest.C(t, func(t *gtest.T) {
 		if err := g.Validator().Data(params).Run(context.TODO()); err == nil {
 			t.AssertNil(err)
 		}
 	})
 
-	kvmap := map[string]interface{}{
+	kvmap := map[string]any{
 		"id":   "0",
 		"name": "john",
 	}
@@ -63,7 +63,7 @@ func Test_CheckMap2(t *testing.T) {
 		t.Error("CheckMap校验失败")
 	}
 
-	kvmap = map[string]interface{}{
+	kvmap = map[string]any{
 		"id":   "1",
 		"name": "john",
 	}
@@ -71,7 +71,7 @@ func Test_CheckMap2(t *testing.T) {
 		"id":   "required|between:1,100",
 		"name": "required|length:4,16",
 	}
-	msgs = map[string]interface{}{
+	msgs = map[string]any{
 		"id": "ID不能为空|ID范围应当为{min}到{max}",
 		"name": map[string]string{
 			"required": "名称不能为空",
@@ -82,7 +82,7 @@ func Test_CheckMap2(t *testing.T) {
 		t.Error(m)
 	}
 
-	kvmap = map[string]interface{}{
+	kvmap = map[string]any{
 		"id":   "1",
 		"name": "john",
 	}
@@ -90,7 +90,7 @@ func Test_CheckMap2(t *testing.T) {
 		"id":   "",
 		"name": "",
 	}
-	msgs = map[string]interface{}{
+	msgs = map[string]any{
 		"id": "ID不能为空|ID范围应当为{min}到{max}",
 		"name": map[string]string{
 			"required": "名称不能为空",
@@ -101,7 +101,7 @@ func Test_CheckMap2(t *testing.T) {
 		t.Error(m)
 	}
 
-	kvmap = map[string]interface{}{
+	kvmap = map[string]any{
 		"id":   "1",
 		"name": "john",
 	}
@@ -109,7 +109,7 @@ func Test_CheckMap2(t *testing.T) {
 		"@required|between:1,100",
 		"@required|length:4,16",
 	}
-	msgs = map[string]interface{}{
+	msgs = map[string]any{
 		"id": "ID不能为空|ID范围应当为{min}到{max}",
 		"name": map[string]string{
 			"required": "名称不能为空",
@@ -120,7 +120,7 @@ func Test_CheckMap2(t *testing.T) {
 		t.Error(m)
 	}
 
-	kvmap = map[string]interface{}{
+	kvmap = map[string]any{
 		"id":   "1",
 		"name": "john",
 	}
@@ -128,7 +128,7 @@ func Test_CheckMap2(t *testing.T) {
 		"id@required|between:1,100",
 		"name@required|length:4,16#名称不能为空|",
 	}
-	msgs = map[string]interface{}{
+	msgs = map[string]any{
 		"id": "ID不能为空|ID范围应当为{min}到{max}",
 		"name": map[string]string{
 			"required": "名称不能为空",
@@ -139,7 +139,7 @@ func Test_CheckMap2(t *testing.T) {
 		t.Error(m)
 	}
 
-	kvmap = map[string]interface{}{
+	kvmap = map[string]any{
 		"id":   "1",
 		"name": "john",
 	}
@@ -147,7 +147,7 @@ func Test_CheckMap2(t *testing.T) {
 		"id@required|between:1,100",
 		"name@required|length:4,16#名称不能为空",
 	}
-	msgs = map[string]interface{}{
+	msgs = map[string]any{
 		"id": "ID不能为空|ID范围应当为{min}到{max}",
 		"name": map[string]string{
 			"required": "名称不能为空",
@@ -160,7 +160,7 @@ func Test_CheckMap2(t *testing.T) {
 }
 
 func Test_CheckMapWithNilAndNotRequiredField(t *testing.T) {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"id": "1",
 	}
 	rules := map[string]string{
@@ -174,7 +174,7 @@ func Test_CheckMapWithNilAndNotRequiredField(t *testing.T) {
 
 func Test_Sequence(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		params := map[string]interface{}{
+		params := map[string]any{
 			"passport":  "",
 			"password":  "123456",
 			"password2": "1234567",
@@ -214,7 +214,7 @@ func Test_Sequence(t *testing.T) {
 func Test_Map_Bail(t *testing.T) {
 	// global bail
 	gtest.C(t, func(t *gtest.T) {
-		params := map[string]interface{}{
+		params := map[string]any{
 			"passport":  "",
 			"password":  "123456",
 			"password2": "1234567",
@@ -230,7 +230,7 @@ func Test_Map_Bail(t *testing.T) {
 	})
 	// global bail with rule bail
 	gtest.C(t, func(t *gtest.T) {
-		params := map[string]interface{}{
+		params := map[string]any{
 			"passport":  "",
 			"password":  "123456",
 			"password2": "1234567",
