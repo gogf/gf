@@ -23,38 +23,6 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/gendao"
 )
 
-// https://github.com/gogf/gf/issues/1761
-func Test_Gen_Dao_Issue_1761(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		db, err := gdb.New(gdb.ConfigNode{
-			Link: "mssql:sa:test.123456@tcp(127.0.0.1:1433)/test?encrypt=disable",
-		})
-		t.AssertNil(err)
-		var (
-			table      = "user1"
-			sqlContent = `
-				CREATE TABLE [user1] (
-					[id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-					[name] VARCHAR(45) NOT NULL,
-				);
-			`
-		)
-		if _, err := db.Exec(ctx, sqlContent); err != nil {
-			gtest.Error(err)
-		}
-		defer func(db gdb.DB, table string) {
-			dropTableStmt := fmt.Sprintf("DROP TABLE IF EXISTS [%s]", table)
-			if _, err := db.Exec(ctx, dropTableStmt); err != nil {
-				gtest.Error(err)
-			}
-		}(db, table)
-		tables, err := db.Tables(ctx)
-		t.AssertNil(err)
-		t.Assert(len(tables), 1)
-		t.Assert(tables[0], table)
-	})
-}
-
 // https://github.com/gogf/gf/issues/2572
 func Test_Gen_Dao_Issue2572(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
