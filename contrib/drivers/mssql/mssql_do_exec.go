@@ -30,7 +30,6 @@ const (
 
 	// Result field names and aliases
 	affectCountExpression  = " 1 as AffectCount"
-	affectCountFieldAlias  = "AffectCount"
 	lastInsertIdFieldAlias = "ID"
 )
 
@@ -95,8 +94,9 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args 
 		err = gerror.WrapCode(gcode.CodeDbOperationError, gerror.New("affectcount is zero"), `sql.Result.RowsAffected failed`)
 		return &InsertResult{lastInsertId: 0, rowsAffected: 0, err: err}, err
 	}
-	// get affect count from the database's reporting
-	rowsAffected := stdSqlResult[0].GMap().GetVar(affectCountFieldAlias).Int64()
+	// For batch insert, OUTPUT clause returns one row per inserted row.
+	// So the rowsAffected should be the count of returned records.
+	rowsAffected := int64(len(stdSqlResult))
 	// get last_insert_id from the first returned row
 	lastInsertId := stdSqlResult[0].GMap().GetVar(lastInsertIdFieldAlias).Int64()
 
