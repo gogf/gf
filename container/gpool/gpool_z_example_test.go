@@ -1,7 +1,7 @@
 // Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with gm file,
+// If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
 package gpool_test
@@ -20,11 +20,11 @@ func ExampleNew() {
 	}
 
 	dbConnPool := gpool.New(time.Hour,
-		func() (interface{}, error) {
+		func() (any, error) {
 			dbConn := new(DBConn)
 			return dbConn, nil
 		},
-		func(i interface{}) {
+		func(i any) {
 			// sample : close db conn
 			// i.(DBConn).Conn.Close()
 		})
@@ -42,12 +42,12 @@ func ExamplePool_Put() {
 	}
 
 	dbConnPool := gpool.New(time.Hour,
-		func() (interface{}, error) {
+		func() (any, error) {
 			dbConn := new(DBConn)
 			dbConn.Limit = 10
 			return dbConn, nil
 		},
-		func(i interface{}) {
+		func(i any) {
 			// sample : close db conn
 			// i.(DBConn).Conn.Close()
 		})
@@ -76,12 +76,12 @@ func ExamplePool_Clear() {
 	}
 
 	dbConnPool := gpool.New(time.Hour,
-		func() (interface{}, error) {
+		func() (any, error) {
 			dbConn := new(DBConn)
 			dbConn.Limit = 10
 			return dbConn, nil
 		},
-		func(i interface{}) {
+		func(i any) {
 			i.(*DBConn).Limit = 0
 			// sample : close db conn
 			// i.(DBConn).Conn.Close()
@@ -106,12 +106,12 @@ func ExamplePool_Get() {
 	}
 
 	dbConnPool := gpool.New(time.Hour,
-		func() (interface{}, error) {
+		func() (any, error) {
 			dbConn := new(DBConn)
 			dbConn.Limit = 10
 			return dbConn, nil
 		},
-		func(i interface{}) {
+		func(i any) {
 			// sample : close db conn
 			// i.(DBConn).Conn.Close()
 		})
@@ -132,12 +132,12 @@ func ExamplePool_Size() {
 	}
 
 	dbConnPool := gpool.New(time.Hour,
-		func() (interface{}, error) {
+		func() (any, error) {
 			dbConn := new(DBConn)
 			dbConn.Limit = 10
 			return dbConn, nil
 		},
-		func(i interface{}) {
+		func(i any) {
 			// sample : close db conn
 			// i.(DBConn).Conn.Close()
 		})
@@ -159,12 +159,12 @@ func ExamplePool_Close() {
 		Limit int
 	}
 	var (
-		newFunc = func() (interface{}, error) {
+		newFunc = func() (any, error) {
 			dbConn := new(DBConn)
 			dbConn.Limit = 10
 			return dbConn, nil
 		}
-		closeFunc = func(i interface{}) {
+		closeFunc = func(i any) {
 			fmt.Println("Close The Pool")
 			// sample : close db conn
 			// i.(DBConn).Conn.Close()

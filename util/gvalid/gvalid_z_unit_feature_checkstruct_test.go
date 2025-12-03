@@ -27,7 +27,7 @@ func Test_CheckStruct(t *testing.T) {
 			"@required|length:6,16",
 			"@between:18,30",
 		}
-		msgs := map[string]interface{}{
+		msgs := map[string]any{
 			"Name": map[string]string{
 				"required": "名称不能为空",
 				"length":   "名称长度为{min}到{max}个字符",
@@ -48,7 +48,7 @@ func Test_CheckStruct(t *testing.T) {
 			"Name@required|length:6,16#名称不能为空",
 			"Age@between:18,30",
 		}
-		msgs := map[string]interface{}{
+		msgs := map[string]any{
 			"Name": map[string]string{
 				"required": "名称不能为空",
 				"length":   "名称长度为{min}到{max}个字符",
@@ -73,7 +73,7 @@ func Test_CheckStruct(t *testing.T) {
 			"Name@required|length:6,16#名称不能为空|",
 			"Age@between:18,30",
 		}
-		msgs := map[string]interface{}{
+		msgs := map[string]any{
 			"Name": map[string]string{
 				"required": "名称不能为空",
 				"length":   "名称长度为{min}到{max}个字符",
@@ -98,7 +98,7 @@ func Test_CheckStruct(t *testing.T) {
 			"Name": "required|length:6,16",
 			"Age":  "between:18,30",
 		}
-		msgs := map[string]interface{}{
+		msgs := map[string]any{
 			"Name": map[string]string{
 				"required": "名称不能为空",
 				"length":   "名称长度为{min}到{max}个字符",
@@ -241,7 +241,7 @@ func Test_CheckStruct_EmbeddedObject_Attribute(t *testing.T) {
 			"Name": "required",
 			"Type": "required",
 		}
-		ruleMsg := map[string]interface{}{
+		ruleMsg := map[string]any{
 			"Name": "名称必填",
 			"Type": "类型必填",
 		}
@@ -266,7 +266,7 @@ func Test_CheckStruct_EmbeddedObject_Attribute(t *testing.T) {
 			"Name": "required",
 			"Type": "required",
 		}
-		ruleMsg := map[string]interface{}{
+		ruleMsg := map[string]any{
 			"Name": "名称必填",
 			"Type": "类型必填",
 		}

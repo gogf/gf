@@ -20,6 +20,13 @@ on:
     - feature/**
     - enhance/**
     - fix/**
+  workflow_dispatch:
+    inputs:
+      debug:
+        type: boolean
+        description: 'Enable tmate Debug'
+        required: false
+        default: false
 
 # This allows a subsequently queued workflow run to interrupt previous runs
 concurrency:
@@ -29,7 +36,7 @@ concurrency:
 env:
   TZ: "Asia/Shanghai"
   # for unit testing cases of some components that only execute on the latest go version.
-  LATEST_GO_VERSION: "1.23"
+  LATEST_GO_VERSION: "1.25"
 
 jobs:
   code-test:
@@ -38,9 +45,8 @@ jobs:
         # 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
         # When adding new go version to the list, make sure:
         # 1. Update the `LATEST_GO_VERSION` env variable.
-        # 2. Update the `Report Coverage` action.
         # 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        go-version: [ "1.22", "1.23" ]
+        go-version: [ "1.23", "1.24", "1.25" ]
         goarch: [ "386", "amd64" ]
 
     runs-on: ubuntu-latest
@@ -48,9 +54,9 @@ jobs:
     # Service containers to run with `code-test`
     services:
       # Etcd service.
-      # docker run -d --name etcd -p 2379:2379 -e ALLOW_NONE_AUTHENTICATION=yes bitnami/etcd:3.4.24
+      # docker run -d --name etcd -p 2379:2379 -e ALLOW_NONE_AUTHENTICATION=yes bitnamilegacy/etcd:3.4.24
       etcd:
-        image: bitnami/etcd:3.4.24
+        image: bitnamilegacy/etcd:3.4.24
         env:
           ALLOW_NONE_AUTHENTICATION: yes
         ports:
@@ -206,7 +212,20 @@ jobs:
         timezoneLinux: "Asia/Shanghai"
 
     - name: Checkout Repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
+
+    - name: Setup tmate Session
+      uses: mxschmitt/action-tmate@v3
+      if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug }}
+      with:
+        detached: true
+        limit-access-to-actor: false
+
+    - name: Free Disk Space
+      run: |
+        df -h /
+        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/hostedtoolcache/CodeQL /opt/hostedtoolcache/Python || true
+        df -h /
 
     - name: Start Apollo Containers
       run:  docker compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
@@ -227,9 +246,9 @@ jobs:
         cache-dependency-path: '**/go.sum'
 
     - name: Install Protoc
-      uses: arduino/setup-protoc@v2
+      uses: arduino/setup-protoc@v3
       with:
-        version: "29.x"
+        version: "31.x"
         repo-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Install the protocol compiler plugins for Go
@@ -263,8 +282,8 @@ jobs:
 
     - name: Report Coverage
       uses: codecov/codecov-action@v4
-      # Only report coverage on the latest go version and amd64 arch
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == '1.23' && matrix.goarch == 'amd64' }}
+      # Only report coverage on the latest go version
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION }}
       with:
         flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
         token: ${{ secrets.CODECOV_TOKEN }}

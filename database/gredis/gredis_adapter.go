@@ -30,12 +30,16 @@ type AdapterGroup interface {
 	GroupString() IGroupString
 }
 
+// RedisRawClient is a type alias for any, representing the raw underlying redis client.
+// Implementations should return their concrete client type as this interface.
+type RedisRawClient any
+
 // AdapterOperation is the core operation functions for redis.
 // These functions can be easily overwritten by custom implements.
 type AdapterOperation interface {
 	// Do send a command to the server and returns the received reply.
 	// It uses json.Marshal for struct/slice/map type values before committing them to redis.
-	Do(ctx context.Context, command string, args ...interface{}) (*gvar.Var, error)
+	Do(ctx context.Context, command string, args ...any) (*gvar.Var, error)
 
 	// Conn retrieves and returns a connection object for continuous operations.
 	// Note that you should call Close function manually if you do not use this connection any further.
@@ -43,6 +47,11 @@ type AdapterOperation interface {
 
 	// Close closes current redis client, closes its connection pool and releases all its related resources.
 	Close(ctx context.Context) (err error)
+
+	// Client returns the underlying redis client instance.
+	// This method provides access to the raw redis client for advanced operations
+	// that are not covered by the standard redis adapter interface.
+	Client() RedisRawClient
 }
 
 // Conn is an interface of a connection from universal redis client.
@@ -51,7 +60,7 @@ type Conn interface {
 
 	// Do send a command to the server and returns the received reply.
 	// It uses json.Marshal for struct/slice/map type values before committing them to redis.
-	Do(ctx context.Context, command string, args ...interface{}) (result *gvar.Var, err error)
+	Do(ctx context.Context, command string, args ...any) (result *gvar.Var, err error)
 
 	// Close puts the connection back to connection pool.
 	Close(ctx context.Context) (err error)

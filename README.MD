@@ -1,9 +1,12 @@
+English | [简体中文](README.zh_CN.MD)
 
 <div align=center>
 <img src="https://goframe.org/img/logo_full.png" width="300" alt="goframe gf logo"/>
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/gogf/gf/v2.svg)](https://pkg.go.dev/github.com/gogf/gf/v2)
 [![GoFrame CI](https://github.com/gogf/gf/actions/workflows/ci-main.yml/badge.svg)](https://github.com/gogf/gf/actions/workflows/ci-main.yml)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/gogf/gf/badge)](https://scorecard.dev/viewer/?uri=github.com/gogf/gf)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/9233/badge)](https://bestpractices.coreinfrastructure.org/projects/9233)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gogf/gf/v2)](https://goreportcard.com/report/github.com/gogf/gf/v2)
 [![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf)
 [![Production Ready](https://img.shields.io/badge/production-ready-blue.svg?style=flat)](https://github.com/gogf/gf)
@@ -21,24 +24,23 @@
 
 A powerful framework for faster, easier, and more efficient project development.
 
+## Documentation
 
-# Documentation
-
-- GoFrame Official Site: [https://goframe.org](https://goframe.org)
-- GoFrame Official Site(en): [https://goframe.org/en](https://goframe.org/en)
-- GoFrame Mirror Site(中文): [https://goframe.org.cn](https://goframe.org.cn)
-- GoFrame Mirror Site(github pages): [https://pages.goframe.org](https://pages.goframe.org)
+- Official Site: [https://goframe.org](https://goframe.org)
+- Official Site(en): [https://goframe.org/en](https://goframe.org/en)
+- 国内镜像: [https://goframe.org.cn](https://goframe.org.cn)
+- Mirror Site: [Github Pages](https://pages.goframe.org)
+- Mirror Site: [Offline Docs](https://github.com/gogf/goframe.org-pdf?tab=readme-ov-file#%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC)
 - GoDoc API: [https://pkg.go.dev/github.com/gogf/gf/v2](https://pkg.go.dev/github.com/gogf/gf/v2)
 
-
-# Contributors
+## Contributors
 
 💖 [Thanks to all the contributors who made GoFrame possible](https://github.com/gogf/gf/graphs/contributors) 💖
 
 <a href="https://github.com/gogf/gf/graphs/contributors">
-<img src="https://goframe.org/img/contributors.svg?version=v2.9.0" alt="goframe contributors"/>
+<img src="https://goframe.org/img/contributors.svg?version=v2.9.5" alt="goframe contributors"/>
 </a>
 
-# License
+## License
 
 `GoFrame` is licensed under the [MIT License](LICENSE), 100% free and open-source, forever.

@@ -29,8 +29,8 @@ func (r *Redis) GroupScript() gredis.IGroupScript {
 // Eval invokes the execution of a server-side Lua script.
 //
 // https://redis.io/commands/eval/
-func (r GroupScript) Eval(ctx context.Context, script string, numKeys int64, keys []string, args []interface{}) (*gvar.Var, error) {
-	var s = []interface{}{script, numKeys}
+func (r GroupScript) Eval(ctx context.Context, script string, numKeys int64, keys []string, args []any) (*gvar.Var, error) {
+	var s = []any{script, numKeys}
 	s = append(s, gconv.Interfaces(keys)...)
 	s = append(s, args...)
 	v, err := r.Operation.Do(ctx, "Eval", s...)
@@ -43,8 +43,8 @@ func (r GroupScript) Eval(ctx context.Context, script string, numKeys int64, key
 // The command is otherwise identical to EVAL.
 //
 // https://redis.io/commands/evalsha/
-func (r GroupScript) EvalSha(ctx context.Context, sha1 string, numKeys int64, keys []string, args []interface{}) (*gvar.Var, error) {
-	var s = []interface{}{sha1, numKeys}
+func (r GroupScript) EvalSha(ctx context.Context, sha1 string, numKeys int64, keys []string, args []any) (*gvar.Var, error) {
+	var s = []any{sha1, numKeys}
 	s = append(s, gconv.Interfaces(keys)...)
 	s = append(s, args...)
 	v, err := r.Operation.Do(ctx, "EvalSha", s...)
@@ -70,8 +70,8 @@ func (r GroupScript) ScriptLoad(ctx context.Context, script string) (string, err
 // https://redis.io/commands/script-exists/
 func (r GroupScript) ScriptExists(ctx context.Context, sha1 string, sha1s ...string) (map[string]bool, error) {
 	var (
-		s         []interface{}
-		sha1Array = append([]interface{}{sha1}, gconv.Interfaces(sha1s)...)
+		s         []any
+		sha1Array = append([]any{sha1}, gconv.Interfaces(sha1s)...)
 	)
 	s = append(s, "Exists")
 	s = append(s, sha1Array...)
@@ -93,14 +93,14 @@ func (r GroupScript) ScriptExists(ctx context.Context, sha1 string, sha1s ...str
 //
 // https://redis.io/commands/script-flush/
 func (r GroupScript) ScriptFlush(ctx context.Context, option ...gredis.ScriptFlushOption) error {
-	var usedOption interface{}
+	var usedOption any
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
-	var s []interface{}
+	var s []any
 	s = append(s, "Flush")
 	s = append(s, mustMergeOptionToArgs(
-		[]interface{}{}, usedOption,
+		[]any{}, usedOption,
 	)...)
 	_, err := r.Operation.Do(ctx, "Script", s...)
 	return err
