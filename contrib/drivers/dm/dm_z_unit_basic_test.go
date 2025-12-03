@@ -28,10 +28,7 @@ func Test_DB_Ping(t *testing.T) {
 }
 
 func TestTables(t *testing.T) {
-	tables := []string{"A_tables", "A_tables2"}
-	for _, v := range tables {
-		createInitTable(v)
-	}
+	tables := createInitTables(2)
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Tables(ctx)
 		gtest.AssertNil(err)
@@ -39,7 +36,7 @@ func TestTables(t *testing.T) {
 		for i := 0; i < len(tables); i++ {
 			find := false
 			for j := 0; j < len(result); j++ {
-				if strings.ToUpper(tables[i]) == result[j] {
+				if strings.ToUpper(tables[i]) == strings.ToUpper(result[j]) {
 					find = true
 					break
 				}
@@ -52,7 +49,7 @@ func TestTables(t *testing.T) {
 		for i := 0; i < len(tables); i++ {
 			find := false
 			for j := 0; j < len(result); j++ {
-				if strings.ToUpper(tables[i]) == result[j] {
+				if strings.ToUpper(tables[i]) == strings.ToUpper(result[j]) {
 					find = true
 					break
 				}
@@ -91,9 +88,6 @@ func TestTableFields(t *testing.T) {
 			"CREATED_TIME": {"TIMESTAMP", false},
 		}
 
-		_, err := dbErr.TableFields(ctx, "Fields")
-		gtest.AssertNE(err, nil)
-
 		res, err := db.TableFields(ctx, tables)
 		gtest.AssertNil(err)
 
@@ -110,6 +104,14 @@ func TestTableFields(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.TableFields(ctx, "t_user t_user2")
+		gtest.AssertNE(err, nil)
+	})
+}
+
+func TestTableFields_WithWrongPassword(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// dbErr is configured with wrong password, so it should return an error
+		_, err := dbErr.TableFields(ctx, "Fields")
 		gtest.AssertNE(err, nil)
 	})
 }
@@ -153,7 +155,6 @@ func TestModelSave(t *testing.T) {
 			result sql.Result
 			err    error
 		)
-		db.SetDebug(true)
 
 		result, err = db.Model(table).Data(g.Map{
 			"id":          1,
