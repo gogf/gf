@@ -13,17 +13,24 @@ import (
 )
 
 const (
-	backIdInsertHeadDefault      = "INSERT INTO"
-	backIdInsertHeadInsertIgnore = "INSERT IGNORE INTO"
+	// INSERT statement prefixes
+	insertPrefixDefault = "INSERT INTO"
+	insertPrefixIgnore  = "INSERT IGNORE INTO"
 
-	autoIncrementName    = "identity"
-	mssqlOutPutKey       = "OUTPUT"
-	mssqlInsertedObjName = "INSERTED"
-	mssqlAffectFd        = " 1 as AffectCount"
-	affectCountFieldName = "AffectCount"
-	mssqlPrimaryKeyName  = "PRIMARY KEY"
-	fdId                 = "ID"
-	positionInsertValues = ") VALUES" // find the position of the string "VALUES" in the INSERT SQL statement to embed output code for retrieving the last inserted ID
+	// Database field attributes
+	fieldExtraIdentity = "IDENTITY"
+	fieldKeyPrimary    = "PRI"
+
+	// SQL keywords and syntax markers
+	outputKeyword      = "OUTPUT"
+	insertValuesMarker = ") VALUES" // find the position of the string "VALUES" in the INSERT SQL statement to embed output code for retrieving the last inserted ID
+
+	// Object and field references
+	insertedObjectName = "INSERTED"
+
+	// Result field names and aliases
+	affectCountExpression  = " 1 as AffectCount"
+	lastInsertIdFieldAlias = "ID"
 )
 
 // DoExec commits the sql string and its arguments to underlying driver
@@ -34,7 +41,7 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args 
 		if tx := gdb.TXFromCtx(ctx, d.GetGroup()); tx != nil {
 			// Firstly, check and retrieve transaction link from context.
 			link = &txLinkMssql{tx.GetSqlTX()}
-		} else if link, err = d.Core.MasterLink(); err != nil {
+		} else if link, err = d.MasterLink(); err != nil {
 			// Or else it creates one from master node.
 			return nil, err
 		}
@@ -46,17 +53,17 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args 
 	}
 
 	// SQL filtering.
-	sqlStr, args = d.Core.FormatSqlBeforeExecuting(sqlStr, args)
+	sqlStr, args = d.FormatSqlBeforeExecuting(sqlStr, args)
 	sqlStr, args, err = d.DoFilter(ctx, link, sqlStr, args)
 	if err != nil {
 		return nil, err
 	}
 
-	if !(strings.HasPrefix(sqlStr, backIdInsertHeadDefault) || strings.HasPrefix(sqlStr, backIdInsertHeadInsertIgnore)) {
+	if !strings.HasPrefix(sqlStr, insertPrefixDefault) && !strings.HasPrefix(sqlStr, insertPrefixIgnore) {
 		return d.Core.DoExec(ctx, link, sqlStr, args)
 	}
-	// find the first pos
-	pos := strings.Index(sqlStr, positionInsertValues)
+	// Find the first position of VALUES marker in the INSERT statement.
+	pos := strings.Index(sqlStr, insertValuesMarker)
 
 	table := d.GetTableNameFromSql(sqlStr)
 	outPutSql := d.GetInsertOutputSql(ctx, table)
@@ -82,21 +89,18 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args 
 	if err != nil {
 		return &InsertResult{lastInsertId: 0, rowsAffected: 0, err: err}, err
 	}
-	var (
-		aCount int64 // affect count
-		lId    int64 // last insert id
-	)
 	stdSqlResult := out.Records
 	if len(stdSqlResult) == 0 {
 		err = gerror.WrapCode(gcode.CodeDbOperationError, gerror.New("affectcount is zero"), `sql.Result.RowsAffected failed`)
 		return &InsertResult{lastInsertId: 0, rowsAffected: 0, err: err}, err
 	}
-	// get affect count
-	aCount = stdSqlResult[0].GMap().GetVar(affectCountFieldName).Int64()
-	// get last_insert_id
-	lId = stdSqlResult[0].GMap().GetVar(fdId).Int64()
+	// For batch insert, OUTPUT clause returns one row per inserted row.
+	// So the rowsAffected should be the count of returned records.
+	rowsAffected := int64(len(stdSqlResult))
+	// get last_insert_id from the first returned row
+	lastInsertId := stdSqlResult[0].GMap().GetVar(lastInsertIdFieldAlias).Int64()
 
-	return &InsertResult{lastInsertId: lId, rowsAffected: aCount}, err
+	return &InsertResult{lastInsertId: lastInsertId, rowsAffected: rowsAffected}, err
 }
 
 // GetTableNameFromSql get table name from sql statement
@@ -112,7 +116,7 @@ func (d *Driver) GetTableNameFromSql(sqlStr string) (table string) {
 	pattern := "INTO(.+?)\\("
 	regCompile := regexp.MustCompile(pattern)
 	tableInfo := regCompile.FindStringSubmatch(sqlStr)
-	//get the first one. after the first it may be content of the value, it's not table name.
+	// get the first one. after the first it may be content of the value, it's not table name.
 	table = tableInfo[1]
 	table = strings.Trim(table, " ")
 	if strings.Contains(table, ".") {
@@ -169,18 +173,18 @@ func (m *Driver) GetInsertOutputSql(ctx context.Context, table string) string {
 		return ""
 	}
 	extraSqlAry := make([]string, 0)
-	extraSqlAry = append(extraSqlAry, fmt.Sprintf(" %s %s", mssqlOutPutKey, mssqlAffectFd))
+	extraSqlAry = append(extraSqlAry, fmt.Sprintf(" %s %s", outputKeyword, affectCountExpression))
 	incrNo := 0
 	if len(fds) > 0 {
 		for _, fd := range fds {
 			// has primary key and is auto-increment
-			if fd.Extra == autoIncrementName && fd.Key == mssqlPrimaryKeyName && !fd.Null {
+			if fd.Extra == fieldExtraIdentity && fd.Key == fieldKeyPrimary && !fd.Null {
 				incrNoStr := ""
 				if incrNo == 0 { // fixed first field named id, convenient to get
-					incrNoStr = fmt.Sprintf(" as %s", fdId)
+					incrNoStr = fmt.Sprintf(" as %s", lastInsertIdFieldAlias)
 				}
 
-				extraSqlAry = append(extraSqlAry, fmt.Sprintf("%s.%s%s", mssqlInsertedObjName, fd.Name, incrNoStr))
+				extraSqlAry = append(extraSqlAry, fmt.Sprintf("%s.%s%s", insertedObjectName, fd.Name, incrNoStr))
 				incrNo++
 			}
 			// fmt.Printf("null:%t name:%s key:%s k:%s \n", fd.Null, fd.Name, fd.Key, k)
