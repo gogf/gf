@@ -58,7 +58,7 @@ func init() {
 	// Create test database
 	if _, err := tempDb.Exec(context.Background(), fmt.Sprintf(`
 		IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = '%s')
-		CREATE DATABASE %s
+		CREATE DATABASE [%s]
 	`, TestSchema, TestSchema)); err != nil {
 		gtest.Fatal(err)
 	}
@@ -128,7 +128,7 @@ func createTable(table ...string) (name string) {
 
 	if _, err := db.Exec(context.Background(), fmt.Sprintf(`
 		IF NOT EXISTS (SELECT * FROM sys.objects WHERE name='%s' and type='U')
-		CREATE TABLE %s (
+		CREATE TABLE [%s] (
 		ID numeric(10,0) NOT NULL,
 		PASSPORT VARCHAR(45)  NULL,
 		PASSWORD VARCHAR(32)  NULL,
@@ -168,7 +168,7 @@ func createInitTable(table ...string) (name string) {
 func dropTable(table string) {
 	if _, err := db.Exec(context.Background(), fmt.Sprintf(`
 		IF EXISTS (SELECT * FROM sys.objects WHERE name='%s' and type='U')
-		DROP TABLE %s
+		DROP TABLE [%s]
 	`, table, table)); err != nil {
 		gtest.Fatal(err)
 	}

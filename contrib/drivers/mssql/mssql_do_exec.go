@@ -30,6 +30,7 @@ const (
 
 	// Result field names and aliases
 	affectCountExpression  = " 1 as AffectCount"
+	affectCountFieldAlias  = "AffectCount"
 	lastInsertIdFieldAlias = "ID"
 )
 
@@ -41,7 +42,7 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args 
 		if tx := gdb.TXFromCtx(ctx, d.GetGroup()); tx != nil {
 			// Firstly, check and retrieve transaction link from context.
 			link = &txLinkMssql{tx.GetSqlTX()}
-		} else if link, err = d.Core.MasterLink(); err != nil {
+		} else if link, err = d.MasterLink(); err != nil {
 			// Or else it creates one from master node.
 			return nil, err
 		}
@@ -53,7 +54,7 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args 
 	}
 
 	// SQL filtering.
-	sqlStr, args = d.Core.FormatSqlBeforeExecuting(sqlStr, args)
+	sqlStr, args = d.FormatSqlBeforeExecuting(sqlStr, args)
 	sqlStr, args, err = d.DoFilter(ctx, link, sqlStr, args)
 	if err != nil {
 		return nil, err
@@ -94,8 +95,8 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args 
 		err = gerror.WrapCode(gcode.CodeDbOperationError, gerror.New("affectcount is zero"), `sql.Result.RowsAffected failed`)
 		return &InsertResult{lastInsertId: 0, rowsAffected: 0, err: err}, err
 	}
-	// get affect count from the number of returned rows
-	rowsAffected := int64(len(stdSqlResult))
+	// get affect count from the database's reporting
+	rowsAffected := stdSqlResult[0].GMap().GetVar(affectCountFieldAlias).Int64()
 	// get last_insert_id from the first returned row
 	lastInsertId := stdSqlResult[0].GMap().GetVar(lastInsertIdFieldAlias).Int64()
 
