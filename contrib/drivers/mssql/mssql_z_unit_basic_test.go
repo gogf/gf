@@ -46,7 +46,7 @@ func TestTables(t *testing.T) {
 			gtest.AssertEQ(find, true)
 		}
 
-		result, err = db.Tables(context.Background(), "master")
+		result, err = db.Tables(context.Background(), TestSchema)
 		gtest.AssertNil(err)
 		for i := 0; i < len(tables); i++ {
 			find := false
@@ -92,7 +92,7 @@ func TestTableFields(t *testing.T) {
 			gtest.AssertEQ(res[k].Comment, v[5])
 		}
 
-		res, err = db.TableFields(context.Background(), "t_user", "master")
+		res, err = db.TableFields(context.Background(), "t_user", TestSchema)
 		gtest.AssertNil(err)
 
 		for k, v := range expect {

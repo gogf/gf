@@ -61,7 +61,6 @@ func Test_Model_Insert(t *testing.T) {
 		user := db.Model(table)
 		result, err := user.Data(g.Map{
 			"id":          1,
-			"uid":         1,
 			"passport":    "t1",
 			"password":    "25d55ad283aa400af464c76d713c07ad",
 			"nickname":    "name_1",
@@ -71,7 +70,6 @@ func Test_Model_Insert(t *testing.T) {
 
 		result, err = db.Model(table).Data(g.Map{
 			"id":          "2",
-			"uid":         "2",
 			"passport":    "t2",
 			"password":    "25d55ad283aa400af464c76d713c07ad",
 			"nickname":    "name_2",
@@ -81,7 +79,6 @@ func Test_Model_Insert(t *testing.T) {
 
 		type User struct {
 			Id         int         `gconv:"id"`
-			Uid        int         `gconv:"uid"`
 			Passport   string      `json:"passport"`
 			Password   string      `gconv:"password"`
 			Nickname   string      `gconv:"nickname"`
@@ -90,7 +87,6 @@ func Test_Model_Insert(t *testing.T) {
 		// Model inserting.
 		result, err = db.Model(table).Data(User{
 			Id:       3,
-			Uid:      3,
 			Passport: "t3",
 			Password: "25d55ad283aa400af464c76d713c07ad",
 			Nickname: "name_3",
@@ -103,7 +99,6 @@ func Test_Model_Insert(t *testing.T) {
 
 		result, err = db.Model(table).Data(&User{
 			Id:         4,
-			Uid:        4,
 			Passport:   "t4",
 			Password:   "25d55ad283aa400af464c76d713c07ad",
 			Nickname:   "T4",
@@ -213,7 +208,6 @@ func Test_Model_BatchInsertWithArrayStruct(t *testing.T) {
 		for i := 1; i <= TableSize; i++ {
 			array.Append(g.Map{
 				"id":          i,
-				"uid":         i,
 				"passport":    fmt.Sprintf("t%d", i),
 				"password":    "25d55ad283aa400af464c76d713c07ad",
 				"nickname":    fmt.Sprintf("name_%d", i),
@@ -235,7 +229,6 @@ func Test_Model_Batch(t *testing.T) {
 		_, err := db.Model(table).Data(g.List{
 			{
 				"id":          2,
-				"uid":         2,
 				"passport":    "t2",
 				"password":    "25d55ad283aa400af464c76d713c07ad",
 				"nickname":    "name_2",
@@ -243,7 +236,6 @@ func Test_Model_Batch(t *testing.T) {
 			},
 			{
 				"id":          3,
-				"uid":         3,
 				"passport":    "t3",
 				"password":    "25d55ad283aa400af464c76d713c07ad",
 				"nickname":    "name_3",
@@ -1607,7 +1599,6 @@ func Test_Model_Option_Where(t *testing.T) {
 		n, _ := r.RowsAffected()
 		t.Assert(n, TableSize)
 	})
-	return
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitTable()
 		defer dropTable(table)

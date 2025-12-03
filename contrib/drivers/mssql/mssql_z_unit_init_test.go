@@ -27,8 +27,7 @@ var (
 const (
 	TableSize        = 10
 	TableName        = "t_user"
-	TestSchema1      = "test1"
-	TestSchema2      = "test2"
+	TestSchema       = "test"
 	TableNamePrefix1 = "gf_"
 	TestDbUser       = "sa"
 	TestDbPass       = "LoremIpsum86"
@@ -36,12 +35,40 @@ const (
 )
 
 func init() {
+	// 先连接 master 数据库来创建 test 数据库
+	nodemaster := gdb.ConfigNode{
+		Host:             "127.0.0.1",
+		Port:             "1433",
+		User:             TestDbUser,
+		Pass:             TestDbPass,
+		Name:             "master",
+		Type:             "mssql",
+		Role:             "master",
+		Charset:          "utf8",
+		Weight:           1,
+		MaxIdleConnCount: 10,
+		MaxOpenConnCount: 10,
+	}
+
+	tempDb, err := gdb.New(nodemaster)
+	if err != nil {
+		gtest.Fatal(err)
+	}
+
+	// 创建 test 数据库
+	if _, err := tempDb.Exec(context.Background(), fmt.Sprintf(`
+		IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = '%s')
+		CREATE DATABASE %s
+	`, TestSchema, TestSchema)); err != nil {
+		gtest.Fatal(err)
+	}
+
 	node := gdb.ConfigNode{
 		Host:             "127.0.0.1",
 		Port:             "1433",
 		User:             TestDbUser,
 		Pass:             TestDbPass,
-		Name:             "test",
+		Name:             TestSchema,
 		Type:             "mssql",
 		Role:             "master",
 		Charset:          "utf8",
@@ -100,7 +127,7 @@ func createTable(table ...string) (name string) {
 	dropTable(name)
 
 	if _, err := db.Exec(context.Background(), fmt.Sprintf(`
-		IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='%s' and xtype='U')
+		IF NOT EXISTS (SELECT * FROM sys.objects WHERE name='%s' and type='U')
 		CREATE TABLE %s (
 		ID numeric(10,0) NOT NULL,
 		PASSPORT VARCHAR(45)  NULL,
@@ -114,7 +141,6 @@ func createTable(table ...string) (name string) {
 		gtest.Fatal(err)
 	}
 
-	db.Schema("test")
 	return
 }
 
@@ -141,7 +167,7 @@ func createInitTable(table ...string) (name string) {
 
 func dropTable(table string) {
 	if _, err := db.Exec(context.Background(), fmt.Sprintf(`
-		IF EXISTS (SELECT * FROM sysobjects WHERE name='%s' and xtype='U')
+		IF EXISTS (SELECT * FROM sys.objects WHERE name='%s' and type='U')
 		DROP TABLE %s
 	`, table, table)); err != nil {
 		gtest.Fatal(err)
@@ -152,7 +178,7 @@ func dropTable(table string) {
 func createInsertAndGetIdTableForTest() (name string) {
 
 	if _, err := db.Exec(context.Background(), `
-IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='ip_to_id' and xtype='U')
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE name='ip_to_id' and type='U')
 begin
 	CREATE TABLE [ip_to_id](
 		[id] [int] IDENTITY(1,1) NOT NULL,
