@@ -17,7 +17,7 @@ import (
 )
 
 // escapeSingleQuote escapes single quotes in the string to prevent SQL injection.
-// In SQL, single quotes are escaped by doubling them: ' -> ”
+// In SQL, single quotes are escaped by doubling them (two single quotes).
 func escapeSingleQuote(s string) string {
 	return strings.ReplaceAll(s, "'", "''")
 }

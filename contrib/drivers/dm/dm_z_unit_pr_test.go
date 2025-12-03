@@ -12,8 +12,8 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-// pr4157 WherePri
-func Test_pr4157(t *testing.T) {
+// PR #4157 WherePri
+func Test_WherePri_PR4157(t *testing.T) {
 	tableName := "A_tables"
 	createInitTable(tableName)
 	defer dropTable(tableName)
@@ -26,8 +26,8 @@ func Test_pr4157(t *testing.T) {
 	})
 }
 
-// pr 4157 get table field comments
-func Test_pr4157_4293(t *testing.T) {
+// PR #4157 get table field comments
+func Test_TableFields_Comment_PR4157(t *testing.T) {
 	tableName := "A_tables"
 	schema := "SYSDBA"
 	createInitTable(tableName)
