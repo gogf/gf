@@ -144,7 +144,7 @@ func createTable(table ...string) (name string) {
 	CREATE TABLE "%s"
 (
 "ID" BIGINT NOT NULL,
-"ACCOUNT_NAME" VARCHAR(128) DEFAULT '' NOT NULL,
+"ACCOUNT_NAME" VARCHAR(128) DEFAULT '' NOT NULL COMMENT 'Account Name',
 "PWD_RESET" TINYINT DEFAULT 0 NOT NULL,
 "ENABLED" INT DEFAULT 1 NOT NULL,
 "DELETED" INT DEFAULT 0 NOT NULL,
@@ -154,13 +154,6 @@ func createTable(table ...string) (name string) {
 "UPDATED_BY" VARCHAR(32) DEFAULT '' NOT NULL,
 "UPDATED_TIME" TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP() NOT NULL,
 NOT CLUSTER PRIMARY KEY("ID")) STORAGE(ON "MAIN", CLUSTERBTR) ;
-	`, name)); err != nil {
-		gtest.Fatal(err)
-	}
-
-	//添加字段注释
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-	COMMENT ON COLUMN "%s"."ACCOUNT_NAME" IS '账号名称';
 	`, name)); err != nil {
 		gtest.Fatal(err)
 	}
