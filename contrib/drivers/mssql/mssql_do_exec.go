@@ -13,17 +13,24 @@ import (
 )
 
 const (
+	// INSERT statement prefixes
 	insertPrefixDefault = "INSERT INTO"
 	insertPrefixIgnore  = "INSERT IGNORE INTO"
 
-	fieldExtraIdentity     = "IDENTITY"
-	fieldKeyPrimary        = "PRI"
-	outputKeyword          = "OUTPUT"
-	insertedObjectName     = "INSERTED"
+	// Database field attributes
+	fieldExtraIdentity = "IDENTITY"
+	fieldKeyPrimary    = "PRI"
+
+	// SQL keywords and syntax markers
+	outputKeyword      = "OUTPUT"
+	insertValuesMarker = ") VALUES" // find the position of the string "VALUES" in the INSERT SQL statement to embed output code for retrieving the last inserted ID
+
+	// Object and field references
+	insertedObjectName = "INSERTED"
+
+	// Result field names and aliases
 	affectCountExpression  = " 1 as AffectCount"
-	affectCountFieldName   = "AffectCount"
 	lastInsertIdFieldAlias = "ID"
-	insertValuesMarker     = ") VALUES" // find the position of the string "VALUES" in the INSERT SQL statement to embed output code for retrieving the last inserted ID
 )
 
 // DoExec commits the sql string and its arguments to underlying driver
@@ -34,7 +41,7 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args 
 		if tx := gdb.TXFromCtx(ctx, d.GetGroup()); tx != nil {
 			// Firstly, check and retrieve transaction link from context.
 			link = &txLinkMssql{tx.GetSqlTX()}
-		} else if link, err = d.Core.MasterLink(); err != nil {
+		} else if link, err = d.MasterLink(); err != nil {
 			// Or else it creates one from master node.
 			return nil, err
 		}
@@ -46,14 +53,14 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args 
 	}
 
 	// SQL filtering.
-	sqlStr, args = d.Core.FormatSqlBeforeExecuting(sqlStr, args)
+	sqlStr, args = d.FormatSqlBeforeExecuting(sqlStr, args)
 	sqlStr, args, err = d.DoFilter(ctx, link, sqlStr, args)
 	if err != nil {
 		return nil, err
 	}
 
-	if !(strings.HasPrefix(sqlStr, insertPrefixDefault) || strings.HasPrefix(sqlStr, insertPrefixIgnore)) {
-		return d.Core.DoExec(ctx, link, sqlStr, args)
+	if !strings.HasPrefix(sqlStr, insertPrefixDefault) && !strings.HasPrefix(sqlStr, insertPrefixIgnore) {
+		return d.DoExec(ctx, link, sqlStr, args)
 	}
 	// find the first pos
 	pos := strings.Index(sqlStr, insertValuesMarker)
@@ -111,7 +118,7 @@ func (d *Driver) GetTableNameFromSql(sqlStr string) (table string) {
 	pattern := "INTO(.+?)\\("
 	regCompile := regexp.MustCompile(pattern)
 	tableInfo := regCompile.FindStringSubmatch(sqlStr)
-	//get the first one. after the first it may be content of the value, it's not table name.
+	// get the first one. after the first it may be content of the value, it's not table name.
 	table = tableInfo[1]
 	table = strings.Trim(table, " ")
 	if strings.Contains(table, ".") {
