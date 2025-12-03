@@ -16,11 +16,13 @@ import (
 func Test_pr4157(t *testing.T) {
 	tableName := "A_tables"
 	createInitTable(tableName)
+	defer dropTable(tableName)
 	gtest.C(t, func(t *gtest.T) {
 		var resOne *User
 		err := db.Model(tableName).WherePri(1).Scan(&resOne)
 		t.AssertNil(err)
 		t.AssertNQ(resOne, nil)
+		t.AssertEQ(resOne.ID, int64(1))
 	})
 }
 
@@ -29,6 +31,7 @@ func Test_pr4157_4293(t *testing.T) {
 	tableName := "A_tables"
 	schema := "SYSDBA"
 	createInitTable(tableName)
+	defer dropTable(tableName)
 	gtest.C(t, func(t *gtest.T) {
 		fields, err := db.Model().TableFields(tableName, schema)
 		t.AssertNil(err)

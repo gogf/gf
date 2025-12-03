@@ -88,9 +88,6 @@ func TestTableFields(t *testing.T) {
 			"CREATED_TIME": {"TIMESTAMP", false},
 		}
 
-		_, err := dbErr.TableFields(ctx, "Fields")
-		gtest.AssertEQ(err, nil)
-
 		res, err := db.TableFields(ctx, tables)
 		gtest.AssertNil(err)
 
@@ -107,6 +104,14 @@ func TestTableFields(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.TableFields(ctx, "t_user t_user2")
+		gtest.AssertNE(err, nil)
+	})
+}
+
+func TestTableFields_WithWrongPassword(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// dbErr is configured with wrong password, so it should return an error
+		_, err := dbErr.TableFields(ctx, "Fields")
 		gtest.AssertNE(err, nil)
 	})
 }
@@ -150,7 +155,6 @@ func TestModelSave(t *testing.T) {
 			result sql.Result
 			err    error
 		)
-		db.SetDebug(true)
 
 		result, err = db.Model(table).Data(g.Map{
 			"id":          1,
@@ -244,6 +248,9 @@ func Test_DB_Exec(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Exec(ctx, "SELECT ? from dual", 1)
 		t.AssertNil(err)
+
+		_, err = db.Exec(ctx, "ERROR")
+		t.AssertNE(err, nil)
 	})
 }
 

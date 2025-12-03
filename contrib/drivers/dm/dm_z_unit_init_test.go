@@ -67,7 +67,6 @@ func init() {
 		UpdatedAt:        "updated_time",
 	}
 
-	// todo
 	nodeLink := gdb.ConfigNode{
 		Type: TestDBType,
 		Name: TestDBName,
@@ -111,6 +110,8 @@ func init() {
 	}
 
 	ctx = context.Background()
+
+	// db.SetDebug(true)
 }
 
 func dropTable(table string) {
