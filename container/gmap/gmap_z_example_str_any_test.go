@@ -1,7 +1,7 @@
 // Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with gm file,
+// If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
 package gmap_test
@@ -22,7 +22,7 @@ func ExampleStrAnyMap_Iterator() {
 	}
 
 	var totalValue int
-	m.Iterator(func(k string, v interface{}) bool {
+	m.Iterator(func(k string, v any) bool {
 		totalValue += v.(int)
 
 		return totalValue < 50
@@ -146,7 +146,7 @@ func ExampleStrAnyMap_Set() {
 func ExampleStrAnyMap_Sets() {
 	m := gmap.NewStrAnyMap()
 
-	addMap := make(map[string]interface{})
+	addMap := make(map[string]any)
 	addMap["key1"] = "val1"
 	addMap["key2"] = "val2"
 	addMap["key3"] = "val3"
@@ -249,10 +249,10 @@ func ExampleStrAnyMap_GetOrSetFunc() {
 	m := gmap.NewStrAnyMap()
 	m.Set("key1", "val1")
 
-	fmt.Println(m.GetOrSetFunc("key1", func() interface{} {
+	fmt.Println(m.GetOrSetFunc("key1", func() any {
 		return "NotExistValue"
 	}))
-	fmt.Println(m.GetOrSetFunc("key2", func() interface{} {
+	fmt.Println(m.GetOrSetFunc("key2", func() any {
 		return "NotExistValue"
 	}))
 
@@ -265,10 +265,10 @@ func ExampleStrAnyMap_GetOrSetFuncLock() {
 	m := gmap.NewStrAnyMap()
 	m.Set("key1", "val1")
 
-	fmt.Println(m.GetOrSetFuncLock("key1", func() interface{} {
+	fmt.Println(m.GetOrSetFuncLock("key1", func() any {
 		return "NotExistValue"
 	}))
-	fmt.Println(m.GetOrSetFuncLock("key2", func() interface{} {
+	fmt.Println(m.GetOrSetFuncLock("key2", func() any {
 		return "NotExistValue"
 	}))
 
@@ -305,10 +305,10 @@ func ExampleStrAnyMap_GetVarOrSetFunc() {
 	m := gmap.NewStrAnyMap()
 	m.Set("key1", "val1")
 
-	fmt.Println(m.GetVarOrSetFunc("key1", func() interface{} {
+	fmt.Println(m.GetVarOrSetFunc("key1", func() any {
 		return "NotExistValue"
 	}))
-	fmt.Println(m.GetVarOrSetFunc("key2", func() interface{} {
+	fmt.Println(m.GetVarOrSetFunc("key2", func() any {
 		return "NotExistValue"
 	}))
 
@@ -321,10 +321,10 @@ func ExampleStrAnyMap_GetVarOrSetFuncLock() {
 	m := gmap.NewStrAnyMap()
 	m.Set("key1", "val1")
 
-	fmt.Println(m.GetVarOrSetFuncLock("key1", func() interface{} {
+	fmt.Println(m.GetVarOrSetFuncLock("key1", func() any {
 		return "NotExistValue"
 	}))
-	fmt.Println(m.GetVarOrSetFuncLock("key2", func() interface{} {
+	fmt.Println(m.GetVarOrSetFuncLock("key2", func() any {
 		return "NotExistValue"
 	}))
 
@@ -347,10 +347,10 @@ func ExampleStrAnyMap_SetIfNotExist() {
 
 func ExampleStrAnyMap_SetIfNotExistFunc() {
 	var m gmap.StrAnyMap
-	fmt.Println(m.SetIfNotExistFunc("k1", func() interface{} {
+	fmt.Println(m.SetIfNotExistFunc("k1", func() any {
 		return "v1"
 	}))
-	fmt.Println(m.SetIfNotExistFunc("k1", func() interface{} {
+	fmt.Println(m.SetIfNotExistFunc("k1", func() any {
 		return "v2"
 	}))
 	fmt.Println(m.Map())
@@ -363,10 +363,10 @@ func ExampleStrAnyMap_SetIfNotExistFunc() {
 
 func ExampleStrAnyMap_SetIfNotExistFuncLock() {
 	var m gmap.StrAnyMap
-	fmt.Println(m.SetIfNotExistFuncLock("k1", func() interface{} {
+	fmt.Println(m.SetIfNotExistFuncLock("k1", func() any {
 		return "v1"
 	}))
-	fmt.Println(m.SetIfNotExistFuncLock("k1", func() interface{} {
+	fmt.Println(m.SetIfNotExistFuncLock("k1", func() any {
 		return "v2"
 	}))
 	fmt.Println(m.Map())
@@ -535,7 +535,7 @@ func ExampleStrAnyMap_LockFunc() {
 		"k4": 4,
 	})
 
-	m.LockFunc(func(m map[string]interface{}) {
+	m.LockFunc(func(m map[string]any) {
 		totalValue := 0
 		for _, v := range m {
 			totalValue += v.(int)
@@ -556,7 +556,7 @@ func ExampleStrAnyMap_RLockFunc() {
 		"k4": 4,
 	})
 
-	m.RLockFunc(func(m map[string]interface{}) {
+	m.RLockFunc(func(m map[string]any) {
 		totalValue := 0
 		for _, v := range m {
 			totalValue += v.(int)
@@ -648,7 +648,7 @@ func ExampleStrAnyMap_UnmarshalJSON() {
 func ExampleStrAnyMap_UnmarshalValue() {
 	var m gmap.StrAnyMap
 
-	goWeb := map[string]interface{}{
+	goWeb := map[string]any{
 		"goframe": "https://goframe.org",
 		"gin":     "https://gin-gonic.com/",
 		"echo":    "https://echo.labstack.com/",

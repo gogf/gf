@@ -24,13 +24,13 @@ func Test_SetGet(t *testing.T) {
 		t.Assert(instance.Get("test-1"), 1)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(instance.GetOrSetFunc("test-2", func() interface{} {
+		t.Assert(instance.GetOrSetFunc("test-2", func() any {
 			return 2
 		}), 2)
 		t.Assert(instance.Get("test-2"), 2)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(instance.GetOrSetFuncLock("test-3", func() interface{} {
+		t.Assert(instance.GetOrSetFuncLock("test-3", func() any {
 			return 3
 		}), 3)
 		t.Assert(instance.Get("test-3"), 3)

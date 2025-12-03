@@ -1,7 +1,7 @@
 // Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with gm file,
+// If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
 package gmap_test
@@ -40,7 +40,7 @@ func Test_AnyAnyMap_Var(t *testing.T) {
 		t.AssertIN(3, m.Values())
 		t.AssertIN(1, m.Values())
 		m.Flip()
-		t.Assert(m.Map(), map[interface{}]int{1: 1, 3: 3})
+		t.Assert(m.Map(), map[any]int{1: 1, 3: 3})
 
 		m.Clear()
 		t.Assert(m.Size(), 0)
@@ -70,14 +70,14 @@ func Test_AnyAnyMap_Basic(t *testing.T) {
 		t.AssertIN(3, m.Values())
 		t.AssertIN(1, m.Values())
 		m.Flip()
-		t.Assert(m.Map(), map[interface{}]int{1: 1, 3: 3})
+		t.Assert(m.Map(), map[any]int{1: 1, 3: 3})
 
 		m.Clear()
 		t.Assert(m.Size(), 0)
 		t.Assert(m.IsEmpty(), true)
 
-		m2 := gmap.NewAnyAnyMapFrom(map[interface{}]interface{}{1: 1, 2: "2"})
-		t.Assert(m2.Map(), map[interface{}]interface{}{1: 1, 2: "2"})
+		m2 := gmap.NewAnyAnyMapFrom(map[any]any{1: 1, 2: "2"})
+		t.Assert(m2.Map(), map[any]any{1: 1, 2: "2"})
 	})
 }
 
@@ -103,23 +103,23 @@ func Test_AnyAnyMap_Batch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewAnyAnyMap()
 
-		m.Sets(map[interface{}]interface{}{1: 1, 2: "2", 3: 3})
-		t.Assert(m.Map(), map[interface{}]interface{}{1: 1, 2: "2", 3: 3})
-		m.Removes([]interface{}{1, 2})
-		t.Assert(m.Map(), map[interface{}]interface{}{3: 3})
+		m.Sets(map[any]any{1: 1, 2: "2", 3: 3})
+		t.Assert(m.Map(), map[any]any{1: 1, 2: "2", 3: 3})
+		m.Removes([]any{1, 2})
+		t.Assert(m.Map(), map[any]any{3: 3})
 	})
 }
 
 func Test_AnyAnyMap_Iterator_Deadlock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		m := gmap.NewAnyAnyMapFrom(map[interface{}]interface{}{1: 1, 2: "2", "3": "3", "4": 4}, true)
-		m.Iterator(func(k interface{}, _ interface{}) bool {
+		m := gmap.NewAnyAnyMapFrom(map[any]any{1: 1, 2: "2", "3": "3", "4": 4}, true)
+		m.Iterator(func(k any, _ any) bool {
 			if gconv.Int(k)%2 == 0 {
 				m.Remove(k)
 			}
 			return true
 		})
-		t.Assert(m.Map(), map[interface{}]interface{}{
+		t.Assert(m.Map(), map[any]any{
 			1:   1,
 			"3": "3",
 		})
@@ -128,20 +128,20 @@ func Test_AnyAnyMap_Iterator_Deadlock(t *testing.T) {
 
 func Test_AnyAnyMap_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		expect := map[interface{}]interface{}{1: 1, 2: "2"}
+		expect := map[any]any{1: 1, 2: "2"}
 		m := gmap.NewAnyAnyMapFrom(expect)
-		m.Iterator(func(k interface{}, v interface{}) bool {
+		m.Iterator(func(k any, v any) bool {
 			t.Assert(expect[k], v)
 			return true
 		})
 		// 断言返回值对遍历控制
 		i := 0
 		j := 0
-		m.Iterator(func(k interface{}, v interface{}) bool {
+		m.Iterator(func(k any, v any) bool {
 			i++
 			return true
 		})
-		m.Iterator(func(k interface{}, v interface{}) bool {
+		m.Iterator(func(k any, v any) bool {
 			j++
 			return false
 		})
@@ -152,12 +152,12 @@ func Test_AnyAnyMap_Iterator(t *testing.T) {
 
 func Test_AnyAnyMap_Lock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		expect := map[interface{}]interface{}{1: 1, 2: "2"}
+		expect := map[any]any{1: 1, 2: "2"}
 		m := gmap.NewAnyAnyMapFrom(expect)
-		m.LockFunc(func(m map[interface{}]interface{}) {
+		m.LockFunc(func(m map[any]any) {
 			t.Assert(m, expect)
 		})
-		m.RLockFunc(func(m map[interface{}]interface{}) {
+		m.RLockFunc(func(m map[any]any) {
 			t.Assert(m, expect)
 		})
 	})
@@ -166,7 +166,7 @@ func Test_AnyAnyMap_Lock(t *testing.T) {
 func Test_AnyAnyMap_Clone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// clone 方法是深克隆
-		m := gmap.NewAnyAnyMapFrom(map[interface{}]interface{}{1: 1, 2: "2"})
+		m := gmap.NewAnyAnyMapFrom(map[any]any{1: 1, 2: "2"})
 
 		m_clone := m.Clone()
 		m.Remove(1)
@@ -186,7 +186,7 @@ func Test_AnyAnyMap_Merge(t *testing.T) {
 		m1.Set(1, 1)
 		m2.Set(2, "2")
 		m1.Merge(m2)
-		t.Assert(m1.Map(), map[interface{}]interface{}{1: 1, 2: "2"})
+		t.Assert(m1.Map(), map[any]any{1: 1, 2: "2"})
 		m3 := gmap.NewAnyAnyMapFrom(nil)
 		m3.Merge(m2)
 		t.Assert(m3.Map(), m2.Map())
@@ -366,7 +366,7 @@ func TestAnyAnyMap_UnmarshalValue(t *testing.T) {
 	// JSON
 	gtest.C(t, func(t *gtest.T) {
 		var v *V
-		err := gconv.Struct(map[string]interface{}{
+		err := gconv.Struct(map[string]any{
 			"name": "john",
 			"map":  []byte(`{"k1":"v1","k2":"v2"}`),
 		}, &v)
@@ -379,7 +379,7 @@ func TestAnyAnyMap_UnmarshalValue(t *testing.T) {
 	// Map
 	gtest.C(t, func(t *gtest.T) {
 		var v *V
-		err := gconv.Struct(map[string]interface{}{
+		err := gconv.Struct(map[string]any{
 			"name": "john",
 			"map": g.Map{
 				"k1": "v1",
@@ -438,8 +438,54 @@ func Test_AnyAnyMap_Diff(t *testing.T) {
 			4:   "v4",
 		})
 		addedKeys, removedKeys, updatedKeys := m1.Diff(m2)
-		t.Assert(addedKeys, []interface{}{4})
-		t.Assert(removedKeys, []interface{}{"1"})
-		t.Assert(updatedKeys, []interface{}{3})
+		t.Assert(addedKeys, []any{4})
+		t.Assert(removedKeys, []any{"1"})
+		t.Assert(updatedKeys, []any{3})
+	})
+}
+
+func Test_AnyAnyMap_DoSetWithLockCheck_FuncValue(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewAnyAnyMap(true)
+
+		// Test GetOrSetFuncLock with function value
+		// Function should be executed and its return value should be set
+		callCount := 0
+		result := m.GetOrSetFuncLock(1, func() any {
+			callCount++
+			return "value1"
+		})
+		t.Assert(result, "value1")
+		t.Assert(callCount, 1)
+		t.Assert(m.Get(1), "value1")
+
+		// Test GetOrSetFuncLock again with same key
+		// Function should NOT be called since key exists
+		result = m.GetOrSetFuncLock(1, func() any {
+			callCount++
+			return "value2"
+		})
+		t.Assert(result, "value1")
+		t.Assert(callCount, 1) // Should still be 1, function not called
+
+		// Test SetIfNotExistFuncLock with function value
+		callCount = 0
+		ok := m.SetIfNotExistFuncLock(2, func() any {
+			callCount++
+			return "value2"
+		})
+		t.Assert(ok, true)
+		t.Assert(callCount, 1)
+		t.Assert(m.Get(2), "value2")
+
+		// Test SetIfNotExistFuncLock again with same key
+		// Function should NOT be called since key exists
+		ok = m.SetIfNotExistFuncLock(2, func() any {
+			callCount++
+			return "value3"
+		})
+		t.Assert(ok, false)
+		t.Assert(callCount, 1)       // Should still be 1, function not called
+		t.Assert(m.Get(2), "value2") // Value should not change
 	})
 }

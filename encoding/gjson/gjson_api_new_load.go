@@ -19,8 +19,8 @@ import (
 //
 // The parameter `safe` specifies whether using this Json object in concurrent-safe context,
 // which is false in default.
-func New(data interface{}, safe ...bool) *Json {
-	return NewWithTag(data, string(ContentTypeJson), safe...)
+func New(data any, safe ...bool) *Json {
+	return NewWithTag(data, string(ContentTypeJSON), safe...)
 }
 
 // NewWithTag creates a Json object with any variable type of `data`, but `data` should be a map
@@ -31,7 +31,7 @@ func New(data interface{}, safe ...bool) *Json {
 //
 // The parameter `safe` specifies whether using this Json object in concurrent-safe context, which
 // is false in default.
-func NewWithTag(data interface{}, tags string, safe ...bool) *Json {
+func NewWithTag(data any, tags string, safe ...bool) *Json {
 	option := Options{
 		Tags: tags,
 	}
@@ -43,7 +43,7 @@ func NewWithTag(data interface{}, tags string, safe ...bool) *Json {
 
 // NewWithOptions creates a Json object with any variable type of `data`, but `data` should be a map
 // or slice for data access reason, or it will make no sense.
-func NewWithOptions(data interface{}, options Options) *Json {
+func NewWithOptions(data any, options Options) *Json {
 	var j *Json
 	switch result := data.(type) {
 	case []byte:
@@ -68,7 +68,7 @@ func NewWithOptions(data interface{}, options Options) *Json {
 		}
 	default:
 		var (
-			pointedData interface{}
+			pointedData any
 			reflectInfo = reflection.OriginValueAndKind(data)
 		)
 		switch reflectInfo.OriginKind {
@@ -76,13 +76,23 @@ func NewWithOptions(data interface{}, options Options) *Json {
 			pointedData = gconv.Interfaces(data)
 
 		case reflect.Map:
-			pointedData = gconv.MapDeep(data, options.Tags)
+			pointedData = gconv.Map(data, gconv.MapOption{
+				Deep:            true,
+				OmitEmpty:       false,
+				Tags:            []string{options.Tags},
+				ContinueOnError: true,
+			})
 
 		case reflect.Struct:
 			if v, ok := data.(iVal); ok {
 				return NewWithOptions(v.Val(), options)
 			}
-			pointedData = gconv.MapDeep(data, options.Tags)
+			pointedData = gconv.Map(data, gconv.MapOption{
+				Deep:            true,
+				OmitEmpty:       false,
+				Tags:            []string{options.Tags},
+				ContinueOnError: true,
+			})
 
 		default:
 			pointedData = data

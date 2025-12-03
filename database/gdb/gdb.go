@@ -43,10 +43,10 @@ type DB interface {
 	//    Model("user u, user_detail ud")
 	// 2. Model name with alias: Model("user", "u")
 	// Also see Core.Model.
-	Model(tableNameOrStruct ...interface{}) *Model
+	Model(tableNameOrStruct ...any) *Model
 
 	// Raw creates and returns a model based on a raw sql not a table.
-	Raw(rawSql string, args ...interface{}) *Model
+	Raw(rawSql string, args ...any) *Model
 
 	// Schema switches to a specified schema.
 	// Also see Core.Schema.
@@ -54,7 +54,7 @@ type DB interface {
 
 	// With creates and returns an ORM model based on metadata of given object.
 	// Also see Core.With.
-	With(objects ...interface{}) *Model
+	With(objects ...any) *Model
 
 	// Open creates a raw connection object for database with given node configuration.
 	// Note that it is not recommended using the function manually.
@@ -79,11 +79,11 @@ type DB interface {
 
 	// Query executes a SQL query that returns rows using given SQL and arguments.
 	// The args are for any placeholder parameters in the query.
-	Query(ctx context.Context, sql string, args ...interface{}) (Result, error)
+	Query(ctx context.Context, sql string, args ...any) (Result, error)
 
 	// Exec executes a SQL query that doesn't return rows (e.g., INSERT, UPDATE, DELETE).
 	// It returns sql.Result for accessing LastInsertId or RowsAffected.
-	Exec(ctx context.Context, sql string, args ...interface{}) (sql.Result, error)
+	Exec(ctx context.Context, sql string, args ...any) (sql.Result, error)
 
 	// Prepare creates a prepared statement for later queries or executions.
 	// The execOnMaster parameter determines whether the statement executes on master node.
@@ -96,32 +96,32 @@ type DB interface {
 	// Insert inserts one or multiple records into table.
 	// The data can be a map, struct, or slice of maps/structs.
 	// The optional batch parameter specifies the batch size for bulk inserts.
-	Insert(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error)
+	Insert(ctx context.Context, table string, data any, batch ...int) (sql.Result, error)
 
 	// InsertIgnore inserts records but ignores duplicate key errors.
 	// It works like Insert but adds IGNORE keyword to the SQL statement.
-	InsertIgnore(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error)
+	InsertIgnore(ctx context.Context, table string, data any, batch ...int) (sql.Result, error)
 
 	// InsertAndGetId inserts a record and returns the auto-generated ID.
 	// It's a convenience method combining Insert with LastInsertId.
-	InsertAndGetId(ctx context.Context, table string, data interface{}, batch ...int) (int64, error)
+	InsertAndGetId(ctx context.Context, table string, data any, batch ...int) (int64, error)
 
 	// Replace inserts or replaces records using REPLACE INTO syntax.
 	// Existing records with same unique key will be deleted and re-inserted.
-	Replace(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error)
+	Replace(ctx context.Context, table string, data any, batch ...int) (sql.Result, error)
 
 	// Save inserts or updates records using INSERT ... ON DUPLICATE KEY UPDATE syntax.
 	// It updates existing records instead of replacing them entirely.
-	Save(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error)
+	Save(ctx context.Context, table string, data any, batch ...int) (sql.Result, error)
 
 	// Update updates records in table that match the condition.
 	// The data can be a map or struct containing the new values.
 	// The condition specifies the WHERE clause with optional placeholder args.
-	Update(ctx context.Context, table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error)
+	Update(ctx context.Context, table string, data any, condition any, args ...any) (sql.Result, error)
 
 	// Delete deletes records from table that match the condition.
 	// The condition specifies the WHERE clause with optional placeholder args.
-	Delete(ctx context.Context, table string, condition interface{}, args ...interface{}) (sql.Result, error)
+	Delete(ctx context.Context, table string, condition any, args ...any) (sql.Result, error)
 
 	// ===========================================================================
 	// Internal APIs for CRUD, which can be overwritten by custom CRUD implements.
@@ -129,7 +129,7 @@ type DB interface {
 
 	// DoSelect executes a SELECT query using the given link and returns the result.
 	// This is an internal method that can be overridden by custom implementations.
-	DoSelect(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)
+	DoSelect(ctx context.Context, link Link, sql string, args ...any) (result Result, err error)
 
 	// DoInsert performs the actual INSERT operation with given options.
 	// This is an internal method that can be overridden by custom implementations.
@@ -137,23 +137,23 @@ type DB interface {
 
 	// DoUpdate performs the actual UPDATE operation.
 	// This is an internal method that can be overridden by custom implementations.
-	DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error)
+	DoUpdate(ctx context.Context, link Link, table string, data any, condition string, args ...any) (result sql.Result, err error)
 
 	// DoDelete performs the actual DELETE operation.
 	// This is an internal method that can be overridden by custom implementations.
-	DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error)
+	DoDelete(ctx context.Context, link Link, table string, condition string, args ...any) (result sql.Result, err error)
 
 	// DoQuery executes a query that returns rows.
 	// This is an internal method that can be overridden by custom implementations.
-	DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)
+	DoQuery(ctx context.Context, link Link, sql string, args ...any) (result Result, err error)
 
 	// DoExec executes a query that doesn't return rows.
 	// This is an internal method that can be overridden by custom implementations.
-	DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error)
+	DoExec(ctx context.Context, link Link, sql string, args ...any) (result sql.Result, err error)
 
 	// DoFilter processes and filters SQL and args before execution.
 	// This is an internal method that can be overridden to implement custom SQL filtering.
-	DoFilter(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error)
+	DoFilter(ctx context.Context, link Link, sql string, args []any) (newSql string, newArgs []any, err error)
 
 	// DoCommit handles the actual commit operation for transactions.
 	// This is an internal method that can be overridden by custom implementations.
@@ -169,27 +169,27 @@ type DB interface {
 
 	// GetAll executes a query and returns all rows as Result.
 	// It's a convenience wrapper around Query.
-	GetAll(ctx context.Context, sql string, args ...interface{}) (Result, error)
+	GetAll(ctx context.Context, sql string, args ...any) (Result, error)
 
 	// GetOne executes a query and returns the first row as Record.
 	// It's useful when you expect only one row to be returned.
-	GetOne(ctx context.Context, sql string, args ...interface{}) (Record, error)
+	GetOne(ctx context.Context, sql string, args ...any) (Record, error)
 
 	// GetValue executes a query and returns the first column of the first row.
 	// It's useful for queries like SELECT COUNT(*) or getting a single value.
-	GetValue(ctx context.Context, sql string, args ...interface{}) (Value, error)
+	GetValue(ctx context.Context, sql string, args ...any) (Value, error)
 
 	// GetArray executes a query and returns the first column of all rows.
 	// It's useful for queries like SELECT id FROM table.
-	GetArray(ctx context.Context, sql string, args ...interface{}) ([]Value, error)
+	GetArray(ctx context.Context, sql string, args ...any) (Array, error)
 
 	// GetCount executes a COUNT query and returns the result as an integer.
 	// It's a convenience method for counting rows.
-	GetCount(ctx context.Context, sql string, args ...interface{}) (int, error)
+	GetCount(ctx context.Context, sql string, args ...any) (int, error)
 
 	// GetScan executes a query and scans the result into the given object pointer.
 	// It automatically maps database columns to struct fields or slice elements.
-	GetScan(ctx context.Context, objPointer interface{}, sql string, args ...interface{}) error
+	GetScan(ctx context.Context, objPointer any, sql string, args ...any) error
 
 	// Union combines multiple SELECT queries using UNION operator.
 	// It returns a new Model that represents the combined query.
@@ -322,15 +322,18 @@ type DB interface {
 
 	// ConvertValueForField converts a value to the appropriate type for a database field.
 	// It handles type conversion from Go types to database-specific types.
-	ConvertValueForField(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error)
+	ConvertValueForField(ctx context.Context, fieldType string, fieldValue any) (any, error)
 
 	// ConvertValueForLocal converts a database value to the appropriate Go type.
 	// It handles type conversion from database-specific types to Go types.
-	ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error)
+	ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue any) (any, error)
+
+	// GetFormattedDBTypeNameForField returns the formatted database type name and pattern for a field type.
+	GetFormattedDBTypeNameForField(fieldType string) (typeName, typePattern string)
 
 	// CheckLocalTypeForField checks if a Go value is compatible with a database field type.
 	// It returns the appropriate LocalType and any conversion errors.
-	CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (LocalType, error)
+	CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue any) (LocalType, error)
 
 	// FormatUpsert formats an upsert (INSERT ... ON DUPLICATE KEY UPDATE) statement.
 	// It generates the appropriate SQL based on the columns, values, and options provided.
@@ -351,15 +354,15 @@ type TX interface {
 
 	// Raw creates and returns a model based on a raw SQL.
 	// The rawSql can contain placeholders ? and corresponding args.
-	Raw(rawSql string, args ...interface{}) *Model
+	Raw(rawSql string, args ...any) *Model
 
 	// Model creates and returns a Model from given table name/struct.
 	// The parameter can be table name as string, or struct/*struct type.
-	Model(tableNameQueryOrStruct ...interface{}) *Model
+	Model(tableNameQueryOrStruct ...any) *Model
 
 	// With creates and returns a Model from given object.
 	// It automatically analyzes the object and generates corresponding SQL.
-	With(object interface{}) *Model
+	With(object any) *Model
 
 	// ===========================================================================
 	// Nested transaction if necessary.
@@ -391,11 +394,11 @@ type TX interface {
 
 	// Query executes a query that returns rows using given SQL and arguments.
 	// The args are for any placeholder parameters in the query.
-	Query(sql string, args ...interface{}) (result Result, err error)
+	Query(sql string, args ...any) (result Result, err error)
 
 	// Exec executes a query that doesn't return rows.
 	// For example: INSERT, UPDATE, DELETE.
-	Exec(sql string, args ...interface{}) (sql.Result, error)
+	Exec(sql string, args ...any) (sql.Result, error)
 
 	// Prepare creates a prepared statement for later queries or executions.
 	// Multiple queries or executions may be run concurrently from the statement.
@@ -407,31 +410,31 @@ type TX interface {
 
 	// GetAll executes a query and returns all rows as Result.
 	// It's a convenient wrapper for Query.
-	GetAll(sql string, args ...interface{}) (Result, error)
+	GetAll(sql string, args ...any) (Result, error)
 
 	// GetOne executes a query and returns the first row as Record.
 	// It's useful when you expect only one row to be returned.
-	GetOne(sql string, args ...interface{}) (Record, error)
+	GetOne(sql string, args ...any) (Record, error)
 
 	// GetStruct executes a query and scans the result into given struct.
 	// The obj should be a pointer to struct.
-	GetStruct(obj interface{}, sql string, args ...interface{}) error
+	GetStruct(obj any, sql string, args ...any) error
 
 	// GetStructs executes a query and scans all results into given struct slice.
 	// The objPointerSlice should be a pointer to slice of struct.
-	GetStructs(objPointerSlice interface{}, sql string, args ...interface{}) error
+	GetStructs(objPointerSlice any, sql string, args ...any) error
 
 	// GetScan executes a query and scans the result into given variables.
 	// The pointer can be type of struct/*struct/[]struct/[]*struct.
-	GetScan(pointer interface{}, sql string, args ...interface{}) error
+	GetScan(pointer any, sql string, args ...any) error
 
 	// GetValue executes a query and returns the first column of first row.
 	// It's useful for queries like SELECT COUNT(*).
-	GetValue(sql string, args ...interface{}) (Value, error)
+	GetValue(sql string, args ...any) (Value, error)
 
 	// GetCount executes a query that should return a count value.
 	// It's a convenient wrapper for count queries.
-	GetCount(sql string, args ...interface{}) (int64, error)
+	GetCount(sql string, args ...any) (int64, error)
 
 	// ===========================================================================
 	// CRUD.
@@ -439,31 +442,31 @@ type TX interface {
 
 	// Insert inserts one or multiple records into table.
 	// The data can be map/struct/*struct/[]map/[]struct/[]*struct.
-	Insert(table string, data interface{}, batch ...int) (sql.Result, error)
+	Insert(table string, data any, batch ...int) (sql.Result, error)
 
 	// InsertIgnore inserts one or multiple records with IGNORE option.
 	// It ignores records that would cause duplicate key conflicts.
-	InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error)
+	InsertIgnore(table string, data any, batch ...int) (sql.Result, error)
 
 	// InsertAndGetId inserts one record and returns its id value.
 	// It's commonly used with auto-increment primary key.
-	InsertAndGetId(table string, data interface{}, batch ...int) (int64, error)
+	InsertAndGetId(table string, data any, batch ...int) (int64, error)
 
 	// Replace inserts or replaces records using REPLACE INTO syntax.
 	// Existing records with same unique key will be deleted and re-inserted.
-	Replace(table string, data interface{}, batch ...int) (sql.Result, error)
+	Replace(table string, data any, batch ...int) (sql.Result, error)
 
 	// Save inserts or updates records using INSERT ... ON DUPLICATE KEY UPDATE syntax.
 	// It updates existing records instead of replacing them entirely.
-	Save(table string, data interface{}, batch ...int) (sql.Result, error)
+	Save(table string, data any, batch ...int) (sql.Result, error)
 
 	// Update updates records in table that match given condition.
 	// The data can be map/struct, and condition supports various formats.
-	Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error)
+	Update(table string, data any, condition any, args ...any) (sql.Result, error)
 
 	// Delete deletes records from table that match given condition.
 	// The condition supports various formats with optional arguments.
-	Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)
+	Delete(table string, condition any, args ...any) (sql.Result, error)
 
 	// ===========================================================================
 	// Utility methods.
@@ -545,7 +548,7 @@ type DoCommitInput struct {
 	Sql string
 
 	// Args is the arguments for SQL placeholders.
-	Args []interface{}
+	Args []any
 
 	// Type indicates the type of SQL operation.
 	Type SqlType
@@ -575,7 +578,7 @@ type DoCommitOutput struct {
 	Tx TX
 
 	// RawResult is the underlying result, which might be sql.Result/*sql.Rows/*sql.Row.
-	RawResult interface{}
+	RawResult any
 }
 
 // Driver is the interface for integrating sql drivers into package gdb.
@@ -587,8 +590,8 @@ type Driver interface {
 // Link is a common database function wrapper interface.
 // Note that, any operation using `Link` will have no SQL logging.
 type Link interface {
-	QueryContext(ctx context.Context, sql string, args ...interface{}) (*sql.Rows, error)
-	ExecContext(ctx context.Context, sql string, args ...interface{}) (sql.Result, error)
+	QueryContext(ctx context.Context, sql string, args ...any) (*sql.Rows, error)
+	ExecContext(ctx context.Context, sql string, args ...any) (sql.Result, error)
 	PrepareContext(ctx context.Context, sql string) (*sql.Stmt, error)
 	IsOnMaster() bool
 	IsTransaction() bool
@@ -596,17 +599,17 @@ type Link interface {
 
 // Sql is the sql recording struct.
 type Sql struct {
-	Sql           string        // SQL string(may contain reserved char '?').
-	Type          SqlType       // SQL operation type.
-	Args          []interface{} // Arguments for this sql.
-	Format        string        // Formatted sql which contains arguments in the sql.
-	Error         error         // Execution result.
-	Start         int64         // Start execution timestamp in milliseconds.
-	End           int64         // End execution timestamp in milliseconds.
-	Group         string        // Group is the group name of the configuration that the sql is executed from.
-	Schema        string        // Schema is the schema name of the configuration that the sql is executed from.
-	IsTransaction bool          // IsTransaction marks whether this sql is executed in transaction.
-	RowsAffected  int64         // RowsAffected marks retrieved or affected number with current sql statement.
+	Sql           string  // SQL string(may contain reserved char '?').
+	Type          SqlType // SQL operation type.
+	Args          []any   // Arguments for this sql.
+	Format        string  // Formatted sql which contains arguments in the sql.
+	Error         error   // Execution result.
+	Start         int64   // Start execution timestamp in milliseconds.
+	End           int64   // End execution timestamp in milliseconds.
+	Group         string  // Group is the group name of the configuration that the sql is executed from.
+	Schema        string  // Schema is the schema name of the configuration that the sql is executed from.
+	IsTransaction bool    // IsTransaction marks whether this sql is executed in transaction.
+	RowsAffected  int64   // RowsAffected marks retrieved or affected number with current sql statement.
 }
 
 // DoInsertOption is the input struct for function DoInsert.
@@ -615,7 +618,7 @@ type DoInsertOption struct {
 	OnDuplicateStr string
 
 	// OnDuplicateMap is the custom key-value map from `OnDuplicateEx` function for `on duplicated` statement.
-	OnDuplicateMap map[string]interface{}
+	OnDuplicateMap map[string]any
 
 	// OnConflict is the custom conflict key of upsert clause, if the database needs it.
 	OnConflict []string
@@ -645,7 +648,7 @@ type TableField struct {
 	Key string
 
 	// Default is the default value for the field.
-	Default interface{}
+	Default any
 
 	// Extra is the extra information. Eg: auto_increment.
 	Extra string
@@ -670,14 +673,17 @@ type (
 	// Value is the field value type.
 	Value = *gvar.Var
 
+	// Array is the field value array type.
+	Array = gvar.Vars
+
 	// Record is the row record of the table.
 	Record map[string]Value
 
 	// Result is the row record array.
 	Result []Record
 
-	// Map is alias of map[string]interface{}, which is the most common usage map type.
-	Map = map[string]interface{}
+	// Map is alias of map[string]any, which is the most common usage map type.
+	Map = map[string]any
 
 	// List is type of map array.
 	List = []Map
@@ -711,6 +717,13 @@ const (
 
 	linkPattern            = `^(\w+):(.*?):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*?)$`
 	linkPatternDescription = `type:username:password@protocol(host:port)/dbname?param1=value1&...&paramN=valueN`
+)
+
+// Context key types to avoid collisions
+type ctxKey string
+
+const (
+	ctxKeyWrappedByGetCtxTimeout ctxKey = "WrappedByGetCtxTimeout"
 )
 
 type ctxTimeoutType int
@@ -774,27 +787,29 @@ const (
 type LocalType string
 
 const (
-	LocalTypeUndefined   LocalType = ""
-	LocalTypeString      LocalType = "string"
-	LocalTypeTime        LocalType = "time"
-	LocalTypeDate        LocalType = "date"
-	LocalTypeDatetime    LocalType = "datetime"
-	LocalTypeInt         LocalType = "int"
-	LocalTypeUint        LocalType = "uint"
-	LocalTypeInt64       LocalType = "int64"
-	LocalTypeUint64      LocalType = "uint64"
-	LocalTypeIntSlice    LocalType = "[]int"
-	LocalTypeInt64Slice  LocalType = "[]int64"
-	LocalTypeUint64Slice LocalType = "[]uint64"
-	LocalTypeStringSlice LocalType = "[]string"
-	LocalTypeInt64Bytes  LocalType = "int64-bytes"
-	LocalTypeUint64Bytes LocalType = "uint64-bytes"
-	LocalTypeFloat32     LocalType = "float32"
-	LocalTypeFloat64     LocalType = "float64"
-	LocalTypeBytes       LocalType = "[]byte"
-	LocalTypeBool        LocalType = "bool"
-	LocalTypeJson        LocalType = "json"
-	LocalTypeJsonb       LocalType = "jsonb"
+	LocalTypeUndefined    LocalType = ""
+	LocalTypeString       LocalType = "string"
+	LocalTypeTime         LocalType = "time"
+	LocalTypeDate         LocalType = "date"
+	LocalTypeDatetime     LocalType = "datetime"
+	LocalTypeInt          LocalType = "int"
+	LocalTypeUint         LocalType = "uint"
+	LocalTypeInt64        LocalType = "int64"
+	LocalTypeUint64       LocalType = "uint64"
+	LocalTypeBigInt       LocalType = "bigint"
+	LocalTypeIntSlice     LocalType = "[]int"
+	LocalTypeInt64Slice   LocalType = "[]int64"
+	LocalTypeUint64Slice  LocalType = "[]uint64"
+	LocalTypeStringSlice  LocalType = "[]string"
+	LocalTypeFloat64Slice LocalType = "[]float64"
+	LocalTypeInt64Bytes   LocalType = "int64-bytes"
+	LocalTypeUint64Bytes  LocalType = "uint64-bytes"
+	LocalTypeFloat32      LocalType = "float32"
+	LocalTypeFloat64      LocalType = "float64"
+	LocalTypeBytes        LocalType = "[]byte"
+	LocalTypeBool         LocalType = "bool"
+	LocalTypeJson         LocalType = "json"
+	LocalTypeJsonb        LocalType = "jsonb"
 )
 
 const (
@@ -814,6 +829,10 @@ const (
 	fieldTypeBigInt     = "big_int"
 	fieldTypeBigint     = "bigint"
 	fieldTypeBigserial  = "bigserial"
+	fieldTypeInt128     = "int128"
+	fieldTypeInt256     = "int256"
+	fieldTypeUint128    = "uint128"
+	fieldTypeUint256    = "uint256"
 	fieldTypeReal       = "real"
 	fieldTypeFloat      = "float"
 	fieldTypeDouble     = "double"
@@ -956,7 +975,7 @@ func Instance(name ...string) (db DB, err error) {
 	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
-	v := instances.GetOrSetFuncLock(group, func() interface{} {
+	v := instances.GetOrSetFuncLock(group, func() any {
 		db, err = NewByGroup(group)
 		return db
 	})
@@ -1091,7 +1110,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 
 	// Cache the underlying connection pool object by node.
 	var (
-		instanceCacheFunc = func() interface{} {
+		instanceCacheFunc = func() any {
 			if sqlDb, err = c.db.Open(node); err != nil {
 				return nil
 			}

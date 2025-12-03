@@ -72,6 +72,7 @@ func SendRecv(address string, data []byte, receive int, retry ...Retry) ([]byte,
 }
 
 // MustGetFreePort performs as GetFreePort, but it panics if any error occurs.
+//
 // Deprecated: the port might be used soon after they were returned, please use `:0` as the listening
 // address which asks system to assign a free port instead.
 func MustGetFreePort() (port int) {
@@ -83,6 +84,7 @@ func MustGetFreePort() (port int) {
 }
 
 // GetFreePort retrieves and returns a port that is free.
+//
 // Deprecated: the port might be used soon after they were returned, please use `:0` as the listening
 // address which asks system to assign a free port instead.
 func GetFreePort() (port int, err error) {
@@ -112,6 +114,7 @@ func GetFreePort() (port int, err error) {
 }
 
 // GetFreePorts retrieves and returns specified number of ports that are free.
+//
 // Deprecated: the ports might be used soon after they were returned, please use `:0` as the listening
 // address which asks system to assign a free port instead.
 func GetFreePorts(count int) (ports []int, err error) {

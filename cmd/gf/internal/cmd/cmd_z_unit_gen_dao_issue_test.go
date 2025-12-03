@@ -98,6 +98,7 @@ func Test_Gen_Dao_Issue2572(t *testing.T) {
 				NoJsonTag:          false,
 				NoModelComment:     false,
 				Clear:              false,
+				GenTable:           false,
 				TypeMapping:        nil,
 				FieldMapping:       nil,
 			}
@@ -187,6 +188,7 @@ func Test_Gen_Dao_Issue2616(t *testing.T) {
 				NoJsonTag:          false,
 				NoModelComment:     false,
 				Clear:              false,
+				GenTable:           false,
 				TypeMapping:        nil,
 				FieldMapping:       nil,
 			}
@@ -298,6 +300,7 @@ func Test_Gen_Dao_Issue2746(t *testing.T) {
 				NoJsonTag:          false,
 				NoModelComment:     false,
 				Clear:              false,
+				GenTable:           false,
 				TypeMapping:        nil,
 				FieldMapping:       nil,
 			}
@@ -370,6 +373,7 @@ func Test_Gen_Dao_Issue3459(t *testing.T) {
 				NoJsonTag:          false,
 				NoModelComment:     false,
 				Clear:              false,
+				GenTable:           false,
 				TypeMapping:        nil,
 			}
 		)
@@ -410,7 +414,7 @@ func Test_Gen_Dao_Issue3459(t *testing.T) {
 			filepath.FromSlash(testPath + "/model/do/table_user.go"),
 			filepath.FromSlash(testPath + "/model/entity/table_user.go"),
 		}
-		for i, _ := range files {
+		for i := range files {
 			//_ = gfile.PutContents(expectFiles[i], gfile.GetContents(files[i]))
 			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
 		}
@@ -482,7 +486,7 @@ func Test_Gen_Dao_Issue3749(t *testing.T) {
 			filepath.FromSlash(testPath + "/model/do/table_user.go"),
 			filepath.FromSlash(testPath + "/model/entity/table_user.go"),
 		}
-		for i, _ := range files {
+		for i := range files {
 			//_ = gfile.PutContents(expectFiles[i], gfile.GetContents(files[i]))
 			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
 		}

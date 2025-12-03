@@ -37,8 +37,8 @@ func init() {
 		Link: `pgsql:postgres:12345678@tcp(127.0.0.1:5432)`,
 	}
 
-	//pgsql only permit to connect to the designation database.
-	//so you need to create the pgsql database before you use orm
+	// pgsql only permit to connect to the designation database.
+	// so you need to create the pgsql database before you use orm
 	gdb.AddConfigNode(gdb.DefaultGroupName, configNode)
 	if r, err := gdb.New(configNode); err != nil {
 		gtest.Fatal(err)
@@ -85,6 +85,8 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 		   	create_time timestamp NOT NULL,
 		    favorite_movie varchar[],
 		    favorite_music text[],
+			numeric_values numeric[],
+			decimal_values decimal[],
 		   	PRIMARY KEY (id)
 		) ;`, name,
 	)); err != nil {
