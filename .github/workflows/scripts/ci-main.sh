@@ -7,14 +7,6 @@ for file in `find . -name go.mod`; do
     dirpath=$(dirname $file)
     echo $dirpath
     
-    # ignore mssql tests as its docker service failed
-    # TODO remove this ignoring codes after the mssql docker service OK
-    if [ "mssql" = $(basename $dirpath) ]; then
-        # clean docker containers and images to free disk space
-        # bash .github/workflows/scripts/ci-main-clean.sh "$dirpath"
-        continue 1
-    fi
-    
     # package kubecm was moved to sub ci procedure.
     if [ "kubecm" = $(basename $dirpath) ]; then
         continue 1

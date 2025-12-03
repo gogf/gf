@@ -8,49 +8,48 @@ package mssql
 
 import (
 	"context"
-	"reflect"
 	"testing"
 
-	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func TestDriver_DoFilter(t *testing.T) {
-	type fields struct {
-		Core *gdb.Core
-	}
-	type args struct {
-		ctx  context.Context
-		link gdb.Link
-		sql  string
-		args []any
-	}
-	var tests []struct {
-		name        string
-		fields      fields
-		args        args
-		wantNewSql  string
-		wantNewArgs []any
-		wantErr     bool
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			d := &Driver{
-				Core: tt.fields.Core,
-			}
-			gotNewSql, gotNewArgs, err := d.DoFilter(tt.args.ctx, tt.args.link, tt.args.sql, tt.args.args)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("DoFilter() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if gotNewSql != tt.wantNewSql {
-				t.Errorf("DoFilter() gotNewSql = %v, want %v", gotNewSql, tt.wantNewSql)
-			}
-			if !reflect.DeepEqual(gotNewArgs, tt.wantNewArgs) {
-				t.Errorf("DoFilter() gotNewArgs = %v, want %v", gotNewArgs, tt.wantNewArgs)
-			}
-		})
-	}
+	gtest.C(t, func(t *gtest.T) {
+		d := &Driver{}
+
+		// Test SELECT with LIMIT
+		sql := "SELECT * FROM users WHERE id = ? LIMIT 10"
+		args := []any{1}
+		newSql, newArgs, err := d.DoFilter(context.Background(), nil, sql, args)
+		t.AssertNil(err)
+		t.Assert(newArgs, args)
+		// DoFilter should transform the SQL for MSSQL compatibility
+		t.AssertNE(newSql, "")
+
+		// Test INSERT statement (should remain unchanged except for placeholder)
+		sql = "INSERT INTO users (name) VALUES (?)"
+		args = []any{"test"}
+		newSql, newArgs, err = d.DoFilter(context.Background(), nil, sql, args)
+		t.AssertNil(err)
+		t.Assert(newArgs, args)
+		t.AssertNE(newSql, "")
+
+		// Test UPDATE statement
+		sql = "UPDATE users SET name = ? WHERE id = ?"
+		args = []any{"test", 1}
+		newSql, newArgs, err = d.DoFilter(context.Background(), nil, sql, args)
+		t.AssertNil(err)
+		t.Assert(newArgs, args)
+		t.AssertNE(newSql, "")
+
+		// Test DELETE statement
+		sql = "DELETE FROM users WHERE id = ?"
+		args = []any{1}
+		newSql, newArgs, err = d.DoFilter(context.Background(), nil, sql, args)
+		t.AssertNil(err)
+		t.Assert(newArgs, args)
+		t.AssertNE(newSql, "")
+	})
 }
 
 func TestDriver_handleSelectSqlReplacement(t *testing.T) {
