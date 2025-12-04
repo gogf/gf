@@ -763,20 +763,113 @@ func (m *Model) getHolderAndArgsAsSubModel(ctx context.Context) (holder string, 
 	return
 }
 
+func (m *Model) parseTableAlias(tableInitStr string) (alias string, tableName string) {
+	// Split by space to separate table from alias
+	// Format can be: `table` alias or `table` AS `alias` or just table alias
+	parts := gstr.SplitAndTrim(tableInitStr, " ")
+	charL, charR := m.db.GetCore().GetChars()
+
+	if len(parts) >= 2 {
+		// Check if second part is "AS" keyword
+		if gstr.Equal(parts[1], "AS") && len(parts) >= 3 {
+			// Format: table AS alias
+			alias = gstr.Trim(parts[2], charL+charR)
+			tableName = gstr.Trim(parts[0], charL+charR)
+		} else if !gstr.Equal(parts[1], "AS") {
+			// Format: table alias (without AS keyword)
+			alias = gstr.Trim(parts[1], charL+charR)
+			tableName = gstr.Trim(parts[0], charL+charR)
+		} else {
+			// Only table name with "AS" keyword but no alias
+			tableName = gstr.Trim(parts[0], charL+charR)
+		}
+	} else if len(parts) == 1 {
+		// No alias, use table name directly
+		tableName = gstr.Trim(parts[0], charL+charR)
+	}
+
+	return alias, tableName
+}
+
 func (m *Model) getAutoPrefix() string {
 	autoPrefix := ""
 	if gstr.Contains(m.tables, " JOIN ") {
-		autoPrefix = m.db.GetCore().QuoteWord(
-			m.db.GetCore().guessPrimaryTableName(m.tablesInit),
-		)
+		// Try to get alias from tablesInit
+		alias, _ := m.parseTableAlias(m.tablesInit)
+		if alias != "" {
+			autoPrefix = m.QuoteWord(alias)
+		}
+
+		// Fallback to table name if alias not found
+		if autoPrefix == "" {
+			autoPrefix = m.QuoteWord(
+				m.db.GetCore().guessPrimaryTableName(m.tablesInit),
+			)
+		}
 	}
 	return autoPrefix
+}
+
+// getPrefixByField attempts to find the correct table prefix for a given field name
+// by checking which table in the JOIN contains this field. It returns:
+// - The quoted table prefix/alias if the field belongs to a specific joined table
+// - An empty string if the field cannot be determined or belongs to multiple tables
+//
+// This function searches through all tables involved in the query (main table and joined tables)
+// and checks their schema to find which table contains the specified field.
+func (m *Model) getPrefixByField(fieldName string) string {
+	// If there's no JOIN, no need to add prefix
+	if !gstr.Contains(m.tables, " JOIN ") {
+		return ""
+	}
+
+	// Get all table names and aliases involved in the query
+	var tables = make(map[string]string) // map[alias/tableName]realTableName
+
+	// Add main table
+	alias, tableName := m.parseTableAlias(m.tablesInit)
+	if alias != "" {
+		tables[alias] = tableName
+	} else if tableName != "" {
+		tables[tableName] = tableName
+	}
+
+	// Add joined tables from tableAliasMap
+	for alias, tableName := range m.tableAliasMap {
+		tables[alias] = tableName
+	}
+
+	// Check which table contains this field
+	var matchedPrefix string
+	var matchCount int
+
+	for aliasOrTable, realTable := range tables {
+		tableFields, err := m.TableFields(realTable)
+		if err != nil {
+			// If we can't get table fields, skip this table
+			continue
+		}
+
+		// Check if this table contains the field
+		if _, exists := tableFields[fieldName]; exists {
+			matchedPrefix = aliasOrTable
+			matchCount++
+		}
+	}
+
+	// Only return prefix if field uniquely belongs to one table
+	if matchCount == 1 {
+		return m.QuoteWord(matchedPrefix)
+	}
+
+	// If field exists in multiple tables or not found, return empty
+	// to avoid ambiguity - user should specify the table explicitly
+	return ""
 }
 
 func (m *Model) getFieldsAsStr() string {
 	var (
 		fieldsStr string
-		core      = m.db.GetCore()
 	)
 	for _, v := range m.fields {
 		field := gconv.String(v)
@@ -787,7 +880,7 @@ func (m *Model) getFieldsAsStr() string {
 			switch v.(type) {
 			case Raw, *Raw:
 			default:
-				field = core.QuoteString(field)
+				field = m.QuoteWord(field)
 			}
 		}
 		if fieldsStr != "" {
@@ -843,7 +936,7 @@ func (m *Model) getFieldsFiltered() string {
 		if len(newFields) > 0 {
 			newFields += ","
 		}
-		newFields += m.db.GetCore().QuoteWord(k)
+		newFields += m.QuoteWord(k)
 	}
 	return newFields
 }
