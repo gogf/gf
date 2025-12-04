@@ -446,8 +446,10 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 	// Group the list by fields. Different fields to different list.
 	// It here uses ListMap to keep sequence for data inserting.
 	// ============================================================================================
-	var keyListMap = gmap.NewListMap()
-	var tmpkeyListMap = make(map[string]List)
+	var (
+		keyListMap    = gmap.NewListMap()
+		tmpKeyListMap = make(map[string]List)
+	)
 	for _, item := range list {
 		mapLen := len(item)
 		if mapLen == 0 {
@@ -463,13 +465,13 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		keys = tmpKeys // for fieldsToSequence
 
 		tmpKeysInSequenceStr := gstr.Join(tmpKeys, ",")
-		if tmpkeyListMapItem, ok := tmpkeyListMap[tmpKeysInSequenceStr]; ok {
-			tmpkeyListMap[tmpKeysInSequenceStr] = append(tmpkeyListMapItem, item)
+		if tmpKeyListMapItem, ok := tmpKeyListMap[tmpKeysInSequenceStr]; ok {
+			tmpKeyListMap[tmpKeysInSequenceStr] = append(tmpKeyListMapItem, item)
 		} else {
-			tmpkeyListMap[tmpKeysInSequenceStr] = List{item}
+			tmpKeyListMap[tmpKeysInSequenceStr] = List{item}
 		}
 	}
-	for tmpKeysInSequenceStr, itemList := range tmpkeyListMap {
+	for tmpKeysInSequenceStr, itemList := range tmpKeyListMap {
 		keyListMap.Set(tmpKeysInSequenceStr, itemList)
 	}
 	if keyListMap.Size() > 1 {
