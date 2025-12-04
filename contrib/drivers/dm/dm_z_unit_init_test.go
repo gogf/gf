@@ -63,8 +63,8 @@ func init() {
 		Weight:           1,
 		MaxIdleConnCount: 10,
 		MaxOpenConnCount: 10,
-		CreatedAt:        "created_time",
-		UpdatedAt:        "updated_time",
+		// CreatedAt:        "created_time",
+		// UpdatedAt:        "updated_time",
 	}
 
 	nodeLink := gdb.ConfigNode{

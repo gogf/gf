@@ -380,6 +380,7 @@ func (m *softTimeMaintainer) GetValueByFieldTypeForCreateOrUpdate(
 	ctx context.Context, fieldType LocalType, isDeletedField bool,
 ) any {
 	var value any
+	// for create or update procedure, the deleted field is always set to non-deleted value.
 	if isDeletedField {
 		switch fieldType {
 		case LocalTypeDate, LocalTypeTime, LocalTypeDatetime:
