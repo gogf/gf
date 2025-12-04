@@ -23,7 +23,7 @@ func escapeSingleQuote(s string) string {
 }
 
 const (
-	tableFieldsSqlTmp         = `SELECT c.COLUMN_NAME, c.DATA_TYPE, c.DATA_DEFAULT, c.NULLABLE, cc.COMMENTS FROM ALL_TAB_COLUMNS c LEFT JOIN ALL_COL_COMMENTS cc ON c.COLUMN_NAME = cc.COLUMN_NAME AND c.TABLE_NAME = cc.TABLE_NAME AND c.OWNER = cc.OWNER WHERE c.TABLE_NAME = '%s' AND c.OWNER = '%s'`
+	tableFieldsSqlTmp         = `SELECT c.COLUMN_NAME, c.DATA_TYPE, c.DATA_LENGTH, c.DATA_DEFAULT, c.NULLABLE, cc.COMMENTS FROM ALL_TAB_COLUMNS c LEFT JOIN ALL_COL_COMMENTS cc ON c.COLUMN_NAME = cc.COLUMN_NAME AND c.TABLE_NAME = cc.TABLE_NAME AND c.OWNER = cc.OWNER WHERE c.TABLE_NAME = '%s' AND c.OWNER = '%s'`
 	tableFieldsPkSqlSchemaTmp = `SELECT COLS.COLUMN_NAME AS PRIMARY_KEY_COLUMN FROM USER_CONSTRAINTS CONS JOIN USER_CONS_COLUMNS COLS ON CONS.CONSTRAINT_NAME = COLS.CONSTRAINT_NAME WHERE CONS.TABLE_NAME = '%s' AND CONS.CONSTRAINT_TYPE = 'P'`
 	tableFieldsPkSqlDBATmp    = `SELECT COLS.COLUMN_NAME AS PRIMARY_KEY_COLUMN FROM DBA_CONSTRAINTS CONS JOIN DBA_CONS_COLUMNS COLS ON CONS.CONSTRAINT_NAME = COLS.CONSTRAINT_NAME WHERE CONS.TABLE_NAME = '%s' AND CONS.OWNER = '%s' AND CONS.CONSTRAINT_TYPE = 'P'`
 )
@@ -85,10 +85,24 @@ func (d *Driver) TableFields(
 		if m["NULLABLE"].String() != "N" {
 			nullable = true
 		}
+
+		// Build field type with length/precision
+		// For NUMBER(p,s): use DATA_PRECISION and DATA_SCALE
+		// For VARCHAR2/CHAR: use DATA_LENGTH
+		var (
+			fieldType  string
+			dataType   = m["DATA_TYPE"].String()
+			dataLength = m["DATA_LENGTH"].Int()
+		)
+		if dataLength > 0 {
+			fieldType = fmt.Sprintf("%s(%d)", dataType, dataLength)
+		} else {
+			fieldType = dataType
+		}
 		fields[m["COLUMN_NAME"].String()] = &gdb.TableField{
 			Index:   i,
 			Name:    m["COLUMN_NAME"].String(),
-			Type:    m["DATA_TYPE"].String(),
+			Type:    fieldType,
 			Null:    nullable,
 			Default: m["DATA_DEFAULT"].Val(),
 			Key:     pkFields.Get(m["COLUMN_NAME"].String()),

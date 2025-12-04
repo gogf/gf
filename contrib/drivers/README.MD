@@ -1,4 +1,3 @@
-English | [简体中文](README.zh_CN.MD)
 
 # Database drivers
 
@@ -44,7 +43,7 @@ func main() {
 
 ## Supported Drivers
 
-### MySQL/MariaDB/TiDB
+### MySQL/MariaDB/TiDB/OceanBase
 
 ```go
 import _ "github.com/gogf/gf/contrib/drivers/mysql/v2"
@@ -115,10 +114,6 @@ Note:
 ```go
 import _ "github.com/gogf/gf/contrib/drivers/dm/v2"
 ```
-
-Note:
-
-- It does not support `Replace` features.
 
 ## Custom Drivers
 
