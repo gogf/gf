@@ -15,7 +15,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
-	semconv "go.opentelemetry.io/otel/semconv/v1.18.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -126,13 +126,13 @@ func GetSpanID(ctx context.Context) string {
 
 // SetBaggageValue is a convenient function for adding one key-value pair to baggage.
 // Note that it uses attribute.Any to set the key-value pair.
-func SetBaggageValue(ctx context.Context, key string, value interface{}) context.Context {
+func SetBaggageValue(ctx context.Context, key string, value any) context.Context {
 	return NewBaggage(ctx).SetValue(key, value)
 }
 
 // SetBaggageMap is a convenient function for adding map key-value pairs to baggage.
 // Note that it uses attribute.Any to set the key-value pair.
-func SetBaggageMap(ctx context.Context, data map[string]interface{}) context.Context {
+func SetBaggageMap(ctx context.Context, data map[string]any) context.Context {
 	return NewBaggage(ctx).SetMap(data)
 }
 

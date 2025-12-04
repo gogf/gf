@@ -19,7 +19,7 @@ import (
 
 // DoExec commits the sql string and its arguments to underlying driver
 // through given link object and returns the execution result.
-func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...interface{}) (result sql.Result, err error) {
+func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...any) (result sql.Result, err error) {
 	var (
 		isUseCoreDoExec bool   = false // Check whether the default method needs to be used
 		primaryKey      string = ""
@@ -63,12 +63,6 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 	}
 
 	// Only the insert operation with primary key can execute the following code
-
-	if d.GetConfig().ExecTimeout > 0 {
-		var cancelFunc context.CancelFunc
-		ctx, cancelFunc = context.WithTimeout(ctx, d.GetConfig().ExecTimeout)
-		defer cancelFunc()
-	}
 
 	// Sql filtering.
 	sql, args = d.FormatSqlBeforeExecuting(sql, args)

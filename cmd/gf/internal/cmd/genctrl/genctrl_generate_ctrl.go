@@ -11,12 +11,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 type controllerGenerator struct{}
@@ -89,7 +90,7 @@ func (c *controllerGenerator) doGenerateCtrlNewByModuleAndVersion(
 		if err = gfile.PutContents(moduleFilePath, gstr.TrimLeft(content)); err != nil {
 			return err
 		}
-		mlog.Printf(`generated: %s`, moduleFilePath)
+		mlog.Printf(`generated: %s`, gfile.RealPath(moduleFilePath))
 	}
 	if !gfile.Exists(moduleFilePathNew) {
 		content := gstr.ReplaceByMap(consts.TemplateGenCtrlControllerNewEmpty, g.MapStrStr{
@@ -99,7 +100,7 @@ func (c *controllerGenerator) doGenerateCtrlNewByModuleAndVersion(
 		if err = gfile.PutContents(moduleFilePathNew, gstr.TrimLeft(content)); err != nil {
 			return err
 		}
-		mlog.Printf(`generated: %s`, moduleFilePathNew)
+		mlog.Printf(`generated: %s`, gfile.RealPath(moduleFilePathNew))
 	}
 	filePaths, err := gfile.ScanDir(dstModuleFolderPath, "*.go", false)
 	if err != nil {
@@ -137,10 +138,11 @@ func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, ite
 
 	if gfile.Exists(methodFilePath) {
 		content = gstr.ReplaceByMap(consts.TemplateGenCtrlControllerMethodFuncMerge, g.MapStrStr{
-			"{Module}":     item.Module,
-			"{CtrlName}":   ctrlName,
-			"{Version}":    item.Version,
-			"{MethodName}": item.MethodName,
+			"{Module}":        item.Module,
+			"{CtrlName}":      ctrlName,
+			"{Version}":       item.Version,
+			"{MethodName}":    item.MethodName,
+			"{MethodComment}": item.GetComment(),
 		})
 
 		if gstr.Contains(gfile.GetContents(methodFilePath), fmt.Sprintf(`func (c *%v) %v(`, ctrlName, item.MethodName)) {
@@ -151,17 +153,18 @@ func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, ite
 		}
 	} else {
 		content = gstr.ReplaceByMap(consts.TemplateGenCtrlControllerMethodFunc, g.MapStrStr{
-			"{Module}":     item.Module,
-			"{ImportPath}": item.Import,
-			"{CtrlName}":   ctrlName,
-			"{Version}":    item.Version,
-			"{MethodName}": item.MethodName,
+			"{Module}":        item.Module,
+			"{ImportPath}":    item.Import,
+			"{CtrlName}":      ctrlName,
+			"{Version}":       item.Version,
+			"{MethodName}":    item.MethodName,
+			"{MethodComment}": item.GetComment(),
 		})
 		if err = gfile.PutContents(methodFilePath, gstr.TrimLeft(content)); err != nil {
 			return err
 		}
 	}
-	mlog.Printf(`generated: %s`, methodFilePath)
+	mlog.Printf(`generated: %s`, gfile.RealPath(methodFilePath))
 	return
 }
 
@@ -191,10 +194,11 @@ func (c *controllerGenerator) doGenerateCtrlMergeItem(dstModuleFolderPath string
 		}
 
 		ctrl := gstr.TrimLeft(gstr.ReplaceByMap(consts.TemplateGenCtrlControllerMethodFuncMerge, g.MapStrStr{
-			"{Module}":     api.Module,
-			"{CtrlName}":   fmt.Sprintf(`Controller%s`, gstr.UcFirst(api.Version)),
-			"{Version}":    api.Version,
-			"{MethodName}": api.MethodName,
+			"{Module}":        api.Module,
+			"{CtrlName}":      fmt.Sprintf(`Controller%s`, gstr.UcFirst(api.Version)),
+			"{Version}":       api.Version,
+			"{MethodName}":    api.MethodName,
+			"{MethodComment}": api.GetComment(),
 		}))
 		ctrlFileItem.controllers.WriteString(ctrl)
 		doneApiSet.Add(api.String())
@@ -221,7 +225,7 @@ func (c *controllerGenerator) doGenerateCtrlMergeItem(dstModuleFolderPath string
 		if err = gfile.PutContentsAppend(ctrlFilePath, ctrlFileItem.controllers.String()); err != nil {
 			return err
 		}
-		mlog.Printf(`generated: %s`, ctrlFilePath)
+		mlog.Printf(`generated: %s`, gfile.RealPath(ctrlFilePath))
 	}
 	return
 }

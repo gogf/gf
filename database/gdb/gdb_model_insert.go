@@ -38,18 +38,18 @@ func (m *Model) Batch(batch int) *Model {
 // Data("uid=? AND name=?", 10000, "john")
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"}).
-func (m *Model) Data(data ...interface{}) *Model {
+func (m *Model) Data(data ...any) *Model {
 	var model = m.getModel()
 	if len(data) > 1 {
 		if s := gconv.String(data[0]); gstr.Contains(s, "?") {
 			model.data = s
 			model.extraArgs = data[1:]
 		} else {
-			m := make(map[string]interface{})
+			newData := make(map[string]any)
 			for i := 0; i < len(data); i += 2 {
-				m[gconv.String(data[i])] = data[i+1]
+				newData[gconv.String(data[i])] = data[i+1]
 			}
-			model.data = m
+			model.data = newData
 		}
 	} else if len(data) == 1 {
 		switch value := data[0].(type) {
@@ -121,7 +121,7 @@ func (m *Model) Data(data ...interface{}) *Model {
 
 // OnConflict sets the primary key or index when columns conflicts occurs.
 // It's not necessary for MySQL driver.
-func (m *Model) OnConflict(onConflict ...interface{}) *Model {
+func (m *Model) OnConflict(onConflict ...any) *Model {
 	if len(onConflict) == 0 {
 		return m
 	}
@@ -150,7 +150,7 @@ func (m *Model) OnConflict(onConflict ...interface{}) *Model {
 //	OnDuplicate(g.Map{
 //		  "nickname": "passport",
 //	}).
-func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
+func (m *Model) OnDuplicate(onDuplicate ...any) *Model {
 	if len(onDuplicate) == 0 {
 		return m
 	}
@@ -176,7 +176,7 @@ func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
 //		  "passport": "",
 //		  "password": "",
 //	}).
-func (m *Model) OnDuplicateEx(onDuplicateEx ...interface{}) *Model {
+func (m *Model) OnDuplicateEx(onDuplicateEx ...any) *Model {
 	if len(onDuplicateEx) == 0 {
 		return m
 	}
@@ -192,7 +192,7 @@ func (m *Model) OnDuplicateEx(onDuplicateEx ...interface{}) *Model {
 // Insert does "INSERT INTO ..." statement for the model.
 // The optional parameter `data` is the same as the parameter of Model.Data function,
 // see Model.Data.
-func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
+func (m *Model) Insert(data ...any) (result sql.Result, err error) {
 	var ctx = m.GetCtx()
 	if len(data) > 0 {
 		return m.Data(data...).Insert()
@@ -201,7 +201,7 @@ func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 }
 
 // InsertAndGetId performs action Insert and returns the last insert id that automatically generated.
-func (m *Model) InsertAndGetId(data ...interface{}) (lastInsertId int64, err error) {
+func (m *Model) InsertAndGetId(data ...any) (lastInsertId int64, err error) {
 	var ctx = m.GetCtx()
 	if len(data) > 0 {
 		return m.Data(data...).InsertAndGetId()
@@ -216,7 +216,7 @@ func (m *Model) InsertAndGetId(data ...interface{}) (lastInsertId int64, err err
 // InsertIgnore does "INSERT IGNORE INTO ..." statement for the model.
 // The optional parameter `data` is the same as the parameter of Model.Data function,
 // see Model.Data.
-func (m *Model) InsertIgnore(data ...interface{}) (result sql.Result, err error) {
+func (m *Model) InsertIgnore(data ...any) (result sql.Result, err error) {
 	var ctx = m.GetCtx()
 	if len(data) > 0 {
 		return m.Data(data...).InsertIgnore()
@@ -227,7 +227,7 @@ func (m *Model) InsertIgnore(data ...interface{}) (result sql.Result, err error)
 // Replace does "REPLACE INTO ..." statement for the model.
 // The optional parameter `data` is the same as the parameter of Model.Data function,
 // see Model.Data.
-func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
+func (m *Model) Replace(data ...any) (result sql.Result, err error) {
 	var ctx = m.GetCtx()
 	if len(data) > 0 {
 		return m.Data(data...).Replace()
@@ -241,7 +241,7 @@ func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
 //
 // It updates the record if there's primary or unique index in the saving data,
 // or else it inserts a new record into the table.
-func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
+func (m *Model) Save(data ...any) (result sql.Result, err error) {
 	var ctx = m.GetCtx()
 	if len(data) > 0 {
 		return m.Data(data...).Save()
@@ -285,7 +285,14 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 	}
 
 	// Automatic handling for creating/updating time.
-	if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
+	if fieldNameCreate != "" && m.isFieldInFieldsEx(fieldNameCreate) {
+		fieldNameCreate = ""
+	}
+	if fieldNameUpdate != "" && m.isFieldInFieldsEx(fieldNameUpdate) {
+		fieldNameUpdate = ""
+	}
+	var isSoftTimeFeatureEnabled = fieldNameCreate != "" || fieldNameUpdate != ""
+	if !m.unscoped && isSoftTimeFeatureEnabled {
 		for k, v := range list {
 			if fieldNameCreate != "" && empty.IsNil(v[fieldNameCreate]) {
 				fieldCreateValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeCreate, false)
@@ -299,6 +306,7 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 					v[fieldNameUpdate] = fieldUpdateValue
 				}
 			}
+			// for timestamp field that should initialize the delete_at field with value, for example 0.
 			if fieldNameDelete != "" && empty.IsNil(v[fieldNameDelete]) {
 				fieldDeleteValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeDelete, true)
 				if fieldDeleteValue != nil {
@@ -327,6 +335,7 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 		},
 		Model:  m,
 		Table:  m.tables,
+		Schema: m.schema,
 		Data:   list,
 		Option: doInsertOption,
 	}
@@ -362,7 +371,7 @@ func (m *Model) formatDoInsertOption(insertOption InsertOption, columnNames []st
 			reflectInfo := reflection.OriginValueAndKind(m.onDuplicate)
 			switch reflectInfo.OriginKind {
 			case reflect.String:
-				option.OnDuplicateMap = make(map[string]interface{})
+				option.OnDuplicateMap = make(map[string]any)
 				for _, v := range gstr.SplitAndTrim(reflectInfo.OriginValue.String(), ",") {
 					if onDuplicateExKeySet.Contains(v) {
 						continue
@@ -371,7 +380,7 @@ func (m *Model) formatDoInsertOption(insertOption InsertOption, columnNames []st
 				}
 
 			case reflect.Map:
-				option.OnDuplicateMap = make(map[string]interface{})
+				option.OnDuplicateMap = make(map[string]any)
 				for k, v := range gconv.Map(m.onDuplicate) {
 					if onDuplicateExKeySet.Contains(k) {
 						continue
@@ -380,7 +389,7 @@ func (m *Model) formatDoInsertOption(insertOption InsertOption, columnNames []st
 				}
 
 			case reflect.Slice, reflect.Array:
-				option.OnDuplicateMap = make(map[string]interface{})
+				option.OnDuplicateMap = make(map[string]any)
 				for _, v := range gconv.Strings(m.onDuplicate) {
 					if onDuplicateExKeySet.Contains(v) {
 						continue
@@ -397,7 +406,7 @@ func (m *Model) formatDoInsertOption(insertOption InsertOption, columnNames []st
 			}
 		}
 	} else if onDuplicateExKeySet.Size() > 0 {
-		option.OnDuplicateMap = make(map[string]interface{})
+		option.OnDuplicateMap = make(map[string]any)
 		for _, v := range columnNames {
 			if onDuplicateExKeySet.Contains(v) {
 				continue
@@ -408,7 +417,7 @@ func (m *Model) formatDoInsertOption(insertOption InsertOption, columnNames []st
 	return
 }
 
-func (m *Model) formatOnDuplicateExKeys(onDuplicateEx interface{}) ([]string, error) {
+func (m *Model) formatOnDuplicateExKeys(onDuplicateEx any) ([]string, error) {
 	if onDuplicateEx == nil {
 		return nil, nil
 	}
@@ -433,7 +442,7 @@ func (m *Model) formatOnDuplicateExKeys(onDuplicateEx interface{}) ([]string, er
 	}
 }
 
-func (m *Model) formatOnConflictKeys(onConflict interface{}) ([]string, error) {
+func (m *Model) formatOnConflictKeys(onConflict any) ([]string, error) {
 	if onConflict == nil {
 		return nil, nil
 	}

@@ -17,8 +17,8 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.20.0"
+	"go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gipv4"
@@ -32,7 +32,7 @@ const (
 //
 // The output parameter `Shutdown` is used for waiting exported trace spans to be uploaded,
 // which is useful if your program is ending, and you do not want to lose recent spans.
-func Init(serviceName, endpoint, path string) (func(), error) {
+func Init(serviceName, endpoint, path string) (func(ctx context.Context), error) {
 	// Try retrieving host ip for tracing info.
 	var (
 		intranetIPArray, err = gipv4.GetIntranetIpArray()
@@ -52,15 +52,13 @@ func Init(serviceName, endpoint, path string) (func(), error) {
 		hostIP = intranetIPArray[0]
 	}
 
-	traceClientHTTP := otlptracehttp.NewClient(
+	ctx := context.Background()
+	traceExp, err := otlptrace.New(ctx, otlptracehttp.NewClient(
 		otlptracehttp.WithEndpoint(endpoint),
 		otlptracehttp.WithURLPath(path),
 		otlptracehttp.WithInsecure(),
 		otlptracehttp.WithCompression(1),
-	)
-
-	ctx := context.Background()
-	traceExp, err := otlptrace.New(ctx, traceClientHTTP)
+	))
 	if err != nil {
 		return nil, err
 	}
@@ -77,18 +75,26 @@ func Init(serviceName, endpoint, path string) (func(), error) {
 		),
 	)
 
-	bsp := sdktrace.NewBatchSpanProcessor(traceExp)
-	tracerProvider := sdktrace.NewTracerProvider(
-		sdktrace.WithSampler(sdktrace.AlwaysSample()),
-		sdktrace.WithResource(res),
-		sdktrace.WithSpanProcessor(bsp),
+	tracerProvider := trace.NewTracerProvider(
+		// AlwaysSample is a sampler that samples every trace.
+		// see: https://pkg.go.dev/go.opentelemetry.io/otel/sdk/trace#AlwaysSample
+		// example see: [example/trace/provider/http/main.go](../../../../../example/trace/provider/http/main.go#L84)
+		trace.WithSampler(trace.AlwaysSample()),
+		// WithResource returns a trace option that sets the resource to be associated with spans.
+		// see: https://pkg.go.dev/go.opentelemetry.io/otel/sdk/trace#WithResource
+		// example see: [example/trace/provider/http/main.go](../../../../../example/trace/provider/http/main.go#L33)
+		trace.WithResource(res),
+		// WithSpanProcessor returns a trace option that sets the span processor to be used by the trace provider.
+		// see: https://pkg.go.dev/go.opentelemetry.io/otel/sdk/trace#WithSpanProcessor
+		// example see: [example/trace/provider/http/main.go](../../../../../example/trace/provider/http/main.go#L96)
+		trace.WithSpanProcessor(trace.NewBatchSpanProcessor(traceExp)),
 	)
 
 	// Set the global propagator to traceContext (not set by default).
-	otel.SetTextMapPropagator(propagation.TraceContext{})
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 	otel.SetTracerProvider(tracerProvider)
 
-	return func() {
+	return func(ctx context.Context) {
 		ctx, cancel := context.WithTimeout(ctx, time.Second)
 		defer cancel()
 		if err = tracerProvider.Shutdown(ctx); err != nil {

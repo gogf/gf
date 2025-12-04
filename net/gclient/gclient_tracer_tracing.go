@@ -32,7 +32,7 @@ type clientTracerTracing struct {
 	span        trace.Span
 	request     *http.Request
 	requestBody []byte
-	headers     map[string]interface{}
+	headers     map[string]any
 	mtx         sync.Mutex
 }
 
@@ -46,7 +46,7 @@ func newClientTracerTracing(
 		Context: ctx,
 		span:    span,
 		request: request,
-		headers: make(map[string]interface{}),
+		headers: make(map[string]any),
 	}
 
 	reqBodyContent, _ := io.ReadAll(ct.request.Body)
@@ -218,14 +218,8 @@ func (ct *clientTracerTracing) WroteRequest(info httptrace.WroteRequestInfo) {
 		ct.span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, info.Err))
 	}
 
-	reqBodyContent, err := gtrace.SafeContentForHttp(ct.requestBody, ct.request.Header)
-	if err != nil {
-		ct.span.SetStatus(codes.Error, fmt.Sprintf(`converting safe content failed: %s`, err.Error()))
-	}
-
 	ct.span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
 		attribute.String(tracingEventHttpRequestHeaders, gconv.String(ct.headers)),
 		attribute.String(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ct.Context).String()),
-		attribute.String(tracingEventHttpRequestBody, reqBodyContent),
 	))
 }

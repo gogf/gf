@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/contrib/registry/file/v2"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/net/gsvc"
@@ -20,6 +19,8 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
+
+	"github.com/gogf/gf/contrib/registry/file/v2"
 )
 
 var ctx = gctx.GetInitCtx()
@@ -44,6 +45,7 @@ func Test_HTTP_Registry(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
+		client.SetDiscovery(gsvc.GetRegistry())
 		client.SetPrefix(fmt.Sprintf("http://%s", svcName))
 		// GET
 		t.Assert(client.GetContent(ctx, "/http-registry"), svcName)
@@ -70,6 +72,7 @@ func Test_HTTP_Discovery_Disable(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
+		client.SetDiscovery(gsvc.GetRegistry())
 		client.SetPrefix(fmt.Sprintf("http://%s", svcName))
 		result, err := client.Get(ctx, "/http-registry")
 		defer result.Close()

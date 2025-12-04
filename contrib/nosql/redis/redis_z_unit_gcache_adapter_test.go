@@ -8,11 +8,11 @@ package redis_test
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/frame/g"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/test/gtest"
 )
@@ -242,7 +242,7 @@ func Test_AdapterRedis_SetIfNotExist(t *testing.T) {
 func Test_AdapterRedis_SetIfNotExistFunc(t *testing.T) {
 	defer cacheRedis.Clear(ctx)
 	gtest.C(t, func(t *gtest.T) {
-		exist, err := cacheRedis.SetIfNotExistFunc(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
+		exist, err := cacheRedis.SetIfNotExistFunc(ctx, 1, func(ctx context.Context) (value any, err error) {
 			return 11, nil
 		}, 0)
 		t.AssertNil(err)
@@ -253,7 +253,7 @@ func Test_AdapterRedis_SetIfNotExistFunc(t *testing.T) {
 func Test_AdapterRedis_SetIfNotExistFuncLock(t *testing.T) {
 	defer cacheRedis.Clear(ctx)
 	gtest.C(t, func(t *gtest.T) {
-		exist, err := cacheRedis.SetIfNotExistFuncLock(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
+		exist, err := cacheRedis.SetIfNotExistFuncLock(ctx, 1, func(ctx context.Context) (value any, err error) {
 			return 11, nil
 		}, 0)
 		t.AssertNil(err)
@@ -285,14 +285,14 @@ func Test_AdapterRedis_GetOrSetFunc(t *testing.T) {
 			key    = "key"
 			value1 = "valueFunc"
 		)
-		v, err := cacheRedis.GetOrSetFunc(ctx, key, func(ctx context.Context) (value interface{}, err error) {
+		v, err := cacheRedis.GetOrSetFunc(ctx, key, func(ctx context.Context) (value any, err error) {
 			value = value1
 			return
 		}, 0)
 		t.AssertNil(err)
 		t.Assert(v, value1)
 
-		v, err = cacheRedis.GetOrSetFunc(ctx, key, func(ctx context.Context) (value interface{}, err error) {
+		v, err = cacheRedis.GetOrSetFunc(ctx, key, func(ctx context.Context) (value any, err error) {
 			value = value1
 			return
 		}, 0)
@@ -304,7 +304,7 @@ func Test_AdapterRedis_GetOrSetFunc(t *testing.T) {
 		var (
 			key = "key1"
 		)
-		v, err := cacheRedis.GetOrSetFunc(ctx, key, func(ctx context.Context) (interface{}, error) {
+		v, err := cacheRedis.GetOrSetFunc(ctx, key, func(ctx context.Context) (any, error) {
 			return nil, nil
 		}, 0)
 		t.AssertNil(err)
@@ -319,7 +319,7 @@ func Test_AdapterRedis_GetOrSetFuncLock(t *testing.T) {
 			key    = "key"
 			value1 = "valueFuncLock"
 		)
-		v, err := cacheRedis.GetOrSetFuncLock(ctx, key, func(ctx context.Context) (value interface{}, err error) {
+		v, err := cacheRedis.GetOrSetFuncLock(ctx, key, func(ctx context.Context) (value any, err error) {
 			value = value1
 			return
 		}, time.Second*60)

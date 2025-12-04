@@ -19,6 +19,7 @@ import (
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/net/ghttp/internal/graceful"
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gcache"
@@ -34,10 +35,10 @@ type (
 		instance         string                    // Instance name of current HTTP server.
 		config           ServerConfig              // Server configuration.
 		plugins          []Plugin                  // Plugin array to extend server functionality.
-		servers          []*gracefulServer         // Underlying http.Server array.
+		servers          []*graceful.Server        // Underlying http.Server array.
 		serverCount      *gtype.Int                // Underlying http.Server number for internal usage.
 		closeChan        chan struct{}             // Used for underlying server closing event notification.
-		serveTree        map[string]interface{}    // The route maps tree.
+		serveTree        map[string]any            // The route maps tree.
 		serveCache       *gcache.Cache             // Server caches for internal usage.
 		routesMap        map[string][]*HandlerItem // Route map mainly for route dumps and repeated route checks.
 		statusHandlerMap map[string][]HandlerFunc  // Custom status handler map.
@@ -63,13 +64,13 @@ type (
 		Handler          *HandlerItem // The handler.
 		Server           string       // Server name.
 		Address          string       // Listening address.
-		Domain           string       // Bound domain.
+		Domain           string       // Bound domain, eg: example.com
 		Type             HandlerType  // Route handler type.
 		Middleware       string       // Bound middleware.
-		Method           string       // Handler method name.
-		Route            string       // Route URI.
+		Method           string       // Handler method name, eg: get, post.
+		Route            string       // Route URI, eg: /api/v1/user/{id}.
 		Priority         int          // Just for reference.
-		IsServiceHandler bool         // Is service handler.
+		IsServiceHandler bool         // Is a service handler.
 	}
 
 	// HandlerFunc is request handler function.
@@ -127,42 +128,41 @@ type (
 
 const (
 	// FreePortAddress marks the server listens using random free port.
-	FreePortAddress = ":0"
+	FreePortAddress = graceful.FreePortAddress
 )
 
 const (
-	HeaderXUrlPath                     = "x-url-path"         // Used for custom route handler, which does not change URL.Path.
-	HookBeforeServe       HookName     = "HOOK_BEFORE_SERVE"  // Hook handler before route handler/file serving.
-	HookAfterServe        HookName     = "HOOK_AFTER_SERVE"   // Hook handler after route handler/file serving.
-	HookBeforeOutput      HookName     = "HOOK_BEFORE_OUTPUT" // Hook handler before response output.
-	HookAfterOutput       HookName     = "HOOK_AFTER_OUTPUT"  // Hook handler after response output.
-	ServerStatusStopped   ServerStatus = 0
-	ServerStatusRunning   ServerStatus = 1
-	DefaultServerName                  = "default"
-	DefaultDomainName                  = "default"
-	HandlerTypeHandler    HandlerType  = "handler"
-	HandlerTypeObject     HandlerType  = "object"
-	HandlerTypeMiddleware HandlerType  = "middleware"
-	HandlerTypeHook       HandlerType  = "hook"
+	HeaderXUrlPath                    = "x-url-path"         // Used for custom route handler, which does not change URL.Path.
+	HookBeforeServe       HookName    = "HOOK_BEFORE_SERVE"  // Hook handler before route handler/file serving.
+	HookAfterServe        HookName    = "HOOK_AFTER_SERVE"   // Hook handler after route handler/file serving.
+	HookBeforeOutput      HookName    = "HOOK_BEFORE_OUTPUT" // Hook handler before response output.
+	HookAfterOutput       HookName    = "HOOK_AFTER_OUTPUT"  // Hook handler after response output.
+	DefaultServerName                 = "default"
+	DefaultDomainName                 = "default"
+	HandlerTypeHandler    HandlerType = "handler"
+	HandlerTypeObject     HandlerType = "object"
+	HandlerTypeMiddleware HandlerType = "middleware"
+	HandlerTypeHook       HandlerType = "hook"
+	ServerStatusStopped               = graceful.ServerStatusStopped
+	ServerStatusRunning               = graceful.ServerStatusRunning
 )
 
 const (
-	supportedHttpMethods                    = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
-	defaultMethod                           = "ALL"
-	routeCacheDuration                      = time.Hour
-	ctxKeyForRequest            gctx.StrKey = "gHttpRequestObject"
-	contentTypeXml                          = "text/xml"
-	contentTypeHtml                         = "text/html"
-	contentTypeJson                         = "application/json"
-	contentTypeJavascript                   = "application/javascript"
-	swaggerUIPackedPath                     = "/goframe/swaggerui"
-	responseHeaderTraceID                   = "Trace-ID"
-	responseHeaderContentLength             = "Content-Length"
-	specialMethodNameInit                   = "Init"
-	specialMethodNameShut                   = "Shut"
-	specialMethodNameIndex                  = "Index"
-	defaultEndpointPort                     = 80
-	noPrintInternalRoute                    = "internalMiddlewareServerTracing"
+	supportedHttpMethods               = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+	defaultMethod                      = "ALL"
+	routeCacheDuration                 = time.Hour
+	ctxKeyForRequest       gctx.StrKey = "gHttpRequestObject"
+	contentTypeXml                     = "text/xml"
+	contentTypeHtml                    = "text/html"
+	contentTypeJson                    = "application/json"
+	contentTypeJavascript              = "application/javascript"
+	swaggerUIPackedPath                = "/goframe/swaggerui"
+	responseHeaderTraceID              = "Trace-ID"
+	specialMethodNameInit              = "Init"
+	specialMethodNameShut              = "Shut"
+	specialMethodNameIndex             = "Index"
+	defaultEndpointPort                = 80
+	noPrintInternalRoute               = "internalMiddlewareServerTracing"
 )
 
 const (
@@ -207,6 +207,7 @@ var (
 )
 
 var (
+	// ErrNeedJsonBody is the error that indicates the request body content should be JSON format.
 	ErrNeedJsonBody = gerror.NewWithOption(gerror.Option{
 		Text: "the request body content should be JSON format",
 		Code: gcode.CodeInvalidRequest,

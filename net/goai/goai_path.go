@@ -49,10 +49,10 @@ const (
 )
 
 type addPathInput struct {
-	Path     string      // Precise route path.
-	Prefix   string      // Route path prefix.
-	Method   string      // Route method.
-	Function interface{} // Uniformed function.
+	Path     string // Precise route path.
+	Prefix   string // Route path prefix.
+	Method   string // Route method.
+	Function any    // Uniformed function.
 }
 
 func (oai *OpenApiV3) addPath(in addPathInput) error {
@@ -73,26 +73,25 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		outputObject reflect.Value
 	)
 	// Create instance according input/output types.
-	if reflectType.In(1).Kind() == reflect.Ptr {
+	if reflectType.In(1).Kind() == reflect.Pointer {
 		inputObject = reflect.New(reflectType.In(1).Elem()).Elem()
 	} else {
 		inputObject = reflect.New(reflectType.In(1)).Elem()
 	}
-	if reflectType.Out(0).Kind() == reflect.Ptr {
+	if reflectType.Out(0).Kind() == reflect.Pointer {
 		outputObject = reflect.New(reflectType.Out(0).Elem()).Elem()
 	} else {
 		outputObject = reflect.New(reflectType.Out(0)).Elem()
 	}
 
 	var (
-		mime                 string
-		path                 = Path{XExtensions: make(XExtensions)}
-		inputMetaMap         = gmeta.Data(inputObject.Interface())
-		outputMetaMap        = gmeta.Data(outputObject.Interface())
-		isInputStructEmpty   = oai.doesStructHasNoFields(inputObject.Interface())
-		inputStructTypeName  = oai.golangTypeToSchemaName(inputObject.Type())
-		outputStructTypeName = oai.golangTypeToSchemaName(outputObject.Type())
-		operation            = Operation{
+		// mime                string
+		path                = Path{XExtensions: make(XExtensions)}
+		inputMetaMap        = gmeta.Data(inputObject.Interface())
+		outputMetaMap       = gmeta.Data(outputObject.Interface())
+		isInputStructEmpty  = oai.doesStructHasNoFields(inputObject.Interface())
+		inputStructTypeName = oai.golangTypeToSchemaName(inputObject.Type())
+		operation           = Operation{
 			Responses:   map[string]ResponseRef{},
 			XExtensions: make(XExtensions),
 		}
@@ -129,7 +128,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		)
 	}
 
-	if err := oai.addSchema(inputObject.Interface(), outputObject.Interface()); err != nil {
+	if err := oai.addSchema(inputObject.Interface()); err != nil {
 		return err
 	}
 
@@ -153,9 +152,9 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			return err
 		}
 		// Allowed request mime.
-		if mime = inputMetaMap[gtag.Mime]; mime == "" {
-			mime = inputMetaMap[gtag.Consumes]
-		}
+		// if mime = inputMetaMap[gtag.Mime]; mime == "" {
+		// 	mime = inputMetaMap[gtag.Consumes]
+		// }
 	}
 
 	// path security
@@ -199,15 +198,16 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	if operation.RequestBody.Value == nil {
 		var (
 			requestBody = RequestBody{
-				Required: true,
-				Content:  map[string]MediaType{},
+				Content: map[string]MediaType{},
 			}
 		)
 		// Supported mime types of request.
 		var (
-			contentTypes = oai.Config.ReadContentTypes
-			tagMimeValue = gmeta.Get(inputObject.Interface(), gtag.Mime).String()
+			contentTypes     = oai.Config.ReadContentTypes
+			tagMimeValue     = gmeta.Get(inputObject.Interface(), gtag.Mime).String()
+			tagRequiredValue = gmeta.Get(inputObject.Interface(), gtag.Required).Bool()
 		)
+		requestBody.Required = tagRequiredValue
 		if tagMimeValue != "" {
 			contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
 		}
@@ -234,52 +234,48 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	}
 
 	// =================================================================================================================
-	// Response.
+	// Default Response.
 	// =================================================================================================================
-	if _, ok := operation.Responses[responseOkKey]; !ok {
-		var (
-			response = Response{
-				Content:     map[string]MediaType{},
-				XExtensions: make(XExtensions),
+	status := responseOkKey
+	if statusValue, ok := outputMetaMap[gtag.Status]; ok {
+		statusCode := gconv.Int(statusValue)
+		if statusCode < 100 || statusCode >= 600 {
+			return gerror.Newf("Invalid HTTP status code: %s", statusValue)
+		}
+		status = statusValue
+	}
+	if _, ok := operation.Responses[status]; !ok {
+		response, err := oai.getResponseFromObject(outputObject.Interface(), true)
+		if err != nil {
+			return err
+		}
+		operation.Responses[status] = ResponseRef{Value: response}
+	}
+
+	// =================================================================================================================
+	// Other Responses.
+	// =================================================================================================================
+	if enhancedResponse, ok := outputObject.Interface().(IEnhanceResponseStatus); ok {
+		for statusCode, data := range enhancedResponse.EnhanceResponseStatus() {
+			if statusCode < 100 || statusCode >= 600 {
+				return gerror.Newf("Invalid HTTP status code: %d", statusCode)
 			}
-		)
-		if len(outputMetaMap) > 0 {
-			if err := oai.tagMapToResponse(outputMetaMap, &response); err != nil {
-				return err
+			if data.Response == nil {
+				continue
+			}
+			status := gconv.String(statusCode)
+			if _, ok := operation.Responses[status]; !ok {
+				response, err := oai.getResponseFromObject(data, false)
+				if err != nil {
+					return err
+				}
+				operation.Responses[status] = ResponseRef{Value: response}
 			}
 		}
-		// Supported mime types of response.
-		var (
-			contentTypes = oai.Config.ReadContentTypes
-			tagMimeValue = gmeta.Get(outputObject.Interface(), gtag.Mime).String()
-			refInput     = getResponseSchemaRefInput{
-				BusinessStructName:      outputStructTypeName,
-				CommonResponseObject:    oai.Config.CommonResponse,
-				CommonResponseDataField: oai.Config.CommonResponseDataField,
-			}
-		)
-		if tagMimeValue != "" {
-			contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
-		}
-		for _, v := range contentTypes {
-			// If customized response mime type, it then ignores common response feature.
-			if tagMimeValue != "" {
-				refInput.CommonResponseObject = nil
-				refInput.CommonResponseDataField = ""
-			}
-			schemaRef, err := oai.getResponseSchemaRef(refInput)
-			if err != nil {
-				return err
-			}
-			response.Content[v] = MediaType{
-				Schema: schemaRef,
-			}
-		}
-		operation.Responses[responseOkKey] = ResponseRef{Value: &response}
 	}
 
 	// Remove operation body duplicated properties.
-	oai.removeOperationDuplicatedProperties(operation)
+	oai.removeOperationDuplicatedProperties(&operation)
 
 	// Assign to certain operation attribute.
 	switch gstr.ToUpper(in.Method) {
@@ -321,14 +317,14 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	return nil
 }
 
-func (oai *OpenApiV3) removeOperationDuplicatedProperties(operation Operation) {
+func (oai *OpenApiV3) removeOperationDuplicatedProperties(operation *Operation) {
 	if len(operation.Parameters) == 0 {
 		// Nothing to do.
 		return
 	}
 
 	var (
-		duplicatedParameterNames []interface{}
+		duplicatedParameterNames []any
 		dataField                string
 	)
 
@@ -356,6 +352,10 @@ func (oai *OpenApiV3) removeOperationDuplicatedProperties(operation Operation) {
 				requestBodyContent.Schema.Value = newSchema
 				newSchema.Required = oai.removeItemsFromArray(newSchema.Required, duplicatedParameterNames)
 				newSchema.Properties.Removes(duplicatedParameterNames)
+				// remove request body if there are no properties left
+				if newSchema.Properties.refs.IsEmpty() {
+					operation.RequestBody = nil
+				}
 				continue
 			}
 		}
@@ -376,7 +376,7 @@ func (oai *OpenApiV3) removeOperationDuplicatedProperties(operation Operation) {
 	}
 }
 
-func (oai *OpenApiV3) removeItemsFromArray(array []string, items []interface{}) []string {
+func (oai *OpenApiV3) removeItemsFromArray(array []string, items []any) []string {
 	arr := garray.NewStrArrayFrom(array)
 	for _, item := range items {
 		if value, ok := item.(string); ok {
@@ -386,7 +386,7 @@ func (oai *OpenApiV3) removeItemsFromArray(array []string, items []interface{}) 
 	return arr.Slice()
 }
 
-func (oai *OpenApiV3) doesStructHasNoFields(s interface{}) bool {
+func (oai *OpenApiV3) doesStructHasNoFields(s any) bool {
 	return reflect.TypeOf(s).NumField() == 0
 }
 

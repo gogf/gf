@@ -21,6 +21,12 @@ import (
 	"github.com/gogf/gf/v2/os/glog"
 )
 
+var (
+	// Compile-time checking for interface implementation.
+	_ gcfg.Adapter        = (*Client)(nil)
+	_ gcfg.WatcherAdapter = (*Client)(nil)
+)
+
 // Config is the configuration object for consul client.
 type Config struct {
 	// api.Config in consul package
@@ -41,6 +47,8 @@ type Client struct {
 	client *api.Client
 	// Configmap content cached. It is `*gjson.Json` value internally.
 	value *g.Var
+	// Watchers for watching file changes.
+	watchers *gcfg.WatcherRegistry
 }
 
 // New creates and returns gcfg.Adapter implementing using consul service.
@@ -55,8 +63,9 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 	}
 
 	client := &Client{
-		config: config,
-		value:  g.NewVar(nil, true),
+		config:   config,
+		value:    g.NewVar(nil, true),
+		watchers: gcfg.NewWatcherRegistry(),
 	}
 
 	client.client, err = api.NewClient(&config.ConsulConfig)
@@ -90,7 +99,7 @@ func (c *Client) Available(ctx context.Context, resource ...string) (ok bool) {
 // Pattern like:
 // "x.y.z" for map item.
 // "x.0.y" for slice item.
-func (c *Client) Get(ctx context.Context, pattern string) (value interface{}, err error) {
+func (c *Client) Get(ctx context.Context, pattern string) (value any, err error) {
 	if c.value.IsNil() {
 		if err = c.updateLocalValue(); err != nil {
 			return nil, err
@@ -102,7 +111,7 @@ func (c *Client) Get(ctx context.Context, pattern string) (value interface{}, er
 // Data retrieves and returns all configuration data in current resource as map.
 // Note that this function may lead lots of memory usage if configuration data is too large,
 // you can implement this function if necessary.
-func (c *Client) Data(ctx context.Context) (data map[string]interface{}, err error) {
+func (c *Client) Data(ctx context.Context) (data map[string]any, err error) {
 	if c.value.IsNil() {
 		if err = c.updateLocalValue(); err != nil {
 			return nil, err
@@ -137,7 +146,7 @@ func (c *Client) addWatcher() (err error) {
 		return nil
 	}
 
-	plan, err := watch.Parse(map[string]interface{}{
+	plan, err := watch.Parse(map[string]any{
 		"type": "key",
 		"key":  c.config.Path,
 	})
@@ -145,7 +154,7 @@ func (c *Client) addWatcher() (err error) {
 		return gerror.Wrapf(err, `watch config from consul path %+v failed`, c.config.Path)
 	}
 
-	plan.Handler = func(idx uint64, raw interface{}) {
+	plan.Handler = func(idx uint64, raw any) {
 		var v *api.KVPair
 		if raw == nil {
 			// nil is a valid return value
@@ -156,13 +165,26 @@ func (c *Client) addWatcher() (err error) {
 		if v, ok = raw.(*api.KVPair); !ok {
 			return
 		}
-
-		if err = c.doUpdate(v.Value); err != nil {
+		err = c.doUpdate(v.Value)
+		if err != nil {
 			c.config.Logger.Errorf(
 				context.Background(),
 				"watch config from consul path %+v update failed: %s",
 				c.config.Path, err,
 			)
+		} else {
+			var m *gjson.Json
+			m, err = gjson.LoadContent(v.Value, true)
+			if err != nil {
+				c.config.Logger.Errorf(
+					context.Background(),
+					"watch config from consul path %+v parse failed: %s",
+					c.config.Path, err,
+				)
+			} else {
+				adapterCtx := NewAdapterCtx().WithOperation(gcfg.OperationUpdate).WithPath(c.config.Path).WithContent(m)
+				c.notifyWatchers(adapterCtx.Ctx)
+			}
 		}
 	}
 
@@ -173,6 +195,7 @@ func (c *Client) addWatcher() (err error) {
 	return nil
 }
 
+// startAsynchronousWatch starts the asynchronous watch.
 func (c *Client) startAsynchronousWatch(plan *watch.Plan) {
 	if err := plan.Run(c.config.ConsulConfig.Address); err != nil {
 		c.config.Logger.Errorf(
@@ -181,4 +204,24 @@ func (c *Client) startAsynchronousWatch(plan *watch.Plan) {
 			c.config.Path, err,
 		)
 	}
+}
+
+// AddWatcher adds a watcher for the specified configuration file.
+func (c *Client) AddWatcher(name string, f func(ctx context.Context)) {
+	c.watchers.Add(name, f)
+}
+
+// RemoveWatcher removes the watcher for the specified configuration file.
+func (c *Client) RemoveWatcher(name string) {
+	c.watchers.Remove(name)
+}
+
+// GetWatcherNames returns all watcher names.
+func (c *Client) GetWatcherNames() []string {
+	return c.watchers.GetNames()
+}
+
+// notifyWatchers notifies all watchers.
+func (c *Client) notifyWatchers(ctx context.Context) {
+	c.watchers.Notify(ctx)
 }

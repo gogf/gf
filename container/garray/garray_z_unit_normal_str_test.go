@@ -13,10 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/internal/empty"
-
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -236,14 +235,14 @@ func TestStrArray_PopLeftsAndPopRights(t *testing.T) {
 		value2 := []string{"0", "1", "2", "3", "4", "5", "6"}
 		array1 := garray.NewStrArrayFrom(value1)
 		array2 := garray.NewStrArrayFrom(value2)
-		t.Assert(array1.PopLefts(2), []interface{}{"0", "1"})
-		t.Assert(array1.Slice(), []interface{}{"2", "3", "4", "5", "6"})
-		t.Assert(array1.PopRights(2), []interface{}{"5", "6"})
-		t.Assert(array1.Slice(), []interface{}{"2", "3", "4"})
-		t.Assert(array1.PopRights(20), []interface{}{"2", "3", "4"})
-		t.Assert(array1.Slice(), []interface{}{})
-		t.Assert(array2.PopLefts(20), []interface{}{"0", "1", "2", "3", "4", "5", "6"})
-		t.Assert(array2.Slice(), []interface{}{})
+		t.Assert(array1.PopLefts(2), []any{"0", "1"})
+		t.Assert(array1.Slice(), []any{"2", "3", "4", "5", "6"})
+		t.Assert(array1.PopRights(2), []any{"5", "6"})
+		t.Assert(array1.Slice(), []any{"2", "3", "4"})
+		t.Assert(array1.PopRights(20), []any{"2", "3", "4"})
+		t.Assert(array1.Slice(), []any{})
+		t.Assert(array2.PopLefts(20), []any{"0", "1", "2", "3", "4", "5", "6"})
+		t.Assert(array2.Slice(), []any{})
 	})
 }
 
@@ -252,12 +251,12 @@ func TestString_Range(t *testing.T) {
 		value1 := []string{"0", "1", "2", "3", "4", "5", "6"}
 		array1 := garray.NewStrArrayFrom(value1)
 		array2 := garray.NewStrArrayFrom(value1, true)
-		t.Assert(array1.Range(0, 1), []interface{}{"0"})
-		t.Assert(array1.Range(1, 2), []interface{}{"1"})
-		t.Assert(array1.Range(0, 2), []interface{}{"0", "1"})
+		t.Assert(array1.Range(0, 1), []any{"0"})
+		t.Assert(array1.Range(1, 2), []any{"1"})
+		t.Assert(array1.Range(0, 2), []any{"0", "1"})
 		t.Assert(array1.Range(-1, 10), value1)
 		t.Assert(array1.Range(10, 1), nil)
-		t.Assert(array2.Range(0, 1), []interface{}{"0"})
+		t.Assert(array2.Range(0, 1), []any{"0"})
 	})
 }
 
@@ -269,7 +268,7 @@ func TestStrArray_Merge(t *testing.T) {
 		array2 := garray.NewStrArrayFrom(a21)
 		t.Assert(array1.Merge(array2).Slice(), []string{"0", "1", "2", "3", "4", "5", "6", "7"})
 
-		func1 := func(v1, v2 interface{}) int {
+		func1 := func(v1, v2 any) int {
 			if gconv.Int(v1) < gconv.Int(v2) {
 				return 0
 			}
@@ -279,9 +278,9 @@ func TestStrArray_Merge(t *testing.T) {
 		s1 := []string{"a", "b", "c", "d"}
 		s2 := []string{"e", "f"}
 		i1 := garray.NewIntArrayFrom([]int{1, 2, 3})
-		i2 := garray.NewArrayFrom([]interface{}{3})
+		i2 := garray.NewArrayFrom([]any{3})
 		s3 := garray.NewStrArrayFrom([]string{"g", "h"})
-		s4 := garray.NewSortedArrayFrom([]interface{}{4, 5}, func1)
+		s4 := garray.NewSortedArrayFrom([]any{4, 5}, func1)
 		s5 := garray.NewSortedStrArrayFrom(s2)
 		s6 := garray.NewSortedIntArrayFrom([]int{1, 2, 3})
 		a1 := garray.NewStrArrayFrom(s1)

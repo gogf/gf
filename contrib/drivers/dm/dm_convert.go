@@ -8,14 +8,13 @@ package dm
 
 import (
 	"context"
-
 	"time"
 
 	"github.com/gogf/gf/v2/os/gtime"
 )
 
 // ConvertValueForField converts value to the type of the record field.
-func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) {
+func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fieldValue any) (any, error) {
 	switch itemValue := fieldValue.(type) {
 	// dm does not support time.Time, it so here converts it to time string that it supports.
 	case time.Time:

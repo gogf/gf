@@ -37,7 +37,7 @@ func (c *Command) Run(ctx context.Context) {
 
 // RunWithValue calls custom function in os.Args that bound to this command with value output.
 // It exits this process with exit code 1 if any error occurs.
-func (c *Command) RunWithValue(ctx context.Context) (value interface{}) {
+func (c *Command) RunWithValue(ctx context.Context) (value any) {
 	value, err := c.RunWithValueError(ctx)
 	if err != nil {
 		var (
@@ -46,14 +46,14 @@ func (c *Command) RunWithValue(ctx context.Context) (value interface{}) {
 			buffer = bytes.NewBuffer(nil)
 		)
 		if code.Code() == gcode.CodeNotFound.Code() {
-			buffer.WriteString(fmt.Sprintf("ERROR: %s\n", gstr.Trim(err.Error())))
+			fmt.Fprintf(buffer, "ERROR: %s\n", gstr.Trim(err.Error()))
 			if lastCmd, ok := detail.(*Command); ok {
 				lastCmd.PrintTo(buffer)
 			} else {
 				c.PrintTo(buffer)
 			}
 		} else {
-			buffer.WriteString(fmt.Sprintf("%+v\n", err))
+			fmt.Fprintf(buffer, "%+v\n", err)
 		}
 		if gtrace.GetTraceID(ctx) == "" {
 			fmt.Println(buffer.String())
@@ -71,12 +71,12 @@ func (c *Command) RunWithError(ctx context.Context) (err error) {
 }
 
 // RunWithValueError calls custom function in os.Args that bound to this command with value and error output.
-func (c *Command) RunWithValueError(ctx context.Context) (value interface{}, err error) {
+func (c *Command) RunWithValueError(ctx context.Context) (value any, err error) {
 	return c.RunWithSpecificArgs(ctx, os.Args)
 }
 
 // RunWithSpecificArgs calls custom function in specific args that bound to this command with value and error output.
-func (c *Command) RunWithSpecificArgs(ctx context.Context, args []string) (value interface{}, err error) {
+func (c *Command) RunWithSpecificArgs(ctx context.Context, args []string) (value any, err error) {
 	if len(args) == 0 {
 		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "args can not be empty!")
 	}
@@ -85,15 +85,18 @@ func (c *Command) RunWithSpecificArgs(ctx context.Context, args []string) (value
 		return nil, err
 	}
 	parsedArgs := parser.GetArgAll()
-	if len(parsedArgs) == 1 {
-		return c.doRun(ctx, args, parser)
-	}
 
 	// Exclude the root binary name.
 	parsedArgs = parsedArgs[1:]
 
+	// If no args or no sub command, it runs standalone.
+	if len(parsedArgs) == 0 || len(c.commands) == 0 {
+		return c.doRun(ctx, args, parser)
+	}
+
 	// Find the matched command and run it.
-	lastCmd, foundCmd, newCtx := c.searchCommand(ctx, parsedArgs, 0)
+	// It here `fromArgIndex` set to 1 to calculate the argument index in to `newCtx`.
+	lastCmd, foundCmd, newCtx := c.searchCommand(ctx, parsedArgs, 1)
 	if foundCmd != nil {
 		return foundCmd.doRun(newCtx, args, parser)
 	}
@@ -109,7 +112,7 @@ func (c *Command) RunWithSpecificArgs(ctx context.Context, args []string) (value
 	return
 }
 
-func (c *Command) doRun(ctx context.Context, args []string, parser *Parser) (value interface{}, err error) {
+func (c *Command) doRun(ctx context.Context, args []string, parser *Parser) (value any, err error) {
 	defer func() {
 		if exception := recover(); exception != nil {
 			if v, ok := exception.(error); ok && gerror.HasStack(v) {
@@ -128,6 +131,7 @@ func (c *Command) doRun(ctx context.Context, args []string, parser *Parser) (val
 		}
 		return nil, c.defaultHelpFunc(ctx, parser)
 	}
+
 	// OpenTelemetry for command.
 	var (
 		span trace.Span

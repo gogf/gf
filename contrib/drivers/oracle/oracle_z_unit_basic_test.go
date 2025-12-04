@@ -12,11 +12,10 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/util/gconv"
-
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func Test_Tables(t *testing.T) {
@@ -28,7 +27,7 @@ func Test_Tables(t *testing.T) {
 		}
 
 		result, err := db.Tables(ctx)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		for i := 0; i < len(tables); i++ {
 			find := false
@@ -42,7 +41,7 @@ func Test_Tables(t *testing.T) {
 		}
 
 		result, err = db.Tables(ctx, TestSchema)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		for i := 0; i < len(tables); i++ {
 			find := false
 			for j := 0; j < len(result); j++ {
@@ -64,7 +63,7 @@ func Test_Table_Fields(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		createTable("t_user")
 		defer dropTable("t_user")
-		var expect = map[string][]interface{}{
+		var expect = map[string][]any{
 			"ID":          {"INT(10,0)", false},
 			"PASSPORT":    {"VARCHAR2(45)", false},
 			"PASSWORD":    {"CHAR(32)", false},
@@ -77,7 +76,7 @@ func Test_Table_Fields(t *testing.T) {
 		gtest.AssertNE(err, nil)
 
 		res, err := db.TableFields(ctx, "t_user")
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		for k, v := range expect {
 			_, ok := res[k]
@@ -89,7 +88,7 @@ func Test_Table_Fields(t *testing.T) {
 		}
 
 		res, err = db.TableFields(ctx, "t_user", TestSchema)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		for k, v := range expect {
 			_, ok := res[k]
@@ -122,7 +121,7 @@ func Test_Do_Insert(t *testing.T) {
 			"CREATE_TIME": gtime.Now().String(),
 		}
 		_, err := db.Insert(ctx, "t_user", data)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 	})
 
@@ -331,7 +330,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
 		defer dropTable(table)
-		// []interface{}
+		// []any
 		r, err := db.Insert(ctx, table, g.Slice{
 			g.Map{
 				"ID":          2,

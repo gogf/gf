@@ -10,7 +10,7 @@ package dm
 // 但是我发现 DoQuery 中会对 sql 会对 " " 达梦的安全字符 进行 / 转义，最后还是导致达梦无法正常解析
 // However, I found that DoQuery() will perform / escape on sql with " " Dameng's safe characters, which ultimately caused Dameng to be unable to parse normally.
 // But processing in DoFilter() is OK
-// func (d *Driver) DoQuery(ctx context.Context, link gdb.Link, sql string, args ...interface{}) (gdb.Result, error) {
+// func (d *Driver) DoQuery(ctx context.Context, link gdb.Link, sql string, args ...any) (gdb.Result, error) {
 // 	l, r := d.GetChars()
 // 	new := gstr.ReplaceI(sql, "INDEX", l+"INDEX"+r)
 // 	g.Dump("new:", new)

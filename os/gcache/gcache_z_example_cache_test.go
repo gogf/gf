@@ -97,7 +97,7 @@ func ExampleCache_SetIfNotExist() {
 	// true <nil>
 	// false <nil>
 	// [k1]
-	// [<nil>]
+	// []
 }
 
 func ExampleCache_SetMap() {
@@ -105,7 +105,7 @@ func ExampleCache_SetMap() {
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
 
-	// map[interface{}]interface{}
+	// map[any]any
 	data := g.MapAnyAny{
 		"k1": "v1",
 		"k2": "v2",
@@ -352,14 +352,14 @@ func ExampleCache_GetOrSetFunc() {
 
 	// GetOrSetFunc retrieves and returns the value of `key`, or sets `key` with result of function `f`
 	// and returns its result if `key` does not exist in the cache.
-	c.GetOrSetFunc(ctx, "k1", func(ctx context.Context) (value interface{}, err error) {
+	c.GetOrSetFunc(ctx, "k1", func(ctx context.Context) (value any, err error) {
 		return "v1", nil
 	}, 10000*time.Millisecond)
 	v, _ := c.Get(ctx, "k1")
 	fmt.Println(v)
 
 	// If func returns nil, no action is taken
-	c.GetOrSetFunc(ctx, "k2", func(ctx context.Context) (value interface{}, err error) {
+	c.GetOrSetFunc(ctx, "k2", func(ctx context.Context) (value any, err error) {
 		return nil, nil
 	}, 10000*time.Millisecond)
 	v1, _ := c.Get(ctx, "k2")
@@ -375,14 +375,14 @@ func ExampleCache_GetOrSetFuncLock() {
 	c := gcache.New()
 
 	// Modify locking Note that the function `f` should be executed within writing mutex lock for concurrent safety purpose.
-	c.GetOrSetFuncLock(ctx, "k1", func(ctx context.Context) (value interface{}, err error) {
+	c.GetOrSetFuncLock(ctx, "k1", func(ctx context.Context) (value any, err error) {
 		return "v1", nil
 	}, 0)
 	v, _ := c.Get(ctx, "k1")
 	fmt.Println(v)
 
 	// Modification failed
-	c.GetOrSetFuncLock(ctx, "k1", func(ctx context.Context) (value interface{}, err error) {
+	c.GetOrSetFuncLock(ctx, "k1", func(ctx context.Context) (value any, err error) {
 		return "update v1", nil
 	}, 0)
 	v, _ = c.Get(ctx, "k1")
@@ -528,13 +528,13 @@ func ExampleCache_MustGetOrSetFunc() {
 	c := gcache.New()
 
 	// MustGetOrSetFunc acts like GetOrSetFunc, but it panics if any error occurs.
-	c.MustGetOrSetFunc(ctx, "k1", func(ctx context.Context) (value interface{}, err error) {
+	c.MustGetOrSetFunc(ctx, "k1", func(ctx context.Context) (value any, err error) {
 		return "v1", nil
 	}, 10000*time.Millisecond)
 	v := c.MustGet(ctx, "k1")
 	fmt.Println(v)
 
-	c.MustGetOrSetFunc(ctx, "k2", func(ctx context.Context) (value interface{}, err error) {
+	c.MustGetOrSetFunc(ctx, "k2", func(ctx context.Context) (value any, err error) {
 		return nil, nil
 	}, 10000*time.Millisecond)
 	v1 := c.MustGet(ctx, "k2")
@@ -551,14 +551,14 @@ func ExampleCache_MustGetOrSetFuncLock() {
 	c := gcache.New()
 
 	// MustGetOrSetFuncLock acts like GetOrSetFuncLock, but it panics if any error occurs.
-	c.MustGetOrSetFuncLock(ctx, "k1", func(ctx context.Context) (value interface{}, err error) {
+	c.MustGetOrSetFuncLock(ctx, "k1", func(ctx context.Context) (value any, err error) {
 		return "v1", nil
 	}, 0)
 	v := c.MustGet(ctx, "k1")
 	fmt.Println(v)
 
 	// Modification failed
-	c.MustGetOrSetFuncLock(ctx, "k1", func(ctx context.Context) (value interface{}, err error) {
+	c.MustGetOrSetFuncLock(ctx, "k1", func(ctx context.Context) (value any, err error) {
 		return "update v1", nil
 	}, 0)
 	v = c.MustGet(ctx, "k1")

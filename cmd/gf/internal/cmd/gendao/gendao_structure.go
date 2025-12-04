@@ -41,26 +41,53 @@ func generateStructDefinition(ctx context.Context, in generateStructDefinitionIn
 			appendImports = append(appendImports, imports)
 		}
 	}
-	tw := tablewriter.NewWriter(buffer)
-	tw.SetBorder(false)
-	tw.SetRowLine(false)
-	tw.SetAutoWrapText(false)
-	tw.SetColumnSeparator("")
-	tw.AppendBulk(array)
-	tw.Render()
+	table := tablewriter.NewTable(buffer, twRenderer, twConfig)
+	table.Bulk(array)
+	table.Render()
 	stContent := buffer.String()
 	// Let's do this hack of table writer for indent!
 	stContent = gstr.Replace(stContent, "  #", "")
 	stContent = gstr.Replace(stContent, "` ", "`")
 	stContent = gstr.Replace(stContent, "``", "")
 	buffer.Reset()
-	buffer.WriteString(fmt.Sprintf("type %s struct {\n", in.StructName))
+	fmt.Fprintf(buffer, "type %s struct {\n", in.StructName)
 	if in.IsDo {
-		buffer.WriteString(fmt.Sprintf("g.Meta `orm:\"table:%s, do:true\"`\n", in.TableName))
+		fmt.Fprintf(buffer, "g.Meta `orm:\"table:%s, do:true\"`\n", in.TableName)
 	}
 	buffer.WriteString(stContent)
 	buffer.WriteString("}")
 	return buffer.String(), appendImports
+}
+
+func getTypeMappingInfo(
+	ctx context.Context, fieldType string, inTypeMapping map[DBFieldTypeName]CustomAttributeType,
+) (typeNameStr, importStr string) {
+	if typeMapping, ok := inTypeMapping[strings.ToLower(fieldType)]; ok {
+		typeNameStr = typeMapping.Type
+		importStr = typeMapping.Import
+		return
+	}
+	tryTypeMatch, _ := gregex.MatchString(`(.+?)\(([^\(\)]+)\)([\s\)]*)`, fieldType)
+	var (
+		tryTypeName string
+		moreTry     bool
+	)
+	if len(tryTypeMatch) == 4 {
+		tryTypeMatch3, _ := gregex.ReplaceString(`\s+`, "", tryTypeMatch[3])
+		tryTypeName = gstr.Trim(tryTypeMatch[1]) + tryTypeMatch3
+		moreTry = tryTypeMatch3 != ""
+	} else {
+		tryTypeName = gstr.Split(fieldType, " ")[0]
+	}
+	if tryTypeName != "" {
+		if typeMapping, ok := inTypeMapping[strings.ToLower(tryTypeName)]; ok {
+			typeNameStr = typeMapping.Type
+			importStr = typeMapping.Import
+		} else if moreTry {
+			typeNameStr, importStr = getTypeMappingInfo(ctx, tryTypeName, inTypeMapping)
+		}
+	}
+	return
 }
 
 // generateStructFieldDefinition generates and returns the attribute definition for specified field.
@@ -75,21 +102,7 @@ func generateStructFieldDefinition(
 	)
 
 	if in.TypeMapping != nil && len(in.TypeMapping) > 0 {
-		var (
-			tryTypeName string
-		)
-		tryTypeMatch, _ := gregex.MatchString(`(.+?)\((.+)\)`, field.Type)
-		if len(tryTypeMatch) == 3 {
-			tryTypeName = gstr.Trim(tryTypeMatch[1])
-		} else {
-			tryTypeName = gstr.Split(field.Type, " ")[0]
-		}
-		if tryTypeName != "" {
-			if typeMapping, ok := in.TypeMapping[strings.ToLower(tryTypeName)]; ok {
-				localTypeNameStr = typeMapping.Type
-				appendImport = typeMapping.Import
-			}
-		}
+		localTypeNameStr, appendImport = getTypeMappingInfo(ctx, field.Type, in.TypeMapping)
 	}
 
 	if localTypeNameStr == "" {
@@ -99,7 +112,7 @@ func generateStructFieldDefinition(
 		}
 		localTypeNameStr = string(localTypeName)
 		switch localTypeName {
-		case gdb.LocalTypeDate, gdb.LocalTypeDatetime:
+		case gdb.LocalTypeDate, gdb.LocalTypeTime, gdb.LocalTypeDatetime:
 			if in.StdTime {
 				localTypeNameStr = "time.Time"
 			} else {
@@ -140,7 +153,7 @@ func generateStructFieldDefinition(
 	}
 
 	attrLines = []string{
-		"    #" + gstr.CaseCamel(strings.ToLower(newFiledName)),
+		"    #" + formatFieldName(newFiledName, FieldNameCaseCamel),
 		" #" + localTypeNameStr,
 	}
 	attrLines = append(attrLines, fmt.Sprintf(` #%sjson:"%s"`, tagKey, jsonTag))
@@ -165,6 +178,43 @@ func generateStructFieldDefinition(
 		attrLines[k] = v
 	}
 	return attrLines, appendImport
+}
+
+type FieldNameCase string
+
+const (
+	FieldNameCaseCamel      FieldNameCase = "CaseCamel"
+	FieldNameCaseCamelLower FieldNameCase = "CaseCamelLower"
+)
+
+// formatFieldName formats and returns a new field name that is used for golang codes generating.
+func formatFieldName(fieldName string, nameCase FieldNameCase) string {
+	// For normal databases like mysql, pgsql, sqlite,
+	// field/table names of that are in normal case.
+	var newFieldName = fieldName
+	if isAllUpper(fieldName) {
+		// For special databases like dm, oracle,
+		// field/table names of that are in upper case.
+		newFieldName = strings.ToLower(fieldName)
+	}
+	switch nameCase {
+	case FieldNameCaseCamel:
+		return gstr.CaseCamel(newFieldName)
+	case FieldNameCaseCamelLower:
+		return gstr.CaseCamelLower(newFieldName)
+	default:
+		return ""
+	}
+}
+
+// isAllUpper checks and returns whether given `fieldName` all letters are upper case.
+func isAllUpper(fieldName string) bool {
+	for _, b := range fieldName {
+		if b >= 'a' && b <= 'z' {
+			return false
+		}
+	}
+	return true
 }
 
 // formatComment formats the comment string to fit the golang code without any lines.

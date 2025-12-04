@@ -50,9 +50,7 @@ func (f *Field) TagStr() string {
 
 // TagMap returns all the tag of the field along with its value string as map.
 func (f *Field) TagMap() map[string]string {
-	var (
-		data = ParseTag(f.TagStr())
-	)
+	data := ParseTag(f.TagStr())
 	for k, v := range data {
 		data[k] = utils.StripSlashes(gtag.Parse(v))
 	}
@@ -88,7 +86,7 @@ func (f *Field) OriginalKind() reflect.Kind {
 		reflectType = f.Value.Type()
 		reflectKind = reflectType.Kind()
 	)
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectType = reflectType.Elem()
 		reflectKind = reflectType.Kind()
 	}
@@ -104,7 +102,7 @@ func (f *Field) OriginalValue() reflect.Value {
 		reflectKind  = reflectType.Kind()
 	)
 
-	for reflectKind == reflect.Ptr && !f.IsNil() {
+	for reflectKind == reflect.Pointer && !f.IsNil() {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Type().Kind()
 	}

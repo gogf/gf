@@ -21,19 +21,27 @@ import (
 	"github.com/gogf/gf/v2/os/gcfg"
 )
 
+var (
+	// Compile-time checking for interface implementation.
+	_ gcfg.Adapter        = (*Client)(nil)
+	_ gcfg.WatcherAdapter = (*Client)(nil)
+)
+
 // Config is the configuration object for nacos client.
 type Config struct {
-	ServerConfigs []constant.ServerConfig `v:"required"` // See constant.ServerConfig
-	ClientConfig  constant.ClientConfig   `v:"required"` // See constant.ClientConfig
-	ConfigParam   vo.ConfigParam          `v:"required"` // See vo.ConfigParam
-	Watch         bool                    // Watch watches remote configuration updates, which updates local configuration in memory immediately when remote configuration changes.
+	ServerConfigs  []constant.ServerConfig                     `v:"required"` // See constant.ServerConfig
+	ClientConfig   constant.ClientConfig                       `v:"required"` // See constant.ClientConfig
+	ConfigParam    vo.ConfigParam                              `v:"required"` // See vo.ConfigParam
+	Watch          bool                                        // Watch watches remote configuration updates, which updates local configuration in memory immediately when remote configuration changes.
+	OnConfigChange func(namespace, group, dataId, data string) // Configure change callback function
 }
 
 // Client implements gcfg.Adapter implementing using nacos service.
 type Client struct {
-	config Config                      // Config object when created.
-	client config_client.IConfigClient // Nacos config client.
-	value  *g.Var                      // Configmap content cached. It is `*gjson.Json` value internally.
+	config   Config                      // Config object when created.
+	client   config_client.IConfigClient // Nacos config client.
+	value    *g.Var                      // Configmap content cached. It is `*gjson.Json` value internally.
+	watchers *gcfg.WatcherRegistry       // Watchers for watching file changes.
 }
 
 // New creates and returns gcfg.Adapter implementing using nacos service.
@@ -45,11 +53,12 @@ func New(ctx context.Context, config Config) (adapter gcfg.Adapter, err error) {
 	}
 
 	client := &Client{
-		config: config,
-		value:  g.NewVar(nil, true),
+		config:   config,
+		value:    g.NewVar(nil, true),
+		watchers: gcfg.NewWatcherRegistry(),
 	}
 
-	client.client, err = clients.CreateConfigClient(map[string]interface{}{
+	client.client, err = clients.CreateConfigClient(map[string]any{
 		"serverConfigs": config.ServerConfigs,
 		"clientConfig":  config.ClientConfig,
 	})
@@ -82,7 +91,7 @@ func (c *Client) Available(ctx context.Context, resource ...string) (ok bool) {
 // Pattern like:
 // "x.y.z" for map item.
 // "x.0.y" for slice item.
-func (c *Client) Get(ctx context.Context, pattern string) (value interface{}, err error) {
+func (c *Client) Get(ctx context.Context, pattern string) (value any, err error) {
 	if c.value.IsNil() {
 		if err = c.updateLocalValue(); err != nil {
 			return nil, err
@@ -94,7 +103,7 @@ func (c *Client) Get(ctx context.Context, pattern string) (value interface{}, er
 // Data retrieves and returns all configuration data in current resource as map.
 // Note that this function may lead lots of memory usage if configuration data is too large,
 // you can implement this function if necessary.
-func (c *Client) Data(ctx context.Context) (data map[string]interface{}, err error) {
+func (c *Client) Data(ctx context.Context) (data map[string]any, err error) {
 	if c.value.IsNil() {
 		if err = c.updateLocalValue(); err != nil {
 			return nil, err
@@ -114,7 +123,7 @@ func (c *Client) updateLocalValue() (err error) {
 
 func (c *Client) doUpdate(content string) (err error) {
 	var j *gjson.Json
-	if j, err = gjson.LoadContent(content); err != nil {
+	if j, err = gjson.LoadContent([]byte(content)); err != nil {
 		return gerror.Wrap(err, `parse config map item from nacos failed`)
 	}
 	c.value.Set(j)
@@ -125,9 +134,14 @@ func (c *Client) addWatcher() error {
 	if !c.config.Watch {
 		return nil
 	}
-
 	c.config.ConfigParam.OnChange = func(namespace, group, dataId, data string) {
-		c.doUpdate(data)
+		_ = c.doUpdate(data)
+		if c.config.OnConfigChange != nil {
+			go c.config.OnConfigChange(namespace, group, dataId, data)
+		}
+		adapterCtx := NewAdapterCtx().WithOperation(gcfg.OperationUpdate).WithNamespace(namespace).
+			WithGroup(group).WithDataId(dataId).WithContent(data)
+		c.notifyWatchers(adapterCtx.Ctx)
 	}
 
 	if err := c.client.ListenConfig(c.config.ConfigParam); err != nil {
@@ -135,4 +149,24 @@ func (c *Client) addWatcher() error {
 	}
 
 	return nil
+}
+
+// AddWatcher adds a watcher for the specified configuration file.
+func (c *Client) AddWatcher(name string, f func(ctx context.Context)) {
+	c.watchers.Add(name, f)
+}
+
+// RemoveWatcher removes the watcher for the specified configuration file.
+func (c *Client) RemoveWatcher(name string) {
+	c.watchers.Remove(name)
+}
+
+// GetWatcherNames returns all watcher names.
+func (c *Client) GetWatcherNames() []string {
+	return c.watchers.GetNames()
+}
+
+// notifyWatchers notifies all watchers.
+func (c *Client) notifyWatchers(ctx context.Context) {
+	c.watchers.Notify(ctx)
 }

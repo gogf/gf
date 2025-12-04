@@ -1,7 +1,7 @@
 // Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with gm file,
+// If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
 package gmap_test
@@ -22,7 +22,7 @@ func ExampleListMap_Iterator() {
 	}
 
 	var totalKey, totalValue int
-	m.Iterator(func(k interface{}, v interface{}) bool {
+	m.Iterator(func(k any, v any) bool {
 		totalKey += k.(int)
 		totalValue += v.(int)
 
@@ -44,7 +44,7 @@ func ExampleListMap_IteratorAsc() {
 	}
 
 	var totalKey, totalValue int
-	m.IteratorAsc(func(k interface{}, v interface{}) bool {
+	m.IteratorAsc(func(k any, v any) bool {
 		totalKey += k.(int)
 		totalValue += v.(int)
 
@@ -66,7 +66,7 @@ func ExampleListMap_IteratorDesc() {
 	}
 
 	var totalKey, totalValue int
-	m.IteratorDesc(func(k interface{}, v interface{}) bool {
+	m.IteratorDesc(func(k any, v any) bool {
 		totalKey += k.(int)
 		totalValue += v.(int)
 
@@ -188,7 +188,7 @@ func ExampleListMap_Set() {
 func ExampleListMap_Sets() {
 	m := gmap.NewListMap()
 
-	addMap := make(map[interface{}]interface{})
+	addMap := make(map[any]any)
 	addMap["key1"] = "val1"
 	addMap["key2"] = "val2"
 	addMap["key3"] = "val3"
@@ -291,10 +291,10 @@ func ExampleListMap_GetOrSetFunc() {
 	m := gmap.NewListMap()
 	m.Set("key1", "val1")
 
-	fmt.Println(m.GetOrSetFunc("key1", func() interface{} {
+	fmt.Println(m.GetOrSetFunc("key1", func() any {
 		return "NotExistValue"
 	}))
-	fmt.Println(m.GetOrSetFunc("key2", func() interface{} {
+	fmt.Println(m.GetOrSetFunc("key2", func() any {
 		return "NotExistValue"
 	}))
 
@@ -307,10 +307,10 @@ func ExampleListMap_GetOrSetFuncLock() {
 	m := gmap.NewListMap()
 	m.Set("key1", "val1")
 
-	fmt.Println(m.GetOrSetFuncLock("key1", func() interface{} {
+	fmt.Println(m.GetOrSetFuncLock("key1", func() any {
 		return "NotExistValue"
 	}))
-	fmt.Println(m.GetOrSetFuncLock("key2", func() interface{} {
+	fmt.Println(m.GetOrSetFuncLock("key2", func() any {
 		return "NotExistValue"
 	}))
 
@@ -347,10 +347,10 @@ func ExampleListMap_GetVarOrSetFunc() {
 	m := gmap.NewListMap()
 	m.Set("key1", "val1")
 
-	fmt.Println(m.GetVarOrSetFunc("key1", func() interface{} {
+	fmt.Println(m.GetVarOrSetFunc("key1", func() any {
 		return "NotExistValue"
 	}))
-	fmt.Println(m.GetVarOrSetFunc("key2", func() interface{} {
+	fmt.Println(m.GetVarOrSetFunc("key2", func() any {
 		return "NotExistValue"
 	}))
 
@@ -363,10 +363,10 @@ func ExampleListMap_GetVarOrSetFuncLock() {
 	m := gmap.NewListMap()
 	m.Set("key1", "val1")
 
-	fmt.Println(m.GetVarOrSetFuncLock("key1", func() interface{} {
+	fmt.Println(m.GetVarOrSetFuncLock("key1", func() any {
 		return "NotExistValue"
 	}))
-	fmt.Println(m.GetVarOrSetFuncLock("key2", func() interface{} {
+	fmt.Println(m.GetVarOrSetFuncLock("key2", func() any {
 		return "NotExistValue"
 	}))
 
@@ -389,10 +389,10 @@ func ExampleListMap_SetIfNotExist() {
 
 func ExampleListMap_SetIfNotExistFunc() {
 	var m gmap.ListMap
-	fmt.Println(m.SetIfNotExistFunc("k1", func() interface{} {
+	fmt.Println(m.SetIfNotExistFunc("k1", func() any {
 		return "v1"
 	}))
-	fmt.Println(m.SetIfNotExistFunc("k1", func() interface{} {
+	fmt.Println(m.SetIfNotExistFunc("k1", func() any {
 		return "v2"
 	}))
 	fmt.Println(m.Map())
@@ -405,10 +405,10 @@ func ExampleListMap_SetIfNotExistFunc() {
 
 func ExampleListMap_SetIfNotExistFuncLock() {
 	var m gmap.ListMap
-	fmt.Println(m.SetIfNotExistFuncLock("k1", func() interface{} {
+	fmt.Println(m.SetIfNotExistFuncLock("k1", func() any {
 		return "v1"
 	}))
-	fmt.Println(m.SetIfNotExistFuncLock("k1", func() interface{} {
+	fmt.Println(m.SetIfNotExistFuncLock("k1", func() any {
 		return "v2"
 	}))
 	fmt.Println(m.Map())
@@ -442,7 +442,7 @@ func ExampleListMap_Removes() {
 		"k4": "v4",
 	})
 
-	removeList := make([]interface{}, 2)
+	removeList := make([]any, 2)
 	removeList = append(removeList, "k1")
 	removeList = append(removeList, "k2")
 

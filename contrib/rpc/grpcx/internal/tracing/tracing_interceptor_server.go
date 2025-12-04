@@ -19,16 +19,16 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/grpcctx"
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/utils"
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/util/gconv"
+
+	"github.com/gogf/gf/contrib/rpc/grpcx/v2/internal/grpcctx"
 )
 
 // UnaryServerInterceptor returns a grpc.UnaryServerInterceptor suitable
 // for usage in a grpc.NewServer call.
-func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func UnaryServerInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 	tracer := otel.GetTracerProvider().Tracer(
 		tracingInstrumentGrpcServer,
 		trace.WithInstrumentationVersion(gf.VERSION),
@@ -58,24 +58,9 @@ func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.Una
 	span.AddEvent(tracingEventGrpcRequest, trace.WithAttributes(
 		attribute.String(tracingEventGrpcRequestBaggage, gconv.String(gtrace.GetBaggageMap(ctx))),
 		attribute.String(tracingEventGrpcMetadataIncoming, gconv.String(grpcctx.Ctx{}.IncomingMap(ctx))),
-		attribute.String(
-			tracingEventGrpcRequestMessage,
-			utils.MarshalMessageToJsonStringForTracing(
-				req, "Request", tracingMaxContentLogSize,
-			),
-		),
 	))
 
 	res, err := handler(ctx, req)
-
-	span.AddEvent(tracingEventGrpcResponse, trace.WithAttributes(
-		attribute.String(
-			tracingEventGrpcResponseMessage,
-			utils.MarshalMessageToJsonStringForTracing(
-				res, "Response", tracingMaxContentLogSize,
-			),
-		),
-	))
 
 	if err != nil {
 		s, _ := status.FromError(err)
@@ -90,7 +75,7 @@ func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.Una
 
 // StreamServerInterceptor returns a grpc.StreamServerInterceptor suitable
 // for use in a grpc.NewServer call.
-func StreamServerInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+func StreamServerInterceptor(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 	tracer := otel.GetTracerProvider().Tracer(
 		tracingInstrumentGrpcServer,
 		trace.WithInstrumentationVersion(gf.VERSION),

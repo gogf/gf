@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/contrib/sdk/httpclient/v2"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
@@ -21,6 +20,8 @@ import (
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
+
+	"github.com/gogf/gf/contrib/sdk/httpclient/v2"
 )
 
 func Test_HttpClient_With_Default_Handler(t *testing.T) {
@@ -65,7 +66,7 @@ func Test_HttpClient_With_Default_Handler(t *testing.T) {
 
 type CustomHandler struct{}
 
-func (c CustomHandler) HandleResponse(ctx context.Context, res *gclient.Response, out interface{}) error {
+func (c CustomHandler) HandleResponse(ctx context.Context, res *gclient.Response, out any) error {
 	defer res.Close()
 	if pointer, ok := out.(*string); ok {
 		*pointer = res.ReadAllString()

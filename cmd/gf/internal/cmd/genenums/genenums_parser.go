@@ -9,6 +9,7 @@ package genenums
 import (
 	"go/constant"
 	"go/types"
+
 	"golang.org/x/tools/go/packages"
 
 	"github.com/gogf/gf/v2/encoding/gjson"
@@ -112,12 +113,12 @@ func (p *EnumsParser) ParsePackage(pkg *packages.Package) {
 }
 
 func (p *EnumsParser) Export() string {
-	var typeEnumMap = make(map[string][]interface{})
+	var typeEnumMap = make(map[string][]any)
 	for _, enum := range p.enums {
 		if typeEnumMap[enum.Type] == nil {
-			typeEnumMap[enum.Type] = make([]interface{}, 0)
+			typeEnumMap[enum.Type] = make([]any, 0)
 		}
-		var value interface{}
+		var value any
 		switch enum.Kind {
 		case constant.Int:
 			value = gconv.Int64(enum.Value)

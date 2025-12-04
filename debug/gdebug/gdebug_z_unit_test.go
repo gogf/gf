@@ -1,3 +1,9 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gdebug_test
 
 import (
@@ -66,7 +72,7 @@ func Test_PrintStack(t *testing.T) {
 
 func Test_GoroutineId(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.AssertGT(gdebug.GoroutineId(), 0)
+		t.AssertGT(gdebug.GoroutineID(), 0)
 	})
 }
 

@@ -12,14 +12,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/util/gconv"
-
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gutil"
 )
@@ -27,30 +26,31 @@ import (
 func Test_Page(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	// db.SetDebug(true)
-	result, err := db.Model(table).Page(1, 2).Order("id").All()
-	gtest.Assert(err, nil)
-	fmt.Println("page:1--------", result)
-	gtest.Assert(len(result), 2)
-	gtest.Assert(result[0]["ID"], 1)
-	gtest.Assert(result[1]["ID"], 2)
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Page(1, 2).Order("id").All()
+		t.AssertNil(err)
+		// fmt.Println("page:1--------", result)
+		gtest.Assert(len(result), 2)
+		gtest.Assert(result[0]["ID"], 1)
+		gtest.Assert(result[1]["ID"], 2)
 
-	result, err = db.Model(table).Page(2, 2).Order("id").All()
-	gtest.Assert(err, nil)
-	fmt.Println("page: 2--------", result)
-	gtest.Assert(len(result), 2)
-	gtest.Assert(result[0]["ID"], 3)
-	gtest.Assert(result[1]["ID"], 4)
+		result, err = db.Model(table).Page(2, 2).Order("id").All()
+		t.AssertNil(err)
+		// fmt.Println("page: 2--------", result)
+		gtest.Assert(len(result), 2)
+		gtest.Assert(result[0]["ID"], 3)
+		gtest.Assert(result[1]["ID"], 4)
 
-	result, err = db.Model(table).Page(3, 2).Order("id").All()
-	gtest.Assert(err, nil)
-	fmt.Println("page:3 --------", result)
-	gtest.Assert(len(result), 2)
-	gtest.Assert(result[0]["ID"], 5)
+		result, err = db.Model(table).Page(3, 2).Order("id").All()
+		t.AssertNil(err)
+		// fmt.Println("page:3 --------", result)
+		gtest.Assert(len(result), 2)
+		gtest.Assert(result[0]["ID"], 5)
 
-	result, err = db.Model(table).Page(2, 3).All()
-	gtest.Assert(err, nil)
-	gtest.Assert(len(result), 3)
+		result, err = db.Model(table).Page(2, 3).All()
+		t.AssertNil(err)
+		gtest.Assert(len(result), 3)
+	})
 }
 
 func Test_Model_Insert(t *testing.T) {
@@ -61,7 +61,6 @@ func Test_Model_Insert(t *testing.T) {
 		user := db.Model(table)
 		result, err := user.Data(g.Map{
 			"id":          1,
-			"uid":         1,
 			"passport":    "t1",
 			"password":    "25d55ad283aa400af464c76d713c07ad",
 			"nickname":    "name_1",
@@ -71,7 +70,6 @@ func Test_Model_Insert(t *testing.T) {
 
 		result, err = db.Model(table).Data(g.Map{
 			"id":          "2",
-			"uid":         "2",
 			"passport":    "t2",
 			"password":    "25d55ad283aa400af464c76d713c07ad",
 			"nickname":    "name_2",
@@ -81,7 +79,6 @@ func Test_Model_Insert(t *testing.T) {
 
 		type User struct {
 			Id         int         `gconv:"id"`
-			Uid        int         `gconv:"uid"`
 			Passport   string      `json:"passport"`
 			Password   string      `gconv:"password"`
 			Nickname   string      `gconv:"nickname"`
@@ -90,7 +87,6 @@ func Test_Model_Insert(t *testing.T) {
 		// Model inserting.
 		result, err = db.Model(table).Data(User{
 			Id:       3,
-			Uid:      3,
 			Passport: "t3",
 			Password: "25d55ad283aa400af464c76d713c07ad",
 			Nickname: "name_3",
@@ -103,7 +99,6 @@ func Test_Model_Insert(t *testing.T) {
 
 		result, err = db.Model(table).Data(&User{
 			Id:         4,
-			Uid:        4,
 			Passport:   "t4",
 			Password:   "25d55ad283aa400af464c76d713c07ad",
 			Nickname:   "T4",
@@ -213,7 +208,6 @@ func Test_Model_BatchInsertWithArrayStruct(t *testing.T) {
 		for i := 1; i <= TableSize; i++ {
 			array.Append(g.Map{
 				"id":          i,
-				"uid":         i,
 				"passport":    fmt.Sprintf("t%d", i),
 				"password":    "25d55ad283aa400af464c76d713c07ad",
 				"nickname":    fmt.Sprintf("name_%d", i),
@@ -235,7 +229,6 @@ func Test_Model_Batch(t *testing.T) {
 		_, err := db.Model(table).Data(g.List{
 			{
 				"id":          2,
-				"uid":         2,
 				"passport":    "t2",
 				"password":    "25d55ad283aa400af464c76d713c07ad",
 				"nickname":    "name_2",
@@ -243,7 +236,6 @@ func Test_Model_Batch(t *testing.T) {
 			},
 			{
 				"id":          3,
-				"uid":         3,
 				"passport":    "t3",
 				"password":    "25d55ad283aa400af464c76d713c07ad",
 				"nickname":    "name_3",
@@ -519,7 +511,19 @@ func Test_Model_Count(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(count, int64(TableSize))
 	})
+}
 
+func Test_Model_Exist(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		exist, err := db.Model(table).Exist()
+		t.AssertNil(err)
+		t.Assert(exist, TableSize > 0)
+		exist, err = db.Model(table).Where("id", -1).Exist()
+		t.AssertNil(err)
+		t.Assert(exist, false)
+	})
 }
 
 func Test_Model_Select(t *testing.T) {
@@ -1595,7 +1599,6 @@ func Test_Model_Option_Where(t *testing.T) {
 		n, _ := r.RowsAffected()
 		t.Assert(n, TableSize)
 	})
-	return
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitTable()
 		defer dropTable(table)
@@ -2663,5 +2666,84 @@ func Test_Model_Replace(t *testing.T) {
 			"create_time": "2018-10-24 10:00:00",
 		}).Replace()
 		t.Assert(err, "Replace operation is not supported by mssql driver")
+	})
+}
+
+// Test_Model_Insert_RowsAffected tests the RowsAffected result for INSERT operations.
+// This test ensures that the rowsAffected value is correctly returned from the database,
+// especially for batch INSERT statements.
+func Test_Model_Insert_RowsAffected(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	// Test single insert - rowsAffected should be 1
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.Map{
+			"id":          1,
+			"passport":    "user_1",
+			"password":    "pass_1",
+			"nickname":    "name_1",
+			"create_time": gtime.Now().String(),
+		}).Insert()
+		t.AssertNil(err)
+
+		n, err := result.RowsAffected()
+		t.AssertNil(err)
+		t.Assert(n, 1)
+	})
+
+	// Test batch insert with 3 rows - rowsAffected should be 3
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.List{
+			{
+				"id":          2,
+				"passport":    "user_2",
+				"password":    "pass_2",
+				"nickname":    "name_2",
+				"create_time": gtime.Now().String(),
+			},
+			{
+				"id":          3,
+				"passport":    "user_3",
+				"password":    "pass_3",
+				"nickname":    "name_3",
+				"create_time": gtime.Now().String(),
+			},
+			{
+				"id":          4,
+				"passport":    "user_4",
+				"password":    "pass_4",
+				"nickname":    "name_4",
+				"create_time": gtime.Now().String(),
+			},
+		}).Insert()
+		t.AssertNil(err)
+
+		n, err := result.RowsAffected()
+		t.AssertNil(err)
+		t.Assert(n, 3)
+	})
+
+	// Test batch insert with 5 rows - rowsAffected should be 5
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.List{
+			{"id": 5, "passport": "user_5", "password": "pass_5", "nickname": "name_5", "create_time": gtime.Now().String()},
+			{"id": 6, "passport": "user_6", "password": "pass_6", "nickname": "name_6", "create_time": gtime.Now().String()},
+			{"id": 7, "passport": "user_7", "password": "pass_7", "nickname": "name_7", "create_time": gtime.Now().String()},
+			{"id": 8, "passport": "user_8", "password": "pass_8", "nickname": "name_8", "create_time": gtime.Now().String()},
+			{"id": 9, "passport": "user_9", "password": "pass_9", "nickname": "name_9", "create_time": gtime.Now().String()},
+		}).Insert()
+		t.AssertNil(err)
+
+		n, err := result.RowsAffected()
+		t.AssertNil(err)
+		t.Assert(n, 5)
+	})
+
+	// Verify total count in table
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 9)
 	})
 }

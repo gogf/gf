@@ -21,10 +21,10 @@ import (
 // Validator is the validation manager for chaining operations.
 type Validator struct {
 	i18nManager                       *gi18n.Manager      // I18n manager for error message translation.
-	data                              interface{}         // Validation data, which can be a map, struct or a certain value to be validated.
-	assoc                             interface{}         // Associated data, which is usually a map, for union validation.
-	rules                             interface{}         // Custom validation data.
-	messages                          interface{}         // Custom validation error messages, which can be string or type of CustomMsg.
+	data                              any                 // Validation data, which can be a map, struct or a certain value to be validated.
+	assoc                             any                 // Associated data, which is usually a map, for union validation.
+	rules                             any                 // Custom validation data.
+	messages                          any                 // Custom validation error messages, which can be string or type of CustomMsg.
 	ruleFuncMap                       map[string]RuleFunc // ruleFuncMap stores custom rule functions for current Validator.
 	useAssocInsteadOfObjectAttributes bool                // Using `assoc` as its validation source instead of attribute values from `Object`.
 	bail                              bool                // Stop validation after the first validation error.
@@ -85,7 +85,7 @@ func (v *Validator) Run(ctx context.Context) Error {
 	})
 }
 
-// Clone creates and returns a new Validator which is a shallow copy of current one.
+// Clone creates and returns a new Validator, which is a shallow copy of the current one.
 func (v *Validator) Clone() *Validator {
 	newValidator := New()
 	*newValidator = *v
@@ -125,7 +125,7 @@ func (v *Validator) Ci() *Validator {
 }
 
 // Data is a chaining operation function, which sets validation data for current operation.
-func (v *Validator) Data(data interface{}) *Validator {
+func (v *Validator) Data(data any) *Validator {
 	if data == nil {
 		return v
 	}
@@ -137,7 +137,7 @@ func (v *Validator) Data(data interface{}) *Validator {
 // Assoc is a chaining operation function, which sets associated validation data for current operation.
 // The optional parameter `assoc` is usually type of map, which specifies the parameter map used in union validation.
 // Calling this function with `assoc` also sets `useAssocInsteadOfObjectAttributes` true
-func (v *Validator) Assoc(assoc interface{}) *Validator {
+func (v *Validator) Assoc(assoc any) *Validator {
 	if assoc == nil {
 		return v
 	}
@@ -148,7 +148,7 @@ func (v *Validator) Assoc(assoc interface{}) *Validator {
 }
 
 // Rules is a chaining operation function, which sets custom validation rules for current operation.
-func (v *Validator) Rules(rules interface{}) *Validator {
+func (v *Validator) Rules(rules any) *Validator {
 	if rules == nil {
 		return v
 	}
@@ -160,7 +160,7 @@ func (v *Validator) Rules(rules interface{}) *Validator {
 // Messages is a chaining operation function, which sets custom error messages for current operation.
 // The parameter `messages` can be type of string/[]string/map[string]string. It supports sequence in error result
 // if `rules` is type of []string.
-func (v *Validator) Messages(messages interface{}) *Validator {
+func (v *Validator) Messages(messages any) *Validator {
 	if messages == nil {
 		return v
 	}

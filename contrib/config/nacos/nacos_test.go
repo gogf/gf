@@ -7,16 +7,22 @@
 package nacos_test
 
 import (
+	"context"
+	"net/url"
 	"testing"
+	"time"
 
 	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 
-	"github.com/gogf/gf/contrib/config/nacos/v2"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
+
+	"github.com/gogf/gf/contrib/config/nacos/v2"
 )
 
 var (
@@ -33,6 +39,7 @@ var (
 		DataId: "config.toml",
 		Group:  "test",
 	}
+	configPublishUrl = "http://localhost:8848/nacos/v2/cs/config?type=toml&namespaceId=public&group=test&dataId=config.toml"
 )
 
 func TestNacos(t *testing.T) {
@@ -47,7 +54,6 @@ func TestNacos(t *testing.T) {
 		config.SetAdapter(adapter)
 
 		t.Assert(config.Available(ctx), true)
-
 		v, err := config.Get(ctx, `server.address`)
 		t.AssertNil(err)
 		t.Assert(v.String(), ":8000")
@@ -55,5 +61,56 @@ func TestNacos(t *testing.T) {
 		m, err := config.Data(ctx)
 		t.AssertNil(err)
 		t.AssertGT(len(m), 0)
+	})
+}
+
+func TestNacosOnConfigChangeFunc(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		adapter, _ := nacos.New(ctx, nacos.Config{
+			ServerConfigs: []constant.ServerConfig{serverConfig},
+			ClientConfig:  clientConfig,
+			ConfigParam:   configParam,
+			Watch:         true,
+			OnConfigChange: func(namespace, group, dataId, data string) {
+				t.Assert(namespace, "public")
+				t.Assert(group, "test")
+				t.Assert(dataId, "config.toml")
+				t.Assert(g.Cfg().MustGet(gctx.GetInitCtx(), "app.name").String(), "gf")
+			},
+		})
+		if watcherAdapter, ok := adapter.(gcfg.WatcherAdapter); ok {
+			watcherAdapter.AddWatcher("test", func(ctx context.Context) {
+				adapterCtx := nacos.GetAdapterCtx(ctx)
+				t.Assert(adapterCtx.GetNamespace(), "public")
+				t.Assert(adapterCtx.GetGroup(), "test")
+				t.Assert(adapterCtx.GetDataId(), "config.toml")
+				t.Assert(adapterCtx.GetOperation(), gcfg.OperationUpdate)
+				t.Assert(g.Cfg().MustGet(gctx.GetInitCtx(), "app.name").String(), "gf")
+			})
+		}
+		g.Cfg().SetAdapter(adapter)
+		t.Assert(g.Cfg().Available(ctx), true)
+		appName, err := g.Cfg().Get(ctx, "app.name")
+		t.AssertNil(err)
+		t.Assert(appName.String(), "")
+		c, err := g.Cfg().Data(ctx)
+		t.AssertNil(err)
+		j := gjson.New(c)
+		err = j.Set("app.name", "gf")
+		t.AssertNil(err)
+		res, err := j.ToTomlString()
+		t.AssertNil(err)
+		_, err = g.Client().Post(ctx, configPublishUrl+"&content="+url.QueryEscape(res))
+		t.AssertNil(err)
+		time.Sleep(5 * time.Second)
+		err = j.Remove("app")
+		t.AssertNil(err)
+		res2, err := j.ToTomlString()
+		t.AssertNil(err)
+		_, err = g.Client().Post(ctx, configPublishUrl+"&content="+url.QueryEscape(res2))
+		t.AssertNil(err)
+		if watcherAdapter, ok := adapter.(gcfg.WatcherAdapter); ok {
+			t.Assert(watcherAdapter.GetWatcherNames()[0], "test")
+		}
 	})
 }

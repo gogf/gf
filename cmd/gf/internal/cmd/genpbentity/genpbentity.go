@@ -11,13 +11,15 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"strings"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/renderer"
+	"github.com/olekukonko/tablewriter/tw"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -27,22 +29,32 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gtag"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
 type (
 	CGenPbEntity      struct{}
 	CGenPbEntityInput struct {
 		g.Meta            `name:"pbentity" config:"{CGenPbEntityConfig}" brief:"{CGenPbEntityBrief}" eg:"{CGenPbEntityEg}" ad:"{CGenPbEntityAd}"`
-		Path              string `name:"path"              short:"p"  brief:"{CGenPbEntityBriefPath}" d:"manifest/protobuf/pbentity"`
-		Package           string `name:"package"           short:"k"  brief:"{CGenPbEntityBriefPackage}"`
-		Link              string `name:"link"              short:"l"  brief:"{CGenPbEntityBriefLink}"`
-		Tables            string `name:"tables"            short:"t"  brief:"{CGenPbEntityBriefTables}"`
-		Prefix            string `name:"prefix"            short:"f"  brief:"{CGenPbEntityBriefPrefix}"`
-		RemovePrefix      string `name:"removePrefix"      short:"r"  brief:"{CGenPbEntityBriefRemovePrefix}"`
-		RemoveFieldPrefix string `name:"removeFieldPrefix" short:"rf" brief:"{CGenPbEntityBriefRemoveFieldPrefix}"`
-		NameCase          string `name:"nameCase"          short:"n"  brief:"{CGenPbEntityBriefNameCase}" d:"Camel"`
-		JsonCase          string `name:"jsonCase"          short:"j"  brief:"{CGenPbEntityBriefJsonCase}" d:"none"`
-		Option            string `name:"option"            short:"o"  brief:"{CGenPbEntityBriefOption}"`
+		Path              string   `name:"path"              short:"p"  brief:"{CGenPbEntityBriefPath}" d:"manifest/protobuf/pbentity"`
+		Package           string   `name:"package"           short:"k"  brief:"{CGenPbEntityBriefPackage}"`
+		GoPackage         string   `name:"goPackage"           short:"g"  brief:"{CGenPbEntityBriefGoPackage}"`
+		Link              string   `name:"link"              short:"l"  brief:"{CGenPbEntityBriefLink}"`
+		Tables            string   `name:"tables"            short:"t"  brief:"{CGenPbEntityBriefTables}"`
+		Prefix            string   `name:"prefix"            short:"f"  brief:"{CGenPbEntityBriefPrefix}"`
+		RemovePrefix      string   `name:"removePrefix"      short:"r"  brief:"{CGenPbEntityBriefRemovePrefix}"`
+		RemoveFieldPrefix string   `name:"removeFieldPrefix" short:"rf" brief:"{CGenPbEntityBriefRemoveFieldPrefix}"`
+		TablesEx          string   `name:"tablesEx"          short:"x"  brief:"{CGenDaoBriefTablesEx}"`
+		NameCase          string   `name:"nameCase"          short:"n"  brief:"{CGenPbEntityBriefNameCase}" d:"Camel"`
+		JsonCase          string   `name:"jsonCase"          short:"j"  brief:"{CGenPbEntityBriefJsonCase}" d:"none"`
+		Option            string   `name:"option"            short:"o"  brief:"{CGenPbEntityBriefOption}"`
+		ShardingPattern   []string `name:"shardingPattern"     short:"sp" brief:"{CGenDaoBriefShardingPattern}"`
+
+		TypeMapping  map[DBFieldTypeName]CustomAttributeType  `name:"typeMapping"  short:"y"  brief:"{CGenPbEntityBriefTypeMapping}"  orphan:"true"`
+		FieldMapping map[DBTableFieldName]CustomAttributeType `name:"fieldMapping" short:"fm" brief:"{CGenPbEntityBriefFieldMapping}" orphan:"true"`
 	}
 	CGenPbEntityOutput struct{}
 
@@ -51,6 +63,13 @@ type (
 		DB           gdb.DB
 		TableName    string // TableName specifies the table name of the table.
 		NewTableName string // NewTableName specifies the prefix-stripped name of the table.
+	}
+
+	DBTableFieldName    = string
+	DBFieldTypeName     = string
+	CustomAttributeType struct {
+		Type   string `brief:"custom attribute type name"`
+		Import string `brief:"custom import for this type"`
 	}
 )
 
@@ -69,7 +88,7 @@ gf gen pbentity -r user_
 	CGenPbEntityAd = `
 CONFIGURATION SUPPORT
     Options are also supported by configuration file.
-    It's suggested using configuration file instead of command line arguments making producing. 
+    It's suggested using configuration file instead of command line arguments making producing.
     The configuration node name is "gf.gen.pbentity", which also supports multiple databases, for example(config.yaml):
     gfcli:
       gen:
@@ -88,15 +107,25 @@ CONFIGURATION SUPPORT
 			  option go_package    = "protobuf/demos";
 			  option java_package  = "protobuf/demos";
 			  option php_namespace = "protobuf/demos";
+            typeMapping:
+              json:
+                type: google.protobuf.Value
+                import: google/protobuf/struct.proto
+              jsonb:
+                type: google.protobuf.Value
+                import: google/protobuf/struct.proto
 `
 	CGenPbEntityBriefPath              = `directory path for generated files storing`
 	CGenPbEntityBriefPackage           = `package path for all entity proto files`
+	CGenPbEntityBriefGoPackage         = `go package path for all entity proto files`
 	CGenPbEntityBriefLink              = `database configuration, the same as the ORM configuration of GoFrame`
 	CGenPbEntityBriefTables            = `generate models only for given tables, multiple table names separated with ','`
 	CGenPbEntityBriefPrefix            = `add specified prefix for all entity names and entity proto files`
 	CGenPbEntityBriefRemovePrefix      = `remove specified prefix of the table, multiple prefix separated with ','`
+	CGenPbEntityBriefTablesEx          = `generate all models exclude the specified tables, multiple prefix separated with ','`
 	CGenPbEntityBriefRemoveFieldPrefix = `remove specified prefix of the field, multiple prefix separated with ','`
 	CGenPbEntityBriefOption            = `extra protobuf options`
+	CGenPbEntityBriefShardingPattern   = `sharding pattern for table name, e.g. "users_?" will replace tables "users_001,users_002,..." to "users" pbentity`
 	CGenPbEntityBriefGroup             = `
 specifying the configuration group name of database for generated ORM instance,
 it's not necessary and the default value is "default"
@@ -106,7 +135,7 @@ it's not necessary and the default value is "default"
 case for message attribute names, default is "Camel":
 | Case            | Example            |
 |---------------- |--------------------|
-| Camel           | AnyKindOfString    | 
+| Camel           | AnyKindOfString    |
 | CamelLower      | anyKindOfString    | default
 | Snake           | any_kind_of_string |
 | SnakeScreaming  | ANY_KIND_OF_STRING |
@@ -119,7 +148,94 @@ case for message attribute names, default is "Camel":
 case for message json tag, cases are the same as "nameCase", default "CamelLower".
 set it to "none" to ignore json tag generating.
 `
+
+	CGenPbEntityBriefTypeMapping  = `custom local type mapping for generated struct attributes relevant to fields of table`
+	CGenPbEntityBriefFieldMapping = `custom local type mapping for generated struct attributes relevant to specific fields of table`
 )
+
+var defaultTypeMapping = map[DBFieldTypeName]CustomAttributeType{
+	// gdb.LocalTypeString
+	"string": {
+		Type: "string",
+	},
+	// gdb.LocalTypeTime
+	// "time": {
+	// 	Type:   "google.protobuf.Duration",
+	// 	Import: "google/protobuf/duration.proto",
+	// },
+	// gdb.LocalTypeDate
+	"date": {
+		Type:   "google.protobuf.Timestamp",
+		Import: "google/protobuf/timestamp.proto",
+	},
+	// gdb.LocalTypeDatetime
+	"datetime": {
+		Type:   "google.protobuf.Timestamp",
+		Import: "google/protobuf/timestamp.proto",
+	},
+	// gdb.LocalTypeInt
+	"int": {
+		Type: "int32",
+	},
+	// gdb.LocalTypeUint
+	"uint": {
+		Type: "uint32",
+	},
+	// gdb.LocalTypeInt64
+	"int64": {
+		Type: "int64",
+	},
+	// gdb.LocalTypeUint64
+	"uint64": {
+		Type: "uint64",
+	},
+	// gdb.LocalTypeIntSlice
+	"[]int": {
+		Type: "repeated int32",
+	},
+	// gdb.LocalTypeInt64Slice
+	"[]int64": {
+		Type: "repeated int64",
+	},
+	// gdb.LocalTypeUint64Slice
+	"[]uint64": {
+		Type: "repeated uint64",
+	},
+	// gdb.LocalTypeInt64Bytes
+	"int64-bytes": {
+		Type: "repeated int64",
+	},
+	// gdb.LocalTypeUint64Bytes
+	"uint64-bytes": {
+		Type: "repeated uint64",
+	},
+	// gdb.LocalTypeFloat32
+	"float32": {
+		Type: "float",
+	},
+	// gdb.LocalTypeFloat64
+	"float64": {
+		Type: "double",
+	},
+	// gdb.LocalTypeBytes
+	"[]byte": {
+		Type: "bytes",
+	},
+	// gdb.LocalTypeBool
+	"bool": {
+		Type: "bool",
+	},
+	// gdb.LocalTypeJson
+	// "json": {
+	// 	Type:   "google.protobuf.Value",
+	// 	Import: "google/protobuf/struct.proto",
+	// },
+	// gdb.LocalTypeJsonb
+	// "jsonb": {
+	// 	Type:   "google.protobuf.Value",
+	// 	Import: "google/protobuf/struct.proto",
+	// },
+}
 
 func init() {
 	gtag.Sets(g.MapStrStr{
@@ -129,15 +245,20 @@ func init() {
 		`CGenPbEntityAd`:                     CGenPbEntityAd,
 		`CGenPbEntityBriefPath`:              CGenPbEntityBriefPath,
 		`CGenPbEntityBriefPackage`:           CGenPbEntityBriefPackage,
+		`CGenPbEntityBriefGoPackage`:         CGenPbEntityBriefGoPackage,
 		`CGenPbEntityBriefLink`:              CGenPbEntityBriefLink,
 		`CGenPbEntityBriefTables`:            CGenPbEntityBriefTables,
 		`CGenPbEntityBriefPrefix`:            CGenPbEntityBriefPrefix,
 		`CGenPbEntityBriefRemovePrefix`:      CGenPbEntityBriefRemovePrefix,
+		`CGenPbEntityBriefTablesEx`:          CGenPbEntityBriefTablesEx,
 		`CGenPbEntityBriefRemoveFieldPrefix`: CGenPbEntityBriefRemoveFieldPrefix,
 		`CGenPbEntityBriefGroup`:             CGenPbEntityBriefGroup,
 		`CGenPbEntityBriefNameCase`:          CGenPbEntityBriefNameCase,
 		`CGenPbEntityBriefJsonCase`:          CGenPbEntityBriefJsonCase,
 		`CGenPbEntityBriefOption`:            CGenPbEntityBriefOption,
+		`CGenPbEntityBriefShardingPattern`:   CGenPbEntityBriefShardingPattern,
+		`CGenPbEntityBriefTypeMapping`:       CGenPbEntityBriefTypeMapping,
+		`CGenPbEntityBriefFieldMapping`:      CGenPbEntityBriefFieldMapping,
 	})
 }
 
@@ -181,6 +302,9 @@ func doGenPbEntityForArray(ctx context.Context, index int, in CGenPbEntityInput)
 		in.Package = modName + "/" + defaultPackageSuffix
 	}
 	removePrefixArray := gstr.SplitAndTrim(in.RemovePrefix, ",")
+
+	excludeTables := gset.NewStrSetFrom(gstr.SplitAndTrim(in.TablesEx, ","))
+
 	// It uses user passed database configuration.
 	if in.Link != "" {
 		var (
@@ -202,6 +326,7 @@ func doGenPbEntityForArray(ctx context.Context, index int, in CGenPbEntityInput)
 	}
 
 	tableNames := ([]string)(nil)
+	shardingNewTableSet := gset.NewStrSet()
 	if in.Tables != "" {
 		tableNames = gstr.SplitAndTrim(in.Tables, ",")
 	} else {
@@ -210,11 +335,49 @@ func doGenPbEntityForArray(ctx context.Context, index int, in CGenPbEntityInput)
 			mlog.Fatalf("fetching tables failed: \n %v", err)
 		}
 	}
+	// merge default typeMapping to input typeMapping.
+	if in.TypeMapping == nil {
+		in.TypeMapping = defaultTypeMapping
+	} else {
+		for key, typeMapping := range defaultTypeMapping {
+			if _, ok := in.TypeMapping[key]; !ok {
+				in.TypeMapping[key] = typeMapping
+			}
+		}
+	}
 
 	for _, tableName := range tableNames {
+		if excludeTables.Contains(tableName) {
+			continue
+		}
 		newTableName := tableName
 		for _, v := range removePrefixArray {
 			newTableName = gstr.TrimLeftStr(newTableName, v, 1)
+		}
+		var shardingTableName string
+		if len(in.ShardingPattern) > 0 {
+			for _, pattern := range in.ShardingPattern {
+				var (
+					match      []string
+					regPattern = gstr.Replace(pattern, "?", `(.+)`)
+				)
+				match, err = gregex.MatchString(regPattern, newTableName)
+				if err != nil {
+					mlog.Fatalf(`invalid sharding pattern "%s": %+v`, pattern, err)
+				}
+				if len(match) < 2 {
+					continue
+				}
+				shardingTableName = gstr.Replace(pattern, "?", "")
+				shardingTableName = gstr.Trim(shardingTableName, `_.-`)
+			}
+		}
+		if shardingTableName != "" {
+			if shardingNewTableSet.Contains(shardingTableName) {
+				continue
+			}
+			shardingNewTableSet.Add(shardingTableName)
+			newTableName = shardingTableName
 		}
 		generatePbEntityContentFile(ctx, CGenPbEntityInternalInput{
 			CGenPbEntityInput: in,
@@ -234,91 +397,113 @@ func generatePbEntityContentFile(ctx context.Context, in CGenPbEntityInternalInp
 	// Change the `newTableName` if `Prefix` is given.
 	newTableName := in.Prefix + in.NewTableName
 	var (
-		imports             string
-		tableNameCamelCase  = gstr.CaseCamel(newTableName)
-		tableNameSnakeCase  = gstr.CaseSnake(newTableName)
-		entityMessageDefine = generateEntityMessageDefinition(tableNameCamelCase, fieldMap, in)
-		fileName            = gstr.Trim(tableNameSnakeCase, "-_.")
-		path                = filepath.FromSlash(gfile.Join(in.Path, fileName+".proto"))
+		tableNameCamelCase                 = gstr.CaseCamel(newTableName)
+		tableNameSnakeCase                 = gstr.CaseSnake(newTableName)
+		entityMessageDefine, appendImports = generateEntityMessageDefinition(tableNameCamelCase, fieldMap, in)
+		fileName                           = gstr.Trim(tableNameSnakeCase, "-_.")
+		path                               = filepath.FromSlash(gfile.Join(in.Path, fileName+".proto"))
 	)
-	if gstr.Contains(entityMessageDefine, "google.protobuf.Timestamp") {
-		imports = `import "google/protobuf/timestamp.proto";`
+	packageImportStr := ""
+	var packageImportsArray = garray.NewStrArray()
+	if len(appendImports) > 0 {
+		for _, appendImport := range appendImports {
+			packageImportStr = fmt.Sprintf(`import "%s";`, appendImport)
+			if packageImportsArray.Search(packageImportStr) == -1 {
+				packageImportsArray.Append(packageImportStr)
+			}
+		}
+	}
+	if in.GoPackage == "" {
+		in.GoPackage = in.Package
 	}
 	entityContent := gstr.ReplaceByMap(getTplPbEntityContent(""), g.MapStrStr{
-		"{Imports}":       imports,
+		"{Imports}":       packageImportsArray.Join("\n"),
 		"{PackageName}":   gfile.Basename(in.Package),
-		"{GoPackage}":     in.Package,
+		"{GoPackage}":     in.GoPackage,
 		"{OptionContent}": in.Option,
 		"{EntityMessage}": entityMessageDefine,
 	})
 	if err := gfile.PutContents(path, strings.TrimSpace(entityContent)); err != nil {
 		mlog.Fatalf("writing content to '%s' failed: %v", path, err)
 	} else {
-		mlog.Print("generated:", path)
+		mlog.Print("generated:", gfile.RealPath(path))
 	}
 }
 
 // generateEntityMessageDefinition generates and returns the message definition for specified table.
-func generateEntityMessageDefinition(entityName string, fieldMap map[string]*gdb.TableField, in CGenPbEntityInternalInput) string {
+func generateEntityMessageDefinition(entityName string, fieldMap map[string]*gdb.TableField, in CGenPbEntityInternalInput) (string, []string) {
 	var (
-		buffer = bytes.NewBuffer(nil)
-		array  = make([][]string, len(fieldMap))
-		names  = sortFieldKeyForPbEntity(fieldMap)
+		appendImports []string
+		buffer        = bytes.NewBuffer(nil)
+		array         = make([][]string, len(fieldMap))
+		names         = sortFieldKeyForPbEntity(fieldMap)
 	)
 	for index, name := range names {
-		array[index] = generateMessageFieldForPbEntity(index+1, fieldMap[name], in)
+		var imports string
+		array[index], imports = generateMessageFieldForPbEntity(index+1, fieldMap[name], in)
+		if imports != "" {
+			appendImports = append(appendImports, imports)
+		}
 	}
-	tw := tablewriter.NewWriter(buffer)
-	tw.SetBorder(false)
-	tw.SetRowLine(false)
-	tw.SetAutoWrapText(false)
-	tw.SetColumnSeparator("")
-	tw.AppendBulk(array)
-	tw.Render()
+	table := tablewriter.NewTable(buffer,
+		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
+			Borders: tw.Border{Top: tw.Off, Bottom: tw.Off, Left: tw.On, Right: tw.Off},
+			Settings: tw.Settings{
+				Separators: tw.Separators{BetweenRows: tw.Off, BetweenColumns: tw.Off},
+			},
+			Symbols: tw.NewSymbolCustom("Proto").WithColumn(" "),
+		})),
+		tablewriter.WithConfig(tablewriter.Config{
+			Row: tw.CellConfig{
+				Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone},
+			},
+		}),
+	)
+	table.Bulk(array)
+	table.Render()
 	stContent := buffer.String()
 	// Let's do this hack of table writer for indent!
-	stContent = gstr.Replace(stContent, "  #", "")
+	stContent = regexp.MustCompile(`\s+\n`).ReplaceAllString(gstr.Replace(stContent, "  #", ""), "\n")
 	buffer.Reset()
 	buffer.WriteString(fmt.Sprintf("message %s {\n", entityName))
 	buffer.WriteString(stContent)
 	buffer.WriteString("}")
-	return buffer.String()
+	return buffer.String(), appendImports
 }
 
 // generateMessageFieldForPbEntity generates and returns the message definition for specified field.
-func generateMessageFieldForPbEntity(index int, field *gdb.TableField, in CGenPbEntityInternalInput) []string {
+func generateMessageFieldForPbEntity(index int, field *gdb.TableField, in CGenPbEntityInternalInput) (attrLines []string, appendImport string) {
 	var (
-		localTypeName gdb.LocalType
-		comment       string
-		jsonTagStr    string
-		err           error
-		ctx           = gctx.GetInitCtx()
+		localTypeNameStr string
+		localTypeName    gdb.LocalType
+		comment          string
+		jsonTagStr       string
+		err              error
+		ctx              = gctx.GetInitCtx()
 	)
-	localTypeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
-	if err != nil {
-		panic(err)
+	if in.TypeMapping != nil && len(in.TypeMapping) > 0 {
+		// match typeMapping after local type transform.
+		// eg: double => string, varchar => string etc.
+		localTypeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
+		if err != nil {
+			panic(err)
+		}
+		if localTypeName != "" {
+			if typeMappingLocal, localOk := in.TypeMapping[strings.ToLower(string(localTypeName))]; localOk {
+				localTypeNameStr = typeMappingLocal.Type
+				appendImport = typeMappingLocal.Import
+			}
+		}
+		// Try match unknown / string localTypeName with db type.
+		if localTypeName == "" || localTypeName == gdb.LocalTypeString {
+			formattedFieldType, _ := in.DB.GetFormattedDBTypeNameForField(field.Type)
+			if typeMapping, ok := in.TypeMapping[strings.ToLower(formattedFieldType)]; ok {
+				localTypeNameStr = typeMapping.Type
+				appendImport = typeMapping.Import
+			}
+		}
 	}
-	var typeMapping = map[gdb.LocalType]string{
-		gdb.LocalTypeString:      "string",
-		gdb.LocalTypeDate:        "google.protobuf.Timestamp",
-		gdb.LocalTypeDatetime:    "google.protobuf.Timestamp",
-		gdb.LocalTypeInt:         "int32",
-		gdb.LocalTypeUint:        "uint32",
-		gdb.LocalTypeInt64:       "int64",
-		gdb.LocalTypeUint64:      "uint64",
-		gdb.LocalTypeIntSlice:    "repeated int32",
-		gdb.LocalTypeInt64Slice:  "repeated int64",
-		gdb.LocalTypeUint64Slice: "repeated uint64",
-		gdb.LocalTypeInt64Bytes:  "repeated int64",
-		gdb.LocalTypeUint64Bytes: "repeated uint64",
-		gdb.LocalTypeFloat32:     "float",
-		gdb.LocalTypeFloat64:     "double",
-		gdb.LocalTypeBytes:       "bytes",
-		gdb.LocalTypeBool:        "bool",
-		gdb.LocalTypeJson:        "string",
-		gdb.LocalTypeJsonb:       "string",
-	}
-	localTypeNameStr := typeMapping[localTypeName]
+
 	if localTypeNameStr == "" {
 		localTypeNameStr = "string"
 	}
@@ -351,12 +536,19 @@ func generateMessageFieldForPbEntity(index int, field *gdb.TableField, in CGenPb
 		newFiledName = gstr.TrimLeftStr(newFiledName, v, 1)
 	}
 
+	if in.FieldMapping != nil && len(in.FieldMapping) > 0 {
+		if typeMapping, ok := in.FieldMapping[fmt.Sprintf("%s.%s", in.TableName, newFiledName)]; ok {
+			localTypeNameStr = typeMapping.Type
+			appendImport = typeMapping.Import
+		}
+	}
+
 	return []string{
 		"    #" + localTypeNameStr,
 		" #" + formatCase(newFiledName, in.NameCase),
 		" #= " + gconv.String(index) + jsonTagStr + ";",
 		" #" + fmt.Sprintf(`// %s`, comment),
-	}
+	}, appendImport
 }
 
 func getTplPbEntityContent(tplEntityPath string) string {

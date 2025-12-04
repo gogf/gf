@@ -13,11 +13,10 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/v2/container/gset"
-	"github.com/gogf/gf/v2/text/gstr"
-
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -38,7 +37,7 @@ func (d *Driver) DoInsert(
 	var (
 		keys   []string
 		values []string
-		params []interface{}
+		params []any
 	)
 	// Retrieve the table fields and length.
 	var (
@@ -124,7 +123,7 @@ func (d *Driver) doSave(ctx context.Context,
 		// insertValues:	Handle values that need to be inserted
 		// updateValues:	Handle values that need to be updated
 		queryHolders = make([]string, oneLen)
-		queryValues  = make([]interface{}, oneLen)
+		queryValues  = make([]any, oneLen)
 		insertKeys   = make([]string, oneLen)
 		insertValues = make([]string, oneLen)
 		updateValues []string

@@ -95,3 +95,46 @@ func Test_CanCallIsNil(t *testing.T) {
 		t.Assert(utils.CanCallIsNil(reflect.ValueOf(iUnsafePointer)), true)
 	})
 }
+
+func Test_IsNumeric(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(utils.IsNumeric("12345"), true)
+		t.Assert(utils.IsNumeric("-12345"), true)
+		t.Assert(utils.IsNumeric("+12345"), true)
+		t.Assert(utils.IsNumeric("123.45"), true)
+		t.Assert(utils.IsNumeric("-123.45"), true)
+		t.Assert(utils.IsNumeric("+123.45"), true)
+		t.Assert(utils.IsNumeric("1+23"), false)
+		t.Assert(utils.IsNumeric("123a45"), false)
+		t.Assert(utils.IsNumeric("123.45.67"), false)
+		t.Assert(utils.IsNumeric(""), false)
+		t.Assert(utils.IsNumeric("1e10"), false)
+		t.Assert(utils.IsNumeric("123 45"), false)
+		t.Assert(utils.IsNumeric("!!!"), false)
+		t.Assert(utils.IsNumeric("-a23"), false)
+		t.Assert(utils.IsNumeric("+a23"), false)
+		t.Assert(utils.IsNumeric("1+23"), false)
+		t.Assert(utils.IsNumeric("1-23"), false)
+		t.Assert(utils.IsNumeric("123."), false)
+		t.Assert(utils.IsNumeric(".123"), false)
+		t.Assert(utils.IsNumeric("123.a"), false)
+		t.Assert(utils.IsNumeric("a.123"), false)
+		t.Assert(utils.IsNumeric("+"), false)
+		t.Assert(utils.IsNumeric("-"), false)
+		t.Assert(utils.IsNumeric("."), false)
+		t.Assert(utils.IsNumeric("-."), false)
+		t.Assert(utils.IsNumeric("+."), false)
+		t.Assert(utils.IsNumeric("-.1"), false)
+		t.Assert(utils.IsNumeric("+.1"), false)
+	})
+}
+
+func TestIsASCII(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(utils.IsASCII("test"), true)
+		t.AssertEQ(utils.IsASCII("测试"), false)
+		t.AssertEQ(utils.IsASCII("テスト"), false)
+		t.AssertEQ(utils.IsASCII("테스트"), false)
+		t.AssertEQ(utils.IsASCII("😁😭❤️😓"), false)
+	})
+}

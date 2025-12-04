@@ -12,10 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/internal/empty"
-
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -574,7 +573,7 @@ func TestSortedIntArray_RLockFunc(t *testing.T) {
 
 func TestSortedIntArray_Merge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		func1 := func(v1, v2 interface{}) int {
+		func1 := func(v1, v2 any) int {
 			if gconv.Int(v1) < gconv.Int(v2) {
 				return 0
 			}
@@ -583,9 +582,9 @@ func TestSortedIntArray_Merge(t *testing.T) {
 		i0 := []int{1, 2, 3, 4}
 		s2 := []string{"e", "f"}
 		i1 := garray.NewIntArrayFrom([]int{1, 2, 3})
-		i2 := garray.NewArrayFrom([]interface{}{3})
+		i2 := garray.NewArrayFrom([]any{3})
 		s3 := garray.NewStrArrayFrom([]string{"g", "h"})
-		s4 := garray.NewSortedArrayFrom([]interface{}{4, 5}, func1)
+		s4 := garray.NewSortedArrayFrom([]any{4, 5}, func1)
 		s5 := garray.NewSortedStrArrayFrom(s2)
 		s6 := garray.NewSortedIntArrayFrom([]int{1, 2, 3})
 		a1 := garray.NewSortedIntArrayFrom(i0)
@@ -795,8 +794,22 @@ func TestSortedIntArray_Filter(t *testing.T) {
 
 func TestSortedIntArray_FilterEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		array := garray.NewSortedIntArrayFrom(g.SliceInt{0, 1, 2, 3, 4, 0})
-		t.Assert(array.FilterEmpty(), g.SliceInt{1, 2, 3, 4})
+		array := garray.NewSortedIntArrayFrom(g.SliceInt{0, 1, -1, 2, 3, 4, 0})
+		t.Assert(array.FilterEmpty(), g.SliceInt{-1, 1, 2, 3, 4})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedIntArrayFrom(g.SliceInt{0, 0, 0, 0, 0, 0, 1})
+		array.SetComparator(func(a, b int) int {
+			if a == b {
+				return 0
+			}
+			if a < b {
+				return 1
+			} else {
+				return -1
+			}
+		})
+		t.Assert(array.FilterEmpty(), g.SliceInt{1})
 	})
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewSortedIntArrayFrom(g.SliceInt{1, 2, 3, 4})

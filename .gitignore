@@ -7,18 +7,21 @@
 .settings/
 .vscode/
 vendor/
-pkg/
 bin/
 **/.DS_Store
 .test/
 cmd/gf/main
 cmd/gf/gf
 temp/
+example/log
 go.work
 go.work.sum
 !cmd/gf/go.work
+.windsurfrules
 
 # Ignore for docs
 node_modules
 .docusaurus
 output
+.example/
+.golangci.bck.yml

@@ -67,7 +67,6 @@ func init() {
 		UpdatedAt:        "updated_time",
 	}
 
-	// todo
 	nodeLink := gdb.ConfigNode{
 		Type: TestDBType,
 		Name: TestDBName,
@@ -111,6 +110,8 @@ func init() {
 	}
 
 	ctx = context.Background()
+
+	// db.SetDebug(true)
 }
 
 func dropTable(table string) {
@@ -143,7 +144,7 @@ func createTable(table ...string) (name string) {
 	CREATE TABLE "%s"
 (
 "ID" BIGINT NOT NULL,
-"ACCOUNT_NAME" VARCHAR(128) DEFAULT '' NOT NULL,
+"ACCOUNT_NAME" VARCHAR(128) DEFAULT '' NOT NULL COMMENT 'Account Name',
 "PWD_RESET" TINYINT DEFAULT 0 NOT NULL,
 "ENABLED" INT DEFAULT 1 NOT NULL,
 "DELETED" INT DEFAULT 0 NOT NULL,
@@ -156,7 +157,6 @@ NOT CLUSTER PRIMARY KEY("ID")) STORAGE(ON "MAIN", CLUSTERBTR) ;
 	`, name)); err != nil {
 		gtest.Fatal(err)
 	}
-
 	return
 }
 
@@ -169,11 +169,11 @@ func createInitTable(table ...string) (name string) {
 			"account_name": fmt.Sprintf(`name_%d`, i),
 			"pwd_reset":    0,
 			"attr_index":   i,
-			"create_time":  gtime.Now().String(),
+			"created_time": gtime.Now(),
 		})
 	}
 	result, err := db.Schema(TestDBName).Insert(context.Background(), name, array.Slice())
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 
 	n, e := result.RowsAffected()
 	gtest.Assert(e, nil)
@@ -211,4 +211,12 @@ NOT CLUSTER PRIMARY KEY("ID")) STORAGE(ON "MAIN", CLUSTERBTR) ;
 	}
 
 	return name, nil
+}
+
+func createInitTables(len int) []string {
+	tables := make([]string, 0, len)
+	for range len {
+		tables = append(tables, createInitTable())
+	}
+	return tables
 }

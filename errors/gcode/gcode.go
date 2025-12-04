@@ -17,7 +17,7 @@ type Code interface {
 
 	// Detail returns the detailed information of current error code,
 	// which is mainly designed as an extension field for error code.
-	Detail() interface{}
+	Detail() any
 }
 
 // ================================================================================================================
@@ -46,13 +46,13 @@ var (
 	CodeNotFound                  = localCode{65, "Not Found", nil}                    // Resource does not exist.
 	CodeInvalidRequest            = localCode{66, "Invalid Request", nil}              // Invalid request.
 	CodeNecessaryPackageNotImport = localCode{67, "Necessary Package Not Import", nil} // It needs necessary package import.
-	CodeInternalPanic             = localCode{68, "Internal Panic", nil}               // An panic occurred internally.
+	CodeInternalPanic             = localCode{68, "Internal Panic", nil}               // A panic occurred internally.
 	CodeBusinessValidationFailed  = localCode{300, "Business Validation Failed", nil}  // Business validation failed.
 )
 
 // New creates and returns an error code.
 // Note that it returns an interface object of Code.
-func New(code int, message string, detail interface{}) Code {
+func New(code int, message string, detail any) Code {
 	return localCode{
 		code:    code,
 		message: message,
@@ -62,7 +62,7 @@ func New(code int, message string, detail interface{}) Code {
 
 // WithCode creates and returns a new error code based on given Code.
 // The code and message is from given `code`, but the detail if from given `detail`.
-func WithCode(code Code, detail interface{}) Code {
+func WithCode(code Code, detail any) Code {
 	return localCode{
 		code:    code.Code(),
 		message: code.Message(),

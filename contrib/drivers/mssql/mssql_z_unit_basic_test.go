@@ -13,11 +13,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/encoding/gxml"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+
+	"github.com/gogf/gf/contrib/drivers/mssql/v2"
 )
 
 func TestTables(t *testing.T) {
@@ -29,7 +33,7 @@ func TestTables(t *testing.T) {
 		}
 
 		result, err := db.Tables(context.Background())
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		for i := 0; i < len(tables); i++ {
 			find := false
@@ -42,8 +46,8 @@ func TestTables(t *testing.T) {
 			gtest.AssertEQ(find, true)
 		}
 
-		result, err = db.Tables(context.Background(), "test")
-		gtest.Assert(err, nil)
+		result, err = db.Tables(context.Background(), TestSchema)
+		gtest.AssertNil(err)
 		for i := 0; i < len(tables); i++ {
 			find := false
 			for j := 0; j < len(result); j++ {
@@ -65,7 +69,7 @@ func TestTableFields(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		createTable("t_user")
 		defer dropTable("t_user")
-		var expect = map[string][]interface{}{
+		var expect = map[string][]any{
 			"ID":          {"numeric(10,0)", false, "PRI", "", "", ""},
 			"PASSPORT":    {"varchar(45)", true, "", "", "", ""},
 			"PASSWORD":    {"varchar(32)", true, "", "", "", ""},
@@ -74,7 +78,7 @@ func TestTableFields(t *testing.T) {
 		}
 
 		res, err := db.TableFields(context.Background(), "t_user")
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		for k, v := range expect {
 			_, ok := res[k]
@@ -88,8 +92,8 @@ func TestTableFields(t *testing.T) {
 			gtest.AssertEQ(res[k].Comment, v[5])
 		}
 
-		res, err = db.TableFields(context.Background(), "t_user", "test")
-		gtest.Assert(err, nil)
+		res, err = db.TableFields(context.Background(), "t_user", TestSchema)
+		gtest.AssertNil(err)
 
 		for k, v := range expect {
 			_, ok := res[k]
@@ -124,7 +128,7 @@ func TestDoInsert(t *testing.T) {
 			"create_time": gtime.Now(),
 		}
 		_, err := db.Insert(context.Background(), "t_user", data)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 	})
 
@@ -145,6 +149,56 @@ func TestDoInsert(t *testing.T) {
 
 		_, err = db.Replace(context.Background(), "t_user", data, 10)
 		gtest.AssertNE(err, nil)
+	})
+}
+
+func TestDoInsertGetId(t *testing.T) {
+	// create test table
+	createInsertAndGetIdTableForTest()
+	gtest.C(t, func(t *gtest.T) {
+		table := "ip_to_id"
+		data := map[string]interface{}{
+			"ip": "192.168.179.1",
+		}
+		id, err := db.InsertAndGetId(gctx.New(), table, data)
+		t.AssertNil(err)
+		t.AssertGT(id, 0)
+		// fmt.Println("id:", id)
+
+		// multiple insert test
+		dataAry := []map[string]interface{}{{"ip": "192.168.5.9"}, {"ip": "192.168.5.10"}}
+		id1, err1 := db.InsertAndGetId(gctx.New(), table, dataAry)
+		t.AssertNil(err1)
+		t.AssertGT(id1, 0)
+	})
+}
+
+func TestGetTableFromSql(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		okTable := "ip_to_id"
+		sqlStr := "INSERT INTO \"ip_to_id\"(\"ip\") VALUES(?)"
+		dbWrapper, ok := db.GetCore().GetDB().(*gdb.DriverWrapperDB)
+		t.Assert(ok, true)
+		dbMssql, ok := dbWrapper.DB.(*mssql.Driver)
+		t.Assert(ok, true)
+		table := dbMssql.GetTableNameFromSql(sqlStr)
+		// fmt.Println("default table:", table)
+		t.Assert(table, okTable)
+
+		sqlStr = "INSERT INTO \"MyLogDb\".\"dbo\".\"ip_to_id\"(\"ip\") VALUES(?)"
+		table = dbMssql.GetTableNameFromSql(sqlStr)
+		// fmt.Println("MyLogDb.dbo.ip_to_id table:", table)
+		t.Assert(table, okTable)
+
+		sqlStr = "INSERT INTO \"ip_to_id\" as \"tt\" (\"ip\") VALUES(?)"
+		table = dbMssql.GetTableNameFromSql(sqlStr)
+		// fmt.Println("ip_to_id as tt table:", table)
+		t.Assert(table, okTable)
+
+		sqlStr = "INSERT INTO \"ip_to_id\" \"tt\" (\"ip\") VALUES(?)"
+		table = dbMssql.GetTableNameFromSql(sqlStr)
+		// fmt.Println("ip_to_id tt table:", table)
+		t.Assert(table, okTable)
 	})
 }
 
@@ -231,7 +285,6 @@ func Test_DB_Insert(t *testing.T) {
 
 		one, err := db.Model(table).Where("id", 3).One()
 		t.AssertNil(err)
-		fmt.Println(one)
 		t.Assert(one["ID"].Int(), 3)
 		t.Assert(one["PASSPORT"].String(), "user_3")
 		t.Assert(one["PASSWORD"].String(), "25d55ad283aa400af464c76d713c07ad")
@@ -379,7 +432,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
 		defer dropTable(table)
-		// []interface{}
+		// []any
 		r, err := db.Insert(ctx, table, g.Slice{
 			g.Map{
 				"id":          2,
@@ -794,7 +847,7 @@ func Test_DB_ToJson(t *testing.T) {
 		}
 
 		// ToJson
-		resultJson, err := gjson.LoadContent(result.Json())
+		resultJson, err := gjson.LoadContent([]byte(result.Json()))
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -867,7 +920,7 @@ func Test_DB_ToXml(t *testing.T) {
 			gtest.Fatal(err)
 		}
 
-		resultXml := result["doc"].(map[string]interface{})
+		resultXml := result["doc"].(map[string]any)
 		if v, ok := resultXml["ID"]; ok {
 			t.Assert(user.Id, v)
 		} else {

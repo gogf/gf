@@ -39,7 +39,7 @@ func New(path string, flag int, perm os.FileMode, ttl ...time.Duration) *Pool {
 
 // newFilePool creates and returns a file pointer pool with given file path, flag and opening permission.
 func newFilePool(p *Pool, path string, flag int, perm os.FileMode, ttl time.Duration) *gpool.Pool {
-	pool := gpool.New(ttl, func() (interface{}, error) {
+	pool := gpool.New(ttl, func() (any, error) {
 		file, err := os.OpenFile(path, flag, perm)
 		if err != nil {
 			err = gerror.Wrapf(err, `os.OpenFile failed for file "%s", flag "%d", perm "%s"`, path, flag, perm)
@@ -53,7 +53,7 @@ func newFilePool(p *Pool, path string, flag int, perm os.FileMode, ttl time.Dura
 			perm: perm,
 			path: path,
 		}, nil
-	}, func(i interface{}) {
+	}, func(i any) {
 		_ = i.(*File).File.Close()
 	})
 	return pool
@@ -99,7 +99,7 @@ func (p *Pool) File() (*File, error) {
 		}
 		// It firstly checks using !p.init.Val() for performance purpose.
 		if !p.init.Val() && p.init.Cas(false, true) {
-			_, _ = gfsnotify.Add(f.path, func(event *gfsnotify.Event) {
+			var watchCallback = func(event *gfsnotify.Event) {
 				// If the file is removed or renamed, recreates the pool by increasing the pool id.
 				if event.IsRemove() || event.IsRename() {
 					// It drops the old pool.
@@ -110,7 +110,8 @@ func (p *Pool) File() (*File, error) {
 					// Whenever the pool id changes, the pool will be recreated.
 					p.id.Add(1)
 				}
-			}, false)
+			}
+			_, _ = gfsnotify.Add(f.path, watchCallback, gfsnotify.WatchOption{NoRecursive: true})
 		}
 		return f, nil
 	}

@@ -1,10 +1,12 @@
-# GoFrame
+English | [简体中文](README.zh_CN.MD)
 
 <div align=center>
-<img src="https://goframe.org/statics/image/logo2.png?v=1" width="300"/>
+<img src="https://goframe.org/img/logo_full.png" width="300" alt="goframe gf logo"/>
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/gogf/gf/v2.svg)](https://pkg.go.dev/github.com/gogf/gf/v2)
 [![GoFrame CI](https://github.com/gogf/gf/actions/workflows/ci-main.yml/badge.svg)](https://github.com/gogf/gf/actions/workflows/ci-main.yml)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/gogf/gf/badge)](https://scorecard.dev/viewer/?uri=github.com/gogf/gf)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/9233/badge)](https://bestpractices.coreinfrastructure.org/projects/9233)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gogf/gf/v2)](https://goreportcard.com/report/github.com/gogf/gf/v2)
 [![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf)
 [![Production Ready](https://img.shields.io/badge/production-ready-blue.svg?style=flat)](https://github.com/gogf/gf)
@@ -20,86 +22,25 @@
 
 </div>
 
-`GoFrame` is a modular, powerful, high-performance and enterprise-class application development framework of Golang.
+A powerful framework for faster, easier, and more efficient project development.
 
-# Features
+## Documentation
 
-- modular, loosely coupled design
-- rich components, out-of-the-box
-- automatic codes generating for efficiency
-- simple and easy to use, detailed documentation
-- interface designed components, with high scalability
-- fully supported tracing and error stack feature
-- specially developed and powerful ORM component
-- robust engineering design specifications
-- convenient development CLI tool provide
-- OpenTelemetry observability features support
-- OpenAPIV3 documentation generating, automatically
-- much, much more...ready to explore?
-
-# Installation
-
-Enter your repo. directory and execute following command:
-
-## primary module
-
-```bash
-go get -u -v github.com/gogf/gf/v2
-```
-
-## cli tool
-
-```bash
-go install github.com/gogf/gf/cmd/gf/v2@latest
-```
-
-# Limitation
-
-```
-golang version >= 1.18
-```
-
-# Documentation
-
-- Chinese Official Site(中文官网): [https://goframe.org](https://goframe.org/display/gf)
-- Chinese Pages Document(中文镜像文档): [https://pages.goframe.org](https://pages.goframe.org)
-- Chinese Offline Document(中文离线文档): [https://github.com/gogf/goframe.org-pdf](https://github.com/gogf/goframe.org-pdf)
+- Official Site: [https://goframe.org](https://goframe.org)
+- Official Site(en): [https://goframe.org/en](https://goframe.org/en)
+- 国内镜像: [https://goframe.org.cn](https://goframe.org.cn)
+- Mirror Site: [Github Pages](https://pages.goframe.org)
+- Mirror Site: [Offline Docs](https://github.com/gogf/goframe.org-pdf?tab=readme-ov-file#%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC)
 - GoDoc API: [https://pkg.go.dev/github.com/gogf/gf/v2](https://pkg.go.dev/github.com/gogf/gf/v2)
 
-# License
+## Contributors
+
+💖 [Thanks to all the contributors who made GoFrame possible](https://github.com/gogf/gf/graphs/contributors) 💖
+
+<a href="https://github.com/gogf/gf/graphs/contributors">
+<img src="https://goframe.org/img/contributors.svg?version=v2.9.6" alt="goframe contributors"/>
+</a>
+
+## License
 
 `GoFrame` is licensed under the [MIT License](LICENSE), 100% free and open-source, forever.
-
-# Part Of Users
-
-- [Tencent](https://www.tencent.com/)
-- [ZTE](https://www.zte.com.cn/china/)
-- [Ant Financial Services](https://www.antfin.com/)
-- [VIVO](https://www.vivo.com/)
-- [MedLinker](https://www.medlinker.com/)
-- [KuCoin](https://www.kucoin.io/)
-- [LeYouJia](https://www.leyoujia.com/)
-- [IGG](https://igg.com)
-- [37](https://www.37.com)
-- [XiMaLaYa](https://www.ximalaya.com)
-- [ZYBang](https://www.zybang.com/)
-
-> We list part of the users here, if your company or products are using `GoFrame`, please let us know [here](https://goframe.org/pages/viewpage.action?pageId=1114415).
-
-# Contributors
-
-This project exists thanks to all the people who contribute. [[Contributors](https://github.com/gogf/gf/graphs/contributors)].
-<a href="https://github.com/gogf/gf/graphs/contributors"><img src="https://contributors-img.web.app/image?repo=gogf/gf" /></a>
-
-# Donators
-
-If you love `GoFrame`, why not [buy developer a cup of coffee](https://goframe.org/pages/viewpage.action?pageId=1115633)?
-
-# Sponsors
-
-We appreciate any kind of sponsorship for `GoFrame` development. If you've got some interesting, please contact WeChat `389961817` / Email `john@goframe.org`.
-
-# Thanks
-
-<a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/download/thumbnails/1114119/jetbrains.png" height="120" alt="JetBrains"/></a>
-<a href="https://www.atlassian.com/?from=GoFrame"><img src="https://goframe.org/download/attachments/1114119/atlassian.jpg" height="120" alt="Atlassian"/></a>

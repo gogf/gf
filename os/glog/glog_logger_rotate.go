@@ -55,7 +55,7 @@ func (l *Logger) doRotateFile(ctx context.Context, filePath string) error {
 
 	// No backups, it then just removes the current logging file.
 	if l.config.RotateBackupLimit == 0 {
-		if err := gfile.Remove(filePath); err != nil {
+		if err := gfile.RemoveFile(filePath); err != nil {
 			return err
 		}
 		intlog.Printf(
@@ -216,7 +216,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 				err := gcompress.GzipFile(path, path+".gz")
 				if err == nil {
 					intlog.Printf(ctx, `compressed done, remove original logging file: %s`, path)
-					if err = gfile.Remove(path); err != nil {
+					if err = gfile.RemoveFile(path); err != nil {
 						intlog.Print(ctx, err)
 					}
 				} else {
@@ -235,7 +235,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 	// =============================================================
 	// Backups count limitation and expiration checks.
 	// =============================================================
-	backupFiles := garray.NewSortedArray(func(a, b interface{}) int {
+	backupFiles := garray.NewSortedArray(func(a, b any) int {
 		// Sorted by rotated/backup file mtime.
 		// The older rotated/backup file is put in the head of array.
 		var (
@@ -264,7 +264,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 		for i := 0; i < diff; i++ {
 			path, _ := backupFiles.PopLeft()
 			intlog.Printf(ctx, `remove exceeded backup limit file: %s`, path)
-			if err := gfile.Remove(path.(string)); err != nil {
+			if err = gfile.RemoveFile(path.(string)); err != nil {
 				intlog.Errorf(ctx, `%+v`, err)
 			}
 		}
@@ -274,7 +274,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 				mtime       time.Time
 				subDuration time.Duration
 			)
-			backupFiles.Iterator(func(_ int, v interface{}) bool {
+			backupFiles.Iterator(func(_ int, v any) bool {
 				path := v.(string)
 				mtime = gfile.MTime(path)
 				subDuration = now.Sub(mtime)
@@ -284,7 +284,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 						`%v - %v = %v > %v, remove expired backup file: %s`,
 						now, mtime, subDuration, l.config.RotateBackupExpire, path,
 					)
-					if err := gfile.Remove(path); err != nil {
+					if err = gfile.RemoveFile(path); err != nil {
 						intlog.Errorf(ctx, `%+v`, err)
 					}
 					return true

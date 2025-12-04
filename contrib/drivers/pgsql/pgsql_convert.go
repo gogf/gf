@@ -11,7 +11,10 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/lib/pq"
+
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -23,24 +26,29 @@ const (
 )
 
 // ConvertValueForField converts value to database acceptable value.
-func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) {
-	var (
-		fieldValueKind = reflect.TypeOf(fieldValue).Kind()
-	)
+func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fieldValue any) (any, error) {
+	if g.IsNil(fieldValue) {
+		return d.Core.ConvertValueForField(ctx, fieldType, fieldValue)
+	}
+
+	var fieldValueKind = reflect.TypeOf(fieldValue).Kind()
 
 	if fieldValueKind == reflect.Slice {
-		fieldValue = gstr.ReplaceByMap(gconv.String(fieldValue),
-			map[string]string{
-				"[": "{",
-				"]": "}",
-			},
-		)
+		// For pgsql, json or jsonb require '[]'
+		if !gstr.Contains(fieldType, "json") {
+			fieldValue = gstr.ReplaceByMap(gconv.String(fieldValue),
+				map[string]string{
+					"[": "{",
+					"]": "}",
+				},
+			)
+		}
 	}
 	return d.Core.ConvertValueForField(ctx, fieldType, fieldValue)
 }
 
 // CheckLocalTypeForField checks and returns corresponding local golang type for given db type.
-func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (gdb.LocalType, error) {
+func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue any) (gdb.LocalType, error) {
 	var typeName string
 	match, _ := gregex.MatchString(`(.+?)\((.+)\)`, fieldType)
 	if len(match) == 3 {
@@ -71,6 +79,12 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 		"_int8":
 		return LocalTypeInt64Slice, nil
 
+	case
+		"_varchar", "_text":
+		return gdb.LocalTypeStringSlice, nil
+	case "_numeric", "_decimal":
+		return gdb.LocalTypeFloat64Slice, nil
+
 	default:
 		return d.Core.CheckLocalTypeForField(ctx, fieldType, fieldValue)
 	}
@@ -79,7 +93,7 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 // ConvertValueForLocal converts value to local Golang type of value according field type name from database.
 // The parameter `fieldType` is in lower case, like:
 // `float(5,2)`, `unsigned double(5,2)`, `decimal(10,2)`, `char(45)`, `varchar(100)`, etc.
-func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) {
+func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue any) (any, error) {
 	typeName, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
 	typeName = strings.ToLower(typeName)
 	switch typeName {
@@ -115,6 +129,21 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 			),
 		), nil
 
+	// String slice.
+	case "_varchar", "_text":
+		var result = make(pq.StringArray, 0)
+		if err := result.Scan(fieldValue); err != nil {
+			return nil, err
+		}
+		return []string(result), nil
+
+	// Float64 slice.
+	case "_numeric", "_decimal":
+		var result pq.Float64Array
+		if err := result.Scan(fieldValue); err != nil {
+			return nil, err
+		}
+		return []float64(result), nil
 	default:
 		return d.Core.ConvertValueForLocal(ctx, fieldType, fieldValue)
 	}

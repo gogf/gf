@@ -34,14 +34,7 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 		source               string
 		underlyingDriverName = "sqlite3"
 	)
-	if config.Link != "" {
-		// ============================================================================
-		// Deprecated from v2.2.0.
-		// ============================================================================
-		source = config.Link
-	} else {
-		source = config.Name
-	}
+	source = config.Name
 	// It searches the source file to locate its absolute path..
 	if absolutePath, _ := gfile.Search(source); absolutePath != "" {
 		source = absolutePath
@@ -52,7 +45,7 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	if config.Extra != "" {
 		var (
 			options  string
-			extraMap map[string]interface{}
+			extraMap map[string]any
 		)
 		if extraMap, err = gstr.Parse(config.Extra); err != nil {
 			return nil, err

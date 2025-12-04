@@ -25,12 +25,12 @@ const (
 // string/[]byte/map/struct/*struct.
 //
 // The optional parameter `noUrlEncode` specifies whether ignore the url encoding for the data.
-func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr string) {
+func BuildParams(params any, noUrlEncode ...bool) (encodedParamStr string) {
 	// If given string/[]byte, converts and returns it directly as string.
 	switch v := params.(type) {
 	case string, []byte:
 		return gconv.String(params)
-	case []interface{}:
+	case []any:
 		if len(v) > 0 {
 			params = v[0]
 		} else {
@@ -38,7 +38,9 @@ func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr strin
 		}
 	}
 	// Else converts it to map and does the url encoding.
-	m, urlEncode := gconv.Map(params), true
+	m, urlEncode := gconv.Map(params, gconv.MapOption{
+		OmitEmpty: true,
+	}), true
 	if len(m) == 0 {
 		return gconv.String(params)
 	}
@@ -77,8 +79,8 @@ func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr strin
 }
 
 // HeaderToMap coverts request headers to map.
-func HeaderToMap(header http.Header) map[string]interface{} {
-	m := make(map[string]interface{})
+func HeaderToMap(header http.Header) map[string]any {
+	m := make(map[string]any)
 	for k, v := range header {
 		if len(v) > 1 {
 			m[k] = v

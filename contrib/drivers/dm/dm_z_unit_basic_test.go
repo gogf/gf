@@ -28,18 +28,15 @@ func Test_DB_Ping(t *testing.T) {
 }
 
 func TestTables(t *testing.T) {
-	tables := []string{"A_tables", "A_tables2"}
-	for _, v := range tables {
-		createInitTable(v)
-	}
+	tables := createInitTables(2)
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Tables(ctx)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		for i := 0; i < len(tables); i++ {
 			find := false
 			for j := 0; j < len(result); j++ {
-				if strings.ToUpper(tables[i]) == result[j] {
+				if strings.ToUpper(tables[i]) == strings.ToUpper(result[j]) {
 					find = true
 					break
 				}
@@ -48,11 +45,11 @@ func TestTables(t *testing.T) {
 		}
 
 		result, err = dblink.Tables(ctx)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 		for i := 0; i < len(tables); i++ {
 			find := false
 			for j := 0; j < len(result); j++ {
-				if strings.ToUpper(tables[i]) == result[j] {
+				if strings.ToUpper(tables[i]) == strings.ToUpper(result[j]) {
 					find = true
 					break
 				}
@@ -82,7 +79,7 @@ func TestTableFields(t *testing.T) {
 	tables := "A_tables"
 	createInitTable(tables)
 	gtest.C(t, func(t *gtest.T) {
-		var expect = map[string][]interface{}{
+		var expect = map[string][]any{
 			"ID":           {"BIGINT", false},
 			"ACCOUNT_NAME": {"VARCHAR", false},
 			"PWD_RESET":    {"TINYINT", false},
@@ -91,11 +88,8 @@ func TestTableFields(t *testing.T) {
 			"CREATED_TIME": {"TIMESTAMP", false},
 		}
 
-		_, err := dbErr.TableFields(ctx, "Fields")
-		gtest.AssertNE(err, nil)
-
 		res, err := db.TableFields(ctx, tables)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		for k, v := range expect {
 			_, ok := res[k]
@@ -110,6 +104,14 @@ func TestTableFields(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.TableFields(ctx, "t_user t_user2")
+		gtest.AssertNE(err, nil)
+	})
+}
+
+func TestTableFields_WithWrongPassword(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// dbErr is configured with wrong password, so it should return an error
+		_, err := dbErr.TableFields(ctx, "Fields")
 		gtest.AssertNE(err, nil)
 	})
 }
@@ -153,7 +155,6 @@ func TestModelSave(t *testing.T) {
 			result sql.Result
 			err    error
 		)
-		db.SetDebug(true)
 
 		result, err = db.Model(table).Data(g.Map{
 			"id":          1,
@@ -205,7 +206,7 @@ func TestModelInsert(t *testing.T) {
 		}
 		// _, err := db.Schema(TestDBName).Model(table).Data(data).Insert()
 		_, err := db.Model(table).Insert(&data)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -220,7 +221,7 @@ func TestModelInsert(t *testing.T) {
 		}
 		// _, err := db.Schema(TestDBName).Model(table).Data(data).Insert()
 		_, err := db.Model(table).Data(&data).Insert()
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 	})
 }
 
@@ -238,7 +239,7 @@ func TestDBInsert(t *testing.T) {
 			"UPDATED_TIME": gtime.Now(),
 		}
 		_, err := db.Insert(ctx, table, &data)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 	})
 }
 
@@ -372,7 +373,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		// []interface{}
+		// []any
 		r, err := db.Insert(ctx, table, g.Slice{
 			g.Map{
 				"ID":           500,

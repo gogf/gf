@@ -29,7 +29,7 @@ func ExampleLoad() {
 }
 
 func ExampleLoadJson() {
-	jsonContent := `{"name":"john", "score":"100"}`
+	jsonContent := []byte(`{"name":"john", "score":"100"}`)
 	j, _ := gjson.LoadJson(jsonContent)
 	fmt.Println(j.Get("name"))
 	fmt.Println(j.Get("score"))
@@ -40,11 +40,13 @@ func ExampleLoadJson() {
 }
 
 func ExampleLoadXml() {
-	xmlContent := `<?xml version="1.0" encoding="UTF-8"?>
-	<base>
-		<name>john</name>
-		<score>100</score>
-	</base>`
+	xmlContent := []byte(`
+<?xml version="1.0" encoding="UTF-8"?>
+<base>
+	<name>john</name>
+	<score>100</score>
+</base>
+`)
 	j, _ := gjson.LoadXml(xmlContent)
 	fmt.Println(j.Get("base.name"))
 	fmt.Println(j.Get("base.score"))
@@ -55,11 +57,11 @@ func ExampleLoadXml() {
 }
 
 func ExampleLoadIni() {
-	iniContent := `
-	[base]
-	name = john
-	score = 100
-	`
+	iniContent := []byte(`
+[base]
+name = john
+score = 100
+`)
 	j, _ := gjson.LoadIni(iniContent)
 	fmt.Println(j.Get("base.name"))
 	fmt.Println(j.Get("base.score"))
@@ -70,10 +72,11 @@ func ExampleLoadIni() {
 }
 
 func ExampleLoadYaml() {
-	yamlContent :=
-		`base:
+	yamlContent := []byte(`
+base:
   name: john
-  score: 100`
+  score: 100
+`)
 
 	j, _ := gjson.LoadYaml(yamlContent)
 	fmt.Println(j.Get("base.name"))
@@ -85,10 +88,11 @@ func ExampleLoadYaml() {
 }
 
 func ExampleLoadToml() {
-	tomlContent :=
-		`[base]
+	tomlContent := []byte(`
+[base]
   name = "john"
-  score = 100`
+  score = 100
+`)
 
 	j, _ := gjson.LoadToml(tomlContent)
 	fmt.Println(j.Get("base.name"))
@@ -100,7 +104,7 @@ func ExampleLoadToml() {
 }
 
 func ExampleLoadContent() {
-	jsonContent := `{"name":"john", "score":"100"}`
+	jsonContent := []byte(`{"name":"john", "score":"100"}`)
 
 	j, _ := gjson.LoadContent(jsonContent)
 
@@ -112,7 +116,7 @@ func ExampleLoadContent() {
 	// 100
 }
 
-func ExampleLoadContent_UTF8BOM() {
+func ExampleLoadContent_jsonContent() {
 	jsonContent := `{"name":"john", "score":"100"}`
 
 	content := make([]byte, 3, len(jsonContent)+3)
@@ -131,12 +135,14 @@ func ExampleLoadContent_UTF8BOM() {
 	// 100
 }
 
-func ExampleLoadContent_Xml() {
-	xmlContent := `<?xml version="1.0" encoding="UTF-8"?>
-	<base>
-		<name>john</name>
-		<score>100</score>
-	</base>`
+func ExampleLoadContent_xml_content() {
+	xmlContent := []byte(`
+<?xml version="1.0" encoding="UTF-8"?>
+<base>
+	<name>john</name>
+	<score>100</score>
+</base>
+`)
 
 	x, _ := gjson.LoadContent(xmlContent)
 
@@ -149,16 +155,20 @@ func ExampleLoadContent_Xml() {
 }
 
 func ExampleLoadContentType() {
-	jsonContent := `{"name":"john", "score":"100"}`
-	xmlContent := `<?xml version="1.0" encoding="UTF-8"?>
-	<base>
-		<name>john</name>
-		<score>100</score>
-	</base>`
+	var (
+		jsonContent = []byte(`{"name":"john", "score":"100"}`)
+		xmlContent  = []byte(`
+<?xml version="1.0" encoding="UTF-8"?>
+<base>
+	<name>john</name>
+	<score>100</score>
+</base>
+`)
+	)
 
 	j, _ := gjson.LoadContentType("json", jsonContent)
 	x, _ := gjson.LoadContentType("xml", xmlContent)
-	j1, _ := gjson.LoadContentType("json", "")
+	j1, _ := gjson.LoadContentType("json", []byte(""))
 
 	fmt.Println(j.Get("name"))
 	fmt.Println(j.Get("score"))
@@ -196,21 +206,21 @@ func ExampleIsValidDataType() {
 	// true
 }
 
-func ExampleLoad_Xml() {
+func ExampleLoad_jsonFilePath() {
 	jsonFilePath := gtest.DataPath("xml", "data1.xml")
 	j, _ := gjson.Load(jsonFilePath)
 	fmt.Println(j.Get("doc.name"))
 	fmt.Println(j.Get("doc.score"))
 }
 
-func ExampleLoad_Properties() {
+func ExampleLoadProperties() {
 	jsonFilePath := gtest.DataPath("properties", "data1.properties")
 	j, _ := gjson.Load(jsonFilePath)
 	fmt.Println(j.Get("pr.name"))
 	fmt.Println(j.Get("pr.score"))
 	fmt.Println(j.Get("pr.sex"))
 
-	//Output:
+	// Output:
 	// john
 	// 100
 	// 0

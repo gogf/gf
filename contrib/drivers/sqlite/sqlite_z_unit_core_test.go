@@ -27,7 +27,7 @@ func Test_New(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		node := gdb.ConfigNode{
 			Type:    "sqlite",
-			Link:    gfile.Join(dbDir, "test.db"),
+			Name:    gfile.Join(dbDir, "test.db"),
 			Charset: "utf8",
 		}
 		newDb, err := gdb.New(node)
@@ -358,7 +358,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
 		defer dropTable(table)
-		// []interface{}
+		// []any
 		r, err := db.Insert(ctx, table, g.Slice{
 			g.Map{
 				"id":          2,
@@ -831,7 +831,7 @@ func Test_DB_ToJson(t *testing.T) {
 		}
 
 		// ToJson
-		resultJson, err := gjson.LoadContent(result.Json())
+		resultJson, err := gjson.LoadContent([]byte(result.Json()))
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -904,7 +904,7 @@ func Test_DB_ToXml(t *testing.T) {
 			gtest.Fatal(err)
 		}
 
-		resultXml := result["doc"].(map[string]interface{})
+		resultXml := result["doc"].(map[string]any)
 		if v, ok := resultXml["id"]; ok {
 			t.Assert(user.Id, v)
 		} else {
@@ -1543,7 +1543,7 @@ func Test_TableFields(t *testing.T) {
 		tableName := "fields_" + gtime.TimestampNanoStr()
 		createTable(tableName)
 		defer dropTable(tableName)
-		var expect = map[string][]interface{}{
+		var expect = map[string][]any{
 			// fields		type	null	key	default	extra	comment
 			"id":          {"INTEGER", false, "pri", nil, "", ""},
 			"passport":    {"VARCHAR(45)", false, "", "passport", "", ""},
@@ -1553,7 +1553,7 @@ func Test_TableFields(t *testing.T) {
 		}
 
 		res, err := db.TableFields(context.Background(), tableName)
-		gtest.Assert(err, nil)
+		gtest.AssertNil(err)
 
 		for k, v := range expect {
 			_, ok := res[k]

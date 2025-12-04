@@ -13,67 +13,78 @@ import "github.com/gogf/gf/v2/container/gvar"
 
 // iTree defines the interface for basic operations of a tree.
 type iTree interface {
-	// Set inserts node into the tree.
-	Set(key interface{}, value interface{})
+	// Set sets key-value pair into the tree.
+	Set(key any, value any)
 
 	// Sets batch sets key-values to the tree.
-	Sets(data map[interface{}]interface{})
+	Sets(data map[any]any)
 
 	// SetIfNotExist sets `value` to the map if the `key` does not exist, and then returns true.
-	// It returns false if `key` exists, and `value` would be ignored.
-	SetIfNotExist(key interface{}, value interface{}) bool
+	// It returns false if `key` exists, and such setting key-value pair operation would be ignored.
+	SetIfNotExist(key any, value any) bool
 
 	// SetIfNotExistFunc sets value with return value of callback function `f`, and then returns true.
-	// It returns false if `key` exists, and `value` would be ignored.
-	SetIfNotExistFunc(key interface{}, f func() interface{}) bool
+	// It returns false if `key` exists, and such setting key-value pair operation would be ignored.
+	SetIfNotExistFunc(key any, f func() any) bool
 
 	// SetIfNotExistFuncLock sets value with return value of callback function `f`, and then returns true.
-	// It returns false if `key` exists, and `value` would be ignored.
+	// It returns false if `key` exists, and such setting key-value pair operation would be ignored.
+	//
 	// SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
-	// it executes function `f` with mutex.Lock of the hash map.
-	SetIfNotExistFuncLock(key interface{}, f func() interface{}) bool
+	// it executes function `f` within mutex.Lock of the hash map.
+	SetIfNotExistFuncLock(key any, f func() any) bool
 
-	// Get searches the node in the tree by `key` and returns its value or nil if key is not found in tree.
-	Get(key interface{}) (value interface{})
+	// Get searches the `key` in the tree and returns its associated `value` or nil if key is not found in tree.
+	//
+	// Note that, the `nil` value from Get function cannot be used to determine key existence, please use Contains
+	// function to do so.
+	Get(key any) (value any)
 
-	// GetOrSet returns the value by key,
-	// or sets value with given `value` if it does not exist and then returns this value.
-	GetOrSet(key interface{}, value interface{}) interface{}
+	// GetOrSet returns its `value` of `key`, or sets value with given `value` if it does not exist and then returns
+	// this value.
+	GetOrSet(key any, value any) any
 
-	// GetOrSetFunc returns the value by key,
-	// or sets value with returned value of callback function `f` if it does not exist
-	// and then returns this value.
-	GetOrSetFunc(key interface{}, f func() interface{}) interface{}
+	// GetOrSetFunc returns its `value` of `key`, or sets value with returned value of callback function `f` if it does
+	// not exist and then returns this value.
+	GetOrSetFunc(key any, f func() any) any
 
-	// GetOrSetFuncLock returns the value by key,
-	// or sets value with returned value of callback function `f` if it does not exist
-	// and then returns this value.
-	// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f`
-	// with mutex.Lock of the hash map.
-	GetOrSetFuncLock(key interface{}, f func() interface{}) interface{}
+	// GetOrSetFuncLock returns its `value` of `key`, or sets value with returned value of callback function `f` if it
+	// does not exist and then returns this value.
+	//
+	// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f` within mutex.Lock of the
+	// hash map.
+	GetOrSetFuncLock(key any, f func() any) any
 
 	// GetVar returns a gvar.Var with the value by given `key`.
-	// The returned gvar.Var is un-concurrent safe.
-	GetVar(key interface{}) *gvar.Var
+	// Note that, the returned gvar.Var is un-concurrent safe.
+	//
+	// Also see function Get.
+	GetVar(key any) *gvar.Var
 
 	// GetVarOrSet returns a gvar.Var with result from GetVarOrSet.
-	// The returned gvar.Var is un-concurrent safe.
-	GetVarOrSet(key interface{}, value interface{}) *gvar.Var
+	// Note that, the returned gvar.Var is un-concurrent safe.
+	//
+	// Also see function GetOrSet.
+	GetVarOrSet(key any, value any) *gvar.Var
 
 	// GetVarOrSetFunc returns a gvar.Var with result from GetOrSetFunc.
-	// The returned gvar.Var is un-concurrent safe.
-	GetVarOrSetFunc(key interface{}, f func() interface{}) *gvar.Var
+	// Note that, the returned gvar.Var is un-concurrent safe.
+	//
+	// Also see function GetOrSetFunc.
+	GetVarOrSetFunc(key any, f func() any) *gvar.Var
 
 	// GetVarOrSetFuncLock returns a gvar.Var with result from GetOrSetFuncLock.
-	// The returned gvar.Var is un-concurrent safe.
-	GetVarOrSetFuncLock(key interface{}, f func() interface{}) *gvar.Var
+	// Note that, the returned gvar.Var is un-concurrent safe.
+	//
+	// Also see function GetOrSetFuncLock.
+	GetVarOrSetFuncLock(key any, f func() any) *gvar.Var
 
 	// Search searches the tree with given `key`.
 	// Second return parameter `found` is true if key was found, otherwise false.
-	Search(key interface{}) (value interface{}, found bool)
+	Search(key any) (value any, found bool)
 
-	// Contains checks whether `key` exists in the tree.
-	Contains(key interface{}) bool
+	// Contains checks and returns whether given `key` exists in the tree.
+	Contains(key any) bool
 
 	// Size returns number of nodes in the tree.
 	Size() int
@@ -81,24 +92,24 @@ type iTree interface {
 	// IsEmpty returns true if tree does not contain any nodes.
 	IsEmpty() bool
 
-	// Remove removes the node from the tree by key.
-	// Key should adhere to the comparator's type assertion, otherwise method panics.
-	Remove(key interface{}) (value interface{})
+	// Remove removes the node from the tree by `key`, and returns its associated value of `key`.
+	// The given `key` should adhere to the comparator's type assertion, otherwise method panics.
+	Remove(key any) (value any)
 
-	// Removes batch deletes values of the tree by `keys`.
-	Removes(keys []interface{})
+	// Removes batch deletes key-value pairs from the tree by `keys`.
+	Removes(keys []any)
 
 	// Clear removes all nodes from the tree.
 	Clear()
 
-	// Keys returns all keys in asc order.
-	Keys() []interface{}
+	// Keys returns all keys from the tree in order by its comparator.
+	Keys() []any
 
-	// Values returns all values in asc order based on the key.
-	Values() []interface{}
+	// Values returns all values from the true in order by its comparator based on the key.
+	Values() []any
 
-	// Replace the data of the tree with given `data`.
-	Replace(data map[interface{}]interface{})
+	// Replace clears the data of the tree and sets the nodes by given `data`.
+	Replace(data map[any]any)
 
 	// Print prints the tree to stdout.
 	Print()
@@ -109,32 +120,75 @@ type iTree interface {
 	// MarshalJSON implements the interface MarshalJSON for json.Marshal.
 	MarshalJSON() (jsonBytes []byte, err error)
 
-	Map() map[interface{}]interface{}
-	MapStrAny() map[string]interface{}
+	// Map returns all key-value pairs as map.
+	Map() map[any]any
+
+	// MapStrAny returns all key-value items as map[string]any.
+	MapStrAny() map[string]any
 
 	// Iterator is alias of IteratorAsc.
-	Iterator(f func(key, value interface{}) bool)
+	//
+	// Also see IteratorAsc.
+	Iterator(f func(key, value any) bool)
 
 	// IteratorFrom is alias of IteratorAscFrom.
-	IteratorFrom(key interface{}, match bool, f func(key, value interface{}) bool)
+	//
+	// Also see IteratorAscFrom.
+	IteratorFrom(key any, match bool, f func(key, value any) bool)
 
 	// IteratorAsc iterates the tree readonly in ascending order with given callback function `f`.
-	// If `f` returns true, then it continues iterating; or false to stop.
-	IteratorAsc(f func(key, value interface{}) bool)
+	// If callback function `f` returns true, then it continues iterating; or false to stop.
+	IteratorAsc(f func(key, value any) bool)
 
 	// IteratorAscFrom iterates the tree readonly in ascending order with given callback function `f`.
-	// The parameter `key` specifies the start entry for iterating. The `match` specifies whether
-	// starting iterating if the `key` is fully matched, or else using index searching iterating.
-	// If `f` returns true, then it continues iterating; or false to stop.
-	IteratorAscFrom(key interface{}, match bool, f func(key, value interface{}) bool)
+	//
+	// The parameter `key` specifies the start entry for iterating.
+	// The parameter `match` specifies whether starting iterating only if the `key` is fully matched, or else using
+	// index searching iterating.
+	// If callback function `f` returns true, then it continues iterating; or false to stop.
+	IteratorAscFrom(key any, match bool, f func(key, value any) bool)
 
 	// IteratorDesc iterates the tree readonly in descending order with given callback function `f`.
-	// If `f` returns true, then it continues iterating; or false to stop.
-	IteratorDesc(f func(key, value interface{}) bool)
+	//
+	// If callback function `f` returns true, then it continues iterating; or false to stop.
+	IteratorDesc(f func(key, value any) bool)
 
 	// IteratorDescFrom iterates the tree readonly in descending order with given callback function `f`.
-	// The parameter `key` specifies the start entry for iterating. The `match` specifies whether
-	// starting iterating if the `key` is fully matched, or else using index searching iterating.
-	// If `f` returns true, then it continues iterating; or false to stop.
-	IteratorDescFrom(key interface{}, match bool, f func(key, value interface{}) bool)
+	//
+	// The parameter `key` specifies the start entry for iterating.
+	// The parameter `match` specifies whether starting iterating only if the `key` is fully matched, or else using
+	// index searching iterating.
+	// If callback function `f` returns true, then it continues iterating; or false to stop.
+	IteratorDescFrom(key any, match bool, f func(key, value any) bool)
+}
+
+// iteratorFromGetIndexT returns the index of the key in the keys slice.
+//
+// The parameter `match` specifies whether starting iterating only if the `key` is fully matched,
+// or else using index searching iterating.
+// If `isIterator` is true, iterator is available; or else not.
+func iteratorFromGetIndexT[T comparable](key T, keys []T, match bool) (index int, canIterator bool) {
+	if match {
+		for i, k := range keys {
+			if k == key {
+				canIterator = true
+				index = i
+			}
+		}
+	} else {
+		if i, ok := any(key).(int); ok {
+			canIterator = true
+			index = i
+		}
+	}
+	return
+}
+
+// iteratorFromGetIndex returns the index of the key in the keys slice.
+//
+// The parameter `match` specifies whether starting iterating only if the `key` is fully matched,
+// or else using index searching iterating.
+// If `isIterator` is true, iterator is available; or else not.
+func iteratorFromGetIndex(key any, keys []any, match bool) (index int, canIterator bool) {
+	return iteratorFromGetIndexT(key, keys, match)
 }

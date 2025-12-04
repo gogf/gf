@@ -18,6 +18,8 @@ import (
 	"time"
 
 	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/renderer"
+	"github.com/olekukonko/tablewriter/tw"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gset"
@@ -26,6 +28,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/net/ghttp/internal/graceful"
 	"github.com/gogf/gf/v2/net/ghttp/internal/swaggerui"
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/net/gsvc"
@@ -88,20 +91,20 @@ func serverProcessInit() {
 // GetServer creates and returns a server instance using given name and default configurations.
 // Note that the parameter `name` should be unique for different servers. It returns an existing
 // server instance if given `name` is already existing in the server mapping.
-func GetServer(name ...interface{}) *Server {
+func GetServer(name ...any) *Server {
 	serverName := DefaultServerName
 	if len(name) > 0 && name[0] != "" {
 		serverName = gconv.String(name[0])
 	}
-	v := serverMapping.GetOrSetFuncLock(serverName, func() interface{} {
+	v := serverMapping.GetOrSetFuncLock(serverName, func() any {
 		s := &Server{
 			instance:         serverName,
 			plugins:          make([]Plugin, 0),
-			servers:          make([]*gracefulServer, 0),
+			servers:          make([]*graceful.Server, 0),
 			closeChan:        make(chan struct{}, 10000),
 			serverCount:      gtype.NewInt(),
 			statusHandlerMap: make(map[string][]HandlerFunc),
-			serveTree:        make(map[string]interface{}),
+			serveTree:        make(map[string]any),
 			serveCache:       gcache.New(),
 			routesMap:        make(map[string][]*HandlerItem),
 			openapi:          goai.New(),
@@ -247,7 +250,13 @@ func (s *Server) Start() error {
 
 	// If this is a child process, it then notifies its parent exit.
 	if gproc.IsChild() {
-		gtimer.SetTimeout(ctx, time.Duration(s.config.GracefulTimeout)*time.Second, func(ctx context.Context) {
+		var gracefulTimeout = time.Duration(s.config.GracefulTimeout) * time.Second
+		gtimer.SetTimeout(ctx, gracefulTimeout, func(ctx context.Context) {
+			intlog.Printf(
+				ctx,
+				`pid[%d]: notice parent server graceful shuttingdown, ppid: %d`,
+				gproc.Pid(), gproc.PPid(),
+			)
 			if err := gproc.Send(gproc.PPid(), []byte("exit"), adminGProcCommGroup); err != nil {
 				intlog.Errorf(ctx, `server error in process communication: %+v`, err)
 			}
@@ -289,11 +298,16 @@ func (s *Server) doRouterMapDump() {
 	}
 	if len(routes) > 0 {
 		buffer := bytes.NewBuffer(nil)
-		table := tablewriter.NewWriter(buffer)
-		table.SetHeader(headers)
-		table.SetRowLine(true)
-		table.SetBorder(false)
-		table.SetCenterSeparator("|")
+		table := tablewriter.NewTable(buffer,
+			tablewriter.WithRenderer(renderer.NewBlueprint(
+				tw.Rendition{
+					Settings: tw.Settings{
+						Separators: tw.Separators{BetweenRows: tw.On},
+					},
+					Symbols: tw.NewSymbolCustom("HTTP").WithCenter("|"),
+				})),
+		)
+		table.Header(headers)
 
 		for _, item := range routes {
 			var (
@@ -331,14 +345,14 @@ func (s *Server) doRouterMapDump() {
 					item.Middleware,
 				)
 			}
-			table.Append(data)
+			_ = table.Append(data)
 		}
-		table.Render()
+		_ = table.Render()
 		s.config.Logger.Header(false).Printf(ctx, "\n%s", buffer.String())
 	}
 }
 
-// GetOpenApi returns the OpenApi specification management object of current server.
+// GetOpenApi returns the OpenApi specification management object of the current server.
 func (s *Server) GetOpenApi() *goai.OpenApiV3 {
 	return s.openapi
 }
@@ -400,7 +414,7 @@ func (s *Server) GetRoutes() []RouterItem {
 			// The value of the map is a custom sorted array.
 			if _, ok := m[item.Domain]; !ok {
 				// Sort in ASC order.
-				m[item.Domain] = garray.NewSortedArray(func(v1, v2 interface{}) int {
+				m[item.Domain] = garray.NewSortedArray(func(v1, v2 any) int {
 					item1 := v1.(RouterItem)
 					item2 := v2.(RouterItem)
 					r := 0
@@ -445,19 +459,11 @@ func (s *Server) Run() {
 	// Signal handler in asynchronous way.
 	go handleProcessSignal()
 
-	// Blocking using channel for graceful restart.
+	// Blocking using the channel for graceful restart.
 	<-s.closeChan
-	// Remove plugins.
-	if len(s.plugins) > 0 {
-		for _, p := range s.plugins {
-			intlog.Printf(ctx, `remove plugin: %s`, p.Name())
-			if err := p.Remove(); err != nil {
-				intlog.Errorf(ctx, "%+v", err)
-			}
-		}
-	}
-	s.doServiceDeregister()
-	s.Logger().Infof(ctx, "pid[%d]: all servers shutdown", gproc.Pid())
+
+	// Shutdown the server
+	_ = s.Shutdown()
 }
 
 // Wait blocks to wait for all servers done.
@@ -471,7 +477,7 @@ func Wait() {
 	<-allShutdownChan
 
 	// Remove plugins.
-	serverMapping.Iterator(func(k string, v interface{}) bool {
+	serverMapping.Iterator(func(k string, v any) bool {
 		s := v.(*Server)
 		if len(s.plugins) > 0 {
 			for _, p := range s.plugins {
@@ -529,9 +535,9 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			if fd > 0 {
 				s.servers = append(s.servers, s.newGracefulServer(itemFunc, fd))
 			} else {
-				s.servers = append(s.servers, s.newGracefulServer(itemFunc))
+				s.servers = append(s.servers, s.newGracefulServer(itemFunc, 0))
 			}
-			s.servers[len(s.servers)-1].isHttps = true
+			s.servers[len(s.servers)-1].SetIsHttps(true)
 		}
 	}
 	// HTTP
@@ -564,7 +570,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 		if fd > 0 {
 			s.servers = append(s.servers, s.newGracefulServer(itemFunc, fd))
 		} else {
-			s.servers = append(s.servers, s.newGracefulServer(itemFunc))
+			s.servers = append(s.servers, s.newGracefulServer(itemFunc, 0))
 		}
 	}
 	// Start listening asynchronously.
@@ -577,11 +583,11 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 	wg.Wait()
 }
 
-func (s *Server) startGracefulServer(ctx context.Context, wg *sync.WaitGroup, server *gracefulServer) {
+func (s *Server) startGracefulServer(ctx context.Context, wg *sync.WaitGroup, server *graceful.Server) {
 	s.serverCount.Add(1)
 	var err error
 	// Create listener.
-	if server.isHttps {
+	if server.IsHttps() {
 		err = server.CreateListenerTLS(
 			s.config.HTTPSCertPath, s.config.HTTPSKeyPath, s.config.TLSConfig,
 		)
@@ -615,7 +621,7 @@ func (s *Server) Status() ServerStatus {
 	}
 	// If any underlying server is running, the server status is running.
 	for _, v := range s.servers {
-		if v.status.Val() == ServerStatusRunning {
+		if v.Status() == ServerStatusRunning {
 			return ServerStatusRunning
 		}
 	}
@@ -630,8 +636,8 @@ func (s *Server) getListenerFdMap() map[string]string {
 		"http":  "",
 	}
 	for _, v := range s.servers {
-		str := v.address + "#" + gconv.String(v.Fd()) + ","
-		if v.isHttps {
+		str := v.GetAddress() + "#" + gconv.String(v.Fd()) + ","
+		if v.IsHttps() {
 			if len(m["https"]) > 0 {
 				m["https"] += ","
 			}
@@ -646,13 +652,30 @@ func (s *Server) getListenerFdMap() map[string]string {
 	return m
 }
 
-// GetListenedPort retrieves and returns one port which is listened by current server.
+// GetListenedPort returns a port currently listened to by the server.
+// It prioritizes the HTTP port if both HTTP and HTTPS are enabled.
 func (s *Server) GetListenedPort() int {
-	ports := s.GetListenedPorts()
-	if len(ports) > 0 {
-		return ports[0]
+	for _, server := range s.servers {
+		if !server.IsHttps() {
+			return server.GetListenedPort()
+		}
 	}
-	return 0
+	for _, server := range s.servers {
+		if server.IsHttps() {
+			return server.GetListenedPort()
+		}
+	}
+	return -1
+}
+
+// GetListenedHTTPSPort retrieves and returns one port which is listened using TLS by current server.
+func (s *Server) GetListenedHTTPSPort() int {
+	for _, server := range s.servers {
+		if server.IsHttps() {
+			return server.GetListenedPort()
+		}
+	}
+	return -1
 }
 
 // GetListenedPorts retrieves and returns the ports which are listened by current server.

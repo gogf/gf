@@ -72,10 +72,10 @@ func Test_Required(t *testing.T) {
 	if m := g.Validator().Data("").Rules("required").Run(ctx); m == nil {
 		t.Error(m)
 	}
-	if m := g.Validator().Data("").Assoc(map[string]interface{}{"id": 1, "age": 19}).Rules("required-if: id,1,age,18").Run(ctx); m == nil {
+	if m := g.Validator().Data("").Assoc(map[string]any{"id": 1, "age": 19}).Rules("required-if: id,1,age,18").Run(ctx); m == nil {
 		t.Error("Required校验失败")
 	}
-	if m := g.Validator().Data("").Assoc(map[string]interface{}{"id": 2, "age": 19}).Rules("required-if: id,1,age,18").Run(ctx); m != nil {
+	if m := g.Validator().Data("").Assoc(map[string]any{"id": 2, "age": 19}).Rules("required-if: id,1,age,18").Run(ctx); m != nil {
 		t.Error("Required校验失败")
 	}
 }
@@ -1577,6 +1577,10 @@ func Test_Enums(t *testing.T) {
 			Id    int
 			Enums EnumsTest `v:"enums"`
 		}
+		type PointerParams struct {
+			Id    int
+			Enums *EnumsTest `v:"enums"`
+		}
 		type SliceParams struct {
 			Id    int
 			Enums []EnumsTest `v:"foreach|enums"`
@@ -1600,6 +1604,13 @@ func Test_Enums(t *testing.T) {
 			Enums: "c",
 		}).Run(ctx)
 		t.Assert(err, "The Enums value `c` should be in enums of: [\"a\",\"b\"]")
+
+		var b EnumsTest = "b"
+		err = g.Validator().Data(&PointerParams{
+			Id:    1,
+			Enums: &b,
+		}).Run(ctx)
+		t.AssertNil(err)
 
 		err = g.Validator().Data(&SliceParams{
 			Id:    1,

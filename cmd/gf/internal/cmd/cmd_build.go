@@ -30,12 +30,10 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
-var (
-	Build = cBuild{
-		nodeNameInConfigFile: "gfcli.build",
-		packedGoFileName:     "internal/packed/build_pack_data.go",
-	}
-)
+var Build = cBuild{
+	nodeNameInConfigFile: "gfcli.build",
+	packedGoFileName:     "internal/packed/build_pack_data.go",
+}
 
 type cBuild struct {
 	g.Meta               `name:"build" brief:"{cBuildBrief}" dc:"{cBuildDc}" eg:"{cBuildEg}" ad:"{cBuildAd}"`
@@ -65,45 +63,67 @@ It provides much more features for building binary:
 `
 	cBuildAd = `
 PLATFORMS
+    aix       ppc64
+    android   386,amd64,arm,arm64
     darwin    amd64,arm64
+    dragonfly amd64
     freebsd   386,amd64,arm
-    linux     386,amd64,arm,arm64,ppc64,ppc64le,mips,mipsle,mips64,mips64le
+    illumos   amd64
+    ios       arm64
+    js        wasm
+    linux     386,amd64,arm,arm64,loong64,mips,mipsle,mips64,mips64le,ppc64,ppc64le,riscv64,s390x
     netbsd    386,amd64,arm
-    openbsd   386,amd64,arm
-    windows   386,amd64
+    openbsd   386,amd64,arm,arm64
+    plan9     386,amd64,arm
+    solaris   amd64
+    wasip1    wasm
+    windows   386,amd64,arm,arm64
 `
 	// https://golang.google.cn/doc/install/source
 	cBuildPlatforms = `
+aix       ppc64
+android   386
+android   amd64
+android   arm
+android   arm64
 darwin    amd64
 darwin    arm64
-ios       amd64
-ios       arm64
+dragonfly amd64
 freebsd   386
 freebsd   amd64
 freebsd   arm
+illumos   amd64
+ios       arm64
+js        wasm
 linux     386
 linux     amd64
 linux     arm
 linux     arm64
-linux     ppc64
-linux     ppc64le
+linux     loong64
 linux     mips
 linux     mipsle
 linux     mips64
 linux     mips64le
+linux     ppc64
+linux     ppc64le
+linux     riscv64
+linux     s390x
 netbsd    386
 netbsd    amd64
 netbsd    arm
 openbsd   386
 openbsd   amd64
 openbsd   arm
-windows   386
-windows   amd64
-android   arm
-dragonfly amd64
+openbsd   arm64
 plan9     386
 plan9     amd64
+plan9     arm
 solaris   amd64
+wasip1    wasm
+windows   386
+windows   amd64
+windows   arm
+windows   arm64
 `
 )
 
@@ -138,11 +158,6 @@ type cBuildInput struct {
 type cBuildOutput struct{}
 
 func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, err error) {
-	// print used go env
-	if in.DumpENV {
-		_, _ = Env.Index(ctx, cEnvInput{})
-	}
-
 	mlog.SetHeaderPrint(true)
 
 	mlog.Debugf(`build command input: %+v`, in)
@@ -217,7 +232,7 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 		if !gfile.Exists(in.PackDst) {
 			// Remove the go file that is automatically packed resource.
 			defer func() {
-				_ = gfile.Remove(in.PackDst)
+				_ = gfile.RemoveFile(in.PackDst)
 				mlog.Printf(`remove the automatically generated resource go file: %s`, in.PackDst)
 			}()
 		}
@@ -240,6 +255,10 @@ func (c cBuild) Index(ctx context.Context, in cBuildInput) (out *cBuildOutput, e
 		genv.MustSet("CGO_ENABLED", "1")
 	} else {
 		genv.MustSet("CGO_ENABLED", "0")
+	}
+	// print used go env
+	if in.DumpENV {
+		_, _ = Env.Index(ctx, cEnvInput{})
 	}
 	for system, item := range platformMap {
 		if len(customSystems) > 0 && customSystems[0] != "all" && !gstr.InArray(customSystems, system) {

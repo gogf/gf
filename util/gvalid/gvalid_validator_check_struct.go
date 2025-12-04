@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error {
+func (v *Validator) doCheckStruct(ctx context.Context, object any) Error {
 	var (
 		errorMaps           = make(map[string]map[string]error) // Returning error.
 		fieldToAliasNameMap = make(map[string]string)           // Field names to alias name map.
@@ -47,7 +47,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 	}
 
 	var (
-		inputParamMap  map[string]interface{}
+		inputParamMap  map[string]any
 		checkRules     = make([]fieldRule, 0)
 		nameToRuleMap  = make(map[string]string) // just for internally searching index purpose.
 		customMessage  = make(CustomMsg)         // Custom rule error message map.
@@ -110,7 +110,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 	}
 	// Input parameter map handling.
 	if v.assoc == nil || !v.useAssocInsteadOfObjectAttributes {
-		inputParamMap = make(map[string]interface{})
+		inputParamMap = make(map[string]any)
 	} else {
 		inputParamMap = gconv.Map(v.assoc)
 	}
@@ -226,7 +226,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 	}
 
 	// Temporary variable for value.
-	var value interface{}
+	var value any
 
 	// It checks the struct recursively if its attribute is a struct/struct slice.
 	for _, field := range fieldMap {
@@ -260,9 +260,10 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 				)
 				if empty.IsNil(value) {
 					switch field.Kind() {
-					case reflect.Map, reflect.Ptr, reflect.Slice, reflect.Array:
+					case reflect.Map, reflect.Pointer, reflect.Slice, reflect.Array:
 						// Nothing to do.
 						continue
+					default:
 					}
 				}
 				v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
@@ -272,6 +273,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 					ErrorMaps:           errorMaps,
 					ResultSequenceRules: &resultSequenceRules,
 				})
+			default:
 			}
 		}
 		if v.bail && len(errorMaps) > 0 {
@@ -284,6 +286,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 
 	// The following logic is the same as some of CheckMap but with sequence support.
 	for _, checkRuleItem := range checkRules {
+		// it ignores Meta object.
 		if !checkRuleItem.IsMeta {
 			value = getPossibleValueFromMap(
 				inputParamMap, checkRuleItem.Name, fieldToAliasNameMap[checkRuleItem.Name],
@@ -293,13 +296,16 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		if value != nil {
 			switch checkRuleItem.FieldKind {
 			case reflect.Struct, reflect.Map:
+				// empty struct or map.
 				if gconv.String(value) == emptyJsonObjectStr {
-					value = ""
+					value = nil
 				}
 			case reflect.Slice, reflect.Array:
+				// empty slice.
 				if gconv.String(value) == emptyJsonArrayStr {
-					value = ""
+					value = []any{}
 				}
+			default:
 			}
 		}
 		// It checks each rule and its value in loop.
@@ -322,6 +328,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 				required := false
 				// rule => error
 				for ruleKey := range errorItem {
+					// it checks whether current rule is kind of required rule.
 					if required = v.checkRuleRequired(ruleKey); required {
 						break
 					}
@@ -352,7 +359,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 	return nil
 }
 
-func getPossibleValueFromMap(inputParamMap map[string]interface{}, fieldName, aliasName string) (value interface{}) {
+func getPossibleValueFromMap(inputParamMap map[string]any, fieldName, aliasName string) (value any) {
 	_, value = gutil.MapPossibleItemByKey(inputParamMap, fieldName)
 	if value == nil && aliasName != "" {
 		_, value = gutil.MapPossibleItemByKey(inputParamMap, aliasName)

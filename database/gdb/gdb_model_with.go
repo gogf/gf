@@ -43,7 +43,7 @@ import (
 // Or:
 //
 //	db.With(UserDetail{}, UserScores{}).Scan(xxx)
-func (m *Model) With(objects ...interface{}) *Model {
+func (m *Model) With(objects ...any) *Model {
 	model := m.getModel()
 	for _, object := range objects {
 		if m.tables == "" {
@@ -66,7 +66,10 @@ func (m *Model) WithAll() *Model {
 }
 
 // doWithScanStruct handles model association operations feature for single struct.
-func (m *Model) doWithScanStruct(pointer interface{}) error {
+func (m *Model) doWithScanStruct(pointer any) error {
+	if len(m.withArray) == 0 && !m.withAll {
+		return nil
+	}
 	var (
 		err                 error
 		allowedTypeStrArray = make([]string, 0)
@@ -121,7 +124,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 			fieldKeys          []string
 			relatedSourceName  = array[0]
 			relatedTargetName  = array[1]
-			relatedTargetValue interface{}
+			relatedTargetValue any
 		)
 		// Find the value of related attribute from `pointer`.
 		for attributeName, attributeValue := range currentStructFieldMap {
@@ -138,17 +141,21 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 			)
 		}
 		bindToReflectValue := field.Value
-		if bindToReflectValue.Kind() != reflect.Ptr && bindToReflectValue.CanAddr() {
+		if bindToReflectValue.Kind() != reflect.Pointer && bindToReflectValue.CanAddr() {
 			bindToReflectValue = bindToReflectValue.Addr()
 		}
 
-		// It automatically retrieves struct field names from current attribute struct/slice.
-		if structType, err := gstructs.StructType(field.Value); err != nil {
+		if structFields, err := gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         field.Value,
+			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+		}); err != nil {
 			return err
 		} else {
-			fieldKeys = structType.FieldKeys()
+			fieldKeys = make([]string, len(structFields))
+			for i, field := range structFields {
+				fieldKeys[i] = field.Name()
+			}
 		}
-
 		// Recursively with feature checks.
 		model = m.db.With(field.Value).Hook(m.hookHandler)
 		if m.withAll {
@@ -182,7 +189,10 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 
 // doWithScanStructs handles model association operations feature for struct slice.
 // Also see doWithScanStruct.
-func (m *Model) doWithScanStructs(pointer interface{}) error {
+func (m *Model) doWithScanStructs(pointer any) error {
+	if len(m.withArray) == 0 && !m.withAll {
+		return nil
+	}
 	if v, ok := pointer.(reflect.Value); ok {
 		pointer = v.Interface()
 	}
@@ -241,7 +251,7 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 			fieldKeys          []string
 			relatedSourceName  = array[0]
 			relatedTargetName  = array[1]
-			relatedTargetValue interface{}
+			relatedTargetValue any
 		)
 		// Find the value slice of related attribute from `pointer`.
 		for attributeName := range currentStructFieldMap {
@@ -261,11 +271,16 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 		if gutil.IsEmpty(relatedTargetValue) {
 			return nil
 		}
-		// It automatically retrieves struct field names from current attribute struct/slice.
-		if structType, err := gstructs.StructType(field.Value); err != nil {
+		if structFields, err := gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         field.Value,
+			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+		}); err != nil {
 			return err
 		} else {
-			fieldKeys = structType.FieldKeys()
+			fieldKeys = make([]string, len(structFields))
+			for i, field := range structFields {
+				fieldKeys[i] = field.Name()
+			}
 		}
 		// Recursively with feature checks.
 		model = m.db.With(field.Value).Hook(m.hookHandler)
@@ -312,17 +327,19 @@ func (m *Model) parseWithTagInFieldStruct(field gstructs.Field) (output parseWit
 		array  []string
 		key    string
 	)
-	for _, v := range gstr.SplitAndTrim(ormTag, " ") {
+	for _, v := range gstr.SplitAndTrim(ormTag, ",") {
 		array = gstr.Split(v, ":")
 		if len(array) == 2 {
 			key = array[0]
 			data[key] = gstr.Trim(array[1])
 		} else {
-			data[key] += " " + gstr.Trim(v)
+			if key == OrmTagForWithOrder {
+				// supporting multiple order fields
+				data[key] += "," + gstr.Trim(v)
+			} else {
+				data[key] += " " + gstr.Trim(v)
+			}
 		}
-	}
-	for k, v := range data {
-		data[k] = gstr.TrimRight(v, ",")
 	}
 	output.With = data[OrmTagForWith]
 	output.Where = data[OrmTagForWithWhere]

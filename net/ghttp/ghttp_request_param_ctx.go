@@ -30,10 +30,8 @@ func (r *Request) Context() context.Context {
 	if RequestFromCtx(ctx) == nil {
 		// Inject Request object into context.
 		ctx = context.WithValue(ctx, ctxKeyForRequest, r)
-		// Add default tracing info if using default tracing provider.
-		ctx = gctx.WithCtx(ctx)
 		// Update the values of the original HTTP request.
-		*r.Request = *r.Request.WithContext(ctx)
+		*r.Request = *r.WithContext(ctx)
 	}
 	return ctx
 }
@@ -62,7 +60,7 @@ func (r *Request) SetCtx(ctx context.Context) {
 // GetCtxVar retrieves and returns a Var with a given key name.
 // The optional parameter `def` specifies the default value of the Var if given `key`
 // does not exist in the context.
-func (r *Request) GetCtxVar(key interface{}, def ...interface{}) *gvar.Var {
+func (r *Request) GetCtxVar(key any, def ...any) *gvar.Var {
 	value := r.Context().Value(key)
 	if value == nil && len(def) > 0 {
 		value = def[0]
@@ -71,8 +69,8 @@ func (r *Request) GetCtxVar(key interface{}, def ...interface{}) *gvar.Var {
 }
 
 // SetCtxVar sets custom parameter to context with key-value pairs.
-func (r *Request) SetCtxVar(key interface{}, value interface{}) {
+func (r *Request) SetCtxVar(key any, value any) {
 	var ctx = r.Context()
 	ctx = context.WithValue(ctx, key, value)
-	*r.Request = *r.Request.WithContext(ctx)
+	*r.Request = *r.WithContext(ctx)
 }

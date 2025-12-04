@@ -9,10 +9,11 @@ package zookeeper
 import (
 	"context"
 	"errors"
-	"github.com/go-zookeeper/zk"
-	"golang.org/x/sync/singleflight"
 	"path"
 	"strings"
+
+	"github.com/go-zookeeper/zk"
+	"golang.org/x/sync/singleflight"
 
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"
@@ -66,9 +67,9 @@ func (w *watcher) Proceed() ([]gsvc.Service, error) {
 }
 
 func (w *watcher) getServicesByPrefix() ([]gsvc.Service, error) {
-	prefix := strings.TrimPrefix(strings.ReplaceAll(w.prefix, "/", "-"), "-")
+	prefix := strings.Trim(strings.ReplaceAll(w.prefix, "/", "-"), "-")
 	serviceNamePath := path.Join(w.nameSpace, prefix)
-	instances, err, _ := w.group.Do(serviceNamePath, func() (interface{}, error) {
+	instances, err, _ := w.group.Do(serviceNamePath, func() (any, error) {
 		servicesID, _, err := w.conn.Children(serviceNamePath)
 		if err != nil {
 			return nil, gerror.Wrapf(
@@ -122,7 +123,7 @@ func (w *watcher) Close() error {
 }
 
 func (w *watcher) watch(ctx context.Context) {
-	prefix := strings.TrimPrefix(strings.ReplaceAll(w.prefix, "/", "-"), "-")
+	prefix := strings.Trim(strings.ReplaceAll(w.prefix, "/", "-"), "-")
 	serviceNamePath := path.Join(w.nameSpace, prefix)
 	for {
 

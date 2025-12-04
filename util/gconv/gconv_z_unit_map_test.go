@@ -21,37 +21,37 @@ type SubMapTest struct {
 }
 
 var mapTests = []struct {
-	value  interface{}
-	expect interface{}
+	value  any
+	expect any
 }{
-	{map[string]int{"k1": 1}, map[string]interface{}{"k1": 1}},
-	{map[string]uint{"k1": 1}, map[string]interface{}{"k1": 1}},
-	{map[string]string{"k1": "v1"}, map[string]interface{}{"k1": "v1"}},
-	{map[string]float32{"k1": 1.1}, map[string]interface{}{"k1": 1.1}},
-	{map[string]float64{"k1": 1.1}, map[string]interface{}{"k1": 1.1}},
-	{map[string]bool{"k1": true}, map[string]interface{}{"k1": true}},
-	{map[string]interface{}{"k1": "v1"}, map[string]interface{}{"k1": "v1"}},
+	{map[string]int{"k1": 1}, map[string]any{"k1": 1}},
+	{map[string]uint{"k1": 1}, map[string]any{"k1": 1}},
+	{map[string]string{"k1": "v1"}, map[string]any{"k1": "v1"}},
+	{map[string]float32{"k1": 1.1}, map[string]any{"k1": 1.1}},
+	{map[string]float64{"k1": 1.1}, map[string]any{"k1": 1.1}},
+	{map[string]bool{"k1": true}, map[string]any{"k1": true}},
+	{map[string]any{"k1": "v1"}, map[string]any{"k1": "v1"}},
 
-	{map[interface{}]int{"k1": 1}, map[string]interface{}{"k1": 1}},
-	{map[interface{}]uint{"k1": 1}, map[string]interface{}{"k1": 1}},
-	{map[interface{}]string{"k1": "v1"}, map[string]interface{}{"k1": "v1"}},
-	{map[interface{}]float32{"k1": 1.1}, map[string]interface{}{"k1": 1.1}},
-	{map[interface{}]float64{"k1": 1.1}, map[string]interface{}{"k1": 1.1}},
-	{map[interface{}]bool{"k1": true}, map[string]interface{}{"k1": true}},
-	{map[interface{}]interface{}{"k1": "v1"}, map[string]interface{}{"k1": "v1"}},
+	{map[any]int{"k1": 1}, map[string]any{"k1": 1}},
+	{map[any]uint{"k1": 1}, map[string]any{"k1": 1}},
+	{map[any]string{"k1": "v1"}, map[string]any{"k1": "v1"}},
+	{map[any]float32{"k1": 1.1}, map[string]any{"k1": 1.1}},
+	{map[any]float64{"k1": 1.1}, map[string]any{"k1": 1.1}},
+	{map[any]bool{"k1": true}, map[string]any{"k1": true}},
+	{map[any]any{"k1": "v1"}, map[string]any{"k1": "v1"}},
 
-	{map[int]int{1: 1}, map[string]interface{}{"1": 1}},
-	{map[int]string{1: "v1"}, map[string]interface{}{"1": "v1"}},
-	{map[uint]int{1: 1}, map[string]interface{}{"1": 1}},
-	{map[uint]string{1: "v1"}, map[string]interface{}{"1": "v1"}},
+	{map[int]int{1: 1}, map[string]any{"1": 1}},
+	{map[int]string{1: "v1"}, map[string]any{"1": "v1"}},
+	{map[uint]int{1: 1}, map[string]any{"1": 1}},
+	{map[uint]string{1: "v1"}, map[string]any{"1": "v1"}},
 
-	{[]int{1, 2, 3}, map[string]interface{}{"1": 2, "3": nil}},
-	{[]int{1, 2, 3, 4}, map[string]interface{}{"1": 2, "3": 4}},
+	{[]int{1, 2, 3}, map[string]any{"1": 2, "3": nil}},
+	{[]int{1, 2, 3, 4}, map[string]any{"1": 2, "3": 4}},
 
 	{`{"earth": "亚马逊雨林"}`,
-		map[string]interface{}{"earth": "亚马逊雨林"}},
+		map[string]any{"earth": "亚马逊雨林"}},
 	{[]byte(`{"earth": "撒哈拉沙漠"}`),
-		map[string]interface{}{"earth": "撒哈拉沙漠"}},
+		map[string]any{"earth": "撒哈拉沙漠"}},
 	{`{Earth}`, nil},
 
 	{"", nil},
@@ -66,13 +66,13 @@ var mapTests = []struct {
 		Earth string
 	}{
 		Earth: "大峡谷",
-	}, map[string]interface{}{"Earth": "大峡谷"}},
+	}, map[string]any{"Earth": "大峡谷"}},
 
 	{struct {
 		Earth string
 	}{
 		Earth: "马里亚纳海沟",
-	}, map[string]interface{}{"Earth": "马里亚纳海沟"}},
+	}, map[string]any{"Earth": "马里亚纳海沟"}},
 
 	{struct {
 		Earth string
@@ -80,7 +80,7 @@ var mapTests = []struct {
 	}{
 		Earth: "大堡礁",
 		mars:  "奥林帕斯山",
-	}, map[string]interface{}{"Earth": "大堡礁"}},
+	}, map[string]any{"Earth": "大堡礁"}},
 
 	{struct {
 		Earth string
@@ -90,7 +90,7 @@ var mapTests = []struct {
 		SubMapTest: SubMapTest{
 			Name: "长江",
 		},
-	}, map[string]interface{}{"Earth": "中国", "Name": "长江"}},
+	}, map[string]any{"Earth": "中国", "Name": "长江"}},
 
 	{struct {
 		Earth string
@@ -100,7 +100,7 @@ var mapTests = []struct {
 		China: SubMapTest{
 			Name: "黄河",
 		},
-	}, map[string]interface{}{"Earth": "中国", "China": map[string]interface{}{"Name": "黄河"}}},
+	}, map[string]any{"Earth": "中国", "China": map[string]any{"Name": "黄河"}}},
 
 	{struct {
 		Earth      string
@@ -110,7 +110,7 @@ var mapTests = []struct {
 		SubMapTest: SubMapTest{
 			Name: "淮河",
 		},
-	}, map[string]interface{}{"Earth": "中国", "sub_map_test": map[string]interface{}{"Name": "淮河"}}},
+	}, map[string]any{"Earth": "中国", "sub_map_test": map[string]any{"Name": "淮河"}}},
 
 	{struct {
 		Earth string
@@ -120,7 +120,7 @@ var mapTests = []struct {
 		China: SubMapTest{
 			Name: "黄河",
 		},
-	}, map[string]interface{}{"Earth": "中国", "中国": map[string]interface{}{"Name": "黄河"}}},
+	}, map[string]any{"Earth": "中国", "中国": map[string]any{"Name": "黄河"}}},
 
 	{struct {
 		China         string `c:"中国"`
@@ -130,7 +130,7 @@ var mapTests = []struct {
 		China:         "长城",
 		America:       "Statue of Liberty",
 		UnitedKingdom: "",
-	}, map[string]interface{}{"中国": "长城", "UK": ""}},
+	}, map[string]any{"中国": "长城", "UK": ""}},
 
 	{struct {
 		China         string `gconv:"中国"`
@@ -140,7 +140,7 @@ var mapTests = []struct {
 		China:         "故宫",
 		America:       "White House",
 		UnitedKingdom: "",
-	}, map[string]interface{}{"中国": "故宫", "UK": ""}},
+	}, map[string]any{"中国": "故宫", "UK": ""}},
 
 	{struct {
 		China         string `json:"中国"`
@@ -150,15 +150,15 @@ var mapTests = []struct {
 		China:         "东方明珠",
 		America:       "Empire State Building",
 		UnitedKingdom: "",
-	}, map[string]interface{}{"中国": "东方明珠", "UK": ""}},
+	}, map[string]any{"中国": "东方明珠", "UK": ""}},
 
 	{struct {
-		China   interface{} `json:",omitempty"`
-		America string      `json:",omitempty"`
+		China   any    `json:",omitempty"`
+		America string `json:",omitempty"`
 	}{
 		China:   "黄山",
 		America: "",
-	}, map[string]interface{}{"China": "黄山", "America": ""}},
+	}, map[string]any{"China": "黄山", "America": ""}},
 }
 
 func TestMap(t *testing.T) {
@@ -173,8 +173,8 @@ func TestMaps(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range mapTests {
 			var (
-				maps    interface{}
-				expects interface{}
+				maps    any
+				expects any
 			)
 
 			if v, ok := test.value.(string); ok {
@@ -184,7 +184,7 @@ func TestMaps(t *testing.T) {
 			} else if test.value == nil {
 				maps = nil
 			} else {
-				maps = []interface{}{
+				maps = []any{
 					test.value,
 					test.value,
 				}
@@ -193,7 +193,7 @@ func TestMaps(t *testing.T) {
 			if test.expect == nil {
 				expects = test.expect
 			} else {
-				expects = []interface{}{
+				expects = []any{
 					test.expect,
 					test.expect,
 				}
@@ -209,7 +209,7 @@ func TestMaps(t *testing.T) {
 
 	// Test for special types.
 	gtest.C(t, func(t *gtest.T) {
-		mapStrAny := []map[string]interface{}{
+		mapStrAny := []map[string]any{
 			{"earth": "亚马逊雨林"},
 			{"mars": "奥林帕斯山"},
 		}
@@ -265,8 +265,8 @@ func TestMapsDeepExtra(t *testing.T) {
 func TestMapStrStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for _, test := range mapTests {
-			var expect map[string]interface{}
-			if v, ok := test.expect.(map[string]interface{}); ok {
+			var expect map[string]any
+			if v, ok := test.expect.(map[string]any); ok {
 				expect = v
 			}
 			for k, v := range expect {
@@ -309,9 +309,9 @@ func TestMapWithMapOption(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var testMapOmitEmpty = struct {
 			Earth   string
-			Venus   int         `gconv:",omitempty"`
-			Mars    string      `c:",omitempty"`
-			Mercury interface{} `json:",omitempty"`
+			Venus   int    `gconv:",omitempty"`
+			Mars    string `c:",omitempty"`
+			Mercury any    `json:",omitempty"`
 		}{
 			Earth:   "死海",
 			Venus:   0,
@@ -319,7 +319,7 @@ func TestMapWithMapOption(t *testing.T) {
 			Mercury: nil,
 		}
 		r := gconv.Map(testMapOmitEmpty, gconv.MapOption{OmitEmpty: true})
-		t.Assert(r, map[string]interface{}{"Earth": "死海"})
+		t.Assert(r, map[string]any{"Earth": "死海"})
 	})
 
 	// Test for option: Tags.
@@ -330,10 +330,10 @@ func TestMapWithMapOption(t *testing.T) {
 			Earth: "尼莫点",
 		}
 		c := gconv.Map(testMapOmitEmpty, gconv.MapOption{Tags: []string{"chinese", "french"}})
-		t.Assert(c, map[string]interface{}{"地球": "尼莫点"})
+		t.Assert(c, map[string]any{"地球": "尼莫点"})
 
 		f := gconv.Map(testMapOmitEmpty, gconv.MapOption{Tags: []string{"french", "chinese"}})
-		t.Assert(f, map[string]interface{}{"Terre": "尼莫点"})
+		t.Assert(f, map[string]any{"Terre": "尼莫点"})
 	})
 }
 
@@ -342,10 +342,10 @@ func TestMapToMapExtra(t *testing.T) {
 		var (
 			err    error
 			value  = map[string]string{"k1": "v1"}
-			expect = make(map[string]interface{})
+			expect = make(map[string]any)
 		)
 		err = gconv.MapToMap(value, &expect)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(value["k1"], expect["k1"])
 	})
 

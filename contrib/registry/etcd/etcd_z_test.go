@@ -9,11 +9,12 @@ package etcd_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/contrib/registry/etcd/v2"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
+
+	"github.com/gogf/gf/contrib/registry/etcd/v2"
 )
 
 func TestRegistry(t *testing.T) {
@@ -24,7 +25,7 @@ func TestRegistry(t *testing.T) {
 	svc := &gsvc.LocalService{
 		Name:      guid.S(),
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:8888"),
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"protocol": "https",
 		},
 	}
@@ -58,7 +59,7 @@ func TestRegistry(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		result, err := registry.Search(ctx, gsvc.SearchInput{
 			Name: svc.GetName(),
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"protocol": "https",
 			},
 		})
@@ -69,7 +70,7 @@ func TestRegistry(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		result, err := registry.Search(ctx, gsvc.SearchInput{
 			Name: svc.GetName(),
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"protocol": "grpc",
 			},
 		})
@@ -92,7 +93,7 @@ func TestWatch(t *testing.T) {
 	svc1 := &gsvc.LocalService{
 		Name:      guid.S(),
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:8888"),
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"protocol": "https",
 		},
 	}

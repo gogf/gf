@@ -59,7 +59,7 @@ func Test_OpenApi_Swagger(t *testing.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		t.Assert(c.GetContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18,"Name":"john"}}`)
+		t.Assert(c.GetContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"OK","data":{"Id":1,"Age":18,"Name":"john"}}`)
 		t.Assert(c.GetContent(ctx, "/test/error"), `{"code":50,"message":"error","data":{"Id":1,"Age":0,"Name":""}}`)
 
 		t.Assert(gstr.Contains(c.GetContent(ctx, "/swagger/"), `API Reference`), true)
@@ -116,9 +116,9 @@ func Test_OpenApi_Multiple_Methods_Swagger(t *testing.T) {
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
 		// Only works on GET & POST methods.
-		t.Assert(c.GetContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18,"Name":"john"}}`)
+		t.Assert(c.GetContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"OK","data":{"Id":1,"Age":18,"Name":"john"}}`)
 		t.Assert(c.GetContent(ctx, "/test/error"), `{"code":50,"message":"error","data":{"Id":1,"Age":0,"Name":""}}`)
-		t.Assert(c.PostContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18,"Name":"john"}}`)
+		t.Assert(c.PostContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"OK","data":{"Id":1,"Age":18,"Name":"john"}}`)
 		t.Assert(c.PostContent(ctx, "/test/error"), `{"code":50,"message":"error","data":{"Id":1,"Age":0,"Name":""}}`)
 
 		// Not works on other methods.
@@ -176,12 +176,37 @@ func Test_OpenApi_Method_All_Swagger(t *testing.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		t.Assert(c.GetContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18,"Name":"john"}}`)
+		t.Assert(c.GetContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"OK","data":{"Id":1,"Age":18,"Name":"john"}}`)
 		t.Assert(c.GetContent(ctx, "/test/error"), `{"code":50,"message":"error","data":{"Id":1,"Age":0,"Name":""}}`)
-		t.Assert(c.PostContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18,"Name":"john"}}`)
+		t.Assert(c.PostContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"OK","data":{"Id":1,"Age":18,"Name":"john"}}`)
 		t.Assert(c.PostContent(ctx, "/test/error"), `{"code":50,"message":"error","data":{"Id":1,"Age":0,"Name":""}}`)
 
 		t.Assert(gstr.Contains(c.GetContent(ctx, "/swagger/"), `API Reference`), true)
 		t.Assert(gstr.Contains(c.GetContent(ctx, "/api.json"), `/test/error`), true)
 	})
+}
+
+func Test_OpenApi_Auth(t *testing.T) {
+	s := g.Server(guid.S())
+	apiPath := "/api.json"
+	s.SetOpenApiPath(apiPath)
+	s.BindHookHandler(s.GetOpenApiPath(), ghttp.HookBeforeServe, openApiBasicAuth)
+	s.Start()
+	defer s.Shutdown()
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(s.GetOpenApiPath(), apiPath)
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		t.Assert(c.GetContent(ctx, apiPath), "Unauthorized")
+		c.SetBasicAuth("OpenApiAuthUserName", "OpenApiAuthPass")
+		cc := c.GetContent(ctx, apiPath)
+		t.AssertNE(cc, "Unauthorized")
+	})
+}
+
+func openApiBasicAuth(r *ghttp.Request) {
+	if !r.BasicAuth("OpenApiAuthUserName", "OpenApiAuthPass", "Restricted") {
+		r.ExitAll()
+		return
+	}
 }

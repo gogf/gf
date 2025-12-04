@@ -9,16 +9,16 @@ package ghttp_test
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gxml"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/os/gview"
-
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 )
@@ -82,6 +82,17 @@ func Test_Response_ServeFileDownload(t *testing.T) {
 				client.GetContent(ctx, "/ServeFileDownload", "filePath=files/server.key"),
 				"BEGIN RSA PRIVATE KEY"),
 			true)
+
+		resp, err := client.Get(ctx, "/ServeFileDownload", "filePath="+srcPath)
+		t.AssertNil(err)
+		t.Assert(resp.ReadAllString(), "file1.txt: This file is for uploading unit test case.")
+		t.Assert(resp.Header.Get("Content-Disposition"), "attachment;filename=file1.txt")
+
+		srcPath = gtest.DataPath("upload", "中文.txt")
+		resp, err = client.Get(ctx, "/ServeFileDownload", "filePath="+srcPath)
+		t.AssertNil(err)
+		t.Assert(resp.ReadAllString(), "中文.txt: This file is for uploading unit test case.")
+		t.Assert(resp.Header.Get("Content-Disposition"), "attachment;filename*=UTF-8''"+url.QueryEscape("中文.txt"))
 	})
 }
 
@@ -272,7 +283,7 @@ func Test_Response_Write(t *testing.T) {
 		r.Response.WriteJsonP(user)
 	})
 	s.BindHandler("/WriteXml", func(r *ghttp.Request) {
-		m := map[string]interface{}{"name": "john"}
+		m := map[string]any{"name": "john"}
 		if bytes, err := gxml.Encode(m); err == nil {
 			r.Response.WriteXml(bytes)
 		}

@@ -8,6 +8,7 @@ package goai
 
 import (
 	"reflect"
+	"strings"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gset"
@@ -31,9 +32,9 @@ type Schema struct {
 	Title                string         `json:"title,omitempty"`
 	Format               string         `json:"format,omitempty"`
 	Description          string         `json:"description,omitempty"`
-	Enum                 []interface{}  `json:"enum,omitempty"`
-	Default              interface{}    `json:"default,omitempty"`
-	Example              interface{}    `json:"example,omitempty"`
+	Enum                 []any          `json:"enum,omitempty"`
+	Default              any            `json:"default,omitempty"`
+	Example              any            `json:"example,omitempty"`
 	ExternalDocs         *ExternalDocs  `json:"externalDocs,omitempty"`
 	UniqueItems          bool           `json:"uniqueItems,omitempty"`
 	ExclusiveMin         bool           `json:"exclusiveMinimum,omitempty"`
@@ -42,7 +43,7 @@ type Schema struct {
 	ReadOnly             bool           `json:"readOnly,omitempty"`
 	WriteOnly            bool           `json:"writeOnly,omitempty"`
 	AllowEmptyValue      bool           `json:"allowEmptyValue,omitempty"`
-	XML                  interface{}    `json:"xml,omitempty"`
+	XML                  any            `json:"xml,omitempty"`
 	Deprecated           bool           `json:"deprecated,omitempty"`
 	Min                  *float64       `json:"minimum,omitempty"`
 	Max                  *float64       `json:"maximum,omitempty"`
@@ -103,7 +104,7 @@ type Discriminator struct {
 
 // addSchema creates schemas with objects.
 // Note that the `object` can be array alias like: `type Res []Item`.
-func (oai *OpenApiV3) addSchema(object ...interface{}) error {
+func (oai *OpenApiV3) addSchema(object ...any) error {
 	for _, v := range object {
 		if err := oai.doAddSchemaSingle(v); err != nil {
 			return err
@@ -112,7 +113,7 @@ func (oai *OpenApiV3) addSchema(object ...interface{}) error {
 	return nil
 }
 
-func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
+func (oai *OpenApiV3) doAddSchemaSingle(object any) error {
 	if oai.Components.Schemas.refs == nil {
 		oai.Components.Schemas.refs = gmap.NewListMap()
 	}
@@ -142,14 +143,14 @@ func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
 }
 
 // structToSchema converts and returns given struct object as Schema.
-func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
+func (oai *OpenApiV3) structToSchema(object any) (*Schema, error) {
 	var (
 		tagMap = gmeta.Data(object)
 		schema = &Schema{
 			Properties:  createSchemas(),
 			XExtensions: make(XExtensions),
 		}
-		ignoreProperties []interface{}
+		ignoreProperties []any
 	)
 	if len(tagMap) > 0 {
 		if err := oai.tagMapToSchema(tagMap, schema); err != nil {
@@ -176,7 +177,7 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 	// struct.
 	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         object,
-		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+		RecursiveOption: gstructs.RecursiveOptionEmbedded,
 	})
 	schema.Type = TypeObject
 	for _, structField := range structFields {
@@ -203,6 +204,56 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 			validationRuleSet := gset.NewStrSetFrom(gstr.Split(ref.Value.ValidationRules, "|"))
 			if validationRuleSet.Contains(validationRuleKeyForRequired) {
 				schema.Required = append(schema.Required, key)
+			}
+
+			// Extract validation rules to schema. like min, max, length
+			lstRules := gstr.Split(ref.Value.ValidationRules, "|")
+			for _, rule := range lstRules {
+				if strings.HasPrefix(rule, validationRuleKeyForMax) {
+					if ref.Value.Type == "integer" || ref.Value.Type == "number" {
+						f := gconv.Float64(rule[4:])
+						ref.Value.Max = &f
+					}
+				}
+
+				if strings.HasPrefix(rule, validationRuleKeyForMaxLength) {
+					maxlength := gconv.Uint64(rule[11:])
+					ref.Value.MaxLength = &maxlength
+				}
+
+				if strings.HasPrefix(rule, validationRuleKeyForMin) {
+					if ref.Value.Type == "integer" || ref.Value.Type == "number" {
+						f := gconv.Float64(rule[4:])
+						ref.Value.Min = &f
+					}
+				}
+
+				if strings.HasPrefix(rule, validationRuleKeyForMinLength) {
+					minlength := gconv.Uint64(rule[11:])
+					ref.Value.MinLength = minlength
+				}
+
+				if strings.HasPrefix(rule, validationRuleKeyForLength) {
+					lengthRule := gstr.Split(rule[7:], ",")
+					if len(lengthRule) == 2 {
+						minlength := gconv.Uint64(lengthRule[0])
+						ref.Value.MinLength = minlength
+						maxlength := gconv.Uint64(lengthRule[1])
+						ref.Value.MaxLength = &maxlength
+					}
+				}
+
+				if strings.HasPrefix(rule, validationRuleKeyForBetween) {
+					if ref.Value.Type == "integer" || ref.Value.Type == "number" {
+						lengthRule := gstr.Split(rule[8:], ",")
+						if len(lengthRule) == 2 {
+							minimum := gconv.Float64(lengthRule[0])
+							ref.Value.Min = &minimum
+							maximum := gconv.Float64(lengthRule[1])
+							ref.Value.Max = &maximum
+						}
+					}
+				}
 			}
 		}
 		if !isValidParameterName(key) {

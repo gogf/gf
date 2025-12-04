@@ -10,11 +10,12 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 )
 
 func (c CGenService) generatePackageImports(generatedContent *bytes.Buffer, packageName string, imports []string) {
@@ -32,7 +33,7 @@ func (c CGenService) generateType(generatedContent *bytes.Buffer, srcStructFunct
 	generatedContent.WriteString("type(")
 	generatedContent.WriteString("\n")
 
-	srcStructFunctions.Iterator(func(key, value interface{}) bool {
+	srcStructFunctions.Iterator(func(key, value any) bool {
 		var (
 			funcContents = make([]string, 0)
 			funcContent  string
@@ -70,7 +71,7 @@ func (c CGenService) generateVar(generatedContent *bytes.Buffer, srcStructFuncti
 	// Generating variable and register definitions.
 	var variableContent string
 
-	srcStructFunctions.Iterator(func(key, value interface{}) bool {
+	srcStructFunctions.Iterator(func(key, value any) bool {
 		structName := key.(string)
 		variableContent += gstr.Trim(gstr.ReplaceByMap(consts.TemplateGenServiceContentVariable, g.MapStrStr{
 			"{StructName}":    structName,
@@ -92,7 +93,7 @@ func (c CGenService) generateVar(generatedContent *bytes.Buffer, srcStructFuncti
 // See: const.TemplateGenServiceContentRegister
 func (c CGenService) generateFunc(generatedContent *bytes.Buffer, srcStructFunctions *gmap.ListMap) {
 	// Variable register function definitions.
-	srcStructFunctions.Iterator(func(key, value interface{}) bool {
+	srcStructFunctions.Iterator(func(key, value any) bool {
 		structName := key.(string)
 		generatedContent.WriteString(gstr.Trim(gstr.ReplaceByMap(consts.TemplateGenServiceContentRegister, g.MapStrStr{
 			"{StructName}":    structName,

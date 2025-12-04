@@ -14,7 +14,7 @@ import (
 )
 
 // Throw throws out an exception, which can be caught be TryCatch or recover.
-func Throw(exception interface{}) {
+func Throw(exception any) {
 	panic(exception)
 }
 

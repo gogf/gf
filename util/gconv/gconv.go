@@ -6,279 +6,166 @@
 
 // Package gconv implements powerful and convenient converting functionality for any types of variables.
 //
-// This package should keep much less dependencies with other packages.
+// This package should keep much fewer dependencies with other packages.
 package gconv
 
 import (
-	"context"
-	"fmt"
-	"math"
 	"reflect"
-	"strconv"
-	"strings"
 	"time"
 
-	"github.com/gogf/gf/v2/encoding/gbinary"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/gogf/gf/v2/util/gconv/internal/converter"
+	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
+	"github.com/gogf/gf/v2/util/gconv/internal/structcache"
 )
+
+// Converter is the manager for type converting.
+type Converter interface {
+	ConverterForConvert
+	ConverterForRegister
+	ConverterForInt
+	ConverterForUint
+	ConverterForTime
+	ConverterForFloat
+	ConverterForMap
+	ConverterForSlice
+	ConverterForStruct
+	ConverterForBasic
+}
+
+// ConverterForBasic is the basic converting interface.
+type ConverterForBasic interface {
+	Scan(srcValue, dstPointer any, option ...ScanOption) (err error)
+	String(anyInput any) (string, error)
+	Bool(anyInput any) (bool, error)
+	Rune(anyInput any) (rune, error)
+}
+
+// ConverterForTime is the converting interface for time.
+type ConverterForTime interface {
+	Time(v any, format ...string) (time.Time, error)
+	Duration(v any) (time.Duration, error)
+	GTime(v any, format ...string) (*gtime.Time, error)
+}
+
+// ConverterForInt is the converting interface for integer.
+type ConverterForInt interface {
+	Int(v any) (int, error)
+	Int8(v any) (int8, error)
+	Int16(v any) (int16, error)
+	Int32(v any) (int32, error)
+	Int64(v any) (int64, error)
+}
+
+// ConverterForUint is the converting interface for unsigned integer.
+type ConverterForUint interface {
+	Uint(v any) (uint, error)
+	Uint8(v any) (uint8, error)
+	Uint16(v any) (uint16, error)
+	Uint32(v any) (uint32, error)
+	Uint64(v any) (uint64, error)
+}
+
+// ConverterForFloat is the converting interface for float.
+type ConverterForFloat interface {
+	Float32(v any) (float32, error)
+	Float64(v any) (float64, error)
+}
+
+// ConverterForMap is the converting interface for map.
+type ConverterForMap interface {
+	Map(v any, option ...MapOption) (map[string]any, error)
+	MapStrStr(v any, option ...MapOption) (map[string]string, error)
+}
+
+// ConverterForSlice is the converting interface for slice.
+type ConverterForSlice interface {
+	Bytes(v any) ([]byte, error)
+	Runes(v any) ([]rune, error)
+	SliceAny(v any, option ...SliceOption) ([]any, error)
+	SliceFloat32(v any, option ...SliceOption) ([]float32, error)
+	SliceFloat64(v any, option ...SliceOption) ([]float64, error)
+	SliceInt(v any, option ...SliceOption) ([]int, error)
+	SliceInt32(v any, option ...SliceOption) ([]int32, error)
+	SliceInt64(v any, option ...SliceOption) ([]int64, error)
+	SliceUint(v any, option ...SliceOption) ([]uint, error)
+	SliceUint32(v any, option ...SliceOption) ([]uint32, error)
+	SliceUint64(v any, option ...SliceOption) ([]uint64, error)
+	SliceStr(v any, option ...SliceOption) ([]string, error)
+	SliceMap(v any, option ...SliceMapOption) ([]map[string]any, error)
+}
+
+// ConverterForStruct is the converting interface for struct.
+type ConverterForStruct interface {
+	Struct(params, pointer any, option ...StructOption) (err error)
+	Structs(params, pointer any, option ...StructsOption) (err error)
+}
+
+// ConverterForConvert is the converting interface for custom converting.
+type ConverterForConvert interface {
+	ConvertWithRefer(fromValue, referValue any, option ...ConvertOption) (any, error)
+	ConvertWithTypeName(fromValue any, toTypeName string, option ...ConvertOption) (any, error)
+}
+
+// ConverterForRegister is the converting interface for custom converter registration.
+type ConverterForRegister interface {
+	RegisterTypeConverterFunc(f any) error
+	RegisterAnyConverterFunc(f AnyConvertFunc, types ...reflect.Type)
+}
+
+type (
+	// AnyConvertFunc is the function type for converting any to specified type.
+	AnyConvertFunc = structcache.AnyConvertFunc
+
+	// MapOption specifies the option for map converting.
+	MapOption = converter.MapOption
+
+	// SliceOption is the option for Slice type converting.
+	SliceOption = converter.SliceOption
+
+	// SliceMapOption is the option for SliceMap function.
+	SliceMapOption = converter.SliceMapOption
+
+	// ScanOption is the option for the Scan function.
+	ScanOption = converter.ScanOption
+
+	// StructOption is the option for Struct converting.
+	StructOption = converter.StructOption
+
+	// StructsOption is the option for Structs function.
+	StructsOption = converter.StructsOption
+
+	// ConvertOption is the option for converting.
+	ConvertOption = converter.ConvertOption
+)
+
+// IUnmarshalValue is the interface for custom defined types customizing value assignment.
+// Note that only pointer can implement interface IUnmarshalValue.
+type IUnmarshalValue = localinterface.IUnmarshalValue
 
 var (
-	// Empty strings.
-	emptyStringMap = map[string]struct{}{
-		"":      {},
-		"0":     {},
-		"no":    {},
-		"off":   {},
-		"false": {},
-	}
-
-	// StructTagPriority defines the default priority tags for Map*/Struct* functions.
-	// Note that, the `gconv/param` tags are used by old version of package.
-	// It is strongly recommended using short tag `c/p` instead in the future.
-	StructTagPriority = gtag.StructTagPriority
+	// defaultConverter is the default management object converting.
+	defaultConverter = converter.NewConverter()
 )
 
-// Byte converts `any` to byte.
-func Byte(any interface{}) byte {
-	if v, ok := any.(byte); ok {
-		return v
-	}
-	return Uint8(any)
+// NewConverter creates and returns management object for type converting.
+func NewConverter() Converter {
+	return converter.NewConverter()
 }
 
-// Bytes converts `any` to []byte.
-func Bytes(any interface{}) []byte {
-	if any == nil {
-		return nil
-	}
-	switch value := any.(type) {
-	case string:
-		return []byte(value)
-
-	case []byte:
-		return value
-
-	default:
-		if f, ok := value.(iBytes); ok {
-			return f.Bytes()
-		}
-		originValueAndKind := reflection.OriginValueAndKind(any)
-		switch originValueAndKind.OriginKind {
-		case reflect.Map:
-			bytes, err := json.Marshal(any)
-			if err != nil {
-				intlog.Errorf(context.TODO(), `%+v`, err)
-			}
-			return bytes
-
-		case reflect.Array, reflect.Slice:
-			var (
-				ok    = true
-				bytes = make([]byte, originValueAndKind.OriginValue.Len())
-			)
-			for i := range bytes {
-				int32Value := Int32(originValueAndKind.OriginValue.Index(i).Interface())
-				if int32Value < 0 || int32Value > math.MaxUint8 {
-					ok = false
-					break
-				}
-				bytes[i] = byte(int32Value)
-			}
-			if ok {
-				return bytes
-			}
-		}
-		return gbinary.Encode(any)
-	}
+// RegisterConverter registers custom converter.
+//
+// Deprecated: use RegisterTypeConverterFunc instead for clear
+func RegisterConverter(fn any) (err error) {
+	return RegisterTypeConverterFunc(fn)
 }
 
-// Rune converts `any` to rune.
-func Rune(any interface{}) rune {
-	if v, ok := any.(rune); ok {
-		return v
-	}
-	return Int32(any)
+// RegisterTypeConverterFunc registers custom converter.
+func RegisterTypeConverterFunc(fn any) (err error) {
+	return defaultConverter.RegisterTypeConverterFunc(fn)
 }
 
-// Runes converts `any` to []rune.
-func Runes(any interface{}) []rune {
-	if v, ok := any.([]rune); ok {
-		return v
-	}
-	return []rune(String(any))
-}
-
-// String converts `any` to string.
-// It's most commonly used converting function.
-func String(any interface{}) string {
-	if any == nil {
-		return ""
-	}
-	switch value := any.(type) {
-	case int:
-		return strconv.Itoa(value)
-	case int8:
-		return strconv.Itoa(int(value))
-	case int16:
-		return strconv.Itoa(int(value))
-	case int32:
-		return strconv.Itoa(int(value))
-	case int64:
-		return strconv.FormatInt(value, 10)
-	case uint:
-		return strconv.FormatUint(uint64(value), 10)
-	case uint8:
-		return strconv.FormatUint(uint64(value), 10)
-	case uint16:
-		return strconv.FormatUint(uint64(value), 10)
-	case uint32:
-		return strconv.FormatUint(uint64(value), 10)
-	case uint64:
-		return strconv.FormatUint(value, 10)
-	case float32:
-		return strconv.FormatFloat(float64(value), 'f', -1, 32)
-	case float64:
-		return strconv.FormatFloat(value, 'f', -1, 64)
-	case bool:
-		return strconv.FormatBool(value)
-	case string:
-		return value
-	case []byte:
-		return string(value)
-	case time.Time:
-		if value.IsZero() {
-			return ""
-		}
-		return value.String()
-	case *time.Time:
-		if value == nil {
-			return ""
-		}
-		return value.String()
-	case gtime.Time:
-		if value.IsZero() {
-			return ""
-		}
-		return value.String()
-	case *gtime.Time:
-		if value == nil {
-			return ""
-		}
-		return value.String()
-	default:
-		// Empty checks.
-		if value == nil {
-			return ""
-		}
-		if f, ok := value.(iString); ok {
-			// If the variable implements the String() interface,
-			// then use that interface to perform the conversion
-			return f.String()
-		}
-		if f, ok := value.(iError); ok {
-			// If the variable implements the Error() interface,
-			// then use that interface to perform the conversion
-			return f.Error()
-		}
-		// Reflect checks.
-		var (
-			rv   = reflect.ValueOf(value)
-			kind = rv.Kind()
-		)
-		switch kind {
-		case reflect.Chan,
-			reflect.Map,
-			reflect.Slice,
-			reflect.Func,
-			reflect.Ptr,
-			reflect.Interface,
-			reflect.UnsafePointer:
-			if rv.IsNil() {
-				return ""
-			}
-		case reflect.String:
-			return rv.String()
-		}
-		if kind == reflect.Ptr {
-			return String(rv.Elem().Interface())
-		}
-		// Finally, we use json.Marshal to convert.
-		if jsonContent, err := json.Marshal(value); err != nil {
-			return fmt.Sprint(value)
-		} else {
-			return string(jsonContent)
-		}
-	}
-}
-
-// Bool converts `any` to bool.
-// It returns false if `any` is: false, "", 0, "false", "off", "no", empty slice/map.
-func Bool(any interface{}) bool {
-	if any == nil {
-		return false
-	}
-	switch value := any.(type) {
-	case bool:
-		return value
-	case []byte:
-		if _, ok := emptyStringMap[strings.ToLower(string(value))]; ok {
-			return false
-		}
-		return true
-	case string:
-		if _, ok := emptyStringMap[strings.ToLower(value)]; ok {
-			return false
-		}
-		return true
-	default:
-		if f, ok := value.(iBool); ok {
-			return f.Bool()
-		}
-		rv := reflect.ValueOf(any)
-		switch rv.Kind() {
-		case reflect.Ptr:
-			return !rv.IsNil()
-		case reflect.Map:
-			fallthrough
-		case reflect.Array:
-			fallthrough
-		case reflect.Slice:
-			return rv.Len() != 0
-		case reflect.Struct:
-			return true
-		default:
-			s := strings.ToLower(String(any))
-			if _, ok := emptyStringMap[s]; ok {
-				return false
-			}
-			return true
-		}
-	}
-}
-
-// checkJsonAndUnmarshalUseNumber checks if given `any` is JSON formatted string value and does converting using `json.UnmarshalUseNumber`.
-func checkJsonAndUnmarshalUseNumber(any interface{}, target interface{}) bool {
-	switch r := any.(type) {
-	case []byte:
-		if json.Valid(r) {
-			if err := json.UnmarshalUseNumber(r, &target); err != nil {
-				return false
-			}
-			return true
-		}
-
-	case string:
-		anyAsBytes := []byte(r)
-		if json.Valid(anyAsBytes) {
-			if err := json.UnmarshalUseNumber(anyAsBytes, &target); err != nil {
-				return false
-			}
-			return true
-		}
-	}
-	return false
+// RegisterAnyConverterFunc registers custom type converting function for specified type.
+func RegisterAnyConverterFunc(f AnyConvertFunc, types ...reflect.Type) {
+	defaultConverter.RegisterAnyConverterFunc(f, types...)
 }

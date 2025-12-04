@@ -23,12 +23,12 @@ import (
 
 // Config is the configuration object for template engine.
 type Config struct {
-	Paths       []string               `json:"paths"`       // Searching array for path, NOT concurrent-safe for performance purpose.
-	Data        map[string]interface{} `json:"data"`        // Global template variables including configuration.
-	DefaultFile string                 `json:"defaultFile"` // Default template file for parsing.
-	Delimiters  []string               `json:"delimiters"`  // Custom template delimiters.
-	AutoEncode  bool                   `json:"autoEncode"`  // Automatically encodes and provides safe html output, which is good for avoiding XSS.
-	I18nManager *gi18n.Manager         `json:"-"`           // I18n manager for the view.
+	Paths       []string       `json:"paths"`       // Searching array for path, NOT concurrent-safe for performance purpose.
+	Data        map[string]any `json:"data"`        // Global template variables including configuration.
+	DefaultFile string         `json:"defaultFile"` // Default template file for parsing.
+	Delimiters  []string       `json:"delimiters"`  // Custom template delimiters.
+	AutoEncode  bool           `json:"autoEncode"`  // Automatically encodes and provides safe html output, which is good for avoiding XSS.
+	I18nManager *gi18n.Manager `json:"-"`           // I18n manager for the view.
 }
 
 const (
@@ -74,7 +74,7 @@ func (view *View) SetConfig(config Config) error {
 }
 
 // SetConfigWithMap set configurations with map for the view.
-func (view *View) SetConfigWithMap(m map[string]interface{}) error {
+func (view *View) SetConfigWithMap(m map[string]any) error {
 	if len(m) == 0 {
 		return gerror.NewCode(gcode.CodeInvalidParameter, "configuration cannot be empty")
 	}
@@ -86,9 +86,9 @@ func (view *View) SetConfigWithMap(m map[string]interface{}) error {
 	_, v1 := gutil.MapPossibleItemByKey(m, "paths")
 	_, v2 := gutil.MapPossibleItemByKey(m, "path")
 	if v1 == nil && v2 != nil {
-		switch v2.(type) {
+		switch v2 := v2.(type) {
 		case string:
-			m["paths"] = []string{v2.(string)}
+			m["paths"] = []string{v2}
 		case []string:
 			m["paths"] = v2
 		}
@@ -182,7 +182,7 @@ func (view *View) AddPath(path string) error {
 			isDir = gfile.IsDir(realPath)
 		}
 	}
-	// Path not exist.
+	// Path doesn't exist.
 	if realPath == "" {
 		err := gerror.NewCodef(gcode.CodeInvalidParameter, `View.AddPath failed: path "%s" does not exist`, path)
 		if errorPrint() {
@@ -219,8 +219,13 @@ func (view *View) Assigns(data Params) {
 // Assign binds a global template variable to current view object.
 // Note that it's not concurrent-safe, which means it would panic
 // if it's called in multiple goroutines in runtime.
-func (view *View) Assign(key string, value interface{}) {
+func (view *View) Assign(key string, value any) {
 	view.data[key] = value
+}
+
+// ClearAssigns trunk all global template variables assignments.
+func (view *View) ClearAssigns() {
+	view.data = make(map[string]any)
 }
 
 // SetDefaultFile sets default template file for parsing.
@@ -248,7 +253,7 @@ func (view *View) SetAutoEncode(enable bool) {
 // BindFunc registers customized global template function named `name`
 // with given function `function` to current view object.
 // The `name` is the function name which can be called in template content.
-func (view *View) BindFunc(name string, function interface{}) {
+func (view *View) BindFunc(name string, function any) {
 	view.funcMap[name] = function
 	// Clear global template object cache.
 	templates.Clear()

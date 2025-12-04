@@ -18,7 +18,7 @@ import (
 )
 
 var stringTests = []struct {
-	value  interface{}
+	value  any
 	expect string
 }{
 	{true, "true"},
@@ -65,6 +65,7 @@ var stringTests = []struct {
 
 	{struct{}{}, "{}"},
 	{nil, ""},
+	{(*string)(nil), ""},
 
 	{gvar.New(123), "123"},
 	{gvar.New(123.456), "123.456"},

@@ -16,12 +16,20 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+var (
+	// Please Note:
+	// When the type is float32 or a custom type defined based on float32,
+	// switching to float64 may result in a few extra decimal places.
+	float32TestValue = float32(123)
+	float64TestValue = float64(123.456)
+)
+
 var floatTests = []struct {
-	value    interface{}
+	value    any
 	expect32 float32
 	expect64 float64
 }{
-	{true, 0, 0},
+	{true, 1, 1},
 	{false, 0, 0},
 
 	{int(0), 0, 0},
@@ -70,9 +78,23 @@ var floatTests = []struct {
 
 	{struct{}{}, 0, 0},
 	{nil, 0, 0},
+	{(*float32)(nil), 0, 0},
+	{(*float64)(nil), 0, 0},
 
 	{gvar.New(123), 123, 123},
 	{gvar.New(123.456), 123.456, 123.456},
+
+	{&float32TestValue, 123, 123},
+	{&float64TestValue, 123.456, 123.456},
+
+	{myFloat32(123), 123, 123},
+	{myFloat64(123.456), 123.456, 123.456},
+
+	{(*myFloat32)(&float32TestValue), 123, 123},
+	{(*myFloat64)(&float64TestValue), 123.456, 123.456},
+
+	{(*myFloat32)(nil), 0, 0},
+	{(*myFloat64)(nil), 0, 0},
 }
 
 func TestFloat32(t *testing.T) {
@@ -125,7 +147,7 @@ func TestFloat32s(t *testing.T) {
 			[]float32{123, 34, 78, 97, 109, 101, 34, 58, 34, 69, 97, 114, 116, 104, 34, 125, 34})
 
 		// []interface
-		t.AssertEQ(gconv.Float32s([]interface{}{1, 2, 3}), []float32{1, 2, 3})
+		t.AssertEQ(gconv.Float32s([]any{1, 2, 3}), []float32{1, 2, 3})
 
 		// gvar.Var
 		t.AssertEQ(gconv.Float32s(
@@ -168,7 +190,7 @@ func TestFloat64s(t *testing.T) {
 			[]float64{123, 34, 78, 97, 109, 101, 34, 58, 34, 69, 97, 114, 116, 104, 34, 125, 34})
 
 		// []interface
-		t.AssertEQ(gconv.Float64s([]interface{}{1, 2, 3}), []float64{1, 2, 3})
+		t.AssertEQ(gconv.Float64s([]any{1, 2, 3}), []float64{1, 2, 3})
 
 		// gvar.Var
 		t.AssertEQ(gconv.Float64s(

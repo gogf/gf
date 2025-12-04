@@ -10,12 +10,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 func (c CGenService) calculateImportedItems(
@@ -149,4 +150,79 @@ func (c CGenService) tidyResult(resultSlice []map[string]string) (resultStr stri
 		}
 	}
 	return
+}
+
+func (c CGenService) getStructFuncItems(structName string, allStructItems map[string][]string, funcItemsWithoutEmbed map[string][]*funcItem) (funcItems []*funcItem) {
+	funcItemNameSet := map[string]struct{}{}
+
+	if items, ok := funcItemsWithoutEmbed[structName]; ok {
+		funcItems = append(funcItems, items...)
+		for _, item := range items {
+			funcItemNameSet[item.MethodName] = struct{}{}
+		}
+	}
+
+	embeddedStructNames, ok := allStructItems[structName]
+	if !ok {
+		return
+	}
+
+	for _, embeddedStructName := range embeddedStructNames {
+		items := c.getStructFuncItems(embeddedStructName, allStructItems, funcItemsWithoutEmbed)
+
+		for _, item := range items {
+			if _, ok := funcItemNameSet[item.MethodName]; ok {
+				continue
+			}
+			funcItemNameSet[item.MethodName] = struct{}{}
+			funcItems = append(funcItems, item)
+		}
+	}
+
+	return
+}
+
+func (c CGenService) calculateStructEmbeddedFuncInfos(folderInfos []folderInfo, allStructItems map[string][]string) (newFolerInfos []folderInfo) {
+	funcItemsWithoutEmbed := make(map[string][]*funcItem)
+	funcItemMap := make(map[string]*([]funcItem))
+	funcItemsWithoutEmbedMap := make(map[string]*funcItem)
+
+	newFolerInfos = append(newFolerInfos, folderInfos...)
+
+	for _, folder := range newFolerInfos {
+		for k := range folder.FileInfos {
+			fi := folder.FileInfos[k]
+			for k := range fi.FuncItems {
+				item := &fi.FuncItems[k]
+				receiver := folder.SrcPackageName + "." + strings.ReplaceAll(item.Receiver, "*", "")
+				funcItemMap[receiver] = &fi.FuncItems
+				funcItemsWithoutEmbed[receiver] = append(funcItemsWithoutEmbed[receiver], item)
+				funcItemsWithoutEmbedMap[fmt.Sprintf("%s:%s", receiver, item.MethodName)] = item
+			}
+		}
+	}
+
+	for receiver, structItems := range allStructItems {
+		receiverName := strings.ReplaceAll(receiver, "*", "")
+		for _, structName := range structItems {
+			// Get the list of methods for the corresponding structName.
+			for _, funcItem := range c.getStructFuncItems(structName, allStructItems, funcItemsWithoutEmbed) {
+				if _, ok := funcItemsWithoutEmbedMap[fmt.Sprintf("%s:%s", receiverName, funcItem.MethodName)]; ok {
+					continue
+				}
+				if funcItemsPtr, ok := funcItemMap[receiverName]; ok {
+					newFuncItem := *funcItem
+					newFuncItem.Receiver = getReceiverName(receiver)
+					(*funcItemsPtr) = append((*funcItemsPtr), newFuncItem)
+				}
+			}
+		}
+	}
+
+	return
+}
+
+func getReceiverName(receiver string) string {
+	ss := strings.Split(receiver, ".")
+	return ss[len(ss)-1]
 }

@@ -16,6 +16,7 @@ type StackMode string
 
 const (
 	// commandEnvKeyForBrief is the command environment name for switch key for brief error stack.
+	//
 	// Deprecated: use commandEnvKeyForStackMode instead.
 	commandEnvKeyForBrief = "gf.gerror.brief"
 
@@ -31,11 +32,9 @@ const (
 	StackModeDetail StackMode = "detail"
 )
 
-var (
-	// stackModeConfigured is the configured error stack mode variable.
-	// It is brief stack mode in default.
-	stackModeConfigured = StackModeBrief
-)
+// stackModeConfigured is the configured error stack mode variable.
+// It is brief stack mode in default.
+var stackModeConfigured = StackModeBrief
 
 func init() {
 	// Deprecated.

@@ -18,7 +18,7 @@ import (
 )
 
 // Decode parses `content` into and returns as map.
-func Decode(content []byte) (map[string]interface{}, error) {
+func Decode(content []byte) (map[string]any, error) {
 	res, err := convert(content)
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func Decode(content []byte) (map[string]interface{}, error) {
 }
 
 // DecodeWithoutRoot parses `content` into a map, and returns the map without root level.
-func DecodeWithoutRoot(content []byte) (map[string]interface{}, error) {
+func DecodeWithoutRoot(content []byte) (map[string]any, error) {
 	res, err := convert(content)
 	if err != nil {
 		return nil, err
@@ -42,16 +42,37 @@ func DecodeWithoutRoot(content []byte) (map[string]interface{}, error) {
 		return nil, err
 	}
 	for _, v := range m {
-		if r, ok := v.(map[string]interface{}); ok {
+		if r, ok := v.(map[string]any); ok {
 			return r, nil
 		}
 	}
 	return m, nil
 }
 
+// XMLEscapeChars forces escaping invalid characters in attribute and element values.
+// NOTE: this is brute force with NO interrogation of '&' being escaped already; if it is
+// then '&amp;' will be re-escaped as '&amp;amp;'.
+//
+/*
+	The values are:
+	"   &quot;
+	'   &apos;
+	<   &lt;
+	>   &gt;
+	&   &amp;
+*/
+//
+// Note: if XMLEscapeCharsDecoder(true) has been called - or the default, 'false,' value
+// has been toggled to 'true' - then XMLEscapeChars(true) is ignored.  If XMLEscapeChars(true)
+// has already been called before XMLEscapeCharsDecoder(true), XMLEscapeChars(false) is called
+// to turn escape encoding on mv.Xml, etc., to prevent double escaping ampersands, '&'.
+func XMLEscapeChars(b ...bool) {
+	mxj.XMLEscapeChars(b...)
+}
+
 // Encode encodes map `m` to an XML format content as bytes.
 // The optional parameter `rootTag` is used to specify the XML root tag.
-func Encode(m map[string]interface{}, rootTag ...string) ([]byte, error) {
+func Encode(m map[string]any, rootTag ...string) ([]byte, error) {
 	b, err := mxj.Map(m).Xml(rootTag...)
 	if err != nil {
 		err = gerror.Wrapf(err, `mxj.Map.Xml failed`)
@@ -61,7 +82,7 @@ func Encode(m map[string]interface{}, rootTag ...string) ([]byte, error) {
 
 // EncodeWithIndent encodes map `m` to an XML format content as bytes with indent.
 // The optional parameter `rootTag` is used to specify the XML root tag.
-func EncodeWithIndent(m map[string]interface{}, rootTag ...string) ([]byte, error) {
+func EncodeWithIndent(m map[string]any, rootTag ...string) ([]byte, error) {
 	b, err := mxj.Map(m).XmlIndent("", "\t", rootTag...)
 	if err != nil {
 		err = gerror.Wrapf(err, `mxj.Map.XmlIndent failed`)

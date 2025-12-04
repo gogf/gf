@@ -168,30 +168,26 @@ func TestCache_LRU(t *testing.T) {
 			t.AssertNil(cache.Set(ctx, i, i, 0))
 		}
 		n, _ := cache.Size(ctx)
-		t.Assert(n, 10)
-		v, _ := cache.Get(ctx, 6)
-		t.Assert(v, 6)
-		time.Sleep(4 * time.Second)
-		g.Log().Debugf(ctx, `items after lru: %+v`, cache.MustData(ctx))
-		n, _ = cache.Size(ctx)
 		t.Assert(n, 2)
-		v, _ = cache.Get(ctx, 6)
-		t.Assert(v, 6)
-		v, _ = cache.Get(ctx, 1)
-		t.Assert(v, nil)
-		t.Assert(cache.Close(ctx), nil)
+		v, _ := cache.Get(ctx, 6)
+		t.AssertNil(v)
+		v, _ = cache.Get(ctx, 9)
+		t.Assert(v, 9)
 	})
 }
 
 func TestCache_LRU_expire(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New(2)
-		t.Assert(cache.Set(ctx, 1, nil, 1000), nil)
+		t.Assert(cache.Set(ctx, 1, nil, 50*time.Millisecond), nil)
+
 		n, _ := cache.Size(ctx)
 		t.Assert(n, 1)
-		v, _ := cache.Get(ctx, 1)
 
-		t.Assert(v, nil)
+		time.Sleep(time.Millisecond * 100)
+
+		n, _ = cache.Size(ctx)
+		t.Assert(n, 0)
 	})
 }
 
@@ -239,7 +235,7 @@ func TestCache_SetIfNotExist(t *testing.T) {
 func TestCache_SetIfNotExistFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
-		exist, err := cache.SetIfNotExistFunc(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
+		exist, err := cache.SetIfNotExistFunc(ctx, 1, func(ctx context.Context) (value any, err error) {
 			return 11, nil
 		}, 0)
 		t.AssertNil(err)
@@ -248,7 +244,7 @@ func TestCache_SetIfNotExistFunc(t *testing.T) {
 		v, _ := cache.Get(ctx, 1)
 		t.Assert(v, 11)
 
-		exist, err = cache.SetIfNotExistFunc(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
+		exist, err = cache.SetIfNotExistFunc(ctx, 1, func(ctx context.Context) (value any, err error) {
 			return 22, nil
 		}, 0)
 		t.AssertNil(err)
@@ -260,7 +256,7 @@ func TestCache_SetIfNotExistFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		gcache.Remove(ctx, g.Slice{1, 2, 3}...)
 
-		ok, err := gcache.SetIfNotExistFunc(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
+		ok, err := gcache.SetIfNotExistFunc(ctx, 1, func(ctx context.Context) (value any, err error) {
 			return 11, nil
 		}, 0)
 		t.AssertNil(err)
@@ -269,7 +265,7 @@ func TestCache_SetIfNotExistFunc(t *testing.T) {
 		v, _ := gcache.Get(ctx, 1)
 		t.Assert(v, 11)
 
-		ok, err = gcache.SetIfNotExistFunc(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
+		ok, err = gcache.SetIfNotExistFunc(ctx, 1, func(ctx context.Context) (value any, err error) {
 			return 22, nil
 		}, 0)
 		t.AssertNil(err)
@@ -283,7 +279,7 @@ func TestCache_SetIfNotExistFunc(t *testing.T) {
 func TestCache_SetIfNotExistFuncLock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
-		exist, err := cache.SetIfNotExistFuncLock(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
+		exist, err := cache.SetIfNotExistFuncLock(ctx, 1, func(ctx context.Context) (value any, err error) {
 			return 11, nil
 		}, 0)
 		t.AssertNil(err)
@@ -292,7 +288,7 @@ func TestCache_SetIfNotExistFuncLock(t *testing.T) {
 		v, _ := cache.Get(ctx, 1)
 		t.Assert(v, 11)
 
-		exist, err = cache.SetIfNotExistFuncLock(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
+		exist, err = cache.SetIfNotExistFuncLock(ctx, 1, func(ctx context.Context) (value any, err error) {
 			return 22, nil
 		}, 0)
 		t.AssertNil(err)
@@ -304,7 +300,7 @@ func TestCache_SetIfNotExistFuncLock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		gcache.Remove(ctx, g.Slice{1, 2, 3}...)
 
-		exist, err := gcache.SetIfNotExistFuncLock(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
+		exist, err := gcache.SetIfNotExistFuncLock(ctx, 1, func(ctx context.Context) (value any, err error) {
 			return 11, nil
 		}, 0)
 		t.AssertNil(err)
@@ -313,7 +309,7 @@ func TestCache_SetIfNotExistFuncLock(t *testing.T) {
 		v, _ := gcache.Get(ctx, 1)
 		t.Assert(v, 11)
 
-		exist, err = gcache.SetIfNotExistFuncLock(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
+		exist, err = gcache.SetIfNotExistFuncLock(ctx, 1, func(ctx context.Context) (value any, err error) {
 			return 22, nil
 		}, 0)
 		t.AssertNil(err)
@@ -378,13 +374,13 @@ func TestCache_GetOrSet(t *testing.T) {
 func TestCache_GetOrSetFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
-		cache.GetOrSetFunc(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
+		cache.GetOrSetFunc(ctx, 1, func(ctx context.Context) (value any, err error) {
 			return 11, nil
 		}, 0)
 		v, _ := cache.Get(ctx, 1)
 		t.Assert(v, 11)
 
-		cache.GetOrSetFunc(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
+		cache.GetOrSetFunc(ctx, 1, func(ctx context.Context) (value any, err error) {
 			return 111, nil
 		}, 0)
 		v, _ = cache.Get(ctx, 1)
@@ -392,13 +388,13 @@ func TestCache_GetOrSetFunc(t *testing.T) {
 
 		gcache.Remove(ctx, g.Slice{1, 2, 3}...)
 
-		gcache.GetOrSetFunc(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
+		gcache.GetOrSetFunc(ctx, 1, func(ctx context.Context) (value any, err error) {
 			return 11, nil
 		}, 0)
 		v, _ = cache.Get(ctx, 1)
 		t.Assert(v, 11)
 
-		gcache.GetOrSetFunc(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
+		gcache.GetOrSetFunc(ctx, 1, func(ctx context.Context) (value any, err error) {
 			return 111, nil
 		}, 0)
 		v, _ = cache.Get(ctx, 1)
@@ -409,26 +405,26 @@ func TestCache_GetOrSetFunc(t *testing.T) {
 func TestCache_GetOrSetFuncLock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
-		cache.GetOrSetFuncLock(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
+		cache.GetOrSetFuncLock(ctx, 1, func(ctx context.Context) (value any, err error) {
 			return 11, nil
 		}, 0)
 		v, _ := cache.Get(ctx, 1)
 		t.Assert(v, 11)
 
-		cache.GetOrSetFuncLock(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
+		cache.GetOrSetFuncLock(ctx, 1, func(ctx context.Context) (value any, err error) {
 			return 111, nil
 		}, 0)
 		v, _ = cache.Get(ctx, 1)
 		t.Assert(v, 11)
 
 		gcache.Remove(ctx, g.Slice{1, 2, 3}...)
-		gcache.GetOrSetFuncLock(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
+		gcache.GetOrSetFuncLock(ctx, 1, func(ctx context.Context) (value any, err error) {
 			return 11, nil
 		}, 0)
 		v, _ = cache.Get(ctx, 1)
 		t.Assert(v, 11)
 
-		gcache.GetOrSetFuncLock(ctx, 1, func(ctx context.Context) (value interface{}, err error) {
+		gcache.GetOrSetFuncLock(ctx, 1, func(ctx context.Context) (value any, err error) {
 			return 111, nil
 		}, 0)
 		v, _ = cache.Get(ctx, 1)
@@ -457,11 +453,7 @@ func TestCache_SetConcurrency(t *testing.T) {
 				})
 			}
 		}()
-		select {
-		case <-time.After(2 * time.Second):
-			// t.Log("first part end")
-		}
-
+		time.Sleep(2 * time.Second)
 		go func() {
 			for {
 				pool.Add(ctx, func(ctx context.Context) {
@@ -469,10 +461,7 @@ func TestCache_SetConcurrency(t *testing.T) {
 				})
 			}
 		}()
-		select {
-		case <-time.After(2 * time.Second):
-			// t.Log("second part end")
-		}
+		time.Sleep(2 * time.Second)
 	})
 }
 
@@ -480,7 +469,10 @@ func TestCache_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		{
 			cache := gcache.New()
-			cache.SetMap(ctx, g.MapAnyAny{1: 11, 2: 22}, 0)
+			cache.SetMap(ctx, g.MapAnyAny{
+				1: 11,
+				2: 22,
+			}, 0)
 			b, _ := cache.Contains(ctx, 1)
 			t.Assert(b, true)
 			v, _ := cache.Get(ctx, 1)
@@ -520,6 +512,7 @@ func TestCache_Basic(t *testing.T) {
 			t.Assert(data[3], nil)
 			n, _ := gcache.Size(ctx)
 			t.Assert(n, 2)
+
 			keys, _ := gcache.Keys(ctx)
 			t.Assert(gset.NewFrom(g.Slice{1, 2}).Equal(gset.NewFrom(keys)), true)
 			keyStrs, _ := gcache.KeyStrings(ctx)
@@ -581,13 +574,13 @@ func TestCache_Basic_Must(t *testing.T) {
 		v = gcache.MustGet(ctx, 2)
 		t.Assert(v, 22)
 
-		gcache.MustGetOrSetFunc(ctx, 3, func(ctx context.Context) (value interface{}, err error) {
+		gcache.MustGetOrSetFunc(ctx, 3, func(ctx context.Context) (value any, err error) {
 			return 33, nil
 		}, 0)
 		v = gcache.MustGet(ctx, 3)
 		t.Assert(v, 33)
 
-		gcache.GetOrSetFuncLock(ctx, 4, func(ctx context.Context) (value interface{}, err error) {
+		gcache.GetOrSetFuncLock(ctx, 4, func(ctx context.Context) (value any, err error) {
 			return 44, nil
 		}, 0)
 		v = gcache.MustGet(ctx, 4)

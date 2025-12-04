@@ -16,12 +16,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Github Code
-        uses: actions/checkout@v4
-      
+        uses: actions/checkout@v5
+
       - name: Set Up Golang Environment
         uses: actions/setup-go@v5
         with:
-          go-version: 1.20.8
+          go-version: 1.25
+          cache: false
       
       - name: Build CLI Binary
         run: |
@@ -34,7 +35,7 @@ jobs:
       - name: Build CLI Binary For All Platform
         run: |
           cd cmd/gf
-          gf build main.go -n gf -a all -s all -p temp
+          gf build main.go -n gf -a all -s linux,windows,darwin,freebsd,netbsd,openbsd -p temp
 
       - name: Move Files Before Release
         run: |
@@ -52,7 +53,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name:     ${{ github.ref }}
-          name: GoFrame Release ${{ github.ref }}
+          name: GoFrame Release ${{ github.ref_name }}
           draft:        false
           prerelease:   false
       

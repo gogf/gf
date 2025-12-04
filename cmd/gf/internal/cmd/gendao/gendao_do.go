@@ -12,8 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 
@@ -40,19 +40,19 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 			structDefinition, _ = generateStructDefinition(ctx, generateStructDefinitionInput{
 				CGenDaoInternalInput: in,
 				TableName:            tableName,
-				StructName:           gstr.CaseCamel(strings.ToLower(newTableName)),
+				StructName:           formatFieldName(newTableName, FieldNameCaseCamel),
 				FieldMap:             fieldMap,
 				IsDo:                 true,
 			})
 		)
-		// replace all types to interface{}.
+		// replace all types to any.
 		structDefinition, _ = gregex.ReplaceStringFuncMatch(
 			"([A-Z]\\w*?)\\s+([\\w\\*\\.]+?)\\s+(//)",
 			structDefinition,
 			func(match []string) string {
 				// If the type is already a pointer/slice/map, it does nothing.
 				if !gstr.HasPrefix(match[2], "*") && !gstr.HasPrefix(match[2], "[]") && !gstr.HasPrefix(match[2], "map") {
-					return fmt.Sprintf(`%s interface{} %s`, match[1], match[3])
+					return fmt.Sprintf(`%s any %s`, match[1], match[3])
 				}
 				return match[0]
 			},
@@ -61,7 +61,7 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 			ctx,
 			in,
 			tableName,
-			gstr.CaseCamel(strings.ToLower(newTableName)),
+			formatFieldName(newTableName, FieldNameCaseCamel),
 			structDefinition,
 		)
 		in.genItems.AppendGeneratedFilePath(doFilePath)
@@ -70,7 +70,7 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 			mlog.Fatalf(`writing content to "%s" failed: %v`, doFilePath, err)
 		} else {
 			utils.GoFmt(doFilePath)
-			mlog.Print("generated:", doFilePath)
+			mlog.Print("generated:", gfile.RealPath(doFilePath))
 		}
 	}
 }
@@ -78,16 +78,23 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 func generateDoContent(
 	ctx context.Context, in CGenDaoInternalInput, tableName, tableNameCamelCase, structDefine string,
 ) string {
-	doContent := gstr.ReplaceByMap(
-		getTemplateFromPathOrDefault(in.TplDaoDoPath, consts.TemplateGenDaoDoContent),
-		g.MapStrStr{
-			tplVarTableName:          tableName,
-			tplVarPackageImports:     getImportPartContent(ctx, structDefine, true, nil),
-			tplVarTableNameCamelCase: tableNameCamelCase,
-			tplVarStructDefine:       structDefine,
-			tplVarPackageName:        filepath.Base(in.DoPath),
-		},
+	var (
+		tplContent = getTemplateFromPathOrDefault(
+			in.TplDaoDoPath, consts.TemplateGenDaoDoContent,
+		)
 	)
-	doContent = replaceDefaultVar(in, doContent)
+	tplView.ClearAssigns()
+	tplView.Assigns(gview.Params{
+		tplVarTableName:          tableName,
+		tplVarPackageImports:     getImportPartContent(ctx, structDefine, true, nil),
+		tplVarTableNameCamelCase: tableNameCamelCase,
+		tplVarStructDefine:       structDefine,
+		tplVarPackageName:        filepath.Base(in.DoPath),
+	})
+	assignDefaultVar(tplView, in)
+	doContent, err := tplView.ParseContent(ctx, tplContent)
+	if err != nil {
+		mlog.Fatalf("parsing template content failed: %v", err)
+	}
 	return doContent
 }
