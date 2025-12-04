@@ -206,8 +206,7 @@ func parseSqlForMerge(table string,
 			pattern, table, queryHolderStr, duplicateKeyStr, insertKeyStr, insertValueStr,
 			strings.Join(updateValues, ","),
 		)
-	} else {
-		// Insert Ignore: INSERT only
-		return fmt.Sprintf(pattern, table, queryHolderStr, duplicateKeyStr, insertKeyStr, insertValueStr)
 	}
+	// Insert Ignore: INSERT only
+	return fmt.Sprintf(pattern, table, queryHolderStr, duplicateKeyStr, insertKeyStr, insertValueStr)
 }
