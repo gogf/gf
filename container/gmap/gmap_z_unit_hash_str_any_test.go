@@ -1,7 +1,7 @@
 // Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with gm file,
+// If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
 package gmap_test
@@ -96,6 +96,42 @@ func Test_StrAnyMap_Set_Fun(t *testing.T) {
 
 		t.Assert(m.SetIfNotExistFuncLock("b", getAny), false)
 		t.Assert(m.SetIfNotExistFuncLock("d", getAny), true)
+
+		type T struct {
+			A int
+		}
+
+		av := m.GetOrSetFunc("s1", func() any {
+			return &T{
+				A: 1,
+			}
+		})
+		ta, ok := av.(*T)
+		t.Assert(ok, true)
+		t.Assert(ta.A, 1)
+
+		av = m.GetOrSetFunc("s1", func() any {
+			return &T{
+				A: 2,
+			}
+		})
+		ta, ok = av.(*T)
+		t.Assert(ok, true)
+		t.Assert(ta.A, 1)
+
+		av = m.GetOrSet("s1", &T{
+			A: 3,
+		})
+		ta, ok = av.(*T)
+		t.Assert(ok, true)
+		t.Assert(ta.A, 1)
+
+		av = m.GetOrSet("s2", &T{
+			A: 4,
+		})
+		ta, ok = av.(*T)
+		t.Assert(ok, true)
+		t.Assert(ta.A, 4)
 	})
 }
 
