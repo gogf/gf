@@ -1,3 +1,4 @@
+English | [简体中文](README.zh_CN.MD)
 
 <div align=center>
 <img src="https://goframe.org/img/logo_full.png" width="300" alt="goframe gf logo"/>
@@ -37,7 +38,7 @@ A powerful framework for faster, easier, and more efficient project development.
 💖 [Thanks to all the contributors who made GoFrame possible](https://github.com/gogf/gf/graphs/contributors) 💖
 
 <a href="https://github.com/gogf/gf/graphs/contributors">
-<img src="https://goframe.org/img/contributors.svg?version=v2.9.5" alt="goframe contributors"/>
+<img src="https://goframe.org/img/contributors.svg?version=v2.9.6" alt="goframe contributors"/>
 </a>
 
 ## License
