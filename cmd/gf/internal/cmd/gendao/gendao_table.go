@@ -47,6 +47,10 @@ func generateTable(ctx context.Context, in CGenDaoInternalInput) {
 			DirPathTable:         dirPathTable,
 		})
 	}
+	generateTables(ctx, generateTablesInput{
+		CGenDaoInternalInput: in,
+		DirPathTable:         dirPathTable,
+	})
 }
 
 // generateTableSingleInput is the input parameter for generateTableSingle.
@@ -59,7 +63,7 @@ type generateTableSingleInput struct {
 	DirPathTable string
 }
 
-// generateTableSingle generates dao files for a single table.
+// generateTableSingle generates table fields files for a single table.
 func generateTableSingle(ctx context.Context, in generateTableSingleInput) {
 	// Generating table data preparing.
 	fieldMap, err := in.DB.TableFields(ctx, in.TableName)
@@ -74,15 +78,13 @@ func generateTableSingle(ctx context.Context, in generateTableSingleInput) {
 		// which would make the go file a testing file.
 		fileName += "_table"
 	}
+	if fileName == "tables" {
+		mlog.Fatal(`table name "tables" is not allowed`)
+	}
 	path := filepath.FromSlash(gfile.Join(in.DirPathTable, fileName+".go"))
 	in.genItems.AppendGeneratedFilePath(path)
 	if in.OverwriteDao || !gfile.Exists(path) {
-		var (
-			ctx        = context.Background()
-			tplContent = getTemplateFromPathOrDefault(
-				in.TplDaoTablePath, consts.TemplateGenTableContent,
-			)
-		)
+		tplContent := getTemplateFromPathOrDefault(in.TplDaoTablePath, consts.TemplateGenTableContent)
 		tplView.ClearAssigns()
 		tplView.Assigns(gview.Params{
 			tplVarGroupName:          in.Group,
@@ -143,5 +145,45 @@ func generateDefaultValue(value interface{}) string {
 		return strconv.Quote(v)
 	default:
 		return gconv.String(v)
+	}
+}
+
+// generateTablesInput is the input parameter for generateTables.
+type generateTablesInput struct {
+	CGenDaoInternalInput
+	// Tables specifies all tables name.
+	Tables       []string
+	DirPathTable string
+}
+
+// generateTables generates tables file for all table.
+func generateTables(ctx context.Context, in generateTablesInput) {
+	path := filepath.FromSlash(gfile.Join(in.DirPathTable, "tables.go"))
+	in.genItems.AppendGeneratedFilePath(path)
+	var builder strings.Builder
+	for _, table := range in.TableNames {
+		builder.WriteString("\"")
+		builder.WriteString(table)
+		builder.WriteString("\",")
+	}
+	tables := builder.String()
+	if in.OverwriteDao || !gfile.Exists(path) {
+		tplContent := getTemplateFromPathOrDefault(in.TplDaoTablePath, consts.TemplateGenTablesContent)
+		tplView.ClearAssigns()
+		tplView.Assigns(gview.Params{
+			tplVarGroupName:   in.Group,
+			tplVarTables:      tables,
+			tplVarPackageName: filepath.Base(in.TablePath),
+		})
+		indexContent, err := tplView.ParseContent(ctx, tplContent)
+		if err != nil {
+			mlog.Fatalf("parsing template content failed: %v", err)
+		}
+		if err = gfile.PutContents(path, strings.TrimSpace(indexContent)); err != nil {
+			mlog.Fatalf("writing content to '%s' failed: %v", path, err)
+		} else {
+			utils.GoFmt(path)
+			mlog.Print("generated:", gfile.RealPath(path))
+		}
 	}
 }
