@@ -155,7 +155,7 @@ func (d *Driver) doMergeInsert(
 	return batchResult, nil
 }
 
-// getPrimaryKeys retrieves the primary key field list of the table.
+// getPrimaryKeys retrieves the primary key field names of the table as a slice of strings.
 // This method extracts primary key information from TableFields.
 func (d *Driver) getPrimaryKeys(ctx context.Context, table string) ([]string, error) {
 	tableFields, err := d.TableFields(ctx, table)
