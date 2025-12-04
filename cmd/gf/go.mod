@@ -3,13 +3,13 @@ module github.com/gogf/gf/cmd/gf/v2
 go 1.23.0
 
 require (
-	github.com/gogf/gf/contrib/drivers/clickhouse/v2 v2.9.5
-	github.com/gogf/gf/contrib/drivers/mssql/v2 v2.9.5
-	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.9.5
-	github.com/gogf/gf/contrib/drivers/oracle/v2 v2.9.5
-	github.com/gogf/gf/contrib/drivers/pgsql/v2 v2.9.5
-	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.9.5
-	github.com/gogf/gf/v2 v2.9.5
+	github.com/gogf/gf/contrib/drivers/clickhouse/v2 v2.9.6
+	github.com/gogf/gf/contrib/drivers/mssql/v2 v2.9.6
+	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.9.6
+	github.com/gogf/gf/contrib/drivers/oracle/v2 v2.9.6
+	github.com/gogf/gf/contrib/drivers/pgsql/v2 v2.9.6
+	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.9.6
+	github.com/gogf/gf/v2 v2.9.6
 	github.com/gogf/selfupdate v0.0.0-20231215043001-5c48c528462f
 	github.com/olekukonko/tablewriter v1.1.0
 	github.com/schollz/progressbar/v3 v3.15.0
@@ -23,7 +23,7 @@ require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.0.15 // indirect
 	github.com/clbanning/mxj/v2 v2.7.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/emirpasic/gods v1.18.1 // indirect
+	github.com/emirpasic/gods/v2 v2.0.0-alpha // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/glebarez/go-sqlite v1.21.2 // indirect

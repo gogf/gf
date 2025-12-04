@@ -7,14 +7,6 @@ for file in `find . -name go.mod`; do
     dirpath=$(dirname $file)
     echo $dirpath
     
-    # ignore mssql tests as its docker service failed
-    # TODO remove this ignoring codes after the mssql docker service OK
-    if [ "mssql" = $(basename $dirpath) ]; then
-        # clean docker containers and images to free disk space
-        bash .github/workflows/scripts/ci-main-clean.sh "$dirpath"
-        continue 1
-    fi
-    
     # package kubecm was moved to sub ci procedure.
     if [ "kubecm" = $(basename $dirpath) ]; then
         continue 1
@@ -36,7 +28,7 @@ for file in `find . -name go.mod`; do
         if ! go version | grep -qE "go${LATEST_GO_VERSION}"; then
             echo "ignore path $dirpath as go version is not ${LATEST_GO_VERSION}: $(go version)"
             # clean docker containers and images to free disk space
-            bash .github/workflows/scripts/ci-main-clean.sh "$dirpath"
+            # bash .github/workflows/scripts/ci-main-clean.sh "$dirpath"
             continue 1
         fi
     fi
@@ -52,16 +44,16 @@ for file in `find . -name go.mod`; do
     
     # test with coverage
     if [ "${coverage}" = "coverage" ]; then
-        go test ./... -race -coverprofile=coverage.out -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
+        go test ./... -count=1 -race -coverprofile=coverage.out -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
         
         if grep -q "/gogf/gf/.*/v2" go.mod; then
             sed -i "s/gogf\/gf\(\/.*\)\/v2/gogf\/gf\/v2\1/g" coverage.out
         fi
     else
-        go test ./... -race || exit 1
+        go test ./... -count=1 -race || exit 1
     fi
     
     cd -
     # clean docker containers and images to free disk space
-    bash .github/workflows/scripts/ci-main-clean.sh "$dirpath"
+    # bash .github/workflows/scripts/ci-main-clean.sh "$dirpath"
 done
