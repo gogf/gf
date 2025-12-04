@@ -99,6 +99,7 @@ func Test_DB_Replace(t *testing.T) {
 		createTable("t_user")
 		defer dropTable("t_user")
 
+		// Insert initial record
 		i := 10
 		data := g.Map{
 			"id":          i,
@@ -107,8 +108,26 @@ func Test_DB_Replace(t *testing.T) {
 			"nickname":    fmt.Sprintf(`T%d`, i),
 			"create_time": gtime.Now().String(),
 		}
-		_, err := db.Replace(ctx, "t_user", data, 10)
-		gtest.AssertNE(err, nil)
+		_, err := db.Insert(ctx, "t_user", data)
+		gtest.AssertNil(err)
+
+		// Replace with new data
+		data2 := g.Map{
+			"id":          i,
+			"passport":    fmt.Sprintf(`t%d_new`, i),
+			"password":    fmt.Sprintf(`p%d_new`, i),
+			"nickname":    fmt.Sprintf(`T%d_new`, i),
+			"create_time": gtime.Now().String(),
+		}
+		_, err = db.Replace(ctx, "t_user", data2)
+		gtest.AssertNil(err)
+
+		// Verify the data was replaced
+		one, err := db.GetOne(ctx, fmt.Sprintf("SELECT * FROM t_user WHERE id=?"), i)
+		gtest.AssertNil(err)
+		gtest.Assert(one["passport"].String(), fmt.Sprintf(`t%d_new`, i))
+		gtest.Assert(one["password"].String(), fmt.Sprintf(`p%d_new`, i))
+		gtest.Assert(one["nickname"].String(), fmt.Sprintf(`T%d_new`, i))
 	})
 }
 

@@ -334,14 +334,53 @@ func Test_Model_Replace(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		_, err := db.Model(table).Data(g.Map{
+		// Insert initial record
+		result, err := db.Model(table).Data(g.Map{
+			"id":          1,
+			"passport":    "t1",
+			"password":    "pass1",
+			"nickname":    "T1",
+			"create_time": "2018-10-24 10:00:00",
+		}).Insert()
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+
+		// Replace with new data
+		result, err = db.Model(table).Data(g.Map{
 			"id":          1,
 			"passport":    "t11",
 			"password":    "25d55ad283aa400af464c76d713c07ad",
 			"nickname":    "T11",
 			"create_time": "2018-10-24 10:00:00",
 		}).Replace()
-		t.Assert(err, "Replace operation is not supported by pgsql driver")
+		t.AssertNil(err)
+		n, _ = result.RowsAffected()
+		t.Assert(n, 1)
+
+		// Verify the data was replaced
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["passport"].String(), "t11")
+		t.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
+		t.Assert(one["nickname"].String(), "T11")
+
+		// Replace with new ID (insert new record)
+		result, err = db.Model(table).Data(g.Map{
+			"id":          2,
+			"passport":    "t22",
+			"password":    "pass22",
+			"nickname":    "T22",
+			"create_time": "2018-10-24 11:00:00",
+		}).Replace()
+		t.AssertNil(err)
+		n, _ = result.RowsAffected()
+		t.Assert(n, 1)
+
+		// Verify new record was inserted
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 2)
 	})
 }
 

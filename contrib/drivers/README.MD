@@ -69,10 +69,6 @@ import _ "github.com/gogf/gf/contrib/drivers/sqlitecgo/v2"
 import _ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
 ```
 
-Note:
-
-- It does not support `Replace` features.
-
 ### SQL Server
 
 ```go
