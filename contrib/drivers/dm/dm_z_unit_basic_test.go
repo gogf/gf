@@ -561,7 +561,7 @@ func TestModelSave(t *testing.T) {
 }
 
 func TestModelInsert(t *testing.T) {
-	// g.Model.insert not lost default not null coloumn
+	// g.Model.insert not lost default not null column
 	table := "A_tables"
 	createInitTable(table)
 	gtest.C(t, func(t *gtest.T) {
