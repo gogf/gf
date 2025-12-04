@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/drivers/oracle/v2
 go 1.23.0
 
 require (
-	github.com/gogf/gf/v2 v2.9.5
+	github.com/gogf/gf/v2 v2.9.6
 	github.com/sijms/go-ora/v2 v2.7.10
 )
 
