@@ -16,18 +16,24 @@ import (
 
 var (
 	tableFieldsSqlTmp = `
-SELECT a.attname AS field, t.typname AS type,a.attnotnull as null,
-    (case when d.contype = 'p' then 'pri' when d.contype = 'u' then 'uni' else '' end)  as key
-      ,ic.column_default as default_value,b.description as comment
-      ,coalesce(character_maximum_length, numeric_precision, -1) as length
-      ,numeric_scale as scale
+SELECT
+    a.attname                                                                            AS field,
+    t.typname                                                                            AS type,
+    a.attnotnull                                                                         AS null,
+    (CASE WHEN d.contype = 'p' THEN 'pri' WHEN d.contype = 'u' THEN 'uni' ELSE '' END)   AS key,
+    ic.column_default                                                                    AS default_value,
+    b.description                                                                        AS comment,
+    COALESCE(character_maximum_length, numeric_precision, -1)                            AS length,
+    numeric_scale                                                                        AS scale
 FROM pg_attribute a
-         left join pg_class c on a.attrelid = c.oid
-         left join pg_constraint d on d.conrelid = c.oid and a.attnum = d.conkey[1]
-         left join pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid
-         left join pg_type t ON a.atttypid = t.oid
-         left join information_schema.columns ic on ic.column_name = a.attname and ic.table_name = c.relname
-WHERE c.oid = '%s'::regclass and a.attisdropped is false and a.attnum > 0
+    LEFT JOIN pg_class c                 ON a.attrelid = c.oid
+    LEFT JOIN pg_constraint d            ON d.conrelid = c.oid AND a.attnum = d.conkey[1]
+    LEFT JOIN pg_description b           ON a.attrelid = b.objoid AND a.attnum = b.objsubid
+    LEFT JOIN pg_type t                  ON a.atttypid = t.oid
+    LEFT JOIN information_schema.columns ic ON ic.column_name = a.attname AND ic.table_name = c.relname
+WHERE c.oid = '%s'::regclass
+    AND a.attisdropped IS FALSE
+    AND a.attnum > 0
 ORDER BY a.attnum`
 )
 

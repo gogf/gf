@@ -501,9 +501,7 @@ func (c *Core) OrderRandomFunction() string {
 	return "RAND()"
 }
 
-func (c *Core) columnValueToLocalValue(
-	ctx context.Context, value any, columnType *sql.ColumnType,
-) (any, error) {
+func (c *Core) columnValueToLocalValue(ctx context.Context, value any, columnType *sql.ColumnType) (any, error) {
 	var scanType = columnType.ScanType()
 	if scanType != nil {
 		// Common basic builtin types.
@@ -513,10 +511,7 @@ func (c *Core) columnValueToLocalValue(
 			reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
 			reflect.Float32, reflect.Float64:
-			return gconv.Convert(
-				gconv.String(value),
-				columnType.ScanType().String(),
-			), nil
+			return gconv.Convert(gconv.String(value), scanType.String()), nil
 		default:
 		}
 	}
