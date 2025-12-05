@@ -23,5 +23,6 @@ go.work.sum
 node_modules
 .docusaurus
 output
+config/*
 .example/
 .golangci.bck.yml
