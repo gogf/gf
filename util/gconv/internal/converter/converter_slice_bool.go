@@ -23,8 +23,8 @@ func (c *Converter) SliceBool(anyInput any, option ...SliceOption) ([]bool, erro
 	var (
 		err         error
 		bb          bool
-		array       []bool = nil
-		sliceOption        = c.getSliceOption(option...)
+		array       []bool
+		sliceOption = c.getSliceOption(option...)
 	)
 	switch value := anyInput.(type) {
 	case []string:

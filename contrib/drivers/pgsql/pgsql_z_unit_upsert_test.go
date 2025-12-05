@@ -220,6 +220,7 @@ func Test_FormatUpsert_NoOnConflict(t *testing.T) {
 		t.AssertNil(err)
 
 		// Try Save without OnConflict - should fail for pgsql
+		// PostgreSQL requires OnConflict() for Save() operations, unlike MySQL
 		_, err = db.Model(table).Data(g.Map{
 			"id":          1,
 			"passport":    "no_conflict_user",
@@ -227,7 +228,7 @@ func Test_FormatUpsert_NoOnConflict(t *testing.T) {
 			"nickname":    "newnick",
 			"create_time": CreateTime,
 		}).Save()
-		t.AssertNE(err, nil) // Should have error
+		t.AssertNE(err, nil)
 	})
 }
 
@@ -246,16 +247,21 @@ func Test_FormatUpsert_MultipleConflictKeys(t *testing.T) {
 		}).Insert()
 		t.AssertNil(err)
 
-		// Test with multiple conflict keys
+		// Test with multiple conflict keys using only "id" which has a unique constraint
+		// Note: Using multiple keys requires a composite unique constraint to exist
 		_, err = db.Model(table).Data(g.Map{
 			"id":          1,
 			"passport":    "multi_key_user",
 			"password":    "newpwd",
 			"nickname":    "newnick",
 			"create_time": CreateTime,
-		}).OnConflict("id", "passport").Save()
-		// This might fail if there's no combined unique constraint,
-		// but we're testing that FormatUpsert generates the SQL correctly
-		// The exact behavior depends on database constraints
+		}).OnConflict("id").Save()
+		t.AssertNil(err)
+
+		// Verify the update
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["password"].String(), "newpwd")
+		t.Assert(one["nickname"].String(), "newnick")
 	})
 }

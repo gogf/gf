@@ -289,7 +289,7 @@ func createInitAllTypesTableWithDb(db gdb.DB, table ...string) (name string) {
 			i, i, i, i%2 == 0))
 
 		// Date/Time types: col_date, col_time, col_timestamp
-		// Use %02d to ensure two-digit day format (01-28 range is safe for all months)
+		// Calculate day as integer in range 1-28; %02d in fmt.Sprintf ensures two-digit zero-padded format
 		dayOfMonth := (i-1)%28 + 1
 		sql.WriteString(fmt.Sprintf("'2024-01-%02d', '10:00:%02d', '2024-01-%02d 10:00:00', ",
 			dayOfMonth, (i-1)%60, dayOfMonth))

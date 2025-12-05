@@ -54,7 +54,7 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 //	| int2, int4                   | int           |
 //	| int8                         | int64         |
 //	| uuid                         | uuid.UUID     |
-//	| _int2, _int4                 | []int32       |
+//	| _int2, _int4                 | []int32       | // Note: pq package does not provide Int16Array; int32 is used for compatibility
 //	| _int8                        | []int64       |
 //	| _float4                      | []float32     |
 //	| _float8                      | []float64     |
