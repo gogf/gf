@@ -110,7 +110,7 @@ func Test_CheckLocalTypeForField(t *testing.T) {
 		// Test bytea array type
 		localType, err := driver.CheckLocalTypeForField(ctx, "_bytea", nil)
 		t.AssertNil(err)
-		t.Assert(localType, gdb.LocalTypeBytes)
+		t.Assert(localType, gdb.LocalTypeBytesSlice)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
