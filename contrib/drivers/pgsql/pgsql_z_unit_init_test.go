@@ -9,6 +9,7 @@ package pgsql_test
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	_ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
 
@@ -259,36 +260,82 @@ func createInitAllTypesTableWithDb(db gdb.DB, table ...string) (name string) {
 
 	// Insert test data
 	for i := 1; i <= TableSize; i++ {
-		if _, err := db.Exec(ctx, fmt.Sprintf(`
-			INSERT INTO %s (
-				col_int2, col_int4, col_int8, col_smallint, col_integer, col_bigint,
-				col_float4, col_float8, col_real, col_double, col_numeric, col_decimal,
-				col_char, col_varchar, col_text, col_bool,
-				col_date, col_time, col_timestamp,
-				col_json, col_jsonb,
-				col_int2_arr, col_int4_arr, col_int8_arr,
-				col_float4_arr, col_float8_arr, col_numeric_arr, col_decimal_arr,
-				col_varchar_arr, col_text_arr, col_bool_arr
-			) VALUES (
-				%d, %d, %d, %d, %d, %d,
-				%d.5, %d.5, %d.5, %d.5, %d.99, %d.99,
-				'char_%d', 'varchar_%d', 'text_%d', %t,
-				'2024-01-0%d', '10:00:0%d', '2024-01-0%d 10:00:00',
-				'{"key": "value%d"}', '{"key": "value%d"}',
-				'{1, 2, %d}', '{10, 20, %d}', '{100, 200, %d}',
-				'{1.1, 2.2, %d.3}', '{1.1, 2.2, %d.3}', '{1.11, 2.22, %d.33}', '{1.11, 2.22, %d.33}',
-				'{"a", "b", "c%d"}', '{"x", "y", "z%d"}', '{true, false, %t}'
-			)`,
-			name,
-			i, i*10, i*100, i, i*10, i*100,
-			i, i, i, i, i, i,
-			i, i, i, i%2 == 0,
-			(i-1)%9+1, (i-1)%9, (i-1)%9+1,
-			i, i,
-			i, i, i,
-			i, i, i, i,
-			i, i, i%2 == 0,
-		)); err != nil {
+		var sql strings.Builder
+
+		// Write INSERT statement header
+		sql.WriteString(fmt.Sprintf(`INSERT INTO %s (
+			col_int2, col_int4, col_int8, col_smallint, col_integer, col_bigint,
+			col_float4, col_float8, col_real, col_double, col_numeric, col_decimal,
+			col_char, col_varchar, col_text, col_bool,
+			col_date, col_time, col_timestamp,
+			col_json, col_jsonb,
+			col_bytea,
+			col_uuid,
+			col_int2_arr, col_int4_arr, col_int8_arr,
+			col_float4_arr, col_float8_arr, col_numeric_arr, col_decimal_arr,
+			col_varchar_arr, col_text_arr, col_bool_arr, col_bytea_arr, col_date_arr, col_timestamp_arr, col_jsonb_arr, col_uuid_arr
+		) VALUES (`, name))
+
+		// Integer types: col_int2, col_int4, col_int8, col_smallint, col_integer, col_bigint
+		sql.WriteString(fmt.Sprintf("%d, %d, %d, %d, %d, %d, ",
+			i, i*10, i*100, i, i*10, i*100))
+
+		// Float types: col_float4, col_float8, col_real, col_double, col_numeric, col_decimal
+		sql.WriteString(fmt.Sprintf("%d.5, %d.5, %d.5, %d.5, %d.99, %d.99, ",
+			i, i, i, i, i, i))
+
+		// Character types: col_char, col_varchar, col_text, col_bool
+		sql.WriteString(fmt.Sprintf("'char_%d', 'varchar_%d', 'text_%d', %t, ",
+			i, i, i, i%2 == 0))
+
+		// Date/Time types: col_date, col_time, col_timestamp
+		// Use %02d to ensure two-digit day format (01-28 range is safe for all months)
+		dayOfMonth := (i-1)%28 + 1
+		sql.WriteString(fmt.Sprintf("'2024-01-%02d', '10:00:%02d', '2024-01-%02d 10:00:00', ",
+			dayOfMonth, (i-1)%60, dayOfMonth))
+
+		// JSON types: col_json, col_jsonb
+		sql.WriteString(fmt.Sprintf(`'{"key": "value%d"}', '{"key": "value%d"}', `, i, i))
+
+		// Bytea type: col_bytea
+		sql.WriteString(`E'\\xDEADBEEF', `)
+
+		// UUID type: col_uuid (use %x for hex representation, padded to ensure valid UUID)
+		sql.WriteString(fmt.Sprintf("'550e8400-e29b-41d4-a716-4466554400%02x', ", i))
+
+		// Integer array types: col_int2_arr, col_int4_arr, col_int8_arr
+		sql.WriteString(fmt.Sprintf("'{1, 2, %d}', '{10, 20, %d}', '{100, 200, %d}', ",
+			i, i, i))
+
+		// Float array types: col_float4_arr, col_float8_arr, col_numeric_arr, col_decimal_arr
+		sql.WriteString(fmt.Sprintf("'{1.1, 2.2, %d.3}', '{1.1, 2.2, %d.3}', '{1.11, 2.22, %d.33}', '{1.11, 2.22, %d.33}', ",
+			i, i, i, i))
+
+		// Character array types: col_varchar_arr, col_text_arr
+		sql.WriteString(fmt.Sprintf(`'{"a", "b", "c%d"}', '{"x", "y", "z%d"}', `, i, i))
+
+		// Boolean array type: col_bool_arr
+		sql.WriteString(fmt.Sprintf("'{true, false, %t}', ", i%2 == 0))
+
+		// Bytea array type: col_bytea_arr (use ARRAY syntax for bytea)
+		sql.WriteString(`ARRAY[E'\\xDEADBEEF', E'\\xCAFEBABE']::bytea[], `)
+
+		// Date array type: col_date_arr
+		sql.WriteString(fmt.Sprintf(`'{"2024-01-%02d", "2024-01-%02d"}', `, dayOfMonth, (dayOfMonth%28)+1))
+
+		// Timestamp array type: col_timestamp_arr
+		sql.WriteString(fmt.Sprintf(`'{"2024-01-%02d 10:00:00", "2024-01-%02d 11:00:00"}', `, dayOfMonth, dayOfMonth))
+
+		// JSONB array type: col_jsonb_arr (store as text array first, then cast to jsonb array)
+		sql.WriteString(`ARRAY['{"key": "value1"}', '{"key": "value2"}']::jsonb[], `)
+
+		// UUID array type: col_uuid_arr
+		sql.WriteString(fmt.Sprintf("ARRAY['550e8400-e29b-41d4-a716-4466554400%02x'::uuid, '6ba7b810-9dad-11d1-80b4-00c04fd430c8'::uuid]", i))
+
+		// Close VALUES
+		sql.WriteString(")")
+
+		if _, err := db.Exec(ctx, sql.String()); err != nil {
 			gtest.Fatal(err)
 		}
 	}

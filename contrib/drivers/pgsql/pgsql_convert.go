@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 
 	"github.com/gogf/gf/v2/database/gdb"
@@ -52,6 +53,7 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 //	|------------------------------|---------------|
 //	| int2, int4                   | int           |
 //	| int8                         | int64         |
+//	| uuid                         | uuid.UUID     |
 //	| _int2, _int4                 | []int32       |
 //	| _int8                        | []int64       |
 //	| _float4                      | []float32     |
@@ -61,6 +63,7 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 //	| _char, _bpchar               | []string      |
 //	| _numeric, _decimal, _money   | []float64     |
 //	| _bytea                       | [][]byte      |
+//	| _uuid                        | []uuid.UUID   |
 func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue any) (gdb.LocalType, error) {
 	var typeName string
 	match, _ := gregex.MatchString(`(.+?)\((.+)\)`, fieldType)
@@ -76,6 +79,9 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 
 	case "int8":
 		return gdb.LocalTypeInt64, nil
+
+	case "uuid":
+		return gdb.LocalTypeUUID, nil
 
 	case "_int2", "_int4":
 		return gdb.LocalTypeInt32Slice, nil
@@ -95,6 +101,9 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 	case "_varchar", "_text", "_char", "_bpchar":
 		return gdb.LocalTypeStringSlice, nil
 
+	case "_uuid":
+		return gdb.LocalTypeUUIDSlice, nil
+
 	case "_numeric", "_decimal", "_money":
 		return gdb.LocalTypeFloat64Slice, nil
 
@@ -108,34 +117,36 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 
 // ConvertValueForLocal converts value to local Golang type of value according field type name from database.
 // The parameter `fieldType` is in lower case, like:
-// `float(5,2)`, `unsigned double(5,2)`, `decimal(10,2)`, `char(45)`, `varchar(100)`, etc.
+// `int2`, `int4`, `int8`, `_int2`, `_int4`, `_int8`, `uuid`, `_uuid`, etc.
 //
-// https://www.postgresql.org/docs/current/datatype.html
+// See: https://www.postgresql.org/docs/current/datatype.html
+//
 // PostgreSQL type mapping:
 //
-//	| PostgreSQL Type (fieldType)          | CREATE TABLE Type                   | pq Type          | Go Type   |
-//	|--------------------------------------|-------------------------------------|------------------|-----------|
-//	| int2                                 | int2, smallint                      | -                | int       |
-//	| int4                                 | int4, integer                       | -                | int       |
-//	| int8                                 | int8, bigint, bigserial             | -                | int64     |
-//	| _int2                                | int2[], smallint[]                  | pq.Int32Array    | []int32   |
-//	| _int4                                | int4[], integer[]                   | pq.Int32Array    | []int32   |
-//	| _int8                                | int8[], bigint[]                    | pq.Int64Array    | []int64   |
-//	| _float4                              | float4[], real[]                    | pq.Float32Array  | []float32 |
-//	| _float8                              | float8[], double precision[]        | pq.Float64Array  | []float64 |
-//	| _bool                                | boolean[], bool[]                   | pq.BoolArray     | []bool    |
-//	| _varchar                             | varchar[], character varying[]      | pq.StringArray   | []string  |
-//	| _text                                | text[]                              | pq.StringArray   | []string  |
-//	| _char, _bpchar                       | char[], character[]                 | pq.StringArray   | []string  |
-//	| _numeric                             | numeric[]                           | pq.Float64Array  | []float64 |
-//	| _decimal                             | decimal[]                           | pq.Float64Array  | []float64 |
-//	| _money                               | money[]                             | pq.Float64Array  | []float64 |
-//	| _bytea                               | bytea[]                             | pq.ByteaArray    | [][]byte  |
+//	| PostgreSQL Type | SQL Type                       | pq Type         | Go Type     |
+//	|-----------------|--------------------------------|-----------------|-------------|
+//	| int2            | int2, smallint                 | -               | int         |
+//	| int4            | int4, integer                  | -               | int         |
+//	| int8            | int8, bigint, bigserial        | -               | int64       |
+//	| uuid            | uuid                           | -               | uuid.UUID   |
+//	| _int2           | int2[], smallint[]             | pq.Int32Array   | []int32     |
+//	| _int4           | int4[], integer[]              | pq.Int32Array   | []int32     |
+//	| _int8           | int8[], bigint[]               | pq.Int64Array   | []int64     |
+//	| _float4         | float4[], real[]               | pq.Float32Array | []float32   |
+//	| _float8         | float8[], double precision[]   | pq.Float64Array | []float64   |
+//	| _bool           | boolean[], bool[]              | pq.BoolArray    | []bool      |
+//	| _varchar        | varchar[], character varying[] | pq.StringArray  | []string    |
+//	| _text           | text[]                         | pq.StringArray  | []string    |
+//	| _char, _bpchar  | char[], character[]            | pq.StringArray  | []string    |
+//	| _numeric        | numeric[]                      | pq.Float64Array | []float64   |
+//	| _decimal        | decimal[]                      | pq.Float64Array | []float64   |
+//	| _money          | money[]                        | pq.Float64Array | []float64   |
+//	| _bytea          | bytea[]                        | pq.ByteaArray   | [][]byte    |
+//	| _uuid           | uuid[]                         | pq.StringArray  | []uuid.UUID |
 //
 // Note: PostgreSQL also supports these array types but they are not yet mapped:
 //   - _date (date[]), _timestamp (timestamp[]), _timestamptz (timestamptz[])
 //   - _jsonb (jsonb[]), _json (json[])
-//   - _uuid (uuid[])
 func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue any) (any, error) {
 	typeName, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
 	typeName = strings.ToLower(typeName)
@@ -190,6 +201,39 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 			return nil, err
 		}
 		return []string(result), nil
+
+	// uuid.UUID
+	case "uuid":
+		var uuidStr string
+		switch v := fieldValue.(type) {
+		case []byte:
+			uuidStr = string(v)
+		case string:
+			uuidStr = v
+		default:
+			uuidStr = gconv.String(fieldValue)
+		}
+		result, err := uuid.Parse(uuidStr)
+		if err != nil {
+			return nil, err
+		}
+		return result, nil
+
+	// []uuid.UUID
+	case "_uuid":
+		var strArray pq.StringArray
+		if err := strArray.Scan(fieldValue); err != nil {
+			return nil, err
+		}
+		result := make([]uuid.UUID, len(strArray))
+		for i, s := range strArray {
+			parsed, err := uuid.Parse(s)
+			if err != nil {
+				return nil, err
+			}
+			result[i] = parsed
+		}
+		return result, nil
 
 	// []float64
 	case "_numeric", "_decimal", "_money":

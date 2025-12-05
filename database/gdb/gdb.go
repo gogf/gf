@@ -818,6 +818,8 @@ const (
 	LocalTypeBoolSlice    LocalType = "[]bool"
 	LocalTypeJson         LocalType = "json"
 	LocalTypeJsonb        LocalType = "jsonb"
+	LocalTypeUUID         LocalType = "uuid.UUID"
+	LocalTypeUUIDSlice    LocalType = "[]uuid.UUID"
 )
 
 const (

@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 )
@@ -741,23 +743,212 @@ func Test_Field_UUID_Array_Type(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		// Note: PostgreSQL _uuid array is not yet mapped in the driver
-		// This test documents the limitation but can be extended when support is added
-
-		_, err := db.Model(table).Data(g.Map{
-			"col_int2":        1,
-			"col_int4":        10,
-			"col_numeric":     99.99,
-			"col_varchar":     "test",
-			"col_bool":        true,
-			"col_varchar_arr": []string{},
-		}).Insert()
+		// Insert with UUID array values using raw SQL
+		// PostgreSQL uuid array literal format: ARRAY['uuid1', 'uuid2']::uuid[]
+		uuid1 := "550e8400-e29b-41d4-a716-446655440000"
+		uuid2 := "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+		uuid3 := "6ba7b811-9dad-11d1-80b4-00c04fd430c8"
+		_, err := db.Exec(ctx, fmt.Sprintf(`
+			INSERT INTO %s (col_int2, col_int4, col_numeric, col_varchar, col_bool, col_varchar_arr, col_uuid_arr)
+			VALUES (1, 10, 99.99, 'test', true, '{}', ARRAY['%s', '%s', '%s']::uuid[])
+		`, table, uuid1, uuid2, uuid3))
 		t.AssertNil(err)
 
-		// Query and verify NULL uuid array is handled gracefully
+		// Query and verify UUID array
 		one, err := db.Model(table).OrderDesc("id").One()
 		t.AssertNil(err)
-		// uuid array should be nil or empty
-		t.Assert(one["col_uuid_arr"].IsNil() || one["col_uuid_arr"].IsEmpty(), true)
+
+		// Test UUID array field - should be converted to []uuid.UUID
+		uuidArrVal := one["col_uuid_arr"]
+		t.Assert(uuidArrVal.IsNil(), false)
+
+		// Verify the array contains the expected data as []uuid.UUID
+		uuidArr := uuidArrVal.Interfaces()
+		t.Assert(len(uuidArr), 3)
+
+		// Verify each element is uuid.UUID type
+		u1, ok := uuidArr[0].(uuid.UUID)
+		t.Assert(ok, true)
+		t.Assert(u1.String(), uuid1)
+
+		u2, ok := uuidArr[1].(uuid.UUID)
+		t.Assert(ok, true)
+		t.Assert(u2.String(), uuid2)
+
+		u3, ok := uuidArr[2].(uuid.UUID)
+		t.Assert(ok, true)
+		t.Assert(u3.String(), uuid3)
+	})
+}
+
+// Test_Field_UUID_Type tests UUID type
+func Test_Field_UUID_Type(t *testing.T) {
+	table := createInitAllTypesTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Query and verify UUID field
+		one, err := db.Model(table).OrderAsc("id").One()
+		t.AssertNil(err)
+
+		// Test UUID field - should be converted to uuid.UUID
+		uuidVal := one["col_uuid"]
+		t.Assert(uuidVal.IsNil(), false)
+
+		// Verify the value is uuid.UUID type
+		uuidObj, ok := uuidVal.Val().(uuid.UUID)
+		t.Assert(ok, true)
+
+		// Verify the UUID format
+		uuidStr := uuidObj.String()
+		t.Assert(len(uuidStr) > 0, true)
+		// UUID should contain the pattern from insert: 550e8400-e29b-41d4-a716-44665544000X
+		t.Assert(uuidStr, "550e8400-e29b-41d4-a716-446655440001")
+
+		// Also verify we can still get string representation via .String()
+		t.Assert(uuidVal.String(), "550e8400-e29b-41d4-a716-446655440001")
+	})
+}
+
+// Test_Field_Bytea_Array_Type_Scan tests bytea array type and scanning
+func Test_Field_Bytea_Array_Type_Scan(t *testing.T) {
+	table := createInitAllTypesTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Query and verify bytea array field
+		one, err := db.Model(table).OrderAsc("id").One()
+		t.AssertNil(err)
+
+		// Test bytea array field
+		byteaArrVal := one["col_bytea_arr"]
+		// bytea array should not be nil since we inserted data
+		t.Assert(byteaArrVal.IsNil(), false)
+	})
+}
+
+// Test_Field_Date_Array_Type_Scan tests date array type and scanning
+func Test_Field_Date_Array_Type_Scan(t *testing.T) {
+	table := createInitAllTypesTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Query and verify date array field
+		one, err := db.Model(table).OrderAsc("id").One()
+		t.AssertNil(err)
+
+		// Test date array field
+		dateArrVal := one["col_date_arr"]
+		t.Assert(dateArrVal.IsNil(), false)
+
+		// Verify the array contains the expected data
+		dateArr := dateArrVal.Strings()
+		t.Assert(len(dateArr) > 0, true)
+	})
+}
+
+// Test_Field_Timestamp_Array_Type_Scan tests timestamp array type and scanning
+func Test_Field_Timestamp_Array_Type_Scan(t *testing.T) {
+	table := createInitAllTypesTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Query and verify timestamp array field
+		one, err := db.Model(table).OrderAsc("id").One()
+		t.AssertNil(err)
+
+		// Test timestamp array field
+		timestampArrVal := one["col_timestamp_arr"]
+		t.Assert(timestampArrVal.IsNil(), false)
+
+		// Verify the array contains the expected data
+		timestampArr := timestampArrVal.Strings()
+		t.Assert(len(timestampArr) > 0, true)
+	})
+}
+
+// Test_Field_JSONB_Array_Type_Scan tests JSONB array type and scanning
+func Test_Field_JSONB_Array_Type_Scan(t *testing.T) {
+	table := createInitAllTypesTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Query and verify JSONB array field
+		one, err := db.Model(table).OrderAsc("id").One()
+		t.AssertNil(err)
+
+		// Test JSONB array field
+		jsonbArrVal := one["col_jsonb_arr"]
+		t.Assert(jsonbArrVal.IsNil(), false)
+	})
+}
+
+// Test_Field_UUID_Query tests querying by UUID field
+func Test_Field_UUID_Query(t *testing.T) {
+	table := createInitAllTypesTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test 1: Query by UUID string
+		uuidStr := "550e8400-e29b-41d4-a716-446655440001"
+		one, err := db.Model(table).Where("col_uuid", uuidStr).One()
+		t.AssertNil(err)
+		t.Assert(one.IsEmpty(), false)
+		t.Assert(one["id"].Int(), 1)
+
+		// Verify the returned UUID is correct
+		uuidObj, ok := one["col_uuid"].Val().(uuid.UUID)
+		t.Assert(ok, true)
+		t.Assert(uuidObj.String(), uuidStr)
+
+		// Test 2: Query by uuid.UUID type directly
+		uuidVal, err := uuid.Parse("550e8400-e29b-41d4-a716-446655440002")
+		t.AssertNil(err)
+		one, err = db.Model(table).Where("col_uuid", uuidVal).One()
+		t.AssertNil(err)
+		t.Assert(one.IsEmpty(), false)
+		t.Assert(one["id"].Int(), 2)
+
+		// Test 3: Query by UUID string using g.Map
+		one, err = db.Model(table).Where(g.Map{
+			"col_uuid": "550e8400-e29b-41d4-a716-446655440003",
+		}).One()
+		t.AssertNil(err)
+		t.Assert(one.IsEmpty(), false)
+		t.Assert(one["id"].Int(), 3)
+
+		// Test 4: Query by uuid.UUID type using g.Map
+		uuidVal, err = uuid.Parse("550e8400-e29b-41d4-a716-446655440004")
+		t.AssertNil(err)
+		one, err = db.Model(table).Where(g.Map{
+			"col_uuid": uuidVal,
+		}).One()
+		t.AssertNil(err)
+		t.Assert(one.IsEmpty(), false)
+		t.Assert(one["id"].Int(), 4)
+
+		// Test 5: Query non-existent UUID
+		one, err = db.Model(table).Where("col_uuid", "00000000-0000-0000-0000-000000000000").One()
+		t.AssertNil(err)
+		t.Assert(one.IsEmpty(), true)
+
+		// Test 6: Query multiple records by UUID IN clause with strings
+		all, err := db.Model(table).WhereIn("col_uuid", g.Slice{
+			"550e8400-e29b-41d4-a716-446655440001",
+			"550e8400-e29b-41d4-a716-446655440002",
+		}).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all), 2)
+		t.Assert(all[0]["id"].Int(), 1)
+		t.Assert(all[1]["id"].Int(), 2)
+
+		// Test 7: Query multiple records by UUID IN clause with uuid.UUID types
+		uuid1, _ := uuid.Parse("550e8400-e29b-41d4-a716-446655440003")
+		uuid2, _ := uuid.Parse("550e8400-e29b-41d4-a716-446655440004")
+		all, err = db.Model(table).WhereIn("col_uuid", g.Slice{uuid1, uuid2}).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all), 2)
+		t.Assert(all[0]["id"].Int(), 3)
+		t.Assert(all[1]["id"].Int(), 4)
 	})
 }

@@ -10,6 +10,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/test/gtest"
 
@@ -111,6 +113,20 @@ func Test_CheckLocalTypeForField(t *testing.T) {
 		localType, err := driver.CheckLocalTypeForField(ctx, "_bytea", nil)
 		t.AssertNil(err)
 		t.Assert(localType, gdb.LocalTypeBytesSlice)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test uuid type
+		localType, err := driver.CheckLocalTypeForField(ctx, "uuid", nil)
+		t.AssertNil(err)
+		t.Assert(localType, gdb.LocalTypeUUID)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test uuid array type
+		localType, err := driver.CheckLocalTypeForField(ctx, "_uuid", nil)
+		t.AssertNil(err)
+		t.Assert(localType, gdb.LocalTypeUUIDSlice)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -255,6 +271,42 @@ func Test_ConvertValueForLocal(t *testing.T) {
 		t.AssertNil(err)
 		resultArr := result.([][]byte)
 		t.Assert(len(resultArr), 2)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test uuid conversion from []byte
+		result, err := driver.ConvertValueForLocal(ctx, "uuid", []byte(`550e8400-e29b-41d4-a716-446655440000`))
+		t.AssertNil(err)
+		t.Assert(result.(uuid.UUID).String(), "550e8400-e29b-41d4-a716-446655440000")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test uuid conversion from string
+		result, err := driver.ConvertValueForLocal(ctx, "uuid", "550e8400-e29b-41d4-a716-446655440000")
+		t.AssertNil(err)
+		t.Assert(result.(uuid.UUID).String(), "550e8400-e29b-41d4-a716-446655440000")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test uuid conversion error case with invalid uuid
+		_, err := driver.ConvertValueForLocal(ctx, "uuid", "invalid-uuid")
+		t.AssertNE(err, nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test _uuid array conversion
+		result, err := driver.ConvertValueForLocal(ctx, "_uuid", []byte(`{550e8400-e29b-41d4-a716-446655440000,6ba7b810-9dad-11d1-80b4-00c04fd430c8}`))
+		t.AssertNil(err)
+		resultArr := result.([]uuid.UUID)
+		t.Assert(len(resultArr), 2)
+		t.Assert(resultArr[0].String(), "550e8400-e29b-41d4-a716-446655440000")
+		t.Assert(resultArr[1].String(), "6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test _uuid array conversion error case
+		_, err := driver.ConvertValueForLocal(ctx, "_uuid", []byte(`{invalid-uuid}`))
+		t.AssertNE(err, nil)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
