@@ -97,7 +97,7 @@ func Test_DoFilter_JsonbOperator(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		// Test jsonb ?| operator
-		// The jsonb ? is first converted to $1, then restored to ? 
+		// The jsonb ? is first converted to $1, then restored to ?
 		// So the next placeholder becomes $2
 		sql := "SELECT * FROM users WHERE (data)::jsonb ?| ?"
 		newSql, _, err := driver.DoFilter(ctx, nil, sql, nil)

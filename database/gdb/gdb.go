@@ -813,6 +813,7 @@ const (
 	LocalTypeFloat32Slice LocalType = "[]float32"
 	LocalTypeFloat64Slice LocalType = "[]float64"
 	LocalTypeBytes        LocalType = "[]byte"
+	LocalTypeBytesSlice   LocalType = "[][]byte"
 	LocalTypeBool         LocalType = "bool"
 	LocalTypeBoolSlice    LocalType = "[]bool"
 	LocalTypeJson         LocalType = "json"

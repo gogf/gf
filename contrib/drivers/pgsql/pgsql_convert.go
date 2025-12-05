@@ -99,7 +99,7 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 		return gdb.LocalTypeFloat64Slice, nil
 
 	case "_bytea":
-		return gdb.LocalTypeBytes, nil
+		return gdb.LocalTypeBytesSlice, nil
 
 	default:
 		return d.Core.CheckLocalTypeForField(ctx, fieldType, fieldValue)
