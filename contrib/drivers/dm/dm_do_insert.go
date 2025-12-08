@@ -76,8 +76,13 @@ func (d *Driver) doMergeInsert(
 		}
 		foundPrimaryKey := false
 		for _, primaryKey := range primaryKeys {
-			if _, ok := list[0][primaryKey]; ok {
-				foundPrimaryKey = true
+			for dataKey := range list[0] {
+				if strings.EqualFold(dataKey, primaryKey) {
+					foundPrimaryKey = true
+					break
+				}
+			}
+			if foundPrimaryKey {
 				break
 			}
 		}
