@@ -178,8 +178,8 @@ func Benchmark_ParamTagIn(b *testing.B) {
 type UserValidReq struct {
 	g.Meta   `path:"/user" method:"get" tags:"XXX" summary:"XXX"`
 	Query    string `p:"query" dc:"查询参数"`
-	Page     int    `p:"page" v:"min:1" dc:"页码，从1开始" d:"1"`
-	PageSize int    `p:"size" v:"between:1,50" dc:"每页大小，最大50"`
+	Page     int    `p:"page_index" v:"min:1" dc:"页码，从1开始" d:"1"`
+	PageSize int    `p:"size" v:"between:1,50" dc:"每页大小，最大50" d:"20"`
 }
 type UserValidRes struct {
 	g.Meta `mime:"application/json"`
@@ -213,8 +213,8 @@ func Test_Params_Valid(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(prefix)
 
-		// t.Assert(client.GetContent(ctx, "/user"), `{"Query":"","Page":1,"PageSize":20}`)
-		// t.Assert(client.GetContent(ctx, "/user?page=0"), `参数错误: 页码，从1开始: 最小值为 1`)
+		t.Assert(client.GetContent(ctx, "/user"), `{"Query":"","Page":1,"PageSize":20}`)
+		t.Assert(client.GetContent(ctx, "/user?page_index=0"), `{"code":51,"message":"The page_index value `+"`0`"+` must be equal or greater than 1","data":null}`)
 		t.Assert(client.GetContent(ctx, "/user?size=100"), `{"code":51,"message":"The size value `+"`100`"+` must be between 1 and 50","data":null}`)
 	})
 }
