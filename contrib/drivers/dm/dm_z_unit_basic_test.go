@@ -602,31 +602,38 @@ func Test_Model_InsertIgnore(t *testing.T) {
 	// db.SetDebug(true)
 
 	gtest.C(t, func(t *gtest.T) {
-		data := User{
-			ID:          int64(666),
-			AccountName: fmt.Sprintf(`name_%d`, 666),
-			PwdReset:    0,
-			AttrIndex:   99,
-			CreatedTime: time.Now(),
-			UpdatedTime: time.Now(),
-		}
-		_, err := db.Model(table).Data(data).Insert()
-		t.AssertNil(err)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		data := User{
-			ID:          int64(666),
-			AccountName: fmt.Sprintf(`name_%d`, 777),
-			PwdReset:    0,
-			AttrIndex:   99,
-			CreatedTime: time.Now(),
-			UpdatedTime: time.Now(),
+		data := g.Map{
+			"id":           1,
+			"account_name": fmt.Sprintf(`name_%d`, 777),
+			"pwd_reset":    0,
+			"attr_index":   777,
+			"created_time": gtime.Now(),
 		}
 		_, err := db.Model(table).Data(data).InsertIgnore()
 		t.AssertNil(err)
 
-		one, err := db.Model(table).Where("id", 666).One()
+		one, err := db.Model(table).WherePri(1).One()
 		t.AssertNil(err)
-		t.Assert(one["ACCOUNT_NAME"].String(), "name_666")
+		t.Assert(one["ACCOUNT_NAME"].String(), "name_1")
+
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			// "id":           1,
+			"account_name": fmt.Sprintf(`name_%d`, 777),
+			"pwd_reset":    0,
+			"attr_index":   777,
+			"created_time": gtime.Now(),
+		}
+		_, err := db.Model(table).Data(data).InsertIgnore()
+		t.AssertNE(err, nil)
+
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
 	})
 }

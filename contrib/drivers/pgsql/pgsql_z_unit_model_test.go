@@ -841,5 +841,24 @@ func Test_Model_InsertIgnore(t *testing.T) {
 		value, err := db.Model(table).Fields("passport").WherePri(1).Value()
 		t.AssertNil(err)
 		t.Assert(value.String(), "t1")
+
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+
+		// pgsql support ignore without primary key
+		result, err = db.Model(table).Data(g.Map{
+			// "id":          1,
+			"uid":         1,
+			"passport":    "t2",
+			"password":    "25d55ad283aa400af464c76d713c07ad",
+			"nickname":    "name_2",
+			"create_time": gtime.Now().String(),
+		}).InsertIgnore()
+		t.AssertNil(err)
+
+		count, err = db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
 	})
 }

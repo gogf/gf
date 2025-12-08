@@ -77,6 +77,7 @@ import _ "github.com/gogf/gf/contrib/drivers/mssql/v2"
 
 Note:
 
+- `InsertIgnore` returns error if there is no primary key or unique index submitted with record.
 - It supports server version >= `SQL Server2005`
 - It ONLY supports datetime2 and datetimeoffset types for auto handling created_at/updated_at/deleted_at columns, because datetime type does not support microseconds precision when column value is passed as string.
 
@@ -109,6 +110,10 @@ Note:
 ```go
 import _ "github.com/gogf/gf/contrib/drivers/dm/v2"
 ```
+
+Note:
+
+- `InsertIgnore` returns error if there is no primary key or unique index submitted with record.
 
 ## Custom Drivers
 

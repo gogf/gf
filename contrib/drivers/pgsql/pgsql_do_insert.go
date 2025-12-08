@@ -13,7 +13,6 @@ import (
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // DoInsert inserts or updates data for given table.
@@ -57,16 +56,14 @@ func (d *Driver) DoInsert(
 		// Treat Replace as Save operation
 		option.InsertOption = gdb.InsertOptionSave
 
-	case gdb.InsertOptionDefault:
-		tableFields, err := d.GetCore().GetDB().TableFields(ctx, table)
-		if err == nil {
-			for _, field := range tableFields {
-				if gstr.Equal(field.Key, "pri") {
-					pkField := *field
-					ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, pkField)
-					break
-				}
-			}
+	// pgsql support InsertIgnore natively, so no need to set primary key in context.
+	case gdb.InsertOptionIgnore, gdb.InsertOptionDefault:
+		primaryKeys, err := d.Core.GetPrimaryKeys(ctx, table)
+		if err != nil {
+			return nil, err
+		}
+		if len(primaryKeys) > 0 {
+			ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, primaryKeys[0])
 		}
 
 	default:
