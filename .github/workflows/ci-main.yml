@@ -54,7 +54,7 @@ jobs:
     # Service containers to run with `code-test`
     services:
       # Etcd service.
-      # docker run --name etcd -p 2379:2379 -e ALLOW_NONE_AUTHENTICATION=yes bitnamilegacy/etcd:3.4.24
+      # docker run -p 2379:2379 -e ALLOW_NONE_AUTHENTICATION=yes bitnamilegacy/etcd:3.4.24
       etcd:
         image: bitnamilegacy/etcd:3.4.24
         env:
@@ -75,7 +75,7 @@ jobs:
           - 6379:6379
 
       # MySQL backend server.
-      # docker run --name mysql \
+      # docker run \
       # -p 3306:3306 \
       # -e MYSQL_DATABASE=test \
       # -e MYSQL_ROOT_PASSWORD=12345678 \
@@ -89,7 +89,7 @@ jobs:
           - 3306:3306
 
       # MariaDb backend server.
-      # docker run --name mariadb \
+      # docker run \
       # -p 3307:3306 \
       # -e MYSQL_DATABASE=test \
       # -e MYSQL_ROOT_PASSWORD=12345678 \
@@ -103,7 +103,7 @@ jobs:
           - 3307:3306
 
       # PostgreSQL backend server.
-      # docker run --name postgres \
+      # docker run \
       # -p 5432:5432 \
       # -e POSTGRES_PASSWORD=12345678 \
       # -e POSTGRES_USER=postgres \
@@ -150,7 +150,7 @@ jobs:
           --health-retries 10
 
       # ClickHouse backend server.
-      # docker run --name clickhouse \
+      # docker run \
       # -p 9000:9000 -p 8123:8123 -p 9001:9001 \
       # clickhouse/clickhouse-server:24.11.1.2557-alpine
       clickhouse-server:
@@ -161,7 +161,7 @@ jobs:
           - 9001:9001
 
       # Polaris backend server.
-      # docker run --name polaris \
+      # docker run \
       # -p 8090:8090 -p 8091:8091 -p 8093:8093 -p 9090:9090 -p 9091:9091 \
       # polarismesh/polaris-standalone:v1.17.2
       polaris:

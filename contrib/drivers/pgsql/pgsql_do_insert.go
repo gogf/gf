@@ -34,7 +34,7 @@ func (d *Driver) DoInsert(
 				return nil, gerror.WrapCode(
 					gcode.CodeInternalError,
 					err,
-					`failed to get primary keys for Replace operation`,
+					`failed to get primary keys for SaReplace operation`,
 				)
 			}
 			foundPrimaryKey := false
