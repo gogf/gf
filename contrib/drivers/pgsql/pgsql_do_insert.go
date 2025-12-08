@@ -59,7 +59,7 @@ func (d *Driver) DoInsert(
 		tableFields, err := d.GetCore().GetDB().TableFields(ctx, table)
 		if err == nil {
 			for _, field := range tableFields {
-				if gstr.Equal(field.Key, "PRI") {
+				if gstr.Equal(field.Key, "pri") {
 					pkField := *field
 					ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, pkField)
 					break
