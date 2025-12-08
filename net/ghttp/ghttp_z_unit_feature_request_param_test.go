@@ -181,6 +181,7 @@ type UserValidReq struct {
 	Page     int    `p:"page_index" v:"min:1" dc:"页码，从1开始" d:"1"`
 	PageSize int    `p:"size" v:"between:1,50" dc:"每页大小，最大50" d:"20"`
 }
+
 type UserValidRes struct {
 	g.Meta `mime:"application/json"`
 }
@@ -196,6 +197,7 @@ func (c *cUserValid) User(ctx context.Context, req *UserValidReq) (res *UserVali
 	return
 }
 
+// Test_Params_Valid for #4442
 func Test_Params_Valid(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
