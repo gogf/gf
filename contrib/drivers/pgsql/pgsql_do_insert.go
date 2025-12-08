@@ -82,7 +82,7 @@ func (d *Driver) getPrimaryKeys(ctx context.Context, table string) ([]string, er
 
 	var primaryKeys []string
 	for _, field := range tableFields {
-		if gstr.Equal(field.Key, "PRI") {
+		if gstr.Equal(field.Key, "pri") {
 			primaryKeys = append(primaryKeys, field.Name)
 		}
 	}
