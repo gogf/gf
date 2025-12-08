@@ -71,3 +71,26 @@ func TestBool(t *testing.T) {
 		}
 	})
 }
+
+func TestBools(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Bools(nil), nil)
+		t.AssertEQ(gconv.Bools([]bool{true, false}), []bool{true, false})
+		t.AssertEQ(gconv.Bools([]int{1, 0, 2}), []bool{true, false, true})
+		t.AssertEQ(gconv.Bools([]string{"true", "false", "1", "0"}), []bool{true, false, true, false})
+		t.AssertEQ(gconv.Bools([]string{"t", "f", "T", "F"}), []bool{true, false, true, false})
+		t.AssertEQ(gconv.Bools([]string{"True", "False", "TRUE", "FALSE"}), []bool{true, false, true, false})
+		t.AssertEQ(gconv.Bools([]string{"yes", "no", "YES", "NO"}), []bool{true, false, true, false})
+		t.AssertEQ(gconv.Bools([]string{"on", "off", "ON", "OFF"}), []bool{true, false, true, false})
+		t.AssertEQ(gconv.Bools([]any{true, 0, "false", 1}), []bool{true, false, false, true})
+		t.AssertEQ(gconv.Bools(`[true, false, true]`), []bool{true, false, true})
+		t.AssertEQ(gconv.Bools(""), []bool{})
+		t.AssertEQ(gconv.Bools("true"), []bool{true})
+	})
+}
+
+func TestSliceBool(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.SliceBool([]bool{true, false}), []bool{true, false})
+	})
+}
