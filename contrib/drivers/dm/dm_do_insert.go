@@ -20,6 +20,7 @@ import (
 )
 
 // DoInsert inserts or updates data for given table.
+// The list parameter must contain at least one record, which was previously validated.
 func (d *Driver) DoInsert(
 	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (result sql.Result, err error) {
@@ -60,16 +61,12 @@ func (d *Driver) doInsertIgnore(ctx context.Context,
 // When withUpdate is false, it performs insert ignore (insert only when no conflict).
 func (d *Driver) doMergeInsert(
 	ctx context.Context,
-	link gdb.Link,
-	table string,
-	list gdb.List,
-	option gdb.DoInsertOption,
-	withUpdate bool,
+	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption, withUpdate bool,
 ) (result sql.Result, err error) {
 	// If OnConflict is not specified, automatically get the primary key of the table
 	conflictKeys := option.OnConflict
 	if len(conflictKeys) == 0 {
-		conflictKeys, err = d.getPrimaryKeys(ctx, table)
+		primaryKeys, err := d.getPrimaryKeys(ctx, table)
 		if err != nil {
 			return nil, gerror.WrapCode(
 				gcode.CodeInternalError,
@@ -77,29 +74,26 @@ func (d *Driver) doMergeInsert(
 				`failed to get primary keys for table`,
 			)
 		}
-		if len(conflictKeys) == 0 {
+		foundPrimaryKey := false
+		for _, primaryKey := range primaryKeys {
+			if _, ok := list[0][primaryKey]; ok {
+				foundPrimaryKey = true
+				break
+			}
+		}
+		if !foundPrimaryKey {
 			return nil, gerror.NewCode(
 				gcode.CodeMissingParameter,
-				`Please specify conflict columns or ensure the table has a primary key`,
+				`Please specify conflict columns or ensure the record has a primary key for Save/Replace/InsertIgnore operation`,
 			)
 		}
-	}
-
-	if len(list) == 0 {
-		opName := "Save"
-		if !withUpdate {
-			opName = "InsertIgnore"
-		}
-		return nil, gerror.NewCodef(
-			gcode.CodeInvalidRequest, `%s operation list is empty by dm driver`, opName,
-		)
+		conflictKeys = primaryKeys
 	}
 
 	var (
-		one          = list[0]
-		oneLen       = len(one)
-		charL, charR = d.GetChars()
-
+		one            = list[0]
+		oneLen         = len(one)
+		charL, charR   = d.GetChars()
 		conflictKeySet = gset.New(false)
 
 		// queryHolders:	Handle data with Holder that need to be merged

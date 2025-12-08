@@ -167,8 +167,8 @@ func (r *InsertResult) RowsAffected() (int64, error) {
 }
 
 // GetInsertOutputSql  gen get last_insert_id code
-func (m *Driver) GetInsertOutputSql(ctx context.Context, table string) string {
-	fds, errFd := m.GetDB().TableFields(ctx, table)
+func (d *Driver) GetInsertOutputSql(ctx context.Context, table string) string {
+	fds, errFd := d.GetDB().TableFields(ctx, table)
 	if errFd != nil {
 		return ""
 	}

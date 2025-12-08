@@ -222,7 +222,7 @@ func Test_FormatUpsert_NoOnConflict(t *testing.T) {
 		// Try Save without OnConflict - should fail for pgsql
 		// PostgreSQL requires OnConflict() for Save() operations, unlike MySQL
 		_, err = db.Model(table).Data(g.Map{
-			"id":          1,
+			// "id":          1,
 			"passport":    "no_conflict_user",
 			"password":    "newpwd",
 			"nickname":    "newnick",

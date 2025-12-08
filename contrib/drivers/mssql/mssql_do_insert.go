@@ -20,6 +20,7 @@ import (
 )
 
 // DoInsert inserts or updates data for given table.
+// The list parameter must contain at least one record, which was previously validated.
 func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case gdb.InsertOptionSave:
@@ -43,12 +44,6 @@ func (d *Driver) doSave(ctx context.Context,
 	if len(option.OnConflict) == 0 {
 		return nil, gerror.NewCode(
 			gcode.CodeMissingParameter, `Please specify conflict columns`,
-		)
-	}
-
-	if len(list) == 0 {
-		return nil, gerror.NewCode(
-			gcode.CodeInvalidRequest, `Save operation list is empty by mssql driver`,
 		)
 	}
 

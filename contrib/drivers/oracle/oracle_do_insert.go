@@ -21,6 +21,7 @@ import (
 )
 
 // DoInsert inserts or updates data for given table.
+// The list parameter must contain at least one record, which was previously validated.
 func (d *Driver) DoInsert(
 	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (result sql.Result, err error) {
@@ -33,6 +34,7 @@ func (d *Driver) DoInsert(
 			gcode.CodeNotSupported,
 			`Replace operation is not supported by oracle driver`,
 		)
+	default:
 	}
 	var (
 		keys   []string
@@ -93,7 +95,7 @@ func (d *Driver) DoInsert(
 	return batchResult, nil
 }
 
-// doSave support upsert for Oracle
+// doSave support upsert for Oracle.
 func (d *Driver) doSave(ctx context.Context,
 	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (result sql.Result, err error) {
@@ -103,17 +105,10 @@ func (d *Driver) doSave(ctx context.Context,
 		)
 	}
 
-	if len(list) == 0 {
-		return nil, gerror.NewCode(
-			gcode.CodeInvalidRequest, `Save operation list is empty by oracle driver`,
-		)
-	}
-
 	var (
-		one          = list[0]
-		oneLen       = len(one)
-		charL, charR = d.GetChars()
-
+		one            = list[0]
+		oneLen         = len(one)
+		charL, charR   = d.GetChars()
 		conflictKeys   = option.OnConflict
 		conflictKeySet = gset.New(false)
 

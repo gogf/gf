@@ -17,9 +17,15 @@ import (
 )
 
 // DoInsert inserts or updates data for given table.
-func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
+// The list parameter must contain at least one record, which was previously validated.
+func (d *Driver) DoInsert(
+	ctx context.Context,
+	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
+) (result sql.Result, err error) {
 	switch option.InsertOption {
-	case gdb.InsertOptionReplace:
+	case
+		gdb.InsertOptionReplace,
+		gdb.InsertOptionSave:
 		// PostgreSQL does not support REPLACE INTO syntax, use Save (ON CONFLICT ... DO UPDATE) instead.
 		// Automatically detect primary keys if OnConflict is not specified.
 		if len(option.OnConflict) == 0 {
@@ -31,10 +37,17 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 					`failed to get primary keys for Replace operation`,
 				)
 			}
-			if len(primaryKeys) == 0 {
+			foundPrimaryKey := false
+			for _, conflictKey := range primaryKeys {
+				if _, ok := list[0][conflictKey]; ok {
+					foundPrimaryKey = true
+					break
+				}
+			}
+			if !foundPrimaryKey {
 				return nil, gerror.NewCode(
 					gcode.CodeMissingParameter,
-					`Replace operation requires primary key, but table has no primary key defined`,
+					`Please specify conflict columns or ensure the record has a primary key for Save/Replace operation`,
 				)
 			}
 			option.OnConflict = primaryKeys
@@ -46,7 +59,7 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 		tableFields, err := d.GetCore().GetDB().TableFields(ctx, table)
 		if err == nil {
 			for _, field := range tableFields {
-				if field.Key == "pri" {
+				if gstr.Equal(field.Key, "PRI") {
 					pkField := *field
 					ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, pkField)
 					break

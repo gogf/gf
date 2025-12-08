@@ -90,7 +90,7 @@ func Test_DB_Save(t *testing.T) {
 			"create_time": gtime.Now().String(),
 		}
 		_, err := db.Save(ctx, "t_user", data, 10)
-		gtest.AssertNE(err, nil)
+		gtest.AssertNil(err)
 	})
 }
 
@@ -323,10 +323,10 @@ func Test_DB_TableFields(t *testing.T) {
 		var expect = map[string][]any{
 			// []string: Index Type Null Key Default Comment
 			// id is bigserial so the default is a pgsql function
-			"id":          {0, "int8", false, "pri", fmt.Sprintf("nextval('%s_id_seq'::regclass)", table), ""},
-			"passport":    {1, "varchar", false, "", nil, ""},
-			"password":    {2, "varchar", false, "", nil, ""},
-			"nickname":    {3, "varchar", false, "", nil, ""},
+			"id":          {0, "int8(64)", false, "pri", fmt.Sprintf("nextval('%s_id_seq'::regclass)", table), ""},
+			"passport":    {1, "varchar(45)", false, "", nil, ""},
+			"password":    {2, "varchar(32)", false, "", nil, ""},
+			"nickname":    {3, "varchar(45)", false, "", nil, ""},
 			"create_time": {4, "timestamp", false, "", nil, ""},
 		}
 
@@ -429,13 +429,13 @@ func Test_DB_TableFields_DuplicateConstraints(t *testing.T) {
 		t.AssertNE(fields["id"], nil)
 		t.Assert(fields["id"].Key, "pri")
 		t.Assert(fields["id"].Name, "id")
-		t.Assert(fields["id"].Type, "int8")
+		t.Assert(fields["id"].Type, "int8(64)")
 
 		// Verify email field has unique constraint
 		t.AssertNE(fields["email"], nil)
 		t.Assert(fields["email"].Key, "uni")
 		t.Assert(fields["email"].Name, "email")
-		t.Assert(fields["email"].Type, "varchar")
+		t.Assert(fields["email"].Type, "varchar(100)")
 
 		// Verify username field has no constraint
 		t.AssertNE(fields["username"], nil)
