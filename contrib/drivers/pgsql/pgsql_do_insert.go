@@ -9,6 +9,7 @@ package pgsql
 import (
 	"context"
 	"database/sql"
+	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -37,9 +38,14 @@ func (d *Driver) DoInsert(
 				)
 			}
 			foundPrimaryKey := false
-			for _, conflictKey := range primaryKeys {
-				if _, ok := list[0][conflictKey]; ok {
-					foundPrimaryKey = true
+			for _, primaryKey := range primaryKeys {
+				for dataKey := range list[0] {
+					if strings.EqualFold(dataKey, primaryKey) {
+						foundPrimaryKey = true
+						break
+					}
+				}
+				if foundPrimaryKey {
 					break
 				}
 			}
