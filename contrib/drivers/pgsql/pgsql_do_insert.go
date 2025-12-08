@@ -75,7 +75,7 @@ func (d *Driver) DoInsert(
 // getPrimaryKeys retrieves the primary key field list of the table.
 // This method extracts primary key information from TableFields.
 func (d *Driver) getPrimaryKeys(ctx context.Context, table string) ([]string, error) {
-	tableFields, err := d.TableFields(ctx, table)
+	tableFields, err := d.GetCore().GetDB().TableFields(ctx, table)
 	if err != nil {
 		return nil, err
 	}
