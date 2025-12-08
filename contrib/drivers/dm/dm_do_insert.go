@@ -66,7 +66,7 @@ func (d *Driver) doMergeInsert(
 	// If OnConflict is not specified, automatically get the primary key of the table
 	conflictKeys := option.OnConflict
 	if len(conflictKeys) == 0 {
-		primaryKeys, err := d.getPrimaryKeys(ctx, table)
+		primaryKeys, err := d.Core.GetPrimaryKeys(ctx, table)
 		if err != nil {
 			return nil, gerror.WrapCode(
 				gcode.CodeInternalError,
@@ -82,9 +82,11 @@ func (d *Driver) doMergeInsert(
 			}
 		}
 		if !foundPrimaryKey {
-			return nil, gerror.NewCode(
+			return nil, gerror.NewCodef(
 				gcode.CodeMissingParameter,
-				`Please specify conflict columns or ensure the record has a primary key for Save/Replace/InsertIgnore operation`,
+				`Replace/Save/InsertIgnore operation requires conflict detection: `+
+					`either specify OnConflict() columns or ensure table '%s' has a primary key in the data`,
+				table,
 			)
 		}
 		conflictKeys = primaryKeys
@@ -147,24 +149,6 @@ func (d *Driver) doMergeInsert(
 		batchResult.Affected += n
 	}
 	return batchResult, nil
-}
-
-// getPrimaryKeys retrieves the primary key field names of the table as a slice of strings.
-// This method extracts primary key information from TableFields.
-func (d *Driver) getPrimaryKeys(ctx context.Context, table string) ([]string, error) {
-	tableFields, err := d.TableFields(ctx, table)
-	if err != nil {
-		return nil, err
-	}
-
-	var primaryKeys []string
-	for _, field := range tableFields {
-		if gstr.Equal(field.Key, "PRI") {
-			primaryKeys = append(primaryKeys, field.Name)
-		}
-	}
-
-	return primaryKeys, nil
 }
 
 // parseSqlForMerge generates MERGE statement for DM database.

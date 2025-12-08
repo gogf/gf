@@ -21,16 +21,44 @@ import (
 
 // DoInsert inserts or updates data for given table.
 // The list parameter must contain at least one record, which was previously validated.
-func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption) (result sql.Result, err error) {
+func (d *Driver) DoInsert(
+	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
+) (result sql.Result, err error) {
 	switch option.InsertOption {
-	case gdb.InsertOptionSave:
+	case
+		gdb.InsertOptionSave,
+		gdb.InsertOptionReplace:
+		// MSSQL does not support REPLACE INTO syntax.
+		// Convert Replace to Save operation, using MERGE statement.
+		// Auto-detect primary keys if OnConflict is not specified.
+		if len(option.OnConflict) == 0 {
+			primaryKeys, err := d.Core.GetPrimaryKeys(ctx, table)
+			if err != nil {
+				return nil, gerror.WrapCode(
+					gcode.CodeInternalError,
+					err,
+					`failed to get primary keys for Replace operation`,
+				)
+			}
+			foundPrimaryKey := false
+			for _, primaryKey := range primaryKeys {
+				if _, ok := list[0][primaryKey]; ok {
+					foundPrimaryKey = true
+					break
+				}
+			}
+			if !foundPrimaryKey {
+				return nil, gerror.NewCodef(
+					gcode.CodeMissingParameter,
+					`Save/Replace operation requires conflict detection: `+
+						`either specify OnConflict() columns or ensure table '%s' has a primary key in the data`,
+					table,
+				)
+			}
+			option.OnConflict = primaryKeys
+		}
+		// Convert to Save operation
 		return d.doSave(ctx, link, table, list, option)
-
-	case gdb.InsertOptionReplace:
-		return nil, gerror.NewCode(
-			gcode.CodeNotSupported,
-			`Replace operation is not supported by mssql driver`,
-		)
 
 	default:
 		return d.Core.DoInsert(ctx, link, table, list, option)
@@ -41,17 +69,10 @@ func (d *Driver) DoInsert(ctx context.Context, link gdb.Link, table string, list
 func (d *Driver) doSave(ctx context.Context,
 	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (result sql.Result, err error) {
-	if len(option.OnConflict) == 0 {
-		return nil, gerror.NewCode(
-			gcode.CodeMissingParameter, `Please specify conflict columns`,
-		)
-	}
-
 	var (
-		one          = list[0]
-		oneLen       = len(one)
-		charL, charR = d.GetChars()
-
+		one            = list[0]
+		oneLen         = len(one)
+		charL, charR   = d.GetChars()
 		conflictKeys   = option.OnConflict
 		conflictKeySet = gset.New(false)
 
@@ -122,7 +143,10 @@ func parseSqlForUpsert(table string,
 		insertValueStr  = strings.Join(insertValues, ",")
 		updateValueStr  = strings.Join(updateValues, ",")
 		duplicateKeyStr string
-		pattern         = gstr.Trim(`MERGE INTO %s T1 USING (VALUES(%s)) T2 (%s) ON (%s) WHEN NOT MATCHED THEN INSERT(%s) VALUES (%s) WHEN MATCHED THEN UPDATE SET %s;`)
+		pattern         = gstr.Trim(
+			`MERGE INTO %s T1 USING (VALUES(%s)) T2 (%s) ON (%s) WHEN NOT MATCHED ` +
+				`THEN INSERT(%s) VALUES (%s) WHEN MATCHED THEN UPDATE SET %s;`,
+		)
 	)
 
 	for index, keys := range duplicateKey {

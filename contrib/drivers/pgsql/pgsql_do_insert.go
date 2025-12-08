@@ -24,12 +24,12 @@ func (d *Driver) DoInsert(
 ) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case
-		gdb.InsertOptionReplace,
-		gdb.InsertOptionSave:
+		gdb.InsertOptionSave,
+		gdb.InsertOptionReplace:
 		// PostgreSQL does not support REPLACE INTO syntax, use Save (ON CONFLICT ... DO UPDATE) instead.
 		// Automatically detect primary keys if OnConflict is not specified.
 		if len(option.OnConflict) == 0 {
-			primaryKeys, err := d.getPrimaryKeys(ctx, table)
+			primaryKeys, err := d.Core.GetPrimaryKeys(ctx, table)
 			if err != nil {
 				return nil, gerror.WrapCode(
 					gcode.CodeInternalError,
@@ -45,9 +45,11 @@ func (d *Driver) DoInsert(
 				}
 			}
 			if !foundPrimaryKey {
-				return nil, gerror.NewCode(
+				return nil, gerror.NewCodef(
 					gcode.CodeMissingParameter,
-					`Please specify conflict columns or ensure the record has a primary key for Save/Replace operation`,
+					`Replace/Save operation requires conflict detection: `+
+						`either specify OnConflict() columns or ensure table '%s' has a primary key in the data`,
+					table,
 				)
 			}
 			option.OnConflict = primaryKeys
@@ -70,22 +72,4 @@ func (d *Driver) DoInsert(
 	default:
 	}
 	return d.Core.DoInsert(ctx, link, table, list, option)
-}
-
-// getPrimaryKeys retrieves the primary key field list of the table.
-// This method extracts primary key information from TableFields.
-func (d *Driver) getPrimaryKeys(ctx context.Context, table string) ([]string, error) {
-	tableFields, err := d.TableFields(ctx, table)
-	if err != nil {
-		return nil, err
-	}
-
-	var primaryKeys []string
-	for _, field := range tableFields {
-		if gstr.Equal(field.Key, "pri") {
-			primaryKeys = append(primaryKeys, field.Name)
-		}
-	}
-
-	return primaryKeys, nil
 }
