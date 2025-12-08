@@ -148,7 +148,7 @@ func TestDoInsert(t *testing.T) {
 		_, err := db.Save(context.Background(), "t_user", data, 10)
 		gtest.AssertNE(err, nil)
 
-		// Replace should now work (it will auto-detect primary key)
+		// Replace should fail because primary key 'id' is not in the data
 		_, err = db.Replace(context.Background(), "t_user", data, 10)
 		gtest.AssertNE(err, nil)
 	})
