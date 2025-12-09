@@ -57,6 +57,7 @@ func (d *Driver) DoInsert(
 					table,
 				)
 			}
+			// TODO consider composite primary keys.
 			option.OnConflict = primaryKeys
 		}
 		// Treat Replace as Save operation

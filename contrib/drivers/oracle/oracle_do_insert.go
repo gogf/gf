@@ -173,6 +173,7 @@ func (d *Driver) doMergeInsert(
 				table,
 			)
 		}
+		// TODO consider composite primary keys.
 		conflictKeys = primaryKeys
 	}
 
