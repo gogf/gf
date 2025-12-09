@@ -90,8 +90,8 @@ import _ "github.com/gogf/gf/contrib/drivers/oracle/v2"
 
 Note:
 
-- It does not support `Replace` features.
 - It does not support `LastInsertId`.
+- `InsertIgnore` returns error if there is no primary key or unique index submitted with record.
 
 ### ClickHouse
 
