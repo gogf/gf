@@ -139,10 +139,10 @@ func Test_Do_Insert(t *testing.T) {
 			"CREATE_TIME": gtime.Now().String(),
 		}
 		_, err := db.Save(ctx, "t_user", data, 10)
-		gtest.AssertNE(err, nil)
+		gtest.AssertNil(err)
 
 		_, err = db.Replace(ctx, "t_user", data, 10)
-		gtest.AssertNE(err, nil)
+		gtest.AssertNil(err)
 	})
 }
 

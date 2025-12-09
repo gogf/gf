@@ -30,10 +30,13 @@ func (d *Driver) DoInsert(
 		return d.doSave(ctx, link, table, list, option)
 
 	case gdb.InsertOptionReplace:
-		return nil, gerror.NewCode(
-			gcode.CodeNotSupported,
-			`Replace operation is not supported by oracle driver`,
-		)
+		// Oracle does not support REPLACE INTO syntax, use SAVE instead.
+		return d.doSave(ctx, link, table, list, option)
+
+	case gdb.InsertOptionIgnore:
+		// Oracle does not support INSERT IGNORE syntax, use MERGE instead.
+		return d.doInsertIgnore(ctx, link, table, list, option)
+
 	default:
 	}
 	var (
@@ -95,21 +98,66 @@ func (d *Driver) DoInsert(
 	return batchResult, nil
 }
 
-// doSave support upsert for Oracle.
+// doSave support upsert for Oracle
 func (d *Driver) doSave(ctx context.Context,
 	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (result sql.Result, err error) {
-	if len(option.OnConflict) == 0 {
-		return nil, gerror.NewCode(
-			gcode.CodeMissingParameter, `Please specify conflict columns`,
-		)
+	return d.doMergeInsert(ctx, link, table, list, option, true)
+}
+
+// doInsertIgnore implements INSERT IGNORE operation using MERGE statement for Oracle database.
+// It only inserts records when there's no conflict on primary/unique keys.
+func (d *Driver) doInsertIgnore(ctx context.Context,
+	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
+) (result sql.Result, err error) {
+	return d.doMergeInsert(ctx, link, table, list, option, false)
+}
+
+// doMergeInsert implements MERGE-based insert operations for Oracle database.
+// When withUpdate is true, it performs upsert (insert or update).
+// When withUpdate is false, it performs insert ignore (insert only when no conflict).
+func (d *Driver) doMergeInsert(
+	ctx context.Context,
+	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption, withUpdate bool,
+) (result sql.Result, err error) {
+	// If OnConflict is not specified, automatically get the primary key of the table
+	conflictKeys := option.OnConflict
+	if len(conflictKeys) == 0 {
+		primaryKeys, err := d.Core.GetPrimaryKeys(ctx, table)
+		if err != nil {
+			return nil, gerror.WrapCode(
+				gcode.CodeInternalError,
+				err,
+				`failed to get primary keys for table`,
+			)
+		}
+		foundPrimaryKey := false
+		for _, primaryKey := range primaryKeys {
+			for dataKey := range list[0] {
+				if strings.EqualFold(dataKey, primaryKey) {
+					foundPrimaryKey = true
+					break
+				}
+			}
+			if foundPrimaryKey {
+				break
+			}
+		}
+		if !foundPrimaryKey {
+			return nil, gerror.NewCodef(
+				gcode.CodeMissingParameter,
+				`Replace/Save/InsertIgnore operation requires conflict detection: `+
+					`either specify OnConflict() columns or ensure table '%s' has a primary key in the data`,
+				table,
+			)
+		}
+		conflictKeys = primaryKeys
 	}
 
 	var (
 		one            = list[0]
 		oneLen         = len(one)
 		charL, charR   = d.GetChars()
-		conflictKeys   = option.OnConflict
 		conflictKeySet = gset.New(false)
 
 		// queryHolders:	Handle data with Holder that need to be upsert
@@ -137,9 +185,9 @@ func (d *Driver) doSave(ctx context.Context,
 		insertKeys[index] = keyWithChar
 		insertValues[index] = fmt.Sprintf("T2.%s", keyWithChar)
 
-		// filter conflict keys in updateValues.
-		// And the key is not a soft created field.
-		if !(conflictKeySet.Contains(key) || d.Core.IsSoftCreatedFieldName(key)) {
+		// Build updateValues only when withUpdate is true
+		// Filter conflict keys and soft created fields from updateValues
+		if withUpdate && !(conflictKeySet.Contains(key) || d.Core.IsSoftCreatedFieldName(key)) {
 			updateValues = append(
 				updateValues,
 				fmt.Sprintf(`T1.%s = T2.%s`, keyWithChar, keyWithChar),
@@ -148,8 +196,10 @@ func (d *Driver) doSave(ctx context.Context,
 		index++
 	}
 
-	batchResult := new(gdb.SqlResult)
-	sqlStr := parseSqlForUpsert(table, queryHolders, insertKeys, insertValues, updateValues, conflictKeys)
+	var (
+		batchResult = new(gdb.SqlResult)
+		sqlStr      = parseSqlForMerge(table, queryHolders, insertKeys, insertValues, updateValues, conflictKeys)
+	)
 	r, err := d.DoExec(ctx, link, sqlStr, queryValues...)
 	if err != nil {
 		return r, err
@@ -163,40 +213,40 @@ func (d *Driver) doSave(ctx context.Context,
 	return batchResult, nil
 }
 
-// parseSqlForUpsert
-// MERGE INTO {{table}} T1
-// USING ( SELECT {{queryHolders}} FROM DUAL T2
-// ON (T1.{{duplicateKey}} = T2.{{duplicateKey}} AND ...)
-// WHEN NOT MATCHED THEN
-// INSERT {{insertKeys}} VALUES {{insertValues}}
-// WHEN MATCHED THEN
-// UPDATE SET {{updateValues}}
-func parseSqlForUpsert(table string,
+// parseSqlForMerge generates MERGE statement for Oracle database.
+// When updateValues is empty, it only inserts (INSERT IGNORE behavior).
+// When updateValues is provided, it performs upsert (INSERT or UPDATE).
+// Examples:
+// - INSERT IGNORE: MERGE INTO table T1 USING (...) T2 ON (...) WHEN NOT MATCHED THEN INSERT(...) VALUES (...)
+// - UPSERT: MERGE INTO table T1 USING (...) T2 ON (...) WHEN NOT MATCHED THEN INSERT(...) VALUES (...) WHEN MATCHED THEN UPDATE SET ...
+func parseSqlForMerge(table string,
 	queryHolders, insertKeys, insertValues, updateValues, duplicateKey []string,
 ) (sqlStr string) {
 	var (
 		queryHolderStr  = strings.Join(queryHolders, ",")
 		insertKeyStr    = strings.Join(insertKeys, ",")
 		insertValueStr  = strings.Join(insertValues, ",")
-		updateValueStr  = strings.Join(updateValues, ",")
 		duplicateKeyStr string
-		pattern         = gstr.Trim(`MERGE INTO %s T1 USING (SELECT %s FROM DUAL) T2 ON (%s) WHEN NOT MATCHED THEN INSERT(%s) VALUES (%s) WHEN MATCHED THEN UPDATE SET %s`)
 	)
 
+	// Build ON condition
 	for index, keys := range duplicateKey {
 		if index != 0 {
 			duplicateKeyStr += " AND "
 		}
-		duplicateTmp := fmt.Sprintf("T1.%s = T2.%s", keys, keys)
-		duplicateKeyStr += duplicateTmp
+		duplicateKeyStr += fmt.Sprintf("T1.%s = T2.%s", keys, keys)
 	}
 
-	return fmt.Sprintf(pattern,
-		table,
-		queryHolderStr,
-		duplicateKeyStr,
-		insertKeyStr,
-		insertValueStr,
-		updateValueStr,
-	)
+	// Build SQL based on whether UPDATE is needed
+	pattern := gstr.Trim(`MERGE INTO %s T1 USING (SELECT %s FROM DUAL) T2 ON (%s) WHEN NOT MATCHED THEN INSERT(%s) VALUES (%s)`)
+	if len(updateValues) > 0 {
+		// Upsert: INSERT or UPDATE
+		pattern += gstr.Trim(` WHEN MATCHED THEN UPDATE SET %s`)
+		return fmt.Sprintf(
+			pattern, table, queryHolderStr, duplicateKeyStr, insertKeyStr, insertValueStr,
+			strings.Join(updateValues, ","),
+		)
+	}
+	// Insert Ignore: INSERT only
+	return fmt.Sprintf(pattern, table, queryHolderStr, duplicateKeyStr, insertKeyStr, insertValueStr)
 }
