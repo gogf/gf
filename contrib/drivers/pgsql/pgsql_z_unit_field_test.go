@@ -73,18 +73,18 @@ func Test_TableFields_Types(t *testing.T) {
 		t.AssertNil(err)
 
 		// Test integer type names
-		t.Assert(fields["col_int2"].Type, "int2")
-		t.Assert(fields["col_int4"].Type, "int4")
-		t.Assert(fields["col_int8"].Type, "int8")
+		t.Assert(fields["col_int2"].Type, "int2(16)")
+		t.Assert(fields["col_int4"].Type, "int4(32)")
+		t.Assert(fields["col_int8"].Type, "int8(64)")
 
 		// Test float type names
-		t.Assert(fields["col_float4"].Type, "float4")
-		t.Assert(fields["col_float8"].Type, "float8")
-		t.Assert(fields["col_numeric"].Type, "numeric")
+		t.Assert(fields["col_float4"].Type, "float4(24)")
+		t.Assert(fields["col_float8"].Type, "float8(53)")
+		t.Assert(fields["col_numeric"].Type, "numeric(10)")
 
 		// Test character type names
-		t.Assert(fields["col_char"].Type, "bpchar")
-		t.Assert(fields["col_varchar"].Type, "varchar")
+		t.Assert(fields["col_char"].Type, "bpchar(10)")
+		t.Assert(fields["col_varchar"].Type, "varchar(100)")
 		t.Assert(fields["col_text"].Type, "text")
 
 		// Test boolean type name

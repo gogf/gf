@@ -109,7 +109,17 @@ func (d *DriverWrapperDB) TableFields(
 // InsertOptionReplace: if there's unique/primary key in the data, it deletes it from table and inserts a new one;
 // InsertOptionSave:    if there's unique/primary key in the data, it updates it or else inserts a new one;
 // InsertOptionIgnore:  if there's unique/primary key in the data, it ignores the inserting;
-func (d *DriverWrapperDB) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption) (result sql.Result, err error) {
+func (d *DriverWrapperDB) DoInsert(
+	ctx context.Context, link Link, table string, list List, option DoInsertOption,
+) (result sql.Result, err error) {
+	if len(list) == 0 {
+		return nil, gerror.NewCodef(
+			gcode.CodeInvalidRequest,
+			`data list is empty for %s operation`,
+			GetInsertOperationByOption(option.InsertOption),
+		)
+	}
+
 	// Convert data type before commit it to underlying db driver.
 	for i, item := range list {
 		list[i], err = d.GetCore().ConvertDataForRecord(ctx, item, table)
