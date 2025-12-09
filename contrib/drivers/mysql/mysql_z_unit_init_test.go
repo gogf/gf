@@ -178,7 +178,7 @@ func Test_PartitionTable(t *testing.T) {
 	createShopDBTable()
 	insertShopDBData()
 
-	//defer dropShopDBTable()
+	// defer dropShopDBTable()
 	gtest.C(t, func(t *gtest.T) {
 		data, err := db3.Ctx(ctx).Model("dbx_order").Partition("p3", "p4").All()
 		t.AssertNil(err)

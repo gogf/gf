@@ -9,14 +9,19 @@ Let's take `mysql` for example.
 
 ```shell
 go get github.com/gogf/gf/contrib/drivers/mysql/v2@latest
+
 # Easy for copying:
 go get github.com/gogf/gf/contrib/drivers/clickhouse/v2@latest
 go get github.com/gogf/gf/contrib/drivers/dm/v2@latest
+go get github.com/gogf/gf/contrib/drivers/gaussdb/v2@latest
+go get github.com/gogf/gf/contrib/drivers/mariadb/v2@latest
 go get github.com/gogf/gf/contrib/drivers/mssql/v2@latest
+go get github.com/gogf/gf/contrib/drivers/oceanbase/v2@latest
 go get github.com/gogf/gf/contrib/drivers/oracle/v2@latest
 go get github.com/gogf/gf/contrib/drivers/pgsql/v2@latest
 go get github.com/gogf/gf/contrib/drivers/sqlite/v2@latest
 go get github.com/gogf/gf/contrib/drivers/sqlitecgo/v2@latest
+go get github.com/gogf/gf/contrib/drivers/tidb/v2@latest
 ```
 
 Choose and import the driver to your project:
@@ -43,10 +48,34 @@ func main() {
 
 ## Supported Drivers
 
-### MySQL/MariaDB/TiDB/OceanBase
+### MySQL
 
 ```go
 import _ "github.com/gogf/gf/contrib/drivers/mysql/v2"
+```
+
+### MariaDB
+
+```go
+import _ "github.com/gogf/gf/contrib/drivers/mariadb/v2"
+```
+
+### TiDB
+
+```go
+import _ "github.com/gogf/gf/contrib/drivers/tidb/v2"
+```
+
+### OceanBase
+
+```go
+import _ "github.com/gogf/gf/contrib/drivers/oceanbase/v2"
+```
+
+### GaussDB
+
+```go
+import _ "github.com/gogf/gf/contrib/drivers/gaussdb/v2"
 ```
 
 ### SQLite
