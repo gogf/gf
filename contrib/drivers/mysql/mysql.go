@@ -27,7 +27,7 @@ func init() {
 	var (
 		err         error
 		driverObj   = New()
-		driverNames = g.SliceStr{"mysql", "mariadb", "tidb"}
+		driverNames = g.SliceStr{"mysql", "mariadb", "tidb"} // TODO remove mariadb and tidb in future versions.
 	)
 	for _, driverName := range driverNames {
 		if err = gdb.Register(driverName, driverObj); err != nil {

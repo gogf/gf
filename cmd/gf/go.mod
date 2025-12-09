@@ -9,6 +9,10 @@ require (
 	github.com/gogf/gf/contrib/drivers/oracle/v2 v2.9.6
 	github.com/gogf/gf/contrib/drivers/pgsql/v2 v2.9.6
 	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.9.6
+	github.com/gogf/gf/contrib/drivers/tidb/v2 v2.9.6
+	github.com/gogf/gf/contrib/drivers/oceanbase/v2 v2.9.6
+	github.com/gogf/gf/contrib/drivers/gaussdb/v2 v2.9.6
+	github.com/gogf/gf/contrib/drivers/mariadb/v2 v2.9.6
 	github.com/gogf/gf/v2 v2.9.6
 	github.com/gogf/selfupdate v0.0.0-20231215043001-5c48c528462f
 	github.com/olekukonko/tablewriter v1.1.0
