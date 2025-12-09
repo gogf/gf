@@ -8,9 +8,10 @@
 package tidb
 
 import (
-	"github.com/gogf/gf/contrib/drivers/mysql/v2"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
+
+	"github.com/gogf/gf/contrib/drivers/mysql/v2"
 )
 
 // Driver is the driver for TiDB database.
