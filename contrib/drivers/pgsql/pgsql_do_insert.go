@@ -37,7 +37,18 @@ func (d *Driver) DoInsert(
 					`failed to get primary keys for Save/Replace operation`,
 				)
 			}
-			foundPrimaryKey := d.Core.FindPrimaryKeyInData(ctx, table, list[0])
+			foundPrimaryKey := false
+			for _, primaryKey := range primaryKeys {
+				for dataKey := range list[0] {
+					if strings.EqualFold(dataKey, primaryKey) {
+						foundPrimaryKey = true
+						break
+					}
+				}
+				if foundPrimaryKey {
+					break
+				}
+			}
 			if !foundPrimaryKey {
 				return nil, gerror.NewCodef(
 					gcode.CodeMissingParameter,
