@@ -1,3 +1,9 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package mssql
 
 import (
@@ -87,12 +93,16 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args 
 		IsTransaction: link.IsTransaction(),
 	})
 	if err != nil {
-		return &InsertResult{lastInsertId: 0, rowsAffected: 0, err: err}, err
+		return &Result{lastInsertId: 0, rowsAffected: 0, err: err}, err
 	}
 	stdSqlResult := out.Records
 	if len(stdSqlResult) == 0 {
-		err = gerror.WrapCode(gcode.CodeDbOperationError, gerror.New("affectcount is zero"), `sql.Result.RowsAffected failed`)
-		return &InsertResult{lastInsertId: 0, rowsAffected: 0, err: err}, err
+		err = gerror.WrapCode(
+			gcode.CodeDbOperationError,
+			gerror.New("affected count is zero"),
+			`sql.Result.RowsAffected failed`,
+		)
+		return &Result{lastInsertId: 0, rowsAffected: 0, err: err}, err
 	}
 	// For batch insert, OUTPUT clause returns one row per inserted row.
 	// So the rowsAffected should be the count of returned records.
@@ -100,7 +110,7 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args 
 	// get last_insert_id from the first returned row
 	lastInsertId := stdSqlResult[0].GMap().GetVar(lastInsertIdFieldAlias).Int64()
 
-	return &InsertResult{lastInsertId: lastInsertId, rowsAffected: rowsAffected}, err
+	return &Result{lastInsertId: lastInsertId, rowsAffected: rowsAffected}, err
 }
 
 // GetTableNameFromSql get table name from sql statement
@@ -111,17 +121,19 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args 
 // "user as u".
 func (d *Driver) GetTableNameFromSql(sqlStr string) (table string) {
 	// INSERT INTO "ip_to_id"("ip") OUTPUT  1 as AffectCount,INSERTED.id as ID VALUES(?)
-	leftChars, rightChars := d.GetChars()
-	trimStr := leftChars + rightChars + "[] "
-	pattern := "INTO(.+?)\\("
-	regCompile := regexp.MustCompile(pattern)
-	tableInfo := regCompile.FindStringSubmatch(sqlStr)
+	var (
+		leftChars, rightChars = d.GetChars()
+		trimStr               = leftChars + rightChars + "[] "
+		pattern               = "INTO(.+?)\\("
+		regCompile            = regexp.MustCompile(pattern)
+		tableInfo             = regCompile.FindStringSubmatch(sqlStr)
+	)
 	// get the first one. after the first it may be content of the value, it's not table name.
 	table = tableInfo[1]
 	table = strings.Trim(table, " ")
 	if strings.Contains(table, ".") {
 		tmpAry := strings.Split(table, ".")
-		// the last one is tablename
+		// the last one is table name
 		table = tmpAry[len(tmpAry)-1]
 	} else if strings.Contains(table, "as") || strings.Contains(table, " ") {
 		tmpAry := strings.Split(table, "as")
@@ -149,21 +161,6 @@ func (l *txLinkMssql) IsTransaction() bool {
 // Note that, transaction operation is always operated on master node.
 func (l *txLinkMssql) IsOnMaster() bool {
 	return true
-}
-
-// InsertResult instance of sql.Result
-type InsertResult struct {
-	lastInsertId int64
-	rowsAffected int64
-	err          error
-}
-
-func (r *InsertResult) LastInsertId() (int64, error) {
-	return r.lastInsertId, r.err
-}
-
-func (r *InsertResult) RowsAffected() (int64, error) {
-	return r.rowsAffected, r.err
 }
 
 // GetInsertOutputSql  gen get last_insert_id code
