@@ -9,7 +9,7 @@ Let's take `mysql` for example.
 
 ```shell
 go get github.com/gogf/gf/contrib/drivers/mysql/v2@latest
-# Easy to copy
+# Easy for copying:
 go get github.com/gogf/gf/contrib/drivers/clickhouse/v2@latest
 go get github.com/gogf/gf/contrib/drivers/dm/v2@latest
 go get github.com/gogf/gf/contrib/drivers/mssql/v2@latest

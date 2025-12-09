@@ -37,6 +37,12 @@ func (d *Driver) DoInsert(
 		return d.doInsertIgnore(ctx, link, table, list, option)
 
 	default:
+		// DM database supports IDENTITY auto-increment columns natively.
+		// The driver automatically returns LastInsertId through sql.Result.
+		//
+		// Note: DM IDENTITY columns cannot accept explicit ID values unless
+		// IDENTITY_INSERT is enabled. When using tables with IDENTITY columns,
+		// avoid providing explicit ID values in the data.
 		return d.Core.DoInsert(ctx, link, table, list, option)
 	}
 }

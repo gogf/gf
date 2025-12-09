@@ -16,8 +16,13 @@ import (
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+)
+
+const (
+	internalPrimaryKeyInCtx gctx.StrKey = "primary_key_field"
 )
 
 // DoInsert inserts or updates data for given table.
@@ -36,6 +41,31 @@ func (d *Driver) DoInsert(
 	case gdb.InsertOptionIgnore:
 		// Oracle does not support INSERT IGNORE syntax, use MERGE instead.
 		return d.doInsertIgnore(ctx, link, table, list, option)
+
+	case gdb.InsertOptionDefault:
+		// For default insert, set primary key field in context to support LastInsertId.
+		// Only set it when the primary key is not provided in the data, for performance reason.
+		tableFields, err := d.GetCore().GetDB().TableFields(ctx, table)
+		if err == nil && len(list) > 0 {
+			for _, field := range tableFields {
+				if strings.EqualFold(field.Key, "pri") {
+					// Check if primary key is provided in the data.
+					pkProvided := false
+					for key := range list[0] {
+						if strings.EqualFold(key, field.Name) {
+							pkProvided = true
+							break
+						}
+					}
+					// Only use RETURNING when primary key is not provided, for performance reason.
+					if !pkProvided {
+						pkField := *field
+						ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, pkField)
+					}
+					break
+				}
+			}
+		}
 
 	default:
 	}
@@ -60,8 +90,8 @@ func (d *Driver) DoInsert(
 		valueHolderStr = strings.Join(valueHolder, ",")
 	)
 	// Format "INSERT...INTO..." statement.
-	intoStrArray := make([]string, 0)
-	for i := 0; i < len(list); i++ {
+	// Note: Use standard INSERT INTO syntax instead of INSERT ALL to ensure triggers fire
+	for i := 0; i < listLength; i++ {
 		for _, k := range keys {
 			if s, ok := list[i][k].(gdb.Raw); ok {
 				params = append(params, gconv.String(s))
@@ -70,30 +100,22 @@ func (d *Driver) DoInsert(
 			}
 		}
 		values = append(values, valueHolderStr)
-		intoStrArray = append(
-			intoStrArray,
-			fmt.Sprintf(
-				"INTO %s(%s) VALUES(%s)",
-				table, keyStr, valueHolderStr,
-			),
-		)
-		if len(intoStrArray) == option.BatchCount || (i == listLength-1 && len(valueHolder) > 0) {
-			r, err := d.DoExec(ctx, link, fmt.Sprintf(
-				"INSERT ALL %s SELECT * FROM DUAL",
-				strings.Join(intoStrArray, " "),
-			), params...)
-			if err != nil {
-				return r, err
-			}
-			if n, err := r.RowsAffected(); err != nil {
-				return r, err
-			} else {
-				batchResult.Result = r
-				batchResult.Affected += n
-			}
-			params = params[:0]
-			intoStrArray = intoStrArray[:0]
+
+		// Execute individual INSERT for each record to trigger row-level triggers
+		r, err := d.DoExec(ctx, link, fmt.Sprintf(
+			"INSERT INTO %s(%s) VALUES(%s)",
+			table, keyStr, valueHolderStr,
+		), params...)
+		if err != nil {
+			return r, err
 		}
+		if n, err := r.RowsAffected(); err != nil {
+			return r, err
+		} else {
+			batchResult.Result = r
+			batchResult.Affected += n
+		}
+		params = params[:0]
 	}
 	return batchResult, nil
 }
@@ -238,7 +260,10 @@ func parseSqlForMerge(table string,
 	}
 
 	// Build SQL based on whether UPDATE is needed
-	pattern := gstr.Trim(`MERGE INTO %s T1 USING (SELECT %s FROM DUAL) T2 ON (%s) WHEN NOT MATCHED THEN INSERT(%s) VALUES (%s)`)
+	pattern := gstr.Trim(
+		`MERGE INTO %s T1 USING (SELECT %s FROM DUAL) T2 ON (%s) WHEN ` +
+			`NOT MATCHED THEN INSERT(%s) VALUES (%s)`,
+	)
 	if len(updateValues) > 0 {
 		// Upsert: INSERT or UPDATE
 		pattern += gstr.Trim(` WHEN MATCHED THEN UPDATE SET %s`)

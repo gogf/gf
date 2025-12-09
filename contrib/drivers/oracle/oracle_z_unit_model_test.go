@@ -275,6 +275,25 @@ func Test_Model_InsertIgnore(t *testing.T) {
 	})
 }
 
+func Test_Model_InsertAndGetId(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			// "id":          1,
+			"passport":    fmt.Sprintf(`t%d`, 1),
+			"password":    fmt.Sprintf(`p%d`, 1),
+			"nickname":    fmt.Sprintf(`T%d`, 1),
+			"create_time": gtime.Now(),
+		}
+		lastId, err := db.Model(table).Data(data).InsertAndGetId()
+		t.AssertNil(err)
+		t.AssertGT(lastId, 0)
+	})
+
+}
+
 // https://github.com/gogf/gf/issues/3286
 func Test_Model_Insert_Raw(t *testing.T) {
 	table := createTable()
