@@ -174,3 +174,49 @@ func Benchmark_ParamTagIn(b *testing.B) {
 		client.PostContent(ctx, "/user", "id="+strconv.Itoa(i))
 	}
 }
+
+type UserValidReq struct {
+	g.Meta   `path:"/user" method:"get" tags:"XXX" summary:"XXX"`
+	Query    string `p:"query" dc:"查询参数"`
+	Page     int    `p:"page_index" v:"min:1" dc:"页码，从1开始" d:"1"`
+	PageSize int    `p:"size" v:"between:1,50" dc:"每页大小，最大50" d:"20"`
+}
+
+type UserValidRes struct {
+	g.Meta `mime:"application/json"`
+}
+
+var (
+	UserValid = cUserValid{}
+)
+
+type cUserValid struct{}
+
+func (c *cUserValid) User(ctx context.Context, req *UserValidReq) (res *UserValidRes, err error) {
+	g.RequestFromCtx(ctx).Response.WriteJson(req)
+	return
+}
+
+// Test_Params_Valid for #4442
+func Test_Params_Valid(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareHandlerResponse)
+		group.Bind(UserValid)
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		client := g.Client()
+		client.SetPrefix(prefix)
+
+		t.Assert(client.GetContent(ctx, "/user"), `{"Query":"","Page":1,"PageSize":20}`)
+		t.Assert(client.GetContent(ctx, "/user?page_index=0"), `{"code":51,"message":"The page_index value `+"`0`"+` must be equal or greater than 1","data":null}`)
+		t.Assert(client.GetContent(ctx, "/user?size=100"), `{"code":51,"message":"The size value `+"`100`"+` must be between 1 and 50","data":null}`)
+	})
+}
