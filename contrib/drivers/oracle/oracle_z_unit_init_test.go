@@ -113,16 +113,48 @@ func createTable(table ...string) (name string) {
 
 	dropTable(name)
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`
-	CREATE TABLE %s (
-		ID NUMBER(10) NOT NULL,
-		PASSPORT VARCHAR(45) NOT NULL,
-		PASSWORD CHAR(32) NOT NULL,
-		NICKNAME VARCHAR(45) NOT NULL,
-		CREATE_TIME varchar(45),
-	    SALARY NUMBER(18,2),
-		PRIMARY KEY (ID))
-	`, name)); err != nil {
+	// Step 1: Create table
+	createTableSQL := fmt.Sprintf(`
+    CREATE TABLE %s (
+        ID NUMBER(10) NOT NULL,
+        PASSPORT VARCHAR(45) NOT NULL,
+        PASSWORD CHAR(32) NOT NULL,
+        NICKNAME VARCHAR(45) NOT NULL,
+        CREATE_TIME VARCHAR(45),
+        SALARY NUMBER(18,2),
+        PRIMARY KEY (ID)
+    )`, name)
+
+	if _, err := db.Exec(ctx, createTableSQL); err != nil {
+		gtest.Fatal(err)
+	}
+
+	// Step 2: Create sequence
+	createSeqSQL := fmt.Sprintf(`
+    CREATE SEQUENCE %s_ID_SEQ
+    START WITH 1
+    INCREMENT BY 1
+    MINVALUE 1
+    MAXVALUE 9999999999
+    NOCYCLE
+    NOCACHE`, name)
+
+	if _, err := db.Exec(ctx, createSeqSQL); err != nil {
+		gtest.Fatal(err)
+	}
+
+	// Step 3: Create trigger - only set ID from sequence when it's NULL
+	createTriggerSQL := fmt.Sprintf(`
+CREATE OR REPLACE TRIGGER %s_ID_TRG
+BEFORE INSERT ON %s
+FOR EACH ROW
+BEGIN
+    IF :NEW.ID IS NULL THEN
+        :NEW.ID := %s_ID_SEQ.NEXTVAL;
+    END IF;
+END;`, name, name, name)
+
+	if _, err := db.Exec(ctx, createTriggerSQL); err != nil {
 		gtest.Fatal(err)
 	}
 
@@ -160,7 +192,15 @@ func dropTable(table string) {
 	if count == 0 {
 		return
 	}
+
+	// Drop table
 	if _, err = db.Exec(ctx, fmt.Sprintf("DROP TABLE %s", table)); err != nil {
 		gtest.Fatal(err)
+	}
+
+	// Drop sequence if exists
+	seqCount, err := db.GetCount(ctx, "SELECT COUNT(*) FROM USER_SEQUENCES WHERE SEQUENCE_NAME = ?", strings.ToUpper(table+"_ID_SEQ"))
+	if err == nil && seqCount > 0 {
+		db.Exec(ctx, fmt.Sprintf("DROP SEQUENCE %s_ID_SEQ", table))
 	}
 }

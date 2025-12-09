@@ -117,6 +117,48 @@ func Test_Model_Insert(t *testing.T) {
 	})
 }
 
+func Test_Model_InsertIgnore(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	// db.SetDebug(true)
+
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    fmt.Sprintf(`t%d`, 777),
+			"password":    fmt.Sprintf(`p%d`, 777),
+			"nickname":    fmt.Sprintf(`T%d`, 777),
+			"create_time": gtime.Now(),
+		}
+		_, err := db.Model(table).Data(data).InsertIgnore()
+		t.AssertNil(err)
+
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["PASSPORT"].String(), "user_1")
+
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"passport":    fmt.Sprintf(`t%d`, 777),
+			"password":    fmt.Sprintf(`p%d`, 777),
+			"nickname":    fmt.Sprintf(`T%d`, 777),
+			"create_time": gtime.Now(),
+		}
+		_, err := db.Model(table).Data(data).InsertIgnore()
+		t.AssertNE(err, nil)
+
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+	})
+}
+
 func Test_Model_Insert_KeyFieldNameMapping(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
@@ -2658,14 +2700,53 @@ func Test_Model_Replace(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		_, err := db.Model(table).Data(g.Map{
+		// Insert initial record
+		result, err := db.Model(table).Data(g.Map{
+			"id":          1,
+			"passport":    "t1",
+			"password":    "pass1",
+			"nickname":    "T1",
+			"create_time": "2018-10-24 10:00:00",
+		}).Insert()
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+
+		// Replace with new data (should update existing record using MERGE)
+		result, err = db.Model(table).Data(g.Map{
 			"id":          1,
 			"passport":    "t11",
 			"password":    "25d55ad283aa400af464c76d713c07ad",
 			"nickname":    "T11",
 			"create_time": "2018-10-24 10:00:00",
 		}).Replace()
-		t.Assert(err, "Replace operation is not supported by mssql driver")
+		t.AssertNil(err)
+		n, _ = result.RowsAffected()
+		t.Assert(n, 1)
+
+		// Verify the data was replaced
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["PASSPORT"].String(), "t11")
+		t.Assert(one["NICKNAME"].String(), "T11")
+
+		// Replace with non-existing record (should insert new record)
+		result, err = db.Model(table).Data(g.Map{
+			"id":          2,
+			"passport":    "t222",
+			"password":    "pass2",
+			"nickname":    "T222",
+			"create_time": "2018-10-24 11:00:00",
+		}).Replace()
+		t.AssertNil(err)
+		n, _ = result.RowsAffected()
+		t.Assert(n, 1) // MERGE reports: 1 for insert
+
+		// Verify the new record was inserted
+		one, err = db.Model(table).WherePri(2).One()
+		t.AssertNil(err)
+		t.Assert(one["PASSPORT"].String(), "t222")
+		t.Assert(one["NICKNAME"].String(), "T222")
 	})
 }
 

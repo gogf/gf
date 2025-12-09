@@ -220,3 +220,33 @@ func createInitTables(len int) []string {
 	}
 	return tables
 }
+
+// createTableWithIdentity creates a table with IDENTITY column for LastInsertId testing
+func createTableWithIdentity(table ...string) (name string) {
+	if len(table) > 0 {
+		name = table[0]
+	} else {
+		name = fmt.Sprintf("random_%d", gtime.Timestamp())
+	}
+
+	dropTable(name)
+
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+	CREATE TABLE "%s"
+(
+"ID" BIGINT IDENTITY(1, 1) NOT NULL,
+"ACCOUNT_NAME" VARCHAR(128) DEFAULT '' NOT NULL COMMENT 'Account Name',
+"PWD_RESET" TINYINT DEFAULT 0 NOT NULL,
+"ENABLED" INT DEFAULT 1 NOT NULL,
+"DELETED" INT DEFAULT 0 NOT NULL,
+"ATTR_INDEX" INT DEFAULT 0 ,
+"CREATED_BY" VARCHAR(32) DEFAULT '' NOT NULL,
+"CREATED_TIME" TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP() NOT NULL,
+"UPDATED_BY" VARCHAR(32) DEFAULT '' NOT NULL,
+"UPDATED_TIME" TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP() NOT NULL,
+NOT CLUSTER PRIMARY KEY("ID")) STORAGE(ON "MAIN", CLUSTERBTR) ;
+	`, name)); err != nil {
+		gtest.Fatal(err)
+	}
+	return
+}

@@ -219,10 +219,10 @@ func Test_FormatUpsert_NoOnConflict(t *testing.T) {
 		}).Insert()
 		t.AssertNil(err)
 
-		// Try Save without OnConflict - should fail for pgsql
-		// PostgreSQL requires OnConflict() for Save() operations, unlike MySQL
+		// Try Save without OnConflict and without primary key in data - should fail
+		// because driver cannot auto-detect conflict columns when primary key is missing
 		_, err = db.Model(table).Data(g.Map{
-			"id":          1,
+			// "id":          1,
 			"passport":    "no_conflict_user",
 			"password":    "newpwd",
 			"nickname":    "newnick",
