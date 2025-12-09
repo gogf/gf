@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package mysql
+package mariadb
 
 import (
 	"context"
@@ -15,9 +15,6 @@ import (
 )
 
 var (
-	// tableFieldsSqlByMariadb is the query statement for retrieving table fields' information in MariaDB.
-	// Deprecated: Use package `contrib/drivers/mariadb` instead.
-	// TODO remove in next version.
 	tableFieldsSqlByMariadb = `
 SELECT
 	c.COLUMN_NAME AS 'Field',
@@ -49,39 +46,21 @@ func init() {
 
 // TableFields retrieves and returns the fields' information of specified table of current
 // schema.
-//
-// The parameter `link` is optional, if given nil it automatically retrieves a raw sql connection
-// as its link to proceed necessary sql query.
-//
-// Note that it returns a map containing the field name and its corresponding fields.
-// As a map is unsorted, the TableField struct has a "Index" field marks its sequence in
-// the fields.
-//
-// It's using cache feature to enhance the performance, which is never expired util the
-// process restarts.
-func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
+func (d *Driver) TableFields(
+	ctx context.Context, table string, schema ...string,
+) (fields map[string]*gdb.TableField, err error) {
 	var (
-		result         gdb.Result
-		link           gdb.Link
-		usedSchema     = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
-		tableFieldsSql string
+		result     gdb.Result
+		link       gdb.Link
+		usedSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
 	)
 	if link, err = d.SlaveLink(usedSchema); err != nil {
 		return nil, err
 	}
-	dbType := d.GetConfig().Type
-	switch dbType {
-	// Deprecated: Use package `contrib/drivers/mariadb` instead.
-	// TODO remove in next version.
-	case "mariadb":
-		tableFieldsSql = fmt.Sprintf(tableFieldsSqlByMariadb, usedSchema, table)
-	default:
-		tableFieldsSql = fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.QuoteWord(table))
-	}
 
 	result, err = d.DoSelect(
 		ctx, link,
-		tableFieldsSql,
+		fmt.Sprintf(tableFieldsSqlByMariadb, usedSchema, table),
 	)
 	if err != nil {
 		return nil, err
