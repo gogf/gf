@@ -1289,7 +1289,7 @@ func Test_Model_Replace(t *testing.T) {
 		t.Assert(one["PASSPORT"].String(), "t222")
 		t.Assert(one["NICKNAME"].String(), "T222")
 
-		// Replace without OnConflict should fail (no primary key detection yet)
+		// Replace without OnConflict (primary key auto-detection is implemented)
 		_, err = db.Model(table).Data(g.Map{
 			"id":          3,
 			"passport":    "t3",
