@@ -9,7 +9,7 @@ Let's take `mysql` for example.
 
 ```shell
 go get github.com/gogf/gf/contrib/drivers/mysql/v2@latest
-# Easy to copy
+# Easy for copying:
 go get github.com/gogf/gf/contrib/drivers/clickhouse/v2@latest
 go get github.com/gogf/gf/contrib/drivers/dm/v2@latest
 go get github.com/gogf/gf/contrib/drivers/mssql/v2@latest
@@ -57,7 +57,7 @@ import _ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
 
 #### cgo version
 
-When the target is a 32-bit Windows system, the cgo version needs to be used.
+When the target is a `32-bit` Windows system, the `cgo` version needs to be used.
 
 ```go
 import _ "github.com/gogf/gf/contrib/drivers/sqlitecgo/v2"
@@ -69,10 +69,6 @@ import _ "github.com/gogf/gf/contrib/drivers/sqlitecgo/v2"
 import _ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
 ```
 
-Note:
-
-- It does not support `Replace` features.
-
 ### SQL Server
 
 ```go
@@ -81,9 +77,10 @@ import _ "github.com/gogf/gf/contrib/drivers/mssql/v2"
 
 Note:
 
-- It does not support `Replace` features.
+- `InsertIgnore` returns error if there is no primary key or unique index submitted with record.
 - It supports server version >= `SQL Server2005`
-- It ONLY supports datetime2 and datetimeoffset types for auto handling created_at/updated_at/deleted_at columns, because datetime type does not support microseconds precision when column value is passed as string.
+- It ONLY supports `datetime2` and `datetimeoffset` types for auto handling created_at/updated_at/deleted_at columns, 
+  because datetime type does not support microseconds precision when column value is passed as string.
 
 ### Oracle
 
@@ -93,8 +90,8 @@ import _ "github.com/gogf/gf/contrib/drivers/oracle/v2"
 
 Note:
 
-- It does not support `Replace` features.
 - It does not support `LastInsertId`.
+- `InsertIgnore` returns error if there is no primary key or unique index submitted with record.
 
 ### ClickHouse
 
@@ -104,7 +101,7 @@ import _ "github.com/gogf/gf/contrib/drivers/clickhouse/v2"
 
 Note:
 
-- It does not support `InsertIgnore/InsertGetId` features.
+- It does not support `InsertIgnore/InsertAndGetId` features.
 - It does not support `Save/Replace` features.
 - It does not support `Transaction` feature.
 - It does not support `RowsAffected` feature.
@@ -114,6 +111,10 @@ Note:
 ```go
 import _ "github.com/gogf/gf/contrib/drivers/dm/v2"
 ```
+
+Note:
+
+- `InsertIgnore` returns error if there is no primary key or unique index submitted with record.
 
 ## Custom Drivers
 
