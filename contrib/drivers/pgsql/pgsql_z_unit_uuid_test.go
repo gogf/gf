@@ -7,10 +7,12 @@
 package pgsql_test
 
 import (
+	"testing"
+
+	"github.com/google/uuid"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/google/uuid"
-	"testing"
 )
 
 func Test_IsUUIDNil_InWhereConditions(t *testing.T) {
