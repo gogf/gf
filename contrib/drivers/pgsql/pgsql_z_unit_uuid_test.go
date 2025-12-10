@@ -50,3 +50,19 @@ func Test_IsUUIDNil_InWhereConditions(t *testing.T) {
 		t.Assert(count3, 3)
 	})
 }
+
+func Test_UUID_WhereConditions(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		tableName := createAllTypesTable()
+		defer dropTable(tableName)
+		u := uuid.New()
+		_, err := db.Model(tableName).Data(g.Map{
+			"col_varchar": "test",
+			"col_uuid":    u,
+		}).Insert()
+		t.AssertNil(err)
+		count, err := db.Model(tableName).Where("col_uuid", u).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+	})
+}
