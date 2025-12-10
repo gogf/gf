@@ -968,6 +968,7 @@ func FormatMultiLineSqlToSingle(sql string) (string, error) {
 	return sql, nil
 }
 
+// genTableFieldsCacheKey generates cache key for table fields.
 func genTableFieldsCacheKey(group, schema, table string) string {
 	return fmt.Sprintf(
 		`%s%s@%s#%s`,
@@ -978,6 +979,7 @@ func genTableFieldsCacheKey(group, schema, table string) string {
 	)
 }
 
+// genSelectCacheKey generates cache key for select.
 func genSelectCacheKey(table, group, schema, name, sql string, args ...any) string {
 	if name == "" {
 		name = fmt.Sprintf(
