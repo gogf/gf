@@ -138,15 +138,17 @@ func TestDoInsert(t *testing.T) {
 
 		i := 10
 		data := g.Map{
-			"id":          i,
+			// "id":          i,
 			"passport":    fmt.Sprintf(`t%d`, i),
 			"password":    fmt.Sprintf(`p%d`, i),
 			"nickname":    fmt.Sprintf(`T%d`, i),
 			"create_time": gtime.Now(),
 		}
+		// Save without OnConflict should fail (missing conflict columns)
 		_, err := db.Save(context.Background(), "t_user", data, 10)
 		gtest.AssertNE(err, nil)
 
+		// Replace should fail because primary key 'id' is not in the data
 		_, err = db.Replace(context.Background(), "t_user", data, 10)
 		gtest.AssertNE(err, nil)
 	})
