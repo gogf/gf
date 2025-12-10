@@ -31,6 +31,7 @@ import (
 	"github.com/gogf/gf/v2/util/gmeta"
 	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/gogf/gf/v2/util/gutil"
+	"github.com/google/uuid"
 )
 
 // iString is the type assert api for String.
@@ -435,7 +436,7 @@ func isKeyValueCanBeOmitEmpty(omitEmpty bool, whereType string, key, value any) 
 		return gutil.IsEmpty(value)
 
 	default:
-		if gstr.Count(gconv.String(key), "?") == 0 && gutil.IsEmpty(value) {
+		if gstr.Count(gconv.String(key), "?") == 0 && (IsUUIDNil(value) || gutil.IsEmpty(value)) {
 			return true
 		}
 	}
@@ -457,7 +458,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 			if in.OmitNil && empty.IsNil(value) {
 				continue
 			}
-			if in.OmitEmpty && empty.IsEmpty(value) {
+			if in.OmitEmpty && (IsUUIDNil(value) || empty.IsEmpty(value)) {
 				continue
 			}
 			newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
@@ -487,7 +488,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 				if in.OmitNil && empty.IsNil(value) {
 					return true
 				}
-				if in.OmitEmpty && empty.IsEmpty(value) {
+				if in.OmitEmpty && (IsUUIDNil(value) || empty.IsEmpty(value)) {
 					return true
 				}
 				newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
@@ -541,7 +542,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 				if in.OmitNil && empty.IsNil(foundValue) {
 					continue
 				}
-				if in.OmitEmpty && empty.IsEmpty(foundValue) {
+				if in.OmitEmpty && (IsUUIDNil(foundValue) || empty.IsEmpty(foundValue)) {
 					continue
 				}
 				newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
@@ -987,4 +988,61 @@ func genSelectCacheKey(table, group, schema, name, sql string, args ...any) stri
 		)
 	}
 	return fmt.Sprintf(`%s%s`, cachePrefixSelectCache, name)
+}
+
+// IsUUIDNil checks whether the given value is uuid.Nil.
+// It returns true if value is uuid.Nil or a pointer to uuid.Nil.
+// It returns false for any other value or non-UUID types.
+func IsUUIDNil(value any, traceSource ...bool) bool {
+	if value == nil {
+		return true
+	}
+
+	// Direct UUID type check
+	if uid, ok := value.(uuid.UUID); ok {
+		return uid == uuid.Nil
+	}
+
+	// Using reflection for pointers and other types
+	var rv reflect.Value
+	if v, ok := value.(reflect.Value); ok {
+		rv = v
+	} else {
+		rv = reflect.ValueOf(value)
+	}
+
+	// Handle pointers
+	if rv.Kind() == reflect.Pointer {
+		if len(traceSource) > 0 && traceSource[0] {
+			// Trace to the source
+			for rv.Kind() == reflect.Pointer {
+				if rv.IsNil() {
+					return true
+				}
+				rv = rv.Elem()
+			}
+
+			// After dereferencing, check if it's a UUID
+			if rv.Type().String() == "uuid.UUID" {
+				uid, ok := rv.Interface().(uuid.UUID)
+				if ok {
+					return uid == uuid.Nil
+				}
+			}
+			return false
+		} else {
+			// Just check if pointer is nil
+			return rv.IsNil()
+		}
+	}
+
+	// For non-pointer values, check if it's a UUID type with Nil value
+	if rv.Type().String() == "uuid.UUID" {
+		uid, ok := rv.Interface().(uuid.UUID)
+		if ok {
+			return uid == uuid.Nil
+		}
+	}
+
+	return false
 }
