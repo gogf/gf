@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
+// Test_IsUUIDNil_InWhereConditions test UUID nil filter in where conditions
 func Test_IsUUIDNil_InWhereConditions(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		tableName := createAllTypesTable()
@@ -53,6 +54,7 @@ func Test_IsUUIDNil_InWhereConditions(t *testing.T) {
 	})
 }
 
+// Test_UUID_WhereConditions test UUID filter in where conditions
 func Test_UUID_WhereConditions(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		tableName := createAllTypesTable()
