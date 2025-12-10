@@ -437,7 +437,7 @@ func isKeyValueCanBeOmitEmpty(omitEmpty bool, whereType string, key, value any) 
 		return gutil.IsEmpty(value)
 
 	default:
-		if gstr.Count(gconv.String(key), "?") == 0 && (IsUUIDNil(value) || gutil.IsEmpty(value)) {
+		if gstr.Count(gconv.String(key), "?") == 0 && (IsUUIDNil(value, true) || gutil.IsEmpty(value)) {
 			return true
 		}
 	}
@@ -459,7 +459,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 			if in.OmitNil && empty.IsNil(value) {
 				continue
 			}
-			if in.OmitEmpty && (IsUUIDNil(value) || empty.IsEmpty(value)) {
+			if in.OmitEmpty && (IsUUIDNil(value, true) || empty.IsEmpty(value)) {
 				continue
 			}
 			newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
@@ -489,7 +489,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 				if in.OmitNil && empty.IsNil(value) {
 					return true
 				}
-				if in.OmitEmpty && (IsUUIDNil(value) || empty.IsEmpty(value)) {
+				if in.OmitEmpty && (IsUUIDNil(value, true) || empty.IsEmpty(value)) {
 					return true
 				}
 				newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
@@ -543,7 +543,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 				if in.OmitNil && empty.IsNil(foundValue) {
 					continue
 				}
-				if in.OmitEmpty && (IsUUIDNil(foundValue) || empty.IsEmpty(foundValue)) {
+				if in.OmitEmpty && (IsUUIDNil(foundValue, true) || empty.IsEmpty(foundValue)) {
 					continue
 				}
 				newArgs = formatWhereKeyValue(formatWhereKeyValueInput{

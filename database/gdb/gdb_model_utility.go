@@ -191,7 +191,7 @@ func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(data Map, allowOmitEm
 	if allowOmitEmpty && m.option&optionOmitEmptyData > 0 {
 		tempMap := make(Map, len(data))
 		for k, v := range data {
-			if IsUUIDNil(v) || empty.IsEmpty(v) {
+			if IsUUIDNil(v, true) || empty.IsEmpty(v) {
 				continue
 			}
 			// Special type filtering.
