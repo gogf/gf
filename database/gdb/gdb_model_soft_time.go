@@ -324,10 +324,23 @@ func (m *softTimeMaintainer) GetFieldValue(
 		return m.getEmptyValue(fieldType)
 	}
 
-	// For create/update, return current time value
+	// For create/update/delete, return current time value
 	switch m.softTimeOption.SoftTimeType {
 	case SoftTimeTypeAuto:
 		return m.getAutoValue(ctx, fieldType)
+	default:
+		switch fieldType {
+		case LocalTypeBool:
+			return 1
+		default:
+			return m.getTimestampValue()
+		}
+	}
+}
+
+// getTimestampValue returns timestamp value for soft time.
+func (m *softTimeMaintainer) getTimestampValue() any {
+	switch m.softTimeOption.SoftTimeType {
 	case SoftTimeTypeTime:
 		return gtime.Now()
 	case SoftTimeTypeTimestamp:
@@ -368,5 +381,17 @@ func (m *softTimeMaintainer) getAutoValue(ctx context.Context, fieldType LocalTy
 	default:
 		intlog.Errorf(ctx, `invalid field type "%s" for soft time auto value`, fieldType)
 		return nil
+	}
+}
+
+// getTimeValue returns time value for datetime field type.
+// For non-datetime types, returns 1 as a fallback marker.
+func (m *softTimeMaintainer) getTimeValue(fieldType LocalType) any {
+	switch fieldType {
+	case LocalTypeDate, LocalTypeTime, LocalTypeDatetime:
+		return gtime.Now()
+	default:
+		// For Bool or other types, use 1 as delete marker
+		return 1
 	}
 }
