@@ -145,11 +145,10 @@ func (m *softTimeMaintainer) GetFieldInfo(
 
 // getSoftFieldNameAndType retrieves and returns the field name of the table for possible key.
 func (m *softTimeMaintainer) getSoftFieldNameAndType(
-	ctx context.Context, schema, table string, candidates []string,
+	ctx context.Context, schema, table string, candidateFields []string,
 ) (fieldName string, fieldType LocalType) {
 	// Build cache key
-	cacheKey := fmt.Sprintf(`soft_field:%s:%s:%s`,
-		schema, table, strings.Join(candidates, ","))
+	cacheKey := genSoftTimeFieldNameTypeCacheKey(schema, table, candidateFields)
 
 	// Try to get from cache
 	cache := m.db.GetCore().GetInnerMemCache()
@@ -161,8 +160,8 @@ func (m *softTimeMaintainer) getSoftFieldNameAndType(
 		}
 
 		// Search for matching field
-		for _, candidate := range candidates {
-			if name := searchFieldNameFromMap(fieldsMap, candidate); name != "" {
+		for _, field := range candidateFields {
+			if name := searchFieldNameFromMap(fieldsMap, field); name != "" {
 				fType, _ := m.db.CheckLocalTypeForField(ctx, fieldsMap[name].Type, nil)
 				return getSoftFieldNameAndTypeCacheItem{
 					FieldName: name,
