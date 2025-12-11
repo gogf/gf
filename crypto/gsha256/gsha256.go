@@ -17,14 +17,14 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-// Encrypt encrypts any type of variable using sha256 algorithms.
+// Encrypt encrypts any type of variable using SHA256 algorithms.
 // It uses package gconv to convert `v` to its bytes type.
 func Encrypt(v any) string {
 	bs := sha256.Sum256(gconv.Bytes(v))
 	return hex.EncodeToString(bs[:])
 }
 
-// EncryptFile encrypts file content of `path` using sha256 algorithms.
+// EncryptFile encrypts file content of `path` using SHA256 algorithms.
 func EncryptFile(path string) (encrypt string, err error) {
 	f, err := os.Open(path)
 	if err != nil {
