@@ -262,9 +262,9 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 	var (
 		list                             List
 		stm                              = m.softTimeMaintainer()
-		fieldNameCreate, fieldTypeCreate = stm.GetFieldNameAndTypeForCreate(ctx, "", m.tablesInit)
-		fieldNameUpdate, fieldTypeUpdate = stm.GetFieldNameAndTypeForUpdate(ctx, "", m.tablesInit)
-		fieldNameDelete, fieldTypeDelete = stm.GetFieldNameAndTypeForDelete(ctx, "", m.tablesInit)
+		fieldNameCreate, fieldTypeCreate = stm.GetFieldInfo(ctx, "", m.tablesInit, SoftTimeFieldCreate)
+		fieldNameUpdate, fieldTypeUpdate = stm.GetFieldInfo(ctx, "", m.tablesInit, SoftTimeFieldUpdate)
+		fieldNameDelete, fieldTypeDelete = stm.GetFieldInfo(ctx, "", m.tablesInit, SoftTimeFieldDelete)
 	)
 	// m.data was already converted to type List/Map by function Data
 	newData, err := m.filterDataForInsertOrUpdate(m.data)
@@ -295,20 +295,20 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 	if !m.unscoped && isSoftTimeFeatureEnabled {
 		for k, v := range list {
 			if fieldNameCreate != "" && empty.IsNil(v[fieldNameCreate]) {
-				fieldCreateValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeCreate, false)
+				fieldCreateValue := stm.GetFieldValue(ctx, fieldTypeCreate, false)
 				if fieldCreateValue != nil {
 					v[fieldNameCreate] = fieldCreateValue
 				}
 			}
 			if fieldNameUpdate != "" && empty.IsNil(v[fieldNameUpdate]) {
-				fieldUpdateValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate, false)
+				fieldUpdateValue := stm.GetFieldValue(ctx, fieldTypeUpdate, false)
 				if fieldUpdateValue != nil {
 					v[fieldNameUpdate] = fieldUpdateValue
 				}
 			}
 			// for timestamp field that should initialize the delete_at field with value, for example 0.
 			if fieldNameDelete != "" && empty.IsNil(v[fieldNameDelete]) {
-				fieldDeleteValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeDelete, true)
+				fieldDeleteValue := stm.GetFieldValue(ctx, fieldTypeDelete, true)
 				if fieldDeleteValue != nil {
 					v[fieldNameDelete] = fieldDeleteValue
 				}
