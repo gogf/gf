@@ -12,9 +12,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/contrib/middleware/glimiter/v2"
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/test/gtest"
+
+	"github.com/gogf/gf/contrib/middleware/glimiter/v2"
 )
 
 func TestMemoryLimiter_Allow(t *testing.T) {

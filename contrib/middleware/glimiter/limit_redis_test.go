@@ -8,16 +8,18 @@ package glimiter_test
 
 import (
 	"context"
-	"github.com/gogf/gf/contrib/middleware/glimiter/v2"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
+
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
+
+	"github.com/gogf/gf/contrib/middleware/glimiter/v2"
 )
 
 var (
