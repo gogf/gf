@@ -998,5 +998,5 @@ func genTableNamesCacheKey(group string) string {
 
 // genSoftTimeFieldNameTypeCacheKey generates cache key for soft time field name and type.
 func genSoftTimeFieldNameTypeCacheKey(schema, table string, candidateFields []string) string {
-	return fmt.Sprintf(`getSoftFieldNameAndType:%s#%s#%s`, schema, table, strings.Join(candidateFields, ","))
+	return fmt.Sprintf(`getSoftFieldNameAndType:%s#%s#%s`, schema, table, strings.Join(candidateFields, "_"))
 }

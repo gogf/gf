@@ -43,7 +43,7 @@ type softTimeMaintainer struct {
 	*Model
 }
 
-// SoftTimeFieldType represents different soft time field purposes
+// SoftTimeFieldType represents different soft time field purposes.
 type SoftTimeFieldType int
 
 const (
@@ -53,16 +53,16 @@ const (
 )
 
 type iSoftTimeMaintainer interface {
-	// GetFieldInfo returns field name and type for specified field purpose
-	GetFieldInfo(ctx context.Context, schema, table string, fieldType SoftTimeFieldType) (fieldName string, localType LocalType)
+	// GetFieldInfo returns field name and type for specified field purpose.
+	GetFieldInfo(ctx context.Context, schema, table string, fieldPurpose SoftTimeFieldType) (fieldName string, localType LocalType)
 
-	// GetFieldValue generates value for create/update/delete operations
+	// GetFieldValue generates value for create/update/delete operations.
 	GetFieldValue(ctx context.Context, localType LocalType, isDeleted bool) any
 
-	// GetDeleteCondition returns WHERE condition for soft delete query
+	// GetDeleteCondition returns WHERE condition for soft delete query.
 	GetDeleteCondition(ctx context.Context) string
 
-	// GetDeleteData returns UPDATE statement data for soft delete
+	// GetDeleteData returns UPDATE statement data for soft delete.
 	GetDeleteData(ctx context.Context, prefix, fieldName string, localType LocalType) (holder string, value any)
 }
 
@@ -104,7 +104,7 @@ func (m *Model) softTimeMaintainer() iSoftTimeMaintainer {
 // GetFieldInfo returns field name and type for specified field purpose.
 // It checks the key with or without cases or chars '-'/'_'/'.'/' '.
 func (m *softTimeMaintainer) GetFieldInfo(
-	ctx context.Context, schema, table string, fieldType SoftTimeFieldType,
+	ctx context.Context, schema, table string, fieldPurpose SoftTimeFieldType,
 ) (fieldName string, localType LocalType) {
 	// Check if feature is disabled
 	if m.db.GetConfig().TimeMaintainDisabled {
@@ -124,7 +124,7 @@ func (m *softTimeMaintainer) GetFieldInfo(
 		defaultFields []string
 	)
 
-	switch fieldType {
+	switch fieldPurpose {
 	case SoftTimeFieldCreate:
 		configField = config.CreatedAt
 		defaultFields = createdFieldNames
@@ -302,7 +302,7 @@ func (m *softTimeMaintainer) buildDeleteCondition(
 		case LocalTypeInt, LocalTypeUint, LocalTypeInt64, LocalTypeUint64, LocalTypeBool:
 			return fmt.Sprintf(`%s=0`, quotedName)
 		default:
-			intlog.Errorf(ctx, `invalid field type "%s" for soft delete condition: %s`, fieldType, fieldName)
+			intlog.Errorf(ctx, `invalid field type "%s" for soft delete condition: prefix=%s, field=%s`, fieldType, prefix, fieldName)
 			return ""
 		}
 
@@ -380,17 +380,5 @@ func (m *softTimeMaintainer) getAutoValue(ctx context.Context, fieldType LocalTy
 	default:
 		intlog.Errorf(ctx, `invalid field type "%s" for soft time auto value`, fieldType)
 		return nil
-	}
-}
-
-// getTimeValue returns time value for datetime field type.
-// For non-datetime types, returns 1 as a fallback marker.
-func (m *softTimeMaintainer) getTimeValue(fieldType LocalType) any {
-	switch fieldType {
-	case LocalTypeDate, LocalTypeTime, LocalTypeDatetime:
-		return gtime.Now()
-	default:
-		// For Bool or other types, use 1 as delete marker
-		return 1
 	}
 }

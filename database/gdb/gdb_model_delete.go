@@ -31,9 +31,7 @@ func (m *Model) Delete(where ...any) (result sql.Result, err error) {
 	var (
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(ctx, false, false)
 		conditionStr                                  = conditionWhere + conditionExtra
-		fieldNameDelete, fieldTypeDelete              = m.softTimeMaintainer().GetFieldInfo(
-			ctx, "", m.tablesInit, SoftTimeFieldDelete,
-		)
+		fieldNameDelete, fieldTypeDelete              = m.softTimeMaintainer().GetFieldInfo(ctx, "", m.tablesInit, SoftTimeFieldDelete)
 	)
 	if m.unscoped {
 		fieldNameDelete = ""
