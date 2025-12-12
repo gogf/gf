@@ -106,7 +106,7 @@ func (m *Model) saveSelectResultToCache(
 		return
 	}
 	// Special handler for Value/Count operations result.
-	if result != nil && len(result) > 0 {
+	if len(result) > 0 {
 		var core = m.db.GetCore()
 		switch selectType {
 		case SelectTypeValue, SelectTypeArray:
