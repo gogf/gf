@@ -50,10 +50,12 @@ func TestEncryptFile(t *testing.T) {
 		defer file.Close()
 		t.AssertNil(err)
 		_, _ = file.Write([]byte("Hello Go Frame"))
-		encryptFile, _ := gsha256.EncryptFile(path)
+		encryptFile, err := gsha256.EncryptFile(path)
+		t.AssertNil(err)
 		t.AssertEQ(encryptFile, result)
 		// when the file is not exist,encrypt will return empty string
-		errEncrypt, _ := gsha256.EncryptFile(errPath)
+		errEncrypt, err := gsha256.EncryptFile(errPath)
+		t.AssertNE(err, nil)
 		t.AssertEQ(errEncrypt, "")
 	})
 }
