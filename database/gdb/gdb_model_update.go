@@ -50,9 +50,7 @@ func (m *Model) Update(dataAndWhere ...any) (result sql.Result, err error) {
 		reflectInfo                                   = reflection.OriginTypeAndKind(m.data)
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(ctx, false, false)
 		conditionStr                                  = conditionWhere + conditionExtra
-		fieldNameUpdate, fieldTypeUpdate              = stm.GetFieldNameAndTypeForUpdate(
-			ctx, "", m.tablesInit,
-		)
+		fieldNameUpdate, fieldTypeUpdate              = stm.GetFieldInfo(ctx, "", m.tablesInit, SoftTimeFieldUpdate)
 	)
 	if fieldNameUpdate != "" && (m.unscoped || m.isFieldInFieldsEx(fieldNameUpdate)) {
 		fieldNameUpdate = ""
@@ -68,7 +66,7 @@ func (m *Model) Update(dataAndWhere ...any) (result sql.Result, err error) {
 		var dataMap = anyValueToMapBeforeToRecord(newData)
 		// Automatically update the record updating time.
 		if fieldNameUpdate != "" && empty.IsNil(dataMap[fieldNameUpdate]) {
-			dataValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate, false)
+			dataValue := stm.GetFieldValue(ctx, fieldTypeUpdate, false)
 			dataMap[fieldNameUpdate] = dataValue
 		}
 		newData = dataMap
@@ -77,7 +75,7 @@ func (m *Model) Update(dataAndWhere ...any) (result sql.Result, err error) {
 		var updateStr = gconv.String(newData)
 		// Automatically update the record updating time.
 		if fieldNameUpdate != "" && !gstr.Contains(updateStr, fieldNameUpdate) {
-			dataValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate, false)
+			dataValue := stm.GetFieldValue(ctx, fieldTypeUpdate, false)
 			updateStr += fmt.Sprintf(`,%s=?`, fieldNameUpdate)
 			conditionArgs = append([]any{dataValue}, conditionArgs...)
 		}

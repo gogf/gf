@@ -787,7 +787,7 @@ func (c *Core) SetTableFields(ctx context.Context, table string, fields map[stri
 func (c *Core) GetTablesWithCache() ([]string, error) {
 	var (
 		ctx           = c.db.GetCtx()
-		cacheKey      = fmt.Sprintf(`Tables:%s`, c.db.GetGroup())
+		cacheKey      = genTableNamesCacheKey(c.db.GetGroup())
 		cacheDuration = gcache.DurationNoExpire
 		innerMemCache = c.GetInnerMemCache()
 	)
