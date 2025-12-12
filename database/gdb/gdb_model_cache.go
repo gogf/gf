@@ -111,13 +111,13 @@ func (m *Model) saveSelectResultToCache(
 		switch selectType {
 		case SelectTypeValue, SelectTypeArray:
 			if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
-				if result[0][internalData.FirstResultColumn].IsEmpty() {
+				if result != nil && len(result) > 0 && result[0][internalData.FirstResultColumn].IsEmpty() {
 					result = nil
 				}
 			}
 		case SelectTypeCount:
 			if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
-				if !m.cacheOption.Force && result[0][internalData.FirstResultColumn].IsEmpty() {
+				if !m.cacheOption.Force && result != nil && len(result) > 0 && result[0][internalData.FirstResultColumn].IsEmpty() {
 					result = nil
 				}
 			}
