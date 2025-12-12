@@ -20,6 +20,7 @@ import (
 )
 
 // DoInsert inserts or updates data for given table.
+// The list parameter must contain at least one record, which was previously validated.
 func (d *Driver) DoInsert(
 	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (result sql.Result, err error) {
@@ -36,6 +37,12 @@ func (d *Driver) DoInsert(
 		return d.doInsertIgnore(ctx, link, table, list, option)
 
 	default:
+		// DM database supports IDENTITY auto-increment columns natively.
+		// The driver automatically returns LastInsertId through sql.Result.
+		//
+		// Note: DM IDENTITY columns cannot accept explicit ID values unless
+		// IDENTITY_INSERT is enabled. When using tables with IDENTITY columns,
+		// avoid providing explicit ID values in the data.
 		return d.Core.DoInsert(ctx, link, table, list, option)
 	}
 }
@@ -60,16 +67,12 @@ func (d *Driver) doInsertIgnore(ctx context.Context,
 // When withUpdate is false, it performs insert ignore (insert only when no conflict).
 func (d *Driver) doMergeInsert(
 	ctx context.Context,
-	link gdb.Link,
-	table string,
-	list gdb.List,
-	option gdb.DoInsertOption,
-	withUpdate bool,
+	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption, withUpdate bool,
 ) (result sql.Result, err error) {
 	// If OnConflict is not specified, automatically get the primary key of the table
 	conflictKeys := option.OnConflict
 	if len(conflictKeys) == 0 {
-		conflictKeys, err = d.getPrimaryKeys(ctx, table)
+		primaryKeys, err := d.Core.GetPrimaryKeys(ctx, table)
 		if err != nil {
 			return nil, gerror.WrapCode(
 				gcode.CodeInternalError,
@@ -77,29 +80,34 @@ func (d *Driver) doMergeInsert(
 				`failed to get primary keys for table`,
 			)
 		}
-		if len(conflictKeys) == 0 {
-			return nil, gerror.NewCode(
+		foundPrimaryKey := false
+		for _, primaryKey := range primaryKeys {
+			for dataKey := range list[0] {
+				if strings.EqualFold(dataKey, primaryKey) {
+					foundPrimaryKey = true
+					break
+				}
+			}
+			if foundPrimaryKey {
+				break
+			}
+		}
+		if !foundPrimaryKey {
+			return nil, gerror.NewCodef(
 				gcode.CodeMissingParameter,
-				`Please specify conflict columns or ensure the table has a primary key`,
+				`Replace/Save/InsertIgnore operation requires conflict detection: `+
+					`either specify OnConflict() columns or ensure table '%s' has a primary key in the data`,
+				table,
 			)
 		}
-	}
-
-	if len(list) == 0 {
-		opName := "Save"
-		if !withUpdate {
-			opName = "InsertIgnore"
-		}
-		return nil, gerror.NewCodef(
-			gcode.CodeInvalidRequest, `%s operation list is empty by dm driver`, opName,
-		)
+		// TODO consider composite primary keys.
+		conflictKeys = primaryKeys
 	}
 
 	var (
-		one          = list[0]
-		oneLen       = len(one)
-		charL, charR = d.GetChars()
-
+		one            = list[0]
+		oneLen         = len(one)
+		charL, charR   = d.GetChars()
 		conflictKeySet = gset.New(false)
 
 		// queryHolders:	Handle data with Holder that need to be merged
@@ -153,24 +161,6 @@ func (d *Driver) doMergeInsert(
 		batchResult.Affected += n
 	}
 	return batchResult, nil
-}
-
-// getPrimaryKeys retrieves the primary key field names of the table as a slice of strings.
-// This method extracts primary key information from TableFields.
-func (d *Driver) getPrimaryKeys(ctx context.Context, table string) ([]string, error) {
-	tableFields, err := d.TableFields(ctx, table)
-	if err != nil {
-		return nil, err
-	}
-
-	var primaryKeys []string
-	for _, field := range tableFields {
-		if field.Key == "PRI" {
-			primaryKeys = append(primaryKeys, field.Name)
-		}
-	}
-
-	return primaryKeys, nil
 }
 
 // parseSqlForMerge generates MERGE statement for DM database.
