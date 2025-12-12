@@ -106,35 +106,35 @@ func (m *Model) saveSelectResultToCache(
 		return
 	}
 	// Special handler for Value/Count operations result.
-	if len(result) > 0 {
+	if result != nil && len(result) > 0 {
 		var core = m.db.GetCore()
 		switch selectType {
 		case SelectTypeValue, SelectTypeArray:
 			if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
-				if result != nil && len(result) > 0 && result[0][internalData.FirstResultColumn].IsEmpty() {
+				if result[0][internalData.FirstResultColumn].IsEmpty() {
 					result = nil
 				}
 			}
 		case SelectTypeCount:
 			if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
-				if !m.cacheOption.Force && result != nil && len(result) > 0 && result[0][internalData.FirstResultColumn].IsEmpty() {
+				if !m.cacheOption.Force && result[0][internalData.FirstResultColumn].IsEmpty() {
 					result = nil
 				}
 			}
 		default:
 		}
 	}
-
+	if result == nil && !m.cacheOption.Force {
+		return
+	}
 	// In case of Cache Penetration.
 	if result != nil && result.IsEmpty() {
 		if m.cacheOption.Force {
 			result = Result{}
 		} else {
 			result = nil
+			return
 		}
-	}
-	if !m.cacheOption.Force && result == nil {
-		return
 	}
 	var (
 		core      = m.db.GetCore()
