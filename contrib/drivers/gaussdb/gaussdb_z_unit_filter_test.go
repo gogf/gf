@@ -9,10 +9,11 @@ package gaussdb_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/contrib/drivers/gaussdb/v2"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/test/gtest"
+
+	"github.com/gogf/gf/contrib/drivers/gaussdb/v2"
 )
 
 // Test_DoFilter_LimitOffset tests LIMIT OFFSET conversion
