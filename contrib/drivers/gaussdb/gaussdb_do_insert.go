@@ -481,7 +481,7 @@ func (d *Driver) doMergeInsert(
 		return r, err
 	}
 	// GaussDB's MERGE statement may not return correct RowsAffected
-	// We manually set it to 1 since MERGE always affects exactly one row
+	// Workaround: If RowsAffected returns 0 despite a successful MERGE, we manually set it to 1.
 	if n, err := r.RowsAffected(); err != nil {
 		return r, err
 	} else {
