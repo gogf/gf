@@ -284,7 +284,8 @@ func createInitAllTypesTableWithDb(db gdb.DB, table ...string) (name string) {
 			i, i, i, i%2 == 0))
 
 		// Date/Time types: col_date, col_time, col_timestamp
-		// Calculate day as integer in range 1-28; %02d in fmt.Sprintf ensures two-digit zero-padded format
+		// Calculate day as integer in range 1-28; 28 is used because it is the maximum day value safe for all months to avoid date validity issues.
+		// %02d in fmt.Sprintf ensures two-digit zero-padded format
 		dayOfMonth := (i-1)%28 + 1
 		sql.WriteString(fmt.Sprintf("'2024-01-%02d', '10:00:%02d', '2024-01-%02d 10:00:00', ",
 			dayOfMonth, (i-1)%60, dayOfMonth))
