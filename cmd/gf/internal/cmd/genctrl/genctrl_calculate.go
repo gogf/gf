@@ -61,40 +61,20 @@ func (c CGenCtrl) getApiItemsInDst(dstFolder string) (items []apiItem, err error
 	if !gfile.Exists(dstFolder) {
 		return nil, nil
 	}
-	type importItem struct {
-		Path  string
-		Alias string
-	}
 	filePaths, err := gfile.ScanDir(dstFolder, "*.go", true)
 	if err != nil {
 		return nil, err
 	}
 	for _, filePath := range filePaths {
 		var (
-			array       []string
 			importItems []importItem
-			importLines []string
 			module      = gfile.Basename(gfile.Dir(filePath))
 		)
-		importLines, err = c.getImportsInDst(filePath)
+		importItems, err = c.getImportsInDst(filePath)
 		if err != nil {
 			return nil, err
 		}
 
-		// retrieve all imports.
-		for _, importLine := range importLines {
-			array = gstr.SplitAndTrim(importLine, " ")
-			if len(array) == 2 {
-				importItems = append(importItems, importItem{
-					Path:  gstr.Trim(array[1], `"`),
-					Alias: array[0],
-				})
-			} else {
-				importItems = append(importItems, importItem{
-					Path: gstr.Trim(array[0], `"`),
-				})
-			}
-		}
 		// retrieve all api usages.
 		// retrieve it without using AST, but use regular expressions to retrieve.
 		// It's because the api definition is simple and regular.
