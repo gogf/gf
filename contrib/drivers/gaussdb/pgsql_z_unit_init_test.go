@@ -35,7 +35,8 @@ var (
 
 func init() {
 	configNode = gdb.ConfigNode{
-		Link: `gaussdb:gaussdb:UTpass@1234@tcp(127.0.0.1:9950)/postgres`,
+		Link:      `gaussdb:gaussdb:UTpass@1234@tcp(127.0.0.1:9950)/postgres`,
+		Namespace: SchemaName, // Set the schema namespace
 	}
 
 	// gaussdb only permit to connect to the designation database.
@@ -50,11 +51,6 @@ func init() {
 	// Create schema if not exists
 	schemaTemplate := "CREATE SCHEMA IF NOT EXISTS %s"
 	if _, err := db.Exec(ctx, fmt.Sprintf(schemaTemplate, SchemaName)); err != nil {
-		gtest.Error(err)
-	}
-
-	// Set search_path to the test schema
-	if _, err := db.Exec(ctx, fmt.Sprintf("SET search_path TO %s", SchemaName)); err != nil {
 		gtest.Error(err)
 	}
 }

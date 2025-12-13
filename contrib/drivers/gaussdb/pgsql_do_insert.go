@@ -214,6 +214,26 @@ func (d *Driver) doMergeInsert(
 	ctx context.Context,
 	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption, withUpdate bool,
 ) (result sql.Result, err error) {
+	// For batch operations (multiple records), process each record individually
+	if len(list) > 1 {
+		var (
+			batchResult   = new(gdb.SqlResult)
+			totalAffected int64
+		)
+		for _, record := range list {
+			singleResult, singleErr := d.doMergeInsert(ctx, link, table, gdb.List{record}, option, withUpdate)
+			if singleErr != nil {
+				return nil, singleErr
+			}
+			if n, _ := singleResult.RowsAffected(); n > 0 {
+				totalAffected += n
+			}
+		}
+		batchResult.Result = &gdb.SqlResult{}
+		batchResult.Affected = totalAffected
+		return batchResult, nil
+	}
+
 	// Check if OnDuplicateMap contains conflict keys
 	// GaussDB MERGE statement cannot update columns used in ON clause
 	// If user wants to update conflict keys, we need to use a different approach
