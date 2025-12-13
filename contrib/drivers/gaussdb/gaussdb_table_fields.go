@@ -11,7 +11,6 @@ import (
 	"fmt"
 
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/util/gutil"
 )
 
 var (
@@ -46,15 +45,17 @@ func init() {
 }
 
 // TableFields retrieves and returns the fields' information of specified table of current schema.
-func (d *Driver) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*gdb.TableField, err error) {
+func (d *Driver) TableFields(
+	ctx context.Context, table string, schema ...string,
+) (fields map[string]*gdb.TableField, err error) {
 	var (
-		result     gdb.Result
-		link       gdb.Link
-		usedSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
-		// TODO duplicated `id` result?
+		result       gdb.Result
+		link         gdb.Link
 		structureSql = fmt.Sprintf(tableFieldsSqlTmp, table)
 	)
-	if link, err = d.SlaveLink(usedSchema); err != nil {
+	// Schema parameter is not used for SlaveLink as it would attempt to switch database
+	// In GaussDB/PostgreSQL, schema is handled via search_path or table qualification
+	if link, err = d.SlaveLink(); err != nil {
 		return nil, err
 	}
 	result, err = d.DoSelect(ctx, link, structureSql)

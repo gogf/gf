@@ -55,7 +55,8 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 		usedSchema = defaultSchema
 	}
 	// DO NOT use `usedSchema` as parameter for function `SlaveLink`.
-	link, err := d.SlaveLink(schema...)
+	// Schema is already handled in usedSchema variable above
+	link, err := d.SlaveLink()
 	if err != nil {
 		return nil, err
 	}

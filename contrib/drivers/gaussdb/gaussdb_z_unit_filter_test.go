@@ -56,10 +56,13 @@ func Test_DoFilter_InsertIgnore(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		// Test INSERT IGNORE conversion
+		// Note: GaussDB (PostgreSQL 9.2) does not support ON CONFLICT syntax (added in PG 9.5)
+		// GaussDB handles InsertIgnore at DoInsert level using MERGE statement
 		sql := "INSERT IGNORE INTO users (name) VALUES ($1)"
 		newSql, _, err := driver.DoFilter(ctx, nil, sql, nil)
 		t.AssertNil(err)
-		t.Assert(newSql, "INSERT INTO users (name) VALUES ($1) ON CONFLICT DO NOTHING")
+		// GaussDB removes IGNORE keyword but doesn't add ON CONFLICT (not supported)
+		t.Assert(newSql, "INSERT INTO users (name) VALUES ($1)")
 	})
 }
 

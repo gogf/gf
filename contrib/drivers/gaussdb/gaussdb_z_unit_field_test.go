@@ -91,7 +91,8 @@ func Test_TableFields_Types(t *testing.T) {
 		t.Assert(fields["col_bool"].Type, "bool")
 
 		// Test date/time type names
-		t.Assert(fields["col_date"].Type, "date")
+		// Note: GaussDB internally represents date as timestamp in pg_type
+		t.Assert(fields["col_date"].Type, "timestamp")
 		t.Assert(fields["col_timestamp"].Type, "timestamp")
 		t.Assert(fields["col_timestamptz"].Type, "timestamptz")
 
