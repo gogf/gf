@@ -37,6 +37,11 @@ type Limiter interface {
 	// It returns -1 if the key doesn't exist.
 	GetRemaining(ctx context.Context, key string) (int, error)
 
+	// GetResetTime returns the time when the rate limit will reset for the given key.
+	// It returns the exact timestamp when the oldest request in the window will expire.
+	// For keys that don't exist, it returns the current time.
+	GetResetTime(ctx context.Context, key string) (time.Time, error)
+
 	// Reset resets the rate limit for the given key.
 	Reset(ctx context.Context, key string) error
 }

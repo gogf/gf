@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/database/gredis"
-	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // RedisLimiter implements Limiter using Redis.
@@ -46,6 +45,11 @@ end
 
 local counterKey = key .. ':counter'
 
+-- If main key was empty (first request or after expiration), reset counter to avoid orphaned state
+if current == 0 then
+    redis.call('DEL', counterKey)
+end
+
 -- Add entries using timestamp with unique member to ensure each request is counted
 for i = 1, n do
     -- Unique member using concatenation to avoid Lua number overflow
@@ -55,10 +59,11 @@ for i = 1, n do
     redis.call('ZADD', key, now, member)
 end
 
--- Set expiration (add buffer to avoid premature expiration)
+-- Set expiration with buffer to avoid premature expiration
+-- Both keys get the same TTL to ensure consistency
+-- The buffer prevents edge cases where key expires during active requests
 redis.call('PEXPIRE', key, window + 1000)
 redis.call('PEXPIRE', counterKey, window + 1000)
-
 
 return 1
 `
@@ -77,6 +82,29 @@ redis.call('ZREMRANGEBYSCORE', key, 0, now - window)
 local current = redis.call('ZCARD', key)
 
 return limit - current
+`
+
+// Lua script for getting reset time
+// Returns the timestamp of the oldest entry in the window
+const luaResetTimeScript = `
+local key = KEYS[1]
+local window = tonumber(ARGV[1])
+local now = tonumber(ARGV[2])
+
+-- Remove expired entries
+redis.call('ZREMRANGEBYSCORE', key, 0, now - window)
+
+-- Get the oldest entry's score (timestamp)
+local oldest = redis.call('ZRANGE', key, 0, 0, 'WITHSCORES')
+
+if #oldest == 0 then
+    -- No entries, return current time
+    return now
+end
+
+-- oldest[2] contains the score (timestamp) of the oldest entry
+-- Reset time is when this oldest entry expires
+return tonumber(oldest[2]) + window
 `
 
 // NewRedisLimiter creates and returns a new Redis-based rate limiter.
@@ -125,20 +153,14 @@ func (l *RedisLimiter) Wait(ctx context.Context, key string) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			// Check without consuming quota
-			remaining, err := l.GetRemaining(ctx, key)
+			// Try to allow directly without checking remaining first
+			// This reduces Redis round-trips from two to one per attempt
+			allowed, err := l.Allow(ctx, key)
 			if err != nil {
 				return err
 			}
-			if remaining > 0 {
-				// Now try to allow
-				allowed, err := l.Allow(ctx, key)
-				if err != nil {
-					return err
-				}
-				if allowed {
-					return nil
-				}
+			if allowed {
+				return nil
 			}
 		}
 	}
@@ -163,12 +185,35 @@ func (l *RedisLimiter) GetRemaining(ctx context.Context, key string) (int, error
 	if err != nil {
 		return 0, err
 	}
+	if result.IsNil() {
+		return 0, nil
+	}
+	return result.Int(), nil
+}
 
-	return gconv.Int(result), nil
+// GetResetTime implements Limiter.GetResetTime.
+// Returns the time when the oldest request in the sliding window will expire.
+func (l *RedisLimiter) GetResetTime(ctx context.Context, key string) (time.Time, error) {
+	now := time.Now().UnixMilli()
+	windowMs := l.window.Milliseconds()
+
+	result, err := l.redis.Eval(ctx, luaResetTimeScript, 1, []string{key}, []any{windowMs, now})
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	if result.IsNil() {
+		return time.Now(), nil
+	}
+
+	resetTimeMs := result.Int64()
+	return time.UnixMilli(resetTimeMs), nil
 }
 
 // Reset implements Limiter.Reset.
+// Deletes both the main key and counter key to ensure clean state.
 func (l *RedisLimiter) Reset(ctx context.Context, key string) error {
-	_, err := l.redis.Del(ctx, key)
+	// Delete both keys atomically
+	_, err := l.redis.Del(ctx, key, fmt.Sprintf("%s:counter", key))
 	return err
 }

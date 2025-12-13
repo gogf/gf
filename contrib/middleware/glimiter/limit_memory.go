@@ -53,7 +53,9 @@ func (l *MemoryLimiter) AllowN(ctx context.Context, key string, n int) (bool, er
 		return false, fmt.Errorf("n must be positive, got %d", n)
 	}
 
-	for {
+	// Limit retries to prevent infinite loop in extreme concurrent scenarios
+	const maxOuterRetries = 100
+	for outerRetry := 0; outerRetry < maxOuterRetries; outerRetry++ {
 		// Get or create counter
 		value, err := l.cache.GetOrSetFuncLock(ctx, key, func(ctx context.Context) (any, error) {
 			return &memoryCounter{count: gtype.NewInt64(0)}, nil
@@ -68,7 +70,9 @@ func (l *MemoryLimiter) AllowN(ctx context.Context, key string, n int) (bool, er
 		}
 
 		// Try to increment using CAS (via gtype.Int64)
-		for {
+		// Inner loop handles concurrent updates to the same counter
+		const maxCASRetries = 1000
+		for casRetry := 0; casRetry < maxCASRetries; casRetry++ {
 			current := counter.count.Val()
 			if current+int64(n) > int64(l.limit) {
 				// Would exceed limit
@@ -81,7 +85,12 @@ func (l *MemoryLimiter) AllowN(ctx context.Context, key string, n int) (bool, er
 			}
 			// CAS failed, retry
 		}
+		// If CAS retries exhausted, it likely means the counter pointer is stale
+		// (cache entry was recreated), retry outer loop to get fresh counter
 	}
+
+	// Should never reach here under normal circumstances
+	return false, fmt.Errorf("exceeded maximum retry attempts")
 }
 
 // Wait implements Limiter.Wait.
@@ -95,20 +104,14 @@ func (l *MemoryLimiter) Wait(ctx context.Context, key string) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			// Check without consuming quota
-			remaining, err := l.GetRemaining(ctx, key)
+			// Try to allow directly without checking remaining first
+			// This reduces overhead from two operations to one
+			allowed, err := l.Allow(ctx, key)
 			if err != nil {
 				return err
 			}
-			if remaining > 0 {
-				// Now try to allow
-				allowed, err := l.Allow(ctx, key)
-				if err != nil {
-					return err
-				}
-				if allowed {
-					return nil
-				}
+			if allowed {
+				return nil
 			}
 		}
 	}
@@ -146,6 +149,22 @@ func (l *MemoryLimiter) GetRemaining(ctx context.Context, key string) (int, erro
 		remaining = 0
 	}
 	return remaining, nil
+}
+
+// GetResetTime implements Limiter.GetResetTime.
+// Returns the expiration time of the cache entry, which is when the rate limit will reset.
+func (l *MemoryLimiter) GetResetTime(ctx context.Context, key string) (time.Time, error) {
+	expireTime, err := l.cache.GetExpire(ctx, key)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	// If key doesn't exist or has no expiration, return current time
+	if expireTime == 0 {
+		return time.Now(), nil
+	}
+
+	return time.Now().Add(expireTime), nil
 }
 
 // Reset implements Limiter.Reset.

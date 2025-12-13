@@ -36,9 +36,9 @@ type MiddlewareConfig struct {
 //
 // Example:
 //
-//	limiter := limit.NewMemoryLimiter(100, time.Minute)
+//	limiter := glimiter.NewMemoryLimiter(100, time.Minute)
 //	s.Group("/api", func(group *ghttp.RouterGroup) {
-//	    group.Middleware(limit.Middleware(limit.MiddlewareConfig{
+//	    group.Middleware(glimiter.Middleware(glimiter.MiddlewareConfig{
 //	        Limiter: limiter,
 //	    }))
 //	    group.ALL("/user", handler)
@@ -78,13 +78,17 @@ func Middleware(config MiddlewareConfig) ghttp.HandlerFunc {
 			remaining = 0
 		}
 
-		// Calculate reset time
-		resetTime := time.Now().Add(config.Limiter.GetWindow()).Unix()
+		// Get accurate reset time from limiter
+		resetTime, err := config.Limiter.GetResetTime(ctx, key)
+		if err != nil {
+			// Fallback to approximate time if error occurs
+			resetTime = time.Now().Add(config.Limiter.GetWindow())
+		}
 
 		// Set rate limit headers
 		r.Response.Header().Set("X-RateLimit-Limit", gconv.String(config.Limiter.GetLimit()))
 		r.Response.Header().Set("X-RateLimit-Remaining", gconv.String(remaining))
-		r.Response.Header().Set("X-RateLimit-Reset", gconv.String(resetTime))
+		r.Response.Header().Set("X-RateLimit-Reset", gconv.String(resetTime.Unix()))
 
 		if !allowed {
 			// Rate limit exceeded

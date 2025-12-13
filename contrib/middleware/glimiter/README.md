@@ -112,7 +112,7 @@ allowed, err := limiter.Allow(ctx, "user:123")
 
 ```go
 type Limiter interface {
-    // 棜查是否允许单个请求
+    // 检查是否允许单个请求
     Allow(ctx context.Context, key string) (bool, error)
     
     // 检查是否允许 N 个请求
