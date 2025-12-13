@@ -17,12 +17,6 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-// skipUnsupportedTest skips tests that require PostgreSQL 9.5+ features (ON CONFLICT)
-// GaussDB is based on PostgreSQL 9.2 and doesn't support these features
-func skipUnsupportedTest(t *testing.T, feature string) {
-	t.Skipf("GaussDB does not support %s (requires PostgreSQL 9.5+ ON CONFLICT syntax, GaussDB is based on PostgreSQL 9.2)", feature)
-}
-
 func Test_Model_Insert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
@@ -277,7 +271,6 @@ func Test_Model_Where(t *testing.T) {
 }
 
 func Test_Model_Save(t *testing.T) {
-	skipUnsupportedTest(t, "Save")
 	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -337,7 +330,6 @@ func Test_Model_Save(t *testing.T) {
 }
 
 func Test_Model_Replace(t *testing.T) {
-	skipUnsupportedTest(t, "Replace")
 	table := createTable()
 	defer dropTable(table)
 
@@ -393,7 +385,6 @@ func Test_Model_Replace(t *testing.T) {
 }
 
 func Test_Model_OnConflict(t *testing.T) {
-	skipUnsupportedTest(t, "OnConflict")
 	var (
 		table      = fmt.Sprintf(`%s_%d`, TablePrefix+"test", gtime.TimestampNano())
 		uniqueName = fmt.Sprintf(`%s_%d`, TablePrefix+"test_unique", gtime.TimestampNano())
@@ -469,8 +460,7 @@ func Test_Model_OnConflict(t *testing.T) {
 }
 
 func Test_Model_OnDuplicate(t *testing.T) {
-	skipUnsupportedTest(t, "OnDuplicate")
-	table := createTable()
+	table := createInitTable()
 	defer dropTable(table)
 
 	// string type 1.
@@ -571,8 +561,7 @@ func Test_Model_OnDuplicate(t *testing.T) {
 }
 
 func Test_Model_OnDuplicateWithCounter(t *testing.T) {
-	skipUnsupportedTest(t, "OnDuplicateWithCounter")
-	table := createTable()
+	table := createInitTable()
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
@@ -594,8 +583,7 @@ func Test_Model_OnDuplicateWithCounter(t *testing.T) {
 }
 
 func Test_Model_OnDuplicateEx(t *testing.T) {
-	skipUnsupportedTest(t, "OnDuplicateEx")
-	table := createTable()
+	table := createInitTable()
 	defer dropTable(table)
 
 	// string type 1.
@@ -810,7 +798,6 @@ func Test_ConvertSliceFloat64(t *testing.T) {
 }
 
 func Test_Model_InsertIgnore(t *testing.T) {
-	skipUnsupportedTest(t, "InsertIgnore")
 	table := createTable()
 	defer dropTable(table)
 
