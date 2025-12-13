@@ -47,13 +47,12 @@ func (d *Driver) DoFilter(
 		return "", nil, err
 	}
 
-	// Add support for gaussdb INSERT OR IGNORE.
-	// GaussDB doesn't support ON CONFLICT DO NOTHING without explicit conflict target
-	// We skip the InsertIgnore conversion for GaussDB as it doesn't support this PostgreSQL 9.5+ feature
-	// Users should handle conflicts explicitly using Upsert or other methods
+	// Handle gaussdb INSERT IGNORE.
+	// The IGNORE keyword is removed here, converting the statement to a regular INSERT.
+	// The actual "ignore" behavior (i.e., skipping inserts that would violate constraints)
+	// is implemented at the DoInsert level by checking for existence before inserting.
 	if gstr.HasPrefix(newSql, gdb.InsertOperationIgnore) {
 		// Remove the IGNORE operation prefix and keep as regular INSERT
-		// This will cause constraint violations to fail, which is expected behavior for GaussDB
 		newSql = "INSERT" + newSql[len(gdb.InsertOperationIgnore):]
 	}
 
