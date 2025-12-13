@@ -9,9 +9,10 @@ package gaussdb_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/contrib/drivers/gaussdb/v2"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/test/gtest"
+
+	"github.com/gogf/gf/contrib/drivers/gaussdb/v2"
 )
 
 // Test_Open tests the Open method with various configurations
