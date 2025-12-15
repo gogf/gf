@@ -8,6 +8,7 @@ package converter
 
 import (
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/gogf/gf/v2/internal/empty"
@@ -23,11 +24,17 @@ func (c *Converter) Bool(anyInput any) (bool, error) {
 	case bool:
 		return value, nil
 	case []byte:
+		if parsed, err := strconv.ParseBool(string(value)); err == nil {
+			return parsed, nil
+		}
 		if _, ok := emptyStringMap[strings.ToLower(string(value))]; ok {
 			return false, nil
 		}
 		return true, nil
 	case string:
+		if parsed, err := strconv.ParseBool(value); err == nil {
+			return parsed, nil
+		}
 		if _, ok := emptyStringMap[strings.ToLower(value)]; ok {
 			return false, nil
 		}

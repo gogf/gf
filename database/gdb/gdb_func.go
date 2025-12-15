@@ -738,6 +738,14 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []any) {
 		reflectValue = reflect.ValueOf(in.Value)
 		reflectKind  = reflectValue.Kind()
 	)
+	// Check if the value implements iString interface (like uuid.UUID).
+	// These types should be treated as single values, not arrays.
+	if reflectKind == reflect.Array {
+		if v, ok := in.Value.(iString); ok {
+			in.Value = v.String()
+			reflectKind = reflect.String
+		}
+	}
 	switch reflectKind {
 	// Slice argument.
 	case reflect.Slice, reflect.Array:
@@ -799,9 +807,7 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []any) {
 
 // handleSliceAndStructArgsForSql is an important function, which handles the sql and all its arguments
 // before committing them to underlying driver.
-func handleSliceAndStructArgsForSql(
-	oldSql string, oldArgs []any,
-) (newSql string, newArgs []any) {
+func handleSliceAndStructArgsForSql(oldSql string, oldArgs []any) (newSql string, newArgs []any) {
 	newSql = oldSql
 	if len(oldArgs) == 0 {
 		return
@@ -817,6 +823,13 @@ func handleSliceAndStructArgsForSql(
 			// Eg: table.Where("name = ?", []byte("john"))
 			if _, ok := oldArg.([]byte); ok {
 				newArgs = append(newArgs, oldArg)
+				continue
+			}
+			// It does not split types that implement fmt.Stringer interface (like uuid.UUID).
+			// These types should be converted to string instead of being expanded as arrays.
+			// Eg: table.Where("uuid = ?", uuid.UUID{...})
+			if v, ok := oldArg.(iString); ok {
+				newArgs = append(newArgs, v.String())
 				continue
 			}
 			var (
@@ -972,6 +985,7 @@ func FormatMultiLineSqlToSingle(sql string) (string, error) {
 	return sql, nil
 }
 
+// genTableFieldsCacheKey generates cache key for table fields.
 func genTableFieldsCacheKey(group, schema, table string) string {
 	return fmt.Sprintf(
 		`%s%s@%s#%s`,
@@ -982,6 +996,7 @@ func genTableFieldsCacheKey(group, schema, table string) string {
 	)
 }
 
+// genSelectCacheKey generates cache key for select.
 func genSelectCacheKey(table, group, schema, name, sql string, args ...any) string {
 	if name == "" {
 		name = fmt.Sprintf(
@@ -993,4 +1008,14 @@ func genSelectCacheKey(table, group, schema, name, sql string, args ...any) stri
 		)
 	}
 	return fmt.Sprintf(`%s%s`, cachePrefixSelectCache, name)
+}
+
+// genTableNamesCacheKey generates cache key for table names.
+func genTableNamesCacheKey(group string) string {
+	return fmt.Sprintf(`Tables:%s`, group)
+}
+
+// genSoftTimeFieldNameTypeCacheKey generates cache key for soft time field name and type.
+func genSoftTimeFieldNameTypeCacheKey(schema, table string, candidateFields []string) string {
+	return fmt.Sprintf(`getSoftFieldNameAndType:%s#%s#%s`, schema, table, strings.Join(candidateFields, "_"))
 }

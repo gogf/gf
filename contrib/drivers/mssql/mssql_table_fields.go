@@ -17,32 +17,32 @@ import (
 var (
 	tableFieldsSqlTmp = `
 SELECT 
-	a.name Field,
-	CASE b.name 
-		WHEN 'datetime' THEN 'datetime'
-		WHEN 'numeric' THEN b.name + '(' + convert(varchar(20), a.xprec) + ',' + convert(varchar(20), a.xscale) + ')' 
-		WHEN 'char' THEN b.name + '(' + convert(varchar(20), a.length)+ ')'
-		WHEN 'varchar' THEN b.name + '(' + convert(varchar(20), a.length)+ ')'
-		ELSE b.name + '(' + convert(varchar(20),a.length)+ ')' END AS Type,
-	CASE WHEN a.isnullable=1 THEN 'YES' ELSE 'NO' end AS [Null],
-	CASE WHEN exists (
-		SELECT 1 FROM sysobjects WHERE xtype='PK' AND name IN (
-			SELECT name FROM sysindexes WHERE indid IN (
-				SELECT indid FROM sysindexkeys WHERE id = a.id AND colid=a.colid
-			)
-		)
-	) THEN 'PRI' ELSE '' END AS [Key],
-	CASE WHEN COLUMNPROPERTY(a.id,a.name,'IsIdentity')=1 THEN 'auto_increment' ELSE '' END Extra,
-	isnull(e.text,'') AS [Default],
-	isnull(g.[value],'') AS [Comment]
-FROM syscolumns a
-LEFT  JOIN systypes b ON a.xtype=b.xtype AND a.xusertype=b.xusertype
-INNER JOIN sysobjects d ON a.id=d.id AND d.xtype='U' AND d.name<>'dtproperties'
-LEFT  JOIN syscomments e ON a.cdefault=e.id
-LEFT  JOIN sys.extended_properties g ON a.id=g.major_id AND a.colid=g.minor_id
-LEFT  JOIN sys.extended_properties f ON d.id=f.major_id AND f.minor_id =0
-WHERE d.name='%s'
-ORDER BY a.id,a.colorder
+	c.name AS Field,
+	CASE 
+		WHEN t.name IN ('datetime', 'datetime2', 'smalldatetime', 'date', 'time', 'text', 'ntext', 'image', 'xml') THEN t.name
+		WHEN t.name IN ('decimal', 'numeric') THEN t.name + '(' + CAST(c.precision AS varchar(20)) + ',' + CAST(c.scale AS varchar(20)) + ')'
+		WHEN t.name IN ('char', 'varchar', 'binary', 'varbinary') THEN t.name + '(' + CASE WHEN c.max_length = -1 THEN 'max' ELSE CAST(c.max_length AS varchar(20)) END + ')'
+		WHEN t.name IN ('nchar', 'nvarchar') THEN t.name + '(' + CASE WHEN c.max_length = -1 THEN 'max' ELSE CAST(c.max_length/2 AS varchar(20)) END + ')'
+		ELSE t.name
+	END AS Type,
+	CASE WHEN c.is_nullable = 1 THEN 'YES' ELSE 'NO' END AS [Null],
+	CASE WHEN pk.column_id IS NOT NULL THEN 'PRI' ELSE '' END AS [Key],
+	CASE WHEN c.is_identity = 1 THEN 'IDENTITY' ELSE '' END AS Extra,
+	ISNULL(dc.definition, '') AS [Default],
+	ISNULL(CAST(ep.value AS nvarchar(max)), '') AS [Comment]
+FROM sys.columns c
+INNER JOIN sys.objects o ON c.object_id = o.object_id AND o.type = 'U' AND o.is_ms_shipped = 0
+INNER JOIN sys.types t ON c.user_type_id = t.user_type_id
+LEFT JOIN sys.default_constraints dc ON c.default_object_id = dc.object_id
+LEFT JOIN sys.extended_properties ep ON c.object_id = ep.major_id AND c.column_id = ep.minor_id AND ep.name = 'MS_Description'
+LEFT JOIN (
+	SELECT ic.object_id, ic.column_id
+	FROM sys.index_columns ic
+	INNER JOIN sys.indexes i ON ic.object_id = i.object_id AND ic.index_id = i.index_id
+	WHERE i.is_primary_key = 1
+) pk ON c.object_id = pk.object_id AND c.column_id = pk.column_id
+WHERE o.name = '%s'
+ORDER BY c.column_id
 `
 )
 

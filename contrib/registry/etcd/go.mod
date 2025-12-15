@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/registry/etcd/v2
 go 1.23.0
 
 require (
-	github.com/gogf/gf/v2 v2.9.5
+	github.com/gogf/gf/v2 v2.9.6
 	go.etcd.io/etcd/client/v3 v3.5.17
 	google.golang.org/grpc v1.59.0
 )
@@ -13,7 +13,7 @@ require (
 	github.com/clbanning/mxj/v2 v2.7.0 // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
-	github.com/emirpasic/gods v1.18.1 // indirect
+	github.com/emirpasic/gods/v2 v2.0.0-alpha // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
