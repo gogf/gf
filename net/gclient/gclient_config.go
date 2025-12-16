@@ -39,27 +39,25 @@ func (c *Client) SetBrowserMode(enabled bool) *Client {
 
 // SetHeader sets a custom HTTP header pair for the client.
 func (c *Client) SetHeader(key, value string) *Client {
-	c.header[key] = value
+	c.header.Set(key, value)
 	return c
 }
 
 // SetHeaderMap sets custom HTTP headers with map.
 func (c *Client) SetHeaderMap(m map[string]string) *Client {
-	for k, v := range m {
-		c.header[k] = v
-	}
+	c.header.Sets(m)
 	return c
 }
 
 // SetAgent sets the User-Agent header for client.
 func (c *Client) SetAgent(agent string) *Client {
-	c.header[httpHeaderUserAgent] = agent
+	c.header.Set(httpHeaderUserAgent, agent)
 	return c
 }
 
 // SetContentType sets HTTP content type for the client.
 func (c *Client) SetContentType(contentType string) *Client {
-	c.header[httpHeaderContentType] = contentType
+	c.header.Set(httpHeaderContentType, contentType)
 	return c
 }
 
@@ -68,7 +66,7 @@ func (c *Client) SetHeaderRaw(headers string) *Client {
 	for _, line := range gstr.SplitAndTrim(headers, "\n") {
 		array, _ := gregex.MatchString(httpRegexHeaderRaw, line)
 		if len(array) >= 3 {
-			c.header[array[1]] = array[2]
+			c.header.Set(array[1], array[2])
 		}
 	}
 	return c
@@ -76,15 +74,13 @@ func (c *Client) SetHeaderRaw(headers string) *Client {
 
 // SetCookie sets a cookie pair for the client.
 func (c *Client) SetCookie(key, value string) *Client {
-	c.cookies[key] = value
+	c.cookies.Set(key, value)
 	return c
 }
 
 // SetCookieMap sets cookie items with map.
 func (c *Client) SetCookieMap(m map[string]string) *Client {
-	for k, v := range m {
-		c.cookies[k] = v
-	}
+	c.cookies.Sets(m)
 	return c
 }
 

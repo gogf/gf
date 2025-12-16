@@ -173,10 +173,10 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 		allowFileUploading = true
 	)
 	if len(data) > 0 {
-		mediaType, _, err := mime.ParseMediaType(c.header[httpHeaderContentType])
+		mediaType, _, err := mime.ParseMediaType(c.header.Get(httpHeaderContentType))
 		if err != nil {
 			// Fallback: use the raw header value if parsing fails.
-			mediaType = c.header[httpHeaderContentType]
+			mediaType = c.header.Get(httpHeaderContentType)
 		}
 		switch mediaType {
 		case httpHeaderContentTypeJson:
@@ -212,10 +212,10 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 	if method == http.MethodGet {
 		var bodyBuffer *bytes.Buffer
 		if params != "" {
-			mediaType, _, err := mime.ParseMediaType(c.header[httpHeaderContentType])
+			mediaType, _, err := mime.ParseMediaType(c.header.Get(httpHeaderContentType))
 			if err != nil {
 				// Fallback: use the raw header value if parsing fails.
-				mediaType = c.header[httpHeaderContentType]
+				mediaType = c.header.Get(httpHeaderContentType)
 			}
 			switch mediaType {
 			case
@@ -315,7 +315,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 				err = gerror.Wrapf(err, `http.NewRequest failed for method "%s" and URL "%s"`, method, url)
 				return nil, err
 			}
-			if v, ok := c.header[httpHeaderContentType]; ok {
+			if v := c.header.Get(httpHeaderContentType); v != "" {
 				// Custom Content-Type.
 				req.Header.Set(httpHeaderContentType, v)
 			} else if len(paramBytes) > 0 {
@@ -335,10 +335,11 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 		req = req.WithContext(ctx)
 	}
 	// Custom header.
-	if len(c.header) > 0 {
-		for k, v := range c.header {
+	if c.header.Size() > 0 {
+		c.header.Iterator(func(k string, v string) bool {
 			req.Header.Set(k, v)
-		}
+			return true
+		})
 	}
 	// It's necessary set the req.Host if you want to custom the host value of the request.
 	// It uses the "Host" value from header if it's not empty.
@@ -346,14 +347,15 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 		req.Host = reqHeaderHost
 	}
 	// Custom Cookie.
-	if len(c.cookies) > 0 {
+	if c.cookies.Size() > 0 {
 		headerCookie := ""
-		for k, v := range c.cookies {
+		c.cookies.Iterator(func(k string, v string) bool {
 			if len(headerCookie) > 0 {
 				headerCookie += ";"
 			}
 			headerCookie += k + "=" + v
-		}
+			return true
+		})
 		if len(headerCookie) > 0 {
 			req.Header.Set(httpHeaderCookie, headerCookie)
 		}

@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2"
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsel"
 	"github.com/gogf/gf/v2/net/gsvc"
@@ -25,18 +26,18 @@ import (
 
 // Client is the HTTP client for HTTP request management.
 type Client struct {
-	http.Client                         // Underlying HTTP Client.
-	header            map[string]string // Custom header map.
-	cookies           map[string]string // Custom cookie map.
-	prefix            string            // Prefix for request.
-	authUser          string            // HTTP basic authentication: user.
-	authPass          string            // HTTP basic authentication: pass.
-	retryCount        int               // Retry count when request fails.
-	noUrlEncode       bool              // No url encoding for request parameters.
-	retryInterval     time.Duration     // Retry interval when request fails.
-	middlewareHandler []HandlerFunc     // Interceptor handlers
-	discovery         gsvc.Discovery    // Discovery for service.
-	builder           gsel.Builder      // Builder for request balance.
+	http.Client                       // Underlying HTTP Client.
+	header            *gmap.StrStrMap // Custom header map.
+	cookies           *gmap.StrStrMap // Custom cookie map.
+	prefix            string          // Prefix for request.
+	authUser          string          // HTTP basic authentication: user.
+	authPass          string          // HTTP basic authentication: pass.
+	retryCount        int             // Retry count when request fails.
+	noUrlEncode       bool            // No url encoding for request parameters.
+	retryInterval     time.Duration   // Retry interval when request fails.
+	middlewareHandler []HandlerFunc   // Interceptor handlers
+	discovery         gsvc.Discovery  // Discovery for service.
+	builder           gsel.Builder    // Builder for request balance.
 }
 
 const (
@@ -83,12 +84,12 @@ func New() *Client {
 				}).DialContext,
 			},
 		},
-		header:    make(map[string]string),
-		cookies:   make(map[string]string),
+		header:    gmap.NewStrStrMap(true),
+		cookies:   gmap.NewStrStrMap(true),
 		builder:   gsel.GetBuilder(),
 		discovery: nil,
 	}
-	c.header[httpHeaderUserAgent] = defaultClientAgent
+	c.header.Set(httpHeaderUserAgent, defaultClientAgent)
 	// It enables OpenTelemetry for client in default.
 	c.Use(internalMiddlewareObservability, internalMiddlewareDiscovery)
 	return c
@@ -98,14 +99,8 @@ func New() *Client {
 func (c *Client) Clone() *Client {
 	newClient := New()
 	*newClient = *c
-	newClient.header = make(map[string]string, len(c.header))
-	for k, v := range c.header {
-		newClient.header[k] = v
-	}
-	newClient.cookies = make(map[string]string, len(c.cookies))
-	for k, v := range c.cookies {
-		newClient.cookies[k] = v
-	}
+	newClient.header = c.header.Clone()
+	newClient.cookies = c.cookies.Clone()
 	return newClient
 }
 
