@@ -198,6 +198,17 @@ jobs:
         ports:
           - 5236:5236
 
+      # openGauss server
+      # docker run --privileged=true -e GS_PASSWORD=UTpass@1234 -p 9950:5432 opengauss/opengauss:7.0.0-RC1.B023
+      gaussdb:
+        image: opengauss/opengauss:7.0.0-RC1.B023
+        env:
+          GS_PASSWORD: UTpass@1234
+          TZ: Asia/Shanghai
+        ports:
+          - 9950:5432
+
+
       zookeeper:
         image: zookeeper:3.8
         ports:

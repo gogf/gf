@@ -8,41 +8,43 @@
 package gaussdb
 
 import (
-	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/frame/g"
+	_ "gitee.com/opengauss/openGauss-connector-go-pq"
 
-	"github.com/gogf/gf/contrib/drivers/mysql/v2"
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/os/gctx"
 )
 
 // Driver is the driver for GaussDB database.
-//
-// GaussDB is an enterprise-level distributed database developed by Huawei. GaussDB for MySQL is a cloud-native
-// database that is fully compatible with MySQL protocol.
-//
-// Although GaussDB is compatible with MySQL protocol, it is packaged as a separate driver component
-// rather than reusing the mysql adapter directly. This design allows for future extensibility,
-// such as implementing GaussDB-specific features or optimizations for cloud-native scenarios.
 type Driver struct {
-	*mysql.Driver
+	*gdb.Core
 }
+
+const (
+	internalPrimaryKeyInCtx gctx.StrKey = "primary_key"
+	defaultSchema           string      = "public"
+	quoteChar               string      = `"`
+)
 
 func init() {
-	var (
-		err         error
-		driverObj   = New()
-		driverNames = g.SliceStr{"gaussdb"}
-	)
-	for _, driverName := range driverNames {
-		if err = gdb.Register(driverName, driverObj); err != nil {
-			panic(err)
-		}
+	if err := gdb.Register(`gaussdb`, New()); err != nil {
+		panic(err)
 	}
 }
 
-// New creates and returns a driver that implements gdb.Driver, which supports operations for GaussDB.
+// New create and returns a driver that implements gdb.Driver, which supports operations for PostgreSql.
 func New() gdb.Driver {
-	mysqlDriver := mysql.New().(*mysql.Driver)
+	return &Driver{}
+}
+
+// New creates and returns a database object for postgresql.
+// It implements the interface of gdb.Driver for extra database driver installation.
+func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 	return &Driver{
-		Driver: mysqlDriver,
-	}
+		Core: core,
+	}, nil
+}
+
+// GetChars returns the security char for this type of database.
+func (d *Driver) GetChars() (charLeft string, charRight string) {
+	return quoteChar, quoteChar
 }
