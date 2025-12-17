@@ -940,7 +940,7 @@ func (m *Model) formatCondition(
 	}
 	// WHERE
 	conditionWhere, conditionArgs = m.whereBuilder.Build()
-	softDeletingCondition := m.softTimeMaintainer().GetWhereConditionForDelete(ctx)
+	softDeletingCondition := m.softTimeMaintainer().GetDeleteCondition(ctx)
 	if m.rawSql != "" && conditionWhere != "" {
 		if gstr.ContainsI(m.rawSql, " WHERE ") {
 			conditionWhere = " AND " + conditionWhere
