@@ -90,7 +90,7 @@ func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args .
 		// Check if this is a valid cached item
 		if cacheItem != nil && cacheItem.IsCached {
 			// Return cached result, even if it's nil or empty
-			// This ensures empty results are properly cached
+			// This ensures empty results are properly cached when Force=true
 			if cacheItem.Result == nil {
 				return Result{}, nil
 			}
@@ -117,12 +117,27 @@ func (m *Model) saveSelectResultToCache(
 		return
 	}
 
-	// In case of Cache Penetration.
-	// When result is empty (nil or empty array), we need to decide whether to cache it:
-	// - If Force=true: Always cache, even empty results (防止缓存穿透)
-	// - If Force=false: Don't cache empty results
-	// Note: result can be nil when query returns no data
+	// Special handler for Value/Count operations result.
+	// Check if the result is semantically empty (e.g., Count=0, Value="").
+	var isEmpty bool
 	if result == nil || result.IsEmpty() {
+		isEmpty = true
+	} else if len(result) > 0 {
+		switch selectType {
+		case SelectTypeValue, SelectTypeArray, SelectTypeCount:
+			var core = m.db.GetCore()
+			if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
+				if v, ok := result[0][internalData.FirstResultColumn]; ok && v.IsEmpty() {
+					// Count=0, Value="" and similar zero-value results are considered empty
+					isEmpty = true
+				}
+			}
+		default:
+		}
+	}
+
+	// In case of Cache Penetration.
+	if isEmpty {
 		if !m.cacheOption.Force {
 			// Don't cache empty results when Force is false
 			return
