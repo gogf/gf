@@ -124,7 +124,7 @@ func (m *Model) saveSelectResultToCache(
 		isEmpty = true
 	} else if len(result) > 0 {
 		switch selectType {
-		case SelectTypeValue, SelectTypeArray, SelectTypeCount:
+		case SelectTypeValue, SelectTypeCount:
 			var core = m.db.GetCore()
 			if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
 				if v, ok := result[0][internalData.FirstResultColumn]; ok && v.IsEmpty() {
