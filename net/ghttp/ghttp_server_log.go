@@ -31,7 +31,7 @@ func (s *Server) handleAccessLog(r *Request) {
 		r.GetClientIp(), r.Referer(), r.UserAgent(),
 	)
 	logger := instance.GetOrSetFuncLock(loggerInstanceKey, func() any {
-		l := s.Logger()
+		l := s.Logger().Clone()
 		l.SetFile(s.config.AccessLogPattern)
 		l.SetStdoutPrint(s.config.LogStdout)
 		l.SetLevelPrint(false)
