@@ -73,7 +73,7 @@ func (s *Server) handleErrorLog(err error, r *Request) {
 		content += ", " + err.Error()
 	}
 	logger := instance.GetOrSetFuncLock(loggerInstanceKey, func() any {
-		l := s.Logger()
+		l := s.Logger().Clone()
 		l.SetStack(false)
 		l.SetFile(s.config.ErrorLogPattern)
 		l.SetStdoutPrint(s.config.LogStdout)
