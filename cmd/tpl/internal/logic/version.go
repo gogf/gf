@@ -8,9 +8,10 @@ import (
 	"sort"
 	"strings"
 
+	"golang.org/x/mod/semver"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
-	"golang.org/x/mod/semver"
 )
 
 // VersionInfo contains module version information

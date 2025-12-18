@@ -13,8 +13,8 @@ var (
 		Description: "A CLI tool for generating Go projects from remote templates",
 		Func: func(ctx context.Context, parser *gcmd.Parser) (err error) {
 			// parser.Command.Print()
-            // Just hint user
-            println("Please use 'tpl init' to generate project, or 'tpl init -h' for help.")
+			// Just hint user
+			println("Please use 'tpl init' to generate project, or 'tpl init -h' for help.")
 			return nil
 		},
 	}

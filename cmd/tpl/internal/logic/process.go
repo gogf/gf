@@ -11,9 +11,9 @@ import (
 
 // ProcessOptions contains options for the Process function
 type ProcessOptions struct {
-	SelectVersion  bool   // Enable interactive version selection
-	ModulePath     string // Custom go.mod module path (e.g., github.com/xxx/xxx)
-	UpgradeDeps    bool   // Upgrade dependencies to latest (go get -u ./...)
+	SelectVersion bool   // Enable interactive version selection
+	ModulePath    string // Custom go.mod module path (e.g., github.com/xxx/xxx)
+	UpgradeDeps   bool   // Upgrade dependencies to latest (go get -u ./...)
 }
 
 // Process handles the template generation flow
