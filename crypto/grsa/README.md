@@ -9,12 +9,6 @@ Package `grsa` provides useful API for RSA encryption/decryption algorithms with
 - Handling Base64 encoded keys
 - Detecting private key types
 
-## Installation
-
-```bash
-go get github.com/gogf/gf/v2/crypto/grsa
-```
-
 ## Quick Start
 
 ### Basic Encryption/Decryption
@@ -155,7 +149,3 @@ Run the package tests with:
 ```bash
 go test -v
 ```
-
-## License
-
-`GoFrame` is licensed under the [MIT License](LICENSE), 100% free and open-source, forever.
