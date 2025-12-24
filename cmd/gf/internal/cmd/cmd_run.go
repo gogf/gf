@@ -34,12 +34,12 @@ type cRun struct {
 }
 
 type cRunApp struct {
-	File        string   // Go run file name.
-	Path        string   // Directory storing built binary.
-	Options     string   // Extra "go run" options.
-	Args        string   // Custom arguments.
-	WatchPaths  []string // Watch paths for live reload.
-	IgnorePaths []string // Ignore paths for file watching.
+	File           string   // Go run file name.
+	Path           string   // Directory storing built binary.
+	Options        string   // Extra "go run" options.
+	Args           string   // Custom arguments.
+	WatchPaths     []string // Watch paths for live reload.
+	IgnorePatterns []string // Custom ignore patterns.
 }
 
 const (
@@ -49,50 +49,47 @@ const (
 gf run main.go
 gf run main.go --args "server -p 8080"
 gf run main.go -mod=vendor
-gf run main.go -w internal/,api/
-gf run main.go -i vendor/*,*.pb.go,node_modules/*
-gf run main.go -w app/,manifest/ -i .git/*,.github/*,dist/*
-gf run main.go -p ./bin -w . -i "test/*,tmp/*,*.log"
-gf run main.go -w service/,model/ -i "frontend/*,web/*,build/*"
+gf run main.go -w internal,api
+gf run main.go -i ".git,node_modules"
 `
 	cRunDc = `
 The "run" command is used for running go codes with hot-compiled-like feature,
 which compiles and runs the go codes asynchronously when codes change.
 `
-	cRunFileBrief        = `building file path.`
-	cRunPathBrief        = `output directory path for built binary file. it's "./" in default`
-	cRunExtraBrief       = `the same options as "go run"/"go build" except some options as follows defined`
-	cRunArgsBrief        = `custom arguments for your process`
-	cRunWatchPathsBrief  = `watch additional paths for live reload, separated by ",". i.e. "internal/,api/"`
-	cRunIgnorePathsBrief = `ignore paths for file watching, separated by ",". i.e. "vendor/*,*.pb.go,node_modules/*,.git/*"`
+	cRunFileBrief          = `building file path.`
+	cRunPathBrief          = `output directory path for built binary file. it's "./" in default`
+	cRunExtraBrief         = `the same options as "go run"/"go build" except some options as follows defined`
+	cRunArgsBrief          = `custom arguments for your process`
+	cRunWatchPathsBrief    = `watch additional paths for live reload, separated by ",". i.e. "internal,api"`
+	cRunIgnorePatternBrief = `custom ignore patterns for watch, separated by ",". i.e. ".git,node_modules"`
 )
 
 var process *gproc.Process
 
 func init() {
 	gtag.Sets(g.MapStrStr{
-		`cRunUsage`:            cRunUsage,
-		`cRunBrief`:            cRunBrief,
-		`cRunEg`:               cRunEg,
-		`cRunDc`:               cRunDc,
-		`cRunFileBrief`:        cRunFileBrief,
-		`cRunPathBrief`:        cRunPathBrief,
-		`cRunExtraBrief`:       cRunExtraBrief,
-		`cRunArgsBrief`:        cRunArgsBrief,
-		`cRunWatchPathsBrief`:  cRunWatchPathsBrief,
-		`cRunIgnorePathsBrief`: cRunIgnorePathsBrief,
+		`cRunUsage`:              cRunUsage,
+		`cRunBrief`:              cRunBrief,
+		`cRunEg`:                 cRunEg,
+		`cRunDc`:                 cRunDc,
+		`cRunFileBrief`:          cRunFileBrief,
+		`cRunPathBrief`:          cRunPathBrief,
+		`cRunExtraBrief`:         cRunExtraBrief,
+		`cRunArgsBrief`:          cRunArgsBrief,
+		`cRunWatchPathsBrief`:    cRunWatchPathsBrief,
+		`cRunIgnorePatternBrief`: cRunIgnorePatternBrief,
 	})
 }
 
 type (
 	cRunInput struct {
-		g.Meta      `name:"run" config:"gfcli.run"`
-		File        string   `name:"FILE"        arg:"true" brief:"{cRunFileBrief}" v:"required"`
-		Path        string   `name:"path"        short:"p"  brief:"{cRunPathBrief}" d:"./"`
-		Extra       string   `name:"extra"       short:"e"  brief:"{cRunExtraBrief}"`
-		Args        string   `name:"args"        short:"a"  brief:"{cRunArgsBrief}"`
-		WatchPaths  []string `name:"watchPaths"  short:"w"  brief:"{cRunWatchPathsBrief}"`
-		IgnorePaths []string `name:"ignorePaths" short:"i"  brief:"{cRunIgnorePathsBrief}"`
+		g.Meta         `name:"run" config:"gfcli.run"`
+		File           string   `name:"FILE"           arg:"true" brief:"{cRunFileBrief}" v:"required"`
+		Path           string   `name:"path"           short:"p"  brief:"{cRunPathBrief}" d:"./"`
+		Extra          string   `name:"extra"          short:"e"  brief:"{cRunExtraBrief}"`
+		Args           string   `name:"args"           short:"a"  brief:"{cRunArgsBrief}"`
+		WatchPaths     []string `name:"watchPaths"     short:"w"  brief:"{cRunWatchPathsBrief}"`
+		IgnorePatterns []string `name:"ignorePatterns" short:"i"  brief:"{cRunIgnorePatternBrief}"`
 	}
 	cRunOutput struct{}
 )
@@ -114,18 +111,18 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		mlog.Printf("watchPaths: %v", in.WatchPaths)
 	}
 
-	if len(in.IgnorePaths) == 1 {
-		in.IgnorePaths = strings.Split(in.IgnorePaths[0], ",")
-		mlog.Printf("ignorePaths: %v", in.IgnorePaths)
+	if len(in.IgnorePatterns) == 1 {
+		in.IgnorePatterns = strings.Split(in.IgnorePatterns[0], ",")
+		mlog.Printf("ignorePatterns: %v", in.IgnorePatterns)
 	}
 
 	app := &cRunApp{
-		File:        in.File,
-		Path:        filepath.FromSlash(in.Path),
-		Options:     in.Extra,
-		Args:        in.Args,
-		WatchPaths:  in.WatchPaths,
-		IgnorePaths: in.IgnorePaths,
+		File:           in.File,
+		Path:           filepath.FromSlash(in.Path),
+		Options:        in.Extra,
+		Args:           in.Args,
+		WatchPaths:     in.WatchPaths,
+		IgnorePatterns: in.IgnorePatterns,
 	}
 	dirty := gtype.NewBool()
 
@@ -153,10 +150,10 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		})
 	}
 
-	// Get all paths to watch after filtering.
+	// Get directories to watch (recursive monitoring).
 	watchPaths := app.getWatchPaths()
 	for _, path := range watchPaths {
-		_, err = gfsnotify.Add(gfile.RealPath(path), callbackFunc)
+		_, err = gfsnotify.Add(path, callbackFunc)
 		if err != nil {
 			mlog.Fatal(err)
 		}
@@ -273,160 +270,121 @@ func (app *cRunApp) genOutputPath() (outputPath string) {
 	return filepath.FromSlash(outputPath)
 }
 
-// getWatchPaths returns all paths to watch after filtering with ignore patterns.
+// getWatchPaths uses BFS to find the minimal set of directories to watch.
+// Rule: if a directory and all its descendants have no ignored subdirectories, watch it;
+// otherwise, recurse into valid children.
 func (app *cRunApp) getWatchPaths() []string {
-	// Collect all root paths to scan.
 	roots := []string{"."}
 	if len(app.WatchPaths) > 0 {
 		roots = app.WatchPaths
 	}
 
-	// Scan all paths and filter with ignore patterns.
-	var watchPaths []string
-	seen := make(map[string]bool)
+	// Use custom ignore patterns if provided, otherwise use default.
+	ignorePatterns := defaultIgnorePatterns
+	if len(app.IgnorePatterns) > 0 {
+		ignorePatterns = app.IgnorePatterns
+	}
 
+	var watchPaths []string
+	queue := make([]string, 0)
+
+	// Initialize queue with valid roots.
 	for _, root := range roots {
 		absRoot := gfile.RealPath(root)
 		if absRoot == "" {
 			mlog.Printf("watch path '%s' not found, skipping", root)
 			continue
 		}
-
-		// Check if the root itself should be ignored.
-		if app.shouldIgnorePath(absRoot) {
-			mlog.Printf("ignoring path: %s", absRoot)
+		if isIgnoredDirName(absRoot, ignorePatterns) {
 			continue
 		}
+		queue = append(queue, absRoot)
+	}
 
-		// Scan directory recursively with custom filtering to avoid scanning ignored directories.
-		files, err := app.scanDirWithFilter(absRoot, "*", true)
-		if err != nil {
-			mlog.Printf("scan directory '%s' error: %s", absRoot, err.Error())
-			continue
-		}
+	// BFS traversal.
+	for len(queue) > 0 {
+		dir := queue[0]
+		queue = queue[1:]
 
-		// Filter files with ignore patterns.
-		for _, file := range files {
-			if seen[file] {
+		// Check if this directory or any descendant contains ignored directories.
+		if !hasIgnoredDescendant(dir, ignorePatterns) {
+			// No ignored descendants, watch this directory (recursive watch covers all).
+			watchPaths = append(watchPaths, dir)
+		} else {
+			// Has ignored descendants, get direct children and add valid ones to queue.
+			entries, err := gfile.ScanDir(dir, "*", false)
+			if err != nil {
+				mlog.Printf("scan directory '%s' error: %s", dir, err.Error())
 				continue
 			}
-			seen[file] = true
-
-			if !app.shouldIgnorePath(file) {
-				watchPaths = append(watchPaths, file)
-			} else {
-				mlog.Printf("ignoring path: %s", file)
+			for _, entry := range entries {
+				if !gfile.IsDir(entry) {
+					continue
+				}
+				if !isIgnoredDirName(entry, ignorePatterns) {
+					queue = append(queue, entry)
+				}
 			}
 		}
 	}
 
 	if len(watchPaths) == 0 {
-		mlog.Printf("no paths to watch after filtering, watching current directory")
+		mlog.Printf("no directories to watch, using current directory")
 		return []string{"."}
 	}
 
-	mlog.Printf("watching %d paths", len(watchPaths))
-	// for _, v := range watchPaths {
-	// 	mlog.Printf("path: %s", v)
-	// }
+	mlog.Printf("watching %d directories (recursive)", len(watchPaths))
+	for _, path := range watchPaths {
+		mlog.Debugf("  - %s", path)
+	}
 	return watchPaths
 }
 
-// scanDirWithFilter scans directory recursively but skips ignored directories to improve performance.
-func (app *cRunApp) scanDirWithFilter(path string, pattern string, recursive bool) ([]string, error) {
-	if !recursive {
-		return gfile.ScanDir(path, pattern, false)
-	}
-
-	var result []string
-	files, err := gfile.ScanDir(path, pattern, false)
+// hasIgnoredDescendant checks if the directory or any of its descendants is ignored.
+func hasIgnoredDescendant(dir string, ignorePatterns []string) bool {
+	entries, err := gfile.ScanDir(dir, "*", false)
 	if err != nil {
-		return nil, err
-	}
-	result = append(result, files...)
-
-	// Get subdirectories
-	subDirs, err := gfile.ScanDir(path, "*", false)
-	if err != nil {
-		return nil, err
+		return false
 	}
 
-	for _, subDir := range subDirs {
-		if !gfile.IsDir(subDir) {
+	for _, entry := range entries {
+		if !gfile.IsDir(entry) {
 			continue
 		}
-
-		// Check if this directory should be ignored
-		if app.shouldIgnorePath(subDir) {
-			mlog.Printf("skipping ignored directory: %s", subDir)
-			continue
+		if isIgnoredDirName(entry, ignorePatterns) {
+			return true
 		}
-
-		// Recursively scan this directory
-		subFiles, err := app.scanDirWithFilter(subDir, pattern, true)
-		if err != nil {
-			return nil, err
+		// Recursively check subdirectories.
+		if hasIgnoredDescendant(entry, ignorePatterns) {
+			return true
 		}
-		result = append(result, subFiles...)
 	}
-
-	return result, nil
+	return false
 }
 
-// shouldIgnorePath checks if the given file path should be ignored based on ignore patterns.
-func (app *cRunApp) shouldIgnorePath(path string) bool {
-	if len(app.IgnorePaths) == 0 {
-		return false
-	}
+// defaultIgnorePatterns contains glob patterns for directory names that should be ignored when watching.
+// These directories typically contain third-party code or non-source files.
+// Patterns support glob syntax: * matches any sequence of characters, ? matches single character.
+var defaultIgnorePatterns = []string{
+	".git",
+	".svn",
+	".hg",
+	".idea",
+	".vscode",
+	"node_modules",
+	"vendor",
+	".*", // All hidden directories
+	"_*", // Directories starting with underscore
+}
 
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		mlog.Printf("convert path to absolute error: %s", err.Error())
-		return false
-	}
-
-	// Get the file name for pattern matching.
-	fileName := filepath.Base(path)
-
-	for _, pattern := range app.IgnorePaths {
-		// Normalize the pattern to handle "./" or "../" prefixes.
-		normalizedPattern := filepath.Clean(pattern)
-
-		// Match against file name.
-		if matched, _ := filepath.Match(normalizedPattern, fileName); matched {
+// isIgnoredDirName checks if a directory name matches any ignored pattern.
+// It accepts either a full path or just the directory name.
+func isIgnoredDirName(name string, ignorePatterns []string) bool {
+	baseName := gfile.Basename(name)
+	for _, pattern := range ignorePatterns {
+		if matched, _ := filepath.Match(pattern, baseName); matched {
 			return true
 		}
-
-		// Match against full path.
-		if matched, _ := filepath.Match(normalizedPattern, absPath); matched {
-			return true
-		}
-
-		// Match against relative path from the current working directory.
-		if cwd, err := os.Getwd(); err == nil {
-			if rel, err := filepath.Rel(cwd, absPath); err == nil {
-				// Match against relative path.
-				if matched, _ := filepath.Match(normalizedPattern, rel); matched {
-					return true
-				}
-
-				// Check if the path starts with a directory pattern (e.g., "vendor/", "node_modules/")
-				if strings.Contains(normalizedPattern, string(filepath.Separator)) {
-					if strings.HasPrefix(rel, normalizedPattern) {
-						return true
-					}
-				}
-
-				// Check if any part of the path matches the pattern.
-				pathParts := strings.Split(rel, string(filepath.Separator))
-				for _, part := range pathParts {
-					if matched, _ := filepath.Match(normalizedPattern, part); matched {
-						return true
-					}
-				}
-			}
-		}
 	}
-
 	return false
 }
