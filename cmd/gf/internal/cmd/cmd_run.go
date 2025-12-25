@@ -278,7 +278,7 @@ func (app *cRunApp) genOutputPath() (outputPath string) {
 	return filepath.FromSlash(outputPath)
 }
 
-// getWatchPaths uses BFS to find the minimal set of directories to watch.
+// getWatchPaths uses DFS to find the minimal set of directories to watch.
 // Rule: if a directory and all its descendants have no ignored subdirectories, watch it;
 // otherwise, recurse into valid children.
 func (app *cRunApp) getWatchPaths() []string {
@@ -294,9 +294,7 @@ func (app *cRunApp) getWatchPaths() []string {
 	}
 
 	var watchPaths []string
-	queue := make([]string, 0)
 
-	// Initialize queue with valid roots.
 	for _, root := range roots {
 		absRoot := gfile.RealPath(root)
 		if absRoot == "" {
@@ -306,34 +304,7 @@ func (app *cRunApp) getWatchPaths() []string {
 		if isIgnoredDirName(absRoot, ignorePatterns) {
 			continue
 		}
-		queue = append(queue, absRoot)
-	}
-
-	// BFS traversal.
-	for len(queue) > 0 {
-		dir := queue[0]
-		queue = queue[1:]
-
-		// Check if this directory or any descendant contains ignored directories.
-		if !hasIgnoredDescendant(dir, ignorePatterns) {
-			// No ignored descendants, watch this directory (recursive watch covers all).
-			watchPaths = append(watchPaths, dir)
-		} else {
-			// Has ignored descendants, get direct children and add valid ones to queue.
-			entries, err := gfile.ScanDir(dir, "*", false)
-			if err != nil {
-				mlog.Printf("scan directory '%s' error: %s", dir, err.Error())
-				continue
-			}
-			for _, entry := range entries {
-				if !gfile.IsDir(entry) {
-					continue
-				}
-				if !isIgnoredDirName(entry, ignorePatterns) {
-					queue = append(queue, entry)
-				}
-			}
-		}
+		app.collectWatchPaths(absRoot, ignorePatterns, &watchPaths)
 	}
 
 	if len(watchPaths) == 0 {
@@ -351,26 +322,43 @@ func (app *cRunApp) getWatchPaths() []string {
 	return watchPaths
 }
 
-// hasIgnoredDescendant checks if the directory or any of its descendants is ignored.
-func hasIgnoredDescendant(dir string, ignorePatterns []string) bool {
+// collectWatchPaths performs a DFS traversal to collect the minimal set of directories to watch.
+func (app *cRunApp) collectWatchPaths(dir string, ignorePatterns []string, watchPaths *[]string) {
+	// Check if this directory or any immediate child is ignored.
+	hasIgnoredChild := false
 	entries, err := gfile.ScanDir(dir, "*", false)
 	if err != nil {
-		return false
+		mlog.Printf("scan directory '%s' error: %s", dir, err.Error())
+		// If we can't scan the directory, add it to watch list as fallback
+		*watchPaths = append(*watchPaths, dir)
+		return
 	}
 
+	// Check for ignored directories in immediate children
 	for _, entry := range entries {
 		if !gfile.IsDir(entry) {
 			continue
 		}
 		if isIgnoredDirName(entry, ignorePatterns) {
-			return true
-		}
-		// Recursively check subdirectories.
-		if hasIgnoredDescendant(entry, ignorePatterns) {
-			return true
+			hasIgnoredChild = true
+			break
 		}
 	}
-	return false
+
+	if !hasIgnoredChild {
+		// No ignored descendants, watch this directory (recursive watch covers all).
+		*watchPaths = append(*watchPaths, dir)
+	} else {
+		// Has ignored immediate children, recurse into valid subdirectories.
+		for _, entry := range entries {
+			if !gfile.IsDir(entry) {
+				continue
+			}
+			if !isIgnoredDirName(entry, ignorePatterns) {
+				app.collectWatchPaths(entry, ignorePatterns, watchPaths)
+			}
+		}
+	}
 }
 
 // defaultIgnorePatterns contains glob patterns for directory names that should be ignored when watching.
