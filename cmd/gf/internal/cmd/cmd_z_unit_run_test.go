@@ -50,7 +50,7 @@ func Test_cRunApp_getWatchPaths_CustomIgnorePattern(t *testing.T) {
 		// Ensure the "2572" directory is not watched directly.
 		for _, path := range watchPaths {
 			t.Log("watch path:", path)
-			t.AssertNE(true, strings.HasSuffix(path, "2572"))
+			t.Assert(strings.HasSuffix(path, "2572"), false)
 		}
 		t.AssertGT(len(watchPaths), 0)
 	})
