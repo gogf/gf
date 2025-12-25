@@ -33,6 +33,11 @@ type cRun struct {
 	g.Meta `name:"run" usage:"{cRunUsage}" brief:"{cRunBrief}" eg:"{cRunEg}" dc:"{cRunDc}"`
 }
 
+type watchPath struct {
+	Path      string
+	Recursive bool
+}
+
 type cRunApp struct {
 	File           string   // Go run file name.
 	Path           string   // Directory storing built binary.
@@ -158,10 +163,12 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		})
 	}
 
-	// Get directories to watch (recursive monitoring).
+	// Get directories to watch (recursive or non-recursive monitoring).
 	watchPaths := app.getWatchPaths()
-	for _, path := range watchPaths {
-		_, err = gfsnotify.Add(path, callbackFunc)
+	for _, wp := range watchPaths {
+		mlog.Printf("watchPaths: %v", wp)
+		option := gfsnotify.WatchOption{NoRecursive: !wp.Recursive}
+		_, err = gfsnotify.Add(wp.Path, callbackFunc, option)
 		if err != nil {
 			mlog.Fatal(err)
 		}
@@ -280,8 +287,8 @@ func (app *cRunApp) genOutputPath() (outputPath string) {
 
 // getWatchPaths uses DFS to find the minimal set of directories to watch.
 // Rule: if a directory and all its descendants have no ignored subdirectories, watch it;
-// otherwise, recurse into valid children.
-func (app *cRunApp) getWatchPaths() []string {
+// otherwise, recurse into valid children and watch the current directory non-recursively.
+func (app *cRunApp) getWatchPaths() []watchPath {
 	roots := []string{"."}
 	if len(app.WatchPaths) > 0 {
 		roots = app.WatchPaths
@@ -293,7 +300,7 @@ func (app *cRunApp) getWatchPaths() []string {
 		ignorePatterns = app.IgnorePatterns
 	}
 
-	var watchPaths []string
+	var watchPaths []watchPath
 
 	for _, root := range roots {
 		absRoot := gfile.RealPath(root)
@@ -310,32 +317,37 @@ func (app *cRunApp) getWatchPaths() []string {
 	if len(watchPaths) == 0 {
 		mlog.Printf("no directories to watch, using current directory")
 		if absCur := gfile.RealPath("."); absCur != "" {
-			return []string{absCur}
+			return []watchPath{{Path: absCur, Recursive: true}}
 		}
-		return []string{"."}
+		return []watchPath{{Path: ".", Recursive: true}}
 	}
 
-	mlog.Printf("watching %d directories (recursive)", len(watchPaths))
-	for _, path := range watchPaths {
-		mlog.Debugf("  - %s", path)
+	mlog.Printf("watching %d paths", len(watchPaths))
+	for _, wp := range watchPaths {
+		recursiveStr := "recursive"
+		if !wp.Recursive {
+			recursiveStr = "non-recursive"
+		}
+		mlog.Debugf("  - %s (%s)", wp.Path, recursiveStr)
 	}
 	return watchPaths
 }
 
 // collectWatchPaths performs a DFS traversal to collect the minimal set of directories to watch.
-func (app *cRunApp) collectWatchPaths(dir string, ignorePatterns []string, watchPaths *[]string) {
+func (app *cRunApp) collectWatchPaths(dir string, ignorePatterns []string, watchPaths *[]watchPath) {
 	// Check if this directory or any immediate child is ignored.
 	hasIgnoredChild := false
 	entries, err := gfile.ScanDir(dir, "*", false)
 	if err != nil {
 		mlog.Printf("scan directory '%s' error: %s", dir, err.Error())
 		// If we can't scan the directory, add it to watch list as fallback
-		*watchPaths = append(*watchPaths, dir)
+		*watchPaths = append(*watchPaths, watchPath{Path: dir, Recursive: true})
 		return
 	}
 
 	// Check for ignored directories in immediate children
 	for _, entry := range entries {
+		mlog.Printf("entry: %s", entry)
 		if !gfile.IsDir(entry) {
 			continue
 		}
@@ -347,9 +359,11 @@ func (app *cRunApp) collectWatchPaths(dir string, ignorePatterns []string, watch
 
 	if !hasIgnoredChild {
 		// No ignored descendants, watch this directory (recursive watch covers all).
-		*watchPaths = append(*watchPaths, dir)
+		*watchPaths = append(*watchPaths, watchPath{Path: dir, Recursive: true})
 	} else {
-		// Has ignored immediate children, recurse into valid subdirectories.
+		// Has ignored immediate children, watch current directory non-recursively to catch top-level files,
+		// and recurse into valid subdirectories recursively.
+		*watchPaths = append(*watchPaths, watchPath{Path: dir, Recursive: false})
 		for _, entry := range entries {
 			if !gfile.IsDir(entry) {
 				continue
