@@ -167,7 +167,7 @@ func Test_cRunApp_getWatchPaths_DeepNestedStructure(t *testing.T) {
 
 		// Should watch individual valid directories due to ignored vendor directory
 		t.AssertGT(len(watchPaths), 0)
-		
+
 		// Verify that vendor directory is not in watch list
 		for _, path := range watchPaths {
 			t.Assert(strings.Contains(path, "vendor"), false)
@@ -193,7 +193,7 @@ func Test_cRunApp_getWatchPaths_MultipleRoots(t *testing.T) {
 
 		// Should watch both root directories
 		t.Assert(len(watchPaths), 2)
-		
+
 		// Both directories should be in the watch list
 		foundDir1, foundDir2 := false, false
 		for _, path := range watchPaths {
@@ -218,7 +218,7 @@ func Test_cRunApp_getWatchPaths_NonExistentDirectory(t *testing.T) {
 
 		// Should fall back to current directory when no valid paths found
 		t.AssertGT(len(watchPaths), 0)
-		
+
 		// Should contain current directory
 		currentDir, _ := os.Getwd()
 		foundCurrentDir := false
@@ -241,7 +241,7 @@ func Test_isIgnoredDirName(t *testing.T) {
 		t.Assert(isIgnoredDirName("_private", defaultIgnorePatterns), true)
 		t.Assert(isIgnoredDirName("src", defaultIgnorePatterns), false)
 		t.Assert(isIgnoredDirName("api", defaultIgnorePatterns), false)
-		
+
 		// Test custom ignore patterns
 		customPatterns := []string{"build", "dist", "*.tmp"}
 		t.Assert(isIgnoredDirName("build", customPatterns), true)
