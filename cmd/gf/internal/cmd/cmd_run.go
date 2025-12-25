@@ -61,7 +61,7 @@ which compiles and runs the go codes asynchronously when codes change.
 	cRunExtraBrief         = `the same options as "go run"/"go build" except some options as follows defined`
 	cRunArgsBrief          = `custom arguments for your process`
 	cRunWatchPathsBrief    = `watch additional paths for live reload, separated by ",". i.e. "internal,api"`
-	cRunIgnorePatternBrief = `custom ignore patterns for watch, separated by ",". i.e. ".git,node_modules"`
+	cRunIgnorePatternBrief = `custom ignore patterns for watch, separated by ",". i.e. ".git,node_modules". default patterns: node_modules, vendor, .*, _*`
 )
 
 var process *gproc.Process
@@ -107,12 +107,20 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 	}
 
 	if len(in.WatchPaths) == 1 {
-		in.WatchPaths = strings.Split(in.WatchPaths[0], ",")
+		parts := strings.Split(in.WatchPaths[0], ",")
+		for i, part := range parts {
+			parts[i] = strings.TrimSpace(part)
+		}
+		in.WatchPaths = parts
 		mlog.Printf("watchPaths: %v", in.WatchPaths)
 	}
 
 	if len(in.IgnorePatterns) == 1 {
-		in.IgnorePatterns = strings.Split(in.IgnorePatterns[0], ",")
+		parts := strings.Split(in.IgnorePatterns[0], ",")
+		for i, part := range parts {
+			parts[i] = strings.TrimSpace(part)
+		}
+		in.IgnorePatterns = parts
 		mlog.Printf("ignorePatterns: %v", in.IgnorePatterns)
 	}
 
@@ -330,6 +338,9 @@ func (app *cRunApp) getWatchPaths() []string {
 
 	if len(watchPaths) == 0 {
 		mlog.Printf("no directories to watch, using current directory")
+		if absCur := gfile.RealPath("."); absCur != "" {
+			return []string{absCur}
+		}
 		return []string{"."}
 	}
 
@@ -366,14 +377,9 @@ func hasIgnoredDescendant(dir string, ignorePatterns []string) bool {
 // These directories typically contain third-party code or non-source files.
 // Patterns support glob syntax: * matches any sequence of characters, ? matches single character.
 var defaultIgnorePatterns = []string{
-	".git",
-	".svn",
-	".hg",
-	".idea",
-	".vscode",
 	"node_modules",
 	"vendor",
-	".*", // All hidden directories
+	".*", // All hidden directories (covers .git, .svn, .hg, .idea, .vscode, etc.)
 	"_*", // Directories starting with underscore
 }
 
