@@ -94,8 +94,7 @@ type RsaConfig struct {
 
 func Start(ctx context.Context) {
 	RSAConfigurator = gprop.New(g.Cfg("rsa"), "rsa", &rsaConfig)
-	RSAConfigurator.MustLoad(ctx)
-	RSAConfigurator.MustWatch(ctx, "rsa-config-watcher")
+	RSAConfigurator.MustLoadAndWatch(ctx, "rsa-config-watcher")
 }
 
 func GetRsaKey(ctx context.Context) (publicKey, privateKey string) {

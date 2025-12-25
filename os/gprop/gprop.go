@@ -154,6 +154,12 @@ func (c *Configurator[T]) MustWatch(ctx context.Context, name string) {
 	}
 }
 
+// MustLoadAndWatch is a convenience method that calls MustLoad and MustWatch
+func (c *Configurator[T]) MustLoadAndWatch(ctx context.Context, name string) {
+	c.MustLoad(ctx)
+	c.MustWatch(ctx, name)
+}
+
 // Get returns the current configuration struct
 // This method is thread-safe and returns a copy of the current configuration
 func (c *Configurator[T]) Get() T {
