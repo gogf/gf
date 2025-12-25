@@ -136,6 +136,12 @@ func (c cInit) initFromRemote(ctx context.Context, in cInitInput) (out *cInitOut
 		return nil, fmt.Errorf("repository URL is required for remote template mode")
 	}
 
+	// Default name to repo basename if empty
+	if name == "" {
+		name = gfile.Basename(repo)
+		mlog.Printf("Using repository basename as project name: %s", name)
+	}
+
 	mlog.Print("initializing from remote template...")
 
 	opts := &geninit.ProcessOptions{
@@ -363,7 +369,10 @@ func interactiveSelectTemplate() (repo, name, modPath string, upgradeDeps bool, 
 
 	for {
 		fmt.Printf("Select template [1-%d]: ", len(defaultTemplates)+1)
-		input, _ := reader.ReadString('\n')
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			return "", "", "", false, fmt.Errorf("failed to read template selection: %w", err)
+		}
 		input = strings.TrimSpace(input)
 
 		idx, e := strconv.Atoi(input)
@@ -378,7 +387,10 @@ func interactiveSelectTemplate() (repo, name, modPath string, upgradeDeps bool, 
 		} else {
 			// Custom URL
 			fmt.Print("Enter repository URL: ")
-			input, _ = reader.ReadString('\n')
+			input, err = reader.ReadString('\n')
+			if err != nil {
+				return "", "", "", false, fmt.Errorf("failed to read repository URL: %w", err)
+			}
 			repo = strings.TrimSpace(input)
 			if repo == "" {
 				fmt.Println("Repository URL cannot be empty")
@@ -391,7 +403,10 @@ func interactiveSelectTemplate() (repo, name, modPath string, upgradeDeps bool, 
 	// 2. Enter project name
 	for {
 		fmt.Print("Enter project name: ")
-		input, _ := reader.ReadString('\n')
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			return "", "", "", false, fmt.Errorf("failed to read project name: %w", err)
+		}
 		name = strings.TrimSpace(input)
 		if name == "" {
 			fmt.Println("Project name cannot be empty")
@@ -402,12 +417,18 @@ func interactiveSelectTemplate() (repo, name, modPath string, upgradeDeps bool, 
 
 	// 3. Enter module path (optional)
 	fmt.Printf("Enter Go module path (leave empty to use \"%s\"): ", name)
-	input, _ := reader.ReadString('\n')
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return "", "", "", false, fmt.Errorf("failed to read module path: %w", err)
+	}
 	modPath = strings.TrimSpace(input)
 
 	// 4. Ask about upgrade
 	fmt.Print("Upgrade dependencies to latest (go get -u)? [y/N]: ")
-	input, _ = reader.ReadString('\n')
+	input, err = reader.ReadString('\n')
+	if err != nil {
+		return "", "", "", false, fmt.Errorf("failed to read upgrade confirmation: %w", err)
+	}
 	input = strings.TrimSpace(strings.ToLower(input))
 	upgradeDeps = input == "y" || input == "yes"
 

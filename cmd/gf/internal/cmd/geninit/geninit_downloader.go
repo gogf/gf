@@ -30,7 +30,11 @@ func downloadTemplate(ctx context.Context, repo string) (string, error) {
 	if err := gfile.Mkdir(tempDir); err != nil {
 		return "", err
 	}
-	defer gfile.Remove(tempDir) // Clean up the temp workspace
+	defer func() {
+		if err := gfile.Remove(tempDir); err != nil {
+			mlog.Debugf("Failed to remove temp directory %s: %v", tempDir, err)
+		}
+	}() // Clean up the temp workspace
 
 	mlog.Debugf("Using temp workspace: %s", tempDir)
 

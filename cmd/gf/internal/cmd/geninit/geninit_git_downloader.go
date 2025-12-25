@@ -74,6 +74,7 @@ func ParseGitURL(url string) (*GitRepoInfo, error) {
 
 // IsSubdirRepo checks if the URL points to a subdirectory of a repository
 // Returns false for Go module paths (which may have /vN suffix or nested module paths)
+// Note: This uses heuristics that may have false positives/negatives in edge cases
 func IsSubdirRepo(url string) bool {
 	info, err := ParseGitURL(url)
 	if err != nil {
@@ -93,8 +94,8 @@ func IsSubdirRepo(url string) bool {
 
 	// Remove version suffix for checking
 	cleanURL := url
-	if idx := strings.Index(url, "@"); idx != -1 {
-		cleanURL = url[:idx]
+	if before, _, ok := strings.Cut(url, "@"); ok {
+		cleanURL = before
 	}
 
 	// Check if the path ends with /vN (Go module major version)
@@ -107,6 +108,7 @@ func IsSubdirRepo(url string) bool {
 				// This looks like a Go module with major version suffix
 				// It could be either a versioned module or a subdir ending in vN
 				// We'll treat it as a Go module and let go get handle it
+				mlog.Debugf("URL %s detected as Go module (ends with /vN)", url)
 				return false
 			}
 		}
@@ -121,10 +123,12 @@ func IsSubdirRepo(url string) bool {
 		if firstPart == "cmd" || firstPart == "contrib" || firstPart == "tools" {
 			// This might be a nested Go module, not a simple subdirectory
 			// Let go get try first
+			mlog.Debugf("URL %s detected as Go module (starts with common pattern)", url)
 			return false
 		}
 	}
 
+	mlog.Debugf("URL %s detected as git subdirectory", url)
 	return true
 }
 
@@ -156,9 +160,13 @@ func downloadGitSubdir(ctx context.Context, repoURL string) (string, *GitRepoInf
 	if err := runCmd(ctx, tempDir, "git", "clone", "--filter=blob:none", "--no-checkout", "--sparse", info.CloneURL); err != nil {
 		// Fallback: try without filter for older git versions
 		mlog.Debugf("Sparse clone failed, trying full clone...")
-		gfile.Remove(cloneDir)
+		if err := gfile.Remove(cloneDir); err != nil {
+			mlog.Debugf("Failed to remove clone directory: %v", err)
+		}
 		if err := runCmd(ctx, tempDir, "git", "clone", "--no-checkout", info.CloneURL); err != nil {
-			gfile.Remove(tempDir)
+			if err := gfile.Remove(tempDir); err != nil {
+				mlog.Debugf("Failed to remove temp directory: %v", err)
+			}
 			return "", nil, fmt.Errorf("git clone failed: %w", err)
 		}
 	}
@@ -168,11 +176,15 @@ func downloadGitSubdir(ctx context.Context, repoURL string) (string, *GitRepoInf
 		// Fallback for older git: use sparse-checkout init + set
 		mlog.Debugf("sparse-checkout set failed, trying legacy method...")
 		if err := runCmd(ctx, cloneDir, "git", "sparse-checkout", "init", "--cone"); err != nil {
-			gfile.Remove(tempDir)
+			if err := gfile.Remove(tempDir); err != nil {
+				mlog.Debugf("Failed to remove temp directory: %v", err)
+			}
 			return "", nil, fmt.Errorf("git sparse-checkout init (legacy) failed: %w", err)
 		}
 		if err := runCmd(ctx, cloneDir, "git", "sparse-checkout", "set", info.SubPath); err != nil {
-			gfile.Remove(tempDir)
+			if err := gfile.Remove(tempDir); err != nil {
+				mlog.Debugf("Failed to remove temp directory: %v", err)
+			}
 			return "", nil, fmt.Errorf("git sparse-checkout set (legacy) failed: %w", err)
 		}
 	}
@@ -184,11 +196,15 @@ func downloadGitSubdir(ctx context.Context, repoURL string) (string, *GitRepoInf
 			mlog.Debugf("Branch 'main' not found, trying 'master'...")
 			info.Branch = "master"
 			if err := runCmd(ctx, cloneDir, "git", "checkout", "master"); err != nil {
-				gfile.Remove(tempDir)
+				if err := gfile.Remove(tempDir); err != nil {
+					mlog.Debugf("Failed to remove temp directory: %v", err)
+				}
 				return "", nil, fmt.Errorf("git checkout failed: %w", err)
 			}
 		} else {
-			gfile.Remove(tempDir)
+			if err := gfile.Remove(tempDir); err != nil {
+				mlog.Debugf("Failed to remove temp directory: %v", err)
+			}
 			return "", nil, fmt.Errorf("git checkout failed: %w", err)
 		}
 	}
@@ -196,7 +212,9 @@ func downloadGitSubdir(ctx context.Context, repoURL string) (string, *GitRepoInf
 	// Return the path to the subdirectory
 	subDirPath := filepath.Join(cloneDir, info.SubPath)
 	if !gfile.Exists(subDirPath) {
-		gfile.Remove(tempDir)
+		if err := gfile.Remove(tempDir); err != nil {
+			mlog.Debugf("Failed to remove temp directory: %v", err)
+		}
 		return "", nil, fmt.Errorf("subdirectory not found: %s", info.SubPath)
 	}
 
@@ -215,8 +233,8 @@ func GetModuleNameFromGoMod(dir string) string {
 	lines := gstr.Split(content, "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, "module ") {
-			return strings.TrimSpace(strings.TrimPrefix(line, "module "))
+		if after, ok := strings.CutPrefix(line, "module "); ok {
+			return strings.TrimSpace(after)
 		}
 	}
 	return ""

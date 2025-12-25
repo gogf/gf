@@ -43,7 +43,22 @@ func Process(ctx context.Context, repo, name string, opts *ProcessOptions) error
 		return processGitSubdir(ctx, repo, name, opts)
 	}
 
-	return processGoModule(ctx, repo, name, opts)
+	// Try Go module download first, fallback to git subdirectory if it fails
+	// This handles edge cases where the heuristic may be incorrect
+	err = processGoModule(ctx, repo, name, opts)
+	if err != nil {
+		mlog.Printf("Go module download failed, trying git subdirectory mode: %v", err)
+		mlog.Print("Note: If this is a git subdirectory, you can force git mode by using a full git URL")
+
+		// If Go module download fails, try git subdirectory as fallback
+		// This handles cases where the heuristic incorrectly classified a git subdir as Go module
+		if IsSubdirRepo(repo) {
+			mlog.Print("Falling back to git subdirectory download...")
+			return processGitSubdir(ctx, repo, name, opts)
+		}
+	}
+
+	return err
 }
 
 // processGoModule handles standard Go module download via go get
@@ -161,8 +176,14 @@ func processGitSubdir(ctx context.Context, repo, name string, opts *ProcessOptio
 	// Clean up temp directory after generation
 	// The temp dir is parent of parent of srcDir (tempDir/repo/subpath)
 	tempDir := filepath.Dir(filepath.Dir(srcDir))
-	if gstr.Contains(tempDir, "gf-init-git") {
-		defer gfile.Remove(tempDir)
+	if tempDir != "" && gfile.Exists(tempDir) && gstr.Contains(tempDir, "gf-init-git") {
+		defer func() {
+			if err := gfile.Remove(tempDir); err != nil {
+				mlog.Debugf("Failed to remove temp directory %s: %v", tempDir, err)
+			} else {
+				mlog.Debugf("Cleaned up temp directory: %s", tempDir)
+			}
+		}()
 	}
 
 	// Default name to subpath basename if empty

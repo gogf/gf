@@ -38,7 +38,11 @@ func GetModuleVersions(ctx context.Context, modulePath string) (*VersionInfo, er
 	if err := gfile.Mkdir(tempDir); err != nil {
 		return nil, err
 	}
-	defer gfile.Remove(tempDir)
+	defer func() {
+		if err := gfile.Remove(tempDir); err != nil {
+			mlog.Debugf("Failed to remove temp directory: %v", err)
+		}
+	}()
 
 	// Initialize a temp go module
 	if err := runCmd(ctx, tempDir, "go", "mod", "init", "temp"); err != nil {
