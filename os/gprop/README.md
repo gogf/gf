@@ -67,63 +67,41 @@ func main() {
 ## Real-World Usage Example
 
 Here's an example of how `gprop` is used in a real-world application for permission management:
+```yaml
+rsa:
+  public-key: "xxxx"
+  private-key: "xxxxxx=="
 
+```
 ```go
-package permission
+package crypto
 
 import (
 	"context"
-	"fmt"
-	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gprop"
-	"github.com/gogf/gf/v2/util/gconv"
-	"strings"
 )
 
 var (
-	ruleConfig             RuleConfig
-	RuleConfigConfigurator *gprop.Configurator[RuleConfig]
+	rsaConfig       RsaConfig
+	RSAConfigurator *gprop.Configurator[RsaConfig]
 )
 
-// API defines the API entity structure
-type API struct {
-	Module  string
-	Path    string
-	Method  string
-	Summary string
-	Struct  string
-	Auth    bool
+type RsaConfig struct {
+	PrivateKey string `json:"privateKey" yaml:"private-key"`
+	PublicKey  string `json:"publicKey" yaml:"public-key"`
 }
 
-type RuleConfig struct {
-	Rules *gmap.KVMap[string, API] `json:"rules" yaml:"rules"`
+func Start(ctx context.Context) {
+	RSAConfigurator = gprop.New(g.Cfg("rsa"), "rsa", &rsaConfig)
+	RSAConfigurator.MustLoad(ctx)
+	RSAConfigurator.MustWatch(ctx, "rsa-config-watcher")
 }
 
-func StartRules(ctx context.Context) {
-	RuleConfigConfigurator = gprop.New[RuleConfig](g.Cfg("rule"), "rules", &ruleConfig)
-	RuleConfigConfigurator.SetConverter(func(data any, target *RuleConfig) error {
-		m := gmap.NewKVMap[string, API](false)
-		var apis []API
-		err := gconv.Scan(data, &apis)
-		if err != nil {
-			return err
-		}
-		for _, api := range apis {
-			key := fmt.Sprintf("method=%s;path=%s;auth=%v", api.Method, api.Path, api.Auth)
-			m.Set(strings.ToUpper(key), api)
-		}
-		target.Rules = m
-		return nil
-	})
-	RuleConfigConfigurator.MustLoad(ctx)
-	RuleConfigConfigurator.MustWatch(ctx, "rule-config-watcher")
+func GetRsaKey(ctx context.Context) (publicKey, privateKey string) {
+	return rsaConfig.PublicKey, rsaConfig.PrivateKey
 }
 
-func DoAuth(method string, path string) bool {
-	key := fmt.Sprintf("method=%s;path=%s;auth=%v", method, path, true)
-	return RuleConfigConfigurator.Get().Rules.Contains(strings.ToUpper(key))
-}
 ```
 
 In this example:
