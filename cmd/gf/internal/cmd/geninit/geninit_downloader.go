@@ -1,4 +1,10 @@
-package logic
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+package geninit
 
 import (
 	"context"
@@ -7,21 +13,22 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 // downloadTemplate fetches the remote repository using go get
 func downloadTemplate(ctx context.Context, repo string) (string, error) {
 	// 1. Create a temporary directory workspace
-	tempDir := gfile.Temp("tpl-cli")
+	tempDir := gfile.Temp("gf-init-cli")
 	if err := gfile.Mkdir(tempDir); err != nil {
 		return "", err
 	}
 	defer gfile.Remove(tempDir) // Clean up the temp workspace
 
-	g.Log().Debug(ctx, "Using temp workspace:", tempDir)
+	mlog.Debugf("Using temp workspace: %s", tempDir)
 
 	// 2. Initialize a temp go module to perform go get
 	// We run commands inside the temp directory
@@ -44,13 +51,13 @@ func downloadTemplate(ctx context.Context, repo string) (string, error) {
 
 	var successRepo string
 	for _, tryRepo := range versionsToTry {
-		g.Log().Infof(ctx, "Downloading template %s...", tryRepo)
+		mlog.Printf("Downloading template %s...", tryRepo)
 		if err := runCmd(ctx, tempDir, "go", "get", tryRepo); err == nil {
 			successRepo = tryRepo
 			break
 		} else {
 			downloadErr = err
-			g.Log().Debugf(ctx, "Failed to download %s, trying next...", tryRepo)
+			mlog.Debugf("Failed to download %s, trying next...", tryRepo)
 		}
 	}
 

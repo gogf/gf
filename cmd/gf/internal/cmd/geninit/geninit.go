@@ -1,12 +1,19 @@
-package logic
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+package geninit
 
 import (
 	"context"
 	"path/filepath"
 
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 // ProcessOptions contains options for the Process function
@@ -16,20 +23,20 @@ type ProcessOptions struct {
 	UpgradeDeps   bool   // Upgrade dependencies to latest (go get -u ./...)
 }
 
-// Process handles the template generation flow
+// Process handles the template generation flow from remote repository
 func Process(ctx context.Context, repo, name string, opts *ProcessOptions) error {
 	if opts == nil {
 		opts = &ProcessOptions{}
 	}
 
 	// 0. Check Go environment first
-	g.Log().Info(ctx, "Checking Go environment...")
+	mlog.Print("Checking Go environment...")
 	goEnv, err := CheckGoEnv(ctx)
 	if err != nil {
-		g.Log().Error(ctx, "Go environment check failed:", err)
+		mlog.Printf("Go environment check failed: %v", err)
 		return err
 	}
-	g.Log().Infof(ctx, "Go environment OK (version: %s)", goEnv.GOVERSION)
+	mlog.Printf("Go environment OK (version: %s)", goEnv.GOVERSION)
 
 	// Check if this is a git subdirectory URL
 	if IsSubdirRepo(repo) {
@@ -66,31 +73,31 @@ func processGoModule(ctx context.Context, repo, name string, opts *ProcessOption
 	if specifiedVersion != "" {
 		// User specified version
 		targetVersion = specifiedVersion
-		g.Log().Infof(ctx, "Using specified version: %s", targetVersion)
+		mlog.Printf("Using specified version: %s", targetVersion)
 	} else if opts.SelectVersion {
 		// Interactive version selection
-		g.Log().Info(ctx, "Fetching available versions...")
+		mlog.Print("Fetching available versions...")
 		versionInfo, err := GetModuleVersions(ctx, modulePath)
 		if err != nil {
-			g.Log().Error(ctx, "Failed to get versions:", err)
+			mlog.Printf("Failed to get versions: %v", err)
 			return err
 		}
 
 		targetVersion, err = SelectVersion(ctx, versionInfo.Versions, modulePath)
 		if err != nil {
-			g.Log().Error(ctx, "Version selection failed:", err)
+			mlog.Printf("Version selection failed: %v", err)
 			return err
 		}
 	} else {
 		// Default: use latest version
-		g.Log().Info(ctx, "Fetching latest version...")
+		mlog.Print("Fetching latest version...")
 		latest, err := GetLatestVersion(ctx, modulePath)
 		if err != nil {
-			g.Log().Warning(ctx, "Failed to get latest version, will try @latest tag:", err)
+			mlog.Printf("Failed to get latest version, will try @latest tag: %v", err)
 			targetVersion = "latest"
 		} else {
 			targetVersion = latest
-			g.Log().Infof(ctx, "Latest version: %s", targetVersion)
+			mlog.Printf("Latest version: %s", targetVersion)
 		}
 	}
 
@@ -98,15 +105,15 @@ func processGoModule(ctx context.Context, repo, name string, opts *ProcessOption
 	repoWithVersion := modulePath + "@" + targetVersion
 	srcDir, err := downloadTemplate(ctx, repoWithVersion)
 	if err != nil {
-		g.Log().Error(ctx, "Download failed:", err)
+		mlog.Printf("Download failed: %v", err)
 		return err
 	}
 
-	g.Log().Debug(ctx, "Template located at:", srcDir)
+	mlog.Debugf("Template located at: %s", srcDir)
 
 	// 3. Generate Project
 	if err := generateProject(ctx, srcDir, name, modulePath, targetModulePath); err != nil {
-		g.Log().Error(ctx, "Generation failed:", err)
+		mlog.Printf("Generation failed: %v", err)
 		return err
 	}
 
@@ -115,12 +122,12 @@ func processGoModule(ctx context.Context, repo, name string, opts *ProcessOption
 	if opts.UpgradeDeps {
 		// Upgrade all dependencies to latest
 		if err := upgradeDependencies(ctx, projectDir); err != nil {
-			g.Log().Warning(ctx, "Failed to upgrade dependencies:", err)
+			mlog.Printf("Failed to upgrade dependencies: %v", err)
 		}
 	} else {
 		// Default: just tidy dependencies
 		if err := tidyDependencies(ctx, projectDir); err != nil {
-			g.Log().Warning(ctx, "Failed to tidy dependencies:", err)
+			mlog.Printf("Failed to tidy dependencies: %v", err)
 		}
 	}
 
@@ -129,27 +136,27 @@ func processGoModule(ctx context.Context, repo, name string, opts *ProcessOption
 
 // processGitSubdir handles git subdirectory download via sparse checkout
 func processGitSubdir(ctx context.Context, repo, name string, opts *ProcessOptions) error {
-	g.Log().Info(ctx, "Detected subdirectory URL, using git sparse checkout...")
+	mlog.Print("Detected subdirectory URL, using git sparse checkout...")
 
 	// Check if git is available
 	gitVersion, err := CheckGitEnv(ctx)
 	if err != nil {
-		g.Log().Error(ctx, "Git is required for subdirectory templates:", err)
+		mlog.Printf("Git is required for subdirectory templates: %v", err)
 		return err
 	}
-	g.Log().Infof(ctx, "Git available (%s)", gitVersion)
+	mlog.Printf("Git available (%s)", gitVersion)
 
 	// Download via git sparse checkout
 	srcDir, gitInfo, err := downloadGitSubdir(ctx, repo)
 	if err != nil {
-		g.Log().Error(ctx, "Git download failed:", err)
+		mlog.Printf("Git download failed: %v", err)
 		return err
 	}
 
 	// Clean up temp directory after generation
 	// The temp dir is parent of parent of srcDir (tempDir/repo/subpath)
 	tempDir := filepath.Dir(filepath.Dir(srcDir))
-	if gstr.Contains(tempDir, "tpl-git") {
+	if gstr.Contains(tempDir, "gf-init-git") {
 		defer gfile.Remove(tempDir)
 	}
 
@@ -171,12 +178,12 @@ func processGitSubdir(ctx context.Context, repo, name string, opts *ProcessOptio
 		targetModulePath = opts.ModulePath
 	}
 
-	g.Log().Debug(ctx, "Template located at:", srcDir)
-	g.Log().Debug(ctx, "Original module:", oldModule)
+	mlog.Debugf("Template located at: %s", srcDir)
+	mlog.Debugf("Original module: %s", oldModule)
 
 	// Generate Project
 	if err := generateProject(ctx, srcDir, name, oldModule, targetModulePath); err != nil {
-		g.Log().Error(ctx, "Generation failed:", err)
+		mlog.Printf("Generation failed: %v", err)
 		return err
 	}
 
@@ -185,12 +192,12 @@ func processGitSubdir(ctx context.Context, repo, name string, opts *ProcessOptio
 	if opts.UpgradeDeps {
 		// Upgrade all dependencies to latest
 		if err := upgradeDependencies(ctx, projectDir); err != nil {
-			g.Log().Warning(ctx, "Failed to upgrade dependencies:", err)
+			mlog.Printf("Failed to upgrade dependencies: %v", err)
 		}
 	} else {
 		// Default: just tidy dependencies
 		if err := tidyDependencies(ctx, projectDir); err != nil {
-			g.Log().Warning(ctx, "Failed to tidy dependencies:", err)
+			mlog.Printf("Failed to tidy dependencies: %v", err)
 		}
 	}
 

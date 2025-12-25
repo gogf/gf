@@ -1,4 +1,10 @@
-package logic
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+package geninit
 
 import (
 	"context"
@@ -10,8 +16,9 @@ import (
 
 	"golang.org/x/mod/semver"
 
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 // VersionInfo contains module version information
@@ -24,7 +31,7 @@ type VersionInfo struct {
 // GetModuleVersions fetches available versions for a Go module
 func GetModuleVersions(ctx context.Context, modulePath string) (*VersionInfo, error) {
 	// Create a temporary directory for go list
-	tempDir := gfile.Temp("tpl-version")
+	tempDir := gfile.Temp("gf-init-version")
 	if err := gfile.Mkdir(tempDir); err != nil {
 		return nil, err
 	}
@@ -41,7 +48,7 @@ func GetModuleVersions(ctx context.Context, modulePath string) (*VersionInfo, er
 	output, err := cmd.Output()
 	if err != nil {
 		// Try with @latest to see if module exists
-		g.Log().Debugf(ctx, "go list -versions failed, trying @latest: %v", err)
+		mlog.Debugf("go list -versions failed, trying @latest: %v", err)
 		return getLatestOnly(ctx, tempDir, modulePath)
 	}
 

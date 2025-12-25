@@ -1,13 +1,20 @@
-package logic
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+package geninit
 
 import (
 	"context"
 	"fmt"
 	"path/filepath"
 
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 // generateProject copies the template to the destination and performs cleanup
@@ -22,11 +29,11 @@ func generateProject(ctx context.Context, srcPath, name, oldModule, newModule st
 	}
 
 	if gfile.Exists(dstPath) && !gfile.IsEmpty(dstPath) {
-		g.Log().Errorf(ctx, "Target directory %s is not empty", dstPath)
+		mlog.Printf("Target directory %s is not empty", dstPath)
 		return fmt.Errorf("target directory %s is not empty", dstPath)
 	}
 
-	g.Log().Infof(ctx, "Generating project in %s...", dstPath)
+	mlog.Printf("Generating project in %s...", dstPath)
 
 	// 1. Copy files
 	if err := gfile.Copy(srcPath, dstPath); err != nil {
@@ -37,7 +44,7 @@ func generateProject(ctx context.Context, srcPath, name, oldModule, newModule st
 	gitDir := filepath.Join(dstPath, ".git")
 	if gfile.Exists(gitDir) {
 		if err := gfile.Remove(gitDir); err != nil {
-			g.Log().Warning(ctx, "Failed to remove .git directory:", err)
+			mlog.Printf("Failed to remove .git directory: %v", err)
 		}
 	}
 
@@ -46,9 +53,9 @@ func generateProject(ctx context.Context, srcPath, name, oldModule, newModule st
 		workPath := filepath.Join(dstPath, workFile)
 		if gfile.Exists(workPath) {
 			if err := gfile.Remove(workPath); err != nil {
-				g.Log().Warning(ctx, "Failed to remove", workFile, ":", err)
+				mlog.Printf("Failed to remove %s: %v", workFile, err)
 			} else {
-				g.Log().Debug(ctx, "Removed", workFile)
+				mlog.Debugf("Removed %s", workFile)
 			}
 		}
 	}
@@ -62,7 +69,7 @@ func generateProject(ctx context.Context, srcPath, name, oldModule, newModule st
 			lines[0] = "module " + newModule
 			newContent := gstr.Join(lines, "\n")
 			if err := gfile.PutContents(goModPath, newContent); err != nil {
-				g.Log().Warning(ctx, "Failed to update go.mod:", err)
+				mlog.Printf("Failed to update go.mod: %v", err)
 			}
 		}
 	}
@@ -71,27 +78,27 @@ func generateProject(ctx context.Context, srcPath, name, oldModule, newModule st
 	if oldModule != "" && oldModule != newModule {
 		replacer := NewASTReplacer(oldModule, newModule)
 		if err := replacer.ReplaceInDir(ctx, dstPath); err != nil {
-			g.Log().Warning(ctx, "Failed to replace imports:", err)
+			mlog.Printf("Failed to replace imports: %v", err)
 		}
 	}
 
-	g.Log().Info(ctx, "Project generated successfully!")
+	mlog.Print("Project generated successfully!")
 	return nil
 }
 
 // tidyDependencies runs go mod tidy in the project directory
 func tidyDependencies(ctx context.Context, projectDir string) error {
-	g.Log().Info(ctx, "Tidying dependencies (go mod tidy)...")
+	mlog.Print("Tidying dependencies (go mod tidy)...")
 	if err := runCmd(ctx, projectDir, "go", "mod", "tidy"); err != nil {
 		return fmt.Errorf("go mod tidy failed: %w", err)
 	}
-	g.Log().Info(ctx, "Dependencies tidied successfully!")
+	mlog.Print("Dependencies tidied successfully!")
 	return nil
 }
 
 // upgradeDependencies runs go get -u ./... to upgrade all dependencies to latest
 func upgradeDependencies(ctx context.Context, projectDir string) error {
-	g.Log().Info(ctx, "Upgrading dependencies to latest (go get -u ./...)...")
+	mlog.Print("Upgrading dependencies to latest (go get -u ./...)...")
 	if err := runCmd(ctx, projectDir, "go", "get", "-u", "./..."); err != nil {
 		return fmt.Errorf("go get -u failed: %w", err)
 	}
@@ -99,6 +106,6 @@ func upgradeDependencies(ctx context.Context, projectDir string) error {
 	if err := runCmd(ctx, projectDir, "go", "mod", "tidy"); err != nil {
 		return fmt.Errorf("go mod tidy after upgrade failed: %w", err)
 	}
-	g.Log().Info(ctx, "Dependencies upgraded successfully!")
+	mlog.Print("Dependencies upgraded successfully!")
 	return nil
 }

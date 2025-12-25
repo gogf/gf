@@ -1,4 +1,10 @@
-package logic
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+package geninit
 
 import (
 	"context"
@@ -6,9 +12,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 // GitRepoInfo holds parsed git repository information
@@ -133,19 +140,19 @@ func downloadGitSubdir(ctx context.Context, repoURL string) (string, *GitRepoInf
 	}
 
 	// Create temp directory for clone
-	tempDir := gfile.Temp("tpl-git")
+	tempDir := gfile.Temp("gf-init-git")
 	if err := gfile.Mkdir(tempDir); err != nil {
 		return "", nil, err
 	}
 
 	cloneDir := filepath.Join(tempDir, info.Repo)
-	g.Log().Debug(ctx, "Using git temp workspace:", tempDir)
-	g.Log().Infof(ctx, "Cloning %s (sparse checkout: %s)...", info.CloneURL, info.SubPath)
+	mlog.Debugf("Using git temp workspace: %s", tempDir)
+	mlog.Printf("Cloning %s (sparse checkout: %s)...", info.CloneURL, info.SubPath)
 
 	// 1. Clone with no checkout, filter, and sparse
 	if err := runCmd(ctx, tempDir, "git", "clone", "--filter=blob:none", "--no-checkout", "--sparse", info.CloneURL); err != nil {
 		// Fallback: try without filter for older git versions
-		g.Log().Debug(ctx, "Sparse clone failed, trying full clone...")
+		mlog.Debugf("Sparse clone failed, trying full clone...")
 		gfile.Remove(cloneDir)
 		if err := runCmd(ctx, tempDir, "git", "clone", "--no-checkout", info.CloneURL); err != nil {
 			gfile.Remove(tempDir)
@@ -156,7 +163,7 @@ func downloadGitSubdir(ctx context.Context, repoURL string) (string, *GitRepoInf
 	// 2. Set sparse-checkout to the subpath
 	if err := runCmd(ctx, cloneDir, "git", "sparse-checkout", "set", info.SubPath); err != nil {
 		// Fallback for older git: use sparse-checkout init + echo
-		g.Log().Debug(ctx, "sparse-checkout set failed, trying legacy method...")
+		mlog.Debugf("sparse-checkout set failed, trying legacy method...")
 		runCmd(ctx, cloneDir, "git", "sparse-checkout", "init", "--cone")
 		runCmd(ctx, cloneDir, "git", "sparse-checkout", "set", info.SubPath)
 	}
@@ -165,7 +172,7 @@ func downloadGitSubdir(ctx context.Context, repoURL string) (string, *GitRepoInf
 	if err := runCmd(ctx, cloneDir, "git", "checkout", info.Branch); err != nil {
 		// Try master if main fails
 		if info.Branch == "main" {
-			g.Log().Debug(ctx, "Branch 'main' not found, trying 'master'...")
+			mlog.Debugf("Branch 'main' not found, trying 'master'...")
 			info.Branch = "master"
 			if err := runCmd(ctx, cloneDir, "git", "checkout", "master"); err != nil {
 				gfile.Remove(tempDir)
@@ -184,7 +191,7 @@ func downloadGitSubdir(ctx context.Context, repoURL string) (string, *GitRepoInf
 		return "", nil, fmt.Errorf("subdirectory not found: %s", info.SubPath)
 	}
 
-	g.Log().Debug(ctx, "Subdirectory located at:", subDirPath)
+	mlog.Debugf("Subdirectory located at: %s", subDirPath)
 	return subDirPath, info, nil
 }
 

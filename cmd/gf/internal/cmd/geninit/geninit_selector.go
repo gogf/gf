@@ -1,4 +1,10 @@
-package logic
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+package geninit
 
 import (
 	"bufio"
@@ -8,7 +14,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 // SelectVersion prompts user to select a version interactively
@@ -18,7 +24,7 @@ func SelectVersion(ctx context.Context, versions []string, modulePath string) (s
 	}
 
 	if len(versions) == 1 {
-		g.Log().Infof(ctx, "Only one version available: %s", versions[0])
+		mlog.Printf("Only one version available: %s", versions[0])
 		return versions[0], nil
 	}
 

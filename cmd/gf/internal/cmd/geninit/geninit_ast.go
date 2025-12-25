@@ -1,4 +1,10 @@
-package logic
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+package geninit
 
 import (
 	"bytes"
@@ -11,8 +17,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 // ASTReplacer handles import path replacement using Go AST
@@ -42,7 +49,7 @@ func (r *ASTReplacer) ReplaceInFile(ctx context.Context, filePath string) error 
 	// Parse the file
 	file, err := parser.ParseFile(r.fset, filePath, content, parser.ParseComments)
 	if err != nil {
-		g.Log().Debugf(ctx, "Failed to parse %s: %v", filePath, err)
+		mlog.Debugf("Failed to parse %s: %v", filePath, err)
 		return nil // Skip files that can't be parsed
 	}
 
@@ -59,7 +66,7 @@ func (r *ASTReplacer) ReplaceInFile(ctx context.Context, filePath string) error 
 					newPath := strings.Replace(importPath, r.oldModule, r.newModule, 1)
 					x.Path.Value = `"` + newPath + `"`
 					changed = true
-					g.Log().Debugf(ctx, "Replaced import: %s -> %s in %s", importPath, newPath, filePath)
+					mlog.Debugf("Replaced import: %s -> %s in %s", importPath, newPath, filePath)
 				}
 			}
 		}
@@ -85,7 +92,7 @@ func (r *ASTReplacer) ReplaceInFile(ctx context.Context, filePath string) error 
 
 // ReplaceInDir replaces import paths in all Go files in a directory (recursively)
 func (r *ASTReplacer) ReplaceInDir(ctx context.Context, dir string) error {
-	g.Log().Infof(ctx, "Replacing imports: %s -> %s", r.oldModule, r.newModule)
+	mlog.Printf("Replacing imports: %s -> %s", r.oldModule, r.newModule)
 
 	// Find all .go files
 	files, err := findGoFiles(dir)
@@ -95,7 +102,7 @@ func (r *ASTReplacer) ReplaceInDir(ctx context.Context, dir string) error {
 
 	for _, file := range files {
 		if err := r.ReplaceInFile(ctx, file); err != nil {
-			g.Log().Warningf(ctx, "Failed to process %s: %v", file, err)
+			mlog.Printf("Failed to process %s: %v", file, err)
 		}
 	}
 

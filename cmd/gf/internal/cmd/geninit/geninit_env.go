@@ -1,4 +1,10 @@
-package logic
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+package geninit
 
 import (
 	"context"
@@ -7,7 +13,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 // GoEnv represents Go environment variables
@@ -27,7 +33,7 @@ func CheckGoEnv(ctx context.Context) (*GoEnv, error) {
 	if err != nil {
 		return nil, fmt.Errorf("go is not installed or not in PATH: %w", err)
 	}
-	g.Log().Debugf(ctx, "Found go binary at: %s", goPath)
+	mlog.Debugf("Found go binary at: %s", goPath)
 
 	// 2. Get go env as JSON
 	cmd := exec.CommandContext(ctx, "go", "env", "-json")
@@ -53,10 +59,10 @@ func CheckGoEnv(ctx context.Context) (*GoEnv, error) {
 		return nil, fmt.Errorf("neither GOMODCACHE nor GOPATH is set")
 	}
 
-	g.Log().Debugf(ctx, "Go Version: %s", env.GOVERSION)
-	g.Log().Debugf(ctx, "GOROOT: %s", env.GOROOT)
-	g.Log().Debugf(ctx, "GOMODCACHE: %s", env.GOMODCACHE)
-	g.Log().Debugf(ctx, "GOPROXY: %s", env.GOPROXY)
+	mlog.Debugf("Go Version: %s", env.GOVERSION)
+	mlog.Debugf("GOROOT: %s", env.GOROOT)
+	mlog.Debugf("GOMODCACHE: %s", env.GOMODCACHE)
+	mlog.Debugf("GOPROXY: %s", env.GOPROXY)
 
 	return &env, nil
 }
@@ -68,7 +74,7 @@ func CheckGitEnv(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("git is not installed or not in PATH: %w", err)
 	}
-	g.Log().Debugf(ctx, "Found git binary at: %s", gitPath)
+	mlog.Debugf("Found git binary at: %s", gitPath)
 
 	// 2. Get git version
 	cmd := exec.CommandContext(ctx, "git", "--version")
@@ -78,7 +84,7 @@ func CheckGitEnv(ctx context.Context) (string, error) {
 	}
 
 	version := strings.TrimSpace(string(output))
-	g.Log().Debugf(ctx, "Git version: %s", version)
+	mlog.Debugf("Git version: %s", version)
 
 	return version, nil
 }
