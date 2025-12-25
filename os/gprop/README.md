@@ -99,7 +99,7 @@ func Start(ctx context.Context) {
 }
 
 func GetRsaKey(ctx context.Context) (publicKey, privateKey string) {
-	return rsaConfig.PublicKey, rsaConfig.PrivateKey
+	return RSAConfigurator.Get().PublicKey, RSAConfigurator.Get().PrivateKey
 }
 
 ```
