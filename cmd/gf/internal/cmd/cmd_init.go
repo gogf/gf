@@ -83,15 +83,15 @@ func init() {
 }
 
 type cInitInput struct {
-	g.Meta       `name:"init"`
-	Name         string `name:"NAME" arg:"true" brief:"{cInitNameBrief}"`
-	Mono         bool   `name:"mono" short:"m" brief:"initialize a mono-repo instead a single-repo" orphan:"true"`
-	MonoApp      bool   `name:"monoApp" short:"a" brief:"initialize a mono-repo-app instead a single-repo" orphan:"true"`
-	Update       bool   `name:"update" short:"u" brief:"update to the latest goframe version" orphan:"true"`
-	Module       string `name:"module" short:"g" brief:"custom go module"`
-	Repo         string `name:"repo" short:"r" brief:"remote repository URL for template download"`
-	SelectVer    bool   `name:"select" short:"s" brief:"enable interactive version selection for remote template" orphan:"true"`
-	Interactive  bool   `name:"interactive" short:"i" brief:"enable interactive mode to select template" orphan:"true"`
+	g.Meta      `name:"init"`
+	Name        string `name:"NAME" arg:"true" brief:"{cInitNameBrief}"`
+	Mono        bool   `name:"mono" short:"m" brief:"initialize a mono-repo instead a single-repo" orphan:"true"`
+	MonoApp     bool   `name:"monoApp" short:"a" brief:"initialize a mono-repo-app instead a single-repo" orphan:"true"`
+	Update      bool   `name:"update" short:"u" brief:"update to the latest goframe version" orphan:"true"`
+	Module      string `name:"module" short:"g" brief:"custom go module"`
+	Repo        string `name:"repo" short:"r" brief:"remote repository URL for template download"`
+	SelectVer   bool   `name:"select" short:"s" brief:"enable interactive version selection for remote template" orphan:"true"`
+	Interactive bool   `name:"interactive" short:"i" brief:"enable interactive mode to select template" orphan:"true"`
 }
 
 type cInitOutput struct{}
