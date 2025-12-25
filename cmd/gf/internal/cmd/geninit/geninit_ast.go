@@ -63,7 +63,8 @@ func (r *ASTReplacer) ReplaceInFile(ctx context.Context, filePath string) error 
 			if x.Path != nil {
 				importPath := strings.Trim(x.Path.Value, `"`)
 				if strings.HasPrefix(importPath, r.oldModule) {
-					newPath := strings.Replace(importPath, r.oldModule, r.newModule, 1)
+					// Replace only the leading module prefix for clarity and correctness.
+					newPath := r.newModule + strings.TrimPrefix(importPath, r.oldModule)
 					x.Path.Value = `"` + newPath + `"`
 					changed = true
 					mlog.Debugf("Replaced import: %s -> %s in %s", importPath, newPath, filePath)
@@ -79,10 +80,8 @@ func (r *ASTReplacer) ReplaceInFile(ctx context.Context, filePath string) error 
 
 	// Write back to file
 	var buf bytes.Buffer
-	cfg := &printer.Config{
-		Mode:     printer.UseSpaces | printer.TabIndent,
-		Tabwidth: 4,
-	}
+	// Use default printer configuration to match gofmt output
+	cfg := &printer.Config{}
 	if err := cfg.Fprint(&buf, r.fset, file); err != nil {
 		return err
 	}

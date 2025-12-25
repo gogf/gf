@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -23,6 +24,9 @@ import (
 func downloadTemplate(ctx context.Context, repo string) (string, error) {
 	// 1. Create a temporary directory workspace
 	tempDir := gfile.Temp("gf-init-cli")
+	if tempDir == "" {
+		return "", fmt.Errorf("failed to create temporary directory")
+	}
 	if err := gfile.Mkdir(tempDir); err != nil {
 		return "", err
 	}
@@ -43,7 +47,7 @@ func downloadTemplate(ctx context.Context, repo string) (string, error) {
 		moduleName = gstr.Split(repo, "@")[0]
 	}
 
-	var downloadErr error
+	var downloadErrs []string
 	versionsToTry := []string{repo}
 	if !gstr.Contains(repo, "@") {
 		versionsToTry = append(versionsToTry, repo+"@latest", repo+"@master")
@@ -56,13 +60,17 @@ func downloadTemplate(ctx context.Context, repo string) (string, error) {
 			successRepo = tryRepo
 			break
 		} else {
-			downloadErr = err
+			downloadErrs = append(downloadErrs, fmt.Sprintf("%s: %v", tryRepo, err))
 			mlog.Debugf("Failed to download %s, trying next...", tryRepo)
 		}
 	}
 
 	if successRepo == "" {
-		return "", fmt.Errorf("failed to download repo %s: %w", repo, downloadErr)
+		errMsg := "all download attempts failed"
+		if len(downloadErrs) > 0 {
+			errMsg = strings.Join(downloadErrs, "; ")
+		}
+		return "", fmt.Errorf("failed to download repo %s: %s", repo, errMsg)
 	}
 
 	// 4. Find the local path using go list -m -json <repo>

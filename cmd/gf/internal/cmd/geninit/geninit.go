@@ -118,7 +118,12 @@ func processGoModule(ctx context.Context, repo, name string, opts *ProcessOption
 	}
 
 	// 4. Handle dependencies
-	projectDir := filepath.Join(gfile.Pwd(), name)
+	var projectDir string
+	if name == "." {
+		projectDir = gfile.Pwd()
+	} else {
+		projectDir = filepath.Join(gfile.Pwd(), name)
+	}
 	if opts.UpgradeDeps {
 		// Upgrade all dependencies to latest
 		if err := upgradeDependencies(ctx, projectDir); err != nil {
@@ -188,7 +193,12 @@ func processGitSubdir(ctx context.Context, repo, name string, opts *ProcessOptio
 	}
 
 	// Handle dependencies
-	projectDir := filepath.Join(gfile.Pwd(), name)
+	var projectDir string
+	if name == "." {
+		projectDir = gfile.Pwd()
+	} else {
+		projectDir = filepath.Join(gfile.Pwd(), name)
+	}
 	if opts.UpgradeDeps {
 		// Upgrade all dependencies to latest
 		if err := upgradeDependencies(ctx, projectDir); err != nil {

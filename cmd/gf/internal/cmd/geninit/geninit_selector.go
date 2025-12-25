@@ -56,7 +56,7 @@ func SelectVersion(ctx context.Context, versions []string, modulePath string) (s
 	// Prompt for selection
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		fmt.Printf("Select version [1-%d] (default: 1 for latest): ", displayCount)
+		fmt.Printf("Select version [1-%d] or enter version string (default: 1 for latest): ", displayCount)
 
 		input, err := reader.ReadString('\n')
 		if err != nil {
@@ -71,15 +71,29 @@ func SelectVersion(ctx context.Context, versions []string, modulePath string) (s
 			return versions[0], nil
 		}
 
-		// Parse selection
+		// Try parsing as number first
 		idx, err := strconv.Atoi(input)
-		if err != nil || idx < 1 || idx > displayCount {
-			fmt.Printf("Invalid selection. Please enter a number between 1 and %d.\n", displayCount)
+		if err == nil {
+			// Valid number - check if in range
+			if idx >= 1 && idx <= len(versions) {
+				// Allow selection from all versions, not just displayed ones
+				selected := versions[idx-1]
+				fmt.Printf("Selected: %s\n", selected)
+				return selected, nil
+			} else if idx < 1 || idx > displayCount {
+				fmt.Printf("Invalid selection. Please enter a number between 1 and %d, or type a version string.\n", displayCount)
+				continue
+			}
+		} else {
+			// Try matching the input as a version string (e.g., "v1.2.3")
+			for _, v := range versions {
+				if v == input || strings.Contains(v, input) {
+					fmt.Printf("Selected: %s\n", v)
+					return v, nil
+				}
+			}
+			fmt.Printf("Version '%s' not found. Please select by number or type a valid version string.\n", input)
 			continue
 		}
-
-		selected := versions[idx-1]
-		fmt.Printf("Selected: %s\n", selected)
-		return selected, nil
 	}
 }

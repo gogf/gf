@@ -141,6 +141,9 @@ func downloadGitSubdir(ctx context.Context, repoURL string) (string, *GitRepoInf
 
 	// Create temp directory for clone
 	tempDir := gfile.Temp("gf-init-git")
+	if tempDir == "" {
+		return "", nil, fmt.Errorf("failed to create temporary directory")
+	}
 	if err := gfile.Mkdir(tempDir); err != nil {
 		return "", nil, err
 	}
@@ -162,10 +165,16 @@ func downloadGitSubdir(ctx context.Context, repoURL string) (string, *GitRepoInf
 
 	// 2. Set sparse-checkout to the subpath
 	if err := runCmd(ctx, cloneDir, "git", "sparse-checkout", "set", info.SubPath); err != nil {
-		// Fallback for older git: use sparse-checkout init + echo
+		// Fallback for older git: use sparse-checkout init + set
 		mlog.Debugf("sparse-checkout set failed, trying legacy method...")
-		runCmd(ctx, cloneDir, "git", "sparse-checkout", "init", "--cone")
-		runCmd(ctx, cloneDir, "git", "sparse-checkout", "set", info.SubPath)
+		if err := runCmd(ctx, cloneDir, "git", "sparse-checkout", "init", "--cone"); err != nil {
+			gfile.Remove(tempDir)
+			return "", nil, fmt.Errorf("git sparse-checkout init (legacy) failed: %w", err)
+		}
+		if err := runCmd(ctx, cloneDir, "git", "sparse-checkout", "set", info.SubPath); err != nil {
+			gfile.Remove(tempDir)
+			return "", nil, fmt.Errorf("git sparse-checkout set (legacy) failed: %w", err)
+		}
 	}
 
 	// 3. Checkout the branch

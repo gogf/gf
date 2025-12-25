@@ -32,6 +32,9 @@ type VersionInfo struct {
 func GetModuleVersions(ctx context.Context, modulePath string) (*VersionInfo, error) {
 	// Create a temporary directory for go list
 	tempDir := gfile.Temp("gf-init-version")
+	if tempDir == "" {
+		return nil, fmt.Errorf("failed to create temporary directory for go list")
+	}
 	if err := gfile.Mkdir(tempDir); err != nil {
 		return nil, err
 	}

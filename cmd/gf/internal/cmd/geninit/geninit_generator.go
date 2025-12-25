@@ -29,7 +29,6 @@ func generateProject(ctx context.Context, srcPath, name, oldModule, newModule st
 	}
 
 	if gfile.Exists(dstPath) && !gfile.IsEmpty(dstPath) {
-		mlog.Printf("Target directory %s is not empty", dstPath)
 		return fmt.Errorf("target directory %s is not empty", dstPath)
 	}
 
@@ -44,7 +43,7 @@ func generateProject(ctx context.Context, srcPath, name, oldModule, newModule st
 	gitDir := filepath.Join(dstPath, ".git")
 	if gfile.Exists(gitDir) {
 		if err := gfile.Remove(gitDir); err != nil {
-			mlog.Printf("Failed to remove .git directory: %v", err)
+			mlog.Debugf("Failed to remove .git directory: %v", err)
 		}
 	}
 
@@ -78,7 +77,7 @@ func generateProject(ctx context.Context, srcPath, name, oldModule, newModule st
 	if oldModule != "" && oldModule != newModule {
 		replacer := NewASTReplacer(oldModule, newModule)
 		if err := replacer.ReplaceInDir(ctx, dstPath); err != nil {
-			mlog.Printf("Failed to replace imports: %v", err)
+			return fmt.Errorf("failed to replace imports: %w", err)
 		}
 	}
 

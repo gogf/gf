@@ -133,8 +133,7 @@ func (c cInit) initFromRemote(ctx context.Context, in cInitInput) (out *cInitOut
 	}
 
 	if repo == "" {
-		mlog.Fatal("repository URL is required for remote template mode")
-		return
+		return nil, fmt.Errorf("repository URL is required for remote template mode")
 	}
 
 	mlog.Print("initializing from remote template...")
@@ -146,8 +145,7 @@ func (c cInit) initFromRemote(ctx context.Context, in cInitInput) (out *cInitOut
 	}
 
 	if err = geninit.Process(ctx, repo, name, opts); err != nil {
-		mlog.Fatalf("failed to initialize from remote template: %v", err)
-		return
+		return nil, err
 	}
 
 	mlog.Print("initialization done!")
@@ -277,7 +275,11 @@ func (c cInit) initInteractive(ctx context.Context, in cInitInput) (out *cInitOu
 	fmt.Println(strings.Repeat("-", 50))
 
 	fmt.Print("Select mode [1-2] (default: 1): ")
-	input, _ := reader.ReadString('\n')
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		mlog.Fatalf("failed to read input: %v", err)
+		return
+	}
 	input = strings.TrimSpace(input)
 
 	if input == "2" {
@@ -294,7 +296,11 @@ func (c cInit) initInteractive(ctx context.Context, in cInitInput) (out *cInitOu
 	fmt.Println(strings.Repeat("-", 50))
 
 	fmt.Print("Select type [1-3] (default: 1): ")
-	input, _ = reader.ReadString('\n')
+	input, err = reader.ReadString('\n')
+	if err != nil {
+		mlog.Fatalf("failed to read input: %v", err)
+		return
+	}
 	input = strings.TrimSpace(input)
 
 	switch input {
@@ -307,7 +313,11 @@ func (c cInit) initInteractive(ctx context.Context, in cInitInput) (out *cInitOu
 	// Get project name
 	for {
 		fmt.Print("Enter project name: ")
-		input, _ = reader.ReadString('\n')
+		input, err = reader.ReadString('\n')
+		if err != nil {
+			mlog.Fatalf("failed to read input: %v", err)
+			return
+		}
 		in.Name = strings.TrimSpace(input)
 		if in.Name != "" {
 			break
@@ -317,12 +327,20 @@ func (c cInit) initInteractive(ctx context.Context, in cInitInput) (out *cInitOu
 
 	// Get module path (optional)
 	fmt.Printf("Enter Go module path (leave empty to use \"%s\"): ", in.Name)
-	input, _ = reader.ReadString('\n')
+	input, err = reader.ReadString('\n')
+	if err != nil {
+		mlog.Fatalf("failed to read input: %v", err)
+		return
+	}
 	in.Module = strings.TrimSpace(input)
 
 	// Ask about update
 	fmt.Print("Update to latest GoFrame version? [y/N]: ")
-	input, _ = reader.ReadString('\n')
+	input, err = reader.ReadString('\n')
+	if err != nil {
+		mlog.Fatalf("failed to read input: %v", err)
+		return
+	}
 	input = strings.TrimSpace(strings.ToLower(input))
 	in.Update = input == "y" || input == "yes"
 
