@@ -51,9 +51,9 @@ func Test_cRunApp_getWatchPaths_CustomIgnorePattern(t *testing.T) {
 		watchPaths := app.getWatchPaths()
 
 		// Ensure the "2572" directory is not watched directly.
-		for _, path := range watchPaths {
-			t.Log("watch path:", path)
-			t.Assert(strings.HasSuffix(path, "2572"), false)
+		for _, wp := range watchPaths {
+			t.Log("watch path:", wp)
+			t.Assert(strings.HasSuffix(wp.Path, "2572"), false)
 		}
 		t.AssertGT(len(watchPaths), 0)
 	})
@@ -82,9 +82,14 @@ func Test_cRunApp_getWatchPaths_WithIgnoredDirectories(t *testing.T) {
 		}
 		watchPaths := app.getWatchPaths()
 
-		// Should watch the src directory since parent has ignored children
-		t.Assert(len(watchPaths), 1)
-		t.Assert(watchPaths[0], filepath.Join(tempDir, "src"))
+		// Should watch tempDir non-recursively (to catch top-level files) and src recursively
+		t.Assert(len(watchPaths), 2)
+		// First path is tempDir (non-recursive)
+		t.Assert(watchPaths[0].Path, tempDir)
+		t.Assert(watchPaths[0].Recursive, false)
+		// Second path is src (recursive, since it has no ignored descendants)
+		t.Assert(watchPaths[1].Path, filepath.Join(tempDir, "src"))
+		t.Assert(watchPaths[1].Recursive, true)
 	})
 }
 
@@ -107,9 +112,10 @@ func Test_cRunApp_getWatchPaths_NoIgnoredDirectories(t *testing.T) {
 		}
 		watchPaths := app.getWatchPaths()
 
-		// Should watch the root directory since no ignored directories exist
+		// Should watch the root directory recursively since no ignored directories exist
 		t.Assert(len(watchPaths), 1)
-		t.Assert(watchPaths[0], tempDir)
+		t.Assert(watchPaths[0].Path, tempDir)
+		t.Assert(watchPaths[0].Recursive, true)
 	})
 }
 
@@ -137,9 +143,12 @@ func Test_cRunApp_getWatchPaths_CustomIgnorePatterns(t *testing.T) {
 		}
 		watchPaths := app.getWatchPaths()
 
-		// Should watch the src directory since parent has ignored children (build, dist)
-		t.Assert(len(watchPaths), 1)
-		t.Assert(watchPaths[0], filepath.Join(tempDir, "src"))
+		// Should watch tempDir non-recursively and src recursively
+		t.Assert(len(watchPaths), 2)
+		t.Assert(watchPaths[0].Path, tempDir)
+		t.Assert(watchPaths[0].Recursive, false)
+		t.Assert(watchPaths[1].Path, filepath.Join(tempDir, "src"))
+		t.Assert(watchPaths[1].Recursive, true)
 	})
 }
 
@@ -169,8 +178,8 @@ func Test_cRunApp_getWatchPaths_DeepNestedStructure(t *testing.T) {
 		t.AssertGT(len(watchPaths), 0)
 
 		// Verify that vendor directory is not in watch list
-		for _, path := range watchPaths {
-			t.Assert(strings.Contains(path, "vendor"), false)
+		for _, wp := range watchPaths {
+			t.Assert(strings.Contains(wp.Path, "vendor"), false)
 		}
 	})
 }
@@ -191,17 +200,19 @@ func Test_cRunApp_getWatchPaths_MultipleRoots(t *testing.T) {
 		}
 		watchPaths := app.getWatchPaths()
 
-		// Should watch both root directories
+		// Should watch both root directories recursively
 		t.Assert(len(watchPaths), 2)
 
 		// Both directories should be in the watch list
 		foundDir1, foundDir2 := false, false
-		for _, path := range watchPaths {
-			if path == tempDir1 {
+		for _, wp := range watchPaths {
+			if wp.Path == tempDir1 {
 				foundDir1 = true
+				t.Assert(wp.Recursive, true)
 			}
-			if path == tempDir2 {
+			if wp.Path == tempDir2 {
 				foundDir2 = true
+				t.Assert(wp.Recursive, true)
 			}
 		}
 		t.Assert(foundDir1, true)
@@ -222,8 +233,8 @@ func Test_cRunApp_getWatchPaths_NonExistentDirectory(t *testing.T) {
 		// Should contain current directory
 		currentDir, _ := os.Getwd()
 		foundCurrentDir := false
-		for _, path := range watchPaths {
-			if path == currentDir {
+		for _, wp := range watchPaths {
+			if wp.Path == currentDir {
 				foundCurrentDir = true
 				break
 			}
@@ -248,5 +259,112 @@ func Test_isIgnoredDirName(t *testing.T) {
 		t.Assert(isIgnoredDirName("dist", customPatterns), true)
 		t.Assert(isIgnoredDirName("test.tmp", customPatterns), true)
 		t.Assert(isIgnoredDirName("src", customPatterns), false)
+	})
+}
+
+func Test_hasIgnoredDescendant(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Create a temporary directory structure
+		tempDir := gfile.Temp("gf_run_test_has_ignored")
+		defer gfile.Remove(tempDir)
+
+		// Create directory structure:
+		// tempDir/
+		//   ├── a/
+		//   │   ├── b/
+		//   │   │   └── vendor/  <-- deeply nested ignored
+		//   │   └── c/
+		//   └── d/
+		gfile.Mkdir(filepath.Join(tempDir, "a", "b", "vendor"))
+		gfile.Mkdir(filepath.Join(tempDir, "a", "c"))
+		gfile.Mkdir(filepath.Join(tempDir, "d"))
+
+		// Test: tempDir should have ignored descendant (vendor is 3 levels deep)
+		t.Assert(hasIgnoredDescendant(tempDir, defaultIgnorePatterns), true)
+
+		// Test: d/ should NOT have ignored descendant
+		t.Assert(hasIgnoredDescendant(filepath.Join(tempDir, "d"), defaultIgnorePatterns), false)
+
+		// Test: a/c/ should NOT have ignored descendant
+		t.Assert(hasIgnoredDescendant(filepath.Join(tempDir, "a", "c"), defaultIgnorePatterns), false)
+
+		// Test: a/ should have ignored descendant (vendor in a/b/)
+		t.Assert(hasIgnoredDescendant(filepath.Join(tempDir, "a"), defaultIgnorePatterns), true)
+
+		// Test: a/b/ should have ignored descendant (vendor directly inside)
+		t.Assert(hasIgnoredDescendant(filepath.Join(tempDir, "a", "b"), defaultIgnorePatterns), true)
+	})
+}
+
+func Test_cRunApp_getWatchPaths_DeeplyNestedIgnore(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Create a temporary directory structure with deeply nested ignored directory
+		tempDir := gfile.Temp("gf_run_test_deeply_nested")
+		defer gfile.Remove(tempDir)
+
+		// Create directory structure:
+		// tempDir/
+		//   ├── a/
+		//   │   ├── b/
+		//   │   │   ├── c/
+		//   │   │   │   └── vendor/  <-- deeply nested ignored (4 levels)
+		//   │   │   └── d/
+		//   │   └── e/
+		//   └── f/
+		gfile.Mkdir(filepath.Join(tempDir, "a", "b", "c", "vendor"))
+		gfile.Mkdir(filepath.Join(tempDir, "a", "b", "d"))
+		gfile.Mkdir(filepath.Join(tempDir, "a", "e"))
+		gfile.Mkdir(filepath.Join(tempDir, "f"))
+
+		app := &cRunApp{
+			WatchPaths: []string{tempDir},
+		}
+		watchPaths := app.getWatchPaths()
+
+		// Expected watch paths:
+		// 1. tempDir (non-recursive) - has ignored descendant
+		// 2. a (non-recursive) - has ignored descendant in b/c/vendor
+		// 3. b (non-recursive) - has ignored descendant in c/vendor
+		// 4. c (non-recursive) - has ignored child vendor
+		// 5. d (recursive) - no ignored descendants
+		// 6. e (recursive) - no ignored descendants
+		// 7. f (recursive) - no ignored descendants
+
+		t.AssertGT(len(watchPaths), 0)
+
+		// Verify vendor is not in watch paths
+		for _, wp := range watchPaths {
+			t.Assert(strings.Contains(wp.Path, "vendor"), false)
+		}
+
+		// Find specific paths and verify their recursive flags
+		foundF := false
+		for _, wp := range watchPaths {
+			if wp.Path == filepath.Join(tempDir, "f") {
+				foundF = true
+				t.Assert(wp.Recursive, true) // f should be recursive (no ignored descendants)
+			}
+		}
+		t.Assert(foundF, true)
+	})
+}
+
+func Test_cRunApp_getWatchPaths_EmptyDirectory(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Create an empty temporary directory
+		tempDir := gfile.Temp("gf_run_test_empty")
+		defer gfile.Remove(tempDir)
+
+		gfile.Mkdir(tempDir)
+
+		app := &cRunApp{
+			WatchPaths: []string{tempDir},
+		}
+		watchPaths := app.getWatchPaths()
+
+		// Empty directory should be watched recursively (no ignored descendants)
+		t.Assert(len(watchPaths), 1)
+		t.Assert(watchPaths[0].Path, tempDir)
+		t.Assert(watchPaths[0].Recursive, true)
 	})
 }
