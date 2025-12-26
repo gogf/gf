@@ -8,15 +8,15 @@ package gcfg_test
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/util/gconv"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
