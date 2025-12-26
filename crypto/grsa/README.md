@@ -147,6 +147,23 @@ The package supports two popular RSA key formats:
 
 Both formats are supported for encryption and decryption operations, with auto-detection capabilities for general functions.
 
+### Technical Background: PKCS#8 vs PKIX
+
+**PKCS#8** is a standard for **private keys** only, not public keys. Public keys use the **PKIX (X.509 SubjectPublicKeyInfo)** format.
+
+| Format | Private Key PEM Header | Public Key PEM Header |
+|--------|------------------------|----------------------|
+| PKCS#1 | `RSA PRIVATE KEY` | `RSA PUBLIC KEY` |
+| PKCS#8/PKIX | `PRIVATE KEY` | `PUBLIC KEY` |
+
+When we refer to a "PKCS#8 key pair", it actually means:
+- **Private key**: PKCS#8 format (RFC 5208)
+- **Public key**: PKIX/SubjectPublicKeyInfo format (RFC 5280, X.509)
+
+This is why the Go standard library provides `x509.MarshalPKCS8PrivateKey` for private keys but `x509.MarshalPKIXPublicKey` for public keys — there is no `MarshalPKCS8PublicKey` function.
+
+The deprecated `EncryptPKCS8` function was a misnomer because encryption uses public keys, and public keys are in PKIX format, not PKCS#8. The correct function name is `EncryptPKIX`.
+
 ## Plaintext Size Limit
 
 RSA encryption has a size limit based on key size. For PKCS#1 v1.5 padding:
