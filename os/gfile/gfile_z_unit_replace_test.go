@@ -117,11 +117,11 @@ func Test_ReplaceDir(t *testing.T) {
 	// Test recursive replacement
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			dirName     = "/testdir_replace_recursive_" + gconv.String(gtime.TimestampNano())
-			subDirName  = dirName + "/subdir"
-			fileName1   = dirName + "/test1.txt"
-			fileName2   = subDirName + "/test2.txt"
-			content     = "hello world"
+			dirName    = "/testdir_replace_recursive_" + gconv.String(gtime.TimestampNano())
+			subDirName = dirName + "/subdir"
+			fileName1  = dirName + "/test1.txt"
+			fileName2  = subDirName + "/test2.txt"
+			content    = "hello world"
 		)
 		createDir(dirName)
 		createDir(subDirName)
