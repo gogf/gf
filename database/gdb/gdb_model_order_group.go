@@ -7,7 +7,7 @@
 package gdb
 
 import (
-	"fmt"
+	"strings"
 
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -30,7 +30,6 @@ func (m *Model) Order(orderBy ...any) *Model {
 		core  = m.db.GetCore()
 		model = m.getModel()
 	)
-
 	for _, v := range orderBy {
 		if model.orderBy != "" {
 			model.orderBy += ","
@@ -41,47 +40,13 @@ func (m *Model) Order(orderBy ...any) *Model {
 		default:
 			orderByStr := gconv.String(v)
 			if gstr.Contains(orderByStr, " ") {
-				// Handle "column asc/desc" format
-				parts := gstr.SplitAndTrim(orderByStr, " ")
-				if len(parts) >= 2 {
-					columnPart := parts[0]
-					orderPart := gstr.Join(parts[1:], " ")
-
-					// Check if column part is qualified
-					if gstr.Contains(columnPart, ".") {
-						model.orderBy += core.QuoteString(columnPart) + " " + orderPart
-					} else {
-						// Try to get the correct prefix for this field
-						prefix := m.getPrefixByField(columnPart)
-						if prefix != "" {
-							model.orderBy += core.QuoteString(fmt.Sprintf("%s.%s", prefix, columnPart)) + " " + orderPart
-						} else {
-							// If we can't determine the table, just quote the field
-							model.orderBy += core.QuoteWord(columnPart) + " " + orderPart
-						}
-					}
-				} else {
-					// Fallback for complex expressions
-					model.orderBy += core.QuoteString(orderByStr)
-				}
+				model.orderBy += core.QuoteString(orderByStr)
 			} else {
 				if gstr.Equal(orderByStr, "ASC") || gstr.Equal(orderByStr, "DESC") {
 					model.orderBy = gstr.TrimRight(model.orderBy, ",")
 					model.orderBy += " " + orderByStr
 				} else {
-					// Check if column is already qualified
-					if gstr.Contains(orderByStr, ".") {
-						model.orderBy += core.QuoteString(orderByStr)
-					} else {
-						// Try to get the correct prefix for this field
-						prefix := m.getPrefixByField(orderByStr)
-						if prefix != "" {
-							model.orderBy += core.QuoteString(fmt.Sprintf("%s.%s", prefix, orderByStr))
-						} else {
-							// If we can't determine the table, just quote the field
-							model.orderBy += core.QuoteWord(orderByStr)
-						}
-					}
+					model.orderBy += core.QuoteWord(orderByStr)
 				}
 			}
 		}
@@ -113,7 +78,7 @@ func (m *Model) OrderRandom() *Model {
 }
 
 // Group sets the "GROUP BY" statement for the model.
-func (m *Model) Group(groupBy ...any) *Model {
+func (m *Model) Group(groupBy ...string) *Model {
 	if len(groupBy) == 0 {
 		return m
 	}
@@ -122,29 +87,9 @@ func (m *Model) Group(groupBy ...any) *Model {
 		model = m.getModel()
 	)
 
-	for _, v := range groupBy {
-		if model.groupBy != "" {
-			model.groupBy += ","
-		}
-		switch v.(type) {
-		case Raw, *Raw:
-			model.groupBy += gconv.String(v)
-		default:
-			groupByStr := gconv.String(v)
-			if gstr.Contains(groupByStr, ".") {
-				// Already qualified (e.g., "table.column")
-				model.groupBy += core.QuoteString(groupByStr)
-			} else {
-				// Try to get the correct prefix for this field
-				prefix := m.getPrefixByField(groupByStr)
-				if prefix != "" {
-					model.groupBy += core.QuoteString(fmt.Sprintf("%s.%s", prefix, groupByStr))
-				} else {
-					// If we can't determine the table, just quote the field
-					model.groupBy += core.QuoteWord(groupByStr)
-				}
-			}
-		}
+	if model.groupBy != "" {
+		model.groupBy += ","
 	}
+	model.groupBy += core.QuoteString(strings.Join(groupBy, ","))
 	return model
 }
