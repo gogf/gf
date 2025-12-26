@@ -27,6 +27,17 @@ import (
 const (
 	// DefaultRSAKeyBits is the default bit size for RSA key generation
 	DefaultRSAKeyBits = 2048
+
+	// KeyTypePKCS1 represents PKCS#1 format private key
+	KeyTypePKCS1 = "PKCS#1"
+	// KeyTypePKCS8 represents PKCS#8 format private key
+	KeyTypePKCS8 = "PKCS#8"
+
+	// PEM block types
+	pemTypeRSAPrivateKey = "RSA PRIVATE KEY" // PKCS#1 private key
+	pemTypePrivateKey    = "PRIVATE KEY"     // PKCS#8 private key
+	pemTypeRSAPublicKey  = "RSA PUBLIC KEY"  // PKCS#1 public key
+	pemTypePublicKey     = "PUBLIC KEY"      // PKIX public key
 )
 
 // Encrypt encrypts data with public key (auto-detect format).
@@ -297,14 +308,14 @@ func GetPrivateKeyType(privateKey []byte) (string, error) {
 	// Try PKCS#1 first
 	_, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err == nil {
-		return "PKCS#1", nil
+		return KeyTypePKCS1, nil
 	}
 
 	// Try PKCS#8
 	priv, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err == nil {
 		if _, ok := priv.(*rsa.PrivateKey); ok {
-			return "PKCS#8", nil
+			return KeyTypePKCS8, nil
 		}
 		return "", gerror.NewCode(gcode.CodeInvalidParameter, "not an RSA private key")
 	}
@@ -339,14 +350,14 @@ func GenerateKeyPair(bits int) (privateKey, publicKey []byte, err error) {
 	// Marshal private key to PKCS#1 format
 	privKeyBytes := x509.MarshalPKCS1PrivateKey(privKey)
 	privateKey = pem.EncodeToMemory(&pem.Block{
-		Type:  "RSA PRIVATE KEY",
+		Type:  pemTypeRSAPrivateKey,
 		Bytes: privKeyBytes,
 	})
 
 	// Generate PKCS#1 public key
 	pubKeyBytes := x509.MarshalPKCS1PublicKey(&privKey.PublicKey)
 	publicKey = pem.EncodeToMemory(&pem.Block{
-		Type:  "RSA PUBLIC KEY",
+		Type:  pemTypeRSAPublicKey,
 		Bytes: pubKeyBytes,
 	})
 
@@ -374,7 +385,7 @@ func GenerateKeyPairPKCS8(bits int) (privateKey, publicKey []byte, err error) {
 	}
 
 	privateKey = pem.EncodeToMemory(&pem.Block{
-		Type:  "PRIVATE KEY",
+		Type:  pemTypePrivateKey,
 		Bytes: privKeyBytes,
 	})
 
@@ -385,7 +396,7 @@ func GenerateKeyPairPKCS8(bits int) (privateKey, publicKey []byte, err error) {
 	}
 
 	publicKey = pem.EncodeToMemory(&pem.Block{
-		Type:  "PUBLIC KEY",
+		Type:  pemTypePublicKey,
 		Bytes: pubKeyBytes,
 	})
 
@@ -411,7 +422,7 @@ func ExtractPKCS1PublicKey(privateKey []byte) ([]byte, error) {
 
 	pubKeyBytes := x509.MarshalPKCS1PublicKey(&priv.PublicKey)
 	return pem.EncodeToMemory(&pem.Block{
-		Type:  "RSA PUBLIC KEY",
+		Type:  pemTypeRSAPublicKey,
 		Bytes: pubKeyBytes,
 	}), nil
 }
