@@ -129,15 +129,8 @@ server:
 `
 
 	gtest.C(t, func(t *gtest.T) {
-		var (
-			configFile = "./" + guid.S() + ".yaml"
-			err        = gfile.PutContents(configFile, configContent)
-		)
-		t.AssertNil(err)
-		defer gfile.RemoveFile(configFile)
-
 		// Create a new config instance
-		cfg, err := gcfg.NewAdapterFile(configFile)
+		cfg, err := gcfg.NewAdapterContent(configContent)
 		t.AssertNil(err)
 
 		// Create target struct
@@ -163,9 +156,9 @@ server:
 		v := configurator.Get()
 		t.Assert(v.Name, "test-app")
 		t.Assert(v.Age, 25)
-		err = gfile.PutContents(configFile, configContent2)
+		err = cfg.SetContent(configContent2)
 		t.AssertNil(err)
-		time.Sleep(1 * time.Second)
+		time.Sleep(2 * time.Second)
 		v2 := configurator.Get()
 		t.Assert(v2.Name, "test-app-2")
 		t.Assert(v2.Age, 200)
