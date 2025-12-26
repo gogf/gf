@@ -360,3 +360,241 @@ func Test_MatchGlob_MalformedPatterns(t *testing.T) {
 		t.Assert(matched, true)
 	})
 }
+
+func Test_MatchGlob_MemoizationCache(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test cases that exercise memoization cache hits
+		// Multiple ** with same suffix patterns will trigger cache reuse
+		matched, err := gfile.MatchGlob("a/**/b/**/c", "a/x/b/y/c")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		// This pattern creates multiple paths that converge to same subproblems
+		matched, err = gfile.MatchGlob("**/a/**/a", "x/a/y/a")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		// Deep recursion with cache hits
+		matched, err = gfile.MatchGlob("**/**/**", "a/b/c")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+	})
+}
+
+func Test_MatchGlob_InvalidGlobstarAtEnd(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Pattern where "**" appears at the very end of string (idx >= len(pattern) after pos+2)
+		// "x**" - invalid globstar at end, should be treated as two "*"
+		matched, err := gfile.MatchGlob("x**", "x")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("x**", "xyz")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		// Pattern ending with invalid globstar that exhausts the string
+		matched, err = gfile.MatchGlob("abc**", "abc")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("abc**", "abcdef")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+	})
+}
+
+func Test_MatchGlob_PrefixWithWildcards(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Prefix contains wildcards - tests lines 220-236
+		// Pattern: "s*c/**/file.go" - prefix "s*c" contains wildcard
+		matched, err := gfile.MatchGlob("s*c/**/*.go", "src/foo/main.go")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("s?c/**/*.go", "src/foo/main.go")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		// Test line 223-225: name has fewer segments than prefix
+		matched, err = gfile.MatchGlob("a/b/c/**", "a/b")
+		t.AssertNil(err)
+		t.Assert(matched, false)
+
+		matched, err = gfile.MatchGlob("a/b/c/**/d", "a")
+		t.AssertNil(err)
+		t.Assert(matched, false)
+
+		// Test line 232-234: wildcard prefix doesn't match
+		matched, err = gfile.MatchGlob("x*c/**/*.go", "src/foo/main.go")
+		t.AssertNil(err)
+		t.Assert(matched, false)
+
+		matched, err = gfile.MatchGlob("s?x/**/*.go", "src/foo/main.go")
+		t.AssertNil(err)
+		t.Assert(matched, false)
+
+		// Test line 236: name update after prefix match
+		matched, err = gfile.MatchGlob("a*/b*/**/*.go", "abc/bcd/efg/main.go")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+	})
+}
+
+func Test_MatchGlob_EmptyNameWithSuffix(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test line 246-249: name becomes empty after prefix match, check if suffix can match empty
+		// "abc/**" with name "abc" - after prefix match, name is empty
+		matched, err := gfile.MatchGlob("abc/**/", "abc")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		// "abc/**/d" with name "abc" - after prefix match, name is empty but suffix is "d"
+		matched, err = gfile.MatchGlob("abc/**/d", "abc")
+		t.AssertNil(err)
+		t.Assert(matched, false)
+
+		// Test with wildcard prefix that exactly matches
+		matched, err = gfile.MatchGlob("a*c/**/x", "abc")
+		t.AssertNil(err)
+		t.Assert(matched, false)
+	})
+}
+
+func Test_MatchGlob_FindValidGlobstarExhaust(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test lines 147-152: findValidGlobstar exhausts pattern without finding valid globstar
+		// Pattern with multiple invalid "**" that ends exactly at pattern length
+		matched, err := gfile.MatchGlob("a**b**", "ab")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("x**y**z", "xyz")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		// Pattern where last "**" is at the very end but invalid
+		matched, err = gfile.MatchGlob("test**", "test")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("test**", "testing")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+	})
+}
+
+func Test_MatchGlob_CacheHit(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test line 166-168: cache hit scenario
+		// Pattern that creates overlapping subproblems triggering cache hits
+		// "**/**" with multiple segments will have cache hits
+		matched, err := gfile.MatchGlob("**/x/**/x", "a/x/b/x")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		// This pattern specifically creates cache hits due to overlapping subproblems
+		// when trying different combinations of ** matching
+		matched, err = gfile.MatchGlob("**/a/**/b/**/a", "x/a/y/b/z/a")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		// Pattern with repeated suffix that will be checked multiple times
+		matched, err = gfile.MatchGlob("**/**/test", "a/b/c/test")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		// Pattern that will cause same subproblem to be solved multiple times
+		// "**/**/**" matching "a/b/c/d" will have many overlapping subproblems
+		matched, err = gfile.MatchGlob("**/**/**/**", "a/b/c/d/e")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+	})
+}
+
+func Test_MatchGlob_WildcardPrefixShortName(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test line 223-225: prefix with wildcards, name has fewer segments
+		// Pattern: "a*/b*/**/c" - prefix "a*/b*" has 2 segments
+		// Name: "ax" - only 1 segment
+		matched, err := gfile.MatchGlob("a*/b*/**/c", "ax")
+		t.AssertNil(err)
+		t.Assert(matched, false)
+
+		// Pattern: "?/b/c/**/d" - prefix "?/b/c" has 3 segments
+		// Name: "x/y" - only 2 segments
+		matched, err = gfile.MatchGlob("?/b/c/**/d", "x/y")
+		t.AssertNil(err)
+		t.Assert(matched, false)
+
+		// Pattern: "[abc]/[def]/**/x" - prefix has 2 segments with brackets
+		// Name: "a" - only 1 segment
+		matched, err = gfile.MatchGlob("[abc]/[def]/**/x", "a")
+		t.AssertNil(err)
+		t.Assert(matched, false)
+	})
+}
+
+func Test_MatchGlob_InvalidGlobstarInSuffix(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test lines 147-152: findValidGlobstar exhausts pattern in recursive call
+		// Pattern "a/**/b**" - first "**" is valid, suffix "b**" has invalid "**" at end
+		// When matching suffix "b**", findValidGlobstar will iterate and find "**" is invalid,
+		// then idx = pos + 2 = 3, len("b**") = 3, so idx >= len(pattern) triggers break
+		matched, err := gfile.MatchGlob("a/**/b**", "a/x/bcd")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("a/**/b**", "a/x/b")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		// Pattern with valid globstar followed by suffix with invalid globstar at end
+		matched, err = gfile.MatchGlob("x/**/y**z", "x/a/yabcz")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		// Multiple invalid globstars in suffix
+		matched, err = gfile.MatchGlob("a/**/x**y**", "a/b/xcy")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+	})
+}
+
+func Test_MatchGlob_MemoizationCacheHit(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test line 166-168: cache hit scenario
+		// To trigger cache hit, we need:
+		// 1. Same (pattern, name) pair called twice
+		// 2. First call must complete (not return early)
+		// 3. This happens when matching FAILS and we try all combinations
+
+		// Pattern "**/**/z" with name "a/b/c/d" (no match)
+		// First ** tries 0,1,2,3,4 segments
+		// For each, second ** tries all remaining combinations
+		// This creates overlapping subproblems that fail:
+		// - ("**/z", "a/b/c/d"), ("**/z", "b/c/d"), ("**/z", "c/d"), ("**/z", "d"), ("**/z", "")
+		// - ("z", "a/b/c/d"), ("z", "b/c/d"), ("z", "c/d"), ("z", "d"), ("z", "")
+		// When first ** matches 0: check ("**/z", "a/b/c/d")
+		//   -> second ** matches 0: check ("z", "a/b/c/d") - false, cached
+		//   -> second ** matches 1: check ("z", "b/c/d") - false, cached
+		//   -> second ** matches 2: check ("z", "c/d") - false, cached
+		//   -> second ** matches 3: check ("z", "d") - false, cached
+		//   -> second ** matches 4: check ("z", "") - false, cached
+		// When first ** matches 1: check ("**/z", "b/c/d")
+		//   -> second ** matches 0: check ("z", "b/c/d") - CACHE HIT!
+		matched, err := gfile.MatchGlob("**/**/z", "a/b/c/d")
+		t.AssertNil(err)
+		t.Assert(matched, false)
+
+		// Another failing pattern that creates cache hits
+		matched, err = gfile.MatchGlob("**/**/**/notexist", "a/b/c/d/e")
+		t.AssertNil(err)
+		t.Assert(matched, false)
+
+		// Pattern with same suffix appearing multiple times in recursion (failing case)
+		matched, err = gfile.MatchGlob("**/x/**/x/**/x", "a/b/c/d/e/f")
+		t.AssertNil(err)
+		t.Assert(matched, false)
+	})
+}
