@@ -372,3 +372,430 @@ func TestDecryptPKCS8WithPKCS1Key(t *testing.T) {
 		t.Assert(string(decrypted), string(plainText))
 	})
 }
+
+func TestEncryptPKIX(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Generate PKCS#8 key pair (which uses PKIX public key format)
+		privateKey8, publicKey8, err := grsa.GenerateKeyPairPKCS8(2048)
+		t.AssertNil(err)
+
+		plainText := []byte("Hello, PKIX World!")
+
+		// Encrypt with PKIX public key
+		cipherText, err := grsa.EncryptPKIX(plainText, publicKey8)
+		t.AssertNil(err)
+		t.AssertNE(cipherText, nil)
+
+		// Decrypt with PKCS#8 private key
+		decrypted, err := grsa.DecryptPKCS8(cipherText, privateKey8)
+		t.AssertNil(err)
+		t.Assert(string(decrypted), string(plainText))
+
+		// Test with invalid public key
+		_, err = grsa.EncryptPKIX(plainText, []byte("invalid key"))
+		t.AssertNE(err, nil)
+
+		// Test with PKCS#1 public key (should fail for EncryptPKIX)
+		_, publicKey1, err := grsa.GenerateKeyPair(2048)
+		t.AssertNil(err)
+		_, err = grsa.EncryptPKIX(plainText, publicKey1)
+		t.AssertNE(err, nil)
+
+		// Test oversized plaintext
+		oversizedPlainText := make([]byte, 300)
+		_, err = grsa.EncryptPKIX(oversizedPlainText, publicKey8)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestEncryptPKCS8Alias(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Generate PKCS#8 key pair
+		privateKey8, publicKey8, err := grsa.GenerateKeyPairPKCS8(2048)
+		t.AssertNil(err)
+
+		plainText := []byte("Hello, PKCS8 Alias!")
+
+		// EncryptPKCS8 is an alias for EncryptPKIX
+		cipherText, err := grsa.EncryptPKCS8(plainText, publicKey8)
+		t.AssertNil(err)
+		t.AssertNE(cipherText, nil)
+
+		// Decrypt should work
+		decrypted, err := grsa.DecryptPKCS8(cipherText, privateKey8)
+		t.AssertNil(err)
+		t.Assert(string(decrypted), string(plainText))
+	})
+}
+
+func TestEncryptPKIXBase64(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Generate PKCS#8 key pair
+		privateKey8, publicKey8, err := grsa.GenerateKeyPairPKCS8(2048)
+		t.AssertNil(err)
+
+		privateKeyBase64 := encodeToBase64(privateKey8)
+		publicKeyBase64 := encodeToBase64(publicKey8)
+
+		plainText := []byte("Hello, PKIX Base64!")
+
+		// Encrypt with PKIX public key
+		cipherTextBase64, err := grsa.EncryptPKIXBase64(plainText, publicKeyBase64)
+		t.AssertNil(err)
+		t.AssertNE(cipherTextBase64, "")
+
+		// Decrypt with PKCS#8 private key
+		decrypted, err := grsa.DecryptPKCS8Base64(cipherTextBase64, privateKeyBase64)
+		t.AssertNil(err)
+		t.Assert(string(decrypted), string(plainText))
+
+		// Test with invalid base64 public key
+		_, err = grsa.EncryptPKIXBase64(plainText, "not-valid-base64!!!")
+		t.AssertNE(err, nil)
+
+		// Test with invalid public key content
+		_, err = grsa.EncryptPKIXBase64(plainText, encodeToBase64([]byte("invalid key")))
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestEncryptPKCS8Base64Alias(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Generate PKCS#8 key pair
+		privateKey8, publicKey8, err := grsa.GenerateKeyPairPKCS8(2048)
+		t.AssertNil(err)
+
+		privateKeyBase64 := encodeToBase64(privateKey8)
+		publicKeyBase64 := encodeToBase64(publicKey8)
+
+		plainText := []byte("Hello, PKCS8 Base64 Alias!")
+
+		// EncryptPKCS8Base64 is an alias for EncryptPKIXBase64
+		cipherTextBase64, err := grsa.EncryptPKCS8Base64(plainText, publicKeyBase64)
+		t.AssertNil(err)
+		t.AssertNE(cipherTextBase64, "")
+
+		// Decrypt should work
+		decrypted, err := grsa.DecryptPKCS8Base64(cipherTextBase64, privateKeyBase64)
+		t.AssertNil(err)
+		t.Assert(string(decrypted), string(plainText))
+	})
+}
+
+func TestDecryptPKCS8Base64(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Generate PKCS#8 key pair
+		privateKey8, publicKey8, err := grsa.GenerateKeyPairPKCS8(2048)
+		t.AssertNil(err)
+
+		privateKeyBase64 := encodeToBase64(privateKey8)
+		publicKeyBase64 := encodeToBase64(publicKey8)
+
+		plainText := []byte("Hello, DecryptPKCS8Base64!")
+
+		// Encrypt
+		cipherTextBase64, err := grsa.EncryptPKIXBase64(plainText, publicKeyBase64)
+		t.AssertNil(err)
+
+		// Decrypt
+		decrypted, err := grsa.DecryptPKCS8Base64(cipherTextBase64, privateKeyBase64)
+		t.AssertNil(err)
+		t.Assert(string(decrypted), string(plainText))
+
+		// Test with invalid base64 private key
+		_, err = grsa.DecryptPKCS8Base64(cipherTextBase64, "not-valid-base64!!!")
+		t.AssertNE(err, nil)
+
+		// Test with invalid base64 ciphertext
+		_, err = grsa.DecryptPKCS8Base64("not-valid-base64!!!", privateKeyBase64)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestGetPrivateKeyTypeBase64(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Generate both PKCS#1 and PKCS#8 key pairs
+		privKey1, _, err := grsa.GenerateKeyPair(2048)
+		t.AssertNil(err)
+
+		privKey8, _, err := grsa.GenerateKeyPairPKCS8(2048)
+		t.AssertNil(err)
+
+		// Check types via base64
+		keyType1, err := grsa.GetPrivateKeyTypeBase64(encodeToBase64(privKey1))
+		t.AssertNil(err)
+		t.Assert(keyType1, "PKCS#1")
+
+		keyType8, err := grsa.GetPrivateKeyTypeBase64(encodeToBase64(privKey8))
+		t.AssertNil(err)
+		t.Assert(keyType8, "PKCS#8")
+
+		// Test with invalid base64
+		_, err = grsa.GetPrivateKeyTypeBase64("not-valid-base64!!!")
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestExtractPKCS1PublicKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Generate PKCS#1 key pair
+		privateKey, publicKey, err := grsa.GenerateKeyPair(2048)
+		t.AssertNil(err)
+
+		// Extract public key from private key
+		extractedPublicKey, err := grsa.ExtractPKCS1PublicKey(privateKey)
+		t.AssertNil(err)
+		t.AssertNE(extractedPublicKey, nil)
+
+		// The extracted public key should work for encryption
+		plainText := []byte("Hello, Extracted Key!")
+		cipherText, err := grsa.EncryptPKCS1(plainText, extractedPublicKey)
+		t.AssertNil(err)
+
+		// Decrypt with original private key
+		decrypted, err := grsa.DecryptPKCS1(cipherText, privateKey)
+		t.AssertNil(err)
+		t.Assert(string(decrypted), string(plainText))
+
+		// Compare extracted key with original (they should be equivalent)
+		cipherText2, err := grsa.EncryptPKCS1(plainText, publicKey)
+		t.AssertNil(err)
+		decrypted2, err := grsa.DecryptPKCS1(cipherText2, privateKey)
+		t.AssertNil(err)
+		t.Assert(string(decrypted2), string(plainText))
+
+		// Test with invalid private key
+		_, err = grsa.ExtractPKCS1PublicKey([]byte("invalid key"))
+		t.AssertNE(err, nil)
+
+		// Test with PKCS#8 private key (should fail)
+		privateKey8, _, err := grsa.GenerateKeyPairPKCS8(2048)
+		t.AssertNil(err)
+		_, err = grsa.ExtractPKCS1PublicKey(privateKey8)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestDecryptPKCS1WithInvalidKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		privateKey, publicKey, err := grsa.GenerateKeyPair(2048)
+		t.AssertNil(err)
+
+		plainText := []byte("Hello, World!")
+		cipherText, err := grsa.EncryptPKCS1(plainText, publicKey)
+		t.AssertNil(err)
+
+		// Test with invalid private key
+		_, err = grsa.DecryptPKCS1(cipherText, []byte("invalid key"))
+		t.AssertNE(err, nil)
+
+		// Test with PKCS#8 private key (should fail for DecryptPKCS1)
+		privateKey8, _, err := grsa.GenerateKeyPairPKCS8(2048)
+		t.AssertNil(err)
+		_, err = grsa.DecryptPKCS1(cipherText, privateKey8)
+		t.AssertNE(err, nil)
+
+		// Verify correct decryption works
+		decrypted, err := grsa.DecryptPKCS1(cipherText, privateKey)
+		t.AssertNil(err)
+		t.Assert(string(decrypted), string(plainText))
+	})
+}
+
+func TestDecryptPKCS8WithInvalidKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		privateKey8, publicKey8, err := grsa.GenerateKeyPairPKCS8(2048)
+		t.AssertNil(err)
+
+		plainText := []byte("Hello, World!")
+		cipherText, err := grsa.EncryptPKIX(plainText, publicKey8)
+		t.AssertNil(err)
+
+		// Test with invalid private key
+		_, err = grsa.DecryptPKCS8(cipherText, []byte("invalid key"))
+		t.AssertNE(err, nil)
+
+		// Verify correct decryption works
+		decrypted, err := grsa.DecryptPKCS8(cipherText, privateKey8)
+		t.AssertNil(err)
+		t.Assert(string(decrypted), string(plainText))
+	})
+}
+
+func TestEncryptPKCS1WithInvalidKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		plainText := []byte("Hello, World!")
+
+		// Test with invalid public key
+		_, err := grsa.EncryptPKCS1(plainText, []byte("invalid key"))
+		t.AssertNE(err, nil)
+
+		// Test with PKCS#8 public key (should fail for EncryptPKCS1)
+		_, publicKey8, err := grsa.GenerateKeyPairPKCS8(2048)
+		t.AssertNil(err)
+		_, err = grsa.EncryptPKCS1(plainText, publicKey8)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestEncryptPKCS1WithOversizedPlaintext(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		_, publicKey, err := grsa.GenerateKeyPair(2048)
+		t.AssertNil(err)
+
+		// Create oversized plaintext
+		oversizedPlainText := make([]byte, 300)
+		_, err = grsa.EncryptPKCS1(oversizedPlainText, publicKey)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestEncryptPKCS1Base64WithInvalidInput(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		plainText := []byte("Hello, World!")
+
+		// Test with invalid base64 public key
+		_, err := grsa.EncryptPKCS1Base64(plainText, "not-valid-base64!!!")
+		t.AssertNE(err, nil)
+
+		// Test with invalid public key content
+		_, err = grsa.EncryptPKCS1Base64(plainText, encodeToBase64([]byte("invalid key")))
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestDecryptPKCS1Base64WithInvalidInput(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		privateKey, publicKey, err := grsa.GenerateKeyPair(2048)
+		t.AssertNil(err)
+
+		privateKeyBase64 := encodeToBase64(privateKey)
+		publicKeyBase64 := encodeToBase64(publicKey)
+
+		plainText := []byte("Hello, World!")
+		cipherTextBase64, err := grsa.EncryptPKCS1Base64(plainText, publicKeyBase64)
+		t.AssertNil(err)
+
+		// Test with invalid base64 private key
+		_, err = grsa.DecryptPKCS1Base64(cipherTextBase64, "not-valid-base64!!!")
+		t.AssertNE(err, nil)
+
+		// Test with invalid base64 ciphertext
+		_, err = grsa.DecryptPKCS1Base64("not-valid-base64!!!", privateKeyBase64)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestEncryptWithNonRSAPublicKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Create a PEM block that is valid but not an RSA key
+		// This tests the "not an RSA public key" error path
+		// We use a valid PEM structure but with invalid content
+		invalidPEM := []byte(`-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE
+-----END PUBLIC KEY-----`)
+
+		plainText := []byte("Hello, World!")
+		_, err := grsa.Encrypt(plainText, invalidPEM)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestDecryptWithNonRSAPrivateKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Create a PEM block that is valid but not an RSA key
+		invalidPEM := []byte(`-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg
+-----END PRIVATE KEY-----`)
+
+		cipherText := []byte("some cipher text")
+		_, err := grsa.Decrypt(cipherText, invalidPEM)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestEncryptBase64WithInvalidPublicKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		plainText := []byte("Hello, World!")
+
+		// Test with valid base64 but invalid key content
+		invalidKeyBase64 := encodeToBase64([]byte("invalid key"))
+		_, err := grsa.EncryptBase64(plainText, invalidKeyBase64)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestGetPrivateKeyTypeWithNonRSAKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Create a valid PKCS#8 PEM but with non-RSA content (EC key)
+		// This tests the "not an RSA private key" error path in GetPrivateKeyType
+		ecPrivateKeyPEM := []byte(`-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgVcB/UNPczVP6jE4Z
+p7v6qYQXsKQZLJGBJKKnUWuHb6+hRANCAASYn3k2T4VqPt1HVAK5Rc7rMb6lGOzF
+v0MVLfCgPKANNGdBvGPmaSLFIxGMNL0v1C2RRvqqEu/vL3POoaqfMJhw
+-----END PRIVATE KEY-----`)
+
+		_, err := grsa.GetPrivateKeyType(ecPrivateKeyPEM)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestDecryptPKCS8WithNonRSAKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Create a valid PKCS#8 PEM but with non-RSA content (EC key)
+		ecPrivateKeyPEM := []byte(`-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgVcB/UNPczVP6jE4Z
+p7v6qYQXsKQZLJGBJKKnUWuHb6+hRANCAASYn3k2T4VqPt1HVAK5Rc7rMb6lGOzF
+v0MVLfCgPKANNGdBvGPmaSLFIxGMNL0v1C2RRvqqEu/vL3POoaqfMJhw
+-----END PRIVATE KEY-----`)
+
+		cipherText := []byte("some cipher text")
+		_, err := grsa.DecryptPKCS8(cipherText, ecPrivateKeyPEM)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestEncryptPKIXWithNonRSAKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Create a valid PKIX PEM but with non-RSA content (EC key)
+		ecPublicKeyPEM := []byte(`-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEmJ95Nk+Faj7dR1QCuUXO6zG+pRjs
+xb9DFS3woDygDTRnQbxj5mkixSMRjDS9L9QtkUb6qhLv7y9zzqGqnzCYcA==
+-----END PUBLIC KEY-----`)
+
+		plainText := []byte("Hello, World!")
+		_, err := grsa.EncryptPKIX(plainText, ecPublicKeyPEM)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestEncryptWithNonRSAPKIXKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Create a valid PKIX PEM but with non-RSA content (EC key)
+		// This tests the "not an RSA public key" error path in Encrypt
+		ecPublicKeyPEM := []byte(`-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEmJ95Nk+Faj7dR1QCuUXO6zG+pRjs
+xb9DFS3woDygDTRnQbxj5mkixSMRjDS9L9QtkUb6qhLv7y9zzqGqnzCYcA==
+-----END PUBLIC KEY-----`)
+
+		plainText := []byte("Hello, World!")
+		_, err := grsa.Encrypt(plainText, ecPublicKeyPEM)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestDecryptWithNonRSAPKCS8Key(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Create a valid PKCS#8 PEM but with non-RSA content (EC key)
+		// This tests the "not an RSA private key" error path in Decrypt
+		ecPrivateKeyPEM := []byte(`-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgVcB/UNPczVP6jE4Z
+p7v6qYQXsKQZLJGBJKKnUWuHb6+hRANCAASYn3k2T4VqPt1HVAK5Rc7rMb6lGOzF
+v0MVLfCgPKANNGdBvGPmaSLFIxGMNL0v1C2RRvqqEu/vL3POoaqfMJhw
+-----END PRIVATE KEY-----`)
+
+		cipherText := []byte("some cipher text")
+		_, err := grsa.Decrypt(cipherText, ecPrivateKeyPEM)
+		t.AssertNE(err, nil)
+	})
+}
