@@ -181,3 +181,182 @@ func Test_MatchGlob_WindowsPath(t *testing.T) {
 		t.Assert(matched, true)
 	})
 }
+
+func Test_MatchGlob_InvalidGlobstar(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// "**" not as complete path component should be treated as two "*"
+		// "a**b" should match "ab", "axb", "axxb", etc. (but not "a/b")
+		matched, err := gfile.MatchGlob("a**b", "ab")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("a**b", "axb")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("a**b", "axxb")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("a**b", "axxxb")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		// "a**b" should NOT match paths with separators
+		matched, err = gfile.MatchGlob("a**b", "a/b")
+		t.AssertNil(err)
+		t.Assert(matched, false)
+
+		matched, err = gfile.MatchGlob("a**b", "ax/yb")
+		t.AssertNil(err)
+		t.Assert(matched, false)
+
+		// "**a" at start (not valid globstar)
+		matched, err = gfile.MatchGlob("**a", "a")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("**a", "xa")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("**a", "xxa")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		// "a**" at end (not valid globstar)
+		matched, err = gfile.MatchGlob("a**", "a")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("a**", "ax")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("a**", "axx")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		// Mixed valid and invalid globstars
+		// "src/**a" - "**" is valid globstar, "a" is suffix
+		matched, err = gfile.MatchGlob("src/**/a", "src/foo/a")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("src/**/a", "src/a")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+	})
+}
+
+func Test_MatchGlob_PrefixBoundary(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// "abc/**" should NOT match "abcdef/file.go" (prefix must be complete path component)
+		matched, err := gfile.MatchGlob("abc/**", "abcdef/file.go")
+		t.AssertNil(err)
+		t.Assert(matched, false)
+
+		// "abc/**" should match "abc/file.go"
+		matched, err = gfile.MatchGlob("abc/**", "abc/file.go")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		// "abc/**" should match "abc/def/file.go"
+		matched, err = gfile.MatchGlob("abc/**", "abc/def/file.go")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		// "abc/**" should match "abc" (prefix equals name)
+		matched, err = gfile.MatchGlob("abc/**", "abc")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		// "src/foo/**" should NOT match "src/foobar/file.go"
+		matched, err = gfile.MatchGlob("src/foo/**", "src/foobar/file.go")
+		t.AssertNil(err)
+		t.Assert(matched, false)
+
+		// "src/foo/**" should match "src/foo/bar/file.go"
+		matched, err = gfile.MatchGlob("src/foo/**", "src/foo/bar/file.go")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+	})
+}
+
+func Test_MatchGlob_MultipleGlobstars(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test with multiple ** operators - this would be slow without memoization
+		matched, err := gfile.MatchGlob("a/**/b/**/c/**/d.go", "a/x/y/b/z/c/w/d.go")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("a/**/b/**/c/**/d.go", "a/b/c/d.go")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("a/**/b/**/c/**/d.go", "a/1/2/3/b/4/5/c/6/d.go")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("a/**/b/**/c/**/d.go", "a/b/c/e.go")
+		t.AssertNil(err)
+		t.Assert(matched, false)
+
+		// Deep nesting test
+		matched, err = gfile.MatchGlob("**/*.go", "a/b/c/d/e/f/g/h/i/j/main.go")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+	})
+}
+
+func Test_MatchGlob_MalformedPatterns(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Unclosed bracket - should return error
+		_, err := gfile.MatchGlob("[", "a")
+		t.AssertNE(err, nil)
+
+		_, err = gfile.MatchGlob("[abc", "a")
+		t.AssertNE(err, nil)
+
+		_, err = gfile.MatchGlob("[[", "a")
+		t.AssertNE(err, nil)
+
+		// Malformed patterns with globstar - errors should propagate
+		_, err = gfile.MatchGlob("**/[", "a/b")
+		t.AssertNE(err, nil)
+
+		_, err = gfile.MatchGlob("[/**", "a/b")
+		t.AssertNE(err, nil)
+
+		_, err = gfile.MatchGlob("a/**/[abc", "a/b/c")
+		t.AssertNE(err, nil)
+
+		// Malformed pattern in prefix with wildcards
+		_, err = gfile.MatchGlob("[a/**/b", "a/x/b")
+		t.AssertNE(err, nil)
+
+		// Invalid escape sequence on non-Windows (backslash at end)
+		// Note: behavior may vary by platform
+		_, err = gfile.MatchGlob("test\\", "test")
+		// On Unix, this might not error but won't match
+		// The key is it shouldn't panic
+
+		// Valid patterns should still work
+		matched, err := gfile.MatchGlob("[abc]", "a")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("[a-z]", "m")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		// Note: filepath.Match uses [^...] for negation, not [!...]
+		matched, err = gfile.MatchGlob("[^abc]", "d")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("[^a-z]", "1")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+	})
+}
