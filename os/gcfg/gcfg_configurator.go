@@ -4,9 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gprop provides a generic configuration manager that binds
-// configuration values to Go structs, similar to Spring Boot's @ConfigurationProperties.
-package gprop
+package gcfg
 
 import (
 	"context"
@@ -15,13 +13,12 @@ import (
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/os/gcfg"
 )
 
 // Configurator is a generic configuration manager that provides
 // configuration loading, watching and management similar to Spring Boot's @ConfigurationProperties
 type Configurator[T any] struct {
-	config        *gcfg.Config                         // The configuration instance to watch
+	config        *Config                              // The configuration instance to watch
 	propertyKey   string                               // The property key pattern to watch
 	targetStruct  *T                                   // The target struct pointer to bind configuration to
 	mutex         sync.RWMutex                         // Mutex for thread-safe operations
@@ -30,16 +27,24 @@ type Configurator[T any] struct {
 	loadErrorFunc func(ctx context.Context, err error) // Optional error handling function for load failures
 }
 
-// New creates a new Configurator instance
+// NewConfigurator creates a new Configurator instance
 // config: the configuration instance to watch for changes
 // propertyKey: the property key pattern to watch (use "" or "." to watch all configuration)
 // targetStruct: pointer to the struct that will receive the configuration values
-func New[T any](config *gcfg.Config, propertyKey string, targetStruct *T) *Configurator[T] {
+func NewConfigurator[T any](config *Config, propertyKey string, targetStruct *T) *Configurator[T] {
 	return &Configurator[T]{
 		config:       config,
 		propertyKey:  propertyKey,
 		targetStruct: targetStruct,
 	}
+}
+
+// NewConfiguratorWithAdapter creates a new Configurator instance
+// adapter: the adapter instance to use for loading and watching configuration
+// propertyKey: the property key pattern to watch (use "" or "." to watch all configuration)
+// targetStruct: pointer to the struct that will receive the configuration values
+func NewConfiguratorWithAdapter[T any](adapter Adapter, propertyKey string, targetStruct *T) *Configurator[T] {
+	return NewConfigurator(NewWithAdapter(adapter), propertyKey, targetStruct)
 }
 
 // OnChange sets the callback function that will be called when configuration changes
@@ -129,7 +134,7 @@ func (c *Configurator[T]) MustLoad(ctx context.Context) {
 // This method sets up a watcher that will call Load() when configuration changes are detected
 func (c *Configurator[T]) Watch(ctx context.Context, name string) error {
 	adapter := c.config.GetAdapter()
-	if watcherAdapter, ok := adapter.(gcfg.WatcherAdapter); ok {
+	if watcherAdapter, ok := adapter.(WatcherAdapter); ok {
 		watcherAdapter.AddWatcher(name, func(ctx context.Context) {
 			// Reload configuration when change is detected
 			if err := c.Load(ctx); err != nil {
@@ -181,30 +186,4 @@ func (c *Configurator[T]) SetLoadErrorHandler(errorFunc func(ctx context.Context
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	c.loadErrorFunc = errorFunc
-}
-
-// FromFile creates a Configurator from a file path
-// filePath: the path to the configuration file
-// propertyKey: the property key pattern to watch (use "" or "." to watch all configuration)
-// targetStruct: pointer to the struct that will receive the configuration values
-func FromFile[T any](filePath string, propertyKey string, targetStruct *T) (*Configurator[T], error) {
-	adapter, err := gcfg.NewAdapterFile(filePath)
-	if err != nil {
-		return nil, err
-	}
-	config := gcfg.NewWithAdapter(adapter)
-	return New(config, propertyKey, targetStruct), nil
-}
-
-// FromContent creates a Configurator from content string
-// content: the configuration content as a string
-// propertyKey: the property key pattern to watch (use "" or "." to watch all configuration)
-// targetStruct: pointer to the struct that will receive the configuration values
-func FromContent[T any](content string, propertyKey string, targetStruct *T) (*Configurator[T], error) {
-	adapter, err := gcfg.NewAdapterContent(content)
-	if err != nil {
-		return nil, err
-	}
-	config := gcfg.NewWithAdapter(adapter)
-	return New(config, propertyKey, targetStruct), nil
 }
