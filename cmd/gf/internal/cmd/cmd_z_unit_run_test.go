@@ -262,40 +262,6 @@ func Test_isIgnoredDirName(t *testing.T) {
 	})
 }
 
-func Test_hasIgnoredDescendant(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		// Create a temporary directory structure
-		tempDir := gfile.Temp("gf_run_test_has_ignored")
-		defer gfile.Remove(tempDir)
-
-		// Create directory structure:
-		// tempDir/
-		//   ├── a/
-		//   │   ├── b/
-		//   │   │   └── vendor/  <-- deeply nested ignored
-		//   │   └── c/
-		//   └── d/
-		gfile.Mkdir(filepath.Join(tempDir, "a", "b", "vendor"))
-		gfile.Mkdir(filepath.Join(tempDir, "a", "c"))
-		gfile.Mkdir(filepath.Join(tempDir, "d"))
-
-		// Test: tempDir should have ignored descendant (vendor is 3 levels deep)
-		t.Assert(hasIgnoredDescendant(tempDir, defaultIgnorePatterns), true)
-
-		// Test: d/ should NOT have ignored descendant
-		t.Assert(hasIgnoredDescendant(filepath.Join(tempDir, "d"), defaultIgnorePatterns), false)
-
-		// Test: a/c/ should NOT have ignored descendant
-		t.Assert(hasIgnoredDescendant(filepath.Join(tempDir, "a", "c"), defaultIgnorePatterns), false)
-
-		// Test: a/ should have ignored descendant (vendor in a/b/)
-		t.Assert(hasIgnoredDescendant(filepath.Join(tempDir, "a"), defaultIgnorePatterns), true)
-
-		// Test: a/b/ should have ignored descendant (vendor directly inside)
-		t.Assert(hasIgnoredDescendant(filepath.Join(tempDir, "a", "b"), defaultIgnorePatterns), true)
-	})
-}
-
 func Test_cRunApp_getWatchPaths_DeeplyNestedIgnore(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// Create a temporary directory structure with deeply nested ignored directory

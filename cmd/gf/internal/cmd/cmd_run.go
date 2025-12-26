@@ -66,7 +66,7 @@ which compiles and runs the go codes asynchronously when codes change.
 	cRunExtraBrief         = `the same options as "go run"/"go build" except some options as follows defined`
 	cRunArgsBrief          = `custom arguments for your process`
 	cRunWatchPathsBrief    = `watch additional paths for live reload, separated by ",". i.e. "internal,api"`
-	cRunIgnorePatternBrief = `custom ignore patterns for watch, separated by ",". i.e. ".git,node_modules". default patterns: node_modules, vendor, .*, _*`
+	cRunIgnorePatternBrief = `custom ignore patterns for watch, separated by ",". i.e. ".git,node_modules". default patterns: node_modules, vendor, .*, _*. Glob syntax: "*" matches any chars, "?" matches single char, "[abc]" matches char class. Note: patterns match directory names only, not paths`
 )
 
 var process *gproc.Process
@@ -111,21 +111,15 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		mlog.Fatalf(`command "go" not found in your environment, please install golang first to proceed this command`)
 	}
 
-	if len(in.WatchPaths) == 1 {
-		parts := strings.Split(in.WatchPaths[0], ",")
-		for i, part := range parts {
-			parts[i] = strings.TrimSpace(part)
-		}
-		in.WatchPaths = parts
+	// Parse comma-separated values in WatchPaths
+	if len(in.WatchPaths) > 0 {
+		in.WatchPaths = parseCommaSeparatedArgs(in.WatchPaths)
 		mlog.Printf("watchPaths: %v", in.WatchPaths)
 	}
 
-	if len(in.IgnorePatterns) == 1 {
-		parts := strings.Split(in.IgnorePatterns[0], ",")
-		for i, part := range parts {
-			parts[i] = strings.TrimSpace(part)
-		}
-		in.IgnorePatterns = parts
+	// Parse comma-separated values in IgnorePatterns
+	if len(in.IgnorePatterns) > 0 {
+		in.IgnorePatterns = parseCommaSeparatedArgs(in.IgnorePatterns)
 		mlog.Printf("ignorePatterns: %v", in.IgnorePatterns)
 	}
 
@@ -270,15 +264,20 @@ func (app *cRunApp) End(ctx context.Context, sig os.Signal, outputPath string) {
 }
 
 func (app *cRunApp) genOutputPath() (outputPath string) {
-	var renamePath string
 	outputPath = gfile.Join(app.Path, gfile.Name(app.File))
 	if runtime.GOOS == "windows" {
 		outputPath += ".exe"
 		if gfile.Exists(outputPath) {
-			renamePath = outputPath + "~"
+			renamePath := outputPath + "~"
 			if err := gfile.Rename(outputPath, renamePath); err != nil {
 				mlog.Print(err)
 			}
+			// Clean up the renamed old binary file
+			defer func() {
+				if gfile.Exists(renamePath) {
+					_ = gfile.Remove(renamePath)
+				}
+			}()
 		}
 	}
 	return filepath.FromSlash(outputPath)
@@ -333,64 +332,81 @@ func (app *cRunApp) getWatchPaths() []watchPath {
 }
 
 // collectWatchPaths performs a DFS traversal to collect the minimal set of directories to watch.
+// Returns true if the directory or any of its descendants contains ignored directories.
 // Rule: if a directory has no ignored descendants at any depth, watch it recursively;
 // otherwise, watch it non-recursively and recurse into valid children.
-func (app *cRunApp) collectWatchPaths(dir string, ignorePatterns []string, watchPaths *[]watchPath) {
+func (app *cRunApp) collectWatchPaths(dir string, ignorePatterns []string, watchPaths *[]watchPath) bool {
 	entries, err := gfile.ScanDir(dir, "*", false)
 	if err != nil {
 		mlog.Printf("scan directory '%s' error: %s", dir, err.Error())
 		// If we can't scan the directory, add it to watch list as fallback
 		*watchPaths = append(*watchPaths, watchPath{Path: dir, Recursive: true})
-		return
-	}
-
-	// Check if any descendant (at any depth) is ignored using DFS with early termination.
-	if !hasIgnoredDescendant(dir, ignorePatterns) {
-		// No ignored descendants at any depth, watch this directory recursively.
-		*watchPaths = append(*watchPaths, watchPath{Path: dir, Recursive: true})
-	} else {
-		// Has ignored descendants, watch current directory non-recursively to catch top-level files,
-		// and recurse into valid subdirectories.
-		*watchPaths = append(*watchPaths, watchPath{Path: dir, Recursive: false})
-		for _, entry := range entries {
-			if !gfile.IsDir(entry) {
-				continue
-			}
-			if !isIgnoredDirName(entry, ignorePatterns) {
-				app.collectWatchPaths(entry, ignorePatterns, watchPaths)
-			}
-		}
-	}
-}
-
-// hasIgnoredDescendant checks if the directory has any ignored subdirectory at any depth.
-// Uses DFS with early termination - stops as soon as an ignored directory is found.
-// Key optimization: when an ignored directory is found, we don't enter it (pruning).
-func hasIgnoredDescendant(dir string, ignorePatterns []string) bool {
-	entries, err := gfile.ScanDir(dir, "*", false)
-	if err != nil {
 		return false
 	}
 
+	// First pass: identify valid subdirectories and check for directly ignored children
+	var validSubDirs []string
+	hasIgnoredChild := false
 	for _, entry := range entries {
 		if !gfile.IsDir(entry) {
 			continue
 		}
-		// Check if this child directory is ignored
 		if isIgnoredDirName(entry, ignorePatterns) {
-			return true // Found an ignored directory, early termination
-		}
-		// Recursively check descendants (DFS with pruning)
-		if hasIgnoredDescendant(entry, ignorePatterns) {
-			return true // Found an ignored descendant, early termination
+			hasIgnoredChild = true
+		} else {
+			validSubDirs = append(validSubDirs, entry)
 		}
 	}
-	return false
+
+	// If already has ignored child, we know this dir needs non-recursive watch
+	if hasIgnoredChild {
+		*watchPaths = append(*watchPaths, watchPath{Path: dir, Recursive: false})
+		for _, subDir := range validSubDirs {
+			app.collectWatchPaths(subDir, ignorePatterns, watchPaths)
+		}
+		return true
+	}
+
+	// No ignored children, but need to check descendants recursively
+	// Collect results from all subdirectories first
+	subResults := make([]bool, len(validSubDirs))
+	subWatchPaths := make([][]watchPath, len(validSubDirs))
+	hasIgnoredDescendant := false
+
+	for i, subDir := range validSubDirs {
+		var subPaths []watchPath
+		subResults[i] = app.collectWatchPaths(subDir, ignorePatterns, &subPaths)
+		subWatchPaths[i] = subPaths
+		if subResults[i] {
+			hasIgnoredDescendant = true
+		}
+	}
+
+	if !hasIgnoredDescendant {
+		// No ignored descendants at any depth, watch this directory recursively
+		*watchPaths = append(*watchPaths, watchPath{Path: dir, Recursive: true})
+		return false
+	}
+
+	// Has ignored descendants, watch current directory non-recursively
+	// and add all collected subdirectory watch paths
+	*watchPaths = append(*watchPaths, watchPath{Path: dir, Recursive: false})
+	for _, subPaths := range subWatchPaths {
+		*watchPaths = append(*watchPaths, subPaths...)
+	}
+	return true
 }
 
 // defaultIgnorePatterns contains glob patterns for directory names that should be ignored when watching.
 // These directories typically contain third-party code or non-source files.
-// Patterns support glob syntax: * matches any sequence of characters, ? matches single character.
+// Supported glob syntax (filepath.Match):
+//   - "*" matches any sequence of non-separator characters
+//   - "?" matches any single non-separator character
+//   - "[abc]" matches any character in the bracket
+//   - "[a-z]" matches any character in the range
+//   - "[^abc]" or "[!abc]" matches any character not in the bracket
+//
+// Note: patterns match directory base names only, not full paths (no "/" or path separators allowed).
 var defaultIgnorePatterns = []string{
 	"node_modules",
 	"vendor",
@@ -399,7 +415,8 @@ var defaultIgnorePatterns = []string{
 }
 
 // isIgnoredDirName checks if a directory name matches any ignored pattern.
-// It accepts either a full path or just the directory name.
+// It accepts either a full path or just the directory name, but only matches against the base name.
+// Note: patterns should not contain "/" as they only match directory names, not paths.
 func isIgnoredDirName(name string, ignorePatterns []string) bool {
 	baseName := gfile.Basename(name)
 	for _, pattern := range ignorePatterns {
@@ -408,4 +425,20 @@ func isIgnoredDirName(name string, ignorePatterns []string) bool {
 		}
 	}
 	return false
+}
+
+// parseCommaSeparatedArgs parses command line arguments that may contain comma-separated values.
+// It handles both single argument with commas (e.g., "a,b,c") and multiple arguments.
+func parseCommaSeparatedArgs(args []string) []string {
+	var result []string
+	for _, arg := range args {
+		parts := strings.Split(arg, ",")
+		for _, part := range parts {
+			trimmed := strings.TrimSpace(part)
+			if trimmed != "" {
+				result = append(result, trimmed)
+			}
+		}
+	}
+	return result
 }
