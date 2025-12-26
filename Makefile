@@ -6,6 +6,7 @@ tidy:
 	./.make_tidy.sh
 
 # execute "golangci-lint" to check code style
+# go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
 .PHONY: lint
 lint:
 	golangci-lint run -c .golangci.yml
