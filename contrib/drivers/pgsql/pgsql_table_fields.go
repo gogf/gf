@@ -80,10 +80,22 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 			}
 			continue
 		}
+
+		var (
+			fieldType  string
+			dataType   = m["type"].String()
+			dataLength = m["length"].Int()
+		)
+		if dataLength > 0 {
+			fieldType = fmt.Sprintf("%s(%d)", dataType, dataLength)
+		} else {
+			fieldType = dataType
+		}
+
 		fields[name] = &gdb.TableField{
 			Index:   index,
 			Name:    name,
-			Type:    m["type"].String(),
+			Type:    fieldType,
 			Null:    !m["null"].Bool(),
 			Key:     m["key"].String(),
 			Default: m["default_value"].Val(),
