@@ -24,6 +24,12 @@
 
 一个强大的框架，为了更快、更轻松、更高效的项目开发。
 
+## 安装
+
+```bash
+go get -u github.com/gogf/gf/v2
+```
+
 ## 文档
 
 - 官方网站: [https://goframe.org](https://goframe.org)
@@ -31,7 +37,8 @@
 - 国内镜像: [https://goframe.org.cn](https://goframe.org.cn)
 - 镜像网站: [Github Pages](https://pages.goframe.org)
 - 镜像网站: [离线文档](https://github.com/gogf/goframe.org-pdf?tab=readme-ov-file#%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC)
-- GoDoc API: [https://pkg.go.dev/github.com/gogf/gf/v2](https://pkg.go.dev/github.com/gogf/gf/v2)
+- Go包文档: [https://pkg.go.dev/github.com/gogf/gf/v2](https://pkg.go.dev/github.com/gogf/gf/v2)
+- 文档源码: [https://github.com/gogf/gf-site](https://github.com/gogf/gf-site)
 
 ## 贡献者
 
