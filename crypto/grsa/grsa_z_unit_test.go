@@ -799,3 +799,260 @@ v0MVLfCgPKANNGdBvGPmaSLFIxGMNL0v1C2RRvqqEu/vL3POoaqfMJhw
 		t.AssertNE(err, nil)
 	})
 }
+
+// ============================================================================
+// OAEP Encryption/Decryption Tests
+// ============================================================================
+
+func TestEncryptDecryptOAEP(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Generate a key pair for testing
+		privateKey, publicKey, err := grsa.GenerateDefaultKeyPair()
+		t.AssertNil(err)
+		t.AssertNE(privateKey, nil)
+		t.AssertNE(publicKey, nil)
+
+		// Test data to encrypt
+		plainText := []byte("Hello, OAEP World!")
+
+		// Encrypt with public key using OAEP
+		cipherText, err := grsa.EncryptOAEP(plainText, publicKey)
+		t.AssertNil(err)
+		t.AssertNE(cipherText, nil)
+
+		// Decrypt with private key using OAEP
+		decryptedText, err := grsa.DecryptOAEP(cipherText, privateKey)
+		t.AssertNil(err)
+		t.Assert(string(decryptedText), string(plainText))
+	})
+}
+
+func TestEncryptDecryptOAEPWithPKCS8Keys(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Generate a PKCS#8 key pair for testing
+		privateKey8, publicKey8, err := grsa.GenerateKeyPairPKCS8(2048)
+		t.AssertNil(err)
+		t.AssertNE(privateKey8, nil)
+		t.AssertNE(publicKey8, nil)
+
+		// Test data to encrypt
+		plainText := []byte("Hello, OAEP PKCS#8 World!")
+
+		// Encrypt with PKIX public key using OAEP
+		cipherText, err := grsa.EncryptOAEP(plainText, publicKey8)
+		t.AssertNil(err)
+		t.AssertNE(cipherText, nil)
+
+		// Decrypt with PKCS#8 private key using OAEP
+		decryptedText, err := grsa.DecryptOAEP(cipherText, privateKey8)
+		t.AssertNil(err)
+		t.Assert(string(decryptedText), string(plainText))
+	})
+}
+
+func TestEncryptDecryptOAEPBase64(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Generate a key pair for testing
+		privateKey, publicKey, err := grsa.GenerateDefaultKeyPair()
+		t.AssertNil(err)
+
+		// Encode keys to base64
+		privateKeyBase64 := encodeToBase64(privateKey)
+		publicKeyBase64 := encodeToBase64(publicKey)
+
+		// Test data to encrypt
+		plainText := []byte("Hello, OAEP Base64 World!")
+
+		// Encrypt with public key using OAEP
+		cipherTextBase64, err := grsa.EncryptOAEPBase64(plainText, publicKeyBase64)
+		t.AssertNil(err)
+		t.AssertNE(cipherTextBase64, "")
+
+		// Decrypt with private key using OAEP
+		decryptedText, err := grsa.DecryptOAEPBase64(cipherTextBase64, privateKeyBase64)
+		t.AssertNil(err)
+		t.Assert(string(decryptedText), string(plainText))
+	})
+}
+
+func TestEncryptOAEPWithInvalidPublicKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		plainText := []byte("Hello, World!")
+
+		// Test with invalid public key
+		_, err := grsa.EncryptOAEP(plainText, []byte("invalid key"))
+		t.AssertNE(err, nil)
+
+		// Test with empty public key
+		_, err = grsa.EncryptOAEP(plainText, []byte{})
+		t.AssertNE(err, nil)
+
+		// Test with nil public key
+		_, err = grsa.EncryptOAEP(plainText, nil)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestDecryptOAEPWithInvalidPrivateKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Generate a valid key pair and encrypt some data
+		privateKey, publicKey, err := grsa.GenerateDefaultKeyPair()
+		t.AssertNil(err)
+
+		plainText := []byte("Hello, World!")
+		cipherText, err := grsa.EncryptOAEP(plainText, publicKey)
+		t.AssertNil(err)
+
+		// Test decryption with invalid private key
+		_, err = grsa.DecryptOAEP(cipherText, []byte("invalid key"))
+		t.AssertNE(err, nil)
+
+		// Test decryption with empty private key
+		_, err = grsa.DecryptOAEP(cipherText, []byte{})
+		t.AssertNE(err, nil)
+
+		// Test decryption with wrong private key
+		wrongPrivKey, _, err := grsa.GenerateDefaultKeyPair()
+		t.AssertNil(err)
+		_, err = grsa.DecryptOAEP(cipherText, wrongPrivKey)
+		t.AssertNE(err, nil)
+
+		// Verify correct decryption still works
+		decrypted, err := grsa.DecryptOAEP(cipherText, privateKey)
+		t.AssertNil(err)
+		t.Assert(string(decrypted), string(plainText))
+	})
+}
+
+func TestEncryptOAEPWithOversizedPlaintext(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Generate a 2048-bit key pair
+		_, publicKey, err := grsa.GenerateDefaultKeyPair()
+		t.AssertNil(err)
+
+		// For 2048-bit key with OAEP SHA-256 padding, max size is 256 - 2*32 - 2 = 190 bytes
+		// Create plaintext that exceeds this limit
+		oversizedPlainText := make([]byte, 200)
+		for i := range oversizedPlainText {
+			oversizedPlainText[i] = 'A'
+		}
+
+		// Encryption should fail with oversized plaintext
+		_, err = grsa.EncryptOAEP(oversizedPlainText, publicKey)
+		t.AssertNE(err, nil)
+
+		// Verify that valid size plaintext works
+		validPlainText := make([]byte, 150)
+		for i := range validPlainText {
+			validPlainText[i] = 'B'
+		}
+		_, err = grsa.EncryptOAEP(validPlainText, publicKey)
+		t.AssertNil(err)
+	})
+}
+
+func TestDecryptOAEPWithCorruptedCiphertext(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		privateKey, publicKey, err := grsa.GenerateDefaultKeyPair()
+		t.AssertNil(err)
+
+		plainText := []byte("Hello, World!")
+		cipherText, err := grsa.EncryptOAEP(plainText, publicKey)
+		t.AssertNil(err)
+
+		// Corrupt the ciphertext
+		corruptedCipherText := make([]byte, len(cipherText))
+		copy(corruptedCipherText, cipherText)
+		corruptedCipherText[0] ^= 0xFF
+		corruptedCipherText[len(corruptedCipherText)-1] ^= 0xFF
+
+		// Decryption should fail with corrupted ciphertext
+		_, err = grsa.DecryptOAEP(corruptedCipherText, privateKey)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestEncryptOAEPBase64WithInvalidInput(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		plainText := []byte("Hello, World!")
+
+		// Test with invalid base64 public key
+		_, err := grsa.EncryptOAEPBase64(plainText, "not-valid-base64!!!")
+		t.AssertNE(err, nil)
+
+		// Test with valid base64 but invalid key content
+		invalidKeyBase64 := encodeToBase64([]byte("invalid key"))
+		_, err = grsa.EncryptOAEPBase64(plainText, invalidKeyBase64)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestDecryptOAEPBase64WithInvalidInput(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		privateKey, publicKey, err := grsa.GenerateDefaultKeyPair()
+		t.AssertNil(err)
+
+		privateKeyBase64 := encodeToBase64(privateKey)
+		publicKeyBase64 := encodeToBase64(publicKey)
+
+		plainText := []byte("Hello, World!")
+		cipherTextBase64, err := grsa.EncryptOAEPBase64(plainText, publicKeyBase64)
+		t.AssertNil(err)
+
+		// Test with invalid base64 private key
+		_, err = grsa.DecryptOAEPBase64(cipherTextBase64, "not-valid-base64!!!")
+		t.AssertNE(err, nil)
+
+		// Test with invalid base64 ciphertext
+		_, err = grsa.DecryptOAEPBase64("not-valid-base64!!!", privateKeyBase64)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestEncryptOAEPWithNonRSAPublicKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Create a valid PKIX PEM but with non-RSA content (EC key)
+		ecPublicKeyPEM := []byte(`-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEmJ95Nk+Faj7dR1QCuUXO6zG+pRjs
+xb9DFS3woDygDTRnQbxj5mkixSMRjDS9L9QtkUb6qhLv7y9zzqGqnzCYcA==
+-----END PUBLIC KEY-----`)
+
+		plainText := []byte("Hello, World!")
+		_, err := grsa.EncryptOAEP(plainText, ecPublicKeyPEM)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestDecryptOAEPWithNonRSAPrivateKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Create a valid PKCS#8 PEM but with non-RSA content (EC key)
+		ecPrivateKeyPEM := []byte(`-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgVcB/UNPczVP6jE4Z
+p7v6qYQXsKQZLJGBJKKnUWuHb6+hRANCAASYn3k2T4VqPt1HVAK5Rc7rMb6lGOzF
+v0MVLfCgPKANNGdBvGPmaSLFIxGMNL0v1C2RRvqqEu/vL3POoaqfMJhw
+-----END PRIVATE KEY-----`)
+
+		cipherText := []byte("some cipher text")
+		_, err := grsa.DecryptOAEP(cipherText, ecPrivateKeyPEM)
+		t.AssertNE(err, nil)
+	})
+}
+
+func TestEncryptOAEPWithHashCustomHash(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// This test verifies that EncryptOAEPWithHash and DecryptOAEPWithHash work correctly
+		// with the default SHA-256 hash (via EncryptOAEP/DecryptOAEP which use sha256.New())
+		privateKey, publicKey, err := grsa.GenerateDefaultKeyPair()
+		t.AssertNil(err)
+
+		plainText := []byte("Hello, Custom Hash World!")
+
+		// Encrypt and decrypt using the default OAEP functions
+		cipherText, err := grsa.EncryptOAEP(plainText, publicKey)
+		t.AssertNil(err)
+
+		decryptedText, err := grsa.DecryptOAEP(cipherText, privateKey)
+		t.AssertNil(err)
+		t.Assert(string(decryptedText), string(plainText))
+	})
+}

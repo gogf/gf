@@ -9,10 +9,27 @@ Package `grsa` provides useful API for RSA encryption/decryption algorithms with
 - Handling Base64 encoded keys
 - Detecting private key types
 - Plaintext size validation
+- **OAEP padding support (recommended for new applications)**
+
+## Security Considerations
+
+This package provides two padding schemes for RSA encryption:
+
+### 1. PKCS#1 v1.5 (Legacy)
+
+Used by `Encrypt*`, `DecryptPKCS1*`, `DecryptPKCS8*` functions.
+
+⚠️ **Security Warning**: PKCS#1 v1.5 padding is considered less secure and vulnerable to padding oracle attacks. It is provided for backward compatibility with existing systems.
+
+### 2. OAEP (Recommended)
+
+Used by `EncryptOAEP*`, `DecryptOAEP*` functions.
+
+✅ **Recommended**: OAEP (Optimal Asymmetric Encryption Padding) provides better security guarantees and should be used for all new applications.
 
 ## Quick Start
 
-### Basic Encryption/Decryption
+### Basic Encryption/Decryption (OAEP - Recommended)
 
 ```go
 package main
@@ -32,7 +49,43 @@ func main() {
     // Data to encrypt
     plainText := []byte("Hello, World!")
 
-    // Encrypt with public key
+    // Encrypt with public key using OAEP (recommended)
+    cipherText, err := grsa.EncryptOAEP(plainText, publicKey)
+    if err != nil {
+        panic(err)
+    }
+
+    // Decrypt with private key using OAEP
+    decryptedText, err := grsa.DecryptOAEP(cipherText, privateKey)
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Println(string(decryptedText)) // Output: Hello, World!
+}
+```
+
+### Legacy Encryption/Decryption (PKCS#1 v1.5)
+
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/gogf/gf/v2/crypto/grsa"
+)
+
+func main() {
+    // Generate a default RSA key pair (2048 bits)
+    privateKey, publicKey, err := grsa.GenerateDefaultKeyPair()
+    if err != nil {
+        panic(err)
+    }
+
+    // Data to encrypt
+    plainText := []byte("Hello, World!")
+
+    // Encrypt with public key (PKCS#1 v1.5 - legacy)
     cipherText, err := grsa.Encrypt(plainText, publicKey)
     if err != nil {
         panic(err)
@@ -73,14 +126,14 @@ func main() {
     // Data to encrypt
     plainText := []byte("Hello, Base64 World!")
 
-    // Encrypt with Base64 encoded public key
-    cipherTextBase64, err := grsa.EncryptBase64(plainText, publicKeyBase64)
+    // Encrypt with Base64 encoded public key using OAEP (recommended)
+    cipherTextBase64, err := grsa.EncryptOAEPBase64(plainText, publicKeyBase64)
     if err != nil {
         panic(err)
     }
 
-    // Decrypt with Base64 encoded private key
-    decryptedText, err := grsa.DecryptBase64(cipherTextBase64, privateKeyBase64)
+    // Decrypt with Base64 encoded private key using OAEP
+    decryptedText, err := grsa.DecryptOAEPBase64(cipherTextBase64, privateKeyBase64)
     if err != nil {
         panic(err)
     }
@@ -97,21 +150,30 @@ func main() {
 - `GenerateKeyPairPKCS8(bits int)`: Generates a new RSA key pair with the given bits in PKCS#8 format
 - `GenerateDefaultKeyPair()`: Generates a new RSA key pair with default bits (2048) in PKCS#1 format
 
-### General Encryption/Decryption
+### OAEP Encryption/Decryption (Recommended)
+
+- `EncryptOAEP(plainText, publicKey []byte)`: Encrypts data with public key using OAEP padding (SHA-256)
+- `DecryptOAEP(cipherText, privateKey []byte)`: Decrypts data with private key using OAEP padding (SHA-256)
+- `EncryptOAEPBase64(plainText []byte, publicKeyBase64 string)`: Encrypts data with OAEP and returns base64-encoded result
+- `DecryptOAEPBase64(cipherTextBase64, privateKeyBase64 string)`: Decrypts base64-encoded OAEP data
+- `EncryptOAEPWithHash(plainText, publicKey, label []byte, hash hash.Hash)`: Encrypts with custom hash function
+- `DecryptOAEPWithHash(cipherText, privateKey, label []byte, hash hash.Hash)`: Decrypts with custom hash function
+
+### General Encryption/Decryption (Legacy - PKCS#1 v1.5)
 
 - `Encrypt(plainText, publicKey []byte)`: Encrypts data with public key (auto-detect format)
 - `Decrypt(cipherText, privateKey []byte)`: Decrypts data with private key (auto-detect format)
 - `EncryptBase64(plainText []byte, publicKeyBase64 string)`: Encrypts data with base64-encoded public key and returns base64-encoded result
 - `DecryptBase64(cipherTextBase64, privateKeyBase64 string)`: Decrypts base64-encoded data with base64-encoded private key
 
-### PKCS#1 Specific Functions
+### PKCS#1 Specific Functions (Legacy)
 
 - `EncryptPKCS1(plainText, publicKey []byte)`: Encrypts data with PKCS#1 format public key
 - `DecryptPKCS1(cipherText, privateKey []byte)`: Decrypts data with PKCS#1 format private key
 - `EncryptPKCS1Base64(plainText []byte, publicKeyBase64 string)`: Encrypts data with PKCS#1 public key and returns base64-encoded result
 - `DecryptPKCS1Base64(cipherTextBase64, privateKeyBase64 string)`: Decrypts base64-encoded data with PKCS#1 private key
 
-### PKIX Specific Functions
+### PKIX Specific Functions (Legacy)
 
 PKIX (X.509) is the standard format for public keys, used with PKCS#8 private keys.
 
@@ -166,11 +228,19 @@ The deprecated `EncryptPKCS8` function was a misnomer because encryption uses pu
 
 ## Plaintext Size Limit
 
-RSA encryption has a size limit based on key size. For PKCS#1 v1.5 padding:
+RSA encryption has a size limit based on key size and padding scheme.
+
+### PKCS#1 v1.5 Padding (Legacy)
 
 - **Max plaintext size = key_size_in_bytes - 11**
 - For a 2048-bit key: max 245 bytes
 - For a 4096-bit key: max 501 bytes
+
+### OAEP Padding with SHA-256 (Recommended)
+
+- **Max plaintext size = key_size_in_bytes - 2 × hash_size - 2**
+- For a 2048-bit key with SHA-256: max 190 bytes
+- For a 4096-bit key with SHA-256: max 446 bytes
 
 If you need to encrypt larger data, consider using hybrid encryption (RSA + AES).
 

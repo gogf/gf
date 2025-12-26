@@ -11,14 +11,30 @@
 // - Encrypting and decrypting data with various key formats
 // - Handling Base64 encoded keys
 // - Detecting private key types
+//
+// # Security Considerations
+//
+// This package provides two padding schemes for RSA encryption:
+//
+// 1. PKCS#1 v1.5 (legacy): Used by Encrypt*, DecryptPKCS1*, DecryptPKCS8* functions.
+// This padding scheme is considered less secure and vulnerable to padding oracle attacks.
+// It is provided for backward compatibility with existing systems.
+//
+// 2. OAEP (recommended): Used by EncryptOAEP*, DecryptOAEP* functions.
+// OAEP (Optimal Asymmetric Encryption Padding) is the recommended padding scheme
+// for new applications as it provides better security guarantees.
+//
+// For new implementations, prefer using OAEP functions (EncryptOAEP, DecryptOAEP, etc.).
 package grsa
 
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
+	"hash"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -40,12 +56,15 @@ const (
 	pemTypePublicKey     = "PUBLIC KEY"      // PKIX public key
 )
 
-// Encrypt encrypts data with public key (auto-detect format).
+// Encrypt encrypts data with public key using PKCS#1 v1.5 padding (auto-detect format).
 // The publicKey can be either PKCS#1 or PKCS#8 (PKIX) format.
 //
 // Note: RSA encryption has a size limit based on key size.
 // For PKCS#1 v1.5 padding, max plaintext size = key_size_in_bytes - 11.
 // For example, a 2048-bit key can encrypt at most 245 bytes.
+//
+// Security Warning: PKCS#1 v1.5 padding is vulnerable to padding oracle attacks.
+// For new applications, consider using EncryptOAEP instead.
 func Encrypt(plainText, publicKey []byte) ([]byte, error) {
 	block, _ := pem.Decode(publicKey)
 	if block == nil {
@@ -77,8 +96,11 @@ func Encrypt(plainText, publicKey []byte) ([]byte, error) {
 	return rsa.EncryptPKCS1v15(rand.Reader, rsaPub, plainText)
 }
 
-// Decrypt decrypts data with private key (auto-detect format).
+// Decrypt decrypts data with private key using PKCS#1 v1.5 padding (auto-detect format).
 // The privateKey can be either PKCS#1 or PKCS#8 format.
+//
+// Security Warning: PKCS#1 v1.5 padding is vulnerable to padding oracle attacks.
+// For new applications, consider using DecryptOAEP instead.
 func Decrypt(cipherText, privateKey []byte) ([]byte, error) {
 	block, _ := pem.Decode(privateKey)
 	if block == nil {
@@ -425,4 +447,123 @@ func ExtractPKCS1PublicKey(privateKey []byte) ([]byte, error) {
 		Type:  pemTypeRSAPublicKey,
 		Bytes: pubKeyBytes,
 	}), nil
+}
+
+// ============================================================================
+// OAEP Encryption/Decryption Functions (Recommended for new applications)
+// ============================================================================
+
+// EncryptOAEP encrypts data with public key using OAEP padding (auto-detect format).
+// The publicKey can be either PKCS#1 or PKCS#8 (PKIX) format.
+// Uses SHA-256 as the hash function by default.
+//
+// OAEP (Optimal Asymmetric Encryption Padding) is more secure than PKCS#1 v1.5
+// and is recommended for new applications.
+//
+// Note: For OAEP with SHA-256, max plaintext size = key_size_in_bytes - 2*32 - 2.
+// For a 2048-bit key, this is 190 bytes.
+func EncryptOAEP(plainText, publicKey []byte) ([]byte, error) {
+	return EncryptOAEPWithHash(plainText, publicKey, nil, sha256.New())
+}
+
+// EncryptOAEPWithHash encrypts data with public key using OAEP padding with custom hash.
+// The publicKey can be either PKCS#1 or PKCS#8 (PKIX) format.
+// The label parameter can be nil for most use cases.
+// The hash parameter specifies the hash function to use (e.g., sha256.New()).
+func EncryptOAEPWithHash(plainText, publicKey, label []byte, hash hash.Hash) ([]byte, error) {
+	block, _ := pem.Decode(publicKey)
+	if block == nil {
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid public key")
+	}
+
+	// Try PKCS#8 (PKIX) first
+	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		// Try PKCS#1
+		pub, err = x509.ParsePKCS1PublicKey(block.Bytes)
+		if err != nil {
+			return nil, gerror.WrapCode(gcode.CodeInvalidParameter, err, "failed to parse public key")
+		}
+	}
+
+	rsaPub, ok := pub.(*rsa.PublicKey)
+	if !ok {
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "not an RSA public key")
+	}
+
+	// Validate plaintext size for OAEP padding
+	// maxSize = keySize - 2*hashSize - 2
+	maxSize := rsaPub.Size() - 2*hash.Size() - 2
+	if len(plainText) > maxSize {
+		return nil, gerror.NewCodef(gcode.CodeInvalidParameter,
+			"plaintext too long: max %d bytes for this key with OAEP, got %d bytes", maxSize, len(plainText))
+	}
+
+	return rsa.EncryptOAEP(hash, rand.Reader, rsaPub, plainText, label)
+}
+
+// DecryptOAEP decrypts data with private key using OAEP padding (auto-detect format).
+// The privateKey can be either PKCS#1 or PKCS#8 format.
+// Uses SHA-256 as the hash function by default.
+func DecryptOAEP(cipherText, privateKey []byte) ([]byte, error) {
+	return DecryptOAEPWithHash(cipherText, privateKey, nil, sha256.New())
+}
+
+// DecryptOAEPWithHash decrypts data with private key using OAEP padding with custom hash.
+// The privateKey can be either PKCS#1 or PKCS#8 format.
+// The label parameter must match the label used during encryption (nil if not used).
+// The hash parameter must match the hash function used during encryption.
+func DecryptOAEPWithHash(cipherText, privateKey, label []byte, hash hash.Hash) ([]byte, error) {
+	block, _ := pem.Decode(privateKey)
+	if block == nil {
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid private key")
+	}
+
+	// Try PKCS#8 first
+	priv, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err != nil {
+		// Try PKCS#1
+		priv, err = x509.ParsePKCS1PrivateKey(block.Bytes)
+		if err != nil {
+			return nil, gerror.WrapCode(gcode.CodeInvalidParameter, err, "failed to parse private key")
+		}
+	}
+
+	rsaPriv, ok := priv.(*rsa.PrivateKey)
+	if !ok {
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "not an RSA private key")
+	}
+
+	return rsa.DecryptOAEP(hash, rand.Reader, rsaPriv, cipherText, label)
+}
+
+// EncryptOAEPBase64 encrypts data with public key using OAEP padding
+// and returns base64-encoded result.
+func EncryptOAEPBase64(plainText []byte, publicKeyBase64 string) (string, error) {
+	publicKey, err := base64.StdEncoding.DecodeString(publicKeyBase64)
+	if err != nil {
+		return "", gerror.WrapCode(gcode.CodeInvalidParameter, err, "failed to decode public key")
+	}
+
+	encrypted, err := EncryptOAEP(plainText, publicKey)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.StdEncoding.EncodeToString(encrypted), nil
+}
+
+// DecryptOAEPBase64 decrypts base64-encoded data with private key using OAEP padding.
+func DecryptOAEPBase64(cipherTextBase64, privateKeyBase64 string) ([]byte, error) {
+	privateKey, err := base64.StdEncoding.DecodeString(privateKeyBase64)
+	if err != nil {
+		return nil, gerror.WrapCode(gcode.CodeInvalidParameter, err, "failed to decode private key")
+	}
+
+	cipherText, err := base64.StdEncoding.DecodeString(cipherTextBase64)
+	if err != nil {
+		return nil, gerror.WrapCode(gcode.CodeInvalidParameter, err, "failed to decode cipher text")
+	}
+
+	return DecryptOAEP(cipherText, privateKey)
 }
