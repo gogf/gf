@@ -29,6 +29,7 @@ type TestConfig struct {
 	Server   ServerConfig `json:"server" yaml:"server"`
 }
 
+// TestConfig2 is a test struct for configuration binding
 type TestConfig2 struct {
 	Name     string       `json:"name" yaml:"name"`
 	Age      int          `json:"age" yaml:"age"`
