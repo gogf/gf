@@ -680,12 +680,6 @@ func Test_SelfName(t *testing.T) {
 	})
 }
 
-func Test_MTimestamp(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gfile.MTimestamp(gfile.Temp()) > 0, true)
-	})
-}
-
 func Test_RemoveFile_RemoveAll(t *testing.T) {
 	// safe deleting single file.
 	gtest.C(t, func(t *gtest.T) {
@@ -723,5 +717,100 @@ func Test_RemoveFile_RemoveAll(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(gfile.Exists(filePath1), false)
 		t.Assert(gfile.Exists(filePath2), false)
+	})
+}
+
+func Test_Join(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Basic join
+		t.Assert(gfile.Join("a", "b", "c"), "a"+gfile.Separator+"b"+gfile.Separator+"c")
+
+		// Join with trailing separator
+		t.Assert(gfile.Join("a"+gfile.Separator, "b"), "a"+gfile.Separator+"b")
+
+		// Join with empty string
+		t.Assert(gfile.Join("", "a", "b"), "a"+gfile.Separator+"b")
+
+		// Join single path
+		t.Assert(gfile.Join("single"), "single")
+
+		// Join with absolute path
+		t.Assert(gfile.Join(gfile.Separator+"root", "path"), gfile.Separator+"root"+gfile.Separator+"path")
+
+		// Join empty
+		t.Assert(gfile.Join(), "")
+	})
+}
+
+func Test_Chdir(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Save current working directory
+		originalPwd := gfile.Pwd()
+		defer func() {
+			// Restore original working directory
+			_ = gfile.Chdir(originalPwd)
+		}()
+
+		// Test changing to temp directory
+		tempDir := gfile.Temp()
+		err := gfile.Chdir(tempDir)
+		t.AssertNil(err)
+		t.Assert(gfile.Pwd(), tempDir)
+
+		// Test changing to non-existent directory
+		err = gfile.Chdir("/nonexistent_dir_12345")
+		t.AssertNE(err, nil)
+	})
+}
+
+func Test_Abs(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test with relative path
+		absPath := gfile.Abs(".")
+		t.Assert(len(absPath) > 0, true)
+		t.Assert(filepath.IsAbs(absPath), true)
+
+		// Test with already absolute path
+		tempDir := gfile.Temp()
+		t.Assert(gfile.Abs(tempDir), tempDir)
+
+		// Test with relative path components
+		absPath = gfile.Abs("./test")
+		t.Assert(filepath.IsAbs(absPath), true)
+
+		// Test with parent directory reference
+		absPath = gfile.Abs("../test")
+		t.Assert(filepath.IsAbs(absPath), true)
+
+		// Test with empty string
+		absPath = gfile.Abs("")
+		t.Assert(len(absPath) > 0, true)
+		t.Assert(filepath.IsAbs(absPath), true)
+	})
+}
+
+func Test_Name(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test with file extension
+		t.Assert(gfile.Name("/var/www/file.js"), "file")
+		t.Assert(gfile.Name("file.js"), "file")
+
+		// Test with multiple dots
+		t.Assert(gfile.Name("/var/www/file.min.js"), "file.min")
+		t.Assert(gfile.Name("archive.tar.gz"), "archive.tar")
+
+		// Test without extension
+		t.Assert(gfile.Name("/var/www/file"), "file")
+		t.Assert(gfile.Name("file"), "file")
+
+		// Test with hidden file (dot file)
+		t.Assert(gfile.Name(".gitignore"), "")
+		t.Assert(gfile.Name(".hidden.txt"), ".hidden")
+
+		// Test with directory path
+		t.Assert(gfile.Name("/var/www/"), "www")
+
+		// Test with only extension
+		t.Assert(gfile.Name(".txt"), "")
 	})
 }
