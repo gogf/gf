@@ -19,7 +19,6 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
-	"strings"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -31,14 +30,18 @@ const (
 )
 
 // Encrypt encrypts data with public key (auto-detect format).
-// The publicKey can be either PKCS#1 or PKCS#8 format.
+// The publicKey can be either PKCS#1 or PKCS#8 (PKIX) format.
+//
+// Note: RSA encryption has a size limit based on key size.
+// For PKCS#1 v1.5 padding, max plaintext size = key_size_in_bytes - 11.
+// For example, a 2048-bit key can encrypt at most 245 bytes.
 func Encrypt(plainText, publicKey []byte) ([]byte, error) {
 	block, _ := pem.Decode(publicKey)
 	if block == nil {
 		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid public key")
 	}
 
-	// Try PKCS#8 first
+	// Try PKCS#8 (PKIX) first
 	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
 		// Try PKCS#1
@@ -51,6 +54,13 @@ func Encrypt(plainText, publicKey []byte) ([]byte, error) {
 	rsaPub, ok := pub.(*rsa.PublicKey)
 	if !ok {
 		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "not an RSA public key")
+	}
+
+	// Validate plaintext size for PKCS#1 v1.5 padding
+	maxSize := rsaPub.Size() - 11
+	if len(plainText) > maxSize {
+		return nil, gerror.NewCodef(gcode.CodeInvalidParameter,
+			"plaintext too long: max %d bytes for this key, got %d bytes", maxSize, len(plainText))
 	}
 
 	return rsa.EncryptPKCS1v15(rand.Reader, rsaPub, plainText)
@@ -113,8 +123,12 @@ func DecryptBase64(cipherTextBase64, privateKeyBase64 string) ([]byte, error) {
 	return Decrypt(cipherText, privateKey)
 }
 
-// EncryptPKCS8 encrypts data with public key by PKCS#8 format.
-func EncryptPKCS8(plainText, publicKey []byte) ([]byte, error) {
+// EncryptPKIX encrypts data with public key in PKIX (X.509) format.
+// PKIX is the standard format for public keys, often referred to as "PKCS#8 public key".
+//
+// Note: RSA encryption has a size limit based on key size.
+// For PKCS#1 v1.5 padding, max plaintext size = key_size_in_bytes - 11.
+func EncryptPKIX(plainText, publicKey []byte) ([]byte, error) {
 	block, _ := pem.Decode(publicKey)
 	if block == nil {
 		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid public key")
@@ -122,7 +136,7 @@ func EncryptPKCS8(plainText, publicKey []byte) ([]byte, error) {
 
 	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
-		return nil, gerror.WrapCode(gcode.CodeInvalidParameter, err, "failed to parse public key")
+		return nil, gerror.WrapCode(gcode.CodeInvalidParameter, err, "failed to parse PKIX public key")
 	}
 
 	rsaPub, ok := pub.(*rsa.PublicKey)
@@ -130,10 +144,26 @@ func EncryptPKCS8(plainText, publicKey []byte) ([]byte, error) {
 		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "not an RSA public key")
 	}
 
+	// Validate plaintext size for PKCS#1 v1.5 padding
+	maxSize := rsaPub.Size() - 11
+	if len(plainText) > maxSize {
+		return nil, gerror.NewCodef(gcode.CodeInvalidParameter,
+			"plaintext too long: max %d bytes for this key, got %d bytes", maxSize, len(plainText))
+	}
+
 	return rsa.EncryptPKCS1v15(rand.Reader, rsaPub, plainText)
 }
 
-// EncryptPKCS1 encrypts data with public key by PKCS#1 format.
+// EncryptPKCS8 is an alias for EncryptPKIX for backward compatibility.
+// Deprecated: Use EncryptPKIX instead. Public keys use PKIX format, not PKCS#8.
+func EncryptPKCS8(plainText, publicKey []byte) ([]byte, error) {
+	return EncryptPKIX(plainText, publicKey)
+}
+
+// EncryptPKCS1 encrypts data with public key in PKCS#1 format.
+//
+// Note: RSA encryption has a size limit based on key size.
+// For PKCS#1 v1.5 padding, max plaintext size = key_size_in_bytes - 11.
 func EncryptPKCS1(plainText, publicKey []byte) ([]byte, error) {
 	block, _ := pem.Decode(publicKey)
 	if block == nil {
@@ -142,7 +172,14 @@ func EncryptPKCS1(plainText, publicKey []byte) ([]byte, error) {
 
 	pub, err := x509.ParsePKCS1PublicKey(block.Bytes)
 	if err != nil {
-		return nil, gerror.WrapCode(gcode.CodeInvalidParameter, err, "failed to parse public key")
+		return nil, gerror.WrapCode(gcode.CodeInvalidParameter, err, "failed to parse PKCS#1 public key")
+	}
+
+	// Validate plaintext size for PKCS#1 v1.5 padding
+	maxSize := pub.Size() - 11
+	if len(plainText) > maxSize {
+		return nil, gerror.NewCodef(gcode.CodeInvalidParameter,
+			"plaintext too long: max %d bytes for this key, got %d bytes", maxSize, len(plainText))
 	}
 
 	return rsa.EncryptPKCS1v15(rand.Reader, pub, plainText)
@@ -155,14 +192,9 @@ func DecryptPKCS8(cipherText, privateKey []byte) ([]byte, error) {
 		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid private key")
 	}
 
-	// Try to parse as PKCS#8 first
 	priv, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err != nil {
-		// If failed, try to parse as PKCS#1
-		priv, err = x509.ParsePKCS1PrivateKey(block.Bytes)
-		if err != nil {
-			return nil, gerror.WrapCode(gcode.CodeInvalidParameter, err, "failed to parse private key")
-		}
+		return nil, gerror.WrapCode(gcode.CodeInvalidParameter, err, "failed to parse PKCS#8 private key")
 	}
 
 	rsaPriv, ok := priv.(*rsa.PrivateKey)
@@ -188,14 +220,14 @@ func DecryptPKCS1(cipherText, privateKey []byte) ([]byte, error) {
 	return rsa.DecryptPKCS1v15(rand.Reader, priv, cipherText)
 }
 
-// EncryptPKCS8Base64 encrypts data with public key by PKCS#8 format and encode result with base64.
-func EncryptPKCS8Base64(plainText []byte, publicKeyBase64 string) (string, error) {
+// EncryptPKIXBase64 encrypts data with PKIX public key and returns base64-encoded result.
+func EncryptPKIXBase64(plainText []byte, publicKeyBase64 string) (string, error) {
 	publicKey, err := base64.StdEncoding.DecodeString(publicKeyBase64)
 	if err != nil {
 		return "", gerror.WrapCode(gcode.CodeInvalidParameter, err, "failed to decode public key")
 	}
 
-	encrypted, err := EncryptPKCS8(plainText, publicKey)
+	encrypted, err := EncryptPKIX(plainText, publicKey)
 	if err != nil {
 		return "", err
 	}
@@ -203,7 +235,13 @@ func EncryptPKCS8Base64(plainText []byte, publicKeyBase64 string) (string, error
 	return base64.StdEncoding.EncodeToString(encrypted), nil
 }
 
-// EncryptPKCS1Base64 encrypts data with public key by PKCS#1 format and encode result with base64.
+// EncryptPKCS8Base64 is an alias for EncryptPKIXBase64 for backward compatibility.
+// Deprecated: Use EncryptPKIXBase64 instead.
+func EncryptPKCS8Base64(plainText []byte, publicKeyBase64 string) (string, error) {
+	return EncryptPKIXBase64(plainText, publicKeyBase64)
+}
+
+// EncryptPKCS1Base64 encrypts data with PKCS#1 public key and returns base64-encoded result.
 func EncryptPKCS1Base64(plainText []byte, publicKeyBase64 string) (string, error) {
 	publicKey, err := base64.StdEncoding.DecodeString(publicKeyBase64)
 	if err != nil {
@@ -233,7 +271,7 @@ func DecryptPKCS8Base64(cipherTextBase64, privateKeyBase64 string) ([]byte, erro
 	return DecryptPKCS8(cipherText, privateKey)
 }
 
-// DecryptPKCS1Base64 decrypts data with private key by PKCS#1 format and decode base64 input.
+// DecryptPKCS1Base64 decrypts base64-encoded data with PKCS#1 private key.
 func DecryptPKCS1Base64(cipherTextBase64, privateKeyBase64 string) ([]byte, error) {
 	privateKey, err := base64.StdEncoding.DecodeString(privateKeyBase64)
 	if err != nil {
@@ -249,24 +287,26 @@ func DecryptPKCS1Base64(cipherTextBase64, privateKeyBase64 string) ([]byte, erro
 }
 
 // GetPrivateKeyType detects the type of private key (PKCS#1 or PKCS#8).
+// It attempts to parse the key in both formats to determine the actual type.
 func GetPrivateKeyType(privateKey []byte) (string, error) {
 	block, _ := pem.Decode(privateKey)
 	if block == nil {
 		return "", gerror.NewCode(gcode.CodeInvalidParameter, "invalid private key")
 	}
 
-	if strings.Contains(string(privateKey), "BEGIN RSA PRIVATE KEY") {
-		_, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-		if err != nil {
-			return "", gerror.WrapCode(gcode.CodeInvalidParameter, err, "failed to parse PKCS#1 private key")
-		}
+	// Try PKCS#1 first
+	_, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err == nil {
 		return "PKCS#1", nil
-	} else if strings.Contains(string(privateKey), "BEGIN PRIVATE KEY") {
-		_, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-		if err != nil {
-			return "", gerror.WrapCode(gcode.CodeInvalidParameter, err, "failed to parse PKCS#8 private key")
+	}
+
+	// Try PKCS#8
+	priv, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err == nil {
+		if _, ok := priv.(*rsa.PrivateKey); ok {
+			return "PKCS#8", nil
 		}
-		return "PKCS#8", nil
+		return "", gerror.NewCode(gcode.CodeInvalidParameter, "not an RSA private key")
 	}
 
 	return "", gerror.NewCode(gcode.CodeInvalidParameter, "unknown private key format")
