@@ -188,6 +188,7 @@ func EncryptPKIX(plainText, publicKey []byte) ([]byte, error) {
 }
 
 // EncryptPKCS8 is an alias for EncryptPKIX for backward compatibility.
+//
 // Deprecated: Use EncryptPKIX instead. Public keys use PKIX format, not PKCS#8.
 func EncryptPKCS8(plainText, publicKey []byte) ([]byte, error) {
 	return EncryptPKIX(plainText, publicKey)
@@ -269,6 +270,7 @@ func EncryptPKIXBase64(plainText []byte, publicKeyBase64 string) (string, error)
 }
 
 // EncryptPKCS8Base64 is an alias for EncryptPKIXBase64 for backward compatibility.
+//
 // Deprecated: Use EncryptPKIXBase64 instead.
 func EncryptPKCS8Base64(plainText []byte, publicKeyBase64 string) (string, error) {
 	return EncryptPKIXBase64(plainText, publicKeyBase64)
