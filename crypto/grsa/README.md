@@ -8,6 +8,7 @@ Package `grsa` provides useful API for RSA encryption/decryption algorithms with
 - Encrypting and decrypting data with various key formats
 - Handling Base64 encoded keys
 - Detecting private key types
+- Plaintext size validation
 
 ## Quick Start
 
@@ -92,45 +93,69 @@ func main() {
 
 ### Key Generation
 
-- `GenerateKeyPair(bits int)`: Generates a new RSA key pair with the given bits
+- `GenerateKeyPair(bits int)`: Generates a new RSA key pair with the given bits in PKCS#1 format
 - `GenerateKeyPairPKCS8(bits int)`: Generates a new RSA key pair with the given bits in PKCS#8 format
-- `GenerateDefaultKeyPair()`: Generates a new RSA key pair with default bits (2048)
+- `GenerateDefaultKeyPair()`: Generates a new RSA key pair with default bits (2048) in PKCS#1 format
 
 ### General Encryption/Decryption
 
 - `Encrypt(plainText, publicKey []byte)`: Encrypts data with public key (auto-detect format)
 - `Decrypt(cipherText, privateKey []byte)`: Decrypts data with private key (auto-detect format)
-- `EncryptBase64(plainText []byte, publicKeyBase64 string)`: Encrypts data with base64-encoded public key
+- `EncryptBase64(plainText []byte, publicKeyBase64 string)`: Encrypts data with base64-encoded public key and returns base64-encoded result
 - `DecryptBase64(cipherTextBase64, privateKeyBase64 string)`: Decrypts base64-encoded data with base64-encoded private key
 
 ### PKCS#1 Specific Functions
 
-- `EncryptPKCS1(plainText, publicKey []byte)`: Encrypts data with public key by PKCS#1 format
-- `DecryptPKCS1(cipherText, privateKey []byte)`: Decrypts data with private key by PKCS#1 format
-- `EncryptPKCS1Base64(plainText []byte, publicKeyBase64 string)`: Encrypts data with public key by PKCS#1 format and encode result with base64
-- `DecryptPKCS1Base64(cipherTextBase64, privateKeyBase64 string)`: Decrypts data with private key by PKCS#1 format and decode base64 input
+- `EncryptPKCS1(plainText, publicKey []byte)`: Encrypts data with PKCS#1 format public key
+- `DecryptPKCS1(cipherText, privateKey []byte)`: Decrypts data with PKCS#1 format private key
+- `EncryptPKCS1Base64(plainText []byte, publicKeyBase64 string)`: Encrypts data with PKCS#1 public key and returns base64-encoded result
+- `DecryptPKCS1Base64(cipherTextBase64, privateKeyBase64 string)`: Decrypts base64-encoded data with PKCS#1 private key
 
-### PKCS#8 Specific Functions
+### PKIX Specific Functions
 
-- `EncryptPKCS8(plainText, publicKey []byte)`: Encrypts data with public key by PKCS#8 format
-- `DecryptPKCS8(cipherText, privateKey []byte)`: Decrypts data with private key by PKCS#8 format
-- `EncryptPKCS8Base64(plainText []byte, publicKeyBase64 string)`: Encrypts data with public key by PKCS#8 format and encode result with base64
-- `DecryptPKCS8Base64(cipherTextBase64, privateKeyBase64 string)`: Decrypts data with private key by PKCS#8 format and decode base64 input
+PKIX (X.509) is the standard format for public keys, used with PKCS#8 private keys.
+
+- `EncryptPKIX(plainText, publicKey []byte)`: Encrypts data with PKIX format public key
+- `EncryptPKIXBase64(plainText []byte, publicKeyBase64 string)`: Encrypts data with PKIX public key and returns base64-encoded result
+- `DecryptPKCS8(cipherText, privateKey []byte)`: Decrypts data with PKCS#8 format private key
+- `DecryptPKCS8Base64(cipherTextBase64, privateKeyBase64 string)`: Decrypts base64-encoded data with PKCS#8 private key
+
+### Deprecated Functions
+
+The following functions are deprecated and will be removed in future versions:
+
+- `EncryptPKCS8(plainText, publicKey []byte)`: Use `EncryptPKIX` instead
+- `EncryptPKCS8Base64(plainText []byte, publicKeyBase64 string)`: Use `EncryptPKIXBase64` instead
 
 ### Utility Functions
 
 - `GetPrivateKeyType(privateKey []byte)`: Detects the type of private key (PKCS#1 or PKCS#8)
-- `GetPrivateKeyTypeBase64(privateKeyBase64 string)`: Detects the type of base64 encoded private key (PKCS#1 or PKCS#8)
-- `ExtractPKCS1PublicKey(privateKey []byte)`: Extracts PKCS#1 public key from private key
+- `GetPrivateKeyTypeBase64(privateKeyBase64 string)`: Detects the type of base64 encoded private key
+- `ExtractPKCS1PublicKey(privateKey []byte)`: Extracts PKCS#1 public key from PKCS#1 private key
 
 ## Key Formats
 
 The package supports two popular RSA key formats:
 
 1. **PKCS#1**: Traditional RSA key format
-2. **PKCS#8**: More modern and flexible key format
+   - Private key PEM header: `-----BEGIN RSA PRIVATE KEY-----`
+   - Public key PEM header: `-----BEGIN RSA PUBLIC KEY-----`
+
+2. **PKCS#8/PKIX**: More modern and flexible key format
+   - Private key PEM header: `-----BEGIN PRIVATE KEY-----`
+   - Public key PEM header: `-----BEGIN PUBLIC KEY-----`
 
 Both formats are supported for encryption and decryption operations, with auto-detection capabilities for general functions.
+
+## Plaintext Size Limit
+
+RSA encryption has a size limit based on key size. For PKCS#1 v1.5 padding:
+
+- **Max plaintext size = key_size_in_bytes - 11**
+- For a 2048-bit key: max 245 bytes
+- For a 4096-bit key: max 501 bytes
+
+If you need to encrypt larger data, consider using hybrid encryption (RSA + AES).
 
 ## Error Handling
 
@@ -138,6 +163,7 @@ All functions return descriptive errors that can be handled using the GoFrame er
 
 - Invalid key format
 - Failed key parsing
+- Plaintext too long
 - Encryption/decryption failures
 
 Always check for errors in production code to ensure robust handling of edge cases.
