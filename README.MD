@@ -45,7 +45,7 @@ go get -u github.com/gogf/gf/v2
 💖 [Thanks to all the contributors who made GoFrame possible](https://github.com/gogf/gf/graphs/contributors) 💖
 
 <a href="https://github.com/gogf/gf/graphs/contributors">
-<img src="https://goframe.org/img/contributors.svg?version=v2.9.6" alt="goframe contributors"/>
+<img src="https://goframe.org/img/contributors.svg?version=v2.9.7" alt="goframe contributors"/>
 </a>
 
 ## License
