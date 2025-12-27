@@ -69,6 +69,7 @@ func Test_Gen_Dao_Default(t *testing.T) {
 				NoJsonTag:          false,
 				NoModelComment:     false,
 				Clear:              false,
+				GenTable:           false,
 				TypeMapping:        nil,
 				FieldMapping:       nil,
 			}
@@ -107,7 +108,7 @@ func Test_Gen_Dao_Default(t *testing.T) {
 			filepath.FromSlash(testPath + "/model/do/table_user.go"),
 			filepath.FromSlash(testPath + "/model/entity/table_user.go"),
 		}
-		for i, _ := range files {
+		for i := range files {
 			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
 		}
 	})
@@ -161,6 +162,7 @@ func Test_Gen_Dao_TypeMapping(t *testing.T) {
 				NoJsonTag:          false,
 				NoModelComment:     false,
 				Clear:              false,
+				GenTable:           false,
 				TypeMapping: map[gendao.DBFieldTypeName]gendao.CustomAttributeType{
 					"int": {
 						Type:   "int64",
@@ -208,7 +210,7 @@ func Test_Gen_Dao_TypeMapping(t *testing.T) {
 			filepath.FromSlash(testPath + "/model/do/table_user.go"),
 			filepath.FromSlash(testPath + "/model/entity/table_user.go"),
 		}
-		for i, _ := range files {
+		for i := range files {
 			//_ = gfile.PutContents(expectFiles[i], gfile.GetContents(files[i]))
 			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
 		}
@@ -263,6 +265,7 @@ func Test_Gen_Dao_FieldMapping(t *testing.T) {
 				NoJsonTag:          false,
 				NoModelComment:     false,
 				Clear:              false,
+				GenTable:           false,
 				TypeMapping: map[gendao.DBFieldTypeName]gendao.CustomAttributeType{
 					"int": {
 						Type:   "int64",
@@ -311,7 +314,7 @@ func Test_Gen_Dao_FieldMapping(t *testing.T) {
 			filepath.FromSlash(testPath + "/model/do/table_user.go"),
 			filepath.FromSlash(testPath + "/model/entity/table_user.go"),
 		}
-		for i, _ := range files {
+		for i := range files {
 			//_ = gfile.PutContents(expectFiles[i], gfile.GetContents(files[i]))
 			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
 		}
@@ -403,7 +406,7 @@ func Test_Gen_Dao_Sqlite3(t *testing.T) {
 			filepath.FromSlash(testPath + "/model/do/table_user.go"),
 			filepath.FromSlash(testPath + "/model/entity/table_user.go"),
 		}
-		for i, _ := range files {
+		for i := range files {
 			//_ = gfile.PutContents(expectFiles[i], gfile.GetContents(files[i]))
 			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
 		}

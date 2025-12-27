@@ -20,11 +20,14 @@ import (
 
 // Cron stores all the cron job entries.
 type Cron struct {
-	idGen     *gtype.Int64    // Used for unique name generation.
-	status    *gtype.Int      // Timed task status(0: Not Start; 1: Running; 2: Stopped; -1: Closed)
-	entries   *gmap.StrAnyMap // All timed task entries.
-	logger    glog.ILogger    // Logger, it is nil in default.
-	jobWaiter sync.WaitGroup  // Graceful shutdown when cron jobs are stopped.
+	idGen       *gtype.Int64    // Used for unique name generation.
+	status      *gtype.Int      // Timed task status(0: Not Start; 1: Running; 2: Stopped; -1: Closed)
+	entries     *gmap.StrAnyMap // All timed task entries.
+	logger      glog.ILogger    // Logger, it is nil in default.
+	loggerMu    sync.RWMutex
+	jobWaiter   sync.WaitGroup // Graceful shutdown when cron jobs are stopped.
+	running     bool
+	runningLock sync.Mutex
 }
 
 // New returns a new Cron object with default settings.
@@ -33,16 +36,21 @@ func New() *Cron {
 		idGen:   gtype.NewInt64(),
 		status:  gtype.NewInt(StatusRunning),
 		entries: gmap.NewStrAnyMap(true),
+		running: true,
 	}
 }
 
 // SetLogger sets the logger for cron.
 func (c *Cron) SetLogger(logger glog.ILogger) {
+	c.loggerMu.Lock()
+	defer c.loggerMu.Unlock()
 	c.logger = logger
 }
 
 // GetLogger returns the logger in the cron.
 func (c *Cron) GetLogger() glog.ILogger {
+	c.loggerMu.RLock()
+	defer c.loggerMu.RUnlock()
 	return c.logger
 }
 
@@ -171,7 +179,10 @@ func (c *Cron) Start(name ...string) {
 			}
 		}
 	} else {
+		c.runningLock.Lock()
 		c.status.Set(StatusReady)
+		c.running = true
+		c.runningLock.Unlock()
 	}
 }
 
@@ -185,14 +196,32 @@ func (c *Cron) Stop(name ...string) {
 			}
 		}
 	} else {
+		c.runningLock.Lock()
 		c.status.Set(StatusStopped)
+		c.running = false
+		c.runningLock.Unlock()
 	}
 }
 
 // StopGracefully Blocks and waits all current running jobs done.
 func (c *Cron) StopGracefully() {
-	c.status.Set(StatusStopped)
-	c.jobWaiter.Wait()
+	ctx := c.StopGracefullyNonBlocking()
+	<-ctx.Done()
+}
+
+// StopGracefullyNonBlocking stops all running tasks gracefully without blocking,
+// returning a context that callers can use to wait for completion.
+func (c *Cron) StopGracefullyNonBlocking() context.Context {
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		c.runningLock.Lock()
+		defer c.runningLock.Unlock()
+		c.status.Set(StatusStopped)
+		c.running = false
+		c.jobWaiter.Wait()
+		cancel()
+	}()
+	return ctx
 }
 
 // Remove deletes scheduled task which named `name`.
@@ -204,7 +233,10 @@ func (c *Cron) Remove(name string) {
 
 // Close stops and closes current cron.
 func (c *Cron) Close() {
+	c.runningLock.Lock()
+	defer c.runningLock.Unlock()
 	c.status.Set(StatusClosed)
+	c.running = false
 }
 
 // Size returns the size of the timed tasks.
@@ -214,7 +246,7 @@ func (c *Cron) Size() int {
 
 // Entries return all timed tasks as slice(order by registered time asc).
 func (c *Cron) Entries() []*Entry {
-	array := garray.NewSortedArraySize(c.entries.Size(), func(v1, v2 interface{}) int {
+	array := garray.NewSortedArraySize(c.entries.Size(), func(v1, v2 any) int {
 		entry1 := v1.(*Entry)
 		entry2 := v2.(*Entry)
 		if entry1.RegisterTime.Nanosecond() > entry2.RegisterTime.Nanosecond() {
@@ -222,13 +254,13 @@ func (c *Cron) Entries() []*Entry {
 		}
 		return -1
 	}, true)
-	c.entries.RLockFunc(func(m map[string]interface{}) {
+	c.entries.RLockFunc(func(m map[string]any) {
 		for _, v := range m {
 			array.Add(v.(*Entry))
 		}
 	})
 	entries := make([]*Entry, array.Len())
-	array.RLockFunc(func(array []interface{}) {
+	array.RLockFunc(func(array []any) {
 		for k, v := range array {
 			entries[k] = v.(*Entry)
 		}

@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 )
 
-func Encode(v interface{}) ([]byte, error) {
+func Encode(v any) ([]byte, error) {
 	buffer := bytes.NewBuffer(nil)
 	if err := toml.NewEncoder(buffer).Encode(v); err != nil {
 		err = gerror.Wrap(err, `toml.Encoder.Encode failed`)
@@ -25,8 +25,8 @@ func Encode(v interface{}) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func Decode(v []byte) (interface{}, error) {
-	var result interface{}
+func Decode(v []byte) (any, error) {
+	var result any
 	if err := toml.Unmarshal(v, &result); err != nil {
 		err = gerror.Wrap(err, `toml.Unmarshal failed`)
 		return nil, err
@@ -34,7 +34,7 @@ func Decode(v []byte) (interface{}, error) {
 	return result, nil
 }
 
-func DecodeTo(v []byte, result interface{}) (err error) {
+func DecodeTo(v []byte, result any) (err error) {
 	err = toml.Unmarshal(v, result)
 	if err != nil {
 		err = gerror.Wrap(err, `toml.Unmarshal failed`)

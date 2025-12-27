@@ -49,7 +49,7 @@ func (r GroupSortedSet) ZAdd(
 	ctx context.Context, key string, option *gredis.ZAddOption, member gredis.ZAddMember, members ...gredis.ZAddMember,
 ) (*gvar.Var, error) {
 	s := mustMergeOptionToArgs(
-		[]interface{}{key}, option,
+		[]any{key}, option,
 	)
 	s = append(s, member.Score, member.Member)
 	for _, item := range members {
@@ -66,7 +66,7 @@ func (r GroupSortedSet) ZAdd(
 // It returns the score of member (a double precision floating point number), represented as string.
 //
 // https://redis.io/commands/zscore/
-func (r GroupSortedSet) ZScore(ctx context.Context, key string, member interface{}) (float64, error) {
+func (r GroupSortedSet) ZScore(ctx context.Context, key string, member any) (float64, error) {
 	v, err := r.Operation.Do(ctx, "ZScore", key, member)
 	return v.Float64(), err
 }
@@ -83,7 +83,7 @@ func (r GroupSortedSet) ZScore(ctx context.Context, key string, member interface
 // It returns the new score of member (a double precision floating point number).
 //
 // https://redis.io/commands/zincrby/
-func (r GroupSortedSet) ZIncrBy(ctx context.Context, key string, increment float64, member interface{}) (float64, error) {
+func (r GroupSortedSet) ZIncrBy(ctx context.Context, key string, increment float64, member any) (float64, error) {
 	v, err := r.Operation.Do(ctx, "ZIncrBy", key, increment, member)
 	return v.Float64(), err
 }
@@ -120,12 +120,12 @@ func (r GroupSortedSet) ZCount(ctx context.Context, key string, min, max string)
 //
 // https://redis.io/commands/zrange/
 func (r GroupSortedSet) ZRange(ctx context.Context, key string, start, stop int64, option ...gredis.ZRangeOption) (gvar.Vars, error) {
-	var usedOption interface{}
+	var usedOption any
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
 	v, err := r.Operation.Do(ctx, "ZRange", mustMergeOptionToArgs(
-		[]interface{}{key, start, stop}, usedOption,
+		[]any{key, start, stop}, usedOption,
 	)...)
 	return v.Vars(), err
 }
@@ -140,12 +140,12 @@ func (r GroupSortedSet) ZRange(ctx context.Context, key string, start, stop int6
 //
 // https://redis.io/commands/zrevrange/
 func (r GroupSortedSet) ZRevRange(ctx context.Context, key string, start, stop int64, option ...gredis.ZRevRangeOption) (*gvar.Var, error) {
-	var usedOption interface{}
+	var usedOption any
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
 	return r.Operation.Do(ctx, "ZRevRange", mustMergeOptionToArgs(
-		[]interface{}{key, start, stop}, usedOption,
+		[]any{key, start, stop}, usedOption,
 	)...)
 }
 
@@ -159,7 +159,7 @@ func (r GroupSortedSet) ZRevRange(ctx context.Context, key string, start, stop i
 // - If member does not exist in the sorted set or key does not exist, Bulk string reply: nil.
 //
 // https://redis.io/commands/zrank/
-func (r GroupSortedSet) ZRank(ctx context.Context, key string, member interface{}) (int64, error) {
+func (r GroupSortedSet) ZRank(ctx context.Context, key string, member any) (int64, error) {
 	v, err := r.Operation.Do(ctx, "ZRank", key, member)
 	return v.Int64(), err
 }
@@ -174,7 +174,7 @@ func (r GroupSortedSet) ZRank(ctx context.Context, key string, member interface{
 // - If member does not exist in the sorted set or key does not exist, Bulk string reply: nil.
 //
 // https://redis.io/commands/zrevrank/
-func (r GroupSortedSet) ZRevRank(ctx context.Context, key string, member interface{}) (int64, error) {
+func (r GroupSortedSet) ZRevRank(ctx context.Context, key string, member any) (int64, error) {
 	v, err := r.Operation.Do(ctx, "ZRevRank", key, member)
 	return v.Int64(), err
 }
@@ -187,8 +187,8 @@ func (r GroupSortedSet) ZRevRank(ctx context.Context, key string, member interfa
 // It returns the number of members removed from the sorted set, not including non existing members.
 //
 // https://redis.io/commands/zrem/
-func (r GroupSortedSet) ZRem(ctx context.Context, key string, member interface{}, members ...interface{}) (int64, error) {
-	var s = []interface{}{key}
+func (r GroupSortedSet) ZRem(ctx context.Context, key string, member any, members ...any) (int64, error) {
+	var s = []any{key}
 	s = append(s, member)
 	s = append(s, members...)
 	v, err := r.Operation.Do(ctx, "ZRem", s...)

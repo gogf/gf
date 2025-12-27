@@ -20,7 +20,7 @@ import (
 
 // UnaryError handles the error types converting between grpc and gerror.
 // Note that, the minus error code is only used locally which will not be sent to other side.
-func (c modClient) UnaryError(ctx context.Context, method string, req, reply interface{},
+func (c modClient) UnaryError(ctx context.Context, method string, req, reply any,
 	cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 	err := invoker(ctx, method, req, reply, cc, opts...)
 	if err != nil {
@@ -37,7 +37,7 @@ func (c modClient) UnaryError(ctx context.Context, method string, req, reply int
 
 // UnaryTracing is a unary interceptor for adding tracing feature for gRPC client using OpenTelemetry.
 func (c modClient) UnaryTracing(
-	ctx context.Context, method string, req, reply interface{},
+	ctx context.Context, method string, req, reply any,
 	cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 	return tracing.UnaryClientInterceptor(ctx, method, req, reply, cc, invoker, opts...)
 }

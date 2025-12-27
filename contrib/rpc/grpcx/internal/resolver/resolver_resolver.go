@@ -110,7 +110,7 @@ func (r *Resolver) ResolveNow(options resolver.ResolveNowOptions) {
 
 }
 
-func newAttributesFromMetadata(metadata map[string]interface{}) *attributes.Attributes {
+func newAttributesFromMetadata(metadata map[string]any) *attributes.Attributes {
 	var a *attributes.Attributes
 	for k, v := range metadata {
 		if a == nil {

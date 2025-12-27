@@ -96,8 +96,8 @@ func Test_Decode1(t *testing.T) {
 		if err != nil {
 			t.Errorf("gxml decode error. %s", dstXml)
 		}
-		s := srcMap["doc"].(map[string]interface{})
-		d := dstMap["doc"].(map[string]interface{})
+		s := srcMap["doc"].(map[string]any)
+		d := dstMap["doc"].(map[string]any)
 		for kk, vv := range s {
 			if vv.(string) != d[kk].(string) {
 				t.Errorf("convert to map error. src:%v, dst:%v", vv, d[kk])
@@ -113,9 +113,9 @@ func Test_Decode2(t *testing.T) {
 `
 		m, err := gxml.Decode([]byte(content))
 		t.AssertNil(err)
-		t.Assert(m["doc"].(map[string]interface{})["username"], "johngcn")
-		t.Assert(m["doc"].(map[string]interface{})["password1"], "123456")
-		t.Assert(m["doc"].(map[string]interface{})["password2"], "123456")
+		t.Assert(m["doc"].(map[string]any)["username"], "johngcn")
+		t.Assert(m["doc"].(map[string]any)["password1"], "123456")
+		t.Assert(m["doc"].(map[string]any)["password2"], "123456")
 	})
 }
 
@@ -133,14 +133,14 @@ func Test_DecodeWitoutRoot(t *testing.T) {
 }
 
 func Test_Encode(t *testing.T) {
-	m := make(map[string]interface{})
-	v := map[string]interface{}{
+	m := make(map[string]any)
+	v := map[string]any{
 		"string": "hello world",
 		"int":    123,
 		"float":  100.92,
 		"bool":   true,
 	}
-	m["root"] = interface{}(v)
+	m["root"] = any(v)
 
 	xmlStr, err := gxml.Encode(m)
 	if err != nil {
@@ -155,14 +155,14 @@ func Test_Encode(t *testing.T) {
 }
 
 func Test_EncodeIndent(t *testing.T) {
-	m := make(map[string]interface{})
-	v := map[string]interface{}{
+	m := make(map[string]any)
+	v := map[string]any{
 		"string": "hello world",
 		"int":    123,
 		"float":  100.92,
 		"bool":   true,
 	}
-	m["root"] = interface{}(v)
+	m["root"] = any(v)
 
 	_, err := gxml.EncodeWithIndent(m, "xml")
 	if err != nil {
@@ -211,8 +211,8 @@ func Test_Issue3716(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			xml = `<Person><Bio>I am a software developer &amp; I love coding.</Bio><Email>john.doe@example.com</Email><Name>&lt;&gt;&amp;&apos;&quot;AAA</Name></Person>`
-			m   = map[string]interface{}{
-				"Person": map[string]interface{}{
+			m   = map[string]any{
+				"Person": map[string]any{
 					"Name":  "<>&'\"AAA",
 					"Email": "john.doe@example.com",
 					"Bio":   "I am a software developer & I love coding.",

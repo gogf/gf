@@ -16,11 +16,17 @@ import (
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+const (
+	internalPrimaryKeyInCtx gctx.StrKey = "primary_key_field"
+)
+
 // DoInsert inserts or updates data for given table.
+// The list parameter must contain at least one record, which was previously validated.
 func (d *Driver) DoInsert(
 	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (result sql.Result, err error) {
@@ -29,15 +35,44 @@ func (d *Driver) DoInsert(
 		return d.doSave(ctx, link, table, list, option)
 
 	case gdb.InsertOptionReplace:
-		return nil, gerror.NewCode(
-			gcode.CodeNotSupported,
-			`Replace operation is not supported by oracle driver`,
-		)
+		// Oracle does not support REPLACE INTO syntax, use SAVE instead.
+		return d.doSave(ctx, link, table, list, option)
+
+	case gdb.InsertOptionIgnore:
+		// Oracle does not support INSERT IGNORE syntax, use MERGE instead.
+		return d.doInsertIgnore(ctx, link, table, list, option)
+
+	case gdb.InsertOptionDefault:
+		// For default insert, set primary key field in context to support LastInsertId.
+		// Only set it when the primary key is not provided in the data, for performance reason.
+		tableFields, err := d.GetCore().GetDB().TableFields(ctx, table)
+		if err == nil && len(list) > 0 {
+			for _, field := range tableFields {
+				if strings.EqualFold(field.Key, "pri") {
+					// Check if primary key is provided in the data.
+					pkProvided := false
+					for key := range list[0] {
+						if strings.EqualFold(key, field.Name) {
+							pkProvided = true
+							break
+						}
+					}
+					// Only use RETURNING when primary key is not provided, for performance reason.
+					if !pkProvided {
+						pkField := *field
+						ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, pkField)
+					}
+					break
+				}
+			}
+		}
+
+	default:
 	}
 	var (
 		keys   []string
 		values []string
-		params []interface{}
+		params []any
 	)
 	// Retrieve the table fields and length.
 	var (
@@ -55,8 +90,8 @@ func (d *Driver) DoInsert(
 		valueHolderStr = strings.Join(valueHolder, ",")
 	)
 	// Format "INSERT...INTO..." statement.
-	intoStrArray := make([]string, 0)
-	for i := 0; i < len(list); i++ {
+	// Note: Use standard INSERT INTO syntax instead of INSERT ALL to ensure triggers fire
+	for i := 0; i < listLength; i++ {
 		for _, k := range keys {
 			if s, ok := list[i][k].(gdb.Raw); ok {
 				params = append(params, gconv.String(s))
@@ -65,30 +100,22 @@ func (d *Driver) DoInsert(
 			}
 		}
 		values = append(values, valueHolderStr)
-		intoStrArray = append(
-			intoStrArray,
-			fmt.Sprintf(
-				"INTO %s(%s) VALUES(%s)",
-				table, keyStr, valueHolderStr,
-			),
-		)
-		if len(intoStrArray) == option.BatchCount || (i == listLength-1 && len(valueHolder) > 0) {
-			r, err := d.DoExec(ctx, link, fmt.Sprintf(
-				"INSERT ALL %s SELECT * FROM DUAL",
-				strings.Join(intoStrArray, " "),
-			), params...)
-			if err != nil {
-				return r, err
-			}
-			if n, err := r.RowsAffected(); err != nil {
-				return r, err
-			} else {
-				batchResult.Result = r
-				batchResult.Affected += n
-			}
-			params = params[:0]
-			intoStrArray = intoStrArray[:0]
+
+		// Execute individual INSERT for each record to trigger row-level triggers
+		r, err := d.DoExec(ctx, link, fmt.Sprintf(
+			"INSERT INTO %s(%s) VALUES(%s)",
+			table, keyStr, valueHolderStr,
+		), params...)
+		if err != nil {
+			return r, err
 		}
+		if n, err := r.RowsAffected(); err != nil {
+			return r, err
+		} else {
+			batchResult.Result = r
+			batchResult.Affected += n
+		}
+		params = params[:0]
 	}
 	return batchResult, nil
 }
@@ -97,24 +124,63 @@ func (d *Driver) DoInsert(
 func (d *Driver) doSave(ctx context.Context,
 	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (result sql.Result, err error) {
-	if len(option.OnConflict) == 0 {
-		return nil, gerror.NewCode(
-			gcode.CodeMissingParameter, `Please specify conflict columns`,
-		)
-	}
+	return d.doMergeInsert(ctx, link, table, list, option, true)
+}
 
-	if len(list) == 0 {
-		return nil, gerror.NewCode(
-			gcode.CodeInvalidRequest, `Save operation list is empty by oracle driver`,
-		)
+// doInsertIgnore implements INSERT IGNORE operation using MERGE statement for Oracle database.
+// It only inserts records when there's no conflict on primary/unique keys.
+func (d *Driver) doInsertIgnore(ctx context.Context,
+	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
+) (result sql.Result, err error) {
+	return d.doMergeInsert(ctx, link, table, list, option, false)
+}
+
+// doMergeInsert implements MERGE-based insert operations for Oracle database.
+// When withUpdate is true, it performs upsert (insert or update).
+// When withUpdate is false, it performs insert ignore (insert only when no conflict).
+func (d *Driver) doMergeInsert(
+	ctx context.Context,
+	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption, withUpdate bool,
+) (result sql.Result, err error) {
+	// If OnConflict is not specified, automatically get the primary key of the table
+	conflictKeys := option.OnConflict
+	if len(conflictKeys) == 0 {
+		primaryKeys, err := d.Core.GetPrimaryKeys(ctx, table)
+		if err != nil {
+			return nil, gerror.WrapCode(
+				gcode.CodeInternalError,
+				err,
+				`failed to get primary keys for table`,
+			)
+		}
+		foundPrimaryKey := false
+		for _, primaryKey := range primaryKeys {
+			for dataKey := range list[0] {
+				if strings.EqualFold(dataKey, primaryKey) {
+					foundPrimaryKey = true
+					break
+				}
+			}
+			if foundPrimaryKey {
+				break
+			}
+		}
+		if !foundPrimaryKey {
+			return nil, gerror.NewCodef(
+				gcode.CodeMissingParameter,
+				`Replace/Save/InsertIgnore operation requires conflict detection: `+
+					`either specify OnConflict() columns or ensure table '%s' has a primary key in the data`,
+				table,
+			)
+		}
+		// TODO consider composite primary keys.
+		conflictKeys = primaryKeys
 	}
 
 	var (
-		one          = list[0]
-		oneLen       = len(one)
-		charL, charR = d.GetChars()
-
-		conflictKeys   = option.OnConflict
+		one            = list[0]
+		oneLen         = len(one)
+		charL, charR   = d.GetChars()
 		conflictKeySet = gset.New(false)
 
 		// queryHolders:	Handle data with Holder that need to be upsert
@@ -123,7 +189,7 @@ func (d *Driver) doSave(ctx context.Context,
 		// insertValues:	Handle values that need to be inserted
 		// updateValues:	Handle values that need to be updated
 		queryHolders = make([]string, oneLen)
-		queryValues  = make([]interface{}, oneLen)
+		queryValues  = make([]any, oneLen)
 		insertKeys   = make([]string, oneLen)
 		insertValues = make([]string, oneLen)
 		updateValues []string
@@ -142,9 +208,9 @@ func (d *Driver) doSave(ctx context.Context,
 		insertKeys[index] = keyWithChar
 		insertValues[index] = fmt.Sprintf("T2.%s", keyWithChar)
 
-		// filter conflict keys in updateValues.
-		// And the key is not a soft created field.
-		if !(conflictKeySet.Contains(key) || d.Core.IsSoftCreatedFieldName(key)) {
+		// Build updateValues only when withUpdate is true
+		// Filter conflict keys and soft created fields from updateValues
+		if withUpdate && !(conflictKeySet.Contains(key) || d.Core.IsSoftCreatedFieldName(key)) {
 			updateValues = append(
 				updateValues,
 				fmt.Sprintf(`T1.%s = T2.%s`, keyWithChar, keyWithChar),
@@ -153,8 +219,10 @@ func (d *Driver) doSave(ctx context.Context,
 		index++
 	}
 
-	batchResult := new(gdb.SqlResult)
-	sqlStr := parseSqlForUpsert(table, queryHolders, insertKeys, insertValues, updateValues, conflictKeys)
+	var (
+		batchResult = new(gdb.SqlResult)
+		sqlStr      = parseSqlForMerge(table, queryHolders, insertKeys, insertValues, updateValues, conflictKeys)
+	)
 	r, err := d.DoExec(ctx, link, sqlStr, queryValues...)
 	if err != nil {
 		return r, err
@@ -168,40 +236,43 @@ func (d *Driver) doSave(ctx context.Context,
 	return batchResult, nil
 }
 
-// parseSqlForUpsert
-// MERGE INTO {{table}} T1
-// USING ( SELECT {{queryHolders}} FROM DUAL T2
-// ON (T1.{{duplicateKey}} = T2.{{duplicateKey}} AND ...)
-// WHEN NOT MATCHED THEN
-// INSERT {{insertKeys}} VALUES {{insertValues}}
-// WHEN MATCHED THEN
-// UPDATE SET {{updateValues}}
-func parseSqlForUpsert(table string,
+// parseSqlForMerge generates MERGE statement for Oracle database.
+// When updateValues is empty, it only inserts (INSERT IGNORE behavior).
+// When updateValues is provided, it performs upsert (INSERT or UPDATE).
+// Examples:
+// - INSERT IGNORE: MERGE INTO table T1 USING (...) T2 ON (...) WHEN NOT MATCHED THEN INSERT(...) VALUES (...)
+// - UPSERT: MERGE INTO table T1 USING (...) T2 ON (...) WHEN NOT MATCHED THEN INSERT(...) VALUES (...) WHEN MATCHED THEN UPDATE SET ...
+func parseSqlForMerge(table string,
 	queryHolders, insertKeys, insertValues, updateValues, duplicateKey []string,
 ) (sqlStr string) {
 	var (
 		queryHolderStr  = strings.Join(queryHolders, ",")
 		insertKeyStr    = strings.Join(insertKeys, ",")
 		insertValueStr  = strings.Join(insertValues, ",")
-		updateValueStr  = strings.Join(updateValues, ",")
 		duplicateKeyStr string
-		pattern         = gstr.Trim(`MERGE INTO %s T1 USING (SELECT %s FROM DUAL) T2 ON (%s) WHEN NOT MATCHED THEN INSERT(%s) VALUES (%s) WHEN MATCHED THEN UPDATE SET %s`)
 	)
 
+	// Build ON condition
 	for index, keys := range duplicateKey {
 		if index != 0 {
 			duplicateKeyStr += " AND "
 		}
-		duplicateTmp := fmt.Sprintf("T1.%s = T2.%s", keys, keys)
-		duplicateKeyStr += duplicateTmp
+		duplicateKeyStr += fmt.Sprintf("T1.%s = T2.%s", keys, keys)
 	}
 
-	return fmt.Sprintf(pattern,
-		table,
-		queryHolderStr,
-		duplicateKeyStr,
-		insertKeyStr,
-		insertValueStr,
-		updateValueStr,
+	// Build SQL based on whether UPDATE is needed
+	pattern := gstr.Trim(
+		`MERGE INTO %s T1 USING (SELECT %s FROM DUAL) T2 ON (%s) WHEN ` +
+			`NOT MATCHED THEN INSERT(%s) VALUES (%s)`,
 	)
+	if len(updateValues) > 0 {
+		// Upsert: INSERT or UPDATE
+		pattern += gstr.Trim(` WHEN MATCHED THEN UPDATE SET %s`)
+		return fmt.Sprintf(
+			pattern, table, queryHolderStr, duplicateKeyStr, insertKeyStr, insertValueStr,
+			strings.Join(updateValues, ","),
+		)
+	}
+	// Insert Ignore: INSERT only
+	return fmt.Sprintf(pattern, table, queryHolderStr, duplicateKeyStr, insertKeyStr, insertValueStr)
 }

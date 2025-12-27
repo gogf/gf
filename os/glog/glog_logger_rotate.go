@@ -235,7 +235,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 	// =============================================================
 	// Backups count limitation and expiration checks.
 	// =============================================================
-	backupFiles := garray.NewSortedArray(func(a, b interface{}) int {
+	backupFiles := garray.NewSortedArray(func(a, b any) int {
 		// Sorted by rotated/backup file mtime.
 		// The older rotated/backup file is put in the head of array.
 		var (
@@ -274,7 +274,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 				mtime       time.Time
 				subDuration time.Duration
 			)
-			backupFiles.Iterator(func(_ int, v interface{}) bool {
+			backupFiles.Iterator(func(_ int, v any) bool {
 				path := v.(string)
 				mtime = gfile.MTime(path)
 				subDuration = now.Sub(mtime)

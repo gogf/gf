@@ -33,8 +33,8 @@ func (r *Redis) GroupHash() gredis.IGroupHash {
 // It returns the number of fields that were added.
 //
 // https://redis.io/commands/hset/
-func (r GroupHash) HSet(ctx context.Context, key string, fields map[string]interface{}) (int64, error) {
-	var s = []interface{}{key}
+func (r GroupHash) HSet(ctx context.Context, key string, fields map[string]any) (int64, error) {
+	var s = []any{key}
 	for k, v := range fields {
 		s = append(s, k, v)
 	}
@@ -51,7 +51,7 @@ func (r GroupHash) HSet(ctx context.Context, key string, fields map[string]inter
 // - 0 if field already exists in the hash and no operation was performed.
 //
 // https://redis.io/commands/hsetnx/
-func (r GroupHash) HSetNX(ctx context.Context, key, field string, value interface{}) (int64, error) {
+func (r GroupHash) HSetNX(ctx context.Context, key, field string, value any) (int64, error) {
 	v, err := r.Operation.Do(ctx, "HSetNX", key, field, value)
 	return v.Int64(), err
 }
@@ -98,7 +98,7 @@ func (r GroupHash) HExists(ctx context.Context, key, field string) (int64, error
 //
 // https://redis.io/commands/hdel/
 func (r GroupHash) HDel(ctx context.Context, key string, fields ...string) (int64, error) {
-	v, err := r.Operation.Do(ctx, "HDel", append([]interface{}{key}, gconv.Interfaces(fields)...)...)
+	v, err := r.Operation.Do(ctx, "HDel", append([]any{key}, gconv.Interfaces(fields)...)...)
 	return v.Int64(), err
 }
 
@@ -147,8 +147,8 @@ func (r GroupHash) HIncrByFloat(ctx context.Context, key, field string, incremen
 // If key does not exist, a new key holding a hash is created.
 //
 // https://redis.io/commands/hmset/
-func (r GroupHash) HMSet(ctx context.Context, key string, fields map[string]interface{}) error {
-	var s = []interface{}{key}
+func (r GroupHash) HMSet(ctx context.Context, key string, fields map[string]any) error {
+	var s = []any{key}
 	for k, v := range fields {
 		s = append(s, k, v)
 	}
@@ -163,7 +163,7 @@ func (r GroupHash) HMSet(ctx context.Context, key string, fields map[string]inte
 //
 // https://redis.io/commands/hmget/
 func (r GroupHash) HMGet(ctx context.Context, key string, fields ...string) (gvar.Vars, error) {
-	v, err := r.Operation.Do(ctx, "HMGet", append([]interface{}{key}, gconv.Interfaces(fields)...)...)
+	v, err := r.Operation.Do(ctx, "HMGet", append([]any{key}, gconv.Interfaces(fields)...)...)
 	return v.Vars(), err
 }
 

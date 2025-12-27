@@ -1,7 +1,7 @@
 // Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with gm file,
+// If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
 package gmap_test
@@ -362,7 +362,7 @@ func TestStrStrMap_UnmarshalValue(t *testing.T) {
 	// JSON
 	gtest.C(t, func(t *gtest.T) {
 		var v *V
-		err := gconv.Struct(map[string]interface{}{
+		err := gconv.Struct(map[string]any{
 			"name": "john",
 			"map":  []byte(`{"k1":"v1","k2":"v2"}`),
 		}, &v)
@@ -375,7 +375,7 @@ func TestStrStrMap_UnmarshalValue(t *testing.T) {
 	// Map
 	gtest.C(t, func(t *gtest.T) {
 		var v *V
-		err := gconv.Struct(map[string]interface{}{
+		err := gconv.Struct(map[string]any{
 			"name": "john",
 			"map": g.Map{
 				"k1": "v1",

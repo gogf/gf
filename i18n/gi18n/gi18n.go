@@ -30,13 +30,13 @@ func T(ctx context.Context, content string) string {
 }
 
 // Tf is alias of TranslateFormat for convenience.
-func Tf(ctx context.Context, format string, values ...interface{}) string {
+func Tf(ctx context.Context, format string, values ...any) string {
 	return Instance().TranslateFormat(ctx, format, values...)
 }
 
 // TranslateFormat translates, formats and returns the `format` with configured language
 // and given `values`.
-func TranslateFormat(ctx context.Context, format string, values ...interface{}) string {
+func TranslateFormat(ctx context.Context, format string, values ...any) string {
 	return Instance().TranslateFormat(ctx, format, values...)
 }
 

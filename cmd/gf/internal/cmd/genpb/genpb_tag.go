@@ -109,7 +109,7 @@ func (c CGenPb) tagCommentIntoListMap(comment string, lineTagMap *gmap.ListMap) 
 
 func (c CGenPb) listMapToStructTag(lineTagMap *gmap.ListMap) string {
 	var tag string
-	lineTagMap.Iterator(func(key, value interface{}) bool {
+	lineTagMap.Iterator(func(key, value any) bool {
 		if tag != "" {
 			tag += " "
 		}

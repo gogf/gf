@@ -606,7 +606,7 @@ func Test_Issue1416(t *testing.T) {
 		r, err := v.ParseOption(context.TODO(), gview.Option{
 			File:   "gview.tpl",
 			Orphan: true,
-			Params: map[string]interface{}{
+			Params: map[string]any{
 				"hello": "world",
 			},
 		})

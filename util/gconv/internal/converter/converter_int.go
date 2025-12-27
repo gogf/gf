@@ -19,11 +19,11 @@ import (
 )
 
 // Int converts `any` to int.
-func (c *Converter) Int(any any) (int, error) {
-	if v, ok := any.(int); ok {
+func (c *Converter) Int(anyInput any) (int, error) {
+	if v, ok := anyInput.(int); ok {
 		return v, nil
 	}
-	v, err := c.Int64(any)
+	v, err := c.Int64(anyInput)
 	if err != nil {
 		return 0, err
 	}
@@ -31,11 +31,11 @@ func (c *Converter) Int(any any) (int, error) {
 }
 
 // Int8 converts `any` to int8.
-func (c *Converter) Int8(any any) (int8, error) {
-	if v, ok := any.(int8); ok {
+func (c *Converter) Int8(anyInput any) (int8, error) {
+	if v, ok := anyInput.(int8); ok {
 		return v, nil
 	}
-	v, err := c.Int64(any)
+	v, err := c.Int64(anyInput)
 	if err != nil {
 		return 0, err
 	}
@@ -43,11 +43,11 @@ func (c *Converter) Int8(any any) (int8, error) {
 }
 
 // Int16 converts `any` to int16.
-func (c *Converter) Int16(any any) (int16, error) {
-	if v, ok := any.(int16); ok {
+func (c *Converter) Int16(anyInput any) (int16, error) {
+	if v, ok := anyInput.(int16); ok {
 		return v, nil
 	}
-	v, err := c.Int64(any)
+	v, err := c.Int64(anyInput)
 	if err != nil {
 		return 0, err
 	}
@@ -55,11 +55,11 @@ func (c *Converter) Int16(any any) (int16, error) {
 }
 
 // Int32 converts `any` to int32.
-func (c *Converter) Int32(any any) (int32, error) {
-	if v, ok := any.(int32); ok {
+func (c *Converter) Int32(anyInput any) (int32, error) {
+	if v, ok := anyInput.(int32); ok {
 		return v, nil
 	}
-	v, err := c.Int64(any)
+	v, err := c.Int64(anyInput)
 	if err != nil {
 		return 0, err
 	}
@@ -67,14 +67,14 @@ func (c *Converter) Int32(any any) (int32, error) {
 }
 
 // Int64 converts `any` to int64.
-func (c *Converter) Int64(any any) (int64, error) {
-	if empty.IsNil(any) {
+func (c *Converter) Int64(anyInput any) (int64, error) {
+	if empty.IsNil(anyInput) {
 		return 0, nil
 	}
-	if v, ok := any.(int64); ok {
+	if v, ok := anyInput.(int64); ok {
 		return v, nil
 	}
-	rv := reflect.ValueOf(any)
+	rv := reflect.ValueOf(anyInput)
 	switch rv.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return rv.Int(), nil
@@ -89,11 +89,11 @@ func (c *Converter) Int64(any any) (int64, error) {
 			return 1, nil
 		}
 		return 0, nil
-	case reflect.Ptr:
+	case reflect.Pointer:
 		if rv.IsNil() {
 			return 0, nil
 		}
-		if f, ok := any.(localinterface.IInt64); ok {
+		if f, ok := anyInput.(localinterface.IInt64); ok {
 			return f.Int64(), nil
 		}
 		return c.Int64(rv.Elem().Interface())
@@ -108,10 +108,11 @@ func (c *Converter) Int64(any any) (int64, error) {
 			isMinus = false
 		)
 		if len(s) > 0 {
-			if s[0] == '-' {
+			switch s[0] {
+			case '-':
 				isMinus = true
 				s = s[1:]
-			} else if s[0] == '+' {
+			case '+':
 				s = s[1:]
 			}
 		}
@@ -145,13 +146,13 @@ func (c *Converter) Int64(any any) (int64, error) {
 			return int64(valueInt64), nil
 		}
 	default:
-		if f, ok := any.(localinterface.IInt64); ok {
+		if f, ok := anyInput.(localinterface.IInt64); ok {
 			return f.Int64(), nil
 		}
 	}
 	return 0, gerror.NewCodef(
 		gcode.CodeInvalidParameter,
 		`unsupport value type for converting to int64: %v`,
-		reflect.TypeOf(any),
+		reflect.TypeOf(anyInput),
 	)
 }

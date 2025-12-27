@@ -1,7 +1,7 @@
 // Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with gm file,
+// If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
 package gmap_test
@@ -22,7 +22,7 @@ func ExampleNew() {
 	// Print size.
 	fmt.Println(m.Size())
 
-	addMap := make(map[interface{}]interface{})
+	addMap := make(map[any]any)
 	addMap["key2"] = "val2"
 	addMap["key3"] = "val3"
 	addMap[1] = 1
@@ -46,7 +46,7 @@ func ExampleNew() {
 	fmt.Println(m.Keys())
 
 	// Batch remove keys.
-	m.Removes([]interface{}{"key1", 1})
+	m.Removes([]any{"key1", 1})
 	fmt.Println(m.Keys())
 
 	// Contains checks whether a key exists.

@@ -167,6 +167,19 @@ func TestIntSet_Union(t *testing.T) {
 		t.Assert(s3.Contains(3), true)
 		t.Assert(s3.Contains(4), true)
 	})
+
+	// Test with nil element in slice
+	gtest.C(t, func(t *gtest.T) {
+		s1 := gset.NewIntSet()
+		s2 := gset.NewIntSet()
+		s1.Add(1, 2)
+		s2.Add(3, 4)
+		s3 := s1.Union(s2, nil)
+		t.Assert(s3.Contains(1), true)
+		t.Assert(s3.Contains(2), true)
+		t.Assert(s3.Contains(3), true)
+		t.Assert(s3.Contains(4), true)
+	})
 }
 
 func TestIntSet_Diff(t *testing.T) {
@@ -215,6 +228,14 @@ func TestIntSet_Complement(t *testing.T) {
 		t.Assert(s3.Contains(2), false)
 		t.Assert(s3.Contains(4), true)
 		t.Assert(s3.Contains(5), true)
+	})
+
+	// Test with nil full set
+	gtest.C(t, func(t *gtest.T) {
+		s1 := gset.NewIntSet()
+		s1.Add(1, 2, 3)
+		s3 := s1.Complement(nil)
+		t.Assert(s3.Size(), 0)
 	})
 }
 

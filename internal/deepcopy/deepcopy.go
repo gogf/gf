@@ -16,13 +16,13 @@ import (
 
 // Interface for delegating copy process to type
 type Interface interface {
-	DeepCopy() interface{}
+	DeepCopy() any
 }
 
 // Copy creates a deep copy of whatever is passed to it and returns the copy
-// in an interface{}.  The returned value will need to be asserted to the
+// in an any.  The returned value will need to be asserted to the
 // correct type.
-func Copy(src interface{}) interface{} {
+func Copy(src any) any {
 	if src == nil {
 		return nil
 	}
@@ -66,7 +66,7 @@ func copyRecursive(original, cpy reflect.Value) {
 
 	// handle according to original's Kind
 	switch original.Kind() {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		// Get the actual value being pointed to.
 		originalValue := original.Elem()
 

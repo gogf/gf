@@ -30,7 +30,7 @@ func (view *View) i18nTranslate(ctx context.Context, content string, variables P
 }
 
 // setI18nLanguageFromCtx retrieves language name from context and sets it to template variables map.
-func (view *View) setI18nLanguageFromCtx(ctx context.Context, variables map[string]interface{}) {
+func (view *View) setI18nLanguageFromCtx(ctx context.Context, variables map[string]any) {
 	if _, ok := variables[i18nLanguageVariableName]; !ok {
 		if language := gi18n.LanguageFromCtx(ctx); language != "" {
 			variables[i18nLanguageVariableName] = language

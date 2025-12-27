@@ -47,7 +47,7 @@ func (s *Schemas) Set(name string, ref SchemaRef) {
 	s.refs.Set(name, ref)
 }
 
-func (s *Schemas) Removes(names []interface{}) {
+func (s *Schemas) Removes(names []any) {
 	s.init()
 	s.refs.Removes(names)
 }
@@ -55,7 +55,7 @@ func (s *Schemas) Removes(names []interface{}) {
 func (s *Schemas) Map() map[string]SchemaRef {
 	s.init()
 	m := make(map[string]SchemaRef)
-	s.refs.Iterator(func(key, value interface{}) bool {
+	s.refs.Iterator(func(key, value any) bool {
 		m[key.(string)] = value.(SchemaRef)
 		return true
 	})
@@ -64,7 +64,7 @@ func (s *Schemas) Map() map[string]SchemaRef {
 
 func (s *Schemas) Iterator(f func(key string, ref SchemaRef) bool) {
 	s.init()
-	s.refs.Iterator(func(key, value interface{}) bool {
+	s.refs.Iterator(func(key, value any) bool {
 		return f(key.(string), value.(SchemaRef))
 	})
 }

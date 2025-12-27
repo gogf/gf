@@ -61,7 +61,7 @@ func (m *Manager) RemoveProcess(pid int) {
 // Processes retrieves and returns all processes in current manager.
 func (m *Manager) Processes() []*Process {
 	processes := make([]*Process, 0)
-	m.processes.RLockFunc(func(m map[int]interface{}) {
+	m.processes.RLockFunc(func(m map[int]any) {
 		for _, v := range m {
 			processes = append(processes, v.(*Process))
 		}

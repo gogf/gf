@@ -31,7 +31,7 @@ func Open(path string, flag int, perm os.FileMode, ttl ...time.Duration) (file *
 	// }
 	pool := pools.GetOrSetFuncLock(
 		fmt.Sprintf("%s&%d&%d&%d", path, flag, fpTTL, perm),
-		func() interface{} {
+		func() any {
 			return New(path, flag, perm, fpTTL)
 		},
 	).(*Pool)

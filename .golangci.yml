@@ -1,7 +1,7 @@
 version: "2"
 run:
   concurrency: 4
-  go: "1.23"
+  go: "1.25"
   modules-download-mode: readonly
   issues-exit-code: 2
   tests: false
@@ -188,7 +188,7 @@ formatters:
         - blank
         - default
         - dot
-        - prefix(github.com/gogf/gf)
+        - prefix(github.com/gogf/gf/v2)
         - prefix(github.com/gogf/gf/cmd)
         - prefix(github.com/gogf/gfcontrib)
         - prefix(github.com/gogf/gf/example)
@@ -196,6 +196,19 @@ formatters:
       no-lex-order: false
     gofmt:
       simplify: true
+      rewrite-rules:
+        - pattern: 'interface{}'
+          replacement: 'any'
+        - pattern: 'reflect.Ptr'
+          replacement: 'reflect.Pointer'
+        - pattern: 'ioutil.ReadAll'
+          replacement: 'io.ReadAll'
+        - pattern: 'ioutil.WriteFile'
+          replacement: 'os.WriteFile'
+        - pattern: 'ioutil.ReadFile'
+          replacement: 'os.ReadFile'
+        - pattern: 'ioutil.NopCloser'
+          replacement: 'io.NopCloser'
     goimports:
       local-prefixes:
         - github.com/gogf/gf/v2

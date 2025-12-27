@@ -21,8 +21,8 @@ import (
 
 // UnaryLogger is the default unary interceptor for logging purpose.
 func (s *GrpcServer) UnaryLogger(
-	ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
-) (interface{}, error) {
+	ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
+) (any, error) {
 	var (
 		start    = time.Now()
 		res, err = handler(ctx, req)
@@ -35,7 +35,7 @@ func (s *GrpcServer) UnaryLogger(
 
 // handleAccessLog handles the access logging for server.
 func (s *GrpcServer) handleAccessLog(
-	ctx context.Context, err error, duration time.Duration, info *grpc.UnaryServerInfo, req, res interface{},
+	ctx context.Context, err error, duration time.Duration, info *grpc.UnaryServerInfo, req, res any,
 ) {
 	if !s.config.AccessLogEnabled {
 		return
@@ -49,7 +49,7 @@ func (s *GrpcServer) handleAccessLog(
 
 // handleErrorLog handles the error logging for server.
 func (s *GrpcServer) handleErrorLog(
-	ctx context.Context, err error, duration time.Duration, info *grpc.UnaryServerInfo, req, res interface{},
+	ctx context.Context, err error, duration time.Duration, info *grpc.UnaryServerInfo, req, res any,
 ) {
 	// It does nothing if error logging is custom disabled.
 	if !s.config.ErrorLogEnabled || err == nil {

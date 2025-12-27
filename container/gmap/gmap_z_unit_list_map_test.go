@@ -1,7 +1,7 @@
 // Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with gm file,
+// If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
 package gmap_test
@@ -21,7 +21,7 @@ func Test_ListMap_Var(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var m gmap.ListMap
 		m.Set("key1", "val1")
-		t.Assert(m.Keys(), []interface{}{"key1"})
+		t.Assert(m.Keys(), []any{"key1"})
 
 		t.Assert(m.Get("key1"), "val1")
 		t.Assert(m.Size(), 1)
@@ -41,7 +41,7 @@ func Test_ListMap_Var(t *testing.T) {
 
 		m.Flip()
 
-		t.Assert(m.Map(), map[interface{}]interface{}{"val3": "key3", "val1": "key1"})
+		t.Assert(m.Map(), map[any]any{"val3": "key3", "val1": "key1"})
 
 		m.Clear()
 		t.Assert(m.Size(), 0)
@@ -53,7 +53,7 @@ func Test_ListMap_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListMap()
 		m.Set("key1", "val1")
-		t.Assert(m.Keys(), []interface{}{"key1"})
+		t.Assert(m.Keys(), []any{"key1"})
 
 		t.Assert(m.Get("key1"), "val1")
 		t.Assert(m.Size(), 1)
@@ -73,14 +73,14 @@ func Test_ListMap_Basic(t *testing.T) {
 
 		m.Flip()
 
-		t.Assert(m.Map(), map[interface{}]interface{}{"val3": "key3", "val1": "key1"})
+		t.Assert(m.Map(), map[any]any{"val3": "key3", "val1": "key1"})
 
 		m.Clear()
 		t.Assert(m.Size(), 0)
 		t.Assert(m.IsEmpty(), true)
 
-		m2 := gmap.NewListMapFrom(map[interface{}]interface{}{1: 1, "key1": "val1"})
-		t.Assert(m2.Map(), map[interface{}]interface{}{1: 1, "key1": "val1"})
+		m2 := gmap.NewListMapFrom(map[any]any{1: 1, "key1": "val1"})
+		t.Assert(m2.Map(), map[any]any{1: 1, "key1": "val1"})
 	})
 }
 
@@ -100,30 +100,30 @@ func Test_ListMap_Set_Fun(t *testing.T) {
 func Test_ListMap_Batch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListMap()
-		m.Sets(map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
-		t.Assert(m.Map(), map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
-		m.Removes([]interface{}{"key1", 1})
-		t.Assert(m.Map(), map[interface{}]interface{}{"key2": "val2", "key3": "val3"})
+		m.Sets(map[any]any{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
+		t.Assert(m.Map(), map[any]any{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
+		m.Removes([]any{"key1", 1})
+		t.Assert(m.Map(), map[any]any{"key2": "val2", "key3": "val3"})
 	})
 }
 
 func Test_ListMap_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		expect := map[interface{}]interface{}{1: 1, "key1": "val1"}
+		expect := map[any]any{1: 1, "key1": "val1"}
 
 		m := gmap.NewListMapFrom(expect)
-		m.Iterator(func(k interface{}, v interface{}) bool {
+		m.Iterator(func(k any, v any) bool {
 			t.Assert(expect[k], v)
 			return true
 		})
 		// 断言返回值对遍历控制
 		i := 0
 		j := 0
-		m.Iterator(func(k interface{}, v interface{}) bool {
+		m.Iterator(func(k any, v any) bool {
 			i++
 			return true
 		})
-		m.Iterator(func(k interface{}, v interface{}) bool {
+		m.Iterator(func(k any, v any) bool {
 			j++
 			return false
 		})
@@ -135,7 +135,7 @@ func Test_ListMap_Iterator(t *testing.T) {
 func Test_ListMap_Clone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// clone 方法是深克隆
-		m := gmap.NewListMapFrom(map[interface{}]interface{}{1: 1, "key1": "val1"})
+		m := gmap.NewListMapFrom(map[any]any{1: 1, "key1": "val1"})
 		m_clone := m.Clone()
 		m.Remove(1)
 		// 修改原 map,clone 后的 map 不影响
@@ -154,7 +154,7 @@ func Test_ListMap_Basic_Merge(t *testing.T) {
 		m1.Set("key1", "val1")
 		m2.Set("key2", "val2")
 		m1.Merge(m2)
-		t.Assert(m1.Map(), map[interface{}]interface{}{"key1": "val1", "key2": "val2"})
+		t.Assert(m1.Map(), map[any]any{"key1": "val1", "key2": "val2"})
 		m3 := gmap.NewListMapFrom(nil)
 		m3.Merge(m2)
 		t.Assert(m3.Map(), m2.Map())
@@ -321,7 +321,7 @@ func TestListMap_UnmarshalValue(t *testing.T) {
 	// JSON
 	gtest.C(t, func(t *gtest.T) {
 		var v *V
-		err := gconv.Struct(map[string]interface{}{
+		err := gconv.Struct(map[string]any{
 			"name": "john",
 			"map":  []byte(`{"1":"v1","2":"v2"}`),
 		}, &v)
@@ -334,7 +334,7 @@ func TestListMap_UnmarshalValue(t *testing.T) {
 	// Map
 	gtest.C(t, func(t *gtest.T) {
 		var v *V
-		err := gconv.Struct(map[string]interface{}{
+		err := gconv.Struct(map[string]any{
 			"name": "john",
 			"map": g.MapIntAny{
 				1: "v1",

@@ -46,10 +46,10 @@ func Search(name string, prioritySearchPaths ...string) (realPath string, err er
 	// If it fails searching, it returns formatted error.
 	if realPath == "" {
 		buffer := bytes.NewBuffer(nil)
-		buffer.WriteString(fmt.Sprintf(`cannot find "%s" in following paths:`, name))
+		fmt.Fprintf(buffer, `cannot find "%s" in following paths:`, name)
 		array.RLockFunc(func(array []string) {
 			for k, v := range array {
-				buffer.WriteString(fmt.Sprintf("\n%d. %s", k+1, v))
+				fmt.Fprintf(buffer, "\n%d. %s", k+1, v)
 			}
 		})
 		err = gerror.New(buffer.String())

@@ -72,10 +72,10 @@ func Test_Required(t *testing.T) {
 	if m := g.Validator().Data("").Rules("required").Run(ctx); m == nil {
 		t.Error(m)
 	}
-	if m := g.Validator().Data("").Assoc(map[string]interface{}{"id": 1, "age": 19}).Rules("required-if: id,1,age,18").Run(ctx); m == nil {
+	if m := g.Validator().Data("").Assoc(map[string]any{"id": 1, "age": 19}).Rules("required-if: id,1,age,18").Run(ctx); m == nil {
 		t.Error("Required校验失败")
 	}
-	if m := g.Validator().Data("").Assoc(map[string]interface{}{"id": 2, "age": 19}).Rules("required-if: id,1,age,18").Run(ctx); m != nil {
+	if m := g.Validator().Data("").Assoc(map[string]any{"id": 2, "age": 19}).Rules("required-if: id,1,age,18").Run(ctx); m != nil {
 		t.Error("Required校验失败")
 	}
 }

@@ -16,14 +16,14 @@ import (
 )
 
 // Time converts `any` to time.Time.
-func (c *Converter) Time(any interface{}, format ...string) (time.Time, error) {
+func (c *Converter) Time(anyInput any, format ...string) (time.Time, error) {
 	// It's already this type.
 	if len(format) == 0 {
-		if v, ok := any.(time.Time); ok {
+		if v, ok := anyInput.(time.Time); ok {
 			return v, nil
 		}
 	}
-	t, err := c.GTime(any, format...)
+	t, err := c.GTime(anyInput, format...)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -36,19 +36,19 @@ func (c *Converter) Time(any interface{}, format ...string) (time.Time, error) {
 // Duration converts `any` to time.Duration.
 // If `any` is string, then it uses time.ParseDuration to convert it.
 // If `any` is numeric, then it converts `any` as nanoseconds.
-func (c *Converter) Duration(any interface{}) (time.Duration, error) {
+func (c *Converter) Duration(anyInput any) (time.Duration, error) {
 	// It's already this type.
-	if v, ok := any.(time.Duration); ok {
+	if v, ok := anyInput.(time.Duration); ok {
 		return v, nil
 	}
-	s, err := c.String(any)
+	s, err := c.String(anyInput)
 	if err != nil {
 		return 0, err
 	}
 	if !utils.IsNumeric(s) {
 		return gtime.ParseDuration(s)
 	}
-	i, err := c.Int64(any)
+	i, err := c.Int64(anyInput)
 	if err != nil {
 		return 0, err
 	}
@@ -60,26 +60,26 @@ func (c *Converter) Duration(any interface{}) (time.Duration, error) {
 // It returns the converted value that matched the first format of the formats slice.
 // If no `format` given, it converts `any` using gtime.NewFromTimeStamp if `any` is numeric,
 // or using gtime.StrToTime if `any` is string.
-func (c *Converter) GTime(any interface{}, format ...string) (*gtime.Time, error) {
-	if empty.IsNil(any) {
+func (c *Converter) GTime(anyInput any, format ...string) (*gtime.Time, error) {
+	if empty.IsNil(anyInput) {
 		return nil, nil
 	}
-	if v, ok := any.(localinterface.IGTime); ok {
+	if v, ok := anyInput.(localinterface.IGTime); ok {
 		return v.GTime(format...), nil
 	}
 	// It's already this type.
 	if len(format) == 0 {
-		if v, ok := any.(*gtime.Time); ok {
+		if v, ok := anyInput.(*gtime.Time); ok {
 			return v, nil
 		}
-		if t, ok := any.(time.Time); ok {
+		if t, ok := anyInput.(time.Time); ok {
 			return gtime.New(t), nil
 		}
-		if t, ok := any.(*time.Time); ok {
+		if t, ok := anyInput.(*time.Time); ok {
 			return gtime.New(t), nil
 		}
 	}
-	s, err := c.String(any)
+	s, err := c.String(anyInput)
 	if err != nil {
 		return nil, err
 	}

@@ -8,49 +8,49 @@ package gdb
 
 // WherePrefix performs as Where, but it adds prefix to each field in where statement.
 // See WhereBuilder.WherePrefix.
-func (m *Model) WherePrefix(prefix string, where interface{}, args ...interface{}) *Model {
+func (m *Model) WherePrefix(prefix string, where any, args ...any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WherePrefix(prefix, where, args...))
 }
 
 // WherePrefixLT builds `prefix.column < value` statement.
 // See WhereBuilder.WherePrefixLT.
-func (m *Model) WherePrefixLT(prefix string, column string, value interface{}) *Model {
+func (m *Model) WherePrefixLT(prefix string, column string, value any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WherePrefixLT(prefix, column, value))
 }
 
 // WherePrefixLTE builds `prefix.column <= value` statement.
 // See WhereBuilder.WherePrefixLTE.
-func (m *Model) WherePrefixLTE(prefix string, column string, value interface{}) *Model {
+func (m *Model) WherePrefixLTE(prefix string, column string, value any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WherePrefixLTE(prefix, column, value))
 }
 
 // WherePrefixGT builds `prefix.column > value` statement.
 // See WhereBuilder.WherePrefixGT.
-func (m *Model) WherePrefixGT(prefix string, column string, value interface{}) *Model {
+func (m *Model) WherePrefixGT(prefix string, column string, value any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WherePrefixGT(prefix, column, value))
 }
 
 // WherePrefixGTE builds `prefix.column >= value` statement.
 // See WhereBuilder.WherePrefixGTE.
-func (m *Model) WherePrefixGTE(prefix string, column string, value interface{}) *Model {
+func (m *Model) WherePrefixGTE(prefix string, column string, value any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WherePrefixGTE(prefix, column, value))
 }
 
 // WherePrefixBetween builds `prefix.column BETWEEN min AND max` statement.
 // See WhereBuilder.WherePrefixBetween.
-func (m *Model) WherePrefixBetween(prefix string, column string, min, max interface{}) *Model {
+func (m *Model) WherePrefixBetween(prefix string, column string, min, max any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WherePrefixBetween(prefix, column, min, max))
 }
 
 // WherePrefixLike builds `prefix.column LIKE like` statement.
 // See WhereBuilder.WherePrefixLike.
-func (m *Model) WherePrefixLike(prefix string, column string, like interface{}) *Model {
+func (m *Model) WherePrefixLike(prefix string, column string, like any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WherePrefixLike(prefix, column, like))
 }
 
 // WherePrefixIn builds `prefix.column IN (in)` statement.
 // See WhereBuilder.WherePrefixIn.
-func (m *Model) WherePrefixIn(prefix string, column string, in interface{}) *Model {
+func (m *Model) WherePrefixIn(prefix string, column string, in any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WherePrefixIn(prefix, column, in))
 }
 
@@ -62,25 +62,25 @@ func (m *Model) WherePrefixNull(prefix string, columns ...string) *Model {
 
 // WherePrefixNotBetween builds `prefix.column NOT BETWEEN min AND max` statement.
 // See WhereBuilder.WherePrefixNotBetween.
-func (m *Model) WherePrefixNotBetween(prefix string, column string, min, max interface{}) *Model {
+func (m *Model) WherePrefixNotBetween(prefix string, column string, min, max any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WherePrefixNotBetween(prefix, column, min, max))
 }
 
 // WherePrefixNotLike builds `prefix.column NOT LIKE like` statement.
 // See WhereBuilder.WherePrefixNotLike.
-func (m *Model) WherePrefixNotLike(prefix string, column string, like interface{}) *Model {
+func (m *Model) WherePrefixNotLike(prefix string, column string, like any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WherePrefixNotLike(prefix, column, like))
 }
 
 // WherePrefixNot builds `prefix.column != value` statement.
 // See WhereBuilder.WherePrefixNot.
-func (m *Model) WherePrefixNot(prefix string, column string, value interface{}) *Model {
+func (m *Model) WherePrefixNot(prefix string, column string, value any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WherePrefixNot(prefix, column, value))
 }
 
 // WherePrefixNotIn builds `prefix.column NOT IN (in)` statement.
 // See WhereBuilder.WherePrefixNotIn.
-func (m *Model) WherePrefixNotIn(prefix string, column string, in interface{}) *Model {
+func (m *Model) WherePrefixNotIn(prefix string, column string, in any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WherePrefixNotIn(prefix, column, in))
 }
 

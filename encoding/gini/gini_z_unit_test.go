@@ -40,12 +40,12 @@ func TestDecode(t *testing.T) {
 		if err != nil {
 			gtest.Fatal(err)
 		}
-		t.Assert(res["addr"].(map[string]interface{})["ip"], "127.0.0.1")
-		t.Assert(res["addr"].(map[string]interface{})["port"], "9001")
-		t.Assert(res["addr"].(map[string]interface{})["command"], `/bin/echo "gf=GoFrame"`)
-		t.Assert(res["DBINFO"].(map[string]interface{})["user"], "root")
-		t.Assert(res["DBINFO"].(map[string]interface{})["type"], "mysql")
-		t.Assert(res["键"].(map[string]interface{})["呵呵"], "值")
+		t.Assert(res["addr"].(map[string]any)["ip"], "127.0.0.1")
+		t.Assert(res["addr"].(map[string]any)["port"], "9001")
+		t.Assert(res["addr"].(map[string]any)["command"], `/bin/echo "gf=GoFrame"`)
+		t.Assert(res["DBINFO"].(map[string]any)["user"], "root")
+		t.Assert(res["DBINFO"].(map[string]any)["type"], "mysql")
+		t.Assert(res["键"].(map[string]any)["呵呵"], "值")
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -76,10 +76,10 @@ func TestEncode(t *testing.T) {
 			gtest.Fatal(err)
 		}
 
-		t.Assert(res["addr"].(map[string]interface{})["ip"], "127.0.0.1")
-		t.Assert(res["addr"].(map[string]interface{})["port"], "9001")
-		t.Assert(res["DBINFO"].(map[string]interface{})["user"], "root")
-		t.Assert(res["DBINFO"].(map[string]interface{})["type"], "mysql")
+		t.Assert(res["addr"].(map[string]any)["ip"], "127.0.0.1")
+		t.Assert(res["addr"].(map[string]any)["port"], "9001")
+		t.Assert(res["DBINFO"].(map[string]any)["user"], "root")
+		t.Assert(res["DBINFO"].(map[string]any)["type"], "mysql")
 
 	})
 }
@@ -99,9 +99,9 @@ func TestToJson(t *testing.T) {
 		iniMap, err := gini.Decode([]byte(iniContent))
 		t.AssertNil(err)
 
-		t.Assert(iniMap["addr"].(map[string]interface{})["ip"], json.Get("addr.ip").String())
-		t.Assert(iniMap["addr"].(map[string]interface{})["port"], json.Get("addr.port").String())
-		t.Assert(iniMap["DBINFO"].(map[string]interface{})["user"], json.Get("DBINFO.user").String())
-		t.Assert(iniMap["DBINFO"].(map[string]interface{})["type"], json.Get("DBINFO.type").String())
+		t.Assert(iniMap["addr"].(map[string]any)["ip"], json.Get("addr.ip").String())
+		t.Assert(iniMap["addr"].(map[string]any)["port"], json.Get("addr.port").String())
+		t.Assert(iniMap["DBINFO"].(map[string]any)["user"], json.Get("DBINFO.user").String())
+		t.Assert(iniMap["DBINFO"].(map[string]any)["type"], json.Get("DBINFO.type").String())
 	})
 }

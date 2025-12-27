@@ -53,7 +53,7 @@ func NewConverter() *Converter {
 
 // MarkTypeConvertFunc marks converting function registered for custom type.
 func (cf *Converter) MarkTypeConvertFunc(fieldType reflect.Type) {
-	if fieldType.Kind() == reflect.Ptr {
+	if fieldType.Kind() == reflect.Pointer {
 		fieldType = fieldType.Elem()
 	}
 	cf.typeConverterFuncMarkMap[fieldType] = struct{}{}
@@ -64,7 +64,7 @@ func (cf *Converter) RegisterAnyConvertFunc(dstType reflect.Type, convertFunc An
 	if dstType == nil || convertFunc == nil {
 		return
 	}
-	for dstType.Kind() == reflect.Ptr {
+	for dstType.Kind() == reflect.Pointer {
 		dstType = dstType.Elem()
 	}
 	if dstType.Kind() == reflect.Interface {
@@ -84,7 +84,7 @@ func (cf *Converter) RegisterAnyConvertFunc(dstType reflect.Type, convertFunc An
 
 // GetAnyConvertFuncByType retrieves and returns the converting function for specified type.
 func (cf *Converter) GetAnyConvertFuncByType(dstType reflect.Type) AnyConvertFunc {
-	if dstType.Kind() == reflect.Ptr {
+	if dstType.Kind() == reflect.Pointer {
 		dstType = dstType.Elem()
 	}
 	return cf.anyToTypeConvertMap[dstType]
@@ -96,7 +96,7 @@ func (cf *Converter) IsAnyConvertFuncEmpty() bool {
 }
 
 func (cf *Converter) checkTypeImplInterface(t reflect.Type) AnyConvertFunc {
-	if t.Kind() != reflect.Ptr {
+	if t.Kind() != reflect.Pointer {
 		t = reflect.PointerTo(t)
 	}
 	for _, inter := range cf.interfaceToTypeConvertMap {
@@ -124,7 +124,7 @@ func checkTypeIsCommonInterface(field reflect.StructField) bool {
 
 	default:
 		// Implemented three types of interfaces that must be pointer types, otherwise it is meaningless
-		if field.Type.Kind() != reflect.Ptr {
+		if field.Type.Kind() != reflect.Pointer {
 			field.Type = reflect.PointerTo(field.Type)
 		}
 		switch {

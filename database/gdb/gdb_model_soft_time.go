@@ -43,28 +43,27 @@ type softTimeMaintainer struct {
 	*Model
 }
 
+// SoftTimeFieldType represents different soft time field purposes.
+type SoftTimeFieldType int
+
+const (
+	SoftTimeFieldCreate SoftTimeFieldType = iota
+	SoftTimeFieldUpdate
+	SoftTimeFieldDelete
+)
+
 type iSoftTimeMaintainer interface {
-	GetFieldNameAndTypeForCreate(
-		ctx context.Context, schema string, table string,
-	) (fieldName string, fieldType LocalType)
+	// GetFieldInfo returns field name and type for specified field purpose.
+	GetFieldInfo(ctx context.Context, schema, table string, fieldPurpose SoftTimeFieldType) (fieldName string, localType LocalType)
 
-	GetFieldNameAndTypeForUpdate(
-		ctx context.Context, schema string, table string,
-	) (fieldName string, fieldType LocalType)
+	// GetFieldValue generates value for create/update/delete operations.
+	GetFieldValue(ctx context.Context, localType LocalType, isDeleted bool) any
 
-	GetFieldNameAndTypeForDelete(
-		ctx context.Context, schema string, table string,
-	) (fieldName string, fieldType LocalType)
+	// GetDeleteCondition returns WHERE condition for soft delete query.
+	GetDeleteCondition(ctx context.Context) string
 
-	GetValueByFieldTypeForCreateOrUpdate(
-		ctx context.Context, fieldType LocalType, isDeletedField bool,
-	) (dataValue any)
-
-	GetDataByFieldNameAndTypeForDelete(
-		ctx context.Context, fieldPrefix, fieldName string, fieldType LocalType,
-	) (dataHolder string, dataValue any)
-
-	GetWhereConditionForDelete(ctx context.Context) string
+	// GetDeleteData returns UPDATE statement data for soft delete.
+	GetDeleteData(ctx context.Context, prefix, fieldName string, localType LocalType) (holder string, value any)
 }
 
 // getSoftFieldNameAndTypeCacheItem is the internal struct for storing create/update/delete fields.
@@ -102,137 +101,83 @@ func (m *Model) softTimeMaintainer() iSoftTimeMaintainer {
 	}
 }
 
-// GetFieldNameAndTypeForCreate checks and returns the field name for record creating time.
-// If there's no field name for storing creating time, it returns an empty string.
+// GetFieldInfo returns field name and type for specified field purpose.
 // It checks the key with or without cases or chars '-'/'_'/'.'/' '.
-func (m *softTimeMaintainer) GetFieldNameAndTypeForCreate(
-	ctx context.Context, schema string, table string,
-) (fieldName string, fieldType LocalType) {
-	// It checks whether this feature disabled.
+func (m *softTimeMaintainer) GetFieldInfo(
+	ctx context.Context, schema, table string, fieldPurpose SoftTimeFieldType,
+) (fieldName string, localType LocalType) {
+	// Check if feature is disabled
 	if m.db.GetConfig().TimeMaintainDisabled {
 		return "", LocalTypeUndefined
 	}
-	tableName := ""
-	if table != "" {
-		tableName = table
-	} else {
-		tableName = m.tablesInit
-	}
-	config := m.db.GetConfig()
-	if config.CreatedAt != "" {
-		return m.getSoftFieldNameAndType(
-			ctx, schema, tableName, []string{config.CreatedAt},
-		)
-	}
-	return m.getSoftFieldNameAndType(
-		ctx, schema, tableName, createdFieldNames,
-	)
-}
 
-// GetFieldNameAndTypeForUpdate checks and returns the field name for record updating time.
-// If there's no field name for storing updating time, it returns an empty string.
-// It checks the key with or without cases or chars '-'/'_'/'.'/' '.
-func (m *softTimeMaintainer) GetFieldNameAndTypeForUpdate(
-	ctx context.Context, schema string, table string,
-) (fieldName string, fieldType LocalType) {
-	// It checks whether this feature disabled.
-	if m.db.GetConfig().TimeMaintainDisabled {
-		return "", LocalTypeUndefined
-	}
-	tableName := ""
-	if table != "" {
-		tableName = table
-	} else {
+	// Determine table name
+	tableName := table
+	if tableName == "" {
 		tableName = m.tablesInit
 	}
-	config := m.db.GetConfig()
-	if config.UpdatedAt != "" {
-		return m.getSoftFieldNameAndType(
-			ctx, schema, tableName, []string{config.UpdatedAt},
-		)
-	}
-	return m.getSoftFieldNameAndType(
-		ctx, schema, tableName, updatedFieldNames,
-	)
-}
 
-// GetFieldNameAndTypeForDelete checks and returns the field name for record deleting time.
-// If there's no field name for storing deleting time, it returns an empty string.
-// It checks the key with or without cases or chars '-'/'_'/'.'/' '.
-func (m *softTimeMaintainer) GetFieldNameAndTypeForDelete(
-	ctx context.Context, schema string, table string,
-) (fieldName string, fieldType LocalType) {
-	// It checks whether this feature disabled.
-	if m.db.GetConfig().TimeMaintainDisabled {
-		return "", LocalTypeUndefined
-	}
-	tableName := ""
-	if table != "" {
-		tableName = table
-	} else {
-		tableName = m.tablesInit
-	}
+	// Get config and field candidates
 	config := m.db.GetConfig()
-	if config.DeletedAt != "" {
-		return m.getSoftFieldNameAndType(
-			ctx, schema, tableName, []string{config.DeletedAt},
-		)
-	}
-	return m.getSoftFieldNameAndType(
-		ctx, schema, tableName, deletedFieldNames,
+	var (
+		configField   string
+		defaultFields []string
 	)
+
+	switch fieldPurpose {
+	case SoftTimeFieldCreate:
+		configField = config.CreatedAt
+		defaultFields = createdFieldNames
+	case SoftTimeFieldUpdate:
+		configField = config.UpdatedAt
+		defaultFields = updatedFieldNames
+	case SoftTimeFieldDelete:
+		configField = config.DeletedAt
+		defaultFields = deletedFieldNames
+	}
+
+	// Use config field if specified, otherwise use defaults
+	if configField != "" {
+		return m.getSoftFieldNameAndType(ctx, schema, tableName, []string{configField})
+	}
+	return m.getSoftFieldNameAndType(ctx, schema, tableName, defaultFields)
 }
 
 // getSoftFieldNameAndType retrieves and returns the field name of the table for possible key.
 func (m *softTimeMaintainer) getSoftFieldNameAndType(
-	ctx context.Context,
-	schema string, table string, checkFiledNames []string,
+	ctx context.Context, schema, table string, candidateFields []string,
 ) (fieldName string, fieldType LocalType) {
-	var (
-		innerMemCache = m.db.GetCore().GetInnerMemCache()
-		cacheKey      = fmt.Sprintf(
-			`getSoftFieldNameAndType:%s#%s#%s`,
-			schema, table, strings.Join(checkFiledNames, "_"),
-		)
-		cacheDuration = gcache.DurationNoExpire
-		cacheFunc     = func(ctx context.Context) (value interface{}, err error) {
-			// Ignore the error from TableFields.
-			fieldsMap, err := m.TableFields(table, schema)
-			if err != nil {
-				return nil, err
-			}
-			if len(fieldsMap) == 0 {
-				return nil, nil
-			}
-			for _, checkFiledName := range checkFiledNames {
-				fieldName = searchFieldNameFromMap(fieldsMap, checkFiledName)
-				if fieldName != "" {
-					fieldType, _ = m.db.CheckLocalTypeForField(
-						ctx, fieldsMap[fieldName].Type, nil,
-					)
-					var cacheItem = getSoftFieldNameAndTypeCacheItem{
-						FieldName: fieldName,
-						FieldType: fieldType,
-					}
-					return cacheItem, nil
-				}
-			}
-			return
+	// Build cache key
+	cacheKey := genSoftTimeFieldNameTypeCacheKey(schema, table, candidateFields)
+
+	// Try to get from cache
+	cache := m.db.GetCore().GetInnerMemCache()
+	result, err := cache.GetOrSetFunc(ctx, cacheKey, func(ctx context.Context) (any, error) {
+		// Get table fields
+		fieldsMap, err := m.TableFields(table, schema)
+		if err != nil || len(fieldsMap) == 0 {
+			return nil, err
 		}
-	)
-	result, err := innerMemCache.GetOrSetFunc(
-		ctx, cacheKey, cacheFunc, cacheDuration,
-	)
-	if err != nil {
-		return
+
+		// Search for matching field
+		for _, field := range candidateFields {
+			if name := searchFieldNameFromMap(fieldsMap, field); name != "" {
+				fType, _ := m.db.CheckLocalTypeForField(ctx, fieldsMap[name].Type, nil)
+				return getSoftFieldNameAndTypeCacheItem{
+					FieldName: name,
+					FieldType: fType,
+				}, nil
+			}
+		}
+		return nil, nil
+	}, gcache.DurationNoExpire)
+
+	if err != nil || result == nil {
+		return "", LocalTypeUndefined
 	}
-	if result == nil {
-		return
-	}
-	cacheItem := result.Val().(getSoftFieldNameAndTypeCacheItem)
-	fieldName = cacheItem.FieldName
-	fieldType = cacheItem.FieldType
-	return
+
+	item := result.Val().(getSoftFieldNameAndTypeCacheItem)
+	return item.FieldName, item.FieldType
 }
 
 func searchFieldNameFromMap(fieldsMap map[string]*TableField, key string) string {
@@ -252,13 +197,13 @@ func searchFieldNameFromMap(fieldsMap map[string]*TableField, key string) string
 	return ""
 }
 
-// GetWhereConditionForDelete retrieves and returns the condition string for soft deleting.
+// GetDeleteCondition returns WHERE condition for soft delete query.
 // It supports multiple tables string like:
 // "user u, user_detail ud"
 // "user u LEFT JOIN user_detail ud ON(ud.uid=u.uid)"
 // "user LEFT JOIN user_detail ON(user_detail.uid=user.uid)"
 // "user u LEFT JOIN user_detail ud ON(ud.uid=u.uid) LEFT JOIN user_stats us ON(us.uid=u.uid)".
-func (m *softTimeMaintainer) GetWhereConditionForDelete(ctx context.Context) string {
+func (m *softTimeMaintainer) GetDeleteCondition(ctx context.Context) string {
 	if m.unscoped {
 		return ""
 	}
@@ -284,9 +229,9 @@ func (m *softTimeMaintainer) GetWhereConditionForDelete(ctx context.Context) str
 		return conditionArray.Join(" AND ")
 	}
 	// Only one table.
-	fieldName, fieldType := m.GetFieldNameAndTypeForDelete(ctx, "", m.tablesInit)
+	fieldName, fieldType := m.GetFieldInfo(ctx, "", m.tablesInit, SoftTimeFieldDelete)
 	if fieldName != "" {
-		return m.getConditionByFieldNameAndTypeForSoftDeleting(ctx, "", fieldName, fieldType)
+		return m.buildDeleteCondition(ctx, "", fieldName, fieldType)
 	}
 	return ""
 }
@@ -310,140 +255,130 @@ func (m *softTimeMaintainer) getConditionOfTableStringForSoftDeleting(ctx contex
 	} else {
 		table = array2[0]
 	}
-	fieldName, fieldType := m.GetFieldNameAndTypeForDelete(ctx, schema, table)
+	fieldName, fieldType := m.GetFieldInfo(ctx, schema, table, SoftTimeFieldDelete)
 	if fieldName == "" {
 		return ""
 	}
 	if len(array1) >= 3 {
-		return m.getConditionByFieldNameAndTypeForSoftDeleting(ctx, array1[2], fieldName, fieldType)
+		return m.buildDeleteCondition(ctx, array1[2], fieldName, fieldType)
 	}
 	if len(array1) >= 2 {
-		return m.getConditionByFieldNameAndTypeForSoftDeleting(ctx, array1[1], fieldName, fieldType)
+		return m.buildDeleteCondition(ctx, array1[1], fieldName, fieldType)
 	}
-	return m.getConditionByFieldNameAndTypeForSoftDeleting(ctx, table, fieldName, fieldType)
+	return m.buildDeleteCondition(ctx, table, fieldName, fieldType)
 }
 
-// GetDataByFieldNameAndTypeForDelete creates and returns the placeholder and value for
-// specified field name and type in soft-deleting scenario.
-func (m *softTimeMaintainer) GetDataByFieldNameAndTypeForDelete(
-	ctx context.Context, fieldPrefix, fieldName string, fieldType LocalType,
-) (dataHolder string, dataValue any) {
-	var (
-		quotedFieldPrefix = m.db.GetCore().QuoteWord(fieldPrefix)
-		quotedFieldName   = m.db.GetCore().QuoteWord(fieldName)
-	)
-	if quotedFieldPrefix != "" {
-		quotedFieldName = fmt.Sprintf(`%s.%s`, quotedFieldPrefix, quotedFieldName)
+// GetDeleteData returns UPDATE statement data for soft delete.
+func (m *softTimeMaintainer) GetDeleteData(
+	ctx context.Context, prefix, fieldName string, fieldType LocalType,
+) (holder string, value any) {
+	core := m.db.GetCore()
+	quotedName := core.QuoteWord(fieldName)
+
+	if prefix != "" {
+		quotedName = fmt.Sprintf(`%s.%s`, core.QuoteWord(prefix), quotedName)
 	}
-	dataHolder = fmt.Sprintf(`%s=?`, quotedFieldName)
-	dataValue = m.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldType, false)
+
+	holder = fmt.Sprintf(`%s=?`, quotedName)
+	value = m.GetFieldValue(ctx, fieldType, false)
 	return
 }
 
-func (m *softTimeMaintainer) getConditionByFieldNameAndTypeForSoftDeleting(
-	ctx context.Context, fieldPrefix, fieldName string, fieldType LocalType,
+// buildDeleteCondition builds WHERE condition for soft delete filtering.
+func (m *softTimeMaintainer) buildDeleteCondition(
+	ctx context.Context, prefix, fieldName string, fieldType LocalType,
 ) string {
-	var (
-		quotedFieldPrefix = m.db.GetCore().QuoteWord(fieldPrefix)
-		quotedFieldName   = m.db.GetCore().QuoteWord(fieldName)
-	)
-	if quotedFieldPrefix != "" {
-		quotedFieldName = fmt.Sprintf(`%s.%s`, quotedFieldPrefix, quotedFieldName)
+	core := m.db.GetCore()
+	quotedName := core.QuoteWord(fieldName)
+
+	if prefix != "" {
+		quotedName = fmt.Sprintf(`%s.%s`, core.QuoteWord(prefix), quotedName)
 	}
 	switch m.softTimeOption.SoftTimeType {
 	case SoftTimeTypeAuto:
 		switch fieldType {
 		case LocalTypeDate, LocalTypeTime, LocalTypeDatetime:
-			return fmt.Sprintf(`%s IS NULL`, quotedFieldName)
+			return fmt.Sprintf(`%s IS NULL`, quotedName)
 		case LocalTypeInt, LocalTypeUint, LocalTypeInt64, LocalTypeUint64, LocalTypeBool:
-			return fmt.Sprintf(`%s=0`, quotedFieldName)
+			return fmt.Sprintf(`%s=0`, quotedName)
 		default:
-			intlog.Errorf(
-				ctx,
-				`invalid field type "%s" of field name "%s" with prefix "%s" for soft deleting condition`,
-				fieldType, fieldName, fieldPrefix,
-			)
+			intlog.Errorf(ctx, `invalid field type "%s" for soft delete condition: prefix=%s, field=%s`, fieldType, prefix, fieldName)
+			return ""
 		}
 
 	case SoftTimeTypeTime:
-		return fmt.Sprintf(`%s IS NULL`, quotedFieldName)
+		return fmt.Sprintf(`%s IS NULL`, quotedName)
 
 	default:
-		return fmt.Sprintf(`%s=0`, quotedFieldName)
+		return fmt.Sprintf(`%s=0`, quotedName)
 	}
-	return ""
 }
 
-// GetValueByFieldTypeForCreateOrUpdate creates and returns the value for specified field type,
-// usually for creating or updating operations.
-func (m *softTimeMaintainer) GetValueByFieldTypeForCreateOrUpdate(
-	ctx context.Context, fieldType LocalType, isDeletedField bool,
+// GetFieldValue generates value for create/update/delete operations.
+func (m *softTimeMaintainer) GetFieldValue(
+	ctx context.Context, fieldType LocalType, isDeleted bool,
 ) any {
-	var value any
-	if isDeletedField {
-		switch fieldType {
-		case LocalTypeDate, LocalTypeTime, LocalTypeDatetime:
-			value = nil
-		default:
-			value = 0
-		}
-		return value
+	// For deleted field, return "empty" value
+	if isDeleted {
+		return m.getEmptyValue(fieldType)
 	}
+
+	// For create/update/delete, return current time value
 	switch m.softTimeOption.SoftTimeType {
 	case SoftTimeTypeAuto:
-		switch fieldType {
-		case LocalTypeDate, LocalTypeTime, LocalTypeDatetime:
-			value = gtime.Now()
-		case LocalTypeInt, LocalTypeUint, LocalTypeInt64, LocalTypeUint64:
-			value = gtime.Timestamp()
-		case LocalTypeBool:
-			value = 1
-		default:
-			intlog.Errorf(
-				ctx,
-				`invalid field type "%s" for soft deleting data`,
-				fieldType,
-			)
-		}
-
+		return m.getAutoValue(ctx, fieldType)
 	default:
 		switch fieldType {
 		case LocalTypeBool:
-			value = 1
+			return 1
 		default:
-			value = m.createValueBySoftTimeOption(isDeletedField)
+			return m.getTimestampValue()
 		}
 	}
-	return value
 }
 
-func (m *softTimeMaintainer) createValueBySoftTimeOption(isDeletedField bool) any {
-	var value any
-	if isDeletedField {
-		switch m.softTimeOption.SoftTimeType {
-		case SoftTimeTypeTime:
-			value = nil
-		default:
-			value = 0
-		}
-		return value
-	}
+// getTimestampValue returns timestamp value for soft time.
+func (m *softTimeMaintainer) getTimestampValue() any {
 	switch m.softTimeOption.SoftTimeType {
 	case SoftTimeTypeTime:
-		value = gtime.Now()
+		return gtime.Now()
 	case SoftTimeTypeTimestamp:
-		value = gtime.Timestamp()
+		return gtime.Timestamp()
 	case SoftTimeTypeTimestampMilli:
-		value = gtime.TimestampMilli()
+		return gtime.TimestampMilli()
 	case SoftTimeTypeTimestampMicro:
-		value = gtime.TimestampMicro()
+		return gtime.TimestampMicro()
 	case SoftTimeTypeTimestampNano:
-		value = gtime.TimestampNano()
+		return gtime.TimestampNano()
 	default:
 		panic(gerror.NewCodef(
 			gcode.CodeInternalPanic,
 			`unrecognized SoftTimeType "%d"`, m.softTimeOption.SoftTimeType,
 		))
 	}
-	return value
+}
+
+// getEmptyValue returns "empty" value for deleted field.
+func (m *softTimeMaintainer) getEmptyValue(fieldType LocalType) any {
+	switch fieldType {
+	case LocalTypeDate, LocalTypeTime, LocalTypeDatetime:
+		return nil
+	default:
+		return 0
+	}
+}
+
+// getAutoValue returns auto-detected value based on field type.
+func (m *softTimeMaintainer) getAutoValue(ctx context.Context, fieldType LocalType) any {
+	switch fieldType {
+	case LocalTypeDate, LocalTypeTime, LocalTypeDatetime:
+		return gtime.Now()
+	case LocalTypeInt, LocalTypeUint, LocalTypeInt64, LocalTypeUint64:
+		return gtime.Timestamp()
+	case LocalTypeBool:
+		return 1
+	default:
+		intlog.Errorf(ctx, `invalid field type "%s" for soft time auto value`, fieldType)
+		return nil
+	}
 }

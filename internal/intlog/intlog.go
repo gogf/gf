@@ -26,7 +26,7 @@ const (
 
 // Print prints `v` with newline using fmt.Println.
 // The parameter `v` can be multiple variables.
-func Print(ctx context.Context, v ...interface{}) {
+func Print(ctx context.Context, v ...any) {
 	if !utils.IsDebugEnabled() {
 		return
 	}
@@ -35,7 +35,7 @@ func Print(ctx context.Context, v ...interface{}) {
 
 // Printf prints `v` with format `format` using fmt.Printf.
 // The parameter `v` can be multiple variables.
-func Printf(ctx context.Context, format string, v ...interface{}) {
+func Printf(ctx context.Context, format string, v ...any) {
 	if !utils.IsDebugEnabled() {
 		return
 	}
@@ -44,7 +44,7 @@ func Printf(ctx context.Context, format string, v ...interface{}) {
 
 // Error prints `v` with newline using fmt.Println.
 // The parameter `v` can be multiple variables.
-func Error(ctx context.Context, v ...interface{}) {
+func Error(ctx context.Context, v ...any) {
 	if !utils.IsDebugEnabled() {
 		return
 	}
@@ -52,7 +52,7 @@ func Error(ctx context.Context, v ...interface{}) {
 }
 
 // Errorf prints `v` with format `format` using fmt.Printf.
-func Errorf(ctx context.Context, format string, v ...interface{}) {
+func Errorf(ctx context.Context, format string, v ...any) {
 	if !utils.IsDebugEnabled() {
 		return
 	}

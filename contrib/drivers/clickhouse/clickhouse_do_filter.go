@@ -17,8 +17,8 @@ import (
 
 // DoFilter handles the sql before posts it to database.
 func (d *Driver) DoFilter(
-	ctx context.Context, link gdb.Link, originSql string, args []interface{},
-) (newSql string, newArgs []interface{}, err error) {
+	ctx context.Context, link gdb.Link, originSql string, args []any,
+) (newSql string, newArgs []any, err error) {
 	if len(args) == 0 {
 		return originSql, args, nil
 	}
@@ -73,13 +73,11 @@ func (d *Driver) DoFilter(
 		}
 		return newSql, args, nil
 
+	default:
+		return originSql, args, nil
 	}
-	return originSql, args, nil
 }
 
 func (d *Driver) getNeedParsedSqlFromCtx(ctx context.Context) bool {
-	if ctx.Value(needParsedSqlInCtx) != nil {
-		return true
-	}
-	return false
+	return ctx.Value(needParsedSqlInCtx) != nil
 }

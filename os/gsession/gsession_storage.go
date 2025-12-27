@@ -21,21 +21,21 @@ type Storage interface {
 
 	// Get retrieves and returns certain session value with given key.
 	// It returns nil if the key does not exist in the session.
-	Get(ctx context.Context, sessionId string, key string) (value interface{}, err error)
+	Get(ctx context.Context, sessionId string, key string) (value any, err error)
 
 	// GetSize retrieves and returns the size of key-value pairs from storage.
 	GetSize(ctx context.Context, sessionId string) (size int, err error)
 
 	// Data retrieves all key-value pairs as map from storage.
-	Data(ctx context.Context, sessionId string) (sessionData map[string]interface{}, err error)
+	Data(ctx context.Context, sessionId string) (sessionData map[string]any, err error)
 
 	// Set sets one key-value session pair to the storage.
 	// The parameter `ttl` specifies the TTL for the session id.
-	Set(ctx context.Context, sessionId string, key string, value interface{}, ttl time.Duration) error
+	Set(ctx context.Context, sessionId string, key string, value any, ttl time.Duration) error
 
 	// SetMap batch sets key-value session pairs as map to the storage.
 	// The parameter `ttl` specifies the TTL for the session id.
-	SetMap(ctx context.Context, sessionId string, mapData map[string]interface{}, ttl time.Duration) error
+	SetMap(ctx context.Context, sessionId string, mapData map[string]any, ttl time.Duration) error
 
 	// Remove deletes key-value pair from specified session from storage.
 	Remove(ctx context.Context, sessionId string, key string) error

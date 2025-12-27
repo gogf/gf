@@ -15,7 +15,7 @@ import (
 
 func TestPtrAny(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var v interface{} = 1
+		var v any = 1
 		t.AssertEQ(gconv.PtrAny(v), &v)
 	})
 }

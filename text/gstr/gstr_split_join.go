@@ -35,7 +35,7 @@ func Join(array []string, sep string) string {
 // `sep` is placed between elements in the resulting string.
 //
 // The parameter `array` can be any type of slice, which be converted to string array.
-func JoinAny(array interface{}, sep string) string {
+func JoinAny(array any, sep string) string {
 	return strings.Join(gconv.Strings(array), sep)
 }
 

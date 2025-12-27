@@ -22,7 +22,7 @@ var qstatic = gqueue.New(length)
 
 var qdynamic = gqueue.New()
 
-var cany = make(chan interface{}, length)
+var cany = make(chan any, length)
 
 func Benchmark_Gqueue_StaticPushAndPop(b *testing.B) {
 	b.N = bn

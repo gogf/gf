@@ -27,14 +27,14 @@ func Test_Parse(t *testing.T) {
 		// invalid
 		m, err = gstr.Parse("a&b")
 		t.AssertNil(err)
-		t.Assert(m, make(map[string]interface{}))
+		t.Assert(m, make(map[string]any))
 		// special key
 		m, err = gstr.Parse(" =1& b=2&   c =3")
 		t.AssertNil(err)
-		t.Assert(m, map[string]interface{}{"b": "2", "c_": "3"})
+		t.Assert(m, map[string]any{"b": "2", "c_": "3"})
 		m, err = gstr.Parse("c[=3")
 		t.AssertNil(err)
-		t.Assert(m, map[string]interface{}{"c_": "3"})
+		t.Assert(m, map[string]any{"c_": "3"})
 		m, err = gstr.Parse("v[a][a]a=m")
 		t.AssertNil(err)
 		t.Assert(m, g.Map{
