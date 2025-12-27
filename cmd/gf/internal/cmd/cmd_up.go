@@ -15,6 +15,7 @@ import (
 
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -39,7 +40,11 @@ gf up
 gf up -a
 gf up -c
 gf up -cf
+gf up -a -m=install
+gf up -a -m=install -p=github.com/gogf/gf/cmd/gf/v2@latest
 `
+	cliMethodHttpDownload = "http"
+	cliMethodGoInstall    = "install"
 )
 
 func init() {
@@ -49,10 +54,14 @@ func init() {
 }
 
 type cUpInput struct {
-	g.Meta `name:"up" config:"gfcli.up"`
-	All    bool `name:"all" short:"a" brief:"upgrade both version and cli, auto fix codes" orphan:"true"`
-	Cli    bool `name:"cli" short:"c" brief:"also upgrade CLI tool" orphan:"true"`
-	Fix    bool `name:"fix" short:"f" brief:"auto fix codes(it only make sense if cli is to be upgraded)" orphan:"true"`
+	g.Meta               `name:"up" config:"gfcli.up"`
+	All                  bool   `name:"all" short:"a" brief:"upgrade both version and cli, auto fix codes" orphan:"true"`
+	Cli                  bool   `name:"cli" short:"c" brief:"also upgrade CLI tool" orphan:"true"`
+	Fix                  bool   `name:"fix" short:"f" brief:"auto fix codes(it only make sense if cli is to be upgraded)" orphan:"true"`
+	CliDownloadingMethod string `name:"cli-download-method" short:"m" brief:"cli upgrade method: http=download binary via HTTP GET, install=upgrade via go install" d:"http"`
+	// CliModulePath specifies the module path for CLI installation via go install.
+	// This is used when CliDownloadingMethod is set to "install".
+	CliModulePath string `name:"cli-module-path" short:"p" brief:"custom cli module path for upgrade CLI tool with go install method" d:"github.com/gogf/gf/cmd/gf/v2@latest"`
 }
 
 type cUpOutput struct{}
@@ -76,7 +85,7 @@ func (c cUp) Index(ctx context.Context, in cUpInput) (out *cUpOutput, err error)
 	}
 
 	if in.Cli {
-		if err = c.doUpgradeCLI(ctx); err != nil {
+		if err = c.doUpgradeCLI(ctx, in); err != nil {
 			return nil, err
 		}
 	}
@@ -170,8 +179,22 @@ func (c cUp) doUpgradeVersion(ctx context.Context, in cUpInput) (out *doUpgradeV
 }
 
 // doUpgradeCLI downloads the new version binary with process.
-func (c cUp) doUpgradeCLI(ctx context.Context) (err error) {
+func (c cUp) doUpgradeCLI(ctx context.Context, in cUpInput) (err error) {
 	mlog.Print(`start upgrading cli...`)
+	fmt.Println(` cli upgrade method:`, in.CliDownloadingMethod)
+	switch in.CliDownloadingMethod {
+	case cliMethodHttpDownload:
+		return c.doUpgradeCLIWithHttpDownload(ctx)
+	case cliMethodGoInstall:
+		return c.doUpgradeCLIWithGoInstall(ctx, in)
+	default:
+		mlog.Fatalf(`invalid cli upgrade method: "%s", please use "http" or "install"`, in.CliDownloadingMethod)
+	}
+	return
+}
+
+func (c cUp) doUpgradeCLIWithHttpDownload(ctx context.Context) (err error) {
+	mlog.Print(`start upgrading cli with http get download...`)
 	var (
 		downloadUrl = fmt.Sprintf(
 			`https://github.com/gogf/gf/releases/latest/download/gf_%s_%s`,
@@ -202,6 +225,41 @@ func (c cUp) doUpgradeCLI(ctx context.Context) (err error) {
 	}
 
 	newFile, err := gfile.Open(localSaveFilePath)
+	if err != nil {
+		return err
+	}
+	// selfupdate
+	err = selfupdate.Apply(newFile, selfupdate.Options{})
+	if err != nil {
+		return err
+	}
+	return
+}
+
+func (c cUp) doUpgradeCLIWithGoInstall(ctx context.Context, in cUpInput) (err error) {
+	mlog.Print(`upgrading cli with go install...`)
+	if !genv.Contains("GOPATH") {
+		mlog.Fatal(`"GOPATH" environment variable does not exist, please check your go installation`)
+	}
+
+	command := fmt.Sprintf(`go install %s`, in.CliModulePath)
+	mlog.Printf(`running command: %s`, command)
+	err = gproc.ShellRun(ctx, command)
+	if err != nil {
+		return err
+	}
+
+	cliFilePath := gfile.Join(genv.Get("GOPATH").String(), "bin/gf")
+	if runtime.GOOS == "windows" {
+		cliFilePath += ".exe"
+	}
+
+	// It fails if file not exist or its size is less than 1MB.
+	if !gfile.Exists(cliFilePath) || gfile.Size(cliFilePath) < 1024*1024 {
+		mlog.Fatalf(`go install %s failed, "%s" does not exist or its size is less than 1MB`, in.CliModulePath, cliFilePath)
+	}
+
+	newFile, err := gfile.Open(cliFilePath)
 	if err != nil {
 		return err
 	}

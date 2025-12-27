@@ -5,10 +5,6 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package oracle implements gdb.Driver, which supports operations for database Oracle.
-//
-// Note:
-// 1. It does not support Save/Replace features.
-// 2. It does not support LastInsertId.
 package oracle
 
 import (

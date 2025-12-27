@@ -181,7 +181,7 @@ type DB interface {
 
 	// GetArray executes a query and returns the first column of all rows.
 	// It's useful for queries like SELECT id FROM table.
-	GetArray(ctx context.Context, sql string, args ...any) ([]Value, error)
+	GetArray(ctx context.Context, sql string, args ...any) (Array, error)
 
 	// GetCount executes a COUNT query and returns the result as an integer.
 	// It's a convenience method for counting rows.
@@ -673,6 +673,9 @@ type (
 	// Value is the field value type.
 	Value = *gvar.Var
 
+	// Array is the field value array type.
+	Array = gvar.Vars
+
 	// Record is the row record of the table.
 	Record map[string]Value
 
@@ -784,28 +787,39 @@ const (
 type LocalType string
 
 const (
-	LocalTypeUndefined   LocalType = ""
-	LocalTypeString      LocalType = "string"
-	LocalTypeTime        LocalType = "time"
-	LocalTypeDate        LocalType = "date"
-	LocalTypeDatetime    LocalType = "datetime"
-	LocalTypeInt         LocalType = "int"
-	LocalTypeUint        LocalType = "uint"
-	LocalTypeInt64       LocalType = "int64"
-	LocalTypeUint64      LocalType = "uint64"
-	LocalTypeBigInt      LocalType = "bigint"
-	LocalTypeIntSlice    LocalType = "[]int"
-	LocalTypeInt64Slice  LocalType = "[]int64"
-	LocalTypeUint64Slice LocalType = "[]uint64"
-	LocalTypeStringSlice LocalType = "[]string"
-	LocalTypeInt64Bytes  LocalType = "int64-bytes"
-	LocalTypeUint64Bytes LocalType = "uint64-bytes"
-	LocalTypeFloat32     LocalType = "float32"
-	LocalTypeFloat64     LocalType = "float64"
-	LocalTypeBytes       LocalType = "[]byte"
-	LocalTypeBool        LocalType = "bool"
-	LocalTypeJson        LocalType = "json"
-	LocalTypeJsonb       LocalType = "jsonb"
+	LocalTypeUndefined    LocalType = ""
+	LocalTypeString       LocalType = "string"
+	LocalTypeTime         LocalType = "time"
+	LocalTypeDate         LocalType = "date"
+	LocalTypeDatetime     LocalType = "datetime"
+	LocalTypeInt          LocalType = "int"
+	LocalTypeUint         LocalType = "uint"
+	LocalTypeInt32        LocalType = "int32"
+	LocalTypeUint32       LocalType = "uint32"
+	LocalTypeInt64        LocalType = "int64"
+	LocalTypeUint64       LocalType = "uint64"
+	LocalTypeBigInt       LocalType = "bigint"
+	LocalTypeIntSlice     LocalType = "[]int"
+	LocalTypeUintSlice    LocalType = "[]uint"
+	LocalTypeInt32Slice   LocalType = "[]int32"
+	LocalTypeUint32Slice  LocalType = "[]uint32"
+	LocalTypeInt64Slice   LocalType = "[]int64"
+	LocalTypeUint64Slice  LocalType = "[]uint64"
+	LocalTypeStringSlice  LocalType = "[]string"
+	LocalTypeInt64Bytes   LocalType = "int64-bytes"
+	LocalTypeUint64Bytes  LocalType = "uint64-bytes"
+	LocalTypeFloat32      LocalType = "float32"
+	LocalTypeFloat64      LocalType = "float64"
+	LocalTypeFloat32Slice LocalType = "[]float32"
+	LocalTypeFloat64Slice LocalType = "[]float64"
+	LocalTypeBytes        LocalType = "[]byte"
+	LocalTypeBytesSlice   LocalType = "[][]byte"
+	LocalTypeBool         LocalType = "bool"
+	LocalTypeBoolSlice    LocalType = "[]bool"
+	LocalTypeJson         LocalType = "json"
+	LocalTypeJsonb        LocalType = "jsonb"
+	LocalTypeUUID         LocalType = "uuid.UUID"
+	LocalTypeUUIDSlice    LocalType = "[]uuid.UUID"
 )
 
 const (

@@ -28,3 +28,13 @@ type Adapter interface {
 	// you can implement this function if necessary.
 	Data(ctx context.Context) (data map[string]any, err error)
 }
+
+// WatcherAdapter is the interface for configuration watcher.
+type WatcherAdapter interface {
+	// AddWatcher adds a watcher function for specified `pattern` and `resource`.
+	AddWatcher(name string, fn func(ctx context.Context))
+	// RemoveWatcher removes the watcher function for specified `pattern` and `resource`.
+	RemoveWatcher(name string)
+	// GetWatcherNames returns all watcher names.
+	GetWatcherNames() []string
+}

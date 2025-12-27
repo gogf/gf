@@ -76,13 +76,23 @@ func NewWithOptions(data any, options Options) *Json {
 			pointedData = gconv.Interfaces(data)
 
 		case reflect.Map:
-			pointedData = gconv.MapDeep(data, options.Tags)
+			pointedData = gconv.Map(data, gconv.MapOption{
+				Deep:            true,
+				OmitEmpty:       false,
+				Tags:            []string{options.Tags},
+				ContinueOnError: true,
+			})
 
 		case reflect.Struct:
 			if v, ok := data.(iVal); ok {
 				return NewWithOptions(v.Val(), options)
 			}
-			pointedData = gconv.MapDeep(data, options.Tags)
+			pointedData = gconv.Map(data, gconv.MapOption{
+				Deep:            true,
+				OmitEmpty:       false,
+				Tags:            []string{options.Tags},
+				ContinueOnError: true,
+			})
 
 		default:
 			pointedData = data
