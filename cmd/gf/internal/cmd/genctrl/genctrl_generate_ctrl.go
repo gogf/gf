@@ -8,6 +8,9 @@ package genctrl
 
 import (
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"path/filepath"
 	"strings"
 
@@ -144,8 +147,8 @@ func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, ite
 			"{MethodName}":    item.MethodName,
 			"{MethodComment}": item.GetComment(),
 		})
-
-		if gstr.Contains(gfile.GetContents(methodFilePath), fmt.Sprintf(`func (c *%v) %v(`, ctrlName, item.MethodName)) {
+		// Use AST-based checking for more accurate method detection
+		if methodExists(methodFilePath, ctrlName, item.MethodName) {
 			return
 		}
 		if err = gfile.PutContentsAppend(methodFilePath, gstr.TrimLeft(content)); err != nil {
@@ -170,7 +173,6 @@ func (c *controllerGenerator) doGenerateCtrlItem(dstModuleFolderPath string, ite
 
 // use -merge
 func (c *controllerGenerator) doGenerateCtrlMergeItem(dstModuleFolderPath string, apiItems []apiItem, doneApiSet *gset.StrSet) (err error) {
-
 	type controllerFileItem struct {
 		module     string
 		version    string
@@ -205,7 +207,8 @@ func (c *controllerGenerator) doGenerateCtrlMergeItem(dstModuleFolderPath string
 		ctrlFilePath := gfile.Join(dstModuleFolderPath, fmt.Sprintf(
 			`%s_%s_%s.go`, ctrlFileItem.module, ctrlFileItem.version, api.FileName,
 		))
-		if gstr.Contains(gfile.GetContents(ctrlFilePath), fmt.Sprintf(`func (c *%v) %v(`, ctrlName, api.MethodName)) {
+		// Use AST-based checking for more accurate method detection
+		if methodExists(ctrlFilePath, ctrlName, api.MethodName) {
 			return
 		}
 
@@ -237,4 +240,42 @@ func (c *controllerGenerator) doGenerateCtrlMergeItem(dstModuleFolderPath string
 		mlog.Printf(`generated: %s`, gfile.RealPath(ctrlFilePath))
 	}
 	return
+}
+
+// methodExists checks if a method with the given receiver type and name exists in the file.
+// It uses AST parsing to accurately detect method definitions regardless of formatting.
+// This handles various code formatting styles including multi-line method signatures.
+func methodExists(filePath, ctrlName, methodName string) bool {
+	fset := token.NewFileSet()
+	node, err := parser.ParseFile(fset, filePath, nil, parser.ParseComments)
+	if err != nil {
+		// If parsing fails (e.g., file doesn't exist or invalid syntax), return false
+		return false
+	}
+	for _, decl := range node.Decls {
+		funcDecl, ok := decl.(*ast.FuncDecl)
+		if !ok {
+			continue
+		}
+		// Check if it's a method (has receiver)
+		if funcDecl.Recv != nil && len(funcDecl.Recv.List) > 0 {
+			// Extract receiver type name
+			// Handle both *T and T patterns
+			recvType := ""
+			switch t := funcDecl.Recv.List[0].Type.(type) {
+			case *ast.StarExpr:
+				if ident, ok := t.X.(*ast.Ident); ok {
+					recvType = ident.Name
+				}
+			case *ast.Ident:
+				recvType = t.Name
+			}
+
+			// Check if both receiver type and method name match
+			if recvType == ctrlName && funcDecl.Name.Name == methodName {
+				return true
+			}
+		}
+	}
+	return false
 }
