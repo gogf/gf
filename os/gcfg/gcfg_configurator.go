@@ -25,17 +25,28 @@ type Configurator[T any] struct {
 	onChange      func(T) error                        // Callback function when configuration changes
 	converter     func(data any, target *T) error      // Optional custom converter function
 	loadErrorFunc func(ctx context.Context, err error) // Optional error handling function for load failures
+	reuse         bool                                 // reuse the same target struct
 }
 
 // NewConfigurator creates a new Configurator instance
 // config: the configuration instance to watch for changes
 // propertyKey: the property key pattern to watch (use "" or "." to watch all configuration)
 // targetStruct: pointer to the struct that will receive the configuration values
-func NewConfigurator[T any](config *Config, propertyKey string, targetStruct *T) *Configurator[T] {
+func NewConfigurator[T any](config *Config, propertyKey string, targetStruct ...*T) *Configurator[T] {
+	if len(targetStruct) > 0 {
+		return &Configurator[T]{
+			config:       config,
+			propertyKey:  propertyKey,
+			targetStruct: targetStruct[0],
+			reuse:        true,
+		}
+
+	}
 	return &Configurator[T]{
 		config:       config,
 		propertyKey:  propertyKey,
-		targetStruct: targetStruct,
+		targetStruct: new(T),
+		reuse:        true,
 	}
 }
 
@@ -43,8 +54,8 @@ func NewConfigurator[T any](config *Config, propertyKey string, targetStruct *T)
 // adapter: the adapter instance to use for loading and watching configuration
 // propertyKey: the property key pattern to watch (use "" or "." to watch all configuration)
 // targetStruct: pointer to the struct that will receive the configuration values
-func NewConfiguratorWithAdapter[T any](adapter Adapter, propertyKey string, targetStruct *T) *Configurator[T] {
-	return NewConfigurator(NewWithAdapter(adapter), propertyKey, targetStruct)
+func NewConfiguratorWithAdapter[T any](adapter Adapter, propertyKey string, targetStruct ...*T) *Configurator[T] {
+	return NewConfigurator(NewWithAdapter(adapter), propertyKey, targetStruct...)
 }
 
 // OnChange sets the callback function that will be called when configuration changes
@@ -89,34 +100,50 @@ func (c *Configurator[T]) Load(ctx context.Context) error {
 		}
 	}
 
-	// Create a temporary variable to hold the new configuration
-	var newConfig T
 	// Use custom converter if provided, otherwise use default gconv.Scan
 	if c.converter != nil && data != nil {
-		if err := c.converter(data.Val(), &newConfig); err != nil {
-			if c.loadErrorFunc != nil {
-				c.loadErrorFunc(ctx, err)
-			}
-			return err
-		}
-	} else {
-		// Convert and bind to temporary variable first
-		if data != nil {
-			if err := data.Scan(&newConfig); err != nil {
+		if c.reuse {
+			if err := c.converter(data.Val(), c.targetStruct); err != nil {
 				if c.loadErrorFunc != nil {
 					c.loadErrorFunc(ctx, err)
 				}
 				return err
 			}
+		} else {
+			var newConfig T
+			if err := c.converter(data.Val(), &newConfig); err != nil {
+				if c.loadErrorFunc != nil {
+					c.loadErrorFunc(ctx, err)
+				}
+				return err
+			}
+			c.targetStruct = &newConfig
+		}
+	} else {
+		if data != nil {
+			if c.reuse {
+				if err := data.Scan(c.targetStruct); err != nil {
+					if c.loadErrorFunc != nil {
+						c.loadErrorFunc(ctx, err)
+					}
+					return err
+				}
+			} else {
+				var newConfig T
+				if err := data.Scan(&newConfig); err != nil {
+					if c.loadErrorFunc != nil {
+						c.loadErrorFunc(ctx, err)
+					}
+					return err
+				}
+				c.targetStruct = &newConfig
+			}
 		}
 	}
 
-	// Update the target struct
-	*c.targetStruct = newConfig
-
 	// Call change callback if exists
 	if c.onChange != nil {
-		return c.onChange(newConfig)
+		return c.onChange(*c.targetStruct)
 	}
 
 	return nil
@@ -186,4 +213,11 @@ func (c *Configurator[T]) SetLoadErrorHandler(errorFunc func(ctx context.Context
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	c.loadErrorFunc = errorFunc
+}
+
+// SetReuseTargetStruct sets whether to reuse the same target struct or create a new one on updates
+func (c *Configurator[T]) SetReuseTargetStruct(reuse bool) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	c.reuse = reuse
 }

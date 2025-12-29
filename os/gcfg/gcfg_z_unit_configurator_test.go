@@ -38,6 +38,16 @@ type TestConfig2 struct {
 	Server   ServerConfig `json:"server" yaml:"server"`
 }
 
+// TestConfig3 is a test struct for configuration binding
+type TestConfig3 struct {
+	Name     string       `json:"name" yaml:"name"`
+	Age      int          `json:"age" yaml:"age"`
+	Enabled  bool         `json:"enabled" yaml:"enabled"`
+	Features []string     `json:"features" yaml:"features"`
+	Server   ServerConfig `json:"server" yaml:"server"`
+	Other    string       `json:"other" yaml:"other"`
+}
+
 type ServerConfig struct {
 	Host string `json:"host" yaml:"host"`
 	Port int    `json:"port" yaml:"port"`
@@ -66,11 +76,8 @@ func TestConfigurator_Load(t *testing.T) {
 		cfg, err := gcfg.NewAdapterFile(configFile)
 		t.AssertNil(err)
 
-		// Create target struct
-		var targetConfig TestConfig
-
 		// Create configurator
-		configurator := gcfg.NewConfiguratorWithAdapter[TestConfig](cfg, "", &targetConfig)
+		configurator := gcfg.NewConfiguratorWithAdapter[TestConfig](cfg, "")
 
 		// Load configuration
 		err = configurator.Load(context.Background())
@@ -87,7 +94,7 @@ func TestConfigurator_Load(t *testing.T) {
 	})
 }
 
-func TestConfigurator_LoadWithPropertyKey(t *testing.T) {
+func TestConfigurator_LoadWithDefaultValues(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			configFile = "./" + guid.S() + ".yaml"
@@ -101,10 +108,43 @@ func TestConfigurator_LoadWithPropertyKey(t *testing.T) {
 		t.AssertNil(err)
 
 		// Create target struct
-		var targetConfig ServerConfig
+		var targetConfig TestConfig3
+		targetConfig.Other = "other"
+
+		// Create configurator
+		configurator := gcfg.NewConfiguratorWithAdapter(cfg, "", &targetConfig)
+
+		// Load configuration
+		err = configurator.Load(context.Background())
+		t.AssertNil(err)
+		v := configurator.Get()
+
+		// Check loaded values
+		t.Assert(v.Name, "test-app")
+		t.Assert(v.Age, 25)
+		t.Assert(v.Enabled, true)
+		t.Assert(v.Server.Host, "localhost")
+		t.Assert(v.Server.Port, 8080)
+		t.Assert(len(v.Features), 3)
+		t.Assert(v.Other, "other")
+	})
+}
+
+func TestConfigurator_LoadWithPropertyKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			configFile = "./" + guid.S() + ".yaml"
+			err        = gfile.PutContents(configFile, configContent)
+		)
+		t.AssertNil(err)
+		defer gfile.RemoveFile(configFile)
+
+		// Create a new config instance
+		cfg, err := gcfg.NewAdapterFile(configFile)
+		t.AssertNil(err)
 
 		// Create configurator with specific property key
-		configurator := gcfg.NewConfiguratorWithAdapter[ServerConfig](cfg, "server", &targetConfig)
+		configurator := gcfg.NewConfiguratorWithAdapter[ServerConfig](cfg, "server")
 
 		// Load configuration
 		err = configurator.Load(context.Background())
@@ -133,14 +173,11 @@ server:
 		cfg, err := gcfg.NewAdapterContent(configContent)
 		t.AssertNil(err)
 
-		// Create target struct
-		var targetConfig TestConfig
-
 		// Variable to track if callback was called
 		callbackCalled := gtype.NewBool(false)
 
 		// Create configurator
-		configurator := gcfg.NewConfiguratorWithAdapter[TestConfig](cfg, "", &targetConfig)
+		configurator := gcfg.NewConfiguratorWithAdapter[TestConfig](cfg, "")
 
 		// Set change callback
 		configurator.OnChange(func(updated TestConfig) error {
@@ -188,11 +225,8 @@ server:
 		cfg, err := gcfg.NewAdapterFile(configFile)
 		t.AssertNil(err)
 
-		// Create target struct
-		var targetConfig TestConfig2
-
 		// Create configurator
-		configurator := gcfg.NewConfiguratorWithAdapter[TestConfig2](cfg, "features", &targetConfig)
+		configurator := gcfg.NewConfiguratorWithAdapter[TestConfig2](cfg, "features")
 
 		// Set custom converter
 		configurator.SetConverter(func(data any, target *TestConfig2) error {
@@ -216,12 +250,8 @@ func TestConfigurator_SetLoadErrorHandler(t *testing.T) {
 		// Create a new config instance with invalid adapter that will cause error
 		cfg, err := gcfg.New()
 		t.AssertNil(err)
-
-		// Create target struct
-		var targetConfig TestConfig
-
 		// Create configurator
-		configurator := gcfg.NewConfigurator(cfg, "non-existent-key", &targetConfig)
+		configurator := gcfg.NewConfigurator[TestConfig](cfg, "non-existent-key")
 
 		// Set error handler
 		errorHandled := gtype.NewBool(false)
