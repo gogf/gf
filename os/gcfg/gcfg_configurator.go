@@ -199,6 +199,15 @@ func (c *Configurator[T]) Get() T {
 	return *c.targetStruct
 }
 
+// GetPointer returns a pointer to the current configuration struct
+// This method is thread-safe and returns a pointer to the current configuration
+// The returned pointer is safe for read operations but should not be modified
+func (c *Configurator[T]) GetPointer() *T {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	return c.targetStruct
+}
+
 // SetConverter sets a custom converter function that will be used during Load operations
 // The converter function receives the source data and the target struct pointer
 func (c *Configurator[T]) SetConverter(converter func(data any, target *T) error) {
