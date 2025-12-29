@@ -24,6 +24,12 @@ English | [简体中文](README.zh_CN.MD)
 
 A powerful framework for faster, easier, and more efficient project development.
 
+## Installation
+
+```bash
+go get -u github.com/gogf/gf/v2
+```
+
 ## Documentation
 
 - Official Site: [https://goframe.org](https://goframe.org)
@@ -32,13 +38,14 @@ A powerful framework for faster, easier, and more efficient project development.
 - Mirror Site: [Github Pages](https://pages.goframe.org)
 - Mirror Site: [Offline Docs](https://github.com/gogf/goframe.org-pdf?tab=readme-ov-file#%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC)
 - GoDoc API: [https://pkg.go.dev/github.com/gogf/gf/v2](https://pkg.go.dev/github.com/gogf/gf/v2)
+- Doc Source: [https://github.com/gogf/gf-site](https://github.com/gogf/gf-site)
 
 ## Contributors
 
 💖 [Thanks to all the contributors who made GoFrame possible](https://github.com/gogf/gf/graphs/contributors) 💖
 
 <a href="https://github.com/gogf/gf/graphs/contributors">
-<img src="https://goframe.org/img/contributors.svg?version=v2.9.6" alt="goframe contributors"/>
+<img src="https://goframe.org/img/contributors.svg?version=v2.9.7" alt="goframe contributors"/>
 </a>
 
 ## License
