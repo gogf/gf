@@ -40,7 +40,6 @@ func NewConfigurator[T any](config *Config, propertyKey string, targetStruct ...
 			targetStruct: targetStruct[0],
 			reuse:        true,
 		}
-
 	}
 	return &Configurator[T]{
 		config:       config,
