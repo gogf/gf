@@ -1,7 +1,7 @@
 // Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with gm file,
+// If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
 package gmap_test
@@ -441,5 +441,51 @@ func Test_AnyAnyMap_Diff(t *testing.T) {
 		t.Assert(addedKeys, []any{4})
 		t.Assert(removedKeys, []any{"1"})
 		t.Assert(updatedKeys, []any{3})
+	})
+}
+
+func Test_AnyAnyMap_DoSetWithLockCheck_FuncValue(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewAnyAnyMap(true)
+
+		// Test GetOrSetFuncLock with function value
+		// Function should be executed and its return value should be set
+		callCount := 0
+		result := m.GetOrSetFuncLock(1, func() any {
+			callCount++
+			return "value1"
+		})
+		t.Assert(result, "value1")
+		t.Assert(callCount, 1)
+		t.Assert(m.Get(1), "value1")
+
+		// Test GetOrSetFuncLock again with same key
+		// Function should NOT be called since key exists
+		result = m.GetOrSetFuncLock(1, func() any {
+			callCount++
+			return "value2"
+		})
+		t.Assert(result, "value1")
+		t.Assert(callCount, 1) // Should still be 1, function not called
+
+		// Test SetIfNotExistFuncLock with function value
+		callCount = 0
+		ok := m.SetIfNotExistFuncLock(2, func() any {
+			callCount++
+			return "value2"
+		})
+		t.Assert(ok, true)
+		t.Assert(callCount, 1)
+		t.Assert(m.Get(2), "value2")
+
+		// Test SetIfNotExistFuncLock again with same key
+		// Function should NOT be called since key exists
+		ok = m.SetIfNotExistFuncLock(2, func() any {
+			callCount++
+			return "value3"
+		})
+		t.Assert(ok, false)
+		t.Assert(callCount, 1)       // Should still be 1, function not called
+		t.Assert(m.Get(2), "value2") // Value should not change
 	})
 }

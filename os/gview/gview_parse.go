@@ -102,6 +102,7 @@ func (view *View) ParseContent(ctx context.Context, content string, params ...Pa
 }
 
 // Option for template parsing.
+//
 // Deprecated: use Options instead.
 type Option = Options
 
@@ -114,6 +115,7 @@ type Options struct {
 }
 
 // ParseOption implements template parsing using Option.
+//
 // Deprecated: use ParseWithOptions instead.
 func (view *View) ParseOption(ctx context.Context, option Option) (result string, err error) {
 	return view.ParseWithOptions(ctx, option)

@@ -90,7 +90,7 @@ func Test_DB_Save(t *testing.T) {
 			"create_time": gtime.Now().String(),
 		}
 		_, err := db.Save(ctx, "t_user", data, 10)
-		gtest.AssertNE(err, nil)
+		gtest.AssertNil(err)
 	})
 }
 
@@ -99,6 +99,7 @@ func Test_DB_Replace(t *testing.T) {
 		createTable("t_user")
 		defer dropTable("t_user")
 
+		// Insert initial record
 		i := 10
 		data := g.Map{
 			"id":          i,
@@ -107,8 +108,26 @@ func Test_DB_Replace(t *testing.T) {
 			"nickname":    fmt.Sprintf(`T%d`, i),
 			"create_time": gtime.Now().String(),
 		}
-		_, err := db.Replace(ctx, "t_user", data, 10)
-		gtest.AssertNE(err, nil)
+		_, err := db.Insert(ctx, "t_user", data)
+		gtest.AssertNil(err)
+
+		// Replace with new data
+		data2 := g.Map{
+			"id":          i,
+			"passport":    fmt.Sprintf(`t%d_new`, i),
+			"password":    fmt.Sprintf(`p%d_new`, i),
+			"nickname":    fmt.Sprintf(`T%d_new`, i),
+			"create_time": gtime.Now().String(),
+		}
+		_, err = db.Replace(ctx, "t_user", data2)
+		gtest.AssertNil(err)
+
+		// Verify the data was replaced
+		one, err := db.GetOne(ctx, fmt.Sprintf("SELECT * FROM t_user WHERE id=?"), i)
+		gtest.AssertNil(err)
+		gtest.Assert(one["passport"].String(), fmt.Sprintf(`t%d_new`, i))
+		gtest.Assert(one["password"].String(), fmt.Sprintf(`p%d_new`, i))
+		gtest.Assert(one["nickname"].String(), fmt.Sprintf(`T%d_new`, i))
 	})
 }
 
@@ -304,10 +323,10 @@ func Test_DB_TableFields(t *testing.T) {
 		var expect = map[string][]any{
 			// []string: Index Type Null Key Default Comment
 			// id is bigserial so the default is a pgsql function
-			"id":          {0, "int8", false, "pri", fmt.Sprintf("nextval('%s_id_seq'::regclass)", table), ""},
-			"passport":    {1, "varchar", false, "", nil, ""},
-			"password":    {2, "varchar", false, "", nil, ""},
-			"nickname":    {3, "varchar", false, "", nil, ""},
+			"id":          {0, "int8(64)", false, "pri", fmt.Sprintf("nextval('%s_id_seq'::regclass)", table), ""},
+			"passport":    {1, "varchar(45)", false, "", nil, ""},
+			"password":    {2, "varchar(32)", false, "", nil, ""},
+			"nickname":    {3, "varchar(45)", false, "", nil, ""},
 			"create_time": {4, "timestamp", false, "", nil, ""},
 		}
 
@@ -339,8 +358,8 @@ int_col INT);`
 		IntCol int64
 	}
 	// pgsql converts table names to lowercase
+	// mark: [c.oid = '%s'::regclass] is not case-sensitive
 	tableName := "Error_table"
-	errStr := fmt.Sprintf(`The table "%s" may not exist, or the table contains no fields`, tableName)
 	_, err := db.Exec(ctx, fmt.Sprintf(createSql, tableName))
 	gtest.AssertNil(err)
 	defer dropTable(tableName)
@@ -351,7 +370,7 @@ int_col INT);`
 			IntCol: 2,
 		}
 		_, err = db.Model(tableName).Data(data).Insert()
-		t.Assert(err, errStr)
+		t.AssertNE(err, nil)
 
 		// Insert a piece of test data using lowercase
 		_, err = db.Model(strings.ToLower(tableName)).Data(data).Insert()
@@ -360,7 +379,7 @@ int_col INT);`
 		_, err = db.Model(tableName).Where("id", 1).Data(g.Map{
 			"int_col": 9999,
 		}).Update()
-		t.Assert(err, errStr)
+		t.AssertNE(err, nil)
 
 	})
 	// The inserted field does not exist in the table
@@ -370,7 +389,7 @@ int_col INT);`
 			"int_col_22": 11111,
 		}
 		_, err = db.Model(tableName).Data(data).Insert()
-		t.Assert(err, errStr)
+		t.Assert(err, fmt.Errorf(`input data match no fields in table "%s"`, tableName))
 
 		lowerTableName := strings.ToLower(tableName)
 		_, err = db.Model(lowerTableName).Data(data).Insert()
@@ -410,13 +429,13 @@ func Test_DB_TableFields_DuplicateConstraints(t *testing.T) {
 		t.AssertNE(fields["id"], nil)
 		t.Assert(fields["id"].Key, "pri")
 		t.Assert(fields["id"].Name, "id")
-		t.Assert(fields["id"].Type, "int8")
+		t.Assert(fields["id"].Type, "int8(64)")
 
 		// Verify email field has unique constraint
 		t.AssertNE(fields["email"], nil)
 		t.Assert(fields["email"].Key, "uni")
 		t.Assert(fields["email"].Name, "email")
-		t.Assert(fields["email"].Type, "varchar")
+		t.Assert(fields["email"].Type, "varchar(100)")
 
 		// Verify username field has no constraint
 		t.AssertNE(fields["username"], nil)

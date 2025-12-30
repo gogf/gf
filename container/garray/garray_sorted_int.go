@@ -8,6 +8,7 @@ package garray
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -19,14 +20,17 @@ import (
 // when its initialization and cannot be changed then.
 type SortedIntArray struct {
 	*SortedTArray[int]
+	once sync.Once
 }
 
 // lazyInit lazily initializes the array.
 func (a *SortedIntArray) lazyInit() {
-	if a.SortedTArray == nil {
-		a.SortedTArray = NewSortedTArraySize(0, defaultComparatorInt, false)
-		a.SetSorter(quickSortInt)
-	}
+	a.once.Do(func() {
+		if a.SortedTArray == nil {
+			a.SortedTArray = NewSortedTArraySize(0, defaultComparatorInt, false)
+			a.SetSorter(quickSortInt)
+		}
+	})
 }
 
 // NewSortedIntArray creates and returns an empty sorted array.
