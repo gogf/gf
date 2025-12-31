@@ -26,6 +26,7 @@ type Configurator[T any] struct {
 	converter     func(data any, target *T) error      // Optional custom converter function
 	loadErrorFunc func(ctx context.Context, err error) // Optional error handling function for load failures
 	reuse         bool                                 // reuse the same target struct
+	watcherName   string                               // watcher name
 }
 
 // NewConfigurator creates a new Configurator instance
@@ -159,6 +160,9 @@ func (c *Configurator[T]) MustLoad(ctx context.Context) {
 // name: the name of the watcher, which is used to identify this watcher
 // This method sets up a watcher that will call Load() when configuration changes are detected
 func (c *Configurator[T]) Watch(ctx context.Context, name string) error {
+	if name == "" {
+		return gerror.New("Watcher name cannot be empty")
+	}
 	adapter := c.config.GetAdapter()
 	if watcherAdapter, ok := adapter.(WatcherAdapter); ok {
 		watcherAdapter.AddWatcher(name, func(ctx context.Context) {
@@ -173,6 +177,7 @@ func (c *Configurator[T]) Watch(ctx context.Context, name string) error {
 				}
 			}
 		})
+		c.watcherName = name
 		return nil
 	}
 	return gerror.New("Watcher adapter not found")
@@ -228,4 +233,28 @@ func (c *Configurator[T]) SetReuseTargetStruct(reuse bool) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	c.reuse = reuse
+}
+
+// StopWatch stops watching for configuration changes and removes the associated watcher
+func (c *Configurator[T]) StopWatch(ctx context.Context) (bool, error) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	if c.watcherName == "" {
+		return false, gerror.New("No watcher name specified")
+	}
+	adapter := c.config.GetAdapter()
+	if watcherAdapter, ok := adapter.(WatcherAdapter); ok {
+		watcherAdapter.RemoveWatcher(c.watcherName)
+		c.watcherName = ""
+		return true, nil
+	}
+	return false, gerror.New("Watcher adapter not found")
+}
+
+// IsWatching returns true if the configurator is currently watching for configuration changes
+func (c *Configurator[T]) IsWatching() bool {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	return c.watcherName != ""
 }

@@ -265,3 +265,56 @@ func TestConfigurator_SetLoadErrorHandler(t *testing.T) {
 		t.Assert(errorHandled, true)
 	})
 }
+
+func TestConfigurator_IsWatchingAndStopWatch(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Create a new config instance
+		cfg, err := gcfg.NewAdapterContent(configContent)
+		t.AssertNil(err)
+
+		// Create configurator
+		configurator := gcfg.NewConfiguratorWithAdapter[TestConfig](cfg, "")
+
+		// Initially, should not be watching
+		t.Assert(configurator.IsWatching(), false)
+
+		// Load configuration
+		err = configurator.Load(context.Background())
+		t.AssertNil(err)
+
+		// Start watching
+		err = configurator.Watch(context.Background(), "test-stopwatch-watcher")
+		t.AssertNil(err)
+
+		// Now should be watching
+		t.Assert(configurator.IsWatching(), true)
+
+		// Stop watching
+		stopped, err := configurator.StopWatch(context.Background())
+		t.AssertNil(err)
+		t.Assert(stopped, true)
+
+		// Should not be watching anymore
+		t.Assert(configurator.IsWatching(), false)
+	})
+}
+
+func TestConfigurator_StopWatchWithoutWatcher(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Create a new config instance
+		cfg, err := gcfg.NewAdapterContent(configContent)
+		t.AssertNil(err)
+
+		// Create configurator without starting to watch
+		configurator := gcfg.NewConfiguratorWithAdapter[TestConfig](cfg, "")
+
+		// Initially, should not be watching
+		t.Assert(configurator.IsWatching(), false)
+
+		// Try to stop watching when not watching
+		stopped, err := configurator.StopWatch(context.Background())
+		t.AssertNE(err, nil)
+		t.Assert(stopped, false)
+		t.Assert(err.Error(), "No watcher name specified")
+	})
+}
