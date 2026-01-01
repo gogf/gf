@@ -100,6 +100,11 @@ func (a *AdapterContent) GetWatcherNames() []string {
 	return a.watchers.GetNames()
 }
 
+// IsWatching checks and returns whether the specified `name` is watching.
+func (a *AdapterContent) IsWatching(name string) bool {
+	return a.watchers.IsWatching(name)
+}
+
 // notifyWatchers notifies all watchers.
 func (a *AdapterContent) notifyWatchers(ctx context.Context) {
 	a.watchers.Notify(ctx)

@@ -27,6 +27,11 @@ func NewWatcherRegistry() *WatcherRegistry {
 	}
 }
 
+// IsWatching checks whether the watcher with the specified name is registered.
+func (r *WatcherRegistry) IsWatching(name string) bool {
+	return r.watchers.Contains(name)
+}
+
 // Add adds a watcher with the specified name and callback function.
 func (r *WatcherRegistry) Add(name string, fn func(ctx context.Context)) {
 	r.watchers.Set(name, fn)

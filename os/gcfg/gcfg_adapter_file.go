@@ -345,6 +345,11 @@ func (a *AdapterFile) GetWatcherNames() []string {
 	return a.watchers.GetNames()
 }
 
+// IsWatching checks and returns whether the specified `name` is watching.
+func (a *AdapterFile) IsWatching(name string) bool {
+	return a.watchers.IsWatching(name)
+}
+
 // notifyWatchers notifies all watchers.
 func (a *AdapterFile) notifyWatchers(ctx context.Context) {
 	a.watchers.Notify(ctx)

@@ -221,6 +221,11 @@ func (c *Client) GetWatcherNames() []string {
 	return c.watchers.GetNames()
 }
 
+// IsWatching checks whether the watcher with the specified name is registered.
+func (c *Client) IsWatching(name string) bool {
+	return c.watchers.IsWatching(name)
+}
+
 // notifyWatchers notifies all watchers.
 func (c *Client) notifyWatchers(ctx context.Context) {
 	c.watchers.Notify(ctx)

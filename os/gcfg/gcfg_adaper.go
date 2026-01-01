@@ -37,4 +37,6 @@ type WatcherAdapter interface {
 	RemoveWatcher(name string)
 	// GetWatcherNames returns all watcher names.
 	GetWatcherNames() []string
+	// IsWatching checks and returns whether the specified `pattern` is watching.
+	IsWatching(name string) bool
 }
