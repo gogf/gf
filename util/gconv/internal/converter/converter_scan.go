@@ -23,6 +23,12 @@ type ScanOption struct {
 	// ContinueOnError specifies whether to continue converting the next element
 	// if one element converting fails.
 	ContinueOnError bool
+
+	// OmitEmpty specifies whether to omit empty values during conversion.
+	OmitEmpty bool
+
+	// OmitNil specifies whether to omit nil values during conversion.
+	OmitNil bool
 }
 
 func (c *Converter) getScanOption(option ...ScanOption) ScanOption {
@@ -292,6 +298,8 @@ func (c *Converter) doScanForComplicatedTypes(
 			mapOption = StructOption{
 				ParamKeyToAttrMap: keyToAttributeNameMapping,
 				ContinueOnError:   option.ContinueOnError,
+				OmitEmpty:         option.OmitEmpty,
+				OmitNil:           option.OmitNil,
 			}
 		)
 		return c.Structs(srcValue, dstPointer, StructsOption{
@@ -304,6 +312,8 @@ func (c *Converter) doScanForComplicatedTypes(
 			ParamKeyToAttrMap: keyToAttributeNameMapping,
 			PriorityTag:       "",
 			ContinueOnError:   option.ContinueOnError,
+			OmitEmpty:         option.OmitEmpty,
+			OmitNil:           option.OmitNil,
 		}
 		return c.Struct(srcValue, dstPointer, structOption)
 	}

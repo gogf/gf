@@ -30,6 +30,12 @@ type StructOption struct {
 	// ContinueOnError specifies whether to continue converting the next element
 	// if one element converting fails.
 	ContinueOnError bool
+
+	// OmitEmpty specifies whether to omit empty values during conversion.
+	OmitEmpty bool
+
+	// OmitNil specifies whether to omit nil values during conversion.
+	OmitNil bool
 }
 
 func (c *Converter) getStructOption(option ...StructOption) StructOption {
@@ -363,6 +369,13 @@ func (c *Converter) bindVarToStructField(
 			}
 		}
 	}()
+	// Check if the value should be omitted based on OmitEmpty or OmitNil options
+	if option.OmitNil && empty.IsNil(srcValue) {
+		return nil
+	}
+	if option.OmitEmpty && empty.IsEmpty(srcValue) {
+		return nil
+	}
 	// Directly converting.
 	if empty.IsNil(srcValue) {
 		fieldValue.Set(reflect.Zero(fieldValue.Type()))

@@ -25,3 +25,8 @@ func Scan(srcValue any, dstPointer any, paramKeyToAttrMap ...map[string]string) 
 	}
 	return defaultConverter.Scan(srcValue, dstPointer, option)
 }
+
+// ScanWithOptions is the same as Scan function, but with additional options parameter.
+func ScanWithOptions(srcValue any, dstPointer any, option ...ScanOption) (err error) {
+	return defaultConverter.Scan(srcValue, dstPointer, option...)
+}
