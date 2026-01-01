@@ -19,6 +19,12 @@ type User struct {
 	Email string
 }
 
+type User2 struct {
+	Name  *string
+	Age   int
+	Email string
+}
+
 type Person struct {
 	Name  string
 	Age   int
@@ -105,5 +111,21 @@ func TestScan_OriginalBehavior(t *testing.T) {
 		t.Assert(person.Name, "newname")
 		t.Assert(person.Age, 25)
 		t.Assert(person.Email, "new@example.com")
+	})
+}
+
+func TestScan_StructOmitEmptyAndOmitNilOptions(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		user2 := User2{Name: nil, Age: 25, Email: ""}
+		person := Person{Name: "wangwu", Age: 0, Email: "old2@example.com"}
+
+		err := gconv.ScanWithOptions(user2, &person, gconv.ScanOption{
+			OmitEmpty: true,
+			OmitNil:   true,
+		})
+		t.AssertNil(err)
+		t.Assert(person.Name, "wangwu")
+		t.Assert(person.Age, 25)
+		t.Assert(person.Email, "old2@example.com")
 	})
 }
