@@ -179,7 +179,7 @@ func (c *Client) updateLocalValue(ctx context.Context) (err error) {
 }
 
 // AddWatcher adds a watcher for the specified configuration file.
-func (c *Client) AddWatcher(name string, f func(ctx context.Context)) {
+func (c *Client) AddWatcher(name string, f gcfg.WatcherFunc) {
 	c.watchers.Add(name, f)
 }
 

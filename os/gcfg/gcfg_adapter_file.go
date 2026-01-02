@@ -331,7 +331,7 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 }
 
 // AddWatcher adds a watcher for the specified configuration file.
-func (a *AdapterFile) AddWatcher(name string, fn func(ctx context.Context)) {
+func (a *AdapterFile) AddWatcher(name string, fn WatcherFunc) {
 	a.watchers.Add(name, fn)
 }
 

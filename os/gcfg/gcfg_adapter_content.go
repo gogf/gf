@@ -86,7 +86,7 @@ func (a *AdapterContent) Data(ctx context.Context) (data map[string]any, err err
 }
 
 // AddWatcher adds a watcher for the specified configuration file.
-func (a *AdapterContent) AddWatcher(name string, fn func(ctx context.Context)) {
+func (a *AdapterContent) AddWatcher(name string, fn WatcherFunc) {
 	a.watchers.Add(name, fn)
 }
 
