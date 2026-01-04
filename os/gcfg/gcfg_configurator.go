@@ -256,5 +256,12 @@ func (c *Configurator[T]) StopWatch(ctx context.Context) (bool, error) {
 func (c *Configurator[T]) IsWatching() bool {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
-	return c.watcherName != ""
+	if c.watcherName == "" {
+		return false
+	}
+	adapter := c.config.GetAdapter()
+	if watcherAdapter, ok := adapter.(WatcherAdapter); ok {
+		return watcherAdapter.IsWatching(c.watcherName)
+	}
+	return false
 }
