@@ -83,7 +83,7 @@ type customCodeError struct {
 	code gcode.Code
 }
 
-func (e *customCodeError) Error() string  { return e.msg }
+func (e *customCodeError) Error() string    { return e.msg }
 func (e *customCodeError) Code() gcode.Code { return e.code }
 
 func nilError() error {
