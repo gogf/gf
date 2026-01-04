@@ -25,7 +25,7 @@ type Configurator[T any] struct {
 	onChange      func(T) error                        // Callback function when configuration changes
 	converter     func(data any, target *T) error      // Optional custom converter function
 	loadErrorFunc func(ctx context.Context, err error) // Optional error handling function for load failures
-	reuse         bool                                 // reuse the same target struct
+	reuse         bool                                 // reuse the same target struct, default is false to avoid data race
 	watcherName   string                               // watcher name
 }
 
@@ -39,14 +39,14 @@ func NewConfigurator[T any](config *Config, propertyKey string, targetStruct ...
 			config:       config,
 			propertyKey:  propertyKey,
 			targetStruct: targetStruct[0],
-			reuse:        true,
+			reuse:        false,
 		}
 	}
 	return &Configurator[T]{
 		config:       config,
 		propertyKey:  propertyKey,
 		targetStruct: new(T),
-		reuse:        true,
+		reuse:        false,
 	}
 }
 
