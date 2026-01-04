@@ -113,6 +113,7 @@ func TestConfigurator_LoadWithDefaultValues(t *testing.T) {
 
 		// Create configurator
 		configurator := gcfg.NewConfiguratorWithAdapter(cfg, "", &targetConfig)
+		configurator.SetReuseTargetStruct(true)
 
 		// Load configuration
 		err = configurator.Load(context.Background())
