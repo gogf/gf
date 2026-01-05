@@ -8,9 +8,9 @@ package gcfg_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"os"
 
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gcmd"
