@@ -74,8 +74,13 @@ type customEqualError struct {
 	msg string
 }
 
-func (e *customEqualError) Error() string           { return e.msg }
-func (e *customEqualError) Equal(target error) bool { return e.msg == target.Error() }
+func (e *customEqualError) Error() string { return e.msg }
+func (e *customEqualError) Equal(target error) bool {
+	if target == nil {
+		return false
+	}
+	return e.msg == target.Error()
+}
 
 // customCodeError implements ICode interface
 type customCodeError struct {
