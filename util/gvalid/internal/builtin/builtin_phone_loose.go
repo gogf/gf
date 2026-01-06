@@ -13,7 +13,7 @@ import (
 )
 
 // RulePhoneLoose implements `phone-loose` rule:
-// Loose mobile phone number verification (Loose mobile phone number validation)
+// Loose mobile phone number verification.
 // As long as the 11 digits numbers beginning with
 // 13, 14, 15, 16, 17, 18, 19 can pass the verification
 // (Any 11-digit numbers starting with 13, 14, 15, 16, 17, 18, 19 can pass the validation).
