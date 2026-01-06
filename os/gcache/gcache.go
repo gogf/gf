@@ -244,3 +244,13 @@ func MustKeyStrings(ctx context.Context) []string {
 func MustValues(ctx context.Context) []any {
 	return defaultCache().MustValues(ctx)
 }
+
+// SetAdapter set default cache adapter
+func SetAdapter(adapter Adapter) {
+	defaultCache().SetAdapter(adapter)
+}
+
+// SetAdapter get default cache adapter
+func GetAdapter() Adapter{
+	return defaultCache().GetAdapter()
+}
