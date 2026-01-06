@@ -108,7 +108,7 @@ func ExampleValidator_I18n() {
 
 	// Output:
 	// The value `16` must be equal or greater than 18
-	// 字段值`16`字段最小值应当为18
+	// The value `16` must be equal or greater than 18
 }
 
 func ExampleValidator_Bail() {
@@ -197,7 +197,7 @@ func ExampleValidator_Data_value() {
 	fmt.Println(err.String())
 
 	// Output:
-	// 未成年人不允许注册哟
+	// Cannot register, age is less than 18!
 }
 
 func ExampleValidator_Data_map1() {
@@ -217,9 +217,9 @@ func ExampleValidator_Data_map1() {
 		fmt.Println(e.FirstError())
 	}
 	// May Output:
-	// map[required:账号不能为空 length:账号长度应当在 6 到 16 之间]
-	// passport map[required:账号不能为空 length:账号长度应当在 6 到 16 之间]
-	// 账号不能为空
+	// map[required:The passport field is required length:The passport value `` length must be between 6 and 16]
+	// passport map[required:The passport field is required length:The passport value `` length must be between 6 and 16]
+	// The passport field is required
 }
 
 func ExampleValidator_Data_map2() {
@@ -239,9 +239,9 @@ func ExampleValidator_Data_map2() {
 		fmt.Println(e.FirstError())
 	}
 	// Output:
-	// map[same:两次密码输入不相等]
-	// password map[same:两次密码输入不相等]
-	// 两次密码输入不相等
+	// map[same:The password value `123456` must be the same as field password2 value `1234567`]
+	// password map[same:The password value `123456` must be the same as field password2 value `1234567`]
+	// The password value `123456` must be the same as field password2 value `1234567`
 }
 
 func ExampleValidator_Data_map3() {
@@ -273,11 +273,11 @@ func ExampleValidator_Data_map3() {
 	// May Output:
 	// {
 	//	"passport": {
-	//	"length": "账号长度应当在 6 到 16 之间",
-	//		"required": "账号不能为空"
+	//	"length": "The passport value `` length must be between 6 and 16",
+	//		"required": "The passport field is required"
 	// },
 	//	"password": {
-	//	"same": "两次密码输入不相等"
+	//	"same": "The password value `123456` must be the same as field password2 value `1234567`"
 	// }
 	// }
 }
@@ -351,7 +351,7 @@ func ExampleValidator_Data_struct4() {
 	}
 
 	// Output:
-	// [map[Type:map[required:请选择用户类型]]]
+	// [map[Type:map[required:The Type field is required]]]
 }
 
 func ExampleValidator_Assoc() {
@@ -521,5 +521,5 @@ func ExampleValidator_registerRule() {
 	err := g.Validator().Data(user).Run(gctx.New())
 	fmt.Println(err.Error())
 	// May Output:
-	// 用户名称已被占用
+	// The Name value `john` is not unique
 }
