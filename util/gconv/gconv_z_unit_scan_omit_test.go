@@ -46,6 +46,21 @@ func TestScan_OmitEmpty(t *testing.T) {
 	})
 }
 
+func TestScan_AllOmitEmpty(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		user := User{Name: "", Age: 0, Email: ""}
+		person := Person{Name: "zhangsan", Age: 100, Email: "old@example.com"}
+
+		err := gconv.ScanWithOptions(user, &person, gconv.ScanOption{
+			OmitEmpty: true,
+		})
+		t.AssertNil(err)
+		t.Assert(person.Name, "zhangsan")
+		t.Assert(person.Age, 100)
+		t.Assert(person.Email, "old@example.com")
+	})
+}
+
 func TestScan_OmitNil(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		data := map[string]any{

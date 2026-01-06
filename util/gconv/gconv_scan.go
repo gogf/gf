@@ -41,20 +41,19 @@ func Scan(srcValue any, dstPointer any, paramKeyToAttrMap ...map[string]string) 
 //
 // Example:
 //
-//   type User struct {
-//       Name  string
-//       Email string
-//   }
+//	type User struct {
+//	    Name  string
+//	    Email string
+//	}
 //
-//   dst := &User{Name: "Alice", Email: "alice@example.com"}
-//   src := map[string]any{
-//       "Name":  "",
-//       "Email": nil,
-//   }
+//	dst := &User{Name: "Alice", Email: "alice@example.com"}
+//	src := map[string]any{
+//	    "Name":  "",
+//	    "Email": nil,
+//	}
 //
-//   // With OmitEmpty and OmitNil, empty and nil values in src will not overwrite dst.
-//   err := ScanWithOptions(src, dst, ScanOption{OmitEmpty: true, OmitNil: true})
-//
+//	// With OmitEmpty and OmitNil, empty and nil values in src will not overwrite dst.
+//	err := ScanWithOptions(src, dst, ScanOption{OmitEmpty: true, OmitNil: true})
 func ScanWithOptions(srcValue any, dstPointer any, option ...ScanOption) (err error) {
 	return defaultConverter.Scan(srcValue, dstPointer, option...)
 }
