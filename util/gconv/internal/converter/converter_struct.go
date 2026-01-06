@@ -31,10 +31,13 @@ type StructOption struct {
 	// if one element converting fails.
 	ContinueOnError bool
 
-	// OmitEmpty specifies whether to omit empty values during conversion.
+	// OmitEmpty specifies whether to skip assignment when the source value is empty
+	// (empty string, zero value, etc.), preserving the existing value in the
+	// destination field.
 	OmitEmpty bool
 
-	// OmitNil specifies whether to omit nil values during conversion.
+	// OmitNil specifies whether to skip assignment when the source value is nil,
+	// preserving the existing value in the destination field.
 	OmitNil bool
 }
 
