@@ -297,7 +297,7 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 		// Add monitor for this configuration file,
 		// any changes of this file will refresh its cache in the Config object.
 		if filePath != "" && !gres.Contains(filePath) {
-			_, err = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
+			_, err := gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
 				a.jsonMap.Remove(usedFileNameOrPath)
 				if event.IsWrite() || event.IsRemove() || event.IsCreate() || event.IsRename() || event.IsChmod() {
 					fileType := gfile.ExtName(usedFileNameOrPath)
@@ -316,9 +316,10 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 					}
 					a.notifyWatchers(adapterCtx.Ctx)
 				}
+				_ = event.Watcher.Remove(filePath)
 			})
 			if err != nil {
-				return nil
+				intlog.Errorf(context.TODO(), "failed listen config file event[%s]: %v", filePath, err)
 			}
 		}
 		return configJson

@@ -104,6 +104,10 @@ var (
 		"smallmoney": {
 			Type: "float64",
 		},
+		"uuid": {
+			Type:   "uuid.UUID",
+			Import: "github.com/google/uuid",
+		},
 	}
 
 	// tablewriter Options
