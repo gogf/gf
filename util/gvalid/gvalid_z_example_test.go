@@ -108,7 +108,7 @@ func ExampleValidator_I18n() {
 
 	// Output:
 	// The value `16` must be equal or greater than 18
-	// The value `16` must be equal or greater than 18
+	// 字段值`16`字段最小值应当为18
 }
 
 func ExampleValidator_Bail() {
@@ -197,7 +197,7 @@ func ExampleValidator_Data_value() {
 	fmt.Println(err.String())
 
 	// Output:
-	// Cannot register, age is less than 18!
+	// 未成年人不允许注册哟
 }
 
 func ExampleValidator_Data_map1() {
@@ -239,9 +239,9 @@ func ExampleValidator_Data_map2() {
 		fmt.Println(e.FirstError())
 	}
 	// Output:
-	// map[same:The password value `123456` must be the same as field password2 value `1234567`]
-	// password map[same:The password value `123456` must be the same as field password2 value `1234567`]
-	// The password value `123456` must be the same as field password2 value `1234567`
+	// map[same:两次密码输入不相等]
+	// password map[same:两次密码输入不相等]
+	// 两次密码输入不相等
 }
 
 func ExampleValidator_Data_map3() {
@@ -351,7 +351,7 @@ func ExampleValidator_Data_struct4() {
 	}
 
 	// Output:
-	// [map[Type:map[required:The Type field is required]]]
+	// [map[Type:map[required:请选择用户类型]]]
 }
 
 func ExampleValidator_Assoc() {
