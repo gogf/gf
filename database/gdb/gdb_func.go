@@ -250,6 +250,17 @@ func anyValueToMapBeforeToRecord(value any) map[string]any {
 	return convertedMap
 }
 
+// valueXform is an optional user-supplied transform that can rewrite
+// If nil, values are left untouched.
+var valueXform func(any) any
+
+// SetValueTransformer registers a custom transform that will be applied
+// to every map value except time-related types and gjson.Json.
+// Pass nil to disable the transform.
+func SetValueTransformer(fn func(oldVal any) (newVal any)) {
+	valueXform = fn
+}
+
 // MapOrStructToMapDeep converts `value` to map type recursively(if attribute struct is embedded).
 // The parameter `value` should be type of *map/map/*struct/struct.
 // It supports embedded struct definition for struct.
@@ -711,6 +722,9 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []any) {
 	}
 	if in.Buffer.Len() > 0 {
 		in.Buffer.WriteString(" AND ")
+	}
+	if valueXform != nil {
+		in.Value = valueXform(in.Value)
 	}
 	// If the value is type of slice, and there's only one '?' holder in
 	// the key string, it automatically adds '?' holder chars according to its arguments count
