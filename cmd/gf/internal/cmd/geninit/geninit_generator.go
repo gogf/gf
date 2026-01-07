@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
 // generateProject copies the template to the destination and performs cleanup
@@ -80,6 +81,9 @@ func generateProject(ctx context.Context, srcPath, name, oldModule, newModule st
 			return fmt.Errorf("failed to replace imports: %w", err)
 		}
 	}
+
+	// 6. Format the generated Go files
+	utils.GoFmt(dstPath)
 
 	mlog.Print("Project generated successfully!")
 	return nil

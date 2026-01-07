@@ -50,8 +50,9 @@ gf init my-mono-repo -a
 gf init my-project -u
 gf init my-project -g "github.com/myorg/myproject"
 gf init -r github.com/gogf/template-single my-project
-gf init -r github.com/gogf/template-single my-project -s
 gf init -r github.com/gogf/examples/httpserver/jwt my-jwt
+gf init -r github.com/gogf/gf/cmd/gf/v2@v2.9.7 mygf
+gf init -r github.com/gogf/gf/cmd/gf/v2 mygf -s
 gf init -i
 `
 	cInitNameBrief = `
@@ -236,6 +237,9 @@ func (c cInit) initFromBuiltin(ctx context.Context, in cInitInput) (out *cInitOu
 	if err != nil {
 		return
 	}
+
+	// Format the generated Go files.
+	utils.GoFmt(in.Name)
 
 	// Update the GoFrame version.
 	if in.Update {
