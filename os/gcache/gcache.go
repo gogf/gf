@@ -250,7 +250,7 @@ func SetAdapter(adapter Adapter) {
 	defaultCache().SetAdapter(adapter)
 }
 
-// SetAdapter get default cache adapter
+// GetAdapter get default cache adapter
 func GetAdapter() Adapter{
 	return defaultCache().GetAdapter()
 }
