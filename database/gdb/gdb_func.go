@@ -250,8 +250,9 @@ func anyValueToMapBeforeToRecord(value any) map[string]any {
 	return convertedMap
 }
 
-// valueXform is an optional user-supplied transform that can rewrite
-// If nil, values are left untouched.
+// valueXform is an optional user-supplied transform that can rewrite the
+// converted map values (for example, to normalize or sanitize them) before
+// they are used, stored, or returned. If nil, values are left untouched.
 var valueXform func(any) any
 
 // SetValueTransformer registers a custom transform that will be applied
