@@ -811,6 +811,9 @@ func handleSliceAndStructArgsForSql(oldSql string, oldArgs []any) (newSql string
 	insertHolderCount := 0
 	// Handles the slice and struct type argument item.
 	for index, oldArg := range oldArgs {
+		if valueXform != nil {
+			oldArg = valueXform(oldArg)
+		}
 		argReflectInfo := reflection.OriginValueAndKind(oldArg)
 		switch argReflectInfo.OriginKind {
 		case reflect.Slice, reflect.Array:
