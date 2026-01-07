@@ -86,7 +86,7 @@ func processGoModule(ctx context.Context, repo, name string, opts *ProcessOption
 	// 1. Determine version to use
 	var targetVersion string
 	if specifiedVersion != "" {
-		// User specified version
+		// User specified version, try to use it first
 		targetVersion = specifiedVersion
 		mlog.Printf("Using specified version: %s", targetVersion)
 	} else if opts.SelectVersion {
@@ -120,8 +120,41 @@ func processGoModule(ctx context.Context, repo, name string, opts *ProcessOption
 	repoWithVersion := modulePath + "@" + targetVersion
 	srcDir, err := downloadTemplate(ctx, repoWithVersion)
 	if err != nil {
-		mlog.Printf("Download failed: %v", err)
-		return err
+		// If specified version download failed, offer to select from available versions
+		if specifiedVersion != "" {
+			mlog.Printf("Failed to download specified version '%s': %v", specifiedVersion, err)
+			mlog.Print("Fetching available versions...")
+
+			versionInfo, verErr := GetModuleVersions(ctx, modulePath)
+			if verErr != nil {
+				mlog.Printf("Failed to get available versions: %v", verErr)
+				return err // Return original download error
+			}
+
+			if len(versionInfo.Versions) == 0 {
+				mlog.Print("No versions available for this module")
+				return err
+			}
+
+			// Let user select from available versions
+			selectedVersion, selErr := SelectVersion(ctx, versionInfo.Versions, modulePath)
+			if selErr != nil {
+				mlog.Printf("Version selection failed: %v", selErr)
+				return selErr
+			}
+
+			// Retry download with selected version
+			targetVersion = selectedVersion
+			repoWithVersion = modulePath + "@" + targetVersion
+			srcDir, err = downloadTemplate(ctx, repoWithVersion)
+			if err != nil {
+				mlog.Printf("Download failed: %v", err)
+				return err
+			}
+		} else {
+			mlog.Printf("Download failed: %v", err)
+			return err
+		}
 	}
 
 	mlog.Debugf("Template located at: %s", srcDir)
