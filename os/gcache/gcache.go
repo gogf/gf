@@ -251,6 +251,6 @@ func SetAdapter(adapter Adapter) {
 }
 
 // GetAdapter get default cache adapter
-func GetAdapter() Adapter{
+func GetAdapter() Adapter {
 	return defaultCache().GetAdapter()
 }
