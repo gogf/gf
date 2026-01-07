@@ -1157,6 +1157,43 @@ func Test_Issue3218(t *testing.T) {
 	})
 }
 
+// https://github.com/gogf/gf/issues/4577
+// Test TableFields with multiple schemas having same table name.
+// Note: MySQL driver uses "SHOW FULL COLUMNS" by default which doesn't have this issue.
+// This test is for compatibility when MySQL driver is configured with type=mariadb,
+// which uses information_schema query that had the bug.
+func Test_Issue4577_TableFields_MultipleSchema(t *testing.T) {
+	tableName := fmt.Sprintf("test_table_fields_%d", gtime.TimestampNano())
+
+	// Create table in schema test1 (db)
+	createTableWithDb(db, tableName)
+	defer dropTableWithDb(db, tableName)
+
+	// Create table in schema test2 (db2)
+	createTableWithDb(db2, tableName)
+	defer dropTableWithDb(db2, tableName)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Get fields from test1 schema
+		fields1, err := db.TableFields(ctx, tableName)
+		t.AssertNil(err)
+		t.Assert(len(fields1), 6)
+
+		// Get fields from test2 schema
+		fields2, err := db2.TableFields(ctx, tableName)
+		t.AssertNil(err)
+		t.Assert(len(fields2), 6)
+
+		// Verify Index values are in valid range [0, 5]
+		for _, field := range fields1 {
+			t.Assert(field.Index >= 0 && field.Index < 6, true)
+		}
+		for _, field := range fields2 {
+			t.Assert(field.Index >= 0 && field.Index < 6, true)
+		}
+	})
+}
+
 // https://github.com/gogf/gf/issues/2552
 func Test_Issue2552_ClearTableFieldsAll(t *testing.T) {
 	table := createTable()
