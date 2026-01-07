@@ -51,7 +51,11 @@ func New() gdb.Driver {
 // New creates and returns a database object for MariaDB.
 // It implements the interface of gdb.Driver for extra database driver installation.
 func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
+	mysqlDB, err := d.Driver.New(core, node)
+	if err != nil {
+		return nil, err
+	}
 	return &Driver{
-		Driver: &mysql.Driver{Core: core},
+		Driver: mysqlDB.(*mysql.Driver),
 	}, nil
 }
