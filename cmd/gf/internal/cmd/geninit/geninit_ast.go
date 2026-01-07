@@ -10,8 +10,8 @@ import (
 	"bytes"
 	"context"
 	"go/ast"
-	"go/format"
 	"go/parser"
+	"go/printer"
 	"go/token"
 	"os"
 	"path/filepath"
@@ -78,10 +78,10 @@ func (r *ASTReplacer) ReplaceInFile(ctx context.Context, filePath string) error 
 		return nil
 	}
 
-	// Write back to file
+	// Write back to file without formatting.
+	// Formatting will be handled by utils.GoFmt after all replacements are done.
 	var buf bytes.Buffer
-	// Use go/format to properly format the output (equivalent to gofmt)
-	if err := format.Node(&buf, r.fset, file); err != nil {
+	if err := printer.Fprint(&buf, r.fset, file); err != nil {
 		return err
 	}
 
