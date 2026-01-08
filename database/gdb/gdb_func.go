@@ -672,7 +672,14 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 }
 
 // formatWhereInterfaces formats `where` as []any.
-func formatWhereInterfaces(db DB, where []any, buffer *bytes.Buffer, newArgs []any) []any {
+func formatWhereInterfaces(db DB, where []any, buffer *bytes.Buffer, newArgs []any) (args []any) {
+	if valueXform != nil {
+		defer func() {
+			for i := range args {
+				args[i] = valueXform(args[i])
+			}
+		}()
+	}
 	if len(where) == 0 {
 		return newArgs
 	}
