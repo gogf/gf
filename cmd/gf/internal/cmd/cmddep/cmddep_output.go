@@ -34,16 +34,47 @@ func (a *analyzer) generate(in Input) string {
 // generateTree generates ASCII tree output.
 func (a *analyzer) generateTree(in Input) string {
 	var sb strings.Builder
-	pkgs := a.getSortedPackages()
 
-	for _, pkgPath := range pkgs {
+	// Find root packages (packages that are not imported by any other package)
+	rootPkgs := a.findRootPackages()
+
+	// Use a single visited map across all root packages to avoid duplicates
+	a.visited = make(map[string]bool)
+
+	for _, pkgPath := range rootPkgs {
 		pkg := a.packages[pkgPath]
-		a.visited = make(map[string]bool)
 		shortName := a.shortName(pkg.ImportPath, in.Group)
 		sb.WriteString(shortName + "\n")
 		a.printTreeNode(&sb, pkg, "", in, 0)
 	}
 	return sb.String()
+}
+
+// findRootPackages finds packages that are not imported by any other internal package.
+func (a *analyzer) findRootPackages() []string {
+	// Build a set of all imported packages
+	imported := make(map[string]bool)
+	for _, pkg := range a.packages {
+		for _, dep := range pkg.Imports {
+			imported[dep] = true
+		}
+	}
+
+	// Find packages that are not imported by others
+	roots := make([]string, 0)
+	for pkgPath := range a.packages {
+		if !imported[pkgPath] {
+			roots = append(roots, pkgPath)
+		}
+	}
+
+	// If no roots found (circular dependencies), use all packages
+	if len(roots) == 0 {
+		roots = a.getSortedPackages()
+	}
+
+	sort.Strings(roots)
+	return roots
 }
 
 func (a *analyzer) printTreeNode(sb *strings.Builder, pkg *goPackage, prefix string, in Input, depth int) {

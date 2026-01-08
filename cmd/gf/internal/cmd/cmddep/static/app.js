@@ -6,7 +6,7 @@ let selectedPackage = null;
 let allPackages = [];
 let isRemoteMode = false;
 let currentRemoteModule = '';
-let packageListMode = 'flat'; // 'flat' or 'tree'
+let packageListMode = 'tree'; // 'flat' or 'tree'
 let expandedNodes = new Set(); // Track expanded tree nodes
 
 // Pan and Zoom state
@@ -94,9 +94,11 @@ async function init() {
     theme.init();
     initPanZoom();
     initRemoteModuleInput();
-    await loadModuleName();
-    await loadPackages();
-    await refresh();
+    const hasLocalModule = await loadModuleName();
+    if (hasLocalModule) {
+        await loadPackages();
+        await refresh();
+    }
 }
 
 // Initialize remote module input
@@ -376,21 +378,28 @@ function showZoomIndicator() {
 }
 
 // Load module name from server
+// Returns true if local module exists, false otherwise
 async function loadModuleName() {
     try {
         const response = await fetch('/api/module');
         const data = await response.json();
         document.getElementById('moduleName').textContent = data.name || '';
         
-        // If no local module, set default value for remote module input
+        // If no local module, set default value and auto-analyze
         if (!data.name) {
             const input = document.getElementById('remoteModuleInput');
             if (input && !input.value) {
                 input.value = 'github.com/gogf/gf/v2';
+                // Fetch versions first, then auto-analyze
+                await fetchVersions();
+                analyzeRemoteModule();
             }
+            return false;
         }
+        return true;
     } catch (e) {
         console.error('Failed to load module name:', e);
+        return false;
     }
 }
 
@@ -566,14 +575,14 @@ function toggleTreeNode(path) {
     
     // Re-render with current filter
     const query = document.getElementById('searchInput').value.toLowerCase();
-    const filtered = query ? allPackages.filter(pkg => pkg.toLowerCase().includes(query)) : allPackages;
+    const filtered = query ? allPackages.filter(pkg => getPkgName(pkg).toLowerCase().includes(query)) : allPackages;
     renderPackageList(filtered);
 }
 
 // Filter packages by search query
 function filterPackages() {
     const query = document.getElementById('searchInput').value.toLowerCase();
-    const filtered = allPackages.filter(pkg => pkg.toLowerCase().includes(query));
+    const filtered = allPackages.filter(pkg => getPkgName(pkg).toLowerCase().includes(query));
     renderPackageList(filtered);
 }
 

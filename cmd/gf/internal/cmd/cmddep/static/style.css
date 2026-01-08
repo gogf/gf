@@ -112,7 +112,7 @@ body {
 }
 
 .remote-input-group input[type="text"] {
-    width: 260px;
+    width: 320px;
     background: var(--input-bg);
     border: 1px solid var(--input-border);
     color: var(--text-primary);
@@ -128,7 +128,7 @@ body {
 }
 
 .remote-input-group select {
-    width: 120px;
+    width: 160px;
     background: var(--input-bg);
     border: 1px solid var(--input-border);
     color: var(--text-primary);
