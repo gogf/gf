@@ -559,9 +559,23 @@ func handleVersionsAPI(w http.ResponseWriter, r *http.Request) {
 
 // fetchModuleVersions fetches versions from Go proxy.
 func fetchModuleVersions(modulePath string) ([]string, error) {
-	// Use go list to get available versions
 	ctx := context.Background()
-	cmd := fmt.Sprintf("go list -m -versions %s", modulePath)
+
+	// Create a temp directory with go.mod to run go list -m
+	tempDir, err := os.MkdirTemp("", "gf-dep-versions-*")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Initialize a temp module
+	initCmd := fmt.Sprintf("cd %s && go mod init temp", tempDir)
+	if _, err := gproc.ShellExec(ctx, initCmd); err != nil {
+		return nil, fmt.Errorf("failed to init temp module: %v", err)
+	}
+
+	// Use go list to get available versions in temp directory
+	cmd := fmt.Sprintf("cd %s && go list -m -versions %s", tempDir, modulePath)
 	result, err := gproc.ShellExec(ctx, cmd)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch versions: %v", err)
