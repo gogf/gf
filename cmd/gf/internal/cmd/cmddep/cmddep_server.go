@@ -7,18 +7,16 @@
 package cmddep
 
 import (
-	"context"
 	"embed"
 	"encoding/json"
 	"fmt"
 	"io/fs"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
-
-	"github.com/gogf/gf/v2/os/gproc"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
@@ -559,8 +557,6 @@ func handleVersionsAPI(w http.ResponseWriter, r *http.Request) {
 
 // fetchModuleVersions fetches versions from Go proxy.
 func fetchModuleVersions(modulePath string) ([]string, error) {
-	ctx := context.Background()
-
 	// Create a temp directory with go.mod to run go list -m
 	tempDir, err := os.MkdirTemp("", "gf-dep-versions-*")
 	if err != nil {
@@ -568,18 +564,21 @@ func fetchModuleVersions(modulePath string) ([]string, error) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	// Initialize a temp module
-	initCmd := fmt.Sprintf("cd %s && go mod init temp", tempDir)
-	if _, err := gproc.ShellExec(ctx, initCmd); err != nil {
-		return nil, fmt.Errorf("failed to init temp module: %v", err)
+	// Initialize a temp module using exec.Command with Dir (cross-platform)
+	initCmd := exec.Command("go", "mod", "init", "temp")
+	initCmd.Dir = tempDir
+	if output, err := initCmd.CombinedOutput(); err != nil {
+		return nil, fmt.Errorf("failed to init temp module: %v, output: %s", err, string(output))
 	}
 
 	// Use go list to get available versions in temp directory
-	cmd := fmt.Sprintf("cd %s && go list -m -versions %s", tempDir, modulePath)
-	result, err := gproc.ShellExec(ctx, cmd)
+	listCmd := exec.Command("go", "list", "-m", "-versions", modulePath)
+	listCmd.Dir = tempDir
+	output, err := listCmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch versions: %v", err)
+		return nil, fmt.Errorf("failed to fetch versions: %v, output: %s", err, string(output))
 	}
+	result := string(output)
 
 	// Parse output: module@version version1 version2 ...
 	result = strings.TrimSpace(result)
@@ -633,21 +632,21 @@ func (s *serverState) handleAnalyzeAPI(w http.ResponseWriter, r *http.Request) {
 		moduleWithVersion = modulePath + "@" + version
 	}
 
-	ctx := context.Background()
-
-	// Initialize go module in temp directory
-	initCmd := fmt.Sprintf("cd %s && go mod init temp", tempDir)
-	if _, err := gproc.ShellExec(ctx, initCmd); err != nil {
+	// Initialize go module in temp directory (cross-platform)
+	initCmd := exec.Command("go", "mod", "init", "temp")
+	initCmd.Dir = tempDir
+	if output, err := initCmd.CombinedOutput(); err != nil {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(analyzeResult{Error: "failed to init module: " + err.Error()})
+		json.NewEncoder(w).Encode(analyzeResult{Error: fmt.Sprintf("failed to init module: %v, output: %s", err, string(output))})
 		return
 	}
 
-	// Download the module
-	getCmd := fmt.Sprintf("cd %s && go get %s", tempDir, moduleWithVersion)
-	if _, err := gproc.ShellExec(ctx, getCmd); err != nil {
+	// Download the module (cross-platform)
+	getCmd := exec.Command("go", "get", moduleWithVersion)
+	getCmd.Dir = tempDir
+	if output, err := getCmd.CombinedOutput(); err != nil {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(analyzeResult{Error: "failed to download module: " + err.Error()})
+		json.NewEncoder(w).Encode(analyzeResult{Error: fmt.Sprintf("failed to download module: %v, output: %s", err, string(output))})
 		return
 	}
 
@@ -671,20 +670,24 @@ func (s *serverState) handleAnalyzeAPI(w http.ResponseWriter, r *http.Request) {
 	newAnalyzer := newAnalyzer()
 	newAnalyzer.modulePrefix = modulePath
 
-	// Load packages from the module directory
+	// Load packages from the module directory (cross-platform)
 	// IMPORTANT: Must run in tempDir context where the module was downloaded,
 	// otherwise it will use packages from the current project's dependencies
-	listCmd := fmt.Sprintf("cd %s && go list -json %s/...", tempDir, modulePath)
-	result, err := gproc.ShellExec(ctx, listCmd)
+	listCmd := exec.Command("go", "list", "-json", modulePath+"/...")
+	listCmd.Dir = tempDir
+	output, err := listCmd.CombinedOutput()
+	result := string(output)
 	if err != nil {
 		// Try loading from the module directory directly
-		listCmd = fmt.Sprintf("cd %s && go list -json ./...", moduleDir)
-		result, err = gproc.ShellExec(ctx, listCmd)
-		if err != nil {
+		listCmd2 := exec.Command("go", "list", "-json", "./...")
+		listCmd2.Dir = moduleDir
+		output2, err2 := listCmd2.CombinedOutput()
+		if err2 != nil {
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(analyzeResult{Error: "failed to list packages: " + err.Error()})
+			json.NewEncoder(w).Encode(analyzeResult{Error: fmt.Sprintf("failed to list packages: %v, output: %s", err2, string(output2))})
 			return
 		}
+		result = string(output2)
 	}
 
 	// Parse packages
