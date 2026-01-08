@@ -406,7 +406,8 @@ async function loadModuleName() {
 // Load packages list
 async function loadPackages() {
     try {
-        const response = await fetch('/api/packages');
+        const internal = document.getElementById('internal').checked;
+        const response = await fetch(`/api/packages?internal=${internal}`);
         allPackages = await response.json();
         document.getElementById('packageCount').textContent = allPackages.length;
         renderPackageList(allPackages);
@@ -642,6 +643,7 @@ async function refresh() {
     const depth = document.getElementById('depth').value;
     const group = document.getElementById('group').checked;
     const reverse = document.getElementById('reverse').checked;
+    const internal = document.getElementById('internal').checked;
 
     if (selectedPackage) {
         await showPackageInfo(selectedPackage);
@@ -650,11 +652,11 @@ async function refresh() {
     }
 
     if (currentView === 'graph') {
-        await refreshGraph(depth, group, reverse);
+        await refreshGraph(depth, group, reverse, internal);
     } else if (currentView === 'tree') {
-        await refreshTree(depth);
+        await refreshTree(depth, internal);
     } else {
-        await refreshList();
+        await refreshList(internal);
     }
 }
 
@@ -687,7 +689,7 @@ async function showPackageInfo(pkg) {
 }
 
 // Refresh graph view
-async function refreshGraph(depth, group, reverse) {
+async function refreshGraph(depth, group, reverse, internal) {
     document.getElementById('graphView').classList.remove('hidden');
     document.getElementById('textView').classList.add('hidden');
 
@@ -697,7 +699,7 @@ async function refreshGraph(depth, group, reverse) {
     panY = 0;
     applyTransform();
 
-    let url = `/api/graph?depth=${depth}&group=${group}&reverse=${reverse}`;
+    let url = `/api/graph?depth=${depth}&group=${group}&reverse=${reverse}&internal=${internal}`;
     if (selectedPackage) {
         url += '&package=' + encodeURIComponent(selectedPackage);
     }
@@ -772,11 +774,11 @@ function autoFitGraph() {
 }
 
 // Refresh tree view
-async function refreshTree(depth) {
+async function refreshTree(depth, internal) {
     document.getElementById('graphView').classList.add('hidden');
     document.getElementById('textView').classList.remove('hidden');
 
-    let url = `/api/tree?depth=${depth}`;
+    let url = `/api/tree?depth=${depth}&internal=${internal}`;
     if (selectedPackage) {
         url += '&package=' + encodeURIComponent(selectedPackage);
     }
@@ -795,13 +797,13 @@ async function refreshTree(depth) {
 }
 
 // Refresh list view
-async function refreshList() {
+async function refreshList(internal) {
     document.getElementById('graphView').classList.add('hidden');
     document.getElementById('textView').classList.remove('hidden');
 
-    let url = '/api/list';
+    let url = `/api/list?internal=${internal}`;
     if (selectedPackage) {
-        url += '?package=' + encodeURIComponent(selectedPackage);
+        url += '&package=' + encodeURIComponent(selectedPackage);
     }
 
     try {

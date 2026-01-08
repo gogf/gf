@@ -125,7 +125,7 @@ func (a *analyzer) startServer(in Input) error {
 		state.currentAnalyzer.handleGraphAPI(w, r, in)
 	})
 	http.HandleFunc("/api/packages", func(w http.ResponseWriter, r *http.Request) {
-		state.currentAnalyzer.handlePackagesAPI(w, in)
+		state.currentAnalyzer.handlePackagesAPI(w, r, in)
 	})
 	http.HandleFunc("/api/package", func(w http.ResponseWriter, r *http.Request) {
 		state.currentAnalyzer.handlePackageAPI(w, r, in)
@@ -173,6 +173,9 @@ func (a *analyzer) handleGraphAPI(w http.ResponseWriter, r *http.Request, in Inp
 	if rev := query.Get("reverse"); rev != "" {
 		in.Reverse = rev == "true"
 	}
+	if i := query.Get("internal"); i != "" {
+		in.Internal = i == "true"
+	}
 	pkg := query.Get("package")
 
 	var data *graphData
@@ -186,7 +189,12 @@ func (a *analyzer) handleGraphAPI(w http.ResponseWriter, r *http.Request, in Inp
 }
 
 // handlePackagesAPI returns all packages list with dependency stats.
-func (a *analyzer) handlePackagesAPI(w http.ResponseWriter, in Input) {
+func (a *analyzer) handlePackagesAPI(w http.ResponseWriter, r *http.Request, in Input) {
+	query := r.URL.Query()
+	if i := query.Get("internal"); i != "" {
+		in.Internal = i == "true"
+	}
+
 	// Build reverse dependency map (who uses each package)
 	usedByMap := make(map[string]int)
 	for fullPath, pkg := range a.packages {
@@ -294,6 +302,9 @@ func (a *analyzer) handleTreeAPI(w http.ResponseWriter, r *http.Request, in Inpu
 	if d := query.Get("depth"); d != "" {
 		fmt.Sscanf(d, "%d", &in.Depth)
 	}
+	if i := query.Get("internal"); i != "" {
+		in.Internal = i == "true"
+	}
 	pkg := query.Get("package")
 
 	var output string
@@ -310,6 +321,9 @@ func (a *analyzer) handleTreeAPI(w http.ResponseWriter, r *http.Request, in Inpu
 // handleListAPI returns list format output.
 func (a *analyzer) handleListAPI(w http.ResponseWriter, r *http.Request, in Input) {
 	query := r.URL.Query()
+	if i := query.Get("internal"); i != "" {
+		in.Internal = i == "true"
+	}
 	pkg := query.Get("package")
 
 	var output string
