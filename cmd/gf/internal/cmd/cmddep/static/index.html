@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="title">Go Package Dependencies</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <h1 data-i18n="pageTitle">Package Dependency Viewer</h1>
+            <div class="module-info">
+                <span data-i18n="currentModule">Current:</span>
+                <span class="module" id="moduleName"></span>
+            </div>
+        </div>
+        <div class="header-center">
+            <div class="remote-input-group">
+                <label for="remoteModuleInput" data-i18n="remoteModuleLabel">Module:</label>
+                <input type="text" id="remoteModuleInput" data-i18n-placeholder="remoteModulePlaceholder" placeholder="e.g. github.com/gogf/gf/v2">
+                <select id="versionSelect" disabled>
+                    <option value="" data-i18n="selectVersion">Select version</option>
+                </select>
+                <button class="btn btn-sm" id="analyzeBtn" onclick="analyzeRemoteModule()" data-i18n="analyze">Analyze</button>
+                <button class="btn btn-sm btn-secondary" id="resetBtn" onclick="resetToLocal()" data-i18n="resetLocal">Reset</button>
+                <span class="loading-spinner hidden" id="loadingSpinner"></span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="theme-switch">
+                <button class="icon-btn" id="themeToggle" title="Toggle theme">
+                    <span class="icon-sun">☀️</span>
+                    <span class="icon-moon">🌙</span>
+                </button>
+            </div>
+            <div class="lang-switch">
+                <select id="langSelect">
+                    <option value="en">English</option>
+                    <option value="zh">中文</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="controls">
+        <div class="control-group">
+            <label data-i18n="viewLabel">View:</label>
+            <div class="btn-group">
+                <button class="btn active" id="btnGraph" onclick="setView('graph')" data-i18n="viewGraph">Graph</button>
+                <button class="btn" id="btnTree" onclick="setView('tree')" data-i18n="viewTree">Tree</button>
+                <button class="btn" id="btnList" onclick="setView('list')" data-i18n="viewList">List</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <label data-i18n="depthLabel">Depth:</label>
+            <select id="depth" onchange="refresh()">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="5">5</option>
+                <option value="0" data-i18n="depthUnlimited">Unlimited</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <input type="checkbox" id="reverse" onchange="refresh()">
+            <label for="reverse" data-i18n="reverseLabel">Reverse (show who uses)</label>
+        </div>
+        <div class="control-group">
+            <input type="checkbox" id="group" onchange="refresh()">
+            <label for="group" data-i18n="groupLabel">Group by directory</label>
+        </div>
+        <div class="control-group graph-only" id="layoutGroup">
+            <label data-i18n="layoutLabel">Layout:</label>
+            <div class="btn-group">
+                <button class="btn active" id="layoutTD" onclick="setLayout('TD')" data-i18n="layoutTD">Top-Down</button>
+                <button class="btn" id="layoutLR" onclick="setLayout('LR')" data-i18n="layoutLR">Left-Right</button>
+            </div>
+        </div>
+        <button class="btn btn-secondary" onclick="clearSelection()" data-i18n="showAll">Show All</button>
+    </div>
+    <div class="main-content">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">
+                    <h3 data-i18n="packagesTitle">Packages</h3>
+                    <span class="count" id="packageCount">0</span>
+                </div>
+                <div class="sidebar-mode">
+                    <button class="mode-btn active" id="modeFlat" onclick="setPackageListMode('flat')" title="Flat list">☰</button>
+                    <button class="mode-btn" id="modeTree" onclick="setPackageListMode('tree')" title="Tree view">🌲</button>
+                </div>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search packages..." oninput="filterPackages()">
+            </div>
+            <div class="package-list" id="packageList"></div>
+        </div>
+        <div class="content-area">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="value" id="nodeCount">0</div>
+                    <div class="label" data-i18n="statsPackages">Packages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="edgeCount">0</div>
+                    <div class="label" data-i18n="statsDependencies">Dependencies</div>
+                </div>
+                <div class="package-info" id="packageInfo">
+                    <div class="package-info-content" id="packageInfoContent"></div>
+                </div>
+            </div>
+            <div class="graph-container" id="graphContainer">
+                <div id="graphView" class="graph-viewport">
+                    <div class="mermaid-container" id="mermaidContainer">
+                        <div class="mermaid" id="mermaidGraph"></div>
+                    </div>
+                    <div class="zoom-indicator" id="zoomIndicator">100%</div>
+                </div>
+                <div id="textView" class="text-output hidden"></div>
+            </div>
+        </div>
+    </div>
+    <div class="zoom-controls" id="zoomControls">
+        <button class="zoom-btn" onclick="zoomIn()" title="Zoom in">+</button>
+        <button class="zoom-btn" onclick="zoomOut()" title="Zoom out">−</button>
+        <button class="zoom-btn" onclick="fitToScreen()" title="Fit to screen">⊡</button>
+        <button class="zoom-btn" onclick="resetZoom()" title="Reset zoom">⟲</button>
+    </div>
+    <script src="/static/i18n.js"></script>
+    <script src="/static/app.js"></script>
+</body>
+</html>

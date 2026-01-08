@@ -22,6 +22,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd"
+	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/cmddep"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/allyes"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
@@ -89,6 +90,7 @@ func GetCommand(ctx context.Context) (*Command, error) {
 		cmd.Install,
 		cmd.Version,
 		cmd.Doc,
+		cmddep.Dep,
 	)
 	if err != nil {
 		return nil, err
