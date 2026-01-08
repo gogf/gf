@@ -18,8 +18,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 	"github.com/gogf/gf/v2/os/gproc"
+
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
 //go:embed static/*
@@ -52,9 +53,9 @@ type packageInfo struct {
 
 // packageSummary represents package summary for list API response.
 type packageSummary struct {
-	Name    string `json:"name"`
-	DepCount   int `json:"depCount"`
-	UsedByCount int `json:"usedByCount"`
+	Name        string `json:"name"`
+	DepCount    int    `json:"depCount"`
+	UsedByCount int    `json:"usedByCount"`
 }
 
 // moduleInfo represents module information for API response.
