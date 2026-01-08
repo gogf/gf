@@ -250,13 +250,14 @@ func anyValueToMapBeforeToRecord(value any) map[string]any {
 	return convertedMap
 }
 
-// valueXform is an optional user-supplied transform that can rewrite
-// If nil, values are left untouched.
+// valueXform is an optional user-supplied transform that can rewrite the
+// converted map values (for example, to normalize or sanitize them) before
+// they are used, stored, or returned. If nil, values are left untouched.
 var valueXform func(any) any
 
-// SetValueTransformer registers a custom transform that will be applied
-// to every map value except time-related types and gjson.Json.
-// Pass nil to disable the transform.
+// SetValueTransformer registers a custom transform used when formatting
+// where-clause map values. The transform is applied to those map values,
+// except for time-related types and gjson.Json. Pass nil to disable it.
 func SetValueTransformer(fn func(oldVal any) (newVal any)) {
 	valueXform = fn
 }
