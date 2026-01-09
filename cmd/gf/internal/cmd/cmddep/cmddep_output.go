@@ -32,9 +32,13 @@ func (a *analyzer) generate(in Input) string {
 	}
 }
 
-// generateTree generates ASCII tree output.
+// generateTree generates ASCII tree output using new traversal system.
 func (a *analyzer) generateTree(in Input) string {
 	var sb strings.Builder
+
+	// Prepare options
+	opts := a.convertInputToFilterOptions(in)
+	opts.Normalize(a.modulePrefix)
 
 	// Add statistics header if showing external dependencies
 	if in.External {
@@ -54,19 +58,31 @@ func (a *analyzer) generateTree(in Input) string {
 		sb.WriteString("\nDependency Tree:\n")
 	}
 
+	// Build package store
+	store := a.buildPackageStore()
+
 	// Find root packages (packages that are not imported by any other package)
 	rootPkgs := a.findRootPackages()
 
-	// Use a single visited map across all root packages to avoid duplicates
-	a.visited = make(map[string]bool)
+	// Create traversal context
+	ctx := &TraversalContext{
+		visited:  make(map[string]bool),
+		options:  opts,
+		store:    store,
+		maxDepth: opts.Depth,
+	}
 
 	for _, pkgPath := range rootPkgs {
-		pkg := a.packages[pkgPath]
-		if a.shouldInclude(pkg.ImportPath, in) {
-			shortName := a.shortName(pkg.ImportPath, in.Group)
-			sb.WriteString(shortName + "\n")
-			a.printTreeNode(&sb, pkg, "", in, 0)
+		pkgInfo, ok := store.packages[pkgPath]
+		if !ok || !opts.ShouldInclude(pkgInfo) {
+			continue
 		}
+		
+		shortName := a.shortName(pkgPath, in.Group)
+		sb.WriteString(shortName + "\n")
+		
+		// Use new traversal system
+		a.printTreeNodeNew(&sb, pkgPath, "", in, ctx, 0)
 	}
 	return sb.String()
 }
@@ -98,20 +114,28 @@ func (a *analyzer) findRootPackages() []string {
 	return roots
 }
 
-func (a *analyzer) printTreeNode(sb *strings.Builder, pkg *goPackage, prefix string, in Input, depth int) {
-	if in.Depth > 0 && depth >= in.Depth {
+
+
+// printTreeNodeNew prints tree node using new traversal system.
+func (a *analyzer) printTreeNodeNew(sb *strings.Builder, pkgPath string, prefix string, in Input, ctx *TraversalContext, depth int) {
+	if ctx.maxDepth > 0 && depth >= ctx.maxDepth {
 		return
 	}
 
-	// filterDeps already applies all filtering including main-only
-	deps := a.filterDeps(pkg.Imports, in)
+	_, ok := ctx.store.packages[pkgPath]
+	if !ok {
+		return
+	}
+
+	// Get filtered dependencies
+	deps := ctx.GetDependencies(pkgPath)
 	sort.Strings(deps)
 
 	for i, dep := range deps {
-		if a.visited[dep] {
+		// Check if already visited
+		if ctx.Visit(dep) {
 			continue
 		}
-		a.visited[dep] = true
 
 		isLast := i == len(deps)-1
 		connector := "├── "
@@ -130,15 +154,19 @@ func (a *analyzer) printTreeNode(sb *strings.Builder, pkg *goPackage, prefix str
 		}
 
 		// Recursively print dependencies
-		if depPkg, ok := a.packages[dep]; ok {
-			a.printTreeNode(sb, depPkg, newPrefix, in, depth+1)
-		}
+		ctx.depth++
+		a.printTreeNodeNew(sb, dep, newPrefix, in, ctx, depth+1)
+		ctx.depth--
 	}
 }
 
-// generateList generates simple list output.
+// generateList generates simple list output using new traversal system.
 func (a *analyzer) generateList(in Input) string {
 	var sb strings.Builder
+	
+	// Prepare options
+	opts := a.convertInputToFilterOptions(in)
+	opts.Normalize(a.modulePrefix)
 	
 	// Add statistics header if showing external dependencies
 	if in.External {
@@ -149,26 +177,25 @@ func (a *analyzer) generateList(in Input) string {
 		sb.WriteString("\n")
 	}
 
-	// Debug mainOnly state
-	// sb.WriteString(fmt.Sprintf("# DEBUG mainOnly=%v\\n", in.MainOnly))
-	
+	// Build package store
+	store := a.buildPackageStore()
+
 	allDeps := make(map[string]bool)
 
 	// Collect dependencies from packages that should be included
-	for _, pkg := range a.packages {
-		if a.shouldInclude(pkg.ImportPath, in) {
-			// Collect dependencies (filterDeps already applies all filtering including main-only)
-			for _, dep := range a.filterDeps(pkg.Imports, in) {
+	for pkgPath, pkgInfo := range store.packages {
+		if !opts.ShouldInclude(pkgInfo) {
+			continue
+		}
+
+		// Get filtered dependencies for this package
+		for _, dep := range store.packages[pkgPath].Imports {
+			depInfo, ok := store.packages[dep]
+			if ok && opts.ShouldInclude(depInfo) {
 				allDeps[dep] = true
 			}
 		}
-		
-		// Additionally, keep the package itself when it passes main-only check
-		if in.MainOnly && a.isModuleRootPackage(pkg.ImportPath) && a.shouldInclude(pkg.ImportPath, in) {
-			allDeps[pkg.ImportPath] = true
-		}
 	}
-
 
 	deps := make([]string, 0, len(allDeps))
 	for dep := range allDeps {
@@ -244,19 +271,26 @@ func (a *analyzer) generateDot(in Input) string {
 	return sb.String()
 }
 
-// generateJSON generates JSON output.
+// generateJSON generates JSON output using new traversal system.
 func (a *analyzer) generateJSON(in Input) string {
+	opts := a.convertInputToFilterOptions(in)
+	opts.Normalize(a.modulePrefix)
+	store := a.buildPackageStore()
+
 	result := make(map[string]any)
 	
 	// Add dependency nodes
 	nodes := make([]*depNode, 0)
 	for _, pkgPath := range a.getSortedPackages() {
-		pkg := a.packages[pkgPath]
-		if a.shouldInclude(pkg.ImportPath, in) {
-			a.visited = make(map[string]bool)
-			node := a.buildDepNode(pkg, in, 0)
-			nodes = append(nodes, node)
+		pkgInfo, ok := store.packages[pkgPath]
+		if !ok || !opts.ShouldInclude(pkgInfo) {
+			continue
 		}
+
+		pkg := a.packages[pkgPath]
+		a.visited = make(map[string]bool)
+		node := a.buildDepNode(pkg, in, 0)
+		nodes = append(nodes, node)
 	}
 	result["dependencies"] = nodes
 	
@@ -283,6 +317,10 @@ func (a *analyzer) generateJSON(in Input) string {
 }
 
 func (a *analyzer) buildDepNode(pkg *goPackage, in Input, depth int) *depNode {
+	opts := a.convertInputToFilterOptions(in)
+	opts.Normalize(a.modulePrefix)
+	store := a.buildPackageStore()
+
 	node := &depNode{
 		Package: a.shortName(pkg.ImportPath, in.Group),
 	}
@@ -291,34 +329,48 @@ func (a *analyzer) buildDepNode(pkg *goPackage, in Input, depth int) *depNode {
 		return node
 	}
 
-	deps := a.filterDeps(pkg.Imports, in)
-	sort.Strings(deps)
+	pkgInfo, ok := store.packages[pkg.ImportPath]
+	if !ok {
+		return node
+	}
 
-	for _, dep := range deps {
-		if a.visited[dep] {
-			continue
-		}
-		a.visited[dep] = true
+	// Track visited packages to avoid cycles
+	if !a.visited[pkg.ImportPath] {
+		a.visited[pkg.ImportPath] = true
 
-		if depPkg, ok := a.packages[dep]; ok {
-			childNode := a.buildDepNode(depPkg, in, depth+1)
-			node.Dependencies = append(node.Dependencies, childNode)
-		} else {
-			node.Dependencies = append(node.Dependencies, &depNode{
-				Package: a.shortName(dep, in.Group),
-			})
+		for _, dep := range pkgInfo.Imports {
+			depInfo, ok := store.packages[dep]
+			if !ok || !opts.ShouldInclude(depInfo) {
+				continue
+			}
+
+			if depPkg, ok := a.packages[dep]; ok {
+				childNode := a.buildDepNode(depPkg, in, depth+1)
+				node.Dependencies = append(node.Dependencies, childNode)
+			} else {
+				node.Dependencies = append(node.Dependencies, &depNode{
+					Package: a.shortName(dep, in.Group),
+				})
+			}
 		}
 	}
+
 	return node
 }
 
-// generateReverse generates reverse dependency output.
+// generateReverse generates reverse dependency output using new system.
 func (a *analyzer) generateReverse(in Input) string {
+	opts := a.convertInputToFilterOptions(in)
+	opts.Normalize(a.modulePrefix)
+	
+	store := a.buildPackageStore()
+
 	// Build reverse dependency map
 	reverseDeps := make(map[string][]string)
-	for pkgPath, pkg := range a.packages {
-		for _, dep := range pkg.Imports {
-			if a.shouldInclude(dep, in) {
+	for pkgPath, pkgInfo := range store.packages {
+		for _, dep := range pkgInfo.Imports {
+			depInfo, ok := store.packages[dep]
+			if ok && opts.ShouldInclude(depInfo) {
 				reverseDeps[dep] = append(reverseDeps[dep], pkgPath)
 			}
 		}
