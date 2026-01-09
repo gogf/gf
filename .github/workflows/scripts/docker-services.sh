@@ -356,7 +356,7 @@ show_service_info() {
     echo -e "${YELLOW}Compose Services (multi-container):${NC}"
     echo "  apollo        - Apollo Config Center (8080, 8070, 8060, 13306)"
     echo "  nacos         - Nacos Registry (8848, 9848, 9555)"
-    echo "  redis-cluster - Redis Master-Slave + Sentinel Cluster (6380-6382, 26379-26381)"
+    echo "  redis-cluster - Redis Primary-Replica + Sentinel Cluster (6380-6382, 26379-26381)"
     echo "  consul        - Consul Service Discovery (8500, 8600)"
     echo ""
     echo -e "${YELLOW}Service Groups:${NC}"
