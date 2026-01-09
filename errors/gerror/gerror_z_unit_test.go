@@ -804,3 +804,26 @@ func Test_WrapCodeSkip_MultipleTexts(t *testing.T) {
 		t.Assert(err.Error(), "text1, text2: inner")
 	})
 }
+
+func Test_TextArgs(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.New("text")
+		textArgs := err.(gerror.ITextArgs)
+		t.Assert(textArgs.Text(), "text")
+		t.Assert(textArgs.Args(), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.Newf("text: %s", "arg1")
+		textArgs := err.(gerror.ITextArgs)
+		t.Assert(textArgs.Text(), "text: %s")
+		t.Assert(textArgs.Args(), []any{"arg1"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err1 := errors.New("text")
+		err2 := gerror.Wrapf(err1, "wrap: %s", "arg1")
+		textArgs := err2.(gerror.ITextArgs)
+		t.Assert(textArgs.Error(), "wrap: arg1: text")
+		t.Assert(textArgs.Text(), "wrap: %s")
+		t.Assert(textArgs.Args(), []any{"arg1"})
+	})
+}
