@@ -725,7 +725,7 @@ func Test_Error_WithCodeMessage(t *testing.T) {
 
 func Test_Format_PlusS(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		// Test %+s format (stack only)
+		// Test %+s text (stack only)
 		err := gerror.New("test error")
 		stackStr := fmt.Sprintf("%+s", err)
 		t.Assert(len(stackStr) > 0, true)
@@ -735,7 +735,7 @@ func Test_Format_PlusS(t *testing.T) {
 
 func Test_Format_MinusS_EmptyText(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		// Test %-s format when text is empty but code has message
+		// Test %-s text when text is empty but code has message
 		err := gerror.NewCode(gcode.CodeInternalError)
 		result := fmt.Sprintf("%-s", err)
 		t.Assert(result, "Internal Error")
@@ -802,5 +802,28 @@ func Test_WrapCodeSkip_MultipleTexts(t *testing.T) {
 		innerErr := errors.New("inner")
 		err := gerror.WrapCodeSkip(gcode.CodeInternalError, 0, innerErr, "text1", "text2")
 		t.Assert(err.Error(), "text1, text2: inner")
+	})
+}
+
+func Test_TextArgs(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.New("text")
+		textArgs := err.(gerror.ITextArgs)
+		t.Assert(textArgs.Text(), "text")
+		t.Assert(textArgs.Args(), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.Newf("text: %s", "arg1")
+		textArgs := err.(gerror.ITextArgs)
+		t.Assert(textArgs.Text(), "text: %s")
+		t.Assert(textArgs.Args(), []any{"arg1"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err1 := errors.New("text")
+		err2 := gerror.Wrapf(err1, "wrap: %s", "arg1")
+		textArgs := err2.(gerror.ITextArgs)
+		t.Assert(textArgs.Error(), "wrap: arg1: text")
+		t.Assert(textArgs.Text(), "wrap: %s")
+		t.Assert(textArgs.Args(), []any{"arg1"})
 	})
 }

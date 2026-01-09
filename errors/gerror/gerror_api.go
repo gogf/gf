@@ -7,8 +7,6 @@
 package gerror
 
 import (
-	"fmt"
-
 	"github.com/gogf/gf/v2/errors/gcode"
 )
 
@@ -21,11 +19,12 @@ func New(text string) error {
 	}
 }
 
-// Newf returns an error that formats as the given format and args.
+// Newf returns an error that formats as the given text and args.
 func Newf(format string, args ...any) error {
 	return &Error{
 		stack: callers(),
-		text:  fmt.Sprintf(format, args...),
+		text:  format,
+		args:  args,
 		code:  gcode.CodeNil,
 	}
 }
@@ -40,12 +39,13 @@ func NewSkip(skip int, text string) error {
 	}
 }
 
-// NewSkipf returns an error that formats as the given format and args.
+// NewSkipf returns an error that formats as the given text and args.
 // The parameter `skip` specifies the stack callers skipped amount.
 func NewSkipf(skip int, format string, args ...any) error {
 	return &Error{
 		stack: callers(skip),
-		text:  fmt.Sprintf(format, args...),
+		text:  format,
+		args:  args,
 		code:  gcode.CodeNil,
 	}
 }
@@ -64,7 +64,7 @@ func Wrap(err error, text string) error {
 	}
 }
 
-// Wrapf returns an error annotating err with a stack trace at the point Wrapf is called, and the format specifier.
+// Wrapf returns an error annotating err with a stack trace at the point Wrapf is called, and the text specifier.
 // It returns nil if given `err` is nil.
 // Note that it does not lose the error code of wrapped error, as it inherits the error code from it.
 func Wrapf(err error, format string, args ...any) error {
@@ -74,7 +74,8 @@ func Wrapf(err error, format string, args ...any) error {
 	return &Error{
 		error: err,
 		stack: callers(),
-		text:  fmt.Sprintf(format, args...),
+		text:  format,
+		args:  args,
 		code:  Code(err),
 	}
 }
@@ -94,7 +95,7 @@ func WrapSkip(skip int, err error, text string) error {
 	}
 }
 
-// WrapSkipf wraps error with text that is formatted with given format and args. It returns nil if given err is nil.
+// WrapSkipf wraps error with text that is formatted with given text and args. It returns nil if given err is nil.
 // The parameter `skip` specifies the stack callers skipped amount.
 // Note that it does not lose the error code of wrapped error, as it inherits the error code from it.
 func WrapSkipf(skip int, err error, format string, args ...any) error {
@@ -104,7 +105,8 @@ func WrapSkipf(skip int, err error, format string, args ...any) error {
 	return &Error{
 		error: err,
 		stack: callers(skip),
-		text:  fmt.Sprintf(format, args...),
+		text:  format,
+		args:  args,
 		code:  Code(err),
 	}
 }
