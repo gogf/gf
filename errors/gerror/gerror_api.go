@@ -19,7 +19,7 @@ func New(text string) error {
 	}
 }
 
-// Newf returns an error that formats as the given text and args.
+// Newf returns an error that formats as the given format and args.
 func Newf(format string, args ...any) error {
 	return &Error{
 		stack: callers(),
@@ -39,7 +39,7 @@ func NewSkip(skip int, text string) error {
 	}
 }
 
-// NewSkipf returns an error that formats as the given text and args.
+// NewSkipf returns an error that formats as the given format and args.
 // The parameter `skip` specifies the stack callers skipped amount.
 func NewSkipf(skip int, format string, args ...any) error {
 	return &Error{
@@ -95,7 +95,7 @@ func WrapSkip(skip int, err error, text string) error {
 	}
 }
 
-// WrapSkipf wraps error with text that is formatted with given text and args. It returns nil if given err is nil.
+// WrapSkipf wraps error with text that is formatted with given format and args. It returns nil if given err is nil.
 // The parameter `skip` specifies the stack callers skipped amount.
 // Note that it does not lose the error code of wrapped error, as it inherits the error code from it.
 func WrapSkipf(skip int, err error, format string, args ...any) error {

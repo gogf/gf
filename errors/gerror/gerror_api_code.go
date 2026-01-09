@@ -21,7 +21,7 @@ func NewCode(code gcode.Code, text ...string) error {
 	}
 }
 
-// NewCodef returns an error that has error code and formats as the given text and args.
+// NewCodef returns an error that has error code and formats as the given format and args.
 func NewCodef(code gcode.Code, format string, args ...any) error {
 	return &Error{
 		stack: callers(),
@@ -41,7 +41,7 @@ func NewCodeSkip(code gcode.Code, skip int, text ...string) error {
 	}
 }
 
-// NewCodeSkipf returns an error that has error code and formats as the given text and args.
+// NewCodeSkipf returns an error that has error code and formats as the given format and args.
 // The parameter `skip` specifies the stack callers skipped amount.
 func NewCodeSkipf(code gcode.Code, skip int, format string, args ...any) error {
 	return &Error{
@@ -96,7 +96,7 @@ func WrapCodeSkip(code gcode.Code, skip int, err error, text ...string) error {
 	}
 }
 
-// WrapCodeSkipf wraps error with code and text that is formatted with given text and args.
+// WrapCodeSkipf wraps error with code and text that is formatted with given format and args.
 // It returns nil if given err is nil.
 // The parameter `skip` specifies the stack callers skipped amount.
 func WrapCodeSkipf(code gcode.Code, skip int, err error, format string, args ...any) error {
