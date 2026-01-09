@@ -66,7 +66,7 @@ func WrapCode(code gcode.Code, err error, text ...string) error {
 	}
 }
 
-// WrapCodef wraps error with code and text specifier.
+// WrapCodef wraps error with code and format specifier.
 // It returns nil if given `err` is nil.
 func WrapCodef(code gcode.Code, err error, format string, args ...any) error {
 	if err == nil {

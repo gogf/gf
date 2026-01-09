@@ -725,7 +725,7 @@ func Test_Error_WithCodeMessage(t *testing.T) {
 
 func Test_Format_PlusS(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		// Test %+s text (stack only)
+		// Test %+s format (stack only)
 		err := gerror.New("test error")
 		stackStr := fmt.Sprintf("%+s", err)
 		t.Assert(len(stackStr) > 0, true)
@@ -735,7 +735,7 @@ func Test_Format_PlusS(t *testing.T) {
 
 func Test_Format_MinusS_EmptyText(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		// Test %-s text when text is empty but code has message
+		// Test %-s format when text is empty but code has message
 		err := gerror.NewCode(gcode.CodeInternalError)
 		result := fmt.Sprintf("%-s", err)
 		t.Assert(result, "Internal Error")
