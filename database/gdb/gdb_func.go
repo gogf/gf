@@ -250,6 +250,18 @@ func anyValueToMapBeforeToRecord(value any) map[string]any {
 	return convertedMap
 }
 
+// valueXform is an optional user-supplied transform that can rewrite the
+// converted map values (for example, to normalize or sanitize them) before
+// they are used, stored, or returned. If nil, values are left untouched.
+var valueXform func(any) any
+
+// SetValueTransformer registers a custom transform used when formatting
+// where-clause map values. The transform is applied to those map values,
+// except for time-related types and gjson.Json. Pass nil to disable it.
+func SetValueTransformer(fn func(oldVal any) (newVal any)) {
+	valueXform = fn
+}
+
 // MapOrStructToMapDeep converts `value` to map type recursively(if attribute struct is embedded).
 // The parameter `value` should be type of *map/map/*struct/struct.
 // It supports embedded struct definition for struct.
@@ -661,7 +673,14 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 }
 
 // formatWhereInterfaces formats `where` as []any.
-func formatWhereInterfaces(db DB, where []any, buffer *bytes.Buffer, newArgs []any) []any {
+func formatWhereInterfaces(db DB, where []any, buffer *bytes.Buffer, newArgs []any) (args []any) {
+	if valueXform != nil {
+		defer func() {
+			for i := range args {
+				args[i] = valueXform(args[i])
+			}
+		}()
+	}
 	if len(where) == 0 {
 		return newArgs
 	}
@@ -711,6 +730,9 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []any) {
 	}
 	if in.Buffer.Len() > 0 {
 		in.Buffer.WriteString(" AND ")
+	}
+	if valueXform != nil {
+		in.Value = valueXform(in.Value)
 	}
 	// If the value is type of slice, and there's only one '?' holder in
 	// the key string, it automatically adds '?' holder chars according to its arguments count
@@ -797,6 +819,9 @@ func handleSliceAndStructArgsForSql(oldSql string, oldArgs []any) (newSql string
 	insertHolderCount := 0
 	// Handles the slice and struct type argument item.
 	for index, oldArg := range oldArgs {
+		if valueXform != nil {
+			oldArg = valueXform(oldArg)
+		}
 		argReflectInfo := reflection.OriginValueAndKind(oldArg)
 		switch argReflectInfo.OriginKind {
 		case reflect.Slice, reflect.Array:
