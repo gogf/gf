@@ -49,31 +49,29 @@ const (
 // It consolidates package information from go list output with additional
 // metadata for filtering and traversal.
 type PackageInfo struct {
-	ImportPath   string       // Full import path (e.g., github.com/gogf/gf/v2/os/gfile)
-	ModulePath   string       // Module path (e.g., github.com/gogf/gf/v2)
-	Kind         PackageKind  // Package classification (Internal/External/StdLib)
-	Tier         int          // Package tier: 0=module root, 1=top-level, 2+=nested
-	Imports      []string     // Direct imports of this package
-	IsStdLib     bool         // Standard library marker (from go list)
-	IsModuleRoot bool         // Is this the root package of its module
-	IsMainModule bool         // Is this package from the main module (not a submodule)
+	ImportPath   string      // Full import path (e.g., github.com/gogf/gf/v2/os/gfile)
+	ModulePath   string      // Module path (e.g., github.com/gogf/gf/v2)
+	Kind         PackageKind // Package classification (Internal/External/StdLib)
+	Tier         int         // Package tier: 0=module root, 1=top-level, 2+=nested
+	Imports      []string    // Direct imports of this package
+	IsStdLib     bool        // Standard library marker (from go list)
+	IsModuleRoot bool        // Is this the root package of its module
 }
 
 // FilterOptions represents filtering criteria for dependency analysis.
 // It provides a clear, normalized representation of user filtering preferences.
 // Usage:
-//   opts := &FilterOptions{
-//       IncludeInternal: true,
-//       IncludeExternal: false,
-//       IncludeStdLib:   false,
-//       MainModuleOnly:  false,
-//       Depth:           3,
-//   }
+//
+//	opts := &FilterOptions{
+//	    IncludeInternal: true,
+//	    IncludeExternal: false,
+//	    IncludeStdLib:   false,
+//	    Depth:           3,
+//	}
 type FilterOptions struct {
 	IncludeInternal bool // Include internal packages from main module
 	IncludeExternal bool // Include external dependencies
 	IncludeStdLib   bool // Include standard library packages
-	MainModuleOnly  bool // Only analyze packages from main module (exclude submodules)
 	Depth           int  // Maximum traversal depth (0 = unlimited)
 }
 
@@ -106,15 +104,30 @@ type analyzer struct {
 	visited      map[string]bool
 	edges        map[string]bool
 	store        *PackageStore // New unified package store
+	// Module-level dependency data (from go mod graph)
+	modules       map[string]*ModuleInfo    // All modules indexed by path
+	moduleGraph   map[string][]string       // Module dependency graph: module -> dependencies
+	directModules map[string]bool           // Direct dependencies (from go.mod require)
+}
+
+// ModuleInfo represents a Go module dependency.
+type ModuleInfo struct {
+	Path     string   // Module path (e.g., github.com/gin-gonic/gin)
+	Version  string   // Module version (e.g., v1.9.0)
+	IsDirect bool     // Is this a direct dependency
+	Deps     []string // Dependencies of this module
 }
 
 // newAnalyzer creates a new dependency analyzer.
 func newAnalyzer() *analyzer {
 	return &analyzer{
-		packages: make(map[string]*goPackage),
-		visited:  make(map[string]bool),
-		edges:    make(map[string]bool),
-		store:    &PackageStore{},
+		packages:      make(map[string]*goPackage),
+		visited:       make(map[string]bool),
+		edges:         make(map[string]bool),
+		store:         &PackageStore{},
+		modules:       make(map[string]*ModuleInfo),
+		moduleGraph:   make(map[string][]string),
+		directModules: make(map[string]bool),
 	}
 }
 
@@ -220,7 +233,423 @@ func (a *analyzer) loadPackages(ctx context.Context, pkgPath string) error {
 	return nil
 }
 
+// loadModuleGraph loads module-level dependencies using go mod graph.
+// This provides module-level dependency information (not package-level).
+func (a *analyzer) loadModuleGraph(ctx context.Context) error {
+	// First, get direct dependencies from go list -m
+	directCmd := "go list -m -json all"
+	directResult, err := gproc.ShellExec(ctx, directCmd)
+	if err != nil {
+		return fmt.Errorf("failed to execute go list -m: %v", err)
+	}
 
+	// Parse direct dependencies
+	directDecoder := json.NewDecoder(strings.NewReader(directResult))
+	for directDecoder.More() {
+		var mod struct {
+			Path     string `json:"Path"`
+			Version  string `json:"Version"`
+			Main     bool   `json:"Main"`
+			Indirect bool   `json:"Indirect"`
+		}
+		if err := directDecoder.Decode(&mod); err != nil {
+			continue
+		}
+
+		// Skip main module
+		if mod.Main {
+			continue
+		}
+
+		// Track direct vs indirect
+		if !mod.Indirect {
+			a.directModules[mod.Path] = true
+		}
+
+		// Create module info
+		a.modules[mod.Path] = &ModuleInfo{
+			Path:     mod.Path,
+			Version:  mod.Version,
+			IsDirect: !mod.Indirect,
+			Deps:     []string{},
+		}
+	}
+
+	// Then, get module dependency graph
+	graphCmd := "go mod graph"
+	graphResult, err := gproc.ShellExec(ctx, graphCmd)
+	if err != nil {
+		return fmt.Errorf("failed to execute go mod graph: %v", err)
+	}
+
+	// Parse go mod graph output
+	// Format: module1@version module2@version
+	lines := gstr.Split(gstr.Trim(graphResult), "\n")
+	for _, line := range lines {
+		line = gstr.Trim(line)
+		if line == "" {
+			continue
+		}
+
+		parts := gstr.Split(line, " ")
+		if len(parts) != 2 {
+			continue
+		}
+
+		from := a.parseModulePath(parts[0])
+		to := a.parseModulePath(parts[1])
+
+		// Add to graph
+		a.moduleGraph[from] = append(a.moduleGraph[from], to)
+
+		// Ensure both modules exist in our map
+		if _, ok := a.modules[from]; !ok {
+			a.modules[from] = &ModuleInfo{
+				Path:     from,
+				Version:  a.parseModuleVersion(parts[0]),
+				IsDirect: a.directModules[from],
+			}
+		}
+		if _, ok := a.modules[to]; !ok {
+			a.modules[to] = &ModuleInfo{
+				Path:     to,
+				Version:  a.parseModuleVersion(parts[1]),
+				IsDirect: a.directModules[to],
+			}
+		}
+
+		// Update deps
+		a.modules[from].Deps = append(a.modules[from].Deps, to)
+	}
+
+	return nil
+}
+
+// parseModulePath extracts module path from "module@version" format.
+func (a *analyzer) parseModulePath(s string) string {
+	if idx := gstr.Pos(s, "@"); idx > 0 {
+		return s[:idx]
+	}
+	return s
+}
+
+// parseModuleVersion extracts version from "module@version" format.
+func (a *analyzer) parseModuleVersion(s string) string {
+	if idx := gstr.Pos(s, "@"); idx > 0 {
+		return s[idx+1:]
+	}
+	return ""
+}
+
+// generateModuleOutput generates output for module-level dependencies.
+func (a *analyzer) generateModuleOutput(in Input) string {
+	switch in.Format {
+	case "tree":
+		return a.generateModuleTree(in)
+	case "list":
+		return a.generateModuleList(in)
+	case "mermaid":
+		return a.generateModuleMermaid(in)
+	case "dot":
+		return a.generateModuleDot(in)
+	case "json":
+		return a.generateModuleJSON(in)
+	default:
+		return a.generateModuleTree(in)
+	}
+}
+
+// generateModuleTree generates tree output for module dependencies.
+func (a *analyzer) generateModuleTree(in Input) string {
+	var sb strings.Builder
+
+	// Get modules to display
+	modules := a.getFilteredModules(in)
+
+	sb.WriteString(fmt.Sprintf("%s (module dependencies)\n", a.modulePrefix))
+
+	// Show direct dependencies first
+	directDeps := make([]string, 0)
+	for _, mod := range modules {
+		if mod.IsDirect {
+			directDeps = append(directDeps, mod.Path)
+		}
+	}
+	sort.Strings(directDeps)
+
+	visited := make(map[string]bool)
+	for i, dep := range directDeps {
+		isLast := i == len(directDeps)-1
+		a.printModuleTreeNode(&sb, dep, "", isLast, in, visited, 0)
+	}
+
+	return sb.String()
+}
+
+// printModuleTreeNode prints a module tree node.
+func (a *analyzer) printModuleTreeNode(sb *strings.Builder, modPath string, prefix string, isLast bool, in Input, visited map[string]bool, depth int) {
+	if in.Depth > 0 && depth >= in.Depth {
+		return
+	}
+
+	connector := "├── "
+	if isLast {
+		connector = "└── "
+	}
+
+	mod := a.modules[modPath]
+	version := ""
+	if mod != nil && mod.Version != "" {
+		version = "@" + mod.Version
+	}
+
+	sb.WriteString(prefix + connector + modPath + version + "\n")
+
+	// Skip if Direct mode and this is not a direct dependency
+	if in.Direct {
+		return
+	}
+
+	// Check for cycles
+	if visited[modPath] {
+		return
+	}
+	visited[modPath] = true
+
+	// Get dependencies
+	deps := a.moduleGraph[modPath]
+	sort.Strings(deps)
+
+	newPrefix := prefix
+	if isLast {
+		newPrefix += "    "
+	} else {
+		newPrefix += "│   "
+	}
+
+	for i, dep := range deps {
+		depIsLast := i == len(deps)-1
+		a.printModuleTreeNode(sb, dep, newPrefix, depIsLast, in, visited, depth+1)
+	}
+
+	delete(visited, modPath)
+}
+
+// generateModuleList generates list output for module dependencies.
+func (a *analyzer) generateModuleList(in Input) string {
+	var sb strings.Builder
+
+	modules := a.getFilteredModules(in)
+
+	// Count stats
+	directCount := 0
+	indirectCount := 0
+	for _, mod := range modules {
+		if mod.IsDirect {
+			directCount++
+		} else {
+			indirectCount++
+		}
+	}
+
+	sb.WriteString(fmt.Sprintf("# Module Dependencies for %s\n", a.modulePrefix))
+	sb.WriteString(fmt.Sprintf("# Direct: %d, Indirect: %d, Total: %d\n\n", directCount, indirectCount, len(modules)))
+
+	// Sort by path
+	paths := make([]string, 0, len(modules))
+	for path := range modules {
+		paths = append(paths, path)
+	}
+	sort.Strings(paths)
+
+	for _, path := range paths {
+		mod := modules[path]
+		marker := ""
+		if mod.IsDirect {
+			marker = " (direct)"
+		}
+		sb.WriteString(fmt.Sprintf("%s@%s%s\n", mod.Path, mod.Version, marker))
+	}
+
+	return sb.String()
+}
+
+// generateModuleMermaid generates Mermaid diagram for module dependencies.
+func (a *analyzer) generateModuleMermaid(in Input) string {
+	var sb strings.Builder
+	sb.WriteString("```mermaid\n")
+	sb.WriteString("graph TD\n")
+
+	edges := a.collectModuleEdges(in)
+	sortedEdges := make([]string, 0, len(edges))
+	for edge := range edges {
+		sortedEdges = append(sortedEdges, edge)
+	}
+	sort.Strings(sortedEdges)
+
+	for _, edge := range sortedEdges {
+		sb.WriteString("    " + edge + "\n")
+	}
+	sb.WriteString("```\n")
+	return sb.String()
+}
+
+// generateModuleDot generates Graphviz DOT for module dependencies.
+func (a *analyzer) generateModuleDot(in Input) string {
+	var sb strings.Builder
+	sb.WriteString("digraph modules {\n")
+	sb.WriteString("    rankdir=TB;\n")
+	sb.WriteString("    node [shape=box];\n")
+
+	edges := a.collectModuleEdges(in)
+	sortedEdges := make([]string, 0, len(edges))
+	for edge := range edges {
+		sortedEdges = append(sortedEdges, edge)
+	}
+	sort.Strings(sortedEdges)
+
+	for _, edge := range sortedEdges {
+		parts := gstr.Split(edge, " --> ")
+		if len(parts) == 2 {
+			fmt.Fprintf(&sb, "    \"%s\" -> \"%s\";\n", parts[0], parts[1])
+		}
+	}
+	sb.WriteString("}\n")
+	return sb.String()
+}
+
+// generateModuleJSON generates JSON output for module dependencies.
+func (a *analyzer) generateModuleJSON(in Input) string {
+	modules := a.getFilteredModules(in)
+
+	result := make(map[string]any)
+
+	// Build module list
+	moduleList := make([]map[string]any, 0)
+	for _, mod := range modules {
+		m := map[string]any{
+			"path":     mod.Path,
+			"version":  mod.Version,
+			"direct":   mod.IsDirect,
+			"depCount": len(mod.Deps),
+		}
+		if !in.Direct {
+			m["dependencies"] = mod.Deps
+		}
+		moduleList = append(moduleList, m)
+	}
+
+	// Sort by path
+	sort.Slice(moduleList, func(i, j int) bool {
+		return moduleList[i]["path"].(string) < moduleList[j]["path"].(string)
+	})
+
+	result["modules"] = moduleList
+
+	// Add statistics
+	directCount := 0
+	indirectCount := 0
+	for _, mod := range modules {
+		if mod.IsDirect {
+			directCount++
+		} else {
+			indirectCount++
+		}
+	}
+	result["statistics"] = map[string]any{
+		"total":    len(modules),
+		"direct":   directCount,
+		"indirect": indirectCount,
+	}
+
+	result["metadata"] = map[string]any{
+		"module": a.modulePrefix,
+		"format": in.Format,
+		"depth":  in.Depth,
+		"direct": in.Direct,
+	}
+
+	data, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return fmt.Sprintf("Error: %v", err)
+	}
+	return string(data)
+}
+
+// getFilteredModules returns modules based on filter options.
+func (a *analyzer) getFilteredModules(in Input) map[string]*ModuleInfo {
+	result := make(map[string]*ModuleInfo)
+
+	for path, mod := range a.modules {
+		// Skip main module
+		if path == a.modulePrefix {
+			continue
+		}
+
+		// Filter by direct/indirect
+		if in.Direct && !mod.IsDirect {
+			continue
+		}
+
+		result[path] = mod
+	}
+
+	return result
+}
+
+// collectModuleEdges collects edges for module dependency graph.
+func (a *analyzer) collectModuleEdges(in Input) map[string]bool {
+	edges := make(map[string]bool)
+
+	// Start from main module
+	if in.Direct {
+		// Only show direct dependencies from main module
+		for path, mod := range a.modules {
+			if mod.IsDirect {
+				from := a.sanitizeName(a.shortModuleName(a.modulePrefix))
+				to := a.sanitizeName(a.shortModuleName(path))
+				edge := fmt.Sprintf("%s --> %s", from, to)
+				edges[edge] = true
+			}
+		}
+	} else {
+		// Show full dependency graph
+		visited := make(map[string]bool)
+		a.collectModuleEdgesRecursive(a.modulePrefix, in, edges, visited, 0)
+	}
+
+	return edges
+}
+
+// collectModuleEdgesRecursive recursively collects module edges.
+func (a *analyzer) collectModuleEdgesRecursive(modPath string, in Input, edges map[string]bool, visited map[string]bool, depth int) {
+	if in.Depth > 0 && depth >= in.Depth {
+		return
+	}
+
+	if visited[modPath] {
+		return
+	}
+	visited[modPath] = true
+
+	deps := a.moduleGraph[modPath]
+	fromName := a.sanitizeName(a.shortModuleName(modPath))
+
+	for _, dep := range deps {
+		toName := a.sanitizeName(a.shortModuleName(dep))
+		if fromName != toName {
+			edge := fmt.Sprintf("%s --> %s", fromName, toName)
+			edges[edge] = true
+		}
+		a.collectModuleEdgesRecursive(dep, in, edges, visited, depth+1)
+	}
+}
+
+// shortModuleName returns the module name (keeping full domain for clarity).
+func (a *analyzer) shortModuleName(modPath string) string {
+	// Return full module path to preserve domain information
+	return modPath
+}
 
 // convertInputToFilterOptions converts legacy Input to new FilterOptions.
 func (a *analyzer) convertInputToFilterOptions(in Input) *FilterOptions {
@@ -228,7 +657,6 @@ func (a *analyzer) convertInputToFilterOptions(in Input) *FilterOptions {
 		IncludeInternal: in.Internal,
 		IncludeExternal: in.External,
 		IncludeStdLib:   !in.NoStd,
-		MainModuleOnly:  in.MainOnly,
 		Depth:           in.Depth,
 	}
 	
@@ -321,11 +749,6 @@ func (opts *FilterOptions) Normalize(modulePrefix string) error {
 
 // ShouldInclude determines if a package should be included based on filter options.
 func (opts *FilterOptions) ShouldInclude(pkg *PackageInfo) bool {
-	// Filter by main module only (exclude submodules)
-	if opts.MainModuleOnly && !pkg.IsMainModule {
-		return false
-	}
-	
 	// Filter by kind
 	switch pkg.Kind {
 	case KindStdLib:
@@ -381,36 +804,6 @@ func (tc *TraversalContext) GetDependencies(pkg string) []string {
 	}
 	
 	return result
-}
-
-// isMainModulePackage checks if a package belongs to the main module (not a submodule).
-func (a *analyzer) isMainModulePackage(pkg string) bool {
-	if a.modulePrefix == "" {
-		return true // If no module prefix, consider all as main module
-	}
-	
-	if !gstr.HasPrefix(pkg, a.modulePrefix) {
-		return false // Not even in our module
-	}
-	
-	// Remove the module prefix to get the relative path
-	relativePath := gstr.TrimLeft(pkg[len(a.modulePrefix):], "/")
-	if relativePath == "" {
-		return true // This is the root module itself
-	}
-	
-	// Check if this path contains a go.mod file (indicating a submodule)
-	// We check from the most specific path up to the root
-	parts := gstr.Split(relativePath, "/")
-	for i := len(parts); i > 0; i-- {
-		subPath := gstr.Join(parts[:i], "/")
-		if subPath != "" && gfile.Exists(subPath+"/go.mod") {
-			// Found a go.mod file in a subdirectory, this indicates a submodule
-			return false
-		}
-	}
-	
-	return true // This is part of the main module
 }
 
 // shortName returns a shortened package name.
@@ -534,7 +927,6 @@ func (a *analyzer) getDependencyStats(_ Input) map[string]any {
 		IncludeInternal: true,
 		IncludeExternal: true,
 		IncludeStdLib:   true,
-		MainModuleOnly:  false,
 		Depth:           0,
 	}
 	
@@ -639,11 +1031,10 @@ func (a *analyzer) buildPackageStore() *PackageStore {
 	// Convert go packages to PackageInfo
 	for path, goPkg := range a.packages {
 		pkgInfo := &PackageInfo{
-			ImportPath:   path,
-			ModulePath:   goPkg.Module.Path,
-			IsStdLib:     goPkg.Standard,
-			Imports:      goPkg.Imports,
-			IsMainModule: a.isMainModulePackage(path),
+			ImportPath: path,
+			ModulePath: goPkg.Module.Path,
+			IsStdLib:   goPkg.Standard,
+			Imports:    goPkg.Imports,
 		}
 		pkgInfo.Kind = store.identifyPackageKind(pkgInfo)
 		store.packages[path] = pkgInfo

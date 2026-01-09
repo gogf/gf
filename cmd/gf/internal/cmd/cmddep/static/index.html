@@ -79,8 +79,12 @@
             <label for="external" data-i18n="externalLabel">External packages</label>
         </div>
         <div class="control-group">
-            <input type="checkbox" id="mainOnly" onchange="refresh()" data-i18n-title="mainOnlyTooltip">
-            <label for="mainOnly" data-i18n="mainOnlyLabel">Main module only</label>
+            <input type="checkbox" id="moduleLevel" onchange="refresh()" data-i18n-title="moduleLevelTooltip">
+            <label for="moduleLevel" data-i18n="moduleLevelLabel">Module level</label>
+        </div>
+        <div class="control-group">
+            <input type="checkbox" id="directOnly" onchange="refresh()" data-i18n-title="directOnlyTooltip">
+            <label for="directOnly" data-i18n="directOnlyLabel">Direct only</label>
         </div>
         <div class="control-group graph-only" id="layoutGroup">
             <label data-i18n="layoutLabel">Layout:</label>

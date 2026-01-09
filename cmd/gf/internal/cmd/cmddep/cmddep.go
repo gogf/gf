@@ -39,13 +39,13 @@ gf dep -r
 gf dep -i=false
 gf dep -e
 gf dep -e -i=false
-gf dep -m
-gf dep -m -e
+gf dep -M
+gf dep -M -D
 gf dep -s
 gf dep -s -p 8080
 gf dep ./internal/... -f tree -d 2
 gf dep --external --group -f mermaid
-gf dep --main --external -f json
+gf dep --module --direct -f json
 `
 )
 
@@ -62,12 +62,13 @@ type Input struct {
 	Package  string `name:"PACKAGE" arg:"true" brief:"package path to analyze, default is ./..." d:"./..."`
 	Format   string `name:"format"   short:"f" brief:"output format: tree/list/mermaid/dot/json" d:"tree"`
 	Depth    int    `name:"depth"    short:"d" brief:"dependency depth limit, 0 means unlimited" d:"3"`
-	Group    bool   `name:"group"    short:"g" brief:"group by top-level directory" d:"false"`
-	Internal bool   `name:"internal" short:"i" brief:"show only internal packages" d:"true"`
-	External bool   `name:"external" short:"e" brief:"show external packages" d:"false"`
-	MainOnly bool   `name:"main"     short:"m" brief:"analyze only main module packages (exclude submodules)" d:"false"`
-	NoStd    bool   `name:"nostd"    short:"n" brief:"exclude standard library" d:"true"`
-	Reverse  bool   `name:"reverse"  short:"r" brief:"show reverse dependencies" d:"false"`
+	Group    bool   `name:"group"    short:"g" brief:"group by top-level directory" d:"false" orphan:"true"`
+	Internal bool   `name:"internal" short:"i" brief:"show only internal packages" d:"true" orphan:"true"`
+	External bool   `name:"external" short:"e" brief:"show external packages" d:"false" orphan:"true"`
+	Module   bool   `name:"module"   short:"M" brief:"show module-level dependencies (from go.mod)" d:"false" orphan:"true"`
+	Direct   bool   `name:"direct"   short:"D" brief:"show only direct dependencies (requires --module)" d:"false" orphan:"true"`
+	NoStd    bool   `name:"nostd"    short:"n" brief:"exclude standard library" d:"true" orphan:"true"`
+	Reverse  bool   `name:"reverse"  short:"r" brief:"show reverse dependencies" d:"false" orphan:"true"`
 	Serve    bool   `name:"serve"    short:"s" brief:"start HTTP server to view dependencies" d:"false" orphan:"true"`
 	Port     int    `name:"port"     short:"p" brief:"HTTP server port" d:"8888"`
 }
@@ -82,7 +83,28 @@ func (c cDep) Index(ctx context.Context, in Input) (out *Output, err error) {
 	// Detect module prefix from go.mod
 	analyzer.modulePrefix = analyzer.detectModulePrefix()
 
-	// Get package information
+	// Module-level analysis mode (uses go mod graph)
+	if in.Module {
+		if in.Serve {
+			// Load module graph for server mode
+			if err := analyzer.loadModuleGraph(ctx); err != nil {
+				mlog.Print("Warning: Failed to load module graph: " + err.Error())
+			}
+			return nil, analyzer.startServer(in)
+		}
+
+		// Load module graph
+		if err := analyzer.loadModuleGraph(ctx); err != nil {
+			return nil, err
+		}
+
+		// Generate module-level output
+		output := analyzer.generateModuleOutput(in)
+		mlog.Print(output)
+		return
+	}
+
+	// Package-level analysis mode (original behavior)
 	loadErr := analyzer.loadPackages(ctx, in.Package)
 
 	// Start HTTP server if requested

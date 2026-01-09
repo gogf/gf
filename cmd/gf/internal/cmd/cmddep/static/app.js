@@ -123,7 +123,11 @@ async function fetchVersions() {
     const versionSelect = document.getElementById('versionSelect');
     const spinner = document.getElementById('loadingSpinner');
     
-    const modulePath = input.value.trim();
+    let modulePath = input.value.trim();
+    // Remove http:// or https:// prefix if present
+    modulePath = modulePath.replace(/^https?:\/\//, '');
+    input.value = modulePath;
+    
     if (!modulePath) {
         versionSelect.disabled = true;
         versionSelect.innerHTML = `<option value="">${i18n.t('selectVersion')}</option>`;
@@ -163,7 +167,11 @@ async function analyzeRemoteModule() {
     const spinner = document.getElementById('loadingSpinner');
     const analyzeBtn = document.getElementById('analyzeBtn');
     
-    const modulePath = input.value.trim();
+    let modulePath = input.value.trim();
+    // Remove http:// or https:// prefix if present
+    modulePath = modulePath.replace(/^https?:\/\//, '');
+    input.value = modulePath;
+    
     const version = versionSelect.value;
     
     if (!modulePath) {
@@ -410,8 +418,9 @@ async function loadPackages() {
     try {
         const internal = document.getElementById('internal').checked;
         const external = document.getElementById('external') ? document.getElementById('external').checked : false;
-        const mainOnly = document.getElementById('mainOnly') ? document.getElementById('mainOnly').checked : false;
-        const response = await fetch(`/api/packages?internal=${internal}&external=${external}&main=${mainOnly}`);
+        const moduleLevel = document.getElementById('moduleLevel') ? document.getElementById('moduleLevel').checked : false;
+        const directOnly = document.getElementById('directOnly') ? document.getElementById('directOnly').checked : false;
+        const response = await fetch(`/api/packages?internal=${internal}&external=${external}&module=${moduleLevel}&direct=${directOnly}`);
         const data = await response.json();
         
         // Handle new API response format with packages and statistics
@@ -678,7 +687,8 @@ async function refresh() {
     const reverse = document.getElementById('reverse').checked;
     const internal = document.getElementById('internal').checked;
     const external = document.getElementById('external') ? document.getElementById('external').checked : false;
-    const mainOnly = document.getElementById('mainOnly') ? document.getElementById('mainOnly').checked : false;
+    const moduleLevel = document.getElementById('moduleLevel') ? document.getElementById('moduleLevel').checked : false;
+    const directOnly = document.getElementById('directOnly') ? document.getElementById('directOnly').checked : false;
 
     if (selectedPackage) {
         await showPackageInfo(selectedPackage);
@@ -687,11 +697,11 @@ async function refresh() {
     }
 
     if (currentView === 'graph') {
-        await refreshGraph(depth, group, reverse, internal, external, mainOnly);
+        await refreshGraph(depth, group, reverse, internal, external, moduleLevel, directOnly);
     } else if (currentView === 'tree') {
-        await refreshTree(depth, internal, external, mainOnly);
+        await refreshTree(depth, internal, external, moduleLevel, directOnly);
     } else {
-        await refreshList(internal, external, mainOnly);
+        await refreshList(internal, external, moduleLevel, directOnly);
     }
 }
 
@@ -724,7 +734,7 @@ async function showPackageInfo(pkg) {
 }
 
 // Refresh graph view
-async function refreshGraph(depth, group, reverse, internal, external, mainOnly) {
+async function refreshGraph(depth, group, reverse, internal, external, moduleLevel, directOnly) {
     document.getElementById('graphView').classList.remove('hidden');
     document.getElementById('textView').classList.add('hidden');
 
@@ -738,8 +748,11 @@ async function refreshGraph(depth, group, reverse, internal, external, mainOnly)
     if (external !== undefined) {
         url += `&external=${external}`;
     }
-    if (mainOnly !== undefined) {
-        url += `&main=${mainOnly}`;
+    if (moduleLevel !== undefined) {
+        url += `&module=${moduleLevel}`;
+    }
+    if (directOnly !== undefined) {
+        url += `&direct=${directOnly}`;
     }
     if (selectedPackage) {
         url += '&package=' + encodeURIComponent(selectedPackage);
@@ -815,7 +828,7 @@ function autoFitGraph() {
 }
 
 // Refresh tree view
-async function refreshTree(depth, internal, external, mainOnly) {
+async function refreshTree(depth, internal, external, moduleLevel, directOnly) {
     document.getElementById('graphView').classList.add('hidden');
     document.getElementById('textView').classList.remove('hidden');
 
@@ -823,8 +836,11 @@ async function refreshTree(depth, internal, external, mainOnly) {
     if (external !== undefined) {
         url += `&external=${external}`;
     }
-    if (mainOnly !== undefined) {
-        url += `&main=${mainOnly}`;
+    if (moduleLevel !== undefined) {
+        url += `&module=${moduleLevel}`;
+    }
+    if (directOnly !== undefined) {
+        url += `&direct=${directOnly}`;
     }
     if (selectedPackage) {
         url += '&package=' + encodeURIComponent(selectedPackage);
@@ -844,7 +860,7 @@ async function refreshTree(depth, internal, external, mainOnly) {
 }
 
 // Refresh list view
-async function refreshList(internal, external, mainOnly) {
+async function refreshList(internal, external, moduleLevel, directOnly) {
     document.getElementById('graphView').classList.add('hidden');
     document.getElementById('textView').classList.remove('hidden');
 
@@ -852,8 +868,11 @@ async function refreshList(internal, external, mainOnly) {
     if (external !== undefined) {
         url += `&external=${external}`;
     }
-    if (mainOnly !== undefined) {
-        url += `&main=${mainOnly}`;
+    if (moduleLevel !== undefined) {
+        url += `&module=${moduleLevel}`;
+    }
+    if (directOnly !== undefined) {
+        url += `&direct=${directOnly}`;
     }
     if (selectedPackage) {
         url += '&package=' + encodeURIComponent(selectedPackage);

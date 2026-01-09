@@ -306,7 +306,6 @@ func (a *analyzer) generateJSON(in Input) string {
 		"internal": in.Internal,
 		"external": in.External,
 		"nostd":    in.NoStd,
-		"main":     in.MainOnly,
 	}
 	
 	data, err := json.MarshalIndent(result, "", "  ")

@@ -7,6 +7,7 @@
 package cmddep
 
 import (
+	"context"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -177,10 +178,29 @@ func (a *analyzer) handleGraphAPI(w http.ResponseWriter, r *http.Request, in Inp
 	if e := query.Get("external"); e != "" {
 		in.External = e == "true"
 	}
-	if m := query.Get("main"); m != "" {
-		in.MainOnly = m == "true"
+	if m := query.Get("module"); m != "" {
+		in.Module = m == "true"
+	}
+	if d := query.Get("direct"); d != "" {
+		in.Direct = d == "true"
 	}
 	pkg := query.Get("package")
+
+	// Module-level graph
+	if in.Module {
+		// Ensure module graph is loaded
+		if len(a.modules) == 0 {
+			if err := a.loadModuleGraph(context.Background()); err != nil {
+				http.Error(w, "Failed to load module graph: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+		
+		data := a.buildModuleGraphData(in)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(data)
+		return
+	}
 
 	var data *graphData
 	if pkg != "" {
@@ -192,7 +212,7 @@ func (a *analyzer) handleGraphAPI(w http.ResponseWriter, r *http.Request, in Inp
 	json.NewEncoder(w).Encode(data)
 }
 
-// handlePackagesAPI returns all packages list with dependency stats.
+// handlePackagesAPI returns all packages list with dependency stats using new system.
 func (a *analyzer) handlePackagesAPI(w http.ResponseWriter, r *http.Request, in Input) {
 	query := r.URL.Query()
 	if i := query.Get("internal"); i != "" {
@@ -201,31 +221,48 @@ func (a *analyzer) handlePackagesAPI(w http.ResponseWriter, r *http.Request, in 
 	if e := query.Get("external"); e != "" {
 		in.External = e == "true"
 	}
-	if m := query.Get("main"); m != "" {
-		in.MainOnly = m == "true"
+	if m := query.Get("module"); m != "" {
+		in.Module = m == "true"
 	}
+	if d := query.Get("direct"); d != "" {
+		in.Direct = d == "true"
+	}
+
+	// Module-level packages
+	if in.Module {
+		a.handleModulesAPI(w, in)
+		return
+	}
+
+	opts := a.convertInputToFilterOptions(in)
+	opts.Normalize(a.modulePrefix)
+	store := a.buildPackageStore()
 
 	// Build reverse dependency map (who uses each package)
 	usedByMap := make(map[string]int)
-	for fullPath, pkg := range a.packages {
-		if !a.shouldInclude(fullPath, in) {
+	for fullPath, pkgInfo := range store.packages {
+		if !opts.ShouldInclude(pkgInfo) {
 			continue
 		}
 		fromShort := a.shortName(fullPath, false)
 		if fromShort == "" {
 			continue
 		}
-		for _, dep := range a.filterDeps(pkg.Imports, in) {
-			shortDep := a.shortName(dep, false)
-			if shortDep != "" {
-				usedByMap[shortDep]++
+		for _, dep := range pkgInfo.Imports {
+			depInfo, ok := store.packages[dep]
+			if ok && opts.ShouldInclude(depInfo) {
+				shortDep := a.shortName(dep, false)
+				if shortDep != "" {
+					usedByMap[shortDep]++
+				}
 			}
 		}
 	}
 
 	packages := make([]packageSummary, 0)
 	for _, pkgPath := range a.getSortedPackages() {
-		if !a.shouldInclude(pkgPath, in) {
+		pkgInfo, ok := store.packages[pkgPath]
+		if !ok || !opts.ShouldInclude(pkgInfo) {
 			continue
 		}
 		shortName := a.shortName(pkgPath, false)
@@ -235,8 +272,9 @@ func (a *analyzer) handlePackagesAPI(w http.ResponseWriter, r *http.Request, in 
 
 		// Count dependencies (filtered)
 		depCount := 0
-		if pkg, ok := a.packages[pkgPath]; ok {
-			for _, dep := range a.filterDeps(pkg.Imports, in) {
+		for _, dep := range pkgInfo.Imports {
+			depInfo, ok := store.packages[dep]
+			if ok && opts.ShouldInclude(depInfo) {
 				shortDep := a.shortName(dep, false)
 				if shortDep != "" {
 					depCount++
@@ -261,7 +299,7 @@ func (a *analyzer) handlePackagesAPI(w http.ResponseWriter, r *http.Request, in 
 	json.NewEncoder(w).Encode(result)
 }
 
-// handlePackageAPI returns detailed info for a specific package.
+// handlePackageAPI returns detailed info for a specific package using new system.
 func (a *analyzer) handlePackageAPI(w http.ResponseWriter, r *http.Request, in Input) {
 	query := r.URL.Query()
 	pkgName := query.Get("name")
@@ -284,7 +322,16 @@ func (a *analyzer) handlePackageAPI(w http.ResponseWriter, r *http.Request, in I
 		return
 	}
 
-	pkg := a.packages[fullPath]
+	opts := a.convertInputToFilterOptions(in)
+	opts.Normalize(a.modulePrefix)
+	store := a.buildPackageStore()
+
+	pkgInfo, ok := store.packages[fullPath]
+	if !ok {
+		http.Error(w, "package not found", http.StatusNotFound)
+		return
+	}
+
 	info := packageInfo{
 		Name:         pkgName,
 		FullPath:     fullPath,
@@ -293,18 +340,21 @@ func (a *analyzer) handlePackageAPI(w http.ResponseWriter, r *http.Request, in I
 	}
 
 	// Get dependencies
-	for _, dep := range a.filterDeps(pkg.Imports, in) {
-		shortName := a.shortName(dep, false)
-		if shortName != "" {
-			info.Dependencies = append(info.Dependencies, shortName)
+	for _, dep := range pkgInfo.Imports {
+		depInfo, ok := store.packages[dep]
+		if ok && opts.ShouldInclude(depInfo) {
+			shortName := a.shortName(dep, false)
+			if shortName != "" {
+				info.Dependencies = append(info.Dependencies, shortName)
+			}
 		}
 	}
 	sort.Strings(info.Dependencies)
 
 	// Get reverse dependencies (who uses this package)
-	for path, p := range a.packages {
+	for path, p := range store.packages {
 		for _, dep := range p.Imports {
-			if dep == fullPath {
+			if dep == fullPath && opts.ShouldInclude(p) {
 				shortName := a.shortName(path, false)
 				if shortName != "" {
 					info.UsedBy = append(info.UsedBy, shortName)
@@ -331,10 +381,29 @@ func (a *analyzer) handleTreeAPI(w http.ResponseWriter, r *http.Request, in Inpu
 	if e := query.Get("external"); e != "" {
 		in.External = e == "true"
 	}
-	if m := query.Get("main"); m != "" {
-		in.MainOnly = m == "true"
+	if m := query.Get("module"); m != "" {
+		in.Module = m == "true"
+	}
+	if d := query.Get("direct"); d != "" {
+		in.Direct = d == "true"
 	}
 	pkg := query.Get("package")
+
+	// Module-level tree
+	if in.Module {
+		// Ensure module graph is loaded
+		if len(a.modules) == 0 {
+			if err := a.loadModuleGraph(context.Background()); err != nil {
+				http.Error(w, "Failed to load module graph: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+		
+		output := a.generateModuleTree(in)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Write([]byte(output))
+		return
+	}
 
 	var output string
 	if pkg != "" {
@@ -356,10 +425,29 @@ func (a *analyzer) handleListAPI(w http.ResponseWriter, r *http.Request, in Inpu
 	if e := query.Get("external"); e != "" {
 		in.External = e == "true"
 	}
-	if m := query.Get("main"); m != "" {
-		in.MainOnly = m == "true"
+	if m := query.Get("module"); m != "" {
+		in.Module = m == "true"
+	}
+	if d := query.Get("direct"); d != "" {
+		in.Direct = d == "true"
 	}
 	pkg := query.Get("package")
+
+	// Module-level list
+	if in.Module {
+		// Ensure module graph is loaded
+		if len(a.modules) == 0 {
+			if err := a.loadModuleGraph(context.Background()); err != nil {
+				http.Error(w, "Failed to load module graph: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+		
+		output := a.generateModuleList(in)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Write([]byte(output))
+		return
+	}
 
 	var output string
 	if pkg != "" {
@@ -412,7 +500,7 @@ func (a *analyzer) buildGraphData(in Input) *graphData {
 	return data
 }
 
-// buildPackageGraphData builds graph data for a specific package.
+// buildPackageGraphData builds graph data for a specific package using new system.
 func (a *analyzer) buildPackageGraphData(pkgName string, in Input) *graphData {
 	data := &graphData{
 		Nodes: make([]graphNode, 0),
@@ -432,6 +520,15 @@ func (a *analyzer) buildPackageGraphData(pkgName string, in Input) *graphData {
 		return data
 	}
 
+	opts := a.convertInputToFilterOptions(in)
+	opts.Normalize(a.modulePrefix)
+	store := a.buildPackageStore()
+
+	_, ok := store.packages[fullPath]
+	if !ok {
+		return data
+	}
+
 	nodeSet := make(map[string]bool)
 	nodeSet[pkgName] = true
 	data.Nodes = append(data.Nodes, graphNode{
@@ -444,9 +541,9 @@ func (a *analyzer) buildPackageGraphData(pkgName string, in Input) *graphData {
 
 	if in.Reverse {
 		// Show packages that depend on this package
-		for path, p := range a.packages {
+		for path, p := range store.packages {
 			for _, dep := range p.Imports {
-				if dep == fullPath {
+				if dep == fullPath && opts.ShouldInclude(p) {
 					shortName := a.shortName(path, false)
 					if shortName != "" && !nodeSet[shortName] {
 						nodeSet[shortName] = true
@@ -472,14 +569,27 @@ func (a *analyzer) buildPackageGraphData(pkgName string, in Input) *graphData {
 	return data
 }
 
-// collectPackageDeps recursively collects dependencies for a package.
+// collectPackageDeps recursively collects dependencies for a package using new system.
 func (a *analyzer) collectPackageDeps(pkg *goPackage, pkgName string, in Input, nodeSet map[string]bool, data *graphData, depth int) {
 	if in.Depth > 0 && depth >= in.Depth {
 		return
 	}
 
-	deps := a.filterDeps(pkg.Imports, in)
-	for _, dep := range deps {
+	opts := a.convertInputToFilterOptions(in)
+	opts.Normalize(a.modulePrefix)
+	store := a.buildPackageStore()
+
+	pkgInfo, ok := store.packages[pkg.ImportPath]
+	if !ok {
+		return
+	}
+
+	for _, dep := range pkgInfo.Imports {
+		depInfo, ok := store.packages[dep]
+		if !ok || !opts.ShouldInclude(depInfo) {
+			continue
+		}
+
 		shortName := a.shortName(dep, false)
 		if shortName == "" {
 			continue
@@ -506,7 +616,7 @@ func (a *analyzer) collectPackageDeps(pkg *goPackage, pkgName string, in Input, 
 	}
 }
 
-// generatePackageTree generates tree output for a specific package.
+// generatePackageTree generates tree output for a specific package using new system.
 func (a *analyzer) generatePackageTree(pkgName string, in Input) string {
 	var fullPath string
 	for path := range a.packages {
@@ -520,15 +630,29 @@ func (a *analyzer) generatePackageTree(pkgName string, in Input) string {
 		return "Package not found: " + pkgName
 	}
 
+	opts := a.convertInputToFilterOptions(in)
+	opts.Normalize(a.modulePrefix)
+	store := a.buildPackageStore()
+
+	_, ok := store.packages[fullPath]
+	if !ok {
+		return "Package not found: " + pkgName
+	}
+
 	var sb strings.Builder
-	pkg := a.packages[fullPath]
-	a.visited = make(map[string]bool)
+	ctx := &TraversalContext{
+		visited:  make(map[string]bool),
+		options:  opts,
+		store:    store,
+		maxDepth: opts.Depth,
+	}
+
 	sb.WriteString(pkgName + "\n")
-	a.printTreeNode(&sb, pkg, "", in, 0)
+	a.printTreeNodeNew(&sb, fullPath, "", in, ctx, 0)
 	return sb.String()
 }
 
-// generatePackageList generates list output for a specific package.
+// generatePackageList generates list output for a specific package using new system.
 func (a *analyzer) generatePackageList(pkgName string, in Input) string {
 	var fullPath string
 	for path := range a.packages {
@@ -542,15 +666,25 @@ func (a *analyzer) generatePackageList(pkgName string, in Input) string {
 		return "Package not found: " + pkgName
 	}
 
-	var sb strings.Builder
-	pkg := a.packages[fullPath]
-	deps := a.filterDeps(pkg.Imports, in)
+	opts := a.convertInputToFilterOptions(in)
+	opts.Normalize(a.modulePrefix)
+	store := a.buildPackageStore()
 
-	shortDeps := make([]string, 0, len(deps))
-	for _, dep := range deps {
-		shortName := a.shortName(dep, false)
-		if shortName != "" {
-			shortDeps = append(shortDeps, shortName)
+	pkgInfo, ok := store.packages[fullPath]
+	if !ok {
+		return "Package not found: " + pkgName
+	}
+
+	var sb strings.Builder
+
+	shortDeps := make([]string, 0)
+	for _, dep := range pkgInfo.Imports {
+		depInfo, ok := store.packages[dep]
+		if ok && opts.ShouldInclude(depInfo) {
+			shortName := a.shortName(dep, false)
+			if shortName != "" {
+				shortDeps = append(shortDeps, shortName)
+			}
 		}
 	}
 	sort.Strings(shortDeps)
@@ -743,6 +877,94 @@ func (s *serverState) handleAnalyzeAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// IMPORTANT: Load module dependencies from the actual module directory
+	// We need to run commands in moduleDir context to get the correct direct/indirect info
+	// Running in tempDir would show everything as indirect since we're not using them there
+	
+	// IMPORTANT: Load direct dependencies info FIRST
+	// This must be done before parsing go mod graph so that IsDirect flag is correct
+	listModCmd := exec.Command("go", "list", "-m", "-json", "all")
+	listModCmd.Dir = moduleDir // Run in the actual module directory
+	modOutput, err := listModCmd.CombinedOutput()
+	if err == nil {
+		modDecoder := json.NewDecoder(strings.NewReader(string(modOutput)))
+		for modDecoder.More() {
+			var mod struct {
+				Path     string `json:"Path"`
+				Version  string `json:"Version"`
+				Main     bool   `json:"Main"`
+				Indirect bool   `json:"Indirect"`
+			}
+			if err := modDecoder.Decode(&mod); err != nil {
+				continue
+			}
+
+			// Skip main module
+			if mod.Main {
+				continue
+			}
+
+			// Track direct vs indirect
+			if !mod.Indirect {
+				newAnalyzer.directModules[mod.Path] = true
+			}
+
+			// Create module info
+			newAnalyzer.modules[mod.Path] = &ModuleInfo{
+				Path:     mod.Path,
+				Version:  mod.Version,
+				IsDirect: !mod.Indirect,
+				Deps:     []string{},
+			}
+		}
+	}
+
+	// Load module-level dependencies for the remote module
+	// Run go mod graph in the module directory context
+	graphCmd := exec.Command("go", "mod", "graph")
+	graphCmd.Dir = moduleDir // Run in the actual module directory
+	graphOutput, err := graphCmd.CombinedOutput()
+	if err == nil {
+		// Parse module graph
+		lines := strings.Split(strings.TrimSpace(string(graphOutput)), "\n")
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if line == "" {
+				continue
+			}
+
+			parts := strings.Fields(line)
+			if len(parts) != 2 {
+				continue
+			}
+
+			from := newAnalyzer.parseModulePath(parts[0])
+			to := newAnalyzer.parseModulePath(parts[1])
+
+			// Add to graph
+			newAnalyzer.moduleGraph[from] = append(newAnalyzer.moduleGraph[from], to)
+
+			// Ensure both modules exist in our map (use existing or create with correct IsDirect)
+			if _, ok := newAnalyzer.modules[from]; !ok {
+				newAnalyzer.modules[from] = &ModuleInfo{
+					Path:     from,
+					Version:  newAnalyzer.parseModuleVersion(parts[0]),
+					IsDirect: newAnalyzer.directModules[from],
+				}
+			}
+			if _, ok := newAnalyzer.modules[to]; !ok {
+				newAnalyzer.modules[to] = &ModuleInfo{
+					Path:     to,
+					Version:  newAnalyzer.parseModuleVersion(parts[1]),
+					IsDirect: newAnalyzer.directModules[to],
+				}
+			}
+
+			// Update deps
+			newAnalyzer.modules[from].Deps = append(newAnalyzer.modules[from].Deps, to)
+		}
+	}
+
 	s.currentAnalyzer = newAnalyzer
 
 	w.Header().Set("Content-Type", "application/json")
@@ -818,4 +1040,106 @@ func (s *serverState) handleResetAPI(w http.ResponseWriter) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]bool{"success": true})
+}
+
+// handleModulesAPI returns module-level dependency list.
+func (a *analyzer) handleModulesAPI(w http.ResponseWriter, in Input) {
+	// Ensure module graph is loaded
+	if len(a.modules) == 0 {
+		if err := a.loadModuleGraph(context.Background()); err != nil {
+			http.Error(w, "Failed to load module graph: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+	
+	modules := a.getFilteredModules(in)
+
+	// Build module list
+	moduleList := make([]map[string]any, 0)
+	for _, mod := range modules {
+		m := map[string]any{
+			"name":        mod.Path,
+			"depCount":    len(mod.Deps),
+			"usedByCount": 0, // TODO: calculate reverse deps
+			"version":     mod.Version,
+			"direct":      mod.IsDirect,
+		}
+		moduleList = append(moduleList, m)
+	}
+
+	// Sort by path
+	sort.Slice(moduleList, func(i, j int) bool {
+		return moduleList[i]["name"].(string) < moduleList[j]["name"].(string)
+	})
+
+	// Count stats
+	directCount := 0
+	indirectCount := 0
+	for _, mod := range modules {
+		if mod.IsDirect {
+			directCount++
+		} else {
+			indirectCount++
+		}
+	}
+
+	result := map[string]any{
+		"packages": moduleList,
+		"statistics": map[string]any{
+			"total":    len(modules),
+			"direct":   directCount,
+			"indirect": indirectCount,
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
+}
+
+// buildModuleGraphData builds graph data for module-level visualization.
+func (a *analyzer) buildModuleGraphData(in Input) *graphData {
+	data := &graphData{
+		Nodes: make([]graphNode, 0),
+		Edges: make([]graphEdge, 0),
+	}
+
+	nodeSet := make(map[string]bool)
+	edges := a.collectModuleEdges(in)
+
+	for edge := range edges {
+		parts := strings.Split(edge, " --> ")
+		if len(parts) != 2 {
+			continue
+		}
+		from, to := parts[0], parts[1]
+
+		if !nodeSet[from] {
+			nodeSet[from] = true
+			group := "indirect"
+			if mod, ok := a.modules[from]; ok && mod.IsDirect {
+				group = "direct"
+			}
+			data.Nodes = append(data.Nodes, graphNode{
+				ID:    from,
+				Label: strings.ReplaceAll(from, "_", "/"),
+				Group: group,
+			})
+		}
+		if !nodeSet[to] {
+			nodeSet[to] = true
+			group := "indirect"
+			if mod, ok := a.modules[to]; ok && mod.IsDirect {
+				group = "direct"
+			}
+			data.Nodes = append(data.Nodes, graphNode{
+				ID:    to,
+				Label: strings.ReplaceAll(to, "_", "/"),
+				Group: group,
+			})
+		}
+
+		data.Edges = append(data.Edges, graphEdge{From: from, To: to})
+	}
+
+	return data
 }

@@ -16,22 +16,46 @@ func TestExternalDependencyAnalysis(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		analyzer := newAnalyzer()
 		analyzer.modulePrefix = "github.com/gogf/gf/cmd/gf/v2"
+		analyzer.packages = map[string]*goPackage{
+			"github.com/other/package": {
+				ImportPath: "github.com/other/package",
+				Standard:   false,
+			},
+			"github.com/gogf/gf/cmd/gf/v2/internal": {
+				ImportPath: "github.com/gogf/gf/cmd/gf/v2/internal",
+				Standard:   false,
+			},
+			"fmt": {
+				ImportPath: "fmt",
+				Standard:   true,
+			},
+		}
 
-		// Test shouldInclude with external dependencies
+		// Test using new FilterOptions system
 		in := Input{
 			Internal: false,
 			External: true,
 			NoStd:    true,
 		}
 
+		opts := analyzer.convertInputToFilterOptions(in)
+		opts.Normalize(analyzer.modulePrefix)
+		store := analyzer.buildPackageStore()
+
 		// Test external package (should be included)
-		t.Assert(analyzer.shouldInclude("github.com/other/package", in), true)
+		externalPkg, ok := store.packages["github.com/other/package"]
+		t.Assert(ok, true)
+		t.Assert(opts.ShouldInclude(externalPkg), true)
 
 		// Test internal package (should not be included)
-		t.Assert(analyzer.shouldInclude("github.com/gogf/gf/cmd/gf/v2/internal", in), false)
+		internalPkg, ok := store.packages["github.com/gogf/gf/cmd/gf/v2/internal"]
+		t.Assert(ok, true)
+		t.Assert(opts.ShouldInclude(internalPkg), false)
 
 		// Test standard library (should not be included due to NoStd)
-		t.Assert(analyzer.shouldInclude("fmt", in), false)
+		stdPkg, ok := store.packages["fmt"]
+		t.Assert(ok, true)
+		t.Assert(opts.ShouldInclude(stdPkg), false)
 	})
 }
 
@@ -39,11 +63,11 @@ func TestExternalGrouping(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		analyzer := newAnalyzer()
 
-		// Test external group extraction
-		t.Assert(analyzer.getExternalGroup("github.com/user/repo"), "github.com/user")
-		t.Assert(analyzer.getExternalGroup("golang.org/x/tools"), "golang.org")
-		t.Assert(analyzer.getExternalGroup("fmt"), "stdlib")
-		t.Assert(analyzer.getExternalGroup("simple"), "simple")
+		// Test external group extraction using shortName
+		t.Assert(analyzer.shortName("github.com/user/repo", false), "github.com/user/repo")
+		t.Assert(analyzer.shortName("golang.org/x/tools", false), "golang.org/x/tools")
+		t.Assert(analyzer.shortName("fmt", false), "fmt")
+		t.Assert(analyzer.shortName("simple", false), "simple")
 	})
 }
 
