@@ -402,7 +402,7 @@ show_help() {
     echo "  $0 start all             # Start all basic services"
     echo "  $0 start apollo          # Start Apollo (compose)"
     echo "  $0 stop all              # Stop all basic services"
-    echo "  $0 logs mysql 50         # View MySQL last 50 lines of logs"
+    echo "  $0 logs mysql 50         # View last 50 lines of MySQL logs"
     echo "  $0 status                # View service status"
     echo ""
 }
