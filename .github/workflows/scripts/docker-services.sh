@@ -542,7 +542,7 @@ select_service_menu() {
     echo ""
     echo -e "${YELLOW}Service Groups:${NC}"
     echo "  17) db (all databases)    18) cache (cache services)"
-    echo "  19) registry (registries) 20) all (all basic services)"
+    echo "  19) registry (registry services) 20) all (all basic services)"
     echo ""
     echo "   0) Back to main menu"
     echo ""
