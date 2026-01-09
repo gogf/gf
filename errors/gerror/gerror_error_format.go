@@ -23,7 +23,7 @@ func (err *Error) Format(s fmt.State, verb rune) {
 		switch {
 		case s.Flag('-'):
 			if err.text != "" {
-				_, _ = io.WriteString(s, err.text)
+				_, _ = io.WriteString(s, err.TextWithArgs())
 			} else {
 				_, _ = io.WriteString(s, err.Error())
 			}

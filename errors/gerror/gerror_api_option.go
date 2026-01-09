@@ -13,6 +13,7 @@ type Option struct {
 	Error error      // Wrapped error if any.
 	Stack bool       // Whether recording stack information into error.
 	Text  string     // Error text, which is created by New* functions.
+	Args  []any      // Error arguments for formatted error text.
 	Code  gcode.Code // Error code if necessary.
 }
 
@@ -22,6 +23,7 @@ func NewWithOption(option Option) error {
 	err := &Error{
 		error: option.Error,
 		text:  option.Text,
+		args:  option.Args,
 		code:  option.Code,
 	}
 	if option.Stack {
