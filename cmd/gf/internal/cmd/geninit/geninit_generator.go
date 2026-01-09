@@ -9,13 +9,13 @@ package geninit
 import (
 	"context"
 	"fmt"
+	"go/format"
 	"path/filepath"
 
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gstr"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
 // generateProject copies the template to the destination and performs cleanup
@@ -82,8 +82,10 @@ func generateProject(ctx context.Context, srcPath, name, oldModule, newModule st
 		}
 	}
 
-	// 6. Format the generated Go files
-	utils.GoFmt(dstPath)
+	// 6. Format the generated Go files using go/format (not imports.Process)
+	// Note: We use formatGoFiles instead of utils.GoFmt because imports.Process
+	// may incorrectly "fix" local import paths by replacing them with cached module paths.
+	formatGoFiles(dstPath)
 
 	mlog.Print("Project generated successfully!")
 	return nil
@@ -111,4 +113,34 @@ func upgradeDependencies(ctx context.Context, projectDir string) error {
 	}
 	mlog.Print("Dependencies upgraded successfully!")
 	return nil
+}
+
+// formatGoFiles formats all Go files in the directory using go/format.
+// Unlike imports.Process, this only formats code without modifying imports,
+// which prevents incorrect "fixing" of local import paths.
+func formatGoFiles(dir string) {
+	files, err := findGoFiles(dir)
+	if err != nil {
+		mlog.Printf("Failed to find Go files for formatting: %v", err)
+		return
+	}
+
+	for _, file := range files {
+		content := gfile.GetContents(file)
+		if content == "" {
+			continue
+		}
+
+		formatted, err := format.Source([]byte(content))
+		if err != nil {
+			mlog.Debugf("Failed to format %s: %v", file, err)
+			continue
+		}
+
+		if string(formatted) != content {
+			if err := gfile.PutContents(file, string(formatted)); err != nil {
+				mlog.Debugf("Failed to write formatted file %s: %v", file, err)
+			}
+		}
+	}
 }
