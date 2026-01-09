@@ -19,24 +19,24 @@
         <div class="header-center">
             <div class="remote-input-group">
                 <label for="remoteModuleInput" data-i18n="remoteModuleLabel">Module:</label>
-                <input type="text" id="remoteModuleInput" data-i18n-placeholder="remoteModulePlaceholder" placeholder="e.g. github.com/gogf/gf/v2">
-                <select id="versionSelect" disabled>
+                <input type="text" id="remoteModuleInput" data-i18n-placeholder="remoteModulePlaceholder" placeholder="e.g. github.com/gogf/gf/v2" data-i18n-title="remoteModuleTooltip">
+                <select id="versionSelect" disabled data-i18n-title="versionSelectTooltip">
                     <option value="" data-i18n="selectVersion">Select version</option>
                 </select>
-                <button class="btn btn-sm" id="analyzeBtn" onclick="analyzeRemoteModule()" data-i18n="analyze">Analyze</button>
-                <button class="btn btn-sm btn-secondary" id="resetBtn" onclick="resetToLocal()" data-i18n="resetLocal">Reset</button>
+                <button class="btn btn-sm" id="analyzeBtn" onclick="analyzeRemoteModule()" data-i18n="analyze" data-i18n-title="analyzeTooltip">Analyze</button>
+                <button class="btn btn-sm btn-secondary" id="resetBtn" onclick="resetToLocal()" data-i18n="resetLocal" data-i18n-title="resetTooltip">Reset</button>
                 <span class="loading-spinner hidden" id="loadingSpinner"></span>
             </div>
         </div>
         <div class="header-right">
             <div class="theme-switch">
-                <button class="icon-btn" id="themeToggle" title="Toggle theme">
+                <button class="icon-btn" id="themeToggle" data-i18n-title="themeTooltip">
                     <span class="icon-sun">☀️</span>
                     <span class="icon-moon">🌙</span>
                 </button>
             </div>
             <div class="lang-switch">
-                <select id="langSelect">
+                <select id="langSelect" data-i18n-title="langTooltip">
                     <option value="en">English</option>
                     <option value="zh">中文</option>
                 </select>
@@ -47,14 +47,14 @@
         <div class="control-group">
             <label data-i18n="viewLabel">View:</label>
             <div class="btn-group">
-                <button class="btn active" id="btnGraph" onclick="setView('graph')" data-i18n="viewGraph">Graph</button>
-                <button class="btn" id="btnTree" onclick="setView('tree')" data-i18n="viewTree">Tree</button>
-                <button class="btn" id="btnList" onclick="setView('list')" data-i18n="viewList">List</button>
+                <button class="btn active" id="btnGraph" onclick="setView('graph')" data-i18n="viewGraph" data-i18n-title="viewGraphTooltip">Graph</button>
+                <button class="btn" id="btnTree" onclick="setView('tree')" data-i18n="viewTree" data-i18n-title="viewTreeTooltip">Tree</button>
+                <button class="btn" id="btnList" onclick="setView('list')" data-i18n="viewList" data-i18n-title="viewListTooltip">List</button>
             </div>
         </div>
         <div class="control-group">
             <label data-i18n="depthLabel">Depth:</label>
-            <select id="depth" onchange="refresh()">
+            <select id="depth" onchange="refresh()" data-i18n-title="depthTooltip">
                 <option value="1">1</option>
                 <option value="2">2</option>
                 <option value="3" selected>3</option>
@@ -63,25 +63,33 @@
             </select>
         </div>
         <div class="control-group">
-            <input type="checkbox" id="reverse" onchange="refresh()">
+            <input type="checkbox" id="reverse" onchange="refresh()" data-i18n-title="reverseTooltip">
             <label for="reverse" data-i18n="reverseLabel">Reverse (show who uses)</label>
         </div>
         <div class="control-group">
-            <input type="checkbox" id="group" onchange="refresh()">
+            <input type="checkbox" id="group" onchange="refresh()" data-i18n-title="groupTooltip">
             <label for="group" data-i18n="groupLabel">Group by directory</label>
         </div>
         <div class="control-group">
-            <input type="checkbox" id="internal" checked onchange="refresh()">
+            <input type="checkbox" id="internal" checked onchange="refresh()" data-i18n-title="internalTooltip">
             <label for="internal" data-i18n="internalLabel">Internal only</label>
+        </div>
+        <div class="control-group">
+            <input type="checkbox" id="external" onchange="refresh()" data-i18n-title="externalTooltip">
+            <label for="external" data-i18n="externalLabel">External packages</label>
+        </div>
+        <div class="control-group">
+            <input type="checkbox" id="mainOnly" onchange="refresh()" data-i18n-title="mainOnlyTooltip">
+            <label for="mainOnly" data-i18n="mainOnlyLabel">Main module only</label>
         </div>
         <div class="control-group graph-only" id="layoutGroup">
             <label data-i18n="layoutLabel">Layout:</label>
             <div class="btn-group">
-                <button class="btn active" id="layoutTD" onclick="setLayout('TD')" data-i18n="layoutTD">Top-Down</button>
-                <button class="btn" id="layoutLR" onclick="setLayout('LR')" data-i18n="layoutLR">Left-Right</button>
+                <button class="btn active" id="layoutTD" onclick="setLayout('TD')" data-i18n="layoutTD" data-i18n-title="layoutTDTooltip">Top-Down</button>
+                <button class="btn" id="layoutLR" onclick="setLayout('LR')" data-i18n="layoutLR" data-i18n-title="layoutLRTooltip">Left-Right</button>
             </div>
         </div>
-        <button class="btn btn-secondary" onclick="clearSelection()" data-i18n="showAll">Show All</button>
+        <button class="btn btn-secondary" onclick="clearSelection()" data-i18n="showAll" data-i18n-title="showAllTooltip">Show All</button>
     </div>
     <div class="main-content">
         <div class="sidebar">
@@ -91,12 +99,12 @@
                     <span class="count" id="packageCount">0</span>
                 </div>
                 <div class="sidebar-mode">
-                    <button class="mode-btn" id="modeFlat" onclick="setPackageListMode('flat')" title="Flat list">☰</button>
-                    <button class="mode-btn active" id="modeTree" onclick="setPackageListMode('tree')" title="Tree view">🌲</button>
+                    <button class="mode-btn" id="modeFlat" onclick="setPackageListMode('flat')" data-i18n-title="flatModeTooltip">☰</button>
+                    <button class="mode-btn active" id="modeTree" onclick="setPackageListMode('tree')" data-i18n-title="treeModeTooltip">🌲</button>
                 </div>
             </div>
             <div class="search-box">
-                <input type="text" id="searchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search packages..." oninput="filterPackages()">
+                <input type="text" id="searchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search packages..." oninput="filterPackages()" data-i18n-title="searchTooltip">
             </div>
             <div class="package-list" id="packageList"></div>
         </div>
@@ -109,6 +117,18 @@
                 <div class="stat-card">
                     <div class="value" id="edgeCount">0</div>
                     <div class="label" data-i18n="statsDependencies">Dependencies</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="internalCount">0</div>
+                    <div class="label" data-i18n="statsInternal">Internal</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="externalCount">0</div>
+                    <div class="label" data-i18n="statsExternal">External</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="stdlibCount">0</div>
+                    <div class="label" data-i18n="statsStdlib">Stdlib</div>
                 </div>
                 <div class="package-info" id="packageInfo">
                     <div class="package-info-content" id="packageInfoContent"></div>
@@ -126,10 +146,10 @@
         </div>
     </div>
     <div class="zoom-controls" id="zoomControls">
-        <button class="zoom-btn" onclick="zoomIn()" title="Zoom in">+</button>
-        <button class="zoom-btn" onclick="zoomOut()" title="Zoom out">−</button>
-        <button class="zoom-btn" onclick="fitToScreen()" title="Fit to screen">⊡</button>
-        <button class="zoom-btn" onclick="resetZoom()" title="Reset zoom">⟲</button>
+        <button class="zoom-btn" onclick="zoomIn()" data-i18n-title="zoomInTooltip">+</button>
+        <button class="zoom-btn" onclick="zoomOut()" data-i18n-title="zoomOutTooltip">−</button>
+        <button class="zoom-btn" onclick="fitToScreen()" data-i18n-title="fitToScreenTooltip">⊡</button>
+        <button class="zoom-btn" onclick="resetZoom()" data-i18n-title="resetZoomTooltip">⟲</button>
     </div>
     <script src="/static/i18n.js"></script>
     <script src="/static/app.js"></script>

@@ -27,6 +27,7 @@ func (a *analyzer) generate(in Input) string {
 	case "json":
 		return a.generateJSON(in)
 	default:
+		// Default to tree format
 		return a.generateTree(in)
 	}
 }
@@ -34,6 +35,24 @@ func (a *analyzer) generate(in Input) string {
 // generateTree generates ASCII tree output.
 func (a *analyzer) generateTree(in Input) string {
 	var sb strings.Builder
+
+	// Add statistics header if showing external dependencies
+	if in.External {
+		stats := a.getDependencyStats(in)
+		sb.WriteString("Dependency Statistics:\n")
+		fmt.Fprintf(&sb, "  Total packages: %v\n", stats["total"])
+		fmt.Fprintf(&sb, "  Internal: %v\n", stats["internal"])
+		fmt.Fprintf(&sb, "  External: %v\n", stats["external"])
+		fmt.Fprintf(&sb, "  Standard library: %v\n", stats["stdlib"])
+		
+		if groups, ok := stats["external_groups"].(map[string]int); ok && len(groups) > 0 {
+			sb.WriteString("  External groups:\n")
+			for group, count := range groups {
+				fmt.Fprintf(&sb, "    %s: %d\n", group, count)
+			}
+		}
+		sb.WriteString("\nDependency Tree:\n")
+	}
 
 	// Find root packages (packages that are not imported by any other package)
 	rootPkgs := a.findRootPackages()
@@ -43,9 +62,11 @@ func (a *analyzer) generateTree(in Input) string {
 
 	for _, pkgPath := range rootPkgs {
 		pkg := a.packages[pkgPath]
-		shortName := a.shortName(pkg.ImportPath, in.Group)
-		sb.WriteString(shortName + "\n")
-		a.printTreeNode(&sb, pkg, "", in, 0)
+		if a.shouldInclude(pkg.ImportPath, in) {
+			shortName := a.shortName(pkg.ImportPath, in.Group)
+			sb.WriteString(shortName + "\n")
+			a.printTreeNode(&sb, pkg, "", in, 0)
+		}
 	}
 	return sb.String()
 }
@@ -82,6 +103,7 @@ func (a *analyzer) printTreeNode(sb *strings.Builder, pkg *goPackage, prefix str
 		return
 	}
 
+	// filterDeps already applies all filtering including main-only
 	deps := a.filterDeps(pkg.Imports, in)
 	sort.Strings(deps)
 
@@ -117,13 +139,36 @@ func (a *analyzer) printTreeNode(sb *strings.Builder, pkg *goPackage, prefix str
 // generateList generates simple list output.
 func (a *analyzer) generateList(in Input) string {
 	var sb strings.Builder
+	
+	// Add statistics header if showing external dependencies
+	if in.External {
+		stats := a.getDependencyStats(in)
+		sb.WriteString("# Dependency Statistics\n")
+		fmt.Fprintf(&sb, "# Total: %v, Internal: %v, External: %v, Stdlib: %v\n", 
+			stats["total"], stats["internal"], stats["external"], stats["stdlib"])
+		sb.WriteString("\n")
+	}
+
+	// Debug mainOnly state
+	// sb.WriteString(fmt.Sprintf("# DEBUG mainOnly=%v\\n", in.MainOnly))
+	
 	allDeps := make(map[string]bool)
 
+	// Collect dependencies from packages that should be included
 	for _, pkg := range a.packages {
-		for _, dep := range a.filterDeps(pkg.Imports, in) {
-			allDeps[dep] = true
+		if a.shouldInclude(pkg.ImportPath, in) {
+			// Collect dependencies (filterDeps already applies all filtering including main-only)
+			for _, dep := range a.filterDeps(pkg.Imports, in) {
+				allDeps[dep] = true
+			}
+		}
+		
+		// Additionally, keep the package itself when it passes main-only check
+		if in.MainOnly && a.isModuleRootPackage(pkg.ImportPath) && a.shouldInclude(pkg.ImportPath, in) {
+			allDeps[pkg.ImportPath] = true
 		}
 	}
+
 
 	deps := make([]string, 0, len(allDeps))
 	for dep := range allDeps {
@@ -201,15 +246,36 @@ func (a *analyzer) generateDot(in Input) string {
 
 // generateJSON generates JSON output.
 func (a *analyzer) generateJSON(in Input) string {
+	result := make(map[string]any)
+	
+	// Add dependency nodes
 	nodes := make([]*depNode, 0)
 	for _, pkgPath := range a.getSortedPackages() {
 		pkg := a.packages[pkgPath]
-		a.visited = make(map[string]bool)
-		node := a.buildDepNode(pkg, in, 0)
-		nodes = append(nodes, node)
+		if a.shouldInclude(pkg.ImportPath, in) {
+			a.visited = make(map[string]bool)
+			node := a.buildDepNode(pkg, in, 0)
+			nodes = append(nodes, node)
+		}
 	}
-
-	data, err := json.MarshalIndent(nodes, "", "  ")
+	result["dependencies"] = nodes
+	
+	// Add statistics
+	result["statistics"] = a.getDependencyStats(in)
+	
+	// Add metadata
+	result["metadata"] = map[string]any{
+		"module":   a.modulePrefix,
+		"format":   in.Format,
+		"depth":    in.Depth,
+		"group":    in.Group,
+		"internal": in.Internal,
+		"external": in.External,
+		"nostd":    in.NoStd,
+		"main":     in.MainOnly,
+	}
+	
+	data, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
 		return fmt.Sprintf("Error: %v", err)
 	}

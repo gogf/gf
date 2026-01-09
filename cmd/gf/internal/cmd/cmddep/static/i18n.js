@@ -23,6 +23,11 @@ const i18n = {
             reverseLabel: 'Reverse (show who uses)',
             groupLabel: 'Group by directory',
             internalLabel: 'Internal only',
+            externalLabel: 'External packages',
+            mainOnlyLabel: 'Main module only',
+            statsInternal: 'Internal',
+            statsExternal: 'External',
+            statsStdlib: 'Stdlib',
             layoutLabel: 'Layout:',
             layoutTD: 'Top-Down',
             layoutLR: 'Left-Right',
@@ -47,7 +52,32 @@ const i18n = {
             latestVersion: 'Latest',
             errorFetchVersions: 'Failed to fetch versions',
             errorAnalyze: 'Failed to analyze module',
-            packageDetails: 'Package Details'
+            packageDetails: 'Package Details',
+            viewGraphTooltip: 'Visualize dependencies as a directed graph',
+            viewTreeTooltip: 'Show dependencies in a hierarchical tree structure',
+            viewListTooltip: 'Display dependencies as a text list',
+            depthTooltip: 'Limit dependency traversal depth',
+            reverseTooltip: 'Show reverse dependencies (who uses the selected package)',
+            groupTooltip: 'Group packages by directory structure',
+            internalTooltip: 'Show only internal packages from current module',
+            externalTooltip: 'Include external dependency packages',
+            mainOnlyTooltip: 'Show only main module packages (exclude vendor)',
+            layoutTDTooltip: 'Top-down layout for dependency graph',
+            layoutLRTooltip: 'Left-right layout for dependency graph',
+            showAllTooltip: 'Clear package selection and show all packages',
+            analyzeTooltip: 'Analyze remote Go module dependencies',
+            resetTooltip: 'Reset to local module analysis',
+            themeTooltip: 'Toggle light/dark theme',
+            langTooltip: 'Select language',
+            flatModeTooltip: 'Flat list view',
+            treeModeTooltip: 'Tree view',
+            zoomInTooltip: 'Zoom in',
+            zoomOutTooltip: 'Zoom out',
+            fitToScreenTooltip: 'Fit to screen',
+            resetZoomTooltip: 'Reset zoom',
+            remoteModuleTooltip: 'Enter a remote Go module path to analyze',
+            versionSelectTooltip: 'Select module version (optional)',
+            searchTooltip: 'Search packages by name'
         },
         zh: {
             title: 'Go 包依赖分析',
@@ -69,6 +99,11 @@ const i18n = {
             reverseLabel: '反向依赖 (谁引用了它)',
             groupLabel: '按目录分组',
             internalLabel: '仅内部包',
+            externalLabel: '外部依赖包',
+            mainOnlyLabel: '仅主模块',
+            statsInternal: '内部',
+            statsExternal: '外部',
+            statsStdlib: '标准库',
             layoutLabel: '布局:',
             layoutTD: '从上到下',
             layoutLR: '从左到右',
@@ -93,7 +128,32 @@ const i18n = {
             latestVersion: '最新版本',
             errorFetchVersions: '获取版本失败',
             errorAnalyze: '分析模块失败',
-            packageDetails: '包详情'
+            packageDetails: '包详情',
+            viewGraphTooltip: '以有向图形式可视化依赖关系',
+            viewTreeTooltip: '以层次树结构显示依赖关系',
+            viewListTooltip: '以文本列表形式显示依赖关系',
+            depthTooltip: '限制依赖遍历的深度',
+            reverseTooltip: '显示反向依赖（谁引用了选中的包）',
+            groupTooltip: '按目录结构分组显示包',
+            internalTooltip: '仅显示当前模块的内部包',
+            externalTooltip: '包含外部依赖包',
+            mainOnlyTooltip: '仅显示主模块包（排除vendor目录）',
+            layoutTDTooltip: '依赖图从上到下布局',
+            layoutLRTooltip: '依赖图从左到右布局',
+            showAllTooltip: '清除包选择，显示所有包',
+            analyzeTooltip: '分析远程Go模块依赖',
+            resetTooltip: '重置为本地模块分析',
+            themeTooltip: '切换明暗主题',
+            langTooltip: '选择语言',
+            flatModeTooltip: '平铺列表视图',
+            treeModeTooltip: '树形视图',
+            zoomInTooltip: '放大',
+            zoomOutTooltip: '缩小',
+            fitToScreenTooltip: '适应屏幕',
+            resetZoomTooltip: '重置缩放',
+            remoteModuleTooltip: '输入远程Go模块路径进行分析',
+            versionSelectTooltip: '选择模块版本（可选）',
+            searchTooltip: '按名称搜索包'
         }
     },
     
@@ -145,6 +205,12 @@ const i18n = {
         document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
             const key = el.getAttribute('data-i18n-placeholder');
             el.placeholder = this.t(key);
+        });
+        
+        // Update title attributes
+        document.querySelectorAll('[data-i18n-title]').forEach(el => {
+            const key = el.getAttribute('data-i18n-title');
+            el.title = this.t(key);
         });
         
         // Update page title

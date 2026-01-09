@@ -37,9 +37,15 @@ gf dep -f json -d 0
 gf dep -g
 gf dep -r
 gf dep -i=false
+gf dep -e
+gf dep -e -i=false
+gf dep -m
+gf dep -m -e
 gf dep -s
 gf dep -s -p 8080
 gf dep ./internal/... -f tree -d 2
+gf dep --external --group -f mermaid
+gf dep --main --external -f json
 `
 )
 
@@ -58,6 +64,8 @@ type Input struct {
 	Depth    int    `name:"depth"    short:"d" brief:"dependency depth limit, 0 means unlimited" d:"3"`
 	Group    bool   `name:"group"    short:"g" brief:"group by top-level directory" d:"false"`
 	Internal bool   `name:"internal" short:"i" brief:"show only internal packages" d:"true"`
+	External bool   `name:"external" short:"e" brief:"show external packages" d:"false"`
+	MainOnly bool   `name:"main"     short:"m" brief:"analyze only main module packages (exclude submodules)" d:"false"`
 	NoStd    bool   `name:"nostd"    short:"n" brief:"exclude standard library" d:"true"`
 	Reverse  bool   `name:"reverse"  short:"r" brief:"show reverse dependencies" d:"false"`
 	Serve    bool   `name:"serve"    short:"s" brief:"start HTTP server to view dependencies" d:"false" orphan:"true"`

@@ -65,6 +65,7 @@ const theme = {
         mermaid.initialize({
             startOnLoad: false,
             theme: this.current === 'dark' ? 'dark' : 'default',
+            maxEdges: 2000,  // Increase edge limit for large dependency graphs
             flowchart: {
                 useMaxWidth: false,
                 htmlLabels: true,
@@ -82,6 +83,7 @@ const theme = {
 mermaid.initialize({
     startOnLoad: false,
     theme: 'default',
+    maxEdges: 2000,  // Increase edge limit for large dependency graphs
     flowchart: {
         useMaxWidth: false,
         htmlLabels: true,
@@ -407,12 +409,43 @@ async function loadModuleName() {
 async function loadPackages() {
     try {
         const internal = document.getElementById('internal').checked;
-        const response = await fetch(`/api/packages?internal=${internal}`);
-        allPackages = await response.json();
+        const external = document.getElementById('external') ? document.getElementById('external').checked : false;
+        const mainOnly = document.getElementById('mainOnly') ? document.getElementById('mainOnly').checked : false;
+        const response = await fetch(`/api/packages?internal=${internal}&external=${external}&main=${mainOnly}`);
+        const data = await response.json();
+        
+        // Handle new API response format with packages and statistics
+        if (data.packages && Array.isArray(data.packages)) {
+            allPackages = data.packages;
+            // Update statistics display if available
+            if (data.statistics) {
+                updateStatisticsDisplay(data.statistics);
+            }
+        } else if (Array.isArray(data)) {
+            // Fallback for old format
+            allPackages = data;
+        } else {
+            console.error('Unexpected API response format:', data);
+            allPackages = [];
+        }
+        
         document.getElementById('packageCount').textContent = allPackages.length;
         renderPackageList(allPackages);
     } catch (e) {
         console.error('Failed to load packages:', e);
+    }
+}
+
+// Update statistics display
+function updateStatisticsDisplay(statistics) {
+    if (statistics) {
+        document.getElementById('internalCount').textContent = statistics.internal || 0;
+        document.getElementById('externalCount').textContent = statistics.external || 0;
+        document.getElementById('stdlibCount').textContent = statistics.stdlib || 0;
+        
+        // Update total count
+        const totalCount = statistics.total || (statistics.internal + statistics.external + statistics.stdlib);
+        document.getElementById('nodeCount').textContent = totalCount;
     }
 }
 
@@ -644,6 +677,8 @@ async function refresh() {
     const group = document.getElementById('group').checked;
     const reverse = document.getElementById('reverse').checked;
     const internal = document.getElementById('internal').checked;
+    const external = document.getElementById('external') ? document.getElementById('external').checked : false;
+    const mainOnly = document.getElementById('mainOnly') ? document.getElementById('mainOnly').checked : false;
 
     if (selectedPackage) {
         await showPackageInfo(selectedPackage);
@@ -652,11 +687,11 @@ async function refresh() {
     }
 
     if (currentView === 'graph') {
-        await refreshGraph(depth, group, reverse, internal);
+        await refreshGraph(depth, group, reverse, internal, external, mainOnly);
     } else if (currentView === 'tree') {
-        await refreshTree(depth, internal);
+        await refreshTree(depth, internal, external, mainOnly);
     } else {
-        await refreshList(internal);
+        await refreshList(internal, external, mainOnly);
     }
 }
 
@@ -689,7 +724,7 @@ async function showPackageInfo(pkg) {
 }
 
 // Refresh graph view
-async function refreshGraph(depth, group, reverse, internal) {
+async function refreshGraph(depth, group, reverse, internal, external, mainOnly) {
     document.getElementById('graphView').classList.remove('hidden');
     document.getElementById('textView').classList.add('hidden');
 
@@ -700,6 +735,12 @@ async function refreshGraph(depth, group, reverse, internal) {
     applyTransform();
 
     let url = `/api/graph?depth=${depth}&group=${group}&reverse=${reverse}&internal=${internal}`;
+    if (external !== undefined) {
+        url += `&external=${external}`;
+    }
+    if (mainOnly !== undefined) {
+        url += `&main=${mainOnly}`;
+    }
     if (selectedPackage) {
         url += '&package=' + encodeURIComponent(selectedPackage);
     }
@@ -774,11 +815,17 @@ function autoFitGraph() {
 }
 
 // Refresh tree view
-async function refreshTree(depth, internal) {
+async function refreshTree(depth, internal, external, mainOnly) {
     document.getElementById('graphView').classList.add('hidden');
     document.getElementById('textView').classList.remove('hidden');
 
     let url = `/api/tree?depth=${depth}&internal=${internal}`;
+    if (external !== undefined) {
+        url += `&external=${external}`;
+    }
+    if (mainOnly !== undefined) {
+        url += `&main=${mainOnly}`;
+    }
     if (selectedPackage) {
         url += '&package=' + encodeURIComponent(selectedPackage);
     }
@@ -797,11 +844,17 @@ async function refreshTree(depth, internal) {
 }
 
 // Refresh list view
-async function refreshList(internal) {
+async function refreshList(internal, external, mainOnly) {
     document.getElementById('graphView').classList.add('hidden');
     document.getElementById('textView').classList.remove('hidden');
 
     let url = `/api/list?internal=${internal}`;
+    if (external !== undefined) {
+        url += `&external=${external}`;
+    }
+    if (mainOnly !== undefined) {
+        url += `&main=${mainOnly}`;
+    }
     if (selectedPackage) {
         url += '&package=' + encodeURIComponent(selectedPackage);
     }

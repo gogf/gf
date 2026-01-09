@@ -174,6 +174,12 @@ func (a *analyzer) handleGraphAPI(w http.ResponseWriter, r *http.Request, in Inp
 	if i := query.Get("internal"); i != "" {
 		in.Internal = i == "true"
 	}
+	if e := query.Get("external"); e != "" {
+		in.External = e == "true"
+	}
+	if m := query.Get("main"); m != "" {
+		in.MainOnly = m == "true"
+	}
 	pkg := query.Get("package")
 
 	var data *graphData
@@ -192,10 +198,19 @@ func (a *analyzer) handlePackagesAPI(w http.ResponseWriter, r *http.Request, in 
 	if i := query.Get("internal"); i != "" {
 		in.Internal = i == "true"
 	}
+	if e := query.Get("external"); e != "" {
+		in.External = e == "true"
+	}
+	if m := query.Get("main"); m != "" {
+		in.MainOnly = m == "true"
+	}
 
 	// Build reverse dependency map (who uses each package)
 	usedByMap := make(map[string]int)
 	for fullPath, pkg := range a.packages {
+		if !a.shouldInclude(fullPath, in) {
+			continue
+		}
 		fromShort := a.shortName(fullPath, false)
 		if fromShort == "" {
 			continue
@@ -210,6 +225,9 @@ func (a *analyzer) handlePackagesAPI(w http.ResponseWriter, r *http.Request, in 
 
 	packages := make([]packageSummary, 0)
 	for _, pkgPath := range a.getSortedPackages() {
+		if !a.shouldInclude(pkgPath, in) {
+			continue
+		}
 		shortName := a.shortName(pkgPath, false)
 		if shortName == "" {
 			continue
@@ -232,8 +250,15 @@ func (a *analyzer) handlePackagesAPI(w http.ResponseWriter, r *http.Request, in 
 			UsedByCount: usedByMap[shortName],
 		})
 	}
+	
+	// Add statistics to response
+	result := map[string]any{
+		"packages":   packages,
+		"statistics": a.getDependencyStats(in),
+	}
+	
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(packages)
+	json.NewEncoder(w).Encode(result)
 }
 
 // handlePackageAPI returns detailed info for a specific package.
@@ -303,6 +328,12 @@ func (a *analyzer) handleTreeAPI(w http.ResponseWriter, r *http.Request, in Inpu
 	if i := query.Get("internal"); i != "" {
 		in.Internal = i == "true"
 	}
+	if e := query.Get("external"); e != "" {
+		in.External = e == "true"
+	}
+	if m := query.Get("main"); m != "" {
+		in.MainOnly = m == "true"
+	}
 	pkg := query.Get("package")
 
 	var output string
@@ -321,6 +352,12 @@ func (a *analyzer) handleListAPI(w http.ResponseWriter, r *http.Request, in Inpu
 	query := r.URL.Query()
 	if i := query.Get("internal"); i != "" {
 		in.Internal = i == "true"
+	}
+	if e := query.Get("external"); e != "" {
+		in.External = e == "true"
+	}
+	if m := query.Get("main"); m != "" {
+		in.MainOnly = m == "true"
 	}
 	pkg := query.Get("package")
 
