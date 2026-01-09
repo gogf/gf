@@ -56,6 +56,7 @@ type PackageInfo struct {
 	Imports      []string     // Direct imports of this package
 	IsStdLib     bool         // Standard library marker (from go list)
 	IsModuleRoot bool         // Is this the root package of its module
+	IsMainModule bool         // Is this package from the main module (not a submodule)
 }
 
 // FilterOptions represents filtering criteria for dependency analysis.
@@ -320,6 +321,11 @@ func (opts *FilterOptions) Normalize(modulePrefix string) error {
 
 // ShouldInclude determines if a package should be included based on filter options.
 func (opts *FilterOptions) ShouldInclude(pkg *PackageInfo) bool {
+	// Filter by main module only (exclude submodules)
+	if opts.MainModuleOnly && !pkg.IsMainModule {
+		return false
+	}
+	
 	// Filter by kind
 	switch pkg.Kind {
 	case KindStdLib:
@@ -633,10 +639,11 @@ func (a *analyzer) buildPackageStore() *PackageStore {
 	// Convert go packages to PackageInfo
 	for path, goPkg := range a.packages {
 		pkgInfo := &PackageInfo{
-			ImportPath: path,
-			ModulePath: goPkg.Module.Path,
-			IsStdLib:   goPkg.Standard,
-			Imports:    goPkg.Imports,
+			ImportPath:   path,
+			ModulePath:   goPkg.Module.Path,
+			IsStdLib:     goPkg.Standard,
+			Imports:      goPkg.Imports,
+			IsMainModule: a.isMainModulePackage(path),
 		}
 		pkgInfo.Kind = store.identifyPackageKind(pkgInfo)
 		store.packages[path] = pkgInfo
