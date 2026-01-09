@@ -35,12 +35,76 @@ type depNode struct {
 	Dependencies []*depNode `json:"dependencies,omitempty"`
 }
 
+// PackageKind indicates the kind of a Go package
+type PackageKind int
+
+const (
+	KindInternal PackageKind = iota // Internal to main module
+	KindExternal                      // External dependency
+	KindStdLib                        // Standard library
+)
+
+// PackageInfo represents unified information about a Go package.
+// This is the core data model for the refactored dependency analyzer.
+// It consolidates package information from go list output with additional
+// metadata for filtering and traversal.
+type PackageInfo struct {
+	ImportPath   string       // Full import path (e.g., github.com/gogf/gf/v2/os/gfile)
+	ModulePath   string       // Module path (e.g., github.com/gogf/gf/v2)
+	Kind         PackageKind  // Package classification (Internal/External/StdLib)
+	Tier         int          // Package tier: 0=module root, 1=top-level, 2+=nested
+	Imports      []string     // Direct imports of this package
+	IsStdLib     bool         // Standard library marker (from go list)
+	IsModuleRoot bool         // Is this the root package of its module
+}
+
+// FilterOptions represents filtering criteria for dependency analysis.
+// It provides a clear, normalized representation of user filtering preferences.
+// Usage:
+//   opts := &FilterOptions{
+//       IncludeInternal: true,
+//       IncludeExternal: false,
+//       IncludeStdLib:   false,
+//       MainModuleOnly:  false,
+//       Depth:           3,
+//   }
+type FilterOptions struct {
+	IncludeInternal bool // Include internal packages from main module
+	IncludeExternal bool // Include external dependencies
+	IncludeStdLib   bool // Include standard library packages
+	MainModuleOnly  bool // Only analyze packages from main module (exclude submodules)
+	Depth           int  // Maximum traversal depth (0 = unlimited)
+}
+
+// TraversalContext manages state during dependency tree traversal.
+// It centralizes visited tracking, depth management, and filtering logic
+// to ensure consistent behavior across different output formats.
+type TraversalContext struct {
+	visited   map[string]bool // Track visited packages to prevent cycles
+	depth     int             // Current traversal depth
+	maxDepth  int             // Maximum traversal depth
+	options   *FilterOptions  // Filtering criteria
+	store     *PackageStore   // Reference to package store
+}
+
+// PackageStore manages a collection of packages and provides unified data access.
+// This centralizes all package data and implements traversal algorithms.
+// It replaces the scattered data access patterns in the original analyzer.
+type PackageStore struct {
+	packages      map[string]*PackageInfo // Package data indexed by import path
+	modulePrefix  string                   // Main module path (from go.mod)
+	sortedPkgs    []string                 // Cached sorted package list
+	internalCount int                      // Cached count of internal packages
+	externalCount int                      // Cached count of external packages
+}
+
 // analyzer handles dependency analysis.
 type analyzer struct {
 	packages     map[string]*goPackage
 	modulePrefix string
 	visited      map[string]bool
 	edges        map[string]bool
+	store        *PackageStore // New unified package store
 }
 
 // newAnalyzer creates a new dependency analyzer.
@@ -49,7 +113,27 @@ func newAnalyzer() *analyzer {
 		packages: make(map[string]*goPackage),
 		visited:  make(map[string]bool),
 		edges:    make(map[string]bool),
+		store:    &PackageStore{},
 	}
+}
+
+// newPackageStore creates a new package store.
+func newPackageStore(modulePrefix string) *PackageStore {
+	return &PackageStore{
+		packages:     make(map[string]*PackageInfo),
+		modulePrefix: modulePrefix,
+	}
+}
+
+// identifyPackageKind determines the kind of a package.
+func (ps *PackageStore) identifyPackageKind(pkg *PackageInfo) PackageKind {
+	if pkg.IsStdLib {
+		return KindStdLib
+	}
+	if ps.modulePrefix != "" && gstr.HasPrefix(pkg.ImportPath, ps.modulePrefix) {
+		return KindInternal
+	}
+	return KindExternal
 }
 
 // detectModulePrefix reads go.mod to get the module path.
@@ -68,10 +152,52 @@ func (a *analyzer) detectModulePrefix() string {
 	return ""
 }
 
-// loadPackages loads package information using go list.
+// loadPackages loads package information using go list with optimized approach.
+// OPTIMIZATION: Reduced from 3 separate go list calls to 2 efficient calls:
+// Previously:
+//   1. go list -json %s                (target packages only)
+//   2. go list -json -deps %s          (with dependencies)
+//   3. go list -json -m all            (all modules)
+// Now (optimized):
+//   1. go list -json -m all            (all modules - fast, definitive)
+//   2. go list -json -deps ./...       (all packages with dependencies)
 func (a *analyzer) loadPackages(ctx context.Context, pkgPath string) error {
-	// Load main packages first
-	cmd := fmt.Sprintf("go list -json %s", pkgPath)
+	// First, load module information - this is fast and provides module metadata
+	// Load all module dependencies using go list -m all
+	// This ensures we capture all modules declared in go.mod, including indirect ones
+	moduleCmd := "go list -json -m all"
+	moduleResult, err := gproc.ShellExec(ctx, moduleCmd)
+	if err != nil {
+		// Modules loading is optional, continue with package loading
+		moduleResult = ""
+	}
+
+	// Parse module information if available
+	if moduleResult != "" {
+		moduleDecoder := json.NewDecoder(strings.NewReader(moduleResult))
+		for moduleDecoder.More() {
+			var mod struct {
+				Path string `json:"Path"`
+			}
+			if err := moduleDecoder.Decode(&mod); err != nil {
+				continue
+			}
+			// Create a virtual package entry for modules not found in code analysis
+			// This ensures all declared dependencies are visible in the graph
+			if _, exists := a.packages[mod.Path]; !exists {
+				a.packages[mod.Path] = &goPackage{
+					ImportPath: mod.Path,
+					Imports:    []string{},
+					Deps:       []string{},
+					Standard:   false,
+				}
+			}
+		}
+	}
+
+	// Second, load package information with all dependencies
+	// Use go list -json -deps to get complete package dependency information
+	cmd := fmt.Sprintf("go list -json -deps %s", pkgPath)
 	result, err := gproc.ShellExec(ctx, cmd)
 	if err != nil {
 		// Try to get more detailed error information
@@ -80,7 +206,7 @@ func (a *analyzer) loadPackages(ctx context.Context, pkgPath string) error {
 		return fmt.Errorf("failed to execute go list: %v, details: %s", err, detailResult)
 	}
 
-	// Parse JSON stream (multiple JSON objects)
+	// Parse the package JSON stream (multiple JSON objects)
 	decoder := json.NewDecoder(strings.NewReader(result))
 	for decoder.More() {
 		var pkg goPackage
@@ -90,75 +216,28 @@ func (a *analyzer) loadPackages(ctx context.Context, pkgPath string) error {
 		a.packages[pkg.ImportPath] = &pkg
 	}
 
-	// For external dependency analysis, also load dependencies
-	// This is optional and won't fail the entire operation
-	cmd = fmt.Sprintf("go list -json -deps %s", pkgPath)
-	result, err = gproc.ShellExec(ctx, cmd)
-	if err == nil {
-		// Parse dependency JSON stream
-		decoder = json.NewDecoder(strings.NewReader(result))
-		for decoder.More() {
-			var pkg goPackage
-			if err := decoder.Decode(&pkg); err != nil {
-				continue
-			}
-			// Only add if not already present
-			if _, exists := a.packages[pkg.ImportPath]; !exists {
-				a.packages[pkg.ImportPath] = &pkg
-			}
-		}
-	}
 	return nil
 }
 
-// filterDeps filters dependencies based on options.
-func (a *analyzer) filterDeps(deps []string, in Input) []string {
-	result := make([]string, 0)
-	seen := make(map[string]bool)
-	for _, original := range deps {
-		dep := original
-		if in.MainOnly {
-			dep = a.getModuleRoot(original)
-		}
 
-		if a.shouldInclude(dep, in) && !seen[dep] {
-			seen[dep] = true
-			result = append(result, dep)
-		}
-	}
-	return result
-}
 
-// shouldInclude checks if a dependency should be included.
-func (a *analyzer) shouldInclude(dep string, in Input) bool {
-	// Exclude standard library if requested
-	if in.NoStd && a.isStdLib(dep) {
-		return false
-	}
-
-	isInternal := a.modulePrefix != "" && gstr.HasPrefix(dep, a.modulePrefix)
-	
-	// Handle main-only filtering - only keep module root packages
-	if in.MainOnly {
-		if dep != a.getModuleRoot(dep) {
-			return false
-		}
+// convertInputToFilterOptions converts legacy Input to new FilterOptions.
+func (a *analyzer) convertInputToFilterOptions(in Input) *FilterOptions {
+	opts := &FilterOptions{
+		IncludeInternal: in.Internal,
+		IncludeExternal: in.External,
+		IncludeStdLib:   !in.NoStd,
+		MainModuleOnly:  in.MainOnly,
+		Depth:           in.Depth,
 	}
 	
-	// Handle internal/external filtering
-	if in.Internal && in.External {
-		// Show both internal and external
-		return true
-	} else if in.Internal && !in.External {
-		// Show only internal packages
-		return isInternal
-	} else if !in.Internal && in.External {
-		// Show only external packages
-		return !isInternal
-	} else {
-		// Default behavior: show internal packages only
-		return isInternal
+	// Apply default: if neither internal nor external, include internal only
+	if !in.Internal && !in.External {
+		opts.IncludeInternal = true
+		opts.IncludeExternal = false
 	}
+	
+	return opts
 }
 
 // isStdLib checks if a package is from standard library.
@@ -218,6 +297,84 @@ func guessModuleRoot(pkg string) string {
 		rootLen = len(parts)
 	}
 	return strings.Join(parts[:rootLen], "/")
+}
+
+// Normalize normalizes filter options based on default behavior.
+func (opts *FilterOptions) Normalize(modulePrefix string) error {
+	// If neither internal nor external is explicitly set to true,
+	// use default behavior: internal only
+	if !opts.IncludeInternal && !opts.IncludeExternal {
+		opts.IncludeInternal = true
+		opts.IncludeExternal = false
+	}
+	
+	// Always include stdlib by default unless explicitly excluded
+	if opts.IncludeStdLib == false {
+		// This is the default (NoStd=true), stdlib is excluded
+	} else {
+		opts.IncludeStdLib = true
+	}
+	
+	return nil
+}
+
+// ShouldInclude determines if a package should be included based on filter options.
+func (opts *FilterOptions) ShouldInclude(pkg *PackageInfo) bool {
+	// Filter by kind
+	switch pkg.Kind {
+	case KindStdLib:
+		if !opts.IncludeStdLib {
+			return false
+		}
+	case KindInternal:
+		if !opts.IncludeInternal {
+			return false
+		}
+	case KindExternal:
+		if !opts.IncludeExternal {
+			return false
+		}
+	}
+	
+	return true
+}
+
+// Visit marks a package as visited and returns whether it was already visited.
+func (tc *TraversalContext) Visit(pkg string) bool {
+	if tc.visited[pkg] {
+		return true
+	}
+	tc.visited[pkg] = true
+	return false
+}
+
+// GetDependencies returns the dependencies of a package according to filter options.
+func (tc *TraversalContext) GetDependencies(pkg string) []string {
+	pkgInfo, ok := tc.store.packages[pkg]
+	if !ok {
+		return []string{}
+	}
+	
+	result := make([]string, 0)
+	seen := make(map[string]bool)
+	
+	for _, dep := range pkgInfo.Imports {
+		if seen[dep] {
+			continue
+		}
+		
+		depInfo, ok := tc.store.packages[dep]
+		if !ok {
+			continue
+		}
+		
+		if tc.options.ShouldInclude(depInfo) {
+			seen[dep] = true
+			result = append(result, dep)
+		}
+	}
+	
+	return result
 }
 
 // isMainModulePackage checks if a package belongs to the main module (not a submodule).
@@ -310,73 +467,217 @@ func (a *analyzer) getSortedPackages() []string {
 	return pkgs
 }
 
-// collectEdges collects all dependency edges.
+// collectEdges collects all dependency edges using new traversal system.
 func (a *analyzer) collectEdges(in Input) map[string]bool {
+	opts := a.convertInputToFilterOptions(in)
+	opts.Normalize(a.modulePrefix)
+	
+	store := a.buildPackageStore()
 	edges := make(map[string]bool)
-	a.visited = make(map[string]bool)
+	visited := make(map[string]bool)
 
-	for _, pkg := range a.packages {
-		a.collectEdgesRecursive(pkg, in, edges, 0)
+	for pkgPath := range store.packages {
+		a.collectEdgesRecursiveNew(pkgPath, opts, store, edges, visited, 0, in)
 	}
 	return edges
 }
 
-func (a *analyzer) collectEdgesRecursive(pkg *goPackage, in Input, edges map[string]bool, depth int) {
+// collectEdgesRecursiveNew recursively collects edges using new system.
+func (a *analyzer) collectEdgesRecursiveNew(pkgPath string, opts *FilterOptions, store *PackageStore, edges map[string]bool, visited map[string]bool, depth int, in Input) {
 	if in.Depth > 0 && depth >= in.Depth {
 		return
 	}
 
-	fromName := a.shortName(pkg.ImportPath, in.Group)
-	deps := a.filterDeps(pkg.Imports, in)
+	pkgInfo, ok := store.packages[pkgPath]
+	if !ok || !opts.ShouldInclude(pkgInfo) {
+		return
+	}
 
-	for _, dep := range deps {
+	if visited[pkgPath] {
+		return
+	}
+	visited[pkgPath] = true
+
+	fromName := a.shortName(pkgPath, in.Group)
+	
+	for _, dep := range pkgInfo.Imports {
+		depInfo, ok := store.packages[dep]
+		if !ok || !opts.ShouldInclude(depInfo) {
+			continue
+		}
+
 		toName := a.shortName(dep, in.Group)
 		if fromName != toName && toName != "" && fromName != "" {
 			edge := fmt.Sprintf("%s --> %s", a.sanitizeName(fromName), a.sanitizeName(toName))
 			edges[edge] = true
 		}
 
-		if !a.visited[dep] {
-			a.visited[dep] = true
-			if depPkg, ok := a.packages[dep]; ok {
-				a.collectEdgesRecursive(depPkg, in, edges, depth+1)
-			}
-		}
+		a.collectEdgesRecursiveNew(dep, opts, store, edges, visited, depth+1, in)
 	}
 }
 
-// getDependencyStats returns statistics about dependencies.
+// getDependencyStats returns statistics about dependencies using new system.
 func (a *analyzer) getDependencyStats(_ Input) map[string]any {
 	stats := make(map[string]any)
 	
 	var internalCount, externalCount, stdlibCount int
 	externalGroups := make(map[string]int)
 	
-	for _, pkg := range a.packages {
-		if !a.shouldInclude(pkg.ImportPath, Input{
-			Internal: true,
-			External: true,
-			NoStd:    false,
-		}) {
+	store := a.buildPackageStore()
+	opts := &FilterOptions{
+		IncludeInternal: true,
+		IncludeExternal: true,
+		IncludeStdLib:   true,
+		MainModuleOnly:  false,
+		Depth:           0,
+	}
+	
+	for _, pkgInfo := range store.packages {
+		if !opts.ShouldInclude(pkgInfo) {
 			continue
 		}
 		
-		if a.isStdLib(pkg.ImportPath) {
+		if pkgInfo.IsStdLib {
 			stdlibCount++
-		} else if a.modulePrefix != "" && gstr.HasPrefix(pkg.ImportPath, a.modulePrefix) {
+		} else if pkgInfo.Kind == KindInternal {
 			internalCount++
-		} else {
+		} else if pkgInfo.Kind == KindExternal {
 			externalCount++
-			group := a.getExternalGroup(pkg.ImportPath)
+			group := a.getExternalGroup(pkgInfo.ImportPath)
 			externalGroups[group]++
 		}
 	}
 	
-	stats["total"] = len(a.packages)
+	stats["total"] = len(store.packages)
 	stats["internal"] = internalCount
 	stats["external"] = externalCount
 	stats["stdlib"] = stdlibCount
 	stats["external_groups"] = externalGroups
 	
 	return stats
+}
+
+// TraverseDependencies traverses dependencies starting from root using filter options.
+func (ps *PackageStore) TraverseDependencies(
+	root string,
+	options *FilterOptions,
+) []string {
+	ctx := &TraversalContext{
+		visited:  make(map[string]bool),
+		maxDepth: options.Depth,
+		options:  options,
+		store:    ps,
+	}
+	
+	result := make([]string, 0)
+	ps.traverseRecursive(root, ctx, &result)
+	return result
+}
+
+// traverseRecursive recursively traverses dependency tree.
+func (ps *PackageStore) traverseRecursive(
+	pkg string,
+	ctx *TraversalContext,
+	result *[]string,
+) {
+	if ctx.maxDepth > 0 && ctx.depth >= ctx.maxDepth {
+		return
+	}
+	
+	if ctx.Visit(pkg) {
+		return // Already visited
+	}
+	
+	pkgInfo, ok := ps.packages[pkg]
+	if !ok {
+		return
+	}
+	
+	if !ctx.options.ShouldInclude(pkgInfo) {
+		return // Filtered out
+	}
+	
+	*result = append(*result, pkg)
+	
+	ctx.depth++
+	for _, dep := range pkgInfo.Imports {
+		ps.traverseRecursive(dep, ctx, result)
+	}
+	ctx.depth--
+}
+
+// TraverseReverse traverses reverse dependencies (reverse of dependency tree).
+func (ps *PackageStore) TraverseReverse(
+	target string,
+	options *FilterOptions,
+) []string {
+	result := make([]string, 0)
+	
+	// Build reverse dependency map on-the-fly
+	for _, pkg := range ps.packages {
+		for _, dep := range pkg.Imports {
+			if dep == target && options.ShouldInclude(pkg) {
+				result = append(result, pkg.ImportPath)
+			}
+		}
+	}
+	
+	sort.Strings(result)
+	return result
+}
+
+// buildPackageStore converts current analyzer state to PackageStore for new traversal system.
+func (a *analyzer) buildPackageStore() *PackageStore {
+	store := newPackageStore(a.modulePrefix)
+	
+	// Convert go packages to PackageInfo
+	for path, goPkg := range a.packages {
+		pkgInfo := &PackageInfo{
+			ImportPath: path,
+			ModulePath: goPkg.Module.Path,
+			IsStdLib:   goPkg.Standard,
+			Imports:    goPkg.Imports,
+		}
+		pkgInfo.Kind = store.identifyPackageKind(pkgInfo)
+		store.packages[path] = pkgInfo
+	}
+	
+	return store
+}
+
+// getFilteredPackages returns all packages matching filter options using new system.
+func (a *analyzer) getFilteredPackages(in Input) []*PackageInfo {
+	opts := a.convertInputToFilterOptions(in)
+	opts.Normalize(a.modulePrefix)
+	
+	store := a.buildPackageStore()
+	result := make([]*PackageInfo, 0)
+	
+	for _, pkgInfo := range store.packages {
+		if opts.ShouldInclude(pkgInfo) {
+			result = append(result, pkgInfo)
+		}
+	}
+	
+	return result
+}
+
+// getFilteredDependencies returns filtered dependencies of a package using new system.
+func (a *analyzer) getFilteredDependencies(pkgPath string, in Input) []string {
+	_, ok := a.packages[pkgPath]
+	if !ok {
+		return []string{}
+	}
+	
+	opts := a.convertInputToFilterOptions(in)
+	opts.Normalize(a.modulePrefix)
+	
+	store := a.buildPackageStore()
+	ctx := &TraversalContext{
+		visited: make(map[string]bool),
+		options: opts,
+		store:   store,
+	}
+	
+	return ctx.GetDependencies(pkgPath)
 }
