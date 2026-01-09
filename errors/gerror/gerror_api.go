@@ -64,7 +64,7 @@ func Wrap(err error, text string) error {
 	}
 }
 
-// Wrapf returns an error annotating err with a stack trace at the point Wrapf is called, and the text specifier.
+// Wrapf returns an error annotating err with a stack trace at the point Wrapf is called, and the format specifier.
 // It returns nil if given `err` is nil.
 // Note that it does not lose the error code of wrapped error, as it inherits the error code from it.
 func Wrapf(err error, format string, args ...any) error {
