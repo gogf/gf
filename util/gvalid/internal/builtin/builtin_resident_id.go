@@ -41,23 +41,23 @@ func (r RuleResidentId) Run(in RunInput) error {
 
 // checkResidentId checks whether given id a china resident id number.
 //
-// xxxxxx yyyy MM dd 375 0  十八位
-// xxxxxx   yy MM dd  75 0  十五位
+// xxxxxx yyyy MM dd 375 0  18 digits
+// xxxxxx   yy MM dd  75 0  15 digits
 //
-// 地区：     [1-9]\d{5}
-// 年的前两位：(18|19|([23]\d))  1800-2399
-// 年的后两位：\d{2}
-// 月份：     ((0[1-9])|(10|11|12))
-// 天数：     (([0-2][1-9])|10|20|30|31) 闰年不能禁止29+
+// Region:     [1-9]\d{5}
+// First two digits of year: (18|19|([23]\d))  1800-2399
+// Last two digits of year: \d{2}
+// Month:     ((0[1-9])|(10|11|12))
+// Day:       (([0-2][1-9])|10|20|30|31) Leap year cannot prohibit 29+
 //
-// 三位顺序码：\d{3}
-// 两位顺序码：\d{2}
-// 校验码：   [0-9Xx]
+// Three sequential digits: \d{3}
+// Two sequential digits: \d{2}
+// Check code:   [0-9Xx]
 //
-// 十八位：^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$
-// 十五位：^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$
+// 18 digits: ^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$
+// 15 digits: ^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$
 //
-// 总：
+// Total:
 // (^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$)
 func (r RuleResidentId) checkResidentId(id string) bool {
 	id = strings.ToUpper(strings.TrimSpace(id))

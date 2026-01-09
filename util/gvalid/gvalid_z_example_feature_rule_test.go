@@ -954,8 +954,8 @@ func ExampleValidator_json() {
 	var (
 		ctx = context.Background()
 		req = BizReq{
-			JSON1: "{\"name\":\"goframe\",\"author\":\"郭强\"}",
-			JSON2: "{\"name\":\"goframe\",\"author\":\"郭强\",\"test\"}",
+			JSON1: "{\"name\":\"goframe\",\"author\":\"Guo Qiang\"}",
+			JSON2: "{\"name\":\"goframe\",\"author\":\"Guo Qiang\",\"test\"}",
 		}
 	)
 	if err := g.Validator().Data(req).Run(ctx); err != nil {
@@ -963,7 +963,7 @@ func ExampleValidator_json() {
 	}
 
 	// Output:
-	// The JSON2 value `{"name":"goframe","author":"郭强","test"}` is not a valid JSON string
+	// The JSON2 value `{"name":"goframe","author":"Guo Qiang","test"}` is not a valid JSON string
 }
 
 func ExampleValidator_integer() {
