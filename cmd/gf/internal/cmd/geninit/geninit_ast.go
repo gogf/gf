@@ -79,7 +79,7 @@ func (r *ASTReplacer) ReplaceInFile(ctx context.Context, filePath string) error 
 	}
 
 	// Write back to file without formatting.
-	// Formatting will be handled by utils.GoFmt after all replacements are done.
+	// Formatting will be handled by formatGoFiles after all replacements are done.
 	var buf bytes.Buffer
 	if err := printer.Fprint(&buf, r.fset, file); err != nil {
 		return err
