@@ -175,3 +175,29 @@ func Test_Model_FieldsPrefix(t *testing.T) {
 		t.Assert(r[0]["nickname"], "name_1")
 	})
 }
+
+func Test_Model_Group_WithJoin(t *testing.T) {
+	var (
+		table1 = gtime.TimestampNanoStr() + "_user"
+		table2 = gtime.TimestampNanoStr() + "_user_detail"
+	)
+	createInitTable(table1)
+	defer dropTable(table1)
+	createInitTable(table2)
+	defer dropTable(table2)
+
+	gtest.C(t, func(t *gtest.T) {
+		// This test verifies that Group works with JOINs and generates qualified column names
+		// to avoid "Column 'id' in group statement is ambiguous" errors
+		r, err := db.Model(table1+" u").
+			Fields("u.id", "u.name", "COUNT(*) as count").
+			LeftJoin(table2+" ud", "u.id = ud.id").
+			Where("u.id", g.Slice{1, 2}).
+			Group("u.id").
+			Order("u.id asc").All()
+		t.AssertNil(err)
+		t.Assert(len(r), 2)
+		t.Assert(r[0]["id"], "1")
+		t.Assert(r[1]["id"], "2")
+	})
+}
