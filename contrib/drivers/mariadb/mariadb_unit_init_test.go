@@ -31,6 +31,7 @@ const (
 
 var (
 	db  gdb.DB
+	db2 gdb.DB
 	ctx = context.TODO()
 )
 
@@ -59,6 +60,7 @@ func init() {
 		gtest.Error(err)
 	}
 	db = db.Schema(TestSchema1)
+	db2 = db.Schema(TestSchema2)
 }
 
 func createTable(table ...string) string {
