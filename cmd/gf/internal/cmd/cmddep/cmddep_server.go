@@ -195,7 +195,7 @@ func (a *analyzer) handleGraphAPI(w http.ResponseWriter, r *http.Request, in Inp
 				return
 			}
 		}
-		
+
 		data := a.buildModuleGraphData(in)
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(data)
@@ -288,13 +288,13 @@ func (a *analyzer) handlePackagesAPI(w http.ResponseWriter, r *http.Request, in 
 			UsedByCount: usedByMap[shortName],
 		})
 	}
-	
+
 	// Add statistics to response
 	result := map[string]any{
 		"packages":   packages,
 		"statistics": a.getDependencyStats(in),
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(result)
 }
@@ -398,7 +398,7 @@ func (a *analyzer) handleTreeAPI(w http.ResponseWriter, r *http.Request, in Inpu
 				return
 			}
 		}
-		
+
 		output := a.generateModuleTree(in)
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.Write([]byte(output))
@@ -442,7 +442,7 @@ func (a *analyzer) handleListAPI(w http.ResponseWriter, r *http.Request, in Inpu
 				return
 			}
 		}
-		
+
 		output := a.generateModuleList(in)
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.Write([]byte(output))
@@ -880,7 +880,7 @@ func (s *serverState) handleAnalyzeAPI(w http.ResponseWriter, r *http.Request) {
 	// IMPORTANT: Load module dependencies from the actual module directory
 	// We need to run commands in moduleDir context to get the correct direct/indirect info
 	// Running in tempDir would show everything as indirect since we're not using them there
-	
+
 	// IMPORTANT: Load direct dependencies info FIRST
 	// This must be done before parsing go mod graph so that IsDirect flag is correct
 	listModCmd := exec.Command("go", "list", "-m", "-json", "all")
@@ -1051,7 +1051,7 @@ func (a *analyzer) handleModulesAPI(w http.ResponseWriter, in Input) {
 			return
 		}
 	}
-	
+
 	modules := a.getFilteredModules(in)
 
 	// Build module list

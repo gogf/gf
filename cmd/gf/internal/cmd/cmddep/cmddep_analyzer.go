@@ -40,8 +40,8 @@ type PackageKind int
 
 const (
 	KindInternal PackageKind = iota // Internal to main module
-	KindExternal                      // External dependency
-	KindStdLib                        // Standard library
+	KindExternal                    // External dependency
+	KindStdLib                      // Standard library
 )
 
 // PackageInfo represents unified information about a Go package.
@@ -79,11 +79,11 @@ type FilterOptions struct {
 // It centralizes visited tracking, depth management, and filtering logic
 // to ensure consistent behavior across different output formats.
 type TraversalContext struct {
-	visited   map[string]bool // Track visited packages to prevent cycles
-	depth     int             // Current traversal depth
-	maxDepth  int             // Maximum traversal depth
-	options   *FilterOptions  // Filtering criteria
-	store     *PackageStore   // Reference to package store
+	visited  map[string]bool // Track visited packages to prevent cycles
+	depth    int             // Current traversal depth
+	maxDepth int             // Maximum traversal depth
+	options  *FilterOptions  // Filtering criteria
+	store    *PackageStore   // Reference to package store
 }
 
 // PackageStore manages a collection of packages and provides unified data access.
@@ -91,10 +91,10 @@ type TraversalContext struct {
 // It replaces the scattered data access patterns in the original analyzer.
 type PackageStore struct {
 	packages      map[string]*PackageInfo // Package data indexed by import path
-	modulePrefix  string                   // Main module path (from go.mod)
-	sortedPkgs    []string                 // Cached sorted package list
-	internalCount int                      // Cached count of internal packages
-	externalCount int                      // Cached count of external packages
+	modulePrefix  string                  // Main module path (from go.mod)
+	sortedPkgs    []string                // Cached sorted package list
+	internalCount int                     // Cached count of internal packages
+	externalCount int                     // Cached count of external packages
 }
 
 // analyzer handles dependency analysis.
@@ -105,9 +105,9 @@ type analyzer struct {
 	edges        map[string]bool
 	store        *PackageStore // New unified package store
 	// Module-level dependency data (from go mod graph)
-	modules       map[string]*ModuleInfo    // All modules indexed by path
-	moduleGraph   map[string][]string       // Module dependency graph: module -> dependencies
-	directModules map[string]bool           // Direct dependencies (from go.mod require)
+	modules       map[string]*ModuleInfo // All modules indexed by path
+	moduleGraph   map[string][]string    // Module dependency graph: module -> dependencies
+	directModules map[string]bool        // Direct dependencies (from go.mod require)
 }
 
 // ModuleInfo represents a Go module dependency.
@@ -169,12 +169,13 @@ func (a *analyzer) detectModulePrefix() string {
 // loadPackages loads package information using go list with optimized approach.
 // OPTIMIZATION: Reduced from 3 separate go list calls to 2 efficient calls:
 // Previously:
-//   1. go list -json %s                (target packages only)
-//   2. go list -json -deps %s          (with dependencies)
-//   3. go list -json -m all            (all modules)
+//  1. go list -json %s                (target packages only)
+//  2. go list -json -deps %s          (with dependencies)
+//  3. go list -json -m all            (all modules)
+//
 // Now (optimized):
-//   1. go list -json -m all            (all modules - fast, definitive)
-//   2. go list -json -deps ./...       (all packages with dependencies)
+//  1. go list -json -m all            (all modules - fast, definitive)
+//  2. go list -json -deps ./...       (all packages with dependencies)
 func (a *analyzer) loadPackages(ctx context.Context, pkgPath string) error {
 	// First, load module information - this is fast and provides module metadata
 	// Load all module dependencies using go list -m all
@@ -659,13 +660,13 @@ func (a *analyzer) convertInputToFilterOptions(in Input) *FilterOptions {
 		IncludeStdLib:   !in.NoStd,
 		Depth:           in.Depth,
 	}
-	
+
 	// Apply default: if neither internal nor external, include internal only
 	if !in.Internal && !in.External {
 		opts.IncludeInternal = true
 		opts.IncludeExternal = false
 	}
-	
+
 	return opts
 }
 
@@ -736,14 +737,14 @@ func (opts *FilterOptions) Normalize(modulePrefix string) error {
 		opts.IncludeInternal = true
 		opts.IncludeExternal = false
 	}
-	
+
 	// Always include stdlib by default unless explicitly excluded
 	if opts.IncludeStdLib == false {
 		// This is the default (NoStd=true), stdlib is excluded
 	} else {
 		opts.IncludeStdLib = true
 	}
-	
+
 	return nil
 }
 
@@ -764,7 +765,7 @@ func (opts *FilterOptions) ShouldInclude(pkg *PackageInfo) bool {
 			return false
 		}
 	}
-	
+
 	return true
 }
 
@@ -783,26 +784,26 @@ func (tc *TraversalContext) GetDependencies(pkg string) []string {
 	if !ok {
 		return []string{}
 	}
-	
+
 	result := make([]string, 0)
 	seen := make(map[string]bool)
-	
+
 	for _, dep := range pkgInfo.Imports {
 		if seen[dep] {
 			continue
 		}
-		
+
 		depInfo, ok := tc.store.packages[dep]
 		if !ok {
 			continue
 		}
-		
+
 		if tc.options.ShouldInclude(depInfo) {
 			seen[dep] = true
 			result = append(result, dep)
 		}
 	}
-	
+
 	return result
 }
 
@@ -819,7 +820,7 @@ func (a *analyzer) shortName(pkg string, group bool) string {
 		}
 		return short
 	}
-	
+
 	// For external packages, handle grouping differently
 	if group {
 		return a.getExternalGroup(pkg)
@@ -833,7 +834,7 @@ func (a *analyzer) getExternalGroup(pkg string) string {
 	if a.isStdLib(pkg) {
 		return "stdlib"
 	}
-	
+
 	// For external packages, group by domain/organization
 	parts := gstr.Split(pkg, "/")
 	if len(parts) > 0 {
@@ -870,7 +871,7 @@ func (a *analyzer) getSortedPackages() []string {
 func (a *analyzer) collectEdges(in Input) map[string]bool {
 	opts := a.convertInputToFilterOptions(in)
 	opts.Normalize(a.modulePrefix)
-	
+
 	store := a.buildPackageStore()
 	edges := make(map[string]bool)
 	visited := make(map[string]bool)
@@ -898,7 +899,7 @@ func (a *analyzer) collectEdgesRecursiveNew(pkgPath string, opts *FilterOptions,
 	visited[pkgPath] = true
 
 	fromName := a.shortName(pkgPath, in.Group)
-	
+
 	for _, dep := range pkgInfo.Imports {
 		depInfo, ok := store.packages[dep]
 		if !ok || !opts.ShouldInclude(depInfo) {
@@ -918,10 +919,10 @@ func (a *analyzer) collectEdgesRecursiveNew(pkgPath string, opts *FilterOptions,
 // getDependencyStats returns statistics about dependencies using new system.
 func (a *analyzer) getDependencyStats(_ Input) map[string]any {
 	stats := make(map[string]any)
-	
+
 	var internalCount, externalCount, stdlibCount int
 	externalGroups := make(map[string]int)
-	
+
 	store := a.buildPackageStore()
 	opts := &FilterOptions{
 		IncludeInternal: true,
@@ -929,12 +930,12 @@ func (a *analyzer) getDependencyStats(_ Input) map[string]any {
 		IncludeStdLib:   true,
 		Depth:           0,
 	}
-	
+
 	for _, pkgInfo := range store.packages {
 		if !opts.ShouldInclude(pkgInfo) {
 			continue
 		}
-		
+
 		if pkgInfo.IsStdLib {
 			stdlibCount++
 		} else if pkgInfo.Kind == KindInternal {
@@ -945,13 +946,13 @@ func (a *analyzer) getDependencyStats(_ Input) map[string]any {
 			externalGroups[group]++
 		}
 	}
-	
+
 	stats["total"] = len(store.packages)
 	stats["internal"] = internalCount
 	stats["external"] = externalCount
 	stats["stdlib"] = stdlibCount
 	stats["external_groups"] = externalGroups
-	
+
 	return stats
 }
 
@@ -966,7 +967,7 @@ func (ps *PackageStore) TraverseDependencies(
 		options:  options,
 		store:    ps,
 	}
-	
+
 	result := make([]string, 0)
 	ps.traverseRecursive(root, ctx, &result)
 	return result
@@ -981,22 +982,22 @@ func (ps *PackageStore) traverseRecursive(
 	if ctx.maxDepth > 0 && ctx.depth >= ctx.maxDepth {
 		return
 	}
-	
+
 	if ctx.Visit(pkg) {
 		return // Already visited
 	}
-	
+
 	pkgInfo, ok := ps.packages[pkg]
 	if !ok {
 		return
 	}
-	
+
 	if !ctx.options.ShouldInclude(pkgInfo) {
 		return // Filtered out
 	}
-	
+
 	*result = append(*result, pkg)
-	
+
 	ctx.depth++
 	for _, dep := range pkgInfo.Imports {
 		ps.traverseRecursive(dep, ctx, result)
@@ -1010,7 +1011,7 @@ func (ps *PackageStore) TraverseReverse(
 	options *FilterOptions,
 ) []string {
 	result := make([]string, 0)
-	
+
 	// Build reverse dependency map on-the-fly
 	for _, pkg := range ps.packages {
 		for _, dep := range pkg.Imports {
@@ -1019,7 +1020,7 @@ func (ps *PackageStore) TraverseReverse(
 			}
 		}
 	}
-	
+
 	sort.Strings(result)
 	return result
 }
@@ -1027,7 +1028,7 @@ func (ps *PackageStore) TraverseReverse(
 // buildPackageStore converts current analyzer state to PackageStore for new traversal system.
 func (a *analyzer) buildPackageStore() *PackageStore {
 	store := newPackageStore(a.modulePrefix)
-	
+
 	// Convert go packages to PackageInfo
 	for path, goPkg := range a.packages {
 		pkgInfo := &PackageInfo{
@@ -1039,7 +1040,7 @@ func (a *analyzer) buildPackageStore() *PackageStore {
 		pkgInfo.Kind = store.identifyPackageKind(pkgInfo)
 		store.packages[path] = pkgInfo
 	}
-	
+
 	return store
 }
 
@@ -1047,16 +1048,16 @@ func (a *analyzer) buildPackageStore() *PackageStore {
 func (a *analyzer) getFilteredPackages(in Input) []*PackageInfo {
 	opts := a.convertInputToFilterOptions(in)
 	opts.Normalize(a.modulePrefix)
-	
+
 	store := a.buildPackageStore()
 	result := make([]*PackageInfo, 0)
-	
+
 	for _, pkgInfo := range store.packages {
 		if opts.ShouldInclude(pkgInfo) {
 			result = append(result, pkgInfo)
 		}
 	}
-	
+
 	return result
 }
 
@@ -1066,16 +1067,16 @@ func (a *analyzer) getFilteredDependencies(pkgPath string, in Input) []string {
 	if !ok {
 		return []string{}
 	}
-	
+
 	opts := a.convertInputToFilterOptions(in)
 	opts.Normalize(a.modulePrefix)
-	
+
 	store := a.buildPackageStore()
 	ctx := &TraversalContext{
 		visited: make(map[string]bool),
 		options: opts,
 		store:   store,
 	}
-	
+
 	return ctx.GetDependencies(pkgPath)
 }

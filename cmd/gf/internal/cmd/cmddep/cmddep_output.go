@@ -48,7 +48,7 @@ func (a *analyzer) generateTree(in Input) string {
 		fmt.Fprintf(&sb, "  Internal: %v\n", stats["internal"])
 		fmt.Fprintf(&sb, "  External: %v\n", stats["external"])
 		fmt.Fprintf(&sb, "  Standard library: %v\n", stats["stdlib"])
-		
+
 		if groups, ok := stats["external_groups"].(map[string]int); ok && len(groups) > 0 {
 			sb.WriteString("  External groups:\n")
 			for group, count := range groups {
@@ -77,10 +77,10 @@ func (a *analyzer) generateTree(in Input) string {
 		if !ok || !opts.ShouldInclude(pkgInfo) {
 			continue
 		}
-		
+
 		shortName := a.shortName(pkgPath, in.Group)
 		sb.WriteString(shortName + "\n")
-		
+
 		// Use new traversal system
 		a.printTreeNodeNew(&sb, pkgPath, "", in, ctx, 0)
 	}
@@ -113,8 +113,6 @@ func (a *analyzer) findRootPackages() []string {
 	sort.Strings(roots)
 	return roots
 }
-
-
 
 // printTreeNodeNew prints tree node using new traversal system.
 func (a *analyzer) printTreeNodeNew(sb *strings.Builder, pkgPath string, prefix string, in Input, ctx *TraversalContext, depth int) {
@@ -163,16 +161,16 @@ func (a *analyzer) printTreeNodeNew(sb *strings.Builder, pkgPath string, prefix 
 // generateList generates simple list output using new traversal system.
 func (a *analyzer) generateList(in Input) string {
 	var sb strings.Builder
-	
+
 	// Prepare options
 	opts := a.convertInputToFilterOptions(in)
 	opts.Normalize(a.modulePrefix)
-	
+
 	// Add statistics header if showing external dependencies
 	if in.External {
 		stats := a.getDependencyStats(in)
 		sb.WriteString("# Dependency Statistics\n")
-		fmt.Fprintf(&sb, "# Total: %v, Internal: %v, External: %v, Stdlib: %v\n", 
+		fmt.Fprintf(&sb, "# Total: %v, Internal: %v, External: %v, Stdlib: %v\n",
 			stats["total"], stats["internal"], stats["external"], stats["stdlib"])
 		sb.WriteString("\n")
 	}
@@ -278,7 +276,7 @@ func (a *analyzer) generateJSON(in Input) string {
 	store := a.buildPackageStore()
 
 	result := make(map[string]any)
-	
+
 	// Add dependency nodes
 	nodes := make([]*depNode, 0)
 	for _, pkgPath := range a.getSortedPackages() {
@@ -293,10 +291,10 @@ func (a *analyzer) generateJSON(in Input) string {
 		nodes = append(nodes, node)
 	}
 	result["dependencies"] = nodes
-	
+
 	// Add statistics
 	result["statistics"] = a.getDependencyStats(in)
-	
+
 	// Add metadata
 	result["metadata"] = map[string]any{
 		"module":   a.modulePrefix,
@@ -307,7 +305,7 @@ func (a *analyzer) generateJSON(in Input) string {
 		"external": in.External,
 		"nostd":    in.NoStd,
 	}
-	
+
 	data, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
 		return fmt.Sprintf("Error: %v", err)
@@ -361,7 +359,7 @@ func (a *analyzer) buildDepNode(pkg *goPackage, in Input, depth int) *depNode {
 func (a *analyzer) generateReverse(in Input) string {
 	opts := a.convertInputToFilterOptions(in)
 	opts.Normalize(a.modulePrefix)
-	
+
 	store := a.buildPackageStore()
 
 	// Build reverse dependency map

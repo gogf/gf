@@ -41,7 +41,7 @@ func Test_FilterOptions_Normalize(t *testing.T) {
 			IncludeStdLib:   false,
 		}
 		opts.Normalize("github.com/gogf/gf/v2")
-		
+
 		// After normalization, internal should be included by default
 		t.Assert(opts.IncludeInternal, true)
 		t.Assert(opts.IncludeExternal, false)
@@ -57,7 +57,7 @@ func Test_FilterOptions_ShouldInclude(t *testing.T) {
 			IncludeExternal: false,
 			IncludeStdLib:   true,
 		}
-		
+
 		internalPkg := &PackageInfo{
 			Kind:     KindInternal,
 			IsStdLib: false,
@@ -70,7 +70,7 @@ func Test_FilterOptions_ShouldInclude(t *testing.T) {
 			Kind:     KindStdLib,
 			IsStdLib: true,
 		}
-		
+
 		t.Assert(opts.ShouldInclude(internalPkg), true)
 		t.Assert(opts.ShouldInclude(externalPkg), false)
 		t.Assert(opts.ShouldInclude(stdlibPkg), true)
@@ -83,7 +83,7 @@ func Test_TraversalContext_Visit(t *testing.T) {
 		ctx := &TraversalContext{
 			visited: make(map[string]bool),
 		}
-		
+
 		// First visit should return false
 		t.Assert(ctx.Visit("pkg1"), false)
 		// Second visit should return true
@@ -105,7 +105,7 @@ func Test_GuessModuleRoot(t *testing.T) {
 			{"github.com/gogf/gf/v2/os/gfile", "github.com/gogf/gf/v2"},
 			{"github.com/gogf/gf/v2/os", "github.com/gogf/gf/v2"},
 		}
-		
+
 		for _, test := range tests {
 			result := guessModuleRoot(test.input)
 			t.AssertEQ(result, test.expect)
@@ -117,7 +117,7 @@ func Test_GuessModuleRoot(t *testing.T) {
 func Test_ConvertInputToFilterOptions(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a := newAnalyzer()
-		
+
 		input := Input{
 			Internal: true,
 			External: false,
@@ -126,9 +126,9 @@ func Test_ConvertInputToFilterOptions(t *testing.T) {
 			Direct:   false,
 			Depth:    3,
 		}
-		
+
 		opts := a.convertInputToFilterOptions(input)
-		
+
 		t.Assert(opts.IncludeInternal, true)
 		t.Assert(opts.IncludeExternal, false)
 		t.Assert(opts.IncludeStdLib, false) // NoStd=true means !IncludeStdLib
@@ -239,16 +239,16 @@ func Test_Dep_Group(t *testing.T) {
 func Test_ModuleLevel_Direct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		ctx := gctx.New()
-		
+
 		// Test module level with direct only
 		in := Input{
 			Module: true,
 			Direct: true,
 			Format: "list",
 		}
-		
+
 		t.Logf("Input.Module: %v, Input.Direct: %v", in.Module, in.Direct)
-		
+
 		_, err := Dep.Index(ctx, in)
 		t.AssertNil(err)
 	})
