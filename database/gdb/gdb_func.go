@@ -151,10 +151,23 @@ func isDoStruct(object any) bool {
 // getTableNameFromOrmTag retrieves and returns the table name from struct object.
 func getTableNameFromOrmTag(object any) string {
 	var tableName string
+
+	actualObj := object
+	if rv, ok := object.(reflect.Value); ok {
+		// 检查 reflect.Value 是否有效
+		if rv.IsValid() && rv.CanInterface() {
+			actualObj = rv.Interface()
+		} else {
+			// 如果无法获取接口值，则创建一个零值占位
+			actualObj = nil
+		}
+	}
+
 	// Use the interface value.
-	if r, ok := object.(iTableName); ok {
+	if r, ok := actualObj.(iTableName); ok && actualObj != nil {
 		tableName = r.TableName()
 	}
+
 	// User meta data tag "orm".
 	if tableName == "" {
 		if ormTag := gmeta.Get(object, OrmTagForStruct); !ormTag.IsEmpty() {
