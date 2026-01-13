@@ -30,7 +30,7 @@ type Adapter interface {
 }
 
 // WatcherFunc is the callback function type for configuration watchers.
-type WatcherFunc func(context.Context)
+type WatcherFunc = func(context.Context)
 
 // WatcherAdapter is the interface for configuration watcher.
 type WatcherAdapter interface {
