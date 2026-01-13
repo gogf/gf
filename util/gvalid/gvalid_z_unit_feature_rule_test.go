@@ -1619,3 +1619,206 @@ func Test_Enums(t *testing.T) {
 		t.AssertNil(err)
 	})
 }
+func Test_Alpha(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		rule := "alpha"
+		val1 := "abc"
+		val2 := "ABC"
+		val3 := "abcABC"
+		val4 := "abc123"
+		val5 := "abc-123"
+		val6 := "abc_123"
+		val7 := "123"
+		val8 := ""
+		val9 := "abc def"
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
+		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
+		err7 := g.Validator().Data(val7).Rules(rule).Run(ctx)
+		err8 := g.Validator().Data(val8).Rules(rule).Run(ctx)
+		err9 := g.Validator().Data(val9).Rules(rule).Run(ctx)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(err3, nil)
+		t.AssertNE(err4, nil)
+		t.AssertNE(err5, nil)
+		t.AssertNE(err6, nil)
+		t.AssertNE(err7, nil)
+		t.AssertNE(err8, nil)
+		t.AssertNE(err9, nil)
+	})
+}
+
+func Test_AlphaDash(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		rule := "alpha-dash"
+		val1 := "abc"
+		val2 := "ABC"
+		val3 := "abc123"
+		val4 := "abc-123"
+		val5 := "abc_123"
+		val6 := "abc-_123"
+		val7 := "abc-_ABC-123"
+		val8 := "abc 123"
+		val9 := "abc@123"
+		val10 := ""
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
+		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
+		err7 := g.Validator().Data(val7).Rules(rule).Run(ctx)
+		err8 := g.Validator().Data(val8).Rules(rule).Run(ctx)
+		err9 := g.Validator().Data(val9).Rules(rule).Run(ctx)
+		err10 := g.Validator().Data(val10).Rules(rule).Run(ctx)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(err3, nil)
+		t.Assert(err4, nil)
+		t.Assert(err5, nil)
+		t.Assert(err6, nil)
+		t.Assert(err7, nil)
+		t.AssertNE(err8, nil)
+		t.AssertNE(err9, nil)
+		t.AssertNE(err10, nil)
+	})
+}
+
+func Test_AlphaNum(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		rule := "alpha-num"
+		val1 := "abc"
+		val2 := "ABC"
+		val3 := "123"
+		val4 := "abc123"
+		val5 := "ABC123"
+		val6 := "abcABC123"
+		val7 := "abc-123"
+		val8 := "abc_123"
+		val9 := "abc 123"
+		val10 := ""
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
+		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
+		err7 := g.Validator().Data(val7).Rules(rule).Run(ctx)
+		err8 := g.Validator().Data(val8).Rules(rule).Run(ctx)
+		err9 := g.Validator().Data(val9).Rules(rule).Run(ctx)
+		err10 := g.Validator().Data(val10).Rules(rule).Run(ctx)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(err3, nil)
+		t.Assert(err4, nil)
+		t.Assert(err5, nil)
+		t.Assert(err6, nil)
+		t.AssertNE(err7, nil)
+		t.AssertNE(err8, nil)
+		t.AssertNE(err9, nil)
+		t.AssertNE(err10, nil)
+	})
+}
+
+func Test_Lowercase(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		rule := "lowercase"
+		val1 := "abc"
+		val2 := "abcdef"
+		val3 := "ABC"
+		val4 := "Abc"
+		val5 := "aBc"
+		val6 := "abc123"
+		val7 := "abc-def"
+		val8 := "abc_def"
+		val9 := ""
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
+		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
+		err7 := g.Validator().Data(val7).Rules(rule).Run(ctx)
+		err8 := g.Validator().Data(val8).Rules(rule).Run(ctx)
+		err9 := g.Validator().Data(val9).Rules(rule).Run(ctx)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.AssertNE(err3, nil)
+		t.AssertNE(err4, nil)
+		t.AssertNE(err5, nil)
+		t.AssertNE(err6, nil)
+		t.AssertNE(err7, nil)
+		t.AssertNE(err8, nil)
+		t.AssertNE(err9, nil)
+	})
+}
+
+func Test_Numeric(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		rule := "numeric"
+		val1 := "0"
+		val2 := "123"
+		val3 := "0123"
+		val4 := "123456789"
+		val5 := "1.23"
+		val6 := "abc"
+		val7 := "123abc"
+		val8 := "abc123"
+		val9 := ""
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
+		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
+		err7 := g.Validator().Data(val7).Rules(rule).Run(ctx)
+		err8 := g.Validator().Data(val8).Rules(rule).Run(ctx)
+		err9 := g.Validator().Data(val9).Rules(rule).Run(ctx)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(err3, nil)
+		t.Assert(err4, nil)
+		t.AssertNE(err5, nil)
+		t.AssertNE(err6, nil)
+		t.AssertNE(err7, nil)
+		t.AssertNE(err8, nil)
+		t.AssertNE(err9, nil)
+	})
+}
+
+func Test_Uppercase(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		rule := "uppercase"
+		val1 := "ABC"
+		val2 := "ABCDEF"
+		val3 := "abc"
+		val4 := "Abc"
+		val5 := "AbC"
+		val6 := "ABC123"
+		val7 := "ABC-DEF"
+		val8 := "ABC_DEF"
+		val9 := ""
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
+		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
+		err7 := g.Validator().Data(val7).Rules(rule).Run(ctx)
+		err8 := g.Validator().Data(val8).Rules(rule).Run(ctx)
+		err9 := g.Validator().Data(val9).Rules(rule).Run(ctx)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.AssertNE(err3, nil)
+		t.AssertNE(err4, nil)
+		t.AssertNE(err5, nil)
+		t.AssertNE(err6, nil)
+		t.AssertNE(err7, nil)
+		t.AssertNE(err8, nil)
+		t.AssertNE(err9, nil)
+	})
+}
