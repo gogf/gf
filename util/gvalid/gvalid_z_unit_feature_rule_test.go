@@ -1621,204 +1621,146 @@ func Test_Enums(t *testing.T) {
 }
 func Test_Alpha(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "alpha"
-		val1 := "abc"
-		val2 := "ABC"
-		val3 := "abcABC"
-		val4 := "abc123"
-		val5 := "abc-123"
-		val6 := "abc_123"
-		val7 := "123"
-		val8 := ""
-		val9 := "abc def"
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
-		err7 := g.Validator().Data(val7).Rules(rule).Run(ctx)
-		err8 := g.Validator().Data(val8).Rules(rule).Run(ctx)
-		err9 := g.Validator().Data(val9).Rules(rule).Run(ctx)
-		t.Assert(err1, nil)
-		t.Assert(err2, nil)
-		t.Assert(err3, nil)
-		t.AssertNE(err4, nil)
-		t.AssertNE(err5, nil)
-		t.AssertNE(err6, nil)
-		t.AssertNE(err7, nil)
-		t.AssertNE(err8, nil)
-		t.AssertNE(err9, nil)
+		m := g.MapStrBool{
+			"abc":     true,
+			"ABC":     true,
+			"abcABC":  true,
+			"abc123":  false,
+			"abc-123": false,
+			"abc_123": false,
+			"123":     false,
+			"":        false,
+			"abc def": false,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("alpha").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_AlphaDash(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "alpha-dash"
-		val1 := "abc"
-		val2 := "ABC"
-		val3 := "abc123"
-		val4 := "abc-123"
-		val5 := "abc_123"
-		val6 := "abc-_123"
-		val7 := "abc-_ABC-123"
-		val8 := "abc 123"
-		val9 := "abc@123"
-		val10 := ""
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
-		err7 := g.Validator().Data(val7).Rules(rule).Run(ctx)
-		err8 := g.Validator().Data(val8).Rules(rule).Run(ctx)
-		err9 := g.Validator().Data(val9).Rules(rule).Run(ctx)
-		err10 := g.Validator().Data(val10).Rules(rule).Run(ctx)
-		t.Assert(err1, nil)
-		t.Assert(err2, nil)
-		t.Assert(err3, nil)
-		t.Assert(err4, nil)
-		t.Assert(err5, nil)
-		t.Assert(err6, nil)
-		t.Assert(err7, nil)
-		t.AssertNE(err8, nil)
-		t.AssertNE(err9, nil)
-		t.AssertNE(err10, nil)
+		m := g.MapStrBool{
+			"abc":           true,
+			"ABC":           true,
+			"abc123":        true,
+			"abc-123":       true,
+			"abc_123":       true,
+			"abc-_123":      true,
+			"abc-_ABC-123":  true,
+			"abc 123":       false,
+			"abc@123":       false,
+			"":              false,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("alpha-dash").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_AlphaNum(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "alpha-num"
-		val1 := "abc"
-		val2 := "ABC"
-		val3 := "123"
-		val4 := "abc123"
-		val5 := "ABC123"
-		val6 := "abcABC123"
-		val7 := "abc-123"
-		val8 := "abc_123"
-		val9 := "abc 123"
-		val10 := ""
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
-		err7 := g.Validator().Data(val7).Rules(rule).Run(ctx)
-		err8 := g.Validator().Data(val8).Rules(rule).Run(ctx)
-		err9 := g.Validator().Data(val9).Rules(rule).Run(ctx)
-		err10 := g.Validator().Data(val10).Rules(rule).Run(ctx)
-		t.Assert(err1, nil)
-		t.Assert(err2, nil)
-		t.Assert(err3, nil)
-		t.Assert(err4, nil)
-		t.Assert(err5, nil)
-		t.Assert(err6, nil)
-		t.AssertNE(err7, nil)
-		t.AssertNE(err8, nil)
-		t.AssertNE(err9, nil)
-		t.AssertNE(err10, nil)
+		m := g.MapStrBool{
+			"abc":       true,
+			"ABC":       true,
+			"123":       true,
+			"abc123":    true,
+			"ABC123":    true,
+			"abcABC123": true,
+			"abc-123":   false,
+			"abc_123":   false,
+			"abc 123":   false,
+			"":          false,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("alpha-num").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_Lowercase(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "lowercase"
-		val1 := "abc"
-		val2 := "abcdef"
-		val3 := "ABC"
-		val4 := "Abc"
-		val5 := "aBc"
-		val6 := "abc123"
-		val7 := "abc-def"
-		val8 := "abc_def"
-		val9 := ""
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
-		err7 := g.Validator().Data(val7).Rules(rule).Run(ctx)
-		err8 := g.Validator().Data(val8).Rules(rule).Run(ctx)
-		err9 := g.Validator().Data(val9).Rules(rule).Run(ctx)
-		t.Assert(err1, nil)
-		t.Assert(err2, nil)
-		t.AssertNE(err3, nil)
-		t.AssertNE(err4, nil)
-		t.AssertNE(err5, nil)
-		t.AssertNE(err6, nil)
-		t.AssertNE(err7, nil)
-		t.AssertNE(err8, nil)
-		t.AssertNE(err9, nil)
+		m := g.MapStrBool{
+			"abc":     true,
+			"abcdef":  true,
+			"ABC":     false,
+			"Abc":     false,
+			"aBc":     false,
+			"abc123":  false,
+			"abc-def": false,
+			"abc_def": false,
+			"":        false,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("lowercase").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_Numeric(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "numeric"
-		val1 := "0"
-		val2 := "123"
-		val3 := "0123"
-		val4 := "123456789"
-		val5 := "1.23"
-		val6 := "abc"
-		val7 := "123abc"
-		val8 := "abc123"
-		val9 := ""
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
-		err7 := g.Validator().Data(val7).Rules(rule).Run(ctx)
-		err8 := g.Validator().Data(val8).Rules(rule).Run(ctx)
-		err9 := g.Validator().Data(val9).Rules(rule).Run(ctx)
-		t.Assert(err1, nil)
-		t.Assert(err2, nil)
-		t.Assert(err3, nil)
-		t.Assert(err4, nil)
-		t.AssertNE(err5, nil)
-		t.AssertNE(err6, nil)
-		t.AssertNE(err7, nil)
-		t.AssertNE(err8, nil)
-		t.AssertNE(err9, nil)
+		m := g.MapStrBool{
+			"0":         true,
+			"123":       true,
+			"0123":      true,
+			"123456789": true,
+			"1.23":      false,
+			"abc":       false,
+			"123abc":    false,
+			"abc123":    false,
+			"":          false,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("numeric").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_Uppercase(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "uppercase"
-		val1 := "ABC"
-		val2 := "ABCDEF"
-		val3 := "abc"
-		val4 := "Abc"
-		val5 := "AbC"
-		val6 := "ABC123"
-		val7 := "ABC-DEF"
-		val8 := "ABC_DEF"
-		val9 := ""
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
-		err7 := g.Validator().Data(val7).Rules(rule).Run(ctx)
-		err8 := g.Validator().Data(val8).Rules(rule).Run(ctx)
-		err9 := g.Validator().Data(val9).Rules(rule).Run(ctx)
-		t.Assert(err1, nil)
-		t.Assert(err2, nil)
-		t.AssertNE(err3, nil)
-		t.AssertNE(err4, nil)
-		t.AssertNE(err5, nil)
-		t.AssertNE(err6, nil)
-		t.AssertNE(err7, nil)
-		t.AssertNE(err8, nil)
-		t.AssertNE(err9, nil)
+		m := g.MapStrBool{
+			"ABC":     true,
+			"ABCDEF":  true,
+			"abc":     false,
+			"Abc":     false,
+			"AbC":     false,
+			"ABC123":  false,
+			"ABC-DEF": false,
+			"ABC_DEF": false,
+			"":        false,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("uppercase").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
