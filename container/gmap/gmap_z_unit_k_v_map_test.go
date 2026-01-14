@@ -1631,6 +1631,7 @@ func Test_KVMap_Flip_String(t *testing.T) {
 	})
 }
 
+// Test TypedNil with custom nil checker for pointers
 func Test_KVMap_TypedNil(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Student struct {

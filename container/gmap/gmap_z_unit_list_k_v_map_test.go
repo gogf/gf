@@ -1342,6 +1342,7 @@ func Test_ListKVMap_UnmarshalValue_NilData(t *testing.T) {
 	})
 }
 
+// Test typed nil values
 func Test_ListKVMap_TypedNil(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Student struct {
