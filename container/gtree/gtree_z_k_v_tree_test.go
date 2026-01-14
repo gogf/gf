@@ -7,11 +7,11 @@
 package gtree_test
 
 import (
-	"github.com/gogf/gf/v2/util/gutil"
 	"testing"
 
 	"github.com/gogf/gf/v2/container/gtree"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 func Test_KVAVLTree_TypedNil(t *testing.T) {
