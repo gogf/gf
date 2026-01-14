@@ -13,6 +13,14 @@ func (m *Model) LockUpdate() *Model {
 	return model
 }
 
+// LockUpdateSkipLocked sets the lock for update for current operation .
+// It skips the locked rows.
+func (m *Model) LockUpdateSkipLocked() *Model {
+	model := m.getModel()
+	model.lockInfo = "FOR UPDATE SKIP LOCKED"
+	return model
+}
+
 // LockShared sets the lock in share mode for current operation.
 func (m *Model) LockShared() *Model {
 	model := m.getModel()
