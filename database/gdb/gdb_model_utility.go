@@ -68,6 +68,11 @@ func (m *Model) mappingAndFilterToTableFields(table string, fields []any, filter
 	if fieldsTable != "" {
 		hasTable, _ := m.db.GetCore().HasTable(fieldsTable)
 		if !hasTable {
+			if fieldsTable != m.tablesInit {
+				// Table/alias unknown (e.g., FieldsPrefix called before LeftJoin), skip filtering.
+				return fields
+			}
+			// HasTable cache miss for main table, fallback to use main table for field mapping.
 			fieldsTable = m.tablesInit
 		}
 	}
