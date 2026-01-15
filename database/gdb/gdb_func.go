@@ -151,13 +151,26 @@ func isDoStruct(object any) bool {
 // getTableNameFromOrmTag retrieves and returns the table name from struct object.
 func getTableNameFromOrmTag(object any) string {
 	var tableName string
-	// Use the interface value.
-	if r, ok := object.(iTableName); ok {
-		tableName = r.TableName()
+	var actualObj = object
+
+	if rv, ok := object.(reflect.Value); ok {
+		// Check if reflect.Value is valid
+		if rv.IsValid() && rv.CanInterface() {
+			actualObj = rv.Interface()
+		} else {
+			// If reflect.Value is invalid, we cannot proceed with interface checks
+			return ""
+		}
 	}
-	// User meta data tag "orm".
-	if tableName == "" {
-		if ormTag := gmeta.Get(object, OrmTagForStruct); !ormTag.IsEmpty() {
+
+	// Check iTableName interface
+	if actualObj != nil {
+		if r, ok := actualObj.(iTableName); ok {
+			return r.TableName()
+		}
+
+		// User meta data tag "orm".
+		if ormTag := gmeta.Get(actualObj, OrmTagForStruct); !ormTag.IsEmpty() {
 			match, _ := gregex.MatchString(
 				fmt.Sprintf(`%s\s*:\s*([^,]+)`, OrmTagForTable),
 				ormTag.String(),
@@ -166,17 +179,19 @@ func getTableNameFromOrmTag(object any) string {
 				tableName = match[1]
 			}
 		}
-	}
-	// Use the struct name of snake case.
-	if tableName == "" {
-		if t, err := gstructs.StructType(object); err != nil {
-			panic(err)
-		} else {
-			tableName = gstr.CaseSnakeFirstUpper(
-				gstr.StrEx(t.String(), "."),
-			)
+
+		// Use the struct name of snake case.
+		if tableName == "" {
+			if t, err := gstructs.StructType(actualObj); err != nil {
+				panic(err)
+			} else {
+				tableName = gstr.CaseSnakeFirstUpper(
+					gstr.StrEx(t.String(), "."),
+				)
+			}
 		}
 	}
+
 	return tableName
 }
 
