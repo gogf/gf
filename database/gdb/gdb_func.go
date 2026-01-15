@@ -154,23 +154,25 @@ func getTableNameFromOrmTag(object any) string {
 
 	actualObj := object
 	if rv, ok := object.(reflect.Value); ok {
-		// 检查 reflect.Value 是否有效
+		// Check if reflect.Value is valid
 		if rv.IsValid() && rv.CanInterface() {
 			actualObj = rv.Interface()
 		} else {
-			// 如果无法获取接口值，则创建一个零值占位
+			// If unable to get interface value, set to nil as placeholder
 			actualObj = nil
 		}
 	}
 
 	// Use the interface value.
-	if r, ok := actualObj.(iTableName); ok && actualObj != nil {
-		tableName = r.TableName()
+	if actualObj != nil {
+		if r, ok := actualObj.(iTableName); ok {
+			tableName = r.TableName()
+		}
 	}
 
 	// User meta data tag "orm".
 	if tableName == "" {
-		if ormTag := gmeta.Get(object, OrmTagForStruct); !ormTag.IsEmpty() {
+		if ormTag := gmeta.Get(actualObj, OrmTagForStruct); !ormTag.IsEmpty() {
 			match, _ := gregex.MatchString(
 				fmt.Sprintf(`%s\s*:\s*([^,]+)`, OrmTagForTable),
 				ormTag.String(),
@@ -182,7 +184,7 @@ func getTableNameFromOrmTag(object any) string {
 	}
 	// Use the struct name of snake case.
 	if tableName == "" {
-		if t, err := gstructs.StructType(object); err != nil {
+		if t, err := gstructs.StructType(actualObj); err != nil {
 			panic(err)
 		} else {
 			tableName = gstr.CaseSnakeFirstUpper(
