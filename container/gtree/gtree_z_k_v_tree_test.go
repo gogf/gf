@@ -177,7 +177,7 @@ func Test_NewKVBTreeWithChecker_TypedNil(t *testing.T) {
 
 }
 
-func Test_NewKVRedBlackTreeChecker_TypedNil(t *testing.T) {
+func Test_NewRedBlackKVTreeWithChecker_TypedNil(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Student struct {
 			Name string
