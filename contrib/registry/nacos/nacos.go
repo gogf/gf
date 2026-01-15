@@ -34,11 +34,11 @@ var (
 
 // Registry is nacos registry.
 type Registry struct {
-	client           naming_client.INamingClient
-	clusterName      string
-	groupName        string
-	defaultEndpoint  string
-	defaultMetadata  map[string]string
+	client          naming_client.INamingClient
+	clusterName     string
+	groupName       string
+	defaultEndpoint string
+	defaultMetadata map[string]string
 }
 
 // Config is the configuration object for nacos client.
