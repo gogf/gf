@@ -46,11 +46,31 @@ func NewBKVTree[K comparable, V any](m int, comparator func(v1, v2 K) int, safe 
 	}
 }
 
+// NewBKVTreeWithChecker instantiates a B-tree with `m` (maximum number of children), a custom key comparator and nil checker.
+// The parameter `safe` is used to specify whether using tree in concurrent-safety, which is false in default.
+// The parameter `checker` is used to specify whether the given value is nil.
+func NewBKVTreeWithChecker[K comparable, V any](m int, comparator func(v1, v2 K) int, checker NilChecker[V], safe ...bool) *BKVTree[K, V] {
+	t := NewBKVTree[K, V](m, comparator, safe...)
+	t.RegisterNilChecker(checker)
+	return t
+}
+
 // NewBKVTreeFrom instantiates a B-tree with `m` (maximum number of children), a custom key comparator and data map.
 // The parameter `safe` is used to specify whether using tree in concurrent-safety,
 // which is false in default.
 func NewBKVTreeFrom[K comparable, V any](m int, comparator func(v1, v2 K) int, data map[K]V, safe ...bool) *BKVTree[K, V] {
 	tree := NewBKVTree[K, V](m, comparator, safe...)
+	for k, v := range data {
+		tree.doSet(k, v)
+	}
+	return tree
+}
+
+// NewBKVTreeWithCheckerFrom instantiates a B-tree with `m` (maximum number of children), a custom key comparator, nil checker and data map.
+// The parameter `safe` is used to specify whether using tree in concurrent-safety, which is false in default.
+// The parameter `checker` is used to specify whether the given value is nil.
+func NewBKVTreeWithCheckerFrom[K comparable, V any](m int, comparator func(v1, v2 K) int, data map[K]V, checker NilChecker[V], safe ...bool) *BKVTree[K, V] {
+	tree := NewBKVTreeWithChecker[K, V](m, comparator, checker, safe...)
 	for k, v := range data {
 		tree.doSet(k, v)
 	}
