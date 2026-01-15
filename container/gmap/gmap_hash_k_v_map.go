@@ -28,10 +28,16 @@ type KVMap[K comparable, V any] struct {
 }
 
 // NewKVMap creates and returns an empty hash map.
-// The parameter `safe` is used to specify whether to use the map in concurrent-safety mode,
-// which is false by default.
+// The parameter `safe` is used to specify whether to use the map in concurrent-safety mode, which is false by default.
 func NewKVMap[K comparable, V any](safe ...bool) *KVMap[K, V] {
 	return NewKVMapFrom(make(map[K]V), safe...)
+}
+
+// NewKVMapWithChecker creates and returns an empty hash map with a custom nil checker.
+// The parameter `checker` is a function used to determine if a value is nil.
+// The parameter `safe` is used to specify whether to use the map in concurrent-safety mode, which is false by default.
+func NewKVMapWithChecker[K comparable, V any](checker NilChecker[V], safe ...bool) *KVMap[K, V] {
+	return NewKVMapWithCheckerFrom(make(map[K]V), checker, safe...)
 }
 
 // NewKVMapFrom creates and returns a hash map from given map `data`.
@@ -42,6 +48,17 @@ func NewKVMapFrom[K comparable, V any](data map[K]V, safe ...bool) *KVMap[K, V] 
 		mu:   rwmutex.Create(safe...),
 		data: data,
 	}
+	return m
+}
+
+// NewKVMapWithCheckerFrom creates and returns a hash map from given map `data` with a custom nil checker.
+// Note that, the param `data` map will be set as the underlying data map (no deep copy),
+// The parameter `checker` is a function used to determine if a value is nil.
+// The parameter `safe` is used to specify whether using map in concurrent-safety,
+// there might be some concurrent-safe issues when changing the map outside.
+func NewKVMapWithCheckerFrom[K comparable, V any](data map[K]V, checker NilChecker[V], safe ...bool) *KVMap[K, V] {
+	m := NewKVMapFrom[K, V](data, safe...)
+	m.RegisterNilChecker(checker)
 	return m
 }
 
