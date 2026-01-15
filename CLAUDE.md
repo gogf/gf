@@ -382,4 +382,3 @@ Follow conventional commit format:
 8. **Concurrent safety**: Many GoFrame components are concurrent-safe - mention this when relevant
 9. **Configuration**: Use gcfg for configuration management rather than hardcoded values
 10. **Logging**: Use glog instead of fmt.Println for production code
-d
