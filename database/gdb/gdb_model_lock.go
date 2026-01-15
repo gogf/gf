@@ -109,7 +109,7 @@ func (m *Model) LockUpdate() *Model {
 	return model
 }
 
-// LockUpdateSkipLocked sets the lock for update for current operation.
+// LockUpdateSkipLocked sets the lock for update with skip locked behavior for current operation.
 // It skips the locked rows.
 // This is equivalent to Lock("FOR UPDATE SKIP LOCKED").
 // Note: Supported by PostgreSQL, Oracle, and MySQL 8.0+.
