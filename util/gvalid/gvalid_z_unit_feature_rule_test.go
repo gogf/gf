@@ -270,31 +270,24 @@ func Test_RequiredWithOutAll(t *testing.T) {
 
 func Test_Date(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "date"
-		val1 := "2010"
-		val2 := "201011"
-		val3 := "20101101"
-		val4 := "2010-11-01"
-		val5 := "2010.11.01"
-		val6 := "2010/11/01"
-		val7 := "2010=11=01"
-		val8 := "123"
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
-		err7 := g.Validator().Data(val7).Rules(rule).Run(ctx)
-		err8 := g.Validator().Data(val8).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.AssertNE(err2, nil)
-		t.Assert(err3, nil)
-		t.Assert(err4, nil)
-		t.Assert(err5, nil)
-		t.Assert(err6, nil)
-		t.AssertNE(err7, nil)
-		t.AssertNE(err8, nil)
+		m := g.MapStrBool{
+			"2010":       false,
+			"201011":     false,
+			"20101101":   true,
+			"2010-11-01": true,
+			"2010.11.01": true,
+			"2010/11/01": true,
+			"2010=11=01": false,
+			"123":        false,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("date").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
@@ -356,232 +349,238 @@ func Test_DateFormat(t *testing.T) {
 
 func Test_Email(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "email"
-		value1 := "m@johngcn"
-		value2 := "m@www@johngcn"
-		value3 := "m-m_m@mail.johng.cn"
-		value4 := "m.m-m@johng.cn"
-		err1 := g.Validator().Data(value1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(value2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(value3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(value4).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.AssertNE(err2, nil)
-		t.Assert(err3, nil)
-		t.Assert(err4, nil)
+		m := g.MapStrBool{
+			"m@johngcn":           false,
+			"m@www@johngcn":       false,
+			"m-m_m@mail.johng.cn": true,
+			"m.m-m@johng.cn":      true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("email").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_Phone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		err1 := g.Validator().Data("1361990897").Rules("phone").Run(ctx)
-		err2 := g.Validator().Data("13619908979").Rules("phone").Run(ctx)
-		err3 := g.Validator().Data("16719908979").Rules("phone").Run(ctx)
-		err4 := g.Validator().Data("19719908989").Rules("phone").Run(ctx)
-		t.AssertNE(err1.String(), nil)
-		t.Assert(err2, nil)
-		t.Assert(err3, nil)
-		t.Assert(err4, nil)
+		m := g.MapStrBool{
+			"1361990897":  false,
+			"13619908979": true,
+			"16719908979": true,
+			"19719908989": true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("phone").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_PhoneLoose(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		err1 := g.Validator().Data("13333333333").Rules("phone-loose").Run(ctx)
-		err2 := g.Validator().Data("15555555555").Rules("phone-loose").Run(ctx)
-		err3 := g.Validator().Data("16666666666").Rules("phone-loose").Run(ctx)
-		err4 := g.Validator().Data("23333333333").Rules("phone-loose").Run(ctx)
-		err5 := g.Validator().Data("1333333333").Rules("phone-loose").Run(ctx)
-		err6 := g.Validator().Data("10333333333").Rules("phone-loose").Run(ctx)
-		t.Assert(err1, nil)
-		t.Assert(err2, nil)
-		t.Assert(err3, nil)
-		t.AssertNE(err4, nil)
-		t.AssertNE(err5, nil)
-		t.AssertNE(err6, nil)
+		m := g.MapStrBool{
+			"13333333333": true,
+			"15555555555": true,
+			"16666666666": true,
+			"23333333333": false,
+			"1333333333":  false,
+			"10333333333": false,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("phone-loose").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_Telephone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "telephone"
-		val1 := "869265"
-		val2 := "028-869265"
-		val3 := "86292651"
-		val4 := "028-8692651"
-		val5 := "0830-8692651"
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.AssertNE(err2, nil)
-		t.Assert(err3, nil)
-		t.Assert(err4, nil)
-		t.Assert(err5, nil)
+		m := g.MapStrBool{
+			"869265":       false,
+			"028-869265":   false,
+			"86292651":     true,
+			"028-8692651":  true,
+			"0830-8692651": true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("telephone").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_Passport(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "passport"
-		val1 := "123456"
-		val2 := "a12345-6"
-		val3 := "aaaaa"
-		val4 := "aaaaaa"
-		val5 := "a123_456"
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.AssertNE(err2, nil)
-		t.AssertNE(err3, nil)
-		t.Assert(err4, nil)
-		t.Assert(err5, nil)
+		m := g.MapStrBool{
+			"123456":   false,
+			"a12345-6": false,
+			"aaaaa":    false,
+			"aaaaaa":   true,
+			"a123_456": true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("passport").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_Password(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "password"
-		val1 := "12345"
-		val2 := "aaaaa"
-		val3 := "a12345-6"
-		val4 := ">,/;'[09-"
-		val5 := "a123_456"
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.AssertNE(err2, nil)
-		t.Assert(err3, nil)
-		t.Assert(err4, nil)
-		t.Assert(err5, nil)
+		m := g.MapStrBool{
+			"12345":     false,
+			"aaaaa":     false,
+			"a12345-6":  true,
+			">,/;'[09-": true,
+			"a123_456":  true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("password").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_Password2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "password2"
-		val1 := "12345"
-		val2 := "Naaaa"
-		val3 := "a12345-6"
-		val4 := ">,/;'[09-"
-		val5 := "a123_456"
-		val6 := "Nant1986"
-		val7 := "Nant1986!"
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
-		err7 := g.Validator().Data(val7).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.AssertNE(err2, nil)
-		t.AssertNE(err3, nil)
-		t.AssertNE(err4, nil)
-		t.AssertNE(err5, nil)
-		t.Assert(err6, nil)
-		t.Assert(err7, nil)
+		m := g.MapStrBool{
+			"12345":     false,
+			"Naaaa":     false,
+			"a12345-6":  false,
+			">,/;'[09-": false,
+			"a123_456":  false,
+			"Nant1986":  true,
+			"Nant1986!": true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("password2").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_Password3(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "password3"
-		val1 := "12345"
-		val2 := "Naaaa"
-		val3 := "a12345-6"
-		val4 := ">,/;'[09-"
-		val5 := "a123_456"
-		val6 := "Nant1986"
-		val7 := "Nant1986!"
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
-		err7 := g.Validator().Data(val7).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.AssertNE(err2, nil)
-		t.AssertNE(err3, nil)
-		t.AssertNE(err4, nil)
-		t.AssertNE(err5, nil)
-		t.AssertNE(err6, nil)
-		t.Assert(err7, nil)
+		m := g.MapStrBool{
+			"12345":     false,
+			"Naaaa":     false,
+			"a12345-6":  false,
+			">,/;'[09-": false,
+			"a123_456":  false,
+			"Nant1986":  false,
+			"Nant1986!": true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("password3").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_Postcode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "postcode"
-		val1 := "12345"
-		val2 := "610036"
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.Assert(err2, nil)
+		m := g.MapStrBool{
+			"12345":  false,
+			"610036": true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("postcode").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_ResidentId(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "resident-id"
-		val1 := "11111111111111"
-		val2 := "1111111111111111"
-		val3 := "311128500121201"
-		val4 := "510521198607185367"
-		val5 := "51052119860718536x"
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.AssertNE(err2, nil)
-		t.AssertNE(err3, nil)
-		t.AssertNE(err4, nil)
-		t.Assert(err5, nil)
+		m := g.MapStrBool{
+			"11111111111111":     false,
+			"1111111111111111":   false,
+			"311128500121201":    false,
+			"510521198607185367": false,
+			"51052119860718536x": true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("resident-id").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_BankCard(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "bank-card"
-		val1 := "6230514630000424470"
-		val2 := "6230514630000424473"
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.Assert(err2, nil)
+		m := g.MapStrBool{
+			"6230514630000424470": false,
+			"6230514630000424473": true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("bank-card").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_QQ(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "qq"
-		val1 := "100"
-		val2 := "1"
-		val3 := "10000"
-		val4 := "38996181"
-		val5 := "389961817"
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.AssertNE(err2, nil)
-		t.Assert(err3, nil)
-		t.Assert(err4, nil)
-		t.Assert(err5, nil)
+		m := g.MapStrBool{
+			"100":       false,
+			"1":         false,
+			"10000":     true,
+			"38996181":  true,
+			"389961817": true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("qq").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
@@ -617,76 +616,78 @@ func Test_Ip(t *testing.T) {
 
 func Test_IPv4(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "ipv4"
-		val1 := "0.0.0"
-		val2 := "0.0.0.0"
-		val3 := "1.1.1.1"
-		val4 := "255.255.255.0"
-		val5 := "127.0.0.1"
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.Assert(err2, nil)
-		t.Assert(err3, nil)
-		t.Assert(err4, nil)
-		t.Assert(err5, nil)
+		m := g.MapStrBool{
+			"0.0.0":         false,
+			"0.0.0.0":       true,
+			"1.1.1.1":       true,
+			"255.255.255.0": true,
+			"127.0.0.1":     true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("ipv4").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_IPv6(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "ipv6"
-		val1 := "192.168.1.1"
-		val2 := "CDCD:910A:2222:5498:8475:1111:3900:2020"
-		val3 := "1030::C9B4:FF12:48AA:1A2B"
-		val4 := "2000:0:0:0:0:0:0:1"
-		val5 := "0000:0000:0000:0000:0000:ffff:c0a8:5909"
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.Assert(err2, nil)
-		t.Assert(err3, nil)
-		t.Assert(err4, nil)
-		t.Assert(err5, nil)
+		m := g.MapStrBool{
+			"192.168.1.1": false,
+			"CDCD:910A:2222:5498:8475:1111:3900:2020": true,
+			"1030::C9B4:FF12:48AA:1A2B":               true,
+			"2000:0:0:0:0:0:0:1":                      true,
+			"0000:0000:0000:0000:0000:ffff:c0a8:5909": true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("ipv6").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_MAC(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "mac"
-		val1 := "192.168.1.1"
-		val2 := "44-45-53-54-00-00"
-		val3 := "01:00:5e:00:00:00"
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.Assert(err2, nil)
-		t.Assert(err3, nil)
+		m := g.MapStrBool{
+			"192.168.1.1":       false,
+			"44-45-53-54-00-00": true,
+			"01:00:5e:00:00:00": true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("mac").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_URL(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "url"
-		val1 := "127.0.0.1"
-		val2 := "https://www.baidu.com"
-		val3 := "http://127.0.0.1"
-		val4 := "file:///tmp/test.txt"
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.Assert(err2, nil)
-		t.Assert(err3, nil)
-		t.Assert(err4, nil)
+		m := g.MapStrBool{
+			"127.0.0.1":             false,
+			"https://www.baidu.com": true,
+			"http://127.0.0.1":      true,
+			"file:///tmp/test.txt":  true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("url").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
@@ -798,290 +799,275 @@ func Test_Between(t *testing.T) {
 
 func Test_Min(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "min:100"
-		val1 := "1"
-		val2 := "99"
-		val3 := "100"
-		val4 := "1000"
-		val5 := "a"
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.AssertNE(err2, nil)
-		t.Assert(err3, nil)
-		t.Assert(err4, nil)
-		t.AssertNE(err5, nil)
-
-		rule2 := "min:a"
-		err6 := g.Validator().Data(val1).Rules(rule2).Run(ctx)
-		t.AssertNE(err6, nil)
+		m := g.MapStrBool{
+			"1":    false,
+			"99":   false,
+			"100":  true,
+			"1000": true,
+			"a":    false,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("min:100").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := g.Validator().Data("1").Rules("min:a").Run(ctx)
+		t.AssertNE(err, nil)
 	})
 }
 
 func Test_Max(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "max:100"
-		val1 := "1"
-		val2 := "99"
-		val3 := "100"
-		val4 := "1000"
-		val5 := "a"
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		t.Assert(err1, nil)
-		t.Assert(err2, nil)
-		t.Assert(err3, nil)
-		t.AssertNE(err4, nil)
-		t.AssertNE(err5, nil)
-
-		rule2 := "max:a"
-		err6 := g.Validator().Data(val1).Rules(rule2).Run(ctx)
-		t.AssertNE(err6, nil)
+		m := g.MapStrBool{
+			"1":    true,
+			"99":   true,
+			"100":  true,
+			"1000": false,
+			"a":    false,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("max:100").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := g.Validator().Data("1").Rules("max:a").Run(ctx)
+		t.AssertNE(err, nil)
 	})
 }
 
 func Test_Json(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "json"
-		val1 := ""
-		val2 := "."
-		val3 := "{}"
-		val4 := "[]"
-		val5 := "[1,2,3,4]"
-		val6 := `{"list":[1,2,3,4]}`
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.AssertNE(err2, nil)
-		t.Assert(err3, nil)
-		t.Assert(err4, nil)
-		t.Assert(err5, nil)
-		t.Assert(err6, nil)
+		m := g.MapStrBool{
+			"":                   false,
+			".":                  false,
+			"{}":                 true,
+			"[]":                 true,
+			"[1,2,3,4]":          true,
+			`{"list":[1,2,3,4]}`: true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("json").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_Integer(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "integer"
-		val1 := ""
-		val2 := "1.0"
-		val3 := "001"
-		val4 := "1"
-		val5 := "100"
-		val6 := `999999999`
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.AssertNE(err2, nil)
-		t.Assert(err3, nil)
-		t.Assert(err4, nil)
-		t.Assert(err5, nil)
-		t.Assert(err6, nil)
+		m := g.MapStrBool{
+			"":          false,
+			"1.0":       false,
+			"001":       true,
+			"1":         true,
+			"100":       true,
+			"999999999": true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("integer").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_Float(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "float"
-		val1 := ""
-		val2 := "a"
-		val3 := "1"
-		val4 := "1.0"
-		val5 := "1.1"
-		val6 := `0.1`
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.AssertNE(err2, nil)
-		t.Assert(err3, nil)
-		t.Assert(err4, nil)
-		t.Assert(err5, nil)
-		t.Assert(err6, nil)
+		m := g.MapStrBool{
+			"":    false,
+			"a":   false,
+			"1":   true,
+			"1.0": true,
+			"1.1": true,
+			"0.1": true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("float").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_Boolean(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "boolean"
-		val1 := "a"
-		val2 := "-"
-		val3 := ""
-		val4 := "1"
-		val5 := "true"
-		val6 := `off`
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.AssertNE(err2, nil)
-		t.Assert(err3, nil)
-		t.Assert(err4, nil)
-		t.Assert(err5, nil)
-		t.Assert(err6, nil)
+		m := g.MapStrBool{
+			"a":    false,
+			"-":    false,
+			"":     true,
+			"1":    true,
+			"true": true,
+			"off":  true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("boolean").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_Same(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "same:id"
-		val1 := "100"
-		params1 := g.Map{
-			"age": 18,
+		type testCase struct {
+			params g.Map
+			pass   bool
 		}
-		params2 := g.Map{
-			"id": 100,
+		cases := []testCase{
+			{g.Map{"age": 18}, false},
+			{g.Map{"id": 100}, true},
+			{g.Map{"id": 100, "name": "john"}, true},
 		}
-		params3 := g.Map{
-			"id":   100,
-			"name": "john",
+		for _, c := range cases {
+			err := g.Validator().Data("100").Assoc(c.params).Rules("same:id").Run(ctx)
+			if c.pass {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
 		}
-		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.Assert(err2, nil)
-		t.Assert(err3, nil)
 	})
 }
 
 func Test_Different(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "different:id"
-		val1 := "100"
-		params1 := g.Map{
-			"age": 18,
+		type testCase struct {
+			params g.Map
+			pass   bool
 		}
-		params2 := g.Map{
-			"id": 100,
+		cases := []testCase{
+			{g.Map{"age": 18}, true},
+			{g.Map{"id": 100}, false},
+			{g.Map{"id": 100, "name": "john"}, false},
 		}
-		params3 := g.Map{
-			"id":   100,
-			"name": "john",
+		for _, c := range cases {
+			err := g.Validator().Data("100").Assoc(c.params).Rules("different:id").Run(ctx)
+			if c.pass {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
 		}
-		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Run(ctx)
-		t.Assert(err1, nil)
-		t.AssertNE(err2, nil)
-		t.AssertNE(err3, nil)
 	})
 }
 
 func Test_EQ(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "eq:id"
-		val1 := "100"
-		params1 := g.Map{
-			"age": 18,
+		type testCase struct {
+			params g.Map
+			pass   bool
 		}
-		params2 := g.Map{
-			"id": 100,
+		cases := []testCase{
+			{g.Map{"age": 18}, false},
+			{g.Map{"id": 100}, true},
+			{g.Map{"id": 100, "name": "john"}, true},
 		}
-		params3 := g.Map{
-			"id":   100,
-			"name": "john",
+		for _, c := range cases {
+			err := g.Validator().Data("100").Assoc(c.params).Rules("eq:id").Run(ctx)
+			if c.pass {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
 		}
-		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.Assert(err2, nil)
-		t.Assert(err3, nil)
 	})
 }
 
 func Test_Not_EQ(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "not-eq:id"
-		val1 := "100"
-		params1 := g.Map{
-			"age": 18,
+		type testCase struct {
+			params g.Map
+			pass   bool
 		}
-		params2 := g.Map{
-			"id": 100,
+		cases := []testCase{
+			{g.Map{"age": 18}, true},
+			{g.Map{"id": 100}, false},
+			{g.Map{"id": 100, "name": "john"}, false},
 		}
-		params3 := g.Map{
-			"id":   100,
-			"name": "john",
+		for _, c := range cases {
+			err := g.Validator().Data("100").Assoc(c.params).Rules("not-eq:id").Run(ctx)
+			if c.pass {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
 		}
-		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Run(ctx)
-		t.Assert(err1, nil)
-		t.AssertNE(err2, nil)
-		t.AssertNE(err3, nil)
 	})
 }
 
 func Test_In(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "in:100,200"
-		val1 := ""
-		val2 := "1"
-		val3 := "100"
-		val4 := "200"
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		t.AssertNE(err1, nil)
-		t.AssertNE(err2, nil)
-		t.Assert(err3, nil)
-		t.Assert(err4, nil)
+		m := g.MapStrBool{
+			"":    false,
+			"1":   false,
+			"100": true,
+			"200": true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("in:100,200").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
 func Test_NotIn(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "not-in:100"
-		val1 := ""
-		val2 := "1"
-		val3 := "100"
-		val4 := "200"
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		t.Assert(err1, nil)
-		t.Assert(err2, nil)
-		t.AssertNE(err3, nil)
-		t.Assert(err4, nil)
+		m := g.MapStrBool{
+			"":    true,
+			"1":   true,
+			"100": false,
+			"200": true,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("not-in:100").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 	gtest.C(t, func(t *gtest.T) {
-		rule := "not-in:100,200"
-		val1 := ""
-		val2 := "1"
-		val3 := "100"
-		val4 := "200"
-		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
-		t.Assert(err1, nil)
-		t.Assert(err2, nil)
-		t.AssertNE(err3, nil)
-		t.AssertNE(err4, nil)
+		m := g.MapStrBool{
+			"":    true,
+			"1":   true,
+			"100": false,
+			"200": false,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("not-in:100,200").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
@@ -1617,5 +1603,150 @@ func Test_Enums(t *testing.T) {
 			Enums: []EnumsTest{EnumsTestA, EnumsTestB},
 		}).Run(ctx)
 		t.AssertNil(err)
+	})
+}
+func Test_Alpha(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := g.MapStrBool{
+			"abc":     true,
+			"ABC":     true,
+			"abcABC":  true,
+			"abc123":  false,
+			"abc-123": false,
+			"abc_123": false,
+			"123":     false,
+			"":        false,
+			"abc def": false,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("alpha").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
+	})
+}
+
+func Test_AlphaDash(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := g.MapStrBool{
+			"abc":          true,
+			"ABC":          true,
+			"abc123":       true,
+			"abc-123":      true,
+			"abc_123":      true,
+			"abc-_123":     true,
+			"abc-_ABC-123": true,
+			"abc 123":      false,
+			"abc@123":      false,
+			"":             false,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("alpha-dash").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
+	})
+}
+
+func Test_AlphaNum(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := g.MapStrBool{
+			"abc":       true,
+			"ABC":       true,
+			"123":       true,
+			"abc123":    true,
+			"ABC123":    true,
+			"abcABC123": true,
+			"abc-123":   false,
+			"abc_123":   false,
+			"abc 123":   false,
+			"":          false,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("alpha-num").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
+	})
+}
+
+func Test_Lowercase(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := g.MapStrBool{
+			"abc":     true,
+			"abcdef":  true,
+			"ABC":     false,
+			"Abc":     false,
+			"aBc":     false,
+			"abc123":  false,
+			"abc-def": false,
+			"abc_def": false,
+			"":        false,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("lowercase").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
+	})
+}
+
+func Test_Numeric(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := g.MapStrBool{
+			"0":         true,
+			"123":       true,
+			"0123":      true,
+			"123456789": true,
+			"1.23":      false,
+			"abc":       false,
+			"123abc":    false,
+			"abc123":    false,
+			"":          false,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("numeric").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
+	})
+}
+
+func Test_Uppercase(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := g.MapStrBool{
+			"ABC":     true,
+			"ABCDEF":  true,
+			"abc":     false,
+			"Abc":     false,
+			"AbC":     false,
+			"ABC123":  false,
+			"ABC-DEF": false,
+			"ABC_DEF": false,
+			"":        false,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("uppercase").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
