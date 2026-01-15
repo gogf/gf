@@ -34,6 +34,15 @@ func NewTSet[T comparable](safe ...bool) *TSet[T] {
 	}
 }
 
+// NewTSetWithChecker creates and returns a new set with a custom nil checker.
+// The parameter `nilChecker` is a function used to determine if a value is nil.
+// The parameter `safe` is used to specify whether using set in concurrent-safety mode.
+func NewTSetWithChecker[T comparable](checker NilChecker[T], safe ...bool) *TSet[T] {
+	s := NewTSet[T](safe...)
+	s.RegisterNilChecker(checker)
+	return s
+}
+
 // NewTSetFrom returns a new set from `items`.
 // `items` - A slice of type T.
 func NewTSetFrom[T comparable](items []T, safe ...bool) *TSet[T] {
@@ -45,6 +54,16 @@ func NewTSetFrom[T comparable](items []T, safe ...bool) *TSet[T] {
 		data: m,
 		mu:   rwmutex.Create(safe...),
 	}
+}
+
+// NewTSetWithCheckerFrom returns a new set from `items` with a custom nil checker.
+// The parameter `items` is a slice of elements to be added to the set.
+// The parameter `checker` is a function used to determine if a value is nil.
+// The parameter `safe` is used to specify whether using set in concurrent-safety mode.
+func NewTSetWithCheckerFrom[T comparable](items []T, checker NilChecker[T], safe ...bool) *TSet[T] {
+	set := NewTSetWithChecker[T](checker, safe...)
+	set.Add(items...)
+	return set
 }
 
 // RegisterNilChecker registers a custom nil checker function for the set elements.
@@ -80,13 +99,13 @@ func (set *TSet[T]) Iterator(f func(v T) bool) {
 // Add adds one or multiple items to the set.
 func (set *TSet[T]) Add(items ...T) {
 	set.mu.Lock()
+	defer set.mu.Unlock()
 	if set.data == nil {
 		set.data = make(map[T]struct{})
 	}
 	for _, v := range items {
 		set.data[v] = struct{}{}
 	}
-	set.mu.Unlock()
 }
 
 // AddIfNotExist checks whether item exists in the set,

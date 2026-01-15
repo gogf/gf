@@ -42,6 +42,15 @@ func NewRedBlackKVTree[K comparable, V any](comparator func(v1, v2 K) int, safe 
 	return &tree
 }
 
+// NewRedBlackKVTreeWithChecker instantiates a red-black tree with the custom key comparator and `nilChecker`.
+// The parameter `safe` is used to specify whether using tree in concurrent-safety, which is false in default.
+// The parameter `checker` is used to specify whether the given value is nil.
+func NewRedBlackKVTreeWithChecker[K comparable, V any](comparator func(v1, v2 K) int, checker NilChecker[V], safe ...bool) *RedBlackKVTree[K, V] {
+	t := NewRedBlackKVTree[K, V](comparator, safe...)
+	t.RegisterNilChecker(checker)
+	return t
+}
+
 // NewRedBlackKVTreeFrom instantiates a red-black tree with the custom key comparator and `data` map.
 // The parameter `safe` is used to specify whether using tree in concurrent-safety,
 // which is false in default.
@@ -49,6 +58,17 @@ func NewRedBlackKVTreeFrom[K comparable, V any](comparator func(v1, v2 K) int, d
 	var tree RedBlackKVTree[K, V]
 	RedBlackKVTreeInitFrom(&tree, comparator, data, safe...)
 	return &tree
+}
+
+// NewRedBlackKVTreeWithCheckerFrom instantiates a red-black tree with the custom key comparator, `data` map and `nilChecker`.
+// The parameter `safe` is used to specify whether using tree in concurrent-safety, which is false in default.
+// The parameter `checker` is used to specify whether the given value is nil.
+func NewRedBlackKVTreeWithCheckerFrom[K comparable, V any](comparator func(v1, v2 K) int, data map[K]V, checker NilChecker[V], safe ...bool) *RedBlackKVTree[K, V] {
+	t := NewRedBlackKVTreeWithChecker[K, V](comparator, checker, safe...)
+	for k, v := range data {
+		t.doSet(k, v)
+	}
+	return t
 }
 
 // RedBlackKVTreeInit instantiates a red-black tree with the custom key comparator.
@@ -210,7 +230,7 @@ func (tree *RedBlackKVTree[K, V]) GetOrSetFunc(key K, f func() V) V {
 // GetOrSetFuncLock returns its `value` of `key`, or sets value with returned value of callback function `f` if it does
 // not exist and then returns this value.
 //
-// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f`within mutex lock.
+// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f` within mutex lock.
 func (tree *RedBlackKVTree[K, V]) GetOrSetFuncLock(key K, f func() V) V {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()

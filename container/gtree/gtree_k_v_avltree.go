@@ -47,11 +47,31 @@ func NewAVLKVTree[K comparable, V any](comparator func(v1, v2 K) int, safe ...bo
 	}
 }
 
+// NewAVLKVTreeWithChecker instantiates an AVL tree with the custom key comparator and nil checker.
+// The parameter `safe` is used to specify whether using tree in concurrent-safety, which is false in default.
+// The parameter `checker` is used to specify whether the given value is nil.
+func NewAVLKVTreeWithChecker[K comparable, V any](comparator func(v1, v2 K) int, checker NilChecker[V], safe ...bool) *AVLKVTree[K, V] {
+	t := NewAVLKVTree[K, V](comparator, safe...)
+	t.RegisterNilChecker(checker)
+	return t
+}
+
 // NewAVLKVTreeFrom instantiates an AVL tree with the custom key comparator and data map.
 //
 // The parameter `safe` is used to specify whether using tree in concurrent-safety, which is false in default.
 func NewAVLKVTreeFrom[K comparable, V any](comparator func(v1, v2 K) int, data map[K]V, safe ...bool) *AVLKVTree[K, V] {
 	tree := NewAVLKVTree[K, V](comparator, safe...)
+	for k, v := range data {
+		tree.doSet(k, v)
+	}
+	return tree
+}
+
+// NewAVLKVTreeWithCheckerFrom instantiates an AVL tree with the custom key comparator, nil checker and data map.
+// The parameter `safe` is used to specify whether using tree in concurrent-safety, which is false in default.
+// The parameter `checker` is used to specify whether the given value is nil.
+func NewAVLKVTreeWithCheckerFrom[K comparable, V any](comparator func(v1, v2 K) int, data map[K]V, checker NilChecker[V], safe ...bool) *AVLKVTree[K, V] {
+	tree := NewAVLKVTreeWithChecker[K, V](comparator, checker, safe...)
 	for k, v := range data {
 		tree.doSet(k, v)
 	}

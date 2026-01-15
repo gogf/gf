@@ -50,11 +50,33 @@ func NewListKVMap[K comparable, V any](safe ...bool) *ListKVMap[K, V] {
 	}
 }
 
+// NewListKVMapWithChecker creates and returns a new ListKVMap instance with a custom nil checker.
+// The parameter `checker` is a function used to determine if a value is nil.
+// The parameter `safe` is used to specify whether using map in concurrent-safety,
+// which is false by default.
+func NewListKVMapWithChecker[K comparable, V any](checker NilChecker[V], safe ...bool) *ListKVMap[K, V] {
+	m := NewListKVMap[K, V](safe...)
+	m.RegisterNilChecker(checker)
+	return m
+}
+
 // NewListKVMapFrom returns a link map from given map `data`.
 // Note that, the param `data` map will be copied to the underlying data structure,
 // so changes to the original map will not affect the link map.
 func NewListKVMapFrom[K comparable, V any](data map[K]V, safe ...bool) *ListKVMap[K, V] {
 	m := NewListKVMap[K, V](safe...)
+	m.Sets(data)
+	return m
+}
+
+// NewListKVMapWithCheckerFrom returns a link map from given map `data` with a custom nil checker.
+// Note that, the param `data` map will be copied to the underlying data structure,
+// so changes to the original map will not affect the link map.
+// The parameter `checker` is a function used to determine if a value is nil.
+// The parameter `safe` is used to specify whether using map in concurrent-safety,
+// which is false by default.
+func NewListKVMapWithCheckerFrom[K comparable, V any](data map[K]V, nilChecker NilChecker[V], safe ...bool) *ListKVMap[K, V] {
+	m := NewListKVMapWithChecker[K, V](nilChecker, safe...)
 	m.Sets(data)
 	return m
 }
