@@ -46,7 +46,7 @@ func NewRedBlackTreeFrom(comparator func(v1, v2 any) int, data map[any]any, safe
 func (tree *RedBlackTree) lazyInit() {
 	tree.once.Do(func() {
 		if tree.RedBlackKVTree == nil {
-			tree.RedBlackKVTree = NewRedBlackKVTree[any, any](gutil.ComparatorTStr, false)
+			tree.RedBlackKVTree = NewRedBlackKVTree[any, any](gutil.ComparatorTStr[any], false)
 		}
 	})
 }

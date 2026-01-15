@@ -24,6 +24,7 @@ type BKVTree[K comparable, V any] struct {
 	comparator func(v1, v2 K) int
 	m          int // order (maximum number of children)
 	tree       *btree.Tree[K, V]
+	nilChecker NilChecker[V]
 }
 
 // BKVTreeEntry represents the key-value pair contained within nodes.
@@ -54,6 +55,26 @@ func NewBKVTreeFrom[K comparable, V any](m int, comparator func(v1, v2 K) int, d
 		tree.doSet(k, v)
 	}
 	return tree
+}
+
+// RegisterNilChecker registers a custom nil checker function for the map values.
+// This function is used to determine if a value should be considered as nil.
+// The nil checker function takes a value of type V and returns a boolean indicating
+// whether the value should be treated as nil.
+func (tree *BKVTree[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	tree.nilChecker = nilChecker
+}
+
+// isNil checks whether the given value is nil.
+// It first checks if a custom nil checker function is registered and uses it if available,
+// otherwise it performs a standard nil check using any(v) == nil.
+func (tree *BKVTree[K, V]) isNil(value V) bool {
+	if tree.nilChecker != nil {
+		return tree.nilChecker(value)
+	}
+	return any(value) == nil
 }
 
 // Clone clones and returns a new tree from current tree.
@@ -453,7 +474,7 @@ func (tree *BKVTree[K, V]) Right() *BKVTreeEntry[K, V] {
 //
 // It returns value with given `key`.
 func (tree *BKVTree[K, V]) doSet(key K, value V) V {
-	if any(value) == nil {
+	if tree.isNil(value) {
 		return value
 	}
 	tree.tree.Put(key, value)

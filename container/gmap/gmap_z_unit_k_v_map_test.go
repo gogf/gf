@@ -1630,3 +1630,36 @@ func Test_KVMap_Flip_String(t *testing.T) {
 		t.Assert(m.Get("val2"), "key2")
 	})
 }
+
+// Test TypedNil with custom nil checker for pointers
+func Test_KVMap_TypedNil(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string
+			Age  int
+		}
+		m1 := gmap.NewKVMap[int, *Student](true)
+		for i := 0; i < 10; i++ {
+			m1.GetOrSetFuncLock(i, func() *Student {
+				if i%2 == 0 {
+					return &Student{}
+				}
+				return nil
+			})
+		}
+		t.Assert(m1.Size(), 10)
+		m2 := gmap.NewKVMap[int, *Student](true)
+		m2.RegisterNilChecker(func(student *Student) bool {
+			return student == nil
+		})
+		for i := 0; i < 10; i++ {
+			m2.GetOrSetFuncLock(i, func() *Student {
+				if i%2 == 0 {
+					return &Student{}
+				}
+				return nil
+			})
+		}
+		t.Assert(m2.Size(), 5)
+	})
+}

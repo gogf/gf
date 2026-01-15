@@ -15,10 +15,14 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// NilChecker is a function that checks whether the given value is nil.
+type NilChecker[T any] func(T) bool
+
 // TSet[T] is consisted of any items.
 type TSet[T comparable] struct {
-	mu   rwmutex.RWMutex
-	data map[T]struct{}
+	mu         rwmutex.RWMutex
+	data       map[T]struct{}
+	nilChecker NilChecker[T]
 }
 
 // NewTSet creates and returns a new set, which contains un-repeated items.
@@ -41,6 +45,26 @@ func NewTSetFrom[T comparable](items []T, safe ...bool) *TSet[T] {
 		data: m,
 		mu:   rwmutex.Create(safe...),
 	}
+}
+
+// RegisterNilChecker registers a custom nil checker function for the set elements.
+// This function is used to determine if an element should be considered as nil.
+// The nil checker function takes an element of type T and returns a boolean indicating
+// whether the element should be treated as nil.
+func (set *TSet[T]) RegisterNilChecker(nilChecker NilChecker[T]) {
+	set.mu.Lock()
+	defer set.mu.Unlock()
+	set.nilChecker = nilChecker
+}
+
+// isNil checks whether the given value is nil.
+// It first checks if a custom nil checker function is registered and uses it if available,
+// otherwise it performs a standard nil check using any(v) == nil.
+func (set *TSet[T]) isNil(v T) bool {
+	if set.nilChecker != nil {
+		return set.nilChecker(v)
+	}
+	return any(v) == nil
 }
 
 // Iterator iterates the set readonly with given callback function `f`,
@@ -71,7 +95,7 @@ func (set *TSet[T]) Add(items ...T) {
 //
 // Note that, if `item` is nil, it does nothing and returns false.
 func (set *TSet[T]) AddIfNotExist(item T) bool {
-	if any(item) == nil {
+	if set.isNil(item) {
 		return false
 	}
 	if !set.Contains(item) {
@@ -95,7 +119,7 @@ func (set *TSet[T]) AddIfNotExist(item T) bool {
 // Note that, if `item` is nil, it does nothing and returns false. The function `f`
 // is executed without writing lock.
 func (set *TSet[T]) AddIfNotExistFunc(item T, f func() bool) bool {
-	if any(item) == nil {
+	if set.isNil(item) {
 		return false
 	}
 	if !set.Contains(item) {
@@ -121,7 +145,7 @@ func (set *TSet[T]) AddIfNotExistFunc(item T, f func() bool) bool {
 // Note that, if `item` is nil, it does nothing and returns false. The function `f`
 // is executed within writing lock.
 func (set *TSet[T]) AddIfNotExistFuncLock(item T, f func() bool) bool {
-	if any(item) == nil {
+	if set.isNil(item) {
 		return false
 	}
 	if !set.Contains(item) {
