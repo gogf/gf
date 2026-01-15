@@ -20,14 +20,26 @@ import (
 func (reg *Registry) Register(ctx context.Context, service gsvc.Service) (registered gsvc.Service, err error) {
 	metadata := map[string]string{}
 	endpoints := service.GetEndpoints()
+
+	// Apply default endpoint override if configured
+	if reg.defaultEndpoint != "" {
+		endpoints = gsvc.Endpoints{gsvc.NewEndpoint(reg.defaultEndpoint)}
+	}
+
 	p := vo.BatchRegisterInstanceParam{
 		ServiceName: service.GetName(),
 		GroupName:   reg.groupName,
 		Instances:   make([]vo.RegisterInstanceParam, 0, len(endpoints)),
 	}
 
+	// Copy service metadata
 	for k, v := range service.GetMetadata() {
 		metadata[k] = gconv.String(v)
+	}
+
+	// Apply default metadata if configured
+	for k, v := range reg.defaultMetadata {
+		metadata[k] = v
 	}
 
 	for _, endpoint := range endpoints {
