@@ -151,7 +151,7 @@ func isDoStruct(object any) bool {
 // getTableNameFromOrmTag retrieves and returns the table name from struct object.
 func getTableNameFromOrmTag(object any) string {
 	var tableName string
-	var actualObj any = object
+	var actualObj = object
 
 	if rv, ok := object.(reflect.Value); ok {
 		// Check if reflect.Value is valid
