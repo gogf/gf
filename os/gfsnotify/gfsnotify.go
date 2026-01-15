@@ -27,12 +27,12 @@ import (
 
 // Watcher is the monitor for file changes.
 type Watcher struct {
-	watcher   *fsnotify.Watcher // Underlying fsnotify object.
-	events    *gqueue.Queue     // Used for internal event management.
-	cache     *gcache.Cache     // Used for repeated event filter.
-	nameSet   *gset.StrSet      // Used for AddOnce feature.
-	callbacks *gmap.StrAnyMap   // Path(file/folder) to callbacks mapping.
-	closeChan chan struct{}     // Used for watcher closing notification.
+	watcher   *fsnotify.Watcher                // Underlying fsnotify object.
+	events    *gqueue.TQueue[*Event]           // Used for internal event management.
+	cache     *gcache.Cache                    // Used for repeated event filter.
+	nameSet   *gset.StrSet                     // Used for AddOnce feature.
+	callbacks *gmap.KVMap[string, *glist.List] // Path(file/folder) to callbacks mapping.
+	closeChan chan struct{}                    // Used for watcher closing notification.
 }
 
 // Callback is the callback function for Watcher.
@@ -82,10 +82,11 @@ const (
 )
 
 var (
-	mu                  sync.Mutex                // Mutex for concurrent safety of defaultWatcher.
-	defaultWatcher      *Watcher                  // Default watcher.
-	callbackIdMap       = gmap.NewIntAnyMap(true) // Global callback id to callback function mapping.
-	callbackIdGenerator = gtype.NewInt()          // Atomic id generator for callback.
+	checker             = func(v *glist.List) bool { return v == nil } // checker checks whether the value is nil.
+	mu                  sync.Mutex                                     // Mutex for concurrent safety of defaultWatcher.
+	defaultWatcher      *Watcher                                       // Default watcher.
+	callbackIdMap       = gmap.NewIntAnyMap(true)                      // Global callback id to callback function mapping.
+	callbackIdGenerator = gtype.NewInt()                               // Atomic id generator for callback.
 )
 
 // New creates and returns a new watcher.
@@ -96,10 +97,10 @@ var (
 func New() (*Watcher, error) {
 	w := &Watcher{
 		cache:     gcache.New(),
-		events:    gqueue.New(),
+		events:    gqueue.NewTQueue[*Event](),
 		nameSet:   gset.NewStrSet(true),
 		closeChan: make(chan struct{}),
-		callbacks: gmap.NewStrAnyMap(true),
+		callbacks: gmap.NewKVMapWithChecker[string, *glist.List](checker, true),
 	}
 	if watcher, err := fsnotify.NewWatcher(); err == nil {
 		w.watcher = watcher
