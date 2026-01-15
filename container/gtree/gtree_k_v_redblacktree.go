@@ -24,6 +24,7 @@ type RedBlackKVTree[K comparable, V any] struct {
 	mu         rwmutex.RWMutex
 	comparator func(v1, v2 K) int
 	tree       *redblacktree.Tree[K, V]
+	nilChecker NilChecker[V]
 }
 
 // RedBlackKVTreeNode is a single element within the tree.
@@ -73,6 +74,26 @@ func RedBlackKVTreeInitFrom[K comparable, V any](tree *RedBlackKVTree[K, V], com
 	for k, v := range data {
 		tree.doSet(k, v)
 	}
+}
+
+// RegisterNilChecker registers a custom nil checker function for the map values.
+// This function is used to determine if a value should be considered as nil.
+// The nil checker function takes a value of type V and returns a boolean indicating
+// whether the value should be treated as nil.
+func (tree *RedBlackKVTree[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	tree.nilChecker = nilChecker
+}
+
+// isNil checks whether the given value is nil.
+// It first checks if a custom nil checker function is registered and uses it if available,
+// otherwise it performs a standard nil check using any(v) == nil.
+func (tree *RedBlackKVTree[K, V]) isNil(value V) bool {
+	if tree.nilChecker != nil {
+		return tree.nilChecker(value)
+	}
+	return any(value) == nil
 }
 
 // SetComparator sets/changes the comparator for sorting.
@@ -592,7 +613,7 @@ func (tree *RedBlackKVTree[K, V]) UnmarshalValue(value any) (err error) {
 //
 // It returns value with given `key`.
 func (tree *RedBlackKVTree[K, V]) doSet(key K, value V) (ret V) {
-	if any(value) == nil {
+	if tree.isNil(value) {
 		return
 	}
 	tree.tree.Put(key, value)
