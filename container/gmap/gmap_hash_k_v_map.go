@@ -53,9 +53,9 @@ func NewKVMapFrom[K comparable, V any](data map[K]V, safe ...bool) *KVMap[K, V] 
 
 // NewKVMapWithCheckerFrom creates and returns a hash map from given map `data` with a custom nil checker.
 // Note that, the param `data` map will be set as the underlying data map (no deep copy),
+// and there might be some concurrent-safe issues when changing the map outside.
 // The parameter `checker` is a function used to determine if a value is nil.
-// The parameter `safe` is used to specify whether using map in concurrent-safety,
-// there might be some concurrent-safe issues when changing the map outside.
+// The parameter `safe` is used to specify whether to use the map in concurrent-safety mode, which is false by default.
 func NewKVMapWithCheckerFrom[K comparable, V any](data map[K]V, checker NilChecker[V], safe ...bool) *KVMap[K, V] {
 	m := NewKVMapFrom[K, V](data, safe...)
 	m.RegisterNilChecker(checker)
