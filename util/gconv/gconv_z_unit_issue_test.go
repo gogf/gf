@@ -805,3 +805,147 @@ func Test_Issue3903(t *testing.T) {
 		t.Assert(a.UserId, 100)
 	})
 }
+
+// https://github.com/gogf/gf/issues/4542
+func Test_Issue4542(t *testing.T) {
+	// Test case 1: Nested map conversion - map[string]any to map[string]map[string]float64
+	// This is the original bug report scenario
+	gtest.C(t, func(t *gtest.T) {
+		type ExchangeRate map[string]map[string]float64
+
+		// Source data from JSON unmarshalling (nested map[string]any)
+		source := map[string]any{
+			"USD": map[string]any{
+				"CNY": 7.0,
+				"EUR": 0.85,
+			},
+			"EUR": map[string]any{
+				"CNY": 8.2,
+				"USD": 1.18,
+			},
+		}
+
+		var exchangeRate ExchangeRate
+		err := gconv.Scan(source, &exchangeRate)
+		t.AssertNil(err)
+		t.Assert(len(exchangeRate), 2)
+		t.Assert(len(exchangeRate["USD"]), 2)
+		t.Assert(exchangeRate["USD"]["CNY"], 7.0)
+		t.Assert(exchangeRate["USD"]["EUR"], 0.85)
+		t.Assert(exchangeRate["EUR"]["CNY"], 8.2)
+		t.Assert(exchangeRate["EUR"]["USD"], 1.18)
+	})
+
+	// Test case 2: Deeply nested map conversion (3 levels)
+	// Verifies recursion terminates correctly at base types
+	gtest.C(t, func(t *gtest.T) {
+		type DeepMap map[string]map[string]map[string]int
+
+		source := map[string]any{
+			"level1": map[string]any{
+				"level2": map[string]any{
+					"level3": 100,
+				},
+			},
+		}
+
+		var deepMap DeepMap
+		err := gconv.Scan(source, &deepMap)
+		t.AssertNil(err)
+		t.Assert(deepMap["level1"]["level2"]["level3"], 100)
+	})
+
+	// Test case 3: Map with different key types
+	gtest.C(t, func(t *gtest.T) {
+		source := map[string]any{
+			"1": map[string]any{
+				"value": 100,
+			},
+			"2": map[string]any{
+				"value": 200,
+			},
+		}
+
+		var result map[int]map[string]int
+		err := gconv.Scan(source, &result)
+		t.AssertNil(err)
+		t.Assert(result[1]["value"], 100)
+		t.Assert(result[2]["value"], 200)
+	})
+
+	// Test case 4: Empty nested map - verifies recursion terminates on empty map
+	gtest.C(t, func(t *gtest.T) {
+		source := map[string]any{
+			"USD": map[string]any{},
+		}
+
+		var result map[string]map[string]float64
+		err := gconv.Scan(source, &result)
+		t.AssertNil(err)
+		t.Assert(len(result), 1)
+		t.Assert(len(result["USD"]), 0)
+	})
+
+	// Test case 5: Mixed struct and map in nested structure
+	// Verifies struct conversion still works (no regression)
+	gtest.C(t, func(t *gtest.T) {
+		type Config struct {
+			Name  string
+			Value int
+		}
+
+		source := map[string]any{
+			"config1": map[string]any{
+				"Name":  "test1",
+				"Value": 100,
+			},
+			"config2": map[string]any{
+				"Name":  "test2",
+				"Value": 200,
+			},
+		}
+
+		// Map value is struct - should still work
+		var result map[string]Config
+		err := gconv.Scan(source, &result)
+		t.AssertNil(err)
+		t.Assert(result["config1"].Name, "test1")
+		t.Assert(result["config1"].Value, 100)
+		t.Assert(result["config2"].Name, "test2")
+		t.Assert(result["config2"].Value, 200)
+	})
+
+	// Test case 6: Very deep nesting (5 levels) - stress test for recursion
+	gtest.C(t, func(t *gtest.T) {
+		source := map[string]any{
+			"l1": map[string]any{
+				"l2": map[string]any{
+					"l3": map[string]any{
+						"l4": map[string]any{
+							"l5": "deep_value",
+						},
+					},
+				},
+			},
+		}
+
+		var result map[string]map[string]map[string]map[string]map[string]string
+		err := gconv.Scan(source, &result)
+		t.AssertNil(err)
+		t.Assert(result["l1"]["l2"]["l3"]["l4"]["l5"], "deep_value")
+	})
+
+	// Test case 7: Source value is not a map (should be converted first)
+	// Verifies no infinite recursion when source doesn't match expected structure
+	gtest.C(t, func(t *gtest.T) {
+		source := map[string]any{
+			"key": "not_a_map",
+		}
+
+		var result map[string]map[string]string
+		err := gconv.Scan(source, &result)
+		// This should not cause infinite recursion, but conversion may fail or return empty
+		// The key point is it should not hang
+		t.AssertNil(err)
+	})
+}
