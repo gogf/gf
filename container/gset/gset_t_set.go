@@ -52,6 +52,8 @@ func NewTSetFrom[T comparable](items []T, safe ...bool) *TSet[T] {
 // The nil checker function takes an element of type T and returns a boolean indicating
 // whether the element should be treated as nil.
 func (set *TSet[T]) RegisterNilChecker(nilChecker NilChecker[T]) {
+	set.mu.Lock()
+	defer set.mu.Unlock()
 	set.nilChecker = nilChecker
 }
 
