@@ -935,7 +935,7 @@ func Test_Issue4542(t *testing.T) {
 		t.Assert(result["l1"]["l2"]["l3"]["l4"]["l5"], "deep_value")
 	})
 
-	// Test case 8: Source value is not a map (should be converted first)
+	// Test case 7: Source value is not a map (should be converted first)
 	// Verifies no infinite recursion when source doesn't match expected structure
 	gtest.C(t, func(t *gtest.T) {
 		source := map[string]any{
