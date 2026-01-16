@@ -98,7 +98,6 @@ func generateStructFieldDefinition(
 		err              error
 		localTypeName    gdb.LocalType
 		localTypeNameStr string
-		jsonTag          = gstr.CaseConvert(field.Name, gstr.CaseTypeMatch(in.JsonCase))
 	)
 
 	if in.TypeMapping != nil && len(in.TypeMapping) > 0 {
@@ -156,6 +155,8 @@ func generateStructFieldDefinition(
 		"    #" + formatFieldName(newFiledName, FieldNameCaseCamel),
 		" #" + localTypeNameStr,
 	}
+
+	jsonTag := gstr.CaseConvert(newFiledName, gstr.CaseTypeMatch(in.JsonCase))
 	attrLines = append(attrLines, fmt.Sprintf(` #%sjson:"%s"`, tagKey, jsonTag))
 	// orm tag
 	if !in.IsDo {

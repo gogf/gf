@@ -4,11 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package mssql implements gdb.Driver, which supports operations for database MSSql.
-//
-// Note:
-// 1. It does not support Replace features.
-// 2. It does not support LastInsertId.
+// Package mssql implements gdb.Driver, which supports operations for MSSQL.
 package mssql
 
 import (

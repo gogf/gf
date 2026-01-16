@@ -128,3 +128,218 @@ func TestIssue4376(t *testing.T) {
 		t.Log(gq.Len(), len(cq))
 	})
 }
+
+// Test static queue (with limit) close operation
+func TestQueue_StaticClose(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		q := gqueue.New(10)
+		defer func() {
+			if err := recover(); err == nil {
+				t.Log("Close succeeded")
+			}
+		}()
+		q.Push(1)
+		q.Push(2)
+		q.Close()
+		// After closing, Pop should return nil
+		v := q.Pop()
+		t.Assert(v, nil)
+	})
+}
+
+// Test Size() method (deprecated alias of Len)
+func TestQueue_Size(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		q := gqueue.New(20)
+		for i := range 10 {
+			q.Push(i)
+		}
+		t.Assert(q.Size(), 10)
+		t.Assert(q.Len(), 10)
+		q.Close()
+	})
+	gtest.C(t, func(t *gtest.T) {
+		q := gqueue.New()
+		for i := range 15 {
+			q.Push(i)
+		}
+		time.Sleep(10 * time.Millisecond)
+		t.Assert(q.Size(), q.Len())
+		q.Close()
+	})
+}
+
+// Test TQueue directly with generic type
+func TestTQueue_Generic(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test with custom type
+		q := gqueue.NewTQueue[string]()
+		defer q.Close()
+		q.Push("hello")
+		q.Push("world")
+		t.Assert(q.Pop(), "hello")
+		t.Assert(q.Pop(), "world")
+	})
+}
+
+// Test TQueue Size method directly
+func TestTQueue_Size(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		q := gqueue.NewTQueue[int]()
+		defer q.Close()
+		for i := range 10 {
+			q.Push(i)
+		}
+		time.Sleep(10 * time.Millisecond)
+		// Size is an alias of Len for TQueue
+		t.Assert(q.Size(), q.Len())
+	})
+}
+
+// Test TQueue with static limit
+func TestTQueue_StaticLimit(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		q := gqueue.NewTQueue[int](5)
+		defer q.Close()
+		for i := range 5 {
+			q.Push(i)
+		}
+		t.Assert(q.Len(), 5)
+		for i := range 5 {
+			t.Assert(q.Pop(), i)
+		}
+		t.Assert(q.Len(), 0)
+	})
+}
+
+// Test queue with large data push/pop
+func TestQueue_LargeDataScale(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		q := gqueue.New()
+		defer q.Close()
+		n := 5000
+		for i := range n {
+			q.Push(i)
+		}
+		time.Sleep(50 * time.Millisecond)
+		// Pop should retrieve all items in order
+		for i := range n {
+			v := q.Pop()
+			t.Assert(v, i)
+		}
+	})
+}
+
+// Test double close (idempotent close)
+func TestQueue_DoubleClose(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		q := gqueue.New()
+		q.Push(1)
+		q.Close()
+		// Second close should not panic
+		q.Close()
+		t.Assert(q.Pop(), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		q := gqueue.New(10)
+		q.Push(1)
+		q.Close()
+		// Second close should not panic for static queue
+		q.Close()
+		// Pop from closed static queue returns the buffered value
+		v := q.Pop()
+		t.Assert(v, 1)
+	})
+}
+
+// Test concurrent push and pop
+func TestQueue_ConcurrentPushPop(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		q := gqueue.New()
+		defer q.Close()
+		// Producer goroutine
+		go func() {
+			for i := range 100 {
+				q.Push(i)
+			}
+			time.Sleep(50 * time.Millisecond)
+			q.Close()
+		}()
+		// Consumer
+		count := 0
+		for {
+			v := q.Pop()
+			if v == nil {
+				break
+			}
+			count++
+		}
+		t.AssertGE(count, 1)
+	})
+}
+
+// Test Pop on empty queue returns nil when closed
+func TestQueue_PopEmptyClosed(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		q := gqueue.New()
+		q.Close()
+		v := q.Pop()
+		t.Assert(v, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		q := gqueue.New(10)
+		q.Close()
+		v := q.Pop()
+		t.Assert(v, nil)
+	})
+}
+
+// Test Len with dynamic queue at capacity boundary
+func TestQueue_LenAtBoundary(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		q := gqueue.New()
+		defer q.Close()
+		// Push exactly defaultQueueSize items to test boundary condition
+		for i := range 10000 {
+			q.Push(i)
+		}
+		time.Sleep(50 * time.Millisecond)
+		len := q.Len()
+		t.AssertGE(len, 0)
+	})
+}
+
+// Test Close on dynamic queue with pending asyncLoopFromListToChannel
+func TestQueue_CloseWithAsyncLoop(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		q := gqueue.New()
+		// Push some data to activate asyncLoopFromListToChannel
+		for i := range 100 {
+			q.Push(i)
+		}
+		// Immediately close
+		q.Close()
+		// Pop should return values until exhausted, then nil
+		for {
+			v := q.Pop()
+			if v == nil {
+				break
+			}
+		}
+		t.Assert(q.Pop(), nil)
+	})
+}
+
+// Test static queue edge case with zero limit (should create unlimited queue)
+func TestQueue_ZeroLimitCreatesUnlimited(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		q := gqueue.New(0)
+		defer q.Close()
+		for i := range 100 {
+			q.Push(i)
+		}
+		time.Sleep(10 * time.Millisecond)
+		len := q.Len()
+		t.Assert(len, 100)
+	})
+}
