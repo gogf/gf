@@ -4,7 +4,7 @@ go 1.23.0
 
 require (
 	gitee.com/opengauss/openGauss-connector-go-pq v1.0.7
-	github.com/gogf/gf/v2 v2.9.7
+	github.com/gogf/gf/v2 v2.9.8
 	github.com/google/uuid v1.6.0
 	github.com/lib/pq v1.10.9
 )
