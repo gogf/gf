@@ -230,33 +230,42 @@ func (m *Model) doStruct(pointer any, where ...any) error {
 		return err
 	}
 
-	// Get reflect.Value from pointer, handling both reflect.Value and direct interfaces
-	var rv reflect.Value
-	if v, ok := pointer.(reflect.Value); ok {
-		if !v.CanInterface() {
-			return nil // Cannot access the value, so skip IAfterScan
-		}
-		// Get the actual value from reflect.Value and create new reflect.Value for pointer dereferencing
-		rv = reflect.ValueOf(v.Interface())
-	} else {
-		rv = reflect.ValueOf(pointer)
+	// 处理多级指针的情况，找到最终的指针用于接口检查
+	var ptrValue reflect.Value
+
+	switch v := pointer.(type) {
+	case reflect.Value:
+		// 已经是 reflect.Value
+		ptrValue = v
+	default:
+		// 转换为 reflect.Value
+		ptrValue = reflect.ValueOf(pointer)
 	}
 
-	// Resolve to the actual struct by dereferencing pointers
-	for rv.Kind() == reflect.Ptr && !rv.IsNil() {
-		rv = rv.Elem()
-	}
-
-	// Skip if the resolved object is invalid or nil
-	if !rv.IsValid() || (rv.Kind() == reflect.Ptr && rv.IsNil()) {
+	// 如果是 nil，直接返回
+	if ptrValue.IsNil() {
 		return nil
 	}
 
-	resolvedObj := rv.Interface()
+	// 找到最终的指针（处理多级指针）
+	for ptrValue.Kind() == reflect.Ptr && !ptrValue.IsNil() {
+		// 如果当前指针指向的还是指针，继续深入
+		if ptrValue.Elem().Kind() == reflect.Ptr {
+			ptrValue = ptrValue.Elem()
+		} else {
+			// 找到了最终的指针（指向非指针类型）
+			break
+		}
+	}
 
-	// Check if the resolved object implements IAfterScan interface
-	if afterScanner, ok := resolvedObj.(IAfterScan); ok {
-		// Call AfterScan if the interface is implemented
+	// 确保 ptrValue 是指针类型且非空
+	if ptrValue.Kind() != reflect.Ptr || ptrValue.IsNil() {
+		return nil
+	}
+
+	// 检查指针是否实现了 IAfterScan 接口
+	if afterScanner, ok := ptrValue.Interface().(IAfterScan); ok {
+		// 调用 AfterScan 方法
 		return afterScanner.AfterScan()
 	}
 
