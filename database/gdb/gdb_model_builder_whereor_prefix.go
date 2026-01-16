@@ -6,6 +6,8 @@
 
 package gdb
 
+import "github.com/gogf/gf/v2/util/gconv"
+
 // WhereOrPrefix performs as WhereOr, but it adds prefix to each field in where statement.
 // Eg:
 // WhereOrPrefix("order", "status", "paid")                        => WHERE xxx OR (`order`.`status`='paid')
@@ -56,7 +58,8 @@ func (b *WhereBuilder) WhereOrPrefixBetween(prefix string, column string, min, m
 
 // WhereOrPrefixLike builds `prefix.column LIKE 'like'` statement in `OR` conditions.
 func (b *WhereBuilder) WhereOrPrefixLike(prefix string, column string, like any) *WhereBuilder {
-	return b.WhereOrf(`%s.%s LIKE ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), like)
+	likeStr := gconv.String(like)
+	return b.WhereOrf(`%s.%s LIKE ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), EscapeLikeString(likeStr))
 }
 
 // WhereOrPrefixIn builds `prefix.column IN (in)` statement in `OR` conditions.
@@ -80,7 +83,8 @@ func (b *WhereBuilder) WhereOrPrefixNotBetween(prefix string, column string, min
 
 // WhereOrPrefixNotLike builds `prefix.column NOT LIKE 'like'` statement in `OR` conditions.
 func (b *WhereBuilder) WhereOrPrefixNotLike(prefix string, column string, like any) *WhereBuilder {
-	return b.WhereOrf(`%s.%s NOT LIKE ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), like)
+	likeStr := gconv.String(like)
+	return b.WhereOrf(`%s.%s NOT LIKE ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), EscapeLikeString(likeStr))
 }
 
 // WhereOrPrefixNotIn builds `prefix.column NOT IN (in)` statement.

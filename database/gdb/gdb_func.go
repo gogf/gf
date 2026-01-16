@@ -1015,3 +1015,25 @@ func genTableNamesCacheKey(group string) string {
 func genSoftTimeFieldNameTypeCacheKey(schema, table string, candidateFields []string) string {
 	return fmt.Sprintf(`getSoftFieldNameAndType:%s#%s#%s`, schema, table, strings.Join(candidateFields, "_"))
 }
+
+// EscapeLikeString escapes special characters in a string for LIKE operations.
+// It escapes '\', '%', and '_' characters to prevent them from being interpreted
+// as wildcard characters in SQL LIKE statements.
+//
+// The function follows standard SQL escaping rules:
+// - '\' becomes '\\'
+// - '%' becomes '\%'
+// - '_' becomes '\_'
+//
+// Example:
+//
+//	EscapeLikeString("john_doe%test\\data") returns "john\\_doe\\%test\\\\data"
+func EscapeLikeString(s string) string {
+	// Escape backslashes first to prevent double escaping
+	s = strings.ReplaceAll(s, "\\", "\\\\")
+	// Escape percent signs
+	s = strings.ReplaceAll(s, "%", "\\%")
+	// Escape underscores
+	s = strings.ReplaceAll(s, "_", "\\_")
+	return s
+}

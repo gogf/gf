@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // doWhereType sets the condition statement for the model. The parameter `where` can be type of
@@ -114,7 +115,7 @@ func (b *WhereBuilder) WhereBetween(column string, min, max any) *WhereBuilder {
 
 // WhereLike builds `column LIKE like` statement.
 func (b *WhereBuilder) WhereLike(column string, like string) *WhereBuilder {
-	return b.Wheref(`%s LIKE ?`, b.model.QuoteWord(column), like)
+	return b.Wheref(`%s LIKE ?`, b.model.QuoteWord(column), EscapeLikeString(like))
 }
 
 // WhereIn builds `column IN (in)` statement.
@@ -138,7 +139,8 @@ func (b *WhereBuilder) WhereNotBetween(column string, min, max any) *WhereBuilde
 
 // WhereNotLike builds `column NOT LIKE like` statement.
 func (b *WhereBuilder) WhereNotLike(column string, like any) *WhereBuilder {
-	return b.Wheref(`%s NOT LIKE ?`, b.model.QuoteWord(column), like)
+	likeStr := gconv.String(like)
+	return b.Wheref(`%s NOT LIKE ?`, b.model.QuoteWord(column), EscapeLikeString(likeStr))
 }
 
 // WhereNot builds `column != value` statement.

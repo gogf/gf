@@ -6,6 +6,8 @@
 
 package gdb
 
+import "github.com/gogf/gf/v2/util/gconv"
+
 // WherePrefix performs as Where, but it adds prefix to each field in where statement.
 // Eg:
 // WherePrefix("order", "status", "paid")                        => WHERE `order`.`status`='paid'
@@ -54,7 +56,8 @@ func (b *WhereBuilder) WherePrefixBetween(prefix string, column string, min, max
 
 // WherePrefixLike builds `prefix.column LIKE like` statement.
 func (b *WhereBuilder) WherePrefixLike(prefix string, column string, like any) *WhereBuilder {
-	return b.Wheref(`%s.%s LIKE ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), like)
+	likeStr := gconv.String(like)
+	return b.Wheref(`%s.%s LIKE ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), EscapeLikeString(likeStr))
 }
 
 // WherePrefixIn builds `prefix.column IN (in)` statement.
@@ -78,7 +81,8 @@ func (b *WhereBuilder) WherePrefixNotBetween(prefix string, column string, min, 
 
 // WherePrefixNotLike builds `prefix.column NOT LIKE like` statement.
 func (b *WhereBuilder) WherePrefixNotLike(prefix string, column string, like any) *WhereBuilder {
-	return b.Wheref(`%s.%s NOT LIKE ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), like)
+	likeStr := gconv.String(like)
+	return b.Wheref(`%s.%s NOT LIKE ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), EscapeLikeString(likeStr))
 }
 
 // WherePrefixNot builds `prefix.column != value` statement.
