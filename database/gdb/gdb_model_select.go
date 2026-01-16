@@ -706,7 +706,6 @@ func (m *Model) doGetAllBySql(
 	if result, err = in.Next(ctx); err != nil {
 		return
 	}
-
 	err = m.saveSelectResultToCache(ctx, selectType, result, sql, args...)
 	return
 }
