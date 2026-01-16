@@ -247,8 +247,8 @@ func (m *Model) doStruct(pointer any, where ...any) error {
 		rv = rv.Elem()
 	}
 
-	// Skip if the resolved object is nil or invalid
-	if !rv.IsValid() || rv.IsNil() {
+	// Skip if the resolved object is invalid or nil
+	if !rv.IsValid() || (rv.Kind() == reflect.Ptr && rv.IsNil()) {
 		return nil
 	}
 
@@ -259,8 +259,6 @@ func (m *Model) doStruct(pointer any, where ...any) error {
 		// Call AfterScan if the interface is implemented
 		return afterScanner.AfterScan()
 	}
-
-	return nil
 
 	return nil
 }
