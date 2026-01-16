@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-// Open creates and returns an underlying sql.DB object for pgsql.
+// Open creates and returns an underlying sql.DB object for GaussDB (openGauss).
 // https://gitee.com/opengauss/openGauss-connector-go-pq
 func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	source, err := configNodeToSource(config)
