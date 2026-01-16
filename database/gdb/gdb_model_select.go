@@ -20,6 +20,14 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// IAfterScan is an interface that can be implemented by structs to perform
+// custom logic after the struct has been populated with data from the database.
+// The AfterScan method is called after the struct fields have been filled with
+// data retrieved from the database during scanning operations.
+type IAfterScan interface {
+	AfterScan() error
+}
+
 // All does "SELECT FROM ..." statement for the model.
 // It retrieves the records from table and returns the result as slice type.
 // It returns nil if there's no record retrieved with the given conditions from table.
@@ -217,7 +225,36 @@ func (m *Model) doStruct(pointer any, where ...any) error {
 	if err = one.Struct(pointer); err != nil {
 		return err
 	}
-	return model.doWithScanStruct(pointer)
+	err = model.doWithScanStruct(pointer)
+	if err != nil {
+		return err
+	}
+
+	// Check if pointer implements IAfterScan interface, handle both direct and reflect.Value cases
+	var objToCheck any
+	if v, ok := pointer.(reflect.Value); ok {
+		if !v.CanInterface() {
+			return nil // Cannot access the value, so skip IAfterScan
+		}
+		objToCheck = v.Interface()
+	} else {
+		objToCheck = pointer
+	}
+
+	// Check if the object implements IAfterScan interface
+	if afterScanner, ok := objToCheck.(IAfterScan); ok {
+		// Check if the object is not nil before calling AfterScan
+		if objToCheck != nil {
+			rv := reflect.ValueOf(objToCheck)
+			if rv.Kind() == reflect.Ptr && !rv.IsNil() {
+				return afterScanner.AfterScan()
+			} else if rv.Kind() != reflect.Ptr {
+				return afterScanner.AfterScan()
+			}
+		}
+	}
+
+	return nil
 }
 
 // Structs retrieves records from table and converts them into given struct slice.
