@@ -14,8 +14,10 @@ const (
 )
 
 var (
+	// Checker function for instances map.
+	checker = func(v *Logger) bool { return v == nil }
 	// Instances map.
-	instances = gmap.NewStrAnyMap(true)
+	instances = gmap.NewKVMapWithChecker[string, *Logger](checker, true)
 )
 
 // Instance returns an instance of Logger with default settings.
@@ -25,7 +27,5 @@ func Instance(name ...string) *Logger {
 	if len(name) > 0 && name[0] != "" {
 		key = name[0]
 	}
-	return instances.GetOrSetFuncLock(key, func() any {
-		return New()
-	}).(*Logger)
+	return instances.GetOrSetFuncLock(key, New)
 }
