@@ -188,7 +188,10 @@ func (oai *OpenApiV3) structToSchema(object any) (*Schema, error) {
 		Pointer:         object,
 		RecursiveOption: gstructs.RecursiveOptionEmbedded,
 	})
-	schema.Type = TypeObject
+	// Only set TypeObject if not already set by g.Meta tag (e.g., type:"string" for HTML responses)
+	if schema.Type == "" {
+		schema.Type = TypeObject
+	}
 	for _, structField := range structFields {
 		if !gstr.IsLetterUpper(structField.Name()[0]) {
 			continue

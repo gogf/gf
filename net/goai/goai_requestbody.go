@@ -142,7 +142,7 @@ func (oai *OpenApiV3) getArrayRequestSchemaRef(requestObject any) (*SchemaRef, e
 	// element type. We need to explicitly register nested structs to ensure proper
 	// OpenAPI documentation generation.
 	objectValue := reflect.ValueOf(requestObject)
-	if objectValue.Kind() == reflect.Ptr {
+	if objectValue.Kind() == reflect.Pointer {
 		objectValue = objectValue.Elem()
 	}
 	if objectValue.Kind() == reflect.Struct {
