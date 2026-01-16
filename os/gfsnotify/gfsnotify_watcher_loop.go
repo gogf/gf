@@ -165,8 +165,7 @@ func (w *Watcher) checkRecursiveWatchingInCreatingEvent(path string) bool {
 		}
 		if callbackItem := w.callbacks.Get(parentDirPath); callbackItem != nil {
 			for _, node := range callbackItem.FrontAll() {
-				callback := node.(*Callback)
-				if callback.recursive {
+				if node.recursive {
 					return true
 				}
 			}
@@ -200,8 +199,7 @@ func (w *Watcher) getCallbacksForPath(path string) (callbacks []*Callback) {
 	// Firstly add the callbacks of itself.
 	if item := w.callbacks.Get(path); item != nil {
 		for _, node := range item.FrontAll() {
-			callback := node.(*Callback)
-			callbacks = append(callbacks, callback)
+			callbacks = append(callbacks, node)
 		}
 	}
 	// ============================================================================================================
@@ -213,8 +211,7 @@ func (w *Watcher) getCallbacksForPath(path string) (callbacks []*Callback) {
 	dirPath := fileDir(path)
 	if item := w.callbacks.Get(dirPath); item != nil {
 		for _, node := range item.FrontAll() {
-			callback := node.(*Callback)
-			callbacks = append(callbacks, callback)
+			callbacks = append(callbacks, node)
 		}
 	}
 
@@ -226,9 +223,8 @@ func (w *Watcher) getCallbacksForPath(path string) (callbacks []*Callback) {
 		}
 		if item := w.callbacks.Get(parentDirPath); item != nil {
 			for _, node := range item.FrontAll() {
-				callback := node.(*Callback)
-				if callback.recursive {
-					callbacks = append(callbacks, callback)
+				if node.recursive {
+					callbacks = append(callbacks, node)
 				}
 			}
 		}
