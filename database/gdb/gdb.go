@@ -863,8 +863,10 @@ const (
 )
 
 var (
+	// checker is the checker function for instances map.
+	checker = func(v DB) bool { return v == nil }
 	// instances is the management map for instances.
-	instances = gmap.NewStrAnyMap(true)
+	instances = gmap.NewKVMapWithChecker[string, DB](checker, true)
 
 	// driverMap manages all custom registered driver.
 	driverMap = map[string]Driver{}
@@ -985,14 +987,14 @@ func Instance(name ...string) (db DB, err error) {
 	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
-	v := instances.GetOrSetFuncLock(group, func() any {
+	v := instances.GetOrSetFuncLock(group, func() DB {
 		db, err = NewByGroup(group)
 		return db
 	})
 	if v != nil {
-		return v.(DB), nil
+		return v, nil
 	}
-	return
+	return nil, err
 }
 
 // getConfigNodeByGroup calculates and returns a configuration node of given group. It
