@@ -96,7 +96,7 @@ func GetServer(name ...any) *Server {
 	if len(name) > 0 && name[0] != "" {
 		serverName = gconv.String(name[0])
 	}
-	v := serverMapping.GetOrSetFuncLock(serverName, func() any {
+	return serverMapping.GetOrSetFuncLock(serverName, func() *Server {
 		s := &Server{
 			instance:         serverName,
 			plugins:          make([]Plugin, 0),
@@ -118,7 +118,6 @@ func GetServer(name ...any) *Server {
 		s.Use(internalMiddlewareServerTracing)
 		return s
 	})
-	return v.(*Server)
 }
 
 // Start starts listening on configured port.
@@ -477,10 +476,9 @@ func Wait() {
 	<-allShutdownChan
 
 	// Remove plugins.
-	serverMapping.Iterator(func(k string, v any) bool {
-		s := v.(*Server)
-		if len(s.plugins) > 0 {
-			for _, p := range s.plugins {
+	serverMapping.Iterator(func(k string, v *Server) bool {
+		if len(v.plugins) > 0 {
+			for _, p := range v.plugins {
 				intlog.Printf(ctx, `remove plugin: %s`, p.Name())
 				if err := p.Remove(); err != nil {
 					intlog.Errorf(ctx, `%+v`, err)

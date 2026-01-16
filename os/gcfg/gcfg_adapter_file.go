@@ -46,8 +46,9 @@ const (
 
 var (
 	supportedFileTypes     = []string{"toml", "yaml", "yml", "json", "ini", "xml", "properties"} // All supported file types suffixes.
-	localInstances         = gmap.NewStrAnyMap(true)                                             // Instances map containing configuration instances.
-	customConfigContentMap = gmap.NewStrStrMap(true)                                             // Customized configuration content.
+	checker                = func(v *Config) bool { return v == nil }
+	localInstances         = gmap.NewKVMapWithChecker[string, *Config](checker, true) // Instances map containing configuration instances.
+	customConfigContentMap = gmap.NewStrStrMap(true)                                  // Customized configuration content.
 
 	// Prefix array for trying searching in resource manager.
 	resourceTryFolders = []string{

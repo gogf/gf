@@ -14,8 +14,9 @@ import (
 )
 
 var (
-	// localInstances for instance management of redis client.
-	localInstances = gmap.NewStrAnyMap(true)
+	// checker is the checker function for instances map.
+	checker        = func(v *Redis) bool { return v == nil }
+	localInstances = gmap.NewKVMapWithChecker[string, *Redis](checker, true)
 )
 
 // Instance returns an instance of redis client with specified group.
@@ -26,7 +27,7 @@ func Instance(name ...string) *Redis {
 	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
-	v := localInstances.GetOrSetFuncLock(group, func() any {
+	return localInstances.GetOrSetFuncLock(group, func() *Redis {
 		if config, ok := GetConfig(group); ok {
 			r, err := New(config)
 			if err != nil {
@@ -37,8 +38,4 @@ func Instance(name ...string) *Redis {
 		}
 		return nil
 	})
-	if v != nil {
-		return v.(*Redis)
-	}
-	return nil
 }

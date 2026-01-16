@@ -13,20 +13,23 @@ import (
 	"github.com/gogf/gf/v2/container/gmap"
 )
 
+// checker is used to check if the value is nil.
+var checker = func(v *glist.Element) bool { return v == nil }
+
 // memoryLru holds LRU info.
 // It uses list.List from stdlib for its underlying doubly linked list.
 type memoryLru struct {
-	mu   sync.RWMutex // Mutex to guarantee concurrent safety.
-	cap  int          // LRU cap.
-	data *gmap.Map    // Key mapping to the item of the list.
-	list *glist.List  // Key list.
+	mu   sync.RWMutex                     // Mutex to guarantee concurrent safety.
+	cap  int                              // LRU cap.
+	data *gmap.KVMap[any, *glist.Element] // Key mapping to the item of the list.
+	list *glist.List                      // Key list.
 }
 
 // newMemoryLru creates and returns a new LRU manager.
 func newMemoryLru(cap int) *memoryLru {
 	lru := &memoryLru{
 		cap:  cap,
-		data: gmap.New(false),
+		data: gmap.NewKVMapWithChecker[any, *glist.Element](checker, false),
 		list: glist.New(false),
 	}
 	return lru
@@ -41,7 +44,7 @@ func (l *memoryLru) Remove(keys ...any) {
 	defer l.mu.Unlock()
 	for _, key := range keys {
 		if v := l.data.Remove(key); v != nil {
-			l.list.Remove(v.(*glist.Element))
+			l.list.Remove(v)
 		}
 	}
 }
@@ -63,9 +66,8 @@ func (l *memoryLru) SaveAndEvict(keys ...any) (evictedKeys []any) {
 }
 
 func (l *memoryLru) doSaveAndEvict(key any) (evictedKey any) {
-	var element *glist.Element
-	if v := l.data.Get(key); v != nil {
-		element = v.(*glist.Element)
+	element := l.data.Get(key)
+	if element != nil {
 		if element.Prev() == nil {
 			// It this element is already on top of list,
 			// it ignores the element moving.
