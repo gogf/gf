@@ -17,13 +17,13 @@ import (
 )
 
 // Open creates and returns an underlying sql.DB object for pgsql.
-// https://pkg.go.dev/github.com/lib/pq
+// https://gitee.com/opengauss/openGauss-connector-go-pq
 func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	source, err := configNodeToSource(config)
 	if err != nil {
 		return nil, err
 	}
-	underlyingDriverName := "postgres"
+	underlyingDriverName := "opengauss"
 	if db, err = sql.Open(underlyingDriverName, source); err != nil {
 		err = gerror.WrapCodef(
 			gcode.CodeDbOperationError, err,
