@@ -198,9 +198,7 @@ func (w *Watcher) doCallback(event *Event, callback *Callback) {
 func (w *Watcher) getCallbacksForPath(path string) (callbacks []*Callback) {
 	// Firstly add the callbacks of itself.
 	if item := w.callbacks.Get(path); item != nil {
-		for _, node := range item.FrontAll() {
-			callbacks = append(callbacks, node)
-		}
+		callbacks = append(callbacks, item.FrontAll()...)
 	}
 	// ============================================================================================================
 	// Secondly searches its direct parent for callbacks.
@@ -210,9 +208,7 @@ func (w *Watcher) getCallbacksForPath(path string) (callbacks []*Callback) {
 	// ============================================================================================================
 	dirPath := fileDir(path)
 	if item := w.callbacks.Get(dirPath); item != nil {
-		for _, node := range item.FrontAll() {
-			callbacks = append(callbacks, node)
-		}
+		callbacks = append(callbacks, item.FrontAll()...)
 	}
 
 	// Lastly searches all the parents of directory of `path` recursively for callbacks.
