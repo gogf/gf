@@ -50,6 +50,18 @@ func (m *Model) Cache(option CacheOption) *Model {
 	return model
 }
 
+// PageCache sets the cache feature for pagination queries. It allows to configure
+// separate cache options for count query and data query in pagination.
+//
+// Note that, the cache feature is disabled if the model is performing select statement
+// on a transaction.
+func (m *Model) PageCache(countOption CacheOption, dataOption CacheOption) *Model {
+	model := m.getModel()
+	model.pageCacheOption = []CacheOption{countOption, dataOption}
+	model.cacheEnabled = true
+	return model
+}
+
 // checkAndRemoveSelectCache checks and removes the cache in insert/update/delete statement if
 // cache feature is enabled.
 func (m *Model) checkAndRemoveSelectCache(ctx context.Context) {
