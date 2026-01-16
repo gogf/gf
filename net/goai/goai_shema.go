@@ -157,8 +157,17 @@ func (oai *OpenApiV3) structToSchema(object any) (*Schema, error) {
 			return nil, err
 		}
 	}
-	if schema.Type != "" && schema.Type != TypeObject {
+	// Check if the object is actually a struct (not a slice/array).
+	// If the tag has "type":"array" but the object is a struct, we should
+	// process it as a normal struct, not as an array.
+	objectIsStruct := reflect.TypeOf(object).Kind() == reflect.Struct
+	if schema.Type != "" && schema.Type != TypeObject && !objectIsStruct {
 		return schema, nil
+	}
+	// If tag says "array" but object is actually a struct, ignore the type tag
+	// and process as normal struct (the array type is for request body, not the schema itself)
+	if schema.Type == TypeArray && objectIsStruct {
+		schema.Type = TypeObject
 	}
 	// []struct.
 	if utils.IsArray(object) {

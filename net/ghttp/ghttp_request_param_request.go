@@ -7,6 +7,8 @@
 package ghttp
 
 import (
+	"reflect"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/os/gstructs"
@@ -188,7 +190,115 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 		return data, nil
 	}
 
+	// Check if request body is a JSON array and handle slice fields.
+	// This enables APIs with type:"array" tag to receive batch request formats.
+	if len(r.bodyArray) > 0 {
+		if err = r.mergeBodyArrayToStruct(data, pointer); err != nil {
+			return data, err
+		}
+	}
+
 	return data, gconv.Struct(data, pointer, mapping...)
+}
+
+// mergeBodyArrayToStruct populates slice fields in the request struct with JSON array body content.
+//
+// Implementation Details:
+// 1. Dereference pointer levels until reaching the underlying struct (supports **Struct, *Struct)
+// 2. First attempt to use cached struct field information from serveHandler for performance
+// 3. Fall back to direct reflection if cached info is unavailable
+// 4. Identify slice/array fields and map them to the JSON array via the data map
+//
+// This function handles the special case where the request body is a JSON array [{}]
+// instead of an object {}. When combined with the type:"array" tag in g.Meta, it allows
+// APIs to directly receive batch request formats without wrapping in an object.
+func (r *Request) mergeBodyArrayToStruct(data map[string]any, pointer any) error {
+	if pointer == nil {
+		return nil
+	}
+
+	reflectVal := reflect.ValueOf(pointer)
+
+	// Handle pointer levels - dereference until we hit a struct or non-pointer
+	for reflectVal.Kind() == reflect.Pointer {
+		if !reflectVal.IsValid() {
+			return nil
+		}
+		// Check if this pointer is nil before dereferencing
+		if reflectVal.IsNil() {
+			// Allocate a new struct if pointer is nil
+			elemType := reflectVal.Type().Elem()
+			if elemType.Kind() == reflect.Pointer {
+				// **Struct case - allocate *Struct
+				newVal := reflect.New(elemType.Elem())
+				reflectVal.Set(newVal)
+			} else {
+				// *Struct case - allocate Struct
+				newVal := reflect.New(elemType)
+				reflectVal.Set(newVal)
+			}
+		}
+		reflectVal = reflectVal.Elem()
+	}
+	if reflectVal.Kind() != reflect.Struct || !reflectVal.IsValid() {
+		return nil
+	}
+
+	// Try to get cached struct fields info first
+	fields := r.serveHandler.Handler.Info.ReqStructFields
+	if len(fields) > 0 {
+		// Use cached struct fields info
+		for _, field := range fields {
+			fieldType := field.Type()
+			// Check if field is a slice or array type
+			if fieldType.Kind() == reflect.Slice || fieldType.Kind() == reflect.Array {
+				fieldName := field.Name()
+				// Use JSON tag name if available
+				if jsonName := field.TagJsonName(); jsonName != "" {
+					fieldName = jsonName
+				}
+				// Populate the slice field with bodyArray
+				data[fieldName] = r.bodyArray
+			}
+		}
+	} else {
+		// Fallback: use reflection to get struct fields directly
+		structType := reflectVal.Type()
+		for i := 0; i < structType.NumField(); i++ {
+			field := structType.Field(i)
+			fieldType := field.Type
+			// Check if field is a slice or array type
+			if fieldType.Kind() == reflect.Slice || fieldType.Kind() == reflect.Array {
+				fieldName := field.Name
+				// Use JSON tag name if available
+				if jsonTag := field.Tag.Get("json"); jsonTag != "" {
+					// Handle json tag with options like "json:"fieldName,omitempty""
+					tagParts := getJsonTagParts(jsonTag)
+					if tagParts[0] != "" {
+						fieldName = tagParts[0]
+					}
+				}
+				// Populate the slice field with bodyArray
+				data[fieldName] = r.bodyArray
+			}
+		}
+	}
+
+	return nil
+}
+
+// getJsonTagParts splits json tag and returns parts
+func getJsonTagParts(jsonTag string) []string {
+	var parts []string
+	start := 0
+	for i := 0; i < len(jsonTag); i++ {
+		if jsonTag[i] == ',' {
+			parts = append(parts, jsonTag[start:i])
+			start = i + 1
+		}
+	}
+	parts = append(parts, jsonTag[start:])
+	return parts
 }
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
