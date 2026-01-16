@@ -611,3 +611,22 @@ func Test_TSet_TypedNil(t *testing.T) {
 		t.Assert(exist2, false)
 	})
 }
+
+func Test_NewTSetWithChecker_TypedNil(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string
+			Age  int
+		}
+		set := gset.NewTSet[*Student](true)
+		var s *Student = nil
+		exist := set.AddIfNotExist(s)
+		t.Assert(exist, true)
+
+		set2 := gset.NewTSetWithChecker[*Student](func(student *Student) bool {
+			return student == nil
+		}, true)
+		exist2 := set2.AddIfNotExist(s)
+		t.Assert(exist2, false)
+	})
+}
