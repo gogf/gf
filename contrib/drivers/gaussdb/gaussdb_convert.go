@@ -11,8 +11,8 @@ import (
 	"reflect"
 	"strings"
 
+	pq "gitee.com/opengauss/openGauss-connector-go-pq"
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
