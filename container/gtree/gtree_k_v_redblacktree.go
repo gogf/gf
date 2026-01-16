@@ -24,6 +24,7 @@ type RedBlackKVTree[K comparable, V any] struct {
 	mu         rwmutex.RWMutex
 	comparator func(v1, v2 K) int
 	tree       *redblacktree.Tree[K, V]
+	nilChecker NilChecker[V]
 }
 
 // RedBlackKVTreeNode is a single element within the tree.
@@ -41,6 +42,15 @@ func NewRedBlackKVTree[K comparable, V any](comparator func(v1, v2 K) int, safe 
 	return &tree
 }
 
+// NewRedBlackKVTreeWithChecker instantiates a red-black tree with the custom key comparator and `nilChecker`.
+// The parameter `safe` is used to specify whether using tree in concurrent-safety, which is false in default.
+// The parameter `checker` is used to specify whether the given value is nil.
+func NewRedBlackKVTreeWithChecker[K comparable, V any](comparator func(v1, v2 K) int, checker NilChecker[V], safe ...bool) *RedBlackKVTree[K, V] {
+	t := NewRedBlackKVTree[K, V](comparator, safe...)
+	t.RegisterNilChecker(checker)
+	return t
+}
+
 // NewRedBlackKVTreeFrom instantiates a red-black tree with the custom key comparator and `data` map.
 // The parameter `safe` is used to specify whether using tree in concurrent-safety,
 // which is false in default.
@@ -48,6 +58,17 @@ func NewRedBlackKVTreeFrom[K comparable, V any](comparator func(v1, v2 K) int, d
 	var tree RedBlackKVTree[K, V]
 	RedBlackKVTreeInitFrom(&tree, comparator, data, safe...)
 	return &tree
+}
+
+// NewRedBlackKVTreeWithCheckerFrom instantiates a red-black tree with the custom key comparator, `data` map and `nilChecker`.
+// The parameter `safe` is used to specify whether using tree in concurrent-safety, which is false in default.
+// The parameter `checker` is used to specify whether the given value is nil.
+func NewRedBlackKVTreeWithCheckerFrom[K comparable, V any](comparator func(v1, v2 K) int, data map[K]V, checker NilChecker[V], safe ...bool) *RedBlackKVTree[K, V] {
+	t := NewRedBlackKVTreeWithChecker[K, V](comparator, checker, safe...)
+	for k, v := range data {
+		t.doSet(k, v)
+	}
+	return t
 }
 
 // RedBlackKVTreeInit instantiates a red-black tree with the custom key comparator.
@@ -73,6 +94,26 @@ func RedBlackKVTreeInitFrom[K comparable, V any](tree *RedBlackKVTree[K, V], com
 	for k, v := range data {
 		tree.doSet(k, v)
 	}
+}
+
+// RegisterNilChecker registers a custom nil checker function for the map values.
+// This function is used to determine if a value should be considered as nil.
+// The nil checker function takes a value of type V and returns a boolean indicating
+// whether the value should be treated as nil.
+func (tree *RedBlackKVTree[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	tree.nilChecker = nilChecker
+}
+
+// isNil checks whether the given value is nil.
+// It first checks if a custom nil checker function is registered and uses it if available,
+// otherwise it performs a standard nil check using any(v) == nil.
+func (tree *RedBlackKVTree[K, V]) isNil(value V) bool {
+	if tree.nilChecker != nil {
+		return tree.nilChecker(value)
+	}
+	return any(value) == nil
 }
 
 // SetComparator sets/changes the comparator for sorting.
@@ -189,7 +230,7 @@ func (tree *RedBlackKVTree[K, V]) GetOrSetFunc(key K, f func() V) V {
 // GetOrSetFuncLock returns its `value` of `key`, or sets value with returned value of callback function `f` if it does
 // not exist and then returns this value.
 //
-// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f`within mutex lock.
+// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f` within mutex lock.
 func (tree *RedBlackKVTree[K, V]) GetOrSetFuncLock(key K, f func() V) V {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
@@ -592,7 +633,7 @@ func (tree *RedBlackKVTree[K, V]) UnmarshalValue(value any) (err error) {
 //
 // It returns value with given `key`.
 func (tree *RedBlackKVTree[K, V]) doSet(key K, value V) (ret V) {
-	if any(value) == nil {
+	if tree.isNil(value) {
 		return
 	}
 	tree.tree.Put(key, value)

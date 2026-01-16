@@ -1419,3 +1419,80 @@ func Test_Model_HasField(t *testing.T) {
 		t.AssertNil(err)
 	})
 }
+
+// https://github.com/gogf/gf/issues/4577
+// Test TableFields with multiple schemas having same table name with JSON field.
+// The bug: when JOIN information_schema.CHECK_CONSTRAINTS without schema filter,
+// MariaDB creates CHECK constraints for JSON fields (json_valid), causing duplicate rows
+// when multiple schemas have tables with same name and same JSON field name.
+// This leads to wrong field Index values.
+func Test_Issue4577_TableFields_MultipleSchema(t *testing.T) {
+	tableName := fmt.Sprintf("test_json_fields_%d", gtime.TimestampNano())
+
+	// Create table with JSON field in schema1 (3 columns)
+	createSQL1 := fmt.Sprintf(`
+		CREATE TABLE %s (
+			id          int(10) unsigned NOT NULL AUTO_INCREMENT,
+			name        varchar(45) NULL,
+			data        JSON NULL,
+			PRIMARY KEY (id)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	`, tableName)
+
+	// Create table with JSON field in schema2 (5 columns - different structure)
+	// This is critical: different column count will cause Index overflow
+	createSQL2 := fmt.Sprintf(`
+		CREATE TABLE %s (
+			id          int(10) unsigned NOT NULL AUTO_INCREMENT,
+			name        varchar(45) NULL,
+			extra1      varchar(45) NULL,
+			extra2      varchar(45) NULL,
+			data        JSON NULL,
+			PRIMARY KEY (id)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	`, tableName)
+
+	// Create table in schema test1 (db) - 3 columns
+	if _, err := db.Exec(ctx, createSQL1); err != nil {
+		gtest.Fatal(err)
+	}
+	defer func() {
+		db.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s", tableName))
+	}()
+
+	// Create table in schema test2 (db2) - 5 columns
+	if _, err := db2.Exec(ctx, createSQL2); err != nil {
+		gtest.Fatal(err)
+	}
+	defer func() {
+		db2.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s", tableName))
+	}()
+
+	gtest.C(t, func(t *gtest.T) {
+		// Clear any cached table fields to ensure fresh query
+		db.GetCore().ClearTableFieldsAll(ctx)
+		db2.GetCore().ClearTableFieldsAll(ctx)
+
+		// Get fields from test1 schema (should have 3 columns)
+		fields1, err := db.TableFields(ctx, tableName)
+		t.AssertNil(err)
+		t.Assert(len(fields1), 3)
+
+		// Check the 'data' field's Index - this is the critical check
+		// Without the fix (missing c.TABLE_SCHEMA = ch.CONSTRAINT_SCHEMA),
+		// the 'data' field's Index would be 3 (due to duplicate row from schema2's CHECK constraint)
+		// which is >= 3 and would cause array out of bounds during Scan
+		dataField := fields1["data"]
+		t.Assert(dataField.Index, 2)
+
+		// Verify JSON field type is correctly detected as 'json'
+		t.Assert(fields1["data"].Type, "json")
+
+		// Get fields from test2 schema (should have 5 columns)
+		fields2, err := db2.TableFields(ctx, tableName)
+		t.AssertNil(err)
+		t.Assert(len(fields2), 5)
+		t.Assert(fields2["data"].Index, 4)
+		t.Assert(fields2["data"].Type, "json")
+	})
+}

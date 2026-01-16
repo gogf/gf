@@ -18,11 +18,15 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// NilChecker is a function that checks whether the given value is nil.
+type NilChecker[V any] func(V) bool
+
 // AVLKVTree holds elements of the AVL tree.
 type AVLKVTree[K comparable, V any] struct {
 	mu         rwmutex.RWMutex
 	comparator func(v1, v2 K) int
 	tree       *avltree.Tree[K, V]
+	nilChecker NilChecker[V]
 }
 
 // AVLKVTreeNode is a single element within the tree.
@@ -43,6 +47,15 @@ func NewAVLKVTree[K comparable, V any](comparator func(v1, v2 K) int, safe ...bo
 	}
 }
 
+// NewAVLKVTreeWithChecker instantiates an AVL tree with the custom key comparator and nil checker.
+// The parameter `safe` is used to specify whether using tree in concurrent-safety, which is false in default.
+// The parameter `checker` is used to specify whether the given value is nil.
+func NewAVLKVTreeWithChecker[K comparable, V any](comparator func(v1, v2 K) int, checker NilChecker[V], safe ...bool) *AVLKVTree[K, V] {
+	t := NewAVLKVTree[K, V](comparator, safe...)
+	t.RegisterNilChecker(checker)
+	return t
+}
+
 // NewAVLKVTreeFrom instantiates an AVL tree with the custom key comparator and data map.
 //
 // The parameter `safe` is used to specify whether using tree in concurrent-safety, which is false in default.
@@ -52,6 +65,37 @@ func NewAVLKVTreeFrom[K comparable, V any](comparator func(v1, v2 K) int, data m
 		tree.doSet(k, v)
 	}
 	return tree
+}
+
+// NewAVLKVTreeWithCheckerFrom instantiates an AVL tree with the custom key comparator, nil checker and data map.
+// The parameter `safe` is used to specify whether using tree in concurrent-safety, which is false in default.
+// The parameter `checker` is used to specify whether the given value is nil.
+func NewAVLKVTreeWithCheckerFrom[K comparable, V any](comparator func(v1, v2 K) int, data map[K]V, checker NilChecker[V], safe ...bool) *AVLKVTree[K, V] {
+	tree := NewAVLKVTreeWithChecker[K, V](comparator, checker, safe...)
+	for k, v := range data {
+		tree.doSet(k, v)
+	}
+	return tree
+}
+
+// RegisterNilChecker registers a custom nil checker function for the map values.
+// This function is used to determine if a value should be considered as nil.
+// The nil checker function takes a value of type V and returns a boolean indicating
+// whether the value should be treated as nil.
+func (tree *AVLKVTree[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	tree.nilChecker = nilChecker
+}
+
+// isNil checks whether the given value is nil.
+// It first checks if a custom nil checker function is registered and uses it if available,
+// otherwise it performs a standard nil check using any(v) == nil.
+func (tree *AVLKVTree[K, V]) isNil(value V) bool {
+	if tree.nilChecker != nil {
+		return tree.nilChecker(value)
+	}
+	return any(value) == nil
 }
 
 // Clone clones and returns a new tree from current tree.
@@ -518,7 +562,7 @@ func (tree *AVLKVTree[K, V]) Flip(comparator ...func(v1, v2 K) int) {
 //
 // It returns value with given `key`.
 func (tree *AVLKVTree[K, V]) doSet(key K, value V) V {
-	if any(value) == nil {
+	if tree.isNil(value) {
 		return value
 	}
 	tree.tree.Put(key, value)

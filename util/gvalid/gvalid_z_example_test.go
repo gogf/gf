@@ -217,9 +217,9 @@ func ExampleValidator_Data_map1() {
 		fmt.Println(e.FirstError())
 	}
 	// May Output:
-	// map[required:账号不能为空 length:账号长度应当在 6 到 16 之间]
-	// passport map[required:账号不能为空 length:账号长度应当在 6 到 16 之间]
-	// 账号不能为空
+	// map[required:The passport field is required length:The passport value `` length must be between 6 and 16]
+	// passport map[required:The passport field is required length:The passport value `` length must be between 6 and 16]
+	// The passport field is required
 }
 
 func ExampleValidator_Data_map2() {
@@ -273,11 +273,11 @@ func ExampleValidator_Data_map3() {
 	// May Output:
 	// {
 	//	"passport": {
-	//	"length": "账号长度应当在 6 到 16 之间",
-	//		"required": "账号不能为空"
+	//	"length": "The passport value `` length must be between 6 and 16",
+	//		"required": "The passport field is required"
 	// },
 	//	"password": {
-	//	"same": "两次密码输入不相等"
+	//	"same": "The password value `123456` must be the same as field password2 value `1234567`"
 	// }
 	// }
 }
@@ -521,5 +521,5 @@ func ExampleValidator_registerRule() {
 	err := g.Validator().Data(user).Run(gctx.New())
 	fmt.Println(err.Error())
 	// May Output:
-	// 用户名称已被占用
+	// The Name value `john` is not unique
 }

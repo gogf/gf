@@ -205,3 +205,94 @@ func Test_Issue4033(t *testing.T) {
 		t.AssertNil(err)
 	})
 }
+
+// https://github.com/gogf/gf/issues/4595
+// FieldsPrefix silently drops fields when using table alias before LeftJoin.
+func Test_Issue4595(t *testing.T) {
+	var (
+		tableUser       = fmt.Sprintf(`%s_%d`, TablePrefix+"issue4595_user", gtime.TimestampNano())
+		tableUserDetail = fmt.Sprintf(`%s_%d`, TablePrefix+"issue4595_user_detail", gtime.TimestampNano())
+	)
+
+	// Create user table
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE %s (
+			id bigserial PRIMARY KEY,
+			name varchar(100),
+			email varchar(100)
+		);`, tableUser,
+	)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(tableUser)
+
+	// Create user_detail table
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE %s (
+			id bigserial PRIMARY KEY,
+			user_id bigint,
+			phone varchar(20),
+			address varchar(200)
+		);`, tableUserDetail,
+	)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(tableUserDetail)
+
+	// Insert test data
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+		INSERT INTO %s (id, name, email) VALUES (1, 'john', 'john@example.com');
+		INSERT INTO %s (id, user_id, phone, address) VALUES (1, 1, '1234567890', '123 Main St');
+	`, tableUser, tableUserDetail)); err != nil {
+		gtest.Fatal(err)
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test case 1: FieldsPrefix called before LeftJoin
+		// Both t1 and t2 fields should be present
+		r, err := db.Model(tableUser).As("t1").
+			FieldsPrefix("t2", "phone", "address").
+			FieldsPrefix("t1", "id", "name", "email").
+			LeftJoin(tableUserDetail, "t2", "t1.id=t2.user_id").
+			All()
+
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(r[0]["id"], 1)
+		t.Assert(r[0]["name"], "john")
+		t.Assert(r[0]["email"], "john@example.com")
+		t.Assert(r[0]["phone"], "1234567890")
+		t.Assert(r[0]["address"], "123 Main St")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test case 2: Using Fields() with prefix
+		r, err := db.Model(tableUser).As("t1").
+			Fields("t2.phone", "t2.address", "t1.id", "t1.name", "t1.email").
+			LeftJoin(tableUserDetail, "t2", "t1.id=t2.user_id").
+			All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(r[0]["id"], 1)
+		t.Assert(r[0]["name"], "john")
+		t.Assert(r[0]["email"], "john@example.com")
+		t.Assert(r[0]["phone"], "1234567890")
+		t.Assert(r[0]["address"], "123 Main St")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test case 3: FieldsPrefix called after LeftJoin
+		r, err := db.Model(tableUser).As("t1").
+			LeftJoin(tableUserDetail, "t2", "t1.id=t2.user_id").
+			FieldsPrefix("t2", "phone", "address").
+			FieldsPrefix("t1", "id", "name", "email").
+			All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(r[0]["id"], 1)
+		t.Assert(r[0]["name"], "john")
+		t.Assert(r[0]["email"], "john@example.com")
+		t.Assert(r[0]["phone"], "1234567890")
+		t.Assert(r[0]["address"], "123 Main St")
+	})
+}
