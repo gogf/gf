@@ -31,10 +31,10 @@ func Open(path string, flag int, perm os.FileMode, ttl ...time.Duration) (file *
 	// }
 	pool := pools.GetOrSetFuncLock(
 		fmt.Sprintf("%s&%d&%d&%d", path, flag, fpTTL, perm),
-		func() any {
+		func() *Pool {
 			return New(path, flag, perm, fpTTL)
 		},
-	).(*Pool)
+	)
 
 	return pool.File()
 }
@@ -52,7 +52,7 @@ func Get(path string, flag int, perm os.FileMode, ttl ...time.Duration) (file *F
 		return nil
 	}
 
-	fp, _ := f.(*Pool).pool.Get()
+	fp, _ := f.pool.Get()
 	return fp.(*File)
 }
 

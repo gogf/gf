@@ -50,8 +50,10 @@ const (
 )
 
 var (
+	// configChecker checks whether the *Config is nil.
+	configChecker = func(v *Config) bool { return v == nil }
 	// Configuration groups.
-	localConfigMap = gmap.NewStrAnyMap(true)
+	localConfigMap = gmap.NewKVMapWithChecker[string, *Config](configChecker, true)
 )
 
 // SetConfig sets the global configuration for specified group.
@@ -119,7 +121,7 @@ func GetConfig(name ...string) (config *Config, ok bool) {
 		group = name[0]
 	}
 	if v := localConfigMap.Get(group); v != nil {
-		return v.(*Config), true
+		return v, true
 	}
 	return &Config{}, false
 }

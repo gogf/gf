@@ -56,7 +56,7 @@ func Instance(name ...string) *Config {
 	if len(name) > 0 && name[0] != "" {
 		instanceName = name[0]
 	}
-	return localInstances.GetOrSetFuncLock(instanceName, func() any {
+	return localInstances.GetOrSetFuncLock(instanceName, func() *Config {
 		adapterFile, err := NewAdapterFile()
 		if err != nil {
 			intlog.Errorf(context.Background(), `%+v`, err)
@@ -66,7 +66,7 @@ func Instance(name ...string) *Config {
 			adapterFile.SetFileName(instanceName)
 		}
 		return NewWithAdapter(adapterFile)
-	}).(*Config)
+	})
 }
 
 // SetAdapter sets the adapter of the current Config object.

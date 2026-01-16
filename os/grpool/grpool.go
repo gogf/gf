@@ -25,10 +25,10 @@ type RecoverFunc func(ctx context.Context, exception error)
 
 // Pool manages the goroutines using pool.
 type Pool struct {
-	limit  int         // Max goroutine count limit.
-	count  *gtype.Int  // Current running goroutine count.
-	list   *glist.List // List for asynchronous job adding purpose.
-	closed *gtype.Bool // Is pool closed or not.
+	limit  int                          // Max goroutine count limit.
+	count  *gtype.Int                   // Current running goroutine count.
+	list   *glist.TList[*localPoolItem] // List for asynchronous job adding purpose.
+	closed *gtype.Bool                  // Is pool closed or not.
 }
 
 // localPoolItem is the job item storing in job list.
@@ -55,7 +55,7 @@ func New(limit ...int) *Pool {
 		pool = &Pool{
 			limit:  -1,
 			count:  gtype.NewInt(),
-			list:   glist.New(true),
+			list:   glist.NewT[*localPoolItem](true),
 			closed: gtype.NewBool(),
 		}
 		timerDuration = grand.D(

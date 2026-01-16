@@ -20,13 +20,11 @@ func (a *AdapterFile) SetContent(content string, fileNameOrPath ...string) {
 		usedFileNameOrPath = fileNameOrPath[0]
 	}
 	// Clear file cache for instances which cached `name`.
-	localInstances.LockFunc(func(m map[string]any) {
+	localInstances.LockFunc(func(m map[string]*Config) {
 		if customConfigContentMap.Contains(usedFileNameOrPath) {
 			for _, v := range m {
-				if configInstance, ok := v.(*Config); ok {
-					if fileConfig, ok := configInstance.GetAdapter().(*AdapterFile); ok {
-						fileConfig.jsonMap.Remove(usedFileNameOrPath)
-					}
+				if fileConfig, ok := v.GetAdapter().(*AdapterFile); ok {
+					fileConfig.jsonMap.Remove(usedFileNameOrPath)
 				}
 			}
 		}
@@ -54,13 +52,11 @@ func (a *AdapterFile) RemoveContent(fileNameOrPath ...string) {
 		usedFileNameOrPath = fileNameOrPath[0]
 	}
 	// Clear file cache for instances which cached `name`.
-	localInstances.LockFunc(func(m map[string]any) {
+	localInstances.LockFunc(func(m map[string]*Config) {
 		if customConfigContentMap.Contains(usedFileNameOrPath) {
 			for _, v := range m {
-				if configInstance, ok := v.(*Config); ok {
-					if fileConfig, ok := configInstance.GetAdapter().(*AdapterFile); ok {
-						fileConfig.jsonMap.Remove(usedFileNameOrPath)
-					}
+				if fileConfig, ok := v.GetAdapter().(*AdapterFile); ok {
+					fileConfig.jsonMap.Remove(usedFileNameOrPath)
 				}
 			}
 			customConfigContentMap.Remove(usedFileNameOrPath)
@@ -75,12 +71,10 @@ func (a *AdapterFile) RemoveContent(fileNameOrPath ...string) {
 func (a *AdapterFile) ClearContent() {
 	customConfigContentMap.Clear()
 	// Clear cache for all instances.
-	localInstances.LockFunc(func(m map[string]any) {
+	localInstances.LockFunc(func(m map[string]*Config) {
 		for _, v := range m {
-			if configInstance, ok := v.(*Config); ok {
-				if fileConfig, ok := configInstance.GetAdapter().(*AdapterFile); ok {
-					fileConfig.jsonMap.Clear()
-				}
+			if fileConfig, ok := v.GetAdapter().(*AdapterFile); ok {
+				fileConfig.jsonMap.Clear()
 			}
 		}
 	})
