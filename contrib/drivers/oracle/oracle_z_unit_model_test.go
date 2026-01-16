@@ -1347,7 +1347,12 @@ func Test_Model_Raw(t *testing.T) {
 			OrderDesc("ID").
 			Count()
 		t.AssertNil(err)
-		t.Assert(count, 6)
+		// After fix for issue #4500, Where conditions are correctly applied to Raw SQL Count.
+		// Raw SQL matches: id in (1, 5, 7, 8, 9, 10)
+		// WhereLT("ID", 8): id < 8 -> (1, 5, 7)
+		// WhereIn("ID", {1-7}): id in (1, 2, 3, 4, 5, 6, 7) -> (1, 5, 7)
+		// Result: 3 records match all conditions
+		t.Assert(count, int64(3))
 	})
 }
 
