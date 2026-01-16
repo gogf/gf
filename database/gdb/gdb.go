@@ -991,10 +991,10 @@ func Instance(name ...string) (db DB, err error) {
 		db, err = NewByGroup(group)
 		return db
 	})
-	if err != nil {
-		return nil, err
+	if v != nil {
+		return v, nil
 	}
-	return v, nil
+	return nil, err
 }
 
 // getConfigNodeByGroup calculates and returns a configuration node of given group. It
