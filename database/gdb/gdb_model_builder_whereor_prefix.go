@@ -6,6 +6,8 @@
 
 package gdb
 
+import "github.com/gogf/gf/v2/util/gconv"
+
 // WhereOrPrefix performs as WhereOr, but it adds prefix to each field in where statement.
 // Eg:
 // WhereOrPrefix("order", "status", "paid")                        => WHERE xxx OR (`order`.`status`='paid')
@@ -59,6 +61,12 @@ func (b *WhereBuilder) WhereOrPrefixLike(prefix string, column string, like any)
 	return b.WhereOrf(`%s.%s LIKE ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), like)
 }
 
+// WhereOrPrefixLikeLiteral builds `prefix.column LIKE 'like'` statement in `OR` conditions with automatic escaping.
+// This method automatically escapes '%', '_', and '\' characters in the like parameter to treat them as literal characters.
+func (b *WhereBuilder) WhereOrPrefixLikeLiteral(prefix string, column string, like any) *WhereBuilder {
+	return b.WhereOrf(`%s.%s LIKE ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), EscapeLikeString(gconv.String(like)))
+}
+
 // WhereOrPrefixIn builds `prefix.column IN (in)` statement in `OR` conditions.
 func (b *WhereBuilder) WhereOrPrefixIn(prefix string, column string, in any) *WhereBuilder {
 	return b.doWhereOrfType(whereHolderTypeIn, `%s.%s IN (?)`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), in)
@@ -81,6 +89,12 @@ func (b *WhereBuilder) WhereOrPrefixNotBetween(prefix string, column string, min
 // WhereOrPrefixNotLike builds `prefix.column NOT LIKE 'like'` statement in `OR` conditions.
 func (b *WhereBuilder) WhereOrPrefixNotLike(prefix string, column string, like any) *WhereBuilder {
 	return b.WhereOrf(`%s.%s NOT LIKE ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), like)
+}
+
+// WhereOrPrefixNotLikeLiteral builds `prefix.column NOT LIKE 'like'` statement in `OR` conditions with automatic escaping.
+// This method automatically escapes '%', '_', and '\' characters in the like parameter to treat them as literal characters.
+func (b *WhereBuilder) WhereOrPrefixNotLikeLiteral(prefix string, column string, like any) *WhereBuilder {
+	return b.WhereOrf(`%s.%s NOT LIKE ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), EscapeLikeString(gconv.String(like)))
 }
 
 // WhereOrPrefixNotIn builds `prefix.column NOT IN (in)` statement.
