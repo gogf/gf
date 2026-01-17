@@ -51,7 +51,8 @@ type Request struct {
 	routerMap       map[string]string    // Router parameters map, which might be nil if there are no router parameters.
 	queryMap        map[string]any       // Query parameters map, which is nil if there's no query string.
 	formMap         map[string]any       // Form parameters map, which is nil if there's no form of data from the client.
-	bodyMap         map[string]any       // Body parameters map, which might be nil if their nobody content.
+	bodyMap         map[string]any       // Body parameters map, which might be nil if there's no body content.
+	bodyArray       []any                // bodyArray stores the parsed JSON array from request body when using type:"array" tag. This enables handling of batch request formats like [{"id":1},{"id":2}] instead of {"items":[...]}. It is populated during parseBody() when Content-Type is application/json and the body is an array.
 	error           error                // Current executing error of the request.
 	exitAll         bool                 // A bool marking whether current request is exited.
 	parsedHost      string               // The parsed host name for current host used by GetHost function.
