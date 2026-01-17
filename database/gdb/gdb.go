@@ -294,6 +294,9 @@ type DB interface {
 	// SetMaxConnLifeTime sets the maximum amount of time a connection may be reused.
 	SetMaxConnLifeTime(d time.Duration)
 
+	// SetMaxIdleConnTime sets the maximum amount of time a connection may be idle before being closed.
+	SetMaxIdleConnTime(d time.Duration)
+
 	// ===========================================================================
 	// Utility methods.
 	// ===========================================================================
@@ -528,6 +531,7 @@ type dynamicConfig struct {
 	MaxIdleConnCount int
 	MaxOpenConnCount int
 	MaxConnLifeTime  time.Duration
+	MaxIdleConnTime  time.Duration
 }
 
 // DoCommitInput is the input parameters for function DoCommit.
@@ -965,6 +969,7 @@ func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 			MaxIdleConnCount: node.MaxIdleConnCount,
 			MaxOpenConnCount: node.MaxOpenConnCount,
 			MaxConnLifeTime:  node.MaxConnLifeTime,
+			MaxIdleConnTime:  node.MaxIdleConnTime,
 		},
 	}
 	if v, ok := driverMap[node.Type]; ok {
@@ -1143,6 +1148,9 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 				sqlDb.SetConnMaxLifetime(c.dynamicConfig.MaxConnLifeTime)
 			} else {
 				sqlDb.SetConnMaxLifetime(defaultMaxConnLifeTime)
+			}
+			if c.dynamicConfig.MaxIdleConnTime > 0 {
+				sqlDb.SetConnMaxIdleTime(c.dynamicConfig.MaxIdleConnTime)
 			}
 			return sqlDb
 		}
