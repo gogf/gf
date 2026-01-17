@@ -1020,14 +1020,29 @@ func genSoftTimeFieldNameTypeCacheKey(schema, table string, candidateFields []st
 // It escapes '\', '%', and '_' characters to prevent them from being interpreted
 // as wildcard characters in SQL LIKE statements.
 //
+// This function is useful when you need to search for literal characters that would
+// otherwise be treated as wildcards in LIKE patterns. Use this when accepting user
+// input for LIKE operations to prevent unintended wildcard matching.
+//
 // The function follows standard SQL escaping rules:
 // - '\' becomes '\\'
 // - '%' becomes '\%'
 // - '_' becomes '\_'
 //
-// Example:
+// Usage examples:
 //
-//	EscapeLikeString("john_doe%test\\data") returns "john\\_doe\\%test\\\\data"
+//	// Search for exact text containing special characters
+//	userInput := "user%name_test"
+//	escaped := gdb.EscapeLikeString(userInput)  // "user\\%name\\_test"
+//	db.Model("users").WhereLike("username", escaped)
+//
+//	// Search for text containing special characters with wildcards
+//	userInput := "user%name"
+//	escaped := gdb.EscapeLikeString(userInput)  // "user\\%name"
+//	db.Model("users").WhereLike("username", "%"+escaped+"%")  // LIKE '%user\%name%'
+//
+//	// Normal wildcard usage (do NOT escape)
+//	db.Model("users").WhereLike("username", "user%")  // LIKE 'user%' - matches userABC, user123, etc.
 func EscapeLikeString(s string) string {
 	// Escape backslashes first to prevent double escaping
 	s = strings.ReplaceAll(s, "\\", "\\\\")

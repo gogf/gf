@@ -10,7 +10,6 @@ import (
 	"fmt"
 
 	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // WhereOr adds "OR" condition to the where statement.
@@ -84,8 +83,7 @@ func (b *WhereBuilder) WhereOrBetween(column string, min, max any) *WhereBuilder
 
 // WhereOrLike builds `column LIKE 'like'` statement in `OR` conditions.
 func (b *WhereBuilder) WhereOrLike(column string, like any) *WhereBuilder {
-	likeStr := gconv.String(like)
-	return b.WhereOrf(`%s LIKE ?`, b.model.QuoteWord(column), EscapeLikeString(likeStr))
+	return b.WhereOrf(`%s LIKE ?`, b.model.QuoteWord(column), like)
 }
 
 // WhereOrIn builds `column IN (in)` statement in `OR` conditions.
@@ -109,8 +107,7 @@ func (b *WhereBuilder) WhereOrNotBetween(column string, min, max any) *WhereBuil
 
 // WhereOrNotLike builds `column NOT LIKE like` statement in `OR` conditions.
 func (b *WhereBuilder) WhereOrNotLike(column string, like any) *WhereBuilder {
-	likeStr := gconv.String(like)
-	return b.WhereOrf(`%s NOT LIKE ?`, b.model.QuoteWord(column), EscapeLikeString(likeStr))
+	return b.WhereOrf(`%s NOT LIKE ?`, b.model.QuoteWord(column), like)
 }
 
 // WhereOrNotIn builds `column NOT IN (in)` statement.
