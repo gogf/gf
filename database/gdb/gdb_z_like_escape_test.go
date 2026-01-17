@@ -1,6 +1,13 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gdb_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/gogf/gf/v2/database/gdb"
@@ -20,7 +27,7 @@ func ExampleEscapeLikeString() {
 	// db.Model("table").WhereLike("column", "%"+escaped+"%")
 
 	// Output: test\%\_data\\with\_special
-	print(escaped)
+	fmt.Println(escaped)
 }
 
 func Test_EscapeLikeString(t *testing.T) {
