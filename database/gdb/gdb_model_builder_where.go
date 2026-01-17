@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // doWhereType sets the condition statement for the model. The parameter `where` can be type of
@@ -117,6 +118,18 @@ func (b *WhereBuilder) WhereLike(column string, like string) *WhereBuilder {
 	return b.Wheref(`%s LIKE ?`, b.model.QuoteWord(column), like)
 }
 
+// WhereLikeLiteral builds `column LIKE like` statement with automatic escaping of special characters.
+// This method automatically escapes '%', '_', and '\' characters in the like parameter to treat them as literal characters.
+// Use this method when you want to search for exact text that may contain LIKE special characters.
+//
+// Example:
+//
+//	db.Model("user").WhereLikeLiteral("name", "john%doe_123")  // Will search for exact string "john%doe_123"
+//	db.Model("user").WhereLike("name", "john%")              // Will search using % as wildcard
+func (b *WhereBuilder) WhereLikeLiteral(column string, like string) *WhereBuilder {
+	return b.Wheref(`%s LIKE ?`, b.model.QuoteWord(column), EscapeLikeString(like))
+}
+
 // WhereIn builds `column IN (in)` statement.
 func (b *WhereBuilder) WhereIn(column string, in any) *WhereBuilder {
 	return b.doWherefType(whereHolderTypeIn, `%s IN (?)`, b.model.QuoteWord(column), in)
@@ -139,6 +152,12 @@ func (b *WhereBuilder) WhereNotBetween(column string, min, max any) *WhereBuilde
 // WhereNotLike builds `column NOT LIKE like` statement.
 func (b *WhereBuilder) WhereNotLike(column string, like any) *WhereBuilder {
 	return b.Wheref(`%s NOT LIKE ?`, b.model.QuoteWord(column), like)
+}
+
+// WhereNotLikeLiteral builds `column NOT LIKE like` statement with automatic escaping of special characters.
+// This method automatically escapes '%', '_', and '\' characters in the like parameter to treat them as literal characters.
+func (b *WhereBuilder) WhereNotLikeLiteral(column string, like any) *WhereBuilder {
+	return b.Wheref(`%s NOT LIKE ?`, b.model.QuoteWord(column), EscapeLikeString(gconv.String(like)))
 }
 
 // WhereNot builds `column != value` statement.
