@@ -8,6 +8,7 @@ package ghttp
 
 import (
 	"reflect"
+	"strings"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/net/goai"
@@ -273,7 +274,7 @@ func (r *Request) mergeBodyArrayToStruct(data map[string]any, pointer any) error
 				// Use JSON tag name if available
 				if jsonTag := field.Tag.Get("json"); jsonTag != "" {
 					// Handle json tag with options like "json:"fieldName,omitempty""
-					tagParts := getJsonTagParts(jsonTag)
+					tagParts := strings.Split(jsonTag, ",")
 					if tagParts[0] != "" {
 						fieldName = tagParts[0]
 					}
@@ -285,20 +286,6 @@ func (r *Request) mergeBodyArrayToStruct(data map[string]any, pointer any) error
 	}
 
 	return nil
-}
-
-// getJsonTagParts splits json tag and returns parts
-func getJsonTagParts(jsonTag string) []string {
-	var parts []string
-	start := 0
-	for i := 0; i < len(jsonTag); i++ {
-		if jsonTag[i] == ',' {
-			parts = append(parts, jsonTag[start:i])
-			start = i + 1
-		}
-	}
-	parts = append(parts, jsonTag[start:])
-	return parts
 }
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
