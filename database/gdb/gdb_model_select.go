@@ -259,7 +259,7 @@ func (m *Model) doStruct(pointer any, where ...any) error {
 	}
 
 	// 确保 ptrValue 是指针类型且非空
-	if ptrValue.Kind() != reflect.Ptr || ptrValue.IsNil() {
+	if (ptrValue.Kind() != reflect.Ptr) || ptrValue.IsNil() {
 		return nil
 	}
 
