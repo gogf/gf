@@ -248,7 +248,7 @@ func (m *Model) doStruct(pointer any, where ...any) error {
 	}
 
 	// 找到最终的指针（处理多级指针）
-	for ptrValue.Kind() == reflect.Ptr && !ptrValue.IsNil() {
+	for (ptrValue.Kind() == reflect.Ptr) && !ptrValue.IsNil() {
 		// 如果当前指针指向的还是指针，继续深入
 		if ptrValue.Elem().Kind() == reflect.Ptr {
 			ptrValue = ptrValue.Elem()
