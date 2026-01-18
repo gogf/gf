@@ -82,7 +82,7 @@ func New(address string, opts ...constant.ClientOption) (reg *Registry) {
 	return
 }
 
-// New creates and returns registry with Config.
+// NewWithConfig new creates and returns registry with Config.
 func NewWithConfig(ctx context.Context, config Config) (reg *Registry, err error) {
 	// Data validation.
 	err = g.Validator().Data(config).Run(ctx)
