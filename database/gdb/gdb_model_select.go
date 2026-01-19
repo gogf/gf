@@ -20,14 +20,6 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-// IAfterScan is an interface that can be implemented by structs to perform
-// custom logic after the struct has been populated with data from the database.
-// The AfterScan method is called after the struct fields have been filled with
-// data retrieved from the database during scanning operations.
-type IAfterScan interface {
-	AfterScan() error
-}
-
 // All does "SELECT FROM ..." statement for the model.
 // It retrieves the records from table and returns the result as slice type.
 // It returns nil if there's no record retrieved with the given conditions from table.
@@ -225,51 +217,7 @@ func (m *Model) doStruct(pointer any, where ...any) error {
 	if err = one.Struct(pointer); err != nil {
 		return err
 	}
-	err = model.doWithScanStruct(pointer)
-	if err != nil {
-		return err
-	}
-
-	// 处理多级指针的情况，找到最终的指针用于接口检查
-	var ptrValue reflect.Value
-
-	switch v := pointer.(type) {
-	case reflect.Value:
-		// 已经是 reflect.Value
-		ptrValue = v
-	default:
-		// 转换为 reflect.Value
-		ptrValue = reflect.ValueOf(pointer)
-	}
-
-	// 如果是 nil，直接返回
-	if ptrValue.IsNil() {
-		return nil
-	}
-
-	// 找到最终的指针（处理多级指针）
-	for (ptrValue.Kind() == reflect.Ptr) && !ptrValue.IsNil() {
-		// 如果当前指针指向的还是指针，继续深入
-		if ptrValue.Elem().Kind() == reflect.Ptr {
-			ptrValue = ptrValue.Elem()
-		} else {
-			// 找到了最终的指针（指向非指针类型）
-			break
-		}
-	}
-
-	// 确保 ptrValue 是指针类型且非空
-	if (ptrValue.Kind() != reflect.Ptr) || ptrValue.IsNil() {
-		return nil
-	}
-
-	// 检查指针是否实现了 IAfterScan 接口
-	if afterScanner, ok := ptrValue.Interface().(IAfterScan); ok {
-		// 调用 AfterScan 方法
-		return afterScanner.AfterScan()
-	}
-
-	return nil
+	return model.doWithScanStruct(pointer)
 }
 
 // Structs retrieves records from table and converts them into given struct slice.
