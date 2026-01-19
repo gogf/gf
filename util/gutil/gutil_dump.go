@@ -308,8 +308,10 @@ func doDumpStruct(in doDumpInternalInput) {
 			fmt.Fprintf(in.Buffer, `<cycle dump %s>`, in.PtrAddress)
 			return
 		}
+		// Add to set and remove when function returns (path-based cycle detection).
+		in.DumpedPointerSet[in.PtrAddress] = struct{}{}
+		defer delete(in.DumpedPointerSet, in.PtrAddress)
 	}
-	in.DumpedPointerSet[in.PtrAddress] = struct{}{}
 
 	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         in.Value,

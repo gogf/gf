@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -294,4 +295,96 @@ func Test_DumpJson(t *testing.T) {
 		var jsonContent = `{"a":1,"b":2}`
 		gutil.DumpJson(jsonContent)
 	})
+}
+
+// https://github.com/gogf/gf/issues/2902
+func Test_Dump_Issue2902_SharedPointer(t *testing.T) {
+	type Inner struct {
+		Value int
+	}
+	type Outer struct {
+		A *Inner
+		B *Inner
+	}
+	gtest.C(t, func(t *gtest.T) {
+		// Shared pointer (not a cycle) should not be marked as cycle dump.
+		shared := &Inner{Value: 100}
+		data := Outer{A: shared, B: shared}
+		buffer := bytes.NewBuffer(nil)
+		g.DumpTo(buffer, data, gutil.DumpOption{})
+		output := buffer.String()
+		// The second field should show the actual value, not "cycle dump".
+		// Both fields point to the same object, but it's not a cycle.
+		t.Assert(gstr.Contains(output, "cycle"), false)
+		t.Assert(gstr.Count(output, "Value"), 2)
+		t.Assert(gstr.Count(output, "100"), 2)
+	})
+}
+
+// https://github.com/gogf/gf/issues/2902
+func Test_Dump_Issue2902_SameTypeFields(t *testing.T) {
+	type User struct {
+		Id   int `params:"id"`
+		Name int `params:"name"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		// Fields with same type (e.g., both are int) share the same reflect.Type,
+		// which should not be marked as cycle dump.
+		var user User
+		fields, _ := gstructs.TagFields(&user, []string{"p", "params"})
+		buffer := bytes.NewBuffer(nil)
+		g.DumpTo(buffer, fields, gutil.DumpOption{})
+		output := buffer.String()
+		// Both fields' Type should show "int", not "cycle dump".
+		t.Assert(gstr.Contains(output, "cycle"), false)
+		t.Assert(gstr.Count(output, `Type:`), 2)
+	})
+}
+
+type benchStruct struct {
+	A int
+	B string
+	C *benchStruct
+	D []int
+	E map[string]int
+}
+
+func createBenchNested(depth int) *benchStruct {
+	if depth <= 0 {
+		return nil
+	}
+	return &benchStruct{
+		A: depth,
+		B: "test",
+		C: createBenchNested(depth - 1),
+		D: []int{1, 2, 3, 4, 5},
+		E: map[string]int{"x": 1, "y": 2},
+	}
+}
+
+var (
+	benchShallow  = &benchStruct{A: 1, B: "test", D: []int{1, 2, 3}, E: map[string]int{"a": 1}}
+	benchNested20 = createBenchNested(20)
+	benchDeep50   = createBenchNested(50)
+)
+
+func Benchmark_Dump_Shallow(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		var buf bytes.Buffer
+		gutil.DumpTo(&buf, benchShallow, gutil.DumpOption{})
+	}
+}
+
+func Benchmark_Dump_Nested20(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		var buf bytes.Buffer
+		gutil.DumpTo(&buf, benchNested20, gutil.DumpOption{})
+	}
+}
+
+func Benchmark_Dump_Deep50(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		var buf bytes.Buffer
+		gutil.DumpTo(&buf, benchDeep50, gutil.DumpOption{})
+	}
 }
