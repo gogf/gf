@@ -108,6 +108,11 @@ type ConfigNode struct {
 	// Optional field
 	MaxConnLifeTime time.Duration `json:"maxLifeTime"`
 
+	// MaxIdleConnTime specifies the maximum idle time of a connection before being closed
+	// This is Go 1.15+ feature: sql.DB.SetConnMaxIdleTime
+	// Optional field
+	MaxIdleConnTime time.Duration `json:"maxIdleTime"`
+
 	// QueryTimeout specifies the maximum execution time for DQL operations
 	// Optional field
 	QueryTimeout time.Duration `json:"queryTimeout"`
@@ -351,6 +356,16 @@ func (c *Core) SetMaxOpenConnCount(n int) {
 // If d <= 0, connections are not closed due to a connection's age.
 func (c *Core) SetMaxConnLifeTime(d time.Duration) {
 	c.dynamicConfig.MaxConnLifeTime = d
+}
+
+// SetMaxIdleConnTime sets the maximum amount of time a connection may be idle before being closed.
+//
+// Idle connections may be closed lazily before reuse.
+//
+// If d <= 0, connections are not closed due to a connection's idle time.
+// This is Go 1.15+ feature: sql.DB.SetConnMaxIdleTime.
+func (c *Core) SetMaxIdleConnTime(d time.Duration) {
+	c.dynamicConfig.MaxIdleConnTime = d
 }
 
 // GetConfig returns the current used node configuration.
