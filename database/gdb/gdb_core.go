@@ -119,7 +119,7 @@ func (c *Core) Close(ctx context.Context) (err error) {
 			if err != nil {
 				err = gerror.WrapCode(gcode.CodeDbOperationError, err, `db.Close failed`)
 			}
-			intlog.Printf(ctx, `close link: %s, err: %v`, k, err)
+			intlog.Printf(ctx, `close link: %s, err: %v`, gconv.String(k), err)
 			if err != nil {
 				return
 			}

@@ -32,11 +32,11 @@ var (
 
 // AdapterFile implements interface Adapter using file.
 type AdapterFile struct {
-	defaultFileNameOrPath *gtype.String    // Default configuration file name or file path.
-	searchPaths           *garray.StrArray // Searching the path array.
-	jsonMap               *gmap.StrAnyMap  // The pared JSON objects for configuration files.
-	violenceCheck         bool             // Whether it does violence check in value index searching. It affects the performance when set true(false in default).
-	watchers              *WatcherRegistry // Watchers for watching file changes.
+	defaultFileNameOrPath *gtype.String                    // Default configuration file name or file path.
+	searchPaths           *garray.StrArray                 // Searching the path array.
+	jsonMap               *gmap.KVMap[string, *gjson.Json] // The pared JSON objects for configuration files.
+	violenceCheck         bool                             // Whether it does violence check in value index searching. It affects the performance when set true(false in default).
+	watchers              *WatcherRegistry                 // Watchers for watching file changes.
 }
 
 const (
@@ -58,6 +58,9 @@ var (
 
 	// Prefix array for trying searching in the local system.
 	localSystemTryFolders = []string{"", "config/", "manifest/config"}
+
+	// jsonMapChecker is the checker for JSON map.
+	jsonMapChecker = func(v *gjson.Json) bool { return v == nil }
 )
 
 // NewAdapterFile returns a new configuration management object.
@@ -78,7 +81,7 @@ func NewAdapterFile(fileNameOrPath ...string) (*AdapterFile, error) {
 	config := &AdapterFile{
 		defaultFileNameOrPath: gtype.NewString(usedFileNameOrPath),
 		searchPaths:           garray.NewStrArray(true),
-		jsonMap:               gmap.NewStrAnyMap(true),
+		jsonMap:               gmap.NewKVMapWithChecker[string, *gjson.Json](jsonMapChecker, true),
 		watchers:              NewWatcherRegistry(),
 	}
 	// Customized dir path from env/cmd.
@@ -257,7 +260,7 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 		usedFileNameOrPath = fileNameOrPath[0]
 	}
 	// It uses JSON map to cache specified configuration file content.
-	result := a.jsonMap.GetOrSetFuncLock(usedFileNameOrPath, func() any {
+	result := a.jsonMap.GetOrSetFuncLock(usedFileNameOrPath, func() *gjson.Json {
 		var (
 			content  string
 			filePath string
@@ -326,7 +329,7 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 		return configJson
 	})
 	if result != nil {
-		return result.(*gjson.Json), err
+		return result, err
 	}
 	return
 }
