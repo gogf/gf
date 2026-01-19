@@ -63,7 +63,7 @@ server:
   port: 8080
 `
 
-func TestConfigurator_Load(t *testing.T) {
+func TestLoader_Load(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			configFile = "./" + guid.S() + ".yaml"
@@ -76,13 +76,13 @@ func TestConfigurator_Load(t *testing.T) {
 		cfg, err := gcfg.NewAdapterFile(configFile)
 		t.AssertNil(err)
 
-		// Create configurator
-		configurator := gcfg.NewConfiguratorWithAdapter[TestConfig](cfg, "")
+		// Create loader
+		loader := gcfg.NewLoaderWithAdapter[TestConfig](cfg, "")
 
 		// Load configuration
-		err = configurator.Load(context.Background())
+		err = loader.Load(context.Background())
 		t.AssertNil(err)
-		v := configurator.Get()
+		v := loader.Get()
 
 		// Check loaded values
 		t.Assert(v.Name, "test-app")
@@ -94,7 +94,7 @@ func TestConfigurator_Load(t *testing.T) {
 	})
 }
 
-func TestConfigurator_LoadWithDefaultValues(t *testing.T) {
+func TestLoader_LoadWithDefaultValues(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			configFile = "./" + guid.S() + ".yaml"
@@ -111,14 +111,14 @@ func TestConfigurator_LoadWithDefaultValues(t *testing.T) {
 		var targetConfig TestConfig3
 		targetConfig.Other = "other"
 
-		// Create configurator
-		configurator := gcfg.NewConfiguratorWithAdapter(cfg, "", &targetConfig)
-		configurator.SetReuseTargetStruct(true)
+		// Create loader
+		loader := gcfg.NewLoaderWithAdapter(cfg, "", &targetConfig)
+		loader.SetReuseTargetStruct(true)
 
 		// Load configuration
-		err = configurator.Load(context.Background())
+		err = loader.Load(context.Background())
 		t.AssertNil(err)
-		v := configurator.Get()
+		v := loader.Get()
 
 		// Check loaded values
 		t.Assert(v.Name, "test-app")
@@ -131,7 +131,7 @@ func TestConfigurator_LoadWithDefaultValues(t *testing.T) {
 	})
 }
 
-func TestConfigurator_LoadWithPropertyKey(t *testing.T) {
+func TestLoader_LoadWithPropertyKey(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			configFile = "./" + guid.S() + ".yaml"
@@ -144,13 +144,13 @@ func TestConfigurator_LoadWithPropertyKey(t *testing.T) {
 		cfg, err := gcfg.NewAdapterFile(configFile)
 		t.AssertNil(err)
 
-		// Create configurator with specific property key
-		configurator := gcfg.NewConfiguratorWithAdapter[ServerConfig](cfg, "server")
+		// Create loader with specific property key
+		loader := gcfg.NewLoaderWithAdapter[ServerConfig](cfg, "server")
 
 		// Load configuration
-		err = configurator.Load(context.Background())
+		err = loader.Load(context.Background())
 		t.AssertNil(err)
-		v := configurator.Get()
+		v := loader.Get()
 
 		// Check loaded values - only the app section should be loaded
 		t.Assert(v.Host, "localhost")
@@ -158,7 +158,7 @@ func TestConfigurator_LoadWithPropertyKey(t *testing.T) {
 	})
 }
 
-func TestConfigurator_WatchAndOnChange(t *testing.T) {
+func TestLoader_WatchAndOnChange(t *testing.T) {
 	var configContent2 = `
 name: test-app-2
 age: 200
@@ -177,34 +177,34 @@ server:
 		// Variable to track if callback was called
 		callbackCalled := gtype.NewBool(false)
 
-		// Create configurator
-		configurator := gcfg.NewConfiguratorWithAdapter[TestConfig](cfg, "")
+		// Create loader
+		loader := gcfg.NewLoaderWithAdapter[TestConfig](cfg, "")
 
 		// Set change callback
-		configurator.OnChange(func(updated TestConfig) error {
+		loader.OnChange(func(updated TestConfig) error {
 			callbackCalled.Set(true)
 			return nil
 		})
 
 		// Load configuration
-		err = configurator.Load(context.Background())
+		err = loader.Load(context.Background())
 		t.AssertNil(err)
-		err = configurator.Watch(context.Background(), "test-watcher")
+		err = loader.Watch(context.Background(), "test-watcher")
 		t.AssertNil(err)
-		v := configurator.Get()
+		v := loader.Get()
 		t.Assert(v.Name, "test-app")
 		t.Assert(v.Age, 25)
 		err = cfg.SetContent(configContent2)
 		t.AssertNil(err)
 		time.Sleep(2 * time.Second)
-		v2 := configurator.Get()
+		v2 := loader.Get()
 		t.Assert(v2.Name, "test-app-2")
 		t.Assert(v2.Age, 200)
 		t.Assert(callbackCalled.Val(), true)
 	})
 }
 
-func TestConfigurator_SetConverter(t *testing.T) {
+func TestLoader_SetConverter(t *testing.T) {
 	var configContent2 = `
 name: test-app-2
 age: 200
@@ -226,94 +226,94 @@ server:
 		cfg, err := gcfg.NewAdapterFile(configFile)
 		t.AssertNil(err)
 
-		// Create configurator
-		configurator := gcfg.NewConfiguratorWithAdapter[TestConfig2](cfg, "features")
+		// Create loader
+		loader := gcfg.NewLoaderWithAdapter[TestConfig2](cfg, "features")
 
 		// Set custom converter
-		configurator.SetConverter(func(data any, target *TestConfig2) error {
+		loader.SetConverter(func(data any, target *TestConfig2) error {
 			s := gconv.Strings(data)
 			target.Features = strings.Join(s, ",")
 			return nil
 		})
 
 		// Load configuration
-		err = configurator.Load(context.Background())
+		err = loader.Load(context.Background())
 		t.AssertNil(err)
-		v := configurator.Get()
+		v := loader.Get()
 
 		// Check converted values
 		t.Assert(v.Features, "feature,feature,feature")
 	})
 }
 
-func TestConfigurator_SetLoadErrorHandler(t *testing.T) {
+func TestLoader_SetLoadErrorHandler(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// Create a new config instance with invalid adapter that will cause error
 		cfg, err := gcfg.New()
 		t.AssertNil(err)
-		// Create configurator
-		configurator := gcfg.NewConfigurator[TestConfig](cfg, "non-existent-key")
+		// Create loader
+		loader := gcfg.NewLoader[TestConfig](cfg, "non-existent-key")
 
 		// Set error handler
 		errorHandled := gtype.NewBool(false)
-		configurator.SetLoadErrorHandler(func(ctx context.Context, err error) {
+		loader.SetLoadErrorHandler(func(ctx context.Context, err error) {
 			errorHandled.Set(true)
 		})
 
 		// Try to load with invalid key
-		err = configurator.Load(context.Background())
+		err = loader.Load(context.Background())
 		// The error should be handled by our error handler
 		t.Assert(errorHandled, true)
 	})
 }
 
-func TestConfigurator_IsWatchingAndStopWatch(t *testing.T) {
+func TestLoader_IsWatchingAndStopWatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// Create a new config instance
 		cfg, err := gcfg.NewAdapterContent(configContent)
 		t.AssertNil(err)
 
-		// Create configurator
-		configurator := gcfg.NewConfiguratorWithAdapter[TestConfig](cfg, "")
+		// Create loader
+		loader := gcfg.NewLoaderWithAdapter[TestConfig](cfg, "")
 
 		// Initially, should not be watching
-		t.Assert(configurator.IsWatching(), false)
+		t.Assert(loader.IsWatching(), false)
 
 		// Load configuration
-		err = configurator.Load(context.Background())
+		err = loader.Load(context.Background())
 		t.AssertNil(err)
 
 		// Start watching
-		err = configurator.Watch(context.Background(), "test-stopwatch-watcher")
+		err = loader.Watch(context.Background(), "test-stopwatch-watcher")
 		t.AssertNil(err)
 
 		// Now should be watching
-		t.Assert(configurator.IsWatching(), true)
+		t.Assert(loader.IsWatching(), true)
 
 		// Stop watching
-		stopped, err := configurator.StopWatch(context.Background())
+		stopped, err := loader.StopWatch(context.Background())
 		t.AssertNil(err)
 		t.Assert(stopped, true)
 
 		// Should not be watching anymore
-		t.Assert(configurator.IsWatching(), false)
+		t.Assert(loader.IsWatching(), false)
 	})
 }
 
-func TestConfigurator_StopWatchWithoutWatcher(t *testing.T) {
+func TestLoader_StopWatchWithoutWatcher(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// Create a new config instance
 		cfg, err := gcfg.NewAdapterContent(configContent)
 		t.AssertNil(err)
 
-		// Create configurator without starting to watch
-		configurator := gcfg.NewConfiguratorWithAdapter[TestConfig](cfg, "")
+		// Create loader without starting to watch
+		loader := gcfg.NewLoaderWithAdapter[TestConfig](cfg, "")
 
 		// Initially, should not be watching
-		t.Assert(configurator.IsWatching(), false)
+		t.Assert(loader.IsWatching(), false)
 
 		// Try to stop watching when not watching
-		stopped, err := configurator.StopWatch(context.Background())
+		stopped, err := loader.StopWatch(context.Background())
 		t.AssertNE(err, nil)
 		t.Assert(stopped, false)
 		t.Assert(err.Error(), "No watcher name specified")
