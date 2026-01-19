@@ -60,36 +60,36 @@ func NewLoaderWithAdapter[T any](adapter Adapter, propertyKey string, targetStru
 
 // OnChange sets the callback function that will be called when configuration changes
 // The callback function receives the updated configuration struct and can return an error
-func (c *Loader[T]) OnChange(fn func(updated T) error) {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-	c.onChange = fn
+func (l *Loader[T]) OnChange(fn func(updated T) error) {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+	l.onChange = fn
 }
 
 // Load loads configuration from the config instance and binds it to the target struct
 // The context is passed to the underlying configuration adapter
-func (c *Loader[T]) Load(ctx context.Context) error {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
+func (l *Loader[T]) Load(ctx context.Context) error {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
 
 	// Get configuration data
 	var data *gvar.Var
-	if c.propertyKey == "" || c.propertyKey == "." {
+	if l.propertyKey == "" || l.propertyKey == "." {
 		// Get all configuration data
-		configData, err := c.config.Data(ctx)
+		configData, err := l.config.Data(ctx)
 		if err != nil {
-			if c.loadErrorFunc != nil {
-				c.loadErrorFunc(ctx, err)
+			if l.loadErrorFunc != nil {
+				l.loadErrorFunc(ctx, err)
 			}
 			return err
 		}
 		data = gvar.New(configData)
 	} else {
 		// Get specific property
-		configValue, err := c.config.Get(ctx, c.propertyKey)
+		configValue, err := l.config.Get(ctx, l.propertyKey)
 		if err != nil {
-			if c.loadErrorFunc != nil {
-				c.loadErrorFunc(ctx, err)
+			if l.loadErrorFunc != nil {
+				l.loadErrorFunc(ctx, err)
 			}
 			return err
 		}
@@ -101,57 +101,57 @@ func (c *Loader[T]) Load(ctx context.Context) error {
 	}
 
 	// Use custom converter if provided, otherwise use default gconv.Scan
-	if c.converter != nil && data != nil {
-		if c.reuse {
-			if err := c.converter(data.Val(), c.targetStruct); err != nil {
-				if c.loadErrorFunc != nil {
-					c.loadErrorFunc(ctx, err)
+	if l.converter != nil && data != nil {
+		if l.reuse {
+			if err := l.converter(data.Val(), l.targetStruct); err != nil {
+				if l.loadErrorFunc != nil {
+					l.loadErrorFunc(ctx, err)
 				}
 				return err
 			}
 		} else {
 			var newConfig T
-			if err := c.converter(data.Val(), &newConfig); err != nil {
-				if c.loadErrorFunc != nil {
-					c.loadErrorFunc(ctx, err)
+			if err := l.converter(data.Val(), &newConfig); err != nil {
+				if l.loadErrorFunc != nil {
+					l.loadErrorFunc(ctx, err)
 				}
 				return err
 			}
-			c.targetStruct = &newConfig
+			l.targetStruct = &newConfig
 		}
 	} else {
 		if data != nil {
-			if c.reuse {
-				if err := data.Scan(c.targetStruct); err != nil {
-					if c.loadErrorFunc != nil {
-						c.loadErrorFunc(ctx, err)
+			if l.reuse {
+				if err := data.Scan(l.targetStruct); err != nil {
+					if l.loadErrorFunc != nil {
+						l.loadErrorFunc(ctx, err)
 					}
 					return err
 				}
 			} else {
 				var newConfig T
 				if err := data.Scan(&newConfig); err != nil {
-					if c.loadErrorFunc != nil {
-						c.loadErrorFunc(ctx, err)
+					if l.loadErrorFunc != nil {
+						l.loadErrorFunc(ctx, err)
 					}
 					return err
 				}
-				c.targetStruct = &newConfig
+				l.targetStruct = &newConfig
 			}
 		}
 	}
 
 	// Call change callback if exists
-	if c.onChange != nil {
-		return c.onChange(*c.targetStruct)
+	if l.onChange != nil {
+		return l.onChange(*l.targetStruct)
 	}
 
 	return nil
 }
 
 // MustLoad is like Load but panics if there is an error
-func (c *Loader[T]) MustLoad(ctx context.Context) {
-	if err := c.Load(ctx); err != nil {
+func (l *Loader[T]) MustLoad(ctx context.Context) {
+	if err := l.Load(ctx); err != nil {
 		panic(err)
 	}
 }
@@ -159,109 +159,109 @@ func (c *Loader[T]) MustLoad(ctx context.Context) {
 // Watch starts watching for configuration changes and automatically updates the target struct
 // name: the name of the watcher, which is used to identify this watcher
 // This method sets up a watcher that will call Load() when configuration changes are detected
-func (c *Loader[T]) Watch(ctx context.Context, name string) error {
+func (l *Loader[T]) Watch(ctx context.Context, name string) error {
 	if name == "" {
 		return gerror.New("Watcher name cannot be empty")
 	}
-	adapter := c.config.GetAdapter()
+	adapter := l.config.GetAdapter()
 	if watcherAdapter, ok := adapter.(WatcherAdapter); ok {
 		watcherAdapter.AddWatcher(name, func(ctx context.Context) {
 			// Reload configuration when change is detected
-			if err := c.Load(ctx); err != nil {
+			if err := l.Load(ctx); err != nil {
 				// Use the configured error handler if available, otherwise execute default logging
-				if c.loadErrorFunc != nil {
-					c.loadErrorFunc(ctx, err)
+				if l.loadErrorFunc != nil {
+					l.loadErrorFunc(ctx, err)
 				} else {
 					// Default logging using intlog (internal logging for development)
 					intlog.Errorf(ctx, "Configuration load failed in watcher %s: %v", name, err)
 				}
 			}
 		})
-		c.watcherName = name
+		l.watcherName = name
 		return nil
 	}
 	return gerror.New("Watcher adapter not found")
 }
 
 // MustWatch is like Watch but panics if there is an error
-func (c *Loader[T]) MustWatch(ctx context.Context, name string) {
-	if err := c.Watch(ctx, name); err != nil {
+func (l *Loader[T]) MustWatch(ctx context.Context, name string) {
+	if err := l.Watch(ctx, name); err != nil {
 		panic(err)
 	}
 }
 
 // MustLoadAndWatch is a convenience method that calls MustLoad and MustWatch
-func (c *Loader[T]) MustLoadAndWatch(ctx context.Context, name string) {
-	c.MustLoad(ctx)
-	c.MustWatch(ctx, name)
+func (l *Loader[T]) MustLoadAndWatch(ctx context.Context, name string) {
+	l.MustLoad(ctx)
+	l.MustWatch(ctx, name)
 }
 
 // Get returns the current configuration struct
 // This method is thread-safe and returns a copy of the current configuration
-func (c *Loader[T]) Get() T {
-	c.mutex.RLock()
-	defer c.mutex.RUnlock()
-	return *c.targetStruct
+func (l *Loader[T]) Get() T {
+	l.mutex.RLock()
+	defer l.mutex.RUnlock()
+	return *l.targetStruct
 }
 
 // GetPointer returns a pointer to the current configuration struct
 // This method is thread-safe and returns a pointer to the current configuration
 // The returned pointer is safe for read operations but should not be modified
-func (c *Loader[T]) GetPointer() *T {
-	c.mutex.RLock()
-	defer c.mutex.RUnlock()
-	return c.targetStruct
+func (l *Loader[T]) GetPointer() *T {
+	l.mutex.RLock()
+	defer l.mutex.RUnlock()
+	return l.targetStruct
 }
 
 // SetConverter sets a custom converter function that will be used during Load operations
 // The converter function receives the source data and the target struct pointer
-func (c *Loader[T]) SetConverter(converter func(data any, target *T) error) {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-	c.converter = converter
+func (l *Loader[T]) SetConverter(converter func(data any, target *T) error) {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+	l.converter = converter
 }
 
 // SetLoadErrorHandler sets an error handling function that will be called when Load operations fail
-func (c *Loader[T]) SetLoadErrorHandler(errorFunc func(ctx context.Context, err error)) {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-	c.loadErrorFunc = errorFunc
+func (l *Loader[T]) SetLoadErrorHandler(errorFunc func(ctx context.Context, err error)) {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+	l.loadErrorFunc = errorFunc
 }
 
 // SetReuseTargetStruct sets whether to reuse the same target struct or create a new one on updates
-func (c *Loader[T]) SetReuseTargetStruct(reuse bool) {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-	c.reuse = reuse
+func (l *Loader[T]) SetReuseTargetStruct(reuse bool) {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+	l.reuse = reuse
 }
 
 // StopWatch stops watching for configuration changes and removes the associated watcher
-func (c *Loader[T]) StopWatch(ctx context.Context) (bool, error) {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
+func (l *Loader[T]) StopWatch(ctx context.Context) (bool, error) {
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
 
-	if c.watcherName == "" {
+	if l.watcherName == "" {
 		return false, gerror.New("No watcher name specified")
 	}
-	adapter := c.config.GetAdapter()
+	adapter := l.config.GetAdapter()
 	if watcherAdapter, ok := adapter.(WatcherAdapter); ok {
-		watcherAdapter.RemoveWatcher(c.watcherName)
-		c.watcherName = ""
+		watcherAdapter.RemoveWatcher(l.watcherName)
+		l.watcherName = ""
 		return true, nil
 	}
 	return false, gerror.New("Watcher adapter not found")
 }
 
 // IsWatching returns true if the loader is currently watching for configuration changes
-func (c *Loader[T]) IsWatching() bool {
-	c.mutex.RLock()
-	defer c.mutex.RUnlock()
-	if c.watcherName == "" {
+func (l *Loader[T]) IsWatching() bool {
+	l.mutex.RLock()
+	defer l.mutex.RUnlock()
+	if l.watcherName == "" {
 		return false
 	}
-	adapter := c.config.GetAdapter()
+	adapter := l.config.GetAdapter()
 	if watcherAdapter, ok := adapter.(WatcherAdapter); ok {
-		return watcherAdapter.IsWatching(c.watcherName)
+		return watcherAdapter.IsWatching(l.watcherName)
 	}
 	return false
 }
