@@ -38,7 +38,7 @@ type (
 		servers          []*graceful.Server        // Underlying http.Server array.
 		serverCount      *gtype.Int                // Underlying http.Server number for internal usage.
 		closeChan        chan struct{}             // Used for underlying server closing event notification.
-		serveTree        map[string]interface{}    // The route maps tree.
+		serveTree        map[string]any            // The route maps tree.
 		serveCache       *gcache.Cache             // Server caches for internal usage.
 		routesMap        map[string][]*HandlerItem // Route map mainly for route dumps and repeated route checks.
 		statusHandlerMap map[string][]HandlerFunc  // Custom status handler map.
@@ -176,9 +176,12 @@ var (
 	// It is used for quick HTTP method searching using map.
 	methodsMap = make(map[string]struct{})
 
+	// checker is used for checking whether the value is nil.
+	checker = func(v *Server) bool { return v == nil }
+
 	// serverMapping stores more than one server instances for current processes.
 	// The key is the name of the server, and the value is its instance.
-	serverMapping = gmap.NewStrAnyMap(true)
+	serverMapping = gmap.NewKVMapWithChecker[string, *Server](checker, true)
 
 	// serverRunning marks the running server counts.
 	// If there is no successful server running or all servers' shutdown, this value is 0.

@@ -148,14 +148,11 @@ func Test_Issue1394(t *testing.T) {
 		for i := 0; i < 10; i++ {
 			gRing.Put(i)
 		}
-		t.Logf("the length:%d", gRing.Len())
 		gRingResult := gRing.Unlink(6)
 		for i := 0; i < 10; i++ {
 			t.Log(gRing.Val())
 			gRing = gRing.Next()
 		}
-		t.Logf("the ring length:%d", gRing.Len())
-		t.Logf("the result length:%d", gRingResult.Len())
 
 		// stdring
 		stdRing := ring.New(10)
@@ -163,14 +160,11 @@ func Test_Issue1394(t *testing.T) {
 			stdRing.Value = i
 			stdRing = stdRing.Next()
 		}
-		t.Logf("the length:%d", stdRing.Len())
 		stdRingResult := stdRing.Unlink(6)
 		for i := 0; i < 10; i++ {
 			t.Log(stdRing.Value)
 			stdRing = stdRing.Next()
 		}
-		t.Logf("the ring length:%d", stdRing.Len())
-		t.Logf("the result length:%d", stdRingResult.Len())
 
 		// Assertion.
 		t.Assert(gRing.Len(), stdRing.Len())
@@ -193,7 +187,7 @@ func TestRing_RLockIteratorNext(t *testing.T) {
 		}
 
 		iterVal := 0
-		r.RLockIteratorNext(func(value interface{}) bool {
+		r.RLockIteratorNext(func(value any) bool {
 			if value.(int) == 0 {
 				iterVal = value.(int)
 				return false
@@ -213,7 +207,7 @@ func TestRing_RLockIteratorPrev(t *testing.T) {
 		}
 
 		iterVal := 0
-		r.RLockIteratorPrev(func(value interface{}) bool {
+		r.RLockIteratorPrev(func(value any) bool {
 			if value.(int) == 0 {
 				iterVal = value.(int)
 				return false

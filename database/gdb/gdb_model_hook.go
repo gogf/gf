@@ -66,12 +66,12 @@ type internalParamHookDelete struct {
 // which is usually not be interesting for upper business hook handler.
 type HookSelectInput struct {
 	internalParamHookSelect
-	Model      *Model        // Current operation Model.
-	Table      string        // The table name that to be used. Update this attribute to change target table name.
-	Schema     string        // The schema name that to be used. Update this attribute to change target schema name.
-	Sql        string        // The sql string that to be committed.
-	Args       []interface{} // The arguments of sql.
-	SelectType SelectType    // The type of this SELECT operation.
+	Model      *Model     // Current operation Model.
+	Table      string     // The table name that to be used. Update this attribute to change target table name.
+	Schema     string     // The schema name that to be used. Update this attribute to change target schema name.
+	Sql        string     // The sql string that to be committed.
+	Args       []any      // The arguments of sql.
+	SelectType SelectType // The type of this SELECT operation.
 }
 
 // HookInsertInput holds the parameters for insert hook operation.
@@ -87,22 +87,22 @@ type HookInsertInput struct {
 // HookUpdateInput holds the parameters for update hook operation.
 type HookUpdateInput struct {
 	internalParamHookUpdate
-	Model     *Model        // Current operation Model.
-	Table     string        // The table name that to be used. Update this attribute to change target table name.
-	Schema    string        // The schema name that to be used. Update this attribute to change target schema name.
-	Data      interface{}   // Data can be type of: map[string]interface{}/string. You can use type assertion on `Data`.
-	Condition string        // The where condition string for updating.
-	Args      []interface{} // The arguments for sql place-holders.
+	Model     *Model // Current operation Model.
+	Table     string // The table name that to be used. Update this attribute to change target table name.
+	Schema    string // The schema name that to be used. Update this attribute to change target schema name.
+	Data      any    // Data can be type of: map[string]any/string. You can use type assertion on `Data`.
+	Condition string // The where condition string for updating.
+	Args      []any  // The arguments for sql place-holders.
 }
 
 // HookDeleteInput holds the parameters for delete hook operation.
 type HookDeleteInput struct {
 	internalParamHookDelete
-	Model     *Model        // Current operation Model.
-	Table     string        // The table name that to be used. Update this attribute to change target table name.
-	Schema    string        // The schema name that to be used. Update this attribute to change target schema name.
-	Condition string        // The where condition string for deleting.
-	Args      []interface{} // The arguments for sql place-holders.
+	Model     *Model // Current operation Model.
+	Table     string // The table name that to be used. Update this attribute to change target table name.
+	Schema    string // The schema name that to be used. Update this attribute to change target schema name.
+	Condition string // The where condition string for deleting.
+	Args      []any  // The arguments for sql place-holders.
 }
 
 const (
@@ -159,6 +159,10 @@ func (h *HookSelectInput) Next(ctx context.Context) (result Result, err error) {
 		if err != nil {
 			return
 		}
+		h.Model.db.GetCore().schema = h.Schema
+		defer func() {
+			h.Model.db.GetCore().schema = h.originalSchemaName.String()
+		}()
 	}
 	return h.Model.db.DoSelect(ctx, h.link, toBeCommittedSql, h.Args...)
 }
@@ -195,6 +199,10 @@ func (h *HookInsertInput) Next(ctx context.Context) (result sql.Result, err erro
 		if err != nil {
 			return
 		}
+		h.Model.db.GetCore().schema = h.Schema
+		defer func() {
+			h.Model.db.GetCore().schema = h.originalSchemaName.String()
+		}()
 	}
 	return h.Model.db.DoInsert(ctx, h.link, h.Table, h.Data, h.Option)
 }
@@ -238,6 +246,10 @@ func (h *HookUpdateInput) Next(ctx context.Context) (result sql.Result, err erro
 		if err != nil {
 			return
 		}
+		h.Model.db.GetCore().schema = h.Schema
+		defer func() {
+			h.Model.db.GetCore().schema = h.originalSchemaName.String()
+		}()
 	}
 	return h.Model.db.DoUpdate(ctx, h.link, h.Table, h.Data, h.Condition, h.Args...)
 }
@@ -281,6 +293,10 @@ func (h *HookDeleteInput) Next(ctx context.Context) (result sql.Result, err erro
 		if err != nil {
 			return
 		}
+		h.Model.db.GetCore().schema = h.Schema
+		defer func() {
+			h.Model.db.GetCore().schema = h.originalSchemaName.String()
+		}()
 	}
 	return h.Model.db.DoDelete(ctx, h.link, h.Table, h.Condition, h.Args...)
 }

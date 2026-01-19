@@ -20,7 +20,7 @@ import (
 
 // Server returns an instance of http server with specified name.
 // Note that it panics if any error occurs duration instance creating.
-func Server(name ...interface{}) *ghttp.Server {
+func Server(name ...any) *ghttp.Server {
 	var (
 		err          error
 		ctx          = context.Background()
@@ -30,14 +30,14 @@ func Server(name ...interface{}) *ghttp.Server {
 	if len(name) > 0 && name[0] != "" {
 		instanceName = gconv.String(name[0])
 	}
-	return instance.GetOrSetFuncLock(instanceKey, func() interface{} {
+	return instance.GetOrSetFuncLock(instanceKey, func() any {
 		server := ghttp.GetServer(instanceName)
 		if Config().Available(ctx) {
 			// Server initialization from configuration.
 			var (
-				configMap             map[string]interface{}
-				serverConfigMap       map[string]interface{}
-				serverLoggerConfigMap map[string]interface{}
+				configMap             map[string]any
+				serverConfigMap       map[string]any
+				serverLoggerConfigMap map[string]any
 				configNodeName        string
 			)
 			if configMap, err = Config().Data(ctx); err != nil {

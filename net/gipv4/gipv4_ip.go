@@ -24,7 +24,7 @@ func GetIpArray() (ips []string, err error) {
 	}
 	for _, address := range interfaceAddr {
 		ipNet, isValidIpNet := address.(*net.IPNet)
-		if !(isValidIpNet && !ipNet.IP.IsLoopback()) {
+		if !isValidIpNet || ipNet.IP.IsLoopback() {
 			continue
 		}
 		if ipNet.IP.To4() != nil {

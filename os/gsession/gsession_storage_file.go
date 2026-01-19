@@ -157,7 +157,7 @@ func (s *StorageFile) GetSession(ctx context.Context, sessionId string, ttl time
 				return nil, err
 			}
 		}
-		var m map[string]interface{}
+		var m map[string]any
 		if err = json.UnmarshalUseNumber(content, &m); err != nil {
 			return nil, err
 		}

@@ -40,12 +40,12 @@ type iString interface {
 
 // iIterator is the type assert api for Iterator.
 type iIterator interface {
-	Iterator(f func(key, value interface{}) bool)
+	Iterator(f func(key, value any) bool)
 }
 
 // iInterfaces is the type assert api for Interfaces.
 type iInterfaces interface {
-	Interfaces() []interface{}
+	Interfaces() []any
 }
 
 // iNil if the type assert api for IsNil.
@@ -128,7 +128,7 @@ func CatchSQL(ctx context.Context, f func(ctx context.Context) error) (sqlArray 
 }
 
 // isDoStruct checks and returns whether given type is a DO struct.
-func isDoStruct(object interface{}) bool {
+func isDoStruct(object any) bool {
 	// It checks by struct name like "XxxForDao", to be compatible with old version.
 	// TODO remove this compatible codes in future.
 	reflectType := reflect.TypeOf(object)
@@ -149,15 +149,28 @@ func isDoStruct(object interface{}) bool {
 }
 
 // getTableNameFromOrmTag retrieves and returns the table name from struct object.
-func getTableNameFromOrmTag(object interface{}) string {
+func getTableNameFromOrmTag(object any) string {
 	var tableName string
-	// Use the interface value.
-	if r, ok := object.(iTableName); ok {
-		tableName = r.TableName()
+	var actualObj = object
+
+	if rv, ok := object.(reflect.Value); ok {
+		// Check if reflect.Value is valid
+		if rv.IsValid() && rv.CanInterface() {
+			actualObj = rv.Interface()
+		} else {
+			// If reflect.Value is invalid, we cannot proceed with interface checks
+			return ""
+		}
 	}
-	// User meta data tag "orm".
-	if tableName == "" {
-		if ormTag := gmeta.Get(object, OrmTagForStruct); !ormTag.IsEmpty() {
+
+	// Check iTableName interface
+	if actualObj != nil {
+		if r, ok := actualObj.(iTableName); ok {
+			return r.TableName()
+		}
+
+		// User meta data tag "orm".
+		if ormTag := gmeta.Get(actualObj, OrmTagForStruct); !ormTag.IsEmpty() {
 			match, _ := gregex.MatchString(
 				fmt.Sprintf(`%s\s*:\s*([^,]+)`, OrmTagForTable),
 				ormTag.String(),
@@ -166,17 +179,19 @@ func getTableNameFromOrmTag(object interface{}) string {
 				tableName = match[1]
 			}
 		}
-	}
-	// Use the struct name of snake case.
-	if tableName == "" {
-		if t, err := gstructs.StructType(object); err != nil {
-			panic(err)
-		} else {
-			tableName = gstr.CaseSnakeFirstUpper(
-				gstr.StrEx(t.String(), "."),
-			)
+
+		// Use the struct name of snake case.
+		if tableName == "" {
+			if t, err := gstructs.StructType(actualObj); err != nil {
+				panic(err)
+			} else {
+				tableName = gstr.CaseSnakeFirstUpper(
+					gstr.StrEx(t.String(), "."),
+				)
+			}
 		}
 	}
+
 	return tableName
 }
 
@@ -185,13 +200,13 @@ func getTableNameFromOrmTag(object interface{}) string {
 // or else it returns an empty slice.
 //
 // The parameter `list` supports types like:
-// []map[string]interface{}
+// []map[string]any
 // []map[string]sub-map
 // []struct
 // []struct:sub-struct
 // Note that the sub-map/sub-struct makes sense only if the optional parameter `subKey` is given.
 // See gutil.ListItemValues.
-func ListItemValues(list interface{}, key interface{}, subKey ...interface{}) (values []interface{}) {
+func ListItemValues(list any, key any, subKey ...any) (values []any) {
 	return gutil.ListItemValues(list, key, subKey...)
 }
 
@@ -199,7 +214,7 @@ func ListItemValues(list interface{}, key interface{}, subKey ...interface{}) (v
 // Note that the parameter `list` should be type of slice which contains elements of map or struct,
 // or else it returns an empty slice.
 // See gutil.ListItemValuesUnique.
-func ListItemValuesUnique(list interface{}, key string, subKey ...interface{}) []interface{} {
+func ListItemValuesUnique(list any, key string, subKey ...any) []any {
 	return gutil.ListItemValuesUnique(list, key, subKey...)
 }
 
@@ -217,7 +232,7 @@ func GetInsertOperationByOption(option InsertOption) string {
 	return operator
 }
 
-func anyValueToMapBeforeToRecord(value interface{}) map[string]interface{} {
+func anyValueToMapBeforeToRecord(value any) map[string]any {
 	convertedMap := gconv.Map(value, gconv.MapOption{
 		Tags:      structTagPriority,
 		OmitEmpty: true, // To be compatible with old version from v2.6.0.
@@ -253,7 +268,7 @@ func anyValueToMapBeforeToRecord(value interface{}) map[string]interface{} {
 // MapOrStructToMapDeep converts `value` to map type recursively(if attribute struct is embedded).
 // The parameter `value` should be type of *map/map/*struct/struct.
 // It supports embedded struct definition for struct.
-func MapOrStructToMapDeep(value interface{}, omitempty bool) map[string]interface{} {
+func MapOrStructToMapDeep(value any, omitempty bool) map[string]any {
 	m := gconv.Map(value, gconv.MapOption{
 		Tags:      structTagPriority,
 		OmitEmpty: omitempty,
@@ -379,7 +394,7 @@ func getFieldsFromStructOrMap(structOrMap any) (fields []any) {
 //
 // Note that it returns the given `where` parameter directly if the `primary` is empty
 // or length of `where` > 1.
-func GetPrimaryKeyCondition(primary string, where ...interface{}) (newWhereCondition []interface{}) {
+func GetPrimaryKeyCondition(primary string, where ...any) (newWhereCondition []any) {
 	if len(where) == 0 {
 		return nil
 	}
@@ -391,7 +406,7 @@ func GetPrimaryKeyCondition(primary string, where ...interface{}) (newWhereCondi
 			rv   = reflect.ValueOf(where[0])
 			kind = rv.Kind()
 		)
-		if kind == reflect.Ptr {
+		if kind == reflect.Pointer {
 			rv = rv.Elem()
 			kind = rv.Kind()
 		}
@@ -401,7 +416,7 @@ func GetPrimaryKeyCondition(primary string, where ...interface{}) (newWhereCondi
 			break
 
 		default:
-			return []interface{}{map[string]interface{}{
+			return []any{map[string]any{
 				primary: where[0],
 			}}
 		}
@@ -417,7 +432,7 @@ type formatWhereHolderInput struct {
 	Table     string // Table is used for fields mapping and filtering internally.
 }
 
-func isKeyValueCanBeOmitEmpty(omitEmpty bool, whereType string, key, value interface{}) bool {
+func isKeyValueCanBeOmitEmpty(omitEmpty bool, whereType string, key, value any) bool {
 	if !omitEmpty {
 		return false
 	}
@@ -443,7 +458,7 @@ func isKeyValueCanBeOmitEmpty(omitEmpty bool, whereType string, key, value inter
 }
 
 // formatWhereHolder formats where statement and its arguments for `Where` and `Having` statements.
-func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (newWhere string, newArgs []interface{}) {
+func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (newWhere string, newArgs []any) {
 	var (
 		buffer      = bytes.NewBuffer(nil)
 		reflectInfo = reflection.OriginValueAndKind(in.Where)
@@ -482,7 +497,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 		// For example, ListMap and TreeMap are ordered map,
 		// which implement `iIterator` interface and are index-friendly for where conditions.
 		if iterator, ok := in.Where.(iIterator); ok {
-			iterator.Iterator(func(key, value interface{}) bool {
+			iterator.Iterator(func(key, value any) bool {
 				ketStr := gconv.String(key)
 				if in.OmitNil && empty.IsNil(value) {
 					return true
@@ -559,7 +574,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 
 	default:
 		// Where filter.
-		var omitEmptyCheckValue interface{}
+		var omitEmptyCheckValue any
 		if len(in.Args) == 1 {
 			omitEmptyCheckValue = in.Args[0]
 		} else {
@@ -598,11 +613,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 		// Regular string and parameter place holder handling.
 		// Eg:
 		// Where("id in(?) and name=?", g.Slice{1,2,3}, "john")
-		i := 0
-		for {
-			if i >= len(in.Args) {
-				break
-			}
+		for i := 0; i < len(in.Args); i++ {
 			// ===============================================================
 			// Sub query, which is always used along with a string condition.
 			// ===============================================================
@@ -621,7 +632,6 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 				in.Args = gutil.SliceDelete(in.Args, i)
 				continue
 			}
-			i++
 		}
 		buffer.WriteString(whereStr)
 	}
@@ -665,8 +675,8 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 	return handleSliceAndStructArgsForSql(newWhere, newArgs)
 }
 
-// formatWhereInterfaces formats `where` as []interface{}.
-func formatWhereInterfaces(db DB, where []interface{}, buffer *bytes.Buffer, newArgs []interface{}) []interface{} {
+// formatWhereInterfaces formats `where` as []any.
+func formatWhereInterfaces(db DB, where []any, buffer *bytes.Buffer, newArgs []any) []any {
 	if len(where) == 0 {
 		return newArgs
 	}
@@ -694,16 +704,16 @@ func formatWhereInterfaces(db DB, where []interface{}, buffer *bytes.Buffer, new
 type formatWhereKeyValueInput struct {
 	Db        DB            // Db is the underlying DB object for current operation.
 	Buffer    *bytes.Buffer // Buffer is the sql statement string without Args for current operation.
-	Args      []interface{} // Args is the full arguments of current operation.
+	Args      []any         // Args is the full arguments of current operation.
 	Key       string        // The field name, eg: "id", "name", etc.
-	Value     interface{}   // The field value, can be any types.
+	Value     any           // The field value, can be any types.
 	Type      string        // The value in Where type.
 	OmitEmpty bool          // Ignores current condition key if `value` is empty.
 	Prefix    string        // Field prefix, eg: "user", "order", etc.
 }
 
 // formatWhereKeyValue handles each key-value pair of the parameter map.
-func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []interface{}) {
+func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []any) {
 	var (
 		quotedKey   = in.Db.GetCore().QuoteWord(in.Key)
 		holderCount = gstr.Count(quotedKey, "?")
@@ -724,6 +734,14 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []interface{}) {
 		reflectValue = reflect.ValueOf(in.Value)
 		reflectKind  = reflectValue.Kind()
 	)
+	// Check if the value implements iString interface (like uuid.UUID).
+	// These types should be treated as single values, not arrays.
+	if reflectKind == reflect.Array {
+		if v, ok := in.Value.(iString); ok {
+			in.Value = v.String()
+			reflectKind = reflect.String
+		}
+	}
 	switch reflectKind {
 	// Slice argument.
 	case reflect.Slice, reflect.Array:
@@ -785,9 +803,7 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []interface{}) {
 
 // handleSliceAndStructArgsForSql is an important function, which handles the sql and all its arguments
 // before committing them to underlying driver.
-func handleSliceAndStructArgsForSql(
-	oldSql string, oldArgs []interface{},
-) (newSql string, newArgs []interface{}) {
+func handleSliceAndStructArgsForSql(oldSql string, oldArgs []any) (newSql string, newArgs []any) {
 	newSql = oldSql
 	if len(oldArgs) == 0 {
 		return
@@ -805,6 +821,13 @@ func handleSliceAndStructArgsForSql(
 				newArgs = append(newArgs, oldArg)
 				continue
 			}
+			// It does not split types that implement fmt.Stringer interface (like uuid.UUID).
+			// These types should be converted to string instead of being expanded as arrays.
+			// Eg: table.Where("uuid = ?", uuid.UUID{...})
+			if v, ok := oldArg.(iString); ok {
+				newArgs = append(newArgs, v.String())
+				continue
+			}
 			var (
 				valueHolderCount = gstr.Count(newSql, "?")
 				argSliceLength   = argReflectInfo.OriginValue.Len()
@@ -817,9 +840,9 @@ func handleSliceAndStructArgsForSql(
 				if gstr.Contains(newSql, "?") {
 					whereKeyWord := " WHERE "
 					if p := gstr.PosI(newSql, whereKeyWord); p == -1 {
-						return "0=1", []interface{}{}
+						return "0=1", []any{}
 					} else {
-						return gstr.SubStr(newSql, 0, p+len(whereKeyWord)) + "0=1", []interface{}{}
+						return gstr.SubStr(newSql, 0, p+len(whereKeyWord)) + "0=1", []any{}
 					}
 				}
 			} else {
@@ -858,18 +881,18 @@ func handleSliceAndStructArgsForSql(
 
 			// Special struct handling.
 		case reflect.Struct:
-			switch oldArg.(type) {
+			switch v := oldArg.(type) {
 			// The underlying driver supports time.Time/*time.Time types.
 			case time.Time, *time.Time:
 				newArgs = append(newArgs, oldArg)
 				continue
 
 			case gtime.Time:
-				newArgs = append(newArgs, oldArg.(gtime.Time).Time)
+				newArgs = append(newArgs, v.Time)
 				continue
 
 			case *gtime.Time:
-				newArgs = append(newArgs, oldArg.(*gtime.Time).Time)
+				newArgs = append(newArgs, v.Time)
 				continue
 
 			default:
@@ -906,7 +929,7 @@ func handleSliceAndStructArgsForSql(
 
 // FormatSqlWithArgs binds the arguments to the sql string and returns a complete
 // sql string, just for debugging.
-func FormatSqlWithArgs(sql string, args []interface{}) string {
+func FormatSqlWithArgs(sql string, args []any) string {
 	index := -1
 	newQuery, _ := gregex.ReplaceStringFunc(
 		`(\?|:v\d+|\$\d+|@p\d+)`,
@@ -922,7 +945,7 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 					return gconv.String(v)
 				}
 				reflectInfo := reflection.OriginValueAndKind(args[index])
-				if reflectInfo.OriginKind == reflect.Ptr &&
+				if reflectInfo.OriginKind == reflect.Pointer &&
 					(reflectInfo.OriginValue.IsNil() || !reflectInfo.OriginValue.IsValid()) {
 					return "null"
 				}
@@ -958,6 +981,7 @@ func FormatMultiLineSqlToSingle(sql string) (string, error) {
 	return sql, nil
 }
 
+// genTableFieldsCacheKey generates cache key for table fields.
 func genTableFieldsCacheKey(group, schema, table string) string {
 	return fmt.Sprintf(
 		`%s%s@%s#%s`,
@@ -968,7 +992,8 @@ func genTableFieldsCacheKey(group, schema, table string) string {
 	)
 }
 
-func genSelectCacheKey(table, group, schema, name, sql string, args ...interface{}) string {
+// genSelectCacheKey generates cache key for select.
+func genSelectCacheKey(table, group, schema, name, sql string, args ...any) string {
 	if name == "" {
 		name = fmt.Sprintf(
 			`%s@%s#%s:%d`,
@@ -979,4 +1004,14 @@ func genSelectCacheKey(table, group, schema, name, sql string, args ...interface
 		)
 	}
 	return fmt.Sprintf(`%s%s`, cachePrefixSelectCache, name)
+}
+
+// genTableNamesCacheKey generates cache key for table names.
+func genTableNamesCacheKey(group string) string {
+	return fmt.Sprintf(`Tables:%s`, group)
+}
+
+// genSoftTimeFieldNameTypeCacheKey generates cache key for soft time field name and type.
+func genSoftTimeFieldNameTypeCacheKey(schema, table string, candidateFields []string) string {
+	return fmt.Sprintf(`getSoftFieldNameAndType:%s#%s#%s`, schema, table, strings.Join(candidateFields, "_"))
 }

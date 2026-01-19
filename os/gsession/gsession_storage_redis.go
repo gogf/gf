@@ -89,7 +89,7 @@ func (s *StorageRedis) GetSession(ctx context.Context, sessionId string, ttl tim
 	if len(content) == 0 {
 		return nil, nil
 	}
-	var m map[string]interface{}
+	var m map[string]any
 	if err = json.UnmarshalUseNumber(content, &m); err != nil {
 		return nil, err
 	}

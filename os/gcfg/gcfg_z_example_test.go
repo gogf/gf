@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gcmd"
@@ -23,10 +24,9 @@ func ExampleConfig_GetWithEnv() {
 		ctx = gctx.New()
 	)
 	v, err := g.Cfg().GetWithEnv(ctx, key)
-	if err != nil {
-		panic(err)
+	if err == nil {
+		panic(gerror.New("environment variable is not defined"))
 	}
-	fmt.Printf("env:%s\n", v)
 	if err = genv.Set(key, "gf"); err != nil {
 		panic(err)
 	}
@@ -37,7 +37,6 @@ func ExampleConfig_GetWithEnv() {
 	fmt.Printf("env:%s", v)
 
 	// Output:
-	// env:
 	// env:gf
 }
 
@@ -47,10 +46,9 @@ func ExampleConfig_GetWithCmd() {
 		ctx = gctx.New()
 	)
 	v, err := g.Cfg().GetWithCmd(ctx, key)
-	if err != nil {
-		panic(err)
+	if err == nil {
+		panic(gerror.New("command option is not defined"))
 	}
-	fmt.Printf("cmd:%s\n", v)
 	// Re-Initialize custom command arguments.
 	os.Args = append(os.Args, fmt.Sprintf(`--%s=yes`, key))
 	gcmd.Init(os.Args...)
@@ -62,11 +60,10 @@ func ExampleConfig_GetWithCmd() {
 	fmt.Printf("cmd:%s", v)
 
 	// Output:
-	// cmd:
 	// cmd:yes
 }
 
-func Example_NewWithAdapter() {
+func ExampleConfig_newWithAdapter() {
 	var (
 		ctx          = gctx.New()
 		content      = `{"a":"b", "c":1}`

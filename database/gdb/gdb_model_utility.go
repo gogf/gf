@@ -68,6 +68,11 @@ func (m *Model) mappingAndFilterToTableFields(table string, fields []any, filter
 	if fieldsTable != "" {
 		hasTable, _ := m.db.GetCore().HasTable(fieldsTable)
 		if !hasTable {
+			if fieldsTable != m.tablesInit {
+				// Table/alias unknown (e.g., FieldsPrefix called before LeftJoin), skip filtering.
+				return fields
+			}
+			// HasTable cache miss for main table, fallback to use main table for field mapping.
 			fieldsTable = m.tablesInit
 		}
 	}
@@ -80,7 +85,7 @@ func (m *Model) mappingAndFilterToTableFields(table string, fields []any, filter
 		return fields
 	}
 	var outputFieldsArray = make([]any, 0)
-	fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
+	fieldsKeyMap := make(map[string]any, len(fieldsMap))
 	for k := range fieldsMap {
 		fieldsKeyMap[k] = nil
 	}
@@ -126,7 +131,7 @@ func (m *Model) mappingAndFilterToTableFields(table string, fields []any, filter
 
 // filterDataForInsertOrUpdate does filter feature with data for inserting/updating operations.
 // Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
-func (m *Model) filterDataForInsertOrUpdate(data interface{}) (interface{}, error) {
+func (m *Model) filterDataForInsertOrUpdate(data any) (any, error) {
 	var err error
 	switch value := data.(type) {
 	case List:
@@ -294,9 +299,9 @@ func (m *Model) getPrimaryKey() string {
 }
 
 // mergeArguments creates and returns new arguments by merging `m.extraArgs` and given `args`.
-func (m *Model) mergeArguments(args []interface{}) []interface{} {
+func (m *Model) mergeArguments(args []any) []any {
 	if len(m.extraArgs) > 0 {
-		newArgs := make([]interface{}, len(m.extraArgs)+len(args))
+		newArgs := make([]any, len(m.extraArgs)+len(args))
 		copy(newArgs, m.extraArgs)
 		copy(newArgs[len(m.extraArgs):], args)
 		return newArgs

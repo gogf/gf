@@ -11,8 +11,6 @@ import (
 	"context"
 
 	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/utils"
@@ -58,7 +56,7 @@ func Instance(name ...string) *Config {
 	if len(name) > 0 && name[0] != "" {
 		instanceName = name[0]
 	}
-	return localInstances.GetOrSetFuncLock(instanceName, func() interface{} {
+	return localInstances.GetOrSetFuncLock(instanceName, func() *Config {
 		adapterFile, err := NewAdapterFile()
 		if err != nil {
 			intlog.Errorf(context.Background(), `%+v`, err)
@@ -68,7 +66,7 @@ func Instance(name ...string) *Config {
 			adapterFile.SetFileName(instanceName)
 		}
 		return NewWithAdapter(adapterFile)
-	}).(*Config)
+	})
 }
 
 // SetAdapter sets the adapter of the current Config object.
@@ -95,10 +93,10 @@ func (c *Config) Available(ctx context.Context, resource ...string) (ok bool) {
 // It returns nil if no value found by `pattern`.
 //
 // It returns a default value specified by `def` if value for `pattern` is not found.
-func (c *Config) Get(ctx context.Context, pattern string, def ...interface{}) (*gvar.Var, error) {
+func (c *Config) Get(ctx context.Context, pattern string, def ...any) (*gvar.Var, error) {
 	var (
 		err   error
-		value interface{}
+		value any
 	)
 	value, err = c.adapter.Get(ctx, pattern)
 	if err != nil {
@@ -118,21 +116,11 @@ func (c *Config) Get(ctx context.Context, pattern string, def ...interface{}) (*
 // It returns the default value `def` if none of them exists.
 //
 // Fetching Rules: Environment arguments are in uppercase format, eg: GF_PACKAGE_VARIABLE.
-func (c *Config) GetWithEnv(ctx context.Context, pattern string, def ...interface{}) (*gvar.Var, error) {
-	value, err := c.Get(ctx, pattern)
-	if err != nil && gerror.Code(err) != gcode.CodeNotFound {
-		return nil, err
+func (c *Config) GetWithEnv(ctx context.Context, pattern string, def ...any) (*gvar.Var, error) {
+	if v := genv.Get(utils.FormatEnvKey(pattern)); v != nil {
+		return v, nil
 	}
-	if value == nil {
-		if v := genv.Get(utils.FormatEnvKey(pattern)); v != nil {
-			return v, nil
-		}
-		if len(def) > 0 {
-			return gvar.New(def[0]), nil
-		}
-		return nil, nil
-	}
-	return value, nil
+	return c.Get(ctx, pattern, def...)
 }
 
 // GetWithCmd returns the configuration value specified by pattern `pattern`.
@@ -140,30 +128,20 @@ func (c *Config) GetWithEnv(ctx context.Context, pattern string, def ...interfac
 // It returns the default value `def` if none of them exists.
 //
 // Fetching Rules: Command line arguments are in lowercase format, eg: gf.package.variable.
-func (c *Config) GetWithCmd(ctx context.Context, pattern string, def ...interface{}) (*gvar.Var, error) {
-	value, err := c.Get(ctx, pattern)
-	if err != nil && gerror.Code(err) != gcode.CodeNotFound {
-		return nil, err
+func (c *Config) GetWithCmd(ctx context.Context, pattern string, def ...any) (*gvar.Var, error) {
+	if v := command.GetOpt(utils.FormatCmdKey(pattern)); v != "" {
+		return gvar.New(v), nil
 	}
-	if value == nil {
-		if v := command.GetOpt(utils.FormatCmdKey(pattern)); v != "" {
-			return gvar.New(v), nil
-		}
-		if len(def) > 0 {
-			return gvar.New(def[0]), nil
-		}
-		return nil, nil
-	}
-	return value, nil
+	return c.Get(ctx, pattern, def...)
 }
 
 // Data retrieves and returns all configuration data as map type.
-func (c *Config) Data(ctx context.Context) (data map[string]interface{}, err error) {
+func (c *Config) Data(ctx context.Context) (data map[string]any, err error) {
 	return c.adapter.Data(ctx)
 }
 
 // MustGet acts as function Get, but it panics if error occurs.
-func (c *Config) MustGet(ctx context.Context, pattern string, def ...interface{}) *gvar.Var {
+func (c *Config) MustGet(ctx context.Context, pattern string, def ...any) *gvar.Var {
 	v, err := c.Get(ctx, pattern, def...)
 	if err != nil {
 		panic(err)
@@ -175,7 +153,7 @@ func (c *Config) MustGet(ctx context.Context, pattern string, def ...interface{}
 }
 
 // MustGetWithEnv acts as function GetWithEnv, but it panics if error occurs.
-func (c *Config) MustGetWithEnv(ctx context.Context, pattern string, def ...interface{}) *gvar.Var {
+func (c *Config) MustGetWithEnv(ctx context.Context, pattern string, def ...any) *gvar.Var {
 	v, err := c.GetWithEnv(ctx, pattern, def...)
 	if err != nil {
 		panic(err)
@@ -184,7 +162,7 @@ func (c *Config) MustGetWithEnv(ctx context.Context, pattern string, def ...inte
 }
 
 // MustGetWithCmd acts as function GetWithCmd, but it panics if error occurs.
-func (c *Config) MustGetWithCmd(ctx context.Context, pattern string, def ...interface{}) *gvar.Var {
+func (c *Config) MustGetWithCmd(ctx context.Context, pattern string, def ...any) *gvar.Var {
 	v, err := c.GetWithCmd(ctx, pattern, def...)
 	if err != nil {
 		panic(err)
@@ -193,7 +171,7 @@ func (c *Config) MustGetWithCmd(ctx context.Context, pattern string, def ...inte
 }
 
 // MustData acts as function Data, but it panics if error occurs.
-func (c *Config) MustData(ctx context.Context) map[string]interface{} {
+func (c *Config) MustData(ctx context.Context) map[string]any {
 	v, err := c.Data(ctx)
 	if err != nil {
 		panic(err)

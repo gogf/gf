@@ -183,6 +183,46 @@ func Test_StrToTime(t *testing.T) {
 			}
 		}
 
+		// test special time string
+		var testSpecialDateTimes = []string{
+			"2006-01-02 8:04:05",
+			"2006-01-02 8:4:05",
+			"2006-01-02 8:4:5",
+			"2006-01-02 8:04:05.000",
+			"2006/01/02 8:4:5",
+			"2006.01.02 8:4:5.000",
+			"2006.01.02 - 8:4:5",
+			"2006.01.02 8:4:5 +0800 CST",
+			"2006-01-02T5:5:5+05:01",
+			"2006-01-01T19:3:5-05:01",
+			"2006-01-02T8:4:5",
+			"02-jan-2006 8:4:5",
+			"02/jan/2006 8:4:5",
+			"02.jan.2006 8:4:5",
+			"02.jan.2006:8:4:5",
+		}
+		for _, item := range testSpecialDateTimes {
+			timeTemp, err := gtime.StrToTime(item)
+			t.AssertNil(err)
+			t.Assert(timeTemp.Time.Local().Format("2006-01-02 15:04:05"), "2006-01-02 08:04:05")
+		}
+
+		// test error time string
+		var testErrorDateTimes = []string{
+			"2006-01-02 28:4:5",
+			"2006-01-02 8:60:5",
+			"2006-01-02 8:4:60",
+			"28:20:20",
+			"8:60:20",
+			"8:20:60",
+		}
+		for _, item := range testErrorDateTimes {
+			_, err := gtime.StrToTime(item)
+			if err == nil {
+				t.Error("test fail")
+			}
+		}
+
 		// test err
 		_, err := gtime.StrToTime("2006-01-02 15:04:05", "aabbccdd")
 		if err == nil {

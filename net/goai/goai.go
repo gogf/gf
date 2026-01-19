@@ -97,10 +97,10 @@ func New() *OpenApiV3 {
 
 // AddInput is the structured parameter for function OpenApiV3.Add.
 type AddInput struct {
-	Path   string      // Path specifies the custom path if this is not configured in Meta of struct tag.
-	Prefix string      // Prefix specifies the custom route path prefix, which will be added with the path tag in Meta of struct tag.
-	Method string      // Method specifies the custom HTTP method if this is not configured in Meta of struct tag.
-	Object interface{} // Object can be an instance of struct or a route function.
+	Path   string // Path specifies the custom path if this is not configured in Meta of struct tag.
+	Prefix string // Prefix specifies the custom route path prefix, which will be added with the path tag in Meta of struct tag.
+	Method string // Method specifies the custom HTTP method if this is not configured in Meta of struct tag.
+	Object any    // Object can be an instance of struct or a route function.
 }
 
 // Add adds an instance of struct or a route function to OpenApiV3 definition implements.
@@ -108,7 +108,7 @@ func (oai *OpenApiV3) Add(in AddInput) error {
 	var (
 		reflectValue = reflect.ValueOf(in.Object)
 	)
-	for reflectValue.Kind() == reflect.Ptr {
+	for reflectValue.Kind() == reflect.Pointer {
 		reflectValue = reflectValue.Elem()
 	}
 	switch reflectValue.Kind() {
@@ -141,27 +141,29 @@ func (oai OpenApiV3) String() string {
 }
 
 func (oai *OpenApiV3) golangTypeToOAIType(t reflect.Type) string {
-	for t.Kind() == reflect.Ptr {
+	for t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
+
+	switch t.String() {
+	case `time.Time`, `gtime.Time`:
+		return TypeString
+	case `ghttp.UploadFile`:
+		return TypeFile
+	case `[]uint8`:
+		return TypeString
+	case `uuid.UUID`:
+		return TypeString
+	}
+
 	switch t.Kind() {
 	case reflect.String:
 		return TypeString
 
 	case reflect.Struct:
-		switch t.String() {
-		case `time.Time`, `gtime.Time`:
-			return TypeString
-		case `ghttp.UploadFile`:
-			return TypeFile
-		}
 		return TypeObject
 
 	case reflect.Slice, reflect.Array:
-		switch t.String() {
-		case `[]uint8`:
-			return TypeString
-		}
 		return TypeArray
 
 	case reflect.Bool:
@@ -204,9 +206,10 @@ func (oai *OpenApiV3) golangTypeToSchemaName(t reflect.Type) string {
 		schemaName = gstr.TrimLeft(t.String(), "*")
 	)
 	// Pointer type has no PkgPath.
-	for t.Kind() == reflect.Ptr {
+	for t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
+	schemaName = gstr.Replace(schemaName, `/`, `.`)
 	if pkgPath = t.PkgPath(); pkgPath != "" && pkgPath != "." {
 		if !oai.Config.IgnorePkgPath {
 			schemaName = gstr.Replace(pkgPath, `/`, `.`) + gstr.SubStrFrom(schemaName, ".")
@@ -216,6 +219,8 @@ func (oai *OpenApiV3) golangTypeToSchemaName(t reflect.Type) string {
 		` `: ``,
 		`{`: ``,
 		`}`: ``,
+		`[`: `.`,
+		`]`: `.`,
 	})
 	return schemaName
 }

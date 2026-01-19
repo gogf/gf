@@ -50,7 +50,7 @@ func TestConvert(t *testing.T) {
 		t.AssertEQ(gconv.Convert([]string{"1", "2"}, "[]string"), []string{"1", "2"})
 		t.AssertEQ(gconv.Convert([]byte{}, "[]byte"), []uint8{})
 
-		var anyTest interface{} = nil
+		var anyTest any = nil
 		t.AssertEQ(gconv.Convert(anyTest, "string"), "")
 		t.AssertEQ(gconv.Convert("1", "string"), "1")
 
@@ -131,8 +131,8 @@ func TestConvert(t *testing.T) {
 
 		var mapStrInt = map[string]int{"k1": 1}
 		var mapStrStr = map[string]string{"k1": "1"}
-		var mapStrAny = map[string]interface{}{"k1": 1}
+		var mapStrAny = map[string]any{"k1": 1}
 		t.AssertEQ(gconv.Convert(mapStrInt, "map[string]string"), mapStrStr)
-		t.AssertEQ(gconv.Convert(mapStrInt, "map[string]interface{}"), mapStrAny)
+		t.AssertEQ(gconv.Convert(mapStrInt, "map[string]any"), mapStrAny)
 	})
 }

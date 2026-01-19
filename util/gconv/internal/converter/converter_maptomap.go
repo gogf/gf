@@ -36,7 +36,7 @@ func (c *Converter) MapToMap(
 		paramsRv = reflect.ValueOf(params)
 	}
 	paramsKind = paramsRv.Kind()
-	if paramsKind == reflect.Ptr {
+	if paramsKind == reflect.Pointer {
 		paramsRv = paramsRv.Elem()
 		paramsKind = paramsRv.Kind()
 	}
@@ -58,7 +58,7 @@ func (c *Converter) MapToMap(
 		pointerRv = reflect.ValueOf(pointer)
 	}
 	pointerKind := pointerRv.Kind()
-	for pointerKind == reflect.Ptr {
+	for pointerKind == reflect.Pointer {
 		pointerRv = pointerRv.Elem()
 		pointerKind = pointerRv.Kind()
 	}
@@ -93,13 +93,18 @@ func (c *Converter) MapToMap(
 		}
 	)
 	// Retrieve the true element type of target map.
-	if pointerValueKind == reflect.Ptr {
+	if pointerValueKind == reflect.Pointer {
 		pointerValueKind = pointerValueType.Elem().Kind()
 	}
 	for _, key := range paramsKeys {
 		mapValue := reflect.New(pointerValueType).Elem()
 		switch pointerValueKind {
-		case reflect.Map, reflect.Struct:
+		case reflect.Map:
+			// For nested map types, recursively call MapToMap.
+			if err = c.MapToMap(paramsRv.MapIndex(key).Interface(), mapValue.Addr().Interface(), mapping, option...); err != nil {
+				return err
+			}
+		case reflect.Struct:
 			structOption := StructOption{
 				ParamKeyToAttrMap: mapping,
 				PriorityTag:       "",

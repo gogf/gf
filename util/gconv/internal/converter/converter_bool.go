@@ -8,6 +8,7 @@ package converter
 
 import (
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/gogf/gf/v2/internal/empty"
@@ -15,19 +16,25 @@ import (
 )
 
 // Bool converts `any` to bool.
-func (c *Converter) Bool(any any) (bool, error) {
-	if empty.IsNil(any) {
+func (c *Converter) Bool(anyInput any) (bool, error) {
+	if empty.IsNil(anyInput) {
 		return false, nil
 	}
-	switch value := any.(type) {
+	switch value := anyInput.(type) {
 	case bool:
 		return value, nil
 	case []byte:
+		if parsed, err := strconv.ParseBool(string(value)); err == nil {
+			return parsed, nil
+		}
 		if _, ok := emptyStringMap[strings.ToLower(string(value))]; ok {
 			return false, nil
 		}
 		return true, nil
 	case string:
+		if parsed, err := strconv.ParseBool(value); err == nil {
+			return parsed, nil
+		}
 		if _, ok := emptyStringMap[strings.ToLower(value)]; ok {
 			return false, nil
 		}
@@ -36,9 +43,9 @@ func (c *Converter) Bool(any any) (bool, error) {
 		if f, ok := value.(localinterface.IBool); ok {
 			return f.Bool(), nil
 		}
-		rv := reflect.ValueOf(any)
+		rv := reflect.ValueOf(anyInput)
 		switch rv.Kind() {
-		case reflect.Ptr:
+		case reflect.Pointer:
 			if rv.IsNil() {
 				return false, nil
 			}
@@ -62,7 +69,7 @@ func (c *Converter) Bool(any any) (bool, error) {
 		case reflect.Struct:
 			return true, nil
 		default:
-			s, err := c.String(any)
+			s, err := c.String(anyInput)
 			if err != nil {
 				return false, err
 			}

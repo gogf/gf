@@ -190,9 +190,9 @@ func forkRestartProcess(ctx context.Context, newExeFilePath ...string) error {
 // getServerFdMap returns all the servers name to file descriptor mapping as map.
 func getServerFdMap() map[string]listenerFdMap {
 	sfm := make(map[string]listenerFdMap)
-	serverMapping.RLockFunc(func(m map[string]interface{}) {
+	serverMapping.RLockFunc(func(m map[string]*Server) {
 		for k, v := range m {
-			sfm[k] = v.(*Server).getListenerFdMap()
+			sfm[k] = v.getListenerFdMap()
 		}
 	})
 	return sfm
@@ -263,11 +263,10 @@ func shutdownWebServersGracefully(ctx context.Context, signal os.Signal) {
 	} else {
 		glog.Printf(ctx, "pid[%d]: server gracefully shutting down by api", gproc.Pid())
 	}
-	serverMapping.RLockFunc(func(m map[string]interface{}) {
+	serverMapping.RLockFunc(func(m map[string]*Server) {
 		for _, v := range m {
-			server := v.(*Server)
-			server.doServiceDeregister()
-			for _, s := range server.servers {
+			v.doServiceDeregister()
+			for _, s := range v.servers {
 				s.Shutdown(ctx)
 			}
 		}
@@ -276,9 +275,9 @@ func shutdownWebServersGracefully(ctx context.Context, signal os.Signal) {
 
 // forceCloseWebServers forced shuts down all servers.
 func forceCloseWebServers(ctx context.Context) {
-	serverMapping.RLockFunc(func(m map[string]interface{}) {
+	serverMapping.RLockFunc(func(m map[string]*Server) {
 		for _, v := range m {
-			for _, s := range v.(*Server).servers {
+			for _, s := range v.servers {
 				s.Close(ctx)
 			}
 		}

@@ -69,7 +69,7 @@ func internalMiddlewareDiscovery(c *Client, r *http.Request) (response *Response
 	// Balancer.
 	var (
 		selectorMapKey   = service.GetPrefix()
-		selectorMapValue = clientSelectorMap.GetOrSetFuncLock(selectorMapKey, func() interface{} {
+		selectorMapValue = clientSelectorMap.GetOrSetFuncLock(selectorMapKey, func() any {
 			intlog.Printf(ctx, `http client create selector for service "%s"`, selectorMapKey)
 			selector := c.builder.Build()
 			// Update selector nodes.

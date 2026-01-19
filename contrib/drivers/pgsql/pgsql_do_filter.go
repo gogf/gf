@@ -17,8 +17,8 @@ import (
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
 func (d *Driver) DoFilter(
-	ctx context.Context, link gdb.Link, sql string, args []interface{},
-) (newSql string, newArgs []interface{}, err error) {
+	ctx context.Context, link gdb.Link, sql string, args []any,
+) (newSql string, newArgs []any, err error) {
 	var index int
 	// Convert placeholder char '?' to string "$x".
 	newSql, err = gregex.ReplaceStringFunc(`\?`, sql, func(s string) string {

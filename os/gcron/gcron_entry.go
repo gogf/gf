@@ -152,7 +152,15 @@ func (e *Entry) checkAndRun(ctx context.Context) {
 		e.Close()
 
 	case StatusReady, StatusRunning:
-		e.cron.jobWaiter.Add(1)
+		e.cron.runningLock.Lock()
+		if e.cron.running {
+			e.cron.jobWaiter.Add(1)
+		} else {
+			e.cron.runningLock.Unlock()
+			e.logDebugf(ctx, `cron job "%s" stoped or closed`, e.getJobNameWithPattern())
+			return
+		}
+		e.cron.runningLock.Unlock()
 		defer func() {
 			e.cron.jobWaiter.Done()
 			if exception := recover(); exception != nil {
@@ -187,13 +195,13 @@ func (e *Entry) getJobNameWithPattern() string {
 	return fmt.Sprintf(`%s(%s)`, e.jobName, e.schedule.pattern)
 }
 
-func (e *Entry) logDebugf(ctx context.Context, format string, v ...interface{}) {
+func (e *Entry) logDebugf(ctx context.Context, format string, v ...any) {
 	if logger := e.cron.GetLogger(); logger != nil {
 		logger.Debugf(ctx, format, v...)
 	}
 }
 
-func (e *Entry) logErrorf(ctx context.Context, format string, v ...interface{}) {
+func (e *Entry) logErrorf(ctx context.Context, format string, v ...any) {
 	logger := e.cron.GetLogger()
 	if logger == nil {
 		logger = glog.DefaultLogger()

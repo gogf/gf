@@ -12,18 +12,18 @@ import (
 	"github.com/gogf/gf/v2/internal/empty"
 )
 
-// IsNil checks whether `value` is nil, especially for interface{} type value.
-func IsNil(value interface{}) bool {
+// IsNil checks whether `value` is nil, especially for any type value.
+func IsNil(value any) bool {
 	return empty.IsNil(value)
 }
 
 // IsEmpty checks whether `value` is empty.
-func IsEmpty(value interface{}) bool {
+func IsEmpty(value any) bool {
 	return empty.IsEmpty(value)
 }
 
 // IsInt checks whether `value` is type of int.
-func IsInt(value interface{}) bool {
+func IsInt(value any) bool {
 	switch value.(type) {
 	case int, *int, int8, *int8, int16, *int16, int32, *int32, int64, *int64:
 		return true
@@ -32,7 +32,7 @@ func IsInt(value interface{}) bool {
 }
 
 // IsUint checks whether `value` is type of uint.
-func IsUint(value interface{}) bool {
+func IsUint(value any) bool {
 	switch value.(type) {
 	case uint, *uint, uint8, *uint8, uint16, *uint16, uint32, *uint32, uint64, *uint64:
 		return true
@@ -41,7 +41,7 @@ func IsUint(value interface{}) bool {
 }
 
 // IsFloat checks whether `value` is type of float.
-func IsFloat(value interface{}) bool {
+func IsFloat(value any) bool {
 	switch value.(type) {
 	case float32, *float32, float64, *float64:
 		return true
@@ -50,12 +50,12 @@ func IsFloat(value interface{}) bool {
 }
 
 // IsSlice checks whether `value` is type of slice.
-func IsSlice(value interface{}) bool {
+func IsSlice(value any) bool {
 	var (
 		reflectValue = reflect.ValueOf(value)
 		reflectKind  = reflectValue.Kind()
 	)
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
@@ -67,12 +67,12 @@ func IsSlice(value interface{}) bool {
 }
 
 // IsMap checks whether `value` is type of map.
-func IsMap(value interface{}) bool {
+func IsMap(value any) bool {
 	var (
 		reflectValue = reflect.ValueOf(value)
 		reflectKind  = reflectValue.Kind()
 	)
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
@@ -84,13 +84,13 @@ func IsMap(value interface{}) bool {
 }
 
 // IsStruct checks whether `value` is type of struct.
-func IsStruct(value interface{}) bool {
+func IsStruct(value any) bool {
 	reflectType := reflect.TypeOf(value)
 	if reflectType == nil {
 		return false
 	}
 	reflectKind := reflectType.Kind()
-	for reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Pointer {
 		reflectType = reflectType.Elem()
 		reflectKind = reflectType.Kind()
 	}

@@ -33,7 +33,7 @@ func Go(
 }
 
 // NewVar returns a gvar.Var.
-func NewVar(i interface{}, safe ...bool) *Var {
+func NewVar(i any, safe ...bool) *Var {
 	return gvar.New(i, safe...)
 }
 
@@ -51,23 +51,23 @@ func Listen() {
 }
 
 // Dump dumps a variable to stdout with more manually readable.
-func Dump(values ...interface{}) {
+func Dump(values ...any) {
 	gutil.Dump(values...)
 }
 
 // DumpTo writes variables `values` as a string in to `writer` with more manually readable
-func DumpTo(writer io.Writer, value interface{}, option gutil.DumpOption) {
+func DumpTo(writer io.Writer, value any, option gutil.DumpOption) {
 	gutil.DumpTo(writer, value, option)
 }
 
 // DumpWithType acts like Dump, but with type information.
 // Also see Dump.
-func DumpWithType(values ...interface{}) {
+func DumpWithType(values ...any) {
 	gutil.DumpWithType(values...)
 }
 
 // DumpWithOption returns variables `values` as a string with more manually readable.
-func DumpWithOption(value interface{}, option gutil.DumpOption) {
+func DumpWithOption(value any, option gutil.DumpOption) {
 	gutil.DumpWithOption(value, option)
 }
 
@@ -77,7 +77,7 @@ func DumpJson(value any) {
 }
 
 // Throw throws an exception, which can be caught by TryCatch function.
-func Throw(exception interface{}) {
+func Throw(exception any) {
 	gutil.Throw(exception)
 }
 
@@ -100,7 +100,7 @@ func TryCatch(ctx context.Context, try func(ctx context.Context), catch func(ctx
 // of pointer that also points to a pointer. It returns nil if the source is nil when `traceSource`
 // is true.
 // Note that it might use reflect feature which affects performance a little.
-func IsNil(value interface{}, traceSource ...bool) bool {
+func IsNil(value any, traceSource ...bool) bool {
 	return empty.IsNil(value, traceSource...)
 }
 
@@ -111,7 +111,7 @@ func IsNil(value interface{}, traceSource ...bool) bool {
 // The parameter `traceSource` is used for tracing to the source variable if given `value` is type of pointer
 // that also points to a pointer. It returns true if the source is empty when `traceSource` is true.
 // Note that it might use reflect feature which affects performance a little.
-func IsEmpty(value interface{}, traceSource ...bool) bool {
+func IsEmpty(value any, traceSource ...bool) bool {
 	return empty.IsEmpty(value, traceSource...)
 }
 

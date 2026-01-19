@@ -34,10 +34,10 @@ func Database(name ...string) gdb.DB {
 		group = name[0]
 	}
 	instanceKey := fmt.Sprintf("%s.%s", frameCoreComponentNameDatabase, group)
-	db := instance.GetOrSetFuncLock(instanceKey, func() interface{} {
+	db := instance.GetOrSetFuncLock(instanceKey, func() any {
 		// It ignores returned error to avoid file no found error while it's not necessary.
 		var (
-			configMap     map[string]interface{}
+			configMap     map[string]any
 			configNodeKey = consts.ConfigNodeNameDatabase
 		)
 		// It firstly searches the configuration of the instance name.
@@ -71,25 +71,25 @@ func Database(name ...string) gdb.DB {
 		}
 
 		if len(configMap) == 0 {
-			configMap = make(map[string]interface{})
+			configMap = make(map[string]any)
 		}
 		// Parse `m` as map-slice and adds it to global configurations for package gdb.
 		for g, groupConfig := range configMap {
 			cg := gdb.ConfigGroup{}
 			switch value := groupConfig.(type) {
-			case []interface{}:
+			case []any:
 				for _, v := range value {
 					if node := parseDBConfigNode(v); node != nil {
 						cg = append(cg, *node)
 					}
 				}
-			case map[string]interface{}:
+			case map[string]any:
 				if node := parseDBConfigNode(value); node != nil {
 					cg = append(cg, *node)
 				}
 			}
 			if len(cg) > 0 {
-				if gdb.GetConfig(group) == nil {
+				if gcg, _ := gdb.GetConfigGroup(group); gcg == nil {
 					intlog.Printf(ctx, "add configuration for group: %s, %#v", g, cg)
 					if err := gdb.SetConfigGroup(g, cg); err != nil {
 						panic(err)
@@ -108,7 +108,7 @@ func Database(name ...string) gdb.DB {
 				cg = append(cg, *node)
 			}
 			if len(cg) > 0 {
-				if gdb.GetConfig(group) == nil {
+				if gcg, _ := gdb.GetConfigGroup(group); gcg == nil {
 					intlog.Printf(ctx, "add configuration for group: %s, %#v", gdb.DefaultGroupName, cg)
 					if err := gdb.SetConfigGroup(gdb.DefaultGroupName, cg); err != nil {
 						panic(err)
@@ -128,7 +128,7 @@ func Database(name ...string) gdb.DB {
 		if db, err := gdb.NewByGroup(name...); err == nil {
 			// Initialize logger for ORM.
 			var (
-				loggerConfigMap map[string]interface{}
+				loggerConfigMap map[string]any
 				loggerNodeName  = fmt.Sprintf("%s.%s", configNodeKey, consts.ConfigNodeNameLogger)
 			)
 			if v, _ := Config().Get(ctx, loggerNodeName); !v.IsEmpty() {
@@ -151,7 +151,6 @@ func Database(name ...string) gdb.DB {
 			// If panics, often because it does not find its configuration for given group.
 			panic(err)
 		}
-		return nil
 	})
 	if db != nil {
 		return db.(gdb.DB)
@@ -159,8 +158,8 @@ func Database(name ...string) gdb.DB {
 	return nil
 }
 
-func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
-	nodeMap, ok := value.(map[string]interface{})
+func parseDBConfigNode(value any) *gdb.ConfigNode {
+	nodeMap, ok := value.(map[string]any)
 	if !ok {
 		return nil
 	}

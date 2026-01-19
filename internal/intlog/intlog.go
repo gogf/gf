@@ -26,7 +26,7 @@ const (
 
 // Print prints `v` with newline using fmt.Println.
 // The parameter `v` can be multiple variables.
-func Print(ctx context.Context, v ...interface{}) {
+func Print(ctx context.Context, v ...any) {
 	if !utils.IsDebugEnabled() {
 		return
 	}
@@ -35,7 +35,7 @@ func Print(ctx context.Context, v ...interface{}) {
 
 // Printf prints `v` with format `format` using fmt.Printf.
 // The parameter `v` can be multiple variables.
-func Printf(ctx context.Context, format string, v ...interface{}) {
+func Printf(ctx context.Context, format string, v ...any) {
 	if !utils.IsDebugEnabled() {
 		return
 	}
@@ -44,7 +44,7 @@ func Printf(ctx context.Context, format string, v ...interface{}) {
 
 // Error prints `v` with newline using fmt.Println.
 // The parameter `v` can be multiple variables.
-func Error(ctx context.Context, v ...interface{}) {
+func Error(ctx context.Context, v ...any) {
 	if !utils.IsDebugEnabled() {
 		return
 	}
@@ -52,7 +52,7 @@ func Error(ctx context.Context, v ...interface{}) {
 }
 
 // Errorf prints `v` with format `format` using fmt.Printf.
-func Errorf(ctx context.Context, format string, v ...interface{}) {
+func Errorf(ctx context.Context, format string, v ...any) {
 	if !utils.IsDebugEnabled() {
 		return
 	}
@@ -94,7 +94,7 @@ func doPrint(ctx context.Context, content string, stack bool) {
 	buffer.WriteString(" [INTE] ")
 	buffer.WriteString(file())
 	buffer.WriteString(" ")
-	if s := traceIdStr(ctx); s != "" {
+	if s := traceIDStr(ctx); s != "" {
 		buffer.WriteString(s + " ")
 	}
 	buffer.WriteString(content)
@@ -106,14 +106,14 @@ func doPrint(ctx context.Context, content string, stack bool) {
 	fmt.Print(buffer.String())
 }
 
-// traceIdStr retrieves and returns the trace id string for logging output.
-func traceIdStr(ctx context.Context) string {
+// traceIDStr retrieves and returns the trace id string for logging output.
+func traceIDStr(ctx context.Context) string {
 	if ctx == nil {
 		return ""
 	}
 	spanCtx := trace.SpanContextFromContext(ctx)
-	if traceId := spanCtx.TraceID(); traceId.IsValid() {
-		return "{" + traceId.String() + "}"
+	if traceID := spanCtx.TraceID(); traceID.IsValid() {
+		return "{" + traceID.String() + "}"
 	}
 	return ""
 }

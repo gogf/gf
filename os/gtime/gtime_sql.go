@@ -6,7 +6,7 @@ import (
 
 // Scan implements interface used by Scan in package database/sql for Scanning value
 // from database to local golang variable.
-func (t *Time) Scan(value interface{}) error {
+func (t *Time) Scan(value any) error {
 	if t == nil {
 		return nil
 	}

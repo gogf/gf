@@ -38,19 +38,24 @@ type Server struct {
 }
 
 // Map for name to server, for singleton purpose.
-var serverMapping = gmap.NewStrAnyMap(true)
+var (
+	// checker is used for checking whether the value is nil.
+	checker = func(v *Server) bool { return v == nil }
+	// serverMapping is the map for name to server.
+	serverMapping = gmap.NewKVMapWithChecker[any, *Server](checker, true)
+)
 
 // GetServer returns the TCP server with specified `name`,
 // or it returns a new normal TCP server named `name` if it does not exist.
 // The parameter `name` is used to specify the TCP server
-func GetServer(name ...interface{}) *Server {
+func GetServer(name ...any) *Server {
 	serverName := defaultServer
 	if len(name) > 0 && name[0] != "" {
 		serverName = gconv.String(name[0])
 	}
-	return serverMapping.GetOrSetFuncLock(serverName, func() interface{} {
+	return serverMapping.GetOrSetFuncLock(serverName, func() *Server {
 		return NewServer("", nil)
-	}).(*Server)
+	})
 }
 
 // NewServer creates and returns a new normal TCP server.

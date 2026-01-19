@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"mime"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -17,6 +18,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/encoding/gurl"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/httputil"
@@ -31,55 +33,55 @@ import (
 
 // Get send GET request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
-func (c *Client) Get(ctx context.Context, url string, data ...interface{}) (*Response, error) {
+func (c *Client) Get(ctx context.Context, url string, data ...any) (*Response, error) {
 	return c.DoRequest(ctx, http.MethodGet, url, data...)
 }
 
 // Put send PUT request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
-func (c *Client) Put(ctx context.Context, url string, data ...interface{}) (*Response, error) {
+func (c *Client) Put(ctx context.Context, url string, data ...any) (*Response, error) {
 	return c.DoRequest(ctx, http.MethodPut, url, data...)
 }
 
 // Post sends request using HTTP method POST and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
-func (c *Client) Post(ctx context.Context, url string, data ...interface{}) (*Response, error) {
+func (c *Client) Post(ctx context.Context, url string, data ...any) (*Response, error) {
 	return c.DoRequest(ctx, http.MethodPost, url, data...)
 }
 
 // Delete send DELETE request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
-func (c *Client) Delete(ctx context.Context, url string, data ...interface{}) (*Response, error) {
+func (c *Client) Delete(ctx context.Context, url string, data ...any) (*Response, error) {
 	return c.DoRequest(ctx, http.MethodDelete, url, data...)
 }
 
 // Head send HEAD request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
-func (c *Client) Head(ctx context.Context, url string, data ...interface{}) (*Response, error) {
+func (c *Client) Head(ctx context.Context, url string, data ...any) (*Response, error) {
 	return c.DoRequest(ctx, http.MethodHead, url, data...)
 }
 
 // Patch send PATCH request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
-func (c *Client) Patch(ctx context.Context, url string, data ...interface{}) (*Response, error) {
+func (c *Client) Patch(ctx context.Context, url string, data ...any) (*Response, error) {
 	return c.DoRequest(ctx, http.MethodPatch, url, data...)
 }
 
 // Connect send CONNECT request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
-func (c *Client) Connect(ctx context.Context, url string, data ...interface{}) (*Response, error) {
+func (c *Client) Connect(ctx context.Context, url string, data ...any) (*Response, error) {
 	return c.DoRequest(ctx, http.MethodConnect, url, data...)
 }
 
 // Options send OPTIONS request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
-func (c *Client) Options(ctx context.Context, url string, data ...interface{}) (*Response, error) {
+func (c *Client) Options(ctx context.Context, url string, data ...any) (*Response, error) {
 	return c.DoRequest(ctx, http.MethodOptions, url, data...)
 }
 
 // Trace send TRACE request and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
-func (c *Client) Trace(ctx context.Context, url string, data ...interface{}) (*Response, error) {
+func (c *Client) Trace(ctx context.Context, url string, data ...any) (*Response, error) {
 	return c.DoRequest(ctx, http.MethodTrace, url, data...)
 }
 
@@ -123,7 +125,7 @@ func (c *Client) PostForm(ctx context.Context, url string, data map[string]strin
 // content for JSON format, and for that it automatically sets the Content-Type as
 // "application/json".
 func (c *Client) DoRequest(
-	ctx context.Context, method, url string, data ...interface{},
+	ctx context.Context, method, url string, data ...any,
 ) (resp *Response, err error) {
 	var requestStartTime = gtime.Now()
 	req, err := c.prepareRequest(ctx, method, url, data...)
@@ -159,7 +161,7 @@ func (c *Client) DoRequest(
 }
 
 // prepareRequest verifies request parameters, builds and returns http request.
-func (c *Client) prepareRequest(ctx context.Context, method, url string, data ...interface{}) (req *http.Request, err error) {
+func (c *Client) prepareRequest(ctx context.Context, method, url string, data ...any) (req *http.Request, err error) {
 	method = strings.ToUpper(method)
 	if len(c.prefix) > 0 {
 		url = c.prefix + gstr.Trim(url)
@@ -172,7 +174,12 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 		allowFileUploading = true
 	)
 	if len(data) > 0 {
-		switch c.header[httpHeaderContentType] {
+		mediaType, _, err := mime.ParseMediaType(c.header[httpHeaderContentType])
+		if err != nil {
+			// Fallback: use the raw header value if parsing fails.
+			mediaType = c.header[httpHeaderContentType]
+		}
+		switch mediaType {
 		case httpHeaderContentTypeJson:
 			switch data[0].(type) {
 			case string, []byte:
@@ -206,7 +213,12 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 	if method == http.MethodGet {
 		var bodyBuffer *bytes.Buffer
 		if params != "" {
-			switch c.header[httpHeaderContentType] {
+			mediaType, _, err := mime.ParseMediaType(c.header[httpHeaderContentType])
+			if err != nil {
+				// Fallback: use the raw header value if parsing fails.
+				mediaType = c.header[httpHeaderContentType]
+			}
+			switch mediaType {
 			case
 				httpHeaderContentTypeJson,
 				httpHeaderContentTypeXml:
@@ -237,7 +249,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 				isFileUploading = false
 			)
 			for _, item := range strings.Split(params, "&") {
-				array := strings.Split(item, "=")
+				array := strings.SplitN(item, "=", 2)
 				if len(array) < 2 {
 					continue
 				}
@@ -276,6 +288,14 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 						fieldName  = array[0]
 						fieldValue = array[1]
 					)
+					// Decode URL-encoded field name and value.
+					// If decoding fails, use the original value.
+					if v, err := gurl.Decode(fieldName); err == nil {
+						fieldName = v
+					}
+					if v, err := gurl.Decode(fieldValue); err == nil {
+						fieldValue = v
+					}
 					if err = writer.WriteField(fieldName, fieldValue); err != nil {
 						return nil, gerror.Wrapf(
 							err, `write form field failed with "%s", "%s"`, fieldName, fieldValue,
@@ -371,7 +391,7 @@ func (c *Client) callRequest(req *http.Request) (resp *Response, err error) {
 			err = gerror.Wrapf(err, `request failed`)
 			// The response might not be nil when err != nil.
 			if resp.Response != nil {
-				_ = resp.Response.Body.Close()
+				_ = resp.Body.Close()
 			}
 			if c.retryCount > 0 {
 				c.retryCount--

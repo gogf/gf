@@ -9,7 +9,6 @@ package gfsnotify
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/container/glist"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
@@ -29,7 +28,7 @@ func (w *Watcher) watchLoop() {
 				return
 			}
 			// filter the repeated event in custom duration.
-			var cacheFunc = func(ctx context.Context) (value interface{}, err error) {
+			var cacheFunc = func(ctx context.Context) (value any, err error) {
 				w.events.Push(&Event{
 					event:   ev,
 					Path:    ev.Name,
@@ -63,69 +62,68 @@ func (w *Watcher) eventLoop() {
 	)
 	for {
 		if v := w.events.Pop(); v != nil {
-			event := v.(*Event)
 			// If there's no any callback of this path, it removes it from monitor,
 			// as a path watching without callback is meaningless.
-			callbacks := w.getCallbacksForPath(event.Path)
+			callbacks := w.getCallbacksForPath(v.Path)
 			if len(callbacks) == 0 {
-				_ = w.watcher.Remove(event.Path)
+				_ = w.watcher.Remove(v.Path)
 				continue
 			}
 
 			switch {
-			case event.IsRemove():
+			case v.IsRemove():
 				// It should check again the existence of the path.
 				// It adds it back to the monitor if it still exists.
-				if fileExists(event.Path) {
+				if fileExists(v.Path) {
 					// A watch will be automatically removed if the watched path is deleted or
 					// renamed.
 					//
 					// It here adds the path back to monitor.
 					// We need no worry about the repeat adding.
-					if err = w.watcher.Add(event.Path); err != nil {
+					if err = w.watcher.Add(v.Path); err != nil {
 						intlog.Errorf(ctx, `%+v`, err)
 					} else {
 						intlog.Printf(
 							ctx,
 							"fake remove event, watcher re-adds monitor for: %s",
-							event.Path,
+							v.Path,
 						)
 					}
 					// Change the event to RENAME, which means it renames itself to its origin name.
-					event.Op = RENAME
+					v.Op = RENAME
 				}
 
-			case event.IsRename():
+			case v.IsRename():
 				// It should check again the existence of the path.
 				// It adds it back to the monitor if it still exists.
 				// Especially Some editors might do RENAME and then CHMOD when it's editing file.
-				if fileExists(event.Path) {
+				if fileExists(v.Path) {
 					// A watch will be automatically removed if the watched path is deleted or
 					// renamed.
 					//
 					// It might lose the monitoring for the path, so we add the path back to monitor.
 					// We need no worry about the repeat adding.
-					if err = w.watcher.Add(event.Path); err != nil {
+					if err = w.watcher.Add(v.Path); err != nil {
 						intlog.Errorf(ctx, `%+v`, err)
 					} else {
 						intlog.Printf(
 							ctx,
 							"fake rename event, watcher re-adds monitor for: %s",
-							event.Path,
+							v.Path,
 						)
 					}
 					// Change the event to CHMOD.
-					event.Op = CHMOD
+					v.Op = CHMOD
 				}
 
-			case event.IsCreate():
+			case v.IsCreate():
 				// =================================================================================
 				// Note that it here just adds the path to monitor without any callback registering,
 				// because its parent already has the callbacks.
 				// =================================================================================
-				if w.checkRecursiveWatchingInCreatingEvent(event.Path) {
+				if w.checkRecursiveWatchingInCreatingEvent(v.Path) {
 					// It handles only folders, watching folders also watching its sub files.
-					for _, subPath := range fileAllDirs(event.Path) {
+					for _, subPath := range fileAllDirs(v.Path) {
 						if fileIsDir(subPath) {
 							if err = w.watcher.Add(subPath); err != nil {
 								intlog.Errorf(ctx, `%+v`, err)
@@ -142,7 +140,7 @@ func (w *Watcher) eventLoop() {
 			}
 			// Calling the callbacks in multiple goroutines.
 			for _, callback := range callbacks {
-				go w.doCallback(event, callback)
+				go w.doCallback(v, callback)
 			}
 		} else {
 			break
@@ -166,9 +164,8 @@ func (w *Watcher) checkRecursiveWatchingInCreatingEvent(path string) bool {
 			break
 		}
 		if callbackItem := w.callbacks.Get(parentDirPath); callbackItem != nil {
-			for _, node := range callbackItem.(*glist.List).FrontAll() {
-				callback := node.(*Callback)
-				if callback.recursive {
+			for _, node := range callbackItem.FrontAll() {
+				if node.recursive {
 					return true
 				}
 			}
@@ -201,10 +198,7 @@ func (w *Watcher) doCallback(event *Event, callback *Callback) {
 func (w *Watcher) getCallbacksForPath(path string) (callbacks []*Callback) {
 	// Firstly add the callbacks of itself.
 	if item := w.callbacks.Get(path); item != nil {
-		for _, node := range item.(*glist.List).FrontAll() {
-			callback := node.(*Callback)
-			callbacks = append(callbacks, callback)
-		}
+		callbacks = append(callbacks, item.FrontAll()...)
 	}
 	// ============================================================================================================
 	// Secondly searches its direct parent for callbacks.
@@ -214,10 +208,7 @@ func (w *Watcher) getCallbacksForPath(path string) (callbacks []*Callback) {
 	// ============================================================================================================
 	dirPath := fileDir(path)
 	if item := w.callbacks.Get(dirPath); item != nil {
-		for _, node := range item.(*glist.List).FrontAll() {
-			callback := node.(*Callback)
-			callbacks = append(callbacks, callback)
-		}
+		callbacks = append(callbacks, item.FrontAll()...)
 	}
 
 	// Lastly searches all the parents of directory of `path` recursively for callbacks.
@@ -227,10 +218,9 @@ func (w *Watcher) getCallbacksForPath(path string) (callbacks []*Callback) {
 			break
 		}
 		if item := w.callbacks.Get(parentDirPath); item != nil {
-			for _, node := range item.(*glist.List).FrontAll() {
-				callback := node.(*Callback)
-				if callback.recursive {
-					callbacks = append(callbacks, callback)
+			for _, node := range item.FrontAll() {
+				if node.recursive {
+					callbacks = append(callbacks, node)
 				}
 			}
 		}

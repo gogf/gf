@@ -24,7 +24,7 @@ var (
 )
 
 var intTests = []struct {
-	value    interface{}
+	value    any
 	expect   int
 	expect8  int8
 	expect16 int16
@@ -196,7 +196,7 @@ func TestInts(t *testing.T) {
 			[]int{123, 34, 78, 97, 109, 101, 34, 58, 34, 69, 97, 114, 116, 104, 34, 125})
 
 		// []interface
-		t.AssertEQ(gconv.Ints([]interface{}{1, 2, 3}), []int{1, 2, 3})
+		t.AssertEQ(gconv.Ints([]any{1, 2, 3}), []int{1, 2, 3})
 
 		// gvar.Var
 		t.AssertEQ(gconv.Ints(
@@ -242,7 +242,7 @@ func TestInt32s(t *testing.T) {
 			[]int32{123, 34, 78, 97, 109, 101, 34, 58, 34, 69, 97, 114, 116, 104, 34, 125, 34})
 
 		// []interface
-		t.AssertEQ(gconv.Int32s([]interface{}{1, 2, 3}), []int32{1, 2, 3})
+		t.AssertEQ(gconv.Int32s([]any{1, 2, 3}), []int32{1, 2, 3})
 
 		// gvar.Var
 		t.AssertEQ(gconv.Int32s(
@@ -285,7 +285,7 @@ func TestInt64s(t *testing.T) {
 			[]int64{123, 34, 78, 97, 109, 101, 34, 58, 34, 69, 97, 114, 116, 104, 34, 125, 34})
 
 		// []interface
-		t.AssertEQ(gconv.Int64s([]interface{}{1, 2, 3}), []int64{1, 2, 3})
+		t.AssertEQ(gconv.Int64s([]any{1, 2, 3}), []int64{1, 2, 3})
 
 		// gvar.Var
 		t.AssertEQ(gconv.Int64s(

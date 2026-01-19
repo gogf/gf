@@ -40,7 +40,7 @@ func (r RuleSize) Run(in RunInput) error {
 	)
 	size, err := strconv.Atoi(in.RulePattern)
 	if valueLen != size || err != nil {
-		return errors.New(strings.Replace(in.Message, "{size}", strconv.Itoa(size), -1))
+		return errors.New(strings.ReplaceAll(in.Message, "{size}", strconv.Itoa(size)))
 	}
 	return nil
 }

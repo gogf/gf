@@ -15,7 +15,7 @@ import (
 )
 
 var byteTests = []struct {
-	value   interface{}
+	value   any
 	expect  byte
 	expects []byte
 }{

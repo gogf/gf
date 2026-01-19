@@ -1,7 +1,7 @@
 // Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with gm file,
+// If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
 package gtree_test
@@ -48,7 +48,7 @@ func ExampleAVLTree_Set() {
 func ExampleAVLTree_Sets() {
 	tree := gtree.NewAVLTree(gutil.ComparatorString)
 
-	tree.Sets(map[interface{}]interface{}{
+	tree.Sets(map[any]any{
 		"key1": "val1",
 		"key2": "val2",
 	})
@@ -95,10 +95,10 @@ func ExampleAVLTree_GetOrSetFunc() {
 		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(tree.GetOrSetFunc("key1", func() interface{} {
+	fmt.Println(tree.GetOrSetFunc("key1", func() any {
 		return "newVal1"
 	}))
-	fmt.Println(tree.GetOrSetFunc("key6", func() interface{} {
+	fmt.Println(tree.GetOrSetFunc("key6", func() any {
 		return "val6"
 	}))
 
@@ -113,10 +113,10 @@ func ExampleAVLTree_GetOrSetFuncLock() {
 		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(tree.GetOrSetFuncLock("key1", func() interface{} {
+	fmt.Println(tree.GetOrSetFuncLock("key1", func() any {
 		return "newVal1"
 	}))
-	fmt.Println(tree.GetOrSetFuncLock("key6", func() interface{} {
+	fmt.Println(tree.GetOrSetFuncLock("key6", func() any {
 		return "val6"
 	}))
 
@@ -157,10 +157,10 @@ func ExampleAVLTree_GetVarOrSetFunc() {
 		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(tree.GetVarOrSetFunc("key1", func() interface{} {
+	fmt.Println(tree.GetVarOrSetFunc("key1", func() any {
 		return "newVal1"
 	}))
-	fmt.Println(tree.GetVarOrSetFunc("key6", func() interface{} {
+	fmt.Println(tree.GetVarOrSetFunc("key6", func() any {
 		return "val6"
 	}))
 
@@ -175,10 +175,10 @@ func ExampleAVLTree_GetVarOrSetFuncLock() {
 		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(tree.GetVarOrSetFuncLock("key1", func() interface{} {
+	fmt.Println(tree.GetVarOrSetFuncLock("key1", func() any {
 		return "newVal1"
 	}))
-	fmt.Println(tree.GetVarOrSetFuncLock("key6", func() interface{} {
+	fmt.Println(tree.GetVarOrSetFuncLock("key6", func() any {
 		return "val6"
 	}))
 
@@ -207,10 +207,10 @@ func ExampleAVLTree_SetIfNotExistFunc() {
 		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(tree.SetIfNotExistFunc("key1", func() interface{} {
+	fmt.Println(tree.SetIfNotExistFunc("key1", func() any {
 		return "newVal1"
 	}))
-	fmt.Println(tree.SetIfNotExistFunc("key6", func() interface{} {
+	fmt.Println(tree.SetIfNotExistFunc("key6", func() any {
 		return "val6"
 	}))
 
@@ -225,10 +225,10 @@ func ExampleAVLTree_SetIfNotExistFuncLock() {
 		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(tree.SetIfNotExistFuncLock("key1", func() interface{} {
+	fmt.Println(tree.SetIfNotExistFuncLock("key1", func() any {
 		return "newVal1"
 	}))
-	fmt.Println(tree.SetIfNotExistFuncLock("key6", func() interface{} {
+	fmt.Println(tree.SetIfNotExistFuncLock("key6", func() any {
 		return "val6"
 	}))
 
@@ -273,7 +273,7 @@ func ExampleAVLTree_Removes() {
 		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	removeKeys := make([]interface{}, 2)
+	removeKeys := make([]any, 2)
 	removeKeys = append(removeKeys, "key1")
 	removeKeys = append(removeKeys, "key6")
 
@@ -405,7 +405,7 @@ func ExampleAVLTree_Replace() {
 
 	fmt.Println(tree.Map())
 
-	data := map[interface{}]interface{}{
+	data := map[any]any{
 		"newKey0": "newVal0",
 		"newKey1": "newVal1",
 		"newKey2": "newVal2",
@@ -573,7 +573,7 @@ func ExampleAVLTree_Iterator() {
 	}
 
 	var totalKey, totalValue int
-	tree.Iterator(func(key, value interface{}) bool {
+	tree.Iterator(func(key, value any) bool {
 		totalKey += key.(int)
 		totalValue += value.(int)
 
@@ -589,13 +589,13 @@ func ExampleAVLTree_Iterator() {
 }
 
 func ExampleAVLTree_IteratorFrom() {
-	m := make(map[interface{}]interface{})
+	m := make(map[any]any)
 	for i := 1; i <= 5; i++ {
 		m[i] = i * 10
 	}
 	tree := gtree.NewAVLTreeFrom(gutil.ComparatorInt, m)
 
-	tree.IteratorFrom(1, true, func(key, value interface{}) bool {
+	tree.IteratorFrom(1, true, func(key, value any) bool {
 		fmt.Println("key:", key, ", value:", value)
 		return true
 	})
@@ -614,7 +614,7 @@ func ExampleAVLTree_IteratorAsc() {
 		tree.Set(i, 10-i)
 	}
 
-	tree.IteratorAsc(func(key, value interface{}) bool {
+	tree.IteratorAsc(func(key, value any) bool {
 		fmt.Println("key:", key, ", value:", value)
 		return true
 	})
@@ -632,14 +632,14 @@ func ExampleAVLTree_IteratorAsc() {
 	// key: 9 , value: 1
 }
 
-func ExampleAVLTree_IteratorAscFrom_Normal() {
-	m := make(map[interface{}]interface{})
+func ExampleAVLTree_IteratorAscFrom_normal() {
+	m := make(map[any]any)
 	for i := 1; i <= 5; i++ {
 		m[i] = i * 10
 	}
 	tree := gtree.NewAVLTreeFrom(gutil.ComparatorInt, m)
 
-	tree.IteratorAscFrom(1, true, func(key, value interface{}) bool {
+	tree.IteratorAscFrom(1, true, func(key, value any) bool {
 		fmt.Println("key:", key, ", value:", value)
 		return true
 	})
@@ -652,14 +652,14 @@ func ExampleAVLTree_IteratorAscFrom_Normal() {
 	// key: 5 , value: 50
 }
 
-func ExampleAVLTree_IteratorAscFrom_NoExistKey() {
-	m := make(map[interface{}]interface{})
+func ExampleAVLTree_IteratorAscFrom_noExistKey() {
+	m := make(map[any]any)
 	for i := 1; i <= 5; i++ {
 		m[i] = i * 10
 	}
 	tree := gtree.NewAVLTreeFrom(gutil.ComparatorInt, m)
 
-	tree.IteratorAscFrom(0, true, func(key, value interface{}) bool {
+	tree.IteratorAscFrom(0, true, func(key, value any) bool {
 		fmt.Println("key:", key, ", value:", value)
 		return true
 	})
@@ -667,14 +667,14 @@ func ExampleAVLTree_IteratorAscFrom_NoExistKey() {
 	// Output:
 }
 
-func ExampleAVLTree_IteratorAscFrom_NoExistKeyAndMatchFalse() {
-	m := make(map[interface{}]interface{})
+func ExampleAVLTree_IteratorAscFrom_noExistKeyAndMatchFalse() {
+	m := make(map[any]any)
 	for i := 1; i <= 5; i++ {
 		m[i] = i * 10
 	}
 	tree := gtree.NewAVLTreeFrom(gutil.ComparatorInt, m)
 
-	tree.IteratorAscFrom(6, false, func(key, value interface{}) bool {
+	tree.IteratorAscFrom(6, false, func(key, value any) bool {
 		fmt.Println("key:", key, ", value:", value)
 		return true
 	})
@@ -688,7 +688,7 @@ func ExampleAVLTree_IteratorDesc() {
 		tree.Set(i, 10-i)
 	}
 
-	tree.IteratorDesc(func(key, value interface{}) bool {
+	tree.IteratorDesc(func(key, value any) bool {
 		fmt.Println("key:", key, ", value:", value)
 		return true
 	})
@@ -707,13 +707,13 @@ func ExampleAVLTree_IteratorDesc() {
 }
 
 func ExampleAVLTree_IteratorDescFrom() {
-	m := make(map[interface{}]interface{})
+	m := make(map[any]any)
 	for i := 1; i <= 5; i++ {
 		m[i] = i * 10
 	}
 	tree := gtree.NewAVLTreeFrom(gutil.ComparatorInt, m)
 
-	tree.IteratorDescFrom(5, true, func(key, value interface{}) bool {
+	tree.IteratorDescFrom(5, true, func(key, value any) bool {
 		fmt.Println("key:", key, ", value:", value)
 		return true
 	})

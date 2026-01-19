@@ -31,13 +31,13 @@ func (r *Redis) GroupString() gredis.IGroupString {
 // Any previous time to live associated with the key is discarded on successful SET operation.
 //
 // https://redis.io/commands/set/
-func (r GroupString) Set(ctx context.Context, key string, value interface{}, option ...gredis.SetOption) (*gvar.Var, error) {
-	var usedOption interface{}
+func (r GroupString) Set(ctx context.Context, key string, value any, option ...gredis.SetOption) (*gvar.Var, error) {
+	var usedOption any
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
 	return r.Operation.Do(ctx, "Set", mustMergeOptionToArgs(
-		[]interface{}{key, value}, usedOption,
+		[]any{key, value}, usedOption,
 	)...)
 }
 
@@ -51,7 +51,7 @@ func (r GroupString) Set(ctx context.Context, key string, value interface{}, opt
 // false: if no key was set (at least one key already existed).
 //
 // https://redis.io/commands/setnx/
-func (r GroupString) SetNX(ctx context.Context, key string, value interface{}) (bool, error) {
+func (r GroupString) SetNX(ctx context.Context, key string, value any) (bool, error) {
 	v, err := r.Operation.Do(ctx, "SetNX", key, value)
 	return v.Bool(), err
 }
@@ -69,7 +69,7 @@ func (r GroupString) SetNX(ctx context.Context, key string, value interface{}) (
 // An error is returned when seconds invalid.
 //
 // https://redis.io/commands/setex/
-func (r GroupString) SetEX(ctx context.Context, key string, value interface{}, ttlInSeconds int64) error {
+func (r GroupString) SetEX(ctx context.Context, key string, value any, ttlInSeconds int64) error {
 	_, err := r.Operation.Do(ctx, "SetEX", key, ttlInSeconds, value)
 	return err
 }
@@ -95,12 +95,12 @@ func (r GroupString) GetDel(ctx context.Context, key string) (*gvar.Var, error) 
 //
 // https://redis.io/commands/getex/
 func (r GroupString) GetEX(ctx context.Context, key string, option ...gredis.GetEXOption) (*gvar.Var, error) {
-	var usedOption interface{}
+	var usedOption any
 	if len(option) > 0 {
 		usedOption = option[0]
 	}
 	return r.Operation.Do(ctx, "GetEX", mustMergeOptionToArgs(
-		[]interface{}{key}, usedOption,
+		[]any{key}, usedOption,
 	)...)
 }
 
@@ -109,7 +109,7 @@ func (r GroupString) GetEX(ctx context.Context, key string, option ...gredis.Get
 // the key is discarded on successful SET operation.
 //
 // https://redis.io/commands/getset/
-func (r GroupString) GetSet(ctx context.Context, key string, value interface{}) (*gvar.Var, error) {
+func (r GroupString) GetSet(ctx context.Context, key string, value any) (*gvar.Var, error) {
 	return r.Operation.Do(ctx, "GetSet", key, value)
 }
 
@@ -214,8 +214,8 @@ func (r GroupString) DecrBy(ctx context.Context, key string, decrement int64) (i
 // were updated while others are unchanged.
 //
 // https://redis.io/commands/mset/
-func (r GroupString) MSet(ctx context.Context, keyValueMap map[string]interface{}) error {
-	var args []interface{}
+func (r GroupString) MSet(ctx context.Context, keyValueMap map[string]any) error {
+	var args []any
 	for k, v := range keyValueMap {
 		args = append(args, k, v)
 	}
@@ -228,8 +228,8 @@ func (r GroupString) MSet(ctx context.Context, keyValueMap map[string]interface{
 // It returns:
 // true:  if the all the keys were set.
 // false: if no key was set (at least one key already existed).
-func (r GroupString) MSetNX(ctx context.Context, keyValueMap map[string]interface{}) (bool, error) {
-	var args []interface{}
+func (r GroupString) MSetNX(ctx context.Context, keyValueMap map[string]any) (bool, error) {
+	var args []any
 	for k, v := range keyValueMap {
 		args = append(args, k, v)
 	}

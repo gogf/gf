@@ -37,7 +37,7 @@ func (r RuleRequiredWithout) Run(in RunInput) error {
 	var (
 		required   = false
 		array      = strings.Split(in.RulePattern, ",")
-		foundValue interface{}
+		foundValue any
 		dataMap    = in.Data.Map()
 	)
 

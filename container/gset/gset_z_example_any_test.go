@@ -1,7 +1,7 @@
 // Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with gm file,
+// If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
 package gset_test
@@ -153,7 +153,7 @@ func ExampleSet_Contains() {
 	// true
 }
 
-func ExampleSet_ContainsI() {
+func ExampleSet_containsI() {
 	var set gset.StrSet
 	set.Add("a")
 	fmt.Println(set.Contains("a"))

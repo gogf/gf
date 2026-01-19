@@ -68,9 +68,9 @@ func TestDecode(t *testing.T) {
 			return
 		}
 
-		t.Assert(decodeStr.(map[string]interface{})["toml"], tomlStr)
+		t.Assert(decodeStr.(map[string]any)["toml"], tomlStr)
 
-		decodeStr1 := make(map[string]interface{})
+		decodeStr1 := make(map[string]any)
 		err = gtoml.DecodeTo(res, &decodeStr1)
 		if err != nil {
 			t.Errorf("decodeTo failed. %v", err)
@@ -86,7 +86,7 @@ func TestDecode(t *testing.T) {
 			return
 		}
 
-		decodeStr1 := make(map[string]interface{})
+		decodeStr1 := make(map[string]any)
 		err = gtoml.DecodeTo([]byte(tomlErr), &decodeStr1)
 		if err == nil {
 			t.Errorf("decodeTo failed. %v", err)

@@ -8,7 +8,6 @@ package clickhouse
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -166,22 +165,22 @@ func createClickhouseExampleTable(connect gdb.DB) error {
 }
 
 func dropClickhouseTableVisits(conn gdb.DB) {
-	sqlStr := fmt.Sprintf("DROP TABLE IF EXISTS `visits`")
+	sqlStr := "DROP TABLE IF EXISTS `visits`"
 	_, _ = conn.Exec(context.Background(), sqlStr)
 }
 
 func dropClickhouseTableDim(conn gdb.DB) {
-	sqlStr := fmt.Sprintf("DROP TABLE IF EXISTS `dim`")
+	sqlStr := "DROP TABLE IF EXISTS `dim`"
 	_, _ = conn.Exec(context.Background(), sqlStr)
 }
 
 func dropClickhouseTableFact(conn gdb.DB) {
-	sqlStr := fmt.Sprintf("DROP TABLE IF EXISTS `fact`")
+	sqlStr := "DROP TABLE IF EXISTS `fact`"
 	_, _ = conn.Exec(context.Background(), sqlStr)
 }
 
 func dropClickhouseExampleTable(conn gdb.DB) {
-	sqlStr := fmt.Sprintf("DROP TABLE IF EXISTS `data_type`")
+	sqlStr := "DROP TABLE IF EXISTS `data_type`"
 	_, _ = conn.Exec(context.Background(), sqlStr)
 }
 
@@ -392,28 +391,28 @@ func TestDriverClickhouse_Replace(t *testing.T) {
 func TestDriverClickhouse_DoFilter(t *testing.T) {
 	rawSQL := "select * from visits where 1 = 1"
 	this := Driver{}
-	replaceSQL, _, err := this.DoFilter(context.Background(), nil, rawSQL, []interface{}{1})
+	replaceSQL, _, err := this.DoFilter(context.Background(), nil, rawSQL, []any{1})
 	gtest.AssertNil(err)
 	gtest.AssertEQ(rawSQL, replaceSQL)
 
 	// this SQL can't run ,clickhouse will report an error because there is no WHERE statement
 	rawSQL = "update visit set url = '1'"
-	replaceSQL, _, err = this.DoFilter(context.Background(), nil, rawSQL, []interface{}{1})
+	replaceSQL, _, err = this.DoFilter(context.Background(), nil, rawSQL, []any{1})
 	gtest.AssertNil(err)
 
 	// this SQL can't run ,clickhouse will report an error because there is no WHERE statement
 	rawSQL = "delete from visit"
-	replaceSQL, _, err = this.DoFilter(context.Background(), nil, rawSQL, []interface{}{1})
+	replaceSQL, _, err = this.DoFilter(context.Background(), nil, rawSQL, []any{1})
 	gtest.AssertNil(err)
 
 	ctx := this.injectNeedParsedSql(context.Background())
 	rawSQL = "UPDATE visit SET url = '1' WHERE url = '0'"
-	replaceSQL, _, err = this.DoFilter(ctx, nil, rawSQL, []interface{}{1})
+	replaceSQL, _, err = this.DoFilter(ctx, nil, rawSQL, []any{1})
 	gtest.AssertNil(err)
 	gtest.AssertEQ(replaceSQL, "ALTER TABLE visit UPDATE url = '1' WHERE url = '0'")
 
 	rawSQL = "DELETE FROM visit WHERE url = '0'"
-	replaceSQL, _, err = this.DoFilter(ctx, nil, rawSQL, []interface{}{1})
+	replaceSQL, _, err = this.DoFilter(ctx, nil, rawSQL, []any{1})
 	gtest.AssertNil(err)
 	gtest.AssertEQ(replaceSQL, "ALTER TABLE visit DELETE WHERE url = '0'")
 }
@@ -468,7 +467,7 @@ func TestDriverClickhouse_NilTime(t *testing.T) {
 		Col4  string
 		Col5  map[string]uint8
 		Col6  []string
-		Col7  []interface{}
+		Col7  []any
 		Col8  *time.Time
 		Col9  uuid.UUID
 		Col10 *gtime.Time
@@ -482,7 +481,7 @@ func TestDriverClickhouse_NilTime(t *testing.T) {
 		insertData = append(insertData, &testNilTime{
 			Col4: "Inc.",
 			Col9: uuid.New(),
-			Col7: []interface{}{ // Tuple(String, UInt8, Array(Map(String, String)))
+			Col7: []any{ // Tuple(String, UInt8, Array(Map(String, String)))
 				"String Value", uint8(5), []map[string]string{
 					{"key": "value"},
 					{"key": "value"},
@@ -521,7 +520,7 @@ func TestDriverClickhouse_BatchInsert(t *testing.T) {
 			"Col4": guid.S(),
 			"Col5": map[string]uint8{"key": 1},             // Map(String, UInt8)
 			"Col6": []string{"Q", "W", "E", "R", "T", "Y"}, // Array(String)
-			"Col7": []interface{}{ // Tuple(String, UInt8, Array(Map(String, String)))
+			"Col7": []any{ // Tuple(String, UInt8, Array(Map(String, String)))
 				"String Value", uint8(5), []map[string]string{
 					{"key": "value"},
 					{"key": "value"},
@@ -561,7 +560,7 @@ func TestDriverClickhouse_TableFields(t *testing.T) {
 	gtest.AssertNil(err)
 	gtest.AssertNE(dataTypeTable, nil)
 
-	var result = map[string][]interface{}{
+	var result = map[string][]any{
 		"Col1":  {0, "Col1", "UInt8", false, "", "", "", "列1"},
 		"Col2":  {1, "Col2", "String", true, "", "", "", "列2"},
 		"Col3":  {2, "Col3", "FixedString(3)", false, "", "", "", "列3"},

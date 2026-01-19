@@ -102,6 +102,7 @@ func (view *View) ParseContent(ctx context.Context, content string, params ...Pa
 }
 
 // Option for template parsing.
+//
 // Deprecated: use Options instead.
 type Option = Options
 
@@ -114,6 +115,7 @@ type Options struct {
 }
 
 // ParseOption implements template parsing using Option.
+//
 // Deprecated: use ParseWithOptions instead.
 func (view *View) ParseOption(ctx context.Context, option Option) (result string, err error) {
 	return view.ParseWithOptions(ctx, option)
@@ -128,7 +130,7 @@ func (view *View) ParseWithOptions(ctx context.Context, opts Options) (result st
 		return "", gerror.New(`template file cannot be empty`)
 	}
 	// It caches the file, folder, and content to enhance performance.
-	r := view.fileCacheMap.GetOrSetFuncLock(opts.File, func() any {
+	r := view.fileCacheMap.GetOrSetFuncLock(opts.File, func() *fileCacheItem {
 		var (
 			path     string
 			folder   string
@@ -167,30 +169,29 @@ func (view *View) ParseWithOptions(ctx context.Context, opts Options) (result st
 	if r == nil {
 		return
 	}
-	item := r.(*fileCacheItem)
 	// It's not necessary continuing parsing if template content is empty.
-	if item.content == "" {
+	if r.content == "" {
 		return "", nil
 	}
 	// If it's an Orphan option, it just parses the single file by ParseContent.
 	if opts.Orphan {
-		return view.doParseContent(ctx, item.content, opts.Params)
+		return view.doParseContent(ctx, r.content, opts.Params)
 	}
 	// Get the template object instance for `folder`.
 	var tpl any
-	tpl, err = view.getTemplate(item.path, item.folder, fmt.Sprintf(`*%s`, gfile.Ext(item.path)))
+	tpl, err = view.getTemplate(r.path, r.folder, fmt.Sprintf(`*%s`, gfile.Ext(r.path)))
 	if err != nil {
 		return "", err
 	}
 	// Using memory lock to ensure concurrent safety for template parsing.
-	gmlock.LockFunc("gview.Parse:"+item.path, func() {
+	gmlock.LockFunc("gview.Parse:"+r.path, func() {
 		if view.config.AutoEncode {
-			tpl, err = tpl.(*htmltpl.Template).Parse(item.content)
+			tpl, err = tpl.(*htmltpl.Template).Parse(r.content)
 		} else {
-			tpl, err = tpl.(*texttpl.Template).Parse(item.content)
+			tpl, err = tpl.(*texttpl.Template).Parse(r.content)
 		}
-		if err != nil && item.path != "" {
-			err = gerror.Wrap(err, item.path)
+		if err != nil && r.path != "" {
+			err = gerror.Wrap(err, r.path)
 		}
 	})
 	if err != nil {
@@ -444,22 +445,21 @@ func (view *View) searchFile(ctx context.Context, file string) (path string, fol
 	if path == "" {
 		buffer := bytes.NewBuffer(nil)
 		if view.searchPaths.Len() > 0 {
-			buffer.WriteString(fmt.Sprintf("cannot find template file \"%s\" in following paths:", file))
+			fmt.Fprintf(buffer, "cannot find template file \"%s\" in following paths:", file)
 			view.searchPaths.RLockFunc(func(array []string) {
 				index := 1
 				for _, searchPath := range array {
 					searchPath = gstr.TrimRight(searchPath, `\/`)
 					for _, tryFolder := range localSystemTryFolders {
-						buffer.WriteString(fmt.Sprintf(
+						fmt.Fprintf(buffer,
 							"\n%d. %s",
-							index, gfile.Join(searchPath, tryFolder),
-						))
+							index, gfile.Join(searchPath, tryFolder))
 						index++
 					}
 				}
 			})
 		} else {
-			buffer.WriteString(fmt.Sprintf("cannot find template file \"%s\" with no path set/add", file))
+			fmt.Fprintf(buffer, "cannot find template file \"%s\" with no path set/add", file)
 		}
 		if errorPrint() {
 			glog.Error(ctx, buffer.String())

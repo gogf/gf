@@ -41,7 +41,7 @@ import (
 // )
 //
 // err := DoRequestObj(ctx, req, &res)
-func (c *Client) DoRequestObj(ctx context.Context, req, res interface{}) error {
+func (c *Client) DoRequestObj(ctx context.Context, req, res any) error {
 	var (
 		method = gmeta.Get(req, gtag.Method).String()
 		path   = gmeta.Get(req, gtag.Path).String()
@@ -86,7 +86,7 @@ func (c *Client) DoRequestObj(ctx context.Context, req, res interface{}) error {
 // Eg:
 // /order/{id}  -> /order/1
 // /user/{name} -> /order/john
-func (c *Client) handlePathForObjRequest(path string, req interface{}) string {
+func (c *Client) handlePathForObjRequest(path string, req any) string {
 	if gstr.Contains(path, "{") {
 		requestParamsMap := gconv.Map(req)
 		if len(requestParamsMap) > 0 {

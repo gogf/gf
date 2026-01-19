@@ -39,7 +39,7 @@ func NewStorageRedisHashTable(redis *gredis.Redis, prefix ...string) *StorageRed
 
 // Get retrieves session value with given key.
 // It returns nil if the key does not exist in the session.
-func (s *StorageRedisHashTable) Get(ctx context.Context, sessionId string, key string) (value interface{}, err error) {
+func (s *StorageRedisHashTable) Get(ctx context.Context, sessionId string, key string) (value any, err error) {
 	v, err := s.redis.HGet(ctx, s.sessionIdToRedisKey(sessionId), key)
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func (s *StorageRedisHashTable) Get(ctx context.Context, sessionId string, key s
 }
 
 // Data retrieves all key-value pairs as map from storage.
-func (s *StorageRedisHashTable) Data(ctx context.Context, sessionId string) (data map[string]interface{}, err error) {
+func (s *StorageRedisHashTable) Data(ctx context.Context, sessionId string) (data map[string]any, err error) {
 	m, err := s.redis.HGetAll(ctx, s.sessionIdToRedisKey(sessionId))
 	if err != nil {
 		return nil, err
@@ -67,8 +67,8 @@ func (s *StorageRedisHashTable) GetSize(ctx context.Context, sessionId string) (
 
 // Set sets key-value session pair to the storage.
 // The parameter `ttl` specifies the TTL for the session id (not for the key-value pair).
-func (s *StorageRedisHashTable) Set(ctx context.Context, sessionId string, key string, value interface{}, ttl time.Duration) error {
-	_, err := s.redis.HSet(ctx, s.sessionIdToRedisKey(sessionId), map[string]interface{}{
+func (s *StorageRedisHashTable) Set(ctx context.Context, sessionId string, key string, value any, ttl time.Duration) error {
+	_, err := s.redis.HSet(ctx, s.sessionIdToRedisKey(sessionId), map[string]any{
 		key: value,
 	})
 	return err
@@ -76,7 +76,7 @@ func (s *StorageRedisHashTable) Set(ctx context.Context, sessionId string, key s
 
 // SetMap batch sets key-value session pairs with map to the storage.
 // The parameter `ttl` specifies the TTL for the session id(not for the key-value pair).
-func (s *StorageRedisHashTable) SetMap(ctx context.Context, sessionId string, data map[string]interface{}, ttl time.Duration) error {
+func (s *StorageRedisHashTable) SetMap(ctx context.Context, sessionId string, data map[string]any, ttl time.Duration) error {
 	err := s.redis.HMSet(ctx, s.sessionIdToRedisKey(sessionId), data)
 	return err
 }

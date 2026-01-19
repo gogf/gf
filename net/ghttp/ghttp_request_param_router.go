@@ -22,7 +22,7 @@ func (r *Request) GetRouterMap() map[string]string {
 
 // GetRouter retrieves and returns the router value with given key name `key`.
 // It returns `def` if `key` does not exist.
-func (r *Request) GetRouter(key string, def ...interface{}) *gvar.Var {
+func (r *Request) GetRouter(key string, def ...any) *gvar.Var {
 	if r.routerMap != nil {
 		if v, ok := r.routerMap[key]; ok {
 			return gvar.New(v)

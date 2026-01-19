@@ -10,7 +10,7 @@ package gdb
 // Eg:
 // WhereOrPrefix("order", "status", "paid")                        => WHERE xxx OR (`order`.`status`='paid')
 // WhereOrPrefix("order", struct{Status:"paid", "channel":"bank"}) => WHERE xxx OR (`order`.`status`='paid' AND `order`.`channel`='bank')
-func (b *WhereBuilder) WhereOrPrefix(prefix string, where interface{}, args ...interface{}) *WhereBuilder {
+func (b *WhereBuilder) WhereOrPrefix(prefix string, where any, args ...any) *WhereBuilder {
 	where, args = b.convertWhereBuilder(where, args)
 
 	builder := b.getBuilder()
@@ -25,42 +25,42 @@ func (b *WhereBuilder) WhereOrPrefix(prefix string, where interface{}, args ...i
 }
 
 // WhereOrPrefixNot builds `prefix.column != value` statement in `OR` conditions.
-func (b *WhereBuilder) WhereOrPrefixNot(prefix string, column string, value interface{}) *WhereBuilder {
+func (b *WhereBuilder) WhereOrPrefixNot(prefix string, column string, value any) *WhereBuilder {
 	return b.WhereOrf(`%s.%s != ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), value)
 }
 
 // WhereOrPrefixLT builds `prefix.column < value` statement in `OR` conditions.
-func (b *WhereBuilder) WhereOrPrefixLT(prefix string, column string, value interface{}) *WhereBuilder {
+func (b *WhereBuilder) WhereOrPrefixLT(prefix string, column string, value any) *WhereBuilder {
 	return b.WhereOrf(`%s.%s < ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), value)
 }
 
 // WhereOrPrefixLTE builds `prefix.column <= value` statement in `OR` conditions.
-func (b *WhereBuilder) WhereOrPrefixLTE(prefix string, column string, value interface{}) *WhereBuilder {
+func (b *WhereBuilder) WhereOrPrefixLTE(prefix string, column string, value any) *WhereBuilder {
 	return b.WhereOrf(`%s.%s <= ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), value)
 }
 
 // WhereOrPrefixGT builds `prefix.column > value` statement in `OR` conditions.
-func (b *WhereBuilder) WhereOrPrefixGT(prefix string, column string, value interface{}) *WhereBuilder {
+func (b *WhereBuilder) WhereOrPrefixGT(prefix string, column string, value any) *WhereBuilder {
 	return b.WhereOrf(`%s.%s > ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), value)
 }
 
 // WhereOrPrefixGTE builds `prefix.column >= value` statement in `OR` conditions.
-func (b *WhereBuilder) WhereOrPrefixGTE(prefix string, column string, value interface{}) *WhereBuilder {
+func (b *WhereBuilder) WhereOrPrefixGTE(prefix string, column string, value any) *WhereBuilder {
 	return b.WhereOrf(`%s.%s >= ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), value)
 }
 
 // WhereOrPrefixBetween builds `prefix.column BETWEEN min AND max` statement in `OR` conditions.
-func (b *WhereBuilder) WhereOrPrefixBetween(prefix string, column string, min, max interface{}) *WhereBuilder {
+func (b *WhereBuilder) WhereOrPrefixBetween(prefix string, column string, min, max any) *WhereBuilder {
 	return b.WhereOrf(`%s.%s BETWEEN ? AND ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), min, max)
 }
 
 // WhereOrPrefixLike builds `prefix.column LIKE 'like'` statement in `OR` conditions.
-func (b *WhereBuilder) WhereOrPrefixLike(prefix string, column string, like interface{}) *WhereBuilder {
+func (b *WhereBuilder) WhereOrPrefixLike(prefix string, column string, like any) *WhereBuilder {
 	return b.WhereOrf(`%s.%s LIKE ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), like)
 }
 
 // WhereOrPrefixIn builds `prefix.column IN (in)` statement in `OR` conditions.
-func (b *WhereBuilder) WhereOrPrefixIn(prefix string, column string, in interface{}) *WhereBuilder {
+func (b *WhereBuilder) WhereOrPrefixIn(prefix string, column string, in any) *WhereBuilder {
 	return b.doWhereOrfType(whereHolderTypeIn, `%s.%s IN (?)`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), in)
 }
 
@@ -74,17 +74,17 @@ func (b *WhereBuilder) WhereOrPrefixNull(prefix string, columns ...string) *Wher
 }
 
 // WhereOrPrefixNotBetween builds `prefix.column NOT BETWEEN min AND max` statement in `OR` conditions.
-func (b *WhereBuilder) WhereOrPrefixNotBetween(prefix string, column string, min, max interface{}) *WhereBuilder {
+func (b *WhereBuilder) WhereOrPrefixNotBetween(prefix string, column string, min, max any) *WhereBuilder {
 	return b.WhereOrf(`%s.%s NOT BETWEEN ? AND ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), min, max)
 }
 
 // WhereOrPrefixNotLike builds `prefix.column NOT LIKE 'like'` statement in `OR` conditions.
-func (b *WhereBuilder) WhereOrPrefixNotLike(prefix string, column string, like interface{}) *WhereBuilder {
+func (b *WhereBuilder) WhereOrPrefixNotLike(prefix string, column string, like any) *WhereBuilder {
 	return b.WhereOrf(`%s.%s NOT LIKE ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), like)
 }
 
 // WhereOrPrefixNotIn builds `prefix.column NOT IN (in)` statement.
-func (b *WhereBuilder) WhereOrPrefixNotIn(prefix string, column string, in interface{}) *WhereBuilder {
+func (b *WhereBuilder) WhereOrPrefixNotIn(prefix string, column string, in any) *WhereBuilder {
 	return b.doWhereOrfType(whereHolderTypeIn, `%s.%s NOT IN (?)`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), in)
 }
 

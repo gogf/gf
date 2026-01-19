@@ -116,7 +116,7 @@ func ExampleLoadContent() {
 	// 100
 }
 
-func ExampleLoadContent_UTF8BOM() {
+func ExampleLoadContent_jsonContent() {
 	jsonContent := `{"name":"john", "score":"100"}`
 
 	content := make([]byte, 3, len(jsonContent)+3)
@@ -135,7 +135,7 @@ func ExampleLoadContent_UTF8BOM() {
 	// 100
 }
 
-func ExampleLoadContent_Xml() {
+func ExampleLoadContent_xml_content() {
 	xmlContent := []byte(`
 <?xml version="1.0" encoding="UTF-8"?>
 <base>
@@ -206,21 +206,21 @@ func ExampleIsValidDataType() {
 	// true
 }
 
-func ExampleLoad_Xml() {
+func ExampleLoad_jsonFilePath() {
 	jsonFilePath := gtest.DataPath("xml", "data1.xml")
 	j, _ := gjson.Load(jsonFilePath)
 	fmt.Println(j.Get("doc.name"))
 	fmt.Println(j.Get("doc.score"))
 }
 
-func ExampleLoad_Properties() {
+func ExampleLoadProperties() {
 	jsonFilePath := gtest.DataPath("properties", "data1.properties")
 	j, _ := gjson.Load(jsonFilePath)
 	fmt.Println(j.Get("pr.name"))
 	fmt.Println(j.Get("pr.score"))
 	fmt.Println(j.Get("pr.sex"))
 
-	//Output:
+	// Output:
 	// john
 	// 100
 	// 0

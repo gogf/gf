@@ -195,7 +195,7 @@ func TestIntArray_Range(t *testing.T) {
 
 func TestIntArray_Merge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		func1 := func(v1, v2 interface{}) int {
+		func1 := func(v1, v2 any) int {
 			if gconv.Int(v1) < gconv.Int(v2) {
 				return 0
 			}
@@ -204,7 +204,7 @@ func TestIntArray_Merge(t *testing.T) {
 
 		n1 := []int{0, 1, 2, 3}
 		n2 := []int{4, 5, 6, 7}
-		i1 := []interface{}{"1", "2"}
+		i1 := []any{"1", "2"}
 		s1 := []string{"a", "b", "c"}
 		s2 := []string{"e", "f"}
 		a1 := garray.NewIntArrayFrom(n1)
@@ -216,7 +216,7 @@ func TestIntArray_Merge(t *testing.T) {
 		a6 := garray.NewSortedIntArrayFrom([]int{1, 2, 3})
 
 		a7 := garray.NewSortedStrArrayFrom(s1)
-		a8 := garray.NewSortedArrayFrom([]interface{}{4, 5}, func1)
+		a8 := garray.NewSortedArrayFrom([]any{4, 5}, func1)
 
 		t.Assert(a1.Merge(a2).Slice(), []int{0, 1, 2, 3, 4, 5, 6, 7})
 		t.Assert(a1.Merge(a3).Len(), 10)

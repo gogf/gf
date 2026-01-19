@@ -33,6 +33,64 @@ func (e *anotherError) Error() string {
 	return "another error"
 }
 
+// customCauseError implements ICause interface
+type customCauseError struct {
+	msg   string
+	cause error
+}
+
+func (e *customCauseError) Error() string { return e.msg }
+func (e *customCauseError) Cause() error  { return e.cause }
+
+// customStackError implements IStack interface
+type customStackError struct {
+	msg   string
+	stack string
+}
+
+func (e *customStackError) Error() string { return e.msg }
+func (e *customStackError) Stack() string { return e.stack }
+
+// customCurrentError implements ICurrent interface
+type customCurrentError struct {
+	msg     string
+	current error
+}
+
+func (e *customCurrentError) Error() string  { return e.msg }
+func (e *customCurrentError) Current() error { return e.current }
+
+// customUnwrapError implements IUnwrap interface
+type customUnwrapError struct {
+	msg    string
+	unwrap error
+}
+
+func (e *customUnwrapError) Error() string { return e.msg }
+func (e *customUnwrapError) Unwrap() error { return e.unwrap }
+
+// customEqualError implements IEqual interface
+type customEqualError struct {
+	msg string
+}
+
+func (e *customEqualError) Error() string { return e.msg }
+func (e *customEqualError) Equal(target error) bool {
+	if target == nil {
+		return false
+	}
+	return e.msg == target.Error()
+}
+
+// customCodeError implements ICode interface
+type customCodeError struct {
+	msg  string
+	code gcode.Code
+}
+
+func (e *customCodeError) Error() string    { return e.msg }
+func (e *customCodeError) Code() gcode.Code { return e.code }
+
 func nilError() error {
 	return nil
 }
@@ -395,6 +453,19 @@ func Test_Json(t *testing.T) {
 		t.Assert(e, nil)
 		t.Assert(string(b), `"2: 1"`)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		errNormal := gerror.New("test")
+		b, e := json.Marshal(errNormal)
+		t.Assert(e, nil)
+		t.Assert(string(b), `"test"`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The string contains special characters.
+		errWithSign := gerror.New(`test ""`)
+		b, e := json.Marshal(errWithSign)
+		t.Assert(e, nil)
+		t.Assert(string(b), `"test \"\""`)
+	})
 }
 
 func Test_HasStack(t *testing.T) {
@@ -539,5 +610,220 @@ func Test_As(t *testing.T) {
 			t.Assert(recover() != nil, true)
 		}()
 		gerror.As(errors.New("error"), nil)
+	})
+}
+
+func Test_NewOption_Deprecated(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test deprecated NewOption function
+		err := gerror.NewOption(gerror.Option{
+			Error: errors.New("base error"),
+			Stack: true,
+			Text:  "option text",
+			Code:  gcode.CodeInternalError,
+		})
+		t.AssertNE(err, nil)
+		t.Assert(gerror.Code(err), gcode.CodeInternalError)
+	})
+}
+
+func Test_Code_WithIUnwrap(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test Code() with custom error that implements IUnwrap but not ICode
+		innerErr := gerror.NewCode(gcode.CodeInternalError, "inner error")
+		unwrapErr := &customUnwrapError{msg: "unwrap error", unwrap: innerErr}
+		t.Assert(gerror.Code(unwrapErr), gcode.CodeInternalError)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// Test Code() with nil
+		t.Assert(gerror.Code(nil), gcode.CodeNil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// Test Code() with custom error that implements ICode
+		codeErr := &customCodeError{msg: "code error", code: gcode.CodeNotFound}
+		t.Assert(gerror.Code(codeErr), gcode.CodeNotFound)
+	})
+}
+
+func Test_Cause_WithIUnwrap(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test Cause() with custom error that implements IUnwrap but not ICause
+		rootErr := errors.New("root error")
+		unwrapErr := &customUnwrapError{msg: "unwrap error", unwrap: rootErr}
+		t.Assert(gerror.Cause(unwrapErr), rootErr)
+	})
+}
+
+func Test_Cause_WithICause(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test Cause() with custom error that implements ICause
+		rootErr := errors.New("root error")
+		causeErr := &customCauseError{msg: "cause error", cause: rootErr}
+		t.Assert(gerror.Cause(causeErr), rootErr)
+	})
+}
+
+func Test_Stack_WithIStack(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test Stack() with custom error that implements IStack
+		stackErr := &customStackError{msg: "stack error", stack: "custom stack trace"}
+		t.Assert(gerror.Stack(stackErr), "custom stack trace")
+	})
+}
+
+func Test_Current_WithICurrent(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test Current() with custom error that implements ICurrent
+		currentErr := errors.New("current error")
+		customErr := &customCurrentError{msg: "custom error", current: currentErr}
+		t.Assert(gerror.Current(customErr), currentErr)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// Test Current() with standard error (does not implement ICurrent)
+		stdErr := errors.New("standard error")
+		t.Assert(gerror.Current(stdErr), stdErr)
+	})
+}
+
+func Test_Equal_WithIEqual(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test Equal() when target implements IEqual
+		err1 := errors.New("test error")
+		err2 := &customEqualError{msg: "test error"}
+		t.Assert(gerror.Equal(err1, err2), true)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// Test Equal() when both are the same
+		err := errors.New("test error")
+		t.Assert(gerror.Equal(err, err), true)
+	})
+}
+
+func Test_Error_Cause_WithICause(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test Error.Cause() when inner error implements ICause
+		rootErr := errors.New("root")
+		causeErr := &customCauseError{msg: "cause", cause: rootErr}
+		wrappedErr := gerror.Wrap(causeErr, "wrapped")
+		t.Assert(gerror.Cause(wrappedErr), rootErr)
+	})
+}
+
+func Test_Error_WithCodeMessage(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test Error.Error() when text is empty but code has message
+		err := gerror.NewCode(gcode.CodeInternalError)
+		t.Assert(err.Error(), "Internal Error")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// Test Error.Error() when text is empty and code has message, with wrapped error
+		innerErr := errors.New("inner")
+		err := gerror.WrapCode(gcode.CodeInternalError, innerErr)
+		t.Assert(err.Error(), "Internal Error: inner")
+	})
+}
+
+func Test_Format_PlusS(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test %+s format (stack only)
+		err := gerror.New("test error")
+		stackStr := fmt.Sprintf("%+s", err)
+		t.Assert(len(stackStr) > 0, true)
+		t.AssertNE(stackStr, "test error")
+	})
+}
+
+func Test_Format_MinusS_EmptyText(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test %-s format when text is empty but code has message
+		err := gerror.NewCode(gcode.CodeInternalError)
+		result := fmt.Sprintf("%-s", err)
+		t.Assert(result, "Internal Error")
+	})
+}
+
+func Test_Stack_DeepNested(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test deeply nested errors stack
+		err := gerror.New("level1")
+		for i := 2; i <= 5; i++ {
+			err = gerror.Wrap(err, fmt.Sprintf("level%d", i))
+		}
+		stack := gerror.Stack(err)
+		t.Assert(len(stack) > 0, true)
+	})
+}
+
+func Test_Stack_NilError(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var err *gerror.Error = nil
+		t.Assert(err.Stack(), "")
+	})
+}
+
+func Test_Stack_WithStandardError(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test stack with wrapped standard error
+		stdErr := errors.New("standard error")
+		err := gerror.Wrap(stdErr, "wrapped")
+		stack := gerror.Stack(err)
+		t.Assert(len(stack) > 0, true)
+	})
+}
+
+func Test_NewCode_MultipleTexts(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test NewCode with multiple text arguments
+		err := gerror.NewCode(gcode.CodeInternalError, "text1", "text2", "text3")
+		t.Assert(err.Error(), "text1, text2, text3")
+	})
+}
+
+func Test_NewCodeSkip_MultipleTexts(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test NewCodeSkip with multiple text arguments
+		err := gerror.NewCodeSkip(gcode.CodeInternalError, 0, "text1", "text2")
+		t.Assert(err.Error(), "text1, text2")
+	})
+}
+
+func Test_WrapCode_MultipleTexts(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test WrapCode with multiple text arguments
+		innerErr := errors.New("inner")
+		err := gerror.WrapCode(gcode.CodeInternalError, innerErr, "text1", "text2")
+		t.Assert(err.Error(), "text1, text2: inner")
+	})
+}
+
+func Test_WrapCodeSkip_MultipleTexts(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test WrapCodeSkip with multiple text arguments
+		innerErr := errors.New("inner")
+		err := gerror.WrapCodeSkip(gcode.CodeInternalError, 0, innerErr, "text1", "text2")
+		t.Assert(err.Error(), "text1, text2: inner")
+	})
+}
+
+func Test_TextArgs(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.New("text")
+		textArgs := err.(gerror.ITextArgs)
+		t.Assert(textArgs.Text(), "text")
+		t.Assert(textArgs.Args(), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.Newf("text: %s", "arg1")
+		textArgs := err.(gerror.ITextArgs)
+		t.Assert(textArgs.Text(), "text: %s")
+		t.Assert(textArgs.Args(), []any{"arg1"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err1 := errors.New("text")
+		err2 := gerror.Wrapf(err1, "wrap: %s", "arg1")
+		textArgs := err2.(gerror.ITextArgs)
+		t.Assert(textArgs.Error(), "wrap: arg1: text")
+		t.Assert(textArgs.Text(), "wrap: %s")
+		t.Assert(textArgs.Args(), []any{"arg1"})
 	})
 }

@@ -63,7 +63,7 @@ func doZipPathWriter(srcPath string, zipWriter *zip.Writer, option ...Option) er
 		files = []string{absolutePath}
 	}
 	headerPrefix := usedOption.Prefix
-	if !(headerPrefix == "/") {
+	if headerPrefix != "/" {
 		headerPrefix = strings.TrimRight(headerPrefix, `\/`)
 	}
 	if headerPrefix != "" && gfile.IsDir(absolutePath) {
@@ -124,8 +124,7 @@ func zipFile(path string, prefix string, zw *zip.Writer) error {
 	prefix = strings.ReplaceAll(prefix, `//`, `/`)
 	file, err := os.Open(path)
 	if err != nil {
-		err = gerror.Wrapf(err, `os.Open failed for path "%s"`, path)
-		return nil
+		return gerror.Wrapf(err, `os.Open failed for path "%s"`, path)
 	}
 	defer file.Close()
 

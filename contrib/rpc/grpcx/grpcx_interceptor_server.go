@@ -40,8 +40,8 @@ func (s modServer) ChainStream(interceptors ...grpc.StreamServerInterceptor) grp
 
 // UnaryError is the default unary interceptor for error converting from custom error to grpc error.
 func (s modServer) UnaryError(
-	ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
-) (interface{}, error) {
+	ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
+) (any, error) {
 	res, err := handler(ctx, req)
 	if err != nil {
 		code := gerror.Code(err)
@@ -54,8 +54,8 @@ func (s modServer) UnaryError(
 
 // UnaryRecover is the first interceptor that keep server not down from panics.
 func (s modServer) UnaryRecover(
-	ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
-) (res interface{}, err error) {
+	ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
+) (res any, err error) {
 	gutil.TryCatch(ctx, func(ctx2 context.Context) {
 		res, err = handler(ctx, req)
 	}, func(ctx context.Context, exception error) {
@@ -66,8 +66,8 @@ func (s modServer) UnaryRecover(
 
 // UnaryValidate Common validation unary interpreter.
 func (s modServer) UnaryValidate(
-	ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
-) (interface{}, error) {
+	ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
+) (any, error) {
 	// It does nothing if there's no validation tag in the struct definition.
 	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		return nil, gerror.NewCode(
@@ -79,8 +79,8 @@ func (s modServer) UnaryValidate(
 }
 
 func (s modServer) UnaryAllowNilRes(
-	ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
-) (interface{}, error) {
+	ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
+) (any, error) {
 	res, err := handler(ctx, req)
 	if g.IsNil(res) {
 		res = proto.Message(nil)
@@ -91,14 +91,14 @@ func (s modServer) UnaryAllowNilRes(
 // UnaryTracing is a unary interceptor for adding tracing feature for gRPC server using OpenTelemetry.
 // The tracing feature is builtin enabled.
 func (s modServer) UnaryTracing(
-	ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
-) (interface{}, error) {
+	ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
+) (any, error) {
 	return tracing.UnaryServerInterceptor(ctx, req, info, handler)
 }
 
 // StreamTracing is a stream unary interceptor for adding tracing feature for gRPC server using OpenTelemetry.
 func (s modServer) StreamTracing(
-	srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler,
+	srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler,
 ) error {
 	return tracing.StreamServerInterceptor(srv, ss, info, handler)
 }

@@ -50,8 +50,10 @@ const (
 )
 
 var (
+	// configChecker checks whether the *Config is nil.
+	configChecker = func(v *Config) bool { return v == nil }
 	// Configuration groups.
-	localConfigMap = gmap.NewStrAnyMap(true)
+	localConfigMap = gmap.NewKVMapWithChecker[string, *Config](configChecker, true)
 )
 
 // SetConfig sets the global configuration for specified group.
@@ -68,7 +70,7 @@ func SetConfig(config *Config, name ...string) {
 
 // SetConfigByMap sets the global configuration for specified group with map.
 // If `name` is not passed, it sets configuration for the default group name.
-func SetConfigByMap(m map[string]interface{}, name ...string) error {
+func SetConfigByMap(m map[string]any, name ...string) error {
 	group := DefaultGroupName
 	if len(name) > 0 {
 		group = name[0]
@@ -82,7 +84,7 @@ func SetConfigByMap(m map[string]interface{}, name ...string) error {
 }
 
 // ConfigFromMap parses and returns config from given map.
-func ConfigFromMap(m map[string]interface{}) (config *Config, err error) {
+func ConfigFromMap(m map[string]any) (config *Config, err error) {
 	config = &Config{}
 	if err = gconv.Scan(m, config); err != nil {
 		err = gerror.NewCodef(gcode.CodeInvalidConfiguration, `invalid redis configuration: %#v`, m)
@@ -119,7 +121,7 @@ func GetConfig(name ...string) (config *Config, ok bool) {
 		group = name[0]
 	}
 	if v := localConfigMap.Get(group); v != nil {
-		return v.(*Config), true
+		return v, true
 	}
 	return &Config{}, false
 }
