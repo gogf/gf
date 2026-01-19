@@ -13,7 +13,6 @@ import (
 
 	"github.com/gogf/gf/v2/encoding/gurl"
 	"github.com/gogf/gf/v2/internal/empty"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -47,15 +46,6 @@ func BuildParams(params any, noUrlEncode ...bool) (encodedParamStr string) {
 	if len(noUrlEncode) == 1 {
 		urlEncode = !noUrlEncode[0]
 	}
-	// If there's file uploading, it ignores the url encoding.
-	if urlEncode {
-		for k, v := range m {
-			if gstr.Contains(k, fileUploadingKey) || gstr.Contains(gconv.String(v), fileUploadingKey) {
-				urlEncode = false
-				break
-			}
-		}
-	}
 	s := ""
 	for k, v := range m {
 		// Ignore nil attributes.
@@ -67,8 +57,8 @@ func BuildParams(params any, noUrlEncode ...bool) (encodedParamStr string) {
 		}
 		s = gconv.String(v)
 		if urlEncode {
-			if strings.HasPrefix(s, fileUploadingKey) && len(s) > len(fileUploadingKey) {
-				// No url encoding if uploading file.
+			if strings.HasPrefix(s, fileUploadingKey) {
+				// No url encoding if value starts with file uploading marker.
 			} else {
 				s = gurl.Encode(s)
 			}
