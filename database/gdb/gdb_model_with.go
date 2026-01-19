@@ -193,46 +193,7 @@ func (m *Model) doWithScanStruct(pointer any) error {
 		}
 	}
 
-	// 处理多级指针的情况，找到最终的指针用于接口检查
-	var ptrValue reflect.Value
-
-	switch v := pointer.(type) {
-	case reflect.Value:
-		// 已经是 reflect.Value
-		ptrValue = v
-	default:
-		// 转换为 reflect.Value
-		ptrValue = reflect.ValueOf(pointer)
-	}
-
-	// 如果是 nil，直接返回
-	if ptrValue.IsNil() {
-		return nil
-	}
-
-	// 找到最终的指针（处理多级指针）
-	for (ptrValue.Kind() == reflect.Ptr) && !ptrValue.IsNil() {
-		// 如果当前指针指向的还是指针，继续深入
-		if ptrValue.Elem().Kind() == reflect.Ptr {
-			ptrValue = ptrValue.Elem()
-		} else {
-			// 找到了最终的指针（指向非指针类型）
-			break
-		}
-	}
-
-	// 确保 ptrValue 是指针类型且非空
-	if (ptrValue.Kind() != reflect.Ptr) || ptrValue.IsNil() {
-		return nil
-	}
-
-	// 检查指针是否实现了 IAfterScan 接口
-	if afterScanner, ok := ptrValue.Interface().(IAfterScan); ok {
-		// 调用 AfterScan 方法
-		return afterScanner.AfterScan()
-	}
-
-	return nil
+	return m.doAfterScan(pointer)
 }
 
 // doWithScanStructs handles model association operations feature for struct slice.
@@ -357,6 +318,71 @@ func (m *Model) doWithScanStructs(pointer any) error {
 		if err != nil && err != sql.ErrNoRows {
 			return err
 		}
+	}
+
+	arrayValue := reflect.ValueOf(pointer)
+	// 找到最终的指针（处理多级指针）
+	for arrayValue.Kind() == reflect.Ptr {
+		arrayValue = arrayValue.Elem()
+	}
+
+	if arrayValue.Kind() != reflect.Slice {
+		return nil
+	}
+
+	if arrayValue.IsNil() {
+		return nil
+	}
+
+	// 遍历切片中的每个元素
+	for i := 0; i < arrayValue.Len(); i++ {
+		element := arrayValue.Index(i)
+		if err = m.doAfterScan(element.Interface()); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *Model) doAfterScan(pointer any) error {
+	// 处理多级指针的情况，找到最终的指针用于接口检查
+	var ptrValue reflect.Value
+
+	switch v := pointer.(type) {
+	case reflect.Value:
+		// 已经是 reflect.Value
+		ptrValue = v
+	default:
+		// 转换为 reflect.Value
+		ptrValue = reflect.ValueOf(pointer)
+	}
+
+	// 如果是 nil，直接返回
+	// if ptrValue.IsNil() {
+	// 	return nil
+	// }
+
+	// 找到最终的指针（处理多级指针）
+	for ptrValue.Kind() == reflect.Ptr && !ptrValue.IsNil() {
+		// 如果当前指针指向的还是指针，继续深入
+		if ptrValue.Elem().Kind() == reflect.Ptr {
+			ptrValue = ptrValue.Elem()
+		} else {
+			// 找到了最终的指针（指向非指针类型）
+			break
+		}
+	}
+
+	// 确保 ptrValue 是指针类型且非空
+	if (ptrValue.Kind() != reflect.Ptr) || ptrValue.IsNil() {
+		return nil
+	}
+
+	// 检查指针是否实现了 IAfterScan 接口
+	if afterScanner, ok := ptrValue.Interface().(IAfterScan); ok {
+		// 调用 AfterScan 方法
+		return afterScanner.AfterScan()
 	}
 	return nil
 }
