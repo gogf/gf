@@ -66,10 +66,11 @@ func NewKVMapWithCheckerFrom[K comparable, V any](data map[K]V, checker NilCheck
 // This function is used to determine if a value should be considered as nil.
 // The nil checker function takes a value of type V and returns a boolean indicating
 // whether the value should be treated as nil.
-func (m *KVMap[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) {
+func (m *KVMap[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) *KVMap[K, V] {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.nilChecker = nilChecker
+	return m
 }
 
 // isNil checks whether the given value is nil.

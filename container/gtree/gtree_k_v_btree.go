@@ -81,10 +81,11 @@ func NewBKVTreeWithCheckerFrom[K comparable, V any](m int, comparator func(v1, v
 // This function is used to determine if a value should be considered as nil.
 // The nil checker function takes a value of type V and returns a boolean indicating
 // whether the value should be treated as nil.
-func (tree *BKVTree[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) {
+func (tree *BKVTree[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) *BKVTree[K, V] {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.nilChecker = nilChecker
+	return tree
 }
 
 // isNil checks whether the given value is nil.

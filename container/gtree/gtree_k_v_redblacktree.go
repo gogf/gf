@@ -100,10 +100,11 @@ func RedBlackKVTreeInitFrom[K comparable, V any](tree *RedBlackKVTree[K, V], com
 // This function is used to determine if a value should be considered as nil.
 // The nil checker function takes a value of type V and returns a boolean indicating
 // whether the value should be treated as nil.
-func (tree *RedBlackKVTree[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) {
+func (tree *RedBlackKVTree[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) *RedBlackKVTree[K, V] {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.nilChecker = nilChecker
+	return tree
 }
 
 // isNil checks whether the given value is nil.
