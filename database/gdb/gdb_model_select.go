@@ -723,8 +723,12 @@ func (m *Model) getFormattedSqlAndArgs(
 		}
 		// Raw SQL Model.
 		if m.rawSql != "" {
-			sqlWithHolder = fmt.Sprintf("SELECT %s FROM (%s) AS T", queryFields, m.rawSql)
-			return sqlWithHolder, nil
+			conditionWhere, conditionExtra, conditionArgs := m.formatCondition(ctx, false, true)
+			sqlWithHolder = fmt.Sprintf(
+				"SELECT %s FROM (%s%s) AS T",
+				queryFields, m.rawSql, conditionWhere+conditionExtra,
+			)
+			return sqlWithHolder, conditionArgs
 		}
 		conditionWhere, conditionExtra, conditionArgs := m.formatCondition(ctx, false, true)
 		sqlWithHolder = fmt.Sprintf("SELECT %s FROM %s%s", queryFields, m.tables, conditionWhere+conditionExtra)

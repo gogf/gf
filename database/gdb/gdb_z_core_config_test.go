@@ -142,6 +142,11 @@ func Test_Core_SetMaxConnections(t *testing.T) {
 		testDuration := time.Hour
 		core.SetMaxConnLifeTime(testDuration)
 		t.Assert(core.dynamicConfig.MaxConnLifeTime, testDuration)
+
+		// Test SetMaxIdleConnTime
+		idleTimeDuration := 30 * time.Minute
+		core.SetMaxIdleConnTime(idleTimeDuration)
+		t.Assert(core.dynamicConfig.MaxIdleConnTime, idleTimeDuration)
 	})
 }
 
