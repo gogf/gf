@@ -460,3 +460,398 @@ func Test_Gen_Dao_Issue3749(t *testing.T) {
 		}
 	})
 }
+
+// https://github.com/gogf/gf/issues/4629
+// Test tables pattern matching with * wildcard.
+func Test_Gen_Dao_Issue4629_TablesPattern_Star(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err         error
+			db          = testDB
+			table1      = "trade_order"
+			table2      = "trade_item"
+			table3      = "user_info"
+			table4      = "user_log"
+			table5      = "config"
+			sqlFilePath = gtest.DataPath(`gendao`, `tables_pattern.sql`)
+		)
+		dropTableStd(db, table1)
+		dropTableStd(db, table2)
+		dropTableStd(db, table3)
+		dropTableStd(db, table4)
+		dropTableStd(db, table5)
+		t.AssertNil(execSqlFile(db, sqlFilePath))
+		defer dropTableStd(db, table1)
+		defer dropTableStd(db, table2)
+		defer dropTableStd(db, table3)
+		defer dropTableStd(db, table4)
+		defer dropTableStd(db, table5)
+
+		var (
+			path  = gfile.Temp(guid.S())
+			group = "test"
+			in    = gendao.CGenDaoInput{
+				Path:   path,
+				Link:   link,
+				Group:  group,
+				Tables: "trade_*", // Should match trade_order, trade_item
+			}
+		)
+		err = gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+
+		pwd := gfile.Pwd()
+		err = gfile.Chdir(path)
+		t.AssertNil(err)
+		defer gfile.Chdir(pwd)
+		defer gfile.RemoveAll(path)
+
+		_, err = gendao.CGenDao{}.Dao(ctx, in)
+		t.AssertNil(err)
+
+		// Should generate 2 dao files: trade_order.go, trade_item.go
+		generatedFiles, err := gfile.ScanDir(gfile.Join(path, "dao"), "*.go", false)
+		t.AssertNil(err)
+		t.Assert(len(generatedFiles), 2)
+
+		// Verify the correct files are generated
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "trade_order.go")), true)
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "trade_item.go")), true)
+		// user_* and config should NOT be generated
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "user_info.go")), false)
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "user_log.go")), false)
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "config.go")), false)
+	})
+}
+
+// https://github.com/gogf/gf/issues/4629
+// Test tables pattern matching with multiple patterns.
+func Test_Gen_Dao_Issue4629_TablesPattern_Multiple(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err         error
+			db          = testDB
+			table1      = "trade_order"
+			table2      = "trade_item"
+			table3      = "user_info"
+			table4      = "user_log"
+			table5      = "config"
+			sqlFilePath = gtest.DataPath(`gendao`, `tables_pattern.sql`)
+		)
+		dropTableStd(db, table1)
+		dropTableStd(db, table2)
+		dropTableStd(db, table3)
+		dropTableStd(db, table4)
+		dropTableStd(db, table5)
+		t.AssertNil(execSqlFile(db, sqlFilePath))
+		defer dropTableStd(db, table1)
+		defer dropTableStd(db, table2)
+		defer dropTableStd(db, table3)
+		defer dropTableStd(db, table4)
+		defer dropTableStd(db, table5)
+
+		var (
+			path  = gfile.Temp(guid.S())
+			group = "test"
+			in    = gendao.CGenDaoInput{
+				Path:   path,
+				Link:   link,
+				Group:  group,
+				Tables: "trade_*,user_*", // Should match trade_order, trade_item, user_info, user_log
+			}
+		)
+		err = gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+
+		pwd := gfile.Pwd()
+		err = gfile.Chdir(path)
+		t.AssertNil(err)
+		defer gfile.Chdir(pwd)
+		defer gfile.RemoveAll(path)
+
+		_, err = gendao.CGenDao{}.Dao(ctx, in)
+		t.AssertNil(err)
+
+		// Should generate 4 dao files
+		generatedFiles, err := gfile.ScanDir(gfile.Join(path, "dao"), "*.go", false)
+		t.AssertNil(err)
+		t.Assert(len(generatedFiles), 4)
+
+		// Verify the correct files are generated
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "trade_order.go")), true)
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "trade_item.go")), true)
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "user_info.go")), true)
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "user_log.go")), true)
+		// config should NOT be generated
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "config.go")), false)
+	})
+}
+
+// https://github.com/gogf/gf/issues/4629
+// Test tables pattern mixed with exact table name.
+func Test_Gen_Dao_Issue4629_TablesPattern_Mixed(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err         error
+			db          = testDB
+			table1      = "trade_order"
+			table2      = "trade_item"
+			table3      = "user_info"
+			table4      = "user_log"
+			table5      = "config"
+			sqlFilePath = gtest.DataPath(`gendao`, `tables_pattern.sql`)
+		)
+		dropTableStd(db, table1)
+		dropTableStd(db, table2)
+		dropTableStd(db, table3)
+		dropTableStd(db, table4)
+		dropTableStd(db, table5)
+		t.AssertNil(execSqlFile(db, sqlFilePath))
+		defer dropTableStd(db, table1)
+		defer dropTableStd(db, table2)
+		defer dropTableStd(db, table3)
+		defer dropTableStd(db, table4)
+		defer dropTableStd(db, table5)
+
+		var (
+			path  = gfile.Temp(guid.S())
+			group = "test"
+			in    = gendao.CGenDaoInput{
+				Path:   path,
+				Link:   link,
+				Group:  group,
+				Tables: "trade_*,config", // Pattern + exact name
+			}
+		)
+		err = gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+
+		pwd := gfile.Pwd()
+		err = gfile.Chdir(path)
+		t.AssertNil(err)
+		defer gfile.Chdir(pwd)
+		defer gfile.RemoveAll(path)
+
+		_, err = gendao.CGenDao{}.Dao(ctx, in)
+		t.AssertNil(err)
+
+		// Should generate 3 dao files: trade_order.go, trade_item.go, config.go
+		generatedFiles, err := gfile.ScanDir(gfile.Join(path, "dao"), "*.go", false)
+		t.AssertNil(err)
+		t.Assert(len(generatedFiles), 3)
+
+		// Verify the correct files are generated
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "trade_order.go")), true)
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "trade_item.go")), true)
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "config.go")), true)
+		// user_* should NOT be generated
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "user_info.go")), false)
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "user_log.go")), false)
+	})
+}
+
+// https://github.com/gogf/gf/issues/4629
+// Test tables pattern with ? wildcard (single character match).
+func Test_Gen_Dao_Issue4629_TablesPattern_Question(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err         error
+			db          = testDB
+			table1      = "trade_order"
+			table2      = "trade_item"
+			table3      = "user_info"
+			table4      = "user_log"
+			table5      = "config"
+			sqlFilePath = gtest.DataPath(`gendao`, `tables_pattern.sql`)
+		)
+		dropTableStd(db, table1)
+		dropTableStd(db, table2)
+		dropTableStd(db, table3)
+		dropTableStd(db, table4)
+		dropTableStd(db, table5)
+		t.AssertNil(execSqlFile(db, sqlFilePath))
+		defer dropTableStd(db, table1)
+		defer dropTableStd(db, table2)
+		defer dropTableStd(db, table3)
+		defer dropTableStd(db, table4)
+		defer dropTableStd(db, table5)
+
+		var (
+			path  = gfile.Temp(guid.S())
+			group = "test"
+			in    = gendao.CGenDaoInput{
+				Path:   path,
+				Link:   link,
+				Group:  group,
+				Tables: "user_???", // ? matches single char: user_log (3 chars) but not user_info (4 chars)
+			}
+		)
+		err = gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+
+		pwd := gfile.Pwd()
+		err = gfile.Chdir(path)
+		t.AssertNil(err)
+		defer gfile.Chdir(pwd)
+		defer gfile.RemoveAll(path)
+
+		_, err = gendao.CGenDao{}.Dao(ctx, in)
+		t.AssertNil(err)
+
+		// Should generate 1 dao file: user_log.go (3 chars after user_)
+		generatedFiles, err := gfile.ScanDir(gfile.Join(path, "dao"), "*.go", false)
+		t.AssertNil(err)
+		t.Assert(len(generatedFiles), 1)
+
+		// Verify only user_log is generated
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "user_log.go")), true)
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "user_info.go")), false) // 4 chars, doesn't match
+	})
+}
+
+// https://github.com/gogf/gf/issues/4629
+// Test that exact table names still work (backward compatibility).
+func Test_Gen_Dao_Issue4629_TablesPattern_ExactNames(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err         error
+			db          = testDB
+			table1      = "trade_order"
+			table2      = "trade_item"
+			table3      = "user_info"
+			table4      = "user_log"
+			table5      = "config"
+			sqlFilePath = gtest.DataPath(`gendao`, `tables_pattern.sql`)
+		)
+		dropTableStd(db, table1)
+		dropTableStd(db, table2)
+		dropTableStd(db, table3)
+		dropTableStd(db, table4)
+		dropTableStd(db, table5)
+		t.AssertNil(execSqlFile(db, sqlFilePath))
+		defer dropTableStd(db, table1)
+		defer dropTableStd(db, table2)
+		defer dropTableStd(db, table3)
+		defer dropTableStd(db, table4)
+		defer dropTableStd(db, table5)
+
+		var (
+			path  = gfile.Temp(guid.S())
+			group = "test"
+			in    = gendao.CGenDaoInput{
+				Path:   path,
+				Link:   link,
+				Group:  group,
+				Tables: "trade_order,config", // Exact names, no patterns
+			}
+		)
+		err = gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+
+		pwd := gfile.Pwd()
+		err = gfile.Chdir(path)
+		t.AssertNil(err)
+		defer gfile.Chdir(pwd)
+		defer gfile.RemoveAll(path)
+
+		_, err = gendao.CGenDao{}.Dao(ctx, in)
+		t.AssertNil(err)
+
+		// Should generate 2 dao files
+		generatedFiles, err := gfile.ScanDir(gfile.Join(path, "dao"), "*.go", false)
+		t.AssertNil(err)
+		t.Assert(len(generatedFiles), 2)
+
+		// Verify exactly the specified tables are generated
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "trade_order.go")), true)
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "config.go")), true)
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "trade_item.go")), false)
+	})
+}
+
+// https://github.com/gogf/gf/issues/4629
+// Test tables pattern matching with PostgreSQL.
+func Test_Gen_Dao_Issue4629_TablesPattern_PgSql(t *testing.T) {
+	if testPgDB == nil {
+		t.Skip("PostgreSQL database not available, skipping test")
+		return
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err         error
+			db          = testPgDB
+			table1      = "trade_order"
+			table2      = "trade_item"
+			table3      = "user_info"
+			table4      = "user_log"
+			table5      = "config"
+			sqlFilePath = gtest.DataPath(`gendao`, `tables_pattern.sql`)
+		)
+		dropTableStd(db, table1)
+		dropTableStd(db, table2)
+		dropTableStd(db, table3)
+		dropTableStd(db, table4)
+		dropTableStd(db, table5)
+		t.AssertNil(execSqlFile(db, sqlFilePath))
+		defer dropTableStd(db, table1)
+		defer dropTableStd(db, table2)
+		defer dropTableStd(db, table3)
+		defer dropTableStd(db, table4)
+		defer dropTableStd(db, table5)
+
+		// Test tables pattern with tablesEx pattern
+		var (
+			path  = gfile.Temp(guid.S())
+			group = "test"
+			in    = gendao.CGenDaoInput{
+				Path:     path,
+				Link:     linkPg,
+				Group:    group,
+				Tables:   "*",        // Match all tables
+				TablesEx: "user_*",   // Exclude user_* tables
+			}
+		)
+		err = gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+
+		pwd := gfile.Pwd()
+		err = gfile.Chdir(path)
+		t.AssertNil(err)
+		defer gfile.Chdir(pwd)
+		defer gfile.RemoveAll(path)
+
+		_, err = gendao.CGenDao{}.Dao(ctx, in)
+		t.AssertNil(err)
+
+		// Should generate 3 dao files: trade_order, trade_item, config (user_* excluded)
+		generatedFiles, err := gfile.ScanDir(gfile.Join(path, "dao"), "*.go", false)
+		t.AssertNil(err)
+		t.Assert(len(generatedFiles), 3)
+
+		// Verify the correct files are generated
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "trade_order.go")), true)
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "trade_item.go")), true)
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "config.go")), true)
+		// user_* should NOT be generated (excluded by tablesEx)
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "user_info.go")), false)
+		t.Assert(gfile.Exists(gfile.Join(path, "dao", "user_log.go")), false)
+	})
+}
