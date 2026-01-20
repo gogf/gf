@@ -822,8 +822,8 @@ func Test_Gen_Dao_Issue4629_TablesPattern_PgSql(t *testing.T) {
 				Path:     path,
 				Link:     linkPg,
 				Group:    group,
-				Tables:   "*",        // Match all tables
-				TablesEx: "user_*",   // Exclude user_* tables
+				Tables:   "*",      // Match all tables
+				TablesEx: "user_*", // Exclude user_* tables
 			}
 		)
 		err = gutil.FillStructWithDefault(&in)
