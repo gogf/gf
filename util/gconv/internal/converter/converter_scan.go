@@ -96,11 +96,14 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ...ScanOption) (er
 	}
 
 	// Get the element type and kind of dstPointer
-	var (
-		dstPointerReflectValueElem     = dstPointerReflectValue.Elem()
-		dstPointerReflectValueElemKind = dstPointerReflectValueElem.Kind()
-	)
+	var dstPointerReflectValueElem = dstPointerReflectValue.Elem()
+	// Check if srcValue and dstPointer are the same type, in which case direct assignment can be performed
+	if ok := c.doConvertWithTypeCheck(srcValueReflectValue, dstPointerReflectValueElem); ok {
+		return nil
+	}
+
 	// Handle multiple level pointers
+	var dstPointerReflectValueElemKind = dstPointerReflectValueElem.Kind()
 	if dstPointerReflectValueElemKind == reflect.Pointer {
 		if dstPointerReflectValueElem.IsNil() {
 			// Create a new value for the pointer dereference
@@ -112,11 +115,6 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ...ScanOption) (er
 			return
 		}
 		return c.Scan(srcValueReflectValue, dstPointerReflectValueElem, option...)
-	}
-
-	// Check if srcValue and dstPointer are the same type, in which case direct assignment can be performed
-	if ok := c.doConvertWithTypeCheck(srcValueReflectValue, dstPointerReflectValueElem); ok {
-		return nil
 	}
 
 	scanOption := c.getScanOption(option...)
