@@ -60,10 +60,11 @@ func NewLoaderWithAdapter[T any](adapter Adapter, propertyKey string, targetStru
 
 // OnChange sets the callback function that will be called when configuration changes
 // The callback function receives the updated configuration struct and can return an error
-func (l *Loader[T]) OnChange(fn func(updated T) error) {
+func (l *Loader[T]) OnChange(fn func(updated T) error) *Loader[T] {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 	l.onChange = fn
+	return l
 }
 
 // Load loads configuration from the config instance and binds it to the target struct
@@ -215,24 +216,27 @@ func (l *Loader[T]) GetPointer() *T {
 
 // SetConverter sets a custom converter function that will be used during Load operations
 // The converter function receives the source data and the target struct pointer
-func (l *Loader[T]) SetConverter(converter func(data any, target *T) error) {
+func (l *Loader[T]) SetConverter(converter func(data any, target *T) error) *Loader[T] {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 	l.converter = converter
+	return l
 }
 
 // SetLoadErrorHandler sets an error handling function that will be called when Load operations fail
-func (l *Loader[T]) SetLoadErrorHandler(errorFunc func(ctx context.Context, err error)) {
+func (l *Loader[T]) SetLoadErrorHandler(errorFunc func(ctx context.Context, err error)) *Loader[T] {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 	l.loadErrorFunc = errorFunc
+	return l
 }
 
 // SetReuseTargetStruct sets whether to reuse the same target struct or create a new one on updates
-func (l *Loader[T]) SetReuseTargetStruct(reuse bool) {
+func (l *Loader[T]) SetReuseTargetStruct(reuse bool) *Loader[T] {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 	l.reuse = reuse
+	return l
 }
 
 // StopWatch stops watching for configuration changes and removes the associated watcher
