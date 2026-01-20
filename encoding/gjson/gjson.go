@@ -52,6 +52,7 @@ type Options struct {
 	Tags      string      // Custom priority tags for decoding, eg: "json,yaml,MyTag". This is especially for struct parsing into Json object.
 	Type      ContentType // Type specifies the data content type, eg: json, xml, yaml, toml, ini.
 	StrNumber bool        // StrNumber causes the Decoder to unmarshal a number into an any as a string instead of as a float64.
+	OmitEmpty bool        // OmitEmpty ignores struct fields with `omitempty` tag when the field value is empty.
 }
 
 // iInterfaces is used for type assert api for Interfaces().

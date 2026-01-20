@@ -120,3 +120,39 @@ func Test_LoadContentType(t *testing.T) {
 		t.Assert(value, 79937385836643329)
 	})
 }
+
+// https://github.com/gogf/gf/issues/4450
+func Test_NewWithOptions_OmitEmpty(t *testing.T) {
+	type User struct {
+		Name   string `json:"name"`
+		Age    int    `json:"age,omitempty"`
+		Height int    `json:"height,omitempty"`
+	}
+
+	// Without OmitEmpty option (default behavior)
+	gtest.C(t, func(t *gtest.T) {
+		user := User{Name: "john", Age: 18, Height: 0}
+		j := gjson.New(user)
+		t.Assert(j.Get("name"), "john")
+		t.Assert(j.Get("age"), 18)
+		t.Assert(j.Get("height"), 0)
+	})
+
+	// With OmitEmpty option enabled
+	gtest.C(t, func(t *gtest.T) {
+		user := User{Name: "john", Age: 18, Height: 0}
+		j := gjson.NewWithOptions(user, gjson.Options{OmitEmpty: true})
+		t.Assert(j.Get("name"), "john")
+		t.Assert(j.Get("age"), 18)
+		t.Assert(j.Get("height"), nil) // Height should be omitted
+	})
+
+	// All empty values with OmitEmpty
+	gtest.C(t, func(t *gtest.T) {
+		user := User{Name: "john", Age: 0, Height: 0}
+		j := gjson.NewWithOptions(user, gjson.Options{OmitEmpty: true})
+		t.Assert(j.Get("name"), "john")
+		t.Assert(j.Get("age"), nil)    // Age should be omitted
+		t.Assert(j.Get("height"), nil) // Height should be omitted
+	})
+}

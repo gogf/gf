@@ -78,7 +78,7 @@ func NewWithOptions(data any, options Options) *Json {
 		case reflect.Map:
 			pointedData = gconv.Map(data, gconv.MapOption{
 				Deep:            true,
-				OmitEmpty:       false,
+				OmitEmpty:       options.OmitEmpty,
 				Tags:            []string{options.Tags},
 				ContinueOnError: true,
 			})
@@ -89,7 +89,7 @@ func NewWithOptions(data any, options Options) *Json {
 			}
 			pointedData = gconv.Map(data, gconv.MapOption{
 				Deep:            true,
-				OmitEmpty:       false,
+				OmitEmpty:       options.OmitEmpty,
 				Tags:            []string{options.Tags},
 				ContinueOnError: true,
 			})
