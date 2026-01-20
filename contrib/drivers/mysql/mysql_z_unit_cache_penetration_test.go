@@ -26,7 +26,7 @@ func Test_Model_Cache_EmptyResult_ForceTrue(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// First query: should query database and cache empty result
 		result, err := db.Model(table).Where("id", 999).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_empty_force_true",
 			Force:    true,
 		}).All()
@@ -44,7 +44,7 @@ func Test_Model_Cache_EmptyResult_ForceTrue(t *testing.T) {
 
 		// Second query: should return cached empty result (not the newly inserted data)
 		result, err = db.Model(table).Where("id", 999).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_empty_force_true",
 			Force:    true,
 		}).All()
@@ -52,11 +52,11 @@ func Test_Model_Cache_EmptyResult_ForceTrue(t *testing.T) {
 		t.Assert(len(result), 0) // Still returns empty because it's cached
 
 		// Wait for cache to expire
-		time.Sleep(time.Second * 11)
+		time.Sleep(time.Second * 6)
 
 		// Third query: cache expired, should return new data
 		result, err = db.Model(table).Where("id", 999).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_empty_force_true_2",
 			Force:    true,
 		}).All()
@@ -74,7 +74,7 @@ func Test_Model_Cache_EmptyResult_ForceFalse(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// First query: should query database, get empty result but NOT cache it
 		result, err := db.Model(table).Where("id", 888).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_empty_force_false",
 			Force:    false,
 		}).All()
@@ -92,7 +92,7 @@ func Test_Model_Cache_EmptyResult_ForceFalse(t *testing.T) {
 
 		// Second query: should return new data (because empty result was not cached)
 		result, err = db.Model(table).Where("id", 888).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_empty_force_false",
 			Force:    false,
 		}).All()
@@ -110,7 +110,7 @@ func Test_Model_Cache_Count_Zero_ForceTrue(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// First query: Count should be 0 and cached
 		count, err := db.Model(table).Where("id", 777).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_count_zero_force_true",
 			Force:    true,
 		}).Count()
@@ -128,7 +128,7 @@ func Test_Model_Cache_Count_Zero_ForceTrue(t *testing.T) {
 
 		// Second query: should still return 0 from cache
 		count, err = db.Model(table).Where("id", 777).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_count_zero_force_true",
 			Force:    true,
 		}).Count()
@@ -145,7 +145,7 @@ func Test_Model_Cache_Count_Zero_ForceFalse(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// First query: Count should be 0 but not cached
 		count, err := db.Model(table).Where("id", 666).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_count_zero_force_false",
 			Force:    false,
 		}).Count()
@@ -163,7 +163,7 @@ func Test_Model_Cache_Count_Zero_ForceFalse(t *testing.T) {
 
 		// Second query: should return new count
 		count, err = db.Model(table).Where("id", 666).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_count_zero_force_false",
 			Force:    false,
 		}).Count()
@@ -180,7 +180,7 @@ func Test_Model_Cache_Value_Empty_ForceTrue(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// First query: Value should be empty and cached
 		value, err := db.Model(table).Where("id", 555).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_value_empty_force_true",
 			Force:    true,
 		}).Value("passport")
@@ -198,7 +198,7 @@ func Test_Model_Cache_Value_Empty_ForceTrue(t *testing.T) {
 
 		// Second query: should still return empty from cache
 		value, err = db.Model(table).Where("id", 555).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_value_empty_force_true",
 			Force:    true,
 		}).Value("passport")
@@ -215,7 +215,7 @@ func Test_Model_Cache_Value_Empty_ForceFalse(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// First query: Value should be empty but not cached
 		value, err := db.Model(table).Where("id", 444).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_value_empty_force_false",
 			Force:    false,
 		}).Value("passport")
@@ -233,7 +233,7 @@ func Test_Model_Cache_Value_Empty_ForceFalse(t *testing.T) {
 
 		// Second query: should return new value
 		value, err = db.Model(table).Where("id", 444).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_value_empty_force_false",
 			Force:    false,
 		}).Value("passport")
@@ -250,7 +250,7 @@ func Test_Model_Cache_One_Empty_ForceTrue(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// First query: should return nil and cache it
 		one, err := db.Model(table).Where("id", 333).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_one_empty_force_true",
 			Force:    true,
 		}).One()
@@ -268,7 +268,7 @@ func Test_Model_Cache_One_Empty_ForceTrue(t *testing.T) {
 
 		// Second query: should still return empty from cache
 		one, err = db.Model(table).Where("id", 333).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_one_empty_force_true",
 			Force:    true,
 		}).One()
@@ -285,7 +285,7 @@ func Test_Model_Cache_One_Empty_ForceFalse(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// First query: should return nil but not cache it
 		one, err := db.Model(table).Where("id", 222).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_one_empty_force_false",
 			Force:    false,
 		}).One()
@@ -303,7 +303,7 @@ func Test_Model_Cache_One_Empty_ForceFalse(t *testing.T) {
 
 		// Second query: should return new data
 		one, err = db.Model(table).Where("id", 222).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_one_empty_force_false",
 			Force:    false,
 		}).One()
@@ -330,7 +330,7 @@ func Test_Model_Cache_NonEmpty_Result(t *testing.T) {
 
 		// First query with Force=false: should cache non-empty result
 		result, err := db.Model(table).Where("id", 111).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_nonempty_force_false",
 			Force:    false,
 		}).All()
@@ -344,7 +344,7 @@ func Test_Model_Cache_NonEmpty_Result(t *testing.T) {
 
 		// Second query: should still return cached result
 		result, err = db.Model(table).Where("id", 111).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_nonempty_force_false",
 			Force:    false,
 		}).All()
@@ -356,7 +356,7 @@ func Test_Model_Cache_NonEmpty_Result(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// Test with Force=true as well
 		result, err := db.Model(table).Where("id", 111).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_nonempty_force_true",
 			Force:    true,
 		}).All()
@@ -379,7 +379,7 @@ func Test_Model_Cache_Penetration_Prevention(t *testing.T) {
 		// With Force=false: each query hits the database
 		for i := 0; i < 5; i++ {
 			_, err := db.Model(table).Where("id", 9999).Cache(gdb.CacheOption{
-				Duration: time.Second * 10,
+				Duration: time.Second * 5,
 				Name:     cacheName + "_no_force",
 				Force:    false,
 			}).All()
@@ -392,7 +392,7 @@ func Test_Model_Cache_Penetration_Prevention(t *testing.T) {
 		cacheName2 := guid.S()
 		for i := 0; i < 5; i++ {
 			_, err := db.Model(table).Where("id", 8888).Cache(gdb.CacheOption{
-				Duration: time.Second * 10,
+				Duration: time.Second * 5,
 				Name:     cacheName2 + "_with_force",
 				Force:    true,
 			}).All()
@@ -410,7 +410,7 @@ func Test_Model_Cache_CountColumn_Zero_ForceTrue(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// First query: CountColumn should be 0 and cached
 		count, err := db.Model(table).Where("id > ?", 10000).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_count_column_zero_force_true",
 			Force:    true,
 		}).CountColumn("id")
@@ -428,7 +428,7 @@ func Test_Model_Cache_CountColumn_Zero_ForceTrue(t *testing.T) {
 
 		// Second query: should still return 0 from cache
 		count, err = db.Model(table).Where("id > ?", 10000).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_count_column_zero_force_true",
 			Force:    true,
 		}).CountColumn("id")
@@ -445,7 +445,7 @@ func Test_Model_Cache_Multiple_Empty_Queries(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// Query 1: id=1000
 		result1, err := db.Model(table).Where("id", 1000).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_multiple_1",
 			Force:    true,
 		}).All()
@@ -454,7 +454,7 @@ func Test_Model_Cache_Multiple_Empty_Queries(t *testing.T) {
 
 		// Query 2: id=2000
 		result2, err := db.Model(table).Where("id", 2000).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_multiple_2",
 			Force:    true,
 		}).All()
@@ -472,7 +472,7 @@ func Test_Model_Cache_Multiple_Empty_Queries(t *testing.T) {
 
 		// Query both again: id=1000 should return empty (cached), id=2000 should also return empty (cached)
 		result1, err = db.Model(table).Where("id", 1000).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_multiple_1",
 			Force:    true,
 		}).All()
@@ -480,7 +480,7 @@ func Test_Model_Cache_Multiple_Empty_Queries(t *testing.T) {
 		t.Assert(len(result1), 0) // Still empty from cache
 
 		result2, err = db.Model(table).Where("id", 2000).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_multiple_2",
 			Force:    true,
 		}).All()
@@ -497,7 +497,7 @@ func Test_Model_Cache_Clear_Empty_Result(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// Cache empty result
 		result, err := db.Model(table).Where("id", 5000).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_clear_empty",
 			Force:    true,
 		}).All()
@@ -523,7 +523,7 @@ func Test_Model_Cache_Clear_Empty_Result(t *testing.T) {
 
 		// Query again: should get new data after cache clear
 		result, err = db.Model(table).Where("id", 5000).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_clear_empty_new",
 			Force:    true,
 		}).All()
@@ -542,7 +542,7 @@ func Test_Model_Cache_Transaction_Disabled(t *testing.T) {
 		err := db.Transaction(context.TODO(), func(ctx context.Context, tx gdb.TX) error {
 			// Query in transaction: cache should be disabled
 			result, err := tx.Model(table).Where("id", 6000).Cache(gdb.CacheOption{
-				Duration: time.Second * 10,
+				Duration: time.Second * 5,
 				Name:     "test_transaction_cache",
 				Force:    true,
 			}).All()
@@ -560,7 +560,7 @@ func Test_Model_Cache_Transaction_Disabled(t *testing.T) {
 
 			// Query again in transaction: should see new data (cache disabled)
 			result, err = tx.Model(table).Where("id", 6000).Cache(gdb.CacheOption{
-				Duration: time.Second * 10,
+				Duration: time.Second * 5,
 				Name:     "test_transaction_cache",
 				Force:    true,
 			}).All()
@@ -583,7 +583,7 @@ func Test_Model_Cache_EmptyLogic_ResultNil(t *testing.T) {
 		// Query non-existent data: result should be empty (nil or empty array)
 		// With Force=true, should cache the empty result
 		result, err := db.Model(table).Where("id", 7001).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_empty_nil_force_true",
 			Force:    true,
 		}).All()
@@ -601,7 +601,7 @@ func Test_Model_Cache_EmptyLogic_ResultNil(t *testing.T) {
 
 		// Query again: should return cached empty result (verifying isEmpty logic)
 		result, err = db.Model(table).Where("id", 7001).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_empty_nil_force_true",
 			Force:    true,
 		}).All()
@@ -619,7 +619,7 @@ func Test_Model_Cache_EmptyLogic_CountZero(t *testing.T) {
 		// Count with no matching records: should be 0 (empty)
 		// With Force=true, should cache the zero count
 		count, err := db.Model(table).Where("id > ?", 8000).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_empty_count_zero",
 			Force:    true,
 		}).Count()
@@ -637,7 +637,7 @@ func Test_Model_Cache_EmptyLogic_CountZero(t *testing.T) {
 
 		// Query again: should return cached 0 (verifying Count=0 empty logic)
 		count, err = db.Model(table).Where("id > ?", 8000).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_empty_count_zero",
 			Force:    true,
 		}).Count()
@@ -655,7 +655,7 @@ func Test_Model_Cache_EmptyLogic_ValueEmpty(t *testing.T) {
 		// Value query with no matching records: should be empty
 		// With Force=true, should cache the empty value
 		value, err := db.Model(table).Where("id", 8100).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_empty_value",
 			Force:    true,
 		}).Value("nickname")
@@ -673,7 +673,7 @@ func Test_Model_Cache_EmptyLogic_ValueEmpty(t *testing.T) {
 
 		// Query again: should return cached empty value (verifying Value="" empty logic)
 		value, err = db.Model(table).Where("id", 8100).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_empty_value",
 			Force:    true,
 		}).Value("nickname")
@@ -690,7 +690,7 @@ func Test_Model_Cache_IsCached_Flag_WithForceTrue(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// First query: empty result should be cached with IsCached=true
 		result1, err := db.Model(table).Where("id", 8200).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_iscached_true",
 			Force:    true,
 		}).All()
@@ -700,7 +700,7 @@ func Test_Model_Cache_IsCached_Flag_WithForceTrue(t *testing.T) {
 		// Second query: should return cached result (proving IsCached=true works)
 		// If IsCached flag didn't work, this would query database again
 		result2, err := db.Model(table).Where("id", 8200).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_iscached_true",
 			Force:    true,
 		}).All()
@@ -718,7 +718,7 @@ func Test_Model_Cache_IsCached_Flag_WithForceTrue(t *testing.T) {
 
 		// Third query: still returns empty (IsCached=true prevents re-query)
 		result3, err := db.Model(table).Where("id", 8200).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_iscached_true",
 			Force:    true,
 		}).All()
@@ -735,7 +735,7 @@ func Test_Model_Cache_IsCached_Flag_WithForceFalse(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// First query: empty result should NOT be cached (Force=false)
 		result1, err := db.Model(table).Where("id", 8300).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_iscached_false",
 			Force:    false,
 		}).All()
@@ -753,7 +753,7 @@ func Test_Model_Cache_IsCached_Flag_WithForceFalse(t *testing.T) {
 
 		// Second query: should return new data (empty result was not cached)
 		result2, err := db.Model(table).Where("id", 8300).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_iscached_false",
 			Force:    false,
 		}).All()
@@ -772,7 +772,7 @@ func Test_Model_Cache_Force_And_IsCached_Combination(t *testing.T) {
 		// Scenario 1: Force=true with empty result
 		// Expected: isEmpty=true, Force=true, should cache with IsCached=true
 		result, err := db.Model(table).Where("id", 8400).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_combination_1",
 			Force:    true,
 		}).All()
@@ -789,7 +789,7 @@ func Test_Model_Cache_Force_And_IsCached_Combination(t *testing.T) {
 		t.AssertNil(err)
 
 		result, err = db.Model(table).Where("id", 8400).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_combination_1",
 			Force:    true,
 		}).All()
@@ -799,7 +799,7 @@ func Test_Model_Cache_Force_And_IsCached_Combination(t *testing.T) {
 		// Scenario 2: Force=false with empty result
 		// Expected: isEmpty=true, Force=false, should NOT cache (no IsCached set)
 		count, err := db.Model(table).Where("id", 8500).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_combination_2",
 			Force:    false,
 		}).Count()
@@ -816,7 +816,7 @@ func Test_Model_Cache_Force_And_IsCached_Combination(t *testing.T) {
 		t.AssertNil(err)
 
 		count, err = db.Model(table).Where("id", 8500).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_combination_2",
 			Force:    false,
 		}).Count()
@@ -826,7 +826,7 @@ func Test_Model_Cache_Force_And_IsCached_Combination(t *testing.T) {
 		// Scenario 3: Force=true with non-empty result
 		// Expected: isEmpty=false, should cache normally with IsCached=true
 		result, err = db.Model(table).Where("id", 8500).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_combination_3",
 			Force:    true,
 		}).All()
@@ -839,7 +839,7 @@ func Test_Model_Cache_Force_And_IsCached_Combination(t *testing.T) {
 
 		// Query again: should return cached old data
 		result, err = db.Model(table).Where("id", 8500).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_combination_3",
 			Force:    true,
 		}).All()
@@ -856,7 +856,7 @@ func Test_Model_Cache_EmptyLogic_AllTypes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// Test All() with empty result
 		result, err := db.Model(table).Where("id", 9001).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_all_empty",
 			Force:    true,
 		}).All()
@@ -865,7 +865,7 @@ func Test_Model_Cache_EmptyLogic_AllTypes(t *testing.T) {
 
 		// Test One() with empty result
 		one, err := db.Model(table).Where("id", 9002).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_one_empty",
 			Force:    true,
 		}).One()
@@ -874,7 +874,7 @@ func Test_Model_Cache_EmptyLogic_AllTypes(t *testing.T) {
 
 		// Test Count() with 0 result
 		count, err := db.Model(table).Where("id", 9003).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_count_empty",
 			Force:    true,
 		}).Count()
@@ -883,7 +883,7 @@ func Test_Model_Cache_EmptyLogic_AllTypes(t *testing.T) {
 
 		// Test Value() with empty result
 		value, err := db.Model(table).Where("id", 9004).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_value_empty",
 			Force:    true,
 		}).Value("nickname")
@@ -892,7 +892,7 @@ func Test_Model_Cache_EmptyLogic_AllTypes(t *testing.T) {
 
 		// Test CountColumn() with 0 result
 		countCol, err := db.Model(table).Where("id", 9005).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_countcol_empty",
 			Force:    true,
 		}).CountColumn("id")
@@ -912,35 +912,35 @@ func Test_Model_Cache_EmptyLogic_AllTypes(t *testing.T) {
 
 		// All queries should still return empty (cached)
 		result, _ = db.Model(table).Where("id", 9001).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_all_empty",
 			Force:    true,
 		}).All()
 		t.Assert(len(result), 0)
 
 		one, _ = db.Model(table).Where("id", 9002).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_one_empty",
 			Force:    true,
 		}).One()
 		t.Assert(one.IsEmpty(), true)
 
 		count, _ = db.Model(table).Where("id", 9003).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_count_empty",
 			Force:    true,
 		}).Count()
 		t.Assert(count, int64(0))
 
 		value, _ = db.Model(table).Where("id", 9004).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_value_empty",
 			Force:    true,
 		}).Value("nickname")
 		t.Assert(value.IsEmpty(), true)
 
 		countCol, _ = db.Model(table).Where("id", 9005).Cache(gdb.CacheOption{
-			Duration: time.Second * 10,
+			Duration: time.Second * 5,
 			Name:     "test_countcol_empty",
 			Force:    true,
 		}).CountColumn("id")
