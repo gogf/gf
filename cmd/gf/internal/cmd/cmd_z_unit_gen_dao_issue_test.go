@@ -822,8 +822,8 @@ func Test_Gen_Dao_Issue4629_TablesPattern_PgSql(t *testing.T) {
 				Path:     path,
 				Link:     linkPg,
 				Group:    group,
-				Tables:   "*",      // Match all tables
-				TablesEx: "user_*", // Exclude user_* tables
+				Tables:   "trade_*,user_*,config", // Match only our test tables
+				TablesEx: "user_*",                // Exclude user_* tables
 			}
 		)
 		err = gutil.FillStructWithDefault(&in)
@@ -841,7 +841,7 @@ func Test_Gen_Dao_Issue4629_TablesPattern_PgSql(t *testing.T) {
 		_, err = gendao.CGenDao{}.Dao(ctx, in)
 		t.AssertNil(err)
 
-		// Should generate 3 dao files: trade_order, trade_item, config (user_* excluded)
+		// Should generate 3 dao files: trade_order, trade_item, config (user_* excluded by tablesEx)
 		generatedFiles, err := gfile.ScanDir(gfile.Join(path, "dao"), "*.go", false)
 		t.AssertNil(err)
 		t.Assert(len(generatedFiles), 3)
