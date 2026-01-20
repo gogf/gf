@@ -226,12 +226,6 @@ func loadContentWithOptions(data []byte, options Options) (*Json, error) {
 	default:
 
 	}
-	if options.Type == "" {
-		return nil, gerror.NewCode(
-			gcode.CodeInvalidParameter,
-			`unable auto check the data format type, you can specify it using Option.Type`,
-		)
-	}
 	// ignore some duplicated types, like js and yml,
 	// which are not necessary shown in error message.
 	allSupportedTypes := []string{
