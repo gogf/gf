@@ -13,7 +13,9 @@ import (
 	"mime"
 	"mime/multipart"
 	"net/http"
+	url2 "net/url"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -161,13 +163,13 @@ func (c *Client) DoRequest(
 }
 
 // prepareRequest verifies request parameters, builds and returns http request.
-func (c *Client) prepareRequest(ctx context.Context, method, url string, data ...any) (req *http.Request, err error) {
+func (c *Client) prepareRequest(ctx context.Context, method, u string, data ...any) (req *http.Request, err error) {
 	method = strings.ToUpper(method)
 	if len(c.prefix) > 0 {
-		url = c.prefix + gstr.Trim(url)
+		u = c.prefix + gstr.Trim(u)
 	}
-	if !gstr.ContainsI(url, httpProtocolName) {
-		url = httpProtocolName + `://` + url
+	if !gstr.ContainsI(u, httpProtocolName) {
+		u = httpProtocolName + `://` + u
 	}
 	var (
 		params             string
@@ -226,18 +228,18 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			default:
 				// It appends the parameters to the url
 				// if http method is GET and Content-Type is not specified.
-				if gstr.Contains(url, "?") {
-					url = url + "&" + params
+				if gstr.Contains(u, "?") {
+					u = u + "&" + params
 				} else {
-					url = url + "?" + params
+					u = u + "?" + params
 				}
 				bodyBuffer = bytes.NewBuffer(nil)
 			}
 		} else {
 			bodyBuffer = bytes.NewBuffer(nil)
 		}
-		if req, err = http.NewRequest(method, url, bodyBuffer); err != nil {
-			err = gerror.Wrapf(err, `http.NewRequest failed with method "%s" and URL "%s"`, method, url)
+		if req, err = http.NewRequest(method, u, bodyBuffer); err != nil {
+			err = gerror.Wrapf(err, `http.NewRequest failed with method "%s" and URL "%s"`, method, u)
 			return nil, err
 		}
 	} else {
@@ -309,9 +311,9 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 				return nil, gerror.Wrapf(err, `form writer close failed`)
 			}
 
-			if req, err = http.NewRequest(method, url, buffer); err != nil {
+			if req, err = http.NewRequest(method, u, buffer); err != nil {
 				return nil, gerror.Wrapf(
-					err, `http.NewRequest failed for method "%s" and URL "%s"`, method, url,
+					err, `http.NewRequest failed for method "%s" and URL "%s"`, method, u,
 				)
 			}
 			if isFileUploading {
@@ -320,8 +322,8 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 		} else {
 			// Normal request.
 			paramBytes := []byte(params)
-			if req, err = http.NewRequest(method, url, bytes.NewReader(paramBytes)); err != nil {
-				err = gerror.Wrapf(err, `http.NewRequest failed for method "%s" and URL "%s"`, method, url)
+			if req, err = http.NewRequest(method, u, bytes.NewReader(paramBytes)); err != nil {
+				err = gerror.Wrapf(err, `http.NewRequest failed for method "%s" and URL "%s"`, method, u)
 				return nil, err
 			}
 			if v, ok := c.header[httpHeaderContentType]; ok {
@@ -366,6 +368,56 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 		if len(headerCookie) > 0 {
 			req.Header.Set(httpHeaderCookie, headerCookie)
 		}
+	}
+	// Handle query parameters for all request methods
+	if len(c.queryParams) > 0 {
+		// Parse the URL to get existing query parameters
+		urlObj, err := url2.Parse(req.URL.String())
+		if err != nil {
+			return nil, gerror.Wrapf(err, `url2.Parse failed for URL "%s"`, req.URL.String())
+		}
+		// Add query parameters from c.queryParams
+		queryValues := urlObj.Query()
+		for k, v := range c.queryParams {
+			// Skip explicit nil values
+			if v == nil {
+				continue
+			}
+
+			// Use reflection to handle slice/array types generically
+			reflectValue := reflect.Indirect(reflect.ValueOf(v)) // Dereference pointers
+
+			// Check if the reflect value is valid (covers dereferenced nil pointers)
+			if !reflectValue.IsValid() {
+				continue
+			}
+
+			// Check if it's a slice or array
+			if reflectValue.Kind() == reflect.Slice || reflectValue.Kind() == reflect.Array {
+				// Skip nil slices
+				if reflectValue.Kind() == reflect.Slice && reflectValue.IsNil() {
+					continue
+				}
+
+				if reflectValue.Len() > 0 { // Only process non-empty slices/arrays
+					for i := 0; i < reflectValue.Len(); i++ {
+						item := reflectValue.Index(i).Interface()
+						if i == 0 {
+							queryValues.Set(k, gconv.String(item))
+						} else {
+							queryValues.Add(k, gconv.String(item))
+						}
+					}
+				} else {
+					// Skip empty slices/arrays instead of adding empty value
+					continue
+				}
+			} else {
+				queryValues.Set(k, gconv.String(v))
+			}
+		}
+		urlObj.RawQuery = queryValues.Encode()
+		req.URL = urlObj
 	}
 	// HTTP basic authentication.
 	if len(c.authUser) > 0 {
