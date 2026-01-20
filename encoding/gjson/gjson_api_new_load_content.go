@@ -232,6 +232,8 @@ func loadContentWithOptions(data []byte, options Options) (*Json, error) {
 			`unable auto check the data format type, you can specify it using Option.Type`,
 		)
 	}
+	// ignore some duplicated types, like js and yml,
+	// which are not necessary shown in error message.
 	allSupportedTypes := []string{
 		ContentTypeJSON,
 		ContentTypeXML,
@@ -345,7 +347,7 @@ func isTomlContent(data []byte) bool {
 		return false
 	}
 
-	// line starts with:
+	// line starts with, this should not be toml format:
 	// key.with.dot = value
 	keyWithDot := gregex.IsMatch(`[\n\r]+[\s\t\w\-]+\.[\s\t\w\-]+\s*=\s*.+`, data)
 	if keyWithDot {
