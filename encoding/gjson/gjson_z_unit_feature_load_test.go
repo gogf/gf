@@ -423,8 +423,8 @@ func Test_Load_YAML_For_I18n(t *testing.T) {
 	var data = []byte(gtest.DataContent("yaml", "i18n-issue.yaml"))
 	gtest.C(t, func(t *gtest.T) {
 		j, err := gjson.LoadContent(data)
-		j.SetViolenceCheck(true)
 		t.AssertNil(err)
+		j.SetViolenceCheck(true)
 		t.Assert(j.Get("resourceUsage.workflow").String(), "workflow")
 	})
 }
