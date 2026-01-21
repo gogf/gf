@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package genpb;
+
+option go_package = "genpb/v1";
+
+message UserReq {
+  // v:required
+  // v:#Id > 0
+  int64 Id = 1;
+  // User name for login
+  string Name = 2;
+  // v:required
+  // v:email
+  string Email = 3; // User email address
+}
+
+message UserResp {
+  int64 Id = 1;
+  string Name = 2;
+  string Email = 3;
+}
