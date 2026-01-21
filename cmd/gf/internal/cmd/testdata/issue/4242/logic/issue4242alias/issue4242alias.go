@@ -3,14 +3,16 @@ package issue4242alias
 import (
 	"context"
 
+	// Anonymous import (should be skipped)
+	_ "github.com/gogf/gf/v2/os/gres"
+
+	// Versioned import without alias
+	"github.com/gogf/gf/v2/net/ghttp"
+
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/issue/4242/service"
 
 	// Explicit alias import
 	mysqlDriver "github.com/gogf/gf/contrib/drivers/mysql/v2"
-	// Versioned import without alias
-	"github.com/gogf/gf/v2/net/ghttp"
-	// Anonymous import (should be skipped)
-	_ "github.com/gogf/gf/v2/os/gres"
 )
 
 func init() {

@@ -3,11 +3,12 @@ package issue4242
 import (
 	"context"
 
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/issue/4242/service"
 
 	"github.com/gogf/gf/contrib/drivers/mysql/v2"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/net/ghttp"
 )
 
 func init() {
