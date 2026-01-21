@@ -9,6 +9,7 @@ package gendao
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
@@ -240,13 +241,22 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 		newTableNames       = make([]string, len(tableNames))
 		shardingNewTableSet = gset.NewStrSet()
 	)
+	// Sort sharding patterns by length descending, so that longer (more specific) patterns
+	// are matched first. This prevents shorter patterns like "a_?" from incorrectly matching
+	// tables that should match longer patterns like "a_b_?" or "a_c_?".
+	// https://github.com/gogf/gf/issues/4603
+	sortedShardingPatterns := make([]string, len(in.ShardingPattern))
+	copy(sortedShardingPatterns, in.ShardingPattern)
+	sort.Slice(sortedShardingPatterns, func(i, j int) bool {
+		return len(sortedShardingPatterns[i]) > len(sortedShardingPatterns[j])
+	})
 	for i, tableName := range tableNames {
 		newTableName := tableName
 		for _, v := range removePrefixArray {
 			newTableName = gstr.TrimLeftStr(newTableName, v, 1)
 		}
-		if len(in.ShardingPattern) > 0 {
-			for _, pattern := range in.ShardingPattern {
+		if len(sortedShardingPatterns) > 0 {
+			for _, pattern := range sortedShardingPatterns {
 				var (
 					match      []string
 					regPattern = gstr.Replace(pattern, "?", `(.+)`)
@@ -262,10 +272,11 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 				newTableName = gstr.Trim(newTableName, `_.-`)
 				if shardingNewTableSet.Contains(newTableName) {
 					tableNames[i] = ""
-					continue
+					break
 				}
 				// Add prefix to sharding table name, if not, the isSharding check would not match.
 				shardingNewTableSet.Add(in.Prefix + newTableName)
+				break
 			}
 		}
 		newTableName = in.Prefix + newTableName
