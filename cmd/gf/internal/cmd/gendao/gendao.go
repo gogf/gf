@@ -188,7 +188,27 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 
 	var tableNames []string
 	if in.Tables != "" {
-		tableNames = gstr.SplitAndTrim(in.Tables, ",")
+		inputTables := gstr.SplitAndTrim(in.Tables, ",")
+		// Check if any table pattern contains wildcard characters.
+		// https://github.com/gogf/gf/issues/4629
+		var hasPattern bool
+		for _, t := range inputTables {
+			if containsWildcard(t) {
+				hasPattern = true
+				break
+			}
+		}
+		if hasPattern {
+			// Fetch all tables first, then filter by patterns.
+			allTables, err := db.Tables(context.TODO())
+			if err != nil {
+				mlog.Fatalf("fetching tables failed: %+v", err)
+			}
+			tableNames = filterTablesByPatterns(allTables, inputTables)
+		} else {
+			// Use exact table names as before.
+			tableNames = inputTables
+		}
 	} else {
 		tableNames, err = db.Tables(context.TODO())
 		if err != nil {
@@ -199,22 +219,11 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 	if in.TablesEx != "" {
 		array := garray.NewStrArrayFrom(tableNames)
 		for _, p := range gstr.SplitAndTrim(in.TablesEx, ",") {
-			if gstr.Contains(p, "*") || gstr.Contains(p, "?") {
-				p = gstr.ReplaceByMap(p, map[string]string{
-					"\r": "",
-					"\n": "",
-				})
-				p = gstr.ReplaceByMap(p, map[string]string{
-					"*": "\r",
-					"?": "\n",
-				})
-				p = gregex.Quote(p)
-				p = gstr.ReplaceByMap(p, map[string]string{
-					"\r": ".*",
-					"\n": ".",
-				})
+			if containsWildcard(p) {
+				// Use exact match with ^ and $ anchors for consistency with tables pattern.
+				regPattern := "^" + patternToRegex(p) + "$"
 				for _, v := range array.Clone().Slice() {
-					if gregex.IsMatchString(p, v) {
+					if gregex.IsMatchString(regPattern, v) {
 						array.RemoveValue(v)
 					}
 				}
@@ -421,4 +430,62 @@ func getTemplateFromPathOrDefault(filePath string, def string) string {
 		}
 	}
 	return def
+}
+
+// containsWildcard checks if the pattern contains wildcard characters (* or ?).
+func containsWildcard(pattern string) bool {
+	return gstr.Contains(pattern, "*") || gstr.Contains(pattern, "?")
+}
+
+// patternToRegex converts a wildcard pattern to a regex pattern.
+// Wildcard characters: * matches any characters, ? matches single character.
+func patternToRegex(pattern string) string {
+	pattern = gstr.ReplaceByMap(pattern, map[string]string{
+		"\r": "",
+		"\n": "",
+	})
+	pattern = gstr.ReplaceByMap(pattern, map[string]string{
+		"*": "\r",
+		"?": "\n",
+	})
+	pattern = gregex.Quote(pattern)
+	pattern = gstr.ReplaceByMap(pattern, map[string]string{
+		"\r": ".*",
+		"\n": ".",
+	})
+	return pattern
+}
+
+// filterTablesByPatterns filters tables by given patterns.
+// Patterns support wildcard characters: * matches any characters, ? matches single character.
+// https://github.com/gogf/gf/issues/4629
+func filterTablesByPatterns(allTables []string, patterns []string) []string {
+	var result []string
+	matched := make(map[string]bool)
+	allTablesSet := make(map[string]bool)
+	for _, t := range allTables {
+		allTablesSet[t] = true
+	}
+	for _, p := range patterns {
+		if containsWildcard(p) {
+			regPattern := "^" + patternToRegex(p) + "$"
+			for _, table := range allTables {
+				if !matched[table] && gregex.IsMatchString(regPattern, table) {
+					result = append(result, table)
+					matched[table] = true
+				}
+			}
+		} else {
+			// Exact table name, use direct string comparison.
+			if !allTablesSet[p] {
+				mlog.Printf(`table "%s" does not exist, skipped`, p)
+				continue
+			}
+			if !matched[p] {
+				result = append(result, p)
+				matched[p] = true
+			}
+		}
+	}
+	return result
 }
