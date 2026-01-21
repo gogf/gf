@@ -55,6 +55,13 @@ func (c CGenEnums) Enums(ctx context.Context, in CGenEnumsInput) (out *CGenEnums
 	if realPath == "" {
 		mlog.Fatalf(`source folder path "%s" does not exist`, in.Src)
 	}
+	// Convert output path to absolute before Chdir, so it remains correct after directory change.
+	// See: https://github.com/gogf/gf/issues/4387
+	outputPath := gfile.Abs(in.Path)
+
+	originPwd := gfile.Pwd()
+	defer gfile.Chdir(originPwd)
+
 	err = gfile.Chdir(realPath)
 	if err != nil {
 		mlog.Fatal(err)
@@ -72,14 +79,14 @@ func (c CGenEnums) Enums(ctx context.Context, in CGenEnumsInput) (out *CGenEnums
 	p := NewEnumsParser(in.Prefixes)
 	p.ParsePackages(pkgs)
 	var enumsContent = gstr.ReplaceByMap(consts.TemplateGenEnums, g.MapStrStr{
-		"{PackageName}": gfile.Basename(gfile.Dir(in.Path)),
+		"{PackageName}": gfile.Basename(gfile.Dir(outputPath)),
 		"{EnumsJson}":   "`" + p.Export() + "`",
 	})
 	enumsContent = gstr.Trim(enumsContent)
-	if err = gfile.PutContents(in.Path, enumsContent); err != nil {
+	if err = gfile.PutContents(outputPath, enumsContent); err != nil {
 		return
 	}
-	mlog.Printf(`generated enums go file: %s`, in.Path)
+	mlog.Printf(`generated enums go file: %s`, outputPath)
 	mlog.Print("done!")
 	return
 }
