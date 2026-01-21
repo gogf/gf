@@ -25,3 +25,4 @@ node_modules
 output
 .example/
 .golangci.bck.yml
+*.exe
