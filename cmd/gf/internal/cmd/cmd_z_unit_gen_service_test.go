@@ -240,7 +240,7 @@ func Test_Gen_Service_PackagesFilter(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/4242
-// Test that versioned imports are correctly preserved.
+// Test that versioned imports and aliased imports are correctly preserved.
 // The issue is that imports like "github.com/minio/minio-go/v7" were being
 // incorrectly handled because the package name (minio) differs from
 // the directory name (minio-go).
@@ -271,50 +271,15 @@ func Test_Issue4242(t *testing.T) {
 		_, err = genservice.CGenService{}.Service(ctx, in)
 		t.AssertNil(err)
 
-		// contents
-		var (
-			genFile    = dstFolder + filepath.FromSlash("/issue_4242.go")
-			expectFile = gtest.DataPath("issue", "4242", "service", "issue_4242.go")
+		// Test versioned imports
+		t.Assert(
+			gfile.GetContents(dstFolder+filepath.FromSlash("/issue_4242.go")),
+			gfile.GetContents(gtest.DataPath("issue", "4242", "service", "issue_4242.go")),
 		)
-		t.Assert(gfile.GetContents(genFile), gfile.GetContents(expectFile))
-	})
-}
-
-// https://github.com/gogf/gf/issues/4242
-// Test that imports with explicit aliases are correctly preserved,
-// and anonymous imports (prefixed with _) are correctly skipped.
-func Test_Issue4242_Alias(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		var (
-			path      = gfile.Temp(guid.S())
-			dstFolder = path + filepath.FromSlash("/service")
-			srvFolder = gtest.DataPath("issue", "4242", "logic")
-			in        = genservice.CGenServiceInput{
-				SrcFolder:       srvFolder,
-				DstFolder:       dstFolder,
-				DstFileNameCase: "Snake",
-				WatchFile:       "",
-				StPattern:       "",
-				Packages:        nil,
-				ImportPrefix:    "",
-				Clear:           false,
-			}
+		// Test aliased imports
+		t.Assert(
+			gfile.GetContents(dstFolder+filepath.FromSlash("/issue_4242_alias.go")),
+			gfile.GetContents(gtest.DataPath("issue", "4242", "service", "issue_4242_alias.go")),
 		)
-		err := gutil.FillStructWithDefault(&in)
-		t.AssertNil(err)
-
-		err = gfile.Mkdir(path)
-		t.AssertNil(err)
-		defer gfile.Remove(path)
-
-		_, err = genservice.CGenService{}.Service(ctx, in)
-		t.AssertNil(err)
-
-		// contents
-		var (
-			genFile    = dstFolder + filepath.FromSlash("/issue_4242_alias.go")
-			expectFile = gtest.DataPath("issue", "4242", "service", "issue_4242_alias.go")
-		)
-		t.Assert(gfile.GetContents(genFile), gfile.GetContents(expectFile))
 	})
 }
