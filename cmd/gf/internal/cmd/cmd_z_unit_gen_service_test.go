@@ -156,3 +156,85 @@ func Test_Issue3835(t *testing.T) {
 		t.Assert(gfile.GetContents(genFile), gfile.GetContents(expectFile))
 	})
 }
+
+func Test_Gen_Service_CamelCase(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			path      = gfile.Temp(guid.S())
+			dstFolder = path + filepath.FromSlash("/service")
+			srvFolder = gtest.DataPath("genservice", "logic")
+			in        = genservice.CGenServiceInput{
+				SrcFolder:       srvFolder,
+				DstFolder:       dstFolder,
+				DstFileNameCase: "Camel",
+				WatchFile:       "",
+				StPattern:       "",
+				Packages:        nil,
+				ImportPrefix:    "",
+				Clear:           false,
+			}
+		)
+		err := gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+		defer gfile.Remove(path)
+
+		// Clean up generated logic.go
+		genSrv := srvFolder + filepath.FromSlash("/logic.go")
+		defer gfile.Remove(genSrv)
+
+		_, err = genservice.CGenService{}.Service(ctx, in)
+		t.AssertNil(err)
+
+		// Files should be in CamelCase
+		files, err := gfile.ScanDir(dstFolder, "*.go", true)
+		t.AssertNil(err)
+		t.Assert(files, []string{
+			dstFolder + filepath.FromSlash("/Article.go"),
+			dstFolder + filepath.FromSlash("/Base.go"),
+			dstFolder + filepath.FromSlash("/Delivery.go"),
+			dstFolder + filepath.FromSlash("/User.go"),
+		})
+	})
+}
+
+func Test_Gen_Service_PackagesFilter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			path      = gfile.Temp(guid.S())
+			dstFolder = path + filepath.FromSlash("/service")
+			srvFolder = gtest.DataPath("genservice", "logic")
+			in        = genservice.CGenServiceInput{
+				SrcFolder:       srvFolder,
+				DstFolder:       dstFolder,
+				DstFileNameCase: "Snake",
+				WatchFile:       "",
+				StPattern:       "",
+				Packages:        []string{"user"},
+				ImportPrefix:    "",
+				Clear:           false,
+			}
+		)
+		err := gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+		defer gfile.Remove(path)
+
+		// Clean up generated logic.go
+		genSrv := srvFolder + filepath.FromSlash("/logic.go")
+		defer gfile.Remove(genSrv)
+
+		_, err = genservice.CGenService{}.Service(ctx, in)
+		t.AssertNil(err)
+
+		// Only user.go should be generated
+		files, err := gfile.ScanDir(dstFolder, "*.go", true)
+		t.AssertNil(err)
+		t.Assert(len(files), 1)
+		t.Assert(files[0], dstFolder+filepath.FromSlash("/user.go"))
+	})
+}
