@@ -259,3 +259,25 @@ func Test_PathInNormal(t *testing.T) {
 		t.Assert(i18n.T(context.Background(), "{#lang}"), "en-US")
 	})
 }
+
+func Test_Issue_Yaml(t *testing.T) {
+	// Copy i18n files to current directory.
+	err := gfile.CopyDir(
+		gtest.DataPath("issue-yaml"),
+		gfile.Join(gdebug.CallerDirectory(), "manifest/i18n"),
+	)
+	// Remove copied files after testing.
+	defer gfile.RemoveAll(gfile.Join(gdebug.CallerDirectory(), "manifest"))
+
+	gtest.AssertNil(err)
+
+	var (
+		i18n = gi18n.New()
+		ctx  = context.Background()
+	)
+
+	gtest.C(t, func(t *gtest.T) {
+		i18n.SetLanguage("zh")
+		t.Assert(i18n.T(ctx, "{#resourceUsage.workflow}"), "workflow")
+	})
+}

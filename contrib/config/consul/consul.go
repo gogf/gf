@@ -207,7 +207,7 @@ func (c *Client) startAsynchronousWatch(plan *watch.Plan) {
 }
 
 // AddWatcher adds a watcher for the specified configuration file.
-func (c *Client) AddWatcher(name string, f func(ctx context.Context)) {
+func (c *Client) AddWatcher(name string, f gcfg.WatcherFunc) {
 	c.watchers.Add(name, f)
 }
 
@@ -219,6 +219,11 @@ func (c *Client) RemoveWatcher(name string) {
 // GetWatcherNames returns all watcher names.
 func (c *Client) GetWatcherNames() []string {
 	return c.watchers.GetNames()
+}
+
+// IsWatching checks whether the watcher with the specified name is registered.
+func (c *Client) IsWatching(name string) bool {
+	return c.watchers.IsWatching(name)
 }
 
 // notifyWatchers notifies all watchers.
