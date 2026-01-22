@@ -188,8 +188,6 @@ func (c *Client) mergeQueryParams(u string, dataParams string) (string, error) {
 				if len(parts) == 2 {
 					// Data params override URL params
 					queryValues[parts[0]] = []string{parts[1]}
-				} else if len(parts) == 1 {
-					queryValues[parts[0]] = []string{""}
 				}
 			}
 		} else {

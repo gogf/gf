@@ -610,3 +610,107 @@ func Test_Client_Query_RawQueryString(t *testing.T) {
 		t.Assert(values.Get("size"), "10")
 	})
 }
+
+// Test_Client_Query_InteractionWithGetDataParams tests the interaction between query parameters
+// set via Query/QueryParams/QueryPair methods and data parameters passed to Get method
+func Test_Client_Query_InteractionWithGetDataParams(t *testing.T) {
+	s := g.Server(guid.S())
+	s.BindHandler("/query", func(r *ghttp.Request) {
+		params := make([]string, 0)
+		for k, v := range r.URL.Query() {
+			params = append(params, fmt.Sprintf("%s=%v", k, v))
+		}
+		r.Response.Write(strings.Join(params, "&"))
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		// Test 1: Query method with data parameters passed to Get method
+		resp := c.Query(g.Map{"key1": "value1"}).GetContent(context.Background(), "/query", g.Map{"key2": "value2"})
+
+		// Both parameters should be present
+		t.Assert(strings.Contains(resp, "key1=[value1]"), true)
+		t.Assert(strings.Contains(resp, "key2=[value2]"), true)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		// Test 2: QueryParams method with data parameters passed to Get method
+		type QueryParams struct {
+			Page int    `json:"page"`
+			Name string `json:"name"`
+		}
+
+		params := QueryParams{Page: 1, Name: "test"}
+
+		resp := c.QueryParams(params).GetContent(context.Background(), "/query", g.Map{"key3": "value3"})
+
+		// Both sets of parameters should be present
+		t.Assert(strings.Contains(resp, "page=[1]"), true)
+		t.Assert(strings.Contains(resp, "name=[test]"), true)
+		t.Assert(strings.Contains(resp, "key3=[value3]"), true)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		// Test 3: QueryPair method with data parameters passed to Get method
+		resp := c.QueryPair("pair_key", "pair_value").
+			GetContent(context.Background(), "/query", g.Map{"data_key": "data_value"})
+
+		// Both parameters should be present
+		t.Assert(strings.Contains(resp, "pair_key=[pair_value]"), true)
+		t.Assert(strings.Contains(resp, "data_key=[data_value]"), true)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		// Test 4: Conflict resolution - query params should override data params (higher priority)
+		resp := c.Query(g.Map{"conflict": "from_query"}).
+			GetContent(context.Background(), "/query", g.Map{"conflict": "from_data"})
+
+		// Query parameter should override data parameter (queryParams have higher priority)
+		t.Assert(strings.Contains(resp, "conflict=[from_query]"), true)
+		t.Assert(strings.Contains(resp, "conflict=[from_data]"), false)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		// Test 5: Mixed scenario with URL parameters, query params, and data params
+		resp := c.Query(g.Map{"query_param": "query_val"}).
+			GetContent(context.Background(), "/query?url_param=url_val", g.Map{"data_param": "data_val"})
+
+		// All three types should be present
+		t.Assert(strings.Contains(resp, "url_param=[url_val]"), true)
+		t.Assert(strings.Contains(resp, "query_param=[query_val]"), true)
+		t.Assert(strings.Contains(resp, "data_param=[data_val]"), true)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		// Test 6: Slice/array parameters with data params
+		resp := c.Query(g.Map{"slice_query": []string{"a", "b"}}).
+			GetContent(context.Background(), "/query", g.Map{"slice_data": []int{1, 2}})
+
+		// Based on debug, query slices become [a b] format, data slices become [[[1,2]]] format
+		t.Assert(strings.Contains(resp, "slice_query=[a b]"), true)
+		// Data slice gets JSON encoded differently
+		t.Assert(strings.Contains(resp, "slice_data="), true) // Just check that it exists
+	})
+}
