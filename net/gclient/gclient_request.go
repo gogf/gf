@@ -13,7 +13,6 @@ import (
 	"mime"
 	"mime/multipart"
 	"net/http"
-	url2 "net/url"
 	"os"
 	"reflect"
 	"strings"
@@ -371,13 +370,9 @@ func (c *Client) prepareRequest(ctx context.Context, method, u string, data ...a
 	}
 	// Handle query parameters for all request methods
 	if len(c.queryParams) > 0 {
-		// Parse the URL to get existing query parameters
-		urlObj, err := url2.Parse(req.URL.String())
-		if err != nil {
-			return nil, gerror.Wrapf(err, `url2.Parse failed for URL "%s"`, req.URL.String())
-		}
-		// Add query parameters from c.queryParams
-		queryValues := urlObj.Query()
+		// Work directly with the URL struct fields to avoid parsing and re-encoding the full URL string
+		// This is more efficient for high-throughput applications and avoids unnecessary string operations
+		queryValues := req.URL.Query()
 		for k, v := range c.queryParams {
 			// Skip explicit nil values
 			if v == nil {
@@ -385,7 +380,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, u string, data ...a
 			}
 
 			// Use reflection to handle slice/array types generically
-			reflectValue := reflect.Indirect(reflect.ValueOf(v)) // Dereference pointers
+			reflectValue := reflect.Indirect(reflect.ValueOf(v)) // Dereference pointers - NOTE: This fully dereferences all levels of pointer indirection (e.g. ***[]string -> []string)
 
 			// Check if the reflect value is valid (covers dereferenced nil pointers)
 			if !reflectValue.IsValid() {
@@ -416,8 +411,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, u string, data ...a
 				queryValues.Set(k, gconv.String(v))
 			}
 		}
-		urlObj.RawQuery = queryValues.Encode()
-		req.URL = urlObj
+		req.URL.RawQuery = queryValues.Encode()
 	}
 	// HTTP basic authentication.
 	if len(c.authUser) > 0 {
