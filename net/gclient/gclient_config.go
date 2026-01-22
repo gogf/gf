@@ -19,7 +19,6 @@ import (
 	"golang.org/x/net/proxy"
 
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/net/gsel"
 	"github.com/gogf/gf/v2/net/gsvc"
@@ -224,7 +223,10 @@ func (c *Client) SetQuery(key string, value any) *Client {
 	if c.queryParams == nil {
 		c.queryParams = make(map[string]any)
 	}
-	c.queryParams[key] = value
+	// Filter out nil values to maintain consistency with SetQueryParams and mergeQueryParams
+	if value != nil {
+		c.queryParams[key] = value
+	}
 	return c
 }
 
@@ -234,7 +236,10 @@ func (c *Client) SetQueryMap(m map[string]any) *Client {
 		c.queryParams = make(map[string]any)
 	}
 	for k, v := range m {
-		c.queryParams[k] = v
+		// Filter out nil values to maintain consistency with SetQueryParams and mergeQueryParams
+		if v != nil {
+			c.queryParams[k] = v
+		}
 	}
 	return c
 }
@@ -247,7 +252,7 @@ func (c *Client) SetQueryParams(params any) *Client {
 	}
 	m := gconv.Map(params)
 	for k, v := range m {
-		if !empty.IsNil(v) {
+		if v != nil {
 			c.queryParams[k] = v
 		}
 	}
