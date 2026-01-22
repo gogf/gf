@@ -1043,7 +1043,7 @@ func genSoftTimeFieldNameTypeCacheKey(schema, table string, candidateFields []st
 //
 //	// Normal wildcard usage (do NOT escape)
 //	db.Model("users").WhereLike("username", "user%")  // LIKE 'user%' - matches userABC, user123, etc.
-func EscapeLikeString(s string) string {
+func escapeLikeString(s string) string {
 	// Escape backslashes first to prevent double escaping
 	s = strings.ReplaceAll(s, "\\", "\\\\")
 	// Escape percent signs

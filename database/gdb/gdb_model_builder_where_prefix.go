@@ -62,7 +62,7 @@ func (b *WhereBuilder) WherePrefixLike(prefix string, column string, like any) *
 // WherePrefixLikeLiteral builds `prefix.column LIKE like` statement with automatic escaping.
 // This method automatically escapes '%', '_', and '\' characters in the like parameter to treat them as literal characters.
 func (b *WhereBuilder) WherePrefixLikeLiteral(prefix string, column string, like any) *WhereBuilder {
-	return b.Wheref(`%s.%s LIKE ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), EscapeLikeString(gconv.String(like)))
+	return b.Wheref(`%s.%s LIKE ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), escapeLikeString(gconv.String(like)))
 }
 
 // WherePrefixIn builds `prefix.column IN (in)` statement.
@@ -92,7 +92,7 @@ func (b *WhereBuilder) WherePrefixNotLike(prefix string, column string, like any
 // WherePrefixNotLikeLiteral builds `prefix.column NOT LIKE like` statement with automatic escaping.
 // This method automatically escapes '%', '_', and '\' characters in the like parameter to treat them as literal characters.
 func (b *WhereBuilder) WherePrefixNotLikeLiteral(prefix string, column string, like any) *WhereBuilder {
-	return b.Wheref(`%s.%s NOT LIKE ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), EscapeLikeString(gconv.String(like)))
+	return b.Wheref(`%s.%s NOT LIKE ?`, b.model.QuoteWord(prefix), b.model.QuoteWord(column), escapeLikeString(gconv.String(like)))
 }
 
 // WherePrefixNot builds `prefix.column != value` statement.

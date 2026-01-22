@@ -127,7 +127,7 @@ func (b *WhereBuilder) WhereLike(column string, like string) *WhereBuilder {
 //	db.Model("user").WhereLikeLiteral("name", "john%doe_123")  // Will search for exact string "john%doe_123"
 //	db.Model("user").WhereLike("name", "john%")              // Will search using % as wildcard
 func (b *WhereBuilder) WhereLikeLiteral(column string, like string) *WhereBuilder {
-	return b.Wheref(`%s LIKE ?`, b.model.QuoteWord(column), EscapeLikeString(like))
+	return b.Wheref(`%s LIKE ?`, b.model.QuoteWord(column), escapeLikeString(like))
 }
 
 // WhereIn builds `column IN (in)` statement.
@@ -157,7 +157,7 @@ func (b *WhereBuilder) WhereNotLike(column string, like any) *WhereBuilder {
 // WhereNotLikeLiteral builds `column NOT LIKE like` statement with automatic escaping of special characters.
 // This method automatically escapes '%', '_', and '\' characters in the like parameter to treat them as literal characters.
 func (b *WhereBuilder) WhereNotLikeLiteral(column string, like any) *WhereBuilder {
-	return b.Wheref(`%s NOT LIKE ?`, b.model.QuoteWord(column), EscapeLikeString(gconv.String(like)))
+	return b.Wheref(`%s NOT LIKE ?`, b.model.QuoteWord(column), escapeLikeString(gconv.String(like)))
 }
 
 // WhereNot builds `column != value` statement.

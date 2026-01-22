@@ -90,7 +90,7 @@ func (b *WhereBuilder) WhereOrLike(column string, like any) *WhereBuilder {
 // WhereOrLikeLiteral builds `column LIKE 'like'` statement in `OR` conditions with automatic escaping.
 // This method automatically escapes '%', '_', and '\' characters in the like parameter to treat them as literal characters.
 func (b *WhereBuilder) WhereOrLikeLiteral(column string, like any) *WhereBuilder {
-	return b.WhereOrf(`%s LIKE ?`, b.model.QuoteWord(column), EscapeLikeString(gconv.String(like)))
+	return b.WhereOrf(`%s LIKE ?`, b.model.QuoteWord(column), escapeLikeString(gconv.String(like)))
 }
 
 // WhereOrIn builds `column IN (in)` statement in `OR` conditions.
@@ -120,7 +120,7 @@ func (b *WhereBuilder) WhereOrNotLike(column string, like any) *WhereBuilder {
 // WhereOrNotLikeLiteral builds `column NOT LIKE like` statement in `OR` conditions with automatic escaping.
 // This method automatically escapes '%', '_', and '\' characters in the like parameter to treat them as literal characters.
 func (b *WhereBuilder) WhereOrNotLikeLiteral(column string, like any) *WhereBuilder {
-	return b.WhereOrf(`%s NOT LIKE ?`, b.model.QuoteWord(column), EscapeLikeString(gconv.String(like)))
+	return b.WhereOrf(`%s NOT LIKE ?`, b.model.QuoteWord(column), escapeLikeString(gconv.String(like)))
 }
 
 // WhereOrNotIn builds `column NOT IN (in)` statement.

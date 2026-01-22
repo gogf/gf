@@ -1053,6 +1053,86 @@ func Test_Model_WherePrefixLike(t *testing.T) {
 	})
 }
 
+func Test_Model_WhereOrPrefixLike(t *testing.T) {
+	var (
+		table1 = gtime.TimestampNanoStr() + "_table1"
+		table2 = gtime.TimestampNanoStr() + "_table2"
+	)
+	createInitTable(table1)
+	defer dropTable(table1)
+	createInitTable(table2)
+	defer dropTable(table2)
+
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table1).
+			FieldsPrefix(table1, "*").
+			LeftJoinOnField(table2, "id").
+			WhereOrPrefix(table1, g.Map{
+				"id": g.Slice{1, 2},
+			}).
+			WhereOrPrefixLike(table2, "nickname", "name_3%").
+			Order("id asc").All()
+		t.AssertNil(err)
+		t.Assert(len(r), 3)
+		t.Assert(r[0]["id"], "1")
+		t.Assert(r[1]["id"], "2")
+		t.Assert(r[2]["id"], "3")
+	})
+}
+
+func Test_Model_WhereOrPrefixLikeLiteral(t *testing.T) {
+	var (
+		table1 = gtime.TimestampNanoStr() + "_table1"
+		table2 = gtime.TimestampNanoStr() + "_table2"
+	)
+	createInitTable(table1)
+	defer dropTable(table1)
+	createInitTable(table2)
+	defer dropTable(table2)
+
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table1).
+			FieldsPrefix(table1, "*").
+			LeftJoinOnField(table2, "id").
+			WhereOrPrefix(table1, g.Map{
+				"id": g.Slice{1, 2},
+			}).
+			WhereOrPrefixLikeLiteral(table2, "nickname", "name_3").
+			Order("id asc").All()
+		t.AssertNil(err)
+		t.Assert(len(r), 3)
+		t.Assert(r[0]["id"], "1")
+		t.Assert(r[1]["id"], "2")
+		t.Assert(r[2]["id"], "3")
+	})
+}
+
+func Test_Model_WhereOrPrefixNotLikeLiteral(t *testing.T) {
+	var (
+		table1 = gtime.TimestampNanoStr() + "_table1"
+		table2 = gtime.TimestampNanoStr() + "_table2"
+	)
+	createInitTable(table1)
+	defer dropTable(table1)
+	createInitTable(table2)
+	defer dropTable(table2)
+
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table1).
+			FieldsPrefix(table1, "*").
+			LeftJoinOnField(table2, "id").
+			WhereOrPrefix(table1, g.Map{
+				"id": g.Slice{1, 2},
+			}).
+			WhereOrPrefixNotLikeLiteral(table2, "nickname", "name_1").
+			Order("id asc").All()
+		t.AssertNil(err)
+		t.Assert(len(r), 10)
+		t.Assert(r[0]["id"], "1")
+		t.Assert(r[1]["id"], "2")
+	})
+}
+
 func Test_Model_WhereExists(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
