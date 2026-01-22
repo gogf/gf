@@ -119,6 +119,16 @@ func (c *Client) PostForm(ctx context.Context, url string, data map[string]strin
 	return c.ContentType(w.FormDataContentType()).Post(ctx, url, body)
 }
 
+// GetMergedURL returns the merged URL after combining base URL, query parameters, and data parameters.
+// This method allows you to inspect the final URL without actually sending the request.
+func (c *Client) GetMergedURL(ctx context.Context, method, u string, data ...any) (mergedURL string, err error) {
+	req, err := c.prepareRequest(ctx, method, u, data...)
+	if err != nil {
+		return "", err
+	}
+	return req.URL.String(), nil
+}
+
 // DoRequest sends request with given HTTP method and data and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
 //
