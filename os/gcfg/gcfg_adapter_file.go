@@ -46,9 +46,8 @@ const (
 
 var (
 	supportedFileTypes     = []string{"toml", "yaml", "yml", "json", "ini", "xml", "properties"} // All supported file types suffixes.
-	checker                = func(v *Config) bool { return v == nil }
-	localInstances         = gmap.NewKVMapWithChecker[string, *Config](checker, true) // Instances map containing configuration instances.
-	customConfigContentMap = gmap.NewStrStrMap(true)                                  // Customized configuration content.
+	localInstances         = gmap.NewKVMap[string, *Config](true)                                // Instances map containing configuration instances.
+	customConfigContentMap = gmap.NewStrStrMap(true)                                             // Customized configuration content.
 
 	// Prefix array for trying searching in resource manager.
 	resourceTryFolders = []string{
@@ -58,9 +57,6 @@ var (
 
 	// Prefix array for trying searching in the local system.
 	localSystemTryFolders = []string{"", "config/", "manifest/config"}
-
-	// jsonMapChecker is the checker for JSON map.
-	jsonMapChecker = func(v *gjson.Json) bool { return v == nil }
 )
 
 // NewAdapterFile returns a new configuration management object.
@@ -81,7 +77,7 @@ func NewAdapterFile(fileNameOrPath ...string) (*AdapterFile, error) {
 	config := &AdapterFile{
 		defaultFileNameOrPath: gtype.NewString(usedFileNameOrPath),
 		searchPaths:           garray.NewStrArray(true),
-		jsonMap:               gmap.NewKVMapWithChecker[string, *gjson.Json](jsonMapChecker, true),
+		jsonMap:               gmap.NewKVMap[string, *gjson.Json](true),
 		watchers:              NewWatcherRegistry(),
 	}
 	// Customized dir path from env/cmd.

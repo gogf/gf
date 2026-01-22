@@ -867,10 +867,8 @@ const (
 )
 
 var (
-	// checker is the checker function for instances map.
-	checker = func(v DB) bool { return v == nil }
 	// instances is the management map for instances.
-	instances = gmap.NewKVMapWithChecker[string, DB](checker, true)
+	instances = gmap.NewKVMap[string, DB](true)
 
 	// driverMap manages all custom registered driver.
 	driverMap = map[string]Driver{}
@@ -944,9 +942,6 @@ func NewByGroup(group ...string) (db DB, err error) {
 	)
 }
 
-// linksChecker is the checker function for links map.
-var linksChecker = func(v *sql.DB) bool { return v == nil }
-
 // newDBByConfigNode creates and returns an ORM object with given configuration node and group name.
 //
 // Very Note:
@@ -963,7 +958,7 @@ func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 		group:         group,
 		debug:         gtype.NewBool(),
 		cache:         gcache.New(),
-		links:         gmap.NewKVMapWithChecker[ConfigNode, *sql.DB](linksChecker, true),
+		links:         gmap.NewKVMap[ConfigNode, *sql.DB](true),
 		logger:        glog.New(),
 		config:        node,
 		localTypeMap:  gmap.NewStrAnyMap(true),

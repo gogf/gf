@@ -82,12 +82,10 @@ const (
 )
 
 var (
-	callBacksChecker     = func(v *glist.TList[*Callback]) bool { return v == nil }             // callBacksChecker checks whether the value is nil.
-	callbackIdMapChecker = func(v *Callback) bool { return v == nil }                           // callbackIdMapChecker checks whether the value is nil.
-	mu                   sync.Mutex                                                             // Mutex for concurrent safety of defaultWatcher.
-	defaultWatcher       *Watcher                                                               // Default watcher.
-	callbackIdMap        = gmap.NewKVMapWithChecker[int, *Callback](callbackIdMapChecker, true) // Global callback id to callback function mapping.
-	callbackIdGenerator  = gtype.NewInt()                                                       // Atomic id generator for callback.
+	mu                  sync.Mutex                            // Mutex for concurrent safety of defaultWatcher.
+	defaultWatcher      *Watcher                              // Default watcher.
+	callbackIdMap       = gmap.NewKVMap[int, *Callback](true) // Global callback id to callback function mapping.
+	callbackIdGenerator = gtype.NewInt()                      // Atomic id generator for callback.
 )
 
 // New creates and returns a new watcher.
@@ -101,7 +99,7 @@ func New() (*Watcher, error) {
 		events:    gqueue.NewTQueue[*Event](),
 		nameSet:   gset.NewStrSet(true),
 		closeChan: make(chan struct{}),
-		callbacks: gmap.NewKVMapWithChecker[string, *glist.TList[*Callback]](callBacksChecker, true),
+		callbacks: gmap.NewKVMap[string, *glist.TList[*Callback]](true),
 	}
 	if watcher, err := fsnotify.NewWatcher(); err == nil {
 		w.watcher = watcher

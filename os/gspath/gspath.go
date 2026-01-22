@@ -39,10 +39,8 @@ type SPathCacheItem struct {
 }
 
 var (
-	// checker is the checking function for checking the value is nil or not.
-	checker = func(v *SPath) bool { return v == nil }
 	// Path to searching object mapping, used for instance management.
-	pathsMap = gmap.NewKVMapWithChecker[string, *SPath](checker, true)
+	pathsMap = gmap.NewKVMap[string, *SPath](true)
 )
 
 // New creates and returns a new path searching manager.

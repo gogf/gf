@@ -14,9 +14,8 @@ const (
 )
 
 var (
-	checker = func(v *View) bool { return v == nil }
 	// Instances map.
-	instances = gmap.NewKVMapWithChecker[string, *View](checker, true)
+	instances = gmap.NewKVMap[string, *View](true)
 )
 
 // Instance returns an instance of View with default settings.

@@ -24,7 +24,6 @@ type BKVTree[K comparable, V any] struct {
 	comparator func(v1, v2 K) int
 	m          int // order (maximum number of children)
 	tree       *btree.Tree[K, V]
-	nilChecker NilChecker[V]
 }
 
 // BKVTreeEntry represents the key-value pair contained within nodes.
@@ -46,15 +45,6 @@ func NewBKVTree[K comparable, V any](m int, comparator func(v1, v2 K) int, safe 
 	}
 }
 
-// NewBKVTreeWithChecker instantiates a B-tree with `m` (maximum number of children), a custom key comparator and nil checker.
-// The parameter `safe` is used to specify whether using tree in concurrent-safety, which is false in default.
-// The parameter `checker` is used to specify whether the given value is nil.
-func NewBKVTreeWithChecker[K comparable, V any](m int, comparator func(v1, v2 K) int, checker NilChecker[V], safe ...bool) *BKVTree[K, V] {
-	t := NewBKVTree[K, V](m, comparator, safe...)
-	t.RegisterNilChecker(checker)
-	return t
-}
-
 // NewBKVTreeFrom instantiates a B-tree with `m` (maximum number of children), a custom key comparator and data map.
 // The parameter `safe` is used to specify whether using tree in concurrent-safety,
 // which is false in default.
@@ -64,38 +54,6 @@ func NewBKVTreeFrom[K comparable, V any](m int, comparator func(v1, v2 K) int, d
 		tree.doSet(k, v)
 	}
 	return tree
-}
-
-// NewBKVTreeWithCheckerFrom instantiates a B-tree with `m` (maximum number of children), a custom key comparator, nil checker and data map.
-// The parameter `safe` is used to specify whether using tree in concurrent-safety, which is false in default.
-// The parameter `checker` is used to specify whether the given value is nil.
-func NewBKVTreeWithCheckerFrom[K comparable, V any](m int, comparator func(v1, v2 K) int, data map[K]V, checker NilChecker[V], safe ...bool) *BKVTree[K, V] {
-	tree := NewBKVTreeWithChecker[K, V](m, comparator, checker, safe...)
-	for k, v := range data {
-		tree.doSet(k, v)
-	}
-	return tree
-}
-
-// RegisterNilChecker registers a custom nil checker function for the map values.
-// This function is used to determine if a value should be considered as nil.
-// The nil checker function takes a value of type V and returns a boolean indicating
-// whether the value should be treated as nil.
-func (tree *BKVTree[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) *BKVTree[K, V] {
-	tree.mu.Lock()
-	defer tree.mu.Unlock()
-	tree.nilChecker = nilChecker
-	return tree
-}
-
-// isNil checks whether the given value is nil.
-// It first checks if a custom nil checker function is registered and uses it if available,
-// otherwise it performs a standard nil check using any(v) == nil.
-func (tree *BKVTree[K, V]) isNil(value V) bool {
-	if tree.nilChecker != nil {
-		return tree.nilChecker(value)
-	}
-	return any(value) == nil
 }
 
 // Clone clones and returns a new tree from current tree.
@@ -495,9 +453,6 @@ func (tree *BKVTree[K, V]) Right() *BKVTreeEntry[K, V] {
 //
 // It returns value with given `key`.
 func (tree *BKVTree[K, V]) doSet(key K, value V) V {
-	if tree.isNil(value) {
-		return value
-	}
 	tree.tree.Put(key, value)
 	return value
 }

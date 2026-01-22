@@ -15,14 +15,10 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-// NilChecker is a function that checks whether the given value is nil.
-type NilChecker[T any] func(T) bool
-
-// TSet[T] is consisted of any items.
+// TSet is a generic set implementation that holds unique items of type T.
 type TSet[T comparable] struct {
-	mu         rwmutex.RWMutex
-	data       map[T]struct{}
-	nilChecker NilChecker[T]
+	mu   rwmutex.RWMutex
+	data map[T]struct{}
 }
 
 // NewTSet creates and returns a new set, which contains un-repeated items.
@@ -32,15 +28,6 @@ func NewTSet[T comparable](safe ...bool) *TSet[T] {
 		data: make(map[T]struct{}),
 		mu:   rwmutex.Create(safe...),
 	}
-}
-
-// NewTSetWithChecker creates and returns a new set with a custom nil checker.
-// The parameter `nilChecker` is a function used to determine if a value is nil.
-// The parameter `safe` is used to specify whether using set in concurrent-safety mode.
-func NewTSetWithChecker[T comparable](checker NilChecker[T], safe ...bool) *TSet[T] {
-	s := NewTSet[T](safe...)
-	s.RegisterNilChecker(checker)
-	return s
 }
 
 // NewTSetFrom returns a new set from `items`.
@@ -54,37 +41,6 @@ func NewTSetFrom[T comparable](items []T, safe ...bool) *TSet[T] {
 		data: m,
 		mu:   rwmutex.Create(safe...),
 	}
-}
-
-// NewTSetWithCheckerFrom returns a new set from `items` with a custom nil checker.
-// The parameter `items` is a slice of elements to be added to the set.
-// The parameter `checker` is a function used to determine if a value is nil.
-// The parameter `safe` is used to specify whether using set in concurrent-safety mode.
-func NewTSetWithCheckerFrom[T comparable](items []T, checker NilChecker[T], safe ...bool) *TSet[T] {
-	set := NewTSetWithChecker[T](checker, safe...)
-	set.Add(items...)
-	return set
-}
-
-// RegisterNilChecker registers a custom nil checker function for the set elements.
-// This function is used to determine if an element should be considered as nil.
-// The nil checker function takes an element of type T and returns a boolean indicating
-// whether the element should be treated as nil.
-func (set *TSet[T]) RegisterNilChecker(nilChecker NilChecker[T]) *TSet[T] {
-	set.mu.Lock()
-	defer set.mu.Unlock()
-	set.nilChecker = nilChecker
-	return set
-}
-
-// isNil checks whether the given value is nil.
-// It first checks if a custom nil checker function is registered and uses it if available,
-// otherwise it performs a standard nil check using any(v) == nil.
-func (set *TSet[T]) isNil(v T) bool {
-	if set.nilChecker != nil {
-		return set.nilChecker(v)
-	}
-	return any(v) == nil
 }
 
 // Iterator iterates the set readonly with given callback function `f`,
@@ -115,9 +71,6 @@ func (set *TSet[T]) Add(items ...T) {
 //
 // Note that, if `item` is nil, it does nothing and returns false.
 func (set *TSet[T]) AddIfNotExist(item T) bool {
-	if set.isNil(item) {
-		return false
-	}
 	if !set.Contains(item) {
 		set.mu.Lock()
 		defer set.mu.Unlock()
@@ -139,9 +92,6 @@ func (set *TSet[T]) AddIfNotExist(item T) bool {
 // Note that, if `item` is nil, it does nothing and returns false. The function `f`
 // is executed without writing lock.
 func (set *TSet[T]) AddIfNotExistFunc(item T, f func() bool) bool {
-	if set.isNil(item) {
-		return false
-	}
 	if !set.Contains(item) {
 		if f() {
 			set.mu.Lock()
@@ -159,15 +109,12 @@ func (set *TSet[T]) AddIfNotExistFunc(item T, f func() bool) bool {
 }
 
 // AddIfNotExistFuncLock checks whether item exists in the set,
-// it adds the item to set and returns true if it does not exists in the set and
+// it adds the item to set and returns true if it does not exist in the set and
 // function `f` returns true, or else it does nothing and returns false.
 //
 // Note that, if `item` is nil, it does nothing and returns false. The function `f`
 // is executed within writing lock.
 func (set *TSet[T]) AddIfNotExistFuncLock(item T, f func() bool) bool {
-	if set.isNil(item) {
-		return false
-	}
 	if !set.Contains(item) {
 		set.mu.Lock()
 		defer set.mu.Unlock()

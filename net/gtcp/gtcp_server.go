@@ -39,10 +39,8 @@ type Server struct {
 
 // Map for name to server, for singleton purpose.
 var (
-	// checker is used for checking whether the value is nil.
-	checker = func(v *Server) bool { return v == nil }
 	// serverMapping is the map for name to server.
-	serverMapping = gmap.NewKVMapWithChecker[any, *Server](checker, true)
+	serverMapping = gmap.NewKVMap[any, *Server](true)
 )
 
 // GetServer returns the TCP server with specified `name`,

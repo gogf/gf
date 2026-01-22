@@ -30,9 +30,8 @@ const (
 )
 
 var (
-	poolChecker = func(v *gpool.Pool) bool { return v == nil }
 	// addressPoolMap is a mapping for address to its pool object.
-	addressPoolMap = gmap.NewKVMapWithChecker[string, *gpool.Pool](poolChecker, true)
+	addressPoolMap = gmap.NewKVMap[string, *gpool.Pool](true)
 )
 
 // NewPoolConn creates and returns a connection with pool feature.

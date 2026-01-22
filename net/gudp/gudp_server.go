@@ -47,10 +47,8 @@ type Server struct {
 type ServerHandler func(conn *ServerConn)
 
 var (
-	// checker is used for checking whether the value is nil.
-	checker = func(v *Server) bool { return v == nil }
 	// serverMapping is used for instance name to its UDP server mappings.
-	serverMapping = gmap.NewKVMapWithChecker[string, *Server](checker, true)
+	serverMapping = gmap.NewKVMap[string, *Server](true)
 )
 
 // GetServer creates and returns an udp server instance with given name.

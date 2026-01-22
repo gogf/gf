@@ -50,10 +50,8 @@ const (
 )
 
 var (
-	// configChecker checks whether the *Config is nil.
-	configChecker = func(v *Config) bool { return v == nil }
 	// Configuration groups.
-	localConfigMap = gmap.NewKVMapWithChecker[string, *Config](configChecker, true)
+	localConfigMap = gmap.NewKVMap[string, *Config](true)
 )
 
 // SetConfig sets the global configuration for specified group.

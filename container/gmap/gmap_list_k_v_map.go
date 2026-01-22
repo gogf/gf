@@ -27,10 +27,9 @@ import (
 //
 // Reference: http://en.wikipedia.org/wiki/Associative_array
 type ListKVMap[K comparable, V any] struct {
-	mu         rwmutex.RWMutex
-	data       map[K]*glist.TElement[*gListKVMapNode[K, V]]
-	list       *glist.TList[*gListKVMapNode[K, V]]
-	nilChecker NilChecker[V]
+	mu   rwmutex.RWMutex
+	data map[K]*glist.TElement[*gListKVMapNode[K, V]]
+	list *glist.TList[*gListKVMapNode[K, V]]
 }
 
 type gListKVMapNode[K comparable, V any] struct {
@@ -50,16 +49,6 @@ func NewListKVMap[K comparable, V any](safe ...bool) *ListKVMap[K, V] {
 	}
 }
 
-// NewListKVMapWithChecker creates and returns a new ListKVMap instance with a custom nil checker.
-// The parameter `checker` is a function used to determine if a value is nil.
-// The parameter `safe` is used to specify whether using map in concurrent-safety,
-// which is false by default.
-func NewListKVMapWithChecker[K comparable, V any](checker NilChecker[V], safe ...bool) *ListKVMap[K, V] {
-	m := NewListKVMap[K, V](safe...)
-	m.RegisterNilChecker(checker)
-	return m
-}
-
 // NewListKVMapFrom returns a link map from given map `data`.
 // Note that, the param `data` map will be copied to the underlying data structure,
 // so changes to the original map will not affect the link map.
@@ -67,39 +56,6 @@ func NewListKVMapFrom[K comparable, V any](data map[K]V, safe ...bool) *ListKVMa
 	m := NewListKVMap[K, V](safe...)
 	m.Sets(data)
 	return m
-}
-
-// NewListKVMapWithCheckerFrom returns a link map from given map `data` with a custom nil checker.
-// Note that, the param `data` map will be copied to the underlying data structure,
-// so changes to the original map will not affect the link map.
-// The parameter `checker` is a function used to determine if a value is nil.
-// The parameter `safe` is used to specify whether using map in concurrent-safety,
-// which is false by default.
-func NewListKVMapWithCheckerFrom[K comparable, V any](data map[K]V, nilChecker NilChecker[V], safe ...bool) *ListKVMap[K, V] {
-	m := NewListKVMapWithChecker[K, V](nilChecker, safe...)
-	m.Sets(data)
-	return m
-}
-
-// RegisterNilChecker registers a custom nil checker function for the map values.
-// This function is used to determine if a value should be considered as nil.
-// The nil checker function takes a value of type V and returns a boolean indicating
-// whether the value should be treated as nil.
-func (m *ListKVMap[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) *ListKVMap[K, V] {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.nilChecker = nilChecker
-	return m
-}
-
-// isNil checks whether the given value is nil.
-// It first checks if a custom nil checker function is registered and uses it if available,
-// otherwise it performs a standard nil check using any(v) == nil.
-func (m *ListKVMap[K, V]) isNil(v V) bool {
-	if m.nilChecker != nil {
-		return m.nilChecker(v)
-	}
-	return any(v) == nil
 }
 
 // Iterator is alias of IteratorAsc.
@@ -326,9 +282,7 @@ func (m *ListKVMap[K, V]) doSetWithLockCheckWithoutLock(key K, value V) V {
 	if e, ok := m.data[key]; ok {
 		return e.Value.value
 	}
-	if !m.isNil(value) {
-		m.data[key] = m.list.PushBack(&gListKVMapNode[K, V]{key, value})
-	}
+	m.data[key] = m.list.PushBack(&gListKVMapNode[K, V]{key, value})
 	return value
 }
 
@@ -371,9 +325,7 @@ func (m *ListKVMap[K, V]) GetOrSetFuncLock(key K, f func() V) V {
 		return e.Value.value
 	}
 	value := f()
-	if !m.isNil(value) {
-		m.data[key] = m.list.PushBack(&gListKVMapNode[K, V]{key, value})
-	}
+	m.data[key] = m.list.PushBack(&gListKVMapNode[K, V]{key, value})
 	return value
 }
 
@@ -414,9 +366,7 @@ func (m *ListKVMap[K, V]) SetIfNotExist(key K, value V) bool {
 	if _, ok := m.data[key]; ok {
 		return false
 	}
-	if !m.isNil(value) {
-		m.data[key] = m.list.PushBack(&gListKVMapNode[K, V]{key, value})
-	}
+	m.data[key] = m.list.PushBack(&gListKVMapNode[K, V]{key, value})
 	return true
 }
 
@@ -434,9 +384,7 @@ func (m *ListKVMap[K, V]) SetIfNotExistFunc(key K, f func() V) bool {
 		return false
 	}
 	value := f()
-	if !m.isNil(value) {
-		m.data[key] = m.list.PushBack(&gListKVMapNode[K, V]{key, value})
-	}
+	m.data[key] = m.list.PushBack(&gListKVMapNode[K, V]{key, value})
 	return true
 }
 
@@ -457,9 +405,7 @@ func (m *ListKVMap[K, V]) SetIfNotExistFuncLock(key K, f func() V) bool {
 		return false
 	}
 	value := f()
-	if !m.isNil(value) {
-		m.data[key] = m.list.PushBack(&gListKVMapNode[K, V]{key, value})
-	}
+	m.data[key] = m.list.PushBack(&gListKVMapNode[K, V]{key, value})
 	return true
 }
 

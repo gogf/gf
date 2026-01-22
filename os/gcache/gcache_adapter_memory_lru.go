@@ -13,9 +13,6 @@ import (
 	"github.com/gogf/gf/v2/container/gmap"
 )
 
-// checker is used to check if the value is nil.
-var checker = func(v *glist.Element) bool { return v == nil }
-
 // memoryLru holds LRU info.
 // It uses list.List from stdlib for its underlying doubly linked list.
 type memoryLru struct {
@@ -29,7 +26,7 @@ type memoryLru struct {
 func newMemoryLru(cap int) *memoryLru {
 	lru := &memoryLru{
 		cap:  cap,
-		data: gmap.NewKVMapWithChecker[any, *glist.Element](checker, false),
+		data: gmap.NewKVMap[any, *glist.Element](false),
 		list: glist.New(false),
 	}
 	return lru

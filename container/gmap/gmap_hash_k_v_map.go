@@ -17,27 +17,16 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-// NilChecker is a function that checks whether the given value is nil.
-type NilChecker[V any] func(V) bool
-
 // KVMap wraps map type `map[K]V` and provides more map features.
 type KVMap[K comparable, V any] struct {
-	mu         rwmutex.RWMutex
-	data       map[K]V
-	nilChecker NilChecker[V]
+	mu   rwmutex.RWMutex
+	data map[K]V
 }
 
 // NewKVMap creates and returns an empty hash map.
 // The parameter `safe` is used to specify whether to use the map in concurrent-safety mode, which is false by default.
 func NewKVMap[K comparable, V any](safe ...bool) *KVMap[K, V] {
 	return NewKVMapFrom(make(map[K]V), safe...)
-}
-
-// NewKVMapWithChecker creates and returns an empty hash map with a custom nil checker.
-// The parameter `checker` is a function used to determine if a value is nil.
-// The parameter `safe` is used to specify whether to use the map in concurrent-safety mode, which is false by default.
-func NewKVMapWithChecker[K comparable, V any](checker NilChecker[V], safe ...bool) *KVMap[K, V] {
-	return NewKVMapWithCheckerFrom(make(map[K]V), checker, safe...)
 }
 
 // NewKVMapFrom creates and returns a hash map from given map `data`.
@@ -49,38 +38,6 @@ func NewKVMapFrom[K comparable, V any](data map[K]V, safe ...bool) *KVMap[K, V] 
 		data: data,
 	}
 	return m
-}
-
-// NewKVMapWithCheckerFrom creates and returns a hash map from given map `data` with a custom nil checker.
-// Note that, the param `data` map will be set as the underlying data map (no deep copy),
-// and there might be some concurrent-safe issues when changing the map outside.
-// The parameter `checker` is a function used to determine if a value is nil.
-// The parameter `safe` is used to specify whether to use the map in concurrent-safety mode, which is false by default.
-func NewKVMapWithCheckerFrom[K comparable, V any](data map[K]V, checker NilChecker[V], safe ...bool) *KVMap[K, V] {
-	m := NewKVMapFrom[K, V](data, safe...)
-	m.RegisterNilChecker(checker)
-	return m
-}
-
-// RegisterNilChecker registers a custom nil checker function for the map values.
-// This function is used to determine if a value should be considered as nil.
-// The nil checker function takes a value of type V and returns a boolean indicating
-// whether the value should be treated as nil.
-func (m *KVMap[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) *KVMap[K, V] {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.nilChecker = nilChecker
-	return m
-}
-
-// isNil checks whether the given value is nil.
-// It first checks if a custom nil checker function is registered and uses it if available,
-// otherwise it performs a standard nil check using any(v) == nil.
-func (m *KVMap[K, V]) isNil(v V) bool {
-	if m.nilChecker != nil {
-		return m.nilChecker(v)
-	}
-	return any(v) == nil
 }
 
 // Iterator iterates the hash map readonly with custom callback function `f`.
@@ -259,9 +216,7 @@ func (m *KVMap[K, V]) doSetWithLockCheck(key K, value V) (val V, ok bool) {
 	if v, ok := m.data[key]; ok {
 		return v, true
 	}
-	if !m.isNil(value) {
-		m.data[key] = value
-	}
+	m.data[key] = value
 	return value, false
 }
 
@@ -296,9 +251,7 @@ func (m *KVMap[K, V]) GetOrSetFuncLock(key K, f func() V) V {
 		return v
 	}
 	value := f()
-	if !m.isNil(value) {
-		m.data[key] = value
-	}
+	m.data[key] = value
 	return value
 }
 

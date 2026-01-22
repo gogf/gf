@@ -14,9 +14,7 @@ import (
 )
 
 var (
-	// checker is the checker function for instances map.
-	checker        = func(v *Redis) bool { return v == nil }
-	localInstances = gmap.NewKVMapWithChecker[string, *Redis](checker, true)
+	localInstances = gmap.NewKVMap[string, *Redis](true)
 )
 
 // Instance returns an instance of redis client with specified group.

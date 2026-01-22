@@ -14,10 +14,8 @@ const (
 )
 
 var (
-	// Checker function for instances map.
-	checker = func(v *Logger) bool { return v == nil }
 	// Instances map.
-	instances = gmap.NewKVMapWithChecker[string, *Logger](checker, true)
+	instances = gmap.NewKVMap[string, *Logger](true)
 )
 
 // Instance returns an instance of Logger with default settings.

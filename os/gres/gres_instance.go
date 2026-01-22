@@ -14,10 +14,8 @@ const (
 )
 
 var (
-	// checker checks whether the value is nil.
-	checker = func(v *Resource) bool { return v == nil }
 	// Instances map.
-	instances = gmap.NewKVMapWithChecker[string, *Resource](checker, true)
+	instances = gmap.NewKVMap[string, *Resource](true)
 )
 
 // Instance returns an instance of Resource.

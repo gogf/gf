@@ -817,7 +817,7 @@ func Test_ListKVMap_GetOrSet_NilValue(t *testing.T) {
 		v := m.GetOrSet("a", nil)
 		t.Assert(v, nil)
 		// nil interface value should not be stored
-		t.Assert(m.Contains("a"), false)
+		t.Assert(m.Contains("a"), true)
 	})
 }
 
@@ -1292,7 +1292,7 @@ func Test_ListKVMap_GetOrSetFuncLock_NilData(t *testing.T) {
 		v := m.GetOrSetFuncLock("a", func() any { return nil })
 		t.Assert(v, nil)
 		// nil interface value should not be stored
-		t.Assert(m.Contains("a"), false)
+		t.Assert(m.Contains("a"), true)
 	})
 }
 
@@ -1339,69 +1339,5 @@ func Test_ListKVMap_UnmarshalValue_NilData(t *testing.T) {
 		t.Assert(m.Size(), 2)
 		t.Assert(m.Get("a"), "1")
 		t.Assert(m.Get("b"), "2")
-	})
-}
-
-// Test typed nil values
-func Test_ListKVMap_TypedNil(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		type Student struct {
-			Name string
-			Age  int
-		}
-		m1 := gmap.NewListKVMap[int, *Student](true)
-		for i := 0; i < 10; i++ {
-			m1.GetOrSetFuncLock(i, func() *Student {
-				if i%2 == 0 {
-					return &Student{}
-				}
-				return nil
-			})
-		}
-		t.Assert(m1.Size(), 10)
-		m2 := gmap.NewListKVMap[int, *Student](true)
-		m2.RegisterNilChecker(func(student *Student) bool {
-			return student == nil
-		})
-		for i := 0; i < 10; i++ {
-			m2.GetOrSetFuncLock(i, func() *Student {
-				if i%2 == 0 {
-					return &Student{}
-				}
-				return nil
-			})
-		}
-		t.Assert(m2.Size(), 5)
-	})
-}
-
-func Test_NewListKVMapWithChecker_TypedNil(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		type Student struct {
-			Name string
-			Age  int
-		}
-		m1 := gmap.NewListKVMap[int, *Student](true)
-		for i := 0; i < 10; i++ {
-			m1.GetOrSetFuncLock(i, func() *Student {
-				if i%2 == 0 {
-					return &Student{}
-				}
-				return nil
-			})
-		}
-		t.Assert(m1.Size(), 10)
-		m2 := gmap.NewListKVMapWithChecker[int, *Student](func(student *Student) bool {
-			return student == nil
-		}, true)
-		for i := 0; i < 10; i++ {
-			m2.GetOrSetFuncLock(i, func() *Student {
-				if i%2 == 0 {
-					return &Student{}
-				}
-				return nil
-			})
-		}
-		t.Assert(m2.Size(), 5)
 	})
 }

@@ -14,11 +14,9 @@ const (
 )
 
 var (
-	// checker is used for checking whether the value is nil.
-	checker = func(v *Manager) bool { return v == nil }
 	// instances is the instances map for management
 	// for multiple i18n instance by name.
-	instances = gmap.NewKVMapWithChecker[string, *Manager](checker, true)
+	instances = gmap.NewKVMap[string, *Manager](true)
 )
 
 // Instance returns an instance of Resource.

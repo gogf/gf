@@ -12,8 +12,6 @@ import (
 	"github.com/gogf/gf/v2/container/gmap"
 )
 
-var checker = func(v *sync.RWMutex) bool { return v == nil }
-
 // Locker is a memory based locker.
 // Note that there's no cache expire mechanism for mutex in locker.
 // You need remove certain mutex manually when you do not want use it anymore.
@@ -25,7 +23,7 @@ type Locker struct {
 // A memory locker can lock/unlock with dynamic string key.
 func New() *Locker {
 	return &Locker{
-		m: gmap.NewKVMapWithChecker[string, *sync.RWMutex](checker, true),
+		m: gmap.NewKVMap[string, *sync.RWMutex](true),
 	}
 }
 

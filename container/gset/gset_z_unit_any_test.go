@@ -419,6 +419,7 @@ func TestSet_AddIfNotExist(t *testing.T) {
 		t.Assert(s.AddIfNotExist(2), true)
 		t.Assert(s.Contains(2), true)
 		t.Assert(s.AddIfNotExist(2), false)
+		t.Assert(s.AddIfNotExist(nil), true)
 		t.Assert(s.AddIfNotExist(nil), false)
 		t.Assert(s.Contains(2), true)
 	})
@@ -497,7 +498,18 @@ func TestSet_AddIfNotExistFuncLock(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.New(true)
-		t.Assert(s.AddIfNotExistFuncLock(nil, func() bool { return true }), false)
+		t.Assert(
+			s.AddIfNotExistFuncLock(nil, func() bool {
+				return true
+			}),
+			true,
+		)
+		t.Assert(
+			s.AddIfNotExistFuncLock(nil, func() bool {
+				return true
+			}),
+			false,
+		)
 		s1 := gset.Set{}
 		t.Assert(s1.AddIfNotExistFuncLock(1, func() bool { return true }), true)
 	})

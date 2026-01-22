@@ -41,8 +41,7 @@ const (
 
 var (
 	// Default view object.
-	defaultViewObj       *View
-	fileCacheItemChecker = func(v *fileCacheItem) bool { return v == nil }
+	defaultViewObj *View
 )
 
 // checkAndInitDefaultView checks and initializes the default view object.
@@ -70,7 +69,7 @@ func New(path ...string) *View {
 		searchPaths:  garray.NewStrArray(),
 		data:         make(map[string]any),
 		funcMap:      make(map[string]any),
-		fileCacheMap: gmap.NewKVMapWithChecker[string, *fileCacheItem](fileCacheItemChecker, true),
+		fileCacheMap: gmap.NewKVMap[string, *fileCacheItem](true),
 		config:       DefaultConfig(),
 	}
 	if len(path) > 0 && len(path[0]) > 0 {
