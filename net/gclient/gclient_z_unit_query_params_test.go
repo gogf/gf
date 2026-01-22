@@ -22,16 +22,7 @@ import (
 
 // Test_Client_Query_BasicTypes tests basic data types in query parameters
 func Test_Client_Query_BasicTypes(t *testing.T) {
-	s := g.Server(guid.S())
-	s.BindHandler("/query", func(r *ghttp.Request) {
-		params := make([]string, 0)
-		for k, v := range r.URL.Query() {
-			params = append(params, fmt.Sprintf("%s=%v", k, v))
-		}
-		r.Response.Write(strings.Join(params, "&"))
-	})
-	s.SetDumpRouterMap(false)
-	s.Start()
+	s := createQueryParamsServer()
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
@@ -112,16 +103,7 @@ func Test_Client_Query_BasicTypes(t *testing.T) {
 
 // Test_Client_Query_Struct tests struct parameter conversion
 func Test_Client_Query_Struct(t *testing.T) {
-	s := g.Server(guid.S())
-	s.BindHandler("/query", func(r *ghttp.Request) {
-		params := make([]string, 0)
-		for k, v := range r.URL.Query() {
-			params = append(params, fmt.Sprintf("%s=%v", k, v))
-		}
-		r.Response.Write(strings.Join(params, "&"))
-	})
-	s.SetDumpRouterMap(false)
-	s.Start()
+	s := createQueryParamsServer()
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
@@ -251,16 +233,7 @@ func Test_Client_Query_SliceArray(t *testing.T) {
 
 // Test_Client_Query_URLMerge tests URL parameter merging
 func Test_Client_Query_URLMerge(t *testing.T) {
-	s := g.Server(guid.S())
-	s.BindHandler("/query", func(r *ghttp.Request) {
-		params := make([]string, 0)
-		for k, v := range r.URL.Query() {
-			params = append(params, fmt.Sprintf("%s=%v", k, v))
-		}
-		r.Response.Write(strings.Join(params, "&"))
-	})
-	s.SetDumpRouterMap(false)
-	s.Start()
+	s := createQueryParamsServer()
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
@@ -326,16 +299,7 @@ func Test_Client_Query_URLMerge(t *testing.T) {
 
 // Test_Client_Query_ChainCalls tests chaining of query methods
 func Test_Client_Query_ChainCalls(t *testing.T) {
-	s := g.Server(guid.S())
-	s.BindHandler("/query", func(r *ghttp.Request) {
-		params := make([]string, 0)
-		for k, v := range r.URL.Query() {
-			params = append(params, fmt.Sprintf("%s=%v", k, v))
-		}
-		r.Response.Write(strings.Join(params, "&"))
-	})
-	s.SetDumpRouterMap(false)
-	s.Start()
+	s := createQueryParamsServer()
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
@@ -454,16 +418,7 @@ func Test_Client_Query_SpecialCharacters(t *testing.T) {
 
 // Test_Client_SetQuery_Methods tests SetQuery, SetQueryMap, and SetQueryParams
 func Test_Client_SetQuery_Methods(t *testing.T) {
-	s := g.Server(guid.S())
-	s.BindHandler("/query", func(r *ghttp.Request) {
-		params := make([]string, 0)
-		for k, v := range r.URL.Query() {
-			params = append(params, fmt.Sprintf("%s=%v", k, v))
-		}
-		r.Response.Write(strings.Join(params, "&"))
-	})
-	s.SetDumpRouterMap(false)
-	s.Start()
+	s := createQueryParamsServer()
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
@@ -614,16 +569,7 @@ func Test_Client_Query_RawQueryString(t *testing.T) {
 // Test_Client_Query_InteractionWithGetDataParams tests the interaction between query parameters
 // set via Query/QueryParams/QueryPair methods and data parameters passed to Get method
 func Test_Client_Query_InteractionWithGetDataParams(t *testing.T) {
-	s := g.Server(guid.S())
-	s.BindHandler("/query", func(r *ghttp.Request) {
-		params := make([]string, 0)
-		for k, v := range r.URL.Query() {
-			params = append(params, fmt.Sprintf("%s=%v", k, v))
-		}
-		r.Response.Write(strings.Join(params, "&"))
-	})
-	s.SetDumpRouterMap(false)
-	s.Start()
+	s := createQueryParamsServer()
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
@@ -713,4 +659,19 @@ func Test_Client_Query_InteractionWithGetDataParams(t *testing.T) {
 		// Data slice gets JSON encoded differently
 		t.Assert(strings.Contains(resp, "slice_data="), true) // Just check that it exists
 	})
+}
+
+// createQueryParamsServer creates a simple server for testing query parameters
+func createQueryParamsServer() *ghttp.Server {
+	s := g.Server(guid.S())
+	s.BindHandler("/query", func(r *ghttp.Request) {
+		params := make([]string, 0)
+		for k, v := range r.URL.Query() {
+			params = append(params, fmt.Sprintf("%s=%v", k, v))
+		}
+		r.Response.Write(strings.Join(params, "&"))
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	return s
 }

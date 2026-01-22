@@ -21,7 +21,7 @@ import (
 
 // Test_Client_Query_Params_OtherMethods tests query parameters functionality with all HTTP methods
 func Test_Client_Query_Params_OtherMethods(t *testing.T) {
-	s := createServer()
+	s := createOtherMethodQueryParamsServer()
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
@@ -104,7 +104,7 @@ func Test_Client_Query_Params_OtherMethods(t *testing.T) {
 
 // Test_Client_Query_Params_SliceArray_OtherMethods tests slice/array query parameters with other HTTP methods
 func Test_Client_Query_Params_SliceArray_OtherMethods(t *testing.T) {
-	s := createServer()
+	s := createOtherMethodQueryParamsServer()
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
@@ -173,7 +173,7 @@ func Test_Client_Query_Params_SliceArray_OtherMethods(t *testing.T) {
 
 // Test_Client_Query_Params_Struct_OtherMethods tests struct query parameters with other HTTP methods
 func Test_Client_Query_Params_Struct_OtherMethods(t *testing.T) {
-	s := createServer()
+	s := createOtherMethodQueryParamsServer()
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
@@ -254,7 +254,7 @@ func Test_Client_Query_Params_Struct_OtherMethods(t *testing.T) {
 
 // Test_Client_Query_Params_URLMerge_OtherMethods tests URL parameter merging with other HTTP methods
 func Test_Client_Query_Params_URLMerge_OtherMethods(t *testing.T) {
-	s := createServer()
+	s := createOtherMethodQueryParamsServer()
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
@@ -320,7 +320,7 @@ func Test_Client_Query_Params_URLMerge_OtherMethods(t *testing.T) {
 
 // Test_Client_Query_Pair_Chain_OtherMethods tests chaining of query methods with other HTTP methods
 func Test_Client_Query_Pair_Chain_OtherMethods(t *testing.T) {
-	s := createServer()
+	s := createOtherMethodQueryParamsServer()
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
@@ -378,7 +378,7 @@ func Test_Client_Query_Pair_Chain_OtherMethods(t *testing.T) {
 
 // Test_Client_SetQuery_Methods_OtherMethods tests SetQuery, SetQueryMap, and SetQueryParams with other HTTP methods
 func Test_Client_SetQuery_Methods_OtherMethods(t *testing.T) {
-	s := createServer()
+	s := createOtherMethodQueryParamsServer()
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
@@ -432,7 +432,7 @@ func Test_Client_SetQuery_Methods_OtherMethods(t *testing.T) {
 
 // Test_Client_Query_WithOtherConfigs_OtherMethods tests query parameters with other client configurations and other methods
 func Test_Client_Query_WithOtherConfigs_OtherMethods(t *testing.T) {
-	s := createServer()
+	s := createOtherMethodQueryParamsServer()
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
@@ -468,7 +468,7 @@ func Test_Client_Query_WithOtherConfigs_OtherMethods(t *testing.T) {
 
 // Test_Client_Query_NilValues_OtherMethods tests nil value handling with other HTTP methods
 func Test_Client_Query_NilValues_OtherMethods(t *testing.T) {
-	s := createServer()
+	s := createOtherMethodQueryParamsServer()
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
@@ -533,8 +533,8 @@ func Test_Client_Query_NilValues_OtherMethods(t *testing.T) {
 	})
 }
 
-// createServer creates a test server for query parameter tests
-func createServer() *ghttp.Server {
+// createOtherMethodQueryParamsServer creates a server for testing other HTTP methods with query parameters
+func createOtherMethodQueryParamsServer() *ghttp.Server {
 	s := g.Server(guid.S())
 	s.BindHandler("POST:/query", queryHandler)
 	s.BindHandler("PUT:/query", queryHandler)
