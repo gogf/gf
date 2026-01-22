@@ -533,6 +533,7 @@ func Test_Client_Query_NilValues_OtherMethods(t *testing.T) {
 	})
 }
 
+// createServer creates a test server for query parameter tests
 func createServer() *ghttp.Server {
 	s := g.Server(guid.S())
 	s.BindHandler("POST:/query", queryHandler)
