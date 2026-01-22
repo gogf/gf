@@ -174,6 +174,15 @@ func (c *Client) mergeQueryParams(u string, dataParams string) (string, error) {
 	// Start with existing URL parameters
 	queryValues := parsedURL.Query()
 
+	// Remove empty value slices from URL parameters to prevent them from being
+	// encoded as "key=" which would override default values on the server side.
+	// This handles cases like "?age" or "?age="
+	for k, v := range queryValues {
+		if len(v) == 0 || (len(v) == 1 && v[0] == "") {
+			delete(queryValues, k)
+		}
+	}
+
 	// Merge data parameters (for GET requests with default Content-Type)
 	if dataParams != "" {
 		// Handle noUrlEncode flag: if noUrlEncode is true, parse data params manually
