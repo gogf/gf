@@ -70,10 +70,11 @@ func NewTSetWithCheckerFrom[T comparable](items []T, checker NilChecker[T], safe
 // This function is used to determine if an element should be considered as nil.
 // The nil checker function takes an element of type T and returns a boolean indicating
 // whether the element should be treated as nil.
-func (set *TSet[T]) RegisterNilChecker(nilChecker NilChecker[T]) {
+func (set *TSet[T]) RegisterNilChecker(nilChecker NilChecker[T]) *TSet[T] {
 	set.mu.Lock()
 	defer set.mu.Unlock()
 	set.nilChecker = nilChecker
+	return set
 }
 
 // isNil checks whether the given value is nil.
