@@ -323,7 +323,7 @@ func (m *Model) doWithScanStructs(pointer any) error {
 	arrayValue := reflect.ValueOf(pointer)
 
 	// Find the final pointer (handling multi-level pointers)
-	for arrayValue.Kind() == reflect.Ptr {
+	for arrayValue.Kind() == reflect.Pointer {
 		arrayValue = arrayValue.Elem()
 	}
 
@@ -360,9 +360,9 @@ func (m *Model) doAfterScan(pointer any) error {
 	}
 
 	// Find the final pointer (handling multi-level pointers)
-	for ptrValue.Kind() == reflect.Ptr && !ptrValue.IsNil() {
+	for ptrValue.Kind() == reflect.Pointer && !ptrValue.IsNil() {
 		// If the current pointer still points to a pointer, go deeper
-		if ptrValue.Elem().Kind() == reflect.Ptr {
+		if ptrValue.Elem().Kind() == reflect.Pointer {
 			ptrValue = ptrValue.Elem()
 		} else {
 			// Found the final pointer (pointing to a non-pointer type)
@@ -371,7 +371,7 @@ func (m *Model) doAfterScan(pointer any) error {
 	}
 
 	// Ensure that ptrValue is a non-nil pointer type
-	if (ptrValue.Kind() != reflect.Ptr) || ptrValue.IsNil() {
+	if (ptrValue.Kind() != reflect.Pointer) || ptrValue.IsNil() {
 		return nil
 	}
 
