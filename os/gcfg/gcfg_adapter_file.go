@@ -34,7 +34,7 @@ var (
 type AdapterFile struct {
 	defaultFileNameOrPath *gtype.String                    // Default configuration file name or file path.
 	searchPaths           *garray.StrArray                 // Searching the path array.
-	jsonMap               *gmap.KVMap[string, *gjson.Json] // The pared JSON objects for configuration files.
+	jsonMap               *gmap.KVMap[string, *gjson.Json] // The parsed JSON objects for configuration files.
 	violenceCheck         bool                             // Whether it does violence check in value index searching. It affects the performance when set true(false in default).
 	watchers              *WatcherRegistry                 // Watchers for watching file changes.
 }
