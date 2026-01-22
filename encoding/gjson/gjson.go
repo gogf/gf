@@ -21,7 +21,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-type ContentType string
+type ContentType = string
 
 const (
 	ContentTypeJSON       ContentType = `json`
@@ -35,23 +35,40 @@ const (
 )
 
 const (
-	defaultSplitChar = '.' // Separator char for hierarchical data access.
+	// Separator char for hierarchical data access.
+	defaultSplitChar = '.'
 )
 
 // Json is the customized JSON struct.
 type Json struct {
 	mu rwmutex.RWMutex
-	p  *any // Pointer for hierarchical data access, it's the root of data in default.
-	c  byte // Char separator('.' in default).
-	vc bool // Violence Check(false in default), which is used to access data when the hierarchical data key contains separator char.
+
+	// Pointer for hierarchical data access, it's the root of data in default.
+	p *any
+
+	// Char separator('.' in default).
+	c byte
+
+	// Violence Check(false in default),
+	// which is used to access data when the hierarchical data key contains separator char.
+	vc bool
 }
 
 // Options for Json object creating/loading.
 type Options struct {
-	Safe      bool        // Mark this object is for in concurrent-safe usage. This is especially for Json object creating.
-	Tags      string      // Custom priority tags for decoding, eg: "json,yaml,MyTag". This is especially for struct parsing into Json object.
-	Type      ContentType // Type specifies the data content type, eg: json, xml, yaml, toml, ini.
-	StrNumber bool        // StrNumber causes the Decoder to unmarshal a number into an any as a string instead of as a float64.
+	// Mark this object is for in concurrent-safe usage. This is especially for Json object creating.
+	Safe bool
+
+	// Custom priority tags for decoding, eg: "json,yaml,MyTag".
+	// This is specially for struct parsing into Json object.
+	Tags string
+
+	// Type specifies the data content type, eg: json, xml, yaml, toml, ini.
+	Type ContentType
+
+	// StrNumber causes the Decoder to unmarshal a number into an any as a string instead of as a float64.
+	// This is specially for json content parsing into Json object.
+	StrNumber bool
 }
 
 // iInterfaces is used for type assert api for Interfaces().

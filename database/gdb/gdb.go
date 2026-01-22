@@ -294,6 +294,9 @@ type DB interface {
 	// SetMaxConnLifeTime sets the maximum amount of time a connection may be reused.
 	SetMaxConnLifeTime(d time.Duration)
 
+	// SetMaxIdleConnTime sets the maximum amount of time a connection may be idle before being closed.
+	SetMaxIdleConnTime(d time.Duration)
+
 	// ===========================================================================
 	// Utility methods.
 	// ===========================================================================
@@ -528,6 +531,7 @@ type dynamicConfig struct {
 	MaxIdleConnCount int
 	MaxOpenConnCount int
 	MaxConnLifeTime  time.Duration
+	MaxIdleConnTime  time.Duration
 }
 
 // DoCommitInput is the input parameters for function DoCommit.
@@ -863,8 +867,10 @@ const (
 )
 
 var (
+	// checker is the checker function for instances map.
+	checker = func(v DB) bool { return v == nil }
 	// instances is the management map for instances.
-	instances = gmap.NewStrAnyMap(true)
+	instances = gmap.NewKVMapWithChecker[string, DB](checker, true)
 
 	// driverMap manages all custom registered driver.
 	driverMap = map[string]Driver{}
@@ -963,6 +969,7 @@ func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 			MaxIdleConnCount: node.MaxIdleConnCount,
 			MaxOpenConnCount: node.MaxOpenConnCount,
 			MaxConnLifeTime:  node.MaxConnLifeTime,
+			MaxIdleConnTime:  node.MaxIdleConnTime,
 		},
 	}
 	if v, ok := driverMap[node.Type]; ok {
@@ -985,14 +992,14 @@ func Instance(name ...string) (db DB, err error) {
 	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
-	v := instances.GetOrSetFuncLock(group, func() any {
+	v := instances.GetOrSetFuncLock(group, func() DB {
 		db, err = NewByGroup(group)
 		return db
 	})
 	if v != nil {
-		return v.(DB), nil
+		return v, nil
 	}
-	return
+	return nil, err
 }
 
 // getConfigNodeByGroup calculates and returns a configuration node of given group. It
@@ -1141,6 +1148,9 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 				sqlDb.SetConnMaxLifetime(c.dynamicConfig.MaxConnLifeTime)
 			} else {
 				sqlDb.SetConnMaxLifetime(defaultMaxConnLifeTime)
+			}
+			if c.dynamicConfig.MaxIdleConnTime > 0 {
+				sqlDb.SetConnMaxIdleTime(c.dynamicConfig.MaxIdleConnTime)
 			}
 			return sqlDb
 		}
