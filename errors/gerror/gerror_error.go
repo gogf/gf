@@ -20,6 +20,7 @@ type Error struct {
 	error error      // Wrapped error.
 	stack stack      // Stack array, which records the stack information when this error is created or wrapped.
 	text  string     // Custom Error text when Error is created, might be empty when its code is not nil.
+	args  []any      // Custom arguments for formatting the error text.
 	code  gcode.Code // Error code if necessary.
 }
 
@@ -42,7 +43,7 @@ func (err *Error) Error() string {
 	if err == nil {
 		return ""
 	}
-	errStr := err.text
+	errStr := err.TextWithArgs()
 	if errStr == "" && err.code != nil {
 		errStr = err.code.Message()
 	}
@@ -76,7 +77,7 @@ func (err *Error) Cause() error {
 			// return loop
 			//
 			// To be compatible with Case of https://github.com/pkg/errors.
-			return errors.New(loop.text)
+			return errors.New(loop.TextWithArgs())
 		}
 	}
 	return nil
@@ -92,6 +93,7 @@ func (err *Error) Current() error {
 		error: nil,
 		stack: err.stack,
 		text:  err.text,
+		args:  err.args,
 		code:  err.code,
 	}
 }
@@ -118,8 +120,26 @@ func (err *Error) Equal(target error) bool {
 		return false
 	}
 	// Text should be the same.
-	if err.text != fmt.Sprintf(`%-s`, target) {
+	if err.TextWithArgs() != fmt.Sprintf(`%-s`, target) {
 		return false
 	}
 	return true
+}
+
+// TextWithArgs returns the formatted error text with its arguments.
+func (err *Error) TextWithArgs() string {
+	if len(err.args) > 0 {
+		return fmt.Sprintf(err.text, err.args...)
+	}
+	return err.text
+}
+
+// Text returns the error text of current error.
+func (err *Error) Text() string {
+	return err.text
+}
+
+// Args returns the error arguments of current error.
+func (err *Error) Args() []any {
+	return err.args
 }

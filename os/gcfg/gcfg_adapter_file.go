@@ -46,8 +46,9 @@ const (
 
 var (
 	supportedFileTypes     = []string{"toml", "yaml", "yml", "json", "ini", "xml", "properties"} // All supported file types suffixes.
-	localInstances         = gmap.NewStrAnyMap(true)                                             // Instances map containing configuration instances.
-	customConfigContentMap = gmap.NewStrStrMap(true)                                             // Customized configuration content.
+	checker                = func(v *Config) bool { return v == nil }
+	localInstances         = gmap.NewKVMapWithChecker[string, *Config](checker, true) // Instances map containing configuration instances.
+	customConfigContentMap = gmap.NewStrStrMap(true)                                  // Customized configuration content.
 
 	// Prefix array for trying searching in resource manager.
 	resourceTryFolders = []string{
@@ -331,7 +332,7 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 }
 
 // AddWatcher adds a watcher for the specified configuration file.
-func (a *AdapterFile) AddWatcher(name string, fn func(ctx context.Context)) {
+func (a *AdapterFile) AddWatcher(name string, fn WatcherFunc) {
 	a.watchers.Add(name, fn)
 }
 
@@ -343,6 +344,11 @@ func (a *AdapterFile) RemoveWatcher(name string) {
 // GetWatcherNames returns all watcher names.
 func (a *AdapterFile) GetWatcherNames() []string {
 	return a.watchers.GetNames()
+}
+
+// IsWatching checks and returns whether the specified `name` is watching.
+func (a *AdapterFile) IsWatching(name string) bool {
+	return a.watchers.IsWatching(name)
 }
 
 // notifyWatchers notifies all watchers.
