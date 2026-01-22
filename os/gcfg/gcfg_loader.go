@@ -18,15 +18,15 @@ import (
 // Loader is a generic configuration manager that provides
 // configuration loading, watching and management similar to Spring Boot's @ConfigurationProperties
 type Loader[T any] struct {
-	config        *Config                              // The configuration instance to watch
-	propertyKey   string                               // The property key pattern to watch
-	targetStruct  *T                                   // The target struct pointer to bind configuration to
-	mutex         sync.RWMutex                         // Mutex for thread-safe operations
-	onChange      func(T) error                        // Callback function when configuration changes
-	converter     func(data any, target *T) error      // Optional custom converter function
-	loadErrorFunc func(ctx context.Context, err error) // Optional error handling function for load failures
-	reuse         bool                                 // reuse the same target struct, default is false to avoid data race
-	watcherName   string                               // watcher name
+	config         *Config                              // The configuration instance to watch
+	propertyKey    string                               // The property key pattern to watch
+	targetStruct   *T                                   // The target struct pointer to bind configuration to
+	mutex          sync.RWMutex                         // Mutex for thread-safe operations
+	onChange       func(T) error                        // Callback function when configuration changes
+	converter      func(data any, target *T) error      // Optional custom converter function
+	watchErrorFunc func(ctx context.Context, err error) // Optional error handling function for watch operations
+	reuse          bool                                 // reuse the same target struct, default is false to avoid data race
+	watcherName    string                               // watcher name
 }
 
 // NewLoader creates a new Loader instance
@@ -79,9 +79,6 @@ func (l *Loader[T]) Load(ctx context.Context) error {
 		// Get all configuration data
 		configData, err := l.config.Data(ctx)
 		if err != nil {
-			if l.loadErrorFunc != nil {
-				l.loadErrorFunc(ctx, err)
-			}
 			return err
 		}
 		data = gvar.New(configData)
@@ -89,9 +86,6 @@ func (l *Loader[T]) Load(ctx context.Context) error {
 		// Get specific property
 		configValue, err := l.config.Get(ctx, l.propertyKey)
 		if err != nil {
-			if l.loadErrorFunc != nil {
-				l.loadErrorFunc(ctx, err)
-			}
 			return err
 		}
 		if configValue != nil {
@@ -105,17 +99,11 @@ func (l *Loader[T]) Load(ctx context.Context) error {
 	if l.converter != nil && data != nil {
 		if l.reuse {
 			if err := l.converter(data.Val(), l.targetStruct); err != nil {
-				if l.loadErrorFunc != nil {
-					l.loadErrorFunc(ctx, err)
-				}
 				return err
 			}
 		} else {
 			var newConfig T
 			if err := l.converter(data.Val(), &newConfig); err != nil {
-				if l.loadErrorFunc != nil {
-					l.loadErrorFunc(ctx, err)
-				}
 				return err
 			}
 			l.targetStruct = &newConfig
@@ -124,17 +112,11 @@ func (l *Loader[T]) Load(ctx context.Context) error {
 		if data != nil {
 			if l.reuse {
 				if err := data.Scan(l.targetStruct); err != nil {
-					if l.loadErrorFunc != nil {
-						l.loadErrorFunc(ctx, err)
-					}
 					return err
 				}
 			} else {
 				var newConfig T
 				if err := data.Scan(&newConfig); err != nil {
-					if l.loadErrorFunc != nil {
-						l.loadErrorFunc(ctx, err)
-					}
 					return err
 				}
 				l.targetStruct = &newConfig
@@ -170,8 +152,8 @@ func (l *Loader[T]) Watch(ctx context.Context, name string) error {
 			// Reload configuration when change is detected
 			if err := l.Load(ctx); err != nil {
 				// Use the configured error handler if available, otherwise execute default logging
-				if l.loadErrorFunc != nil {
-					l.loadErrorFunc(ctx, err)
+				if l.watchErrorFunc != nil {
+					l.watchErrorFunc(ctx, err)
 				} else {
 					// Default logging using intlog (internal logging for development)
 					intlog.Errorf(ctx, "Configuration load failed in watcher %s: %v", name, err)
@@ -223,11 +205,11 @@ func (l *Loader[T]) SetConverter(converter func(data any, target *T) error) *Loa
 	return l
 }
 
-// SetLoadErrorHandler sets an error handling function that will be called when Load operations fail
-func (l *Loader[T]) SetLoadErrorHandler(errorFunc func(ctx context.Context, err error)) *Loader[T] {
+// SetWatchErrorHandler sets an error handling function that will be called when Load operations fail during Watch
+func (l *Loader[T]) SetWatchErrorHandler(errorFunc func(ctx context.Context, err error)) *Loader[T] {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
-	l.loadErrorFunc = errorFunc
+	l.watchErrorFunc = errorFunc
 	return l
 }
 

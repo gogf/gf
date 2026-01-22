@@ -8,6 +8,7 @@ package gcfg_test
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -246,24 +247,47 @@ server:
 	})
 }
 
-func TestLoader_SetLoadErrorHandler(t *testing.T) {
+func TestLoader_SetWatchErrorHandler(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		// Create a new config instance with invalid adapter that will cause error
-		cfg, err := gcfg.New()
+		// Create a new config instance with content that will cause converter error
+		cfg, err := gcfg.NewAdapterContent(configContent)
 		t.AssertNil(err)
-		// Create loader
-		loader := gcfg.NewLoader[TestConfig](cfg, "non-existent-key")
 
-		// Set error handler
+		// Create loader
+		loader := gcfg.NewLoaderWithAdapter[TestConfig](cfg, "")
+
+		// Set error handler for watch operations
 		errorHandled := gtype.NewBool(false)
-		loader.SetLoadErrorHandler(func(ctx context.Context, err error) {
+		loader.SetWatchErrorHandler(func(ctx context.Context, err error) {
 			errorHandled.Set(true)
 		})
 
-		// Try to load with invalid key
+		// Set a converter that will fail
+		loader.SetConverter(func(data any, target *TestConfig) error {
+			return errors.New("converter error")
+		})
+
+		// Load initially - this should return error without calling error handler
 		err = loader.Load(context.Background())
-		// The error should be handled by our error handler
-		t.Assert(errorHandled, true)
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "converter error")
+		// Error handler should NOT be called during direct Load
+		t.Assert(errorHandled.Val(), false)
+
+		// Start watching - now errors during Load should trigger the error handler
+		err = loader.Watch(context.Background(), "test-error-handler")
+		t.AssertNil(err)
+		// Reset
+		errorHandled.Set(false)
+		// Trigger a config change - this will call Load internally and should trigger error handler
+		err = cfg.SetContent(configContent)
+		t.AssertNil(err)
+
+		// Wait for watcher to process the change
+		time.Sleep(1 * time.Second)
+
+		// Error handler should be called during Watch's Load
+		t.Assert(errorHandled.Val(), true)
 	})
 }
 
