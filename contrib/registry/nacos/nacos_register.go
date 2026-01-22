@@ -17,7 +17,7 @@ import (
 
 // Register registers `service` to Registry.
 // Note that it returns a new Service if it changes the input Service with custom one.
-func (reg *Registry) Register(ctx context.Context, service gsvc.Service) (registered gsvc.Service, err error) {
+func (reg *Registry) Register(_ context.Context, service gsvc.Service) (registered gsvc.Service, err error) {
 	metadata := map[string]string{}
 	endpoints := service.GetEndpoints()
 
@@ -67,7 +67,7 @@ func (reg *Registry) Register(ctx context.Context, service gsvc.Service) (regist
 }
 
 // Deregister off-lines and removes `service` from the Registry.
-func (reg *Registry) Deregister(ctx context.Context, service gsvc.Service) (err error) {
+func (reg *Registry) Deregister(_ context.Context, service gsvc.Service) (err error) {
 	c := reg.client
 
 	for _, endpoint := range service.GetEndpoints() {
