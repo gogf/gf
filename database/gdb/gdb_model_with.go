@@ -321,7 +321,8 @@ func (m *Model) doWithScanStructs(pointer any) error {
 	}
 
 	arrayValue := reflect.ValueOf(pointer)
-	// 找到最终的指针（处理多级指针）
+
+	// Find the final pointer (handling multi-level pointers)
 	for arrayValue.Kind() == reflect.Ptr {
 		arrayValue = arrayValue.Elem()
 	}
@@ -357,11 +358,6 @@ func (m *Model) doAfterScan(pointer any) error {
 		// Convert to reflect.Value
 		ptrValue = reflect.ValueOf(pointer)
 	}
-
-	// Return directly if it is nil
-	// if ptrValue.IsNil() {
-	// 	return nil
-	// }
 
 	// Find the final pointer (handling multi-level pointers)
 	for ptrValue.Kind() == reflect.Ptr && !ptrValue.IsNil() {
