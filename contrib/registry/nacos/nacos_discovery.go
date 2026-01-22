@@ -19,7 +19,7 @@ import (
 )
 
 // Search searches and returns services with specified condition.
-func (reg *Registry) Search(ctx context.Context, in gsvc.SearchInput) (result []gsvc.Service, err error) {
+func (reg *Registry) Search(_ context.Context, in gsvc.SearchInput) (result []gsvc.Service, err error) {
 	if in.Prefix == "" && in.Name != "" {
 		in.Prefix = gsvc.NewServiceWithName(in.Name).GetPrefix()
 	}
