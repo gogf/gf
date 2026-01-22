@@ -1,24 +1,25 @@
 # GoFrame Nacos Registry
 
-
 Use `nacos` as service registration and discovery management.
 
-
 ## Installation
+
 ```
 go get -u -v github.com/gogf/gf/contrib/registry/nacos/v2
 ```
+
 suggested using `go.mod`:
+
 ```
 require github.com/gogf/gf/contrib/registry/nacos/v2 latest
 ```
-
 
 ## Example
 
 ### Reference example
 
 [server](../../../example/registry/nacos/http/server/main.go)
+
 ```go
 package main
 
@@ -44,6 +45,7 @@ func main() {
 ```
 
 [client](../../../example/registry/nacos/http/client/main.go)
+
 ```go
 package main
 
@@ -78,4 +80,3 @@ func main() {
 ## License
 
 `GoFrame Nacos` is licensed under the [MIT License](../../../LICENSE), 100% free and open-source, forever.
-

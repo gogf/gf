@@ -4,7 +4,7 @@ go 1.23.0
 
 require (
 	github.com/gogf/gf/v2 v2.9.8
-	github.com/nacos-group/nacos-sdk-go/v2 v2.3.3
+	github.com/nacos-group/nacos-sdk-go/v2 v2.3.5
 )
 
 require (
