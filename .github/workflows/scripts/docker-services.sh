@@ -136,13 +136,27 @@ start_service() {
             return 0
         else
             print_info "Starting existing container $service..."
-            docker start "$container_name" > /dev/null
-            print_success "$service started"
-            return 0
+            local start_output=$(docker start "$container_name" 2>&1)
+            if [ $? -eq 0 ]; then
+                print_success "$service started (container: $container_name)"
+                return 0
+            else
+                print_error "Failed to start existing container $service"
+                print_error "Docker output: $start_output"
+                print_info "Showing container logs (last 10 lines):"
+                docker logs --tail 10 "$container_name" 2>&1 | sed 's/^/  /'
+                return 1
+            fi
         fi
     fi
 
     print_info "Starting $service..."
+    print_info "  Image: $image"
+    print_info "  Container: $container_name"
+    print_info "  Ports: $ports"
+    if [ -n "$envs" ]; then
+        print_info "  Environment: $envs"
+    fi
     
     # Build docker run command
     local cmd="docker run -d --name $container_name"
@@ -164,10 +178,41 @@ start_service() {
     
     cmd="$cmd $image"
     
-    if eval "$cmd" > /dev/null 2>&1; then
+    print_info "  Executing: $cmd"
+    
+    local output=$(eval "$cmd" 2>&1)
+    local exit_code=$?
+    
+    if [ $exit_code -eq 0 ]; then
         print_success "$service started (container: $container_name)"
+        
+        # Wait a moment and check if container is still running
+        sleep 2
+        if ! docker ps --format '{{.Names}}' | grep -q "^${container_name}$"; then
+            print_warning "$service container exited unexpectedly after start"
+            print_info "Showing container logs (last 50 lines):"
+            docker logs --tail 50 "$container_name" 2>&1 | sed 's/^/  /'
+            return 1
+        fi
+        
+        return 0
     else
         print_error "Failed to start $service"
+        print_error "Exit code: $exit_code"
+        print_error "Docker output: $output"
+        
+        # Check for common issues
+        if echo "$output" | grep -q "port is already allocated"; then
+            print_error "Cause: Port conflict detected"
+            print_info "Suggestion: Another service is using the same port. Stop it or use different ports."
+        elif echo "$output" | grep -q "No such image"; then
+            print_error "Cause: Image not found locally"
+            print_info "Suggestion: Run 'docker pull $image' first"
+        elif echo "$output" | grep -q "permission denied"; then
+            print_error "Cause: Permission denied"
+            print_info "Suggestion: Check Docker permissions or try with sudo"
+        fi
+        
         return 1
     fi
 }
