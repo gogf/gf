@@ -31,8 +31,12 @@ func (item *localStatsItem) Stats() sql.DBStats {
 func (c *Core) Stats(ctx context.Context) []StatsItem {
 	var items = make([]StatsItem, 0)
 	c.links.Iterator(func(k ConfigNode, v *sql.DB) bool {
+		// Create a local copy of k to avoid loop variable address re-use issue
+		// In Go, loop variables are re-used with the same memory address across iterations,
+		// directly using &k would cause all localStatsItem instances to share the same address
+		node := k
 		items = append(items, &localStatsItem{
-			node:  &k,
+			node:  &node,
 			stats: v.Stats(),
 		})
 		return true
