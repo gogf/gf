@@ -9,11 +9,11 @@ package gexecutor_test
 import (
 	"context"
 	"errors"
-	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/util/gconv"
 	"testing"
 
+	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gexecutor"
 )
 
