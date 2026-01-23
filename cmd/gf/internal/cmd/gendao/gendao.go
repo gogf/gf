@@ -65,7 +65,7 @@ type (
 		NoModelComment     bool                                     `name:"noModelComment"      short:"m"  brief:"{CGenDaoBriefNoModelComment}" orphan:"true"`
 		Clear              bool                                     `name:"clear"               short:"a"  brief:"{CGenDaoBriefClear}" orphan:"true"`
 		GenTable           bool                                     `name:"genTable"            short:"gt" brief:"{CGenDaoBriefGenTable}" orphan:"true"`
-		DoUseTypePtr       bool                                     `name:"doUseTypePtr"   short:"utp" brief:"use type pointer instead of any for DO fields" orphan:"true"`
+		UsePointerTypeDo   bool                                     `name:"usePointerTypeDo"    short:"pt" brief:"use type pointer instead of any for DO fields" orphan:"true"`
 		TypeMapping        map[DBFieldTypeName]CustomAttributeType  `name:"typeMapping"  short:"y"  brief:"{CGenDaoBriefTypeMapping}"  orphan:"true"`
 		FieldMapping       map[DBTableFieldName]CustomAttributeType `name:"fieldMapping" short:"fm" brief:"{CGenDaoBriefFieldMapping}" orphan:"true"`
 

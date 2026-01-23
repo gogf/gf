@@ -52,7 +52,7 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 			func(match []string) string {
 				// If the type is already a pointer/slice/map, it does nothing.
 				if !gstr.HasPrefix(match[2], "*") && !gstr.HasPrefix(match[2], "[]") && !gstr.HasPrefix(match[2], "map") {
-					if in.DoUseTypePtr {
+					if in.UsePointerTypeDo {
 						return fmt.Sprintf(`%s *%s %s`, match[1], match[2], match[3])
 					}
 
