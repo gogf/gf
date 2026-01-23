@@ -74,14 +74,22 @@ test(container/garray): add unit tests for sorted array
 
 按照以下顺序执行 git 操作：
 
-1. **git add -A**
-   - 将所有修改的文件添加到暂存区
+1. **检查待提交文件**
+   - 使用 `git status` 和 `git diff` 确认本次需要提交的变更
+   - 排除调试、临时或生成文件，以及可能包含敏感信息的文件
 
-2. **git commit -m "commit message"**
+2. **选择性暂存变更**
+   - 使用 `git add <file1> <file2> ...` 按文件添加需要提交的修改
+   - 或使用 `git add -p` 进行交互式暂存，确保只加入相关修改
+
+3. **检查已暂存内容**
+   - 使用 `git diff --cached` 检查暂存区的变更是否符合预期
+
+4. **git commit -m "commit message"**
    - 使用生成的 commit message 提交代码
    - 确保 commit message 符合上述规范
 
-3. **git push**
+5. **git push**
    - 将本地提交推送到远程仓库
    - 如果是首次推送新分支，使用 `git push -u origin <branch-name>`
 
