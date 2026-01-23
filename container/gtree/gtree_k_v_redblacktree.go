@@ -10,9 +10,9 @@ import (
 	"fmt"
 
 	"github.com/emirpasic/gods/v2/trees/redblacktree"
-	"github.com/gogf/gf/v2/internal/empty"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
 	"github.com/gogf/gf/v2/text/gstr"
