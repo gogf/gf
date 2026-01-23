@@ -749,7 +749,9 @@ func (a *TArray[T]) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-// Note that do not use pointer as its receiver here.
+// DO NOT change this receiver to pointer type, as the TArray can be used as a var defined variable, like:
+// var a TArray[int]
+// Please refer to corresponding tests for more details.
 func (a TArray[T]) MarshalJSON() ([]byte, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()

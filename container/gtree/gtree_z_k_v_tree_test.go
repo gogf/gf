@@ -29,9 +29,10 @@ func Test_KVAVLTree_TypedNil(t *testing.T) {
 				avlTree.Set(i, s)
 			}
 		}
-		t.Assert(avlTree.Size(), 10)
+		t.Assert(avlTree.Size(), 5)
+
 		avlTree2 := gtree.NewAVLKVTree[int, *Student](gutil.ComparatorTStr[int], true)
-		avlTree2.RegisterNilChecker(func(student *Student) bool {
+		avlTree2.SetNilChecker(func(student *Student) bool {
 			return student == nil
 		})
 		for i := 0; i < 10; i++ {
@@ -62,9 +63,10 @@ func Test_KVBTree_TypedNil(t *testing.T) {
 				btree.Set(i, s)
 			}
 		}
-		t.Assert(btree.Size(), 10)
+		t.Assert(btree.Size(), 5)
+
 		btree2 := gtree.NewBKVTree[int, *Student](100, gutil.ComparatorTStr[int], true)
-		btree2.RegisterNilChecker(func(student *Student) bool {
+		btree2.SetNilChecker(func(student *Student) bool {
 			return student == nil
 		})
 		for i := 0; i < 10; i++ {
@@ -95,10 +97,10 @@ func Test_KVRedBlackTree_TypedNil(t *testing.T) {
 				redBlackTree.Set(i, s)
 			}
 		}
-		t.Assert(redBlackTree.Size(), 10)
-		redBlackTree2 := gtree.NewRedBlackKVTree[int, *Student](gutil.ComparatorTStr[int], true)
+		t.Assert(redBlackTree.Size(), 5)
 
-		redBlackTree2.RegisterNilChecker(func(student *Student) bool {
+		redBlackTree2 := gtree.NewRedBlackKVTree[int, *Student](gutil.ComparatorTStr[int], true)
+		redBlackTree2.SetNilChecker(func(student *Student) bool {
 			return student == nil
 		})
 		for i := 0; i < 10; i++ {
@@ -128,7 +130,8 @@ func Test_NewKVAVLTreeWithChecker_TypedNil(t *testing.T) {
 				avlTree.Set(i, s)
 			}
 		}
-		t.Assert(avlTree.Size(), 10)
+		t.Assert(avlTree.Size(), 5)
+
 		avlTree2 := gtree.NewAVLKVTreeWithChecker[int, *Student](gutil.ComparatorTStr[int], func(student *Student) bool {
 			return student == nil
 		}, true)
@@ -160,7 +163,8 @@ func Test_NewKVBTreeWithChecker_TypedNil(t *testing.T) {
 				btree.Set(i, s)
 			}
 		}
-		t.Assert(btree.Size(), 10)
+		t.Assert(btree.Size(), 5)
+
 		btree2 := gtree.NewBKVTreeWithChecker[int, *Student](100, gutil.ComparatorTStr[int], func(student *Student) bool {
 			return student == nil
 		}, true)
@@ -192,7 +196,8 @@ func Test_NewRedBlackKVTreeWithChecker_TypedNil(t *testing.T) {
 				redBlackTree.Set(i, s)
 			}
 		}
-		t.Assert(redBlackTree.Size(), 10)
+		t.Assert(redBlackTree.Size(), 5)
+
 		redBlackTree2 := gtree.NewRedBlackKVTreeWithChecker[int, *Student](gutil.ComparatorTStr[int], func(student *Student) bool {
 			return student == nil
 		}, true)

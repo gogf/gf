@@ -46,7 +46,7 @@ func NewSortedTArray[T comparable](comparator func(a, b T) int, safe ...bool) *S
 	return NewSortedTArraySize(0, comparator, safe...)
 }
 
-// NewSortedTArraySize create and returns an sorted array with given size and cap.
+// NewSortedTArraySize create and returns a sorted array with given size and cap.
 // The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedTArraySize[T comparable](cap int, comparator func(a, b T) int, safe ...bool) *SortedTArray[T] {
@@ -718,7 +718,9 @@ func (a *SortedTArray[T]) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-// Note that do not use pointer as its receiver here.
+// DO NOT change this receiver to pointer type, as the TArray can be used as a var defined variable, like:
+// var a SortedTArray[int]
+// Please refer to corresponding tests for more details.
 func (a SortedTArray[T]) MarshalJSON() ([]byte, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
