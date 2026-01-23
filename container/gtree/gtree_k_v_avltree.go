@@ -12,6 +12,7 @@ import (
 	"github.com/emirpasic/gods/v2/trees/avltree"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -52,7 +53,7 @@ func NewAVLKVTree[K comparable, V any](comparator func(v1, v2 K) int, safe ...bo
 // The parameter `checker` is used to specify whether the given value is nil.
 func NewAVLKVTreeWithChecker[K comparable, V any](comparator func(v1, v2 K) int, checker NilChecker[V], safe ...bool) *AVLKVTree[K, V] {
 	t := NewAVLKVTree[K, V](comparator, safe...)
-	t.RegisterNilChecker(checker)
+	t.SetNilChecker(checker)
 	return t
 }
 
@@ -78,25 +79,24 @@ func NewAVLKVTreeWithCheckerFrom[K comparable, V any](comparator func(v1, v2 K) 
 	return tree
 }
 
-// RegisterNilChecker registers a custom nil checker function for the map values.
+// SetNilChecker registers a custom nil checker function for the map values.
 // This function is used to determine if a value should be considered as nil.
 // The nil checker function takes a value of type V and returns a boolean indicating
 // whether the value should be treated as nil.
-func (tree *AVLKVTree[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) *AVLKVTree[K, V] {
+func (tree *AVLKVTree[K, V]) SetNilChecker(nilChecker NilChecker[V]) {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.nilChecker = nilChecker
-	return tree
 }
 
 // isNil checks whether the given value is nil.
 // It first checks if a custom nil checker function is registered and uses it if available,
 // otherwise it performs a standard nil check using any(v) == nil.
-func (tree *AVLKVTree[K, V]) isNil(value V) bool {
+func (tree *AVLKVTree[K, V]) isNil(v V) bool {
 	if tree.nilChecker != nil {
-		return tree.nilChecker(value)
+		return tree.nilChecker(v)
 	}
-	return any(value) == nil
+	return empty.IsNil(v)
 }
 
 // Clone clones and returns a new tree from current tree.
