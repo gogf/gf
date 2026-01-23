@@ -79,7 +79,7 @@ func (set *TSet[T]) SetNilChecker(nilChecker NilChecker[T]) {
 
 // isNil checks whether the given value is nil.
 // It first checks if a custom nil checker function is registered and uses it if available,
-// otherwise it performs a standard nil check using any(v) == nil.
+// otherwise it falls back to the default empty.IsNil function.
 func (set *TSet[T]) isNil(v T) bool {
 	if set.nilChecker != nil {
 		return set.nilChecker(v)

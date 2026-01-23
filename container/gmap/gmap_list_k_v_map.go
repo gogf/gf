@@ -93,7 +93,7 @@ func (m *ListKVMap[K, V]) SetNilChecker(nilChecker NilChecker[V]) {
 
 // isNil checks whether the given value is nil.
 // It first checks if a custom nil checker function is registered and uses it if available,
-// otherwise it performs a standard nil check using any(v) == nil.
+// otherwise it falls back to the default empty.IsNil function.
 func (m *ListKVMap[K, V]) isNil(v V) bool {
 	if m.nilChecker != nil {
 		return m.nilChecker(v)
