@@ -1,8 +1,6 @@
 ---
 description: "自动整理当前分支修改内容，生成符合规范的commit message，并执行git add、commit和push操作"
 agent: "agent"
-tools:
-  ['gitkraken/*']
 ---
 
 # Git 提交和推送任务
