@@ -12,6 +12,7 @@ import (
 	"github.com/emirpasic/gods/v2/trees/redblacktree"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -47,7 +48,7 @@ func NewRedBlackKVTree[K comparable, V any](comparator func(v1, v2 K) int, safe 
 // The parameter `checker` is used to specify whether the given value is nil.
 func NewRedBlackKVTreeWithChecker[K comparable, V any](comparator func(v1, v2 K) int, checker NilChecker[V], safe ...bool) *RedBlackKVTree[K, V] {
 	t := NewRedBlackKVTree[K, V](comparator, safe...)
-	t.RegisterNilChecker(checker)
+	t.SetNilChecker(checker)
 	return t
 }
 
@@ -96,11 +97,11 @@ func RedBlackKVTreeInitFrom[K comparable, V any](tree *RedBlackKVTree[K, V], com
 	}
 }
 
-// RegisterNilChecker registers a custom nil checker function for the map values.
+// SetNilChecker registers a custom nil checker function for the map values.
 // This function is used to determine if a value should be considered as nil.
 // The nil checker function takes a value of type V and returns a boolean indicating
 // whether the value should be treated as nil.
-func (tree *RedBlackKVTree[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) {
+func (tree *RedBlackKVTree[K, V]) SetNilChecker(nilChecker NilChecker[V]) {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.nilChecker = nilChecker
@@ -108,12 +109,12 @@ func (tree *RedBlackKVTree[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) {
 
 // isNil checks whether the given value is nil.
 // It first checks if a custom nil checker function is registered and uses it if available,
-// otherwise it performs a standard nil check using any(v) == nil.
-func (tree *RedBlackKVTree[K, V]) isNil(value V) bool {
+// otherwise it falls back to the default empty.IsNil function.
+func (tree *RedBlackKVTree[K, V]) isNil(v V) bool {
 	if tree.nilChecker != nil {
-		return tree.nilChecker(value)
+		return tree.nilChecker(v)
 	}
-	return any(value) == nil
+	return empty.IsNil(v)
 }
 
 // SetComparator sets/changes the comparator for sorting.

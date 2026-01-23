@@ -22,8 +22,11 @@ type NilChecker[V any] func(V) bool
 
 // KVMap wraps map type `map[K]V` and provides more map features.
 type KVMap[K comparable, V any] struct {
-	mu         rwmutex.RWMutex
-	data       map[K]V
+	mu   rwmutex.RWMutex
+	data map[K]V
+
+	// nilChecker is the custom nil checker function.
+	// It uses empty.IsNil if it's nil.
 	nilChecker NilChecker[V]
 }
 
@@ -58,15 +61,15 @@ func NewKVMapFrom[K comparable, V any](data map[K]V, safe ...bool) *KVMap[K, V] 
 // The parameter `safe` is used to specify whether to use the map in concurrent-safety mode, which is false by default.
 func NewKVMapWithCheckerFrom[K comparable, V any](data map[K]V, checker NilChecker[V], safe ...bool) *KVMap[K, V] {
 	m := NewKVMapFrom[K, V](data, safe...)
-	m.RegisterNilChecker(checker)
+	m.SetNilChecker(checker)
 	return m
 }
 
-// RegisterNilChecker registers a custom nil checker function for the map values.
+// SetNilChecker registers a custom nil checker function for the map values.
 // This function is used to determine if a value should be considered as nil.
 // The nil checker function takes a value of type V and returns a boolean indicating
 // whether the value should be treated as nil.
-func (m *KVMap[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) {
+func (m *KVMap[K, V]) SetNilChecker(nilChecker NilChecker[V]) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.nilChecker = nilChecker
@@ -74,12 +77,12 @@ func (m *KVMap[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) {
 
 // isNil checks whether the given value is nil.
 // It first checks if a custom nil checker function is registered and uses it if available,
-// otherwise it performs a standard nil check using any(v) == nil.
+// otherwise it falls back to the default empty.IsNil function.
 func (m *KVMap[K, V]) isNil(v V) bool {
 	if m.nilChecker != nil {
 		return m.nilChecker(v)
 	}
-	return any(v) == nil
+	return empty.IsNil(v)
 }
 
 // Iterator iterates the hash map readonly with custom callback function `f`.
@@ -242,11 +245,12 @@ func (m *KVMap[K, V]) Pops(size int) map[K]V {
 	return newMap
 }
 
-// doSetWithLockCheck checks whether value of the key exists with mutex.Lock,
-// if not exists, set value to the map with given `key`,
-// or else just return the existing value.
+// doSetWithLockCheck sets value with given `value` if it does not exist,
+// and then returns this value and whether it exists.
 //
-// It returns value with given `key`.
+// It is a helper function for GetOrSet* functions.
+//
+// Note that, it does not add the value to the map if the given `value` is nil.
 func (m *KVMap[K, V]) doSetWithLockCheck(key K, value V) (val V, ok bool) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -274,6 +278,8 @@ func (m *KVMap[K, V]) GetOrSet(key K, value V) V {
 // GetOrSetFunc returns the value by key,
 // or sets value with returned value of callback function `f` if it does not exist
 // and then returns this value.
+//
+// Note that, it does not add the value to the map if the returned value of `f` is nil.
 func (m *KVMap[K, V]) GetOrSetFunc(key K, f func() V) V {
 	v, _ := m.doSetWithLockCheck(key, f())
 	return v
@@ -285,6 +291,8 @@ func (m *KVMap[K, V]) GetOrSetFunc(key K, f func() V) V {
 //
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f`
 // with mutex.Lock of the hash map.
+//
+// Note that, it does not add the value to the map if the returned value of `f` is nil.
 func (m *KVMap[K, V]) GetOrSetFuncLock(key K, f func() V) V {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -524,6 +532,9 @@ func (m *KVMap[K, V]) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
+// DO NOT change this receiver to pointer type, as the KVMap can be used as a var defined variable, like:
+// var m gmap.KVMap[int, string]
+// Please refer to corresponding tests for more details.
 func (m KVMap[K, V]) MarshalJSON() ([]byte, error) {
 	return json.Marshal(gconv.Map(m.Map()))
 }

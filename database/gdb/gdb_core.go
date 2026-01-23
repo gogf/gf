@@ -113,19 +113,17 @@ func (c *Core) Close(ctx context.Context) (err error) {
 	if err = c.cache.Close(ctx); err != nil {
 		return err
 	}
-	c.links.LockFunc(func(m map[any]any) {
+	c.links.LockFunc(func(m map[ConfigNode]*sql.DB) {
 		for k, v := range m {
-			if db, ok := v.(*sql.DB); ok {
-				err = db.Close()
-				if err != nil {
-					err = gerror.WrapCode(gcode.CodeDbOperationError, err, `db.Close failed`)
-				}
-				intlog.Printf(ctx, `close link: %s, err: %v`, k, err)
-				if err != nil {
-					return
-				}
-				delete(m, k)
+			err = v.Close()
+			if err != nil {
+				err = gerror.WrapCode(gcode.CodeDbOperationError, err, `db.Close failed`)
 			}
+			intlog.Printf(ctx, `close link: %s, err: %v`, gconv.String(k), err)
+			if err != nil {
+				return
+			}
+			delete(m, k)
 		}
 	})
 	return

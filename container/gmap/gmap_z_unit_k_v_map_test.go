@@ -774,6 +774,13 @@ func Test_KVMap_MarshalJSON(t *testing.T) {
 		t.Assert(data["a"], 1)
 		t.Assert(data["b"], 2)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		var m gmap.KVMap[int, int]
+		m.Set(1, 10)
+		b, err := json.Marshal(m)
+		t.AssertNil(err)
+		t.Assert(string(b), `{"1":10}`)
+	})
 }
 
 func Test_KVMap_UnmarshalJSON(t *testing.T) {
@@ -1647,9 +1654,10 @@ func Test_KVMap_TypedNil(t *testing.T) {
 				return nil
 			})
 		}
-		t.Assert(m1.Size(), 10)
+		t.Assert(m1.Size(), 5)
+
 		m2 := gmap.NewKVMap[int, *Student](true)
-		m2.RegisterNilChecker(func(student *Student) bool {
+		m2.SetNilChecker(func(student *Student) bool {
 			return student == nil
 		})
 		for i := 0; i < 10; i++ {
@@ -1679,7 +1687,8 @@ func Test_NewKVMapWithChecker_TypedNil(t *testing.T) {
 				return nil
 			})
 		}
-		t.Assert(m1.Size(), 10)
+		t.Assert(m1.Size(), 5)
+
 		m2 := gmap.NewKVMapWithChecker[int, *Student](func(student *Student) bool {
 			return student == nil
 		}, true)

@@ -1159,6 +1159,13 @@ func Test_ListKVMap_MarshalJSON_Error(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(string(b), `{"a":"1"}`)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		var m gmap.ListKVMap[int, int]
+		m.Set(1, 10)
+		b, err := json.Marshal(m)
+		t.AssertNil(err)
+		t.Assert(string(b), `{"1":10}`)
+	})
 }
 
 // Test empty map operations
@@ -1358,9 +1365,10 @@ func Test_ListKVMap_TypedNil(t *testing.T) {
 				return nil
 			})
 		}
-		t.Assert(m1.Size(), 10)
+		t.Assert(m1.Size(), 5)
+
 		m2 := gmap.NewListKVMap[int, *Student](true)
-		m2.RegisterNilChecker(func(student *Student) bool {
+		m2.SetNilChecker(func(student *Student) bool {
 			return student == nil
 		})
 		for i := 0; i < 10; i++ {
@@ -1390,7 +1398,8 @@ func Test_NewListKVMapWithChecker_TypedNil(t *testing.T) {
 				return nil
 			})
 		}
-		t.Assert(m1.Size(), 10)
+		t.Assert(m1.Size(), 5)
+
 		m2 := gmap.NewListKVMapWithChecker[int, *Student](func(student *Student) bool {
 			return student == nil
 		}, true)
