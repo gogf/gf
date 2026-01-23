@@ -82,10 +82,11 @@ func NewAVLKVTreeWithCheckerFrom[K comparable, V any](comparator func(v1, v2 K) 
 // This function is used to determine if a value should be considered as nil.
 // The nil checker function takes a value of type V and returns a boolean indicating
 // whether the value should be treated as nil.
-func (tree *AVLKVTree[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) {
+func (tree *AVLKVTree[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) *AVLKVTree[K, V] {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.nilChecker = nilChecker
+	return tree
 }
 
 // isNil checks whether the given value is nil.
