@@ -22,8 +22,8 @@ agent: "agent"
 - 检索当前仓库源码的所有代码文件，按照组件维度进行分类整理，整理成类似于以下任务形式，以便于后续按照任务形式处理源码文件：
 ```markdown
 - net/ghttp
- - [ ] ghttp_func.go
- - [ ] ghttp_server.go
+  - [ ] ghttp_func.go
+  - [ ] ghttp_server.go
 ```
 - 将以上任务内容写入到任务文件，任务文件目录路径为：如：${fileDirname}/../../temp ，任务文件名称格式为：当前最新版本号-comments-update-tasks.md ，例如：v2.8.0-comments-update-tasks.md，以便于AI Agent根据任务逐步整理源码文件注释内容。
 - 如果该版本的任务文件已经存在，则不需要重复创建任务文件，直接使用已有的任务文件即可。
