@@ -95,6 +95,91 @@ func TestExecutor_WithBeforeAndAfter(t *testing.T) {
 	})
 }
 
+func TestExecutor_WithOnError(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		errorHandled := gtype.NewBool(false)
+		receivedError := gtype.NewInterface(nil)
+		ctx := context.Background()
+
+		expectedErr := errors.New("main function error")
+
+		executor := gexecutor.New[string, string]("input")
+		executor = executor.WithMain(func(ctx context.Context, input string) (string, error) {
+			return "", expectedErr
+		}).WithOnError(func(ctx context.Context, err error) {
+			errorHandled.Set(true)
+			receivedError.Set(err)
+		})
+
+		result, err := executor.Do(ctx)
+
+		t.Assert(err, expectedErr)
+		t.Assert(result, "")
+		t.Assert(errorHandled.Val(), true)
+		t.Assert(receivedError.Val(), expectedErr)
+	})
+}
+
+func TestExecutor_WithBeforeAfterAndOnError(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		beforeExecuted := gtype.NewBool(false)
+		afterExecuted := gtype.NewBool(false)
+		errorHandled := gtype.NewBool(false)
+		ctx := context.Background()
+
+		expectedErr := errors.New("processing error")
+
+		executor := gexecutor.New[int, string](5)
+		executor = executor.WithBefore(func(ctx context.Context, input int) {
+			beforeExecuted.Set(true)
+		}).WithMain(func(ctx context.Context, input int) (string, error) {
+			return "", expectedErr
+		}).WithAfter(func(ctx context.Context, result string) {
+			// This should not be executed when there's an error
+			afterExecuted.Set(true)
+		}).WithOnError(func(ctx context.Context, err error) {
+			errorHandled.Set(true)
+		})
+
+		result, err := executor.Do(ctx)
+
+		t.Assert(err, expectedErr)
+		t.Assert(result, "")
+		t.Assert(beforeExecuted.Val(), true)
+		t.Assert(afterExecuted.Val(), false) // After function should not be called when error occurs
+		t.Assert(errorHandled.Val(), true)
+	})
+}
+
+func TestExecutor_WithBeforeAfterAndNoError(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		beforeExecuted := gtype.NewBool(false)
+		afterExecuted := gtype.NewBool(false)
+		errorHandled := gtype.NewBool(false)
+		ctx := context.Background()
+
+		executor := gexecutor.New[int, string](5)
+		executor = executor.WithBefore(func(ctx context.Context, input int) {
+			beforeExecuted.Set(true)
+		}).WithMain(func(ctx context.Context, input int) (string, error) {
+			return "success_result", nil
+		}).WithAfter(func(ctx context.Context, result string) {
+			afterExecuted.Set(true)
+		}).WithOnError(func(ctx context.Context, err error) {
+			// This should not be called when there's no error
+			errorHandled.Set(true)
+		})
+
+		result, err := executor.Do(ctx)
+
+		t.Assert(err, nil)
+		t.Assert(result, "success_result")
+		t.Assert(beforeExecuted.Val(), true)
+		t.Assert(afterExecuted.Val(), true)
+		t.Assert(errorHandled.Val(), false) // Error handler should not be called when no error occurs
+	})
+}
+
 func TestExecutor_MainFunctionError(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expectedErr := errors.New("main function error")

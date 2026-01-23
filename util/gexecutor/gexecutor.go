@@ -28,6 +28,8 @@ type Executor[T any, R any] struct {
 	beforeFunc func(ctx context.Context, input T)
 	// afterFunc is an optional function that runs after the main function
 	afterFunc func(ctx context.Context, result R)
+	// onErrorFunc is an optional function that runs when an error occurs
+	onErrorFunc func(context.Context, error)
 }
 
 // New creates and returns a new Executor instance with the given input.
@@ -41,10 +43,11 @@ func New[T any, R any](input T) *Executor[T, R] {
 // Returns a new Executor instance with the main function set.
 func (e *Executor[T, R]) WithMain(f func(context.Context, T) (R, error)) *Executor[T, R] {
 	return &Executor[T, R]{
-		input:      e.input,
-		mainFunc:   f,
-		beforeFunc: e.beforeFunc,
-		afterFunc:  e.afterFunc,
+		input:       e.input,
+		mainFunc:    f,
+		beforeFunc:  e.beforeFunc,
+		afterFunc:   e.afterFunc,
+		onErrorFunc: e.onErrorFunc,
 	}
 }
 
@@ -53,10 +56,11 @@ func (e *Executor[T, R]) WithMain(f func(context.Context, T) (R, error)) *Execut
 // Returns a new Executor instance with the before function set.
 func (e *Executor[T, R]) WithBefore(f func(context.Context, T)) *Executor[T, R] {
 	return &Executor[T, R]{
-		input:      e.input,
-		mainFunc:   e.mainFunc,
-		beforeFunc: f,
-		afterFunc:  e.afterFunc,
+		input:       e.input,
+		mainFunc:    e.mainFunc,
+		beforeFunc:  f,
+		afterFunc:   e.afterFunc,
+		onErrorFunc: e.onErrorFunc,
 	}
 }
 
@@ -65,10 +69,24 @@ func (e *Executor[T, R]) WithBefore(f func(context.Context, T)) *Executor[T, R] 
 // Returns a new Executor instance with the after function set.
 func (e *Executor[T, R]) WithAfter(f func(context.Context, R)) *Executor[T, R] {
 	return &Executor[T, R]{
-		input:      e.input,
-		mainFunc:   e.mainFunc,
-		beforeFunc: e.beforeFunc,
-		afterFunc:  f,
+		input:       e.input,
+		mainFunc:    e.mainFunc,
+		beforeFunc:  e.beforeFunc,
+		afterFunc:   f,
+		onErrorFunc: e.onErrorFunc,
+	}
+}
+
+// WithOnError sets the error handler function for the executor.
+// The error handler function runs when an error occurs and receives the context and error.
+// Returns a new Executor instance with the error handler function set.
+func (e *Executor[T, R]) WithOnError(f func(context.Context, error)) *Executor[T, R] {
+	return &Executor[T, R]{
+		input:       e.input,
+		mainFunc:    e.mainFunc,
+		beforeFunc:  e.beforeFunc,
+		afterFunc:   e.afterFunc,
+		onErrorFunc: f,
 	}
 }
 
@@ -91,6 +109,9 @@ func (e *Executor[T, R]) Do(ctx context.Context) (R, error) {
 	}
 	result, err := e.mainFunc(ctx, e.input)
 	if err != nil {
+		if e.onErrorFunc != nil {
+			e.onErrorFunc(ctx, err)
+		}
 		return zero, err
 	}
 
