@@ -7,6 +7,7 @@
 package gcode_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -34,5 +35,23 @@ func Test_WithCode(t *testing.T) {
 		c := gcode.WithCode(gcode.CodeInternalError, "CodeInternalError")
 		t.Assert(c.Code(), gcode.CodeInternalError.Code())
 		t.Assert(c.Detail(), "CodeInternalError")
+	})
+}
+
+func Test_String(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Test with detail
+		c := gcode.New(100, "test message", "test detail")
+		t.Assert(c.(fmt.Stringer).String(), "100:test message test detail")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// Test with message but no detail
+		c := gcode.New(100, "test message", nil)
+		t.Assert(c.(fmt.Stringer).String(), "100:test message")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// Test with no message and no detail
+		c := gcode.New(100, "", nil)
+		t.Assert(c.(fmt.Stringer).String(), "100")
 	})
 }

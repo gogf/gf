@@ -363,3 +363,37 @@ func Test_Router_DomainGroup(t *testing.T) {
 		t.Assert(client2.DeleteContent(ctx, "/app/comment/20"), "Not Found")
 	})
 }
+
+// issue#4100
+func TestIssue4100(t *testing.T) {
+	s := g.Server(guid.S())
+	d := s.Domain("")
+	d.BindHandler("/:name", func(r *ghttp.Request) {
+		r.Response.Write("/:name")
+	})
+	d.BindHandler("/:name/update", func(r *ghttp.Request) {
+		r.Response.Write(r.Get("name"))
+	})
+	d.BindHandler("/:name/:action", func(r *ghttp.Request) {
+		r.Response.Write(r.Get("action"))
+	})
+	d.BindHandler("/:name/*any", func(r *ghttp.Request) {
+		r.Response.Write(r.Get("any"))
+	})
+	d.BindHandler("/user/list/{field}.html", func(r *ghttp.Request) {
+		r.Response.Write(r.Get("field"))
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		t.Assert(client.GetContent(ctx, "/john"), "")
+		t.Assert(client.GetContent(ctx, "/john/update"), "john")
+		t.Assert(client.GetContent(ctx, "/john/edit"), "edit")
+		t.Assert(client.GetContent(ctx, "/user/list/100.html"), "100")
+	})
+}

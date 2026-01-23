@@ -11,6 +11,7 @@ import (
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -23,12 +24,19 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
+var (
+	// Compile-time checking for interface implementation.
+	_ Adapter        = (*AdapterFile)(nil)
+	_ WatcherAdapter = (*AdapterFile)(nil)
+)
+
 // AdapterFile implements interface Adapter using file.
 type AdapterFile struct {
-	defaultFileNameOrPath string           // Default configuration file name or file path.
-	searchPaths           *garray.StrArray // Searching the path array.
-	jsonMap               *gmap.StrAnyMap  // The pared JSON objects for configuration files.
-	violenceCheck         bool             // Whether it does violence check in value index searching. It affects the performance when set true(false in default).
+	defaultFileNameOrPath *gtype.String                    // Default configuration file name or file path.
+	searchPaths           *garray.StrArray                 // Searching the path array.
+	jsonMap               *gmap.KVMap[string, *gjson.Json] // The parsed JSON objects for configuration files.
+	violenceCheck         bool                             // Whether it does violence check in value index searching. It affects the performance when set true(false in default).
+	watchers              *WatcherRegistry                 // Watchers for watching file changes.
 }
 
 const (
@@ -38,8 +46,9 @@ const (
 
 var (
 	supportedFileTypes     = []string{"toml", "yaml", "yml", "json", "ini", "xml", "properties"} // All supported file types suffixes.
-	localInstances         = gmap.NewStrAnyMap(true)                                             // Instances map containing configuration instances.
-	customConfigContentMap = gmap.NewStrStrMap(true)                                             // Customized configuration content.
+	checker                = func(v *Config) bool { return v == nil }
+	localInstances         = gmap.NewKVMapWithChecker[string, *Config](checker, true) // Instances map containing configuration instances.
+	customConfigContentMap = gmap.NewStrStrMap(true)                                  // Customized configuration content.
 
 	// Prefix array for trying searching in resource manager.
 	resourceTryFolders = []string{
@@ -49,6 +58,9 @@ var (
 
 	// Prefix array for trying searching in the local system.
 	localSystemTryFolders = []string{"", "config/", "manifest/config"}
+
+	// jsonMapChecker is the checker for JSON map.
+	jsonMapChecker = func(v *gjson.Json) bool { return v == nil }
 )
 
 // NewAdapterFile returns a new configuration management object.
@@ -67,9 +79,10 @@ func NewAdapterFile(fileNameOrPath ...string) (*AdapterFile, error) {
 		}
 	}
 	config := &AdapterFile{
-		defaultFileNameOrPath: usedFileNameOrPath,
+		defaultFileNameOrPath: gtype.NewString(usedFileNameOrPath),
 		searchPaths:           garray.NewStrArray(true),
-		jsonMap:               gmap.NewStrAnyMap(true),
+		jsonMap:               gmap.NewKVMapWithChecker[string, *gjson.Json](jsonMapChecker, true),
+		watchers:              NewWatcherRegistry(),
 	}
 	// Customized dir path from env/cmd.
 	if customPath := command.GetOptWithEnv(commandEnvKeyForPath); customPath != "" {
@@ -121,12 +134,12 @@ func (a *AdapterFile) SetViolenceCheck(check bool) {
 
 // SetFileName sets the default configuration file name.
 func (a *AdapterFile) SetFileName(fileNameOrPath string) {
-	a.defaultFileNameOrPath = fileNameOrPath
+	a.defaultFileNameOrPath.Set(fileNameOrPath)
 }
 
 // GetFileName returns the default configuration file name.
 func (a *AdapterFile) GetFileName() string {
-	return a.defaultFileNameOrPath
+	return a.defaultFileNameOrPath.String()
 }
 
 // Get retrieves and returns value by specified `pattern`.
@@ -159,8 +172,17 @@ func (a *AdapterFile) Set(pattern string, value any) error {
 		return err
 	}
 	if j != nil {
-		return j.Set(pattern, value)
+		err = j.Set(pattern, value)
+		if err != nil {
+			return err
+		}
 	}
+	fileName := a.GetFileName()
+	filePath, _ := a.GetFilePath(fileName)
+	fileType := gfile.ExtName(fileName)
+	adapterCtx := NewAdapterFileCtx().WithOperation(OperationSet).WithKey(pattern).WithValue(value).
+		WithFileName(fileName).WithFilePath(filePath).WithFileType(fileType)
+	a.notifyWatchers(adapterCtx.Ctx)
 	return nil
 }
 
@@ -189,6 +211,11 @@ func (a *AdapterFile) MustGet(ctx context.Context, pattern string) *gvar.Var {
 // which will force reload configuration content from the file.
 func (a *AdapterFile) Clear() {
 	a.jsonMap.Clear()
+	fileName := a.GetFileName()
+	filePath, _ := a.GetFilePath(fileName)
+	fileType := gfile.ExtName(fileName)
+	adapterFileCtx := NewAdapterFileCtx().WithOperation(OperationClear).WithFileName(fileName).WithFilePath(filePath).WithFileType(fileType)
+	a.notifyWatchers(adapterFileCtx.Ctx)
 }
 
 // Dump prints current JSON object with more manually readable.
@@ -200,7 +227,7 @@ func (a *AdapterFile) Dump() {
 
 // Available checks and returns whether configuration of given `file` is available.
 func (a *AdapterFile) Available(ctx context.Context, fileName ...string) bool {
-	checkFileName := gutil.GetOrDefaultStr(a.defaultFileNameOrPath, fileName...)
+	checkFileName := gutil.GetOrDefaultStr(a.defaultFileNameOrPath.String(), fileName...)
 	// Custom configuration content exists.
 	if a.GetContent(checkFileName) != "" {
 		return true
@@ -228,16 +255,12 @@ func (a *AdapterFile) autoCheckAndAddMainPkgPathToSearchPaths() {
 // getJson returns a *gjson.Json object for the specified `file` content.
 // It would print error if file reading fails. It returns nil if any error occurs.
 func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json, err error) {
-	var (
-		usedFileNameOrPath = a.defaultFileNameOrPath
-	)
+	usedFileNameOrPath := a.GetFileName()
 	if len(fileNameOrPath) > 0 && fileNameOrPath[0] != "" {
 		usedFileNameOrPath = fileNameOrPath[0]
-	} else {
-		usedFileNameOrPath = a.defaultFileNameOrPath
 	}
 	// It uses JSON map to cache specified configuration file content.
-	result := a.jsonMap.GetOrSetFuncLock(usedFileNameOrPath, func() any {
+	result := a.jsonMap.GetOrSetFuncLock(usedFileNameOrPath, func() *gjson.Json {
 		var (
 			content  string
 			filePath string
@@ -278,17 +301,60 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 		// Add monitor for this configuration file,
 		// any changes of this file will refresh its cache in the Config object.
 		if filePath != "" && !gres.Contains(filePath) {
-			_, err = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
+			_, err := gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
 				a.jsonMap.Remove(usedFileNameOrPath)
+				if event.IsWrite() || event.IsRemove() || event.IsCreate() || event.IsRename() || event.IsChmod() {
+					fileType := gfile.ExtName(usedFileNameOrPath)
+					adapterCtx := NewAdapterFileCtx().WithFileName(usedFileNameOrPath).WithFilePath(filePath).WithFileType(fileType)
+					switch {
+					case event.IsWrite():
+						adapterCtx.WithOperation(OperationWrite)
+					case event.IsRemove():
+						adapterCtx.WithOperation(OperationRemove)
+					case event.IsCreate():
+						adapterCtx.WithOperation(OperationCreate)
+					case event.IsRename():
+						adapterCtx.WithOperation(OperationRename)
+					case event.IsChmod():
+						adapterCtx.WithOperation(OperationChmod)
+					}
+					a.notifyWatchers(adapterCtx.Ctx)
+				}
+				_ = event.Watcher.Remove(filePath)
 			})
 			if err != nil {
-				return nil
+				intlog.Errorf(context.TODO(), "failed listen config file event[%s]: %v", filePath, err)
 			}
 		}
 		return configJson
 	})
 	if result != nil {
-		return result.(*gjson.Json), err
+		return result, err
 	}
 	return
+}
+
+// AddWatcher adds a watcher for the specified configuration file.
+func (a *AdapterFile) AddWatcher(name string, fn WatcherFunc) {
+	a.watchers.Add(name, fn)
+}
+
+// RemoveWatcher removes the watcher for the specified configuration file.
+func (a *AdapterFile) RemoveWatcher(name string) {
+	a.watchers.Remove(name)
+}
+
+// GetWatcherNames returns all watcher names.
+func (a *AdapterFile) GetWatcherNames() []string {
+	return a.watchers.GetNames()
+}
+
+// IsWatching checks and returns whether the specified `name` is watching.
+func (a *AdapterFile) IsWatching(name string) bool {
+	return a.watchers.IsWatching(name)
+}
+
+// notifyWatchers notifies all watchers.
+func (a *AdapterFile) notifyWatchers(ctx context.Context) {
+	a.watchers.Notify(ctx)
 }

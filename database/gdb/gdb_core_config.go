@@ -108,6 +108,11 @@ type ConfigNode struct {
 	// Optional field
 	MaxConnLifeTime time.Duration `json:"maxLifeTime"`
 
+	// MaxIdleConnTime specifies the maximum idle time of a connection before being closed
+	// This is Go 1.15+ feature: sql.DB.SetConnMaxIdleTime
+	// Optional field
+	MaxIdleConnTime time.Duration `json:"maxIdleTime"`
+
 	// QueryTimeout specifies the maximum execution time for DQL operations
 	// Optional field
 	QueryTimeout time.Duration `json:"queryTimeout"`
@@ -241,15 +246,47 @@ func AddDefaultConfigNode(node ConfigNode) error {
 }
 
 // AddDefaultConfigGroup adds multiple node configurations to configuration of default group.
+//
+// Deprecated: Use SetDefaultConfigGroup instead.
 func AddDefaultConfigGroup(nodes ConfigGroup) error {
 	return SetConfigGroup(DefaultGroupName, nodes)
 }
 
+// SetDefaultConfigGroup sets multiple node configurations to configuration of default group.
+func SetDefaultConfigGroup(nodes ConfigGroup) error {
+	return SetConfigGroup(DefaultGroupName, nodes)
+}
+
 // GetConfig retrieves and returns the configuration of given group.
+//
+// Deprecated: Use GetConfigGroup instead.
 func GetConfig(group string) ConfigGroup {
+	configGroup, _ := GetConfigGroup(group)
+	return configGroup
+}
+
+// GetConfigGroup retrieves and returns the configuration of given group.
+// It returns an error if the group does not exist, or an empty slice if the group exists but has no nodes.
+func GetConfigGroup(group string) (ConfigGroup, error) {
 	configs.RLock()
 	defer configs.RUnlock()
-	return configs.config[group]
+
+	configGroup, exists := configs.config[group]
+	if !exists {
+		return nil, gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`configuration group "%s" not found`,
+			group,
+		)
+	}
+	return configGroup, nil
+}
+
+// GetAllConfig retrieves and returns all configurations.
+func GetAllConfig() Config {
+	configs.RLock()
+	defer configs.RUnlock()
+	return configs.config
 }
 
 // SetDefaultGroup sets the group name for default configuration.
@@ -319,6 +356,16 @@ func (c *Core) SetMaxOpenConnCount(n int) {
 // If d <= 0, connections are not closed due to a connection's age.
 func (c *Core) SetMaxConnLifeTime(d time.Duration) {
 	c.dynamicConfig.MaxConnLifeTime = d
+}
+
+// SetMaxIdleConnTime sets the maximum amount of time a connection may be idle before being closed.
+//
+// Idle connections may be closed lazily before reuse.
+//
+// If d <= 0, connections are not closed due to a connection's idle time.
+// This is Go 1.15+ feature: sql.DB.SetConnMaxIdleTime.
+func (c *Core) SetMaxIdleConnTime(d time.Duration) {
+	c.dynamicConfig.MaxIdleConnTime = d
 }
 
 // GetConfig returns the current used node configuration.

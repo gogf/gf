@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/net/gsvc"
 )
 
-var _ gsvc.Registry = &Registry{}
+var _ gsvc.Registry = (*Registry)(nil)
 
 // Content for custom service Marshal/Unmarshal.
 type Content struct {

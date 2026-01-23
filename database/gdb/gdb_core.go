@@ -12,6 +12,7 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -112,19 +113,17 @@ func (c *Core) Close(ctx context.Context) (err error) {
 	if err = c.cache.Close(ctx); err != nil {
 		return err
 	}
-	c.links.LockFunc(func(m map[any]any) {
+	c.links.LockFunc(func(m map[ConfigNode]*sql.DB) {
 		for k, v := range m {
-			if db, ok := v.(*sql.DB); ok {
-				err = db.Close()
-				if err != nil {
-					err = gerror.WrapCode(gcode.CodeDbOperationError, err, `db.Close failed`)
-				}
-				intlog.Printf(ctx, `close link: %s, err: %v`, k, err)
-				if err != nil {
-					return
-				}
-				delete(m, k)
+			err = v.Close()
+			if err != nil {
+				err = gerror.WrapCode(gcode.CodeDbOperationError, err, `db.Close failed`)
 			}
+			intlog.Printf(ctx, `close link: %s, err: %v`, gconv.String(k), err)
+			if err != nil {
+				return
+			}
+			delete(m, k)
 		}
 	})
 	return
@@ -174,7 +173,7 @@ func (c *Core) GetOne(ctx context.Context, sql string, args ...any) (Record, err
 
 // GetArray queries and returns data values as slice from database.
 // Note that if there are multiple columns in the result, it returns just one column values randomly.
-func (c *Core) GetArray(ctx context.Context, sql string, args ...any) ([]Value, error) {
+func (c *Core) GetArray(ctx context.Context, sql string, args ...any) (Array, error) {
 	all, err := c.db.DoSelect(ctx, nil, sql, args...)
 	if err != nil {
 		return nil, err
@@ -445,26 +444,33 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 	// Group the list by fields. Different fields to different list.
 	// It here uses ListMap to keep sequence for data inserting.
 	// ============================================================================================
-	var keyListMap = gmap.NewListMap()
+	var (
+		keyListMap    = gmap.NewListMap()
+		tmpKeyListMap = make(map[string]List)
+	)
 	for _, item := range list {
-		var (
-			tmpKeys              = make([]string, 0)
-			tmpKeysInSequenceStr string
-		)
+		mapLen := len(item)
+		if mapLen == 0 {
+			continue
+		}
+		tmpKeys := make([]string, 0, mapLen)
 		for k := range item {
 			tmpKeys = append(tmpKeys, k)
 		}
-		keys, err = c.fieldsToSequence(ctx, table, tmpKeys)
-		if err != nil {
-			return nil, err
+		if mapLen > 1 {
+			sort.Strings(tmpKeys)
 		}
-		tmpKeysInSequenceStr = gstr.Join(keys, ",")
-		if !keyListMap.Contains(tmpKeysInSequenceStr) {
-			keyListMap.Set(tmpKeysInSequenceStr, make(List, 0))
+		keys = tmpKeys // for fieldsToSequence
+
+		tmpKeysInSequenceStr := gstr.Join(tmpKeys, ",")
+		if tmpKeyListMapItem, ok := tmpKeyListMap[tmpKeysInSequenceStr]; ok {
+			tmpKeyListMap[tmpKeysInSequenceStr] = append(tmpKeyListMapItem, item)
+		} else {
+			tmpKeyListMap[tmpKeysInSequenceStr] = List{item}
 		}
-		tmpKeysInSequenceList := keyListMap.Get(tmpKeysInSequenceStr).(List)
-		tmpKeysInSequenceList = append(tmpKeysInSequenceList, item)
-		keyListMap.Set(tmpKeysInSequenceStr, tmpKeysInSequenceList)
+	}
+	for tmpKeysInSequenceStr, itemList := range tmpKeyListMap {
+		keyListMap.Set(tmpKeysInSequenceStr, itemList)
 	}
 	if keyListMap.Size() > 1 {
 		var (
@@ -486,6 +492,15 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 			return true
 		})
 		return &sqlResult, err
+	}
+
+	keys, err = c.fieldsToSequence(ctx, table, keys)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(keys) == 0 {
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "no valid data fields found in table")
 	}
 
 	// Prepare the batch result pointer.
@@ -742,11 +757,35 @@ func (c *Core) GetInnerMemCache() *gcache.Cache {
 	return c.innerMemCache
 }
 
+func (c *Core) SetTableFields(ctx context.Context, table string, fields map[string]*TableField, schema ...string) error {
+	if table == "" {
+		return gerror.NewCode(gcode.CodeInvalidParameter, "table name cannot be empty")
+	}
+	charL, charR := c.db.GetChars()
+	table = gstr.Trim(table, charL+charR)
+	if gstr.Contains(table, " ") {
+		return gerror.NewCode(
+			gcode.CodeInvalidParameter,
+			"function TableFields supports only single table operations",
+		)
+	}
+	var (
+		innerMemCache = c.GetInnerMemCache()
+		// prefix:group@schema#table
+		cacheKey = genTableFieldsCacheKey(
+			c.db.GetGroup(),
+			gutil.GetOrDefaultStr(c.db.GetSchema(), schema...),
+			table,
+		)
+	)
+	return innerMemCache.Set(ctx, cacheKey, fields, gcache.DurationNoExpire)
+}
+
 // GetTablesWithCache retrieves and returns the table names of current database with cache.
 func (c *Core) GetTablesWithCache() ([]string, error) {
 	var (
 		ctx           = c.db.GetCtx()
-		cacheKey      = fmt.Sprintf(`Tables:%s`, c.db.GetGroup())
+		cacheKey      = genTableNamesCacheKey(c.db.GetGroup())
 		cacheDuration = gcache.DurationNoExpire
 		innerMemCache = c.GetInnerMemCache()
 	)
