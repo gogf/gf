@@ -76,7 +76,8 @@ test(container/garray): add unit tests for sorted array
 
 1. **检查待提交文件**
    - 使用 `git status` 和 `git diff` 确认本次需要提交的变更
-   - 排除调试、临时或生成文件，以及可能包含敏感信息的文件
+   - 在暂存之前排除调试、临时或生成文件，以及可能包含敏感信息的文件，确保只提交相关修改
+   - 避免使用 `git add -A` 或 `git add .` 一次性暂存所有变更
 
 2. **选择性暂存变更**
    - 使用 `git add <file1> <file2> ...` 按文件添加需要提交的修改
