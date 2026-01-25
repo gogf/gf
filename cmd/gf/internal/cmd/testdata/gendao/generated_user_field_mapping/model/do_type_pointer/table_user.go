@@ -5,10 +5,9 @@
 package do
 
 import (
-	"github.com/shopspring/decimal"
-
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/shopspring/decimal"
 )
 
 // TableUser is the golang structure of table table_user for DAO operations like Where/Data.

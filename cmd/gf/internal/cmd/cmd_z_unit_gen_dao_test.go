@@ -413,7 +413,7 @@ func Test_Gen_Dao_Sqlite3(t *testing.T) {
 	})
 }
 
-func Test_Gen_Dao_PointerType_Default(t *testing.T) {
+func Test_Gen_Dao_TypePointer_Default(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err        error
@@ -462,7 +462,7 @@ func Test_Gen_Dao_PointerType_Default(t *testing.T) {
 				NoModelComment:     false,
 				Clear:              false,
 				GenTable:           false,
-				UsePointerTypeDo:   true,
+				TypePointerSupport: true,
 				TypeMapping:        nil,
 				FieldMapping:       nil,
 			}
@@ -490,24 +490,26 @@ func Test_Gen_Dao_PointerType_Default(t *testing.T) {
 		t.Assert(files, []string{
 			filepath.FromSlash(path + "/dao/internal/table_user.go"),
 			filepath.FromSlash(path + "/dao/table_user.go"),
-			filepath.FromSlash(path + "/model/do_pointer_type/table_user.go"),
+			filepath.FromSlash(path + "/model/do/table_user.go"),
 			filepath.FromSlash(path + "/model/entity/table_user.go"),
 		})
+
 		// content
 		testPath := gtest.DataPath("gendao", "generated_user")
 		expectFiles := []string{
 			filepath.FromSlash(testPath + "/dao/internal/table_user.go"),
 			filepath.FromSlash(testPath + "/dao/table_user.go"),
-			filepath.FromSlash(testPath + "/model/do/table_user.go"),
+			filepath.FromSlash(testPath + "/model/do_type_pointer/table_user.go"),
 			filepath.FromSlash(testPath + "/model/entity/table_user.go"),
 		}
+
 		for i := range files {
 			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
 		}
 	})
 }
 
-func Test_Gen_Dao_PointerType_TypeMapping(t *testing.T) {
+func Test_Gen_Dao_TypePointer_TypeMapping(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err        error
@@ -556,7 +558,7 @@ func Test_Gen_Dao_PointerType_TypeMapping(t *testing.T) {
 				NoModelComment:     false,
 				Clear:              false,
 				GenTable:           false,
-				UsePointerTypeDo:   true,
+				TypePointerSupport: true,
 				TypeMapping: map[gendao.DBFieldTypeName]gendao.CustomAttributeType{
 					"int": {
 						Type:   "int64",
@@ -593,7 +595,7 @@ func Test_Gen_Dao_PointerType_TypeMapping(t *testing.T) {
 		t.Assert(files, []string{
 			filepath.FromSlash(path + "/dao/internal/table_user.go"),
 			filepath.FromSlash(path + "/dao/table_user.go"),
-			filepath.FromSlash(path + "/model/do_pointer_type/table_user.go"),
+			filepath.FromSlash(path + "/model/do/table_user.go"),
 			filepath.FromSlash(path + "/model/entity/table_user.go"),
 		})
 		// content
@@ -601,17 +603,17 @@ func Test_Gen_Dao_PointerType_TypeMapping(t *testing.T) {
 		expectFiles := []string{
 			filepath.FromSlash(testPath + "/dao/internal/table_user.go"),
 			filepath.FromSlash(testPath + "/dao/table_user.go"),
-			filepath.FromSlash(testPath + "/model/do/table_user.go"),
+			filepath.FromSlash(testPath + "/model/do_type_pointer/table_user.go"),
 			filepath.FromSlash(testPath + "/model/entity/table_user.go"),
 		}
 		for i := range files {
-			// _ = gfile.PutContents(expectFiles[i], gfile.GetContents(files[i]))
+			_ = gfile.PutContents(expectFiles[i], gfile.GetContents(files[i]))
 			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
 		}
 	})
 }
 
-func Test_Gen_Dao_PointerType_FieldMapping(t *testing.T) {
+func Test_Gen_Dao_TypePointer_FieldMapping(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err        error
@@ -660,7 +662,7 @@ func Test_Gen_Dao_PointerType_FieldMapping(t *testing.T) {
 				NoModelComment:     false,
 				Clear:              false,
 				GenTable:           false,
-				UsePointerTypeDo:   true,
+				TypePointerSupport: true,
 				TypeMapping: map[gendao.DBFieldTypeName]gendao.CustomAttributeType{
 					"int": {
 						Type:   "int64",
@@ -698,7 +700,7 @@ func Test_Gen_Dao_PointerType_FieldMapping(t *testing.T) {
 		t.Assert(files, []string{
 			filepath.FromSlash(path + "/dao/internal/table_user.go"),
 			filepath.FromSlash(path + "/dao/table_user.go"),
-			filepath.FromSlash(path + "/model/do_pointer_type/table_user.go"),
+			filepath.FromSlash(path + "/model/do/table_user.go"),
 			filepath.FromSlash(path + "/model/entity/table_user.go"),
 		})
 		// content
@@ -706,7 +708,7 @@ func Test_Gen_Dao_PointerType_FieldMapping(t *testing.T) {
 		expectFiles := []string{
 			filepath.FromSlash(testPath + "/dao/internal/table_user.go"),
 			filepath.FromSlash(testPath + "/dao/table_user.go"),
-			filepath.FromSlash(testPath + "/model/do/table_user.go"),
+			filepath.FromSlash(testPath + "/model/do_type_pointer/table_user.go"),
 			filepath.FromSlash(testPath + "/model/entity/table_user.go"),
 		}
 		for i := range files {
