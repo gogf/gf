@@ -397,6 +397,10 @@ func (m *Model) ScanList(structSlicePointer any, bindToAttrName string, relation
 	case 1:
 		relationFields = relationAttrNameAndFields[0]
 	}
+	depth := m.withBatchDepth
+	if depth == 0 {
+		depth = 1
+	}
 	return doScanList(doScanListInput{
 		Model:              m,
 		Result:             result,
@@ -405,6 +409,9 @@ func (m *Model) ScanList(structSlicePointer any, bindToAttrName string, relation
 		BindToAttrName:     bindToAttrName,
 		RelationAttrName:   relationAttrName,
 		RelationFields:     relationFields,
+		BatchEnabled:       m.withBatchEnabled,
+		BatchOptions:       m.withBatchOptions,
+		Depth:              depth,
 	})
 }
 

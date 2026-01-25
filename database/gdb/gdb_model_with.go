@@ -65,6 +65,33 @@ func (m *Model) WithAll() *Model {
 	return model
 }
 
+// WithBatch enables or disables the batch recursive scanning feature for association operations.
+// The batch recursive scanning feature is used to solve the N+1 problem by batching multiple
+// association queries into one or fewer queries.
+// It is disabled by default.
+// 开启或关闭关联查询的批量递归扫描功能（解决N+1问题）。
+// 默认关闭，开启后可大幅提升存在大量关联数据时的查询性能。
+func (m *Model) WithBatch(enabled ...bool) *Model {
+	model := m.getModel()
+	model.withBatchEnabled = true
+	if len(enabled) > 0 {
+		model.withBatchEnabled = enabled[0]
+	}
+	return model
+}
+
+// WithBatchOption provides fine-grained control for batch recursive scanning for association operations.
+// This method automatically enables the batch recursive scanning feature.
+// It allows configuring different batch sizes and thresholds for different association depths.
+// 为关联查询的批量递归扫描提供更细粒度的配置。
+// 调用该方法会自动开启批量递归扫描功能。支持按层级（Depth）设置 BatchSize、BatchThreshold 等。
+func (m *Model) WithBatchOption(options ...WithBatchOption) *Model {
+	model := m.getModel()
+	model.withBatchEnabled = true
+	model.withBatchOptions = append(model.withBatchOptions, options...)
+	return model
+}
+
 // doWithScanStruct handles model association operations feature for single struct.
 func (m *Model) doWithScanStruct(pointer any) error {
 	if len(m.withArray) == 0 && !m.withAll {
@@ -158,6 +185,9 @@ func (m *Model) doWithScanStruct(pointer any) error {
 		}
 		// Recursively with feature checks.
 		model = m.db.With(field.Value).Hook(m.hookHandler)
+		model.withBatchEnabled = m.withBatchEnabled
+		model.withBatchOptions = m.withBatchOptions
+		model.withBatchDepth = m.withBatchDepth + 1
 		if m.withAll {
 			model = model.WithAll()
 		} else {
@@ -284,6 +314,9 @@ func (m *Model) doWithScanStructs(pointer any) error {
 		}
 		// Recursively with feature checks.
 		model = m.db.With(field.Value).Hook(m.hookHandler)
+		model.withBatchEnabled = m.withBatchEnabled
+		model.withBatchOptions = m.withBatchOptions
+		model.withBatchDepth = m.withBatchDepth + 1
 		if m.withAll {
 			model = model.WithAll()
 		} else {
