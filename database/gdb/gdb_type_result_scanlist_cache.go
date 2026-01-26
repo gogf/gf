@@ -9,163 +9,164 @@ package gdb
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
-
-	"github.com/gogf/gf/v2/text/gstr"
 )
 
-// ==================== 字段元数据缓存管理器 ====================
-// 设计原则：
-// 1. 仅缓存确定性信息（字段索引、类型判断）
-// 2. 保留动态查找能力（嵌入字段、大小写不敏感）
-// 3. 使用 sync.Map 保证高性能并发读取
+// Field metadata cache manager
+// Design principle:
+// 1. Cache deterministic information only (field index, type judgment)
+// 2. Retain dynamic lookup capability (embedded fields, case insensitive)
+// 3. Use sync.Map to ensure high performance concurrent access
 
-// fieldCacheManager 字段缓存管理器
+// fieldCacheManager field cache manager
 type fieldCacheManager struct {
 	cache sync.Map // map[string]*fieldCache
 }
 
-// newFieldCacheManager 创建字段缓存管理器
+// newFieldCacheManager creates field cache manager
 func newFieldCacheManager() *fieldCacheManager {
 	return &fieldCacheManager{}
 }
 
-// fieldCacheMgr 全局字段缓存管理器实例
-var fieldCacheMgr = newFieldCacheManager()
+// fieldCacheInstance global field cache manager instance
+var fieldCacheInstance = newFieldCacheManager()
 
-// fieldCache 字段缓存
-// 存储可以安全缓存的确定性字段信息，避免在循环内重复反射
+// fieldCache field cache
+// Stores deterministic field information that can be safely cached to avoid repeated reflection in loops
 type fieldCache struct {
-	// 确定性字段索引（可安全缓存）
-	bindToAttrIndex   int          // 绑定属性的字段索引（如 UserDetail）
-	relationAttrIndex int          // 关系属性的字段索引（如 User，-1表示无）
-	isPointerElem     bool         // 数组元素是否为指针类型
-	bindToAttrKind    reflect.Kind // 绑定属性的类型
+	// Deterministic field index (can be safely cached)
+	bindToAttrIndex   int          // Field index of bound attribute (e.g. UserDetail)
+	relationAttrIndex int          // Field index of relation attribute (e.g. User, -1 means none)
+	isPointerElem     bool         // Whether array element is pointer type
+	bindToAttrKind    reflect.Kind // Type of bound attribute
 
-	// 字段名映射（支持大小写不敏感查找）
+	// Field name mapping (supports case-insensitive lookup)
 	fieldNameMap  map[string]string // lowercase -> OriginalName
 	fieldIndexMap map[string]int    // FieldName -> Index
 }
 
-// getOrBuild 获取或构建缓存（线程安全）
-func (m *fieldCacheManager) getOrBuild(
+// getOrSet gets or sets cache (thread-safe)
+func (m *fieldCacheManager) getOrSet(
 	arrayItemType reflect.Type,
 	bindToAttrName string,
 	relationAttrName string,
 ) (*fieldCache, error) {
-	// 构建缓存键
+	// Build cache key
 	cacheKey := m.buildCacheKey(arrayItemType, bindToAttrName, relationAttrName)
 
-	// 快速路径：缓存命中
+	// Fast path: cache hit
 	if cached, ok := m.cache.Load(cacheKey); ok {
 		return cached.(*fieldCache), nil
 	}
 
-	// 慢速路径：构建缓存
+	// Slow path: build cache
 	cache, err := m.buildCache(arrayItemType, bindToAttrName, relationAttrName)
 	if err != nil {
 		return nil, err
 	}
 
-	// 存储到缓存（如果并发构建，只有一个会被保存）
+	// Store to cache (if built concurrently, only one will be saved)
 	actual, _ := m.cache.LoadOrStore(cacheKey, cache)
 	return actual.(*fieldCache), nil
 }
 
-// buildCacheKey 构建缓存键
+// buildCacheKey builds the cache key
 func (m *fieldCacheManager) buildCacheKey(
 	typ reflect.Type,
 	bindToAttrName string,
 	relationAttrName string,
 ) string {
-	// 使用类型的唯一标识 + 字段名组合
-	return fmt.Sprintf("%s|%s|%s", typ.String(), bindToAttrName, relationAttrName)
+	// Estimate capacity: type name + two field names + 2 separators
+	var builder strings.Builder
+	typeName := typ.String()
+	builder.Grow(len(typeName) + len(bindToAttrName) + len(relationAttrName) + 2)
+
+	builder.WriteString(typeName)
+	builder.WriteByte('|')
+	builder.WriteString(bindToAttrName)
+	builder.WriteByte('|')
+	builder.WriteString(relationAttrName)
+
+	return builder.String()
 }
 
-// buildCache 构建字段访问缓存
+// buildCache builds field access cache
 func (m *fieldCacheManager) buildCache(
 	arrayItemType reflect.Type,
 	bindToAttrName string,
 	relationAttrName string,
 ) (*fieldCache, error) {
-	cache := &fieldCache{
-		relationAttrIndex: -1, // 默认值
-		fieldNameMap:      make(map[string]string),
-		fieldIndexMap:     make(map[string]int),
-	}
-
-	// 获取实际的结构体类型
+	// Get the actual struct type
 	structType := arrayItemType
+	isPointerElem := false
 	if structType.Kind() == reflect.Pointer {
 		structType = structType.Elem()
-		cache.isPointerElem = true
+		isPointerElem = true
 	}
 
 	if structType.Kind() != reflect.Struct {
 		return nil, fmt.Errorf("arrayItemType must be struct or pointer to struct, got: %s", arrayItemType.Kind())
 	}
 
-	// 遍历所有字段，构建字段映射
 	numField := structType.NumField()
+	cache := &fieldCache{
+		relationAttrIndex: -1,
+		isPointerElem:     isPointerElem,
+		fieldNameMap:      make(map[string]string, numField), // Pre-allocate capacity
+		fieldIndexMap:     make(map[string]int, numField),    // Pre-allocate capacity
+	}
+
+	// Iterate all fields, build field mapping
 	for i := 0; i < numField; i++ {
 		field := structType.Field(i)
 		fieldName := field.Name
 
 		cache.fieldIndexMap[fieldName] = i
-		cache.fieldNameMap[gstr.ToLower(fieldName)] = fieldName
+		cache.fieldNameMap[strings.ToLower(fieldName)] = fieldName
 	}
 
-	// 查找 bindToAttrName 字段索引
+	// Find bindToAttrName field index
 	if idx, ok := cache.fieldIndexMap[bindToAttrName]; ok {
 		cache.bindToAttrIndex = idx
 		field := structType.Field(idx)
 		cache.bindToAttrKind = field.Type.Kind()
-	} else if originalName, ok := cache.fieldNameMap[gstr.ToLower(bindToAttrName)]; ok {
-		// 大小写不敏感查找
-		cache.bindToAttrIndex = cache.fieldIndexMap[originalName]
-		field := structType.Field(cache.bindToAttrIndex)
-		cache.bindToAttrKind = field.Type.Kind()
 	} else {
-		return nil, fmt.Errorf(`field "%s" not found in type %s`, bindToAttrName, arrayItemType.String())
+		// Case-insensitive lookup
+		lowerBindName := strings.ToLower(bindToAttrName)
+		if originalName, ok := cache.fieldNameMap[lowerBindName]; ok {
+			cache.bindToAttrIndex = cache.fieldIndexMap[originalName]
+			field := structType.Field(cache.bindToAttrIndex)
+			cache.bindToAttrKind = field.Type.Kind()
+		} else {
+			return nil, fmt.Errorf(`field "%s" not found in type %s`, bindToAttrName, arrayItemType.String())
+		}
 	}
 
-	// 查找 relationAttrName 字段索引（可选）
+	// Find relationAttrName field index (optional)
 	if relationAttrName != "" {
 		if idx, ok := cache.fieldIndexMap[relationAttrName]; ok {
 			cache.relationAttrIndex = idx
-		} else if originalName, ok := cache.fieldNameMap[gstr.ToLower(relationAttrName)]; ok {
-			cache.relationAttrIndex = cache.fieldIndexMap[originalName]
+		} else {
+			// Case-insensitive lookup
+			lowerRelName := strings.ToLower(relationAttrName)
+			if originalName, ok := cache.fieldNameMap[lowerRelName]; ok {
+				cache.relationAttrIndex = cache.fieldIndexMap[originalName]
+			}
 		}
-		// 注意：如果找不到，保持 -1，表示需要使用 arrayElemValue 本身
+		// Note: if not found, keep -1, indicating that arrayElemValue itself should be used
 	}
 
 	return cache, nil
 }
 
-// clear 清空所有缓存（测试或热更新时使用）
+// clear clears all cache (used for testing or hot updates)
 func (m *fieldCacheManager) clear() {
-	m.cache.Range(func(key, value any) bool {
-		m.cache.Delete(key)
-		return true
-	})
+	m.cache.Clear()
 }
 
-// stats 获取缓存统计信息
-func (m *fieldCacheManager) stats() (count int) {
-	m.cache.Range(func(key, value any) bool {
-		count++
-		return true
-	})
-	return count
-}
-
-// ClearFieldCache 清空字段缓存（供外部调用）
-// 用于测试或应用热更新场景
+// ClearFieldCache clears field cache (for external calls)
+// Used for testing or application hot update scenarios
 func ClearFieldCache() {
-	fieldCacheMgr.clear()
-}
-
-// GetFieldCacheStats 获取字段缓存统计信息（供监控使用）
-func GetFieldCacheStats() int {
-	return fieldCacheMgr.stats()
+	fieldCacheInstance.clear()
 }
