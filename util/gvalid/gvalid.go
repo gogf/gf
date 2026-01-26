@@ -76,7 +76,7 @@ var (
 	}
 	// regular expression object for single rule
 	// which is compiled just once and of repeatable usage.
-	ruleRegex, _ = regexp.Compile(singleRulePattern)
+	ruleRegex = regexp.MustCompile(singleRulePattern)
 
 	// decorativeRuleMap defines all rules that are just marked rules which have neither functional meaning
 	// nor error messages.
