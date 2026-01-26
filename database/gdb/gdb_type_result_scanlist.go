@@ -480,7 +480,7 @@ func doScanListAssignmentLoop(
 
 	// Phase 1 优化：使用缓存管理器获取字段索引缓存
 	// 这里缓存了确定性的字段访问信息，避免循环内重复反射
-	cache, err := globalFieldCacheManager.GetOrBuild(
+	cache, err := fieldCacheMgr.getOrBuild(
 		arrayItemType,
 		in.BindToAttrName,
 		in.RelationAttrName,
