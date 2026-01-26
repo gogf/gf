@@ -479,7 +479,7 @@ func doScanListAssignmentLoop(
 	)
 
 	// 使用缓存管理器获取字段索引缓存，这里缓存了确定性的字段访问信息，避免循环内重复反射
-	cache, err := fieldCacheInstance.getOrSet(
+	cacheItem, err := fieldCacheInstance.getOrSet(
 		arrayItemType,
 		in.BindToAttrName,
 		in.RelationAttrName,
@@ -492,7 +492,7 @@ func doScanListAssignmentLoop(
 		arrayElemValue := arrayValue.Index(i)
 
 		// 使用缓存的类型判断结果
-		if cache.isPointerElem {
+		if cacheItem.isPointerElem {
 			arrayElemValue = arrayElemValue.Elem()
 			if !arrayElemValue.IsValid() {
 				arrayElemValue = reflect.New(arrayItemType.Elem()).Elem()
@@ -501,11 +501,11 @@ func doScanListAssignmentLoop(
 		}
 
 		// 使用缓存的字段索引直接访问（避免 FieldByName）
-		bindToAttrValue := arrayElemValue.Field(cache.bindToAttrIndex)
+		bindToAttrValue := arrayElemValue.Field(cacheItem.bindToAttrIndex)
 
 		// 获取关系属性值
-		if cache.relationAttrIndex >= 0 {
-			relationFromAttrValue = arrayElemValue.Field(cache.relationAttrIndex)
+		if cacheItem.relationAttrIndex >= 0 {
+			relationFromAttrValue = arrayElemValue.Field(cacheItem.relationAttrIndex)
 			if relationFromAttrValue.Kind() == reflect.Pointer {
 				relationFromAttrValue = relationFromAttrValue.Elem()
 			}

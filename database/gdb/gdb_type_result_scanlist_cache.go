@@ -21,7 +21,7 @@ import (
 
 // fieldCacheManager field cache manager
 type fieldCacheManager struct {
-	cache sync.Map // map[string]*fieldCache
+	cache sync.Map // map[string]*fieldCacheItem
 }
 
 // newFieldCacheManager creates field cache manager
@@ -32,9 +32,9 @@ func newFieldCacheManager() *fieldCacheManager {
 // fieldCacheInstance global field cache manager instance
 var fieldCacheInstance = newFieldCacheManager()
 
-// fieldCache field cache
+// fieldCacheItem field cache
 // Stores deterministic field information that can be safely cached to avoid repeated reflection in loops
-type fieldCache struct {
+type fieldCacheItem struct {
 	// Deterministic field index (can be safely cached)
 	bindToAttrIndex   int          // Field index of bound attribute (e.g. UserDetail)
 	relationAttrIndex int          // Field index of relation attribute (e.g. User, -1 means none)
@@ -51,13 +51,13 @@ func (m *fieldCacheManager) getOrSet(
 	arrayItemType reflect.Type,
 	bindToAttrName string,
 	relationAttrName string,
-) (*fieldCache, error) {
+) (*fieldCacheItem, error) {
 	// Build cache key
 	cacheKey := m.buildCacheKey(arrayItemType, bindToAttrName, relationAttrName)
 
 	// Fast path: cache hit
 	if cached, ok := m.cache.Load(cacheKey); ok {
-		return cached.(*fieldCache), nil
+		return cached.(*fieldCacheItem), nil
 	}
 
 	// Slow path: build cache
@@ -68,7 +68,7 @@ func (m *fieldCacheManager) getOrSet(
 
 	// Store to cache (if built concurrently, only one will be saved)
 	actual, _ := m.cache.LoadOrStore(cacheKey, cache)
-	return actual.(*fieldCache), nil
+	return actual.(*fieldCacheItem), nil
 }
 
 // buildCacheKey builds the cache key
@@ -96,7 +96,7 @@ func (m *fieldCacheManager) buildCache(
 	arrayItemType reflect.Type,
 	bindToAttrName string,
 	relationAttrName string,
-) (*fieldCache, error) {
+) (*fieldCacheItem, error) {
 	// Get the actual struct type
 	structType := arrayItemType
 	isPointerElem := false
@@ -110,7 +110,7 @@ func (m *fieldCacheManager) buildCache(
 	}
 
 	numField := structType.NumField()
-	cache := &fieldCache{
+	cache := &fieldCacheItem{
 		relationAttrIndex: -1,
 		isPointerElem:     isPointerElem,
 		fieldNameMap:      make(map[string]string, numField), // Pre-allocate capacity
