@@ -9,6 +9,7 @@ package gset
 import (
 	"bytes"
 
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -39,7 +40,7 @@ func NewTSet[T comparable](safe ...bool) *TSet[T] {
 // The parameter `safe` is used to specify whether using set in concurrent-safety mode.
 func NewTSetWithChecker[T comparable](checker NilChecker[T], safe ...bool) *TSet[T] {
 	s := NewTSet[T](safe...)
-	s.RegisterNilChecker(checker)
+	s.SetNilChecker(checker)
 	return s
 }
 
@@ -66,11 +67,11 @@ func NewTSetWithCheckerFrom[T comparable](items []T, checker NilChecker[T], safe
 	return set
 }
 
-// RegisterNilChecker registers a custom nil checker function for the set elements.
+// SetNilChecker registers a custom nil checker function for the set elements.
 // This function is used to determine if an element should be considered as nil.
 // The nil checker function takes an element of type T and returns a boolean indicating
 // whether the element should be treated as nil.
-func (set *TSet[T]) RegisterNilChecker(nilChecker NilChecker[T]) {
+func (set *TSet[T]) SetNilChecker(nilChecker NilChecker[T]) {
 	set.mu.Lock()
 	defer set.mu.Unlock()
 	set.nilChecker = nilChecker
@@ -78,12 +79,12 @@ func (set *TSet[T]) RegisterNilChecker(nilChecker NilChecker[T]) {
 
 // isNil checks whether the given value is nil.
 // It first checks if a custom nil checker function is registered and uses it if available,
-// otherwise it performs a standard nil check using any(v) == nil.
+// otherwise it falls back to the default empty.IsNil function.
 func (set *TSet[T]) isNil(v T) bool {
 	if set.nilChecker != nil {
 		return set.nilChecker(v)
 	}
-	return any(v) == nil
+	return empty.IsNil(v)
 }
 
 // Iterator iterates the set readonly with given callback function `f`,
@@ -109,7 +110,7 @@ func (set *TSet[T]) Add(items ...T) {
 }
 
 // AddIfNotExist checks whether item exists in the set,
-// it adds the item to set and returns true if it does not exists in the set,
+// it adds the item to set and returns true if it does not exist in the set,
 // or else it does nothing and returns false.
 //
 // Note that, if `item` is nil, it does nothing and returns false.
