@@ -477,27 +477,48 @@ func doScanListAssignmentLoop(
 		relationFromAttrField          reflect.Value
 		relationBindToFieldNameChecked bool
 	)
+
+	// Phase 1 优化：使用缓存管理器获取字段索引缓存
+	// 这里缓存了确定性的字段访问信息，避免循环内重复反射
+	cache, err := globalFieldCacheManager.GetOrBuild(
+		arrayItemType,
+		in.BindToAttrName,
+		in.RelationAttrName,
+	)
+	if err != nil {
+		return err
+	}
+
 	for i := 0; i < arrayValue.Len(); i++ {
 		arrayElemValue := arrayValue.Index(i)
-		if arrayElemValue.Kind() == reflect.Pointer {
+
+		// 使用缓存的类型判断结果
+		if cache.isPointerElem {
 			arrayElemValue = arrayElemValue.Elem()
 			if !arrayElemValue.IsValid() {
 				arrayElemValue = reflect.New(arrayItemType.Elem()).Elem()
 				arrayValue.Index(i).Set(arrayElemValue.Addr())
 			}
 		}
-		bindToAttrValue := arrayElemValue.FieldByName(in.BindToAttrName)
-		if in.RelationAttrName != "" {
-			relationFromAttrValue = arrayElemValue.FieldByName(in.RelationAttrName)
+
+		// 使用缓存的字段索引直接访问（避免 FieldByName）
+		bindToAttrValue := arrayElemValue.Field(cache.bindToAttrIndex)
+
+		// 获取关系属性值
+		if cache.relationAttrIndex >= 0 {
+			relationFromAttrValue = arrayElemValue.Field(cache.relationAttrIndex)
 			if relationFromAttrValue.Kind() == reflect.Pointer {
 				relationFromAttrValue = relationFromAttrValue.Elem()
 			}
 		} else {
 			relationFromAttrValue = arrayElemValue
 		}
+
 		if len(relation.DataMap) > 0 && !relationFromAttrValue.IsValid() {
 			return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid relation fields specified: "%v"`, in.RelationFields)
 		}
+
+		// 嵌入字段查找保持原有的动态查找逻辑（不缓存）
 		if in.RelationFields != "" && !relationBindToFieldNameChecked {
 			relationFromAttrField = relationFromAttrValue.FieldByName(relation.BindToFieldName)
 			if !relationFromAttrField.IsValid() {
@@ -518,6 +539,8 @@ func doScanListAssignmentLoop(
 			}
 			relationBindToFieldNameChecked = true
 		}
+
+		// 使用缓存的类型信息进行分发
 		switch attr.Kind {
 		case reflect.Array, reflect.Slice:
 			if err = doScanListHandleAssignmentSlice(in, bindToAttrValue, relationFromAttrValue, *relation, structsMap); err != nil {
@@ -598,7 +621,7 @@ func doScanListHandleAssignmentPointer(
 	index int,
 ) error {
 	var element reflect.Value
-	if bindToAttrValue.IsNil() {
+	if bindToAttrValue.Kind() == reflect.Pointer && bindToAttrValue.IsNil() {
 		element = reflect.New(attr.Type.Elem()).Elem()
 	} else {
 		element = bindToAttrValue.Elem()
