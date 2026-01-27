@@ -433,7 +433,7 @@ func parseWithTagInField(field reflect.StructField) (output withTagOutput) {
 	output.Where = data[OrmTagForWithWhere]
 	output.Order = data[OrmTagForWithOrder]
 	output.Unscoped = data[OrmTagForWithUnscoped]
-	output.BatchSize = gconv.Int(data["batchSize"])
-	output.BatchThreshold = gconv.Int(data["threshold"])
+	output.BatchSize = gconv.Int(data[OrmTagForWithBatchSize])
+	output.BatchThreshold = gconv.Int(data[OrmTagForWithBatchThreshold])
 	return
 }
