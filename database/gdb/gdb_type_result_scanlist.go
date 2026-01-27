@@ -269,7 +269,8 @@ func doScanList(in doScanListInput) (err error) {
 		return err
 	}
 
-	// 使用缓存管理器获取字段索引缓存，这里缓存了确定性的字段访问信息，避免循环内重复反射
+	// Use field cache manager to get deterministic field access metadata.
+	// This caches field indices and type information (NOT tag semantics) to avoid repeated reflection in loops.
 	cacheItem, err := fieldCacheInstance.getOrSet(
 		arrayItemType,
 		in.BindToAttrName,
@@ -280,14 +281,16 @@ func doScanList(in doScanListInput) (err error) {
 	}
 
 	// 3. Batch recursive scanning optimization.
-	// 批量递归扫描优化：通过预先提取所有子数据的ID并执行批量查询，解决传统的N+1性能问题。
+	// Batch recursive scanning pre-fetches all child IDs and performs bulk queries to solve the N+1 performance problem.
+	// Note: BatchSize and BatchThreshold are passed via doScanListInput instead of cache
+	// because they may vary per query (e.g., different WithBatchOption configurations).
 	structsMap, err := doScanListGetBatchRecursiveMap(in, attr, relation, cacheItem)
 	if err != nil {
 		return err
 	}
 
 	// 4. Final assignment loop.
-	// 最终赋值循环：将查询到的数据分发到各个结构体属性中。
+	// Final assignment loop: Distribute queried data to various struct attributes.
 	if err = doScanListAssignmentLoop(in, arrayValue, attr, &relation, structsMap, cacheItem); err != nil {
 		return err
 	}
@@ -366,22 +369,22 @@ func doScanListGetBindAttrInfo(arrayItemType reflect.Type, bindToAttrName string
 
 // doScanListGetBatchRecursiveMap executes the batch recursive scanning optimization (Solving N+1 problem).
 // It returns a map that contains the relational structs, which can be used for fast assignment in the loop.
-// 批量递归扫描的核心逻辑：
-// 1. 获取批量配置（BatchSize, BatchThreshold）。
-// 2. 将 Result 中的所有记录通过 Chunking 分段扫描到一个临时切片中。
-// 3. 构建一个以关联字段为 Key 的 Map，供后续 O(1) 复杂度的赋值循环使用。
-// 4. 对该临时切片执行递归关联查询（doWithScanStructs）。
+// Core logic for batch recursive scanning:
+// 1. Get batch configuration (BatchSize, BatchThreshold).
+// 2. Chunk scan all records in Result to a temporary slice.
+// 3. Build a map with relation field as Key for subsequent O(1) complexity assignment loop.
+// 4. Perform recursive association queries on the temporary slice (doWithScanStructs).
 func doScanListGetBatchRecursiveMap(
 	in doScanListInput, attr doScanListBindAttr, relation doScanListRelation, cacheItem *fieldCacheItem,
 ) (relationStructsMap map[string]reflect.Value, err error) {
-	if !in.BatchEnabled || len(in.Result) < cacheItem.withBatchThreshold {
+	if !in.BatchEnabled || len(in.Result) < in.BatchThreshold {
 		return nil, nil
 	}
 
 	if in.Model != nil && len(in.Result) > 0 {
 		var (
 			allChildStructsSlice reflect.Value
-			batchSize            = cacheItem.withBatchSize
+			batchSize            = in.BatchSize
 		)
 		if batchSize <= 0 {
 			batchSize = 1000
@@ -394,25 +397,35 @@ func doScanListGetBatchRecursiveMap(
 			allChildStructsSlice = reflect.MakeSlice(reflect.SliceOf(attr.Field.Type), 0, len(in.Result))
 		}
 
-		// Step 2: Scan all result records into the container using chunking.
-		for i := 0; i < len(in.Result); i += batchSize {
-			end := i + batchSize
-			if end > len(in.Result) {
-				end = len(in.Result)
+		// Step 2: Extract all child records from relation.DataMap and scan them into a single slice.
+		// relation.DataMap structure: map[parentKey][]Record (e.g., map["1"][]UserScore records for uid=1)
+		if relation.FromFieldName != "" && len(relation.DataMap) > 0 {
+			// Collect all child records from DataMap
+			allChildRecords := make(Result, 0)
+			for _, records := range relation.DataMap {
+				for _, record := range records.Slice() {
+					allChildRecords = append(allChildRecords, record.(Record))
+				}
 			}
-			var (
-				resultChunk        = in.Result[i:end]
-				allChildStructsPtr any
-			)
-			if attr.Kind == reflect.Array || attr.Kind == reflect.Slice {
-				allChildStructsPtr = reflect.New(attr.Field.Type).Interface()
-			} else {
-				allChildStructsPtr = reflect.New(reflect.SliceOf(attr.Field.Type)).Interface()
+
+			// Scan all child records into the target slice type
+			if len(allChildRecords) > 0 {
+				if attr.Kind == reflect.Array || attr.Kind == reflect.Slice {
+					allChildStructsPtr := reflect.New(attr.Field.Type).Interface()
+					if err = allChildRecords.Structs(allChildStructsPtr); err != nil {
+						return nil, err
+					}
+					allChildStructsSlice = reflect.ValueOf(allChildStructsPtr).Elem()
+				} else {
+					// For non-slice types (pointer), we still need to process all records
+					// but will only use the first match per key in Step 4
+					allChildStructsPtr := reflect.New(reflect.SliceOf(attr.Field.Type)).Interface()
+					if err = allChildRecords.Structs(allChildStructsPtr); err != nil {
+						return nil, err
+					}
+					allChildStructsSlice = reflect.ValueOf(allChildStructsPtr).Elem()
+				}
 			}
-			if err = resultChunk.Structs(allChildStructsPtr); err != nil {
-				return nil, err
-			}
-			allChildStructsSlice = reflect.AppendSlice(allChildStructsSlice, reflect.ValueOf(allChildStructsPtr).Elem())
 		}
 
 		// Step 3: Execute recursive relation queries for ALL records at once (Breadth-First).
@@ -429,7 +442,36 @@ func doScanListGetBatchRecursiveMap(
 		if relation.FromFieldName != "" {
 			relationStructsMap = make(map[string]reflect.Value)
 			for i := 0; i < allChildStructsSlice.Len(); i++ {
-				kv := gconv.String(in.Result[i][relation.FromFieldName])
+				// Extract the key from the struct field directly, not from in.Result
+				// because doWithScanStructs may have filtered some records (e.g., where conditions)
+				structItem := allChildStructsSlice.Index(i)
+				if structItem.Kind() == reflect.Pointer {
+					// Check if pointer is nil (filtered by where condition)
+					if structItem.IsNil() {
+						continue
+					}
+					structItem = structItem.Elem()
+				}
+
+				// Get the relation field value from the struct
+				// In batch mode, we need to use FromFieldName (the child table's field) as the map key
+				// For example: UserScores.uid -> map["1"] (where "1" is the uid value)
+				relationFieldValue := structItem.FieldByName(relation.FromFieldName)
+				if !relationFieldValue.IsValid() {
+					// Try case-insensitive lookup using gstructs.FieldMap
+					fieldMap, _ := gstructs.FieldMap(gstructs.FieldMapInput{
+						Pointer:         structItem,
+						RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+					})
+					if key, _ := gutil.MapPossibleItemByKey(gconv.Map(fieldMap), relation.FromFieldName); key != "" {
+						relationFieldValue = structItem.FieldByName(key)
+					}
+				}
+				if !relationFieldValue.IsValid() {
+					continue
+				}
+
+				kv := gconv.String(relationFieldValue.Interface())
 				if attr.Kind == reflect.Array || attr.Kind == reflect.Slice {
 					if _, ok := relationStructsMap[kv]; !ok {
 						relationStructsMap[kv] = reflect.MakeSlice(attr.Field.Type, 0, 0)
@@ -465,7 +507,7 @@ func doScanListAssignmentLoop(
 	for i := 0; i < arrayValue.Len(); i++ {
 		arrayElemValue := arrayValue.Index(i)
 
-		// 使用缓存的类型判断结果
+		// Use cached type information (pointer element check)
 		if cacheItem.isPointerElem {
 			arrayElemValue = arrayElemValue.Elem()
 			if !arrayElemValue.IsValid() {
@@ -474,12 +516,28 @@ func doScanListAssignmentLoop(
 			}
 		}
 
-		// 使用缓存的字段索引直接访问（避免 FieldByName）
-		bindToAttrValue := arrayElemValue.Field(cacheItem.bindToAttrIndex)
+		// Use cached field index for direct access (avoid FieldByName)
+		var bindToAttrValue reflect.Value
+		if cacheItem.bindToAttrIndex >= 0 {
+			// Direct field access
+			bindToAttrValue = arrayElemValue.Field(cacheItem.bindToAttrIndex)
+		} else if len(cacheItem.bindToAttrIndexPath) > 0 {
+			// Embedded field access using index path
+			bindToAttrValue = arrayElemValue.FieldByIndex(cacheItem.bindToAttrIndexPath)
+		} else {
+			// Fallback to FieldByName (shouldn't happen if cache is correct)
+			bindToAttrValue = arrayElemValue.FieldByName(in.BindToAttrName)
+		}
 
-		// 获取关系属性值
+		// Get relation attribute value
 		if cacheItem.relationAttrIndex >= 0 {
 			relationFromAttrValue = arrayElemValue.Field(cacheItem.relationAttrIndex)
+			if relationFromAttrValue.Kind() == reflect.Pointer {
+				relationFromAttrValue = relationFromAttrValue.Elem()
+			}
+		} else if len(cacheItem.relationAttrIndexPath) > 0 {
+			// Embedded field access using index path
+			relationFromAttrValue = arrayElemValue.FieldByIndex(cacheItem.relationAttrIndexPath)
 			if relationFromAttrValue.Kind() == reflect.Pointer {
 				relationFromAttrValue = relationFromAttrValue.Elem()
 			}
@@ -491,7 +549,7 @@ func doScanListAssignmentLoop(
 			return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid relation fields specified: "%v"`, in.RelationFields)
 		}
 
-		// 嵌入字段查找保持原有的动态查找逻辑（不缓存）
+		// Dynamic lookup for embedded fields (NOT cached due to runtime dependency)
 		if in.RelationFields != "" && !relationBindToFieldNameChecked {
 			relationFromAttrField = relationFromAttrValue.FieldByName(relation.BindToFieldName)
 			if !relationFromAttrField.IsValid() {
@@ -513,7 +571,7 @@ func doScanListAssignmentLoop(
 			relationBindToFieldNameChecked = true
 		}
 
-		// 使用缓存的类型信息进行分发
+		// Dispatch based on cached attribute type
 		switch attr.Kind {
 		case reflect.Array, reflect.Slice:
 			if err = doScanListHandleAssignmentSlice(in, bindToAttrValue, relationFromAttrValue, *relation, structsMap); err != nil {

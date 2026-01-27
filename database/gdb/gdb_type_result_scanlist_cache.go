@@ -21,7 +21,15 @@ import (
 
 // fieldCacheManager field cache manager
 type fieldCacheManager struct {
-	cache sync.Map // map[string]*fieldCacheItem
+	cache sync.Map // map[fieldCacheKey]*fieldCacheItem
+}
+
+// fieldCacheKey is the composite key for field cache
+// Using struct instead of string to properly distinguish types with same name
+type fieldCacheKey struct {
+	typ              reflect.Type // The actual type (not just string representation)
+	bindToAttrName   string
+	relationAttrName string
 }
 
 // newFieldCacheManager creates field cache manager
@@ -34,15 +42,16 @@ var fieldCacheInstance = newFieldCacheManager()
 
 // fieldCacheItem field cache
 // Stores deterministic field information that can be safely cached to avoid repeated reflection in loops
+// Note: withTag and related batch settings are NOT cached because they contain dynamic semantics
+// (e.g., where/order conditions) that may differ across struct definitions with the same type name.
 type fieldCacheItem struct {
 	// Deterministic field index (can be safely cached)
-	bindToAttrIndex    int           // Field index of bound attribute (e.g. UserDetail)
-	relationAttrIndex  int           // Field index of relation attribute (e.g. User, -1 means none)
-	isPointerElem      bool          // Whether array element is pointer type
-	bindToAttrKind     reflect.Kind  // Type of bound attribute
-	withTag            withTagOutput // Parsed with tags
-	withBatchSize      int           // Batch size from orm tag
-	withBatchThreshold int           // Batch threshold from orm tag
+	bindToAttrIndex       int          // Field index of bound attribute (e.g. UserDetail), -1 for embedded fields
+	bindToAttrIndexPath   []int        // Full index path for embedded fields (e.g. []int{1, 2})
+	relationAttrIndex     int          // Field index of relation attribute (e.g. User, -1 means none)
+	relationAttrIndexPath []int        // Full index path for embedded relation attribute
+	isPointerElem         bool         // Whether array element is pointer type
+	bindToAttrKind        reflect.Kind // Type of bound attribute
 
 	// Field name mapping (supports case-insensitive lookup)
 	fieldNameMap  map[string]string // lowercase -> OriginalName
@@ -55,8 +64,12 @@ func (m *fieldCacheManager) getOrSet(
 	bindToAttrName string,
 	relationAttrName string,
 ) (*fieldCacheItem, error) {
-	// Build cache key
-	cacheKey := m.buildCacheKey(arrayItemType, bindToAttrName, relationAttrName)
+	// Build cache key using reflect.Type directly
+	cacheKey := fieldCacheKey{
+		typ:              arrayItemType,
+		bindToAttrName:   bindToAttrName,
+		relationAttrName: relationAttrName,
+	}
 
 	// Fast path: cache hit
 	if cached, ok := m.cache.Load(cacheKey); ok {
@@ -72,26 +85,6 @@ func (m *fieldCacheManager) getOrSet(
 	// Store to cache (if built concurrently, only one will be saved)
 	actual, _ := m.cache.LoadOrStore(cacheKey, cache)
 	return actual.(*fieldCacheItem), nil
-}
-
-// buildCacheKey builds the cache key
-func (m *fieldCacheManager) buildCacheKey(
-	typ reflect.Type,
-	bindToAttrName string,
-	relationAttrName string,
-) string {
-	// Estimate capacity: type name + two field names + 2 separators
-	var builder strings.Builder
-	typeName := typ.String()
-	builder.Grow(len(typeName) + len(bindToAttrName) + len(relationAttrName) + 2)
-
-	builder.WriteString(typeName)
-	builder.WriteByte('|')
-	builder.WriteString(bindToAttrName)
-	builder.WriteByte('|')
-	builder.WriteString(relationAttrName)
-
-	return builder.String()
 }
 
 // buildCache builds field access cache
@@ -134,10 +127,6 @@ func (m *fieldCacheManager) buildCache(
 		cache.bindToAttrIndex = idx
 		field := structType.Field(idx)
 		cache.bindToAttrKind = field.Type.Kind()
-		// Parse with-batch tags once and cache them
-		cache.withTag = parseWithTagInField(field)
-		cache.withBatchSize = cache.withTag.BatchSize
-		cache.withBatchThreshold = cache.withTag.BatchThreshold
 	} else {
 		// Case-insensitive lookup
 		lowerBindName := strings.ToLower(bindToAttrName)
@@ -145,12 +134,22 @@ func (m *fieldCacheManager) buildCache(
 			cache.bindToAttrIndex = cache.fieldIndexMap[originalName]
 			field := structType.Field(cache.bindToAttrIndex)
 			cache.bindToAttrKind = field.Type.Kind()
-			// Parse with-batch tags once and cache them
-			cache.withTag = parseWithTagInField(field)
-			cache.withBatchSize = cache.withTag.BatchSize
-			cache.withBatchThreshold = cache.withTag.BatchThreshold
 		} else {
-			return nil, fmt.Errorf(`field "%s" not found in type %s`, bindToAttrName, arrayItemType.String())
+			// Try to find embedded field using FieldByName (supports anonymous/embedded struct)
+			field, ok := structType.FieldByName(bindToAttrName)
+			if !ok {
+				return nil, fmt.Errorf(`field "%s" not found in type %s`, bindToAttrName, arrayItemType.String())
+			}
+			// For embedded fields, field.Index contains the full path
+			if len(field.Index) == 1 {
+				// Direct field (shouldn't happen as we already checked fieldIndexMap)
+				cache.bindToAttrIndex = field.Index[0]
+			} else {
+				// Embedded field - store the full index path
+				cache.bindToAttrIndex = -1 // Mark as embedded field
+				cache.bindToAttrIndexPath = field.Index
+			}
+			cache.bindToAttrKind = field.Type.Kind()
 		}
 	}
 
@@ -163,9 +162,20 @@ func (m *fieldCacheManager) buildCache(
 			lowerRelName := strings.ToLower(relationAttrName)
 			if originalName, ok := cache.fieldNameMap[lowerRelName]; ok {
 				cache.relationAttrIndex = cache.fieldIndexMap[originalName]
+			} else {
+				// Try to find embedded field
+				if field, ok := structType.FieldByName(relationAttrName); ok {
+					if len(field.Index) == 1 {
+						cache.relationAttrIndex = field.Index[0]
+					} else {
+						// Embedded field
+						cache.relationAttrIndex = -1
+						cache.relationAttrIndexPath = field.Index
+					}
+				}
+				// Note: if still not found, keep -1, indicating that arrayElemValue itself should be used
 			}
 		}
-		// Note: if not found, keep -1, indicating that arrayElemValue itself should be used
 	}
 
 	return cache, nil

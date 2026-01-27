@@ -137,7 +137,6 @@ func (m *Model) doWithScanStruct(pointer any) error {
 		}
 		var (
 			model              *Model
-			fieldKeys          []string
 			relatedSourceName  = array[0]
 			relatedTargetName  = array[1]
 			relatedTargetValue any
@@ -161,17 +160,6 @@ func (m *Model) doWithScanStruct(pointer any) error {
 			bindToReflectValue = bindToReflectValue.Addr()
 		}
 
-		if structFields, err := gstructs.Fields(gstructs.FieldsInput{
-			Pointer:         field.Value,
-			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
-		}); err != nil {
-			return err
-		} else {
-			fieldKeys = make([]string, len(structFields))
-			for i, field := range structFields {
-				fieldKeys[i] = field.Name()
-			}
-		}
 		// Recursively with feature checks.
 		model = m.db.With(field.Value).Hook(m.hookHandler)
 		model.withBatchEnabled = m.withBatchEnabled
@@ -189,11 +177,12 @@ func (m *Model) doWithScanStruct(pointer any) error {
 		if parsedTagOutput.Unscoped == "true" {
 			model = model.Unscoped()
 		}
-		// With cache feature.
+		// Apply cache option if enabled (for query result caching, not field metadata).
 		if m.cacheEnabled && m.cacheOption.Name == "" {
 			model = model.Cache(m.cacheOption)
 		}
-		err = model.Fields(fieldKeys).
+		// Fields will be automatically determined from the struct type
+		err = model.Fields(field.Value).
 			Where(relatedSourceName, relatedTargetValue).
 			Scan(bindToReflectValue)
 		// It ignores sql.ErrNoRows in with feature.
@@ -213,25 +202,17 @@ func (m *Model) doWithScanStructs(pointer any) error {
 	if v, ok := pointer.(reflect.Value); ok {
 		pointer = v.Interface()
 	}
-
 	var (
 		err                 error
 		allowedTypeStrArray = make([]string, 0)
-	)
-
-	// 提取数组元素类型（用于缓存查找）
-	var (
-		reflectValue  = reflect.ValueOf(pointer)
-		reflectKind   = reflectValue.Kind()
-		arrayItemType reflect.Type
+		reflectValue        = reflect.ValueOf(pointer)
+		reflectKind         = reflectValue.Kind()
 	)
 	if reflectKind == reflect.Ptr {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
-	if reflectKind == reflect.Slice || reflectKind == reflect.Array {
-		arrayItemType = reflectValue.Type().Elem()
-	} else {
+	if reflectKind != reflect.Slice && reflectKind != reflect.Array {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`the parameter "pointer" for doWithScanStructs should be type of slice, invalid type: %v`,
@@ -271,29 +252,21 @@ func (m *Model) doWithScanStructs(pointer any) error {
 		var (
 			fieldTypeStr = gstr.TrimAll(field.Type().String(), "*[]")
 		)
-		// 从缓存中获取解析后的标签参数
-		cacheItem, err := fieldCacheInstance.getOrSet(
-			arrayItemType,
-			fieldName,
-			"",
-		)
-		if err != nil {
-			return err
-		}
-
-		if cacheItem.withTag.With == "" {
+		// Parse withTag directly from field instead of using cache to avoid cache pollution
+		// when multiple tests define struct with same name but different tags
+		parsedTagOutput := parseWithTagInField(field.Field)
+		if parsedTagOutput.With == "" {
 			continue
 		}
 		if !m.withAll && !gstr.InArray(allowedTypeStrArray, fieldTypeStr) {
 			continue
 		}
-		array := gstr.SplitAndTrim(cacheItem.withTag.With, "=")
+		array := gstr.SplitAndTrim(parsedTagOutput.With, "=")
 		if len(array) == 1 {
-			array = append(array, cacheItem.withTag.With)
+			array = append(array, parsedTagOutput.With)
 		}
 		var (
 			model              *Model
-			fieldKeys          []string
 			relatedSourceName  = array[0]
 			relatedTargetName  = array[1]
 			relatedTargetValue any
@@ -309,23 +282,12 @@ func (m *Model) doWithScanStructs(pointer any) error {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`cannot find the related value for attribute name "%s" of with tag "%s"`,
-				relatedTargetName, cacheItem.withTag.With,
+				relatedTargetName, parsedTagOutput.With,
 			)
 		}
 		// If related value is empty, it does nothing but just returns.
 		if gutil.IsEmpty(relatedTargetValue) {
 			continue
-		}
-		if structFields, err := gstructs.Fields(gstructs.FieldsInput{
-			Pointer:         field.Value,
-			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
-		}); err != nil {
-			return err
-		} else {
-			fieldKeys = make([]string, len(structFields))
-			for i, field := range structFields {
-				fieldKeys[i] = field.Name()
-			}
 		}
 		// Recursively with feature checks.
 		model = m.db.With(field.Value).Hook(m.hookHandler)
@@ -335,16 +297,16 @@ func (m *Model) doWithScanStructs(pointer any) error {
 		} else {
 			model = model.With(m.withArray...)
 		}
-		if cacheItem.withTag.Where != "" {
-			model = model.Where(cacheItem.withTag.Where)
+		if parsedTagOutput.Where != "" {
+			model = model.Where(parsedTagOutput.Where)
 		}
-		if cacheItem.withTag.Order != "" {
-			model = model.Order(cacheItem.withTag.Order)
+		if parsedTagOutput.Order != "" {
+			model = model.Order(parsedTagOutput.Order)
 		}
-		if cacheItem.withTag.Unscoped == "true" {
+		if parsedTagOutput.Unscoped == "true" {
 			model = model.Unscoped()
 		}
-		// With cache feature.
+		// Apply cache option if enabled (for query result caching, not field metadata).
 		if m.cacheEnabled && m.cacheOption.Name == "" {
 			model = model.Cache(m.cacheOption)
 		}
@@ -356,8 +318,8 @@ func (m *Model) doWithScanStructs(pointer any) error {
 		)
 
 		if m.withBatchEnabled {
-			batchSize = cacheItem.withBatchSize
-			batchThreshold = cacheItem.withBatchThreshold
+			batchSize = parsedTagOutput.BatchSize
+			batchThreshold = parsedTagOutput.BatchThreshold
 		}
 
 		if m.withBatchEnabled && batchSize > 0 && len(gconv.SliceAny(relatedTargetValue)) >= batchThreshold {
@@ -368,7 +330,8 @@ func (m *Model) doWithScanStructs(pointer any) error {
 					end = len(ids)
 				}
 				// 使用 Clone() 避免条件累加
-				result, err := model.Clone().Fields(fieldKeys).
+				// Fields will be automatically determined from the struct type
+				result, err := model.Clone().Fields(field.Value).
 					Where(relatedSourceName, ids[i:end]).
 					All()
 				if err != nil {
@@ -377,7 +340,8 @@ func (m *Model) doWithScanStructs(pointer any) error {
 				results = append(results, result...)
 			}
 		} else {
-			results, err = model.Clone().Fields(fieldKeys).
+			// Fields will be automatically determined from the struct type
+			results, err = model.Clone().Fields(field.Value).
 				Where(relatedSourceName, relatedTargetValue).
 				All()
 			if err != nil && err != sql.ErrNoRows {
@@ -396,7 +360,7 @@ func (m *Model) doWithScanStructs(pointer any) error {
 			StructSliceValue:   reflect.ValueOf(pointer).Elem(),
 			BindToAttrName:     fieldName,
 			RelationAttrName:   "",
-			RelationFields:     cacheItem.withTag.With,
+			RelationFields:     parsedTagOutput.With,
 			BatchEnabled:       m.withBatchEnabled,
 			BatchSize:          batchSize,
 			BatchThreshold:     batchThreshold,
@@ -422,7 +386,7 @@ func parseWithTagInField(field reflect.StructField) (output withTagOutput) {
 		ormTag = field.Tag.Get(OrmTagForStruct)
 		data   = make(map[string]string)
 	)
-	// 解析标签，支持 key:value 和嵌套的 batch:threshold=1000,batchSize=100
+	// Parse tags, support key:value and nested batch:threshold=1000,batchSize=100
 	for _, v := range gstr.SplitAndTrim(ormTag, ",") {
 		v = gstr.Trim(v)
 		if v == "" {
@@ -443,7 +407,7 @@ func parseWithTagInField(field reflect.StructField) (output withTagOutput) {
 			continue
 		}
 
-		// 处理普通的 key:value 或 key=value
+		// Process normal key:value or key=value
 		var (
 			key   string
 			value string
