@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -80,18 +81,6 @@ func (m *Model) WithBatch(enabled ...bool) *Model {
 	return model
 }
 
-// WithBatchOption provides fine-grained control for batch recursive scanning for association operations.
-// This method automatically enables the batch recursive scanning feature.
-// It allows configuring different batch sizes and thresholds for different association depths.
-// 为关联查询的批量递归扫描提供更细粒度的配置。
-// 调用该方法会自动开启批量递归扫描功能。支持按层级（Depth）设置 BatchSize、BatchThreshold 等。
-func (m *Model) WithBatchOption(options ...WithBatchOption) *Model {
-	model := m.getModel()
-	model.withBatchEnabled = true
-	model.withBatchOptions = append(model.withBatchOptions, options...)
-	return model
-}
-
 // doWithScanStruct handles model association operations feature for single struct.
 func (m *Model) doWithScanStruct(pointer any) error {
 	if len(m.withArray) == 0 && !m.withAll {
@@ -131,7 +120,7 @@ func (m *Model) doWithScanStruct(pointer any) error {
 	for _, field := range currentStructFieldMap {
 		var (
 			fieldTypeStr    = gstr.TrimAll(field.Type().String(), "*[]")
-			parsedTagOutput = m.parseWithTagInFieldStruct(field)
+			parsedTagOutput = parseWithTagInField(field.Field)
 		)
 		if parsedTagOutput.With == "" {
 			continue
@@ -186,8 +175,6 @@ func (m *Model) doWithScanStruct(pointer any) error {
 		// Recursively with feature checks.
 		model = m.db.With(field.Value).Hook(m.hookHandler)
 		model.withBatchEnabled = m.withBatchEnabled
-		model.withBatchOptions = m.withBatchOptions
-		model.withBatchDepth = m.withBatchDepth + 1
 		if m.withAll {
 			model = model.WithAll()
 		} else {
@@ -231,6 +218,27 @@ func (m *Model) doWithScanStructs(pointer any) error {
 		err                 error
 		allowedTypeStrArray = make([]string, 0)
 	)
+
+	// 提取数组元素类型（用于缓存查找）
+	var (
+		reflectValue  = reflect.ValueOf(pointer)
+		reflectKind   = reflectValue.Kind()
+		arrayItemType reflect.Type
+	)
+	if reflectKind == reflect.Ptr {
+		reflectValue = reflectValue.Elem()
+		reflectKind = reflectValue.Kind()
+	}
+	if reflectKind == reflect.Slice || reflectKind == reflect.Array {
+		arrayItemType = reflectValue.Type().Elem()
+	} else {
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`the parameter "pointer" for doWithScanStructs should be type of slice, invalid type: %v`,
+			reflect.TypeOf(pointer),
+		)
+	}
+
 	currentStructFieldMap, err := gstructs.FieldMap(gstructs.FieldMapInput{
 		Pointer:          pointer,
 		PriorityTagArray: nil,
@@ -261,20 +269,27 @@ func (m *Model) doWithScanStructs(pointer any) error {
 
 	for fieldName, field := range currentStructFieldMap {
 		var (
-			fieldTypeStr    = gstr.TrimAll(field.Type().String(), "*[]")
-			parsedTagOutput = m.parseWithTagInFieldStruct(field)
+			fieldTypeStr = gstr.TrimAll(field.Type().String(), "*[]")
 		)
-		if parsedTagOutput.With == "" {
+		// 从缓存中获取解析后的标签参数
+		cacheItem, err := fieldCacheInstance.getOrSet(
+			arrayItemType,
+			fieldName,
+			"",
+		)
+		if err != nil {
+			return err
+		}
+
+		if cacheItem.withTag.With == "" {
 			continue
 		}
 		if !m.withAll && !gstr.InArray(allowedTypeStrArray, fieldTypeStr) {
 			continue
 		}
-		array := gstr.SplitAndTrim(parsedTagOutput.With, "=")
+		array := gstr.SplitAndTrim(cacheItem.withTag.With, "=")
 		if len(array) == 1 {
-			// It supports using only one column name
-			// if both tables associates using the same column name.
-			array = append(array, parsedTagOutput.With)
+			array = append(array, cacheItem.withTag.With)
 		}
 		var (
 			model              *Model
@@ -294,12 +309,12 @@ func (m *Model) doWithScanStructs(pointer any) error {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`cannot find the related value for attribute name "%s" of with tag "%s"`,
-				relatedTargetName, parsedTagOutput.With,
+				relatedTargetName, cacheItem.withTag.With,
 			)
 		}
 		// If related value is empty, it does nothing but just returns.
 		if gutil.IsEmpty(relatedTargetValue) {
-			return nil
+			continue
 		}
 		if structFields, err := gstructs.Fields(gstructs.FieldsInput{
 			Pointer:         field.Value,
@@ -315,68 +330,145 @@ func (m *Model) doWithScanStructs(pointer any) error {
 		// Recursively with feature checks.
 		model = m.db.With(field.Value).Hook(m.hookHandler)
 		model.withBatchEnabled = m.withBatchEnabled
-		model.withBatchOptions = m.withBatchOptions
-		model.withBatchDepth = m.withBatchDepth + 1
 		if m.withAll {
 			model = model.WithAll()
 		} else {
 			model = model.With(m.withArray...)
 		}
-		if parsedTagOutput.Where != "" {
-			model = model.Where(parsedTagOutput.Where)
+		if cacheItem.withTag.Where != "" {
+			model = model.Where(cacheItem.withTag.Where)
 		}
-		if parsedTagOutput.Order != "" {
-			model = model.Order(parsedTagOutput.Order)
+		if cacheItem.withTag.Order != "" {
+			model = model.Order(cacheItem.withTag.Order)
 		}
-		if parsedTagOutput.Unscoped == "true" {
+		if cacheItem.withTag.Unscoped == "true" {
 			model = model.Unscoped()
 		}
 		// With cache feature.
 		if m.cacheEnabled && m.cacheOption.Name == "" {
 			model = model.Cache(m.cacheOption)
 		}
-		err = model.Fields(fieldKeys).
-			Where(relatedSourceName, relatedTargetValue).
-			ScanList(pointer, fieldName, parsedTagOutput.With)
-		// It ignores sql.ErrNoRows in with feature.
-		if err != nil && err != sql.ErrNoRows {
+
+		var (
+			batchSize      int
+			batchThreshold int
+			results        Result
+		)
+
+		if m.withBatchEnabled {
+			batchSize = cacheItem.withBatchSize
+			batchThreshold = cacheItem.withBatchThreshold
+		}
+
+		if m.withBatchEnabled && batchSize > 0 && len(gconv.SliceAny(relatedTargetValue)) >= batchThreshold {
+			var ids = gconv.SliceAny(relatedTargetValue)
+			for i := 0; i < len(ids); i += batchSize {
+				end := i + batchSize
+				if end > len(ids) {
+					end = len(ids)
+				}
+				// 使用 Clone() 避免条件累加
+				result, err := model.Clone().Fields(fieldKeys).
+					Where(relatedSourceName, ids[i:end]).
+					All()
+				if err != nil {
+					return err
+				}
+				results = append(results, result...)
+			}
+		} else {
+			results, err = model.Clone().Fields(fieldKeys).
+				Where(relatedSourceName, relatedTargetValue).
+				All()
+			if err != nil && err != sql.ErrNoRows {
+				return err
+			}
+		}
+
+		if results.IsEmpty() {
+			continue
+		}
+
+		err = doScanList(doScanListInput{
+			Model:              model,
+			Result:             results,
+			StructSlicePointer: pointer,
+			StructSliceValue:   reflect.ValueOf(pointer).Elem(),
+			BindToAttrName:     fieldName,
+			RelationAttrName:   "",
+			RelationFields:     cacheItem.withTag.With,
+			BatchEnabled:       m.withBatchEnabled,
+			BatchSize:          batchSize,
+			BatchThreshold:     batchThreshold,
+		})
+		if err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-type parseWithTagInFieldStructOutput struct {
-	With     string
-	Where    string
-	Order    string
-	Unscoped string
+type withTagOutput struct {
+	With           string
+	Where          string
+	Order          string
+	Unscoped       string
+	BatchSize      int
+	BatchThreshold int
 }
 
-func (m *Model) parseWithTagInFieldStruct(field gstructs.Field) (output parseWithTagInFieldStructOutput) {
+func parseWithTagInField(field reflect.StructField) (output withTagOutput) {
 	var (
-		ormTag = field.Tag(OrmTagForStruct)
+		ormTag = field.Tag.Get(OrmTagForStruct)
 		data   = make(map[string]string)
-		array  []string
-		key    string
 	)
+	// 解析标签，支持 key:value 和嵌套的 batch:threshold=1000,batchSize=100
 	for _, v := range gstr.SplitAndTrim(ormTag, ",") {
-		array = gstr.Split(v, ":")
-		if len(array) == 2 {
-			key = array[0]
-			data[key] = gstr.Trim(array[1])
-		} else {
-			if key == OrmTagForWithOrder {
-				// supporting multiple order fields
-				data[key] += "," + gstr.Trim(v)
-			} else {
-				data[key] += " " + gstr.Trim(v)
+		v = gstr.Trim(v)
+		if v == "" {
+			continue
+		}
+
+		// 处理 batch: 开头的特殊配置
+		if gstr.HasPrefix(v, "batch:") {
+			// 提取 batch: 后面的内容
+			batchConfig := gstr.TrimLeft(v, "batch:")
+			// 解析 batch 内部的配置项（如 threshold=1000,batchSize=100）
+			for _, batchItem := range gstr.SplitAndTrim(batchConfig, ",") {
+				parts := gstr.Split(batchItem, "=")
+				if len(parts) == 2 {
+					data[gstr.Trim(parts[0])] = gstr.Trim(parts[1])
+				}
 			}
+			continue
+		}
+
+		// 处理普通的 key:value 或 key=value
+		var (
+			key   string
+			value string
+			parts = gstr.Split(v, ":")
+		)
+		if len(parts) == 2 {
+			key = gstr.Trim(parts[0])
+			value = gstr.Trim(parts[1])
+		} else {
+			parts = gstr.Split(v, "=")
+			if len(parts) == 2 {
+				key = gstr.Trim(parts[0])
+				value = gstr.Trim(parts[1])
+			}
+		}
+
+		if key != "" {
+			data[key] = value
 		}
 	}
 	output.With = data[OrmTagForWith]
 	output.Where = data[OrmTagForWithWhere]
 	output.Order = data[OrmTagForWithOrder]
 	output.Unscoped = data[OrmTagForWithUnscoped]
+	output.BatchSize = gconv.Int(data["batchSize"])
+	output.BatchThreshold = gconv.Int(data["threshold"])
 	return
 }

@@ -36,10 +36,13 @@ var fieldCacheInstance = newFieldCacheManager()
 // Stores deterministic field information that can be safely cached to avoid repeated reflection in loops
 type fieldCacheItem struct {
 	// Deterministic field index (can be safely cached)
-	bindToAttrIndex   int          // Field index of bound attribute (e.g. UserDetail)
-	relationAttrIndex int          // Field index of relation attribute (e.g. User, -1 means none)
-	isPointerElem     bool         // Whether array element is pointer type
-	bindToAttrKind    reflect.Kind // Type of bound attribute
+	bindToAttrIndex    int           // Field index of bound attribute (e.g. UserDetail)
+	relationAttrIndex  int           // Field index of relation attribute (e.g. User, -1 means none)
+	isPointerElem      bool          // Whether array element is pointer type
+	bindToAttrKind     reflect.Kind  // Type of bound attribute
+	withTag            withTagOutput // Parsed with tags
+	withBatchSize      int           // Batch size from orm tag
+	withBatchThreshold int           // Batch threshold from orm tag
 
 	// Field name mapping (supports case-insensitive lookup)
 	fieldNameMap  map[string]string // lowercase -> OriginalName
@@ -131,6 +134,10 @@ func (m *fieldCacheManager) buildCache(
 		cache.bindToAttrIndex = idx
 		field := structType.Field(idx)
 		cache.bindToAttrKind = field.Type.Kind()
+		// Parse with-batch tags once and cache them
+		cache.withTag = parseWithTagInField(field)
+		cache.withBatchSize = cache.withTag.BatchSize
+		cache.withBatchThreshold = cache.withTag.BatchThreshold
 	} else {
 		// Case-insensitive lookup
 		lowerBindName := strings.ToLower(bindToAttrName)
@@ -138,6 +145,10 @@ func (m *fieldCacheManager) buildCache(
 			cache.bindToAttrIndex = cache.fieldIndexMap[originalName]
 			field := structType.Field(cache.bindToAttrIndex)
 			cache.bindToAttrKind = field.Type.Kind()
+			// Parse with-batch tags once and cache them
+			cache.withTag = parseWithTagInField(field)
+			cache.withBatchSize = cache.withTag.BatchSize
+			cache.withBatchThreshold = cache.withTag.BatchThreshold
 		} else {
 			return nil, fmt.Errorf(`field "%s" not found in type %s`, bindToAttrName, arrayItemType.String())
 		}

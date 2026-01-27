@@ -117,14 +117,15 @@ func (r Result) ScanList(structSlicePointer any, bindToAttrName string, relation
 		RelationAttrName:   relationAttrName,
 		RelationFields:     relationFields,
 		BatchEnabled:       false,
-		BatchOptions:       nil,
-		Depth:              1,
+		BatchSize:          0,
+		BatchThreshold:     0,
 	})
 }
 
 type checkGetSliceElementInfoForScanListOutput struct {
 	SliceReflectValue reflect.Value
 	BindToAttrType    reflect.Type
+	BindToAttrField   reflect.StructField
 }
 
 func checkGetSliceElementInfoForScanList(structSlicePointer any, bindToAttrName string) (out *checkGetSliceElementInfoForScanListOutput, err error) {
@@ -179,6 +180,7 @@ func checkGetSliceElementInfoForScanList(structSlicePointer any, bindToAttrName 
 			reflect.TypeOf(structSlicePointer).String(),
 		)
 	}
+	out.BindToAttrField = structField
 	// Find the attribute struct type for ORM fields filtering.
 	reflectType = structField.Type
 	reflectKind = reflectType.Kind()
@@ -203,8 +205,8 @@ type doScanListInput struct {
 	RelationAttrName   string
 	RelationFields     string
 	BatchEnabled       bool
-	BatchOptions       []WithBatchOption
-	Depth              int
+	BatchSize          int
+	BatchThreshold     int
 }
 
 // doScanListRelation is the relation metadata for doScanList.
@@ -267,16 +269,26 @@ func doScanList(in doScanListInput) (err error) {
 		return err
 	}
 
+	// 使用缓存管理器获取字段索引缓存，这里缓存了确定性的字段访问信息，避免循环内重复反射
+	cacheItem, err := fieldCacheInstance.getOrSet(
+		arrayItemType,
+		in.BindToAttrName,
+		in.RelationAttrName,
+	)
+	if err != nil {
+		return err
+	}
+
 	// 3. Batch recursive scanning optimization.
 	// 批量递归扫描优化：通过预先提取所有子数据的ID并执行批量查询，解决传统的N+1性能问题。
-	structsMap, err := doScanListGetBatchRecursiveMap(in, attr, relation)
+	structsMap, err := doScanListGetBatchRecursiveMap(in, attr, relation, cacheItem)
 	if err != nil {
 		return err
 	}
 
 	// 4. Final assignment loop.
 	// 最终赋值循环：将查询到的数据分发到各个结构体属性中。
-	if err = doScanListAssignmentLoop(in, arrayValue, attr, &relation, structsMap); err != nil {
+	if err = doScanListAssignmentLoop(in, arrayValue, attr, &relation, structsMap, cacheItem); err != nil {
 		return err
 	}
 
@@ -355,25 +367,26 @@ func doScanListGetBindAttrInfo(arrayItemType reflect.Type, bindToAttrName string
 // doScanListGetBatchRecursiveMap executes the batch recursive scanning optimization (Solving N+1 problem).
 // It returns a map that contains the relational structs, which can be used for fast assignment in the loop.
 // 批量递归扫描的核心逻辑：
-// 1. 根据当前层级（Depth）获取对应的批量配置（BatchSize, BatchThreshold）。
+// 1. 获取批量配置（BatchSize, BatchThreshold）。
 // 2. 将 Result 中的所有记录通过 Chunking 分段扫描到一个临时切片中。
-// 3. 对该临时切片执行递归关联查询（doWithScanStructs）。
-// 4. 构建一个以关联字段为 Key 的 Map，供后续 O(1) 复杂度的赋值循环使用。
+// 3. 构建一个以关联字段为 Key 的 Map，供后续 O(1) 复杂度的赋值循环使用。
+// 4. 对该临时切片执行递归关联查询（doWithScanStructs）。
 func doScanListGetBatchRecursiveMap(
-	in doScanListInput, attr doScanListBindAttr, relation doScanListRelation,
+	in doScanListInput, attr doScanListBindAttr, relation doScanListRelation, cacheItem *fieldCacheItem,
 ) (relationStructsMap map[string]reflect.Value, err error) {
-	var (
-		opt                  = in.getOptionForCurrentLayer()
-		allChildStructsValue reflect.Value
-	)
-	if !opt.Enabled || len(in.Result) < opt.BatchThreshold {
+	if !in.BatchEnabled || len(in.Result) < cacheItem.withBatchThreshold {
 		return nil, nil
 	}
 
 	if in.Model != nil && len(in.Result) > 0 {
 		var (
 			allChildStructsSlice reflect.Value
+			batchSize            = cacheItem.withBatchSize
 		)
+		if batchSize <= 0 {
+			batchSize = 1000
+		}
+
 		// Step 1: Prepare the container for bulk scanning.
 		if attr.Kind == reflect.Array || attr.Kind == reflect.Slice {
 			allChildStructsSlice = reflect.MakeSlice(attr.Field.Type, 0, len(in.Result))
@@ -381,15 +394,7 @@ func doScanListGetBatchRecursiveMap(
 			allChildStructsSlice = reflect.MakeSlice(reflect.SliceOf(attr.Field.Type), 0, len(in.Result))
 		}
 
-		// Step 2: Scan all result records into the container and execute batch queries.
-		// It uses chunking both for memory processing and database queries to:
-		// 1. Avoid placeholder limit in SQL (MySQL limit: 65535)
-		// 2. Control memory usage for large datasets
-		// 3. Enable fine-grained control over query batch size
-		batchSize := opt.BatchSize
-		if batchSize <= 0 {
-			batchSize = 1000
-		}
+		// Step 2: Scan all result records into the container using chunking.
 		for i := 0; i < len(in.Result); i += batchSize {
 			end := i + batchSize
 			if end > len(in.Result) {
@@ -407,60 +412,38 @@ func doScanListGetBatchRecursiveMap(
 			if err = resultChunk.Structs(allChildStructsPtr); err != nil {
 				return nil, err
 			}
-
-			// Step 3: Execute recursive relation queries for this batch.
-			// Each batch will generate its own WHERE IN(...) clause with at most batchSize IDs.
-			if err = in.Model.doWithScanStructs(allChildStructsPtr); err != nil {
-				return nil, err
-			}
-
 			allChildStructsSlice = reflect.AppendSlice(allChildStructsSlice, reflect.ValueOf(allChildStructsPtr).Elem())
 		}
 
+		// Step 3: Execute recursive relation queries for ALL records at once (Breadth-First).
+		// We create an addressable pointer for the entire slice to allow doWithScanStructs to bind results back.
+		allChildStructsSlicePtr := reflect.New(allChildStructsSlice.Type())
+		allChildStructsSlicePtr.Elem().Set(allChildStructsSlice)
+		if err = in.Model.doWithScanStructs(allChildStructsSlicePtr.Interface()); err != nil {
+			return nil, err
+		}
+		// Sync back the results if they were modified (e.g., pointers filled).
+		allChildStructsSlice = allChildStructsSlicePtr.Elem()
+
 		// Step 4: Build a map for fast lookup in the main assignment loop.
-		// Note: After the batched queries above, allChildStructsSlice contains all results.
-		allChildStructsValue = allChildStructsSlice
 		if relation.FromFieldName != "" {
 			relationStructsMap = make(map[string]reflect.Value)
-			for i := 0; i < allChildStructsValue.Len(); i++ {
+			for i := 0; i < allChildStructsSlice.Len(); i++ {
 				kv := gconv.String(in.Result[i][relation.FromFieldName])
 				if attr.Kind == reflect.Array || attr.Kind == reflect.Slice {
 					if _, ok := relationStructsMap[kv]; !ok {
 						relationStructsMap[kv] = reflect.MakeSlice(attr.Field.Type, 0, 0)
 					}
-					relationStructsMap[kv] = reflect.Append(relationStructsMap[kv], allChildStructsValue.Index(i))
+					relationStructsMap[kv] = reflect.Append(relationStructsMap[kv], allChildStructsSlice.Index(i))
 				} else {
 					if _, ok := relationStructsMap[kv]; !ok {
-						relationStructsMap[kv] = allChildStructsValue.Index(i)
+						relationStructsMap[kv] = allChildStructsSlice.Index(i)
 					}
 				}
 			}
 		}
 	}
 	return relationStructsMap, nil
-}
-
-func (in doScanListInput) getOptionForCurrentLayer() WithBatchOption {
-	// Default value.
-	finalOpt := WithBatchOption{
-		Enabled:   in.BatchEnabled,
-		BatchSize: 1000,
-	}
-	// 1. Find the global default option (Layer == 0).
-	for _, opt := range in.BatchOptions {
-		if opt.Layer == 0 {
-			finalOpt = opt
-			// Do not return here, as we might have more specific layer option.
-		}
-	}
-	// 2. Find the specific layer option (Layer == in.Depth).
-	for _, opt := range in.BatchOptions {
-		if opt.Layer == in.Depth {
-			finalOpt = opt
-			return finalOpt
-		}
-	}
-	return finalOpt
 }
 
 // doScanListAssignmentLoop executes the final assignment loop for ScanList.
@@ -470,6 +453,7 @@ func doScanListAssignmentLoop(
 	attr doScanListBindAttr,
 	relation *doScanListRelation,
 	structsMap map[string]reflect.Value,
+	cacheItem *fieldCacheItem,
 ) (err error) {
 	var (
 		arrayItemType                  = arrayValue.Index(0).Type()
@@ -477,16 +461,6 @@ func doScanListAssignmentLoop(
 		relationFromAttrField          reflect.Value
 		relationBindToFieldNameChecked bool
 	)
-
-	// 使用缓存管理器获取字段索引缓存，这里缓存了确定性的字段访问信息，避免循环内重复反射
-	cacheItem, err := fieldCacheInstance.getOrSet(
-		arrayItemType,
-		in.BindToAttrName,
-		in.RelationAttrName,
-	)
-	if err != nil {
-		return err
-	}
 
 	for i := 0; i < arrayValue.Len(); i++ {
 		arrayElemValue := arrayValue.Index(i)

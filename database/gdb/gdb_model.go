@@ -57,16 +57,6 @@ type Model struct {
 	shardingConfig   ShardingConfig    // ShardingConfig for database/table sharding feature.
 	shardingValue    any               // Sharding value for sharding feature.
 	withBatchEnabled bool              // withBatchEnabled enables batch recursive scanning for association operations (Solving N+1 problem).
-	withBatchOptions []WithBatchOption // withBatchOptions provides fine-grained control for batch recursive scanning.
-	withBatchDepth   int               // withBatchDepth is the current depth of batch recursive scanning.
-}
-
-// WithBatchOption is the option for batch recursive scanning for association operations.
-type WithBatchOption struct {
-	Layer          int  // Layer specifies the association depth (1-based). 0 means global default for all layers.
-	Enabled        bool // Enabled enables or disables batch recursive scanning for this layer.
-	BatchThreshold int  // BatchThreshold is the minimum number of records to trigger batch optimization. Default is 0.
-	BatchSize      int  // BatchSize is the number of records to scan in each chunk to avoid database placeholder limits. Default is 1000.
 }
 
 // ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
