@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gmeta"
 )
@@ -147,11 +146,15 @@ func Test_WithAll_AdvancedScenarios(t *testing.T) {
 		defer db.SetDebug(false)
 		fmt.Println("\n========== Scenario 1: 极小数据集（1条）==========")
 
-		_, err := db.Model(tableUser).Data(g.Map{"id": 1, "name": "user_1"}).Insert()
+		user1 := User{Id: 1, Name: "user_1"}
+		userDetail1 := UserDetail{Uid: 1, Address: "address_1"}
+		userScore1 := UserScores{Id: 1, Uid: 1, Score: 100}
+
+		_, err := db.Model(tableUser).Data(user1).Insert()
 		t.AssertNil(err)
-		_, err = db.Model(tableUserDetail).Data(g.Map{"uid": 1, "address": "address_1"}).Insert()
+		_, err = db.Model(tableUserDetail).Data(userDetail1).Insert()
 		t.AssertNil(err)
-		_, err = db.Model(tableUserScores).Data(g.Map{"id": 1, "uid": 1, "score": 100}).Insert()
+		_, err = db.Model(tableUserScores).Data(userScore1).Insert()
 		t.AssertNil(err)
 
 		var users []*User
@@ -177,12 +180,11 @@ func Test_WithAll_AdvancedScenarios(t *testing.T) {
 		defer db.SetDebug(false)
 		fmt.Println("\n========== Scenario 2: BatchThreshold 精确边界 ==========")
 
-		// 准备10条数据
-		usersData := g.List{}
-		detailsData := g.List{}
-		for i := 1; i <= 10; i++ {
-			usersData = append(usersData, g.Map{"id": i, "name": fmt.Sprintf("user_%d", i)})
-			detailsData = append(detailsData, g.Map{"uid": i, "address": fmt.Sprintf("address_%d", i)})
+		usersData := make([]*User, 10)
+		detailsData := make([]*UserDetail, 10)
+		for i := 0; i < 10; i++ {
+			usersData[i] = &User{Id: i + 1, Name: fmt.Sprintf("user_%d", i+1)}
+			detailsData[i] = &UserDetail{Uid: i + 1, Address: fmt.Sprintf("address_%d", i+1)}
 		}
 		_, err := db.Model(tableUser).Data(usersData).Insert()
 		t.AssertNil(err)
@@ -227,28 +229,30 @@ func Test_WithAll_AdvancedScenarios(t *testing.T) {
 		db.SetDebug(true)
 		defer db.SetDebug(false)
 		// 20用户 * 5scores * 3details = 300 details
-		usersData := g.List{}
-		for i := 1; i <= 20; i++ {
-			usersData = append(usersData, g.Map{"id": i, "name": fmt.Sprintf("user_%d", i)})
+		usersData := make([]*User, 20)
+		for i := 0; i < 20; i++ {
+			usersData[i] = &User{Id: i + 1, Name: fmt.Sprintf("user_%d", i+1)}
 		}
 		_, err := db.Model(tableUser).Data(usersData).Insert()
 		t.AssertNil(err)
 
-		scoresData := g.List{}
+		scoresData := make([]*UserScores, 100) // 20*5=100
 		scoreId := 1
-		for i := 1; i <= 20; i++ {
-			for j := 1; j <= 5; j++ {
-				scoresData = append(scoresData, g.Map{"id": scoreId, "uid": i, "score": j * 10})
+		for i := 0; i < 20; i++ {
+			for j := 0; j < 5; j++ {
+				scoresData[scoreId-1] = &UserScores{Id: scoreId, Uid: i + 1, Score: (j + 1) * 10}
 				scoreId++
 			}
 		}
 		_, err = db.Model(tableUserScores).Data(scoresData).Insert()
 		t.AssertNil(err)
 
-		detailsData := g.List{}
+		detailsData := make([]*UserScoreDetails, 300) // 100*3=300
+		detailIdx := 0
 		for i := 1; i <= 100; i++ {
-			for j := 1; j <= 3; j++ {
-				detailsData = append(detailsData, g.Map{"score_id": i, "detail_info": fmt.Sprintf("detail_%d_%d", i, j)})
+			for j := 0; j < 3; j++ {
+				detailsData[detailIdx] = &UserScoreDetails{ScoreId: i, DetailInfo: fmt.Sprintf("detail_%d_%d", i, j+1)}
+				detailIdx++
 			}
 		}
 		_, err = db.Model(tableUserScoreDetails).Data(detailsData).Insert()
@@ -285,7 +289,9 @@ func Test_WithAll_AdvancedScenarios(t *testing.T) {
 		fmt.Println("\n========== Scenario 4: 空关联数据 ==========")
 		db.SetDebug(true)
 		defer db.SetDebug(false)
-		_, err := db.Model(tableUser).Data(g.Map{"id": 100, "name": "user_empty"}).Insert()
+
+		userEmpty := User{Id: 100, Name: "user_empty"}
+		_, err := db.Model(tableUser).Data(userEmpty).Insert()
 		t.AssertNil(err)
 
 		var users []*User
@@ -308,39 +314,41 @@ func Test_WithAll_AdvancedScenarios(t *testing.T) {
 		db.SetDebug(true)
 		defer db.SetDebug(false)
 		// 5用户 * 2scores * 2details * 2comments
-		usersData := g.List{}
-		for i := 1; i <= 5; i++ {
-			usersData = append(usersData, g.Map{"id": i, "name": fmt.Sprintf("user_%d", i)})
+		usersData := make([]*User, 5)
+		for i := 0; i < 5; i++ {
+			usersData[i] = &User{Id: i + 1, Name: fmt.Sprintf("user_%d", i+1)}
 		}
 		_, err := db.Model(tableUser).Data(usersData).Insert()
 		t.AssertNil(err)
 
-		scoresData := g.List{}
+		scoresData := make([]*UserScores, 10) // 5*2=10
 		scoreId := 1
-		for i := 1; i <= 5; i++ {
-			for j := 1; j <= 2; j++ {
-				scoresData = append(scoresData, g.Map{"id": scoreId, "uid": i, "score": j * 10})
+		for i := 0; i < 5; i++ {
+			for j := 0; j < 2; j++ {
+				scoresData[scoreId-1] = &UserScores{Id: scoreId, Uid: i + 1, Score: (j + 1) * 10}
 				scoreId++
 			}
 		}
 		_, err = db.Model(tableUserScores).Data(scoresData).Insert()
 		t.AssertNil(err)
 
-		detailsData := g.List{}
+		detailsData := make([]*UserScoreDetails, 20) // 10*2=20
 		detailId := 1
-		for i := 1; i <= 10; i++ {
-			for j := 1; j <= 2; j++ {
-				detailsData = append(detailsData, g.Map{"id": detailId, "score_id": i, "detail_info": fmt.Sprintf("detail_%d_%d", i, j)})
+		for i := 0; i < 10; i++ {
+			for j := 0; j < 2; j++ {
+				detailsData[detailId-1] = &UserScoreDetails{Id: detailId, ScoreId: i + 1, DetailInfo: fmt.Sprintf("detail_%d_%d", i+1, j+1)}
 				detailId++
 			}
 		}
 		_, err = db.Model(tableUserScoreDetails).Data(detailsData).Insert()
 		t.AssertNil(err)
 
-		commentsData := g.List{}
-		for i := 1; i <= 20; i++ {
-			for j := 1; j <= 2; j++ {
-				commentsData = append(commentsData, g.Map{"detail_id": i, "comment": fmt.Sprintf("comment_%d_%d", i, j)})
+		commentsData := make([]*ScoreComments, 40) // 20*2=40
+		commentId := 1
+		for i := 0; i < 20; i++ {
+			for j := 0; j < 2; j++ {
+				commentsData[commentId-1] = &ScoreComments{DetailId: i + 1, Comment: fmt.Sprintf("comment_%d_%d", i+1, j+1)}
+				commentId++
 			}
 		}
 		_, err = db.Model(tableScoreComments).Data(commentsData).Insert()
@@ -383,19 +391,20 @@ func Test_WithAll_AdvancedScenarios(t *testing.T) {
 		detailPerScore := 3
 
 		fmt.Println("  → 插入1000个用户...")
-		usersData := g.List{}
-		for i := 1; i <= userCount; i++ {
-			usersData = append(usersData, g.Map{"id": i, "name": fmt.Sprintf("user_%d", i)})
+		usersData := make([]*User, userCount)
+		for i := 0; i < userCount; i++ {
+			usersData[i] = &User{Id: i + 1, Name: fmt.Sprintf("user_%d", i+1)}
 		}
 		_, err := db.Model(tableUser).Data(usersData).Insert()
 		t.AssertNil(err)
 
 		fmt.Println("  → 插入5000个scores...")
-		scoresData := g.List{}
+		totalScores := userCount * scorePerUser
+		scoresData := make([]*UserScores, totalScores)
 		scoreId := 1
-		for i := 1; i <= userCount; i++ {
-			for j := 1; j <= scorePerUser; j++ {
-				scoresData = append(scoresData, g.Map{"id": scoreId, "uid": i, "score": j * 10})
+		for i := 0; i < userCount; i++ {
+			for j := 0; j < scorePerUser; j++ {
+				scoresData[scoreId-1] = &UserScores{Id: scoreId, Uid: i + 1, Score: (j + 1) * 10}
 				scoreId++
 			}
 		}
@@ -403,10 +412,13 @@ func Test_WithAll_AdvancedScenarios(t *testing.T) {
 		t.AssertNil(err)
 
 		fmt.Println("  → 插入15000个details...")
-		detailsData := g.List{}
+		totalDetails := userCount * scorePerUser * detailPerScore
+		detailsData := make([]*UserScoreDetails, totalDetails)
+		detailIdx := 0
 		for i := 1; i <= userCount*scorePerUser; i++ {
-			for j := 1; j <= detailPerScore; j++ {
-				detailsData = append(detailsData, g.Map{"score_id": i, "detail_info": fmt.Sprintf("detail_%d_%d", i, j)})
+			for j := 0; j < detailPerScore; j++ {
+				detailsData[detailIdx] = &UserScoreDetails{ScoreId: i, DetailInfo: fmt.Sprintf("detail_%d_%d", i, j+1)}
+				detailIdx++
 			}
 		}
 		_, err = db.Model(tableUserScoreDetails).Data(detailsData).Batch(1000).Insert()
@@ -443,17 +455,19 @@ func Test_WithAll_AdvancedScenarios(t *testing.T) {
 		fmt.Println("\n========== Scenario 7: 全局配置+层级覆盖 ==========")
 		db.SetDebug(true)
 		defer db.SetDebug(false)
-		usersData := g.List{}
-		for i := 1; i <= 10; i++ {
-			usersData = append(usersData, g.Map{"id": i, "name": fmt.Sprintf("user_%d", i)})
+		usersData := make([]*User, 10)
+		for i := 0; i < 10; i++ {
+			usersData[i] = &User{Id: i + 1, Name: fmt.Sprintf("user_%d", i+1)}
 		}
 		_, err := db.Model(tableUser).Data(usersData).Insert()
 		t.AssertNil(err)
 
-		scoresData := g.List{}
-		for i := 1; i <= 10; i++ {
-			for j := 1; j <= 3; j++ {
-				scoresData = append(scoresData, g.Map{"uid": i, "score": j * 10})
+		scoresData := make([]*UserScores, 30) // 10*3=30
+		scoreIdx := 0
+		for i := 0; i < 10; i++ {
+			for j := 0; j < 3; j++ {
+				scoresData[scoreIdx] = &UserScores{Uid: i + 1, Score: (j + 1) * 10}
+				scoreIdx++
 			}
 		}
 		_, err = db.Model(tableUserScores).Data(scoresData).Insert()

@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gmeta"
 )
@@ -132,11 +131,11 @@ func Test_With_BatchOptimization(t *testing.T) {
 		fmt.Println("\n========== Scenario 1: With 单个关联字段 ==========")
 
 		// 插入数据
-		usersData := g.List{}
-		detailsData := g.List{}
+		usersData := make([]*User, 0, 50)
+		detailsData := make([]*UserDetail, 0, 50)
 		for i := 1; i <= 50; i++ {
-			usersData = append(usersData, g.Map{"id": i, "name": fmt.Sprintf("user_%d", i)})
-			detailsData = append(detailsData, g.Map{"uid": i, "address": fmt.Sprintf("address_%d", i)})
+			usersData = append(usersData, &User{Id: i, Name: fmt.Sprintf("user_%d", i)})
+			detailsData = append(detailsData, &UserDetail{Uid: i, Address: fmt.Sprintf("address_%d", i)})
 		}
 		_, err := db.Model(tableUser).Data(usersData).Insert()
 		t.AssertNil(err)
@@ -179,14 +178,14 @@ func Test_With_BatchOptimization(t *testing.T) {
 		fmt.Println("\n========== Scenario 2: With 多个关联字段 ==========")
 
 		// 插入数据
-		usersData := g.List{}
-		detailsData := g.List{}
-		scoresData := g.List{}
+		usersData := make([]*User, 0, 30)
+		detailsData := make([]*UserDetail, 0, 30)
+		scoresData := make([]*UserScores, 0, 150)
 		for i := 1; i <= 30; i++ {
-			usersData = append(usersData, g.Map{"id": i, "name": fmt.Sprintf("user_%d", i)})
-			detailsData = append(detailsData, g.Map{"uid": i, "address": fmt.Sprintf("address_%d", i)})
+			usersData = append(usersData, &User{Id: i, Name: fmt.Sprintf("user_%d", i)})
+			detailsData = append(detailsData, &UserDetail{Uid: i, Address: fmt.Sprintf("address_%d", i)})
 			for j := 1; j <= 5; j++ {
-				scoresData = append(scoresData, g.Map{"uid": i, "score": j * 10})
+				scoresData = append(scoresData, &UserScores{Uid: i, Score: j * 10})
 			}
 		}
 		_, err := db.Model(tableUser).Data(usersData).Insert()
@@ -228,14 +227,14 @@ func Test_With_BatchOptimization(t *testing.T) {
 		fmt.Println("\n========== Scenario 3: With 多层级 BatchSize 配置 ==========")
 
 		// 插入数据：50用户 + detail + scores
-		usersData := g.List{}
-		detailsData := g.List{}
-		scoresData := g.List{}
+		usersData := make([]*User, 0, 50)
+		detailsData := make([]*UserDetail, 0, 50)
+		scoresData := make([]*UserScores, 0, 250)
 		for i := 1; i <= 50; i++ {
-			usersData = append(usersData, g.Map{"id": i, "name": fmt.Sprintf("user_%d", i)})
-			detailsData = append(detailsData, g.Map{"uid": i, "address": fmt.Sprintf("address_%d", i)})
+			usersData = append(usersData, &User{Id: i, Name: fmt.Sprintf("user_%d", i)})
+			detailsData = append(detailsData, &UserDetail{Uid: i, Address: fmt.Sprintf("address_%d", i)})
 			for j := 1; j <= 5; j++ {
-				scoresData = append(scoresData, g.Map{"uid": i, "score": j * 10})
+				scoresData = append(scoresData, &UserScores{Uid: i, Score: j * 10})
 			}
 		}
 		_, err := db.Model(tableUser).Data(usersData).Insert()
@@ -284,11 +283,11 @@ func Test_With_BatchOptimization(t *testing.T) {
 		fmt.Println("\n========== Scenario 4: With + BatchSize 配置 ==========")
 
 		// 插入100个用户
-		usersData := g.List{}
-		detailsData := g.List{}
+		usersData := make([]*User, 0, 100)
+		detailsData := make([]*UserDetail, 0, 100)
 		for i := 1; i <= 100; i++ {
-			usersData = append(usersData, g.Map{"id": i, "name": fmt.Sprintf("user_%d", i)})
-			detailsData = append(detailsData, g.Map{"uid": i, "address": fmt.Sprintf("address_%d", i)})
+			usersData = append(usersData, &User{Id: i, Name: fmt.Sprintf("user_%d", i)})
+			detailsData = append(detailsData, &UserDetail{Uid: i, Address: fmt.Sprintf("address_%d", i)})
 		}
 		_, err := db.Model(tableUser).Data(usersData).Insert()
 		t.AssertNil(err)
@@ -332,11 +331,11 @@ func Test_With_BatchOptimization(t *testing.T) {
 		fmt.Println("\n========== Scenario 5: With + BatchThreshold ==========")
 
 		// 插入10个用户
-		usersData := g.List{}
-		detailsData := g.List{}
+		usersData := make([]*User, 0, 10)
+		detailsData := make([]*UserDetail, 0, 10)
 		for i := 1; i <= 10; i++ {
-			usersData = append(usersData, g.Map{"id": i, "name": fmt.Sprintf("user_%d", i)})
-			detailsData = append(detailsData, g.Map{"uid": i, "address": fmt.Sprintf("address_%d", i)})
+			usersData = append(usersData, &User{Id: i, Name: fmt.Sprintf("user_%d", i)})
+			detailsData = append(detailsData, &UserDetail{Uid: i, Address: fmt.Sprintf("address_%d", i)})
 		}
 		_, err := db.Model(tableUser).Data(usersData).Insert()
 		t.AssertNil(err)
@@ -389,14 +388,14 @@ func Test_With_BatchOptimization(t *testing.T) {
 		fmt.Println("\n========== Scenario 6: With vs WithAll 性能对比 ==========")
 
 		// 插入数据
-		usersData := g.List{}
-		detailsData := g.List{}
-		scoresData := g.List{}
+		usersData := make([]*User, 0, 200)
+		detailsData := make([]*UserDetail, 0, 200)
+		scoresData := make([]*UserScores, 0, 2000)
 		for i := 1; i <= 200; i++ {
-			usersData = append(usersData, g.Map{"id": i, "name": fmt.Sprintf("user_%d", i)})
-			detailsData = append(detailsData, g.Map{"uid": i, "address": fmt.Sprintf("address_%d", i)})
+			usersData = append(usersData, &User{Id: i, Name: fmt.Sprintf("user_%d", i)})
+			detailsData = append(detailsData, &UserDetail{Uid: i, Address: fmt.Sprintf("address_%d", i)})
 			for j := 1; j <= 10; j++ {
-				scoresData = append(scoresData, g.Map{"uid": i, "score": j * 10})
+				scoresData = append(scoresData, &UserScores{Uid: i, Score: j * 10})
 			}
 		}
 		_, err := db.Model(tableUser).Data(usersData).Insert()

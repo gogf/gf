@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gmeta"
 )
@@ -87,13 +86,13 @@ func Test_WithBatchDepth_StateCheck(t *testing.T) {
 	defer dropTable(tableUserScores)
 
 	// 插入测试数据
-	_, err = db.Model(tableUser).Data(g.Map{"id": 1, "name": "user_1"}).Insert()
+	_, err = db.Model(tableUser).Data(&User{Id: 1, Name: "user_1"}).Insert()
 	gtest.AssertNil(err)
-	_, err = db.Model(tableUserDetail).Data(g.Map{"uid": 1, "address": "address_1"}).Insert()
+	_, err = db.Model(tableUserDetail).Data(&UserDetail{Uid: 1, Address: "address_1"}).Insert()
 	gtest.AssertNil(err)
-	_, err = db.Model(tableUserScores).Data(g.List{
-		g.Map{"uid": 1, "score": 10},
-		g.Map{"uid": 1, "score": 20},
+	_, err = db.Model(tableUserScores).Data([]*UserScores{
+		{Uid: 1, Score: 10},
+		{Uid: 1, Score: 20},
 	}).Insert()
 	gtest.AssertNil(err)
 

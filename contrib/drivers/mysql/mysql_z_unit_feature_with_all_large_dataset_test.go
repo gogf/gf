@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gmeta"
 )
@@ -137,11 +136,11 @@ func Test_WithAll_LargeDataset(t *testing.T) {
 	// 1. 插入用户数据
 	fmt.Println("→ 插入用户数据...")
 	startTime := time.Now()
-	usersData := make(g.List, 0, userCount)
+	usersData := make([]*User, 0, userCount)
 	for i := 1; i <= userCount; i++ {
-		usersData = append(usersData, g.Map{
-			"id":   i,
-			"name": fmt.Sprintf("user_%d", i),
+		usersData = append(usersData, &User{
+			Id:   i,
+			Name: fmt.Sprintf("user_%d", i),
 		})
 	}
 	_, err = db.Model(tableUser).Data(usersData).Batch(1000).Insert()
@@ -151,11 +150,11 @@ func Test_WithAll_LargeDataset(t *testing.T) {
 	// 2. 插入用户详情
 	fmt.Println("→ 插入用户详情...")
 	startTime = time.Now()
-	detailsData := make(g.List, 0, userCount)
+	detailsData := make([]*UserDetail, 0, userCount)
 	for i := 1; i <= userCount; i++ {
-		detailsData = append(detailsData, g.Map{
-			"uid":     i,
-			"address": fmt.Sprintf("address_%d", i),
+		detailsData = append(detailsData, &UserDetail{
+			Uid:     i,
+			Address: fmt.Sprintf("address_%d", i),
 		})
 	}
 	_, err = db.Model(tableUserDetail).Data(detailsData).Batch(1000).Insert()
@@ -165,14 +164,14 @@ func Test_WithAll_LargeDataset(t *testing.T) {
 	// 3. 插入 UserScores
 	fmt.Println("→ 插入 UserScores...")
 	startTime = time.Now()
-	scoresData := make(g.List, 0, totalScores)
+	scoresData := make([]*UserScores, 0, totalScores)
 	scoreId := 1
 	for i := 1; i <= userCount; i++ {
 		for j := 1; j <= scorePerUser; j++ {
-			scoresData = append(scoresData, g.Map{
-				"id":    scoreId,
-				"uid":   i,
-				"score": j * 10,
+			scoresData = append(scoresData, &UserScores{
+				Id:    scoreId,
+				Uid:   i,
+				Score: j * 10,
 			})
 			scoreId++
 		}
@@ -184,12 +183,12 @@ func Test_WithAll_LargeDataset(t *testing.T) {
 	// 4. 插入 ScoreDetails
 	fmt.Println("→ 插入 ScoreDetails...")
 	startTime = time.Now()
-	scoreDetailsData := make(g.List, 0, totalDetails)
+	scoreDetailsData := make([]*UserScoreDetails, 0, totalDetails)
 	for i := 1; i <= totalScores; i++ {
 		for j := 1; j <= detailPerScore; j++ {
-			scoreDetailsData = append(scoreDetailsData, g.Map{
-				"score_id":    i,
-				"detail_info": fmt.Sprintf("detail_%d_%d", i, j),
+			scoreDetailsData = append(scoreDetailsData, &UserScoreDetails{
+				ScoreId:    i,
+				DetailInfo: fmt.Sprintf("detail_%d_%d", i, j),
 			})
 		}
 	}

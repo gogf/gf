@@ -1,9 +1,3 @@
-// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
-//
-// This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
-
 package mysql_test
 
 import (
@@ -12,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gmeta"
 )
@@ -112,43 +105,49 @@ func Test_WithAll_PerformanceComparison(t *testing.T) {
 	scoreDetailPerScore := 10
 
 	// Batch insert users
-	usersData := g.List{}
-	for i := 1; i <= userCount; i++ {
-		usersData = append(usersData, g.Map{"id": i, "name": fmt.Sprintf("name_%d", i)})
+	usersData := make([]*User, userCount)
+	for i := 0; i < userCount; i++ {
+		usersData[i] = &User{Id: i + 1, Name: fmt.Sprintf("name_%d", i+1)}
 	}
 	_, err = db.Model(tableUser).Data(usersData).Insert()
 	gtest.AssertNil(err)
 
 	// Batch insert details
-	detailsData := g.List{}
+	detailsData := make([]*UserDetail, userCount*detailPerUser)
+	idx := 0
 	for i := 1; i <= userCount; i++ {
 		for j := 1; j <= detailPerUser; j++ {
-			detailsData = append(detailsData, g.Map{"uid": i, "address": fmt.Sprintf("address_%d_%d", i, j)})
+			detailsData[idx] = &UserDetail{Uid: i, Address: fmt.Sprintf("address_%d_%d", i, j)}
+			idx++
 		}
 	}
 	_, err = db.Model(tableUserDetail).Data(detailsData).Insert()
 	gtest.AssertNil(err)
 
 	// Batch insert scores
-	scoresData := g.List{}
+	scoresData := make([]*UserScores, userCount*scorePerUser)
+	scoreIdx := 0
 	for i := 1; i <= userCount; i++ {
 		for j := 1; j <= scorePerUser; j++ {
-			scoresData = append(scoresData, g.Map{"uid": i, "score": j})
+			scoresData[scoreIdx] = &UserScores{Uid: i, Score: j}
+			scoreIdx++
 		}
 	}
 	_, err = db.Model(tableUserScores).Data(scoresData).Insert()
 	gtest.AssertNil(err)
 
 	// Batch insert score details
-	scoreDetailsData := g.List{}
+	scoreDetailsData := make([]*UserScoreDetails, userCount*scorePerUser*scoreDetailPerScore)
+	scoreDetailIdx := 0
 	for i := 1; i <= userCount; i++ {
 		for j := 1; j <= scorePerUser; j++ {
 			actualScoreId := (i-1)*scorePerUser + j
 			for k := 1; k <= scoreDetailPerScore; k++ {
-				scoreDetailsData = append(scoreDetailsData, g.Map{
-					"score_id":    actualScoreId,
-					"detail_info": fmt.Sprintf("detail_info_%d_%d_%d", i, j, k),
-				})
+				scoreDetailsData[scoreDetailIdx] = &UserScoreDetails{
+					ScoreId:    actualScoreId,
+					DetailInfo: fmt.Sprintf("detail_info_%d_%d_%d", i, j, k),
+				}
+				scoreDetailIdx++
 			}
 		}
 	}
