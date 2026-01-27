@@ -36,6 +36,8 @@ type File struct {
 }
 
 var (
+	// checker is used for checking whether the value is nil.
+	checker = func(v *Pool) bool { return v == nil }
 	// Global file pointer pool.
-	pools = gmap.NewStrAnyMap(true)
+	pools = gmap.NewKVMapWithChecker[string, *Pool](checker, true)
 )

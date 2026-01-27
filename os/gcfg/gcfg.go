@@ -11,6 +11,8 @@ import (
 	"context"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/utils"
@@ -56,7 +58,7 @@ func Instance(name ...string) *Config {
 	if len(name) > 0 && name[0] != "" {
 		instanceName = name[0]
 	}
-	return localInstances.GetOrSetFuncLock(instanceName, func() any {
+	return localInstances.GetOrSetFuncLock(instanceName, func() *Config {
 		adapterFile, err := NewAdapterFile()
 		if err != nil {
 			intlog.Errorf(context.Background(), `%+v`, err)
@@ -66,7 +68,7 @@ func Instance(name ...string) *Config {
 			adapterFile.SetFileName(instanceName)
 		}
 		return NewWithAdapter(adapterFile)
-	}).(*Config)
+	})
 }
 
 // SetAdapter sets the adapter of the current Config object.
@@ -117,10 +119,20 @@ func (c *Config) Get(ctx context.Context, pattern string, def ...any) (*gvar.Var
 //
 // Fetching Rules: Environment arguments are in uppercase format, eg: GF_PACKAGE_VARIABLE.
 func (c *Config) GetWithEnv(ctx context.Context, pattern string, def ...any) (*gvar.Var, error) {
-	if v := genv.Get(utils.FormatEnvKey(pattern)); v != nil {
-		return v, nil
+	value, err := c.Get(ctx, pattern)
+	if err != nil && gerror.Code(err) != gcode.CodeNotFound {
+		return nil, err
 	}
-	return c.Get(ctx, pattern, def...)
+	if value == nil {
+		if v := genv.Get(utils.FormatEnvKey(pattern)); v != nil {
+			return v, nil
+		}
+		if len(def) > 0 {
+			return gvar.New(def[0]), nil
+		}
+		return nil, nil
+	}
+	return value, nil
 }
 
 // GetWithCmd returns the configuration value specified by pattern `pattern`.
@@ -129,10 +141,20 @@ func (c *Config) GetWithEnv(ctx context.Context, pattern string, def ...any) (*g
 //
 // Fetching Rules: Command line arguments are in lowercase format, eg: gf.package.variable.
 func (c *Config) GetWithCmd(ctx context.Context, pattern string, def ...any) (*gvar.Var, error) {
-	if v := command.GetOpt(utils.FormatCmdKey(pattern)); v != "" {
-		return gvar.New(v), nil
+	value, err := c.Get(ctx, pattern)
+	if err != nil && gerror.Code(err) != gcode.CodeNotFound {
+		return nil, err
 	}
-	return c.Get(ctx, pattern, def...)
+	if value == nil {
+		if v := command.GetOpt(utils.FormatCmdKey(pattern)); v != "" {
+			return gvar.New(v), nil
+		}
+		if len(def) > 0 {
+			return gvar.New(def[0]), nil
+		}
+		return nil, nil
+	}
+	return value, nil
 }
 
 // Data retrieves and returns all configuration data as map type.

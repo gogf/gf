@@ -32,11 +32,11 @@ var (
 
 // AdapterFile implements interface Adapter using file.
 type AdapterFile struct {
-	defaultFileNameOrPath *gtype.String    // Default configuration file name or file path.
-	searchPaths           *garray.StrArray // Searching the path array.
-	jsonMap               *gmap.StrAnyMap  // The pared JSON objects for configuration files.
-	violenceCheck         bool             // Whether it does violence check in value index searching. It affects the performance when set true(false in default).
-	watchers              *WatcherRegistry // Watchers for watching file changes.
+	defaultFileNameOrPath *gtype.String                    // Default configuration file name or file path.
+	searchPaths           *garray.StrArray                 // Searching the path array.
+	jsonMap               *gmap.KVMap[string, *gjson.Json] // The parsed JSON objects for configuration files.
+	violenceCheck         bool                             // Whether it does violence check in value index searching. It affects the performance when set true(false in default).
+	watchers              *WatcherRegistry                 // Watchers for watching file changes.
 }
 
 const (
@@ -46,8 +46,9 @@ const (
 
 var (
 	supportedFileTypes     = []string{"toml", "yaml", "yml", "json", "ini", "xml", "properties"} // All supported file types suffixes.
-	localInstances         = gmap.NewStrAnyMap(true)                                             // Instances map containing configuration instances.
-	customConfigContentMap = gmap.NewStrStrMap(true)                                             // Customized configuration content.
+	checker                = func(v *Config) bool { return v == nil }
+	localInstances         = gmap.NewKVMapWithChecker[string, *Config](checker, true) // Instances map containing configuration instances.
+	customConfigContentMap = gmap.NewStrStrMap(true)                                  // Customized configuration content.
 
 	// Prefix array for trying searching in resource manager.
 	resourceTryFolders = []string{
@@ -57,6 +58,9 @@ var (
 
 	// Prefix array for trying searching in the local system.
 	localSystemTryFolders = []string{"", "config/", "manifest/config"}
+
+	// jsonMapChecker is the checker for JSON map.
+	jsonMapChecker = func(v *gjson.Json) bool { return v == nil }
 )
 
 // NewAdapterFile returns a new configuration management object.
@@ -77,7 +81,7 @@ func NewAdapterFile(fileNameOrPath ...string) (*AdapterFile, error) {
 	config := &AdapterFile{
 		defaultFileNameOrPath: gtype.NewString(usedFileNameOrPath),
 		searchPaths:           garray.NewStrArray(true),
-		jsonMap:               gmap.NewStrAnyMap(true),
+		jsonMap:               gmap.NewKVMapWithChecker[string, *gjson.Json](jsonMapChecker, true),
 		watchers:              NewWatcherRegistry(),
 	}
 	// Customized dir path from env/cmd.
@@ -256,7 +260,7 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 		usedFileNameOrPath = fileNameOrPath[0]
 	}
 	// It uses JSON map to cache specified configuration file content.
-	result := a.jsonMap.GetOrSetFuncLock(usedFileNameOrPath, func() any {
+	result := a.jsonMap.GetOrSetFuncLock(usedFileNameOrPath, func() *gjson.Json {
 		var (
 			content  string
 			filePath string
@@ -325,13 +329,13 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 		return configJson
 	})
 	if result != nil {
-		return result.(*gjson.Json), err
+		return result, err
 	}
 	return
 }
 
 // AddWatcher adds a watcher for the specified configuration file.
-func (a *AdapterFile) AddWatcher(name string, fn func(ctx context.Context)) {
+func (a *AdapterFile) AddWatcher(name string, fn WatcherFunc) {
 	a.watchers.Add(name, fn)
 }
 
@@ -343,6 +347,11 @@ func (a *AdapterFile) RemoveWatcher(name string) {
 // GetWatcherNames returns all watcher names.
 func (a *AdapterFile) GetWatcherNames() []string {
 	return a.watchers.GetNames()
+}
+
+// IsWatching checks and returns whether the specified `name` is watching.
+func (a *AdapterFile) IsWatching(name string) bool {
+	return a.watchers.IsWatching(name)
 }
 
 // notifyWatchers notifies all watchers.
