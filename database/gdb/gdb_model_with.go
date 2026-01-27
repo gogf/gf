@@ -208,7 +208,7 @@ func (m *Model) doWithScanStructs(pointer any) error {
 		reflectValue        = reflect.ValueOf(pointer)
 		reflectKind         = reflectValue.Kind()
 	)
-	if reflectKind == reflect.Ptr {
+	if reflectKind == reflect.Pointer {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
