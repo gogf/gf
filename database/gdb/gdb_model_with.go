@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"database/sql"
+	"errors"
 	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -186,7 +187,7 @@ func (m *Model) doWithScanStruct(pointer any) error {
 			Where(relatedSourceName, relatedTargetValue).
 			Scan(bindToReflectValue)
 		// It ignores sql.ErrNoRows in with feature.
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return err
 		}
 	}
@@ -208,7 +209,7 @@ func (m *Model) doWithScanStructs(pointer any) error {
 		reflectValue        = reflect.ValueOf(pointer)
 		reflectKind         = reflectValue.Kind()
 	)
-	if reflectKind == reflect.Pointer {
+	if reflectKind == reflect.Ptr {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
@@ -344,7 +345,7 @@ func (m *Model) doWithScanStructs(pointer any) error {
 			results, err = model.Clone().Fields(field.Value).
 				Where(relatedSourceName, relatedTargetValue).
 				All()
-			if err != nil && err != sql.ErrNoRows {
+			if err != nil && !errors.Is(err, sql.ErrNoRows) {
 				return err
 			}
 		}

@@ -372,9 +372,7 @@ func (m *Model) ScanAndCount(pointer any, totalCount *int, useFieldForCount bool
 // ScanList converts `r` to struct slice which contains other complex struct attributes.
 // Also see Result.ScanList.
 func (m *Model) ScanList(structSlicePointer any, bindToAttrName string, relationAttrNameAndFields ...string) (err error) {
-	var (
-		result Result
-	)
+	var result Result
 	out, err := checkGetSliceElementInfoForScanList(structSlicePointer, bindToAttrName)
 	if err != nil {
 		return err
