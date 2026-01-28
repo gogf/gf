@@ -1015,3 +1015,40 @@ func genTableNamesCacheKey(group string) string {
 func genSoftTimeFieldNameTypeCacheKey(schema, table string, candidateFields []string) string {
 	return fmt.Sprintf(`getSoftFieldNameAndType:%s#%s#%s`, schema, table, strings.Join(candidateFields, "_"))
 }
+
+// EscapeLikeString escapes special characters in a string for LIKE operations.
+// It escapes '\', '%', and '_' characters to prevent them from being interpreted
+// as wildcard characters in SQL LIKE statements.
+//
+// This function is useful when you need to search for literal characters that would
+// otherwise be treated as wildcards in LIKE patterns. Use this when accepting user
+// input for LIKE operations to prevent unintended wildcard matching.
+//
+// The function follows standard SQL escaping rules:
+// - '\' becomes '\\'
+// - '%' becomes '\%'
+// - '_' becomes '\_'
+//
+// Usage examples:
+//
+//	// Search for exact text containing special characters
+//	userInput := "user%name_test"
+//	escaped := gdb.EscapeLikeString(userInput)  // "user\\%name\\_test"
+//	db.Model("users").WhereLike("username", escaped)
+//
+//	// Search for text containing special characters with wildcards
+//	userInput := "user%name"
+//	escaped := gdb.EscapeLikeString(userInput)  // "user\\%name"
+//	db.Model("users").WhereLike("username", "%"+escaped+"%")  // LIKE '%user\%name%'
+//
+//	// Normal wildcard usage (do NOT escape)
+//	db.Model("users").WhereLike("username", "user%")  // LIKE 'user%' - matches userABC, user123, etc.
+func escapeLikeString(s string) string {
+	// Escape backslashes first to prevent double escaping
+	s = strings.ReplaceAll(s, "\\", "\\\\")
+	// Escape percent signs
+	s = strings.ReplaceAll(s, "%", "\\%")
+	// Escape underscores
+	s = strings.ReplaceAll(s, "_", "\\_")
+	return s
+}
