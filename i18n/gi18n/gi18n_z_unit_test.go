@@ -159,6 +159,10 @@ func Test_Resource(t *testing.T) {
 
 		m.SetLanguage("zh-CN")
 		t.Assert(m.T(context.Background(), "{#hello}{#world}"), "你好世界")
+
+		m.SetLanguage("ja")
+		const key = "The year is 2128. AI has taken over the world, and all forms of racing is done by these DNA driven machines ; they are alive, and they have a will to win."
+		t.Assert(m.T(context.Background(), "{#"+key+"}"), "2128年です。AIが世界を支配し、あらゆる形式のレースはDNA駆動の機械によって行われています。彼らは生きており、勝つ意志を持っています。")
 	})
 }
 
@@ -215,6 +219,9 @@ func Test_PathInResource(t *testing.T) {
 		t.AssertNil(err)
 		i18n.SetLanguage("ja")
 		t.Assert(i18n.T(context.Background(), "{#hello}{#world}"), "こんにちは世界")
+
+		const key = "The year is 2128. AI has taken over the world, and all forms of racing is done by these DNA driven machines ; they are alive, and they have a will to win."
+		t.Assert(i18n.T(context.Background(), "{#"+key+"}"), "2128年です。AIが世界を支配し、あらゆる形式のレースはDNA駆動の機械によって行われています。彼らは生きており、勝つ意志を持っています。")
 	})
 }
 
