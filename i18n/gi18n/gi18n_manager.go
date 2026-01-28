@@ -9,6 +9,7 @@ package gi18n
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -253,6 +254,7 @@ func (m *Manager) init(ctx context.Context) {
 				name  string
 				lang  string
 				array []string
+				err   error
 			)
 			m.data = make(map[string]map[string]string)
 			for _, file := range files {
@@ -267,7 +269,14 @@ func (m *Manager) init(ctx context.Context) {
 				if m.data[lang] == nil {
 					m.data[lang] = make(map[string]string)
 				}
-				if j, err := gjson.LoadContent(file.Content()); err == nil {
+				ext := filepath.Ext(name)
+				var j *gjson.Json
+				if fileType := gjson.ContentType(strings.TrimPrefix(ext, ".")); gjson.IsValidDataType(fileType) {
+					j, err = gjson.LoadContentType(fileType, file.Content())
+				} else {
+					j, err = gjson.LoadContent(file.Content())
+				}
+				if err == nil {
 					for k, v := range j.Var().Map() {
 						m.data[lang][k] = gconv.String(v)
 					}
@@ -285,6 +294,7 @@ func (m *Manager) init(ctx context.Context) {
 			path  string
 			lang  string
 			array []string
+			err   error
 		)
 		m.data = make(map[string]map[string]string)
 		for _, file := range files {
@@ -298,7 +308,14 @@ func (m *Manager) init(ctx context.Context) {
 			if m.data[lang] == nil {
 				m.data[lang] = make(map[string]string)
 			}
-			if j, err := gjson.LoadContent(gfile.GetBytes(file)); err == nil {
+			ext := filepath.Ext(file)
+			var j *gjson.Json
+			if fileType := gjson.ContentType(strings.TrimPrefix(ext, ".")); gjson.IsValidDataType(fileType) {
+				j, err = gjson.LoadContentType(fileType, gfile.GetBytes(file))
+			} else {
+				j, err = gjson.LoadContent(gfile.GetBytes(file))
+			}
+			if err == nil {
 				for k, v := range j.Var().Map() {
 					m.data[lang][k] = gconv.String(v)
 				}
