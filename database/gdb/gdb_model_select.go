@@ -369,13 +369,15 @@ func (m *Model) ScanAndCount(pointer any, totalCount *int, useFieldForCount bool
 // ScanList converts `r` to struct slice which contains other complex struct attributes.
 // Note that the parameter `listPointer` should be type of *[]struct/*[]*struct.
 //
-// See Result.ScanList.
+// ScanList converts `r` to struct slice which contains other complex struct attributes.
+// Also see Result.ScanList.
 func (m *Model) ScanList(structSlicePointer any, bindToAttrName string, relationAttrNameAndFields ...string) (err error) {
 	var result Result
 	out, err := checkGetSliceElementInfoForScanList(structSlicePointer, bindToAttrName)
 	if err != nil {
 		return err
 	}
+
 	if len(m.fields) > 0 || len(m.fieldsEx) != 0 {
 		// There are custom fields.
 		result, err = m.All()
@@ -405,6 +407,7 @@ func (m *Model) ScanList(structSlicePointer any, bindToAttrName string, relation
 		BindToAttrName:     bindToAttrName,
 		RelationAttrName:   relationAttrName,
 		RelationFields:     relationFields,
+		BatchEnabled:       m.withBatchEnabled,
 	})
 }
 
