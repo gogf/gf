@@ -77,7 +77,7 @@ func Test_Gpool(t *testing.T) {
 		t.Assert(err2, errors.New("pool is empty"))
 		t.Assert(v2, nil)
 		// test close expireFunc
-		for index := 0; index < 10; index++ {
+		for index := range 10 {
 			p2.Put(index)
 		}
 		t.Assert(p2.Size(), 10)

@@ -119,8 +119,8 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*Han
 		array = strings.Split(path[1:], "/")
 	}
 	var (
-		lastMiddlewareElem    *glist.Element
-		parsedItemList        = glist.New()
+		lastMiddlewareElem    *glist.TElement[*HandlerItemParsed]
+		parsedItemList        = glist.NewT[*HandlerItemParsed]()
 		repeatHandlerCheckMap = make(map[int]struct{}, 16)
 	)
 
@@ -245,7 +245,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*Han
 		var index = 0
 		parsedItems = make([]*HandlerItemParsed, parsedItemList.Len())
 		for e := parsedItemList.Front(); e != nil; e = e.Next() {
-			parsedItems[index] = e.Value.(*HandlerItemParsed)
+			parsedItems[index] = e.Value
 			index++
 		}
 	}

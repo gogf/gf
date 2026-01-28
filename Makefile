@@ -6,6 +6,7 @@ tidy:
 	./.make_tidy.sh
 
 # execute "golangci-lint" to check code style
+# go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
 .PHONY: lint
 lint:
 	golangci-lint run -c .golangci.yml
@@ -75,3 +76,13 @@ subsync: subup
 		git push origin; \
 	fi; \
 	cd ..;
+
+# manage docker services for local development
+# usage: make docker or make docker cmd=start svc=mysql
+.PHONY: docker
+docker:
+	@if [ -z "$(cmd)" ]; then \
+		./.github/workflows/scripts/docker-services.sh; \
+	else \
+		./.github/workflows/scripts/docker-services.sh $(cmd) $(svc) $(extra); \
+	fi

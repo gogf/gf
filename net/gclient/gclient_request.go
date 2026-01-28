@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/encoding/gurl"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/httputil"
@@ -248,7 +249,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 				isFileUploading = false
 			)
 			for _, item := range strings.Split(params, "&") {
-				array := strings.Split(item, "=")
+				array := strings.SplitN(item, "=", 2)
 				if len(array) < 2 {
 					continue
 				}
@@ -287,6 +288,14 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 						fieldName  = array[0]
 						fieldValue = array[1]
 					)
+					// Decode URL-encoded field name and value.
+					// If decoding fails, use the original value.
+					if v, err := gurl.Decode(fieldName); err == nil {
+						fieldName = v
+					}
+					if v, err := gurl.Decode(fieldValue); err == nil {
+						fieldValue = v
+					}
 					if err = writer.WriteField(fieldName, fieldValue); err != nil {
 						return nil, gerror.Wrapf(
 							err, `write form field failed with "%s", "%s"`, fieldName, fieldValue,

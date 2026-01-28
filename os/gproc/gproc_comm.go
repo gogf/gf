@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gqueue"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/net/gtcp"
@@ -42,9 +43,11 @@ const (
 )
 
 var (
+	// checker is used for checking whether the value is nil.
+	checker = func(v *gqueue.TQueue[*MsgRequest]) bool { return v == nil }
 	// commReceiveQueues is the group name to queue map for storing received data.
-	// The value of the map is type of *gqueue.Queue.
-	commReceiveQueues = gmap.NewStrAnyMap(true)
+	// The value of the map is type of *gqueue.TQueue[*MsgRequest].
+	commReceiveQueues = gmap.NewKVMapWithChecker[string, *gqueue.TQueue[*MsgRequest]](checker, true)
 
 	// commPidFolderPath specifies the folder path storing pid to port mapping files.
 	commPidFolderPath string

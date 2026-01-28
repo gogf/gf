@@ -139,10 +139,10 @@ func Test_Do_Insert(t *testing.T) {
 			"CREATE_TIME": gtime.Now().String(),
 		}
 		_, err := db.Save(ctx, "t_user", data, 10)
-		gtest.AssertNE(err, nil)
+		gtest.AssertNil(err)
 
 		_, err = db.Replace(ctx, "t_user", data, 10)
-		gtest.AssertNE(err, nil)
+		gtest.AssertNil(err)
 	})
 }
 
@@ -185,6 +185,7 @@ func Test_DB_Insert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
+	// db.SetDebug(true)
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Insert(ctx, table, g.Map{
 			"ID":          1,
@@ -233,7 +234,7 @@ func Test_DB_Insert(t *testing.T) {
 
 		one, err := db.Model(table).Where("ID", 3).One()
 		t.AssertNil(err)
-		fmt.Println(one)
+		// fmt.Println(one)
 		t.Assert(one["ID"].Int(), 3)
 		t.Assert(one["PASSPORT"].String(), "user_3")
 		t.Assert(one["PASSWORD"].String(), "25d55ad283aa400af464c76d713c07ad")
