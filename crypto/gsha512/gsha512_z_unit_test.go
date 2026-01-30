@@ -54,7 +54,7 @@ func TestEncryptFile(t *testing.T) {
 		encryptFile, err := gsha512.EncryptFile(path)
 		t.AssertNil(err)
 		t.AssertEQ(encryptFile, result)
-		// when the file is not exist, encrypt will return empty string
+		// when the file does not exist, encrypt will return an empty string and a non-nil error
 		errEncrypt, err := gsha512.EncryptFile(errPath)
 		t.AssertNE(err, nil)
 		t.AssertEQ(errEncrypt, "")
