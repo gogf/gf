@@ -46,10 +46,11 @@ func TestEncryptFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		result := "2c6df89b4fda8e4c0baa7dc962380c496f1efe6e5c7ffc3bd33175b2e8f8e394716c8ec2e40c70468dd23bbbdc503db480c57b0051705ef5beaa7aec4a9061d5"
 		file, err := os.Create(path)
+		t.AssertNil(err)
 		defer os.Remove(path)
 		defer file.Close()
+		_, err = file.Write([]byte("Hello Go Frame"))
 		t.AssertNil(err)
-		_, _ = file.Write([]byte("Hello Go Frame"))
 		encryptFile, err := gsha512.EncryptFile(path)
 		t.AssertNil(err)
 		t.AssertEQ(encryptFile, result)
