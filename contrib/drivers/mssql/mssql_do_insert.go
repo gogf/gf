@@ -102,7 +102,7 @@ func (d *Driver) doMergeInsert(
 		one            = list[0]
 		oneLen         = len(one)
 		charL, charR   = d.GetChars()
-		conflictKeySet = gset.New(false)
+		conflictKeySet = gset.NewStrSet(false)
 
 		// queryHolders:	Handle data with Holder that need to be merged
 		// queryValues:		Handle data that need to be merged
