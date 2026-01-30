@@ -78,50 +78,41 @@ func (r *Registry) doKeepAlive(
 	var ctx = context.Background()
 	for {
 		select {
+		case <-r.client.Ctx().Done():
+			r.logger.Infof(ctx, "keepalive done for lease id: %d", leaseID)
+			return
+
 		case res, ok := <-keepAliceCh:
 			if res != nil {
 				// r.logger.Debugf(ctx, `keepalive loop: %v, %s`, ok, res.String())
 			}
 			if !ok {
-				// Check if the client context is done to avoid reconnection attempts
-				// when the client is intentionally closed.
-				select {
-				case <-r.client.Ctx().Done():
-					r.logger.Infof(ctx, "keepalive done for lease id: %d, client context cancelled", leaseID)
-					return
-				default:
-					// Client is still active, the keepalive channel closed due to network issues.
-					// Attempt to re-register the service.
-					r.logger.Warningf(ctx, `keepalive exit, lease id: %d, retry register`, leaseID)
-					for {
-						// Check client context before each retry
-						select {
-						case <-r.client.Ctx().Done():
-							r.logger.Infof(ctx, "keepalive done for lease id: %d, client context cancelled during retry", leaseID)
-							return
-						default:
-						}
-
-						if err := r.doRegisterLease(ctx, service); err != nil {
-							retryDuration := grand.D(time.Second, time.Second*3)
-							r.logger.Errorf(
-								ctx,
-								`keepalive retry register failed, will retry in %s: %+v`,
-								retryDuration, err,
-							)
-							time.Sleep(retryDuration)
-							continue
-						}
-						r.logger.Infof(ctx, `keepalive retry register success for service "%s"`, service.GetKey())
-						break
+				// KeepAlive channel closed, attempt to re-register the service.
+				r.logger.Warningf(ctx, `keepalive exit, lease id: %d, retry register`, leaseID)
+				for {
+					// Check if client context is cancelled before retry.
+					select {
+					case <-r.client.Ctx().Done():
+						r.logger.Infof(ctx, "retry register cancelled, client context done")
+						return
+					default:
 					}
-					return
-				}
-			}
 
-		case <-r.client.Ctx().Done():
-			r.logger.Infof(ctx, "keepalive done for lease id: %d", leaseID)
-			return
+					if err := r.doRegisterLease(ctx, service); err != nil {
+						retryDuration := grand.D(time.Second, time.Second*3)
+						r.logger.Errorf(
+							ctx,
+							`keepalive retry register failed, will retry in %s: %+v`,
+							retryDuration, err,
+						)
+						time.Sleep(retryDuration)
+						continue
+					}
+					r.logger.Infof(ctx, `keepalive retry register success for service "%s"`, service.GetKey())
+					break
+				}
+				return
+			}
 		}
 	}
 }
