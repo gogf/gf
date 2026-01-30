@@ -87,39 +87,39 @@ func (c *Client) DoRequestObj(ctx context.Context, req, res any) error {
 	}
 
 	// Classify request parameters by `in` tag
-	pathParams, queryParams, headerParams, cookieParams, bodyParams, err := c.classifyRequestParams(req)
+	params, err := c.classifyRequestParams(req)
 	if err != nil {
 		return err
 	}
 
 	// Backward compatibility: if path has placeholders but no path params were classified,
 	// try to extract from all fields (for requests without `in` tags)
-	if gstr.Contains(path, "{") && len(pathParams) == 0 {
+	if gstr.Contains(path, "{") && len(params.path) == 0 {
 		allParamsMap := gconv.Map(req)
 		path = c.handlePathForObjRequest(path, allParamsMap)
 	} else {
 		// Replace path parameters
-		path = c.handlePathForObjRequest(path, pathParams)
+		path = c.handlePathForObjRequest(path, params.path)
 	}
 
 	// Build client with parameters
 	client := c
-	if len(queryParams) > 0 {
-		client = client.SetQueryMap(queryParams)
+	if len(params.query) > 0 {
+		client = client.SetQueryMap(params.query)
 	}
-	if len(headerParams) > 0 {
-		client = client.SetHeaderMap(headerParams)
+	if len(params.header) > 0 {
+		client = client.SetHeaderMap(params.header)
 	}
-	if len(cookieParams) > 0 {
-		for k, v := range cookieParams {
+	if len(params.cookie) > 0 {
+		for k, v := range params.cookie {
 			client = client.SetCookie(k, v)
 		}
 	}
 
 	// Prepare body data
 	var data any
-	if len(bodyParams) > 0 {
-		data = bodyParams
+	if len(params.body) > 0 {
+		data = params.body
 	}
 
 	// Send request
@@ -163,6 +163,15 @@ func (c *Client) handlePathForObjRequest(path string, pathParams map[string]any)
 	return path
 }
 
+// requestParams holds classified request parameters by location
+type requestParams struct {
+	path   map[string]any
+	query  map[string]any
+	header map[string]string
+	cookie map[string]string
+	body   map[string]any
+}
+
 // classifyRequestParams classifies request parameters by `in` tag.
 // It returns parameters categorized into path, query, header, cookie, and body.
 //
@@ -177,19 +186,14 @@ func (c *Client) handlePathForObjRequest(path string, pathParams map[string]any)
 //   - Anonymous embedded structs are automatically flattened
 //   - Named struct fields with `in:"query"` are flattened to query parameters
 //   - Named struct fields without `in` tag are placed in body as-is
-func (c *Client) classifyRequestParams(req any) (
-	pathParams map[string]any,
-	queryParams map[string]any,
-	headerParams map[string]string,
-	cookieParams map[string]string,
-	bodyParams map[string]any,
-	err error,
-) {
-	pathParams = make(map[string]any)
-	queryParams = make(map[string]any)
-	headerParams = make(map[string]string)
-	cookieParams = make(map[string]string)
-	bodyParams = make(map[string]any)
+func (c *Client) classifyRequestParams(req any) (*requestParams, error) {
+	params := &requestParams{
+		path:   make(map[string]any),
+		query:  make(map[string]any),
+		header: make(map[string]string),
+		cookie: make(map[string]string),
+		body:   make(map[string]any),
+	}
 
 	// Use RecursiveOptionEmbedded to automatically flatten anonymous embedded structs
 	fields, err := gstructs.Fields(gstructs.FieldsInput{
@@ -197,7 +201,7 @@ func (c *Client) classifyRequestParams(req any) (
 		RecursiveOption: gstructs.RecursiveOptionEmbedded,
 	})
 	if err != nil {
-		return nil, nil, nil, nil, nil, err
+		return nil, err
 	}
 
 	for _, field := range fields {
@@ -220,60 +224,60 @@ func (c *Client) classifyRequestParams(req any) (
 				switch inTag {
 				case goai.ParameterInQuery:
 					// Flatten struct fields to query parameters
-					if err := flattenStructToMap(queryParams, fieldValue); err != nil {
-						return nil, nil, nil, nil, nil, err
+					if err := flattenStructToMap(params.query, fieldValue); err != nil {
+						return nil, err
 					}
 					continue
 
 				case goai.ParameterInHeader:
 					// Header doesn't support struct, serialize to JSON
 					jsonBytes, _ := json.Marshal(fieldValue)
-					headerParams[fieldName] = string(jsonBytes)
+					params.header[fieldName] = string(jsonBytes)
 					continue
 
 				case goai.ParameterInPath, goai.ParameterInCookie:
 					// Path and Cookie don't support struct type
-					return nil, nil, nil, nil, nil, gerror.Newf(
+					return nil, gerror.Newf(
 						`field "%s" with in:"%s" cannot be a struct type`,
 						fieldName, inTag,
 					)
 				}
 			}
 			// Struct field without `in` tag goes to body
-			bodyParams[fieldName] = fieldValue
+			params.body[fieldName] = fieldValue
 			continue
 		}
 
 		// Handle regular fields (including flattened embedded fields)
 		switch inTag {
 		case goai.ParameterInPath:
-			pathParams[fieldName] = fieldValue
+			params.path[fieldName] = fieldValue
 
 		case goai.ParameterInQuery:
 			// Handle map type (flatten to key[subkey] format)
 			if reflectValue.IsValid() && reflectValue.Kind() == reflect.Map {
 				for _, key := range reflectValue.MapKeys() {
 					mapKey := fmt.Sprintf("%s[%s]", fieldName, key.String())
-					queryParams[mapKey] = reflectValue.MapIndex(key).Interface()
+					params.query[mapKey] = reflectValue.MapIndex(key).Interface()
 				}
 			} else {
 				// Slice/array/primitive types are handled by SetQueryMap
-				queryParams[fieldName] = fieldValue
+				params.query[fieldName] = fieldValue
 			}
 
 		case goai.ParameterInHeader:
-			headerParams[fieldName] = gconv.String(fieldValue)
+			params.header[fieldName] = gconv.String(fieldValue)
 
 		case goai.ParameterInCookie:
-			cookieParams[fieldName] = gconv.String(fieldValue)
+			params.cookie[fieldName] = gconv.String(fieldValue)
 
 		default:
 			// No `in` tag, goes to body
-			bodyParams[fieldName] = fieldValue
+			params.body[fieldName] = fieldValue
 		}
 	}
 
-	return
+	return params, nil
 }
 
 // flattenStructToMap flattens struct fields to target map.
