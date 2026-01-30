@@ -24,6 +24,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/httputil"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -195,29 +196,19 @@ func (c *Client) mergeQueryParams(u string, dataParams string) (string, error) {
 
 	// Merge data parameters (for GET requests with default Content-Type)
 	if dataParams != "" {
-		// Handle noUrlEncode flag: if noUrlEncode is true, parse data params manually
-		// to avoid double encoding/decoding issues
+		var dataValues url.Values
 		if c.noUrlEncode {
-			// Split params by & and add them without URL encoding
-			for _, pair := range strings.Split(dataParams, "&") {
-				if pair == "" {
-					continue
-				}
-				parts := strings.SplitN(pair, "=", 2)
-				if len(parts) == 2 {
-					// Data params override URL params
-					queryValues[parts[0]] = []string{parts[1]}
-				}
-			}
+			// Parse params without URL decoding to avoid double encoding/decoding issues
+			dataValues = parseUnEncodedParams(dataParams)
 		} else {
-			dataValues, err := url.ParseQuery(dataParams)
+			dataValues, err = url.ParseQuery(dataParams)
 			if err != nil {
 				return "", gerror.Wrapf(err, `url.ParseQuery failed for data params "%s"`, dataParams)
 			}
-			for k, v := range dataValues {
-				// Data params override URL params
-				queryValues[k] = v
-			}
+		}
+		// Data params override URL params
+		for k, v := range dataValues {
+			queryValues[k] = v
 		}
 	}
 
@@ -265,18 +256,7 @@ func (c *Client) mergeQueryParams(u string, dataParams string) (string, error) {
 	// Update URL with merged parameters
 	// Respect noUrlEncode flag
 	if c.noUrlEncode {
-		// Manually build query string without encoding
-		var queryParts []string
-		for k, values := range queryValues {
-			for _, v := range values {
-				if v == "" {
-					queryParts = append(queryParts, k)
-				} else {
-					queryParts = append(queryParts, k+"="+v)
-				}
-			}
-		}
-		parsedURL.RawQuery = strings.Join(queryParts, "&")
+		parsedURL.RawQuery = buildUnEncodedQuery(queryValues)
 	} else {
 		parsedURL.RawQuery = queryValues.Encode()
 	}
@@ -295,22 +275,82 @@ func (c *Client) normalizeURL(u string) string {
 	return u
 }
 
+// getMediaType safely parses the Content-Type header and returns the media type.
+// If parsing fails, it logs the error and returns the raw header value as fallback.
+func (c *Client) getMediaType(ctx context.Context) string {
+	contentType := c.header[httpHeaderContentType]
+	if contentType == "" {
+		return ""
+	}
+
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		// Log the parsing error for debugging purposes
+		intlog.Errorf(ctx,
+			`mime.ParseMediaType failed for Content-Type "%s": %v, using raw value as fallback`,
+			contentType, err,
+		)
+		return contentType
+	}
+	return mediaType
+}
+
+// parseUnEncodedParams parses URL-encoded parameter string without decoding.
+// This is used when noUrlEncode flag is true to avoid double encoding/decoding.
+// It splits the params by '&' and '=' and returns a url.Values map.
+func parseUnEncodedParams(params string) url.Values {
+	values := make(url.Values)
+	if params == "" {
+		return values
+	}
+
+	for _, pair := range strings.Split(params, "&") {
+		if pair == "" {
+			continue
+		}
+		parts := strings.SplitN(pair, "=", 2)
+		if len(parts) == 2 {
+			values[parts[0]] = []string{parts[1]}
+		} else if len(parts) == 1 {
+			// Handle key without value (e.g., "?flag")
+			values[parts[0]] = []string{""}
+		}
+	}
+	return values
+}
+
+// buildUnEncodedQuery builds a query string from url.Values without encoding.
+// This is used when noUrlEncode flag is true.
+func buildUnEncodedQuery(values url.Values) string {
+	if len(values) == 0 {
+		return ""
+	}
+
+	var queryParts []string
+	for k, vals := range values {
+		for _, v := range vals {
+			if v == "" {
+				queryParts = append(queryParts, k)
+			} else {
+				queryParts = append(queryParts, k+"="+v)
+			}
+		}
+	}
+	return strings.Join(queryParts, "&")
+}
+
 // buildRequestParams converts data to request parameters based on Content-Type.
 // It returns:
 // - params: serialized parameter string
 // - allowFileUploading: whether file uploading is allowed for this request
 // - err: error if serialization fails
-func (c *Client) buildRequestParams(data ...any) (params string, allowFileUploading bool, err error) {
+func (c *Client) buildRequestParams(ctx context.Context, data ...any) (params string, allowFileUploading bool, err error) {
 	allowFileUploading = true
 	if len(data) == 0 {
 		return "", allowFileUploading, nil
 	}
 
-	mediaType, _, err := mime.ParseMediaType(c.header[httpHeaderContentType])
-	if err != nil {
-		// Fallback: use the raw header value if parsing fails.
-		mediaType = c.header[httpHeaderContentType]
-	}
+	mediaType := c.getMediaType(ctx)
 
 	switch mediaType {
 	case httpHeaderContentTypeJson:
@@ -495,14 +535,10 @@ func (c *Client) createMultipartRequest(method, u string, params string) (*http.
 
 // createGetRequest creates http.Request for GET method.
 // It merges query parameters and handles different Content-Types.
-func (c *Client) createGetRequest(u string, params string) (*http.Request, error) {
+func (c *Client) createGetRequest(ctx context.Context, u string, params string) (*http.Request, error) {
 	var bodyBuffer *bytes.Buffer
 	if params != "" {
-		mediaType, _, err := mime.ParseMediaType(c.header[httpHeaderContentType])
-		if err != nil {
-			// Fallback: use the raw header value if parsing fails.
-			mediaType = c.header[httpHeaderContentType]
-		}
+		mediaType := c.getMediaType(ctx)
 		switch mediaType {
 		case
 			httpHeaderContentTypeJson,
@@ -511,6 +547,7 @@ func (c *Client) createGetRequest(u string, params string) (*http.Request, error
 		default:
 			// Merge all query parameters before creating http.Request
 			// This includes: URL params + data params + c.queryParams
+			var err error
 			if u, err = c.mergeQueryParams(u, params); err != nil {
 				return nil, err
 			}
@@ -556,14 +593,14 @@ func (c *Client) prepareRequest(ctx context.Context, method, u string, data ...a
 	u = c.normalizeURL(u)
 
 	// 2. Build request parameters
-	params, allowFileUploading, err := c.buildRequestParams(data...)
+	params, allowFileUploading, err := c.buildRequestParams(ctx, data...)
 	if err != nil {
 		return nil, err
 	}
 
 	// 3. Create request based on method
 	if method == http.MethodGet {
-		req, err = c.createGetRequest(u, params)
+		req, err = c.createGetRequest(ctx, u, params)
 	} else {
 		req, err = c.createPostRequest(method, u, params, allowFileUploading)
 	}
