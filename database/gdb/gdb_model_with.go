@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"context"
 	"database/sql"
 	"reflect"
 
@@ -23,7 +24,7 @@ import (
 // The AfterScan method is called after the struct fields have been filled with
 // data retrieved from the database during scanning operations.
 type IAfterScan interface {
-	AfterScan() error
+	AfterScan(ctx context.Context) error
 }
 
 // With creates and returns an ORM model based on metadata of given object.
@@ -378,7 +379,7 @@ func (m *Model) doAfterScan(pointer any) error {
 	// Check whether the pointer implements the IAfterScan interface
 	if afterScanner, ok := ptrValue.Interface().(IAfterScan); ok {
 		// Call the AfterScan method
-		return afterScanner.AfterScan()
+		return afterScanner.AfterScan(m.GetCtx())
 	}
 	return nil
 }
