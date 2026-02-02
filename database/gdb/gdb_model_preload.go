@@ -84,7 +84,7 @@ type batchQueryResult struct {
 
 // doPreloadScan is the entry point for preload mode scanning.
 // It performs batch recursive scanning for association operations to solve the N+1 problem.
-func (m *Model) doPreloadScan(pointer interface{}) error {
+func (m *Model) doPreloadScan(pointer any) error {
 	// Create preload context
 	ctx := &preloadContext{
 		model:        m,
