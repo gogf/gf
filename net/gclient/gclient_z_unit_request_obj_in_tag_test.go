@@ -17,6 +17,7 @@ import (
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -37,16 +38,13 @@ func Test_DoRequestObj_InTag_Mixed(t *testing.T) {
 		cookieSession := r.Cookie.Get("session")
 
 		// Verify body parameters
-		type User struct {
-			Name string `json:"name"`
-			Age  int    `json:"age"`
-		}
-		var user User
-		r.Parse(&user)
+		bodyMap := r.GetBodyMap()
+		bodyName := gconv.String(bodyMap["name"])
+		bodyAge := gconv.Int(bodyMap["age"])
 
 		// Return verification result
 		r.Response.Writef("path_id=%s,query_page=%s,header_token=%s,cookie_session=%s,body_name=%s,body_age=%d",
-			pathId, queryPage, headerToken, cookieSession, user.Name, user.Age)
+			pathId, queryPage, headerToken, cookieSession, bodyName, bodyAge)
 	})
 	s.SetDumpRouterMap(false)
 	s.Start()
@@ -308,14 +306,9 @@ func Test_DoRequestObj_InTag_RequestInspection(t *testing.T) {
 		}
 
 		// Parse body JSON
-		type BodyData struct {
-			Name string `json:"name"`
-			Age  int    `json:"age"`
-		}
-		var bodyData BodyData
-		r.Parse(&bodyData)
-		info.BodyName = bodyData.Name
-		info.BodyAge = bodyData.Age
+		bodyMap := r.GetBodyMap()
+		info.BodyName = gconv.String(bodyMap["name"])
+		info.BodyAge = gconv.Int(bodyMap["age"])
 
 		r.Response.WriteJson(info)
 	})
