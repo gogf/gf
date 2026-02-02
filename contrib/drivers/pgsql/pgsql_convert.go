@@ -8,11 +8,13 @@ package pgsql
 
 import (
 	"context"
+	"encoding/hex"
+	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -54,7 +56,7 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 //	| int2, int4                   | int           |
 //	| int8                         | int64         |
 //	| uuid                         | uuid.UUID     |
-//	| _int2, _int4                 | []int32       | // Note: pq package does not provide Int16Array; int32 is used for compatibility
+//	| _int2, _int4                 | []int32       | // Note: pgtype uses int32 for compatibility
 //	| _int8                        | []int64       |
 //	| _float4                      | []float32     |
 //	| _float8                      | []float64     |
@@ -123,26 +125,26 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 //
 // PostgreSQL type mapping:
 //
-//	| PostgreSQL Type | SQL Type                       | pq Type         | Go Type     |
-//	|-----------------|--------------------------------|-----------------|-------------|
-//	| int2            | int2, smallint                 | -               | int         |
-//	| int4            | int4, integer                  | -               | int         |
-//	| int8            | int8, bigint, bigserial        | -               | int64       |
-//	| uuid            | uuid                           | -               | uuid.UUID   |
-//	| _int2           | int2[], smallint[]             | pq.Int32Array   | []int32     |
-//	| _int4           | int4[], integer[]              | pq.Int32Array   | []int32     |
-//	| _int8           | int8[], bigint[]               | pq.Int64Array   | []int64     |
-//	| _float4         | float4[], real[]               | pq.Float32Array | []float32   |
-//	| _float8         | float8[], double precision[]   | pq.Float64Array | []float64   |
-//	| _bool           | boolean[], bool[]              | pq.BoolArray    | []bool      |
-//	| _varchar        | varchar[], character varying[] | pq.StringArray  | []string    |
-//	| _text           | text[]                         | pq.StringArray  | []string    |
-//	| _char, _bpchar  | char[], character[]            | pq.StringArray  | []string    |
-//	| _numeric        | numeric[]                      | pq.Float64Array | []float64   |
-//	| _decimal        | decimal[]                      | pq.Float64Array | []float64   |
-//	| _money          | money[]                        | pq.Float64Array | []float64   |
-//	| _bytea          | bytea[]                        | pq.ByteaArray   | [][]byte    |
-//	| _uuid           | uuid[]                         | pq.StringArray  | []uuid.UUID |
+//	| PostgreSQL Type | SQL Type                       | pgtype Type              | Go Type     |
+//	|-----------------|--------------------------------|--------------------------|-------------|
+//	| int2            | int2, smallint                 | -                        | int         |
+//	| int4            | int4, integer                  | -                        | int         |
+//	| int8            | int8, bigint, bigserial        | -                        | int64       |
+//	| uuid            | uuid                           | -                        | uuid.UUID   |
+//	| _int2           | int2[], smallint[]             | pgtype.Array[int32]      | []int32     |
+//	| _int4           | int4[], integer[]              | pgtype.Array[int32]      | []int32     |
+//	| _int8           | int8[], bigint[]               | pgtype.Array[int64]      | []int64     |
+//	| _float4         | float4[], real[]               | pgtype.Array[float32]    | []float32   |
+//	| _float8         | float8[], double precision[]   | pgtype.Array[float64]    | []float64   |
+//	| _bool           | boolean[], bool[]              | pgtype.Array[bool]       | []bool      |
+//	| _varchar        | varchar[], character varying[] | pgtype.Array[string]     | []string    |
+//	| _text           | text[]                         | pgtype.Array[string]     | []string    |
+//	| _char, _bpchar  | char[], character[]            | pgtype.Array[string]     | []string    |
+//	| _numeric        | numeric[]                      | pgtype.Array[float64]    | []float64   |
+//	| _decimal        | decimal[]                      | pgtype.Array[float64]    | []float64   |
+//	| _money          | money[]                        | pgtype.Array[float64]    | []float64   |
+//	| _bytea          | bytea[]                        | pgtype.Array[[]byte]     | [][]byte    |
+//	| _uuid           | uuid[]                         | pgtype.Array[string]     | []uuid.UUID |
 //
 // Note: PostgreSQL also supports these array types but they are not yet mapped:
 //   - _date (date[]), _timestamp (timestamp[]), _timestamptz (timestamptz[])
@@ -156,51 +158,27 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 
 	// []int32
 	case "_int2", "_int4":
-		var result pq.Int32Array
-		if err := result.Scan(fieldValue); err != nil {
-			return nil, err
-		}
-		return []int32(result), nil
+		return scanInt32Array(fieldValue)
 
 	// []int64
 	case "_int8":
-		var result pq.Int64Array
-		if err := result.Scan(fieldValue); err != nil {
-			return nil, err
-		}
-		return []int64(result), nil
+		return scanInt64Array(fieldValue)
 
 	// []float32
 	case "_float4":
-		var result pq.Float32Array
-		if err := result.Scan(fieldValue); err != nil {
-			return nil, err
-		}
-		return []float32(result), nil
+		return scanFloat32Array(fieldValue)
 
 	// []float64
 	case "_float8":
-		var result pq.Float64Array
-		if err := result.Scan(fieldValue); err != nil {
-			return nil, err
-		}
-		return []float64(result), nil
+		return scanFloat64Array(fieldValue)
 
 	// []bool
 	case "_bool":
-		var result pq.BoolArray
-		if err := result.Scan(fieldValue); err != nil {
-			return nil, err
-		}
-		return []bool(result), nil
+		return scanBoolArray(fieldValue)
 
 	// []string
 	case "_varchar", "_text", "_char", "_bpchar":
-		var result pq.StringArray
-		if err := result.Scan(fieldValue); err != nil {
-			return nil, err
-		}
-		return []string(result), nil
+		return scanStringArray(fieldValue)
 
 	// uuid.UUID
 	case "uuid":
@@ -221,8 +199,8 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 
 	// []uuid.UUID
 	case "_uuid":
-		var strArray pq.StringArray
-		if err := strArray.Scan(fieldValue); err != nil {
+		strArray, err := scanStringArray(fieldValue)
+		if err != nil {
 			return nil, err
 		}
 		result := make([]uuid.UUID, len(strArray))
@@ -237,21 +215,206 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 
 	// []float64
 	case "_numeric", "_decimal", "_money":
-		var result pq.Float64Array
-		if err := result.Scan(fieldValue); err != nil {
-			return nil, err
-		}
-		return []float64(result), nil
+		return scanFloat64Array(fieldValue)
 
 	// [][]byte
 	case "_bytea":
-		var result pq.ByteaArray
-		if err := result.Scan(fieldValue); err != nil {
-			return nil, err
-		}
-		return [][]byte(result), nil
+		return scanByteaArray(fieldValue)
 
 	default:
 		return d.Core.ConvertValueForLocal(ctx, fieldType, fieldValue)
 	}
+}
+
+// parsePostgresArray parses PostgreSQL array text format (e.g., "{1,2,3}") into string slice.
+// It handles NULL values, quoted strings, and escaped characters.
+func parsePostgresArray(src any) ([]string, error) {
+	var str string
+	switch v := src.(type) {
+	case []byte:
+		str = string(v)
+	case string:
+		str = v
+	default:
+		return nil, fmt.Errorf("unsupported type for PostgreSQL array: %T", src)
+	}
+
+	if str == "" || str == "{}" {
+		return []string{}, nil
+	}
+
+	// Validate PostgreSQL array format: must start with '{' and end with '}'
+	if !strings.HasPrefix(str, "{") || !strings.HasSuffix(str, "}") {
+		return nil, fmt.Errorf("invalid PostgreSQL array format: %s", str)
+	}
+
+	// Remove outer braces
+	str = strings.TrimPrefix(str, "{")
+	str = strings.TrimSuffix(str, "}")
+
+	var result []string
+	var current strings.Builder
+	var inQuotes bool
+	var escaped bool
+
+	for i := 0; i < len(str); i++ {
+		c := str[i]
+		if escaped {
+			current.WriteByte(c)
+			escaped = false
+			continue
+		}
+		switch c {
+		case '\\':
+			escaped = true
+		case '"':
+			inQuotes = !inQuotes
+		case ',':
+			if inQuotes {
+				current.WriteByte(c)
+			} else {
+				result = append(result, current.String())
+				current.Reset()
+			}
+		default:
+			current.WriteByte(c)
+		}
+	}
+	// Add the last element
+	if current.Len() > 0 || len(result) > 0 {
+		result = append(result, current.String())
+	}
+
+	return result, nil
+}
+
+// scanInt32Array parses PostgreSQL int2[] or int4[] array.
+func scanInt32Array(fieldValue any) ([]int32, error) {
+	elements, err := parsePostgresArray(fieldValue)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]int32, 0, len(elements))
+	for _, s := range elements {
+		if s == "NULL" || s == "" {
+			continue
+		}
+		v, err := strconv.ParseInt(s, 10, 32)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, int32(v))
+	}
+	return result, nil
+}
+
+// scanInt64Array parses PostgreSQL int8[] array.
+func scanInt64Array(fieldValue any) ([]int64, error) {
+	elements, err := parsePostgresArray(fieldValue)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]int64, 0, len(elements))
+	for _, s := range elements {
+		if s == "NULL" || s == "" {
+			continue
+		}
+		v, err := strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, v)
+	}
+	return result, nil
+}
+
+// scanFloat32Array parses PostgreSQL float4[] array.
+func scanFloat32Array(fieldValue any) ([]float32, error) {
+	elements, err := parsePostgresArray(fieldValue)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]float32, 0, len(elements))
+	for _, s := range elements {
+		if s == "NULL" || s == "" {
+			continue
+		}
+		v, err := strconv.ParseFloat(s, 32)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, float32(v))
+	}
+	return result, nil
+}
+
+// scanFloat64Array parses PostgreSQL float8[], numeric[], decimal[], money[] array.
+func scanFloat64Array(fieldValue any) ([]float64, error) {
+	elements, err := parsePostgresArray(fieldValue)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]float64, 0, len(elements))
+	for _, s := range elements {
+		if s == "NULL" || s == "" {
+			continue
+		}
+		// Handle money format like "$1,234.56"
+		s = strings.ReplaceAll(s, "$", "")
+		s = strings.ReplaceAll(s, ",", "")
+		v, err := strconv.ParseFloat(s, 64)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, v)
+	}
+	return result, nil
+}
+
+// scanBoolArray parses PostgreSQL bool[] array.
+func scanBoolArray(fieldValue any) ([]bool, error) {
+	elements, err := parsePostgresArray(fieldValue)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]bool, 0, len(elements))
+	for _, s := range elements {
+		if s == "NULL" || s == "" {
+			continue
+		}
+		v := s == "t" || s == "true" || s == "TRUE" || s == "1"
+		result = append(result, v)
+	}
+	return result, nil
+}
+
+// scanStringArray parses PostgreSQL varchar[], text[], char[] array.
+func scanStringArray(fieldValue any) ([]string, error) {
+	return parsePostgresArray(fieldValue)
+}
+
+// scanByteaArray parses PostgreSQL bytea[] array.
+func scanByteaArray(fieldValue any) ([][]byte, error) {
+	elements, err := parsePostgresArray(fieldValue)
+	if err != nil {
+		return nil, err
+	}
+	result := make([][]byte, 0, len(elements))
+	for _, s := range elements {
+		if s == "NULL" || s == "" {
+			result = append(result, nil)
+			continue
+		}
+		// PostgreSQL bytea is typically in hex format: \x...
+		if strings.HasPrefix(s, "\\x") {
+			decoded, err := hex.DecodeString(s[2:])
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, decoded)
+		} else {
+			result = append(result, []byte(s))
+		}
+	}
+	return result, nil
 }
