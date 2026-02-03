@@ -96,7 +96,7 @@ func (m *Model) doPreloadScan(pointer any) error {
 // recursivePreload performs recursive preload operations on the given pointer.
 // It collects all relation fields, executes batch queries, maps results, and recursively processes nested relations.
 // Circular references are detected using a backtracking algorithm with visitedTypes map.
-func (p *preloadContext) recursivePreload(pointer interface{}) error {
+func (p *preloadContext) recursivePreload(pointer any) error {
 	// 1. Get element type and check for circular references
 	sliceValue := reflect.ValueOf(pointer)
 	if sliceValue.Kind() != reflect.Ptr {
@@ -167,7 +167,7 @@ func (p *preloadContext) recursivePreload(pointer interface{}) error {
 
 // collectRelations collects all relation fields from the struct that should be preloaded.
 // It uses struct cache to avoid repeated reflection operations.
-func (p *preloadContext) collectRelations(pointer interface{}) ([]*relationFieldInfo, error) {
+func (p *preloadContext) collectRelations(pointer any) ([]*relationFieldInfo, error) {
 	// Get slice value
 	sliceValue := reflect.ValueOf(pointer).Elem()
 	if sliceValue.Len() == 0 {
@@ -303,7 +303,7 @@ func (p *preloadContext) getChunkConfig(relation *relationFieldInfo) (chunkSize,
 
 // queryRelation executes a batch query for a single relation field.
 // It collects all unique relation keys and performs a single WHERE IN query.
-func (p *preloadContext) queryRelation(pointer interface{}, relation *relationFieldInfo) *batchQueryResult {
+func (p *preloadContext) queryRelation(pointer any, relation *relationFieldInfo) *batchQueryResult {
 	result := &batchQueryResult{
 		FieldName: relation.Field.Name(),
 		DataMap:   make(map[string]Result),
@@ -428,7 +428,7 @@ func (p *preloadContext) queryRelation(pointer interface{}, relation *relationFi
 
 // mapResults maps batch query results to struct fields.
 func (p *preloadContext) mapResults(
-	pointer interface{},
+	pointer any,
 	relations []*relationFieldInfo,
 	batchResults map[string]*batchQueryResult,
 ) error {
@@ -515,7 +515,7 @@ func (p *preloadContext) mapResults(
 }
 
 // recursivePreloadNext recursively processes the next level of relations.
-func (p *preloadContext) recursivePreloadNext(pointer interface{}, relation *relationFieldInfo) error {
+func (p *preloadContext) recursivePreloadNext(pointer any, relation *relationFieldInfo) error {
 	sliceValue := reflect.ValueOf(pointer).Elem()
 
 	if relation.isSlice() {
