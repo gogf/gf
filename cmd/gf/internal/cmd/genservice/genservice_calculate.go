@@ -12,7 +12,6 @@ import (
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 
@@ -37,21 +36,14 @@ func (c CGenService) calculateImportedItems(
 	}
 
 	for _, item := range pkgItems {
-		alias := item.Alias
-
-		// If the alias is _, it means that the package is not generated.
-		if alias == "_" {
+		// Skip anonymous imports
+		if item.Alias == "_" {
 			mlog.Debugf(`ignore anonymous package: %s`, item.RawImport)
 			continue
 		}
-		// If the alias is empty, it will use the package name as the alias.
-		if alias == "" {
-			alias = gfile.Basename(gstr.Trim(item.Path, `"`))
-		}
-		if !gstr.Contains(allFuncParamType.String(), alias) {
-			mlog.Debugf(`ignore unused package: %s`, item.RawImport)
-			continue
-		}
+		// Keep all imports, let gofmt clean up unused ones.
+		// We cannot accurately infer package name from import path
+		// (e.g., path "minio-go" but package name is "minio").
 		srcImportedPackages.Add(item.RawImport)
 	}
 	return nil
