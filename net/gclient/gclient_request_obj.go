@@ -8,13 +8,11 @@ package gclient
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gregex"
@@ -29,7 +27,7 @@ import (
 // The request object `req` is defined like:
 //
 //	type UserCreateReq struct {
-//	    g.Meta `path:"/user/{id}" method:"post"`
+//	    g.Meta `path:"/user/{id}" method:"post" mime:"application/json"`
 //	    Id     int    `in:"path"`      // Path parameter
 //	    Token  string `in:"header"`    // Header parameter
 //	    Page   int    `in:"query"`     // Query parameter
@@ -40,6 +38,11 @@ import (
 //
 // The response object `res` should be a pointer type. It automatically converts result
 // to given object `res` if success.
+//
+// Supported g.Meta tags:
+//   - "path":   Request path (required)
+//   - "method": HTTP method (required)
+//   - "mime":   Content-Type header (optional, e.g., "application/json")
 //
 // Supported `in` tag values:
 //   - "path":   URL path parameters (e.g., /user/{id})
@@ -63,13 +66,14 @@ import (
 //	)
 //	err := client.DoRequestObj(ctx, req, &res)
 //	// Actual request: POST /user/123?page=1
-//	// Headers: Token: Bearer xxx
+//	// Headers: Token: Bearer xxx, Content-Type: application/json
 //	// Cookies: Session=session-id
 //	// Body: {"name":"John","age":25}
 func (c *Client) DoRequestObj(ctx context.Context, req, res any) error {
 	var (
-		method = gmeta.Get(req, gtag.Method).String()
-		path   = gmeta.Get(req, gtag.Path).String()
+		method      = gmeta.Get(req, gtag.Method).String()
+		path        = gmeta.Get(req, gtag.Path).String()
+		contentType = gmeta.Get(req, gtag.Mime).String()
 	)
 	if method == "" {
 		return gerror.NewCodef(
@@ -114,6 +118,10 @@ func (c *Client) DoRequestObj(ctx context.Context, req, res any) error {
 		for k, v := range params.cookie {
 			client = client.SetCookie(k, v)
 		}
+	}
+	// Set Content-Type from mime tag if specified
+	if contentType != "" {
+		client = client.ContentType(contentType)
 	}
 
 	// Prepare body data
@@ -176,16 +184,20 @@ type requestParams struct {
 // It returns parameters categorized into path, query, header, cookie, and body.
 //
 // Supported `in` tag values:
-//   - "path":   URL path parameters
-//   - "query":  URL query parameters (supports slice/array/map types)
+//   - "path":   URL path parameters (primitive types only)
+//   - "query":  URL query parameters (supports primitive types and slice/array)
 //   - "header": HTTP request headers (string values only)
 //   - "cookie": HTTP cookies (string values only)
-//   - (empty):  Request body parameters (default)
+//   - (empty):  Request body parameters (default, supports all types)
 //
-// For embedded structs:
-//   - Anonymous embedded structs are automatically flattened
-//   - Named struct fields with `in:"query"` are flattened to query parameters
-//   - Named struct fields without `in` tag are placed in body as-is
+// Type restrictions:
+//   - Struct and Map types are NOT supported for path/query/header/cookie parameters
+//   - Only primitive types, slices, and arrays are allowed for query parameters
+//   - Struct fields without `in` tag will be placed in the request body
+//
+// Embedded struct handling:
+//   - Anonymous embedded structs without tags: fields are flattened into body
+//   - Named struct fields: kept as nested structure in body
 func (c *Client) classifyRequestParams(req any) (*requestParams, error) {
 	params := &requestParams{
 		path:   make(map[string]any),
@@ -195,10 +207,10 @@ func (c *Client) classifyRequestParams(req any) (*requestParams, error) {
 		body:   make(map[string]any),
 	}
 
-	// Use RecursiveOptionEmbedded to automatically flatten anonymous embedded structs
+	// Process direct fields first, then handle embedded structs for body parameters
 	fields, err := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         req,
-		RecursiveOption: gstructs.RecursiveOptionEmbedded,
+		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 	})
 	if err != nil {
 		return nil, err
@@ -219,29 +231,12 @@ func (c *Client) classifyRequestParams(req any) (*requestParams, error) {
 
 		// Handle named struct fields (non-embedded)
 		if !field.IsEmbedded() && reflectValue.IsValid() && reflectValue.Kind() == reflect.Struct {
-			// If struct field has `in` tag, special handling is required
+			// Struct fields with `in` tag are not supported
 			if inTag != "" {
-				switch inTag {
-				case goai.ParameterInQuery:
-					// Flatten struct fields to query parameters
-					if err := flattenStructToMap(params.query, fieldValue); err != nil {
-						return nil, err
-					}
-					continue
-
-				case goai.ParameterInHeader:
-					// Header doesn't support struct, serialize to JSON
-					jsonBytes, _ := json.Marshal(fieldValue)
-					params.header[fieldName] = string(jsonBytes)
-					continue
-
-				case goai.ParameterInPath, goai.ParameterInCookie:
-					// Path and Cookie don't support struct type
-					return nil, gerror.Newf(
-						`field "%s" with in:"%s" cannot be a struct type`,
-						fieldName, inTag,
-					)
-				}
+				return nil, gerror.Newf(
+					`field "%s" with in:"%s" cannot be a struct type`,
+					fieldName, inTag,
+				)
 			}
 			// Struct field without `in` tag goes to body
 			params.body[fieldName] = fieldValue
@@ -254,16 +249,15 @@ func (c *Client) classifyRequestParams(req any) (*requestParams, error) {
 			params.path[fieldName] = fieldValue
 
 		case goai.ParameterInQuery:
-			// Handle map type (flatten to key[subkey] format)
+			// Map type is not supported for query parameters
 			if reflectValue.IsValid() && reflectValue.Kind() == reflect.Map {
-				for _, key := range reflectValue.MapKeys() {
-					mapKey := fmt.Sprintf("%s[%s]", fieldName, key.String())
-					params.query[mapKey] = reflectValue.MapIndex(key).Interface()
-				}
-			} else {
-				// Slice/array/primitive types are handled by SetQueryMap
-				params.query[fieldName] = fieldValue
+				return nil, gerror.Newf(
+					`field "%s" with in:"query" cannot be a map type, please use struct fields instead`,
+					fieldName,
+				)
 			}
+			// Slice/array/primitive types are handled by SetQueryMap
+			params.query[fieldName] = fieldValue
 
 		case goai.ParameterInHeader:
 			params.header[fieldName] = gconv.String(fieldValue)
@@ -278,30 +272,4 @@ func (c *Client) classifyRequestParams(req any) (*requestParams, error) {
 	}
 
 	return params, nil
-}
-
-// flattenStructToMap flattens struct fields to target map.
-// It's used for flattening named struct fields with `in:"query"` tag.
-func flattenStructToMap(targetMap map[string]any, structValue any) error {
-	fields, err := gstructs.Fields(gstructs.FieldsInput{
-		Pointer:         structValue,
-		RecursiveOption: gstructs.RecursiveOptionEmbedded,
-	})
-	if err != nil {
-		return err
-	}
-
-	for _, field := range fields {
-		if !field.IsExported() {
-			continue
-		}
-
-		fieldName := field.TagPriorityName()
-		fieldValue := field.Value.Interface()
-
-		// Use field name directly (consistent with anonymous embedded behavior)
-		targetMap[fieldName] = fieldValue
-	}
-
-	return nil
 }
