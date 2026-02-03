@@ -99,7 +99,7 @@ func (m *Model) doPreloadScan(pointer any) error {
 func (p *preloadContext) recursivePreload(pointer any) error {
 	// 1. Get element type and check for circular references
 	sliceValue := reflect.ValueOf(pointer)
-	if sliceValue.Kind() != reflect.Ptr {
+	if sliceValue.Kind() != reflect.Pointer {
 		return gerror.NewCode(gcode.CodeInvalidParameter, "pointer must be a pointer to slice")
 	}
 	sliceValue = sliceValue.Elem()
