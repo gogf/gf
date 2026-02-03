@@ -49,7 +49,7 @@ func newRelationFieldInfo(field gstructs.Field, parsedTag parseWithTagInFieldStr
 			kind = elem.Kind()
 		}
 	}
-	info.isSliceType = (kind == reflect.Slice || kind == reflect.Array)
+	info.isSliceType = kind == reflect.Slice || kind == reflect.Array
 
 	// Pre-parse relation field pair from "with" tag
 	// Format: "source_field=target_field" or just "field_name" (same name in both tables)
@@ -96,7 +96,7 @@ func (m *Model) doPreloadScan(pointer any) error {
 // recursivePreload performs recursive preload operations on the given pointer.
 // It collects all relation fields, executes batch queries, maps results, and recursively processes nested relations.
 // Circular references are detected using a backtracking algorithm with visitedTypes map.
-func (ctx *preloadContext) recursivePreload(pointer interface{}) error {
+func (p *preloadContext) recursivePreload(pointer interface{}) error {
 	// 1. Get element type and check for circular references
 	sliceValue := reflect.ValueOf(pointer)
 	if sliceValue.Kind() != reflect.Ptr {
@@ -121,15 +121,15 @@ func (ctx *preloadContext) recursivePreload(pointer interface{}) error {
 	// Check for circular reference using backtracking
 	// This allows A->B->C->A structure as long as they're not in the same path
 	typeName := elemType.String()
-	if ctx.visitedTypes[typeName] {
+	if p.visitedTypes[typeName] {
 		// Already visiting this type in the current path, skip to avoid infinite loop
 		return nil
 	}
-	ctx.visitedTypes[typeName] = true
-	defer delete(ctx.visitedTypes, typeName) // Backtrack: remove from visited when returning
+	p.visitedTypes[typeName] = true
+	defer delete(p.visitedTypes, typeName) // Backtrack: remove from visited when returning
 
 	// 2. Collect relation fields
-	relations, err := ctx.collectRelations(pointer)
+	relations, err := p.collectRelations(pointer)
 	if err != nil {
 		return err
 	}
@@ -138,12 +138,12 @@ func (ctx *preloadContext) recursivePreload(pointer interface{}) error {
 	}
 
 	// Store all relations for chunkName group lookup
-	ctx.allRelations = relations
+	p.allRelations = relations
 
 	// 3. Batch query all relation fields (sequential execution, no goroutines)
 	batchResults := make(map[string]*batchQueryResult)
 	for _, relation := range relations {
-		result := ctx.queryRelation(pointer, relation)
+		result := p.queryRelation(pointer, relation)
 		batchResults[relation.Field.Name()] = result
 		if result.Error != nil {
 			return result.Error
@@ -151,13 +151,13 @@ func (ctx *preloadContext) recursivePreload(pointer interface{}) error {
 	}
 
 	// 4. Map results to struct fields
-	if err := ctx.mapResults(pointer, relations, batchResults); err != nil {
+	if err := p.mapResults(pointer, relations, batchResults); err != nil {
 		return err
 	}
 
 	// 5. Recursively process next level
 	for _, relation := range relations {
-		if err := ctx.recursivePreloadNext(pointer, relation); err != nil {
+		if err := p.recursivePreloadNext(pointer, relation); err != nil {
 			return err
 		}
 	}
@@ -167,7 +167,7 @@ func (ctx *preloadContext) recursivePreload(pointer interface{}) error {
 
 // collectRelations collects all relation fields from the struct that should be preloaded.
 // It uses struct cache to avoid repeated reflection operations.
-func (ctx *preloadContext) collectRelations(pointer interface{}) ([]*relationFieldInfo, error) {
+func (p *preloadContext) collectRelations(pointer interface{}) ([]*relationFieldInfo, error) {
 	// Get slice value
 	sliceValue := reflect.ValueOf(pointer).Elem()
 	if sliceValue.Len() == 0 {
@@ -190,13 +190,13 @@ func (ctx *preloadContext) collectRelations(pointer interface{}) ([]*relationFie
 	var relations []*relationFieldInfo
 	for _, field := range cached.fields {
 		// Parse tag every time (low cost, maintains flexibility)
-		parsedTag := ctx.model.parseWithTagInFieldStruct(field)
+		parsedTag := p.model.parseWithTagInFieldStruct(field)
 		if parsedTag.With == "" {
 			continue // No "with" tag, skip
 		}
 
 		// Check if this field should be preloaded
-		if !ctx.shouldPreload(field) {
+		if !p.shouldPreload(field) {
 			continue
 		}
 
@@ -209,15 +209,15 @@ func (ctx *preloadContext) collectRelations(pointer interface{}) ([]*relationFie
 }
 
 // shouldPreload checks if a field should be preloaded based on Model configuration.
-func (ctx *preloadContext) shouldPreload(field gstructs.Field) bool {
+func (p *preloadContext) shouldPreload(field gstructs.Field) bool {
 	// WithAll mode: all fields with "with" tag are allowed
-	if ctx.model.withAll {
+	if p.model.withAll {
 		return true
 	}
 
 	// With mode: check if field type is in withArray
 	fieldTypeStr := gstr.TrimAll(field.Type().String(), "*[]")
-	for _, withItem := range ctx.model.withArray {
+	for _, withItem := range p.model.withArray {
 		withItemType, err := gstructs.StructType(withItem)
 		if err != nil {
 			continue
@@ -241,14 +241,14 @@ func (ctx *preloadContext) shouldPreload(field gstructs.Field) bool {
 // Value semantics:
 // - In Tag: Only when both chunkSize and chunkMinRows are configured and > 0, enable chunking
 // - In API: -1 means use tag/group config, 0 means disable chunking, >0 means enable with that value
-func (ctx *preloadContext) getChunkConfig(relation *relationFieldInfo) (chunkSize, chunkMinRows int) {
+func (p *preloadContext) getChunkConfig(relation *relationFieldInfo) (chunkSize, chunkMinRows int) {
 	chunkName := relation.ParsedTag.ChunkName
 	chunkSize = -1
 	chunkMinRows = -1
 
 	// Priority 1: API configuration (matched by chunkName)
-	if chunkName != "" && ctx.model.preloadOptions != nil {
-		if config, ok := ctx.model.preloadOptions[chunkName]; ok {
+	if chunkName != "" && p.model.preloadOptions != nil {
+		if config, ok := p.model.preloadOptions[chunkName]; ok {
 			// API config found, use it
 			chunkSize = config.ChunkSize
 			chunkMinRows = config.ChunkMinRows
@@ -281,7 +281,7 @@ func (ctx *preloadContext) getChunkConfig(relation *relationFieldInfo) (chunkSiz
 
 	// Priority 3: ChunkName group config (look for other fields with same chunkName)
 	if chunkName != "" {
-		for _, rel := range ctx.allRelations {
+		for _, rel := range p.allRelations {
 			if rel.ParsedTag.ChunkName == chunkName && rel != relation && rel.ParsedTag.Chunked {
 				// Found a field with same chunkName that has chunk config
 				if chunkSize == -1 {
@@ -303,7 +303,7 @@ func (ctx *preloadContext) getChunkConfig(relation *relationFieldInfo) (chunkSiz
 
 // queryRelation executes a batch query for a single relation field.
 // It collects all unique relation keys and performs a single WHERE IN query.
-func (ctx *preloadContext) queryRelation(pointer interface{}, relation *relationFieldInfo) *batchQueryResult {
+func (p *preloadContext) queryRelation(pointer interface{}, relation *relationFieldInfo) *batchQueryResult {
 	result := &batchQueryResult{
 		FieldName: relation.Field.Name(),
 		DataMap:   make(map[string]Result),
@@ -322,12 +322,18 @@ func (ctx *preloadContext) queryRelation(pointer interface{}, relation *relation
 		firstItem = firstItem.Elem()
 	}
 
+	// Use cached struct info to find field name
+	cached, err := getCachedStructInfo(firstItem.Type())
+	if err != nil {
+		result.Error = err
+		return result
+	}
+
 	// Find the actual field name that matches relation.targetField (case-insensitive)
 	var actualFieldName string
-	for i := 0; i < firstItem.NumField(); i++ {
-		fieldName := firstItem.Type().Field(i).Name
-		if utils.EqualFoldWithoutChars(fieldName, relation.targetField) {
-			actualFieldName = fieldName
+	for _, field := range cached.fields {
+		if utils.EqualFoldWithoutChars(field.Name(), relation.targetField) {
+			actualFieldName = field.Name()
 			break
 		}
 	}
@@ -357,8 +363,8 @@ func (ctx *preloadContext) queryRelation(pointer interface{}, relation *relation
 		fieldValue = reflect.New(elemType)
 	}
 
-	model := ctx.model.db.Model(fieldValue.Interface())
-	model = model.Hook(ctx.model.hookHandler)
+	model := p.model.db.Model(fieldValue.Interface())
+	model = model.Hook(p.model.hookHandler)
 
 	// Apply tag conditions
 	if relation.ParsedTag.Where != "" {
@@ -372,12 +378,12 @@ func (ctx *preloadContext) queryRelation(pointer interface{}, relation *relation
 	}
 
 	// Apply cache if enabled
-	if ctx.model.cacheEnabled && ctx.model.cacheOption.Name == "" {
-		model = model.Cache(ctx.model.cacheOption)
+	if p.model.cacheEnabled && p.model.cacheOption.Name == "" {
+		model = model.Cache(p.model.cacheOption)
 	}
 
 	// 3. Get chunk configuration (API > Tag > chunkName group > Global default)
-	chunkSize, chunkMinRows := ctx.getChunkConfig(relation)
+	chunkSize, chunkMinRows := p.getChunkConfig(relation)
 
 	// Determine if chunking is needed
 	shouldChunk := chunkSize > 0 && len(targetValues) >= chunkMinRows
@@ -421,12 +427,24 @@ func (ctx *preloadContext) queryRelation(pointer interface{}, relation *relation
 }
 
 // mapResults maps batch query results to struct fields.
-func (ctx *preloadContext) mapResults(
+func (p *preloadContext) mapResults(
 	pointer interface{},
 	relations []*relationFieldInfo,
 	batchResults map[string]*batchQueryResult,
 ) error {
 	sliceValue := reflect.ValueOf(pointer).Elem()
+	if sliceValue.Len() == 0 {
+		return nil
+	}
+
+	firstItem := sliceValue.Index(0)
+	if firstItem.Kind() == reflect.Pointer {
+		firstItem = firstItem.Elem()
+	}
+	cached, err := getCachedStructInfo(firstItem.Type())
+	if err != nil {
+		return err
+	}
 
 	for i := 0; i < sliceValue.Len(); i++ {
 		item := sliceValue.Index(i)
@@ -437,10 +455,9 @@ func (ctx *preloadContext) mapResults(
 		for _, relation := range relations {
 			// Get relation key value from current item - need to use actual field name
 			var actualTargetFieldName string
-			for j := 0; j < item.NumField(); j++ {
-				fieldName := item.Type().Field(j).Name
-				if utils.EqualFoldWithoutChars(fieldName, relation.targetField) {
-					actualTargetFieldName = fieldName
+			for _, field := range cached.fields {
+				if utils.EqualFoldWithoutChars(field.Name(), relation.targetField) {
+					actualTargetFieldName = field.Name()
 					break
 				}
 			}
@@ -498,7 +515,7 @@ func (ctx *preloadContext) mapResults(
 }
 
 // recursivePreloadNext recursively processes the next level of relations.
-func (ctx *preloadContext) recursivePreloadNext(pointer interface{}, relation *relationFieldInfo) error {
+func (p *preloadContext) recursivePreloadNext(pointer interface{}, relation *relationFieldInfo) error {
 	sliceValue := reflect.ValueOf(pointer).Elem()
 
 	if relation.isSlice() {
@@ -570,7 +587,7 @@ func (ctx *preloadContext) recursivePreloadNext(pointer interface{}, relation *r
 			mergedSlicePtr := reflect.New(mergedSliceType)
 			mergedSlicePtr.Elem().Set(mergedSlice)
 
-			if err := ctx.recursivePreload(mergedSlicePtr.Interface()); err != nil {
+			if err := p.recursivePreload(mergedSlicePtr.Interface()); err != nil {
 				return err
 			}
 
@@ -613,7 +630,7 @@ func (ctx *preloadContext) recursivePreloadNext(pointer interface{}, relation *r
 			tempSlicePtr := reflect.New(sliceType)
 			tempSlicePtr.Elem().Set(tempSlice)
 
-			if err := ctx.recursivePreload(tempSlicePtr.Interface()); err != nil {
+			if err := p.recursivePreload(tempSlicePtr.Interface()); err != nil {
 				return err
 			}
 
