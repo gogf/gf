@@ -125,7 +125,7 @@ func Test_Model_Hook_Delete(t *testing.T) {
 				}).Where(in.Condition).Update()
 			},
 		})
-		_, err := m.Where(1).Delete()
+		_, err := m.Where("1=1").Delete()
 		t.AssertNil(err)
 
 		all, err := m.All()

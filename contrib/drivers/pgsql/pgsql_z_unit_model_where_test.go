@@ -191,7 +191,7 @@ func Test_Model_Where(t *testing.T) {
 			"nickname like ?":    "%name%",
 			"id between ? and ?": g.Slice{1, 3},
 			"id > 0":             nil,
-			"create_time > 0":    nil,
+			"create_time IS NOT NULL": nil,
 			"id":                 g.Slice{1, 2, 3},
 		}
 		result, err := db.Model(table).Where(conditions).Order("id asc").All()
@@ -205,7 +205,7 @@ func Test_Model_Where(t *testing.T) {
 			"nickname like ?":    "%name%",
 			"id between ? and ?": g.Slice{1, 3},
 			"id >= ?":            1,
-			"create_time > ?":    0,
+			"create_time > ?":    "1970-01-01",
 			"id in(?)":           g.Slice{1, 2, 3},
 		}
 		result, err := db.Model(table).Where(conditions).Order("id asc").All()
@@ -447,7 +447,7 @@ func Test_Model_WherePri(t *testing.T) {
 			"nickname like ?":    "%name%",
 			"id between ? and ?": g.Slice{1, 3},
 			"id > 0":             nil,
-			"create_time > 0":    nil,
+			"create_time IS NOT NULL": nil,
 			"id":                 g.Slice{1, 2, 3},
 		}
 		result, err := db.Model(table).WherePri(conditions).Order("id asc").All()
@@ -461,7 +461,7 @@ func Test_Model_WherePri(t *testing.T) {
 			"nickname like ?":    "%name%",
 			"id between ? and ?": g.Slice{1, 3},
 			"id >= ?":            1,
-			"create_time > ?":    0,
+			"create_time > ?":    "1970-01-01",
 			"id in(?)":           g.Slice{1, 2, 3},
 		}
 		result, err := db.Model(table).WherePri(conditions).Order("id asc").All()
@@ -1105,8 +1105,8 @@ CREATE TABLE %s (
 
 func Test_Model_WherePrefix(t *testing.T) {
 	var (
-		table1 = gtime.TimestampNanoStr() + "_table1"
-		table2 = gtime.TimestampNanoStr() + "_table2"
+		table1 = "table1_" + gtime.TimestampNanoStr()
+		table2 = "table2_" + gtime.TimestampNanoStr()
 	)
 	createInitTable(table1)
 	defer dropTable(table1)
@@ -1130,8 +1130,8 @@ func Test_Model_WherePrefix(t *testing.T) {
 
 func Test_Model_WhereOrPrefix(t *testing.T) {
 	var (
-		table1 = gtime.TimestampNanoStr() + "_table1"
-		table2 = gtime.TimestampNanoStr() + "_table2"
+		table1 = "table1_" + gtime.TimestampNanoStr()
+		table2 = "table2_" + gtime.TimestampNanoStr()
 	)
 	createInitTable(table1)
 	defer dropTable(table1)
@@ -1160,8 +1160,8 @@ func Test_Model_WhereOrPrefix(t *testing.T) {
 
 func Test_Model_WherePrefixLike(t *testing.T) {
 	var (
-		table1 = gtime.TimestampNanoStr() + "_table1"
-		table2 = gtime.TimestampNanoStr() + "_table2"
+		table1 = "table1_" + gtime.TimestampNanoStr()
+		table2 = "table2_" + gtime.TimestampNanoStr()
 	)
 	createInitTable(table1)
 	defer dropTable(table1)
