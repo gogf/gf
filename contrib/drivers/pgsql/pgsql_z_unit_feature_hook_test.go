@@ -58,6 +58,8 @@ func Test_Model_Hook_Insert(t *testing.T) {
 				for i, item := range in.Data {
 					item["passport"] = fmt.Sprintf(`test_port_%d`, item["id"])
 					item["nickname"] = fmt.Sprintf(`test_name_%d`, item["id"])
+					item["password"] = fmt.Sprintf(`test_pass_%d`, item["id"])
+					item["create_time"] = CreateTime
 					in.Data[i] = item
 				}
 				return in.Next(ctx)

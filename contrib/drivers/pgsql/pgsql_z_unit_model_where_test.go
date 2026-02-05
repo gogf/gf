@@ -883,8 +883,34 @@ func Test_Model_Where_MultiSliceArguments(t *testing.T) {
 }
 
 func Test_Model_Where_ISNULL(t *testing.T) {
-	table := createInitTable()
+	// Create a custom table with nullable nickname column for this test
+	table := fmt.Sprintf(`%s_%d`, TablePrefix+"nullable", gtime.TimestampNano())
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE %s (
+		   	id bigserial NOT NULL,
+		   	passport varchar(45),
+		   	password varchar(32),
+		   	nickname varchar(45),
+		   	create_time timestamp,
+		   	PRIMARY KEY (id)
+		) ;`, table,
+	)); err != nil {
+		gtest.Fatal(err)
+	}
 	defer dropTable(table)
+
+	// Insert test data
+	for i := 1; i <= TableSize; i++ {
+		if _, err := db.Insert(ctx, table, g.Map{
+			"id":          i,
+			"passport":    fmt.Sprintf(`user_%d`, i),
+			"password":    fmt.Sprintf(`pass_%d`, i),
+			"nickname":    fmt.Sprintf(`name_%d`, i),
+			"create_time": gtime.NewFromStr(CreateTime).String(),
+		}); err != nil {
+			gtest.Fatal(err)
+		}
+	}
 
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).Data("nickname", nil).Where("id", 2).Update()
