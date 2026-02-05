@@ -257,7 +257,7 @@ func Test_TX_Delete_Commit(t *testing.T) {
 		tx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
-		_, err = tx.Delete(table, 1)
+		_, err = tx.Model(table).Where("id", 1).Delete()
 		t.AssertNil(err)
 
 		err = tx.Commit()
@@ -278,12 +278,12 @@ func Test_TX_Delete_Rollback(t *testing.T) {
 		tx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
-		_, err = tx.Delete(table, 1)
+		_, err = tx.Model(table).Where("id", 1).Delete()
 		t.AssertNil(err)
 
 		n, err := tx.Model(table).Count()
 		t.AssertNil(err)
-		t.Assert(n, int64(0))
+		t.Assert(n, int64(TableSize-1))
 
 		err = tx.Rollback()
 		t.AssertNil(err)
