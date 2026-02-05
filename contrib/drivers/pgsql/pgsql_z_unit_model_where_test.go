@@ -188,11 +188,11 @@ func Test_Model_Where(t *testing.T) {
 	// complicated where 1
 	gtest.C(t, func(t *gtest.T) {
 		conditions := g.Map{
-			"nickname like ?":    "%name%",
-			"id between ? and ?": g.Slice{1, 3},
-			"id > 0":             nil,
+			"nickname like ?":         "%name%",
+			"id between ? and ?":      g.Slice{1, 3},
+			"id > 0":                  nil,
 			"create_time IS NOT NULL": nil,
-			"id":                 g.Slice{1, 2, 3},
+			"id":                      g.Slice{1, 2, 3},
 		}
 		result, err := db.Model(table).Where(conditions).Order("id asc").All()
 		t.AssertNil(err)
@@ -444,11 +444,11 @@ func Test_Model_WherePri(t *testing.T) {
 	// complicated where 1
 	gtest.C(t, func(t *gtest.T) {
 		conditions := g.Map{
-			"nickname like ?":    "%name%",
-			"id between ? and ?": g.Slice{1, 3},
-			"id > 0":             nil,
+			"nickname like ?":         "%name%",
+			"id between ? and ?":      g.Slice{1, 3},
+			"id > 0":                  nil,
 			"create_time IS NOT NULL": nil,
-			"id":                 g.Slice{1, 2, 3},
+			"id":                      g.Slice{1, 2, 3},
 		}
 		result, err := db.Model(table).WherePri(conditions).Order("id asc").All()
 		t.AssertNil(err)
