@@ -58,6 +58,7 @@ CONFIGURATION SUPPORT
 	CGenDaoBriefStdTime           = `use time.Time from stdlib instead of gtime.Time for generated time/date fields of tables`
 	CGenDaoBriefWithTime          = `add created time for auto produced go files`
 	CGenDaoBriefGJsonSupport      = `use gJsonSupport to use *gjson.Json instead of string for generated json fields of tables`
+	CGenDoBriefTypePointerSupport = `use type pointer instead of any for DO fields`
 	CGenDaoBriefImportPrefix      = `custom import prefix for generated go files`
 	CGenDaoBriefDaoPath           = `directory path for storing generated dao files under path`
 	CGenDaoBriefTablePath         = `directory path for storing generated table files under path`
@@ -133,6 +134,7 @@ func init() {
 		`CGenDaoBriefDoPath`:             CGenDaoBriefDoPath,
 		`CGenDaoBriefEntityPath`:         CGenDaoBriefEntityPath,
 		`CGenDaoBriefGJsonSupport`:       CGenDaoBriefGJsonSupport,
+		`CGenDoBriefTypePointerSupport`:  CGenDoBriefTypePointerSupport,
 		`CGenDaoBriefImportPrefix`:       CGenDaoBriefImportPrefix,
 		`CGenDaoBriefOverwriteDao`:       CGenDaoBriefOverwriteDao,
 		`CGenDaoBriefModelFile`:          CGenDaoBriefModelFile,
