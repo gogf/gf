@@ -1377,3 +1377,121 @@ func Test_ValidationRules(t *testing.T) {
 		t.Assert(schema.Properties.Get("Address").Value.MaxLength, 64)
 	})
 }
+
+// TestOpenApiV3_ArrayRequestBody tests the OpenAPI schema generation for APIs with type:"array" tag.
+// This enables APIs to receive JSON array request bodies like [{"id":1},{"id":2}] instead of {"items":[...]}.
+func TestOpenApiV3_ArrayRequestBody(t *testing.T) {
+	// ChatMessage is a simple message structure for array request testing.
+	type ChatMessage struct {
+		Role    string `json:"role" dc:"Role: system/user/assistant"`
+		Content string `json:"content" dc:"Message content"`
+	}
+
+	// BatchChatReq demonstrates the type:"array" tag usage for batch chat APIs.
+	// When type:"array" is specified, the request body should be a JSON array [{}]
+	// instead of an object {}, and the schema type will be "array" not "object".
+	type BatchChatReq struct {
+		g.Meta   `mime:"application/json" method:"post" path:"/batch/chat" type:"array" summary:"Batch chat API"`
+		Messages []ChatMessage `json:"messages" dc:"Message list"`
+	}
+
+	type BatchChatRes struct {
+		Results []string `json:"results" dc:"Processing results"`
+	}
+
+	f := func(ctx context.Context, req *BatchChatReq) (res *BatchChatRes, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+		)
+		err = oai.Add(goai.AddInput{
+			Path:   "/batch/chat",
+			Method: http.MethodPost,
+			Object: f,
+		})
+		t.AssertNil(err)
+
+		// Verify path is registered
+		t.AssertNE(oai.Paths["/batch/chat"], nil)
+		t.AssertNE(oai.Paths["/batch/chat"].Post, nil)
+
+		// Verify request body schema is array type (not object type)
+		requestBodySchema := oai.Paths["/batch/chat"].Post.RequestBody.Value.Content["application/json"].Schema
+		t.Assert(requestBodySchema.Value.Type, goai.TypeArray)
+
+		// Verify items reference points to the ChatMessage schema
+		t.AssertNE(requestBodySchema.Value.Items, nil)
+		t.AssertNE(requestBodySchema.Value.Items.Ref, "")
+
+		// Verify ChatMessage schema is registered in Components.Schemas
+		chatMessageSchema := oai.Components.Schemas.Get("github.com.gogf.gf.v2.net.goai_test.ChatMessage")
+		t.AssertNE(chatMessageSchema, nil)
+		t.Assert(chatMessageSchema.Value.Type, goai.TypeObject)
+		t.Assert(chatMessageSchema.Value.Properties.Get("role").Value.Type, goai.TypeString)
+		t.Assert(chatMessageSchema.Value.Properties.Get("content").Value.Type, goai.TypeString)
+	})
+}
+
+// TestOpenApiV3_ArrayRequestBody_Nested tests array request body with nested structures.
+// This verifies that nested struct types are properly registered in Components.Schemas.
+func TestOpenApiV3_ArrayRequestBody_Nested(t *testing.T) {
+	type BatchChatRes struct {
+		Results []string `json:"results" dc:"Processing results"`
+	}
+
+	// ExtraInfo represents nested structure within array elements.
+	type ExtraInfo struct {
+		Key1 string   `json:"key1" dc:"Key 1"`
+		Tags []string `json:"tags" dc:"Tags list"`
+	}
+
+	// ChatMessageWithExtra includes nested struct fields.
+	type ChatMessageWithExtra struct {
+		Role    string    `json:"role" dc:"Role: system/user/assistant"`
+		Content string    `json:"content" dc:"Message content"`
+		Extra   ExtraInfo `json:"extra" dc:"Extra information"`
+	}
+
+	// NestedArrayReq demonstrates nested structure support in array requests.
+	type NestedArrayReq struct {
+		g.Meta   `mime:"application/json" method:"post" path:"/nested-array" type:"array" summary:"Nested array API"`
+		Messages []ChatMessageWithExtra `json:"messages" dc:"Message list with nested structure"`
+	}
+
+	f := func(ctx context.Context, req *NestedArrayReq) (res *BatchChatRes, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+		)
+		err = oai.Add(goai.AddInput{
+			Path:   "/nested-array",
+			Method: http.MethodPost,
+			Object: f,
+		})
+		t.AssertNil(err)
+
+		// Verify request body schema is array type
+		requestBodySchema := oai.Paths["/nested-array"].Post.RequestBody.Value.Content["application/json"].Schema
+		t.Assert(requestBodySchema.Value.Type, goai.TypeArray)
+
+		// Verify ChatMessageWithExtra schema is registered
+		chatSchema := oai.Components.Schemas.Get("github.com.gogf.gf.v2.net.goai_test.ChatMessageWithExtra")
+		t.AssertNE(chatSchema, nil)
+		t.Assert(chatSchema.Value.Type, goai.TypeObject)
+
+		// Verify nested ExtraInfo schema is also registered
+		extraSchema := oai.Components.Schemas.Get("github.com.gogf.gf.v2.net.goai_test.ExtraInfo")
+		t.AssertNE(extraSchema, nil)
+		t.Assert(extraSchema.Value.Type, goai.TypeObject)
+		t.Assert(extraSchema.Value.Properties.Get("key1").Value.Type, goai.TypeString)
+		t.Assert(extraSchema.Value.Properties.Get("tags").Value.Type, goai.TypeArray)
+	})
+}
