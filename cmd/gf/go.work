@@ -14,5 +14,9 @@ replace (
 	github.com/gogf/gf/contrib/drivers/oracle/v2 => ../../contrib/drivers/oracle
 	github.com/gogf/gf/contrib/drivers/pgsql/v2 => ../../contrib/drivers/pgsql
 	github.com/gogf/gf/contrib/drivers/sqlite/v2 => ../../contrib/drivers/sqlite
+	github.com/gogf/gf/contrib/drivers/mariadb/v2 => ../../contrib/drivers/mariadb
+	github.com/gogf/gf/contrib/drivers/tidb/v2 => ../../contrib/drivers/tidb
+	github.com/gogf/gf/contrib/drivers/oceanbase/v2 => ../../contrib/drivers/oceanbase
+	github.com/gogf/gf/contrib/drivers/gaussdb/v2 => ../../contrib/drivers/gaussdb
 	github.com/gogf/gf/v2 => ../../
 )

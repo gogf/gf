@@ -117,6 +117,7 @@ func As(err error, target any) bool {
 
 // HasError performs as Is.
 // This function is designed and implemented early before errors.Is of go stdlib.
+//
 // Deprecated: use Is instead.
 func HasError(err, target error) bool {
 	return errors.Is(err, target)

@@ -23,6 +23,14 @@ on:
     - fix/**
     - copilot/**
 
+  workflow_dispatch:
+    inputs:
+      debug:
+        type: boolean
+        description: 'Enable tmate Debug'
+        required: false
+        default: false
+
 # This allows a subsequently queued workflow run to interrupt previous runs
 concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
@@ -49,7 +57,7 @@ jobs:
     # Service containers to run with `code-test`
     services:
       # Etcd service.
-      # docker run -d --name etcd -p 2379:2379 -e ALLOW_NONE_AUTHENTICATION=yes bitnamilegacy/etcd:3.4.24
+      # docker run -p 2379:2379 -e ALLOW_NONE_AUTHENTICATION=yes bitnamilegacy/etcd:3.4.24
       etcd:
         image: bitnamilegacy/etcd:3.4.24
         env:
@@ -70,7 +78,7 @@ jobs:
           - 6379:6379
 
       # MySQL backend server.
-      # docker run -d --name mysql \
+      # docker run \
       # -p 3306:3306 \
       # -e MYSQL_DATABASE=test \
       # -e MYSQL_ROOT_PASSWORD=12345678 \
@@ -84,7 +92,7 @@ jobs:
           - 3306:3306
 
       # MariaDb backend server.
-      # docker run -d --name mariadb \
+      # docker run \
       # -p 3307:3306 \
       # -e MYSQL_DATABASE=test \
       # -e MYSQL_ROOT_PASSWORD=12345678 \
@@ -98,7 +106,7 @@ jobs:
           - 3307:3306
 
       # PostgreSQL backend server.
-      # docker run -d --name postgres \
+      # docker run \
       # -p 5432:5432 \
       # -e POSTGRES_PASSWORD=12345678 \
       # -e POSTGRES_USER=postgres \
@@ -145,7 +153,7 @@ jobs:
           --health-retries 10
 
       # ClickHouse backend server.
-      # docker run -d --name clickhouse \
+      # docker run \
       # -p 9000:9000 -p 8123:8123 -p 9001:9001 \
       # clickhouse/clickhouse-server:24.11.1.2557-alpine
       clickhouse-server:
@@ -156,7 +164,7 @@ jobs:
           - 9001:9001
 
       # Polaris backend server.
-      # docker run -d --name polaris \
+      # docker run \
       # -p 8090:8090 -p 8091:8091 -p 8093:8093 -p 9090:9090 -p 9091:9091 \
       # polarismesh/polaris-standalone:v1.17.2
       polaris:
@@ -193,6 +201,17 @@ jobs:
         ports:
           - 5236:5236
 
+      # openGauss server
+      # docker run --privileged=true -e GS_PASSWORD=UTpass@1234 -p 9950:5432 opengauss/opengauss:7.0.0-RC1.B023
+      gaussdb:
+        image: opengauss/opengauss:7.0.0-RC1.B023
+        env:
+          GS_PASSWORD: UTpass@1234
+          TZ: Asia/Shanghai
+        ports:
+          - 9950:5432
+
+
       zookeeper:
         image: zookeeper:3.8
         ports:
@@ -208,6 +227,19 @@ jobs:
 
     - name: Checkout Repository
       uses: actions/checkout@v5
+
+    - name: Setup tmate Session
+      uses: mxschmitt/action-tmate@v3
+      if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug }}
+      with:
+        detached: true
+        limit-access-to-actor: false
+
+    - name: Free Disk Space
+      run: |
+        df -h /
+        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/hostedtoolcache/CodeQL /opt/hostedtoolcache/Python || true
+        df -h /
 
     - name: Start Apollo Containers
       run:  docker compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build

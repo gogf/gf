@@ -2944,7 +2944,9 @@ func Test_Model_Raw(t *testing.T) {
 			Limit(2).
 			Count()
 		t.AssertNil(err)
-		t.Assert(count, int64(6))
+		// Raw SQL selects {1,5,7,8,9,10}, Where filters to id < 8 AND id IN {1,2,3,4,5,6,7}
+		// Result: {1,5,7} = 3 records
+		t.Assert(count, int64(3))
 	})
 }
 
@@ -3783,6 +3785,7 @@ func Test_Model_FixGdbJoin(t *testing.T) {
 				FieldsPrefix(`rules_template`, "name").
 				FieldsPrefix(`common_resource`, `src_instance_id`, "database_kind", "source_type", "ip", "port")
 			all, err := orm.OrderAsc("src_instance_id").All()
+			t.Assert(err, nil)
 			t.Assert(len(all), 4)
 			t.Assert(all[0]["pay_mode"], 1)
 			t.Assert(all[0]["src_instance_id"], 2)

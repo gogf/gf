@@ -23,6 +23,15 @@ type ScanOption struct {
 	// ContinueOnError specifies whether to continue converting the next element
 	// if one element converting fails.
 	ContinueOnError bool
+
+	// OmitEmpty specifies whether to skip assignment when the source value is empty
+	// (empty string, zero value, etc.), preserving the existing value in the
+	// destination field.
+	OmitEmpty bool
+
+	// OmitNil specifies whether to skip assignment when the source value is nil,
+	// preserving the existing value in the destination field.
+	OmitNil bool
 }
 
 func (c *Converter) getScanOption(option ...ScanOption) ScanOption {
@@ -87,11 +96,14 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ...ScanOption) (er
 	}
 
 	// Get the element type and kind of dstPointer
-	var (
-		dstPointerReflectValueElem     = dstPointerReflectValue.Elem()
-		dstPointerReflectValueElemKind = dstPointerReflectValueElem.Kind()
-	)
+	var dstPointerReflectValueElem = dstPointerReflectValue.Elem()
+	// Check if srcValue and dstPointer are the same type, in which case direct assignment can be performed
+	if ok := c.doConvertWithTypeCheck(srcValueReflectValue, dstPointerReflectValueElem); ok {
+		return nil
+	}
+
 	// Handle multiple level pointers
+	var dstPointerReflectValueElemKind = dstPointerReflectValueElem.Kind()
 	if dstPointerReflectValueElemKind == reflect.Pointer {
 		if dstPointerReflectValueElem.IsNil() {
 			// Create a new value for the pointer dereference
@@ -103,11 +115,6 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ...ScanOption) (er
 			return
 		}
 		return c.Scan(srcValueReflectValue, dstPointerReflectValueElem, option...)
-	}
-
-	// Check if srcValue and dstPointer are the same type, in which case direct assignment can be performed
-	if ok := c.doConvertWithTypeCheck(srcValueReflectValue, dstPointerReflectValueElem); ok {
-		return nil
 	}
 
 	scanOption := c.getScanOption(option...)
@@ -292,6 +299,8 @@ func (c *Converter) doScanForComplicatedTypes(
 			mapOption = StructOption{
 				ParamKeyToAttrMap: keyToAttributeNameMapping,
 				ContinueOnError:   option.ContinueOnError,
+				OmitEmpty:         option.OmitEmpty,
+				OmitNil:           option.OmitNil,
 			}
 		)
 		return c.Structs(srcValue, dstPointer, StructsOption{
@@ -304,6 +313,8 @@ func (c *Converter) doScanForComplicatedTypes(
 			ParamKeyToAttrMap: keyToAttributeNameMapping,
 			PriorityTag:       "",
 			ContinueOnError:   option.ContinueOnError,
+			OmitEmpty:         option.OmitEmpty,
+			OmitNil:           option.OmitNil,
 		}
 		return c.Struct(srcValue, dstPointer, structOption)
 	}

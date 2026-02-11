@@ -21,6 +21,24 @@ func TestVar_Ints(t *testing.T) {
 	})
 }
 
+func TestVar_Bools(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var arr = []bool{true, false, true, false}
+		objOne := gvar.New(arr, true)
+		t.AssertEQ(objOne.Bools(), arr)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var arr = []int{1, 0, 1, 0}
+		objOne := gvar.New(arr, true)
+		t.AssertEQ(objOne.Bools(), []bool{true, false, true, false})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var arr = []string{"true", "false", "1", "0"}
+		objOne := gvar.New(arr, true)
+		t.AssertEQ(objOne.Bools(), []bool{true, false, true, false})
+	})
+}
+
 func TestVar_Uints(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var arr = []int{1, 2, 3, 4, 5}
