@@ -87,9 +87,17 @@ func (r *Registry) doKeepAlive(
 				// r.logger.Debugf(ctx, `keepalive loop: %v, %s`, ok, res.String())
 			}
 			if !ok {
+				// KeepAlive channel closed, attempt to re-register the service.
 				r.logger.Warningf(ctx, `keepalive exit, lease id: %d, retry register`, leaseID)
-				// Re-register the service.
 				for {
+					// Check if client context is cancelled before retry.
+					select {
+					case <-r.client.Ctx().Done():
+						r.logger.Infof(ctx, "retry register cancelled, client context done")
+						return
+					default:
+					}
+
 					if err := r.doRegisterLease(ctx, service); err != nil {
 						retryDuration := grand.D(time.Second, time.Second*3)
 						r.logger.Errorf(
@@ -100,6 +108,7 @@ func (r *Registry) doKeepAlive(
 						time.Sleep(retryDuration)
 						continue
 					}
+					r.logger.Infof(ctx, `keepalive retry register success for service "%s"`, service.GetKey())
 					break
 				}
 				return
