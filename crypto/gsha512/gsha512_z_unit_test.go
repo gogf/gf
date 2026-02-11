@@ -10,6 +10,7 @@ package gsha512_test
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/gogf/gf/v2/crypto/gsha512"
@@ -41,14 +42,19 @@ func TestEncrypt(t *testing.T) {
 }
 
 func TestEncryptFile(t *testing.T) {
-	path := "test.text"
-	errPath := "err.text"
+	path := gtest.DataPath("test.text")
+	errPath := gtest.DataPath("err.text")
 	gtest.C(t, func(t *gtest.T) {
 		result := "2c6df89b4fda8e4c0baa7dc962380c496f1efe6e5c7ffc3bd33175b2e8f8e394716c8ec2e40c70468dd23bbbdc503db480c57b0051705ef5beaa7aec4a9061d5"
+		// ensure the testdata directory exists
+		dir := filepath.Dir(path)
+		err := os.MkdirAll(dir, 0o755)
+		t.AssertNil(err)
+
 		file, err := os.Create(path)
 		t.AssertNil(err)
-		defer os.Remove(path)
-		defer file.Close()
+		defer func() { _ = os.Remove(path) }()
+		defer func() { _ = file.Close() }()
 		_, err = file.Write([]byte("Hello Go Frame"))
 		t.AssertNil(err)
 		encryptFile, err := gsha512.EncryptFile(path)
