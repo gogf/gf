@@ -7,7 +7,7 @@
 package gdb
 
 import (
-	"strings"
+	"fmt"
 
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -78,18 +78,44 @@ func (m *Model) OrderRandom() *Model {
 }
 
 // Group sets the "GROUP BY" statement for the model.
-func (m *Model) Group(groupBy ...string) *Model {
+func (m *Model) Group(groupBy ...any) *Model {
 	if len(groupBy) == 0 {
 		return m
 	}
 	var (
-		core  = m.db.GetCore()
-		model = m.getModel()
+		core       = m.db.GetCore()
+		model      = m.getModel()
+		autoPrefix = ""
 	)
 
-	if model.groupBy != "" {
-		model.groupBy += ","
+	// Check if we need to auto-prefix columns when there are JOINs
+	if gstr.Contains(m.tables, " JOIN ") {
+		autoPrefix = m.QuoteWord(
+			core.guessPrimaryTableName(m.tablesInit),
+		)
 	}
-	model.groupBy += core.QuoteString(strings.Join(groupBy, ","))
+
+	for _, v := range groupBy {
+		if model.groupBy != "" {
+			model.groupBy += ","
+		}
+		switch v.(type) {
+		case Raw, *Raw:
+			model.groupBy += gconv.String(v)
+		default:
+			groupByStr := gconv.String(v)
+			if gstr.Contains(groupByStr, ".") {
+				// Already qualified (e.g., "table.column")
+				model.groupBy += core.QuoteString(groupByStr)
+			} else {
+				// Need to qualify with table prefix if there are joins
+				if autoPrefix != "" {
+					model.groupBy += fmt.Sprintf("%s.%s", autoPrefix, core.QuoteWord(groupByStr))
+				} else {
+					model.groupBy += core.QuoteWord(groupByStr)
+				}
+			}
+		}
+	}
 	return model
 }
