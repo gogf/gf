@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // WhereOr adds "OR" condition to the where statement.
@@ -86,6 +87,12 @@ func (b *WhereBuilder) WhereOrLike(column string, like any) *WhereBuilder {
 	return b.WhereOrf(`%s LIKE ?`, b.model.QuoteWord(column), like)
 }
 
+// WhereOrLikeLiteral builds `column LIKE 'like'` statement in `OR` conditions with automatic escaping.
+// This method automatically escapes '%', '_', and '\' characters in the like parameter to treat them as literal characters.
+func (b *WhereBuilder) WhereOrLikeLiteral(column string, like any) *WhereBuilder {
+	return b.WhereOrf(`%s LIKE ?`, b.model.QuoteWord(column), escapeLikeString(gconv.String(like)))
+}
+
 // WhereOrIn builds `column IN (in)` statement in `OR` conditions.
 func (b *WhereBuilder) WhereOrIn(column string, in any) *WhereBuilder {
 	return b.doWhereOrfType(whereHolderTypeIn, `%s IN (?)`, b.model.QuoteWord(column), in)
@@ -108,6 +115,12 @@ func (b *WhereBuilder) WhereOrNotBetween(column string, min, max any) *WhereBuil
 // WhereOrNotLike builds `column NOT LIKE like` statement in `OR` conditions.
 func (b *WhereBuilder) WhereOrNotLike(column string, like any) *WhereBuilder {
 	return b.WhereOrf(`%s NOT LIKE ?`, b.model.QuoteWord(column), like)
+}
+
+// WhereOrNotLikeLiteral builds `column NOT LIKE like` statement in `OR` conditions with automatic escaping.
+// This method automatically escapes '%', '_', and '\' characters in the like parameter to treat them as literal characters.
+func (b *WhereBuilder) WhereOrNotLikeLiteral(column string, like any) *WhereBuilder {
+	return b.WhereOrf(`%s NOT LIKE ?`, b.model.QuoteWord(column), escapeLikeString(gconv.String(like)))
 }
 
 // WhereOrNotIn builds `column NOT IN (in)` statement.

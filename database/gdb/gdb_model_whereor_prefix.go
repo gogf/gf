@@ -48,6 +48,12 @@ func (m *Model) WhereOrPrefixLike(prefix string, column string, like any) *Model
 	return m.callWhereBuilder(m.whereBuilder.WhereOrPrefixLike(prefix, column, like))
 }
 
+// WhereOrPrefixLikeLiteral builds `prefix.column LIKE 'like'` statement in `OR` conditions with automatic escaping.
+// See WhereBuilder.WhereOrPrefixLikeLiteral.
+func (m *Model) WhereOrPrefixLikeLiteral(prefix string, column string, like any) *Model {
+	return m.callWhereBuilder(m.whereBuilder.WhereOrPrefixLikeLiteral(prefix, column, like))
+}
+
 // WhereOrPrefixIn builds `prefix.column IN (in)` statement in `OR` conditions.
 // See WhereBuilder.WhereOrPrefixIn.
 func (m *Model) WhereOrPrefixIn(prefix string, column string, in any) *Model {
@@ -70,6 +76,12 @@ func (m *Model) WhereOrPrefixNotBetween(prefix string, column string, min, max a
 // See WhereBuilder.WhereOrPrefixNotLike.
 func (m *Model) WhereOrPrefixNotLike(prefix string, column string, like any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WhereOrPrefixNotLike(prefix, column, like))
+}
+
+// WhereOrPrefixNotLikeLiteral builds `prefix.column NOT LIKE 'like'` statement in `OR` conditions with automatic escaping.
+// See WhereBuilder.WhereOrPrefixNotLikeLiteral.
+func (m *Model) WhereOrPrefixNotLikeLiteral(prefix string, column string, like any) *Model {
+	return m.callWhereBuilder(m.whereBuilder.WhereOrPrefixNotLikeLiteral(prefix, column, like))
 }
 
 // WhereOrPrefixNotIn builds `prefix.column NOT IN (in)` statement.
