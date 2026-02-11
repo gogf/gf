@@ -70,6 +70,9 @@ var stringTests = []struct {
 	{gvar.New(123), "123"},
 	{gvar.New(123.456), "123.456"},
 
+	{myString("123"), "123"},
+	{(*myString)(nil), ""},
+
 	{goTime, "1911-10-10 00:00:00 +0000 UTC"},
 	{&goTime, "1911-10-10 00:00:00 +0000 UTC"},
 	// TODO The String method of gtime not equals to time.Time
@@ -77,6 +80,7 @@ var stringTests = []struct {
 	{&gfTime, "1911-10-10 00:00:00"},
 	//{gfTime, "1911-10-10 00:00:00 +0000 UTC"},
 	//{&gfTime, "1911-10-10 00:00:00 +0000 UTC"},
+
 }
 
 var (
