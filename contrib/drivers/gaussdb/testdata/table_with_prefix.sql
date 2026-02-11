@@ -3,4 +3,4 @@ CREATE TABLE instance (
     f_id SERIAL NOT NULL PRIMARY KEY,
     name varchar(255) DEFAULT ''
 );
-INSERT INTO instance VALUES (1, 'john')
+INSERT INTO instance VALUES (1, 'john');
