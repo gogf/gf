@@ -136,13 +136,80 @@ start_service() {
             return 0
         else
             print_info "Starting existing container $service..."
-            docker start "$container_name" > /dev/null
-            print_success "$service started"
-            return 0
+            local start_output=$(docker start "$container_name" 2>&1)
+            local start_code=$?
+            if [ $start_code -eq 0 ]; then
+                # Check if container is actually running
+                sleep 1
+                if docker ps --format '{{.Names}}' | grep -q "^${container_name}$"; then
+                    print_success "$service started (container: $container_name)"
+                    return 0
+                else
+                    print_error "Failed to start existing container $service - container exited immediately"
+                    print_info "Container logs (last 30 lines):"
+                    docker logs --tail 30 "$container_name" 2>&1 | sed 's/^/  /'
+                    print_info "Suggestion: Try removing the container with: make docker cmd=remove svc=$service"
+                    return 1
+                fi
+            else
+                print_error "Failed to start existing container $service"
+                print_error "Docker output: $start_output"
+                print_info "Container logs (last 30 lines):"
+                docker logs --tail 30 "$container_name" 2>&1 | sed 's/^/  /'
+                return 1
+            fi
         fi
     fi
 
     print_info "Starting $service..."
+    print_info "  Image: $image"
+    print_info "  Container: $container_name"
+    print_info "  Ports: $ports"
+    if [ -n "$envs" ]; then
+        print_info "  Environment: $envs"
+    fi
+    
+    # Check if image exists locally
+    print_info "  Checking image availability..."
+    if ! docker image inspect "$image" &> /dev/null; then
+        print_warning "Image $image not found locally"
+        print_info "  Attempting to pull image $image (this may take a while)..."
+        
+        local pull_output=$(docker pull "$image" 2>&1)
+        local pull_code=$?
+        
+        if [ $pull_code -ne 0 ]; then
+            print_error "Failed to pull image $image"
+            print_error "Pull output:"
+            echo "$pull_output" | sed 's/^/  /'
+            
+            if echo "$pull_output" | grep -q "TLS handshake timeout\|network\|timeout"; then
+                print_error "Cause: Network timeout or connectivity issue"
+                print_info "Suggestions:"
+                print_info "  1. Check your network connection"
+                print_info "  2. Try again later"
+                print_info "  3. Configure Docker to use a mirror registry"
+                print_info "  4. Manually pull: docker pull $image"
+            elif echo "$pull_output" | grep -q "not found\|manifest unknown"; then
+                print_error "Cause: Image or tag does not exist in registry"
+                print_info "Suggestion: Check if the image name and tag are correct"
+            fi
+            
+            return 1
+        fi
+        
+        # Verify the image was actually pulled
+        if ! docker image inspect "$image" &> /dev/null; then
+            print_error "Image pull reported success but image not found locally"
+            print_error "Pull output:"
+            echo "$pull_output" | sed 's/^/  /'
+            return 1
+        fi
+        
+        print_success "Image pulled successfully"
+    else
+        print_info "  Image found locally"
+    fi
     
     # Build docker run command
     local cmd="docker run -d --name $container_name"
@@ -164,10 +231,80 @@ start_service() {
     
     cmd="$cmd $image"
     
-    if eval "$cmd" > /dev/null 2>&1; then
-        print_success "$service started (container: $container_name)"
+    print_info "  Executing: $cmd"
+    
+    local output=$(eval "$cmd" 2>&1)
+    local exit_code=$?
+    
+    if [ $exit_code -eq 0 ] && [ -n "$output" ]; then
+        # Check if output looks like a container ID (64 hex characters)
+        if echo "$output" | grep -qE '^[0-9a-f]{64}$'; then
+            local container_id="$output"
+            print_success "$service started (container: $container_name, ID: ${container_id:0:12})"
+        else
+            # Output doesn't look like a container ID, something might be wrong
+            print_warning "Container start returned unexpected output:"
+            echo "$output" | sed 's/^/  /'
+        fi
+        
+        # Wait a moment and check if container is still running
+        print_info "  Verifying container health..."
+        sleep 3
+        
+        # Check if container exists at all
+        if ! docker ps -a --format '{{.Names}}' | grep -q "^${container_name}$"; then
+            print_error "$service container was not created"
+            print_error "Docker run output:"
+            echo "$output" | sed 's/^/  /'
+            
+            if echo "$output" | grep -qi "unable to find image"; then
+                print_error "Cause: Image not available despite earlier check"
+                print_info "Suggestion: Try manually pulling the image: docker pull $image"
+            fi
+            
+            return 1
+        fi
+        
+        # Check if container is running
+        if docker ps --format '{{.Names}}' | grep -q "^${container_name}$"; then
+            print_success "$service is running healthy"
+            return 0
+        else
+            print_error "$service container exited unexpectedly after start"
+            
+            # Get container exit status
+            local container_status=$(docker inspect --format='{{.State.Status}}' "$container_name" 2>/dev/null)
+            local container_exit_code=$(docker inspect --format='{{.State.ExitCode}}' "$container_name" 2>/dev/null)
+            
+            print_info "Container status: $container_status (exit code: $container_exit_code)"
+            print_info "Container logs (last 50 lines):"
+            docker logs --tail 50 "$container_name" 2>&1 | sed 's/^/  /'
+            print_info "Suggestion: Check the logs above for error details. Remove failed container with: make docker cmd=remove svc=$service"
+            return 1
+        fi
     else
         print_error "Failed to start $service"
+        print_error "Exit code: $exit_code"
+        print_error "Docker output:"
+        echo "$output" | sed 's/^/  /'
+        
+        # Check for common issues
+        if echo "$output" | grep -q "port is already allocated"; then
+            print_error "Cause: Port conflict - port(s) $ports already in use"
+            print_info "Suggestions:"
+            print_info "  1. Check what's using the port: lsof -i :3306 (replace with your port)"
+            print_info "  2. Stop the conflicting service"
+            print_info "  3. Or use a different port"
+        elif echo "$output" | grep -q "No such image"; then
+            print_error "Cause: Image not found"
+            print_info "Suggestion: Run 'make docker cmd=pull svc=$service' first"
+        elif echo "$output" | grep -q "permission denied\|Cannot connect to the Docker daemon"; then
+            print_error "Cause: Docker permission or daemon issue"
+            print_info "Suggestions:"
+            print_info "  1. Ensure Docker daemon is running"
+            print_info "  2. Check Docker permissions for current user"
+        fi
+        
         return 1
     fi
 }
