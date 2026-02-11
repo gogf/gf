@@ -1,7 +1,7 @@
 [English](README.MD) | 简体中文
 
 <div align=center>
-<img src="https://goframe.org/img/logo_full.png" width="300" alt="goframe gf logo"/>
+<img src="https://goframe.org/img/logo_full.png" width="300" alt="goframe logo"/>
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/gogf/gf/v2.svg)](https://pkg.go.dev/github.com/gogf/gf/v2)
 [![GoFrame CI](https://github.com/gogf/gf/actions/workflows/ci-main.yml/badge.svg)](https://github.com/gogf/gf/actions/workflows/ci-main.yml)
@@ -23,7 +23,7 @@
 
 </div>
 
-一个强大的框架，为了更快、更轻松、更高效的项目开发。
+一款强大的框架，为了更快、更轻松、更高效的项目开发。
 
 ## 安装
 
@@ -51,4 +51,4 @@ go get -u github.com/gogf/gf/v2
 
 ## 许可证
 
-`GoFrame` 采用 [MIT License](LICENSE) 许可，100% 免费和开源，永久保持。
+`GoFrame` 采用 [MIT License](LICENSE) 许可，100%开源和免费。
