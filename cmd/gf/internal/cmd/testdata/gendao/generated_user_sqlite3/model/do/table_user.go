@@ -18,4 +18,7 @@ type TableUser struct {
 	Nickname  any         //
 	CreatedAt *gtime.Time //
 	UpdatedAt *gtime.Time //
+	Email     any         //
+	Status    any         //
+	Height    any         //
 }
