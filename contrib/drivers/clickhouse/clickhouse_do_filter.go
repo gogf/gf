@@ -73,13 +73,11 @@ func (d *Driver) DoFilter(
 		}
 		return newSql, args, nil
 
+	default:
+		return originSql, args, nil
 	}
-	return originSql, args, nil
 }
 
 func (d *Driver) getNeedParsedSqlFromCtx(ctx context.Context) bool {
-	if ctx.Value(needParsedSqlInCtx) != nil {
-		return true
-	}
-	return false
+	return ctx.Value(needParsedSqlInCtx) != nil
 }

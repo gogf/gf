@@ -162,12 +162,12 @@ type iTree interface {
 	IteratorDescFrom(key any, match bool, f func(key, value any) bool)
 }
 
-// iteratorFromGetIndex returns the index of the key in the keys slice.
+// iteratorFromGetIndexT returns the index of the key in the keys slice.
 //
 // The parameter `match` specifies whether starting iterating only if the `key` is fully matched,
 // or else using index searching iterating.
 // If `isIterator` is true, iterator is available; or else not.
-func iteratorFromGetIndex(key any, keys []any, match bool) (index int, canIterator bool) {
+func iteratorFromGetIndexT[T comparable](key T, keys []T, match bool) (index int, canIterator bool) {
 	if match {
 		for i, k := range keys {
 			if k == key {
@@ -176,10 +176,19 @@ func iteratorFromGetIndex(key any, keys []any, match bool) (index int, canIterat
 			}
 		}
 	} else {
-		if i, ok := key.(int); ok {
+		if i, ok := any(key).(int); ok {
 			canIterator = true
 			index = i
 		}
 	}
 	return
+}
+
+// iteratorFromGetIndex returns the index of the key in the keys slice.
+//
+// The parameter `match` specifies whether starting iterating only if the `key` is fully matched,
+// or else using index searching iterating.
+// If `isIterator` is true, iterator is available; or else not.
+func iteratorFromGetIndex(key any, keys []any, match bool) (index int, canIterator bool) {
+	return iteratorFromGetIndexT(key, keys, match)
 }

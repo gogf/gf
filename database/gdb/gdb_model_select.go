@@ -56,6 +56,9 @@ func (m *Model) AllAndCount(useFieldForCount bool) (result Result, totalCount in
 	if !useFieldForCount {
 		countModel.fields = []any{Raw("1")}
 	}
+	if len(m.pageCacheOption) > 0 {
+		countModel = countModel.Cache(m.pageCacheOption[0])
+	}
 
 	// Get the total count of records
 	totalCount, err = countModel.Count()
@@ -68,8 +71,13 @@ func (m *Model) AllAndCount(useFieldForCount bool) (result Result, totalCount in
 		return
 	}
 
+	resultModel := m.Clone()
+	if len(m.pageCacheOption) > 1 {
+		resultModel = resultModel.Cache(m.pageCacheOption[1])
+	}
+
 	// Retrieve all records
-	result, err = m.doGetAll(m.GetCtx(), SelectTypeDefault, false)
+	result, err = resultModel.doGetAll(m.GetCtx(), SelectTypeDefault, false)
 	return
 }
 
@@ -337,7 +345,9 @@ func (m *Model) ScanAndCount(pointer any, totalCount *int, useFieldForCount bool
 	if !useFieldForCount {
 		countModel.fields = []any{Raw("1")}
 	}
-
+	if len(m.pageCacheOption) > 0 {
+		countModel = countModel.Cache(m.pageCacheOption[0])
+	}
 	// Get the total count of records
 	*totalCount, err = countModel.Count()
 	if err != nil {
@@ -348,7 +358,11 @@ func (m *Model) ScanAndCount(pointer any, totalCount *int, useFieldForCount bool
 	if *totalCount == 0 {
 		return
 	}
-	err = m.Scan(pointer)
+	scanModel := m.Clone()
+	if len(m.pageCacheOption) > 1 {
+		scanModel = scanModel.Cache(m.pageCacheOption[1])
+	}
+	err = scanModel.Scan(pointer)
 	return
 }
 
@@ -710,8 +724,12 @@ func (m *Model) getFormattedSqlAndArgs(
 		}
 		// Raw SQL Model.
 		if m.rawSql != "" {
-			sqlWithHolder = fmt.Sprintf("SELECT %s FROM (%s) AS T", queryFields, m.rawSql)
-			return sqlWithHolder, nil
+			conditionWhere, conditionExtra, conditionArgs := m.formatCondition(ctx, false, true)
+			sqlWithHolder = fmt.Sprintf(
+				"SELECT %s FROM (%s%s) AS T",
+				queryFields, m.rawSql, conditionWhere+conditionExtra,
+			)
+			return sqlWithHolder, conditionArgs
 		}
 		conditionWhere, conditionExtra, conditionArgs := m.formatCondition(ctx, false, true)
 		sqlWithHolder = fmt.Sprintf("SELECT %s FROM %s%s", queryFields, m.tables, conditionWhere+conditionExtra)
@@ -752,7 +770,7 @@ func (m *Model) getHolderAndArgsAsSubModel(ctx context.Context) (holder string, 
 func (m *Model) getAutoPrefix() string {
 	autoPrefix := ""
 	if gstr.Contains(m.tables, " JOIN ") {
-		autoPrefix = m.db.GetCore().QuoteWord(
+		autoPrefix = m.QuoteWord(
 			m.db.GetCore().guessPrimaryTableName(m.tablesInit),
 		)
 	}
@@ -762,7 +780,6 @@ func (m *Model) getAutoPrefix() string {
 func (m *Model) getFieldsAsStr() string {
 	var (
 		fieldsStr string
-		core      = m.db.GetCore()
 	)
 	for _, v := range m.fields {
 		field := gconv.String(v)
@@ -773,7 +790,7 @@ func (m *Model) getFieldsAsStr() string {
 			switch v.(type) {
 			case Raw, *Raw:
 			default:
-				field = core.QuoteString(field)
+				field = m.QuoteWord(field)
 			}
 		}
 		if fieldsStr != "" {
@@ -829,7 +846,7 @@ func (m *Model) getFieldsFiltered() string {
 		if len(newFields) > 0 {
 			newFields += ","
 		}
-		newFields += m.db.GetCore().QuoteWord(k)
+		newFields += m.QuoteWord(k)
 	}
 	return newFields
 }
@@ -848,7 +865,7 @@ func (m *Model) formatCondition(
 	}
 	// WHERE
 	conditionWhere, conditionArgs = m.whereBuilder.Build()
-	softDeletingCondition := m.softTimeMaintainer().GetWhereConditionForDelete(ctx)
+	softDeletingCondition := m.softTimeMaintainer().GetDeleteCondition(ctx)
 	if m.rawSql != "" && conditionWhere != "" {
 		if gstr.ContainsI(m.rawSql, " WHERE ") {
 			conditionWhere = " AND " + conditionWhere

@@ -23,11 +23,11 @@ import (
 
 // View object for template engine.
 type View struct {
-	searchPaths  *garray.StrArray // Searching array for path, NOT concurrent-safe for performance purpose.
-	data         map[string]any   // Global template variables.
-	funcMap      map[string]any   // Global template function map.
-	fileCacheMap *gmap.StrAnyMap  // File cache map.
-	config       Config           // Extra configuration for the view.
+	searchPaths  *garray.StrArray                    // Searching array for path, NOT concurrent-safe for performance purpose.
+	data         map[string]any                      // Global template variables.
+	funcMap      map[string]any                      // Global template function map.
+	fileCacheMap *gmap.KVMap[string, *fileCacheItem] // File cache map.
+	config       Config                              // Extra configuration for the view.
 }
 
 type (
@@ -41,7 +41,8 @@ const (
 
 var (
 	// Default view object.
-	defaultViewObj *View
+	defaultViewObj       *View
+	fileCacheItemChecker = func(v *fileCacheItem) bool { return v == nil }
 )
 
 // checkAndInitDefaultView checks and initializes the default view object.
@@ -69,7 +70,7 @@ func New(path ...string) *View {
 		searchPaths:  garray.NewStrArray(),
 		data:         make(map[string]any),
 		funcMap:      make(map[string]any),
-		fileCacheMap: gmap.NewStrAnyMap(true),
+		fileCacheMap: gmap.NewKVMapWithChecker[string, *fileCacheItem](fileCacheItemChecker, true),
 		config:       DefaultConfig(),
 	}
 	if len(path) > 0 && len(path[0]) > 0 {

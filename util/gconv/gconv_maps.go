@@ -17,6 +17,7 @@ func SliceMap(anyInput any, option ...MapOption) []map[string]any {
 }
 
 // SliceMapDeep is alias of MapsDeep.
+//
 // Deprecated: used SliceMap instead.
 func SliceMapDeep(anyInput any) []map[string]any {
 	return MapsDeep(anyInput)
@@ -43,6 +44,7 @@ func Maps(value any, option ...MapOption) []map[string]any {
 // MapsDeep converts `value` to []map[string]any recursively.
 //
 // TODO completely implement the recursive converting for all types.
+//
 // Deprecated: used Maps instead.
 func MapsDeep(value any, tags ...string) []map[string]any {
 	if value == nil {

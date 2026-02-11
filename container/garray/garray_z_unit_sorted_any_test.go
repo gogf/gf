@@ -939,24 +939,29 @@ func TestSortedArray_Filter(t *testing.T) {
 
 func TestSortedArray_FilterNil(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		values := g.Slice{0, 1, 2, 3, 4, "", g.Slice{}}
+		values := g.Slice{0, 1, 2, 3, 4, "", nil, g.Slice{}}
 		array := garray.NewSortedArrayFromCopy(values, gutil.ComparatorInt)
 		t.Assert(array.FilterNil().Slice(), g.Slice{0, "", g.Slice{}, 1, 2, 3, 4})
 	})
 	gtest.C(t, func(t *gtest.T) {
-		array := garray.NewSortedArrayFromCopy(g.Slice{nil, 1, 2, 3, 4, nil}, gutil.ComparatorInt)
+		array := garray.NewSortedArrayFromCopy(g.Slice{nil, 1, 2, nil, 3, 4, nil}, gutil.ComparatorInt)
 		t.Assert(array.FilterNil(), g.Slice{1, 2, 3, 4})
 	})
 }
 
 func TestSortedArray_FilterEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		array := garray.NewSortedArrayFrom(g.Slice{0, 1, 2, 3, 4, "", g.Slice{}}, gutil.ComparatorInt)
-		t.Assert(array.FilterEmpty(), g.Slice{1, 2, 3, 4})
+		array := garray.NewSortedArrayFrom(g.Slice{0, 1, 2, 0, -1, 3, 4, "", g.Slice{}}, gutil.ComparatorInt)
+		t.Assert(array.FilterEmpty(), g.Slice{-1, 1, 2, 3, 4})
 	})
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewSortedArrayFrom(g.Slice{1, 2, 3, 4}, gutil.ComparatorInt)
 		t.Assert(array.FilterEmpty(), g.Slice{1, 2, 3, 4})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		values := g.Slice{0, 1, 2, 3, 4, -1, -2, nil, []any{}, ""}
+		array := garray.NewSortedArrayFrom(values, gutil.ComparatorString)
+		t.Assert(array.FilterEmpty().Slice(), g.Slice{-1, -2, 1, 2, 3, 4})
 	})
 }
 

@@ -86,9 +86,9 @@ func Test_HTTP_Server(t *testing.T) {
 			fmt.Sprintf(`server_port="%d"`, s.GetListenedPort()),
 			expectContent,
 		)
-		//fmt.Println(metricsContent)
+		// fmt.Println(metricsContent)
 		for _, line := range gstr.SplitAndTrim(expectContent, "\n") {
-			//fmt.Println(line)
+			// fmt.Println(line)
 			t.Assert(gstr.Contains(metricsContent, line), true)
 		}
 	})

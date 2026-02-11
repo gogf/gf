@@ -113,19 +113,17 @@ func (c *Core) Close(ctx context.Context) (err error) {
 	if err = c.cache.Close(ctx); err != nil {
 		return err
 	}
-	c.links.LockFunc(func(m map[any]any) {
+	c.links.LockFunc(func(m map[ConfigNode]*sql.DB) {
 		for k, v := range m {
-			if db, ok := v.(*sql.DB); ok {
-				err = db.Close()
-				if err != nil {
-					err = gerror.WrapCode(gcode.CodeDbOperationError, err, `db.Close failed`)
-				}
-				intlog.Printf(ctx, `close link: %s, err: %v`, k, err)
-				if err != nil {
-					return
-				}
-				delete(m, k)
+			err = v.Close()
+			if err != nil {
+				err = gerror.WrapCode(gcode.CodeDbOperationError, err, `db.Close failed`)
 			}
+			intlog.Printf(ctx, `close link: %s, err: %v`, gconv.String(k), err)
+			if err != nil {
+				return
+			}
+			delete(m, k)
 		}
 	})
 	return
@@ -446,8 +444,10 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 	// Group the list by fields. Different fields to different list.
 	// It here uses ListMap to keep sequence for data inserting.
 	// ============================================================================================
-	var keyListMap = gmap.NewListMap()
-	var tmpkeyListMap = make(map[string]List)
+	var (
+		keyListMap    = gmap.NewListMap()
+		tmpKeyListMap = make(map[string]List)
+	)
 	for _, item := range list {
 		mapLen := len(item)
 		if mapLen == 0 {
@@ -463,13 +463,13 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		keys = tmpKeys // for fieldsToSequence
 
 		tmpKeysInSequenceStr := gstr.Join(tmpKeys, ",")
-		if tmpkeyListMapItem, ok := tmpkeyListMap[tmpKeysInSequenceStr]; ok {
-			tmpkeyListMap[tmpKeysInSequenceStr] = append(tmpkeyListMapItem, item)
+		if tmpKeyListMapItem, ok := tmpKeyListMap[tmpKeysInSequenceStr]; ok {
+			tmpKeyListMap[tmpKeysInSequenceStr] = append(tmpKeyListMapItem, item)
 		} else {
-			tmpkeyListMap[tmpKeysInSequenceStr] = List{item}
+			tmpKeyListMap[tmpKeysInSequenceStr] = List{item}
 		}
 	}
-	for tmpKeysInSequenceStr, itemList := range tmpkeyListMap {
+	for tmpKeysInSequenceStr, itemList := range tmpKeyListMap {
 		keyListMap.Set(tmpKeysInSequenceStr, itemList)
 	}
 	if keyListMap.Size() > 1 {
@@ -757,11 +757,35 @@ func (c *Core) GetInnerMemCache() *gcache.Cache {
 	return c.innerMemCache
 }
 
+func (c *Core) SetTableFields(ctx context.Context, table string, fields map[string]*TableField, schema ...string) error {
+	if table == "" {
+		return gerror.NewCode(gcode.CodeInvalidParameter, "table name cannot be empty")
+	}
+	charL, charR := c.db.GetChars()
+	table = gstr.Trim(table, charL+charR)
+	if gstr.Contains(table, " ") {
+		return gerror.NewCode(
+			gcode.CodeInvalidParameter,
+			"function TableFields supports only single table operations",
+		)
+	}
+	var (
+		innerMemCache = c.GetInnerMemCache()
+		// prefix:group@schema#table
+		cacheKey = genTableFieldsCacheKey(
+			c.db.GetGroup(),
+			gutil.GetOrDefaultStr(c.db.GetSchema(), schema...),
+			table,
+		)
+	)
+	return innerMemCache.Set(ctx, cacheKey, fields, gcache.DurationNoExpire)
+}
+
 // GetTablesWithCache retrieves and returns the table names of current database with cache.
 func (c *Core) GetTablesWithCache() ([]string, error) {
 	var (
 		ctx           = c.db.GetCtx()
-		cacheKey      = fmt.Sprintf(`Tables:%s`, c.db.GetGroup())
+		cacheKey      = genTableNamesCacheKey(c.db.GetGroup())
 		cacheDuration = gcache.DurationNoExpire
 		innerMemCache = c.GetInnerMemCache()
 	)
