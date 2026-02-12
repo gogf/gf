@@ -461,7 +461,6 @@ CREATE TABLE %s (
 			Order("uid asc").
 			ScanList(&users, "User")
 		t.AssertNil(err)
-		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(users[0].User, &EntityUser{3, "name_3"})
 		t.Assert(users[1].User, &EntityUser{4, "name_4"})
