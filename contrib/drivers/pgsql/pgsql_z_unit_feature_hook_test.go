@@ -167,7 +167,7 @@ func Test_Model_Hook_Chain(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	// Normal chain: two hooks both modify data
+	// Hook replacement: the last Hook replaces the previous one
 	gtest.C(t, func(t *gtest.T) {
 		m := db.Model(table).Hook(gdb.HookHandler{
 			Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
