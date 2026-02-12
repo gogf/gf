@@ -56,7 +56,7 @@ CREATE TABLE %s (
 		// For time asserting purpose.
 		time.Sleep(2 * time.Second)
 
-		// Save (PostgreSQL uses OnConflict instead of REPLACE)
+		// Save (GaussDB uses OnConflict instead of REPLACE)
 		dataSave := g.Map{
 			"id":   1,
 			"name": "name_10",
@@ -999,10 +999,10 @@ CREATE TABLE %s (
 	})
 }
 
-// FIXME: PostgreSQL boolean type soft delete is not supported yet.
+// FIXME: GaussDB boolean type soft delete is not supported yet.
 // The framework generates "delete_at=0" condition for soft delete query,
-// but PostgreSQL boolean cannot compare with integer directly.
-// Uncomment this test after the framework supports PostgreSQL boolean soft delete.
+// but GaussDB boolean cannot compare with integer directly.
+// Uncomment this test after the framework supports GaussDB boolean soft delete.
 //
 // func Test_SoftTime_CreateUpdateDelete_Bool_Deleted(t *testing.T) {
 // 	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
@@ -1062,10 +1062,10 @@ CREATE TABLE %s (
 // 	})
 // }
 
-// FIXME: PostgreSQL boolean type soft delete is not supported yet.
+// FIXME: GaussDB boolean type soft delete is not supported yet.
 // The framework generates "delete_at=0" condition for soft delete query,
-// but PostgreSQL boolean cannot compare with integer directly.
-// Uncomment this test after the framework supports PostgreSQL boolean soft delete.
+// but GaussDB boolean cannot compare with integer directly.
+// Uncomment this test after the framework supports GaussDB boolean soft delete.
 //
 // func Test_SoftTime_CreateUpdateDelete_Option_SoftTimeTypeTimestampMilli(t *testing.T) {
 // 	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
@@ -1126,10 +1126,10 @@ CREATE TABLE %s (
 // 	})
 // }
 
-// FIXME: PostgreSQL boolean type soft delete is not supported yet.
+// FIXME: GaussDB boolean type soft delete is not supported yet.
 // The framework generates "delete_at=0" condition for soft delete query,
-// but PostgreSQL boolean cannot compare with integer directly.
-// Uncomment this test after the framework supports PostgreSQL boolean soft delete.
+// but GaussDB boolean cannot compare with integer directly.
+// Uncomment this test after the framework supports GaussDB boolean soft delete.
 //
 // func Test_SoftTime_CreateUpdateDelete_Option_SoftTimeTypeTimestampNano(t *testing.T) {
 // 	table := "soft_time_test_table_" + gtime.TimestampNanoStr()
