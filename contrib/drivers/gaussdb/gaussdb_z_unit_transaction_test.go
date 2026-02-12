@@ -39,7 +39,7 @@ func Test_TX_Query(t *testing.T) {
 		t.AssertNil(err)
 	})
 
-	// Test error query - in PostgreSQL, once a statement fails,
+	// Test error query - in GaussDB, once a statement fails,
 	// the transaction is aborted and must be rolled back
 	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin(ctx)
@@ -72,7 +72,7 @@ func Test_TX_Exec(t *testing.T) {
 		t.AssertNil(err)
 	})
 
-	// Test error exec - in PostgreSQL, once a statement fails,
+	// Test error exec - in GaussDB, once a statement fails,
 	// the transaction is aborted and must be rolled back
 	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin(ctx)
@@ -1527,7 +1527,7 @@ func Test_Transaction_ReadOnly(t *testing.T) {
 }
 
 func Test_Transaction_Isolation_ReadCommitted(t *testing.T) {
-	// PgSQL default isolation level is READ COMMITTED.
+	// GaussDB default isolation level is READ COMMITTED.
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitTable()
 		defer dropTable(table)
@@ -1614,7 +1614,7 @@ func Test_Transaction_Isolation_RepeatableRead(t *testing.T) {
 }
 
 func Test_Transaction_Isolation_Serializable(t *testing.T) {
-	// PgSQL uses SSI (Serializable Snapshot Isolation) for SERIALIZABLE level.
+	// GaussDB uses SSI (Serializable Snapshot Isolation) for SERIALIZABLE level.
 	// Concurrent writes to the same data may cause serialization failures.
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitTable()
@@ -1642,7 +1642,7 @@ func Test_Transaction_Isolation_Serializable(t *testing.T) {
 				})
 				return err
 			})
-			// Note: PostgreSQL SSI may or may not cause serialization failure
+			// Note: GaussDB SSI may or may not cause serialization failure
 			// depending on timing and whether there's an actual conflict.
 			// For new rows with unique IDs, it typically succeeds.
 			// We only verify the outer transaction completes.
