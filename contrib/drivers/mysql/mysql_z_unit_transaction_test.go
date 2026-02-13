@@ -2579,9 +2579,9 @@ func Test_Transaction_Large_Batch_Update(t *testing.T) {
 		_, err := db.Insert(ctx, table, data)
 		t.AssertNil(err)
 
-		// Update all records in transaction
+		// Update all records in transaction (WHERE required for safety)
 		err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
-			_, err := tx.Model(table).Update(g.Map{"nickname": "updated"})
+			_, err := tx.Model(table).Where("id > ?", 0).Update(g.Map{"nickname": "updated"})
 			return err
 		})
 		t.AssertNil(err)
