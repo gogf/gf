@@ -1949,3 +1949,64 @@ func Test_Issue4500(t *testing.T) {
 		t.Assert(len(all), 3)
 	})
 }
+
+// https://github.com/gogf/gf/issues/4698
+func Test_Issue4698(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	// Test 1: AllAndCount with multiple fields should generate valid COUNT SQL
+	gtest.C(t, func(t *gtest.T) {
+		// Bug: AllAndCount(true) with Fields("id, nickname") generates COUNT(id, nickname)
+		// Fix: Should always generate COUNT(1) or COUNT(*) regardless of fields
+		result, count, err := db.Model(table).Fields("id, nickname").AllAndCount(true)
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+		t.Assert(len(result), TableSize)
+		// Verify result only contains specified fields
+		t.AssertNE(result[0]["id"], nil)
+		t.AssertNE(result[0]["nickname"], nil)
+		t.Assert(result[0]["passport"], nil) // passport should not be in result
+	})
+
+	// Test 2: AllAndCount(false) with multiple fields - already worked but verify
+	gtest.C(t, func(t *gtest.T) {
+		result, count, err := db.Model(table).Fields("id, nickname").AllAndCount(false)
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+		t.Assert(len(result), TableSize)
+	})
+
+	// Test 3: ScanAndCount with multiple fields should also work
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id       int
+			Nickname string
+		}
+		var users []User
+		var total int
+		err := db.Model(table).Fields("id, nickname").ScanAndCount(&users, &total, true)
+		t.AssertNil(err)
+		t.Assert(total, TableSize)
+		t.Assert(len(users), TableSize)
+		t.AssertGT(users[0].Id, 0)
+		t.AssertNE(users[0].Nickname, "")
+	})
+
+	// Test 4: AllAndCount with single field - should still work
+	gtest.C(t, func(t *gtest.T) {
+		result, count, err := db.Model(table).Fields("id").AllAndCount(true)
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+		t.Assert(len(result), TableSize)
+		t.Assert(len(result[0]), 1) // Only id field
+	})
+
+	// Test 5: AllAndCount with Where condition
+	gtest.C(t, func(t *gtest.T) {
+		result, count, err := db.Model(table).Fields("id, nickname").Where("id<?", 5).AllAndCount(true)
+		t.AssertNil(err)
+		t.Assert(count, 4) // id 1,2,3,4
+		t.Assert(len(result), 4)
+	})
+}
