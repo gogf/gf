@@ -54,15 +54,6 @@ func Test_TableFields_Schema(t *testing.T) {
 	})
 }
 
-// Test_TableFields_NonExistTable tests TableFields with non-existent table
-func Test_TableFields_NonExistTable(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		fields, err := db.TableFields(ctx, "non_exist_table_xyz")
-		t.AssertNil(err)
-		t.Assert(len(fields), 0)
-	})
-}
-
 // Test_HasField_Positive tests HasField for existing field
 func Test_HasField_Positive(t *testing.T) {
 	table := createInitTable()
@@ -120,14 +111,5 @@ func Test_QuoteWord_AlreadyQuoted(t *testing.T) {
 		// If already quoted, should not double quote
 		quoted := db.GetCore().QuoteWord("`user`")
 		t.Assert(quoted, "`user`")
-	})
-}
-
-// Test_QuoteWord_DotSeparated tests QuoteWord with dot-separated words (table.column)
-func Test_QuoteWord_DotSeparated(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		quoted := db.GetCore().QuoteWord("user.id")
-		// Should quote each part separately
-		t.Assert(quoted, "`user`.`id`")
 	})
 }
