@@ -1918,14 +1918,14 @@ func Test_Transaction_Deadlock_TwoTables(t *testing.T) {
 		defer dropTable(table1)
 		defer dropTable(table2)
 
-		var (
-			tx1Err error
-			tx2Err error
-		)
+		var wg sync.WaitGroup
+		errs := make([]error, 2)
 
 		// Transaction 1: lock table1 then table2
+		wg.Add(1)
 		go func() {
-			tx1Err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			defer wg.Done()
+			errs[0] = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 				_, err := tx.Update(table1, g.Map{"passport": "tx1_lock"}, "id=1")
 				if err != nil {
 					return err
@@ -1937,9 +1937,11 @@ func Test_Transaction_Deadlock_TwoTables(t *testing.T) {
 		}()
 
 		// Transaction 2: lock table2 then table1
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			time.Sleep(50 * time.Millisecond)
-			tx2Err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			errs[1] = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 				_, err := tx.Update(table2, g.Map{"passport": "tx2_lock"}, "id=1")
 				if err != nil {
 					return err
@@ -1951,10 +1953,10 @@ func Test_Transaction_Deadlock_TwoTables(t *testing.T) {
 		}()
 
 		// Wait for both transactions to complete
-		time.Sleep(500 * time.Millisecond)
+		wg.Wait()
 
 		// At least one transaction should fail due to deadlock
-		t.Assert(tx1Err != nil || tx2Err != nil, true)
+		t.Assert(errs[0] != nil || errs[1] != nil, true)
 	})
 }
 
@@ -1964,14 +1966,14 @@ func Test_Transaction_Deadlock_SameTable(t *testing.T) {
 		table := createInitTable()
 		defer dropTable(table)
 
-		var (
-			tx1Err error
-			tx2Err error
-		)
+		var wg sync.WaitGroup
+		errs := make([]error, 2)
 
 		// Transaction 1: lock id=1 then id=2
+		wg.Add(1)
 		go func() {
-			tx1Err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			defer wg.Done()
+			errs[0] = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 				_, err := tx.Update(table, g.Map{"nickname": "tx1"}, "id=1")
 				if err != nil {
 					return err
@@ -1983,9 +1985,11 @@ func Test_Transaction_Deadlock_SameTable(t *testing.T) {
 		}()
 
 		// Transaction 2: lock id=2 then id=1
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			time.Sleep(50 * time.Millisecond)
-			tx2Err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			errs[1] = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 				_, err := tx.Update(table, g.Map{"nickname": "tx2"}, "id=2")
 				if err != nil {
 					return err
@@ -1997,10 +2001,10 @@ func Test_Transaction_Deadlock_SameTable(t *testing.T) {
 		}()
 
 		// Wait for both transactions to complete
-		time.Sleep(500 * time.Millisecond)
+		wg.Wait()
 
 		// At least one transaction should fail due to deadlock
-		t.Assert(tx1Err != nil || tx2Err != nil, true)
+		t.Assert(errs[0] != nil || errs[1] != nil, true)
 	})
 }
 
