@@ -615,12 +615,22 @@ func (m *Model) UnionAll(unions ...*Model) *Model {
 // The parameter `limit` can be either one or two number, if passed two number is passed,
 // it then sets "LIMIT limit[0],limit[1]" statement for the model, or else it sets "LIMIT limit[0]"
 // statement.
+// Note: Negative values are treated as zero.
 func (m *Model) Limit(limit ...int) *Model {
 	model := m.getModel()
 	switch len(limit) {
 	case 1:
+		if limit[0] < 0 {
+			limit[0] = 0
+		}
 		model.limit = limit[0]
 	case 2:
+		if limit[0] < 0 {
+			limit[0] = 0
+		}
+		if limit[1] < 0 {
+			limit[1] = 0
+		}
 		model.start = limit[0]
 		model.limit = limit[1]
 	}
@@ -629,8 +639,12 @@ func (m *Model) Limit(limit ...int) *Model {
 
 // Offset sets the "OFFSET" statement for the model.
 // It only makes sense for some databases like SQLServer, PostgreSQL, etc.
+// Note: Negative values are treated as zero.
 func (m *Model) Offset(offset int) *Model {
 	model := m.getModel()
+	if offset < 0 {
+		offset = 0
+	}
 	model.offset = offset
 	return model
 }
@@ -645,10 +659,14 @@ func (m *Model) Distinct() *Model {
 // Page sets the paging number for the model.
 // The parameter `page` is started from 1 for paging.
 // Note that, it differs that the Limit function starts from 0 for "LIMIT" statement.
+// Note: Negative limit values are treated as zero.
 func (m *Model) Page(page, limit int) *Model {
 	model := m.getModel()
 	if page <= 0 {
 		page = 1
+	}
+	if limit < 0 {
+		limit = 0
 	}
 	model.start = (page - 1) * limit
 	model.limit = limit
