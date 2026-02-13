@@ -52,10 +52,9 @@ func (m *Model) AllAndCount(useFieldForCount bool) (result Result, totalCount in
 	// Clone the model for counting
 	countModel := m.Clone()
 
-	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
-	if !useFieldForCount {
-		countModel.fields = []any{Raw("1")}
-	}
+	// Always use COUNT(1) for counting, regardless of useFieldForCount.
+	// COUNT() accepts only one argument, so we can't use multiple fields.
+	countModel.fields = []any{Raw("1")}
 	if len(m.pageCacheOption) > 0 {
 		countModel = countModel.Cache(m.pageCacheOption[0])
 	}
@@ -341,10 +340,9 @@ func (m *Model) Scan(pointer any, where ...any) error {
 func (m *Model) ScanAndCount(pointer any, totalCount *int, useFieldForCount bool) (err error) {
 	// support Fields with *, example: .Fields("a.*, b.name"). Count sql is select count(1) from xxx
 	countModel := m.Clone()
-	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
-	if !useFieldForCount {
-		countModel.fields = []any{Raw("1")}
-	}
+	// Always use COUNT(1) for counting, regardless of useFieldForCount.
+	// COUNT() accepts only one argument, so we can't use multiple fields.
+	countModel.fields = []any{Raw("1")}
 	if len(m.pageCacheOption) > 0 {
 		countModel = countModel.Cache(m.pageCacheOption[0])
 	}
