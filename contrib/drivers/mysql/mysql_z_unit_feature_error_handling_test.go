@@ -184,7 +184,7 @@ func Test_Model_Fields_Empty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).Fields("").Limit(1).All()
 		t.AssertNil(err)
-		t.Assert(len(result) <= 1)
+		t.AssertLE(len(result), 1)
 	})
 }
 
