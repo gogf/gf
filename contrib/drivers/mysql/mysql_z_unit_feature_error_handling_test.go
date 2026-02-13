@@ -71,31 +71,27 @@ func Test_Model_Update_EmptyData(t *testing.T) {
 	})
 }
 
-// Test_Model_Update_NoWhere tests Update without WHERE clause
+// Test_Model_Update_NoWhere tests Update without WHERE clause is rejected by framework
 func Test_Model_Update_NoWhere(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		// Update all records without WHERE should work but is risky
-		result, err := db.Model(table).Data(g.Map{"nickname": "updated"}).Update()
-		t.AssertNil(err)
-		n, _ := result.RowsAffected()
-		t.Assert(n, TableSize)
+		// Framework safety check: Update without WHERE should return error
+		_, err := db.Model(table).Data(g.Map{"nickname": "updated"}).Update()
+		t.AssertNE(err, nil)
 	})
 }
 
-// Test_Model_Delete_NoWhere tests Delete without WHERE clause
+// Test_Model_Delete_NoWhere tests Delete without WHERE clause is rejected by framework
 func Test_Model_Delete_NoWhere(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		// Delete all records without WHERE should work
-		result, err := db.Model(table).Delete()
-		t.AssertNil(err)
-		n, _ := result.RowsAffected()
-		t.Assert(n, TableSize)
+		// Framework safety check: Delete without WHERE should return error
+		_, err := db.Model(table).Delete()
+		t.AssertNE(err, nil)
 	})
 }
 
@@ -131,11 +127,19 @@ func Test_Model_Scan_EmptyResult(t *testing.T) {
 		Id int
 	}
 
+	// Scan initialized struct with empty result returns sql.ErrNoRows
 	gtest.C(t, func(t *gtest.T) {
 		var user User
 		err := db.Model(table).Where("id > ?", 1000).Scan(&user)
+		t.AssertNE(err, nil)
+	})
+
+	// Scan nil pointer with empty result returns nil error
+	gtest.C(t, func(t *gtest.T) {
+		var user *User
+		err := db.Model(table).Where("id > ?", 1000).Scan(&user)
 		t.AssertNil(err)
-		t.Assert(user.Id, 0) // Should be zero value
+		t.Assert(user, nil)
 	})
 }
 
@@ -184,7 +188,7 @@ func Test_Model_Fields_Empty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).Fields("").Limit(1).All()
 		t.AssertNil(err)
-		t.Assert(len(result) <= 1)
+		t.AssertLE(len(result), 1)
 	})
 }
 
@@ -200,8 +204,8 @@ func Test_Model_Order_InvalidSyntax(t *testing.T) {
 	})
 }
 
-// Test_Model_Group_InvalidSyntax tests Group with invalid syntax
-func Test_Model_Group_InvalidSyntax(t *testing.T) {
+// Test_Model_Group_UnknownColumn tests Group with non-existent column
+func Test_Model_Group_UnknownColumn(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
@@ -234,17 +238,20 @@ func Test_Model_SQLInjection_Where(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		// Attempt SQL injection through parameter
+		// Attempt SQL injection through string column parameter.
+		// Using string column `nickname` instead of int column `id`,
+		// because MySQL coerces "1 OR 1=1" to 1 for int columns.
 		maliciousInput := "1 OR 1=1"
-		result, err := db.Model(table).Where("id = ?", maliciousInput).All()
+		result, err := db.Model(table).Where("nickname = ?", maliciousInput).All()
 		t.AssertNil(err)
 		t.Assert(len(result), 0) // Should not return all records
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		// Attempt SQL injection with quotes
+		// Attempt SQL injection with quotes, using string column to avoid
+		// MySQL implicit int conversion (which would coerce "1'..." to 1)
 		maliciousInput := "1'; DROP TABLE " + table + "; --"
-		result, err := db.Model(table).Where("id = ?", maliciousInput).All()
+		result, err := db.Model(table).Where("nickname = ?", maliciousInput).All()
 		t.AssertNil(err)
 		t.Assert(len(result), 0)
 		// Table should still exist

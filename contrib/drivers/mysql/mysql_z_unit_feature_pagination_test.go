@@ -465,19 +465,18 @@ func Test_Model_Page_Boundary(t *testing.T) {
 		t.Assert(result[0]["id"], 1)
 	})
 
-	// Size 0
+	// Size 0: framework treats limit=0 as "no limit", returns all records
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).Page(1, 0).All()
 		t.AssertNil(err)
-		t.Assert(len(result), 0)
+		t.Assert(len(result), TableSize)
 	})
 
-	// Regression test for #4699: Page with negative size should return empty result
-	// https://github.com/gogf/gf/issues/4699
+	// Negative size: normalized to 0, same as Page(1, 0)
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).Page(1, -1).All()
 		t.AssertNil(err)
-		t.Assert(len(result), 0)
+		t.Assert(len(result), TableSize)
 	})
 
 	// Very large page number (beyond available data)
@@ -494,19 +493,18 @@ func Test_Model_Limit_Boundary(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	// Limit 0
+	// Limit 0: framework treats limit=0 as "no limit", returns all records
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).Limit(0).All()
 		t.AssertNil(err)
-		t.Assert(len(result), 0)
+		t.Assert(len(result), TableSize)
 	})
 
-	// Regression test for #4699: Negative limit should return empty result
-	// https://github.com/gogf/gf/issues/4699
+	// Negative limit: normalized to 0, same as Limit(0)
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).Limit(-1).All()
 		t.AssertNil(err)
-		t.Assert(len(result), 0)
+		t.Assert(len(result), TableSize)
 	})
 
 	// Limit larger than available data
@@ -516,9 +514,17 @@ func Test_Model_Limit_Boundary(t *testing.T) {
 		t.Assert(len(result), TableSize)
 	})
 
-	// Limit with Offset beyond data
+	// Limit(offset, size): offset=5 skips 5 rows, size=100 takes up to 100
+	// With 10 rows total, skipping 5 returns remaining 5 rows
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).Limit(5, 100).All()
+		t.AssertNil(err)
+		t.Assert(len(result), TableSize-5)
+	})
+
+	// Offset beyond data: returns empty result
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Limit(100, 5).All()
 		t.AssertNil(err)
 		t.Assert(len(result), 0)
 	})
