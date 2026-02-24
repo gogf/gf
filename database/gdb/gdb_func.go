@@ -981,17 +981,6 @@ func FormatMultiLineSqlToSingle(sql string) (string, error) {
 	return sql, nil
 }
 
-// genTableFieldsCacheKey generates cache key for table fields.
-func genTableFieldsCacheKey(group, schema, table string) string {
-	return fmt.Sprintf(
-		`%s%s@%s#%s`,
-		cachePrefixTableFields,
-		group,
-		schema,
-		table,
-	)
-}
-
 // genSelectCacheKey generates cache key for select.
 func genSelectCacheKey(table, group, schema, name, sql string, args ...any) string {
 	if name == "" {
@@ -1004,14 +993,4 @@ func genSelectCacheKey(table, group, schema, name, sql string, args ...any) stri
 		)
 	}
 	return fmt.Sprintf(`%s%s`, cachePrefixSelectCache, name)
-}
-
-// genTableNamesCacheKey generates cache key for table names.
-func genTableNamesCacheKey(group string) string {
-	return fmt.Sprintf(`Tables:%s`, group)
-}
-
-// genSoftTimeFieldNameTypeCacheKey generates cache key for soft time field name and type.
-func genSoftTimeFieldNameTypeCacheKey(schema, table string, candidateFields []string) string {
-	return fmt.Sprintf(`getSoftFieldNameAndType:%s#%s#%s`, schema, table, strings.Join(candidateFields, "_"))
 }

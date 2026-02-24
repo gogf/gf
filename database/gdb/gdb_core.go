@@ -23,7 +23,6 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/internal/utils"
-	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -736,27 +735,28 @@ func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
 	}
 }
 
-// HasTable determine whether the table name exists in the database.
-func (c *Core) HasTable(name string) (bool, error) {
-	tables, err := c.GetTablesWithCache()
+// HasTable determines whether the table name exists in the database.
+// The optional schema parameter specifies which schema to check; if omitted the default schema for the current database connection is used.
+// Lookup is O(1) via the schema registry.
+func (c *Core) HasTable(name string, schema ...string) (bool, error) {
+	schemaName := gutil.GetOrDefaultStr(c.db.GetSchema(), schema...)
+	charL, charR := c.db.GetChars()
+	name = gstr.Trim(name, charL+charR)
+
+	reg := c.db.GetCore().registry
+	if reg.HasTable(c.db.GetGroup(), schemaName, name) {
+		return true, nil
+	}
+	// Registry not populated yet: fall back to loading all table names from DB.
+	_, err := c.GetTablesWithCache(schema...)
 	if err != nil {
 		return false, err
 	}
-	charL, charR := c.db.GetChars()
-	name = gstr.Trim(name, charL+charR)
-	for _, table := range tables {
-		if table == name {
-			return true, nil
-		}
-	}
-	return false, nil
+	return reg.HasTable(c.db.GetGroup(), schemaName, name), nil
 }
 
-// GetInnerMemCache retrieves and returns the inner memory cache object.
-func (c *Core) GetInnerMemCache() *gcache.Cache {
-	return c.innerMemCache
-}
-
+// SetTableFields stores pre-built table field metadata into the registry.
+// It is used by generated dao code to inject field information at startup.
 func (c *Core) SetTableFields(ctx context.Context, table string, fields map[string]*TableField, schema ...string) error {
 	if table == "" {
 		return gerror.NewCode(gcode.CodeInvalidParameter, "table name cannot be empty")
@@ -769,40 +769,40 @@ func (c *Core) SetTableFields(ctx context.Context, table string, fields map[stri
 			"function TableFields supports only single table operations",
 		)
 	}
-	var (
-		innerMemCache = c.GetInnerMemCache()
-		// prefix:group@schema#table
-		cacheKey = genTableFieldsCacheKey(
-			c.db.GetGroup(),
-			gutil.GetOrDefaultStr(c.db.GetSchema(), schema...),
-			table,
-		)
+	c.db.GetCore().registry.Set(
+		c.db.GetGroup(),
+		gutil.GetOrDefaultStr(c.db.GetSchema(), schema...),
+		table,
+		fields,
 	)
-	return innerMemCache.Set(ctx, cacheKey, fields, gcache.DurationNoExpire)
+	return nil
 }
 
-// GetTablesWithCache retrieves and returns the table names of current database with cache.
-func (c *Core) GetTablesWithCache() ([]string, error) {
+// GetTablesWithCache retrieves and returns the table names for the current database,
+// using the registry as a cache. The optional schema parameter specifies which
+// schema to query; if omitted the default schema is used.
+//
+// On first call the DB is queried for all table names and the results are stored
+// in the registry as existence markers. Subsequent calls return registry data directly.
+func (c *Core) GetTablesWithCache(schema ...string) ([]string, error) {
 	var (
-		ctx           = c.db.GetCtx()
-		cacheKey      = genTableNamesCacheKey(c.db.GetGroup())
-		cacheDuration = gcache.DurationNoExpire
-		innerMemCache = c.GetInnerMemCache()
+		group      = c.db.GetGroup()
+		schemaName = gutil.GetOrDefaultStr(c.db.GetSchema(), schema...)
+		reg        = c.db.GetCore().registry
 	)
-	result, err := innerMemCache.GetOrSetFuncLock(
-		ctx, cacheKey,
-		func(ctx context.Context) (any, error) {
-			tableList, err := c.db.Tables(ctx)
-			if err != nil {
-				return nil, err
-			}
-			return tableList, nil
-		}, cacheDuration,
-	)
+	// Return from registry if we already have any tables registered for this group+schema.
+	if tables := reg.Tables(group, schemaName); len(tables) > 0 {
+		return tables, nil
+	}
+	// Query DB and populate registry as existence markers.
+	ctx := c.db.GetCtx()
+	tableList, err := c.db.Tables(ctx, schema...)
 	if err != nil {
 		return nil, err
 	}
-	return result.Strings(), nil
+	// Batch register all tables with a single lock acquisition.
+	reg.Sets(group, schemaName, tableList)
+	return tableList, nil
 }
 
 // IsSoftCreatedFieldName checks and returns whether given field name is an automatic-filled created time.
