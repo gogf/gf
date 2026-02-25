@@ -141,14 +141,15 @@ func (c *Core) TableFields(ctx context.Context, table string, schema ...string) 
 	return
 }
 
-// ClearTableFields removes the cached fields for the specified table.
-// This clears ALL schema metadata for that table (fields, soft-delete field derivations)
-// since the registry is the single source of truth for all schema metadata.
+// ClearTableFields clears the cached field data for the specified table so that the
+// next call to TableFields re-queries the database. The table's existence marker is
+// preserved so that HasTable continues to return true without a DB round-trip.
 func (c *Core) ClearTableFields(ctx context.Context, table string, schema ...string) (err error) {
-	c.db.GetCore().registry.Delete(
+	c.db.GetCore().registry.Set(
 		c.db.GetGroup(),
 		gutil.GetOrDefaultStr(c.db.GetSchema(), schema...),
 		table,
+		nil,
 	)
 	return
 }

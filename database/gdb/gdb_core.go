@@ -790,8 +790,8 @@ func (c *Core) GetTablesWithCache(schema ...string) ([]string, error) {
 		schemaName = gutil.GetOrDefaultStr(c.db.GetSchema(), schema...)
 		reg        = c.db.GetCore().registry
 	)
-	// Return from registry if we already have any tables registered for this group+schema.
-	if tables := reg.Tables(group, schemaName); len(tables) > 0 {
+	// Return from registry if the full table name list has already been loaded for this group+schema.
+	if tables, loaded := reg.GetLoadedSchemaTables(group, schemaName); loaded {
 		return tables, nil
 	}
 	// Query DB and populate registry as existence markers.

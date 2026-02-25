@@ -527,7 +527,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 		)
 		// If `Prefix` is given, it checks and retrieves the table name.
 		if in.Prefix != "" {
-			hasTable, _ := db.GetCore().HasTable(in.Prefix)
+			hasTable, _ := db.GetCore().HasTable(in.Prefix, in.Schema)
 			if hasTable {
 				in.Table = in.Prefix
 			} else {
