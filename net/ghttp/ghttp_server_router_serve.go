@@ -132,35 +132,29 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*Han
 			continue
 		}
 		// Make a list array with a capacity of 16.
-		lists := make([]*glist.List, 0, 16)
+		lists := make([]*glist.TList[*HandlerItem], 0, 16)
 		for i, part := range array {
 			// Add all lists of each node to the list array.
-			if v, ok := p.(map[string]any)["*list"]; ok {
-				lists = append(lists, v.(*glist.List))
-			}
-			if v, ok := p.(map[string]any)[part]; ok {
+			lists = p.appendList(lists)
+			if child, ok := p.children[part]; ok {
 				// Loop to the next node by certain key name.
-				p = v
+				p = child
 				if i == len(array)-1 {
-					if v, ok := p.(map[string]any)["*list"]; ok {
-						lists = append(lists, v.(*glist.List))
-						break
-					}
+					lists = p.appendList(lists)
+					break
 				}
-			} else if v, ok := p.(map[string]any)["*fuzz"]; ok {
+			} else if p.fuzz != nil {
 				// Loop to the next node by fuzzy node item.
-				p = v
+				p = p.fuzz
 			}
 			if i == len(array)-1 {
 				// It here also checks the fuzzy item,
 				// for rule case like: "/user/*action" matches to "/user".
-				if v, ok := p.(map[string]any)["*fuzz"]; ok {
-					p = v
+				if p.fuzz != nil {
+					p = p.fuzz
 				}
 				// The leaf must have a list item. It adds the list to the list array.
-				if v, ok := p.(map[string]any)["*list"]; ok {
-					lists = append(lists, v.(*glist.List))
-				}
+				lists = p.appendList(lists)
 			}
 		}
 
@@ -168,7 +162,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*Han
 		// As the tail of the list array has the most priority, it iterates the list array from its tail to head.
 		for i := len(lists) - 1; i >= 0; i-- {
 			for e := lists[i].Front(); e != nil; e = e.Next() {
-				item := e.Value.(*HandlerItem)
+				item := e.Value
 				// Filter repeated handler items, especially the middleware and hook handlers.
 				// It is necessary, do not remove this checks logic unless you really know how it is necessary.
 				//

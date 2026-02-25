@@ -30,6 +30,41 @@ var (
 	handlerIdGenerator = gtype.NewInt()
 )
 
+// ensureList lazily initializes the node's list if nil, appends it to dst and returns the result.
+func (n *routeNode) ensureList(dst []*glist.TList[*HandlerItem]) []*glist.TList[*HandlerItem] {
+	if n.list == nil {
+		n.list = glist.NewT[*HandlerItem]()
+	}
+	return append(dst, n.list)
+}
+
+// ensureFuzz lazily initializes the fuzz child node and returns it.
+func (n *routeNode) ensureFuzz() *routeNode {
+	if n.fuzz == nil {
+		n.fuzz = &routeNode{}
+	}
+	return n.fuzz
+}
+
+// ensureChild lazily initializes the named exact-match child node and returns it.
+func (n *routeNode) ensureChild(part string) *routeNode {
+	if n.children == nil {
+		n.children = make(map[string]*routeNode)
+	}
+	if _, ok := n.children[part]; !ok {
+		n.children[part] = &routeNode{}
+	}
+	return n.children[part]
+}
+
+// appendList appends the node's list to dst if it is non-nil, and returns the result.
+func (n *routeNode) appendList(dst []*glist.TList[*HandlerItem]) []*glist.TList[*HandlerItem] {
+	if n.list != nil {
+		return append(dst, n.list)
+	}
+	return dst
+}
+
 // routerMapKey creates and returns a unique router key for given parameters.
 // This key is used for Server.routerMap attribute, which is mainly for checks for
 // repeated router registering.
@@ -187,32 +222,32 @@ func (s *Server) doSetHandler(
 	handler.Router.RegRule, handler.Router.RegNames = s.patternToRegular(uri)
 
 	if _, ok := s.serveTree[domain]; !ok {
-		s.serveTree[domain] = make(map[string]any)
+		s.serveTree[domain] = &routeNode{}
 	}
 	// List array, very important for router registering.
 	// There may be multiple lists adding into this array when searching from root to leaf.
 	var (
 		array []string
-		lists = make([]*glist.List, 0)
+		lists []*glist.TList[*HandlerItem]
 	)
 	if strings.EqualFold("/", uri) {
 		array = []string{"/"}
 	} else {
 		array = strings.Split(uri[1:], "/")
 	}
-	// Multilayer hash table:
-	// 1. Each node of the table is separated by URI path which is split by char '/'.
-	// 2. The key "*fuzz" specifies this node is a fuzzy node, which has no certain name.
-	// 3. The key "*list" is the list item of the node, MOST OF THE NODES HAVE THIS ITEM,
-	//    especially the fuzzy node. NOTE THAT the fuzzy node must have the "*list" item,
-	//    and the leaf node also has "*list" item. If the node is not a fuzzy node either
-	//    a leaf, it neither has "*list" item.
-	// 2. The "*list" item is a list containing registered router items ordered by their
+	// Multilayer prefix trie:
+	// 1. Each node of the trie is separated by URI path which is split by char '/'.
+	// 2. The field "fuzz" specifies this node is a fuzzy node, which has no certain name.
+	// 3. The field "list" is the list item of the node, MOST OF THE NODES HAVE THIS ITEM,
+	//    especially the fuzzy node. NOTE THAT the fuzzy node must have the "list" item,
+	//    and the leaf node also has "list" item. If the node is not a fuzzy node either
+	//    a leaf, it neither has "list" item.
+	// 2. The "list" item is a list containing registered router items ordered by their
 	//    priorities from high to low. If it's a fuzzy node, all the sub router items
-	//    from this fuzzy node will also be added to its "*list" item.
+	//    from this fuzzy node will also be added to its "list" item.
 	// 3. There may be repeated router items in the router lists. The lists' priorities
 	//    from root to leaf are from low to high.
-	var p = s.serveTree[domain]
+	p := s.serveTree[domain]
 	for i, part := range array {
 		// Ignore empty URI part, like: /user//index
 		if part == "" {
@@ -220,47 +255,28 @@ func (s *Server) doSetHandler(
 		}
 		// Check if it's a fuzzy node.
 		if gregex.IsMatchString(`^[:\*]|\{[\w\.\-]+\}|\*`, part) {
-			part = "*fuzz"
-			// If it's a fuzzy node, it creates a "*list" item - which is a list - in the hash map.
-			// All the sub router items from this fuzzy node will also be added to its "*list" item.
-			if v, ok := p.(map[string]any)["*list"]; !ok {
-				newListForFuzzy := glist.New()
-				p.(map[string]any)["*list"] = newListForFuzzy
-				lists = append(lists, newListForFuzzy)
-			} else {
-				lists = append(lists, v.(*glist.List))
-			}
-		}
-		// Make a new bucket for the current node.
-		if _, ok := p.(map[string]any)[part]; !ok {
-			p.(map[string]any)[part] = make(map[string]any)
-		}
-		// Loop to next bucket.
-		p = p.(map[string]any)[part]
-		// The leaf is a hash map and must have an item named "*list", which contains the router item.
-		// The leaf can be furthermore extended by adding more ket-value pairs into its map.
-		// Note that the `v != "*fuzz"` comparison is required as the list might be added in the former
-		// fuzzy checks.
-		if i == len(array)-1 && part != "*fuzz" {
-			if v, ok := p.(map[string]any)["*list"]; !ok {
-				leafList := glist.New()
-				p.(map[string]any)["*list"] = leafList
-				lists = append(lists, leafList)
-			} else {
-				lists = append(lists, v.(*glist.List))
+			// If it's a fuzzy node, the CURRENT node p gets a list, which accumulates
+			// all sub-handler items from this fuzzy node onward.
+			lists = p.ensureList(lists)
+			// Navigate into the fuzz child node.
+			p = p.ensureFuzz()
+		} else {
+			// Make a new child bucket for the current segment if not exists, then navigate.
+			p = p.ensureChild(part)
+			// The leaf node must have a list item containing the router item.
+			if i == len(array)-1 {
+				lists = p.ensureList(lists)
 			}
 		}
 	}
 	// It iterates the list array of `lists`, compares priorities and inserts the new router item in
 	// the proper position of each list. The priority of the list is ordered from high to low.
-	var item *HandlerItem
 	for _, l := range lists {
 		pushed := false
 		for e := l.Front(); e != nil; e = e.Next() {
-			item = e.Value.(*HandlerItem)
 			// Checks the priority whether inserting the route item before current item,
 			// which means it has higher priority.
-			if s.compareRouterPriority(handler, item) {
+			if s.compareRouterPriority(handler, e.Value) {
 				l.InsertBefore(e, handler)
 				pushed = true
 				goto end
