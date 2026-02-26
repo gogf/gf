@@ -434,6 +434,9 @@ func (m *KVMap[K, V]) SetIfNotExistFuncWithError(key K, f func() (V, error)) (bo
 	if err != nil {
 		return false, err
 	}
+	if m.isNil(value) {
+		return true, nil
+	}
 	return m.SetIfNotExist(key, value), nil
 }
 
