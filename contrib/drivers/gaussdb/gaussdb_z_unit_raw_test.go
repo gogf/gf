@@ -7,6 +7,7 @@
 package gaussdb_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gogf/gf/v2/database/gdb"
@@ -95,5 +96,47 @@ func Test_Raw_Update(t *testing.T) {
 		n, err := user.Where("id", 101).Count()
 		t.AssertNil(err)
 		t.Assert(n, int64(1))
+	})
+}
+
+func Test_Raw_Where(t *testing.T) {
+	table1 := createTable("test_raw_where_table1")
+	table2 := createTable("test_raw_where_table2")
+	defer dropTable(table1)
+	defer dropTable(table2)
+
+	// https://github.com/gogf/gf/issues/3922
+	gtest.C(t, func(t *gtest.T) {
+		expectSql := `SELECT * FROM "test_raw_where_table1" AS A WHERE NOT EXISTS (SELECT B.id FROM "test_raw_where_table2" AS B WHERE "B"."id"=A.id) LIMIT 1`
+		sql, err := gdb.ToSQL(ctx, func(ctx context.Context) error {
+			s := db.Model(table2).As("B").Ctx(ctx).Fields("B.id").Where("B.id", gdb.Raw("A.id"))
+			m := db.Model(table1).As("A").Ctx(ctx).Where("NOT EXISTS ?", s).Limit(1)
+			_, err := m.All()
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(expectSql, sql)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		expectSql := `SELECT * FROM "test_raw_where_table1" AS A WHERE NOT EXISTS (SELECT B.id FROM "test_raw_where_table2" AS B WHERE B.id=A.id) LIMIT 1`
+		sql, err := gdb.ToSQL(ctx, func(ctx context.Context) error {
+			s := db.Model(table2).As("B").Ctx(ctx).Fields("B.id").Where(gdb.Raw("B.id=A.id"))
+			m := db.Model(table1).As("A").Ctx(ctx).Where("NOT EXISTS ?", s).Limit(1)
+			_, err := m.All()
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(expectSql, sql)
+	})
+	// https://github.com/gogf/gf/issues/3915
+	gtest.C(t, func(t *gtest.T) {
+		expectSql := `SELECT * FROM "test_raw_where_table1" WHERE "passport" < "nickname"`
+		sql, err := gdb.ToSQL(ctx, func(ctx context.Context) error {
+			m := db.Model(table1).Ctx(ctx).WhereLT("passport", gdb.Raw(`"nickname"`))
+			_, err := m.All()
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(expectSql, sql)
 	})
 }

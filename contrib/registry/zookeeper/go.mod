@@ -4,7 +4,7 @@ go 1.23.0
 
 require (
 	github.com/go-zookeeper/zk v1.0.3
-	github.com/gogf/gf/v2 v2.9.8
+	github.com/gogf/gf/v2 v2.10.0
 	golang.org/x/sync v0.16.0
 )
 
