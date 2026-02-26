@@ -94,6 +94,10 @@ func (m *Model) mappingAndFilterToTableFields(table string, fields []any, filter
 			fieldStr         = gconv.String(field)
 			inputFieldsArray []string
 		)
+		// Skip empty string fields.
+		if fieldStr == "" {
+			continue
+		}
 		switch {
 		case gregex.IsMatchString(regularFieldNameWithoutDotRegPattern, fieldStr):
 			inputFieldsArray = append(inputFieldsArray, fieldStr)
