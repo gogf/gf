@@ -440,6 +440,7 @@ func (m *KVMap[K, V]) SetIfNotExistFuncWithError(key K, f func() (V, error)) (bo
 // SetIfNotExistFuncLockWithError sets value with return value of callback function `f`, and then returns true.
 // It returns false if `key` exists, and `value` would be ignored.
 // It returns (false, error) if `f` returns a non-nil error, and `value` would not be stored.
+// Note that, it does not add the value to the map if the returned value of `f` is nil.
 //
 // SetIfNotExistFuncLockWithError differs with SetIfNotExistFuncWithError function is that
 // it executes function `f` with mutex.Lock of the hash map.
