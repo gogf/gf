@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS %s (
+    id SERIAL PRIMARY KEY,
+    name varchar(45) NOT NULL
+);
