@@ -358,3 +358,100 @@ func Test_Params_JsonArray_FieldWithJSONTag(t *testing.T) {
 		t.Assert(result, `{"count":3}`)
 	})
 }
+
+// Test_Params_JsonArray_MultipleSliceFields tests that only the first slice field is populated
+// when struct has multiple slice fields. This validates the break behavior after finding first match.
+func Test_Params_JsonArray_MultipleSliceFields(t *testing.T) {
+	s := g.Server(guid.S())
+
+	type MultiSliceItem struct {
+		Id   int    `json:"id"`
+		Name string `json:"name"`
+	}
+
+	// Struct with multiple slice fields - only first one should be populated
+	type MultiSliceReq struct {
+		g.Meta    `mime:"application/json" method:"post" path:"/multi-slice" type:"array"`
+		Items     []MultiSliceItem `json:"items"`      // First slice field - should be populated
+		Backup    []MultiSliceItem `json:"backup"`     // Second slice field - should remain empty
+		ExtraData string           `json:"extraData"`
+	}
+
+	multiSliceHandler := func(r *ghttp.Request) {
+		var req *MultiSliceReq
+		if err := r.Parse(&req); err != nil {
+			r.Response.WriteExit(err)
+		}
+		r.Response.WriteJson(g.Map{
+			"itemsCount":  len(req.Items),
+			"backupCount": len(req.Backup),
+			"extraData":   req.ExtraData,
+		})
+	}
+
+	s.BindHandler("/multi-slice", multiSliceHandler)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		// Test that only first slice field gets populated
+		body := `[{"id":1,"name":"first"},{"id":2,"name":"second"}]`
+		result := client.PostContent(ctx, "/multi-slice", body)
+		t.AssertNE(result, "")
+		// Items should have 2 elements, Backup should be empty (0 elements)
+		t.Assert(result, `{"backupCount":0,"extraData":"","itemsCount":2}`)
+	})
+}
+
+// Test_Params_JsonArray_FallbackReflection tests the fallback reflection path
+// when ReqStructFields cache is not available (using BindHandler directly).
+func Test_Params_JsonArray_FallbackReflection(t *testing.T) {
+	s := g.Server(guid.S())
+
+	type FallbackItem struct {
+		Value int    `json:"value"`
+		Label string `json:"label"`
+	}
+
+	type FallbackReq struct {
+		g.Meta `mime:"application/json" method:"post" path:"/fallback" type:"array"`
+		Data   []FallbackItem `json:"data"`
+	}
+
+	// Using BindHandler directly - this triggers the fallback reflection path
+	fallbackHandler := func(r *ghttp.Request) {
+		var req *FallbackReq
+		if err := r.Parse(&req); err != nil {
+			r.Response.WriteExit(err)
+		}
+		total := 0
+		for _, item := range req.Data {
+			total += item.Value
+		}
+		r.Response.WriteJson(g.Map{
+			"count": len(req.Data),
+			"total": total,
+		})
+	}
+
+	s.BindHandler("/fallback", fallbackHandler)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		body := `[{"value":10,"label":"a"},{"value":20,"label":"b"},{"value":30,"label":"c"}]`
+		result := client.PostContent(ctx, "/fallback", body)
+		t.AssertNE(result, "")
+		t.Assert(result, `{"count":3,"total":60}`)
+	})
+}

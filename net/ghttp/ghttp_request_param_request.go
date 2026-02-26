@@ -208,7 +208,7 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 // 1. Dereference pointer levels until reaching the underlying struct (supports **Struct, *Struct)
 // 2. First attempt to use cached struct field information from serveHandler for performance
 // 3. Fall back to direct reflection if cached info is unavailable
-// 4. Identify slice/array fields and map them to the JSON array via the data map
+// 4. Identify the first slice/array field and map it to the JSON array via the data map
 //
 // This function handles the special case where the request body is a JSON array [{}]
 // instead of an object {}. When combined with the type:"array" tag in g.Meta, it allows
@@ -246,7 +246,11 @@ func (r *Request) mergeBodyArrayToStruct(data map[string]any, pointer any) error
 	}
 
 	// Try to get cached struct fields info first
-	fields := r.serveHandler.Handler.Info.ReqStructFields
+	var fields []gstructs.Field
+	if r.serveHandler != nil && r.serveHandler.Handler.Info.ReqStructFields != nil {
+		fields = r.serveHandler.Handler.Info.ReqStructFields
+	}
+
 	if len(fields) > 0 {
 		// Use cached struct fields info
 		for _, field := range fields {
@@ -260,6 +264,8 @@ func (r *Request) mergeBodyArrayToStruct(data map[string]any, pointer any) error
 				}
 				// Populate the slice field with bodyArray
 				data[fieldName] = r.bodyArray
+				// Only process the first slice field since bodyArray should map to one field
+				break
 			}
 		}
 	} else {
@@ -281,6 +287,8 @@ func (r *Request) mergeBodyArrayToStruct(data map[string]any, pointer any) error
 				}
 				// Populate the slice field with bodyArray
 				data[fieldName] = r.bodyArray
+				// Only process the first slice field since bodyArray should map to one field
+				break
 			}
 		}
 	}
