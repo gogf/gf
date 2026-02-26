@@ -226,3 +226,49 @@ array = [1,2,3]
 		t.Assert(c.MustGetWithCmd(ctx, `redis.user`), `2`)
 	})
 }
+
+func Test_GetEffective(t *testing.T) {
+	content := `
+v1    = 1
+v2    = "true"
+[server]
+    port = 8080
+    host = "localhost"
+[redis]
+    disk  = "127.0.0.1:6379,0"
+    cache = "127.0.0.1:6379,1"
+`
+	gtest.C(t, func(t *gtest.T) {
+		c, err := gcfg.New()
+		t.AssertNil(err)
+		c.GetAdapter().(*gcfg.AdapterFile).SetContent(content)
+		defer c.GetAdapter().(*gcfg.AdapterFile).ClearContent()
+
+		// Test 1: Get from config file when no cmd/env set
+		t.Assert(c.MustGetEffective(ctx, "server.port"), 8080)
+		t.Assert(c.MustGetEffective(ctx, "server.host"), "localhost")
+
+		// Test 2: Environment variable overrides config file
+		t.Assert(genv.Set("SERVER_PORT", "9090"), nil)
+		defer genv.Remove("SERVER_PORT")
+		t.Assert(c.MustGetEffective(ctx, "server.port"), "9090")
+
+		// Test 3: Command line overrides environment variable
+		gcmd.Init([]string{"gf", "--server.port=7070"}...)
+		t.Assert(c.MustGetEffective(ctx, "server.port"), "7070")
+
+		// Test 4: Default value when nothing is set
+		t.Assert(c.MustGetEffective(ctx, "server.timeout", 30), 30)
+
+		// Test 5: Empty string from command line should override
+		gcmd.Init([]string{"gf", "--server.name="}...)
+		t.Assert(genv.Set("SERVER_NAME", "from-env"), nil)
+		defer genv.Remove("SERVER_NAME")
+		t.Assert(c.MustGetEffective(ctx, "server.name"), "")
+
+		// Test 6: Key not in config, only in env
+		t.Assert(genv.Set("APP_DEBUG", "true"), nil)
+		defer genv.Remove("APP_DEBUG")
+		t.Assert(c.MustGetEffective(ctx, "app.debug"), "true")
+	})
+}
