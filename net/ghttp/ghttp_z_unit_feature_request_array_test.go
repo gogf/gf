@@ -372,8 +372,8 @@ func Test_Params_JsonArray_MultipleSliceFields(t *testing.T) {
 	// Struct with multiple slice fields - only first one should be populated
 	type MultiSliceReq struct {
 		g.Meta    `mime:"application/json" method:"post" path:"/multi-slice" type:"array"`
-		Items     []MultiSliceItem `json:"items"`      // First slice field - should be populated
-		Backup    []MultiSliceItem `json:"backup"`     // Second slice field - should remain empty
+		Items     []MultiSliceItem `json:"items"`  // First slice field - should be populated
+		Backup    []MultiSliceItem `json:"backup"` // Second slice field - should remain empty
 		ExtraData string           `json:"extraData"`
 	}
 
