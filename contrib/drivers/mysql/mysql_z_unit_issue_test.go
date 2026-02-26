@@ -1949,3 +1949,37 @@ func Test_Issue4500(t *testing.T) {
 		t.Assert(len(all), 3)
 	})
 }
+
+// https://github.com/gogf/gf/issues/4697
+func Test_Issue4697(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Fields("") should be treated as Fields() and select all fields
+		result, err := db.Model(table).Fields("").Limit(1).All()
+		t.AssertNil(err)
+		t.AssertGT(len(result), 0)
+		// Should have all fields (id, passport, password, nickname, create_time, create_date)
+		t.Assert(len(result[0]), 6)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Fields("", "id") should ignore empty string and only select "id"
+		result, err := db.Model(table).Fields("", "id").Limit(1).All()
+		t.AssertNil(err)
+		t.AssertGT(len(result), 0)
+		t.Assert(len(result[0]), 1)
+		t.AssertNE(result[0]["id"], nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Fields("id", "", "nickname") should ignore empty string
+		result, err := db.Model(table).Fields("id", "", "nickname").Limit(1).All()
+		t.AssertNil(err)
+		t.AssertGT(len(result), 0)
+		t.Assert(len(result[0]), 2)
+		t.AssertNE(result[0]["id"], nil)
+		t.AssertNE(result[0]["nickname"], nil)
+	})
+}
