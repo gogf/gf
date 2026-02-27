@@ -109,6 +109,13 @@ func Test_CheckLocalTypeForField(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
+		// Test bytea type
+		localType, err := driver.CheckLocalTypeForField(ctx, "bytea", nil)
+		t.AssertNil(err)
+		t.Assert(localType, gdb.LocalTypeBytes)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
 		// Test bytea array type
 		localType, err := driver.CheckLocalTypeForField(ctx, "_bytea", nil)
 		t.AssertNil(err)
@@ -362,6 +369,17 @@ func Test_ConvertValueForLocal(t *testing.T) {
 		_, err := driver.ConvertValueForLocal(ctx, "_bytea", "invalid")
 		t.AssertNE(err, nil)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test bytea conversion - should preserve []byte as-is
+		input := []byte{0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x5D, 0x5B}
+		result, err := driver.ConvertValueForLocal(ctx, "bytea", input)
+		t.AssertNil(err)
+		resultBytes, ok := result.([]byte)
+		t.Assert(ok, true)
+		t.Assert(len(resultBytes), len(input))
+		t.Assert(resultBytes, input)
+	})
 }
 
 // Test_ConvertValueForField tests the ConvertValueForField method
@@ -405,5 +423,15 @@ func Test_ConvertValueForField(t *testing.T) {
 		result, err := driver.ConvertValueForField(ctx, "jsonb", []string{"a", "b"})
 		t.AssertNil(err)
 		t.Assert(result, `["a","b"]`)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test []byte value for bytea type (should preserve raw bytes, not do []->{} replacement)
+		input := []byte{0xDE, 0xAD, 0x5B, 0x5D, 0xBE, 0xEF}
+		result, err := driver.ConvertValueForField(ctx, "bytea", input)
+		t.AssertNil(err)
+		resultBytes, ok := result.([]byte)
+		t.Assert(ok, true)
+		t.Assert(resultBytes, input)
 	})
 }

@@ -290,6 +290,93 @@ func Test_Issue4500(t *testing.T) {
 	})
 }
 
+// https://github.com/gogf/gf/issues/4677
+// record.Get().Bytes() corrupts bytea data on retrieval from PostgreSQL.
+func Test_Issue4677(t *testing.T) {
+	table := fmt.Sprintf(`%s_%d`, TablePrefix+"issue4677", gtime.TimestampNano())
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE %s (
+			id bigserial PRIMARY KEY,
+			bin_data bytea
+		);`, table,
+	)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test 1: Binary data with various byte values including 0x00, 0x5D(']'), 0x5B('[')
+		originalBytes := []byte{
+			0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x01, 0x5B, 0x5D,
+			0xFF, 0x7B, 0x7D, 0x80, 0xCA, 0xFE, 0xBA, 0xBE,
+		}
+
+		_, err := db.Model(table).Data(g.Map{
+			"bin_data": originalBytes,
+		}).Insert()
+		t.AssertNil(err)
+
+		record, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+
+		retrievedBytes := record["bin_data"].Bytes()
+		t.Assert(len(retrievedBytes), len(originalBytes))
+		t.Assert(retrievedBytes, originalBytes)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test 2: Larger binary data (simulating gob/protobuf encoded payload)
+		largeBytes := make([]byte, 1024)
+		for i := range largeBytes {
+			largeBytes[i] = byte(i % 256)
+		}
+
+		_, err := db.Model(table).Data(g.Map{
+			"bin_data": largeBytes,
+		}).Insert()
+		t.AssertNil(err)
+
+		record, err := db.Model(table).OrderDesc("id").One()
+		t.AssertNil(err)
+
+		retrievedBytes := record["bin_data"].Bytes()
+		t.Assert(len(retrievedBytes), len(largeBytes))
+		t.Assert(retrievedBytes, largeBytes)
+	})
+}
+
+// https://github.com/gogf/gf/issues/4231
+// ConvertValueForField corrupts bytea data containing 0x5D on write.
+func Test_Issue4231(t *testing.T) {
+	table := fmt.Sprintf(`%s_%d`, TablePrefix+"issue4231", gtime.TimestampNano())
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE %s (
+			id bigserial PRIMARY KEY,
+			bin_data bytea
+		);`, table,
+	)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Bytes containing 0x5D (ASCII ']') which was being converted to 0x7D ('}')
+		originalBytes := []byte{0x01, 0x5D, 0x02, 0x5B, 0x03}
+
+		_, err := db.Model(table).Data(g.Map{
+			"bin_data": originalBytes,
+		}).Insert()
+		t.AssertNil(err)
+
+		record, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+
+		retrievedBytes := record["bin_data"].Bytes()
+		t.Assert(len(retrievedBytes), len(originalBytes))
+		t.Assert(retrievedBytes, originalBytes)
+	})
+}
+
 // https://github.com/gogf/gf/issues/4595
 // FieldsPrefix silently drops fields when using table alias before LeftJoin.
 func Test_Issue4595(t *testing.T) {
