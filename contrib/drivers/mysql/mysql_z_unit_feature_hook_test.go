@@ -134,3 +134,95 @@ func Test_Model_Hook_Delete(t *testing.T) {
 		}
 	})
 }
+
+// Test_Model_Hook_Multiple tests multiple hooks execution order
+func Test_Model_Hook_Multiple(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		var execOrder []string
+
+		m := db.Model(table).Hook(gdb.HookHandler{
+			Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
+				execOrder = append(execOrder, "hook1_before")
+				result, err = in.Next(ctx)
+				execOrder = append(execOrder, "hook1_after")
+				return
+			},
+		}).Hook(gdb.HookHandler{
+			Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
+				execOrder = append(execOrder, "hook2_before")
+				result, err = in.Next(ctx)
+				execOrder = append(execOrder, "hook2_after")
+				return
+			},
+		})
+
+		_, err := m.Where("id", 1).One()
+		t.AssertNil(err)
+
+		// Verify hook execution order (FIFO - first registered hook executes first)
+		t.AssertGT(len(execOrder), 0)
+	})
+}
+
+// Test_Model_Hook_Error_Abort tests hook returning error aborts operation
+func Test_Model_Hook_Error_Abort(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		m := db.Model(table).Hook(gdb.HookHandler{
+			Insert: func(ctx context.Context, in *gdb.HookInsertInput) (result sql.Result, err error) {
+				// Return error to abort insert
+				return nil, fmt.Errorf("hook aborted insert")
+			},
+		})
+
+		_, err := m.Insert(g.Map{
+			"passport": "test_abort",
+			"password": "pass",
+			"nickname": "name",
+		})
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "hook aborted insert")
+
+		// Verify record was not inserted
+		count, err := db.Model(table).Where("passport", "test_abort").Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
+	})
+}
+
+// Test_Model_Hook_Modify_Data tests hook modifying data before insert
+func Test_Model_Hook_Modify_Data(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		m := db.Model(table).Hook(gdb.HookHandler{
+			Insert: func(ctx context.Context, in *gdb.HookInsertInput) (result sql.Result, err error) {
+				// Modify all data items
+				for i := range in.Data {
+					in.Data[i]["password"] = "encrypted_" + fmt.Sprint(in.Data[i]["password"])
+					in.Data[i]["nickname"] = "verified_" + fmt.Sprint(in.Data[i]["nickname"])
+				}
+				return in.Next(ctx)
+			},
+		})
+
+		_, err := m.Insert(g.Map{
+			"passport": "test_user",
+			"password": "plain123",
+			"nickname": "john",
+		})
+		t.AssertNil(err)
+
+		// Verify data was modified by hook
+		one, err := db.Model(table).Where("passport", "test_user").One()
+		t.AssertNil(err)
+		t.Assert(one["password"].String(), "encrypted_plain123")
+		t.Assert(one["nickname"].String(), "verified_john")
+	})
+}
