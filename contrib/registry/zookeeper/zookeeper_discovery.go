@@ -19,6 +19,9 @@ import (
 
 // Search searches and returns services with specified condition.
 func (r *Registry) Search(_ context.Context, in gsvc.SearchInput) ([]gsvc.Service, error) {
+	if in.Prefix == "" && in.Name != "" {
+		in.Prefix = gsvc.NewServiceWithName(in.Name).GetPrefix()
+	}
 	prefix := strings.Trim(strings.ReplaceAll(in.Prefix, "/", "-"), "-")
 	instances, err, _ := r.group.Do(prefix, func() (any, error) {
 		serviceNamePath := path.Join(r.opts.namespace, prefix)
@@ -65,8 +68,9 @@ func (r *Registry) Search(_ context.Context, in gsvc.SearchInput) ([]gsvc.Servic
 			"Error with group do",
 		)
 	}
-	// Service filter.
-	filteredServices := make([]gsvc.Service, 0)
+	// Service filter and merge instances with the same prefix into one service.
+	mergedMap := make(map[string]*gsvc.LocalService)
+	mergedOrder := make([]string, 0)
 	for _, service := range instances.([]gsvc.Service) {
 		if in.Prefix != "" && !gstr.HasPrefix(service.GetKey(), in.Prefix) {
 			continue
@@ -84,8 +88,28 @@ func (r *Registry) Search(_ context.Context, in gsvc.SearchInput) ([]gsvc.Servic
 				continue
 			}
 		}
-		resultItem := service
-		filteredServices = append(filteredServices, resultItem)
+		servicePrefix := service.GetPrefix()
+		if merged, ok := mergedMap[servicePrefix]; ok {
+			merged.Endpoints = append(merged.Endpoints, service.GetEndpoints()...)
+		} else {
+			ls := &gsvc.LocalService{
+				Name:      service.GetName(),
+				Version:   service.GetVersion(),
+				Endpoints: append(gsvc.Endpoints{}, service.GetEndpoints()...),
+				Metadata:  service.GetMetadata(),
+			}
+			if localSvc, ok2 := service.(*gsvc.LocalService); ok2 {
+				ls.Head = localSvc.Head
+				ls.Deployment = localSvc.Deployment
+				ls.Namespace = localSvc.Namespace
+			}
+			mergedMap[servicePrefix] = ls
+			mergedOrder = append(mergedOrder, servicePrefix)
+		}
+	}
+	filteredServices := make([]gsvc.Service, 0, len(mergedOrder))
+	for _, key := range mergedOrder {
+		filteredServices = append(filteredServices, mergedMap[key])
 	}
 	return filteredServices, nil
 }
