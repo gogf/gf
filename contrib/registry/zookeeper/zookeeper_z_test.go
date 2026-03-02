@@ -154,6 +154,7 @@ func TestServiceInstanceLeaf(t *testing.T) {
 
 // TestRegistryMultiInstance verifies that multiple instances of the same service
 // can be registered simultaneously without overwriting each other (issue #4149).
+// Search merges instances sharing the same prefix into one LocalService with all endpoints combined.
 func TestRegistryMultiInstance(t *testing.T) {
 	r := New([]string{"127.0.0.1:2181"}, WithRootPath("/gogf"))
 	ctx := context.Background()
@@ -194,10 +195,14 @@ func TestRegistryMultiInstance(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Search failed: %v", err)
 	}
-	if len(services) != 2 {
-		t.Fatalf("expected 2 instances after multi-instance registration, got %d", len(services))
+	if len(services) != 1 {
+		t.Fatalf("expected 1 merged service entry, got %d", len(services))
 	}
-	g.Log().Infof(ctx, "Found %d service instances (expected 2)", len(services))
+	endpoints := services[0].GetEndpoints()
+	if len(endpoints) != 2 {
+		t.Fatalf("expected 2 endpoints after multi-instance registration, got %d", len(endpoints))
+	}
+	g.Log().Infof(ctx, "Found %d endpoints in merged service (expected 2)", len(endpoints))
 
 	if err = r.Deregister(ctx, s1); err != nil {
 		t.Fatalf("Deregister svc1 failed: %v", err)
