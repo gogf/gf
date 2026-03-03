@@ -185,41 +185,53 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ...ScanOption) (er
 			)
 			for i := 0; i < srcLen; i++ {
 				srcElem := srcValueReflectValue.Index(i).Interface()
+				elem := newSlice.Index(i)
+
+				if elem.Kind() == reflect.Pointer {
+					if elem.IsNil() {
+						elem.Set(reflect.New(elem.Type().Elem()))
+					}
+					elem = elem.Elem()
+				}
+
 				switch dstElemType.Kind() {
 				case reflect.String:
 					v, err := c.String(srcElem)
 					if err != nil && !scanOption.ContinueOnError {
 						return err
 					}
-					newSlice.Index(i).SetString(v)
+					elem.SetString(v)
 				case reflect.Int:
 					v, err := c.Int64(srcElem)
 					if err != nil && !scanOption.ContinueOnError {
 						return err
 					}
-					newSlice.Index(i).SetInt(v)
+					elem.SetInt(v)
 				case reflect.Int64:
 					v, err := c.Int64(srcElem)
 					if err != nil && !scanOption.ContinueOnError {
 						return err
 					}
-					newSlice.Index(i).SetInt(v)
+					elem.SetInt(v)
 				case reflect.Float64:
 					v, err := c.Float64(srcElem)
 					if err != nil && !scanOption.ContinueOnError {
 						return err
 					}
-					newSlice.Index(i).SetFloat(v)
+					elem.SetFloat(v)
 				case reflect.Bool:
 					v, err := c.Bool(srcElem)
 					if err != nil && !scanOption.ContinueOnError {
 						return err
 					}
-					newSlice.Index(i).SetBool(v)
+					elem.SetBool(v)
 				default:
-					err = c.Scan(
-						srcElem, newSlice.Index(i).Addr().Interface(), option...,
-					)
+					target := newSlice.Index(i)
+					if target.Kind() == reflect.Pointer {
+						err = c.Scan(srcElem, target.Interface(), option...)
+					} else {
+						err = c.Scan(srcElem, target.Addr().Interface(), option...)
+					}
 					if err != nil && !scanOption.ContinueOnError {
 						return err
 					}

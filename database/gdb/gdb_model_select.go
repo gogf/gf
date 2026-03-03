@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"reflect"
 
@@ -302,11 +303,63 @@ func (m *Model) Scan(pointer any, where ...any) error {
 	}
 	switch reflectInfo.OriginKind {
 	case reflect.Slice, reflect.Array:
+		elemType := reflectInfo.InputType
+		for elemType.Kind() == reflect.Pointer {
+			elemType = elemType.Elem()
+		}
+		elemType = elemType.Elem()
+		originalType := elemType
+		for elemType.Kind() == reflect.Pointer {
+			originalType = elemType
+			elemType = elemType.Elem()
+		}
+
+		if elemType != nil && (elemType.Kind() != reflect.Struct || elemType.Implements(reflect.TypeFor[sql.Scanner]()) || originalType.Implements(reflect.TypeFor[sql.Scanner]())) {
+			if len(m.fields) == 1 {
+				args := append([]any{m.fields[0]}, where...)
+				valueArr, err := m.Array(args...)
+				if err != nil {
+					return err
+				}
+				return valueArr.Scan(pointer)
+			}
+		}
 		return m.doStructs(pointer, where...)
 
 	case reflect.Struct, reflect.Invalid:
-		return m.doStruct(pointer, where...)
+		elemType := reflectInfo.InputType
+		originalType := elemType
+		for elemType.Kind() == reflect.Pointer {
+			originalType = elemType
 
+			elemType = elemType.Elem()
+		}
+		if elemType != nil && (elemType.Implements(reflect.TypeFor[sql.Scanner]()) || originalType.Implements(reflect.TypeFor[sql.Scanner]())) {
+			if len(m.fields) == 1 {
+				args := append([]any{m.fields[0]}, where...)
+				valueArr, err := m.Value(args...)
+				if err != nil {
+					return err
+				}
+				return valueArr.Scan(pointer)
+			}
+		}
+		return m.doStruct(pointer, where...)
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64, reflect.Bool, reflect.String:
+		if len(m.fields) != 1 {
+			return gerror.NewCode(
+				gcode.CodeInvalidParameter,
+				fmt.Sprintf("Scan operation failed: expected 1 field, but got %d", len(m.fields)),
+			)
+		}
+		args := append([]any{m.fields[0]}, where...)
+		value, err := m.Value(args...)
+		if err != nil {
+			return err
+		}
+		return value.Scan(pointer)
 	default:
 		return gerror.NewCode(
 			gcode.CodeInvalidParameter,

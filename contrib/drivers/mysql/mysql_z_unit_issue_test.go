@@ -14,6 +14,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -2064,5 +2066,173 @@ func Test_Issue4698(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(count, TableSize)
 		t.Assert(len(result), TableSize)
+	})
+}
+
+// https://github.com/gogf/gf/issues/3977
+func Test_Issue3977(t *testing.T) {
+	table := "issue3977"
+	array := gstr.SplitAndTrim(gtest.DataContent(`issues`, `3977.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table)
+	// string *string []string []*string
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		var username string
+		err = db.Model(table).Fields("username").Where("id", 1).Scan(&username)
+		t.Assert(err, nil)
+		t.Assert(username, "username1")
+		var username2 *string
+		err = db.Model(table).Fields("username").Where("id", 1).Scan(&username2)
+		t.Assert(err, nil)
+		t.Assert(username2, "username1")
+
+		var usernames []string
+		err = db.Model(table).Fields("username").Scan(&usernames)
+		t.AssertNil(err)
+		t.Assert(usernames, []string{"username1", "username2", "username3"})
+
+		var usernames2 []*string
+		err = db.Model(table).Fields("username").Scan(&usernames2)
+		t.AssertNil(err)
+		t.Assert(usernames2, []string{"username1", "username2", "username3"})
+
+	})
+	// float64 *float64
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		var balance float64
+		err = db.Model(table).Fields("balance").Where("id", 1).Scan(&balance)
+		t.Assert(err, nil)
+		t.Assert(balance, 1.01)
+
+		var balance2 *float64
+		err = db.Model(table).Fields("balance").Where("id", 1).Scan(&balance2)
+		t.Assert(err, nil)
+		t.Assert(balance2, 1.01)
+
+		var balances []float64
+		err = db.Model(table).Fields("balance").Scan(&balances)
+		t.Assert(err, nil)
+		t.Assert(balances, []float64{1.01, 2.02, 3.03})
+
+		var balances2 []*float64
+		err = db.Model(table).Fields("balance").Scan(&balances2)
+		t.Assert(err, nil)
+		expectedBalances := []float64{1.01, 2.02, 3.03}
+		actualBalances := make([]float64, len(balances2))
+		for i, v := range balances2 {
+			if v != nil {
+				actualBalances[i] = *v
+			}
+		}
+		t.Assert(actualBalances, expectedBalances)
+
+		var totalBalances float64
+		err = db.Model(table).FieldSum("balance").WhereIn("id", []int64{1, 2, 3, 4, 5}).Scan(&totalBalances)
+		t.Assert(err, nil)
+		t.Assert(totalBalances, 6.06)
+
+		var totalBalances2 *float64
+		err = db.Model(table).FieldSum("balance").WhereIn("id", []int64{1, 2, 3, 4, 5}).Scan(&totalBalances2)
+		t.Assert(err, nil)
+		t.Assert(totalBalances2, 6.06)
+
+	})
+	// int []int
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		var age int
+		err = db.Model(table).Fields("age").Where("id", 1).Scan(&age)
+		t.Assert(err, nil)
+		t.Assert(age, 18)
+
+		var age2 *int
+		err = db.Model(table).Fields("age").Where("id", 1).Scan(&age2)
+		t.Assert(err, nil)
+		t.Assert(age2, 18)
+
+		var ids []int64
+		err = db.Model(table).Fields("id").Where("state", true).Scan(&ids)
+		t.AssertNil(err)
+		t.Assert(ids, []int64{1, 2})
+
+		var id2s []*int64
+		err = db.Model(table).Fields("id").Where("state", true).Scan(&id2s)
+		t.AssertNil(err)
+		t.Assert(id2s, []int64{1, 2})
+
+		var total int64
+		err = db.Model(table).FieldSum("id").WhereIn("id", []int64{1, 2, 3, 4, 5}).Scan(&total)
+		t.Assert(err, nil)
+		t.Assert(total, 6)
+
+		var total2 int64
+		err = db.Model(table).FieldSum("id").WhereIn("id", []int64{1, 2, 3, 4, 5}).Scan(&total2)
+		t.Assert(err, nil)
+		t.Assert(total2, 6)
+
+	})
+	// bool
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		var state bool
+		err = db.Model(table).Fields("state").Where("id", 1).Scan(&state)
+		t.Assert(err, nil)
+		t.Assert(state, true)
+
+		var state2 *bool
+		err = db.Model(table).Fields("state").Where("id", 1).Scan(&state2)
+		t.Assert(err, nil)
+		t.Assert(state2, true)
+
+		var states []bool
+		err = db.Model(table).Fields("state").Scan(&states)
+		t.AssertNil(err)
+		t.Assert(states, []bool{true, true, false})
+		var states2 []*bool
+		err = db.Model(table).Fields("state").Scan(&states2)
+		t.AssertNil(err)
+		t.Assert(states2, []bool{true, true, false})
+	})
+	// decimal.Decimal
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		var balance decimal.Decimal
+		err = db.Model(table).Fields("balance").Where("id", 1).Scan(&balance)
+		t.Assert(err, nil)
+		t.Assert(balance, decimal.NewFromFloat(1.01))
+
+		var balance2 *decimal.Decimal
+		err = db.Model(table).Fields("balance").Where("id", 1).Scan(&balance2)
+		t.Assert(err, nil)
+		t.Assert(balance2, decimal.NewFromFloat(1.01))
+
+		var totalBalances decimal.Decimal
+		err = db.Model(table).FieldSum("balance").WhereIn("id", []int64{1, 2, 3, 4, 5}).Scan(&totalBalances)
+		t.Assert(err, nil)
+		t.Assert(totalBalances, decimal.NewFromFloat(6.06))
+
+		var totalBalances2 *decimal.Decimal
+		err = db.Model(table).FieldSum("balance").WhereIn("id", []int64{1, 2, 3, 4, 5}).Scan(&totalBalances2)
+		t.Assert(err, nil)
+		t.Assert(totalBalances2, decimal.NewFromFloat(6.06))
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		var createdAt gtime.Time
+		err = db.Model(table).Fields("create_at").Where("id", 1).Scan(&createdAt)
+		t.AssertNil(err)
+		t.Assert(createdAt, "2020-01-01 00:00:00")
+
+		var createdAt2 *gtime.Time
+		err = db.Model(table).Fields("create_at").Where("id", 1).Scan(&createdAt2)
+		t.AssertNil(err)
+		t.Assert(createdAt2, "2020-01-01 00:00:00")
 	})
 }
