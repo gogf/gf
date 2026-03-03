@@ -11,7 +11,7 @@ require (
 	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.10.0
 	github.com/gogf/gf/v2 v2.10.0
 	github.com/gogf/selfupdate v0.0.0-20231215043001-5c48c528462f
-	github.com/olekukonko/tablewriter v1.1.0
+	github.com/olekukonko/tablewriter v1.1.3
 	github.com/schollz/progressbar/v3 v3.15.0
 	golang.org/x/mod v0.25.0
 	golang.org/x/tools v0.26.0
