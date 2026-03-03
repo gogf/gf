@@ -1570,6 +1570,7 @@ func Test_DB_Ctx(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 		_, err := db.Query(ctx, "SELECT SLEEP(10)")
+		t.AssertNE(err, nil)
 		t.Assert(gstr.Contains(err.Error(), "deadline"), true)
 	})
 }
