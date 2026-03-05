@@ -79,7 +79,6 @@ func (l *localProvider) SetAsGlobal() {
 }
 
 // getRuntimeVersion returns the runtime version.
-// It returns the runtime version.
 func getRuntimeVersion() string {
 	val := reflect.ValueOf(runtime.Version)
 
