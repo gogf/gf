@@ -194,8 +194,12 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 	// Check if request body is a JSON array and handle slice fields.
 	// This enables APIs with type:"array" tag to receive batch request formats.
 	if len(r.bodyArray) > 0 {
-		if err = r.mergeBodyArrayToStruct(data, pointer); err != nil {
-			return data, err
+		if handler := r.GetServeHandler(); handler != nil {
+			if metaType := handler.GetMetaTag("type"); metaType == "array" {
+				if err = r.mergeBodyArrayToStruct(data, pointer); err != nil {
+					return data, err
+				}
+			}
 		}
 	}
 
