@@ -207,10 +207,8 @@ func (oai *OpenApiV3) getArrayRequestSchemaRef(requestObject any) (*SchemaRef, e
 	// Step 5: Return array schema with items referencing the element schema.
 	return &SchemaRef{
 		Value: &Schema{
-			Type: "array",
-			Items: &SchemaRef{
-				Ref: elementSchemaRef.Ref,
-			},
+			Type:  "array",
+			Items: elementSchemaRef,
 		},
 	}, nil
 }
