@@ -129,6 +129,89 @@ func TestGetService(t *testing.T) {
 	}
 }
 
+// TestServiceInstanceLeaf verifies that serviceInstanceLeaf produces a valid,
+// unique ZooKeeper node name from endpoint information.
+func TestServiceInstanceLeaf(t *testing.T) {
+	cases := []struct {
+		endpoints string
+		expected  string
+	}{
+		{"127.0.0.1:9000", "127.0.0.1-9000"},
+		{"10.0.0.1:8080", "10.0.0.1-8080"},
+	}
+	for _, c := range cases {
+		svc := &gsvc.LocalService{
+			Name:      "leaf-test-svc",
+			Version:   "v1.0.0",
+			Endpoints: gsvc.NewEndpoints(c.endpoints),
+		}
+		got := serviceInstanceLeaf(svc)
+		if got != c.expected {
+			t.Fatalf("serviceInstanceLeaf(%q) = %q, want %q", c.endpoints, got, c.expected)
+		}
+	}
+}
+
+// TestRegistryMultiInstance verifies that multiple instances of the same service
+// can be registered simultaneously without overwriting each other (issue #4149).
+// Search merges instances sharing the same prefix into one LocalService with all endpoints combined.
+func TestRegistryMultiInstance(t *testing.T) {
+	r := New([]string{"127.0.0.1:2181"}, WithRootPath("/gogf"))
+	ctx := context.Background()
+
+	// Two instances of the same service on different ports.
+	svc1 := &gsvc.LocalService{
+		Name:      "multi-instance-svc",
+		Version:   "v1.0.0",
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Endpoints: gsvc.NewEndpoints("127.0.0.1:19001"),
+	}
+	svc2 := &gsvc.LocalService{
+		Name:      "multi-instance-svc",
+		Version:   "v1.0.0",
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Endpoints: gsvc.NewEndpoints("127.0.0.1:19002"),
+	}
+
+	s1, err := r.Register(ctx, svc1)
+	if err != nil {
+		t.Fatalf("Register svc1 failed: %v", err)
+	}
+
+	s2, err := r.Register(ctx, svc2)
+	if err != nil {
+		t.Fatalf("Register svc2 failed: %v", err)
+	}
+
+	// Allow ZK to settle.
+	time.Sleep(200 * time.Millisecond)
+
+	// Both instances should be discoverable.
+	services, err := r.Search(ctx, gsvc.SearchInput{
+		Prefix:  svc1.GetPrefix(),
+		Name:    svc1.Name,
+		Version: svc1.Version,
+	})
+	if err != nil {
+		t.Fatalf("Search failed: %v", err)
+	}
+	if len(services) != 1 {
+		t.Fatalf("expected 1 merged service entry, got %d", len(services))
+	}
+	endpoints := services[0].GetEndpoints()
+	if len(endpoints) != 2 {
+		t.Fatalf("expected 2 endpoints after multi-instance registration, got %d", len(endpoints))
+	}
+	g.Log().Infof(ctx, "Found %d endpoints in merged service (expected 2)", len(endpoints))
+
+	if err = r.Deregister(ctx, s1); err != nil {
+		t.Fatalf("Deregister svc1 failed: %v", err)
+	}
+	if err = r.Deregister(ctx, s2); err != nil {
+		t.Fatalf("Deregister svc2 failed: %v", err)
+	}
+}
+
 // TestWatch Test Watch
 func TestWatch(t *testing.T) {
 	r := New([]string{"127.0.0.1:2181"}, WithRootPath("/gogf"))
