@@ -279,9 +279,9 @@ func (r *Request) mergeBodyArrayToStruct(data map[string]any, pointer any) error
 				fieldName := field.Name
 				// Use JSON tag name if available
 				if jsonTag := field.Tag.Get("json"); jsonTag != "" {
-					// Handle json tag with options like "json:"fieldName,omitempty""
+					// Handle json tag with options like `json:"fieldName,omitempty"`
 					tagParts := strings.Split(jsonTag, ",")
-					if tagParts[0] != "" {
+					if tagParts[0] != "" && tagParts[0] != "-" {
 						fieldName = tagParts[0]
 					}
 				}
