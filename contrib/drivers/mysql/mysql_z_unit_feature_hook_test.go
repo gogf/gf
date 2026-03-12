@@ -162,8 +162,9 @@ func Test_Model_Hook_Multiple(t *testing.T) {
 		_, err := m.Where("id", 1).One()
 		t.AssertNil(err)
 
-		// Verify hook execution order (FIFO - first registered hook executes first)
-		t.AssertGT(len(execOrder), 0)
+		// Verify only the last registered hook executes (Hook is override, not chain)
+		t.Assert(len(execOrder), 2)
+		t.Assert(execOrder, g.Slice{"hook2_before", "hook2_after"})
 	})
 }
 
