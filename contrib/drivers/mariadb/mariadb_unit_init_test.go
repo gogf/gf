@@ -30,9 +30,10 @@ const (
 )
 
 var (
-	db  gdb.DB
-	db2 gdb.DB
-	ctx = context.TODO()
+	db        gdb.DB
+	db2       gdb.DB
+	dbInvalid gdb.DB
+	ctx       = context.TODO()
 )
 
 func init() {
@@ -61,6 +62,19 @@ func init() {
 	}
 	db = db.Schema(TestSchema1)
 	db2 = db.Schema(TestSchema2)
+
+	// Invalid db (wrong port for testing error handling).
+	nodeInvalid := gdb.ConfigNode{
+		Link:        fmt.Sprintf("mariadb:root:%s@tcp(127.0.0.1:3317)/?loc=Local&parseTime=true", TestDbPass),
+		TranTimeout: time.Second * 3,
+	}
+	gdb.AddConfigNode("nodeinvalid", nodeInvalid)
+	if r, err := gdb.NewByGroup("nodeinvalid"); err != nil {
+		gtest.Error(err)
+	} else {
+		dbInvalid = r
+	}
+	dbInvalid = dbInvalid.Schema(TestSchema1)
 }
 
 func createTable(table ...string) string {
