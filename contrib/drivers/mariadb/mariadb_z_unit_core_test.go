@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package mysql_test
+package mariadb_test
 
 import (
 	"context"
@@ -27,10 +27,10 @@ func Test_New(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		node := gdb.ConfigNode{
 			Host: "127.0.0.1",
-			Port: "3306",
+			Port: "3307",
 			User: TestDbUser,
 			Pass: TestDbPass,
-			Type: "mysql",
+			Type: "mariadb",
 		}
 		newDb, err := gdb.New(node)
 		t.AssertNil(err)
