@@ -161,11 +161,11 @@ func (oai *OpenApiV3) structToSchema(object any) (*Schema, error) {
 	// If the tag has "type":"array" but the object is a struct (including pointers
 	// or interfaces to structs), we should process it as a normal struct, not as an array.
 	var (
-		t             = reflect.TypeOf(object)
+		t              = reflect.TypeOf(object)
 		objectIsStruct bool
 	)
 	if t != nil {
-		for t.Kind() == reflect.Ptr || t.Kind() == reflect.Interface {
+		for t.Kind() == reflect.Pointer || t.Kind() == reflect.Interface {
 			t = t.Elem()
 			if t == nil {
 				break
