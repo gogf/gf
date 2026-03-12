@@ -153,12 +153,16 @@ func (oai *OpenApiV3) getArrayRequestSchemaRef(requestObject any) (*SchemaRef, e
 			switch fieldKind {
 			case reflect.Struct:
 				// Register nested struct types
-				_, _ = oai.newSchemaRefWithGolangType(field.Type, nil)
+				if _, err := oai.newSchemaRefWithGolangType(field.Type, nil); err != nil {
+					return nil, err
+				}
 			case reflect.Slice, reflect.Array:
 				// Register slice element types if they are structs
 				elemType := field.Type.Elem()
 				if elemType.Kind() == reflect.Struct {
-					_, _ = oai.newSchemaRefWithGolangType(elemType, nil)
+					if _, err := oai.newSchemaRefWithGolangType(elemType, nil); err != nil {
+						return nil, err
+					}
 				}
 			}
 		}
