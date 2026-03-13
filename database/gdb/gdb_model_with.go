@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"database/sql"
+	"errors"
 	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -15,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -62,6 +64,38 @@ func (m *Model) With(objects ...any) *Model {
 func (m *Model) WithAll() *Model {
 	model := m.getModel()
 	model.withAll = true
+	return model
+}
+
+// Preload enables model association operations on all objects that have "with" tag in the struct.
+func (m *Model) Preload(enable ...bool) *Model {
+	model := m.getModel()
+	m.preload = true
+	if len(enable) > 0 {
+		model.preload = enable[0]
+	}
+	return m
+}
+
+// PreloadOptions sets the preload configuration options.
+// It matches fields by chunkName and allows runtime override of chunk settings.
+// Multiple options can be provided to configure different chunkName groups.
+func (m *Model) PreloadOptions(options ...PreloadOption) *Model {
+	model := m.getModel()
+	if model.preloadOptions == nil {
+		model.preloadOptions = make(map[string]*PreloadOption)
+	}
+
+	for _, opt := range options {
+		// Skip empty chunkName
+		if opt.ChunkName == "" {
+			continue
+		}
+		// Store a copy of the option
+		optCopy := opt
+		model.preloadOptions[opt.ChunkName] = &optCopy
+	}
+
 	return model
 }
 
@@ -176,11 +210,12 @@ func (m *Model) doWithScanStruct(pointer any) error {
 		if m.cacheEnabled && m.cacheOption.Name == "" {
 			model = model.Cache(m.cacheOption)
 		}
+		model.preload = m.preload
 		err = model.Fields(fieldKeys).
 			Where(relatedSourceName, relatedTargetValue).
 			Scan(bindToReflectValue)
 		// It ignores sql.ErrNoRows in with feature.
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return err
 		}
 	}
@@ -193,6 +228,13 @@ func (m *Model) doWithScanStructs(pointer any) error {
 	if len(m.withArray) == 0 && !m.withAll {
 		return nil
 	}
+
+	// If preload mode is enabled, use the new batch preload logic
+	if m.preload {
+		return m.doPreloadScan(pointer)
+	}
+
+	// Otherwise, use the legacy mode (original implementation)
 	if v, ok := pointer.(reflect.Value); ok {
 		pointer = v.Interface()
 	}
@@ -302,11 +344,12 @@ func (m *Model) doWithScanStructs(pointer any) error {
 		if m.cacheEnabled && m.cacheOption.Name == "" {
 			model = model.Cache(m.cacheOption)
 		}
+		model.preload = m.preload
 		err = model.Fields(fieldKeys).
 			Where(relatedSourceName, relatedTargetValue).
 			ScanList(pointer, fieldName, parsedTagOutput.With)
 		// It ignores sql.ErrNoRows in with feature.
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return err
 		}
 	}
@@ -314,29 +357,46 @@ func (m *Model) doWithScanStructs(pointer any) error {
 }
 
 type parseWithTagInFieldStructOutput struct {
-	With     string
-	Where    string
-	Order    string
-	Unscoped string
+	With         string
+	Where        string
+	Order        string
+	Unscoped     string
+	Chunked      bool
+	ChunkName    string
+	ChunkSize    int
+	ChunkMinRows int
 }
 
 func (m *Model) parseWithTagInFieldStruct(field gstructs.Field) (output parseWithTagInFieldStructOutput) {
 	var (
-		ormTag = field.Tag(OrmTagForStruct)
-		data   = make(map[string]string)
-		array  []string
-		key    string
+		ormTag         = field.Tag(OrmTagForStruct)
+		data           = make(map[string]string)
+		array          []string
+		key            string
+		ifChunkSize    bool
+		ifChunkMinRows bool
 	)
 	for _, v := range gstr.SplitAndTrim(ormTag, ",") {
+		v = gstr.Trim(v)
+		if v == "" {
+			continue
+		}
 		array = gstr.Split(v, ":")
 		if len(array) == 2 {
 			key = array[0]
 			data[key] = gstr.Trim(array[1])
+			switch key {
+			case OrmTagForChunkSize:
+				ifChunkSize = true
+			case OrmTagForChunkMinRows:
+				ifChunkMinRows = true
+			}
 		} else {
-			if key == OrmTagForWithOrder {
+			switch key {
+			case OrmTagForWithOrder:
 				// supporting multiple order fields
 				data[key] += "," + gstr.Trim(v)
-			} else {
+			default:
 				data[key] += " " + gstr.Trim(v)
 			}
 		}
@@ -345,5 +405,18 @@ func (m *Model) parseWithTagInFieldStruct(field gstructs.Field) (output parseWit
 	output.Where = data[OrmTagForWithWhere]
 	output.Order = data[OrmTagForWithOrder]
 	output.Unscoped = data[OrmTagForWithUnscoped]
+
+	// Parse chunk configuration
+	// Chunked is true only when both chunkSize and chunkMinRows are configured in tag and > 0
+	output.ChunkName = data[OrmTagForChunkName]
+	if ifChunkSize {
+		output.ChunkSize = gconv.Int(data[OrmTagForChunkSize])
+	}
+	if ifChunkMinRows {
+		output.ChunkMinRows = gconv.Int(data[OrmTagForChunkMinRows])
+	}
+	// Chunked means: Tag explicitly configured both chunkSize and chunkMinRows (and both > 0)
+	output.Chunked = ifChunkSize && ifChunkMinRows && output.ChunkSize > 0 && output.ChunkMinRows > 0
+
 	return
 }
