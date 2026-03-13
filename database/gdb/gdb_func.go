@@ -427,6 +427,7 @@ func GetPrimaryKeyCondition(primary string, where ...any) (newWhereCondition []a
 type formatWhereHolderInput struct {
 	WhereHolder
 	OmitNil   bool
+	OmitZero  bool
 	OmitEmpty bool
 	Schema    string
 	Table     string // Table is used for fields mapping and filtering internally.
@@ -457,6 +458,25 @@ func isKeyValueCanBeOmitEmpty(omitEmpty bool, whereType string, key, value any) 
 	return false
 }
 
+func isKeyValueCanBeOmitZero(omitZero bool, whereType string, key, value any) bool {
+	if !omitZero {
+		return false
+	}
+	switch whereType {
+	case whereHolderTypeNoArgs:
+		return false
+
+	case whereHolderTypeIn:
+		return empty.IsZero(value)
+
+	default:
+		if gstr.Count(gconv.String(key), "?") == 0 && empty.IsZero(value) {
+			return true
+		}
+	}
+	return false
+}
+
 // formatWhereHolder formats where statement and its arguments for `Where` and `Having` statements.
 func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (newWhere string, newArgs []any) {
 	var (
@@ -470,6 +490,9 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 	case reflect.Map:
 		for key, value := range MapOrStructToMapDeep(in.Where, true) {
 			if in.OmitNil && empty.IsNil(value) {
+				continue
+			}
+			if in.OmitZero && empty.IsZero(value) {
 				continue
 			}
 			if in.OmitEmpty && empty.IsEmpty(value) {
@@ -502,6 +525,9 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 				if in.OmitNil && empty.IsNil(value) {
 					return true
 				}
+				if in.OmitZero && empty.IsZero(value) {
+					return true
+				}
 				if in.OmitEmpty && empty.IsEmpty(value) {
 					return true
 				}
@@ -512,6 +538,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 					Key:       ketStr,
 					Value:     value,
 					OmitEmpty: in.OmitEmpty,
+					OmitZero:  in.OmitZero,
 					Prefix:    in.Prefix,
 					Type:      in.Type,
 				})
@@ -556,6 +583,9 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 				if in.OmitNil && empty.IsNil(foundValue) {
 					continue
 				}
+				if in.OmitZero && empty.IsZero(foundValue) {
+					continue
+				}
 				if in.OmitEmpty && empty.IsEmpty(foundValue) {
 					continue
 				}
@@ -566,6 +596,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 					Key:       foundKey,
 					Value:     foundValue,
 					OmitEmpty: in.OmitEmpty,
+					OmitZero:  in.OmitZero,
 					Prefix:    in.Prefix,
 					Type:      in.Type,
 				})
@@ -583,6 +614,9 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 		if isKeyValueCanBeOmitEmpty(in.OmitEmpty, in.Type, in.Where, omitEmptyCheckValue) {
 			return
 		}
+		if isKeyValueCanBeOmitZero(in.OmitZero, in.Type, in.Where, omitEmptyCheckValue) {
+			return
+		}
 		// Usually a string.
 		whereStr := gstr.Trim(gconv.String(in.Where))
 		// Is `whereStr` a field name which composed as a key-value condition?
@@ -597,6 +631,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 				Key:       whereStr,
 				Value:     in.Args[0],
 				OmitEmpty: in.OmitEmpty,
+				OmitZero:  in.OmitZero,
 				Prefix:    in.Prefix,
 				Type:      in.Type,
 			})
@@ -709,6 +744,7 @@ type formatWhereKeyValueInput struct {
 	Value     any           // The field value, can be any types.
 	Type      string        // The value in Where type.
 	OmitEmpty bool          // Ignores current condition key if `value` is empty.
+	OmitZero  bool          // Ignores current condition key if `value` is zero value of its type.
 	Prefix    string        // Field prefix, eg: "user", "order", etc.
 }
 
@@ -719,6 +755,9 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []any) {
 		holderCount = gstr.Count(quotedKey, "?")
 	)
 	if isKeyValueCanBeOmitEmpty(in.OmitEmpty, in.Type, quotedKey, in.Value) {
+		return in.Args
+	}
+	if isKeyValueCanBeOmitZero(in.OmitZero, in.Type, quotedKey, in.Value) {
 		return in.Args
 	}
 	if in.Prefix != "" && !gstr.Contains(quotedKey, ".") {
