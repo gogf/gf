@@ -33,65 +33,88 @@ import (
 )
 
 type (
-	CGenDao      struct{}
+	// CGenDao is the command handler struct for "gen dao" command.
+	CGenDao struct{}
+
+	// CGenDaoInput defines all input parameters for the "gen dao" command.
+	// It supports both command-line arguments and configuration file options.
 	CGenDaoInput struct {
 		g.Meta             `name:"dao" config:"{CGenDaoConfig}" usage:"{CGenDaoUsage}" brief:"{CGenDaoBrief}" eg:"{CGenDaoEg}" ad:"{CGenDaoAd}"`
-		Path               string   `name:"path"                short:"p"  brief:"{CGenDaoBriefPath}" d:"internal"`
-		Link               string   `name:"link"                short:"l"  brief:"{CGenDaoBriefLink}"`
-		Tables             string   `name:"tables"              short:"t"  brief:"{CGenDaoBriefTables}"`
-		TablesEx           string   `name:"tablesEx"            short:"x"  brief:"{CGenDaoBriefTablesEx}"`
-		ShardingPattern    []string `name:"shardingPattern"     short:"sp" brief:"{CGenDaoBriefShardingPattern}"`
-		Group              string   `name:"group"               short:"g"  brief:"{CGenDaoBriefGroup}" d:"default"`
-		Prefix             string   `name:"prefix"              short:"f"  brief:"{CGenDaoBriefPrefix}"`
-		RemovePrefix       string   `name:"removePrefix"        short:"r"  brief:"{CGenDaoBriefRemovePrefix}"`
-		RemoveFieldPrefix  string   `name:"removeFieldPrefix"   short:"rf" brief:"{CGenDaoBriefRemoveFieldPrefix}"`
-		JsonCase           string   `name:"jsonCase"            short:"j"  brief:"{CGenDaoBriefJsonCase}" d:"CamelLower"`
-		ImportPrefix       string   `name:"importPrefix"        short:"i"  brief:"{CGenDaoBriefImportPrefix}"`
-		DaoPath            string   `name:"daoPath"             short:"d"  brief:"{CGenDaoBriefDaoPath}" d:"dao"`
-		TablePath          string   `name:"tablePath"           short:"tp" brief:"{CGenDaoBriefTablePath}" d:"table"`
-		DoPath             string   `name:"doPath"              short:"o"  brief:"{CGenDaoBriefDoPath}" d:"model/do"`
-		EntityPath         string   `name:"entityPath"          short:"e"  brief:"{CGenDaoBriefEntityPath}" d:"model/entity"`
-		TplDaoTablePath    string   `name:"tplDaoTablePath"     short:"t0" brief:"{CGenDaoBriefTplDaoTablePath}"`
-		TplDaoIndexPath    string   `name:"tplDaoIndexPath"     short:"t1" brief:"{CGenDaoBriefTplDaoIndexPath}"`
-		TplDaoInternalPath string   `name:"tplDaoInternalPath"  short:"t2" brief:"{CGenDaoBriefTplDaoInternalPath}"`
-		TplDaoDoPath       string   `name:"tplDaoDoPath"        short:"t3" brief:"{CGenDaoBriefTplDaoDoPathPath}"`
-		TplDaoEntityPath   string   `name:"tplDaoEntityPath"    short:"t4" brief:"{CGenDaoBriefTplDaoEntityPath}"`
-		StdTime            bool     `name:"stdTime"             short:"s"  brief:"{CGenDaoBriefStdTime}" orphan:"true"`
-		WithTime           bool     `name:"withTime"            short:"w"  brief:"{CGenDaoBriefWithTime}" orphan:"true"`
-		GJsonSupport       bool     `name:"gJsonSupport"        short:"n"  brief:"{CGenDaoBriefGJsonSupport}" orphan:"true"`
-		OverwriteDao       bool     `name:"overwriteDao"        short:"v"  brief:"{CGenDaoBriefOverwriteDao}" orphan:"true"`
-		DescriptionTag     bool     `name:"descriptionTag"      short:"c"  brief:"{CGenDaoBriefDescriptionTag}" orphan:"true"`
-		NoJsonTag          bool     `name:"noJsonTag"           short:"k"  brief:"{CGenDaoBriefNoJsonTag}" orphan:"true"`
-		NoModelComment     bool     `name:"noModelComment"      short:"m"  brief:"{CGenDaoBriefNoModelComment}" orphan:"true"`
-		Clear              bool     `name:"clear"               short:"a"  brief:"{CGenDaoBriefClear}" orphan:"true"`
-		GenTable           bool     `name:"genTable"            short:"gt" brief:"{CGenDaoBriefGenTable}" orphan:"true"`
+		Path               string   `name:"path"                short:"p"  brief:"{CGenDaoBriefPath}" d:"internal"`          // Base directory path for generated files.
+		Link               string   `name:"link"                short:"l"  brief:"{CGenDaoBriefLink}"`                        // Database connection string (e.g., "mysql:root:pass@tcp(127.0.0.1:3306)/db").
+		Tables             string   `name:"tables"              short:"t"  brief:"{CGenDaoBriefTables}"`                      // Comma-separated table names or wildcard patterns to include.
+		TablesEx           string   `name:"tablesEx"            short:"x"  brief:"{CGenDaoBriefTablesEx}"`                    // Comma-separated table names or wildcard patterns to exclude.
+		ShardingPattern    []string `name:"shardingPattern"     short:"sp" brief:"{CGenDaoBriefShardingPattern}"`             // Patterns for sharding tables (e.g., "users_?" merges users_001, users_002 into one dao).
+		Group              string   `name:"group"               short:"g"  brief:"{CGenDaoBriefGroup}" d:"default"`           // Database configuration group name for ORM instance.
+		Prefix             string   `name:"prefix"              short:"f"  brief:"{CGenDaoBriefPrefix}"`                      // Prefix to add to all generated table names.
+		RemovePrefix       string   `name:"removePrefix"        short:"r"  brief:"{CGenDaoBriefRemovePrefix}"`                // Comma-separated prefixes to remove from table names.
+		RemoveFieldPrefix  string   `name:"removeFieldPrefix"   short:"rf" brief:"{CGenDaoBriefRemoveFieldPrefix}"`           // Comma-separated prefixes to remove from field names.
+		JsonCase           string   `name:"jsonCase"            short:"j"  brief:"{CGenDaoBriefJsonCase}" d:"CamelLower"`     // Naming convention for JSON tags (e.g., CamelLower, Snake).
+		ImportPrefix       string   `name:"importPrefix"        short:"i"  brief:"{CGenDaoBriefImportPrefix}"`                // Custom Go import path prefix for generated files.
+		DaoPath            string   `name:"daoPath"             short:"d"  brief:"{CGenDaoBriefDaoPath}" d:"dao"`             // Sub-directory under Path for dao files.
+		TablePath          string   `name:"tablePath"           short:"tp" brief:"{CGenDaoBriefTablePath}" d:"table"`         // Sub-directory under Path for table field definition files.
+		DoPath             string   `name:"doPath"              short:"o"  brief:"{CGenDaoBriefDoPath}" d:"model/do"`         // Sub-directory under Path for DO (Data Object) files.
+		EntityPath         string   `name:"entityPath"          short:"e"  brief:"{CGenDaoBriefEntityPath}" d:"model/entity"` // Sub-directory under Path for entity struct files.
+		TplDaoTablePath    string   `name:"tplDaoTablePath"     short:"t0" brief:"{CGenDaoBriefTplDaoTablePath}"`             // Custom template file for dao table generation.
+		TplDaoIndexPath    string   `name:"tplDaoIndexPath"     short:"t1" brief:"{CGenDaoBriefTplDaoIndexPath}"`             // Custom template file for dao index generation.
+		TplDaoInternalPath string   `name:"tplDaoInternalPath"  short:"t2" brief:"{CGenDaoBriefTplDaoInternalPath}"`          // Custom template file for dao internal generation.
+		TplDaoDoPath       string   `name:"tplDaoDoPath"        short:"t3" brief:"{CGenDaoBriefTplDaoDoPathPath}"`            // Custom template file for DO generation.
+		TplDaoEntityPath   string   `name:"tplDaoEntityPath"    short:"t4" brief:"{CGenDaoBriefTplDaoEntityPath}"`            // Custom template file for entity generation.
+		StdTime            bool     `name:"stdTime"             short:"s"  brief:"{CGenDaoBriefStdTime}" orphan:"true"`       // Use stdlib time.Time instead of gtime.Time for time fields.
+		WithTime           bool     `name:"withTime"            short:"w"  brief:"{CGenDaoBriefWithTime}" orphan:"true"`      // Add creation timestamp to generated file headers.
+		GJsonSupport       bool     `name:"gJsonSupport"        short:"n"  brief:"{CGenDaoBriefGJsonSupport}" orphan:"true"`  // Use *gjson.Json instead of string for JSON fields.
+		OverwriteDao       bool     `name:"overwriteDao"        short:"v"  brief:"{CGenDaoBriefOverwriteDao}" orphan:"true"`  // Overwrite existing dao files (both index and internal).
+		DescriptionTag     bool     `name:"descriptionTag"      short:"c"  brief:"{CGenDaoBriefDescriptionTag}" orphan:"true"`// Add description struct tag with field comment.
+		NoJsonTag          bool     `name:"noJsonTag"           short:"k"  brief:"{CGenDaoBriefNoJsonTag}" orphan:"true"`     // Omit json struct tags from generated structs.
+		NoModelComment     bool     `name:"noModelComment"      short:"m"  brief:"{CGenDaoBriefNoModelComment}" orphan:"true"`// Omit inline comments from generated struct fields.
+		Clear              bool     `name:"clear"               short:"a"  brief:"{CGenDaoBriefClear}" orphan:"true"`         // Delete generated files that no longer correspond to database tables.
+		GenTable           bool     `name:"genTable"            short:"gt" brief:"{CGenDaoBriefGenTable}" orphan:"true"`      // Enable generation of table field definition files.
+		SqlDir             string   `name:"sqlDir"              short:"sd" brief:"{CGenDaoBriefSqlDir}"`                      // Directory of SQL DDL files for offline generation (no DB connection needed).
+		SqlType            string   `name:"sqlType"             short:"st" brief:"{CGenDaoBriefSqlType}" d:"mysql"`           // SQL dialect when using SqlDir (mysql, pgsql, mssql, oracle, sqlite).
 
-		TypeMapping  map[DBFieldTypeName]CustomAttributeType  `name:"typeMapping"  short:"y"  brief:"{CGenDaoBriefTypeMapping}"  orphan:"true"`
+		// TypeMapping maps database field type names to custom Go types.
+		// For example, mapping "decimal" to "float64" or "uuid" to "uuid.UUID".
+		TypeMapping map[DBFieldTypeName]CustomAttributeType `name:"typeMapping"  short:"y"  brief:"{CGenDaoBriefTypeMapping}"  orphan:"true"`
+		// FieldMapping maps specific table.field combinations to custom Go types.
+		// For example, mapping "user.balance" to "decimal.Decimal".
 		FieldMapping map[DBTableFieldName]CustomAttributeType `name:"fieldMapping" short:"fm" brief:"{CGenDaoBriefFieldMapping}" orphan:"true"`
 
-		// internal usage purpose.
+		// genItems tracks all generated file paths and directories for cleanup purposes.
 		genItems *CGenDaoInternalGenItems
 	}
+
+	// CGenDaoOutput is the output of the "gen dao" command (currently empty).
 	CGenDaoOutput struct{}
 
+	// CGenDaoInternalInput extends CGenDaoInput with runtime-resolved fields
+	// used during the actual generation process.
 	CGenDaoInternalInput struct {
 		CGenDaoInput
-		DB               gdb.DB
-		TableNames       []string
-		NewTableNames    []string
-		ShardingTableSet *gset.StrSet
+		DB               gdb.DB       // Database connection instance (nil in SQL file mode).
+		TableNames       []string     // Original table names from database or SQL files.
+		NewTableNames    []string     // Processed table names after prefix removal and sharding.
+		ShardingTableSet *gset.StrSet // Set of table names identified as sharding tables.
+		// TableFieldsMap stores pre-parsed table fields from SQL files.
+		// When this is set (SQL file mode), DB may be nil.
+		TableFieldsMap map[string]map[string]*gdb.TableField
 	}
-	DBTableFieldName    = string
-	DBFieldTypeName     = string
+
+	// DBTableFieldName is the fully-qualified field name in "table.field" format.
+	DBTableFieldName = string
+	// DBFieldTypeName is the database column type name (e.g., "varchar", "decimal").
+	DBFieldTypeName = string
+	// CustomAttributeType defines a custom Go type mapping with its import path.
 	CustomAttributeType struct {
-		Type   string `brief:"custom attribute type name"`
-		Import string `brief:"custom import for this type"`
+		Type   string `brief:"custom attribute type name"` // Go type name (e.g., "decimal.Decimal").
+		Import string `brief:"custom import for this type"` // Go import path (e.g., "github.com/shopspring/decimal").
 	}
 )
 
 var (
-	createdAt          = gtime.Now()
-	tplView            = gview.New()
+	createdAt = gtime.Now()  // Timestamp captured at program start, used in generated file headers.
+	tplView   = gview.New()  // Shared template view instance for rendering all Go file templates.
+	// defaultTypeMapping provides built-in type mappings from database types to Go types.
+	// User-provided TypeMapping takes precedence over these defaults.
 	defaultTypeMapping = map[DBFieldTypeName]CustomAttributeType{
 		"decimal": {
 			Type: "float64",
@@ -111,7 +134,8 @@ var (
 		},
 	}
 
-	// tablewriter Options
+	// twRenderer configures the tablewriter to render without borders or separators,
+	// producing clean aligned text output for generated Go source code.
 	twRenderer = tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
 		Borders: tw.Border{Top: tw.Off, Bottom: tw.Off, Left: tw.Off, Right: tw.Off},
 		Settings: tw.Settings{
@@ -126,9 +150,17 @@ var (
 	})
 )
 
+// Dao is the main entry point for the "gen dao" command.
+// It dispatches to the appropriate generation mode based on input:
+//   - SQL file mode (SqlDir is set): generates from DDL files without database connection.
+//   - Link mode (Link is set): uses a direct database connection string.
+//   - Config mode: reads database configuration from the application config file.
 func (c CGenDao) Dao(ctx context.Context, in CGenDaoInput) (out *CGenDaoOutput, err error) {
 	in.genItems = newCGenDaoInternalGenItems()
-	if in.Link != "" {
+	if in.SqlDir != "" {
+		// SQL file mode: generate from SQL DDL files without database connection.
+		doGenDaoFromSQLFiles(ctx, in)
+	} else if in.Link != "" {
 		doGenDaoForArray(ctx, -1, in)
 	} else if g.Cfg().Available(ctx) {
 		v := g.Cfg().MustGet(ctx, CGenDaoConfig)
@@ -147,7 +179,11 @@ func (c CGenDao) Dao(ctx context.Context, in CGenDaoInput) (out *CGenDaoOutput, 
 	return
 }
 
-// doGenDaoForArray implements the "gen dao" command for configuration array.
+// doGenDaoForArray implements the "gen dao" command for a single configuration entry.
+// When index >= 0, it reads configuration from the array at that index.
+// When index < 0, it uses the input as-is (for Link mode or single config mode).
+// It performs the full generation pipeline: connect to DB, resolve tables,
+// apply sharding patterns, and generate dao/table/do/entity files.
 func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 	var (
 		err error
@@ -332,6 +368,10 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 	in.genItems.SetClear(in.Clear)
 }
 
+// getImportPartContent analyzes the generated Go source code and builds the import block.
+// It automatically detects usage of gtime.Time, time.Time, and gjson.Json in the source,
+// and includes the corresponding import paths. Additional custom imports (from TypeMapping
+// or FieldMapping) are appended and their dependencies are resolved via "go get" if needed.
 func getImportPartContent(ctx context.Context, source string, isDo bool, appendImports []string) string {
 	var packageImportsArray = garray.NewStrArray()
 	if isDo {
@@ -385,6 +425,9 @@ func getImportPartContent(ctx context.Context, source string, isDo bool, appendI
 	return packageImportsStr
 }
 
+// assignDefaultVar sets the default template variables for datetime strings
+// used in generated file headers. The creation timestamp is only included
+// when WithTime is enabled in the input configuration.
 func assignDefaultVar(view *gview.View, in CGenDaoInternalInput) {
 	var (
 		tplCreatedAtDatetimeStr string
@@ -399,6 +442,8 @@ func assignDefaultVar(view *gview.View, in CGenDaoInternalInput) {
 	})
 }
 
+// sortFieldKeyForDao returns field names sorted by their Index in the TableField map.
+// This preserves the original column order as defined in the database table schema.
 func sortFieldKeyForDao(fieldMap map[string]*gdb.TableField) []string {
 	names := make(map[int]string)
 	for _, field := range fieldMap {
@@ -423,6 +468,20 @@ func sortFieldKeyForDao(fieldMap map[string]*gdb.TableField) []string {
 	return result
 }
 
+// getTableFields retrieves table fields either from the pre-parsed TableFieldsMap (SQL file mode)
+// or from the database connection. This abstracts the data source for generation functions.
+func getTableFields(ctx context.Context, in CGenDaoInternalInput, tableName string) (map[string]*gdb.TableField, error) {
+	if in.TableFieldsMap != nil {
+		if fields, ok := in.TableFieldsMap[tableName]; ok {
+			return fields, nil
+		}
+		return nil, fmt.Errorf("table '%s' not found in SQL files", tableName)
+	}
+	return in.DB.TableFields(ctx, tableName)
+}
+
+// getTemplateFromPathOrDefault returns the template content from the given file path.
+// If the file path is empty or the file has no content, it falls back to the default template.
 func getTemplateFromPathOrDefault(filePath string, def string) string {
 	if filePath != "" {
 		if contents := gfile.GetContents(filePath); contents != "" {
@@ -488,4 +547,131 @@ func filterTablesByPatterns(allTables []string, patterns []string) []string {
 		}
 	}
 	return result
+}
+
+// doGenDaoFromSQLFiles implements the "gen dao" command for SQL file mode.
+// It parses DDL SQL files to obtain table structures without requiring a database connection.
+func doGenDaoFromSQLFiles(ctx context.Context, in CGenDaoInput) {
+	if dirRealPath := gfile.RealPath(in.Path); dirRealPath == "" {
+		mlog.Fatalf(`path "%s" does not exist`, in.Path)
+	}
+	if dirRealPath := gfile.RealPath(in.SqlDir); dirRealPath == "" {
+		mlog.Fatalf(`SQL directory "%s" does not exist`, in.SqlDir)
+	}
+
+	dialect := SQLDialect(strings.ToLower(in.SqlType))
+	tableNames, tableFieldsMap := ParseSQLFilesFromDir(in.SqlDir, dialect)
+
+	removePrefixArray := gstr.SplitAndTrim(in.RemovePrefix, ",")
+
+	// Table filtering by name patterns.
+	if in.Tables != "" {
+		inputTables := gstr.SplitAndTrim(in.Tables, ",")
+		var hasPattern bool
+		for _, t := range inputTables {
+			if containsWildcard(t) {
+				hasPattern = true
+				break
+			}
+		}
+		if hasPattern {
+			tableNames = filterTablesByPatterns(tableNames, inputTables)
+		} else {
+			tableNames = inputTables
+		}
+	}
+
+	// Table excluding.
+	if in.TablesEx != "" {
+		array := garray.NewStrArrayFrom(tableNames)
+		for _, p := range gstr.SplitAndTrim(in.TablesEx, ",") {
+			if containsWildcard(p) {
+				regPattern := "^" + patternToRegex(p) + "$"
+				for _, v := range array.Clone().Slice() {
+					if gregex.IsMatchString(regPattern, v) {
+						array.RemoveValue(v)
+					}
+				}
+			} else {
+				array.RemoveValue(p)
+			}
+		}
+		tableNames = array.Slice()
+	}
+
+	// merge default typeMapping.
+	if in.TypeMapping == nil {
+		in.TypeMapping = defaultTypeMapping
+	} else {
+		for key, typeMapping := range defaultTypeMapping {
+			if _, ok := in.TypeMapping[key]; !ok {
+				in.TypeMapping[key] = typeMapping
+			}
+		}
+	}
+
+	// Process table names (prefix removal, sharding, etc.)
+	var (
+		newTableNames       = make([]string, len(tableNames))
+		shardingNewTableSet = gset.NewStrSet()
+	)
+	sortedShardingPatterns := make([]string, len(in.ShardingPattern))
+	copy(sortedShardingPatterns, in.ShardingPattern)
+	sort.Slice(sortedShardingPatterns, func(i, j int) bool {
+		return len(sortedShardingPatterns[i]) > len(sortedShardingPatterns[j])
+	})
+	for i, tableName := range tableNames {
+		newTableName := tableName
+		for _, v := range removePrefixArray {
+			newTableName = gstr.TrimLeftStr(newTableName, v, 1)
+		}
+		if len(sortedShardingPatterns) > 0 {
+			for _, pattern := range sortedShardingPatterns {
+				var (
+					match      []string
+					regPattern = gstr.Replace(pattern, "?", `(.+)`)
+					err        error
+				)
+				match, err = gregex.MatchString(regPattern, newTableName)
+				if err != nil {
+					mlog.Fatalf(`invalid sharding pattern "%s": %+v`, pattern, err)
+				}
+				if len(match) < 2 {
+					continue
+				}
+				newTableName = gstr.Replace(pattern, "?", "")
+				newTableName = gstr.Trim(newTableName, `_.-`)
+				if shardingNewTableSet.Contains(newTableName) {
+					tableNames[i] = ""
+					break
+				}
+				shardingNewTableSet.Add(in.Prefix + newTableName)
+				break
+			}
+		}
+		newTableName = in.Prefix + newTableName
+		if tableNames[i] != "" {
+			newTableNames[i] = newTableName
+		}
+	}
+	tableNames = garray.NewStrArrayFrom(tableNames).FilterEmpty().Slice()
+	newTableNames = garray.NewStrArrayFrom(newTableNames).FilterEmpty().Slice()
+	in.genItems.Scale()
+
+	internalInput := CGenDaoInternalInput{
+		CGenDaoInput:     in,
+		DB:               nil,
+		TableNames:       tableNames,
+		NewTableNames:    newTableNames,
+		ShardingTableSet: shardingNewTableSet,
+		TableFieldsMap:   tableFieldsMap,
+	}
+
+	// Generate all files using the same flow as database mode.
+	generateDao(ctx, internalInput)
+	generateTable(ctx, internalInput)
+	generateDo(ctx, internalInput)
+	generateEntity(ctx, internalInput)
+
+	in.genItems.SetClear(in.Clear)
 }

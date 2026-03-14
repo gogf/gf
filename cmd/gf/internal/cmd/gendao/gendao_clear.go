@@ -13,6 +13,10 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
+// doClear performs cleanup of stale generated files across all generation items.
+// It collects all generated file paths from all items, then for each item with
+// Clear enabled, removes any .go files in its directories that are NOT in the
+// generated file list. This ensures files for dropped/removed tables are cleaned up.
 func doClear(items *CGenDaoInternalGenItems) {
 	var allGeneratedFilePaths = make([]string, 0)
 	for _, item := range items.Items {
@@ -29,6 +33,10 @@ func doClear(items *CGenDaoInternalGenItems) {
 	}
 }
 
+// doClearItem removes stale .go files for a single generation item.
+// It scans all storage directories for .go files and deletes any file
+// that is not in the allGeneratedFilePaths list (i.e., no longer corresponds
+// to an existing database table).
 func doClearItem(item CGenDaoInternalGenItem, allGeneratedFilePaths []string) {
 	var generatedFilePaths = make([]string, 0)
 	for _, dirPath := range item.StorageDirPaths {

@@ -20,12 +20,15 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
+// generateEntity generates entity struct files for all tables.
+// Entity structs represent database table rows with concrete Go types,
+// including orm tags for field-to-column mapping and json tags for serialization.
 func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
 	var dirPathEntity = gfile.Join(in.Path, in.EntityPath)
 	in.genItems.AppendDirPath(dirPathEntity)
 	// Model content.
 	for i, tableName := range in.TableNames {
-		fieldMap, err := in.DB.TableFields(ctx, tableName)
+		fieldMap, err := getTableFields(ctx, in, tableName)
 		if err != nil {
 			mlog.Fatalf("fetching tables fields failed for table '%s':\n%v", tableName, err)
 		}
@@ -60,6 +63,9 @@ func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
 	}
 }
 
+// generateEntityContent renders the entity file content using the template engine.
+// It assembles template variables and parses the entity template to produce
+// the final Go source file content with proper imports and struct definition.
 func generateEntityContent(
 	ctx context.Context, in CGenDaoInternalInput, tableName, tableNameCamelCase, structDefine string, appendImports []string,
 ) string {

@@ -864,6 +864,24 @@ const (
 	fieldTypeTimestampz = "timestamptz"
 	fieldTypeJson       = "json"
 	fieldTypeJsonb      = "jsonb"
+
+	// PostgreSQL specific types.
+	fieldTypeInt2            = "int2"
+	fieldTypeInt4            = "int4"
+	fieldTypeInteger         = "integer"
+	fieldTypeInt8            = "int8"
+	fieldTypeFloat4          = "float4"
+	fieldTypeFloat8          = "float8"
+	fieldTypeDoublePrecision = "double precision"
+	fieldTypeBoolean         = "boolean"
+
+	// Oracle specific types.
+	fieldTypeNumber = "number"
+
+	// MSSQL specific types.
+	fieldTypeDatetime2      = "datetime2"
+	fieldTypeDatetimeOffset = "datetimeoffset"
+	fieldTypeSmalldatetime  = "smalldatetime"
 )
 
 var (
