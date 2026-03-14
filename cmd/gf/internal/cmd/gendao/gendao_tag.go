@@ -74,6 +74,8 @@ CONFIGURATION SUPPORT
 	CGenDaoBriefTypeMapping       = `custom local type mapping for generated struct attributes relevant to fields of table`
 	CGenDaoBriefFieldMapping      = `custom local type mapping for generated struct attributes relevant to specific fields of table`
 	CGenDaoBriefShardingPattern   = `sharding pattern for table name, e.g. "users_?" will be replace tables "users_001,users_002,..." to "users" dao`
+	CGenDaoBriefSqlDir            = `directory path of SQL DDL files for generating dao/do/entity without database connection`
+	CGenDaoBriefSqlType           = `SQL dialect type when using sqlDir, options: mysql|pgsql|mssql|oracle|sqlite, default is "mysql"`
 	CGenDaoBriefGroup             = `
 specifying the configuration group name of database for generated ORM instance,
 it's not necessary and the default value is "default"
@@ -95,21 +97,23 @@ generated json tag case for model struct, cases are as follows:
 	CGenDaoBriefTplDaoDoPathPath   = `template file path for dao do file`
 	CGenDaoBriefTplDaoEntityPath   = `template file path for dao entity file`
 
-	tplVarTableName               = `TplTableName`
-	tplVarTableNameCamelCase      = `TplTableNameCamelCase`
-	tplVarTableNameCamelLowerCase = `TplTableNameCamelLowerCase`
-	tplVarTableSharding           = `TplTableSharding`
-	tplVarTableShardingPrefix     = `TplTableShardingPrefix`
-	tplVarTableFields             = `TplTableFields`
-	tplVarPackageImports          = `TplPackageImports`
-	tplVarImportPrefix            = `TplImportPrefix`
-	tplVarStructDefine            = `TplStructDefine`
-	tplVarColumnDefine            = `TplColumnDefine`
-	tplVarColumnNames             = `TplColumnNames`
-	tplVarGroupName               = `TplGroupName`
-	tplVarDatetimeStr             = `TplDatetimeStr`
-	tplVarCreatedAtDatetimeStr    = `TplCreatedAtDatetimeStr`
-	tplVarPackageName             = `TplPackageName`
+	// Template variable names used by gview for rendering Go file templates.
+	// These are passed to tplView.Assigns() and referenced in template files.
+	tplVarTableName               = `TplTableName`               // Original database table name.
+	tplVarTableNameCamelCase      = `TplTableNameCamelCase`      // PascalCase table name (e.g., "UserDetail").
+	tplVarTableNameCamelLowerCase = `TplTableNameCamelLowerCase` // camelCase table name (e.g., "userDetail").
+	tplVarTableSharding           = `TplTableSharding`           // Boolean: whether this is a sharding table.
+	tplVarTableShardingPrefix     = `TplTableShardingPrefix`     // Sharding table name prefix (e.g., "user_").
+	tplVarTableFields             = `TplTableFields`             // Generated table field definitions.
+	tplVarPackageImports          = `TplPackageImports`          // Generated import block string.
+	tplVarImportPrefix            = `TplImportPrefix`            // Go import path prefix for internal dao package.
+	tplVarStructDefine            = `TplStructDefine`            // Generated struct definition string.
+	tplVarColumnDefine            = `TplColumnDefine`            // Column struct field definitions for dao internal.
+	tplVarColumnNames             = `TplColumnNames`             // Column name-to-string assignments for dao internal.
+	tplVarGroupName               = `TplGroupName`               // Database configuration group name.
+	tplVarDatetimeStr             = `TplDatetimeStr`             // Current datetime string for file headers.
+	tplVarCreatedAtDatetimeStr    = `TplCreatedAtDatetimeStr`    // "Created at <datetime>" string (empty if WithTime is false).
+	tplVarPackageName             = `TplPackageName`             // Go package name for the generated file.
 )
 
 func init() {
@@ -145,6 +149,8 @@ func init() {
 		`CGenDaoBriefTypeMapping`:        CGenDaoBriefTypeMapping,
 		`CGenDaoBriefFieldMapping`:       CGenDaoBriefFieldMapping,
 		`CGenDaoBriefShardingPattern`:    CGenDaoBriefShardingPattern,
+		`CGenDaoBriefSqlDir`:             CGenDaoBriefSqlDir,
+		`CGenDaoBriefSqlType`:            CGenDaoBriefSqlType,
 		`CGenDaoBriefGroup`:              CGenDaoBriefGroup,
 		`CGenDaoBriefJsonCase`:           CGenDaoBriefJsonCase,
 		`CGenDaoBriefTplDaoIndexPath`:    CGenDaoBriefTplDaoIndexPath,

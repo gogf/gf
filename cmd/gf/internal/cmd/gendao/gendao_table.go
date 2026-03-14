@@ -62,7 +62,7 @@ type generateTableSingleInput struct {
 // generateTableSingle generates dao files for a single table.
 func generateTableSingle(ctx context.Context, in generateTableSingleInput) {
 	// Generating table data preparing.
-	fieldMap, err := in.DB.TableFields(ctx, in.TableName)
+	fieldMap, err := getTableFields(ctx, in.CGenDaoInternalInput, in.TableName)
 	if err != nil {
 		mlog.Fatalf(`fetching tables fields failed for table "%s": %+v`, in.TableName, err)
 	}
