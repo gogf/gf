@@ -20,7 +20,7 @@ up:
 	fi; \
 	echo "Commit: $$COMMIT_MSG"; \
 	git commit -m "$$COMMIT_MSG" && \
-	git push origin
+	git push origin $$(git branch --show-current)
 
 # execute "go mod tidy" on all folders that have go.mod file
 .PHONY: tidy
