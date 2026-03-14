@@ -40,37 +40,37 @@ type (
 	// It supports both command-line arguments and configuration file options.
 	CGenDaoInput struct {
 		g.Meta             `name:"dao" config:"{CGenDaoConfig}" usage:"{CGenDaoUsage}" brief:"{CGenDaoBrief}" eg:"{CGenDaoEg}" ad:"{CGenDaoAd}"`
-		Path               string   `name:"path"                short:"p"  brief:"{CGenDaoBriefPath}" d:"internal"`          // Base directory path for generated files.
-		Link               string   `name:"link"                short:"l"  brief:"{CGenDaoBriefLink}"`                        // Database connection string (e.g., "mysql:root:pass@tcp(127.0.0.1:3306)/db").
-		Tables             string   `name:"tables"              short:"t"  brief:"{CGenDaoBriefTables}"`                      // Comma-separated table names or wildcard patterns to include.
-		TablesEx           string   `name:"tablesEx"            short:"x"  brief:"{CGenDaoBriefTablesEx}"`                    // Comma-separated table names or wildcard patterns to exclude.
-		ShardingPattern    []string `name:"shardingPattern"     short:"sp" brief:"{CGenDaoBriefShardingPattern}"`             // Patterns for sharding tables (e.g., "users_?" merges users_001, users_002 into one dao).
-		Group              string   `name:"group"               short:"g"  brief:"{CGenDaoBriefGroup}" d:"default"`           // Database configuration group name for ORM instance.
-		Prefix             string   `name:"prefix"              short:"f"  brief:"{CGenDaoBriefPrefix}"`                      // Prefix to add to all generated table names.
-		RemovePrefix       string   `name:"removePrefix"        short:"r"  brief:"{CGenDaoBriefRemovePrefix}"`                // Comma-separated prefixes to remove from table names.
-		RemoveFieldPrefix  string   `name:"removeFieldPrefix"   short:"rf" brief:"{CGenDaoBriefRemoveFieldPrefix}"`           // Comma-separated prefixes to remove from field names.
-		JsonCase           string   `name:"jsonCase"            short:"j"  brief:"{CGenDaoBriefJsonCase}" d:"CamelLower"`     // Naming convention for JSON tags (e.g., CamelLower, Snake).
-		ImportPrefix       string   `name:"importPrefix"        short:"i"  brief:"{CGenDaoBriefImportPrefix}"`                // Custom Go import path prefix for generated files.
-		DaoPath            string   `name:"daoPath"             short:"d"  brief:"{CGenDaoBriefDaoPath}" d:"dao"`             // Sub-directory under Path for dao files.
-		TablePath          string   `name:"tablePath"           short:"tp" brief:"{CGenDaoBriefTablePath}" d:"table"`         // Sub-directory under Path for table field definition files.
-		DoPath             string   `name:"doPath"              short:"o"  brief:"{CGenDaoBriefDoPath}" d:"model/do"`         // Sub-directory under Path for DO (Data Object) files.
-		EntityPath         string   `name:"entityPath"          short:"e"  brief:"{CGenDaoBriefEntityPath}" d:"model/entity"` // Sub-directory under Path for entity struct files.
-		TplDaoTablePath    string   `name:"tplDaoTablePath"     short:"t0" brief:"{CGenDaoBriefTplDaoTablePath}"`             // Custom template file for dao table generation.
-		TplDaoIndexPath    string   `name:"tplDaoIndexPath"     short:"t1" brief:"{CGenDaoBriefTplDaoIndexPath}"`             // Custom template file for dao index generation.
-		TplDaoInternalPath string   `name:"tplDaoInternalPath"  short:"t2" brief:"{CGenDaoBriefTplDaoInternalPath}"`          // Custom template file for dao internal generation.
-		TplDaoDoPath       string   `name:"tplDaoDoPath"        short:"t3" brief:"{CGenDaoBriefTplDaoDoPathPath}"`            // Custom template file for DO generation.
-		TplDaoEntityPath   string   `name:"tplDaoEntityPath"    short:"t4" brief:"{CGenDaoBriefTplDaoEntityPath}"`            // Custom template file for entity generation.
-		StdTime            bool     `name:"stdTime"             short:"s"  brief:"{CGenDaoBriefStdTime}" orphan:"true"`       // Use stdlib time.Time instead of gtime.Time for time fields.
-		WithTime           bool     `name:"withTime"            short:"w"  brief:"{CGenDaoBriefWithTime}" orphan:"true"`      // Add creation timestamp to generated file headers.
-		GJsonSupport       bool     `name:"gJsonSupport"        short:"n"  brief:"{CGenDaoBriefGJsonSupport}" orphan:"true"`  // Use *gjson.Json instead of string for JSON fields.
-		OverwriteDao       bool     `name:"overwriteDao"        short:"v"  brief:"{CGenDaoBriefOverwriteDao}" orphan:"true"`  // Overwrite existing dao files (both index and internal).
-		DescriptionTag     bool     `name:"descriptionTag"      short:"c"  brief:"{CGenDaoBriefDescriptionTag}" orphan:"true"`// Add description struct tag with field comment.
-		NoJsonTag          bool     `name:"noJsonTag"           short:"k"  brief:"{CGenDaoBriefNoJsonTag}" orphan:"true"`     // Omit json struct tags from generated structs.
-		NoModelComment     bool     `name:"noModelComment"      short:"m"  brief:"{CGenDaoBriefNoModelComment}" orphan:"true"`// Omit inline comments from generated struct fields.
-		Clear              bool     `name:"clear"               short:"a"  brief:"{CGenDaoBriefClear}" orphan:"true"`         // Delete generated files that no longer correspond to database tables.
-		GenTable           bool     `name:"genTable"            short:"gt" brief:"{CGenDaoBriefGenTable}" orphan:"true"`      // Enable generation of table field definition files.
-		SqlDir             string   `name:"sqlDir"              short:"sd" brief:"{CGenDaoBriefSqlDir}"`                      // Directory of SQL DDL files for offline generation (no DB connection needed).
-		SqlType            string   `name:"sqlType"             short:"st" brief:"{CGenDaoBriefSqlType}" d:"mysql"`           // SQL dialect when using SqlDir (mysql, pgsql, mssql, oracle, sqlite).
+		Path               string   `name:"path"                short:"p"  brief:"{CGenDaoBriefPath}" d:"internal"`            // Base directory path for generated files.
+		Link               string   `name:"link"                short:"l"  brief:"{CGenDaoBriefLink}"`                         // Database connection string (e.g., "mysql:root:pass@tcp(127.0.0.1:3306)/db").
+		Tables             string   `name:"tables"              short:"t"  brief:"{CGenDaoBriefTables}"`                       // Comma-separated table names or wildcard patterns to include.
+		TablesEx           string   `name:"tablesEx"            short:"x"  brief:"{CGenDaoBriefTablesEx}"`                     // Comma-separated table names or wildcard patterns to exclude.
+		ShardingPattern    []string `name:"shardingPattern"     short:"sp" brief:"{CGenDaoBriefShardingPattern}"`              // Patterns for sharding tables (e.g., "users_?" merges users_001, users_002 into one dao).
+		Group              string   `name:"group"               short:"g"  brief:"{CGenDaoBriefGroup}" d:"default"`            // Database configuration group name for ORM instance.
+		Prefix             string   `name:"prefix"              short:"f"  brief:"{CGenDaoBriefPrefix}"`                       // Prefix to add to all generated table names.
+		RemovePrefix       string   `name:"removePrefix"        short:"r"  brief:"{CGenDaoBriefRemovePrefix}"`                 // Comma-separated prefixes to remove from table names.
+		RemoveFieldPrefix  string   `name:"removeFieldPrefix"   short:"rf" brief:"{CGenDaoBriefRemoveFieldPrefix}"`            // Comma-separated prefixes to remove from field names.
+		JsonCase           string   `name:"jsonCase"            short:"j"  brief:"{CGenDaoBriefJsonCase}" d:"CamelLower"`      // Naming convention for JSON tags (e.g., CamelLower, Snake).
+		ImportPrefix       string   `name:"importPrefix"        short:"i"  brief:"{CGenDaoBriefImportPrefix}"`                 // Custom Go import path prefix for generated files.
+		DaoPath            string   `name:"daoPath"             short:"d"  brief:"{CGenDaoBriefDaoPath}" d:"dao"`              // Sub-directory under Path for dao files.
+		TablePath          string   `name:"tablePath"           short:"tp" brief:"{CGenDaoBriefTablePath}" d:"table"`          // Sub-directory under Path for table field definition files.
+		DoPath             string   `name:"doPath"              short:"o"  brief:"{CGenDaoBriefDoPath}" d:"model/do"`          // Sub-directory under Path for DO (Data Object) files.
+		EntityPath         string   `name:"entityPath"          short:"e"  brief:"{CGenDaoBriefEntityPath}" d:"model/entity"`  // Sub-directory under Path for entity struct files.
+		TplDaoTablePath    string   `name:"tplDaoTablePath"     short:"t0" brief:"{CGenDaoBriefTplDaoTablePath}"`              // Custom template file for dao table generation.
+		TplDaoIndexPath    string   `name:"tplDaoIndexPath"     short:"t1" brief:"{CGenDaoBriefTplDaoIndexPath}"`              // Custom template file for dao index generation.
+		TplDaoInternalPath string   `name:"tplDaoInternalPath"  short:"t2" brief:"{CGenDaoBriefTplDaoInternalPath}"`           // Custom template file for dao internal generation.
+		TplDaoDoPath       string   `name:"tplDaoDoPath"        short:"t3" brief:"{CGenDaoBriefTplDaoDoPathPath}"`             // Custom template file for DO generation.
+		TplDaoEntityPath   string   `name:"tplDaoEntityPath"    short:"t4" brief:"{CGenDaoBriefTplDaoEntityPath}"`             // Custom template file for entity generation.
+		StdTime            bool     `name:"stdTime"             short:"s"  brief:"{CGenDaoBriefStdTime}" orphan:"true"`        // Use stdlib time.Time instead of gtime.Time for time fields.
+		WithTime           bool     `name:"withTime"            short:"w"  brief:"{CGenDaoBriefWithTime}" orphan:"true"`       // Add creation timestamp to generated file headers.
+		GJsonSupport       bool     `name:"gJsonSupport"        short:"n"  brief:"{CGenDaoBriefGJsonSupport}" orphan:"true"`   // Use *gjson.Json instead of string for JSON fields.
+		OverwriteDao       bool     `name:"overwriteDao"        short:"v"  brief:"{CGenDaoBriefOverwriteDao}" orphan:"true"`   // Overwrite existing dao files (both index and internal).
+		DescriptionTag     bool     `name:"descriptionTag"      short:"c"  brief:"{CGenDaoBriefDescriptionTag}" orphan:"true"` // Add description struct tag with field comment.
+		NoJsonTag          bool     `name:"noJsonTag"           short:"k"  brief:"{CGenDaoBriefNoJsonTag}" orphan:"true"`      // Omit json struct tags from generated structs.
+		NoModelComment     bool     `name:"noModelComment"      short:"m"  brief:"{CGenDaoBriefNoModelComment}" orphan:"true"` // Omit inline comments from generated struct fields.
+		Clear              bool     `name:"clear"               short:"a"  brief:"{CGenDaoBriefClear}" orphan:"true"`          // Delete generated files that no longer correspond to database tables.
+		GenTable           bool     `name:"genTable"            short:"gt" brief:"{CGenDaoBriefGenTable}" orphan:"true"`       // Enable generation of table field definition files.
+		SqlDir             string   `name:"sqlDir"              short:"sd" brief:"{CGenDaoBriefSqlDir}"`                       // Directory of SQL DDL files for offline generation (no DB connection needed).
+		SqlType            string   `name:"sqlType"             short:"st" brief:"{CGenDaoBriefSqlType}" d:"mysql"`            // SQL dialect when using SqlDir (mysql, pgsql, mssql, oracle, sqlite).
 
 		// TypeMapping maps database field type names to custom Go types.
 		// For example, mapping "decimal" to "float64" or "uuid" to "uuid.UUID".
@@ -105,14 +105,14 @@ type (
 	DBFieldTypeName = string
 	// CustomAttributeType defines a custom Go type mapping with its import path.
 	CustomAttributeType struct {
-		Type   string `brief:"custom attribute type name"` // Go type name (e.g., "decimal.Decimal").
+		Type   string `brief:"custom attribute type name"`  // Go type name (e.g., "decimal.Decimal").
 		Import string `brief:"custom import for this type"` // Go import path (e.g., "github.com/shopspring/decimal").
 	}
 )
 
 var (
-	createdAt = gtime.Now()  // Timestamp captured at program start, used in generated file headers.
-	tplView   = gview.New()  // Shared template view instance for rendering all Go file templates.
+	createdAt = gtime.Now() // Timestamp captured at program start, used in generated file headers.
+	tplView   = gview.New() // Shared template view instance for rendering all Go file templates.
 	// defaultTypeMapping provides built-in type mappings from database types to Go types.
 	// User-provided TypeMapping takes precedence over these defaults.
 	defaultTypeMapping = map[DBFieldTypeName]CustomAttributeType{
