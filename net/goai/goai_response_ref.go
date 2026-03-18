@@ -107,7 +107,7 @@ func (oai *OpenApiV3) getResponseFromObject(data any, isDefault bool) (*Response
 		return nil, err
 	}
 	//Add common response schema to common response schemas
-	if schemaRef!=nil{
+	if schemaRef != nil {
 		schemaRef.Ref="CommonResponse_" + refInput.BusinessStructName
 		oai.Components.Schemas.Set(schemaRef.Ref, SchemaRef{
 			Value: schemaRef.Value,
