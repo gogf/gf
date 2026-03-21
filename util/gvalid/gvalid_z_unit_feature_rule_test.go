@@ -271,14 +271,19 @@ func Test_RequiredWithOutAll(t *testing.T) {
 func Test_Date(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := g.MapStrBool{
-			"2010":       false,
-			"201011":     false,
-			"20101101":   true,
-			"2010-11-01": true,
-			"2010.11.01": true,
-			"2010/11/01": true,
-			"2010=11=01": false,
-			"123":        false,
+			"2010":         false,
+			"201011":       false,
+			"20101101":     true,
+			"2010-11-01":   true,
+			"2010.11.01":   true,
+			"2010/11/01":   true,
+			"2010=11=01":   false,
+			"123":          false,
+			"2026-1111":    false, // Bug: invalid format should not pass
+			"2026-13-33":   false, // Bug: invalid date should not pass
+			"2026-02-29":   false, // Non-leap year should not pass
+			"2024-02-29":   true,  // Leap year should pass
+			"202611-11":    false, // Invalid separator should not pass
 		}
 		for k, v := range m {
 			err := g.Validator().Data(k).Rules("date").Run(ctx)
