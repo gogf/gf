@@ -44,12 +44,14 @@ func (r RuleDate) Run(in RunInput) error {
 		return nil
 	}
 	// Try direct time conversion for validation, which handles both format and date validity.
-	// Support common date formats: 2006-01-02, 20060102, 2006.01.02
-	if _, err := gtime.StrToDateFormat(in.Value.String(), "Ymd"); err != nil {
-		// Try with separator formats
-		if _, err := gtime.StrToDateFormat(in.Value.String(), "Y-m-d"); err != nil {
-			if _, err := gtime.StrToDateFormat(in.Value.String(), "Y.m.d"); err != nil {
-				return errors.New(in.Message)
+	// Support common date formats: 2006-01-02, 20060102, 2006.01.02, 2006/01/02
+	if _, err := gtime.StrToTimeFormat(in.Value.String(), "Ymd"); err != nil {
+		// Try with different separator formats
+		if _, err := gtime.StrToTimeFormat(in.Value.String(), "Y-m-d"); err != nil {
+			if _, err := gtime.StrToTimeFormat(in.Value.String(), "Y.m.d"); err != nil {
+				if _, err := gtime.StrToTimeFormat(in.Value.String(), "Y/m/d"); err != nil {
+					return errors.New(in.Message)
+				}
 			}
 		}
 	}
