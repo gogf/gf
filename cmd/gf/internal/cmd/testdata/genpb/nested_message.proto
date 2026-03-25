@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package genpb;
+
+option go_package = "genpb/v1";
+
+message Order {
+  // v:required
+  int64 OrderId = 1;
+  // Order details
+  OrderDetail Detail = 2;
+}
+
+message OrderDetail {
+  // v:required
+  string ProductName = 1;
+  // v:min:1
+  int32 Quantity = 2;
+  // v:min:0.01
+  double Price = 3;
+}

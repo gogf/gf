@@ -138,7 +138,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object any) Error {
 				name = value
 			} else {
 				// It or else uses the attribute name directly.
-				name = fieldName
+				name = field.TagPriorityName()
 			}
 		} else {
 			// It uses the alias name from validation rule.

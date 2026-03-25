@@ -13,10 +13,10 @@ import (
 )
 
 // RulePhoneLoose implements `phone-loose` rule:
-// Loose mobile phone number verification(宽松的手机号验证)
+// Loose mobile phone number verification.
 // As long as the 11 digits numbers beginning with
 // 13, 14, 15, 16, 17, 18, 19 can pass the verification
-// (只要满足 13、14、15、16、17、18、19开头的11位数字都可以通过验证).
+// (Any 11-digit numbers starting with 13, 14, 15, 16, 17, 18, 19 can pass the validation).
 //
 // Format: phone-loose
 type RulePhoneLoose struct{}

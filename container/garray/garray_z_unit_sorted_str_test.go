@@ -806,8 +806,22 @@ func TestSortedStrArray_Filter(t *testing.T) {
 
 func TestSortedStrArray_FilterEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		array := garray.NewSortedStrArrayFrom(g.SliceStr{"", "1", "2", "0"})
+		array := garray.NewSortedStrArrayFrom(g.SliceStr{"", "1", "", "2", "0", ""})
 		t.Assert(array.FilterEmpty(), g.SliceStr{"0", "1", "2"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedStrArrayFrom(g.SliceStr{"", "", "", "2", "0", "a", "b"})
+		array.SetComparator(func(a, b string) int {
+			if a == b {
+				return 0
+			}
+			if a < b {
+				return 1
+			} else {
+				return -1
+			}
+		})
+		t.Assert(array.FilterEmpty(), g.SliceStr{"b", "a", "2", "0"})
 	})
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewSortedStrArrayFrom(g.SliceStr{"1", "2"})

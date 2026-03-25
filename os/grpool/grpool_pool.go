@@ -104,18 +104,12 @@ func (p *Pool) checkAndForkNewGoroutineWorker() {
 
 func (p *Pool) asynchronousWorker() {
 	defer p.count.Add(-1)
-
-	var (
-		listItem any
-		poolItem *localPoolItem
-	)
 	// Harding working, one by one, job never empty, worker never die.
 	for !p.closed.Val() {
-		listItem = p.list.PopBack()
+		listItem := p.list.PopBack()
 		if listItem == nil {
 			return
 		}
-		poolItem = listItem.(*localPoolItem)
-		poolItem.Func(poolItem.Ctx)
+		listItem.Func(listItem.Ctx)
 	}
 }

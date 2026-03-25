@@ -8,18 +8,15 @@
 package gset
 
 import (
-	"bytes"
+	"sync"
 
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/rwmutex"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Set is consisted of any items.
 type Set struct {
-	mu   rwmutex.RWMutex
-	data map[any]struct{}
+	*TSet[any]
+	once sync.Once
 }
 
 // New create and returns a new set, which contains un-repeated items.
@@ -33,44 +30,38 @@ func New(safe ...bool) *Set {
 // Also see New.
 func NewSet(safe ...bool) *Set {
 	return &Set{
-		data: make(map[any]struct{}),
-		mu:   rwmutex.Create(safe...),
+		TSet: NewTSet[any](safe...),
 	}
 }
 
 // NewFrom returns a new set from `items`.
 // Parameter `items` can be either a variable of any type, or a slice.
 func NewFrom(items any, safe ...bool) *Set {
-	m := make(map[any]struct{})
-	for _, v := range gconv.Interfaces(items) {
-		m[v] = struct{}{}
-	}
 	return &Set{
-		data: m,
-		mu:   rwmutex.Create(safe...),
+		TSet: NewTSetFrom[any](gconv.Interfaces(items), safe...),
 	}
+}
+
+// lazyInit lazily initializes the set.
+func (a *Set) lazyInit() {
+	a.once.Do(func() {
+		if a.TSet == nil {
+			a.TSet = NewTSet[any]()
+		}
+	})
 }
 
 // Iterator iterates the set readonly with given callback function `f`,
 // if `f` returns true then continue iterating; or false to stop.
 func (set *Set) Iterator(f func(v any) bool) {
-	for _, k := range set.Slice() {
-		if !f(k) {
-			break
-		}
-	}
+	set.lazyInit()
+	set.TSet.Iterator(f)
 }
 
 // Add adds one or multiple items to the set.
 func (set *Set) Add(items ...any) {
-	set.mu.Lock()
-	if set.data == nil {
-		set.data = make(map[any]struct{})
-	}
-	for _, v := range items {
-		set.data[v] = struct{}{}
-	}
-	set.mu.Unlock()
+	set.lazyInit()
+	set.TSet.Add(items...)
 }
 
 // AddIfNotExist checks whether item exists in the set,
@@ -79,21 +70,8 @@ func (set *Set) Add(items ...any) {
 //
 // Note that, if `item` is nil, it does nothing and returns false.
 func (set *Set) AddIfNotExist(item any) bool {
-	if item == nil {
-		return false
-	}
-	if !set.Contains(item) {
-		set.mu.Lock()
-		defer set.mu.Unlock()
-		if set.data == nil {
-			set.data = make(map[any]struct{})
-		}
-		if _, ok := set.data[item]; !ok {
-			set.data[item] = struct{}{}
-			return true
-		}
-	}
-	return false
+	set.lazyInit()
+	return set.TSet.AddIfNotExist(item)
 }
 
 // AddIfNotExistFunc checks whether item exists in the set,
@@ -103,23 +81,8 @@ func (set *Set) AddIfNotExist(item any) bool {
 // Note that, if `item` is nil, it does nothing and returns false. The function `f`
 // is executed without writing lock.
 func (set *Set) AddIfNotExistFunc(item any, f func() bool) bool {
-	if item == nil {
-		return false
-	}
-	if !set.Contains(item) {
-		if f() {
-			set.mu.Lock()
-			defer set.mu.Unlock()
-			if set.data == nil {
-				set.data = make(map[any]struct{})
-			}
-			if _, ok := set.data[item]; !ok {
-				set.data[item] = struct{}{}
-				return true
-			}
-		}
-	}
-	return false
+	set.lazyInit()
+	return set.TSet.AddIfNotExistFunc(item, f)
 }
 
 // AddIfNotExistFuncLock checks whether item exists in the set,
@@ -129,95 +92,44 @@ func (set *Set) AddIfNotExistFunc(item any, f func() bool) bool {
 // Note that, if `item` is nil, it does nothing and returns false. The function `f`
 // is executed within writing lock.
 func (set *Set) AddIfNotExistFuncLock(item any, f func() bool) bool {
-	if item == nil {
-		return false
-	}
-	if !set.Contains(item) {
-		set.mu.Lock()
-		defer set.mu.Unlock()
-		if set.data == nil {
-			set.data = make(map[any]struct{})
-		}
-		if f() {
-			if _, ok := set.data[item]; !ok {
-				set.data[item] = struct{}{}
-				return true
-			}
-		}
-	}
-	return false
+	set.lazyInit()
+	return set.TSet.AddIfNotExistFuncLock(item, f)
 }
 
 // Contains checks whether the set contains `item`.
 func (set *Set) Contains(item any) bool {
-	var ok bool
-	set.mu.RLock()
-	if set.data != nil {
-		_, ok = set.data[item]
-	}
-	set.mu.RUnlock()
-	return ok
+	set.lazyInit()
+	return set.TSet.Contains(item)
 }
 
 // Remove deletes `item` from set.
 func (set *Set) Remove(item any) {
-	set.mu.Lock()
-	if set.data != nil {
-		delete(set.data, item)
-	}
-	set.mu.Unlock()
+	set.lazyInit()
+	set.TSet.Remove(item)
 }
 
 // Size returns the size of the set.
 func (set *Set) Size() int {
-	set.mu.RLock()
-	l := len(set.data)
-	set.mu.RUnlock()
-	return l
+	set.lazyInit()
+	return set.TSet.Size()
 }
 
 // Clear deletes all items of the set.
 func (set *Set) Clear() {
-	set.mu.Lock()
-	set.data = make(map[any]struct{})
-	set.mu.Unlock()
+	set.lazyInit()
+	set.TSet.Clear()
 }
 
 // Slice returns all items of the set as slice.
 func (set *Set) Slice() []any {
-	set.mu.RLock()
-	var (
-		i   = 0
-		ret = make([]any, len(set.data))
-	)
-	for item := range set.data {
-		ret[i] = item
-		i++
-	}
-	set.mu.RUnlock()
-	return ret
+	set.lazyInit()
+	return set.TSet.Slice()
 }
 
 // Join joins items with a string `glue`.
 func (set *Set) Join(glue string) string {
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	if len(set.data) == 0 {
-		return ""
-	}
-	var (
-		l      = len(set.data)
-		i      = 0
-		buffer = bytes.NewBuffer(nil)
-	)
-	for k := range set.data {
-		buffer.WriteString(gconv.String(k))
-		if i != l-1 {
-			buffer.WriteString(glue)
-		}
-		i++
-	}
-	return buffer.String()
+	set.lazyInit()
+	return set.TSet.Join(glue)
 }
 
 // String returns items as a string, which implements like json.Marshal does.
@@ -225,63 +137,27 @@ func (set *Set) String() string {
 	if set == nil {
 		return ""
 	}
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	var (
-		s      string
-		l      = len(set.data)
-		i      = 0
-		buffer = bytes.NewBuffer(nil)
-	)
-	buffer.WriteByte('[')
-	for k := range set.data {
-		s = gconv.String(k)
-		if gstr.IsNumeric(s) {
-			buffer.WriteString(s)
-		} else {
-			buffer.WriteString(`"` + gstr.QuoteMeta(s, `"\`) + `"`)
-		}
-		if i != l-1 {
-			buffer.WriteByte(',')
-		}
-		i++
-	}
-	buffer.WriteByte(']')
-	return buffer.String()
+	set.lazyInit()
+	return set.TSet.String()
 }
 
 // LockFunc locks writing with callback function `f`.
 func (set *Set) LockFunc(f func(m map[any]struct{})) {
-	set.mu.Lock()
-	defer set.mu.Unlock()
-	f(set.data)
+	set.lazyInit()
+	set.TSet.LockFunc(f)
 }
 
 // RLockFunc locks reading with callback function `f`.
 func (set *Set) RLockFunc(f func(m map[any]struct{})) {
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	f(set.data)
+	set.lazyInit()
+	set.TSet.RLockFunc(f)
 }
 
 // Equal checks whether the two sets equal.
 func (set *Set) Equal(other *Set) bool {
-	if set == other {
-		return true
-	}
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	other.mu.RLock()
-	defer other.mu.RUnlock()
-	if len(set.data) != len(other.data) {
-		return false
-	}
-	for key := range set.data {
-		if _, ok := other.data[key]; !ok {
-			return false
-		}
-	}
-	return true
+	set.lazyInit()
+	other.lazyInit()
+	return set.TSet.Equal(other.TSet)
 }
 
 // IsSubsetOf checks whether the current set is a sub-set of `other`.
@@ -289,85 +165,40 @@ func (set *Set) IsSubsetOf(other *Set) bool {
 	if set == other {
 		return true
 	}
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	other.mu.RLock()
-	defer other.mu.RUnlock()
-	for key := range set.data {
-		if _, ok := other.data[key]; !ok {
-			return false
-		}
-	}
-	return true
+
+	set.lazyInit()
+	other.lazyInit()
+
+	return set.TSet.IsSubsetOf(other.TSet)
 }
 
 // Union returns a new set which is the union of `set` and `others`.
 // Which means, all the items in `newSet` are in `set` or in `others`.
 func (set *Set) Union(others ...*Set) (newSet *Set) {
-	newSet = NewSet()
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	for _, other := range others {
-		if set != other {
-			other.mu.RLock()
-		}
-		for k, v := range set.data {
-			newSet.data[k] = v
-		}
-		if set != other {
-			for k, v := range other.data {
-				newSet.data[k] = v
-			}
-		}
-		if set != other {
-			other.mu.RUnlock()
-		}
-	}
+	set.lazyInit()
 
-	return
+	return &Set{
+		TSet: set.TSet.Union(set.toTSetSlice(others)...),
+	}
 }
 
 // Diff returns a new set which is the difference set from `set` to `others`.
 // Which means, all the items in `newSet` are in `set` but not in `others`.
 func (set *Set) Diff(others ...*Set) (newSet *Set) {
-	newSet = NewSet()
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	for _, other := range others {
-		if set == other {
-			continue
-		}
-		other.mu.RLock()
-		for k, v := range set.data {
-			if _, ok := other.data[k]; !ok {
-				newSet.data[k] = v
-			}
-		}
-		other.mu.RUnlock()
+	set.lazyInit()
+
+	return &Set{
+		TSet: set.TSet.Diff(set.toTSetSlice(others)...),
 	}
-	return
 }
 
 // Intersect returns a new set which is the intersection from `set` to `others`.
 // Which means, all the items in `newSet` are in `set` and also in `others`.
 func (set *Set) Intersect(others ...*Set) (newSet *Set) {
-	newSet = NewSet()
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	for _, other := range others {
-		if set != other {
-			other.mu.RLock()
-		}
-		for k, v := range set.data {
-			if _, ok := other.data[k]; ok {
-				newSet.data[k] = v
-			}
-		}
-		if set != other {
-			other.mu.RUnlock()
-		}
+	set.lazyInit()
+	return &Set{
+		TSet: set.TSet.Intersect(set.toTSetSlice(others)...),
 	}
-	return
 }
 
 // Complement returns a new set which is the complement from `set` to `full`.
@@ -376,36 +207,22 @@ func (set *Set) Intersect(others ...*Set) (newSet *Set) {
 // It returns the difference between `full` and `set`
 // if the given set `full` is not the full set of `set`.
 func (set *Set) Complement(full *Set) (newSet *Set) {
-	newSet = NewSet()
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	if set != full {
-		full.mu.RLock()
-		defer full.mu.RUnlock()
-	}
-	for k, v := range full.data {
-		if _, ok := set.data[k]; !ok {
-			newSet.data[k] = v
+	set.lazyInit()
+	if full == nil {
+		return &Set{
+			TSet: NewTSet[any](true),
 		}
 	}
-	return
+	full.lazyInit()
+	return &Set{
+		TSet: set.TSet.Complement(full.TSet),
+	}
 }
 
 // Merge adds items from `others` sets into `set`.
 func (set *Set) Merge(others ...*Set) *Set {
-	set.mu.Lock()
-	defer set.mu.Unlock()
-	for _, other := range others {
-		if set != other {
-			other.mu.RLock()
-		}
-		for k, v := range other.data {
-			set.data[k] = v
-		}
-		if set != other {
-			other.mu.RUnlock()
-		}
-	}
+	set.lazyInit()
+	set.TSet.Merge(set.toTSetSlice(others)...)
 	return set
 }
 
@@ -413,101 +230,46 @@ func (set *Set) Merge(others ...*Set) *Set {
 // Note: The items should be converted to int type,
 // or you'd get a result that you unexpected.
 func (set *Set) Sum() (sum int) {
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	for k := range set.data {
-		sum += gconv.Int(k)
-	}
-	return
+	set.lazyInit()
+	return set.TSet.Sum()
 }
 
 // Pop randomly pops an item from set.
 func (set *Set) Pop() any {
-	set.mu.Lock()
-	defer set.mu.Unlock()
-	for k := range set.data {
-		delete(set.data, k)
-		return k
-	}
-	return nil
+	set.lazyInit()
+	return set.TSet.Pop()
 }
 
 // Pops randomly pops `size` items from set.
 // It returns all items if size == -1.
 func (set *Set) Pops(size int) []any {
-	set.mu.Lock()
-	defer set.mu.Unlock()
-	if size > len(set.data) || size == -1 {
-		size = len(set.data)
-	}
-	if size <= 0 {
-		return nil
-	}
-	index := 0
-	array := make([]any, size)
-	for k := range set.data {
-		delete(set.data, k)
-		array[index] = k
-		index++
-		if index == size {
-			break
-		}
-	}
-	return array
+	set.lazyInit()
+	return set.TSet.Pops(size)
 }
 
 // Walk applies a user supplied function `f` to every item of set.
 func (set *Set) Walk(f func(item any) any) *Set {
-	set.mu.Lock()
-	defer set.mu.Unlock()
-	m := make(map[any]struct{}, len(set.data))
-	for k, v := range set.data {
-		m[f(k)] = v
-	}
-	set.data = m
+	set.lazyInit()
+	set.TSet.Walk(f)
 	return set
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (set Set) MarshalJSON() ([]byte, error) {
-	return json.Marshal(set.Slice())
+	set.lazyInit()
+	return set.TSet.MarshalJSON()
 }
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (set *Set) UnmarshalJSON(b []byte) error {
-	set.mu.Lock()
-	defer set.mu.Unlock()
-	if set.data == nil {
-		set.data = make(map[any]struct{})
-	}
-	var array []any
-	if err := json.UnmarshalUseNumber(b, &array); err != nil {
-		return err
-	}
-	for _, v := range array {
-		set.data[v] = struct{}{}
-	}
-	return nil
+	set.lazyInit()
+	return set.TSet.UnmarshalJSON(b)
 }
 
 // UnmarshalValue is an interface implement which sets any type of value for set.
 func (set *Set) UnmarshalValue(value any) (err error) {
-	set.mu.Lock()
-	defer set.mu.Unlock()
-	if set.data == nil {
-		set.data = make(map[any]struct{})
-	}
-	var array []any
-	switch value.(type) {
-	case string, []byte:
-		err = json.UnmarshalUseNumber(gconv.Bytes(value), &array)
-	default:
-		array = gconv.SliceAny(value)
-	}
-	for _, v := range array {
-		set.data[v] = struct{}{}
-	}
-	return
+	set.lazyInit()
+	return set.TSet.UnmarshalValue(value)
 }
 
 // DeepCopy implements interface for deep copy of current type.
@@ -515,11 +277,21 @@ func (set *Set) DeepCopy() any {
 	if set == nil {
 		return nil
 	}
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	data := make([]any, 0)
-	for k := range set.data {
-		data = append(data, k)
+	set.lazyInit()
+	return &Set{
+		TSet: set.TSet.DeepCopy().(*TSet[any]),
 	}
-	return NewFrom(data, set.mu.IsSafe())
+}
+
+// toTSetSlice converts []*Set to []*TSet[any]
+func (set *Set) toTSetSlice(sets []*Set) (tSets []*TSet[any]) {
+	tSets = make([]*TSet[any], len(sets))
+	for i, v := range sets {
+		if v == nil {
+			continue
+		}
+		v.lazyInit()
+		tSets[i] = v.TSet
+	}
+	return
 }

@@ -9,6 +9,7 @@ package gendao
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
@@ -47,8 +48,10 @@ type (
 		JsonCase           string   `name:"jsonCase"            short:"j"  brief:"{CGenDaoBriefJsonCase}" d:"CamelLower"`
 		ImportPrefix       string   `name:"importPrefix"        short:"i"  brief:"{CGenDaoBriefImportPrefix}"`
 		DaoPath            string   `name:"daoPath"             short:"d"  brief:"{CGenDaoBriefDaoPath}" d:"dao"`
+		TablePath          string   `name:"tablePath"           short:"tp" brief:"{CGenDaoBriefTablePath}" d:"table"`
 		DoPath             string   `name:"doPath"              short:"o"  brief:"{CGenDaoBriefDoPath}" d:"model/do"`
 		EntityPath         string   `name:"entityPath"          short:"e"  brief:"{CGenDaoBriefEntityPath}" d:"model/entity"`
+		TplDaoTablePath    string   `name:"tplDaoTablePath"     short:"t0" brief:"{CGenDaoBriefTplDaoTablePath}"`
 		TplDaoIndexPath    string   `name:"tplDaoIndexPath"     short:"t1" brief:"{CGenDaoBriefTplDaoIndexPath}"`
 		TplDaoInternalPath string   `name:"tplDaoInternalPath"  short:"t2" brief:"{CGenDaoBriefTplDaoInternalPath}"`
 		TplDaoDoPath       string   `name:"tplDaoDoPath"        short:"t3" brief:"{CGenDaoBriefTplDaoDoPathPath}"`
@@ -61,6 +64,7 @@ type (
 		NoJsonTag          bool     `name:"noJsonTag"           short:"k"  brief:"{CGenDaoBriefNoJsonTag}" orphan:"true"`
 		NoModelComment     bool     `name:"noModelComment"      short:"m"  brief:"{CGenDaoBriefNoModelComment}" orphan:"true"`
 		Clear              bool     `name:"clear"               short:"a"  brief:"{CGenDaoBriefClear}" orphan:"true"`
+		GenTable           bool     `name:"genTable"            short:"gt" brief:"{CGenDaoBriefGenTable}" orphan:"true"`
 
 		TypeMapping  map[DBFieldTypeName]CustomAttributeType  `name:"typeMapping"  short:"y"  brief:"{CGenDaoBriefTypeMapping}"  orphan:"true"`
 		FieldMapping map[DBTableFieldName]CustomAttributeType `name:"fieldMapping" short:"fm" brief:"{CGenDaoBriefFieldMapping}" orphan:"true"`
@@ -100,6 +104,10 @@ var (
 		},
 		"smallmoney": {
 			Type: "float64",
+		},
+		"uuid": {
+			Type:   "uuid.UUID",
+			Import: "github.com/google/uuid",
 		},
 	}
 
@@ -180,7 +188,27 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 
 	var tableNames []string
 	if in.Tables != "" {
-		tableNames = gstr.SplitAndTrim(in.Tables, ",")
+		inputTables := gstr.SplitAndTrim(in.Tables, ",")
+		// Check if any table pattern contains wildcard characters.
+		// https://github.com/gogf/gf/issues/4629
+		var hasPattern bool
+		for _, t := range inputTables {
+			if containsWildcard(t) {
+				hasPattern = true
+				break
+			}
+		}
+		if hasPattern {
+			// Fetch all tables first, then filter by patterns.
+			allTables, err := db.Tables(context.TODO())
+			if err != nil {
+				mlog.Fatalf("fetching tables failed: %+v", err)
+			}
+			tableNames = filterTablesByPatterns(allTables, inputTables)
+		} else {
+			// Use exact table names as before.
+			tableNames = inputTables
+		}
 	} else {
 		tableNames, err = db.Tables(context.TODO())
 		if err != nil {
@@ -190,8 +218,18 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 	// Table excluding.
 	if in.TablesEx != "" {
 		array := garray.NewStrArrayFrom(tableNames)
-		for _, v := range gstr.SplitAndTrim(in.TablesEx, ",") {
-			array.RemoveValue(v)
+		for _, p := range gstr.SplitAndTrim(in.TablesEx, ",") {
+			if containsWildcard(p) {
+				// Use exact match with ^ and $ anchors for consistency with tables pattern.
+				regPattern := "^" + patternToRegex(p) + "$"
+				for _, v := range array.Clone().Slice() {
+					if gregex.IsMatchString(regPattern, v) {
+						array.RemoveValue(v)
+					}
+				}
+			} else {
+				array.RemoveValue(p)
+			}
 		}
 		tableNames = array.Slice()
 	}
@@ -212,13 +250,22 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 		newTableNames       = make([]string, len(tableNames))
 		shardingNewTableSet = gset.NewStrSet()
 	)
+	// Sort sharding patterns by length descending, so that longer (more specific) patterns
+	// are matched first. This prevents shorter patterns like "a_?" from incorrectly matching
+	// tables that should match longer patterns like "a_b_?" or "a_c_?".
+	// https://github.com/gogf/gf/issues/4603
+	sortedShardingPatterns := make([]string, len(in.ShardingPattern))
+	copy(sortedShardingPatterns, in.ShardingPattern)
+	sort.Slice(sortedShardingPatterns, func(i, j int) bool {
+		return len(sortedShardingPatterns[i]) > len(sortedShardingPatterns[j])
+	})
 	for i, tableName := range tableNames {
 		newTableName := tableName
 		for _, v := range removePrefixArray {
 			newTableName = gstr.TrimLeftStr(newTableName, v, 1)
 		}
-		if len(in.ShardingPattern) > 0 {
-			for _, pattern := range in.ShardingPattern {
+		if len(sortedShardingPatterns) > 0 {
+			for _, pattern := range sortedShardingPatterns {
 				var (
 					match      []string
 					regPattern = gstr.Replace(pattern, "?", `(.+)`)
@@ -234,10 +281,11 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 				newTableName = gstr.Trim(newTableName, `_.-`)
 				if shardingNewTableSet.Contains(newTableName) {
 					tableNames[i] = ""
-					continue
+					break
 				}
 				// Add prefix to sharding table name, if not, the isSharding check would not match.
 				shardingNewTableSet.Add(in.Prefix + newTableName)
+				break
 			}
 		}
 		newTableName = in.Prefix + newTableName
@@ -252,6 +300,14 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 
 	// Dao: index and internal.
 	generateDao(ctx, CGenDaoInternalInput{
+		CGenDaoInput:     in,
+		DB:               db,
+		TableNames:       tableNames,
+		NewTableNames:    newTableNames,
+		ShardingTableSet: shardingNewTableSet,
+	})
+	// Table: table fields.
+	generateTable(ctx, CGenDaoInternalInput{
 		CGenDaoInput:     in,
 		DB:               db,
 		TableNames:       tableNames,
@@ -374,4 +430,62 @@ func getTemplateFromPathOrDefault(filePath string, def string) string {
 		}
 	}
 	return def
+}
+
+// containsWildcard checks if the pattern contains wildcard characters (* or ?).
+func containsWildcard(pattern string) bool {
+	return gstr.Contains(pattern, "*") || gstr.Contains(pattern, "?")
+}
+
+// patternToRegex converts a wildcard pattern to a regex pattern.
+// Wildcard characters: * matches any characters, ? matches single character.
+func patternToRegex(pattern string) string {
+	pattern = gstr.ReplaceByMap(pattern, map[string]string{
+		"\r": "",
+		"\n": "",
+	})
+	pattern = gstr.ReplaceByMap(pattern, map[string]string{
+		"*": "\r",
+		"?": "\n",
+	})
+	pattern = gregex.Quote(pattern)
+	pattern = gstr.ReplaceByMap(pattern, map[string]string{
+		"\r": ".*",
+		"\n": ".",
+	})
+	return pattern
+}
+
+// filterTablesByPatterns filters tables by given patterns.
+// Patterns support wildcard characters: * matches any characters, ? matches single character.
+// https://github.com/gogf/gf/issues/4629
+func filterTablesByPatterns(allTables []string, patterns []string) []string {
+	var result []string
+	matched := make(map[string]bool)
+	allTablesSet := make(map[string]bool)
+	for _, t := range allTables {
+		allTablesSet[t] = true
+	}
+	for _, p := range patterns {
+		if containsWildcard(p) {
+			regPattern := "^" + patternToRegex(p) + "$"
+			for _, table := range allTables {
+				if !matched[table] && gregex.IsMatchString(regPattern, table) {
+					result = append(result, table)
+					matched[table] = true
+				}
+			}
+		} else {
+			// Exact table name, use direct string comparison.
+			if !allTablesSet[p] {
+				mlog.Printf(`table "%s" does not exist, skipped`, p)
+				continue
+			}
+			if !matched[p] {
+				result = append(result, p)
+				matched[p] = true
+			}
+		}
+	}
+	return result
 }

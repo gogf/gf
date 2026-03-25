@@ -58,7 +58,7 @@ func init() {
 	nodePrefix.Prefix = TableNamePrefix1
 
 	nodeInvalid := gdb.ConfigNode{
-		Link:        fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3307)/?loc=Local&parseTime=true", TestDbPass),
+		Link:        fmt.Sprintf("mysql:root:%s@tcp(127.0.0.1:3316)/?loc=Local&parseTime=true", TestDbPass),
 		TranTimeout: time.Second * 3,
 	}
 	gdb.AddConfigNode("test", nodeDefault)
@@ -178,7 +178,7 @@ func Test_PartitionTable(t *testing.T) {
 	createShopDBTable()
 	insertShopDBData()
 
-	//defer dropShopDBTable()
+	// defer dropShopDBTable()
 	gtest.C(t, func(t *gtest.T) {
 		data, err := db3.Ctx(ctx).Model("dbx_order").Partition("p3", "p4").All()
 		t.AssertNil(err)

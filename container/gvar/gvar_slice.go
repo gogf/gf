@@ -8,6 +8,11 @@ package gvar
 
 import "github.com/gogf/gf/v2/util/gconv"
 
+// Bools converts and returns `v` as []bool.
+func (v *Var) Bools() []bool {
+	return gconv.Bools(v.Val())
+}
+
 // Ints converts and returns `v` as []int.
 func (v *Var) Ints() []int {
 	return gconv.Ints(v.Val())

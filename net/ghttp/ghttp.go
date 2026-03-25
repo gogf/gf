@@ -176,9 +176,12 @@ var (
 	// It is used for quick HTTP method searching using map.
 	methodsMap = make(map[string]struct{})
 
+	// checker is used for checking whether the value is nil.
+	checker = func(v *Server) bool { return v == nil }
+
 	// serverMapping stores more than one server instances for current processes.
 	// The key is the name of the server, and the value is its instance.
-	serverMapping = gmap.NewStrAnyMap(true)
+	serverMapping = gmap.NewKVMapWithChecker[string, *Server](checker, true)
 
 	// serverRunning marks the running server counts.
 	// If there is no successful server running or all servers' shutdown, this value is 0.

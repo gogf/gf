@@ -12,18 +12,20 @@ import (
 	"github.com/gogf/gf/v2/container/gmap"
 )
 
+var checker = func(v *sync.RWMutex) bool { return v == nil }
+
 // Locker is a memory based locker.
 // Note that there's no cache expire mechanism for mutex in locker.
 // You need remove certain mutex manually when you do not want use it anymore.
 type Locker struct {
-	m *gmap.StrAnyMap
+	m *gmap.KVMap[string, *sync.RWMutex]
 }
 
 // New creates and returns a new memory locker.
 // A memory locker can lock/unlock with dynamic string key.
 func New() *Locker {
 	return &Locker{
-		m: gmap.NewStrAnyMap(true),
+		m: gmap.NewKVMapWithChecker[string, *sync.RWMutex](checker, true),
 	}
 }
 
@@ -43,7 +45,7 @@ func (l *Locker) TryLock(key string) bool {
 // Unlock unlocks the writing lock of the `key`.
 func (l *Locker) Unlock(key string) {
 	if v := l.m.Get(key); v != nil {
-		v.(*sync.RWMutex).Unlock()
+		v.Unlock()
 	}
 }
 
@@ -63,7 +65,7 @@ func (l *Locker) TryRLock(key string) bool {
 // RUnlock unlocks the reading lock of the `key`.
 func (l *Locker) RUnlock(key string) {
 	if v := l.m.Get(key); v != nil {
-		v.(*sync.RWMutex).RUnlock()
+		v.RUnlock()
 	}
 }
 
@@ -128,7 +130,7 @@ func (l *Locker) Clear() {
 // getOrNewMutex returns the mutex of given `key` if it exists,
 // or else creates and returns a new one.
 func (l *Locker) getOrNewMutex(key string) *sync.RWMutex {
-	return l.m.GetOrSetFuncLock(key, func() any {
+	return l.m.GetOrSetFuncLock(key, func() *sync.RWMutex {
 		return &sync.RWMutex{}
-	}).(*sync.RWMutex)
+	})
 }

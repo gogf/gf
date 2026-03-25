@@ -161,56 +161,85 @@ func loadContentWithOptions(data []byte, options Options) (*Json, error) {
 	if len(data) == 0 {
 		return NewWithOptions(nil, options), nil
 	}
-	if options.Type == "" {
-		options.Type, err = checkDataType(data)
+	var (
+		checkType   ContentType
+		decodedData any
+	)
+	if options.Type != "" {
+		checkType = gstr.TrimLeft(options.Type, ".")
+	} else {
+		checkType, err = checkDataType(data)
 		if err != nil {
 			return nil, err
 		}
 	}
-	options.Type = ContentType(gstr.TrimLeft(
-		string(options.Type), "."),
-	)
-	switch options.Type {
+	switch checkType {
 	case ContentTypeJSON, ContentTypeJs:
+		decoder := json.NewDecoder(bytes.NewReader(data))
+		if options.StrNumber {
+			decoder.UseNumber()
+		}
+		if err = decoder.Decode(&result); err != nil {
+			return nil, err
+		}
+		switch result.(type) {
+		case string, []byte:
+			return nil, gerror.Newf(`json decoding failed for content: %s`, data)
+		}
+		return NewWithOptions(result, options), nil
 
 	case ContentTypeXML:
-		data, err = gxml.ToJson(data)
+		decodedData, err = gxml.Decode(data)
+		if err != nil {
+			return nil, err
+		}
+		return NewWithOptions(decodedData, options), nil
 
 	case ContentTypeYaml, ContentTypeYml:
-		data, err = gyaml.ToJson(data)
+		decodedData, err = gyaml.Decode(data)
+		if err != nil {
+			return nil, err
+		}
+		return NewWithOptions(decodedData, options), nil
 
 	case ContentTypeToml:
-		data, err = gtoml.ToJson(data)
+		decodedData, err = gtoml.Decode(data)
+		if err != nil {
+			return nil, err
+		}
+		return NewWithOptions(decodedData, options), nil
 
 	case ContentTypeIni:
-		data, err = gini.ToJson(data)
+		decodedData, err = gini.Decode(data)
+		if err != nil {
+			return nil, err
+		}
+		return NewWithOptions(decodedData, options), nil
 
 	case ContentTypeProperties:
-		data, err = gproperties.ToJson(data)
+		decodedData, err = gproperties.Decode(data)
+		if err != nil {
+			return nil, err
+		}
+		return NewWithOptions(decodedData, options), nil
 
 	default:
-		err = gerror.NewCodef(
-			gcode.CodeInvalidParameter,
-			`unsupported type "%s" for loading`,
-			options.Type,
-		)
 	}
-	if err != nil {
-		return nil, err
+	// ignore some duplicated types, like js and yml,
+	// which are not necessary shown in error message.
+	allSupportedTypes := []string{
+		ContentTypeJSON,
+		ContentTypeXML,
+		ContentTypeYaml,
+		ContentTypeToml,
+		ContentTypeIni,
+		ContentTypeProperties,
 	}
-
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	if options.StrNumber {
-		decoder.UseNumber()
-	}
-	if err = decoder.Decode(&result); err != nil {
-		return nil, err
-	}
-	switch result.(type) {
-	case string, []byte:
-		return nil, gerror.Newf(`json decoding failed for content: %s`, data)
-	}
-	return NewWithOptions(result, options), nil
+	return nil, gerror.NewCodef(
+		gcode.CodeInvalidParameter,
+		`unsupported type "%s" for loading, all supported types: %s`,
+		options.Type, gstr.Join(allSupportedTypes, ", "),
+	)
 }
 
 // checkDataType automatically checks and returns the data type for `content`.
@@ -247,33 +276,104 @@ func checkDataType(data []byte) (ContentType, error) {
 	}
 }
 
+// isXMLContent checks whether given content is XML format.
+// XML format is easy to be identified using regular expression.
 func isXMLContent(data []byte) bool {
 	return gregex.IsMatch(`^\s*<.+>[\S\s]+<.+>\s*$`, data)
 }
 
+// isYamlContent checks whether given content is YAML format.
 func isYamlContent(data []byte) bool {
-	return !gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*"""[\s\S]+"""`, data) &&
-		!gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*'''[\s\S]+'''`, data) &&
-		((gregex.IsMatch(`^[\n\r]*[\w\-\s\t]+\s*:\s*".+"`, data) ||
-			gregex.IsMatch(`^[\n\r]*[\w\-\s\t]+\s*:\s*\w+`, data)) ||
-			(gregex.IsMatch(`[\n\r]+[\w\-\s\t]+\s*:\s*".+"`, data) ||
-				gregex.IsMatch(`[\n\r]+[\w\-\s\t]+\s*:\s*\w+`, data)))
+	// x = y
+	// "x.x" = "y"
+	tomlFormat1 := gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*"""[\s\S]+"""`, data)
+	if tomlFormat1 {
+		return false
+	}
+	// "x.x" = '''
+	// y
+	// '''
+	tomlFormat2 := gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*'''[\s\S]+'''`, data)
+	if tomlFormat2 {
+		return false
+	}
+
+	// content starts with:
+	// x : "y"
+	yamlFormat1 := gregex.IsMatch(`^[\n\r]*[\w\-\s\t]+\s*:\s+".+"`, data)
+
+	// content starts with:
+	// x : y
+	yamlFormat2 := gregex.IsMatch(`^[\n\r]*[\w\-\s\t]+\s*:\s+\w+`, data)
+
+	// line starts with:
+	// x : "y"
+	yamlFormat3 := gregex.IsMatch(`[\n\r]+[\w\-\s\t]+\s*:\s+".+"`, data)
+
+	// line starts with:
+	// x : y
+	yamlFormat4 := gregex.IsMatch(`[\n\r]+[\w\-\s\t]+\s*:\s+\w+`, data)
+
+	// content starts with:
+	// "x" : "y"
+	yamlFormat5 := gregex.IsMatch(`^[\n\r]*".+":\s+".+"`, data)
+
+	// line starts with:
+	// "x" : y
+	yamlFormat6 := gregex.IsMatch(`[\n\r]+".+":\s+\w+`, data)
+
+	return yamlFormat1 || yamlFormat2 || yamlFormat3 || yamlFormat4 || yamlFormat5 || yamlFormat6
 }
 
+// isTomlContent checks whether given content is TOML format.
 func isTomlContent(data []byte) bool {
-	return !gregex.IsMatch(`^[\s\t\n\r]*;.+`, data) &&
-		!gregex.IsMatch(`[\s\t\n\r]+;.+`, data) &&
-		!gregex.IsMatch(`[\n\r]+[\s\t\w\-]+\.[\s\t\w\-]+\s*=\s*.+`, data) &&
-		(gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*".+"`, data) ||
-			gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*\w+`, data))
+	// content starts with:
+	// ; comment line
+	contentStartsWithSemicolonComment := gregex.IsMatch(`^[\s\t\n\r]*;.+`, data)
+	if contentStartsWithSemicolonComment {
+		return false
+	}
+	// line starts with:
+	// ; comment line
+	lineStartsWithSemicolonComment := gregex.IsMatch(`[\s\t\n\r]+;.+`, data)
+	if lineStartsWithSemicolonComment {
+		return false
+	}
+
+	// line starts with, this should not be toml format:
+	// key.with.dot = value
+	keyWithDot := gregex.IsMatch(`[\n\r]+[\s\t\w\-]+\.[\s\t\w\-]+\s*=\s*.+`, data)
+	if keyWithDot {
+		return false
+	}
+
+	// line starts with:
+	// key = value
+	// key = "value"
+	// "key" = "value"
+	// "key" = value
+	tomlFormat1 := gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*".+"`, data)
+	tomlFormat2 := gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*\w+`, data)
+	return tomlFormat1 || tomlFormat2
 }
 
+// isIniContent checks whether given content is INI format.
 func isIniContent(data []byte) bool {
-	return gregex.IsMatch(`\[[\w\.]+\]`, data) &&
-		(gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*".+"`, data) ||
-			gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*\w+`, data))
+	// no section like: [section], but ini format must have sections.
+	hasBrackets := gregex.IsMatch(`\[[\w\.]+\]`, data)
+	if !hasBrackets {
+		return false
+	}
+	iniFormat1 := gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*".+"`, data)
+	iniFormat2 := gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*\w+`, data)
+	return iniFormat1 || iniFormat2
 }
 
+// isPropertyContent checks whether given content is Properties format.
 func isPropertyContent(data []byte) bool {
-	return gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*\w+`, data)
+	// line starts with:
+	// key = value
+	// "key" = value
+	propertyFormat := gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*\w+`, data)
+	return propertyFormat
 }

@@ -288,7 +288,8 @@ func (m *Manager) init(ctx context.Context) {
 				if m.data[lang] == nil {
 					m.data[lang] = make(map[string]string)
 				}
-				if j, err := gjson.LoadContent(file.Content()); err == nil {
+				options := gjson.Options{Type: gfile.ExtName(name)}
+				if j, err := gjson.LoadWithOptions(file.Content(), options); err == nil {
 					for k, v := range j.Var().Map() {
 						m.data[lang][k] = gconv.String(v)
 					}
@@ -319,7 +320,7 @@ func (m *Manager) init(ctx context.Context) {
 			if m.data[lang] == nil {
 				m.data[lang] = make(map[string]string)
 			}
-			if j, err := gjson.LoadContent(gfile.GetBytes(file)); err == nil {
+			if j, err := gjson.LoadPath(file, gjson.Options{}); err == nil {
 				for k, v := range j.Var().Map() {
 					m.data[lang][k] = gconv.String(v)
 				}

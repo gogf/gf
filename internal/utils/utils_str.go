@@ -9,6 +9,7 @@ package utils
 import (
 	"bytes"
 	"strings"
+	"unicode"
 )
 
 // DefaultTrimChars are the characters which are stripped by Trim* functions in default.
@@ -166,4 +167,14 @@ func StripSlashes(str string) string {
 		buf.WriteRune(char)
 	}
 	return buf.String()
+}
+
+// IsASCII checks whether given string is ASCII characters.
+func IsASCII(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] > unicode.MaxASCII {
+			return false
+		}
+	}
+	return true
 }

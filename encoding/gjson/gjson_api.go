@@ -142,6 +142,8 @@ func (j *Json) Contains(pattern string) bool {
 // The target value by `pattern` should be type of slice or map.
 // It returns -1 if the target value is not found, or its type is invalid.
 func (j *Json) Len(pattern string) int {
+	j.mu.RLock()
+	defer j.mu.RUnlock()
 	p := j.getPointerByPattern(pattern)
 	if p != nil {
 		switch (*p).(type) {

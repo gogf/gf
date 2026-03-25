@@ -10,6 +10,7 @@ package gdb
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -250,4 +251,23 @@ func (c *Core) guessPrimaryTableName(tableStr string) string {
 		return ""
 	}
 	return guessedTableName
+}
+
+// GetPrimaryKeys retrieves and returns the primary key field names of the specified table.
+// This method extracts primary key information from TableFields.
+// The parameter `schema` is optional, if not specified it uses the default schema.
+func (c *Core) GetPrimaryKeys(ctx context.Context, table string, schema ...string) ([]string, error) {
+	tableFields, err := c.db.TableFields(ctx, table, schema...)
+	if err != nil {
+		return nil, err
+	}
+
+	var primaryKeys []string
+	for _, field := range tableFields {
+		if strings.EqualFold(field.Key, "pri") {
+			primaryKeys = append(primaryKeys, field.Name)
+		}
+	}
+
+	return primaryKeys, nil
 }

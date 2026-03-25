@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 )
 
+// Driver is the driver for dm database.
 type Driver struct {
 	*gdb.Core
 }

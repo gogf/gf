@@ -15,6 +15,9 @@ import (
 )
 
 var (
+	// tableFieldsSqlByMariadb is the query statement for retrieving table fields' information in MariaDB.
+	// Deprecated: Use package `contrib/drivers/mariadb` instead.
+	// TODO remove in next version.
 	tableFieldsSqlByMariadb = `
 SELECT
 	c.COLUMN_NAME AS 'Field',
@@ -29,6 +32,7 @@ SELECT
 FROM
 	information_schema.COLUMNS AS c
 	LEFT JOIN information_schema.CHECK_CONSTRAINTS AS ch ON c.TABLE_NAME = ch.TABLE_NAME 
+    AND c.TABLE_SCHEMA = ch.CONSTRAINT_SCHEMA
 	AND c.COLUMN_NAME = ch.CONSTRAINT_NAME 
 WHERE
 	c.TABLE_SCHEMA = '%s' 
@@ -68,6 +72,8 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 	}
 	dbType := d.GetConfig().Type
 	switch dbType {
+	// Deprecated: Use package `contrib/drivers/mariadb` instead.
+	// TODO remove in next version.
 	case "mariadb":
 		tableFieldsSql = fmt.Sprintf(tableFieldsSqlByMariadb, usedSchema, table)
 	default:

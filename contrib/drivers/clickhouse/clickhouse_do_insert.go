@@ -16,13 +16,12 @@ import (
 )
 
 // DoInsert inserts or updates data for given table.
+// The list parameter must contain at least one record, which was previously validated.
 func (d *Driver) DoInsert(
 	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (result sql.Result, err error) {
-	var (
-		keys        []string // Field names.
-		valueHolder = make([]string, 0)
-	)
+	var keys, valueHolder []string
+
 	// Handle the field names and placeholders.
 	for k := range list[0] {
 		keys = append(keys, k)
@@ -56,7 +55,12 @@ func (d *Driver) DoInsert(
 	if err != nil {
 		return
 	}
-	for i := 0; i < len(list); i++ {
+
+	defer func() {
+		_ = stmt.Close()
+	}()
+
+	for i := range len(list) {
 		// Values that will be committed to underlying database driver.
 		params := make([]any, 0)
 		for _, k := range keys {

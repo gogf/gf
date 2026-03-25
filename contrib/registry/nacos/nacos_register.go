@@ -17,17 +17,29 @@ import (
 
 // Register registers `service` to Registry.
 // Note that it returns a new Service if it changes the input Service with custom one.
-func (reg *Registry) Register(ctx context.Context, service gsvc.Service) (registered gsvc.Service, err error) {
+func (reg *Registry) Register(_ context.Context, service gsvc.Service) (registered gsvc.Service, err error) {
 	metadata := map[string]string{}
 	endpoints := service.GetEndpoints()
+
+	// Apply default endpoint override if configured
+	if reg.defaultEndpoint != "" {
+		endpoints = gsvc.Endpoints{gsvc.NewEndpoint(reg.defaultEndpoint)}
+	}
+
 	p := vo.BatchRegisterInstanceParam{
 		ServiceName: service.GetName(),
 		GroupName:   reg.groupName,
 		Instances:   make([]vo.RegisterInstanceParam, 0, len(endpoints)),
 	}
 
+	// Copy service metadata
 	for k, v := range service.GetMetadata() {
 		metadata[k] = gconv.String(v)
+	}
+
+	// Apply default metadata if configured
+	for k, v := range reg.defaultMetadata {
+		metadata[k] = v
 	}
 
 	for _, endpoint := range endpoints {
@@ -55,7 +67,7 @@ func (reg *Registry) Register(ctx context.Context, service gsvc.Service) (regist
 }
 
 // Deregister off-lines and removes `service` from the Registry.
-func (reg *Registry) Deregister(ctx context.Context, service gsvc.Service) (err error) {
+func (reg *Registry) Deregister(_ context.Context, service gsvc.Service) (err error) {
 	c := reg.client
 
 	for _, endpoint := range service.GetEndpoints() {

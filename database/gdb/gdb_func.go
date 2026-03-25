@@ -151,13 +151,26 @@ func isDoStruct(object any) bool {
 // getTableNameFromOrmTag retrieves and returns the table name from struct object.
 func getTableNameFromOrmTag(object any) string {
 	var tableName string
-	// Use the interface value.
-	if r, ok := object.(iTableName); ok {
-		tableName = r.TableName()
+	var actualObj = object
+
+	if rv, ok := object.(reflect.Value); ok {
+		// Check if reflect.Value is valid
+		if rv.IsValid() && rv.CanInterface() {
+			actualObj = rv.Interface()
+		} else {
+			// If reflect.Value is invalid, we cannot proceed with interface checks
+			return ""
+		}
 	}
-	// User meta data tag "orm".
-	if tableName == "" {
-		if ormTag := gmeta.Get(object, OrmTagForStruct); !ormTag.IsEmpty() {
+
+	// Check iTableName interface
+	if actualObj != nil {
+		if r, ok := actualObj.(iTableName); ok {
+			return r.TableName()
+		}
+
+		// User meta data tag "orm".
+		if ormTag := gmeta.Get(actualObj, OrmTagForStruct); !ormTag.IsEmpty() {
 			match, _ := gregex.MatchString(
 				fmt.Sprintf(`%s\s*:\s*([^,]+)`, OrmTagForTable),
 				ormTag.String(),
@@ -166,17 +179,19 @@ func getTableNameFromOrmTag(object any) string {
 				tableName = match[1]
 			}
 		}
-	}
-	// Use the struct name of snake case.
-	if tableName == "" {
-		if t, err := gstructs.StructType(object); err != nil {
-			panic(err)
-		} else {
-			tableName = gstr.CaseSnakeFirstUpper(
-				gstr.StrEx(t.String(), "."),
-			)
+
+		// Use the struct name of snake case.
+		if tableName == "" {
+			if t, err := gstructs.StructType(actualObj); err != nil {
+				panic(err)
+			} else {
+				tableName = gstr.CaseSnakeFirstUpper(
+					gstr.StrEx(t.String(), "."),
+				)
+			}
 		}
 	}
+
 	return tableName
 }
 
@@ -719,6 +734,14 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []any) {
 		reflectValue = reflect.ValueOf(in.Value)
 		reflectKind  = reflectValue.Kind()
 	)
+	// Check if the value implements iString interface (like uuid.UUID).
+	// These types should be treated as single values, not arrays.
+	if reflectKind == reflect.Array {
+		if v, ok := in.Value.(iString); ok {
+			in.Value = v.String()
+			reflectKind = reflect.String
+		}
+	}
 	switch reflectKind {
 	// Slice argument.
 	case reflect.Slice, reflect.Array:
@@ -780,9 +803,7 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []any) {
 
 // handleSliceAndStructArgsForSql is an important function, which handles the sql and all its arguments
 // before committing them to underlying driver.
-func handleSliceAndStructArgsForSql(
-	oldSql string, oldArgs []any,
-) (newSql string, newArgs []any) {
+func handleSliceAndStructArgsForSql(oldSql string, oldArgs []any) (newSql string, newArgs []any) {
 	newSql = oldSql
 	if len(oldArgs) == 0 {
 		return
@@ -798,6 +819,13 @@ func handleSliceAndStructArgsForSql(
 			// Eg: table.Where("name = ?", []byte("john"))
 			if _, ok := oldArg.([]byte); ok {
 				newArgs = append(newArgs, oldArg)
+				continue
+			}
+			// It does not split types that implement fmt.Stringer interface (like uuid.UUID).
+			// These types should be converted to string instead of being expanded as arrays.
+			// Eg: table.Where("uuid = ?", uuid.UUID{...})
+			if v, ok := oldArg.(iString); ok {
+				newArgs = append(newArgs, v.String())
 				continue
 			}
 			var (
@@ -953,6 +981,7 @@ func FormatMultiLineSqlToSingle(sql string) (string, error) {
 	return sql, nil
 }
 
+// genTableFieldsCacheKey generates cache key for table fields.
 func genTableFieldsCacheKey(group, schema, table string) string {
 	return fmt.Sprintf(
 		`%s%s@%s#%s`,
@@ -963,6 +992,7 @@ func genTableFieldsCacheKey(group, schema, table string) string {
 	)
 }
 
+// genSelectCacheKey generates cache key for select.
 func genSelectCacheKey(table, group, schema, name, sql string, args ...any) string {
 	if name == "" {
 		name = fmt.Sprintf(
@@ -974,4 +1004,14 @@ func genSelectCacheKey(table, group, schema, name, sql string, args ...any) stri
 		)
 	}
 	return fmt.Sprintf(`%s%s`, cachePrefixSelectCache, name)
+}
+
+// genTableNamesCacheKey generates cache key for table names.
+func genTableNamesCacheKey(group string) string {
+	return fmt.Sprintf(`Tables:%s`, group)
+}
+
+// genSoftTimeFieldNameTypeCacheKey generates cache key for soft time field name and type.
+func genSoftTimeFieldNameTypeCacheKey(schema, table string, candidateFields []string) string {
+	return fmt.Sprintf(`getSoftFieldNameAndType:%s#%s#%s`, schema, table, strings.Join(candidateFields, "_"))
 }

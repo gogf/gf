@@ -55,3 +55,36 @@ func Test_MTimeMillisecond(t *testing.T) {
 		t.Assert(gfile.MTimestampMilli(""), -1)
 	})
 }
+
+func Test_MTimestamp(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			file1   = "/testfile_mtimestamp.txt"
+			err     error
+			fileobj os.FileInfo
+		)
+
+		createTestFile(file1, "")
+		defer delTestFiles(file1)
+		fileobj, err = os.Stat(testpath() + file1)
+		t.AssertNil(err)
+
+		// Test MTimestamp returns correct unix timestamp
+		timestamp := gfile.MTimestamp(testpath() + file1)
+		t.Assert(timestamp, fileobj.ModTime().Unix())
+		t.Assert(timestamp > 0, true)
+
+		// Test with non-existent file
+		t.Assert(gfile.MTimestamp("/nonexistent_file_12345.txt"), -1)
+
+		// Test with empty path
+		t.Assert(gfile.MTimestamp(""), -1)
+	})
+
+	// Test MTimestamp with directory
+	gtest.C(t, func(t *gtest.T) {
+		tempDir := gfile.Temp()
+		timestamp := gfile.MTimestamp(tempDir)
+		t.Assert(timestamp > 0, true)
+	})
+}

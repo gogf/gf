@@ -205,3 +205,265 @@ func Test_Issue4033(t *testing.T) {
 		t.AssertNil(err)
 	})
 }
+
+// https://github.com/gogf/gf/issues/4500
+// Raw() Count ignores Where condition
+func Test_Issue4500(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	// Test 1: Raw SQL with WHERE + external Where condition + Count
+	// This tests that formatCondition correctly uses AND when Raw SQL already has WHERE
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.
+			Raw(fmt.Sprintf("SELECT * FROM %s WHERE id IN (?)", table), g.Slice{1, 5, 7, 8, 9, 10}).
+			WhereLT("id", 8).
+			Count()
+		t.AssertNil(err)
+		// Raw SQL: id IN (1,5,7,8,9,10) = 6 records
+		// Where: id < 8 filters to {1,5,7} = 3 records
+		t.Assert(count, 3)
+	})
+
+	// Test 2: Raw SQL without WHERE + external Where condition + Count
+	// This tests that formatCondition correctly adds WHERE
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.
+			Raw(fmt.Sprintf("SELECT * FROM %s", table)).
+			WhereLT("id", 5).
+			Count()
+		t.AssertNil(err)
+		// Raw SQL: all 10 records
+		// Where: id < 5 = {1,2,3,4} = 4 records
+		t.Assert(count, 4)
+	})
+
+	// Test 3: Raw + Where + ScanAndCount
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id       int
+			Passport string
+		}
+		var users []User
+		var total int
+		err := db.
+			Raw(fmt.Sprintf("SELECT * FROM %s WHERE id IN (?)", table), g.Slice{1, 5, 7, 8, 9, 10}).
+			WhereLT("id", 8).
+			ScanAndCount(&users, &total, false)
+		t.AssertNil(err)
+		// Both scan result and count should respect Where condition
+		t.Assert(len(users), 3)
+		t.Assert(total, 3)
+	})
+
+	// Test 4: Raw + multiple Where conditions + Count
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.
+			Raw(fmt.Sprintf("SELECT * FROM %s WHERE id > ?", table), 0).
+			WhereLT("id", 5).
+			WhereGTE("id", 2).
+			Count()
+		t.AssertNil(err)
+		// Raw: id > 0 (all 10 records)
+		// Where: id < 5 AND id >= 2 = {2, 3, 4} = 3 records
+		t.Assert(count, 3)
+	})
+
+	// Test 5: Raw SQL with no external Where + Count (baseline test)
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.
+			Raw(fmt.Sprintf("SELECT * FROM %s WHERE id IN (?)", table), g.Slice{1, 2, 3}).
+			Count()
+		t.AssertNil(err)
+		// Should count 3 records
+		t.Assert(count, 3)
+	})
+
+	// Test 6: Verify All() still works correctly with Raw + Where
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.
+			Raw(fmt.Sprintf("SELECT * FROM %s WHERE id IN (?)", table), g.Slice{1, 5, 7, 8, 9, 10}).
+			WhereLT("id", 8).
+			All()
+		t.AssertNil(err)
+		t.Assert(len(all), 3)
+	})
+}
+
+// https://github.com/gogf/gf/issues/4677
+// record.Get().Bytes() corrupts bytea data on retrieval from PostgreSQL.
+func Test_Issue4677(t *testing.T) {
+	table := fmt.Sprintf(`%s_%d`, TablePrefix+"issue4677", gtime.TimestampNano())
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE %s (
+			id bigserial PRIMARY KEY,
+			bin_data bytea
+		);`, table,
+	)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test 1: Binary data with various byte values including 0x00, 0x5D(']'), 0x5B('[')
+		originalBytes := []byte{
+			0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x01, 0x5B, 0x5D,
+			0xFF, 0x7B, 0x7D, 0x80, 0xCA, 0xFE, 0xBA, 0xBE,
+		}
+
+		_, err := db.Model(table).Data(g.Map{
+			"bin_data": originalBytes,
+		}).Insert()
+		t.AssertNil(err)
+
+		record, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+
+		retrievedBytes := record["bin_data"].Bytes()
+		t.Assert(len(retrievedBytes), len(originalBytes))
+		t.Assert(retrievedBytes, originalBytes)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test 2: Larger binary data (simulating gob/protobuf encoded payload)
+		largeBytes := make([]byte, 1024)
+		for i := range largeBytes {
+			largeBytes[i] = byte(i % 256)
+		}
+
+		_, err := db.Model(table).Data(g.Map{
+			"bin_data": largeBytes,
+		}).Insert()
+		t.AssertNil(err)
+
+		record, err := db.Model(table).OrderDesc("id").One()
+		t.AssertNil(err)
+
+		retrievedBytes := record["bin_data"].Bytes()
+		t.Assert(len(retrievedBytes), len(largeBytes))
+		t.Assert(retrievedBytes, largeBytes)
+	})
+}
+
+// https://github.com/gogf/gf/issues/4231
+// ConvertValueForField corrupts bytea data containing 0x5D on write.
+func Test_Issue4231(t *testing.T) {
+	table := fmt.Sprintf(`%s_%d`, TablePrefix+"issue4231", gtime.TimestampNano())
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE %s (
+			id bigserial PRIMARY KEY,
+			bin_data bytea
+		);`, table,
+	)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Bytes containing 0x5D (ASCII ']') which was being converted to 0x7D ('}')
+		originalBytes := []byte{0x01, 0x5D, 0x02, 0x5B, 0x03}
+
+		_, err := db.Model(table).Data(g.Map{
+			"bin_data": originalBytes,
+		}).Insert()
+		t.AssertNil(err)
+
+		record, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+
+		retrievedBytes := record["bin_data"].Bytes()
+		t.Assert(len(retrievedBytes), len(originalBytes))
+		t.Assert(retrievedBytes, originalBytes)
+	})
+}
+
+// https://github.com/gogf/gf/issues/4595
+// FieldsPrefix silently drops fields when using table alias before LeftJoin.
+func Test_Issue4595(t *testing.T) {
+	var (
+		tableUser       = fmt.Sprintf(`%s_%d`, TablePrefix+"issue4595_user", gtime.TimestampNano())
+		tableUserDetail = fmt.Sprintf(`%s_%d`, TablePrefix+"issue4595_user_detail", gtime.TimestampNano())
+	)
+
+	// Create user table
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE %s (
+			id bigserial PRIMARY KEY,
+			name varchar(100),
+			email varchar(100)
+		);`, tableUser,
+	)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(tableUser)
+
+	// Create user_detail table
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE %s (
+			id bigserial PRIMARY KEY,
+			user_id bigint,
+			phone varchar(20),
+			address varchar(200)
+		);`, tableUserDetail,
+	)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(tableUserDetail)
+
+	// Insert test data
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+		INSERT INTO %s (id, name, email) VALUES (1, 'john', 'john@example.com');
+		INSERT INTO %s (id, user_id, phone, address) VALUES (1, 1, '1234567890', '123 Main St');
+	`, tableUser, tableUserDetail)); err != nil {
+		gtest.Fatal(err)
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test case 1: FieldsPrefix called before LeftJoin
+		// Both t1 and t2 fields should be present
+		r, err := db.Model(tableUser).As("t1").
+			FieldsPrefix("t2", "phone", "address").
+			FieldsPrefix("t1", "id", "name", "email").
+			LeftJoin(tableUserDetail, "t2", "t1.id=t2.user_id").
+			All()
+
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(r[0]["id"], 1)
+		t.Assert(r[0]["name"], "john")
+		t.Assert(r[0]["email"], "john@example.com")
+		t.Assert(r[0]["phone"], "1234567890")
+		t.Assert(r[0]["address"], "123 Main St")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test case 2: Using Fields() with prefix
+		r, err := db.Model(tableUser).As("t1").
+			Fields("t2.phone", "t2.address", "t1.id", "t1.name", "t1.email").
+			LeftJoin(tableUserDetail, "t2", "t1.id=t2.user_id").
+			All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(r[0]["id"], 1)
+		t.Assert(r[0]["name"], "john")
+		t.Assert(r[0]["email"], "john@example.com")
+		t.Assert(r[0]["phone"], "1234567890")
+		t.Assert(r[0]["address"], "123 Main St")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test case 3: FieldsPrefix called after LeftJoin
+		r, err := db.Model(tableUser).As("t1").
+			LeftJoin(tableUserDetail, "t2", "t1.id=t2.user_id").
+			FieldsPrefix("t2", "phone", "address").
+			FieldsPrefix("t1", "id", "name", "email").
+			All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(r[0]["id"], 1)
+		t.Assert(r[0]["name"], "john")
+		t.Assert(r[0]["email"], "john@example.com")
+		t.Assert(r[0]["phone"], "1234567890")
+		t.Assert(r[0]["address"], "123 Main St")
+	})
+}

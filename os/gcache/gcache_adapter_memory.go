@@ -21,13 +21,15 @@ import (
 
 // AdapterMemory is an adapter implements using memory.
 type AdapterMemory struct {
-	data        *memoryData        // data is the underlying cache data which is stored in a hash table.
-	expireTimes *memoryExpireTimes // expireTimes is the expiring key to its timestamp mapping, which is used for quick indexing and deleting.
-	expireSets  *memoryExpireSets  // expireSets is the expiring timestamp to its key set mapping, which is used for quick indexing and deleting.
-	lru         *memoryLru         // lru is the LRU manager, which is enabled when attribute cap > 0.
-	eventList   *glist.List        // eventList is the asynchronous event list for internal data synchronization.
-	closed      *gtype.Bool        // closed controls the cache closed or not.
+	data        *memoryData                       // data is the underlying cache data which is stored in a hash table.
+	expireTimes *memoryExpireTimes                // expireTimes is the expiring key to its timestamp mapping, which is used for quick indexing and deleting.
+	expireSets  *memoryExpireSets                 // expireSets is the expiring timestamp to its key set mapping, which is used for quick indexing and deleting.
+	lru         *memoryLru                        // lru is the LRU manager, which is enabled when attribute cap > 0.
+	eventList   *glist.TList[*adapterMemoryEvent] // eventList is the asynchronous event list for internal data synchronization.
+	closed      *gtype.Bool                       // closed controls the cache closed or not.
 }
+
+var _ Adapter = (*AdapterMemory)(nil)
 
 // Internal event item.
 type adapterMemoryEvent struct {
@@ -59,7 +61,7 @@ func doNewAdapterMemory() *AdapterMemory {
 		data:        newMemoryData(),
 		expireTimes: newMemoryExpireTimes(),
 		expireSets:  newMemoryExpireSets(),
-		eventList:   glist.New(true),
+		eventList:   glist.NewT[*adapterMemoryEvent](true),
 		closed:      gtype.NewBool(),
 	}
 	// Here may be a "timer leak" if adapter is manually changed from adapter_memory adapter.
@@ -412,7 +414,6 @@ func (c *AdapterMemory) syncEventAndClearExpired(ctx context.Context) {
 		return
 	}
 	var (
-		event         *adapterMemoryEvent
 		oldExpireTime int64
 		newExpireTime int64
 	)
@@ -420,11 +421,10 @@ func (c *AdapterMemory) syncEventAndClearExpired(ctx context.Context) {
 	// Data expiration synchronization.
 	// ================================
 	for {
-		v := c.eventList.PopFront()
-		if v == nil {
+		event := c.eventList.PopFront()
+		if event == nil {
 			break
 		}
-		event = v.(*adapterMemoryEvent)
 		// Fetching the old expire set.
 		oldExpireTime = c.expireTimes.Get(event.k)
 		// Calculating the new expiration time set.

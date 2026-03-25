@@ -122,9 +122,13 @@ func NewWithClient(client *etcd3.Client, option ...Option) *Registry {
 		client: client,
 		kv:     etcd3.NewKV(client),
 	}
+	r.etcdConfig.DialTimeout = DefaultDialTimeout
 	if len(option) > 0 {
 		r.logger = option[0].Logger
 		r.keepaliveTTL = option[0].KeepaliveTTL
+		if option[0].DialTimeout > 0 {
+			r.etcdConfig.DialTimeout = option[0].DialTimeout
+		}
 	}
 	if r.logger == nil {
 		r.logger = g.Log()

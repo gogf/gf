@@ -99,7 +99,12 @@ func (c *Converter) MapToMap(
 	for _, key := range paramsKeys {
 		mapValue := reflect.New(pointerValueType).Elem()
 		switch pointerValueKind {
-		case reflect.Map, reflect.Struct:
+		case reflect.Map:
+			// For nested map types, recursively call MapToMap.
+			if err = c.MapToMap(paramsRv.MapIndex(key).Interface(), mapValue.Addr().Interface(), mapping, option...); err != nil {
+				return err
+			}
+		case reflect.Struct:
 			structOption := StructOption{
 				ParamKeyToAttrMap: mapping,
 				PriorityTag:       "",

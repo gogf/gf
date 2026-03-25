@@ -94,7 +94,7 @@ func Test_Instance_EnvPath(t *testing.T) {
 		t.Assert(Instance("c3") != nil, true)
 		t.Assert(Instance("c3").MustGet(ctx, "my-config"), "3")
 		t.Assert(Instance("c4").MustGet(ctx, "my-config"), "4")
-		localInstances = gmap.NewStrAnyMap(true)
+		localInstances = gmap.NewKVMapWithChecker[string, *Config](checker, true)
 	})
 }
 
@@ -105,6 +105,6 @@ func Test_Instance_EnvFile(t *testing.T) {
 		genv.Set("GF_GCFG_FILE", "c6.json")
 		defer genv.Set("GF_GCFG_FILE", "")
 		t.Assert(Instance().MustGet(ctx, "my-config"), "6")
-		localInstances = gmap.NewStrAnyMap(true)
+		localInstances = gmap.NewKVMapWithChecker[string, *Config](checker, true)
 	})
 }

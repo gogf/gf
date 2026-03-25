@@ -25,18 +25,50 @@ var (
 )
 
 const (
-	TableSize  = 10
-	TestDbUser = "sa"
-	TestDbPass = "LoremIpsum86"
+	TableSize        = 10
+	TableName        = "t_user"
+	TestSchema       = "test"
+	TableNamePrefix1 = "gf_"
+	TestDbUser       = "sa"
+	TestDbPass       = "LoremIpsum86"
+	CreateTime       = "2018-10-24 10:00:00"
 )
 
 func init() {
-	node := gdb.ConfigNode{
+	// First connect to master database to create test database
+	nodemaster := gdb.ConfigNode{
 		Host:             "127.0.0.1",
 		Port:             "1433",
 		User:             TestDbUser,
 		Pass:             TestDbPass,
 		Name:             "master",
+		Type:             "mssql",
+		Role:             "master",
+		Charset:          "utf8",
+		Weight:           1,
+		MaxIdleConnCount: 10,
+		MaxOpenConnCount: 10,
+	}
+
+	tempDb, err := gdb.New(nodemaster)
+	if err != nil {
+		gtest.Fatal(err)
+	}
+
+	// Create test database
+	if _, err := tempDb.Exec(context.Background(), fmt.Sprintf(`
+		IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = '%s')
+		CREATE DATABASE [%s]
+	`, TestSchema, TestSchema)); err != nil {
+		gtest.Fatal(err)
+	}
+
+	node := gdb.ConfigNode{
+		Host:             "127.0.0.1",
+		Port:             "1433",
+		User:             TestDbUser,
+		Pass:             TestDbPass,
+		Name:             TestSchema,
 		Type:             "mssql",
 		Role:             "master",
 		Charset:          "utf8",
@@ -95,8 +127,8 @@ func createTable(table ...string) (name string) {
 	dropTable(name)
 
 	if _, err := db.Exec(context.Background(), fmt.Sprintf(`
-		IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='%s' and xtype='U')
-		CREATE TABLE %s (
+		IF NOT EXISTS (SELECT * FROM sys.objects WHERE name='%s' and type='U')
+		CREATE TABLE [%s] (
 		ID numeric(10,0) NOT NULL,
 		PASSPORT VARCHAR(45)  NULL,
 		PASSWORD VARCHAR(32)  NULL,
@@ -109,7 +141,6 @@ func createTable(table ...string) (name string) {
 		gtest.Fatal(err)
 	}
 
-	db.Schema("test")
 	return
 }
 
@@ -136,9 +167,33 @@ func createInitTable(table ...string) (name string) {
 
 func dropTable(table string) {
 	if _, err := db.Exec(context.Background(), fmt.Sprintf(`
-		IF EXISTS (SELECT * FROM sysobjects WHERE name='%s' and xtype='U')
-		DROP TABLE %s
+		IF EXISTS (SELECT * FROM sys.objects WHERE name='%s' and type='U')
+		DROP TABLE [%s]
 	`, table, table)); err != nil {
 		gtest.Fatal(err)
 	}
+}
+
+// createInsertAndGetIdTableForTest tests InsertAndGetId functionality
+func createInsertAndGetIdTableForTest() (name string) {
+
+	if _, err := db.Exec(context.Background(), `
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE name='ip_to_id' and type='U')
+begin
+	CREATE TABLE [ip_to_id](
+		[id] [int] IDENTITY(1,1) NOT NULL,
+		[ip] [varchar](128) NULL,
+	 CONSTRAINT [PK_ip_to_id] PRIMARY KEY CLUSTERED 
+	(
+		[id] ASC
+	)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+	) ON [PRIMARY]
+end
+	`); err != nil {
+		gtest.Fatal(err)
+	}
+
+	db.Schema(db.GetConfig().Name)
+	name = "ip_to_id"
+	return
 }

@@ -76,7 +76,7 @@ var (
 	}
 	// regular expression object for single rule
 	// which is compiled just once and of repeatable usage.
-	ruleRegex, _ = regexp.Compile(singleRulePattern)
+	ruleRegex = regexp.MustCompile(singleRulePattern)
 
 	// decorativeRuleMap defines all rules that are just marked rules which have neither functional meaning
 	// nor error messages.
@@ -91,7 +91,7 @@ var (
 // The sequence tag is like: [alias@]rule[...#msg...]
 func ParseTagValue(tag string) (field, rule, msg string) {
 	// Complete sequence tag.
-	// Example: name@required|length:2,20|password3|same:password1#||密码强度不足 | 两次密码不一致
+	// Example: name@required|length:2,20|password3|same:password1#||Password strength is insufficient | Passwords are not match
 	match, _ := gregex.MatchString(`\s*((\w+)\s*@){0,1}\s*([^#]+)\s*(#\s*(.*)){0,1}\s*`, tag)
 	if len(match) > 5 {
 		msg = strings.TrimSpace(match[5])

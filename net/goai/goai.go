@@ -144,24 +144,26 @@ func (oai *OpenApiV3) golangTypeToOAIType(t reflect.Type) string {
 	for t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
+
+	switch t.String() {
+	case `time.Time`, `gtime.Time`:
+		return TypeString
+	case `ghttp.UploadFile`:
+		return TypeFile
+	case `[]uint8`:
+		return TypeString
+	case `uuid.UUID`:
+		return TypeString
+	}
+
 	switch t.Kind() {
 	case reflect.String:
 		return TypeString
 
 	case reflect.Struct:
-		switch t.String() {
-		case `time.Time`, `gtime.Time`:
-			return TypeString
-		case `ghttp.UploadFile`:
-			return TypeFile
-		}
 		return TypeObject
 
 	case reflect.Slice, reflect.Array:
-		switch t.String() {
-		case `[]uint8`:
-			return TypeString
-		}
 		return TypeArray
 
 	case reflect.Bool:
@@ -207,6 +209,7 @@ func (oai *OpenApiV3) golangTypeToSchemaName(t reflect.Type) string {
 	for t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
+	schemaName = gstr.Replace(schemaName, `/`, `.`)
 	if pkgPath = t.PkgPath(); pkgPath != "" && pkgPath != "." {
 		if !oai.Config.IgnorePkgPath {
 			schemaName = gstr.Replace(pkgPath, `/`, `.`) + gstr.SubStrFrom(schemaName, ".")
@@ -216,6 +219,8 @@ func (oai *OpenApiV3) golangTypeToSchemaName(t reflect.Type) string {
 		` `: ``,
 		`{`: ``,
 		`}`: ``,
+		`[`: `.`,
+		`]`: `.`,
 	})
 	return schemaName
 }
