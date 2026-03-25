@@ -8,7 +8,6 @@ package gi18n_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
