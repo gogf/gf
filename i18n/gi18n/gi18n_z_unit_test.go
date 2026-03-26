@@ -95,7 +95,7 @@ func Test_TranslateMap(t *testing.T) {
 			Path: gtest.DataPath("i18n-file"),
 		})
 		i18n.SetLanguage("zh-CN")
-		str := i18n.Tmp(context.Background(), "replace_map_test", map[string]interface{}{"name": "blue", "score": "3000"})
+		str := i18n.Tm(context.Background(), "replace_map_test", map[string]interface{}{"name": "blue", "score": "3000"})
 		t.Log(str)
 		t.Assert(str, "hello 3000 blue is ok")
 	})
