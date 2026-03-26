@@ -165,8 +165,8 @@ func (m *Manager) Tf(ctx context.Context, format string, values ...any) string {
 }
 
 // Tm is alias of TranslateMap for convenience.
-func (m *Manager) Tm(ctx context.Context, cxtContent string, valMap map[string]interface{}) string {
-	return m.TranslateMap(ctx, cxtContent, valMap)
+func (m *Manager) Tm(ctx context.Context, cntMsg string, valMap map[string]interface{}) string {
+	return m.TranslateMap(ctx, cntMsg, valMap)
 }
 
 // TranslateFormat translates, formats and returns the `format` with configured language
