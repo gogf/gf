@@ -133,3 +133,25 @@ func (c *Client) NoUrlEncode() *Client {
 	newClient.SetNoUrlEncode(true)
 	return newClient
 }
+
+// Query is a chaining function, which sets query parameters with map for next request.
+func (c *Client) Query(m map[string]any) *Client {
+	newClient := c.Clone()
+	newClient.SetQueryMap(m)
+	return newClient
+}
+
+// QueryParams is a chaining function, which sets query parameters with struct or map object for next request.
+// The `params` can be type of: string/[]byte/map/struct/*struct.
+func (c *Client) QueryParams(params any) *Client {
+	newClient := c.Clone()
+	newClient.SetQueryParams(params)
+	return newClient
+}
+
+// QueryPair is a chaining function, which sets a query parameter pair for next request.
+func (c *Client) QueryPair(key string, value any) *Client {
+	newClient := c.Clone()
+	newClient.SetQuery(key, value)
+	return newClient
+}
