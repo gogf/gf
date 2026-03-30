@@ -81,7 +81,6 @@ func (l *Logger) Clone() *Logger {
 	return &Logger{
 		config: l.config,
 		parent: l,
-		attrs:  l.attrs,
 	}
 }
 
