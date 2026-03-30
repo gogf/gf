@@ -115,7 +115,7 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...a
 				index: -1,
 			},
 			Logger:   l,
-			AllAttrs: append([]slog.Attr(nil), l.attrs[:]...),
+			AllAttrs: append([]slog.Attr(nil), l.attrs...),
 			Buffer:   bytes.NewBuffer(nil),
 			Time:     now,
 			Color:    defaultLevelColor[level],
