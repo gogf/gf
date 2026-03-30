@@ -491,6 +491,17 @@ func Test_Concurrent(t *testing.T) {
 	})
 }
 
+func Test_Attrs(t *testing.T) {
+	ctx := context.Background()
+	glog.Attrs(slog.Int("int", 1), slog.String("str", "str")).Print(ctx, "attr1")
+	glog.Attrs(slog.Any("any1", "any1")).Attrs(slog.Any("any2", "any2")).Info(ctx, "print-any1&any2")
+	glog.Attrs(slog.Int64("int64", 1000))
+	cl := glog.DefaultLogger().Clone()
+	cl.SetHandlers(glog.HandlerJson)
+	cl.Attrs(slog.Any("any", "clone-any-attr")).Error(ctx, "clone-error-text")
+	cl.Attrs(slog.Any("any2", "clone-any2-attr")).Error(ctx, "clone-error-text")
+}
+
 func Test_Attrs_Std(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
