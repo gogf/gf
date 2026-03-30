@@ -9,6 +9,7 @@ package glog
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/os/grpool"
@@ -17,6 +18,7 @@ import (
 
 // ILogger is the API interface for logger.
 type ILogger interface {
+	Attrs(attrs ...slog.Attr) ILogger
 	Print(ctx context.Context, v ...any)
 	Printf(ctx context.Context, format string, v ...any)
 	Debug(ctx context.Context, v ...any)

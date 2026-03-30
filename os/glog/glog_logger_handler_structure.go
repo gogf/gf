@@ -194,6 +194,10 @@ func (buf *structuredBuffer) Bytes() []byte {
 	if buf.in.Stack != "" {
 		buf.addValue(structureKeyStack, buf.in.Stack)
 	}
+	for _, attr := range buf.in.AllAttrs {
+		buf.addValue(attr.Key, attr.Value.Any())
+	}
+
 	contentBytes := buf.buffer.Bytes()
 	buf.buffer.Reset()
 	contentBytes = bytes.ReplaceAll(contentBytes, []byte{'\n'}, []byte{' '})

@@ -9,6 +9,9 @@ package glog_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 	"sync"
@@ -485,5 +488,114 @@ func Test_Concurrent(t *testing.T) {
 		wg.Wait()
 		content := gfile.GetContents(gfile.Join(p, f))
 		t.Assert(gstr.Count(content, s), c)
+	})
+}
+
+func Test_Attrs_Std(t *testing.T) {
+
+	gtest.C(t, func(t *gtest.T) {
+		ctx := context.Background()
+		glog.Attrs(slog.Int("int", 1), slog.String("str", "str")).Print(ctx, "attr1")
+		glog.Attrs(slog.Any("any1", "any1")).Attrs(slog.Any("any2", "any2")).Info(ctx, "print-any1&any2")
+
+		glog.SetHandlers(glog.HandlerJson)
+		glog.Attrs(slog.Int("int", 1), slog.String("str", "str")).Print(ctx, "json-handler-attr1")
+		glog.Attrs(slog.Any("any1", "any1")).Attrs(slog.Any("any2", "any2")).Warning(ctx, "json-handler-print-any1&any2")
+
+		glog.SetHandlers(glog.HandlerStructure)
+		glog.Attrs(slog.Int("int", 1), slog.String("str", "str")).Print(ctx, "struct-handler-attr1")
+		glog.Attrs(slog.Any("any1", "any1")).Attrs(slog.Any("any2", "any2")).Error(ctx, "struct-handler-print-any1&any2")
+	})
+}
+func Test_Attrs_New(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.New()
+		ctx := context.Background()
+		l.Attrs(slog.Int("int", 1), slog.String("str", "str")).Print(ctx, "attr1")
+		l.Attrs(slog.Any("any1", "any1")).Attrs(slog.Any("any2", "any2")).Info(ctx, "print-any1&any2")
+
+		l.SetHandlers(glog.HandlerJson)
+		l.Attrs(slog.Int("int", 1), slog.String("str", "str")).Print(ctx, "json-handler-attr1")
+		l.Attrs(slog.Any("any1", "any1")).Attrs(slog.Any("any2", "any2")).Warning(ctx, "json-handler-print-any1&any2")
+
+		l.SetHandlers(glog.HandlerStructure)
+		l.Attrs(slog.Int("int", 1), slog.String("str", "str")).Print(ctx, "struct-handler-attr1")
+		l.Attrs(slog.Any("any1", "any1")).Attrs(slog.Any("any2", "any2")).Error(ctx, "struct-handler-print-any1&any2")
+	})
+
+}
+func Test_Attrs_Default(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.DefaultLogger()
+		ctx := context.Background()
+		l.Attrs(slog.Int("int", 1), slog.String("str", "str")).Print(ctx, "attr1")
+		l.Attrs(slog.Any("any1", "any1")).Attrs(slog.Any("any2", "any2")).Info(ctx, "print-any1&any2")
+
+		l.SetHandlers(glog.HandlerJson)
+		l.Attrs(slog.Int("int", 1), slog.String("str", "str")).Info(ctx, "json-handler-attr1")
+		l.Attrs(slog.Any("any1", "any1")).Attrs(slog.Any("any2", "any2")).Warning(ctx, "json-handler-print-any1&any2")
+
+		l.SetHandlers(glog.HandlerStructure)
+		l.Attrs(slog.Int("int", 1), slog.String("str", "str")).Info(ctx, "struct-handler-attr1")
+		l.Attrs(slog.Any("any1", "any1")).Attrs(slog.Any("any2", "any2")).Error(ctx, "struct-handler-print-any1&any2")
+
+		l.SetHandlers(glog.HandlerJson)
+		l.Attrs(slog.Int64("int64", 1000))
+		l.Clone().Attrs(slog.Any("any", "clone-any-attr")).Info(ctx, "clone-info-text")
+		l.Info(ctx, "source-info-ctx")
+	})
+
+}
+func Test_Attrs_WithWriter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.NewWithWriter(os.Stdout)
+		l.SetStdoutPrint(false)
+		ctx := context.Background()
+		l.Attrs(slog.Int("int", 1), slog.String("str", "str")).Print(ctx, "attr1")
+		l.Attrs(slog.Any("any1", "any1")).Attrs(slog.Any("any2", "any2")).Info(ctx, "print-any1&any2")
+
+		l.SetHandlers(glog.HandlerJson)
+		l.Attrs(slog.Int("int", 1), slog.String("str", "str")).Info(ctx, "json-handler-attr1")
+		l.Attrs(slog.Any("any1", "any1")).Attrs(slog.Any("any2", "any2")).Warning(ctx, "json-handler-warning-any1&any2")
+		l.Attrs(slog.Any("any1", "any1")).Attrs(slog.Any("any2", "any2")).Error(ctx, "struct-handler-error-any1&any2")
+
+		l.SetHandlers(glog.HandlerStructure)
+		l.Attrs(slog.Int("int", 1), slog.String("str", "str")).Info(ctx, "struct-handler-attr1")
+		l.Attrs(slog.Any("any1", "any1")).Attrs(slog.Any("any2", "any2")).Error(ctx, "struct-handler-print-any1&any2")
+
+		l.SetHandlers(glog.HandlerJson)
+		l.Attrs(slog.Int64("int64", 1000))
+		l.Clone().Attrs(slog.Any("any", "clone-any-attr")).Info(ctx, "clone-info-text")
+		l.Info(ctx, "source-info-ctx")
+
+		l.SetHandlers(func(ctx context.Context, in *glog.HandlerInput) {
+			var (
+				json_map = map[string]any{
+					"time":  in.Time,
+					"msg":   in.ValuesContent(),
+					"lv":    in.LevelFormat,
+					"stack": in.Stack,
+				}
+				log_others = map[string]any{}
+				josn_bytes []byte
+				err        error
+			)
+			for _, attr := range in.AllAttrs {
+				log_others[attr.Key] = attr.Value.Any()
+			}
+			json_map["other"] = log_others
+
+			if josn_bytes, err = json.Marshal(json_map); err != nil {
+				panic(err)
+			}
+			if _, err = fmt.Fprint(in.Buffer, string(josn_bytes), "\n"); err != nil {
+				panic(err)
+			}
+			in.Next(ctx)
+		})
+		l.Attrs(slog.Int64("int64", 1000))
+		cl := l.Clone()
+		cl.Attrs(slog.Any("any", "clone-any-attr")).Error(ctx, "clone-error-text")
+		cl.Attrs(slog.Any("any2", "clone-any2-attr")).Error(ctx, "clone-error-text")
 	})
 }

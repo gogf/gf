@@ -9,8 +9,14 @@ package glog
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 )
+
+func (l *Logger) Attrs(attrs ...slog.Attr) ILogger {
+	l.attrs = append(l.attrs, attrs...)
+	return l
+}
 
 // Print prints `v` with newline using fmt.Sprintln.
 // The parameter `v` can be multiple variables.

@@ -9,6 +9,8 @@ package glog
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/gogf/gf/v2/util/gconv"
@@ -29,6 +31,9 @@ type HandlerInput struct {
 
 	// Current Logger object.
 	Logger *Logger
+
+	// Current Logger Attrs.
+	AllAttrs []slog.Attr
 
 	// Buffer for logging content outputs.
 	Buffer *bytes.Buffer
@@ -196,6 +201,10 @@ func (in *HandlerInput) getDefaultBuffer(withColor bool) *bytes.Buffer {
 
 	if len(in.Values) > 0 {
 		in.addStringToBuffer(buffer, in.ValuesContent())
+	}
+
+	for _, attr := range in.Logger.attrs {
+		in.addStringToBuffer(buffer, fmt.Sprintf("%s=%v", attr.Key, attr.Value.Any()))
 	}
 
 	if in.Stack != "" {

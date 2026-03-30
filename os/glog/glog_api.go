@@ -6,7 +6,15 @@
 
 package glog
 
-import "context"
+import (
+	"context"
+	"log/slog"
+)
+
+func Attrs(attrs ...slog.Attr) ILogger {
+	defaultLogger.Attrs(attrs...)
+	return defaultLogger
+}
 
 // Print prints `v` with newline using fmt.Sprintln.
 // The parameter `v` can be multiple variables.

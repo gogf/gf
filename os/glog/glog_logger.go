@@ -11,6 +11,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"runtime"
 	"strings"
@@ -36,6 +37,7 @@ import (
 type Logger struct {
 	parent *Logger // Parent logger, if it is not empty, it means the logger is used in chaining function.
 	config Config  // Logger configuration.
+	attrs  []slog.Attr
 }
 
 const (
@@ -79,6 +81,7 @@ func (l *Logger) Clone() *Logger {
 	return &Logger{
 		config: l.config,
 		parent: l,
+		attrs:  l.attrs,
 	}
 }
 
@@ -112,13 +115,14 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...a
 			internalHandlerInfo: internalHandlerInfo{
 				index: -1,
 			},
-			Logger: l,
-			Buffer: bytes.NewBuffer(nil),
-			Time:   now,
-			Color:  defaultLevelColor[level],
-			Level:  level,
-			Stack:  stack,
-			Values: values,
+			Logger:   l,
+			AllAttrs: l.attrs,
+			Buffer:   bytes.NewBuffer(nil),
+			Time:     now,
+			Color:    defaultLevelColor[level],
+			Level:    level,
+			Stack:    stack,
+			Values:   values,
 		}
 	)
 
@@ -207,6 +211,14 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...a
 			}
 		}
 	}
+	if l.parent != nil {
+		var current = l
+		for current.parent != nil {
+			input.AllAttrs = append(input.AllAttrs, current.parent.attrs...)
+			current = current.parent
+		}
+	}
+
 	if l.config.Flags&F_ASYNC > 0 {
 		input.IsAsync = true
 		err := asyncPool.Add(ctx, func(ctx context.Context) {
@@ -244,6 +256,7 @@ func (l *Logger) doFinalPrint(ctx context.Context, input *HandlerInput) *bytes.B
 			buffer = buf
 		}
 	}
+	l.attrs = nil
 	return buffer
 }
 
