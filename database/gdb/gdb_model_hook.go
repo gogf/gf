@@ -286,9 +286,79 @@ func (h *HookDeleteInput) Next(ctx context.Context) (result sql.Result, err erro
 }
 
 // Hook sets the hook functions for current model.
+// Can be used multiple times without overwriting.
 func (m *Model) Hook(hook HookHandler) *Model {
-	return m.Handler(func(ctx context.Context, model *Model) *Model {
-		model.hookHandler = hook
-		return model
-	})
+	// Compose hook handlers eagerly so multiple Hook calls can be chained
+	// without requiring callHandlers execution.
+	model := m
+
+	if model.hookHandler.Select == nil {
+		model.hookHandler.Select = hook.Select
+	} else if hook.Select != nil {
+		prev := model.hookHandler.Select
+		current := hook.Select
+		model.hookHandler.Select = func(ctx context.Context, in *HookSelectInput) (result Result, err error) {
+			original := in.handler
+			in.handler = func(ctx context.Context, in *HookSelectInput) (result Result, err error) {
+				in.handler = original
+				in.handlerCalled = false
+				return current(ctx, in)
+			}
+			in.handlerCalled = false
+			return prev(ctx, in)
+		}
+	}
+
+	if model.hookHandler.Insert == nil {
+		model.hookHandler.Insert = hook.Insert
+	} else if hook.Insert != nil {
+		prev := model.hookHandler.Insert
+		current := hook.Insert
+		model.hookHandler.Insert = func(ctx context.Context, in *HookInsertInput) (result sql.Result, err error) {
+			original := in.handler
+			in.handler = func(ctx context.Context, in *HookInsertInput) (result sql.Result, err error) {
+				in.handler = original
+				in.handlerCalled = false
+				return current(ctx, in)
+			}
+			in.handlerCalled = false
+			return prev(ctx, in)
+		}
+	}
+
+	if model.hookHandler.Update == nil {
+		model.hookHandler.Update = hook.Update
+	} else if hook.Update != nil {
+		prev := model.hookHandler.Update
+		current := hook.Update
+		model.hookHandler.Update = func(ctx context.Context, in *HookUpdateInput) (result sql.Result, err error) {
+			original := in.handler
+			in.handler = func(ctx context.Context, in *HookUpdateInput) (result sql.Result, err error) {
+				in.handler = original
+				in.handlerCalled = false
+				return current(ctx, in)
+			}
+			in.handlerCalled = false
+			return prev(ctx, in)
+		}
+	}
+
+	if model.hookHandler.Delete == nil {
+		model.hookHandler.Delete = hook.Delete
+	} else if hook.Delete != nil {
+		prev := model.hookHandler.Delete
+		current := hook.Delete
+		model.hookHandler.Delete = func(ctx context.Context, in *HookDeleteInput) (result sql.Result, err error) {
+			original := in.handler
+			in.handler = func(ctx context.Context, in *HookDeleteInput) (result sql.Result, err error) {
+				in.handler = original
+				in.handlerCalled = false
+				return current(ctx, in)
+			}
+			in.handlerCalled = false
+			return prev(ctx, in)
+		}
+	}
+
+	return model
 }

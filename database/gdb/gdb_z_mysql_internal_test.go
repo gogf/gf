@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -54,6 +55,38 @@ func Test_HookSelect_Regex(t *testing.T) {
 		)
 		t.AssertNil(err)
 		t.Assert(toBeCommittedSql, `select * FROM user_1`)
+	})
+}
+
+func Test_Multiple_Hooks(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var calls []string
+
+		model := (&Model{}).
+			Hook(HookHandler{
+				Select: func(ctx context.Context, in *HookSelectInput) (result Result, err error) {
+					calls = append(calls, "hook1")
+					return in.Next(ctx)
+				},
+			}).
+			Hook(HookHandler{
+				Select: func(ctx context.Context, in *HookSelectInput) (result Result, err error) {
+					calls = append(calls, "hook2")
+					return in.Next(ctx)
+				},
+			}).
+			Hook(HookHandler{
+				Select: func(ctx context.Context, in *HookSelectInput) (result Result, err error) {
+					calls = append(calls, "hook3")
+					return nil, nil
+				},
+			})
+
+		_, err := model.hookHandler.Select(context.Background(), &HookSelectInput{
+			Model: &Model{},
+		})
+		t.AssertNil(err)
+		t.Assert(calls, []string{"hook1", "hook2", "hook3"})
 	})
 }
 
