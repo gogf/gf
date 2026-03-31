@@ -167,19 +167,19 @@ func (m *Manager) Tf(ctx context.Context, format string, values ...any) string {
 // TranslateFormat translates,formats and returns the format with configured language
 // and given values using positional arguments (fmt.Sprintf)
 // For order-independent, key-based replacement, use TranslateMap instead
-func (m *Manager) TranslateFormat(ctx context.Context, format string, values ...interface{}) string {
+func (m *Manager) TranslateFormat(ctx context.Context, format string, values ...any) string {
 	return fmt.Sprintf(m.Translate(ctx, format), values...)
 }
 
 // Tm is alias of TranslateMap for convenience.
-func (m *Manager) Tm(ctx context.Context, content string, valMap map[string]interface{}) string {
+func (m *Manager) Tm(ctx context.Context, content string, valMap map[string]any) string {
 	return m.TranslateMap(ctx, content, valMap)
 }
 
 // TranslateMap parameter replacement is order-independent.
 // replaced param format is :{key}.  for example: content is "my name is :name.",the valMap is map[string]interface{} {"name":"alias"}
 // the result of translation is "my name is alias."
-func (m *Manager) TranslateMap(ctx context.Context, content string, valMap map[string]interface{}) string {
+func (m *Manager) TranslateMap(ctx context.Context, content string, valMap map[string]any) string {
 	result := m.Translate(ctx, content)
 	mpStrStr := gconv.MapStrStr(valMap)
 	if len(mpStrStr) > 0 {
