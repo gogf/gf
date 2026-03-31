@@ -279,6 +279,8 @@ func (m *Model) Clone() *Model {
 	}
 	// Basic attributes copy.
 	*newModel = *m
+	// Deep copy hook handler slices to avoid sharing.
+	newModel.hookHandler = m.hookHandler.Clone()
 	// WhereBuilder copy, note the attribute pointer.
 	newModel.whereBuilder = m.whereBuilder.Clone()
 	newModel.whereBuilder.model = newModel

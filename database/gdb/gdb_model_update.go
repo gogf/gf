@@ -95,11 +95,8 @@ func (m *Model) Update(dataAndWhere ...any) (result sql.Result, err error) {
 	}
 
 	in := &HookUpdateInput{
-		internalParamHookUpdate: internalParamHookUpdate{
-			internalParamHook: internalParamHook{
-				link: m.getLink(true),
-			},
-			handler: m.hookHandler.Update,
+		internalParamHook: internalParamHook{
+			link: m.getLink(true),
 		},
 		Model:     m,
 		Table:     m.tables,
@@ -108,7 +105,7 @@ func (m *Model) Update(dataAndWhere ...any) (result sql.Result, err error) {
 		Condition: conditionStr,
 		Args:      m.mergeArguments(conditionArgs),
 	}
-	return in.Next(ctx)
+	return m.hookHandler.runUpdate(ctx, in)
 }
 
 // UpdateAndGetAffected performs update statement and returns the affected rows number.

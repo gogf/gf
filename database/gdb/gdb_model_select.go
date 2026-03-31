@@ -722,11 +722,8 @@ func (m *Model) doGetAllBySql(
 	}
 
 	in := &HookSelectInput{
-		internalParamHookSelect: internalParamHookSelect{
-			internalParamHook: internalParamHook{
-				link: m.getLink(false),
-			},
-			handler: m.hookHandler.Select,
+		internalParamHook: internalParamHook{
+			link: m.getLink(false),
 		},
 		Model:      m,
 		Table:      m.tables,
@@ -735,7 +732,7 @@ func (m *Model) doGetAllBySql(
 		Args:       m.mergeArguments(args),
 		SelectType: selectType,
 	}
-	if result, err = in.Next(ctx); err != nil {
+	if result, err = m.hookHandler.runSelect(ctx, in); err != nil {
 		return
 	}
 

@@ -8,7 +8,6 @@ package gaussdb_test
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"testing"
 
@@ -24,19 +23,18 @@ func Test_Model_Hook_Select(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		m := db.Model(table).Hook(gdb.HookHandler{
-			Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
-				result, err = in.Next(ctx)
+		m := db.Model(table).Hook(
+			gdb.AfterSelect(func(ctx context.Context, in *gdb.HookSelectInput, result gdb.Result, err error) (gdb.Result, error) {
 				if err != nil {
-					return
+					return result, err
 				}
 				for i, record := range result {
 					record["test"] = gvar.New(100 + record["id"].Int())
 					result[i] = record
 				}
-				return
-			},
-		})
+				return result, nil
+			}),
+		)
 		all, err := m.Where("id > ?", 6).OrderAsc("id").All()
 		t.AssertNil(err)
 		t.Assert(len(all), 4)
@@ -53,8 +51,8 @@ func Test_Model_Hook_Insert(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		m := db.Model(table).Hook(gdb.HookHandler{
-			Insert: func(ctx context.Context, in *gdb.HookInsertInput) (result sql.Result, err error) {
+		m := db.Model(table).Hook(
+			gdb.BeforeInsert(func(ctx context.Context, in *gdb.HookInsertInput) error {
 				for i, item := range in.Data {
 					item["passport"] = fmt.Sprintf(`test_port_%d`, item["id"])
 					item["nickname"] = fmt.Sprintf(`test_name_%d`, item["id"])
@@ -62,9 +60,9 @@ func Test_Model_Hook_Insert(t *testing.T) {
 					item["create_time"] = CreateTime
 					in.Data[i] = item
 				}
-				return in.Next(ctx)
-			},
-		})
+				return nil
+			}),
+		)
 		_, err := m.Insert(g.Map{
 			"id":       1,
 			"nickname": "name_1",
@@ -83,8 +81,8 @@ func Test_Model_Hook_Update(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		m := db.Model(table).Hook(gdb.HookHandler{
-			Update: func(ctx context.Context, in *gdb.HookUpdateInput) (result sql.Result, err error) {
+		m := db.Model(table).Hook(
+			gdb.BeforeUpdate(func(ctx context.Context, in *gdb.HookUpdateInput) error {
 				switch value := in.Data.(type) {
 				case gdb.List:
 					for i, data := range value {
@@ -99,9 +97,9 @@ func Test_Model_Hook_Update(t *testing.T) {
 					value["nickname"] = `name`
 					in.Data = value
 				}
-				return in.Next(ctx)
-			},
-		})
+				return nil
+			}),
+		)
 		_, err := m.Data(g.Map{
 			"nickname": "name_1",
 		}).WherePri(1).Update()
@@ -120,13 +118,16 @@ func Test_Model_Hook_Delete(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		m := db.Model(table).Hook(gdb.HookHandler{
-			Delete: func(ctx context.Context, in *gdb.HookDeleteInput) (result sql.Result, err error) {
-				return db.Model(table).Data(g.Map{
+		m := db.Model(table).Hook(
+			gdb.BeforeDelete(func(ctx context.Context, in *gdb.HookDeleteInput) error {
+				origCondition := in.Condition
+				in.Condition = "1=0"
+				_, err := in.Model.Data(g.Map{
 					"nickname": `deleted`,
-				}).Where(in.Condition).Update()
-			},
-		})
+				}).Where(origCondition).Update()
+				return err
+			}),
+		)
 		_, err := m.Where("1=1").Delete()
 		t.AssertNil(err)
 
@@ -143,20 +144,19 @@ func Test_Model_Hook_Select_Count(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		m := db.Model(table).Hook(gdb.HookHandler{
-			Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
-				result, err = in.Next(ctx)
+		m := db.Model(table).Hook(
+			gdb.AfterSelect(func(ctx context.Context, in *gdb.HookSelectInput, result gdb.Result, err error) (gdb.Result, error) {
 				if err != nil {
-					return
+					return result, err
 				}
-				// Adding extra fields should not affect Count operations
+				// Adding extra fields should not affect Count operations.
 				for i, record := range result {
 					record["extra"] = gvar.New("extra_value")
 					result[i] = record
 				}
-				return
-			},
-		})
+				return result, nil
+			}),
+		)
 		count, err := m.Count()
 		t.AssertNil(err)
 		t.Assert(count, TableSize)
@@ -169,46 +169,46 @@ func Test_Model_Hook_Chain(t *testing.T) {
 
 	// Normal chain: two hooks both modify data
 	gtest.C(t, func(t *gtest.T) {
-		m := db.Model(table).Hook(gdb.HookHandler{
-			Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
-				result, err = in.Next(ctx)
-				if err != nil {
-					return
-				}
-				for i, record := range result {
-					record["hook1"] = gvar.New("value1")
-					result[i] = record
-				}
-				return
-			},
-		}).Hook(gdb.HookHandler{
-			Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
-				result, err = in.Next(ctx)
-				if err != nil {
-					return
-				}
-				for i, record := range result {
-					record["hook2"] = gvar.New("value2")
-					result[i] = record
-				}
-				return
-			},
-		})
+		m := db.Model(table).
+			Hook(
+				gdb.AfterSelect(func(ctx context.Context, in *gdb.HookSelectInput, result gdb.Result, err error) (gdb.Result, error) {
+					if err != nil {
+						return result, err
+					}
+					for i, record := range result {
+						record["hook1"] = gvar.New("value1")
+						result[i] = record
+					}
+					return result, nil
+				}),
+			).
+			Hook(
+				gdb.AfterSelect(func(ctx context.Context, in *gdb.HookSelectInput, result gdb.Result, err error) (gdb.Result, error) {
+					if err != nil {
+						return result, err
+					}
+					for i, record := range result {
+						record["hook2"] = gvar.New("value2")
+						result[i] = record
+					}
+					return result, nil
+				}),
+			)
 		all, err := m.Where("id", 1).All()
 		t.AssertNil(err)
 		t.Assert(len(all), 1)
 		t.Assert(all[0]["id"].Int(), 1)
-		// The last Hook should take effect (Hook replaces previous one)
+		t.Assert(all[0]["hook1"].String(), "value1")
 		t.Assert(all[0]["hook2"].String(), "value2")
 	})
 
 	// Error chain: hook returns error
 	gtest.C(t, func(t *gtest.T) {
-		m := db.Model(table).Hook(gdb.HookHandler{
-			Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
+		m := db.Model(table).Hook(
+			gdb.AfterSelect(func(ctx context.Context, in *gdb.HookSelectInput, result gdb.Result, err error) (gdb.Result, error) {
 				return nil, gerror.New("hook error")
-			},
-		})
+			}),
+		)
 		_, err := m.Where("id", 1).All()
 		t.AssertNE(err, nil)
 		t.Assert(err.Error(), "hook error")

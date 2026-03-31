@@ -111,23 +111,26 @@ func Test_DB_Replace(t *testing.T) {
 		_, err := db.Insert(ctx, "t_user", data)
 		gtest.AssertNil(err)
 
+		passportNew := fmt.Sprintf(`t%d_new`, i)
+		passwordNew := fmt.Sprintf(`p%d_new`, i)
+		nicknameNew := fmt.Sprintf(`T%d_new`, i)
 		// Replace with new data
 		data2 := g.Map{
 			"id":          i,
-			"passport":    fmt.Sprintf(`t%d_new`, i),
-			"password":    fmt.Sprintf(`p%d_new`, i),
-			"nickname":    fmt.Sprintf(`T%d_new`, i),
+			"passport":    passportNew,
+			"password":    passwordNew,
+			"nickname":    nicknameNew,
 			"create_time": gtime.Now().String(),
 		}
 		_, err = db.Replace(ctx, "t_user", data2)
 		gtest.AssertNil(err)
 
 		// Verify the data was replaced
-		one, err := db.GetOne(ctx, fmt.Sprintf("SELECT * FROM t_user WHERE id=?"), i)
+		one, err := db.GetOne(ctx, "SELECT * FROM t_user WHERE id=?", i)
 		gtest.AssertNil(err)
-		gtest.Assert(one["passport"].String(), fmt.Sprintf(`t%d_new`, i))
-		gtest.Assert(one["password"].String(), fmt.Sprintf(`p%d_new`, i))
-		gtest.Assert(one["nickname"].String(), fmt.Sprintf(`T%d_new`, i))
+		gtest.Assert(one["passport"].String(), passportNew)
+		gtest.Assert(one["password"].String(), passwordNew)
+		gtest.Assert(one["nickname"].String(), nicknameNew)
 	})
 }
 
