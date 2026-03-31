@@ -11,10 +11,17 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"slices"
 )
 
 func (l *Logger) Attrs(attrs ...slog.Attr) ILogger {
-	l.attrs = append(l.attrs, attrs...)
+	l.attrs.Append(slices.Collect(func(yield func(v *slog.Attr) bool) {
+		for _, attr := range attrs {
+			if !yield(&attr) {
+				return
+			}
+		}
+	})...)
 	return l
 }
 

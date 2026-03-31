@@ -33,7 +33,7 @@ type HandlerInput struct {
 	Logger *Logger
 
 	// Current Logger Attrs.
-	AllAttrs []slog.Attr
+	AllAttrs []*slog.Attr
 
 	// Buffer for logging content outputs.
 	Buffer *bytes.Buffer
@@ -203,7 +203,7 @@ func (in *HandlerInput) getDefaultBuffer(withColor bool) *bytes.Buffer {
 		in.addStringToBuffer(buffer, in.ValuesContent())
 	}
 
-	for _, attr := range in.Logger.attrs {
+	for _, attr := range in.Logger.attrs.Slice() {
 		in.addStringToBuffer(buffer, fmt.Sprintf("%s=%v", attr.Key, attr.Value.Any()))
 	}
 

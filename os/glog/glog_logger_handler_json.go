@@ -38,7 +38,7 @@ func HandlerJson(ctx context.Context, in *HandlerInput) {
 		Prefix:     in.Prefix,
 		Content:    in.Content,
 		Stack:      in.Stack,
-		Attrs:      make(map[string]any, len(in.Logger.attrs)),
+		Attrs:      make(map[string]any, len(in.AllAttrs)),
 	}
 	if len(in.Values) > 0 {
 		if output.Content != "" {

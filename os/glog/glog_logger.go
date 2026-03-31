@@ -20,6 +20,7 @@ import (
 	"github.com/fatih/color"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/internal/consts"
 	"github.com/gogf/gf/v2/internal/errors"
@@ -37,7 +38,7 @@ import (
 type Logger struct {
 	parent *Logger // Parent logger, if it is not empty, it means the logger is used in chaining function.
 	config Config  // Logger configuration.
-	attrs  []slog.Attr
+	attrs  garray.TArray[*slog.Attr]
 }
 
 const (
@@ -65,6 +66,7 @@ const (
 func New() *Logger {
 	return &Logger{
 		config: DefaultConfig(),
+		attrs:  *garray.NewTArray[*slog.Attr](true),
 	}
 }
 
@@ -81,6 +83,7 @@ func (l *Logger) Clone() *Logger {
 	return &Logger{
 		config: l.config,
 		parent: l,
+		attrs:  *garray.NewTArray[*slog.Attr](true),
 	}
 }
 
@@ -115,7 +118,7 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...a
 				index: -1,
 			},
 			Logger:   l,
-			AllAttrs: append([]slog.Attr(nil), l.attrs...),
+			AllAttrs: l.attrs.Slice(),
 			Buffer:   bytes.NewBuffer(nil),
 			Time:     now,
 			Color:    defaultLevelColor[level],
@@ -213,7 +216,7 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...a
 	if l.parent != nil {
 		var current = l
 		for current.parent != nil {
-			input.AllAttrs = append(input.AllAttrs, current.parent.attrs...)
+			input.AllAttrs = append(input.AllAttrs, current.parent.attrs.Slice()...)
 			current = current.parent
 		}
 	}
@@ -255,7 +258,7 @@ func (l *Logger) doFinalPrint(ctx context.Context, input *HandlerInput) *bytes.B
 			buffer = buf
 		}
 	}
-	l.attrs = nil
+	l.attrs.Clear()
 	return buffer
 }
 
