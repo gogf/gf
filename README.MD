@@ -1,7 +1,7 @@
 English | [简体中文](README.zh_CN.MD)
 
 <div align=center>
-<img src="https://goframe.org/img/logo_full.png" width="300" alt="goframe gf logo"/>
+<img src="https://goframe.org/img/logo_full.png" width="300" alt="goframe logo"/>
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/gogf/gf/v2.svg)](https://pkg.go.dev/github.com/gogf/gf/v2)
 [![GoFrame CI](https://github.com/gogf/gf/actions/workflows/ci-main.yml/badge.svg)](https://github.com/gogf/gf/actions/workflows/ci-main.yml)
