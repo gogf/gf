@@ -164,16 +164,16 @@ func (m *Manager) Tf(ctx context.Context, format string, values ...any) string {
 	return m.TranslateFormat(ctx, format, values...)
 }
 
-// Tm is alias of TranslateMap for convenience.
-func (m *Manager) Tm(ctx context.Context, cntMsg string, valMap map[string]interface{}) string {
-	return m.TranslateMap(ctx, cntMsg, valMap)
-}
-
-// TranslateFormat translates, formats and returns the `format` with configured language
-// and given `values` using positional arguments (fmt.Sprintf).
-// For order-independent, key-based replacement, use TranslateMap instead.
+// TranslateFormat translates,formats and returns the format with configured language
+// and given values using positional arguments (fmt.Sprintf)
+// For order-independent, key-based replacement, use TranslateMap instead
 func (m *Manager) TranslateFormat(ctx context.Context, format string, values ...interface{}) string {
 	return fmt.Sprintf(m.Translate(ctx, format), values...)
+}
+
+// Tm is alias of TranslateMap for convenience.
+func (m *Manager) Tm(ctx context.Context, content string, valMap map[string]interface{}) string {
+	return m.TranslateMap(ctx, content, valMap)
 }
 
 // TranslateMap parameter replacement is order-independent.
