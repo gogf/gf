@@ -90,11 +90,8 @@ func (m *Model) Update(ctx context.Context) (result sql.Result, err error) {
 	}
 
 	in := &HookUpdateInput{
-		internalParamHookUpdate: internalParamHookUpdate{
-			internalParamHook: internalParamHook{
-				link: model.getLink(ctx, true),
-			},
-			handler: model.hookHandler.Update,
+		internalParamHook: internalParamHook{
+			link: model.getLink(ctx, true),
 		},
 		Model:     model,
 		Table:     model.tables,
@@ -103,7 +100,7 @@ func (m *Model) Update(ctx context.Context) (result sql.Result, err error) {
 		Condition: conditionStr,
 		Args:      model.mergeArguments(conditionArgs),
 	}
-	return in.Next(ctx)
+	return m.hookHandler.runUpdate(ctx, in)
 }
 
 // UpdateAndGetAffected performs update statement and returns the affected rows number.

@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -54,6 +55,70 @@ func Test_HookSelect_Regex(t *testing.T) {
 		)
 		t.AssertNil(err)
 		t.Assert(toBeCommittedSql, `select * FROM user_1`)
+	})
+}
+
+func Test_Multiple_Hooks(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			beforeCalls []string
+			afterCalls  []string
+		)
+
+		model := (&Model{}).
+			// One Hook call registers multiple handlers, in order.
+			Hook(
+				BeforeSelect(func(ctx context.Context, in *HookSelectInput) error {
+					beforeCalls = append(beforeCalls, "before1")
+					return nil
+				}),
+				BeforeSelect(func(ctx context.Context, in *HookSelectInput) error {
+					beforeCalls = append(beforeCalls, "before2")
+					return nil
+				}),
+				AfterSelect(func(ctx context.Context, in *HookSelectInput, result Result, err error) (Result, error) {
+					afterCalls = append(afterCalls, "after1")
+					return result, err
+				}),
+			).
+			// Chained Hook calls append handlers in chain order.
+			Hook(
+				BeforeSelect(func(ctx context.Context, in *HookSelectInput) error {
+					beforeCalls = append(beforeCalls, "before3")
+					return nil
+				}),
+				AfterSelect(func(ctx context.Context, in *HookSelectInput, result Result, err error) (Result, error) {
+					afterCalls = append(afterCalls, "after2")
+					return result, err
+				}),
+			).
+			Hook(
+				BeforeSelect(func(ctx context.Context, in *HookSelectInput) error {
+					beforeCalls = append(beforeCalls, "before4")
+					return nil
+				}),
+				AfterSelect(func(ctx context.Context, in *HookSelectInput, result Result, err error) (Result, error) {
+					afterCalls = append(afterCalls, "after3")
+					return result, err
+				}),
+			)
+
+		// Execute registered handlers without touching DB.
+		in := &HookSelectInput{Model: &Model{}}
+		for _, h := range model.hookHandler.selectBefore {
+			t.AssertNil(h(context.Background(), in))
+		}
+		var (
+			result Result = nil
+			err    error  = nil
+		)
+		for _, h := range model.hookHandler.selectAfter {
+			result, err = h(context.Background(), in, result, err)
+			t.AssertNil(err)
+		}
+
+		t.Assert(beforeCalls, []string{"before1", "before2", "before3", "before4"})
+		t.Assert(afterCalls, []string{"after1", "after2", "after3"})
 	})
 }
 

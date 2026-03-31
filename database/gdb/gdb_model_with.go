@@ -161,7 +161,8 @@ func (m *Model) doWithScanStruct(ctx context.Context, pointer any) error {
 			}
 		}
 		// Recursively with feature checks.
-		model = m.db.With(field.Value).Hook(m.hookHandler)
+		model = m.db.With(field.Value)
+		model.hookHandler = m.hookHandler.Clone()
 		if m.withAll {
 			model = model.WithAll()
 		} else {
@@ -287,7 +288,8 @@ func (m *Model) doWithScanStructs(ctx context.Context, pointer any) error {
 			}
 		}
 		// Recursively with feature checks.
-		model = m.db.With(field.Value).Hook(m.hookHandler)
+		model = m.db.With(field.Value)
+		model.hookHandler = m.hookHandler.Clone()
 		if m.withAll {
 			model = model.WithAll()
 		} else {

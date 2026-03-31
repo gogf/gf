@@ -8,7 +8,6 @@ package mysql_test
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"testing"
 
@@ -70,7 +69,7 @@ func dropShardingDatabase(t *gtest.T) {
 }
 
 func Test_Sharding_Basic(t *testing.T) {
-	return
+	t.Skip("disabled by default: requires sharding test databases")
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			tablePrefix  = "user_"
@@ -144,7 +143,7 @@ func Test_Sharding_Basic(t *testing.T) {
 
 // Test_Sharding_Error tests error cases
 func Test_Sharding_Error(t *testing.T) {
-	return
+	t.Skip("disabled by default: requires sharding test databases")
 	gtest.C(t, func(t *gtest.T) {
 		// Create test databases and tables
 		createShardingDatabase(t)
@@ -182,7 +181,7 @@ func Test_Sharding_Error(t *testing.T) {
 
 // Test_Sharding_Complex tests complex sharding scenarios
 func Test_Sharding_Complex(t *testing.T) {
-	return
+	t.Skip("disabled by default: requires sharding test databases")
 	gtest.C(t, func(t *gtest.T) {
 		// Create test databases and tables
 		createShardingDatabase(t)
@@ -251,24 +250,24 @@ func Test_Model_Sharding_Table_Using_Hook(t *testing.T) {
 	createTable(table2)
 	defer dropTable(table2)
 
-	shardingModel := db.Model(table1).Hook(gdb.HookHandler{
-		Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
+	shardingModel := db.Model(table1).Hook(
+		gdb.BeforeSelect(func(ctx context.Context, in *gdb.HookSelectInput) error {
 			in.Table = table2
-			return in.Next(ctx)
-		},
-		Insert: func(ctx context.Context, in *gdb.HookInsertInput) (result sql.Result, err error) {
+			return nil
+		}),
+		gdb.BeforeInsert(func(ctx context.Context, in *gdb.HookInsertInput) error {
 			in.Table = table2
-			return in.Next(ctx)
-		},
-		Update: func(ctx context.Context, in *gdb.HookUpdateInput) (result sql.Result, err error) {
+			return nil
+		}),
+		gdb.BeforeUpdate(func(ctx context.Context, in *gdb.HookUpdateInput) error {
 			in.Table = table2
-			return in.Next(ctx)
-		},
-		Delete: func(ctx context.Context, in *gdb.HookDeleteInput) (result sql.Result, err error) {
+			return nil
+		}),
+		gdb.BeforeDelete(func(ctx context.Context, in *gdb.HookDeleteInput) error {
 			in.Table = table2
-			return in.Next(ctx)
-		},
-	})
+			return nil
+		}),
+	)
 	gtest.C(t, func(t *gtest.T) {
 		r, err := shardingModel.Data(g.Map{
 			"id":          1,
@@ -359,28 +358,28 @@ func Test_Model_Sharding_Schema_Using_Hook(t *testing.T) {
 	createTableWithDb(db2, table)
 	defer dropTableWithDb(db2, table)
 
-	shardingModel := db.Model(table).Hook(gdb.HookHandler{
-		Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
+	shardingModel := db.Model(table).Hook(
+		gdb.BeforeSelect(func(ctx context.Context, in *gdb.HookSelectInput) error {
 			in.Table = table
 			in.Schema = db2.GetSchema()
-			return in.Next(ctx)
-		},
-		Insert: func(ctx context.Context, in *gdb.HookInsertInput) (result sql.Result, err error) {
+			return nil
+		}),
+		gdb.BeforeInsert(func(ctx context.Context, in *gdb.HookInsertInput) error {
 			in.Table = table
 			in.Schema = db2.GetSchema()
-			return in.Next(ctx)
-		},
-		Update: func(ctx context.Context, in *gdb.HookUpdateInput) (result sql.Result, err error) {
+			return nil
+		}),
+		gdb.BeforeUpdate(func(ctx context.Context, in *gdb.HookUpdateInput) error {
 			in.Table = table
 			in.Schema = db2.GetSchema()
-			return in.Next(ctx)
-		},
-		Delete: func(ctx context.Context, in *gdb.HookDeleteInput) (result sql.Result, err error) {
+			return nil
+		}),
+		gdb.BeforeDelete(func(ctx context.Context, in *gdb.HookDeleteInput) error {
 			in.Table = table
 			in.Schema = db2.GetSchema()
-			return in.Next(ctx)
-		},
-	})
+			return nil
+		}),
+	)
 	gtest.C(t, func(t *gtest.T) {
 		r, err := shardingModel.Data(g.Map{
 			"id":          1,
