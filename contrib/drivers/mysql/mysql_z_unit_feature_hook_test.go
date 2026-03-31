@@ -136,6 +136,7 @@ func Test_Model_Hook_Delete(t *testing.T) {
 		}
 	})
 }
+
 // Test_Model_Hook_Multiple tests multiple hooks execution order
 func Test_Model_Hook_Multiple(t *testing.T) {
 	table := createInitTable()
