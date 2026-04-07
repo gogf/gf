@@ -96,11 +96,11 @@ func Test_Parse(t *testing.T) {
 		t.Assert(m["name"], "john")
 		t.Assert(m["score"], "100")
 
-		// name overwrite
+		// repeated key accumulates into slice
 		m, err = gstr.Parse("a=1&a=2")
 		t.AssertNil(err)
 		t.Assert(m, g.Map{
-			"a": 2,
+			"a": g.Slice{"1", "2"},
 		})
 		// slice
 		m, err = gstr.Parse("a[]=1&a[]=2")
@@ -119,7 +119,7 @@ func Test_Parse(t *testing.T) {
 		m, err = gstr.Parse("a=1&a=2&c=3")
 		t.AssertNil(err)
 		t.Assert(m, g.Map{
-			"a": "2",
+			"a": g.Slice{"1", "2"},
 			"c": "3",
 		})
 		// map
@@ -136,7 +136,7 @@ func Test_Parse(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(m, g.Map{
 			"m": g.Map{
-				"a": "2",
+				"a": g.Slice{"1", "2"},
 				"b": "3",
 			},
 		})

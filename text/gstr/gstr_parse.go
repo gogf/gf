@@ -105,7 +105,16 @@ func build(result map[string]any, keys []string, value any) error {
 		key    = strings.Trim(keys[0], "'\"")
 	)
 	if length == 1 {
-		result[key] = value
+		existing, ok := result[key]
+		if !ok {
+			result[key] = value
+			return nil
+		}
+		if children, ok := existing.([]any); ok {
+			result[key] = append(children, value)
+		} else {
+			result[key] = []any{existing, value}
+		}
 		return nil
 	}
 
