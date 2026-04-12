@@ -84,6 +84,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 		   	password varchar(32) NOT NULL,
 		   	nickname varchar(45) NOT NULL,
 		   	create_time timestamp NOT NULL,
+		   	create_date date NULL,
 		    favorite_movie varchar[],
 		    favorite_music text[],
 			numeric_values numeric[],
