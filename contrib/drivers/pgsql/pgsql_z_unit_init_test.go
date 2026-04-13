@@ -77,13 +77,16 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 
 	dropTableWithDb(db, name)
 
+	// Schema aligned with MySQL/MariaDB baseline: passport/password/nickname/create_time are nullable.
+	// This allows ported tests (OmitEmpty/OmitNil/etc.) to exercise partial inserts without failing
+	// on NOT NULL constraints that don't exist in the MySQL baseline.
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 		CREATE TABLE %s (
 		   	id bigserial  NOT NULL,
-		   	passport varchar(45) NOT NULL,
-		   	password varchar(32) NOT NULL,
-		   	nickname varchar(45) NOT NULL,
-		   	create_time timestamp NOT NULL,
+		   	passport varchar(45) NULL,
+		   	password varchar(32) NULL,
+		   	nickname varchar(45) NULL,
+		   	create_time timestamp NULL,
 		   	create_date date NULL,
 		    favorite_movie varchar[],
 		    favorite_music text[],
