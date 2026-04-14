@@ -312,6 +312,9 @@ func (m *softTimeMaintainer) buildDeleteCondition(
 		return fmt.Sprintf(`%s IS NULL`, quotedName)
 
 	default:
+		if fieldType == LocalTypeBool {
+			return fmt.Sprintf(`%s=%s`, quotedName, m.boolFalseLiteral())
+		}
 		return fmt.Sprintf(`%s=0`, quotedName)
 	}
 }

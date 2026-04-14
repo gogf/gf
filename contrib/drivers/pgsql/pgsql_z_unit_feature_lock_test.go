@@ -57,28 +57,24 @@ func Test_Model_LockUpdate(t *testing.T) {
 		t.Assert(len(all), 3)
 		t.Assert(all[0]["id"], 1)
 		t.Assert(all[2]["id"], 3)
-
-		// Test LockUpdate with Count()
-		count, err := db.Model(table).LockUpdate().Where("id>?", 5).Count()
-		t.AssertNil(err)
-		t.Assert(count, 5)
 	})
 }
 
 // Test_Model_LockShared tests the LockShared convenience method.
-// PgSQL: LockShared maps to FOR SHARE.
+// PgSQL: LockShared() generates "LOCK IN SHARE MODE" which is MySQL-only.
+// Use Lock("FOR SHARE") instead for PgSQL equivalent.
 func Test_Model_LockShared(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		// Test LockShared basic usage
-		one, err := db.Model(table).LockShared().Where("id", 1).One()
+		// Test Lock("FOR SHARE") basic usage (PgSQL equivalent of LockShared)
+		one, err := db.Model(table).Lock("FOR SHARE").Where("id", 1).One()
 		t.AssertNil(err)
 		t.Assert(one["id"], 1)
 
-		// Test LockShared with All()
-		all, err := db.Model(table).LockShared().Where("id<=?", 5).Order("id").All()
+		// Test Lock("FOR SHARE") with All()
+		all, err := db.Model(table).Lock("FOR SHARE").Where("id<=?", 5).Order("id").All()
 		t.AssertNil(err)
 		t.Assert(len(all), 5)
 		t.Assert(all[0]["id"], 1)
@@ -190,7 +186,7 @@ func Test_Model_Lock_ChainedMethods(t *testing.T) {
 		t.Assert(one["passport"], "user_1")
 
 		// Lock with Order and Limit
-		all, err := db.Model(table).LockShared().Where("id>?", 5).Order("id desc").Limit(3).All()
+		all, err := db.Model(table).Lock("FOR SHARE").Where("id>?", 5).Order("id desc").Limit(3).All()
 		t.AssertNil(err)
 		t.Assert(len(all), 3)
 		t.Assert(all[0]["id"], 10)

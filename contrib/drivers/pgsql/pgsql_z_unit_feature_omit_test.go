@@ -8,6 +8,7 @@ package pgsql_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/gogf/gf/v2/database/gdb"
@@ -314,6 +315,10 @@ func Test_Model_OmitNil_WithPointerStruct(t *testing.T) {
 func Test_Model_OmitEmpty_ZeroValues(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
+	// Reset bigserial sequence to follow explicitly inserted ids (1..TableSize).
+	db.Exec(ctx, fmt.Sprintf(
+		"SELECT setval(pg_get_serial_sequence('%s', 'id'), (SELECT MAX(id) FROM %s))", table, table,
+	))
 
 	gtest.C(t, func(t *gtest.T) {
 		// Test OmitEmptyData with various zero values
