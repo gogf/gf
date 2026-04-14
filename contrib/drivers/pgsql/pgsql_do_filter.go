@@ -52,6 +52,11 @@ func (d *Driver) DoFilter(
 		newSql = "INSERT" + newSql[len(gdb.InsertOperationIgnore):] + " ON CONFLICT DO NOTHING"
 	}
 
+	// Translate MySQL shared lock syntax to PostgreSQL syntax.
+	// LockShared() generates "LOCK IN SHARE MODE" which is MySQL-only;
+	// PostgreSQL uses "FOR SHARE" for the same semantics.
+	newSql = gstr.Replace(newSql, "LOCK IN SHARE MODE", "FOR SHARE")
+
 	newArgs = args
 
 	return d.Core.DoFilter(ctx, link, newSql, newArgs)
