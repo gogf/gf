@@ -126,7 +126,7 @@ func Test_Issue3671(t *testing.T) {
 	}
 	var (
 		sqlText = gtest.DataContent("issues", "issue3671.sql")
-		table   = fmt.Sprintf(`%s_%d`, TablePrefix+"issue3632", gtime.TimestampNano())
+		table   = fmt.Sprintf(`%s_%d`, TablePrefix+"issue3671", gtime.TimestampNano())
 	)
 	if _, err := db.Exec(ctx, fmt.Sprintf(sqlText, table)); err != nil {
 		gtest.Fatal(err)
@@ -1154,7 +1154,7 @@ func Test_Issue2787(t *testing.T) {
 				WhereOr("password", "abc123")).
 			Where("passport", "pp").
 			Build()
-		t.Assert(condWhere, "(`id`=?) AND (((`nickname`=?) OR (`password`=?))) AND (`passport`=?)")
+		t.Assert(condWhere, `("id"=?) AND ((("nickname"=?) OR ("password"=?))) AND ("passport"=?)`)
 
 		condWhere, _ = m.OmitEmpty().Builder().
 			Where("id", "").
@@ -1163,7 +1163,7 @@ func Test_Issue2787(t *testing.T) {
 				WhereOr("password", "abc123")).
 			Where("passport", "pp").
 			Build()
-		t.Assert(condWhere, "((`nickname`=?) OR (`password`=?)) AND (`passport`=?)")
+		t.Assert(condWhere, `(("nickname"=?) OR ("password"=?)) AND ("passport"=?)`)
 
 		condWhere, _ = m.OmitEmpty().Builder().
 			Where(m.Builder().
@@ -1172,7 +1172,7 @@ func Test_Issue2787(t *testing.T) {
 			Where("id", "").
 			Where("passport", "pp").
 			Build()
-		t.Assert(condWhere, "((`nickname`=?) OR (`password`=?)) AND (`passport`=?)")
+		t.Assert(condWhere, `(("nickname"=?) OR ("password"=?)) AND ("passport"=?)`)
 	})
 }
 
@@ -1473,7 +1473,36 @@ func Test_Issue2552_ClearTableFields(t *testing.T) {
 
 // https://github.com/gogf/gf/issues/2643
 func Test_Issue2643(t *testing.T) {
-	t.Skip("MySQL-specific SQL functions (lpad, concat_ws, CASE WHEN quoting) differ in PostgreSQL")
+	table := "issue2643"
+	array := gstr.SplitAndTrim(gtest.DataContent("issues", "issue2643.sql"), ";")
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			expectKey1 = `SELECT s.name,replace(concat_ws(',',lpad(s.id::text, 6, '0'),s.name),',','') "code" FROM "issue2643" AS s`
+			expectKey2 = `SELECT CASE WHEN dept='物资部' THEN '物资部' ELSE '其他' END dept,sum(s.value) FROM "issue2643" AS s GROUP BY CASE WHEN dept='物资部' THEN '物资部' ELSE '其他' END`
+		)
+		sqlArray, err := gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			db.Ctx(ctx).Model(table).As("s").Fields(
+				"s.name",
+				`replace(concat_ws(',',lpad(s.id::text, 6, '0'),s.name),',','') "code"`,
+			).All()
+			db.Ctx(ctx).Model(table).As("s").Fields(
+				"CASE WHEN dept='物资部' THEN '物资部' ELSE '其他' END dept",
+				"sum(s.value)",
+			).Group("CASE WHEN dept='物资部' THEN '物资部' ELSE '其他' END").All()
+			return nil
+		})
+		t.AssertNil(err)
+		sqlContent := gstr.Join(sqlArray, "\n")
+		t.Assert(gstr.Contains(sqlContent, expectKey1), true)
+		t.Assert(gstr.Contains(sqlContent, expectKey2), true)
+	})
 }
 
 // https://github.com/gogf/gf/issues/3238

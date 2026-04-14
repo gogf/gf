@@ -113,9 +113,10 @@ func Test_PgSQL_JSONB_Existence(t *testing.T) {
 		_, err = db.Model(table).Data(g.Map{"data": `{"name":"bob"}`}).Insert()
 		t.AssertNil(err)
 
-		// ? key existence operator
+		// jsonb_exists is the function form of the ? key-existence operator.
+		// We use it here because GoFrame's DoFilter replaces bare ? with $N placeholders.
 		result, err := db.GetValue(ctx, fmt.Sprintf(
-			`SELECT COUNT(*) FROM %s WHERE data ? 'email'`, table,
+			`SELECT COUNT(*) FROM %s WHERE jsonb_exists(data, 'email')`, table,
 		))
 		t.AssertNil(err)
 		t.Assert(result.Int(), 1)
