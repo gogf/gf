@@ -624,8 +624,9 @@ func Test_PgSQL_Array_Contains(t *testing.T) {
 		t.AssertNil(err)
 
 		// @> contains: find rows where array contains 'movie_a'
+		// Cast ARRAY literal to varchar[] to match the column type (varchar[]).
 		all, err := db.GetAll(ctx, fmt.Sprintf(
-			`SELECT id FROM %s WHERE favorite_movie @> ARRAY['movie_a'] ORDER BY id`, table,
+			`SELECT id FROM %s WHERE favorite_movie @> ARRAY['movie_a']::varchar[] ORDER BY id`, table,
 		))
 		t.AssertNil(err)
 		t.Assert(len(all), 1)
@@ -633,7 +634,7 @@ func Test_PgSQL_Array_Contains(t *testing.T) {
 
 		// @> contains: find rows where array contains 'movie_b' (both rows)
 		all, err = db.GetAll(ctx, fmt.Sprintf(
-			`SELECT id FROM %s WHERE favorite_movie @> ARRAY['movie_b'] ORDER BY id`, table,
+			`SELECT id FROM %s WHERE favorite_movie @> ARRAY['movie_b']::varchar[] ORDER BY id`, table,
 		))
 		t.AssertNil(err)
 		t.Assert(len(all), 2)

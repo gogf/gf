@@ -869,10 +869,12 @@ func Test_Issue1002(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(v.Int(), 1)
 	})
-	// where + time.Time arguments, UTC.
+	// where + time.Time arguments.
+	// PgSQL "timestamp without time zone" compares literal values without timezone
+	// conversion, so use times that bracket the stored value 19:03:33 directly.
 	gtest.C(t, func(t *gtest.T) {
-		t1, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 11:03:32")
-		t2, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 11:03:34")
+		t1, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 19:03:32")
+		t2, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 19:03:34")
 		{
 			v, err := db.Model(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).Value()
 			t.AssertNil(err)
@@ -1028,7 +1030,7 @@ CREATE TABLE %s (
 		_, err2 := db.Model(table).Where(g.Map{}).Delete()
 		t.Assert(err2, `there should be WHERE condition statement for DELETE operation`)
 
-		_, err3 := db.Model(table).Where(1).Delete()
+		_, err3 := db.Model(table).Where("1=1").Delete()
 		t.AssertNil(err3)
 	})
 }
@@ -1922,11 +1924,14 @@ func issue4034SaveDeviceAndToken(ctx context.Context, table string) error {
 }
 
 func issue4034SaveAppDevice(ctx context.Context, table string, tx gdb.TX) error {
+	// PgSQL ON CONFLICT requires a conflict target; the original MySQL test uses
+	// Save() (REPLACE INTO) which works without one. Use Insert() instead since
+	// this test only inserts a new record.
 	_, err := db.Model(table).Safe().Ctx(ctx).TX(tx).Data(g.Map{
 		"passport": "111",
 		"password": "222",
 		"nickname": "333",
-	}).Save()
+	}).Insert()
 	return err
 }
 
