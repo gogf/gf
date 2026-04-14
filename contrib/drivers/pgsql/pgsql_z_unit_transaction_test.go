@@ -1697,7 +1697,8 @@ func Test_TX_Delete(t *testing.T) {
 		tx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
-		_, err = tx.Delete(table, 1)
+		// PgSQL does not accept "WHERE 1" (integer as boolean); use "1=1" instead.
+		_, err = tx.Delete(table, "1=1")
 		t.AssertNil(err)
 
 		err = tx.Commit()
@@ -1716,7 +1717,8 @@ func Test_TX_Delete(t *testing.T) {
 		tx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
-		_, err = tx.Delete(table, 1)
+		// PgSQL does not accept "WHERE 1" (integer as boolean); use "1=1" instead.
+		_, err = tx.Delete(table, "1=1")
 		t.AssertNil(err)
 
 		n, err := tx.Model(table).Count()
