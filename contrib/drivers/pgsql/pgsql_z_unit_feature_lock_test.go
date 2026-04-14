@@ -196,9 +196,10 @@ func Test_Model_Lock_ChainedMethods(t *testing.T) {
 		// PgSQL note: FOR UPDATE is not permitted with GROUP BY; use LockShared (FOR SHARE) which
 		// also rejects grouped queries. Therefore use plain aggregation without a lock clause for
 		// the grouped case to preserve the MariaDB test's shape (fields/group/having/order).
+		// PgSQL HAVING cannot reference SELECT aliases; use the aggregate expression directly.
 		all, err = db.Model(table).Fields("LEFT(passport,4) as prefix, COUNT(*) as cnt").
 			Group("prefix").
-			Having("cnt>?", 0).
+			Having("COUNT(*)>?", 0).
 			Order("prefix").
 			All()
 		t.AssertNil(err)
