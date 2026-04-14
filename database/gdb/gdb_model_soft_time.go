@@ -302,7 +302,7 @@ func (m *softTimeMaintainer) buildDeleteCondition(
 		case LocalTypeInt, LocalTypeUint, LocalTypeInt64, LocalTypeUint64:
 			return fmt.Sprintf(`%s=0`, quotedName)
 		case LocalTypeBool:
-			return fmt.Sprintf(`%s=false`, quotedName)
+			return fmt.Sprintf(`%s=%s`, quotedName, m.boolFalseLiteral())
 		default:
 			intlog.Errorf(ctx, `invalid field type "%s" for soft delete condition: prefix=%s, field=%s`, fieldType, prefix, fieldName)
 			return ""
@@ -313,6 +313,18 @@ func (m *softTimeMaintainer) buildDeleteCondition(
 
 	default:
 		return fmt.Sprintf(`%s=0`, quotedName)
+	}
+}
+
+// boolFalseLiteral returns the SQL literal for boolean false appropriate for the current driver.
+// Drivers with strict boolean types (pgsql, gaussdb, clickhouse) require 'false',
+// while others (mysql, mssql, oracle, dm, etc.) use '0' for bit/int-based boolean columns.
+func (m *softTimeMaintainer) boolFalseLiteral() string {
+	switch m.db.GetConfig().Type {
+	case "pgsql", "gaussdb", "clickhouse":
+		return "false"
+	default:
+		return "0"
 	}
 }
 
