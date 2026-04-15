@@ -324,10 +324,10 @@ func Test_DB_TableFields(t *testing.T) {
 			// []string: Index Type Null Key Default Comment
 			// id is bigserial so the default is a pgsql function
 			"id":          {0, "int8(64)", false, "pri", fmt.Sprintf("nextval('%s_id_seq'::regclass)", table), ""},
-			"passport":    {1, "varchar(45)", false, "", nil, ""},
-			"password":    {2, "varchar(32)", false, "", nil, ""},
-			"nickname":    {3, "varchar(45)", false, "", nil, ""},
-			"create_time": {4, "timestamp", false, "", nil, ""},
+			"passport":    {1, "varchar(45)", true, "", nil, ""},
+			"password":    {2, "varchar(32)", true, "", nil, ""},
+			"nickname":    {3, "varchar(45)", true, "", nil, ""},
+			"create_time": {4, "timestamp", true, "", nil, ""},
 		}
 
 		res, err := db.TableFields(ctx, table)

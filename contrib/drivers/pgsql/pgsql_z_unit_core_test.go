@@ -151,10 +151,10 @@ func Test_Core_ClearTableFields(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		fields, err := db.TableFields(ctx, table)
 		t.AssertNil(err)
-		// PgSQL baseline table has 10 columns:
-		// id, passport, password, nickname, create_time, create_date,
+		// PgSQL baseline table has 9 columns:
+		// id, passport, password, nickname, create_time,
 		// favorite_movie, favorite_music, numeric_values, decimal_values.
-		t.Assert(len(fields), 10)
+		t.Assert(len(fields), 9)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		err := db.GetCore().ClearTableFields(ctx, table)
