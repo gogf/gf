@@ -4,6 +4,7 @@ go 1.23.0
 
 require (
 	github.com/gogf/gf/v2 v2.10.0
+	github.com/google/uuid v1.6.0
 	github.com/microsoft/go-mssqldb v1.7.1
 )
 
@@ -17,7 +18,6 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/grokify/html-strip-tags-go v0.1.0 // indirect
 	github.com/magiconair/properties v1.8.10 // indirect
