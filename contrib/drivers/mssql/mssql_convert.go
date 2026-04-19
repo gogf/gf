@@ -42,9 +42,9 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 //
 // SQL Server stores UNIQUEIDENTIFIER on the wire as a 16-byte binary blob whose first 8 bytes
 // follow the little-endian COM/Win32 GUID layout, while the remaining 8 bytes are big-endian.
-// Reading the raw bytes as a string yields garbage; [mssql.UniqueIdentifier.Scan] performs the
-// required byte-order swap so the returned [uuid.UUID] matches the canonical RFC 4122 form
-// (and what tools like SSMS display).
+// Reading the raw bytes as a string yields garbage; go-mssqldb's UniqueIdentifier.Scan
+// performs the required byte-order swap so the returned [uuid.UUID] matches the canonical
+// RFC 4122 form (and what tools like SSMS display).
 func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue any) (any, error) {
 	typeName, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
 	typeName = strings.ToLower(typeName)

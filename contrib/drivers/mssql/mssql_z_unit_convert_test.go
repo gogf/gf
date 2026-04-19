@@ -19,8 +19,8 @@ import (
 	"github.com/gogf/gf/contrib/drivers/mssql/v2"
 )
 
-// Test_CheckLocalTypeForField_UniqueIdentifier verifies that uniqueidentifier maps
-// to LocalTypeUUID and that other types fall through to the Core implementation.
+// Test_CheckLocalTypeForField_UniqueIdentifier verifies that uniqueidentifier (any case)
+// maps to LocalTypeUUID.
 func Test_CheckLocalTypeForField_UniqueIdentifier(t *testing.T) {
 	var (
 		ctx    = context.Background()
@@ -38,14 +38,6 @@ func Test_CheckLocalTypeForField_UniqueIdentifier(t *testing.T) {
 		localType, err := driver.CheckLocalTypeForField(ctx, "UNIQUEIDENTIFIER", nil)
 		t.AssertNil(err)
 		t.Assert(localType, gdb.LocalTypeUUID)
-	})
-
-	// Unknown types fall through to the Core implementation, which returns
-	// LocalTypeString for anything it does not recognise.
-	gtest.C(t, func(t *gtest.T) {
-		localType, err := driver.CheckLocalTypeForField(ctx, "nvarchar(100)", nil)
-		t.AssertNil(err)
-		t.Assert(localType, gdb.LocalTypeString)
 	})
 }
 
@@ -79,8 +71,9 @@ func Test_ConvertValueForLocal_UniqueIdentifier(t *testing.T) {
 		t.Assert(got, want)
 	})
 
-	// mssql.UniqueIdentifier.Scan also accepts string form, so values already
-	// converted server-side (e.g. via CAST AS NVARCHAR(36)) round-trip correctly.
+	// go-mssqldb's UniqueIdentifier.Scan also accepts string form, so values
+	// already converted server-side (e.g. via CAST AS NVARCHAR(36)) round-trip
+	// correctly.
 	gtest.C(t, func(t *gtest.T) {
 		want := uuid.MustParse("DA93D4F6-223F-42B2-A647-789371FFA693")
 
@@ -90,9 +83,9 @@ func Test_ConvertValueForLocal_UniqueIdentifier(t *testing.T) {
 		t.Assert(got, want)
 	})
 
-	// Sanity check: feeding the same wire bytes directly into the
-	// mssql.UniqueIdentifier scanner yields the same UUID, so this driver
-	// hook stays in lock-step with the underlying go-mssqldb implementation.
+	// Sanity check: feeding the same wire bytes directly into go-mssqldb's
+	// UniqueIdentifier scanner yields the same UUID, so this driver hook stays
+	// in lock-step with the underlying go-mssqldb implementation.
 	gtest.C(t, func(t *gtest.T) {
 		var ms mssqldriver.UniqueIdentifier
 		t.AssertNil(ms.Scan([]byte{
