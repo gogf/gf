@@ -144,6 +144,9 @@ func (oai *OpenApiV3) golangTypeToOAIType(t reflect.Type) string {
 	for t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
+	if customType, ok := oai.getCustomOAITypeByGolangType(t); ok {
+		return customType
+	}
 
 	switch t.String() {
 	case `time.Time`, `gtime.Time`:
@@ -182,6 +185,22 @@ func (oai *OpenApiV3) golangTypeToOAIType(t reflect.Type) string {
 	default:
 		return TypeObject
 	}
+}
+
+func (oai *OpenApiV3) getCustomOAITypeByGolangType(t reflect.Type) (string, bool) {
+	if len(oai.Config.TypeMapping) == 0 || t == nil {
+		return "", false
+	}
+	if customType, ok := oai.Config.TypeMapping[t.String()]; ok {
+		return customType, true
+	}
+	if t.PkgPath() != "" && t.Name() != "" {
+		typeId := fmt.Sprintf(`%s.%s`, t.PkgPath(), t.Name())
+		if customType, ok := oai.Config.TypeMapping[typeId]; ok {
+			return customType, true
+		}
+	}
+	return "", false
 }
 
 // golangTypeToOAIFormat converts and returns OpenAPI parameter format for given golang type `t`.

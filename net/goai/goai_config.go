@@ -28,6 +28,11 @@ type Config struct {
 	CommonResponse          any      // Common response structure for all paths.
 	CommonResponseDataField string   // Common response field name to be replaced with certain business response structure. Eg: `Data`, `Response.`.
 	IgnorePkgPath           bool     // Ignores package name for schema name.
+	// TypeMapping customizes OpenAPI type mapping for given golang types.
+	// Map key supports both short type name and full type id:
+	// 1. `carbon.Carbon`
+	// 2. `github.com/golang-module/carbon/v2.Carbon`
+	TypeMapping map[string]string
 	// EnumXExtensionFunc is called for each enum type.
 	// Returned extension values are written to schema x-extensions.
 	EnumXExtensionFunc EnumXExtensionFunc
