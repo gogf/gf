@@ -154,6 +154,13 @@ func Test_SetGlobalEnums(t *testing.T) {
 		values, err := gtag.GetEnumValuesByType("k8s.io/apimachinery/pkg/api/resource.Format")
 		t.AssertNil(err)
 		t.Assert(values, []any{"BinarySI", "DecimalExponent", "DecimalSI"})
+		items, err := gtag.GetEnumItemsByType("k8s.io/apimachinery/pkg/api/resource.Format")
+		t.AssertNil(err)
+		t.Assert(items, []gtag.EnumItem{
+			{Value: "BinarySI"},
+			{Value: "DecimalExponent"},
+			{Value: "DecimalSI"},
+		})
 		t.AssertNil(gtag.SetGlobalEnums(oldEnumsJson))
 	})
 
@@ -169,6 +176,33 @@ func Test_SetGlobalEnums(t *testing.T) {
 		values, err := gtag.GetEnumValuesByType("github.com/test/pkg.Status")
 		t.AssertNil(err)
 		t.Assert(values, []any{float64(1), float64(0)})
+		items, err := gtag.GetEnumItemsByType("github.com/test/pkg.Status")
+		t.AssertNil(err)
+		t.Assert(items, []gtag.EnumItem{
+			{Value: float64(1), Comment: "active"},
+			{Value: float64(0), Comment: "inactive"},
+		})
+		t.AssertNil(gtag.SetGlobalEnums(oldEnumsJson))
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		oldEnumsJson, err := gtag.GetGlobalEnums()
+		t.AssertNil(err)
+
+		err = gtag.SetGlobalEnums(`{"github.com/test/pkg.Status":[
+		{"value":"Action","comment":"动作"},
+		{"value":"None","comment":"无"},
+		{"value":"URL","comment":"URL地址"}
+	]}`)
+		t.AssertNil(err)
+
+		items, err := gtag.GetEnumItemsByType("github.com/test/pkg.Status")
+		t.AssertNil(err)
+		t.Assert(items, []gtag.EnumItem{
+			{Value: "Action", Comment: "动作"},
+			{Value: "None", Comment: "无"},
+			{Value: "URL", Comment: "URL地址"},
+		})
 		t.AssertNil(gtag.SetGlobalEnums(oldEnumsJson))
 	})
 }

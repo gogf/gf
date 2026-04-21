@@ -64,9 +64,13 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 
 	// Type enums.
 	var typeId = fmt.Sprintf(`%s.%s`, pkgPath, typeName)
-	schema.Enum, err = gtag.GetEnumValuesByType(typeId)
+	enumItems, err := gtag.GetEnumItemsByType(typeId)
 	if err != nil {
 		return nil, err
+	}
+	schema.Enum = make([]any, 0, len(enumItems))
+	for _, enumItem := range enumItems {
+		schema.Enum = append(schema.Enum, enumItem.Value)
 	}
 
 	if len(tagMap) > 0 {
@@ -172,7 +176,37 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 			}
 		}
 	}
+	oai.buildEnumValueXExtensions(typeId, schema, enumItems)
 	return schemaRef, nil
+}
+
+func (oai *OpenApiV3) buildEnumValueXExtensions(typeId string, schema *Schema, enumItems []gtag.EnumItem) {
+	if len(enumItems) == 0 || oai.Config.EnumXExtensionFunc == nil {
+		return
+	}
+	var targetSchema = schema
+	if schema.Type == TypeArray && schema.Items != nil && schema.Items.Value != nil {
+		targetSchema = schema.Items.Value
+	}
+	if len(targetSchema.Enum) == 0 {
+		return
+	}
+	if targetSchema.XExtensions == nil {
+		targetSchema.XExtensions = make(XExtensions)
+	}
+	extensionMap := oai.Config.EnumXExtensionFunc(EnumXExtensionInput{
+		TypeID: typeId,
+		Items:  enumItems,
+	})
+	for extensionKey, extensionValue := range extensionMap {
+		if extensionKey == "" {
+			continue
+		}
+		if !gstr.HasPrefix(extensionKey, "x-") && !gstr.HasPrefix(extensionKey, "X-") {
+			extensionKey = "x-" + extensionKey
+		}
+		targetSchema.XExtensions[extensionKey] = extensionValue
+	}
 }
 
 func (r SchemaRef) MarshalJSON() ([]byte, error) {
