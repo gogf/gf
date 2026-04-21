@@ -33,3 +33,46 @@ func GetGlobalEnums() (string, error) {
 func GetEnumsByType(typeName string) string {
 	return string(enumsMap[typeName])
 }
+
+// GetEnumValuesByType retrieves and returns enum values by type name.
+// It supports both legacy format:
+//
+//	["a", "b"]
+//
+// and the structured format:
+//
+//	[{"value":"a","comment":"..."},{"value":"b","comment":"..."}]
+func GetEnumValuesByType(typeName string) ([]any, error) {
+	enums := enumsMap[typeName]
+	if len(enums) == 0 {
+		return nil, nil
+	}
+	var items []any
+	if err := json.Unmarshal(enums, &items); err != nil {
+		return nil, err
+	}
+	if len(items) == 0 {
+		return items, nil
+	}
+	firstMap, ok := items[0].(map[string]any)
+	if !ok {
+		return items, nil
+	}
+	if _, ok = firstMap["value"]; !ok {
+		return items, nil
+	}
+	values := make([]any, 0, len(items))
+	for _, item := range items {
+		itemMap, ok := item.(map[string]any)
+		if !ok {
+			values = append(values, item)
+			continue
+		}
+		if value, ok := itemMap["value"]; ok {
+			values = append(values, value)
+			continue
+		}
+		values = append(values, item)
+	}
+	return values, nil
+}

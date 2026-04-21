@@ -151,6 +151,24 @@ func Test_SetGlobalEnums(t *testing.T) {
         "DecimalExponent",
         "DecimalSI"
     ]`)
+		values, err := gtag.GetEnumValuesByType("k8s.io/apimachinery/pkg/api/resource.Format")
+		t.AssertNil(err)
+		t.Assert(values, []any{"BinarySI", "DecimalExponent", "DecimalSI"})
+		t.AssertNil(gtag.SetGlobalEnums(oldEnumsJson))
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		oldEnumsJson, err := gtag.GetGlobalEnums()
+		t.AssertNil(err)
+
+		err = gtag.SetGlobalEnums(`{"github.com/test/pkg.Status":[
+		{"value":1,"comment":"active"},
+		{"value":0,"comment":"inactive"}
+	]}`)
+		t.AssertNil(err)
+		values, err := gtag.GetEnumValuesByType("github.com/test/pkg.Status")
+		t.AssertNil(err)
+		t.Assert(values, []any{float64(1), float64(0)})
 		t.AssertNil(gtag.SetGlobalEnums(oldEnumsJson))
 	})
 }

@@ -7,6 +7,7 @@
 package genenums
 
 import (
+	"go/ast"
 	"go/constant"
 	"go/types"
 
@@ -27,10 +28,16 @@ type EnumsParser struct {
 }
 
 type EnumItem struct {
-	Name  string
-	Value string
-	Kind  constant.Kind // String/Int/Bool/Float/Complex/Unknown
-	Type  string        // Pkg.ID + TypeName
+	Name    string
+	Value   string
+	Comment string
+	Kind    constant.Kind // String/Int/Bool/Float/Complex/Unknown
+	Type    string        // Pkg.ID + TypeName
+}
+
+type EnumExportItem struct {
+	Value   any    `json:"value"`
+	Comment string `json:"comment,omitempty"`
 }
 
 func NewEnumsParser(prefixes []string) *EnumsParser {
@@ -72,6 +79,8 @@ func (p *EnumsParser) ParsePackage(pkg *packages.Package) {
 		}
 	}
 
+	var enumComments = p.parseEnumComments(pkg)
+
 	var (
 		scope = pkg.Types.Scope()
 		names = scope.Names()
@@ -101,10 +110,11 @@ func (p *EnumsParser) ParsePackage(pkg *packages.Package) {
 			enumValue = constant.StringVal(con.Val())
 		}
 		p.enums = append(p.enums, EnumItem{
-			Name:  enumName,
-			Value: enumValue,
-			Type:  enumType,
-			Kind:  enumKind,
+			Name:    enumName,
+			Value:   enumValue,
+			Type:    enumType,
+			Kind:    enumKind,
+			Comment: enumComments[p.enumKey(enumType, enumName)],
 		})
 	}
 	for _, im := range pkg.Imports {
@@ -131,9 +141,67 @@ func (p *EnumsParser) Export() string {
 		default:
 			value = enum.Value
 		}
-		typeEnumMap[enum.Type] = append(typeEnumMap[enum.Type], value)
+		typeEnumMap[enum.Type] = append(typeEnumMap[enum.Type], EnumExportItem{
+			Value:   value,
+			Comment: enum.Comment,
+		})
 	}
 	return gjson.MustEncodeString(typeEnumMap)
+}
+
+func (p *EnumsParser) parseEnumComments(pkg *packages.Package) map[string]string {
+	var comments = make(map[string]string)
+	if pkg == nil || pkg.TypesInfo == nil {
+		return comments
+	}
+	for _, file := range pkg.Syntax {
+		ast.Inspect(file, func(n ast.Node) bool {
+			valueSpec, ok := n.(*ast.ValueSpec)
+			if !ok {
+				return true
+			}
+			comment := ""
+			if valueSpec.Comment != nil {
+				comment = valueSpec.Comment.Text()
+			}
+			if comment == "" && valueSpec.Doc != nil {
+				comment = valueSpec.Doc.Text()
+			}
+			comment = gstr.Trim(comment)
+			if comment == "" {
+				return true
+			}
+			for _, name := range valueSpec.Names {
+				obj := pkg.TypesInfo.Defs[name]
+				con, ok := obj.(*types.Const)
+				if !ok || !con.Exported() {
+					continue
+				}
+				enumType := con.Type().String()
+				if !gstr.Contains(enumType, "/") {
+					continue
+				}
+				comments[p.enumKey(enumType, con.Name())] = p.normalizeEnumComment(con.Name(), comment)
+			}
+			return true
+		})
+	}
+	return comments
+}
+
+func (p *EnumsParser) enumKey(enumType, enumName string) string {
+	return enumType + "#" + enumName
+}
+
+func (p *EnumsParser) normalizeEnumComment(enumName, comment string) string {
+	comment = gstr.Trim(comment)
+	if comment == "" {
+		return ""
+	}
+	if gstr.HasPrefix(comment, enumName) {
+		comment = gstr.Trim(gstr.TrimLeftStr(comment, enumName, 1))
+	}
+	return comment
 }
 
 func getStandardPackages() map[string]struct{} {

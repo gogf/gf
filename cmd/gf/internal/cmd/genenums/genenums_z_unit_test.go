@@ -83,7 +83,7 @@ func Test_EnumsParser_Export_WithEnums(t *testing.T) {
 		t.AssertNE(result, "")
 
 		// Parse the result to verify - use raw map to avoid gjson path issues with "."
-		var resultMap map[string][]interface{}
+		var resultMap map[string][]EnumExportItem
 		err := gjson.DecodeTo(result, &resultMap)
 		t.AssertNil(err)
 
@@ -94,7 +94,7 @@ func Test_EnumsParser_Export_WithEnums(t *testing.T) {
 		// Verify Type type has 1 value
 		typeValues := resultMap["pkg.Type"]
 		t.Assert(len(typeValues), 1)
-		t.Assert(typeValues[0], "type_a")
+		t.Assert(typeValues[0].Value, "type_a")
 	})
 }
 
@@ -108,16 +108,16 @@ func Test_EnumsParser_Export_IntValues(t *testing.T) {
 		}
 
 		result := p.Export()
-		var resultMap map[string][]interface{}
+		var resultMap map[string][]EnumExportItem
 		err := gjson.DecodeTo(result, &resultMap)
 		t.AssertNil(err)
 
 		values := resultMap["pkg.Int"]
 		t.Assert(len(values), 3)
 		// Int values should be exported as integers (stored as float64 in JSON)
-		t.Assert(values[0], float64(1))
-		t.Assert(values[1], float64(2))
-		t.Assert(values[2], float64(-5))
+		t.Assert(values[0].Value, float64(1))
+		t.Assert(values[1].Value, float64(2))
+		t.Assert(values[2].Value, float64(-5))
 	})
 }
 
@@ -130,7 +130,7 @@ func Test_EnumsParser_Export_FloatValues(t *testing.T) {
 		}
 
 		result := p.Export()
-		var resultMap map[string][]interface{}
+		var resultMap map[string][]EnumExportItem
 		err := gjson.DecodeTo(result, &resultMap)
 		t.AssertNil(err)
 
@@ -148,14 +148,14 @@ func Test_EnumsParser_Export_BoolValues(t *testing.T) {
 		}
 
 		result := p.Export()
-		var resultMap map[string][]interface{}
+		var resultMap map[string][]EnumExportItem
 		err := gjson.DecodeTo(result, &resultMap)
 		t.AssertNil(err)
 
 		values := resultMap["pkg.Bool"]
 		t.Assert(len(values), 2)
-		t.Assert(values[0], true)
-		t.Assert(values[1], false)
+		t.Assert(values[0].Value, true)
+		t.Assert(values[1].Value, false)
 	})
 }
 
@@ -168,14 +168,14 @@ func Test_EnumsParser_Export_StringValues(t *testing.T) {
 		}
 
 		result := p.Export()
-		var resultMap map[string][]interface{}
+		var resultMap map[string][]EnumExportItem
 		err := gjson.DecodeTo(result, &resultMap)
 		t.AssertNil(err)
 
 		values := resultMap["pkg.Str"]
 		t.Assert(len(values), 2)
-		t.Assert(values[0], "hello")
-		t.Assert(values[1], "world")
+		t.Assert(values[0].Value, "hello")
+		t.Assert(values[1].Value, "world")
 	})
 }
 
@@ -189,7 +189,7 @@ func Test_EnumsParser_Export_MixedTypes(t *testing.T) {
 		}
 
 		result := p.Export()
-		var resultMap map[string][]interface{}
+		var resultMap map[string][]EnumExportItem
 		err := gjson.DecodeTo(result, &resultMap)
 		t.AssertNil(err)
 
@@ -204,14 +204,16 @@ func Test_EnumItem_Structure(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// Test EnumItem structure
 		item := EnumItem{
-			Name:  "TestEnum",
-			Value: "test_value",
-			Type:  "github.com/test/pkg.EnumType",
-			Kind:  constant.String,
+			Name:    "TestEnum",
+			Value:   "test_value",
+			Comment: "enum comment",
+			Type:    "github.com/test/pkg.EnumType",
+			Kind:    constant.String,
 		}
 
 		t.Assert(item.Name, "TestEnum")
 		t.Assert(item.Value, "test_value")
+		t.Assert(item.Comment, "enum comment")
 		t.Assert(item.Type, "github.com/test/pkg.EnumType")
 		t.Assert(item.Kind, constant.String)
 	})
@@ -276,7 +278,7 @@ const (
 		t.Assert(len(result) > 2, true) // More than just "{}"
 
 		// Parse result as raw map to handle keys with "/"
-		var resultMap map[string][]interface{}
+		var resultMap map[string][]EnumExportItem
 		err = gjson.DecodeTo(result, &resultMap)
 		t.AssertNil(err)
 
@@ -291,6 +293,68 @@ const (
 		colorValues, hasColor := resultMap[colorKey]
 		t.Assert(hasColor, true)
 		t.Assert(len(colorValues), 3)
+	})
+}
+
+func Test_EnumsParser_ParsePackages_WithComments(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		tempDir := gfile.Temp(guid.S())
+		err := gfile.Mkdir(tempDir)
+		t.AssertNil(err)
+		defer gfile.Remove(tempDir)
+
+		goModContent := `module github.com/test/commenttest
+
+go 1.21
+`
+		err = gfile.PutContents(filepath.Join(tempDir, "go.mod"), goModContent)
+		t.AssertNil(err)
+
+		enumsContent := `package commenttest
+
+type BannerRedirectType string
+
+const (
+	// NoneBannerRedirectType 无
+	NoneBannerRedirectType BannerRedirectType = "None"
+	// URLBannerRedirectType URL地址
+	URLBannerRedirectType BannerRedirectType = "URL"
+	// ActionBannerRedirectType 动作
+	ActionBannerRedirectType BannerRedirectType = "Action"
+)
+`
+		err = gfile.PutContents(filepath.Join(tempDir, "enums.go"), enumsContent)
+		t.AssertNil(err)
+
+		cfg := &packages.Config{
+			Dir:   tempDir,
+			Mode:  pkgLoadMode,
+			Tests: false,
+		}
+		pkgs, err := packages.Load(cfg)
+		t.AssertNil(err)
+		t.Assert(len(pkgs) > 0, true)
+
+		p := NewEnumsParser(nil)
+		p.ParsePackages(pkgs)
+		result := p.Export()
+
+		var resultMap map[string][]EnumExportItem
+		err = gjson.DecodeTo(result, &resultMap)
+		t.AssertNil(err)
+
+		bannerRedirectTypeKey := "github.com/test/commenttest.BannerRedirectType"
+		bannerRedirectTypeValues, ok := resultMap[bannerRedirectTypeKey]
+		t.Assert(ok, true)
+		t.Assert(len(bannerRedirectTypeValues), 3)
+
+		bannerRedirectTypeCommentMap := make(map[string]string)
+		for _, item := range bannerRedirectTypeValues {
+			bannerRedirectTypeCommentMap[item.Value.(string)] = item.Comment
+		}
+		t.Assert(bannerRedirectTypeCommentMap["None"], "无")
+		t.Assert(bannerRedirectTypeCommentMap["URL"], "URL地址")
+		t.Assert(bannerRedirectTypeCommentMap["Action"], "动作")
 	})
 }
 

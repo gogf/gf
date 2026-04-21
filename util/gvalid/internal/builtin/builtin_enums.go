@@ -71,9 +71,20 @@ func (r RuleEnums) Run(in RunInput) error {
 			typeId,
 		)
 	}
-	var enumsValues = make([]any, 0)
-	if err := json.Unmarshal([]byte(tagEnums), &enumsValues); err != nil {
+	enumsValues, err := gtag.GetEnumValuesByType(typeId)
+	if err != nil {
 		return err
+	}
+	if len(enumsValues) == 0 {
+		return gerror.NewCodef(
+			gcode.CodeInvalidOperation,
+			`no enums found for type "%s", missing using command "gf gen enums"?`,
+			typeId,
+		)
+	}
+	tagEnumsBytes, err := json.Marshal(enumsValues)
+	if err == nil {
+		tagEnums = string(tagEnumsBytes)
 	}
 	if !gstr.InArray(gconv.Strings(enumsValues), in.Value.String()) {
 		return errors.New(gstr.Replace(
