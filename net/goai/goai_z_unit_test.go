@@ -1377,3 +1377,35 @@ func Test_ValidationRules(t *testing.T) {
 		t.Assert(schema.Properties.Get("Address").Value.MaxLength, 64)
 	})
 }
+
+func Test_TypeMapping(t *testing.T) {
+	type Carbon struct {
+		Timestamp int64 `json:"timestamp"`
+	}
+	type Req struct {
+		gmeta.Meta `path:"/CreateResourceReq" method:"POST" tags:"default"`
+		At         Carbon `dc:"time value" json:"at"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+			req = new(Req)
+		)
+		oai.Config.TypeMapping = map[string]string{
+			"goai_test.Carbon": goai.TypeString,
+		}
+
+		err = oai.Add(goai.AddInput{
+			Object: req,
+		})
+		t.AssertNil(err)
+
+		var reqKey = "github.com.gogf.gf.v2.net.goai_test.Req"
+		t.Assert(
+			oai.Components.Schemas.Get(reqKey).Value.Properties.Get("at").Value.Type,
+			goai.TypeString,
+		)
+	})
+}
