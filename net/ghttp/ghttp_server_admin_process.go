@@ -125,7 +125,13 @@ func forkReloadProcess(ctx context.Context, newExeFilePath ...string) error {
 		binaryPath = newExeFilePath[0]
 	}
 	if binaryPath == "" {
-		return gerror.NewCode(gcode.CodeInvalidOperation, "cannot determine current executable path")
+		return gerror.NewCodef(
+			gcode.CodeInvalidOperation,
+			"cannot determine current executable path: gfile.SelfPath() returned empty and no executable override was provided (goos=%s, goarch=%s, overrideProvided=%t)",
+			runtime.GOOS,
+			runtime.GOARCH,
+			len(newExeFilePath) > 0 && newExeFilePath[0] != "",
+		)
 	}
 	if !gfile.Exists(binaryPath) {
 		return gerror.Newf(`binary file path "%s" does not exist`, binaryPath)
