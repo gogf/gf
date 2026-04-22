@@ -226,6 +226,13 @@ Default:
 // GetFormattedDBTypeNameForField retrieves and returns the formatted database type name
 // eg. `int(10) unsigned` -> `int`, `varchar(100)` -> `varchar`, etc.
 func (c *Core) GetFormattedDBTypeNameForField(fieldType string) (typeName, typePattern string) {
+	return FormatDBTypeName(fieldType)
+}
+
+// FormatDBTypeName retrieves and returns the formatted database type name and pattern
+// from raw field type string without requiring a database connection.
+// eg. `int(10) unsigned` -> (`int`, `10`), `varchar(100)` -> (`varchar`, `100`).
+func FormatDBTypeName(fieldType string) (typeName, typePattern string) {
 	match, _ := gregex.MatchString(`(.+?)\((.+)\)`, fieldType)
 	if len(match) == 3 {
 		typeName = gstr.Trim(match[1])
@@ -246,11 +253,17 @@ func (c *Core) GetFormattedDBTypeNameForField(fieldType string) (typeName, typeP
 // The `fieldType` is retrieved from ColumnTypes of db driver, example:
 // UNSIGNED INT
 func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ any) (LocalType, error) {
+	return CheckLocalTypeForFieldType(fieldType)
+}
+
+// CheckLocalTypeForFieldType checks and returns corresponding local type for given db field type string
+// without requiring a database connection.
+func CheckLocalTypeForFieldType(fieldType string) (LocalType, error) {
 	var (
 		typeName    string
 		typePattern string
 	)
-	typeName, typePattern = c.GetFormattedDBTypeNameForField(fieldType)
+	typeName, typePattern = FormatDBTypeName(fieldType)
 	switch typeName {
 	case
 		fieldTypeBinary,
@@ -268,7 +281,10 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ a
 		fieldTypeSmallint,
 		fieldTypeMediumInt,
 		fieldTypeMediumint,
-		fieldTypeSerial:
+		fieldTypeSerial,
+		fieldTypeInt2,
+		fieldTypeInt4,
+		fieldTypeInteger:
 		if gstr.ContainsI(fieldType, "unsigned") {
 			return LocalTypeUint, nil
 		}
@@ -277,7 +293,8 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ a
 	case
 		fieldTypeBigInt,
 		fieldTypeBigint,
-		fieldTypeBigserial:
+		fieldTypeBigserial,
+		fieldTypeInt8:
 		if gstr.ContainsI(fieldType, "unsigned") {
 			return LocalTypeUint64, nil
 		}
@@ -298,11 +315,15 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ a
 		fieldTypeDecimal,
 		fieldTypeMoney,
 		fieldTypeNumeric,
-		fieldTypeSmallmoney:
+		fieldTypeSmallmoney,
+		fieldTypeNumber:
 		return LocalTypeString, nil
 	case
 		fieldTypeFloat,
-		fieldTypeDouble:
+		fieldTypeDouble,
+		fieldTypeFloat4,
+		fieldTypeFloat8,
+		fieldTypeDoublePrecision:
 		return LocalTypeFloat64, nil
 
 	case
@@ -317,7 +338,8 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ a
 		return LocalTypeInt64Bytes, nil
 
 	case
-		fieldTypeBool:
+		fieldTypeBool,
+		fieldTypeBoolean:
 		return LocalTypeBool, nil
 
 	case
@@ -331,7 +353,10 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ a
 	case
 		fieldTypeDatetime,
 		fieldTypeTimestamp,
-		fieldTypeTimestampz:
+		fieldTypeTimestampz,
+		fieldTypeDatetime2,
+		fieldTypeDatetimeOffset,
+		fieldTypeSmalldatetime:
 		return LocalTypeDatetime, nil
 
 	case
@@ -345,7 +370,10 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ a
 	default:
 		// Auto-detect field type, using key match.
 		switch {
-		case strings.Contains(typeName, "text") || strings.Contains(typeName, "char") || strings.Contains(typeName, "character"):
+		case strings.Contains(typeName, "text") || strings.Contains(typeName, "char") ||
+			strings.Contains(typeName, "character") || strings.Contains(typeName, "clob") ||
+			strings.Contains(typeName, "ntext") || strings.Contains(typeName, "xml") ||
+			strings.Contains(typeName, "string"):
 			return LocalTypeString, nil
 
 		case strings.Contains(typeName, "float") || strings.Contains(typeName, "double") || strings.Contains(typeName, "numeric"):
@@ -354,7 +382,9 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ a
 		case strings.Contains(typeName, "bool"):
 			return LocalTypeBool, nil
 
-		case strings.Contains(typeName, "binary") || strings.Contains(typeName, "blob"):
+		case strings.Contains(typeName, "binary") || strings.Contains(typeName, "blob") ||
+			strings.Contains(typeName, "bytea") || strings.Contains(typeName, "image") ||
+			strings.Contains(typeName, "raw"):
 			return LocalTypeBytes, nil
 
 		case strings.Contains(typeName, "int"):

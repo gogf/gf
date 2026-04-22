@@ -26,6 +26,9 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
+// generateDao generates dao files (index + internal) for all tables in the input.
+// It creates the dao directory structure and iterates over each table to generate
+// individual dao files via generateDaoSingle.
 func generateDao(ctx context.Context, in CGenDaoInternalInput) {
 	var (
 		dirPathDao         = gfile.Join(in.Path, in.DaoPath)
@@ -48,21 +51,20 @@ func generateDao(ctx context.Context, in CGenDaoInternalInput) {
 	}
 }
 
+// generateDaoSingleInput holds all parameters needed to generate dao files for a single table.
 type generateDaoSingleInput struct {
 	CGenDaoInternalInput
-	// TableName specifies the table name of the table.
-	TableName string
-	// NewTableName specifies the prefix-stripped or custom edited name of the table.
-	NewTableName       string
-	DirPathDao         string
-	DirPathDaoInternal string
-	IsSharding         bool
+	TableName          string // Original table name as it exists in the database.
+	NewTableName       string // Processed table name after prefix removal and sharding.
+	DirPathDao         string // Directory path for the dao index files.
+	DirPathDaoInternal string // Directory path for the dao internal implementation files.
+	IsSharding         bool   // Whether this table is a sharding table (merged from multiple physical tables).
 }
 
 // generateDaoSingle generates the dao and model content of given table.
 func generateDaoSingle(ctx context.Context, in generateDaoSingleInput) {
 	// Generating table data preparing.
-	fieldMap, err := in.DB.TableFields(ctx, in.TableName)
+	fieldMap, err := getTableFields(ctx, in.CGenDaoInternalInput, in.TableName)
 	if err != nil {
 		mlog.Fatalf(`fetching tables fields failed for table "%s": %+v`, in.TableName, err)
 	}
@@ -105,14 +107,21 @@ func generateDaoSingle(ctx context.Context, in generateDaoSingleInput) {
 	})
 }
 
+// generateDaoIndexInput holds parameters for generating the dao index file.
+// The index file provides the public API (exported struct and constructor)
+// for accessing the DAO, delegating to the internal implementation.
 type generateDaoIndexInput struct {
 	generateDaoSingleInput
-	TableNameCamelCase      string
-	TableNameCamelLowerCase string
-	ImportPrefix            string
-	FileName                string
+	TableNameCamelCase      string // CamelCase version of the table name (e.g., "UserDetail").
+	TableNameCamelLowerCase string // camelCase version of the table name (e.g., "userDetail").
+	ImportPrefix            string // Go import path prefix for the dao package.
+	FileName                string // Output file name (without extension).
 }
 
+// generateDaoIndex generates the dao index file for a single table.
+// The index file is the public-facing dao file that users import directly.
+// It will NOT overwrite an existing file unless OverwriteDao is enabled,
+// allowing users to customize the index file without losing changes.
 func generateDaoIndex(in generateDaoIndexInput) {
 	path := filepath.FromSlash(gfile.Join(in.DirPathDao, in.FileName+".go"))
 	// It should add path to result slice whenever it would generate the path file or not.
@@ -147,15 +156,21 @@ func generateDaoIndex(in generateDaoIndexInput) {
 	}
 }
 
+// generateDaoInternalInput holds parameters for generating the dao internal file.
+// The internal file contains the actual DAO implementation with column definitions
+// and is always overwritten on regeneration.
 type generateDaoInternalInput struct {
 	generateDaoSingleInput
-	TableNameCamelCase      string
-	TableNameCamelLowerCase string
-	ImportPrefix            string
-	FileName                string
-	FieldMap                map[string]*gdb.TableField
+	TableNameCamelCase      string                     // CamelCase version of the table name.
+	TableNameCamelLowerCase string                     // camelCase version of the table name.
+	ImportPrefix            string                     // Go import path prefix for the dao package.
+	FileName                string                     // Output file name (without extension).
+	FieldMap                map[string]*gdb.TableField // Map of column name to field metadata.
 }
 
+// generateDaoInternal generates the dao internal implementation file for a single table.
+// This file is always regenerated (overwritten) and contains the Columns struct definition
+// with column name constants and their string value assignments.
 func generateDaoInternal(in generateDaoInternalInput) {
 	var (
 		ctx                    = context.Background()

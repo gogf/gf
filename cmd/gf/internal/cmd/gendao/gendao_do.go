@@ -22,6 +22,10 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
+// generateDo generates DO (Data Object) files for all tables.
+// DO structs use "any" type for all scalar fields (replacing concrete types),
+// enabling flexible query building with the g.Meta `orm:"do:true"` tag.
+// Pointer, slice, and map types are preserved as-is.
 func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 	var dirPathDo = filepath.FromSlash(gfile.Join(in.Path, in.DoPath))
 	in.genItems.AppendDirPath(dirPathDo)
@@ -30,7 +34,7 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 	in.NoModelComment = false
 	// Model content.
 	for i, tableName := range in.TableNames {
-		fieldMap, err := in.DB.TableFields(ctx, tableName)
+		fieldMap, err := getTableFields(ctx, in, tableName)
 		if err != nil {
 			mlog.Fatalf("fetching tables fields failed for table '%s':\n%v", tableName, err)
 		}
@@ -75,6 +79,9 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 	}
 }
 
+// generateDoContent renders the DO file content using the template engine.
+// It assembles template variables including package imports, struct definition,
+// and metadata, then parses the DO template to produce the final file content.
 func generateDoContent(
 	ctx context.Context, in CGenDaoInternalInput, tableName, tableNameCamelCase, structDefine string,
 ) string {

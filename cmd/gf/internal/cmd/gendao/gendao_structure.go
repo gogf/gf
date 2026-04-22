@@ -20,14 +20,20 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
+// generateStructDefinitionInput holds parameters for generating a Go struct definition
+// from database table fields.
 type generateStructDefinitionInput struct {
 	CGenDaoInternalInput
-	TableName  string                     // Table name.
-	StructName string                     // Struct name.
-	FieldMap   map[string]*gdb.TableField // Table field map.
-	IsDo       bool                       // Is generating DTO struct.
+	TableName  string                     // Original database table name.
+	StructName string                     // Go struct name (CamelCase of table name).
+	FieldMap   map[string]*gdb.TableField // Map of column name to field metadata.
+	IsDo       bool                       // Whether generating a DO struct (uses g.Meta orm tag).
 }
 
+// generateStructDefinition generates a complete Go struct definition string from table fields.
+// It returns the struct source code and a list of additional import paths needed
+// by custom type mappings. The fields are rendered in a table-aligned format
+// using tablewriter for consistent code formatting.
 func generateStructDefinition(ctx context.Context, in generateStructDefinitionInput) (string, []string) {
 	var appendImports []string
 	buffer := bytes.NewBuffer(nil)
@@ -59,6 +65,10 @@ func generateStructDefinition(ctx context.Context, in generateStructDefinitionIn
 	return buffer.String(), appendImports
 }
 
+// getTypeMappingInfo looks up a database field type in the type mapping configuration.
+// It handles exact matches first, then tries to extract the base type name from
+// parameterized types like "varchar(255)" or "numeric(10,2) unsigned".
+// Returns the mapped Go type name and its import path (if any).
 func getTypeMappingInfo(
 	ctx context.Context, fieldType string, inTypeMapping map[DBFieldTypeName]CustomAttributeType,
 ) (typeNameStr, importStr string) {
@@ -105,9 +115,17 @@ func generateStructFieldDefinition(
 	}
 
 	if localTypeNameStr == "" {
-		localTypeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
-		if err != nil {
-			panic(err)
+		if in.DB != nil {
+			localTypeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			// SQL file mode: use standalone type checking without database connection.
+			localTypeName, err = gdb.CheckLocalTypeForFieldType(field.Type)
+			if err != nil {
+				panic(err)
+			}
 		}
 		localTypeNameStr = string(localTypeName)
 		switch localTypeName {
@@ -181,11 +199,12 @@ func generateStructFieldDefinition(
 	return attrLines, appendImport
 }
 
+// FieldNameCase defines the naming convention for converting field names to Go identifiers.
 type FieldNameCase string
 
 const (
-	FieldNameCaseCamel      FieldNameCase = "CaseCamel"
-	FieldNameCaseCamelLower FieldNameCase = "CaseCamelLower"
+	FieldNameCaseCamel      FieldNameCase = "CaseCamel"      // PascalCase: "user_name" -> "UserName"
+	FieldNameCaseCamelLower FieldNameCase = "CaseCamelLower" // camelCase: "user_name" -> "userName"
 )
 
 // formatFieldName formats and returns a new field name that is used for golang codes generating.

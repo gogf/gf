@@ -26,3 +26,4 @@ output
 .example/
 .golangci.bck.yml
 *.exe
+.aiprompt.zh.md
