@@ -32,6 +32,9 @@ func init() {
 	if goRootForFilter != "" {
 		goRootForFilter = strings.ReplaceAll(goRootForFilter, "\\", "/")
 	}
+	if len(os.Args) == 0 {
+		return
+	}
 	// Initialize internal package variable: selfPath.
 	selfPath, _ = exec.LookPath(os.Args[0])
 	if selfPath != "" {
