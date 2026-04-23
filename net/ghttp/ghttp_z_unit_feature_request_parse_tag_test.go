@@ -177,3 +177,113 @@ func Test_Params_ParseTag_TopLevelStructSlice(t *testing.T) {
 		)
 	})
 }
+
+func Benchmark_Params_ParseTag(b *testing.B) {
+	type benchmarkNoParseReq struct {
+		g.Meta `path:"/bench/no-parse" method:"post"`
+		Title  string   `json:"title"`
+		Email  string   `json:"email"`
+		Tags   []string `json:"tags"`
+	}
+	type benchmarkWithParseReq struct {
+		g.Meta `path:"/bench/with-parse" method:"post"`
+		Title  string   `json:"title" parse:"trim-space|lower"`
+		Email  string   `json:"email" parse:"trim-space|lower"`
+		Tags   []string `json:"tags" parse:"foreach|trim-space|lower"`
+	}
+	type benchmarkArrayNoParseItem struct {
+		Title string   `json:"title"`
+		Tags  []string `json:"tags"`
+	}
+	type benchmarkArrayWithParseItem struct {
+		Title string   `json:"title" parse:"trim-space|lower"`
+		Tags  []string `json:"tags" parse:"foreach|trim-space|lower"`
+	}
+
+	b.StopTimer()
+
+	s := g.Server(guid.S())
+	s.SetDumpRouterMap(false)
+	s.SetAccessLogEnabled(false)
+	s.SetErrorLogEnabled(false)
+	s.BindHandler("/bench/no-parse", func(ctx context.Context, req *benchmarkNoParseReq) (res any, err error) {
+		g.RequestFromCtx(ctx).Response.Write(req.Title)
+		return nil, nil
+	})
+	s.BindHandler("/bench/with-parse", func(ctx context.Context, req *benchmarkWithParseReq) (res any, err error) {
+		g.RequestFromCtx(ctx).Response.Write(req.Title)
+		return nil, nil
+	})
+	s.BindHandler("/bench/array-no-parse", func(r *ghttp.Request) {
+		var items []*benchmarkArrayNoParseItem
+		if err := r.Parse(&items); err != nil {
+			r.Response.WriteExit(err)
+		}
+		r.Response.Write(items[0].Title)
+	})
+	s.BindHandler("/bench/array-with-parse", func(r *ghttp.Request) {
+		var items []*benchmarkArrayWithParseItem
+		if err := r.Parse(&items); err != nil {
+			r.Response.WriteExit(err)
+		}
+		r.Response.Write(items[0].Title)
+	})
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	client := g.Client()
+	client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+	jsonClient := client.ContentJson()
+
+	structPayload := g.Map{
+		"title": "  Demo Title  ",
+		"email": "  Demo@Example.COM  ",
+		"tags":  []string{" Alpha ", " Beta "},
+	}
+	arrayPayload := []map[string]any{
+		{
+			"title": "  Demo Title  ",
+			"tags":  []string{" Alpha ", " Beta "},
+		},
+		{
+			"title": "  Extra  ",
+			"tags":  []string{" Gamma "},
+		},
+	}
+
+	b.StartTimer()
+	b.Run("struct_no_parse_tag", func(b *testing.B) {
+		b.ReportAllocs()
+		jsonClient.PostContent(ctx, "/bench/no-parse", structPayload)
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			jsonClient.PostContent(ctx, "/bench/no-parse", structPayload)
+		}
+	})
+	b.Run("struct_with_parse_tag", func(b *testing.B) {
+		b.ReportAllocs()
+		jsonClient.PostContent(ctx, "/bench/with-parse", structPayload)
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			jsonClient.PostContent(ctx, "/bench/with-parse", structPayload)
+		}
+	})
+	b.Run("array_no_parse_tag", func(b *testing.B) {
+		b.ReportAllocs()
+		jsonClient.PostContent(ctx, "/bench/array-no-parse", arrayPayload)
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			jsonClient.PostContent(ctx, "/bench/array-no-parse", arrayPayload)
+		}
+	})
+	b.Run("array_with_parse_tag", func(b *testing.B) {
+		b.ReportAllocs()
+		jsonClient.PostContent(ctx, "/bench/array-with-parse", arrayPayload)
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			jsonClient.PostContent(ctx, "/bench/array-with-parse", arrayPayload)
+		}
+	})
+}

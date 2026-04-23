@@ -133,7 +133,14 @@ func (r *Request) doParseArray(pointer any, reflectVal reflect.Value) error {
 	if err != nil || arrayItemType.Kind() != reflect.Struct {
 		return r.doParseArrayWithJSON(pointer, reflectVal)
 	}
-	data, err := r.doParseArrayData(pointer)
+	parseMeta, err := getOrBuildParseStructMetaByType(arrayItemType)
+	if err != nil {
+		return err
+	}
+	if parseMeta == nil || !parseMeta.HasParseTag {
+		return r.doParseArrayWithJSON(pointer, reflectVal)
+	}
+	data, err := r.doParseArrayData(parseMeta)
 	if err != nil {
 		return err
 	}

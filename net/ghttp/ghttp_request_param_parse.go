@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"sync"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -64,10 +65,24 @@ type parseRuleItem struct {
 	Pattern string
 }
 
+type parseStructMeta struct {
+	HasParseTag bool
+	Fields      []parseFieldMeta
+}
+
+type parseFieldMeta struct {
+	Name           string
+	FieldType      reflect.Type
+	BaseLookupKeys []string
+	ParseRules     []parseRuleItem
+	NestedMeta     *parseStructMeta
+}
+
 var (
 	// customParseFuncMap stores the custom parse functions.
 	// map[Rule]ParseFunc
-	customParseFuncMap = make(map[string]ParseFunc)
+	customParseFuncMap   = make(map[string]ParseFunc)
+	parseStructMetaCache sync.Map
 )
 
 func init() {
@@ -134,23 +149,25 @@ func (r *Request) doParseRequestData(data map[string]any, pointer any, mapping .
 	if len(data) == 0 || pointer == nil {
 		return nil
 	}
-	structType, err := getParseStructType(pointer)
+	parseMeta, err := r.getRequestParseStructMeta(pointer)
 	if err != nil {
 		return err
+	}
+	if parseMeta == nil || !parseMeta.HasParseTag {
+		return nil
 	}
 	var customMapping map[string]string
 	if len(mapping) > 0 {
 		customMapping = mapping[0]
 	}
-	return r.doParseMapByStruct(data, structType, customMapping, "")
+	return r.doParseMapByMeta(data, parseMeta, customMapping, "")
 }
 
-func (r *Request) doParseArrayData(pointer any) ([]map[string]any, error) {
-	structType, err := getParseStructArrayItemType(pointer)
-	if err != nil {
-		return nil, err
-	}
-	var data []map[string]any
+func (r *Request) doParseArrayData(parseMeta *parseStructMeta) ([]map[string]any, error) {
+	var (
+		data []map[string]any
+		err  error
+	)
 	if err = json.UnmarshalUseNumber(r.GetBody(), &data); err != nil {
 		return nil, err
 	}
@@ -158,49 +175,32 @@ func (r *Request) doParseArrayData(pointer any) ([]map[string]any, error) {
 		if data[i] == nil {
 			data[i] = map[string]any{}
 		}
-		if err = r.doParseMapByStruct(data[i], structType, nil, fmt.Sprintf("[%d]", i)); err != nil {
+		if err = r.doParseMapByMeta(data[i], parseMeta, nil, fmt.Sprintf("[%d]", i)); err != nil {
 			return nil, err
 		}
 	}
 	return data, nil
 }
 
-func (r *Request) doParseMapByStruct(
-	data map[string]any, structType reflect.Type, mapping map[string]string, fieldPrefix string,
+func (r *Request) doParseMapByMeta(
+	data map[string]any, parseMeta *parseStructMeta, mapping map[string]string, fieldPrefix string,
 ) error {
-	structType = indirectToType(structType)
-	if structType.Kind() != reflect.Struct || len(data) == 0 {
+	if parseMeta == nil || !parseMeta.HasParseTag || len(data) == 0 {
 		return nil
 	}
-	for i := 0; i < structType.NumField(); i++ {
-		structField := structType.Field(i)
-		if !isExportedStructField(structField) {
-			continue
-		}
-		fieldPath := joinParseFieldPath(fieldPrefix, structField.Name)
-		if structField.Anonymous && structField.Tag == "" {
-			if err := r.doParseMapByStruct(data, structField.Type, nil, fieldPrefix); err != nil {
-				return err
-			}
-			continue
-		}
-		foundKey, foundValue, found := findParseValueFromMap(data, structField, mapping)
-		if parseTag := strings.TrimSpace(structField.Tag.Get(gtag.ParseRule)); parseTag != "" {
-			rules, err := parseRuleItems(parseTag)
+	for _, fieldMeta := range parseMeta.Fields {
+		fieldPath := joinParseFieldPath(fieldPrefix, fieldMeta.Name)
+		foundKey, foundValue, found := findParseValueFromMap(data, fieldMeta, mapping)
+		if found && len(fieldMeta.ParseRules) > 0 {
+			parsedValue, err := r.doParseRuleItems(foundValue, data, fieldMeta, fieldPath)
 			if err != nil {
 				return err
 			}
-			if found {
-				parsedValue, err := r.doParseRuleItems(foundValue, data, structField, fieldPath, rules)
-				if err != nil {
-					return err
-				}
-				data[foundKey] = parsedValue
-				foundValue = parsedValue
-			}
+			data[foundKey] = parsedValue
+			foundValue = parsedValue
 		}
-		if found {
-			parsedNestedValue, err := r.doParseNestedValue(foundValue, structField.Type, fieldPath)
+		if found && fieldMeta.NestedMeta != nil && fieldMeta.NestedMeta.HasParseTag {
+			parsedNestedValue, err := r.doParseNestedValue(foundValue, fieldMeta, fieldPath)
 			if err != nil {
 				return err
 			}
@@ -210,27 +210,23 @@ func (r *Request) doParseMapByStruct(
 	return nil
 }
 
-func (r *Request) doParseNestedValue(value any, fieldType reflect.Type, fieldPath string) (any, error) {
-	indirectType := indirectToType(fieldType)
+func (r *Request) doParseNestedValue(value any, fieldMeta parseFieldMeta, fieldPath string) (any, error) {
+	indirectType := indirectToType(fieldMeta.FieldType)
 	switch indirectType.Kind() {
 	case reflect.Struct:
 		nestedMap, ok := value.(map[string]any)
 		if !ok {
 			return value, nil
 		}
-		if err := r.doParseMapByStruct(nestedMap, indirectType, nil, fieldPath); err != nil {
+		if err := r.doParseMapByMeta(nestedMap, fieldMeta.NestedMeta, nil, fieldPath); err != nil {
 			return value, err
 		}
 	case reflect.Slice, reflect.Array:
-		elemType := indirectToType(indirectType.Elem())
-		if elemType.Kind() != reflect.Struct {
-			return value, nil
-		}
 		switch arrayValue := value.(type) {
 		case []map[string]any:
 			for i := range arrayValue {
-				if err := r.doParseMapByStruct(
-					arrayValue[i], elemType, nil, fmt.Sprintf("%s[%d]", fieldPath, i),
+				if err := r.doParseMapByMeta(
+					arrayValue[i], fieldMeta.NestedMeta, nil, fmt.Sprintf("%s[%d]", fieldPath, i),
 				); err != nil {
 					return value, err
 				}
@@ -241,8 +237,8 @@ func (r *Request) doParseNestedValue(value any, fieldType reflect.Type, fieldPat
 				if !ok {
 					continue
 				}
-				if err := r.doParseMapByStruct(
-					itemMap, elemType, nil, fmt.Sprintf("%s[%d]", fieldPath, i),
+				if err := r.doParseMapByMeta(
+					itemMap, fieldMeta.NestedMeta, nil, fmt.Sprintf("%s[%d]", fieldPath, i),
 				); err != nil {
 					return value, err
 				}
@@ -253,12 +249,12 @@ func (r *Request) doParseNestedValue(value any, fieldType reflect.Type, fieldPat
 }
 
 func (r *Request) doParseRuleItems(
-	value any, data map[string]any, structField reflect.StructField, fieldPath string, rules []parseRuleItem,
+	value any, data map[string]any, fieldMeta parseFieldMeta, fieldPath string,
 ) (any, error) {
 	currentValue := value
-	for i, rule := range rules {
+	for i, rule := range fieldMeta.ParseRules {
 		if rule.Name == parseRuleForeach {
-			return r.doParseForeachRule(currentValue, data, structField, fieldPath, rules[i+1:])
+			return r.doParseForeachRule(currentValue, data, fieldMeta, fieldPath, fieldMeta.ParseRules[i+1:])
 		}
 		parseFunc := customParseFuncMap[rule.Name]
 		if parseFunc == nil {
@@ -274,7 +270,7 @@ func (r *Request) doParseRuleItems(
 			Name:      rule.Name,
 			Pattern:   rule.Pattern,
 			Field:     fieldPath,
-			FieldType: structField.Type,
+			FieldType: fieldMeta.FieldType,
 			Value:     currentValue,
 			Data:      data,
 			Request:   r,
@@ -287,7 +283,7 @@ func (r *Request) doParseRuleItems(
 }
 
 func (r *Request) doParseForeachRule(
-	value any, data map[string]any, structField reflect.StructField, fieldPath string, rules []parseRuleItem,
+	value any, data map[string]any, fieldMeta parseFieldMeta, fieldPath string, rules []parseRuleItem,
 ) (any, error) {
 	if len(rules) == 0 || value == nil {
 		return value, nil
@@ -306,9 +302,12 @@ func (r *Request) doParseForeachRule(
 		parsedItem, err := r.doParseRuleItems(
 			reflectValue.Index(i).Interface(),
 			data,
-			structField,
+			parseFieldMeta{
+				Name:       fieldMeta.Name,
+				FieldType:  fieldMeta.FieldType,
+				ParseRules: rules,
+			},
 			fmt.Sprintf("%s[%d]", fieldPath, i),
-			rules,
 		)
 		if err != nil {
 			return nil, err
@@ -344,9 +343,9 @@ func parseRuleItems(tagValue string) ([]parseRuleItem, error) {
 }
 
 func findParseValueFromMap(
-	data map[string]any, structField reflect.StructField, mapping map[string]string,
+	data map[string]any, fieldMeta parseFieldMeta, mapping map[string]string,
 ) (foundKey string, foundValue any, found bool) {
-	for _, candidate := range buildParseLookupKeys(structField, mapping) {
+	for _, candidate := range buildParseLookupKeys(fieldMeta, mapping) {
 		if candidate == "" {
 			continue
 		}
@@ -357,24 +356,16 @@ func findParseValueFromMap(
 	return "", nil, false
 }
 
-func buildParseLookupKeys(structField reflect.StructField, mapping map[string]string) []string {
-	keys := make([]string, 0, len(gtag.StructTagPriority)+2)
+func buildParseLookupKeys(fieldMeta parseFieldMeta, mapping map[string]string) []string {
+	keys := make([]string, 0, len(fieldMeta.BaseLookupKeys)+1)
 	if len(mapping) > 0 {
 		for paramKey, attrName := range mapping {
-			if attrName == structField.Name {
+			if attrName == fieldMeta.Name {
 				keys = append(keys, paramKey)
 			}
 		}
 	}
-	for _, tagName := range gtag.StructTagPriority {
-		if tagValue := structField.Tag.Get(tagName); tagValue != "" {
-			tagValue = strings.Split(tagValue, ",")[0]
-			if tagValue != "" && tagValue != "-" {
-				keys = append(keys, tagValue)
-			}
-		}
-	}
-	keys = append(keys, structField.Name)
+	keys = append(keys, fieldMeta.BaseLookupKeys...)
 	return uniqueParseLookupKeys(keys)
 }
 
@@ -445,6 +436,144 @@ func getParseStructArrayItemType(pointer any) (reflect.Type, error) {
 		)
 	}
 	return indirectToType(reflectType.Elem()), nil
+}
+
+func (r *Request) getRequestParseStructMeta(pointer any) (*parseStructMeta, error) {
+	if r != nil && r.serveHandler != nil && r.serveHandler.Handler != nil && r.serveHandler.Handler.Info.IsStrictRoute {
+		if !r.serveHandler.Handler.Info.ReqStructHasParseTag {
+			return nil, nil
+		}
+		return r.serveHandler.Handler.Info.ReqStructParseMeta, nil
+	}
+	return getOrBuildParseStructMeta(pointer)
+}
+
+func getOrBuildParseStructMeta(pointer any) (*parseStructMeta, error) {
+	structType, err := getParseStructType(pointer)
+	if err != nil {
+		return nil, err
+	}
+	return getOrBuildParseStructMetaByType(structType)
+}
+
+func getOrBuildParseStructMetaByType(structType reflect.Type) (*parseStructMeta, error) {
+	structType = indirectToType(structType)
+	if structType == nil || structType.Kind() != reflect.Struct {
+		return nil, nil
+	}
+	if cachedMeta, ok := parseStructMetaCache.Load(structType); ok {
+		return cachedMeta.(*parseStructMeta), nil
+	}
+	parseMeta, err := buildParseStructMeta(structType, make(map[reflect.Type]*parseStructMeta))
+	if err != nil {
+		return nil, err
+	}
+	actualMeta, _ := parseStructMetaCache.LoadOrStore(structType, parseMeta)
+	return actualMeta.(*parseStructMeta), nil
+}
+
+func buildParseStructMeta(
+	structType reflect.Type, buildingMetaMap map[reflect.Type]*parseStructMeta,
+) (*parseStructMeta, error) {
+	structType = indirectToType(structType)
+	if parseMeta, ok := buildingMetaMap[structType]; ok {
+		return parseMeta, nil
+	}
+	parseMeta := &parseStructMeta{}
+	if structType == nil || structType.Kind() != reflect.Struct {
+		return parseMeta, nil
+	}
+	buildingMetaMap[structType] = parseMeta
+	for i := 0; i < structType.NumField(); i++ {
+		structField := structType.Field(i)
+		if !isExportedStructField(structField) {
+			continue
+		}
+		if structField.Anonymous && structField.Tag == "" {
+			childMeta, err := buildParseStructMeta(indirectToType(structField.Type), buildingMetaMap)
+			if err != nil {
+				return nil, err
+			}
+			if childMeta != nil && childMeta.HasParseTag {
+				parseMeta.HasParseTag = true
+				parseMeta.Fields = append(parseMeta.Fields, childMeta.Fields...)
+			}
+			continue
+		}
+		fieldMeta, ok, err := buildParseFieldMeta(structField, buildingMetaMap)
+		if err != nil {
+			return nil, err
+		}
+		if ok {
+			parseMeta.HasParseTag = true
+			parseMeta.Fields = append(parseMeta.Fields, fieldMeta)
+		}
+	}
+	return parseMeta, nil
+}
+
+func buildParseFieldMeta(
+	structField reflect.StructField, buildingMetaMap map[reflect.Type]*parseStructMeta,
+) (parseFieldMeta, bool, error) {
+	fieldMeta := parseFieldMeta{
+		Name:           structField.Name,
+		FieldType:      structField.Type,
+		BaseLookupKeys: buildBaseParseLookupKeys(structField),
+	}
+	if parseTag := strings.TrimSpace(structField.Tag.Get(gtag.ParseRule)); parseTag != "" {
+		rules, err := parseRuleItems(parseTag)
+		if err != nil {
+			return parseFieldMeta{}, false, err
+		}
+		fieldMeta.ParseRules = rules
+	}
+	nestedMeta, err := getNestedParseStructMeta(structField.Type, buildingMetaMap)
+	if err != nil {
+		return parseFieldMeta{}, false, err
+	}
+	if nestedMeta != nil && nestedMeta.HasParseTag {
+		fieldMeta.NestedMeta = nestedMeta
+	}
+	if len(fieldMeta.ParseRules) == 0 && fieldMeta.NestedMeta == nil {
+		return parseFieldMeta{}, false, nil
+	}
+	return fieldMeta, true, nil
+}
+
+func getNestedParseStructMeta(
+	fieldType reflect.Type, buildingMetaMap map[reflect.Type]*parseStructMeta,
+) (*parseStructMeta, error) {
+	indirectType := indirectToType(fieldType)
+	switch indirectType.Kind() {
+	case reflect.Struct:
+		if buildingMetaMap != nil {
+			return buildParseStructMeta(indirectType, buildingMetaMap)
+		}
+		return getOrBuildParseStructMetaByType(indirectType)
+	case reflect.Slice, reflect.Array:
+		elemType := indirectToType(indirectType.Elem())
+		if elemType.Kind() == reflect.Struct {
+			if buildingMetaMap != nil {
+				return buildParseStructMeta(elemType, buildingMetaMap)
+			}
+			return getOrBuildParseStructMetaByType(elemType)
+		}
+	}
+	return nil, nil
+}
+
+func buildBaseParseLookupKeys(structField reflect.StructField) []string {
+	keys := make([]string, 0, len(gtag.StructTagPriority)+1)
+	for _, tagName := range gtag.StructTagPriority {
+		if tagValue := structField.Tag.Get(tagName); tagValue != "" {
+			tagValue = strings.Split(tagValue, ",")[0]
+			if tagValue != "" && tagValue != "-" {
+				keys = append(keys, tagValue)
+			}
+		}
+	}
+	keys = append(keys, structField.Name)
+	return uniqueParseLookupKeys(keys)
 }
 
 func indirectToType(reflectType reflect.Type) reflect.Type {

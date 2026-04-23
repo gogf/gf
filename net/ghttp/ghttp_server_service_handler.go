@@ -235,6 +235,10 @@ func (s *Server) checkAndCreateFuncInfo(
 		return funcInfo, err
 	}
 	funcInfo.ReqStructFields = fields
+	if funcInfo.ReqStructParseMeta, err = getOrBuildParseStructMetaByType(funcInfo.Type.In(1).Elem()); err != nil {
+		return funcInfo, err
+	}
+	funcInfo.ReqStructHasParseTag = funcInfo.ReqStructParseMeta != nil && funcInfo.ReqStructParseMeta.HasParseTag
 	funcInfo.Func = createRouterFunc(funcInfo)
 	return
 }
