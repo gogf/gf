@@ -1317,14 +1317,10 @@ func Test_Issue3204(t *testing.T) {
 		})
 		t.AssertNil(err)
 		t.Assert(insertId, 20)
-		// CatchSQL may return empty on PgSQL when InsertAndGetId uses RETURNING.
-		// The functional assertion (insertId=20) is the meaningful check.
-		if len(sqlArray) > 0 {
-			t.Assert(
-				gstr.Contains(sqlArray[len(sqlArray)-1], `("id","passport") VALUES(20,'passport_20')`),
-				true,
-			)
-		}
+		t.Assert(
+			gstr.Contains(sqlArray[len(sqlArray)-1], `("id","passport") VALUES(20,'passport_20')`),
+			true,
+		)
 	})
 	// update data
 	gtest.C(t, func(t *gtest.T) {
