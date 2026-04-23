@@ -7,12 +7,15 @@
 package pgsql_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // =============================================================================
@@ -356,6 +359,67 @@ func Test_PgSQL_Returning_Upsert(t *testing.T) {
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
 		t.Assert(count, 1)
+	})
+}
+
+// Test_PgSQL_Returning_CatchSQL verifies CatchSQL captures INSERT ... RETURNING.
+// Regression for a bug where pgsql/gaussdb DoExec bypassed Core.DoQuery and
+// silently dropped the SQL from CatchSQLManager on InsertAndGetId.
+func Test_PgSQL_Returning_CatchSQL(t *testing.T) {
+	table := fmt.Sprintf(`%s_%d`, TablePrefix+"returning_catchsql", gtime.TimestampNano())
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE %s (
+			id bigserial PRIMARY KEY,
+			name varchar(100)
+		);`, table)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		sqlArray, err := gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			_, e := db.Ctx(ctx).Model(table).Data(g.Map{"name": "alice"}).InsertAndGetId()
+			return e
+		})
+		t.AssertNil(err)
+		t.AssertGT(len(sqlArray), 0)
+		// The captured SQL must contain the RETURNING clause.
+		t.Assert(gstr.Contains(sqlArray[len(sqlArray)-1], `RETURNING "id"`), true)
+		// Insert must have executed (CatchSQL uses DoCommit=true).
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+	})
+}
+
+// Test_PgSQL_Returning_ToSQL verifies ToSQL captures without executing.
+// Regression for a bug where pgsql/gaussdb DoExec bypassed Core.DoQuery and
+// executed the INSERT even when ToSQL (DoCommit=false) was active.
+func Test_PgSQL_Returning_ToSQL(t *testing.T) {
+	table := fmt.Sprintf(`%s_%d`, TablePrefix+"returning_tosql", gtime.TimestampNano())
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE %s (
+			id bigserial PRIMARY KEY,
+			name varchar(100)
+		);`, table)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		before, err := db.Model(table).Count()
+		t.AssertNil(err)
+
+		capturedSql, err := gdb.ToSQL(ctx, func(ctx context.Context) error {
+			_, e := db.Ctx(ctx).Model(table).Data(g.Map{"name": "bob"}).InsertAndGetId()
+			return e
+		})
+		t.AssertNil(err)
+		t.AssertNE(capturedSql, "")
+		// Row count must be unchanged — ToSQL must NOT execute.
+		after, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(after, before)
 	})
 }
 
