@@ -345,6 +345,17 @@ type DB interface {
 	// OrderRandomFunction returns the SQL function for random ordering.
 	// The implementation is database-specific (e.g., RAND() for MySQL).
 	OrderRandomFunction() string
+
+	// GetBoolLiteral returns the SQL literal for the given boolean value.
+	// Drivers with strict boolean types (e.g. pgsql, gaussdb, clickhouse)
+	// return "true"/"false"; others return "1"/"0" for bit/int-based
+	// boolean columns.
+	GetBoolLiteral(v bool) string
+
+	// GetLockSharedClause returns the SQL clause emitted by Model.LockShared().
+	// Drivers that don't support MySQL's legacy "LOCK IN SHARE MODE" override
+	// to return their dialect equivalent (e.g. "FOR SHARE" on PostgreSQL).
+	GetLockSharedClause() string
 }
 
 // TX defines the interfaces for ORM transaction operations.
