@@ -56,11 +56,6 @@ func (d *Driver) DoFilter(
 		newSql = "INSERT" + newSql[len(gdb.InsertOperationIgnore):]
 	}
 
-	// Translate MySQL shared lock syntax to GaussDB (PostgreSQL-compatible) syntax.
-	// LockShared() generates "LOCK IN SHARE MODE" which is MySQL-only;
-	// GaussDB uses "FOR SHARE" for the same semantics.
-	newSql = gstr.Replace(newSql, "LOCK IN SHARE MODE", "FOR SHARE")
-
 	newArgs = args
 
 	return d.Core.DoFilter(ctx, link, newSql, newArgs)
