@@ -11,7 +11,6 @@ import (
 	"strconv"
 
 	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // RuleMinLength implements `min-length` rule:
@@ -34,10 +33,7 @@ func (r RuleMinLength) Message() string {
 }
 
 func (r RuleMinLength) Run(in RunInput) error {
-	var (
-		valueRunes = gconv.Runes(in.Value.String())
-		valueLen   = len(valueRunes)
-	)
+	var valueLen = getValueLength(in.Value)
 	min, err := strconv.Atoi(in.RulePattern)
 	if valueLen < min || err != nil {
 		return errors.New(gstr.Replace(in.Message, "{min}", strconv.Itoa(min)))

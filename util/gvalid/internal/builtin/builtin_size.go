@@ -10,8 +10,6 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-
-	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // RuleSize implements `size` rule:
@@ -34,10 +32,7 @@ func (r RuleSize) Message() string {
 }
 
 func (r RuleSize) Run(in RunInput) error {
-	var (
-		valueRunes = gconv.Runes(in.Value.String())
-		valueLen   = len(valueRunes)
-	)
+	var valueLen = getValueLength(in.Value)
 	size, err := strconv.Atoi(in.RulePattern)
 	if valueLen != size || err != nil {
 		return errors.New(strings.ReplaceAll(in.Message, "{size}", strconv.Itoa(size)))

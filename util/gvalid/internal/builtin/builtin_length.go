@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // RuleLength implements `length` rule:
@@ -36,8 +35,7 @@ func (r RuleLength) Message() string {
 
 func (r RuleLength) Run(in RunInput) error {
 	var (
-		valueRunes = gconv.Runes(in.Value.String())
-		valueLen   = len(valueRunes)
+		valueLen = getValueLength(in.Value)
 	)
 	var (
 		min   = 0

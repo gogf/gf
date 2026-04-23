@@ -11,7 +11,6 @@ import (
 	"strconv"
 
 	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // RuleMaxLength implements `max-length` rule:
@@ -34,10 +33,7 @@ func (r RuleMaxLength) Message() string {
 }
 
 func (r RuleMaxLength) Run(in RunInput) error {
-	var (
-		valueRunes = gconv.Runes(in.Value.String())
-		valueLen   = len(valueRunes)
-	)
+	var valueLen = getValueLength(in.Value)
 	max, err := strconv.Atoi(in.RulePattern)
 	if valueLen > max || err != nil {
 		return errors.New(gstr.Replace(in.Message, "{max}", strconv.Itoa(max)))

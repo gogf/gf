@@ -784,6 +784,25 @@ func Test_Size(t *testing.T) {
 	}
 }
 
+func Test_LengthRules_SliceAndArray(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(g.Validator().Data([]int{1, 2, 3}).Rules("size:3").Run(ctx))
+		t.AssertNE(g.Validator().Data([]int{1, 2, 3}).Rules("size:2").Run(ctx), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(g.Validator().Data([]int{1, 2, 3}).Rules("length:2,4").Run(ctx))
+		t.AssertNE(g.Validator().Data([]int{1, 2, 3}).Rules("length:4,5").Run(ctx), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(g.Validator().Data([3]int{1, 2, 3}).Rules("min-length:3").Run(ctx))
+		t.AssertNE(g.Validator().Data([3]int{1, 2, 3}).Rules("min-length:4").Run(ctx), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(g.Validator().Data([3]int{1, 2, 3}).Rules("max-length:3").Run(ctx))
+		t.AssertNE(g.Validator().Data([3]int{1, 2, 3}).Rules("max-length:2").Run(ctx), nil)
+	})
+}
+
 func Test_Between(t *testing.T) {
 	rule := "between:6.01, 10.01"
 	if m := g.Validator().Data(10).Rules(rule).Run(ctx); m != nil {
