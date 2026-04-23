@@ -32,7 +32,7 @@ func (r RuleEmail) Message() string {
 
 func (r RuleEmail) Run(in RunInput) error {
 	ok := gregex.IsMatchString(
-		`^[a-zA-Z0-9_\-\.]+@[a-zA-Z0-9_\-]+(\.[a-zA-Z0-9_\-]+)+$`,
+		`^[a-zA-Z0-9_\-.+]+@[a-zA-Z0-9_\-]+(\.[a-zA-Z0-9_\-]+)+$`,
 		in.Value.String(),
 	)
 	if ok {

@@ -350,10 +350,11 @@ func Test_DateFormat(t *testing.T) {
 func Test_Email(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := g.MapStrBool{
-			"m@johngcn":           false,
-			"m@www@johngcn":       false,
-			"m-m_m@mail.johng.cn": true,
-			"m.m-m@johng.cn":      true,
+			"m@johngcn":                     false,
+			"m@www@johngcn":                 false,
+			"m-m_m@mail.johng.cn":           true,
+			"m.m-m@johng.cn":                true,
+			"john.doe+newsletter@gmail.com": true,
 		}
 		for k, v := range m {
 			err := g.Validator().Data(k).Rules("email").Run(ctx)
