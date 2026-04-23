@@ -770,11 +770,11 @@ func Test_Issue1401(t *testing.T) {
 
 // https://github.com/gogf/gf/issues/1412
 func Test_Issue1412(t *testing.T) {
-	// Framework bug: With() uses Go struct field name ("Id") as the column name in
-	// WHERE clause instead of the mapped column name ("id"). PgSQL double-quoted identifiers
-	// are case-sensitive, so WHERE "Id"=0 fails with "column Id does not exist".
-	// This needs a fix in gdb's With() column-name resolution. TODO: create issue.
-	t.Skip("Framework bug: With() generates case-sensitive column name on PgSQL — needs core fix")
+	// PgSQL-adapted: MySQL version uses `with:Id=ItemId` (Go field name on left side),
+	// which only works because MySQL identifiers are case-insensitive. PgSQL double-quoted
+	// identifiers are case-sensitive per SQL standard, so the left side must be the actual
+	// DB column name ("id"). The right side ("ItemId") stays as a Go field name — the
+	// framework resolves it to the struct field via case-insensitive matching.
 	var (
 		table1 = "parcels"
 		table2 = "items"
@@ -799,7 +799,7 @@ func Test_Issue1412(t *testing.T) {
 			gmeta.Meta `orm:"table:parcels"`
 			Id         int   `json:"id"`
 			ItemId     int   `json:"item_id"`
-			Items      Items `json:"items" orm:"with:Id=ItemId"`
+			Items      Items `json:"items" orm:"with:id=ItemId"`
 		}
 
 		entity := &ParcelRsp{}
@@ -822,7 +822,7 @@ func Test_Issue1412(t *testing.T) {
 			gmeta.Meta `orm:"table:parcels"`
 			Id         int   `json:"id"`
 			ItemId     int   `json:"item_id"`
-			Items      Items `json:"items" orm:"with:Id=ItemId"`
+			Items      Items `json:"items" orm:"with:id=ItemId"`
 		}
 
 		entity := &ParcelRsp{}
