@@ -100,6 +100,24 @@ func Test_RequiredIfAll(t *testing.T) {
 	})
 }
 
+func Test_ExcludedIf(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		rule := "excluded-if:id,1,age,18"
+		t.AssertNE(g.Validator().Data("john").Assoc(g.Map{"id": 1, "age": 18}).Rules(rule).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"id": 1, "age": 18}).Rules(rule).Run(ctx), nil)
+		t.Assert(g.Validator().Data("john").Assoc(g.Map{"id": 1, "age": 20}).Rules(rule).Run(ctx), nil)
+	})
+}
+
+func Test_ExcludedUnless(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		rule := "excluded-unless:id,1,age,18"
+		t.Assert(g.Validator().Data("john").Assoc(g.Map{"id": 1, "age": 18}).Rules(rule).Run(ctx), nil)
+		t.AssertNE(g.Validator().Data("john").Assoc(g.Map{"id": 1, "age": 20}).Rules(rule).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"id": 1, "age": 20}).Rules(rule).Run(ctx), nil)
+	})
+}
+
 func Test_RequiredUnless(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "required-unless:id,1,age,18"
@@ -107,6 +125,27 @@ func Test_RequiredUnless(t *testing.T) {
 		t.AssertNE(g.Validator().Data("").Assoc(g.Map{"id": 0}).Rules(rule).Run(ctx), nil)
 		t.Assert(g.Validator().Data("").Assoc(g.Map{"age": 18}).Rules(rule).Run(ctx), nil)
 		t.AssertNE(g.Validator().Data("").Assoc(g.Map{"age": 20}).Rules(rule).Run(ctx), nil)
+	})
+}
+
+func Test_ExcludedWith(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		rule := "excluded-with:id,name"
+		val1 := "john"
+		params1 := g.Map{
+			"age": 18,
+		}
+		params2 := g.Map{
+			"id": 100,
+		}
+		params3 := g.Map{
+			"id":   100,
+			"name": "doe",
+		}
+		t.Assert(g.Validator().Data(val1).Assoc(params1).Rules(rule).Run(ctx), nil)
+		t.AssertNE(g.Validator().Data(val1).Assoc(params2).Rules(rule).Run(ctx), nil)
+		t.AssertNE(g.Validator().Data(val1).Assoc(params3).Rules(rule).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(params2).Rules(rule).Run(ctx), nil)
 	})
 }
 
@@ -199,6 +238,15 @@ func Test_RequiredWith(t *testing.T) {
 	})
 }
 
+func Test_ExcludedWithAll(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		rule := "excluded-with-all:id,name"
+		t.Assert(g.Validator().Data("john").Assoc(g.Map{"id": 100}).Rules(rule).Run(ctx), nil)
+		t.AssertNE(g.Validator().Data("john").Assoc(g.Map{"id": 100, "name": "doe"}).Rules(rule).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"id": 100, "name": "doe"}).Rules(rule).Run(ctx), nil)
+	})
+}
+
 func Test_RequiredWithAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "required-with-all:id,name"
@@ -222,6 +270,16 @@ func Test_RequiredWithAll(t *testing.T) {
 	})
 }
 
+func Test_ExcludedWithOut(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		rule := "excluded-without:id,name"
+		t.AssertNE(g.Validator().Data("john").Assoc(g.Map{"age": 18}).Rules(rule).Run(ctx), nil)
+		t.AssertNE(g.Validator().Data("john").Assoc(g.Map{"id": 100}).Rules(rule).Run(ctx), nil)
+		t.Assert(g.Validator().Data("john").Assoc(g.Map{"id": 100, "name": "doe"}).Rules(rule).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"age": 18}).Rules(rule).Run(ctx), nil)
+	})
+}
+
 func Test_RequiredWithOut(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "required-without:id,name"
@@ -242,6 +300,15 @@ func Test_RequiredWithOut(t *testing.T) {
 		t.AssertNE(err1, nil)
 		t.AssertNE(err2, nil)
 		t.Assert(err3, nil)
+	})
+}
+
+func Test_ExcludedWithOutAll(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		rule := "excluded-without-all:id,name"
+		t.AssertNE(g.Validator().Data("john").Assoc(g.Map{"age": 18}).Rules(rule).Run(ctx), nil)
+		t.Assert(g.Validator().Data("john").Assoc(g.Map{"id": 100}).Rules(rule).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"age": 18}).Rules(rule).Run(ctx), nil)
 	})
 }
 
@@ -364,6 +431,29 @@ func Test_Email(t *testing.T) {
 				t.AssertNE(err, nil)
 			}
 		}
+	})
+}
+
+func Test_StringMatchRules(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(g.Validator().Data("goframe").Rules("contains-any:xyzf").Run(ctx))
+		t.AssertNE(g.Validator().Data("goframe").Rules("contains-any:xyz").Run(ctx), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(g.Validator().Data("goframe").Rules("contains-rune:o").Run(ctx))
+		t.AssertNE(g.Validator().Data("goframe").Rules("contains-rune:z").Run(ctx), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(g.Validator().Data("goframe").Rules("excludes-all:xyz").Run(ctx))
+		t.AssertNE(g.Validator().Data("goframe").Rules("excludes-all:xyzf").Run(ctx), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(g.Validator().Data("goframe").Rules("starts-with:go").Run(ctx))
+		t.AssertNE(g.Validator().Data("goframe").Rules("starts-with:frame").Run(ctx), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(g.Validator().Data("goframe").Rules("starts-not-with:frame").Run(ctx))
+		t.AssertNE(g.Validator().Data("goframe").Rules("starts-not-with:go").Run(ctx), nil)
 	})
 }
 
@@ -804,6 +894,25 @@ func Test_Size(t *testing.T) {
 	if m := g.Validator().Data("123456").Rules(rule).Run(ctx); m == nil {
 		t.Error("长度校验失败")
 	}
+}
+
+func Test_Unique(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(g.Validator().Data([]int{1, 2, 3}).Rules("unique").Run(ctx))
+		t.AssertNE(g.Validator().Data([]int{1, 2, 2}).Rules("unique").Run(ctx), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(g.Validator().Data(map[string]int{"a": 1, "b": 2}).Rules("unique").Run(ctx))
+		t.AssertNE(g.Validator().Data(map[string]int{"a": 1, "b": 1}).Rules("unique").Run(ctx), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type user struct {
+			Id   int
+			Name string
+		}
+		t.AssertNil(g.Validator().Data([]user{{Id: 1}, {Id: 2}}).Rules("unique:Id").Run(ctx))
+		t.AssertNE(g.Validator().Data([]user{{Id: 1}, {Id: 1}}).Rules("unique:Id").Run(ctx), nil)
+	})
 }
 
 func Test_LengthRules_SliceAndArray(t *testing.T) {
