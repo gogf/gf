@@ -24,6 +24,7 @@
 "gf.gvalid.rule.ipv4"                 = "{field}字段值`{value}`IPv4地址格式不正确"
 "gf.gvalid.rule.ipv6"                 = "{field}字段值`{value}`IPv6地址格式不正确"
 "gf.gvalid.rule.mac"                  = "{field}字段值`{value}`MAC地址格式不正确"
+"gf.gvalid.rule.uuid"                 = "{field}字段值`{value}`UUID格式不正确"
 "gf.gvalid.rule.url"                  = "{field}字段值`{value}`URL地址格式不正确"
 "gf.gvalid.rule.domain"               = "{field}字段值`{value}`域名格式不正确"
 "gf.gvalid.rule.length"               = "{field}字段值`{value}`字段长度应当为{min}到{max}个字符"

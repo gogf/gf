@@ -23,6 +23,7 @@
 "gf.gvalid.rule.ipv4" =                  "The {field} value `{value}` is not a valid IPv4 address"
 "gf.gvalid.rule.ipv6" =                  "The {field} value `{value}` is not a valid IPv6 address"
 "gf.gvalid.rule.mac" =                   "The {field} value `{value}` is not a valid MAC address"
+"gf.gvalid.rule.uuid" =                  "The {field} value `{value}` is not a valid UUID"
 "gf.gvalid.rule.url" =                   "The {field} value `{value}` is not a valid URL address"
 "gf.gvalid.rule.domain" =                "The {field} value `{value}` is not a valid domain format"
 "gf.gvalid.rule.length" =                "The {field} value `{value}` length must be between {min} and {max}"

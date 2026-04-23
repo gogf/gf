@@ -366,6 +366,27 @@ func Test_Email(t *testing.T) {
 	})
 }
 
+func Test_UUID(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := g.MapStrBool{
+			"a323f910-f690-11ec-963d-79c0b7fcf119": true,
+			"A323F910-F690-11EC-963D-79C0B7FCF119": true,
+			"a323f910f69011ec963d79c0b7fcf119":     false,
+			"a323f910-f690-61ec-963d-79c0b7fcf119": false,
+			"a323f910-f690-11ec-763d-79c0b7fcf119": false,
+			"not-a-uuid":                           false,
+		}
+		for k, v := range m {
+			err := g.Validator().Data(k).Rules("uuid").Run(ctx)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
+	})
+}
+
 func Test_Phone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := g.MapStrBool{

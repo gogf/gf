@@ -734,6 +734,27 @@ func ExampleValidator_mac() {
 	// The Mac2 value `Z0-CC-6A-D6-B1-1A` is not a valid MAC address
 }
 
+func ExampleValidator_uuid() {
+	type BizReq struct {
+		UUID1 string `v:"uuid"`
+		UUID2 string `v:"uuid"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			UUID1: "a323f910-f690-11ec-963d-79c0b7fcf119",
+			UUID2: "a323f910f69011ec963d79c0b7fcf119",
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The UUID2 value `a323f910f69011ec963d79c0b7fcf119` is not a valid UUID
+}
+
 func ExampleValidator_url() {
 	type BizReq struct {
 		URL1 string `v:"url"`
