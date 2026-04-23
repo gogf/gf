@@ -50,6 +50,7 @@ const (
 	Status               = "status"          // Response status code, usually for OpenAPI in response struct.
 	ResponseExample      = "responseExample" // Response example resource path, usually for OpenAPI in response struct.
 	ResponseExampleShort = "resEg"           // Short name of ResponseExample.
+	ParseRule            = "parse"           // Parse rule tag of struct field for pre-processing request parameters before binding and validation.
 )
 
 // StructTagPriority defines the default priority tags for Map*/Struct* functions.

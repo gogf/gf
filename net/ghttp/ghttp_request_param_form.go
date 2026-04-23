@@ -105,5 +105,8 @@ func (r *Request) doGetFormStruct(pointer any, mapping ...map[string]string) (da
 	if err = r.mergeDefaultStructValue(data, pointer); err != nil {
 		return data, nil
 	}
+	if err = r.doParseRequestData(data, pointer, mapping...); err != nil {
+		return data, err
+	}
 	return data, gconv.Struct(data, pointer, mapping...)
 }

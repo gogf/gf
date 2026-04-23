@@ -43,6 +43,8 @@ var (
 // Parse is the most commonly used function, which converts request parameters to struct or struct
 // slice. It also automatically validates the struct or every element of the struct slice according
 // to the validation tag of the struct.
+// It also supports field-level pre-processing using struct tag `parse`, which is executed before
+// parameter binding and validation.
 //
 // The parameter `pointer` can be type of: *struct/**struct/*[]struct/*[]*struct.
 //
@@ -119,23 +121,58 @@ func (r *Request) doParse(pointer any, requestType int) error {
 	// Multiple struct, it only supports JSON type post content like:
 	// [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
 	case reflect.Array, reflect.Slice:
-		// If struct slice conversion, it might post JSON/XML/... content,
-		// so it uses `gjson` for the conversion.
-		j, err := gjson.LoadContent(r.GetBody())
-		if err != nil {
+		if err := r.doParseArray(pointer, reflectVal2); err != nil {
 			return err
 		}
-		if err = j.Var().Scan(pointer); err != nil {
+	}
+	return nil
+}
+
+func (r *Request) doParseArray(pointer any, reflectVal reflect.Value) error {
+	arrayItemType, err := getParseStructArrayItemType(pointer)
+	if err != nil || arrayItemType.Kind() != reflect.Struct {
+		return r.doParseArrayWithJSON(pointer, reflectVal)
+	}
+	data, err := r.doParseArrayData(pointer)
+	if err != nil {
+		return err
+	}
+	if err = gconv.Scan(data, pointer); err != nil {
+		return err
+	}
+	for i := 0; i < reflectVal.Len(); i++ {
+		assocData := map[string]any{}
+		if i < len(data) {
+			assocData = data[i]
+		}
+		if err = gvalid.New().
+			Bail().
+			Data(reflectVal.Index(i)).
+			Assoc(assocData).
+			Run(r.Context()); err != nil {
 			return err
 		}
-		for i := 0; i < reflectVal2.Len(); i++ {
-			if err = gvalid.New().
-				Bail().
-				Data(reflectVal2.Index(i)).
-				Assoc(j.Get(gconv.String(i)).Map()).
-				Run(r.Context()); err != nil {
-				return err
-			}
+	}
+	return nil
+}
+
+func (r *Request) doParseArrayWithJSON(pointer any, reflectVal reflect.Value) error {
+	// If struct slice conversion, it might post JSON/XML/... content,
+	// so it uses `gjson` for the conversion.
+	j, err := gjson.LoadContent(r.GetBody())
+	if err != nil {
+		return err
+	}
+	if err = j.Var().Scan(pointer); err != nil {
+		return err
+	}
+	for i := 0; i < reflectVal.Len(); i++ {
+		if err = gvalid.New().
+			Bail().
+			Data(reflectVal.Index(i)).
+			Assoc(j.Get(gconv.String(i)).Map()).
+			Run(r.Context()); err != nil {
+			return err
 		}
 	}
 	return nil

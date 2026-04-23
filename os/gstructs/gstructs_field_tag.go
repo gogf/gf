@@ -95,6 +95,11 @@ func (f *Field) TagIn() string {
 	return v
 }
 
+// TagParse returns the most commonly used tag `parse` value of the field.
+func (f *Field) TagParse() string {
+	return f.Tag(gtag.ParseRule)
+}
+
 // TagPriorityName checks and returns tag name that matches the name item in `gtag.StructTagPriority`.
 // It or else returns attribute field Name if it doesn't have a tag name by `gtag.StructsTagPriority`.
 func (f *Field) TagPriorityName() string {

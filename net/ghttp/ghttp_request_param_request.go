@@ -188,6 +188,10 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 		return data, nil
 	}
 
+	if err = r.doParseRequestData(data, pointer, mapping...); err != nil {
+		return data, err
+	}
+
 	return data, gconv.Struct(data, pointer, mapping...)
 }
 
