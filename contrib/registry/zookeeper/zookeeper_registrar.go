@@ -18,6 +18,13 @@ import (
 	"github.com/gogf/gf/v2/net/gsvc"
 )
 
+// serviceInstanceLeaf returns a unique ZooKeeper leaf node name for the service instance.
+// It is derived from the service's endpoints so that multiple instances of the same service
+// can coexist as separate children under the service prefix path.
+func serviceInstanceLeaf(service gsvc.Service) string {
+	return strings.NewReplacer(":", "-", ",", "_").Replace(service.GetEndpoints().String())
+}
+
 // Register registers `service` to Registry.
 // Note that it returns a new Service if it changes the input Service with custom one.
 func (r *Registry) Register(_ context.Context, service gsvc.Service) (gsvc.Service, error) {
@@ -51,7 +58,7 @@ func (r *Registry) Register(_ context.Context, service gsvc.Service) (gsvc.Servi
 			"Error with marshal Content to Json string",
 		)
 	}
-	servicePath := path.Join(servicePrefixPath, service.GetName())
+	servicePath := path.Join(servicePrefixPath, serviceInstanceLeaf(service))
 	if err = r.ensureName(servicePath, data, zk.FlagEphemeral); err != nil {
 		return service, gerror.Wrapf(
 			err,
@@ -67,7 +74,7 @@ func (r *Registry) Register(_ context.Context, service gsvc.Service) (gsvc.Servi
 func (r *Registry) Deregister(ctx context.Context, service gsvc.Service) error {
 	ch := make(chan error, 1)
 	prefix := strings.Trim(strings.ReplaceAll(service.GetPrefix(), "/", "-"), "-")
-	servicePath := path.Join(r.opts.namespace, prefix, service.GetName())
+	servicePath := path.Join(r.opts.namespace, prefix, serviceInstanceLeaf(service))
 	go func() {
 		err := r.conn.Delete(servicePath, -1)
 		ch <- err
@@ -94,8 +101,10 @@ func (r *Registry) ensureName(path string, data []byte, flags int32) error {
 		)
 	}
 	// ephemeral nodes handling after restart
-	// fixes a race condition if the server crashes without using CreateProtectedEphemeralSequential()
-	if flags&zk.FlagEphemeral == zk.FlagEphemeral {
+	// fixes a race condition if the server crashes without using CreateProtectedEphemeralSequential().
+	// Only delete when the node already exists to avoid nil dereference on stat and to prevent
+	// a new instance from deleting a sibling instance's node registered at the same path.
+	if exists && flags&zk.FlagEphemeral == zk.FlagEphemeral {
 		err = r.conn.Delete(path, stat.Version)
 		if err != nil && err != zk.ErrNoNode {
 			return gerror.Wrapf(err,
