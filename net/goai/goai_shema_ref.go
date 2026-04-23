@@ -52,6 +52,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 			Format:      oaiFormat,
 			XExtensions: make(XExtensions),
 		}
+		enumItemsForXExt []gtag.EnumItem
 	)
 	if pkgPath == "" {
 		switch golangType.Kind() {
@@ -72,10 +73,17 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 	for _, enumItem := range enumItems {
 		schema.Enum = append(schema.Enum, enumItem.Value)
 	}
+	enumItemsForXExt = enumItems
 
 	if len(tagMap) > 0 {
 		if err = oai.tagMapToSchema(tagMap, schema); err != nil {
 			return nil, err
+		}
+		if validationRules, ok := oai.getValidationRulesFromTagMap(tagMap); ok {
+			if enumValues := oai.getEnumValuesFromValidationRules(validationRules); len(enumValues) > 0 {
+				oai.setSchemaEnumByValidationRules(schema, validationRules)
+				enumItemsForXExt = filterEnumItemsByValues(enumItems, enumValues)
+			}
 		}
 		if oaiType == TypeArray && schema.Type == TypeFile {
 			schema.Type = TypeArray
@@ -176,7 +184,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 			}
 		}
 	}
-	oai.buildEnumValueXExtensions(typeId, schema, enumItems)
+	oai.buildEnumValueXExtensions(typeId, schema, enumItemsForXExt)
 	return schemaRef, nil
 }
 
@@ -207,6 +215,23 @@ func (oai *OpenApiV3) buildEnumValueXExtensions(typeId string, schema *Schema, e
 		}
 		targetSchema.XExtensions[extensionKey] = extensionValue
 	}
+}
+
+func filterEnumItemsByValues(enumItems []gtag.EnumItem, enumValues []string) []gtag.EnumItem {
+	if len(enumItems) == 0 || len(enumValues) == 0 {
+		return nil
+	}
+	itemMap := make(map[string]gtag.EnumItem, len(enumItems))
+	for _, item := range enumItems {
+		itemMap[gconv.String(item.Value)] = item
+	}
+	items := make([]gtag.EnumItem, 0, len(enumValues))
+	for _, enumValue := range enumValues {
+		if item, ok := itemMap[enumValue]; ok {
+			items = append(items, item)
+		}
+	}
+	return items
 }
 
 func (r SchemaRef) MarshalJSON() ([]byte, error) {

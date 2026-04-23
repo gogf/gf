@@ -1387,6 +1387,68 @@ func Test_Enums_WithEnumXExtensionFunc(t *testing.T) {
 	})
 }
 
+func Test_Enums_WithInTag_SubsetForEnumXExtensionFunc(t *testing.T) {
+	type Status string
+	const (
+		StatusA Status = "a"
+		StatusB Status = "b"
+		StatusC Status = "c"
+	)
+	type Req struct {
+		gmeta.Meta `path:"/CreateResourceReq" method:"POST" tags:"default"`
+		Status1    Status   `dc:"状态1" v:"in:a,c" json:",omitempty"`
+		Status2    []Status `dc:"状态2" v:"in:b" json:",omitempty"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+			req = new(Req)
+		)
+		err = gtag.SetGlobalEnums(gjson.MustEncodeString(g.Map{
+			"github.com/gogf/gf/v2/net/goai_test.Status": []any{
+				g.Map{"value": StatusA, "comment": "状态A"},
+				g.Map{"value": StatusB, "comment": "状态B"},
+				g.Map{"value": StatusC, "comment": "状态C"},
+			},
+		}))
+		t.AssertNil(err)
+
+		oai.AddEnumXExtensionFunc(func(in goai.EnumXExtensionInput) map[string]any {
+			var apifoxEnum = make([]map[string]any, 0, len(in.Items))
+			for _, item := range in.Items {
+				apifoxEnum = append(apifoxEnum, map[string]any{
+					"value": item.Value,
+					"name":  item.Comment,
+				})
+			}
+			return map[string]any{
+				"x-apifox-enum": apifoxEnum,
+			}
+		})
+
+		err = oai.Add(goai.AddInput{
+			Object: req,
+		})
+		t.AssertNil(err)
+
+		var reqKey = "github.com.gogf.gf.v2.net.goai_test.Req"
+		status1 := oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Status1").Value
+		t.Assert(status1.Enum, g.Slice{"a", "c"})
+		t.Assert(status1.XExtensions["x-apifox-enum"], g.Slice{
+			g.Map{"value": "a", "name": "状态A"},
+			g.Map{"value": "c", "name": "状态C"},
+		})
+
+		status2 := oai.Components.Schemas.Get(reqKey).Value.Properties.Get("Status2").Value.Items.Value
+		t.Assert(status2.Enum, g.Slice{"b"})
+		t.Assert(status2.XExtensions["x-apifox-enum"], g.Slice{
+			g.Map{"value": "b", "name": "状态B"},
+		})
+	})
+}
+
 func Test_TypeMapping(t *testing.T) {
 	type Carbon struct {
 		Timestamp int64 `json:"timestamp"`

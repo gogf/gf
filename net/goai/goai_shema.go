@@ -276,34 +276,50 @@ func (oai *OpenApiV3) tagMapToSchema(tagMap map[string]string, schema *Schema) e
 	}
 	oai.tagMapToXExtensions(mergedTagMap, schema.XExtensions)
 	// Validation info to OpenAPI schema pattern.
-	for _, tag := range gvalid.GetTags() {
-		if validationTagValue, ok := tagMap[tag]; ok {
-			_, validationRules, _ := gvalid.ParseTagValue(validationTagValue)
-			schema.ValidationRules = validationRules
-			// Enum checks.
-			if len(schema.Enum) == 0 {
-				for _, rule := range gstr.SplitAndTrim(validationRules, "|") {
-					if gstr.HasPrefix(rule, validationRuleKeyForIn) {
-						var (
-							isAllEnumNumber = true
-							enumArray       = gstr.SplitAndTrim(rule[len(validationRuleKeyForIn):], ",")
-						)
-						for _, enum := range enumArray {
-							if !gstr.IsNumeric(enum) {
-								isAllEnumNumber = false
-								break
-							}
-						}
-						if isAllEnumNumber {
-							schema.Enum = gconv.Interfaces(gconv.Int64s(enumArray))
-						} else {
-							schema.Enum = gconv.Interfaces(enumArray)
-						}
-					}
-				}
-			}
-			break
+	if validationRules, ok := oai.getValidationRulesFromTagMap(tagMap); ok {
+		schema.ValidationRules = validationRules
+		// Enum checks.
+		if len(schema.Enum) == 0 {
+			oai.setSchemaEnumByValidationRules(schema, validationRules)
 		}
 	}
 	return nil
+}
+
+func (oai *OpenApiV3) getValidationRulesFromTagMap(tagMap map[string]string) (string, bool) {
+	for _, tag := range gvalid.GetTags() {
+		if validationTagValue, ok := tagMap[tag]; ok {
+			_, validationRules, _ := gvalid.ParseTagValue(validationTagValue)
+			return validationRules, true
+		}
+	}
+	return "", false
+}
+
+func (oai *OpenApiV3) getEnumValuesFromValidationRules(validationRules string) []string {
+	for _, rule := range gstr.SplitAndTrim(validationRules, "|") {
+		if gstr.HasPrefix(rule, validationRuleKeyForIn) {
+			return gstr.SplitAndTrim(rule[len(validationRuleKeyForIn):], ",")
+		}
+	}
+	return nil
+}
+
+func (oai *OpenApiV3) setSchemaEnumByValidationRules(schema *Schema, validationRules string) {
+	enumArray := oai.getEnumValuesFromValidationRules(validationRules)
+	if len(enumArray) == 0 {
+		return
+	}
+	var isAllEnumNumber = true
+	for _, enum := range enumArray {
+		if !gstr.IsNumeric(enum) {
+			isAllEnumNumber = false
+			break
+		}
+	}
+	if isAllEnumNumber {
+		schema.Enum = gconv.Interfaces(gconv.Int64s(enumArray))
+	} else {
+		schema.Enum = gconv.Interfaces(enumArray)
+	}
 }
