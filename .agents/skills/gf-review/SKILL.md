@@ -1,13 +1,13 @@
 ---
-name: openspec-review
+name: gf-review
 description: >-
   Code and specification review for OpenSpec workflow. Triggers automatically after /opsx:apply
-  task completion, after /opsx:feedback task completion, and before /opsx:archive. Use when
-  user requests code review, spec compliance check, or when explicitly invoked via /openspec-review.
-compatibility: Requires OpenSpec CLI, GoFrame v2 skill, openspec-e2e skill.
+  task completion, after /gf-feedback task completion, and before /opsx:archive. Use when
+  user requests code review, spec compliance check, or when explicitly invoked via /gf-review.
+compatibility: Requires OpenSpec CLI and GoFrame v2 skill.
 ---
 
-# OpenSpec Review
+# GF Review
 
 Structured code and specification review for the OpenSpec development workflow.
 
@@ -19,11 +19,11 @@ Structured code and specification review for the OpenSpec development workflow.
 
 **Automatic triggers:**
 - After completing each task in `/opsx:apply`
-- After completing each task in `/opspec-feedback`
+- After completing each task in `/gf-feedback`
 - Before executing `/opsx:archive`
 
 **Manual trigger:**
-- User explicitly requests: "review this code", "check spec compliance", "/openspec-review"
+- User explicitly requests: "review this code", "check spec compliance", "/gf-review"
 
 ---
 
@@ -94,17 +94,19 @@ Check against `CLAUDE.md` SQL file management specifications, at minimum coverin
 4. **Seed write style compliance** — delivered SQL must reject `INSERT ... ON DUPLICATE KEY UPDATE` and reject explicit writes to `AUTO_INCREMENT` `id` columns in seed/mock/install data
 5. Whether schema/data changes still match the current change scope and deployment path
 
-### 7. E2E Test Review
+### 7. Unit Test Review
 
-**Trigger**: New or modified E2E test files in `hack/tests/e2e/` directory
+**Trigger**: New or modified Go implementation files, or new/modified Go unit test files matching `*_test.go`
 
-1. Invoke `openspec-e2e` skill for test conventions
-2. Check against `CLAUDE.md` E2E test specifications
+Check at minimum:
+1. Behavior-changing Go code includes focused unit coverage in the same package, preferably by extending existing `*_z_unit*_test.go` or `*_test.go`
+2. Tests assert the changed logic directly instead of relying on broad workflow-level coverage when a package-level test is sufficient
+3. Verification uses targeted `go test ./path/to/pkg -run TestName` during development and package-level `go test ./path/to/pkg` for regression
 
 ### 8. Generate Review Report
 
 ```markdown
-## OpenSpec Review Report
+## GF Review Report
 
 **Change:** <change-name>
 **Scope:** <task-specific / full change>
@@ -123,8 +125,8 @@ Check against `CLAUDE.md` SQL file management specifications, at minimum coverin
 ### SQL Review
 ✓ No SQL changes / ✓ SQL changes compliant / ⚠ N SQL issues found
 
-### E2E Test Review
-✓ Tests follow conventions / ⚠ N issues found
+### Unit Test Review
+✓ Unit tests are focused and sufficient / ⚠ N issues found
 
 ### Summary
 - **Critical:** N (must fix before archive)
@@ -150,7 +152,7 @@ Check against `CLAUDE.md` SQL file management specifications, at minimum coverin
 | Workflow Step | Behavior |
 |---------------|----------|
 | `/opsx:apply` task done | Review, offer to fix issues before next task |
-| `/opspec-feedback` task done | Review, fix before marking complete |
+| `/gf-feedback` task done | Review, fix before marking complete |
 | `/opsx:archive` | Review all changes, block on critical issues |
 
 ---
@@ -160,6 +162,7 @@ Check against `CLAUDE.md` SQL file management specifications, at minimum coverin
 - **CLAUDE.md is the single source of truth** — All spec references point to it
 - Only check categories relevant to changed files
 - Scope identification MUST include untracked files and expanded untracked directories; never rely on `git diff` alone
+- Behavior-changing Go code without focused unit tests is a review finding unless the author documents why tests are not applicable
 - Don't block on warnings — only critical issues block archive
 - Include file paths and line numbers in issue reports
 - Offer to fix issues automatically when straightforward

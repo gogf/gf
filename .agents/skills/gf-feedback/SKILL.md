@@ -1,20 +1,20 @@
 ---
-name: openspec-feedback
+name: gf-feedback
 description: >-
   Track, fix, verify, and test any bugs, improvements, or gaps reported against an OpenSpec change.
   MUST use this skill whenever user reports problems, defects, issues, bugs, or gaps related to
   existing implementations, even if they don't explicitly say "feedback" or mention OpenSpec.
-compatibility: Requires openspec CLI, openspec-e2e skill, openspec-review skill.
+compatibility: Requires openspec CLI, Go toolchain, and gf-review skill.
 ---
 
 # Feedback: Structured Fix, Verification & Test Coverage Loop
 
-When users discover bugs or improvement points after implementation, this skill captures those issues, organizes them into a traceable task list in `tasks.md`, systematically fixes and verifies each one, and ensures every fix is covered by E2E tests.
+When users discover bugs or improvement points after implementation, this skill captures those issues, organizes them into a traceable task list in `tasks.md`, systematically fixes and verifies each one, and ensures every behavior-changing fix is covered by focused unit tests.
 
 **Core principles:**
 1. **Spec is the source of truth** — Spec-level changes require spec update before task recording
 2. **Write it down first, then fix it** — Every issue gets recorded before any code change
-3. **Every fix deserves a test** — User-observable behavior changes require E2E test coverage
+3. **Every fix deserves a test** — Behavior-changing code changes require unit test coverage in the affected package
 
 ---
 
@@ -75,8 +75,8 @@ Announce: "Applying feedback fixes to change: **<name>**"
 | `specs/` | Delta spec definitions |
 
 ```bash
-# Find highest TC ID for test planning
-find hack/tests/e2e -name 'TC*.ts' | sort | tail -1
+# Locate existing unit tests in the impacted package before adding a new one
+rg --files <pkg-dir> | rg '_test\\.go$'
 ```
 
 ---
@@ -153,9 +153,9 @@ Append a **Feedback section** to `tasks.md`:
 **Confirm with user** before writing to file.
 
 **Test coverage planning (internal):**
-- User-observable behavior change → Test required
-- Internal-only optimization → Test optional
-- Prefer sub-assertions in existing TC when scenario fits
+- Behavior-changing code change → Unit test required
+- Internal-only optimization → Unit test optional unless logic risk increased
+- Prefer extending the nearest `*_z_unit*_test.go` or `*_test.go` in the same package
 
 ---
 
@@ -169,7 +169,7 @@ For each task:
 
 **c. Implement** — Minimal, focused fix following existing patterns
 
-**d. Write/update E2E tests** — Follow `openspec-e2e` conventions
+**d. Write/update unit tests** — Prefer the affected package's existing `*_z_unit*_test.go` or `*_test.go` files and keep assertions focused on the changed logic
 
 **e. Assess Impact Scope (MANDATORY)**
 
@@ -177,36 +177,37 @@ After implementing, identify regression risk:
 
 | Change Type | Map To Tests |
 |-------------|--------------|
-| Backend API endpoint | All frontend pages calling that endpoint |
-| Shared component/utility | All pages using that component |
-| DB schema/DAO | All features reading/writing affected tables |
-| Auth/permission | All auth tests + permission-dependent tests |
-| Page-specific | All tests under that module directory |
+| Package-level logic | Targeted test for changed function/method + package regression tests |
+| Shared utility | Utility package unit tests + highest-value dependent package tests already covering reuse |
+| DB/DAO logic | DAO/model package unit tests with focused fixtures, mocks, or test helpers |
+| Public API validation | Handler/service package unit tests that assert the changed validation path |
+| Refactor without behavior change | Existing package tests that prove behavior parity |
 
 ```bash
-# Example: Find tests for user API changes
-grep -r "api/user" hack/tests/e2e --include="*.ts" -l
+# Example: Find unit tests related to a changed symbol or package
+rg -l "GenDao|gdao" . -g '*_test.go'
 ```
 
 Announce:
 ```
 ### Impact Analysis for FB-X
-- Modified: apps/lina-core/internal/controller/menu.go
-- Affected modules: menu management
-- Regression tests: TC0005-menu-tree.ts, TC0006-menu-crud.ts
+- Modified: cmd/gf/internal/cmd/gendao/gendao.go
+- Affected package: cmd/gf/internal/cmd/gendao
+- Unit tests: cmd/gf/internal/cmd/gendao/gendao_test.go
+- Regression command: go test ./cmd/gf/internal/cmd/gendao -run 'TestGenDao'
 ```
 
 **f. Verify (MANDATORY before marking complete)**
 
-1. Run new/updated E2E tests for this task → **must pass**
-2. Run ALL identified regression tests → **must pass**
+1. Run new/updated unit tests for this task → **must pass**
+2. Run ALL identified package-level regression tests → **must pass**
 3. Only then: mark task `[x]` in tasks.md
 
 If regression fails:
 - Fix inline if related to current change
 - Add as new FB task if separate issue
 
-**g. Run review** — Invoke `openspec-review` skill after completion
+**g. Run review** — Invoke `gf-review` skill after completion
 
 ---
 
@@ -237,13 +238,13 @@ If failures → add new FB tasks, loop to Step 6.
 **Change:** <name>
 **Issues reported:** X
 **Issues fixed:** Y/X
-**Tests added:** Z new test cases / sub-assertions
-**Regression tests run:** R tests across N modules
+**Tests added:** Z unit tests / focused assertions
+**Regression tests run:** R tests across N packages
 **Verification:** all passed / N issues remaining
 
 ### Fixed This Session
-- [x] FB-1: <title> ✓ (test: TC0010a | regression: TC0005, TC0006 ✓)
-- [x] FB-2: <title> ✓ (test: existing coverage | regression: TC0003 ✓)
+- [x] FB-1: <title> ✓ (unit test: TestGenDao_FiltersInvalidTables | package: ./cmd/gf/internal/cmd/gendao ✓)
+- [x] FB-2: <title> ✓ (unit test: existing package coverage extended | package: ./cmd/gf/internal/cmd ✓)
 
 ### Remaining (if any)
 - [ ] FB-3: <title> — blocked by <reason>
@@ -259,7 +260,7 @@ If failures → add new FB tasks, loop to Step 6.
 | Missing test cases only | Classify as test-gap, implement tests |
 | Fix reveals more issues | Add as new FB tasks |
 | "Bug" is actually feature request | Re-classify as spec-level, update specs first |
-| Test not feasible (timing, infra) | Verify via full suite, note reason in summary |
+| Unit test not feasible (docs/spec only) | Note reason explicitly and skip only when no runtime code changes exist |
 | Multiple feedback rounds | All tasks in single Feedback section, sequential numbering |
 
 ---
@@ -271,9 +272,9 @@ If failures → add new FB tasks, loop to Step 6.
 - **Write tasks before fixing** — Never code without recording
 - **Confirm task list with user** — User validates analysis
 - **Minimal fixes** — No refactoring beyond issue scope
-- **User-visible fix needs test** — No exceptions unless technically infeasible
-- **No green check without green tests** — Mark `[x]` only after tests pass
-- **Impact analysis mandatory** — Every fix requires regression test identification
+- **Behavior-changing fix needs unit test** — No exceptions unless the change is docs/spec only
+- **No green check without green unit tests** — Mark `[x]` only after tests pass
+- **Impact analysis mandatory** — Every fix requires package-level regression test identification
 - **Regression failures block completion** — Must resolve before marking done
 - **Update tasks.md in real time** — Mark complete immediately after verification
 - **Match file language** — Use same language as existing content in target file
