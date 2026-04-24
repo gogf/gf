@@ -1,21 +1,21 @@
 ---
-name: "规范化编写markdown文档格式"
-description: "规范化所有markdown文档的格式，确保文档结构清晰，内容易读，提升整体质量和用户体验。本文档详细说明了标题层级、段落格式、代码块使用、列表格式、图片和链接插入等方面的规范要求，旨在帮助作者统一文档风格，便于读者理解和查阅相关内容。通过遵循这些格式规范，能够有效提升markdown文档的专业性和可维护性。"
+name: "Standardize markdown document formatting"
+description: "Standardize the formatting of all markdown documents to keep structure clear, content readable, and the overall quality and user experience consistent. This document explains requirements for heading levels, paragraph formatting, code block usage, list formatting, and image and link insertion so authors can follow a unified style that is easier to read and maintain."
 applyTo: "*.md"
 ---
 
-# 文档主要格式要求
+# Primary Formatting Requirements
 
-- 文档内容中的关键字需要使用代码块格式展示，例如RuntimeClass、containerd、GPU、AI等，需要修改为`RuntimeClass`、`containerd`、`GPU`、`AI`格式。
-- 高亮代码块左右两边不要加空格。例如"使用`RuntimeClass`组件"而不是"使用 `RuntimeClass` 组件"。
-- 如果是编写技术类的文章，最后需要审查生成的文章内容，保证文章内容符合技术事实，不允许出现错误的技术描述。
-- 当生成的内容过多时，需要拆分为多个任务执行，以避免单次回复内容过多超过模型限制导致整个流程失败。
+- Keywords or specialized terms in the document must be formatted with inline code, for example `RuntimeClass`, `containerd`, `GPU`, and `AI`.
+- In Chinese text, do not add spaces around inline code.
+- For technical articles, review the generated content before finalizing it to ensure the material is technically accurate and contains no incorrect technical descriptions.
+- When the generated content is too large, split it into multiple tasks to avoid exceeding model output limits and causing the workflow to fail.
 
 
-# 文档内容细节要求
+# Detailed Content Requirements
 
-- 如果文档中涉及到对某个组件、项目的参数或者配置项介绍时，尽可能使用表格形式展示，并且表格长度不能过长防止阅读时页面出现滚动条。
-- 在中文段落中的符号使用中文全角符号而不是半角覆盖，例如使用`，`而不是`,`、使用`；`而不是`;`等。
-- 文章中的架构图、流程图等类型的图示中，必须使用`mermaid`来展示图形。在`mermaid`图形中如果使用换行，不要使用`\n`符号，而是使用`<br/>`标签。
-- 文章中的代码块如果不是`mermaid`图形，而是使用使用`┌─`、`┐`、`┤`、`│`等字符表格展示时，那么统一使用英文内容，以便表格能够对齐。
-- 段落间不要出现`---`的分割线。
+- When documenting parameters or configuration items for a component or project, prefer tables when practical, and keep tables short enough to avoid horizontal scrolling during normal reading.
+- In Chinese paragraphs, use full-width punctuation rather than half-width punctuation, for example `，` instead of `,` and `；` instead of `;`.
+- Use `mermaid` for architecture diagrams, flowcharts, and similar visuals. If you need line breaks inside `mermaid`, use `<br/>` instead of `\n`.
+- If a code block is not a `mermaid` diagram and instead uses box-drawing characters such as `┌─`, `┐`, `┤`, or `│`, keep the content in English so the layout stays aligned.
+- Do not use `---` as a separator between paragraphs.

@@ -58,6 +58,13 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
+# Documentation Writing Rules
+
+Technical documentation such as `README.md` must follow `.agents/instructions/markdown-format.instructions.md`.
+
+- All directory-level primary documentation files in the repository must use the English `README.md` and provide a matching Chinese mirror in `README.zh_CN.md`.
+- When adding a new directory documentation file, create both `README.md` and `README.zh_CN.md` in the same change. Maintaining only one language version is not allowed.
+
 # Development Workflow Rules
 
 This project follows `SDD` and uses the `OpenSpec` tool to drive implementation. Change records are stored under `openspec/changes/`. Each change includes `proposal.md`, `design.md`, `specs/`, and `tasks.md`.
