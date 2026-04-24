@@ -1,6 +1,6 @@
 ---
 name: git-commit-push
-description: Review the current git working tree, generate a commit message from the actual diff using the repository's commit or PR-title convention, commit all current changes on the active branch, and push that branch to `origin`. Use this whenever the user asks to "commit", "push", "提交并推送", "generate a commit message", "提交当前修改", or wants the current branch changes sent upstream without hand-writing the git commands.
+description: Review the current git working tree, generate a commit message from the actual diff using the repository's commit or PR-title convention, commit all current changes on the active branch, and push that branch to `origin`. Use this whenever the user asks to "commit", "push", "commit and push", "generate a commit message", "commit the current changes", or wants the current branch changes sent upstream without hand-writing the git commands.
 ---
 
 # Git Commit Push
@@ -14,7 +14,7 @@ This skill is for execution, not just advice. When it triggers, actually run the
 - The user asks you to commit the current changes, with or without asking for push
 - The user wants you to write the commit message from the diff instead of inventing one up front
 - The user mentions the repo's PR or commit naming convention and wants you to follow it
-- The user says things like "提交当前分支", "帮我 commit", "commit and push", "生成 commit message 并推送", or "把这些修改发到 origin"
+- The user says things like "commit the current branch", "help me commit", "commit and push", "generate a commit message and push", or "send these changes to origin"
 
 ## Core Behavior
 
@@ -94,7 +94,7 @@ When you use this skill:
 User request:
 
 ```text
-帮我按照仓库规范生成 commit message，然后提交并推送当前分支
+Generate a commit message that follows this repository's convention, then commit and push the current branch
 ```
 
 Expected behavior:
