@@ -36,7 +36,7 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 		}
 		var (
 			newTableName        = in.NewTableNames[i]
-			doFilePath          = gfile.Join(dirPathDo, gstr.CaseSnake(newTableName)+".go")
+			doFilePath          = gfile.Join(dirPathDo, formatFileName(newTableName, in.FileNameCase)+".go")
 			structDefinition, _ = generateStructDefinition(ctx, generateStructDefinitionInput{
 				CGenDaoInternalInput: in,
 				TableName:            tableName,

@@ -13,7 +13,6 @@ import (
 
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gview"
-	"github.com/gogf/gf/v2/text/gstr"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
@@ -32,7 +31,7 @@ func generateEntity(ctx context.Context, in CGenDaoInternalInput) {
 
 		var (
 			newTableName                    = in.NewTableNames[i]
-			entityFilePath                  = filepath.FromSlash(gfile.Join(dirPathEntity, gstr.CaseSnake(newTableName)+".go"))
+			entityFilePath                  = filepath.FromSlash(gfile.Join(dirPathEntity, formatFileName(newTableName, in.FileNameCase)+".go"))
 			structDefinition, appendImports = generateStructDefinition(ctx, generateStructDefinitionInput{
 				CGenDaoInternalInput: in,
 				TableName:            tableName,
