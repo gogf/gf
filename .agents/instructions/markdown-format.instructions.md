@@ -1,7 +1,7 @@
 ---
 name: "Standardize markdown document formatting"
 description: "Standardize the formatting of all markdown documents to keep structure clear, content readable, and the overall quality and user experience consistent. This document explains requirements for heading levels, paragraph formatting, code block usage, list formatting, and image and link insertion so authors can follow a unified style that is easier to read and maintain."
-applyTo: "*.md"
+applyTo: "*.{md,MD}"
 ---
 
 # Primary Formatting Requirements
