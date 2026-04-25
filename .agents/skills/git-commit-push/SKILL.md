@@ -32,28 +32,71 @@ This skill is for execution, not just advice. When it triggers, actually run the
 
 ## Commit Message Rules
 
-Prefer a single-line subject unless the user explicitly asks for a body.
+The commit message is formatted as follows: `<type>[optional scope]: <description>` For example, `fix(os/gtime): fix time zone issue`
+  + `<type>` is mandatory and can be one of `fix`, `feat`, `build`, `ci`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
+    + `fix`: Used when a bug has been fixed.
+    + `feat`: Used when a new feature has been added.
+    + `build`: Used for modifications to the project build system, such as changes to dependencies, external interfaces, or upgrading Node version.
+    + `ci`: Used for modifications to continuous integration processes, such as changes to Travis, Jenkins workflow configurations.
+    + `docs`: Used for modifications to documentation, such as changes to README files, API documentation, etc.
+    + `style`: Used for changes to code style, such as adjustments to indentation, spaces, blank lines, etc.
+    + `refactor`: Used for code refactoring, such as changes to code structure, variable names, function names, without altering functionality.
+    + `perf`: Used for performance optimization, such as improving code performance, reducing memory usage, etc.
+    + `test`: Used for modifications to test cases, such as adding, deleting, or modifying test cases for code.
+    + `chore`: Used for modifications to non-business-related code, such as changes to build processes or tool configurations.
+  + After `<type>`, specify the affected package name or scope in parentheses, for example, `(os/gtime)`.
+  + The part after the colon uses the verb tense + phrase that completes the blank in
+  + Lowercase verb after the colon
+  + No trailing period
+  + Keep the title as short as possible. ideally under 76 characters or shorter
++ If there is a corresponding issue, add either `fixes #1234` (the latter if this is not a complete fix) to this comment
 
-When `.github/PULL_REQUEST_TEMPLATE.MD` exists, follow its title rules:
+### Examples
+#### Commit message with description and breaking change footer
+```
+feat: allow provided config object to extend other configs
+BREAKING CHANGE: `extends` key in config file is now used for extending other config files
+```
 
-- Use `<type>[optional scope]: <description>`
-- Choose `type` from the allowed list in the template
-- Pick a scope from the dominant changed package, module, directory, or feature area when it is clear
-- Use a lowercase verb after the colon
-- Do not end the subject with a period
-- Keep it short, ideally 76 characters or fewer
+#### Commit message with ! to draw attention to breaking change
+```
+feat!: send an email to the customer when a product is shipped
+```
 
-Map the diff to the narrowest honest type:
+#### Commit message with scope and ! to draw attention to breaking change
+```
+feat(api)!: send an email to the customer when a product is shipped
+```
 
-- `feat` for a new user-facing capability
-- `fix` for a bug fix
-- `docs` for documentation-only changes
-- `test` for test-only changes
-- `refactor` for structural cleanup without behavior change
-- `chore` for tooling, repo maintenance, or housekeeping changes
-- `build`, `ci`, `style`, or `perf` only when those clearly fit better
+#### Commit message with both ! and BREAKING CHANGE footer
+```
+feat!: drop support for Node 6
+BREAKING CHANGE: use JavaScript features not available in Node 6.
+```
 
-Do not invent issue numbers. If the template mentions `Fixes #1234` or `Updates #1234`, treat that as PR-comment guidance unless the user explicitly asks for a multi-line commit message that includes it.
+#### Commit message with no body
+```
+docs: correct spelling of CHANGELOG
+```
+
+#### Commit message with scope
+```
+feat(lang): add Polish language
+```
+
+#### Commit message with multi-paragraph body and multiple footers
+```
+fix: prevent racing of requests
+
+Introduce a request id and a reference to latest request. Dismiss
+incoming responses other than from latest request.
+
+Remove timeouts which were used to mitigate the racing issue but are
+obsolete now.
+
+Reviewed-by: Z
+Refs: #123
+```
 
 ## Execution Rules
 
@@ -100,7 +143,6 @@ Generate a commit message that follows this repository's convention, then commit
 Expected behavior:
 
 - Inspect the repo status and diff
-- Read `.github/PULL_REQUEST_TEMPLATE.MD` if present
 - Generate a conventional subject from the real changes
 - Run one commit for the whole current working tree
 - Push the active branch to `origin`
