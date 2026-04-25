@@ -11,6 +11,7 @@ on:
     - feature/**
     - enhance/**
     - fix/**
+    - copilot/**
 
   pull_request:
     branches:
@@ -20,6 +21,8 @@ on:
     - feature/**
     - enhance/**
     - fix/**
+    - copilot/**
+
   workflow_dispatch:
     inputs:
       debug:

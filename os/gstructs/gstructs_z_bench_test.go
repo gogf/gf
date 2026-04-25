@@ -26,7 +26,7 @@ var (
 
 func Benchmark_ReflectTypeOf(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		reflect.TypeOf(user).String()
+		_ = reflect.TypeOf(user).String()
 	}
 }
 
