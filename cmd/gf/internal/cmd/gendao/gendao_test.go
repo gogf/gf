@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // Test containsWildcard function.
@@ -178,5 +179,14 @@ func Test_filterTablesByPatterns_NonExistent(t *testing.T) {
 		t.AssertIN("trade_order", result)
 		t.AssertIN("user_info", result)
 		t.AssertNI("nonexistent", result)
+	})
+}
+
+func Test_formatFileName(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(formatFileName("sys_i18n_message", ""), "sys_i_18_n_message")
+		t.Assert(formatFileName("sys_i18n_message", string(gstr.SnakeFirstUpper)), "sys_i18n_message")
+		t.Assert(formatFileName("SYS_I18N_MESSAGE", string(gstr.SnakeFirstUpper)), "sys_i18n_message")
+		t.Assert(formatFileName("user_test", string(gstr.SnakeFirstUpper)), "user_test_table")
 	})
 }

@@ -58,23 +58,30 @@ CONFIGURATION SUPPORT
 	CGenDaoBriefStdTime           = `use time.Time from stdlib instead of gtime.Time for generated time/date fields of tables`
 	CGenDaoBriefWithTime          = `add created time for auto produced go files`
 	CGenDaoBriefGJsonSupport      = `use gJsonSupport to use *gjson.Json instead of string for generated json fields of tables`
-	CGenDaoBriefImportPrefix      = `custom import prefix for generated go files`
-	CGenDaoBriefDaoPath           = `directory path for storing generated dao files under path`
-	CGenDaoBriefTablePath         = `directory path for storing generated table files under path`
-	CGenDaoBriefDoPath            = `directory path for storing generated do files under path`
-	CGenDaoBriefEntityPath        = `directory path for storing generated entity files under path`
-	CGenDaoBriefOverwriteDao      = `overwrite all dao files both inside/outside internal folder`
-	CGenDaoBriefModelFile         = `custom file name for storing generated model content`
-	CGenDaoBriefModelFileForDao   = `custom file name generating model for DAO operations like Where/Data. It's empty in default`
-	CGenDaoBriefDescriptionTag    = `add comment to description tag for each field`
-	CGenDaoBriefNoJsonTag         = `no json tag will be added for each field`
-	CGenDaoBriefNoModelComment    = `no model comment will be added for each field`
-	CGenDaoBriefClear             = `delete all generated go files that do not exist in database`
-	CGenDaoBriefGenTable          = `generate table files`
-	CGenDaoBriefTypeMapping       = `custom local type mapping for generated struct attributes relevant to fields of table`
-	CGenDaoBriefFieldMapping      = `custom local type mapping for generated struct attributes relevant to specific fields of table`
-	CGenDaoBriefShardingPattern   = `sharding pattern for table name, e.g. "users_?" will be replace tables "users_001,users_002,..." to "users" dao`
-	CGenDaoBriefGroup             = `
+	CGenDaoBriefFileNameCase      = `
+generated go file name case for dao/table/do/entity files, cases are as follows:
+| Case            | Example            |
+|---------------- |--------------------|
+| Snake           | any_kind_of_string | default
+| SnakeFirstUpper | rgb_code_md5       |
+`
+	CGenDaoBriefImportPrefix    = `custom import prefix for generated go files`
+	CGenDaoBriefDaoPath         = `directory path for storing generated dao files under path`
+	CGenDaoBriefTablePath       = `directory path for storing generated table files under path`
+	CGenDaoBriefDoPath          = `directory path for storing generated do files under path`
+	CGenDaoBriefEntityPath      = `directory path for storing generated entity files under path`
+	CGenDaoBriefOverwriteDao    = `overwrite all dao files both inside/outside internal folder`
+	CGenDaoBriefModelFile       = `custom file name for storing generated model content`
+	CGenDaoBriefModelFileForDao = `custom file name generating model for DAO operations like Where/Data. It's empty in default`
+	CGenDaoBriefDescriptionTag  = `add comment to description tag for each field`
+	CGenDaoBriefNoJsonTag       = `no json tag will be added for each field`
+	CGenDaoBriefNoModelComment  = `no model comment will be added for each field`
+	CGenDaoBriefClear           = `delete all generated go files that do not exist in database`
+	CGenDaoBriefGenTable        = `generate table files`
+	CGenDaoBriefTypeMapping     = `custom local type mapping for generated struct attributes relevant to fields of table`
+	CGenDaoBriefFieldMapping    = `custom local type mapping for generated struct attributes relevant to specific fields of table`
+	CGenDaoBriefShardingPattern = `sharding pattern for table name, e.g. "users_?" will be replace tables "users_001,users_002,..." to "users" dao`
+	CGenDaoBriefGroup           = `
 specifying the configuration group name of database for generated ORM instance,
 it's not necessary and the default value is "default"
 `
@@ -128,6 +135,7 @@ func init() {
 		`CGenDaoBriefRemoveFieldPrefix`:  CGenDaoBriefRemoveFieldPrefix,
 		`CGenDaoBriefStdTime`:            CGenDaoBriefStdTime,
 		`CGenDaoBriefWithTime`:           CGenDaoBriefWithTime,
+		`CGenDaoBriefFileNameCase`:       CGenDaoBriefFileNameCase,
 		`CGenDaoBriefDaoPath`:            CGenDaoBriefDaoPath,
 		`CGenDaoBriefTablePath`:          CGenDaoBriefTablePath,
 		`CGenDaoBriefDoPath`:             CGenDaoBriefDoPath,
