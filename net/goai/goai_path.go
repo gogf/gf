@@ -215,16 +215,29 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			if isInputStructEmpty {
 				requestBody.Content[v] = MediaType{}
 			} else {
-				schemaRef, err := oai.getRequestSchemaRef(getRequestSchemaRefInput{
-					BusinessStructName: inputStructTypeName,
-					RequestObject:      oai.Config.CommonRequest,
-					RequestDataField:   oai.Config.CommonRequestDataField,
-				})
-				if err != nil {
-					return err
-				}
-				requestBody.Content[v] = MediaType{
-					Schema: schemaRef,
+				// Check if the request body should be an array type
+				tagTypeValue := gmeta.Get(inputObject.Interface(), "type").String()
+				if tagTypeValue == "array" {
+					// Find the slice field in the struct and generate array schema
+					arraySchemaRef, err := oai.getArrayRequestSchemaRef(inputObject.Interface())
+					if err != nil {
+						return err
+					}
+					requestBody.Content[v] = MediaType{
+						Schema: arraySchemaRef,
+					}
+				} else {
+					schemaRef, err := oai.getRequestSchemaRef(getRequestSchemaRefInput{
+						BusinessStructName: inputStructTypeName,
+						RequestObject:      oai.Config.CommonRequest,
+						RequestDataField:   oai.Config.CommonRequestDataField,
+					})
+					if err != nil {
+						return err
+					}
+					requestBody.Content[v] = MediaType{
+						Schema: schemaRef,
+					}
 				}
 			}
 		}
