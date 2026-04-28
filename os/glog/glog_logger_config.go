@@ -23,30 +23,30 @@ import (
 
 // Config is the configuration object for logger.
 type Config struct {
-	Handlers             []Handler      `json:"-"`                    // Logger handlers which implement feature similar as middleware.
-	Writer               io.Writer      `json:"-"`                    // Customized io.Writer.
-	Flags                int            `json:"flags"                d:"20" dc:"Extra flags for logging output|i18n:config.logger.flags"`                // Extra flags for logging output features.
-	TimeFormat           string         `json:"timeFormat"           d:"2006-01-02T15:04:05.000Z07:00" dc:"Logging time format|i18n:config.logger.timeFormat"`           // Logging time format
-	Path                 string         `json:"path"                 dc:"Logging directory path|i18n:config.logger.path"`                 // Logging directory path.
-	File                 string         `json:"file"                 d:"{Y-m-d}.log" dc:"Log file name pattern|i18n:config.logger.file"`                 // Format pattern for logging file.
-	Level                int            `json:"level"                d:"992" dc:"Output level (DEBU=16,INFO=32,NOTI=64,WARN=128,ERRO=256,CRIT=512,ALL=992)|i18n:config.logger.level"`                // Output level.
-	Prefix               string         `json:"prefix"               dc:"Prefix for logging content|i18n:config.logger.prefix"`               // Prefix string for every logging content.
-	StSkip               int            `json:"stSkip"               d:"0" dc:"Stack skip count|i18n:config.logger.stSkip"`               // Skipping count for stack.
-	StStatus             int            `json:"stStatus"             d:"1" dc:"Stack status (1=enabled, 0=disabled)|i18n:config.logger.stStatus"`             // Stack status(1: enabled - default; 0: disabled)
-	StFilter             string         `json:"stFilter"             dc:"Stack string filter|i18n:config.logger.stFilter"`             // Stack string filter.
-	CtxKeys              []any          `json:"ctxKeys"`              // Context keys for logging, which is used for value retrieving from context.
-	HeaderPrint          bool           `json:"header"               d:"true" dc:"Print log header|i18n:config.logger.headerPrint"`               // Print header or not(true in default).
-	StdoutPrint          bool           `json:"stdout"               d:"true" dc:"Output to stdout|i18n:config.logger.stdoutPrint"`               // Output to stdout or not(true in default).
-	LevelPrint           bool           `json:"levelPrint"           d:"true" dc:"Print level string|i18n:config.logger.levelPrint"`           // Print level format string or not(true in default).
-	LevelPrefixes        map[int]string `json:"levelPrefixes"`        // Logging level to its prefix string mapping.
-	RotateSize           int64          `json:"rotateSize"           d:"0" dc:"Rotate file size in bytes (0=disabled)|i18n:config.logger.rotateSize"`           // Rotate the logging file if its size > 0 in bytes.
-	RotateExpire         time.Duration  `json:"rotateExpire"         d:"0" dc:"Rotate file expire duration|i18n:config.logger.rotateExpire"`         // Rotate the logging file if its mtime exceeds this duration.
-	RotateBackupLimit    int            `json:"rotateBackupLimit"    d:"0" dc:"Max rotated backup files|i18n:config.logger.rotateBackupLimit"`    // Max backup for rotated files, default is 0, means no backups.
-	RotateBackupExpire   time.Duration  `json:"rotateBackupExpire"   d:"0" dc:"Rotated backup file expire|i18n:config.logger.rotateBackupExpire"`   // Max expires for rotated files, which is 0 in default, means no expiration.
-	RotateBackupCompress int            `json:"rotateBackupCompress" d:"0" dc:"Gzip compress level for backup|i18n:config.logger.rotateBackupCompress"` // Compress level for rotated files using gzip algorithm. It's 0 in default, means no compression.
-	RotateCheckInterval  time.Duration  `json:"rotateCheckInterval"  d:"1h" dc:"Async rotate check interval|i18n:config.logger.rotateCheckInterval"`  // Asynchronously checks the backups and expiration at intervals. It's 1 hour in default.
-	StdoutColorDisabled  bool           `json:"stdoutColorDisabled"  d:"false" dc:"Disable stdout color|i18n:config.logger.stdoutColorDisabled"`  // Logging level prefix with color to writer or not (false in default).
-	WriterColorEnable    bool           `json:"writerColorEnable"    d:"false" dc:"Enable writer color|i18n:config.logger.writerColorEnable"`    // Logging level prefix with color to writer or not (false in default).
+	Handlers             []Handler      `json:"-"`                                                                                                                                    // Logger handlers which implement feature similar as middleware.
+	Writer               io.Writer      `json:"-"`                                                                                                                                    // Customized io.Writer.
+	Flags                int            `json:"flags"                d:"20" dc:"Extra flags for logging output|i18n:config.logger.flags"`                                             // Extra flags for logging output features.
+	TimeFormat           string         `json:"timeFormat"           d:"2006-01-02T15:04:05.000Z07:00" dc:"Logging time format|i18n:config.logger.timeFormat"`                        // Logging time format
+	Path                 string         `json:"path"                 dc:"Logging directory path|i18n:config.logger.path"`                                                             // Logging directory path.
+	File                 string         `json:"file"                 d:"{Y-m-d}.log" dc:"Log file name pattern|i18n:config.logger.file"`                                              // Format pattern for logging file.
+	Level                int            `json:"level"                d:"992" dc:"Output level (DEBU=16,INFO=32,NOTI=64,WARN=128,ERRO=256,CRIT=512,ALL=992)|i18n:config.logger.level"` // Output level.
+	Prefix               string         `json:"prefix"               dc:"Prefix for logging content|i18n:config.logger.prefix"`                                                       // Prefix string for every logging content.
+	StSkip               int            `json:"stSkip"               d:"0" dc:"Stack skip count|i18n:config.logger.stSkip"`                                                           // Skipping count for stack.
+	StStatus             int            `json:"stStatus"             d:"1" dc:"Stack status (1=enabled, 0=disabled)|i18n:config.logger.stStatus"`                                     // Stack status(1: enabled - default; 0: disabled)
+	StFilter             string         `json:"stFilter"             dc:"Stack string filter|i18n:config.logger.stFilter"`                                                            // Stack string filter.
+	CtxKeys              []any          `json:"ctxKeys"`                                                                                                                              // Context keys for logging, which is used for value retrieving from context.
+	HeaderPrint          bool           `json:"header"               d:"true" dc:"Print log header|i18n:config.logger.headerPrint"`                                                   // Print header or not(true in default).
+	StdoutPrint          bool           `json:"stdout"               d:"true" dc:"Output to stdout|i18n:config.logger.stdoutPrint"`                                                   // Output to stdout or not(true in default).
+	LevelPrint           bool           `json:"levelPrint"           d:"true" dc:"Print level string|i18n:config.logger.levelPrint"`                                                  // Print level format string or not(true in default).
+	LevelPrefixes        map[int]string `json:"levelPrefixes"`                                                                                                                        // Logging level to its prefix string mapping.
+	RotateSize           int64          `json:"rotateSize"           d:"0" dc:"Rotate file size in bytes (0=disabled)|i18n:config.logger.rotateSize"`                                 // Rotate the logging file if its size > 0 in bytes.
+	RotateExpire         time.Duration  `json:"rotateExpire"         d:"0" dc:"Rotate file expire duration|i18n:config.logger.rotateExpire"`                                          // Rotate the logging file if its mtime exceeds this duration.
+	RotateBackupLimit    int            `json:"rotateBackupLimit"    d:"0" dc:"Max rotated backup files|i18n:config.logger.rotateBackupLimit"`                                        // Max backup for rotated files, default is 0, means no backups.
+	RotateBackupExpire   time.Duration  `json:"rotateBackupExpire"   d:"0" dc:"Rotated backup file expire|i18n:config.logger.rotateBackupExpire"`                                     // Max expires for rotated files, which is 0 in default, means no expiration.
+	RotateBackupCompress int            `json:"rotateBackupCompress" d:"0" dc:"Gzip compress level for backup|i18n:config.logger.rotateBackupCompress"`                               // Compress level for rotated files using gzip algorithm. It's 0 in default, means no compression.
+	RotateCheckInterval  time.Duration  `json:"rotateCheckInterval"  d:"1h" dc:"Async rotate check interval|i18n:config.logger.rotateCheckInterval"`                                  // Asynchronously checks the backups and expiration at intervals. It's 1 hour in default.
+	StdoutColorDisabled  bool           `json:"stdoutColorDisabled"  d:"false" dc:"Disable stdout color|i18n:config.logger.stdoutColorDisabled"`                                      // Logging level prefix with color to writer or not (false in default).
+	WriterColorEnable    bool           `json:"writerColorEnable"    d:"false" dc:"Enable writer color|i18n:config.logger.writerColorEnable"`                                         // Logging level prefix with color to writer or not (false in default).
 	internalConfig
 }
 

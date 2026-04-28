@@ -18,14 +18,14 @@ import (
 // extracted from struct tags (json, d, v, dc) via reflection.
 type FieldSchema struct {
 	Name        string   `json:"name"`              // Go struct field name
-	JsonKey     string   `json:"jsonKey"`            // JSON/YAML key from json tag
-	Type        string   `json:"type"`               // Field type: string, int, bool, duration, etc.
-	Default     string   `json:"default"`            // Default value from `d` tag
-	Rule        string   `json:"rule"`               // Validation rule from `v` tag
-	Description string   `json:"description"`        // English description from `dc` tag
-	I18nKey     string   `json:"i18nKey"`            // I18n key extracted from `dc` tag (i18n:xxx)
-	Group       string   `json:"group"`              // Logical group (Basic, Logging, Cookie, etc.)
-	Options     []string `json:"options,omitempty"`   // Enum options if applicable
+	JsonKey     string   `json:"jsonKey"`           // JSON/YAML key from json tag
+	Type        string   `json:"type"`              // Field type: string, int, bool, duration, etc.
+	Default     string   `json:"default"`           // Default value from `d` tag
+	Rule        string   `json:"rule"`              // Validation rule from `v` tag
+	Description string   `json:"description"`       // English description from `dc` tag
+	I18nKey     string   `json:"i18nKey"`           // I18n key extracted from `dc` tag (i18n:xxx)
+	Group       string   `json:"group"`             // Logical group (Basic, Logging, Cookie, etc.)
+	Options     []string `json:"options,omitempty"` // Enum options if applicable
 }
 
 // ModuleSchema describes the configuration schema for one module.

@@ -16,11 +16,11 @@ import (
 
 // testServerConfig is a simplified version of ghttp.ServerConfig for testing.
 type testServerConfig struct {
-	Name         string        `json:"name"         d:"default"   v:"required"  dc:"Server name|i18n:config.server.name"`
-	Address      string        `json:"address"      d:":0"        v:"required"  dc:"Server listening address|i18n:config.server.address"`
-	ReadTimeout  time.Duration `json:"readTimeout"  d:"60s"                     dc:"HTTP read timeout|i18n:config.server.readTimeout"`
-	KeepAlive    bool          `json:"keepAlive"    d:"true"                    dc:"Enable HTTP keep-alive"`
-	unexported   string        // should be skipped
+	Name        string        `json:"name"         d:"default"   v:"required"  dc:"Server name|i18n:config.server.name"`
+	Address     string        `json:"address"      d:":0"        v:"required"  dc:"Server listening address|i18n:config.server.address"`
+	ReadTimeout time.Duration `json:"readTimeout"  d:"60s"                     dc:"HTTP read timeout|i18n:config.server.readTimeout"`
+	KeepAlive   bool          `json:"keepAlive"    d:"true"                    dc:"Enable HTTP keep-alive"`
+	unexported  string        // should be skipped
 }
 
 // TestBaseConfig tests embedded struct scanning.
@@ -30,9 +30,9 @@ type TestBaseConfig struct {
 }
 
 type TestDatabaseConfig struct {
-	TestBaseConfig          // embedded
-	User           string   `json:"user"     d:"root"  v:"required" dc:"Database user|i18n:config.database.user"`
-	Password       string   `json:"password"           v:"required" dc:"Database password|i18n:config.database.password"`
+	TestBaseConfig        // embedded
+	User           string `json:"user"     d:"root"  v:"required" dc:"Database user|i18n:config.database.user"`
+	Password       string `json:"password"           v:"required" dc:"Database password|i18n:config.database.password"`
 }
 
 func TestSchemaRegistry_Register(t *testing.T) {

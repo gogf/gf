@@ -23,12 +23,12 @@ import (
 
 // Config is the configuration object for template engine.
 type Config struct {
-	Paths       []string       `json:"paths"       dc:"Template search paths|i18n:config.viewer.paths"`       // Searching array for path, NOT concurrent-safe for performance purpose.
-	Data        map[string]any `json:"data"        dc:"Global template variables|i18n:config.viewer.data"`        // Global template variables including configuration.
-	DefaultFile string         `json:"defaultFile" d:"index.html" dc:"Default template file|i18n:config.viewer.defaultFile"` // Default template file for parsing.
-	Delimiters  []string       `json:"delimiters"  dc:"Template delimiters|i18n:config.viewer.delimiters"`  // Custom template delimiters.
-	AutoEncode  bool           `json:"autoEncode"  d:"false" dc:"Auto HTML encode for XSS safety|i18n:config.viewer.autoEncode"`  // Automatically encodes and provides safe html output, which is good for avoiding XSS.
-	I18nManager *gi18n.Manager `json:"-"`           // I18n manager for the view.
+	Paths       []string       `json:"paths"       dc:"Template search paths|i18n:config.viewer.paths"`                          // Searching array for path, NOT concurrent-safe for performance purpose.
+	Data        map[string]any `json:"data"        dc:"Global template variables|i18n:config.viewer.data"`                       // Global template variables including configuration.
+	DefaultFile string         `json:"defaultFile" d:"index.html" dc:"Default template file|i18n:config.viewer.defaultFile"`     // Default template file for parsing.
+	Delimiters  []string       `json:"delimiters"  dc:"Template delimiters|i18n:config.viewer.delimiters"`                       // Custom template delimiters.
+	AutoEncode  bool           `json:"autoEncode"  d:"false" dc:"Auto HTML encode for XSS safety|i18n:config.viewer.autoEncode"` // Automatically encodes and provides safe html output, which is good for avoiding XSS.
+	I18nManager *gi18n.Manager `json:"-"`                                                                                        // I18n manager for the view.
 }
 
 const (

@@ -22,27 +22,27 @@ import (
 type Config struct {
 	// Address It supports single and cluster redis server. Multiple addresses joined with char ','. Eg: 192.168.1.1:6379, 192.168.1.2:6379.
 	Address         string        `json:"address"         v:"required" dc:"Redis server address|i18n:config.redis.address"`
-	Db              int           `json:"db"              d:"0" dc:"Redis database index|i18n:config.redis.db"`              // Redis db.
-	User            string        `json:"user"            dc:"Username for AUTH|i18n:config.redis.user"`            // Username for AUTH.
-	Pass            string        `json:"pass"            dc:"Password for AUTH|i18n:config.redis.pass"`            // Password for AUTH.
-	SentinelUser    string        `json:"sentinel_user"   dc:"Username for sentinel AUTH|i18n:config.redis.sentinelUser"`   // Username for sentinel AUTH.
-	SentinelPass    string        `json:"sentinel_pass"   dc:"Password for sentinel AUTH|i18n:config.redis.sentinelPass"`   // Password for sentinel AUTH.
-	MinIdle         int           `json:"minIdle"         d:"0" dc:"Min idle connections|i18n:config.redis.minIdle"`         // Minimum number of connections allowed to be idle (default is 0)
-	MaxIdle         int           `json:"maxIdle"         d:"10" dc:"Max idle connections|i18n:config.redis.maxIdle"`         // Maximum number of connections allowed to be idle (default is 10)
-	MaxActive       int           `json:"maxActive"       d:"0" dc:"Max active connections (0=unlimited)|i18n:config.redis.maxActive"`       // Maximum number of connections limit (default is 0 means no limit).
-	MaxConnLifetime time.Duration `json:"maxConnLifetime" d:"30s" dc:"Max connection lifetime|i18n:config.redis.maxConnLifetime"` // Maximum lifetime of the connection (default is 30 seconds, not allowed to be set to 0)
-	IdleTimeout     time.Duration `json:"idleTimeout"     d:"10s" dc:"Idle connection timeout|i18n:config.redis.idleTimeout"`     // Maximum idle time for connection (default is 10 seconds, not allowed to be set to 0)
-	WaitTimeout     time.Duration `json:"waitTimeout"     dc:"Wait timeout for connection pool|i18n:config.redis.waitTimeout"`     // Timed out duration waiting to get a connection from the connection pool.
-	DialTimeout     time.Duration `json:"dialTimeout"     dc:"Dial connection timeout|i18n:config.redis.dialTimeout"`     // Dial connection timeout for TCP.
-	ReadTimeout     time.Duration `json:"readTimeout"     dc:"Read timeout|i18n:config.redis.readTimeout"`     // Read timeout for TCP. DO NOT set it if not necessary.
-	WriteTimeout    time.Duration `json:"writeTimeout"    dc:"Write timeout|i18n:config.redis.writeTimeout"`    // Write timeout for TCP.
-	MasterName      string        `json:"masterName"      dc:"Master name for Sentinel mode|i18n:config.redis.masterName"`      // Used in Redis Sentinel mode.
-	TLS             bool          `json:"tls"             d:"false" dc:"Enable TLS connection|i18n:config.redis.tls"`             // Specifies whether TLS should be used when connecting to the server.
-	TLSSkipVerify   bool          `json:"tlsSkipVerify"   d:"false" dc:"Skip TLS server name verification|i18n:config.redis.tlsSkipVerify"`   // Disables server name verification when connecting over TLS.
-	TLSConfig       *tls.Config   `json:"-"`               // TLS Config to use. When set TLS will be negotiated.
-	SlaveOnly       bool          `json:"slaveOnly"       d:"false" dc:"Route commands to slave nodes only|i18n:config.redis.slaveOnly"`       // Route all commands to slave read-only nodes.
-	Cluster         bool          `json:"cluster"         d:"false" dc:"Enable cluster mode|i18n:config.redis.cluster"`         // Specifies whether cluster mode be used.
-	Protocol        int           `json:"protocol"        d:"3" dc:"RESP protocol version (2 or 3)|i18n:config.redis.protocol"`        // Specifies the RESP version (Protocol 2 or 3.)
+	Db              int           `json:"db"              d:"0" dc:"Redis database index|i18n:config.redis.db"`                             // Redis db.
+	User            string        `json:"user"            dc:"Username for AUTH|i18n:config.redis.user"`                                    // Username for AUTH.
+	Pass            string        `json:"pass"            dc:"Password for AUTH|i18n:config.redis.pass"`                                    // Password for AUTH.
+	SentinelUser    string        `json:"sentinel_user"   dc:"Username for sentinel AUTH|i18n:config.redis.sentinelUser"`                   // Username for sentinel AUTH.
+	SentinelPass    string        `json:"sentinel_pass"   dc:"Password for sentinel AUTH|i18n:config.redis.sentinelPass"`                   // Password for sentinel AUTH.
+	MinIdle         int           `json:"minIdle"         d:"0" dc:"Min idle connections|i18n:config.redis.minIdle"`                        // Minimum number of connections allowed to be idle (default is 0)
+	MaxIdle         int           `json:"maxIdle"         d:"10" dc:"Max idle connections|i18n:config.redis.maxIdle"`                       // Maximum number of connections allowed to be idle (default is 10)
+	MaxActive       int           `json:"maxActive"       d:"0" dc:"Max active connections (0=unlimited)|i18n:config.redis.maxActive"`      // Maximum number of connections limit (default is 0 means no limit).
+	MaxConnLifetime time.Duration `json:"maxConnLifetime" d:"30s" dc:"Max connection lifetime|i18n:config.redis.maxConnLifetime"`           // Maximum lifetime of the connection (default is 30 seconds, not allowed to be set to 0)
+	IdleTimeout     time.Duration `json:"idleTimeout"     d:"10s" dc:"Idle connection timeout|i18n:config.redis.idleTimeout"`               // Maximum idle time for connection (default is 10 seconds, not allowed to be set to 0)
+	WaitTimeout     time.Duration `json:"waitTimeout"     dc:"Wait timeout for connection pool|i18n:config.redis.waitTimeout"`              // Timed out duration waiting to get a connection from the connection pool.
+	DialTimeout     time.Duration `json:"dialTimeout"     dc:"Dial connection timeout|i18n:config.redis.dialTimeout"`                       // Dial connection timeout for TCP.
+	ReadTimeout     time.Duration `json:"readTimeout"     dc:"Read timeout|i18n:config.redis.readTimeout"`                                  // Read timeout for TCP. DO NOT set it if not necessary.
+	WriteTimeout    time.Duration `json:"writeTimeout"    dc:"Write timeout|i18n:config.redis.writeTimeout"`                                // Write timeout for TCP.
+	MasterName      string        `json:"masterName"      dc:"Master name for Sentinel mode|i18n:config.redis.masterName"`                  // Used in Redis Sentinel mode.
+	TLS             bool          `json:"tls"             d:"false" dc:"Enable TLS connection|i18n:config.redis.tls"`                       // Specifies whether TLS should be used when connecting to the server.
+	TLSSkipVerify   bool          `json:"tlsSkipVerify"   d:"false" dc:"Skip TLS server name verification|i18n:config.redis.tlsSkipVerify"` // Disables server name verification when connecting over TLS.
+	TLSConfig       *tls.Config   `json:"-"`                                                                                                // TLS Config to use. When set TLS will be negotiated.
+	SlaveOnly       bool          `json:"slaveOnly"       d:"false" dc:"Route commands to slave nodes only|i18n:config.redis.slaveOnly"`    // Route all commands to slave read-only nodes.
+	Cluster         bool          `json:"cluster"         d:"false" dc:"Enable cluster mode|i18n:config.redis.cluster"`                     // Specifies whether cluster mode be used.
+	Protocol        int           `json:"protocol"        d:"3" dc:"RESP protocol version (2 or 3)|i18n:config.redis.protocol"`             // Specifies the RESP version (Protocol 2 or 3.)
 }
 
 const (
