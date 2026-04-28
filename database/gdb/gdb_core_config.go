@@ -30,120 +30,120 @@ type ConfigGroup []ConfigNode
 type ConfigNode struct {
 	// Host specifies the server address, can be either IP address or domain name
 	// Example: "127.0.0.1", "localhost"
-	Host string `json:"host"`
+	Host string `json:"host" d:"127.0.0.1" dc:"Database server address|i18n:config.database.host"`
 
 	// Port specifies the server port number
 	// Default is typically "3306" for MySQL
-	Port string `json:"port"`
+	Port string `json:"port" dc:"Database server port|i18n:config.database.port"`
 
 	// User specifies the authentication username for database connection
-	User string `json:"user"`
+	User string `json:"user" v:"required" dc:"Database username|i18n:config.database.user"`
 
 	// Pass specifies the authentication password for database connection
-	Pass string `json:"pass"`
+	Pass string `json:"pass" dc:"Database password|i18n:config.database.pass"`
 
 	// Name specifies the default database name to be used
-	Name string `json:"name"`
+	Name string `json:"name" v:"required" dc:"Database name|i18n:config.database.name"`
 
 	// Type specifies the database type
 	// Example: mysql, mariadb, sqlite, mssql, pgsql, oracle, clickhouse, dm.
-	Type string `json:"type"`
+	Type string `json:"type" v:"required" dc:"Database type (mysql,pgsql,sqlite,mssql,oracle,clickhouse,dm)|i18n:config.database.type"`
 
 	// Link provides custom connection string that combines all configuration in one string
 	// Optional field
-	Link string `json:"link"`
+	Link string `json:"link" dc:"Custom connection string|i18n:config.database.link"`
 
 	// Extra provides additional configuration options for third-party database drivers
 	// Optional field
-	Extra string `json:"extra"`
+	Extra string `json:"extra" dc:"Extra connection options|i18n:config.database.extra"`
 
 	// Role specifies the node role in master-slave setup
 	// Optional field, defaults to "master"
 	// Available values: "master", "slave"
-	Role Role `json:"role"`
+	Role Role `json:"role" d:"master" dc:"Node role (master/slave)|i18n:config.database.role"`
 
 	// Debug enables debug mode for logging and output
 	// Optional field
-	Debug bool `json:"debug"`
+	Debug bool `json:"debug" d:"false" dc:"Enable debug mode|i18n:config.database.debug"`
 
 	// Prefix specifies the table name prefix
 	// Optional field
-	Prefix string `json:"prefix"`
+	Prefix string `json:"prefix" dc:"Table name prefix|i18n:config.database.prefix"`
 
 	// DryRun enables simulation mode where SELECT statements are executed
 	// but INSERT/UPDATE/DELETE statements are not
 	// Optional field
-	DryRun bool `json:"dryRun"`
+	DryRun bool `json:"dryRun" d:"false" dc:"Enable dry run mode|i18n:config.database.dryRun"`
 
 	// Weight specifies the node weight for load balancing calculations
 	// Optional field, only effective in multi-node setups
-	Weight int `json:"weight"`
+	Weight int `json:"weight" d:"0" dc:"Node weight for load balancing|i18n:config.database.weight"`
 
 	// Charset specifies the character set for database operations
 	// Optional field, defaults to "utf8"
-	Charset string `json:"charset"`
+	Charset string `json:"charset" d:"utf8" dc:"Character set|i18n:config.database.charset"`
 
 	// Protocol specifies the network protocol for database connection
 	// Optional field, defaults to "tcp"
 	// See net.Dial for available network protocols
-	Protocol string `json:"protocol"`
+	Protocol string `json:"protocol" d:"tcp" dc:"Network protocol|i18n:config.database.protocol"`
 
 	// Timezone sets the time zone for timestamp interpretation and display
 	// Optional field
-	Timezone string `json:"timezone"`
+	Timezone string `json:"timezone" dc:"Connection timezone|i18n:config.database.timezone"`
 
 	// Namespace specifies the schema namespace for certain databases
 	// Optional field, e.g., in PostgreSQL, Name is the catalog and Namespace is the schema
-	Namespace string `json:"namespace"`
+	Namespace string `json:"namespace" dc:"Schema namespace|i18n:config.database.namespace"`
 
 	// MaxIdleConnCount specifies the maximum number of idle connections in the pool
 	// Optional field
-	MaxIdleConnCount int `json:"maxIdle"`
+	MaxIdleConnCount int `json:"maxIdle" d:"10" dc:"Max idle connections|i18n:config.database.maxIdle"`
 
 	// MaxOpenConnCount specifies the maximum number of open connections in the pool
 	// Optional field
-	MaxOpenConnCount int `json:"maxOpen"`
+	MaxOpenConnCount int `json:"maxOpen" d:"0" dc:"Max open connections (0=unlimited)|i18n:config.database.maxOpen"`
 
 	// MaxConnLifeTime specifies the maximum lifetime of a connection
 	// Optional field
-	MaxConnLifeTime time.Duration `json:"maxLifeTime"`
+	MaxConnLifeTime time.Duration `json:"maxLifeTime" d:"30s" dc:"Max connection lifetime|i18n:config.database.maxLifeTime"`
 
 	// MaxIdleConnTime specifies the maximum idle time of a connection before being closed
 	// This is Go 1.15+ feature: sql.DB.SetConnMaxIdleTime
 	// Optional field
-	MaxIdleConnTime time.Duration `json:"maxIdleTime"`
+	MaxIdleConnTime time.Duration `json:"maxIdleTime" dc:"Max connection idle time|i18n:config.database.maxIdleTime"`
 
 	// QueryTimeout specifies the maximum execution time for DQL operations
 	// Optional field
-	QueryTimeout time.Duration `json:"queryTimeout"`
+	QueryTimeout time.Duration `json:"queryTimeout" dc:"DQL query timeout|i18n:config.database.queryTimeout"`
 
 	// ExecTimeout specifies the maximum execution time for DML operations
 	// Optional field
-	ExecTimeout time.Duration `json:"execTimeout"`
+	ExecTimeout time.Duration `json:"execTimeout" dc:"DML exec timeout|i18n:config.database.execTimeout"`
 
 	// TranTimeout specifies the maximum execution time for a transaction block
 	// Optional field
-	TranTimeout time.Duration `json:"tranTimeout"`
+	TranTimeout time.Duration `json:"tranTimeout" dc:"Transaction timeout|i18n:config.database.tranTimeout"`
 
 	// PrepareTimeout specifies the maximum execution time for prepare operations
 	// Optional field
-	PrepareTimeout time.Duration `json:"prepareTimeout"`
+	PrepareTimeout time.Duration `json:"prepareTimeout" dc:"Prepare statement timeout|i18n:config.database.prepareTimeout"`
 
 	// CreatedAt specifies the field name for automatic timestamp on record creation
 	// Optional field
-	CreatedAt string `json:"createdAt"`
+	CreatedAt string `json:"createdAt" dc:"Auto timestamp field for creation|i18n:config.database.createdAt"`
 
 	// UpdatedAt specifies the field name for automatic timestamp on record updates
 	// Optional field
-	UpdatedAt string `json:"updatedAt"`
+	UpdatedAt string `json:"updatedAt" dc:"Auto timestamp field for update|i18n:config.database.updatedAt"`
 
 	// DeletedAt specifies the field name for automatic timestamp on record deletion
 	// Optional field
-	DeletedAt string `json:"deletedAt"`
+	DeletedAt string `json:"deletedAt" dc:"Auto timestamp field for soft delete|i18n:config.database.deletedAt"`
 
 	// TimeMaintainDisabled controls whether automatic time maintenance is disabled
 	// Optional field
-	TimeMaintainDisabled bool `json:"timeMaintainDisabled"`
+	TimeMaintainDisabled bool `json:"timeMaintainDisabled" d:"false" dc:"Disable auto time maintenance|i18n:config.database.timeMaintainDisabled"`
 }
 
 type Role string

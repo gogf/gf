@@ -50,26 +50,26 @@ type ServerConfig struct {
 	// ======================================================================================================
 
 	// Service name, which is for service registry and discovery.
-	Name string `json:"name"`
+	Name string `json:"name" d:"default" dc:"Service name for registry and discovery|i18n:config.server.name"`
 
 	// Address specifies the server listening address like "port" or ":port",
 	// multiple addresses joined using ','.
-	Address string `json:"address"`
+	Address string `json:"address" d:":0" v:"required" dc:"Server listening address|i18n:config.server.address"`
 
 	// HTTPSAddr specifies the HTTPS addresses, multiple addresses joined using char ','.
-	HTTPSAddr string `json:"httpsAddr"`
+	HTTPSAddr string `json:"httpsAddr" dc:"HTTPS listening address|i18n:config.server.httpsAddr"`
 
 	// Listeners specifies the custom listeners.
 	Listeners []net.Listener `json:"listeners"`
 
 	// Endpoints are custom endpoints for service register, it uses Address if empty.
-	Endpoints []string `json:"endpoints"`
+	Endpoints []string `json:"endpoints" dc:"Custom endpoints for service register|i18n:config.server.endpoints"`
 
 	// HTTPSCertPath specifies certification file path for HTTPS service.
-	HTTPSCertPath string `json:"httpsCertPath"`
+	HTTPSCertPath string `json:"httpsCertPath" dc:"HTTPS certification file path|i18n:config.server.httpsCertPath"`
 
 	// HTTPSKeyPath specifies the key file path for HTTPS service.
-	HTTPSKeyPath string `json:"httpsKeyPath"`
+	HTTPSKeyPath string `json:"httpsKeyPath" dc:"HTTPS key file path|i18n:config.server.httpsKeyPath"`
 
 	// TLSConfig optionally provides a TLS configuration for use
 	// by ServeTLS and ListenAndServeTLS. Note that this value is
@@ -90,19 +90,19 @@ type ServerConfig struct {
 	// decisions on each request body's acceptable deadline or
 	// upload rate, most users will prefer to use
 	// ReadHeaderTimeout. It is valid to use them both.
-	ReadTimeout time.Duration `json:"readTimeout"`
+	ReadTimeout time.Duration `json:"readTimeout" d:"60s" dc:"HTTP read timeout duration|i18n:config.server.readTimeout"`
 
 	// WriteTimeout is the maximum duration before timing out
 	// writes of the response. It is reset whenever a new
 	// request's header is read. Like ReadTimeout, it does not
 	// let Handlers make decisions on a per-request basis.
-	WriteTimeout time.Duration `json:"writeTimeout"`
+	WriteTimeout time.Duration `json:"writeTimeout" d:"0" dc:"HTTP write timeout duration|i18n:config.server.writeTimeout"`
 
 	// IdleTimeout is the maximum amount of time to wait for the
 	// next request when keep-alive are enabled. If IdleTimeout
 	// is zero, the value of ReadTimeout is used. If both are
 	// zero, there is no timeout.
-	IdleTimeout time.Duration `json:"idleTimeout"`
+	IdleTimeout time.Duration `json:"idleTimeout" d:"60s" dc:"HTTP idle timeout duration|i18n:config.server.idleTimeout"`
 
 	// MaxHeaderBytes controls the maximum number of bytes the
 	// server will read parsing the request header's keys and
@@ -111,14 +111,14 @@ type ServerConfig struct {
 	//
 	// It can be configured in configuration file using string like: 1m, 10m, 500kb etc.
 	// It's 10240 bytes in default.
-	MaxHeaderBytes int `json:"maxHeaderBytes"`
+	MaxHeaderBytes int `json:"maxHeaderBytes" d:"10240" dc:"Max header size in bytes|i18n:config.server.maxHeaderBytes"`
 
 	// KeepAlive enables HTTP keep-alive.
-	KeepAlive bool `json:"keepAlive"`
+	KeepAlive bool `json:"keepAlive" d:"true" dc:"Enable HTTP keep-alive|i18n:config.server.keepAlive"`
 
 	// ServerAgent specifies the server agent information, which is wrote to
 	// HTTP response header as "Server".
-	ServerAgent string `json:"serverAgent"`
+	ServerAgent string `json:"serverAgent" d:"GoFrame HTTP Server" dc:"Server agent header value|i18n:config.server.serverAgent"`
 
 	// View specifies the default template view object for the server.
 	View *gview.View `json:"view"`
@@ -128,78 +128,78 @@ type ServerConfig struct {
 	// ======================================================================================================
 
 	// Rewrites specifies the URI rewrite rules map.
-	Rewrites map[string]string `json:"rewrites"`
+	Rewrites map[string]string `json:"rewrites" dc:"URI rewrite rules map|i18n:config.server.rewrites"`
 
 	// IndexFiles specifies the index files for static folder.
-	IndexFiles []string `json:"indexFiles"`
+	IndexFiles []string `json:"indexFiles" dc:"Index files for static folder|i18n:config.server.indexFiles"`
 
 	// IndexFolder specifies if listing sub-files when requesting folder.
 	// The server responses HTTP status code 403 if it is false.
-	IndexFolder bool `json:"indexFolder"`
+	IndexFolder bool `json:"indexFolder" d:"false" dc:"Allow listing folder contents|i18n:config.server.indexFolder"`
 
 	// ServerRoot specifies the root directory for static service.
-	ServerRoot string `json:"serverRoot"`
+	ServerRoot string `json:"serverRoot" dc:"Root directory for static service|i18n:config.server.serverRoot"`
 
 	// SearchPaths specifies additional searching directories for static service.
-	SearchPaths []string `json:"searchPaths"`
+	SearchPaths []string `json:"searchPaths" dc:"Additional search paths for static service|i18n:config.server.searchPaths"`
 
 	// StaticPaths specifies URI to directory mapping array.
 	StaticPaths []staticPathItem `json:"staticPaths"`
 
 	// FileServerEnabled is the global switch for static service.
 	// It is automatically set enabled if any static path is set.
-	FileServerEnabled bool `json:"fileServerEnabled"`
+	FileServerEnabled bool `json:"fileServerEnabled" d:"false" dc:"Enable static file server|i18n:config.server.fileServerEnabled"`
 
 	// ======================================================================================================
 	// Cookie.
 	// ======================================================================================================
 
 	// CookieMaxAge specifies the max TTL for cookie items.
-	CookieMaxAge time.Duration `json:"cookieMaxAge"`
+	CookieMaxAge time.Duration `json:"cookieMaxAge" d:"8760h" dc:"Cookie max TTL duration|i18n:config.server.cookieMaxAge"`
 
 	// CookiePath specifies cookie path.
 	// It also affects the default storage for session id.
-	CookiePath string `json:"cookiePath"`
+	CookiePath string `json:"cookiePath" d:"/" dc:"Cookie path|i18n:config.server.cookiePath"`
 
 	// CookieDomain specifies cookie domain.
 	// It also affects the default storage for session id.
-	CookieDomain string `json:"cookieDomain"`
+	CookieDomain string `json:"cookieDomain" dc:"Cookie domain|i18n:config.server.cookieDomain"`
 
 	// CookieSameSite specifies cookie SameSite property.
 	// It also affects the default storage for session id.
-	CookieSameSite string `json:"cookieSameSite"`
+	CookieSameSite string `json:"cookieSameSite" dc:"Cookie SameSite property|i18n:config.server.cookieSameSite"`
 
 	// CookieSameSite specifies cookie Secure property.
 	// It also affects the default storage for session id.
-	CookieSecure bool `json:"cookieSecure"`
+	CookieSecure bool `json:"cookieSecure" d:"false" dc:"Cookie Secure flag|i18n:config.server.cookieSecure"`
 
 	// CookieSameSite specifies cookie HttpOnly property.
 	// It also affects the default storage for session id.
-	CookieHttpOnly bool `json:"cookieHttpOnly"`
+	CookieHttpOnly bool `json:"cookieHttpOnly" d:"false" dc:"Cookie HttpOnly flag|i18n:config.server.cookieHttpOnly"`
 
 	// ======================================================================================================
 	// Session.
 	// ======================================================================================================
 
 	// SessionIdName specifies the session id name.
-	SessionIdName string `json:"sessionIdName"`
+	SessionIdName string `json:"sessionIdName" d:"gfsessionid" dc:"Session ID name|i18n:config.server.sessionIdName"`
 
 	// SessionMaxAge specifies max TTL for session items.
-	SessionMaxAge time.Duration `json:"sessionMaxAge"`
+	SessionMaxAge time.Duration `json:"sessionMaxAge" d:"24h" dc:"Session max TTL duration|i18n:config.server.sessionMaxAge"`
 
 	// SessionPath specifies the session storage directory path for storing session files.
 	// It only makes sense if the session storage is type of file storage.
-	SessionPath string `json:"sessionPath"`
+	SessionPath string `json:"sessionPath" dc:"Session file storage path|i18n:config.server.sessionPath"`
 
 	// SessionStorage specifies the session storage.
 	SessionStorage gsession.Storage `json:"sessionStorage"`
 
 	// SessionCookieMaxAge specifies the cookie ttl for session id.
 	// If it is set 0, it means it expires along with browser session.
-	SessionCookieMaxAge time.Duration `json:"sessionCookieMaxAge"`
+	SessionCookieMaxAge time.Duration `json:"sessionCookieMaxAge" d:"24h" dc:"Session cookie max TTL|i18n:config.server.sessionCookieMaxAge"`
 
 	// SessionCookieOutput specifies whether automatic outputting session id to cookie.
-	SessionCookieOutput bool `json:"sessionCookieOutput"`
+	SessionCookieOutput bool `json:"sessionCookieOutput" d:"true" dc:"Auto output session id to cookie|i18n:config.server.sessionCookieOutput"`
 
 	// ======================================================================================================
 	// Logging.
@@ -235,13 +235,13 @@ type ServerConfig struct {
 	// ======================================================================================================
 
 	// Graceful enables graceful reload feature for all servers of the process.
-	Graceful bool `json:"graceful"`
+	Graceful bool `json:"graceful" d:"false" dc:"Enable graceful reload|i18n:config.server.graceful"`
 
 	// GracefulTimeout set the maximum survival time (seconds) of the parent process.
-	GracefulTimeout int `json:"gracefulTimeout"`
+	GracefulTimeout int `json:"gracefulTimeout" d:"2" dc:"Graceful reload timeout in seconds|i18n:config.server.gracefulTimeout"`
 
 	// GracefulShutdownTimeout set the maximum survival time (seconds) before stopping the server.
-	GracefulShutdownTimeout int `json:"gracefulShutdownTimeout"`
+	GracefulShutdownTimeout int `json:"gracefulShutdownTimeout" d:"5" dc:"Graceful shutdown timeout in seconds|i18n:config.server.gracefulShutdownTimeout"`
 
 	// ======================================================================================================
 	// Other.
@@ -250,23 +250,23 @@ type ServerConfig struct {
 	// ClientMaxBodySize specifies the max body size limit in bytes for client request.
 	// It can be configured in configuration file using string like: 1m, 10m, 500kb etc.
 	// It's `8MB` in default.
-	ClientMaxBodySize int64 `json:"clientMaxBodySize"`
+	ClientMaxBodySize int64 `json:"clientMaxBodySize" d:"8388608" dc:"Max client body size in bytes|i18n:config.server.clientMaxBodySize"`
 
 	// FormParsingMemory specifies max memory buffer size in bytes which can be used for
 	// parsing multimedia form.
 	// It can be configured in configuration file using string like: 1m, 10m, 500kb etc.
 	// It's 1MB in default.
-	FormParsingMemory int64 `json:"formParsingMemory"`
+	FormParsingMemory int64 `json:"formParsingMemory" d:"1048576" dc:"Max form parsing memory in bytes|i18n:config.server.formParsingMemory"`
 
 	// NameToUriType specifies the type for converting struct method name to URI when
 	// registering routes.
-	NameToUriType int `json:"nameToUriType"`
+	NameToUriType int `json:"nameToUriType" d:"0" dc:"Method name to URI type (0:default,1:fullname,2:alllower,3:camel)|i18n:config.server.nameToUriType"`
 
 	// RouteOverWrite allows to overwrite the route if duplicated.
-	RouteOverWrite bool `json:"routeOverWrite"`
+	RouteOverWrite bool `json:"routeOverWrite" d:"false" dc:"Allow overwriting duplicate routes|i18n:config.server.routeOverWrite"`
 
 	// DumpRouterMap specifies whether automatically dumps router map when server starts.
-	DumpRouterMap bool `json:"dumpRouterMap"`
+	DumpRouterMap bool `json:"dumpRouterMap" d:"true" dc:"Dump router map on server start|i18n:config.server.dumpRouterMap"`
 }
 
 // NewConfig creates and returns a ServerConfig object with default configurations.

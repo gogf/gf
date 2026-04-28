@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoFrame Config Editor</title>
+<script src="/static/vue.global.prod.js"></script>
+<link href="/static/tailwind.min.css" rel="stylesheet">
+<!-- <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.prod.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet"> -->
+<style>
+:root {
+  --primary: #2563EB;
+  --primary-light: #3B82F6;
+  --primary-dark: #1E40AF;
+  --primary-glow: rgba(37, 99, 235, 0.15);
+  --bg-sidebar: #0F172A;
+  --bg-sidebar-hover: #1E293B;
+  --bg-content: #F1F5F9;
+  --bg-card: #FFFFFF;
+  --text-primary: #0F172A;
+  --text-secondary: #64748B;
+  --text-light: #F1F5F9;
+  --text-muted: #94A3B8;
+  --success: #10B981;
+  --danger: #EF4444;
+  --warning: #F59E0B;
+  --accent: #6366F1;
+  --border: #E2E8F0;
+  --border-light: #F1F5F9;
+  --sidebar-width: 260px;
+  --header-height: 60px;
+  --footer-height: 36px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg-content);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideInLeft { from { transform: translateX(-8px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes saveAnim { 0% { transform: scale(1); } 30% { transform: scale(0.95); } 60% { transform: scale(1.02); } 100% { transform: scale(1); } }
+@keyframes checkmark { 0% { stroke-dashoffset: 24; } 100% { stroke-dashoffset: 0; } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 0 0 var(--primary-glow); } 50% { box-shadow: 0 0 0 8px transparent; } }
+.fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
+.fade-in { animation: fadeIn 0.3s ease-out; }
+.slide-in-left { animation: slideInLeft 0.25s cubic-bezier(0.22, 1, 0.36, 1); }
+.save-anim { animation: saveAnim 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
+.glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); }
+.glass-dark { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); }
+.field-input {
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  border: 1.5px solid var(--border);
+  background: #FAFBFC;
+  font-family: 'Courier New', Consolas, monospace;
+  font-size: 13px;
+}
+.field-input:hover { border-color: #CBD5E1; background: #FFFFFF; }
+.field-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); outline: none; background: #FFFFFF; }
+.field-input.has-error { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15); }
+.toggle-switch { position: relative; width: 48px; height: 26px; flex-shrink: 0; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-slider {
+  position: absolute; cursor: pointer; inset: 0;
+  background: #CBD5E1; border-radius: 26px;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.toggle-slider:before {
+  content: ""; position: absolute;
+  height: 20px; width: 20px; left: 3px; bottom: 3px;
+  background: white; border-radius: 50%;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+input:checked + .toggle-slider { background: var(--primary); }
+input:checked + .toggle-slider:before { transform: translateX(22px); }
+.modified-bar {
+  width: 3px; border-radius: 0 2px 2px 0;
+  background: linear-gradient(180deg, var(--primary), var(--accent));
+  position: absolute; left: 0; top: 8px; bottom: 8px;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tooltip-wrap { position: relative; }
+.tooltip-wrap .tip-text {
+  visibility: hidden; opacity: 0;
+  background: var(--bg-sidebar); color: var(--text-light);
+  padding: 8px 14px; border-radius: 8px; font-size: 12px;
+  line-height: 1.5;
+  position: absolute; z-index: 100; bottom: calc(100% + 8px);
+  left: 50%; transform: translateX(-50%) translateY(4px);
+  white-space: normal; max-width: 280px; min-width: 120px;
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+.tooltip-wrap .tip-text::after {
+  content: ''; position: absolute; top: 100%; left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent; border-top-color: var(--bg-sidebar);
+}
+.tooltip-wrap:hover .tip-text { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0); }
+.group-card {
+  transition: border-color 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.group-card:hover { border-color: #CBD5E1; box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
+.field-row { transition: all 0.2s ease; position: relative; }
+.field-row:hover { background: rgba(37, 99, 235, 0.02); }
+.module-item {
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative; overflow: hidden;
+}
+.module-item::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(99, 102, 241, 0.05));
+  opacity: 0; transition: opacity 0.2s ease;
+}
+.module-item:hover::before { opacity: 1; }
+.module-item.active {
+  background: linear-gradient(135deg, #2563EB, #4F46E5);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+.module-item.active::before { opacity: 0; }
+.type-badge { font-family: 'Courier New', Consolas, monospace; font-size: 11px; letter-spacing: 0.3px; }
+.btn-save { background: linear-gradient(135deg, #2563EB, #4F46E5); transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
+.btn-save:hover { background: linear-gradient(135deg, #1D4ED8, #4338CA); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35); transform: translateY(-1px); }
+.btn-save.saved { background: linear-gradient(135deg, #10B981, #059669); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35); }
+.toast {
+  position: fixed; top: 20px; right: 20px; z-index: 200;
+  padding: 14px 20px; border-radius: 12px;
+  font-size: 14px; font-weight: 500;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  transform: translateX(120%);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.toast.show { transform: translateX(0); }
+.toast.success { background: linear-gradient(135deg, #10B981, #059669); color: white; }
+.toast.error { background: linear-gradient(135deg, #EF4444, #DC2626); color: white; }
+.skeleton {
+  background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+  background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px;
+}
+.status-dot { position: relative; }
+.status-dot::after {
+  content: ''; position: absolute; inset: -3px;
+  border-radius: 50%; border: 2px solid currentColor;
+  opacity: 0; animation: pulseGlow 2s ease-in-out infinite;
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div :class="['toast', toast.type, toast.show ? 'show' : '']">
+    <div class="flex items-center space-x-2">
+      <svg v-if="toast.type==='success'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+      <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span>{{ toast.message }}</span>
+    </div>
+  </div>
+
+  <header class="fixed top-0 left-0 right-0 glass z-50" style="height: var(--header-height); border-bottom: 1px solid rgba(226, 232, 240, 0.8);">
+    <div class="h-full flex items-center justify-between px-6">
+      <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, #2563EB, #4F46E5); box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);">
+            <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-7v4h4l-5 7z"/></svg>
+          </div>
+          <div>
+            <h1 class="text-base font-semibold leading-tight" style="color: var(--text-primary);">GoFrame</h1>
+            <p class="text-xs" style="color: var(--text-muted);">Config Editor</p>
+          </div>
+        </div>
+        <div class="h-6 w-px bg-gray-200 mx-1"></div>
+        <span class="text-xs font-medium px-2.5 py-1 rounded-full" style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(99, 102, 241, 0.08)); color: var(--primary);">v1.0</span>
+      </div>
+      <div class="flex items-center space-x-3">
+        <div class="relative">
+          <input v-model="searchQuery" type="text"
+            :placeholder="lang==='zh-CN' ? '搜索字段...' : 'Search fields...'"
+            class="w-48 text-sm pl-9 pr-3 py-2 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all">
+          <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+        <div class="flex items-center bg-gray-100 rounded-lg p-0.5" style="border: 1px solid var(--border);">
+          <button @click="switchLang('en')" :class="['px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all', lang==='en' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700']">EN</button>
+          <button @click="switchLang('zh-CN')" :class="['px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all', lang==='zh-CN' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700']">中文</button>
+        </div>
+        <div class="relative">
+          <select v-model="exportFormat" class="appearance-none text-sm font-medium border border-gray-200 rounded-lg pl-3 pr-8 py-2 bg-white hover:border-gray-300 focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all cursor-pointer" style="color: var(--text-primary);">
+            <option value="yaml">YAML</option>
+            <option value="toml">TOML</option>
+            <option value="json">JSON</option>
+          </select>
+          <svg class="absolute right-2.5 top-3 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <button @click="saveConfig" :class="['btn-save flex items-center space-x-2 px-5 py-2 rounded-lg text-sm font-semibold text-white', saving ? 'saved save-anim' : '']" :disabled="saving">
+          <svg v-if="!saving" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+          <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" style="stroke-dasharray: 24; animation: checkmark 0.4s ease forwards;"/></svg>
+          <span>{{ saving ? (lang==='zh-CN'?'已保存':'Saved!') : (lang==='zh-CN'?'保存配置':'Save') }}</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex" style="padding-top: var(--header-height);">
+    <aside class="fixed left-0 bottom-0 sidebar-scroll overflow-y-auto" style="top: var(--header-height); width: var(--sidebar-width); background: var(--bg-sidebar); padding-bottom: var(--footer-height);">
+      <div class="px-5 pt-5 pb-3">
+        <div class="text-xs font-bold uppercase tracking-widest" style="color: #475569;">
+          {{ lang==='zh-CN' ? '配置模块' : 'MODULES' }}
+        </div>
+      </div>
+      <div class="px-3 space-y-1">
+        <div v-for="(schema, idx) in schemas" :key="schema.name" :style="{ animationDelay: idx * 50 + 'ms' }" class="fade-in">
+          <button @click="selectModule(schema.name)"
+            :class="['module-item w-full flex items-center justify-between px-3 py-3 rounded-xl text-sm font-medium', activeModule===schema.name ? 'active text-white' : 'text-gray-400 hover:text-gray-200']">
+            <div class="flex items-center space-x-3 relative z-10">
+              <span class="w-9 h-9 rounded-lg flex items-center justify-center text-base"
+                :style="{ background: activeModule===schema.name ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.04)', boxShadow: activeModule===schema.name ? 'inset 0 1px 0 rgba(255,255,255,0.1)' : 'none' }">
+                {{ moduleIcons[schema.name] }}
+              </span>
+              <span class="relative z-10">{{ formatModuleName(schema.name) }}</span>
+            </div>
+            <div class="flex items-center space-x-2 relative z-10">
+              <span v-if="getModuleModifiedCount(schema.name) > 0" class="flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold" style="background: rgba(37, 99, 235, 0.2); color: #93C5FD;">
+                {{ getModuleModifiedCount(schema.name) }}
+              </span>
+              <span class="text-xs opacity-50">{{ schema.fields.length }}</span>
+            </div>
+          </button>
+          <div v-show="activeModule===schema.name" class="ml-4 mt-1 mb-2 space-y-0.5 slide-in-left">
+            <button v-for="group in schema.groups" :key="group"
+              @click="scrollToGroup(group)"
+              :class="['w-full text-left flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs transition-all relative', activeGroup===group ? 'text-blue-400' : 'text-gray-600 hover:text-gray-400']">
+              <span class="w-1.5 h-1.5 rounded-full" :style="{ background: groupHasModified(schema, group) ? '#3B82F6' : activeGroup===group ? '#3B82F6' : '#334155' }"></span>
+              <span>{{ group }}</span>
+              <span class="ml-auto text-xs opacity-40">{{ getGroupFieldCount(schema, group) }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="px-5 py-4 mt-4" style="border-top: 1px solid rgba(255,255,255,0.05);">
+        <div class="text-xs" style="color: #475569;">
+          <div class="flex items-center space-x-2 mb-1">
+            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+            <span>{{ schemas.length }} {{ lang==='zh-CN' ? '个模块已加载' : 'modules loaded' }}</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="w-2 h-2 rounded-full" :class="modifiedCount > 0 ? 'bg-blue-500' : 'bg-gray-600'"></span>
+            <span>{{ modifiedCount }} {{ lang==='zh-CN' ? '处修改' : 'changes' }}</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="flex-1 min-h-screen" style="margin-left: var(--sidebar-width); padding-bottom: calc(var(--footer-height) + 24px);">
+      <div v-if="loading" class="p-6">
+        <div class="max-w-4xl mx-auto space-y-4">
+          <div class="skeleton h-10 w-64 mb-6"></div>
+          <div v-for="i in 3" :key="i" class="bg-white rounded-xl border p-6 space-y-4">
+            <div class="skeleton h-6 w-40"></div>
+            <div v-for="j in 4" :key="j" class="flex items-center space-x-4">
+              <div class="skeleton h-4 w-32"></div>
+              <div class="skeleton h-9 flex-1"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else-if="!currentSchema" class="flex items-center justify-center h-64">
+        <div class="text-center">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style="background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(99,102,241,0.08));">
+            <svg class="w-8 h-8" style="color: var(--primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          </div>
+          <p class="text-sm font-medium" style="color: var(--text-secondary);">{{ lang==='zh-CN' ? '请从左侧选择一个配置模块' : 'Select a module from the sidebar' }}</p>
+        </div>
+      </div>
+
+      <div v-else class="p-6">
+        <div class="max-w-4xl mx-auto">
+          <div class="mb-6 fade-in-up">
+            <div class="flex items-center space-x-3 mb-2">
+              <span class="text-2xl">{{ moduleIcons[currentSchema.name] }}</span>
+              <h1 class="text-2xl font-bold" style="color: var(--text-primary);">
+                {{ formatModuleName(currentSchema.name) }}
+                <span class="text-lg font-normal" style="color: var(--text-muted);">{{ lang==='zh-CN' ? '配置' : 'Configuration' }}</span>
+              </h1>
+            </div>
+            <div class="flex items-center space-x-4 text-sm" style="color: var(--text-secondary);">
+              <span class="flex items-center space-x-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
+                <span>{{ filteredFieldCount }} {{ lang==='zh-CN' ? '个字段' : 'fields' }}</span>
+              </span>
+              <span class="flex items-center space-x-1">
+                <span style="color: var(--text-muted);">{{ lang==='zh-CN' ? '配置节点' : 'Node' }}:</span>
+                <code class="px-2 py-0.5 rounded-md text-xs font-mono" style="background: rgba(37,99,235,0.06); color: var(--primary);">{{ currentSchema.configNode }}</code>
+              </span>
+            </div>
+            <!-- 配置组选择器 -->
+            <div v-if="showConfigGroupSelector" class="mt-4 flex items-center space-x-3">
+              <span class="text-sm font-medium" style="color: var(--text-secondary);">
+                {{ lang==='zh-CN' ? '配置组' : 'Config Group' }}:
+              </span>
+              <div class="flex items-center bg-gray-100 rounded-lg p-0.5" style="border: 1px solid var(--border);">
+                <button v-for="group in configGroups" :key="group"
+                  @click="selectConfigGroup(group)"
+                  :class="['px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all', activeConfigGroup===group ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700']">
+                  {{ group }}
+                </button>
+              </div>
+              <span v-if="activeConfigGroup" class="text-xs px-2 py-0.5 rounded-full" style="background: rgba(37,99,235,0.08); color: var(--primary);">
+                {{ activeConfigGroup }}
+              </span>
+            </div>
+          </div>
+
+          <div v-for="(group, gIdx) in currentSchema.groups" :key="group" :id="'group-'+group"
+            :style="{ animationDelay: gIdx * 60 + 'ms' }"
+            class="group-card bg-white mb-4 overflow-hidden fade-in-up"
+            v-show="getFilteredGroupFields(group).length > 0">
+            <button @click="toggleGroup(group)"
+              class="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors group">
+              <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                  :style="{ background: expandedGroups[group] ? 'linear-gradient(135deg, rgba(37,99,235,0.1), rgba(99,102,241,0.1))' : '#F8FAFC' }">
+                  <svg :class="['w-4 h-4 transition-all duration-300', expandedGroups[group] ? '' : '-rotate-90']"
+                    :style="{ color: expandedGroups[group] ? 'var(--primary)' : 'var(--text-muted)' }"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+                <h2 class="text-sm font-semibold tracking-wide" style="color: var(--text-primary);">{{ group }}</h2>
+                <span class="text-xs font-medium px-2 py-0.5 rounded-full" style="background: var(--border-light); color: var(--text-muted);">{{ getFilteredGroupFields(group).length }}</span>
+                <span v-if="groupHasModified(currentSchema, group)" class="flex items-center space-x-1 text-xs font-medium px-2 py-0.5 rounded-full" style="background: var(--primary-glow); color: var(--primary);">
+                  <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                  <span>{{ lang==='zh-CN' ? '已修改' : 'Modified' }}</span>
+                </span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span v-if="groupHasModified(currentSchema, group)" @click.stop="resetGroup(group)"
+                  class="opacity-0 group-hover:opacity-100 text-xs px-2.5 py-1 rounded-md hover:bg-red-50 transition-all cursor-pointer select-none" style="color: var(--danger);">
+                  {{ lang==='zh-CN' ? '重置分组' : 'Reset Group' }}
+                </span>
+              </div>
+            </button>
+
+            <div v-if="expandedGroups[group]" class="border-t" style="border-color: var(--border-light);">
+              <div v-for="(field, fIdx) in getFilteredGroupFields(group)" :key="field.jsonKey"
+                :style="{ animationDelay: fIdx * 30 + 'ms' }"
+                class="field-row px-6 py-4 border-b last:border-0 fade-in" style="border-color: var(--border-light);">
+                <div v-if="isModified(field)" class="modified-bar"></div>
+                <div class="flex items-start gap-4">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center flex-wrap gap-2 mb-1">
+                      <span class="text-sm font-semibold" style="color: var(--text-primary);">{{ field.name }}</span>
+                      <code class="text-xs font-mono px-1.5 py-0.5 rounded" style="background: #F1F5F9; color: var(--text-secondary);">{{ field.jsonKey }}</code>
+                      <span :class="['type-badge px-1.5 py-0.5 rounded', typeColorClass(field.type)]">{{ field.type }}</span>
+                      <span v-if="field.rule" class="type-badge px-1.5 py-0.5 rounded" style="background: rgba(245, 158, 11, 0.08); color: #D97706;">{{ field.rule }}</span>
+                    </div>
+                    <p class="text-xs leading-relaxed" style="color: var(--text-secondary);">{{ getFieldDescription(field) }}</p>
+                    <div v-if="field.default" class="flex items-center mt-1.5 text-xs" style="color: var(--text-muted);">
+                      <span>{{ lang==='zh-CN' ? '默认' : 'Default' }}:</span>
+                      <code class="ml-1 font-mono px-1.5 py-0.5 rounded" style="background: #F8FAFC; color: var(--text-secondary);">{{ field.default }}</code>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2 flex-shrink-0" style="width: 280px;">
+                    <template v-if="field.type === 'bool'">
+                      <div class="flex items-center space-x-3 w-full justify-end">
+                        <span class="text-xs font-medium" :style="{ color: getFieldValue(field) ? 'var(--primary)' : 'var(--text-muted)' }">
+                          {{ getFieldValue(field) ? (lang==='zh-CN'?'开启':'ON') : (lang==='zh-CN'?'关闭':'OFF') }}
+                        </span>
+                        <label class="toggle-switch">
+                          <input type="checkbox" :checked="getFieldValue(field)" @change="setFieldValue(field, $event.target.checked)">
+                          <span class="toggle-slider"></span>
+                        </label>
+                      </div>
+                    </template>
+
+                    <template v-else-if="field.type === 'duration'">
+                      <input type="text"
+                        :value="getFieldValue(field) !== undefined ? getFieldValue(field) : ''"
+                        @input="setFieldValue(field, $event.target.value)"
+                        @blur="validateField(field)"
+                        :placeholder="field.default || 'e.g. 30s, 1m, 1h'"
+                        class="field-input w-full text-sm px-3 py-2 rounded-lg">
+                    </template>
+
+                    <template v-else-if="field.type === 'int' || field.type === 'float'">
+                      <input type="number"
+                        :value="getFieldValue(field) !== undefined ? getFieldValue(field) : ''"
+                        @input="setFieldValue(field, $event.target.value)"
+                        @blur="validateField(field)"
+                        :placeholder="field.default || '0'"
+                        class="field-input w-full text-sm px-3 py-2 rounded-lg">
+                    </template>
+
+                    <template v-else-if="field.type === 'map' || field.type.startsWith('[]')">
+                      <textarea
+                        :value="getFieldValue(field) !== undefined ? JSON.stringify(getFieldValue(field), null, 2) : ''"
+                        @input="setJSONFieldValue(field, $event.target.value)"
+                        @blur="validateField(field)"
+                        :placeholder="field.default || (field.type === 'map' ? '{key: value}' : '[item1, item2]')"
+                        rows="2"
+                        class="field-input w-full text-sm px-3 py-2 rounded-lg resize-y"
+                        style="min-height: 36px;"></textarea>
+                    </template>
+
+                    <template v-else>
+                      <input type="text"
+                        :value="getFieldValue(field) !== undefined ? getFieldValue(field) : ''"
+                        @input="setFieldValue(field, $event.target.value)"
+                        @blur="validateField(field)"
+                        :placeholder="field.default || ''"
+                        class="field-input w-full text-sm px-3 py-2 rounded-lg">
+                    </template>
+
+                    <button v-if="isModified(field)" @click="resetField(field)"
+                      class="tooltip-wrap p-2 rounded-lg hover:bg-red-50 transition-all flex-shrink-0 group">
+                      <svg class="w-4 h-4 transition-colors" style="color: var(--text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                      </svg>
+                      <span class="tip-text">{{ lang==='zh-CN' ? '恢复默认值' : 'Reset to default' }}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div v-if="fieldErrors[activeModule+'.'+field.jsonKey]" class="mt-2 flex items-center space-x-1.5 text-xs" style="color: var(--danger);">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <span>{{ fieldErrors[activeModule+'.'+field.jsonKey] }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="searchQuery && filteredFieldCount === 0" class="text-center py-12">
+            <svg class="w-12 h-12 mx-auto mb-3" style="color: var(--text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <p class="text-sm font-medium" style="color: var(--text-secondary);">
+              {{ lang==='zh-CN' ? '没有找到匹配的字段' : 'No matching fields found' }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer class="fixed bottom-0 left-0 right-0 glass flex items-center justify-between px-6 text-xs z-40"
+    style="height: var(--footer-height); border-top: 1px solid rgba(226, 232, 240, 0.8); color: var(--text-secondary);">
+    <div class="flex items-center space-x-4">
+      <span v-if="configFilePath" class="flex items-center space-x-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+        <span class="font-mono">{{ configFilePath }}</span>
+      </span>
+      <span v-else class="flex items-center space-x-1.5" style="color: var(--text-muted);">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>{{ lang==='zh-CN' ? '未加载配置文件' : 'No config file loaded' }}</span>
+      </span>
+    </div>
+    <div class="flex items-center space-x-4">
+      <span v-if="modifiedCount > 0" class="flex items-center space-x-1.5 font-medium" style="color: var(--primary);">
+        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 status-dot"></span>
+        <span>{{ modifiedCount }} {{ lang==='zh-CN' ? '处修改' : 'change(s)' }}</span>
+      </span>
+      <span v-if="lastSaved" class="flex items-center space-x-1.5" style="color: var(--success);">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        <span>{{ lang==='zh-CN' ? '已保存' : 'Saved' }} {{ lastSaved }}</span>
+      </span>
+      <span class="font-mono opacity-60">GoFrame Config Editor v1.0</span>
+    </div>
+  </footer>
+</div>
+
+<script>
+const { createApp, ref, computed, onMounted, reactive, nextTick } = Vue;
+
+createApp({
+  setup() {
+    const schemas = ref([]);
+    const activeModule = ref('');
+    const activeGroup = ref('');
+    const activeConfigGroup = ref('');  // 当前选择的配置组，如 "default", "cache", "disk"
+    const lang = ref('en');
+    const i18nData = ref({});
+    const configData = ref({});
+    const editedValues = reactive({});
+    const fieldErrors = reactive({});
+    const expandedGroups = reactive({});
+    const loading = ref(true);
+    const saving = ref(false);
+    const configFilePath = ref('');
+    const configFileType = ref('yaml');
+    const exportFormat = ref('yaml');
+    const lastSaved = ref('');
+    const searchQuery = ref('');
+    const toast = reactive({ show: false, type: 'success', message: '' });
+    const moduleIcons = { server: '\u{1F310}', database: '\u{1F5C4}', redis: '\u26A1', logger: '\u{1F4DD}', viewer: '\u{1F3A8}' };
+
+    const currentSchema = computed(() => schemas.value.find(s => s.name === activeModule.value));
+
+    // 计算当前模块的配置组列表
+    const configGroups = computed(() => {
+      if (!currentSchema.value || !configData.value) return [];
+      const moduleData = configData.value[currentSchema.value.configNode];
+      if (!moduleData || typeof moduleData !== 'object') return [];
+      // 获取所有配置组名称（排除非对象类型的键）
+      const groups = [];
+      for (const key of Object.keys(moduleData)) {
+        const val = moduleData[key];
+        if (val && typeof val === 'object') {
+          groups.push(key);
+        }
+      }
+      return groups.sort();
+    });
+
+    // 判断是否需要显示配置组选择器（有多个配置组时才显示）
+    const showConfigGroupSelector = computed(() => configGroups.value.length > 1);
+    const modifiedCount = computed(() => Object.keys(editedValues).length);
+    const filteredFieldCount = computed(() => {
+      if (!currentSchema.value) return 0;
+      if (!searchQuery.value) return currentSchema.value.fields.length;
+      return currentSchema.value.fields.filter(f => matchSearch(f)).length;
+    });
+
+    function showToast(type, message) {
+      toast.type = type; toast.message = message; toast.show = true;
+      setTimeout(() => { toast.show = false; }, 3000);
+    }
+
+    function formatModuleName(name) { return name.charAt(0).toUpperCase() + name.slice(1); }
+
+    function matchSearch(field) {
+      if (!searchQuery.value) return true;
+      const q = searchQuery.value.toLowerCase();
+      const desc = lang.value !== 'en' && field.i18nKey && i18nData.value[field.i18nKey]
+        ? i18nData.value[field.i18nKey] : (field.description || '');
+      return field.name.toLowerCase().includes(q) ||
+             field.jsonKey.toLowerCase().includes(q) ||
+             desc.toLowerCase().includes(q) ||
+             field.type.toLowerCase().includes(q);
+    }
+
+    function selectModule(name) {
+      activeModule.value = name;
+      activeConfigGroup.value = '';  // 切换模块时重置配置组选择
+      const schema = schemas.value.find(s => s.name === name);
+      if (schema) {
+        schema.groups.forEach(g => { if (!(g in expandedGroups)) expandedGroups[g] = true; });
+      }
+      // 自动选择第一个配置组
+      nextTick(() => {
+        if (configGroups.value.length > 0) {
+          activeConfigGroup.value = configGroups.value[0];
+        }
+      });
+    }
+
+    // 选择配置组
+    function selectConfigGroup(groupName) {
+      activeConfigGroup.value = groupName;
+    }
+
+    function toggleGroup(group) { expandedGroups[group] = !expandedGroups[group]; }
+
+    function scrollToGroup(group) {
+      activeGroup.value = group;
+      expandedGroups[group] = true;
+      nextTick(() => {
+        const el = document.getElementById('group-' + group);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+
+    function getGroupFields(group) {
+      if (!currentSchema.value) return [];
+      return currentSchema.value.fields.filter(f => f.group === group);
+    }
+
+    function getFilteredGroupFields(group) { return getGroupFields(group).filter(f => matchSearch(f)); }
+
+    function getGroupFieldCount(schema, group) { return schema.fields.filter(f => f.group === group).length; }
+
+    // findValueInObj returns the value for key from obj using a case-insensitive match.
+    function findValueInObj(obj, key) {
+      if (!obj || typeof obj !== 'object') return undefined;
+      if (key in obj) return obj[key];
+      const lk = key.toLowerCase();
+      for (const k of Object.keys(obj)) {
+        if (k.toLowerCase() === lk) return obj[k];
+      }
+      return undefined;
+    }
+
+    // resolveConfigValue finds the actual config value for a field,
+    // handling nested structures like database.default.host and redis.default.address.
+    function resolveConfigValue(moduleData, field) {
+      if (!moduleData) return undefined;
+      const key = field.jsonKey;
+
+      // 如果选择了配置组，直接从该组获取值
+      if (activeConfigGroup.value && moduleData[activeConfigGroup.value]) {
+        const groupData = moduleData[activeConfigGroup.value];
+        // 处理数组形式（如 database.default 是数组）
+        if (Array.isArray(groupData) && groupData.length > 0) {
+          return findValueInObj(groupData[0], key);
+        }
+        // 处理对象形式（如 redis.default 是对象）
+        if (typeof groupData === 'object') {
+          return findValueInObj(groupData, key);
+        }
+      }
+
+      // 1. Direct lookup.
+      const direct = findValueInObj(moduleData, key);
+      if (direct !== undefined) return direct;
+
+      // 2. Nested group lookup — GoFrame stores database/redis configs under
+      //    group names like "default", e.g. database.default.host.
+      for (const groupKey of Object.keys(moduleData)) {
+        const groupVal = moduleData[groupKey];
+        if (!groupVal || typeof groupVal !== 'object') continue;
+
+        // Object form: { host: "...", port: "..." }
+        if (!Array.isArray(groupVal)) {
+          const nested = findValueInObj(groupVal, key);
+          if (nested !== undefined) return nested;
+        }
+        // Array form: [{ host: "...", port: "..." }] — take first element.
+        if (Array.isArray(groupVal) && groupVal.length > 0) {
+          const nested = findValueInObj(groupVal[0], key);
+          if (nested !== undefined) return nested;
+        }
+      }
+      return undefined;
+    }
+
+    function getFieldValue(field) {
+      const key = activeModule.value + '.' + (activeConfigGroup.value ? activeConfigGroup.value + '.' : '') + field.jsonKey;
+      if (key in editedValues) return editedValues[key];
+      if (!currentSchema.value) return undefined;
+      const moduleData = configData.value[currentSchema.value.configNode];
+      return resolveConfigValue(moduleData, field);
+    }
+
+    function setFieldValue(field, value) {
+      const key = activeModule.value + '.' + (activeConfigGroup.value ? activeConfigGroup.value + '.' : '') + field.jsonKey;
+      editedValues[key] = value;
+      delete fieldErrors[key];
+    }
+
+    function setJSONFieldValue(field, rawValue) {
+      const key = activeModule.value + '.' + (activeConfigGroup.value ? activeConfigGroup.value + '.' : '') + field.jsonKey;
+      try {
+        editedValues[key] = JSON.parse(rawValue);
+        delete fieldErrors[key];
+      } catch (e) {
+        if (rawValue.trim() === '') {
+          delete editedValues[key];
+          delete fieldErrors[key];
+        } else {
+          fieldErrors[key] = lang.value === 'zh-CN' ? '无效的 JSON 格式' : 'Invalid JSON format';
+        }
+      }
+    }
+
+    function resetField(field) {
+      const key = activeModule.value + '.' + (activeConfigGroup.value ? activeConfigGroup.value + '.' : '') + field.jsonKey;
+      delete editedValues[key];
+      delete fieldErrors[key];
+    }
+
+    function resetGroup(group) { getGroupFields(group).forEach(f => resetField(f)); }
+
+    function isModified(field) {
+      const key = activeModule.value + '.' + (activeConfigGroup.value ? activeConfigGroup.value + '.' : '') + field.jsonKey;
+      return key in editedValues;
+    }
+
+    function groupHasModified(schema, group) {
+      const prefix = schema.name + '.' + (activeConfigGroup.value ? activeConfigGroup.value + '.' : '');
+      return schema.fields.filter(f => f.group === group).some(f => (prefix + f.jsonKey) in editedValues);
+    }
+
+    function getModuleModifiedCount(moduleName) {
+      return Object.keys(editedValues).filter(k => k.startsWith(moduleName + '.')).length;
+    }
+
+    function getFieldDescription(field) {
+      if (lang.value !== 'en' && field.i18nKey && i18nData.value[field.i18nKey]) {
+        return i18nData.value[field.i18nKey];
+      }
+      return field.description || '';
+    }
+
+    function typeColorClass(type) {
+      const map = { 'string': 'bg-green-50 text-green-700', 'int': 'bg-blue-50 text-blue-700',
+        'bool': 'bg-purple-50 text-purple-700', 'duration': 'bg-amber-50 text-amber-700',
+        'float': 'bg-indigo-50 text-indigo-700', 'map': 'bg-pink-50 text-pink-700' };
+      if (type.startsWith('[]')) return 'bg-orange-50 text-orange-700';
+      return map[type] || 'bg-gray-100 text-gray-600';
+    }
+
+    function validateField(field) {
+      const key = activeModule.value + '.' + field.jsonKey;
+      const value = getFieldValue(field);
+      if (field.rule && field.rule.includes('required') && (!value || value === '')) {
+        fieldErrors[key] = (lang.value === 'zh-CN' ? '此字段为必填项' : 'This field is required');
+        return;
+      }
+      delete fieldErrors[key];
+    }
+
+    async function switchLang(newLang) {
+      lang.value = newLang;
+      if (newLang !== 'en') {
+        try {
+          const res = await fetch('/api/i18n/' + newLang);
+          const json = await res.json();
+          if (json.code === 0) i18nData.value = json.data || {};
+        } catch (e) { console.error('Failed to load i18n', e); }
+      }
+    }
+
+    // setNestedValue updates fieldKey inside moduleData in-place,
+    // handling nested structures like database.default.host and redis.default.address.
+    function setNestedValue(moduleData, fieldKey, value) {
+      const lk = fieldKey.toLowerCase();
+      // 1. Direct update.
+      for (const k of Object.keys(moduleData)) {
+        if (k.toLowerCase() === lk) { moduleData[k] = value; return true; }
+      }
+      // 2. Look inside nested group objects.
+      for (const groupKey of Object.keys(moduleData)) {
+        const groupVal = moduleData[groupKey];
+        if (!groupVal || typeof groupVal !== 'object') continue;
+
+        if (!Array.isArray(groupVal)) {
+          for (const k of Object.keys(groupVal)) {
+            if (k.toLowerCase() === lk) { groupVal[k] = value; return true; }
+          }
+        }
+        if (Array.isArray(groupVal) && groupVal.length > 0) {
+          for (const k of Object.keys(groupVal[0])) {
+            if (k.toLowerCase() === lk) { groupVal[0][k] = value; return true; }
+          }
+        }
+      }
+      return false;
+    }
+
+    // 获取指定模块的配置组列表
+    function configGroupsForModule(moduleName) {
+      const schema = schemas.value.find(s => s.name === moduleName);
+      if (!schema || !configData.value) return [];
+      const moduleData = configData.value[schema.configNode];
+      if (!moduleData || typeof moduleData !== 'object') return [];
+      const groups = [];
+      for (const key of Object.keys(moduleData)) {
+        const val = moduleData[key];
+        if (val && typeof val === 'object') {
+          groups.push(key);
+        }
+      }
+      return groups;
+    }
+
+    async function saveConfig() {
+      const merged = JSON.parse(JSON.stringify(configData.value || {}));
+      for (const [key, value] of Object.entries(editedValues)) {
+        const parts = key.split('.');
+        const moduleName = parts[0];
+        const schema = schemas.value.find(s => s.name === moduleName);
+        if (!schema) continue;
+        const configNode = schema.configNode;
+        if (!merged[configNode]) merged[configNode] = {};
+
+        // 检查是否有配置组（如 redis.cache.address 中的 cache）
+        const configGroups = configGroupsForModule(moduleName);
+        if (configGroups.length > 0 && parts.length >= 3) {
+          // 格式: module.configGroup.fieldKey
+          const groupName = parts[1];
+          const fieldKey = parts.slice(2).join('.');
+          if (!merged[configNode][groupName]) {
+            merged[configNode][groupName] = {};
+          }
+          const groupData = merged[configNode][groupName];
+          if (Array.isArray(groupData) && groupData.length > 0) {
+            groupData[0][fieldKey] = value;
+          } else if (typeof groupData === 'object') {
+            groupData[fieldKey] = value;
+          }
+        } else {
+          // 格式: module.fieldKey（无配置组）
+          const fieldKey = parts.slice(1).join('.');
+          if (!setNestedValue(merged[configNode], fieldKey, value)) {
+            merged[configNode][fieldKey] = value;
+          }
+        }
+      }
+
+      saving.value = true;
+      try {
+        const res = await fetch('/api/config/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            config: merged,
+            filePath: configFilePath.value || '',
+            fileType: exportFormat.value,
+          })
+        });
+        const json = await res.json();
+        if (json.code === 0) {
+          lastSaved.value = new Date().toLocaleTimeString();
+          if (json.data && json.data.filePath) configFilePath.value = json.data.filePath;
+          showToast('success', lang.value === 'zh-CN' ? '配置保存成功' : 'Configuration saved successfully');
+        } else {
+          showToast('error', (lang.value === 'zh-CN' ? '保存失败: ' : 'Save failed: ') + json.message);
+        }
+      } catch (e) {
+        showToast('error', (lang.value === 'zh-CN' ? '保存错误: ' : 'Save error: ') + e.message);
+      }
+      setTimeout(() => { saving.value = false; }, 2000);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (!saving.value) saveConfig();
+      }
+    });
+
+    onMounted(async () => {
+      try {
+        const [schemaRes, cfgRes] = await Promise.all([
+          fetch('/api/schemas'),
+          fetch('/api/config')
+        ]);
+        const schemaJson = await schemaRes.json();
+        if (schemaJson.code === 0) {
+          schemas.value = schemaJson.data || [];
+          if (schemas.value.length > 0) selectModule(schemas.value[0].name);
+        }
+        const cfgJson = await cfgRes.json();
+        if (cfgJson.code === 0 && cfgJson.data) {
+          configData.value = cfgJson.data.config || {};
+          configFilePath.value = cfgJson.data.filePath || '';
+          configFileType.value = cfgJson.data.fileType || 'yaml';
+          exportFormat.value = cfgJson.data.fileType || 'yaml';
+        }
+      } catch (e) {
+        console.error('Failed to load data', e);
+        showToast('error', 'Failed to load configuration data');
+      }
+      loading.value = false;
+    });
+
+    return {
+      schemas, activeModule, activeGroup, activeConfigGroup, lang, i18nData, configData,
+      editedValues, fieldErrors, expandedGroups, loading, saving, configFilePath,
+      configFileType, exportFormat, lastSaved, moduleIcons, searchQuery,
+      toast, currentSchema, modifiedCount, filteredFieldCount,
+      configGroups, showConfigGroupSelector,
+      showToast, formatModuleName, matchSearch,
+      selectModule, selectConfigGroup, toggleGroup, scrollToGroup,
+      getGroupFields, getFilteredGroupFields, getGroupFieldCount,
+      getFieldValue, setFieldValue, setJSONFieldValue, resetField, resetGroup,
+      isModified, groupHasModified, getModuleModifiedCount,
+      getFieldDescription, typeColorClass, validateField,
+      switchLang, saveConfig,
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
