@@ -22,6 +22,11 @@ type structInfo struct {
 	comment    string
 }
 
+type importItem struct {
+	Path  string
+	Alias string
+}
+
 // getStructsNameInSrc retrieves all struct names and comment
 // that end in "Req" and have "g.Meta" in their body.
 func (c CGenCtrl) getStructsNameInSrc(filePath string) (structInfos []*structInfo, err error) {
@@ -73,7 +78,7 @@ func (c CGenCtrl) getStructsNameInSrc(filePath string) (structInfos []*structInf
 }
 
 // getImportsInDst retrieves all import paths in the file.
-func (c CGenCtrl) getImportsInDst(filePath string) (imports []string, err error) {
+func (c CGenCtrl) getImportsInDst(filePath string) (imports []importItem, err error) {
 	var (
 		fileContent = gfile.GetContents(filePath)
 		fileSet     = token.NewFileSet()
@@ -86,7 +91,14 @@ func (c CGenCtrl) getImportsInDst(filePath string) (imports []string, err error)
 
 	ast.Inspect(node, func(n ast.Node) bool {
 		if imp, ok := n.(*ast.ImportSpec); ok {
-			imports = append(imports, imp.Path.Value)
+			var alias string
+			if imp.Name != nil {
+				alias = imp.Name.Name
+			}
+			imports = append(imports, importItem{
+				Path:  gstr.Trim(imp.Path.Value, `"`),
+				Alias: alias,
+			})
 		}
 		return true
 	})
