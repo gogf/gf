@@ -10,7 +10,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/os/gtime"
 )
 
 // RuleDate implements `date` rule:
@@ -41,12 +41,19 @@ func (r RuleDate) Run(in RunInput) error {
 		if obj.IsZero() {
 			return errors.New(in.Message)
 		}
+		return nil
 	}
-	if !gregex.IsMatchString(
-		`\d{4}[\.\-\_/]{0,1}\d{2}[\.\-\_/]{0,1}\d{2}`,
-		in.Value.String(),
-	) {
-		return errors.New(in.Message)
+	// Try direct time conversion for validation, which handles both format and date validity.
+	// Support common date formats: 2006-01-02, 20060102, 2006.01.02, 2006/01/02
+	if _, err := gtime.StrToTimeFormat(in.Value.String(), "Ymd"); err != nil {
+		// Try with different separator formats
+		if _, err := gtime.StrToTimeFormat(in.Value.String(), "Y-m-d"); err != nil {
+			if _, err := gtime.StrToTimeFormat(in.Value.String(), "Y.m.d"); err != nil {
+				if _, err := gtime.StrToTimeFormat(in.Value.String(), "Y/m/d"); err != nil {
+					return errors.New(in.Message)
+				}
+			}
+		}
 	}
 	return nil
 }
