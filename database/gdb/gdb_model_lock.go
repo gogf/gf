@@ -120,10 +120,11 @@ func (m *Model) LockUpdateSkipLocked() *Model {
 }
 
 // LockShared sets the lock in share mode for current operation.
-// This is equivalent to Lock("LOCK IN SHARE MODE") for MySQL or Lock("FOR SHARE") for PostgreSQL.
-// Note: For maximum compatibility, this uses MySQL's legacy syntax.
+// The actual clause is dialect-specific and supplied by the driver via
+// GetLockSharedClause() — MySQL emits "LOCK IN SHARE MODE", PostgreSQL/GaussDB
+// emit "FOR SHARE", etc.
 func (m *Model) LockShared() *Model {
 	model := m.getModel()
-	model.lockInfo = LockInShareMode
+	model.lockInfo = m.db.GetLockSharedClause()
 	return model
 }
