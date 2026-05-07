@@ -314,6 +314,13 @@ func (m *Model) Clone() *Model {
 		newModel.having = make([]any, n)
 		copy(newModel.having, m.having)
 	}
+	if n := len(m.withOptions); n > 0 {
+		newModel.withOptions = make(map[ChunkName]*WithOption, n)
+		for k, v := range m.withOptions {
+			optCopy := *v
+			newModel.withOptions[k] = &optCopy
+		}
+	}
 	return newModel
 }
 
