@@ -216,6 +216,9 @@ func (m *Model) doWithScanStructs(pointer any) error {
 	if len(m.withArray) == 0 && !m.withAll {
 		return nil
 	}
+	if v, ok := pointer.(reflect.Value); ok {
+		pointer = v.Interface()
+	}
 	return m.doBatchWithScan(pointer)
 }
 
