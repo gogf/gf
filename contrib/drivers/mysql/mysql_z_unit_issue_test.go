@@ -1983,3 +1983,86 @@ func Test_Issue4697(t *testing.T) {
 		t.AssertNE(result[0]["nickname"], nil)
 	})
 }
+
+// https://github.com/gogf/gf/issues/4698
+func Test_Issue4698(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	// Test 1: AllAndCount with multiple fields should generate valid COUNT SQL
+	gtest.C(t, func(t *gtest.T) {
+		result, count, err := db.Model(table).Fields("id, nickname").AllAndCount(true)
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+		t.Assert(len(result), TableSize)
+		t.AssertNE(result[0]["id"], nil)
+		t.AssertNE(result[0]["nickname"], nil)
+		t.Assert(result[0]["passport"], nil)
+	})
+
+	// Test 2: AllAndCount(false) with multiple fields
+	gtest.C(t, func(t *gtest.T) {
+		result, count, err := db.Model(table).Fields("id, nickname").AllAndCount(false)
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+		t.Assert(len(result), TableSize)
+	})
+
+	// Test 3: ScanAndCount with multiple fields
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id       int
+			Nickname string
+		}
+		var users []User
+		var total int
+		err := db.Model(table).Fields("id, nickname").ScanAndCount(&users, &total, true)
+		t.AssertNil(err)
+		t.Assert(total, TableSize)
+		t.Assert(len(users), TableSize)
+		t.AssertGT(users[0].Id, 0)
+		t.AssertNE(users[0].Nickname, "")
+	})
+
+	// Test 4: AllAndCount with single field and useFieldForCount=true
+	gtest.C(t, func(t *gtest.T) {
+		result, count, err := db.Model(table).Fields("id").AllAndCount(true)
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+		t.Assert(len(result), TableSize)
+		t.Assert(len(result[0]), 1)
+	})
+
+	// Test 5: AllAndCount with Where condition
+	gtest.C(t, func(t *gtest.T) {
+		result, count, err := db.Model(table).Fields("id, nickname").Where("id<?", 5).AllAndCount(true)
+		t.AssertNil(err)
+		t.Assert(count, 4)
+		t.Assert(len(result), 4)
+	})
+
+	// Test 6: Distinct + AllAndCount(false) should use COUNT(1), not COUNT(DISTINCT 1)
+	gtest.C(t, func(t *gtest.T) {
+		result, count, err := db.Model(table).Fields("nickname").Distinct().AllAndCount(false)
+		t.AssertNil(err)
+		// COUNT(1) should return total rows, not distinct count
+		t.Assert(count, TableSize)
+		t.AssertGT(len(result), 0)
+	})
+
+	// Test 7: Distinct + AllAndCount(true) with single field should use COUNT(DISTINCT nickname)
+	gtest.C(t, func(t *gtest.T) {
+		_, count, err := db.Model(table).Fields("nickname").Distinct().AllAndCount(true)
+		t.AssertNil(err)
+		// COUNT(DISTINCT nickname) should return distinct count
+		t.Assert(count, TableSize)
+	})
+
+	// Test 8: Distinct + multiple fields + AllAndCount(true) should fallback to COUNT(1)
+	gtest.C(t, func(t *gtest.T) {
+		result, count, err := db.Model(table).Fields("id, nickname").Distinct().AllAndCount(true)
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+		t.Assert(len(result), TableSize)
+	})
+}
