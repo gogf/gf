@@ -56,15 +56,17 @@ type Model struct {
 	softTimeOption  SoftTimeOption            // SoftTimeOption is the option to customize soft time feature for Model.
 	shardingConfig  ShardingConfig            // ShardingConfig for database/table sharding feature.
 	shardingValue   any                       // Sharding value for sharding feature.
-	preload         bool                      // preload enables batch recursive scanning for association operations (Solving N+1 problem).
-	preloadOptions  map[string]*PreloadOption // preloadOptions is the preload configuration indexed by chunkName.
+	withOptions     map[ChunkName]*WithOption // withOptions is the batch association configuration indexed by chunkName.
 }
 
-// PreloadOption is the configuration for preload operations.
-type PreloadOption struct {
-	ChunkName    string // ChunkName is used to match the chunkName in the tag (for grouping fields).
-	ChunkSize    int    // ChunkSize is the size of each chunk (0 means no chunking, -1 means use default).
-	ChunkMinRows int    // ChunkMinRows is the minimum number of rows to trigger chunking (0 means always chunk, -1 means use default).
+// ChunkName is a type alias for chunk group identifier used in WithOptions.
+type ChunkName = string
+
+// WithOption is the configuration for batch association operations.
+type WithOption struct {
+	ChunkName    ChunkName // ChunkName is used to match the chunkName in the tag (for grouping fields).
+	ChunkSize    int       // ChunkSize is the size of each chunk (0 means no chunking, -1 means use default).
+	ChunkMinRows int       // ChunkMinRows is the minimum number of rows to trigger chunking (0 means always chunk, -1 means use default).
 }
 
 // ModelHandler is a function that handles given Model and returns a new Model that is custom modified.

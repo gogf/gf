@@ -22,11 +22,12 @@ import (
 // relationFieldInfo holds information about a relation field in a struct.
 // It caches parsed information to avoid repeated reflection and parsing.
 type relationFieldInfo struct {
-	Field       gstructs.Field                  // Field information from gstructs
-	ParsedTag   parseWithTagInFieldStructOutput // Parsed ORM tag information
-	isSliceType bool                            // Cached: whether the field is a slice type
-	sourceField string                          // Cached: source field name in the related table (DB column)
-	targetField string                          // Cached: target field name in the current struct
+	Field       gstructs.Field // Field information from gstructs
+	WithTag     withTagConfig  // Basic ORM tag configuration (with, where, order, unscoped)
+	ChunkTag    chunkTagConfig // Chunk-related tag configuration
+	isSliceType bool           // Cached: whether the field is a slice type
+	sourceField string         // Cached: source field name in the related table (DB column)
+	targetField string         // Cached: target field name in the current struct
 }
 
 // isSlice returns whether this relation field is a slice type (one-to-many).
@@ -35,10 +36,11 @@ func (r *relationFieldInfo) isSlice() bool {
 }
 
 // newRelationFieldInfo creates a new relationFieldInfo with pre-computed cache values.
-func newRelationFieldInfo(field gstructs.Field, parsedTag parseWithTagInFieldStructOutput) *relationFieldInfo {
+func newRelationFieldInfo(field gstructs.Field, withTag withTagConfig, chunkTag chunkTagConfig) *relationFieldInfo {
 	info := &relationFieldInfo{
-		Field:     field,
-		ParsedTag: parsedTag,
+		Field:    field,
+		WithTag:  withTag,
+		ChunkTag: chunkTag,
 	}
 
 	// Pre-compute slice type
@@ -53,7 +55,7 @@ func newRelationFieldInfo(field gstructs.Field, parsedTag parseWithTagInFieldStr
 
 	// Pre-parse relation field pair from "with" tag
 	// Format: "source_field=target_field" or just "field_name" (same name in both tables)
-	parts := gstr.SplitAndTrim(parsedTag.With, "=")
+	parts := gstr.SplitAndTrim(withTag.With, "=")
 	if len(parts) == 1 {
 		// Same field name in both tables
 		info.sourceField = parts[0]
@@ -67,9 +69,9 @@ func newRelationFieldInfo(field gstructs.Field, parsedTag parseWithTagInFieldStr
 	return info
 }
 
-// preloadContext holds the context for recursive preload operations.
+// withScanContext holds the context for recursive batch association operations.
 // It tracks visited types to detect circular references using backtracking algorithm.
-type preloadContext struct {
+type withScanContext struct {
 	model        *Model               // Parent Model (reuses its db, hook, cache configurations)
 	visitedTypes map[string]bool      // Visited types for circular reference detection (backtracking)
 	allRelations []*relationFieldInfo // All relation fields (for chunkName group lookup)
@@ -82,21 +84,20 @@ type batchQueryResult struct {
 	Error     error             // Query error if any
 }
 
-// doPreloadScan is the entry point for preload mode scanning.
+// doBatchWithScan is the entry point for batch association scanning.
 // It performs batch recursive scanning for association operations to solve the N+1 problem.
-func (m *Model) doPreloadScan(pointer any) error {
-	// Create preload context
-	ctx := &preloadContext{
+func (m *Model) doBatchWithScan(pointer any) error {
+	ctx := &withScanContext{
 		model:        m,
 		visitedTypes: make(map[string]bool),
 	}
-	return ctx.recursivePreload(pointer)
+	return ctx.doRecursiveWithScan(pointer)
 }
 
-// recursivePreload performs recursive preload operations on the given pointer.
+// doRecursiveWithScan performs recursive batch association operations on the given pointer.
 // It collects all relation fields, executes batch queries, maps results, and recursively processes nested relations.
 // Circular references are detected using a backtracking algorithm with visitedTypes map.
-func (p *preloadContext) recursivePreload(pointer any) error {
+func (p *withScanContext) doRecursiveWithScan(pointer any) error {
 	// 1. Get element type and check for circular references
 	sliceValue := reflect.ValueOf(pointer)
 	if sliceValue.Kind() != reflect.Pointer {
@@ -134,7 +135,7 @@ func (p *preloadContext) recursivePreload(pointer any) error {
 		return err
 	}
 	if len(relations) == 0 {
-		return nil // No relations to preload
+		return nil // No relations to process
 	}
 
 	// Store all relations for chunkName group lookup
@@ -157,7 +158,7 @@ func (p *preloadContext) recursivePreload(pointer any) error {
 
 	// 5. Recursively process next level
 	for _, relation := range relations {
-		if err := p.recursivePreloadNext(pointer, relation); err != nil {
+		if err := p.doRecursiveWithScanNext(pointer, relation); err != nil {
 			return err
 		}
 	}
@@ -165,9 +166,9 @@ func (p *preloadContext) recursivePreload(pointer any) error {
 	return nil
 }
 
-// collectRelations collects all relation fields from the struct that should be preloaded.
+// collectRelations collects all relation fields from the struct that should be batch-processed.
 // It uses struct cache to avoid repeated reflection operations.
-func (p *preloadContext) collectRelations(pointer any) ([]*relationFieldInfo, error) {
+func (p *withScanContext) collectRelations(pointer any) ([]*relationFieldInfo, error) {
 	// Get slice value
 	sliceValue := reflect.ValueOf(pointer).Elem()
 	if sliceValue.Len() == 0 {
@@ -189,27 +190,28 @@ func (p *preloadContext) collectRelations(pointer any) ([]*relationFieldInfo, er
 	// Iterate fields and parse tags (tag parsing is done every time, not cached)
 	var relations []*relationFieldInfo
 	for _, field := range cached.fields {
-		// Parse tag every time (low cost, maintains flexibility)
-		parsedTag := p.model.parseWithTagInFieldStruct(field)
-		if parsedTag.With == "" {
+		withTag := parseWithTag(field)
+		if withTag.With == "" {
 			continue // No "with" tag, skip
 		}
 
-		// Check if this field should be preloaded
-		if !p.shouldPreload(field) {
+		// Check if this field should be processed
+		if !p.shouldProcess(field) {
 			continue
 		}
 
+		chunkTag := parseChunkTag(field)
+
 		// Create relationFieldInfo (not cached)
-		relation := newRelationFieldInfo(field, parsedTag)
+		relation := newRelationFieldInfo(field, withTag, chunkTag)
 		relations = append(relations, relation)
 	}
 
 	return relations, nil
 }
 
-// shouldPreload checks if a field should be preloaded based on Model configuration.
-func (p *preloadContext) shouldPreload(field gstructs.Field) bool {
+// shouldProcess checks if a field should be processed based on Model configuration.
+func (p *withScanContext) shouldProcess(field gstructs.Field) bool {
 	// WithAll mode: all fields with "with" tag are allowed
 	if p.model.withAll {
 		return true
@@ -241,14 +243,14 @@ func (p *preloadContext) shouldPreload(field gstructs.Field) bool {
 // Value semantics:
 // - In Tag: Only when both chunkSize and chunkMinRows are configured and > 0, enable chunking
 // - In API: -1 means use tag/group config, 0 means disable chunking, >0 means enable with that value
-func (p *preloadContext) getChunkConfig(relation *relationFieldInfo) (chunkSize, chunkMinRows int) {
-	chunkName := relation.ParsedTag.ChunkName
+func (p *withScanContext) getChunkConfig(relation *relationFieldInfo) (chunkSize, chunkMinRows int) {
+	chunkName := relation.ChunkTag.ChunkName
 	chunkSize = -1
 	chunkMinRows = -1
 
 	// Priority 1: API configuration (matched by chunkName)
-	if chunkName != "" && p.model.preloadOptions != nil {
-		if config, ok := p.model.preloadOptions[chunkName]; ok {
+	if chunkName != "" && p.model.withOptions != nil {
+		if config, ok := p.model.withOptions[chunkName]; ok {
 			// API config found, use it
 			chunkSize = config.ChunkSize
 			chunkMinRows = config.ChunkMinRows
@@ -268,13 +270,13 @@ func (p *preloadContext) getChunkConfig(relation *relationFieldInfo) (chunkSize,
 	}
 
 	// Priority 2: Tag configuration (only if Chunked=true, meaning both are configured)
-	if relation.ParsedTag.Chunked {
+	if relation.ChunkTag.Chunked {
 		// Both chunkSize and chunkMinRows are configured in tag
 		if chunkSize == -1 {
-			chunkSize = relation.ParsedTag.ChunkSize
+			chunkSize = relation.ChunkTag.ChunkSize
 		}
 		if chunkMinRows == -1 {
-			chunkMinRows = relation.ParsedTag.ChunkMinRows
+			chunkMinRows = relation.ChunkTag.ChunkMinRows
 		}
 		return chunkSize, chunkMinRows
 	}
@@ -282,13 +284,13 @@ func (p *preloadContext) getChunkConfig(relation *relationFieldInfo) (chunkSize,
 	// Priority 3: ChunkName group config (look for other fields with same chunkName)
 	if chunkName != "" {
 		for _, rel := range p.allRelations {
-			if rel.ParsedTag.ChunkName == chunkName && rel != relation && rel.ParsedTag.Chunked {
+			if rel.ChunkTag.ChunkName == chunkName && rel != relation && rel.ChunkTag.Chunked {
 				// Found a field with same chunkName that has chunk config
 				if chunkSize == -1 {
-					chunkSize = rel.ParsedTag.ChunkSize
+					chunkSize = rel.ChunkTag.ChunkSize
 				}
 				if chunkMinRows == -1 {
-					chunkMinRows = rel.ParsedTag.ChunkMinRows
+					chunkMinRows = rel.ChunkTag.ChunkMinRows
 				}
 				if chunkSize > 0 && chunkMinRows > 0 {
 					return chunkSize, chunkMinRows
@@ -303,14 +305,13 @@ func (p *preloadContext) getChunkConfig(relation *relationFieldInfo) (chunkSize,
 
 // queryRelation executes a batch query for a single relation field.
 // It collects all unique relation keys and performs a single WHERE IN query.
-func (p *preloadContext) queryRelation(pointer any, relation *relationFieldInfo) *batchQueryResult {
+func (p *withScanContext) queryRelation(pointer any, relation *relationFieldInfo) *batchQueryResult {
 	result := &batchQueryResult{
 		FieldName: relation.Field.Name(),
 		DataMap:   make(map[string]Result),
 	}
 
 	// 1. Collect unique relation key values
-	// We need to find the actual struct field name that matches the target field (case-insensitive)
 	sliceValue := reflect.ValueOf(pointer).Elem()
 	if sliceValue.Len() == 0 {
 		return result
@@ -367,13 +368,13 @@ func (p *preloadContext) queryRelation(pointer any, relation *relationFieldInfo)
 	model = model.Hook(p.model.hookHandler)
 
 	// Apply tag conditions
-	if relation.ParsedTag.Where != "" {
-		model = model.Where(relation.ParsedTag.Where)
+	if relation.WithTag.Where != "" {
+		model = model.Where(relation.WithTag.Where)
 	}
-	if relation.ParsedTag.Order != "" {
-		model = model.Order(relation.ParsedTag.Order)
+	if relation.WithTag.Order != "" {
+		model = model.Order(relation.WithTag.Order)
 	}
-	if relation.ParsedTag.Unscoped == "true" {
+	if relation.WithTag.Unscoped == "true" {
 		model = model.Unscoped()
 	}
 
@@ -382,7 +383,7 @@ func (p *preloadContext) queryRelation(pointer any, relation *relationFieldInfo)
 		model = model.Cache(p.model.cacheOption)
 	}
 
-	// 3. Get chunk configuration (API > Tag > chunkName group > Global default)
+	// 3. Get chunk configuration (API > Tag > chunkName group)
 	chunkSize, chunkMinRows := p.getChunkConfig(relation)
 
 	// Determine if chunking is needed
@@ -427,7 +428,7 @@ func (p *preloadContext) queryRelation(pointer any, relation *relationFieldInfo)
 }
 
 // mapResults maps batch query results to struct fields.
-func (p *preloadContext) mapResults(
+func (p *withScanContext) mapResults(
 	pointer any,
 	relations []*relationFieldInfo,
 	batchResults map[string]*batchQueryResult,
@@ -514,8 +515,8 @@ func (p *preloadContext) mapResults(
 	return nil
 }
 
-// recursivePreloadNext recursively processes the next level of relations.
-func (p *preloadContext) recursivePreloadNext(pointer any, relation *relationFieldInfo) error {
+// doRecursiveWithScanNext recursively processes the next level of relations.
+func (p *withScanContext) doRecursiveWithScanNext(pointer any, relation *relationFieldInfo) error {
 	sliceValue := reflect.ValueOf(pointer).Elem()
 
 	if relation.isSlice() {
@@ -587,11 +588,11 @@ func (p *preloadContext) recursivePreloadNext(pointer any, relation *relationFie
 			mergedSlicePtr := reflect.New(mergedSliceType)
 			mergedSlicePtr.Elem().Set(mergedSlice)
 
-			if err := p.recursivePreload(mergedSlicePtr.Interface()); err != nil {
+			if err := p.doRecursiveWithScan(mergedSlicePtr.Interface()); err != nil {
 				return err
 			}
 
-			// IMPORTANT: Since we're working with pointers, the modifications made by recursivePreload
+			// IMPORTANT: Since we're working with pointers, the modifications made by doRecursiveWithScan
 			// are automatically reflected in the original parent slices. No need to copy back.
 		}
 	} else {
@@ -630,7 +631,7 @@ func (p *preloadContext) recursivePreloadNext(pointer any, relation *relationFie
 			tempSlicePtr := reflect.New(sliceType)
 			tempSlicePtr.Elem().Set(tempSlice)
 
-			if err := p.recursivePreload(tempSlicePtr.Interface()); err != nil {
+			if err := p.doRecursiveWithScan(tempSlicePtr.Interface()); err != nil {
 				return err
 			}
 

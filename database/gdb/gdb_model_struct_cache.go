@@ -14,7 +14,7 @@ import (
 )
 
 // Global cache for struct information using gmap.KVMap.
-// This cache is shared by both legacy With mode and Preload mode.
+// This cache is shared by both single-struct and batch With operations.
 // Uses NewKVMapWithChecker to handle typed nil issue for pointer values.
 var (
 	structInfoChecker = func(v *modelStructCacheItem) bool { return v == nil }
@@ -57,7 +57,7 @@ func buildStructCacheItem(structType reflect.Type) (*modelStructCacheItem, error
 
 // getCachedStructInfo gets or creates cached struct information.
 // It uses gmap.KVMap's GetOrSetFuncLock for thread-safe lazy initialization.
-// This function is used by both legacy With mode and Preload mode.
+// This function is used by both single-struct and batch With operations.
 func getCachedStructInfo(structType reflect.Type) (*modelStructCacheItem, error) {
 	// Use GetOrSetFuncLock to ensure thread-safe lazy initialization
 	// The function is only executed once per key, even under concurrent access

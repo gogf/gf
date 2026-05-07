@@ -17,7 +17,6 @@ import (
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // With creates and returns an ORM model based on metadata of given object.
@@ -67,23 +66,13 @@ func (m *Model) WithAll() *Model {
 	return model
 }
 
-// Preload enables model association operations on all objects that have "with" tag in the struct.
-func (m *Model) Preload(enable ...bool) *Model {
-	model := m.getModel()
-	m.preload = true
-	if len(enable) > 0 {
-		model.preload = enable[0]
-	}
-	return m
-}
-
-// PreloadOptions sets the preload configuration options.
+// WithOptions sets the batch association configuration options.
 // It matches fields by chunkName and allows runtime override of chunk settings.
 // Multiple options can be provided to configure different chunkName groups.
-func (m *Model) PreloadOptions(options ...PreloadOption) *Model {
+func (m *Model) WithOptions(options ...WithOption) *Model {
 	model := m.getModel()
-	if model.preloadOptions == nil {
-		model.preloadOptions = make(map[string]*PreloadOption)
+	if model.withOptions == nil {
+		model.withOptions = make(map[ChunkName]*WithOption)
 	}
 
 	for _, opt := range options {
@@ -93,7 +82,7 @@ func (m *Model) PreloadOptions(options ...PreloadOption) *Model {
 		}
 		// Store a copy of the option
 		optCopy := opt
-		model.preloadOptions[opt.ChunkName] = &optCopy
+		model.withOptions[opt.ChunkName] = &optCopy
 	}
 
 	return model
@@ -137,21 +126,21 @@ func (m *Model) doWithScanStruct(pointer any) error {
 	}
 	for _, field := range currentStructFieldMap {
 		var (
-			fieldTypeStr    = gstr.TrimAll(field.Type().String(), "*[]")
-			parsedTagOutput = m.parseWithTagInFieldStruct(field)
+			fieldTypeStr = gstr.TrimAll(field.Type().String(), "*[]")
+			withTag      = parseWithTag(field)
 		)
-		if parsedTagOutput.With == "" {
+		if withTag.With == "" {
 			continue
 		}
 		// It just handlers "with" type attribute struct, so it ignores other struct types.
 		if !m.withAll && !gstr.InArray(allowedTypeStrArray, fieldTypeStr) {
 			continue
 		}
-		array := gstr.SplitAndTrim(parsedTagOutput.With, "=")
+		array := gstr.SplitAndTrim(withTag.With, "=")
 		if len(array) == 1 {
 			// It also supports using only one column name
 			// if both tables associates using the same column name.
-			array = append(array, parsedTagOutput.With)
+			array = append(array, withTag.With)
 		}
 		var (
 			model              *Model
@@ -171,7 +160,7 @@ func (m *Model) doWithScanStruct(pointer any) error {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`cannot find the target related value of name "%s" in with tag "%s" for attribute "%s.%s"`,
-				relatedTargetName, parsedTagOutput.With, reflect.TypeOf(pointer).Elem(), field.Name(),
+				relatedTargetName, withTag.With, reflect.TypeOf(pointer).Elem(), field.Name(),
 			)
 		}
 		bindToReflectValue := field.Value
@@ -197,20 +186,19 @@ func (m *Model) doWithScanStruct(pointer any) error {
 		} else {
 			model = model.With(m.withArray...)
 		}
-		if parsedTagOutput.Where != "" {
-			model = model.Where(parsedTagOutput.Where)
+		if withTag.Where != "" {
+			model = model.Where(withTag.Where)
 		}
-		if parsedTagOutput.Order != "" {
-			model = model.Order(parsedTagOutput.Order)
+		if withTag.Order != "" {
+			model = model.Order(withTag.Order)
 		}
-		if parsedTagOutput.Unscoped == "true" {
+		if withTag.Unscoped == "true" {
 			model = model.Unscoped()
 		}
 		// With cache feature.
 		if m.cacheEnabled && m.cacheOption.Name == "" {
 			model = model.Cache(m.cacheOption)
 		}
-		model.preload = m.preload
 		err = model.Fields(fieldKeys).
 			Where(relatedSourceName, relatedTargetValue).
 			Scan(bindToReflectValue)
@@ -228,153 +216,62 @@ func (m *Model) doWithScanStructs(pointer any) error {
 	if len(m.withArray) == 0 && !m.withAll {
 		return nil
 	}
-
-	// If preload mode is enabled, use the new batch preload logic
-	if m.preload {
-		return m.doPreloadScan(pointer)
-	}
-
-	// Otherwise, use the legacy mode (original implementation)
-	if v, ok := pointer.(reflect.Value); ok {
-		pointer = v.Interface()
-	}
-
-	var (
-		err                 error
-		allowedTypeStrArray = make([]string, 0)
-	)
-	currentStructFieldMap, err := gstructs.FieldMap(gstructs.FieldMapInput{
-		Pointer:          pointer,
-		PriorityTagArray: nil,
-		RecursiveOption:  gstructs.RecursiveOptionEmbeddedNoTag,
-	})
-	if err != nil {
-		return err
-	}
-	// It checks the with array and automatically calls the ScanList to complete association querying.
-	if !m.withAll {
-		for _, field := range currentStructFieldMap {
-			for _, withItem := range m.withArray {
-				withItemReflectValueType, err := gstructs.StructType(withItem)
-				if err != nil {
-					return err
-				}
-				var (
-					fieldTypeStr                = gstr.TrimAll(field.Type().String(), "*[]")
-					withItemReflectValueTypeStr = gstr.TrimAll(withItemReflectValueType.String(), "*[]")
-				)
-				// It does select operation if the field type is in the specified with type array.
-				if gstr.Compare(fieldTypeStr, withItemReflectValueTypeStr) == 0 {
-					allowedTypeStrArray = append(allowedTypeStrArray, fieldTypeStr)
-				}
-			}
-		}
-	}
-
-	for fieldName, field := range currentStructFieldMap {
-		var (
-			fieldTypeStr    = gstr.TrimAll(field.Type().String(), "*[]")
-			parsedTagOutput = m.parseWithTagInFieldStruct(field)
-		)
-		if parsedTagOutput.With == "" {
-			continue
-		}
-		if !m.withAll && !gstr.InArray(allowedTypeStrArray, fieldTypeStr) {
-			continue
-		}
-		array := gstr.SplitAndTrim(parsedTagOutput.With, "=")
-		if len(array) == 1 {
-			// It supports using only one column name
-			// if both tables associates using the same column name.
-			array = append(array, parsedTagOutput.With)
-		}
-		var (
-			model              *Model
-			fieldKeys          []string
-			relatedSourceName  = array[0]
-			relatedTargetName  = array[1]
-			relatedTargetValue any
-		)
-		// Find the value slice of related attribute from `pointer`.
-		for attributeName := range currentStructFieldMap {
-			if utils.EqualFoldWithoutChars(attributeName, relatedTargetName) {
-				relatedTargetValue = ListItemValuesUnique(pointer, attributeName)
-				break
-			}
-		}
-		if relatedTargetValue == nil {
-			return gerror.NewCodef(
-				gcode.CodeInvalidParameter,
-				`cannot find the related value for attribute name "%s" of with tag "%s"`,
-				relatedTargetName, parsedTagOutput.With,
-			)
-		}
-		// If related value is empty, it does nothing but just returns.
-		if gutil.IsEmpty(relatedTargetValue) {
-			return nil
-		}
-		if structFields, err := gstructs.Fields(gstructs.FieldsInput{
-			Pointer:         field.Value,
-			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
-		}); err != nil {
-			return err
-		} else {
-			fieldKeys = make([]string, len(structFields))
-			for i, field := range structFields {
-				fieldKeys[i] = field.Name()
-			}
-		}
-		// Recursively with feature checks.
-		model = m.db.With(field.Value).Hook(m.hookHandler)
-		if m.withAll {
-			model = model.WithAll()
-		} else {
-			model = model.With(m.withArray...)
-		}
-		if parsedTagOutput.Where != "" {
-			model = model.Where(parsedTagOutput.Where)
-		}
-		if parsedTagOutput.Order != "" {
-			model = model.Order(parsedTagOutput.Order)
-		}
-		if parsedTagOutput.Unscoped == "true" {
-			model = model.Unscoped()
-		}
-		// With cache feature.
-		if m.cacheEnabled && m.cacheOption.Name == "" {
-			model = model.Cache(m.cacheOption)
-		}
-		model.preload = m.preload
-		err = model.Fields(fieldKeys).
-			Where(relatedSourceName, relatedTargetValue).
-			ScanList(pointer, fieldName, parsedTagOutput.With)
-		// It ignores sql.ErrNoRows in with feature.
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return err
-		}
-	}
-	return nil
+	return m.doBatchWithScan(pointer)
 }
 
-type parseWithTagInFieldStructOutput struct {
-	With         string
-	Where        string
-	Order        string
-	Unscoped     string
-	Chunked      bool
+// withTagConfig holds the basic ORM tag configuration for a relation field.
+type withTagConfig struct {
+	With     string
+	Where    string
+	Order    string
+	Unscoped string
+}
+
+// chunkTagConfig holds the chunk-related ORM tag configuration for a relation field.
+type chunkTagConfig struct {
 	ChunkName    string
 	ChunkSize    int
 	ChunkMinRows int
+	Chunked      bool
 }
 
-func (m *Model) parseWithTagInFieldStruct(field gstructs.Field) (output parseWithTagInFieldStructOutput) {
+// parseWithTag parses the basic ORM tag configuration (with, where, order, unscoped) from a struct field.
+func parseWithTag(field gstructs.Field) withTagConfig {
+	ormTag := field.Tag(OrmTagForStruct)
+	data := parseOrmTagData(ormTag)
+	return withTagConfig{
+		With:     data[OrmTagForWith],
+		Where:    data[OrmTagForWithWhere],
+		Order:    data[OrmTagForWithOrder],
+		Unscoped: data[OrmTagForWithUnscoped],
+	}
+}
+
+// parseChunkTag parses the chunk-related ORM tag configuration from a struct field.
+func parseChunkTag(field gstructs.Field) chunkTagConfig {
+	ormTag := field.Tag(OrmTagForStruct)
+	data := parseOrmTagData(ormTag)
+
+	chunkName := data[OrmTagForChunkName]
+	_, ifChunkSize := data[OrmTagForChunkSize]
+	_, ifChunkMinRows := data[OrmTagForChunkMinRows]
+	chunkSize := gconv.Int(data[OrmTagForChunkSize])
+	chunkMinRows := gconv.Int(data[OrmTagForChunkMinRows])
+
+	return chunkTagConfig{
+		ChunkName:    chunkName,
+		ChunkSize:    chunkSize,
+		ChunkMinRows: chunkMinRows,
+		Chunked:      ifChunkSize && ifChunkMinRows && chunkSize > 0 && chunkMinRows > 0,
+	}
+}
+
+// parseOrmTagData parses the raw ORM tag string into a key-value map.
+func parseOrmTagData(ormTag string) map[string]string {
 	var (
-		ormTag         = field.Tag(OrmTagForStruct)
-		data           = make(map[string]string)
-		array          []string
-		key            string
-		ifChunkSize    bool
-		ifChunkMinRows bool
+		data  = make(map[string]string)
+		array []string
+		key   string
 	)
 	for _, v := range gstr.SplitAndTrim(ormTag, ",") {
 		v = gstr.Trim(v)
@@ -385,38 +282,14 @@ func (m *Model) parseWithTagInFieldStruct(field gstructs.Field) (output parseWit
 		if len(array) == 2 {
 			key = array[0]
 			data[key] = gstr.Trim(array[1])
-			switch key {
-			case OrmTagForChunkSize:
-				ifChunkSize = true
-			case OrmTagForChunkMinRows:
-				ifChunkMinRows = true
-			}
 		} else {
 			switch key {
 			case OrmTagForWithOrder:
-				// supporting multiple order fields
 				data[key] += "," + gstr.Trim(v)
 			default:
 				data[key] += " " + gstr.Trim(v)
 			}
 		}
 	}
-	output.With = data[OrmTagForWith]
-	output.Where = data[OrmTagForWithWhere]
-	output.Order = data[OrmTagForWithOrder]
-	output.Unscoped = data[OrmTagForWithUnscoped]
-
-	// Parse chunk configuration
-	// Chunked is true only when both chunkSize and chunkMinRows are configured in tag and > 0
-	output.ChunkName = data[OrmTagForChunkName]
-	if ifChunkSize {
-		output.ChunkSize = gconv.Int(data[OrmTagForChunkSize])
-	}
-	if ifChunkMinRows {
-		output.ChunkMinRows = gconv.Int(data[OrmTagForChunkMinRows])
-	}
-	// Chunked means: Tag explicitly configured both chunkSize and chunkMinRows (and both > 0)
-	output.Chunked = ifChunkSize && ifChunkMinRows && output.ChunkSize > 0 && output.ChunkMinRows > 0
-
-	return
+	return data
 }

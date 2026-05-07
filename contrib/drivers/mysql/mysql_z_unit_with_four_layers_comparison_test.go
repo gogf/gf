@@ -18,12 +18,12 @@ import (
 	"github.com/gogf/gf/v2/util/gmeta"
 )
 
-// Test_Preload_FourLayers_Comparison tests four-layer nested preload with unified data and comprehensive comparison.
-// This test compares Legacy, Preload, and Chunk modes with the same dataset and validates:
+// Test_With_FourLayers_Comparison tests four-layer nested With using the same dataset.
+// It runs both Batch and Chunk modes and validates:
 // 1. Data correctness
 // 2. Query count
 // 3. Performance
-func Test_Preload_FourLayers_Comparison(t *testing.T) {
+func Test_With_FourLayers_Comparison(t *testing.T) {
 	var (
 		tableUser         = "user_four_comparison"
 		tableUserDetail   = "user_detail_four_comparison"
@@ -106,7 +106,7 @@ func Test_Preload_FourLayers_Comparison(t *testing.T) {
 	}
 
 	// Initialize test data: 100 users for better performance comparison
-	fmt.Println("Initializing test data...")
+	t.Log("Initializing test data...")
 	for i := 1; i <= 100; i++ {
 		user := User{
 			Name:   fmt.Sprintf("user_%d", i),
@@ -177,193 +177,134 @@ func Test_Preload_FourLayers_Comparison(t *testing.T) {
 			}
 		}
 	}
-	fmt.Println("Test data initialized successfully")
+	t.Log("Test data initialized successfully")
 
-	// Helper function to validate data correctness
-	validateData := func(t *gtest.T, users []*User, mode string) {
-		fmt.Printf("\n=== Validating %s mode data ===\n", mode)
+	gtest.C(t, func(t *gtest.T) {
+		// Helper function to validate data correctness
+		validateData := func(users []*User, mode string) {
+			t.Logf("\n=== Validating %s mode data ===", mode)
+			t.Assert(len(users) > 0, true)
+			t.Logf("Total users loaded: %d", len(users))
 
-		// Should have users with status=1
-		t.Assert(len(users) > 0, true)
-		fmt.Printf("Total users loaded: %d\n", len(users))
+			totalScores := 0
+			totalDetails := 0
+			totalMeta := 0
+			deletedScoresCount := 0
+			deletedDetailsCount := 0
+			deletedMetaCount := 0
 
-		totalScores := 0
-		totalDetails := 0
-		totalMeta := 0
-		deletedScoresCount := 0
-		deletedDetailsCount := 0
-		deletedMetaCount := 0
+			for _, user := range users {
+				t.Assert(user.Status, 1)
 
-		for _, user := range users {
-			// Verify user status
-			t.Assert(user.Status, 1)
+				t.AssertNE(user.UserDetail, nil)
+				t.Assert(user.UserDetail.Uid, user.Id)
+				t.Assert(strings.HasPrefix(user.UserDetail.Address, "address_"), true)
 
-			// Verify UserDetail
-			t.AssertNE(user.UserDetail, nil)
-			t.Assert(user.UserDetail.Uid, user.Id)
-			t.Assert(strings.HasPrefix(user.UserDetail.Address, "address_"), true)
+				t.Assert(len(user.UserScores) > 0, true)
+				totalScores += len(user.UserScores)
 
-			// Verify UserScores
-			t.Assert(len(user.UserScores) > 0, true)
-			totalScores += len(user.UserScores)
+				for _, score := range user.UserScores {
+					t.Assert(score.Score >= 10, true)
 
-			for _, score := range user.UserScores {
-				// Verify where condition: score >= 10
-				t.Assert(score.Score >= 10, true)
-				// Verify order: priority desc
+					if score.DeletedAt != nil {
+						deletedScoresCount++
+					}
+
+					t.Assert(len(score.ScoreDetails) > 0, true)
+					totalDetails += len(score.ScoreDetails)
+
+					for _, detail := range score.ScoreDetails {
+						t.Assert(detail.Rank > 0, true)
+						if detail.DeletedAt != nil {
+							deletedDetailsCount++
+						}
+
+						t.Assert(len(detail.DetailMeta) > 0, true)
+						totalMeta += len(detail.DetailMeta)
+
+						for _, meta := range detail.DetailMeta {
+							t.Assert(strings.HasPrefix(meta.MetaKey, "key_"), true)
+							if meta.DeletedAt != nil {
+								deletedMetaCount++
+							}
+						}
+
+						if len(detail.DetailMeta) > 1 {
+							for i := 0; i < len(detail.DetailMeta)-1; i++ {
+								t.Assert(detail.DetailMeta[i].SortOrder <= detail.DetailMeta[i+1].SortOrder, true)
+							}
+						}
+					}
+
+					if len(score.ScoreDetails) > 1 {
+						for i := 0; i < len(score.ScoreDetails)-1; i++ {
+							t.Assert(score.ScoreDetails[i].Rank >= score.ScoreDetails[i+1].Rank, true)
+						}
+					}
+				}
+
 				if len(user.UserScores) > 1 {
-					// Priority should be in descending order
-				}
-				// Count soft deleted scores
-				if score.DeletedAt != nil {
-					deletedScoresCount++
-				}
-
-				// Verify ScoreDetails
-				t.Assert(len(score.ScoreDetails) > 0, true)
-				totalDetails += len(score.ScoreDetails)
-
-				for _, detail := range score.ScoreDetails {
-					// Verify where condition: rank > 0
-					t.Assert(detail.Rank > 0, true)
-					// Count soft deleted details
-					if detail.DeletedAt != nil {
-						deletedDetailsCount++
-					}
-
-					// Verify DetailMeta
-					t.Assert(len(detail.DetailMeta) > 0, true)
-					totalMeta += len(detail.DetailMeta)
-
-					for _, meta := range detail.DetailMeta {
-						// Verify where condition: meta_key like 'key_%'
-						t.Assert(strings.HasPrefix(meta.MetaKey, "key_"), true)
-						// Count soft deleted meta
-						if meta.DeletedAt != nil {
-							deletedMetaCount++
-						}
-					}
-
-					// Verify order: sort_order asc
-					if len(detail.DetailMeta) > 1 {
-						for i := 0; i < len(detail.DetailMeta)-1; i++ {
-							t.Assert(detail.DetailMeta[i].SortOrder <= detail.DetailMeta[i+1].SortOrder, true)
-						}
-					}
-				}
-
-				// Verify order: rank desc
-				if len(score.ScoreDetails) > 1 {
-					for i := 0; i < len(score.ScoreDetails)-1; i++ {
-						t.Assert(score.ScoreDetails[i].Rank >= score.ScoreDetails[i+1].Rank, true)
+					for i := 0; i < len(user.UserScores)-1; i++ {
+						t.Assert(user.UserScores[i].Priority >= user.UserScores[i+1].Priority, true)
 					}
 				}
 			}
 
-			// Verify order: priority desc
-			if len(user.UserScores) > 1 {
-				for i := 0; i < len(user.UserScores)-1; i++ {
-					t.Assert(user.UserScores[i].Priority >= user.UserScores[i+1].Priority, true)
-				}
-			}
+			t.Logf("Total scores: %d (deleted: %d)", totalScores, deletedScoresCount)
+			t.Logf("Total details: %d (deleted: %d)", totalDetails, deletedDetailsCount)
+			t.Logf("Total meta: %d (deleted: %d)", totalMeta, deletedMetaCount)
+
+			t.Assert(deletedScoresCount > 0, true)
+			t.Assert(deletedDetailsCount > 0, true)
+			t.Assert(deletedMetaCount > 0, true)
+
+			t.Logf("Data validation passed for %s mode", mode)
 		}
 
-		fmt.Printf("Total scores: %d (deleted: %d)\n", totalScores, deletedScoresCount)
-		fmt.Printf("Total details: %d (deleted: %d)\n", totalDetails, deletedDetailsCount)
-		fmt.Printf("Total meta: %d (deleted: %d)\n", totalMeta, deletedMetaCount)
-
-		// Verify unscoped:true includes soft deleted records
-		t.Assert(deletedScoresCount > 0, true)
-		t.Assert(deletedDetailsCount > 0, true)
-		t.Assert(deletedMetaCount > 0, true)
-
-		fmt.Printf("✓ Data validation passed for %s mode\n", mode)
-	}
-
-	// Test 1: Legacy mode
-	gtest.C(t, func(t *gtest.T) {
-		fmt.Printf("\n=== Testing Legacy Mode ===\n")
-
-		// Enable debug to see SQL queries
+		// Batch With mode
+		t.Log("\n=== Testing Batch With Mode ===")
 		oldDebug := db.GetDebug()
 		db.SetDebug(true)
 
 		startTime := time.Now()
-		var usersLegacy []*User
-		err := db.Model(tableUser).Where("status=?", 1).WithAll().Scan(&usersLegacy)
+		var usersBatch []*User
+		err := db.Model(tableUser).Where("status=?", 1).WithAll().Scan(&usersBatch)
 		duration := time.Since(startTime)
 
 		db.SetDebug(oldDebug)
 
 		t.AssertNil(err)
+		t.Logf("Batch With Mode Duration: %v", duration)
+		t.Log("Note: Check console output above to count SELECT queries")
+		validateData(usersBatch, "Batch")
 
-		fmt.Printf("\n=== Legacy Mode Results ===\n")
-		fmt.Printf("Duration: %v\n", duration)
-		fmt.Printf("Note: Check console output above to count SELECT queries\n")
-
-		validateData(t, usersLegacy, "Legacy")
-	})
-
-	// Test 2: Preload mode
-	gtest.C(t, func(t *gtest.T) {
-		fmt.Printf("\n=== Testing Preload Mode ===\n")
-
-		// Enable debug to see SQL queries
-		oldDebug := db.GetDebug()
+		// Chunk mode
+		t.Log("\n=== Testing Chunk Mode ===")
 		db.SetDebug(true)
 
-		startTime := time.Now()
-		var usersPreload []*User
-		err := db.Model(tableUser).Where("status=?", 1).Preload().WithAll().Scan(&usersPreload)
-		duration := time.Since(startTime)
-
-		db.SetDebug(oldDebug)
-
-		t.AssertNil(err)
-
-		fmt.Printf("\n=== Preload Mode Results ===\n")
-		fmt.Printf("Duration: %v\n", duration)
-		fmt.Printf("Note: Check console output above to count SELECT queries\n")
-
-		validateData(t, usersPreload, "Preload")
-	})
-
-	// Test 3: Chunk mode
-	gtest.C(t, func(t *gtest.T) {
-		fmt.Printf("\n=== Testing Chunk Mode ===\n")
-
-		// Enable debug to see SQL queries
-		oldDebug := db.GetDebug()
-		db.SetDebug(true)
-
-		startTime := time.Now()
+		startTime = time.Now()
 		var usersChunk []*User
-		err := db.Model(tableUser).
+		err = db.Model(tableUser).
 			Where("status=?", 1).
-			Preload().
-			PreloadOptions(
-				gdb.PreloadOption{ChunkName: "scoreChunk", ChunkSize: 12, ChunkMinRows: 6},
-				gdb.PreloadOption{ChunkName: "detailChunk", ChunkSize: 10, ChunkMinRows: 5},
+			WithOptions(
+				gdb.WithOption{ChunkName: "scoreChunk", ChunkSize: 12, ChunkMinRows: 6},
+				gdb.WithOption{ChunkName: "detailChunk", ChunkSize: 10, ChunkMinRows: 5},
 			).
 			WithAll().
 			Scan(&usersChunk)
-		duration := time.Since(startTime)
+		duration = time.Since(startTime)
 
 		db.SetDebug(oldDebug)
 
 		t.AssertNil(err)
+		t.Logf("Chunk Mode Duration: %v", duration)
+		t.Log("Note: Check console output above to count SELECT queries")
+		validateData(usersChunk, "Chunk")
 
-		fmt.Printf("\n=== Chunk Mode Results ===\n")
-		fmt.Printf("Duration: %v\n", duration)
-		fmt.Printf("Note: Check console output above to count SELECT queries\n")
-
-		validateData(t, usersChunk, "Chunk")
+		// Summary
+		t.Log("\n=== Performance Comparison Summary ===")
+		t.Log("Both modes returned the same correct data.")
+		t.Log("Batch mode: Single-batch queries (best for small datasets)")
+		t.Log("Chunk mode: Chunked batch queries (balanced for large datasets)")
 	})
-
-	// Summary
-	fmt.Printf("\n=== Performance Comparison Summary ===\n")
-	fmt.Printf("All three modes returned the same correct data.\n")
-	fmt.Printf("Legacy mode: N+1 queries (many queries)\n")
-	fmt.Printf("Preload mode: Batch queries (few queries, best performance)\n")
-	fmt.Printf("Chunk mode: Chunked batch queries (balanced approach)\n")
 }
