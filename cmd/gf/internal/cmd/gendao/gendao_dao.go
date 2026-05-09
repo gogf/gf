@@ -69,20 +69,13 @@ func generateDaoSingle(ctx context.Context, in generateDaoSingleInput) {
 	var (
 		tableNameCamelCase      = formatFieldName(in.NewTableName, FieldNameCaseCamel)
 		tableNameCamelLowerCase = formatFieldName(in.NewTableName, FieldNameCaseCamelLower)
-		tableNameSnakeCase      = gstr.CaseSnake(in.NewTableName)
+		fileName                = formatFileName(in.NewTableName, in.FileNameCase)
 		importPrefix            = in.ImportPrefix
 	)
 	if importPrefix == "" {
 		importPrefix = utils.GetImportPath(gfile.Join(in.Path, in.DaoPath))
 	} else {
 		importPrefix = gstr.Join(g.SliceStr{importPrefix, in.DaoPath}, "/")
-	}
-
-	fileName := gstr.Trim(tableNameSnakeCase, "-_.")
-	if len(fileName) > 5 && fileName[len(fileName)-5:] == "_test" {
-		// Add suffix to avoid the table name which contains "_test",
-		// which would make the go file a testing file.
-		fileName += "_table"
 	}
 
 	// dao - index
