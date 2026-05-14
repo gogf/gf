@@ -9,12 +9,15 @@ package gdb
 const (
 	optionOmitNil             = optionOmitNilWhere | optionOmitNilData
 	optionOmitEmpty           = optionOmitEmptyWhere | optionOmitEmptyData
+	optionOmitZero            = optionOmitZeroWhere | optionOmitZeroData
 	optionOmitNilDataInternal = optionOmitNilData | optionOmitNilDataList // this option is used internally only for ForDao feature.
 	optionOmitEmptyWhere      = 1 << iota                                 // 8
 	optionOmitEmptyData                                                   // 16
 	optionOmitNilWhere                                                    // 32
 	optionOmitNilData                                                     // 64
 	optionOmitNilDataList                                                 // 128
+	optionOmitZeroWhere                                                   // 256
+	optionOmitZeroData                                                    // 512
 )
 
 // OmitEmpty sets optionOmitEmpty option for the model, which automatically filers
@@ -69,5 +72,32 @@ func (m *Model) OmitNilWhere() *Model {
 func (m *Model) OmitNilData() *Model {
 	model := m.getModel()
 	model.option = model.option | optionOmitNilData
+	return model
+}
+
+// OmitZero sets optionOmitZero option for the model, which automatically filters
+// the data and where parameters for `zero` values of their types.
+// Unlike OmitEmpty, it does NOT treat non-nil empty slice/map as zero.
+func (m *Model) OmitZero() *Model {
+	model := m.getModel()
+	model.option = model.option | optionOmitZero
+	return model
+}
+
+// OmitZeroWhere sets optionOmitZeroWhere option for the model, which automatically filters
+// the Where/Having parameters for `zero` values of their types.
+// Unlike OmitEmptyWhere, it does NOT treat non-nil empty slice/map as zero.
+func (m *Model) OmitZeroWhere() *Model {
+	model := m.getModel()
+	model.option = model.option | optionOmitZeroWhere
+	return model
+}
+
+// OmitZeroData sets optionOmitZeroData option for the model, which automatically filters
+// the Data parameters for `zero` values of their types.
+// Unlike OmitEmptyData, it does NOT treat non-nil empty slice/map as zero.
+func (m *Model) OmitZeroData() *Model {
+	model := m.getModel()
+	model.option = model.option | optionOmitZeroData
 	return model
 }

@@ -34,6 +34,11 @@ type iTime interface {
 	IsZero() bool
 }
 
+// iIsZero is used for type assert api for IsZero().
+type iIsZero interface {
+	IsZero() bool
+}
+
 // IsEmpty checks whether given `value` empty.
 // It returns true if `value` is in: 0, nil, false, "", len(slice/map/chan) == 0,
 // or else it returns false.
@@ -240,4 +245,72 @@ func IsNil(value any, traceSource ...bool) bool {
 		return false
 	}
 	return false
+}
+
+// IsZero checks whether given `value` is zero value of its type.
+// It returns true if `value` is in: nil, 0, false, "", nil pointer, nil slice/map/chan,
+// zero struct, or implements IsZero() bool interface and returns true.
+// Unlike IsEmpty, it does NOT treat non-nil empty slice/map/chan as zero.
+//
+// The parameter `traceSource` is used for tracing to the source variable if given `value` is type of pointer
+// that also points to a pointer. It returns true if the source is zero when `traceSource` is true.
+// Note that it might use reflect feature which affects performance a little.
+func IsZero(value any, traceSource ...bool) bool {
+	if value == nil {
+		return true
+	}
+	// It firstly checks the variable as common types using assertion to enhance the performance,
+	// and then using reflection.
+	switch result := value.(type) {
+	case int:
+		return result == 0
+	case int8:
+		return result == 0
+	case int16:
+		return result == 0
+	case int32:
+		return result == 0
+	case int64:
+		return result == 0
+	case uint:
+		return result == 0
+	case uint8:
+		return result == 0
+	case uint16:
+		return result == 0
+	case uint32:
+		return result == 0
+	case uint64:
+		return result == 0
+	case float32:
+		return result == 0
+	case float64:
+		return result == 0
+	case bool:
+		return !result
+	case string:
+		return result == ""
+
+	default:
+		// Finally, using reflect.
+		var rv reflect.Value
+		if v, ok := value.(reflect.Value); ok {
+			rv = v
+		} else {
+			rv = reflect.ValueOf(value)
+			// Check IsZero() interface for non-reflect.Value inputs.
+			if f, ok := value.(iIsZero); ok {
+				return f.IsZero()
+			}
+		}
+		if !rv.IsValid() {
+			return true
+		}
+		if rv.Kind() == reflect.Pointer {
+			if len(traceSource) > 0 && traceSource[0] {
+				return IsZero(rv.Elem())
+			}
+		}
+		return rv.IsZero()
+	}
 }

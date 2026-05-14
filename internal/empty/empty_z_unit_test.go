@@ -163,3 +163,68 @@ func Test_Issue3362(t *testing.T) {
 		t.Assert(empty.IsNil(&i, true), true)
 	})
 }
+
+func TestIsZero(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// true - zero values
+		t.Assert(empty.IsZero(nil), true)
+		t.Assert(empty.IsZero(0), true)
+		t.Assert(empty.IsZero(int8(0)), true)
+		t.Assert(empty.IsZero(int16(0)), true)
+		t.Assert(empty.IsZero(int32(0)), true)
+		t.Assert(empty.IsZero(int64(0)), true)
+		t.Assert(empty.IsZero(uint(0)), true)
+		t.Assert(empty.IsZero(uint8(0)), true)
+		t.Assert(empty.IsZero(uint16(0)), true)
+		t.Assert(empty.IsZero(uint32(0)), true)
+		t.Assert(empty.IsZero(uint64(0)), true)
+		t.Assert(empty.IsZero(float32(0)), true)
+		t.Assert(empty.IsZero(float64(0)), true)
+		t.Assert(empty.IsZero(false), true)
+		t.Assert(empty.IsZero(""), true)
+		t.Assert(empty.IsZero(time.Time{}), true)
+
+		// true - nil pointer, nil slice, nil map
+		var nilSlice []int
+		var nilMap map[string]int
+		var nilPtr *int
+		t.Assert(empty.IsZero(nilSlice), true)
+		t.Assert(empty.IsZero(nilMap), true)
+		t.Assert(empty.IsZero(nilPtr), true)
+
+		// false - non-zero values
+		t.Assert(empty.IsZero(1), false)
+		t.Assert(empty.IsZero(int8(1)), false)
+		t.Assert(empty.IsZero(int16(1)), false)
+		t.Assert(empty.IsZero(int32(1)), false)
+		t.Assert(empty.IsZero(int64(1)), false)
+		t.Assert(empty.IsZero(uint(1)), false)
+		t.Assert(empty.IsZero(uint8(1)), false)
+		t.Assert(empty.IsZero(uint16(1)), false)
+		t.Assert(empty.IsZero(uint32(1)), false)
+		t.Assert(empty.IsZero(uint64(1)), false)
+		t.Assert(empty.IsZero(float32(1)), false)
+		t.Assert(empty.IsZero(float64(1)), false)
+		t.Assert(empty.IsZero(true), false)
+		t.Assert(empty.IsZero("hello"), false)
+		t.Assert(empty.IsZero(time.Now()), false)
+
+		// KEY DIFFERENCE from IsEmpty:
+		// Non-nil empty slice/map are NOT zero (but ARE empty).
+		emptySlice := make([]int, 0)
+		emptyMap := make(map[string]int)
+		t.Assert(empty.IsZero(emptySlice), false)
+		t.Assert(empty.IsZero(emptyMap), false)
+		// Verify IsEmpty treats them as empty for comparison.
+		t.Assert(empty.IsEmpty(emptySlice), true)
+		t.Assert(empty.IsEmpty(emptyMap), true)
+	})
+
+	// Test with traceSource for pointer.
+	gtest.C(t, func(t *gtest.T) {
+		var i *int
+		t.Assert(empty.IsZero(i), true)
+		t.Assert(empty.IsZero(&i), false)
+		t.Assert(empty.IsZero(&i, true), true)
+	})
+}
