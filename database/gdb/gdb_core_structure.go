@@ -27,27 +27,43 @@ import (
 
 // GetFieldTypeStr retrieves and returns the field type string for certain field by name.
 func (c *Core) GetFieldTypeStr(ctx context.Context, fieldName, table, schema string) string {
-	field := c.GetFieldType(ctx, fieldName, table, schema)
-	if field != nil {
-		// Kinds of data type examples:
-		// year(4)
-		// datetime
-		// varchar(64)
-		// bigint(20)
-		// int(10) unsigned
-		typeName := gstr.StrTillEx(field.Type, "(") // int(10) unsigned -> int
-		if typeName != "" {
-			typeName = gstr.Trim(typeName)
-		} else {
-			typeName = field.Type
-		}
-		return typeName
-	}
-	return ""
+	fieldStrMap := c.GetFieldTypeStrMap(ctx, table, schema)
+	return fieldStrMap[fieldName]
 }
 
 // GetFieldType retrieves and returns the field type object for certain field by name.
 func (c *Core) GetFieldType(ctx context.Context, fieldName, table, schema string) *TableField {
+	fieldsMap := c.GetFieldTypeMap(ctx, table, schema)
+	return fieldsMap[fieldName]
+}
+
+// GetFieldTypeStrMap retrieves and returns the field type string map.
+func (c *Core) GetFieldTypeStrMap(ctx context.Context, table, schema string) map[string]string {
+	fieldMap := c.GetFieldTypeMap(ctx, table, schema)
+	fieldStrMap := make(map[string]string, len(fieldMap))
+	for fieldName, field := range fieldMap {
+		typeName := ""
+		if field != nil {
+			// Kinds of data type examples:
+			// year(4)
+			// datetime
+			// varchar(64)
+			// bigint(20)
+			// int(10) unsigned
+			typeName = gstr.StrTillEx(field.Type, "(") // int(10) unsigned -> int
+			if typeName != "" {
+				typeName = gstr.Trim(typeName)
+			} else {
+				typeName = field.Type
+			}
+		}
+		fieldStrMap[fieldName] = typeName
+	}
+	return fieldStrMap
+}
+
+// GetFieldTypeMap retrieves and returns the field type object map.
+func (c *Core) GetFieldTypeMap(ctx context.Context, table, schema string) map[string]*TableField {
 	fieldsMap, err := c.db.TableFields(ctx, table, schema)
 	if err != nil {
 		intlog.Errorf(
@@ -57,12 +73,7 @@ func (c *Core) GetFieldType(ctx context.Context, fieldName, table, schema string
 		)
 		return nil
 	}
-	for tableFieldName, tableField := range fieldsMap {
-		if tableFieldName == fieldName {
-			return tableField
-		}
-	}
-	return nil
+	return fieldsMap
 }
 
 // ConvertDataForRecord is a very important function, which does converting for any data that
@@ -75,8 +86,10 @@ func (c *Core) ConvertDataForRecord(ctx context.Context, value any, table string
 		err  error
 		data = MapOrStructToMapDeep(value, true)
 	)
+
+	fieldTypeMap := c.GetFieldTypeStrMap(ctx, table, c.GetSchema())
 	for fieldName, fieldValue := range data {
-		var fieldType = c.GetFieldTypeStr(ctx, fieldName, table, c.GetSchema())
+		fieldType := fieldTypeMap[fieldName]
 		data[fieldName], err = c.db.ConvertValueForField(
 			ctx,
 			fieldType,
