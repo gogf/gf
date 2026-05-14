@@ -24,6 +24,7 @@ import (
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // SetBrowserMode enables browser mode of the client.
@@ -215,4 +216,45 @@ func (c *Client) SetBuilder(builder gsel.Builder) {
 // SetDiscovery sets the load balance builder for client.
 func (c *Client) SetDiscovery(discovery gsvc.Discovery) {
 	c.discovery = discovery
+}
+
+// SetQuery sets a query parameter pair for the client.
+func (c *Client) SetQuery(key string, value any) *Client {
+	if c.queryParams == nil {
+		c.queryParams = make(map[string]any)
+	}
+	// Filter out nil values to maintain consistency with SetQueryParams and mergeQueryParams
+	if value != nil {
+		c.queryParams[key] = value
+	}
+	return c
+}
+
+// SetQueryMap sets query parameters with map.
+func (c *Client) SetQueryMap(m map[string]any) *Client {
+	if c.queryParams == nil {
+		c.queryParams = make(map[string]any)
+	}
+	for k, v := range m {
+		// Filter out nil values to maintain consistency with SetQueryParams and mergeQueryParams
+		if v != nil {
+			c.queryParams[k] = v
+		}
+	}
+	return c
+}
+
+// SetQueryParams sets query parameters with struct or map object.
+// The `params` can be type of: string/[]byte/map/struct/*struct.
+func (c *Client) SetQueryParams(params any) *Client {
+	if c.queryParams == nil {
+		c.queryParams = make(map[string]any)
+	}
+	m := gconv.Map(params)
+	for k, v := range m {
+		if v != nil {
+			c.queryParams[k] = v
+		}
+	}
+	return c
 }
