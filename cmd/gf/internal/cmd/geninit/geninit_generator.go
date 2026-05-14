@@ -85,7 +85,7 @@ func generateProject(ctx context.Context, srcPath, name, oldModule, newModule st
 	// 6. Format the generated Go files using go/format (not imports.Process)
 	// Note: We use formatGoFiles instead of utils.GoFmt because imports.Process
 	// may incorrectly "fix" local import paths by replacing them with cached module paths.
-	formatGoFiles(dstPath)
+	FormatGoFiles(dstPath)
 
 	mlog.Print("Project generated successfully!")
 	return nil
@@ -115,10 +115,10 @@ func upgradeDependencies(ctx context.Context, projectDir string) error {
 	return nil
 }
 
-// formatGoFiles formats all Go files in the directory using go/format.
+// FormatGoFiles formats all Go files in the directory using go/format.
 // Unlike imports.Process, this only formats code without modifying imports,
 // which prevents incorrect "fixing" of local import paths.
-func formatGoFiles(dir string) {
+func FormatGoFiles(dir string) {
 	files, err := findGoFiles(dir)
 	if err != nil {
 		mlog.Printf("Failed to find Go files for formatting: %v", err)
