@@ -123,7 +123,7 @@ func (c *Config) Get(ctx context.Context, pattern string, def ...any) (*gvar.Var
 // variable as fallback only when the configuration value is not found. If you need standard
 // priority where environment variables can override configuration values, use GetEffective instead.
 func (c *Config) GetWithEnv(ctx context.Context, pattern string, def ...any) (*gvar.Var, error) {
-	value, err := c.Get(ctx, pattern)
+	value, err := c.Get(ctx, utils.FormatCmdKey(pattern))
 	if err != nil && gerror.Code(err) != gcode.CodeNotFound {
 		return nil, err
 	}
