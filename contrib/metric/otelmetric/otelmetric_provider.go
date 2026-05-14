@@ -7,6 +7,7 @@
 package otelmetric
 
 import (
+	"reflect"
 	"time"
 
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
@@ -77,6 +78,24 @@ func (l *localProvider) SetAsGlobal() {
 	otel.SetMeterProvider(l)
 }
 
+// getRuntimeVersion returns the runtime version.
+func getRuntimeVersion() string {
+	val := reflect.ValueOf(runtime.Version)
+
+	if val.Kind() == reflect.Func {
+		results := val.Call(nil)
+		if len(results) > 0 && results[0].Kind() == reflect.String {
+			return results[0].String()
+		} else {
+			return "unknown"
+		}
+	} else if val.Kind() == reflect.String {
+		return val.String()
+	} else {
+		return "unknown"
+	}
+}
+
 // MeterPerformer creates and returns a MeterPerformer.
 // A Performer can produce types of Metric performer.
 func (l *localProvider) MeterPerformer(option gmetric.MeterOption) gmetric.MeterPerformer {
@@ -91,7 +110,7 @@ func createViewsForBuiltInMetrics() []metric.View {
 			Name: "process.runtime.go.gc.pause_ns",
 			Scope: instrumentation.Scope{
 				Name:    runtime.ScopeName,
-				Version: runtime.Version(),
+				Version: getRuntimeVersion(),
 			},
 		},
 		metric.Stream{
@@ -107,7 +126,7 @@ func createViewsForBuiltInMetrics() []metric.View {
 			Name: "runtime.uptime",
 			Scope: instrumentation.Scope{
 				Name:    runtime.ScopeName,
-				Version: runtime.Version(),
+				Version: getRuntimeVersion(),
 			},
 		},
 		metric.Stream{
