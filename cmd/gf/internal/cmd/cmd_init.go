@@ -232,14 +232,17 @@ func (c cInit) initFromBuiltin(ctx context.Context, in cInitInput) (out *cInitOu
 				return content
 			}
 		}
+		mlog.Debugf("replace %s %s to %s", path, cInitRepoPrefix+templateRepoName, in.Module)
 		return gstr.Replace(gfile.GetContents(path), cInitRepoPrefix+templateRepoName, in.Module)
 	}, in.Name, "*", true)
 	if err != nil {
 		return
 	}
 
-	// Format the generated Go files.
-	utils.GoFmt(in.Name)
+	// Format the generated Go files using go/format (not goimports).
+	// utils.GoFmt uses imports.Process which may remove local import paths that cannot
+	// be resolved in the GOPATH or module cache right after generation (e.g. "myapp/api/hello/v1").
+	geninit.FormatGoFiles(in.Name)
 
 	// Update the GoFrame version.
 	if in.Update {
