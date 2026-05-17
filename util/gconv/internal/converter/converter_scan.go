@@ -275,7 +275,7 @@ func (c *Converter) doScanForComplicatedTypes(
 			ContinueOnError: option.ContinueOnError,
 		})
 
-	case reflect.Array, reflect.Slice:
+	case reflect.Slice:
 		var (
 			sliceElem     = dstPointerReflectTypeElem.Elem()
 			sliceElemKind = sliceElem.Kind()
