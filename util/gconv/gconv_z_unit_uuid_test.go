@@ -10,10 +10,11 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/google/uuid"
 )
 
 func TestBsToUUID(t *testing.T) {
