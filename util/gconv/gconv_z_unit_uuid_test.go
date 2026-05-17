@@ -16,16 +16,22 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+func init() {
+	err := initConverter()
+	if err != nil {
+		panic(err)
+	}
+}
+
 func TestBsToUUID(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
-		err := initConverter()
-		t.Assert(err, nil)
+
 		v, _ := uuid.NewV7()
 		b := v[:]
 		var u uuid.UUID
 
-		err = gconv.Scan(v, &u)
+		err := gconv.Scan(v, &u)
 		t.Assert(err, nil)
 		t.Assert(v, u)
 
@@ -39,12 +45,11 @@ func TestBsToUUID(t *testing.T) {
 func TestUUIDToBS(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
-		err := initConverter()
-		t.Assert(err, nil)
+
 		v, _ := uuid.NewV7()
 
 		var bs []byte
-		err = gconv.Scan(v, &bs)
+		err := gconv.Scan(v, &bs)
 
 		t.Assert(err, nil)
 		t.Assert(v[:], bs)
