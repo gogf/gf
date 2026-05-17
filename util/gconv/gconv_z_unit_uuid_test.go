@@ -7,7 +7,6 @@
 package gconv_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/google/uuid"
@@ -70,19 +69,6 @@ func initConverter() (err error) {
 		if err = gconv.RegisterTypeConverterFunc(fn); err != nil {
 			return
 		}
-	}
-	return
-}
-
-func convAnyToUUID(in any, out reflect.Value) (err error) {
-	if _, ok := out.Interface().(*uuid.UUID); ok {
-		bs := gconv.Bytes(in)
-		var u *uuid.UUID
-		u, err = convBsToUUID(bs)
-		if err != nil {
-			return
-		}
-		out.Elem().Set(reflect.ValueOf(*u))
 	}
 	return
 }
