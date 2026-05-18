@@ -439,8 +439,26 @@ func Test_DB_Save(t *testing.T) {
 			"nickname":    fmt.Sprintf(`T%d`, i),
 			"create_time": gtime.Now().String(),
 		}
-		_, err := db.Save(ctx, "t_user", data, 10)
-		gtest.AssertNE(err, nil)
+		result, err := db.Save(ctx, "t_user", data, 10)
+		t.AssertNil(err)
+		rowsAffected, err := result.RowsAffected()
+		t.AssertNil(err)
+		t.Assert(rowsAffected, 1)
+
+		data["nickname"] = "T10-updated"
+		result, err = db.Save(ctx, "t_user", data, 10)
+		t.AssertNil(err)
+		rowsAffected, err = result.RowsAffected()
+		t.AssertNil(err)
+		t.Assert(rowsAffected, 1)
+
+		value, err := db.Model("t_user").Where("id", i).Value("nickname")
+		t.AssertNil(err)
+		t.Assert(value.String(), "T10-updated")
+
+		delete(data, "id")
+		_, err = db.Save(ctx, "t_user", data, 10)
+		t.AssertNE(err, nil)
 	})
 }
 
