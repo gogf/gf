@@ -77,13 +77,15 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 
 	dropTableWithDb(db, name)
 
+	// Non-PK columns are nullable to allow partial inserts in ported tests
+	// (OmitEmpty/OmitNil/Hook/Concurrent/Transaction tests).
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 		CREATE TABLE %s (
 		   	id bigserial  NOT NULL,
-		   	passport varchar(45) NOT NULL,
-		   	password varchar(32) NOT NULL,
-		   	nickname varchar(45) NOT NULL,
-		   	create_time timestamp NOT NULL,
+		   	passport varchar(45) NULL,
+		   	password varchar(32) NULL,
+		   	nickname varchar(45) NULL,
+		   	create_time timestamp NULL,
 		    favorite_movie varchar[],
 		    favorite_music text[],
 			numeric_values numeric[],
