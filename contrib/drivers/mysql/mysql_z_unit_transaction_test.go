@@ -743,7 +743,6 @@ func Test_Transaction_Panic(t *testing.T) {
 			})
 			t.AssertNil(err)
 			panic("error")
-			return nil
 		})
 		t.AssertNE(err, nil)
 
@@ -854,7 +853,6 @@ func Test_Transaction_Nested_TX_Transaction_UseTX(t *testing.T) {
 				t.AssertNil(err)
 
 				panic("error")
-				return err
 			})
 			t.AssertNE(err, nil)
 			return nil
@@ -916,7 +914,6 @@ func Test_Transaction_Nested_TX_Transaction_UseTX(t *testing.T) {
 				t.AssertNil(err)
 
 				panic("error")
-				return err
 			})
 			t.AssertNE(err, nil)
 			return nil
@@ -993,7 +990,6 @@ func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
 
 				// panic makes this transaction rollback.
 				panic("error")
-				return err
 			})
 			t.AssertNE(err, nil)
 			return nil
@@ -1055,7 +1051,6 @@ func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
 
 				// panic makes this transaction rollback.
 				panic("error")
-				return err
 			})
 			t.AssertNE(err, nil)
 			return nil

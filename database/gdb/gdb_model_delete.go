@@ -54,11 +54,8 @@ func (m *Model) Delete(ctx context.Context) (result sql.Result, err error) {
 			ctx, "", fieldNameDelete, fieldTypeDelete,
 		)
 		in := &HookUpdateInput{
-			internalParamHookUpdate: internalParamHookUpdate{
-				internalParamHook: internalParamHook{
-					link: model.getLink(ctx, true),
-				},
-				handler: model.hookHandler.Update,
+			internalParamHook: internalParamHook{
+				link: model.getLink(ctx, true),
 			},
 			Model:     model,
 			Table:     model.tables,
@@ -67,15 +64,12 @@ func (m *Model) Delete(ctx context.Context) (result sql.Result, err error) {
 			Condition: conditionStr,
 			Args:      append([]interface{}{dataValue}, conditionArgs...),
 		}
-		return in.Next(ctx)
+		return m.hookHandler.runUpdate(ctx, in)
 	}
 
 	in := &HookDeleteInput{
-		internalParamHookDelete: internalParamHookDelete{
-			internalParamHook: internalParamHook{
-				link: model.getLink(ctx, true),
-			},
-			handler: model.hookHandler.Delete,
+		internalParamHook: internalParamHook{
+			link: model.getLink(ctx, true),
 		},
 		Model:     model,
 		Table:     model.tables,
@@ -83,5 +77,5 @@ func (m *Model) Delete(ctx context.Context) (result sql.Result, err error) {
 		Condition: conditionStr,
 		Args:      conditionArgs,
 	}
-	return in.Next(ctx)
+	return m.hookHandler.runDelete(ctx, in)
 }

@@ -316,11 +316,8 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 	}
 
 	in := &HookInsertInput{
-		internalParamHookInsert: internalParamHookInsert{
-			internalParamHook: internalParamHook{
-				link: model.getLink(ctx, true),
-			},
-			handler: model.hookHandler.Insert,
+		internalParamHook: internalParamHook{
+			link: model.getLink(ctx, true),
 		},
 		Model:  model,
 		Table:  model.tables,
@@ -328,7 +325,7 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 		Data:   list,
 		Option: doInsertOption,
 	}
-	return in.Next(ctx)
+	return m.hookHandler.runInsert(ctx, in)
 }
 
 func (m *Model) formatDoInsertOption(insertOption InsertOption, columnNames []string) (option DoInsertOption, err error) {

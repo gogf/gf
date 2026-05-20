@@ -1290,11 +1290,10 @@ func Test_Issue3238(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
-			_, err := db.Model(table).Hook(gdb.HookHandler{
-				Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
-					result, err = in.Next(ctx)
+			_, err := db.Model(table).Hook(
+				gdb.AfterSelect(func(ctx context.Context, in *gdb.HookSelectInput, result gdb.Result, err error) (gdb.Result, error) {
 					if err != nil {
-						return
+						return result, err
 					}
 					var wg sync.WaitGroup
 					for _, record := range result {
@@ -1308,9 +1307,8 @@ func Test_Issue3238(t *testing.T) {
 						}(record)
 					}
 					wg.Wait()
-					return
-				},
-			},
+					return result, nil
+				}),
 			).All(ctx)
 			t.AssertNil(err)
 		}
@@ -1428,27 +1426,26 @@ func Test_Issue3626(t *testing.T) {
 
 	var (
 		cacheKey  = guid.S()
-		cacheFunc = func(duration time.Duration) gdb.HookHandler {
-			return gdb.HookHandler{
-				Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
-					get, err := db.GetCache().Get(ctx, cacheKey)
-					if err == nil && !get.IsEmpty() {
-						err = get.Scan(&result)
-						if err == nil {
-							return result, nil
-						}
+		cacheFunc = func(duration time.Duration) gdb.HookDescriptor {
+			return gdb.AfterSelect(func(ctx context.Context, in *gdb.HookSelectInput, result gdb.Result, err error) (gdb.Result, error) {
+				// In new hook design, DB select always runs before after hook.
+				// We still keep cache as an override for returning results.
+				get, getErr := db.GetCache().Get(ctx, cacheKey)
+				if getErr == nil && !get.IsEmpty() {
+					var cached gdb.Result
+					if scanErr := get.Scan(&cached); scanErr == nil {
+						return cached, nil
 					}
-					result, err = in.Next(ctx)
-					if err != nil {
-						return nil, err
-					}
-					if result == nil || result.Len() < 1 {
-						result = make(gdb.Result, 0)
-					}
-					_ = db.GetCache().Set(ctx, cacheKey, result, duration)
-					return
-				},
-			}
+				}
+				if err != nil {
+					return result, err
+				}
+				if result == nil || result.Len() < 1 {
+					result = make(gdb.Result, 0)
+				}
+				_ = db.GetCache().Set(ctx, cacheKey, result, duration)
+				return result, nil
+			})
 		}
 	)
 	gtest.C(t, func(t *gtest.T) {
@@ -1503,20 +1500,15 @@ func Test_Issue3968(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		var hook = gdb.HookHandler{
-			Select: func(ctx context.Context, in *gdb.HookSelectInput) (result gdb.Result, err error) {
-				result, err = in.Next(ctx)
-				if err != nil {
-					return nil, err
-				}
-				if result != nil {
-					for i, _ := range result {
-						result[i]["location"] = gvar.New("ny")
-					}
-				}
-				return
-			},
-		}
+		var hook = gdb.AfterSelect(func(ctx context.Context, in *gdb.HookSelectInput, result gdb.Result, err error) (gdb.Result, error) {
+			if err != nil {
+				return nil, err
+			}
+			for i := range result {
+				result[i]["location"] = gvar.New("ny")
+			}
+			return result, nil
+		})
 		var (
 			count  int
 			result gdb.Result
