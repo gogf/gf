@@ -16,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -94,6 +95,26 @@ func (c *cUserTagDefault) User(ctx context.Context, req *UserTagDefaultReq) (res
 	return
 }
 
+type UserInvalidJsonReq struct {
+	g.Meta `path:"/user-invalid-json" method:"post" summary:"user invalid json api"`
+	Name   string `v:"required"`
+}
+
+type UserInvalidJsonRes struct {
+	g.Meta `mime:"application/json"`
+	Name   string
+}
+
+var (
+	UserInvalidJson = cUserInvalidJson{}
+)
+
+type cUserInvalidJson struct{}
+
+func (c *cUserInvalidJson) User(ctx context.Context, req *UserInvalidJsonReq) (res *UserInvalidJsonRes, err error) {
+	return &UserInvalidJsonRes{Name: req.Name}, nil
+}
+
 func Test_ParamsTagDefault(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
@@ -147,6 +168,36 @@ func Test_ParamsTagDefault(t *testing.T) {
 		// Test providing JSON content via GET request
 		resp = client.ContentJson().GetContent(ctx, "/user-default", `{"id":500,"isVip":false}`)
 		t.Assert(resp, `{"Id":500,"Name":"john","Age":18,"Score":99.9,"IsVip":false,"NickName":"nickname-default","EmptyStr":"","Email":"","Address":""}`)
+	})
+}
+
+func Test_ParamsInvalidJsonReportsParseError(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareHandlerResponse)
+		group.Bind(UserInvalidJson)
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	for i := 0; i < 100 && s.GetListenedPort() == 0; i++ {
+		time.Sleep(10 * time.Millisecond)
+	}
+	if s.GetListenedPort() == 0 {
+		t.Fatal("server did not start listening")
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		client := g.Client()
+		client.SetPrefix(prefix)
+
+		for _, body := range []string{`{"name":}`, `[{"name":"john"}]`, `name=john`} {
+			resp := client.ContentJson().PostContent(ctx, "/user-invalid-json", body)
+			t.Assert(gstr.Contains(resp, "Parse JSON body failed"), true)
+			t.Assert(gstr.Contains(resp, `"Name"`), false)
+		}
 	})
 }
 

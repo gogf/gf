@@ -236,8 +236,18 @@ func (r *Request) parseBody() {
 	if body := r.GetBody(); len(body) > 0 {
 		// Trim space/new line characters.
 		body = bytes.TrimSpace(body)
+		if len(body) == 0 {
+			return
+		}
+		contentType := r.Header.Get("Content-Type")
+		jsonContentType := r.Method != http.MethodGet && gstr.ContainsI(contentType, contentTypeJson)
 		// JSON format checks.
-		if body[0] == '{' && body[len(body)-1] == '}' {
+		if jsonContentType {
+			if err := json.UnmarshalUseNumber(body, &r.bodyMap); err != nil {
+				r.SetError(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse JSON body failed"))
+				return
+			}
+		} else if body[0] == '{' {
 			_ = json.UnmarshalUseNumber(body, &r.bodyMap)
 		}
 		// XML format checks.
@@ -248,7 +258,7 @@ func (r *Request) parseBody() {
 			r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
 		}
 		// Default parameters decoding.
-		if contentType := r.Header.Get("Content-Type"); (contentType == "" || !gstr.Contains(contentType, "multipart/")) && r.bodyMap == nil {
+		if (contentType == "" || !gstr.Contains(contentType, "multipart/")) && r.bodyMap == nil {
 			r.bodyMap, _ = gstr.Parse(r.GetBodyString())
 		}
 	}
