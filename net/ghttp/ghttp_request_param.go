@@ -240,14 +240,16 @@ func (r *Request) parseBody() {
 			return
 		}
 		contentType := r.Header.Get("Content-Type")
-		jsonContentType := r.Method != http.MethodGet && gstr.ContainsI(contentType, contentTypeJson)
+		jsonContentType := gstr.ContainsI(contentType, contentTypeJson)
+		// Preserve GET query/form body compatibility while validating JSON-shaped GET bodies.
+		strictJsonContentType := jsonContentType && (r.Method != http.MethodGet || body[0] == '{' || body[0] == '[')
 		// JSON format checks.
-		if jsonContentType {
+		if strictJsonContentType {
 			if err := json.UnmarshalUseNumber(body, &r.bodyMap); err != nil {
 				r.SetError(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse JSON body failed"))
 				return
 			}
-		} else if body[0] == '{' {
+		} else if body[0] == '{' && body[len(body)-1] == '}' {
 			_ = json.UnmarshalUseNumber(body, &r.bodyMap)
 		}
 		// XML format checks.

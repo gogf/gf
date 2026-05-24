@@ -8,15 +8,16 @@ package ghttp_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -96,8 +97,8 @@ func (c *cUserTagDefault) User(ctx context.Context, req *UserTagDefaultReq) (res
 }
 
 type UserInvalidJsonReq struct {
-	g.Meta `path:"/user-invalid-json" method:"post" summary:"user invalid json api"`
-	Name   string `v:"required"`
+	g.Meta `path:"/user-invalid-json" method:"post,get" summary:"user invalid json api"`
+	Name   string
 }
 
 type UserInvalidJsonRes struct {
@@ -190,13 +191,26 @@ func Test_ParamsInvalidJsonReportsParseError(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		reqCtx := context.Background()
 		client := g.Client()
 		client.SetPrefix(prefix)
 
+		assertInvalidParameter := func(resp string) {
+			var payload struct {
+				Code int                 `json:"code"`
+				Data *UserInvalidJsonRes `json:"data"`
+			}
+			err := json.Unmarshal([]byte(resp), &payload)
+			t.AssertNil(err)
+			t.Assert(payload.Code, gcode.CodeInvalidParameter.Code())
+			t.Assert(payload.Data, nil)
+		}
+
 		for _, body := range []string{`{"name":}`, `[{"name":"john"}]`, `name=john`} {
-			resp := client.ContentJson().PostContent(ctx, "/user-invalid-json", body)
-			t.Assert(gstr.Contains(resp, "Parse JSON body failed"), true)
-			t.Assert(gstr.Contains(resp, `"Name"`), false)
+			assertInvalidParameter(client.ContentJson().PostContent(reqCtx, "/user-invalid-json", body))
+		}
+		for _, body := range []string{`{"name":}`, `[{"name":"john"}]`} {
+			assertInvalidParameter(client.ContentJson().GetContent(reqCtx, "/user-invalid-json", body))
 		}
 	})
 }
