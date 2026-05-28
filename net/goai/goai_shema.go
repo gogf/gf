@@ -157,8 +157,31 @@ func (oai *OpenApiV3) structToSchema(object any) (*Schema, error) {
 			return nil, err
 		}
 	}
-	if schema.Type != "" && schema.Type != TypeObject {
+	// Check if the object is actually a struct (not a slice/array).
+	// If the tag has "type":"array" but the object is a struct (including pointers
+	// or interfaces to structs), we should process it as a normal struct, not as an array.
+	var (
+		t              = reflect.TypeOf(object)
+		objectIsStruct bool
+	)
+	if t != nil {
+		for t.Kind() == reflect.Pointer || t.Kind() == reflect.Interface {
+			t = t.Elem()
+			if t == nil {
+				break
+			}
+		}
+		if t != nil && t.Kind() == reflect.Struct {
+			objectIsStruct = true
+		}
+	}
+	if schema.Type != "" && schema.Type != TypeObject && !objectIsStruct {
 		return schema, nil
+	}
+	// If tag says "array" but object is actually a struct, ignore the type tag
+	// and process as normal struct (the array type is for request body, not the schema itself)
+	if schema.Type == TypeArray && objectIsStruct {
+		schema.Type = TypeObject
 	}
 	// []struct.
 	if utils.IsArray(object) {
@@ -179,7 +202,10 @@ func (oai *OpenApiV3) structToSchema(object any) (*Schema, error) {
 		Pointer:         object,
 		RecursiveOption: gstructs.RecursiveOptionEmbedded,
 	})
-	schema.Type = TypeObject
+	// Only set TypeObject if not already set by g.Meta tag (e.g., type:"string" for HTML responses)
+	if schema.Type == "" {
+		schema.Type = TypeObject
+	}
 	for _, structField := range structFields {
 		if !gstr.IsLetterUpper(structField.Name()[0]) {
 			continue

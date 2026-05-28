@@ -236,9 +236,13 @@ func (r *Request) parseBody() {
 	if body := r.GetBody(); len(body) > 0 {
 		// Trim space/new line characters.
 		body = bytes.TrimSpace(body)
-		// JSON format checks.
+		// JSON format checks - object.
 		if body[0] == '{' && body[len(body)-1] == '}' {
 			_ = json.UnmarshalUseNumber(body, &r.bodyMap)
+		}
+		// JSON format checks - array.
+		if body[0] == '[' && body[len(body)-1] == ']' {
+			_ = json.UnmarshalUseNumber(body, &r.bodyArray)
 		}
 		// XML format checks.
 		if len(body) > 5 && bytes.EqualFold(body[:5], xmlHeaderBytes) {
