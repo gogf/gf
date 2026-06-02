@@ -260,6 +260,6 @@ func (c *Client) SetDiscovery(discovery gsvc.Discovery) {
 
 // SetTransport sets the transport for the client.
 func (c *Client) SetTransport(transport http.RoundTripper) *Client {
-	c.Client.Transport = transport
+	c.Transport = transport
 	return c
 }
