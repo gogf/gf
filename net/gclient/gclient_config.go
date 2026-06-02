@@ -95,8 +95,49 @@ func (c *Client) SetPrefix(prefix string) *Client {
 }
 
 // SetTimeout sets the request timeout for the client.
+// It only updates the client timeout, not transport timeouts.
+// Use SetTransportTimeout to configure transport-level timeouts.
 func (c *Client) SetTimeout(t time.Duration) *Client {
 	c.Client.Timeout = t
+	return c
+}
+
+// SetTransportTimeout sets the transport-level timeouts for the client.
+// It configures ResponseHeaderTimeout, TLSHandshakeTimeout, and ExpectContinueTimeout.
+// Use this method to set fine-grained timeouts for different phases of the request.
+func (c *Client) SetTransportTimeout(responseHeaderTimeout, tlsHandshakeTimeout, expectContinueTimeout time.Duration) *Client {
+	if transport, ok := c.Transport.(*http.Transport); ok {
+		transport.ResponseHeaderTimeout = responseHeaderTimeout
+		transport.TLSHandshakeTimeout = tlsHandshakeTimeout
+		transport.ExpectContinueTimeout = expectContinueTimeout
+	}
+	return c
+}
+
+// SetResponseHeaderTimeout sets the timeout for receiving response headers.
+// This is the maximum time to wait for the server to send response headers.
+func (c *Client) SetResponseHeaderTimeout(t time.Duration) *Client {
+	if transport, ok := c.Transport.(*http.Transport); ok {
+		transport.ResponseHeaderTimeout = t
+	}
+	return c
+}
+
+// SetTLSHandshakeTimeout sets the timeout for TLS handshake.
+// This is the maximum time to wait for TLS handshake to complete.
+func (c *Client) SetTLSHandshakeTimeout(t time.Duration) *Client {
+	if transport, ok := c.Transport.(*http.Transport); ok {
+		transport.TLSHandshakeTimeout = t
+	}
+	return c
+}
+
+// SetExpectContinueTimeout sets the timeout for Expect: 100-continue.
+// This is the maximum time to wait for the server to respond to Expect: 100-continue header.
+func (c *Client) SetExpectContinueTimeout(t time.Duration) *Client {
+	if transport, ok := c.Transport.(*http.Transport); ok {
+		transport.ExpectContinueTimeout = t
+	}
 	return c
 }
 
@@ -215,4 +256,10 @@ func (c *Client) SetBuilder(builder gsel.Builder) {
 // SetDiscovery sets the load balance builder for client.
 func (c *Client) SetDiscovery(discovery gsvc.Discovery) {
 	c.discovery = discovery
+}
+
+// SetTransport sets the transport for the client.
+func (c *Client) SetTransport(transport http.RoundTripper) *Client {
+	c.Client.Transport = transport
+	return c
 }

@@ -58,31 +58,44 @@ var (
 	defaultClientAgent = fmt.Sprintf(`GClient %s at %s`, gf.VERSION, hostname)
 )
 
-// New creates and returns a new HTTP client object.
+// New creates and returns a new HTTP client object with a default timeout of 30 seconds.
 func New() *Client {
+	return NewWithTimeout(30 * time.Second)
+}
+
+// NewWithTimeout creates and returns a new HTTP client object with specified timeout.
+func NewWithTimeout(timeout time.Duration) *Client {
+	// Create a new Transport based on DefaultTransport's defaults, but as an independent copy.
+	// This avoids modifying the global http.DefaultTransport which is shared across the process.
+	transport := &http.Transport{
+		TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
+		DisableKeepAlives:   true,
+		MaxIdleConnsPerHost: 50,
+		MaxConnsPerHost:     100,
+
+		// Go default
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+	defaultClient := http.Client{
+		Transport: transport,
+		Timeout:   timeout,
+	}
+
+	return NewWithHttpClient(&defaultClient)
+}
+
+// NewWithHttpClient creates and returns a new Client with given http.Client.
+func NewWithHttpClient(client *http.Client) *Client {
 	c := &Client{
-		Client: http.Client{
-			Transport: &http.Transport{
-				// No validation for https certification of the server in default.
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-				DisableKeepAlives:     true,
-				MaxIdleConns:          100,
-				MaxIdleConnsPerHost:   50,
-				MaxConnsPerHost:       100,
-				IdleConnTimeout:       90 * time.Second,
-				ResponseHeaderTimeout: 30 * time.Second,
-				ExpectContinueTimeout: 1 * time.Second,
-				TLSHandshakeTimeout:   10 * time.Second,
-				ForceAttemptHTTP2:     true,
-				DisableCompression:    false,
-				DialContext: (&net.Dialer{
-					Timeout:   30 * time.Second,
-					KeepAlive: 30 * time.Second,
-				}).DialContext,
-			},
-		},
+		Client:    *client,
 		header:    make(map[string]string),
 		cookies:   make(map[string]string),
 		builder:   gsel.GetBuilder(),
