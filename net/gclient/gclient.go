@@ -11,7 +11,6 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"time"
@@ -64,36 +63,32 @@ func New() *Client {
 }
 
 // NewWithTimeout creates and returns a new HTTP client object with specified timeout.
+//
+// The transport is cloned from http.DefaultTransport to inherit standard library defaults
+// (such as Proxy, HTTP/2 knobs, and future Go defaults), then customized with the project's
+// own TLS, keep-alive, and connection pool settings.
 func NewWithTimeout(timeout time.Duration) *Client {
-	// Create a new Transport based on DefaultTransport's defaults, but as an independent copy.
-	// This avoids modifying the global http.DefaultTransport which is shared across the process.
-	transport := &http.Transport{
-		TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
-		DisableKeepAlives:   true,
-		MaxIdleConnsPerHost: 50,
-		MaxConnsPerHost:     100,
-
-		// Go default
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).DialContext,
-		ForceAttemptHTTP2:     true,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-	}
+	// Clone from http.DefaultTransport to inherit standard library defaults,
+	// then override with project-specific settings.
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	// No validation for https certification of the server in default.
+	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	transport.DisableKeepAlives = true
+	transport.MaxIdleConnsPerHost = 50
+	transport.MaxConnsPerHost = 100
 	defaultClient := http.Client{
 		Transport: transport,
 		Timeout:   timeout,
 	}
-
 	return NewWithHttpClient(&defaultClient)
 }
 
 // NewWithHttpClient creates and returns a new Client with given http.Client.
+// It panics if client is nil.
 func NewWithHttpClient(client *http.Client) *Client {
+	if client == nil {
+		panic(`gclient: client must not be nil`)
+	}
 	c := &Client{
 		Client:    *client,
 		header:    make(map[string]string),

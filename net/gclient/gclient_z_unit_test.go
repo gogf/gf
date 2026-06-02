@@ -720,6 +720,17 @@ func TestClient_NoUrlEncode(t *testing.T) {
 	})
 }
 
+func TestClient_NewWithHttpClient_NilPanics(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer func() {
+			if r := recover(); r != nil {
+				t.Assert(fmt.Sprintf("%v", r), `gclient: client must not be nil`)
+			}
+		}()
+		gclient.NewWithHttpClient(nil)
+	})
+}
+
 func TestClient_SetTransportTimeout_ShouldUpdateTransportTimeouts(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := gclient.New()
