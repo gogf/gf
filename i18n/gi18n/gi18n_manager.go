@@ -20,6 +20,7 @@ import (
 	"github.com/gogf/gf/v2/os/gfsnotify"
 	"github.com/gogf/gf/v2/os/gres"
 	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // pathType is the type for i18n file path.
@@ -186,7 +187,7 @@ func (m *Manager) Translate(ctx context.Context, content string) string {
 	j := gjson.New(data)
 	// Parse content as name.
 	if v, ok := data[content]; ok {
-		return v.(string)
+		return gconv.String(v)
 	}
 	// Parse content as variables container.
 	result, _ := gregex.ReplaceStringFuncMatch(
@@ -215,7 +216,7 @@ func (m *Manager) GetContent(ctx context.Context, key string) string {
 		transLang = lang
 	}
 	if data, ok := m.data[transLang]; ok {
-		return data[key].(string)
+		return gconv.String(data[key])
 	}
 	return ""
 }
