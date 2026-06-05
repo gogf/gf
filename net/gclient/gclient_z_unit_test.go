@@ -722,12 +722,17 @@ func TestClient_NoUrlEncode(t *testing.T) {
 
 func TestClient_NewWithHttpClient_NilPanics(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				t.Assert(fmt.Sprintf("%v", r), `gclient: client must not be nil`)
-			}
+		var panicked bool
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					panicked = true
+					t.Assert(fmt.Sprintf("%v", r), `gclient: client must not be nil`)
+				}
+			}()
+			gclient.NewWithHttpClient(nil)
 		}()
-		gclient.NewWithHttpClient(nil)
+		t.Assert(panicked, true)
 	})
 }
 
@@ -751,8 +756,10 @@ func TestClient_SetTransportTimeout_ShouldUpdateTransportTimeouts(t *testing.T) 
 		// Verify that client timeout remains at default (30s from New())
 		t.Assert(client.Client.Timeout, 30*time.Second)
 
-		// Verify that IdleConnTimeout is not changed (should remain default 90s)
-		t.Assert(transport.IdleConnTimeout, 90*time.Second)
+		// Verify that IdleConnTimeout is not changed (should remain default from DefaultTransport)
+		defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+		t.Assert(ok, true)
+		t.Assert(transport.IdleConnTimeout, defaultTransport.IdleConnTimeout)
 	})
 }
 
@@ -770,12 +777,14 @@ func TestClient_SetTimeout_ShouldOnlyUpdateClientTimeout(t *testing.T) {
 		// Verify transport timeouts are not changed (should remain defaults)
 		transport, ok := client.Transport.(*http.Transport)
 		t.Assert(ok, true)
-		// ResponseHeaderTimeout should be 0 (not set by default)
-		t.Assert(transport.ResponseHeaderTimeout, 0*time.Second)
-		// TLSHandshakeTimeout should be 10s (default)
-		t.Assert(transport.TLSHandshakeTimeout, 10*time.Second)
-		// ExpectContinueTimeout should be 1s (default)
-		t.Assert(transport.ExpectContinueTimeout, 1*time.Second)
+		defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+		t.Assert(ok, true)
+		// ResponseHeaderTimeout should match DefaultTransport
+		t.Assert(transport.ResponseHeaderTimeout, defaultTransport.ResponseHeaderTimeout)
+		// TLSHandshakeTimeout should match DefaultTransport
+		t.Assert(transport.TLSHandshakeTimeout, defaultTransport.TLSHandshakeTimeout)
+		// ExpectContinueTimeout should match DefaultTransport
+		t.Assert(transport.ExpectContinueTimeout, defaultTransport.ExpectContinueTimeout)
 	})
 }
 
@@ -818,13 +827,15 @@ func TestClient_Clone_ShouldPreserveTimeoutSettings(t *testing.T) {
 		// Verify cloned client has same timeout
 		t.Assert(cloned.Client.Timeout, timeout)
 
-		// Verify transport timeouts are preserved (should be defaults)
+		// Verify transport timeouts are preserved (should be defaults from DefaultTransport)
 		transport, ok := cloned.Transport.(*http.Transport)
 		t.Assert(ok, true)
-		// ResponseHeaderTimeout should be 0 (not set by default)
-		t.Assert(transport.ResponseHeaderTimeout, 0*time.Second)
-		// TLSHandshakeTimeout should be 10s (default)
-		t.Assert(transport.TLSHandshakeTimeout, 10*time.Second)
+		defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+		t.Assert(ok, true)
+		// ResponseHeaderTimeout should match DefaultTransport
+		t.Assert(transport.ResponseHeaderTimeout, defaultTransport.ResponseHeaderTimeout)
+		// TLSHandshakeTimeout should match DefaultTransport
+		t.Assert(transport.TLSHandshakeTimeout, defaultTransport.TLSHandshakeTimeout)
 
 		// Modify cloned client's timeout
 		newTimeout := 10 * time.Second
@@ -875,6 +886,11 @@ func TestClient_SetTransportTimeout_WithIndividualMethods(t *testing.T) {
 
 		// Verify client timeout is still at default (30s from New())
 		t.Assert(client.Client.Timeout, 30*time.Second)
+
+		// Verify that other timeouts are preserved from DefaultTransport
+		defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+		t.Assert(ok, true)
+		t.Assert(transport.IdleConnTimeout, defaultTransport.IdleConnTimeout)
 	})
 }
 

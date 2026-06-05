@@ -70,7 +70,23 @@ func New() *Client {
 func NewWithTimeout(timeout time.Duration) *Client {
 	// Clone from http.DefaultTransport to inherit standard library defaults,
 	// then override with project-specific settings.
-	transport := http.DefaultTransport.(*http.Transport).Clone()
+	var transport *http.Transport
+	if defaultTransport, ok := http.DefaultTransport.(*http.Transport); ok {
+		transport = defaultTransport.Clone()
+	} else {
+		// Fallback to manual construction if DefaultTransport is not *http.Transport
+		// (e.g., if the application replaced it with a custom RoundTripper)
+		transport = &http.Transport{
+			DisableKeepAlives:     true,
+			MaxIdleConns:          100,
+			MaxIdleConnsPerHost:   50,
+			MaxConnsPerHost:       100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+			ForceAttemptHTTP2:     true,
+		}
+	}
 	// No validation for https certification of the server in default.
 	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	transport.DisableKeepAlives = true
