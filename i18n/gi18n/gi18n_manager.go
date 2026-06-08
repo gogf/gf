@@ -35,10 +35,10 @@ const (
 // Manager for i18n contents, it is concurrent safe, supporting hot reload.
 type Manager struct {
 	mu       sync.RWMutex
-	data     map[string]map[string]interface{} // Translating map.
-	pattern  string                            // Pattern for regex parsing.
-	pathType pathType                          // Path type for i18n files.
-	options  Options                           // configuration options.
+	data     map[string]map[string]any // Translating map.
+	pattern  string                    // Pattern for regex parsing.
+	pathType pathType                  // Path type for i18n files.
+	options  Options                   // configuration options.
 }
 
 // Options is used for i18n object configuration.
@@ -257,7 +257,7 @@ func (m *Manager) init(ctx context.Context) {
 				lang  string
 				array []string
 			)
-			m.data = make(map[string]map[string]interface{})
+			m.data = make(map[string]map[string]any)
 			for _, file := range files {
 				name = file.Name()
 				path = name[len(m.options.Path)+1:]
@@ -268,7 +268,7 @@ func (m *Manager) init(ctx context.Context) {
 					lang = gfile.Name(array[0])
 				}
 				if m.data[lang] == nil {
-					m.data[lang] = make(map[string]interface{})
+					m.data[lang] = make(map[string]any)
 				}
 				options := gjson.Options{Type: gfile.ExtName(name)}
 				if j, err := gjson.LoadWithOptions(file.Content(), options); err == nil {
@@ -290,7 +290,7 @@ func (m *Manager) init(ctx context.Context) {
 			lang  string
 			array []string
 		)
-		m.data = make(map[string]map[string]interface{})
+		m.data = make(map[string]map[string]any)
 		for _, file := range files {
 			path = file[len(m.options.Path)+1:]
 			array = strings.Split(path, gfile.Separator)
@@ -300,7 +300,7 @@ func (m *Manager) init(ctx context.Context) {
 				lang = gfile.Name(array[0])
 			}
 			if m.data[lang] == nil {
-				m.data[lang] = make(map[string]interface{})
+				m.data[lang] = make(map[string]any)
 			}
 			if j, err := gjson.LoadPath(file, gjson.Options{}); err == nil {
 				for k, v := range j.Var().Map() {
