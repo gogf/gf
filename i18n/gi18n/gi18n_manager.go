@@ -193,6 +193,10 @@ func (m *Manager) Translate(ctx context.Context, content string) string {
 	result, _ := gregex.ReplaceStringFuncMatch(
 		m.pattern, content,
 		func(match []string) string {
+			// Handling the Case Where Key Names Themselves Contain Hierarchical Symbols "."
+			if strings.Contains(match[1], ".") {
+				j.SetViolenceCheck(true)
+			}
 			v := j.Get(match[1])
 			if v != nil {
 				return v.String()
