@@ -129,3 +129,49 @@ func (r *Redis) Close(ctx context.Context) error {
 	}
 	return r.localAdapter.Close(ctx)
 }
+
+// Pipeline returns a Pipeliner for batching multiple commands into a single network round-trip.
+// Commands are buffered locally and sent to the server when Pipeliner.Exec is called.
+func (r *Redis) Pipeline(ctx context.Context) Pipeliner {
+	if r == nil || r.localAdapter == nil {
+		return nil
+	}
+	return r.localAdapter.Pipeline(ctx)
+}
+
+// TxPipeline returns a Pipeliner that wraps commands in a MULTI/EXEC transaction.
+// All queued commands are executed atomically by the Redis server.
+func (r *Redis) TxPipeline(ctx context.Context) Pipeliner {
+	if r == nil || r.localAdapter == nil {
+		return nil
+	}
+	return r.localAdapter.TxPipeline(ctx)
+}
+
+// Watch watches the given keys for modifications and executes fn in a transaction.
+// If any watched key is modified by another client before the transaction executes,
+// the transaction is aborted and Watch returns a transaction-abort error.
+func (r *Redis) Watch(ctx context.Context, fn func(tx Tx) error, keys ...string) error {
+	if r == nil || r.localAdapter == nil {
+		return gerror.NewCode(gcode.CodeInvalidParameter, errorNilRedis)
+	}
+	return r.localAdapter.Watch(ctx, fn, keys...)
+}
+
+// MustPipeline performs as function Pipeline, but it panics if any error occurs internally.
+func (r *Redis) MustPipeline(ctx context.Context) Pipeliner {
+	pipe := r.Pipeline(ctx)
+	if pipe == nil {
+		panic(gerror.NewCode(gcode.CodeInvalidParameter, errorNilRedis))
+	}
+	return pipe
+}
+
+// MustTxPipeline performs as function TxPipeline, but it panics if any error occurs internally.
+func (r *Redis) MustTxPipeline(ctx context.Context) Pipeliner {
+	pipe := r.TxPipeline(ctx)
+	if pipe == nil {
+		panic(gerror.NewCode(gcode.CodeInvalidParameter, errorNilRedis))
+	}
+	return pipe
+}
