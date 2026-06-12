@@ -52,6 +52,23 @@ type AdapterOperation interface {
 	// This method provides access to the raw redis client for advanced operations
 	// that are not covered by the standard redis adapter interface.
 	Client() RedisRawClient
+
+	// Pipeline returns a Pipeliner for batching multiple commands into a single
+	// network round-trip. Commands are buffered locally and sent when Exec is called.
+	// See Pipeliner for usage details.
+	Pipeline(ctx context.Context) Pipeliner
+
+	// TxPipeline returns a Pipeliner that wraps commands in a MULTI/EXEC transaction.
+	// All queued commands are executed atomically by the Redis server.
+	// In Redis Cluster mode, all keys in the transaction MUST be on the same hash slot;
+	// otherwise the server returns a CROSSSLOT error.
+	TxPipeline(ctx context.Context) Pipeliner
+
+	// Watch watches the given keys for modifications and executes fn in a transaction.
+	// If any watched key is modified by another client before the transaction executes,
+	// the transaction is aborted and Watch returns a transaction-abort error.
+	// In Redis Cluster mode, all keys MUST be on the same hash slot.
+	Watch(ctx context.Context, fn func(tx Tx) error, keys ...string) error
 }
 
 // Conn is an interface of a connection from universal redis client.
