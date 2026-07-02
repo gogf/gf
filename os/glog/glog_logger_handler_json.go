@@ -9,47 +9,75 @@ package glog
 import (
 	"context"
 
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/util/gconv"
 )
-
-// HandlerOutputJson is the structure outputting logging content as single json.
-type HandlerOutputJson struct {
-	Time       string `json:""`           // Formatted time string, like "2016-01-09 12:00:00".
-	TraceId    string `json:",omitempty"` // Trace id, only available if tracing is enabled.
-	CtxStr     string `json:",omitempty"` // The retrieved context value string from context, only available if Config.CtxKeys configured.
-	Level      string `json:""`           // Formatted level string, like "DEBU", "ERRO", etc. Eg: ERRO
-	CallerPath string `json:",omitempty"` // The source file path and its line number that calls logging, only available if F_FILE_SHORT or F_FILE_LONG set.
-	CallerFunc string `json:",omitempty"` // The source function name that calls logging, only available if F_CALLER_FN set.
-	Prefix     string `json:",omitempty"` // Custom prefix string for logging content.
-	Content    string `json:""`           // Content is the main logging content, containing error stack string produced by logger.
-	Stack      string `json:",omitempty"` // Stack string produced by logger, only available if Config.StStatus configured.
-}
 
 // HandlerJson is a handler for output logging content as a single json string.
 func HandlerJson(ctx context.Context, in *HandlerInput) {
-	output := HandlerOutputJson{
-		Time:       in.TimeFormat,
-		TraceId:    in.TraceId,
-		CtxStr:     in.CtxStr,
-		Level:      in.LevelFormat,
-		CallerFunc: in.CallerFunc,
-		CallerPath: in.CallerPath,
-		Prefix:     in.Prefix,
-		Content:    in.Content,
-		Stack:      in.Stack,
-	}
-	if len(in.Values) > 0 {
-		if output.Content != "" {
-			output.Content += " "
-		}
-		output.Content += in.ValuesContent()
-	}
+	output := gmap.NewStrAnyMap()
+	output.Set("Time", in.TimeFormat)
+	setJsonHandlerOutputValue(output, "TraceId", in.TraceId)
+	setJsonHandlerOutputCtxValues(ctx, in, output)
+	output.Set("Level", in.LevelFormat)
+	setJsonHandlerOutputValue(output, "CallerFunc", in.CallerFunc)
+	setJsonHandlerOutputValue(output, "CallerPath", in.CallerPath)
+	setJsonHandlerOutputContent(output, in)
+	setJsonHandlerOutputValue(output, "Stack", in.Stack)
+
 	// Output json content.
-	jsonBytes, err := json.Marshal(output)
+	jsonBytes, err := json.Marshal(output.Map())
 	if err != nil {
 		panic(err)
 	}
 	in.Buffer.Write(jsonBytes)
 	in.Buffer.Write([]byte("\n"))
 	in.Next(ctx)
+}
+
+// setJsonHandlerOutputValue sets non-empty value to handler output.
+func setJsonHandlerOutputValue(output *gmap.StrAnyMap, key string, value any) {
+	if gconv.String(value) != "" {
+		output.Set(key, value)
+	}
+}
+
+// setJsonHandlerOutputCtxValues appends configured context values to handler output.
+func setJsonHandlerOutputCtxValues(ctx context.Context, in *HandlerInput, output *gmap.StrAnyMap) {
+	if ctx == nil || in.Logger == nil {
+		return
+	}
+	for _, ctxKey := range in.Logger.GetCtxKeys() {
+		ctxValue := ctx.Value(ctxKey)
+		if ctxValue == nil {
+			ctxValue = ctx.Value(gctx.StrKey(gconv.String(ctxKey)))
+		}
+		if ctxValue != nil {
+			output.Set(gconv.String(ctxKey), ctxValue)
+		}
+	}
+}
+
+// setJsonHandlerOutputContent appends logging content or flattens JSON object content.
+func setJsonHandlerOutputContent(output *gmap.StrAnyMap, in *HandlerInput) {
+	content := in.Content
+	if len(in.Values) > 0 {
+		if content != "" {
+			content += " "
+		}
+		content += in.ValuesContent()
+	}
+
+	var contentMap map[string]any
+	if content != "" && json.Unmarshal([]byte(content), &contentMap) == nil {
+		for key, value := range contentMap {
+			if _, found := output.Search(key); !found {
+				output.Set(key, value)
+			}
+		}
+		return
+	}
+	output.Set("Content", content)
 }
