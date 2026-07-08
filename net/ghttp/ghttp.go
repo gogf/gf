@@ -15,6 +15,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
+	"github.com/gogf/gf/v2/container/glist"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -38,7 +39,7 @@ type (
 		servers          []*graceful.Server        // Underlying http.Server array.
 		serverCount      *gtype.Int                // Underlying http.Server number for internal usage.
 		closeChan        chan struct{}             // Used for underlying server closing event notification.
-		serveTree        map[string]any            // The route maps tree.
+		serveTree        map[string]*routeNode     // The route trie, keyed by domain.
 		serveCache       *gcache.Cache             // Server caches for internal usage.
 		routesMap        map[string][]*HandlerItem // Route map mainly for route dumps and repeated route checks.
 		statusHandlerMap map[string][]HandlerFunc  // Custom status handler map.
@@ -47,6 +48,24 @@ type (
 		serviceMu        sync.Mutex                // Concurrent safety for operations of attribute service.
 		service          gsvc.Service              // The service for Registry.
 		registrar        gsvc.Registrar            // Registrar for service register.
+	}
+
+	// routeNode is a node in the route prefix trie.
+	// Each node represents one URI segment separated by '/'.
+	//
+	// The trie structure replaces the original map[string]any design:
+	//   - children: exact-match path segments (formerly map[string]any entries with string keys)
+	//   - fuzz:     wildcard child node for :param, {param}, *wildcard (formerly key "*fuzz")
+	//   - list:     handler items registered at this node (formerly key "*list" → *glist.List)
+	//
+	// Rules (preserved from the original implementation):
+	//   - A fuzzy node MUST have a non-nil list; all sub-handlers accumulate here.
+	//   - A leaf node MUST have a non-nil list.
+	//   - Intermediate exact-match nodes have a nil list.
+	routeNode struct {
+		children map[string]*routeNode
+		fuzz     *routeNode
+		list     *glist.TList[*HandlerItem]
 	}
 
 	// Router object.
