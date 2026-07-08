@@ -8,11 +8,13 @@ package ghttp_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -94,6 +96,26 @@ func (c *cUserTagDefault) User(ctx context.Context, req *UserTagDefaultReq) (res
 	return
 }
 
+type UserInvalidJsonReq struct {
+	g.Meta `path:"/user-invalid-json" method:"post,get" summary:"user invalid json api"`
+	Name   string
+}
+
+type UserInvalidJsonRes struct {
+	g.Meta `mime:"application/json"`
+	Name   string
+}
+
+var (
+	UserInvalidJson = cUserInvalidJson{}
+)
+
+type cUserInvalidJson struct{}
+
+func (c *cUserInvalidJson) User(ctx context.Context, req *UserInvalidJsonReq) (res *UserInvalidJsonRes, err error) {
+	return &UserInvalidJsonRes{Name: req.Name}, nil
+}
+
 func Test_ParamsTagDefault(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
@@ -147,6 +169,49 @@ func Test_ParamsTagDefault(t *testing.T) {
 		// Test providing JSON content via GET request
 		resp = client.ContentJson().GetContent(ctx, "/user-default", `{"id":500,"isVip":false}`)
 		t.Assert(resp, `{"Id":500,"Name":"john","Age":18,"Score":99.9,"IsVip":false,"NickName":"nickname-default","EmptyStr":"","Email":"","Address":""}`)
+	})
+}
+
+func Test_ParamsInvalidJsonReportsParseError(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareHandlerResponse)
+		group.Bind(UserInvalidJson)
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	for i := 0; i < 100 && s.GetListenedPort() == 0; i++ {
+		time.Sleep(10 * time.Millisecond)
+	}
+	if s.GetListenedPort() == 0 {
+		t.Fatal("server did not start listening")
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		reqCtx := context.Background()
+		client := g.Client()
+		client.SetPrefix(prefix)
+
+		assertInvalidParameter := func(resp string) {
+			var payload struct {
+				Code int                 `json:"code"`
+				Data *UserInvalidJsonRes `json:"data"`
+			}
+			err := json.Unmarshal([]byte(resp), &payload)
+			t.AssertNil(err)
+			t.Assert(payload.Code, gcode.CodeInvalidParameter.Code())
+			t.Assert(payload.Data, nil)
+		}
+
+		for _, body := range []string{`{"name":}`, `[{"name":"john"}]`, `name=john`} {
+			assertInvalidParameter(client.ContentJson().PostContent(reqCtx, "/user-invalid-json", body))
+		}
+		for _, body := range []string{`{"name":}`, `[{"name":"john"}]`} {
+			assertInvalidParameter(client.ContentJson().GetContent(reqCtx, "/user-invalid-json", body))
+		}
 	})
 }
 

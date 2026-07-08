@@ -174,6 +174,9 @@ func (r *Request) GetRequestStruct(pointer any, mapping ...map[string]string) er
 
 func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) (data map[string]any, err error) {
 	data = r.GetRequestMap()
+	if err = r.GetError(); err != nil {
+		return nil, err
+	}
 	if data == nil {
 		data = map[string]any{}
 	}
