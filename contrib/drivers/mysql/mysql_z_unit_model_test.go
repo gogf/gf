@@ -575,7 +575,7 @@ func Test_Model_All(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).Where("id<0").All()
-		t.Assert(result, nil)
+		t.Assert(len(result), 0)
 		t.AssertNil(err)
 	})
 }
