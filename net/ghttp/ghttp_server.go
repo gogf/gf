@@ -125,6 +125,11 @@ func GetServer(name ...any) *Server {
 func (s *Server) Start() error {
 	var ctx = gctx.GetInitCtx()
 
+	// Execute before-start hooks.
+	if err := s.executeBeforeStartHooks(); err != nil {
+		return gerror.Wrap(err, `before-start hook failed`)
+	}
+
 	// Swagger UI.
 	if s.config.SwaggerPath != "" {
 		swaggerui.Init()
@@ -264,6 +269,9 @@ func (s *Server) Start() error {
 	s.initOpenApi()
 	s.doServiceRegister()
 	s.doRouterMapDump()
+
+	// Execute after-start hooks once the server has started successfully.
+	s.executeAfterStartHooks()
 
 	return nil
 }
