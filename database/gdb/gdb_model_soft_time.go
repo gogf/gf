@@ -16,7 +16,6 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/utils"
-	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -64,12 +63,6 @@ type iSoftTimeMaintainer interface {
 
 	// GetDeleteData returns UPDATE statement data for soft delete.
 	GetDeleteData(ctx context.Context, prefix, fieldName string, localType LocalType) (holder string, value any)
-}
-
-// getSoftFieldNameAndTypeCacheItem is the internal struct for storing create/update/delete fields.
-type getSoftFieldNameAndTypeCacheItem struct {
-	FieldName string
-	FieldType LocalType
 }
 
 var (
@@ -144,40 +137,34 @@ func (m *softTimeMaintainer) GetFieldInfo(
 }
 
 // getSoftFieldNameAndType retrieves and returns the field name of the table for possible key.
+// It derives the result directly from the table's field map (already cached in the registry)
+// instead of maintaining a separate cache layer, which eliminates:
+//   - cross-group cache pollution (different database groups with same table name)
+//   - cache inconsistency when clearing table fields
+//   - concurrent cache penetration during cold start
 func (m *softTimeMaintainer) getSoftFieldNameAndType(
 	ctx context.Context, schema, table string, candidateFields []string,
 ) (fieldName string, fieldType LocalType) {
-	// Build cache key
-	cacheKey := genSoftTimeFieldNameTypeCacheKey(schema, table, candidateFields)
-
-	// Try to get from cache
-	cache := m.db.GetCore().GetInnerMemCache()
-	result, err := cache.GetOrSetFunc(ctx, cacheKey, func(ctx context.Context) (any, error) {
-		// Get table fields
-		fieldsMap, err := m.TableFields(table, schema)
-		if err != nil || len(fieldsMap) == 0 {
-			return nil, err
-		}
-
-		// Search for matching field
-		for _, field := range candidateFields {
-			if name := searchFieldNameFromMap(fieldsMap, field); name != "" {
-				fType, _ := m.db.CheckLocalTypeForField(ctx, fieldsMap[name].Type, nil)
-				return getSoftFieldNameAndTypeCacheItem{
-					FieldName: name,
-					FieldType: fType,
-				}, nil
-			}
-		}
-		return nil, nil
-	}, gcache.DurationNoExpire)
-
-	if err != nil || result == nil {
+	// Call chain to registry cache:
+	//   m.TableFields(table, schema)
+	//     → Model.TableFields
+	//       → m.db.TableFields(ctx, table, schema)
+	//         → DriverWrapperDB.TableFields
+	//           → reg.GetOrSet(group, schema, table, loader)
+	//             → tableRegistry.GetOrSet
+	//               [cache hit]  → return cached fields (O(1) map lookup)
+	//               [cache miss] → loader() queries DB + stores in registry (double-checked locking)
+	fieldsMap, err := m.TableFields(table, schema)
+	if err != nil || len(fieldsMap) == 0 {
 		return "", LocalTypeUndefined
 	}
-
-	item := result.Val().(getSoftFieldNameAndTypeCacheItem)
-	return item.FieldName, item.FieldType
+	for _, field := range candidateFields {
+		if name := searchFieldNameFromMap(fieldsMap, field); name != "" {
+			fType, _ := m.db.CheckLocalTypeForField(ctx, fieldsMap[name].Type, nil)
+			return name, fType
+		}
+	}
+	return "", LocalTypeUndefined
 }
 
 func searchFieldNameFromMap(fieldsMap map[string]*TableField, key string) string {

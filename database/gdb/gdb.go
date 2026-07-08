@@ -524,7 +524,7 @@ type Core struct {
 	config        *ConfigNode                      // Current config node.
 	localTypeMap  *gmap.StrAnyMap                  // Local type map for database field type conversion.
 	dynamicConfig dynamicConfig                    // Dynamic configurations, which can be changed in runtime.
-	innerMemCache *gcache.Cache                    // Internal memory cache for storing temporary data.
+	registry      *tableRegistry                   // Schema metadata registry: table fields, table existence. Replaces innerMemCache.
 }
 
 type dynamicConfig struct {
@@ -710,7 +710,6 @@ const (
 	defaultMaxIdleConnCount               = 10               // Max idle connection count in pool.
 	defaultMaxOpenConnCount               = 0                // Max open connection count in pool. Default is no limit.
 	defaultMaxConnLifeTime                = 30 * time.Second // Max lifetime for per connection in pool in seconds.
-	cachePrefixTableFields                = `TableFields:`
 	cachePrefixSelectCache                = `SelectCache:`
 	commandEnvKeyForDryRun                = "gf.gdb.dryrun"
 	modelForDaoSuffix                     = `ForDao`
@@ -960,14 +959,14 @@ func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 		}
 	}
 	c := &Core{
-		group:         group,
-		debug:         gtype.NewBool(),
-		cache:         gcache.New(),
-		links:         gmap.NewKVMapWithChecker[ConfigNode, *sql.DB](linksChecker, true),
-		logger:        glog.New(),
-		config:        node,
-		localTypeMap:  gmap.NewStrAnyMap(true),
-		innerMemCache: gcache.New(),
+		group:        group,
+		debug:        gtype.NewBool(),
+		cache:        gcache.New(),
+		links:        gmap.NewKVMapWithChecker[ConfigNode, *sql.DB](linksChecker, true),
+		logger:       glog.New(),
+		config:       node,
+		localTypeMap: gmap.NewStrAnyMap(true),
+		registry:     newTableRegistry(),
 		dynamicConfig: dynamicConfig{
 			MaxIdleConnCount: node.MaxIdleConnCount,
 			MaxOpenConnCount: node.MaxOpenConnCount,
