@@ -28,7 +28,7 @@ func PJW(str []byte) uint32 {
 // PJW64 implements the classic PJW hash algorithm for 64 bits.
 func PJW64(str []byte) uint64 {
 	var (
-		BitsInUnsignedInt uint64 = 32 // 4 * 8
+		BitsInUnsignedInt uint64 = 64 // 4 * 8
 		ThreeQuarters            = (BitsInUnsignedInt * 3) / 4
 		OneEighth                = BitsInUnsignedInt / 8
 		HighBits          uint64 = (0xFFFFFFFFFFFFFFFF) << (BitsInUnsignedInt - OneEighth)
