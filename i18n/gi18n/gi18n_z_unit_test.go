@@ -288,3 +288,57 @@ func Test_Issue_Yaml(t *testing.T) {
 		t.Assert(i18n.T(ctx, "{#resourceUsage.workflow}"), "workflow")
 	})
 }
+
+func Test_ViolenceCheck(t *testing.T) {
+	i18n := gi18n.New(gi18n.Options{
+		Path: gtest.DataPath("violence-check"),
+	})
+	i18n.SetLanguage("en")
+
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(i18n.T(context.Background(), "{#foo}"), "foo_value")
+		t.Assert(i18n.T(context.Background(), "{#foo.bar}"), "literal_dotted_value")
+		t.Assert(i18n.T(context.Background(), "{#nested.key}"), "nested_key_value")
+		t.Assert(i18n.T(context.Background(), "foo={#foo}, foo.bar={#foo.bar}, nested.key={#nested.key}"), "foo=foo_value, foo.bar=literal_dotted_value, nested.key=nested_key_value")
+	})
+}
+
+func Test_DottedKeyResolution(t *testing.T) {
+	i18n := gi18n.New(gi18n.Options{
+		Path: gtest.DataPath("dotted-key"),
+	})
+	i18n.SetLanguage("en")
+
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(i18n.T(context.Background(), "{#plain_key}"), "plain_value")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(i18n.T(context.Background(), "{#app.name}"), "MyApp")
+		t.Assert(i18n.T(context.Background(), "{#app.site_name}"), "My Site")
+		t.Assert(i18n.T(context.Background(), "{#app.config.port}"), "8080")
+		t.Assert(i18n.T(context.Background(), "{#app.config.debug}"), "true")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(i18n.T(context.Background(), "{#nested.deep}"), "deep_value")
+		t.Assert(i18n.T(context.Background(), "{#nested.level.value}"), "deep_nested_value")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(i18n.T(context.Background(), "{#database.host}"), "localhost")
+		t.Assert(i18n.T(context.Background(), "{#database.port}"), "5432")
+		t.Assert(i18n.T(context.Background(), "{#database.credentials.user}"), "admin")
+		t.Assert(i18n.T(context.Background(), "{#database.credentials.password}"), "secret")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		result := i18n.T(context.Background(), "App: {#app.name}, DB: {#database.host}:{#database.port}, User: {#database.credentials.user}")
+		t.Assert(result, "App: MyApp, DB: localhost:5432, User: admin")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(i18n.T(context.Background(), "{#non.existent.key}"), "{#non.existent.key}")
+		t.Assert(i18n.T(context.Background(), "{#app.non.existent}"), "{#app.non.existent}")
+	})
+}

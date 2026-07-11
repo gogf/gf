@@ -1,0 +1,5 @@
+foo = "foo_value"
+"foo.bar" = "literal_dotted_value"
+
+[nested]
+key = "nested_key_value"

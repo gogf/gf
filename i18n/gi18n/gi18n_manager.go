@@ -183,26 +183,30 @@ func (m *Manager) Translate(ctx context.Context, content string) string {
 	if data == nil {
 		return content
 	}
-	// Convert to json
-	j := gjson.New(data)
 	// Parse content as name.
 	if v, ok := data[content]; ok {
 		return gconv.String(v)
 	}
+	var j *gjson.Json
 	// Parse content as variables container.
 	result, _ := gregex.ReplaceStringFuncMatch(
 		m.pattern, content,
 		func(match []string) string {
-			// Handling the Case Where Key Names Themselves Contain Hierarchical Symbols "."
 			if strings.Contains(match[1], ".") {
+				if j == nil {
+					j = gjson.New(data)
+				}
 				j.SetViolenceCheck(true)
+				v := j.Get(match[1])
+				j.SetViolenceCheck(false)
+				if v != nil {
+					return v.String()
+				}
+				return match[0]
 			}
-			v := j.Get(match[1])
-			if v != nil {
-				return v.String()
+			if v, ok := data[match[1]]; ok {
+				return gconv.String(v)
 			}
-			// return match[1] will return the content between delimiters
-			// return match[0] will return the original content
 			return match[0]
 		})
 	intlog.Printf(ctx, `Translate for language: %s`, transLang)
