@@ -1,0 +1,23 @@
+plain_key = "plain_value"
+
+[app]
+name = "MyApp"
+site_name = "My Site"
+
+[app.config]
+port = "8080"
+debug = "true"
+
+[nested]
+deep = "deep_value"
+
+[nested.level]
+value = "deep_nested_value"
+
+[database]
+host = "localhost"
+port = "5432"
+
+[database.credentials]
+user = "admin"
+password = "secret"
