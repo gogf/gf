@@ -1,0 +1,20 @@
+CREATE TABLE %s (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `key` varchar(45) DEFAULT NULL,
+  `category_id` int(10) unsigned NOT NULL,
+  `user_id` int(10) unsigned NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `content` mediumtext NOT NULL,
+  `sort` int(10) unsigned DEFAULT '0',
+  `brief` varchar(255) DEFAULT NULL,
+  `thumb` varchar(255) DEFAULT NULL,
+  `tags` varchar(900) DEFAULT NULL,
+  `referer` varchar(255) DEFAULT NULL,
+  `status` smallint(5) unsigned DEFAULT '0',
+  `view_count` int(10) unsigned DEFAULT '0',
+  `zan_count` int(10) unsigned DEFAULT NULL,
+  `cai_count` int(10) unsigned DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
