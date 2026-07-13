@@ -7,17 +7,20 @@
 package gdb
 
 const (
+	optionOmitEmptyWhere  = 1 << (iota + 3) // 8
+	optionOmitEmptyData                     // 16
+	optionOmitNilWhere                      // 32
+	optionOmitNilData                       // 64
+	optionOmitNilDataList                   // 128
+	optionOmitZeroWhere                     // 256
+	optionOmitZeroData                      // 512
+)
+
+const (
 	optionOmitNil             = optionOmitNilWhere | optionOmitNilData
 	optionOmitEmpty           = optionOmitEmptyWhere | optionOmitEmptyData
 	optionOmitZero            = optionOmitZeroWhere | optionOmitZeroData
 	optionOmitNilDataInternal = optionOmitNilData | optionOmitNilDataList // this option is used internally only for ForDao feature.
-	optionOmitEmptyWhere      = 1 << iota                                 // 8
-	optionOmitEmptyData                                                   // 16
-	optionOmitNilWhere                                                    // 32
-	optionOmitNilData                                                     // 64
-	optionOmitNilDataList                                                 // 128
-	optionOmitZeroWhere                                                   // 256
-	optionOmitZeroData                                                    // 512
 )
 
 // OmitEmpty sets optionOmitEmpty option for the model, which automatically filers

@@ -298,13 +298,18 @@ func IsZero(value any, traceSource ...bool) bool {
 			rv = v
 		} else {
 			rv = reflect.ValueOf(value)
-			// Check IsZero() interface for non-reflect.Value inputs.
-			if f, ok := value.(iIsZero); ok {
-				return f.IsZero()
-			}
 		}
 		if !rv.IsValid() {
 			return true
+		}
+		if rv.Kind() == reflect.Pointer && rv.IsNil() {
+			return true
+		}
+		// Check IsZero() interface for non-reflect.Value inputs.
+		if _, ok := value.(reflect.Value); !ok {
+			if f, ok := value.(iIsZero); ok {
+				return f.IsZero()
+			}
 		}
 		if rv.Kind() == reflect.Pointer {
 			if len(traceSource) > 0 && traceSource[0] {

@@ -188,9 +188,11 @@ func TestIsZero(t *testing.T) {
 		var nilSlice []int
 		var nilMap map[string]int
 		var nilPtr *int
+		var nilTime *time.Time
 		t.Assert(empty.IsZero(nilSlice), true)
 		t.Assert(empty.IsZero(nilMap), true)
 		t.Assert(empty.IsZero(nilPtr), true)
+		t.Assert(empty.IsZero(nilTime), true)
 
 		// false - non-zero values
 		t.Assert(empty.IsZero(1), false)
@@ -223,8 +225,11 @@ func TestIsZero(t *testing.T) {
 	// Test with traceSource for pointer.
 	gtest.C(t, func(t *gtest.T) {
 		var i *int
+		var nilTime *time.Time
 		t.Assert(empty.IsZero(i), true)
+		t.Assert(empty.IsZero(i, true), true)
 		t.Assert(empty.IsZero(&i), false)
 		t.Assert(empty.IsZero(&i, true), true)
+		t.Assert(empty.IsZero(nilTime, true), true)
 	})
 }
