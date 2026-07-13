@@ -323,10 +323,22 @@ func (tree *RedBlackTree) Left() *RedBlackTreeNode {
 	return tree.RedBlackKVTree.Left()
 }
 
+// PopLeft removes and returns the minimum element corresponding to the comparator of the tree or nil if the tree is empty.
+func (tree *RedBlackTree) PopLeft() *RedBlackTreeNode {
+	tree.lazyInit()
+	return tree.RedBlackKVTree.PopLeft()
+}
+
 // Right returns the maximum element corresponding to the comparator of the tree or nil if the tree is empty.
 func (tree *RedBlackTree) Right() *RedBlackTreeNode {
 	tree.lazyInit()
 	return tree.RedBlackKVTree.Right()
+}
+
+// PopRight removes and returns the maximum element corresponding to the comparator of the tree or nil if the tree is empty.
+func (tree *RedBlackTree) PopRight() *RedBlackTreeNode {
+	tree.lazyInit()
+	return tree.RedBlackKVTree.PopRight()
 }
 
 // Floor Finds floor node of the input key, returns the floor node or nil if no floor node is found.

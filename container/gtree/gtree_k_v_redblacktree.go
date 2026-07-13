@@ -502,6 +502,22 @@ func (tree *RedBlackKVTree[K, V]) Left() *RedBlackKVTreeNode[K, V] {
 	}
 }
 
+// PopLeft removes the minimum element corresponding to the comparator of the tree and returns the minimum node,
+// or nil if the tree is empty.
+func (tree *RedBlackKVTree[K, V]) PopLeft() *RedBlackKVTreeNode[K, V] {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	node := tree.tree.Left()
+	if node == nil {
+		return nil
+	}
+	tree.doRemove(node.Key)
+	return &RedBlackKVTreeNode[K, V]{
+		Key:   node.Key,
+		Value: node.Value,
+	}
+}
+
 // Right returns the maximum element corresponding to the comparator of the tree or nil if the tree is empty.
 func (tree *RedBlackKVTree[K, V]) Right() *RedBlackKVTreeNode[K, V] {
 	tree.mu.RLock()
@@ -510,6 +526,22 @@ func (tree *RedBlackKVTree[K, V]) Right() *RedBlackKVTreeNode[K, V] {
 	if node == nil {
 		return nil
 	}
+	return &RedBlackKVTreeNode[K, V]{
+		Key:   node.Key,
+		Value: node.Value,
+	}
+}
+
+// PopRight removes the maximum element corresponding to the comparator of the tree and returns the maximum node,
+// or nil if the tree is empty.
+func (tree *RedBlackKVTree[K, V]) PopRight() *RedBlackKVTreeNode[K, V] {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	node := tree.tree.Right()
+	if node == nil {
+		return nil
+	}
+	tree.doRemove(node.Key)
 	return &RedBlackKVTreeNode[K, V]{
 		Key:   node.Key,
 		Value: node.Value,
