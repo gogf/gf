@@ -32,6 +32,7 @@ type Client struct {
 	authPass          string            // HTTP basic authentication: pass.
 	retryCount        int               // Retry count when request fails.
 	noUrlEncode       bool              // No url encoding for request parameters.
+	queryParams       map[string]any    // Query parameters map.
 	retryInterval     time.Duration     // Retry interval when request fails.
 	middlewareHandler []HandlerFunc     // Interceptor handlers
 	discovery         gsvc.Discovery    // Discovery for service.
@@ -106,11 +107,12 @@ func NewWithHttpClient(client *http.Client) *Client {
 		panic(`gclient: client must not be nil`)
 	}
 	c := &Client{
-		Client:    *client,
-		header:    make(map[string]string),
-		cookies:   make(map[string]string),
-		builder:   gsel.GetBuilder(),
-		discovery: nil,
+		Client:      *client,
+		header:      make(map[string]string),
+		cookies:     make(map[string]string),
+		queryParams: make(map[string]any),
+		builder:     gsel.GetBuilder(),
+		discovery:   nil,
 	}
 	c.header[httpHeaderUserAgent] = defaultClientAgent
 	// It enables OpenTelemetry for client in default.
@@ -129,6 +131,10 @@ func (c *Client) Clone() *Client {
 	newClient.cookies = make(map[string]string, len(c.cookies))
 	for k, v := range c.cookies {
 		newClient.cookies[k] = v
+	}
+	newClient.queryParams = make(map[string]any, len(c.queryParams))
+	for k, v := range c.queryParams {
+		newClient.queryParams[k] = v
 	}
 	return newClient
 }
