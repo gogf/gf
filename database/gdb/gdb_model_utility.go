@@ -37,6 +37,12 @@ func (m *Model) TableFields(tableStr string, schema ...string) (fields map[strin
 		usedTable  = m.db.GetCore().guessPrimaryTableName(tableStr)
 		usedSchema = gutil.GetOrDefaultStr(m.schema, schema...)
 	)
+	// Strip quote characters from schema name, as it may come from cross-database
+	// table parsing (e.g., `schema`.`table`) and contain database-specific quote chars.
+	charL, charR := m.db.GetChars()
+	if usedSchema != "" && (charL != "" || charR != "") {
+		usedSchema = gstr.Trim(usedSchema, charL+charR)
+	}
 	// Sharding feature.
 	usedSchema, err = m.getActualSchema(ctx, usedSchema)
 	if err != nil {
@@ -94,6 +100,10 @@ func (m *Model) mappingAndFilterToTableFields(table string, fields []any, filter
 			fieldStr         = gconv.String(field)
 			inputFieldsArray []string
 		)
+		// Skip empty string fields.
+		if fieldStr == "" {
+			continue
+		}
 		switch {
 		case gregex.IsMatchString(regularFieldNameWithoutDotRegPattern, fieldStr):
 			inputFieldsArray = append(inputFieldsArray, fieldStr)

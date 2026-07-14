@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Function to run sed in-place with OS-specific options
-sed_inplace() {
+sed_replace() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS - requires empty string after -i
         sed -i '' "$@"
@@ -40,11 +40,11 @@ fi
 
 if [[ true ]]; then
     # Use sed to replace the version number in version.go
-    sed_inplace 's/VERSION = ".*"/VERSION = "'${newVersion}'"/' version.go
+    sed_replace 's/VERSION = ".*"/VERSION = "'${newVersion}'"/' version.go
 
     # Use sed to replace the version number in README.MD
-    sed_inplace 's/version=[^"]*/version='${newVersion}'/' README.MD
-    sed_inplace 's/version=[^"]*/version='${newVersion}'/' README.zh_CN.MD
+    sed_replace 's/version=[^"]*/version='${newVersion}'/' README.MD
+    sed_replace 's/version=[^"]*/version='${newVersion}'/' README.zh_CN.MD
 fi
 
 if [ -f "go.work" ]; then
@@ -81,20 +81,20 @@ for file in `find ${workdir} -name go.mod`; do
         go mod edit -replace github.com/gogf/gf/contrib/drivers/sqlite/v2=../../contrib/drivers/sqlite
     fi
     # Remove indirect dependencies
-    sed_inplace '/\/\/ indirect/d' go.mod
+    sed_replace '/\/\/ indirect/d' go.mod
     go mod tidy
     # Remove toolchain line if exists
-    sed_inplace '/^toolchain/d' go.mod
+    sed_replace '/^toolchain/d' go.mod
 
     # Upgrading only GoFrame related libraries, sometimes even if a version number is specified,
     # it may not be possible to successfully upgrade. Please confirm before submitting the code
     go list -f "{{if and (not .Indirect) (not .Main)}}{{.Path}}@${newVersion}{{end}}" -m all | grep "^github.com/gogf/gf"
     go list -f "{{if and (not .Indirect) (not .Main)}}{{.Path}}@${newVersion}{{end}}" -m all | grep "^github.com/gogf/gf" | xargs -L1 go get -v
     # Remove indirect dependencies
-    sed_inplace '/\/\/ indirect/d' go.mod
+    sed_replace '/\/\/ indirect/d' go.mod
     go mod tidy
     # Remove toolchain line if exists
-    sed_inplace '/^toolchain/d' go.mod
+    sed_replace '/^toolchain/d' go.mod
     if [ $goModPath = "./cmd/gf" ]; then
         go mod edit -dropreplace github.com/gogf/gf/v2
         go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/clickhouse/v2

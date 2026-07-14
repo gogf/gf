@@ -119,16 +119,25 @@ func checkActionFrequency() error {
 // forkReloadProcess creates a new child process and copies the fd to child process.
 func forkReloadProcess(ctx context.Context, newExeFilePath ...string) error {
 	var (
-		binaryPath = os.Args[0]
+		binaryPath = gfile.SelfPath()
 	)
 	if len(newExeFilePath) > 0 && newExeFilePath[0] != "" {
 		binaryPath = newExeFilePath[0]
+	}
+	if binaryPath == "" {
+		return gerror.NewCodef(
+			gcode.CodeInvalidOperation,
+			"cannot determine current executable path: gfile.SelfPath() returned empty and no executable override was provided (goos=%s, goarch=%s, overrideProvided=%t)",
+			runtime.GOOS,
+			runtime.GOARCH,
+			len(newExeFilePath) > 0 && newExeFilePath[0] != "",
+		)
 	}
 	if !gfile.Exists(binaryPath) {
 		return gerror.Newf(`binary file path "%s" does not exist`, binaryPath)
 	}
 	var (
-		p   = gproc.NewProcess(binaryPath, os.Args[1:], os.Environ())
+		p   = gproc.NewProcess(binaryPath, getCurrentProcessArgs(), os.Environ())
 		sfm = getServerFdMap()
 	)
 	for name, m := range sfm {
@@ -165,17 +174,20 @@ func forkReloadProcess(ctx context.Context, newExeFilePath ...string) error {
 // forkRestartProcess creates a new server process.
 func forkRestartProcess(ctx context.Context, newExeFilePath ...string) error {
 	var (
-		path = os.Args[0]
+		path = gfile.SelfPath()
 	)
 	if len(newExeFilePath) > 0 && newExeFilePath[0] != "" {
 		path = newExeFilePath[0]
+	}
+	if path == "" {
+		return gerror.NewCode(gcode.CodeInvalidOperation, "cannot determine current executable path")
 	}
 	if err := os.Unsetenv(adminActionReloadEnvKey); err != nil {
 		intlog.Errorf(ctx, `%+v`, err)
 	}
 	env := os.Environ()
 	env = append(env, adminActionRestartEnvKey+"=1")
-	p := gproc.NewProcess(path, os.Args[1:], env)
+	p := gproc.NewProcess(path, getCurrentProcessArgs(), env)
 	if _, err := p.Start(ctx); err != nil {
 		glog.Errorf(
 			ctx,
@@ -183,6 +195,13 @@ func forkRestartProcess(ctx context.Context, newExeFilePath ...string) error {
 			gproc.Pid(), err.Error(),
 		)
 		return err
+	}
+	return nil
+}
+
+func getCurrentProcessArgs() []string {
+	if len(os.Args) > 1 {
+		return os.Args[1:]
 	}
 	return nil
 }
