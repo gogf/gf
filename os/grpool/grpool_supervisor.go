@@ -14,17 +14,31 @@ import (
 
 // supervisor checks the job list and fork new worker goroutine to handle the job
 // if there are jobs but no workers in pool.
-func (p *Pool) supervisor(_ context.Context) {
+func (p *Pool) supervisor(ctx context.Context) {
 	if p.IsClosed() {
 		gtimer.Exit()
 	}
-	if p.list.Size() > 0 && p.count.Val() == 0 {
-		var number = p.list.Size()
-		if p.limit > 0 {
-			number = p.limit
+	if p.IsParsed() {
+		return
+	}
+	if p.limitChanger != nil {
+		limit := p.limitChanger(ctx, p.limit)
+		if limit <= 0 {
+			limit = -1
 		}
-		for i := 0; i < number; i++ {
-			p.checkAndForkNewGoroutineWorker()
+		p.limit = limit
+	}
+
+	if p.list.Size() > 0 {
+		n := p.limit - p.count.Val()
+		if p.limit <= 0 || n > 0 {
+			var number = p.list.Size()
+			if n > 0 {
+				number = n
+			}
+			for i := 0; i < number; i++ {
+				p.checkAndForkNewGoroutineWorker()
+			}
 		}
 	}
 }

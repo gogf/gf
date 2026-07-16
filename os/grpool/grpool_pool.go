@@ -71,6 +71,37 @@ func (p *Pool) Jobs() int {
 	return p.list.Size()
 }
 
+// Parse parse pool work.
+func (p *Pool) Parse() bool {
+	if p.IsClosed() {
+		return false
+	}
+	if !p.parsed.Swap(true) {
+		if p.timer != nil {
+			p.timer.Stop()
+		}
+	}
+	return true
+}
+
+// IsClosed returns if pool is parsed.
+func (p *Pool) IsParsed() bool {
+	return p.parsed.Load()
+}
+
+// Resume resume pool work.
+func (p *Pool) Resume() bool {
+	if p.IsClosed() {
+		return false
+	}
+	if p.parsed.Swap(false) {
+		if p.timer != nil {
+			p.timer.Start()
+		}
+	}
+	return true
+}
+
 // IsClosed returns if pool is closed.
 func (p *Pool) IsClosed() bool {
 	return p.closed.Val()
@@ -103,13 +134,23 @@ func (p *Pool) checkAndForkNewGoroutineWorker() {
 }
 
 func (p *Pool) asynchronousWorker() {
-	defer p.count.Add(-1)
+	var (
+		n   int
+		dec int = -1
+	)
+	defer func() { p.count.Add(dec) }()
 	// Harding working, one by one, job never empty, worker never die.
-	for !p.closed.Val() {
+	for !p.closed.Val() && !p.parsed.Load() {
 		listItem := p.list.PopBack()
 		if listItem == nil {
 			return
 		}
 		listItem.Func(listItem.Ctx)
+		// check whether need reduce woker.
+		n = p.count.Val()
+		if p.limit != -1 && n > p.limit && p.count.Cas(n, n-1) {
+			dec = 0
+			return
+		}
 	}
 }

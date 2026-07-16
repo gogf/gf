@@ -113,6 +113,90 @@ func Test_Limit3(t *testing.T) {
 	})
 }
 
+func Test_Limit4(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			array = garray.NewArray(true)
+			size  = 1000
+			limit = 100
+			pool  = grpool.NewWithOption(grpool.PoolOption{
+				Limit: 100,
+				LimitChanger: func(ctx context.Context, old int) (new int) {
+					return limit
+				},
+			})
+		)
+		t.Assert(pool.Cap(), 100)
+		for i := 0; i < size; i++ {
+			pool.Add(ctx, func(ctx context.Context) {
+				array.Append(1)
+				time.Sleep(2 * time.Second)
+			})
+		}
+		time.Sleep(time.Second)
+		t.Assert(pool.Size(), 100)
+		t.Assert(pool.Jobs(), 900)
+		t.Assert(array.Len(), 100)
+		limit = 50
+		time.Sleep(time.Second * 2)
+		t.Assert(pool.Size(), 50)
+		t.Assert(pool.Jobs(), 850)
+		t.Assert(array.Len(), 150)
+		limit = 100
+		time.Sleep(time.Second * 2)
+		t.Assert(pool.Size(), 100)
+		t.Assert(pool.Jobs(), 750)
+		t.Assert(array.Len(), 250)
+		pool.Close()
+		time.Sleep(2 * time.Second)
+		t.Assert(pool.Size(), 0)
+		t.Assert(pool.Jobs(), 750)
+		t.Assert(array.Len(), 250)
+		t.Assert(pool.IsClosed(), true)
+		t.AssertNE(pool.Add(ctx, func(ctx context.Context) {}), nil)
+	})
+}
+
+func Test_ParseAndResume(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			array = garray.NewArray(true)
+			size  = 1000
+			pool  = grpool.New(100)
+		)
+		t.Assert(pool.Cap(), 100)
+		for i := 0; i < size; i++ {
+			pool.Add(ctx, func(ctx context.Context) {
+				array.Append(1)
+				time.Sleep(2 * time.Second)
+			})
+		}
+		time.Sleep(time.Second)
+		t.Assert(pool.Size(), 100)
+		t.Assert(pool.Jobs(), 900)
+		t.Assert(array.Len(), 100)
+		pool.Parse()
+		time.Sleep(time.Second * 2)
+		t.Assert(pool.Size(), 0)
+		t.Assert(pool.Jobs(), 900)
+		t.Assert(array.Len(), 100)
+		t.Assert(pool.IsParsed(), true)
+		pool.Resume()
+		time.Sleep(time.Second * 2)
+		t.Assert(pool.Size(), 100)
+		t.Assert(pool.Jobs(), 800)
+		t.Assert(array.Len(), 200)
+		t.Assert(pool.IsParsed(), false)
+		pool.Close()
+		time.Sleep(2 * time.Second)
+		t.Assert(pool.Size(), 0)
+		t.Assert(pool.Jobs(), 800)
+		t.Assert(array.Len(), 200)
+		t.Assert(pool.IsClosed(), true)
+		t.AssertNE(pool.Add(ctx, func(ctx context.Context) {}), nil)
+	})
+}
+
 func Test_AddWithRecover(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
