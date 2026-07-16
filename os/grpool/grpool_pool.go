@@ -135,10 +135,10 @@ func (p *Pool) checkAndForkNewGoroutineWorker() {
 
 func (p *Pool) asynchronousWorker() {
 	var (
-		n   int
-		dec int = -1
+		n      int
+		addVal = -1
 	)
-	defer func() { p.count.Add(dec) }()
+	defer func() { p.count.Add(addVal) }()
 	// Harding working, one by one, job never empty, worker never die.
 	for !p.closed.Val() && !p.parsed.Load() {
 		listItem := p.list.PopBack()
@@ -149,7 +149,7 @@ func (p *Pool) asynchronousWorker() {
 		// check whether need reduce woker.
 		n = p.count.Val()
 		if p.limit != -1 && n > p.limit && p.count.Cas(n, n-1) {
-			dec = 0
+			addVal = 0
 			return
 		}
 	}
