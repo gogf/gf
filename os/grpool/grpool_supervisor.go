@@ -21,17 +21,18 @@ func (p *Pool) supervisor(ctx context.Context) {
 	if p.IsParsed() {
 		return
 	}
+	var changed = false
 	if p.limitChanger != nil {
-		limit := p.limitChanger(ctx, p.limit)
-		if limit <= 0 {
-			limit = -1
-		}
-		p.limit = limit
+		changed = p.limitChanger(ctx, &p.limit)
+	}
+	if p.count.Val() == 0 {
+		changed = true
 	}
 
-	if p.list.Size() > 0 {
-		n := p.limit - p.count.Val()
-		if p.limit <= 0 || n > 0 {
+	if p.list.Size() > 0 && changed {
+		limit := int(p.limit.Load())
+		n := limit - p.count.Val()
+		if limit <= 0 || n > 0 {
 			var number = p.list.Size()
 			if n > 0 {
 				number = n

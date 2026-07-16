@@ -9,6 +9,7 @@ package grpool_test
 import (
 	"context"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -121,8 +122,8 @@ func Test_Limit4(t *testing.T) {
 			limit = 100
 			pool  = grpool.NewWithOption(grpool.PoolOption{
 				Limit: 100,
-				LimitChanger: func(ctx context.Context, old int) (new int) {
-					return limit
+				LimitChanger: func(ctx context.Context, val *atomic.Int64) (changed bool) {
+					return val.Swap(int64(limit)) != int64(limit)
 				},
 			})
 		)

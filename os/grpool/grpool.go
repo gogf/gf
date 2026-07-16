@@ -21,14 +21,14 @@ import (
 // Func is the pool function which contains context parameter.
 type Func func(ctx context.Context)
 
-type LimitChangerFunc func(ctx context.Context, old int) (new int)
+type LimitChangerFunc func(ctx context.Context, value *atomic.Int64) (changed bool)
 
 // RecoverFunc is the pool runtime panic recover function which contains context parameter.
 type RecoverFunc func(ctx context.Context, exception error)
 
 // Pool manages the goroutines using pool.
 type Pool struct {
-	limit        int                          // Max goroutine count limit.
+	limit        atomic.Int64                 // Max goroutine count limit.
 	count        *gtype.Int                   // Current running goroutine count.
 	list         *glist.TList[*localPoolItem] // List for asynchronous job adding purpose.
 	closed       *gtype.Bool                  // Is pool closed or not.
@@ -86,7 +86,6 @@ func NewWithOption(option ...PoolOption) *Pool {
 	}
 	var (
 		pool = &Pool{
-			limit:        -1,
 			limitChanger: nil,
 			count:        gtype.NewInt(),
 			list:         glist.NewT[*localPoolItem](true),
@@ -98,7 +97,9 @@ func NewWithOption(option ...PoolOption) *Pool {
 		)
 	)
 	if o.Limit > 0 {
-		pool.limit = o.Limit
+		pool.limit.Store(int64(o.Limit))
+	} else {
+		pool.limit.Store(-1)
 	}
 	if o.LimitChanger != nil {
 		pool.limitChanger = o.LimitChanger

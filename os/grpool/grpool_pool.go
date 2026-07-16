@@ -57,7 +57,7 @@ func (p *Pool) AddWithRecover(ctx context.Context, userFunc Func, recoverFunc Re
 // This capacity is defined when pool is created.
 // It returns -1 if there's no limit.
 func (p *Pool) Cap() int {
-	return p.limit
+	return int(p.limit.Load())
 }
 
 // Size returns current goroutine count of the pool.
@@ -119,7 +119,7 @@ func (p *Pool) checkAndForkNewGoroutineWorker() {
 	var n int
 	for {
 		n = p.count.Val()
-		if p.limit != -1 && n >= p.limit {
+		if limit := int(p.limit.Load()); limit != -1 && n >= limit {
 			// No need fork new goroutine.
 			return
 		}
@@ -148,7 +148,7 @@ func (p *Pool) asynchronousWorker() {
 		listItem.Func(listItem.Ctx)
 		// check whether need reduce woker.
 		n = p.count.Val()
-		if p.limit != -1 && n > p.limit && p.count.Cas(n, n-1) {
+		if limit := int(p.limit.Load()); limit != -1 && n > limit && p.count.Cas(n, n-1) {
 			addVal = 0
 			return
 		}
