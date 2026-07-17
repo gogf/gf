@@ -84,7 +84,7 @@ func (p *Pool) Jobs() int {
 	return p.list.Size()
 }
 
-// ClearJobs clear current all jobs and return how many cleared.
+// ClearJobs clears all queued jobs and returns how many were cleared.
 func (p *Pool) ClearJobs() (count int) {
 	items := p.list.PopBackAll()
 	return len(items)

@@ -8,6 +8,7 @@ package grpool
 
 import (
 	"context"
+	"math"
 
 	"github.com/gogf/gf/v2/os/gtimer"
 )
@@ -28,6 +29,9 @@ func (p *Pool) supervisor(ctx context.Context) {
 		}
 		if v := p.limit.Load(); v <= 0 && v != -1 {
 			p.limit.Store(-1)
+			changed = true
+		} else if v > int64(math.MaxInt) {
+			p.limit.Store(int64(math.MaxInt))
 			changed = true
 		}
 	}

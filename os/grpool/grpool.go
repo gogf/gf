@@ -40,7 +40,7 @@ type Pool struct {
 	limitChanged atomic.Bool
 }
 
-// PoolOption used to pass options
+// PoolOption is used to pass options for creating a Pool.
 type PoolOption struct {
 	Limit        int              // Max goroutine count limit.
 	LimitChanger LimitChangerFunc // Function used to change max goroutine count limit. Let it nil to disable.
