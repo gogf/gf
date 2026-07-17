@@ -21,7 +21,7 @@ func (p *Pool) supervisor(ctx context.Context) {
 	if p.IsPaused() {
 		return
 	}
-	var changed = false
+	changed := p.limitChanged.Load()
 	if p.limitChanger != nil {
 		changed = p.limitChanger(ctx, &p.limit)
 		if v := p.limit.Load(); v <= 0 && v != -1 {
@@ -33,25 +33,28 @@ func (p *Pool) supervisor(ctx context.Context) {
 		changed = true
 	}
 
-	if p.list.Size() > 0 && changed {
-		limit := p.limit.Load()
-		if limit == -1 {
-			size := p.list.Size()
-			for i := 0; i < size; i++ {
+	if changed {
+		if p.list.Size() > 0 {
+			limit := p.limit.Load()
+			if limit == -1 {
+				size := p.list.Size()
+				for i := 0; i < size; i++ {
+					p.checkAndForkNewGoroutineWorker()
+				}
+				return
+			}
+			n := limit - int64(p.count.Val())
+			if n <= 0 {
+				return
+			}
+			number := p.list.Size()
+			if n < int64(number) {
+				number = int(n)
+			}
+			for i := 0; i < number; i++ {
 				p.checkAndForkNewGoroutineWorker()
 			}
-			return
 		}
-		n := limit - int64(p.count.Val())
-		if n <= 0 {
-			return
-		}
-		number := p.list.Size()
-		if n < int64(number) {
-			number = int(n)
-		}
-		for i := 0; i < number; i++ {
-			p.checkAndForkNewGoroutineWorker()
-		}
+		p.limitChanged.Store(false)
 	}
 }

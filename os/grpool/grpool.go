@@ -37,6 +37,7 @@ type Pool struct {
 	limitChanger LimitChangerFunc             // Function used to change max goroutine count limit. Let it nil to disable.
 	paused       atomic.Bool                  // Whether the pool is paused from starting new work.
 	timer        *gtimer.Entry
+	limitChanged atomic.Bool
 }
 
 // PoolOption used to pass options

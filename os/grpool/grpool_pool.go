@@ -60,13 +60,17 @@ func (p *Pool) Cap() int {
 	return int(p.limit.Load())
 }
 
-// Cap can change the capacity and returns the capacity of the pool before changed.
+// SetCap changes the capacity and returns the pool capacity before the change.
 // It returns -1 if there's no limit.
 func (p *Pool) SetCap(cap int) int {
 	if cap <= 0 {
 		cap = -1
 	}
-	return int(p.limit.Swap(int64(cap)))
+	oldCap := int(p.limit.Swap(int64(cap)))
+	if cap != oldCap {
+		p.limitChanged.Store(true)
+	}
+	return oldCap
 }
 
 // Size returns current goroutine count of the pool.
@@ -162,9 +166,17 @@ func (p *Pool) asynchronousWorker() {
 	)
 	defer func() { p.count.Add(addVal) }()
 	// Harding working, one by one, job never empty, worker never die.
-	for !p.closed.Val() && !p.paused.Load() {
+	for !p.closed.Val() {
+		if p.paused.Load() {
+			return
+		}
 		listItem := p.list.PopBack()
 		if listItem == nil {
+			return
+		}
+		// Avoid starting new work after Pause() is observed.
+		if p.paused.Load() {
+			p.list.PushBack(listItem)
 			return
 		}
 		listItem.Func(listItem.Ctx)
