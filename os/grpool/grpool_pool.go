@@ -84,7 +84,7 @@ func (p *Pool) Parse() bool {
 	return true
 }
 
-// IsClosed returns if pool is parsed.
+// IsParsed returns whether the pool is parsed.
 func (p *Pool) IsParsed() bool {
 	return p.parsed.Load()
 }
@@ -146,7 +146,7 @@ func (p *Pool) asynchronousWorker() {
 			return
 		}
 		listItem.Func(listItem.Ctx)
-		// check whether need reduce woker.
+		// ccheck whether need reduce worker.
 		n = p.count.Val()
 		if limit := int(p.limit.Load()); limit != -1 && n > limit && p.count.Cas(n, n-1) {
 			addVal = 0

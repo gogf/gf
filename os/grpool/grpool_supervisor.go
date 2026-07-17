@@ -34,7 +34,7 @@ func (p *Pool) supervisor(ctx context.Context) {
 		n := limit - p.count.Val()
 		if limit <= 0 || n > 0 {
 			var number = p.list.Size()
-			if n > 0 {
+			if n > 0 && n < number {
 				number = n
 			}
 			for i := 0; i < number; i++ {

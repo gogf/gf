@@ -33,7 +33,7 @@ type Pool struct {
 	list         *glist.TList[*localPoolItem] // List for asynchronous job adding purpose.
 	closed       *gtype.Bool                  // Is pool closed or not.
 	limitChanger LimitChangerFunc             // Function used to change max goroutine count limit. Let it nil to disable.
-	parsed       atomic.Bool                  // Pool parsed to work
+	parsed       atomic.Bool                  // Whether the pool is parsed (paused) from starting new work.
 	timer        *gtimer.Entry
 }
 
@@ -74,7 +74,7 @@ func New(limit ...int) *Pool {
 	}
 }
 
-// New creates and returns a new goroutine pool object.
+// NewWithOption creates and returns a new goroutine pool object.
 // The parameter `option` is used to limit the max goroutine count or set limit changer,
 // which is not limited in default.
 func NewWithOption(option ...PoolOption) *Pool {
