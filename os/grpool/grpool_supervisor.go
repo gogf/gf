@@ -23,7 +23,9 @@ func (p *Pool) supervisor(ctx context.Context) {
 	}
 	changed := p.limitChanged.Swap(false)
 	if p.limitChanger != nil {
-		changed = p.limitChanger(ctx, &p.limit)
+		if p.limitChanger(ctx, &p.limit) {
+			changed = true
+		}
 		if v := p.limit.Load(); v <= 0 && v != -1 {
 			p.limit.Store(-1)
 			changed = true
