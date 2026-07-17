@@ -71,7 +71,7 @@ func (p *Pool) Jobs() int {
 	return p.list.Size()
 }
 
-// Pause pause pool work. The jobs will be keeped in queue and will be dealed when resumes.
+// Pause pauses pool work. Jobs are kept in the queue and will be processed when the pool resumes.
 func (p *Pool) Pause() bool {
 	if p.IsClosed() {
 		return false
@@ -109,13 +109,21 @@ func (p *Pool) IsClosed() bool {
 
 // Close closes the goroutine pool, which makes all goroutines exit.
 func (p *Pool) Close() {
-	p.closed.Set(true)
+	if p.closed.Cas(false, true) {
+		if p.timer != nil {
+			p.timer.Close()
+			p.timer = nil
+		}
+	}
 }
 
 // checkAndForkNewGoroutineWorker checks and creates a new goroutine worker.
 // Note that the worker dies if the job function panics and the job has no recover handling.
 func (p *Pool) checkAndForkNewGoroutineWorker() {
 	// Check whether fork new goroutine or not.
+	if p.paused.Load() {
+		return
+	}
 	var n int
 	for {
 		n = p.count.Val()
@@ -146,9 +154,9 @@ func (p *Pool) asynchronousWorker() {
 			return
 		}
 		listItem.Func(listItem.Ctx)
-		// ccheck whether need reduce worker.
+		// Check whether need reduce worker.
 		n = p.count.Val()
-		if limit := int(p.limit.Load()); limit != -1 && n > limit && p.count.Cas(n, n-1) {
+		if limit := int(p.limit.Load()); limit > 0 && n > limit && p.count.Cas(n, n-1) {
 			addVal = 0
 			return
 		}

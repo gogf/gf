@@ -21,6 +21,8 @@ import (
 // Func is the pool function which contains context parameter.
 type Func func(ctx context.Context)
 
+// LimitChangerFunc updates the pool's goroutine limit dynamically.
+// It should update value and return true if the limit was changed.
 type LimitChangerFunc func(ctx context.Context, value *atomic.Int64) (changed bool)
 
 // RecoverFunc is the pool runtime panic recover function which contains context parameter.
@@ -33,7 +35,7 @@ type Pool struct {
 	list         *glist.TList[*localPoolItem] // List for asynchronous job adding purpose.
 	closed       *gtype.Bool                  // Is pool closed or not.
 	limitChanger LimitChangerFunc             // Function used to change max goroutine count limit. Let it nil to disable.
-	paused       atomic.Bool                  // Whether the pool is parsed (paused) from starting new work.
+	paused       atomic.Bool                  // Whether the pool is paused from starting new work.
 	timer        *gtimer.Entry
 }
 
@@ -133,17 +135,17 @@ func Jobs() int {
 	return defaultPool.Jobs()
 }
 
-// Pause pause pool work.
+// Pause pauses the default pool work.
 func Pause() {
 	defaultPool.Pause()
 }
 
-// IsPaused returns if pool is paused.
+// IsPaused returns whether the default pool is paused.
 func IsPaused() bool {
 	return defaultPool.IsPaused()
 }
 
-// Resume resume pool work.
+// Resume resumes the default pool work.
 func Resume() {
 	defaultPool.Resume()
 }

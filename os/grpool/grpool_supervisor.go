@@ -24,15 +24,19 @@ func (p *Pool) supervisor(ctx context.Context) {
 	var changed = false
 	if p.limitChanger != nil {
 		changed = p.limitChanger(ctx, &p.limit)
+		if v := p.limit.Load(); v <= 0 && v != -1 {
+			p.limit.Store(-1)
+			changed = true
+		}
 	}
-	if p.count.Val() == 0 {
+	if !changed && p.count.Val() == 0 {
 		changed = true
 	}
 
 	if p.list.Size() > 0 && changed {
 		limit := int(p.limit.Load())
 		n := limit - p.count.Val()
-		if limit <= 0 || n > 0 {
+		if limit == -1 || n > 0 {
 			var number = p.list.Size()
 			if n > 0 && n < number {
 				number = n
