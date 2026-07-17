@@ -21,7 +21,7 @@ func (p *Pool) supervisor(ctx context.Context) {
 	if p.IsPaused() {
 		return
 	}
-	changed := p.limitChanged.Load()
+	changed := p.limitChanged.Swap(false)
 	if p.limitChanger != nil {
 		changed = p.limitChanger(ctx, &p.limit)
 		if v := p.limit.Load(); v <= 0 && v != -1 {
@@ -55,6 +55,5 @@ func (p *Pool) supervisor(ctx context.Context) {
 				p.checkAndForkNewGoroutineWorker()
 			}
 		}
-		p.limitChanged.Store(false)
 	}
 }
