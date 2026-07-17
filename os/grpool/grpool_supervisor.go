@@ -8,23 +8,58 @@ package grpool
 
 import (
 	"context"
+	"math"
 
 	"github.com/gogf/gf/v2/os/gtimer"
 )
 
 // supervisor checks the job list and fork new worker goroutine to handle the job
 // if there are jobs but no workers in pool.
-func (p *Pool) supervisor(_ context.Context) {
+func (p *Pool) supervisor(ctx context.Context) {
 	if p.IsClosed() {
 		gtimer.Exit()
 	}
-	if p.list.Size() > 0 && p.count.Val() == 0 {
-		var number = p.list.Size()
-		if p.limit > 0 {
-			number = p.limit
+	if p.IsPaused() {
+		return
+	}
+	changed := p.limitChanged.Swap(false)
+	if p.limitChanger != nil {
+		if p.limitChanger(ctx, &p.limit) {
+			changed = true
 		}
-		for i := 0; i < number; i++ {
-			p.checkAndForkNewGoroutineWorker()
+		if v := p.limit.Load(); v <= 0 && v != -1 {
+			p.limit.Store(-1)
+			changed = true
+		} else if v > int64(math.MaxInt) {
+			p.limit.Store(int64(math.MaxInt))
+			changed = true
+		}
+	}
+	if !changed && p.count.Val() == 0 {
+		changed = true
+	}
+
+	if changed {
+		if p.list.Size() > 0 {
+			limit := p.limit.Load()
+			if limit == -1 {
+				size := p.list.Size()
+				for i := 0; i < size; i++ {
+					p.checkAndForkNewGoroutineWorker()
+				}
+				return
+			}
+			n := limit - int64(p.count.Val())
+			if n <= 0 {
+				return
+			}
+			number := p.list.Size()
+			if n < int64(number) {
+				number = int(n)
+			}
+			for i := 0; i < number; i++ {
+				p.checkAndForkNewGoroutineWorker()
+			}
 		}
 	}
 }

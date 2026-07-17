@@ -9,6 +9,7 @@ package grpool
 
 import (
 	"context"
+	"sync/atomic"
 	"time"
 
 	"github.com/gogf/gf/v2/container/glist"
@@ -20,15 +21,29 @@ import (
 // Func is the pool function which contains context parameter.
 type Func func(ctx context.Context)
 
+// LimitChangerFunc updates the pool's goroutine limit dynamically.
+// It should update value and return true if the limit was changed.
+type LimitChangerFunc func(ctx context.Context, value *atomic.Int64) (changed bool)
+
 // RecoverFunc is the pool runtime panic recover function which contains context parameter.
 type RecoverFunc func(ctx context.Context, exception error)
 
 // Pool manages the goroutines using pool.
 type Pool struct {
-	limit  int                          // Max goroutine count limit.
-	count  *gtype.Int                   // Current running goroutine count.
-	list   *glist.TList[*localPoolItem] // List for asynchronous job adding purpose.
-	closed *gtype.Bool                  // Is pool closed or not.
+	limit        atomic.Int64                 // Max goroutine count limit.
+	count        *gtype.Int                   // Current running goroutine count.
+	list         *glist.TList[*localPoolItem] // List for asynchronous job adding purpose.
+	closed       *gtype.Bool                  // Is pool closed or not.
+	limitChanger LimitChangerFunc             // Function used to change max goroutine count limit. Let it nil to disable.
+	paused       atomic.Bool                  // Whether the pool is paused from starting new work.
+	timer        *gtimer.Entry                // Timer entry for running the supervisor job.
+	limitChanged atomic.Bool                  // Marks whether the pool limit changed and supervisor should adjust workers.
+}
+
+// PoolOption is used to pass options for creating a Pool.
+type PoolOption struct {
+	Limit        int              // Max goroutine count limit.
+	LimitChanger LimitChangerFunc // Function used to change max goroutine count limit. Let it nil to disable.
 }
 
 // localPoolItem is the job item storing in job list.
@@ -51,22 +66,48 @@ var (
 // The parameter `limit` is used to limit the max goroutine count,
 // which is not limited in default.
 func New(limit ...int) *Pool {
+	if len(limit) == 0 {
+		return NewWithOption(PoolOption{
+			Limit: -1,
+		})
+	} else {
+		return NewWithOption(PoolOption{
+			Limit: limit[0],
+		})
+	}
+}
+
+// NewWithOption creates and returns a new goroutine pool object.
+// The parameter `option` is used to limit the max goroutine count or set limit changer,
+// which is not limited in default.
+func NewWithOption(option ...PoolOption) *Pool {
+	var o *PoolOption
+	if len(option) > 0 {
+		o = &option[0]
+	} else {
+		o = &PoolOption{}
+	}
 	var (
 		pool = &Pool{
-			limit:  -1,
-			count:  gtype.NewInt(),
-			list:   glist.NewT[*localPoolItem](true),
-			closed: gtype.NewBool(),
+			limitChanger: nil,
+			count:        gtype.NewInt(),
+			list:         glist.NewT[*localPoolItem](true),
+			closed:       gtype.NewBool(),
 		}
 		timerDuration = grand.D(
 			minSupervisorTimerDuration,
 			maxSupervisorTimerDuration,
 		)
 	)
-	if len(limit) > 0 && limit[0] > 0 {
-		pool.limit = limit[0]
+	if o.Limit > 0 {
+		pool.limit.Store(int64(o.Limit))
+	} else {
+		pool.limit.Store(-1)
 	}
-	gtimer.Add(context.Background(), timerDuration, pool.supervisor)
+	if o.LimitChanger != nil {
+		pool.limitChanger = o.LimitChanger
+	}
+	pool.timer = gtimer.AddSingleton(context.Background(), timerDuration, pool.supervisor)
 	return pool
 }
 
@@ -93,4 +134,19 @@ func Size() int {
 // Jobs returns current job count of default goroutine pool.
 func Jobs() int {
 	return defaultPool.Jobs()
+}
+
+// Pause pauses the default pool work.
+func Pause() bool {
+	return defaultPool.Pause()
+}
+
+// IsPaused returns whether the default pool is paused.
+func IsPaused() bool {
+	return defaultPool.IsPaused()
+}
+
+// Resume resumes the default pool work.
+func Resume() bool {
+	return defaultPool.Resume()
 }
