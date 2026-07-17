@@ -71,12 +71,12 @@ func (p *Pool) Jobs() int {
 	return p.list.Size()
 }
 
-// Parse parse pool work.
-func (p *Pool) Parse() bool {
+// Pause pause pool work. The jobs will be keeped in queue and will be dealed when resumes.
+func (p *Pool) Pause() bool {
 	if p.IsClosed() {
 		return false
 	}
-	if !p.parsed.Swap(true) {
+	if !p.paused.Swap(true) {
 		if p.timer != nil {
 			p.timer.Stop()
 		}
@@ -84,9 +84,9 @@ func (p *Pool) Parse() bool {
 	return true
 }
 
-// IsParsed returns whether the pool is parsed.
-func (p *Pool) IsParsed() bool {
-	return p.parsed.Load()
+// IsPaused returns whether the pool is paused.
+func (p *Pool) IsPaused() bool {
+	return p.paused.Load()
 }
 
 // Resume resume pool work.
@@ -94,7 +94,7 @@ func (p *Pool) Resume() bool {
 	if p.IsClosed() {
 		return false
 	}
-	if p.parsed.Swap(false) {
+	if p.paused.Swap(false) {
 		if p.timer != nil {
 			p.timer.Start()
 		}
@@ -140,7 +140,7 @@ func (p *Pool) asynchronousWorker() {
 	)
 	defer func() { p.count.Add(addVal) }()
 	// Harding working, one by one, job never empty, worker never die.
-	for !p.closed.Val() && !p.parsed.Load() {
+	for !p.closed.Val() && !p.paused.Load() {
 		listItem := p.list.PopBack()
 		if listItem == nil {
 			return

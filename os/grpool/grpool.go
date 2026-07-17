@@ -33,7 +33,7 @@ type Pool struct {
 	list         *glist.TList[*localPoolItem] // List for asynchronous job adding purpose.
 	closed       *gtype.Bool                  // Is pool closed or not.
 	limitChanger LimitChangerFunc             // Function used to change max goroutine count limit. Let it nil to disable.
-	parsed       atomic.Bool                  // Whether the pool is parsed (paused) from starting new work.
+	paused       atomic.Bool                  // Whether the pool is parsed (paused) from starting new work.
 	timer        *gtimer.Entry
 }
 
@@ -133,14 +133,14 @@ func Jobs() int {
 	return defaultPool.Jobs()
 }
 
-// Parse parse pool work.
-func Parse() {
-	defaultPool.Parse()
+// Pause pause pool work.
+func Pause() {
+	defaultPool.Pause()
 }
 
-// IsClosed returns if pool is parsed.
-func IsParsed() bool {
-	return defaultPool.IsParsed()
+// IsPaused returns if pool is paused.
+func IsPaused() bool {
+	return defaultPool.IsPaused()
 }
 
 // Resume resume pool work.

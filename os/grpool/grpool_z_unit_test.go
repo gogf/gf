@@ -160,7 +160,7 @@ func Test_Limit4(t *testing.T) {
 	})
 }
 
-func Test_ParseAndResume(t *testing.T) {
+func Test_PauseAndResume(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			array = garray.NewArray(true)
@@ -178,18 +178,18 @@ func Test_ParseAndResume(t *testing.T) {
 		t.Assert(pool.Size(), 100)
 		t.Assert(pool.Jobs(), 900)
 		t.Assert(array.Len(), 100)
-		pool.Parse()
+		pool.Pause()
 		time.Sleep(time.Second * 2)
 		t.Assert(pool.Size(), 0)
 		t.Assert(pool.Jobs(), 900)
 		t.Assert(array.Len(), 100)
-		t.Assert(pool.IsParsed(), true)
+		t.Assert(pool.IsPaused(), true)
 		pool.Resume()
 		time.Sleep(time.Second * 2)
 		t.Assert(pool.Size(), 100)
 		t.Assert(pool.Jobs(), 800)
 		t.Assert(array.Len(), 200)
-		t.Assert(pool.IsParsed(), false)
+		t.Assert(pool.IsPaused(), false)
 		pool.Close()
 		time.Sleep(2 * time.Second)
 		t.Assert(pool.Size(), 0)

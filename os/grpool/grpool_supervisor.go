@@ -18,7 +18,7 @@ func (p *Pool) supervisor(ctx context.Context) {
 	if p.IsClosed() {
 		gtimer.Exit()
 	}
-	if p.IsParsed() {
+	if p.IsPaused() {
 		return
 	}
 	var changed = false
