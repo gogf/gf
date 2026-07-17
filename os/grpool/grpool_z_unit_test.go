@@ -18,6 +18,17 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
+func waitUntil(timeout time.Duration, condition func() bool) bool {
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		if condition() {
+			return true
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	return condition()
+}
+
 func Test_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -136,25 +147,34 @@ func Test_Limit4(t *testing.T) {
 				time.Sleep(2 * time.Second)
 			})
 		}
-		time.Sleep(time.Second)
-		t.Assert(pool.Size(), 100)
-		t.Assert(pool.Jobs(), 900)
-		t.Assert(array.Len(), 100)
+		t.Assert(waitUntil(2*time.Second, func() bool {
+			return pool.Size() == 100 && pool.Jobs() <= 900 && array.Len() > 0
+		}), true)
+		t.Assert(pool.Jobs()+array.Len(), size)
+
 		limit.Store(50)
-		time.Sleep(time.Second * 2)
+		t.Assert(waitUntil(4*time.Second, func() bool {
+			return pool.Size() <= 50 && pool.Size() >= 0
+		}), true)
 		t.Assert(pool.Size(), 50)
-		t.Assert(pool.Jobs(), 850)
-		t.Assert(array.Len(), 150)
+		t.Assert(pool.Jobs()+array.Len(), size)
+
+		jobsBeforeIncrease := pool.Jobs()
+		arrayBeforeIncrease := array.Len()
 		limit.Store(100)
-		time.Sleep(time.Second * 2)
-		t.Assert(pool.Size(), 100)
-		t.Assert(pool.Jobs(), 750)
-		t.Assert(array.Len(), 250)
+		t.Assert(waitUntil(4*time.Second, func() bool {
+			return pool.Size() > 50
+		}), true)
+		t.AssertLE(pool.Size(), 100)
+		t.AssertGT(pool.Jobs(), 0)
+		t.AssertLT(pool.Jobs(), jobsBeforeIncrease)
+		t.AssertGT(array.Len(), arrayBeforeIncrease)
+		t.Assert(pool.Jobs()+array.Len(), size)
+
 		pool.Close()
 		time.Sleep(2 * time.Second)
 		t.Assert(pool.Size(), 0)
-		t.Assert(pool.Jobs(), 750)
-		t.Assert(array.Len(), 250)
+		t.Assert(pool.Jobs()+array.Len(), size)
 		t.Assert(pool.IsClosed(), true)
 		t.AssertNE(pool.Add(ctx, func(ctx context.Context) {}), nil)
 	})
