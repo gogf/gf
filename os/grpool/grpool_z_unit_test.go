@@ -116,14 +116,16 @@ func Test_Limit3(t *testing.T) {
 
 func Test_Limit4(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		var limit atomic.Int64
+		limit.Store(100)
 		var (
 			array = garray.NewArray(true)
 			size  = 1000
-			limit = 100
 			pool  = grpool.NewWithOption(grpool.PoolOption{
 				Limit: 100,
 				LimitChanger: func(ctx context.Context, val *atomic.Int64) (changed bool) {
-					return val.Swap(int64(limit)) != int64(limit)
+					v := limit.Load()
+					return val.Swap(v) != v
 				},
 			})
 		)
@@ -138,12 +140,12 @@ func Test_Limit4(t *testing.T) {
 		t.Assert(pool.Size(), 100)
 		t.Assert(pool.Jobs(), 900)
 		t.Assert(array.Len(), 100)
-		limit = 50
+		limit.Store(50)
 		time.Sleep(time.Second * 2)
 		t.Assert(pool.Size(), 50)
 		t.Assert(pool.Jobs(), 850)
 		t.Assert(array.Len(), 150)
-		limit = 100
+		limit.Store(100)
 		time.Sleep(time.Second * 2)
 		t.Assert(pool.Size(), 100)
 		t.Assert(pool.Jobs(), 750)
