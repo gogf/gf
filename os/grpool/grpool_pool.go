@@ -53,19 +53,20 @@ func (p *Pool) AddWithRecover(ctx context.Context, userFunc Func, recoverFunc Re
 	})
 }
 
-// Cap can change the capacity and returns the capacity of the pool before changed.
-// This capacity is defined when pool is created. Pass newCap will change it.
+// Cap returns the capacity of the pool.
+// This capacity is defined when pool is created.
 // It returns -1 if there's no limit.
-func (p *Pool) Cap(newCap ...int) int {
-	if len(newCap) > 0 {
-		cap := int64(newCap[0])
-		if cap <= 0 {
-			cap = -1
-		}
-		return int(p.limit.Swap(cap))
-	} else {
-		return int(p.limit.Load())
+func (p *Pool) Cap() int {
+	return int(p.limit.Load())
+}
+
+// Cap can change the capacity and returns the capacity of the pool before changed.
+// It returns -1 if there's no limit.
+func (p *Pool) SetCap(cap int) int {
+	if cap <= 0 {
+		cap = -1
 	}
+	return int(p.limit.Swap(int64(cap)))
 }
 
 // Size returns current goroutine count of the pool.
@@ -126,7 +127,6 @@ func (p *Pool) Close() {
 	if p.closed.Cas(false, true) {
 		if p.timer != nil {
 			p.timer.Close()
-			p.timer = nil
 		}
 	}
 }

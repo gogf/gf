@@ -36,7 +36,8 @@ func (p *Pool) supervisor(ctx context.Context) {
 	if p.list.Size() > 0 && changed {
 		limit := p.limit.Load()
 		if limit == -1 {
-			for i := 0; i < p.list.Size(); i++ {
+			size := p.list.Size()
+			for i := 0; i < size; i++ {
 				p.checkAndForkNewGoroutineWorker()
 			}
 			return
