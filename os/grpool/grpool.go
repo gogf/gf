@@ -137,8 +137,8 @@ func Jobs() int {
 }
 
 // Pause pauses the default pool work.
-func Pause() {
-	defaultPool.Pause()
+func Pause() bool {
+	return defaultPool.Pause()
 }
 
 // IsPaused returns whether the default pool is paused.
@@ -147,6 +147,6 @@ func IsPaused() bool {
 }
 
 // Resume resumes the default pool work.
-func Resume() {
-	defaultPool.Resume()
+func Resume() bool {
+	return defaultPool.Resume()
 }
