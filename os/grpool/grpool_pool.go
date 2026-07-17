@@ -53,11 +53,19 @@ func (p *Pool) AddWithRecover(ctx context.Context, userFunc Func, recoverFunc Re
 	})
 }
 
-// Cap returns the capacity of the pool.
-// This capacity is defined when pool is created.
+// Cap can change the capacity and returns the capacity of the pool before changed.
+// This capacity is defined when pool is created. Pass newCap will change it.
 // It returns -1 if there's no limit.
-func (p *Pool) Cap() int {
-	return int(p.limit.Load())
+func (p *Pool) Cap(newCap ...int) int {
+	if len(newCap) > 0 {
+		cap := int64(newCap[0])
+		if cap <= 0 {
+			cap = -1
+		}
+		return int(p.limit.Swap(cap))
+	} else {
+		return int(p.limit.Load())
+	}
 }
 
 // Size returns current goroutine count of the pool.
@@ -69,6 +77,12 @@ func (p *Pool) Size() int {
 // Note that, it does not return worker/goroutine count but the job/task count.
 func (p *Pool) Jobs() int {
 	return p.list.Size()
+}
+
+// ClearJobs clear current all jobs and return how many cleared.
+func (p *Pool) ClearJobs() (count int) {
+	items := p.list.PopBackAll()
+	return len(items)
 }
 
 // Pause pauses pool work. Jobs are kept in the queue and will be processed when the pool resumes.
@@ -89,7 +103,7 @@ func (p *Pool) IsPaused() bool {
 	return p.paused.Load()
 }
 
-// Resume resume pool work.
+// Resume resumes pool work.
 func (p *Pool) Resume() bool {
 	if p.IsClosed() {
 		return false
@@ -127,7 +141,7 @@ func (p *Pool) checkAndForkNewGoroutineWorker() {
 	var n int
 	for {
 		n = p.count.Val()
-		if limit := int(p.limit.Load()); limit != -1 && n >= limit {
+		if limit := p.limit.Load(); limit != -1 && int64(n) >= limit {
 			// No need fork new goroutine.
 			return
 		}
@@ -156,7 +170,7 @@ func (p *Pool) asynchronousWorker() {
 		listItem.Func(listItem.Ctx)
 		// Check whether need reduce worker.
 		n = p.count.Val()
-		if limit := int(p.limit.Load()); limit > 0 && n > limit && p.count.Cas(n, n-1) {
+		if limit := p.limit.Load(); limit > 0 && int64(n) > limit && p.count.Cas(n, n-1) {
 			addVal = 0
 			return
 		}

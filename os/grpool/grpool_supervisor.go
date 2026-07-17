@@ -34,16 +34,23 @@ func (p *Pool) supervisor(ctx context.Context) {
 	}
 
 	if p.list.Size() > 0 && changed {
-		limit := int(p.limit.Load())
-		n := limit - p.count.Val()
-		if limit == -1 || n > 0 {
-			var number = p.list.Size()
-			if n > 0 && n < number {
-				number = n
-			}
-			for i := 0; i < number; i++ {
+		limit := p.limit.Load()
+		if limit == -1 {
+			for i := 0; i < p.list.Size(); i++ {
 				p.checkAndForkNewGoroutineWorker()
 			}
+			return
+		}
+		n := limit - int64(p.count.Val())
+		if n <= 0 {
+			return
+		}
+		number := p.list.Size()
+		if n < int64(number) {
+			number = int(n)
+		}
+		for i := 0; i < number; i++ {
+			p.checkAndForkNewGoroutineWorker()
 		}
 	}
 }
