@@ -183,39 +183,61 @@ func Test_Limit4(t *testing.T) {
 func Test_PauseAndResume(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			array = garray.NewArray(true)
-			size  = 1000
-			pool  = grpool.New(100)
+			err                 error
+			started             atomic.Int64
+			completed           atomic.Int64
+			firstBatchReleased  = make(chan struct{})
+			secondBatchReleased = make(chan struct{})
+			size                = 20
+			pool                = grpool.New(10)
 		)
-		t.Assert(pool.Cap(), 100)
-		for i := 0; i < size; i++ {
-			pool.Add(ctx, func(ctx context.Context) {
-				array.Append(1)
-				time.Sleep(2 * time.Second)
-			})
+		waitForCondition := func(condition func() bool) {
+			t.Helper()
+			deadline := time.Now().Add(5 * time.Second)
+			for time.Now().Before(deadline) {
+				if condition() {
+					return
+				}
+				time.Sleep(10 * time.Millisecond)
+			}
+			t.Fatal("timed out waiting for pool state")
 		}
-		time.Sleep(time.Second)
-		t.Assert(pool.Size(), 100)
-		t.Assert(pool.Jobs(), 900)
-		t.Assert(array.Len(), 100)
-		pool.Pause()
-		time.Sleep(time.Second * 2)
-		t.Assert(pool.Size(), 0)
-		t.Assert(pool.Jobs(), 900)
-		t.Assert(array.Len(), 100)
+		t.Assert(pool.Cap(), 10)
+		for i := 0; i < size; i++ {
+			err = pool.Add(ctx, func(ctx context.Context) {
+				current := started.Add(1)
+				if current <= 10 {
+					<-firstBatchReleased
+				} else {
+					<-secondBatchReleased
+				}
+				completed.Add(1)
+			})
+			t.AssertNil(err)
+		}
+		waitForCondition(func() bool {
+			return pool.Size() == 10 && pool.Jobs() == 10 && started.Load() == 10
+		})
+		t.Assert(pool.Pause(), true)
+		close(firstBatchReleased)
+		waitForCondition(func() bool {
+			return pool.Size() == 0 && pool.Jobs() == 10 && started.Load() == 10 && completed.Load() == 10
+		})
 		t.Assert(pool.IsPaused(), true)
-		pool.Resume()
-		time.Sleep(time.Second * 2)
-		t.Assert(pool.Size(), 100)
-		t.Assert(pool.Jobs(), 800)
-		t.Assert(array.Len(), 200)
+		t.Assert(pool.Resume(), true)
+		waitForCondition(func() bool {
+			return pool.Size() == 10 && pool.Jobs() == 0 && started.Load() == 20 && completed.Load() == 10
+		})
 		t.Assert(pool.IsPaused(), false)
+		close(secondBatchReleased)
+		waitForCondition(func() bool {
+			return pool.Size() == 0 && pool.Jobs() == 0 && completed.Load() == 20
+		})
 		pool.Close()
-		time.Sleep(2 * time.Second)
-		t.Assert(pool.Size(), 0)
-		t.Assert(pool.Jobs(), 800)
-		t.Assert(array.Len(), 200)
 		t.Assert(pool.IsClosed(), true)
+		t.Assert(pool.Size(), 0)
+		t.Assert(pool.Jobs(), 0)
+		t.Assert(completed.Load(), int64(20))
 		t.AssertNE(pool.Add(ctx, func(ctx context.Context) {}), nil)
 	})
 }
