@@ -9,6 +9,7 @@ package gdb
 import (
 	"database/sql"
 	"math"
+	"reflect"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/encoding/gjson"
@@ -192,6 +193,7 @@ func (r Result) RecordKeyUint(key string) map[uint]Record {
 
 // Structs converts `r` to struct slice.
 // Note that the parameter `pointer` should be type of *[]struct/*[]*struct.
+// It also supports *[]map[string]any / *[]map[string]interface{} (see #4787).
 func (r Result) Structs(pointer any) (err error) {
 	// If the result is empty and the target pointer is not empty, it returns error.
 	if r.IsEmpty() {
@@ -199,6 +201,11 @@ func (r Result) Structs(pointer any) (err error) {
 			return sql.ErrNoRows
 		}
 		return nil
+	}
+	// converter.Structs treats each map row as a struct and leaves []map destinations empty.
+	// Use List()+Scan for map slices so keys/values are preserved.
+	if isMapStringAnySlicePointer(pointer) {
+		return gconv.Scan(r.List(), pointer)
 	}
 	var (
 		sliceOption  = gconv.SliceOption{ContinueOnError: true}
@@ -211,4 +218,21 @@ func (r Result) Structs(pointer any) (err error) {
 		SliceOption:  sliceOption,
 		StructOption: structOption,
 	})
+}
+
+// isMapStringAnySlicePointer reports whether pointer is *[]map[string]T where T is interface{}/any.
+func isMapStringAnySlicePointer(pointer any) bool {
+	rv := reflect.ValueOf(pointer)
+	if rv.Kind() != reflect.Pointer || rv.IsNil() {
+		return false
+	}
+	sliceType := rv.Type().Elem()
+	if sliceType.Kind() != reflect.Slice {
+		return false
+	}
+	elem := sliceType.Elem()
+	if elem.Kind() != reflect.Map {
+		return false
+	}
+	return elem.Key().Kind() == reflect.String && elem.Elem().Kind() == reflect.Interface
 }
