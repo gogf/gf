@@ -12,6 +12,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strings"
 
@@ -218,6 +219,25 @@ func (r *Request) parseQuery() {
 		r.queryMap, err = gstr.Parse(r.URL.RawQuery)
 		if err != nil {
 			panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse Query failed"))
+		}
+		// gstr.Parse keeps only the last value for repeated plain keys (a=1&a=2 → a=2).
+		// HTTP query multi-values like names=a&names=b should bind to []string as all values.
+		// Promote those keys using the standard library parser (plain keys only; nested m[a]
+		// syntax stays with gstr.Parse).
+		if values, err := url.ParseQuery(r.URL.RawQuery); err == nil {
+			if r.queryMap == nil {
+				r.queryMap = make(map[string]any)
+			}
+			for k, vs := range values {
+				if len(vs) <= 1 || strings.Contains(k, "[") {
+					continue
+				}
+				arr := make([]any, len(vs))
+				for i, v := range vs {
+					arr[i] = v
+				}
+				r.queryMap[k] = arr
+			}
 		}
 	}
 }

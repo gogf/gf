@@ -594,3 +594,34 @@ func Test_Params_Parse_Issue1488(t *testing.T) {
 		t.Assert(c.GetContent(ctx, "/", ``), `16161616161616161616`)
 	})
 }
+
+// Test_Params_Parse_RepeatedQuerySlice covers issue #4751:
+// repeated plain query keys should bind to all values for []string fields.
+func Test_Params_Parse_RepeatedQuerySlice(t *testing.T) {
+	type ListNamesReq struct {
+		Names []string `json:"names"`
+	}
+	s := g.Server(guid.S())
+	s.BindHandler("GET:/names", func(r *ghttp.Request) {
+		var req ListNamesReq
+		if err := r.Parse(&req); err != nil {
+			r.Response.WriteExit(err)
+		}
+		r.Response.WriteJson(req.Names)
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		// single value still works
+		t.Assert(c.GetContent(ctx, "/names?names=a"), `["a"]`)
+		// repeated plain keys keep all values
+		t.Assert(c.GetContent(ctx, "/names?names=a&names=b"), `["a","b"]`)
+		// bracket form still works
+		t.Assert(c.GetContent(ctx, "/names?names[]=a&names[]=b"), `["a","b"]`)
+	})
+}
