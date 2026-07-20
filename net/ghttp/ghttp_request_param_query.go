@@ -148,6 +148,7 @@ func (r *Request) doGetQueryStruct(pointer any, mapping ...map[string]string) (d
 	if data == nil {
 		data = map[string]any{}
 	}
+	data = r.applyMultiQueryValuesForSliceFields(data, pointer)
 	if err = r.mergeDefaultStructValue(data, pointer); err != nil {
 		return data, nil
 	}

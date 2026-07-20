@@ -180,6 +180,7 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 	if data == nil {
 		data = map[string]any{}
 	}
+	data = r.applyMultiQueryValuesForSliceFields(data, pointer)
 
 	// `in` Tag Struct values.
 	if err = r.mergeInTagStructValue(data); err != nil {

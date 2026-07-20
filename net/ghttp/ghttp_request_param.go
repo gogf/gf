@@ -220,26 +220,89 @@ func (r *Request) parseQuery() {
 		if err != nil {
 			panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse Query failed"))
 		}
-		// gstr.Parse keeps only the last value for repeated plain keys (a=1&a=2 → a=2).
-		// HTTP query multi-values like names=a&names=b should bind to []string as all values.
-		// Promote those keys using the standard library parser (plain keys only; nested m[a]
-		// syntax stays with gstr.Parse).
-		if values, err := url.ParseQuery(r.URL.RawQuery); err == nil {
-			if r.queryMap == nil {
-				r.queryMap = make(map[string]any)
+	}
+}
+
+// applyMultiQueryValuesForSliceFields copies multi-value plain query keys into data
+// when the target struct has a matching slice/array field. GetQuery still keeps
+// last-wins semantics via gstr.Parse; only struct binding (Parse) needs all values.
+// See issue #4751.
+func (r *Request) applyMultiQueryValuesForSliceFields(data map[string]any, pointer any) map[string]any {
+	if r.URL == nil || r.URL.RawQuery == "" || data == nil || pointer == nil {
+		return data
+	}
+	sliceKeys := sliceFieldParamKeys(pointer)
+	if len(sliceKeys) == 0 {
+		return data
+	}
+	values, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		return data
+	}
+	out := data
+	copied := false
+	for k, vs := range values {
+		if len(vs) <= 1 || strings.Contains(k, "[") {
+			continue
+		}
+		if _, ok := sliceKeys[k]; !ok {
+			if _, ok = sliceKeys[strings.ToLower(k)]; !ok {
+				continue
 			}
-			for k, vs := range values {
-				if len(vs) <= 1 || strings.Contains(k, "[") {
-					continue
-				}
-				arr := make([]any, len(vs))
-				for i, v := range vs {
-					arr[i] = v
-				}
-				r.queryMap[k] = arr
+		}
+		if !copied {
+			out = make(map[string]any, len(data))
+			for dk, dv := range data {
+				out[dk] = dv
+			}
+			copied = true
+		}
+		arr := make([]any, len(vs))
+		for i, v := range vs {
+			arr[i] = v
+		}
+		out[k] = arr
+	}
+	return out
+}
+
+// sliceFieldParamKeys returns possible request param names for exported slice/array fields.
+func sliceFieldParamKeys(pointer any) map[string]struct{} {
+	t := reflect.TypeOf(pointer)
+	for t != nil && t.Kind() == reflect.Pointer {
+		t = t.Elem()
+	}
+	if t == nil || t.Kind() != reflect.Struct {
+		return nil
+	}
+	keys := make(map[string]struct{})
+	for i := 0; i < t.NumField(); i++ {
+		f := t.Field(i)
+		if f.PkgPath != "" {
+			continue
+		}
+		ft := f.Type
+		for ft.Kind() == reflect.Pointer {
+			ft = ft.Elem()
+		}
+		if ft.Kind() != reflect.Slice && ft.Kind() != reflect.Array {
+			continue
+		}
+		add := func(name string) {
+			if name == "" || name == "-" {
+				return
+			}
+			keys[name] = struct{}{}
+			keys[strings.ToLower(name)] = struct{}{}
+		}
+		add(f.Name)
+		for _, tag := range []string{"p", "param", "json"} {
+			if v := f.Tag.Get(tag); v != "" {
+				add(strings.Split(v, ",")[0])
 			}
 		}
 	}
+	return keys
 }
 
 // parseBody parses the request raw data into r.rawMap.
