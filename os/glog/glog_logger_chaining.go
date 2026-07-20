@@ -162,17 +162,9 @@ func (l *Logger) Stdout(enabled ...bool) *Logger {
 	}
 	// stdout printing is enabled if `enabled` is not passed.
 	if len(enabled) > 0 && !enabled[0] {
-		logger.mu.Lock()
-	c := logger.loadConfig()
-	c.StdoutPrint = false
-	logger.storeConfig(c)
-	logger.mu.Unlock()
+		logger.SetStdoutPrint(false)
 	} else {
-		logger.mu.Lock()
-	c := logger.loadConfig()
-	c.StdoutPrint = true
-	logger.storeConfig(c)
-	logger.mu.Unlock()
+		logger.SetStdoutPrint(true)
 	}
 	return logger
 }
@@ -209,16 +201,16 @@ func (l *Logger) Line(long ...bool) *Logger {
 	}
 	if len(long) > 0 && long[0] {
 		logger.mu.Lock()
-	c := logger.loadConfig()
-	c.Flags |= F_FILE_LONG
-	logger.storeConfig(c)
-	logger.mu.Unlock()
+		c := logger.loadConfig()
+		c.Flags |= F_FILE_LONG
+		logger.storeConfig(c)
+		logger.mu.Unlock()
 	} else {
 		logger.mu.Lock()
-	c := logger.loadConfig()
-	c.Flags |= F_FILE_SHORT
-	logger.storeConfig(c)
-	logger.mu.Unlock()
+		c := logger.loadConfig()
+		c.Flags |= F_FILE_SHORT
+		logger.storeConfig(c)
+		logger.mu.Unlock()
 	}
 	return logger
 }
