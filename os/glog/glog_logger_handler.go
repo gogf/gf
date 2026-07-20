@@ -157,11 +157,11 @@ func (in *HandlerInput) ValuesContent() string {
 
 func (in *HandlerInput) getDefaultBuffer(withColor bool) *bytes.Buffer {
 	buffer := bytes.NewBuffer(nil)
-	if in.Logger.config.HeaderPrint {
+	if in.Logger.loadConfig().HeaderPrint {
 		if in.TimeFormat != "" {
 			buffer.WriteString(in.TimeFormat)
 		}
-		if in.Logger.config.LevelPrint && in.LevelFormat != "" {
+		if in.Logger.loadConfig().LevelPrint && in.LevelFormat != "" {
 			var levelStr = "[" + in.LevelFormat + "]"
 			if withColor {
 				in.addStringToBuffer(buffer, in.Logger.getColoredStr(
@@ -178,7 +178,7 @@ func (in *HandlerInput) getDefaultBuffer(withColor bool) *bytes.Buffer {
 	if in.CtxStr != "" {
 		in.addStringToBuffer(buffer, "{"+in.CtxStr+"}")
 	}
-	if in.Logger.config.HeaderPrint {
+	if in.Logger.loadConfig().HeaderPrint {
 		if in.Prefix != "" {
 			in.addStringToBuffer(buffer, in.Prefix)
 		}

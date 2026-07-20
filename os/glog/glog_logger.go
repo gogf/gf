@@ -14,6 +14,8 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/fatih/color"
@@ -35,7 +37,8 @@ import (
 // Logger is the struct for logging management.
 type Logger struct {
 	parent *Logger // Parent logger, if it is not empty, it means the logger is used in chaining function.
-	config Config  // Logger configuration.
+	mu     sync.Mutex
+	config atomic.Value // stores Config; never mutate in place after Store.
 }
 
 const (
@@ -61,9 +64,26 @@ const (
 
 // New creates and returns a custom logger.
 func New() *Logger {
-	return &Logger{
-		config: DefaultConfig(),
+	l := &Logger{}
+	l.storeConfig(DefaultConfig())
+	return l
+}
+
+// loadConfig returns the current logger configuration snapshot.
+func (l *Logger) loadConfig() Config {
+	if l == nil {
+		return Config{}
 	}
+	v := l.config.Load()
+	if v == nil {
+		return DefaultConfig()
+	}
+	return v.(Config)
+}
+
+// storeConfig stores configuration. Caller must hold l.mu when doing read-modify-write.
+func (l *Logger) storeConfig(c Config) {
+	l.config.Store(c)
 }
 
 // NewWithWriter creates and returns a custom logger with io.Writer.
@@ -76,20 +96,20 @@ func NewWithWriter(writer io.Writer) *Logger {
 // Clone returns a new logger, which a `shallow copy` of the current logger.
 // Note that the attribute `config` of the cloned one is the shallow copy of current one.
 func (l *Logger) Clone() *Logger {
-	return &Logger{
-		config: l.config,
-		parent: l,
-	}
+	c := &Logger{parent: l}
+	c.storeConfig(l.loadConfig())
+	return c
 }
 
 // getFilePath returns the logging file path.
 // The logging file name must have extension name of "log".
 func (l *Logger) getFilePath(now time.Time) string {
+	cfg := l.loadConfig()
 	// Content containing "{}" in the file name is formatted using gtime.
-	file, _ := gregex.ReplaceStringFunc(`{.+?}`, l.config.File, func(s string) string {
+	file, _ := gregex.ReplaceStringFunc(`{.+?}`, cfg.File, func(s string) string {
 		return gtime.New(now).Format(strings.Trim(s, "{}"))
 	})
-	file = gfile.Join(l.config.Path, file)
+	file = gfile.Join(cfg.Path, file)
 	return file
 }
 
@@ -99,10 +119,10 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...a
 	// It uses atomic reading operation to enhance the performance checking.
 	// It here uses CAP for performance and concurrent safety.
 	// It just initializes once for each logger.
-	if l.config.RotateSize > 0 || l.config.RotateExpire > 0 {
-		if !l.config.rotatedHandlerInitialized.Val() && l.config.rotatedHandlerInitialized.Cas(false, true) {
+	if l.loadConfig().RotateSize > 0 || l.loadConfig().RotateExpire > 0 {
+		if !l.loadConfig().rotatedHandlerInitialized.Val() && l.loadConfig().rotatedHandlerInitialized.Cas(false, true) {
 			l.rotateChecksTimely(ctx)
-			intlog.Printf(ctx, "logger rotation initialized: every %s", l.config.RotateCheckInterval.String())
+			intlog.Printf(ctx, "logger rotation initialized: every %s", l.loadConfig().RotateCheckInterval.String())
 		}
 	}
 
@@ -123,8 +143,8 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...a
 	)
 
 	// Logging handlers.
-	if len(l.config.Handlers) > 0 {
-		input.handlers = append(input.handlers, l.config.Handlers...)
+	if len(l.loadConfig().Handlers) > 0 {
+		input.handlers = append(input.handlers, l.loadConfig().Handlers...)
 	} else if defaultHandler != nil {
 		input.handlers = []Handler{defaultHandler}
 	}
@@ -132,19 +152,19 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...a
 
 	// Time.
 	timeFormat := ""
-	if l.config.TimeFormat != "" {
-		timeFormat = l.config.TimeFormat
+	if l.loadConfig().TimeFormat != "" {
+		timeFormat = l.loadConfig().TimeFormat
 	} else {
-		if l.config.Flags&F_TIME_DATE > 0 {
+		if l.loadConfig().Flags&F_TIME_DATE > 0 {
 			timeFormat += "2006-01-02"
 		}
-		if l.config.Flags&F_TIME_TIME > 0 {
+		if l.loadConfig().Flags&F_TIME_TIME > 0 {
 			if timeFormat != "" {
 				timeFormat += " "
 			}
 			timeFormat += "15:04:05"
 		}
-		if l.config.Flags&F_TIME_MILLI > 0 {
+		if l.loadConfig().Flags&F_TIME_MILLI > 0 {
 			if timeFormat != "" {
 				timeFormat += " "
 			}
@@ -160,28 +180,28 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...a
 	input.LevelFormat = l.GetLevelPrefix(level)
 
 	// Caller path and Fn name.
-	if l.config.Flags&(F_FILE_LONG|F_FILE_SHORT|F_CALLER_FN) > 0 {
+	if l.loadConfig().Flags&(F_FILE_LONG|F_FILE_SHORT|F_CALLER_FN) > 0 {
 		callerFnName, path, line := gdebug.CallerWithFilter(
 			[]string{consts.StackFilterKeyForGoFrame},
-			l.config.StSkip,
+			l.loadConfig().StSkip,
 		)
-		if l.config.Flags&F_CALLER_FN > 0 {
+		if l.loadConfig().Flags&F_CALLER_FN > 0 {
 			if len(callerFnName) > 2 {
 				input.CallerFunc = fmt.Sprintf(`[%s]`, callerFnName)
 			}
 		}
 		if line >= 0 && len(path) > 1 {
-			if l.config.Flags&F_FILE_LONG > 0 {
+			if l.loadConfig().Flags&F_FILE_LONG > 0 {
 				input.CallerPath = fmt.Sprintf(`%s:%d:`, path, line)
 			}
-			if l.config.Flags&F_FILE_SHORT > 0 {
+			if l.loadConfig().Flags&F_FILE_SHORT > 0 {
 				input.CallerPath = fmt.Sprintf(`%s:%d:`, gfile.Basename(path), line)
 			}
 		}
 	}
 	// Prefix.
-	if len(l.config.Prefix) > 0 {
-		input.Prefix = l.config.Prefix
+	if len(l.loadConfig().Prefix) > 0 {
+		input.Prefix = l.loadConfig().Prefix
 	}
 
 	// Convert value to string.
@@ -192,8 +212,8 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...a
 			input.TraceId = traceId.String()
 		}
 		// Context values.
-		if len(l.config.CtxKeys) > 0 {
-			for _, ctxKey := range l.config.CtxKeys {
+		if len(l.loadConfig().CtxKeys) > 0 {
+			for _, ctxKey := range l.loadConfig().CtxKeys {
 				var ctxValue any
 				if ctxValue = ctx.Value(ctxKey); ctxValue == nil {
 					ctxValue = ctx.Value(gctx.StrKey(gconv.String(ctxKey)))
@@ -207,7 +227,7 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...a
 			}
 		}
 	}
-	if l.config.Flags&F_ASYNC > 0 {
+	if l.loadConfig().Flags&F_ASYNC > 0 {
 		input.IsAsync = true
 		err := asyncPool.Add(ctx, func(ctx context.Context) {
 			input.Next(ctx)
@@ -224,21 +244,21 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...a
 func (l *Logger) doFinalPrint(ctx context.Context, input *HandlerInput) *bytes.Buffer {
 	var buffer *bytes.Buffer
 	// Allow output to stdout?
-	if l.config.StdoutPrint {
+	if l.loadConfig().StdoutPrint {
 		if buf := l.printToStdout(ctx, input); buf != nil {
 			buffer = buf
 		}
 	}
 
 	// Output content to disk file.
-	if l.config.Path != "" {
+	if l.loadConfig().Path != "" {
 		if buf := l.printToFile(ctx, input.Time, input); buf != nil {
 			buffer = buf
 		}
 	}
 
 	// Used custom writer.
-	if l.config.Writer != nil {
+	if l.loadConfig().Writer != nil {
 		// Output to custom writer.
 		if buf := l.printToWriter(ctx, input); buf != nil {
 			buffer = buf
@@ -249,9 +269,9 @@ func (l *Logger) doFinalPrint(ctx context.Context, input *HandlerInput) *bytes.B
 
 // printToWriter writes buffer to writer.
 func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) *bytes.Buffer {
-	if l.config.Writer != nil {
-		var buffer = input.getRealBuffer(l.config.WriterColorEnable)
-		if _, err := l.config.Writer.Write(buffer.Bytes()); err != nil {
+	if l.loadConfig().Writer != nil {
+		var buffer = input.getRealBuffer(l.loadConfig().WriterColorEnable)
+		if _, err := l.loadConfig().Writer.Write(buffer.Bytes()); err != nil {
 			intlog.Errorf(ctx, `%+v`, err)
 		}
 		return buffer
@@ -261,10 +281,10 @@ func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) *bytes.
 
 // printToStdout outputs logging content to stdout.
 func (l *Logger) printToStdout(ctx context.Context, input *HandlerInput) *bytes.Buffer {
-	if l.config.StdoutPrint {
+	if l.loadConfig().StdoutPrint {
 		var (
 			err    error
-			buffer = input.getRealBuffer(!l.config.StdoutColorDisabled)
+			buffer = input.getRealBuffer(!l.loadConfig().StdoutColorDisabled)
 		)
 		// This will lose color in Windows os system. DO NOT USE.
 		// if _, err := os.Stdout.Write(input.getRealBuffer(true).Bytes()); err != nil {
@@ -281,7 +301,7 @@ func (l *Logger) printToStdout(ctx context.Context, input *HandlerInput) *bytes.
 // printToFile outputs logging content to disk file.
 func (l *Logger) printToFile(ctx context.Context, t time.Time, in *HandlerInput) *bytes.Buffer {
 	var (
-		buffer        = in.getRealBuffer(l.config.WriterColorEnable)
+		buffer        = in.getRealBuffer(l.loadConfig().WriterColorEnable)
 		logFilePath   = l.getFilePath(t)
 		memoryLockKey = memoryLockPrefixForPrintingToFile + logFilePath
 	)
@@ -289,7 +309,7 @@ func (l *Logger) printToFile(ctx context.Context, t time.Time, in *HandlerInput)
 	defer gmlock.Unlock(memoryLockKey)
 
 	// Rotation file size checks.
-	if l.config.RotateSize > 0 && gfile.Size(logFilePath) > l.config.RotateSize {
+	if l.loadConfig().RotateSize > 0 && gfile.Size(logFilePath) > l.loadConfig().RotateSize {
 		if runtime.GOOS == "windows" {
 			file := l.createFpInPool(ctx, logFilePath)
 			if file == nil {
@@ -370,7 +390,7 @@ func (l *Logger) printErr(ctx context.Context, level int, values ...any) {
 		return
 	}
 	var stack string
-	if l.config.StStatus == 1 {
+	if l.loadConfig().StStatus == 1 {
 		stack = l.GetStack()
 	}
 	// In matter of sequence, do not use stderr here, but use the same stdout.
@@ -395,13 +415,13 @@ func (l *Logger) PrintStack(ctx context.Context, skip ...int) {
 // GetStack returns the caller stack content,
 // the optional parameter `skip` specify the skipped stack offset from the end point.
 func (l *Logger) GetStack(skip ...int) string {
-	stackSkip := l.config.StSkip
+	stackSkip := l.loadConfig().StSkip
 	if len(skip) > 0 {
 		stackSkip += skip[0]
 	}
 	filters := []string{pathFilterKey}
-	if l.config.StFilter != "" {
-		filters = append(filters, l.config.StFilter)
+	if l.loadConfig().StFilter != "" {
+		filters = append(filters, l.loadConfig().StFilter)
 	}
 	// Whether filter framework error stacks.
 	if errors.IsStackModeBrief() {

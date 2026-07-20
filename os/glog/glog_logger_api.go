@@ -146,5 +146,5 @@ func (l *Logger) checkLevel(level int) bool {
 	if l == nil {
 		return false
 	}
-	return l.config.Level&level > 0
+	return l.loadConfig().Level&level > 0
 }

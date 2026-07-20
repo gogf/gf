@@ -487,3 +487,34 @@ func Test_Concurrent(t *testing.T) {
 		t.Assert(gstr.Count(content, s), c)
 	})
 }
+
+// Test_SetConfigConcurrentWithInfo ensures SetConfig does not race with Info (#4795).
+func Test_SetConfigConcurrentWithInfo(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := glog.New()
+		ctx := context.Background()
+		var wg sync.WaitGroup
+		wg.Add(2)
+		stop := make(chan struct{})
+		go func() {
+			defer wg.Done()
+			for {
+				select {
+				case <-stop:
+					return
+				default:
+					l.Info(ctx, "hello")
+				}
+			}
+		}()
+		go func() {
+			defer wg.Done()
+			cfg := l.GetConfig()
+			for i := 0; i < 500; i++ {
+				_ = l.SetConfig(cfg)
+			}
+			close(stop)
+		}()
+		wg.Wait()
+	})
+}

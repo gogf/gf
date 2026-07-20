@@ -54,8 +54,8 @@ func (l *Logger) Cat(category string) *Logger {
 	} else {
 		logger = l
 	}
-	if logger.config.Path != "" {
-		if err := logger.SetPath(gfile.Join(logger.config.Path, category)); err != nil {
+	if path := logger.loadConfig().Path; path != "" {
+		if err := logger.SetPath(gfile.Join(path, category)); err != nil {
 			panic(err)
 		}
 	}
@@ -162,9 +162,17 @@ func (l *Logger) Stdout(enabled ...bool) *Logger {
 	}
 	// stdout printing is enabled if `enabled` is not passed.
 	if len(enabled) > 0 && !enabled[0] {
-		logger.config.StdoutPrint = false
+		logger.mu.Lock()
+	c := logger.loadConfig()
+	c.StdoutPrint = false
+	logger.storeConfig(c)
+	logger.mu.Unlock()
 	} else {
-		logger.config.StdoutPrint = true
+		logger.mu.Lock()
+	c := logger.loadConfig()
+	c.StdoutPrint = true
+	logger.storeConfig(c)
+	logger.mu.Unlock()
 	}
 	return logger
 }
@@ -200,9 +208,17 @@ func (l *Logger) Line(long ...bool) *Logger {
 		logger = l
 	}
 	if len(long) > 0 && long[0] {
-		logger.config.Flags |= F_FILE_LONG
+		logger.mu.Lock()
+	c := logger.loadConfig()
+	c.Flags |= F_FILE_LONG
+	logger.storeConfig(c)
+	logger.mu.Unlock()
 	} else {
-		logger.config.Flags |= F_FILE_SHORT
+		logger.mu.Lock()
+	c := logger.loadConfig()
+	c.Flags |= F_FILE_SHORT
+	logger.storeConfig(c)
+	logger.mu.Unlock()
 	}
 	return logger
 }

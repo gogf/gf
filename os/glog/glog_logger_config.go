@@ -83,12 +83,14 @@ func DefaultConfig() Config {
 
 // GetConfig returns the configuration of current Logger.
 func (l *Logger) GetConfig() Config {
-	return l.config
+	return l.loadConfig()
 }
 
 // SetConfig set configurations for the logger.
 func (l *Logger) SetConfig(config Config) error {
-	l.config = config
+	l.mu.Lock()
+	l.storeConfig(config)
+	l.mu.Unlock()
 	// Necessary validation.
 	if config.Path != "" {
 		if err := l.SetPath(config.Path); err != nil {
@@ -96,7 +98,7 @@ func (l *Logger) SetConfig(config Config) error {
 			return err
 		}
 	}
-	intlog.Printf(context.TODO(), "SetConfig: %+v", l.config)
+	intlog.Printf(context.TODO(), "SetConfig: %+v", l.loadConfig())
 	return nil
 }
 
@@ -125,58 +127,83 @@ func (l *Logger) SetConfigWithMap(m map[string]any) error {
 			return gerror.NewCodef(gcode.CodeInvalidConfiguration, `invalid rotate size: %v`, rotateSizeValue)
 		}
 	}
-	if err := gconv.Struct(m, &l.config); err != nil {
+	c := l.loadConfig()
+	if err := gconv.Struct(m, &c); err != nil {
 		return err
 	}
-	return l.SetConfig(l.config)
+	return l.SetConfig(c)
 }
 
 // SetDebug enables/disables the debug level for logger.
 // The debug level is enabled in default.
 func (l *Logger) SetDebug(debug bool) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
 	if debug {
-		l.config.Level = l.config.Level | LEVEL_DEBU
+		c.Level = c.Level | LEVEL_DEBU
 	} else {
-		l.config.Level = l.config.Level & ^LEVEL_DEBU
+		c.Level = c.Level & ^LEVEL_DEBU
 	}
+	l.storeConfig(c)
 }
 
 // SetAsync enables/disables async logging output feature.
 func (l *Logger) SetAsync(enabled bool) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
 	if enabled {
-		l.config.Flags = l.config.Flags | F_ASYNC
+		c.Flags = c.Flags | F_ASYNC
 	} else {
-		l.config.Flags = l.config.Flags & ^F_ASYNC
+		c.Flags = c.Flags & ^F_ASYNC
 	}
+	l.storeConfig(c)
 }
 
 // SetFlags sets extra flags for logging output features.
 func (l *Logger) SetFlags(flags int) {
-	l.config.Flags = flags
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
+	c.Flags = flags
+	l.storeConfig(c)
 }
 
 // GetFlags returns the flags of logger.
 func (l *Logger) GetFlags() int {
-	return l.config.Flags
+	return l.loadConfig().Flags
 }
 
 // SetStack enables/disables the stack feature in failure logging outputs.
 func (l *Logger) SetStack(enabled bool) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
 	if enabled {
-		l.config.StStatus = 1
+		c.StStatus = 1
 	} else {
-		l.config.StStatus = 0
+		c.StStatus = 0
 	}
+	l.storeConfig(c)
 }
 
 // SetStackSkip sets the stack offset from the end point.
 func (l *Logger) SetStackSkip(skip int) {
-	l.config.StSkip = skip
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
+	c.StSkip = skip
+	l.storeConfig(c)
 }
 
 // SetStackFilter sets the stack filter from the end point.
 func (l *Logger) SetStackFilter(filter string) {
-	l.config.StFilter = filter
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
+	c.StFilter = filter
+	l.storeConfig(c)
 }
 
 // SetCtxKeys sets the context keys for logger. The keys is used for retrieving values
@@ -184,30 +211,38 @@ func (l *Logger) SetStackFilter(filter string) {
 //
 // Note that multiple calls of this function will overwrite the previous set context keys.
 func (l *Logger) SetCtxKeys(keys ...any) {
-	l.config.CtxKeys = keys
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
+	c.CtxKeys = keys
+	l.storeConfig(c)
 }
 
 // AppendCtxKeys appends extra keys to logger.
 // It ignores the key if it is already appended to the logger previously.
 func (l *Logger) AppendCtxKeys(keys ...any) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
 	var isExist bool
 	for _, key := range keys {
 		isExist = false
-		for _, ctxKey := range l.config.CtxKeys {
+		for _, ctxKey := range c.CtxKeys {
 			if ctxKey == key {
 				isExist = true
 				break
 			}
 		}
 		if !isExist {
-			l.config.CtxKeys = append(l.config.CtxKeys, key)
+			c.CtxKeys = append(c.CtxKeys, key)
 		}
 	}
+	l.storeConfig(c)
 }
 
 // GetCtxKeys retrieves and returns the context keys for logging.
 func (l *Logger) GetCtxKeys() []any {
-	return l.config.CtxKeys
+	return l.loadConfig().CtxKeys
 }
 
 // SetWriter sets the customized logging `writer` for logging.
@@ -215,13 +250,17 @@ func (l *Logger) GetCtxKeys() []any {
 // Developer can use customized logging `writer` to redirect logging output to another service,
 // eg: kafka, mysql, mongodb, etc.
 func (l *Logger) SetWriter(writer io.Writer) {
-	l.config.Writer = writer
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
+	c.Writer = writer
+	l.storeConfig(c)
 }
 
 // GetWriter returns the customized writer object, which implements the io.Writer interface.
 // It returns nil if no writer previously set.
 func (l *Logger) GetWriter() io.Writer {
-	return l.config.Writer
+	return l.loadConfig().Writer
 }
 
 // SetPath sets the directory path for file logging.
@@ -234,60 +273,100 @@ func (l *Logger) SetPath(path string) error {
 			return gerror.Wrapf(err, `Mkdir "%s" failed in PWD "%s"`, path, gfile.Pwd())
 		}
 	}
-	l.config.Path = strings.TrimRight(path, gfile.Separator)
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
+	c.Path = strings.TrimRight(path, gfile.Separator)
+	l.storeConfig(c)
 	return nil
 }
 
 // GetPath returns the logging directory path for file logging.
 // It returns empty string if no directory path set.
 func (l *Logger) GetPath() string {
-	return l.config.Path
+	return l.loadConfig().Path
 }
 
 // SetFile sets the file name `pattern` for file logging.
 // Datetime pattern can be used in `pattern`, eg: access-{Ymd}.log.
 // The default file name pattern is: Y-m-d.log, eg: 2018-01-01.log
 func (l *Logger) SetFile(pattern string) {
-	l.config.File = pattern
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
+	c.File = pattern
+	l.storeConfig(c)
 }
 
 // SetTimeFormat sets the time format for the logging time.
 func (l *Logger) SetTimeFormat(timeFormat string) {
-	l.config.TimeFormat = timeFormat
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
+	c.TimeFormat = timeFormat
+	l.storeConfig(c)
 }
 
 // SetStdoutPrint sets whether output the logging contents to stdout, which is true in default.
 func (l *Logger) SetStdoutPrint(enabled bool) {
-	l.config.StdoutPrint = enabled
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
+	c.StdoutPrint = enabled
+	l.storeConfig(c)
 }
 
 // SetHeaderPrint sets whether output header of the logging contents, which is true in default.
 func (l *Logger) SetHeaderPrint(enabled bool) {
-	l.config.HeaderPrint = enabled
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
+	c.HeaderPrint = enabled
+	l.storeConfig(c)
 }
 
 // SetLevelPrint sets whether output level string of the logging contents, which is true in default.
 func (l *Logger) SetLevelPrint(enabled bool) {
-	l.config.LevelPrint = enabled
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
+	c.LevelPrint = enabled
+	l.storeConfig(c)
 }
 
 // SetPrefix sets prefix string for every logging content.
 // Prefix is part of header, which means if header output is shut, no prefix will be output.
 func (l *Logger) SetPrefix(prefix string) {
-	l.config.Prefix = prefix
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
+	c.Prefix = prefix
+	l.storeConfig(c)
 }
 
 // SetHandlers sets the logging handlers for current logger.
 func (l *Logger) SetHandlers(handlers ...Handler) {
-	l.config.Handlers = handlers
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
+	c.Handlers = handlers
+	l.storeConfig(c)
 }
 
 // SetWriterColorEnable enables file/writer logging with color.
 func (l *Logger) SetWriterColorEnable(enabled bool) {
-	l.config.WriterColorEnable = enabled
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
+	c.WriterColorEnable = enabled
+	l.storeConfig(c)
 }
 
 // SetStdoutColorDisabled disables stdout logging with color.
 func (l *Logger) SetStdoutColorDisabled(disabled bool) {
-	l.config.StdoutColorDisabled = disabled
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
+	c.StdoutColorDisabled = disabled
+	l.storeConfig(c)
 }

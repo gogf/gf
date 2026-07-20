@@ -66,45 +66,75 @@ var levelStringMap = map[string]int{
 // Note that levels ` LEVEL_CRIT | LEVEL_PANI | LEVEL_FATA ` cannot be removed for logging content,
 // which are automatically added to levels.
 func (l *Logger) SetLevel(level int) {
-	l.config.Level = level | LEVEL_CRIT | LEVEL_PANI | LEVEL_FATA
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
+	c.Level = level | LEVEL_CRIT | LEVEL_PANI | LEVEL_FATA
+	l.storeConfig(c)
 }
 
 // GetLevel returns the logging level value.
 func (l *Logger) GetLevel() int {
-	return l.config.Level
+	return l.loadConfig().Level
 }
 
 // SetLevelStr sets the logging level by level string.
 func (l *Logger) SetLevelStr(levelStr string) error {
 	if level, ok := levelStringMap[strings.ToUpper(levelStr)]; ok {
-		l.config.Level = level
-	} else {
-		return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid level string: %s`, levelStr)
+		l.mu.Lock()
+		defer l.mu.Unlock()
+		c := l.loadConfig()
+		c.Level = level
+		l.storeConfig(c)
+		return nil
 	}
-	return nil
+	return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid level string: %s`, levelStr)
 }
 
 // SetLevelPrefix sets the prefix string for specified level.
 func (l *Logger) SetLevelPrefix(level int, prefix string) {
-	l.config.LevelPrefixes[level] = prefix
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
+	if c.LevelPrefixes == nil {
+		c.LevelPrefixes = make(map[int]string)
+	} else {
+		// copy to avoid racing with concurrent readers holding old Config
+		n := make(map[int]string, len(c.LevelPrefixes)+1)
+		for k, v := range c.LevelPrefixes {
+			n[k] = v
+		}
+		c.LevelPrefixes = n
+	}
+	c.LevelPrefixes[level] = prefix
+	l.storeConfig(c)
 }
 
 // SetLevelPrefixes sets the level to prefix string mapping for the logger.
 func (l *Logger) SetLevelPrefixes(prefixes map[int]string) {
-	for k, v := range prefixes {
-		l.config.LevelPrefixes[k] = v
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	c := l.loadConfig()
+	n := make(map[int]string, len(c.LevelPrefixes)+len(prefixes))
+	for k, v := range c.LevelPrefixes {
+		n[k] = v
 	}
+	for k, v := range prefixes {
+		n[k] = v
+	}
+	c.LevelPrefixes = n
+	l.storeConfig(c)
 }
 
 // GetLevelPrefix returns the prefix string for specified level.
 func (l *Logger) GetLevelPrefix(level int) string {
-	return l.config.LevelPrefixes[level]
+	return l.loadConfig().LevelPrefixes[level]
 }
 
 // getLevelPrefixWithBrackets returns the prefix string with brackets for specified level.
 func (l *Logger) getLevelPrefixWithBrackets(level int) string {
 	levelStr := ""
-	if s, ok := l.config.LevelPrefixes[level]; ok {
+	if s, ok := l.loadConfig().LevelPrefixes[level]; ok {
 		levelStr = "[" + s + "]"
 	}
 	return levelStr
