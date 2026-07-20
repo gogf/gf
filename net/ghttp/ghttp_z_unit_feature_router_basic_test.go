@@ -8,6 +8,8 @@ package ghttp_test
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"testing"
 	"time"
 
@@ -296,5 +298,43 @@ func Test_Router_Priority(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/admin-1"), "admin-{page}")
 		t.Assert(client.GetContent(ctx, "/admin-goods"), "admin-goods")
 		t.Assert(client.GetContent(ctx, "/admin-goods-2"), "admin-goods-{page}")
+	})
+}
+
+// Test_Router_LowercaseMethodCache ensures a non-canonical method casing does not
+// poison the serve handler cache for later requests (issue #4765).
+func Test_Router_LowercaseMethodCache(t *testing.T) {
+	s := g.Server(guid.S())
+	s.BindHandler("GET:/api/user", func(r *ghttp.Request) {
+		r.Response.Write("hello")
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		addr := fmt.Sprintf("http://127.0.0.1:%d/api/user", s.GetListenedPort())
+
+		// raw lowercase method — g.Client always upper-cases methods
+		req1, err := http.NewRequest("get", addr, nil)
+		t.AssertNil(err)
+		resp1, err := http.DefaultClient.Do(req1)
+		t.AssertNil(err)
+		body1, err := io.ReadAll(resp1.Body)
+		resp1.Body.Close()
+		t.AssertNil(err)
+		t.Assert(resp1.StatusCode, 200)
+		t.Assert(string(body1), "hello")
+
+		req2, err := http.NewRequest(http.MethodGet, addr, nil)
+		t.AssertNil(err)
+		resp2, err := http.DefaultClient.Do(req2)
+		t.AssertNil(err)
+		body2, err := io.ReadAll(resp2.Body)
+		resp2.Body.Close()
+		t.AssertNil(err)
+		t.Assert(resp2.StatusCode, 200)
+		t.Assert(string(body2), "hello")
 	})
 }

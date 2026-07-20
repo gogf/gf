@@ -43,8 +43,11 @@ func (s *Server) serveHandlerKey(method, path, domain string) string {
 // getHandlersWithCache searches the router item with cache feature for a given request.
 func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*HandlerItemParsed, serveItem *HandlerItemParsed, hasHook, hasServe bool) {
 	var (
-		ctx    = r.Context()
-		method = r.Method
+		ctx = r.Context()
+		// HTTP methods are case-insensitive (RFC 9110). Cache keys already upper-case the
+		// method via serveHandlerKey, so search must use the same form — otherwise a
+		// lowercase "get" miss gets cached under "GET:..." and poisons later real GET hits.
+		method = strings.ToUpper(r.Method)
 		path   = r.URL.Path
 		host   = r.GetHost()
 	)
@@ -64,7 +67,7 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*HandlerItemPar
 	// It searches the handler with the request method instead of OPTIONS method.
 	if method == http.MethodOptions {
 		if v := r.Header.Get("Access-Control-Request-Method"); v != "" {
-			method = v
+			method = strings.ToUpper(v)
 		}
 	}
 	// Search and cache the router handlers.
