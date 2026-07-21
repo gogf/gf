@@ -59,6 +59,41 @@ func generateStructDefinition(ctx context.Context, in generateStructDefinitionIn
 	return buffer.String(), appendImports
 }
 
+// normalizeTypeMapping lower-cases all map keys so config like `UUID` matches
+// DB types reported as `uuid`. Later entries with the same lower key win.
+func normalizeTypeMapping(
+	in map[DBFieldTypeName]CustomAttributeType,
+) map[DBFieldTypeName]CustomAttributeType {
+	if len(in) == 0 {
+		return in
+	}
+	out := make(map[DBFieldTypeName]CustomAttributeType, len(in))
+	for key, typeMapping := range in {
+		out[strings.ToLower(key)] = typeMapping
+	}
+	return out
+}
+
+// lookupFieldMapping finds a field mapping for table.field (case-insensitive).
+func lookupFieldMapping(
+	fieldMapping map[DBTableFieldName]CustomAttributeType, table, field string,
+) (CustomAttributeType, bool) {
+	if len(fieldMapping) == 0 {
+		return CustomAttributeType{}, false
+	}
+	key := fmt.Sprintf("%s.%s", table, field)
+	if typeMapping, ok := fieldMapping[key]; ok {
+		return typeMapping, true
+	}
+	want := strings.ToLower(key)
+	for k, typeMapping := range fieldMapping {
+		if strings.ToLower(k) == want {
+			return typeMapping, true
+		}
+	}
+	return CustomAttributeType{}, false
+}
+
 func getTypeMappingInfo(
 	ctx context.Context, fieldType string, inTypeMapping map[DBFieldTypeName]CustomAttributeType,
 ) (typeNameStr, importStr string) {
@@ -144,11 +179,9 @@ func generateStructFieldDefinition(
 		newFiledName = gstr.TrimLeftStr(newFiledName, v, 1)
 	}
 
-	if in.FieldMapping != nil && len(in.FieldMapping) > 0 {
-		if typeMapping, ok := in.FieldMapping[fmt.Sprintf("%s.%s", in.TableName, newFiledName)]; ok {
-			localTypeNameStr = typeMapping.Type
-			appendImport = typeMapping.Import
-		}
+	if typeMapping, ok := lookupFieldMapping(in.FieldMapping, in.TableName, newFiledName); ok {
+		localTypeNameStr = typeMapping.Type
+		appendImport = typeMapping.Import
 	}
 
 	attrLines = []string{

@@ -7,11 +7,49 @@
 package gendao
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
 )
+
+// Test_Issue4734_TypeMappingUUIDCase: config keys like "UUID" must match DB type "uuid".
+func Test_Issue4734_TypeMappingUUIDCase(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// User config often uses mixed-case keys; lookup always uses ToLower(fieldType).
+		raw := map[DBFieldTypeName]CustomAttributeType{
+			"UUID": {Type: "string"},
+		}
+		normalized := normalizeTypeMapping(raw)
+		// After normalize only "uuid" key remains.
+		t.Assert(normalized["uuid"].Type, "string")
+		_, hasUpper := normalized["UUID"]
+		t.Assert(hasUpper, false)
+
+		// Merge with defaults like doGenDaoForArray does.
+		merged := normalizeTypeMapping(map[DBFieldTypeName]CustomAttributeType{
+			"UUID": {Type: "string"},
+		})
+		for key, typeMapping := range defaultTypeMapping {
+			if _, ok := merged[key]; !ok {
+				merged[key] = typeMapping
+			}
+		}
+		// User override wins over default uuid -> uuid.UUID.
+		name, imp := getTypeMappingInfo(context.Background(), "uuid", merged)
+		t.Assert(name, "string")
+		t.Assert(imp, "")
+
+		// Field mapping is case-insensitive on table.field.
+		fm := map[DBTableFieldName]CustomAttributeType{
+			"Widget.Widget_Id": {Type: "string"},
+		}
+		got, ok := lookupFieldMapping(fm, "widget", "widget_id")
+		t.Assert(ok, true)
+		t.Assert(got.Type, "string")
+	})
+}
 
 // Test containsWildcard function.
 func Test_containsWildcard(t *testing.T) {

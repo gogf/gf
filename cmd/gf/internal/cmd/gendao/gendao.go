@@ -17,6 +17,8 @@ import (
 	"github.com/olekukonko/tablewriter/tw"
 	"golang.org/x/mod/modfile"
 
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -27,9 +29,6 @@ import (
 	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
-
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
 type (
@@ -235,6 +234,10 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 		tableNames = array.Slice()
 	}
 
+	// Normalize typeMapping keys to lower-case so config keys like "UUID" match
+	// DB field types like "uuid" (getTypeMappingInfo always looks up ToLower).
+	// See #4734.
+	in.TypeMapping = normalizeTypeMapping(in.TypeMapping)
 	// merge default typeMapping to input typeMapping.
 	if in.TypeMapping == nil {
 		in.TypeMapping = defaultTypeMapping
