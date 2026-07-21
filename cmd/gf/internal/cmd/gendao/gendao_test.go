@@ -13,6 +13,38 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
+// Test_Issue4659_ShardingDigitSuffix: non-numeric tables must not be treated as shards.
+func Test_Issue4659_ShardingDigitSuffix(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Pattern a_? with digit-only suffix.
+		base, ok := matchShardingPattern("a_?", "a_1")
+		t.Assert(ok, true)
+		t.Assert(base, "a")
+
+		base, ok = matchShardingPattern("a_?", "a_2")
+		t.Assert(ok, true)
+		t.Assert(base, "a")
+
+		// Letter / multi-segment tables are not shards of "a".
+		_, ok = matchShardingPattern("a_?", "a_b")
+		t.Assert(ok, false)
+		_, ok = matchShardingPattern("a_?", "a_c")
+		t.Assert(ok, false)
+		_, ok = matchShardingPattern("a_?", "a_b_1")
+		t.Assert(ok, false)
+
+		// Longer pattern still works for a_b_1.
+		base, ok = matchShardingPattern("a_b_?", "a_b_1")
+		t.Assert(ok, true)
+		t.Assert(base, "a_b")
+
+		// users_001 style multi-digit suffixes.
+		base, ok = matchShardingPattern("users_?", "users_0001")
+		t.Assert(ok, true)
+		t.Assert(base, "users")
+	})
+}
+
 // Test containsWildcard function.
 func Test_containsWildcard(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {

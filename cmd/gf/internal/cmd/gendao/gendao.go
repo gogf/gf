@@ -17,6 +17,8 @@ import (
 	"github.com/olekukonko/tablewriter/tw"
 	"golang.org/x/mod/modfile"
 
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
+	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -27,9 +29,6 @@ import (
 	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
-
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
-	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
 type (
@@ -267,19 +266,11 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 		}
 		if len(sortedShardingPatterns) > 0 {
 			for _, pattern := range sortedShardingPatterns {
-				var (
-					match      []string
-					regPattern = gstr.Replace(pattern, "?", `(.+)`)
-				)
-				match, err = gregex.MatchString(regPattern, newTableName)
-				if err != nil {
-					mlog.Fatalf(`invalid sharding pattern "%s": %+v`, pattern, err)
-				}
-				if len(match) < 2 {
+				baseName, ok := matchShardingPattern(pattern, newTableName)
+				if !ok {
 					continue
 				}
-				newTableName = gstr.Replace(pattern, "?", "")
-				newTableName = gstr.Trim(newTableName, `_.-`)
+				newTableName = baseName
 				if shardingNewTableSet.Contains(newTableName) {
 					tableNames[i] = ""
 					break
@@ -431,6 +422,25 @@ func getTemplateFromPathOrDefault(filePath string, def string) string {
 		}
 	}
 	return def
+}
+
+// matchShardingPattern returns the base dao table name if tableName matches
+// sharding pattern. Pattern "?" stands for a numeric shard suffix only
+// (e.g. users_001), not arbitrary text — so pattern "a_?" matches a_1 but not
+// non-shard tables like a_b (#4659).
+func matchShardingPattern(pattern, tableName string) (baseName string, ok bool) {
+	if pattern == "" || !gstr.Contains(pattern, "?") {
+		return "", false
+	}
+	// Full-string match; "?" = one or more digits (users_001, a_1, ...).
+	regPattern := `^` + gstr.Replace(pattern, "?", `(\d+)`) + `$`
+	match, err := gregex.MatchString(regPattern, tableName)
+	if err != nil || len(match) < 2 {
+		return "", false
+	}
+	baseName = gstr.Replace(pattern, "?", "")
+	baseName = gstr.Trim(baseName, `_.-`)
+	return baseName, baseName != ""
 }
 
 // containsWildcard checks if the pattern contains wildcard characters (* or ?).
