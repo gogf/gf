@@ -48,10 +48,13 @@ func configNodeToSource(config *gdb.ConfigNode) string {
 		config.User, config.Pass, config.Protocol, config.Host, portStr, config.Name, config.Charset,
 	)
 	if config.Timezone != "" {
-		if strings.Contains(config.Timezone, "/") {
-			config.Timezone = url.QueryEscape(config.Timezone)
+		// Escape so values like Asia/Shanghai or fixed offsets survive query parsing.
+		// (Previously only names containing "/" were escaped.)
+		loc := config.Timezone
+		if strings.ContainsAny(loc, "/+ :'") {
+			loc = url.QueryEscape(loc)
 		}
-		source = fmt.Sprintf("%s&loc=%s", source, config.Timezone)
+		source = fmt.Sprintf("%s&loc=%s", source, loc)
 	}
 	if config.Extra != "" {
 		source = fmt.Sprintf("%s&%s", source, config.Extra)

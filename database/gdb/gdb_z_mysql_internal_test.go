@@ -270,6 +270,19 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		t.Assert(newNode.Charset, `utf8`)
 		t.Assert(newNode.Protocol, `tcp`)
 	})
+	// https://github.com/gogf/gf/issues/4759
+	// time_zone is a MySQL session system variable; it must not fill Timezone (DSN loc=).
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: "mysql:user:pwd@tcp(127.0.0.1:3306)/dbname?charset=utf8&loc=UTC&time_zone=%27%2B00%3A00%27&parseTime=true",
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Type, `mysql`)
+		t.Assert(newNode.Charset, `utf8`)
+		t.Assert(newNode.Timezone, ``)
+		t.Assert(newNode.Extra, `charset=utf8&loc=UTC&time_zone=%27%2B00%3A00%27&parseTime=true`)
+	})
 	// https://github.com/gogf/gf/issues/3862
 	gtest.C(t, func(t *gtest.T) {
 		node := &ConfigNode{

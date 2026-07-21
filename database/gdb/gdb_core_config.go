@@ -471,6 +471,10 @@ func parseConfigNodeLink(node *ConfigNode) (*ConfigNode, error) {
 	}
 	if node.Extra != "" {
 		if m, _ := gstr.Parse(node.Extra); len(m) > 0 {
+			// MySQL driver system variables such as time_zone=... must remain in Extra
+			// only. gconv maps "time_zone" onto ConfigNode.Timezone, which is then
+			// re-emitted as DSN loc= and breaks sql.Open (see #4759).
+			delete(m, "time_zone")
 			_ = gconv.Struct(m, &node)
 		}
 	}
