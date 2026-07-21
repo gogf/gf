@@ -37,8 +37,8 @@ func (reg *Registry) Register(_ context.Context, service gsvc.Service) (register
 		metadata[k] = gconv.String(v)
 	}
 
-	// Apply default metadata if configured
-	for k, v := range reg.defaultMetadata {
+	// Apply default metadata if configured (snapshot from atomic.Value).
+	for k, v := range reg.loadDefaultMetadata() {
 		metadata[k] = v
 	}
 
