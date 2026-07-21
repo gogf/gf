@@ -8,12 +8,17 @@ package gsession_test
 
 import (
 	"context"
+	"fmt"
+	"sync"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gsession"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Test_StorageFile(t *testing.T) {
@@ -78,5 +83,70 @@ func Test_StorageFile(t *testing.T) {
 		t.Assert(s.MustSize(), 0)
 		t.Assert(s.MustGet("k5"), nil)
 		t.Assert(s.MustGet("k6"), nil)
+	})
+}
+
+// Test_StorageFile_SetSessionAtomic covers #4792: concurrent GetSession must not
+// observe a truncated file while SetSession is rewriting the same session id.
+func Test_StorageFile_SetSessionAtomic(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		dir := gfile.Temp(guid.S())
+		t.AssertNil(gfile.Mkdir(dir))
+		storage := gsession.NewStorageFile(dir, time.Minute)
+		ctx := context.TODO()
+		sessionId := "sid-atomic-" + guid.S()
+		data := gmap.NewStrAnyMapFrom(g.Map{"userId": 1, "name": "u"}, true)
+
+		// seed once
+		t.AssertNil(storage.SetSession(ctx, sessionId, data, time.Minute))
+
+		var wg sync.WaitGroup
+		errCh := make(chan error, 64)
+		// writers
+		for i := 0; i < 4; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for j := 0; j < 50; j++ {
+					d := gmap.NewStrAnyMapFrom(g.Map{"userId": 1, "n": j}, true)
+					if err := storage.SetSession(ctx, sessionId, d, time.Minute); err != nil {
+						errCh <- err
+						return
+					}
+				}
+			}()
+		}
+		// readers — must never see "missing" session while writes are in flight
+		// after the seed (len(content)>8).
+		for i := 0; i < 8; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for j := 0; j < 80; j++ {
+					got, err := storage.GetSession(ctx, sessionId, time.Minute)
+					if err != nil {
+						errCh <- err
+						return
+					}
+					if got == nil {
+						errCh <- fmt.Errorf("GetSession returned nil under concurrent SetSession")
+						return
+					}
+					if got.Get("userId") == nil {
+						errCh <- fmt.Errorf("session missing userId")
+						return
+					}
+				}
+			}()
+		}
+		wg.Wait()
+		close(errCh)
+		for err := range errCh {
+			t.AssertNil(err)
+		}
+		// final read
+		got, err := storage.GetSession(ctx, sessionId, time.Minute)
+		t.AssertNil(err)
+		t.AssertNE(got, nil)
 	})
 }

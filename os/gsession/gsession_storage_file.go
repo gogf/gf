@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -33,6 +34,9 @@ type StorageFile struct {
 	cryptoKey     []byte        // Used when enable crypto feature.
 	cryptoEnabled bool          // Used when enable crypto feature.
 	updatingIdSet *gset.StrSet  // To be batched updated session id set.
+	// sessionMu holds per-sessionId *sync.RWMutex so concurrent GetSession/SetSession
+	// on the same id never observe a truncated file mid-write (see #4792).
+	sessionMu sync.Map
 }
 
 const (
@@ -126,8 +130,17 @@ func (s *StorageFile) sessionFilePath(sessionId string) string {
 	return gfile.Join(s.path, sessionId) + ".session"
 }
 
+// sessionLock returns the per-session RWMutex used to serialize file IO.
+func (s *StorageFile) sessionLock(sessionId string) *sync.RWMutex {
+	v, _ := s.sessionMu.LoadOrStore(sessionId, &sync.RWMutex{})
+	return v.(*sync.RWMutex)
+}
+
 // RemoveAll deletes all key-value pairs from storage.
 func (s *StorageFile) RemoveAll(ctx context.Context, sessionId string) error {
+	mu := s.sessionLock(sessionId)
+	mu.Lock()
+	defer mu.Unlock()
 	return gfile.RemoveAll(s.sessionFilePath(sessionId))
 }
 
@@ -139,6 +152,10 @@ func (s *StorageFile) RemoveAll(ctx context.Context, sessionId string) error {
 //
 // This function is called ever when session starts.
 func (s *StorageFile) GetSession(ctx context.Context, sessionId string, ttl time.Duration) (sessionData *gmap.StrAnyMap, err error) {
+	mu := s.sessionLock(sessionId)
+	mu.RLock()
+	defer mu.RUnlock()
+
 	var (
 		path    = s.sessionFilePath(sessionId)
 		content = gfile.GetBytes(path)
@@ -172,9 +189,11 @@ func (s *StorageFile) GetSession(ctx context.Context, sessionId string, ttl time
 // SetSession updates the data map for specified session id.
 // This function is called ever after session, which is changed dirty, is closed.
 // This copy all session data map from memory to storage.
+//
+// Per-session lock serializes Get/Set so concurrent GetSession never observes a
+// truncated file between O_TRUNC and the following writes (see #4792).
 func (s *StorageFile) SetSession(ctx context.Context, sessionId string, sessionData *gmap.StrAnyMap, ttl time.Duration) error {
 	intlog.Printf(ctx, "StorageFile.SetSession: %s, %v, %v", sessionId, sessionData, ttl)
-	path := s.sessionFilePath(sessionId)
 	content, err := json.Marshal(sessionData)
 	if err != nil {
 		return err
@@ -186,6 +205,12 @@ func (s *StorageFile) SetSession(ctx context.Context, sessionId string, sessionD
 			return err
 		}
 	}
+
+	mu := s.sessionLock(sessionId)
+	mu.Lock()
+	defer mu.Unlock()
+
+	path := s.sessionFilePath(sessionId)
 	file, err := gfile.OpenWithFlagPerm(
 		path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm,
 	)
@@ -193,13 +218,12 @@ func (s *StorageFile) SetSession(ctx context.Context, sessionId string, sessionD
 		return err
 	}
 	defer file.Close()
+	// Same two writes as before; lock above is what makes them race-free for readers.
 	if _, err = file.Write(gbinary.EncodeInt64(gtime.TimestampMilli())); err != nil {
-		err = gerror.Wrapf(err, `write data failed to file "%s"`, path)
-		return err
+		return gerror.Wrapf(err, `write data failed to file "%s"`, path)
 	}
 	if _, err = file.Write(content); err != nil {
-		err = gerror.Wrapf(err, `write data failed to file "%s"`, path)
-		return err
+		return gerror.Wrapf(err, `write data failed to file "%s"`, path)
 	}
 	return nil
 }
