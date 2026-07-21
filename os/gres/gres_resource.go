@@ -51,9 +51,14 @@ func (r *Resource) Add(content string, prefix ...string) error {
 	if len(prefix) > 0 {
 		namePrefix = prefix[0]
 	}
+	namePrefix = strings.ReplaceAll(namePrefix, `\`, `/`)
 	for i := 0; i < len(files); i++ {
 		files[i].resource = r
-		r.tree.Set(namePrefix+files[i].file.Name, files[i])
+		// Always store with `/` separators so Get works cross-platform (#4782).
+		name := namePrefix + files[i].file.Name
+		name = strings.ReplaceAll(name, `\`, `/`)
+		name = strings.ReplaceAll(name, `//`, `/`)
+		r.tree.Set(name, files[i])
 	}
 	intlog.Printf(context.TODO(), "Add %d files to resource manager", r.tree.Size())
 	return nil

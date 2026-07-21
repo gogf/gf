@@ -63,8 +63,10 @@ func doZipPathWriter(srcPath string, zipWriter *zip.Writer, option ...Option) er
 		files = []string{absolutePath}
 	}
 	headerPrefix := usedOption.Prefix
+	// Resource keys always use `/` (see Separator), including on Windows (#4782).
+	headerPrefix = toResourcePath(headerPrefix)
 	if headerPrefix != "/" {
-		headerPrefix = strings.TrimRight(headerPrefix, `\/`)
+		headerPrefix = strings.TrimRight(headerPrefix, `/`)
 	}
 	if headerPrefix != "" && gfile.IsDir(absolutePath) {
 		headerPrefix += "/"
@@ -78,6 +80,7 @@ func doZipPathWriter(srcPath string, zipWriter *zip.Writer, option ...Option) er
 		} else {
 			headerPrefix = gfile.Basename(absolutePath)
 		}
+		headerPrefix = toResourcePath(headerPrefix)
 	}
 	headerPrefix = strings.ReplaceAll(headerPrefix, `//`, `/`)
 	for _, file := range files {
@@ -93,6 +96,8 @@ func doZipPathWriter(srcPath string, zipWriter *zip.Writer, option ...Option) er
 		if subFilePath != "" {
 			subFilePath = gfile.Dir(subFilePath)
 		}
+		// Windows ScanDir paths use `\`; force resource-style separators.
+		subFilePath = toResourcePath(subFilePath)
 		if err = zipFile(file, headerPrefix+subFilePath, zipWriter); err != nil {
 			return err
 		}
@@ -101,10 +106,15 @@ func doZipPathWriter(srcPath string, zipWriter *zip.Writer, option ...Option) er
 	if headerPrefix != "" {
 		var (
 			name    string
-			tmpPath = headerPrefix
+			tmpPath = strings.TrimRight(headerPrefix, `/`)
 		)
+		if tmpPath == "" {
+			tmpPath = `/`
+		}
 		for {
-			name = strings.ReplaceAll(gfile.Basename(tmpPath), `\`, `/`)
+			name = gfile.Basename(tmpPath)
+			name = toResourcePath(name)
+			tmpPath = toResourcePath(tmpPath)
 			err = zipFileVirtual(fileinfo.New(name, 0, os.ModeDir|os.ModePerm, time.Now()), tmpPath, zipWriter)
 			if err != nil {
 				return err
@@ -112,7 +122,12 @@ func doZipPathWriter(srcPath string, zipWriter *zip.Writer, option ...Option) er
 			if tmpPath == `/` || !strings.Contains(tmpPath, `/`) {
 				break
 			}
-			tmpPath = gfile.Dir(tmpPath)
+			// Avoid gfile.Dir which may reintroduce OS separators on Windows.
+			if i := strings.LastIndex(tmpPath, `/`); i > 0 {
+				tmpPath = tmpPath[:i]
+			} else {
+				break
+			}
 		}
 	}
 	return nil
@@ -162,7 +177,7 @@ func zipFileVirtual(info os.FileInfo, path string, zw *zip.Writer) error {
 	if err != nil {
 		return err
 	}
-	header.Name = path
+	header.Name = toResourcePath(path)
 	if _, err = zw.CreateHeader(header); err != nil {
 		err = gerror.Wrapf(err, `create zip header failed for %#v`, header)
 		return err
@@ -178,8 +193,18 @@ func createFileHeader(info os.FileInfo, prefix string) (*zip.FileHeader, error) 
 	}
 	if len(prefix) > 0 {
 		header.Name = prefix + `/` + header.Name
-		header.Name = strings.ReplaceAll(header.Name, `\`, `/`)
-		header.Name, _ = gregex.ReplaceString(`/{2,}`, `/`, header.Name)
 	}
+	header.Name = toResourcePath(header.Name)
 	return header, nil
+}
+
+// toResourcePath forces path separators to `/` for packed resource keys.
+// gres.Get always normalizes lookups to `/`; mixed `\` keys break Windows packs (#4782).
+func toResourcePath(path string) string {
+	if path == "" {
+		return path
+	}
+	path = strings.ReplaceAll(path, `\`, `/`)
+	path, _ = gregex.ReplaceString(`/{2,}`, `/`, path)
+	return path
 }

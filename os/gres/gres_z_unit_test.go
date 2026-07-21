@@ -10,11 +10,11 @@ import (
 	"strings"
 	"testing"
 
-	_ "github.com/gogf/gf/v2/os/gres/testdata/data"
-
+	"github.com/gogf/gf/v2/encoding/gbase64"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gres"
+	_ "github.com/gogf/gf/v2/os/gres/testdata/data"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 )
@@ -119,6 +119,28 @@ func Test_PackWithPrefix2(t *testing.T) {
 		)
 		t.AssertNil(err)
 		_ = gfile.Remove(goFilePath)
+	})
+}
+
+// Test_Issue4782_PackPrefixSeparators ensures packed resource keys always use `/`
+// even when prefix or OS paths contain backslashes (Windows). See #4782.
+func Test_Issue4782_PackPrefixSeparators(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		srcPath := gtest.DataPath("files")
+		// Simulate Windows-style prefix users pass on CLI / config.
+		data, err := gres.PackWithOption(srcPath, gres.Option{Prefix: `api\i18n`})
+		t.AssertNil(err)
+		r := gres.New()
+		t.AssertNil(r.Add(gbase64.EncodeToString(data)))
+		// Lookup must succeed with forward-slash path (gi18n.SetPath style).
+		t.Assert(r.Contains("api/i18n"), true)
+		// No raw backslash keys should be stored.
+		for _, f := range r.ScanDir("api", "*", true) {
+			t.Assert(strings.Contains(f.Name(), `\`), false)
+		}
+		// File under packed tree reachable via `/`.
+		files := r.ScanDirFile("api/i18n", "*", true)
+		t.AssertGT(len(files), 0)
 	})
 }
 
