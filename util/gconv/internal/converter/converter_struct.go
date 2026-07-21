@@ -500,9 +500,10 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 
 	kind := structFieldValue.Kind()
 	// Converting using `Set` interface implements, for some types.
+	// Array kinds are never nil; reflect.Value.IsNil panics on them (e.g. uuid.UUID is [16]byte).
 	switch kind {
 	case reflect.Slice, reflect.Array, reflect.Pointer, reflect.Interface:
-		if !structFieldValue.IsNil() {
+		if !utils.CanCallIsNil(structFieldValue) || !structFieldValue.IsNil() {
 			if v, ok := structFieldValue.Interface().(localinterface.ISet); ok {
 				v.Set(value)
 				return nil
@@ -525,9 +526,32 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
 		}
 
+	// Fixed-size arrays that implement UnmarshalText/JSON (e.g. uuid.UUID as [16]byte)
+	// must not go through MakeSlice — that only works for slice destinations.
+	case reflect.Array:
+		if ok, err = bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok || err != nil {
+			return err
+		}
+		// Fallback: element-wise assign when source is a sequence of the same length.
+		reflectValue := reflect.ValueOf(value)
+		if (reflectValue.Kind() == reflect.Slice || reflectValue.Kind() == reflect.Array) &&
+			reflectValue.Len() == structFieldValue.Len() {
+			for i := 0; i < structFieldValue.Len(); i++ {
+				if err = c.bindVarToReflectValue(structFieldValue.Index(i), reflectValue.Index(i).Interface(), option); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`cannot convert value "%v" to type "%s"`,
+			value, structFieldValue.Type().String(),
+		)
+
 	// Note that the slice element might be type of struct,
 	// so it uses Struct function doing the converting internally.
-	case reflect.Slice, reflect.Array:
+	case reflect.Slice:
 		var (
 			reflectArray  reflect.Value
 			reflectValue  = reflect.ValueOf(value)
@@ -557,15 +581,22 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 					} else {
 						elem = reflect.New(elemType).Elem()
 					}
-					if elem.Kind() == reflect.Struct {
-						if err = c.Struct(reflectValue.Index(i).Interface(), elem, option); err == nil {
+					srcElem := reflectValue.Index(i).Interface()
+					// Array/named types with UnmarshalText (uuid.UUID) and structs first.
+					if ok, ierr := bindVarToReflectValueWithInterfaceCheck(elem, srcElem); ok {
+						if ierr != nil {
+							return ierr
+						}
+						converted = true
+					} else if elem.Kind() == reflect.Struct {
+						if err = c.Struct(srcElem, elem, option); err == nil {
 							converted = true
 						}
 					}
 					if !converted {
 						err = c.doConvertWithReflectValueSet(
 							elem, doConvertInput{
-								FromValue:  reflectValue.Index(i).Interface(),
+								FromValue:  srcElem,
 								ToTypeName: elemTypeName,
 								ReferValue: elem,
 							},
@@ -615,7 +646,12 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 			} else {
 				elem = reflect.New(elemType).Elem()
 			}
-			if elem.Kind() == reflect.Struct {
+			if ok, ierr := bindVarToReflectValueWithInterfaceCheck(elem, value); ok {
+				if ierr != nil {
+					return ierr
+				}
+				converted = true
+			} else if elem.Kind() == reflect.Struct {
 				if err = c.Struct(value, elem, option); err == nil {
 					converted = true
 				}
