@@ -10,11 +10,12 @@ import (
 	"strings"
 	"testing"
 
+	_ "github.com/gogf/gf/v2/os/gres/testdata/data"
+
 	"github.com/gogf/gf/v2/encoding/gbase64"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gres"
-	_ "github.com/gogf/gf/v2/os/gres/testdata/data"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 )
