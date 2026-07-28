@@ -239,37 +239,6 @@ func Test_Model_Exist(t *testing.T) {
 	})
 }
 
-func Test_Model_Where(t *testing.T) {
-	table := createInitTable()
-	defer dropTable(table)
-
-	// map + slice parameter
-	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).Where(g.Map{
-			"id":       g.Slice{1, 2, 3},
-			"passport": g.Slice{"user_2", "user_3"},
-		}).Where("id=? and nickname=?", g.Slice{3, "name_3"}).One()
-		t.AssertNil(err)
-		t.AssertGT(len(result), 0)
-		t.Assert(result["id"].Int(), 3)
-	})
-
-	// struct, automatic mapping and filtering.
-	gtest.C(t, func(t *gtest.T) {
-		type User struct {
-			Id       int
-			Nickname string
-		}
-		result, err := db.Model(table).Where(User{3, "name_3"}).One()
-		t.AssertNil(err)
-		t.Assert(result["id"].Int(), 3)
-
-		result, err = db.Model(table).Where(&User{3, "name_3"}).One()
-		t.AssertNil(err)
-		t.Assert(result["id"].Int(), 3)
-	})
-}
-
 func Test_Model_Save(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)

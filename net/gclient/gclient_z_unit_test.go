@@ -719,3 +719,213 @@ func TestClient_NoUrlEncode(t *testing.T) {
 		t.Assert(c.NoUrlEncode().GetContent(ctx, `/`, params), `path=/data/binlog`)
 	})
 }
+
+func TestClient_NewWithHttpClient_NilPanics(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var panicked bool
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					panicked = true
+					t.Assert(fmt.Sprintf("%v", r), `gclient: client must not be nil`)
+				}
+			}()
+			gclient.NewWithHttpClient(nil)
+		}()
+		t.Assert(panicked, true)
+	})
+}
+
+func TestClient_SetTransportTimeout_ShouldUpdateTransportTimeouts(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		client := gclient.New()
+		responseHeaderTimeout := 5 * time.Second
+		tlsHandshakeTimeout := 3 * time.Second
+		expectContinueTimeout := 2 * time.Second
+
+		// Set transport timeouts
+		client.SetTransportTimeout(responseHeaderTimeout, tlsHandshakeTimeout, expectContinueTimeout)
+
+		// Verify transport timeouts
+		transport, ok := client.Transport.(*http.Transport)
+		t.Assert(ok, true)
+		t.Assert(transport.ResponseHeaderTimeout, responseHeaderTimeout)
+		t.Assert(transport.TLSHandshakeTimeout, tlsHandshakeTimeout)
+		t.Assert(transport.ExpectContinueTimeout, expectContinueTimeout)
+
+		// Verify that client timeout remains at default (30s from New())
+		t.Assert(client.Client.Timeout, 30*time.Second)
+
+		// Verify that IdleConnTimeout is not changed (should remain default from DefaultTransport)
+		defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+		t.Assert(ok, true)
+		t.Assert(transport.IdleConnTimeout, defaultTransport.IdleConnTimeout)
+	})
+}
+
+func TestClient_SetTimeout_ShouldOnlyUpdateClientTimeout(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		client := gclient.New()
+		timeout := 5 * time.Second
+
+		// Set timeout
+		client.SetTimeout(timeout)
+
+		// Verify client timeout
+		t.Assert(client.Client.Timeout, timeout)
+
+		// Verify transport timeouts are not changed (should remain defaults)
+		transport, ok := client.Transport.(*http.Transport)
+		t.Assert(ok, true)
+		defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+		t.Assert(ok, true)
+		// ResponseHeaderTimeout should match DefaultTransport
+		t.Assert(transport.ResponseHeaderTimeout, defaultTransport.ResponseHeaderTimeout)
+		// TLSHandshakeTimeout should match DefaultTransport
+		t.Assert(transport.TLSHandshakeTimeout, defaultTransport.TLSHandshakeTimeout)
+		// ExpectContinueTimeout should match DefaultTransport
+		t.Assert(transport.ExpectContinueTimeout, defaultTransport.ExpectContinueTimeout)
+	})
+}
+
+func TestClient_SetTimeout_WithDifferentValues(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		client := gclient.New()
+
+		// Test with various timeout values
+		testCases := []time.Duration{
+			1 * time.Second,
+			10 * time.Second,
+			30 * time.Second,
+			1 * time.Minute,
+		}
+
+		for _, timeout := range testCases {
+			client.SetTimeout(timeout)
+
+			// Verify client timeout is set correctly
+			t.Assert(client.Client.Timeout, timeout)
+
+			// Verify transport timeouts remain unchanged (defaults)
+			transport, ok := client.Transport.(*http.Transport)
+			t.Assert(ok, true)
+			// ResponseHeaderTimeout should remain 0 (not set by default)
+			t.Assert(transport.ResponseHeaderTimeout, 0*time.Second)
+		}
+	})
+}
+
+func TestClient_Clone_ShouldPreserveTimeoutSettings(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		original := gclient.New()
+		timeout := 5 * time.Second
+		original.SetTimeout(timeout)
+
+		// Clone the client
+		cloned := original.Clone()
+
+		// Verify cloned client has same timeout
+		t.Assert(cloned.Client.Timeout, timeout)
+
+		// Verify transport timeouts are preserved (should be defaults from DefaultTransport)
+		transport, ok := cloned.Transport.(*http.Transport)
+		t.Assert(ok, true)
+		defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+		t.Assert(ok, true)
+		// ResponseHeaderTimeout should match DefaultTransport
+		t.Assert(transport.ResponseHeaderTimeout, defaultTransport.ResponseHeaderTimeout)
+		// TLSHandshakeTimeout should match DefaultTransport
+		t.Assert(transport.TLSHandshakeTimeout, defaultTransport.TLSHandshakeTimeout)
+
+		// Modify cloned client's timeout
+		newTimeout := 10 * time.Second
+		cloned.SetTimeout(newTimeout)
+
+		// Verify original client's timeout is unchanged
+		t.Assert(original.Client.Timeout, timeout)
+
+		// Verify cloned client has new timeout
+		t.Assert(cloned.Client.Timeout, newTimeout)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		client := gclient.New()
+		client.SetResponseHeaderTimeout(5 * time.Second)
+		transport, ok := client.Transport.(*http.Transport)
+		t.Assert(ok, true)
+		t.Assert(transport.ResponseHeaderTimeout, 5*time.Second)
+
+		client.SetTLSHandshakeTimeout(3 * time.Second)
+		t.Assert(transport.TLSHandshakeTimeout, 3*time.Second)
+
+		client.SetExpectContinueTimeout(2 * time.Second)
+		t.Assert(transport.ExpectContinueTimeout, 2*time.Second)
+
+		// Verify client timeout is still at default (30s from New())
+		t.Assert(client.Client.Timeout, 30*time.Second)
+	})
+}
+
+func TestClient_SetTransportTimeout_WithIndividualMethods(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		client := gclient.New()
+
+		// Test SetResponseHeaderTimeout
+		client.SetResponseHeaderTimeout(5 * time.Second)
+		transport, ok := client.Transport.(*http.Transport)
+		t.Assert(ok, true)
+		t.Assert(transport.ResponseHeaderTimeout, 5*time.Second)
+
+		// Test SetTLSHandshakeTimeout
+		client.SetTLSHandshakeTimeout(3 * time.Second)
+		t.Assert(transport.TLSHandshakeTimeout, 3*time.Second)
+
+		// Test SetExpectContinueTimeout
+		client.SetExpectContinueTimeout(2 * time.Second)
+		t.Assert(transport.ExpectContinueTimeout, 2*time.Second)
+
+		// Verify client timeout is still at default (30s from New())
+		t.Assert(client.Client.Timeout, 30*time.Second)
+
+		// Verify that other timeouts are preserved from DefaultTransport
+		defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+		t.Assert(ok, true)
+		t.Assert(transport.IdleConnTimeout, defaultTransport.IdleConnTimeout)
+	})
+}
+
+func TestClient_SetTransportTimeout_ShouldNotAffectClientTimeout(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		client := gclient.New()
+		clientTimeout := 10 * time.Second
+		client.SetTimeout(clientTimeout)
+
+		// Set transport timeouts
+		client.SetTransportTimeout(5*time.Second, 3*time.Second, 2*time.Second)
+
+		// Verify client timeout is unchanged
+		t.Assert(client.Client.Timeout, clientTimeout)
+
+		// Verify transport timeouts are set
+		transport, ok := client.Transport.(*http.Transport)
+		t.Assert(ok, true)
+		t.Assert(transport.ResponseHeaderTimeout, 5*time.Second)
+		t.Assert(transport.TLSHandshakeTimeout, 3*time.Second)
+		t.Assert(transport.ExpectContinueTimeout, 2*time.Second)
+	})
+}
+
+func TestClient_SetTransportTimeout_ZeroValues(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		client := gclient.New()
+
+		// Set zero values (effectively disable timeouts)
+		client.SetTransportTimeout(0, 0, 0)
+
+		transport, ok := client.Transport.(*http.Transport)
+		t.Assert(ok, true)
+		t.Assert(transport.ResponseHeaderTimeout, 0*time.Second)
+		t.Assert(transport.TLSHandshakeTimeout, 0*time.Second)
+		t.Assert(transport.ExpectContinueTimeout, 0*time.Second)
+	})
+}

@@ -208,6 +208,28 @@ func formatFieldName(fieldName string, nameCase FieldNameCase) string {
 	}
 }
 
+// formatFileName formats and returns a new file name for generated source files.
+func formatFileName(fileName, nameCase string) string {
+	if nameCase == "" {
+		nameCase = string(gstr.Snake)
+	}
+	fileName = normalizeNameForCaseConvert(fileName)
+	fileName = gstr.Trim(gstr.CaseConvert(fileName, gstr.CaseTypeMatch(nameCase)), "-_.")
+	if len(fileName) > 5 && fileName[len(fileName)-5:] == "_test" {
+		// Add suffix to avoid the table name which contains "_test",
+		// which would make the go file a testing file.
+		fileName += "_table"
+	}
+	return fileName
+}
+
+func normalizeNameForCaseConvert(name string) string {
+	if isAllUpper(name) {
+		return strings.ToLower(name)
+	}
+	return name
+}
+
 // isAllUpper checks and returns whether given `fieldName` all letters are upper case.
 func isAllUpper(fieldName string) bool {
 	for _, b := range fieldName {
