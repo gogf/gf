@@ -14,6 +14,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/fatih/color"
@@ -36,6 +37,7 @@ import (
 type Logger struct {
 	parent *Logger // Parent logger, if it is not empty, it means the logger is used in chaining function.
 	config Config  // Logger configuration.
+	mu     sync.RWMutex
 }
 
 const (
@@ -76,6 +78,8 @@ func NewWithWriter(writer io.Writer) *Logger {
 // Clone returns a new logger, which a `shallow copy` of the current logger.
 // Note that the attribute `config` of the cloned one is the shallow copy of current one.
 func (l *Logger) Clone() *Logger {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 	return &Logger{
 		config: l.config,
 		parent: l,
@@ -95,6 +99,8 @@ func (l *Logger) getFilePath(now time.Time) string {
 
 // print prints `s` to defined writer, logging file or passed `std`.
 func (l *Logger) print(ctx context.Context, level int, stack string, values ...any) {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 	// Lazy initialize for rotation feature.
 	// It uses atomic reading operation to enhance the performance checking.
 	// It here uses CAP for performance and concurrent safety.
@@ -222,6 +228,8 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...a
 
 // doFinalPrint outputs the logging content according configuration.
 func (l *Logger) doFinalPrint(ctx context.Context, input *HandlerInput) *bytes.Buffer {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 	var buffer *bytes.Buffer
 	// Allow output to stdout?
 	if l.config.StdoutPrint {
@@ -369,10 +377,12 @@ func (l *Logger) printErr(ctx context.Context, level int, values ...any) {
 	if l == nil {
 		return
 	}
+	l.mu.RLock()
 	var stack string
 	if l.config.StStatus == 1 {
 		stack = l.GetStack()
 	}
+	l.mu.RUnlock()
 	// In matter of sequence, do not use stderr here, but use the same stdout.
 	l.print(ctx, level, stack, values...)
 }
@@ -395,6 +405,8 @@ func (l *Logger) PrintStack(ctx context.Context, skip ...int) {
 // GetStack returns the caller stack content,
 // the optional parameter `skip` specify the skipped stack offset from the end point.
 func (l *Logger) GetStack(skip ...int) string {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 	stackSkip := l.config.StSkip
 	if len(skip) > 0 {
 		stackSkip += skip[0]
