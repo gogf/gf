@@ -77,6 +77,16 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 	}
 	parameter.Schema = schemaRef
 
+	// If the parameter is a query parameter with an object schema,
+	// set style: deepObject and explode: true per OpenAPI 3.0 specification.
+	// This ensures client generators (e.g. openapi-generator) correctly serialize
+	// nested struct query parameters as ?Param[Field]=value.
+	if parameter.In == ParameterInQuery && schemaRef.Value != nil && schemaRef.Value.Type == TypeObject {
+		parameter.Style = "deepObject"
+		var explodeTrue = true
+		parameter.Explode = &explodeTrue
+	}
+
 	// Ignore parameter.
 	if !isValidParameterName(parameter.Name) {
 		return nil, nil
