@@ -118,6 +118,10 @@ func (c *Config) Get(ctx context.Context, pattern string, def ...any) (*gvar.Var
 // It returns the default value `def` if none of them exists.
 //
 // Fetching Rules: Environment arguments are in uppercase format, eg: GF_PACKAGE_VARIABLE.
+//
+// Note: This method uses the configuration (adapter) as the primary source, with environment
+// variable as fallback only when the configuration value is not found. If you need standard
+// priority where environment variables can override configuration values, use GetEffective instead.
 func (c *Config) GetWithEnv(ctx context.Context, pattern string, def ...any) (*gvar.Var, error) {
 	value, err := c.Get(ctx, pattern)
 	if err != nil && gerror.Code(err) != gcode.CodeNotFound {
@@ -140,6 +144,10 @@ func (c *Config) GetWithEnv(ctx context.Context, pattern string, def ...any) (*g
 // It returns the default value `def` if none of them exists.
 //
 // Fetching Rules: Command line arguments are in lowercase format, eg: gf.package.variable.
+//
+// Note: This method uses configuration file as the primary source, with command line argument
+// as fallback only when config value is not found. If you need standard priority where
+// command line arguments can override config file values, use GetEffective instead.
 func (c *Config) GetWithCmd(ctx context.Context, pattern string, def ...any) (*gvar.Var, error) {
 	value, err := c.Get(ctx, pattern)
 	if err != nil && gerror.Code(err) != gcode.CodeNotFound {
@@ -155,6 +163,48 @@ func (c *Config) GetWithCmd(ctx context.Context, pattern string, def ...any) (*g
 		return nil, nil
 	}
 	return value, nil
+}
+
+// GetEffective returns the configuration value with standard priority (highest to lowest):
+//
+//	Command line arguments > Environment variables > Configuration file > Default value
+//
+// This follows the 12-Factor App methodology where higher priority sources can override
+// lower priority ones, allowing runtime configuration without modifying config files.
+//
+// Key format conversion:
+//   - Command line: lowercase with dots, eg: gf.package.variable (--gf.package.variable=value)
+//   - Environment: uppercase with underscores, eg: GF_PACKAGE_VARIABLE
+//
+// Unlike GetWithEnv/GetWithCmd which use config file as primary source, this method
+// treats command line and environment variables as overrides, which is the standard
+// behavior in frameworks like Spring Boot and Viper.
+func (c *Config) GetEffective(ctx context.Context, pattern string, def ...any) (*gvar.Var, error) {
+	// 1. Command line arguments (highest priority)
+	cmdKey := utils.FormatCmdKey(pattern)
+	if command.ContainsOpt(cmdKey) {
+		return gvar.New(command.GetOpt(cmdKey)), nil
+	}
+
+	// 2. Environment variables
+	if v := genv.Get(utils.FormatEnvKey(pattern)); v != nil {
+		return v, nil
+	}
+
+	// 3. Configuration file
+	value, err := c.Get(ctx, pattern)
+	if err != nil && gerror.Code(err) != gcode.CodeNotFound {
+		return nil, err
+	}
+	if value != nil {
+		return value, nil
+	}
+
+	// 4. Default value
+	if len(def) > 0 {
+		return gvar.New(def[0]), nil
+	}
+	return nil, nil
 }
 
 // Data retrieves and returns all configuration data as map type.
@@ -186,6 +236,15 @@ func (c *Config) MustGetWithEnv(ctx context.Context, pattern string, def ...any)
 // MustGetWithCmd acts as function GetWithCmd, but it panics if error occurs.
 func (c *Config) MustGetWithCmd(ctx context.Context, pattern string, def ...any) *gvar.Var {
 	v, err := c.GetWithCmd(ctx, pattern, def...)
+	if err != nil {
+		panic(err)
+	}
+	return v
+}
+
+// MustGetEffective acts as function GetEffective, but it panics if error occurs.
+func (c *Config) MustGetEffective(ctx context.Context, pattern string, def ...any) *gvar.Var {
+	v, err := c.GetEffective(ctx, pattern, def...)
 	if err != nil {
 		panic(err)
 	}

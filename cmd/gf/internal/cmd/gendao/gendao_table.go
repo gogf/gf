@@ -17,7 +17,6 @@ import (
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gview"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/consts"
@@ -67,13 +66,7 @@ func generateTableSingle(ctx context.Context, in generateTableSingleInput) {
 		mlog.Fatalf(`fetching tables fields failed for table "%s": %+v`, in.TableName, err)
 	}
 
-	tableNameSnakeCase := gstr.CaseSnake(in.NewTableName)
-	fileName := gstr.Trim(tableNameSnakeCase, "-_.")
-	if len(fileName) > 5 && fileName[len(fileName)-5:] == "_test" {
-		// Add suffix to avoid the table name which contains "_test",
-		// which would make the go file a testing file.
-		fileName += "_table"
-	}
+	fileName := formatFileName(in.NewTableName, in.FileNameCase)
 	path := filepath.FromSlash(gfile.Join(in.DirPathTable, fileName+".go"))
 	in.genItems.AppendGeneratedFilePath(path)
 	if in.OverwriteDao || !gfile.Exists(path) {

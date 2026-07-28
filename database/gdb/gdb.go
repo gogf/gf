@@ -990,19 +990,14 @@ func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 // Instance returns an instance for DB operations.
 // The parameter `name` specifies the configuration group name,
 // which is DefaultGroupName in default.
-func Instance(name ...string) (db DB, err error) {
+func Instance(name ...string) (DB, error) {
 	group := configs.group
 	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
-	v := instances.GetOrSetFuncLock(group, func() DB {
-		db, err = NewByGroup(group)
-		return db
+	return instances.GetOrSetFuncLockWithError(group, func() (DB, error) {
+		return NewByGroup(group)
 	})
-	if v != nil {
-		return v, nil
-	}
-	return nil, err
 }
 
 // getConfigNodeByGroup calculates and returns a configuration node of given group. It
