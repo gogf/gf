@@ -146,5 +146,7 @@ func (l *Logger) checkLevel(level int) bool {
 	if l == nil {
 		return false
 	}
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 	return l.config.Level&level > 0
 }
