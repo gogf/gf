@@ -142,6 +142,9 @@ func (r *Request) GetQueryStruct(pointer any, mapping ...map[string]string) erro
 func (r *Request) doGetQueryStruct(pointer any, mapping ...map[string]string) (data map[string]any, err error) {
 	r.parseQuery()
 	data = r.GetQueryMap()
+	if err = r.GetError(); err != nil {
+		return nil, err
+	}
 	if data == nil {
 		data = map[string]any{}
 	}

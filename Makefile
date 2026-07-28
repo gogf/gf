@@ -34,6 +34,7 @@ branch:
 version:
 	@set -e; \
 	newVersion=$(to); \
+	$(MAKE) -C cmd/gf pack; \
 	./.make_version.sh ./ $$newVersion; \
 	echo "make version to=$(to) done"
 
