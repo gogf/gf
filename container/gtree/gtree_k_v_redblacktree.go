@@ -511,11 +511,12 @@ func (tree *RedBlackKVTree[K, V]) PopLeft() *RedBlackKVTreeNode[K, V] {
 	if node == nil {
 		return nil
 	}
-	tree.doRemove(node.Key)
-	return &RedBlackKVTreeNode[K, V]{
+	popped := &RedBlackKVTreeNode[K, V]{
 		Key:   node.Key,
 		Value: node.Value,
 	}
+	tree.tree.Remove(node.Key)
+	return popped
 }
 
 // Right returns the maximum element corresponding to the comparator of the tree or nil if the tree is empty.
@@ -541,11 +542,12 @@ func (tree *RedBlackKVTree[K, V]) PopRight() *RedBlackKVTreeNode[K, V] {
 	if node == nil {
 		return nil
 	}
-	tree.doRemove(node.Key)
-	return &RedBlackKVTreeNode[K, V]{
+	popped := &RedBlackKVTreeNode[K, V]{
 		Key:   node.Key,
 		Value: node.Value,
 	}
+	tree.tree.Remove(node.Key)
+	return popped
 }
 
 // Floor Finds floor node of the input key, returns the floor node or nil if no floor node is found.
