@@ -186,20 +186,21 @@ func (s *StorageFile) SetSession(ctx context.Context, sessionId string, sessionD
 			return err
 		}
 	}
-	file, err := gfile.OpenWithFlagPerm(
-		path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm,
-	)
-	if err != nil {
-		return err
+	// Build content with 8-byte timestamp prefix (same format as before).
+	timestamp := gbinary.EncodeInt64(gtime.TimestampMilli())
+	data := make([]byte, 8+len(content))
+	copy(data[:8], timestamp)
+	copy(data[8:], content)
+
+	// Atomic write: write to temp file first, then rename.
+	// This prevents concurrent readers from seeing an empty/partial file.
+	tmpPath := path + ".tmp"
+	if err := os.WriteFile(tmpPath, data, os.ModePerm); err != nil {
+		return gerror.Wrapf(err, `write data failed to file "%s"`, tmpPath)
 	}
-	defer file.Close()
-	if _, err = file.Write(gbinary.EncodeInt64(gtime.TimestampMilli())); err != nil {
-		err = gerror.Wrapf(err, `write data failed to file "%s"`, path)
-		return err
-	}
-	if _, err = file.Write(content); err != nil {
-		err = gerror.Wrapf(err, `write data failed to file "%s"`, path)
-		return err
+	if err := os.Rename(tmpPath, path); err != nil {
+		os.Remove(tmpPath)
+		return gerror.Wrapf(err, `rename "%s" -> "%s" failed`, tmpPath, path)
 	}
 	return nil
 }
