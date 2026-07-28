@@ -91,7 +91,7 @@ func TestLogger_SetHandlers_HandlerJson(t *testing.T) {
 		t.Assert(output["Level"], "DEBU")
 		t.Assert(output["Name"], "john")
 		t.Assert(output["Uid"], float64(100))
-		t.Assert(output["CtxStr"], nil)
+		t.Assert(output["CtxStr"], "1234567890, abcdefg")
 		t.Assert(output["Content"], nil)
 		t.Assert(gstr.Contains(w.String(), `"{\"`), false)
 	})
@@ -137,6 +137,66 @@ func readJsonHandlerOutput(t *gtest.T, w *bytes.Buffer) map[string]any {
 	return output
 }
 
+func TestLogger_SetHandlers_HandlerJson_Prefix(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		w := bytes.NewBuffer(nil)
+		l := glog.NewWithWriter(w)
+		l.SetHandlers(glog.HandlerJson)
+		l.SetPrefix("my-prefix")
+
+		l.Debug(context.Background(), "test content")
+		output := readJsonHandlerOutput(t, w)
+		t.Assert(output["Prefix"], "my-prefix")
+		t.Assert(output["Content"], "test content")
+		t.Assert(output["Level"], "DEBU")
+	})
+}
+
+func TestLogger_SetHandlers_HandlerJson_ReservedKeyProtection(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		w := bytes.NewBuffer(nil)
+		l := glog.NewWithWriter(w)
+		l.SetHandlers(glog.HandlerJson)
+		// Try to use reserved keys as context keys.
+		l.SetCtxKeys("Time", "Level", "TraceId")
+		ctx := context.WithValue(context.Background(), "Time", "spoofed-time")
+		ctx = context.WithValue(ctx, "Level", "spoofed-level")
+		ctx = context.WithValue(ctx, "TraceId", "spoofed-trace")
+
+		l.Debug(ctx, "test content")
+		output := readJsonHandlerOutput(t, w)
+		// Reserved keys should not be overwritten by context values.
+		t.AssertNE(output["Time"], "spoofed-time")
+		t.Assert(output["Level"], "DEBU")
+		t.AssertNE(output["TraceId"], "spoofed-trace")
+		t.Assert(output["Content"], "test content")
+	})
+}
+
+func TestLogger_SetHandlers_HandlerJson_ContentReservedKeyProtection(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		w := bytes.NewBuffer(nil)
+		l := glog.NewWithWriter(w)
+		l.SetHandlers(glog.HandlerJson)
+
+		// JSON content with reserved keys should not overwrite core metadata.
+		l.Debug(context.Background(), g.Map{
+			"Time":    "spoofed-time",
+			"Level":   "spoofed-level",
+			"Stack":   "spoofed-stack",
+			"Content": "spoofed-content",
+			"Name":    "john",
+		})
+		output := readJsonHandlerOutput(t, w)
+		// Reserved keys in content should be skipped.
+		t.AssertNE(output["Time"], "spoofed-time")
+		t.Assert(output["Level"], "DEBU")
+		t.AssertNE(output["Stack"], "spoofed-stack")
+		// Non-reserved keys should be flattened.
+		t.Assert(output["Name"], "john")
+	})
+}
+
 func TestLogger_SetHandlers_HandlerStructure(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		w := bytes.NewBuffer(nil)
@@ -171,8 +231,8 @@ func Test_SetDefaultHandler(t *testing.T) {
 		ctx = context.WithValue(ctx, "Span-Id", "abcdefg")
 
 		l.Debug(ctx, 1, 2, 3)
-		t.Assert(gstr.Count(w.String(), "1234567890"), 1)
-		t.Assert(gstr.Count(w.String(), "abcdefg"), 1)
+		t.Assert(gstr.Count(w.String(), "1234567890"), 2)
+		t.Assert(gstr.Count(w.String(), "abcdefg"), 2)
 		t.Assert(gstr.Count(w.String(), `"1 2 3"`), 1)
 		t.Assert(gstr.Count(w.String(), `"DEBU"`), 1)
 	})
