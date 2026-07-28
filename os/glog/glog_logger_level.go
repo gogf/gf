@@ -8,6 +8,7 @@ package glog
 
 import (
 	"strings"
+	"sync"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -66,16 +67,22 @@ var levelStringMap = map[string]int{
 // Note that levels ` LEVEL_CRIT | LEVEL_PANI | LEVEL_FATA ` cannot be removed for logging content,
 // which are automatically added to levels.
 func (l *Logger) SetLevel(level int) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.config.Level = level | LEVEL_CRIT | LEVEL_PANI | LEVEL_FATA
 }
 
 // GetLevel returns the logging level value.
 func (l *Logger) GetLevel() int {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 	return l.config.Level
 }
 
 // SetLevelStr sets the logging level by level string.
 func (l *Logger) SetLevelStr(levelStr string) error {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	if level, ok := levelStringMap[strings.ToUpper(levelStr)]; ok {
 		l.config.Level = level
 	} else {
@@ -86,11 +93,15 @@ func (l *Logger) SetLevelStr(levelStr string) error {
 
 // SetLevelPrefix sets the prefix string for specified level.
 func (l *Logger) SetLevelPrefix(level int, prefix string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.config.LevelPrefixes[level] = prefix
 }
 
 // SetLevelPrefixes sets the level to prefix string mapping for the logger.
 func (l *Logger) SetLevelPrefixes(prefixes map[int]string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	for k, v := range prefixes {
 		l.config.LevelPrefixes[k] = v
 	}
@@ -98,11 +109,15 @@ func (l *Logger) SetLevelPrefixes(prefixes map[int]string) {
 
 // GetLevelPrefix returns the prefix string for specified level.
 func (l *Logger) GetLevelPrefix(level int) string {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 	return l.config.LevelPrefixes[level]
 }
 
 // getLevelPrefixWithBrackets returns the prefix string with brackets for specified level.
 func (l *Logger) getLevelPrefixWithBrackets(level int) string {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 	levelStr := ""
 	if s, ok := l.config.LevelPrefixes[level]; ok {
 		levelStr = "[" + s + "]"
