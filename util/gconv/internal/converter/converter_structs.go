@@ -115,6 +115,23 @@ func (c *Converter) Structs(params any, pointer any, option ...StructsOption) (e
 			}
 			reflectElemArray.Index(i).Set(tempReflectValue.Addr())
 		}
+	} else if itemTypeKind == reflect.Map {
+		// Map element — use MapToMap instead of Struct.
+		// Struct expects a struct type and silently produces empty maps for non-struct types.
+		for i := 0; i < len(paramsList); i++ {
+			var tempReflectValue reflect.Value
+			if i < pointerRvLength {
+				tempReflectValue = pointerRvElem.Index(i)
+			} else {
+				tempReflectValue = reflect.New(itemType).Elem()
+			}
+			if err = c.MapToMap(paramsList[i], tempReflectValue, nil, MapOption{
+				ContinueOnError: structsOption.StructOption.ContinueOnError,
+			}); err != nil {
+				return err
+			}
+			reflectElemArray.Index(i).Set(tempReflectValue)
+		}
 	} else {
 		// Struct element.
 		for i := 0; i < len(paramsList); i++ {
