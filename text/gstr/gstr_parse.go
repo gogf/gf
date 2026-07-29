@@ -105,7 +105,19 @@ func build(result map[string]any, keys []string, value any) error {
 		key    = strings.Trim(keys[0], "'\"")
 	)
 	if length == 1 {
-		result[key] = value
+		if existing, ok := result[key]; ok {
+			// Key already exists with a plain key (no slice notation).
+			// Convert both values to a slice to preserve all values.
+			// This handles repeated query parameters like ?name=a&name=b.
+			switch v := existing.(type) {
+			case []any:
+				result[key] = append(v, value)
+			default:
+				result[key] = []any{existing, value}
+			}
+		} else {
+			result[key] = value
+		}
 		return nil
 	}
 
