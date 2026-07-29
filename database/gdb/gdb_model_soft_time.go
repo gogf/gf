@@ -9,6 +9,7 @@ package gdb
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -213,9 +214,17 @@ func (m *softTimeMaintainer) GetDeleteCondition(ctx context.Context) string {
 		tableMatch, _ := gregex.MatchString(`(.+?) [A-Z]+ JOIN`, m.tables)
 		conditionArray.Append(m.getConditionOfTableStringForSoftDeleting(ctx, tableMatch[1]))
 		// Multiple joined tables, exclude the sub query sql which contains char '(' and ')'.
-		tableMatches, _ := gregex.MatchAllString(`JOIN ([^()]+?) ON`, m.tables)
+		// For LEFT JOIN, inject the soft delete condition into the ON clause so that
+		// the WHERE clause does not turn the LEFT JOIN into an INNER JOIN.
+		// For other JOINs (INNER, RIGHT, CROSS), add to WHERE clause as before.
+		tableMatches, _ := gregex.MatchAllString(`(LEFT\s+)?JOIN\s+([^()]+?)\s+ON`, m.tables)
 		for _, match := range tableMatches {
-			conditionArray.Append(m.getConditionOfTableStringForSoftDeleting(ctx, match[1]))
+			tableStr := match[len(match)-1]
+			if len(match) >= 3 && match[1] == "LEFT " {
+				m.injectSoftDeleteIntoLeftJoinOnClause(ctx, tableStr)
+			} else {
+				conditionArray.Append(m.getConditionOfTableStringForSoftDeleting(ctx, tableStr))
+			}
 		}
 	}
 	if conditionArray.Len() == 0 && gstr.Contains(m.tables, ",") {
@@ -234,6 +243,59 @@ func (m *softTimeMaintainer) GetDeleteCondition(ctx context.Context) string {
 		return m.buildDeleteCondition(ctx, "", fieldName, fieldType)
 	}
 	return ""
+}
+
+// injectSoftDeleteIntoLeftJoinOnClause injects the soft delete condition into the
+// ON clause of the LEFT JOIN expression in m.tables for the given table string.
+// This ensures that for LEFT JOINs, the soft delete filter is applied as part of
+// the join condition rather than the WHERE clause, which would otherwise turn the
+// LEFT JOIN into an INNER JOIN.
+func (m *softTimeMaintainer) injectSoftDeleteIntoLeftJoinOnClause(ctx context.Context, tableStr string) {
+	// Split the table string to extract alias.
+	// tableStr examples:
+	//   - "member"
+	//   - "xy_member member"
+	//   - "`test`.`demo` as b"
+	var (
+		table  string
+		schema string
+		array1 = gstr.SplitAndTrim(tableStr, " ")
+		array2 = gstr.SplitAndTrim(array1[0], ".")
+	)
+	if len(array2) >= 2 {
+		table = array2[1]
+		schema = array2[0]
+	} else {
+		table = array2[0]
+	}
+	fieldName, fieldType := m.GetFieldInfo(ctx, schema, table, SoftTimeFieldDelete)
+	if fieldName == "" {
+		return
+	}
+	// Determine the alias prefix for the condition.
+	var alias string
+	if len(array1) >= 3 {
+		alias = array1[2]
+	} else if len(array1) >= 2 {
+		alias = array1[1]
+	} else {
+		alias = table
+	}
+	// Build the soft delete condition.
+	condition := m.buildDeleteCondition(ctx, alias, fieldName, fieldType)
+	if condition == "" {
+		return
+	}
+	// Inject the condition into the ON clause of the LEFT JOIN.
+	// The pattern is: LEFT JOIN <tableStr> ON (<existing_on_condition>)
+	// We need to change it to: LEFT JOIN <tableStr> ON (<existing_on_condition> AND <condition>)
+	quotedTableStr := regexp.QuoteMeta(tableStr)
+	pattern := fmt.Sprintf(`(LEFT\s+JOIN\s+%s\s+ON\s*\()`, quotedTableStr)
+	replacement := fmt.Sprintf(`$1%s AND `, condition)
+	newTables, _ := gregex.ReplaceString(pattern, replacement, m.tables)
+	if newTables != m.tables {
+		m.tables = newTables
+	}
 }
 
 // getConditionOfTableStringForSoftDeleting does something as its name describes.
