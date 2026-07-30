@@ -44,7 +44,7 @@ func (s *Server) serveHandlerKey(method, path, domain string) string {
 func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*HandlerItemParsed, serveItem *HandlerItemParsed, hasHook, hasServe bool) {
 	var (
 		ctx    = r.Context()
-		method = r.Method
+		method = strings.ToUpper(r.Method)
 		path   = r.URL.Path
 		host   = r.GetHost()
 	)
