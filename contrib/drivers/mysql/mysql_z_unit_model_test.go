@@ -1707,6 +1707,149 @@ func Test_Model_OmitNil(t *testing.T) {
 	})
 }
 
+func Test_Model_OmitZero(t *testing.T) {
+	table := fmt.Sprintf(`table_%s`, gtime.TimestampNanoStr())
+	tableSql := fmt.Sprintf(`
+    CREATE TABLE IF NOT EXISTS %s (
+        id int(10) unsigned NOT NULL AUTO_INCREMENT,
+        name varchar(45) NOT NULL,
+        PRIMARY KEY (id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, table)
+	if _, err := db.Exec(ctx, tableSql); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(table)
+
+	// OmitZero filters both zero int and empty string, leaving no data -> error
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).OmitZero().Data(g.Map{
+			"id":   0,
+			"name": "",
+		}).Save()
+		t.AssertNE(err, nil)
+	})
+	// OmitZeroData: same behavior for data fields
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).OmitZeroData().Data(g.Map{
+			"id":   0,
+			"name": "",
+		}).Save()
+		t.AssertNE(err, nil)
+	})
+	// OmitZeroData with non-zero values: insert succeeds, 1 row affected
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).OmitZeroData().Data(g.Map{
+			"id":   1,
+			"name": "test",
+		}).Save()
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+	})
+	// OmitZeroWhere only filters where, not data: insert succeeds, 1 row affected
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).OmitZeroWhere().Data(g.Map{
+			"id":   2,
+			"name": "test2",
+		}).Save()
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+	})
+}
+
+func Test_Model_OmitZeroWhere(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	// Basic type where.
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", 0).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(0))
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).OmitZeroWhere().Where("id", 0).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(TableSize))
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).OmitZeroWhere().Where("id", 0).Where("nickname", "").Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(TableSize))
+	})
+	// Slice where: non-nil empty slice is NOT treated as zero by OmitZeroWhere (unlike OmitEmptyWhere).
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", g.Slice{1, 2, 3}).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(3))
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", g.Slice{}).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(0))
+	})
+	// OmitZeroWhere does NOT filter non-nil empty slice, result is still 0.
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).OmitZeroWhere().Where("id", g.Slice{}).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(0))
+	})
+	// Struct where: nil slice fields are zero, so they get filtered.
+	gtest.C(t, func(t *gtest.T) {
+		type Input struct {
+			Id   []int
+			Name []string
+		}
+		count, err := db.Model(table).Where(Input{}).OmitZeroWhere().Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(TableSize))
+	})
+	// Map where: non-nil empty slice is NOT filtered by OmitZeroWhere.
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where(g.Map{
+			"id": []int{},
+		}).OmitZeroWhere().Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(0))
+	})
+}
+
+func Test_Builder_OmitZeroWhere(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", 1).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(1))
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", 0).OmitZeroWhere().Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(TableSize))
+	})
+	// Builder inherits OmitZeroWhere option
+	gtest.C(t, func(t *gtest.T) {
+		builder := db.Model(table).OmitZeroWhere().Builder()
+		count, err := db.Model(table).Where(
+			builder.Where("id", 0),
+		).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(TableSize))
+	})
+	// OmitZeroWhere does NOT filter non-nil empty slice (key difference from OmitEmptyWhere)
+	gtest.C(t, func(t *gtest.T) {
+		builder := db.Model(table).OmitZeroWhere().Builder()
+		count, err := db.Model(table).Where(
+			builder.Where("id", g.Slice{}),
+		).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(0))
+	})
+}
+
 func Test_Model_FieldsEx(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
