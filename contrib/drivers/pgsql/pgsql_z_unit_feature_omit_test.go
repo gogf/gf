@@ -280,15 +280,7 @@ func Test_Model_OmitNil_WithPointerStruct(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	type User struct {
-		Id       int
-		Passport *string
-		Nickname *string
-		Password string
-	}
-	_ = User{}
-
-	// Note: Kept MariaDB placeholder. Struct field nil pointer handling needs further investigation;
+	// Note: pointer-struct OmitNilData path needs further investigation (same as MariaDB baseline);
 	// the Map variant below covers the usable OmitNilData path.
 	gtest.C(t, func(t *gtest.T) {
 		// Test OmitNilData with Map (working as expected)
@@ -315,12 +307,14 @@ func Test_Model_OmitNil_WithPointerStruct(t *testing.T) {
 func Test_Model_OmitEmpty_ZeroValues(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	// Reset bigserial sequence to follow explicitly inserted ids (1..TableSize).
-	db.Exec(ctx, fmt.Sprintf(
-		"SELECT setval(pg_get_serial_sequence('%s', 'id'), (SELECT MAX(id) FROM %s))", table, table,
-	))
 
 	gtest.C(t, func(t *gtest.T) {
+		// Reset bigserial sequence to follow explicitly inserted ids (1..TableSize).
+		_, err := db.Exec(ctx, fmt.Sprintf(
+			"SELECT setval(pg_get_serial_sequence('%s', 'id'), (SELECT MAX(id) FROM %s))", table, table,
+		))
+		t.AssertNil(err)
+
 		// Test OmitEmptyData with various zero values
 		result, err := db.Model(table).OmitEmptyData().Data(g.Map{
 			"id":       0,           // zero int, should be omitted

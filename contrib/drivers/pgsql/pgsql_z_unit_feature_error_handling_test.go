@@ -16,10 +16,6 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-// dbInvalid is a placeholder matching the MariaDB baseline. PgSQL init_test.go does not
-// configure a second invalid DB handle, so Test_Model_All_InvalidConnection will skip.
-var dbInvalid gdb.DB
-
 // Test_Model_Insert_NilData tests Insert with nil data.
 func Test_Model_Insert_NilData(t *testing.T) {
 	table := createTable()

@@ -61,7 +61,8 @@ func Test_Model_LockUpdate(t *testing.T) {
 }
 
 // Test_Model_LockShared tests the LockShared convenience method.
-// PgSQL DoFilter translates "LOCK IN SHARE MODE" to "FOR SHARE" automatically.
+// PgSQL LockShared uses Driver.GetLockSharedClause() → "FOR SHARE"
+// (not MySQL's legacy "LOCK IN SHARE MODE").
 func Test_Model_LockShared(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
