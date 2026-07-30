@@ -64,7 +64,6 @@ func (b *WhereBuilder) Build() (conditionWhere string, conditionArgs []any) {
 				newWhere, newArgs := formatWhereHolder(ctx, b.model.db, formatWhereHolderInput{
 					WhereHolder: holder,
 					OmitNil:     b.model.option&optionOmitNilWhere > 0,
-					OmitZero:    b.model.option&optionOmitZeroWhere > 0,
 					OmitEmpty:   b.model.option&optionOmitEmptyWhere > 0,
 					Schema:      b.model.schema,
 					Table:       tableForMappingAndFiltering,
@@ -84,7 +83,6 @@ func (b *WhereBuilder) Build() (conditionWhere string, conditionArgs []any) {
 				newWhere, newArgs := formatWhereHolder(ctx, b.model.db, formatWhereHolderInput{
 					WhereHolder: holder,
 					OmitNil:     b.model.option&optionOmitNilWhere > 0,
-					OmitZero:    b.model.option&optionOmitZeroWhere > 0,
 					OmitEmpty:   b.model.option&optionOmitEmptyWhere > 0,
 					Schema:      b.model.schema,
 					Table:       tableForMappingAndFiltering,
