@@ -10,7 +10,6 @@ import (
 	"database/sql"
 	"fmt"
 	"net/url"
-	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -48,9 +47,7 @@ func configNodeToSource(config *gdb.ConfigNode) string {
 		config.User, config.Pass, config.Protocol, config.Host, portStr, config.Name, config.Charset,
 	)
 	if config.Timezone != "" {
-		if strings.Contains(config.Timezone, "/") {
-			config.Timezone = url.QueryEscape(config.Timezone)
-		}
+		config.Timezone = url.QueryEscape(config.Timezone)
 		source = fmt.Sprintf("%s&loc=%s", source, config.Timezone)
 	}
 	if config.Extra != "" {
