@@ -116,7 +116,9 @@ func Test_Limit3(t *testing.T) {
 		t.Assert(pool.Jobs(), 900)
 		t.Assert(array.Len(), 100)
 		pool.Close()
-		time.Sleep(2 * time.Second)
+		t.Assert(waitUntil(5*time.Second, func() bool {
+			return pool.Size() == 0
+		}), true)
 		t.Assert(pool.Size(), 0)
 		t.Assert(pool.Jobs(), 900)
 		t.Assert(array.Len(), 100)
@@ -163,7 +165,7 @@ func Test_Limit4(t *testing.T) {
 		arrayBeforeIncrease := array.Len()
 		limit.Store(100)
 		t.Assert(waitUntil(4*time.Second, func() bool {
-			return pool.Size() > 50
+			return pool.Size() > 50 && pool.Jobs() < jobsBeforeIncrease
 		}), true)
 		t.AssertLE(pool.Size(), 100)
 		t.AssertGT(pool.Jobs(), 0)
@@ -172,7 +174,9 @@ func Test_Limit4(t *testing.T) {
 		t.Assert(pool.Jobs()+array.Len(), size)
 
 		pool.Close()
-		time.Sleep(2 * time.Second)
+		t.Assert(waitUntil(5*time.Second, func() bool {
+			return pool.Size() == 0
+		}), true)
 		t.Assert(pool.Size(), 0)
 		t.Assert(pool.Jobs()+array.Len(), size)
 		t.Assert(pool.IsClosed(), true)
