@@ -17,6 +17,7 @@ import (
 // if there are jobs but no workers in pool.
 func (p *Pool) supervisor(ctx context.Context) {
 	if p.IsClosed() {
+		// gtimer.Exit() panics internally, so the code below is unreachable.
 		gtimer.Exit()
 	}
 	if p.IsPaused() {

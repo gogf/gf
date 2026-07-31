@@ -16,7 +16,7 @@ import (
 // Add pushes a new job to the pool.
 // The job will be executed asynchronously.
 func (p *Pool) Add(ctx context.Context, f Func) error {
-	for p.closed.Val() {
+	if p.closed.Val() {
 		return gerror.NewCode(
 			gcode.CodeInvalidOperation,
 			"goroutine defaultPool is already closed",
@@ -165,7 +165,7 @@ func (p *Pool) asynchronousWorker() {
 		addVal = -1
 	)
 	defer func() { p.count.Add(addVal) }()
-	// Harding working, one by one, job never empty, worker never die.
+	// Hard working, one by one, job never empty, worker never die.
 	for !p.closed.Val() {
 		if p.paused.Load() {
 			return
