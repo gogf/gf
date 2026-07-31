@@ -1744,7 +1744,8 @@ func Test_Model_OmitZero(t *testing.T) {
 			"name": "test",
 		}).Save()
 		t.AssertNil(err)
-		n, _ := result.RowsAffected()
+		n, rowsErr := result.RowsAffected()
+		t.AssertNil(rowsErr)
 		t.Assert(n, 1)
 	})
 	// OmitZeroWhere only filters where, not data: insert succeeds, 1 row affected
