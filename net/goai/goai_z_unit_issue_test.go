@@ -377,6 +377,84 @@ func (Issue4247) Issue4247HasBody(ctx context.Context, req *Issue4247HasBodyReq)
 	return
 }
 
+// https://github.com/gogf/gf/issues/4784
+func Test_Issue4784(t *testing.T) {
+	type FilterOptions struct {
+		IncludeDeleted bool `json:"includeDeleted"`
+		Status         int  `json:"status"`
+	}
+	type Issue4784Req struct {
+		g.Meta  `path:"/test" method:"GET" tags:"default"`
+		Name    string        `json:"name" in:"query"`
+		Options FilterOptions `json:"options" in:"query"`
+	}
+	type Issue4784Res struct{}
+
+	f := func(ctx context.Context, req *Issue4784Req) (res *Issue4784Res, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		oai := goai.New()
+		err := oai.Add(goai.AddInput{
+			Object: f,
+		})
+		t.AssertNil(err)
+
+		// Verify path and method exist.
+		t.AssertNE(oai.Paths["/test"].Get, nil)
+		params := oai.Paths["/test"].Get.Parameters
+		t.Assert(len(params), 2)
+
+		// First param: Name (string type) — should NOT have style/explode.
+		t.Assert(params[0].Value.Name, "name")
+		t.Assert(params[0].Value.In, goai.ParameterInQuery)
+		t.Assert(params[0].Value.Style, "")
+		t.AssertNil(params[0].Value.Explode)
+
+		// Second param: Options (object type) — should have style=deepObject and explode=true.
+		t.Assert(params[1].Value.Name, "options")
+		t.Assert(params[1].Value.In, goai.ParameterInQuery)
+		t.Assert(params[1].Value.Style, "deepObject")
+		t.Assert(params[1].Value.Explode != nil, true)
+		t.Assert(*params[1].Value.Explode, true)
+	})
+}
+
+// Test_Issue4784_Override verifies that explicit style/explode set via struct tags
+// are NOT overwritten by the deepObject default logic.
+func Test_Issue4784_Override(t *testing.T) {
+	type FilterOptions struct {
+		IncludeDeleted bool `json:"includeDeleted"`
+	}
+	type Issue4784OverrideReq struct {
+		g.Meta  `path:"/test" method:"GET" tags:"default"`
+		Options FilterOptions `json:"options" in:"query" style:"form" explode:"false"`
+	}
+	type Issue4784OverrideRes struct{}
+
+	f := func(ctx context.Context, req *Issue4784OverrideReq) (res *Issue4784OverrideRes, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		oai := goai.New()
+		err := oai.Add(goai.AddInput{
+			Object: f,
+		})
+		t.AssertNil(err)
+
+		params := oai.Paths["/test"].Get.Parameters
+		t.Assert(len(params), 1)
+
+		// Options has explicit style=form and explode=false from struct tags — should NOT be overridden.
+		t.Assert(params[0].Value.Name, "options")
+		t.Assert(params[0].Value.Style, "form")
+		t.Assert(params[0].Value.Explode != nil, true)
+		t.Assert(*params[0].Value.Explode, false)
+	})
+}
+
 // https://github.com/gogf/gf/issues/4247
 func Test_Issue4247(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
