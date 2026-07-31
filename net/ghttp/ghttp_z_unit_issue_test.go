@@ -9,6 +9,7 @@ package ghttp_test
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"testing"
 	"time"
@@ -782,5 +783,62 @@ func Test_Issue4227(t *testing.T) {
 		resp3 := client.PostContent(ctx, "/hello/123", `{}`)
 		t.Assert(resp3, `{"Authorization":"Bearer token123","query_param":false,"path_param":123,"cookie_param":true,"body_param":false}`)
 
+	})
+}
+
+// https://github.com/gogf/gf/issues/4765
+// Test_Issue4765 verifies that lowercase HTTP methods (e.g., "get", "post")
+// are normalized to uppercase before building the route cache key, preventing
+// cache pollution that would cause subsequent correctly-cased requests to 404.
+func Test_Issue4765(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.GET("/user-case", func(r *ghttp.Request) {
+			r.Response.Write("ok")
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+
+		// Use raw net/http client to send lowercase method, because gclient
+		// normalizes method to uppercase internally.
+		httpClient := &http.Client{}
+
+		// Step 1: send lowercase "get" — must return 200 "ok".
+		req1, err := http.NewRequest("get", prefix+"/user-case", nil)
+		t.AssertNil(err)
+		resp1, err := httpClient.Do(req1)
+		t.AssertNil(err)
+		body1, err := io.ReadAll(resp1.Body)
+		t.AssertNil(err)
+		resp1.Body.Close()
+		t.Assert(string(body1), "ok")
+
+		// Step 2: send uppercase "GET" — must still return 200 "ok",
+		// proving the cache was not polluted by the lowercase request.
+		req2, err := http.NewRequest("GET", prefix+"/user-case", nil)
+		t.AssertNil(err)
+		resp2, err := httpClient.Do(req2)
+		t.AssertNil(err)
+		body2, err := io.ReadAll(resp2.Body)
+		t.AssertNil(err)
+		resp2.Body.Close()
+		t.Assert(string(body2), "ok")
+
+		// Step 3: send mixed-case "Get" — must also work.
+		req3, err := http.NewRequest("Get", prefix+"/user-case", nil)
+		t.AssertNil(err)
+		resp3, err := httpClient.Do(req3)
+		t.AssertNil(err)
+		body3, err := io.ReadAll(resp3.Body)
+		t.AssertNil(err)
+		resp3.Body.Close()
+		t.Assert(string(body3), "ok")
 	})
 }
