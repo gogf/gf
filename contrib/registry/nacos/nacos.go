@@ -32,6 +32,41 @@ var (
 	_ gsvc.Registry = &Registry{}
 )
 
+// Option is the option for creating Registry.
+type Option func(*Registry)
+
+// WithClusterName sets the cluster name for the registry.
+// The default is 'DEFAULT'.
+func WithClusterName(name string) Option {
+	return func(r *Registry) {
+		r.clusterName = name
+	}
+}
+
+// WithGroupName sets the group name for the registry.
+// The default is 'DEFAULT_GROUP'.
+func WithGroupName(name string) Option {
+	return func(r *Registry) {
+		r.groupName = name
+	}
+}
+
+// WithDefaultEndpoint sets the default endpoint for service registration.
+// It overrides the service endpoints when registering if it's not empty.
+func WithDefaultEndpoint(endpoint string) Option {
+	return func(r *Registry) {
+		r.defaultEndpoint = endpoint
+	}
+}
+
+// WithDefaultMetadata sets the default metadata for service registration.
+// It will be merged with service's original metadata when registering.
+func WithDefaultMetadata(metadata map[string]string) Option {
+	return func(r *Registry) {
+		r.defaultMetadata = metadata
+	}
+}
+
 // Registry is nacos registry.
 type Registry struct {
 	client          naming_client.INamingClient
@@ -83,7 +118,7 @@ func New(address string, opts ...constant.ClientOption) (reg *Registry) {
 }
 
 // NewWithConfig creates and returns registry with Config.
-func NewWithConfig(ctx context.Context, config Config) (reg *Registry, err error) {
+func NewWithConfig(ctx context.Context, config Config, opts ...Option) (reg *Registry, err error) {
 	// Data validation.
 	err = g.Validator().Data(config).Run(ctx)
 	if err != nil {
@@ -97,27 +132,34 @@ func NewWithConfig(ctx context.Context, config Config) (reg *Registry, err error
 	if err != nil {
 		return
 	}
-	return NewWithClient(nameingClient), nil
+	return NewWithClient(nameingClient, opts...), nil
 }
 
 // NewWithClient new the instance with INamingClient
-func NewWithClient(client naming_client.INamingClient) *Registry {
+func NewWithClient(client naming_client.INamingClient, opts ...Option) *Registry {
 	r := &Registry{
 		client:          client,
 		clusterName:     "DEFAULT",
 		groupName:       "DEFAULT_GROUP",
 		defaultMetadata: make(map[string]string),
 	}
+	for _, opt := range opts {
+		opt(r)
+	}
 	return r
 }
 
 // SetClusterName can set the clusterName. The default is 'DEFAULT'
+//
+// Deprecated: Use WithClusterName option in NewWithClient/NewWithConfig instead.
 func (reg *Registry) SetClusterName(clusterName string) *Registry {
 	reg.clusterName = clusterName
 	return reg
 }
 
 // SetGroupName can set the groupName. The default is 'DEFAULT_GROUP'
+//
+// Deprecated: Use WithGroupName option in NewWithClient/NewWithConfig instead.
 func (reg *Registry) SetGroupName(groupName string) *Registry {
 	reg.groupName = groupName
 	return reg
@@ -125,6 +167,8 @@ func (reg *Registry) SetGroupName(groupName string) *Registry {
 
 // SetDefaultEndpoint sets the default endpoint for service registration.
 // It overrides the service endpoints when registering if it's not empty.
+//
+// Deprecated: Use WithDefaultEndpoint option in NewWithClient/NewWithConfig instead.
 func (reg *Registry) SetDefaultEndpoint(endpoint string) *Registry {
 	reg.defaultEndpoint = endpoint
 	return reg
@@ -132,6 +176,8 @@ func (reg *Registry) SetDefaultEndpoint(endpoint string) *Registry {
 
 // SetDefaultMetadata sets the default metadata for service registration.
 // It will be merged with service's original metadata when registering.
+//
+// Deprecated: Use WithDefaultMetadata option in NewWithClient/NewWithConfig instead.
 func (reg *Registry) SetDefaultMetadata(metadata map[string]string) *Registry {
 	reg.defaultMetadata = metadata
 	return reg
