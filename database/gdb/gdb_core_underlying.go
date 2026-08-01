@@ -514,6 +514,22 @@ func (c *Core) OrderRandomFunction() string {
 	return "RAND()"
 }
 
+// GetBoolLiteral returns the SQL literal for the given boolean value.
+// Default is "1"/"0" (MySQL bit/int convention); strict-bool drivers override.
+func (c *Core) GetBoolLiteral(v bool) string {
+	if v {
+		return "1"
+	}
+	return "0"
+}
+
+// GetLockSharedClause returns the SQL clause for Model.LockShared().
+// Default is MySQL's legacy "LOCK IN SHARE MODE"; drivers with other
+// dialect syntax (e.g. PostgreSQL's "FOR SHARE") override.
+func (c *Core) GetLockSharedClause() string {
+	return LockInShareMode
+}
+
 func (c *Core) columnValueToLocalValue(ctx context.Context, value any, columnType *sql.ColumnType) (any, error) {
 	var scanType = columnType.ScanType()
 	if scanType != nil {
