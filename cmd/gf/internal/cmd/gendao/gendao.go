@@ -85,8 +85,8 @@ type (
 	DBTableFieldName    = string
 	DBFieldTypeName     = string
 	CustomAttributeType struct {
-		Type   string `brief:"custom attribute type name"`
-		Import string `brief:"custom import for this type"`
+		Type   string `name:"type" brief:"custom attribute type name"`
+		Import string `name:"import" brief:"custom import for this type"`
 	}
 )
 
