@@ -28,12 +28,27 @@ func (r Record) Xml(rootTag ...string) string {
 }
 
 // Map converts `r` to map[string]any.
+// Nested gdb.Result and gdb.Record values are recursively converted
+// to []map[string]any and map[string]any respectively.
 func (r Record) Map() Map {
 	m := make(map[string]any)
 	for k, v := range r {
-		m[k] = v.Val()
+		m[k] = convertNestedValue(v.Val())
 	}
 	return m
+}
+
+// convertNestedValue recursively converts nested gdb.Result and gdb.Record
+// values to standard Go types ([]map[string]any and map[string]any).
+func convertNestedValue(val any) any {
+	switch vt := val.(type) {
+	case Result:
+		return vt.List()
+	case Record:
+		return vt.Map()
+	default:
+		return val
+	}
 }
 
 // GMap converts `r` to a gmap.
@@ -53,7 +68,7 @@ func (r Record) Struct(pointer any) error {
 		}
 		return nil
 	}
-	return converter.Struct(r, pointer, gconv.StructOption{
+	return converter.Struct(r.Map(), pointer, gconv.StructOption{
 		PriorityTag:     OrmTagForStruct,
 		ContinueOnError: true,
 	})

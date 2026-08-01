@@ -207,7 +207,7 @@ func (r Result) Structs(pointer any) (err error) {
 			ContinueOnError: true,
 		}
 	)
-	return converter.Structs(r, pointer, gconv.StructsOption{
+	return converter.Structs(r.List(), pointer, gconv.StructsOption{
 		SliceOption:  sliceOption,
 		StructOption: structOption,
 	})
