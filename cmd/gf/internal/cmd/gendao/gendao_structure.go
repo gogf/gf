@@ -62,6 +62,7 @@ func generateStructDefinition(ctx context.Context, in generateStructDefinitionIn
 func getTypeMappingInfo(
 	ctx context.Context, fieldType string, inTypeMapping map[DBFieldTypeName]CustomAttributeType,
 ) (typeNameStr, importStr string) {
+	fieldType = strings.TrimSpace(fieldType)
 	if typeMapping, ok := inTypeMapping[strings.ToLower(fieldType)]; ok {
 		typeNameStr = typeMapping.Type
 		importStr = typeMapping.Import
