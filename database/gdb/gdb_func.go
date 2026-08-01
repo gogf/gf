@@ -1002,6 +1002,10 @@ func genSelectCacheKey(table, group, schema, name, sql string, args ...any) stri
 			schema,
 			ghash.BKDR64([]byte(sql+", @PARAMS:"+gconv.String(args))),
 		)
+	} else {
+		// Include table name in the cache key so ClearCache(table) can find cache
+		// entries that use a custom Name.
+		name = fmt.Sprintf(`%s@%s`, table, name)
 	}
 	return fmt.Sprintf(`%s%s`, cachePrefixSelectCache, name)
 }
