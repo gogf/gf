@@ -341,7 +341,8 @@ func Test_GaussDB_Returning_Insert_Batch(t *testing.T) {
 	})
 }
 
-// Test_GaussDB_Returning_Upsert tests INSERT ... ON CONFLICT ... RETURNING (Save).
+// Test_GaussDB_Returning_Upsert tests Save() returning the row id.
+// GaussDB has no ON CONFLICT; the driver emits a MERGE statement.
 func Test_GaussDB_Returning_Upsert(t *testing.T) {
 	table := fmt.Sprintf(`%s_%d`, TablePrefix+"returning_upsert", gtime.TimestampNano())
 	if _, err := db.Exec(ctx, fmt.Sprintf(`

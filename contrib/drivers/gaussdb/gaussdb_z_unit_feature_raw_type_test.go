@@ -93,7 +93,8 @@ func Test_DataType_JSON_Set(t *testing.T) {
 		}).Insert()
 		t.AssertNil(err)
 
-		// GaussDB needs create_missing passed explicitly; it does not default to true.
+		// GaussDB defaults create_missing to false and, when it is omitted, silently
+		// returns the document unchanged rather than reporting an error.
 		_, err = db.Exec(ctx, fmt.Sprintf("UPDATE %s SET data = jsonb_set(data, '{age}', '30', true) WHERE id = 1", table))
 		t.AssertNil(err)
 
@@ -175,8 +176,16 @@ func Test_DataType_JSON_Complex(t *testing.T) {
 		}).Insert()
 		t.AssertNil(err)
 
-		// GaussDB has no #>> operator; jsonb_extract_path_text walks the same path.
+		// The #>> path operator. Note the surrounding whitespace: without it the
+		// parser reads `data#` as an identifier.
 		one, err := db.Model(table).
+			Fields(`data #>> '{user,contacts,email}' as email`).
+			Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["email"].String(), "charlie@example.com")
+
+		// jsonb_extract_path_text walks the same path as a function call.
+		one, err = db.Model(table).
 			Fields("jsonb_extract_path_text(data, 'user', 'contacts', 'email') as email").
 			Where("id", 1).One()
 		t.AssertNil(err)
@@ -725,10 +734,6 @@ func Test_DataType_Set_Empty(t *testing.T) {
 // Test_DataType_Geometry_Point tests the built-in point type.
 // These are GaussDB's native geometric types and need no PostGIS extension;
 // only the ST_* function family does.
-//
-// The column is read through an explicit ::text cast: gdb's type detection
-// matches "int" as a substring, so a "point" column is otherwise classified as
-// an integer and its value is lost.
 func Test_DataType_Geometry_Point(t *testing.T) {
 	table := "test_geo_point_" + gtime.TimestampMicroStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(
@@ -742,7 +747,7 @@ func Test_DataType_Geometry_Point(t *testing.T) {
 		_, err := db.Model(table).Data(g.Map{"id": 1, "pt": "(1.5,2.5)"}).Insert()
 		t.AssertNil(err)
 
-		one, err := db.Model(table).Fields("pt::text as pt").Where("id", 1).One()
+		one, err := db.Model(table).Where("id", 1).One()
 		t.AssertNil(err)
 		t.Assert(one["pt"].String(), "(1.5,2.5)")
 

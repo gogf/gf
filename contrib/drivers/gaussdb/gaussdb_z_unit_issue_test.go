@@ -66,7 +66,7 @@ func Test_IssueBytea_RoundTrip(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		// A NULL bytea column reads back as empty rather than panicking.
+		// A NULL bytea column reads back as nil, not as an empty payload.
 		_, err := db.Model(table).Data(g.Map{"id": 4}).Insert()
 		t.AssertNil(err)
 

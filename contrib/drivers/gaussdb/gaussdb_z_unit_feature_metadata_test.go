@@ -107,13 +107,19 @@ func Test_HasField_Schema(t *testing.T) {
 }
 
 // Test_HasTable_Positive tests HasTable for an existing table.
-// Core.HasTable reads a cache populated with gcache.DurationNoExpire, so a table
-// created afterwards is invisible to it; db.Tables queries the database directly.
+// Core.HasTable reads a list cached with gcache.DurationNoExpire, so the cache is
+// cleared first to make a table created by this test visible to it.
 func Test_HasTable_Positive(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(db.GetCore().ClearCacheAll(ctx))
+
+		has, err := db.GetCore().HasTable(table)
+		t.AssertNil(err)
+		t.Assert(has, true)
+
 		tables, err := db.Tables(ctx)
 		t.AssertNil(err)
 		t.AssertIN(table, tables)
