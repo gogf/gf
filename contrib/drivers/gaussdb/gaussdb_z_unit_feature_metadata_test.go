@@ -56,8 +56,8 @@ func Test_TableFields_Schema(t *testing.T) {
 }
 
 // Test_TableFields_NotExistTable tests TableFields against a missing table.
-// GaussDB resolves the table via '<table>'::regclass, so a missing table
-// surfaces as an error rather than an empty field map.
+// GaussDB resolves the table via '<table>'::regclass, so this errors rather
+// than returning an empty field map.
 func Test_TableFields_NotExistTable(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		fields, err := db.TableFields(ctx, "table_not_exist_for_metadata_test")
@@ -107,10 +107,8 @@ func Test_HasField_Schema(t *testing.T) {
 }
 
 // Test_HasTable_Positive tests HasTable for an existing table.
-// Note: Core.HasTable reads the table-name list cached by GetTablesWithCache with
-// gcache.DurationNoExpire, so a table created after the cache was populated is not
-// visible to it. The table list is therefore asserted through db.Tables, which
-// queries the database directly and does not depend on test execution order.
+// Core.HasTable reads a cache populated with gcache.DurationNoExpire, so a table
+// created afterwards is invisible to it; db.Tables queries the database directly.
 func Test_HasTable_Positive(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
