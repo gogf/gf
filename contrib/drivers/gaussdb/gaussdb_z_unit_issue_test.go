@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // Test_IssueBytea_RoundTrip verifies binary data survives a bytea round trip.
@@ -83,9 +84,12 @@ func Test_IssueBytea_RoundTrip(t *testing.T) {
 // the real column failed with "column ... is of type X but expression is of type
 // text" — breaking any read-modify-write cycle over a nullable non-text column.
 func Test_IssueSave_NullTypedColumn(t *testing.T) {
-	// Column types that are not implicitly coercible from text.
+	// Column types that are not implicitly coercible from text, plus types whose
+	// TableField.Type carries a modifier — "int4(32)" and friends reject a cast
+	// with one, so the modifier has to be stripped before it is emitted.
 	for _, columnType := range []string{
 		"numeric[]", "text[]", "jsonb", "boolean", "bytea", "uuid",
+		"int2", "int4", "int8", "float4", "float8", "numeric(10,2)", "varchar(45)",
 	} {
 		gtest.C(t, func(t *gtest.T) {
 			table := "issue_save_null_" + gtime.TimestampMicroStr()
@@ -152,37 +156,68 @@ func Test_IssueSave_NullTypedColumn_Replace(t *testing.T) {
 // Test_IssuePointInterval_NotConvertedToInt verifies that column types whose
 // names merely contain an integer keyword are not converted to integers.
 //
-// gdb's fallback type detection matches "int" as a substring, so "point" and
-// "interval" were both classified as integers and their values became 0.
+// gdb's fallback type detection matches "int" as a substring, so "point",
+// "interval", "tinterval" and the range types were all classified as integers
+// and their values became 0.
 func Test_IssuePointInterval_NotConvertedToInt(t *testing.T) {
 	table := "issue_point_interval_" + gtime.TimestampMicroStr()
-	if _, err := db.Exec(ctx, fmt.Sprintf(
-		`CREATE TABLE %s (id int PRIMARY KEY, pt point, span interval)`, table,
-	)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`CREATE TABLE %s (
+		id     int PRIMARY KEY,
+		pt     point,
+		span   interval,
+		tspan  tinterval,
+		r4     int4range,
+		r8     int8range,
+		pts    point[],
+		spans  interval[]
+	)`, table)); err != nil {
 		gtest.Fatal(err)
 	}
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		_, err := db.Exec(ctx, fmt.Sprintf(
-			`INSERT INTO %s VALUES (1, '(1.5,2.5)', '2 days')`, table,
-		))
+		_, err := db.Exec(ctx, fmt.Sprintf(`INSERT INTO %s VALUES (
+			1, '(1.5,2.5)', '2 days',
+			'["2024-01-01 00:00:00" "2024-01-02 00:00:00"]',
+			'[1,5)', '[10,50)',
+			'{"(1,2)","(3,4)"}', '{"1 day","2 days"}'
+		)`, table))
 		t.AssertNil(err)
 
-		// Read through the ORM and compare against an explicit ::text cast,
-		// which is unaffected by the type detection.
 		one, err := db.Model(table).Where("id", 1).One()
 		t.AssertNil(err)
 
-		want, err := db.Model(table).
-			Fields("pt::text as pt, span::text as span").Where("id", 1).One()
+		// Scalars keep their real content instead of collapsing to 0.
+		t.Assert(one["pt"].String(), "(1.5,2.5)")
+		t.Assert(one["span"].String(), "2 days")
+		t.Assert(one["r4"].String(), "[1,5)")
+		t.Assert(one["r8"].String(), "[10,50)")
+		t.AssertNE(one["tspan"].String(), "0")
+		t.Assert(gstr.Contains(one["tspan"].String(), "2024-01-01"), true)
+
+		// Array forms are read as their element text representation.
+		t.Assert(one["pts"].Strings(), g.SliceStr{"(1,2)", "(3,4)"})
+		t.Assert(one["spans"].Strings(), g.SliceStr{"1 day", "2 days"})
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Control: real integer columns must keep working.
+		intTable := "issue_int_control_" + gtime.TimestampMicroStr()
+		if _, err := db.Exec(ctx, fmt.Sprintf(
+			`CREATE TABLE %s (id int PRIMARY KEY, a int2, b int4, c int8, d int4[])`, intTable,
+		)); err != nil {
+			gtest.Fatal(err)
+		}
+		defer dropTable(intTable)
+
+		_, err := db.Exec(ctx, fmt.Sprintf(`INSERT INTO %s VALUES (1, 1, 2, 3, '{4,5}')`, intTable))
 		t.AssertNil(err)
 
-		t.Assert(one["pt"].String(), want["pt"].String())
-		t.Assert(one["span"].String(), want["span"].String())
-
-		// And the values are the real ones, not zeroes.
-		t.Assert(one["pt"].String(), "(1.5,2.5)")
-		t.AssertNE(one["span"].String(), "0")
+		one, err := db.Model(intTable).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["a"].Int(), 1)
+		t.Assert(one["b"].Int(), 2)
+		t.Assert(one["c"].Int64(), int64(3))
+		t.Assert(one["d"].Ints(), []int{4, 5})
 	})
 }

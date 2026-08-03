@@ -574,10 +574,17 @@ func (d *Driver) getNullFieldTypes(
 			continue
 		}
 		for name, field := range tableFields {
-			if strings.EqualFold(name, key) && field.Type != "" {
-				types[strings.ToLower(key)] = field.Type
-				break
+			if !strings.EqualFold(name, key) {
+				continue
 			}
+			// TableField.Type carries the type modifier, e.g. "int4(32)". Integer and
+			// float types reject one ("type modifier is not allowed for type int4"),
+			// and it is redundant for the rest since the value is NULL.
+			typeName, _ := d.GetCore().GetFormattedDBTypeNameForField(field.Type)
+			if typeName != "" {
+				types[strings.ToLower(key)] = typeName
+			}
+			break
 		}
 	}
 	return types, nil
