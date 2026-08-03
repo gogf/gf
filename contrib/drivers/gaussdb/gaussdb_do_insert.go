@@ -16,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -326,10 +327,23 @@ func (d *Driver) doMergeInsert(
 		conflictKeySet.Add(strings.ToUpper(conflictKey))
 	}
 
+	// A NULL placeholder in the USING branch carries no type of its own, and GaussDB
+	// then infers text for it. Assigning that back to a column such as numeric[],
+	// jsonb, boolean, bytea or uuid fails, which breaks read-modify-write cycles that
+	// carry an untouched NULL column. Cast those placeholders to the real column type.
+	nullFieldTypes, err := d.getNullFieldTypes(ctx, table, one)
+	if err != nil {
+		return nil, err
+	}
+
 	index := 0
 	for key, value := range one {
 		keyWithChar := charL + key + charR
-		queryHolders[index] = fmt.Sprintf("$%d AS %s", index+1, keyWithChar)
+		holder := fmt.Sprintf("$%d", index+1)
+		if fieldType := nullFieldTypes[strings.ToLower(key)]; fieldType != "" {
+			holder += "::" + fieldType
+		}
+		queryHolders[index] = fmt.Sprintf("%s AS %s", holder, keyWithChar)
 		queryValues[index] = value
 		insertKeys[index] = keyWithChar
 		insertValues[index] = fmt.Sprintf("T2.%s", keyWithChar)
@@ -532,4 +546,39 @@ func parseSqlForMerge(table string,
 
 	sqlStr = fmt.Sprintf("%s %s %s %s%s", intoStr, usingStr, onStr, insertStr, updateStr)
 	return
+}
+
+// getNullFieldTypes returns the database type of every record field whose value is
+// NULL, keyed by lower-cased field name. It returns nil when the record holds no
+// NULL value, so the table metadata is only fetched when it is actually needed.
+func (d *Driver) getNullFieldTypes(
+	ctx context.Context, table string, one gdb.Map,
+) (map[string]string, error) {
+	var hasNull bool
+	for _, value := range one {
+		if g.IsNil(value) {
+			hasNull = true
+			break
+		}
+	}
+	if !hasNull {
+		return nil, nil
+	}
+	tableFields, err := d.GetCore().GetDB().TableFields(ctx, table)
+	if err != nil {
+		return nil, err
+	}
+	types := make(map[string]string, len(one))
+	for key, value := range one {
+		if !g.IsNil(value) {
+			continue
+		}
+		for name, field := range tableFields {
+			if strings.EqualFold(name, key) && field.Type != "" {
+				types[strings.ToLower(key)] = field.Type
+				break
+			}
+		}
+	}
+	return types, nil
 }
