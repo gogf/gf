@@ -187,6 +187,9 @@ func (c *Core) With(objects ...any) *Model {
 func (m *Model) Partition(partitions ...string) *Model {
 	model := m.getModel()
 	model.partition = gstr.Join(partitions, ",")
+	if model.partition != "" {
+		model.tables = fmt.Sprintf(`%s PARTITION (%s)`, model.tables, model.partition)
+	}
 	return model
 }
 
