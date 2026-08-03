@@ -115,6 +115,15 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 	case "bytea":
 		return gdb.LocalTypeBytes, nil
 
+	// Types whose names merely contain "int" must be listed explicitly: Core's
+	// fallback detection matches that substring, so "point" and "interval" would
+	// otherwise be classified as integers and read back as 0.
+	case "point", "interval":
+		return gdb.LocalTypeString, nil
+
+	case "_point", "_interval":
+		return gdb.LocalTypeStringSlice, nil
+
 	case "_bytea":
 		return gdb.LocalTypeBytesSlice, nil
 
@@ -211,7 +220,10 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 		return []bool(result), nil
 
 	// []string
-	case "_varchar", "_text", "_char", "_bpchar":
+	case "_varchar", "_text", "_char", "_bpchar",
+		// Geometric/interval arrays have no dedicated pq scanner; their elements
+		// are read as their text representation.
+		"_point", "_interval":
 		var result pq.StringArray
 		if err := result.Scan(fieldValue); err != nil {
 			return nil, err
