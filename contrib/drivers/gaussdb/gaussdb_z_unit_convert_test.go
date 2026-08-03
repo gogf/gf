@@ -123,6 +123,35 @@ func Test_CheckLocalTypeForField(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
+		// Type names that merely contain "int" must not be detected as integers.
+		for _, typeName := range []string{"point", "interval", "tinterval", "int4range", "int8range"} {
+			localType, err := driver.CheckLocalTypeForField(ctx, typeName, nil)
+			t.AssertNil(err)
+			t.Assert(localType, gdb.LocalTypeString)
+		}
+		for _, typeName := range []string{"_point", "_interval", "_tinterval", "_int4range", "_int8range"} {
+			localType, err := driver.CheckLocalTypeForField(ctx, typeName, nil)
+			t.AssertNil(err)
+			t.Assert(localType, gdb.LocalTypeStringSlice)
+		}
+		// Control: genuine integer types keep their mapping.
+		for _, c := range []struct {
+			typeName string
+			want     gdb.LocalType
+		}{
+			{"int2", gdb.LocalTypeInt},
+			{"int4", gdb.LocalTypeInt},
+			{"int8", gdb.LocalTypeInt64},
+			{"_int4", gdb.LocalTypeInt32Slice},
+			{"_int8", gdb.LocalTypeInt64Slice},
+		} {
+			localType, err := driver.CheckLocalTypeForField(ctx, c.typeName, nil)
+			t.AssertNil(err)
+			t.Assert(localType, c.want)
+		}
+	})
+
+	gtest.C(t, func(t *gtest.T) {
 		// Test uuid type
 		localType, err := driver.CheckLocalTypeForField(ctx, "uuid", nil)
 		t.AssertNil(err)

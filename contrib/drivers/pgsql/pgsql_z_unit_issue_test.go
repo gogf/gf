@@ -2230,7 +2230,11 @@ func Test_Issue2231(t *testing.T) {
 func Test_IssuePointInterval_NotConvertedToInt(t *testing.T) {
 	table := "issue_point_interval_" + gtime.TimestampMicroStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(
-		`CREATE TABLE %s (id int PRIMARY KEY, pt point, span interval, pts point[], spans interval[])`,
+		`CREATE TABLE %s (
+			id int PRIMARY KEY, pt point, span interval,
+			r4 int4range, r8 int8range, mr int4multirange,
+			pts point[], spans interval[]
+		)`,
 		table,
 	)); err != nil {
 		gtest.Fatal(err)
@@ -2239,7 +2243,11 @@ func Test_IssuePointInterval_NotConvertedToInt(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Exec(ctx, fmt.Sprintf(
-			`INSERT INTO %s VALUES (1, '(1.5,2.5)', '2 days', '{"(1,2)","(3,4)"}', '{"1 day","2 days"}')`,
+			`INSERT INTO %s VALUES (
+				1, '(1.5,2.5)', '2 days',
+				'[1,5)', '[10,50)', '{[1,5)}',
+				'{"(1,2)","(3,4)"}', '{"1 day","2 days"}'
+			)`,
 			table,
 		))
 		t.AssertNil(err)
@@ -2250,6 +2258,9 @@ func Test_IssuePointInterval_NotConvertedToInt(t *testing.T) {
 		// Scalar values keep their real content instead of collapsing to 0.
 		t.Assert(one["pt"].String(), "(1.5,2.5)")
 		t.Assert(one["span"].String(), "2 days")
+		t.Assert(one["r4"].String(), "[1,5)")
+		t.Assert(one["r8"].String(), "[10,50)")
+		t.Assert(one["mr"].String(), "{[1,5)}")
 
 		// Array forms are read as their element text representation.
 		t.Assert(one["pts"].Strings(), g.SliceStr{"(1,2)", "(3,4)"})
