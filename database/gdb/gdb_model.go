@@ -187,13 +187,6 @@ func (c *Core) With(objects ...any) *Model {
 func (m *Model) Partition(partitions ...string) *Model {
 	model := m.getModel()
 	model.partition = partitions
-	// Warn if the driver does not support partition selection.
-	if !model.db.FormatPartitionClause(model.tables, partitions) != model.tables {
-		model.db.GetLogger().Warningf(
-			model.db.GetCtx(),
-			"Partition selection is not supported by the current driver; partition names will be ignored",
-		)
-	}
 	return model
 }
 
