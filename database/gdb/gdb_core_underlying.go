@@ -530,6 +530,16 @@ func (c *Core) GetLockSharedClause() string {
 	return LockInShareMode
 }
 
+// FormatPartitionClause returns the table expression restricting a statement to
+// the partitions named by Model.Partition().
+// The default implementation ignores partition names and returns table unchanged.
+// This is deliberate: PostgreSQL parses "FROM t PARTITION (p0)" as a table alias
+// and silently returns the whole table with a renamed column, so the safe default
+// is to ignore partition names.
+func (c *Core) FormatPartitionClause(table string, _ []string) string {
+	return table
+}
+
 func (c *Core) columnValueToLocalValue(ctx context.Context, value any, columnType *sql.ColumnType) (any, error) {
 	var scanType = columnType.ScanType()
 	if scanType != nil {
