@@ -530,6 +530,17 @@ func (c *Core) GetLockSharedClause() string {
 	return LockInShareMode
 }
 
+// GetPartitionClause returns the SQL PARTITION clause for the given partition
+// names. MySQL/MariaDB syntax: " PARTITION (p0,p1)". Drivers that do not
+// support the PARTITION clause (e.g. PostgreSQL, GaussDB) override this to
+// return an empty string.
+func (c *Core) GetPartitionClause(partitions string) string {
+	if partitions == "" {
+		return ""
+	}
+	return " PARTITION (" + partitions + ")"
+}
+
 func (c *Core) columnValueToLocalValue(ctx context.Context, value any, columnType *sql.ColumnType) (any, error) {
 	var scanType = columnType.ScanType()
 	if scanType != nil {

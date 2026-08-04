@@ -746,6 +746,15 @@ func (m *Model) doGetAllBySql(
 func (m *Model) getFormattedSqlAndArgs(
 	ctx context.Context, selectType SelectType, limit1 bool,
 ) (sqlWithHolder string, holderArgs []any) {
+	// getTableWithPartition returns m.tables with the driver-specific
+	// PARTITION clause appended when m.partition is set.
+	getTableWithPartition := func() string {
+		table := m.tables
+		if m.partition != "" {
+			table += m.db.GetPartitionClause(m.partition)
+		}
+		return table
+	}
 	switch selectType {
 	case SelectTypeCount:
 		queryFields := "COUNT(1)"
@@ -764,7 +773,7 @@ func (m *Model) getFormattedSqlAndArgs(
 			return sqlWithHolder, conditionArgs
 		}
 		conditionWhere, conditionExtra, conditionArgs := m.formatCondition(ctx, false, true)
-		sqlWithHolder = fmt.Sprintf("SELECT %s FROM %s%s", queryFields, m.tables, conditionWhere+conditionExtra)
+		sqlWithHolder = fmt.Sprintf("SELECT %s FROM %s%s", queryFields, getTableWithPartition(), conditionWhere+conditionExtra)
 		if len(m.groupBy) > 0 {
 			sqlWithHolder = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", sqlWithHolder)
 		}
@@ -785,7 +794,7 @@ func (m *Model) getFormattedSqlAndArgs(
 		// DISTINCT t.user_id uid
 		sqlWithHolder = fmt.Sprintf(
 			"SELECT %s%s FROM %s%s",
-			m.distinct, m.getFieldsFiltered(), m.tables, conditionWhere+conditionExtra,
+			m.distinct, m.getFieldsFiltered(), getTableWithPartition(), conditionWhere+conditionExtra,
 		)
 		return sqlWithHolder, conditionArgs
 	}

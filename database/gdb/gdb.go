@@ -356,6 +356,12 @@ type DB interface {
 	// Drivers that don't support MySQL's legacy "LOCK IN SHARE MODE" override
 	// to return their dialect equivalent (e.g. "FOR SHARE" on PostgreSQL).
 	GetLockSharedClause() string
+
+	// GetPartitionClause returns the SQL PARTITION clause appended to the
+	// table name in SELECT queries. Returns an empty string when the driver
+	// does not support the PARTITION clause (e.g. PostgreSQL).
+	// MySQL/MariaDB syntax: " PARTITION (p0,p1)"
+	GetPartitionClause(partitions string) string
 }
 
 // TX defines the interfaces for ORM transaction operations.

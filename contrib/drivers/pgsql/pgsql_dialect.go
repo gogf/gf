@@ -25,3 +25,10 @@ func (d *Driver) GetBoolLiteral(v bool) string {
 func (d *Driver) GetLockSharedClause() string {
 	return gdb.LockForShare
 }
+
+// GetPartitionClause returns an empty string for PostgreSQL. PostgreSQL does
+// not support the MySQL-style PARTITION (p) clause on SELECT statements;
+// it uses declarative partitioning with inheritance-based partition pruning.
+func (d *Driver) GetPartitionClause(partitions string) string {
+	return ""
+}

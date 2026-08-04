@@ -189,7 +189,7 @@ func Test_PartitionTable(t *testing.T) {
 		data, err = db3.Ctx(ctx).Model("dbx_order").Partition("p3").All()
 		t.AssertNil(err)
 		dataLen = len(data)
-		t.Assert(dataLen, 5)
+		t.Assert(dataLen, 1)
 	})
 }
 
