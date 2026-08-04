@@ -764,7 +764,7 @@ func (m *Model) getFormattedSqlAndArgs(
 			return sqlWithHolder, conditionArgs
 		}
 		conditionWhere, conditionExtra, conditionArgs := m.formatCondition(ctx, false, true)
-		sqlWithHolder = fmt.Sprintf("SELECT %s FROM %s%s", queryFields, m.tables, conditionWhere+conditionExtra)
+				sqlWithHolder = fmt.Sprintf("SELECT %s FROM %s%s", queryFields, m.db.FormatPartitionClause(m.tables, m.partition), conditionWhere+conditionExtra)
 		if len(m.groupBy) > 0 {
 			sqlWithHolder = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", sqlWithHolder)
 		}
@@ -785,7 +785,7 @@ func (m *Model) getFormattedSqlAndArgs(
 		// DISTINCT t.user_id uid
 		sqlWithHolder = fmt.Sprintf(
 			"SELECT %s%s FROM %s%s",
-			m.distinct, m.getFieldsFiltered(), m.tables, conditionWhere+conditionExtra,
+			m.distinct, m.getFieldsFiltered(), m.db.FormatPartitionClause(m.tables, m.partition), conditionWhere+conditionExtra,
 		)
 		return sqlWithHolder, conditionArgs
 	}
