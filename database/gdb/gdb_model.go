@@ -37,7 +37,7 @@ type Model struct {
 	limit           int               // Used for "select ... start, limit ..." statement.
 	option          int               // Option for extra operation features.
 	offset          int               // Offset statement for some databases grammar.
-	partition       string            // Partition table partition name.
+	partition       []string           // Partition table partition names.
 	data            any               // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
 	batch           int               // Batch number for batch Insert/Replace/Save operations.
 	filter          bool              // Filter data and where key-value pairs according to the fields of the table.
@@ -183,10 +183,17 @@ func (c *Core) With(objects ...any) *Model {
 
 // Partition sets Partition name.
 // Example:
-// dao.User.Ctx(ctx).Partition（"p1","p2","p3").All()
+// dao.User.Ctx(ctx).Partition("p1","p2","p3").All()
 func (m *Model) Partition(partitions ...string) *Model {
 	model := m.getModel()
-	model.partition = gstr.Join(partitions, ",")
+	model.partition = partitions
+	// Warn if the driver does not support partition selection.
+	if !model.db.FormatPartitionClause(model.tables, partitions) != model.tables {
+		model.db.GetLogger().Warningf(
+			model.db.GetCtx(),
+			"Partition selection is not supported by the current driver; partition names will be ignored",
+		)
+	}
 	return model
 }
 
