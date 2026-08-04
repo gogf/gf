@@ -356,6 +356,12 @@ type DB interface {
 	// Drivers that don't support MySQL's legacy "LOCK IN SHARE MODE" override
 	// to return their dialect equivalent (e.g. "FOR SHARE" on PostgreSQL).
 	GetLockSharedClause() string
+
+	// FormatPartitionClause returns the table expression restricting a statement to
+	// the partitions named by Model.Partition().
+	// Drivers that support partition selection (e.g., MySQL, GaussDB) override this
+	// to emit the PARTITION clause. The default returns table unchanged.
+	FormatPartitionClause(table string, partitions []string) string
 }
 
 // TX defines the interfaces for ORM transaction operations.
