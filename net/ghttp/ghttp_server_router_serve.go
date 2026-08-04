@@ -48,6 +48,7 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*HandlerItemPar
 		path   = r.URL.Path
 		host   = r.GetHost()
 	)
+	r.Method = method
 	// In case of, eg:
 	// Case 1:
 	// 		GET /net/http
