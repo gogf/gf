@@ -8,6 +8,7 @@ package gaussdb
 
 import (
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // GetBoolLiteral returns the SQL literal for the given boolean value.
@@ -23,4 +24,14 @@ func (d *Driver) GetBoolLiteral(v bool) string {
 // GaussDB uses "FOR SHARE" instead of MySQL's legacy "LOCK IN SHARE MODE".
 func (d *Driver) GetLockSharedClause() string {
 	return gdb.LockForShare
+}
+
+// FormatPartitionClause returns the GaussDB PARTITION clause.
+// GaussDB (openGauss) accepts exactly one partition name.
+// With more than one name, only the first is used.
+func (d *Driver) FormatPartitionClause(table string, partitions []string) string {
+	if len(partitions) == 0 {
+		return table
+	}
+	return table + " PARTITION (" + partitions[0] + ")"
 }
