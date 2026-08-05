@@ -501,7 +501,7 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 	kind := structFieldValue.Kind()
 	// Converting using `Set` interface implements, for some types.
 	switch kind {
-	case reflect.Slice, reflect.Array, reflect.Pointer, reflect.Interface:
+	case reflect.Slice, reflect.Pointer, reflect.Interface:
 		if !structFieldValue.IsNil() {
 			if v, ok := structFieldValue.Interface().(localinterface.ISet); ok {
 				v.Set(value)
