@@ -115,19 +115,25 @@ func init() {
 }
 
 func dropTable(table string) {
-	count, err := db.GetCount(
-		ctx,
-		"SELECT COUNT(*) FROM all_tables WHERE owner = ? And table_name= ?", TestDBName, strings.ToUpper(table),
-	)
-	if err != nil {
-		gtest.Fatal(err)
+	tableNameMap := map[string]struct{}{
+		strings.ToUpper(table):   {},
+		strings.Trim(table, `"`): {},
 	}
+	for tableName := range tableNameMap {
+		count, err := db.GetCount(
+			ctx,
+			"SELECT COUNT(*) FROM all_tables WHERE owner = ? And table_name= ?", TestDBName, tableName,
+		)
+		if err != nil {
+			gtest.Fatal(err)
+		}
 
-	if count == 0 {
-		return
-	}
-	if _, err := db.Exec(ctx, fmt.Sprintf("DROP TABLE %s", table)); err != nil {
-		gtest.Fatal(err)
+		if count == 0 {
+			continue
+		}
+		if _, err = db.Exec(ctx, fmt.Sprintf(`DROP TABLE "%s"`, strings.ReplaceAll(tableName, `"`, `""`))); err != nil {
+			gtest.Fatal(err)
+		}
 	}
 }
 
@@ -141,7 +147,7 @@ func createTable(table ...string) (name string) {
 	dropTable(name)
 
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
-	CREATE TABLE "%s"
+	CREATE TABLE %s
 (
 "ID" BIGINT NOT NULL,
 "ACCOUNT_NAME" VARCHAR(128) DEFAULT '' NOT NULL COMMENT 'Account Name',
@@ -191,14 +197,14 @@ func createTableFalse(table ...string) (name string, err error) {
 	dropTable(name)
 
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
-	CREATE TABLE "%s"
+	CREATE TABLE %s
 (
 "ID" BIGINT NOT NULL,
 "ACCOUNT_NAME" VARCHAR(128) DEFAULT '' NOT NULL,
 "PWD_RESET" TINYINT DEFAULT 0 NOT NULL,
 "ENABLED" INT DEFAULT 1 NOT NULL,
 "DELETED" INT DEFAULT 0 NOT NULL,
-"INDEX" INT DEFAULT 0 ,
+INDEX INT DEFAULT 0 ,
 "ATTR_INDEX" INT DEFAULT 0 ,
 "CREATED_BY" VARCHAR(32) DEFAULT '' NOT NULL,
 "CREATED_TIME" TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP() NOT NULL,
@@ -232,7 +238,7 @@ func createTableWithIdentity(table ...string) (name string) {
 	dropTable(name)
 
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
-	CREATE TABLE "%s"
+	CREATE TABLE %s
 (
 "ID" BIGINT IDENTITY(1, 1) NOT NULL,
 "ACCOUNT_NAME" VARCHAR(128) DEFAULT '' NOT NULL COMMENT 'Account Name',
