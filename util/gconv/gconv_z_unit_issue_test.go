@@ -1014,3 +1014,74 @@ func Test_Issue4786(t *testing.T) {
 		t.Assert(string(result.Values[1][:6]), "second")
 	})
 }
+
+// Test_Issue4786_SingleValue verifies single string value converts to slice with one array-backed element.
+func Test_Issue4786_SingleValue(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var result issue4786Request
+		err := gconv.Struct(
+			g.Map{"values": "single"},
+			&result,
+		)
+		t.AssertNil(err)
+		t.Assert(len(result.Values), 1)
+		t.Assert(string(result.Values[0][:6]), "single")
+	})
+}
+
+// Test_Issue4786_EmptySlice verifies empty slice source produces empty result.
+func Test_Issue4786_EmptySlice(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var result issue4786Request
+		err := gconv.Struct(
+			g.Map{"values": []string{}},
+			&result,
+		)
+		t.AssertNil(err)
+		t.Assert(len(result.Values), 0)
+	})
+}
+
+// Test_Issue4786_AnySlice verifies []any source type converts to array-backed slice.
+func Test_Issue4786_AnySlice(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var result issue4786Request
+		err := gconv.Struct(
+			g.Map{"values": []any{"hello", "world"}},
+			&result,
+		)
+		t.AssertNil(err)
+		t.Assert(len(result.Values), 2)
+		t.Assert(string(result.Values[0][:5]), "hello")
+		t.Assert(string(result.Values[1][:5]), "world")
+	})
+}
+
+// issue4786SmallArray is a smaller array type for testing different sizes.
+type issue4786SmallArray [4]byte
+
+// UnmarshalText stores text in the small array-backed value.
+func (v *issue4786SmallArray) UnmarshalText(text []byte) error {
+	copy(v[:], text)
+	return nil
+}
+
+// issue4786SmallRequest contains small array-backed values.
+type issue4786SmallRequest struct {
+	Values []issue4786SmallArray `json:"values"`
+}
+
+// Test_Issue4786_DifferentArraySize verifies conversion works with different array sizes.
+func Test_Issue4786_DifferentArraySize(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var result issue4786SmallRequest
+		err := gconv.Struct(
+			g.Map{"values": []string{"ab", "cd"}},
+			&result,
+		)
+		t.AssertNil(err)
+		t.Assert(len(result.Values), 2)
+		t.Assert(string(result.Values[0][:2]), "ab")
+		t.Assert(string(result.Values[1][:2]), "cd")
+	})
+}
