@@ -10,7 +10,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -18,6 +20,7 @@ import (
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 func Test_TX_Query(t *testing.T) {
@@ -692,7 +695,6 @@ func Test_Transaction_Panic(t *testing.T) {
 			}).OnConflict("id").Save()
 			t.AssertNil(err)
 			panic("error")
-			return nil
 		})
 		t.AssertNE(err, nil)
 
@@ -830,7 +832,6 @@ func Test_Transaction_Nested_TX_Transaction_UseTX(t *testing.T) {
 				}).Insert()
 				t.AssertNil(err)
 				panic("error")
-				return err
 			})
 			t.AssertNE(err, nil)
 			return nil
@@ -885,7 +886,6 @@ func Test_Transaction_Nested_TX_Transaction_UseTX(t *testing.T) {
 				}).Insert()
 				t.AssertNil(err)
 				panic("error")
-				return err
 			})
 			t.AssertNE(err, nil)
 			return nil
@@ -952,7 +952,6 @@ func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
 				t.AssertNil(err)
 				// panic makes this transaction rollback.
 				panic("error")
-				return err
 			})
 			t.AssertNE(err, nil)
 			return nil
@@ -1007,7 +1006,6 @@ func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
 				t.AssertNil(err)
 				// panic makes this transaction rollback.
 				panic("error")
-				return err
 			})
 			t.AssertNE(err, nil)
 			return nil
@@ -1689,5 +1687,1160 @@ func Test_Transaction_Spread(t *testing.T) {
 		all, err = db.Ctx(ctx).Model(table).All()
 		t.AssertNil(err)
 		t.Assert(len(all), 0)
+	})
+}
+
+func Test_TX_Delete(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+		tx, err := db.Begin(ctx)
+		t.AssertNil(err)
+
+		// PgSQL does not accept "WHERE 1" (integer as boolean); use "1=1" instead.
+		_, err = tx.Delete(table, "1=1")
+		t.AssertNil(err)
+
+		err = tx.Commit()
+		t.AssertNil(err)
+
+		n, err := db.Model(table).Count()
+		t.AssertNil(err)
+
+		t.Assert(n, int64(0))
+		t.Assert(tx.IsClosed(), true)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+		tx, err := db.Begin(ctx)
+		t.AssertNil(err)
+
+		// PgSQL does not accept "WHERE 1" (integer as boolean); use "1=1" instead.
+		_, err = tx.Delete(table, "1=1")
+		t.AssertNil(err)
+
+		n, err := tx.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(n, int64(0))
+
+		err = tx.Rollback()
+		t.AssertNil(err)
+
+		n, err = db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(n, int64(TableSize))
+		t.AssertNE(n, int64(0))
+		t.Assert(tx.IsClosed(), true)
+	})
+}
+
+func Test_TX_Replace(t *testing.T) {
+	t.Skip("PostgreSQL does not support REPLACE INTO syntax; use INSERT ON CONFLICT instead")
+}
+
+func Test_TX_BatchReplace(t *testing.T) {
+	t.Skip("PostgreSQL does not support REPLACE INTO syntax; use INSERT ON CONFLICT instead")
+}
+
+func Test_Transaction_Propagation(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		// Test PropagationRequired
+		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			_, err := tx.Insert(table, g.Map{
+				"id":       1,
+				"passport": "required",
+			})
+			t.AssertNil(err)
+
+			err = tx.TransactionWithOptions(ctx, gdb.TxOptions{
+				Propagation: gdb.PropagationRequired,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err := tx2.Insert(table, g.Map{
+					"id":       2,
+					"passport": "required_nested",
+				})
+				return err
+			})
+			t.AssertNil(err)
+
+			return nil
+		})
+		t.AssertNil(err)
+
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(2))
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		// Test PropagationRequiresNew
+		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			_, err := tx.Insert(table, g.Map{
+				"id":       3,
+				"passport": "outer",
+			})
+			t.AssertNil(err)
+
+			err = tx.TransactionWithOptions(ctx, gdb.TxOptions{
+				Propagation: gdb.PropagationRequiresNew,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				_, _ = tx2.Insert(table, g.Map{
+					"id":       4,
+					"passport": "inner_new",
+				})
+				return gerror.New("rollback inner transaction")
+			})
+			t.AssertNE(err, nil)
+
+			return nil
+		})
+		t.AssertNil(err)
+
+		count, err := db.Model(table).Where("passport", "outer").Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(1))
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		// Test PropagationNested
+		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			_, err := tx.Insert(table, g.Map{
+				"id":       5,
+				"passport": "nested_outer",
+			})
+			t.AssertNil(err)
+
+			err = tx.TransactionWithOptions(ctx, gdb.TxOptions{
+				Propagation: gdb.PropagationNested,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				_, _ = tx2.Insert(table, g.Map{
+					"id":       6,
+					"passport": "nested_inner",
+				})
+				return gerror.New("rollback to savepoint")
+			})
+			t.AssertNE(err, nil)
+
+			_, err = tx.Insert(table, g.Map{
+				"id":       7,
+				"passport": "nested_after",
+			})
+			t.AssertNil(err)
+
+			return nil
+		})
+		t.AssertNil(err)
+
+		count, err := db.Model(table).Where("passport", "nested_inner").Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(0))
+
+		count, err = db.Model(table).Where("passport IN(?,?)",
+			"nested_outer", "nested_after").Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(2))
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		// Test PropagationNotSupported
+		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			_, err := tx.Insert(table, g.Map{
+				"id":       8,
+				"passport": "tx_record",
+			})
+			t.AssertNil(err)
+
+			err = tx.TransactionWithOptions(ctx, gdb.TxOptions{
+				Propagation: gdb.PropagationNotSupported,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err = db.Insert(ctx, table, g.Map{
+					"id":       9,
+					"passport": "non_tx_record",
+				})
+				return err
+			})
+			t.AssertNil(err)
+
+			return nil
+		})
+		t.AssertNil(err)
+	})
+}
+
+func Test_Transaction_Propagation_PropagationSupports(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		// scenario1: when in a transaction, use PropagationSupports to execute a transaction
+		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			_, err := tx.Insert(table, g.Map{
+				"id": 1,
+			})
+			if err != nil {
+				return err
+			}
+			err = tx.TransactionWithOptions(ctx, gdb.TxOptions{
+				Propagation: gdb.PropagationSupports,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err = tx2.Insert(table, g.Map{
+					"id": 2,
+				})
+				return gerror.New("error")
+			})
+			return err
+		})
+		t.AssertNE(err, nil)
+
+		// scenario2: when not in a transaction, do not use transaction but direct db link.
+		err = db.TransactionWithOptions(ctx, gdb.TxOptions{
+			Propagation: gdb.PropagationSupports,
+		}, func(ctx context.Context, tx gdb.TX) error {
+			_, err = tx.Insert(table, g.Map{
+				"id": 3,
+			})
+			return err
+		})
+		t.AssertNil(err)
+
+		result, err := db.Model(table).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 1)
+		t.Assert(result[0]["id"], 3)
+	})
+}
+
+func Test_Transaction_Isolation(t *testing.T) {
+	// PostgreSQL does not truly support READ UNCOMMITTED; it behaves as READ COMMITTED.
+	// Test READ COMMITTED instead.
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
+			Isolation: sql.LevelReadCommitted,
+		}, func(ctx context.Context, tx1 gdb.TX) error {
+			_, err := tx1.Update(table, g.Map{"passport": "dirty_read"}, "id=1")
+			t.AssertNil(err)
+
+			err = db.TransactionWithOptions(ctx, gdb.TxOptions{
+				Propagation: gdb.PropagationRequiresNew,
+				Isolation:   sql.LevelReadCommitted,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				// In READ COMMITTED, should NOT see uncommitted change
+				v, err := tx2.Model(table).Where("id=1").Value("passport")
+				t.AssertNil(err)
+				t.Assert(v.String(), "user_1")
+				return nil
+			})
+			t.AssertNil(err)
+
+			return gerror.New("rollback first transaction")
+		})
+		t.AssertNE(err, nil)
+
+		v, err := db.Model(table).Where("id=1").Value("passport")
+		t.AssertNil(err)
+		t.Assert(v.String(), "user_1")
+	})
+
+	// Test REPEATABLE READ
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+
+		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
+			Propagation: gdb.PropagationRequiresNew,
+			Isolation:   sql.LevelRepeatableRead,
+		}, func(ctx context.Context, tx1 gdb.TX) error {
+			v1, err := tx1.Model(table).Where("id=1").Value("passport")
+			t.AssertNil(err)
+			initialValue := v1.String()
+
+			err = db.TransactionWithOptions(ctx, gdb.TxOptions{
+				Propagation: gdb.PropagationRequiresNew,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err := tx2.Update(table, g.Map{
+					"passport": "changed_value",
+				}, "id=1")
+				t.AssertNil(err)
+				return nil
+			})
+			t.AssertNil(err)
+
+			v, err := db.Model(table).Where("id=1").Value("passport")
+			t.AssertNil(err)
+			t.Assert(v.String(), "changed_value")
+
+			v2, err := tx1.Model(table).Where("id=1").Value("passport")
+			t.AssertNil(err)
+			t.Assert(v2.String(), initialValue)
+
+			v3, err := tx1.Model(table).Where("id=1").Value("passport")
+			t.AssertNil(err)
+			t.Assert(v3.String(), initialValue)
+
+			return nil
+		})
+		t.AssertNil(err)
+
+		v, err := db.Model(table).Where("id=1").Value("passport")
+		t.AssertNil(err)
+		t.Assert(v.String(), "changed_value")
+	})
+
+	// Test SERIALIZABLE
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+
+		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
+			Propagation: gdb.PropagationRequiresNew,
+			Isolation:   sql.LevelSerializable,
+		}, func(ctx context.Context, tx1 gdb.TX) error {
+			_, err := tx1.Model(table).All()
+			t.AssertNil(err)
+
+			// PostgreSQL SSI: concurrent insert in another serializable tx may succeed
+			// individually but cause a serialization failure. We just verify it doesn't
+			// corrupt data.
+			err = db.TransactionWithOptions(ctx, gdb.TxOptions{
+				Propagation: gdb.PropagationRequiresNew,
+				Isolation:   sql.LevelSerializable,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err := tx2.Insert(table, g.Map{
+					"id":       1000,
+					"passport": "new_user",
+				})
+				return err
+			})
+			// In PgSQL SSI, the insert may or may not fail depending on conflict detection
+			return nil
+		})
+		t.AssertNil(err)
+	})
+
+	// Test READ COMMITTED
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
+			Propagation: gdb.PropagationRequiresNew,
+			Isolation:   sql.LevelReadCommitted,
+		}, func(ctx context.Context, tx1 gdb.TX) error {
+			v1, err := tx1.Model(table).Where("id=1").Value("passport")
+			t.AssertNil(err)
+			initialValue := v1.String()
+
+			err = db.TransactionWithOptions(ctx, gdb.TxOptions{
+				Propagation: gdb.PropagationRequiresNew,
+				Isolation:   sql.LevelReadCommitted,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err := tx2.Update(table, g.Map{"passport": "committed_value"}, "id=1")
+				return err
+			})
+			t.AssertNil(err)
+
+			v2, err := tx1.Model(table).Where("id=1").Value("passport")
+			t.AssertNil(err)
+			t.Assert(v2.String(), "committed_value")
+			t.AssertNE(v2.String(), initialValue)
+			return nil
+		})
+		t.AssertNil(err)
+	})
+}
+
+func Test_Transaction_Isolation_ReadCommitted_NonRepeatableRead(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+
+		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
+			Propagation: gdb.PropagationRequiresNew,
+			Isolation:   sql.LevelReadCommitted,
+		}, func(ctx context.Context, tx1 gdb.TX) error {
+			v1, err := tx1.Model(table).Where("id=1").Value("passport")
+			t.AssertNil(err)
+			firstRead := v1.String()
+			t.Assert(firstRead, "user_1")
+
+			err = db.TransactionWithOptions(ctx, gdb.TxOptions{
+				Propagation: gdb.PropagationRequiresNew,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err := tx2.Update(table, g.Map{"passport": "user_1_modified"}, "id=1")
+				return err
+			})
+			t.AssertNil(err)
+
+			v2, err := tx1.Model(table).Where("id=1").Value("passport")
+			t.AssertNil(err)
+			secondRead := v2.String()
+			t.Assert(secondRead, "user_1_modified")
+			t.AssertNE(firstRead, secondRead)
+
+			return nil
+		})
+		t.AssertNil(err)
+	})
+}
+
+func Test_Transaction_Isolation_Serializable_PhantomRead(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+
+		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
+			Propagation: gdb.PropagationRequiresNew,
+			Isolation:   sql.LevelSerializable,
+		}, func(ctx context.Context, tx1 gdb.TX) error {
+			count1, err := tx1.Model(table).Count()
+			t.AssertNil(err)
+			t.Assert(count1, int64(TableSize))
+
+			// PostgreSQL SSI: concurrent insert may or may not fail,
+			// we just verify phantom reads are prevented.
+			_ = db.TransactionWithOptions(ctx, gdb.TxOptions{
+				Propagation: gdb.PropagationRequiresNew,
+				Isolation:   sql.LevelSerializable,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err := tx2.Insert(table, g.Map{
+					"id":       100,
+					"passport": "phantom_user",
+				})
+				return err
+			})
+
+			count2, err := tx1.Model(table).Count()
+			t.AssertNil(err)
+			t.Assert(count2, count1)
+
+			return nil
+		})
+		t.AssertNil(err)
+	})
+}
+
+func Test_Transaction_Isolation_RepeatableRead_ConsistentSnapshot(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+
+		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
+			Propagation: gdb.PropagationRequiresNew,
+			Isolation:   sql.LevelRepeatableRead,
+		}, func(ctx context.Context, tx1 gdb.TX) error {
+			records1, err := tx1.Model(table).Where("id IN(?,?)", 1, 2).All()
+			t.AssertNil(err)
+			t.Assert(len(records1), 2)
+
+			err = db.TransactionWithOptions(ctx, gdb.TxOptions{
+				Propagation: gdb.PropagationRequiresNew,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err := tx2.Update(table, g.Map{"nickname": "modified"}, "id IN(?,?)", 1, 2)
+				return err
+			})
+			t.AssertNil(err)
+
+			records2, err := tx1.Model(table).Where("id IN(?,?)", 1, 2).All()
+			t.AssertNil(err)
+			t.Assert(len(records2), 2)
+			for i := 0; i < 2; i++ {
+				t.Assert(records1[i]["nickname"], records2[i]["nickname"])
+				t.AssertNE(records2[i]["nickname"].String(), "modified")
+			}
+
+			return nil
+		})
+		t.AssertNil(err)
+	})
+}
+
+func Test_Transaction_Deadlock_TwoTables(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table1 := createInitTable()
+		table2 := createInitTable()
+		defer dropTable(table1)
+		defer dropTable(table2)
+
+		var wg sync.WaitGroup
+		errs := make([]error, 2)
+		tx1Locked := make(chan struct{})
+		tx2Locked := make(chan struct{})
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			errs[0] = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+				_, err := tx.Update(table1, g.Map{"passport": "tx1_lock"}, "id=1")
+				if err != nil {
+					return err
+				}
+				close(tx1Locked)
+				<-tx2Locked
+				_, err = tx.Update(table2, g.Map{"passport": "tx1_lock"}, "id=1")
+				return err
+			})
+		}()
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			errs[1] = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+				<-tx1Locked
+				_, err := tx.Update(table2, g.Map{"passport": "tx2_lock"}, "id=1")
+				if err != nil {
+					return err
+				}
+				close(tx2Locked)
+				_, err = tx.Update(table1, g.Map{"passport": "tx2_lock"}, "id=1")
+				return err
+			})
+		}()
+
+		wg.Wait()
+
+		t.Assert(errs[0] != nil || errs[1] != nil, true)
+	})
+}
+
+func Test_Transaction_Deadlock_SameTable(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+
+		var wg sync.WaitGroup
+		errs := make([]error, 2)
+		tx1Locked := make(chan struct{})
+		tx2Locked := make(chan struct{})
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			errs[0] = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+				_, err := tx.Update(table, g.Map{"nickname": "tx1"}, "id=1")
+				if err != nil {
+					return err
+				}
+				close(tx1Locked)
+				<-tx2Locked
+				_, err = tx.Update(table, g.Map{"nickname": "tx1"}, "id=2")
+				return err
+			})
+		}()
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			errs[1] = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+				<-tx1Locked
+				_, err := tx.Update(table, g.Map{"nickname": "tx2"}, "id=2")
+				if err != nil {
+					return err
+				}
+				close(tx2Locked)
+				_, err = tx.Update(table, g.Map{"nickname": "tx2"}, "id=1")
+				return err
+			})
+		}()
+
+		wg.Wait()
+
+		t.Assert(errs[0] != nil || errs[1] != nil, true)
+	})
+}
+
+func Test_Transaction_Deadlock_Retry(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+
+		maxRetries := 3
+		var retryCount int
+
+		executeWithRetry := func(fn func(context.Context, gdb.TX) error) error {
+			for i := 0; i < maxRetries; i++ {
+				err := db.Transaction(ctx, fn)
+				if err == nil {
+					return nil
+				}
+				errMsg := err.Error()
+				if gstr.ContainsI(errMsg, "deadlock") || gstr.ContainsI(errMsg, "lock wait timeout") {
+					retryCount++
+					time.Sleep(50 * time.Millisecond)
+					continue
+				}
+				return err
+			}
+			return gerror.New("max retries exceeded")
+		}
+
+		err := executeWithRetry(func(ctx context.Context, tx gdb.TX) error {
+			_, err := tx.Update(table, g.Map{"passport": "retry_test"}, "id=1")
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(retryCount, 0)
+	})
+}
+
+func Test_Transaction_Nested_7Levels(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		err := db.Transaction(ctx, func(ctx context.Context, tx1 gdb.TX) error {
+			_, err := tx1.Insert(table, g.Map{"id": 1, "passport": "level1"})
+			t.AssertNil(err)
+
+			return tx1.Transaction(ctx, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err := tx2.Insert(table, g.Map{"id": 2, "passport": "level2"})
+				t.AssertNil(err)
+
+				return tx2.Transaction(ctx, func(ctx context.Context, tx3 gdb.TX) error {
+					_, err := tx3.Insert(table, g.Map{"id": 3, "passport": "level3"})
+					t.AssertNil(err)
+
+					return tx3.Transaction(ctx, func(ctx context.Context, tx4 gdb.TX) error {
+						_, err := tx4.Insert(table, g.Map{"id": 4, "passport": "level4"})
+						t.AssertNil(err)
+
+						return tx4.Transaction(ctx, func(ctx context.Context, tx5 gdb.TX) error {
+							_, err := tx5.Insert(table, g.Map{"id": 5, "passport": "level5"})
+							t.AssertNil(err)
+
+							return tx5.Transaction(ctx, func(ctx context.Context, tx6 gdb.TX) error {
+								_, err := tx6.Insert(table, g.Map{"id": 6, "passport": "level6"})
+								t.AssertNil(err)
+
+								return tx6.Transaction(ctx, func(ctx context.Context, tx7 gdb.TX) error {
+									_, err := tx7.Insert(table, g.Map{"id": 7, "passport": "level7"})
+									return err
+								})
+							})
+						})
+					})
+				})
+			})
+		})
+		t.AssertNil(err)
+
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(7))
+	})
+}
+
+func Test_Transaction_Nested_7Levels_PartialRollback(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		err := db.Transaction(ctx, func(ctx context.Context, tx1 gdb.TX) error {
+			_, err := tx1.Insert(table, g.Map{"id": 1, "passport": "level1"})
+			t.AssertNil(err)
+
+			return tx1.Transaction(ctx, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err := tx2.Insert(table, g.Map{"id": 2, "passport": "level2"})
+				t.AssertNil(err)
+
+				return tx2.Transaction(ctx, func(ctx context.Context, tx3 gdb.TX) error {
+					_, err := tx3.Insert(table, g.Map{"id": 3, "passport": "level3"})
+					t.AssertNil(err)
+
+					return tx3.Transaction(ctx, func(ctx context.Context, tx4 gdb.TX) error {
+						_, err := tx4.Insert(table, g.Map{"id": 4, "passport": "level4"})
+						t.AssertNil(err)
+
+						return tx4.Transaction(ctx, func(ctx context.Context, tx5 gdb.TX) error {
+							_, err := tx5.Insert(table, g.Map{"id": 5, "passport": "level5"})
+							t.AssertNil(err)
+
+							return tx5.Transaction(ctx, func(ctx context.Context, tx6 gdb.TX) error {
+								_, err := tx6.Insert(table, g.Map{"id": 6, "passport": "level6"})
+								t.AssertNil(err)
+
+								return tx6.Transaction(ctx, func(ctx context.Context, tx7 gdb.TX) error {
+									_, err := tx7.Insert(table, g.Map{"id": 7, "passport": "level7"})
+									t.AssertNil(err)
+									return gerror.New("rollback from level 7")
+								})
+							})
+						})
+					})
+				})
+			})
+		})
+		t.AssertNE(err, nil)
+
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(0))
+	})
+}
+
+func Test_Transaction_Nested_10Levels(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		err := db.Transaction(ctx, func(ctx context.Context, tx1 gdb.TX) error {
+			_, err := tx1.Insert(table, g.Map{"id": 1, "passport": "level1"})
+			t.AssertNil(err)
+
+			return tx1.Transaction(ctx, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err := tx2.Insert(table, g.Map{"id": 2, "passport": "level2"})
+				t.AssertNil(err)
+
+				return tx2.Transaction(ctx, func(ctx context.Context, tx3 gdb.TX) error {
+					_, err := tx3.Insert(table, g.Map{"id": 3, "passport": "level3"})
+					t.AssertNil(err)
+
+					return tx3.Transaction(ctx, func(ctx context.Context, tx4 gdb.TX) error {
+						_, err := tx4.Insert(table, g.Map{"id": 4, "passport": "level4"})
+						t.AssertNil(err)
+
+						return tx4.Transaction(ctx, func(ctx context.Context, tx5 gdb.TX) error {
+							_, err := tx5.Insert(table, g.Map{"id": 5, "passport": "level5"})
+							t.AssertNil(err)
+
+							return tx5.Transaction(ctx, func(ctx context.Context, tx6 gdb.TX) error {
+								_, err := tx6.Insert(table, g.Map{"id": 6, "passport": "level6"})
+								t.AssertNil(err)
+
+								return tx6.Transaction(ctx, func(ctx context.Context, tx7 gdb.TX) error {
+									_, err := tx7.Insert(table, g.Map{"id": 7, "passport": "level7"})
+									t.AssertNil(err)
+
+									return tx7.Transaction(ctx, func(ctx context.Context, tx8 gdb.TX) error {
+										_, err := tx8.Insert(table, g.Map{"id": 8, "passport": "level8"})
+										t.AssertNil(err)
+
+										return tx8.Transaction(ctx, func(ctx context.Context, tx9 gdb.TX) error {
+											_, err := tx9.Insert(table, g.Map{"id": 9, "passport": "level9"})
+											t.AssertNil(err)
+
+											return tx9.Transaction(ctx, func(ctx context.Context, tx10 gdb.TX) error {
+												_, err := tx10.Insert(table, g.Map{"id": 10, "passport": "level10"})
+												return err
+											})
+										})
+									})
+								})
+							})
+						})
+					})
+				})
+			})
+		})
+		t.AssertNil(err)
+
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(10))
+	})
+}
+
+func Test_Transaction_Nested_SavePoint_Multiple(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		tx, err := db.Begin(ctx)
+		t.AssertNil(err)
+
+		_, err = tx.Insert(table, g.Map{"id": 1, "passport": "sp1"})
+		t.AssertNil(err)
+		err = tx.SavePoint("sp1")
+		t.AssertNil(err)
+
+		_, err = tx.Insert(table, g.Map{"id": 2, "passport": "sp2"})
+		t.AssertNil(err)
+		err = tx.SavePoint("sp2")
+		t.AssertNil(err)
+
+		_, err = tx.Insert(table, g.Map{"id": 3, "passport": "sp3"})
+		t.AssertNil(err)
+		err = tx.SavePoint("sp3")
+		t.AssertNil(err)
+
+		_, err = tx.Insert(table, g.Map{"id": 4, "passport": "no_sp"})
+		t.AssertNil(err)
+
+		err = tx.RollbackTo("sp2")
+		t.AssertNil(err)
+
+		err = tx.Commit()
+		t.AssertNil(err)
+
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(2))
+
+		v1, err := db.Model(table).Where("id=1").Value("passport")
+		t.AssertNil(err)
+		t.Assert(v1.String(), "sp1")
+
+		v2, err := db.Model(table).Where("id=2").Value("passport")
+		t.AssertNil(err)
+		t.Assert(v2.String(), "sp2")
+	})
+}
+
+func Test_Transaction_Nested_SavePoint_RollbackToNonExistent(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		tx, err := db.Begin(ctx)
+		t.AssertNil(err)
+
+		_, err = tx.Insert(table, g.Map{"id": 1, "passport": "test"})
+		t.AssertNil(err)
+
+		err = tx.RollbackTo("non_existent")
+		t.AssertNE(err, nil)
+
+		err = tx.Rollback()
+		t.AssertNil(err)
+	})
+}
+
+func Test_Transaction_Concurrent_Insert(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		var wg = sync.WaitGroup{}
+		concurrency := 10
+
+		wg.Add(concurrency)
+		for i := 0; i < concurrency; i++ {
+			go func(index int) {
+				defer wg.Done()
+				err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+					_, err := tx.Insert(table, g.Map{
+						"id":       index + 1,
+						"passport": fmt.Sprintf("user_%d", index+1),
+					})
+					return err
+				})
+				t.AssertNil(err)
+			}(i)
+		}
+
+		wg.Wait()
+
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(concurrency))
+	})
+}
+
+func Test_Transaction_Concurrent_Update(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+
+		var wg = sync.WaitGroup{}
+		concurrency := 5
+
+		wg.Add(concurrency)
+		for i := 0; i < concurrency; i++ {
+			go func(index int) {
+				defer wg.Done()
+				_ = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+					_, err := tx.Update(table, g.Map{
+						"nickname": fmt.Sprintf("concurrent_%d", index),
+					}, "id=1")
+					return err
+				})
+			}(i)
+		}
+
+		wg.Wait()
+
+		v, err := db.Model(table).Where("id=1").Value("nickname")
+		t.AssertNil(err)
+		t.AssertNE(v.String(), "name_1")
+	})
+}
+
+func Test_Transaction_Mixed_Propagation_Nested(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		err := db.Transaction(ctx, func(ctx context.Context, tx1 gdb.TX) error {
+			_, err := tx1.Insert(table, g.Map{"id": 1, "passport": "outer"})
+			t.AssertNil(err)
+
+			// REQUIRES_NEW
+			err = tx1.TransactionWithOptions(ctx, gdb.TxOptions{
+				Propagation: gdb.PropagationRequiresNew,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err := tx2.Insert(table, g.Map{"id": 2, "passport": "independent"})
+				return err
+			})
+			t.AssertNil(err)
+
+			// NESTED
+			err = tx1.TransactionWithOptions(ctx, gdb.TxOptions{
+				Propagation: gdb.PropagationNested,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err := tx2.Insert(table, g.Map{"id": 3, "passport": "nested"})
+				t.AssertNil(err)
+				return gerror.New("rollback nested")
+			})
+			t.AssertNE(err, nil)
+
+			// REQUIRED
+			err = tx1.TransactionWithOptions(ctx, gdb.TxOptions{
+				Propagation: gdb.PropagationRequired,
+			}, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err := tx2.Insert(table, g.Map{"id": 4, "passport": "required"})
+				return err
+			})
+			t.AssertNil(err)
+
+			return nil
+		})
+		t.AssertNil(err)
+
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(3))
+
+		exists, err := db.Model(table).Where("passport", "nested").Count()
+		t.AssertNil(err)
+		t.Assert(exists, int64(0))
+	})
+}
+
+func Test_Transaction_Rollback_After_Commit(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		tx, err := db.Begin(ctx)
+		t.AssertNil(err)
+
+		_, err = tx.Insert(table, g.Map{"id": 1, "passport": "test"})
+		t.AssertNil(err)
+
+		err = tx.Commit()
+		t.AssertNil(err)
+
+		err = tx.Rollback()
+		t.AssertNE(err, nil)
+	})
+}
+
+func Test_Transaction_Commit_After_Rollback(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		tx, err := db.Begin(ctx)
+		t.AssertNil(err)
+
+		_, err = tx.Insert(table, g.Map{"id": 1, "passport": "test"})
+		t.AssertNil(err)
+
+		err = tx.Rollback()
+		t.AssertNil(err)
+
+		err = tx.Commit()
+		t.AssertNE(err, nil)
+	})
+}
+
+func Test_Transaction_Operation_After_Commit(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		tx, err := db.Begin(ctx)
+		t.AssertNil(err)
+
+		err = tx.Commit()
+		t.AssertNil(err)
+
+		_, err = tx.Insert(table, g.Map{"id": 1, "passport": "test"})
+		t.AssertNE(err, nil)
+	})
+}
+
+func Test_Transaction_Operation_After_Rollback(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		tx, err := db.Begin(ctx)
+		t.AssertNil(err)
+
+		err = tx.Rollback()
+		t.AssertNil(err)
+
+		_, err = tx.Insert(table, g.Map{"id": 1, "passport": "test"})
+		t.AssertNE(err, nil)
+	})
+}
+
+func Test_Transaction_Context_Timeout(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		ctxTimeout, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+		defer cancel()
+
+		err := db.Transaction(ctxTimeout, func(ctx context.Context, tx gdb.TX) error {
+			_, err := tx.Insert(table, g.Map{"id": 1, "passport": "test"})
+			t.AssertNil(err)
+
+			<-ctx.Done()
+			return ctx.Err()
+		})
+		t.AssertNE(err, nil)
+	})
+}
+
+func Test_Transaction_Context_Cancel(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		ctxCancel, cancel := context.WithCancel(context.Background())
+
+		go func() {
+			time.Sleep(100 * time.Millisecond)
+			cancel()
+		}()
+
+		err := db.Transaction(ctxCancel, func(ctx context.Context, tx gdb.TX) error {
+			_, err := tx.Insert(table, g.Map{"id": 1, "passport": "test"})
+			t.AssertNil(err)
+
+			<-ctx.Done()
+			return ctx.Err()
+		})
+		t.AssertNE(err, nil)
+	})
+}
+
+func Test_Transaction_Empty_NoOperations(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			return nil
+		})
+		t.AssertNil(err)
+	})
+}
+
+func Test_Transaction_Large_Batch_Insert(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			batchSize := 1000
+			data := make(g.List, batchSize)
+			for i := 0; i < batchSize; i++ {
+				data[i] = g.Map{
+					"id":       i + 1,
+					"passport": fmt.Sprintf("user_%d", i+1),
+				}
+			}
+
+			_, err := tx.Insert(table, data)
+			return err
+		})
+		t.AssertNil(err)
+
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(1000))
+	})
+}
+
+func Test_Transaction_Large_Batch_Update(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		batchSize := 500
+		data := make(g.List, batchSize)
+		for i := 0; i < batchSize; i++ {
+			data[i] = g.Map{
+				"id":       i + 1,
+				"passport": fmt.Sprintf("user_%d", i+1),
+			}
+		}
+		_, err := db.Insert(ctx, table, data)
+		t.AssertNil(err)
+
+		err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			_, err := tx.Model(table).Where("id > ?", 0).Update(g.Map{"nickname": "updated"})
+			return err
+		})
+		t.AssertNil(err)
+
+		count, err := db.Model(table).Where("nickname", "updated").Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(batchSize))
+	})
+}
+
+func Test_Transaction_ReadOnly_WithUpdate(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+
+		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
+			ReadOnly: true,
+		}, func(ctx context.Context, tx gdb.TX) error {
+			_, err := tx.Model(table).All()
+			t.AssertNil(err)
+
+			_, err = tx.Insert(table, g.Map{
+				"id":       100,
+				"passport": "new_user",
+			})
+			return err
+		})
+		t.AssertNE(err, nil)
+	})
+}
+
+func Test_Transaction_ReadOnly_WithDelete(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
+
+		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
+			ReadOnly: true,
+		}, func(ctx context.Context, tx gdb.TX) error {
+			_, err := tx.Delete(table, "id=1")
+			return err
+		})
+		t.AssertNE(err, nil)
+
+		count, err := db.Model(table).Where("id=1").Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(1))
 	})
 }

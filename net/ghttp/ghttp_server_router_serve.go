@@ -29,15 +29,32 @@ type handlerCacheItem struct {
 	hasServe    bool
 }
 
-// serveHandlerKey creates and returns a handler key for router.
+// serveHandlerKey creates and returns a handler key for router registration.
+//
+// It is the serveCacheKey with `method` normalized to uppercase, as registration accepts
+// the method in any case, eg BindHandler("get:/api/user", ...) registers a GET route.
 func (s *Server) serveHandlerKey(method, path, domain string) string {
+	return s.serveCacheKey(strings.ToUpper(method), path, domain)
+}
+
+// serveCacheKey creates and returns a cache key for the router searching cache.
+//
+// Different from serveHandlerKey, it does NOT normalize the case of `method`, as the
+// searching result is bound to the exact method token that was searched with. A request
+// carrying a non-canonical method casing(eg "get") must not share the cache item with the
+// canonical one(eg "GET"), or else its serveItem-less result would be cached under the
+// canonical key and make every subsequent well-formed request 404.
+//
+// Note that it also defines the key format of serveHandlerKey, which is the registration
+// side key, so changing the format here changes the registered router keys as well.
+func (s *Server) serveCacheKey(method, path, domain string) string {
 	if len(domain) > 0 {
 		domain = "@" + domain
 	}
 	if method == "" {
 		return path + strings.ToLower(domain)
 	}
-	return strings.ToUpper(method) + ":" + path + strings.ToLower(domain)
+	return method + ":" + path + strings.ToLower(domain)
 }
 
 // getHandlersWithCache searches the router item with cache feature for a given request.
@@ -71,7 +88,7 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*HandlerItemPar
 	if xUrlPath := r.Header.Get(HeaderXUrlPath); xUrlPath != "" {
 		path = xUrlPath
 	}
-	var handlerCacheKey = s.serveHandlerKey(method, path, host)
+	var handlerCacheKey = s.serveCacheKey(method, path, host)
 	value, err := s.serveCache.GetOrSetFunc(ctx, handlerCacheKey, func(ctx context.Context) (any, error) {
 		parsedItems, serveItem, hasHook, hasServe = s.searchHandlers(method, path, host)
 		if parsedItems != nil {

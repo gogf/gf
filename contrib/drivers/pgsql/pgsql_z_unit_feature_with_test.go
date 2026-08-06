@@ -1035,6 +1035,262 @@ func Test_Table_Relation_WithAll_AttributeStructAlsoHasWithTag(t *testing.T) {
 	})
 }
 
+func Test_Table_Relation_WithAll_AttributeStructAlsoHasWithTag_MoreDeep(t *testing.T) {
+	var (
+		tableUser       = "withall_deep_user"
+		tableUserDetail = "withall_deep_user_detail"
+		tableUserScores = "withall_deep_user_scores"
+	)
+	dropTable(tableUser)
+	dropTable(tableUserDetail)
+	dropTable(tableUserScores)
+
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user.sql"), tableUser)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUser)
+
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_detail.sql"), tableUserDetail)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUserDetail)
+
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_scores.sql"), tableUserScores)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUserScores)
+
+	type UserScores struct {
+		gmeta.Meta `orm:"table:withall_deep_user_scores"`
+		Id         int `json:"id"`
+		Uid        int `json:"uid"`
+		Score      int `json:"score"`
+	}
+
+	type UserDetail1 struct {
+		gmeta.Meta `orm:"table:withall_deep_user_detail"`
+		Uid        int           `json:"uid"`
+		Address    string        `json:"address"`
+		UserScores []*UserScores `orm:"with:uid"`
+	}
+
+	type UserDetail2 struct {
+		gmeta.Meta  `orm:"table:withall_deep_user_detail"`
+		Uid         int           `json:"uid"`
+		Address     string        `json:"address"`
+		UserDetail1 *UserDetail1  `orm:"with:uid"`
+		UserScores  []*UserScores `orm:"with:uid"`
+	}
+
+	type UserDetail3 struct {
+		gmeta.Meta  `orm:"table:withall_deep_user_detail"`
+		Uid         int           `json:"uid"`
+		Address     string        `json:"address"`
+		UserDetail2 *UserDetail2  `orm:"with:uid"`
+		UserScores  []*UserScores `orm:"with:uid"`
+	}
+
+	type UserDetail struct {
+		gmeta.Meta  `orm:"table:withall_deep_user_detail"`
+		Uid         int           `json:"uid"`
+		Address     string        `json:"address"`
+		UserDetail3 *UserDetail3  `orm:"with:uid"`
+		UserScores  []*UserScores `orm:"with:uid"`
+	}
+
+	type User struct {
+		gmeta.Meta  `orm:"table:withall_deep_user"`
+		*UserDetail `orm:"with:uid=id"`
+		Id          int    `json:"id"`
+		Name        string `json:"name"`
+	}
+
+	// Initialize the data.
+	var err error
+	for i := 1; i <= 5; i++ {
+		_, err = db.Insert(ctx, tableUser, g.Map{
+			"id":   i,
+			"name": fmt.Sprintf(`name_%d`, i),
+		})
+		gtest.AssertNil(err)
+		_, err = db.Insert(ctx, tableUserDetail, g.Map{
+			"uid":     i,
+			"address": fmt.Sprintf(`address_%d`, i),
+		})
+		gtest.AssertNil(err)
+		for j := 1; j <= 5; j++ {
+			_, err = db.Insert(ctx, tableUserScores, g.Map{
+				"uid":   i,
+				"score": j,
+			})
+			gtest.AssertNil(err)
+		}
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var user *User
+		err := db.Model(tableUser).WithAll().Where("id", 3).Scan(&user)
+		t.AssertNil(err)
+		t.Assert(user.Id, 3)
+		t.AssertNE(user.UserDetail, nil)
+		t.Assert(user.UserDetail.Uid, 3)
+		t.Assert(user.UserDetail.UserDetail3.Uid, 3)
+		t.Assert(user.UserDetail.UserDetail3.UserDetail2.Uid, 3)
+		t.Assert(user.UserDetail.UserDetail3.UserDetail2.UserDetail1.Uid, 3)
+		t.Assert(user.UserDetail.Address, `address_3`)
+		t.Assert(len(user.UserDetail.UserScores), 5)
+		t.Assert(user.UserDetail.UserScores[0].Uid, 3)
+		t.Assert(user.UserDetail.UserScores[0].Score, 1)
+		t.Assert(user.UserDetail.UserScores[4].Uid, 3)
+		t.Assert(user.UserDetail.UserScores[4].Score, 5)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var user User
+		err := db.Model(tableUser).WithAll().Where("id", 4).Scan(&user)
+		t.AssertNil(err)
+		t.Assert(user.Id, 4)
+		t.AssertNE(user.UserDetail, nil)
+		t.Assert(user.UserDetail.Uid, 4)
+		t.Assert(user.UserDetail.UserDetail3.Uid, 4)
+		t.Assert(user.UserDetail.UserDetail3.UserDetail2.Uid, 4)
+		t.Assert(user.UserDetail.UserDetail3.UserDetail2.UserDetail1.Uid, 4)
+		t.Assert(user.UserDetail.Address, `address_4`)
+		t.Assert(len(user.UserDetail.UserScores), 5)
+		t.Assert(user.UserDetail.UserScores[0].Uid, 4)
+		t.Assert(user.UserDetail.UserScores[0].Score, 1)
+		t.Assert(user.UserDetail.UserScores[4].Uid, 4)
+		t.Assert(user.UserDetail.UserScores[4].Score, 5)
+	})
+}
+
+func Test_Table_Relation_With_AttributeStructAlsoHasWithTag_MoreDeep(t *testing.T) {
+	var (
+		tableUser       = "with_deep_user"
+		tableUserDetail = "with_deep_user_detail"
+		tableUserScores = "with_deep_user_scores"
+	)
+	dropTable(tableUser)
+	dropTable(tableUserDetail)
+	dropTable(tableUserScores)
+
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user.sql"), tableUser)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUser)
+
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_detail.sql"), tableUserDetail)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUserDetail)
+
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_scores.sql"), tableUserScores)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUserScores)
+
+	type UserScores struct {
+		gmeta.Meta `orm:"table:with_deep_user_scores"`
+		Id         int `json:"id"`
+		Uid        int `json:"uid"`
+		Score      int `json:"score"`
+	}
+
+	type UserDetail1 struct {
+		gmeta.Meta `orm:"table:with_deep_user_detail"`
+		Uid        int           `json:"uid"`
+		Address    string        `json:"address"`
+		UserScores []*UserScores `orm:"with:uid"`
+	}
+
+	type UserDetail2 struct {
+		gmeta.Meta  `orm:"table:with_deep_user_detail"`
+		Uid         int           `json:"uid"`
+		Address     string        `json:"address"`
+		UserDetail1 *UserDetail1  `orm:"with:uid"`
+		UserScores  []*UserScores `orm:"with:uid"`
+	}
+
+	type UserDetail3 struct {
+		gmeta.Meta  `orm:"table:with_deep_user_detail"`
+		Uid         int           `json:"uid"`
+		Address     string        `json:"address"`
+		UserDetail2 *UserDetail2  `orm:"with:uid"`
+		UserScores  []*UserScores `orm:"with:uid"`
+	}
+
+	type UserDetail struct {
+		gmeta.Meta  `orm:"table:with_deep_user_detail"`
+		Uid         int           `json:"uid"`
+		Address     string        `json:"address"`
+		UserDetail3 *UserDetail3  `orm:"with:uid"`
+		UserScores  []*UserScores `orm:"with:uid"`
+	}
+
+	type User struct {
+		gmeta.Meta  `orm:"table:with_deep_user"`
+		*UserDetail `orm:"with:uid=id"`
+		Id          int    `json:"id"`
+		Name        string `json:"name"`
+	}
+
+	// Initialize the data.
+	var err error
+	for i := 1; i <= 5; i++ {
+		_, err = db.Insert(ctx, tableUser, g.Map{
+			"id":   i,
+			"name": fmt.Sprintf(`name_%d`, i),
+		})
+		gtest.AssertNil(err)
+		_, err = db.Insert(ctx, tableUserDetail, g.Map{
+			"uid":     i,
+			"address": fmt.Sprintf(`address_%d`, i),
+		})
+		gtest.AssertNil(err)
+		for j := 1; j <= 5; j++ {
+			_, err = db.Insert(ctx, tableUserScores, g.Map{
+				"uid":   i,
+				"score": j,
+			})
+			gtest.AssertNil(err)
+		}
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var user *User
+		err := db.Model(tableUser).With(UserDetail{}, UserDetail2{}, UserDetail3{}, UserScores{}).Where("id", 3).Scan(&user)
+		t.AssertNil(err)
+		t.Assert(user.Id, 3)
+		t.AssertNE(user.UserDetail, nil)
+		t.Assert(user.UserDetail.Uid, 3)
+		t.Assert(user.UserDetail.UserDetail3.Uid, 3)
+		t.Assert(user.UserDetail.UserDetail3.UserDetail2.Uid, 3)
+		t.Assert(user.UserDetail.UserDetail3.UserDetail2.UserDetail1, nil)
+		t.Assert(user.UserDetail.Address, `address_3`)
+		t.Assert(len(user.UserDetail.UserScores), 5)
+		t.Assert(user.UserDetail.UserScores[0].Uid, 3)
+		t.Assert(user.UserDetail.UserScores[0].Score, 1)
+		t.Assert(user.UserDetail.UserScores[4].Uid, 3)
+		t.Assert(user.UserDetail.UserScores[4].Score, 5)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var user User
+		err := db.Model(tableUser).With(UserDetail{}, UserDetail2{}, UserDetail3{}, UserScores{}).Where("id", 4).Scan(&user)
+		t.AssertNil(err)
+		t.Assert(user.Id, 4)
+		t.AssertNE(user.UserDetail, nil)
+		t.Assert(user.UserDetail.Uid, 4)
+		t.Assert(user.UserDetail.UserDetail3.Uid, 4)
+		t.Assert(user.UserDetail.UserDetail3.UserDetail2.Uid, 4)
+		t.Assert(user.UserDetail.UserDetail3.UserDetail2.UserDetail1, nil)
+		t.Assert(user.UserDetail.Address, `address_4`)
+		t.Assert(len(user.UserDetail.UserScores), 5)
+		t.Assert(user.UserDetail.UserScores[0].Uid, 4)
+		t.Assert(user.UserDetail.UserScores[0].Score, 1)
+		t.Assert(user.UserDetail.UserScores[4].Uid, 4)
+		t.Assert(user.UserDetail.UserScores[4].Score, 5)
+	})
+}
+
 func Test_Table_Relation_With_MultipleDepends1(t *testing.T) {
 	defer func() {
 		dropTable("table_a")
