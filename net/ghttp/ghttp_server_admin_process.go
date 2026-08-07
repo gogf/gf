@@ -239,20 +239,21 @@ func restartWebServers(ctx context.Context, signal os.Signal, newExeFilePath str
 	if runtime.GOOS == "windows" {
 		if signal != nil {
 			// Controlled by signal.
-			forceCloseWebServers(ctx)
 			if err := forkRestartProcess(ctx, newExeFilePath); err != nil {
 				intlog.Errorf(ctx, `%+v`, err)
+				return err
 			}
+			forceCloseWebServers(ctx)
 			return nil
 		}
 		// Controlled by web page.
 		// It should ensure the response wrote to client and then close all servers gracefully.
-		// On Windows, we don't close the server here.
-		// The new process will kill the old one when it starts.
 		gtimer.SetTimeout(ctx, time.Second, func(ctx context.Context) {
 			if err := forkRestartProcess(ctx, newExeFilePath); err != nil {
 				intlog.Errorf(ctx, `%+v`, err)
+				return
 			}
+			forceCloseWebServers(ctx)
 		})
 		return nil
 	}
