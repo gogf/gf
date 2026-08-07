@@ -13,7 +13,6 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/otel"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/text/gregex"
@@ -67,12 +66,8 @@ type ConfigNode struct {
 	// Optional field
 	Debug bool `json:"debug"`
 
-	// Otel specifies the OpenTelemetry tracing configuration
-	// Optional field
-	Otel otel.Config `json:"otel"`
-
-	// OtelTraceSQLEnabled enables OpenTelemetry tracing for SQL operations
-	// Deprecated: Use Otel.TraceSQLEnabled instead. This field is kept for backward compatibility.
+	// OtelTraceSQLEnabled enables OpenTelemetry tracing for SQL operations.
+	// When enabled, SQL statements will be recorded as trace span attributes.
 	// Optional field
 	OtelTraceSQLEnabled bool `json:"otelTraceSQLEnabled"`
 
@@ -495,13 +490,7 @@ func parseConfigNodeLink(node *ConfigNode) (*ConfigNode, error) {
 }
 
 // IsOtelTraceSQLEnabled returns whether SQL tracing is enabled for this configuration.
-// It checks both the new Otel.TraceSQLEnabled field and the deprecated OtelTraceSQLEnabled field
-// for backward compatibility.
+// When enabled, SQL statements will be recorded as trace span attributes.
 func (node *ConfigNode) IsOtelTraceSQLEnabled() bool {
-	// Check new configuration first
-	if node.Otel.TraceSQLEnabled {
-		return true
-	}
-	// Fall back to deprecated field for backward compatibility
 	return node.OtelTraceSQLEnabled
 }

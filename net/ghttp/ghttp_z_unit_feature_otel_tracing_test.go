@@ -7,19 +7,15 @@
 package ghttp_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/internal/otel"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 )
-
-var testCtx = context.Background()
 
 func Test_OTEL_RequestTracing_Disabled(t *testing.T) {
 	s := g.Server(guid.S())
@@ -143,9 +139,9 @@ func Test_OTEL_BothTracingEnabled(t *testing.T) {
 func Test_OTEL_NewConfiguration_RequestTracing(t *testing.T) {
 	s := g.Server(guid.S())
 
-	// Enable request tracing using new independent OTEL configuration
+	// Enable request tracing using flat boolean field
 	config := ghttp.NewConfig()
-	config.Otel.TraceRequestEnabled = true
+	config.OtelTraceRequestEnabled = true
 	err := s.SetConfig(config)
 	gtest.AssertNil(err)
 
@@ -175,9 +171,9 @@ func Test_OTEL_NewConfiguration_RequestTracing(t *testing.T) {
 func Test_OTEL_NewConfiguration_ResponseTracing(t *testing.T) {
 	s := g.Server(guid.S())
 
-	// Enable response tracing using new independent OTEL configuration
+	// Enable response tracing using flat boolean field
 	config := ghttp.NewConfig()
-	config.Otel.TraceResponseEnabled = true
+	config.OtelTraceResponseEnabled = true
 	err := s.SetConfig(config)
 	gtest.AssertNil(err)
 
@@ -207,10 +203,10 @@ func Test_OTEL_NewConfiguration_ResponseTracing(t *testing.T) {
 func Test_OTEL_BackwardCompatibility(t *testing.T) {
 	s := g.Server(guid.S())
 
-	// Test that legacy configuration still works alongside new configuration
+	// Test that configuration works with both fields
 	config := ghttp.NewConfig()
-	config.OtelTraceRequestEnabled = true   // Legacy field
-	config.Otel.TraceResponseEnabled = true // New field
+	config.OtelTraceRequestEnabled = true
+	config.OtelTraceResponseEnabled = true
 	err := s.SetConfig(config)
 	gtest.AssertNil(err)
 
@@ -234,21 +230,5 @@ func Test_OTEL_BackwardCompatibility(t *testing.T) {
 		// Test that both legacy and new configuration work together
 		t.Assert(s.GetConfig().IsOtelTraceRequestEnabled(), true)
 		t.Assert(s.GetConfig().IsOtelTraceResponseEnabled(), true)
-	})
-}
-
-func Test_OTEL_Configuration_Helpers(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		// Test new OTEL config helpers
-		otelConfig := otel.NewConfig()
-		t.Assert(otelConfig.IsTracingSQLEnabled(), false)
-		t.Assert(otelConfig.IsTracingRequestEnabled(), false)
-		t.Assert(otelConfig.IsTracingResponseEnabled(), false)
-
-		otelConfig.TraceSQLEnabled = true
-		otelConfig.TraceRequestEnabled = true
-		t.Assert(otelConfig.IsTracingSQLEnabled(), true)
-		t.Assert(otelConfig.IsTracingRequestEnabled(), true)
-		t.Assert(otelConfig.IsTracingResponseEnabled(), false)
 	})
 }
