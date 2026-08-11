@@ -312,14 +312,21 @@ func (m *Model) Scan(pointer any, where ...any) error {
 		}
 
 		if elemType != nil && (elemType.Kind() != reflect.Struct || elemType.Implements(reflect.TypeFor[sql.Scanner]()) || originalType.Implements(reflect.TypeFor[sql.Scanner]())) {
-			if len(m.fields) == 1 {
-				args := append([]any{m.fields[0]}, where...)
-				valueArr, err := m.Array(args...)
-				if err != nil {
-					return err
-				}
-				return valueArr.Scan(pointer)
+			if len(m.fields) != 1 {
+				return gerror.NewCode(
+					gcode.CodeInvalidParameter,
+					fmt.Sprintf(
+						`Scan into slice of basic type requires exactly 1 field specified via Fields(), but got %d`,
+						len(m.fields),
+					),
+				)
 			}
+			args := append([]any{m.fields[0]}, where...)
+			valueArr, err := m.Array(args...)
+			if err != nil {
+				return err
+			}
+			return valueArr.Scan(pointer)
 		}
 		return m.doStructs(pointer, where...)
 
