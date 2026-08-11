@@ -88,6 +88,12 @@ func (c *Converter) String(anyInput any) (string, error) {
 			// then use that interface to perform the conversion
 			return f.Error(), nil
 		}
+		// Unwrap reflect.Value input for consistency with Bool converter.
+		if rv, ok := value.(reflect.Value); ok {
+			if rv.IsValid() && rv.CanInterface() {
+				return c.String(rv.Interface())
+			}
+		}
 		// Reflect checks.
 		var (
 			rv   = reflect.ValueOf(value)
