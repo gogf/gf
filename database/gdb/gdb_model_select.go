@@ -332,7 +332,8 @@ func (m *Model) Scan(pointer any, where ...any) error {
 
 	case reflect.Struct, reflect.Invalid:
 		// OriginType has all outer pointers stripped; use reflect.PointerTo to also check
-		// whether *T implements sql.Scanner (pointer receiver methods).
+		// whether *T implements sql.Scanner (pointer receiver methods). Note: Go does not
+		// allow **T or deeper as a method receiver, so checking T and *T is sufficient.
 		elemType := reflectInfo.OriginType
 		if elemType != nil && (elemType.Implements(reflect.TypeFor[sql.Scanner]()) || reflect.PointerTo(elemType).Implements(reflect.TypeFor[sql.Scanner]())) {
 			if len(m.fields) == 1 {
