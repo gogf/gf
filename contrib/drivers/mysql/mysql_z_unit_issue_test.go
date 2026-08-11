@@ -2272,10 +2272,13 @@ func Test_Issue3977(t *testing.T) {
 		err := db.Model(table).Fields("username").Where("id", 9999).Scan(&name)
 		t.Assert(err, sql.ErrNoRows)
 
-		// pointer to basic type
+		// pointer to basic type: `namePtr` starts as a nil pointer, consistent with
+		// Record.Struct/**struct semantics, no row does not produce sql.ErrNoRows here
+		// and `namePtr` stays nil.
 		var namePtr *string
 		err = db.Model(table).Fields("username").Where("id", 9999).Scan(&namePtr)
-		t.Assert(err, sql.ErrNoRows)
+		t.AssertNil(err)
+		t.Assert(namePtr, nil)
 
 		// sql.Scanner type
 		var balance decimal.Decimal
