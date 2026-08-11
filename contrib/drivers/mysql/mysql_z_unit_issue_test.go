@@ -8,6 +8,7 @@ package mysql_test
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -2261,5 +2262,30 @@ func Test_Issue3977(t *testing.T) {
 		var balance decimal.Decimal
 		err := db.Model(table).Scan(&balance)
 		t.AssertNE(err, nil)
+	})
+
+	// Scanning into a non-nil pointer when no row matches should return sql.ErrNoRows,
+	// consistent with Record.Struct/Result.Structs. See PR review comment.
+	gtest.C(t, func(t *gtest.T) {
+		// basic type
+		var name string
+		err := db.Model(table).Fields("username").Where("id", 9999).Scan(&name)
+		t.Assert(err, sql.ErrNoRows)
+
+		// pointer to basic type
+		var namePtr *string
+		err = db.Model(table).Fields("username").Where("id", 9999).Scan(&namePtr)
+		t.Assert(err, sql.ErrNoRows)
+
+		// sql.Scanner type
+		var balance decimal.Decimal
+		err = db.Model(table).Fields("balance").Where("id", 9999).Scan(&balance)
+		t.Assert(err, sql.ErrNoRows)
+
+		// slice of basic type: empty result yields an empty slice, NOT sql.ErrNoRows
+		var names []string
+		err = db.Model(table).Fields("username").Where("id", 9999).Scan(&names)
+		t.AssertNil(err)
+		t.Assert(len(names), 0)
 	})
 }

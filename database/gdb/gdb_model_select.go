@@ -16,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -365,11 +366,17 @@ func (m *Model) Scan(pointer any, where ...any) error {
 				)
 			}
 			args := append([]any{m.fields[0]}, where...)
-			valueArr, err := m.Value(args...)
+			value, err := m.Value(args...)
 			if err != nil {
 				return err
 			}
-			return valueArr.Scan(pointer)
+			if value == nil {
+				if !empty.IsNil(pointer, true) {
+					return sql.ErrNoRows
+				}
+				return nil
+			}
+			return value.Scan(pointer)
 		}
 		return m.doStruct(pointer, where...)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
@@ -385,6 +392,12 @@ func (m *Model) Scan(pointer any, where ...any) error {
 		value, err := m.Value(args...)
 		if err != nil {
 			return err
+		}
+		if value == nil {
+			if !empty.IsNil(pointer, true) {
+				return sql.ErrNoRows
+			}
+			return nil
 		}
 		return value.Scan(pointer)
 	default:
