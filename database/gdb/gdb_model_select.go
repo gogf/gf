@@ -303,11 +303,8 @@ func (m *Model) Scan(pointer any, where ...any) error {
 	}
 	switch reflectInfo.OriginKind {
 	case reflect.Slice, reflect.Array:
-		elemType := reflectInfo.InputType
-		for elemType.Kind() == reflect.Pointer {
-			elemType = elemType.Elem()
-		}
-		elemType = elemType.Elem()
+		// OriginType has all outer pointers stripped, so Elem() gives the slice element type.
+		elemType := reflectInfo.OriginType.Elem()
 		originalType := elemType
 		for elemType.Kind() == reflect.Pointer {
 			originalType = elemType
@@ -327,14 +324,10 @@ func (m *Model) Scan(pointer any, where ...any) error {
 		return m.doStructs(pointer, where...)
 
 	case reflect.Struct, reflect.Invalid:
-		elemType := reflectInfo.InputType
-		originalType := elemType
-		for elemType.Kind() == reflect.Pointer {
-			originalType = elemType
-
-			elemType = elemType.Elem()
-		}
-		if elemType != nil && (elemType.Implements(reflect.TypeFor[sql.Scanner]()) || originalType.Implements(reflect.TypeFor[sql.Scanner]())) {
+		// OriginType has all outer pointers stripped; use reflect.PointerTo to also check
+		// whether *T implements sql.Scanner (pointer receiver methods).
+		elemType := reflectInfo.OriginType
+		if elemType != nil && (elemType.Implements(reflect.TypeFor[sql.Scanner]()) || reflect.PointerTo(elemType).Implements(reflect.TypeFor[sql.Scanner]())) {
 			if len(m.fields) == 1 {
 				args := append([]any{m.fields[0]}, where...)
 				valueArr, err := m.Value(args...)
@@ -363,7 +356,7 @@ func (m *Model) Scan(pointer any, where ...any) error {
 	default:
 		return gerror.NewCode(
 			gcode.CodeInvalidParameter,
-			`element of parameter "pointer" for function Scan should type of struct/*struct/[]struct/[]*struct`,
+			`element of parameter "pointer" for function Scan should type of struct/*struct/[]struct/[]*struct, or basic type like int/string/float64/bool`,
 		)
 	}
 }

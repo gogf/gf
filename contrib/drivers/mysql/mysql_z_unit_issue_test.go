@@ -2132,6 +2132,8 @@ func Test_Issue3977(t *testing.T) {
 		}
 		t.Assert(actualBalances, expectedBalances)
 
+		// Note: float64 cannot represent 1.01/6.06 exactly, but the comparison works because
+		// both the database driver and the Go literal resolve to the same nearest float64 value.
 		var totalBalances float64
 		err = db.Model(table).FieldSum("balance").WhereIn("id", []int64{1, 2, 3, 4, 5}).Scan(&totalBalances)
 		t.Assert(err, nil)
