@@ -92,3 +92,18 @@ func ValueToInterface(v reflect.Value) (value any, ok bool) {
 		return nil, false
 	}
 }
+
+// IsBasicKind reports whether the given reflect.Kind is one of the basic types
+// (int/uint/float/bool/string and their fixed-size variants).
+// It does NOT include complex, array, chan, func, interface, map, pointer, slice,
+// struct, or unsafe.Pointer.
+func IsBasicKind(kind reflect.Kind) bool {
+	switch kind {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64,
+		reflect.Bool, reflect.String:
+		return true
+	}
+	return false
+}
