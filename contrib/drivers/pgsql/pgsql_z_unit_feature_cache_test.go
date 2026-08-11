@@ -68,16 +68,10 @@ func Test_Model_Cache_TTL(t *testing.T) {
 		_, err = db.Model(table).Data(g.Map{"passport": "ttl_test"}).Where("id", 1).Update()
 		t.AssertNil(err)
 
-		// Immediate query - cache still valid
-		one, err = db.Model(table).Cache(gdb.CacheOption{
-			Duration: time.Millisecond * 100,
-			Name:     "test_cache_ttl",
-		}).Where("id", 1).One()
-		t.AssertNil(err)
-		t.Assert(one["passport"], "user_1") // cached value
-
-		// Wait for cache to expire
-		time.Sleep(time.Millisecond * 150)
+		// Wait for cache to expire. Serving the cached value before it expires is
+		// covered by Test_Model_Cache_Basic, whose TTL is wide enough that a slow
+		// database round trip cannot exhaust it.
+		time.Sleep(time.Millisecond * 300)
 
 		// Query after expiration - should get fresh data
 		one, err = db.Model(table).Cache(gdb.CacheOption{
