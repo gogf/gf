@@ -46,6 +46,7 @@ type (
 		RemovePrefix       string   `name:"removePrefix"        short:"r"  brief:"{CGenDaoBriefRemovePrefix}"`
 		RemoveFieldPrefix  string   `name:"removeFieldPrefix"   short:"rf" brief:"{CGenDaoBriefRemoveFieldPrefix}"`
 		JsonCase           string   `name:"jsonCase"            short:"j"  brief:"{CGenDaoBriefJsonCase}" d:"CamelLower"`
+		FileNameCase       string   `name:"fileNameCase"        short:"fc" brief:"{CGenDaoBriefFileNameCase}" d:"Snake"`
 		ImportPrefix       string   `name:"importPrefix"        short:"i"  brief:"{CGenDaoBriefImportPrefix}"`
 		DaoPath            string   `name:"daoPath"             short:"d"  brief:"{CGenDaoBriefDaoPath}" d:"dao"`
 		TablePath          string   `name:"tablePath"           short:"tp" brief:"{CGenDaoBriefTablePath}" d:"table"`
