@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"strings"
 
+	pq "gitee.com/opengauss/openGauss-connector-go-pq"
+
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -341,7 +343,10 @@ func (d *Driver) doMergeInsert(
 		keyWithChar := charL + key + charR
 		holder := fmt.Sprintf("$%d", index+1)
 		if fieldType := nullFieldTypes[strings.ToLower(key)]; fieldType != "" {
-			holder += "::" + fieldType
+			// The cast target is quoted: pg_type.typname preserves the case a user
+			// defined type was created with, and an unquoted one would be folded to
+			// lower case and then fail to resolve.
+			holder += "::" + pq.QuoteIdentifier(fieldType)
 		}
 		queryHolders[index] = fmt.Sprintf("%s AS %s", holder, keyWithChar)
 		queryValues[index] = value
@@ -548,6 +553,18 @@ func parseSqlForMerge(table string,
 	return
 }
 
+// trimTypeModifier drops a trailing type modifier from a database type name,
+// e.g. "varchar(45)" -> "varchar", leaving the case of the name untouched.
+func trimTypeModifier(fieldType string) string {
+	if !strings.HasSuffix(fieldType, ")") {
+		return strings.TrimSpace(fieldType)
+	}
+	if index := strings.LastIndexByte(fieldType, '('); index > 0 {
+		return strings.TrimSpace(fieldType[:index])
+	}
+	return strings.TrimSpace(fieldType)
+}
+
 // getNullFieldTypes returns the database type of every record field whose value is
 // NULL, keyed by lower-cased field name. It returns nil when the record holds no
 // NULL value, so the table metadata is only fetched when it is actually needed.
@@ -580,8 +597,12 @@ func (d *Driver) getNullFieldTypes(
 			// TableField.Type carries the type modifier, e.g. "int4(32)". Integer and
 			// float types reject one ("type modifier is not allowed for type int4"),
 			// and it is redundant for the rest since the value is NULL.
-			typeName, _ := d.GetCore().GetFormattedDBTypeNameForField(field.Type)
-			if typeName != "" {
+			//
+			// The modifier is stripped here rather than through
+			// Core.GetFormattedDBTypeNameForField, which lower-cases the name for type
+			// classification; pg_type.typname keeps the case a user defined type was
+			// created with, and losing it makes the cast unresolvable.
+			if typeName := trimTypeModifier(field.Type); typeName != "" {
 				types[strings.ToLower(key)] = typeName
 			}
 			break

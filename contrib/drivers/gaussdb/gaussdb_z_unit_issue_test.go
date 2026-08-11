@@ -153,6 +153,53 @@ func Test_IssueSave_NullTypedColumn_Replace(t *testing.T) {
 	})
 }
 
+// Test_IssueSave_NullTypedColumn_QuotedTypeName covers a column whose type was
+// created with a quoted, mixed-case name.
+//
+// pg_type.typname keeps the original case, so emitting the cast target without
+// quotes let the server fold it to lower case and then fail to resolve it with
+// `type "myenum" does not exist`.
+func Test_IssueSave_NullTypedColumn_QuotedTypeName(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			suffix   = gtime.TimestampMicroStr()
+			typeName = `"MyEnum` + suffix + `"`
+			table    = "issue_save_quoted_type_" + suffix
+		)
+		if _, err := db.Exec(ctx, fmt.Sprintf(
+			`CREATE TYPE %s AS ENUM ('a', 'b')`, typeName,
+		)); err != nil {
+			gtest.Fatal(err)
+		}
+		defer db.Exec(ctx, fmt.Sprintf(`DROP TYPE IF EXISTS %s CASCADE`, typeName))
+
+		if _, err := db.Exec(ctx, fmt.Sprintf(
+			`CREATE TABLE %s (id bigserial PRIMARY KEY, nickname varchar(45), val %s)`,
+			table, typeName,
+		)); err != nil {
+			gtest.Fatal(err)
+		}
+		defer dropTable(table)
+
+		_, err := db.Model(table).Data(g.Map{"id": 1, "nickname": "n1"}).Insert()
+		t.AssertNil(err)
+
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["val"].IsNil(), true)
+
+		data := one.Map()
+		data["nickname"] = "n1-updated"
+		_, err = db.Model(table).Data(data).Save()
+		t.AssertNil(err)
+
+		one, err = db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["nickname"].String(), "n1-updated")
+		t.Assert(one["val"].IsNil(), true)
+	})
+}
+
 // Test_IssuePointInterval_NotConvertedToInt verifies that column types whose
 // names merely contain an integer keyword are not converted to integers.
 //
