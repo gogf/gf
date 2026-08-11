@@ -276,23 +276,39 @@ func (m *Model) doStructs(pointer any, where ...any) error {
 // It calls function doStruct if `pointer` is type of *struct/**struct.
 // It calls function doStructs if `pointer` is type of *[]struct/*[]*struct.
 //
+// It also supports scanning a single field result into a basic type (int, float, string, bool, etc.),
+// a pointer to a basic type, a slice of basic types, or a slice of pointers to basic types. In these
+// cases exactly one field must be specified via Fields (or a field-producing helper such as FieldSum),
+// otherwise an error is returned. Types implementing sql.Scanner (e.g. decimal.Decimal, gtime.Time)
+// are scanned through their Scan method in the same way.
+//
 // The optional parameter `where` is the same as the parameter of Model.Where function,  see Model.Where.
 //
 // Note that it returns sql.ErrNoRows if the given parameter `pointer` pointed to a variable that has
 // default value and there's no record retrieved with the given conditions from table.
 //
 // Example:
-// user := new(User)
-// err  := db.Model("user").Where("id", 1).Scan(user)
 //
-// user := (*User)(nil)
-// err  := db.Model("user").Where("id", 1).Scan(&user)
+//	user := new(User)
+//	err  := db.Model("user").Where("id", 1).Scan(user)
 //
-// users := ([]User)(nil)
-// err   := db.Model("user").Scan(&users)
+//	user := (*User)(nil)
+//	err  := db.Model("user").Where("id", 1).Scan(&user)
 //
-// users := ([]*User)(nil)
-// err   := db.Model("user").Scan(&users).
+//	users := ([]User)(nil)
+//	err   := db.Model("user").Scan(&users)
+//
+//	users := ([]*User)(nil)
+//	err   := db.Model("user").Scan(&users)
+//
+//	var name string
+//	err   := db.Model("user").Fields("name").Where("id", 1).Scan(&name)
+//
+//	var names []string
+//	err   := db.Model("user").Fields("name").Scan(&names)
+//
+//	var names2 []*string
+//	err   := db.Model("user").Fields("name").Scan(&names2)
 func (m *Model) Scan(pointer any, where ...any) error {
 	reflectInfo := reflection.OriginTypeAndKind(pointer)
 	if reflectInfo.InputKind != reflect.Pointer {
@@ -336,14 +352,21 @@ func (m *Model) Scan(pointer any, where ...any) error {
 		// allow **T or deeper as a method receiver, so checking T and *T is sufficient.
 		elemType := reflectInfo.OriginType
 		if elemType != nil && (elemType.Implements(reflect.TypeFor[sql.Scanner]()) || reflect.PointerTo(elemType).Implements(reflect.TypeFor[sql.Scanner]())) {
-			if len(m.fields) == 1 {
-				args := append([]any{m.fields[0]}, where...)
-				valueArr, err := m.Value(args...)
-				if err != nil {
-					return err
-				}
-				return valueArr.Scan(pointer)
+			if len(m.fields) != 1 {
+				return gerror.NewCode(
+					gcode.CodeInvalidParameter,
+					fmt.Sprintf(
+						`Scan into sql.Scanner type requires exactly 1 field specified via Fields(), but got %d`,
+						len(m.fields),
+					),
+				)
 			}
+			args := append([]any{m.fields[0]}, where...)
+			valueArr, err := m.Value(args...)
+			if err != nil {
+				return err
+			}
+			return valueArr.Scan(pointer)
 		}
 		return m.doStruct(pointer, where...)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,

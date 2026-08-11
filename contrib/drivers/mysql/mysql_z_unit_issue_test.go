@@ -2223,6 +2223,15 @@ func Test_Issue3977(t *testing.T) {
 		err = db.Model(table).FieldSum("balance").WhereIn("id", []int64{1, 2, 3, 4, 5}).Scan(&totalBalances2)
 		t.Assert(err, nil)
 		t.Assert(totalBalances2, decimal.NewFromFloat(6.06))
+
+		// Slice of pointer to decimal.Decimal (sql.Scanner implemented on pointer receiver).
+		var balances []*decimal.Decimal
+		err = db.Model(table).Fields("balance").Scan(&balances)
+		t.AssertNil(err)
+		t.Assert(len(balances), 3)
+		t.Assert(balances[0], decimal.NewFromFloat(1.01))
+		t.Assert(balances[1], decimal.NewFromFloat(2.02))
+		t.Assert(balances[2], decimal.NewFromFloat(3.03))
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -2236,5 +2245,21 @@ func Test_Issue3977(t *testing.T) {
 		err = db.Model(table).Fields("create_at").Where("id", 1).Scan(&createdAt2)
 		t.AssertNil(err)
 		t.Assert(createdAt2, "2020-01-01 00:00:00")
+
+		// Slice of pointer to gtime.Time (sql.Scanner implemented on pointer receiver).
+		var createdAts []*gtime.Time
+		err = db.Model(table).Fields("create_at").Scan(&createdAts)
+		t.AssertNil(err)
+		t.Assert(len(createdAts), 3)
+		t.Assert(createdAts[0], "2020-01-01 00:00:00")
+		t.Assert(createdAts[1], "2020-01-01 00:00:00")
+		t.Assert(createdAts[2], "2020-01-01 00:00:00")
+	})
+
+	// sql.Scanner type without Fields() should return a clear parameter error.
+	gtest.C(t, func(t *gtest.T) {
+		var balance decimal.Decimal
+		err := db.Model(table).Scan(&balance)
+		t.AssertNE(err, nil)
 	})
 }
