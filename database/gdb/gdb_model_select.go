@@ -328,9 +328,10 @@ func (m *Model) Scan(pointer any, where ...any) error {
 			elemType = elemType.Elem()
 		}
 
-		// Only route to the basic-type slice branch when the element is a true basic type
-		// (int/uint/float/bool/string) or a sql.Scanner type. Other non-struct kinds such
-		// as map (e.g. gdb.Record) or interface must fall through to doStructs.
+		// Only route to the basic-type slice branch when the element is a true scalar type
+		// (int/uint/float/bool/string) or a sql.Scanner. Map/record slices and other
+		// non-struct kinds must fall through to doStructs; otherwise []Record or similar
+		// results would be misclassified as a slice of basic values.
 		if elemType != nil && (reflection.IsBasicKind(elemType.Kind()) || elemType.Implements(reflect.TypeFor[sql.Scanner]()) || originalType.Implements(reflect.TypeFor[sql.Scanner]())) {
 			if len(m.fields) != 1 {
 				return gerror.NewCode(

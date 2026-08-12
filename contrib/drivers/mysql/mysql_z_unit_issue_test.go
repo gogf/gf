@@ -2225,7 +2225,8 @@ func Test_Issue3977(t *testing.T) {
 		t.Assert(err, nil)
 		t.Assert(totalBalances2, decimal.NewFromFloat(6.06))
 
-		// Slice of pointer to decimal.Decimal (sql.Scanner implemented on pointer receiver).
+		// Scanner implementations like decimal.Decimal and gtime.Time are usually
+		// defined on pointer receivers, so slice scans must use pointer elements.
 		var balances []*decimal.Decimal
 		err = db.Model(table).Fields("balance").Scan(&balances)
 		t.AssertNil(err)
