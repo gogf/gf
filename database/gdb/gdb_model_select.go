@@ -277,18 +277,40 @@ func (m *Model) doStructs(pointer any, where ...any) error {
 	return model.doWithScanStructs(pointer)
 }
 
+// isExpandingField reports whether the given field entry can expand to multiple
+// result columns at the SQL level. This includes:
+//   - gdb.Raw / *gdb.Raw expressions (e.g. Raw("name,age")),
+//   - the wildcard "*",
+//   - table-qualified wildcards like "a.*" or "table_name.*".
+//
+// SQL aggregate functions such as COUNT(*) are NOT considered expanding because
+// they always produce exactly one column.
+func isExpandingField(field any) bool {
+	switch v := field.(type) {
+	case Raw, *Raw:
+		return true
+	case string:
+		return v == "*" || gstr.HasSuffix(v, ".*")
+	default:
+		return false
+	}
+}
+
 // isSingleFieldSpecified reports whether the model has exactly one explicit
-// non-Raw field. FieldsEx is not treated as a single-field specification.
+// field that resolves to a single column. FieldsEx is not treated as a
+// single-field specification.
+//
+// It rejects:
+//   - gdb.Raw entries that may expand to multiple columns,
+//   - wildcard "*" and table-qualified wildcards like "a.*".
+//
 // Used by the Scanner struct branch to decide whether to attempt a single-field
 // Scan or fall through to doStruct.
 func (m *Model) isSingleFieldSpecified() bool {
 	if len(m.fields) != 1 {
 		return false
 	}
-	// Reject gdb.Raw: it is stored as one field entry but may expand to
-	// multiple columns at the SQL level.
-	_, ok := m.fields[0].(Raw)
-	return !ok
+	return !isExpandingField(m.fields[0])
 }
 
 // validateSingleFieldSpecified checks that the model has at least one field
@@ -298,18 +320,20 @@ func (m *Model) isSingleFieldSpecified() bool {
 // m.fields is empty. The actual column count is validated after query
 // execution by Value() / Array().
 //
-// Raw fields (gdb.Raw) are rejected because they cannot be validated for
-// single-column semantics at the specification level — a Raw("name,age") is
-// stored as one field entry but produces two result columns.
+// Fields that expand to multiple columns (gdb.Raw, "*", "a.*") are rejected
+// because they cannot be validated for single-column semantics at the
+// specification level.
 func (m *Model) validateSingleFieldSpecified() error {
 	if m.isSingleFieldSpecified() {
 		return nil
 	}
-	// Reaching here with exactly one field means it is gdb.Raw.
+	// Reaching here with exactly one field means it is an expanding field
+	// (gdb.Raw or wildcard like "*" / "a.*").
 	if len(m.fields) == 1 {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
-			`Scan into basic/scanner type does not support gdb.Raw field; use an explicit field name instead`,
+			`Scan into basic/scanner type does not support expanding field %v (gdb.Raw or wildcard); use an explicit field name instead`,
+			m.fields[0],
 		)
 	}
 	if len(m.fieldsEx) > 0 {
@@ -407,8 +431,14 @@ func (m *Model) Scan(pointer any, where ...any) error {
 		// allow **T or deeper as a method receiver, so checking T and *T is sufficient.
 		elemType := reflectInfo.OriginType
 		if elemType != nil &&
-			(elemType.Implements(scannerType) || reflect.PointerTo(elemType).Implements(scannerType)) &&
-			m.isSingleFieldSpecified() {
+			(elemType.Implements(scannerType) || reflect.PointerTo(elemType).Implements(scannerType)) {
+			// The target type implements sql.Scanner: it must have exactly one
+			// explicit field specified so the query returns a single column.
+			// Without this guard, doStruct would auto-select the Scanner
+			// struct's (often unexported) fields, producing incorrect SQL.
+			if err := m.validateSingleFieldSpecified(); err != nil {
+				return err
+			}
 			// Single non-Raw field and the target type implements sql.Scanner:
 			// scan the scalar value directly through the Scanner interface.
 			model := m.Clone()

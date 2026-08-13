@@ -87,5 +87,20 @@ func Test_ScanValidateSingleFieldSpecified(t *testing.T) {
 		m5 := &Model{fields: []any{Raw("name")}}
 		t.AssertNE(m5.validateSingleFieldSpecified(), nil)
 		t.Assert(m5.isSingleFieldSpecified(), false)
+
+		// Wildcard "*" → reject (expands to all columns).
+		m6 := &Model{fields: []any{"*"}}
+		t.AssertNE(m6.validateSingleFieldSpecified(), nil)
+		t.Assert(m6.isSingleFieldSpecified(), false)
+
+		// Table-qualified wildcard "a.*" → reject (expands to all columns of alias a).
+		m7 := &Model{fields: []any{"a.*"}}
+		t.AssertNE(m7.validateSingleFieldSpecified(), nil)
+		t.Assert(m7.isSingleFieldSpecified(), false)
+
+		// COUNT(*) → accept (aggregate function, always produces one column).
+		m8 := &Model{fields: []any{"COUNT(*)"}}
+		t.AssertNil(m8.validateSingleFieldSpecified())
+		t.Assert(m8.isSingleFieldSpecified(), true)
 	})
 }
