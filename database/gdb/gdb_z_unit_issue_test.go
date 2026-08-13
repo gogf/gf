@@ -52,3 +52,40 @@ func Test_Issue4699(t *testing.T) {
 		t.AssertEQ(m7.offset, 10)
 	})
 }
+
+// Test_ScanValidateSingleFieldSpecified tests that validateSingleFieldSpecified
+// and isSingleFieldSpecified correctly accept/reject various field configurations,
+// especially the gdb.Raw case which bypasses len(m.fields) checks.
+func Test_ScanValidateSingleFieldSpecified(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// No fields at all → reject.
+		m0 := &Model{}
+		t.AssertNE(m0.validateSingleFieldSpecified(), nil)
+		t.Assert(m0.isSingleFieldSpecified(), false)
+
+		// Exactly one normal field → accept.
+		m1 := &Model{fields: []any{"name"}}
+		t.AssertNil(m1.validateSingleFieldSpecified())
+		t.Assert(m1.isSingleFieldSpecified(), true)
+
+		// Two normal fields → reject.
+		m2 := &Model{fields: []any{"name", "age"}}
+		t.AssertNE(m2.validateSingleFieldSpecified(), nil)
+		t.Assert(m2.isSingleFieldSpecified(), false)
+
+		// gdb.Raw("name,age") stored as one field entry → reject,
+		// because it may expand to multiple columns at the SQL level.
+		m3 := &Model{fields: []any{Raw("name,age")}}
+		t.AssertNE(m3.validateSingleFieldSpecified(), nil)
+		t.Assert(m3.isSingleFieldSpecified(), false)
+
+		// FieldsEx only → accept (actual column count checked post-execution).
+		m4 := &Model{fieldsEx: []any{"id"}}
+		t.AssertNil(m4.validateSingleFieldSpecified())
+
+		// gdb.Raw("name") as single field → reject (still Raw, cannot guarantee).
+		m5 := &Model{fields: []any{Raw("name")}}
+		t.AssertNE(m5.validateSingleFieldSpecified(), nil)
+		t.Assert(m5.isSingleFieldSpecified(), false)
+	})
+}

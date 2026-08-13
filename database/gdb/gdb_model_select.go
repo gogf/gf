@@ -22,6 +22,10 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// scannerType is the reflect.Type for sql.Scanner, cached at package level to avoid
+// repeated reflect.TypeFor lookups in the Scan method's hot path.
+var scannerType = reflect.TypeFor[sql.Scanner]()
+
 // All does "SELECT FROM ..." statement for the model.
 // It retrieves the records from table and returns the result as slice type.
 // It returns nil if there's no record retrieved with the given conditions from table.
@@ -273,6 +277,52 @@ func (m *Model) doStructs(pointer any, where ...any) error {
 	return model.doWithScanStructs(pointer)
 }
 
+// validateSingleFieldSpecified checks that the model has at least one field
+// specification suitable for a single-column scan (basic type, sql.Scanner, or
+// their slices). It accepts both explicit Fields and FieldsEx, because FieldsEx
+// can narrow the result to a single column even though m.fields is empty.
+// The actual column count is validated after query execution by Value() / Array().
+//
+// Raw fields (gdb.Raw) are rejected because they cannot be validated for single-column
+// semantics at the specification level — a Raw("name,age") is stored as one field entry
+// but produces two result columns.
+func (m *Model) validateSingleFieldSpecified() error {
+	if len(m.fields) == 1 {
+		// Reject gdb.Raw: it is stored as one field entry but may expand to
+		// multiple columns at the SQL level. The caller should use explicit
+		// field names to guarantee exactly one column.
+		if _, ok := m.fields[0].(Raw); ok {
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`Scan into basic/scanner type does not support gdb.Raw field; use an explicit field name instead`,
+			)
+		}
+		return nil
+	}
+	if len(m.fieldsEx) > 0 {
+		return nil
+	}
+	return gerror.NewCodef(
+		gcode.CodeInvalidParameter,
+		`Scan into basic/scanner type requires exactly 1 field specified via Fields(), but got %d`,
+		len(m.fields),
+	)
+}
+
+// isSingleFieldSpecified reports whether the model has exactly one explicit
+// non-Raw field (not FieldsEx). Used by the Scanner struct branch to decide
+// whether to attempt a single-field Scan or fall through to doStruct.
+func (m *Model) isSingleFieldSpecified() bool {
+	if len(m.fields) != 1 {
+		return false
+	}
+	// Reject gdb.Raw: cannot guarantee single-column semantics.
+	if _, ok := m.fields[0].(Raw); ok {
+		return false
+	}
+	return true
+}
+
 // Scan automatically calls Struct or Structs function according to the type of parameter `pointer`.
 // It calls function doStruct if `pointer` is type of *struct/**struct.
 // It calls function doStructs if `pointer` is type of *[]struct/*[]*struct.
@@ -332,18 +382,19 @@ func (m *Model) Scan(pointer any, where ...any) error {
 		// (int/uint/float/bool/string) or a sql.Scanner. Map/record slices and other
 		// non-struct kinds must fall through to doStructs; otherwise []Record or similar
 		// results would be misclassified as a slice of basic values.
-		if elemType != nil && (reflection.IsBasicKind(elemType.Kind()) || elemType.Implements(reflect.TypeFor[sql.Scanner]()) || originalType.Implements(reflect.TypeFor[sql.Scanner]())) {
-			if len(m.fields) != 1 {
-				return gerror.NewCode(
-					gcode.CodeInvalidParameter,
-					fmt.Sprintf(
-						`Scan into slice of basic type requires exactly 1 field specified via Fields(), but got %d`,
-						len(m.fields),
-					),
-				)
+		if elemType != nil &&
+			(reflection.IsBasicKind(elemType.Kind()) || elemType.Implements(scannerType) || originalType.Implements(scannerType)) {
+			if err := m.validateSingleFieldSpecified(); err != nil {
+				return err
 			}
-			args := append([]any{m.fields[0]}, where...)
-			valueArr, err := m.Array(args...)
+			// Use a clone to avoid mutating the original model. Do not pass the field
+			// as an argument to Array() because it already lives in m.fields and
+			// Array() would append it again (Fields is append-only).
+			model := m.Clone()
+			if len(where) > 0 {
+				model = model.Where(where[0], where[1:]...)
+			}
+			valueArr, err := model.Array()
 			if err != nil {
 				return err
 			}
@@ -356,18 +407,16 @@ func (m *Model) Scan(pointer any, where ...any) error {
 		// whether *T implements sql.Scanner (pointer receiver methods). Note: Go does not
 		// allow **T or deeper as a method receiver, so checking T and *T is sufficient.
 		elemType := reflectInfo.OriginType
-		if elemType != nil && (elemType.Implements(reflect.TypeFor[sql.Scanner]()) || reflect.PointerTo(elemType).Implements(reflect.TypeFor[sql.Scanner]())) {
-			if len(m.fields) != 1 {
-				return gerror.NewCode(
-					gcode.CodeInvalidParameter,
-					fmt.Sprintf(
-						`Scan into sql.Scanner type requires exactly 1 field specified via Fields(), but got %d`,
-						len(m.fields),
-					),
-				)
+		if elemType != nil &&
+			(elemType.Implements(scannerType) || reflect.PointerTo(elemType).Implements(scannerType)) &&
+			m.isSingleFieldSpecified() {
+			// Single non-Raw field and the target type implements sql.Scanner:
+			// scan the scalar value directly through the Scanner interface.
+			model := m.Clone()
+			if len(where) > 0 {
+				model = model.Where(where[0], where[1:]...)
 			}
-			args := append([]any{m.fields[0]}, where...)
-			value, err := m.Value(args...)
+			value, err := model.Value()
 			if err != nil {
 				return err
 			}
@@ -380,17 +429,18 @@ func (m *Model) Scan(pointer any, where ...any) error {
 			return value.Scan(pointer)
 		}
 		return m.doStruct(pointer, where...)
+
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
 		reflect.Float32, reflect.Float64, reflect.Bool, reflect.String:
-		if len(m.fields) != 1 {
-			return gerror.NewCode(
-				gcode.CodeInvalidParameter,
-				fmt.Sprintf("Scan operation failed: expected 1 field, but got %d", len(m.fields)),
-			)
+		if err := m.validateSingleFieldSpecified(); err != nil {
+			return err
 		}
-		args := append([]any{m.fields[0]}, where...)
-		value, err := m.Value(args...)
+		model := m.Clone()
+		if len(where) > 0 {
+			model = model.Where(where[0], where[1:]...)
+		}
+		value, err := model.Value()
 		if err != nil {
 			return err
 		}
