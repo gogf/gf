@@ -188,6 +188,11 @@ func TestScanReflectValueInput(t *testing.T) {
 		t.Assert(gconv.Float32(reflect.ValueOf(float32(1.5))), float32(1.5))
 		// reflect.Value wrapping a string.
 		t.Assert(gconv.String(reflect.ValueOf("hello")), "hello")
+		// reflect.Value wrapping non-string kinds should unwrap and convert correctly,
+		// not return the reflection type name (e.g. "<int Value>").
+		t.Assert(gconv.String(reflect.ValueOf(42)), "42")
+		t.Assert(gconv.String(reflect.ValueOf(3.14)), "3.14")
+		t.Assert(gconv.String(reflect.ValueOf(true)), "true")
 	})
 }
 

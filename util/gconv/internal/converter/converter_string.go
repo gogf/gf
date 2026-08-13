@@ -78,6 +78,14 @@ func (c *Converter) String(anyInput any) (string, error) {
 		}
 		return value.String(), nil
 	default:
+		// Unwrap reflect.Value input early so that the IString/IError checks below
+		// do not accidentally match reflect.Value's own String() method, which returns
+		// the reflection type name (e.g. "<int Value>") instead of the actual value.
+		if rv, ok := value.(reflect.Value); ok {
+			if rv.IsValid() && rv.CanInterface() {
+				return c.String(rv.Interface())
+			}
+		}
 		if f, ok := value.(localinterface.IString); ok {
 			// If the variable implements the String() interface,
 			// then use that interface to perform the conversion
@@ -87,12 +95,6 @@ func (c *Converter) String(anyInput any) (string, error) {
 			// If the variable implements the Error() interface,
 			// then use that interface to perform the conversion
 			return f.Error(), nil
-		}
-		// Unwrap reflect.Value input for consistency with Bool converter.
-		if rv, ok := value.(reflect.Value); ok {
-			if rv.IsValid() && rv.CanInterface() {
-				return c.String(rv.Interface())
-			}
 		}
 		// Reflect checks.
 		var (
