@@ -52,9 +52,16 @@ func (m *Model) AllAndCount(useFieldForCount bool) (result Result, totalCount in
 	// Clone the model for counting
 	countModel := m.Clone()
 
-	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
-	if !useFieldForCount {
-		countModel.fields = []any{Raw("1")}
+	// Decide how to build the COUNT() expression:
+	// - If caller explicitly wants to use the single field expression for counting,
+	//   honor it (e.g. Fields("DISTINCT col") with useFieldForCount = true).
+	// - Otherwise, clear fields to let Count() use its default COUNT(1),
+	//   avoiding invalid COUNT(field1, field2, ...) with multiple fields,
+	//   or incorrect COUNT(DISTINCT 1) when Distinct() is set.
+	if useFieldForCount && len(m.fields) == 1 {
+		countModel.fields = m.fields
+	} else {
+		countModel.fields = nil
 	}
 	if len(m.pageCacheOption) > 0 {
 		countModel = countModel.Cache(m.pageCacheOption[0])
@@ -341,9 +348,16 @@ func (m *Model) Scan(pointer any, where ...any) error {
 func (m *Model) ScanAndCount(pointer any, totalCount *int, useFieldForCount bool) (err error) {
 	// support Fields with *, example: .Fields("a.*, b.name"). Count sql is select count(1) from xxx
 	countModel := m.Clone()
-	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
-	if !useFieldForCount {
-		countModel.fields = []any{Raw("1")}
+	// Decide how to build the COUNT() expression:
+	// - If caller explicitly wants to use the single field expression for counting,
+	//   honor it (e.g. Fields("DISTINCT col") with useFieldForCount = true).
+	// - Otherwise, clear fields to let Count() use its default COUNT(1),
+	//   avoiding invalid COUNT(field1, field2, ...) with multiple fields,
+	//   or incorrect COUNT(DISTINCT 1) when Distinct() is set.
+	if useFieldForCount && len(m.fields) == 1 {
+		countModel.fields = m.fields
+	} else {
+		countModel.fields = nil
 	}
 	if len(m.pageCacheOption) > 0 {
 		countModel = countModel.Cache(m.pageCacheOption[0])
@@ -615,12 +629,22 @@ func (m *Model) UnionAll(unions ...*Model) *Model {
 // The parameter `limit` can be either one or two number, if passed two number is passed,
 // it then sets "LIMIT limit[0],limit[1]" statement for the model, or else it sets "LIMIT limit[0]"
 // statement.
+// Note: Negative values are treated as zero.
 func (m *Model) Limit(limit ...int) *Model {
 	model := m.getModel()
 	switch len(limit) {
 	case 1:
+		if limit[0] < 0 {
+			limit[0] = 0
+		}
 		model.limit = limit[0]
 	case 2:
+		if limit[0] < 0 {
+			limit[0] = 0
+		}
+		if limit[1] < 0 {
+			limit[1] = 0
+		}
 		model.start = limit[0]
 		model.limit = limit[1]
 	}
@@ -629,8 +653,12 @@ func (m *Model) Limit(limit ...int) *Model {
 
 // Offset sets the "OFFSET" statement for the model.
 // It only makes sense for some databases like SQLServer, PostgreSQL, etc.
+// Note: Negative values are treated as zero.
 func (m *Model) Offset(offset int) *Model {
 	model := m.getModel()
+	if offset < 0 {
+		offset = 0
+	}
 	model.offset = offset
 	return model
 }
@@ -645,10 +673,14 @@ func (m *Model) Distinct() *Model {
 // Page sets the paging number for the model.
 // The parameter `page` is started from 1 for paging.
 // Note that, it differs that the Limit function starts from 0 for "LIMIT" statement.
+// Note: Negative limit values are treated as zero.
 func (m *Model) Page(page, limit int) *Model {
 	model := m.getModel()
 	if page <= 0 {
 		page = 1
+	}
+	if limit < 0 {
+		limit = 0
 	}
 	model.start = (page - 1) * limit
 	model.limit = limit

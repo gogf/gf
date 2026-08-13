@@ -345,6 +345,17 @@ type DB interface {
 	// OrderRandomFunction returns the SQL function for random ordering.
 	// The implementation is database-specific (e.g., RAND() for MySQL).
 	OrderRandomFunction() string
+
+	// GetBoolLiteral returns the SQL literal for the given boolean value.
+	// Drivers with strict boolean types (e.g. pgsql, gaussdb, clickhouse)
+	// return "true"/"false"; others return "1"/"0" for bit/int-based
+	// boolean columns.
+	GetBoolLiteral(v bool) string
+
+	// GetLockSharedClause returns the SQL clause emitted by Model.LockShared().
+	// Drivers that don't support MySQL's legacy "LOCK IN SHARE MODE" override
+	// to return their dialect equivalent (e.g. "FOR SHARE" on PostgreSQL).
+	GetLockSharedClause() string
 }
 
 // TX defines the interfaces for ORM transaction operations.
@@ -990,19 +1001,14 @@ func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 // Instance returns an instance for DB operations.
 // The parameter `name` specifies the configuration group name,
 // which is DefaultGroupName in default.
-func Instance(name ...string) (db DB, err error) {
+func Instance(name ...string) (DB, error) {
 	group := configs.group
 	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
-	v := instances.GetOrSetFuncLock(group, func() DB {
-		db, err = NewByGroup(group)
-		return db
+	return instances.GetOrSetFuncLockWithError(group, func() (DB, error) {
+		return NewByGroup(group)
 	})
-	if v != nil {
-		return v, nil
-	}
-	return nil, err
 }
 
 // getConfigNodeByGroup calculates and returns a configuration node of given group. It

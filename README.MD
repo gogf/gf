@@ -1,7 +1,7 @@
 English | [简体中文](README.zh_CN.MD)
 
 <div align=center>
-<img src="https://goframe.org/img/logo_full.png" width="300" alt="goframe gf logo"/>
+<img src="https://goframe.org/img/logo_full.png" width="300" alt="goframe logo"/>
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/gogf/gf/v2.svg)](https://pkg.go.dev/github.com/gogf/gf/v2)
 [![GoFrame CI](https://github.com/gogf/gf/actions/workflows/ci-main.yml/badge.svg)](https://github.com/gogf/gf/actions/workflows/ci-main.yml)
@@ -46,7 +46,7 @@ go get -u github.com/gogf/gf/v2
 💖 [Thanks to all the contributors who made GoFrame possible](https://github.com/gogf/gf/graphs/contributors) 💖
 
 <a href="https://github.com/gogf/gf/graphs/contributors">
-<img src="https://goframe.org/img/contributors.svg?version=v2.10.0" alt="goframe contributors"/>
+<img src="https://goframe.org/img/contributors.svg?version=v2.10.2" alt="goframe contributors"/>
 </a>
 
 ## License
