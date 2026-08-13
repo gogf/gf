@@ -277,27 +277,40 @@ func (m *Model) doStructs(pointer any, where ...any) error {
 	return model.doWithScanStructs(pointer)
 }
 
+// isSingleFieldSpecified reports whether the model has exactly one explicit
+// non-Raw field. FieldsEx is not treated as a single-field specification.
+// Used by the Scanner struct branch to decide whether to attempt a single-field
+// Scan or fall through to doStruct.
+func (m *Model) isSingleFieldSpecified() bool {
+	if len(m.fields) != 1 {
+		return false
+	}
+	// Reject gdb.Raw: it is stored as one field entry but may expand to
+	// multiple columns at the SQL level.
+	_, ok := m.fields[0].(Raw)
+	return !ok
+}
+
 // validateSingleFieldSpecified checks that the model has at least one field
 // specification suitable for a single-column scan (basic type, sql.Scanner, or
-// their slices). It accepts both explicit Fields and FieldsEx, because FieldsEx
-// can narrow the result to a single column even though m.fields is empty.
-// The actual column count is validated after query execution by Value() / Array().
+// their slices). It accepts both an explicit single Fields entry and FieldsEx,
+// because FieldsEx can narrow the result to a single column even though
+// m.fields is empty. The actual column count is validated after query
+// execution by Value() / Array().
 //
-// Raw fields (gdb.Raw) are rejected because they cannot be validated for single-column
-// semantics at the specification level — a Raw("name,age") is stored as one field entry
-// but produces two result columns.
+// Raw fields (gdb.Raw) are rejected because they cannot be validated for
+// single-column semantics at the specification level — a Raw("name,age") is
+// stored as one field entry but produces two result columns.
 func (m *Model) validateSingleFieldSpecified() error {
-	if len(m.fields) == 1 {
-		// Reject gdb.Raw: it is stored as one field entry but may expand to
-		// multiple columns at the SQL level. The caller should use explicit
-		// field names to guarantee exactly one column.
-		if _, ok := m.fields[0].(Raw); ok {
-			return gerror.NewCodef(
-				gcode.CodeInvalidParameter,
-				`Scan into basic/scanner type does not support gdb.Raw field; use an explicit field name instead`,
-			)
-		}
+	if m.isSingleFieldSpecified() {
 		return nil
+	}
+	// Reaching here with exactly one field means it is gdb.Raw.
+	if len(m.fields) == 1 {
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`Scan into basic/scanner type does not support gdb.Raw field; use an explicit field name instead`,
+		)
 	}
 	if len(m.fieldsEx) > 0 {
 		return nil
@@ -307,20 +320,6 @@ func (m *Model) validateSingleFieldSpecified() error {
 		`Scan into basic/scanner type requires exactly 1 field specified via Fields(), but got %d`,
 		len(m.fields),
 	)
-}
-
-// isSingleFieldSpecified reports whether the model has exactly one explicit
-// non-Raw field (not FieldsEx). Used by the Scanner struct branch to decide
-// whether to attempt a single-field Scan or fall through to doStruct.
-func (m *Model) isSingleFieldSpecified() bool {
-	if len(m.fields) != 1 {
-		return false
-	}
-	// Reject gdb.Raw: cannot guarantee single-column semantics.
-	if _, ok := m.fields[0].(Raw); ok {
-		return false
-	}
-	return true
 }
 
 // Scan automatically calls Struct or Structs function according to the type of parameter `pointer`.
