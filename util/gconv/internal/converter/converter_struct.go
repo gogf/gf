@@ -121,6 +121,12 @@ func (c *Converter) Struct(params, pointer any, option ...StructOption) (err err
 		return nil
 	}
 
+	// Time destinations must keep the source location. Do not fall through to
+	// generic map/JSON converting, which serializes gtime without timezone.
+	if ok, err = c.assignIfTimeDestination(pointerElemReflectValue, paramsInterface); ok || err != nil {
+		return err
+	}
+
 	// custom convert.
 	ok, err = c.callCustomConverter(paramsReflectValue, pointerReflectValue)
 	if err != nil && !structOption.ContinueOnError {

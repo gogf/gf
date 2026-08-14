@@ -72,8 +72,7 @@ func (c *Converter) builtInAnyConvertFuncForTime(from any, to reflect.Value) err
 	if err != nil {
 		return err
 	}
-	*to.Addr().Interface().(*time.Time) = t
-	return nil
+	return setConvertedTimeValue(to, t)
 }
 
 func (c *Converter) builtInAnyConvertFuncForGTime(from any, to reflect.Value) error {
@@ -84,6 +83,50 @@ func (c *Converter) builtInAnyConvertFuncForGTime(from any, to reflect.Value) er
 	if v == nil {
 		v = gtime.New()
 	}
-	*to.Addr().Interface().(*gtime.Time) = *v
-	return nil
+	return setConvertedGTimeValue(to, *v)
+}
+
+// setConvertedTimeValue assigns t to to without requiring to.Addr().
+// Struct conversion may pass an unaddressable time.Time value.
+func setConvertedTimeValue(to reflect.Value, t time.Time) error {
+	switch {
+	case to.Kind() == reflect.Struct && to.CanSet():
+		to.Set(reflect.ValueOf(t))
+		return nil
+	case to.Kind() == reflect.Pointer:
+		if to.IsNil() {
+			if !to.CanSet() {
+				return nil
+			}
+			to.Set(reflect.New(to.Type().Elem()))
+		}
+		return setConvertedTimeValue(to.Elem(), t)
+	case to.CanAddr():
+		*to.Addr().Interface().(*time.Time) = t
+		return nil
+	default:
+		return nil
+	}
+}
+
+// setConvertedGTimeValue assigns v to to without requiring to.Addr().
+func setConvertedGTimeValue(to reflect.Value, v gtime.Time) error {
+	switch {
+	case to.Kind() == reflect.Struct && to.CanSet():
+		to.Set(reflect.ValueOf(v))
+		return nil
+	case to.Kind() == reflect.Pointer:
+		if to.IsNil() {
+			if !to.CanSet() {
+				return nil
+			}
+			to.Set(reflect.New(to.Type().Elem()))
+		}
+		return setConvertedGTimeValue(to.Elem(), v)
+	case to.CanAddr():
+		*to.Addr().Interface().(*gtime.Time) = v
+		return nil
+	default:
+		return nil
+	}
 }
