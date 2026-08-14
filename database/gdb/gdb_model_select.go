@@ -408,6 +408,12 @@ func (m *Model) Scan(pointer any, where ...any) error {
 		if elemType != nil &&
 			(reflection.IsBasicKind(elemType.Kind()) || elemType.Implements(scannerType) || originalType.Implements(scannerType)) {
 			if err := m.validateSingleFieldSpecified(); err != nil {
+				// If the Scanner type is a struct (e.g. decimal.Decimal, gtime.Time),
+				// fall back to doStructs to scan as a struct instead of returning an error.
+				// Basic types (int, string, etc.) cannot be scanned as structs, so keep the error.
+				if elemType.Kind() == reflect.Struct {
+					return m.doStructs(pointer, where...)
+				}
 				return err
 			}
 			// Use a clone to avoid mutating the original model. Do not pass the field
