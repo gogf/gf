@@ -286,14 +286,47 @@ func (m *Model) doStructs(pointer any, where ...any) error {
 // SQL aggregate functions such as COUNT(*) are NOT considered expanding because
 // they always produce exactly one column.
 func isExpandingField(field any) bool {
+	var s string
 	switch v := field.(type) {
-	case Raw, *Raw:
-		return true
+	case Raw:
+		s = string(v)
+	case *Raw:
+		if v == nil {
+			return false
+		}
+		s = string(*v)
 	case string:
-		return v == "*" || gstr.HasSuffix(v, ".*")
+		s = v
 	default:
 		return false
 	}
+	return isExpandingFieldStr(s)
+}
+
+// isExpandingFieldStr checks whether a field string can expand to multiple
+// result columns. It detects wildcards ("*", "a.*") and top-level commas
+// ("name,age") while ignoring commas nested inside parentheses (e.g. function
+// argument lists like "COUNT(DISTINCT `id`,`username`)").
+func isExpandingFieldStr(s string) bool {
+	if s == "*" || gstr.HasSuffix(s, ".*") {
+		return true
+	}
+	depth := 0
+	for _, ch := range s {
+		switch ch {
+		case '(':
+			depth++
+		case ')':
+			if depth > 0 {
+				depth--
+			}
+		case ',':
+			if depth == 0 {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // isSingleFieldSpecified reports whether the model has exactly one explicit
@@ -336,14 +369,47 @@ func (m *Model) validateSingleFieldSpecified() error {
 			m.fields[0],
 		)
 	}
-	if len(m.fieldsEx) > 0 {
-		return nil
+	if len(m.fields) == 0 && len(m.fieldsEx) > 0 {
+		return m.validateFieldsExSingleColumn()
 	}
 	return gerror.NewCodef(
 		gcode.CodeInvalidParameter,
 		`Scan into basic/scanner type requires exactly 1 field specified via Fields(), but got %d`,
 		len(m.fields),
 	)
+}
+
+// validateFieldsExSingleColumn verifies that the FieldsEx-only query narrows
+// the result set to exactly one column. When the table schema cannot be
+// inspected (no DB connection, etc.) validation is skipped and the check is
+// deferred to the post-query Value()/Array() step.
+func (m *Model) validateFieldsExSingleColumn() error {
+	if m.db == nil {
+		return nil
+	}
+	tableFields, err := m.TableFields(m.tablesInit)
+	if err != nil || len(tableFields) == 0 {
+		return nil
+	}
+	remaining := len(tableFields)
+	for _, excluded := range m.fieldsEx {
+		for _, name := range gstr.SplitAndTrim(gconv.String(excluded), ",") {
+			if name == "" {
+				continue
+			}
+			if _, ok := tableFields[name]; ok {
+				remaining--
+			}
+		}
+	}
+	if remaining != 1 {
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`Scan into basic/scanner type requires exactly 1 field specified via Fields(), but FieldsEx leaves %d columns after filtering`,
+			remaining,
+		)
+	}
+	return nil
 }
 
 // Scan automatically calls Struct or Structs function according to the type of parameter `pointer`.
@@ -1023,8 +1089,23 @@ func (m *Model) getFieldsFiltered() string {
 	}
 	var (
 		fieldsArray []string
-		fieldsExSet = gset.NewStrSetFrom(gconv.Strings(m.fieldsEx))
+		// A gdb.Raw entry may wrap a comma-separated field list (e.g.
+		// Raw("id,age")).
+		fieldsExValues []string
 	)
+	for _, v := range m.fieldsEx {
+		switch r := v.(type) {
+		case Raw:
+			fieldsExValues = append(fieldsExValues, gstr.SplitAndTrim(string(r), ",")...)
+		case *Raw:
+			if r != nil {
+				fieldsExValues = append(fieldsExValues, gstr.SplitAndTrim(string(*r), ",")...)
+			}
+		default:
+			fieldsExValues = append(fieldsExValues, gconv.String(v))
+		}
+	}
+	fieldsExSet := gset.NewStrSetFrom(fieldsExValues)
 	if len(m.fields) > 0 {
 		// Filter custom fields with fieldEx.
 		fieldsArray = make([]string, 0, 8)

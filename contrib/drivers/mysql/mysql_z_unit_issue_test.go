@@ -2080,6 +2080,7 @@ func Test_Issue3977(t *testing.T) {
 		}
 	}
 	defer dropTable(table)
+	// db.SetDebug(true)
 	// string *string []string []*string
 	gtest.C(t, func(t *gtest.T) {
 		var err error
@@ -2291,5 +2292,51 @@ func Test_Issue3977(t *testing.T) {
 		err = db.Model(table).Fields("username").Where("id", 9999).Scan(&names)
 		t.AssertNil(err)
 		t.Assert(len(names), 0)
+	})
+	// Raw
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		var username string
+		err = db.Model(table).Fields(gdb.Raw("username")).Where("id", 1).Scan(&username)
+		t.Assert(err, nil)
+		t.Assert(username, "username1")
+		var username2 *string
+		err = db.Model(table).Fields(gdb.Raw("username")).Where("id", 1).Scan(&username2)
+		t.Assert(err, nil)
+		t.Assert(username2, "username1")
+		err = db.Model(table).Fields(gdb.Raw("username,age")).Where("id", 1).Scan(&username)
+		t.Assert(err.Error(), "Scan into basic/scanner type does not support expanding field username,age (gdb.Raw or wildcard); use an explicit field name instead")
+		var age int
+		err = db.Model(table).Fields(gdb.Raw("sum(age) as a")).WhereIn("id", []int{1, 2}).Scan(&age)
+		t.AssertNil(err)
+		t.Assert(age, 118)
+		var total int
+		err = db.Model(table).Fields(gdb.Raw("count(*) as a")).WhereIn("id", []int{1, 2, 3}).Scan(&total)
+		t.AssertNil(err)
+		t.Assert(total, 3)
+		err = db.Model(table).Fields(gdb.Raw("COUNT(DISTINCT `id`,`username`) as a")).WhereIn("id", []int{1, 2, 3}).Scan(&total)
+		t.AssertNil(err)
+		t.Assert(total, 3)
+	})
+
+	// FieldsEx
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		var username string
+		err = db.Model(table).FieldsEx([]string{"id", "age", "balance", "state", "create_at", "update_at"}).Where("id", 1).Scan(&username)
+		t.Assert(err, nil)
+		t.Assert(username, "username1")
+		var username2 *string
+		err = db.Model(table).FieldsEx("id,age,balance,state,create_at,update_at").Where("id", 2).Scan(&username2)
+		t.Assert(err, nil)
+		t.Assert(username2, "username2")
+		err = db.Model(table).FieldsEx("id", "age", "balance", "state", "create_at", "update_at").Where("id", 1).Scan(&username)
+		t.Assert(err, nil)
+		t.Assert(username, "username1")
+		err = db.Model(table).FieldsEx(gdb.Raw("id,age,balance,state,create_at,update_at")).Where("id", 2).Scan(&username2)
+		t.Assert(err, nil)
+		t.Assert(username2, "username2")
+		err = db.Model(table).FieldsEx([]string{"id", "age", "state", "create_at", "update_at"}).Where("id", 1).Scan(&username)
+		t.Assert(err.Error(), "Scan into basic/scanner type requires exactly 1 field specified via Fields(), but FieldsEx leaves 2 columns after filtering")
 	})
 }
