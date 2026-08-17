@@ -87,8 +87,8 @@ func Test_ScanValidateSingleFieldSpecified(t *testing.T) {
 
 		// gdb.Raw("name") as single field → reject (still Raw, cannot guarantee).
 		m5 := &Model{fields: []any{Raw("name")}}
-		t.AssertNE(m5.validateSingleFieldSpecified(), nil)
-		t.Assert(m5.isSingleFieldSpecified(), false)
+		t.AssertNil(m5.validateSingleFieldSpecified())
+		t.Assert(m5.isSingleFieldSpecified(), true)
 
 		// Wildcard "*" → reject (expands to all columns).
 		m6 := &Model{fields: []any{"*"}}

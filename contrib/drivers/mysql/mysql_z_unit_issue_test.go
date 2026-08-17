@@ -15,8 +15,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/shopspring/decimal"
-
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -24,8 +22,10 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
 	"github.com/gogf/gf/v2/util/guid"
+	"github.com/shopspring/decimal"
 )
 
 // https://github.com/gogf/gf/issues/1380
@@ -2070,6 +2070,18 @@ func Test_Issue4698(t *testing.T) {
 	})
 }
 
+type Issue3977SUser struct {
+	UserName string `json:"username" orm:"username"`
+	Age      int    `json:"age" orm:"age"`
+}
+
+func (u *Issue3977SUser) Scan(v any) error {
+	if v == nil {
+		return nil
+	}
+	return gconv.Struct(v, u)
+}
+
 // https://github.com/gogf/gf/issues/3977
 func Test_Issue3977(t *testing.T) {
 	table := "issue3977"
@@ -2080,6 +2092,7 @@ func Test_Issue3977(t *testing.T) {
 		}
 	}
 	defer dropTable(table)
+	// db.SetDebug(true)
 	// string *string []string []*string
 	gtest.C(t, func(t *gtest.T) {
 		var err error
@@ -2262,7 +2275,7 @@ func Test_Issue3977(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var balance decimal.Decimal
 		err := db.Model(table).Scan(&balance)
-		t.AssertNE(err, nil)
+		t.AssertNil(err)
 	})
 
 	// FieldsEx is an exclusion list and must not be treated as a single-column
@@ -2308,4 +2321,86 @@ func Test_Issue3977(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(names), 0)
 	})
+
+	// Raw
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		var username string
+		err = db.Model(table).Fields(gdb.Raw("username")).Where("id", 1).Scan(&username)
+		t.Assert(err, nil)
+		t.Assert(username, "username1")
+		var username2 *string
+		err = db.Model(table).Fields(gdb.Raw("username")).Where("id", 1).Scan(&username2)
+		t.Assert(err, nil)
+		t.Assert(username2, "username1")
+		err = db.Model(table).Fields(gdb.Raw("username,age")).Where("id", 1).Scan(&username)
+		t.Assert(err.Error(), "Scan into basic/scanner type does not support expanding field username,age (gdb.Raw or wildcard); use an explicit field name instead")
+		var age int
+		err = db.Model(table).Fields(gdb.Raw("sum(age) as a")).WhereIn("id", []int{1, 2}).Scan(&age)
+		t.AssertNil(err)
+		t.Assert(age, 118)
+		var total int
+		err = db.Model(table).Fields(gdb.Raw("count(*) as a")).WhereIn("id", []int{1, 2, 3}).Scan(&total)
+		t.AssertNil(err)
+		t.Assert(total, 3)
+		err = db.Model(table).Fields(gdb.Raw("COUNT(DISTINCT `id`,`username`) as a")).WhereIn("id", []int{1, 2, 3}).Scan(&total)
+		t.AssertNil(err)
+		t.Assert(total, 3)
+	})
+
+	// FieldsEx
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		var username string
+		err = db.Model(table).FieldsEx([]string{"id", "age", "balance", "state", "create_at", "update_at"}).Where("id", 1).Scan(&username)
+		t.Assert(err, nil)
+		t.Assert(username, "username1")
+		var username2 *string
+		err = db.Model(table).FieldsEx("id,age,balance,state,create_at,update_at").Where("id", 2).Scan(&username2)
+		t.Assert(err, nil)
+		t.Assert(username2, "username2")
+		err = db.Model(table).FieldsEx("id", "age", "balance", "state", "create_at", "update_at").Where("id", 1).Scan(&username)
+		t.Assert(err, nil)
+		t.Assert(username, "username1")
+		err = db.Model(table).FieldsEx([]string{"id", "age", "state", "create_at", "update_at"}).Where("id", 1).Scan(&username)
+		t.Assert(err.Error(), "Scan into basic/scanner type requires exactly 1 field specified via Fields(), but FieldsEx leaves 2 columns after filtering")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var user Issue3977SUser
+		// Many field scan
+		err := db.Model(table).Fields("username", "age").Where("id", 1).Scan(&user)
+		t.Assert(err, nil)
+		t.Assert(user.Age, 18)
+		t.Assert(user.UserName, "username1")
+
+		// Single field scan
+		var user2 Issue3977SUser
+		err = db.Model(table).Fields("age").Where("id", 2).Scan(&user2)
+		t.Assert(err, nil)
+		t.Assert(user2.Age, 100)
+		t.Assert(user2.UserName, "")
+
+		err = db.Model(table).Fields("`age`").Where("id", 2).Scan(&user2)
+		t.Assert(err, nil)
+		t.Assert(user2.Age, 100)
+		t.Assert(user2.UserName, "")
+
+		err = db.Model(table).Fields("`age` as age").Where("id", 2).Scan(&user2)
+		t.Assert(err, nil)
+		t.Assert(user2.Age, 100)
+		t.Assert(user2.UserName, "")
+
+		err = db.Model(table).Fields("`age` age").Where("id", 2).Scan(&user2)
+		t.Assert(err, nil)
+		t.Assert(user2.Age, 100)
+		t.Assert(user2.UserName, "")
+
+		err = db.Model(table).Fields("`age` age").Where("id", 2).Scan(&user2)
+		t.Assert(err, nil)
+		t.Assert(user2.Age, 100)
+		t.Assert(user2.UserName, "")
+
+	})
+
 }

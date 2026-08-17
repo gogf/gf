@@ -286,14 +286,82 @@ func (m *Model) doStructs(pointer any, where ...any) error {
 // SQL aggregate functions such as COUNT(*) are NOT considered expanding because
 // they always produce exactly one column.
 func isExpandingField(field any) bool {
+	var s string
 	switch v := field.(type) {
-	case Raw, *Raw:
-		return true
+	case Raw:
+		s = string(v)
+	case *Raw:
+		if v == nil {
+			return false
+		}
+		s = string(*v)
 	case string:
-		return v == "*" || gstr.HasSuffix(v, ".*")
+		s = v
 	default:
 		return false
 	}
+	return isExpandingFieldStr(s)
+}
+
+// isExpandingFieldStr checks whether a field string can expand to multiple
+// result columns. It detects wildcards ("*", "a.*") and top-level commas
+// ("name,age") while ignoring commas nested inside parentheses (e.g. function
+// argument lists like "COUNT(DISTINCT `id`,`username`)").
+func isExpandingFieldStr(s string) bool {
+	if s == "*" || gstr.HasSuffix(s, ".*") {
+		return true
+	}
+	depth := 0
+	for _, ch := range s {
+		switch ch {
+		case '(':
+			depth++
+		case ')':
+			if depth > 0 {
+				depth--
+			}
+		case ',':
+			if depth == 0 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// extractFieldName extracts the column name from a field specification for
+// use as a map key in struct mapping. It handles:
+//   - plain strings: "age" → "age"
+//   - gdb.Raw: Raw("age") → "age"
+//   - "table.field" → "field"
+//   - "expr as alias" → "alias" (case-insensitive "as")
+//   - backtick/quote stripping: "`field`" → "field"
+func extractFieldName(field any) string {
+	var s string
+	switch v := field.(type) {
+	case Raw:
+		s = string(v)
+	case *Raw:
+		if v == nil {
+			return ""
+		}
+		s = string(*v)
+	case string:
+		s = v
+	default:
+		s = gconv.String(v)
+	}
+	// Handle "expr as alias" → use alias.
+	if idx := gstr.PosI(s, " as "); idx >= 0 {
+		s = gstr.Trim(s[idx+4:])
+	}
+	// Handle "table.field" → use field name.
+	if idx := gstr.PosR(s, "."); idx >= 0 {
+		s = s[idx+1:]
+	}
+	// Strip backticks and quotes.
+	s = gstr.Trim(s, "`\"'")
+	return s
 }
 
 // isSingleFieldSpecified reports whether the model has exactly one explicit
@@ -319,10 +387,41 @@ func (m *Model) isSingleFieldSpecified() bool {
 // not declare a single result column. Value()/Array() also cannot be used as a
 // post-query column-count check here, because they return FirstResultColumn
 // before that validation runs.
-//
-// Fields that expand to multiple columns (gdb.Raw, "*", "a.*") are rejected
-// because they cannot be validated for single-column semantics at the
-// specification level.
+func (m *Model) validateFieldsExSingleColumn() error {
+	if m.db == nil {
+		return nil
+	}
+	tableFields, err := m.TableFields(m.tablesInit)
+	if err != nil || len(tableFields) == 0 {
+		return nil
+	}
+	remaining := len(tableFields)
+	for _, excluded := range m.fieldsEx {
+		for _, name := range gstr.SplitAndTrim(gconv.String(excluded), ",") {
+			if name == "" {
+				continue
+			}
+			if _, ok := tableFields[name]; ok {
+				remaining--
+			}
+		}
+	}
+	if remaining != 1 {
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`Scan into basic/scanner type requires exactly 1 field specified via Fields(), but FieldsEx leaves %d columns after filtering`,
+			remaining,
+		)
+	}
+	return nil
+}
+
+// validateSingleFieldSpecified checks that the model has at least one field
+// specification suitable for a single-column scan (basic type, sql.Scanner, or
+// their slices). It accepts both an explicit single Fields entry and FieldsEx,
+// because FieldsEx can narrow the result to a single column even though
+// m.fields is empty. The actual column count is validated after query
+// execution by Value() / Array().
 func (m *Model) validateSingleFieldSpecified() error {
 	if m.isSingleFieldSpecified() {
 		return nil
@@ -335,6 +434,9 @@ func (m *Model) validateSingleFieldSpecified() error {
 			`Scan into basic/scanner type does not support expanding field %v (gdb.Raw or wildcard); use an explicit field name instead`,
 			m.fields[0],
 		)
+	}
+	if len(m.fields) == 0 && len(m.fieldsEx) > 0 {
+		return m.validateFieldsExSingleColumn()
 	}
 	return gerror.NewCodef(
 		gcode.CodeInvalidParameter,
@@ -441,7 +543,8 @@ func (m *Model) Scan(pointer any, where ...any) error {
 			// Without this guard, doStruct would auto-select the Scanner
 			// struct's (often unexported) fields, producing incorrect SQL.
 			if err := m.validateSingleFieldSpecified(); err != nil {
-				return err
+				// Fallback to doStruct
+				return m.doStruct(pointer, where...)
 			}
 			// Single non-Raw field and the target type implements sql.Scanner:
 			// scan the scalar value directly through the Scanner interface.
@@ -459,7 +562,23 @@ func (m *Model) Scan(pointer any, where ...any) error {
 				}
 				return nil
 			}
-			return value.Scan(pointer)
+			if err = value.Scan(pointer); err != nil {
+				// Fallback: the target type may be a struct with orm-tagged
+				// fields that also implements sql.Scanner. In that case the
+				// scalar value cannot be converted to the struct through the
+				// Scanner interface. Build a map[string]any from the field
+				// name and value, then use orm-tag-based struct mapping.
+				fieldName := extractFieldName(m.fields[0])
+				return converter.Struct(
+					map[string]any{fieldName: value.Interface()},
+					pointer,
+					gconv.StructOption{
+						PriorityTag:     OrmTagForStruct,
+						ContinueOnError: true,
+					},
+				)
+			}
+			return nil
 		}
 		return m.doStruct(pointer, where...)
 
