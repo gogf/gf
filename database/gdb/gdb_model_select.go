@@ -351,17 +351,28 @@ func extractFieldName(field any) string {
 	default:
 		s = gconv.String(v)
 	}
+
+	s = gstr.Trim(s)
+	if s == "" {
+		return ""
+	}
+
 	// Handle "expr as alias" → use alias.
 	if idx := gstr.PosI(s, " as "); idx >= 0 {
-		s = gstr.Trim(s[idx+4:])
+		return gstr.Trim(s[idx+4:], "`\"'")
 	}
+
+	parts := gstr.Fields(s)
+	if len(parts) >= 2 {
+		return gstr.Trim(parts[len(parts)-1], "`\"'")
+	}
+
 	// Handle "table.field" → use field name.
 	if idx := gstr.PosR(s, "."); idx >= 0 {
-		s = s[idx+1:]
+		return gstr.Trim(s[idx+1:], "`\"'")
 	}
-	// Strip backticks and quotes.
-	s = gstr.Trim(s, "`\"'")
-	return s
+
+	return gstr.Trim(s, "`\"'")
 }
 
 // isSingleFieldSpecified reports whether the model has exactly one explicit
@@ -392,8 +403,11 @@ func (m *Model) validateFieldsExSingleColumn() error {
 		return nil
 	}
 	tableFields, err := m.TableFields(m.tablesInit)
-	if err != nil || len(tableFields) == 0 {
-		return nil
+	if err != nil {
+		return err
+	}
+	if len(tableFields) == 0 {
+		return gerror.Newf(`empty table fields for table "%s"`, m.tablesInit)
 	}
 	remaining := len(tableFields)
 	for _, excluded := range m.fieldsEx {
