@@ -172,7 +172,7 @@ func TestScanBasicTypes(t *testing.T) {
 }
 
 // TestScanReflectValueInput tests that the basic converter functions correctly unwrap
-// reflect.Value inputs, which is required by the gdb Scan-into-basic-type feature.
+// reflect.Value inputs instead of treating the wrapper as the converted value.
 func TestScanReflectValueInput(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// reflect.Value wrapping a bool.
