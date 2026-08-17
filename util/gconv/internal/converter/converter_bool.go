@@ -40,6 +40,11 @@ func (c *Converter) Bool(anyInput any) (bool, error) {
 		}
 		return true, nil
 	default:
+		if rv, ok := value.(reflect.Value); ok {
+			if rv.IsValid() && rv.CanInterface() {
+				return c.Bool(rv.Interface())
+			}
+		}
 		if f, ok := value.(localinterface.IBool); ok {
 			return f.Bool(), nil
 		}
