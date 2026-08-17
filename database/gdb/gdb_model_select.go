@@ -313,12 +313,12 @@ func (m *Model) isSingleFieldSpecified() bool {
 	return !isExpandingField(m.fields[0])
 }
 
-// validateSingleFieldSpecified checks that the model has at least one field
-// specification suitable for a single-column scan (basic type, sql.Scanner, or
-// their slices). It accepts both an explicit single Fields entry and FieldsEx,
-// because FieldsEx can narrow the result to a single column even though
-// m.fields is empty. The actual column count is validated after query
-// execution by Value() / Array().
+// validateSingleFieldSpecified checks that the model has exactly one explicit
+// Fields entry suitable for a single-column scan (basic type, sql.Scanner, or
+// their slices). FieldsEx is not accepted: it is an exclusion list and does
+// not declare a single result column. Value()/Array() also cannot be used as a
+// post-query column-count check here, because they return FirstResultColumn
+// before that validation runs.
 //
 // Fields that expand to multiple columns (gdb.Raw, "*", "a.*") are rejected
 // because they cannot be validated for single-column semantics at the
@@ -336,9 +336,6 @@ func (m *Model) validateSingleFieldSpecified() error {
 			m.fields[0],
 		)
 	}
-	if len(m.fieldsEx) > 0 {
-		return nil
-	}
 	return gerror.NewCodef(
 		gcode.CodeInvalidParameter,
 		`Scan into basic/scanner type requires exactly 1 field specified via Fields(), but got %d`,
@@ -353,8 +350,9 @@ func (m *Model) validateSingleFieldSpecified() error {
 // It also supports scanning a single field result into a basic type (int, float, string, bool, etc.),
 // a pointer to a basic type, a slice of basic types, or a slice of pointers to basic types. In these
 // cases exactly one field must be specified via Fields (or a field-producing helper such as FieldSum),
-// otherwise an error is returned. Types implementing sql.Scanner (e.g. decimal.Decimal, gtime.Time)
-// are scanned through their Scan method in the same way.
+// otherwise an error is returned. FieldsEx is not accepted, because it does not declare a single
+// result column. Types implementing sql.Scanner (e.g. decimal.Decimal, gtime.Time) are scanned
+// through their Scan method in the same way.
 //
 // The optional parameter `where` is the same as the parameter of Model.Where function,  see Model.Where.
 //

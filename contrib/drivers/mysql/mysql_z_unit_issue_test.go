@@ -2265,6 +2265,22 @@ func Test_Issue3977(t *testing.T) {
 		t.AssertNE(err, nil)
 	})
 
+	// FieldsEx is an exclusion list and must not be treated as a single-column
+	// specification. Otherwise Scan silently returns the first remaining column.
+	gtest.C(t, func(t *gtest.T) {
+		var username string
+		err := db.Model(table).FieldsEx("id").Where("id", 1).Scan(&username)
+		t.AssertNE(err, nil)
+
+		var usernames []string
+		err = db.Model(table).FieldsEx("id").Scan(&usernames)
+		t.AssertNE(err, nil)
+
+		err = db.Model(table).Fields("username").Where("id", 1).Scan(&username)
+		t.AssertNil(err)
+		t.Assert(username, "username1")
+	})
+
 	// Scanning into a non-nil pointer when no row matches should return sql.ErrNoRows,
 	// consistent with Record.Struct/Result.Structs. See PR review comment.
 	gtest.C(t, func(t *gtest.T) {
