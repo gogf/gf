@@ -223,7 +223,7 @@ jobs:
         timezoneLinux: "Asia/Shanghai"
 
     - name: Checkout Repository
-      uses: actions/checkout@v5
+      uses: actions/checkout@v7
 
     - name: Setup tmate Session
       uses: mxschmitt/action-tmate@v3
@@ -251,7 +251,7 @@ jobs:
       run:  docker compose -f ".github/workflows/consul/docker-compose.yml" up -d --build
 
     - name: Setup Golang ${{ matrix.go-version }}
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v7
       with:
         go-version: ${{ matrix.go-version }}
         cache-dependency-path: '**/go.sum'
@@ -292,7 +292,7 @@ jobs:
       run:  docker compose -f ".github/workflows/consul/docker-compose.yml" down
 
     - name: Report Coverage
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v7
       # Only report coverage on the latest go version
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION }}
       with:
