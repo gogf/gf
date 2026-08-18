@@ -11,10 +11,15 @@ services:
       - "9848:9848"
       - "9555:9555"
     healthcheck:
-      test: [ "CMD", "curl" ,"http://localhost:8848/nacos" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:8848/nacos" ]
       interval: 5s
       timeout: 3s
       retries: 10
+      # Nacos is a JVM service and needs well over the 50s that interval*retries
+      # allows on a loaded runner. Without start_period those early failures
+      # count towards retries, the container is declared unhealthy, and the
+      # initializer that depends on it never runs.
+      start_period: 180s
 
   initializer:
     image: alpine/curl:latest
