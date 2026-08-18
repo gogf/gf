@@ -236,6 +236,22 @@ jobs:
 
     - name: Start Apollo Containers
       run:  docker compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
+
+    - name: Wait for Apollo to serve configuration
+      run: |
+        # A running container is not enough: apollo-quick-start imports its seed
+        # data after boot, and until that finishes the config service answers
+        # normally but without the keys the tests read.
+        for i in $(seq 1 60); do
+          if curl -sf "http://localhost:8080/configs/SampleApp/default/application" | grep -q '"server.address"'; then
+            echo "Apollo is serving configuration."
+            exit 0
+          fi
+          sleep 5
+        done
+        echo "Apollo did not start serving configuration within 5 minutes."
+        docker compose -f ".github/workflows/apollo/docker-compose.yml" logs --tail=50
+        exit 1
       
     - name: Start Nacos Containers
       run:  docker compose -f ".github/workflows/nacos/docker-compose.yml" up -d --build
