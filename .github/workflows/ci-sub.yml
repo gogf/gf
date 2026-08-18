@@ -47,9 +47,7 @@ jobs:
 
     steps:
     - name: Setup Timezone
-      uses: szenius/set-timezone@v2.0
-      with:
-        timezoneLinux: "Asia/Shanghai"
+      run:  sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
     - name: Checkout Repository
       uses: actions/checkout@v7
