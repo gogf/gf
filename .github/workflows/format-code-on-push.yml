@@ -18,7 +18,7 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
       - name: Install gci
-        run: go install github.com/daixiang0/gci@latest
+        run: go install github.com/daixiang0/gci@v0.13.6 # keep in sync with scripts/before_script.sh
       - name: Run gci
         run: |
           gci write --custom-order \
