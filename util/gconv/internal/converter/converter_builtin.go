@@ -10,6 +10,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gtime"
 )
 
@@ -96,7 +98,7 @@ func setConvertedTimeValue(to reflect.Value, t time.Time) error {
 	case to.Kind() == reflect.Pointer:
 		if to.IsNil() {
 			if !to.CanSet() {
-				return nil
+				return unsettableTimeDestinationError(to)
 			}
 			to.Set(reflect.New(to.Type().Elem()))
 		}
@@ -105,7 +107,7 @@ func setConvertedTimeValue(to reflect.Value, t time.Time) error {
 		*to.Addr().Interface().(*time.Time) = t
 		return nil
 	default:
-		return nil
+		return unsettableTimeDestinationError(to)
 	}
 }
 
@@ -118,7 +120,7 @@ func setConvertedGTimeValue(to reflect.Value, v gtime.Time) error {
 	case to.Kind() == reflect.Pointer:
 		if to.IsNil() {
 			if !to.CanSet() {
-				return nil
+				return unsettableTimeDestinationError(to)
 			}
 			to.Set(reflect.New(to.Type().Elem()))
 		}
@@ -127,6 +129,16 @@ func setConvertedGTimeValue(to reflect.Value, v gtime.Time) error {
 		*to.Addr().Interface().(*gtime.Time) = v
 		return nil
 	default:
-		return nil
+		return unsettableTimeDestinationError(to)
 	}
+}
+
+// unsettableTimeDestinationError reports that a converted time value cannot be
+// written to the given destination.
+func unsettableTimeDestinationError(to reflect.Value) error {
+	return gerror.NewCodef(
+		gcode.CodeInvalidParameter,
+		`cannot assign converted time value to unsettable destination of type "%s"`,
+		to.Type(),
+	)
 }

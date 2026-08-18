@@ -9,6 +9,7 @@ package gconv_test
 import (
 	"fmt"
 	"math/big"
+	"reflect"
 	"testing"
 	"time"
 
@@ -1275,5 +1276,94 @@ func Test_Issue4429_GTimeStringOutputUnchanged(t *testing.T) {
 		t.Assert(gconv.String(gtimeUTC), gtimeUTC.String())
 		t.Assert(gconv.String(*gtimeUTC), gtimeUTC.String())
 		t.Assert(gconv.String(gtimeUTC), "2025-09-16 11:32:42")
+	})
+}
+
+type issue4429CustomTimeSrc struct {
+	Hour int
+}
+
+type issue4429PanicIVal struct{}
+
+func (p *issue4429PanicIVal) Val() any {
+	if p == nil {
+		panic("typed-nil IVal must not call Val")
+	}
+	return nil
+}
+
+type issue4429SelfValMap map[string]any
+
+func (m issue4429SelfValMap) Val() any {
+	return m
+}
+
+func Test_Issue4429_CustomConverterKeepsPrecedence(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		conv := gconv.NewConverter()
+		customTime := time.Date(2024, 1, 2, 3, 4, 5, 0, time.FixedZone("X", 3*3600))
+		err := conv.RegisterTypeConverterFunc(func(in issue4429CustomTimeSrc) (*time.Time, error) {
+			t := customTime.Add(time.Duration(in.Hour) * time.Hour)
+			return &t, nil
+		})
+		t.AssertNil(err)
+
+		var got time.Time
+		err = conv.Struct(issue4429CustomTimeSrc{Hour: 1}, &got)
+		t.AssertNil(err)
+		t.Assert(got.UnixNano(), customTime.Add(time.Hour).UnixNano())
+		_, offset := got.Zone()
+		t.Assert(offset, 3*3600)
+
+		var scanned time.Time
+		err = conv.Scan(issue4429CustomTimeSrc{Hour: 2}, &scanned)
+		t.AssertNil(err)
+		t.Assert(scanned.UnixNano(), customTime.Add(2*time.Hour).UnixNano())
+	})
+}
+
+func Test_Issue4429_UnsettableTimeDestinationReturnsError(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		_, gtimeUTC := issue4429UTCSample()
+		src := map[string]any{"now": gtimeUTC}
+
+		err := gconv.Struct(src, reflect.ValueOf(time.Time{}))
+		t.AssertNE(err, nil)
+
+		err = gconv.Struct(src, reflect.ValueOf((*time.Time)(nil)))
+		t.AssertNE(err, nil)
+
+		err = gconv.Struct(src, reflect.ValueOf(gtime.Time{}))
+		t.AssertNE(err, nil)
+
+		err = gconv.Struct(src, reflect.ValueOf((*gtime.Time)(nil)))
+		t.AssertNE(err, nil)
+	})
+}
+
+func Test_Issue4429_TypedNilIValDoesNotPanic(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var typedNilVar *gvar.Var
+		t.Assert(gconv.Time(typedNilVar), time.Time{})
+		t.Assert(gconv.GTime(typedNilVar), nil)
+
+		var typedNilIVal *issue4429PanicIVal
+		t.Assert(gconv.Time(typedNilIVal), time.Time{})
+		t.Assert(gconv.GTime(typedNilIVal), nil)
+	})
+}
+
+func Test_Issue4429_NonComparableIValDoesNotPanic(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		issue4429WithShanghaiLocal(t, func() {
+			utcTime, gtimeUTC := issue4429UTCSample()
+
+			issue4429AssertUTCTime(t, gconv.Time(issue4429SelfValMap{"now": gtimeUTC}), utcTime)
+			t.AssertNE(gconv.GTime(issue4429SelfValMap{"now": gtimeUTC}), nil)
+			t.Assert(gconv.GTime(issue4429SelfValMap{"now": gtimeUTC}).Unix(), gtimeUTC.Unix())
+
+			got := gconv.Time(issue4429SelfValMap{"id": 1, "name": "x"})
+			t.Assert(got.IsZero(), true)
+		})
 	})
 }

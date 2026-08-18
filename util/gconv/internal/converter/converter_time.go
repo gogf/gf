@@ -147,16 +147,19 @@ func (c *Converter) GTime(anyInput any, format ...string) (*gtime.Time, error) {
 func unwrapTimeSource(anyInput any) any {
 	const maxUnwrapDepth = 8
 	for i := 0; i < maxUnwrapDepth; i++ {
-		if anyInput == nil {
+		if empty.IsNil(anyInput) {
 			return nil
 		}
-		if v, ok := anyInput.(localinterface.IVal); ok && v != nil {
-			next := v.Val()
-			if next == anyInput {
-				return anyInput
+		if v, ok := anyInput.(localinterface.IVal); ok {
+			if empty.IsNil(v) {
+				return nil
 			}
-			anyInput = next
-			continue
+			next := v.Val()
+			if !isSameTimeSource(next, anyInput) {
+				anyInput = next
+				continue
+			}
+			// IVal returned itself; still try single-value map unwrap below.
 		}
 		if next, ok := unwrapSingleValueMap(anyInput); ok {
 			anyInput = next
@@ -165,6 +168,39 @@ func unwrapTimeSource(anyInput any) any {
 		return anyInput
 	}
 	return anyInput
+}
+
+// isSameTimeSource reports whether next still refers to the same source as
+// current. Interface comparison is skipped for non-comparable dynamic types
+// such as a named map that implements IVal and returns itself.
+func isSameTimeSource(next, current any) bool {
+	if next == nil || current == nil {
+		return next == nil && current == nil
+	}
+	nextValue := reflect.ValueOf(next)
+	currentValue := reflect.ValueOf(current)
+	if !nextValue.IsValid() || !currentValue.IsValid() {
+		return !nextValue.IsValid() && !currentValue.IsValid()
+	}
+	if !nextValue.Type().Comparable() || !currentValue.Type().Comparable() {
+		return isSameNonComparableTimeSource(nextValue, currentValue)
+	}
+	return next == current
+}
+
+// isSameNonComparableTimeSource compares values that cannot use interface
+// equality, without calling reflect.Value.Pointer on unsupported kinds.
+func isSameNonComparableTimeSource(nextValue, currentValue reflect.Value) bool {
+	if nextValue.Type() != currentValue.Type() {
+		return false
+	}
+	switch nextValue.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Map, reflect.Pointer, reflect.Slice, reflect.UnsafePointer:
+		return nextValue.Pointer() == currentValue.Pointer()
+	default:
+		// Stop unwrapping to avoid an interface-comparison panic.
+		return true
+	}
 }
 
 // unwrapSingleValueMap returns the only value of a one-entry map.
