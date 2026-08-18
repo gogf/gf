@@ -63,6 +63,7 @@ func Test_IssueBytea_RoundTrip(t *testing.T) {
 		one, err := db.Model(table).Where("id", 3).One()
 		t.AssertNil(err)
 		t.Assert(len(one["data"].Bytes()), 0)
+		t.Assert(one["data"].IsNil(), false)
 	})
 
 	gtest.C(t, func(t *gtest.T) {

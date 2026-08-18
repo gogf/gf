@@ -504,12 +504,12 @@ func Test_DataType_Datetime_Precision(t *testing.T) {
 		}).Insert()
 		t.AssertNil(err)
 
-		// Compare up to seconds; driver may reformat microseconds.
 		one, err := db.Model(table).Where("id", 1).One()
 		t.AssertNil(err)
 		expected := "2024-01-15 12:30:45"
 		actual := one["created_at"].String()[:19]
 		t.Assert(actual, expected)
+		t.Assert(one["created_at"].GTime().Microsecond(), 123456)
 	})
 }
 

@@ -521,6 +521,7 @@ func Test_Model_Page(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		model := db.Model(table).Safe().Order("id")
 		all, err := model.Page(3, 3).All()
+		t.AssertNil(err)
 		count, err := model.Count()
 		t.AssertNil(err)
 		t.Assert(len(all), 3)
