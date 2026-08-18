@@ -260,8 +260,10 @@ jobs:
 
     - name: Install the protocol compiler plugins for Go
       run: |
-        go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-        go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+        # Pinned: protoc-gen-go-grpc v1.6.0 requires Go >= 1.24 and v1.6.2 requires
+        # Go >= 1.25, either of which breaks the older matrix entries.
+        go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.12
+        go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
         export PATH="$PATH:$(go env GOPATH)/bin"
 
     - name: Before Script
