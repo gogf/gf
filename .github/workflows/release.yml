@@ -16,12 +16,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Github Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Set Up Golang Environment
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
-          go-version: 1.25
+          go-version: 1.26
           cache: false
       
       - name: Build CLI Binary
@@ -48,7 +48,7 @@ jobs:
 
       - name: Create Github Release
         id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -59,7 +59,7 @@ jobs:
       
       - name: Upload Release Asset
         id:   upload-release-asset
-        uses: alexellis/upload-assets@0.4.0
+        uses: alexellis/upload-assets@0.5.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

@@ -483,3 +483,90 @@ func Test_Issue4247(t *testing.T) {
 		t.Assert(j.Get(`paths./cluster/{cluster_id}/node/{name}/join.post.requestBody`).String(), requestBody)
 	})
 }
+
+// https://github.com/gogf/gf/issues/4746
+func Test_Issue4746(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Issue4746InterfaceReq struct {
+			g.Meta `path:"/interface" method:"post"`
+			Values []any `json:"values" v:"in:a,b"`
+		}
+		type Issue4746InterfaceRes struct{}
+
+		f := func(ctx context.Context, req *Issue4746InterfaceReq) (res *Issue4746InterfaceRes, err error) {
+			return
+		}
+
+		oai := goai.New()
+		err := oai.Add(goai.AddInput{Object: f})
+		t.AssertNil(err)
+
+		schemaRef := oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Issue4746InterfaceReq`)
+		t.AssertNE(schemaRef, nil)
+		values := schemaRef.Value.Properties.Get(`values`)
+		t.AssertNE(values, nil)
+		t.Assert(values.Value.Type, goai.TypeArray)
+		t.Assert(len(values.Value.Enum), 0)
+		t.AssertNE(values.Value.Items, nil)
+		t.AssertNE(values.Value.Items.Value, nil)
+		t.Assert(values.Value.Items.Value.Enum, g.Slice{"a", "b"})
+		t.Assert(len(values.Value.Items.Value.AllOf), 1)
+		t.AssertNE(values.Value.Items.Value.AllOf[0].Ref, "")
+
+		b, err := values.MarshalJSON()
+		t.AssertNil(err)
+		j := gjson.New(b)
+		t.Assert(j.Get(`enum`).IsNil(), true)
+		t.Assert(j.Get(`items.enum`).Strings(), g.SliceStr{"a", "b"})
+		t.AssertNE(j.Get(`items.allOf.0.$ref`).String(), "")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Issue4746StringReq struct {
+			g.Meta `path:"/string" method:"post"`
+			Values []string `json:"values" v:"in:a,b"`
+		}
+		type Issue4746StringRes struct{}
+
+		f := func(ctx context.Context, req *Issue4746StringReq) (res *Issue4746StringRes, err error) {
+			return
+		}
+
+		oai := goai.New()
+		err := oai.Add(goai.AddInput{Object: f})
+		t.AssertNil(err)
+
+		schemaRef := oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Issue4746StringReq`)
+		t.AssertNE(schemaRef, nil)
+		values := schemaRef.Value.Properties.Get(`values`)
+		t.AssertNE(values, nil)
+		t.Assert(values.Value.Type, goai.TypeArray)
+		t.Assert(len(values.Value.Enum), 0)
+		t.AssertNE(values.Value.Items, nil)
+		t.AssertNE(values.Value.Items.Value, nil)
+		t.Assert(values.Value.Items.Value.Enum, g.Slice{"a", "b"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Issue4746NoEnumReq struct {
+			g.Meta `path:"/no-enum" method:"post"`
+			Values []any `json:"values"`
+		}
+		type Issue4746NoEnumRes struct{}
+
+		f := func(ctx context.Context, req *Issue4746NoEnumReq) (res *Issue4746NoEnumRes, err error) {
+			return
+		}
+
+		oai := goai.New()
+		err := oai.Add(goai.AddInput{Object: f})
+		t.AssertNil(err)
+
+		schemaRef := oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Issue4746NoEnumReq`)
+		t.AssertNE(schemaRef, nil)
+		values := schemaRef.Value.Properties.Get(`values`)
+		t.AssertNE(values, nil)
+		t.Assert(values.Value.Type, goai.TypeArray)
+		t.Assert(len(values.Value.Enum), 0)
+		t.AssertNE(values.Value.Items, nil)
+		t.AssertNil(values.Value.Items.Value)
+	})
+}

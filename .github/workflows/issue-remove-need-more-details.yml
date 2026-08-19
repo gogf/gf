@@ -16,14 +16,21 @@ permissions:
 jobs:
   issue-remove-need-more-details:
     permissions:
-      issues: write # for actions-cool/issues-helper to update issues
-     # pull-requests: write # for actions-cool/issues-helper to update PRs
+      issues: write # to remove the need more details label
     runs-on: ubuntu-latest
     steps:
       - name: remove need more details
         if: github.event.issue.state == 'open' && github.actor == github.event.issue.user.login
-        uses: actions-cool/issues-helper@v3
+        uses: actions/github-script@v9
         with:
-          actions: 'remove-labels'
-          issue-number: ${{ github.event.issue.number }}
-          labels: 'need more details'
+          script: |
+            const LABEL = 'need more details'
+            const labels = context.payload.issue.labels.map(l => l.name)
+            if (!labels.includes(LABEL)) return
+
+            await github.rest.issues.removeLabel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              name: LABEL,
+            })
