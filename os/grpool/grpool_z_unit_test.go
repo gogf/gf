@@ -18,6 +18,17 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
+// assertNoJobLost checks that no job went missing, without requiring an exact sum.
+// A job leaves the queue before it appends to the array, so during that window it
+// is counted in neither Jobs() nor the array. inFlightLimit bounds how many jobs
+// can be in that window: the peak worker count the pool has had, not its current
+// Cap(), because jobs left over from before a shrink are still in flight.
+func assertNoJobLost(t *gtest.T, pool *grpool.Pool, array *garray.Array, size, inFlightLimit int) {
+	sum := pool.Jobs() + array.Len()
+	t.AssertLE(sum, size)
+	t.AssertGE(sum, size-inFlightLimit)
+}
+
 func waitUntil(timeout time.Duration, condition func() bool) bool {
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
@@ -152,14 +163,14 @@ func Test_Limit4(t *testing.T) {
 		t.Assert(waitUntil(2*time.Second, func() bool {
 			return pool.Size() == 100 && pool.Jobs() <= 900 && array.Len() > 0
 		}), true)
-		t.Assert(pool.Jobs()+array.Len(), size)
+		assertNoJobLost(t, pool, array, size, 100)
 
 		limit.Store(50)
 		t.Assert(waitUntil(4*time.Second, func() bool {
 			return pool.Size() <= 50 && pool.Size() >= 0
 		}), true)
 		t.Assert(pool.Size(), 50)
-		t.Assert(pool.Jobs()+array.Len(), size)
+		assertNoJobLost(t, pool, array, size, 100)
 
 		jobsBeforeIncrease := pool.Jobs()
 		arrayBeforeIncrease := array.Len()
@@ -171,7 +182,7 @@ func Test_Limit4(t *testing.T) {
 		t.AssertGT(pool.Jobs(), 0)
 		t.AssertLT(pool.Jobs(), jobsBeforeIncrease)
 		t.AssertGT(array.Len(), arrayBeforeIncrease)
-		t.Assert(pool.Jobs()+array.Len(), size)
+		assertNoJobLost(t, pool, array, size, 100)
 
 		pool.Close()
 		t.Assert(waitUntil(5*time.Second, func() bool {
