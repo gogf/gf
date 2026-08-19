@@ -15,11 +15,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-      # Nacos is a JVM service and needs well over the 50s that interval*retries
-      # allows on a loaded runner. Without start_period those early failures
-      # count towards retries, the container is declared unhealthy, and the
-      # initializer that depends on it never runs.
-      start_period: 180s
+      start_period: 60s
 
   initializer:
     image: alpine/curl:latest
