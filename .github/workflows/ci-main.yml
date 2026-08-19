@@ -243,7 +243,7 @@ jobs:
         # data after boot, and until that finishes the config service answers
         # normally but without the keys the tests read.
         for i in $(seq 1 60); do
-          if curl -sf "http://localhost:8080/configs/SampleApp/default/application" | grep -q '"server.address"'; then
+          if curl -fsS --connect-timeout 2 --max-time 5 "http://localhost:8080/configs/SampleApp/default/application" | grep -Fq '"server.address"'; then
             echo "Apollo is serving configuration."
             exit 0
           fi
