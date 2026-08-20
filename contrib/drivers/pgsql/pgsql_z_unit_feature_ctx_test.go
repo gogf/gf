@@ -100,3 +100,81 @@ func Test_Ctx_Timeout(t *testing.T) {
 		t.AssertNE(err, nil)
 	})
 }
+
+// Test_Ctx_Cancel tests context cancellation.
+func Test_Ctx_Cancel(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		// Cancel immediately
+		cancel()
+
+		// Query should fail due to cancelled context
+		_, err := db.Model(table).Ctx(ctx).All()
+		t.AssertNE(err, nil)
+	})
+}
+
+// Test_Ctx_Propagation_Transaction tests context propagation in transaction.
+func Test_Ctx_Propagation_Transaction(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	db.GetLogger().(*glog.Logger).SetCtxKeys("TraceId")
+
+	gtest.C(t, func(t *gtest.T) {
+		db.SetDebug(true)
+		defer db.SetDebug(false)
+
+		ctx := context.WithValue(context.Background(), "TraceId", "tx_trace_123")
+		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			// Context should propagate to transaction operations
+			_, err := tx.Model(table).Ctx(ctx).Where("id", 1).One()
+			return err
+		})
+		t.AssertNil(err)
+	})
+}
+
+// Test_Ctx_Multiple_Values tests context with multiple values.
+func Test_Ctx_Multiple_Values(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	db.GetLogger().(*glog.Logger).SetCtxKeys("TraceId", "RequestId", "UserId")
+
+	gtest.C(t, func(t *gtest.T) {
+		db.SetDebug(true)
+		defer db.SetDebug(false)
+
+		ctx := context.WithValue(context.Background(), "TraceId", "trace_001")
+		ctx = context.WithValue(ctx, "RequestId", "req_002")
+		ctx = context.WithValue(ctx, "UserId", "user_003")
+
+		db.Model(table).Ctx(ctx).Where("id", 1).One()
+	})
+}
+
+// Test_Ctx_Nested_Operations tests context in nested operations.
+func Test_Ctx_Nested_Operations(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	db.GetLogger().(*glog.Logger).SetCtxKeys("TraceId")
+
+	gtest.C(t, func(t *gtest.T) {
+		db.SetDebug(true)
+		defer db.SetDebug(false)
+
+		ctx := context.WithValue(context.Background(), "TraceId", "nested_trace")
+
+		// Nested query operations should all have context
+		result, err := db.Model(table).Ctx(ctx).Where("id>", 0).All()
+		t.AssertNil(err)
+
+		if len(result) > 0 {
+			// Another query using same context
+			_, err = db.Model(table).Ctx(ctx).Where("id", result[0]["id"]).One()
+			t.AssertNil(err)
+		}
+	})
+}
