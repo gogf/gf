@@ -247,6 +247,13 @@ jobs:
             echo "Apollo is serving configuration."
             exit 0
           fi
+          # The container gives up on its own after 120 seconds. Once it has,
+          # nothing will ever answer, so stop burning the remaining budget.
+          if docker compose -f ".github/workflows/apollo/docker-compose.yml" logs apollo-quick-start 2>/dev/null | grep -Fq 'Config service failed to start'; then
+            echo "Apollo config service gave up during startup."
+            docker compose -f ".github/workflows/apollo/docker-compose.yml" logs --tail=50
+            exit 1
+          fi
           sleep 5
         done
         echo "Apollo did not start serving configuration within 5 minutes."
