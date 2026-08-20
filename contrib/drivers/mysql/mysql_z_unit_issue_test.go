@@ -15,8 +15,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/shopspring/decimal"
-
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -24,7 +22,6 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
 	"github.com/gogf/gf/v2/util/guid"
 )
@@ -2076,13 +2073,6 @@ type Issue3977SUser struct {
 	Age      int    `json:"age" orm:"age"`
 }
 
-func (u *Issue3977SUser) Scan(v any) error {
-	if v == nil {
-		return nil
-	}
-	return gconv.Struct(v, u)
-}
-
 // https://github.com/gogf/gf/issues/3977
 func Test_Issue3977(t *testing.T) {
 	table := "issue3977"
@@ -2216,68 +2206,6 @@ func Test_Issue3977(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(states2, []bool{true, true, false})
 	})
-	// decimal.Decimal
-	gtest.C(t, func(t *gtest.T) {
-		var err error
-		var balance decimal.Decimal
-		err = db.Model(table).Fields("balance").Where("id", 1).Scan(&balance)
-		t.Assert(err, nil)
-		t.Assert(balance, decimal.NewFromFloat(1.01))
-
-		var balance2 *decimal.Decimal
-		err = db.Model(table).Fields("balance").Where("id", 1).Scan(&balance2)
-		t.Assert(err, nil)
-		t.Assert(balance2, decimal.NewFromFloat(1.01))
-
-		var totalBalances decimal.Decimal
-		err = db.Model(table).FieldSum("balance").WhereIn("id", []int64{1, 2, 3, 4, 5}).Scan(&totalBalances)
-		t.Assert(err, nil)
-		t.Assert(totalBalances, decimal.NewFromFloat(6.06))
-
-		var totalBalances2 *decimal.Decimal
-		err = db.Model(table).FieldSum("balance").WhereIn("id", []int64{1, 2, 3, 4, 5}).Scan(&totalBalances2)
-		t.Assert(err, nil)
-		t.Assert(totalBalances2, decimal.NewFromFloat(6.06))
-
-		// Scanner implementations like decimal.Decimal and gtime.Time are usually
-		// defined on pointer receivers, so slice scans must use pointer elements.
-		var balances []*decimal.Decimal
-		err = db.Model(table).Fields("balance").Scan(&balances)
-		t.AssertNil(err)
-		t.Assert(len(balances), 3)
-		t.Assert(balances[0], decimal.NewFromFloat(1.01))
-		t.Assert(balances[1], decimal.NewFromFloat(2.02))
-		t.Assert(balances[2], decimal.NewFromFloat(3.03))
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		var err error
-		var createdAt gtime.Time
-		err = db.Model(table).Fields("create_at").Where("id", 1).Scan(&createdAt)
-		t.AssertNil(err)
-		t.Assert(createdAt, "2020-01-01 00:00:00")
-
-		var createdAt2 *gtime.Time
-		err = db.Model(table).Fields("create_at").Where("id", 1).Scan(&createdAt2)
-		t.AssertNil(err)
-		t.Assert(createdAt2, "2020-01-01 00:00:00")
-
-		// Slice of pointer to gtime.Time (sql.Scanner implemented on pointer receiver).
-		var createdAts []*gtime.Time
-		err = db.Model(table).Fields("create_at").Scan(&createdAts)
-		t.AssertNil(err)
-		t.Assert(len(createdAts), 3)
-		t.Assert(createdAts[0], "2020-01-01 00:00:00")
-		t.Assert(createdAts[1], "2020-01-01 00:00:00")
-		t.Assert(createdAts[2], "2020-01-01 00:00:00")
-	})
-
-	// sql.Scanner type without Fields() should return a clear parameter error.
-	gtest.C(t, func(t *gtest.T) {
-		var balance decimal.Decimal
-		err := db.Model(table).Scan(&balance)
-		t.AssertNil(err)
-	})
 
 	// FieldsEx is an exclusion list and must not be treated as a single-column
 	// specification. Otherwise Scan silently returns the first remaining column.
@@ -2311,11 +2239,6 @@ func Test_Issue3977(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(namePtr, nil)
 
-		// sql.Scanner type
-		var balance decimal.Decimal
-		err = db.Model(table).Fields("balance").Where("id", 9999).Scan(&balance)
-		t.Assert(err, sql.ErrNoRows)
-
 		// slice of basic type: empty result yields an empty slice, NOT sql.ErrNoRows
 		var names []string
 		err = db.Model(table).Fields("username").Where("id", 9999).Scan(&names)
@@ -2335,7 +2258,7 @@ func Test_Issue3977(t *testing.T) {
 		t.Assert(err, nil)
 		t.Assert(username2, "username1")
 		err = db.Model(table).Fields(gdb.Raw("username,age")).Where("id", 1).Scan(&username)
-		t.Assert(err.Error(), "Scan into basic/scanner type does not support expanding field username,age (gdb.Raw or wildcard); use an explicit field name instead")
+		t.Assert(err.Error(), "Scan into basic type does not support expanding field username,age (gdb.Raw or wildcard); use an explicit field name instead")
 		var age int
 		err = db.Model(table).Fields(gdb.Raw("sum(age) as a")).WhereIn("id", []int{1, 2}).Scan(&age)
 		t.AssertNil(err)
@@ -2364,7 +2287,7 @@ func Test_Issue3977(t *testing.T) {
 		t.Assert(err, nil)
 		t.Assert(username, "username1")
 		err = db.Model(table).FieldsEx([]string{"id", "age", "state", "create_at", "update_at"}).Where("id", 1).Scan(&username)
-		t.Assert(err.Error(), "Scan into basic/scanner type requires exactly 1 field specified via Fields(), but FieldsEx leaves 2 columns after filtering")
+		t.Assert(err.Error(), "Scan into basic type requires exactly 1 field specified via Fields(), but FieldsEx leaves 2 columns after filtering")
 	})
 
 	gtest.C(t, func(t *gtest.T) {

@@ -22,10 +22,6 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-// scannerType is the reflect.Type for sql.Scanner, cached at package level to avoid
-// repeated reflect.TypeFor lookups in the Scan method's hot path.
-var scannerType = reflect.TypeFor[sql.Scanner]()
-
 // All does "SELECT FROM ..." statement for the model.
 // It retrieves the records from table and returns the result as slice type.
 // It returns nil if there's no record retrieved with the given conditions from table.
@@ -329,52 +325,6 @@ func isExpandingFieldStr(s string) bool {
 	return false
 }
 
-// extractFieldName extracts the column name from a field specification for
-// use as a map key in struct mapping. It handles:
-//   - plain strings: "age" → "age"
-//   - gdb.Raw: Raw("age") → "age"
-//   - "table.field" → "field"
-//   - "expr as alias" → "alias" (case-insensitive "as")
-//   - backtick/quote stripping: "`field`" → "field"
-func extractFieldName(field any) string {
-	var s string
-	switch v := field.(type) {
-	case Raw:
-		s = string(v)
-	case *Raw:
-		if v == nil {
-			return ""
-		}
-		s = string(*v)
-	case string:
-		s = v
-	default:
-		s = gconv.String(v)
-	}
-
-	s = gstr.Trim(s)
-	if s == "" {
-		return ""
-	}
-
-	// Handle "expr as alias" → use alias.
-	if idx := gstr.PosI(s, " as "); idx >= 0 {
-		return gstr.Trim(s[idx+4:], "`\"'")
-	}
-
-	parts := gstr.Fields(s)
-	if len(parts) >= 2 {
-		return gstr.Trim(parts[len(parts)-1], "`\"'")
-	}
-
-	// Handle "table.field" → use field name.
-	if idx := gstr.PosR(s, "."); idx >= 0 {
-		return gstr.Trim(s[idx+1:], "`\"'")
-	}
-
-	return gstr.Trim(s, "`\"'")
-}
-
 // isSingleFieldSpecified reports whether the model has exactly one explicit
 // field that resolves to a single column. FieldsEx is not treated as a
 // single-field specification.
@@ -382,9 +332,6 @@ func extractFieldName(field any) string {
 // It rejects:
 //   - gdb.Raw entries that may expand to multiple columns,
 //   - wildcard "*" and table-qualified wildcards like "a.*".
-//
-// Used by the Scanner struct branch to decide whether to attempt a single-field
-// Scan or fall through to doStruct.
 func (m *Model) isSingleFieldSpecified() bool {
 	if len(m.fields) != 1 {
 		return false
@@ -392,12 +339,10 @@ func (m *Model) isSingleFieldSpecified() bool {
 	return !isExpandingField(m.fields[0])
 }
 
-// validateSingleFieldSpecified checks that the model has exactly one explicit
-// Fields entry suitable for a single-column scan (basic type, sql.Scanner, or
-// their slices). FieldsEx is not accepted: it is an exclusion list and does
-// not declare a single result column. Value()/Array() also cannot be used as a
-// post-query column-count check here, because they return FirstResultColumn
-// before that validation runs.
+// validateFieldsExSingleColumn checks whether FieldsEx leaves exactly one table
+// column, which is required for scanning into a basic type or a slice of basic
+// types. Value()/Array() cannot be used as a post-query column-count check
+// here, because they return FirstResultColumn before that validation runs.
 func (m *Model) validateFieldsExSingleColumn() error {
 	if m.db == nil {
 		return nil
@@ -423,19 +368,17 @@ func (m *Model) validateFieldsExSingleColumn() error {
 	if remaining != 1 {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
-			`Scan into basic/scanner type requires exactly 1 field specified via Fields(), but FieldsEx leaves %d columns after filtering`,
+			`Scan into basic type requires exactly 1 field specified via Fields(), but FieldsEx leaves %d columns after filtering`,
 			remaining,
 		)
 	}
 	return nil
 }
 
-// validateSingleFieldSpecified checks that the model has at least one field
-// specification suitable for a single-column scan (basic type, sql.Scanner, or
-// their slices). It accepts both an explicit single Fields entry and FieldsEx,
-// because FieldsEx can narrow the result to a single column even though
-// m.fields is empty. The actual column count is validated after query
-// execution by Value() / Array().
+// validateSingleFieldSpecified checks that the model has a field specification
+// suitable for a single-column scan into a basic type or a slice of basic types.
+// It accepts both an explicit single Fields entry and FieldsEx, because FieldsEx
+// can narrow the result to a single column even though m.fields is empty.
 func (m *Model) validateSingleFieldSpecified() error {
 	if m.isSingleFieldSpecified() {
 		return nil
@@ -445,7 +388,7 @@ func (m *Model) validateSingleFieldSpecified() error {
 	if len(m.fields) == 1 {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
-			`Scan into basic/scanner type does not support expanding field %v (gdb.Raw or wildcard); use an explicit field name instead`,
+			`Scan into basic type does not support expanding field %v (gdb.Raw or wildcard); use an explicit field name instead`,
 			m.fields[0],
 		)
 	}
@@ -454,7 +397,7 @@ func (m *Model) validateSingleFieldSpecified() error {
 	}
 	return gerror.NewCodef(
 		gcode.CodeInvalidParameter,
-		`Scan into basic/scanner type requires exactly 1 field specified via Fields(), but got %d`,
+		`Scan into basic type requires exactly 1 field specified via Fields(), but got %d`,
 		len(m.fields),
 	)
 }
@@ -466,9 +409,7 @@ func (m *Model) validateSingleFieldSpecified() error {
 // It also supports scanning a single field result into a basic type (int, float, string, bool, etc.),
 // a pointer to a basic type, a slice of basic types, or a slice of pointers to basic types. In these
 // cases exactly one field must be specified via Fields (or a field-producing helper such as FieldSum),
-// otherwise an error is returned. FieldsEx is not accepted, because it does not declare a single
-// result column. Types implementing sql.Scanner (e.g. decimal.Decimal, gtime.Time) are scanned
-// through their Scan method in the same way.
+// otherwise an error is returned. FieldsEx is accepted only when it leaves exactly one column.
 //
 // The optional parameter `where` is the same as the parameter of Model.Where function,  see Model.Where.
 //
@@ -509,25 +450,16 @@ func (m *Model) Scan(pointer any, where ...any) error {
 	case reflect.Slice, reflect.Array:
 		// OriginType has all outer pointers stripped, so Elem() gives the slice element type.
 		elemType := reflectInfo.OriginType.Elem()
-		originalType := elemType
 		for elemType.Kind() == reflect.Pointer {
-			originalType = elemType
 			elemType = elemType.Elem()
 		}
 
 		// Only route to the basic-type slice branch when the element is a true scalar type
-		// (int/uint/float/bool/string) or a sql.Scanner. Map/record slices and other
-		// non-struct kinds must fall through to doStructs; otherwise []Record or similar
-		// results would be misclassified as a slice of basic values.
-		if elemType != nil &&
-			(reflection.IsBasicKind(elemType.Kind()) || elemType.Implements(scannerType) || originalType.Implements(scannerType)) {
+		// (int/uint/float/bool/string). Map/record slices and other non-struct kinds must
+		// fall through to doStructs; otherwise []Record or similar results would be
+		// misclassified as a slice of basic values.
+		if elemType != nil && reflection.IsBasicKind(elemType.Kind()) {
 			if err := m.validateSingleFieldSpecified(); err != nil {
-				// If the Scanner type is a struct (e.g. decimal.Decimal, gtime.Time),
-				// fall back to doStructs to scan as a struct instead of returning an error.
-				// Basic types (int, string, etc.) cannot be scanned as structs, so keep the error.
-				if elemType.Kind() == reflect.Struct {
-					return m.doStructs(pointer, where...)
-				}
 				return err
 			}
 			// Use a clone to avoid mutating the original model. Do not pass the field
@@ -546,54 +478,6 @@ func (m *Model) Scan(pointer any, where ...any) error {
 		return m.doStructs(pointer, where...)
 
 	case reflect.Struct, reflect.Invalid:
-		// OriginType has all outer pointers stripped; use reflect.PointerTo to also check
-		// whether *T implements sql.Scanner (pointer receiver methods). Note: Go does not
-		// allow **T or deeper as a method receiver, so checking T and *T is sufficient.
-		elemType := reflectInfo.OriginType
-		if elemType != nil &&
-			(elemType.Implements(scannerType) || reflect.PointerTo(elemType).Implements(scannerType)) {
-			// The target type implements sql.Scanner: it must have exactly one
-			// explicit field specified so the query returns a single column.
-			// Without this guard, doStruct would auto-select the Scanner
-			// struct's (often unexported) fields, producing incorrect SQL.
-			if err := m.validateSingleFieldSpecified(); err != nil {
-				// Fallback to doStruct
-				return m.doStruct(pointer, where...)
-			}
-			// Single non-Raw field and the target type implements sql.Scanner:
-			// scan the scalar value directly through the Scanner interface.
-			model := m.Clone()
-			if len(where) > 0 {
-				model = model.Where(where[0], where[1:]...)
-			}
-			value, err := model.Value()
-			if err != nil {
-				return err
-			}
-			if value == nil {
-				if !empty.IsNil(pointer, true) {
-					return sql.ErrNoRows
-				}
-				return nil
-			}
-			if err = value.Scan(pointer); err != nil {
-				// Fallback: the target type may be a struct with orm-tagged
-				// fields that also implements sql.Scanner. In that case the
-				// scalar value cannot be converted to the struct through the
-				// Scanner interface. Build a map[string]any from the field
-				// name and value, then use orm-tag-based struct mapping.
-				fieldName := extractFieldName(m.fields[0])
-				return converter.Struct(
-					map[string]any{fieldName: value.Interface()},
-					pointer,
-					gconv.StructOption{
-						PriorityTag:     OrmTagForStruct,
-						ContinueOnError: true,
-					},
-				)
-			}
-			return nil
-		}
 		return m.doStruct(pointer, where...)
 
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
