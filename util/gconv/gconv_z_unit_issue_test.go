@@ -9,8 +9,14 @@ package gconv_test
 import (
 	"fmt"
 	"math/big"
+	"os"
+	"os/exec"
+	"reflect"
+	"strings"
 	"testing"
 	"time"
+
+	_ "time/tzdata"
 
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/container/gvar"
@@ -1083,5 +1089,307 @@ func Test_Issue4786_DifferentArraySize(t *testing.T) {
 		t.Assert(len(result.Values), 2)
 		t.Assert(string(result.Values[0][:2]), "ab")
 		t.Assert(string(result.Values[1][:2]), "cd")
+	})
+}
+
+// https://github.com/gogf/gf/issues/4429
+// https://github.com/gogf/gf/issues/4841
+func issue4429UTCSample() (time.Time, *gtime.Time) {
+	utcTime := time.Date(2025, 9, 16, 11, 32, 42, 878465000, time.UTC)
+	return utcTime, gtime.NewFromTime(utcTime)
+}
+
+// issue4429NaiveStringHelperEnv marks the isolated subprocess that evaluates
+// timezone-less datetime strings under TZ=Asia/Shanghai.
+const issue4429NaiveStringHelperEnv = "GF_GCONV_ISSUE4429_NAIVE_LOCAL"
+
+// issue4429NaiveStringHelperCommandEnv builds the child-process environment.
+// Existing TZ and helper markers are dropped so the appended values win.
+func issue4429NaiveStringHelperCommandEnv() []string {
+	env := make([]string, 0, len(os.Environ())+2)
+	for _, item := range os.Environ() {
+		if strings.HasPrefix(item, "TZ=") || strings.HasPrefix(item, issue4429NaiveStringHelperEnv+"=") {
+			continue
+		}
+		env = append(env, item)
+	}
+	return append(env, issue4429NaiveStringHelperEnv+"=1", "TZ=Asia/Shanghai")
+}
+
+// issue4429RunNaiveStringHelper re-executes the current test in a child process
+// whose local timezone is Asia/Shanghai. Mutating time.Local in-process races
+// with leftover timers from other tests that call time.Now().
+func issue4429RunNaiveStringHelper(t *testing.T) {
+	cmd := exec.Command(
+		os.Args[0],
+		"-test.run=^Test_Issue4429_NaiveStringStaysLocal$",
+		"-test.count=1",
+		"-test.v=true",
+	)
+	cmd.Env = issue4429NaiveStringHelperCommandEnv()
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("naive local-string helper failed: %v\n%s", err, output)
+	}
+	if !strings.Contains(string(output), "PASS: Test_Issue4429_NaiveStringStaysLocal") {
+		t.Fatalf("naive local-string helper did not pass:\n%s", output)
+	}
+}
+
+func issue4429AssertUTCTime(t *gtest.T, got time.Time, want time.Time) {
+	t.Assert(got.UnixNano(), want.UnixNano())
+	_, offset := got.Zone()
+	t.Assert(offset, 0)
+}
+
+func Test_Issue4429_StructsToTimeSlice(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		utcTime, gtimeUTC := issue4429UTCSample()
+		rows := []map[string]any{
+			{"now": gtimeUTC},
+		}
+
+		var timeResult []time.Time
+		err := gconv.Structs(rows, &timeResult)
+		t.AssertNil(err)
+		t.Assert(len(timeResult), 1)
+		issue4429AssertUTCTime(t, timeResult[0], utcTime)
+
+		var timePtrResult []*time.Time
+		err = gconv.Structs(rows, &timePtrResult)
+		t.AssertNil(err)
+		t.Assert(len(timePtrResult), 1)
+		t.AssertNE(timePtrResult[0], nil)
+		issue4429AssertUTCTime(t, *timePtrResult[0], utcTime)
+
+		var gtimeResult []*gtime.Time
+		err = gconv.Structs(rows, &gtimeResult)
+		t.AssertNil(err)
+		t.Assert(len(gtimeResult), 1)
+		t.AssertNE(gtimeResult[0], nil)
+		t.Assert(gtimeResult[0].Unix(), gtimeUTC.Unix())
+		issue4429AssertUTCTime(t, gtimeResult[0].Time, utcTime)
+
+		var gtimeValueResult []gtime.Time
+		err = gconv.Structs(rows, &gtimeValueResult)
+		t.AssertNil(err)
+		t.Assert(len(gtimeValueResult), 1)
+		t.Assert(gtimeValueResult[0].Unix(), gtimeUTC.Unix())
+		issue4429AssertUTCTime(t, gtimeValueResult[0].Time, utcTime)
+	})
+}
+
+func Test_Issue4429_StructFieldAndScalar(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		utcTime, gtimeUTC := issue4429UTCSample()
+
+		issue4429AssertUTCTime(t, gconv.Time(gtimeUTC), utcTime)
+		issue4429AssertUTCTime(t, gconv.GTime(gtimeUTC).Time, utcTime)
+		t.Assert(gconv.GTime(gtimeUTC).Unix(), gtimeUTC.Unix())
+
+		type timeRow struct {
+			Now time.Time
+		}
+		var timeField timeRow
+		err := gconv.Struct(map[string]any{"now": gtimeUTC}, &timeField)
+		t.AssertNil(err)
+		issue4429AssertUTCTime(t, timeField.Now, utcTime)
+
+		type gtimeRow struct {
+			Now *gtime.Time
+		}
+		var gtimeField gtimeRow
+		err = gconv.Struct(map[string]any{"now": gtimeUTC}, &gtimeField)
+		t.AssertNil(err)
+		t.AssertNE(gtimeField.Now, nil)
+		t.Assert(gtimeField.Now.Unix(), gtimeUTC.Unix())
+		issue4429AssertUTCTime(t, gtimeField.Now.Time, utcTime)
+
+		var gotTime time.Time
+		err = gconv.Struct(map[string]any{"now": gtimeUTC}, &gotTime)
+		t.AssertNil(err)
+		issue4429AssertUTCTime(t, gotTime, utcTime)
+
+		var gotTimePtr *time.Time
+		err = gconv.Struct(map[string]any{"now": gtimeUTC}, &gotTimePtr)
+		t.AssertNil(err)
+		t.AssertNE(gotTimePtr, nil)
+		issue4429AssertUTCTime(t, *gotTimePtr, utcTime)
+
+		var gotGTime *gtime.Time
+		err = gconv.Struct(map[string]any{"now": gtimeUTC}, &gotGTime)
+		t.AssertNil(err)
+		t.AssertNE(gotGTime, nil)
+		t.Assert(gotGTime.Unix(), gtimeUTC.Unix())
+
+		var gotGTimeValue gtime.Time
+		err = gconv.Struct(map[string]any{"now": gtimeUTC}, &gotGTimeValue)
+		t.AssertNil(err)
+		t.Assert(gotGTimeValue.Unix(), gtimeUTC.Unix())
+		issue4429AssertUTCTime(t, gotGTimeValue.Time, utcTime)
+
+		var gvarTimeResult []time.Time
+		err = gconv.Structs([]map[string]any{{"now": gvar.New(gtimeUTC)}}, &gvarTimeResult)
+		t.AssertNil(err)
+		t.Assert(len(gvarTimeResult), 1)
+		issue4429AssertUTCTime(t, gvarTimeResult[0], utcTime)
+
+		recordRows := []map[string]*gvar.Var{
+			{"now": gvar.New(gtimeUTC)},
+		}
+		var recordTimeResult []time.Time
+		err = gconv.Structs(recordRows, &recordTimeResult)
+		t.AssertNil(err)
+		t.Assert(len(recordTimeResult), 1)
+		issue4429AssertUTCTime(t, recordTimeResult[0], utcTime)
+	})
+}
+
+func Test_Issue4429_NaiveStringStaysLocal(t *testing.T) {
+	if os.Getenv(issue4429NaiveStringHelperEnv) != "1" {
+		issue4429RunNaiveStringHelper(t)
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		got := gconv.Time("2025-09-16 11:32:42")
+		_, offset := got.Zone()
+		t.Assert(offset, 8*3600)
+		t.Assert(got.Year(), 2025)
+		t.Assert(got.Month(), time.September)
+		t.Assert(got.Day(), 16)
+		t.Assert(got.Hour(), 11)
+		t.Assert(got.Minute(), 32)
+		t.Assert(got.Second(), 42)
+
+		gotGTime := gconv.GTime("2025-09-16 11:32:42")
+		t.AssertNE(gotGTime, nil)
+		_, gtimeOffset := gotGTime.Zone()
+		t.Assert(gtimeOffset, 8*3600)
+	})
+}
+
+func Test_Issue4429_TypedAndWrappedSources(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		utcTime, gtimeUTC := issue4429UTCSample()
+
+		issue4429AssertUTCTime(t, gconv.Time(utcTime), utcTime)
+		issue4429AssertUTCTime(t, gconv.Time(&utcTime), utcTime)
+		issue4429AssertUTCTime(t, gconv.Time(*gtimeUTC), utcTime)
+		t.Assert(gconv.Time((*time.Time)(nil)), time.Time{})
+		t.Assert(gconv.Time((*gtime.Time)(nil)), time.Time{})
+
+		t.AssertNE(gconv.GTime(*gtimeUTC), nil)
+		issue4429AssertUTCTime(t, gconv.GTime(*gtimeUTC).Time, utcTime)
+		t.AssertNE(gconv.GTime(utcTime), nil)
+		issue4429AssertUTCTime(t, gconv.GTime(utcTime).Time, utcTime)
+		t.AssertNE(gconv.GTime(&utcTime), nil)
+		issue4429AssertUTCTime(t, gconv.GTime(&utcTime).Time, utcTime)
+		t.Assert(gconv.GTime((*time.Time)(nil)), nil)
+		t.Assert(gconv.GTime((*gtime.Time)(nil)), nil)
+
+		issue4429AssertUTCTime(t, gconv.Time(map[any]any{"now": gtimeUTC}), utcTime)
+		t.AssertNE(gconv.GTime(map[any]any{"now": gtimeUTC}), nil)
+		t.Assert(gconv.GTime(map[any]any{"now": gtimeUTC}).Unix(), gtimeUTC.Unix())
+
+		emptyTime := gconv.Time(map[string]any{})
+		t.Assert(emptyTime.IsZero(), true)
+		t.Assert(gconv.GTime(map[string]any{}), nil)
+	})
+}
+
+func Test_Issue4429_GTimeStringOutputUnchanged(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		_, gtimeUTC := issue4429UTCSample()
+		t.Assert(gconv.String(gtimeUTC), gtimeUTC.String())
+		t.Assert(gconv.String(*gtimeUTC), gtimeUTC.String())
+		t.Assert(gconv.String(gtimeUTC), "2025-09-16 11:32:42")
+	})
+}
+
+type issue4429CustomTimeSrc struct {
+	Hour int
+}
+
+type issue4429PanicIVal struct{}
+
+func (p *issue4429PanicIVal) Val() any {
+	if p == nil {
+		panic("typed-nil IVal must not call Val")
+	}
+	return nil
+}
+
+type issue4429SelfValMap map[string]any
+
+func (m issue4429SelfValMap) Val() any {
+	return m
+}
+
+func Test_Issue4429_CustomConverterKeepsPrecedence(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		conv := gconv.NewConverter()
+		customTime := time.Date(2024, 1, 2, 3, 4, 5, 0, time.FixedZone("X", 3*3600))
+		err := conv.RegisterTypeConverterFunc(func(in issue4429CustomTimeSrc) (*time.Time, error) {
+			t := customTime.Add(time.Duration(in.Hour) * time.Hour)
+			return &t, nil
+		})
+		t.AssertNil(err)
+
+		var got time.Time
+		err = conv.Struct(issue4429CustomTimeSrc{Hour: 1}, &got)
+		t.AssertNil(err)
+		t.Assert(got.UnixNano(), customTime.Add(time.Hour).UnixNano())
+		_, offset := got.Zone()
+		t.Assert(offset, 3*3600)
+
+		var scanned time.Time
+		err = conv.Scan(issue4429CustomTimeSrc{Hour: 2}, &scanned)
+		t.AssertNil(err)
+		t.Assert(scanned.UnixNano(), customTime.Add(2*time.Hour).UnixNano())
+	})
+}
+
+func Test_Issue4429_UnsettableTimeDestinationReturnsError(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		_, gtimeUTC := issue4429UTCSample()
+		src := map[string]any{"now": gtimeUTC}
+
+		err := gconv.Struct(src, reflect.ValueOf(time.Time{}))
+		t.AssertNE(err, nil)
+
+		err = gconv.Struct(src, reflect.ValueOf((*time.Time)(nil)))
+		t.AssertNE(err, nil)
+
+		err = gconv.Struct(src, reflect.ValueOf(gtime.Time{}))
+		t.AssertNE(err, nil)
+
+		err = gconv.Struct(src, reflect.ValueOf((*gtime.Time)(nil)))
+		t.AssertNE(err, nil)
+	})
+}
+
+func Test_Issue4429_TypedNilIValDoesNotPanic(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var typedNilVar *gvar.Var
+		t.Assert(gconv.Time(typedNilVar), time.Time{})
+		t.Assert(gconv.GTime(typedNilVar), nil)
+
+		var typedNilIVal *issue4429PanicIVal
+		t.Assert(gconv.Time(typedNilIVal), time.Time{})
+		t.Assert(gconv.GTime(typedNilIVal), nil)
+	})
+}
+
+func Test_Issue4429_NonComparableIValDoesNotPanic(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		utcTime, gtimeUTC := issue4429UTCSample()
+
+		issue4429AssertUTCTime(t, gconv.Time(issue4429SelfValMap{"now": gtimeUTC}), utcTime)
+		t.AssertNE(gconv.GTime(issue4429SelfValMap{"now": gtimeUTC}), nil)
+		t.Assert(gconv.GTime(issue4429SelfValMap{"now": gtimeUTC}).Unix(), gtimeUTC.Unix())
+
+		got := gconv.Time(issue4429SelfValMap{"id": 1, "name": "x"})
+		t.Assert(got.IsZero(), true)
 	})
 }
