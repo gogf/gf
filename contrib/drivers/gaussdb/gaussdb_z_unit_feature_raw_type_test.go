@@ -601,7 +601,8 @@ func createEnumType(t *gtest.T) (string, func()) {
 		gtest.Fatal(err)
 	}
 	return name, func() {
-		_, _ = db.Exec(ctx, fmt.Sprintf(`DROP TYPE IF EXISTS %s`, name))
+		_, err := db.Exec(ctx, fmt.Sprintf(`DROP TYPE IF EXISTS %s`, name))
+		t.AssertNil(err)
 	}
 }
 

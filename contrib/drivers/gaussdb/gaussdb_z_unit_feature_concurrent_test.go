@@ -193,58 +193,83 @@ func Test_Concurrent_Transaction(t *testing.T) {
 }
 
 // Test_Concurrent_Mixed_Operations tests mixed concurrent operations.
-// Individual operation errors are tolerated here: the interleaved inserts and
-// updates race by design, so the assertion is that the database stays consistent
-// and reachable afterwards rather than that every operation succeeded.
 func Test_Concurrent_Mixed_Operations(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
+		// createInitTable seeds its rows with explicit ids, which leaves the bigserial
+		// sequence at its initial value. Advance it past the seeded rows so the inserts
+		// below cannot collide with them and every operation is expected to succeed.
+		_, err := db.Exec(ctx, fmt.Sprintf(
+			`SELECT setval(pg_get_serial_sequence('%s', 'id'), %d)`, table, TableSize,
+		))
+		t.AssertNil(err)
+
 		var (
 			wg         sync.WaitGroup
 			operations = 30
+			inserts    int
+			errs       = make([]error, operations)
+			queried    = make([]gdb.Record, operations)
+			// Row id -> the nickname its updater writes. The schedule below gives every
+			// seeded row exactly one updater, so each write is deterministically visible.
+			updated = make(map[int]string)
 		)
 		wg.Add(operations)
 		for i := 0; i < operations; i++ {
 			switch i % 3 {
 			case 0: // Insert
-				go func(id int) {
+				inserts++
+				go func(idx, id int) {
 					defer wg.Done()
-					_, _ = db.Model(table).Insert(g.Map{
+					_, errs[idx] = db.Model(table).Insert(g.Map{
 						"passport":    fmt.Sprintf("new_user_%d", id),
 						"password":    fmt.Sprintf("new_pass_%d", id),
 						"nickname":    fmt.Sprintf("new_name_%d", id),
 						"create_time": gtime.Now().String(),
 					})
-				}(i)
+				}(i, i)
 			case 1: // Update
-				go func(id int) {
+				updated[(i%TableSize)+1] = fmt.Sprintf("concurrent_%d", i)
+				go func(idx, id int) {
 					defer wg.Done()
-					_, _ = db.Model(table).Data(g.Map{
+					_, errs[idx] = db.Model(table).Data(g.Map{
 						"nickname": fmt.Sprintf("concurrent_%d", id),
 					}).Where("id", (id%TableSize)+1).Update()
-				}(i)
+				}(i, i)
 			case 2: // Query
-				go func(id int) {
+				go func(idx, id int) {
 					defer wg.Done()
-					_, _ = db.Model(table).Where("id", (id%TableSize)+1).One()
-				}(i)
+					queried[idx], errs[idx] = db.Model(table).Where("id", (id%TableSize)+1).One()
+				}(i, i)
 			}
 		}
 		wg.Wait()
 
-		// Verify database is still consistent.
-		// Use AssertGE: concurrent inserts may conflict with the bigserial sequence,
-		// which createInitTable's explicit id inserts do not advance.
+		// Every operation succeeded, and each query returned the row it asked for.
+		for i, err := range errs {
+			t.AssertNil(err)
+			if i%3 == 2 {
+				t.AssertNE(queried[i], nil)
+				t.Assert(queried[i]["id"].Int(), (i%TableSize)+1)
+			}
+		}
+
+		// Every insert landed, so the row count is exact rather than a lower bound.
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
-		t.AssertGE(count, TableSize)
+		t.Assert(count, TableSize+inserts)
 
-		// The pre-existing rows are all still readable.
+		// The pre-existing rows are all still readable, and each carries the nickname
+		// written by its concurrent updater.
 		all, err := db.Model(table).Where("id<=?", TableSize).Order("id").All()
 		t.AssertNil(err)
 		t.Assert(len(all), TableSize)
+		t.Assert(len(updated), TableSize)
+		for _, v := range all {
+			t.Assert(v["nickname"].String(), updated[v["id"].Int()])
+		}
 	})
 }
 

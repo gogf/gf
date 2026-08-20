@@ -172,7 +172,10 @@ func Test_IssueSave_NullTypedColumn_QuotedTypeName(t *testing.T) {
 		)); err != nil {
 			gtest.Fatal(err)
 		}
-		defer db.Exec(ctx, fmt.Sprintf(`DROP TYPE IF EXISTS %s CASCADE`, typeName))
+		defer func() {
+			_, err := db.Exec(ctx, fmt.Sprintf(`DROP TYPE IF EXISTS %s CASCADE`, typeName))
+			t.AssertNil(err)
+		}()
 
 		if _, err := db.Exec(ctx, fmt.Sprintf(
 			`CREATE TABLE %s (id bigserial PRIMARY KEY, nickname varchar(45), val %s)`,

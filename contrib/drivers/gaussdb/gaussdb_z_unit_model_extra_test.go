@@ -53,10 +53,7 @@ func Test_Model_Batch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitTable()
 		defer dropTable(table)
-		// Scalar columns only: Save() builds a MERGE whose USING branch types a
-		// NULL as text, so the baseline table's always-NULL array columns cannot
-		// survive a read-modify-write cycle.
-		result, err := db.Model(table).Fields("id,passport,password,nickname,create_time").All()
+		result, err := db.Model(table).All()
 		t.AssertNil(err)
 		t.Assert(len(result), TableSize)
 		for _, v := range result {
