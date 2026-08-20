@@ -38,6 +38,11 @@ func tableNameCandidatesForMetadata(table string) []string {
 	return []string{upperTable, table}
 }
 
+// schemaNameForMetadata returns the schema owner name used in DM metadata queries.
+func schemaNameForMetadata(schema string) string {
+	return strings.ToUpper(strings.Trim(schema, quoteChar))
+}
+
 // TableFields retrieves and returns the fields' information of specified table of current schema.
 func (d *Driver) TableFields(
 	ctx context.Context, table string, schema ...string,
@@ -49,7 +54,7 @@ func (d *Driver) TableFields(
 		// When no schema is specified, the configuration item is returned by default
 		usedSchema        = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
 		usedMetadataTable string
-		usedMetadataOwner = strings.ToUpper(usedSchema)
+		usedMetadataOwner = schemaNameForMetadata(usedSchema)
 	)
 	// When usedSchema is empty, return the default link
 	if link, err = d.SlaveLink(usedSchema); err != nil {

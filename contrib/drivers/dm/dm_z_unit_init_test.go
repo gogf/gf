@@ -115,9 +115,10 @@ func init() {
 }
 
 func dropTable(table string) {
+	metadataTable := strings.Trim(table, `"`)
 	tableNameMap := map[string]struct{}{
-		strings.ToUpper(table):   {},
-		strings.Trim(table, `"`): {},
+		strings.ToUpper(metadataTable): {},
+		metadataTable:                  {},
 	}
 	for tableName := range tableNameMap {
 		count, err := db.GetCount(
