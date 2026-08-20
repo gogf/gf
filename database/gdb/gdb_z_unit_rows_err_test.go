@@ -108,7 +108,9 @@ func mockRowsErrQuery(t *gtest.T, dsn string) *sql.Rows {
 	db, err := sql.Open(mockRowsErrDriverName, dsn)
 	t.AssertNil(err)
 	// sql.Open starts a connection opener goroutine that only exits on Close.
-	t.Cleanup(func() { _ = db.Close() })
+	t.Cleanup(func() {
+		t.AssertNil(db.Close())
+	})
 	rows, err := db.Query("select")
 	t.AssertNil(err)
 	return rows
