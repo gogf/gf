@@ -72,7 +72,7 @@ func (m *Model) getModel() *Model {
 func (m *Model) mappingAndFilterToTableFields(table string, fields []any, filter bool) []any {
 	var fieldsTable = table
 	if fieldsTable != "" {
-		hasTable, _ := m.db.GetCore().HasTable(fieldsTable)
+		hasTable, _ := m.db.GetCore().HasTable(fieldsTable, m.schema)
 		if !hasTable {
 			if fieldsTable != m.tablesInit {
 				// Table/alias unknown (e.g., FieldsPrefix called before LeftJoin), skip filtering.
