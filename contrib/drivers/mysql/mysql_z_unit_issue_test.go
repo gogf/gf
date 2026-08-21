@@ -2207,8 +2207,8 @@ func Test_Issue3977(t *testing.T) {
 		t.Assert(states2, []bool{true, true, false})
 	})
 
-	// FieldsEx is an exclusion list and must not be treated as a single-column
-	// specification. Otherwise Scan silently returns the first remaining column.
+	// FieldsEx that leaves more than one column must be rejected, otherwise
+	// Scan would silently return the first remaining column value.
 	gtest.C(t, func(t *gtest.T) {
 		var username string
 		err := db.Model(table).FieldsEx("id").Where("id", 1).Scan(&username)
