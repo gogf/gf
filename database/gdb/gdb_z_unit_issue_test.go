@@ -87,7 +87,8 @@ func Test_ScanValidateSingleFieldSpecified(t *testing.T) {
 		t.AssertNil(m4.validateSingleFieldSpecified())
 		t.Assert(m4.isSingleFieldSpecified(), false)
 
-		// gdb.Raw("name") as single field → reject (still Raw, cannot guarantee).
+		// gdb.Raw("name") as single field → accept, because it resolves to a
+		// single column and is not an expanding field.
 		m5 := &Model{fields: []any{Raw("name")}}
 		t.AssertNil(m5.validateSingleFieldSpecified())
 		t.Assert(m5.isSingleFieldSpecified(), true)
