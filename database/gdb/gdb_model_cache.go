@@ -35,6 +35,9 @@ type CacheOption struct {
 type selectCacheItem struct {
 	Result            Result // Sql result of SELECT statement.
 	FirstResultColumn string // The first column name of result, for Value/Count functions.
+	// IsCached is a flag to distinguish between "cache miss" and "cached empty result".
+	// When true, it means this is a valid cached item (even if Result is empty).
+	IsCached bool
 }
 
 // Cache sets the cache feature for the model. It caches the result of the sql, which means
@@ -96,7 +99,15 @@ func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args .
 		if err = v.Scan(&cacheItem); err != nil {
 			return nil, err
 		}
-		return cacheItem.Result, nil
+		// Check if this is a valid cached item
+		if cacheItem != nil && cacheItem.IsCached {
+			// Return cached result, even if it's nil or empty
+			// This ensures empty results are properly cached when Force=true
+			if cacheItem.Result == nil {
+				return Result{}, nil
+			}
+			return cacheItem.Result, nil
+		}
 	}
 	return
 }
@@ -117,14 +128,20 @@ func (m *Model) saveSelectResultToCache(
 		}
 		return
 	}
+
 	// Special handler for Value/Count operations result.
-	if len(result) > 0 {
-		var core = m.db.GetCore()
+	// Check if the result is semantically empty (e.g., Count=0, Value="").
+	var isEmpty bool
+	if result == nil || result.IsEmpty() {
+		isEmpty = true
+	} else if len(result) > 0 {
 		switch selectType {
-		case SelectTypeValue, SelectTypeArray, SelectTypeCount:
+		case SelectTypeValue, SelectTypeCount:
+			var core = m.db.GetCore()
 			if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
-				if result[0][internalData.FirstResultColumn].IsEmpty() {
-					result = nil
+				if v, ok := result[0][internalData.FirstResultColumn]; ok && v.IsEmpty() {
+					// Count=0, Value="" and similar zero-value results are considered empty
+					isEmpty = true
 				}
 			}
 		default:
@@ -132,17 +149,20 @@ func (m *Model) saveSelectResultToCache(
 	}
 
 	// In case of Cache Penetration.
-	if result != nil && result.IsEmpty() {
-		if m.cacheOption.Force {
-			result = Result{}
-		} else {
-			result = nil
+	if isEmpty {
+		if !m.cacheOption.Force {
+			// Don't cache empty results when Force is false
+			return
 		}
+		// Ensure result is an empty array (not nil) for consistent cache behavior
+		result = Result{}
 	}
+
 	var (
 		core      = m.db.GetCore()
 		cacheItem = &selectCacheItem{
-			Result: result,
+			Result:   result,
+			IsCached: true, // Mark this as a valid cached item
 		}
 	)
 	if internalData := core.getInternalColumnFromCtx(ctx); internalData != nil {
