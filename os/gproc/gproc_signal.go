@@ -70,12 +70,17 @@ func AddSigHandlerShutdown(handler ...SigHandler) {
 	notifySignals()
 }
 
-// Listen blocks and does signal listening and handling.
-func Listen() {
+// StartListen starts signal listening in the background without blocking.
+// It is safe to call multiple times; the listener goroutine is started at most once.
+func StartListen() {
 	listenOnce.Do(func() {
 		go listen()
 	})
+}
 
+// Listen blocks and does signal listening and handling.
+func Listen() {
+	StartListen()
 	<-waitChan
 }
 
