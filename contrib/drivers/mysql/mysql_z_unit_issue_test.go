@@ -8,6 +8,7 @@ package mysql_test
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -2065,4 +2066,265 @@ func Test_Issue4698(t *testing.T) {
 		t.Assert(count, TableSize)
 		t.Assert(len(result), TableSize)
 	})
+}
+
+type Issue3977SUser struct {
+	UserName string `json:"username" orm:"username"`
+	Age      int    `json:"age" orm:"age"`
+}
+
+// https://github.com/gogf/gf/issues/3977
+func Test_Issue3977(t *testing.T) {
+	table := "issue3977"
+	array := gstr.SplitAndTrim(gtest.DataContent(`issues`, `3977.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(ctx, v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table)
+	// db.SetDebug(true)
+	// string *string []string []*string
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		var username string
+		err = db.Model(table).Fields("username").Where("id", 1).Scan(&username)
+		t.Assert(err, nil)
+		t.Assert(username, "username1")
+		var username2 *string
+		err = db.Model(table).Fields("username").Where("id", 1).Scan(&username2)
+		t.Assert(err, nil)
+		t.Assert(username2, "username1")
+
+		var usernames []string
+		err = db.Model(table).Fields("username").Scan(&usernames)
+		t.AssertNil(err)
+		t.Assert(usernames, []string{"username1", "username2", "username3"})
+
+		var usernames2 []*string
+		err = db.Model(table).Fields("username").Scan(&usernames2)
+		t.AssertNil(err)
+		t.Assert(usernames2, []string{"username1", "username2", "username3"})
+
+	})
+	// float64 *float64
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		var balance float64
+		err = db.Model(table).Fields("balance").Where("id", 1).Scan(&balance)
+		t.Assert(err, nil)
+		t.Assert(balance, 1.01)
+
+		var balance2 *float64
+		err = db.Model(table).Fields("balance").Where("id", 1).Scan(&balance2)
+		t.Assert(err, nil)
+		t.Assert(balance2, 1.01)
+
+		var balances []float64
+		err = db.Model(table).Fields("balance").Scan(&balances)
+		t.Assert(err, nil)
+		t.Assert(balances, []float64{1.01, 2.02, 3.03})
+
+		var balances2 []*float64
+		err = db.Model(table).Fields("balance").Scan(&balances2)
+		t.Assert(err, nil)
+		expectedBalances := []float64{1.01, 2.02, 3.03}
+		actualBalances := make([]float64, len(balances2))
+		for i, v := range balances2 {
+			if v != nil {
+				actualBalances[i] = *v
+			}
+		}
+		t.Assert(actualBalances, expectedBalances)
+
+		// Note: float64 cannot represent 1.01/6.06 exactly, but the comparison works because
+		// both the database driver and the Go literal resolve to the same nearest float64 value.
+		var totalBalances float64
+		err = db.Model(table).FieldSum("balance").WhereIn("id", []int64{1, 2, 3, 4, 5}).Scan(&totalBalances)
+		t.Assert(err, nil)
+		t.Assert(totalBalances, 6.06)
+
+		var totalBalances2 *float64
+		err = db.Model(table).FieldSum("balance").WhereIn("id", []int64{1, 2, 3, 4, 5}).Scan(&totalBalances2)
+		t.Assert(err, nil)
+		t.Assert(totalBalances2, 6.06)
+
+	})
+	// int []int
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		var age int
+		err = db.Model(table).Fields("age").Where("id", 1).Scan(&age)
+		t.Assert(err, nil)
+		t.Assert(age, 18)
+
+		var age2 *int
+		err = db.Model(table).Fields("age").Where("id", 1).Scan(&age2)
+		t.Assert(err, nil)
+		t.Assert(age2, 18)
+
+		var ids []int64
+		err = db.Model(table).Fields("id").Where("state", true).Scan(&ids)
+		t.AssertNil(err)
+		t.Assert(ids, []int64{1, 2})
+
+		var id2s []*int64
+		err = db.Model(table).Fields("id").Where("state", true).Scan(&id2s)
+		t.AssertNil(err)
+		t.Assert(id2s, []int64{1, 2})
+
+		var total int64
+		err = db.Model(table).FieldSum("id").WhereIn("id", []int64{1, 2, 3, 4, 5}).Scan(&total)
+		t.Assert(err, nil)
+		t.Assert(total, 6)
+
+		var total2 int64
+		err = db.Model(table).FieldSum("id").WhereIn("id", []int64{1, 2, 3, 4, 5}).Scan(&total2)
+		t.Assert(err, nil)
+		t.Assert(total2, 6)
+
+	})
+	// bool
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		var state bool
+		err = db.Model(table).Fields("state").Where("id", 1).Scan(&state)
+		t.Assert(err, nil)
+		t.Assert(state, true)
+
+		var state2 *bool
+		err = db.Model(table).Fields("state").Where("id", 1).Scan(&state2)
+		t.Assert(err, nil)
+		t.Assert(state2, true)
+
+		var states []bool
+		err = db.Model(table).Fields("state").Scan(&states)
+		t.AssertNil(err)
+		t.Assert(states, []bool{true, true, false})
+		var states2 []*bool
+		err = db.Model(table).Fields("state").Scan(&states2)
+		t.AssertNil(err)
+		t.Assert(states2, []bool{true, true, false})
+	})
+
+	// FieldsEx that leaves more than one column must be rejected, otherwise
+	// Scan would silently return the first remaining column value.
+	gtest.C(t, func(t *gtest.T) {
+		var username string
+		err := db.Model(table).FieldsEx("id").Where("id", 1).Scan(&username)
+		t.AssertNE(err, nil)
+
+		var usernames []string
+		err = db.Model(table).FieldsEx("id").Scan(&usernames)
+		t.AssertNE(err, nil)
+
+		err = db.Model(table).Fields("username").Where("id", 1).Scan(&username)
+		t.AssertNil(err)
+		t.Assert(username, "username1")
+	})
+
+	// Scanning into a non-nil pointer when no row matches should return sql.ErrNoRows,
+	// consistent with Record.Struct/Result.Structs. See PR review comment.
+	gtest.C(t, func(t *gtest.T) {
+		// basic type
+		var name string
+		err := db.Model(table).Fields("username").Where("id", 9999).Scan(&name)
+		t.Assert(err, sql.ErrNoRows)
+
+		// pointer to basic type: `namePtr` starts as a nil pointer, consistent with
+		// Record.Struct/**struct semantics, no row does not produce sql.ErrNoRows here
+		// and `namePtr` stays nil.
+		var namePtr *string
+		err = db.Model(table).Fields("username").Where("id", 9999).Scan(&namePtr)
+		t.AssertNil(err)
+		t.Assert(namePtr, nil)
+
+		// slice of basic type: empty result yields an empty slice, NOT sql.ErrNoRows
+		var names []string
+		err = db.Model(table).Fields("username").Where("id", 9999).Scan(&names)
+		t.AssertNil(err)
+		t.Assert(len(names), 0)
+	})
+
+	// Raw
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		var username string
+		err = db.Model(table).Fields(gdb.Raw("username")).Where("id", 1).Scan(&username)
+		t.Assert(err, nil)
+		t.Assert(username, "username1")
+		var username2 *string
+		err = db.Model(table).Fields(gdb.Raw("username")).Where("id", 1).Scan(&username2)
+		t.Assert(err, nil)
+		t.Assert(username2, "username1")
+		err = db.Model(table).Fields(gdb.Raw("username,age")).Where("id", 1).Scan(&username)
+		t.Assert(err.Error(), "Scan into basic type does not support expanding field username,age (gdb.Raw or wildcard); use an explicit field name instead")
+		var age int
+		err = db.Model(table).Fields(gdb.Raw("sum(age) as a")).WhereIn("id", []int{1, 2}).Scan(&age)
+		t.AssertNil(err)
+		t.Assert(age, 118)
+		var total int
+		err = db.Model(table).Fields(gdb.Raw("count(*) as a")).WhereIn("id", []int{1, 2, 3}).Scan(&total)
+		t.AssertNil(err)
+		t.Assert(total, 3)
+		err = db.Model(table).Fields(gdb.Raw("COUNT(DISTINCT `id`,`username`) as a")).WhereIn("id", []int{1, 2, 3}).Scan(&total)
+		t.AssertNil(err)
+		t.Assert(total, 3)
+	})
+
+	// FieldsEx
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		var username string
+		err = db.Model(table).FieldsEx([]string{"id", "age", "balance", "state", "create_at", "update_at"}).Where("id", 1).Scan(&username)
+		t.Assert(err, nil)
+		t.Assert(username, "username1")
+		var username2 *string
+		err = db.Model(table).FieldsEx("id,age,balance,state,create_at,update_at").Where("id", 2).Scan(&username2)
+		t.Assert(err, nil)
+		t.Assert(username2, "username2")
+		err = db.Model(table).FieldsEx("id", "age", "balance", "state", "create_at", "update_at").Where("id", 1).Scan(&username)
+		t.Assert(err, nil)
+		t.Assert(username, "username1")
+		err = db.Model(table).FieldsEx([]string{"id", "age", "state", "create_at", "update_at"}).Where("id", 1).Scan(&username)
+		t.Assert(err.Error(), "Scan into basic type requires exactly 1 field specified via Fields(), but FieldsEx leaves 2 columns after filtering")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var user Issue3977SUser
+		// Many field scan
+		err := db.Model(table).Fields("username", "age").Where("id", 1).Scan(&user)
+		t.Assert(err, nil)
+		t.Assert(user.Age, 18)
+		t.Assert(user.UserName, "username1")
+
+		// Single field scan
+		var user2 Issue3977SUser
+		err = db.Model(table).Fields("age").Where("id", 2).Scan(&user2)
+		t.Assert(err, nil)
+		t.Assert(user2.Age, 100)
+		t.Assert(user2.UserName, "")
+
+		err = db.Model(table).Fields("`age`").Where("id", 2).Scan(&user2)
+		t.Assert(err, nil)
+		t.Assert(user2.Age, 100)
+		t.Assert(user2.UserName, "")
+
+		err = db.Model(table).Fields("`age` as age").Where("id", 2).Scan(&user2)
+		t.Assert(err, nil)
+		t.Assert(user2.Age, 100)
+		t.Assert(user2.UserName, "")
+
+		err = db.Model(table).Fields("`age` age").Where("id", 2).Scan(&user2)
+		t.Assert(err, nil)
+		t.Assert(user2.Age, 100)
+		t.Assert(user2.UserName, "")
+
+		err = db.Model(table).Fields("`age` age").Where("id", 2).Scan(&user2)
+		t.Assert(err, nil)
+		t.Assert(user2.Age, 100)
+		t.Assert(user2.UserName, "")
+
+	})
+
 }
