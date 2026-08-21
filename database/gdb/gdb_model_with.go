@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"context"
 	"database/sql"
 	"reflect"
 
@@ -17,6 +18,14 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gutil"
 )
+
+// IAfterScan is an interface that can be implemented by structs to perform
+// custom logic after the struct has been populated with data from the database.
+// The AfterScan method is called after the struct fields have been filled with
+// data retrieved from the database during scanning operations.
+type IAfterScan interface {
+	AfterScan(ctx context.Context) error
+}
 
 // With creates and returns an ORM model based on metadata of given object.
 // It also enables model association operations feature on given `object`.
@@ -184,7 +193,8 @@ func (m *Model) doWithScanStruct(pointer any) error {
 			return err
 		}
 	}
-	return nil
+
+	return m.doAfterScan(pointer)
 }
 
 // doWithScanStructs handles model association operations feature for struct slice.
@@ -309,6 +319,67 @@ func (m *Model) doWithScanStructs(pointer any) error {
 		if err != nil && err != sql.ErrNoRows {
 			return err
 		}
+	}
+
+	arrayValue := reflect.ValueOf(pointer)
+
+	// Find the final pointer (handling multi-level pointers)
+	for arrayValue.Kind() == reflect.Pointer {
+		arrayValue = arrayValue.Elem()
+	}
+
+	if arrayValue.Kind() != reflect.Slice {
+		return nil
+	}
+
+	if arrayValue.IsNil() {
+		return nil
+	}
+
+	// 遍历切片中的每个元素
+	for i := 0; i < arrayValue.Len(); i++ {
+		element := arrayValue.Index(i)
+		if err = m.doAfterScan(element.Interface()); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *Model) doAfterScan(pointer any) error {
+	// Handle multi-level pointers and find the final pointer for interface checking.
+	var ptrValue reflect.Value
+
+	switch v := pointer.(type) {
+	case reflect.Value:
+		// Already a reflect.Value
+		ptrValue = v
+	default:
+		// Convert to reflect.Value
+		ptrValue = reflect.ValueOf(pointer)
+	}
+
+	// Find the final pointer (handling multi-level pointers)
+	for ptrValue.Kind() == reflect.Pointer && !ptrValue.IsNil() {
+		// If the current pointer still points to a pointer, go deeper
+		if ptrValue.Elem().Kind() == reflect.Pointer {
+			ptrValue = ptrValue.Elem()
+		} else {
+			// Found the final pointer (pointing to a non-pointer type)
+			break
+		}
+	}
+
+	// Ensure that ptrValue is a non-nil pointer type
+	if (ptrValue.Kind() != reflect.Pointer) || ptrValue.IsNil() {
+		return nil
+	}
+
+	// Check whether the pointer implements the IAfterScan interface
+	if afterScanner, ok := ptrValue.Interface().(IAfterScan); ok {
+		// Call the AfterScan method
+		return afterScanner.AfterScan(m.GetCtx())
 	}
 	return nil
 }
