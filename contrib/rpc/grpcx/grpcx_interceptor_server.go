@@ -43,11 +43,16 @@ func (s modServer) UnaryError(
 	ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
 ) (any, error) {
 	res, err := handler(ctx, req)
-	if err != nil {
-		code := gerror.Code(err)
-		if code.Code() != -1 {
-			err = status.Error(codes.Code(code.Code()), err.Error())
-		}
+	if err == nil {
+		return res, nil
+	}
+	// Priority 1: Error already implements GRPCStatus, it's already a gRPC standard error
+	if _, ok := err.(interface{ GRPCStatus() *status.Status }); ok {
+		return res, err
+	}
+	// Priority 2: Convert custom business error code to gRPC status error
+	if code := gerror.Code(err); code.Code() != -1 {
+		return res, status.Error(codes.Code(code.Code()), err.Error())
 	}
 	return res, err
 }
