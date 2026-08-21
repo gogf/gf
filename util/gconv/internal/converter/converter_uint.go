@@ -74,6 +74,12 @@ func (c *Converter) Uint64(anyInput any) (uint64, error) {
 	if v, ok := anyInput.(uint64); ok {
 		return v, nil
 	}
+	// Unwrap reflect.Value input for consistency with Bool converter.
+	if rv, ok := anyInput.(reflect.Value); ok {
+		if rv.IsValid() && rv.CanInterface() {
+			return c.Uint64(rv.Interface())
+		}
+	}
 	rv := reflect.ValueOf(anyInput)
 	switch rv.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
