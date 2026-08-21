@@ -48,7 +48,9 @@ func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 	}, nil
 }
 
-// GetChars returns the security char for this type of database.
+// GetChars returns empty security chars for this type of database.
+// DM treats unquoted identifiers as uppercase identifiers. The framework should
+// not add quotes automatically, as quoted identifiers become case-sensitive.
 func (d *Driver) GetChars() (charLeft string, charRight string) {
-	return quoteChar, quoteChar
+	return "", ""
 }

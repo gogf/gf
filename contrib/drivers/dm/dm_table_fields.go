@@ -28,6 +28,21 @@ const (
 	tableFieldsPkSqlDBATmp    = `SELECT COLS.COLUMN_NAME AS PRIMARY_KEY_COLUMN FROM DBA_CONSTRAINTS CONS JOIN DBA_CONS_COLUMNS COLS ON CONS.CONSTRAINT_NAME = COLS.CONSTRAINT_NAME WHERE CONS.TABLE_NAME = '%s' AND CONS.OWNER = '%s' AND CONS.CONSTRAINT_TYPE = 'P'`
 )
 
+// tableNameCandidatesForMetadata returns table name candidates for DM metadata queries.
+func tableNameCandidatesForMetadata(table string) []string {
+	table = strings.Trim(table, quoteChar)
+	upperTable := strings.ToUpper(table)
+	if upperTable == table {
+		return []string{table}
+	}
+	return []string{upperTable, table}
+}
+
+// schemaNameForMetadata returns the schema owner name used in DM metadata queries.
+func schemaNameForMetadata(schema string) string {
+	return strings.ToUpper(strings.Trim(schema, quoteChar))
+}
+
 // TableFields retrieves and returns the fields' information of specified table of current schema.
 func (d *Driver) TableFields(
 	ctx context.Context, table string, schema ...string,
@@ -37,28 +52,36 @@ func (d *Driver) TableFields(
 		pkResult gdb.Result
 		link     gdb.Link
 		// When no schema is specified, the configuration item is returned by default
-		usedSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		usedSchema        = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		usedMetadataTable string
+		usedMetadataOwner = schemaNameForMetadata(usedSchema)
 	)
 	// When usedSchema is empty, return the default link
 	if link, err = d.SlaveLink(usedSchema); err != nil {
 		return nil, err
 	}
 	// The link has been distinguished and no longer needs to judge the owner
-	result, err = d.DoSelect(
-		ctx, link,
-		fmt.Sprintf(
-			tableFieldsSqlTmp,
-			escapeSingleQuote(strings.ToUpper(table)),
-			escapeSingleQuote(strings.ToUpper(d.GetSchema())),
-		),
-	)
-	if err != nil {
-		return nil, err
+	for _, candidate := range tableNameCandidatesForMetadata(table) {
+		usedMetadataTable = candidate
+		result, err = d.DoSelect(
+			ctx, link,
+			fmt.Sprintf(
+				tableFieldsSqlTmp,
+				escapeSingleQuote(usedMetadataTable),
+				escapeSingleQuote(usedMetadataOwner),
+			),
+		)
+		if err != nil {
+			return nil, err
+		}
+		if !result.IsEmpty() {
+			break
+		}
 	}
 	// Query the primary key field
 	pkResult, err = d.DoSelect(
 		ctx, link,
-		fmt.Sprintf(tableFieldsPkSqlSchemaTmp, escapeSingleQuote(strings.ToUpper(table))),
+		fmt.Sprintf(tableFieldsPkSqlSchemaTmp, escapeSingleQuote(usedMetadataTable)),
 	)
 	if err != nil {
 		return nil, err
@@ -66,7 +89,7 @@ func (d *Driver) TableFields(
 	if pkResult.IsEmpty() {
 		pkResult, err = d.DoSelect(
 			ctx, link,
-			fmt.Sprintf(tableFieldsPkSqlDBATmp, escapeSingleQuote(strings.ToUpper(table)), escapeSingleQuote(strings.ToUpper(d.GetSchema()))),
+			fmt.Sprintf(tableFieldsPkSqlDBATmp, escapeSingleQuote(usedMetadataTable), escapeSingleQuote(usedMetadataOwner)),
 		)
 		if err != nil {
 			return nil, err
