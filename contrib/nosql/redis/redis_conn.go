@@ -33,6 +33,11 @@ import (
 type Conn struct {
 	ps    *redis.PubSub
 	redis *Redis
+	// conn is a dedicated connection pinned to this Conn instance (via go-redis
+	// StickyConnPool), ensuring that connection-stateful commands like MULTI/EXEC
+	// or SELECT always run on the same underlying connection.
+	// It is nil for cluster clients, where commands fall back to the shared pool.
+	conn *redis.Conn
 }
 
 // traceItem holds the information for redis trace.
@@ -128,7 +133,11 @@ func (c *Conn) doCommand(ctx context.Context, command string, args ...any) (repl
 		arguments := make([]any, len(args)+1)
 		copy(arguments, []any{command})
 		copy(arguments[1:], args)
-		reply, err = c.resultToVar(c.redis.client.Do(ctx, arguments...).Result())
+		if c.conn != nil {
+			reply, err = c.resultToVar(c.conn.Do(ctx, arguments...).Result())
+		} else {
+			reply, err = c.resultToVar(c.redis.client.Do(ctx, arguments...).Result())
+		}
 		if err != nil {
 			err = gerror.Wrapf(err, `Redis Client Do failed with arguments "%v"`, arguments)
 		}
@@ -188,6 +197,16 @@ func (c *Conn) Close(ctx context.Context) (err error) {
 		if err != nil {
 			err = gerror.Wrapf(err, `Redis PubSub Close failed`)
 		}
+	}
+	if c.conn != nil {
+		// Return the pinned connection to the shared connection pool.
+		if closeErr := c.conn.Close(); closeErr != nil {
+			closeErr = gerror.Wrap(closeErr, `Redis Connection Close failed`)
+			if err == nil {
+				err = closeErr
+			}
+		}
+		c.conn = nil
 	}
 	return
 }
