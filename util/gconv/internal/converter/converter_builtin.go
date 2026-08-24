@@ -74,7 +74,11 @@ func (c *Converter) builtInAnyConvertFuncForTime(from any, to reflect.Value) err
 	}
 
 	if to.Kind() == reflect.Pointer {
-		to.Elem().Set(reflect.ValueOf(t))
+		if to.IsNil() {
+			to.Set(reflect.ValueOf(&t))
+		} else {
+			to.Elem().Set(reflect.ValueOf(t))
+		}
 		return nil
 	}
 	*to.Addr().Interface().(*time.Time) = t
@@ -90,7 +94,11 @@ func (c *Converter) builtInAnyConvertFuncForGTime(from any, to reflect.Value) er
 		v = gtime.New()
 	}
 	if to.Kind() == reflect.Pointer {
-		to.Elem().Set(reflect.ValueOf(*v))
+		if to.IsNil() {
+			to.Set(reflect.ValueOf(v))
+		} else {
+			to.Elem().Set(reflect.ValueOf(*v))
+		}
 		return nil
 	}
 	*to.Addr().Interface().(*gtime.Time) = *v

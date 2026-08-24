@@ -2180,6 +2180,7 @@ func Test_Issue3977(t *testing.T) {
 		err = db.Model(table).Fields("create_at").Where("id", 3).Scan(&createTime4)
 		t.Assert(err, nil)
 		t.AssertNil(createTime4)
+		t.Assert(createTime4.IsZero(), true)
 
 		var createTime5 gtime.Time
 		err = db.Model(table).Fields("create_at").Where("id", 999).Scan(&createTime5)
