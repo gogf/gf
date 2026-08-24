@@ -480,6 +480,11 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 			internalData.FirstResultColumn = columnTypes[0].Name()
 		}
 	}
+
+	table := parseStruct(ctx, c.GetDB(), columnTypes)
+	if table != nil {
+		return c.scanRowsToMap(rows, table, len(columnTypes))
+	}
 	var (
 		values   = make([]any, len(columnTypes))
 		result   = make(Result, 0)

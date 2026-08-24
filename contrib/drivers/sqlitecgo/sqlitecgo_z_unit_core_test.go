@@ -42,7 +42,7 @@ func Test_New(t *testing.T) {
 func Test_New_Path_With_Colon(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 
-		dbFilePathWithColon := gfile.Join(dbDir, "test:1")
+		dbFilePathWithColon := gfile.Join(dbDir, "test_1")
 		if err := gfile.Mkdir(dbFilePathWithColon); err != nil {
 			gtest.Error(err)
 		}

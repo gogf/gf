@@ -221,9 +221,35 @@ func (m *Model) doStruct(pointer any, where ...any) error {
 	if err != nil {
 		return err
 	}
+
+	if model.scanPointer != nil {
+		var pointerValue reflect.Value
+		var pointerType reflect.Type
+		var ok bool
+		if pointerValue, ok = model.scanPointer.(reflect.Value); ok {
+			pointerType = pointerValue.Type()
+			if pointerType.Kind() == reflect.Ptr {
+				pointerType = pointerType.Elem()
+			}
+		} else {
+			pointerType = reflect.TypeOf(model.scanPointer).Elem()
+		}
+
+		table := convTableInfo.Get(pointerType)
+		if table != nil {
+			val, err := table.ScanToStruct(pointerType, one, pointerType.Kind() == reflect.Ptr)
+			if err != nil {
+				return err
+			}
+			reflect.ValueOf(pointer).Elem().Set(val)
+			goto WITH
+		}
+
+	}
 	if err = one.Struct(pointer); err != nil {
 		return err
 	}
+WITH:
 	return model.doWithScanStruct(pointer)
 }
 
@@ -265,9 +291,19 @@ func (m *Model) doStructs(pointer any, where ...any) error {
 	if err != nil {
 		return err
 	}
+	elemType := reflect.TypeOf(pointer).Elem().Elem()
+	table := convTableInfo.Get(elemType)
+	if model.scanPointer != nil && table != nil {
+		err := table.ScanToSlice(model.scanPointer, all)
+		if err != nil {
+			return err
+		}
+		goto WITH
+	}
 	if err = all.Structs(pointer); err != nil {
 		return err
 	}
+WITH:
 	return model.doWithScanStructs(pointer)
 }
 
@@ -300,6 +336,8 @@ func (m *Model) Scan(pointer any, where ...any) error {
 			`the parameter "pointer" for function Scan should type of pointer`,
 		)
 	}
+	m.scanPointer = pointer
+
 	switch reflectInfo.OriginKind {
 	case reflect.Slice, reflect.Array:
 		return m.doStructs(pointer, where...)
@@ -734,6 +772,9 @@ func (m *Model) doGetAllBySql(
 		Sql:        sql,
 		Args:       m.mergeArguments(args),
 		SelectType: selectType,
+	}
+	if m.scanPointer != nil {
+		ctx = context.WithValue(ctx, "scan", m.scanPointer)
 	}
 	if result, err = in.Next(ctx); err != nil {
 		return
