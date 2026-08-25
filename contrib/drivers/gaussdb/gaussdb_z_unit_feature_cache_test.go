@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package mariadb_test
+package gaussdb_test
 
 import (
 	"context"
@@ -13,10 +13,11 @@ import (
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-// Test_Model_Cache_Basic tests basic cache functionality
+// Test_Model_Cache_Basic tests basic cache functionality.
 func Test_Model_Cache_Basic(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
@@ -50,7 +51,7 @@ func Test_Model_Cache_Basic(t *testing.T) {
 	})
 }
 
-// Test_Model_Cache_TTL tests cache TTL expiration
+// Test_Model_Cache_TTL tests cache TTL expiration.
 func Test_Model_Cache_TTL(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
@@ -68,16 +69,10 @@ func Test_Model_Cache_TTL(t *testing.T) {
 		_, err = db.Model(table).Data(g.Map{"passport": "ttl_test"}).Where("id", 1).Update()
 		t.AssertNil(err)
 
-		// Immediate query - cache still valid
-		one, err = db.Model(table).Cache(gdb.CacheOption{
-			Duration: time.Millisecond * 100,
-			Name:     "test_cache_ttl",
-		}).Where("id", 1).One()
-		t.AssertNil(err)
-		t.Assert(one["passport"], "user_1") // cached value
-
-		// Wait for cache to expire
-		time.Sleep(time.Millisecond * 150)
+		// Wait for cache to expire. Serving the cached value before it expires is
+		// covered by Test_Model_Cache_Basic, whose TTL is wide enough that a slow
+		// database round trip cannot exhaust it.
+		time.Sleep(time.Millisecond * 300)
 
 		// Query after expiration - should get fresh data
 		one, err = db.Model(table).Cache(gdb.CacheOption{
@@ -89,7 +84,7 @@ func Test_Model_Cache_TTL(t *testing.T) {
 	})
 }
 
-// Test_Model_Cache_Clear tests clearing cache with negative duration
+// Test_Model_Cache_Clear tests clearing cache with negative duration.
 func Test_Model_Cache_Clear(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
@@ -120,7 +115,7 @@ func Test_Model_Cache_Clear(t *testing.T) {
 	})
 }
 
-// Test_Model_Cache_NoExpire tests cache with no expiration (Duration=0)
+// Test_Model_Cache_NoExpire tests cache with no expiration (Duration=0).
 func Test_Model_Cache_NoExpire(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
@@ -158,17 +153,7 @@ func Test_Model_Cache_NoExpire(t *testing.T) {
 	})
 }
 
-// Test_Model_Cache_Force tests Force option to cache nil results
-func Test_Model_Cache_Force(t *testing.T) {
-	table := createInitTable()
-	defer dropTable(table)
-
-	// Note: Removed Force cache test due to cache invalidation on INSERT
-	// The test logic was flawed - INSERT operations clear cache, so cached nil
-	// results would be invalidated before the second query
-}
-
-// Test_Model_Cache_DisabledInTransaction tests cache is disabled in transactions
+// Test_Model_Cache_DisabledInTransaction tests cache is disabled in transactions.
 func Test_Model_Cache_DisabledInTransaction(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
@@ -201,7 +186,7 @@ func Test_Model_Cache_DisabledInTransaction(t *testing.T) {
 	})
 }
 
-// Test_Model_PageCache tests pagination cache
+// Test_Model_PageCache tests pagination cache.
 func Test_Model_PageCache(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
@@ -216,10 +201,13 @@ func Test_Model_PageCache(t *testing.T) {
 		t.Assert(len(all), 3)
 		t.Assert(count, 10)
 
-		// Insert new record
+		// Insert new record.
 		_, err = db.Model(table).Data(g.Map{
-			"id":       11,
-			"passport": "user_11",
+			"id":          11,
+			"passport":    "user_11",
+			"password":    "pass_11",
+			"nickname":    "name_11",
+			"create_time": gtime.Now().String(),
 		}).Insert()
 		t.AssertNil(err)
 
@@ -257,7 +245,7 @@ func Test_Model_PageCache(t *testing.T) {
 	})
 }
 
-// Test_Model_Cache_DifferentNames tests different cache names for same query
+// Test_Model_Cache_DifferentNames tests different cache names for same query.
 func Test_Model_Cache_DifferentNames(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
