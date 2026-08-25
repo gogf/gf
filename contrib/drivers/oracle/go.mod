@@ -4,7 +4,7 @@ go 1.23.0
 
 require (
 	github.com/gogf/gf/v2 v2.10.2
-	github.com/sijms/go-ora/v2 v2.7.10
+	github.com/sijms/go-ora/v2 v2.7.18
 )
 
 require (
