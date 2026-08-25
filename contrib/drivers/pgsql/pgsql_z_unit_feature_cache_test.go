@@ -68,16 +68,10 @@ func Test_Model_Cache_TTL(t *testing.T) {
 		_, err = db.Model(table).Data(g.Map{"passport": "ttl_test"}).Where("id", 1).Update()
 		t.AssertNil(err)
 
-		// Immediate query - cache still valid
-		one, err = db.Model(table).Cache(gdb.CacheOption{
-			Duration: time.Millisecond * 100,
-			Name:     "test_cache_ttl",
-		}).Where("id", 1).One()
-		t.AssertNil(err)
-		t.Assert(one["passport"], "user_1") // cached value
-
-		// Wait for cache to expire
-		time.Sleep(time.Millisecond * 150)
+		// Wait for cache to expire. Serving the cached value before it expires is
+		// covered by Test_Model_Cache_Basic, whose TTL is wide enough that a slow
+		// database round trip cannot exhaust it.
+		time.Sleep(time.Millisecond * 300)
 
 		// Query after expiration - should get fresh data
 		one, err = db.Model(table).Cache(gdb.CacheOption{
@@ -210,12 +204,13 @@ func Test_Model_PageCache(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		// First page query with cache
-		all, err := db.Model(table).PageCache(
+		all, count, err := db.Model(table).PageCache(
 			gdb.CacheOption{Duration: time.Second * 10, Name: "test_page_count"},
 			gdb.CacheOption{Duration: time.Second * 10, Name: "test_page_data"},
-		).Page(1, 3).All()
+		).Page(1, 3).AllAndCount(false)
 		t.AssertNil(err)
 		t.Assert(len(all), 3)
+		t.Assert(count, 10)
 
 		// Insert new record
 		_, err = db.Model(table).Data(g.Map{
@@ -225,12 +220,14 @@ func Test_Model_PageCache(t *testing.T) {
 		t.AssertNil(err)
 
 		// Query again - should return cached results
-		all, err = db.Model(table).PageCache(
+		all, count, err = db.Model(table).PageCache(
 			gdb.CacheOption{Duration: time.Second * 10, Name: "test_page_count"},
 			gdb.CacheOption{Duration: time.Second * 10, Name: "test_page_data"},
-		).Page(1, 3).All()
+		).Page(1, 3).AllAndCount(false)
 		t.AssertNil(err)
-		t.Assert(len(all), 3) // cached results
+		t.Assert(len(all), 3)
+		// Count comes from the cache, so it still reports the pre-insert value.
+		t.Assert(count, 10)
 
 		// Clear page cache by updating with Duration=-1
 		_, err = db.Model(table).Cache(gdb.CacheOption{
@@ -240,17 +237,19 @@ func Test_Model_PageCache(t *testing.T) {
 		t.AssertNil(err)
 
 		// Query with fresh cache - should return updated count
-		all, err = db.Model(table).PageCache(
+		all, count, err = db.Model(table).PageCache(
 			gdb.CacheOption{Duration: time.Second * 10, Name: "test_page_count"},
 			gdb.CacheOption{Duration: time.Second * 10, Name: "test_page_data"},
-		).Page(1, 3).All()
+		).Page(1, 3).AllAndCount(false)
 		t.AssertNil(err)
-		t.Assert(len(all), 3) // still 3 items per page
+		t.Assert(len(all), 3)
+		// Count cache was cleared above, so the new row is visible.
+		t.Assert(count, 11)
 
 		// Verify total count increased
-		count, err := db.Model(table).Count()
+		totalCount, err := db.Model(table).Count()
 		t.AssertNil(err)
-		t.Assert(count, 11)
+		t.Assert(totalCount, 11)
 	})
 }
 

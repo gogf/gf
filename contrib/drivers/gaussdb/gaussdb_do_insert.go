@@ -12,10 +12,13 @@ import (
 	"fmt"
 	"strings"
 
+	pq "gitee.com/opengauss/openGauss-connector-go-pq"
+
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -326,10 +329,26 @@ func (d *Driver) doMergeInsert(
 		conflictKeySet.Add(strings.ToUpper(conflictKey))
 	}
 
+	// A NULL placeholder in the USING branch carries no type of its own, and GaussDB
+	// then infers text for it. Assigning that back to a column such as numeric[],
+	// jsonb, boolean, bytea or uuid fails, which breaks read-modify-write cycles that
+	// carry an untouched NULL column. Cast those placeholders to the real column type.
+	nullFieldTypes, err := d.getNullFieldTypes(ctx, table, one)
+	if err != nil {
+		return nil, err
+	}
+
 	index := 0
 	for key, value := range one {
 		keyWithChar := charL + key + charR
-		queryHolders[index] = fmt.Sprintf("$%d AS %s", index+1, keyWithChar)
+		holder := fmt.Sprintf("$%d", index+1)
+		if fieldType := nullFieldTypes[strings.ToLower(key)]; fieldType != "" {
+			// The cast target is quoted: pg_type.typname preserves the case a user
+			// defined type was created with, and an unquoted one would be folded to
+			// lower case and then fail to resolve.
+			holder += "::" + pq.QuoteIdentifier(fieldType)
+		}
+		queryHolders[index] = fmt.Sprintf("%s AS %s", holder, keyWithChar)
 		queryValues[index] = value
 		insertKeys[index] = keyWithChar
 		insertValues[index] = fmt.Sprintf("T2.%s", keyWithChar)
@@ -532,4 +551,62 @@ func parseSqlForMerge(table string,
 
 	sqlStr = fmt.Sprintf("%s %s %s %s%s", intoStr, usingStr, onStr, insertStr, updateStr)
 	return
+}
+
+// trimTypeModifier drops a trailing type modifier from a database type name,
+// e.g. "varchar(45)" -> "varchar", leaving the case of the name untouched.
+func trimTypeModifier(fieldType string) string {
+	if !strings.HasSuffix(fieldType, ")") {
+		return strings.TrimSpace(fieldType)
+	}
+	if index := strings.LastIndexByte(fieldType, '('); index > 0 {
+		return strings.TrimSpace(fieldType[:index])
+	}
+	return strings.TrimSpace(fieldType)
+}
+
+// getNullFieldTypes returns the database type of every record field whose value is
+// NULL, keyed by lower-cased field name. It returns nil when the record holds no
+// NULL value, so the table metadata is only fetched when it is actually needed.
+func (d *Driver) getNullFieldTypes(
+	ctx context.Context, table string, one gdb.Map,
+) (map[string]string, error) {
+	var hasNull bool
+	for _, value := range one {
+		if g.IsNil(value) {
+			hasNull = true
+			break
+		}
+	}
+	if !hasNull {
+		return nil, nil
+	}
+	tableFields, err := d.GetCore().GetDB().TableFields(ctx, table)
+	if err != nil {
+		return nil, err
+	}
+	types := make(map[string]string, len(one))
+	for key, value := range one {
+		if !g.IsNil(value) {
+			continue
+		}
+		for name, field := range tableFields {
+			if !strings.EqualFold(name, key) {
+				continue
+			}
+			// TableField.Type carries the type modifier, e.g. "int4(32)". Integer and
+			// float types reject one ("type modifier is not allowed for type int4"),
+			// and it is redundant for the rest since the value is NULL.
+			//
+			// The modifier is stripped here rather than through
+			// Core.GetFormattedDBTypeNameForField, which lower-cases the name for type
+			// classification; pg_type.typname keeps the case a user defined type was
+			// created with, and losing it makes the cast unresolvable.
+			if typeName := trimTypeModifier(field.Type); typeName != "" {
+				types[strings.ToLower(key)] = typeName
+			}
+			break
+		}
+	}
+	return types, nil
 }
