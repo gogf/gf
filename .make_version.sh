@@ -79,6 +79,7 @@ for file in `find ${workdir} -name go.mod`; do
         go mod edit -replace github.com/gogf/gf/contrib/drivers/oracle/v2=../../contrib/drivers/oracle
         go mod edit -replace github.com/gogf/gf/contrib/drivers/pgsql/v2=../../contrib/drivers/pgsql
         go mod edit -replace github.com/gogf/gf/contrib/drivers/sqlite/v2=../../contrib/drivers/sqlite
+        go mod edit -replace github.com/gogf/gf/contrib/drivers/dm/v2=../../contrib/drivers/dm
     fi
     # Remove indirect dependencies
     sed_replace '/\/\/ indirect/d' go.mod
@@ -103,6 +104,7 @@ for file in `find ${workdir} -name go.mod`; do
         go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/oracle/v2
         go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/pgsql/v2
         go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/sqlite/v2
+        go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/dm/v2
         mv go.work.version.bak go.work
     fi
     cd -
