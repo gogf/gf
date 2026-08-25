@@ -18,5 +18,6 @@ replace (
 	github.com/gogf/gf/contrib/drivers/tidb/v2 => ../../contrib/drivers/tidb
 	github.com/gogf/gf/contrib/drivers/oceanbase/v2 => ../../contrib/drivers/oceanbase
 	github.com/gogf/gf/contrib/drivers/gaussdb/v2 => ../../contrib/drivers/gaussdb
+	github.com/gogf/gf/contrib/drivers/dm/v2 => ../../contrib/drivers/dm
 	github.com/gogf/gf/v2 => ../../
 )
