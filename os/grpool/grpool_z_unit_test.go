@@ -23,8 +23,10 @@ import (
 // is counted in neither Jobs() nor the array. inFlightLimit bounds how many jobs
 // can be in that window: the peak worker count the pool has had, not its current
 // Cap(), because jobs left over from before a shrink are still in flight.
+// The array must be read before the queue, otherwise a job leaving the queue
+// between the two reads is counted twice and the sum exceeds size.
 func assertNoJobLost(t *gtest.T, pool *grpool.Pool, array *garray.Array, size, inFlightLimit int) {
-	sum := pool.Jobs() + array.Len()
+	sum := array.Len() + pool.Jobs()
 	t.AssertLE(sum, size)
 	t.AssertGE(sum, size-inFlightLimit)
 }
