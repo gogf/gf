@@ -107,12 +107,6 @@ type IUnmarshalValue interface {
 	UnmarshalValue(any) error
 }
 
-// ISqlScanner is the interface for custom defined types customizing value assignment.
-// Note that only pointer can implement interface ISqlScanner.
-type ISqlScanner interface {
-	Scan(src any) error
-}
-
 // ISet is the interface for custom value assignment.
 type ISet interface {
 	Set(value any) (old any)

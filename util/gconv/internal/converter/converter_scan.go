@@ -186,9 +186,6 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ...ScanOption) (er
 			for i := range srcLen {
 				srcElem := srcValueReflectValue.Index(i).Interface()
 				target := newSlice.Index(i)
-				if srcElem == nil {
-					continue
-				}
 
 				// For pointer element types (e.g. []*int), allocate the element
 				// and dereference it so the scalar setters below can write the

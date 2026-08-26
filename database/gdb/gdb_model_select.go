@@ -11,24 +11,16 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
-	"time"
 
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
-
-var scannerType = reflect.TypeFor[sql.Scanner]()
-
-// knownScalarStructTypes contains struct types that represent a single
-// database column but do not implement sql.Scanner.
-var knownScalarStructTypes = map[reflect.Type]struct{}{
-	reflect.TypeFor[time.Time](): {},
-}
 
 // All does "SELECT FROM ..." statement for the model.
 // It retrieves the records from table and returns the result as slice type.
@@ -333,42 +325,6 @@ func isExpandingFieldStr(s string) bool {
 	return false
 }
 
-func isScalarConversionType(elemType reflect.Type) bool {
-	if elemType == nil {
-		return false
-	}
-	pt := reflect.PointerTo(elemType)
-	if pt.Implements(scannerType) {
-		return true
-	}
-	_, ok := knownScalarStructTypes[elemType]
-	return ok
-}
-
-// valueOrNoRows fetches the single-column value via Value(). Value() returns
-// nil both when no row matches and when the row exists but the column value is
-// NULL, so One() is used to disambiguate: a missing row yields sql.ErrNoRows,
-// while a NULL column returns (nil, nil) so the caller leaves the destination
-// at its zero value (no error).
-func (m *Model) valueOrNoRows() (Value, error) {
-	value, err := m.Value()
-	if err != nil {
-		return nil, err
-	}
-	if value != nil {
-		return value, nil
-	}
-	one, err := m.One()
-	if err != nil {
-		return nil, err
-	}
-	if one.IsEmpty() {
-		return nil, sql.ErrNoRows
-	}
-	// Row exists but the column value is NULL.
-	return nil, nil
-}
-
 // isSingleFieldSpecified reports whether the model has exactly one explicit
 // field that resolves to a single column. FieldsEx is not treated as a
 // single-field specification.
@@ -412,7 +368,7 @@ func (m *Model) validateFieldsExSingleColumn() error {
 	if remaining != 1 {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
-			`Scan into basic/scalar-conversion type requires exactly 1 field specified via Fields(), but FieldsEx leaves %d columns after filtering`,
+			`Scan into basic type requires exactly 1 field specified via Fields(), but FieldsEx leaves %d columns after filtering`,
 			remaining,
 		)
 	}
@@ -432,7 +388,7 @@ func (m *Model) validateSingleFieldSpecified() error {
 	if len(m.fields) == 1 {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
-			`Scan into basic/scalar-conversion type does not support expanding field %v (gdb.Raw or wildcard); use an explicit field name instead`,
+			`Scan into basic type does not support expanding field %v (gdb.Raw or wildcard); use an explicit field name instead`,
 			m.fields[0],
 		)
 	}
@@ -441,7 +397,7 @@ func (m *Model) validateSingleFieldSpecified() error {
 	}
 	return gerror.NewCodef(
 		gcode.CodeInvalidParameter,
-		`Scan into basic/scalar-conversion type requires exactly 1 field specified via Fields(), but got %d`,
+		`Scan into basic type requires exactly 1 field specified via Fields(), but got %d`,
 		len(m.fields),
 	)
 }
@@ -502,7 +458,7 @@ func (m *Model) Scan(pointer any, where ...any) error {
 		// (int/uint/float/bool/string). Map/record slices and other non-struct kinds must
 		// fall through to doStructs; otherwise []Record or similar results would be
 		// misclassified as a slice of basic values.
-		if elemType != nil && (reflection.IsBasicKind(elemType.Kind()) || isScalarConversionType(elemType)) {
+		if elemType != nil && reflection.IsBasicKind(elemType.Kind()) {
 			if err := m.validateSingleFieldSpecified(); err != nil {
 				return err
 			}
@@ -522,27 +478,6 @@ func (m *Model) Scan(pointer any, where ...any) error {
 		return m.doStructs(pointer, where...)
 
 	case reflect.Struct, reflect.Invalid:
-		elemType := reflectInfo.OriginType
-		if isScalarConversionType(elemType) {
-			if err := m.validateSingleFieldSpecified(); err != nil {
-				// Fallback to doStruct
-				return m.doStruct(pointer, where...)
-			}
-			// Single non-Raw field and the target type implements a scalar-conversion
-			// interface: scan the scalar value through gconv.
-			model := m.Clone()
-			if len(where) > 0 {
-				model = model.Where(where[0], where[1:]...)
-			}
-			value, err := model.valueOrNoRows()
-			if err != nil {
-				return err
-			}
-			if value == nil {
-				return nil
-			}
-			return value.Scan(pointer)
-		}
 		return m.doStruct(pointer, where...)
 
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
@@ -555,13 +490,14 @@ func (m *Model) Scan(pointer any, where ...any) error {
 		if len(where) > 0 {
 			model = model.Where(where[0], where[1:]...)
 		}
-		value, err := model.valueOrNoRows()
+		value, err := model.Value()
 		if err != nil {
 			return err
 		}
 		if value == nil {
-			// No row (handled by valueOrNoRows → sql.ErrNoRows) OR the row exists
-			// but the column value is NULL; leave the destination at its zero value.
+			if !empty.IsNil(pointer, true) {
+				return sql.ErrNoRows
+			}
 			return nil
 		}
 		return value.Scan(pointer)
