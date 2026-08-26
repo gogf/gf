@@ -106,7 +106,8 @@ type DB interface {
 	// It's a convenience method combining Insert with LastInsertId.
 	InsertAndGetId(ctx context.Context, table string, data any, batch ...int) (int64, error)
 
-	// InsertAndGetPrimaryKeyValue inserts a record and returns the auto-generated primary key value.
+	// InsertAndGetPrimaryKeyValue inserts record(s) and returns the generated primary-key value.
+	// For batch inserts, it returns the primary-key value of the last inserted row.
 	// It supports generated values that cannot be represented as int64, such as UUIDs.
 	InsertAndGetPrimaryKeyValue(ctx context.Context, table string, data any, batch ...int) (Value, error)
 
