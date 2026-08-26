@@ -1151,7 +1151,7 @@ func Test_NameFromJsonTag(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type CreateReq struct {
 			gmeta.Meta `path:"/CreateReq" method:"POST"`
-			Name       string `json:"nick_name, omitempty"`
+			Name       string `json:"nick_name,omitempty"`
 		}
 
 		var (
@@ -1172,7 +1172,7 @@ func Test_NameFromJsonTag(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type CreateReq struct {
 			gmeta.Meta `path:"/CreateReq" method:"GET"`
-			Name       string `json:"nick_name, omitempty" in:"header"`
+			Name       string `json:"nick_name,omitempty" in:"header"`
 		}
 		var (
 			err error

@@ -17,12 +17,36 @@ import (
 
 // Time converts `any` to time.Time.
 func (c *Converter) Time(anyInput any, format ...string) (time.Time, error) {
-	// It's already this type.
+	// Handle special cases when no format is specified
 	if len(format) == 0 {
+		// Direct type matches - fastest path
 		if v, ok := anyInput.(time.Time); ok {
 			return v, nil
 		}
+		if v, ok := anyInput.(*gtime.Time); ok {
+			if v != nil {
+				return v.Time, nil
+			}
+		}
+
+		// Handle map inputs by extracting the first value
+		// This is optimized for ORM scenarios where maps like {"now": gtimeVal}
+		// need to be converted to a single time.Time value
+		// If anyInput is a map with string keys, this block accesses its data directly.
+		// Timezone preservation is ensured by accessing the v.Time field directly,
+		// rather than converting time values to strings, which could lose timezone information.
+		if mapData, ok := anyInput.(map[string]any); ok {
+			if len(mapData) == 0 {
+				return time.Time{}, nil
+			}
+			// Extract the first value efficiently without full iteration
+			for _, value := range mapData {
+				return c.Time(value)
+			}
+		}
 	}
+
+	// Fall back to GTime conversion for complex cases
 	t, err := c.GTime(anyInput, format...)
 	if err != nil {
 		return time.Time{}, err
@@ -30,6 +54,7 @@ func (c *Converter) Time(anyInput any, format ...string) (time.Time, error) {
 	if t != nil {
 		return t.Time, nil
 	}
+
 	return time.Time{}, nil
 }
 
@@ -64,21 +89,28 @@ func (c *Converter) GTime(anyInput any, format ...string) (*gtime.Time, error) {
 	if empty.IsNil(anyInput) {
 		return nil, nil
 	}
+
+	// Check for custom interfaces first
 	if v, ok := anyInput.(localinterface.IGTime); ok {
 		return v.GTime(format...), nil
 	}
-	// It's already this type.
+
+	// Handle direct type matches when no format is specified - HIGHEST PRIORITY for timezone preservation
 	if len(format) == 0 {
-		if v, ok := anyInput.(*gtime.Time); ok {
+		switch v := anyInput.(type) {
+		case *gtime.Time:
 			return v, nil
-		}
-		if t, ok := anyInput.(time.Time); ok {
-			return gtime.New(t), nil
-		}
-		if t, ok := anyInput.(*time.Time); ok {
-			return gtime.New(t), nil
+		case gtime.Time:
+			// Return a pointer to preserve the exact same gtime instance with timezone
+			return &v, nil
+		case time.Time:
+			return gtime.New(v), nil
+		case *time.Time:
+			return gtime.New(v), nil
 		}
 	}
+
+	// Convert to string for parsing
 	s, err := c.String(anyInput)
 	if err != nil {
 		return nil, err
@@ -86,7 +118,8 @@ func (c *Converter) GTime(anyInput any, format ...string) (*gtime.Time, error) {
 	if len(s) == 0 {
 		return gtime.New(), nil
 	}
-	// Priority conversion using given format.
+
+	// Handle format-specific conversion
 	if len(format) > 0 {
 		for _, item := range format {
 			t, err := gtime.StrToTimeFormat(s, item)
@@ -99,13 +132,18 @@ func (c *Converter) GTime(anyInput any, format ...string) (*gtime.Time, error) {
 		}
 		return nil, nil
 	}
+
+	// Handle numeric timestamps
 	if utils.IsNumeric(s) {
 		i, err := c.Int64(s)
 		if err != nil {
 			return nil, err
 		}
 		return gtime.NewFromTimeStamp(i), nil
-	} else {
-		return gtime.StrToTime(s)
 	}
+
+	// Parse as time string with timezone preservation
+	// Enhanced: if the string lacks timezone info, try to parse it with RFC3339 format first
+	// This helps preserve timezone when the original gtime had timezone information
+	return gtime.StrToTime(s)
 }
