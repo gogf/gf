@@ -30,13 +30,14 @@ import (
 
 // GrpcServer is the server for GRPC protocol.
 type GrpcServer struct {
-	Server    *grpc.Server
-	config    *GrpcServerConfig
-	listener  net.Listener
-	services  []gsvc.Service
-	waitGroup sync.WaitGroup
-	registrar gsvc.Registrar
-	serviceMu sync.Mutex
+	Server     *grpc.Server
+	config     *GrpcServerConfig
+	listenerMu sync.RWMutex
+	listener   net.Listener
+	services   []gsvc.Service
+	waitGroup  sync.WaitGroup
+	registrar  gsvc.Registrar
+	serviceMu  sync.Mutex
 }
 
 // Service implements gsvc.Service interface.
@@ -95,34 +96,51 @@ func (s *GrpcServer) Service(services ...gsvc.Service) {
 	s.services = append(s.services, services...)
 }
 
-// Run starts the server in blocking way.
-func (s *GrpcServer) Run() {
-	var (
-		err error
-		ctx = gctx.GetInitCtx()
-	)
-	// Create listener to bind listening ip and port.
-	s.listener, err = net.Listen("tcp", s.config.Address)
-	if err != nil {
-		s.Logger().Fatalf(ctx, `%+v`, err)
+// serve binds the listener, starts serving asynchronously, and registers services.
+// It does not block on OS signal handling and is intended for external lifecycle managers.
+func (s *GrpcServer) serve() error {
+	ctx := gctx.GetInitCtx()
+
+	s.listenerMu.Lock()
+	if s.listener != nil {
+		s.listenerMu.Unlock()
+		return gerror.NewCode(gcode.CodeInvalidOperation, "grpc server already started")
 	}
+	listener, err := net.Listen("tcp", s.config.Address)
+	if err != nil {
+		s.listenerMu.Unlock()
+		return err
+	}
+	s.listener = listener
+	s.listenerMu.Unlock()
 
-	// Start listening.
-	go s.doServeAsynchronously(ctx)
-
-	// Service register.
+	go s.doServeAsynchronously(ctx, listener)
 	s.doServiceRegister()
 	s.Logger().Infof(
 		ctx,
 		"pid[%d]: grpc server started listening on [%s]",
 		gproc.Pid(), s.GetListenedAddress(),
 	)
+	return nil
+}
+
+// Run starts the server in blocking way.
+func (s *GrpcServer) Run() {
+	ctx := gctx.GetInitCtx()
+	if err := s.serve(); err != nil {
+		s.Logger().Fatalf(ctx, `%+v`, err)
+	}
 	s.doSignalListen()
 }
 
-func (s *GrpcServer) doServeAsynchronously(ctx context.Context) {
-	if err := s.Server.Serve(s.listener); err != nil {
-		s.Logger().Fatalf(ctx, `%+v`, err)
+// StartManaged starts serving under external lifecycle management without signal handling.
+func (s *GrpcServer) StartManaged() error {
+	return s.serve()
+}
+
+func (s *GrpcServer) doServeAsynchronously(ctx context.Context, listener net.Listener) {
+	if err := s.Server.Serve(listener); err != nil && err != grpc.ErrServerStopped {
+		s.Logger().Errorf(ctx, `grpc server serve error: %+v`, err)
 	}
 }
 
@@ -225,6 +243,12 @@ func (s *GrpcServer) Stop() {
 	s.Server.GracefulStop()
 }
 
+// StopForceful forcibly stops the server and de-registers services from the registry.
+func (s *GrpcServer) StopForceful() {
+	s.doServiceDeregister()
+	s.Server.Stop()
+}
+
 // GetConfig returns the configuration of current Server.
 func (s *GrpcServer) GetConfig() *GrpcServerConfig {
 	return s.config
@@ -245,6 +269,8 @@ func (s *GrpcServer) GetListenedAddress() string {
 
 // GetListenedPort retrieves and returns one port which is listened to by current server.
 func (s *GrpcServer) GetListenedPort() int {
+	s.listenerMu.RLock()
+	defer s.listenerMu.RUnlock()
 	if ln := s.listener; ln != nil {
 		return ln.Addr().(*net.TCPAddr).Port
 	}

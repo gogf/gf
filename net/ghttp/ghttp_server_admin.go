@@ -73,10 +73,15 @@ func (p *utilAdmin) Restart(r *Request) {
 
 // Shutdown shuts down all the servers.
 func (p *utilAdmin) Shutdown(r *Request) {
+	// Capture stable references before entering the timer closure,
+	// since the request lifecycle ends after WriteExit returns.
+	server := r.Server
 	gtimer.SetTimeout(r.Context(), time.Second, func(ctx context.Context) {
 		// It shuts down the server after 1 second, which is not triggered by system signal,
 		// to ensure the response successfully to the client.
-		_ = r.Server.Shutdown()
+		if err := server.Shutdown(); err != nil {
+			server.Logger().Errorf(ctx, "server shutdown failed: %v", err)
+		}
 	})
 	r.Response.WriteExit("server shutdown")
 }
@@ -91,10 +96,9 @@ func (s *Server) EnableAdmin(pattern ...string) {
 	s.BindObject(p, &utilAdmin{})
 }
 
-// Shutdown shuts the current server.
-func (s *Server) Shutdown() error {
-	var ctx = context.TODO()
-	// Remove plugins.
+// stopServers removes plugins, deregisters the service discovery endpoint if any,
+// then shuts down or force-closes all underlying HTTP servers.
+func (s *Server) stopServers(ctx context.Context, forceful bool) {
 	if len(s.plugins) > 0 {
 		for _, p := range s.plugins {
 			s.Logger().Printf(ctx, `remove plugin: %s`, p.Name())
@@ -105,11 +109,33 @@ func (s *Server) Shutdown() error {
 	}
 
 	s.doServiceDeregister()
-	// Only shut down current servers.
-	// It may have multiple underlying http servers.
 	for _, v := range s.servers {
-		v.Shutdown(ctx)
+		if forceful {
+			v.Close(ctx)
+		} else {
+			v.Shutdown(ctx)
+		}
 	}
-	s.Logger().Infof(ctx, "pid[%d]: all servers shutdown", gproc.Pid())
+
+	if forceful {
+		s.Logger().Infof(ctx, "pid[%d]: all servers closed", gproc.Pid())
+	} else {
+		s.Logger().Infof(ctx, "pid[%d]: all servers shutdown", gproc.Pid())
+	}
+}
+
+// Shutdown gracefully shuts the current server.
+// It waits for all in-flight requests to complete before shutting down.
+func (s *Server) Shutdown() error {
+	var ctx = context.TODO()
+	s.stopServers(ctx, false)
+	return nil
+}
+
+// Close forcibly closes the current server.
+// Unlike Shutdown, it does not wait for in-flight requests to complete.
+func (s *Server) Close() error {
+	var ctx = context.TODO()
+	s.stopServers(ctx, true)
 	return nil
 }
