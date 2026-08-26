@@ -2219,3 +2219,70 @@ func Test_Issue4698(t *testing.T) {
 func Test_Issue2231(t *testing.T) {
 	t.Skip("MariaDB-specific regex link test not applicable to PostgreSQL")
 }
+
+// Test_IssuePointInterval_NotConvertedToInt verifies that column types whose
+// names merely contain an integer keyword are not converted to integers.
+//
+// gdb's fallback type detection matches "int" as a substring, so "point" and
+// "interval" were both classified as integers and their values became 0.
+func Test_IssuePointInterval_NotConvertedToInt(t *testing.T) {
+	table := "issue_point_interval_" + gtime.TimestampMicroStr()
+	if _, err := db.Exec(ctx, fmt.Sprintf(
+		`CREATE TABLE %s (
+			id int PRIMARY KEY, pt point, span interval,
+			r4 int4range, r8 int8range, mr int4multirange,
+			pts point[], spans interval[]
+		)`,
+		table,
+	)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Exec(ctx, fmt.Sprintf(
+			`INSERT INTO %s VALUES (
+				1, '(1.5,2.5)', '2 days',
+				'[1,5)', '[10,50)', '{[1,5)}',
+				'{"(1,2)","(3,4)"}', '{"1 day","2 days"}'
+			)`,
+			table,
+		))
+		t.AssertNil(err)
+
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+
+		// Scalar values keep their real content instead of collapsing to 0.
+		t.Assert(one["pt"].String(), "(1.5,2.5)")
+		t.Assert(one["span"].String(), "2 days")
+		t.Assert(one["r4"].String(), "[1,5)")
+		t.Assert(one["r8"].String(), "[10,50)")
+		t.Assert(one["mr"].String(), "{[1,5)}")
+
+		// Array forms are read as their element text representation.
+		t.Assert(one["pts"].Strings(), g.SliceStr{"(1,2)", "(3,4)"})
+		t.Assert(one["spans"].Strings(), g.SliceStr{"1 day", "2 days"})
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Real integer columns are unaffected.
+		intTable := "issue_int_control_" + gtime.TimestampMicroStr()
+		if _, err := db.Exec(ctx, fmt.Sprintf(
+			`CREATE TABLE %s (id int PRIMARY KEY, a int2, b int4, c int8, d int4[])`, intTable,
+		)); err != nil {
+			gtest.Fatal(err)
+		}
+		defer dropTable(intTable)
+
+		_, err := db.Exec(ctx, fmt.Sprintf(`INSERT INTO %s VALUES (1, 1, 2, 3, '{4,5}')`, intTable))
+		t.AssertNil(err)
+
+		one, err := db.Model(intTable).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["a"].Int(), 1)
+		t.Assert(one["b"].Int(), 2)
+		t.Assert(one["c"].Int64(), int64(3))
+		t.Assert(one["d"].Ints(), []int{4, 5})
+	})
+}
