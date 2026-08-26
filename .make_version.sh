@@ -31,6 +31,25 @@ workdir=.
 newVersion=$2
 echo "Prepare to replace the GoFrame library version numbers in all go.mod files in the ${workdir} directory with ${newVersion}"
 
+# Parse the replace block from cmd/gf/go.work to keep the replace directives
+# in sync with the go.work file. Each line inside the "replace (" block is
+# expected to be in the form "module/path => ../../relative/path". The output
+# is a list of "module=target" pairs, one per line.
+parse_replace_modules() {
+    local goWorkFile="cmd/gf/go.work"
+    if [ ! -f "$goWorkFile" ]; then
+        echo "Error: $goWorkFile not found, cannot sync replace directives"
+        exit 1
+    fi
+    # Extract module and target paths between "replace (" and the closing ")".
+    sed -n '/^replace (/,/^)/p' "$goWorkFile" \
+        | grep -E '=>' \
+        | sed -E 's/^[[:space:]]*([^[:space:]]+)[[:space:]]*=>[[:space:]]*([^[:space:]]+).*/\1=\2/'
+}
+
+# Collect the replace module=target pairs once at startup.
+replacePairs=$(parse_replace_modules)
+
 # check find command support or not
 output=$(find "${workdir}" -name go.mod 2>&1)
 if [[ $? -ne 0 ]]; then
@@ -72,13 +91,11 @@ for file in `find ${workdir} -name go.mod`; do
     # Add replace directive for local development.
     if [ $goModPath = "./cmd/gf" ]; then
         mv go.work go.work.version.bak
-        go mod edit -replace github.com/gogf/gf/v2=../../
-        go mod edit -replace github.com/gogf/gf/contrib/drivers/clickhouse/v2=../../contrib/drivers/clickhouse
-        go mod edit -replace github.com/gogf/gf/contrib/drivers/mssql/v2=../../contrib/drivers/mssql
-        go mod edit -replace github.com/gogf/gf/contrib/drivers/mysql/v2=../../contrib/drivers/mysql
-        go mod edit -replace github.com/gogf/gf/contrib/drivers/oracle/v2=../../contrib/drivers/oracle
-        go mod edit -replace github.com/gogf/gf/contrib/drivers/pgsql/v2=../../contrib/drivers/pgsql
-        go mod edit -replace github.com/gogf/gf/contrib/drivers/sqlite/v2=../../contrib/drivers/sqlite
+        # Add replace directives dynamically from cmd/gf/go.work so that the
+        # script stays in sync with the replace block in that file.
+        for pair in $replacePairs; do
+            go mod edit -replace "$pair"
+        done
     fi
     # Remove indirect dependencies
     sed_replace '/\/\/ indirect/d' go.mod
@@ -96,13 +113,11 @@ for file in `find ${workdir} -name go.mod`; do
     # Remove toolchain line if exists
     sed_replace '/^toolchain/d' go.mod
     if [ $goModPath = "./cmd/gf" ]; then
-        go mod edit -dropreplace github.com/gogf/gf/v2
-        go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/clickhouse/v2
-        go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/mssql/v2
-        go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/mysql/v2
-        go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/oracle/v2
-        go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/pgsql/v2
-        go mod edit -dropreplace github.com/gogf/gf/contrib/drivers/sqlite/v2
+        # Drop the replace directives that were added above, keeping the
+        # script in sync with the replace block in cmd/gf/go.work.
+        for pair in $replacePairs; do
+            go mod edit -dropreplace "${pair%%=*}"
+        done
         mv go.work.version.bak go.work
     fi
     cd -
