@@ -25,6 +25,7 @@ localdocs/
 node_modules
 .docusaurus
 output
+config/*
 .example/
 .golangci.bck.yml
 *.exe
