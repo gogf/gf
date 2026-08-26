@@ -15,8 +15,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/shopspring/decimal"
-
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -27,6 +25,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
 	"github.com/gogf/gf/v2/util/guid"
+	"github.com/shopspring/decimal"
 )
 
 // https://github.com/gogf/gf/issues/1380
