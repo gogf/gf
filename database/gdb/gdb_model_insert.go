@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// This file implements model data preparation and insert operations.
+
 package gdb
 
 import (
@@ -211,6 +213,19 @@ func (m *Model) InsertAndGetId(data ...any) (lastInsertId int64, err error) {
 		return 0, err
 	}
 	return result.LastInsertId()
+}
+
+// InsertAndGetPrimaryKeyValue performs action Insert and returns the generated primary key value.
+func (m *Model) InsertAndGetPrimaryKeyValue(data ...any) (lastInsertPrimaryKeyValue Value, err error) {
+	var ctx = m.GetCtx()
+	if len(data) > 0 {
+		return m.Data(data...).InsertAndGetPrimaryKeyValue()
+	}
+	result, err := m.doInsertWithOption(ctx, InsertOptionDefault)
+	if err != nil {
+		return nil, err
+	}
+	return getLastInsertPrimaryKeyValue(result)
 }
 
 // InsertIgnore does "INSERT IGNORE INTO ..." statement for the model.

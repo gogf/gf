@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// This file verifies SQLite model operations and generic database API behavior.
+
 package sqlite_test
 
 import (
@@ -3428,6 +3430,53 @@ func Test_Model_InsertAndGetId(t *testing.T) {
 		}).InsertAndGetId()
 		t.AssertNil(err)
 		t.Assert(id, 2)
+	})
+}
+
+// Test_InsertAndGetPrimaryKeyValue verifies integer fallbacks across model, database, and transaction APIs.
+func Test_InsertAndGetPrimaryKeyValue(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		modelValue, err := db.Model(table).Data(g.Map{"passport": "model"}).InsertAndGetPrimaryKeyValue()
+		t.AssertNil(err)
+		t.Assert(modelValue.Int64(), int64(1))
+
+		modelValue, err = db.Model(table).InsertAndGetPrimaryKeyValue(g.Map{"passport": "model-data"})
+		t.AssertNil(err)
+		t.Assert(modelValue.Int64(), int64(2))
+
+		dbValue, err := db.InsertAndGetPrimaryKeyValue(ctx, table, g.Map{"passport": "database"})
+		t.AssertNil(err)
+		t.Assert(dbValue.Int64(), int64(3))
+
+		dbValue, err = db.InsertAndGetPrimaryKeyValue(ctx, table, g.List{
+			{"passport": "database-batch-1"},
+			{"passport": "database-batch-2"},
+		}, 1)
+		t.AssertNil(err)
+		t.Assert(dbValue.Int64(), int64(5))
+
+		err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			txValue, txErr := tx.InsertAndGetPrimaryKeyValue(table, g.Map{"passport": "transaction"})
+			if txErr != nil {
+				return txErr
+			}
+			t.Assert(txValue.Int64(), int64(6))
+
+			txValue, txErr = tx.InsertAndGetPrimaryKeyValue(table, g.List{{"passport": "transaction-batch"}}, 1)
+			if txErr != nil {
+				return txErr
+			}
+			t.Assert(txValue.Int64(), int64(7))
+			return nil
+		})
+		t.AssertNil(err)
+
+		emptyValue, err := db.Model(table).InsertAndGetPrimaryKeyValue()
+		t.Assert(emptyValue, nil)
+		t.AssertNE(err, nil)
 	})
 }
 

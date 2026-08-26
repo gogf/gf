@@ -4,19 +4,31 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// This file defines SQL execution result adapters and generated primary-key values.
+
 package gdb
 
 import (
 	"database/sql"
 
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gerror"
 )
+
+// ResultWithPrimaryKeyValue extends sql.Result with access to a generated primary-key value
+// that cannot necessarily be represented as int64.
+type ResultWithPrimaryKeyValue interface {
+	sql.Result
+
+	// LastInsertPrimaryKeyValue returns the generated primary-key value from the last inserted row.
+	LastInsertPrimaryKeyValue() (Value, error)
+}
 
 // SqlResult is execution result for sql operations.
 // It also supports batch operation result for rowsAffected.
 type SqlResult struct {
-	Result   sql.Result
-	Affected int64
+	Result   sql.Result // Result is the most recent underlying SQL result.
+	Affected int64      // Affected is the accumulated number of affected rows.
 }
 
 // MustGetAffected returns the affected rows count, if any error occurs, it panics.
@@ -64,4 +76,25 @@ func (r *SqlResult) LastInsertId() (int64, error) {
 		return 0, nil
 	}
 	return r.Result.LastInsertId()
+}
+
+// LastInsertPrimaryKeyValue returns the generated primary-key value from the last inserted row.
+func (r *SqlResult) LastInsertPrimaryKeyValue() (Value, error) {
+	if r.Result == nil {
+		return gvar.New(nil), nil
+	}
+	return getLastInsertPrimaryKeyValue(r.Result)
+}
+
+// getLastInsertPrimaryKeyValue returns a driver's native primary-key value when available and
+// otherwise wraps the standard integer last-insert ID.
+func getLastInsertPrimaryKeyValue(result sql.Result) (Value, error) {
+	if valueResult, ok := result.(ResultWithPrimaryKeyValue); ok {
+		return valueResult.LastInsertPrimaryKeyValue()
+	}
+	lastInsertID, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+	return gvar.New(lastInsertID), nil
 }

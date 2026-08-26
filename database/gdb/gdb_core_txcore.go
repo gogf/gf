@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// This file implements database operations bound to a transaction.
+
 package gdb
 
 import (
@@ -339,6 +341,14 @@ func (tx *TXCore) InsertAndGetId(table string, data any, batch ...int) (int64, e
 		return tx.Model(table).Ctx(tx.ctx).Data(data).Batch(batch[0]).InsertAndGetId()
 	}
 	return tx.Model(table).Ctx(tx.ctx).Data(data).InsertAndGetId()
+}
+
+// InsertAndGetPrimaryKeyValue performs action Insert and returns the generated primary key value.
+func (tx *TXCore) InsertAndGetPrimaryKeyValue(table string, data any, batch ...int) (Value, error) {
+	if len(batch) > 0 {
+		return tx.Model(table).Ctx(tx.ctx).Data(data).Batch(batch[0]).InsertAndGetPrimaryKeyValue()
+	}
+	return tx.Model(table).Ctx(tx.ctx).Data(data).InsertAndGetPrimaryKeyValue()
 }
 
 // Replace does "REPLACE INTO ..." statement for the table.

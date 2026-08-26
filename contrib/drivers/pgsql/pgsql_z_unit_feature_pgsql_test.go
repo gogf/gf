@@ -4,12 +4,16 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// This file verifies PostgreSQL-specific query and returning features.
+
 package pgsql_test
 
 import (
 	"context"
 	"fmt"
 	"testing"
+
+	"github.com/google/uuid"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -284,6 +288,50 @@ func Test_PgSQL_Returning_Insert(t *testing.T) {
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
 		t.Assert(count, 2)
+	})
+}
+
+// Test_PgSQL_Returning_InsertAndGetPrimaryKeyValue_UUID tests UUID keys across insert API layers.
+func Test_PgSQL_Returning_InsertAndGetPrimaryKeyValue_UUID(t *testing.T) {
+	table := fmt.Sprintf(`%s_%d`, TablePrefix+"returning_uuid", gtime.TimestampNano())
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+		CREATE TABLE %s (
+			id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+			name varchar(100)
+		);`, table)); err != nil {
+		t.Skipf("PostgreSQL UUID generation is unavailable: %v", err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		modelValue, err := db.Model(table).Data(g.Map{"name": "model"}).InsertAndGetPrimaryKeyValue()
+		t.AssertNil(err)
+		_, err = uuid.Parse(modelValue.String())
+		t.AssertNil(err)
+
+		result, err := db.Model(table).Data(g.Map{"name": "optional-result"}).Insert()
+		t.AssertNil(err)
+		valueResult, ok := result.(gdb.ResultWithPrimaryKeyValue)
+		t.Assert(ok, true)
+		resultValue, err := valueResult.LastInsertPrimaryKeyValue()
+		t.AssertNil(err)
+		_, err = uuid.Parse(resultValue.String())
+		t.AssertNil(err)
+
+		dbValue, err := db.InsertAndGetPrimaryKeyValue(ctx, table, g.Map{"name": "database"})
+		t.AssertNil(err)
+		_, err = uuid.Parse(dbValue.String())
+		t.AssertNil(err)
+
+		err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			txValue, txErr := tx.InsertAndGetPrimaryKeyValue(table, g.Map{"name": "transaction"})
+			if txErr != nil {
+				return txErr
+			}
+			_, txErr = uuid.Parse(txValue.String())
+			return txErr
+		})
+		t.AssertNil(err)
 	})
 }
 

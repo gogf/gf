@@ -5,6 +5,8 @@
 // You can obtain one at https://github.com/gogf/gf.
 //
 
+// This file implements core database operations and driver delegation.
+
 package gdb
 
 import (
@@ -359,6 +361,14 @@ func (c *Core) InsertAndGetId(ctx context.Context, table string, data any, batch
 		return c.Model(table).Ctx(ctx).Data(data).Batch(batch[0]).InsertAndGetId()
 	}
 	return c.Model(table).Ctx(ctx).Data(data).InsertAndGetId()
+}
+
+// InsertAndGetPrimaryKeyValue performs action Insert and returns the generated primary key value.
+func (c *Core) InsertAndGetPrimaryKeyValue(ctx context.Context, table string, data any, batch ...int) (Value, error) {
+	if len(batch) > 0 {
+		return c.Model(table).Ctx(ctx).Data(data).Batch(batch[0]).InsertAndGetPrimaryKeyValue()
+	}
+	return c.Model(table).Ctx(ctx).Data(data).InsertAndGetPrimaryKeyValue()
 }
 
 // Replace does "REPLACE INTO ..." statement for the table.

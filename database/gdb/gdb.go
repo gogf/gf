@@ -106,6 +106,10 @@ type DB interface {
 	// It's a convenience method combining Insert with LastInsertId.
 	InsertAndGetId(ctx context.Context, table string, data any, batch ...int) (int64, error)
 
+	// InsertAndGetPrimaryKeyValue inserts a record and returns the auto-generated primary key value.
+	// It supports generated values that cannot be represented as int64, such as UUIDs.
+	InsertAndGetPrimaryKeyValue(ctx context.Context, table string, data any, batch ...int) (Value, error)
+
 	// Replace inserts or replaces records using REPLACE INTO syntax.
 	// Existing records with same unique key will be deleted and re-inserted.
 	Replace(ctx context.Context, table string, data any, batch ...int) (sql.Result, error)
@@ -465,6 +469,10 @@ type TX interface {
 	// InsertAndGetId inserts one record and returns its id value.
 	// It's commonly used with auto-increment primary key.
 	InsertAndGetId(table string, data any, batch ...int) (int64, error)
+
+	// InsertAndGetPrimaryKeyValue inserts one record and returns its generated primary key value.
+	// It supports generated values that cannot be represented as int64, such as UUIDs.
+	InsertAndGetPrimaryKeyValue(table string, data any, batch ...int) (Value, error)
 
 	// Replace inserts or replaces records using REPLACE INTO syntax.
 	// Existing records with same unique key will be deleted and re-inserted.

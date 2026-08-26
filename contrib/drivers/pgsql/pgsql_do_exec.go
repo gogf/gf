@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// This file executes PostgreSQL statements and captures returned primary keys.
+
 package pgsql
 
 import (
@@ -72,21 +74,24 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 	}
 	affected := len(records)
 	if affected > 0 {
+		lastInsertPrimaryKeyValue := records[affected-1][primaryKey]
 		if !strings.Contains(pkField.Type, "int") {
 			return Result{
-				affected:     int64(affected),
-				lastInsertId: 0,
+				affected:                  int64(affected),
+				lastInsertId:              0,
+				lastInsertPrimaryKeyValue: lastInsertPrimaryKeyValue,
 				lastInsertIdError: gerror.NewCodef(
 					gcode.CodeNotSupported,
 					"LastInsertId is not supported by primary key type: %s", pkField.Type),
 			}, nil
 		}
 
-		if records[affected-1][primaryKey] != nil {
-			lastInsertId := records[affected-1][primaryKey].Int64()
+		if lastInsertPrimaryKeyValue != nil {
+			lastInsertId := lastInsertPrimaryKeyValue.Int64()
 			return Result{
-				affected:     int64(affected),
-				lastInsertId: lastInsertId,
+				affected:                  int64(affected),
+				lastInsertId:              lastInsertId,
+				lastInsertPrimaryKeyValue: lastInsertPrimaryKeyValue,
 			}, nil
 		}
 	}
