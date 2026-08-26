@@ -52,3 +52,60 @@ func Test_Issue4699(t *testing.T) {
 		t.AssertEQ(m7.offset, 10)
 	})
 }
+
+// Test_ScanValidateSingleFieldSpecified tests that validateSingleFieldSpecified
+// and isSingleFieldSpecified correctly accept/reject various field configurations,
+// especially the gdb.Raw case which bypasses len(m.fields) checks.
+func Test_ScanValidateSingleFieldSpecified(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// No fields at all → reject.
+		m0 := &Model{}
+		t.AssertNE(m0.validateSingleFieldSpecified(), nil)
+		t.Assert(m0.isSingleFieldSpecified(), false)
+
+		// Exactly one normal field → accept.
+		m1 := &Model{fields: []any{"name"}}
+		t.AssertNil(m1.validateSingleFieldSpecified())
+		t.Assert(m1.isSingleFieldSpecified(), true)
+
+		// Two normal fields → reject.
+		m2 := &Model{fields: []any{"name", "age"}}
+		t.AssertNE(m2.validateSingleFieldSpecified(), nil)
+		t.Assert(m2.isSingleFieldSpecified(), false)
+
+		// gdb.Raw("name,age") stored as one field entry → reject,
+		// because it may expand to multiple columns at the SQL level.
+		m3 := &Model{fields: []any{Raw("name,age")}}
+		t.AssertNE(m3.validateSingleFieldSpecified(), nil)
+		t.Assert(m3.isSingleFieldSpecified(), false)
+
+		// FieldsEx only → accepted. FieldsEx can narrow the result to a single
+		// column; with a nil db the column-count check is skipped, so validation
+		// passes. isSingleFieldSpecified still reports false because FieldsEx is
+		// not an explicit single-field declaration.
+		m4 := &Model{fieldsEx: []any{"id"}}
+		t.AssertNil(m4.validateSingleFieldSpecified())
+		t.Assert(m4.isSingleFieldSpecified(), false)
+
+		// gdb.Raw("name") as single field → accept, because it resolves to a
+		// single column and is not an expanding field.
+		m5 := &Model{fields: []any{Raw("name")}}
+		t.AssertNil(m5.validateSingleFieldSpecified())
+		t.Assert(m5.isSingleFieldSpecified(), true)
+
+		// Wildcard "*" → reject (expands to all columns).
+		m6 := &Model{fields: []any{"*"}}
+		t.AssertNE(m6.validateSingleFieldSpecified(), nil)
+		t.Assert(m6.isSingleFieldSpecified(), false)
+
+		// Table-qualified wildcard "a.*" → reject (expands to all columns of alias a).
+		m7 := &Model{fields: []any{"a.*"}}
+		t.AssertNE(m7.validateSingleFieldSpecified(), nil)
+		t.Assert(m7.isSingleFieldSpecified(), false)
+
+		// COUNT(*) → accept (aggregate function, always produces one column).
+		m8 := &Model{fields: []any{"COUNT(*)"}}
+		t.AssertNil(m8.validateSingleFieldSpecified())
+		t.Assert(m8.isSingleFieldSpecified(), true)
+	})
+}
