@@ -30,9 +30,13 @@ func Test_Try(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		s := `gutil Try test`
+		r := `gutil Finally test`
 		t.Assert(gutil.Try(ctx, func(ctx context.Context) {
 			panic(gerror.New(s))
+		}, func(ctx context.Context) {
+			r = `gutil Finally test passed`
 		}), s)
+		t.Assert(r, `gutil Finally test passed`)
 	})
 }
 
@@ -53,12 +57,17 @@ func Test_TryCatch(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
+		r := `gutil Finally test`
 		gutil.TryCatch(ctx, func(ctx context.Context) {
 			panic(gerror.New("gutil TryCatch test"))
 
 		}, func(ctx context.Context, err error) {
 			t.Assert(err, "gutil TryCatch test")
+			r = `gutil Finally test catch`
+		}, func(ctx context.Context) {
+			r = `gutil Finally test passed`
 		})
+		t.Assert(r, `gutil Finally test passed`)
 	})
 }
 
