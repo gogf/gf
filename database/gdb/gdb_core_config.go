@@ -423,7 +423,12 @@ func (c *Core) GetPrefix() string {
 func (c *Core) GetSchema() string {
 	schema := c.schema
 	if schema == "" {
-		schema = c.db.GetConfig().Name
+		config := c.db.GetConfig()
+		if config.Type == driverTypePgSQL {
+			schema = config.Namespace
+		} else {
+			schema = config.Name
+		}
 	}
 	return schema
 }
