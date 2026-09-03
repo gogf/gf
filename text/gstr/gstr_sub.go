@@ -48,9 +48,10 @@ func StrEx(haystack string, needle string) string {
 // Example:
 // StrTill("av.mp4", ".") -> "av."
 // StrTill("123456789", "456") -> "123456"
+// StrTill("abc", "a") -> "a"
 func StrTill(haystack string, needle string) string {
 	pos := strings.Index(haystack, needle)
-	if pos == NotFoundIndex || pos == 0 {
+	if pos == NotFoundIndex {
 		return ""
 	}
 	return haystack[:pos+len(needle)]

@@ -265,6 +265,9 @@ func Test_StrTill(t *testing.T) {
 		t.Assert(gstr.StrTill("hello world", "lo"), "hello")
 		t.Assert(gstr.StrTill("你好世界", "世界"), "你好世界")
 		t.Assert(gstr.StrTill("你好世界", "好世"), "你好世")
+		t.Assert(gstr.StrTill("abc", "a"), "a")
+		t.Assert(gstr.StrTill("abc", "ab"), "ab")
+		t.Assert(gstr.StrTill("@name@example.com", "@"), "@")
 	})
 }
 
