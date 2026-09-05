@@ -9,6 +9,8 @@ package redis
 import (
 	"context"
 
+	"github.com/redis/go-redis/v9"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -39,8 +41,17 @@ func (r *Redis) Close(ctx context.Context) (err error) {
 // Conn retrieves and returns a connection object for continuous operations.
 // Note that you should call Close function manually if you do not use this connection any further.
 func (r *Redis) Conn(ctx context.Context) (gredis.Conn, error) {
+	var conn *redis.Conn
+	// Pin a dedicated underlying connection for non-cluster clients, so that
+	// connection-stateful commands (MULTI/EXEC, SELECT, etc.) issued through this
+	// Conn always run on the same physical connection. Cluster clients are not
+	// supported by go-redis Conn(), which fall back to the shared connection pool.
+	if client, ok := r.client.(*redis.Client); ok {
+		conn = client.Conn()
+	}
 	return &Conn{
 		redis: r,
+		conn:  conn,
 	}, nil
 }
 
