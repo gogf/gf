@@ -10,14 +10,41 @@ env: # Set environment variables
 
 jobs:
   close-issues:
+    permissions:
+      issues: write # to close inactive issues
     runs-on: ubuntu-latest
     steps:
       - name: need close
-        uses: actions-cool/issues-helper@v3
+        uses: actions/github-script@v9
         with:
-          actions: "close-issues"
-#          token: ${{ secrets.GF_TOKEN }}
-          labels: 'inactive'
-          inactive-day: 30
-          exclude-labels: 'bug,$exclude-empty'
-          close-reason: 'not active'
+          script: |
+            const INACTIVE_LABEL = 'inactive'
+            const EXCLUDE_LABELS = ['bug']
+            const INACTIVE_DAYS = 30
+            const cutoff = new Date(Date.now() - INACTIVE_DAYS * 24 * 60 * 60 * 1000)
+
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: INACTIVE_LABEL,
+              per_page: 100,
+            })
+
+            for (const issue of issues) {
+              if (issue.pull_request) continue
+              if (new Date(issue.updated_at) > cutoff) continue
+
+              const labels = issue.labels.map(l => (typeof l === 'string' ? l : l.name))
+              // Same `$exclude-empty` semantics as the check-inactive workflow.
+              if (labels.length === 0) continue
+              if (labels.some(l => EXCLUDE_LABELS.includes(l))) continue
+
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed',
+                state_reason: 'not_planned',
+              })
+            }

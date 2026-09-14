@@ -36,7 +36,7 @@ concurrency:
 env:
   TZ: "Asia/Shanghai"
   # for unit testing cases of some components that only execute on the latest go version.
-  LATEST_GO_VERSION: "1.25"
+  LATEST_GO_VERSION: "1.26"
 
 jobs:
   code-test:
@@ -46,7 +46,7 @@ jobs:
         # When adding new go version to the list, make sure:
         # 1. Update the `LATEST_GO_VERSION` env variable.
         # 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        go-version: [ "1.23", "1.24", "1.25" ]
+        go-version: [ "1.23", "1.24", "1.25", "1.26" ]
         goarch: [ "386", "amd64" ]
 
     runs-on: ubuntu-latest
@@ -215,15 +215,11 @@ jobs:
           - 2181:2181
 
     steps:
-    # TODO: szenius/set-timezone update to node16
-    # sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
     - name: Setup Timezone
-      uses: szenius/set-timezone@v2.0
-      with:
-        timezoneLinux: "Asia/Shanghai"
+      run:  sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
     - name: Checkout Repository
-      uses: actions/checkout@v5
+      uses: actions/checkout@v7
 
     - name: Setup tmate Session
       uses: mxschmitt/action-tmate@v3
@@ -240,6 +236,22 @@ jobs:
 
     - name: Start Apollo Containers
       run:  docker compose -f ".github/workflows/apollo/docker-compose.yml" up -d --build
+
+    - name: Wait for Apollo to serve configuration
+      run: |
+        # A running container is not enough: apollo-quick-start imports its seed
+        # data after boot, and until that finishes the config service answers
+        # normally but without the keys the tests read.
+        for i in $(seq 1 60); do
+          if curl -fsS --connect-timeout 2 --max-time 5 "http://localhost:8080/configs/SampleApp/default/application" | grep -Fq '"server.address"'; then
+            echo "Apollo is serving configuration."
+            exit 0
+          fi
+          sleep 5
+        done
+        echo "Apollo did not start serving configuration within 5 minutes."
+        docker compose -f ".github/workflows/apollo/docker-compose.yml" logs --tail=50
+        exit 1
       
     - name: Start Nacos Containers
       run:  docker compose -f ".github/workflows/nacos/docker-compose.yml" up -d --build
@@ -251,7 +263,7 @@ jobs:
       run:  docker compose -f ".github/workflows/consul/docker-compose.yml" up -d --build
 
     - name: Setup Golang ${{ matrix.go-version }}
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v7
       with:
         go-version: ${{ matrix.go-version }}
         cache-dependency-path: '**/go.sum'
@@ -264,8 +276,10 @@ jobs:
 
     - name: Install the protocol compiler plugins for Go
       run: |
-        go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-        go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+        # Pinned: protoc-gen-go-grpc v1.6.0 requires Go >= 1.24 and v1.6.2 requires
+        # Go >= 1.25, either of which breaks the older matrix entries.
+        go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.12
+        go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
         export PATH="$PATH:$(go env GOPATH)/bin"
 
     - name: Before Script
@@ -292,7 +306,7 @@ jobs:
       run:  docker compose -f ".github/workflows/consul/docker-compose.yml" down
 
     - name: Report Coverage
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v7
       # Only report coverage on the latest go version
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION }}
       with:
