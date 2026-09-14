@@ -43,6 +43,7 @@ linters:
         - typeSwitchVar
         - elseif
     govet:
+      enable-all: true
       disable:
         - asmdecl
         - assign
@@ -78,20 +79,6 @@ linters:
         - unreachable
         - unsafeptr
         - unusedwrite
-      enable-all: true
-      settings:
-        printf:
-          funcs:
-            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
-            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
-            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
-            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
-        unusedresult:
-          funcs:
-            - pkg.MyFunc
-            - context.WithCancel
-          stringmethods:
-            - MyMethod
     misspell:
       locale: US
       ignore-rules:
@@ -145,10 +132,32 @@ linters:
           severity: warning
           disabled: false
     staticcheck:
-      checks: [ "all","-S1000","-S1009","-S1016","-S1023","-S1025","-S1029","-S1034","-S1040","-SA1016","-SA1019","-SA1029","-SA4006","-SA4015","-SA6003","-SA9003","-ST1003","-QF1001","-QF1002","-QF1003","-QF1006","-QF1007","-QF1008","-QF1011","-QF1012","-ST1011" ]
-      initialisms: [ "ACL", "API", "ASCII", "CPU", "CSS", "DNS", "EOF", "GUID", "HTML", "HTTP", "HTTPS", "ID", "IP", "JSON", "QPS", "RAM", "RPC", "SLA", "SMTP", "SQL", "SSH", "TCP", "TLS", "TTL", "UDP", "UI", "GID", "UID", "UUID", "URI", "URL", "UTF8", "VM", "XML", "XMPP", "XSRF", "XSS", "SIP", "RTP", "AMQP", "DB", "TS" ]
-      dot-import-whitelist: [ "fmt" ]
-      http-status-code-whitelist: [ "200", "400", "404", "500" ]
+      checks:
+        - "all"
+        - "-S1000"
+        - "-S1009"
+        - "-S1016"
+        - "-S1023"
+        - "-S1025"
+        - "-S1029"
+        - "-S1034"
+        - "-S1040"
+        - "-SA1019"
+        - "-SA1029"
+        - "-SA4006"
+        - "-SA4015"
+        - "-SA6003"
+        - "-SA9003"
+        - "-ST1003"
+        - "-QF1001"
+        - "-QF1002"
+        - "-QF1003"
+        - "-QF1006"
+        - "-QF1007"
+        - "-QF1008"
+        - "-QF1011"
+        - "-QF1012"
+        - "-ST1011"
   exclusions:
     generated: lax
     presets:
@@ -189,7 +198,7 @@ formatters:
         - dot
         - prefix(github.com/gogf/gf/v2)
         - prefix(github.com/gogf/gf/cmd)
-        - prefix(github.com/gogf/gfcontrib)
+        - prefix(github.com/gogf/gf/contrib)
         - prefix(github.com/gogf/gf/example)
       custom-order: true
       no-lex-order: false

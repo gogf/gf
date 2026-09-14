@@ -25,6 +25,11 @@ on:
       - fix/**
       - feat/**
 
+# Cancel in-progress runs for the same branch/PR.
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
 jobs:
   golang-ci:
     strategy:
@@ -45,7 +50,7 @@ jobs:
       - name: golang-ci-lint
         uses: golangci/golangci-lint-action@v9
         with:
-          # Required: specify the golangci-lint version without the patch version to always use the latest patch.
+          version: v2.13.1
           only-new-issues: true
           skip-cache: true
           github-token: ${{ secrets.GITHUB_TOKEN }}

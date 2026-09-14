@@ -91,7 +91,7 @@ func createViewsForBuiltInMetrics() []metric.View {
 			Name: "process.runtime.go.gc.pause_ns",
 			Scope: instrumentation.Scope{
 				Name:    runtime.ScopeName,
-				Version: runtime.Version(),
+				Version: runtime.Version,
 			},
 		},
 		metric.Stream{
@@ -107,7 +107,7 @@ func createViewsForBuiltInMetrics() []metric.View {
 			Name: "runtime.uptime",
 			Scope: instrumentation.Scope{
 				Name:    runtime.ScopeName,
-				Version: runtime.Version(),
+				Version: runtime.Version,
 			},
 		},
 		metric.Stream{
