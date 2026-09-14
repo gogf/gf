@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/gogf/gf/contrib/registry/file/v2 v2.10.2
-	github.com/gogf/gf/v2 v2.10.2
+	github.com/gogf/gf/v2 v2.10.3
 	go.opentelemetry.io/otel v1.45.0
 	go.opentelemetry.io/otel/trace v1.45.0
 	google.golang.org/grpc v1.64.1

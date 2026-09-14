@@ -2,7 +2,7 @@ module github.com/gogf/gf/cmd/gf/cmd/gf/testdata/vardump/v2
 
 go 1.25.0
 
-require github.com/gogf/gf/v2 v2.10.2
+require github.com/gogf/gf/v2 v2.10.3
 
 require (
 	go.opentelemetry.io/otel v1.45.0 // indirect

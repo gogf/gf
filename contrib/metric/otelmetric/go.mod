@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/metric/otelmetric/v2
 go 1.25.0
 
 require (
-	github.com/gogf/gf/v2 v2.10.2
+	github.com/gogf/gf/v2 v2.10.3
 	github.com/prometheus/client_golang v1.24.1
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.70.0
 	go.opentelemetry.io/otel v1.45.0
