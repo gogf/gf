@@ -20,8 +20,6 @@ import (
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -698,17 +696,17 @@ func Test_Model_AllAndCount(t *testing.T) {
 		t.Assert(all[0]["passport"], "user_1")
 		t.Assert(count, 1)
 	})
-	// AllAndCount with Join return CodeDbOperationError
+	// AllAndCount with Join and multiple fields
+	// Regression test for #4698 - should use COUNT(1) not COUNT(field1, field2, ...)
 	gtest.C(t, func(t *gtest.T) {
 		all, count, err := db.Model(table).As("u1").
 			LeftJoin(tableName2, "u2", "u2.id=u1.id").
 			Fields("u1.passport,u1.id,u2.name,u2.age").
 			Where("u1.id<2").
 			AllAndCount(true)
-		t.AssertNE(err, nil)
-		t.AssertEQ(gerror.Code(err), gcode.CodeDbOperationError)
-		t.Assert(count, 0)
-		t.Assert(all, nil)
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(count, 1)
 	})
 }
 
@@ -1390,10 +1388,10 @@ func Test_Model_ScanAndCount(t *testing.T) {
 			Fields("u1.passport,u1.id,u2.name,u2.age").
 			Where("u1.id<2").
 			ScanAndCount(&users, &count, true)
-		t.AssertNE(err, nil)
-		t.Assert(gerror.Code(err), gcode.CodeDbOperationError)
-		t.Assert(count, 0)
-		t.AssertEQ(users, nil)
+		// Regression test for #4698 - should use COUNT(1) not COUNT(field1, field2, ...)
+		t.AssertNil(err)
+		t.Assert(len(users), 1)
+		t.Assert(count, 1)
 	})
 }
 

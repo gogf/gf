@@ -333,6 +333,54 @@ func (m *KVMap[K, V]) GetVarOrSetFuncLock(key K, f func() V) *gvar.Var {
 	return gvar.New(m.GetOrSetFuncLock(key, f))
 }
 
+// GetOrSetFuncWithError returns the value by key,
+// or sets value with returned value of callback function `f` if it does not exist
+// and then returns this value.
+//
+// Note that, it does not add the value to the map if the returned value of `f` is nil
+// or if `f` returns a non-nil error.
+func (m *KVMap[K, V]) GetOrSetFuncWithError(key K, f func() (V, error)) (V, error) {
+	if v, ok := m.Search(key); ok {
+		return v, nil
+	}
+	value, err := f()
+	if err != nil {
+		var zero V
+		return zero, err
+	}
+	v, _ := m.doSetWithLockCheck(key, value)
+	return v, nil
+}
+
+// GetOrSetFuncLockWithError returns the value by key,
+// or sets value with returned value of callback function `f` if it does not exist
+// and then returns this value.
+//
+// GetOrSetFuncLockWithError differs with GetOrSetFuncWithError function is that it executes function `f`
+// with mutex.Lock of the hash map.
+//
+// Note that, it does not add the value to the map if the returned value of `f` is nil
+// or if `f` returns a non-nil error.
+func (m *KVMap[K, V]) GetOrSetFuncLockWithError(key K, f func() (V, error)) (V, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = make(map[K]V)
+	}
+	if v, ok := m.data[key]; ok {
+		return v, nil
+	}
+	value, err := f()
+	if err != nil {
+		var zero V
+		return zero, err
+	}
+	if !m.isNil(value) {
+		m.data[key] = value
+	}
+	return value, nil
+}
+
 // SetIfNotExist sets `value` to the map if the `key` does not exist, and then returns true.
 // It returns false if `key` exists, and `value` would be ignored.
 func (m *KVMap[K, V]) SetIfNotExist(key K, value V) bool {
@@ -373,6 +421,49 @@ func (m *KVMap[K, V]) SetIfNotExistFuncLock(key K, f func() V) bool {
 		return true
 	}
 	return false
+}
+
+// SetIfNotExistFuncWithError sets value with return value of callback function `f`, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
+// It returns (false, error) if `f` returns a non-nil error, and `value` would not be stored.
+func (m *KVMap[K, V]) SetIfNotExistFuncWithError(key K, f func() (V, error)) (bool, error) {
+	if m.Contains(key) {
+		return false, nil
+	}
+	value, err := f()
+	if err != nil {
+		return false, err
+	}
+	if m.isNil(value) {
+		return true, nil
+	}
+	return m.SetIfNotExist(key, value), nil
+}
+
+// SetIfNotExistFuncLockWithError sets value with return value of callback function `f`, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
+// It returns (false, error) if `f` returns a non-nil error, and `value` would not be stored.
+// Note that, it does not add the value to the map if the returned value of `f` is nil.
+//
+// SetIfNotExistFuncLockWithError differs with SetIfNotExistFuncWithError function is that
+// it executes function `f` with mutex.Lock of the hash map.
+func (m *KVMap[K, V]) SetIfNotExistFuncLockWithError(key K, f func() (V, error)) (bool, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = make(map[K]V)
+	}
+	if _, ok := m.data[key]; ok {
+		return false, nil
+	}
+	value, err := f()
+	if err != nil {
+		return false, err
+	}
+	if !m.isNil(value) {
+		m.data[key] = value
+	}
+	return true, nil
 }
 
 // Remove deletes value from map by given `key`, and return this deleted value.

@@ -76,7 +76,7 @@ func Test_PJW(t *testing.T) {
 		t.Assert(j, x)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		x := uint64(31150)
+		x := uint64(46)
 		j := ghash.PJW64(strBasic)
 		t.Assert(j, x)
 	})
@@ -89,7 +89,7 @@ func Test_ELF(t *testing.T) {
 		t.Assert(j, x)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		x := uint64(31150)
+		x := uint64(46)
 		j := ghash.ELF64(strBasic)
 		t.Assert(j, x)
 	})
