@@ -33,13 +33,13 @@ go get -u github.com/gogf/gf/v2
 
 ## 文档
 
-- 官方网站: [https://goframe.org](https://goframe.org)
-- 官方网站(en): [https://goframe.org/en](https://goframe.org/en)
-- 国内镜像: [https://goframe.org.cn](https://goframe.org.cn)
-- 镜像网站: [https://pages.goframe.org](https://pages.goframe.org)
-- 镜像网站: [离线文档](https://github.com/gogf/goframe.org-pdf?tab=readme-ov-file#%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC)
-- Go包文档: [https://pkg.go.dev/github.com/gogf/gf/v2](https://pkg.go.dev/github.com/gogf/gf/v2)
-- 文档源码: [https://github.com/gogf/gf-site](https://github.com/gogf/gf-site)
+- 官方网站：[https://goframe.org](https://goframe.org)
+- 官方网站（en）：[https://goframe.org/en](https://goframe.org/en)
+- 国内镜像：[https://goframe.org.cn](https://goframe.org.cn)
+- 镜像网站：[https://pages.goframe.org](https://pages.goframe.org)
+- 镜像网站：[离线文档](https://github.com/gogf/goframe.org-pdf?tab=readme-ov-file#%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC)
+- `Go`包文档：[https://pkg.go.dev/github.com/gogf/gf/v2](https://pkg.go.dev/github.com/gogf/gf/v2)
+- 文档源码：[https://github.com/gogf/gf-site](https://github.com/gogf/gf-site)
 
 ## 贡献者
 
@@ -51,4 +51,4 @@ go get -u github.com/gogf/gf/v2
 
 ## 许可证
 
-`GoFrame` 采用 [MIT License](LICENSE) 许可，100%开源和免费。
+`GoFrame`采用 [MIT License](LICENSE) 许可，100%开源和免费。

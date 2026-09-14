@@ -23,18 +23,18 @@ You can also install `gf` tool using pre-built binaries: <https://github.com/gog
 
 3. Database support
 
-   |     DB     | builtin support |                                                                             remarks                                                                             |
-   | :--------: | :-------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-   |   mysql    |       yes       |                                                                                -                                                                                |
-   |  mariadb   |       yes       |                                                                                -                                                                                |
-   |    tidb    |       yes       |                                                                                -                                                                                |
-   |   mssql    |       yes       |                                                                                -                                                                                |
-   |   oracle   |       yes       |                                                                                -                                                                                |
-   |   pgsql    |       yes       |                                                                                -                                                                                |
-   |   sqlite   |       yes       |                                                                                -                                                                                |
-   | sqlitecgo  |       no        | to support sqlite database on 32bit architecture systems, manually add package import to the [source codes](./internal/cmd/cmd_gen_dao.go) and do the building. |
-   | clickhouse |       yes       |                                                                                -                                                                                |
-   |     dm     |       no        |                              manually add package import to the [source codes](./internal/cmd/cmd_gen_dao.go) and do the building.                              |
+   | DB | builtin support | remarks |
+   | --- | --- | --- |
+   | `mysql` | yes | - |
+   | `mariadb` | yes | - |
+   | `tidb` | yes | - |
+   | `mssql` | yes | - |
+   | `oracle` | yes | - |
+   | `pgsql` | yes | - |
+   | `sqlite` | yes | - |
+   | `sqlitecgo` | no | 32-bit `sqlite`: import in `cmd_gen_dao.go` and rebuild. |
+   | `clickhouse` | yes | - |
+   | `dm` | no | Import in `cmd_gen_dao.go` and rebuild. |
 
 ## 2) Manually Install
 
@@ -64,6 +64,7 @@ COMMAND
     install    install gf binary to system (might need root/admin permission)
     version    show version information of current binary
     doc        download https://pages.goframe.org/ to run locally
+    agents     link local AI coding-agent paths to .agents and AGENTS.md
 
 OPTION
     -y, --yes       all yes for all command without prompt ask
