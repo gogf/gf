@@ -443,14 +443,14 @@ func Test_DB_Save(t *testing.T) {
 		t.AssertNil(err)
 		rowsAffected, err := result.RowsAffected()
 		t.AssertNil(err)
-		t.Assert(rowsAffected, 1)
+		t.Assert(rowsAffected, int64(1))
 
 		data["nickname"] = "T10-updated"
 		result, err = db.Save(ctx, "t_user", data, 10)
 		t.AssertNil(err)
 		rowsAffected, err = result.RowsAffected()
 		t.AssertNil(err)
-		t.Assert(rowsAffected, 1)
+		t.Assert(rowsAffected, int64(1))
 
 		value, err := db.Model("t_user").Where("id", i).Value("nickname")
 		t.AssertNil(err)
@@ -458,6 +458,52 @@ func Test_DB_Save(t *testing.T) {
 
 		delete(data, "id")
 		_, err = db.Save(ctx, "t_user", data, 10)
+		t.AssertNE(err, nil)
+
+		list := gdb.List{
+			{
+				"id":          11,
+				"passport":    "t11",
+				"password":    "p11",
+				"nickname":    "T11",
+				"create_time": gtime.Now().String(),
+			},
+			{
+				"id":          12,
+				"passport":    "t12",
+				"password":    "p12",
+				"nickname":    "T12",
+				"create_time": gtime.Now().String(),
+			},
+		}
+		result, err = db.Save(ctx, "t_user", list, 10)
+		t.AssertNil(err)
+		rowsAffected, err = result.RowsAffected()
+		t.AssertNil(err)
+		t.Assert(rowsAffected, int64(2))
+		value, err = db.Model("t_user").Where("id", 11).Value("nickname")
+		t.AssertNil(err)
+		t.Assert(value.String(), "T11")
+		value, err = db.Model("t_user").Where("id", 12).Value("nickname")
+		t.AssertNil(err)
+		t.Assert(value.String(), "T12")
+
+		incompleteList := gdb.List{
+			{
+				"id":          13,
+				"passport":    "t13",
+				"password":    "p13",
+				"nickname":    "T13",
+				"create_time": gtime.Now().String(),
+			},
+			{
+				"passport":    "t14",
+				"password":    "p14",
+				"nickname":    "T14",
+				"create_time": gtime.Now().String(),
+			},
+		}
+		_, err = db.Save(ctx, "t_user", incompleteList, 10)
 		t.AssertNE(err, nil)
 	})
 }

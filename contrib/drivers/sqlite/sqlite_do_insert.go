@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// This file implements SQLite insert behavior overrides for upsert conflict inference.
+// sqlite_do_insert.go infers Save conflict columns from table primary keys.
 
 package sqlite
 
@@ -35,7 +35,7 @@ func (d *Driver) DoInsert(
 			return nil, gerror.NewCodef(
 				gcode.CodeMissingParameter,
 				`Save operation requires conflict detection: `+
-					`either specify OnConflict() columns or ensure table '%s' has primary keys in the data`,
+					`either specify OnConflict() columns or include all primary key values for table '%s' in the save data`,
 				table,
 			)
 		}
@@ -44,14 +44,16 @@ func (d *Driver) DoInsert(
 	return d.Core.DoInsert(ctx, link, table, list, option)
 }
 
-// saveDataHasPrimaryKeys reports whether the first save record contains all primary keys.
+// saveDataHasPrimaryKeys reports whether every save record contains all primary keys.
 func saveDataHasPrimaryKeys(list gdb.List, primaryKeys []string) bool {
 	if len(list) == 0 || len(primaryKeys) == 0 {
 		return false
 	}
-	for _, primaryKey := range primaryKeys {
-		if !saveDataHasKey(list[0], primaryKey) {
-			return false
+	for _, item := range list {
+		for _, primaryKey := range primaryKeys {
+			if !saveDataHasKey(item, primaryKey) {
+				return false
+			}
 		}
 	}
 	return true
