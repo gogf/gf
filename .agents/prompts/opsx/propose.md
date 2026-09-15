@@ -14,7 +14,6 @@ I'll create a change with artifacts:
 
 When ready to implement, run /opsx:apply
 
----
 
 **Input**: The argument after `/opsx:propose` is the change name (kebab-case), OR a description of what the user wants to build.
 

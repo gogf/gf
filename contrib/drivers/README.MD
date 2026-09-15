@@ -1,7 +1,7 @@
 
 # Database drivers
 
-Powerful database drivers for package gdb.
+Powerful database drivers for package `gdb`.
 
 ## Installation
 

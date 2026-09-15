@@ -15,18 +15,16 @@ Enter explore mode. Think deeply. Visualize freely. Follow the conversation wher
 
 **This is a stance, not a workflow.** There are no fixed steps, no required sequence, no mandatory outputs. You're a thinking partner helping the user explore.
 
----
 
 ## The Stance
 
 - **Curious, not prescriptive** - Ask questions that emerge naturally, don't follow a script
 - **Open threads, not interrogations** - Surface multiple interesting directions and let the user follow what resonates. Don't funnel them through a single path of questions.
-- **Visual** - Use ASCII diagrams liberally when they'd help clarify thinking
+- **Visual** - Use `mermaid` for architecture diagrams, flowcharts, and similar visuals. If you need line breaks inside `mermaid`, use `<br/>` instead of `\n`. ASCII box-drawing is allowed only when mermaid is a poor fit, and those blocks must stay in English.
 - **Adaptive** - Follow interesting threads, pivot when new information emerges
 - **Patient** - Don't rush to conclusions, let the shape of the problem emerge
 - **Grounded** - Explore the actual codebase when relevant, don't just theorize
 
----
 
 ## What You Might Do
 
@@ -51,21 +49,12 @@ Depending on what the user brings, you might:
 - Recommend a path (if asked)
 
 **Visualize**
-```
-┌─────────────────────────────────────────┐
-│     Use ASCII diagrams liberally        │
-├─────────────────────────────────────────┤
-│                                         │
-│   ┌────────┐         ┌────────┐        │
-│   │ State  │────────▶│ State  │        │
-│   │   A    │         │   B    │        │
-│   └────────┘         └────────┘        │
-│                                         │
-│   System diagrams, state machines,      │
-│   data flows, architecture sketches,    │
-│   dependency graphs, comparison tables  │
-│                                         │
-└─────────────────────────────────────────┘
+
+Use `mermaid` for system diagrams, state machines, data flows, and architecture sketches:
+
+```mermaid
+flowchart LR
+    A["State A"] --> B["State B"]
 ```
 
 **Surface risks and unknowns**
@@ -73,7 +62,6 @@ Depending on what the user brings, you might:
 - Find gaps in understanding
 - Suggest spikes or investigations
 
----
 
 ## OpenSpec Awareness
 
@@ -130,7 +118,6 @@ If the user mentions a change or you detect one is relevant:
 
 4. **The user decides** - Offer and move on. Don't pressure. Don't auto-capture.
 
----
 
 ## What You Don't Have To Do
 
@@ -141,111 +128,63 @@ If the user mentions a change or you detect one is relevant:
 - Stay on topic if a tangent is valuable
 - Be brief (this is thinking time)
 
----
 
 ## Handling Different Entry Points
 
 **User brings a vague idea:**
+
+> User: I'm thinking about adding real-time collaboration
+
+Real-time collab is a big space. Let me think about this...
+
+```mermaid
+flowchart LR
+    A["Awareness<br/>Presence"] --> B["Coordination<br/>Cursors"] --> C["Sync<br/>CRDT"]
 ```
-User: I'm thinking about adding real-time collaboration
 
-You: Real-time collab is a big space. Let me think about this...
-
-      COLLABORATION SPECTRUM
-      ════════════════════════════════════════════
-
-      Awareness          Coordination         Sync
-          │                   │                 │
-          ▼                   ▼                 ▼
-      ┌────────┐         ┌────────┐        ┌────────┐
-      │Presence│         │Cursors │        │  CRDT  │
-      │  "3    │         │ Multi  │        │Conflict│
-      │online" │         │ select │        │  free  │
-      └────────┘         └────────┘        └────────┘
-          │                   │                 │
-       trivial            moderate           complex
-
-      Where's your head at?
-```
+Where's your head at?
 
 **User brings a specific problem:**
+
+> User: The auth system is a mess
+
+After reading the codebase:
+
+```mermaid
+flowchart TD
+    G["Google OAuth"] --> S[Session]
+    GH["GitHub OAuth"] --> S
+    E["Email Magic"] --> S
+    S --> P[Perms]
 ```
-User: The auth system is a mess
 
-You: [reads codebase]
-
-     ┌─────────────────────────────────────────────┐
-     │              CURRENT AUTH FLOW              │
-     └─────────────────────────────────────────────┘
-                        │
-          ┌─────────────┼─────────────┐
-          ▼             ▼             ▼
-     ┌─────────┐  ┌─────────┐  ┌─────────┐
-     │ Google  │  │  GitHub │  │  Email  │
-     │  OAuth  │  │  OAuth  │  │  Magic  │
-     └────┬────┘  └────┬────┘  └────┬────┘
-          │             │             │
-          └─────────────┼─────────────┘
-                        ▼
-                  ┌───────────┐
-                  │  Session  │
-                  └─────┬─────┘
-                        │
-                        ▼
-                  ┌───────────┐
-                  │   Perms   │
-                  └───────────┘
-
-     I see three tangles. Which one's burning?
-```
+I see three tangles. Which one's burning?
 
 **User is stuck mid-implementation:**
-```
-User: /opsx:explore add-auth-system
-      The OAuth integration is more complex than expected
 
-You: [reads change artifacts]
+> User: `/opsx:explore add-auth-system`
+> The OAuth integration is more complex than expected
 
-     You're on task 4: "Implement OAuth flow"
-
-     Let me trace what's involved...
-
-     [draws diagram, explores options, suggests paths]
-
-     Want to update the design to reflect this?
-     Or add a spike task to investigate?
-```
+After reading change artifacts: you're on task 4, "Implement OAuth flow". Trace what's involved, explore options, then ask whether to update the design or add a spike task.
 
 **User wants to compare options:**
-```
-User: Should we use Postgres or SQLite?
 
-You: Generic answer is boring. What's the context?
+> User: Should we use Postgres or SQLite?
 
-User: A CLI tool that tracks local dev environments
+Generic answer is boring. What's the context?
 
-You: That changes everything.
+> User: A CLI tool that tracks local dev environments
 
-     ┌─────────────────────────────────────────────────┐
-     │         CLI TOOL DATA STORAGE                  │
-     └─────────────────────────────────────────────────┘
+That changes everything.
 
-     Key constraints:
-     • No daemon running
-     • Must work offline
-     • Single user
+| | `SQLite` | `Postgres` |
+| --- | --- | --- |
+| Deployment | embedded | needs server |
+| Offline | yes | no |
+| Single file | yes | no |
 
-                  SQLite          Postgres
-     Deployment   embedded ✓      needs server ✗
-     Offline      yes ✓           no ✗
-     Single file  yes ✓           no ✗
+`SQLite`. Not even close. Unless... is there a sync component?
 
-     SQLite. Not even close.
-
-     Unless... is there a sync component?
-```
-
----
 
 ## Ending Discovery
 
@@ -274,7 +213,6 @@ When it feels like things are crystallizing, you might summarize:
 
 But this summary is optional. Sometimes the thinking IS the value.
 
----
 
 ## Guardrails
 
@@ -283,6 +221,6 @@ But this summary is optional. Sometimes the thinking IS the value.
 - **Don't rush** - Discovery is thinking time, not task time
 - **Don't force structure** - Let patterns emerge naturally
 - **Don't auto-capture** - Offer to save insights, don't just do it
-- **Do visualize** - A good diagram is worth many paragraphs
+- **Do visualize** - A good mermaid diagram is worth many paragraphs
 - **Do explore the codebase** - Ground discussions in reality
 - **Do question assumptions** - Including the user's and your own
