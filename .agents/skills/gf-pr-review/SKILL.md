@@ -10,8 +10,6 @@ compatibility: 需要已登录的 GitHub CLI `gh`，并且有读 PR、读协作�
 
 按`GoFrame`项目规范审查`GitHub PR`。不合规就发评论说明怎么改；审不明白就升级给相关维护者；完全符合规范再打`bot-approved`。
 
-本技能和`gf-review`不是一回事：`gf-review`只看本地`OpenSpec`改动，不碰`GitHub`。本技能只审`GitHub`上的`PR`，而且会真的发评论、打标签。
-
 ## 核心规则
 
 1. 默认仓库是`gogf/gf`。
@@ -27,21 +25,6 @@ compatibility: 需要已登录的 GitHub CLI `gh`，并且有读 PR、读协作�
 11. 没法可靠判断时，新建一条带隐藏标记的阻断评论，并`@`曾经改过相关文件的项目成员。
 12. 不要把 commit 数量或 squash 当作审查问题。仓库合并`PR`时默认 squash merge，源分支有多少个 commit 不影响合并。即使目标分支的`CONTRIBUTING.md`写了最多两个 commit，也不要因此发评论、阻断或拒绝`bot-approved`。
 13. 当前 head 的 CI 失败时，必须作为审查问题提出：说明需要修好才能合并，并根据失败日志给出简短修复建议。不要把日志里的命令拿到本地对`PR`代码重跑。
-
-## 输入识别
-
-能看懂这类说法就启动：
-
-- `gf-pr-review`
-- `审查社区 PR`
-- `审查 PR #123`
-- `检查 gogf/gf 的 PR`
-- `review PR 45 in owner/repo`
-- `给这个 PR 做规范审查`
-
-用户没指定仓库时，用`gogf/gf`。
-
-用户随口说「review」「看看这段代码」或走`/gf-review`，不要启动本技能。
 
 ## 前置检查
 
