@@ -499,9 +499,16 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 	}
 
 	kind := structFieldValue.Kind()
-	// Converting using `Set` interface implements, for some types.
+	// Converting using common interfaces before falling through to reflection-based conversion.
 	switch kind {
-	case reflect.Slice, reflect.Array, reflect.Pointer, reflect.Interface:
+	case reflect.Array:
+		// Array values are addressable when they come from struct fields;
+		// use interface checks (IUnmarshalValue/IUnmarshalText/IUnmarshalJSON)
+		// instead of ISet which requires IsNil — not valid for arrays.
+		if ok, err = bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok || err != nil {
+			return err
+		}
+	case reflect.Slice, reflect.Pointer, reflect.Interface:
 		if !structFieldValue.IsNil() {
 			if v, ok := structFieldValue.Interface().(localinterface.ISet); ok {
 				v.Set(value)
