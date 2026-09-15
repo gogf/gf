@@ -14,6 +14,7 @@ on:
       - feature/**
       - enhance/**
       - fix/**
+      - copilot/**
       - feat/**
   pull_request:
     branches:
@@ -23,6 +24,7 @@ on:
       - feature/**
       - enhance/**
       - fix/**
+      - copilot/**
       - feat/**
 
 jobs:

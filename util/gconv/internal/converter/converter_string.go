@@ -71,12 +71,16 @@ func (c *Converter) String(anyInput any) (string, error) {
 		if value.IsZero() {
 			return "", nil
 		}
-		return value.String(), nil
+		// Use RFC3339 format to preserve timezone information during conversion
+		// This ensures timezone data is maintained when gtime.Time values are serialized
+		return value.Time.Format(time.RFC3339), nil
 	case *gtime.Time:
-		if value == nil {
+		if value == nil || value.IsZero() {
 			return "", nil
 		}
-		return value.String(), nil
+		// Use RFC3339 format to preserve timezone information during conversion
+		// This ensures timezone data is maintained when *gtime.Time values are serialized
+		return value.Time.Format(time.RFC3339), nil
 	default:
 		// Unwrap reflect.Value input early so that the IString/IError checks below
 		// do not accidentally match reflect.Value's own String() method, which returns
