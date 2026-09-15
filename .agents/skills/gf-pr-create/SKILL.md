@@ -20,6 +20,7 @@ compatibility: 需要 git，以及已登录的 GitHub CLI gh（优先）或可�
 6. PR 正文必须应用模板规则，但发出去的正文里不得再保留模板中的说明清单。
 7. 标题、正文和本次新产生的 commit subject 都根据实际 diff 生成，不要只根据用户一句话臆造。
 8. 不要 force push，不要改写已经推送到远程的历史。不要调用 Copilot 代写 PR 的工具。
+9. 创建或复用 PR 之后，把目标仓库最近活跃的 5 名可审查社区成员加为 reviewer。加不上时保留已创建的 PR，不要假装已经请求成功。
 
 ## 工作流
 
@@ -180,6 +181,46 @@ gh pr create \
 
 不要使用会把实现交给 Copilot 的创建 PR 工具。
 
+### 7. 添加审查人
+
+步骤 6 成功之后（新建或复用开放 PR 都算），把目标仓库最近活跃的 5 名可审查社区成员加为 reviewer。这一步失败不得回滚已经创建的 PR。
+
+1. 读取当前审查请求和 PR 作者：
+
+```bash
+gh pr view "$PR_NUMBER" -R "$TARGET_REPO" --json author,reviewRequests
+```
+
+个人 reviewer 已有 5 名或以上时跳过。不要清掉已经请求过的人。不要请求 team。
+
+2. 收集有 push 权限的协作者。GitHub 对没有写权限的用户会静默丢弃审查请求，所以先过滤，不要只按最近提交作者硬加：
+
+```bash
+gh api "repos/$TARGET_REPO/collaborators?per_page=100" --paginate \
+  --jq '.[] | select(.permissions.push == true) | .login'
+```
+
+3. 从目标默认分支提交里按时间从新到旧收集`author.login`并去重：
+
+```bash
+gh api "repos/$TARGET_REPO/commits?sha=$DEFAULT_BRANCH&per_page=100&page=$PAGE"
+```
+
+排除：PR 作者；login 以`[bot]`结尾；`github-actions`、`web-flow`、`Copilot`；login 含`bot`（大小写不敏感）；已经在`reviewRequests`里的人。只保留第 2 步中有 push 权限的登录名。不够 5 人就翻页，直到凑齐或提交历史用尽。
+
+4. 一次加上候选，然后必须再读`reviewRequests`核对实际生效的人：
+
+```bash
+gh pr edit "$PR_NUMBER" -R "$TARGET_REPO" --add-reviewer "a,b,c,d,e"
+gh pr view "$PR_NUMBER" -R "$TARGET_REPO" --json reviewRequests
+```
+
+不够 5 人就继续从提交历史补人。协作者列表拿不到时，按提交顺序逐个`--add-reviewer`并核对，跳过未被接受的人。
+
+`gh`不可用时，先查 GitHub MCP 工具 schema，用带`reviewers`参数的更新 PR 工具。不要调用 Copilot 代审。
+
+凑不满 5 人也保持已创建的 PR，报告实际加上的登录名和缺口原因。
+
 ## PR 标题
 
 每次都以`.github/PULL_REQUEST_TEMPLATE.MD`为准。标题始终用英文，不随后续正文语言选项变化。生成后自检，不合格就改到合格再提交。
@@ -250,6 +291,7 @@ Fixes #1234
 - 最终 PR 标题
 - 目标仓库和目标分支
 - PR URL 和编号
+- 已请求的 reviewer 登录名；不足 5 人时说明原因
 - 若没有开新 PR：说明是复用已有 PR，还是因无改动、权限不足、推送失败而停止
 
 不要输出 token、密码或完整无用 diff。不要声称已经创建 PR，除非命令或 MCP 调用确实成功并返回了 URL。
