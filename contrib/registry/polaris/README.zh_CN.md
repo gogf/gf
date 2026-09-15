@@ -10,13 +10,13 @@
 go get -u -v github.com/gogf/gf/contrib/registry/polaris/v2
 ```
 
-suggested using `go.mod`:
+建议使用`go.mod`：
 
 ```
 require github.com/gogf/gf/contrib/registry/polaris/v2 latest
 ```
 
-## Golang版本限制
+## `Go`版本限制
 
 ```
 golang version >= 1.20
@@ -26,7 +26,7 @@ golang version >= 1.20
 
 ### 引用示例
 
-[服务端](example/registry/polaris/server/main.go)
+[服务端](../../../example/registry/polaris/server/server.go)
 
 ```go
 package main
@@ -53,10 +53,9 @@ func main() {
     })
     s.Run()
 }
-
 ```
 
-[客户端](example/registry/polaris/client/main.go)
+[客户端](../../../example/registry/polaris/client/client.go)
 
 ```go
 package main
@@ -89,9 +88,8 @@ func main() {
         time.Sleep(time.Second)
     }
 }
-
 ```
 
 ## 协议
 
-`GoFrame Polaris` 使用非常友好的 [MIT](../../../LICENSE) 开源协议进行发布，永久`100%`开源免费。
+`GoFrame Polaris`使用非常友好的 [MIT](../../../LICENSE) 开源协议进行发布，永久`100%`开源免费。
