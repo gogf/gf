@@ -7,6 +7,7 @@
 package ghttp_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -787,13 +788,23 @@ func Test_Issue4227(t *testing.T) {
 }
 
 // https://github.com/gogf/gf/issues/4765
-// Test_Issue4765 verifies that lowercase HTTP methods (e.g., "get", "post")
-// are normalized to uppercase before building the route cache key, preventing
-// cache pollution that would cause subsequent correctly-cased requests to 404.
+// Test_Issue4765 verifies that a request carrying a non-canonical method casing does not
+// pollute the router searching cache.
+//
+// Such a request does not match a route registered with the canonical method, as the method
+// token is case-sensitive(RFC 9110 section 9.1). But its serveItem-less searching result must
+// not be shared with the canonical method, or else every subsequent well-formed request would
+// be served from that cache item and 404 as well.
+//
+// The method to search with has two sources, and both are covered here: the request line, and
+// the Access-Control-Request-Method header of a preflight request.
 func Test_Issue4765(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.GET("/user-case", func(r *ghttp.Request) {
+			r.Response.Write("ok")
+		})
+		group.GET("/preflight-case", func(r *ghttp.Request) {
 			r.Response.Write("ok")
 		})
 	})
@@ -803,42 +814,129 @@ func Test_Issue4765(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 
+	var (
+		prefix     = fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		httpClient = &http.Client{}
+	)
+	// doRequest sends a request using the raw net/http client, as gclient normalizes the
+	// method to uppercase internally and cannot produce a non-canonical method casing.
+	doRequest := func(t *gtest.T, method, path string, header map[string]string) (int, string) {
+		req, err := http.NewRequest(method, prefix+path, nil)
+		t.AssertNil(err)
+		for k, v := range header {
+			req.Header.Set(k, v)
+		}
+		resp, err := httpClient.Do(req)
+		t.AssertNil(err)
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
+		t.AssertNil(err)
+		return resp.StatusCode, string(body)
+	}
+
+	// The method to search with comes from the request line.
 	gtest.C(t, func(t *gtest.T) {
-		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		cases := []struct {
+			method string
+			status int
+			body   string
+		}{
+			// Non-canonical casing does not match the route registered as "GET".
+			{"get", http.StatusNotFound, "Not Found"},
+			{"Get", http.StatusNotFound, "Not Found"},
+			// The canonical method still works, which proves the searching result of the
+			// requests above was not cached under the canonical key.
+			{"GET", http.StatusOK, "ok"},
+			{"GET", http.StatusOK, "ok"},
+		}
+		for _, c := range cases {
+			status, body := doRequest(t, c.method, "/user-case", nil)
+			t.Assert(status, c.status)
+			t.Assert(body, c.body)
+		}
+	})
 
-		// Use raw net/http client to send lowercase method, because gclient
-		// normalizes method to uppercase internally.
-		httpClient := &http.Client{}
+	// The method to search with comes from the Access-Control-Request-Method header, which
+	// is client-supplied as well and is not normalized either.
+	gtest.C(t, func(t *gtest.T) {
+		status, body := doRequest(t, http.MethodOptions, "/preflight-case", map[string]string{
+			"Origin":                        "http://example.com",
+			"Access-Control-Request-Method": "get",
+		})
+		t.Assert(status, http.StatusNotFound)
+		t.Assert(body, "Not Found")
 
-		// Step 1: send lowercase "get" — must return 200 "ok".
-		req1, err := http.NewRequest("get", prefix+"/user-case", nil)
-		t.AssertNil(err)
-		resp1, err := httpClient.Do(req1)
-		t.AssertNil(err)
-		body1, err := io.ReadAll(resp1.Body)
-		t.AssertNil(err)
-		resp1.Body.Close()
-		t.Assert(string(body1), "ok")
+		for i := 0; i < 2; i++ {
+			status, body = doRequest(t, http.MethodGet, "/preflight-case", nil)
+			t.Assert(status, http.StatusOK)
+			t.Assert(body, "ok")
+		}
+	})
+}
 
-		// Step 2: send uppercase "GET" — must still return 200 "ok",
-		// proving the cache was not polluted by the lowercase request.
-		req2, err := http.NewRequest("GET", prefix+"/user-case", nil)
-		t.AssertNil(err)
-		resp2, err := httpClient.Do(req2)
-		t.AssertNil(err)
-		body2, err := io.ReadAll(resp2.Body)
-		t.AssertNil(err)
-		resp2.Body.Close()
-		t.Assert(string(body2), "ok")
+// https://github.com/gogf/gf/issues/4830
+// Test_Issue4830 verifies that the router layer and the parameter layer agree on the method
+// of a request.
+//
+// The router searches with the method token as it was received, and `r.Method` keeps that very
+// value, so the framework internal branches on `r.Method`(eg the GET body fallback of GetQuery)
+// and the user code(eg method based middleware) can never diverge from the routing result of
+// the same request.
+func Test_Issue4830(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(func(r *ghttp.Request) {
+			if r.Method == http.MethodDelete {
+				r.Response.WriteStatusExit(http.StatusForbidden, "blocked")
+			}
+			r.Middleware.Next()
+		})
+		group.GET("/query", func(r *ghttp.Request) {
+			r.Response.Write(r.Method, ",", r.GetQuery("a"))
+		})
+		group.DELETE("/delete", func(r *ghttp.Request) {
+			r.Response.Write("reached")
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
 
-		// Step 3: send mixed-case "Get" — must also work.
-		req3, err := http.NewRequest("Get", prefix+"/user-case", nil)
-		t.AssertNil(err)
-		resp3, err := httpClient.Do(req3)
-		t.AssertNil(err)
-		body3, err := io.ReadAll(resp3.Body)
-		t.AssertNil(err)
-		resp3.Body.Close()
-		t.Assert(string(body3), "ok")
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			prefix     = fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+			httpClient = &http.Client{}
+			cases      = []struct {
+				method string
+				path   string
+				status int
+				body   string
+			}{
+				// The handler observes the method the request was routed with, so GetQuery
+				// takes its GET branch and falls back to the request body.
+				{"GET", "/query", http.StatusOK, "GET,frombody"},
+				// Non-canonical casing never reaches the handler, so there is no request that
+				// the router treats as GET while the parameter layer does not.
+				{"get", "/query", http.StatusNotFound, "Not Found"},
+				// The middleware observes the same method as the router did.
+				{"DELETE", "/delete", http.StatusForbidden, "blocked"},
+				{"delete", "/delete", http.StatusNotFound, "Not Found"},
+				{"DeLeTe", "/delete", http.StatusNotFound, "Not Found"},
+			}
+		)
+		for _, c := range cases {
+			req, err := http.NewRequest(c.method, prefix+c.path, bytes.NewBufferString(`{"a":"frombody"}`))
+			t.AssertNil(err)
+			req.Header.Set("Content-Type", "application/json")
+			resp, err := httpClient.Do(req)
+			t.AssertNil(err)
+			body, err := io.ReadAll(resp.Body)
+			t.AssertNil(err)
+			resp.Body.Close()
+			t.Assert(resp.StatusCode, c.status)
+			t.Assert(string(body), c.body)
+		}
 	})
 }

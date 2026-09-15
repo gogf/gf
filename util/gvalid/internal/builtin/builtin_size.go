@@ -10,13 +10,12 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-
-	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // RuleSize implements `size` rule:
 // Length must be :size.
 // The length is calculated using unicode string, which means one chinese character or letter both has the length of 1.
+// For a slice, an array or a map the length is the number of its elements.
 //
 // Format: size:size
 type RuleSize struct{}
@@ -34,10 +33,7 @@ func (r RuleSize) Message() string {
 }
 
 func (r RuleSize) Run(in RunInput) error {
-	var (
-		valueRunes = gconv.Runes(in.Value.String())
-		valueLen   = len(valueRunes)
-	)
+	valueLen := valueLength(in.Value.Val())
 	size, err := strconv.Atoi(in.RulePattern)
 	if valueLen != size || err != nil {
 		return errors.New(strings.ReplaceAll(in.Message, "{size}", strconv.Itoa(size)))

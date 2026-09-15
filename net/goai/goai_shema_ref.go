@@ -123,7 +123,14 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 		}
 		schema.Items = subSchemaRef
 		if len(schema.Enum) > 0 {
-			schema.Items.Value.Enum = schema.Enum
+			if schema.Items.Value != nil {
+				schema.Items.Value.Enum = schema.Enum
+			} else {
+				schema.Items = &SchemaRef{Value: &Schema{
+					AllOf: SchemaRefs{*subSchemaRef},
+					Enum:  schema.Enum,
+				}}
+			}
 			schema.Enum = nil
 		}
 
