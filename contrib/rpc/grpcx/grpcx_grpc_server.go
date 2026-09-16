@@ -96,9 +96,21 @@ func (s *GrpcServer) Service(services ...gsvc.Service) {
 	s.services = append(s.services, services...)
 }
 
+// serveFailureAction selects how an unexpected Server.Serve error is reported.
+type serveFailureAction int
+
+const (
+	// serveFailureFatal terminates the process. Used by blocking Run().
+	serveFailureFatal serveFailureAction = iota
+	// serveFailureLog logs the error and returns. Used by StartManaged().
+	serveFailureLog
+)
+
 // serve binds the listener, starts serving asynchronously, and registers services.
 // It does not block on OS signal handling and is intended for external lifecycle managers.
-func (s *GrpcServer) serve() error {
+// failureAction controls whether an unexpected Server.Serve error terminates the process
+// (blocking Run) or is only logged (StartManaged).
+func (s *GrpcServer) serve(failureAction serveFailureAction) error {
 	ctx := gctx.GetInitCtx()
 
 	s.listenerMu.Lock()
@@ -114,7 +126,7 @@ func (s *GrpcServer) serve() error {
 	s.listener = listener
 	s.listenerMu.Unlock()
 
-	go s.doServeAsynchronously(ctx, listener)
+	go s.doServeAsynchronously(ctx, listener, failureAction)
 	s.doServiceRegister()
 	s.Logger().Infof(
 		ctx,
@@ -127,7 +139,7 @@ func (s *GrpcServer) serve() error {
 // Run starts the server in blocking way.
 func (s *GrpcServer) Run() {
 	ctx := gctx.GetInitCtx()
-	if err := s.serve(); err != nil {
+	if err := s.serve(serveFailureFatal); err != nil {
 		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
 	s.doSignalListen()
@@ -135,12 +147,20 @@ func (s *GrpcServer) Run() {
 
 // StartManaged starts serving under external lifecycle management without signal handling.
 func (s *GrpcServer) StartManaged() error {
-	return s.serve()
+	return s.serve(serveFailureLog)
 }
 
-func (s *GrpcServer) doServeAsynchronously(ctx context.Context, listener net.Listener) {
+// doServeAsynchronously serves gRPC connections on the given listener.
+// Unexpected Serve errors terminate the process when failureAction is
+// serveFailureFatal so blocking Run() cannot sit in signal wait with a dead
+// listener. StartManaged uses serveFailureLog so the caller retains lifecycle control.
+func (s *GrpcServer) doServeAsynchronously(ctx context.Context, listener net.Listener, failureAction serveFailureAction) {
 	if err := s.Server.Serve(listener); err != nil && err != grpc.ErrServerStopped {
-		s.Logger().Errorf(ctx, `grpc server serve error: %+v`, err)
+		if failureAction == serveFailureFatal {
+			s.Logger().Fatalf(ctx, `%+v`, err)
+		} else {
+			s.Logger().Errorf(ctx, `grpc server serve error: %+v`, err)
+		}
 	}
 }
 
