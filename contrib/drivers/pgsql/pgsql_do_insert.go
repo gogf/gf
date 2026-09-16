@@ -9,7 +9,6 @@ package pgsql
 import (
 	"context"
 	"database/sql"
-	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -56,12 +55,8 @@ func (d *Driver) DoInsert(
 		// because DoExec needs the `TableField.Type` to determine if LastInsertId is supported.
 		tableFields, err := d.GetCore().GetDB().TableFields(ctx, table)
 		if err == nil {
-			for _, field := range tableFields {
-				if strings.EqualFold(field.Key, "pri") {
-					pkField := *field
-					ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, pkField)
-					break
-				}
+			if fields := gdb.PrimaryKeyFields(tableFields); len(fields) > 0 {
+				ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, *fields[0])
 			}
 		}
 

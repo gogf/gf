@@ -115,9 +115,7 @@ func Test_DB_Save_CompositePrimaryKey(t *testing.T) {
 		t.Assert(fields["b"].Key, "pri")
 		keys, err := db.GetCore().GetPrimaryKeys(ctx, table)
 		t.AssertNil(err)
-		t.Assert(len(keys), 2)
-		t.AssertIN("a", keys)
-		t.AssertIN("b", keys)
+		t.Assert(keys, []string{"a", "b"})
 
 		_, err = db.Save(ctx, table, g.Map{"a": 1, "b": 2, "name": "n1"})
 		t.AssertNil(err)

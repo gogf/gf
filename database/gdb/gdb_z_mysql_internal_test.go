@@ -453,6 +453,24 @@ func Test_HasPrimaryKeys(t *testing.T) {
 	})
 }
 
+// Test_PrimaryKeyFields orders composite primary keys by Index instead of map iteration.
+func Test_PrimaryKeyFields(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(PrimaryKeyFields(nil))
+		t.Assert(len(PrimaryKeyFields(map[string]*TableField{})), 0)
+
+		fields := map[string]*TableField{
+			"name": {Name: "name", Key: "", Index: 2},
+			"b":    {Name: "b", Key: "pri", Index: 1},
+			"a":    {Name: "a", Key: "PRI", Index: 0},
+		}
+		keys := PrimaryKeyFields(fields)
+		t.Assert(len(keys), 2)
+		t.Assert(keys[0].Name, "a")
+		t.Assert(keys[1].Name, "b")
+	})
+}
+
 // Test_mapHasKey covers case-insensitive map key matching.
 func Test_mapHasKey(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {

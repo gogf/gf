@@ -47,22 +47,18 @@ func (d *Driver) DoInsert(
 		// Only set it when the primary key is not provided in the data, for performance reason.
 		tableFields, err := d.GetCore().GetDB().TableFields(ctx, table)
 		if err == nil && len(list) > 0 {
-			for _, field := range tableFields {
-				if strings.EqualFold(field.Key, "pri") {
-					// Check if primary key is provided in the data.
-					pkProvided := false
-					for key := range list[0] {
-						if strings.EqualFold(key, field.Name) {
-							pkProvided = true
-							break
-						}
+			if fields := gdb.PrimaryKeyFields(tableFields); len(fields) > 0 {
+				field := fields[0]
+				pkProvided := false
+				for key := range list[0] {
+					if strings.EqualFold(key, field.Name) {
+						pkProvided = true
+						break
 					}
-					// Only use RETURNING when primary key is not provided, for performance reason.
-					if !pkProvided {
-						pkField := *field
-						ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, pkField)
-					}
-					break
+				}
+				// Only use RETURNING when the leading primary key is not provided.
+				if !pkProvided {
+					ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, *field)
 				}
 			}
 		}

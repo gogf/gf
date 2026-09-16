@@ -10,6 +10,7 @@ package gdb
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -262,14 +263,33 @@ func (c *Core) GetPrimaryKeys(ctx context.Context, table string, schema ...strin
 		return nil, err
 	}
 
-	var primaryKeys []string
+	fields := PrimaryKeyFields(tableFields)
+	if len(fields) == 0 {
+		return nil, nil
+	}
+	primaryKeys := make([]string, 0, len(fields))
+	for _, field := range fields {
+		primaryKeys = append(primaryKeys, field.Name)
+	}
+	return primaryKeys, nil
+}
+
+// PrimaryKeyFields returns primary-key fields ordered by Index.
+// TableFields is a map, so callers must not range it when they need a stable key order.
+func PrimaryKeyFields(tableFields map[string]*TableField) []*TableField {
+	if len(tableFields) == 0 {
+		return nil
+	}
+	var keys []*TableField
 	for _, field := range tableFields {
-		if strings.EqualFold(field.Key, "pri") {
-			primaryKeys = append(primaryKeys, field.Name)
+		if field != nil && strings.EqualFold(field.Key, "pri") {
+			keys = append(keys, field)
 		}
 	}
-
-	return primaryKeys, nil
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i].Index < keys[j].Index
+	})
+	return keys
 }
 
 // HasPrimaryKeys reports whether every record contains all primary-key columns.
