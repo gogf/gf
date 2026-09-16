@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package grpcx provides gapp Server adapter for GrpcServer.
+// gapp.Server adapter wrapping GrpcServer for unified application lifecycle.
+
 package grpcx
 
 import (
