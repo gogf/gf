@@ -271,3 +271,30 @@ func (c *Core) GetPrimaryKeys(ctx context.Context, table string, schema ...strin
 
 	return primaryKeys, nil
 }
+
+// HasPrimaryKeys reports whether every record contains all primary-key columns.
+// Column names are compared case-insensitively. An empty list or empty primary-key
+// list is not a usable conflict target.
+func HasPrimaryKeys(list List, primaryKeys []string) bool {
+	if len(list) == 0 || len(primaryKeys) == 0 {
+		return false
+	}
+	for _, item := range list {
+		for _, primaryKey := range primaryKeys {
+			if !mapHasKey(item, primaryKey) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// mapHasKey reports whether the map contains the given key case-insensitively.
+func mapHasKey(data Map, key string) bool {
+	for dataKey := range data {
+		if strings.EqualFold(dataKey, key) {
+			return true
+		}
+	}
+	return false
+}
