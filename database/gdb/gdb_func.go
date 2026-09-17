@@ -394,6 +394,11 @@ func getFieldsFromStructOrMap(structOrMap any) (fields []any) {
 //
 // Note that it returns the given `where` parameter directly if the `primary` is empty
 // or length of `where` > 1.
+//
+// Note that the single-value and slice forms above build a condition on the given `primary`
+// column only. If `primary` is one column of a composite primary key, the result is a partial
+// key condition that may match multiple records. For a composite primary key, express the
+// complete key with the map/struct form, for example g.Map{"tenant_id": 1, "biz_id": 2}.
 func GetPrimaryKeyCondition(primary string, where ...any) (newWhereCondition []any) {
 	if len(where) == 0 {
 		return nil
