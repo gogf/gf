@@ -10,6 +10,7 @@ package gproc_test
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -20,6 +21,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/os/gproc"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 // These tests raise real OS signals in a child process. They cannot be expressed in the
@@ -65,57 +67,64 @@ func Test_Signal_HandlersAddedAfterListenEndedDoNotReArmNotify(t *testing.T) {
 }
 
 func assertSecondSignalTerminates(t *testing.T, mode string) {
-	t.Helper()
 	if os.Getenv(signalHelperEnv) != "" {
 		runSignalHelper(os.Getenv(signalHelperEnv))
 		return
 	}
 
-	output := newOutputSink()
-	cmd := exec.Command(os.Args[0], "-test.run=^"+t.Name()+"$")
-	cmd.Env = append(os.Environ(), signalHelperEnv+"="+mode)
-	cmd.Stdout = output
-	cmd.Stderr = output
-	if err := cmd.Start(); err != nil {
-		t.Fatalf("start helper process failed: %v", err)
-	}
-	defer func() { _ = cmd.Process.Kill() }()
+	gtest.C(t, func(t *gtest.T) {
+		output := newOutputSink()
+		cmd := exec.Command(os.Args[0], "-test.run=^"+t.Name()+"$")
+		cmd.Env = append(os.Environ(), signalHelperEnv+"="+mode)
+		cmd.Stdout = output
+		cmd.Stderr = output
+		t.AssertNil(cmd.Start())
+		defer func() {
+			if err := killHelperProcess(cmd); err != nil {
+				t.Logf("kill helper process failed: %v", err)
+			}
+		}()
 
-	output.waitLine(t, "READY", 30*time.Second)
-	if err := cmd.Process.Signal(syscall.SIGINT); err != nil {
-		t.Fatalf("send first signal failed: %v", err)
-	}
-	output.waitLine(t, "HANDLING", 30*time.Second)
+		output.waitLine(t, "READY", 30*time.Second)
+		t.AssertNil(cmd.Process.Signal(syscall.SIGINT))
+		output.waitLine(t, "HANDLING", 30*time.Second)
 
-	// The shutdown handler is blocked and never returns. The process may only be
-	// terminated by the second signal if the default behavior has been restored.
-	if err := cmd.Process.Signal(syscall.SIGINT); err != nil {
-		t.Fatalf("send second signal failed: %v", err)
-	}
+		// The shutdown handler is blocked and never returns. The process may only be
+		// terminated by the second signal if the default behavior has been restored.
+		t.AssertNil(cmd.Process.Signal(syscall.SIGINT))
 
-	done := make(chan error, 1)
-	go func() { done <- cmd.Wait() }()
-	select {
-	case err := <-done:
-		exitErr, ok := err.(*exec.ExitError)
-		if !ok {
-			t.Fatalf("helper process should be terminated by signal, got: %v", err)
+		done := make(chan error, 1)
+		go func() { done <- cmd.Wait() }()
+		select {
+		case err := <-done:
+			exitErr, ok := err.(*exec.ExitError)
+			if !ok {
+				t.Error(fmt.Sprintf("helper process should be terminated by signal, got: %v", err))
+			}
+			status, ok := exitErr.Sys().(syscall.WaitStatus)
+			if !ok {
+				t.Error(fmt.Sprintf("unexpected wait status type: %T", exitErr.Sys()))
+			}
+			t.Assert(status.Signaled(), true)
+			t.Assert(status.Signal(), syscall.SIGINT)
+		case <-time.After(30 * time.Second):
+			killErr := killHelperProcess(cmd)
+			<-done
+			t.Error(fmt.Sprintf(
+				"helper process ignored the second signal (kill error: %v), output:\n%s",
+				killErr, output.String(),
+			))
 		}
-		status, ok := exitErr.Sys().(syscall.WaitStatus)
-		if !ok {
-			t.Fatalf("unexpected wait status type: %T", exitErr.Sys())
-		}
-		if !status.Signaled() || status.Signal() != syscall.SIGINT {
-			t.Fatalf("helper process should be terminated by SIGINT, got: %v", status)
-		}
-	case <-time.After(30 * time.Second):
-		_ = cmd.Process.Kill()
-		<-done
-		t.Fatalf(
-			"helper process ignored the second signal, output:\n%s",
-			output.String(),
-		)
+	})
+}
+
+// killHelperProcess kills the helper process. A process that has already exited is not
+// an error: in the passing case it has been terminated by the second signal.
+func killHelperProcess(cmd *exec.Cmd) error {
+	if err := cmd.Process.Kill(); err != nil && !errors.Is(err, os.ErrProcessDone) {
+		return err
 	}
+	return nil
 }
 
 // outputSink collects the output of the helper process, both line by line for waiting and
@@ -157,8 +166,7 @@ func (s *outputSink) String() string {
 	return s.all.String()
 }
 
-func (s *outputSink) waitLine(t *testing.T, expect string, timeout time.Duration) {
-	t.Helper()
+func (s *outputSink) waitLine(t *gtest.T, expect string, timeout time.Duration) {
 	deadline := time.After(timeout)
 	for {
 		select {
@@ -167,7 +175,7 @@ func (s *outputSink) waitLine(t *testing.T, expect string, timeout time.Duration
 				return
 			}
 		case <-deadline:
-			t.Fatalf("timeout waiting for %q, output:\n%s", expect, s.String())
+			t.Error(fmt.Sprintf("timeout waiting for %q, output:\n%s", expect, s.String()))
 		}
 	}
 }
