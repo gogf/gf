@@ -79,6 +79,13 @@ func (b *WhereBuilder) Wheref(format string, args ...any) *WhereBuilder {
 // key value. That is, if primary key is "id" and given `where` parameter as "123", the
 // WherePri function treats the condition as "id=123", but Model.Where treats the condition
 // as string "123".
+//
+// Note that the single-value/slice form is only valid for tables with a single-column
+// primary key. For a table with a composite primary key, the condition is built on the
+// first primary key column in table column order, which is a partial key condition and
+// may affect multiple records. Pass all key columns explicitly, for example:
+// WherePri(g.Map{"tenant_id": 1, "biz_id": 2})
+// Where("tenant_id=? AND biz_id=?", 1, 2)
 func (b *WhereBuilder) WherePri(where any, args ...any) *WhereBuilder {
 	if len(args) > 0 {
 		return b.Where(where, args...)
