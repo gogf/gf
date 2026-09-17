@@ -47,22 +47,18 @@ func (d *Driver) DoInsert(
 		// Only set it when the primary key is not provided in the data, for performance reason.
 		tableFields, err := d.GetCore().GetDB().TableFields(ctx, table)
 		if err == nil && len(list) > 0 {
-			for _, field := range tableFields {
-				if strings.EqualFold(field.Key, "pri") {
-					// Check if primary key is provided in the data.
-					pkProvided := false
-					for key := range list[0] {
-						if strings.EqualFold(key, field.Name) {
-							pkProvided = true
-							break
-						}
+			if fields := gdb.PrimaryKeyFields(tableFields); len(fields) > 0 {
+				field := fields[0]
+				pkProvided := false
+				for key := range list[0] {
+					if strings.EqualFold(key, field.Name) {
+						pkProvided = true
+						break
 					}
-					// Only use RETURNING when primary key is not provided, for performance reason.
-					if !pkProvided {
-						pkField := *field
-						ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, pkField)
-					}
-					break
+				}
+				// Only use RETURNING when the leading primary key is not provided.
+				if !pkProvided {
+					ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, *field)
 				}
 			}
 		}
@@ -153,27 +149,14 @@ func (d *Driver) doMergeInsert(
 				`failed to get primary keys for table`,
 			)
 		}
-		foundPrimaryKey := false
-		for _, primaryKey := range primaryKeys {
-			for dataKey := range list[0] {
-				if strings.EqualFold(dataKey, primaryKey) {
-					foundPrimaryKey = true
-					break
-				}
-			}
-			if foundPrimaryKey {
-				break
-			}
-		}
-		if !foundPrimaryKey {
+		if !gdb.HasPrimaryKeys(list, primaryKeys) {
 			return nil, gerror.NewCodef(
 				gcode.CodeMissingParameter,
 				`Replace/Save/InsertIgnore operation requires conflict detection: `+
-					`either specify OnConflict() columns or ensure table '%s' has a primary key in the data`,
+					`either specify OnConflict() columns or include all primary key values for table '%s' in the save data`,
 				table,
 			)
 		}
-		// TODO consider composite primary keys.
 		conflictKeys = primaryKeys
 	}
 
