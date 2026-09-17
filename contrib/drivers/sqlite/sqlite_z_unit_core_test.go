@@ -21,6 +21,7 @@ import (
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 func Test_New(t *testing.T) {
@@ -537,6 +538,89 @@ func Test_DB_Save_CompositePrimaryKey(t *testing.T) {
 			{"a": 5, "name": "n5"},
 		})
 		t.AssertNE(err, nil)
+	})
+}
+
+// Test_Model_WherePri_CompositePrimaryKey covers WherePri on a table with a composite
+// primary key: the map form carries the complete key, while the single-value and slice
+// forms match the first primary key column in table column order only, which is a
+// partial key condition that may affect multiple records.
+func Test_Model_WherePri_CompositePrimaryKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("t_wp_%d", gtime.TimestampNano())
+		defer dropTable(table)
+		_, err := db.Exec(ctx, fmt.Sprintf(`
+			CREATE TABLE %s (
+				a    INTEGER NOT NULL,
+				b    INTEGER NOT NULL,
+				name VARCHAR(45),
+				PRIMARY KEY (a, b)
+			)`, table))
+		t.AssertNil(err)
+		_, err = db.Exec(ctx, fmt.Sprintf(
+			"INSERT INTO `%s`(a, b, name) VALUES(1, 2, 'n1'), (1, 3, 'n2'), (2, 2, 'n3')", table,
+		))
+		t.AssertNil(err)
+
+		// The map form filters by the complete primary key: neither `a`=1 nor `b`=2 alone
+		// matches only this row, so a count of 1 proves both conditions apply.
+		var mapCount int
+		sqls, err := gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			var err error
+			mapCount, err = db.Model(table).Ctx(ctx).WherePri(g.Map{"a": 1, "b": 2}).Count()
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(mapCount, 1)
+		mapSql := sqls[len(sqls)-1]
+		t.Assert(gstr.Contains(mapSql, "`a`=1"), true)
+		t.Assert(gstr.Contains(mapSql, "`b`=2"), true)
+
+		// The slice form is built on the same first column in table column order.
+		sqls, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			_, err := db.Model(table).Ctx(ctx).WherePri(g.Slice{1, 2}).Count()
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(gstr.Contains(sqls[len(sqls)-1], "`a` IN(1,2)"), true)
+
+		// The single-value form must not vary between calls, and it lands on the first
+		// column in table column order, consistent with the driver's primary-key choice.
+		var firstSql string
+		for i := 0; i < 20; i++ {
+			sqls, err := gdb.CatchSQL(ctx, func(ctx context.Context) error {
+				_, err := db.Model(table).Ctx(ctx).WherePri(1).Count()
+				return err
+			})
+			t.AssertNil(err)
+			// The last statement is the generated count SQL; earlier ones may be table-fields metadata queries.
+			stmt := sqls[len(sqls)-1]
+			if i == 0 {
+				firstSql = stmt
+				continue
+			}
+			t.Assert(stmt, firstSql)
+		}
+		t.Assert(gstr.Contains(firstSql, "`a`=1"), true)
+	})
+
+	// The column order decides, not the order inside the PRIMARY KEY declaration.
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("t_wp_rev_%d", gtime.TimestampNano())
+		defer dropTable(table)
+		_, err := db.Exec(ctx, fmt.Sprintf(`
+			CREATE TABLE %s (
+				a INTEGER NOT NULL,
+				b INTEGER NOT NULL,
+				PRIMARY KEY (b, a)
+			)`, table))
+		t.AssertNil(err)
+		sqls, err := gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			_, err := db.Model(table).Ctx(ctx).WherePri(1).Count()
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(gstr.Contains(sqls[len(sqls)-1], "`a`=1"), true)
 	})
 }
 
