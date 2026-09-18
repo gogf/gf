@@ -51,23 +51,9 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 // The parameter `fieldType` is in lower case, like:
 // `int2`, `int4`, `int8`, `_int2`, `_int4`, `_int8`, `_float4`, `_float8`, etc.
 //
-// PostgreSQL type mapping:
-//
-//	| PostgreSQL Type              | Local Go Type |
-//	|------------------------------|---------------|
-//	| int2, int4                   | int           |
-//	| int8                         | int64         |
-//	| uuid                         | uuid.UUID     |
-//	| _int2, _int4                 | []int32       | // Note: pq package does not provide Int16Array; int32 is used for compatibility
-//	| _int8                        | []int64       |
-//	| _float4                      | []float32     |
-//	| _float8                      | []float64     |
-//	| _bool                        | []bool        |
-//	| _varchar, _text              | []string      |
-//	| _char, _bpchar               | []string      |
-//	| _numeric, _decimal, _money   | []float64     |
-//	| _bytea                       | [][]byte      |
-//	| _uuid                        | []uuid.UUID   |
+// The type name is looked up in localTypeMap, which lists every name the underlying driver
+// can report. Only a name absent from it, such as a type the server knows but the driver
+// does not, falls back to the core.
 func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue any) (gdb.LocalType, error) {
 	var typeName string
 	match, _ := gregex.MatchString(`(.+?)\((.+)\)`, fieldType)
@@ -77,58 +63,10 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 		typeName = fieldType
 	}
 	typeName = strings.ToLower(typeName)
-	switch typeName {
-	case "int2", "int4":
-		return gdb.LocalTypeInt, nil
-
-	case "int8":
-		return gdb.LocalTypeInt64, nil
-
-	case "uuid":
-		return gdb.LocalTypeUUID, nil
-
-	case "_int2", "_int4":
-		return gdb.LocalTypeInt32Slice, nil
-
-	case "_int8":
-		return gdb.LocalTypeInt64Slice, nil
-
-	case "_float4":
-		return gdb.LocalTypeFloat32Slice, nil
-
-	case "_float8":
-		return gdb.LocalTypeFloat64Slice, nil
-
-	case "_bool":
-		return gdb.LocalTypeBoolSlice, nil
-
-	case "_varchar", "_text", "_char", "_bpchar":
-		return gdb.LocalTypeStringSlice, nil
-
-	case "_uuid":
-		return gdb.LocalTypeUUIDSlice, nil
-
-	case "_numeric", "_decimal", "_money":
-		return gdb.LocalTypeFloat64Slice, nil
-
-	case "bytea":
-		return gdb.LocalTypeBytes, nil
-
-	// Types whose names merely contain "int" must be listed explicitly: Core's
-	// fallback detection matches that substring, so these would otherwise be
-	// classified as integers and read back as 0.
-	case "point", "interval", "tinterval", "int4range", "int8range":
-		return gdb.LocalTypeString, nil
-
-	case "_point", "_interval", "_tinterval", "_int4range", "_int8range":
-		return gdb.LocalTypeStringSlice, nil
-
-	case "_bytea":
-		return gdb.LocalTypeBytesSlice, nil
-
-	default:
-		return d.Core.CheckLocalTypeForField(ctx, fieldType, fieldValue)
+	if localType, ok := localTypeMap[typeName]; ok {
+		return localType, nil
 	}
+	return d.Core.CheckLocalTypeForField(ctx, fieldType, fieldValue)
 }
 
 // ConvertValueForLocal converts value to local Golang type of value according field type name from database.
@@ -164,72 +102,64 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 //   - _date (date[]), _timestamp (timestamp[]), _timestamptz (timestamptz[])
 //   - _jsonb (jsonb[]), _json (json[])
 func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue any) (any, error) {
-	typeName, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
-	typeName = strings.ToLower(typeName)
-
-	// Basic types are mostly handled by Core layer; handle array types and special-case bytea here.
-	switch typeName {
-
-	// []byte
-	case "bytea":
+	localType, err := d.CheckLocalTypeForField(ctx, fieldType, fieldValue)
+	if err != nil {
+		return nil, err
+	}
+	// Dispatching on the local type, rather than on the type name again, keeps this in step
+	// with localTypeMap: a type name is classified in one place only.
+	switch localType {
+	case gdb.LocalTypeBytes:
 		if v, ok := fieldValue.([]byte); ok {
 			return v, nil
 		}
 		return fieldValue, nil
 
-	// []int32
-	case "_int2", "_int4":
+	case gdb.LocalTypeInt32Slice:
 		var result pq.Int32Array
-		if err := result.Scan(fieldValue); err != nil {
+		if err = result.Scan(fieldValue); err != nil {
 			return nil, err
 		}
 		return []int32(result), nil
 
-	// []int64
-	case "_int8":
+	case gdb.LocalTypeInt64Slice:
 		var result pq.Int64Array
-		if err := result.Scan(fieldValue); err != nil {
+		if err = result.Scan(fieldValue); err != nil {
 			return nil, err
 		}
 		return []int64(result), nil
 
-	// []float32
-	case "_float4":
+	case gdb.LocalTypeFloat32Slice:
 		var result pq.Float32Array
-		if err := result.Scan(fieldValue); err != nil {
+		if err = result.Scan(fieldValue); err != nil {
 			return nil, err
 		}
 		return []float32(result), nil
 
-	// []float64
-	case "_float8":
+	case gdb.LocalTypeFloat64Slice:
 		var result pq.Float64Array
-		if err := result.Scan(fieldValue); err != nil {
+		if err = result.Scan(fieldValue); err != nil {
 			return nil, err
 		}
 		return []float64(result), nil
 
-	// []bool
-	case "_bool":
+	case gdb.LocalTypeBoolSlice:
 		var result pq.BoolArray
-		if err := result.Scan(fieldValue); err != nil {
+		if err = result.Scan(fieldValue); err != nil {
 			return nil, err
 		}
 		return []bool(result), nil
 
-	// []string
-	case "_varchar", "_text", "_char", "_bpchar",
-		// Geometric/interval/range arrays have no dedicated pq scanner; their
-		// elements are read as their text representation.
-		"_point", "_interval", "_tinterval", "_int4range", "_int8range":
+	case gdb.LocalTypeStringSlice:
+		// Arrays without a dedicated pq scanner, such as the geometric, interval, range
+		// and temporal ones, are read as the text representation of their elements.
 		var result pq.StringArray
-		if err := result.Scan(fieldValue); err != nil {
+		if err = result.Scan(fieldValue); err != nil {
 			return nil, err
 		}
 		return []string(result), nil
 
-	// uuid.UUID
-	case "uuid":
+	case gdb.LocalTypeUUID:
 		var uuidStr string
 		switch v := fieldValue.(type) {
 		case []byte:
@@ -245,10 +175,9 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 		}
 		return result, nil
 
-	// []uuid.UUID
-	case "_uuid":
+	case gdb.LocalTypeUUIDSlice:
 		var strArray pq.StringArray
-		if err := strArray.Scan(fieldValue); err != nil {
+		if err = strArray.Scan(fieldValue); err != nil {
 			return nil, err
 		}
 		result := make([]uuid.UUID, len(strArray))
@@ -261,18 +190,9 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 		}
 		return result, nil
 
-	// []float64
-	case "_numeric", "_decimal", "_money":
-		var result pq.Float64Array
-		if err := result.Scan(fieldValue); err != nil {
-			return nil, err
-		}
-		return []float64(result), nil
-
-	// [][]byte
-	case "_bytea":
+	case gdb.LocalTypeBytesSlice:
 		var result pq.ByteaArray
-		if err := result.Scan(fieldValue); err != nil {
+		if err = result.Scan(fieldValue); err != nil {
 			return nil, err
 		}
 		return [][]byte(result), nil
