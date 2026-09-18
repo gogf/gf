@@ -272,3 +272,33 @@ func Test_IssuePointInterval_NotConvertedToInt(t *testing.T) {
 		t.Assert(one["d"].Ints(), []int{4, 5})
 	})
 }
+
+// Test_Issue4842 tests that types whose names merely contain "int" are not detected as
+// integers and read back as 0. The driver lists most of them explicitly, but int2vector
+// is only covered by the fallback detection of the core.
+// See https://github.com/gogf/gf/issues/4842
+func Test_Issue4842(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// The int2vector value must match its own text rendering rather than becoming 0.
+		one, err := db.GetOne(ctx, `SELECT indkey AS v, indkey::text AS expect FROM pg_index LIMIT 1`)
+		t.AssertNil(err)
+		t.Assert(one["v"].String(), one["expect"].String())
+	})
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.GetOne(ctx, `SELECT '(1.5,2.5)'::point AS a, '2 days'::interval AS b,
+			'[1,10)'::int4range AS c, '[1,10)'::int8range AS d`)
+		t.AssertNil(err)
+		t.Assert(one["a"].String(), `(1.5,2.5)`)
+		t.Assert(one["b"].String(), `2 days`)
+		t.Assert(one["c"].String(), `[1,10)`)
+		t.Assert(one["d"].String(), `[1,10)`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// Genuine integer types must keep being detected as integers.
+		one, err := db.GetOne(ctx, `SELECT 41::int2 AS a, 42::int4 AS b, 43::int8 AS c`)
+		t.AssertNil(err)
+		t.Assert(one["a"].Int(), 41)
+		t.Assert(one["b"].Int(), 42)
+		t.Assert(one["c"].Int64(), int64(43))
+	})
+}
