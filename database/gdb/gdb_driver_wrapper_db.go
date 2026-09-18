@@ -11,12 +11,10 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gutil"
 )
@@ -70,31 +68,17 @@ func (d *DriverWrapperDB) TableFields(
 		)
 	}
 	var (
-		innerMemCache = d.GetCore().GetInnerMemCache()
-		// prefix:group@schema#table
-		cacheKey = genTableFieldsCacheKey(
-			d.GetGroup(),
-			gutil.GetOrDefaultStr(d.GetSchema(), schema...),
-			table,
-		)
-		cacheFunc = func(ctx context.Context) (any, error) {
+		reg    = d.GetCore().registry
+		group  = d.GetGroup()
+		sName  = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		loader = func() (map[string]*TableField, error) {
 			return d.DB.TableFields(
 				context.WithValue(ctx, ctxKeyInternalProducedSQL, struct{}{}),
 				table, schema...,
 			)
 		}
-		value *gvar.Var
 	)
-	value, err = innerMemCache.GetOrSetFuncLock(
-		ctx, cacheKey, cacheFunc, gcache.DurationNoExpire,
-	)
-	if err != nil {
-		return
-	}
-	if !value.IsNil() {
-		fields = value.Val().(map[string]*TableField)
-	}
-	return
+	return reg.GetOrSet(group, sName, table, loader)
 }
 
 // DoInsert inserts or updates data for given table.
