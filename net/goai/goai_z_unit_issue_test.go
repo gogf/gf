@@ -377,6 +377,84 @@ func (Issue4247) Issue4247HasBody(ctx context.Context, req *Issue4247HasBodyReq)
 	return
 }
 
+// https://github.com/gogf/gf/issues/4784
+func Test_Issue4784(t *testing.T) {
+	type FilterOptions struct {
+		IncludeDeleted bool `json:"includeDeleted"`
+		Status         int  `json:"status"`
+	}
+	type Issue4784Req struct {
+		g.Meta  `path:"/test" method:"GET" tags:"default"`
+		Name    string        `json:"name" in:"query"`
+		Options FilterOptions `json:"options" in:"query"`
+	}
+	type Issue4784Res struct{}
+
+	f := func(ctx context.Context, req *Issue4784Req) (res *Issue4784Res, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		oai := goai.New()
+		err := oai.Add(goai.AddInput{
+			Object: f,
+		})
+		t.AssertNil(err)
+
+		// Verify path and method exist.
+		t.AssertNE(oai.Paths["/test"].Get, nil)
+		params := oai.Paths["/test"].Get.Parameters
+		t.Assert(len(params), 2)
+
+		// First param: Name (string type) — should NOT have style/explode.
+		t.Assert(params[0].Value.Name, "name")
+		t.Assert(params[0].Value.In, goai.ParameterInQuery)
+		t.Assert(params[0].Value.Style, "")
+		t.AssertNil(params[0].Value.Explode)
+
+		// Second param: Options (object type) — should have style=deepObject and explode=true.
+		t.Assert(params[1].Value.Name, "options")
+		t.Assert(params[1].Value.In, goai.ParameterInQuery)
+		t.Assert(params[1].Value.Style, "deepObject")
+		t.Assert(params[1].Value.Explode != nil, true)
+		t.Assert(*params[1].Value.Explode, true)
+	})
+}
+
+// Test_Issue4784_Override verifies that explicit style/explode set via struct tags
+// are NOT overwritten by the deepObject default logic.
+func Test_Issue4784_Override(t *testing.T) {
+	type FilterOptions struct {
+		IncludeDeleted bool `json:"includeDeleted"`
+	}
+	type Issue4784OverrideReq struct {
+		g.Meta  `path:"/test" method:"GET" tags:"default"`
+		Options FilterOptions `json:"options" in:"query" style:"form" explode:"false"`
+	}
+	type Issue4784OverrideRes struct{}
+
+	f := func(ctx context.Context, req *Issue4784OverrideReq) (res *Issue4784OverrideRes, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		oai := goai.New()
+		err := oai.Add(goai.AddInput{
+			Object: f,
+		})
+		t.AssertNil(err)
+
+		params := oai.Paths["/test"].Get.Parameters
+		t.Assert(len(params), 1)
+
+		// Options has explicit style=form and explode=false from struct tags — should NOT be overridden.
+		t.Assert(params[0].Value.Name, "options")
+		t.Assert(params[0].Value.Style, "form")
+		t.Assert(params[0].Value.Explode != nil, true)
+		t.Assert(*params[0].Value.Explode, false)
+	})
+}
+
 // https://github.com/gogf/gf/issues/4247
 func Test_Issue4247(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
@@ -403,5 +481,92 @@ func Test_Issue4247(t *testing.T) {
 		requestBody := `{"content":{"application/json":{"schema":{"description":"增加节点","properties":{"type":{"description":"节点类型","format":"string","type":"string"}},"required":["type"],"type":"object"}}}}`
 		t.Assert(j.Get(`paths./cluster/{cluster_id}/node/{name}/drain.post.requestBody`).IsEmpty(), true)
 		t.Assert(j.Get(`paths./cluster/{cluster_id}/node/{name}/join.post.requestBody`).String(), requestBody)
+	})
+}
+
+// https://github.com/gogf/gf/issues/4746
+func Test_Issue4746(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Issue4746InterfaceReq struct {
+			g.Meta `path:"/interface" method:"post"`
+			Values []any `json:"values" v:"in:a,b"`
+		}
+		type Issue4746InterfaceRes struct{}
+
+		f := func(ctx context.Context, req *Issue4746InterfaceReq) (res *Issue4746InterfaceRes, err error) {
+			return
+		}
+
+		oai := goai.New()
+		err := oai.Add(goai.AddInput{Object: f})
+		t.AssertNil(err)
+
+		schemaRef := oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Issue4746InterfaceReq`)
+		t.AssertNE(schemaRef, nil)
+		values := schemaRef.Value.Properties.Get(`values`)
+		t.AssertNE(values, nil)
+		t.Assert(values.Value.Type, goai.TypeArray)
+		t.Assert(len(values.Value.Enum), 0)
+		t.AssertNE(values.Value.Items, nil)
+		t.AssertNE(values.Value.Items.Value, nil)
+		t.Assert(values.Value.Items.Value.Enum, g.Slice{"a", "b"})
+		t.Assert(len(values.Value.Items.Value.AllOf), 1)
+		t.AssertNE(values.Value.Items.Value.AllOf[0].Ref, "")
+
+		b, err := values.MarshalJSON()
+		t.AssertNil(err)
+		j := gjson.New(b)
+		t.Assert(j.Get(`enum`).IsNil(), true)
+		t.Assert(j.Get(`items.enum`).Strings(), g.SliceStr{"a", "b"})
+		t.AssertNE(j.Get(`items.allOf.0.$ref`).String(), "")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Issue4746StringReq struct {
+			g.Meta `path:"/string" method:"post"`
+			Values []string `json:"values" v:"in:a,b"`
+		}
+		type Issue4746StringRes struct{}
+
+		f := func(ctx context.Context, req *Issue4746StringReq) (res *Issue4746StringRes, err error) {
+			return
+		}
+
+		oai := goai.New()
+		err := oai.Add(goai.AddInput{Object: f})
+		t.AssertNil(err)
+
+		schemaRef := oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Issue4746StringReq`)
+		t.AssertNE(schemaRef, nil)
+		values := schemaRef.Value.Properties.Get(`values`)
+		t.AssertNE(values, nil)
+		t.Assert(values.Value.Type, goai.TypeArray)
+		t.Assert(len(values.Value.Enum), 0)
+		t.AssertNE(values.Value.Items, nil)
+		t.AssertNE(values.Value.Items.Value, nil)
+		t.Assert(values.Value.Items.Value.Enum, g.Slice{"a", "b"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Issue4746NoEnumReq struct {
+			g.Meta `path:"/no-enum" method:"post"`
+			Values []any `json:"values"`
+		}
+		type Issue4746NoEnumRes struct{}
+
+		f := func(ctx context.Context, req *Issue4746NoEnumReq) (res *Issue4746NoEnumRes, err error) {
+			return
+		}
+
+		oai := goai.New()
+		err := oai.Add(goai.AddInput{Object: f})
+		t.AssertNil(err)
+
+		schemaRef := oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Issue4746NoEnumReq`)
+		t.AssertNE(schemaRef, nil)
+		values := schemaRef.Value.Properties.Get(`values`)
+		t.AssertNE(values, nil)
+		t.Assert(values.Value.Type, goai.TypeArray)
+		t.Assert(len(values.Value.Enum), 0)
+		t.AssertNE(values.Value.Items, nil)
+		t.AssertNil(values.Value.Items.Value)
 	})
 }

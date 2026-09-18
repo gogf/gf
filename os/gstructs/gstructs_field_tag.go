@@ -101,8 +101,12 @@ func (f *Field) TagPriorityName() string {
 	name := f.Name()
 	for _, tagName := range gtag.StructTagPriority {
 		if tagValue := f.Tag(tagName); tagValue != "" {
-			name = tagValue
-			break
+			// Strip tag options after comma, e.g., json:"name,omitempty" -> "name".
+			tagValue = strings.Split(tagValue, ",")[0]
+			if tagValue != "" {
+				name = tagValue
+				break
+			}
 		}
 	}
 	return name

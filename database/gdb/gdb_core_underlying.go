@@ -459,6 +459,14 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 		}
 	}()
 	if !rows.Next() {
+		// A false return from rows.Next() has two meanings: the result set is exhausted,
+		// or the iteration was interrupted by an error, which is only retrievable through
+		// rows.Err(). Without this check an error that aborts the iteration, such as a
+		// deadlock hit while scanning a `SELECT ... FOR UPDATE`, is silently reported to
+		// the caller as an empty result set with a nil error.
+		if err := rows.Err(); err != nil {
+			return nil, err
+		}
 		return nil, nil
 	}
 	// Column names and types.
@@ -503,6 +511,12 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 		}
 		result = append(result, record)
 		if !rows.Next() {
+			// Same as above. Without this check the caller receives a silently truncated
+			// result set together with a nil error, which is even harder to notice than
+			// an empty one.
+			if err = rows.Err(); err != nil {
+				return nil, err
+			}
 			break
 		}
 	}
@@ -512,6 +526,22 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 // OrderRandomFunction returns the SQL function for random ordering.
 func (c *Core) OrderRandomFunction() string {
 	return "RAND()"
+}
+
+// GetBoolLiteral returns the SQL literal for the given boolean value.
+// Default is "1"/"0" (MySQL bit/int convention); strict-bool drivers override.
+func (c *Core) GetBoolLiteral(v bool) string {
+	if v {
+		return "1"
+	}
+	return "0"
+}
+
+// GetLockSharedClause returns the SQL clause for Model.LockShared().
+// Default is MySQL's legacy "LOCK IN SHARE MODE"; drivers with other
+// dialect syntax (e.g. PostgreSQL's "FOR SHARE") override.
+func (c *Core) GetLockSharedClause() string {
+	return LockInShareMode
 }
 
 func (c *Core) columnValueToLocalValue(ctx context.Context, value any, columnType *sql.ColumnType) (any, error) {

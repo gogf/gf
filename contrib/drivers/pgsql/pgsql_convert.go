@@ -30,6 +30,10 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 	var fieldValueKind = reflect.TypeOf(fieldValue).Kind()
 
 	if fieldValueKind == reflect.Slice {
+		// For bytea type, pass []byte directly without any conversion.
+		if _, ok := fieldValue.([]byte); ok && gstr.Contains(fieldType, "bytea") {
+			return d.Core.ConvertValueForField(ctx, fieldType, fieldValue)
+		}
 		// For pgsql, json or jsonb require '[]'
 		if !gstr.Contains(fieldType, "json") {
 			fieldValue = gstr.ReplaceByMap(gconv.String(fieldValue),
@@ -62,6 +66,7 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 //	| _varchar, _text              | []string      |
 //	| _char, _bpchar               | []string      |
 //	| _numeric, _decimal, _money   | []float64     |
+//	| bytea                        | []byte        |
 //	| _bytea                       | [][]byte      |
 //	| _uuid                        | []uuid.UUID   |
 func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue any) (gdb.LocalType, error) {
@@ -107,6 +112,20 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 	case "_numeric", "_decimal", "_money":
 		return gdb.LocalTypeFloat64Slice, nil
 
+	case "bytea":
+		return gdb.LocalTypeBytes, nil
+
+	// Types whose names merely contain "int" must be listed explicitly: Core's
+	// fallback detection matches that substring, so these would otherwise be
+	// classified as integers and read back as 0.
+	case "point", "interval",
+		"int4range", "int8range", "int4multirange", "int8multirange":
+		return gdb.LocalTypeString, nil
+
+	case "_point", "_interval",
+		"_int4range", "_int8range", "_int4multirange", "_int8multirange":
+		return gdb.LocalTypeStringSlice, nil
+
 	case "_bytea":
 		return gdb.LocalTypeBytesSlice, nil
 
@@ -141,6 +160,7 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 //	| _numeric        | numeric[]                      | pq.Float64Array | []float64   |
 //	| _decimal        | decimal[]                      | pq.Float64Array | []float64   |
 //	| _money          | money[]                        | pq.Float64Array | []float64   |
+//	| bytea           | bytea                          | -               | []byte      |
 //	| _bytea          | bytea[]                        | pq.ByteaArray   | [][]byte    |
 //	| _uuid           | uuid[]                         | pq.StringArray  | []uuid.UUID |
 //
@@ -151,8 +171,15 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 	typeName, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
 	typeName = strings.ToLower(typeName)
 
-	// Basic types are mostly handled by Core layer, only handle array types here
+	// Basic types are mostly handled by Core layer; handle array types and special-case bytea here.
 	switch typeName {
+
+	// []byte
+	case "bytea":
+		if v, ok := fieldValue.([]byte); ok {
+			return v, nil
+		}
+		return fieldValue, nil
 
 	// []int32
 	case "_int2", "_int4":
@@ -195,7 +222,11 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 		return []bool(result), nil
 
 	// []string
-	case "_varchar", "_text", "_char", "_bpchar":
+	case "_varchar", "_text", "_char", "_bpchar",
+		// Geometric/interval/range arrays have no dedicated pq scanner; their
+		// elements are read as their text representation.
+		"_point", "_interval",
+		"_int4range", "_int8range", "_int4multirange", "_int8multirange":
 		var result pq.StringArray
 		if err := result.Scan(fieldValue); err != nil {
 			return nil, err

@@ -31,7 +31,7 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 		return
 	}
 	for _, m := range result {
-		if v, ok := m["IOT_NAME"]; ok {
+		if v, ok := lookupRecordValue(m, "IOT_NAME"); ok {
 			tables = append(tables, v.String())
 		}
 	}

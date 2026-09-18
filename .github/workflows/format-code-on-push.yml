@@ -12,13 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
       - name: Setup Golang ${{ matrix.go-version }}
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version: ${{ matrix.go-version }}
       - name: Install gci
-        run: go install github.com/daixiang0/gci@latest
+        run: go install github.com/daixiang0/gci@v0.13.6 # keep in sync with scripts/before_script.sh
       - name: Run gci
         run: |
           gci write --custom-order \

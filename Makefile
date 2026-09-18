@@ -34,6 +34,7 @@ branch:
 version:
 	@set -e; \
 	newVersion=$(to); \
+	$(MAKE) -C cmd/gf pack; \
 	./.make_version.sh ./ $$newVersion; \
 	echo "make version to=$(to) done"
 
@@ -61,3 +62,8 @@ docker:
 	else \
 		./.github/workflows/scripts/docker-services.sh $(cmd) $(svc) $(extra); \
 	fi
+
+# make agents agent=claude [action=unlink] [force=1]
+.PHONY: agents
+agents:
+	@cd cmd/gf && go run . agents $(if $(agent),--agent=$(agent)) $(if $(action),--action=$(action)) $(if $(force),--force)
