@@ -30,13 +30,24 @@ type Validator struct {
 	bail                              bool                // Stop validation after the first validation error.
 	foreach                           bool                // It tells the next validation using current value as an array and validates each of its element.
 	caseInsensitive                   bool                // Case-Insensitive configuration for those rules that need value comparison.
+	cache                             bool                // Enable the parsed rule value cache for the validation, which is enabled in default.
 }
 
 // New creates and returns a new Validator.
-func New() *Validator {
+//
+// The optional parameter `cached` specifies whether to enable the parsed rule
+// value cache for the validation, which is enabled in default. Disable it if
+// the validation rules of current validation are dynamically generated, to
+// avoid useless cache growth in the process.
+func New(cached ...bool) *Validator {
+	var cacheEnabled = true
+	if len(cached) > 0 {
+		cacheEnabled = cached[0]
+	}
 	return &Validator{
 		i18nManager: gi18n.Instance(),          // Use default i18n manager.
 		ruleFuncMap: make(map[string]RuleFunc), // Custom rule function storing map.
+		cache:       cacheEnabled,
 	}
 }
 
