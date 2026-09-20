@@ -235,7 +235,7 @@ func (r *Request) mergeBodyArrayToStruct(data map[string]any, pointer any) error
 		}
 	}
 	for _, field := range fields {
-		var fieldKind = field.Type().Type.Kind()
+		var fieldKind = field.Type().Kind()
 		if fieldKind != reflect.Slice && fieldKind != reflect.Array {
 			continue
 		}
