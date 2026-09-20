@@ -412,3 +412,60 @@ func Test_Gen_Dao_Sqlite3(t *testing.T) {
 		}
 	})
 }
+
+func Test_Gen_Dao_FileNameCaseSnakeFirstUpper(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err        error
+			db         = testDB
+			table      = "sys_i18n_message"
+			sqlContent = fmt.Sprintf(
+				gtest.DataContent(`gendao`, `user.tpl.sql`),
+				table,
+			)
+		)
+		dropTableWithDb(db, table)
+		array := gstr.SplitAndTrim(sqlContent, ";")
+		for _, v := range array {
+			if _, err = db.Exec(ctx, v); err != nil {
+				t.AssertNil(err)
+			}
+		}
+		defer dropTableWithDb(db, table)
+
+		var (
+			path = gfile.Temp(guid.S())
+			in   = gendao.CGenDaoInput{
+				Path:         path,
+				Link:         link,
+				Group:        "test",
+				Tables:       table,
+				FileNameCase: "SnakeFirstUpper",
+			}
+		)
+		err = gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+		defer gfile.Remove(path)
+
+		err = gfile.Copy(
+			gtest.DataPath("gendao", "go.mod.txt"),
+			gfile.Join(path, "go.mod"),
+		)
+		t.AssertNil(err)
+
+		_, err = gendao.CGenDao{}.Dao(ctx, in)
+		t.AssertNil(err)
+
+		files, err := gfile.ScanDir(path, "*.go", true)
+		t.AssertNil(err)
+		t.Assert(files, []string{
+			filepath.FromSlash(path + "/dao/internal/sys_i18n_message.go"),
+			filepath.FromSlash(path + "/dao/sys_i18n_message.go"),
+			filepath.FromSlash(path + "/model/do/sys_i18n_message.go"),
+			filepath.FromSlash(path + "/model/entity/sys_i18n_message.go"),
+		})
+	})
+}
