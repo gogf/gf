@@ -205,6 +205,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		var (
 			contentTypes     = oai.Config.ReadContentTypes
 			tagMimeValue     = gmeta.Get(inputObject.Interface(), gtag.Mime).String()
+			tagTypeValue     = gmeta.Get(inputObject.Interface(), gtag.Type).String()
 			tagRequiredValue = gmeta.Get(inputObject.Interface(), gtag.Required).Bool()
 		)
 		requestBody.Required = tagRequiredValue
@@ -214,30 +215,26 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		for _, v := range contentTypes {
 			if isInputStructEmpty {
 				requestBody.Content[v] = MediaType{}
+			} else if tagTypeValue == TypeArray {
+				// The request body is a JSON array, which is declared by the `type:"array"` tag.
+				arraySchemaRef, err := oai.getArrayRequestSchemaRef(inputObject.Interface())
+				if err != nil {
+					return err
+				}
+				requestBody.Content[v] = MediaType{
+					Schema: arraySchemaRef,
+				}
 			} else {
-				// Check if the request body should be an array type
-				tagTypeValue := gmeta.Get(inputObject.Interface(), "type").String()
-				if tagTypeValue == "array" {
-					// Find the slice field in the struct and generate array schema
-					arraySchemaRef, err := oai.getArrayRequestSchemaRef(inputObject.Interface())
-					if err != nil {
-						return err
-					}
-					requestBody.Content[v] = MediaType{
-						Schema: arraySchemaRef,
-					}
-				} else {
-					schemaRef, err := oai.getRequestSchemaRef(getRequestSchemaRefInput{
-						BusinessStructName: inputStructTypeName,
-						RequestObject:      oai.Config.CommonRequest,
-						RequestDataField:   oai.Config.CommonRequestDataField,
-					})
-					if err != nil {
-						return err
-					}
-					requestBody.Content[v] = MediaType{
-						Schema: schemaRef,
-					}
+				schemaRef, err := oai.getRequestSchemaRef(getRequestSchemaRefInput{
+					BusinessStructName: inputStructTypeName,
+					RequestObject:      oai.Config.CommonRequest,
+					RequestDataField:   oai.Config.CommonRequestDataField,
+				})
+				if err != nil {
+					return err
+				}
+				requestBody.Content[v] = MediaType{
+					Schema: schemaRef,
 				}
 			}
 		}

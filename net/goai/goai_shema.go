@@ -157,30 +157,24 @@ func (oai *OpenApiV3) structToSchema(object any) (*Schema, error) {
 			return nil, err
 		}
 	}
-	// Check if the object is actually a struct (not a slice/array).
-	// If the tag has "type":"array" but the object is a struct (including pointers
-	// or interfaces to structs), we should process it as a normal struct, not as an array.
+	// The `type` tag is used for declaring the type of the request body or the response
+	// content, for example the `type:"array"` tag declares a JSON array request body. The
+	// schema of the struct itself is still an object, so it continues the object schema
+	// processing below instead of returning the array schema directly.
 	var (
-		t              = reflect.TypeOf(object)
+		reflectType    = reflect.TypeOf(object)
 		objectIsStruct bool
 	)
-	if t != nil {
-		for t.Kind() == reflect.Pointer || t.Kind() == reflect.Interface {
-			t = t.Elem()
-			if t == nil {
-				break
-			}
-		}
-		if t != nil && t.Kind() == reflect.Struct {
-			objectIsStruct = true
-		}
+	for reflectType != nil && reflectType.Kind() == reflect.Pointer {
+		reflectType = reflectType.Elem()
 	}
-	if schema.Type != "" && schema.Type != TypeObject && !objectIsStruct {
-		return schema, nil
+	if reflectType != nil && reflectType.Kind() == reflect.Struct {
+		objectIsStruct = true
 	}
-	// If tag says "array" but object is actually a struct, ignore the type tag
-	// and process as normal struct (the array type is for request body, not the schema itself)
-	if schema.Type == TypeArray && objectIsStruct {
+	if schema.Type != "" && schema.Type != TypeObject {
+		if schema.Type != TypeArray || !objectIsStruct {
+			return schema, nil
+		}
 		schema.Type = TypeObject
 	}
 	// []struct.
@@ -202,10 +196,7 @@ func (oai *OpenApiV3) structToSchema(object any) (*Schema, error) {
 		Pointer:         object,
 		RecursiveOption: gstructs.RecursiveOptionEmbedded,
 	})
-	// Only set TypeObject if not already set by g.Meta tag (e.g., type:"string" for HTML responses)
-	if schema.Type == "" {
-		schema.Type = TypeObject
-	}
+	schema.Type = TypeObject
 	for _, structField := range structFields {
 		if !gstr.IsLetterUpper(structField.Name()[0]) {
 			continue

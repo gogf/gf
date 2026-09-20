@@ -7,6 +7,7 @@
 package ghttp_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -17,441 +18,213 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-// Test Item struct for array request body
-type JsonArrayItem struct {
+// arrayItem is the element type of the JSON array request body.
+type arrayItem struct {
 	Id      int    `json:"id"`
 	Name    string `json:"name"`
 	Content string `json:"content"`
 }
 
-// Request struct with slice field
-type JsonArrayReq struct {
-	g.Meta     `mime:"application/json" method:"post" path:"/array" type:"array"`
-	Items      []JsonArrayItem `json:"items"`
-	ExtraField string          `json:"extraField"`
+// arrayItemExtra is the nested struct attribute of arrayItemNested.
+type arrayItemExtra struct {
+	Key1 string   `json:"key1"`
+	Tags []string `json:"tags"`
 }
 
-// Handler struct for array request test
-type JsonArrayHandler struct{}
+// arrayItemNested is the element type containing nested struct attribute.
+type arrayItemNested struct {
+	Role    string         `json:"role"`
+	Content string         `json:"content"`
+	Extra   arrayItemExtra `json:"extra"`
+}
 
-func (h *JsonArrayHandler) Index(r *ghttp.Request) {
-	var req *JsonArrayReq
-	if err := r.Parse(&req); err != nil {
-		r.Response.WriteExit(err)
+// arrayReqTagged is the request struct that enables the JSON array request body by the
+// `type:"array"` tag in its `g.Meta`. The JSON array request body is mapped to the first
+// slice attribute `Items`, and the following slice attribute `Tags` is not affected.
+type arrayReqTagged struct {
+	g.Meta     `mime:"application/json" method:"post" path:"/array/tagged" type:"array"`
+	Items      []arrayItem `json:"items"`
+	Tags       []string    `json:"tags,omitempty"`
+	ExtraField string      `json:"extraField"`
+}
+
+// arrayReqUntagged is the same request struct as arrayReqTagged but without the
+// `type:"array"` tag, of which the JSON array request body is not parsed, just as before.
+type arrayReqUntagged struct {
+	g.Meta     `mime:"application/json" method:"post" path:"/array/untagged"`
+	Items      []arrayItem `json:"items"`
+	ExtraField string      `json:"extraField"`
+}
+
+// arrayReqNested is the request struct with nested struct elements.
+type arrayReqNested struct {
+	g.Meta `mime:"application/json" method:"post" path:"/array/nested" type:"array"`
+	Items  []arrayItemNested `json:"items"`
+}
+
+// arrayRes is the response struct in the tests of the JSON array request body.
+type arrayRes struct {
+	ItemsCount   int    `json:"itemsCount"`
+	TagsCount    int    `json:"tagsCount"`
+	FirstId      int    `json:"firstId"`
+	FirstContent string `json:"firstContent"`
+	ExtraField   string `json:"extraField"`
+}
+
+func writeArrayRes(r *ghttp.Request, items []arrayItem, tags []string, extraField string) {
+	var res = arrayRes{
+		ItemsCount: len(items),
+		TagsCount:  len(tags),
+		ExtraField: extraField,
 	}
-	itemsCount := len(req.Items)
-	var firstItemId int
-	var firstItemName string
-	if len(req.Items) > 0 {
-		firstItemId = req.Items[0].Id
-		firstItemName = req.Items[0].Name
+	if len(items) > 0 {
+		res.FirstId = items[0].Id
+		res.FirstContent = items[0].Content
 	}
-	r.Response.WriteJson(g.Map{
-		"itemsCount":    itemsCount,
-		"firstItemId":   firstItemId,
-		"firstItemName": firstItemName,
-		"extraField":    req.ExtraField,
-	})
+	r.Response.WriteJson(res)
 }
 
-func Test_Params_JsonArray_Request(t *testing.T) {
-	s := g.Server(guid.S())
-	s.BindObject("/array", new(JsonArrayHandler))
-	s.SetDumpRouterMap(false)
-	s.Start()
-	defer s.Shutdown()
+// arrayController is the strict route controller, of which the request struct fields
+// are cached by the route handler.
+type arrayController struct{}
 
-	time.Sleep(100 * time.Millisecond)
-	gtest.C(t, func(t *gtest.T) {
-		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-
-		// Test JSON array request body
-		arrayBody := `[{"id":1,"name":"item1","content":"test content 1"},{"id":2,"name":"item2","content":"test content 2"}]`
-		result := client.PostContent(ctx, "/array", arrayBody)
-		t.Assert(result, `{"extraField":"","firstItemId":1,"firstItemName":"item1","itemsCount":2}`)
-	})
+func (c *arrayController) Tagged(ctx context.Context, req *arrayReqTagged) (res *arrayRes, err error) {
+	writeArrayRes(g.RequestFromCtx(ctx), req.Items, req.Tags, req.ExtraField)
+	return
 }
 
-type JsonArrayExtraReq struct {
-	g.Meta     `mime:"application/json" method:"post" path:"/array-extra" type:"array"`
-	Items      []JsonArrayItem `json:"items"`
-	ExtraField string          `json:"extraField"`
+func (c *arrayController) Untagged(ctx context.Context, req *arrayReqUntagged) (res *arrayRes, err error) {
+	writeArrayRes(g.RequestFromCtx(ctx), req.Items, nil, req.ExtraField)
+	return
 }
 
-type JsonArrayExtraHandler struct{}
-
-func (h *JsonArrayExtraHandler) Index(r *ghttp.Request) {
-	var req *JsonArrayExtraReq
-	if err := r.Parse(&req); err != nil {
-		r.Response.WriteExit(err)
+func (c *arrayController) Nested(ctx context.Context, req *arrayReqNested) (res *arrayRes, err error) {
+	var results = make([]string, 0, len(req.Items))
+	for _, item := range req.Items {
+		results = append(results, fmt.Sprintf("%s/%s/%s/%v", item.Role, item.Content, item.Extra.Key1, item.Extra.Tags))
 	}
-	itemsCount := len(req.Items)
-	var totalIds int
-	if len(req.Items) >= 2 {
-		totalIds = req.Items[0].Id + req.Items[1].Id
-	}
-	r.Response.WriteJson(g.Map{
-		"itemsCount": itemsCount,
-		"extraField": req.ExtraField,
-		"totalIds":   totalIds,
-	})
-}
-
-func Test_Params_JsonArray_WithExtraField(t *testing.T) {
-	s := g.Server(guid.S())
-	s.BindObject("/array-extra", new(JsonArrayExtraHandler))
-	s.SetDumpRouterMap(false)
-	s.Start()
-	defer s.Shutdown()
-
-	time.Sleep(100 * time.Millisecond)
-	gtest.C(t, func(t *gtest.T) {
-		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-
-		// Test with extra field in JSON object wrapper (simulated)
-		// Note: When type:"array" is set, the body is expected to be a direct array
-		arrayBody := `[{"id":10,"name":"first"},{"id":20,"name":"second"}]`
-		result := client.PostContent(ctx, "/array-extra", arrayBody)
-		t.Assert(result, `{"extraField":"","itemsCount":2,"totalIds":30}`)
-	})
-}
-
-type EmptyArrayReq struct {
-	g.Meta `mime:"application/json" method:"post" path:"/empty-array" type:"array"`
-	Items  []JsonArrayItem `json:"items"`
-}
-
-type EmptyArrayHandler struct{}
-
-func (h *EmptyArrayHandler) Index(r *ghttp.Request) {
-	var req *EmptyArrayReq
-	if err := r.Parse(&req); err != nil {
-		r.Response.WriteExit(err)
-	}
-	r.Response.WriteJson(g.Map{
-		"itemsCount": len(req.Items),
-		"isEmpty":    len(req.Items) == 0,
-	})
-}
-
-func Test_Params_JsonArray_Empty(t *testing.T) {
-	s := g.Server(guid.S())
-	s.BindObject("/empty-array", new(EmptyArrayHandler))
-	s.SetDumpRouterMap(false)
-	s.Start()
-	defer s.Shutdown()
-
-	time.Sleep(100 * time.Millisecond)
-	gtest.C(t, func(t *gtest.T) {
-		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-
-		// Test empty array
-		emptyArrayBody := `[]`
-		result := client.PostContent(ctx, "/empty-array", emptyArrayBody)
-		t.Assert(result, `{"isEmpty":true,"itemsCount":0}`)
-	})
-}
-
-type SingleItemReq struct {
-	g.Meta `mime:"application/json" method:"post" path:"/single-item" type:"array"`
-	Items  []JsonArrayItem `json:"items"`
-}
-
-type SingleItemHandler struct{}
-
-func (h *SingleItemHandler) Index(r *ghttp.Request) {
-	var req *SingleItemReq
-	if err := r.Parse(&req); err != nil {
-		r.Response.WriteExit(err)
-	}
-	itemsCount := len(req.Items)
-	var itemId int
-	var itemName string
-	if len(req.Items) > 0 {
-		itemId = req.Items[0].Id
-		itemName = req.Items[0].Name
-	}
-	r.Response.WriteJson(g.Map{
-		"itemsCount": itemsCount,
-		"itemId":     itemId,
-		"itemName":   itemName,
-	})
-}
-
-func Test_Params_JsonArray_SingleItem(t *testing.T) {
-	s := g.Server(guid.S())
-	s.BindObject("/single-item", new(SingleItemHandler))
-	s.SetDumpRouterMap(false)
-	s.Start()
-	defer s.Shutdown()
-
-	time.Sleep(100 * time.Millisecond)
-	gtest.C(t, func(t *gtest.T) {
-		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-
-		// Test single item array
-		singleItemBody := `[{"id":100,"name":"only one"}]`
-		result := client.PostContent(ctx, "/single-item", singleItemBody)
-		t.Assert(result, `{"itemId":100,"itemName":"only one","itemsCount":1}`)
-	})
-}
-
-// Extra field for nested struct test
-type ExtraField struct {
-	Key1 string   `json:"key1" dc:"Key 1"`
-	Key2 int      `json:"key2" dc:"Key 2"`
-	Tags []string `json:"tags" dc:"Tags"`
-}
-
-// NestedItem struct with nested fields
-type NestedItem struct {
-	Role    string     `json:"role" dc:"Role: system/user/assistant"`
-	Content string     `json:"content" dc:"Message content"`
-	Extra   ExtraField `json:"extra" dc:"Extra information"`
-}
-
-// Nested request struct
-type NestedArrayReq struct {
-	g.Meta `mime:"application/json" method:"post" path:"/nested-array" type:"array"`
-	Items  []NestedItem `json:"items" dc:"Items with nested structure"`
-}
-
-type NestedArrayRes struct {
-	Results []string `json:"results" dc:"Processing results"`
-}
-
-type NestedArrayHandler struct{}
-
-func (h *NestedArrayHandler) Index(r *ghttp.Request) {
-	var req *NestedArrayReq
-	if err := r.Parse(&req); err != nil {
-		r.Response.WriteExit(err)
-	}
-	results := make([]string, len(req.Items))
-	for i, item := range req.Items {
-		results[i] = fmt.Sprintf("Role:%s Content:%s Extra.key1:%s %v", item.Role, item.Content, item.Extra.Key1, item.Extra.Tags)
-	}
-	r.Response.WriteJson(g.Map{
+	g.RequestFromCtx(ctx).Response.WriteJson(g.Map{
 		"itemsCount": len(req.Items),
 		"results":    results,
 	})
+	return
 }
 
-func Test_Params_JsonArray_Nested(t *testing.T) {
+// rawArrayHandler is the none-strict route handler, of which the request struct fields
+// are retrieved by reflection instead of the cached route handler fields.
+func rawArrayHandler(r *ghttp.Request) {
+	var req *arrayReqTagged
+	if err := r.Parse(&req); err != nil {
+		r.Response.WriteExit(err)
+	}
+	writeArrayRes(r, req.Items, req.Tags, req.ExtraField)
+}
+
+func Test_Params_JsonArray_RequestBody(t *testing.T) {
 	s := g.Server(guid.S())
-	s.BindObject("/nested-array", new(NestedArrayHandler))
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Bind(new(arrayController))
+	})
+	s.BindHandler("/array/raw", rawArrayHandler)
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
+
+	var (
+		prefix = fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		client = g.Client()
+	)
+	client.SetPrefix(prefix)
+
+	var cases = []struct {
+		name   string
+		path   string
+		body   string
+		expect string
+	}{
+		{
+			name:   "tagged request struct with multiple items",
+			path:   "/array/tagged",
+			body:   `[{"id":1,"name":"item1","content":"content1"},{"id":2,"name":"item2","content":"content2"}]`,
+			expect: `{"itemsCount":2,"tagsCount":0,"firstId":1,"firstContent":"content1","extraField":""}`,
+		},
+		{
+			name:   "tagged request struct with single item",
+			path:   "/array/tagged",
+			body:   `[{"id":100,"name":"only one","content":"content100"}]`,
+			expect: `{"itemsCount":1,"tagsCount":0,"firstId":100,"firstContent":"content100","extraField":""}`,
+		},
+		{
+			name:   "tagged request struct with empty array",
+			path:   "/array/tagged",
+			body:   `[]`,
+			expect: `{"itemsCount":0,"tagsCount":0,"firstId":0,"firstContent":"","extraField":""}`,
+		},
+		{
+			// The JSON object request body is still working for the tagged request struct.
+			name:   "tagged request struct with object body",
+			path:   "/array/tagged",
+			body:   `{"items":[{"id":7,"content":"content7"}]}`,
+			expect: `{"itemsCount":1,"tagsCount":0,"firstId":7,"firstContent":"content7","extraField":""}`,
+		},
+		{
+			// It uses the request struct fields by reflection as the handler is not a strict route.
+			name:   "none-strict route handler",
+			path:   "/array/raw",
+			body:   `[{"id":10,"content":"content10"},{"id":20,"content":"content20"}]`,
+			expect: `{"itemsCount":2,"tagsCount":0,"firstId":10,"firstContent":"content10","extraField":""}`,
+		},
+		{
+			// The JSON array request body is not parsed for the request struct without the tag.
+			name:   "untagged request struct",
+			path:   "/array/untagged",
+			body:   `[{"id":1,"content":"content1"}]`,
+			expect: `{"itemsCount":0,"tagsCount":0,"firstId":0,"firstContent":"","extraField":""}`,
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			gtest.C(t, func(t *gtest.T) {
+				t.Assert(client.PostContent(ctx, c.path, c.body), c.expect)
+			})
+		})
+	}
+
+	// The JSON array request body works with the JSON content type either.
+	t.Run("tagged request struct with json content type", func(t *testing.T) {
+		gtest.C(t, func(t *gtest.T) {
+			t.Assert(
+				client.ContentJson().PostContent(ctx, "/array/tagged", `[{"id":3,"content":"content3"}]`),
+				`{"itemsCount":1,"tagsCount":0,"firstId":3,"firstContent":"content3","extraField":""}`,
+			)
+		})
+	})
+}
+
+func Test_Params_JsonArray_RequestBodyNested(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Bind(new(arrayController))
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
 
-		// Test nested structure
-		nestedBody := `[
-			{"role": "user", "content": "hello", "extra": {"key1": "value1", "key2": 123, "tags": ["tag1", "tag2"]}},
-			{"role": "assistant", "content": "world", "extra": {"key1": "value2", "key2": 456, "tags": ["tag3"]}}
+		var body = `[
+			{"role":"user","content":"hello","extra":{"key1":"value1","tags":["tag1","tag2"]}},
+			{"role":"assistant","content":"world","extra":{"key1":"value2","tags":["tag3"]}}
 		]`
-		result := client.PostContent(ctx, "/nested-array", nestedBody)
-		// Verify nested structure parsing - handler returns results with nested data
-		t.AssertNE(result, "")
-		t.Assert(result, `{"itemsCount":2,"results":["Role:user Content:hello Extra.key1:value1 [tag1 tag2]","Role:assistant Content:world Extra.key1:value2 [tag3]"]}`)
-	})
-}
-
-// Test_Params_JsonArray_PointerLevels tests pointer level handling (*Struct and **Struct cases).
-func Test_Params_JsonArray_PointerLevels(t *testing.T) {
-	s := g.Server(guid.S())
-	s.BindObject("/pointer-test", new(JsonArrayHandler))
-	s.SetDumpRouterMap(false)
-	s.Start()
-	defer s.Shutdown()
-
-	time.Sleep(100 * time.Millisecond)
-	gtest.C(t, func(t *gtest.T) {
-		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-
-		// Test with valid array body - uses JsonArrayHandler which returns extraField
-		validBody := `[{"id":1,"name":"test"}]`
-		result := client.PostContent(ctx, "/pointer-test", validBody)
-		t.AssertNE(result, "")
-		t.Assert(result, `{"extraField":"","firstItemId":1,"firstItemName":"test","itemsCount":1}`)
-	})
-}
-
-// Test_Params_JsonArray_CacheHit tests parsing when ReqStructFields is already cached.
-func Test_Params_JsonArray_CacheHit(t *testing.T) {
-	s := g.Server(guid.S())
-	s.BindObject("/cache-test", new(JsonArrayHandler))
-	s.SetDumpRouterMap(false)
-	s.Start()
-	defer s.Shutdown()
-
-	time.Sleep(100 * time.Millisecond)
-	gtest.C(t, func(t *gtest.T) {
-		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-
-		// Multiple requests to test cached struct fields
-		for i := 0; i < 3; i++ {
-			body := fmt.Sprintf(`[{"id":%d,"name":"request%d"}]`, i+1, i+1)
-			result := client.PostContent(ctx, "/cache-test", body)
-			expected := fmt.Sprintf(`{"extraField":"","firstItemId":%d,"firstItemName":"request%d","itemsCount":1}`, i+1, i+1)
-			t.Assert(result, expected)
-		}
-	})
-}
-
-// Test_Params_JsonArray_FieldWithJSONTag tests slice field with json tag containing options.
-func Test_Params_JsonArray_FieldWithJSONTag(t *testing.T) {
-	s := g.Server(guid.S())
-
-	// Handler that uses struct with json tag options
-	type TagOptionItem struct {
-		Id      int    `json:"id,omitempty"`
-		Name    string `json:"name"`
-		Content string `json:"content,omitempty"`
-	}
-
-	type TagOptionReq struct {
-		g.Meta   `mime:"application/json" method:"post" path:"/tag-option" type:"array"`
-		DataList []TagOptionItem `json:"dataList,omitempty"`
-	}
-
-	type TagOptionRes struct {
-		Count int `json:"count"`
-	}
-
-	type TagOptionHandler struct{}
-
-	tagOptionHandler := func(r *ghttp.Request) {
-		var req *TagOptionReq
-		if err := r.Parse(&req); err != nil {
-			r.Response.WriteExit(err)
-		}
-		r.Response.WriteJson(g.Map{
-			"count": len(req.DataList),
-		})
-	}
-
-	s.BindHandler("/tag-option", tagOptionHandler)
-	s.SetDumpRouterMap(false)
-	s.Start()
-	defer s.Shutdown()
-
-	time.Sleep(100 * time.Millisecond)
-	gtest.C(t, func(t *gtest.T) {
-		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-
-		// Test with omitempty fields
-		body := `[{"id":1,"name":"test"},{"name":"noId"},{"id":3,"name":"withId","content":"has content"}]`
-		result := client.PostContent(ctx, "/tag-option", body)
-		t.AssertNE(result, "")
-		t.Assert(result, `{"count":3}`)
-	})
-}
-
-// Test_Params_JsonArray_MultipleSliceFields tests that only the first slice field is populated
-// when struct has multiple slice fields. This validates the break behavior after finding first match.
-func Test_Params_JsonArray_MultipleSliceFields(t *testing.T) {
-	s := g.Server(guid.S())
-
-	type MultiSliceItem struct {
-		Id   int    `json:"id"`
-		Name string `json:"name"`
-	}
-
-	// Struct with multiple slice fields - only first one should be populated
-	type MultiSliceReq struct {
-		g.Meta    `mime:"application/json" method:"post" path:"/multi-slice" type:"array"`
-		Items     []MultiSliceItem `json:"items"`  // First slice field - should be populated
-		Backup    []MultiSliceItem `json:"backup"` // Second slice field - should remain empty
-		ExtraData string           `json:"extraData"`
-	}
-
-	multiSliceHandler := func(r *ghttp.Request) {
-		var req *MultiSliceReq
-		if err := r.Parse(&req); err != nil {
-			r.Response.WriteExit(err)
-		}
-		r.Response.WriteJson(g.Map{
-			"itemsCount":  len(req.Items),
-			"backupCount": len(req.Backup),
-			"extraData":   req.ExtraData,
-		})
-	}
-
-	s.BindHandler("/multi-slice", multiSliceHandler)
-	s.SetDumpRouterMap(false)
-	s.Start()
-	defer s.Shutdown()
-
-	time.Sleep(100 * time.Millisecond)
-	gtest.C(t, func(t *gtest.T) {
-		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-
-		// Test that only first slice field gets populated
-		body := `[{"id":1,"name":"first"},{"id":2,"name":"second"}]`
-		result := client.PostContent(ctx, "/multi-slice", body)
-		t.AssertNE(result, "")
-		// Items should have 2 elements, Backup should be empty (0 elements)
-		t.Assert(result, `{"backupCount":0,"extraData":"","itemsCount":2}`)
-	})
-}
-
-// Test_Params_JsonArray_FallbackReflection tests the fallback reflection path
-// when ReqStructFields cache is not available (using BindHandler directly).
-func Test_Params_JsonArray_FallbackReflection(t *testing.T) {
-	s := g.Server(guid.S())
-
-	type FallbackItem struct {
-		Value int    `json:"value"`
-		Label string `json:"label"`
-	}
-
-	type FallbackReq struct {
-		g.Meta `mime:"application/json" method:"post" path:"/fallback" type:"array"`
-		Data   []FallbackItem `json:"data"`
-	}
-
-	// Using BindHandler directly - this triggers the fallback reflection path
-	fallbackHandler := func(r *ghttp.Request) {
-		var req *FallbackReq
-		if err := r.Parse(&req); err != nil {
-			r.Response.WriteExit(err)
-		}
-		total := 0
-		for _, item := range req.Data {
-			total += item.Value
-		}
-		r.Response.WriteJson(g.Map{
-			"count": len(req.Data),
-			"total": total,
-		})
-	}
-
-	s.BindHandler("/fallback", fallbackHandler)
-	s.SetDumpRouterMap(false)
-	s.Start()
-	defer s.Shutdown()
-
-	time.Sleep(100 * time.Millisecond)
-	gtest.C(t, func(t *gtest.T) {
-		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-
-		body := `[{"value":10,"label":"a"},{"value":20,"label":"b"},{"value":30,"label":"c"}]`
-		result := client.PostContent(ctx, "/fallback", body)
-		t.AssertNE(result, "")
-		t.Assert(result, `{"count":3,"total":60}`)
+		t.Assert(
+			client.PostContent(ctx, "/array/nested", body),
+			`{"itemsCount":2,"results":["user/hello/value1/[tag1 tag2]","assistant/world/value2/[tag3]"]}`,
+		)
 	})
 }

@@ -9,6 +9,8 @@ package goai
 import (
 	"reflect"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -112,20 +114,18 @@ func (oai *OpenApiV3) getRequestSchemaRef(in getRequestSchemaRefInput) (*SchemaR
 	}, nil
 }
 
-// getArrayRequestSchemaRef generates an OpenAPI schema reference for JSON array request bodies.
-// This function supports the type:"array" tag in g.Meta for APIs that receive batch request formats.
+// getArrayRequestSchemaRef generates the OpenAPI schema reference for a JSON array request body,
+// which is declared by the `type:"array"` tag in `g.Meta`. APIs using this tag accept a JSON
+// array request body like `[{"id":1},{"id":2}]` instead of an object like `{"items":[{"id":1}]}`.
 //
-// Implementation Steps:
-//  1. Pre-register all nested struct types: Walk through the request struct and register any
-//     struct fields and slice element types in Components.Schemas. This ensures proper schema
-//     generation for nested structures.
-//  2. Locate slice field: Use gstructs.Fields to find the first slice/array field in the struct.
-//  3. Generate element schema: Create a schema reference for the slice's element type using
-//     newSchemaRefWithGolangType, which handles nested structures recursively.
-//  4. Return array schema: Construct a SchemaRef with Type="array" and Items pointing to the
-//     element schema.
+// The schema is generated from the first slice/array attribute of the request struct, for example:
 //
-// Example OpenAPI Output:
+//	type BatchChatReq struct {
+//	    g.Meta   `mime:"application/json" method:"post" path:"/batch/chat" type:"array"`
+//	    Messages []ChatMessage `json:"messages"`
+//	}
+//
+// The generated OpenAPI definition is:
 //
 //	requestBody:
 //	  content:
@@ -134,42 +134,7 @@ func (oai *OpenApiV3) getRequestSchemaRef(in getRequestSchemaRefInput) (*SchemaR
 //	        type: array
 //	        items:
 //	          $ref: '#/components/schemas/ChatMessage'
-//
-// Related: ghttp_request_param_request.go::mergeBodyArrayToStruct
 func (oai *OpenApiV3) getArrayRequestSchemaRef(requestObject any) (*SchemaRef, error) {
-	// Step 1: Pre-register all nested struct types in Components.Schemas.
-	// This is necessary because newSchemaRefWithGolangType only registers the direct
-	// element type. We need to explicitly register nested structs to ensure proper
-	// OpenAPI documentation generation.
-	objectValue := reflect.ValueOf(requestObject)
-	if objectValue.Kind() == reflect.Pointer {
-		objectValue = objectValue.Elem()
-	}
-	if objectValue.Kind() == reflect.Struct {
-		structType := objectValue.Type()
-		for i := 0; i < structType.NumField(); i++ {
-			field := structType.Field(i)
-			fieldKind := field.Type.Kind()
-			switch fieldKind {
-			case reflect.Struct:
-				// Register nested struct types
-				if _, err := oai.newSchemaRefWithGolangType(field.Type, nil); err != nil {
-					return nil, err
-				}
-			case reflect.Slice, reflect.Array:
-				// Register slice element types if they are structs
-				elemType := field.Type.Elem()
-				if elemType.Kind() == reflect.Struct {
-					if _, err := oai.newSchemaRefWithGolangType(elemType, nil); err != nil {
-						return nil, err
-					}
-				}
-			}
-		}
-	}
-
-	// Step 2: Find the slice/array field in the struct.
-	// We use gstructs.Fields to properly handle embedded structs.
 	structFields, err := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         requestObject,
 		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
@@ -177,38 +142,29 @@ func (oai *OpenApiV3) getArrayRequestSchemaRef(requestObject any) (*SchemaRef, e
 	if err != nil {
 		return nil, err
 	}
-
-	var sliceField *gstructs.Field
-	for _, field := range structFields {
-		fieldValueType := field.Value.Type()
-		if fieldValueType.Kind() == reflect.Slice || fieldValueType.Kind() == reflect.Array {
-			sliceField = &field
-			break
+	// The request body definition is the first slice/array attribute of the request struct,
+	// as only one attribute is able to receive the JSON array request body.
+	for _, structField := range structFields {
+		var golangType = structField.Type().Type
+		if golangType.Kind() != reflect.Slice && golangType.Kind() != reflect.Array {
+			continue
 		}
-	}
-
-	// Step 3: Return empty array schema if no slice field found.
-	if sliceField == nil {
+		// It also recursively registers the schema of all the nested struct types in the
+		// element type into Components.Schemas.
+		elementSchemaRef, err := oai.newSchemaRefWithGolangType(golangType.Elem(), nil)
+		if err != nil {
+			return nil, err
+		}
 		return &SchemaRef{
 			Value: &Schema{
-				Type:  "array",
-				Items: &SchemaRef{},
+				Type:  TypeArray,
+				Items: elementSchemaRef,
 			},
 		}, nil
 	}
-
-	// Step 4: Get element type and generate schema reference.
-	elementType := sliceField.Value.Type().Elem()
-	elementSchemaRef, err := oai.newSchemaRefWithGolangType(elementType, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// Step 5: Return array schema with items referencing the element schema.
-	return &SchemaRef{
-		Value: &Schema{
-			Type:  "array",
-			Items: elementSchemaRef,
-		},
-	}, nil
+	return nil, gerror.NewCodef(
+		gcode.CodeInvalidParameter,
+		`there's no slice/array attribute in request struct "%s" for the "type:array" tag definition`,
+		oai.golangTypeToSchemaName(reflect.TypeOf(requestObject)),
+	)
 }
