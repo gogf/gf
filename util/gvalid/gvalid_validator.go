@@ -36,11 +36,13 @@ type Validator struct {
 // New creates and returns a new Validator.
 //
 // The optional parameter `cached` specifies whether to enable the parsed rule
-// value cache for the validation, which is enabled in default. Disable it if
-// the validation rules of current validation are dynamically generated, to
-// avoid useless cache growth in the process.
+// value cache for the validation, which is disabled in default, as the rule
+// values might be dynamically generated in user code and the process level
+// cache would then grow without bound. Enable it if the rule values are known
+// to be static, which is the case for the validation rules from struct tag,
+// as the framework does for HTTP request handling (see package `ghttp`).
 func New(cached ...bool) *Validator {
-	var cacheEnabled = true
+	var cacheEnabled = false
 	if len(cached) > 0 {
 		cacheEnabled = cached[0]
 	}

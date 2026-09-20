@@ -108,7 +108,9 @@ func (r *Request) doParse(pointer any, requestType int) error {
 			}
 		}
 		// Validation.
-		if err = gvalid.New().
+		// The validation rules here are all from struct tag, which are static,
+		// so the parsed rule value cache is enabled for performance.
+		if err = gvalid.New(true).
 			Bail().
 			Data(pointer).
 			Assoc(data).
@@ -129,7 +131,9 @@ func (r *Request) doParse(pointer any, requestType int) error {
 			return err
 		}
 		for i := 0; i < reflectVal2.Len(); i++ {
-			if err = gvalid.New().
+			// The validation rules here are all from struct tag, which are static,
+			// so the parsed rule value cache is enabled for performance.
+			if err = gvalid.New(true).
 				Bail().
 				Data(reflectVal2.Index(i)).
 				Assoc(j.Get(gconv.String(i)).Map()).

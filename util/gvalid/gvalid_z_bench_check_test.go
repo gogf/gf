@@ -8,6 +8,10 @@
 
 // Benchmarks for the struct validation path, which is the mostly used path for
 // the standard HTTP handler signature validation.
+//
+// Note that the benchmarks below create the Validator with `gvalid.New(true)`,
+// which enables the parsed rule value cache, just like what the HTTP request
+// handling in package `ghttp` does.
 package gvalid_test
 
 import (
@@ -86,19 +90,19 @@ var benchBigReqValue = benchBigReq{
 // Test_ZZBenchSanity ensures the benchmarks below really trigger the validations.
 func Test_ZZBenchSanity(t *testing.T) {
 	// The valid data passes.
-	if err := gvalid.New().Bail().Data(&benchCheckUserValue).Run(benchCheckCtx); err != nil {
+	if err := gvalid.New(true).Bail().Data(&benchCheckUserValue).Run(benchCheckCtx); err != nil {
 		t.Fatalf("expect no error, but got: %v", err)
 	}
-	if err := gvalid.New().Bail().Data(&benchBigReqValue).Run(benchCheckCtx); err != nil {
+	if err := gvalid.New(true).Bail().Data(&benchBigReqValue).Run(benchCheckCtx); err != nil {
 		t.Fatalf("expect no error, but got: %v", err)
 	}
 	// The invalid data fails, which means the validation is really running.
 	var user = benchCheckUser{Name: "", Age: 200}
-	if err := gvalid.New().Bail().Data(&user).Run(benchCheckCtx); err == nil {
+	if err := gvalid.New(true).Bail().Data(&user).Run(benchCheckCtx); err == nil {
 		t.Fatal("expect validation error, but got nil")
 	}
 	var req = benchBigReq{Age: 200}
-	if err := gvalid.New().Bail().Data(&req).Run(benchCheckCtx); err == nil {
+	if err := gvalid.New(true).Bail().Data(&req).Run(benchCheckCtx); err == nil {
 		t.Fatal("expect validation error, but got nil")
 	}
 }
@@ -117,7 +121,7 @@ func Benchmark_CheckStruct_Data(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		if err := gvalid.New().Bail().Data(&benchCheckUserValue).Run(benchCheckCtx); err != nil {
+		if err := gvalid.New(true).Bail().Data(&benchCheckUserValue).Run(benchCheckCtx); err != nil {
 			b.Fatal(err)
 		}
 	}
@@ -129,7 +133,7 @@ func Benchmark_CheckStruct_Assoc(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		if err := gvalid.New().Bail().Data(&benchCheckUserValue).Assoc(benchCheckUserMap).Run(benchCheckCtx); err != nil {
+		if err := gvalid.New(true).Bail().Data(&benchCheckUserValue).Assoc(benchCheckUserMap).Run(benchCheckCtx); err != nil {
 			b.Fatal(err)
 		}
 	}
@@ -141,7 +145,7 @@ func Benchmark_CheckStruct_BigReq(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		if err := gvalid.New().Bail().Data(&benchBigReqValue).Run(benchCheckCtx); err != nil {
+		if err := gvalid.New(true).Bail().Data(&benchBigReqValue).Run(benchCheckCtx); err != nil {
 			b.Fatal(err)
 		}
 	}
