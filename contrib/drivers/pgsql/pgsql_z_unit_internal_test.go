@@ -7,11 +7,13 @@
 package pgsql
 
 import (
+	"context"
 	"strings"
 	"testing"
 
 	"github.com/lib/pq/oid"
 
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -65,5 +67,23 @@ func Test_ExtraTypeNamesAreMapped(t *testing.T) {
 			_, ok := localTypeMap[name]
 			t.Assert(ok, true)
 		}
+	})
+}
+
+// Test_LocalTypeBitKeepsPrecision asserts that bit keeps being decided by its precision,
+// which the lookup by name in localTypeMap cannot see: bit(1) is a boolean.
+func Test_LocalTypeBitKeepsPrecision(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx    = context.Background()
+			driver = &Driver{Core: &gdb.Core{}}
+		)
+		localType, err := driver.CheckLocalTypeForField(ctx, "bit(1)", nil)
+		t.AssertNil(err)
+		t.Assert(localType, gdb.LocalTypeBool)
+
+		localType, err = driver.CheckLocalTypeForField(ctx, "bit(8)", nil)
+		t.AssertNil(err)
+		t.Assert(localType, gdb.LocalTypeInt64Bytes)
 	})
 }

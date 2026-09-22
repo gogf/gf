@@ -53,7 +53,8 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 //
 // The type name is looked up in localTypeMap, which lists every name the underlying driver
 // can report. Only a name absent from it, such as a type the server knows but the driver
-// does not, falls back to the core.
+// does not, falls back to the core. So does `bit`, whose local type depends on its precision
+// rather than its name: the core takes bit(1) as a boolean.
 func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue any) (gdb.LocalType, error) {
 	var typeName string
 	match, _ := gregex.MatchString(`(.+?)\((.+)\)`, fieldType)
@@ -63,6 +64,9 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 		typeName = fieldType
 	}
 	typeName = strings.ToLower(typeName)
+	if typeName == "bit" {
+		return d.Core.CheckLocalTypeForField(ctx, fieldType, fieldValue)
+	}
 	if localType, ok := localTypeMap[typeName]; ok {
 		return localType, nil
 	}

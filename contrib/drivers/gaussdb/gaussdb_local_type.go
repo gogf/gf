@@ -122,7 +122,7 @@ var localTypeMap = map[string]gdb.LocalType{
 	"anynonarray":                    gdb.LocalTypeString,
 	"anyrange":                       gdb.LocalTypeString,
 	"anyset":                         gdb.LocalTypeString,
-	"bit":                            gdb.LocalTypeInt64Bytes,
+	"bit":                            gdb.LocalTypeInt64Bytes, // bit(1) is a boolean; see CheckLocalTypeForField
 	"blob":                           gdb.LocalTypeBytes,
 	"bool":                           gdb.LocalTypeBool,
 	"box":                            gdb.LocalTypeString,

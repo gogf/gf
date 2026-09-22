@@ -21,8 +21,9 @@ import (
 // "int", while the value `(1.5,2.5)` is still stored as text.
 //
 // The declared type therefore decides the local type only as far as the value agrees with it.
-// When the name suggests a number but the driver hands over text, SQLite has already
-// determined the value is not a number, and coercing it anyway would replace it with 0.
+// When the name suggests an integer but the driver hands over text or a float, SQLite has
+// already stored the value under another storage class, and coercing it to the declared
+// type would replace it with 0 or truncate it.
 func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue any) (gdb.LocalType, error) {
 	localType, err := d.Core.CheckLocalTypeForField(ctx, fieldType, fieldValue)
 	if err != nil {
@@ -33,8 +34,15 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 		gdb.LocalTypeInt, gdb.LocalTypeUint,
 		gdb.LocalTypeInt32, gdb.LocalTypeUint32,
 		gdb.LocalTypeInt64, gdb.LocalTypeUint64,
-		gdb.LocalTypeBigInt,
-		gdb.LocalTypeFloat32, gdb.LocalTypeFloat64:
+		gdb.LocalTypeBigInt:
+		switch fieldValue.(type) {
+		case string, []byte:
+			return gdb.LocalTypeString, nil
+		case float32, float64:
+			return gdb.LocalTypeFloat64, nil
+		default:
+		}
+	case gdb.LocalTypeFloat32, gdb.LocalTypeFloat64:
 		switch fieldValue.(type) {
 		case string, []byte:
 			return gdb.LocalTypeString, nil

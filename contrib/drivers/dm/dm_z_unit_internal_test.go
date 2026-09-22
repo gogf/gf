@@ -68,7 +68,10 @@ func Test_LocalTypeCoverage(t *testing.T) {
 		}
 		_, err = conn.Exec(ctx, fmt.Sprintf("CREATE TABLE %s (%s)", table, strings.Join(columns, ", ")))
 		t.AssertNil(err)
-		defer conn.Exec(ctx, "DROP TABLE "+table)
+		defer func() {
+			_, err := conn.Exec(ctx, "DROP TABLE "+table)
+			t.AssertNil(err)
+		}()
 
 		fields, err := conn.TableFields(ctx, table)
 		t.AssertNil(err)

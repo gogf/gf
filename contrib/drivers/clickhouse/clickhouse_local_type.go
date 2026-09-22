@@ -36,7 +36,7 @@ var localTypeMap = map[string]gdb.LocalType{
 	"binary":                          gdb.LocalTypeBytes,
 	"binary large object":             gdb.LocalTypeBytes,
 	"binary varying":                  gdb.LocalTypeBytes,
-	"bit":                             gdb.LocalTypeInt64Bytes,
+	"bit":                             gdb.LocalTypeInt64Bytes, // bit(1) is a boolean; see CheckLocalTypeForField
 	"blob":                            gdb.LocalTypeBytes,
 	"bool":                            gdb.LocalTypeBool,
 	"boolean":                         gdb.LocalTypeBool,
@@ -168,6 +168,9 @@ var localTypeMap = map[string]gdb.LocalType{
 // CheckLocalTypeForField checks and returns corresponding local golang type for given db type.
 // The parameter `fieldType` is the type name reported by the driver, like `Int64`,
 // `Point`, `IntervalDay` or `Array(Nullable(Int64))`.
+//
+// `bit` is left to the core, as its local type depends on its precision rather than its
+// name: the core takes bit(1) as a boolean.
 func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue any) (gdb.LocalType, error) {
 	var typeName string
 	match, _ := gregex.MatchString(`(.+?)\((.+)\)`, fieldType)
@@ -177,6 +180,9 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 		typeName = fieldType
 	}
 	typeName = strings.ToLower(typeName)
+	if typeName == "bit" {
+		return d.Core.CheckLocalTypeForField(ctx, fieldType, fieldValue)
+	}
 	if localType, ok := localTypeMap[typeName]; ok {
 		return localType, nil
 	}
