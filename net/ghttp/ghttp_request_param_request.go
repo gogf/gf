@@ -7,6 +7,8 @@
 package ghttp
 
 import (
+	"reflect"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/os/gstructs"
@@ -94,13 +96,16 @@ func (r *Request) GetRequestMap(kvMap ...map[string]any) map[string]any {
 		}
 		m[k] = v
 	}
-	for k, v := range r.bodyMap {
-		if filter {
-			if _, ok = kvMap[0][k]; !ok {
-				continue
+	// The form map might be the body map itself, which has been merged above.
+	if !sameMap(r.formMap, r.bodyMap) {
+		for k, v := range r.bodyMap {
+			if filter {
+				if _, ok = kvMap[0][k]; !ok {
+					continue
+				}
 			}
+			m[k] = v
 		}
-		m[k] = v
 	}
 	for k, v := range r.paramsMap {
 		if filter {
@@ -198,6 +203,11 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 func (r *Request) mergeDefaultStructValue(data map[string]any, pointer any) error {
 	fields := r.serveHandler.Handler.Info.ReqStructFields
 	if len(fields) > 0 {
+		// Nothing to do as no field uses the default value tag,
+		// which is prechecked at handler registration.
+		if !r.serveHandler.Handler.Info.ReqStructTags.HasDefault {
+			return nil
+		}
 		for _, field := range fields {
 			if tagValue := field.TagDefault(); tagValue != "" {
 				mergeTagValueWithFoundKey(data, false, field.Name(), field.Name(), tagValue)
@@ -223,42 +233,54 @@ func (r *Request) mergeDefaultStructValue(data map[string]any, pointer any) erro
 // mergeInTagStructValue merges the request parameters with header or cookie values from struct `in` tag definition.
 func (r *Request) mergeInTagStructValue(data map[string]any) error {
 	fields := r.serveHandler.Handler.Info.ReqStructFields
-	if len(fields) > 0 {
+	// Nothing to do as no field uses the `in` tag,
+	// which is prechecked at handler registration.
+	if len(fields) == 0 || !r.serveHandler.Handler.Info.ReqStructTags.HasIn {
+		return nil
+	}
+	var (
+		headerMap = make(map[string]any)
+		cookieMap = make(map[string]any)
+	)
+
+	for k, v := range r.Header {
+		if len(v) > 0 {
+			headerMap[k] = v[0]
+		}
+	}
+
+	for _, cookie := range r.Cookies() {
+		cookieMap[cookie.Name] = cookie.Value
+	}
+
+	for _, field := range fields {
 		var (
-			headerMap = make(map[string]any)
-			cookieMap = make(map[string]any)
+			foundKey   string
+			foundValue any
 		)
-
-		for k, v := range r.Header {
-			if len(v) > 0 {
-				headerMap[k] = v[0]
+		if tagValue := field.TagIn(); tagValue != "" {
+			findKey := field.TagPriorityName()
+			switch tagValue {
+			case goai.ParameterInHeader:
+				foundKey, foundValue = gutil.MapPossibleItemByKey(headerMap, findKey)
+			case goai.ParameterInCookie:
+				foundKey, foundValue = gutil.MapPossibleItemByKey(cookieMap, findKey)
 			}
-		}
-
-		for _, cookie := range r.Cookies() {
-			cookieMap[cookie.Name] = cookie.Value
-		}
-
-		for _, field := range fields {
-			var (
-				foundKey   string
-				foundValue any
-			)
-			if tagValue := field.TagIn(); tagValue != "" {
-				findKey := field.TagPriorityName()
-				switch tagValue {
-				case goai.ParameterInHeader:
-					foundKey, foundValue = gutil.MapPossibleItemByKey(headerMap, findKey)
-				case goai.ParameterInCookie:
-					foundKey, foundValue = gutil.MapPossibleItemByKey(cookieMap, findKey)
-				}
-				if foundKey != "" {
-					mergeTagValueWithFoundKey(data, true, foundKey, field.Name(), foundValue)
-				}
+			if foundKey != "" {
+				mergeTagValueWithFoundKey(data, true, foundKey, field.Name(), foundValue)
 			}
 		}
 	}
 	return nil
+}
+
+// sameMap checks whether the two maps are the same map object.
+// Note that maps are not comparable in Go, it here compares the underlying map pointers.
+func sameMap(m1, m2 map[string]any) bool {
+	if m1 == nil || m2 == nil {
+		return false
+	}
+	return reflect.ValueOf(m1).Pointer() == reflect.ValueOf(m2).Pointer()
 }
 
 // mergeTagValueWithFoundKey merges the request parameters when the key does not exist in the map or overwritten is true or the value is nil.

@@ -8,6 +8,7 @@ package gi18n_test
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -142,6 +143,26 @@ func Test_Instance(t *testing.T) {
 		m := gi18n.Instance(gconv.String(gtime.TimestampNano()))
 		m.SetPath(gtest.DataPath("i18n-dir"))
 		t.Assert(m.T(context.Background(), "{#hello}{#world}"), "HelloWorld")
+	})
+
+	// The concurrent first calls should return the same instance.
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			name     = gconv.String(gtime.TimestampNano())
+			wg       = sync.WaitGroup{}
+			managers = make([]*gi18n.Manager, 100)
+		)
+		for i := 0; i < len(managers); i++ {
+			wg.Add(1)
+			go func(index int) {
+				defer wg.Done()
+				managers[index] = gi18n.Instance(name)
+			}(i)
+		}
+		wg.Wait()
+		for i := 1; i < len(managers); i++ {
+			t.Assert(managers[i] == managers[0], true)
+		}
 	})
 }
 
