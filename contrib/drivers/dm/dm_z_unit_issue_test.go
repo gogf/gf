@@ -161,3 +161,31 @@ func Test_MultilineSQLStatement(t *testing.T) {
 		t.Assert(result[0]["ACCOUNT_NAME"].String(), "updated_multiline")
 	})
 }
+
+// Test_Issue4842 tests that the INTERVAL types, whose names merely contain "int", are not
+// detected as integers and read back as 0.
+// See https://github.com/gogf/gf/issues/4842
+func Test_Issue4842(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.GetOne(ctx, `SELECT INTERVAL '2' DAY AS v FROM dual`)
+		t.AssertNil(err)
+		t.Assert(one["V"].String(), `INTERVAL '000000002' DAY(9)`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.GetOne(ctx, `SELECT INTERVAL '2 12:23:34' DAY TO SECOND AS v FROM dual`)
+		t.AssertNil(err)
+		t.Assert(one["V"].String(), `INTERVAL '000000002 12:23:34.000000' DAY(9) TO SECOND(6)`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.GetOne(ctx, `SELECT INTERVAL '1-10' YEAR TO MONTH AS v FROM dual`)
+		t.AssertNil(err)
+		t.Assert(one["V"].String(), `INTERVAL '000000001-10' YEAR(9) TO MONTH`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// Genuine integer types must keep being detected as integers.
+		one, err := db.GetOne(ctx, `SELECT CAST(42 AS INT) AS a, CAST(43 AS BIGINT) AS b FROM dual`)
+		t.AssertNil(err)
+		t.Assert(one["A"].Int(), 42)
+		t.Assert(one["B"].Int64(), int64(43))
+	})
+}
