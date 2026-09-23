@@ -10,6 +10,8 @@ import (
 	"reflect"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -206,7 +208,20 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 	//
 	// The client then submits `[{"id":1},{"id":2}]` as the request body instead of
 	// `{"items":[{"id":1},{"id":2}]}`.
-	if len(r.bodyArray) > 0 && gmeta.Get(pointer, gtag.Type).String() == goai.TypeArray {
+	//
+	// Note that a JSON array is valid JSON but is not a valid request body for the ordinary
+	// object endpoints, so it is reported as an invalid parameter for the request struct
+	// without the tag, instead of being silently ignored with all attributes left as zero
+	// values. It uses `r.bodyArray != nil` instead of `len(r.bodyArray) > 0` here, as the
+	// empty JSON array `[]` should be merged into the request struct either.
+	if r.bodyArray != nil {
+		if gmeta.Get(pointer, gtag.Type).String() != goai.TypeArray {
+			return nil, gerror.NewCode(
+				gcode.CodeInvalidParameter,
+				`the JSON array request body is only supported by the request struct `+
+					`tagged with type:"array" in its g.Meta`,
+			)
+		}
 		if err = r.mergeBodyArrayToStruct(data, pointer); err != nil {
 			return data, err
 		}
@@ -244,9 +259,13 @@ func (r *Request) mergeBodyArrayToStruct(data map[string]any, pointer any) error
 			continue
 		}
 		data[fieldName] = r.bodyArray
-		break
+		return nil
 	}
-	return nil
+	return gerror.NewCodef(
+		gcode.CodeInvalidParameter,
+		`request struct %T tagged with type:"array" has no eligible slice or array field`,
+		pointer,
+	)
 }
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.

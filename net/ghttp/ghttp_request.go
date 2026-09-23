@@ -275,12 +275,29 @@ func (r *Request) SetError(err error) {
 	r.error = err
 }
 
-// ReloadParam is used for modifying request parameter.
-// Sometimes, we want to modify request parameters through middleware, but directly modifying Request.Body
-// is invalid, so it clears the parsed* marks of Request to make the parameters reparsed.
+// ReloadParam clears parsed request parameters after middleware changes the body or query.
+// It also removes temporary files from the previous multipart form before reparsing.
 func (r *Request) ReloadParam() {
+	if r.MultipartForm != nil {
+		if err := r.MultipartForm.RemoveAll(); err != nil {
+			panic(fmt.Errorf("remove multipart form before reloading parameters: %w", err))
+		}
+		r.MultipartForm = nil
+	}
 	r.parsedBody = false
 	r.parsedForm = false
 	r.parsedQuery = false
 	r.bodyContent = nil
+	r.formMap = nil
+	r.queryMap = nil
+	r.Form = nil
+	r.PostForm = nil
+}
+
+// ReloadQuery clears parsed query parameters after middleware changes RawQuery.
+// It preserves parsed body, form values, and multipart uploads.
+func (r *Request) ReloadQuery() {
+	r.parsedQuery = false
+	r.queryMap = nil
+	r.Form = nil
 }

@@ -370,6 +370,13 @@ func (oai *OpenApiV3) removeOperationDuplicatedProperties(operation *Operation) 
 			}
 		}
 
+		// The request body schema might have no properties at all, for example the JSON
+		// array request body declared by the `type:"array"` tag, of which the schema is
+		// an array type without any property, so there's nothing to remove.
+		if requestBodyContent.Schema.Value.Properties == nil {
+			continue
+		}
+
 		// Check the Value public field for the request body.
 		if commonRequest := requestBodyContent.Schema.Value.Properties.Get(dataField); commonRequest != nil {
 			commonRequest.Value.Required = oai.removeItemsFromArray(commonRequest.Value.Required, duplicatedParameterNames)

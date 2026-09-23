@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/gogf/gf/v2/encoding/gjson"
@@ -1493,5 +1494,113 @@ func TestOpenApiV3_ArrayRequestBody_Nested(t *testing.T) {
 		t.Assert(extraSchema.Value.Type, goai.TypeObject)
 		t.Assert(extraSchema.Value.Properties.Get("key1").Value.Type, goai.TypeString)
 		t.Assert(extraSchema.Value.Properties.Get("tags").Value.Type, goai.TypeArray)
+	})
+}
+
+// TestOpenApiV3_ArrayRequestBody_PathParameter tests the OpenAPI schema generation for the API
+// that is declared with the `type:"array"` tag and a path parameter at the same time.
+//
+// The array request body schema has no property at all, on which the property removing of
+// removeOperationDuplicatedProperties used to panic as long as the operation has any parameter.
+func TestOpenApiV3_ArrayRequestBody_PathParameter(t *testing.T) {
+	type PathArrayItem struct {
+		Name string `json:"name" dc:"Name"`
+	}
+	type PathArrayReq struct {
+		g.Meta `mime:"application/json" method:"post" path:"/batch/{id}" type:"array"`
+		Id     int             `json:"id" dc:"Id"`
+		Items  []PathArrayItem `json:"items" dc:"Items"`
+	}
+	type PathArrayRes struct {
+		Ok bool `json:"ok" dc:"Ok"`
+	}
+
+	f := func(ctx context.Context, req *PathArrayReq) (res *PathArrayRes, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var oai = goai.New()
+		err := oai.Add(goai.AddInput{
+			Path:   "/batch/{id}",
+			Method: http.MethodPost,
+			Object: f,
+		})
+		t.AssertNil(err)
+
+		var operation = oai.Paths["/batch/{id}"].Post
+		t.AssertNE(operation, nil)
+
+		// The path parameter is kept, as it is not a property of the JSON array request body.
+		t.Assert(len(operation.Parameters), 1)
+		t.Assert(operation.Parameters[0].Value.Name, "id")
+
+		// The JSON array request body is kept as well.
+		t.AssertNE(operation.RequestBody, nil)
+		t.Assert(
+			operation.RequestBody.Value.Content["application/json"].Schema.Value.Type,
+			goai.TypeArray,
+		)
+	})
+}
+
+// TestOpenApiV3_ArrayRequestBody_MissingArrayField checks the declaration error for a
+// request struct tagged as an array without an array or slice field.
+func TestOpenApiV3_ArrayRequestBody_MissingArrayField(t *testing.T) {
+	type MissingArrayReq struct {
+		g.Meta `mime:"application/json" method:"post" path:"/batch/missing" type:"array"`
+		Name   string `json:"name"`
+	}
+	f := func(ctx context.Context, req *MissingArrayReq) (res *struct{}, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		err := goai.New().Add(goai.AddInput{
+			Path:   "/batch/missing",
+			Method: http.MethodPost,
+			Object: f,
+		})
+		t.AssertNE(err, nil)
+		t.Assert(strings.Contains(err.Error(), `type:"array"`), true)
+	})
+}
+
+// TestOpenApiV3_ArrayRequestBody_FieldSelection checks that schema items come from the
+// same first eligible array field selected by the HTTP request binding path.
+func TestOpenApiV3_ArrayRequestBody_FieldSelection(t *testing.T) {
+	type HiddenFirstReq struct {
+		g.Meta `mime:"application/json" method:"post" path:"/batch/hidden" type:"array"`
+		Hidden []int    `json:"-"`
+		Items  []string `json:"items"`
+	}
+	type TaggedEmbed struct {
+		Items []string `json:"items"`
+	}
+	type TaggedEmbeddedReq struct {
+		g.Meta      `mime:"application/json" method:"post" path:"/batch/embedded" type:"array"`
+		TaggedEmbed `json:"container"`
+		Fallback    []int `json:"fallback"`
+	}
+
+	hiddenHandler := func(context.Context, *HiddenFirstReq) (*struct{}, error) { return nil, nil }
+	embeddedHandler := func(context.Context, *TaggedEmbeddedReq) (*struct{}, error) { return nil, nil }
+
+	gtest.C(t, func(t *gtest.T) {
+		var oai = goai.New()
+		err := oai.Add(goai.AddInput{Path: "/batch/hidden", Method: http.MethodPost, Object: hiddenHandler})
+		t.AssertNil(err)
+		err = oai.Add(goai.AddInput{Path: "/batch/embedded", Method: http.MethodPost, Object: embeddedHandler})
+		t.AssertNil(err)
+
+		for _, path := range []string{"/batch/hidden", "/batch/embedded"} {
+			t.Run(path, func(subtest *testing.T) {
+				gtest.C(subtest, func(t *gtest.T) {
+					var schema = oai.Paths[path].Post.RequestBody.Value.Content["application/json"].Schema.Value
+					t.Assert(schema.Type, goai.TypeArray)
+					t.Assert(schema.Items.Value.Type, goai.TypeString)
+				})
+			})
+		}
 	})
 }

@@ -137,7 +137,7 @@ func (oai *OpenApiV3) getRequestSchemaRef(in getRequestSchemaRefInput) (*SchemaR
 func (oai *OpenApiV3) getArrayRequestSchemaRef(requestObject any) (*SchemaRef, error) {
 	structFields, err := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         requestObject,
-		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+		RecursiveOption: gstructs.RecursiveOptionEmbedded,
 	})
 	if err != nil {
 		return nil, err
@@ -147,6 +147,9 @@ func (oai *OpenApiV3) getArrayRequestSchemaRef(requestObject any) (*SchemaRef, e
 	for _, structField := range structFields {
 		var golangType = structField.Type().Type
 		if golangType.Kind() != reflect.Slice && golangType.Kind() != reflect.Array {
+			continue
+		}
+		if structField.TagPriorityName() == "-" {
 			continue
 		}
 		// It also recursively registers the schema of all the nested struct types in the
@@ -164,7 +167,7 @@ func (oai *OpenApiV3) getArrayRequestSchemaRef(requestObject any) (*SchemaRef, e
 	}
 	return nil, gerror.NewCodef(
 		gcode.CodeInvalidParameter,
-		`there's no slice/array attribute in request struct "%s" for the "type:array" tag definition`,
+		`there is no slice/array attribute in request struct "%s" for the type:"array" tag definition`,
 		oai.golangTypeToSchemaName(reflect.TypeOf(requestObject)),
 	)
 }

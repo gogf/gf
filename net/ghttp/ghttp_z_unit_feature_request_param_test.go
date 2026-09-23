@@ -206,28 +206,14 @@ func Test_ParamsInvalidJsonReportsParseError(t *testing.T) {
 			t.Assert(payload.Data, nil)
 		}
 
-		assertValidJson := func(resp string) {
-			var payload struct {
-				Code int `json:"code"`
-			}
-			err := json.Unmarshal([]byte(resp), &payload)
-			t.AssertNil(err)
-			t.Assert(payload.Code, gcode.CodeOK.Code())
-		}
-
-		// The malformed JSON bodies and the form encoded body are reported as invalid parameters.
-		for _, body := range []string{`{"name":}`, `name=john`} {
+		// The malformed JSON bodies, the JSON array body and the form encoded body are
+		// reported as invalid parameters. Note that the JSON array body is only supported
+		// by the request struct tagged with `type:"array"`, which this one is not.
+		for _, body := range []string{`{"name":}`, `[{"name":"john"}]`, `name=john`} {
 			assertInvalidParameter(client.ContentJson().PostContent(reqCtx, "/user-invalid-json", body))
 		}
-		for _, body := range []string{`{"name":}`} {
+		for _, body := range []string{`{"name":}`, `[{"name":"john"}]`} {
 			assertInvalidParameter(client.ContentJson().GetContent(reqCtx, "/user-invalid-json", body))
-		}
-
-		// The JSON array body is valid JSON, which is supported by the request struct tagged
-		// with `type:"array"`, so it is not reported as an invalid parameter.
-		for _, body := range []string{`[{"name":"john"}]`} {
-			assertValidJson(client.ContentJson().PostContent(reqCtx, "/user-invalid-json", body))
-			assertValidJson(client.ContentJson().GetContent(reqCtx, "/user-invalid-json", body))
 		}
 	})
 }
