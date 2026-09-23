@@ -14,6 +14,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -163,182 +164,241 @@ func (c *Client) DoRequest(
 // prepareRequest verifies request parameters, builds and returns http request.
 func (c *Client) prepareRequest(ctx context.Context, method, url string, data ...any) (req *http.Request, err error) {
 	method = strings.ToUpper(method)
-	if len(c.prefix) > 0 {
-		url = c.prefix + gstr.Trim(url)
-	}
-	if !gstr.ContainsI(url, httpProtocolName) {
-		url = httpProtocolName + `://` + url
-	}
+	url = c.prepareRequestURL(url)
 	var (
 		params             string
+		mediaType          string
 		allowFileUploading = true
 	)
 	if len(data) > 0 {
-		mediaType, _, err := mime.ParseMediaType(c.header[httpHeaderContentType])
-		if err != nil {
-			// Fallback: use the raw header value if parsing fails.
-			mediaType = c.header[httpHeaderContentType]
-		}
-		switch mediaType {
-		case httpHeaderContentTypeJson:
-			switch data[0].(type) {
-			case string, []byte:
-				params = gconv.String(data[0])
-			default:
-				if b, err := json.Marshal(data[0]); err != nil {
-					return nil, err
-				} else {
-					params = string(b)
-				}
-			}
-			allowFileUploading = false
-
-		case httpHeaderContentTypeXml:
-			switch data[0].(type) {
-			case string, []byte:
-				params = gconv.String(data[0])
-			default:
-				if b, err := gjson.New(data[0]).ToXml(); err != nil {
-					return nil, err
-				} else {
-					params = string(b)
-				}
-			}
-			allowFileUploading = false
-
-		default:
-			params = httputil.BuildParams(data[0], c.noUrlEncode)
-		}
-	}
-	if method == http.MethodGet {
-		var bodyBuffer *bytes.Buffer
-		if params != "" {
-			mediaType, _, err := mime.ParseMediaType(c.header[httpHeaderContentType])
-			if err != nil {
-				// Fallback: use the raw header value if parsing fails.
-				mediaType = c.header[httpHeaderContentType]
-			}
-			switch mediaType {
-			case
-				httpHeaderContentTypeJson,
-				httpHeaderContentTypeXml:
-				bodyBuffer = bytes.NewBuffer([]byte(params))
-			default:
-				// It appends the parameters to the url
-				// if http method is GET and Content-Type is not specified.
-				if gstr.Contains(url, "?") {
-					url = url + "&" + params
-				} else {
-					url = url + "?" + params
-				}
-				bodyBuffer = bytes.NewBuffer(nil)
-			}
-		} else {
-			bodyBuffer = bytes.NewBuffer(nil)
-		}
-		if req, err = http.NewRequest(method, url, bodyBuffer); err != nil {
-			err = gerror.Wrapf(err, `http.NewRequest failed with method "%s" and URL "%s"`, method, url)
+		mediaType = c.resolveRequestMediaType()
+		if params, allowFileUploading, err = c.encodeRequestParams(data[0], mediaType); err != nil {
 			return nil, err
 		}
-	} else {
-		if allowFileUploading && strings.Contains(params, httpParamFileHolder) {
-			// File uploading request.
-			var (
-				buffer          = bytes.NewBuffer(nil)
-				writer          = multipart.NewWriter(buffer)
-				isFileUploading = false
-			)
-			for _, item := range strings.Split(params, "&") {
-				array := strings.SplitN(item, "=", 2)
-				if len(array) < 2 {
-					continue
-				}
-				if len(array[1]) > 6 && strings.Compare(array[1][0:6], httpParamFileHolder) == 0 {
-					path := array[1][6:]
-					if !gfile.Exists(path) {
-						return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `"%s" does not exist`, path)
-					}
-					var (
-						file          io.Writer
-						formFileName  = gfile.Basename(path)
-						formFieldName = array[0]
-					)
-					// it sets post content type as `application/octet-stream`
-					if file, err = writer.CreateFormFile(formFieldName, formFileName); err != nil {
-						return nil, gerror.Wrapf(
-							err, `CreateFormFile failed with "%s", "%s"`, formFieldName, formFileName,
-						)
-					}
-					var f *os.File
-					if f, err = gfile.Open(path); err != nil {
-						return nil, err
-					}
-					if _, err = io.Copy(file, f); err != nil {
-						_ = f.Close()
-						return nil, gerror.Wrapf(
-							err, `io.Copy failed from "%s" to form "%s"`, path, formFieldName,
-						)
-					}
-					if err = f.Close(); err != nil {
-						return nil, gerror.Wrapf(err, `close file descriptor failed for "%s"`, path)
-					}
-					isFileUploading = true
-				} else {
-					var (
-						fieldName  = array[0]
-						fieldValue = array[1]
-					)
-					// Decode URL-encoded field name and value.
-					// If decoding fails, use the original value.
-					if v, err := gurl.Decode(fieldName); err == nil {
-						fieldName = v
-					}
-					if v, err := gurl.Decode(fieldValue); err == nil {
-						fieldValue = v
-					}
-					if err = writer.WriteField(fieldName, fieldValue); err != nil {
-						return nil, gerror.Wrapf(
-							err, `write form field failed with "%s", "%s"`, fieldName, fieldValue,
-						)
-					}
-				}
-			}
-			// Close finishes the multipart message and writes the trailing
-			// boundary end line to the output.
-			if err = writer.Close(); err != nil {
-				return nil, gerror.Wrapf(err, `form writer close failed`)
-			}
+	}
+	switch {
+	case method == http.MethodGet:
+		req, err = c.newGetRequest(method, url, params, mediaType)
+	case allowFileUploading && strings.Contains(params, httpParamFileHolder):
+		req, err = c.newMultipartRequest(method, url, params)
+	default:
+		req, err = c.newNormalRequest(method, url, params)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return c.applyRequestOptions(req, ctx), nil
+}
 
-			if req, err = http.NewRequest(method, url, buffer); err != nil {
-				return nil, gerror.Wrapf(
-					err, `http.NewRequest failed for method "%s" and URL "%s"`, method, url,
-				)
+// urlSchemeRegex matches urls that already carry a scheme, like "http://", "https://" or "ws://".
+// It anchors at the beginning and requires the "://" part, so that neither urls containing
+// "http" inside (eg. "myhttpservice.com") nor "host:port" inputs (eg. "localhost:8000")
+// are mistakenly treated as schemed ones.
+var urlSchemeRegex = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9+.-]*://`)
+
+// prepareRequestURL returns the url with the client prefix and the protocol completed.
+func (c *Client) prepareRequestURL(url string) string {
+	if len(c.prefix) > 0 {
+		url = c.prefix + gstr.Trim(url)
+	}
+	if !urlSchemeRegex.MatchString(url) {
+		url = httpProtocolName + `://` + url
+	}
+	return url
+}
+
+// resolveRequestMediaType parses and returns the media type from the client custom
+// Content-Type header. It falls back to the raw header value if parsing fails.
+func (c *Client) resolveRequestMediaType() string {
+	mediaType, _, err := mime.ParseMediaType(c.header[httpHeaderContentType])
+	if err != nil {
+		// Fallback: use the raw header value if parsing fails.
+		mediaType = c.header[httpHeaderContentType]
+	}
+	return mediaType
+}
+
+// encodeRequestParams serializes the request data into params string according to
+// the given media type. It also returns whether the params allow file uploading.
+func (c *Client) encodeRequestParams(data any, mediaType string) (string, bool, error) {
+	switch mediaType {
+	case httpHeaderContentTypeJson:
+		switch data.(type) {
+		case string, []byte:
+			return gconv.String(data), false, nil
+		default:
+			b, err := json.Marshal(data)
+			if err != nil {
+				return "", false, err
 			}
-			if isFileUploading {
-				req.Header.Set(httpHeaderContentType, writer.FormDataContentType())
+			return string(b), false, nil
+		}
+
+	case httpHeaderContentTypeXml:
+		switch data.(type) {
+		case string, []byte:
+			return gconv.String(data), false, nil
+		default:
+			b, err := gjson.New(data).ToXml()
+			if err != nil {
+				return "", false, err
 			}
-		} else {
-			// Normal request.
-			paramBytes := []byte(params)
-			if req, err = http.NewRequest(method, url, bytes.NewReader(paramBytes)); err != nil {
-				err = gerror.Wrapf(err, `http.NewRequest failed for method "%s" and URL "%s"`, method, url)
-				return nil, err
+			return string(b), false, nil
+		}
+
+	default:
+		return httputil.BuildParams(data, c.noUrlEncode), true, nil
+	}
+}
+
+// newGetRequest builds and returns a GET request with given params.
+// Note that it appends the params to the url if the media type is not json or xml.
+func (c *Client) newGetRequest(method, url, params, mediaType string) (req *http.Request, err error) {
+	var bodyBuffer *bytes.Buffer
+	if params != "" {
+		switch mediaType {
+		case
+			httpHeaderContentTypeJson,
+			httpHeaderContentTypeXml:
+			bodyBuffer = bytes.NewBuffer([]byte(params))
+		default:
+			// It appends the parameters to the url
+			// if http method is GET and Content-Type is not specified.
+			if gstr.Contains(url, "?") {
+				url = url + "&" + params
+			} else {
+				url = url + "?" + params
 			}
-			if v, ok := c.header[httpHeaderContentType]; ok {
-				// Custom Content-Type.
-				req.Header.Set(httpHeaderContentType, v)
-			} else if len(paramBytes) > 0 {
-				if (paramBytes[0] == '[' || paramBytes[0] == '{') && json.Valid(paramBytes) {
-					// Auto-detecting and setting the post content format: JSON.
-					req.Header.Set(httpHeaderContentType, httpHeaderContentTypeJson)
-				} else if gregex.IsMatchString(httpRegexParamJson, params) {
-					// If the parameters passed like "name=value", it then uses form type.
-					req.Header.Set(httpHeaderContentType, httpHeaderContentTypeForm)
-				}
-			}
+			bodyBuffer = bytes.NewBuffer(nil)
+		}
+	} else {
+		bodyBuffer = bytes.NewBuffer(nil)
+	}
+	if req, err = http.NewRequest(method, url, bodyBuffer); err != nil {
+		err = gerror.Wrapf(err, `http.NewRequest failed with method "%s" and URL "%s"`, method, url)
+		return nil, err
+	}
+	return req, nil
+}
+
+// newMultipartRequest builds and returns a multipart request for form data which
+// contains file uploading items in format "@file:path".
+func (c *Client) newMultipartRequest(method, url, params string) (req *http.Request, err error) {
+	var (
+		buffer          = bytes.NewBuffer(nil)
+		writer          = multipart.NewWriter(buffer)
+		isFileUploading = false
+	)
+	for _, item := range strings.Split(params, "&") {
+		var isFile bool
+		if isFile, err = writeMultipartItem(writer, item); err != nil {
+			return nil, err
+		}
+		if isFile {
+			isFileUploading = true
 		}
 	}
+	// Close finishes the multipart message and writes the trailing
+	// boundary end line to the output.
+	if err = writer.Close(); err != nil {
+		return nil, gerror.Wrapf(err, `form writer close failed`)
+	}
 
+	if req, err = http.NewRequest(method, url, buffer); err != nil {
+		return nil, gerror.Wrapf(
+			err, `http.NewRequest failed for method "%s" and URL "%s"`, method, url,
+		)
+	}
+	if isFileUploading {
+		req.Header.Set(httpHeaderContentType, writer.FormDataContentType())
+	}
+	return req, nil
+}
+
+// writeMultipartItem writes one "key=value" item into the multipart writer.
+// It returns whether this item is a file uploading one.
+func writeMultipartItem(writer *multipart.Writer, item string) (isFile bool, err error) {
+	array := strings.SplitN(item, "=", 2)
+	if len(array) < 2 {
+		return false, nil
+	}
+	if len(array[1]) > 6 && strings.Compare(array[1][0:6], httpParamFileHolder) == 0 {
+		path := array[1][6:]
+		if !gfile.Exists(path) {
+			return false, gerror.NewCodef(gcode.CodeInvalidParameter, `"%s" does not exist`, path)
+		}
+		var (
+			file          io.Writer
+			formFileName  = gfile.Basename(path)
+			formFieldName = array[0]
+		)
+		// it sets post content type as `application/octet-stream`
+		if file, err = writer.CreateFormFile(formFieldName, formFileName); err != nil {
+			return false, gerror.Wrapf(
+				err, `CreateFormFile failed with "%s", "%s"`, formFieldName, formFileName,
+			)
+		}
+		var f *os.File
+		if f, err = gfile.Open(path); err != nil {
+			return false, err
+		}
+		if _, err = io.Copy(file, f); err != nil {
+			_ = f.Close()
+			return false, gerror.Wrapf(
+				err, `io.Copy failed from "%s" to form "%s"`, path, formFieldName,
+			)
+		}
+		if err = f.Close(); err != nil {
+			return false, gerror.Wrapf(err, `close file descriptor failed for "%s"`, path)
+		}
+		return true, nil
+	}
+	var (
+		fieldName  = array[0]
+		fieldValue = array[1]
+	)
+	// Decode URL-encoded field name and value.
+	// If decoding fails, use the original value.
+	if v, err := gurl.Decode(fieldName); err == nil {
+		fieldName = v
+	}
+	if v, err := gurl.Decode(fieldValue); err == nil {
+		fieldValue = v
+	}
+	if err = writer.WriteField(fieldName, fieldValue); err != nil {
+		return false, gerror.Wrapf(
+			err, `write form field failed with "%s", "%s"`, fieldName, fieldValue,
+		)
+	}
+	return false, nil
+}
+
+// newNormalRequest builds and returns a request with params as its body. It automatically
+// detects and sets the Content-Type in json or form format if the client has no custom one.
+func (c *Client) newNormalRequest(method, url, params string) (req *http.Request, err error) {
+	paramBytes := []byte(params)
+	if req, err = http.NewRequest(method, url, bytes.NewReader(paramBytes)); err != nil {
+		err = gerror.Wrapf(err, `http.NewRequest failed for method "%s" and URL "%s"`, method, url)
+		return nil, err
+	}
+	if v, ok := c.header[httpHeaderContentType]; ok {
+		// Custom Content-Type.
+		req.Header.Set(httpHeaderContentType, v)
+	} else if len(paramBytes) > 0 {
+		if (paramBytes[0] == '[' || paramBytes[0] == '{') && json.Valid(paramBytes) {
+			// Auto-detecting and setting the post content format: JSON.
+			req.Header.Set(httpHeaderContentType, httpHeaderContentTypeJson)
+		} else if gregex.IsMatchString(httpRegexParamJson, params) {
+			// If the parameters passed like "name=value", it then uses form type.
+			req.Header.Set(httpHeaderContentType, httpHeaderContentTypeForm)
+		}
+	}
+	return req, nil
+}
+
+// applyRequestOptions applies the client custom options to the request:
+// context, custom header, host, cookie and basic authentication.
+func (c *Client) applyRequestOptions(req *http.Request, ctx context.Context) *http.Request {
 	// Context.
 	if ctx != nil {
 		req = req.WithContext(ctx)
@@ -371,7 +431,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 	if len(c.authUser) > 0 {
 		req.SetBasicAuth(c.authUser, c.authPass)
 	}
-	return req, nil
+	return req
 }
 
 // callRequest sends request with give http.Request, and returns the responses object.
