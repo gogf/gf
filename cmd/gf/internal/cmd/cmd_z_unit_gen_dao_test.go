@@ -114,6 +114,67 @@ func Test_Gen_Dao_Default(t *testing.T) {
 	})
 }
 
+// Test_Gen_Dao_PostgreSQLSchema verifies that gen dao discovers tables in a selected PostgreSQL schema.
+func Test_Gen_Dao_PostgreSQLSchema(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			schema = "gen_dao_" + guid.S()
+			table  = "table_user"
+			path   = gfile.Temp(guid.S())
+		)
+		t.AssertNE(testPgDB, nil)
+		_, err := testPgDB.Exec(ctx, fmt.Sprintf("CREATE SCHEMA %s", schema))
+		t.AssertNil(err)
+		t.Cleanup(func() {
+			_, cleanupErr := testPgDB.Exec(ctx, fmt.Sprintf("DROP SCHEMA %s CASCADE", schema))
+			t.AssertNil(cleanupErr)
+		})
+
+		_, err = testPgDB.Exec(ctx, fmt.Sprintf(
+			"CREATE TABLE %s.%s (id serial PRIMARY KEY, name varchar(45))", schema, table,
+		))
+		t.AssertNil(err)
+		var group = "gen_dao_" + guid.S()
+		err = gdb.AddConfigNode(group, gdb.ConfigNode{Link: linkPg})
+		t.AssertNil(err)
+		schemaDB, err := gdb.Instance(group)
+		t.AssertNil(err)
+		tables, err := schemaDB.Schema(schema).Tables(ctx)
+		t.AssertNil(err)
+		t.AssertIN(table, tables)
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+		t.Cleanup(func() {
+			t.AssertNil(gfile.Remove(path))
+		})
+		err = gfile.Copy(
+			gtest.DataPath("gendao", "go.mod.txt"),
+			gfile.Join(path, "go.mod"),
+		)
+		t.AssertNil(err)
+
+		in := gendao.CGenDaoInput{
+			Path:   path,
+			Link:   linkPg,
+			Schema: schema,
+			Tables: "*",
+		}
+		err = gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+		_, err = gendao.CGenDao{}.Dao(ctx, in)
+		t.AssertNil(err)
+
+		files, err := gfile.ScanDir(path, "*.go", true)
+		t.AssertNil(err)
+		t.Assert(files, []string{
+			filepath.FromSlash(path + "/dao/internal/table_user.go"),
+			filepath.FromSlash(path + "/dao/table_user.go"),
+			filepath.FromSlash(path + "/model/do/table_user.go"),
+			filepath.FromSlash(path + "/model/entity/table_user.go"),
+		})
+	})
+}
+
 func Test_Gen_Dao_TypeMapping(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (

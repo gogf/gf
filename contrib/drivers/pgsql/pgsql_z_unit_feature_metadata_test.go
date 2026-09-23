@@ -37,7 +37,7 @@ func Test_TableFields_Basic(t *testing.T) {
 }
 
 // Test_TableFields_Schema tests TableFields with explicit schema.
-// PgSQL uses the shared SchemaName ("test") declared in pgsql_z_unit_init_test.go.
+// PgSQL uses the shared SchemaName ("public") declared in pgsql_z_unit_init_test.go.
 func Test_TableFields_Schema(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
