@@ -52,21 +52,22 @@ var (
 //
 // TODO: Improve the performance by reducing duplicated reflect usage on the same variable across packages.
 func (r *Request) Parse(pointer any) error {
-	return r.doParse(pointer, parseTypeRequest)
+	return r.doParse(pointer, parseTypeRequest, true)
 }
 
 // ParseQuery performs like function Parse, but only parses the query parameters.
 func (r *Request) ParseQuery(pointer any) error {
-	return r.doParse(pointer, parseTypeQuery)
+	return r.doParse(pointer, parseTypeQuery, true)
 }
 
 // ParseForm performs like function Parse, but only parses the form parameters or the body content.
 func (r *Request) ParseForm(pointer any) error {
-	return r.doParse(pointer, parseTypeForm)
+	return r.doParse(pointer, parseTypeForm, true)
 }
 
 // doParse parses the request data to struct/structs according to request type.
-func (r *Request) doParse(pointer any, requestType int) error {
+// The parameter `withValidation` specifies whether doing validation for the given pointer.
+func (r *Request) doParse(pointer any, requestType int, withValidation bool) error {
 	var (
 		reflectVal1  = reflect.ValueOf(pointer)
 		reflectKind1 = reflectVal1.Kind()
@@ -108,12 +109,14 @@ func (r *Request) doParse(pointer any, requestType int) error {
 			}
 		}
 		// Validation.
-		if err = gvalid.New().
-			Bail().
-			Data(pointer).
-			Assoc(data).
-			Run(r.Context()); err != nil {
-			return err
+		if withValidation {
+			if err = gvalid.New().
+				Bail().
+				Data(pointer).
+				Assoc(data).
+				Run(r.Context()); err != nil {
+				return err
+			}
 		}
 
 	// Multiple struct, it only supports JSON type post content like:
@@ -128,13 +131,15 @@ func (r *Request) doParse(pointer any, requestType int) error {
 		if err = j.Var().Scan(pointer); err != nil {
 			return err
 		}
-		for i := 0; i < reflectVal2.Len(); i++ {
-			if err = gvalid.New().
-				Bail().
-				Data(reflectVal2.Index(i)).
-				Assoc(j.Get(gconv.String(i)).Map()).
-				Run(r.Context()); err != nil {
-				return err
+		if withValidation {
+			for i := 0; i < reflectVal2.Len(); i++ {
+				if err = gvalid.New().
+					Bail().
+					Data(reflectVal2.Index(i)).
+					Assoc(j.Get(gconv.String(i)).Map()).
+					Run(r.Context()); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -307,7 +312,9 @@ func (r *Request) parseForm() {
 			for name, values := range r.PostForm {
 				// Invalid parameter name.
 				// Only allow chars of: '\w', '[', ']', '-'.
-				if !gregex.IsMatchString(`^[\w\-\[\]]+$`, name) && len(r.PostForm) == 1 {
+				// The content type check is only necessary for the single parameter case,
+				// which might be JSON/XML content passed as the parameter name.
+				if len(r.PostForm) == 1 && !gregex.IsMatchString(`^[\w\-\[\]]+$`, name) {
 					// It might be JSON/XML content.
 					if s := gstr.Trim(name + strings.Join(values, " ")); len(s) > 0 {
 						if s[0] == '{' && s[len(s)-1] == '}' || s[0] == '<' && s[len(s)-1] == '>' {
