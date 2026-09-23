@@ -36,7 +36,10 @@ func TestConn_Transaction(t *testing.T) {
 
 		_, err = redis.Do(ctx, "set", "test:tx:probe", "real")
 		t.AssertNil(err)
-		defer redis.Do(ctx, "del", "test:tx:probe")
+		defer func() {
+			_, err = redis.Do(ctx, "del", "test:tx:probe")
+			t.AssertNil(err)
+		}()
 
 		_, err = redis.Do(ctx, "del", "test:tx:set")
 		t.AssertNil(err)
@@ -58,7 +61,10 @@ func TestConn_Transaction(t *testing.T) {
 		v, err = conn.Do(ctx, "exec")
 		t.AssertNil(err)
 		t.Assert(v.Strings(), []string{"1", "1"})
-		defer redis.Do(ctx, "del", "test:tx:set")
+		defer func() {
+			_, err = redis.Do(ctx, "del", "test:tx:set")
+			t.AssertNil(err)
+		}()
 
 		// The connection is clean after EXEC.
 		v, err = conn.Do(ctx, "scard", "test:tx:set")
