@@ -7,6 +7,7 @@
 package gvalid_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 var (
@@ -1753,5 +1755,32 @@ func Test_Uppercase(t *testing.T) {
 				t.AssertNE(err, nil)
 			}
 		}
+	})
+}
+
+// It tests the rule parsing when the rule pattern contains char ':'.
+func Test_Rule_PatternContainingColon(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var rule = `regex:^\d+:\w+$`
+		t.AssertNil(g.Validator().Data("123:abc").Rules(rule).Run(ctx))
+		t.AssertNE(g.Validator().Data("abc").Rules(rule).Run(ctx), nil)
+	})
+}
+
+// It tests custom rule which name contains non-ASCII chars.
+// It used to panic as the rule name was parsed using regexp `^([\w-]+):{0,1}(.*)`.
+func Test_Rule_NonAsciiName(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			rule = "中文规则"
+			f    = func(ctx context.Context, in gvalid.RuleFuncInput) error {
+				if in.Value.String() != "ok" {
+					return gerror.New("the value should be ok")
+				}
+				return nil
+			}
+		)
+		t.AssertNil(g.Validator().RuleFunc(rule, f).Data("ok").Rules(rule).Run(ctx))
+		t.AssertNE(g.Validator().RuleFunc(rule, f).Data("no").Rules(rule).Run(ctx), nil)
 	})
 }

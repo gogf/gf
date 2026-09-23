@@ -30,13 +30,26 @@ type Validator struct {
 	bail                              bool                // Stop validation after the first validation error.
 	foreach                           bool                // It tells the next validation using current value as an array and validates each of its element.
 	caseInsensitive                   bool                // Case-Insensitive configuration for those rules that need value comparison.
+	cache                             bool                // Enable the parsed rule value cache for the validation, which is enabled in default.
 }
 
 // New creates and returns a new Validator.
-func New() *Validator {
+//
+// The optional parameter `cached` specifies whether to enable the parsed rule
+// value cache for the validation, which is disabled in default, as the rule
+// values might be dynamically generated in user code and the process level
+// cache would then grow without bound. Enable it if the rule values are known
+// to be static, which is the case for the validation rules from struct tag,
+// as the framework does for HTTP request handling (see package `ghttp`).
+func New(cached ...bool) *Validator {
+	var cacheEnabled = false
+	if len(cached) > 0 {
+		cacheEnabled = cached[0]
+	}
 	return &Validator{
 		i18nManager: gi18n.Instance(),          // Use default i18n manager.
 		ruleFuncMap: make(map[string]RuleFunc), // Custom rule function storing map.
+		cache:       cacheEnabled,
 	}
 }
 
@@ -87,9 +100,8 @@ func (v *Validator) Run(ctx context.Context) Error {
 
 // Clone creates and returns a new Validator, which is a shallow copy of the current one.
 func (v *Validator) Clone() *Validator {
-	newValidator := New()
-	*newValidator = *v
-	return newValidator
+	newValidator := *v
+	return &newValidator
 }
 
 // I18n sets the i18n manager for the validator.
