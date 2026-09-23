@@ -103,9 +103,9 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 //	| _bytea          | bytea[]                        | pq.ByteaArray   | [][]byte    |
 //	| _uuid           | uuid[]                         | pq.StringArray  | []uuid.UUID |
 //
-// Note: PostgreSQL also supports these array types but they are not yet mapped:
-//   - _date (date[]), _timestamp (timestamp[]), _timestamptz (timestamptz[])
-//   - _jsonb (jsonb[]), _json (json[])
+// Note: _date, _timestamp and _timestamptz are mapped in localTypeMap and read back as
+// []string, one element per array member. _json and _jsonb map to a single string on
+// purpose: pq has no scanner for them, so the whole array literal is returned as text.
 func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue any) (any, error) {
 	localType, err := d.CheckLocalTypeForField(ctx, fieldType, fieldValue)
 	if err != nil {

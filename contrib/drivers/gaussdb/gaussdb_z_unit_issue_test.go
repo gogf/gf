@@ -275,7 +275,8 @@ func Test_IssuePointInterval_NotConvertedToInt(t *testing.T) {
 
 // Test_Issue4842 tests that types whose names merely contain "int" are not detected as
 // integers and read back as 0. The driver lists most of them explicitly, but int2vector
-// is only covered by the fallback detection of the core.
+// is only covered by the fallback detection of the core. The daterange and reltime scalars
+// were listed as a datetime, which lost everything the parser could not read as a date.
 // See https://github.com/gogf/gf/issues/4842
 func Test_Issue4842(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
@@ -292,6 +293,16 @@ func Test_Issue4842(t *testing.T) {
 		t.Assert(one["b"].String(), `2 days`)
 		t.Assert(one["c"].String(), `[1,10)`)
 		t.Assert(one["d"].String(), `[1,10)`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The daterange and reltime scalars keep their text instead of being parsed as a
+		// datetime, which kept the lower bound of a range only and dropped a relative time.
+		one, err := db.GetOne(ctx, `SELECT '[2026-01-01,2026-02-01)'::daterange AS a,
+			'1 day'::reltime AS b, ARRAY['1 day'::reltime] AS c`)
+		t.AssertNil(err)
+		t.Assert(one["a"].String(), `[2026-01-01,2026-02-01)`)
+		t.Assert(one["b"].String(), `1 day`)
+		t.Assert(one["c"].Strings(), g.SliceStr{"1 day"})
 	})
 	gtest.C(t, func(t *gtest.T) {
 		// Genuine integer types must keep being detected as integers.

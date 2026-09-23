@@ -137,7 +137,7 @@ var localTypeMap = map[string]gdb.LocalType{
 	"clob":                           gdb.LocalTypeString,
 	"cstring":                        gdb.LocalTypeString,
 	"date":                           gdb.LocalTypeDate,
-	"daterange":                      gdb.LocalTypeDatetime,
+	"daterange":                      gdb.LocalTypeString, // was datetime
 	"fdw_handler":                    gdb.LocalTypeString,
 	"float4":                         gdb.LocalTypeFloat64,
 	"float8":                         gdb.LocalTypeFloat64,
@@ -212,7 +212,7 @@ var localTypeMap = map[string]gdb.LocalType{
 	"regproc":                        gdb.LocalTypeString,
 	"regprocedure":                   gdb.LocalTypeString,
 	"regtype":                        gdb.LocalTypeString,
-	"reltime":                        gdb.LocalTypeDatetime,
+	"reltime":                        gdb.LocalTypeString, // was datetime
 	"smalldatetime":                  gdb.LocalTypeDatetime,
 	"smgr":                           gdb.LocalTypeString,
 	"tdigestdata":                    gdb.LocalTypeString,
