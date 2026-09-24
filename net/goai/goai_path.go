@@ -205,6 +205,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		var (
 			contentTypes     = oai.Config.ReadContentTypes
 			tagMimeValue     = gmeta.Get(inputObject.Interface(), gtag.Mime).String()
+			tagTypeValue     = gmeta.Get(inputObject.Interface(), gtag.Type).String()
 			tagRequiredValue = gmeta.Get(inputObject.Interface(), gtag.Required).Bool()
 		)
 		requestBody.Required = tagRequiredValue
@@ -214,6 +215,15 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		for _, v := range contentTypes {
 			if isInputStructEmpty {
 				requestBody.Content[v] = MediaType{}
+			} else if tagTypeValue == TypeArray {
+				// The request body is a JSON array, which is declared by the `type:"array"` tag.
+				arraySchemaRef, err := oai.getArrayRequestSchemaRef(inputObject.Interface())
+				if err != nil {
+					return err
+				}
+				requestBody.Content[v] = MediaType{
+					Schema: arraySchemaRef,
+				}
 			} else {
 				schemaRef, err := oai.getRequestSchemaRef(getRequestSchemaRefInput{
 					BusinessStructName: inputStructTypeName,
@@ -358,6 +368,13 @@ func (oai *OpenApiV3) removeOperationDuplicatedProperties(operation *Operation) 
 				}
 				continue
 			}
+		}
+
+		// The request body schema might have no properties at all, for example the JSON
+		// array request body declared by the `type:"array"` tag, of which the schema is
+		// an array type without any property, so there's nothing to remove.
+		if requestBodyContent.Schema.Value.Properties == nil {
+			continue
 		}
 
 		// Check the Value public field for the request body.

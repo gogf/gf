@@ -29,6 +29,7 @@ const (
 	Domain               = `domain`          // Route domain for HTTP request.
 	Mime                 = `mime`            // MIME type for HTTP request/response.
 	Consumes             = `consumes`        // MIME type for HTTP request.
+	Type                 = `type`            // Type of the request body or the response content, usually for OpenAPI definition.
 	Summary              = `summary`         // Summary for struct, usually for OpenAPI in request struct.
 	SummaryShort         = `sm`              // Short name of Summary.
 	SummaryShort2        = `sum`             // Short name of Summary.

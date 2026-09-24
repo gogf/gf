@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/gogf/gf/v2/encoding/gjson"
@@ -1375,5 +1376,231 @@ func Test_ValidationRules(t *testing.T) {
 		t.Assert(schema.Properties.Get("Grade").Value.Max, 12.0)
 		t.Assert(schema.Properties.Get("Address").Value.MinLength, 3)
 		t.Assert(schema.Properties.Get("Address").Value.MaxLength, 64)
+	})
+}
+
+// TestOpenApiV3_ArrayRequestBody tests the OpenAPI schema generation for APIs with type:"array" tag.
+// This enables APIs to receive JSON array request bodies like [{"id":1},{"id":2}] instead of {"items":[...]}.
+func TestOpenApiV3_ArrayRequestBody(t *testing.T) {
+	// ChatMessage is a simple message structure for array request testing.
+	type ChatMessage struct {
+		Role    string `json:"role" dc:"Role: system/user/assistant"`
+		Content string `json:"content" dc:"Message content"`
+	}
+
+	// BatchChatReq demonstrates the type:"array" tag usage for batch chat APIs.
+	// When type:"array" is specified, the request body should be a JSON array [{}]
+	// instead of an object {}, and the schema type will be "array" not "object".
+	type BatchChatReq struct {
+		g.Meta   `mime:"application/json" method:"post" path:"/batch/chat" type:"array" summary:"Batch chat API"`
+		Messages []ChatMessage `json:"messages" dc:"Message list"`
+	}
+
+	type BatchChatRes struct {
+		Results []string `json:"results" dc:"Processing results"`
+	}
+
+	f := func(ctx context.Context, req *BatchChatReq) (res *BatchChatRes, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+		)
+		err = oai.Add(goai.AddInput{
+			Path:   "/batch/chat",
+			Method: http.MethodPost,
+			Object: f,
+		})
+		t.AssertNil(err)
+
+		// Verify path is registered
+		t.AssertNE(oai.Paths["/batch/chat"], nil)
+		t.AssertNE(oai.Paths["/batch/chat"].Post, nil)
+
+		// Verify request body schema is array type (not object type)
+		requestBodySchema := oai.Paths["/batch/chat"].Post.RequestBody.Value.Content["application/json"].Schema
+		t.Assert(requestBodySchema.Value.Type, goai.TypeArray)
+
+		// Verify items reference points to the ChatMessage schema
+		t.AssertNE(requestBodySchema.Value.Items, nil)
+		t.AssertNE(requestBodySchema.Value.Items.Ref, "")
+
+		// Verify ChatMessage schema is registered in Components.Schemas
+		chatMessageSchema := oai.Components.Schemas.Get("github.com.gogf.gf.v2.net.goai_test.ChatMessage")
+		t.AssertNE(chatMessageSchema, nil)
+		t.Assert(chatMessageSchema.Value.Type, goai.TypeObject)
+		t.Assert(chatMessageSchema.Value.Properties.Get("role").Value.Type, goai.TypeString)
+		t.Assert(chatMessageSchema.Value.Properties.Get("content").Value.Type, goai.TypeString)
+	})
+}
+
+// TestOpenApiV3_ArrayRequestBody_Nested tests array request body with nested structures.
+// This verifies that nested struct types are properly registered in Components.Schemas.
+func TestOpenApiV3_ArrayRequestBody_Nested(t *testing.T) {
+	type BatchChatRes struct {
+		Results []string `json:"results" dc:"Processing results"`
+	}
+
+	// ExtraInfo represents nested structure within array elements.
+	type ExtraInfo struct {
+		Key1 string   `json:"key1" dc:"Key 1"`
+		Tags []string `json:"tags" dc:"Tags list"`
+	}
+
+	// ChatMessageWithExtra includes nested struct fields.
+	type ChatMessageWithExtra struct {
+		Role    string    `json:"role" dc:"Role: system/user/assistant"`
+		Content string    `json:"content" dc:"Message content"`
+		Extra   ExtraInfo `json:"extra" dc:"Extra information"`
+	}
+
+	// NestedArrayReq demonstrates nested structure support in array requests.
+	type NestedArrayReq struct {
+		g.Meta   `mime:"application/json" method:"post" path:"/nested-array" type:"array" summary:"Nested array API"`
+		Messages []ChatMessageWithExtra `json:"messages" dc:"Message list with nested structure"`
+	}
+
+	f := func(ctx context.Context, req *NestedArrayReq) (res *BatchChatRes, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+		)
+		err = oai.Add(goai.AddInput{
+			Path:   "/nested-array",
+			Method: http.MethodPost,
+			Object: f,
+		})
+		t.AssertNil(err)
+
+		// Verify request body schema is array type
+		requestBodySchema := oai.Paths["/nested-array"].Post.RequestBody.Value.Content["application/json"].Schema
+		t.Assert(requestBodySchema.Value.Type, goai.TypeArray)
+
+		// Verify ChatMessageWithExtra schema is registered
+		chatSchema := oai.Components.Schemas.Get("github.com.gogf.gf.v2.net.goai_test.ChatMessageWithExtra")
+		t.AssertNE(chatSchema, nil)
+		t.Assert(chatSchema.Value.Type, goai.TypeObject)
+
+		// Verify nested ExtraInfo schema is also registered
+		extraSchema := oai.Components.Schemas.Get("github.com.gogf.gf.v2.net.goai_test.ExtraInfo")
+		t.AssertNE(extraSchema, nil)
+		t.Assert(extraSchema.Value.Type, goai.TypeObject)
+		t.Assert(extraSchema.Value.Properties.Get("key1").Value.Type, goai.TypeString)
+		t.Assert(extraSchema.Value.Properties.Get("tags").Value.Type, goai.TypeArray)
+	})
+}
+
+// TestOpenApiV3_ArrayRequestBody_PathParameter tests the OpenAPI schema generation for the API
+// that is declared with the `type:"array"` tag and a path parameter at the same time.
+//
+// The array request body schema has no property at all, on which the property removing of
+// removeOperationDuplicatedProperties used to panic as long as the operation has any parameter.
+func TestOpenApiV3_ArrayRequestBody_PathParameter(t *testing.T) {
+	type PathArrayItem struct {
+		Name string `json:"name" dc:"Name"`
+	}
+	type PathArrayReq struct {
+		g.Meta `mime:"application/json" method:"post" path:"/batch/{id}" type:"array"`
+		Id     int             `json:"id" dc:"Id"`
+		Items  []PathArrayItem `json:"items" dc:"Items"`
+	}
+	type PathArrayRes struct {
+		Ok bool `json:"ok" dc:"Ok"`
+	}
+
+	f := func(ctx context.Context, req *PathArrayReq) (res *PathArrayRes, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var oai = goai.New()
+		err := oai.Add(goai.AddInput{
+			Path:   "/batch/{id}",
+			Method: http.MethodPost,
+			Object: f,
+		})
+		t.AssertNil(err)
+
+		var operation = oai.Paths["/batch/{id}"].Post
+		t.AssertNE(operation, nil)
+
+		// The path parameter is kept, as it is not a property of the JSON array request body.
+		t.Assert(len(operation.Parameters), 1)
+		t.Assert(operation.Parameters[0].Value.Name, "id")
+
+		// The JSON array request body is kept as well.
+		t.AssertNE(operation.RequestBody, nil)
+		t.Assert(
+			operation.RequestBody.Value.Content["application/json"].Schema.Value.Type,
+			goai.TypeArray,
+		)
+	})
+}
+
+// TestOpenApiV3_ArrayRequestBody_MissingArrayField checks the declaration error for a
+// request struct tagged as an array without an array or slice field.
+func TestOpenApiV3_ArrayRequestBody_MissingArrayField(t *testing.T) {
+	type MissingArrayReq struct {
+		g.Meta `mime:"application/json" method:"post" path:"/batch/missing" type:"array"`
+		Name   string `json:"name"`
+	}
+	f := func(ctx context.Context, req *MissingArrayReq) (res *struct{}, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		err := goai.New().Add(goai.AddInput{
+			Path:   "/batch/missing",
+			Method: http.MethodPost,
+			Object: f,
+		})
+		t.AssertNE(err, nil)
+		t.Assert(strings.Contains(err.Error(), `type:"array"`), true)
+	})
+}
+
+// TestOpenApiV3_ArrayRequestBody_FieldSelection checks that schema items come from the
+// same first eligible array field selected by the HTTP request binding path.
+func TestOpenApiV3_ArrayRequestBody_FieldSelection(t *testing.T) {
+	type HiddenFirstReq struct {
+		g.Meta `mime:"application/json" method:"post" path:"/batch/hidden" type:"array"`
+		Hidden []int    `json:"-"`
+		Items  []string `json:"items"`
+	}
+	type TaggedEmbed struct {
+		Items []string `json:"items"`
+	}
+	type TaggedEmbeddedReq struct {
+		g.Meta      `mime:"application/json" method:"post" path:"/batch/embedded" type:"array"`
+		TaggedEmbed `json:"container"`
+		Fallback    []int `json:"fallback"`
+	}
+
+	hiddenHandler := func(context.Context, *HiddenFirstReq) (*struct{}, error) { return nil, nil }
+	embeddedHandler := func(context.Context, *TaggedEmbeddedReq) (*struct{}, error) { return nil, nil }
+
+	gtest.C(t, func(t *gtest.T) {
+		var oai = goai.New()
+		err := oai.Add(goai.AddInput{Path: "/batch/hidden", Method: http.MethodPost, Object: hiddenHandler})
+		t.AssertNil(err)
+		err = oai.Add(goai.AddInput{Path: "/batch/embedded", Method: http.MethodPost, Object: embeddedHandler})
+		t.AssertNil(err)
+
+		for _, path := range []string{"/batch/hidden", "/batch/embedded"} {
+			t.Run(path, func(subtest *testing.T) {
+				gtest.C(subtest, func(t *gtest.T) {
+					var schema = oai.Paths[path].Post.RequestBody.Value.Content["application/json"].Schema.Value
+					t.Assert(schema.Type, goai.TypeArray)
+					t.Assert(schema.Items.Value.Type, goai.TypeString)
+				})
+			})
+		}
 	})
 }

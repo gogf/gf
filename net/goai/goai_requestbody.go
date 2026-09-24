@@ -9,6 +9,8 @@ package goai
 import (
 	"reflect"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -110,4 +112,62 @@ func (oai *OpenApiV3) getRequestSchemaRef(in getRequestSchemaRefInput) (*SchemaR
 	return &SchemaRef{
 		Value: schema,
 	}, nil
+}
+
+// getArrayRequestSchemaRef generates the OpenAPI schema reference for a JSON array request body,
+// which is declared by the `type:"array"` tag in `g.Meta`. APIs using this tag accept a JSON
+// array request body like `[{"id":1},{"id":2}]` instead of an object like `{"items":[{"id":1}]}`.
+//
+// The schema is generated from the first slice/array attribute of the request struct, for example:
+//
+//	type BatchChatReq struct {
+//	    g.Meta   `mime:"application/json" method:"post" path:"/batch/chat" type:"array"`
+//	    Messages []ChatMessage `json:"messages"`
+//	}
+//
+// The generated OpenAPI definition is:
+//
+//	requestBody:
+//	  content:
+//	    application/json:
+//	      schema:
+//	        type: array
+//	        items:
+//	          $ref: '#/components/schemas/ChatMessage'
+func (oai *OpenApiV3) getArrayRequestSchemaRef(requestObject any) (*SchemaRef, error) {
+	structFields, err := gstructs.Fields(gstructs.FieldsInput{
+		Pointer:         requestObject,
+		RecursiveOption: gstructs.RecursiveOptionEmbedded,
+	})
+	if err != nil {
+		return nil, err
+	}
+	// The request body definition is the first slice/array attribute of the request struct,
+	// as only one attribute is able to receive the JSON array request body.
+	for _, structField := range structFields {
+		var golangType = structField.Type().Type
+		if golangType.Kind() != reflect.Slice && golangType.Kind() != reflect.Array {
+			continue
+		}
+		if structField.TagPriorityName() == "-" {
+			continue
+		}
+		// It also recursively registers the schema of all the nested struct types in the
+		// element type into Components.Schemas.
+		elementSchemaRef, err := oai.newSchemaRefWithGolangType(golangType.Elem(), nil)
+		if err != nil {
+			return nil, err
+		}
+		return &SchemaRef{
+			Value: &Schema{
+				Type:  TypeArray,
+				Items: elementSchemaRef,
+			},
+		}, nil
+	}
+	return nil, gerror.NewCodef(
+		gcode.CodeInvalidParameter,
+		`there is no slice/array attribute in request struct "%s" for the type:"array" tag definition`,
+		oai.golangTypeToSchemaName(reflect.TypeOf(requestObject)),
+	)
 }

@@ -157,8 +157,25 @@ func (oai *OpenApiV3) structToSchema(object any) (*Schema, error) {
 			return nil, err
 		}
 	}
+	// The `type` tag is used for declaring the type of the request body or the response
+	// content, for example the `type:"array"` tag declares a JSON array request body. The
+	// schema of the struct itself is still an object, so it continues the object schema
+	// processing below instead of returning the array schema directly.
+	var (
+		reflectType    = reflect.TypeOf(object)
+		objectIsStruct bool
+	)
+	for reflectType != nil && reflectType.Kind() == reflect.Pointer {
+		reflectType = reflectType.Elem()
+	}
+	if reflectType != nil && reflectType.Kind() == reflect.Struct {
+		objectIsStruct = true
+	}
 	if schema.Type != "" && schema.Type != TypeObject {
-		return schema, nil
+		if schema.Type != TypeArray || !objectIsStruct {
+			return schema, nil
+		}
+		schema.Type = TypeObject
 	}
 	// []struct.
 	if utils.IsArray(object) {

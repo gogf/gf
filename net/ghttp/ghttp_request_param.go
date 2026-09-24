@@ -170,7 +170,13 @@ func (r *Request) MakeBodyRepeatableRead(repeatableRead bool) []byte {
 			panic(gerror.WrapCode(gcode.CodeInternalError, err, errMsg))
 		}
 	}
-	r.Body = utils.NewReadCloser(r.bodyContent, repeatableRead)
+	body := utils.NewReadCloser(r.bodyContent, repeatableRead)
+	if currentBody, ok := r.Body.(*multipartBodyReader); ok && currentBody == r.multipartBody {
+		// An internal wrapper change must not invalidate an already parsed multipart form.
+		currentBody.ReadCloser = body
+	} else {
+		r.Body = body
+	}
 	return r.bodyContent
 }
 
@@ -229,6 +235,11 @@ func (r *Request) parseBody() {
 		return
 	}
 	r.parsedBody = true
+	// The body might be re-parsed after being changed, for example by the middleware
+	// calling ReloadParam, so the previous parsed result is reset here to avoid the
+	// mutual residue between the object and the array formats.
+	r.bodyMap = nil
+	r.bodyArray = nil
 	// There's no data posted.
 	if r.ContentLength == 0 {
 		return
@@ -245,12 +256,32 @@ func (r *Request) parseBody() {
 		strictJsonContentType := jsonContentType && (r.Method != http.MethodGet || body[0] == '{' || body[0] == '[')
 		// JSON format checks.
 		if strictJsonContentType {
-			if err := json.UnmarshalUseNumber(body, &r.bodyMap); err != nil {
-				r.SetError(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse JSON body failed"))
-				return
+			var err error
+			if body[0] == '[' {
+				err = json.UnmarshalUseNumber(body, &r.bodyArray)
+			} else {
+				err = json.UnmarshalUseNumber(body, &r.bodyMap)
 			}
-		} else if body[0] == '{' && body[len(body)-1] == '}' {
-			_ = json.UnmarshalUseNumber(body, &r.bodyMap)
+			if err != nil {
+				r.SetError(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse JSON body failed"))
+			}
+			// The JSON content is already parsed strictly above, no need to continue the
+			// following relaxed parsing, or else the JSON content might be misparsed as
+			// the form parameters by the default parameters decoding below.
+			return
+		}
+		// JSON format checks, it is a relaxed parsing for the none-JSON content type, of
+		// which the failure is tolerated and just falls back to the default decoding below,
+		// as the body might be the form content that starts and ends with the same
+		// characters as the JSON content does.
+		if body[0] == '{' && body[len(body)-1] == '}' {
+			if err := json.UnmarshalUseNumber(body, &r.bodyMap); err != nil {
+				r.bodyMap = nil
+			}
+		} else if body[0] == '[' && body[len(body)-1] == ']' {
+			if err := json.UnmarshalUseNumber(body, &r.bodyArray); err != nil {
+				r.bodyArray = nil
+			}
 		}
 		// XML format checks.
 		if len(body) > 5 && bytes.EqualFold(body[:5], xmlHeaderBytes) {
@@ -260,7 +291,7 @@ func (r *Request) parseBody() {
 			r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
 		}
 		// Default parameters decoding.
-		if (contentType == "" || !gstr.Contains(contentType, "multipart/")) && r.bodyMap == nil {
+		if (contentType == "" || !gstr.Contains(contentType, "multipart/")) && r.bodyMap == nil && r.bodyArray == nil {
 			r.bodyMap, _ = gstr.Parse(r.GetBodyString())
 		}
 	}
@@ -292,6 +323,9 @@ func (r *Request) parseForm() {
 		}
 		if isMultiPartRequest {
 			// multipart/form-data, multipart/mixed
+			if r.MultipartForm == nil {
+				r.trackMultipartBody()
+			}
 			if err = r.ParseMultipartForm(r.Server.config.FormParsingMemory); err != nil {
 				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, "r.ParseMultipartForm failed"))
 			}

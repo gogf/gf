@@ -206,6 +206,9 @@ func Test_ParamsInvalidJsonReportsParseError(t *testing.T) {
 			t.Assert(payload.Data, nil)
 		}
 
+		// The malformed JSON bodies, the JSON array body and the form encoded body are
+		// reported as invalid parameters. Note that the JSON array body is only supported
+		// by the request struct tagged with `type:"array"`, which this one is not.
 		for _, body := range []string{`{"name":}`, `[{"name":"john"}]`, `name=john`} {
 			assertInvalidParameter(client.ContentJson().PostContent(reqCtx, "/user-invalid-json", body))
 		}

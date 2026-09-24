@@ -7,10 +7,16 @@
 package ghttp
 
 import (
+	"reflect"
+
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gmeta"
+	"github.com/gogf/gf/v2/util/gtag"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -191,7 +197,75 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 		return data, nil
 	}
 
+	// The request body is a JSON array, which is only supported by the request struct that
+	// is tagged with `type:"array"` in its `g.Meta`. It maps the JSON array to the first
+	// slice/array attribute of the request struct, for example:
+	//
+	//	type BatchAddReq struct {
+	//	    g.Meta `mime:"application/json" method:"post" path:"/batch/add" type:"array"`
+	//	    Items  []Item `json:"items"`
+	//	}
+	//
+	// The client then submits `[{"id":1},{"id":2}]` as the request body instead of
+	// `{"items":[{"id":1},{"id":2}]}`.
+	//
+	// Note that a JSON array is valid JSON but is not a valid request body for the ordinary
+	// object endpoints, so it is reported as an invalid parameter for the request struct
+	// without the tag, instead of being silently ignored with all attributes left as zero
+	// values. It uses `r.bodyArray != nil` instead of `len(r.bodyArray) > 0` here, as the
+	// empty JSON array `[]` should be merged into the request struct either.
+	if r.bodyArray != nil {
+		if gmeta.Get(pointer, gtag.Type).String() != goai.TypeArray {
+			return nil, gerror.NewCode(
+				gcode.CodeInvalidParameter,
+				`the JSON array request body is only supported by the request struct `+
+					`tagged with type:"array" in its g.Meta`,
+			)
+		}
+		if err = r.mergeBodyArrayToStruct(data, pointer); err != nil {
+			return data, err
+		}
+	}
+
 	return data, gconv.Struct(data, pointer, mapping...)
+}
+
+// mergeBodyArrayToStruct merges the JSON array of the request body into the request struct.
+//
+// It uses the cached struct fields of the route handler if available, or else it retrieves
+// the struct fields from the given `pointer` by reflection. The JSON array is assigned to
+// the first slice/array attribute found, as only one attribute is able to receive the
+// JSON array request body.
+func (r *Request) mergeBodyArrayToStruct(data map[string]any, pointer any) error {
+	var fields = r.serveHandler.Handler.Info.ReqStructFields
+	if len(fields) == 0 {
+		// It is not a strict route handler, retrieving the struct fields by reflection.
+		var err error
+		fields, err = gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         pointer,
+			RecursiveOption: gstructs.RecursiveOptionEmbedded,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	for _, field := range fields {
+		var fieldKind = field.Type().Kind()
+		if fieldKind != reflect.Slice && fieldKind != reflect.Array {
+			continue
+		}
+		var fieldName = field.TagPriorityName()
+		if fieldName == "-" {
+			continue
+		}
+		data[fieldName] = r.bodyArray
+		return nil
+	}
+	return gerror.NewCodef(
+		gcode.CodeInvalidParameter,
+		`request struct %T tagged with type:"array" has no eligible slice or array field`,
+		pointer,
+	)
 }
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
