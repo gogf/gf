@@ -66,6 +66,11 @@ type ConfigNode struct {
 	// Optional field
 	Debug bool `json:"debug"`
 
+	// OtelTraceSQLEnabled enables OpenTelemetry tracing for SQL operations.
+	// When enabled, SQL statements will be recorded as trace span attributes.
+	// Optional field
+	OtelTraceSQLEnabled bool `json:"otelTraceSQLEnabled"`
+
 	// Prefix specifies the table name prefix
 	// Optional field
 	Prefix string `json:"prefix"`
@@ -482,4 +487,10 @@ func parseConfigNodeLink(node *ConfigNode) (*ConfigNode, error) {
 		node.Protocol = defaultProtocol
 	}
 	return node, nil
+}
+
+// IsOtelTraceSQLEnabled returns whether SQL tracing is enabled for this configuration.
+// When enabled, SQL statements will be recorded as trace span attributes.
+func (node *ConfigNode) IsOtelTraceSQLEnabled() bool {
+	return node.OtelTraceSQLEnabled
 }
