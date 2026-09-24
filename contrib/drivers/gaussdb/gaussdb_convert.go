@@ -87,6 +87,7 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 //	| int4            | int4, integer                  | -               | int         |
 //	| int8            | int8, bigint, bigserial        | -               | int64       |
 //	| uuid            | uuid                           | -               | uuid.UUID   |
+//	| _int1           | int1[], tinyint[]              | pq.Int32Array   | []int32     |
 //	| _int2           | int2[], smallint[]             | pq.Int32Array   | []int32     |
 //	| _int4           | int4[], integer[]              | pq.Int32Array   | []int32     |
 //	| _int8           | int8[], bigint[]               | pq.Int64Array   | []int64     |
