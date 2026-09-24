@@ -214,6 +214,20 @@ jobs:
         ports:
           - 2181:2181
 
+      # OceanBase server in mini mode, MySQL protocol.
+      # docker run -p 2881:2881 -e MODE=mini oceanbase/oceanbase-ce:4.3.5-lts
+      oceanbase:
+        image: oceanbase/oceanbase-ce:4.3.5-lts
+        env:
+          MODE: mini
+        ports:
+          - 2881:2881
+        options: >-
+          --health-cmd "obclient -h127.0.0.1 -P2881 -uroot@test -e \"SELECT 1\""
+          --health-interval 10s
+          --health-timeout 10s
+          --health-retries 30
+
     steps:
     - name: Setup Timezone
       run:  sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
