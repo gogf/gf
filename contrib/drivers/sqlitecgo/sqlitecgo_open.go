@@ -41,7 +41,7 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	}
 
 	// Multiple PRAGMAs can be specified, e.g.:
-	// path/to/some.db?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)
+	// path/to/some.db?_busy_timeout=5000&_journal_mode=WAL
 	if config.Extra != "" {
 		var (
 			options  string
@@ -54,7 +54,7 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 			if options != "" {
 				options += "&"
 			}
-			options += fmt.Sprintf(`_pragma=%s(%s)`, k, gurl.Encode(gconv.String(v)))
+			options += fmt.Sprintf(`_%s=%s`, k, gurl.Encode(gconv.String(v)))
 		}
 		if len(options) > 1 {
 			source += "?" + options
