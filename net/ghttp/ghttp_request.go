@@ -8,6 +8,7 @@ package ghttp
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -58,10 +59,16 @@ type Request struct {
 	parsedHost      string               // The parsed host name for current host used by GetHost function.
 	clientIp        string               // The parsed client ip for current host used by GetClientIp function.
 	bodyContent     []byte               // Request body content.
+	multipartBody   *multipartBodyReader // Body identity associated with the parsed multipart form.
 	isFileRequest   bool                 // A bool marking whether current request is file serving.
 	viewObject      *gview.View          // Custom template view engine object for this response.
 	viewParams      gview.Params         // Custom template view variables for this response.
 	originUrlPath   string               // Original URL path that passed from client.
+}
+
+// multipartBodyReader preserves body identity across internal reader replacements.
+type multipartBodyReader struct {
+	io.ReadCloser
 }
 
 // staticFile is the file struct for static file service.
@@ -79,6 +86,10 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 		Response:      newResponse(s, w),
 		EnterTime:     gtime.Now(),
 		originUrlPath: r.URL.Path,
+	}
+	// Track before middleware can parse uploads through embedded net/http methods.
+	if gstr.ContainsI(r.Header.Get("Content-Type"), "multipart/") {
+		request.trackMultipartBody()
 	}
 	request.Cookie = GetCookie(request)
 	request.Session = s.sessionManager.New(
@@ -275,15 +286,27 @@ func (r *Request) SetError(err error) {
 	r.error = err
 }
 
-// ReloadParam clears parsed request parameters after middleware changes the body or query.
-// It also removes temporary files from the previous multipart form before reparsing.
+// ReloadParam clears parsed request parameters and the current request error before reparsing.
+// Parsed multipart data and temporary files are retained unless the tracked Body is replaced.
+// Use ReloadQuery when only the query string changes and the body should remain untouched.
 func (r *Request) ReloadParam() {
-	if r.MultipartForm != nil {
+	currentBody, _ := r.Body.(*multipartBodyReader)
+	preserveMultipart := r.MultipartForm != nil && (r.multipartBody == nil || currentBody == r.multipartBody)
+	if r.MultipartForm != nil && !preserveMultipart {
 		if err := r.MultipartForm.RemoveAll(); err != nil {
 			panic(fmt.Errorf("remove multipart form before reloading parameters: %w", err))
 		}
 		r.MultipartForm = nil
 	}
+	if !preserveMultipart {
+		r.PostForm = nil
+		if gstr.ContainsI(r.Header.Get("Content-Type"), "multipart/") {
+			r.trackMultipartBody()
+		} else {
+			r.multipartBody = nil
+		}
+	}
+	r.error = nil
 	r.parsedBody = false
 	r.parsedForm = false
 	r.parsedQuery = false
@@ -291,7 +314,14 @@ func (r *Request) ReloadParam() {
 	r.formMap = nil
 	r.queryMap = nil
 	r.Form = nil
-	r.PostForm = nil
+}
+
+// trackMultipartBody marks the stream without buffering uploaded content.
+func (r *Request) trackMultipartBody() {
+	if currentBody, ok := r.Body.(*multipartBodyReader); !ok || currentBody != r.multipartBody {
+		r.multipartBody = &multipartBodyReader{ReadCloser: r.Body}
+		r.Body = r.multipartBody
+	}
 }
 
 // ReloadQuery clears parsed query parameters after middleware changes RawQuery.

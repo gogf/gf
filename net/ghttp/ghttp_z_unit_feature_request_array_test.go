@@ -424,6 +424,8 @@ func Test_Params_JsonArray_ReloadParam(t *testing.T) {
 	}{
 		{"array to object", `[{"id":1}]`, `{"items":[{"id":2}]}`, 2, 1},
 		{"object to array", `{"items":[{"id":1}]}`, `[{"id":2}]`, 2, 0},
+		{"invalid to object", `{"items":}`, `{"items":[{"id":2}]}`, 2, 1},
+		{"invalid to array", `{"items":}`, `[{"id":2}]`, 2, 0},
 	} {
 		t.Run(testCase.name, func(t *testing.T) {
 			gtest.C(t, func(t *gtest.T) {

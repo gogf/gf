@@ -170,7 +170,13 @@ func (r *Request) MakeBodyRepeatableRead(repeatableRead bool) []byte {
 			panic(gerror.WrapCode(gcode.CodeInternalError, err, errMsg))
 		}
 	}
-	r.Body = utils.NewReadCloser(r.bodyContent, repeatableRead)
+	body := utils.NewReadCloser(r.bodyContent, repeatableRead)
+	if currentBody, ok := r.Body.(*multipartBodyReader); ok && currentBody == r.multipartBody {
+		// An internal wrapper change must not invalidate an already parsed multipart form.
+		currentBody.ReadCloser = body
+	} else {
+		r.Body = body
+	}
 	return r.bodyContent
 }
 
@@ -317,6 +323,9 @@ func (r *Request) parseForm() {
 		}
 		if isMultiPartRequest {
 			// multipart/form-data, multipart/mixed
+			if r.MultipartForm == nil {
+				r.trackMultipartBody()
+			}
 			if err = r.ParseMultipartForm(r.Server.config.FormParsingMemory); err != nil {
 				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, "r.ParseMultipartForm failed"))
 			}
