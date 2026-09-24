@@ -67,6 +67,11 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 
 	case ParameterInCookie, ParameterInHeader, ParameterInQuery:
 
+	case ParameterInBody:
+		// The field tagged with `in:"body"` is documented as the request body instead of an
+		// operation parameter.
+		return nil, nil
+
 	default:
 		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid tag value "%s" for In`, parameter.In)
 	}

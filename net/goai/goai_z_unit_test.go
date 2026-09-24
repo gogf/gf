@@ -1377,3 +1377,104 @@ func Test_ValidationRules(t *testing.T) {
 		t.Assert(schema.Properties.Get("Address").Value.MaxLength, 64)
 	})
 }
+
+// TestOpenApiV3_ArrayRequestBody tests the OpenAPI schema generation for the request struct that
+// declares the JSON array request body by the field tagged with `in:"body"`.
+func TestOpenApiV3_ArrayRequestBody(t *testing.T) {
+	// ChatMessage is the element type of the JSON array request body.
+	type ChatMessage struct {
+		Role    string `json:"role" dc:"Role"`
+		Content string `json:"content" dc:"Content"`
+	}
+	// BatchChatReq declares the parameter together with the JSON array request body.
+	type BatchChatReq struct {
+		g.Meta   `path:"/batch/chat/{id}" method:"post" mime:"application/json" summary:"batch chat"`
+		Id       int           `json:"id" dc:"Id"`
+		Messages []ChatMessage `json:"messages" dc:"Message list" in:"body"`
+	}
+	type BatchChatRes struct {
+		Results []string `json:"results" dc:"Results"`
+	}
+	var f = func(ctx context.Context, req *BatchChatReq) (res *BatchChatRes, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var oai = goai.New()
+		t.AssertNil(oai.Add(goai.AddInput{
+			Path:   "/batch/chat/{id}",
+			Method: http.MethodPost,
+			Object: f,
+		}))
+
+		var operation = oai.Paths["/batch/chat/{id}"].Post
+		t.AssertNE(operation, nil)
+
+		// The field tagged with `in:"body"` is documented as the request body, not a parameter.
+		t.Assert(len(operation.Parameters), 1)
+		t.Assert(operation.Parameters[0].Value.Name, "id")
+
+		// The request body is the array schema of that field, and it is not removed by the
+		// duplicated properties removing even though the operation has a parameter.
+		t.AssertNE(operation.RequestBody, nil)
+		t.Assert(operation.RequestBody.Value.Description, "Message list")
+		var schemaRef = operation.RequestBody.Value.Content["application/json"].Schema
+		t.AssertNE(schemaRef, nil)
+		t.Assert(schemaRef.Ref, "")
+		t.Assert(schemaRef.Value.Type, goai.TypeArray)
+		t.AssertNE(schemaRef.Value.Items, nil)
+		t.AssertNE(schemaRef.Value.Items.Ref, "")
+
+		// The element type is registered in the components.
+		var elementSchema = oai.Components.Schemas.Get(schemaRef.Value.Items.Ref)
+		t.AssertNE(elementSchema, nil)
+		t.Assert(elementSchema.Value.Type, goai.TypeObject)
+		t.Assert(elementSchema.Value.Properties.Get("role").Value.Type, goai.TypeString)
+		t.Assert(elementSchema.Value.Properties.Get("content").Value.Type, goai.TypeString)
+
+		// Pointer-to-slice body fields must be documented as one-dimensional arrays.
+		type PointerBatchReq struct {
+			g.Meta `path:"/batch/chat-pointer" method:"post" mime:"application/json"`
+			Items  *[]ChatMessage `json:"items" in:"body"`
+		}
+		var pointerHandler = func(ctx context.Context, req *PointerBatchReq) (res *BatchChatRes, err error) {
+			return
+		}
+		var pointerOai = goai.New()
+		t.AssertNil(pointerOai.Add(goai.AddInput{Object: pointerHandler}))
+		var pointerSchema = pointerOai.Paths["/batch/chat-pointer"].Post.RequestBody.Value.Content["application/json"].Schema.Value
+		t.Assert(pointerSchema.Type, goai.TypeArray)
+		t.Assert(pointerSchema.Items.Value.Type, goai.TypeObject)
+
+		// The body field declared in an embedded struct is documented as the array body, no
+		// matter the embedded struct is tagged or not: the field is scanned with the same
+		// recursive option as the HTTP handler registering.
+		type EmbeddedBase struct {
+			Items []ChatMessage `json:"items" in:"body"`
+		}
+		type EmbeddedTaggedReq struct {
+			g.Meta       `path:"/batch/chat-embedded-tagged" method:"post" mime:"application/json"`
+			EmbeddedBase `json:"base"`
+		}
+		type EmbeddedPlainReq struct {
+			g.Meta `path:"/batch/chat-embedded-plain" method:"post" mime:"application/json"`
+			EmbeddedBase
+		}
+		var embeddedTaggedHandler = func(ctx context.Context, req *EmbeddedTaggedReq) (res *BatchChatRes, err error) {
+			return
+		}
+		var embeddedPlainHandler = func(ctx context.Context, req *EmbeddedPlainReq) (res *BatchChatRes, err error) {
+			return
+		}
+		var embeddedOai = goai.New()
+		t.AssertNil(embeddedOai.Add(goai.AddInput{Object: embeddedTaggedHandler}))
+		t.AssertNil(embeddedOai.Add(goai.AddInput{Object: embeddedPlainHandler}))
+		for _, path := range []string{"/batch/chat-embedded-tagged", "/batch/chat-embedded-plain"} {
+			var embeddedSchema = embeddedOai.Paths[path].Post.RequestBody.Value.Content["application/json"].Schema.Value
+			t.Assert(embeddedSchema.Type, goai.TypeArray)
+			t.AssertNE(embeddedSchema.Items.Ref, "")
+		}
+		t.AssertNE(pointerSchema.Items.Ref, "")
+	})
+
+}

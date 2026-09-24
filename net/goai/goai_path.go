@@ -211,10 +211,44 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		if tagMimeValue != "" {
 			contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
 		}
+		// The field tagged with `in:"body"` receives the whole request body, so the schema of
+		// that field is used as the request body schema instead of the schema of the request
+		// struct, which would otherwise be documented as a wrapping object.
+		//
+		// Note that the body field is retrieved from the fields scanned with the same recursive
+		// option as the HTTP handler registering, so that the document describes exactly the
+		// same field the handler receives the body with. The parameter fields above keep their
+		// own scanning option.
+		bodyStructFields, err := gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         inputObject.Interface(),
+			RecursiveOption: gstructs.RecursiveOptionEmbedded,
+		})
+		if err != nil {
+			return err
+		}
+		var (
+			bodyField, hasBodyField = findBodyField(bodyStructFields)
+			bodySchemaRef           *SchemaRef
+		)
+		if hasBodyField {
+			schemaRef, err := oai.newSchemaRefWithGolangType(bodyField.Type().Type, nil)
+			if err != nil {
+				return err
+			}
+			bodySchemaRef = schemaRef
+			requestBody.Description = bodyField.TagDescription()
+		}
 		for _, v := range contentTypes {
-			if isInputStructEmpty {
+			switch {
+			case bodySchemaRef != nil:
+				requestBody.Content[v] = MediaType{
+					Schema: bodySchemaRef,
+				}
+
+			case isInputStructEmpty:
 				requestBody.Content[v] = MediaType{}
-			} else {
+
+			default:
 				schemaRef, err := oai.getRequestSchemaRef(getRequestSchemaRefInput{
 					BusinessStructName: inputStructTypeName,
 					RequestObject:      oai.Config.CommonRequest,
@@ -360,6 +394,12 @@ func (oai *OpenApiV3) removeOperationDuplicatedProperties(operation *Operation) 
 			}
 		}
 
+		// The request body schema might have no properties at all, for example the JSON array
+		// request body of the field tagged with `in:"body"`, of which there's nothing to remove.
+		if requestBodyContent.Schema.Value == nil || requestBodyContent.Schema.Value.Properties == nil {
+			continue
+		}
+
 		// Check the Value public field for the request body.
 		if commonRequest := requestBodyContent.Schema.Value.Properties.Get(dataField); commonRequest != nil {
 			commonRequest.Value.Required = oai.removeItemsFromArray(commonRequest.Value.Required, duplicatedParameterNames)
@@ -388,6 +428,17 @@ func (oai *OpenApiV3) removeItemsFromArray(array []string, items []any) []string
 
 func (oai *OpenApiV3) doesStructHasNoFields(s any) bool {
 	return reflect.TypeOf(s).NumField() == 0
+}
+
+// findBodyField retrieves and returns the field tagged with `in:"body"` from the given request
+// struct fields, which receives the whole request body.
+func findBodyField(structFields []gstructs.Field) (gstructs.Field, bool) {
+	for _, structField := range structFields {
+		if structField.TagIn() == ParameterInBody {
+			return structField, true
+		}
+	}
+	return gstructs.Field{}, false
 }
 
 func (oai *OpenApiV3) tagMapToPath(tagMap map[string]string, path *Path) error {

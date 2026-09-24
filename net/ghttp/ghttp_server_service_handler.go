@@ -14,6 +14,7 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 )
@@ -235,8 +236,64 @@ func (s *Server) checkAndCreateFuncInfo(
 		return funcInfo, err
 	}
 	funcInfo.ReqStructFields = fields
+	if err = funcInfo.checkAndCreateReqBodyField(); err != nil {
+		return funcInfo, err
+	}
 	funcInfo.Func = createRouterFunc(funcInfo)
 	return
+}
+
+// checkAndCreateReqBodyField retrieves the request struct field that receives the whole request
+// body, which is declared by the `in:"body"` tag on the field.
+//
+// The request body is only able to be received by one field, so it returns error if there are
+// multiple fields tagged with `in:"body"`. It also returns error if the field is not of slice
+// type, as only the JSON array request body is supported for now; note that an object request
+// body does not need this tag, which is received by the ordinary request struct fields.
+//
+// It is called once at handler registration, which also resolves the tag name of the field for
+// the request handling to remove the request parameter of the same name.
+func (f *handlerFuncInfo) checkAndCreateReqBodyField() error {
+	for _, field := range f.ReqStructFields {
+		if field.TagIn() != goai.ParameterInBody {
+			continue
+		}
+		if f.ReqBodyFieldName != "" {
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid handler: only one request struct field is allowed to be tagged with in:"body", `+
+					`but got both "%s" and "%s"`,
+				f.ReqBodyFieldName, field.Name(),
+			)
+		}
+		var fieldType = field.Type().Type
+		for fieldType.Kind() == reflect.Pointer {
+			fieldType = fieldType.Elem()
+		}
+		if fieldType.Kind() != reflect.Slice {
+			var hint string
+			switch fieldType.Kind() {
+			case reflect.Array:
+				hint = `; a fixed-size array can be replaced by a slice with a length validation rule`
+			case reflect.Struct, reflect.Map, reflect.Interface:
+				hint = `; an object request body is received by the ordinary fields of the request ` +
+					`struct, which does not need the in:"body" tag`
+			default:
+			}
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid handler: the request struct field "%s" tagged with in:"body" should be type of `+
+					`slice, but got "%s"%s`,
+				field.Name(), field.Type().String(), hint,
+			)
+		}
+		f.ReqBodyFieldName = field.Name()
+		// The tag name is also resolved here, as the request handling removes the request
+		// parameter of the same name before the struct converting, which is matched with a
+		// higher priority than the field name by the struct converting.
+		f.ReqBodyFieldTagName = field.TagPriorityName()
+	}
+	return nil
 }
 
 func createRouterFunc(funcInfo handlerFuncInfo) func(r *Request) {

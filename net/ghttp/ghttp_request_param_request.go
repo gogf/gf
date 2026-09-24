@@ -8,6 +8,8 @@ package ghttp
 
 import (
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -180,6 +182,14 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 	if data == nil {
 		data = map[string]any{}
 	}
+	// A field tagged with `in:"body"` represents the complete request body. Before converting,
+	// remove the request parameter that is named exactly after the field tag name, as the tag
+	// name is matched with a higher priority than the field name by the struct converting,
+	// which would otherwise overwrite the body array. Both names are resolved at router
+	// registering time, see checkAndCreateReqBodyField.
+	if r.serveHandler.Handler.Info.ReqBodyFieldName != "" {
+		delete(data, r.serveHandler.Handler.Info.ReqBodyFieldTagName)
+	}
 
 	// `in` Tag Struct values.
 	if err = r.mergeInTagStructValue(data); err != nil {
@@ -189,6 +199,28 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 	// Default struct values.
 	if err = r.mergeDefaultStructValue(data, pointer); err != nil {
 		return data, nil
+	}
+
+	// The request struct field tagged with `in:"body"` receives the whole request body, which
+	// is a JSON array instead of being split into the request parameters.
+	if bodyFieldName := r.serveHandler.Handler.Info.ReqBodyFieldName; bodyFieldName != "" {
+		if r.bodyArray != nil {
+			data[bodyFieldName] = r.bodyArray
+		} else if r.bodyMap != nil || r.MultipartForm != nil {
+			// The JSON object, the form parameters and the multipart forms are not acceptable
+			// for such field, which are reported as an invalid parameter instead of being
+			// silently ignored with the field left as a nil slice.
+			return nil, gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`the request body should be a JSON array for the request struct field "%s" tagged with in:"body"`,
+				bodyFieldName,
+			)
+		} else {
+			// There's no body at all. The nil value occupies the field name, so that the field
+			// is bound to its zero value before the request parameters of similar names (case
+			// or symbol variants) could be fuzzy matched to it.
+			data[bodyFieldName] = nil
+		}
 	}
 
 	return data, gconv.Struct(data, pointer, mapping...)
