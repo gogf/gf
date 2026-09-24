@@ -74,27 +74,14 @@ func (d *Driver) doMergeInsert(
 				`failed to get primary keys for table`,
 			)
 		}
-		foundPrimaryKey := false
-		for _, primaryKey := range primaryKeys {
-			for dataKey := range list[0] {
-				if strings.EqualFold(dataKey, primaryKey) {
-					foundPrimaryKey = true
-					break
-				}
-			}
-			if foundPrimaryKey {
-				break
-			}
-		}
-		if !foundPrimaryKey {
+		if !gdb.HasPrimaryKeys(list, primaryKeys) {
 			return nil, gerror.NewCodef(
 				gcode.CodeMissingParameter,
 				`Replace/Save/InsertIgnore operation requires conflict detection: `+
-					`either specify OnConflict() columns or ensure table '%s' has a primary key in the data`,
+					`either specify OnConflict() columns or include all primary key values for table '%s' in the save data`,
 				table,
 			)
 		}
-		// TODO consider composite primary keys.
 		conflictKeys = primaryKeys
 	}
 

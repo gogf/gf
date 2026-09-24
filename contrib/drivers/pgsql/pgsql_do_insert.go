@@ -9,7 +9,6 @@ package pgsql
 import (
 	"context"
 	"database/sql"
-	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -37,27 +36,14 @@ func (d *Driver) DoInsert(
 					`failed to get primary keys for Save/Replace operation`,
 				)
 			}
-			foundPrimaryKey := false
-			for _, primaryKey := range primaryKeys {
-				for dataKey := range list[0] {
-					if strings.EqualFold(dataKey, primaryKey) {
-						foundPrimaryKey = true
-						break
-					}
-				}
-				if foundPrimaryKey {
-					break
-				}
-			}
-			if !foundPrimaryKey {
+			if !gdb.HasPrimaryKeys(list, primaryKeys) {
 				return nil, gerror.NewCodef(
 					gcode.CodeMissingParameter,
 					`Replace/Save operation requires conflict detection: `+
-						`either specify OnConflict() columns or ensure table '%s' has a primary key in the data`,
+						`either specify OnConflict() columns or include all primary key values for table '%s' in the save data`,
 					table,
 				)
 			}
-			// TODO consider composite primary keys.
 			option.OnConflict = primaryKeys
 		}
 		// Treat Replace as Save operation
@@ -69,12 +55,8 @@ func (d *Driver) DoInsert(
 		// because DoExec needs the `TableField.Type` to determine if LastInsertId is supported.
 		tableFields, err := d.GetCore().GetDB().TableFields(ctx, table)
 		if err == nil {
-			for _, field := range tableFields {
-				if strings.EqualFold(field.Key, "pri") {
-					pkField := *field
-					ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, pkField)
-					break
-				}
+			if fields := gdb.PrimaryKeyFields(tableFields); len(fields) > 0 {
+				ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, *fields[0])
 			}
 		}
 

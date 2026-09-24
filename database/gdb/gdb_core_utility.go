@@ -10,6 +10,7 @@ package gdb
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -262,12 +263,58 @@ func (c *Core) GetPrimaryKeys(ctx context.Context, table string, schema ...strin
 		return nil, err
 	}
 
-	var primaryKeys []string
+	fields := PrimaryKeyFields(tableFields)
+	if len(fields) == 0 {
+		return nil, nil
+	}
+	primaryKeys := make([]string, 0, len(fields))
+	for _, field := range fields {
+		primaryKeys = append(primaryKeys, field.Name)
+	}
+	return primaryKeys, nil
+}
+
+// PrimaryKeyFields returns primary-key fields ordered by Index.
+// TableFields is a map, so callers must not range it when they need a stable key order.
+func PrimaryKeyFields(tableFields map[string]*TableField) []*TableField {
+	if len(tableFields) == 0 {
+		return nil
+	}
+	var keys []*TableField
 	for _, field := range tableFields {
-		if strings.EqualFold(field.Key, "pri") {
-			primaryKeys = append(primaryKeys, field.Name)
+		if field != nil && strings.EqualFold(field.Key, "pri") {
+			keys = append(keys, field)
 		}
 	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i].Index < keys[j].Index
+	})
+	return keys
+}
 
-	return primaryKeys, nil
+// HasPrimaryKeys reports whether every record contains all primary-key columns.
+// Column names are compared case-insensitively. An empty list or empty primary-key
+// list is not a usable conflict target.
+func HasPrimaryKeys(list List, primaryKeys []string) bool {
+	if len(list) == 0 || len(primaryKeys) == 0 {
+		return false
+	}
+	for _, item := range list {
+		for _, primaryKey := range primaryKeys {
+			if !mapHasKey(item, primaryKey) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// mapHasKey reports whether the map contains the given key case-insensitively.
+func mapHasKey(data Map, key string) bool {
+	for dataKey := range data {
+		if strings.EqualFold(dataKey, key) {
+			return true
+		}
+	}
+	return false
 }
