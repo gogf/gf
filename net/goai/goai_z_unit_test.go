@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// This file tests OpenAPI generation from Go types and request metadata.
+
 package goai_test
 
 import (
@@ -1477,4 +1479,235 @@ func TestOpenApiV3_ArrayRequestBody(t *testing.T) {
 		t.AssertNE(pointerSchema.Items.Ref, "")
 	})
 
+}
+
+// TestOpenApiV3_ArrayRequestBody_Parameters preserves ordinary and explicit parameters alongside an array body.
+func TestOpenApiV3_ArrayRequestBody_Parameters(t *testing.T) {
+	// BatchReq combines inferred query and path parameters with explicitly located parameters.
+	type BatchReq struct {
+		g.Meta  `mime:"application/json"`
+		Id      int      `json:"id" d:"100"`
+		Group   string   `json:"group"`
+		Query   string   `json:"query" in:"query"`
+		Header  string   `json:"header" in:"header"`
+		Cookie  string   `json:"cookie" in:"cookie"`
+		Items   []string `json:"items" in:"body"`
+		Ignored string   `json:"-"`
+	}
+	var handler = func(_ context.Context, _ *BatchReq) (*struct{}, error) {
+		return nil, nil
+	}
+	for _, method := range []string{http.MethodPost, http.MethodPut, http.MethodPatch} {
+		t.Run(method, func(t *testing.T) {
+			gtest.C(t, func(t *gtest.T) {
+				var oai = goai.New()
+				t.AssertNil(oai.Add(goai.AddInput{
+					Path: "/batch/{group}", Method: method, Object: handler,
+				}))
+				var (
+					path      = oai.Paths["/batch/{group}"]
+					operation = map[string]*goai.Operation{
+						http.MethodPost: path.Post, http.MethodPut: path.Put, http.MethodPatch: path.Patch,
+					}[method]
+					parameters = make(map[string]*goai.Parameter)
+				)
+				for _, parameter := range operation.Parameters {
+					parameters[parameter.Value.Name] = parameter.Value
+				}
+				t.Assert(len(parameters), 5)
+				t.AssertNil(parameters["items"])
+				for name, location := range map[string]string{
+					"id": goai.ParameterInQuery, "group": goai.ParameterInPath,
+					"query": goai.ParameterInQuery, "header": goai.ParameterInHeader, "cookie": goai.ParameterInCookie,
+				} {
+					t.AssertNE(parameters[name], nil)
+					t.Assert(parameters[name].In, location)
+				}
+				t.Assert(parameters["id"].Schema.Value.Default, 100)
+				t.Assert(parameters["group"].Required, true)
+				t.Assert(operation.RequestBody.Value.Content["application/json"].Schema.Value.Type, goai.TypeArray)
+			})
+		})
+	}
+
+	// A regular POST keeps its ordinary fields in the object body.
+	gtest.C(t, func(t *gtest.T) {
+		type ObjectReq struct {
+			g.Meta `path:"/object" method:"post" mime:"application/json"`
+			Id     int `json:"id" d:"100"`
+		}
+		var (
+			oai     = goai.New()
+			handler = func(_ context.Context, _ *ObjectReq) (*struct{}, error) {
+				return nil, nil
+			}
+		)
+		t.AssertNil(oai.Add(goai.AddInput{Object: handler}))
+		var operation = oai.Paths["/object"].Post
+		t.Assert(len(operation.Parameters), 0)
+		var schemaRef = operation.RequestBody.Value.Content["application/json"].Schema
+		var schema = oai.Components.Schemas.Get(schemaRef.Ref).Value
+		t.Assert(schema.Type, goai.TypeObject)
+		t.Assert(schema.Properties.Get("id").Value.Default, 100)
+	})
+}
+
+// TestOpenApiV3_ArrayRequestBody_Required maps unconditional field validation to request body requirements.
+func TestOpenApiV3_ArrayRequestBody_Required(t *testing.T) {
+	var cases = []struct {
+		name     string // Name identifies the metadata combination.
+		handler  any    // Handler carries the request field and Meta tags under test.
+		required bool   // Required is the expected request body requirement.
+	}{
+		{
+			name: "optional",
+			handler: func(_ context.Context, _ *struct {
+				Items []string `in:"body"`
+			}) (*struct{}, error) {
+				return nil, nil
+			},
+		},
+		{
+			name: "required",
+			handler: func(_ context.Context, _ *struct {
+				Items []string `in:"body" v:"required"`
+			}) (*struct{}, error) {
+				return nil, nil
+			},
+			required: true,
+		},
+		{
+			name: "long_validation_tag",
+			handler: func(_ context.Context, _ *struct {
+				Items []string `in:"body" valid:"required"`
+			}) (*struct{}, error) {
+				return nil, nil
+			},
+			required: true,
+		},
+		{
+			name: "alias_and_message",
+			handler: func(_ context.Context, _ *struct {
+				Items []string `in:"body" v:"Messages@required#Please provide messages"`
+			}) (*struct{}, error) {
+				return nil, nil
+			},
+			required: true,
+		},
+		{
+			name: "combined_rules",
+			handler: func(_ context.Context, _ *struct {
+				Items []string `in:"body" v:"length:1,10|required#Invalid length|Please provide messages"`
+			}) (*struct{}, error) {
+				return nil, nil
+			},
+			required: true,
+		},
+		{
+			name: "required_if",
+			handler: func(_ context.Context, _ *struct {
+				Items []string `in:"body" v:"required-if:Enabled,true"`
+			}) (*struct{}, error) {
+				return nil, nil
+			},
+		},
+		{
+			name: "required_with",
+			handler: func(_ context.Context, _ *struct {
+				Items []string `in:"body" v:"required-with:Enabled"`
+			}) (*struct{}, error) {
+				return nil, nil
+			},
+		},
+		{
+			name: "meta_required",
+			handler: func(_ context.Context, _ *struct {
+				g.Meta `required:"true"`
+				Items  []string `in:"body"`
+			}) (*struct{}, error) {
+				return nil, nil
+			},
+			required: true,
+		},
+		{
+			name: "meta_optional_field_required",
+			handler: func(_ context.Context, _ *struct {
+				g.Meta `required:"false"`
+				Items  []string `in:"body" v:"required"`
+			}) (*struct{}, error) {
+				return nil, nil
+			},
+			required: true,
+		},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			gtest.C(t, func(t *gtest.T) {
+				var oai = goai.New()
+				t.AssertNil(oai.Add(goai.AddInput{
+					Path: "/batch", Method: http.MethodPost, Object: testCase.handler,
+				}))
+				var body = oai.Paths["/batch"].Post.RequestBody.Value
+				t.Assert(body.Required, testCase.required)
+				t.Assert(body.Content["application/json"].Schema.Value.Type, goai.TypeArray)
+			})
+		})
+	}
+
+	// Standalone OpenAPI generation also accepts an unconstrained interface body schema.
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			oai     = goai.New()
+			handler = func(_ context.Context, _ *struct {
+				Body any `in:"body"`
+			}) (*struct{}, error) {
+				return nil, nil
+			}
+		)
+		t.AssertNil(oai.Add(goai.AddInput{
+			Path: "/interface-body", Method: http.MethodPost, Object: handler,
+		}))
+		var body = oai.Paths["/interface-body"].Post.RequestBody.Value
+		t.Assert(body.Required, false)
+		t.AssertNil(body.Content["application/json"].Schema.Value)
+	})
+}
+
+// TestOpenApiV3_ArrayRequestBody_EmbeddedMetadata covers a required pointer body inside a tagged embedded struct.
+func TestOpenApiV3_ArrayRequestBody_EmbeddedMetadata(t *testing.T) {
+	// BodyFields supplies the whole request body through an embedded field.
+	type BodyFields struct {
+		Items *[]string `json:"items" in:"body" v:"required" dc:"Batch items"`
+	}
+	// EmbeddedReq retains ordinary query metadata alongside its embedded body.
+	type EmbeddedReq struct {
+		g.Meta     `path:"/embedded" method:"post" mime:"application/json"`
+		BodyFields `json:"bodyFields"`
+		Id         int `json:"id" d:"100"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			oai     = goai.New()
+			handler = func(_ context.Context, _ *EmbeddedReq) (*struct{}, error) {
+				return nil, nil
+			}
+		)
+		t.AssertNil(oai.Add(goai.AddInput{Object: handler}))
+		var (
+			operation  = oai.Paths["/embedded"].Post
+			body       = operation.RequestBody.Value
+			schema     = body.Content["application/json"].Schema.Value
+			parameters = make(map[string]*goai.Parameter)
+		)
+		for _, parameter := range operation.Parameters {
+			parameters[parameter.Value.Name] = parameter.Value
+		}
+		t.AssertNE(parameters["id"], nil)
+		t.Assert(parameters["id"].In, goai.ParameterInQuery)
+		t.Assert(parameters["id"].Schema.Value.Default, 100)
+		t.Assert(body.Required, true)
+		t.Assert(body.Description, "Batch items")
+		t.Assert(schema.Type, goai.TypeArray)
+		t.Assert(schema.Items.Value.Type, goai.TypeString)
+	})
 }
