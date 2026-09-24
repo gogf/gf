@@ -13,7 +13,9 @@ import (
 	"mime"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -22,6 +24,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/httputil"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -117,6 +120,16 @@ func (c *Client) PostForm(ctx context.Context, url string, data map[string]strin
 	return c.ContentType(w.FormDataContentType()).Post(ctx, url, body)
 }
 
+// GetMergedURL returns the merged URL after combining base URL, query parameters, and data parameters.
+// This method allows you to inspect the final URL without actually sending the request.
+func (c *Client) GetMergedURL(ctx context.Context, method, u string, data ...any) (mergedURL string, err error) {
+	req, err := c.prepareRequest(ctx, method, u, data...)
+	if err != nil {
+		return "", err
+	}
+	return req.URL.String(), nil
+}
+
 // DoRequest sends request with given HTTP method and data and returns the response object.
 // Note that the response object MUST be closed if it'll never be used.
 //
@@ -160,185 +173,222 @@ func (c *Client) DoRequest(
 	return resp, err
 }
 
-// prepareRequest verifies request parameters, builds and returns http request.
-func (c *Client) prepareRequest(ctx context.Context, method, url string, data ...any) (req *http.Request, err error) {
-	method = strings.ToUpper(method)
-	if len(c.prefix) > 0 {
-		url = c.prefix + gstr.Trim(url)
+// mergeQueryParams merges URL query parameters, data parameters, and c.queryParams.
+// Priority: c.queryParams > dataParams > urlParams
+// This ensures consistent parameter handling and avoids multiple URL parsing operations.
+func (c *Client) mergeQueryParams(u string, dataParams string) (string, error) {
+	parsedURL, err := url.Parse(u)
+	if err != nil {
+		return "", gerror.Wrapf(err, `url.Parse failed for URL "%s"`, u)
 	}
-	if !gstr.ContainsI(url, httpProtocolName) {
-		url = httpProtocolName + `://` + url
-	}
-	var (
-		params             string
-		allowFileUploading = true
-	)
-	if len(data) > 0 {
-		mediaType, _, err := mime.ParseMediaType(c.header[httpHeaderContentType])
-		if err != nil {
-			// Fallback: use the raw header value if parsing fails.
-			mediaType = c.header[httpHeaderContentType]
-		}
-		switch mediaType {
-		case httpHeaderContentTypeJson:
-			switch data[0].(type) {
-			case string, []byte:
-				params = gconv.String(data[0])
-			default:
-				if b, err := json.Marshal(data[0]); err != nil {
-					return nil, err
-				} else {
-					params = string(b)
-				}
-			}
-			allowFileUploading = false
 
-		case httpHeaderContentTypeXml:
-			switch data[0].(type) {
-			case string, []byte:
-				params = gconv.String(data[0])
-			default:
-				if b, err := gjson.New(data[0]).ToXml(); err != nil {
-					return nil, err
-				} else {
-					params = string(b)
-				}
-			}
-			allowFileUploading = false
+	// Start with existing URL parameters
+	queryValues := parsedURL.Query()
 
-		default:
-			params = httputil.BuildParams(data[0], c.noUrlEncode)
+	// Remove empty value slices from URL parameters to prevent them from being
+	// encoded as "key=" which would override default values on the server side.
+	// This handles cases like "?age" or "?age="
+	for k, v := range queryValues {
+		if len(v) == 0 || (len(v) == 1 && v[0] == "") {
+			delete(queryValues, k)
 		}
 	}
-	if method == http.MethodGet {
-		var bodyBuffer *bytes.Buffer
-		if params != "" {
-			mediaType, _, err := mime.ParseMediaType(c.header[httpHeaderContentType])
-			if err != nil {
-				// Fallback: use the raw header value if parsing fails.
-				mediaType = c.header[httpHeaderContentType]
-			}
-			switch mediaType {
-			case
-				httpHeaderContentTypeJson,
-				httpHeaderContentTypeXml:
-				bodyBuffer = bytes.NewBuffer([]byte(params))
-			default:
-				// It appends the parameters to the url
-				// if http method is GET and Content-Type is not specified.
-				if gstr.Contains(url, "?") {
-					url = url + "&" + params
-				} else {
-					url = url + "?" + params
-				}
-				bodyBuffer = bytes.NewBuffer(nil)
-			}
+
+	// Merge data parameters (for GET requests with default Content-Type)
+	if dataParams != "" {
+		var dataValues url.Values
+		if c.noUrlEncode {
+			// Parse params without URL decoding to avoid double encoding/decoding issues
+			dataValues = parseUnEncodedParams(dataParams)
 		} else {
-			bodyBuffer = bytes.NewBuffer(nil)
+			dataValues, err = url.ParseQuery(dataParams)
+			if err != nil {
+				return "", gerror.Wrapf(err, `url.ParseQuery failed for data params "%s"`, dataParams)
+			}
 		}
-		if req, err = http.NewRequest(method, url, bodyBuffer); err != nil {
-			err = gerror.Wrapf(err, `http.NewRequest failed with method "%s" and URL "%s"`, method, url)
-			return nil, err
+		// Data params override URL params
+		for k, v := range dataValues {
+			queryValues[k] = v
 		}
-	} else {
-		if allowFileUploading && strings.Contains(params, httpParamFileHolder) {
-			// File uploading request.
-			var (
-				buffer          = bytes.NewBuffer(nil)
-				writer          = multipart.NewWriter(buffer)
-				isFileUploading = false
-			)
-			for _, item := range strings.Split(params, "&") {
-				array := strings.SplitN(item, "=", 2)
-				if len(array) < 2 {
+	}
+
+	// Merge c.queryParams (highest priority)
+	if len(c.queryParams) > 0 {
+		for k, v := range c.queryParams {
+			// Skip explicit nil values
+			if v == nil {
+				continue
+			}
+
+			// Use reflection to handle slice/array types generically
+			reflectValue := reflect.Indirect(reflect.ValueOf(v))
+
+			// Check if the reflect value is valid (covers dereferenced nil pointers)
+			if !reflectValue.IsValid() {
+				continue
+			}
+
+			// Check if it's a slice or array
+			if reflectValue.Kind() == reflect.Slice || reflectValue.Kind() == reflect.Array {
+				// Skip nil slices
+				if reflectValue.Kind() == reflect.Slice && reflectValue.IsNil() {
 					continue
 				}
-				if len(array[1]) > 6 && strings.Compare(array[1][0:6], httpParamFileHolder) == 0 {
-					path := array[1][6:]
-					if !gfile.Exists(path) {
-						return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `"%s" does not exist`, path)
-					}
-					var (
-						file          io.Writer
-						formFileName  = gfile.Basename(path)
-						formFieldName = array[0]
-					)
-					// it sets post content type as `application/octet-stream`
-					if file, err = writer.CreateFormFile(formFieldName, formFileName); err != nil {
-						return nil, gerror.Wrapf(
-							err, `CreateFormFile failed with "%s", "%s"`, formFieldName, formFileName,
-						)
-					}
-					var f *os.File
-					if f, err = gfile.Open(path); err != nil {
-						return nil, err
-					}
-					if _, err = io.Copy(file, f); err != nil {
-						_ = f.Close()
-						return nil, gerror.Wrapf(
-							err, `io.Copy failed from "%s" to form "%s"`, path, formFieldName,
-						)
-					}
-					if err = f.Close(); err != nil {
-						return nil, gerror.Wrapf(err, `close file descriptor failed for "%s"`, path)
-					}
-					isFileUploading = true
-				} else {
-					var (
-						fieldName  = array[0]
-						fieldValue = array[1]
-					)
-					// Decode URL-encoded field name and value.
-					// If decoding fails, use the original value.
-					if v, err := gurl.Decode(fieldName); err == nil {
-						fieldName = v
-					}
-					if v, err := gurl.Decode(fieldValue); err == nil {
-						fieldValue = v
-					}
-					if err = writer.WriteField(fieldName, fieldValue); err != nil {
-						return nil, gerror.Wrapf(
-							err, `write form field failed with "%s", "%s"`, fieldName, fieldValue,
-						)
-					}
-				}
-			}
-			// Close finishes the multipart message and writes the trailing
-			// boundary end line to the output.
-			if err = writer.Close(); err != nil {
-				return nil, gerror.Wrapf(err, `form writer close failed`)
-			}
 
-			if req, err = http.NewRequest(method, url, buffer); err != nil {
-				return nil, gerror.Wrapf(
-					err, `http.NewRequest failed for method "%s" and URL "%s"`, method, url,
-				)
-			}
-			if isFileUploading {
-				req.Header.Set(httpHeaderContentType, writer.FormDataContentType())
-			}
-		} else {
-			// Normal request.
-			paramBytes := []byte(params)
-			if req, err = http.NewRequest(method, url, bytes.NewReader(paramBytes)); err != nil {
-				err = gerror.Wrapf(err, `http.NewRequest failed for method "%s" and URL "%s"`, method, url)
-				return nil, err
-			}
-			if v, ok := c.header[httpHeaderContentType]; ok {
-				// Custom Content-Type.
-				req.Header.Set(httpHeaderContentType, v)
-			} else if len(paramBytes) > 0 {
-				if (paramBytes[0] == '[' || paramBytes[0] == '{') && json.Valid(paramBytes) {
-					// Auto-detecting and setting the post content format: JSON.
-					req.Header.Set(httpHeaderContentType, httpHeaderContentTypeJson)
-				} else if gregex.IsMatchString(httpRegexParamJson, params) {
-					// If the parameters passed like "name=value", it then uses form type.
-					req.Header.Set(httpHeaderContentType, httpHeaderContentTypeForm)
+				if reflectValue.Len() > 0 {
+					// Clear existing values for this key
+					delete(queryValues, k)
+					for i := 0; i < reflectValue.Len(); i++ {
+						item := reflectValue.Index(i).Interface()
+						queryValues.Add(k, gconv.String(item))
+					}
+				} else {
+					// Skip empty slices/arrays instead of adding empty value
+					continue
 				}
+			} else {
+				// queryParams override previous values
+				queryValues.Set(k, gconv.String(v))
 			}
 		}
 	}
 
+	// Update URL with merged parameters
+	// Respect noUrlEncode flag
+	if c.noUrlEncode {
+		parsedURL.RawQuery = buildUnEncodedQuery(queryValues)
+	} else {
+		parsedURL.RawQuery = queryValues.Encode()
+	}
+	return parsedURL.String(), nil
+}
+
+// normalizeURL normalizes the URL by adding prefix and protocol if needed.
+// It returns the normalized URL string.
+func (c *Client) normalizeURL(u string) string {
+	if len(c.prefix) > 0 {
+		u = c.prefix + gstr.Trim(u)
+	}
+	if !gstr.ContainsI(u, httpProtocolName) {
+		u = httpProtocolName + `://` + u
+	}
+	return u
+}
+
+// getMediaType safely parses the Content-Type header and returns the media type.
+// If parsing fails, it logs the error and returns the raw header value as fallback.
+func (c *Client) getMediaType(ctx context.Context) string {
+	contentType := c.header[httpHeaderContentType]
+	if contentType == "" {
+		return ""
+	}
+
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		// Log the parsing error for debugging purposes
+		intlog.Errorf(ctx,
+			`mime.ParseMediaType failed for Content-Type "%s": %v, using raw value as fallback`,
+			contentType, err,
+		)
+		return contentType
+	}
+	return mediaType
+}
+
+// parseUnEncodedParams parses URL-encoded parameter string without decoding.
+// This is used when noUrlEncode flag is true to avoid double encoding/decoding.
+// It splits the params by '&' and '=' and returns a url.Values map.
+func parseUnEncodedParams(params string) url.Values {
+	values := make(url.Values)
+	if params == "" {
+		return values
+	}
+
+	for _, pair := range strings.Split(params, "&") {
+		if pair == "" {
+			continue
+		}
+		parts := strings.SplitN(pair, "=", 2)
+		if len(parts) == 2 {
+			values[parts[0]] = []string{parts[1]}
+		} else if len(parts) == 1 {
+			// Handle key without value (e.g., "?flag")
+			values[parts[0]] = []string{""}
+		}
+	}
+	return values
+}
+
+// buildUnEncodedQuery builds a query string from url.Values without encoding.
+// This is used when noUrlEncode flag is true.
+func buildUnEncodedQuery(values url.Values) string {
+	if len(values) == 0 {
+		return ""
+	}
+
+	var queryParts []string
+	for k, vals := range values {
+		for _, v := range vals {
+			if v == "" {
+				queryParts = append(queryParts, k)
+			} else {
+				queryParts = append(queryParts, k+"="+v)
+			}
+		}
+	}
+	return strings.Join(queryParts, "&")
+}
+
+// buildRequestParams converts data to request parameters based on Content-Type.
+// It returns:
+// - params: serialized parameter string
+// - allowFileUploading: whether file uploading is allowed for this request
+// - err: error if serialization fails
+func (c *Client) buildRequestParams(ctx context.Context, data ...any) (params string, allowFileUploading bool, err error) {
+	allowFileUploading = true
+	if len(data) == 0 {
+		return "", allowFileUploading, nil
+	}
+
+	mediaType := c.getMediaType(ctx)
+
+	switch mediaType {
+	case httpHeaderContentTypeJson:
+		switch data[0].(type) {
+		case string, []byte:
+			params = gconv.String(data[0])
+		default:
+			if b, err := json.Marshal(data[0]); err != nil {
+				return "", false, err
+			} else {
+				params = string(b)
+			}
+		}
+		allowFileUploading = false
+
+	case httpHeaderContentTypeXml:
+		switch data[0].(type) {
+		case string, []byte:
+			params = gconv.String(data[0])
+		default:
+			if b, err := gjson.New(data[0]).ToXml(); err != nil {
+				return "", false, err
+			} else {
+				params = string(b)
+			}
+		}
+		allowFileUploading = false
+
+	default:
+		params = httputil.BuildParams(data[0], c.noUrlEncode)
+	}
+
+	return params, allowFileUploading, nil
+}
+
+// enhanceRequest enhances the request with context, headers, cookies and authentication.
+// It modifies the request in-place and returns the enhanced request.
+func (c *Client) enhanceRequest(req *http.Request, ctx context.Context) *http.Request {
 	// Context.
 	if ctx != nil {
 		req = req.WithContext(ctx)
@@ -349,7 +399,7 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 			req.Header.Set(k, v)
 		}
 	}
-	// It's necessary set the req.Host if you want to custom the host value of the request.
+	// It's necessary to set the req.Host if you want to customize the host value of the request.
 	// It uses the "Host" value from header if it's not empty.
 	if reqHeaderHost := req.Header.Get(httpHeaderHost); reqHeaderHost != "" {
 		req.Host = reqHeaderHost
@@ -371,6 +421,196 @@ func (c *Client) prepareRequest(ctx context.Context, method, url string, data ..
 	if len(c.authUser) > 0 {
 		req.SetBasicAuth(c.authUser, c.authPass)
 	}
+	return req
+}
+
+// createNormalPostRequest creates http.Request with normal body for POST/PUT/DELETE.
+// It auto-detects Content-Type based on body content if not specified.
+func (c *Client) createNormalPostRequest(method, u string, params string) (*http.Request, error) {
+	// Normal request.
+	paramBytes := []byte(params)
+	req, err := http.NewRequest(method, u, bytes.NewReader(paramBytes))
+	if err != nil {
+		return nil, gerror.Wrapf(err, `http.NewRequest failed for method "%s" and URL "%s"`, method, u)
+	}
+
+	if v, ok := c.header[httpHeaderContentType]; ok {
+		// Custom Content-Type.
+		req.Header.Set(httpHeaderContentType, v)
+	} else if len(paramBytes) > 0 {
+		if (paramBytes[0] == '[' || paramBytes[0] == '{') && json.Valid(paramBytes) {
+			// Auto-detecting and setting the post content format: JSON.
+			req.Header.Set(httpHeaderContentType, httpHeaderContentTypeJson)
+		} else if gregex.IsMatchString(httpRegexParamJson, params) {
+			// If the parameters passed like "name=value", it then uses form type.
+			req.Header.Set(httpHeaderContentType, httpHeaderContentTypeForm)
+		}
+	}
+
+	return req, nil
+}
+
+// createMultipartRequest creates http.Request with multipart form data for file uploading.
+// It processes @file: markers and creates multipart form with files and fields.
+func (c *Client) createMultipartRequest(method, u string, params string) (*http.Request, error) {
+	// File uploading request.
+	var (
+		buffer          = bytes.NewBuffer(nil)
+		writer          = multipart.NewWriter(buffer)
+		isFileUploading = false
+	)
+	for _, item := range strings.Split(params, "&") {
+		array := strings.SplitN(item, "=", 2)
+		if len(array) < 2 {
+			continue
+		}
+		if len(array[1]) > 6 && strings.Compare(array[1][0:6], httpParamFileHolder) == 0 {
+			path := array[1][6:]
+			if !gfile.Exists(path) {
+				return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `"%s" does not exist`, path)
+			}
+			var (
+				formFileName  = gfile.Basename(path)
+				formFieldName = array[0]
+			)
+			// It sets post content type as `application/octet-stream`
+			if file, err := writer.CreateFormFile(formFieldName, formFileName); err != nil {
+				return nil, gerror.Wrapf(
+					err, `CreateFormFile failed with "%s", "%s"`, formFieldName, formFileName,
+				)
+			} else {
+				var f *os.File
+				if f, err = gfile.Open(path); err != nil {
+					return nil, err
+				}
+				if _, err = io.Copy(file, f); err != nil {
+					_ = f.Close()
+					return nil, gerror.Wrapf(
+						err, `io.Copy failed from "%s" to form "%s"`, path, formFieldName,
+					)
+				}
+				if err = f.Close(); err != nil {
+					return nil, gerror.Wrapf(err, `close file descriptor failed for "%s"`, path)
+				}
+				isFileUploading = true
+			}
+		} else {
+			var (
+				fieldName  = array[0]
+				fieldValue = array[1]
+			)
+			// Decode URL-encoded field name and value.
+			// If decoding fails, use the original value.
+			if v, err := gurl.Decode(fieldName); err == nil {
+				fieldName = v
+			}
+			if v, err := gurl.Decode(fieldValue); err == nil {
+				fieldValue = v
+			}
+			if err := writer.WriteField(fieldName, fieldValue); err != nil {
+				return nil, gerror.Wrapf(
+					err, `write form field failed with "%s", "%s"`, fieldName, fieldValue,
+				)
+			}
+		}
+	}
+	// Close finishes the multipart message and writes the trailing
+	// boundary end line to the output.
+	if err := writer.Close(); err != nil {
+		return nil, gerror.Wrapf(err, `form writer close failed`)
+	}
+
+	req, err := http.NewRequest(method, u, buffer)
+	if err != nil {
+		return nil, gerror.Wrapf(
+			err, `http.NewRequest failed for method "%s" and URL "%s"`, method, u,
+		)
+	}
+	if isFileUploading {
+		req.Header.Set(httpHeaderContentType, writer.FormDataContentType())
+	}
+
+	return req, nil
+}
+
+// createGetRequest creates http.Request for GET method.
+// It merges query parameters and handles different Content-Types.
+func (c *Client) createGetRequest(ctx context.Context, u string, params string) (*http.Request, error) {
+	var bodyBuffer *bytes.Buffer
+	if params != "" {
+		mediaType := c.getMediaType(ctx)
+		switch mediaType {
+		case
+			httpHeaderContentTypeJson,
+			httpHeaderContentTypeXml:
+			bodyBuffer = bytes.NewBuffer([]byte(params))
+		default:
+			// Merge all query parameters before creating http.Request
+			// This includes: URL params + data params + c.queryParams
+			var err error
+			if u, err = c.mergeQueryParams(u, params); err != nil {
+				return nil, err
+			}
+			bodyBuffer = bytes.NewBuffer(nil)
+		}
+	} else {
+		// Only merge URL params and c.queryParams
+		var err error
+		if u, err = c.mergeQueryParams(u, ""); err != nil {
+			return nil, err
+		}
+		bodyBuffer = bytes.NewBuffer(nil)
+	}
+	req, err := http.NewRequest(http.MethodGet, u, bodyBuffer)
+	if err != nil {
+		return nil, gerror.Wrapf(err, `http.NewRequest failed with method "GET" and URL "%s"`, u)
+	}
+	return req, nil
+}
+
+// createPostRequest creates http.Request for POST/PUT/DELETE methods.
+// It dispatches to multipart or normal request handler based on params content.
+func (c *Client) createPostRequest(method, u string, params string, allowFileUploading bool) (*http.Request, error) {
+	// POST/PUT/DELETE etc: merge c.queryParams into URL
+	if len(c.queryParams) > 0 {
+		var err error
+		if u, err = c.mergeQueryParams(u, ""); err != nil {
+			return nil, err
+		}
+	}
+
+	if allowFileUploading && strings.Contains(params, httpParamFileHolder) {
+		return c.createMultipartRequest(method, u, params)
+	}
+	return c.createNormalPostRequest(method, u, params)
+}
+
+// prepareRequest verifies request parameters, builds and returns http request.
+func (c *Client) prepareRequest(ctx context.Context, method, u string, data ...any) (req *http.Request, err error) {
+	method = strings.ToUpper(method)
+
+	// 1. Normalize URL
+	u = c.normalizeURL(u)
+
+	// 2. Build request parameters
+	params, allowFileUploading, err := c.buildRequestParams(ctx, data...)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. Create request based on method
+	if method == http.MethodGet {
+		req, err = c.createGetRequest(ctx, u, params)
+	} else {
+		req, err = c.createPostRequest(method, u, params, allowFileUploading)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// 4. Enhance request with context, headers, cookies, auth
+	req = c.enhanceRequest(req, ctx)
+
 	return req, nil
 }
 

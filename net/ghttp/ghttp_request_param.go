@@ -189,6 +189,31 @@ func (r *Request) GetJson() (*gjson.Json, error) {
 	})
 }
 
+// GetBodyMap returns only the parameters from request body, without mixing with query, form, or router parameters.
+// This method is useful when you want to distinguish body parameters from other parameter sources.
+func (r *Request) GetBodyMap(def ...map[string]any) map[string]any {
+	r.parseBody()
+	if r.bodyMap == nil {
+		if len(def) > 0 && def[0] != nil {
+			return def[0]
+		}
+		return make(map[string]any)
+	}
+	m := make(map[string]any)
+	for k, v := range r.bodyMap {
+		m[k] = v
+	}
+	// Check none exist parameters and assign it with default value.
+	if len(def) > 0 && def[0] != nil {
+		for k, v := range def[0] {
+			if _, ok := m[k]; !ok {
+				m[k] = v
+			}
+		}
+	}
+	return m
+}
+
 // GetMap is an alias and convenient function for GetRequestMap.
 // See GetRequestMap.
 func (r *Request) GetMap(def ...map[string]any) map[string]any {
