@@ -229,6 +229,11 @@ func (r *Request) parseBody() {
 		return
 	}
 	r.parsedBody = true
+	// The body might be re-parsed after being changed, for example the middleware calling
+	// ReloadParam, so the previously parsed results are reset to avoid the stale ones being
+	// mixed up between the object and array formats.
+	r.bodyMap = nil
+	r.bodyArray = nil
 	// There's no data posted.
 	if r.ContentLength == 0 {
 		return
@@ -243,6 +248,20 @@ func (r *Request) parseBody() {
 		jsonContentType := gstr.ContainsI(contentType, contentTypeJson)
 		// Preserve GET query/form body compatibility while validating JSON-shaped GET bodies.
 		strictJsonContentType := jsonContentType && (r.Method != http.MethodGet || body[0] == '{' || body[0] == '[')
+		// JSON array format check for the request struct declaring a field tagged with `in:"body"`.
+		// Note that the array body is accepted no matter what the content type is, just like the
+		// object body is relaxed checked below.
+		if r.isArrayRequestBodyExpected() && body[0] == '[' && body[len(body)-1] == ']' {
+			var array []any
+			if err := json.UnmarshalUseNumber(body, &array); err == nil {
+				r.bodyArray = array
+				return
+			} else if strictJsonContentType {
+				r.SetError(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse JSON body failed"))
+				return
+			}
+			// It is not a valid JSON array, falling back to the default parameters decoding below.
+		}
 		// JSON format checks.
 		if strictJsonContentType {
 			if err := json.UnmarshalUseNumber(body, &r.bodyMap); err != nil {
@@ -264,6 +283,19 @@ func (r *Request) parseBody() {
 			r.bodyMap, _ = gstr.Parse(r.GetBodyString())
 		}
 	}
+}
+
+// isArrayRequestBodyExpected checks and returns whether the handler serving current request
+// declares a request struct field tagged with `in:"body"`, which receives the whole JSON array
+// request body.
+//
+// Note that there might be no serving handler for current request, for example the static file
+// request or the route not matched request.
+func (r *Request) isArrayRequestBodyExpected() bool {
+	if r.serveHandler == nil || r.serveHandler.Handler == nil {
+		return false
+	}
+	return r.serveHandler.Handler.Info.ReqBodyFieldName != ""
 }
 
 // parseForm parses the request form for HTTP method PUT, POST, PATCH.
@@ -289,6 +321,16 @@ func (r *Request) parseForm() {
 			// To avoid big memory consuming.
 			// The `multipart/` type form always contains binary data, which is not necessary read twice.
 			r.MakeBodyRepeatableRead(true)
+			// A field tagged with `in:"body"` receives the whole request body, so the JSON array
+			// body is detected before the form decoding below, which would otherwise cut the
+			// array into bogus form parameters.
+			if r.isArrayRequestBodyExpected() {
+				r.parseBody()
+				if r.bodyArray != nil {
+					r.formMap = nil
+					return
+				}
+			}
 		}
 		if isMultiPartRequest {
 			// multipart/form-data, multipart/mixed

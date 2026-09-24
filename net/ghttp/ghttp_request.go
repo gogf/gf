@@ -52,6 +52,7 @@ type Request struct {
 	queryMap        map[string]any       // Query parameters map, which is nil if there's no query string.
 	formMap         map[string]any       // Form parameters map, which is nil if there's no form of data from the client.
 	bodyMap         map[string]any       // Body parameters map, which might be nil if their nobody content.
+	bodyArray       []any                // Body parameters array, which is nil unless the request body is a JSON array for a handler that declares a field tagged with `in:"body"`.
 	error           error                // Current executing error of the request.
 	exitAll         bool                 // A bool marking whether current request is exited.
 	parsedHost      string               // The parsed host name for current host used by GetHost function.
