@@ -396,6 +396,17 @@ type User struct {
 	Password   string
 	Nickname   string
 	CreateTime *gtime.Time
+	CreateDate *gtime.Time
+}
+
+type DoUser struct {
+	g.Meta     `orm:"table:user, do:true"`
+	Id         any
+	Passport   any
+	Password   any
+	Nickname   any
+	CreateTime *gtime.Time
+	CreateDate *gtime.Time
 }
 
 func (user *User) UnmarshalValue(value any) error {
@@ -406,6 +417,7 @@ func (user *User) UnmarshalValue(value any) error {
 			Password:   "",
 			Nickname:   record["nickname"].String(),
 			CreateTime: record["create_time"].GTime(),
+			CreateDate: record["create_date"].GTime(),
 		}
 		return nil
 	}
