@@ -214,6 +214,18 @@ jobs:
         ports:
           - 2181:2181
 
+      # TiDB server, MySQL protocol.
+      # docker run -p 4000:4000 pingcap/tidb:v8.5.1
+      tidb:
+        image: pingcap/tidb:v8.5.1
+        ports:
+          - 4000:4000
+        options: >-
+          --health-cmd "curl -sf http://127.0.0.1:10080/status"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
     steps:
     - name: Setup Timezone
       run:  sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
