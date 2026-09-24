@@ -47,6 +47,8 @@ type (
 		serviceMu        sync.Mutex                // Concurrent safety for operations of attribute service.
 		service          gsvc.Service              // The service for Registry.
 		registrar        gsvc.Registrar            // Registrar for service register.
+		beforeStartHooks []ServerHookFunc          // Lifecycle hooks executed before server starts.
+		afterStartHooks  []ServerHookFunc          // Lifecycle hooks executed after server starts.
 	}
 
 	// Router object.
@@ -75,6 +77,9 @@ type (
 
 	// HandlerFunc is request handler function.
 	HandlerFunc = func(r *Request)
+
+	// ServerHookFunc is the hook function for server lifecycle events.
+	ServerHookFunc = func(s *Server) error
 
 	// handlerFuncInfo contains the HandlerFunc address and its reflection type.
 	handlerFuncInfo struct {
