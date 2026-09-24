@@ -10,6 +10,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"runtime"
 	"testing"
 	"time"
 
@@ -21,6 +22,7 @@ import (
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 func Test_New(t *testing.T) {
@@ -41,14 +43,20 @@ func Test_New(t *testing.T) {
 
 func Test_New_Path_With_Colon(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-
-		dbFilePathWithColon := gfile.Join(dbDir, "test:1")
-		if err := gfile.Mkdir(dbFilePathWithColon); err != nil {
-			gtest.Error(err)
+		// The link parser used to split a file path on ":" as if it were host:port, which
+		// broke every Windows path. A Windows path carries the colon in its drive letter;
+		// elsewhere a directory name supplies one, as Windows forbids a colon in a file name.
+		dbFilePath := gfile.Join(dbDir, "test.db")
+		if runtime.GOOS != "windows" {
+			dir := gfile.Join(dbDir, "test:1")
+			t.AssertNil(gfile.Mkdir(dir))
+			dbFilePath = gfile.Join(dir, "test.db")
 		}
+		t.Assert(gstr.Contains(dbFilePath, ":"), true)
+
 		node := gdb.ConfigNode{
 			Type:    "sqlite",
-			Link:    fmt.Sprintf(`sqlite::@file(%s)`, gfile.Join(dbFilePathWithColon, "test.db")),
+			Link:    fmt.Sprintf(`sqlite::@file(%s)`, dbFilePath),
 			Charset: "utf8",
 		}
 		newDb, err := gdb.New(node)
