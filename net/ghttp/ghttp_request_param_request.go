@@ -8,8 +8,6 @@ package ghttp
 
 import (
 	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -210,11 +208,7 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 			// The JSON object, the form parameters and the multipart forms are not acceptable
 			// for such field, which are reported as an invalid parameter instead of being
 			// silently ignored with the field left as a nil slice.
-			return nil, gerror.NewCodef(
-				gcode.CodeInvalidParameter,
-				`the request body should be a JSON array for the request struct field "%s" tagged with in:"body"`,
-				bodyFieldName,
-			)
+			return nil, newArrayRequestBodyError(bodyFieldName)
 		} else {
 			// There's no body at all. The nil value occupies the field name, so that the field
 			// is bound to its zero value before the request parameters of similar names (case

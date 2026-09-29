@@ -306,7 +306,8 @@ func Test_Request_JsonArrayBody_MultipartRejected(t *testing.T) {
 		return buffer.String()
 	}
 	// The multipart forms are not acceptable for the array body field, no matter they carry
-	// normal fields, files or nothing at all.
+	// normal fields, files or nothing at all. The malformed multipart body is also reported as
+	// an invalid parameter: it is rejected before being parsed, which would otherwise panic.
 	for _, body := range []string{
 		newMultipartBody(`Content-Disposition: form-data; name="id"` + "\r\n\r\n888"),
 		newMultipartBody(
@@ -314,6 +315,7 @@ func Test_Request_JsonArrayBody_MultipartRejected(t *testing.T) {
 				`Content-Type: text/plain` + "\r\n\r\nhello",
 		),
 		newMultipartBody(),
+		`this-is-not-a-multipart-body`,
 	} {
 		gtest.C(t, func(t *gtest.T) {
 			var parsed = gjson.New(client.ContentType("multipart/form-data; boundary="+boundary).
