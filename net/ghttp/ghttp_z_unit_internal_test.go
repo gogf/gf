@@ -54,6 +54,36 @@ type reqBodyStructReq struct {
 	Data reqBodyStructData `json:"data" in:"body"`
 }
 
+// reqBodyUploadFileReq declares the `in:"body"` tag on a single uploading file field, which is
+// not able to receive the request body.
+type reqBodyUploadFileReq struct {
+	File *UploadFile `json:"file" in:"body"`
+}
+
+// reqBodyUploadFilesReq declares the `in:"body"` tag on an uploading file slice field, of which
+// the type is a slice as well but not a bodyable one.
+type reqBodyUploadFilesReq struct {
+	Files []*UploadFile `json:"files" in:"body"`
+}
+
+// reqBodyUploadFilesAliasReq declares the `in:"body"` tag on the UploadFiles type, which is
+// another form of the uploading file slice field.
+type reqBodyUploadFilesAliasReq struct {
+	Files UploadFiles `json:"files" in:"body"`
+}
+
+// reqBodyDuplicatedInTagReq declares the `in` tag more than once with different values on one
+// field, of which the parameter location is ambiguous.
+type reqBodyDuplicatedInTagReq struct {
+	Item string `json:"item" in:"query" in:"header"`
+}
+
+// reqBodySameInTagReq declares the `in` tag more than once with the same value, which is
+// unambiguous for the parameter location.
+type reqBodySameInTagReq struct {
+	Item string `json:"item" in:"query" in:"query"`
+}
+
 // reqBodyDuplicatedReq declares the `in:"body"` tag on multiple fields.
 type reqBodyDuplicatedReq struct {
 	Items []int `json:"items" in:"body"`
@@ -119,10 +149,51 @@ func Test_HandlerFuncInfo_CheckAndCreateReqBodyField(t *testing.T) {
 		t.Assert(gerror.Code(err), gcode.CodeInvalidParameter)
 		t.Assert(gstr.Contains(err.Error(), "ordinary fields of the request struct"), true)
 
+		// The field tagged with `in:"body"` is of a single uploading file type.
+		info = newReqBodyFuncInfo(t, &reqBodyUploadFileReq{})
+		err = info.checkAndCreateReqBodyField()
+		t.AssertNE(err, nil)
+		t.Assert(gerror.Code(err), gcode.CodeInvalidParameter)
+		t.Assert(gstr.Contains(err.Error(), "file type"), true)
+
+		// The fields tagged with `in:"body"` are of uploading file slice types, which are also
+		// slices but are not able to receive the JSON array request body.
+		for _, req := range []any{&reqBodyUploadFilesReq{}, &reqBodyUploadFilesAliasReq{}} {
+			info = newReqBodyFuncInfo(t, req)
+			err = info.checkAndCreateReqBodyField()
+			t.AssertNE(err, nil)
+			t.Assert(gerror.Code(err), gcode.CodeInvalidParameter)
+			t.Assert(gstr.Contains(err.Error(), "file type"), true)
+			t.Assert(gstr.Contains(err.Error(), "multipart/form-data"), true)
+		}
+
 		// Multiple fields tagged with `in:"body"`.
 		info = newReqBodyFuncInfo(t, &reqBodyDuplicatedReq{})
 		err = info.checkAndCreateReqBodyField()
 		t.AssertNE(err, nil)
 		t.Assert(gerror.Code(err), gcode.CodeInvalidParameter)
+	})
+}
+
+func Test_HandlerFuncInfo_CheckDuplicatedInTag(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// No `in` tag at all.
+		var info = newReqBodyFuncInfo(t, &reqBodyAbsentReq{})
+		t.AssertNil(info.checkDuplicatedInTag())
+
+		// One `in` tag on the body field.
+		info = newReqBodyFuncInfo(t, &reqBodyValidReq{})
+		t.AssertNil(info.checkDuplicatedInTag())
+
+		// The same `in` value declared more than once is not ambiguous.
+		info = newReqBodyFuncInfo(t, &reqBodySameInTagReq{})
+		t.AssertNil(info.checkDuplicatedInTag())
+
+		// More than one `in` tag with different values on one field.
+		info = newReqBodyFuncInfo(t, &reqBodyDuplicatedInTagReq{})
+		err := info.checkDuplicatedInTag()
+		t.AssertNE(err, nil)
+		t.Assert(gerror.Code(err), gcode.CodeInvalidParameter)
+		t.Assert(gstr.Contains(err.Error(), `conflicting values "query" and "header"`), true)
 	})
 }

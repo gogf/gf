@@ -17,6 +17,7 @@ import (
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 // BindHandler registers a handler function to server with a given pattern.
@@ -236,6 +237,9 @@ func (s *Server) checkAndCreateFuncInfo(
 		return funcInfo, err
 	}
 	funcInfo.ReqStructFields = fields
+	if err = funcInfo.checkDuplicatedInTag(); err != nil {
+		return funcInfo, err
+	}
 	if err = funcInfo.checkAndCreateReqBodyField(); err != nil {
 		return funcInfo, err
 	}
@@ -243,13 +247,38 @@ func (s *Server) checkAndCreateFuncInfo(
 	return
 }
 
+// checkDuplicatedInTag checks and returns error if the `in` tag is declared with conflicting
+// values on a request struct field, which makes the parameter location ambiguous: the request
+// handling resolves the `in` tag with the first value as the reflect.StructTag does, while the
+// tag map used by the document generation keeps the last one.
+func (f *handlerFuncInfo) checkDuplicatedInTag() error {
+	for _, field := range f.ReqStructFields {
+		// The field Tag keeps the first value of a tag key, while the parsed tag map keeps the
+		// last one, so a difference between them means the key is declared more than once with
+		// different values.
+		var (
+			firstValue = field.Tag(gtag.In)
+			lastValue  = gstructs.ParseTag(field.TagStr())[gtag.In]
+		)
+		if firstValue != lastValue {
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid handler: the request struct field "%s" declares the in tag with conflicting `+
+					`values "%s" and "%s"`,
+				field.Name(), firstValue, lastValue,
+			)
+		}
+	}
+	return nil
+}
+
 // checkAndCreateReqBodyField retrieves the request struct field that receives the whole request
 // body, which is declared by the `in:"body"` tag on the field.
 //
 // The request body is only able to be received by one field, so it returns error if there are
-// multiple fields tagged with `in:"body"`. It also returns error if the field is not of slice
-// type, as only the JSON array request body is supported for now; note that an object request
-// body does not need this tag, which is received by the ordinary request struct fields.
+// multiple fields tagged with `in:"body"`. It also returns error if the field can not receive
+// the JSON array request body: a non-slice type, or an uploading file type, as files are
+// received by the ordinary request struct fields through the multipart/form-data request.
 //
 // It is called once at handler registration, which also resolves the tag name of the field for
 // the request handling to remove the request parameter of the same name.
@@ -269,6 +298,15 @@ func (f *handlerFuncInfo) checkAndCreateReqBodyField() error {
 		var fieldType = field.Type().Type
 		for fieldType.Kind() == reflect.Pointer {
 			fieldType = fieldType.Elem()
+		}
+		if isFileType(fieldType) {
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid handler: the request struct field "%s" tagged with in:"body" is of file type "%s"; `+
+					`files are uploaded by the multipart/form-data request and received by the ordinary `+
+					`fields of the request struct, which does not need the in:"body" tag`,
+				field.Name(), field.Type().String(),
+			)
 		}
 		if fieldType.Kind() != reflect.Slice {
 			var hint string
@@ -294,6 +332,16 @@ func (f *handlerFuncInfo) checkAndCreateReqBodyField() error {
 		f.ReqBodyFieldTagName = field.TagPriorityName()
 	}
 	return nil
+}
+
+// isFileType checks and returns whether given golang type is of the uploading file type
+// `UploadFile`, including its pointer and slice forms, for example: *UploadFile, UploadFile,
+// []*UploadFile, UploadFiles.
+func isFileType(fieldType reflect.Type) bool {
+	for fieldType.Kind() == reflect.Pointer || fieldType.Kind() == reflect.Slice {
+		fieldType = fieldType.Elem()
+	}
+	return fieldType == reflect.TypeOf(UploadFile{})
 }
 
 func createRouterFunc(funcInfo handlerFuncInfo) func(r *Request) {
