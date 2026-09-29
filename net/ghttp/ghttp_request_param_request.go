@@ -196,7 +196,7 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
 func (r *Request) mergeDefaultStructValue(data map[string]any, pointer any) error {
-	fields := r.serveHandler.Handler.Info.ReqStructFields
+	fields := r.reqStructFields()
 	if len(fields) > 0 {
 		for _, field := range fields {
 			if tagValue := field.TagDefault(); tagValue != "" {
@@ -222,7 +222,7 @@ func (r *Request) mergeDefaultStructValue(data map[string]any, pointer any) erro
 
 // mergeInTagStructValue merges the request parameters with header or cookie values from struct `in` tag definition.
 func (r *Request) mergeInTagStructValue(data map[string]any) error {
-	fields := r.serveHandler.Handler.Info.ReqStructFields
+	fields := r.reqStructFields()
 	if len(fields) > 0 {
 		var (
 			headerMap = make(map[string]any)
