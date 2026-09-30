@@ -431,6 +431,16 @@ END;`, guidTable, guidTable),
 		t.AssertNil(err)
 		t.Assert(count, 1)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(guidTable).Data(g.Map{"name": "last_insert_id"}).Insert()
+		t.AssertNil(err)
+		affected, err := result.RowsAffected()
+		t.AssertNil(err)
+		t.Assert(affected, 1)
+		_, err = result.LastInsertId()
+		t.Assert(gerror.Code(err), gcode.CodeNotSupported)
+	})
 }
 
 // Test_Oracle_LastInsertId_NoPrimaryKey tests InsertAndGetId on a table without primary key.
@@ -1754,7 +1764,7 @@ func Test_Oracle_LastInsertId_NonIntegerPrimaryKeyId(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		id, err := db.Model(table).Data(g.Map{"name": "a"}).InsertAndGetId()
-		t.AssertNil(err)
+		t.Assert(gerror.Code(err), gcode.CodeNotSupported)
 		t.Assert(id, 0)
 
 		count, err := db.Model(table).Where("name", "a").Count()
