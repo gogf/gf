@@ -202,7 +202,7 @@ func (c *Core) ClearCacheAll(ctx context.Context) (err error) {
 
 // HasField determine whether the field exists in the table.
 func (c *Core) HasField(ctx context.Context, table, field string, schema ...string) (bool, error) {
-	table = c.guessPrimaryTableName(table)
+	table = c.db.GetTableNameForFields(table)
 	tableFields, err := c.db.TableFields(ctx, table, schema...)
 	if err != nil {
 		return false, err
@@ -219,8 +219,9 @@ func (c *Core) HasField(ctx context.Context, table, field string, schema ...stri
 	}
 	charLeft, charRight := c.db.GetChars()
 	field = gstr.Trim(field, charLeft+charRight)
+	foldedField := c.db.FoldIdentifier(field)
 	for _, f := range fieldsArray {
-		if f == field {
+		if f == field || f == foldedField {
 			return true, nil
 		}
 	}

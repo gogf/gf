@@ -22,7 +22,6 @@ import (
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // GetFieldTypeStr retrieves and returns the field type string for certain field by name.
@@ -472,7 +471,7 @@ func (c *Core) ConvertValueForLocal(
 // mappingAndFilterData automatically mappings the map key to table field and removes
 // all key-value pairs that are not the field of given table.
 func (c *Core) mappingAndFilterData(ctx context.Context, schema, table string, data map[string]any, filter bool) (map[string]any, error) {
-	fieldsMap, err := c.db.TableFields(ctx, c.guessPrimaryTableName(table), schema)
+	fieldsMap, err := c.db.TableFields(ctx, c.db.GetTableNameForFields(table), schema)
 	if err != nil {
 		return nil, err
 	}
@@ -487,7 +486,7 @@ func (c *Core) mappingAndFilterData(ctx context.Context, schema, table string, d
 	var foundKey string
 	for dataKey, dataValue := range data {
 		if _, ok := fieldsKeyMap[dataKey]; !ok {
-			foundKey, _ = gutil.MapPossibleItemByKey(fieldsKeyMap, dataKey)
+			foundKey, _ = mapPossibleItemByFieldKey(c.db, fieldsKeyMap, dataKey)
 			if foundKey != "" {
 				if _, ok = data[foundKey]; !ok {
 					data[foundKey] = dataValue

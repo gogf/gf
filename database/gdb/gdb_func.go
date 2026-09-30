@@ -316,6 +316,20 @@ func doQuoteTableName(table, prefix, charLeft, charRight string) string {
 	return gstr.Join(array1, ",")
 }
 
+// mapPossibleItemByFieldKey acts like gutil.MapPossibleItemByKey on map `data` keyed by
+// field names, but before the fuzzy matching it looks up `key` folded by DB.FoldIdentifier.
+func mapPossibleItemByFieldKey(db DB, data map[string]any, key string) (foundKey string, foundValue any) {
+	if v, ok := data[key]; ok {
+		return key, v
+	}
+	if foldedKey := db.FoldIdentifier(key); foldedKey != key {
+		if v, ok := data[foldedKey]; ok {
+			return foldedKey, v
+		}
+	}
+	return gutil.MapPossibleItemByKey(data, key)
+}
+
 // doQuoteWord checks given string `s` a word, if true quotes it with `charLeft` and `charRight`
 // and returns the quoted string; or else returns `s` without any change.
 func doQuoteWord(s, charLeft, charRight string) string {
@@ -551,7 +565,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 			if ormTagValue == "" {
 				ormTagValue = structField.Name
 			}
-			foundKey, foundValue := gutil.MapPossibleItemByKey(data, ormTagValue)
+			foundKey, foundValue := mapPossibleItemByFieldKey(db, data, ormTagValue)
 			if foundKey != "" {
 				if in.OmitNil && empty.IsNil(foundValue) {
 					continue
