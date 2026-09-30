@@ -112,7 +112,8 @@ type limitClause struct {
 // rewriteQuery rewrites the MySQL syntax that the core builds and Oracle rejects, in `sql`
 // itself and in every parenthesized sub-query, innermost first: a LIMIT clause becomes a ROWNUM
 // filter over the query it limits, keeping the clauses that follow it such as a lock clause,
-// and a compound query is rewritten by rewriteCompoundQuery.
+// a compound query is rewritten by rewriteCompoundQuery, and the AS keyword before a table alias
+// is removed by removeTableAliasKeywords.
 // It returns `sql` unchanged if its parentheses or quotes are unbalanced.
 func rewriteQuery(sql string) string {
 	tokens, trailing, ok := scanSqlTokens(sql)
@@ -124,10 +125,69 @@ func rewriteQuery(sql string) string {
 			tokens[i].text = "(" + rewriteQuery(token.text[1:len(token.text)-1]) + ")"
 		}
 	}
+	tokens = removeTableAliasKeywords(tokens)
 	if len(tokens) > 0 && (tokens[0].group || tokens[0].is("SELECT") || tokens[0].is("WITH")) {
 		tokens = rewriteLimitClause(tokens)
 	}
 	return joinSqlTokens(tokens) + trailing
+}
+
+// tableReferenceKeywords are the keywords followed by the table references of a statement.
+var tableReferenceKeywords = map[string]bool{"FROM": true, "JOIN": true, "UPDATE": true}
+
+// tableReferenceEndKeywords are the keywords that end the table references of a statement.
+var tableReferenceEndKeywords = map[string]bool{
+	"SELECT": true, "WHERE": true, "ON": true, "USING": true, "SET": true, "GROUP": true,
+	"HAVING": true, "ORDER": true, "CONNECT": true, "START": true, "UNION": true,
+	"INTERSECT": true, "MINUS": true, "EXCEPT": true, "FOR": true, "LIMIT": true,
+	"OFFSET": true, "RETURNING": true,
+}
+
+// joinKeywords are the keywords that begin a join after a table reference.
+var joinKeywords = map[string]bool{
+	"JOIN": true, "INNER": true, "LEFT": true, "RIGHT": true, "FULL": true, "CROSS": true,
+	"NATURAL": true,
+}
+
+// removeTableAliasKeywords removes the AS keyword, which Oracle rejects, between a table or
+// sub-query and its alias among the table references at the outermost level of `tokens`:
+// an AS that the alias, then the end of the references, a comma or a join follows.
+// Any other AS is kept, like the one before a column alias or in "AS OF TIMESTAMP".
+func removeTableAliasKeywords(tokens []sqlToken) []sqlToken {
+	var (
+		result      = make([]sqlToken, 0, len(tokens))
+		inReference bool
+		inJoinCond  bool
+	)
+	for i, token := range tokens {
+		if !token.group {
+			switch word := strings.ToUpper(token.text); {
+			case tableReferenceKeywords[word]:
+				inReference, inJoinCond = true, false
+			case word == "ON" || word == "USING":
+				inReference, inJoinCond = false, inReference || inJoinCond
+			case tableReferenceEndKeywords[word]:
+				inReference, inJoinCond = false, false
+			case word == "," && inJoinCond:
+				inReference, inJoinCond = true, false
+			}
+		}
+		if inReference && token.is("AS") && i+1 < len(tokens) && isSqlAlias(tokens[i+1]) {
+			if i+2 == len(tokens) || tokens[i+2].text == "," ||
+				tableReferenceEndKeywords[strings.ToUpper(tokens[i+2].text)] ||
+				joinKeywords[strings.ToUpper(tokens[i+2].text)] {
+				continue
+			}
+		}
+		result = append(result, token)
+	}
+	return result
+}
+
+// isSqlAlias reports whether `token` is a plain identifier that can be an alias.
+func isSqlAlias(token sqlToken) bool {
+	return !token.group && token.text != "" && isSqlWordChar(token.text[0]) &&
+		!strings.ContainsAny(token.text, ".:")
 }
 
 // rewriteLimitClause rewrites the LIMIT clause at the outermost level of the query formed by

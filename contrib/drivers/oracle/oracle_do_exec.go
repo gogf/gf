@@ -9,6 +9,7 @@ package oracle
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
 	"strings"
 
@@ -25,6 +26,9 @@ const (
 func (d *Driver) DoExec(
 	ctx context.Context, link gdb.Link, sql string, args ...interface{},
 ) (result sql.Result, err error) {
+	if isReleaseSavePoint(sql) {
+		return driver.RowsAffected(0), nil
+	}
 	var (
 		isUseCoreDoExec = true
 		primaryKey      string
