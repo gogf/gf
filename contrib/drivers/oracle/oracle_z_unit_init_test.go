@@ -38,9 +38,9 @@ const (
 )
 
 const (
-	oracleMaxIdentifierLength = 30
-	oracleErrTableNotExist    = 942
-	oracleErrSequenceNotExist = 2289
+	oracleErrTableNotExist     = 942
+	oracleErrIdentifierTooLong = 972
+	oracleErrSequenceNotExist  = 2289
 )
 
 const (
@@ -215,10 +215,8 @@ func dropTableWithDb(db gdb.DB, table string) {
 		gtest.Fatal(err)
 	}
 	sequence := table + "_ID_SEQ"
-	if len(sequence) > oracleMaxIdentifierLength {
-		return
-	}
-	if _, err := db.Exec(ctx, fmt.Sprintf("DROP SEQUENCE %s", sequence)); err != nil && !isOracleError(err, oracleErrSequenceNotExist) {
+	if _, err := db.Exec(ctx, fmt.Sprintf("DROP SEQUENCE %s", sequence)); err != nil &&
+		!isOracleError(err, oracleErrSequenceNotExist) && !isOracleError(err, oracleErrIdentifierTooLong) {
 		gtest.Fatal(err)
 	}
 }
