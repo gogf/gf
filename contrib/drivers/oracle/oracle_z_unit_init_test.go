@@ -8,14 +8,15 @@ package oracle_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
 	_ "github.com/sijms/go-ora/v2"
 
-	"github.com/gogf/gf/v2/container/garray"
+	"github.com/sijms/go-ora/v2/network"
+
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 )
@@ -34,6 +35,12 @@ const (
 	TestSchema2      = "test2"
 	TableNamePrefix1 = "gf_"
 	TestSchema       = "XE"
+)
+
+const (
+	oracleMaxIdentifierLength = 30
+	oracleErrTableNotExist    = 942
+	oracleErrSequenceNotExist = 2289
 )
 
 const (
@@ -104,14 +111,25 @@ func init() {
 	ctx = context.Background()
 }
 
-func createTable(table ...string) (name string) {
+func createTable(table ...string) string {
+	return createTableWithDb(db, table...)
+}
+
+func createInitTable(table ...string) string {
+	return createInitTableWithDb(db, table...)
+}
+
+func dropTable(table string) {
+	dropTableWithDb(db, table)
+}
+
+func createTableWithDb(db gdb.DB, table ...string) (name string) {
 	if len(table) > 0 {
 		name = table[0]
+		dropTableWithDb(db, name)
 	} else {
-		name = fmt.Sprintf("user_%d", gtime.Timestamp())
+		name = fmt.Sprintf("user_%d", gtime.TimestampMicro())
 	}
-
-	dropTable(name)
 
 	// Step 1: Create table
 	createTableSQL := fmt.Sprintf(`
@@ -162,45 +180,50 @@ END;`, name, name, name)
 	return
 }
 
-func createInitTable(table ...string) (name string) {
-	name = createTable(table...)
-	array := garray.New(true)
+func createInitTableWithDb(db gdb.DB, table ...string) (name string) {
+	name = createTableWithDb(db, table...)
+	var (
+		values = make([]string, 0, TableSize)
+		args   = make([]any, 0, TableSize*5)
+	)
 	for i := 1; i <= TableSize; i++ {
-		array.Append(g.Map{
-			"id":          i,
-			"passport":    fmt.Sprintf(`user_%d`, i),
-			"password":    fmt.Sprintf(`pass_%d`, i),
-			"nickname":    fmt.Sprintf(`name_%d`, i),
-			"create_time": gtime.Now().String(),
-		})
+		values = append(values, fmt.Sprintf(
+			"INTO %s (ID, PASSPORT, PASSWORD, NICKNAME, CREATE_TIME) VALUES (?, ?, ?, ?, ?)", name,
+		))
+		args = append(args,
+			i,
+			fmt.Sprintf(`user_%d`, i),
+			fmt.Sprintf(`pass_%d`, i),
+			fmt.Sprintf(`name_%d`, i),
+			gtime.Now().String(),
+		)
 	}
-	result, err := db.Insert(context.Background(), name, array.Slice())
+	result, err := db.Exec(context.Background(), "INSERT ALL "+strings.Join(values, " ")+" SELECT 1 FROM DUAL", args...)
 	gtest.AssertNil(err)
 
 	n, e := result.RowsAffected()
 	gtest.Assert(e, nil)
 	gtest.Assert(n, TableSize)
+
+	_, err = db.TableFields(context.Background(), name)
+	gtest.AssertNil(err)
 	return
 }
 
-func dropTable(table string) {
-	count, err := db.GetCount(ctx, "SELECT COUNT(*) FROM USER_TABLES WHERE TABLE_NAME = ?", strings.ToUpper(table))
-	if err != nil {
+func dropTableWithDb(db gdb.DB, table string) {
+	if _, err := db.Exec(ctx, fmt.Sprintf("DROP TABLE %s", table)); err != nil && !isOracleError(err, oracleErrTableNotExist) {
 		gtest.Fatal(err)
 	}
-
-	if count == 0 {
+	sequence := table + "_ID_SEQ"
+	if len(sequence) > oracleMaxIdentifierLength {
 		return
 	}
-
-	// Drop table
-	if _, err = db.Exec(ctx, fmt.Sprintf("DROP TABLE %s", table)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf("DROP SEQUENCE %s", sequence)); err != nil && !isOracleError(err, oracleErrSequenceNotExist) {
 		gtest.Fatal(err)
 	}
+}
 
-	// Drop sequence if exists
-	seqCount, err := db.GetCount(ctx, "SELECT COUNT(*) FROM USER_SEQUENCES WHERE SEQUENCE_NAME = ?", strings.ToUpper(table+"_ID_SEQ"))
-	if err == nil && seqCount > 0 {
-		db.Exec(ctx, fmt.Sprintf("DROP SEQUENCE %s_ID_SEQ", table))
-	}
+func isOracleError(err error, code int) bool {
+	var oracleError *network.OracleError
+	return errors.As(err, &oracleError) && oracleError.ErrCode == code
 }
