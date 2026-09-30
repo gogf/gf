@@ -39,6 +39,12 @@ type IGroupGeneric interface {
 	PExpireAt(ctx context.Context, key string, time time.Time, option ...ExpireOption) (int64, error)
 	PExpireTime(ctx context.Context, key string) (*gvar.Var, error)
 	PTTL(ctx context.Context, key string) (int64, error)
+
+	// ScanAll iterates all keys matching the given pattern across the entire keyspace.
+	// In standalone and sentinel modes, it repeatedly calls Scan until the cursor returns to 0.
+	// In Cluster mode, it transparently iterates all master nodes and aggregates results.
+	// This is the safe alternative to Keys, which can block the server on large datasets.
+	ScanAll(ctx context.Context, option ...ScanOption) ([]string, error)
 }
 
 // CopyOption provides options for function Copy.
