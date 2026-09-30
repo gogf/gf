@@ -16,16 +16,19 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-var (
-	tableFieldsSqlTmp = `
-SELECT 
+// tableFieldsColumnsSql selects the name, type and nullability of the columns aliased as `c`.
+const tableFieldsColumnsSql = `
     c.COLUMN_NAME AS FIELD, 
     CASE   
     WHEN (c.DATA_TYPE='NUMBER' AND NVL(c.DATA_SCALE,0)=0) THEN 'INT'||'('||c.DATA_PRECISION||','||c.DATA_SCALE||')'
     WHEN (c.DATA_TYPE='NUMBER' AND NVL(c.DATA_SCALE,0)>0) THEN 'FLOAT'||'('||c.DATA_PRECISION||','||c.DATA_SCALE||')'
     WHEN c.DATA_TYPE='FLOAT' THEN c.DATA_TYPE||'('||c.DATA_PRECISION||','||c.DATA_SCALE||')' 
     ELSE c.DATA_TYPE||'('||c.DATA_LENGTH||')' END AS TYPE,
-    c.NULLABLE,
+    c.NULLABLE,`
+
+var (
+	tableFieldsSqlTmp = `
+SELECT ` + tableFieldsColumnsSql + `
     CASE WHEN pk.COLUMN_NAME IS NOT NULL THEN 'PRI' ELSE '' END AS KEY
 FROM USER_TAB_COLUMNS c
 LEFT JOIN (
@@ -38,14 +41,7 @@ WHERE c.TABLE_NAME = '%s'
 ORDER BY c.COLUMN_ID
 `
 	ownerTableFieldsSqlTmp = `
-SELECT 
-    c.COLUMN_NAME AS FIELD, 
-    CASE   
-    WHEN (c.DATA_TYPE='NUMBER' AND NVL(c.DATA_SCALE,0)=0) THEN 'INT'||'('||c.DATA_PRECISION||','||c.DATA_SCALE||')'
-    WHEN (c.DATA_TYPE='NUMBER' AND NVL(c.DATA_SCALE,0)>0) THEN 'FLOAT'||'('||c.DATA_PRECISION||','||c.DATA_SCALE||')'
-    WHEN c.DATA_TYPE='FLOAT' THEN c.DATA_TYPE||'('||c.DATA_PRECISION||','||c.DATA_SCALE||')' 
-    ELSE c.DATA_TYPE||'('||c.DATA_LENGTH||')' END AS TYPE,
-    c.NULLABLE,
+SELECT ` + tableFieldsColumnsSql + `
     CASE WHEN c.COLUMN_NAME IN (
         SELECT cols.COLUMN_NAME 
         FROM ALL_CONSTRAINTS cons 
