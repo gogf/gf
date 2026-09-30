@@ -304,7 +304,7 @@ func Test_Model_Insert_Raw(t *testing.T) {
 			"UID":         1,
 			"PASSPORT":    "t1",
 			"PASSWORD":    "25d55ad283aa400af464c76d713c07ad",
-			"NICKNAME":    gdb.Raw("name_1"),
+			"NICKNAME":    gdb.Raw("'name_1'"),
 			"SALARY":      2675.11,
 			"CREATE_TIME": gtime.Now().String(),
 		}).Insert()

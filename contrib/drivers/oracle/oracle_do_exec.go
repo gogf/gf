@@ -13,8 +13,6 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 const (
@@ -54,40 +52,22 @@ func (d *Driver) DoExec(
 		}
 	}
 
-	// Check if it is an INSERT statement with primary key.
-	if !isUseCoreDoExec && pkField.Name != "" && strings.Contains(strings.ToUpper(sql), "INSERT INTO") {
+	// Check if it is an INSERT statement with an integer primary key.
+	if !isUseCoreDoExec && pkField.Name != "" && isIntegerField(pkField) &&
+		strings.Contains(strings.ToUpper(sql), "INSERT INTO") {
 		primaryKey = pkField.Name
 		// Oracle supports RETURNING clause to get the last inserted id
 		sql += fmt.Sprintf(returningClause, d.QuoteWord(primaryKey))
 	} else {
-		// Use default DoExec for non-INSERT or no primary key scenarios
+		// Use default DoExec for non-INSERT, no primary key or non-integer primary key scenarios
 		return d.Core.DoExec(ctx, link, sql, args...)
 	}
 
 	// Only the insert operation with primary key can execute the following code
 
-	// SQL filtering.
-	sql, args = d.FormatSqlBeforeExecuting(sql, args)
-	sql, args, err = d.DoFilter(ctx, link, sql, args)
-	if err != nil {
-		return nil, err
-	}
-
 	// Prepare output variable for RETURNING clause
 	var lastInsertId int64
-	// Append the output parameter for the RETURNING clause
-	args = append(args, &lastInsertId)
-
-	// Link execution.
-	_, err = d.DoCommit(ctx, gdb.DoCommitInput{
-		Link:          link,
-		Sql:           sql,
-		Args:          args,
-		Stmt:          nil,
-		Type:          gdb.SqlTypeExecContext,
-		IsTransaction: link.IsTransaction(),
-	})
-
+	r, err := d.Core.DoExec(ctx, &returningLink{Link: link, dest: &lastInsertId}, sql, args...)
 	if err != nil {
 		return &Result{
 			lastInsertId:      0,
@@ -95,26 +75,31 @@ func (d *Driver) DoExec(
 			lastInsertIdError: err,
 		}, err
 	}
-
-	// Get rows affected from the result
-	// For single insert with RETURNING clause, affected is always 1
-	var affected int64 = 1
-
-	// Check if the primary key field type supports LastInsertId
-	if !strings.Contains(strings.ToLower(pkField.Type), "int") {
-		return &Result{
-			lastInsertId: 0,
-			rowsAffected: affected,
-			lastInsertIdError: gerror.NewCodef(
-				gcode.CodeNotSupported,
-				"LastInsertId is not supported by primary key type: %s",
-				pkField.Type,
-			),
-		}, nil
+	affected, err := r.RowsAffected()
+	if err != nil {
+		return nil, err
 	}
-
 	return &Result{
 		lastInsertId: lastInsertId,
 		rowsAffected: affected,
 	}, nil
+}
+
+// isIntegerField reports whether the column `field` holds integers, which TableFields reports
+// as INT(precision,scale) for a NUMBER column without fractional digits.
+func isIntegerField(field gdb.TableField) bool {
+	typeName, _, _ := strings.Cut(field.Type, "(")
+	return strings.EqualFold(strings.TrimSpace(typeName), "INT")
+}
+
+// returningLink is a gdb.Link that appends the output parameter of the RETURNING clause
+// to the arguments of the statement it executes.
+type returningLink struct {
+	gdb.Link
+	dest *int64
+}
+
+// ExecContext executes the statement with the RETURNING output parameter appended to `args`.
+func (l *returningLink) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
+	return l.Link.ExecContext(ctx, query, append(args, l.dest)...)
 }
