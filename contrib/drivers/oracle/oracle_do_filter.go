@@ -64,18 +64,18 @@ func convertPlaceholders(sql string) string {
 	return b.String()
 }
 
-// literalOrCommentEnd returns the index following the string literal or the comment that begins
-// at index `i` of `sql`, or -1 if none begins there. A quote that is never closed does not begin
-// a literal, and a comment that is never closed runs to the end of `sql`.
+// literalOrCommentEnd returns the index following the quoted literal or identifier, or the
+// comment, that begins at index `i` of `sql`, or -1 if none begins there. A quote that is never
+// closed does not begin a literal, and a comment that is never closed runs to the end of `sql`.
+// A line comment includes the line break that ends it.
 func literalOrCommentEnd(sql string, i int) int {
+	if end, ok := quotedEnd(sql, i); ok {
+		return end
+	}
 	switch {
-	case sql[i] == '\'':
-		if end := closingQuote(sql, i); end >= 0 {
-			return end + 1
-		}
 	case strings.HasPrefix(sql[i:], "--"):
 		if n := strings.IndexByte(sql[i:], '\n'); n >= 0 {
-			return i + n
+			return i + n + 1
 		}
 		return len(sql)
 	case strings.HasPrefix(sql[i:], "/*"):
@@ -125,11 +125,25 @@ func rewriteQuery(sql string) string {
 			tokens[i].text = "(" + rewriteQuery(token.text[1:len(token.text)-1]) + ")"
 		}
 	}
-	tokens = removeTableAliasKeywords(tokens)
-	if len(tokens) > 0 && (tokens[0].group || tokens[0].is("SELECT") || tokens[0].is("WITH")) {
-		tokens = rewriteLimitClause(tokens)
+	var start int
+	for start < len(tokens) && isCommentStart(tokens[start].text, 0) {
+		start++
+	}
+	if start == len(tokens) {
+		return joinSqlTokens(tokens) + trailing
+	}
+	if first := tokens[start]; first.group || dmlKeywords[strings.ToUpper(first.text)] {
+		tokens = removeTableAliasKeywords(tokens)
+	}
+	if first := tokens[start]; first.group || first.is("SELECT") || first.is("WITH") {
+		tokens = append(tokens[:start:start], rewriteLimitClause(tokens[start:])...)
 	}
 	return joinSqlTokens(tokens) + trailing
+}
+
+// dmlKeywords are the keywords beginning the statements whose table aliases are rewritten.
+var dmlKeywords = map[string]bool{
+	"SELECT": true, "WITH": true, "INSERT": true, "UPDATE": true, "DELETE": true, "MERGE": true,
 }
 
 // tableReferenceKeywords are the keywords followed by the table references of a statement.
@@ -151,7 +165,7 @@ var joinKeywords = map[string]bool{
 
 // removeTableAliasKeywords removes the AS keyword, which Oracle rejects, between a table or
 // sub-query and its alias among the table references at the outermost level of `tokens`:
-// an AS that the alias, then the end of the references, a comma or a join follows.
+// an AS that the alias, then the end of the references, a comma, a semicolon or a join follows.
 // Any other AS is kept, like the one before a column alias or in "AS OF TIMESTAMP".
 func removeTableAliasKeywords(tokens []sqlToken) []sqlToken {
 	var (
@@ -166,14 +180,14 @@ func removeTableAliasKeywords(tokens []sqlToken) []sqlToken {
 				inReference, inJoinCond = true, false
 			case word == "ON" || word == "USING":
 				inReference, inJoinCond = false, inReference || inJoinCond
-			case tableReferenceEndKeywords[word]:
+			case tableReferenceEndKeywords[word] || word == ";":
 				inReference, inJoinCond = false, false
 			case word == "," && inJoinCond:
 				inReference, inJoinCond = true, false
 			}
 		}
 		if inReference && token.is("AS") && i+1 < len(tokens) && isSqlAlias(tokens[i+1]) {
-			if i+2 == len(tokens) || tokens[i+2].text == "," ||
+			if i+2 == len(tokens) || tokens[i+2].text == "," || tokens[i+2].text == ";" ||
 				tableReferenceEndKeywords[strings.ToUpper(tokens[i+2].text)] ||
 				joinKeywords[strings.ToUpper(tokens[i+2].text)] {
 				continue
@@ -184,10 +198,15 @@ func removeTableAliasKeywords(tokens []sqlToken) []sqlToken {
 	return result
 }
 
-// isSqlAlias reports whether `token` is a plain identifier that can be an alias.
+// isSqlAlias reports whether `token` is an identifier that can be an alias.
 func isSqlAlias(token sqlToken) bool {
-	return !token.group && token.text != "" && isSqlWordChar(token.text[0]) &&
-		!strings.ContainsAny(token.text, ".:")
+	if token.group || token.text == "" {
+		return false
+	}
+	if token.text[0] == '"' {
+		return true
+	}
+	return isSqlWordChar(token.text[0]) && !strings.ContainsAny(token.text, ".:")
 }
 
 // rewriteLimitClause rewrites the LIMIT clause at the outermost level of the query formed by
@@ -198,7 +217,7 @@ func rewriteLimitClause(tokens []sqlToken) []sqlToken {
 		return rewriteCompoundQuery(tokens)
 	}
 	var (
-		query   = strings.TrimSpace(joinSqlTokens(rewriteCompoundQuery(tokens[:clause.begin])))
+		query   = joinSqlTokens(rewriteCompoundQuery(tokens[:clause.begin]))[len(tokens[0].space):]
 		limited string
 	)
 	if clause.offset > 0 {
@@ -256,7 +275,7 @@ func rewriteCompoundQuery(tokens []sqlToken) []sqlToken {
 	if !isOrderBy(tokens, last+1) {
 		return tokens
 	}
-	compound := strings.TrimSpace(joinSqlTokens(tokens[:last+1]))
+	compound := joinSqlTokens(tokens[:last+1])[len(tokens[0].space):]
 	return append(
 		[]sqlToken{{space: tokens[0].space, text: fmt.Sprintf(derivedTableTmp, compound)}},
 		tokens[last+1:]...,
@@ -295,8 +314,8 @@ func sqlTokenNumber(tokens []sqlToken, i int) (int, bool) {
 }
 
 // scanSqlTokens splits `sql` into tokens at its outermost parenthesis level, and returns them
-// with the whitespace after the last one, so that joining them gives back `sql`. It returns
-// false if a parenthesis or a quote in `sql` is unbalanced.
+// with the whitespace after the last one, so that joining them gives back `sql`. A comment is
+// a token of its own. It returns false if a parenthesis or a quote in `sql` is unbalanced.
 func scanSqlTokens(sql string) (tokens []sqlToken, trailing string, ok bool) {
 	var end int
 	for i := 0; i < len(sql); {
@@ -307,6 +326,8 @@ func scanSqlTokens(sql string) (tokens []sqlToken, trailing string, ok bool) {
 		}
 		var begin = i
 		switch {
+		case isCommentStart(sql, i):
+			i = literalOrCommentEnd(sql, i)
 		case c == '(':
 			if i = closingParenthesis(sql, i); i < 0 {
 				return nil, "", false
@@ -314,11 +335,10 @@ func scanSqlTokens(sql string) (tokens []sqlToken, trailing string, ok bool) {
 			i++
 		case c == ')':
 			return nil, "", false
-		case c == '\'':
-			if i = closingQuote(sql, i); i < 0 {
+		case isQuoteStart(sql, i):
+			if i, _ = quotedEnd(sql, i); i < 0 {
 				return nil, "", false
 			}
-			i++
 		case isSqlWordChar(c):
 			for i < len(sql) && isSqlWordChar(sql[i]) {
 				i++
@@ -343,15 +363,22 @@ func joinSqlTokens(tokens []sqlToken) string {
 }
 
 // closingParenthesis returns the index of the parenthesis closing the one at `open`, skipping
-// quoted literals, or -1 if there is none.
+// quoted literals and comments, or -1 if there is none.
 func closingParenthesis(sql string, open int) int {
 	var depth int
 	for i := open; i < len(sql); i++ {
-		switch sql[i] {
-		case '\'':
-			if i = closingQuote(sql, i); i < 0 {
+		if isCommentStart(sql, i) {
+			i = literalOrCommentEnd(sql, i) - 1
+			continue
+		}
+		if isQuoteStart(sql, i) {
+			if i, _ = quotedEnd(sql, i); i < 0 {
 				return -1
 			}
+			i--
+			continue
+		}
+		switch sql[i] {
 		case '(':
 			depth++
 		case ')':
@@ -364,20 +391,69 @@ func closingParenthesis(sql string, open int) int {
 	return -1
 }
 
-// closingQuote returns the index of the quote closing the literal opened at `open`, taking a
-// doubled quote as an escaped one, or -1 if there is none.
+// isQuoteStart reports whether a quoted literal or identifier begins at index `i` of `sql`.
+func isQuoteStart(sql string, i int) bool {
+	_, ok := quotedEnd(sql, i)
+	return ok
+}
+
+// quotedEnd returns the index following the quoted literal or identifier that begins at index
+// `i` of `sql`, and whether one begins there: a string literal '...', an identifier "...", or an
+// alternative quoting literal q'[...]' or nq'[...]'. The index is -1 if it is never closed.
+func quotedEnd(sql string, i int) (int, bool) {
+	switch c := sql[i]; {
+	case c == '\'' || c == '"':
+		if end := closingQuote(sql, i); end >= 0 {
+			return end + 1, true
+		}
+		return -1, true
+	case strings.IndexByte("qQnN", c) >= 0 && (i == 0 || !isSqlWordChar(sql[i-1])):
+		j := i
+		if c == 'n' || c == 'N' {
+			j++
+		}
+		if j+2 >= len(sql) || (sql[j] != 'q' && sql[j] != 'Q') || sql[j+1] != '\'' {
+			return -1, false
+		}
+		closing := sql[j+2]
+		switch closing {
+		case '[':
+			closing = ']'
+		case '(':
+			closing = ')'
+		case '{':
+			closing = '}'
+		case '<':
+			closing = '>'
+		}
+		if n := strings.Index(sql[j+3:], string(closing)+"'"); n >= 0 {
+			return j + 3 + n + 2, true
+		}
+		return -1, true
+	}
+	return -1, false
+}
+
+// closingQuote returns the index of the quote closing the literal or identifier opened at
+// `open`, taking a doubled quote as an escaped one, or -1 if there is none.
 func closingQuote(sql string, open int) int {
+	quote := sql[open]
 	for i := open + 1; i < len(sql); i++ {
-		if sql[i] != '\'' {
+		if sql[i] != quote {
 			continue
 		}
-		if i+1 < len(sql) && sql[i+1] == '\'' {
+		if i+1 < len(sql) && sql[i+1] == quote {
 			i++
 			continue
 		}
 		return i
 	}
 	return -1
+}
+
+// isCommentStart reports whether a comment begins at index `i` of `sql`.
+func isCommentStart(sql string, i int) bool {
+	return strings.HasPrefix(sql[i:], "--") || strings.HasPrefix(sql[i:], "/*")
 }
 
 func isSqlSpace(c byte) bool {

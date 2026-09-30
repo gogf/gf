@@ -128,6 +128,34 @@ func Test_RewriteQuery(t *testing.T) {
 				"SELECT EXTRACT(YEAR FROM d) AS y FROM t",
 			},
 			{
+				`SELECT "u".id FROM "user" AS "u"`,
+				`SELECT "u".id FROM "user" "u"`,
+			},
+			{
+				"CREATE OR REPLACE PACKAGE BODY pk AS PROCEDURE p1(n OUT NUMBER) AS BEGIN SELECT COUNT(*) INTO n FROM t; END; PROCEDURE p2(n OUT NUMBER) AS BEGIN SELECT 1 INTO n FROM dual; END; END pk;",
+				"CREATE OR REPLACE PACKAGE BODY pk AS PROCEDURE p1(n OUT NUMBER) AS BEGIN SELECT COUNT(*) INTO n FROM t; END; PROCEDURE p2(n OUT NUMBER) AS BEGIN SELECT 1 INTO n FROM dual; END; END pk;",
+			},
+			{
+				"SELECT * FROM t AS a; SELECT * FROM u AS b",
+				"SELECT * FROM t a; SELECT * FROM u b",
+			},
+			{
+				"SELECT * FROM t -- note\n LIMIT 10",
+				"SELECT * FROM (SELECT * FROM t -- note\n) WHERE ROWNUM <= 10",
+			},
+			{
+				"(SELECT id FROM t) UNION (SELECT id FROM u) -- note\n LIMIT 1",
+				"SELECT * FROM ((SELECT id FROM t) UNION (SELECT id FROM u) -- note\n) WHERE ROWNUM <= 1",
+			},
+			{
+				`SELECT "a(b" FROM t LIMIT 1`,
+				`SELECT * FROM (SELECT "a(b" FROM t) WHERE ROWNUM <= 1`,
+			},
+			{
+				`SELECT q'[it's (x]' FROM t LIMIT 1`,
+				`SELECT * FROM (SELECT q'[it's (x]' FROM t) WHERE ROWNUM <= 1`,
+			},
+			{
 				"SELECT * FROM t ORDER BY id LIMIT 3",
 				"SELECT * FROM (SELECT * FROM t ORDER BY id) WHERE ROWNUM <= 3",
 			},
@@ -251,6 +279,46 @@ func Test_RewriteQuery(t *testing.T) {
 				"\n  SELECT *\n\tFROM t\n  WHERE id IN (1, 2)  ",
 				"\n  SELECT *\n\tFROM t\n  WHERE id IN (1, 2)  ",
 			},
+			{
+				"SELECT * FROM t /* don't */ WHERE id=:v1 LIMIT 1",
+				"SELECT * FROM (SELECT * FROM t /* don't */ WHERE id=:v1) WHERE ROWNUM <= 1",
+			},
+			{
+				"SELECT * FROM t -- it's\nWHERE id=:v1 LIMIT 1",
+				"SELECT * FROM (SELECT * FROM t -- it's\nWHERE id=:v1) WHERE ROWNUM <= 1",
+			},
+			{
+				"SELECT /*+ INDEX(t idx) */ * FROM t LIMIT 1",
+				"SELECT * FROM (SELECT /*+ INDEX(t idx) */ * FROM t) WHERE ROWNUM <= 1",
+			},
+			{
+				"SELECT * FROM t /* LIMIT 5 */ WHERE id=:v1",
+				"SELECT * FROM t /* LIMIT 5 */ WHERE id=:v1",
+			},
+			{
+				"SELECT * FROM t WHERE id IN (SELECT id FROM t /* ) */ ORDER BY id LIMIT 2)",
+				"SELECT * FROM t WHERE id IN (SELECT * FROM (SELECT id FROM t /* ) */ ORDER BY id) WHERE ROWNUM <= 2)",
+			},
+			{
+				"/* audit */ SELECT * FROM t ORDER BY id LIMIT 10",
+				"/* audit */ SELECT * FROM (SELECT * FROM t ORDER BY id) WHERE ROWNUM <= 10",
+			},
+			{
+				"-- note\nSELECT * FROM t ORDER BY id LIMIT 2,3",
+				"-- note\nSELECT * FROM ( SELECT GFORM.*, ROWNUM ROW_NUMBER__ FROM (SELECT * FROM t ORDER BY id) GFORM WHERE ROWNUM <= 5 ) WHERE ROW_NUMBER__ > 2",
+			},
+			{
+				"-- a\n/* b */ (SELECT ID FROM t WHERE id=:v1) UNION (SELECT ID FROM t WHERE id=:v2) LIMIT 1",
+				"-- a\n/* b */ SELECT * FROM ((SELECT ID FROM t WHERE id=:v1) UNION (SELECT ID FROM t WHERE id=:v2)) WHERE ROWNUM <= 1",
+			},
+			{
+				"SELECT * FROM t WHERE id IN (/* sub */ SELECT id FROM t ORDER BY id LIMIT 2)",
+				"SELECT * FROM t WHERE id IN (/* sub */ SELECT * FROM (SELECT id FROM t ORDER BY id) WHERE ROWNUM <= 2)",
+			},
+			{
+				"/* only a comment */",
+				"/* only a comment */",
+			},
 		}
 		for _, c := range cases {
 			t.Assert(rewriteQuery(c.sql), c.expect)
@@ -348,6 +416,14 @@ func Test_ConvertPlaceholders(t *testing.T) {
 			{
 				`SELECT "ID" FROM t WHERE "NAME"=? AND 5/2>?`,
 				`SELECT "ID" FROM t WHERE "NAME"=:v1 AND 5/2>:v2`,
+			},
+			{
+				`SELECT "O'x", 'c?' FROM t WHERE a = ?`,
+				`SELECT "O'x", 'c?' FROM t WHERE a = :v1`,
+			},
+			{
+				`SELECT "a?b", q'[it's ?]', Nq'{?}', Q'!?!' FROM t WHERE a = ?`,
+				`SELECT "a?b", q'[it's ?]', Nq'{?}', Q'!?!' FROM t WHERE a = :v1`,
 			},
 		}
 		for _, c := range cases {
