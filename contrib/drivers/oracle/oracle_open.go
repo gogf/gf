@@ -24,10 +24,27 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 		source               string
 		underlyingDriverName = "oracle"
 	)
+	source = gora.BuildUrl(
+		config.Host, gconv.Int(config.Port), config.Name, config.User, config.Pass, openOptions(config),
+	)
 
+	if db, err = sql.Open(underlyingDriverName, source); err != nil {
+		err = gerror.WrapCodef(
+			gcode.CodeDbOperationError, err,
+			`sql.Open failed for driver "%s" by source "%s"`, underlyingDriverName, source,
+		)
+		return nil, err
+	}
+	return
+}
+
+// openOptions returns the options of the underlying driver for `config`. An option given in
+// `config.Extra` replaces the default option of the same name in any letter case.
+func openOptions(config *gdb.ConfigNode) map[string]string {
 	options := map[string]string{
 		"CONNECTION TIMEOUT": "60",
 		"PREFETCH_ROWS":      "25",
+		"LOB FETCH":          "POST",
 	}
 
 	if config.Debug {
@@ -40,20 +57,14 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 		for _, v := range list {
 			kv := strings.Split(v, "=")
 			if len(kv) == 2 {
+				for key := range options {
+					if strings.EqualFold(key, kv[0]) {
+						delete(options, key)
+					}
+				}
 				options[kv[0]] = kv[1]
 			}
 		}
 	}
-	source = gora.BuildUrl(
-		config.Host, gconv.Int(config.Port), config.Name, config.User, config.Pass, options,
-	)
-
-	if db, err = sql.Open(underlyingDriverName, source); err != nil {
-		err = gerror.WrapCodef(
-			gcode.CodeDbOperationError, err,
-			`sql.Open failed for driver "%s" by source "%s"`, underlyingDriverName, source,
-		)
-		return nil, err
-	}
-	return
+	return options
 }

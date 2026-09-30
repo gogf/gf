@@ -38,9 +38,19 @@ func init() {
 }
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
+// It rewrites the syntax that Oracle rejects with rewriteQuery, and converts the arguments that
+// the underlying driver does not bind without loss with convertArgument.
 func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []any) (newSql string, newArgs []any, err error) {
 	newSql = rewriteQuery(convertPlaceholders(sql))
-	return d.Core.DoFilter(ctx, link, newSql, args)
+	if len(args) > 0 {
+		newArgs = make([]any, len(args))
+		for i, arg := range args {
+			if newArgs[i], err = convertArgument(arg); err != nil {
+				return "", nil, err
+			}
+		}
+	}
+	return d.Core.DoFilter(ctx, link, newSql, newArgs)
 }
 
 // convertPlaceholders converts each placeholder '?' in `sql` to ":vN", N counting from 1,
