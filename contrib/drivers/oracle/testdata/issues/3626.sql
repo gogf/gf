@@ -1,0 +1,5 @@
+CREATE TABLE issue3626 (
+    id   NUMBER(10)   NOT NULL,
+    name VARCHAR2(45) DEFAULT NULL,
+    PRIMARY KEY (id)
+);
