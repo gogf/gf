@@ -28,9 +28,14 @@ const (
 
 // DoInsert inserts or updates data for given table.
 // The list parameter must contain at least one record, which was previously validated.
+// The table is written to without the alias that `table` may give it, which Oracle rejects in
+// INSERT and MERGE.
 func (d *Driver) DoInsert(
 	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (result sql.Result, err error) {
+	if name := d.GetTableNameForFields(table); name != "" {
+		table = name
+	}
 	switch option.InsertOption {
 	case gdb.InsertOptionSave:
 		return d.doSave(ctx, link, table, list, option)
