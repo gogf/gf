@@ -14,6 +14,8 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 const (
@@ -56,16 +58,34 @@ func (d *Driver) DoExec(
 		}
 	}
 
-	// Check if it is an INSERT statement with an integer primary key.
-	if !isUseCoreDoExec && pkField.Name != "" && isIntegerField(pkField) &&
-		strings.Contains(strings.ToUpper(sql), "INSERT INTO") {
-		primaryKey = pkField.Name
-		// Oracle supports RETURNING clause to get the last inserted id
-		sql += fmt.Sprintf(returningClause, d.QuoteWord(primaryKey))
-	} else {
-		// Use default DoExec for non-INSERT, no primary key or non-integer primary key scenarios
+	// Check if it is an INSERT statement with a primary key.
+	isInsertWithPrimaryKey := !isUseCoreDoExec && pkField.Name != "" &&
+		strings.Contains(strings.ToUpper(sql), "INSERT INTO")
+	if !isInsertWithPrimaryKey {
+		// Use default DoExec for non-INSERT or no primary key scenarios
 		return d.Core.DoExec(ctx, link, sql, args...)
 	}
+	if !isIntegerField(pkField) {
+		r, err := d.Core.DoExec(ctx, link, sql, args...)
+		if err != nil {
+			return r, err
+		}
+		affected, err := r.RowsAffected()
+		if err != nil {
+			return nil, err
+		}
+		return &Result{
+			rowsAffected: affected,
+			lastInsertIdError: gerror.NewCodef(
+				gcode.CodeNotSupported,
+				"LastInsertId is not supported by primary key type: %s",
+				pkField.Type,
+			),
+		}, nil
+	}
+	primaryKey = pkField.Name
+	// Oracle supports RETURNING clause to get the last inserted id
+	sql += fmt.Sprintf(returningClause, d.QuoteWord(primaryKey))
 
 	// Only the insert operation with primary key can execute the following code
 
