@@ -161,6 +161,13 @@ func Test_CheckLocalTypeForField(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(localType, gdb.LocalTypeInt32Slice)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// timetz must be classified as a string to preserve its UTC offset.
+		localType, err := driver.CheckLocalTypeForField(ctx, "timetz", nil)
+		t.AssertNil(err)
+		t.Assert(localType, gdb.LocalTypeString)
+	})
 }
 
 // Test_ConvertValueForLocal tests the ConvertValueForLocal method
@@ -169,6 +176,22 @@ func Test_ConvertValueForLocal(t *testing.T) {
 		ctx    = context.Background()
 		driver = pgsql.Driver{}
 	)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Positive and negative offsets must both survive local conversion.
+		database, err := gdb.New(gdb.ConfigNode{Type: "pgsql"})
+		t.AssertNil(err)
+		if err != nil {
+			return
+		}
+		driver.Core = database.GetCore()
+
+		for _, value := range []string{"12:34:56+08", "12:34:56-05"} {
+			result, err := driver.ConvertValueForLocal(ctx, "timetz", []byte(value))
+			t.AssertNil(err)
+			t.Assert(result, value)
+		}
+	})
 
 	gtest.C(t, func(t *gtest.T) {
 		// Test _int2 array conversion
