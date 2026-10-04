@@ -44,7 +44,6 @@ func openOptions(config *gdb.ConfigNode) map[string]string {
 	options := map[string]string{
 		"CONNECTION TIMEOUT": "60",
 		"PREFETCH_ROWS":      "25",
-		"LOB FETCH":          "POST",
 	}
 
 	if config.Debug {

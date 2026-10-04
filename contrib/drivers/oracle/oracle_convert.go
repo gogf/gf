@@ -95,10 +95,6 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 	return d.Core.CheckLocalTypeForField(ctx, fieldType, fieldValue)
 }
 
-// maxBindSize is the size in bytes beyond which a character or binary value can no longer be
-// bound as VARCHAR2 or RAW, but has to be bound as a LOB.
-const maxBindSize = 4000
-
 // characterFieldTypes are the field types whose values are bound as text.
 var characterFieldTypes = map[string]bool{
 	"CHAR":      true,
@@ -131,35 +127,12 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 		convertedValue = string(b)
 	}
 	switch fieldType {
-	case "CLOB":
-		if s, ok := convertedValue.(string); ok && len(s) > maxBindSize {
-			return gora.Clob{String: s, Valid: true}, nil
-		}
-
-	case "NCLOB":
-		if s, ok := convertedValue.(string); ok && len(s) > maxBindSize {
-			return gora.NClob{String: s, Valid: true}, nil
-		}
-
-	case "BLOB":
-		if b, ok := convertedValue.([]byte); ok && len(b) > maxBindSize {
-			return gora.Blob{Data: b, Valid: true}, nil
-		}
-
-	case "DATE":
+	case "DATE", "TIMESTAMP":
 		switch t := convertedValue.(type) {
 		case time.Time:
 			return t.In(time.Local), nil
 		case *time.Time:
 			return t.In(time.Local), nil
-		}
-
-	case "TIMESTAMP":
-		switch t := convertedValue.(type) {
-		case time.Time:
-			return gora.TimeStampTZ(t.In(time.Local)), nil
-		case *time.Time:
-			return gora.TimeStampTZ(t.In(time.Local)), nil
 		}
 	}
 	return convertedValue, nil
@@ -178,19 +151,27 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 }
 
 // ConvertColumnValueForLocal converts a value scanned from a result set column to local Golang type.
-// The underlying driver scans a NUMBER value as an int64 or uint64 for an integer and as a string
-// for a decimal, but reports float64 as the scan type. The integer is kept as it is, and the
-// decimal is converted to float64 only if float64 holds it exactly, or else kept as the string.
+// The underlying driver scans a NUMBER value as its exact decimal string, but reports float64 as
+// the scan type of every NUMBER column. The value of a NUMBER column without decimal places, being
+// NUMBER(p) or NUMBER(p,0), is converted to int64, or to uint64 beyond the range of int64, or else
+// kept as the string, so that an integer does not lose precision. The value of any other NUMBER
+// column, including NUMBER without precision and scale, is converted by the scan type to float64,
+// as for any other column.
 func (d *Driver) ConvertColumnValueForLocal(ctx context.Context, columnType *sql.ColumnType, fieldValue any) (any, error) {
-	if columnType.DatabaseTypeName() != "NUMBER" {
-		return d.Core.ConvertColumnValueForLocal(ctx, columnType, fieldValue)
-	}
-	if s, ok := fieldValue.(string); ok {
-		if f, err := strconv.ParseFloat(s, 64); err == nil && strconv.FormatFloat(f, 'f', -1, 64) == s {
-			return f, nil
+	if columnType.DatabaseTypeName() == "NUMBER" {
+		if _, scale, ok := columnType.DecimalSize(); ok && scale == 0 {
+			if s, ok := fieldValue.(string); ok {
+				if i, err := strconv.ParseInt(s, 10, 64); err == nil {
+					return i, nil
+				}
+				if u, err := strconv.ParseUint(s, 10, 64); err == nil {
+					return u, nil
+				}
+				return s, nil
+			}
 		}
 	}
-	return fieldValue, nil
+	return d.Core.ConvertColumnValueForLocal(ctx, columnType, fieldValue)
 }
 
 // convertArgument converts `value`, an argument of a statement, to a value that the underlying

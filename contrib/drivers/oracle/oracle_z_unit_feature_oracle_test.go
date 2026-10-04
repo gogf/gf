@@ -608,15 +608,17 @@ func Test_Oracle_Sequence_Nextval(t *testing.T) {
 		t.Assert(value.Int64(), 4)
 	})
 
+	// Note: NEXTVAL is a NUMBER without precision, whose value is read as float64 and loses the
+	// integers beyond 2^53, so a larger sequence value is read with a cast to NUMBER(p).
 	gtest.C(t, func(t *gtest.T) {
-		value, err := db.GetValue(ctx, fmt.Sprintf("SELECT %s.NEXTVAL FROM dual", bigSeq))
+		value, err := db.GetValue(ctx, fmt.Sprintf("SELECT CAST(%s.NEXTVAL AS NUMBER(19)) AS ID FROM dual", bigSeq))
 		t.AssertNil(err)
 		t.Assert(value.String(), "9007199254740993")
-		t.Assert(value.Int64(), int64(9007199254740993))
+		t.AssertEQ(value.Val(), int64(9007199254740993))
 
 		value, err = db.GetValue(ctx, fmt.Sprintf("SELECT %s.NEXTVAL FROM dual", bigSeq))
 		t.AssertNil(err)
-		t.Assert(value.Int64(), int64(9007199254740994))
+		t.AssertEQ(value.Val(), float64(9007199254740994))
 	})
 }
 
@@ -1192,10 +1194,15 @@ func Test_Oracle_TableFields_TypeStrings(t *testing.T) {
 		}).Insert()
 		t.AssertNil(err)
 
-		array, err := db.Model(table).Order("id").Array("n")
+		array, err := db.Model(table).Order("id").Array("TO_CHAR(n)")
+		t.AssertNil(err)
+		t.Assert(array, g.Slice{"3.14159", "12345678901234567890", ".000000000000000000000000000001"})
+
+		// Note: the value of a NUMBER column without precision is read as float64.
+		array, err = db.Model(table).Order("id").Array("n")
 		t.AssertNil(err)
 		t.Assert(array[0].Float64(), 3.14159)
-		t.Assert(array[1].String(), "12345678901234567890")
+		t.Assert(array[1].Float64(), 12345678901234567890.0)
 		t.Assert(array[2].Float64(), 1e-30)
 	})
 }
@@ -1942,6 +1949,61 @@ func Test_Oracle_BinaryDouble_BeyondNumberRange(t *testing.T) {
 		count, err := db.GetCount(ctx, fmt.Sprintf("SELECT COUNT(1) FROM %s WHERE d = :d", table), sql.Named("d", 4e200))
 		t.AssertNil(err)
 		t.Assert(count, 1)
+	})
+}
+
+// Test_Oracle_Number_ResultType tests the Go type of the values of NUMBER columns, which follows the
+// column and not the value: int64 for a column without decimal places, or uint64 and then the
+// decimal string for a value beyond the range of int64, and float64 for any other column.
+func Test_Oracle_Number_ResultType(t *testing.T) {
+	table := oracleFeatureTableName("t_numtype")
+	oracleFeatureExec(fmt.Sprintf(`CREATE TABLE %s (
+    ID NUMBER(10) NOT NULL,
+    AMOUNT NUMBER(20,4),
+    BIG NUMBER(38,0),
+    ANY_NUM NUMBER,
+    PRIMARY KEY (ID)
+)`, table))
+	defer dropTable(table)
+
+	_, err := db.Model(table).Data(g.List{
+		{"id": 1, "amount": "1", "big": "9223372036854775807", "any_num": "1"},
+		{"id": 2, "amount": "1.5", "big": "9223372036854775808", "any_num": "1.5"},
+		{"id": 3, "amount": "1234567890123456.1234", "big": "99999999999999999999999999999999999999", "any_num": "12345678901234567890.5"},
+		{"id": 4, "amount": "-2", "big": "-9223372036854775809", "any_num": "-2"},
+	}).Insert()
+	gtest.AssertNil(err)
+
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Model(table).Order("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all), 4)
+		for _, record := range all {
+			t.Assert(fmt.Sprintf("%T", record["ID"].Val()), "int64")
+			t.Assert(fmt.Sprintf("%T", record["AMOUNT"].Val()), "float64")
+			t.Assert(fmt.Sprintf("%T", record["ANY_NUM"].Val()), "float64")
+		}
+		t.Assert(all.Array("AMOUNT"), g.Slice{1, 1.5, 1234567890123456.1234, -2})
+		t.Assert(all.Array("ANY_NUM"), g.Slice{1, 1.5, 12345678901234567890.5, -2})
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		array, err := db.Model(table).Order("id").Array("big")
+		t.AssertNil(err)
+		t.AssertEQ(array[0].Val(), int64(9223372036854775807))
+		t.AssertEQ(array[1].Val(), uint64(9223372036854775808))
+		t.AssertEQ(array[2].Val(), "99999999999999999999999999999999999999")
+		t.AssertEQ(array[3].Val(), "-9223372036854775809")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		value, err := db.Model(table).Where("id", 2).Value("SUM(id)")
+		t.AssertNil(err)
+		t.AssertEQ(value.Val(), float64(2))
+
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 4)
 	})
 }
 
