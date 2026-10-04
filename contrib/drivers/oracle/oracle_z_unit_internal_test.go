@@ -326,19 +326,21 @@ func Test_RewriteQuery(t *testing.T) {
 	})
 }
 
-// Test_OpenOptions_LobFetch asserts that LOB columns are read in full by default, and that the
-// LOB FETCH option given in Extra replaces the default whatever its letter case.
-func Test_OpenOptions_LobFetch(t *testing.T) {
+// Test_OpenOptions_Extra asserts that an option given in Extra replaces the default option of the
+// same name whatever its letter case, so that the underlying driver is not given both.
+func Test_OpenOptions_Extra(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		options := openOptions(&gdb.ConfigNode{})
-		t.Assert(options["LOB FETCH"], "POST")
-	})
-	gtest.C(t, func(t *gtest.T) {
-		options := openOptions(&gdb.ConfigNode{Extra: "lob fetch=PRE&SSL VERIFY=false"})
 		t.Assert(options, map[string]string{
 			"CONNECTION TIMEOUT": "60",
 			"PREFETCH_ROWS":      "25",
-			"lob fetch":          "PRE",
+		})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		options := openOptions(&gdb.ConfigNode{Extra: "prefetch_rows=1000&SSL VERIFY=false"})
+		t.Assert(options, map[string]string{
+			"CONNECTION TIMEOUT": "60",
+			"prefetch_rows":      "1000",
 			"SSL VERIFY":         "false",
 		})
 	})
