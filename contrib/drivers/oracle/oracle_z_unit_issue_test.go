@@ -662,12 +662,10 @@ func Test_Issue2356(t *testing.T) {
 			t.AssertNil(err)
 		}
 
-		_, err := db.Model(table).One()
+		one, err := db.Model(table).One()
 		t.AssertNil(err)
-		// Note: the value read back is not asserted. go-ora v2.7.10 decodes a NUMBER as uint64 only
-		// when it is strictly below the maximum uint64, so 18446744073709551615 itself falls through
-		// to a float64 and loses precision, see
-		// https://github.com/sijms/go-ora/blob/v2.7.10/v2/parameter.go#L978-L979.
+		t.Assert(one["ID"].String(), "18446744073709551615")
+		t.AssertEQ(one["ID"].Uint64(), uint64(18446744073709551615))
 	})
 	gtest.C(t, func(t *gtest.T) {
 		table := fmt.Sprintf("demo_%d", gtime.TimestampMicro())
