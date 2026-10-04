@@ -140,10 +140,27 @@ func Test_Model_LockUpdate(t *testing.T) {
 		t.Assert(one["PASSPORT"], "user_1")
 	})
 
-	// Note: LockUpdate with All() over several rows is not asserted. go-ora v2.7.10 panics decoding
-	// the second row of a SELECT ... FOR UPDATE (index out of range in DataSet.setBitVector, see
-	// https://github.com/sijms/go-ora/blob/v2.7.10/v2/data_set.go#L91), and the transaction holding
-	// the locks can then no longer be rolled back.
+	gtest.C(t, func(t *gtest.T) {
+		tx, err := db.Begin(ctx)
+		t.AssertNil(err)
+		defer tx.Rollback()
+
+		// Test LockUpdate with All() over several rows
+		all, err := tx.Model(table).LockUpdate().Where("id>? AND id<?", 1, 5).Order("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all), 3)
+		t.Assert(all[0]["ID"], 2)
+		t.Assert(all[2]["ID"], 4)
+		for _, id := range []int{2, 3, 4} {
+			lockAssertHeld(t, table, id)
+		}
+
+		err = tx.Rollback()
+		t.AssertNil(err)
+		for _, id := range []int{2, 3, 4} {
+			t.AssertNil(lockTry(table, gdb.LockForUpdateNowait, id))
+		}
+	})
 
 	gtest.C(t, func(t *gtest.T) {
 		// Test LockUpdate with Count()
@@ -183,9 +200,35 @@ func Test_Model_LockUpdateSkipLocked(t *testing.T) {
 		t.Assert(one["ID"], 1)
 	})
 
-	// Note: LockUpdateSkipLocked with All() returning several rows is not asserted, for the go-ora
-	// v2.7.10 panic on multi-row SELECT ... FOR UPDATE results described in Test_Model_LockUpdate.
-	// The skipping itself is asserted below on a query left with a single unlocked row.
+	gtest.C(t, func(t *gtest.T) {
+		txA, err := db.Begin(ctx)
+		t.AssertNil(err)
+		defer txA.Rollback()
+
+		_, err = txA.Model(table).Lock(gdb.LockForUpdateWait10).Where("id", 5).All()
+		t.AssertNil(err)
+
+		local := lockNewDB(t)
+		defer local.Close(ctx)
+
+		txB, err := local.Begin(ctx)
+		t.AssertNil(err)
+		defer txB.Rollback()
+
+		// Test LockUpdateSkipLocked with All() returning several rows
+		all, err := txB.Model(table).LockUpdateSkipLocked().Where("id>? AND id<?", 3, 7).Order("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all), 2)
+		t.Assert(all[0]["ID"], 4)
+		t.Assert(all[1]["ID"], 6)
+		lockAssertHeld(t, table, 4)
+		lockAssertHeld(t, table, 6)
+
+		err = txB.Rollback()
+		t.AssertNil(err)
+		err = txA.Rollback()
+		t.AssertNil(err)
+	})
 
 	gtest.C(t, func(t *gtest.T) {
 		txA, err := db.Begin(ctx)

@@ -840,10 +840,9 @@ func Test_DataType_Geometry_Null(t *testing.T) {
 	table := rawTypeCreateTable("t_rt_geo", "LOCATION SDO_GEOMETRY")
 	defer dropTable(table)
 
-	// Note: inserting nil through the model is not asserted. go-ora v2.7.10 binds a nil value as a
-	// CHAR NULL, which Oracle rejects for an object column (ORA-00932); a NULL of SDO_GEOMETRY needs
-	// a Go type registered for it with RegisterType, see
-	// https://github.com/sijms/go-ora/blob/v2.7.10/v2/connection.go#L1252.
+	// Note: inserting nil through the model is not asserted. go-ora v2.9.0 binds a nil value as a
+	// NCHAR NULL, which Oracle rejects for an object column (ORA-00932), see
+	// https://github.com/sijms/go-ora/blob/v2.9.0/v2/parameter_encode.go#L20-L21.
 
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Exec(ctx, fmt.Sprintf("INSERT INTO %s (ID, LOCATION) VALUES (100, NULL)", table))
@@ -852,9 +851,9 @@ func Test_DataType_Geometry_Null(t *testing.T) {
 		count, err := db.Model(table).Where("id", 100).WhereNull("location").Count()
 		t.AssertNil(err)
 		t.Assert(count, 1)
-		// Note: reading the NULL back with One() is not asserted. go-ora v2.7.10 refuses to decode an
-		// SDO_GEOMETRY column, even a NULL one, until a Go type is registered for it, see
-		// https://github.com/sijms/go-ora/blob/v2.7.10/v2/parameter.go#L906.
+		// Note: reading the NULL back with One() is not asserted. go-ora v2.9.0 fails to decode an
+		// SDO_GEOMETRY column, even a NULL one ("invalid size for GetInt64"), see
+		// https://github.com/sijms/go-ora/blob/v2.9.0/v2/network/session.go#L1608.
 	})
 }
 

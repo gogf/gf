@@ -1512,7 +1512,7 @@ func Test_Oracle_Extra_OptionParsing(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[string]string{
 			"FOO=bar":                "unknown URL option: FOO",
-			"connection timeout=abc": "CONNECTION TIMEOUT value must be an integer",
+			"connection timeout=abc": "value must be an integer",
 			"LOB FETCH=bad":          "LOB FETCH value should be",
 		}
 		for extra, message := range expect {
