@@ -23,11 +23,28 @@ const (
 )
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
+// A time argument is converted to the time zone of the driver, in which a column without time
+// zone stores and returns its wall clock, as the type of the column it goes to is unknown here.
+// `args` is copied before an argument is converted, and returned as it is if none is.
 func (d *Driver) DoFilter(
 	ctx context.Context, link gdb.Link, sql string, args []any,
 ) (newSql string, newArgs []any, err error) {
 	newSql = rewriteQuery(convertPlaceholders(sql))
-	return d.Core.DoFilter(ctx, link, newSql, args)
+	if newSql, newArgs, err = d.Core.DoFilter(ctx, link, newSql, args); err != nil {
+		return "", nil, err
+	}
+	var copied bool
+	for i, arg := range newArgs {
+		value, converted := d.timeInLocation(arg)
+		if !converted {
+			continue
+		}
+		if !copied {
+			newArgs, copied = append([]any(nil), newArgs...), true
+		}
+		newArgs[i] = value
+	}
+	return newSql, newArgs, nil
 }
 
 // convertPlaceholders converts each placeholder '?' in `sql` to "@pN", N counting from 1,
