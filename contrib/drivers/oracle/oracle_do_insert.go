@@ -235,8 +235,9 @@ func (d *Driver) doMergeInsert(
 
 // formatMergeUpdateValues returns the assignments of the MERGE UPDATE SET clause for a record
 // with the given `keys`. It follows OnDuplicate/OnDuplicateEx of `option` if specified, or else
-// updates every key except conflict keys and soft created fields. A conflict key assigned from
-// its own source column is left out, as it cannot change the matched row.
+// updates every key except conflict keys and, unless the whole record is replaced, soft created
+// fields. A conflict key assigned from its own source column is left out, as it cannot change
+// the matched row.
 func (d *Driver) formatMergeUpdateValues(
 	keys []string, conflictKeySet *gset.StrSet, option gdb.DoInsertOption,
 ) (updateValues []string) {
@@ -283,9 +284,12 @@ func (d *Driver) formatMergeUpdateValues(
 		}
 		return updateValues
 	}
-	// Filter conflict keys and soft created fields from updateValues
+	// Filter conflict keys, and soft created fields unless the whole record is replaced.
 	for _, key := range keys {
-		if conflictKeySet.Contains(gstr.ToUpper(key)) || d.Core.IsSoftCreatedFieldName(key) {
+		if conflictKeySet.Contains(gstr.ToUpper(key)) {
+			continue
+		}
+		if option.InsertOption != gdb.InsertOptionReplace && d.Core.IsSoftCreatedFieldName(key) {
 			continue
 		}
 		keyWithChar := charL + key + charR
