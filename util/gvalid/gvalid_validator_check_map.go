@@ -87,16 +87,10 @@ func (v *Validator) doCheckMap(ctx context.Context, params any) Error {
 			customMessage = msg
 		}
 	}
-	var (
-		value     any
-		validator = v.Clone()
-	)
+	var value any
 
 	// It checks the struct recursively if its attribute is an embedded struct.
 	// Ignore inputParamMap, assoc, rules and messages from parent.
-	validator.assoc = nil
-	validator.rules = nil
-	validator.messages = nil
 	for _, item := range inputParamMap {
 		originTypeAndKind := reflection.OriginTypeAndKind(item)
 		switch originTypeAndKind.OriginKind {

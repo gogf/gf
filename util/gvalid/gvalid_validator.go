@@ -30,7 +30,7 @@ type Validator struct {
 	bail                              bool                // Stop validation after the first validation error.
 	foreach                           bool                // It tells the next validation using current value as an array and validates each of its element.
 	caseInsensitive                   bool                // Case-Insensitive configuration for those rules that need value comparison.
-	cache                             bool                // Enable the parsed rule value cache for the validation, which is enabled in default.
+	cache                             bool                // Enable the parsed rule value cache for the validation, which is disabled in default.
 }
 
 // New creates and returns a new Validator.
