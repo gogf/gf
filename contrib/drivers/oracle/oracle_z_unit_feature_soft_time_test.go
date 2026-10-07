@@ -1341,7 +1341,7 @@ CREATE TABLE %s (
 		t.Assert(oneReplace["ID"].Int(), 1)
 		t.Assert(oneReplace["NAME"].String(), "name_100")
 		t.Assert(oneReplace["DELETE_AT"].String(), "")
-		t.Assert(oneReplace["CREATE_AT"].String(), "2024-05-30 20:00:00")
+		t.Assert(oneReplace["CREATE_AT"].String(), "2024-05-30 21:00:00")
 		t.Assert(oneReplace["UPDATE_AT"].String(), "2024-05-30 21:00:00")
 
 		// Insert with delete_at
