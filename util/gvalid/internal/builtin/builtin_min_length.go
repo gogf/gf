@@ -11,12 +11,12 @@ import (
 	"strconv"
 
 	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // RuleMinLength implements `min-length` rule:
 // Length is equal or greater than :min.
 // The length is calculated using unicode string, which means one chinese character or letter both has the length of 1.
+// For a slice, an array or a map the length is the number of its elements.
 //
 // Format: min-length:min
 type RuleMinLength struct{}
@@ -34,10 +34,7 @@ func (r RuleMinLength) Message() string {
 }
 
 func (r RuleMinLength) Run(in RunInput) error {
-	var (
-		valueRunes = gconv.Runes(in.Value.String())
-		valueLen   = len(valueRunes)
-	)
+	valueLen := valueLength(in.Value.Val())
 	min, err := strconv.Atoi(in.RulePattern)
 	if valueLen < min || err != nil {
 		return errors.New(gstr.Replace(in.Message, "{min}", strconv.Itoa(min)))

@@ -81,10 +81,10 @@ func main() {
 
 ## Configuration Options
 
-The registry supports the following configuration options:
-
-- `WithAddress(address string)`: Sets the Consul server address (default: "127.0.0.1:8500")
-- `WithToken(token string)`: Sets the ACL token for Consul authentication
+| Option | Description |
+| --- | --- |
+| `WithAddress(address string)` | Consul server address. Default: `127.0.0.1:8500` |
+| `WithToken(token string)` | ACL token for Consul authentication |
 
 ## Features
 

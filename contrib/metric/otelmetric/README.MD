@@ -156,5 +156,5 @@ func main() {
 
 ## License
 
-`GoFrame Polaris` is licensed under the [MIT License](../../../LICENSE), 100% free and open-source, forever.
+`GoFrame otelmetric` is licensed under the [MIT License](../../../LICENSE), 100% free and open-source, forever.
 

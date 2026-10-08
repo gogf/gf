@@ -1,6 +1,6 @@
 # GoFrame Polaris Registry
 
-English | [简体中文](README_ZH.MD)
+English | [简体中文](README.zh_CN.md)
 
 Use `PolarisMesh` as service registration, discovery management and heartbeat reporting.
 

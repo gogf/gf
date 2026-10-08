@@ -11,9 +11,8 @@ compatibility: Requires OpenSpec CLI and GoFrame v2 skill.
 
 Structured code and specification review for the OpenSpec development workflow.
 
-**Spec Source**: `CLAUDE.md` is the single source of truth for all review criteria.
+**Spec Source**: `AGENTS.md` is the single source of truth for all review criteria.
 
----
 
 ## When This Skill Activates
 
@@ -25,7 +24,6 @@ Structured code and specification review for the OpenSpec development workflow.
 **Manual trigger:**
 - User explicitly requests: "review this code", "check spec compliance", "/gf-review"
 
----
 
 ## Review Workflow
 
@@ -62,32 +60,32 @@ Run `openspec status --change "<name>" --json` to understand the current change 
 
 ### 2. Load Specifications
 
-Read `CLAUDE.md` to load all specifications. This is the single source of truth.
+Read `AGENTS.md` to load all specifications. This is the single source of truth.
 
 ### 3. Backend Code Review
 
 **Trigger**: Changes to files under `apps/lina-core` directory
 
 1. Invoke `goframe-v2` skill for GoFrame framework conventions
-2. Check against `CLAUDE.md` backend code specifications
+2. Check against `AGENTS.md` backend code specifications
 
 ### 4. RESTful API Review
 
 **Trigger**: Any API endpoint changes
 
-Check against `CLAUDE.md` API design specifications.
+Check against `AGENTS.md` API design specifications.
 
 ### 5. Project Specification Review
 
 **Trigger**: Any implementation changes
 
-Check against `CLAUDE.md` architecture design specifications and code development specifications.
+Check against `AGENTS.md` architecture design specifications and code development specifications.
 
 ### 6. SQL Review
 
 **Trigger**: New or modified files under `apps/lina-core/manifest/sql/`、`apps/lina-core/manifest/sql/mock-data/`、`apps/lina-plugins/**/manifest/sql/` or SQL snippets embedded in related delivery docs
 
-Check against `CLAUDE.md` SQL file management specifications, at minimum covering:
+Check against `AGENTS.md` SQL file management specifications, at minimum covering:
 1. File naming, versioning, and single-iteration single-file rules
 2. Seed DML vs mock data separation
 3. **Idempotent execution safety** — SQL must be safe to run multiple times without duplicate-object errors or duplicate seed data; verify use of `IF [NOT] EXISTS`, `IF EXISTS`, `INSERT IGNORE`, or equivalent safe re-entry patterns
@@ -120,7 +118,7 @@ Check at minimum:
 ✓ All endpoints compliant / ⚠ N violations found
 
 ### Project Spec Review
-✓ Compliant with CLAUDE.md / ⚠ N violations found
+✓ Compliant with AGENTS.md / ⚠ N violations found
 
 ### SQL Review
 ✓ No SQL changes / ✓ SQL changes compliant / ⚠ N SQL issues found
@@ -133,10 +131,9 @@ Check at minimum:
 - **Warnings:** N (recommended to fix)
 
 ### Recommended Actions
-1. [Specific action with CLAUDE.md reference]
+1. [Specific action with AGENTS.md reference]
 ```
 
----
 
 ## Issue Severity
 
@@ -145,7 +142,6 @@ Check at minimum:
 | **Critical** | Block archive, must fix |
 | **Warning** | Show but allow proceed |
 
----
 
 ## Integration Points
 
@@ -155,11 +151,10 @@ Check at minimum:
 | `/gf-feedback` task done | Review, fix before marking complete |
 | `/opsx:archive` | Review all changes, block on critical issues |
 
----
 
 ## Guardrails
 
-- **CLAUDE.md is the single source of truth** — All spec references point to it
+- **AGENTS.md is the single source of truth** — All spec references point to it
 - Only check categories relevant to changed files
 - Scope identification MUST include untracked files and expanded untracked directories; never rely on `git diff` alone
 - Behavior-changing Go code without focused unit tests is a review finding unless the author documents why tests are not applicable

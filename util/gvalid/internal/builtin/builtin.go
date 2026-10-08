@@ -14,6 +14,7 @@ import (
 	"reflect"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 type Rule interface {
@@ -55,4 +56,39 @@ func Register(rule Rule) {
 // GetRule retrieves and returns rule by `name`.
 func GetRule(name string) Rule {
 	return ruleMap[name]
+}
+
+// valueLength returns the length of `value` for the length related rules, that is
+// `length`, `min-length`, `max-length` and `size`.
+//
+// For a slice, an array or a map it returns the number of elements. That is the same
+// notion of length that `required` already applies to the very same value, see
+// isRequiredEmpty, so that both rules in a tag like `required|min-length:2` agree on
+// what the length of a container is.
+//
+// For anything else it returns the number of unicode runes of its string form, which
+// keeps the historical behavior: one chinese character or letter both has the length
+// of 1.
+//
+// A byte slice is deliberately measured as a string. gconv converts it to a string
+// directly instead of serializing it, so `[]byte("GoFrame")` has always had the length
+// of its text and keeps it here.
+func valueLength(value any) int {
+	reflectValue := reflect.ValueOf(value)
+	for reflectValue.Kind() == reflect.Pointer {
+		reflectValue = reflectValue.Elem()
+	}
+	switch reflectValue.Kind() {
+	case reflect.Slice, reflect.Array:
+		if reflectValue.Type().Elem().Kind() == reflect.Uint8 {
+			break
+		}
+		return reflectValue.Len()
+
+	case reflect.Map:
+		return reflectValue.Len()
+
+	default:
+	}
+	return len(gconv.Runes(gconv.String(value)))
 }

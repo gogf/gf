@@ -18,18 +18,16 @@ Enter explore mode. Think deeply. Visualize freely. Follow the conversation wher
 - A comparison: "postgres vs sqlite for this"
 - Nothing (just enter explore mode)
 
----
 
 ## The Stance
 
 - **Curious, not prescriptive** - Ask questions that emerge naturally, don't follow a script
 - **Open threads, not interrogations** - Surface multiple interesting directions and let the user follow what resonates. Don't funnel them through a single path of questions.
-- **Visual** - Use ASCII diagrams liberally when they'd help clarify thinking
+- **Visual** - Use `mermaid` for architecture diagrams, flowcharts, and similar visuals. If you need line breaks inside `mermaid`, use `<br/>` instead of `\n`. ASCII box-drawing is allowed only when mermaid is a poor fit, and those blocks must stay in English.
 - **Adaptive** - Follow interesting threads, pivot when new information emerges
 - **Patient** - Don't rush to conclusions, let the shape of the problem emerge
 - **Grounded** - Explore the actual codebase when relevant, don't just theorize
 
----
 
 ## What You Might Do
 
@@ -54,21 +52,12 @@ Depending on what the user brings, you might:
 - Recommend a path (if asked)
 
 **Visualize**
-```
-┌─────────────────────────────────────────┐
-│     Use ASCII diagrams liberally        │
-├─────────────────────────────────────────┤
-│                                         │
-│   ┌────────┐         ┌────────┐        │
-│   │ State  │────────▶│ State  │        │
-│   │   A    │         │   B    │        │
-│   └────────┘         └────────┘        │
-│                                         │
-│   System diagrams, state machines,      │
-│   data flows, architecture sketches,    │
-│   dependency graphs, comparison tables  │
-│                                         │
-└─────────────────────────────────────────┘
+
+Use `mermaid` for system diagrams, state machines, data flows, and architecture sketches:
+
+```mermaid
+flowchart LR
+    A["State A"] --> B["State B"]
 ```
 
 **Surface risks and unknowns**
@@ -76,7 +65,6 @@ Depending on what the user brings, you might:
 - Find gaps in understanding
 - Suggest spikes or investigations
 
----
 
 ## OpenSpec Awareness
 
@@ -135,7 +123,6 @@ If the user mentions a change or you detect one is relevant:
 
 4. **The user decides** - Offer and move on. Don't pressure. Don't auto-capture.
 
----
 
 ## What You Don't Have To Do
 
@@ -146,7 +133,6 @@ If the user mentions a change or you detect one is relevant:
 - Stay on topic if a tangent is valuable
 - Be brief (this is thinking time)
 
----
 
 ## Ending Discovery
 
@@ -159,7 +145,6 @@ There's no required ending. Discovery might:
 
 When things crystallize, you might offer a summary - but it's optional. Sometimes the thinking IS the value.
 
----
 
 ## Guardrails
 
@@ -168,6 +153,6 @@ When things crystallize, you might offer a summary - but it's optional. Sometime
 - **Don't rush** - Discovery is thinking time, not task time
 - **Don't force structure** - Let patterns emerge naturally
 - **Don't auto-capture** - Offer to save insights, don't just do it
-- **Do visualize** - A good diagram is worth many paragraphs
+- **Do visualize** - A good mermaid diagram is worth many paragraphs
 - **Do explore the codebase** - Ground discussions in reality
 - **Do question assumptions** - Including the user's and your own

@@ -16,7 +16,6 @@ When users discover bugs or improvement points after implementation, this skill 
 2. **Write it down first, then fix it** — Every issue gets recorded before any code change
 3. **Every fix deserves a test** — Behavior-changing code changes require unit test coverage in the affected package
 
----
 
 ## Workflow
 
@@ -63,7 +62,6 @@ Please select 1 or 2:
 
 Announce: "Applying feedback fixes to change: **<name>**"
 
----
 
 ### 2. Read Current Context
 
@@ -79,7 +77,6 @@ Announce: "Applying feedback fixes to change: **<name>**"
 rg --files <pkg-dir> | rg '_test\\.go$'
 ```
 
----
 
 ### 3. Analyze and Organize Issues
 
@@ -101,7 +98,6 @@ For each reported issue:
 
 **Group related issues** — Same root cause → single task with multiple verification points.
 
----
 
 ### 4. Update Delta Specs (for Spec-Level Issues Only)
 
@@ -132,7 +128,6 @@ The system SHALL support legacy CSV format.
 **Migration:** Use the new CSV format with header row.
 ```
 
----
 
 ### 5. Write Task List to tasks.md
 
@@ -157,7 +152,6 @@ Append a **Feedback section** to `tasks.md`:
 - Internal-only optimization → Unit test optional unless logic risk increased
 - Prefer extending the nearest `*_z_unit*_test.go` or `*_test.go` in the same package
 
----
 
 ### 6. Execute Fixes (Loop)
 
@@ -209,7 +203,6 @@ If regression fails:
 
 **g. Run review** — Invoke `gf-review` skill after completion
 
----
 
 ### 7. Comprehensive Verification
 
@@ -228,7 +221,6 @@ After all fixes:
 
 If failures → add new FB tasks, loop to Step 6.
 
----
 
 ### 8. Report Completion
 
@@ -250,7 +242,6 @@ If failures → add new FB tasks, loop to Step 6.
 - [ ] FB-3: <title> — blocked by <reason>
 ```
 
----
 
 ## Edge Cases
 
@@ -263,7 +254,6 @@ If failures → add new FB tasks, loop to Step 6.
 | Unit test not feasible (docs/spec only) | Note reason explicitly and skip only when no runtime code changes exist |
 | Multiple feedback rounds | All tasks in single Feedback section, sequential numbering |
 
----
 
 ## Guardrails
 
