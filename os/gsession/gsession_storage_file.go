@@ -12,6 +12,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -123,14 +124,71 @@ func (s *StorageFile) SetCryptoEnabled(enabled bool) {
 	s.cryptoEnabled = enabled
 }
 
-// sessionFilePath returns the storage file path for given session id.
-func (s *StorageFile) sessionFilePath(sessionId string) string {
-	return gfile.Join(s.path, sessionId) + ".session"
+// sessionFilePath returns a path contained in the storage directory for the session id.
+func (s *StorageFile) sessionFilePath(sessionId string) (string, error) {
+	// Preserve the existing suffix and trailing-separator behavior for custom ids.
+	name := gfile.Join(sessionId) + ".session"
+	if !filepath.IsLocal(name) {
+		return "", gerror.NewCode(gcode.CodeInvalidParameter, "session id escapes the storage directory")
+	}
+	path := gfile.Join(s.path) + string(filepath.Separator) + name
+	if err := s.checkSessionFilePath(path); err != nil {
+		return "", err
+	}
+	return path, nil
+}
+
+// checkSessionFilePath rejects existing paths and symlinks outside the storage directory.
+func (s *StorageFile) checkSessionFilePath(path string) error {
+	root, err := filepath.EvalSymlinks(s.path)
+	if err != nil {
+		return gerror.Wrap(err, "resolve session storage directory failed")
+	}
+	root, err = filepath.Abs(root)
+	if err != nil {
+		return gerror.Wrap(err, "resolve absolute session storage directory failed")
+	}
+	// Check existing parents as well as the leaf; a missing file is still a valid path.
+	for current := path; ; {
+		resolved, resolveErr := filepath.EvalSymlinks(current)
+		if resolveErr == nil {
+			resolved, resolveErr = filepath.Abs(resolved)
+			if resolveErr != nil {
+				return gerror.Wrap(resolveErr, "resolve absolute session file path failed")
+			}
+			relative, relErr := filepath.Rel(root, resolved)
+			if relErr != nil || !filepath.IsLocal(relative) {
+				return gerror.NewCode(gcode.CodeInvalidParameter, "session path escapes the storage directory")
+			}
+			return nil
+		}
+		if !os.IsNotExist(resolveErr) {
+			return gerror.Wrap(resolveErr, "resolve session file path failed")
+		}
+		if info, statErr := os.Lstat(current); statErr == nil && info.Mode()&os.ModeSymlink != 0 {
+			return gerror.NewCode(gcode.CodeInvalidParameter, "session path contains an unresolved symbolic link")
+		} else if statErr != nil && !os.IsNotExist(statErr) {
+			return gerror.Wrap(statErr, "stat session file path failed")
+		}
+		// Split preserves .. after a symbolic link instead of cleaning it away.
+		parent, _ := filepath.Split(current)
+		if parent == "" {
+			return gerror.Wrap(resolveErr, "resolve session file path failed")
+		}
+		current = gfile.Join(parent)
+		if current == filepath.VolumeName(parent) {
+			current = filepath.VolumeName(parent) + string(filepath.Separator)
+		}
+	}
 }
 
 // RemoveAll deletes all key-value pairs from storage.
 func (s *StorageFile) RemoveAll(ctx context.Context, sessionId string) error {
-	return gfile.RemoveAll(s.sessionFilePath(sessionId))
+	path, err := s.sessionFilePath(sessionId)
+	if err != nil {
+		return err
+	}
+	return gfile.RemoveAll(path)
 }
 
 // GetSession returns the session data as *gmap.StrAnyMap for given session id from storage.
@@ -141,10 +199,11 @@ func (s *StorageFile) RemoveAll(ctx context.Context, sessionId string) error {
 //
 // This function is called ever when session starts.
 func (s *StorageFile) GetSession(ctx context.Context, sessionId string, ttl time.Duration) (sessionData *gmap.StrAnyMap, err error) {
-	var (
-		path    = s.sessionFilePath(sessionId)
-		content = gfile.GetBytes(path)
-	)
+	path, err := s.sessionFilePath(sessionId)
+	if err != nil {
+		return nil, err
+	}
+	content := gfile.GetBytes(path)
 	// It updates the TTL only if the session file already exists.
 	if len(content) > 8 {
 		timestampMilli := gbinary.DecodeToInt64(content[:8])
@@ -176,7 +235,10 @@ func (s *StorageFile) GetSession(ctx context.Context, sessionId string, ttl time
 // This copy all session data map from memory to storage.
 func (s *StorageFile) SetSession(ctx context.Context, sessionId string, sessionData *gmap.StrAnyMap, ttl time.Duration) error {
 	intlog.Printf(ctx, "StorageFile.SetSession: %s, %v, %v", sessionId, sessionData, ttl)
-	path := s.sessionFilePath(sessionId)
+	path, err := s.sessionFilePath(sessionId)
+	if err != nil {
+		return err
+	}
 	content, err := json.Marshal(sessionData)
 	if err != nil {
 		return err
@@ -196,6 +258,9 @@ func (s *StorageFile) SetSession(ctx context.Context, sessionId string, sessionD
 // It just adds the session id to the async handling queue.
 func (s *StorageFile) UpdateTTL(ctx context.Context, sessionId string, ttl time.Duration) error {
 	intlog.Printf(ctx, "StorageFile.UpdateTTL: %s, %v", sessionId, ttl)
+	if _, err := s.sessionFilePath(sessionId); err != nil {
+		return err
+	}
 	if ttl >= DefaultStorageFileUpdateTTLInterval {
 		s.updatingIdSet.Add(sessionId)
 	}
@@ -205,7 +270,10 @@ func (s *StorageFile) UpdateTTL(ctx context.Context, sessionId string, ttl time.
 // updateSessionTTL updates the TTL for specified session id.
 func (s *StorageFile) updateSessionTTl(ctx context.Context, sessionId string) error {
 	intlog.Printf(ctx, "StorageFile.updateSession: %s", sessionId)
-	path := s.sessionFilePath(sessionId)
+	path, err := s.sessionFilePath(sessionId)
+	if err != nil {
+		return err
+	}
 	file, err := gfile.OpenWithFlag(path, os.O_WRONLY)
 	if err != nil {
 		return err
@@ -218,6 +286,9 @@ func (s *StorageFile) updateSessionTTl(ctx context.Context, sessionId string) er
 }
 
 func (s *StorageFile) checkAndClearSessionFile(ctx context.Context, path string) (err error) {
+	if err = s.checkSessionFilePath(path); err != nil {
+		return err
+	}
 	var (
 		file                *os.File
 		readBytesCount      int

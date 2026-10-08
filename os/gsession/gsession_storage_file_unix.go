@@ -14,6 +14,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"path/filepath"
 
 	"github.com/gogf/gf/v2/encoding/gbinary"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -25,7 +26,8 @@ import (
 // setSessionFile publishes the timestamp and payload using same-directory replacement.
 func (*StorageFile) setSessionFile(ctx context.Context, path string, content []byte) error {
 	// Each writer prepares a private file on the same filesystem as the session.
-	file, err := os.CreateTemp(gfile.Dir(path), "gsession-*.tmp")
+	dir, _ := filepath.Split(path)
+	file, err := os.CreateTemp(dir, "gsession-*.tmp")
 	if err != nil {
 		return gerror.Wrapf(err, `create temporary session file for "%s" failed`, path)
 	}
