@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// This file implements session storage backed by files.
+
 package gsession
 
 import (
@@ -186,22 +188,7 @@ func (s *StorageFile) SetSession(ctx context.Context, sessionId string, sessionD
 			return err
 		}
 	}
-	file, err := gfile.OpenWithFlagPerm(
-		path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm,
-	)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	if _, err = file.Write(gbinary.EncodeInt64(gtime.TimestampMilli())); err != nil {
-		err = gerror.Wrapf(err, `write data failed to file "%s"`, path)
-		return err
-	}
-	if _, err = file.Write(content); err != nil {
-		err = gerror.Wrapf(err, `write data failed to file "%s"`, path)
-		return err
-	}
-	return nil
+	return s.setSessionFile(ctx, path, content)
 }
 
 // UpdateTTL updates the TTL for specified session id.
