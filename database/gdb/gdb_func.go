@@ -66,6 +66,9 @@ const (
 	OrmTagForWithOrder    = "order"
 	OrmTagForWithUnscoped = "unscoped"
 	OrmTagForDo           = "do"
+	OrmTagForChunkName    = "chunkName"
+	OrmTagForChunkSize    = "chunkSize"
+	OrmTagForChunkMinRows = "chunkMinRows"
 )
 
 var (
