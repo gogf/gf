@@ -244,6 +244,18 @@ type ServerConfig struct {
 	GracefulShutdownTimeout int `json:"gracefulShutdownTimeout"`
 
 	// ======================================================================================================
+	// OpenTelemetry Tracing.
+	// ======================================================================================================
+
+	// OtelTraceRequestEnabled enables tracing of HTTP request parameters.
+	// When enabled, request query and form parameters will be recorded as trace span attributes.
+	OtelTraceRequestEnabled bool `json:"otelTraceRequestEnabled"`
+
+	// OtelTraceResponseEnabled enables tracing of HTTP response body.
+	// When enabled, response body content will be recorded as trace span attributes.
+	OtelTraceResponseEnabled bool `json:"otelTraceResponseEnabled"`
+
+	// ======================================================================================================
 	// Other.
 	// ======================================================================================================
 
@@ -274,45 +286,47 @@ type ServerConfig struct {
 // some pointer attributes that may be shared in different servers.
 func NewConfig() ServerConfig {
 	return ServerConfig{
-		Name:                    DefaultServerName,
-		Address:                 ":0",
-		HTTPSAddr:               "",
-		Listeners:               nil,
-		Handler:                 nil,
-		ReadTimeout:             60 * time.Second,
-		WriteTimeout:            0, // No timeout.
-		IdleTimeout:             60 * time.Second,
-		MaxHeaderBytes:          10240, // 10KB
-		KeepAlive:               true,
-		IndexFiles:              []string{"index.html", "index.htm"},
-		IndexFolder:             false,
-		ServerAgent:             "GoFrame HTTP Server",
-		ServerRoot:              "",
-		StaticPaths:             make([]staticPathItem, 0),
-		FileServerEnabled:       false,
-		CookieMaxAge:            time.Hour * 24 * 365,
-		CookiePath:              "/",
-		CookieDomain:            "",
-		SessionIdName:           "gfsessionid",
-		SessionPath:             gsession.DefaultStorageFilePath,
-		SessionMaxAge:           time.Hour * 24,
-		SessionCookieOutput:     true,
-		SessionCookieMaxAge:     time.Hour * 24,
-		Logger:                  glog.New(),
-		LogLevel:                "all",
-		LogStdout:               true,
-		ErrorStack:              true,
-		ErrorLogEnabled:         true,
-		ErrorLogPattern:         "error-{Ymd}.log",
-		AccessLogEnabled:        false,
-		AccessLogPattern:        "access-{Ymd}.log",
-		DumpRouterMap:           true,
-		ClientMaxBodySize:       8 * 1024 * 1024, // 8MB
-		FormParsingMemory:       1024 * 1024,     // 1MB
-		Rewrites:                make(map[string]string),
-		Graceful:                false,
-		GracefulTimeout:         2, // seconds
-		GracefulShutdownTimeout: 5, // seconds
+		Name:                     DefaultServerName,
+		Address:                  ":0",
+		HTTPSAddr:                "",
+		Listeners:                nil,
+		Handler:                  nil,
+		ReadTimeout:              60 * time.Second,
+		WriteTimeout:             0, // No timeout.
+		IdleTimeout:              60 * time.Second,
+		MaxHeaderBytes:           10240, // 10KB
+		KeepAlive:                true,
+		IndexFiles:               []string{"index.html", "index.htm"},
+		IndexFolder:              false,
+		ServerAgent:              "GoFrame HTTP Server",
+		ServerRoot:               "",
+		StaticPaths:              make([]staticPathItem, 0),
+		FileServerEnabled:        false,
+		CookieMaxAge:             time.Hour * 24 * 365,
+		CookiePath:               "/",
+		CookieDomain:             "",
+		SessionIdName:            "gfsessionid",
+		SessionPath:              gsession.DefaultStorageFilePath,
+		SessionMaxAge:            time.Hour * 24,
+		SessionCookieOutput:      true,
+		SessionCookieMaxAge:      time.Hour * 24,
+		Logger:                   glog.New(),
+		LogLevel:                 "all",
+		LogStdout:                true,
+		ErrorStack:               true,
+		ErrorLogEnabled:          true,
+		ErrorLogPattern:          "error-{Ymd}.log",
+		AccessLogEnabled:         false,
+		AccessLogPattern:         "access-{Ymd}.log",
+		OtelTraceRequestEnabled:  false,
+		OtelTraceResponseEnabled: false,
+		DumpRouterMap:            true,
+		ClientMaxBodySize:        8 * 1024 * 1024, // 8MB
+		FormParsingMemory:        1024 * 1024,     // 1MB
+		Rewrites:                 make(map[string]string),
+		Graceful:                 false,
+		GracefulTimeout:          2, // seconds
+		GracefulShutdownTimeout:  5, // seconds
 	}
 }
 
@@ -572,4 +586,21 @@ func (s *Server) SetRegistrar(registrar gsvc.Registrar) {
 // GetRegistrar returns the Registrar of server.
 func (s *Server) GetRegistrar() gsvc.Registrar {
 	return s.registrar
+}
+
+// GetConfig returns the configuration of current server.
+func (s *Server) GetConfig() ServerConfig {
+	return s.config
+}
+
+// IsOtelTraceRequestEnabled returns whether HTTP request tracing is enabled.
+// When enabled, request query and form parameters will be recorded as trace span attributes.
+func (c ServerConfig) IsOtelTraceRequestEnabled() bool {
+	return c.OtelTraceRequestEnabled
+}
+
+// IsOtelTraceResponseEnabled returns whether HTTP response body tracing is enabled.
+// When enabled, response body content will be recorded as trace span attributes.
+func (c ServerConfig) IsOtelTraceResponseEnabled() bool {
+	return c.OtelTraceResponseEnabled
 }
