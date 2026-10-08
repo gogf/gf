@@ -1116,6 +1116,11 @@ func Test_Not_Regex(t *testing.T) {
 		err := g.Validator().Data("abcde6").Rules(rule).Run(ctx)
 		t.AssertNil(err)
 	})
+	// "not-regex|foo" has no colon. The pattern "|foo" matches every value, so the value is rejected.
+	gtest.C(t, func(t *gtest.T) {
+		err := g.Validator().Data("abc").Rules(`not-regex|foo`).Run(ctx)
+		t.AssertNE(err, nil)
+	})
 }
 
 // issue: https://github.com/gogf/gf/issues/1077

@@ -149,15 +149,35 @@ func (v *Validator) parseTagValue(tag string) (field, rule, msg string) {
 }
 
 // parseRuleItem parses one rule item into rule key and rule pattern.
-// The rule item is in format of: ruleKey[:rulePattern], for example: "max:6".
-// Note that only the first char ':' is treated as the separator, and the rest
-// part, which might contain chars like ':' and '|', belongs to the rule pattern.
+// An ASCII rule name is the leading [\w-]+ run. A following ':' starts the pattern,
+// and anything else, including '|', stays in the pattern. "not-regex|foo" is therefore
+// rule "not-regex" and pattern "|foo". A name that does not start with that ASCII run,
+// such as "中文规则", is split on the first ':' instead, so a missing match does not panic.
 // Examples:
 //
 //	"required"           -> ruleKey "required", rulePattern ""
 //	"between:1,100"      -> ruleKey "between", rulePattern "1,100"
 //	"regex:^\d+:\w+$"    -> ruleKey "regex", rulePattern "^\d+:\w+$"
+//	"not-regex|foo"      -> ruleKey "not-regex", rulePattern "|foo"
 func parseRuleItem(ruleItem string) (ruleKey, rulePattern string) {
+	end := 0
+	for end < len(ruleItem) {
+		c := ruleItem[end]
+		if (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_' || c == '-' {
+			end++
+			continue
+		}
+		break
+	}
+	if end > 0 {
+		pattern := ""
+		if end < len(ruleItem) && ruleItem[end] == ':' {
+			pattern = ruleItem[end+1:]
+		} else if end < len(ruleItem) {
+			pattern = ruleItem[end:]
+		}
+		return gstr.Trim(ruleItem[:end]), gstr.Trim(pattern)
+	}
 	if index := strings.IndexByte(ruleItem, ':'); index != -1 {
 		return gstr.Trim(ruleItem[:index]), gstr.Trim(ruleItem[index+1:])
 	}
