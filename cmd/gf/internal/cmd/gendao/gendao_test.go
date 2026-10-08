@@ -7,11 +7,22 @@
 package gendao
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
 )
+
+// Test_CGenDaoInput_Schema verifies that gen dao exposes schema through command and configuration metadata.
+func Test_CGenDaoInput_Schema(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		field, ok := reflect.TypeFor[CGenDaoInput]().FieldByName("Schema")
+		t.Assert(ok, true)
+		t.Assert(field.Tag.Get("name"), "schema")
+		t.Assert(field.Tag.Get("brief"), "{CGenDaoBriefSchema}")
+	})
+}
 
 // Test containsWildcard function.
 func Test_containsWildcard(t *testing.T) {
