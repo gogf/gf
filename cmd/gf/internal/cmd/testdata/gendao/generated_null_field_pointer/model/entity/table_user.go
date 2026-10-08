@@ -14,7 +14,7 @@ type TableUser struct {
 	Passport string      `json:"passport" orm:"passport"  ` // User Passport
 	Password string      `json:"password" orm:"password"  ` // User Password
 	Nickname string      `json:"nickname" orm:"nickname"  ` // User Nickname
-	Score    float64     `json:"score"    orm:"score"     ` // Total score amount.
+	Score    *float64    `json:"score"    orm:"score"     ` // Total score amount.
 	CreateAt *gtime.Time `json:"createAt" orm:"create_at" ` // Created Time
 	UpdateAt *gtime.Time `json:"updateAt" orm:"update_at" ` // Updated Time
 	Email    *string     `json:"email"    orm:"email"     ` // User Email

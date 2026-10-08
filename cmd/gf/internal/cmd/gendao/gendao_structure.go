@@ -132,18 +132,6 @@ func generateStructFieldDefinition(
 				localTypeNameStr = "string"
 			}
 		}
-
-		// convert null filed in the database to pointer in package entity.
-		if !in.IsDo && field.Null && !strings.HasPrefix(localTypeNameStr, "*") && len(in.NullFieldPattern) > 0 {
-			for _, pattern := range in.NullFieldPattern {
-				regPattern := gstr.Replace(pattern, "?", `(.+)`)
-				match := gregex.IsMatchString(regPattern, in.TableName)
-				if match {
-					localTypeNameStr = "*" + localTypeNameStr
-					break
-				}
-			}
-		}
 	}
 
 	var (
@@ -160,6 +148,15 @@ func generateStructFieldDefinition(
 		if typeMapping, ok := in.FieldMapping[fmt.Sprintf("%s.%s", in.TableName, newFiledName)]; ok {
 			localTypeNameStr = typeMapping.Type
 			appendImport = typeMapping.Import
+		}
+	}
+
+	// Convert NULL fields of matched tables to pointer types in entity files.
+	// It is executed after both type mappings above, as they may replace the field type
+	// that was already converted to a pointer or was not a pointer yet.
+	if !in.IsDo && field.Null && len(in.NullFieldPattern) > 0 && !strings.HasPrefix(localTypeNameStr, "*") {
+		if matchNullFieldPattern(in.TableName, in.NullFieldPattern) {
+			localTypeNameStr = "*" + localTypeNameStr
 		}
 	}
 
