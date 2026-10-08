@@ -154,6 +154,35 @@ func TestDoInsert(t *testing.T) {
 	})
 }
 
+// Test_DB_Save_CompositePrimaryKey requires every Save record to include all composite key columns.
+func Test_DB_Save_CompositePrimaryKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("t_ck_%d", gtime.Timestamp())
+		defer dropTable(table)
+		_, err := db.Exec(context.Background(), fmt.Sprintf(`
+			CREATE TABLE [%s] (
+				A numeric(10,0) NOT NULL,
+				B numeric(10,0) NOT NULL,
+				NAME VARCHAR(45) NULL,
+				PRIMARY KEY (A, B)
+			)
+		`, table))
+		t.AssertNil(err)
+
+		_, err = db.Save(context.Background(), table, g.Map{"A": 1, "B": 2, "NAME": "n1"})
+		t.AssertNil(err)
+
+		_, err = db.Save(context.Background(), table, g.Map{"A": 1, "NAME": "n2"})
+		t.AssertNE(err, nil)
+
+		_, err = db.Save(context.Background(), table, g.Slice{
+			g.Map{"A": 3, "B": 4, "NAME": "n3"},
+			g.Map{"A": 5, "NAME": "n5"},
+		})
+		t.AssertNE(err, nil)
+	})
+}
+
 func TestDoInsertGetId(t *testing.T) {
 	// create test table
 	createInsertAndGetIdTableForTest()

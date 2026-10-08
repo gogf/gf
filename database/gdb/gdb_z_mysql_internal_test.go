@@ -426,3 +426,57 @@ func Test_isSubQuery(t *testing.T) {
 		t.Assert(isSubQuery("select 1"), true)
 	})
 }
+
+// Test_HasPrimaryKeys covers empty input, case-insensitive keys, composite keys, and batch rows.
+func Test_HasPrimaryKeys(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(HasPrimaryKeys(nil, []string{"id"}), false)
+		t.Assert(HasPrimaryKeys(List{}, []string{"id"}), false)
+		t.Assert(HasPrimaryKeys(List{Map{"id": 1}}, nil), false)
+		t.Assert(HasPrimaryKeys(List{Map{"id": 1}}, []string{}), false)
+
+		t.Assert(HasPrimaryKeys(List{Map{"id": 1, "name": "a"}}, []string{"id"}), true)
+		t.Assert(HasPrimaryKeys(List{Map{"ID": 1}}, []string{"id"}), true)
+		t.Assert(HasPrimaryKeys(List{Map{"name": "a"}}, []string{"id"}), false)
+
+		t.Assert(HasPrimaryKeys(List{Map{"a": 1, "b": 2}}, []string{"a", "b"}), true)
+		t.Assert(HasPrimaryKeys(List{Map{"a": 1}}, []string{"a", "b"}), false)
+
+		t.Assert(HasPrimaryKeys(List{
+			Map{"id": 1, "name": "a"},
+			Map{"id": 2, "name": "b"},
+		}, []string{"id"}), true)
+		t.Assert(HasPrimaryKeys(List{
+			Map{"id": 1, "name": "a"},
+			Map{"name": "b"},
+		}, []string{"id"}), false)
+	})
+}
+
+// Test_PrimaryKeyFields orders composite primary keys by Index instead of map iteration.
+func Test_PrimaryKeyFields(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(PrimaryKeyFields(nil))
+		t.Assert(len(PrimaryKeyFields(map[string]*TableField{})), 0)
+
+		fields := map[string]*TableField{
+			"name": {Name: "name", Key: "", Index: 2},
+			"b":    {Name: "b", Key: "pri", Index: 1},
+			"a":    {Name: "a", Key: "PRI", Index: 0},
+		}
+		keys := PrimaryKeyFields(fields)
+		t.Assert(len(keys), 2)
+		t.Assert(keys[0].Name, "a")
+		t.Assert(keys[1].Name, "b")
+	})
+}
+
+// Test_mapHasKey covers case-insensitive map key matching.
+func Test_mapHasKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(mapHasKey(Map{"id": 1}, "id"), true)
+		t.Assert(mapHasKey(Map{"ID": 1}, "id"), true)
+		t.Assert(mapHasKey(Map{"name": "a"}, "id"), false)
+		t.Assert(mapHasKey(Map{}, "id"), false)
+	})
+}

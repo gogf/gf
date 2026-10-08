@@ -46,12 +46,8 @@ func (d *Driver) DoInsert(
 		// because DoExec needs the `TableField.Type` to determine if LastInsertId is supported.
 		tableFields, err := d.GetCore().GetDB().TableFields(ctx, table)
 		if err == nil {
-			for _, field := range tableFields {
-				if strings.EqualFold(field.Key, "pri") {
-					pkField := *field
-					ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, pkField)
-					break
-				}
+			if fields := gdb.PrimaryKeyFields(tableFields); len(fields) > 0 {
+				ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, *fields[0])
 			}
 		}
 
@@ -268,21 +264,9 @@ func (d *Driver) doMergeInsert(
 				`failed to get primary keys for table`,
 			)
 		}
-		foundPrimaryKey := false
-		for _, primaryKey := range primaryKeys {
-			for dataKey := range list[0] {
-				if strings.EqualFold(dataKey, primaryKey) {
-					foundPrimaryKey = true
-					break
-				}
-			}
-			if foundPrimaryKey {
-				break
-			}
-		}
-		if !foundPrimaryKey {
-			// For InsertIgnore without primary key, try normal insert and ignore duplicate errors
-			// For Save/Replace, primary key is required
+		if !gdb.HasPrimaryKeys(list, primaryKeys) {
+			// For InsertIgnore without a complete primary key, try normal insert and ignore duplicate errors.
+			// For Save/Replace, every record must include all primary-key columns.
 			if !withUpdate {
 				result, err := d.Core.DoInsert(ctx, link, table, list, option)
 				if err != nil {
@@ -298,11 +282,10 @@ func (d *Driver) doMergeInsert(
 			return nil, gerror.NewCodef(
 				gcode.CodeMissingParameter,
 				`Replace/Save operation requires conflict detection: `+
-					`either specify OnConflict() columns or ensure table '%s' has a primary key in the data`,
+					`either specify OnConflict() columns or include all primary key values for table '%s' in the save data`,
 				table,
 			)
 		}
-		// TODO consider composite primary keys.
 		conflictKeys = primaryKeys
 	}
 

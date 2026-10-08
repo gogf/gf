@@ -17,8 +17,8 @@ compatibility: 需要 git，以及已登录的 GitHub CLI gh（优先）或可�
 3. 提交前，当前改动必须位于一条独立的非主分支上。若当前就在主分支，先切出新分支再提交。
 4. 提交前必须用**结构化选项**询问用户：本次 PR **正文**用英文还是中文。该选择只影响正文，不影响标题。未得到选择前，不得生成正文或创建 PR。
 5. PR 标题始终遵守`.github/PULL_REQUEST_TEMPLATE.MD`，始终用英文书写，不随步骤 3 的语言选项变化。每次执行都要重新读取该文件，不要靠记忆。
-6. PR 正文必须应用模板规则，但发出去的正文里不得再保留模板中的说明清单。
-7. 标题、正文和本次新产生的 commit subject 都根据实际 diff 生成，不要只根据用户一句话臆造。
+6. PR 正文必须应用模板规则，但发出去的正文里不得再保留模板中的说明清单。正文是写给没参加这次对话的社区维护者看的审查材料，必须把背景、方案、改动和关联讨论写清楚，不能只留一两句摘要。写出的 Markdown 必须遵守`.agents/instructions/markdown-format.instructions.md`，发出去前读该文件并自检，不要凭记忆。
+7. 标题、正文和本次新产生的 commit subject 都根据实际 diff、会话上下文和查到的关联讨论生成，不要只根据用户一句话臆造，也不要编造没出现过的 issue / PR / 评论。
 8. 不要 force push，不要改写已经推送到远程的历史。不要调用 Copilot 代写 PR 的工具。
 9. 创建或复用 PR 之后，把目标仓库最近活跃的 5 名可审查社区成员加为 reviewer。加不上时保留已创建的 PR，不要假装已经请求成功。
 
@@ -40,8 +40,9 @@ git log --oneline --decorate -n 20
 
 同时读取：
 
-- `.github/PULL_REQUEST_TEMPLATE.MD`（标题和正文规则的唯一来源）
+- `.github/PULL_REQUEST_TEMPLATE.MD`（标题格式和`Fixes`/`Updates`的来源；详细正文结构以本技能「PR 正文」为准）
 - `CONTRIBUTING.md`（PR 应对着`master`打开）
+- `.agents/instructions/markdown-format.instructions.md`（PR 正文 Markdown 格式的唯一来源）
 
 确认 GitHub 访问：
 
@@ -145,7 +146,15 @@ git push -u origin HEAD
 
 推送失败时报告原始错误并停止。远程分支被别人更新时，不要自动 rebase、merge 或 force push。
 
-### 6. 创建 Pull Request
+### 6. 收集审查背景并撰写正文
+
+推送成功后、调用`gh pr create`之前，先为维护者写好完整正文。维护者通常没看过这次对话，看不到你为什么改、为什么选这个方案、对应哪条评论。缺这些信息时，审查只能对着 diff 猜意图。
+
+按「PR 正文」收集材料并写成`$BODY_FILE`。材料不够就补查，不要用空泛的「修复问题」「更新代码」交差。写成后对照`.agents/instructions/markdown-format.instructions.md`改到合规，再进入下一步。
+
+已有同一 head 的开放 PR、这次只是推送更新时：若现有正文缺少「PR 正文」要求的章节，用`gh pr edit --body-file`补全后再报告 URL，不要为此再开一条 PR。
+
+### 7. 创建 Pull Request
 
 先查是否已有同一 head 的开放 PR，避免重复开：
 
@@ -181,9 +190,9 @@ gh pr create \
 
 不要使用会把实现交给 Copilot 的创建 PR 工具。
 
-### 7. 添加审查人
+### 8. 添加审查人
 
-步骤 6 成功之后（新建或复用开放 PR 都算），把目标仓库最近活跃的 5 名可审查社区成员加为 reviewer。这一步失败不得回滚已经创建的 PR。
+步骤 7 成功之后（新建或复用开放 PR 都算），把目标仓库最近活跃的 5 名可审查社区成员加为 reviewer。这一步失败不得回滚已经创建的 PR。
 
 1. 读取当前审查请求和 PR 作者：
 
@@ -247,31 +256,90 @@ chore: remove unused sonar project properties
 
 ## PR 正文
 
-应用模板后删除说明文字。发出去的正文只保留对这次改动有用的内容。
+正文的读者是社区维护者，不是这次会话里的你和用户。写完后自检：一个没看过对话、只打开 Files changed 的人，能否明白痛点、方案、改了什么、以及该去哪条 issue / PR / 评论核对。不能的话就补材料，不要发出去。
 
-结构：
+应用 GitHub 模板后删除模板里的说明清单。标题仍保持英文。正文语言必须和步骤 3 的选择一致，不要中英混写两套说明。不要贴完整 diff。
 
-1. 用步骤 3 所选语言写清楚改了什么、为什么改。可以分短句或要点，不要贴完整 diff。标题仍保持英文。
-2. 有对应 issue 时，单独一行写`Fixes #1234`（已完整修复）或`Updates #1234`（尚未完整修复）。这两个关键字保持英文，GitHub 靠它们关闭或关联 issue。
-3. 没有对应 issue 就不要编造编号。
-4. 不要把模板里的类型说明、参考链接或「删除这些说明」复制进正文。
-5. 不要同时堆中英两套说明。正文语言必须和步骤 3 的选择一致。
+### Markdown 格式
 
-英文示例：
+正文 Markdown 以`.agents/instructions/markdown-format.instructions.md`为准。写出后、发出去前读该文件并自检，不要凭记忆。该文件未覆盖的 GitHub 约定：
+
+- `Fixes`/`Updates`、`#1234`、完整 URL 保持英文半角，以便 GitHub 识别。
+- `@用户名`保持可通知的提及，不要包进反引号。
+- 中文正文用该文件的中文全角标点；英文正文用英文标点。
+
+### 撰写前收集
+
+按下面来源补齐事实，再动笔。只写查到的内容。整节没有材料就省略该节，不要留空标题，也不要拿「无」凑字。
+
+1. **这次对话**：用户原话、探索结论、被否掉的方案、审查意见、明确的 follow-up。
+2. **实际改动**：`git diff` / `git log`，前后行为差异，受影响的包和公开 API，测试覆盖了哪条路径。
+3. **本地设计材料**：若工作区有对应的`openspec/changes/<name>/proposal.md`或`design.md`，用来还原动机和取舍，但不要把 OpenSpec 文件名或工作流术语写进正文。
+4. **关联讨论**：对话、分支名、commit body 里出现的 issue / PR 编号，用`gh issue view`、`gh pr view`、`gh api repos/<owner>/<repo>/issues/<n>/comments`或行内评论接口核对标题和关键意见。是 follow-up 时，把源 PR 里仍适用的评论要点写进「关联」，并附链接。
+5. **没有线索就不要搜一圈硬凑。** 没有对应 issue 不要编造编号。
+
+### 正文结构
+
+用步骤 3 所选语言的标题，按这个顺序写。某节确实没有材料时，不要留空标题；「关联」里没有 issue 就不要写`Fixes`。
+
+中文标题：`背景`、`痛点与场景`、`技术方案`、`改动内容`、`关联`、`验证`。  
+英文标题：`Background`、`Problem`、`Approach`、`Changes`、`Related`、`Verification`。
+
+1. **背景**  
+   这段改动从哪来：既有行为、哪次讨论、哪条 PR 的后续、用户或社区遇到的什么情况。把时间线和动机讲清楚。
+
+2. **痛点与场景**  
+   不改会怎样。用可核对的现象写：错误结果、错误 SQL、缺字段的批量写入、调用方必须补额外参数等。有业务场景就写谁在什么操作下会踩到。
+
+3. **技术方案**  
+   选了什么、为什么选、和哪些备选做过取舍，以及明确不做的范围。维护者要能判断方案是否过大或过小。
+
+4. **改动内容**  
+   按包或驱动列出行为变化，写清改前 / 改后，而不是文件名清单。点出公开 API、错误码、测试补了哪类用例。不要贴 hunk。
+
+5. **关联**  
+   列出查到的 issue、PR、关键评论，带链接或`#编号`。完整修复用单独一行`Fixes #1234`，尚未完整修复用`Updates #1234`。这两个关键字保持英文。没有关联就整节省略，不要写「Fixes #0」。
+
+6. **验证**  
+   本地或 CI 实际跑过的命令、结果，以及没跑的部分（例如需要真实库的驱动测试留给 CI）。没跑的不要写成已经验证。
+
+### 示例
+
+中文：
 
 ```markdown
-Remove the unused Sonar project properties file and refresh the root README badges.
+## 背景
 
-Fixes #1234
+#4766让 SQLite 的`Save`在未指定`OnConflict`时从主键推断冲突列，并且要求每一行都带齐主键字段。合并后评论里指出`pgsql`、`dm`、`oracle`等驱动仍是「复合主键里只要出现一个字段就过」，和 SQLite 不一致，需要另开`PR`对齐。
+
+## 痛点与场景
+
+调用方对复合主键表做`Save`、且未手写`OnConflict`时，这些驱动只要`list[0]`里有任意一个主键列，就会把整组主键写进`ON CONFLICT`或`MERGE ON`。后面的行如果缺列，SQL 仍然按完整唯一索引生成，更新对不上或直接执行失败。批量 upsert 尤其容易踩。
+
+## 技术方案
+
+把「每一行是否包含全部主键列」抽成`gdb.HasPrimaryKeys`，放在现有的`database/gdb/gdb_core_utility.go`（紧挨`GetPrimaryKeys`），各 upsert 驱动共用。`sqlite`、`sqlitecgo`也改走同一实现，避免两套校验再漂移。`gaussdb`的`InsertIgnore`在主键不完整时仍走原来的降级插入；本次不改 MySQL 系的`ON DUPLICATE KEY UPDATE`。
+
+## 改动内容
+
+- `gdb.HasPrimaryKeys`：空 list、空主键、大小写、复合主键缺列、后续行缺列都会判失败。
+- `pgsql`、`gaussdb`、`dm`、`oracle`、`mssql`：推断`OnConflict`前改为检查全部主键列，错误文案改为要求 save data 里带齐主键值。
+- `sqlite`、`sqlitecgo`：删除本地副本，改为调用`gdb.HasPrimaryKeys`。
+- 各相关驱动补了复合主键`Save`成功、缺列失败、批量后续行缺列失败的用例。
+
+## 关联
+
+- Follow-up of https://github.com/gogf/gf/pull/4766
+- #4766中@LanceAdd指出 sqlite 对复合主键更严，`pgsql`、`dm`、`oracle`仍是遇到其中一个字段即可：https://github.com/gogf/gf/pull/4766#issuecomment-4404490806
+
+## 验证
+
+- `go test ./database/gdb -run 'Test_HasPrimaryKeys|Test_mapHasKey'`通过
+- `sqlite`、`sqlitecgo`的`Save`与复合主键用例通过
+- `pgsql`、`gaussdb`、`dm`、`oracle`、`mssql`的同类用例已添加，需要对应数据库，留给 CI
 ```
 
-中文示例：
-
-```markdown
-删除未使用的 Sonar 项目配置，并更新根目录 README 中的徽章。
-
-Fixes #1234
-```
+英文用同一六段，标题换成`Background` / `Problem` / `Approach` / `Changes` / `Related` / `Verification`。关联关键字仍是`Fixes`或`Updates`。
 
 ## 推送与目标仓库
 
