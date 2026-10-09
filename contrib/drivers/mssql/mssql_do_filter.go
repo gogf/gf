@@ -20,6 +20,10 @@ const (
 	derivedTableTmp    = `SELECT * FROM (%s) AS TMP_`
 	orderByNothing     = `ORDER BY (SELECT NULL)`
 	orderByFirstColumn = `ORDER BY 1`
+	// countTableAlias is the alias of the derived table whose rows the core counts for a grouped Count.
+	countTableAlias = "count_alias"
+	// countColumnAlias names the column of that derived table.
+	countColumnAlias = "count_value"
 )
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
@@ -29,7 +33,7 @@ const (
 func (d *Driver) DoFilter(
 	ctx context.Context, link gdb.Link, sql string, args []any,
 ) (newSql string, newArgs []any, err error) {
-	newSql = rewriteQuery(convertPlaceholders(sql))
+	newSql = rewriteQuery(convertPlaceholders(rewriteSavePoint(sql)))
 	if newSql, newArgs, err = d.Core.DoFilter(ctx, link, newSql, args); err != nil {
 		return "", nil, err
 	}
@@ -167,9 +171,11 @@ type limitClause struct {
 
 // rewriteQuery rewrites the MySQL syntax that the core builds and SQL Server rejects, in
 // `sql` itself and in every parenthesized sub-query, innermost first: a LIMIT or OFFSET clause
-// becomes TOP or OFFSET FETCH, keeping the clauses that follow it such as a lock clause, and an
-// operand of a compound query that has its own ORDER BY becomes a derived table. The comments
-// that a query begins with are kept before it.
+// becomes TOP or OFFSET FETCH, a lock clause becomes a table hint by moveLockClause, an operand
+// of a compound query that has its own ORDER BY becomes a derived table, and the alias of the
+// target table of an UPDATE or DELETE statement moves into a FROM clause by rewriteAliasedTarget,
+// and the column of the derived table of a grouped Count is named by nameCountColumn.
+// The comments that a query begins with are kept before it.
 // It returns `sql` itself if it has nothing to rewrite, or if its parentheses or quotes are
 // unbalanced.
 func rewriteQuery(sql string) string {
@@ -202,19 +208,43 @@ func rewriteQuery(sql string) string {
 		start++
 	}
 	if start < len(tokens) {
-		if first := tokens[start]; first.group || first.is("SELECT") || first.is("WITH") {
-			query, operands := rewriteCompoundOperands(tokens[start:])
-			query, paged := rewriteLimitClause(query)
-			if operands || paged {
-				tokens = append(tokens[:start:start], query...)
-				rewritten = true
-			}
+		var (
+			query   = tokens[start:]
+			changed bool
+		)
+		switch first := tokens[start]; {
+		case first.group || first.is("SELECT") || first.is("WITH"):
+			var named, locked, operands, paged bool
+			query, named = nameCountColumn(query)
+			query, locked = moveLockClause(query)
+			query, operands = rewriteCompoundOperands(query)
+			query, paged = rewriteLimitClause(query)
+			changed = named || locked || operands || paged
+		case first.is("UPDATE") || first.is("DELETE"):
+			query, changed = rewriteAliasedTarget(query)
+		}
+		if changed {
+			tokens = append(tokens[:start:start], query...)
+			rewritten = true
 		}
 	}
 	if !rewritten {
 		return sql
 	}
 	return joinSqlTokens(tokens) + trailing
+}
+
+// nameCountColumn names the column of the derived table of the statement formed by `tokens` in a
+// column alias list if it is the one that the core builds for a grouped Count, `SELECT COUNT(1)
+// FROM (SELECT COUNT(...) FROM ...) count_alias`, as SQL Server requires every column of a derived
+// table to have a name, and reports whether it is.
+func nameCountColumn(tokens []sqlToken) ([]sqlToken, bool) {
+	if len(tokens) != 6 || !tokens[0].is("SELECT") || !tokens[1].is("COUNT") || tokens[2].text != "(1)" ||
+		!tokens[3].is("FROM") || !tokens[4].group || !tokens[5].is(countTableAlias) {
+		return tokens, false
+	}
+	tokens[5].text += "(" + countColumnAlias + ")"
+	return tokens, true
 }
 
 // rewriteLimitClause rewrites the LIMIT or OFFSET clause at the outermost level of the
