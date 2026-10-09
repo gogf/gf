@@ -4,5 +4,8 @@ create table `%s`(
     password   VARCHAR(128) NOT NULL DEFAULT password,
     nickname   VARCHAR(45),
     created_at TIMESTAMP,
-    updated_at TIMESTAMP
+    updated_at TIMESTAMP,
+    email      VARCHAR(255) DEFAULT NULL,
+    status     INTEGER      DEFAULT NULL,
+    height     REAL         DEFAULT NULL
 )
