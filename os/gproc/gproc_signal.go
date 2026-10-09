@@ -20,6 +20,10 @@ import (
 // SigHandler defines a function type for signal handling.
 type SigHandler func(sig os.Signal)
 
+// signalListenEnded marks that the signal listening loop has exited, after which nothing
+// drains signalChan any more. It is guarded by signalHandlerMu.
+var signalListenEnded bool
+
 var (
 	// Use internal variable to guarantee concurrent safety
 	// when multiple Listen happen.
@@ -90,6 +94,17 @@ func listen() {
 	for {
 		sig = <-signalChan
 		intlog.Printf(ctx, `signal received: %s`, sig.String())
+		_, isShutdownSignal := shutdownSignalMap[sig]
+		if isShutdownSignal {
+			// This listening loop returns right after the shutdown handlers are done, so
+			// from this point on nothing drains signalChan any more. Restore the default
+			// behavior before running them: otherwise every signal received afterwards is
+			// silently discarded and the process can only be stopped by SIGKILL, with not
+			// even SIGQUIT able to dump the goroutine stacks.
+			// It also restores the conventional escape hatch: a second shutdown signal
+			// terminates the process even when a shutdown handler blocks.
+			endSignalListening()
+		}
 		if handlers := getHandlersBySignal(sig); len(handlers) > 0 {
 			for _, handler := range handlers {
 				wg.Add(1)
@@ -106,7 +121,7 @@ func listen() {
 			}
 		}
 		// If it is shutdown signal, it exits this signal listening.
-		if _, ok := shutdownSignalMap[sig]; ok {
+		if isShutdownSignal {
 			intlog.Printf(
 				ctx,
 				`receive shutdown signal "%s", waiting all signal handler done`,
@@ -120,7 +135,30 @@ func listen() {
 	}
 }
 
+// endSignalListening restores the default behavior for the listened signals and marks
+// the listening as ended, so that handlers added afterwards cannot re-arm signal.Notify
+// on a channel that no longer has a reader.
+//
+// It holds signalHandlerMu because notifySignals runs under that same lock: without it a
+// concurrent AddSigHandler could observe signalListenEnded as false and call signal.Notify
+// right after signal.Stop, silently swallowing signals again.
+func endSignalListening() {
+	signalHandlerMu.Lock()
+	defer signalHandlerMu.Unlock()
+	signalListenEnded = true
+	signal.Stop(signalChan)
+}
+
 func notifySignals() {
+	// The listening loop has exited and nothing drains signalChan any more. Re-arming
+	// signal.Notify here would silently discard every signal received from now on.
+	if signalListenEnded {
+		intlog.Print(
+			context.Background(),
+			`signal listening has ended, newly added signal handlers will not be notified`,
+		)
+		return
+	}
 	var signals = make([]os.Signal, 0)
 	for s := range signalHandlerMap {
 		signals = append(signals, s)

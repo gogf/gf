@@ -42,7 +42,7 @@ func MiddlewareHandlerResponse(r *Request) {
 	}
 
 	// It does not output common response content if it is stream response.
-	mediaType, _, _ := mime.ParseMediaType(r.Response.Header().Get("Content-Type"))
+	mediaType, _, _ := mime.ParseMediaType(r.Response.Header().Get(HeaderContentType))
 	for _, ct := range streamContentType {
 		if mediaType == ct {
 			return

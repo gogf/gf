@@ -7,9 +7,33 @@
 package ghttp_test
 
 import (
+	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/gogf/gf/v2/net/ghttp"
 )
+
+// The two benchmarks below compare the http.Header lookup cost of the canonical header name
+// spelling used by the ghttp.HeaderXxx constants with a non-canonical one: the non-canonical
+// name has to be rebuilt for every lookup by net/http.
+func Benchmark_HeaderGetWithCanonicalName(b *testing.B) {
+	header := make(http.Header)
+	header.Set(ghttp.HeaderWwwAuthenticate, "Basic realm=x")
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_ = header.Get(ghttp.HeaderWwwAuthenticate)
+	}
+}
+
+func Benchmark_HeaderGetWithNonCanonicalName(b *testing.B) {
+	header := make(http.Header)
+	header.Set(ghttp.HeaderWwwAuthenticate, "Basic realm=x")
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_ = header.Get("WWW-Authenticate")
+	}
+}
 
 func Benchmark_TrimRightCharWithStrings(b *testing.B) {
 	for i := 0; i < b.N; i++ {

@@ -14,8 +14,10 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 // BindHandler registers a handler function to server with a given pattern.
@@ -235,8 +237,189 @@ func (s *Server) checkAndCreateFuncInfo(
 		return funcInfo, err
 	}
 	funcInfo.ReqStructFields = fields
+	funcInfo.ReqStructTags = scanRequestStructTags(funcInfo.Type.In(1), fields)
+	if err = funcInfo.checkDuplicatedInTag(); err != nil {
+		return funcInfo, err
+	}
+	if err = funcInfo.checkAndCreateReqBodyField(); err != nil {
+		return funcInfo, err
+	}
 	funcInfo.Func = createRouterFunc(funcInfo)
 	return
+}
+
+// requestStructTags marks the tag usages of a request struct, which is
+// prechecked once at handler registration for the request handling to skip the
+// tag-driven work that the struct does not use.
+//
+// Note that it never skips the work that might take effect: the raw tag values
+// are checked instead of the parsed ones, as the tag variables can be
+// registered or updated later in the boot procedure, see package gtag; and the
+// tags are checked on exactly the scope that their handling covers, see
+// scanRequestStructTags.
+type requestStructTags struct {
+	HasValid   bool // Whether any field uses the `valid`/`v` tag.
+	HasIn      bool // Whether any field uses the `in` tag.
+	HasDefault bool // Whether any field uses the `default`/`d` tag.
+}
+
+// scanRequestStructTags reports the tag usages of the given request struct,
+// which is precomputed at handler registration for the request handling to skip
+// the tag-driven work that the struct does not use.
+//
+// It is called once at handler registration.
+//
+// Note that the raw tag values are checked instead of the parsed ones, as the
+// tag variables might be registered or updated later in the boot procedure, see
+// package gtag. Keep the checked scopes in sync with their handling:
+//   - the `in` and `default` tags are checked from the given request struct
+//     fields, which are exactly the fields the parameter merging handles;
+//   - the `valid` tag is checked from the whole type graph, as the validation
+//     also walks into the nested attribute types, see the doCheckValueRecursively
+//     of package gvalid.
+func scanRequestStructTags(requestType reflect.Type, requestFields []gstructs.Field) (tags requestStructTags) {
+	for _, field := range requestFields {
+		if field.Field.Tag.Get(gtag.In) != "" {
+			tags.HasIn = true
+		}
+		if field.Field.Tag.Get(gtag.Default) != "" || field.Field.Tag.Get(gtag.DefaultShort) != "" {
+			tags.HasDefault = true
+		}
+	}
+	tags.HasValid = hasValidTagInType(requestType, make(map[reflect.Type]struct{}))
+	return
+}
+
+// hasValidTagInType checks and returns whether the `valid` tag is used by the
+// given type or by any type reachable from its attributes.
+func hasValidTagInType(structType reflect.Type, visited map[reflect.Type]struct{}) bool {
+	// It walks the pointer types by dereferencing, and marks each type as visited,
+	// which avoids both the infinite recursion for the self reference types and the
+	// infinite dereference for the cyclic pointer types like `type P *P`, whose
+	// element type is itself.
+	for {
+		if _, ok := visited[structType]; ok {
+			return false
+		}
+		visited[structType] = struct{}{}
+		if structType.Kind() != reflect.Pointer {
+			break
+		}
+		structType = structType.Elem()
+	}
+	switch structType.Kind() {
+	case reflect.Struct:
+		for i := 0; i < structType.NumField(); i++ {
+			var field = structType.Field(i)
+			if field.Tag.Get(gtag.Valid) != "" || field.Tag.Get(gtag.ValidShort) != "" {
+				return true
+			}
+			if hasValidTagInType(field.Type, visited) {
+				return true
+			}
+		}
+
+	case reflect.Slice, reflect.Array, reflect.Map:
+		return hasValidTagInType(structType.Elem(), visited)
+	}
+	return false
+}
+
+// checkDuplicatedInTag checks and returns error if the `in` tag is declared with conflicting
+// values on a request struct field, which makes the parameter location ambiguous: the request
+// handling resolves the `in` tag with the first value as the reflect.StructTag does, while the
+// tag map used by the document generation keeps the last one.
+func (f *handlerFuncInfo) checkDuplicatedInTag() error {
+	for _, field := range f.ReqStructFields {
+		// The field Tag keeps the first value of a tag key, while the parsed tag map keeps the
+		// last one, so a difference between them means the key is declared more than once with
+		// different values.
+		var (
+			firstValue = field.Tag(gtag.In)
+			lastValue  = gstructs.ParseTag(field.TagStr())[gtag.In]
+		)
+		if firstValue != lastValue {
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid handler: the request struct field "%s" declares the in tag with conflicting `+
+					`values "%s" and "%s"`,
+				field.Name(), firstValue, lastValue,
+			)
+		}
+	}
+	return nil
+}
+
+// checkAndCreateReqBodyField retrieves the request struct field that receives the whole request
+// body, which is declared by the `in:"body"` tag on the field.
+//
+// The request body is only able to be received by one field, so it returns error if there are
+// multiple fields tagged with `in:"body"`. It also returns error if the field can not receive
+// the JSON array request body: a non-slice type, or an uploading file type, as files are
+// received by the ordinary request struct fields through the multipart/form-data request.
+//
+// It is called once at handler registration, which also resolves the tag name of the field for
+// the request handling to remove the request parameter of the same name.
+func (f *handlerFuncInfo) checkAndCreateReqBodyField() error {
+	for _, field := range f.ReqStructFields {
+		if field.TagIn() != goai.ParameterInBody {
+			continue
+		}
+		if f.ReqBodyFieldName != "" {
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid handler: only one request struct field is allowed to be tagged with in:"body", `+
+					`but got both "%s" and "%s"`,
+				f.ReqBodyFieldName, field.Name(),
+			)
+		}
+		var fieldType = field.Type().Type
+		for fieldType.Kind() == reflect.Pointer {
+			fieldType = fieldType.Elem()
+		}
+		if isFileType(fieldType) {
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid handler: the request struct field "%s" tagged with in:"body" is of file type "%s"; `+
+					`files are uploaded by the multipart/form-data request and received by the ordinary `+
+					`fields of the request struct, which does not need the in:"body" tag`,
+				field.Name(), field.Type().String(),
+			)
+		}
+		if fieldType.Kind() != reflect.Slice {
+			var hint string
+			switch fieldType.Kind() {
+			case reflect.Array:
+				hint = `; a fixed-size array can be replaced by a slice with a length validation rule`
+			case reflect.Struct, reflect.Map, reflect.Interface:
+				hint = `; an object request body is received by the ordinary fields of the request ` +
+					`struct, which does not need the in:"body" tag`
+			default:
+			}
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid handler: the request struct field "%s" tagged with in:"body" should be type of `+
+					`slice, but got "%s"%s`,
+				field.Name(), field.Type().String(), hint,
+			)
+		}
+		f.ReqBodyFieldName = field.Name()
+		// The tag name is also resolved here, as the request handling removes the request
+		// parameter of the same name before the struct converting, which is matched with a
+		// higher priority than the field name by the struct converting.
+		f.ReqBodyFieldTagName = field.TagPriorityName()
+	}
+	return nil
+}
+
+// isFileType checks and returns whether given golang type is of the uploading file type
+// `UploadFile`, including its pointer and slice forms, for example: *UploadFile, UploadFile,
+// []*UploadFile, UploadFiles.
+func isFileType(fieldType reflect.Type) bool {
+	for fieldType.Kind() == reflect.Pointer || fieldType.Kind() == reflect.Slice {
+		fieldType = fieldType.Elem()
+	}
+	return fieldType == reflect.TypeOf(UploadFile{})
 }
 
 func createRouterFunc(funcInfo handlerFuncInfo) func(r *Request) {
@@ -252,7 +435,12 @@ func createRouterFunc(funcInfo handlerFuncInfo) func(r *Request) {
 			var inputObject reflect.Value
 			if funcInfo.Type.In(1).Kind() == reflect.Pointer {
 				inputObject = reflect.New(funcInfo.Type.In(1).Elem())
-				r.error = r.Parse(inputObject.Interface())
+				// The validation is prechecked unnecessary for the request struct
+				// at handler registration, see handlerFuncInfo.ReqStructTags.
+				// The flags are read from the handler item here, which is the same
+				// source the parameter merging reads, instead of the copied funcInfo.
+				r.error = r.doParse(inputObject.Interface(), parseTypeRequest,
+					r.serveHandler.Handler.Info.ReqStructTags.HasValid)
 			} else {
 				inputObject = reflect.New(funcInfo.Type.In(1).Elem()).Elem()
 				r.error = r.Parse(inputObject.Addr().Interface())

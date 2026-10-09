@@ -1134,37 +1134,41 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 	}
 
 	// Cache the underlying connection pool object by node.
-	var (
-		instanceCacheFunc = func() *sql.DB {
-			if sqlDb, err = c.db.Open(node); err != nil {
-				return nil
-			}
-			if sqlDb == nil {
-				return nil
-			}
-			if c.dynamicConfig.MaxIdleConnCount > 0 {
-				sqlDb.SetMaxIdleConns(c.dynamicConfig.MaxIdleConnCount)
-			} else {
-				sqlDb.SetMaxIdleConns(defaultMaxIdleConnCount)
-			}
-			if c.dynamicConfig.MaxOpenConnCount > 0 {
-				sqlDb.SetMaxOpenConns(c.dynamicConfig.MaxOpenConnCount)
-			} else {
-				sqlDb.SetMaxOpenConns(defaultMaxOpenConnCount)
-			}
-			if c.dynamicConfig.MaxConnLifeTime > 0 {
-				sqlDb.SetConnMaxLifetime(c.dynamicConfig.MaxConnLifeTime)
-			} else {
-				sqlDb.SetConnMaxLifetime(defaultMaxConnLifeTime)
-			}
-			if c.dynamicConfig.MaxIdleConnTime > 0 {
-				sqlDb.SetConnMaxIdleTime(c.dynamicConfig.MaxIdleConnTime)
-			}
-			return sqlDb
+	instanceCacheFunc := func() *sql.DB {
+		if sqlDb, err = c.db.Open(node); err != nil {
+			return nil
 		}
-		// it here uses NODE VALUE not pointer as the cache key, in case of oracle ORA-12516 error.
+		if sqlDb == nil {
+			return nil
+		}
+		if c.dynamicConfig.MaxIdleConnCount > 0 {
+			sqlDb.SetMaxIdleConns(c.dynamicConfig.MaxIdleConnCount)
+		} else {
+			sqlDb.SetMaxIdleConns(defaultMaxIdleConnCount)
+		}
+		if c.dynamicConfig.MaxOpenConnCount > 0 {
+			sqlDb.SetMaxOpenConns(c.dynamicConfig.MaxOpenConnCount)
+		} else {
+			sqlDb.SetMaxOpenConns(defaultMaxOpenConnCount)
+		}
+		if c.dynamicConfig.MaxConnLifeTime > 0 {
+			sqlDb.SetConnMaxLifetime(c.dynamicConfig.MaxConnLifeTime)
+		} else {
+			sqlDb.SetConnMaxLifetime(defaultMaxConnLifeTime)
+		}
+		if c.dynamicConfig.MaxIdleConnTime > 0 {
+			sqlDb.SetConnMaxIdleTime(c.dynamicConfig.MaxIdleConnTime)
+		}
+		return sqlDb
+	}
+	// It here uses NODE VALUE not pointer as the cache key, in case of oracle ORA-12516 error.
+	// It checks the existing pool with the reading lock, as it is created on first usage.
+	var instanceValue *sql.DB
+	if cached, found := c.links.Search(*node); found {
+		instanceValue = cached
+	} else {
 		instanceValue = c.links.GetOrSetFuncLock(*node, instanceCacheFunc)
-	)
+	}
 	if instanceValue != nil && sqlDb == nil {
 		// It reads from instance map.
 		sqlDb = instanceValue

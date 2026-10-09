@@ -2288,3 +2288,54 @@ func Test_IssuePointInterval_NotConvertedToInt(t *testing.T) {
 		t.Assert(one["d"].Ints(), []int{4, 5})
 	})
 }
+
+// Test_Issue4842 tests the type names that the keyword matching of the core used to infer
+// a wrong type for, because the name embeds a keyword: int2vector was taken for an integer
+// and read back as 0, while the arrays of temporal types were taken for a single datetime,
+// which dropped every element but the first. The range types were taken for a datetime too,
+// which kept their lower bound only.
+// See https://github.com/gogf/gf/issues/4842
+func Test_Issue4842(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// int2vector: its name embeds "int" while holding a vector of attribute numbers.
+		one, err := db.GetOne(ctx, `SELECT indkey AS v, indkey::text AS expect FROM pg_index LIMIT 1`)
+		t.AssertNil(err)
+		t.Assert(one["v"].String(), one["expect"].String())
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// Arrays of temporal types keep all of their elements.
+		one, err := db.GetOne(ctx, `SELECT
+			ARRAY['2026-01-01'::date, '2026-01-02'::date] AS a,
+			ARRAY['10:00:00'::time, '11:00:00'::time] AS b,
+			ARRAY['2026-01-01 10:00:00'::timestamp, '2026-01-02 11:00:00'::timestamp] AS c,
+			ARRAY['[2026-01-01,2026-02-01)'::daterange] AS d`)
+		t.AssertNil(err)
+		t.Assert(one["a"].Strings(), g.SliceStr{"2026-01-01", "2026-01-02"})
+		t.Assert(one["b"].Strings(), g.SliceStr{"10:00:00", "11:00:00"})
+		t.Assert(one["c"].Strings(), g.SliceStr{"2026-01-01 10:00:00", "2026-01-02 11:00:00"})
+		t.Assert(one["d"].Strings(), g.SliceStr{"[2026-01-01,2026-02-01)"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// Scalar ranges keep both bounds instead of collapsing to the lower one.
+		one, err := db.GetOne(ctx, `SELECT '[2026-01-01,2026-02-01)'::daterange AS a,
+			'[2026-01-01 10:00:00,2026-02-01 11:00:00)'::tsrange AS b,
+			'[1,10)'::int4range AS c,
+			'[1.5,2.5)'::numrange AS d`)
+		t.AssertNil(err)
+		t.Assert(one["a"].String(), `[2026-01-01,2026-02-01)`)
+		t.Assert(one["b"].String(), `["2026-01-01 10:00:00","2026-02-01 11:00:00")`)
+		t.Assert(one["c"].String(), `[1,10)`)
+		t.Assert(one["d"].String(), `[1.5,2.5)`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// Genuine integer and temporal scalars are unaffected.
+		one, err := db.GetOne(ctx, `SELECT 41::int2 AS a, 42::int4 AS b, 43::int8 AS c,
+			'2026-01-01'::date AS d, '10:00:00'::time AS e`)
+		t.AssertNil(err)
+		t.Assert(one["a"].Int(), 41)
+		t.Assert(one["b"].Int(), 42)
+		t.Assert(one["c"].Int64(), int64(43))
+		t.Assert(one["d"].String(), `2026-01-01`)
+		t.Assert(one["e"].String(), `10:00:00`)
+	})
+}
