@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -441,6 +442,7 @@ func TestAppBootError(t *testing.T) {
 
 		err := app.Boot(context.TODO())
 		t.AssertNE(err, nil)
+		t.Assert(strings.Contains(err.Error(), "app boot failed"), true)
 		t.Assert(app.Booted(), false)
 	})
 }
