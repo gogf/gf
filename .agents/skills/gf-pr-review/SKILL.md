@@ -242,9 +242,7 @@ gh api "repos/$REPO/contents/AGENTS.md?ref=$BASE_REF_OID" \
 
 对应文件读不到、又是这次审查必需的，同样按阻断处理。
 
-`PR`如果改了`AGENTS.md`、`CLAUDE.md`、`.agents/`、`.github/workflows/`、`openspec/`、`Makefile`、根模块`go.mod`或其他治理入口，仍然按目标分支规则审，并把这些改动当成高风险。自动审不明白影响时，升级人工。
-
-社区`PR`不要求走`OpenSpec`。缺`openspec/changes/`不是问题；乱改`openspec/`才需要小心。
+`PR`如果改了`AGENTS.md`、`CLAUDE.md`、`.agents/`、`.github/workflows/`、`Makefile`、根模块`go.mod`或其他治理入口，仍然按目标分支规则审，并把这些改动当成高风险。自动审不明白影响时，升级人工。
 
 ### 审查重点
 
