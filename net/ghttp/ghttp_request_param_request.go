@@ -185,6 +185,14 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 	if data == nil {
 		data = map[string]any{}
 	}
+	// A field tagged with `in:"body"` represents the complete request body. Before converting,
+	// remove the request parameter that is named exactly after the field tag name, as the tag
+	// name is matched with a higher priority than the field name by the struct converting,
+	// which would otherwise overwrite the body array. Both names are resolved at router
+	// registering time, see checkAndCreateReqBodyField.
+	if r.reqBodyFieldName() != "" {
+		delete(data, r.serveHandler.Handler.Info.ReqBodyFieldTagName)
+	}
 
 	// `in` Tag Struct values.
 	if err = r.mergeInTagStructValue(data); err != nil {
@@ -196,19 +204,36 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 		return data, nil
 	}
 
+	// The request struct field tagged with `in:"body"` receives the whole request body, which
+	// is a JSON array instead of being split into the request parameters.
+	if bodyFieldName := r.reqBodyFieldName(); bodyFieldName != "" {
+		if r.bodyArray != nil {
+			data[bodyFieldName] = r.bodyArray
+		} else if r.bodyMap != nil || r.MultipartForm != nil {
+			// The JSON object, the form parameters and the multipart forms are not acceptable
+			// for such field, which are reported as an invalid parameter instead of being
+			// silently ignored with the field left as a nil slice.
+			return nil, newArrayRequestBodyError(bodyFieldName)
+		} else {
+			// There's no body at all. The nil value occupies the field name, so that the field
+			// is bound to its zero value before the request parameters of similar names (case
+			// or symbol variants) could be fuzzy matched to it.
+			data[bodyFieldName] = nil
+		}
+	}
+
 	return data, gconv.Struct(data, pointer, mapping...)
 }
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
 func (r *Request) mergeDefaultStructValue(data map[string]any, pointer any) error {
-	fields := r.serveHandler.Handler.Info.ReqStructFields
-	if len(fields) > 0 {
-		// Nothing to do as no field uses the default value tag,
-		// which is prechecked at handler registration.
-		if !r.serveHandler.Handler.Info.ReqStructTags.HasDefault {
+	// The tag usage is prechecked at handler registration. A request without a serving handler
+	// keeps the field scan below, so parsing still works for a route that was not matched.
+	if tags, ok := r.reqStructTags(); ok {
+		if !tags.HasDefault {
 			return nil
 		}
-		for _, field := range fields {
+		for _, field := range r.reqStructFields() {
 			if tagValue := field.TagDefault(); tagValue != "" {
 				mergeTagValueWithFoundKey(data, false, field.Name(), field.Name(), tagValue)
 			}
@@ -232,12 +257,13 @@ func (r *Request) mergeDefaultStructValue(data map[string]any, pointer any) erro
 
 // mergeInTagStructValue merges the request parameters with header or cookie values from struct `in` tag definition.
 func (r *Request) mergeInTagStructValue(data map[string]any) error {
-	fields := r.serveHandler.Handler.Info.ReqStructFields
-	// Nothing to do as no field uses the `in` tag,
-	// which is prechecked at handler registration.
-	if len(fields) == 0 || !r.serveHandler.Handler.Info.ReqStructTags.HasIn {
+	// Nothing to do as no field uses the `in` tag, which is prechecked at handler registration.
+	// A request without a serving handler has no registered fields either.
+	tags, ok := r.reqStructTags()
+	if !ok || !tags.HasIn {
 		return nil
 	}
+	fields := r.reqStructFields()
 	var (
 		headerMap = make(map[string]any)
 		cookieMap = make(map[string]any)
