@@ -244,7 +244,7 @@ func (r *Request) parseBody() {
 		if len(body) == 0 {
 			return
 		}
-		contentType := r.Header.Get("Content-Type")
+		contentType := r.Header.Get(HeaderContentType)
 		jsonContentType := gstr.ContainsI(contentType, contentTypeJson)
 		// Preserve GET query/form body compatibility while validating JSON-shaped GET bodies.
 		strictJsonContentType := jsonContentType && (r.Method != http.MethodGet || body[0] == '{' || body[0] == '[')
@@ -327,7 +327,7 @@ func (r *Request) parseForm() {
 		return
 	}
 
-	if contentType := r.Header.Get("Content-Type"); contentType != "" {
+	if contentType := r.Header.Get(HeaderContentType); contentType != "" {
 		var isMultiPartRequest = gstr.Contains(contentType, "multipart/")
 		var isFormRequest = gstr.Contains(contentType, "form")
 		var err error
