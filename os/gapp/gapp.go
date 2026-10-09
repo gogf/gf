@@ -53,6 +53,11 @@ type App struct {
 	stopOnce     sync.Once // ensures Stop is executed only once
 }
 
+// bootWaitHook, when non-nil, runs while Boot is about to wait for an in-progress
+// boot. It runs with app.mu held and must not block or lock app.mu.
+// Tests use it to join that wait before the leader finishes.
+var bootWaitHook func()
+
 // New creates and returns a new App instance with optional initial servers.
 func New(servers ...Server) *App {
 	app := &App{
@@ -118,12 +123,14 @@ func (app *App) Option(opts ...Option) {
 // Boot is idempotent: calling it multiple times is safe and subsequent
 // calls after the first are no-ops.
 //
-// If an Option's Apply returns an error, Boot rolls back by running
-// any already-collected cleanup hooks in reverse order and returns
-// the error.
+// If an Option's Apply returns an error or panics, Boot rolls back by running
+// any already-collected cleanup hooks in reverse order and returns the error.
+// A panic is recovered so Boot is not left marked successful. The returned
+// error is wrapped with "app boot failed"; concurrent waiters receive that
+// same wrapped error.
 //
 // If ctx is nil, gctx.GetInitCtx() is used for Apply and rollback.
-func (app *App) Boot(ctx context.Context) error {
+func (app *App) Boot(ctx context.Context) (err error) {
 	app.mu.Lock()
 	for {
 		if app.booted {
@@ -131,13 +138,16 @@ func (app *App) Boot(ctx context.Context) error {
 			return nil
 		}
 		if app.booting {
+			if bootWaitHook != nil {
+				bootWaitHook()
+			}
 			app.bootCond.Wait()
 			if app.booted {
 				app.mu.Unlock()
 				return nil
 			}
 			if !app.booting {
-				err := app.lastBootErr
+				err = app.lastBootErr
 				app.mu.Unlock()
 				return err
 			}
@@ -154,10 +164,13 @@ func (app *App) Boot(ctx context.Context) error {
 	// Apply() (via app.Option()) are also processed.
 	app.mu.Unlock()
 
-	// Ensure booting is always reset and waiters are unblocked,
-	// even if applyOptions panics during rollback.
-	var err error
+	// err is a named result so this defer can both recover a panic and
+	// replace the returned error with the wrapped lastBootErr.
 	defer func() {
+		if r := recover(); r != nil {
+			err = gerror.NewCodef(gcode.CodeInternalPanic, "app boot panicked: %v", r)
+			app.runHooksReverse(baseCtx)
+		}
 		app.mu.Lock()
 		app.booting = false
 		if err == nil {
@@ -219,14 +232,13 @@ func (app *App) Booted() bool {
 }
 
 // runHooksReverse atomically swaps out all collected cleanup hooks, then runs
-// them in reverse order. The hooks slice is cleared before execution so that
-// hooks appended concurrently (e.g. by applyOptions during Boot) are not
-// accidentally discarded, and a panic in one hook does not cause double-cleanup
-// on a subsequent call.
+// them in reverse order. The slice is detached with nil before execution so a
+// hook appended concurrently does not overwrite one that has not run yet, and
+// a panic in one hook does not cause double-cleanup on a subsequent call.
 func (app *App) runHooksReverse(ctx context.Context) {
 	app.mu.Lock()
 	hooks := app.hooks
-	app.hooks = app.hooks[:0]
+	app.hooks = nil
 	app.mu.Unlock()
 
 	for i := len(hooks) - 1; i >= 0; i-- {

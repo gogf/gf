@@ -4,16 +4,16 @@ GoFrame 应用生命周期管理中的后台任务服务器。
 
 ## 介绍
 
-`gjob` 包提供了两种 `gapp.Server` 实现，用于后台任务处理：
+`gjob`包提供了两种`gapp.Server`实现，用于后台任务处理：
 
 - **WorkerServer**：管理在独立协程中运行的长驻后台任务
-- **CronServer**：管理按 cron 表达式定时执行的调度任务
+- **CronServer**：管理按`cron`表达式定时执行的调度任务
 
-两种服务器类型均实现了 `gapp.Server` 接口，可以注册到 `gapp.App` 进行统一的生命周期管理。
+两种服务器类型均实现了`gapp.Server`接口，可以注册到`gapp.App`进行统一的生命周期管理。
 
 ## 基于配置的启动方式
 
-`NewServersFromConfig` 辅助函数从应用配置文件中读取任务配置并创建相应的服务器实例。当你希望将任务定义与处理代码解耦时，推荐使用此方式。
+`NewServersFromConfig`辅助函数从应用配置文件中读取任务配置并创建相应的服务器实例。当你希望将任务定义与处理代码解耦时，推荐使用此方式。
 
 ### 配置格式
 
@@ -69,7 +69,7 @@ func main() {
 }
 ```
 
-被禁用（`enable: false`）的任务或 `HandlerMap` 中没有对应处理函数的任务会自动跳过。
+被禁用（`enable: false`）的任务或`HandlerMap`中没有对应处理函数的任务会自动跳过。
 
 ## WorkerServer
 
@@ -119,7 +119,7 @@ func main() {
 
 ## CronServer
 
-CronServer 管理通过 `gcron` 按 cron 表达式定时执行的任务。任务以单例模式注册，即如果上一次执行尚未完成，则跳过本次触发。
+CronServer 管理通过`gcron`按`cron`表达式定时执行的任务。任务以单例模式注册，即如果上一次执行尚未完成，则跳过本次触发。
 
 ### CronHandler
 
@@ -209,16 +209,16 @@ func main() {
 
 | 方法 | 说明 |
 |---|---|
-| `NewWorkerServer(ctx context.Context, tasks ...WorkerTask)` | 使用生命周期 context 创建 WorkerServer |
+| `NewWorkerServer(ctx context.Context, tasks ...WorkerTask)` | 使用生命周期`context`创建 WorkerServer |
 | `Add(tasks ...WorkerTask) error` | 在 Start 前添加任务；服务器已启动或已停止时返回错误 |
 | `Start() error` | 并发启动所有任务 |
-| `Stop(graceful bool) error` | 停止所有任务；取消 context 并等待 goroutine 退出 |
+| `Stop(graceful bool) error` | 停止所有任务；取消`context`并等待 goroutine 退出 |
 
 ### CronServer
 
 | 方法 | 说明 |
 |---|---|
-| `NewCronServer(ctx context.Context, tasks ...CronTask)` | 使用生命周期 context 创建 CronServer |
+| `NewCronServer(ctx context.Context, tasks ...CronTask)` | 使用生命周期`context`创建 CronServer |
 | `Add(tasks ...CronTask) error` | 在 Start 前添加任务；服务器已启动或已停止时返回错误 |
 | `Start() error` | 注册并启动所有 cron 任务 |
 | `Stop(graceful bool) error` | 停止 cron 调度器 |
@@ -227,4 +227,4 @@ func main() {
 
 | 方法 | 说明 |
 |---|---|
-| `NewServersFromConfig(ctx, HandlerMap)` | 从 `scheduler.job` 配置创建服务器 |
+| `NewServersFromConfig(ctx, HandlerMap)` | 从`scheduler.job`配置创建服务器 |

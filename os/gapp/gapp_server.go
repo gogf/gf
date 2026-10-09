@@ -20,10 +20,29 @@ import (
 
 // adapterStartTimeout is the maximum duration to wait for a server
 // to indicate it is listening after Start() is called.
-const adapterStartTimeout = time.Second * 2
+// Tests shorten it to reach the timeout path without waiting.
+var adapterStartTimeout = time.Second * 2
 
 // adapterStartPollInterval is the interval between readiness polls.
 const adapterStartPollInterval = time.Millisecond * 10
+
+// adapterServeGate, when non-nil, runs at the start of an adapter serve
+// goroutine before the underlying server blocks in Run. Tests hold it so the
+// startup timeout path is observed before a listener exists.
+var adapterServeGate func()
+
+// abandonUnreadyServer reports a startup timeout.
+// It closes the server only after a port is listening, and returns that close
+// error when closing fails. gudp.Server.Close always uses s.conn and panics
+// when startup has not stored the connection yet.
+func abandonUnreadyServer(port int, closeFn func() error, message string) error {
+	if port > 0 {
+		if closeErr := closeFn(); closeErr != nil {
+			return gerror.WrapCode(gcode.CodeOperationFailed, closeErr, message)
+		}
+	}
+	return gerror.NewCode(gcode.CodeOperationFailed, message)
+}
 
 // httpServerAdapter wraps ghttp.Server to implement the Server interface.
 type httpServerAdapter struct {
@@ -68,6 +87,9 @@ func (a *tcpServerAdapter) Start() error {
 		errCh = make(chan error, 1)
 	)
 	go func() {
+		if adapterServeGate != nil {
+			adapterServeGate()
+		}
 		if err := a.server.Run(); err != nil {
 			select {
 			case errCh <- err:
@@ -95,9 +117,13 @@ func (a *tcpServerAdapter) Start() error {
 		return gerror.WrapCode(gcode.CodeInternalError, err, "tcp server start failed")
 	default:
 	}
-	// Best-effort cleanup of the leaked goroutine and port on timeout.
-	a.server.Close()
-	return gerror.NewCode(gcode.CodeOperationFailed, "tcp server failed to start within timeout")
+	// Close only after a port is listening. A timeout before listen must not
+	// call Close, and a close failure has to be returned to the caller.
+	return abandonUnreadyServer(
+		a.server.GetListenedPort(),
+		a.server.Close,
+		"tcp server failed to start within timeout",
+	)
 }
 
 // Post-start errors from the underlying Run() goroutine are sent to errCh
@@ -131,6 +157,9 @@ func (a *udpServerAdapter) Start() error {
 		errCh = make(chan error, 1)
 	)
 	go func() {
+		if adapterServeGate != nil {
+			adapterServeGate()
+		}
 		if err := a.server.Run(); err != nil {
 			select {
 			case errCh <- err:
@@ -158,9 +187,13 @@ func (a *udpServerAdapter) Start() error {
 		return gerror.WrapCode(gcode.CodeInternalError, err, "udp server start failed")
 	default:
 	}
-	// Best-effort cleanup of the leaked goroutine and connection on timeout.
-	a.server.Close()
-	return gerror.NewCode(gcode.CodeOperationFailed, "udp server failed to start within timeout")
+	// Close only after a port is listening. gudp.Server.Close panics when the
+	// connection is not stored yet, and a close failure has to be returned.
+	return abandonUnreadyServer(
+		a.server.GetListenedPort(),
+		a.server.Close,
+		"udp server failed to start within timeout",
+	)
 }
 
 // Stop stops the UDP server.
