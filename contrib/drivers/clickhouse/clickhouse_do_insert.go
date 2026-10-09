@@ -20,6 +20,11 @@ import (
 func (d *Driver) DoInsert(
 	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (result sql.Result, err error) {
+	// Save and Replace insert the records, which a ReplacingMergeTree table deduplicates, but
+	// inserting them cannot skip the conflicting records as InsertIgnore does.
+	if option.InsertOption == gdb.InsertOptionIgnore {
+		return nil, errUnsupportedInsertIgnore
+	}
 	var keys, valueHolder []string
 
 	// Handle the field names and placeholders.
