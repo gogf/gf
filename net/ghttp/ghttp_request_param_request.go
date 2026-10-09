@@ -226,14 +226,20 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 }
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
+//
+// The default tag usage is prechecked at handler registration, and that precheck only covers the
+// registered request struct fields. The pointer scan below still runs when those fields are empty,
+// which is the case of a plain handler function and of a request matching no route.
 func (r *Request) mergeDefaultStructValue(data map[string]any, pointer any) error {
-	// The tag usage is prechecked at handler registration. A request without a serving handler
-	// keeps the field scan below, so parsing still works for a route that was not matched.
-	if tags, ok := r.reqStructTags(); ok {
-		if !tags.HasDefault {
+	// A serving handler with registered fields can skip the pointer scan. The precheck is false
+	// when none of those fields uses the default tag. A handler without registered fields, or a
+	// request without a serving handler, keeps the scan below.
+	fields := r.reqStructFields()
+	if len(fields) > 0 {
+		if tags, ok := r.reqStructTags(); ok && !tags.HasDefault {
 			return nil
 		}
-		for _, field := range r.reqStructFields() {
+		for _, field := range fields {
 			if tagValue := field.TagDefault(); tagValue != "" {
 				mergeTagValueWithFoundKey(data, false, field.Name(), field.Name(), tagValue)
 			}

@@ -282,6 +282,57 @@ func Test_RequestTags_DefaultTag(t *testing.T) {
 	})
 }
 
+// Test_RequestTags_DefaultFallback tests that a default tag on the parsed pointer is still
+// applied when the serving handler has no registered request struct fields. A plain handler
+// function is matched and serving, while its registered fields and tag precheck stay empty.
+// A request matching no route has no serving handler, and the pointer scan still applies.
+// A handler that does register fields without a default tag keeps the precheck skip.
+func Test_RequestTags_DefaultFallback(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var captured testRequestTagsDefault
+		var r = newTestServingRequest(t, func(r *Request) {
+			if err := r.Parse(&captured); err != nil {
+				r.SetError(err)
+			}
+		}, `{}`)
+		t.AssertNil(r.error)
+		t.Assert(captured.Id, 100)
+		t.Assert(len(r.reqStructFields()), 0)
+		t.Assert(r.serveHandler.Handler.Info.ReqStructTags.HasDefault, false)
+
+		var (
+			unmatched = newRequest(
+				r.Server,
+				httptest.NewRequest(http.MethodPost, "/missing", strings.NewReader(`{}`)),
+				httptest.NewRecorder(),
+			)
+			data = map[string]any{}
+		)
+		err := unmatched.mergeDefaultStructValue(data, &testRequestTagsDefault{})
+		t.AssertNil(err)
+		t.Assert(data["Id"], "100")
+
+		var s, funcInfo = newTestHandler(t, func(ctx context.Context, req *testRequestTagsNoTag) (*testRequestTagsRes, error) {
+			return nil, nil
+		})
+		t.Assert(funcInfo.ReqStructTags.HasDefault, false)
+		t.AssertNE(len(funcInfo.ReqStructFields), 0)
+		var strict = newRequest(
+			s,
+			httptest.NewRequest(http.MethodPost, "/test", strings.NewReader(`{}`)),
+			httptest.NewRecorder(),
+		)
+		strict.handlers, strict.serveHandler, strict.hasHookHandler, strict.hasServeHandler = s.getHandlersWithCache(strict)
+		t.AssertNE(strict.serveHandler, nil)
+		t.Assert(strict.serveHandler.Handler.Info.ReqStructTags.HasDefault, false)
+		t.AssertNE(len(strict.reqStructFields()), 0)
+		data = map[string]any{}
+		err = strict.mergeDefaultStructValue(data, &testRequestTagsDefault{})
+		t.AssertNil(err)
+		t.Assert(len(data), 0)
+	})
+}
+
 // Test_RequestTags_UnexportedTag tests that the tags of unexported attributes
 // are also prechecked, as the parameter merging handles all the request struct
 // fields, not only the exported ones.
