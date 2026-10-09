@@ -285,3 +285,43 @@ func Test_Params_Valid(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/user?size=100"), `{"code":51,"message":"The size value `+"`100`"+` must be between 1 and 50","data":null}`)
 	})
 }
+
+// Test_Params_Parse_RouteNotFound checks that parsing a request struct for a request matching no
+// route does not panic: there's no serving handler for such request, of which the request struct
+// information is not available.
+func Test_Params_Parse_RouteNotFound(t *testing.T) {
+	// RouteNotFoundReq is parsed in the middleware for every request.
+	type RouteNotFoundReq struct {
+		Name string `json:"name" d:"default-name"`
+	}
+	s := g.Server(guid.S())
+	// The middleware parses the request struct for every request, including the requests
+	// matching no route.
+	s.BindMiddlewareDefault(func(r *ghttp.Request) {
+		var req = &RouteNotFoundReq{}
+		if err := r.Parse(req); err != nil {
+			r.SetError(err)
+			return
+		}
+		r.Middleware.Next()
+	})
+	s.BindHandler("/user", func(r *ghttp.Request) {
+		r.Response.Write("ok")
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		var client = g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		// The request matching no route is responded as not found, instead of the internal
+		// server error caused by the request struct parsing.
+		t.Assert(client.GetContent(ctx, "/no-such-route"), "Not Found")
+		// The request matching a route is served as usual.
+		t.Assert(client.GetContent(ctx, "/user"), "ok")
+	})
+}

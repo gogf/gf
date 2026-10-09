@@ -28,6 +28,10 @@ func Instance(name ...string) *Manager {
 	if len(name) > 0 && name[0] != "" {
 		key = name[0]
 	}
+	// It checks the existing instance with the reading lock, as it is created on first usage.
+	if instance, found := instances.Search(key); found {
+		return instance
+	}
 	return instances.GetOrSetFuncLock(key, func() *Manager {
 		return New()
 	})
