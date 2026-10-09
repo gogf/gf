@@ -193,6 +193,7 @@ func Test_ConvertValueForLocal(t *testing.T) {
 			{time.Date(0, time.January, 1, 12, 34, 56, 0, time.FixedZone("", 8*60*60)), "12:34:56+08"},
 			{time.Date(0, time.January, 1, 12, 34, 56, 0, time.FixedZone("", -5*60*60)), "12:34:56-05"},
 			{time.Date(0, time.January, 1, 12, 34, 56, 0, time.FixedZone("", 5*60*60+30*60)), "12:34:56+05:30"},
+			{time.Date(0, time.January, 1, 12, 34, 56, 0, time.FixedZone("", 5*60*60+30*60+15)), "12:34:56+05:30:15"},
 			{time.Date(0, time.January, 1, 12, 34, 56, 123456000, time.FixedZone("", 5*60*60+30*60)), "12:34:56.123456+05:30"},
 		} {
 			result, err := driver.ConvertValueForLocal(ctx, "timetz", testCase.value)
