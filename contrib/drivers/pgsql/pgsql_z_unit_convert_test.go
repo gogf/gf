@@ -9,6 +9,7 @@ package pgsql_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -179,17 +180,36 @@ func Test_ConvertValueForLocal(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		// Positive and negative offsets must both survive local conversion.
-		database, err := gdb.New(gdb.ConfigNode{Type: "pgsql"})
-		t.AssertNil(err)
-		if err != nil {
-			return
-		}
-		driver.Core = database.GetCore()
-
 		for _, value := range []string{"12:34:56+08", "12:34:56-05"} {
 			result, err := driver.ConvertValueForLocal(ctx, "timetz", []byte(value))
 			t.AssertNil(err)
 			t.Assert(result, value)
+		}
+
+		for _, testCase := range []struct {
+			value time.Time
+			want  string
+		}{
+			{time.Date(0, time.January, 1, 12, 34, 56, 0, time.FixedZone("", 8*60*60)), "12:34:56+08"},
+			{time.Date(0, time.January, 1, 12, 34, 56, 0, time.FixedZone("", -5*60*60)), "12:34:56-05"},
+			{time.Date(0, time.January, 1, 12, 34, 56, 0, time.FixedZone("", 5*60*60+30*60)), "12:34:56+05:30"},
+			{time.Date(0, time.January, 1, 12, 34, 56, 123456000, time.FixedZone("", 5*60*60+30*60)), "12:34:56.123456+05:30"},
+		} {
+			result, err := driver.ConvertValueForLocal(ctx, "timetz", testCase.value)
+			t.AssertNil(err)
+			t.Assert(result, testCase.want)
+		}
+
+		for _, testCase := range []struct {
+			value any
+			want  string
+		}{
+			{"12:34:56+08", "12:34:56+08"},
+			{[]byte("12:34:56-05"), "12:34:56-05"},
+		} {
+			result, err := driver.ConvertValueForLocal(ctx, "timetz", testCase.value)
+			t.AssertNil(err)
+			t.Assert(result, testCase.want)
 		}
 	})
 

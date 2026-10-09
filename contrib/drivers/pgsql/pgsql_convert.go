@@ -8,8 +8,10 @@ package pgsql
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -102,11 +104,23 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 //	| bytea           | bytea                          | -               | []byte      |
 //	| _bytea          | bytea[]                        | pq.ByteaArray   | [][]byte    |
 //	| _uuid           | uuid[]                         | pq.StringArray  | []uuid.UUID |
+//	| timetz          | time with time zone            | time.Time      | string     |
 //
 // Note: _date, _timestamp and _timestamptz are mapped in localTypeMap and read back as
 // []string, one element per array member. _json and _jsonb map to a single string on
 // purpose: pq has no scanner for them, so the whole array literal is returned as text.
 func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue any) (any, error) {
+	if isTimeTZFieldType(fieldType) {
+		switch value := fieldValue.(type) {
+		case time.Time:
+			return formatTimeTZValue(value), nil
+		case []byte:
+			return string(value), nil
+		case string:
+			return value, nil
+		}
+	}
+
 	localType, err := d.CheckLocalTypeForField(ctx, fieldType, fieldValue)
 	if err != nil {
 		return nil, err
@@ -205,4 +219,29 @@ func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fie
 	default:
 		return d.Core.ConvertValueForLocal(ctx, fieldType, fieldValue)
 	}
+}
+
+// isTimeTZFieldType reports whether the database field type is timetz.
+func isTimeTZFieldType(fieldType string) bool {
+	typeName, _, _ := strings.Cut(strings.ToLower(strings.TrimSpace(fieldType)), "(")
+	return typeName == "timetz"
+}
+
+// formatTimeTZValue formats a time-of-day with its numeric UTC offset.
+func formatTimeTZValue(value time.Time) string {
+	_, offset := value.Zone()
+	sign := "+"
+	if offset < 0 {
+		sign = "-"
+		offset = -offset
+	}
+
+	result := value.Format("15:04:05.999999999") + fmt.Sprintf("%s%02d", sign, offset/3600)
+	if offset%3600 != 0 {
+		result += fmt.Sprintf(":%02d", offset%3600/60)
+	}
+	if offset%60 != 0 {
+		result += fmt.Sprintf(":%02d", offset%60)
+	}
+	return result
 }
