@@ -105,7 +105,7 @@ func (w *watcher) getServicesByPrefix() ([]gsvc.Service, error) {
 			}
 			items = append(items, svc)
 		}
-		return items, nil
+		return mergeServices(items), nil
 	})
 	if err != nil {
 		return nil, gerror.Wrapf(
