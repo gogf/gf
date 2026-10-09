@@ -190,6 +190,8 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 	// name is matched with a higher priority than the field name by the struct converting,
 	// which would otherwise overwrite the body array. Both names are resolved at router
 	// registering time, see checkAndCreateReqBodyField.
+	// reqBodyFieldName is empty when current request has no serving handler, for example a
+	// request matching no route, so the tag name below is read only for a matched handler.
 	if r.reqBodyFieldName() != "" {
 		delete(data, r.serveHandler.Handler.Info.ReqBodyFieldTagName)
 	}
@@ -206,6 +208,7 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 
 	// The request struct field tagged with `in:"body"` receives the whole request body, which
 	// is a JSON array instead of being split into the request parameters.
+	// The field name comes from reqBodyFieldName, which is empty when there is no serving handler.
 	if bodyFieldName := r.reqBodyFieldName(); bodyFieldName != "" {
 		if r.bodyArray != nil {
 			data[bodyFieldName] = r.bodyArray
