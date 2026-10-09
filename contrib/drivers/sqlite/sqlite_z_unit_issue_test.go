@@ -54,3 +54,45 @@ func Test_Issue4842(t *testing.T) {
 		t.Assert(one["iv"].Float64(), -2.75)
 	})
 }
+
+// Test_Issue4895 verifies that an undeclared column preserves each row's storage
+// class instead of converting every value to the first row's numeric type.
+// See https://github.com/gogf/gf/issues/4895.
+func Test_Issue4895(t *testing.T) {
+	for _, test := range []struct {
+		name   string
+		values []any
+	}{
+		{"integer_first", []any{int64(42), 1.5, "hello", []byte{1, 2, 3}, nil}},
+		{"real_first", []any{1.5, int64(42), "hello", []byte{1, 2, 3}, nil}},
+		{"text_first", []any{"hello", int64(42), 1.5, []byte{1, 2, 3}, nil}},
+		{"null_first", []any{nil, int64(42), 1.5, "hello", []byte{1, 2, 3}}},
+		{"integers", []any{int64(42), int64(-7), int64(0), nil}},
+		{"reals", []any{1.5, -2.75, 0.5, nil}},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			gtest.C(t, func(t *gtest.T) {
+				// A missing declared type allows every SQLite storage class in v.
+				table := fmt.Sprintf(`issue4895_%d`, gtime.TimestampNano())
+				_, err := db.Exec(ctx, fmt.Sprintf("CREATE TABLE `%s`(id INTEGER PRIMARY KEY, v)", table))
+				t.AssertNil(err)
+				defer dropTable(table)
+				for i, value := range test.values {
+					_, err = db.Exec(ctx, fmt.Sprintf("INSERT INTO `%s` VALUES(?, ?)", table), i+1, value)
+					t.AssertNil(err)
+				}
+				all, err := db.Model(table).OrderAsc("id").All()
+				t.AssertNil(err)
+				t.AssertEQ(len(all), len(test.values))
+				for i, expected := range test.values {
+					if expected == nil {
+						t.AssertNil(all[i]["v"])
+					} else {
+						// AssertEQ checks the dynamic Go type as well as the value.
+						t.AssertEQ(all[i]["v"].Val(), expected)
+					}
+				}
+			})
+		})
+	}
+}

@@ -260,74 +260,80 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 		usedFileNameOrPath = fileNameOrPath[0]
 	}
 	// It uses JSON map to cache specified configuration file content.
-	result := a.jsonMap.GetOrSetFuncLock(usedFileNameOrPath, func() *gjson.Json {
-		var (
-			content  string
-			filePath string
-		)
-		// The configured content can be any kind of data type different from its file type.
-		isFromConfigContent := true
-		if content = a.GetContent(usedFileNameOrPath); content == "" {
-			isFromConfigContent = false
-			filePath, err = a.GetFilePath(usedFileNameOrPath)
-			if err != nil {
-				return nil
-			}
-			if filePath == "" {
-				return nil
-			}
-			if file := gres.Get(filePath); file != nil {
-				content = string(file.Content())
-			} else {
-				content = gfile.GetContents(filePath)
-			}
-		}
-		// Note that the underlying configuration JSON object operations are concurrent safe.
-		dataType := gjson.ContentType(gfile.ExtName(filePath))
-		if gjson.IsValidDataType(dataType) && !isFromConfigContent {
-			configJson, err = gjson.LoadContentType(dataType, []byte(content), true)
-		} else {
-			configJson, err = gjson.LoadContent([]byte(content), true)
-		}
-		if err != nil {
-			if filePath != "" {
-				err = gerror.Wrapf(err, `load config file "%s" failed`, filePath)
-			} else {
-				err = gerror.Wrap(err, `load configuration failed`)
-			}
-			return nil
-		}
-		configJson.SetViolenceCheck(a.violenceCheck)
-		// Add monitor for this configuration file,
-		// any changes of this file will refresh its cache in the Config object.
-		if filePath != "" && !gres.Contains(filePath) {
-			_, err := gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
-				a.jsonMap.Remove(usedFileNameOrPath)
-				if event.IsWrite() || event.IsRemove() || event.IsCreate() || event.IsRename() || event.IsChmod() {
-					fileType := gfile.ExtName(usedFileNameOrPath)
-					adapterCtx := NewAdapterFileCtx().WithFileName(usedFileNameOrPath).WithFilePath(filePath).WithFileType(fileType)
-					switch {
-					case event.IsWrite():
-						adapterCtx.WithOperation(OperationWrite)
-					case event.IsRemove():
-						adapterCtx.WithOperation(OperationRemove)
-					case event.IsCreate():
-						adapterCtx.WithOperation(OperationCreate)
-					case event.IsRename():
-						adapterCtx.WithOperation(OperationRename)
-					case event.IsChmod():
-						adapterCtx.WithOperation(OperationChmod)
-					}
-					a.notifyWatchers(adapterCtx.Ctx)
+	// It checks the existing json object with the reading lock, as it is created on first usage.
+	var result *gjson.Json
+	if cached, found := a.jsonMap.Search(usedFileNameOrPath); found {
+		result = cached
+	} else {
+		result = a.jsonMap.GetOrSetFuncLock(usedFileNameOrPath, func() *gjson.Json {
+			var (
+				content  string
+				filePath string
+			)
+			// The configured content can be any kind of data type different from its file type.
+			isFromConfigContent := true
+			if content = a.GetContent(usedFileNameOrPath); content == "" {
+				isFromConfigContent = false
+				filePath, err = a.GetFilePath(usedFileNameOrPath)
+				if err != nil {
+					return nil
 				}
-				_ = event.Watcher.Remove(filePath)
-			})
-			if err != nil {
-				intlog.Errorf(context.TODO(), "failed listen config file event[%s]: %v", filePath, err)
+				if filePath == "" {
+					return nil
+				}
+				if file := gres.Get(filePath); file != nil {
+					content = string(file.Content())
+				} else {
+					content = gfile.GetContents(filePath)
+				}
 			}
-		}
-		return configJson
-	})
+			// Note that the underlying configuration JSON object operations are concurrent safe.
+			dataType := gjson.ContentType(gfile.ExtName(filePath))
+			if gjson.IsValidDataType(dataType) && !isFromConfigContent {
+				configJson, err = gjson.LoadContentType(dataType, []byte(content), true)
+			} else {
+				configJson, err = gjson.LoadContent([]byte(content), true)
+			}
+			if err != nil {
+				if filePath != "" {
+					err = gerror.Wrapf(err, `load config file "%s" failed`, filePath)
+				} else {
+					err = gerror.Wrap(err, `load configuration failed`)
+				}
+				return nil
+			}
+			configJson.SetViolenceCheck(a.violenceCheck)
+			// Add monitor for this configuration file,
+			// any changes of this file will refresh its cache in the Config object.
+			if filePath != "" && !gres.Contains(filePath) {
+				_, err := gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
+					a.jsonMap.Remove(usedFileNameOrPath)
+					if event.IsWrite() || event.IsRemove() || event.IsCreate() || event.IsRename() || event.IsChmod() {
+						fileType := gfile.ExtName(usedFileNameOrPath)
+						adapterCtx := NewAdapterFileCtx().WithFileName(usedFileNameOrPath).WithFilePath(filePath).WithFileType(fileType)
+						switch {
+						case event.IsWrite():
+							adapterCtx.WithOperation(OperationWrite)
+						case event.IsRemove():
+							adapterCtx.WithOperation(OperationRemove)
+						case event.IsCreate():
+							adapterCtx.WithOperation(OperationCreate)
+						case event.IsRename():
+							adapterCtx.WithOperation(OperationRename)
+						case event.IsChmod():
+							adapterCtx.WithOperation(OperationChmod)
+						}
+						a.notifyWatchers(adapterCtx.Ctx)
+					}
+					_ = event.Watcher.Remove(filePath)
+				})
+				if err != nil {
+					intlog.Errorf(context.TODO(), "failed listen config file event[%s]: %v", filePath, err)
+				}
+			}
+			return configJson
+		})
+	}
 	if result != nil {
 		return result, err
 	}
