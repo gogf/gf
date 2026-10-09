@@ -10,6 +10,7 @@ package ghttp
 import (
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -30,7 +31,16 @@ type CORSOptions struct {
 var (
 	// defaultAllowHeaders is the default allowed headers for CORS.
 	// It defined another map for better header key searching performance.
-	defaultAllowHeaders    = "Origin,Content-Type,Accept,User-Agent,Cookie,Authorization,X-Auth-Token,X-Requested-With"
+	defaultAllowHeaders = strings.Join([]string{
+		HeaderOrigin,
+		HeaderContentType,
+		headerAccept,
+		headerUserAgent,
+		headerCookie,
+		HeaderAuthorization,
+		headerXAuthToken,
+		HeaderXRequestedWith,
+	}, ",")
 	defaultAllowHeadersMap = make(map[string]struct{})
 )
 
@@ -52,7 +62,7 @@ func (r *Response) DefaultCORSOptions() CORSOptions {
 		MaxAge:           3628800,
 	}
 	// Allow all client's custom headers in default.
-	if headers := r.Request.Header.Get("Access-Control-Request-Headers"); headers != "" {
+	if headers := r.Request.Header.Get(HeaderAccessControlRequestHeaders); headers != "" {
 		array := gstr.SplitAndTrim(headers, ",")
 		for _, header := range array {
 			if _, ok := defaultAllowHeadersMap[header]; !ok {
@@ -61,7 +71,7 @@ func (r *Response) DefaultCORSOptions() CORSOptions {
 		}
 	}
 	// Allow all anywhere origin in default.
-	if origin := r.Request.Header.Get("Origin"); origin != "" {
+	if origin := r.Request.Header.Get(HeaderOrigin); origin != "" {
 		options.AllowOrigin = origin
 	} else if referer := r.Request.Referer(); referer != "" {
 		if ref, err := url.Parse(referer); err == nil {
@@ -77,22 +87,22 @@ func (r *Response) DefaultCORSOptions() CORSOptions {
 // See https://www.w3.org/TR/cors/ .
 func (r *Response) CORS(options CORSOptions) {
 	if r.CORSAllowedOrigin(options) {
-		r.Header().Set("Access-Control-Allow-Origin", options.AllowOrigin)
+		r.Header().Set(HeaderAccessControlAllowOrigin, options.AllowOrigin)
 	}
 	if options.AllowCredentials != "" {
-		r.Header().Set("Access-Control-Allow-Credentials", options.AllowCredentials)
+		r.Header().Set(HeaderAccessControlAllowCredentials, options.AllowCredentials)
 	}
 	if options.ExposeHeaders != "" {
-		r.Header().Set("Access-Control-Expose-Headers", options.ExposeHeaders)
+		r.Header().Set(HeaderAccessControlExposeHeaders, options.ExposeHeaders)
 	}
 	if options.MaxAge != 0 {
-		r.Header().Set("Access-Control-Max-Age", gconv.String(options.MaxAge))
+		r.Header().Set(HeaderAccessControlMaxAge, gconv.String(options.MaxAge))
 	}
 	if options.AllowMethods != "" {
-		r.Header().Set("Access-Control-Allow-Methods", options.AllowMethods)
+		r.Header().Set(HeaderAccessControlAllowMethods, options.AllowMethods)
 	}
 	if options.AllowHeaders != "" {
-		r.Header().Set("Access-Control-Allow-Headers", options.AllowHeaders)
+		r.Header().Set(HeaderAccessControlAllowHeaders, options.AllowHeaders)
 	}
 	// No continue service handling if it's OPTIONS request.
 	// Note that there's special checks in previous router searching,
@@ -111,7 +121,7 @@ func (r *Response) CORSAllowedOrigin(options CORSOptions) bool {
 	if options.AllowDomain == nil {
 		return true
 	}
-	origin := r.Request.Header.Get("Origin")
+	origin := r.Request.Header.Get(HeaderOrigin)
 	if origin == "" {
 		return true
 	}

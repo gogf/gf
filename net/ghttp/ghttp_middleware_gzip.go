@@ -35,7 +35,7 @@ func MiddlewareGzip(r *Request) {
 	r.Middleware.Next()
 
 	// Skip if already compressed or empty response
-	if r.Response.Header().Get("Content-Encoding") != "" {
+	if r.Response.Header().Get(HeaderContentEncoding) != "" {
 		return
 	}
 
@@ -63,8 +63,8 @@ func MiddlewareGzip(r *Request) {
 
 	// Clear the original buffer and set headers
 	r.Response.ClearBuffer()
-	r.Response.Header().Set("Content-Encoding", "gzip")
-	r.Response.Header().Del("Content-Length")
+	r.Response.Header().Set(HeaderContentEncoding, "gzip")
+	r.Response.Header().Del(HeaderContentLength)
 
 	// Write the compressed data
 	r.Response.Write(compressed.Bytes())
@@ -72,5 +72,5 @@ func MiddlewareGzip(r *Request) {
 
 // acceptsGzip returns true if the client accepts gzip compression.
 func acceptsGzip(r *http.Request) bool {
-	return strings.Contains(r.Header.Get("Accept-Encoding"), "gzip")
+	return strings.Contains(r.Header.Get(HeaderAcceptEncoding), "gzip")
 }

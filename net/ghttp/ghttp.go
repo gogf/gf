@@ -134,7 +134,6 @@ const (
 )
 
 const (
-	HeaderXUrlPath                    = "x-url-path"         // Used for custom route handler, which does not change URL.Path.
 	HookBeforeServe       HookName    = "HOOK_BEFORE_SERVE"  // Hook handler before route handler/file serving.
 	HookAfterServe        HookName    = "HOOK_AFTER_SERVE"   // Hook handler after route handler/file serving.
 	HookBeforeOutput      HookName    = "HOOK_BEFORE_OUTPUT" // Hook handler before response output.
@@ -159,7 +158,6 @@ const (
 	contentTypeJson                    = "application/json"
 	contentTypeJavascript              = "application/javascript"
 	swaggerUIPackedPath                = "/goframe/swaggerui"
-	responseHeaderTraceID              = "Trace-ID"
 	specialMethodNameInit              = "Init"
 	specialMethodNameShut              = "Shut"
 	specialMethodNameIndex             = "Index"
