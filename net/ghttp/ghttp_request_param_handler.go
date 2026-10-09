@@ -31,3 +31,13 @@ func (r *Request) reqStructFields() []gstructs.Field {
 	}
 	return r.serveHandler.Handler.Info.ReqStructFields
 }
+
+// reqStructTags returns the request struct tag usages registered on the serving handler.
+// The boolean is false when current request has no serving handler, for example a static file
+// request or a request matching no route.
+func (r *Request) reqStructTags() (requestStructTags, bool) {
+	if r.serveHandler == nil || r.serveHandler.Handler == nil {
+		return requestStructTags{}, false
+	}
+	return r.serveHandler.Handler.Info.ReqStructTags, true
+}
