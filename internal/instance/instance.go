@@ -62,7 +62,12 @@ func GetOrSetFunc(name string, f func() any) any {
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f`
 // with mutex.Lock of the hash map.
 func GetOrSetFuncLock(name string, f func() any) any {
-	return getGroup(name).GetOrSetFuncLock(name, f)
+	group := getGroup(name)
+	// It checks the existing instance with the reading lock, as it is created on first usage.
+	if cached, found := group.Search(name); found {
+		return cached
+	}
+	return group.GetOrSetFuncLock(name, f)
 }
 
 // SetIfNotExist sets `instance` to the map if the `name` does not exist, then returns true.
