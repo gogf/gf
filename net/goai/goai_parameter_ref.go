@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// This file generates OpenAPI parameter references from request fields.
+
 package goai
 
 import (
@@ -26,7 +28,8 @@ type ParameterRef struct {
 	Value *Parameter
 }
 
-func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path, method string) (*ParameterRef, error) {
+// newParameterRefWithStructMethod resolves a request field's parameter location and schema.
+func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path, method string, hasBodyField bool) (*ParameterRef, error) {
 	var (
 		tagMap    = field.TagMap()
 		fieldName = field.TagPriorityName()
@@ -48,6 +51,9 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 		// Automatically detect its "in" attribute.
 		if gstr.ContainsI(path, fmt.Sprintf(`{%s}`, parameter.Name)) {
 			parameter.In = ParameterInPath
+		} else if hasBodyField {
+			// A whole-body field leaves the remaining implicit parameters in the query.
+			parameter.In = ParameterInQuery
 		} else {
 			// Default the parameter input to "query" if method is "GET/DELETE".
 			switch gstr.ToUpper(method) {
@@ -66,6 +72,11 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 		parameter.Required = true
 
 	case ParameterInCookie, ParameterInHeader, ParameterInQuery:
+
+	case ParameterInBody:
+		// The field tagged with `in:"body"` is documented as the request body instead of an
+		// operation parameter.
+		return nil, nil
 
 	default:
 		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid tag value "%s" for In`, parameter.In)
