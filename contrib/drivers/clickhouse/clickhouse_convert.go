@@ -9,6 +9,7 @@ package clickhouse
 import (
 	"context"
 	"database/sql/driver"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -79,5 +80,40 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 			return nil, err
 		}
 		return convertedValue, nil
+	}
+}
+
+// ConvertValueForLocal converts value to local Golang type of value according field type name from database.
+// The underlying driver returns the values of a DateTime column declared without a time zone in the
+// time zone of the server; they are read in the local time zone instead, as MySQL does with loc=Local.
+func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue any) (any, error) {
+	if isZonelessDateTime(fieldType) {
+		switch t := fieldValue.(type) {
+		case time.Time:
+			fieldValue = t.In(time.Local)
+		case *time.Time:
+			if t != nil {
+				fieldValue = t.In(time.Local)
+			}
+		}
+	}
+	return d.Core.ConvertValueForLocal(ctx, fieldType, fieldValue)
+}
+
+// isZonelessDateTime reports whether `fieldType` is a DateTime or DateTime64 type declared without
+// a time zone, like `DateTime`, `DateTime64(3)` or `Nullable(DateTime)`.
+func isZonelessDateTime(fieldType string) bool {
+	for _, wrapper := range []string{"Nullable(", "LowCardinality("} {
+		if strings.HasPrefix(fieldType, wrapper) && strings.HasSuffix(fieldType, ")") {
+			fieldType = fieldType[len(wrapper) : len(fieldType)-1]
+		}
+	}
+	switch {
+	case fieldType == "DateTime":
+		return true
+	case strings.HasPrefix(fieldType, "DateTime64(") && strings.HasSuffix(fieldType, ")"):
+		return !strings.Contains(fieldType, ",")
+	default:
+		return false
 	}
 }
