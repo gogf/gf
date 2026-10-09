@@ -7,6 +7,8 @@
 package ghttp
 
 import (
+	"reflect"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/os/gstructs"
@@ -94,13 +96,16 @@ func (r *Request) GetRequestMap(kvMap ...map[string]any) map[string]any {
 		}
 		m[k] = v
 	}
-	for k, v := range r.bodyMap {
-		if filter {
-			if _, ok = kvMap[0][k]; !ok {
-				continue
+	// The form map might be the body map itself, which has been merged above.
+	if !sameMap(r.formMap, r.bodyMap) {
+		for k, v := range r.bodyMap {
+			if filter {
+				if _, ok = kvMap[0][k]; !ok {
+					continue
+				}
 			}
+			m[k] = v
 		}
-		m[k] = v
 	}
 	for k, v := range r.paramsMap {
 		if filter {
@@ -185,7 +190,9 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 	// name is matched with a higher priority than the field name by the struct converting,
 	// which would otherwise overwrite the body array. Both names are resolved at router
 	// registering time, see checkAndCreateReqBodyField.
-	if r.serveHandler.Handler.Info.ReqBodyFieldName != "" {
+	// reqBodyFieldName is empty when current request has no serving handler, for example a
+	// request matching no route, so the tag name below is read only for a matched handler.
+	if r.reqBodyFieldName() != "" {
 		delete(data, r.serveHandler.Handler.Info.ReqBodyFieldTagName)
 	}
 
@@ -201,7 +208,8 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 
 	// The request struct field tagged with `in:"body"` receives the whole request body, which
 	// is a JSON array instead of being split into the request parameters.
-	if bodyFieldName := r.serveHandler.Handler.Info.ReqBodyFieldName; bodyFieldName != "" {
+	// The field name comes from reqBodyFieldName, which is empty when there is no serving handler.
+	if bodyFieldName := r.reqBodyFieldName(); bodyFieldName != "" {
 		if r.bodyArray != nil {
 			data[bodyFieldName] = r.bodyArray
 		} else if r.bodyMap != nil || r.MultipartForm != nil {
@@ -221,9 +229,19 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 }
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
+//
+// The default tag usage is prechecked at handler registration, and that precheck only covers the
+// registered request struct fields. The pointer scan below still runs when those fields are empty,
+// which is the case of a plain handler function and of a request matching no route.
 func (r *Request) mergeDefaultStructValue(data map[string]any, pointer any) error {
+	// A serving handler with registered fields can skip the pointer scan. The precheck is false
+	// when none of those fields uses the default tag. A handler without registered fields, or a
+	// request without a serving handler, keeps the scan below.
 	fields := r.reqStructFields()
 	if len(fields) > 0 {
+		if tags, ok := r.reqStructTags(); ok && !tags.HasDefault {
+			return nil
+		}
 		for _, field := range fields {
 			if tagValue := field.TagDefault(); tagValue != "" {
 				mergeTagValueWithFoundKey(data, false, field.Name(), field.Name(), tagValue)
@@ -248,43 +266,56 @@ func (r *Request) mergeDefaultStructValue(data map[string]any, pointer any) erro
 
 // mergeInTagStructValue merges the request parameters with header or cookie values from struct `in` tag definition.
 func (r *Request) mergeInTagStructValue(data map[string]any) error {
+	// Nothing to do as no field uses the `in` tag, which is prechecked at handler registration.
+	// A request without a serving handler has no registered fields either.
+	tags, ok := r.reqStructTags()
+	if !ok || !tags.HasIn {
+		return nil
+	}
 	fields := r.reqStructFields()
-	if len(fields) > 0 {
+	var (
+		headerMap = make(map[string]any)
+		cookieMap = make(map[string]any)
+	)
+
+	for k, v := range r.Header {
+		if len(v) > 0 {
+			headerMap[k] = v[0]
+		}
+	}
+
+	for _, cookie := range r.Cookies() {
+		cookieMap[cookie.Name] = cookie.Value
+	}
+
+	for _, field := range fields {
 		var (
-			headerMap = make(map[string]any)
-			cookieMap = make(map[string]any)
+			foundKey   string
+			foundValue any
 		)
-
-		for k, v := range r.Header {
-			if len(v) > 0 {
-				headerMap[k] = v[0]
+		if tagValue := field.TagIn(); tagValue != "" {
+			findKey := field.TagPriorityName()
+			switch tagValue {
+			case goai.ParameterInHeader:
+				foundKey, foundValue = gutil.MapPossibleItemByKey(headerMap, findKey)
+			case goai.ParameterInCookie:
+				foundKey, foundValue = gutil.MapPossibleItemByKey(cookieMap, findKey)
 			}
-		}
-
-		for _, cookie := range r.Cookies() {
-			cookieMap[cookie.Name] = cookie.Value
-		}
-
-		for _, field := range fields {
-			var (
-				foundKey   string
-				foundValue any
-			)
-			if tagValue := field.TagIn(); tagValue != "" {
-				findKey := field.TagPriorityName()
-				switch tagValue {
-				case goai.ParameterInHeader:
-					foundKey, foundValue = gutil.MapPossibleItemByKey(headerMap, findKey)
-				case goai.ParameterInCookie:
-					foundKey, foundValue = gutil.MapPossibleItemByKey(cookieMap, findKey)
-				}
-				if foundKey != "" {
-					mergeTagValueWithFoundKey(data, true, foundKey, field.Name(), foundValue)
-				}
+			if foundKey != "" {
+				mergeTagValueWithFoundKey(data, true, foundKey, field.Name(), foundValue)
 			}
 		}
 	}
 	return nil
+}
+
+// sameMap checks whether the two maps are the same map object.
+// Note that maps are not comparable in Go, it here compares the underlying map pointers.
+func sameMap(m1, m2 map[string]any) bool {
+	if m1 == nil || m2 == nil {
+		return false
+	}
+	return reflect.ValueOf(m1).Pointer() == reflect.ValueOf(m2).Pointer()
 }
 
 // mergeTagValueWithFoundKey merges the request parameters when the key does not exist in the map or overwritten is true or the value is nil.

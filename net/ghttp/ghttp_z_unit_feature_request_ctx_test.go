@@ -16,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/encoding/gbase64"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/gclient"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
@@ -63,6 +64,8 @@ func Test_Request_IsAjaxRequest(t *testing.T) {
 	})
 }
 
+// Test_Request_GetClientIp checks the client IP header fallback order.
+// X-Forwarded-For is first. Each later header is used only when the earlier ones are absent.
 func Test_Request_GetClientIp(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := g.Server(guid.S())
@@ -72,16 +75,40 @@ func Test_Request_GetClientIp(t *testing.T) {
 			})
 		})
 		s.SetDumpRouterMap(false)
-		s.Start()
-		defer s.Shutdown()
+		err := s.Start()
+		t.AssertNil(err)
+		defer func() {
+			shutdownErr := s.Shutdown()
+			t.AssertNil(shutdownErr)
+		}()
 
 		time.Sleep(100 * time.Millisecond)
 
-		c := g.Client()
-		c.SetHeader("X-Forwarded-For", "192.168.0.1")
-		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
-
-		t.Assert(c.GetContent(ctx, "/"), "192.168.0.1")
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		// clientIpHeaders is the lookup order used by GetClientIp.
+		// The last five names are unexported, so the wire names are repeated here.
+		clientIpHeaders := []string{
+			ghttp.HeaderXForwardedFor,
+			"Proxy-Client-Ip",
+			"Wl-Proxy-Client-Ip",
+			"Http_client_ip",
+			"Http_x_forwarded_for",
+			ghttp.HeaderXRealIp,
+		}
+		for i, header := range clientIpHeaders {
+			ip := fmt.Sprintf("10.0.0.%d", i+1)
+			client := gclient.New()
+			client.SetHeader(header, ip)
+			client.SetPrefix(prefix)
+			t.Assert(client.GetContent(ctx, "/"), ip)
+		}
+		for i := 0; i < len(clientIpHeaders)-1; i++ {
+			client := gclient.New()
+			client.SetHeader(clientIpHeaders[i], "1.1.1.1")
+			client.SetHeader(clientIpHeaders[i+1], "2.2.2.2")
+			client.SetPrefix(prefix)
+			t.Assert(client.GetContent(ctx, "/"), "1.1.1.1")
+		}
 	})
 }
 

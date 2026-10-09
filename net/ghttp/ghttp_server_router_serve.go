@@ -80,7 +80,7 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*HandlerItemPar
 	// Special http method OPTIONS handling.
 	// It searches the handler with the request method instead of OPTIONS method.
 	if method == http.MethodOptions {
-		if v := r.Header.Get("Access-Control-Request-Method"); v != "" {
+		if v := r.Header.Get(HeaderAccessControlRequestMethod); v != "" {
 			method = v
 		}
 	}
