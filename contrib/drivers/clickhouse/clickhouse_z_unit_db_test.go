@@ -103,7 +103,11 @@ func Test_DB_Save(t *testing.T) {
 			"create_time": gtime.Now(),
 		}
 		_, err := db.Save(ctx, "t_user", data, 10)
-		gtest.AssertNE(err, nil)
+		gtest.AssertNil(err)
+
+		one, err := db.Model("t_user").Where("id", i).One()
+		gtest.AssertNil(err)
+		gtest.Assert(one["passport"], fmt.Sprintf(`t%d`, i))
 	})
 }
 
