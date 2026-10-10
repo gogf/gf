@@ -9,9 +9,9 @@ package clickhouse
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -32,8 +32,8 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 	}
 	var (
 		getColumnsSql = fmt.Sprintf(
-			"select %s from `system`.columns c where `table` = '%s'",
-			tableFieldsColumns, table,
+			"select %s from `system`.columns c where `database` = currentDatabase() and `table` = '%s'",
+			tableFieldsColumns, strings.ReplaceAll(table, "'", "''"),
 		)
 	)
 	result, err = d.DoSelect(ctx, link, getColumnsSql)
@@ -45,12 +45,14 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 		var (
 			isNull    = false
 			fieldType = m["type"].String()
+			key       string
 		)
-		// in clickhouse , field type like is Nullable(int)
-		fieldsResult, _ := gregex.MatchString(`^Nullable\((.*?)\)`, fieldType)
-		if len(fieldsResult) == 2 {
+		if strings.HasPrefix(fieldType, "Nullable(") && strings.HasSuffix(fieldType, ")") {
 			isNull = true
-			fieldType = fieldsResult[1]
+			fieldType = fieldType[len("Nullable(") : len(fieldType)-1]
+		}
+		if m["is_in_primary_key"].Bool() {
+			key = "PRI"
 		}
 		position := m["position"].Int()
 		if result[0]["position"].Int() != 0 {
@@ -61,9 +63,9 @@ func (d *Driver) TableFields(ctx context.Context, table string, schema ...string
 			Name:    m["name"].String(),
 			Default: m["default_expression"].Val(),
 			Comment: m["comment"].String(),
-			// Key:     m["Key"].String(),
-			Type: fieldType,
-			Null: isNull,
+			Key:     key,
+			Type:    fieldType,
+			Null:    isNull,
 		}
 	}
 	return fields, nil
