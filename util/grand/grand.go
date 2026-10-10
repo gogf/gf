@@ -9,6 +9,7 @@ package grand
 
 import (
 	"encoding/binary"
+	"math"
 	"time"
 )
 
@@ -90,18 +91,51 @@ func S(n int, symbols ...bool) string {
 	return string(b)
 }
 
-// D returns a random time.Duration between min and max: [min, max].
+// D returns a random time.Duration in the closed interval [min, max].
+// Factors of ten shared by both ends are removed before sampling and put
+// back afterwards, so D(time.Second, 3*time.Second) stays on whole seconds.
 func D(min, max time.Duration) time.Duration {
+	if min >= max {
+		return min
+	}
 	multiple := int64(1)
-	if min != 0 {
-		for min%10 == 0 {
+	lo, hi := int64(min), int64(max)
+	if lo != 0 {
+		for lo%10 == 0 && hi%10 == 0 {
 			multiple *= 10
-			min /= 10
-			max /= 10
+			lo /= 10
+			hi /= 10
 		}
 	}
-	n := int64(N(int(min), int(max)))
-	return time.Duration(n * multiple)
+	return time.Duration(uniformInt64(lo, hi) * multiple)
+}
+
+// uniformInt64 returns an integer in the closed interval [min, max].
+// Spans that fit in Intn use it. Larger spans draw 8 random bytes so a
+// duration past about 4.29s is reachable. Intn only has 32 bits.
+func uniformInt64(min, max int64) int64 {
+	if min >= max {
+		return min
+	}
+	span := uint64(max) - uint64(min) + 1
+	if span == 0 {
+		var buf [8]byte
+		copy(buf[:], B(8))
+		return int64(binary.LittleEndian.Uint64(buf[:]))
+	}
+	if span <= uint64(math.MaxInt32) {
+		return min + int64(Intn(int(span)))
+	}
+	limit := ^uint64(0) - (^uint64(0) % span)
+	for {
+		var buf [8]byte
+		copy(buf[:], B(8))
+		n := binary.LittleEndian.Uint64(buf[:])
+		if n < limit {
+			// Add in unsigned arithmetic. A span above 2^63 does not fit in a positive int64.
+			return int64(uint64(min) + n%span)
+		}
+	}
 }
 
 // Str randomly picks and returns `n` count of chars from given string `s`.

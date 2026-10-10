@@ -9,6 +9,7 @@
 package grand_test
 
 import (
+	"math"
 	"strings"
 	"testing"
 	"time"
@@ -88,6 +89,34 @@ func Test_D(t *testing.T) {
 				grand.D(1*time.Second, 3*time.Second),
 				[]time.Duration{1 * time.Second, 2 * time.Second, 3 * time.Second},
 			)
+		}
+		seenMax := false
+		for i := 0; i < 5000; i++ {
+			v := grand.D(1000, 2500)
+			t.AssertGE(v, time.Duration(1000))
+			t.AssertLE(v, time.Duration(2500))
+			t.Assert(v%100, time.Duration(0))
+			if v == 2500 {
+				seenMax = true
+			}
+		}
+		t.Assert(seenMax, true)
+		seenPastFive := false
+		for i := 0; i < 2000; i++ {
+			v := grand.D(0, 6*time.Second)
+			t.AssertGE(v, time.Duration(0))
+			t.AssertLE(v, 6*time.Second)
+			if v > 5*time.Second {
+				seenPastFive = true
+			}
+		}
+		t.Assert(seenPastFive, true)
+		wideMin := time.Duration(math.MinInt64 + 100)
+		wideMax := time.Duration(math.MaxInt64)
+		for i := 0; i < 40; i++ {
+			v := grand.D(wideMin, wideMax)
+			t.AssertGE(v, wideMin)
+			t.AssertLE(v, wideMax)
 		}
 	})
 }
