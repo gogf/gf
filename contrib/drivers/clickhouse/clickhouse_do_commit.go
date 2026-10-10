@@ -13,7 +13,13 @@ import (
 )
 
 // DoCommit commits current sql and arguments to underlying sql driver.
+// The result of an executed statement is a Result, as the result of the underlying driver
+// reports no affected rows.
 func (d *Driver) DoCommit(ctx context.Context, in gdb.DoCommitInput) (out gdb.DoCommitOutput, err error) {
 	ctx = d.InjectIgnoreResult(ctx)
-	return d.Core.DoCommit(ctx, in)
+	out, err = d.Core.DoCommit(ctx, in)
+	if err == nil && (in.Type == gdb.SqlTypeExecContext || in.Type == gdb.SqlTypeStmtExecContext) {
+		out.Result = &Result{rowsAffectedErr: errRowsAffectedNotSupported}
+	}
+	return out, err
 }
