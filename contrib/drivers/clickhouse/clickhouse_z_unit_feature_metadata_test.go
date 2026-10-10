@@ -8,6 +8,7 @@ package clickhouse_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/gogf/gf/v2/test/gtest"
@@ -141,6 +142,64 @@ func Test_ClickHouse_TableFields_SchemaIsolation(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(fields), 2)
 		t.Assert(fields["name_1"], nil)
+		t.AssertNE(fields["name_2"], nil)
+	})
+}
+
+// Test_ClickHouse_TableFields_QuotedName tests TableFields of a table whose name has a backslash and
+// a single quote, and of a name that would end the string literal of a query embedding it.
+func Test_ClickHouse_TableFields_QuotedName(t *testing.T) {
+	var (
+		table  = chAName(`user\'`)
+		quoted = "`" + strings.NewReplacer(`\`, `\\`, "`", "\\`").Replace(table) + "`"
+	)
+	_, err := db.Exec(ctx, fmt.Sprintf("CREATE TABLE %s (id UInt64, name String) ENGINE = MergeTree() ORDER BY id", quoted))
+	gtest.AssertNil(err)
+	defer db.Exec(ctx, "DROP TABLE IF EXISTS "+quoted)
+
+	gtest.C(t, func(t *gtest.T) {
+		fields, err := db.TableFields(ctx, table)
+		t.AssertNil(err)
+		t.Assert(len(fields), 2)
+		t.Assert(fields["id"].Key, "PRI")
+		t.Assert(fields["name"].Type, "String")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		fields, err := db.TableFields(ctx, `x\'OR/**/1=1--`)
+		t.AssertNil(err)
+		t.Assert(len(fields), 0)
+	})
+}
+
+// Test_ClickHouse_TableFields_DatabasePrefix tests TableFields of a table prefixed with its database,
+// quoted or not, which reads the table of that database rather than of the current one.
+func Test_ClickHouse_TableFields_DatabasePrefix(t *testing.T) {
+	schema1, schema2 := chACreateSchemas()
+	defer chADropSchemas(schema1, schema2)
+
+	table := chAName("user")
+	for i, schema := range []string{schema1, schema2} {
+		_, err := db.Exec(ctx, fmt.Sprintf(
+			"CREATE TABLE %s.%s (id UInt64, name_%d String) ENGINE = MergeTree() ORDER BY id",
+			schema, table, i+1,
+		))
+		gtest.AssertNil(err)
+	}
+	gtest.C(t, func(t *gtest.T) {
+		fields, err := db.TableFields(ctx, schema2+"."+table, schema1)
+		t.AssertNil(err)
+		t.Assert(len(fields), 2)
+		t.AssertNE(fields["name_2"], nil)
+		t.Assert(fields["id"].Key, "PRI")
+
+		fields, err = db.TableFields(ctx, "`"+schema1+"`.`"+table+"`")
+		t.AssertNil(err)
+		t.Assert(len(fields), 2)
+		t.AssertNE(fields["name_1"], nil)
+
+		fields, err = db.TableFields(ctx, "`"+table+"`", schema2)
+		t.AssertNil(err)
+		t.Assert(len(fields), 2)
 		t.AssertNE(fields["name_2"], nil)
 	})
 }
