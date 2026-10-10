@@ -10,6 +10,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/gogf/gf/v2/container/gset"
@@ -70,41 +71,34 @@ func (d *Driver) DoInsert(
 	default:
 	}
 	var (
-		keys   []string
-		values []string
-		params []any
-	)
-	// Retrieve the table fields and length.
-	var (
-		listLength  = len(list)
-		valueHolder = make([]string, 0)
-	)
-	for k := range list[0] {
-		keys = append(keys, k)
-		valueHolder = append(valueHolder, "?")
-	}
-	var (
-		batchResult    = new(gdb.SqlResult)
-		charL, charR   = d.GetChars()
-		keyStr         = charL + strings.Join(keys, charL+","+charR) + charR
-		valueHolderStr = strings.Join(valueHolder, ",")
+		batchResult  = new(gdb.SqlResult)
+		charL, charR = d.GetChars()
 	)
 	// Format "INSERT...INTO..." statement.
 	// Note: Use standard INSERT INTO syntax instead of INSERT ALL to ensure triggers fire
-	for i := 0; i < listLength; i++ {
+	for _, item := range list {
+		var (
+			keys   = make([]string, 0, len(item))
+			values = make([]string, 0, len(item))
+			params = make([]any, 0, len(item))
+		)
+		for k := range item {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
 		for _, k := range keys {
-			if s, ok := list[i][k].(gdb.Raw); ok {
-				params = append(params, gconv.String(s))
+			if s, ok := item[k].(gdb.Raw); ok {
+				values = append(values, gconv.String(s))
 			} else {
-				params = append(params, list[i][k])
+				values = append(values, "?")
+				params = append(params, item[k])
 			}
 		}
-		values = append(values, valueHolderStr)
 
 		// Execute individual INSERT for each record to trigger row-level triggers
 		r, err := d.DoExec(ctx, link, fmt.Sprintf(
 			"INSERT INTO %s(%s) VALUES(%s)",
-			table, keyStr, valueHolderStr,
+			table, charL+strings.Join(keys, charR+","+charL)+charR, strings.Join(values, ","),
 		), params...)
 		if err != nil {
 			return r, err
@@ -115,7 +109,6 @@ func (d *Driver) DoInsert(
 			batchResult.Result = r
 			batchResult.Affected += n
 		}
-		params = params[:0]
 	}
 	return batchResult, nil
 }
@@ -178,21 +171,9 @@ func (d *Driver) doMergeInsert(
 	}
 
 	var (
-		one            = list[0]
-		oneLen         = len(one)
 		charL, charR   = d.GetChars()
 		conflictKeySet = gset.NewStrSet(false)
-
-		// queryHolders:	Handle data with Holder that need to be upsert
-		// queryValues:		Handle data that need to be upsert
-		// insertKeys:		Handle valid keys that need to be inserted
-		// insertValues:	Handle values that need to be inserted
-		// updateValues:	Handle values that need to be updated
-		queryHolders = make([]string, oneLen)
-		queryValues  = make([]any, oneLen)
-		insertKeys   = make([]string, oneLen)
-		insertValues = make([]string, oneLen)
-		updateValues []string
+		batchResult    = new(gdb.SqlResult)
 	)
 
 	// conflictKeys slice type conv to set type
@@ -200,40 +181,121 @@ func (d *Driver) doMergeInsert(
 		conflictKeySet.Add(gstr.ToUpper(conflictKey))
 	}
 
-	index := 0
-	for key, value := range one {
-		keyWithChar := charL + key + charR
-		queryHolders[index] = fmt.Sprintf("? AS %s", keyWithChar)
-		queryValues[index] = value
-		insertKeys[index] = keyWithChar
-		insertValues[index] = fmt.Sprintf("T2.%s", keyWithChar)
+	for _, one := range list {
+		var (
+			oneLen = len(one)
+			keys   = make([]string, 0, oneLen)
 
-		// Build updateValues only when withUpdate is true
-		// Filter conflict keys and soft created fields from updateValues
-		if withUpdate && !(conflictKeySet.Contains(key) || d.Core.IsSoftCreatedFieldName(key)) {
-			updateValues = append(
-				updateValues,
-				fmt.Sprintf(`T1.%s = T2.%s`, keyWithChar, keyWithChar),
-			)
+			// queryHolders:	Handle data with Holder that need to be upsert
+			// queryValues:		Handle data that need to be upsert
+			// insertKeys:		Handle valid keys that need to be inserted
+			// insertValues:	Handle values that need to be inserted
+			// updateValues:	Handle values that need to be updated
+			queryHolders = make([]string, oneLen)
+			queryValues  = make([]any, 0, oneLen)
+			insertKeys   = make([]string, oneLen)
+			insertValues = make([]string, oneLen)
+			updateValues []string
+		)
+
+		for key := range one {
+			keys = append(keys, key)
 		}
-		index++
-	}
+		sort.Strings(keys)
+		for index, key := range keys {
+			keyWithChar := charL + key + charR
+			if s, ok := one[key].(gdb.Raw); ok {
+				queryHolders[index] = fmt.Sprintf("%s AS %s", gconv.String(s), keyWithChar)
+			} else {
+				queryHolders[index] = fmt.Sprintf("? AS %s", keyWithChar)
+				queryValues = append(queryValues, one[key])
+			}
+			insertKeys[index] = keyWithChar
+			insertValues[index] = fmt.Sprintf("T2.%s", keyWithChar)
+		}
+		// Build updateValues only when withUpdate is true
+		if withUpdate {
+			updateValues = d.formatMergeUpdateValues(keys, conflictKeySet, option)
+		}
 
-	var (
-		batchResult = new(gdb.SqlResult)
-		sqlStr      = parseSqlForMerge(table, queryHolders, insertKeys, insertValues, updateValues, conflictKeys)
-	)
-	r, err := d.DoExec(ctx, link, sqlStr, queryValues...)
-	if err != nil {
-		return r, err
-	}
-	if n, err := r.RowsAffected(); err != nil {
-		return r, err
-	} else {
-		batchResult.Result = r
-		batchResult.Affected += n
+		sqlStr := parseSqlForMerge(table, queryHolders, insertKeys, insertValues, updateValues, conflictKeys)
+		r, err := d.DoExec(ctx, link, sqlStr, queryValues...)
+		if err != nil {
+			return r, err
+		}
+		if n, err := r.RowsAffected(); err != nil {
+			return r, err
+		} else {
+			batchResult.Result = r
+			batchResult.Affected += n
+		}
 	}
 	return batchResult, nil
+}
+
+// formatMergeUpdateValues returns the assignments of the MERGE UPDATE SET clause for a record
+// with the given `keys`. It follows OnDuplicate/OnDuplicateEx of `option` if specified, or else
+// updates every key except conflict keys and, unless the whole record is replaced, soft created
+// fields. A conflict key assigned from its own source column is left out, as it cannot change
+// the matched row.
+func (d *Driver) formatMergeUpdateValues(
+	keys []string, conflictKeySet *gset.StrSet, option gdb.DoInsertOption,
+) (updateValues []string) {
+	charL, charR := d.GetChars()
+	if option.OnDuplicateStr != "" {
+		return []string{option.OnDuplicateStr}
+	}
+	if len(option.OnDuplicateMap) > 0 {
+		updateKeys := make([]string, 0, len(option.OnDuplicateMap))
+		for key := range option.OnDuplicateMap {
+			updateKeys = append(updateKeys, key)
+		}
+		sort.Strings(updateKeys)
+		for _, key := range updateKeys {
+			keyWithChar := charL + key + charR
+			switch value := option.OnDuplicateMap[key].(type) {
+			case gdb.Raw, *gdb.Raw:
+				updateValues = append(updateValues, fmt.Sprintf(`T1.%s = %s`, keyWithChar, gconv.String(value)))
+
+			case gdb.Counter, *gdb.Counter:
+				var counter gdb.Counter
+				switch v := value.(type) {
+				case gdb.Counter:
+					counter = v
+				case *gdb.Counter:
+					counter = *v
+				}
+				operator, columnVal := "+", counter.Value
+				if columnVal < 0 {
+					operator, columnVal = "-", -columnVal
+				}
+				updateValues = append(updateValues, fmt.Sprintf(
+					`T1.%s = T1.%s%s%s`,
+					keyWithChar, charL+counter.Field+charR, operator, gconv.String(columnVal),
+				))
+
+			default:
+				column := gconv.String(value)
+				if conflictKeySet.Contains(gstr.ToUpper(key)) && strings.EqualFold(key, column) {
+					continue
+				}
+				updateValues = append(updateValues, fmt.Sprintf(`T1.%s = T2.%s`, keyWithChar, charL+column+charR))
+			}
+		}
+		return updateValues
+	}
+	// Filter conflict keys, and soft created fields unless the whole record is replaced.
+	for _, key := range keys {
+		if conflictKeySet.Contains(gstr.ToUpper(key)) {
+			continue
+		}
+		if option.InsertOption != gdb.InsertOptionReplace && d.Core.IsSoftCreatedFieldName(key) {
+			continue
+		}
+		keyWithChar := charL + key + charR
+		updateValues = append(updateValues, fmt.Sprintf(`T1.%s = T2.%s`, keyWithChar, keyWithChar))
+	}
+	return updateValues
 }
 
 // parseSqlForMerge generates MERGE statement for Oracle database.

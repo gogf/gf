@@ -13,16 +13,19 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/text/gstr"
 )
 
 var (
 	newSqlReplacementTmp = `
 SELECT * FROM (
-	SELECT GFORM.*, ROWNUM ROW_NUMBER__ FROM (%s %s) GFORM WHERE ROWNUM <= %d
+	SELECT GFORM.*, ROWNUM ROW_NUMBER__ FROM (%s) GFORM WHERE ROWNUM <= %d
 ) WHERE ROW_NUMBER__ > %d
 `
+)
+
+const (
+	rowNumLimitTmp  = `SELECT * FROM (%s) WHERE ROWNUM <= %d`
+	derivedTableTmp = `SELECT * FROM (%s)`
 )
 
 func init() {
@@ -35,105 +38,429 @@ func init() {
 
 // DoFilter deals with the sql string before commits it to underlying sql driver.
 func (d *Driver) DoFilter(ctx context.Context, link gdb.Link, sql string, args []any) (newSql string, newArgs []any, err error) {
-	var index int
-	newArgs = args
-	// Convert placeholder char '?' to string ":vx".
-	newSql, err = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
-		index++
-		return fmt.Sprintf(":v%d", index)
-	})
-	if err != nil {
-		return
-	}
-	newSql, err = d.parseSql(newSql)
-	if err != nil {
-		return
-	}
-	return d.Core.DoFilter(ctx, link, newSql, newArgs)
+	newSql = rewriteQuery(convertPlaceholders(sql))
+	return d.Core.DoFilter(ctx, link, newSql, args)
 }
 
-// parseSql does some replacement of the sql before commits it to underlying driver,
-// for support of oracle server.
-func (d *Driver) parseSql(toBeCommittedSql string) (string, error) {
+// convertPlaceholders converts each placeholder '?' in `sql` to ":vN", N counting from 1,
+// leaving string literals and comments as they are.
+func convertPlaceholders(sql string) string {
 	var (
-		err       error
-		operation = gstr.StrTillEx(toBeCommittedSql, " ")
-		keyword   = strings.ToUpper(gstr.Trim(operation))
+		b     strings.Builder
+		index int
 	)
-	switch keyword {
-	case "SELECT":
-		toBeCommittedSql, err = d.handleSelectSqlReplacement(toBeCommittedSql)
-		if err != nil {
-			return "", err
+	b.Grow(len(sql))
+	for i := 0; i < len(sql); i++ {
+		if end := literalOrCommentEnd(sql, i); end >= 0 {
+			b.WriteString(sql[i:end])
+			i = end - 1
+		} else if sql[i] == '?' {
+			index++
+			b.WriteString(":v" + strconv.Itoa(index))
+		} else {
+			b.WriteByte(sql[i])
 		}
 	}
-	return toBeCommittedSql, nil
+	return b.String()
 }
 
-func (d *Driver) handleSelectSqlReplacement(toBeCommittedSql string) (newSql string, err error) {
+// literalOrCommentEnd returns the index following the quoted literal or identifier, or the
+// comment, that begins at index `i` of `sql`, or -1 if none begins there. A quote that is never
+// closed does not begin a literal, and a comment that is never closed runs to the end of `sql`.
+// A line comment includes the line break that ends it.
+func literalOrCommentEnd(sql string, i int) int {
+	if end, ok := quotedEnd(sql, i); ok {
+		return end
+	}
+	switch {
+	case strings.HasPrefix(sql[i:], "--"):
+		if n := strings.IndexByte(sql[i:], '\n'); n >= 0 {
+			return i + n + 1
+		}
+		return len(sql)
+	case strings.HasPrefix(sql[i:], "/*"):
+		if n := strings.Index(sql[i+2:], "*/"); n >= 0 {
+			return i + 2 + n + 2
+		}
+		return len(sql)
+	}
+	return -1
+}
+
+// sqlToken is a lexical unit at the outermost parenthesis level of a sql statement: a word,
+// a quoted literal, a punctuation character, or a whole parenthesized group.
+type sqlToken struct {
+	space string // The whitespace preceding the token.
+	text  string
+	group bool
+}
+
+// is reports whether the token is the keyword `word`, case-insensitively.
+func (t sqlToken) is(word string) bool {
+	return !t.group && strings.EqualFold(t.text, word)
+}
+
+// limitClause is a LIMIT clause in MySQL syntax, `LIMIT count`, `LIMIT offset,count` or
+// `LIMIT count OFFSET offset`, spanning the tokens from index `begin` to index `end` exclusive.
+type limitClause struct {
+	begin  int
+	end    int
+	offset int
+	count  int
+}
+
+// rewriteQuery rewrites the MySQL syntax that the core builds and Oracle rejects, in `sql`
+// itself and in every parenthesized sub-query, innermost first: a LIMIT clause becomes a ROWNUM
+// filter over the query it limits, keeping the clauses that follow it such as a lock clause,
+// a compound query is rewritten by rewriteCompoundQuery, and the AS keyword before a table alias
+// is removed by removeTableAliasKeywords.
+// It returns `sql` unchanged if its parentheses or quotes are unbalanced.
+func rewriteQuery(sql string) string {
+	tokens, trailing, ok := scanSqlTokens(sql)
+	if !ok {
+		return sql
+	}
+	for i, token := range tokens {
+		if token.group {
+			tokens[i].text = "(" + rewriteQuery(token.text[1:len(token.text)-1]) + ")"
+		}
+	}
+	var start int
+	for start < len(tokens) && isCommentStart(tokens[start].text, 0) {
+		start++
+	}
+	if start == len(tokens) {
+		return joinSqlTokens(tokens) + trailing
+	}
+	if first := tokens[start]; first.group || dmlKeywords[strings.ToUpper(first.text)] {
+		tokens = removeTableAliasKeywords(tokens)
+	}
+	if first := tokens[start]; first.group || first.is("SELECT") || first.is("WITH") {
+		tokens = append(tokens[:start:start], rewriteLimitClause(tokens[start:])...)
+	}
+	return joinSqlTokens(tokens) + trailing
+}
+
+// dmlKeywords are the keywords beginning the statements whose table aliases are rewritten.
+var dmlKeywords = map[string]bool{
+	"SELECT": true, "WITH": true, "INSERT": true, "UPDATE": true, "DELETE": true, "MERGE": true,
+}
+
+// tableReferenceKeywords are the keywords followed by the table references of a statement.
+var tableReferenceKeywords = map[string]bool{"FROM": true, "JOIN": true, "UPDATE": true}
+
+// tableReferenceEndKeywords are the keywords that end the table references of a statement.
+var tableReferenceEndKeywords = map[string]bool{
+	"SELECT": true, "WHERE": true, "ON": true, "USING": true, "SET": true, "GROUP": true,
+	"HAVING": true, "ORDER": true, "CONNECT": true, "START": true, "UNION": true,
+	"INTERSECT": true, "MINUS": true, "EXCEPT": true, "FOR": true, "LIMIT": true,
+	"OFFSET": true, "RETURNING": true,
+}
+
+// joinKeywords are the keywords that begin a join after a table reference.
+var joinKeywords = map[string]bool{
+	"JOIN": true, "INNER": true, "LEFT": true, "RIGHT": true, "FULL": true, "CROSS": true,
+	"NATURAL": true,
+}
+
+// removeTableAliasKeywords removes the AS keyword, which Oracle rejects, between a table or
+// sub-query and its alias among the table references at the outermost level of `tokens`:
+// an AS that the alias, then the end of the references, a comma, a semicolon or a join follows.
+// Any other AS is kept, like the one before a column alias or in "AS OF TIMESTAMP".
+func removeTableAliasKeywords(tokens []sqlToken) []sqlToken {
 	var (
-		match  [][]string
-		patten = `^\s*(?i)(SELECT)|(LIMIT\s*(\d+)\s*,{0,1}\s*(\d*))`
+		result      = make([]sqlToken, 0, len(tokens))
+		inReference bool
+		inJoinCond  bool
 	)
-	match, err = gregex.MatchAllString(patten, toBeCommittedSql)
-	if err != nil {
-		return "", err
+	for i, token := range tokens {
+		if !token.group {
+			switch word := strings.ToUpper(token.text); {
+			case tableReferenceKeywords[word]:
+				inReference, inJoinCond = true, false
+			case word == "ON" || word == "USING":
+				inReference, inJoinCond = false, inReference || inJoinCond
+			case tableReferenceEndKeywords[word] || word == ";":
+				inReference, inJoinCond = false, false
+			case word == "," && inJoinCond:
+				inReference, inJoinCond = true, false
+			}
+		}
+		if inReference && token.is("AS") && i+1 < len(tokens) && isSqlAlias(tokens[i+1]) {
+			if i+2 == len(tokens) || tokens[i+2].text == "," || tokens[i+2].text == ";" ||
+				tableReferenceEndKeywords[strings.ToUpper(tokens[i+2].text)] ||
+				joinKeywords[strings.ToUpper(tokens[i+2].text)] {
+				continue
+			}
+		}
+		result = append(result, token)
 	}
-	if len(match) == 0 {
-		return toBeCommittedSql, nil
+	return result
+}
+
+// isSqlAlias reports whether `token` is an identifier that can be an alias.
+func isSqlAlias(token sqlToken) bool {
+	if token.group || token.text == "" {
+		return false
 	}
-	var index = 1
-	if len(match) < 2 || strings.HasPrefix(match[index][0], "LIMIT") == false {
-		return toBeCommittedSql, nil
+	if token.text[0] == '"' {
+		return true
 	}
-	// only handle `SELECT ... LIMIT ...` statement.
-	queryExpr, err := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", toBeCommittedSql)
-	if err != nil {
-		return "", err
+	return isSqlWordChar(token.text[0]) && !strings.ContainsAny(token.text, ".:")
+}
+
+// rewriteLimitClause rewrites the LIMIT clause at the outermost level of the query formed by
+// `tokens` into a ROWNUM filter over the query it limits.
+func rewriteLimitClause(tokens []sqlToken) []sqlToken {
+	clause, ok := findLimitClause(tokens)
+	if !ok {
+		return rewriteCompoundQuery(tokens)
 	}
-	if len(queryExpr) == 0 {
-		return toBeCommittedSql, nil
+	var (
+		query   = joinSqlTokens(rewriteCompoundQuery(tokens[:clause.begin]))[len(tokens[0].space):]
+		limited string
+	)
+	if clause.offset > 0 {
+		limited = fmt.Sprintf(newSqlReplacementTmp, query, clause.offset+clause.count, clause.offset)
+	} else {
+		limited = fmt.Sprintf(rowNumLimitTmp, query, clause.count)
 	}
-	if len(queryExpr) != 4 ||
-		strings.EqualFold(queryExpr[1], "SELECT") == false ||
-		strings.EqualFold(queryExpr[3], "LIMIT") == false {
-		return toBeCommittedSql, nil
-	}
-	page, limit := 0, 0
-	for i := 1; i < len(match[index]); i++ {
-		if len(strings.TrimSpace(match[index][i])) == 0 {
+	return append([]sqlToken{{space: tokens[0].space, text: limited}}, tokens[clause.end:]...)
+}
+
+// findLimitClause returns the first LIMIT clause among `tokens`.
+func findLimitClause(tokens []sqlToken) (clause limitClause, ok bool) {
+	for i, token := range tokens {
+		if !token.is("LIMIT") {
 			continue
 		}
-		if strings.HasPrefix(match[index][i], "LIMIT") {
-			if match[index][i+2] != "" {
-				page, err = strconv.Atoi(match[index][i+1])
-				if err != nil {
-					return "", err
-				}
-				limit, err = strconv.Atoi(match[index][i+2])
-				if err != nil {
-					return "", err
-				}
-				if page <= 0 {
-					page = 1
-				}
-				limit = (page/limit + 1) * limit
-				page, err = strconv.Atoi(match[index][i+1])
-				if err != nil {
-					return "", err
-				}
-			} else {
-				limit, err = strconv.Atoi(match[index][i+1])
-				if err != nil {
-					return "", err
-				}
+		count, ok := sqlTokenNumber(tokens, i+1)
+		if !ok {
+			continue
+		}
+		clause = limitClause{begin: i, end: i + 2, count: count}
+		if i+2 < len(tokens) && tokens[i+2].text == "," {
+			if n, ok := sqlTokenNumber(tokens, i+3); ok {
+				clause.offset, clause.count, clause.end = count, n, i+4
 			}
-			break
+		} else if i+2 < len(tokens) && tokens[i+2].is("OFFSET") {
+			if n, ok := sqlTokenNumber(tokens, i+3); ok {
+				clause.offset, clause.end = n, i+4
+			}
+		}
+		return clause, true
+	}
+	return clause, false
+}
+
+// rewriteCompoundQuery rewrites the compound query that the core builds as
+// `(SELECT ...) UNION [ALL] (SELECT ...) ... [ORDER BY ...]`. Oracle rejects ORDER BY in a
+// parenthesized operand, so such an operand becomes a sub-query in FROM. Oracle cannot resolve
+// the column names of a `SELECT *` operand in the ORDER BY of the compound query either, so a
+// compound query with ORDER BY becomes a derived table that the ORDER BY applies to.
+func rewriteCompoundQuery(tokens []sqlToken) []sqlToken {
+	if len(tokens) < 3 || !tokens[0].group || !tokens[1].is("UNION") {
+		return tokens
+	}
+	var last int
+	for i, token := range tokens {
+		if !token.group || !isCompoundOperand(tokens, i) {
+			continue
+		}
+		if operand := token.text[1 : len(token.text)-1]; hasOrderBy(operand) {
+			tokens[i].text = "(" + fmt.Sprintf(derivedTableTmp, operand) + ")"
+		}
+		last = i
+	}
+	if !isOrderBy(tokens, last+1) {
+		return tokens
+	}
+	compound := joinSqlTokens(tokens[:last+1])[len(tokens[0].space):]
+	return append(
+		[]sqlToken{{space: tokens[0].space, text: fmt.Sprintf(derivedTableTmp, compound)}},
+		tokens[last+1:]...,
+	)
+}
+
+// isCompoundOperand reports whether the group at index `i` of `tokens` is an operand of the
+// compound query formed by `tokens`.
+func isCompoundOperand(tokens []sqlToken, i int) bool {
+	return i == 0 || tokens[i-1].is("UNION") || (i > 1 && tokens[i-1].is("ALL") && tokens[i-2].is("UNION"))
+}
+
+// hasOrderBy reports whether the query `sql` has an ORDER BY clause at its outermost level.
+func hasOrderBy(sql string) bool {
+	tokens, _, _ := scanSqlTokens(sql)
+	for i := range tokens {
+		if isOrderBy(tokens, i) {
+			return true
 		}
 	}
-	var newReplacedSql = fmt.Sprintf(
-		newSqlReplacementTmp,
-		queryExpr[1], queryExpr[2], limit, page,
-	)
-	return newReplacedSql, nil
+	return false
+}
+
+// isOrderBy reports whether an ORDER BY clause begins at index `i` of `tokens`.
+func isOrderBy(tokens []sqlToken, i int) bool {
+	return i+1 < len(tokens) && tokens[i].is("ORDER") && tokens[i+1].is("BY")
+}
+
+// sqlTokenNumber returns the integer that the token at index `i` of `tokens` is.
+func sqlTokenNumber(tokens []sqlToken, i int) (int, bool) {
+	if i >= len(tokens) || tokens[i].group {
+		return 0, false
+	}
+	n, err := strconv.Atoi(tokens[i].text)
+	return n, err == nil
+}
+
+// scanSqlTokens splits `sql` into tokens at its outermost parenthesis level, and returns them
+// with the whitespace after the last one, so that joining them gives back `sql`. A comment is
+// a token of its own. It returns false if a parenthesis or a quote in `sql` is unbalanced.
+func scanSqlTokens(sql string) (tokens []sqlToken, trailing string, ok bool) {
+	var end int
+	for i := 0; i < len(sql); {
+		c := sql[i]
+		if isSqlSpace(c) {
+			i++
+			continue
+		}
+		var begin = i
+		switch {
+		case isCommentStart(sql, i):
+			i = literalOrCommentEnd(sql, i)
+		case c == '(':
+			if i = closingParenthesis(sql, i); i < 0 {
+				return nil, "", false
+			}
+			i++
+		case c == ')':
+			return nil, "", false
+		case isQuoteStart(sql, i):
+			if i, _ = quotedEnd(sql, i); i < 0 {
+				return nil, "", false
+			}
+		case isSqlWordChar(c):
+			for i < len(sql) && isSqlWordChar(sql[i]) {
+				i++
+			}
+		default:
+			i++
+		}
+		tokens = append(tokens, sqlToken{space: sql[end:begin], text: sql[begin:i], group: c == '('})
+		end = i
+	}
+	return tokens, sql[end:], true
+}
+
+// joinSqlTokens joins `tokens` back into sql.
+func joinSqlTokens(tokens []sqlToken) string {
+	var b strings.Builder
+	for _, token := range tokens {
+		b.WriteString(token.space)
+		b.WriteString(token.text)
+	}
+	return b.String()
+}
+
+// closingParenthesis returns the index of the parenthesis closing the one at `open`, skipping
+// quoted literals and comments, or -1 if there is none.
+func closingParenthesis(sql string, open int) int {
+	var depth int
+	for i := open; i < len(sql); i++ {
+		if isCommentStart(sql, i) {
+			i = literalOrCommentEnd(sql, i) - 1
+			continue
+		}
+		if isQuoteStart(sql, i) {
+			if i, _ = quotedEnd(sql, i); i < 0 {
+				return -1
+			}
+			i--
+			continue
+		}
+		switch sql[i] {
+		case '(':
+			depth++
+		case ')':
+			depth--
+			if depth == 0 {
+				return i
+			}
+		}
+	}
+	return -1
+}
+
+// isQuoteStart reports whether a quoted literal or identifier begins at index `i` of `sql`.
+func isQuoteStart(sql string, i int) bool {
+	_, ok := quotedEnd(sql, i)
+	return ok
+}
+
+// quotedEnd returns the index following the quoted literal or identifier that begins at index
+// `i` of `sql`, and whether one begins there: a string literal '...', an identifier "...", or an
+// alternative quoting literal q'[...]' or nq'[...]'. The index is -1 if it is never closed.
+func quotedEnd(sql string, i int) (int, bool) {
+	switch c := sql[i]; {
+	case c == '\'' || c == '"':
+		if end := closingQuote(sql, i); end >= 0 {
+			return end + 1, true
+		}
+		return -1, true
+	case strings.IndexByte("qQnN", c) >= 0 && (i == 0 || !isSqlWordChar(sql[i-1])):
+		j := i
+		if c == 'n' || c == 'N' {
+			j++
+		}
+		if j+2 >= len(sql) || (sql[j] != 'q' && sql[j] != 'Q') || sql[j+1] != '\'' {
+			return -1, false
+		}
+		closing := sql[j+2]
+		switch closing {
+		case '[':
+			closing = ']'
+		case '(':
+			closing = ')'
+		case '{':
+			closing = '}'
+		case '<':
+			closing = '>'
+		}
+		if n := strings.Index(sql[j+3:], string(closing)+"'"); n >= 0 {
+			return j + 3 + n + 2, true
+		}
+		return -1, true
+	}
+	return -1, false
+}
+
+// closingQuote returns the index of the quote closing the literal or identifier opened at
+// `open`, taking a doubled quote as an escaped one, or -1 if there is none.
+func closingQuote(sql string, open int) int {
+	quote := sql[open]
+	for i := open + 1; i < len(sql); i++ {
+		if sql[i] != quote {
+			continue
+		}
+		if i+1 < len(sql) && sql[i+1] == quote {
+			i++
+			continue
+		}
+		return i
+	}
+	return -1
+}
+
+// isCommentStart reports whether a comment begins at index `i` of `sql`.
+func isCommentStart(sql string, i int) bool {
+	return strings.HasPrefix(sql[i:], "--") || strings.HasPrefix(sql[i:], "/*")
+}
+
+func isSqlSpace(c byte) bool {
+	return c == ' ' || c == '\t' || c == '\n' || c == '\r'
+}
+
+func isSqlWordChar(c byte) bool {
+	return c == '_' || c == '$' || c == '#' || c == '.' || c == ':' || c >= 0x80 ||
+		('0' <= c && c <= '9') || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
 }

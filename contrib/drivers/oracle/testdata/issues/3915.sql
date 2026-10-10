@@ -1,0 +1,8 @@
+CREATE TABLE issue3915 (
+    id NUMBER(10)   NOT NULL,
+    a  BINARY_FLOAT DEFAULT NULL,
+    b  BINARY_FLOAT DEFAULT NULL,
+    PRIMARY KEY (id)
+);
+INSERT INTO issue3915 (id, a, b) VALUES (1, 1, 2);
+INSERT INTO issue3915 (id, a, b) VALUES (2, 5, 4);
