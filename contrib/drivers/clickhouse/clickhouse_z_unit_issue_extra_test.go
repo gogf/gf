@@ -1115,15 +1115,15 @@ func Test_Issue3204(t *testing.T) {
 				Password: "",
 			}
 		)
-		// Note: the driver sends the inserted records in a batch of the underlying driver, which
-		// CatchSQL does not see, as the core catches the statements in DoQuery and DoExec only;
-		// the omitted fields are checked on the inserted record instead.
 		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
 			_, err = db.Ctx(ctx).Model(table).Data(data).Insert()
 			return err
 		})
 		t.AssertNil(err)
-		t.Assert(len(sqlArray), 0)
+		t.Assert(
+			gstr.Contains(sqlArray[len(sqlArray)-1], "(id,passport) VALUES (20,'passport_20')"),
+			true,
+		)
 		one, err := db.Model(table).Where("id", 20).One()
 		t.AssertNil(err)
 		t.Assert(one["passport"], "passport_20")
