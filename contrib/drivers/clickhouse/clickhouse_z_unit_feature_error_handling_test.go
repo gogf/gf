@@ -8,12 +8,14 @@ package clickhouse_test
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"testing"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -59,6 +61,44 @@ func Test_Model_Insert_EmptySlice(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model(table).Data(g.Slice{}).Insert()
 		t.AssertNE(err, nil)
+	})
+}
+
+// Test_Model_Insert_InvalidNumberString tests that a string that is not a number or a boolean of
+// the column type fails the insert instead of being stored as zero.
+func Test_Model_Insert_InvalidNumberString(t *testing.T) {
+	table := "number_" + gtime.TimestampNanoStr()
+	_, err := db.Exec(ctx, fmt.Sprintf(
+		"CREATE TABLE %s (id UInt64, u8 UInt8, i32 Int32, f64 Float64, b Bool) ENGINE = MergeTree ORDER BY id", table,
+	))
+	gtest.AssertNil(err)
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).Data(g.Map{"id": 1, "u8": " 255 ", "i32": "-5", "f64": "1.5", "b": "true"}).Insert()
+		t.AssertNil(err)
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["u8"].Int(), 255)
+		t.Assert(one["i32"].Int(), -5)
+		t.Assert(one["f64"].Float64(), 1.5)
+		t.Assert(one["b"].Bool(), true)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		for _, data := range []g.Map{
+			{"id": 2, "u8": "abc"},
+			{"id": 2, "u8": "300"},
+			{"id": 2, "u8": "-1"},
+			{"id": 2, "i32": "1.5"},
+			{"id": 2, "f64": "abc"},
+			{"id": 2, "b": "yes"},
+		} {
+			_, err := db.Model(table).Data(data).Insert()
+			t.AssertNE(err, nil)
+		}
+		count, err := db.Model(table).Where("id", 2).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
 	})
 }
 

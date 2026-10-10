@@ -502,7 +502,7 @@ func TestDriverClickhouse_NilTime(t *testing.T) {
 	gtest.AssertNE(data, nil)
 	g.Dump(data)
 	gtest.AssertEQ(data["Col11"].String(), "1.12")
-	gtest.AssertEQ(data["Col12"].String(), "99999.99")
+	gtest.AssertEQ(data["Col12"].String(), "100000.00")
 }
 
 func TestDriverClickhouse_BatchInsert(t *testing.T) {

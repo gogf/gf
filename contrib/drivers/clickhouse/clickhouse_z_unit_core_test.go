@@ -1547,7 +1547,6 @@ func Test_Types(t *testing.T) {
 		defer dropTable(table)
 		// Note: Date32 starts from 1900-01-01 and ClickHouse has no time-of-day type,
 		// so the date is moved into range and the time is stored as a string.
-		// ClickHouse truncates the digits beyond the scale of a Decimal instead of rounding them.
 		data := g.Map{
 			"id":        1,
 			"blob":      "i love gf",
@@ -1572,7 +1571,7 @@ func Test_Types(t *testing.T) {
 		t.Assert(one["date"].String(), data["date"])
 		t.Assert(one["time"].String(), `10:00:01`)
 		t.Assert(one["timestamp"].GTime().Format(`Y-m-d H:i:s.u`), `2022-02-14 12:00:01.123`)
-		t.Assert(one["decimal"].String(), -123.45)
+		t.Assert(one["decimal"].String(), -123.46)
 		t.Assert(one["double"].String(), data["double"])
 		t.Assert(one["bit"].Int(), data["bit"])
 		t.Assert(one["tinyint"].Bool(), data["tinyint"])
@@ -1598,7 +1597,7 @@ func Test_Types(t *testing.T) {
 		t.Assert(obj.Date.Format("Y-m-d"), data["date"])
 		t.Assert(obj.Time.String(), `10:00:01`)
 		t.Assert(obj.Timestamp.Format(`Y-m-d H:i:s.u`), `2022-02-14 12:00:01.123`)
-		t.Assert(obj.Decimal, -123.45)
+		t.Assert(obj.Decimal, -123.46)
 		t.Assert(obj.Double, data["double"])
 		t.Assert(obj.Bit, data["bit"])
 		t.Assert(obj.TinyInt, data["tinyint"])

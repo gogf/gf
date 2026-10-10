@@ -16,6 +16,8 @@ import (
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -585,7 +587,7 @@ func Test_Issue1733(t *testing.T) {
 // https://github.com/gogf/gf/issues/2012
 // Note: ClickHouse 24.11 has no TIME type, so a DateTime column holds the value. A time of day
 // parsed by gtime carries the date 0000-01-01, outside of the range of DateTime, so the inserts
-// are checked but not the stored time.
+// fail instead of storing a time wrapped around.
 func Test_Issue2012(t *testing.T) {
 	table := "time_only_" + guid.S()
 	chCExecSqls(db, fmt.Sprintf(`
@@ -609,19 +611,19 @@ func Test_Issue2012(t *testing.T) {
 		_, err := m.Insert(TimeOnly{
 			TimeOnly: gtime.New(timeOnly),
 		})
-		t.AssertNil(err)
+		t.Assert(gerror.Code(err), gcode.CodeInvalidParameter)
 
 		_, err = m.Insert(g.Map{
 			"time_only": timeOnly,
 		})
-		t.AssertNil(err)
+		t.Assert(gerror.Code(err), gcode.CodeInvalidParameter)
 
 		_, err = m.Insert("time_only", timeOnly)
-		t.AssertNil(err)
+		t.Assert(gerror.Code(err), gcode.CodeInvalidParameter)
 
-		count, err := db.Model(table).WhereNotNull("time_only").Count()
+		count, err := db.Model(table).Count()
 		t.AssertNil(err)
-		t.Assert(count, 3)
+		t.Assert(count, 0)
 	})
 }
 

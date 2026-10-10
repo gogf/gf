@@ -13,6 +13,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/big"
 	"net"
 	"strings"
@@ -23,6 +24,8 @@ import (
 	"github.com/shopspring/decimal"
 
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -1210,5 +1213,364 @@ func Test_ClickHouse_DataType_LowCardinality(t *testing.T) {
 		count, err := db.Model(table).Where("lc", "beijing").Count()
 		t.AssertNil(err)
 		t.Assert(count, 2)
+	})
+}
+
+// Test_ClickHouse_DataType_Decimal_Precision tests that a value written to a Decimal column is rounded half
+// away from zero to the scale of the column, as MySQL and PostgreSQL do, and fails if its rounded integer
+// part exceeds the precision of the column.
+func Test_ClickHouse_DataType_Decimal_Precision(t *testing.T) {
+	table := chCCreateTypeTable(
+		"test_decimal_precision",
+		"d9 Decimal(9, 2), d5 Decimal(5, 2), d3 Decimal(3), d32 Decimal32(2), d64 Decimal64(4), "+
+			"d128 Decimal128(2), d256 Decimal256(2)",
+	)
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).Data(g.Map{
+			"id":   1,
+			"d9":   "99999.999",
+			"d5":   1.239,
+			"d3":   "-999.4",
+			"d32":  decimal.RequireFromString("-1.005"),
+			"d64":  "99999999999999.99994",
+			"d128": strings.Repeat("9", 36) + ".994",
+			"d256": "-" + strings.Repeat("9", 74) + ".994",
+		}).Insert()
+		t.AssertNil(err)
+
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["d9"].String(), "100000.00")
+		t.Assert(one["d5"].String(), "1.24")
+		t.Assert(one["d3"].String(), "-999")
+		t.Assert(one["d32"].String(), "-1.01")
+		t.Assert(one["d64"].String(), "99999999999999.9999")
+		t.Assert(one["d128"].String(), strings.Repeat("9", 36)+".99")
+		t.Assert(one["d256"].String(), "-"+strings.Repeat("9", 74)+".99")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			overflow  = decimal.RequireFromString("1000")
+			overflows = []g.Map{
+				{"d9": "99999999999"},
+				{"d9": "-10000000"},
+				{"d9": "9999999.995"},
+				{"d5": "123456.7"},
+				{"d5": 1000.0},
+				{"d5": -1000.0},
+				{"d5": 999.995},
+				{"d5": overflow},
+				{"d5": &overflow},
+				{"d3": "1000"},
+				{"d3": "-999.5"},
+				{"d32": "10000000"},
+				{"d64": "-100000000000000"},
+				{"d64": "99999999999999.99995"},
+				{"d128": "1" + strings.Repeat("0", 36)},
+				{"d256": "-1" + strings.Repeat("0", 74)},
+			}
+		)
+		for i, data := range overflows {
+			data["id"] = i + 2
+			_, err := db.Model(table).Data(data).Insert()
+			t.AssertNE(err, nil)
+			t.Assert(gerror.Code(err), gcode.CodeInvalidParameter)
+		}
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).Data(g.Map{
+			"d5": 2.345,
+			"d9": decimal.RequireFromString("-1.005"),
+		}).Where("id", 1).Update()
+		t.AssertNil(err)
+
+		for _, value := range []any{"123456.7", -1000.0, decimal.RequireFromString("1000"), 999.995} {
+			_, err = db.Model(table).Data(g.Map{"d5": value}).Where("id", 1).Update()
+			t.AssertNE(err, nil)
+			t.Assert(gerror.Code(err), gcode.CodeInvalidParameter)
+		}
+
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["d5"].String(), "2.35")
+		t.Assert(one["d9"].String(), "-1.01")
+	})
+}
+
+// Test_ClickHouse_DataType_Integer_Range tests that a number out of the range of an integer or a Float32
+// column, or a float with a fraction for an integer column, fails instead of wrapping around.
+func Test_ClickHouse_DataType_Integer_Range(t *testing.T) {
+	table := chCCreateTypeTable(
+		"test_integer_range",
+		"u8 UInt8, i8 Int8, u64 UInt64, i64 Int64, i32 Int32, f32 Float32",
+	)
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).Data(g.Map{
+			"id":  1,
+			"u8":  255,
+			"i8":  -128,
+			"u64": uint64(math.MaxUint64),
+			"i64": -9.2e18,
+			"i32": 2.0,
+			"f32": 3.4e38,
+		}).Insert()
+		t.AssertNil(err)
+
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["u8"].Int(), 255)
+		t.Assert(one["i8"].Int(), -128)
+		t.AssertEQ(one["u64"].Uint64(), uint64(math.MaxUint64))
+		t.Assert(one["i64"].Int64(), int64(-9.2e18))
+		t.Assert(one["i32"].Int(), 2)
+		t.Assert(one["f32"].Float32(), float32(3.4e38))
+	})
+	gtest.C(t, func(t *gtest.T) {
+		overflows := []g.Map{
+			{"u8": 300},
+			{"u8": -1},
+			{"u8": "300"},
+			{"i8": 200},
+			{"i8": uint64(math.MaxUint64)},
+			{"u64": -1},
+			{"u64": 1.8446744073709552e19},
+			{"i64": 1.9},
+			{"i64": 9.3e18},
+			{"i64": math.NaN()},
+			{"i32": int64(2147483648)},
+			{"i32": float32(-0.5)},
+			{"f32": 3.5e38},
+			{"f32": "3.5e38"},
+		}
+		for i, data := range overflows {
+			data["id"] = i + 2
+			_, err := db.Model(table).Data(data).Insert()
+			t.AssertNE(err, nil)
+			t.Assert(gerror.Code(err), gcode.CodeInvalidParameter)
+		}
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+	})
+}
+
+// Test_ClickHouse_DataType_BigInteger tests writing integers, floats, strings and big integers to the
+// Int128, UInt128, Int256 and UInt256 columns, and nil and non-nil pointers to a Nullable column.
+func Test_ClickHouse_DataType_BigInteger(t *testing.T) {
+	table := chCCreateTypeTable(
+		"test_big_integer",
+		"i128 Int128, u128 UInt128, i256 Int256, u256 UInt256, n Nullable(Int32)",
+	)
+	defer dropTable(table)
+
+	var (
+		minInt128  = "-170141183460469231731687303715884105728"
+		maxUint128 = "340282366920938463463374607431768211455"
+		maxUint256 = "115792089237316195423570985008687907853269984665640564039457584007913129639935"
+	)
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			nilInt *int
+			five   = 5
+			u256   = new(big.Int)
+		)
+		u256.SetString(maxUint256, 10)
+		_, err := db.Model(table).Data(g.List{
+			g.Map{"id": 1, "i128": 5, "u128": "5", "i256": int64(-7), "u256": uint64(math.MaxUint64), "n": nilInt},
+			g.Map{"id": 2, "i128": minInt128, "u128": maxUint128, "i256": 3.0, "u256": u256, "n": &five},
+			g.Map{"id": 3, "i128": *big.NewInt(-1), "u128": uint8(1), "i256": " -9 ", "u256": float32(2), "n": nil},
+		}).Insert()
+		t.AssertNil(err)
+
+		all, err := db.Model(table).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all), 3)
+		t.Assert(all[0]["i128"].String(), "5")
+		t.Assert(all[0]["u128"].String(), "5")
+		t.Assert(all[0]["i256"].String(), "-7")
+		t.Assert(all[0]["u256"].String(), "18446744073709551615")
+		t.Assert(all[0]["n"].IsNil(), true)
+		t.Assert(all[1]["i128"].String(), minInt128)
+		t.Assert(all[1]["u128"].String(), maxUint128)
+		t.Assert(all[1]["i256"].String(), "3")
+		t.Assert(all[1]["u256"].String(), maxUint256)
+		t.Assert(all[1]["n"].Int(), 5)
+		t.Assert(all[2]["i128"].String(), "-1")
+		t.Assert(all[2]["u128"].String(), "1")
+		t.Assert(all[2]["i256"].String(), "-9")
+		t.Assert(all[2]["u256"].String(), "2")
+		t.Assert(all[2]["n"].IsNil(), true)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			pow256   = new(big.Int).Lsh(big.NewInt(1), 256)
+			invalids = []g.Map{
+				{"i128": "abc"},
+				{"i128": "1.5"},
+				{"i128": "170141183460469231731687303715884105728"},
+				{"u128": -1},
+				{"u128": "340282366920938463463374607431768211456"},
+				{"i256": 3.5},
+				{"i256": math.Inf(1)},
+				{"u256": "-1"},
+				{"u256": pow256},
+			}
+		)
+		for i, data := range invalids {
+			data["id"] = i + 4
+			_, err := db.Model(table).Data(data).Insert()
+			t.AssertNE(err, nil)
+			t.Assert(gerror.Code(err), gcode.CodeInvalidParameter)
+		}
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 3)
+	})
+}
+
+// Test_ClickHouse_DataType_Decimal_OtherDatabase tests that a decimal written to a table prefixed with
+// another database is checked against the column of that table rather than of the table of the same
+// name in the configured database.
+// Note: under Schema, the check uses the table of the same name in the configured database, as the
+// core does to convert the values for every driver, so a value is rounded to the scale of that table
+// and the digits beyond the scale of the written column are truncated by ClickHouse.
+func Test_ClickHouse_DataType_Decimal_OtherDatabase(t *testing.T) {
+	schemaDb, schema := chCNewSchemaDb()
+	defer chCDropSchema(schema)
+	defer schemaDb.Close(ctx)
+
+	var (
+		narrow = chAName("decimal_narrow")
+		wide   = chAName("decimal_wide")
+	)
+	chCExecSqls(db,
+		fmt.Sprintf("CREATE TABLE %s (id UInt64, d Decimal(18, 6)) ENGINE = MergeTree() ORDER BY id", narrow),
+		fmt.Sprintf("CREATE TABLE %s.%s (id UInt64, d Decimal(9, 2)) ENGINE = MergeTree() ORDER BY id", schema, narrow),
+		fmt.Sprintf("CREATE TABLE %s (id UInt64, d Decimal(9, 2)) ENGINE = MergeTree() ORDER BY id", wide),
+		fmt.Sprintf("CREATE TABLE %s.%s (id UInt64, d Decimal(18, 6)) ENGINE = MergeTree() ORDER BY id", schema, wide),
+	)
+	defer dropTable(narrow, wide)
+
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(schema + "." + narrow).Data(g.Map{"id": 1, "d": "99999999999"}).Insert()
+		t.AssertNE(err, nil)
+		t.Assert(gerror.Code(err), gcode.CodeInvalidParameter)
+
+		_, err = db.Model(schema + "." + narrow).Data(g.Map{"id": 1, "d": "1.239"}).Insert()
+		t.AssertNil(err)
+
+		_, err = db.Model(schema+"."+narrow).Data(g.Map{"d": "99999999999"}).Where("id", 1).Update()
+		t.AssertNE(err, nil)
+		t.Assert(gerror.Code(err), gcode.CodeInvalidParameter)
+
+		_, err = db.Model(schema + "." + wide).Data(g.Map{"id": 1, "d": "99999999999.123456"}).Insert()
+		t.AssertNil(err)
+
+		_, err = db.Model(schema+"."+wide).Data(g.Map{"d": "1.234567"}).Where("id", 1).Update()
+		t.AssertNil(err)
+
+		value, err := schemaDb.Model(narrow).Where("id", 1).Value("d")
+		t.AssertNil(err)
+		t.Assert(value.String(), "1.24")
+
+		value, err = schemaDb.Model(wide).Where("id", 1).Value("d")
+		t.AssertNil(err)
+		t.Assert(value.String(), "1.234567")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(wide).Schema(schema).Data(g.Map{"id": 2, "d": "99999999999.123456"}).Insert()
+		t.AssertNE(err, nil)
+		t.Assert(gerror.Code(err), gcode.CodeInvalidParameter)
+
+		_, err = db.Model(narrow).Schema(schema).Data(g.Map{"id": 2, "d": "1.239"}).Insert()
+		t.AssertNil(err)
+
+		value, err := schemaDb.Model(narrow).Where("id", 2).Value("d")
+		t.AssertNil(err)
+		t.Assert(value.String(), "1.23")
+
+		count, err := schemaDb.Model(wide).Where("id", 2).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
+
+		count, err = db.Model(narrow).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
+	})
+}
+
+// Test_ClickHouse_DataType_Time_Range tests that a time is written to a DateTime, DateTime64, Date or
+// Date32 column up to the bounds of the column, and fails beyond them instead of wrapping around or
+// being clamped.
+// Note: a DateTime64 begins on 1900-01-01 in the time zone of the value, and ends at
+// 2262-04-11 23:47:16.854775807 UTC, the last time the underlying driver binds, before its
+// documented end in 2299.
+func Test_ClickHouse_DataType_Time_Range(t *testing.T) {
+	table := chCCreateTypeTable("test_time_range", "dt DateTime, dt64 DateTime64(3), d Date, d32 Date32")
+	defer dropTable(table)
+
+	var (
+		maxDateTime64 = time.Unix(0, math.MaxInt64).UTC()
+		inRange       = []g.Map{
+			{"dt": time.Unix(0, 0).UTC()},
+			{"dt": time.Unix(math.MaxUint32, 0).UTC()},
+			{"dt64": time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC)},
+			{"dt64": maxDateTime64},
+			{"d": time.Date(1970, 1, 1, 0, 0, 0, 0, time.Local)},
+			{"d": "2149-06-06"},
+			{"d32": gtime.NewFromStr("1900-01-01")},
+			{"d32": time.Date(2299, 12, 31, 23, 0, 0, 0, time.Local)},
+		}
+		outOfRange = []g.Map{
+			{"dt": time.Unix(-1, 0).UTC()},
+			{"dt": time.Unix(math.MaxUint32+1, 0).UTC()},
+			{"dt": "2200-01-01 00:00:00"},
+			{"dt64": time.Date(1899, 12, 31, 23, 59, 59, 999000000, time.UTC)},
+			{"dt64": maxDateTime64.Add(time.Nanosecond)},
+			{"dt64": gtime.NewFromTime(time.Date(2299, 12, 31, 0, 0, 0, 0, time.UTC))},
+			{"d": time.Date(1969, 12, 31, 23, 0, 0, 0, time.Local)},
+			{"d": "2149-06-07"},
+			{"d32": time.Date(1899, 12, 31, 0, 0, 0, 0, time.Local)},
+			{"d32": "2300-01-01"},
+			{"dt": "0000-00-00 00:00:00"},
+			{"d": "0000-00-00"},
+			{"dt64": "not a time"},
+		}
+	)
+	gtest.C(t, func(t *gtest.T) {
+		for i, data := range inRange {
+			data["id"] = i + 1
+			_, err := db.Model(table).Data(data).Insert()
+			t.AssertNil(err)
+		}
+		all, err := db.Model(table).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all), len(inRange))
+		t.Assert(all[0]["dt"].Time().Equal(time.Unix(0, 0)), true)
+		t.Assert(all[1]["dt"].Time().Equal(time.Unix(math.MaxUint32, 0)), true)
+		t.Assert(all[2]["dt64"].Time().Equal(time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC)), true)
+		t.Assert(all[3]["dt64"].Time().Equal(maxDateTime64.Truncate(time.Millisecond)), true)
+		t.Assert(all[4]["d"].GTime().Format("Y-m-d"), "1970-01-01")
+		t.Assert(all[5]["d"].GTime().Format("Y-m-d"), "2149-06-06")
+		t.Assert(all[6]["d32"].GTime().Format("Y-m-d"), "1900-01-01")
+		t.Assert(all[7]["d32"].GTime().Format("Y-m-d"), "2299-12-31")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		for i, data := range outOfRange {
+			data["id"] = len(inRange) + i + 1
+			_, err := db.Model(table).Data(data).Insert()
+			t.AssertNE(err, nil)
+			t.Assert(gerror.Code(err), gcode.CodeInvalidParameter)
+		}
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, len(inRange))
 	})
 }

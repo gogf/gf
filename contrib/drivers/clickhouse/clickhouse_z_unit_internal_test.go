@@ -47,3 +47,23 @@ func Test_LocalTypeCoverage(t *testing.T) {
 		t.Assert(missing, nil)
 	})
 }
+
+// Test_ConvertValueForField_Allocs tests that converting a value for a column allocates nothing for
+// the type of the column, as it is done for every value written.
+func Test_ConvertValueForField_Allocs(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx    = context.Background()
+			driver = &Driver{}
+		)
+		t.Assert(testing.AllocsPerRun(100, func() {
+			_ = fieldTypeFamily("LowCardinality(Nullable(UInt8))")
+		}), 0)
+		t.Assert(testing.AllocsPerRun(100, func() {
+			_, _ = driver.convertValueByFieldType(ctx, "UInt8", 5)
+		}), 0)
+		t.Assert(testing.AllocsPerRun(100, func() {
+			_, _ = driver.ConvertValueForField(ctx, "Int64", true)
+		}), 0)
+	})
+}

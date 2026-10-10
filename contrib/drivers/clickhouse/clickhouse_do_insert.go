@@ -25,6 +25,13 @@ func (d *Driver) DoInsert(
 	if option.InsertOption == gdb.InsertOptionIgnore {
 		return nil, errUnsupportedInsertIgnore
 	}
+	fields, err := d.tableFields(ctx, table)
+	if err != nil {
+		return nil, err
+	}
+	if list, err = d.convertDecimalValues(ctx, fields, list); err != nil {
+		return nil, err
+	}
 	var keys, valueHolder []string
 
 	// Handle the field names and placeholders.
