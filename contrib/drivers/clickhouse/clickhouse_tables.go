@@ -8,13 +8,12 @@ package clickhouse
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gogf/gf/v2/database/gdb"
 )
 
 const (
-	tablesSqlTmp = "select name from `system`.tables where database = '%s'"
+	tablesSql = "select name from `system`.tables where database = currentDatabase()"
 )
 
 // Tables retrieves and returns the tables of current schema.
@@ -25,7 +24,7 @@ func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string,
 	if err != nil {
 		return nil, err
 	}
-	result, err = d.DoSelect(ctx, link, fmt.Sprintf(tablesSqlTmp, d.GetConfig().Name))
+	result, err = d.DoSelect(ctx, link, tablesSql)
 	if err != nil {
 		return
 	}
