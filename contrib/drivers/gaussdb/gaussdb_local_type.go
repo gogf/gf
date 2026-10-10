@@ -56,8 +56,8 @@ var localTypeMap = map[string]gdb.LocalType{
 	"_hll_hashval":                   gdb.LocalTypeString,
 	"_hll_trans_type":                gdb.LocalTypeString,
 	"_inet":                          gdb.LocalTypeString,
-	"_int1":                          gdb.LocalTypeInt,
-	"_int16":                         gdb.LocalTypeInt,
+	"_int1":                          gdb.LocalTypeInt32Slice,  // was int
+	"_int16":                         gdb.LocalTypeStringSlice, // was int
 	"_int2":                          gdb.LocalTypeInt32Slice,
 	"_int2vector":                    gdb.LocalTypeStringSlice, // was int
 	"_int2vector_extend":             gdb.LocalTypeStringSlice, // was int
@@ -153,7 +153,7 @@ var localTypeMap = map[string]gdb.LocalType{
 	"hll_trans_type":                 gdb.LocalTypeString,
 	"inet":                           gdb.LocalTypeString,
 	"int1":                           gdb.LocalTypeInt,
-	"int16":                          gdb.LocalTypeInt,
+	"int16":                          gdb.LocalTypeBigInt, // was int
 	"int2":                           gdb.LocalTypeInt,
 	"int2vector":                     gdb.LocalTypeString, // was int
 	"int2vector_extend":              gdb.LocalTypeString, // was int
