@@ -8,9 +8,13 @@ package ghttp
 
 import (
 	"net/http"
+	"reflect"
+	"strings"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // SetQuery sets custom query value with key-value pairs.
@@ -148,8 +152,57 @@ func (r *Request) doGetQueryStruct(pointer any, mapping ...map[string]string) (d
 	if data == nil {
 		data = map[string]any{}
 	}
+	r.mergeRepeatedQueryValues(data, pointer)
 	if err = r.mergeDefaultStructValue(data, pointer); err != nil {
 		return data, nil
 	}
 	return data, gconv.Struct(data, pointer, mapping...)
+}
+
+// mergeRepeatedQueryValues merges all the values of the repeated query parameters into `data`,
+// like `names=a&names=b`, for the struct fields of slice type in `pointer`.
+//
+// The query string is parsed by gstr.Parse, which keeps only the last value of a repeated plain
+// key, so the slice field would receive only that last value without this merging. The value in
+// `data` is replaced only if it is still the last value from the query string, as it might be
+// overridden by the parameters of higher priority, like the form, body or custom ones.
+func (r *Request) mergeRepeatedQueryValues(data map[string]any, pointer any) {
+	if r.URL.RawQuery == "" {
+		return
+	}
+	repeatedValues := make(map[string][]string)
+	for key, values := range r.URL.Query() {
+		// The keys like `names[]` are already parsed as slice by gstr.Parse.
+		if len(values) > 1 && !strings.Contains(key, "[") {
+			repeatedValues[key] = values
+		}
+	}
+	if len(repeatedValues) == 0 {
+		return
+	}
+	fields, err := gstructs.Fields(gstructs.FieldsInput{
+		Pointer:         pointer,
+		RecursiveOption: gstructs.RecursiveOptionEmbedded,
+	})
+	if err != nil {
+		// The `pointer` is not a struct, which has no field to merge and is left to the struct
+		// converting as it is.
+		return
+	}
+	for _, field := range fields {
+		fieldType := field.Field.Type
+		for fieldType.Kind() == reflect.Pointer {
+			fieldType = fieldType.Elem()
+		}
+		// The []byte field receives the value as a whole like the string field.
+		if fieldType.Kind() != reflect.Slice || fieldType.Elem().Kind() == reflect.Uint8 {
+			continue
+		}
+		foundKey, foundValue := gutil.MapPossibleItemByKey(data, field.TagPriorityName())
+		values, ok := repeatedValues[foundKey]
+		if !ok || foundValue != values[len(values)-1] {
+			continue
+		}
+		data[foundKey] = values
+	}
 }
