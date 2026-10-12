@@ -8,6 +8,7 @@ package sqlitecgo_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -15,7 +16,6 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/text/gstr"
 )
 
 func Test_DB_Insert_NilGjson(t *testing.T) {
@@ -107,7 +107,7 @@ func Test_DB_Ctx(t *testing.T) {
 		SELECT COUNT(*) FROM counter
 		`)
 		t.AssertNE(err, nil)
-		t.Assert(gstr.Contains(err.Error(), "deadline"), true)
+		t.Assert(errors.Is(ctx.Err(), context.DeadlineExceeded), true)
 	})
 }
 
