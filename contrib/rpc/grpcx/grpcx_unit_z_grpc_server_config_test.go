@@ -55,7 +55,8 @@ func Test_Grpcx_Grpc_Server_Config(t *testing.T) {
 	// cfg set one endpoint
 	gtest.C(t, func(t *gtest.T) {
 		s := Server.New(cfg)
-		s.doServiceRegister()
+		err := s.doServiceRegister(serveFailureLog)
+		t.AssertNil(err)
 		for _, svc := range s.services {
 			t.Assert(svc.GetEndpoints().String(), addr)
 		}
@@ -68,7 +69,8 @@ func Test_Grpcx_Grpc_Server_Config(t *testing.T) {
 	}
 	gtest.C(t, func(t *gtest.T) {
 		s := Server.New(cfg)
-		s.doServiceRegister()
+		err := s.doServiceRegister(serveFailureLog)
+		t.AssertNil(err)
 		for _, svc := range s.services {
 			t.Assert(svc.GetEndpoints().String(), addr)
 		}

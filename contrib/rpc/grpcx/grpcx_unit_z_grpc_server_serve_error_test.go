@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -29,6 +30,38 @@ import (
 
 // testRunServeFatalEnv enables the subprocess path that expects Run() to Fatalf.
 const testRunServeFatalEnv = "GF_GRPCX_TEST_RUN_SERVE_FATAL"
+
+// testRegisterFatalEnv enables the subprocess path that expects register failure to Fatalf.
+const testRegisterFatalEnv = "GF_GRPCX_TEST_REGISTER_FATAL"
+
+// registerFailRegistrar fails every Register call.
+type registerFailRegistrar struct{}
+
+// Register returns a fixed registration error.
+func (registerFailRegistrar) Register(context.Context, gsvc.Service) (gsvc.Service, error) {
+	return nil, errors.New("register failed")
+}
+
+// Deregister implements gsvc.Registrar.
+func (registerFailRegistrar) Deregister(context.Context, gsvc.Service) error {
+	return nil
+}
+
+// runRegisterFatalChild registers with a failing registrar on the fatal path.
+func runRegisterFatalChild() {
+	logger := glog.New()
+	logger.SetStdoutPrint(true)
+	c := Server.NewConfig()
+	c.Name = guid.S()
+	c.Address = "127.0.0.1:0"
+	c.Logger = logger
+	c.LogStdout = false
+	s := Server.New(c)
+	s.registrar = registerFailRegistrar{}
+	if err := s.doServiceRegister(serveFailureFatal); err != nil {
+		os.Exit(2)
+	}
+}
 
 // errAcceptFailed is returned by acceptFailListener to force Server.Serve to fail.
 var errAcceptFailed = errors.New("accept failed")
@@ -190,6 +223,49 @@ func Test_Grpcx_Run_ServeErrorIsFatal(t *testing.T) {
 			"-test.v=false",
 		)
 		cmd.Env = append(os.Environ(), testRunServeFatalEnv+"=1")
+		output, err := cmd.CombinedOutput()
+		if ctx.Err() != nil {
+			t.Fatalf("subprocess timed out, output=%s", output)
+		}
+		t.AssertNE(err, nil)
+
+		var exitErr *exec.ExitError
+		t.Assert(errors.As(err, &exitErr), true)
+		t.Assert(exitErr.ExitCode(), 1)
+		t.Assert(strings.Contains(string(output), "FATA"), true)
+	})
+}
+
+func Test_StartManaged_RegisterErrorIsReturned(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var buf safeBuffer
+		s := newServeErrorTestServer(&buf)
+		s.registrar = registerFailRegistrar{}
+		err := s.StartManaged()
+		t.AssertNE(err, nil)
+		t.Assert(strings.Contains(err.Error(), "register failed"), true)
+		t.Assert(strings.Contains(buf.String(), "FATA"), false)
+	})
+}
+
+func Test_doServiceRegister_FatalOnBlockingPath(t *testing.T) {
+	if os.Getenv(testRegisterFatalEnv) == "1" {
+		runRegisterFatalChild()
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+		defer cancel()
+
+		cmd := exec.CommandContext(
+			ctx,
+			os.Args[0],
+			"-test.run=^Test_doServiceRegister_FatalOnBlockingPath$",
+			"-test.count=1",
+			"-test.v=false",
+		)
+		cmd.Env = append(os.Environ(), testRegisterFatalEnv+"=1")
 		output, err := cmd.CombinedOutput()
 		if ctx.Err() != nil {
 			t.Fatalf("subprocess timed out, output=%s", output)

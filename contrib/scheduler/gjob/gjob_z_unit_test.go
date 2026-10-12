@@ -8,6 +8,7 @@ package gjob_test
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -583,11 +584,6 @@ scheduler:
     - name: disabled-worker
       type: worker
       enable: false
-    - name: no-type
-      enable: true
-    - name: invalid-type
-      type: unknown
-      enable: true
 `
 
 func TestNewServersFromConfig(t *testing.T) {
@@ -616,12 +612,13 @@ func TestNewServersFromConfig(t *testing.T) {
 			}),
 		}
 
-		servers := gjob.NewServersFromConfig(context.Background(), handlers)
+		servers, err := gjob.NewServersFromConfig(context.Background(), handlers)
+		t.AssertNil(err)
 		// Should create 2 servers: one WorkerServer and one CronServer.
 		t.Assert(len(servers), 2)
 
 		app := gapp.New(servers...)
-		err := app.Start(context.Background())
+		err = app.Start(context.Background())
 		t.AssertNil(err)
 
 		time.Sleep(1500 * time.Millisecond)
@@ -643,8 +640,9 @@ func TestNewServersFromConfigNoHandlers(t *testing.T) {
 		adapter.SetContent(testJobConfig)
 		defer adapter.SetContent("")
 
-		// No handlers provided.
-		servers := gjob.NewServersFromConfig(context.Background(), gjob.HandlerMap{})
+		// No handlers provided. Enabled jobs without a handler are skipped.
+		servers, err := gjob.NewServersFromConfig(context.Background(), gjob.HandlerMap{})
+		t.AssertNil(err)
 		t.Assert(len(servers), 0)
 	})
 }
@@ -664,8 +662,8 @@ func TestNewServersFromConfigWrongHandlerType(t *testing.T) {
 			"cron1":   func() {}, // Not a CronHandler
 		}
 
-		servers := gjob.NewServersFromConfig(context.Background(), handlers)
-		// All handlers have wrong types, so no servers should be created.
+		servers, err := gjob.NewServersFromConfig(context.Background(), handlers)
+		t.AssertNE(err, nil)
 		t.Assert(len(servers), 0)
 	})
 }
@@ -676,12 +674,13 @@ func TestNewServersFromConfigEmptyConfig(t *testing.T) {
 		if !ok {
 			t.Fatal("expected gcfg.AdapterFile")
 		}
-		adapter.SetContent("")
+		adapter.SetContent("scheduler:\n  note: empty\n")
 		defer adapter.SetContent("")
 
-		servers := gjob.NewServersFromConfig(context.Background(), gjob.HandlerMap{
+		servers, err := gjob.NewServersFromConfig(context.Background(), gjob.HandlerMap{
 			"worker1": gjob.WorkerHandler(func(ctx context.Context) func() { return nil }),
 		})
+		t.AssertNil(err)
 		t.Assert(len(servers), 0)
 	})
 }
@@ -706,8 +705,9 @@ scheduler:
 			"cron1": gjob.CronHandler(func(ctx context.Context) error { return nil }),
 		}
 
-		servers := gjob.NewServersFromConfig(context.Background(), handlers)
-		t.Assert(len(servers), 0)
+		_, err := gjob.NewServersFromConfig(context.Background(), handlers)
+		t.AssertNE(err, nil)
+		t.Assert(strings.Contains(err.Error(), "missing spec"), true)
 	})
 }
 
@@ -732,8 +732,50 @@ scheduler:
 			"cron1": gjob.CronHandler(func(ctx context.Context) error { return nil }),
 		}
 
-		servers := gjob.NewServersFromConfig(context.Background(), handlers)
+		servers, err := gjob.NewServersFromConfig(context.Background(), handlers)
+		t.AssertNil(err)
 		// Only one CronServer should be created.
 		t.Assert(len(servers), 1)
+	})
+}
+
+func TestNewServersFromConfigUnknownType(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		const unknownTypeConfig = `
+scheduler:
+  job:
+    - name: worker1
+      type: unknown
+      enable: true
+`
+		adapter, ok := g.Cfg().GetAdapter().(*gcfg.AdapterFile)
+		if !ok {
+			t.Fatal("expected gcfg.AdapterFile")
+		}
+		adapter.SetContent(unknownTypeConfig)
+		defer adapter.SetContent("")
+
+		servers, err := gjob.NewServersFromConfig(context.Background(), gjob.HandlerMap{
+			"worker1": gjob.WorkerHandler(func(ctx context.Context) func() { return nil }),
+		})
+		t.Assert(servers, nil)
+		t.AssertNE(err, nil)
+		t.Assert(strings.Contains(err.Error(), "unknown type"), true)
+	})
+}
+
+func TestNewServersFromConfigReadError(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		adapter, ok := g.Cfg().GetAdapter().(*gcfg.AdapterFile)
+		if !ok {
+			t.Fatal("expected gcfg.AdapterFile")
+		}
+		adapter.SetContent("scheduler: [")
+		defer adapter.SetContent("")
+
+		servers, err := gjob.NewServersFromConfig(context.Background(), gjob.HandlerMap{})
+		t.Assert(servers, nil)
+		t.AssertNE(err, nil)
+		t.Assert(strings.Contains(err.Error(), "failed to get job config"), true)
 	})
 }

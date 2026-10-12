@@ -62,14 +62,17 @@ func main() {
         }),
     }
 
-    jobServers := gjob.NewServersFromConfig(context.Background(), handlers)
+    jobServers, err := gjob.NewServersFromConfig(context.Background(), handlers)
+    if err != nil {
+        g.Log().Fatal(context.Background(), err)
+    }
     app := g.App(gapp.NewHTTPServerAdapter(httpServer))
     app.Add(jobServers...)
     app.Run(gctx.GetInitCtx())
 }
 ```
 
-被禁用（`enable: false`）的任务或`HandlerMap`中没有对应处理函数的任务会自动跳过。
+被禁用（`enable: false`）的任务，或`HandlerMap`中没有对应处理函数的任务，会被跳过。读取`scheduler.job`失败、未知任务类型、缺少`cron`的`spec`，或处理函数类型不匹配时，会返回错误，避免进程在这些任务缺失的情况下仍正常启动。
 
 ## WorkerServer
 
@@ -227,4 +230,4 @@ func main() {
 
 | 方法 | 说明 |
 |---|---|
-| `NewServersFromConfig(ctx, HandlerMap)` | 从`scheduler.job`配置创建服务器 |
+| `NewServersFromConfig(ctx, HandlerMap) ([]gapp.Server, error)` | 从`scheduler.job`配置创建服务器；非法配置返回错误 |

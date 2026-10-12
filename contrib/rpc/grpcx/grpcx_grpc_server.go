@@ -127,7 +127,10 @@ func (s *GrpcServer) serve(failureAction serveFailureAction) error {
 	s.listenerMu.Unlock()
 
 	go s.doServeAsynchronously(ctx, listener, failureAction)
-	s.doServiceRegister()
+	if err := s.doServiceRegister(failureAction); err != nil {
+		s.StopForceful()
+		return err
+	}
 	s.Logger().Infof(
 		ctx,
 		"pid[%d]: grpc server started listening on [%s]",
@@ -185,9 +188,11 @@ func (s *GrpcServer) Logger() *glog.Logger {
 }
 
 // doServiceRegister registers current service to Registry.
-func (s *GrpcServer) doServiceRegister() {
+// Register failures terminate the process on the blocking Run path.
+// StartManaged returns the error so the caller can stop other servers.
+func (s *GrpcServer) doServiceRegister(failureAction serveFailureAction) error {
 	if s.registrar == nil {
-		return
+		return nil
 	}
 	s.serviceMu.Lock()
 	defer s.serviceMu.Unlock()
@@ -198,7 +203,6 @@ func (s *GrpcServer) doServiceRegister() {
 		}}
 	}
 	var (
-		err      error
 		ctx      = gctx.GetInitCtx()
 		protocol = `grpc`
 	)
@@ -215,13 +219,18 @@ func (s *GrpcServer) doServiceRegister() {
 		s.Logger().Debugf(ctx, `service register: %+v`, service)
 		if len(service.GetEndpoints()) == 0 {
 			s.Logger().Warningf(ctx, `no endpoints found to register service, abort service registering`)
-			return
+			return nil
 		}
-		if service, err = s.registrar.Register(ctx, service); err != nil {
-			s.Logger().Fatalf(ctx, `%+v`, err)
+		registered, err := s.registrar.Register(ctx, service)
+		if err != nil {
+			if failureAction == serveFailureFatal {
+				s.Logger().Fatalf(ctx, `%+v`, err)
+			}
+			return err
 		}
-		s.services[i] = service
+		s.services[i] = registered
 	}
+	return nil
 }
 
 // doServiceDeregister de-registers current service from Registry.

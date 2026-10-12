@@ -62,14 +62,17 @@ func main() {
         }),
     }
 
-    jobServers := gjob.NewServersFromConfig(context.Background(), handlers)
+    jobServers, err := gjob.NewServersFromConfig(context.Background(), handlers)
+    if err != nil {
+        g.Log().Fatal(context.Background(), err)
+    }
     app := g.App(gapp.NewHTTPServerAdapter(httpServer))
     app.Add(jobServers...)
     app.Run(gctx.GetInitCtx())
 }
 ```
 
-Tasks that are disabled (`enable: false`) or have no matching handler in the `HandlerMap` are automatically skipped.
+Tasks that are disabled (`enable: false`) or have no matching handler in the `HandlerMap` are skipped. A failure to read `scheduler.job`, an unknown task type, a missing cron spec, or a handler of the wrong type is returned as an error so the process does not start with those jobs missing.
 
 ## WorkerServer
 
@@ -227,4 +230,4 @@ func main() {
 
 | Method | Description |
 |---|---|
-| `NewServersFromConfig(ctx, HandlerMap)` | Creates servers from `scheduler.job` config |
+| `NewServersFromConfig(ctx, HandlerMap) ([]gapp.Server, error)` | Creates servers from `scheduler.job` config; invalid config returns an error |

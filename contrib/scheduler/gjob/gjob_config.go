@@ -12,6 +12,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gapp"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -57,14 +59,19 @@ type HandlerMap map[string]any
 //	      spec: "*/2 * * * * *"
 //
 // The returned slice contains only the servers that have at least one task.
-// Disabled tasks and tasks without matching handlers are skipped.
-func NewServersFromConfig(ctx context.Context, handlers HandlerMap) []gapp.Server {
+// Disabled tasks and tasks without a matching handler are skipped.
+// A config read error, an unknown task type, a missing cron spec, or a handler
+// type mismatch is returned so startup can fail instead of silently dropping jobs.
+func NewServersFromConfig(ctx context.Context, handlers HandlerMap) ([]gapp.Server, error) {
+	configs, err := loadConfig(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	var (
-		configs     = loadConfig(ctx)
 		workerTasks []WorkerTask
 		cronTasks   []CronTask
 	)
-
 	for _, cfg := range configs {
 		if !cfg.Enable {
 			continue
@@ -80,8 +87,11 @@ func NewServersFromConfig(ctx context.Context, handlers HandlerMap) []gapp.Serve
 		case taskTypeWorker:
 			h, ok := handler.(WorkerHandler)
 			if !ok {
-				g.Log().Warningf(ctx, "job config %s: handler is not WorkerHandler, skipping", cfg.Name)
-				continue
+				return nil, gerror.NewCodef(
+					gcode.CodeInvalidConfiguration,
+					"job config %s: handler is not WorkerHandler",
+					cfg.Name,
+				)
 			}
 			workerTasks = append(workerTasks, WorkerTask{
 				Name:    cfg.Name,
@@ -90,13 +100,19 @@ func NewServersFromConfig(ctx context.Context, handlers HandlerMap) []gapp.Serve
 
 		case taskTypeCron:
 			if cfg.Spec == "" {
-				g.Log().Warningf(ctx, "job config %s: missing spec for cron task, skipping", cfg.Name)
-				continue
+				return nil, gerror.NewCodef(
+					gcode.CodeInvalidConfiguration,
+					"job config %s: missing spec for cron task",
+					cfg.Name,
+				)
 			}
 			h, ok := handler.(CronHandler)
 			if !ok {
-				g.Log().Warningf(ctx, "job config %s: handler is not CronHandler, skipping", cfg.Name)
-				continue
+				return nil, gerror.NewCodef(
+					gcode.CodeInvalidConfiguration,
+					"job config %s: handler is not CronHandler",
+					cfg.Name,
+				)
 			}
 			cronTasks = append(cronTasks, CronTask{
 				Name:    cfg.Name,
@@ -105,64 +121,65 @@ func NewServersFromConfig(ctx context.Context, handlers HandlerMap) []gapp.Serve
 			})
 
 		default:
-			g.Log().Warningf(ctx, "job config %s: unknown type %q, skipping", cfg.Name, cfg.Type)
+			return nil, gerror.NewCodef(
+				gcode.CodeInvalidConfiguration,
+				"job config %s: unknown type %q",
+				cfg.Name,
+				cfg.Type,
+			)
 		}
 	}
 
 	var servers []gapp.Server
-
 	if len(workerTasks) > 0 {
 		servers = append(servers, NewWorkerServer(ctx, workerTasks...))
 	}
-
 	if len(cronTasks) > 0 {
 		servers = append(servers, NewCronServer(ctx, cronTasks...))
 	}
-
-	return servers
+	return servers, nil
 }
 
 // loadConfig reads job configurations from the application config file.
-func loadConfig(ctx context.Context) []*jobConfig {
+func loadConfig(ctx context.Context) ([]*jobConfig, error) {
 	cfg, err := g.Cfg().Get(ctx, configKey)
 	if err != nil {
-		g.Log().Errorf(ctx, "failed to get job config: %v", err)
-		return nil
+		return nil, gerror.WrapCode(gcode.CodeInvalidConfiguration, err, "failed to get job config")
 	}
-
 	if cfg.IsNil() || cfg.IsEmpty() {
-		return nil
+		return nil, nil
 	}
 
 	maps := cfg.Maps()
 	if len(maps) == 0 {
-		return nil
+		return nil, nil
 	}
 
-	var configs []*jobConfig
+	configs := make([]*jobConfig, 0, len(maps))
 	for _, m := range maps {
-		jobType := gconv.String(m["type"])
+		var (
+			name    = gconv.String(m["name"])
+			jobType = gconv.String(m["type"])
+		)
 		if jobType == "" {
-			name := gconv.String(m["name"])
-			g.Log().Warningf(ctx, "job config %s: missing type, skipping", name)
-			continue
+			return nil, gerror.NewCodef(gcode.CodeInvalidConfiguration, "job config %s: missing type", name)
 		}
-
 		if jobType != taskTypeWorker && jobType != taskTypeCron {
-			name := gconv.String(m["name"])
-			g.Log().Warningf(ctx, "job config %s: invalid type %q, skipping", name, jobType)
-			continue
+			return nil, gerror.NewCodef(
+				gcode.CodeInvalidConfiguration,
+				"job config %s: unknown type %q",
+				name,
+				jobType,
+			)
 		}
-
 		configs = append(configs, &jobConfig{
-			Name:   gconv.String(m["name"]),
+			Name:   name,
 			Type:   jobType,
 			Enable: gconv.Bool(m["enable"]),
 			Spec:   gconv.String(m["spec"]),
 		})
 	}
-
-	return configs
+	return configs, nil
 }
 
 // String returns a human-readable description of the HandlerMap.

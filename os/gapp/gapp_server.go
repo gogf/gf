@@ -9,6 +9,7 @@
 package gapp
 
 import (
+	"sync"
 	"time"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -16,6 +17,8 @@ import (
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/net/gudp"
+	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/os/glog"
 )
 
 // adapterStartTimeout is the maximum duration to wait for a server
@@ -31,17 +34,143 @@ const adapterStartPollInterval = time.Millisecond * 10
 // startup timeout path is observed before a listener exists.
 var adapterServeGate func()
 
-// abandonUnreadyServer reports a startup timeout.
-// It closes the server only after a port is listening, and returns that close
-// error when closing fails. gudp.Server.Close always uses s.conn and panics
-// when startup has not stored the connection yet.
-func abandonUnreadyServer(port int, closeFn func() error, message string) error {
-	if port > 0 {
-		if closeErr := closeFn(); closeErr != nil {
-			return gerror.WrapCode(gcode.CodeOperationFailed, closeErr, message)
+// serveResult delivers a background Run error to Start, or logs it once Start
+// has already reported success. An abandoned start ignores the error caused by
+// the follow-up Close.
+type serveResult struct {
+	mu        sync.Mutex
+	errCh     chan error
+	accepted  bool
+	abandoned bool
+}
+
+// newServeResult creates an empty serve result for one Start call.
+func newServeResult() *serveResult {
+	return &serveResult{errCh: make(chan error, 1)}
+}
+
+// watch runs the server and records a non-nil Run error.
+func (r *serveResult) watch(run func() error) {
+	if adapterServeGate != nil {
+		adapterServeGate()
+	}
+	err := run()
+	if err == nil {
+		return
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.abandoned {
+		return
+	}
+	if r.accepted {
+		glog.Errorf(gctx.GetInitCtx(), "server stopped after start: %+v", err)
+		return
+	}
+	select {
+	case r.errCh <- err:
+	default:
+		glog.Errorf(gctx.GetInitCtx(), "server stopped after start: %+v", err)
+	}
+}
+
+// accept marks startup successful and returns a Run error that won the race.
+func (r *serveResult) accept() error {
+	r.mu.Lock()
+	r.accepted = true
+	r.mu.Unlock()
+	return r.takeErr()
+}
+
+// markAbandoned ignores Run errors caused by closing an unready server.
+func (r *serveResult) markAbandoned() {
+	r.mu.Lock()
+	r.abandoned = true
+	r.mu.Unlock()
+}
+
+// takeErr returns a Run error already queued for Start, if any.
+func (r *serveResult) takeErr() error {
+	select {
+	case err := <-r.errCh:
+		return err
+	default:
+		return nil
+	}
+}
+
+// abandonUnreadyServer waits until the server is listening, then closes it.
+// Close is not called before a port exists, because gudp.Server.Close panics
+// when the connection is not stored yet. A close error is returned to the caller.
+// serveErr, when non-nil, ends the wait early with that Run error.
+func abandonUnreadyServer(port func() int, closeFn func() error, serveErr <-chan error, message string) error {
+	for {
+		if serveErr != nil {
+			select {
+			case err := <-serveErr:
+				if err != nil {
+					return gerror.WrapCode(gcode.CodeInternalError, err, message)
+				}
+			default:
+			}
+		}
+		if port() > 0 {
+			if closeErr := closeFn(); closeErr != nil {
+				return gerror.WrapCode(gcode.CodeOperationFailed, closeErr, message)
+			}
+			return gerror.NewCode(gcode.CodeOperationFailed, message)
+		}
+		select {
+		case err := <-serveErr:
+			if err != nil {
+				return gerror.WrapCode(gcode.CodeInternalError, err, message)
+			}
+		case <-time.After(adapterStartPollInterval):
 		}
 	}
-	return gerror.NewCode(gcode.CodeOperationFailed, message)
+}
+
+// startBlockingServer polls until a blocking server is listening.
+// On timeout it keeps waiting only long enough to close the listener once the
+// port appears, and returns that close error instead of leaving the server running.
+func startBlockingServer(run func() error, port func() int, closeFn func() error, failPrefix, timeoutMessage string) error {
+	result := newServeResult()
+	go result.watch(run)
+
+	deadline := time.Now().Add(adapterStartTimeout)
+	for time.Now().Before(deadline) {
+		if port() > 0 {
+			if err := result.accept(); err != nil {
+				return gerror.WrapCode(gcode.CodeInternalError, err, failPrefix)
+			}
+			return nil
+		}
+		if err := result.takeErr(); err != nil {
+			return gerror.WrapCode(gcode.CodeInternalError, err, failPrefix)
+		}
+		time.Sleep(adapterStartPollInterval)
+	}
+	if err := result.takeErr(); err != nil {
+		return gerror.WrapCode(gcode.CodeInternalError, err, failPrefix)
+	}
+	return abandonUnreadyServer(port, func() error {
+		result.markAbandoned()
+		return closeFn()
+	}, result.errCh, timeoutMessage)
+}
+
+// closeIfListening closes a server once, and only after it has a listened port.
+func closeIfListening(closed *bool, mu *sync.Mutex, port func() int, closeFn func() error) error {
+	mu.Lock()
+	defer mu.Unlock()
+	if *closed || port() <= 0 {
+		return nil
+	}
+	if err := closeFn(); err != nil {
+		return err
+	}
+	*closed = true
+	return nil
 }
 
 // httpServerAdapter wraps ghttp.Server to implement the Server interface.
@@ -71,7 +200,9 @@ func (a *httpServerAdapter) Stop(graceful bool) error {
 
 // tcpServerAdapter wraps gtcp.Server to implement the Server interface.
 type tcpServerAdapter struct {
-	server *gtcp.Server
+	server  *gtcp.Server
+	closeMu sync.Mutex
+	closed  bool
 }
 
 // NewTCPServerAdapter creates and returns a Server adapter for gtcp.Server.
@@ -83,65 +214,33 @@ func NewTCPServerAdapter(server *gtcp.Server) Server {
 // Since gtcp.Server.Run() is blocking, it is launched in a goroutine
 // and the method polls until the listener is ready.
 func (a *tcpServerAdapter) Start() error {
-	var (
-		errCh = make(chan error, 1)
-	)
-	go func() {
-		if adapterServeGate != nil {
-			adapterServeGate()
-		}
-		if err := a.server.Run(); err != nil {
-			select {
-			case errCh <- err:
-			default:
-			}
-		}
-	}()
-
-	// Poll until the listener is established or timeout.
-	deadline := time.Now().Add(adapterStartTimeout)
-	for time.Now().Before(deadline) {
-		if a.server.GetListenedPort() > 0 {
-			return nil
-		}
-		select {
-		case err := <-errCh:
-			return gerror.WrapCode(gcode.CodeInternalError, err, "tcp server start failed")
-		default:
-		}
-		time.Sleep(adapterStartPollInterval)
-	}
-
-	select {
-	case err := <-errCh:
-		return gerror.WrapCode(gcode.CodeInternalError, err, "tcp server start failed")
-	default:
-	}
-	// Close only after a port is listening. A timeout before listen must not
-	// call Close, and a close failure has to be returned to the caller.
-	return abandonUnreadyServer(
-		a.server.GetListenedPort(),
-		a.server.Close,
+	return startBlockingServer(
+		a.server.Run,
+		a.server.GetListenedPort,
+		a.closeListening,
+		"tcp server start failed",
 		"tcp server failed to start within timeout",
 	)
 }
 
-// Post-start errors from the underlying Run() goroutine are sent to errCh
-// but are not read after Start() returns successfully. A server that fails
-// after startup will appear healthy while being non-functional. Callers
-// needing post-start error monitoring should wrap the adapter with their
-// own error notification mechanism.
+// closeListening closes the TCP listener once it exists.
+func (a *tcpServerAdapter) closeListening() error {
+	return closeIfListening(&a.closed, &a.closeMu, a.server.GetListenedPort, a.server.Close)
+}
 
 // Stop stops the TCP server.
 // Since TCP has no built-in graceful shutdown concept, both graceful and forceful
-// stop close the listener immediately.
+// stop close the listener immediately. Stop before the listener exists is a no-op
+// so a nil listener is not treated as a successful close of a later bind.
 func (a *tcpServerAdapter) Stop(_ bool) error {
-	return a.server.Close()
+	return a.closeListening()
 }
 
 // udpServerAdapter wraps gudp.Server to implement the Server interface.
 type udpServerAdapter struct {
-	server *gudp.Server
+	server  *gudp.Server
+	closeMu sync.Mutex
+	closed  bool
 }
 
 // NewUDPServerAdapter creates and returns a Server adapter for gudp.Server.
@@ -153,52 +252,25 @@ func NewUDPServerAdapter(server *gudp.Server) Server {
 // Since gudp.Server.Run() is blocking, it is launched in a goroutine
 // and the method polls until the connection is ready.
 func (a *udpServerAdapter) Start() error {
-	var (
-		errCh = make(chan error, 1)
-	)
-	go func() {
-		if adapterServeGate != nil {
-			adapterServeGate()
-		}
-		if err := a.server.Run(); err != nil {
-			select {
-			case errCh <- err:
-			default:
-			}
-		}
-	}()
-
-	// Poll until the connection is established or timeout.
-	deadline := time.Now().Add(adapterStartTimeout)
-	for time.Now().Before(deadline) {
-		if a.server.GetListenedPort() > 0 {
-			return nil
-		}
-		select {
-		case err := <-errCh:
-			return gerror.WrapCode(gcode.CodeInternalError, err, "udp server start failed")
-		default:
-		}
-		time.Sleep(adapterStartPollInterval)
-	}
-
-	select {
-	case err := <-errCh:
-		return gerror.WrapCode(gcode.CodeInternalError, err, "udp server start failed")
-	default:
-	}
-	// Close only after a port is listening. gudp.Server.Close panics when the
-	// connection is not stored yet, and a close failure has to be returned.
-	return abandonUnreadyServer(
-		a.server.GetListenedPort(),
-		a.server.Close,
+	return startBlockingServer(
+		a.server.Run,
+		a.server.GetListenedPort,
+		a.closeListening,
+		"udp server start failed",
 		"udp server failed to start within timeout",
 	)
 }
 
+// closeListening closes the UDP connection once it exists.
+// gudp.Server.Close panics when the connection has not been stored yet.
+func (a *udpServerAdapter) closeListening() error {
+	return closeIfListening(&a.closed, &a.closeMu, a.server.GetListenedPort, a.server.Close)
+}
+
 // Stop stops the UDP server.
 // Since UDP has no built-in graceful shutdown concept, both graceful and forceful
-// stop close the connection immediately.
+// stop close the connection immediately. Stop before the connection exists does
+// not call Close.
 func (a *udpServerAdapter) Stop(_ bool) error {
-	return a.server.Close()
+	return a.closeListening()
 }

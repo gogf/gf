@@ -9,7 +9,9 @@
 package gapp
 
 import (
+	"bytes"
 	"context"
+	"net"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -18,6 +20,7 @@ import (
 
 	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/net/gudp"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -125,26 +128,40 @@ func TestBootPanicDoesNotMarkBooted(t *testing.T) {
 	})
 }
 
-func TestAbandonUnreadyServerSkipsCloseBeforeListen(t *testing.T) {
+func TestAbandonUnreadyServerClosesWhenPortAppears(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		called := false
-		err := abandonUnreadyServer(-1, func() error {
-			called = true
-			return context.Canceled
-		}, "udp server failed to start within timeout")
-		t.Assert(called, false)
+		var (
+			port   int32 = -1
+			called int32
+		)
+		done := make(chan error, 1)
+		go func() {
+			done <- abandonUnreadyServer(func() int {
+				return int(atomic.LoadInt32(&port))
+			}, func() error {
+				atomic.StoreInt32(&called, 1)
+				return nil
+			}, nil, "udp server failed to start within timeout")
+		}()
+
+		time.Sleep(30 * time.Millisecond)
+		t.Assert(atomic.LoadInt32(&called), int32(0))
+		atomic.StoreInt32(&port, 1)
+
+		err := <-done
+		t.Assert(atomic.LoadInt32(&called), int32(1))
+		t.AssertNE(err, nil)
 		t.Assert(strings.Contains(err.Error(), "udp server failed to start within timeout"), true)
-		t.Assert(strings.Contains(err.Error(), context.Canceled.Error()), false)
 	})
 }
 
 func TestAbandonUnreadyServerClosesWhenListening(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		called := false
-		err := abandonUnreadyServer(1, func() error {
+		err := abandonUnreadyServer(func() int { return 1 }, func() error {
 			called = true
 			return nil
-		}, "tcp server failed to start within timeout")
+		}, nil, "tcp server failed to start within timeout")
 		t.Assert(called, true)
 		t.AssertNE(err, nil)
 		t.Assert(strings.Contains(err.Error(), "tcp server failed to start within timeout"), true)
@@ -154,16 +171,43 @@ func TestAbandonUnreadyServerClosesWhenListening(t *testing.T) {
 
 func TestAbandonUnreadyServerReturnsCloseError(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		err := abandonUnreadyServer(1, func() error {
+		err := abandonUnreadyServer(func() int { return 1 }, func() error {
 			return context.Canceled
-		}, "tcp server failed to start within timeout")
+		}, nil, "tcp server failed to start within timeout")
 		t.AssertNE(err, nil)
 		t.Assert(strings.Contains(err.Error(), "tcp server failed to start within timeout"), true)
 		t.Assert(strings.Contains(err.Error(), context.Canceled.Error()), true)
 	})
 }
 
-func TestTCPAndUDPStartTimeoutDoNotCloseBeforeListen(t *testing.T) {
+func TestAbandonUnreadyServerReturnsServeError(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		serveErr := make(chan error, 1)
+		serveErr <- context.Canceled
+		called := false
+		err := abandonUnreadyServer(func() int { return -1 }, func() error {
+			called = true
+			return nil
+		}, serveErr, "tcp server failed to start within timeout")
+		t.Assert(called, false)
+		t.AssertNE(err, nil)
+		t.Assert(strings.Contains(err.Error(), context.Canceled.Error()), true)
+	})
+}
+
+func TestStopBeforeListenDoesNotPanic(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		tcpServer := gtcp.NewServer("127.0.0.1:0", func(*gtcp.Conn) {})
+		err := (&tcpServerAdapter{server: tcpServer}).Stop(false)
+		t.AssertNil(err)
+
+		udpServer := gudp.NewServer("127.0.0.1:0", func(*gudp.ServerConn) {})
+		err = (&udpServerAdapter{server: udpServer}).Stop(false)
+		t.AssertNil(err)
+	})
+}
+
+func TestTCPAndUDPStartTimeoutClosesWhenPortAppears(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		previousTimeout := adapterStartTimeout
 		adapterStartTimeout = 0
@@ -176,31 +220,94 @@ func TestTCPAndUDPStartTimeoutDoNotCloseBeforeListen(t *testing.T) {
 		adapterServeGate = func() {
 			<-release
 		}
+		go func() {
+			time.Sleep(20 * time.Millisecond)
+			close(release)
+		}()
 
 		tcpServer := gtcp.NewServer("127.0.0.1:0", func(*gtcp.Conn) {})
-		tcpErr := (&tcpServerAdapter{server: tcpServer}).Start()
+		tcpAdapter := &tcpServerAdapter{server: tcpServer}
+		tcpErr := tcpAdapter.Start()
 		t.AssertNE(tcpErr, nil)
 		t.Assert(strings.Contains(tcpErr.Error(), "tcp server failed to start within timeout"), true)
+		conn, dialErr := net.DialTimeout("tcp", tcpServer.GetListenedAddress(), 200*time.Millisecond)
+		if conn != nil {
+			t.AssertNil(conn.Close())
+		}
+		t.AssertNE(dialErr, nil)
+		t.AssertNil(tcpAdapter.Stop(false))
 
-		udpServer := gudp.NewServer("127.0.0.1:0", func(*gudp.ServerConn) {})
-		udpErr := (&udpServerAdapter{server: udpServer}).Start()
+		udpRelease := make(chan struct{})
+		udpReceived := make(chan struct{}, 1)
+		adapterServeGate = func() {
+			<-udpRelease
+		}
+		go func() {
+			time.Sleep(20 * time.Millisecond)
+			close(udpRelease)
+		}()
+		udpServer := gudp.NewServer("127.0.0.1:0", func(conn *gudp.ServerConn) {
+			data, _, err := conn.Recv(-1)
+			if err == nil && len(data) > 0 {
+				udpReceived <- struct{}{}
+			}
+		})
+		udpAdapter := &udpServerAdapter{server: udpServer}
+		udpErr := udpAdapter.Start()
 		t.AssertNE(udpErr, nil)
 		t.Assert(strings.Contains(udpErr.Error(), "udp server failed to start within timeout"), true)
-
-		close(release)
-		waitUntilListening(t, tcpServer.GetListenedPort, udpServer.GetListenedPort)
-		t.AssertNil(tcpServer.Close())
-		t.AssertNil(udpServer.Close())
+		client, clientErr := net.Dial("udp", udpServer.GetListenedAddress())
+		t.AssertNil(clientErr)
+		_, writeErr := client.Write([]byte("ping"))
+		t.AssertNil(writeErr)
+		t.AssertNil(client.Close())
+		select {
+		case <-udpReceived:
+			t.Fatal("udp server still accepted data after startup was abandoned")
+		case <-time.After(200 * time.Millisecond):
+		}
+		t.AssertNil(udpAdapter.Stop(false))
 	})
 }
 
-// waitUntilListening waits until both port readers report a listened port.
-func waitUntilListening(t *gtest.T, ports ...func() int) {
-	deadline := time.Now().Add(2 * time.Second)
-	for _, port := range ports {
-		for time.Now().Before(deadline) && port() <= 0 {
-			time.Sleep(time.Millisecond)
+func TestTCPServerLogsServeErrorAfterStart(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var buf lockedBuffer
+		logger := glog.NewWithWriter(&buf)
+		logger.SetStdoutPrint(false)
+		previous := glog.DefaultLogger()
+		glog.SetDefaultLogger(logger)
+		defer glog.SetDefaultLogger(previous)
+
+		tcpServer := gtcp.NewServer("127.0.0.1:0", func(*gtcp.Conn) {})
+		adapter := &tcpServerAdapter{server: tcpServer}
+		t.AssertNil(adapter.Start())
+		t.AssertNil(tcpServer.Close())
+
+		deadline := time.Now().Add(2 * time.Second)
+		for time.Now().Before(deadline) && !strings.Contains(buf.String(), "server stopped after start") {
+			time.Sleep(10 * time.Millisecond)
 		}
-		t.Assert(port() > 0, true)
-	}
+		t.Assert(strings.Contains(buf.String(), "server stopped after start"), true)
+	})
+}
+
+// lockedBuffer is a concurrent-safe buffer for log capture.
+type lockedBuffer struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+// Write implements io.Writer.
+func (b *lockedBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.Write(p)
+}
+
+// String returns the captured text.
+func (b *lockedBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.String()
 }
