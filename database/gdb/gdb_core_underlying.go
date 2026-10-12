@@ -544,9 +544,12 @@ func (c *Core) GetLockSharedClause() string {
 	return LockInShareMode
 }
 
+// columnValueToLocalValue converts a scanned value using column metadata or the driver.
 func (c *Core) columnValueToLocalValue(ctx context.Context, value any, columnType *sql.ColumnType) (any, error) {
 	var scanType = columnType.ScanType()
-	if scanType != nil {
+	// Without a declared database type, ScanType may describe only the first row,
+	// as with SQLite. Let the driver handle later values of a different type.
+	if scanType != nil && (columnType.DatabaseTypeName() != "" || scanType == reflect.TypeOf(value)) {
 		// Common basic builtin types.
 		switch scanType.Kind() {
 		case

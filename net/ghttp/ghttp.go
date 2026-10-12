@@ -78,11 +78,14 @@ type (
 
 	// handlerFuncInfo contains the HandlerFunc address and its reflection type.
 	handlerFuncInfo struct {
-		Func            HandlerFunc      // Handler function address.
-		Type            reflect.Type     // Reflect type information for current handler, which is used for extensions of the handler feature.
-		Value           reflect.Value    // Reflect value information for current handler, which is used for extensions of the handler feature.
-		IsStrictRoute   bool             // Whether strict route matching is enabled.
-		ReqStructFields []gstructs.Field // Request struct fields.
+		Func                HandlerFunc       // Handler function address.
+		Type                reflect.Type      // Reflect type information for current handler, which is used for extensions of the handler feature.
+		Value               reflect.Value     // Reflect value information for current handler, which is used for extensions of the handler feature.
+		IsStrictRoute       bool              // Whether strict route matching is enabled.
+		ReqStructFields     []gstructs.Field  // Request struct fields.
+		ReqStructTags       requestStructTags // Tag usages of the request struct, which is precomputed at handler registration.
+		ReqBodyFieldName    string            // Request struct field name tagged with `in:"body"`, which receives the whole request body.
+		ReqBodyFieldTagName string            // Tag name of the `in:"body"` field, which is resolved once at router registering for the request handling to remove the parameter of the same name.
 	}
 
 	// HandlerItem is the registered handler for route handling,
@@ -132,7 +135,6 @@ const (
 )
 
 const (
-	HeaderXUrlPath                    = "x-url-path"         // Used for custom route handler, which does not change URL.Path.
 	HookBeforeServe       HookName    = "HOOK_BEFORE_SERVE"  // Hook handler before route handler/file serving.
 	HookAfterServe        HookName    = "HOOK_AFTER_SERVE"   // Hook handler after route handler/file serving.
 	HookBeforeOutput      HookName    = "HOOK_BEFORE_OUTPUT" // Hook handler before response output.
@@ -157,7 +159,6 @@ const (
 	contentTypeJson                    = "application/json"
 	contentTypeJavascript              = "application/javascript"
 	swaggerUIPackedPath                = "/goframe/swaggerui"
-	responseHeaderTraceID              = "Trace-ID"
 	specialMethodNameInit              = "Init"
 	specialMethodNameShut              = "Shut"
 	specialMethodNameIndex             = "Index"

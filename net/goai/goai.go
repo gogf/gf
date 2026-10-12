@@ -60,6 +60,10 @@ const (
 	ParameterInPath   = `path`
 	ParameterInQuery  = `query`
 	ParameterInCookie = `cookie`
+	// ParameterInBody marks that a request struct field receives the whole request body.
+	// Note that it is a GoFrame level marker and is NOT a valid value of the OpenAPI parameter
+	// `in` attribute, so such field never produces an operation parameter.
+	ParameterInBody = `body`
 )
 
 const (

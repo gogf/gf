@@ -214,6 +214,32 @@ jobs:
         ports:
           - 2181:2181
 
+      # TiDB server, MySQL protocol.
+      # docker run -p 4000:4000 pingcap/tidb:v8.5.1
+      tidb:
+        image: pingcap/tidb:v8.5.1
+        ports:
+          - 4000:4000
+        options: >-
+          --health-cmd "curl -sf http://127.0.0.1:10080/status"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+      # OceanBase server in mini mode, MySQL protocol.
+      # docker run -p 2881:2881 -e MODE=mini oceanbase/oceanbase-ce:4.3.5-lts
+      oceanbase:
+        image: oceanbase/oceanbase-ce:4.3.5-lts
+        env:
+          MODE: mini
+        ports:
+          - 2881:2881
+        options: >-
+          --health-cmd "obclient -h127.0.0.1 -P2881 -uroot@test -e \"SELECT 1\""
+          --health-interval 10s
+          --health-timeout 10s
+          --health-retries 30
+
     steps:
     - name: Setup Timezone
       run:  sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
