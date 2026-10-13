@@ -4,7 +4,11 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// Plugin registration and installed-resource cleanup for HTTP servers.
+
 package ghttp
+
+import "context"
 
 // Plugin is the interface for server plugin.
 type Plugin interface {
@@ -19,4 +23,18 @@ type Plugin interface {
 // Plugin adds plugin to the server.
 func (s *Server) Plugin(plugin ...Plugin) {
 	s.plugins = append(s.plugins, plugin...)
+}
+
+// removePlugins detaches installed plugins so shutdown never removes uninstalled ones.
+func (s *Server) removePlugins(ctx context.Context) {
+	s.pluginMu.Lock()
+	plugins := s.installedPlugins
+	s.installedPlugins = nil
+	s.pluginMu.Unlock()
+	for _, p := range plugins {
+		s.Logger().Printf(ctx, `remove plugin: %s`, p.Name())
+		if err := p.Remove(); err != nil {
+			s.Logger().Errorf(ctx, "%+v", err)
+		}
+	}
 }

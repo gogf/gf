@@ -45,12 +45,16 @@ type App struct {
 	options      []Option                    // registered options to apply during Boot
 	hooks        []func(ctx context.Context) // cleanup functions collected during Boot
 	booted       bool                        // whether Boot has been called successfully
-	booting      bool                        // whether Boot is in progress
-	lastBootErr  error                       // result of the last failed Boot for concurrent waiters
-	bootCond     sync.Cond                   // coordinates concurrent Boot callers
+	bootAttempt  *bootAttempt                // current Boot attempt shared by concurrent callers
 	lifecycleCtx context.Context             // context from first successful Boot; used when Start/Stop get nil ctx
 	logger       *glog.Logger
 	stopOnce     sync.Once // ensures Stop is executed only once
+}
+
+// bootAttempt keeps completion and its result together so retries cannot replace a waiter's result.
+type bootAttempt struct {
+	done chan struct{}
+	err  error
 }
 
 // bootWaitHook, when non-nil, runs while Boot is about to wait for an in-progress
@@ -66,7 +70,6 @@ func New(servers ...Server) *App {
 		hooks:   make([]func(ctx context.Context), 0),
 		logger:  glog.New(),
 	}
-	app.bootCond.L = &app.mu
 	if len(servers) > 0 {
 		app.servers = append(app.servers, servers...)
 	}
@@ -133,39 +136,29 @@ func (app *App) Option(opts ...Option) {
 // error is wrapped with "app boot failed"; concurrent waiters receive that
 // same wrapped error.
 //
-// If ctx is nil, gctx.GetInitCtx() is used for Apply and rollback.
+// If ctx is nil, gctx.GetInitCtx() is used for Apply. Automatic rollback retains
+// context values without cancellation or deadlines so cleanup I/O can complete.
 func (app *App) Boot(ctx context.Context) (err error) {
 	app.mu.Lock()
-	for {
-		if app.booted {
-			app.mu.Unlock()
-			return nil
+	if app.booted {
+		app.mu.Unlock()
+		return nil
+	}
+	if attempt := app.bootAttempt; attempt != nil {
+		if bootWaitHook != nil {
+			bootWaitHook()
 		}
-		if app.booting {
-			if bootWaitHook != nil {
-				bootWaitHook()
-			}
-			app.bootCond.Wait()
-			if app.booted {
-				app.mu.Unlock()
-				return nil
-			}
-			if !app.booting {
-				err = app.lastBootErr
-				app.mu.Unlock()
-				return err
-			}
-			continue
-		}
-		app.booting = true
-		app.lastBootErr = nil
-		break
+		app.mu.Unlock()
+		<-attempt.done
+		return attempt.err
 	}
 	var (
+		attempt     = &bootAttempt{done: make(chan struct{})}
 		baseCtx     = normalizeCtx(ctx)
 		serverCount = len(app.servers)
 		optionCount = len(app.options)
 	)
+	app.bootAttempt = attempt
 
 	// Release the lock before applying options. applyOptions reads from
 	// app.options by index so that Options registered dynamically during
@@ -173,14 +166,14 @@ func (app *App) Boot(ctx context.Context) (err error) {
 	app.mu.Unlock()
 
 	// err is a named result so this defer can both recover a panic and
-	// replace the returned error with the wrapped lastBootErr.
+	// replace the returned error with the wrapped attempt result.
 	defer func() {
 		if r := recover(); r != nil {
 			err = gerror.NewCodef(gcode.CodeInternalPanic, "app boot panicked: %v", r)
-			app.runHooksReverse(baseCtx)
+			app.runHooksReverse(gctx.NeverDone(baseCtx))
 		}
 		app.mu.Lock()
-		app.booting = false
+		app.bootAttempt = nil
 		if err == nil {
 			app.booted = true
 			if app.lifecycleCtx == nil {
@@ -192,10 +185,10 @@ func (app *App) Boot(ctx context.Context) (err error) {
 			app.servers = app.servers[:serverCount]
 			clear(app.options[optionCount:])
 			app.options = app.options[:optionCount]
-			app.lastBootErr = gerror.WrapCode(gcode.CodeInternalError, err, "app boot failed")
-			err = app.lastBootErr
+			err = gerror.WrapCode(gcode.CodeInternalError, err, "app boot failed")
 		}
-		app.bootCond.Broadcast()
+		attempt.err = err
+		close(attempt.done)
 		app.mu.Unlock()
 	}()
 
@@ -223,7 +216,7 @@ func (app *App) applyOptions(baseCtx context.Context, startIdx int) error {
 		hook, err := opt.Apply(baseCtx, app)
 		if err != nil {
 			// Rollback: run already-collected hooks in reverse.
-			app.runHooksReverse(baseCtx)
+			app.runHooksReverse(gctx.NeverDone(baseCtx))
 			return err
 		}
 		if hook != nil {
@@ -397,7 +390,7 @@ func (app *App) Run(ctx context.Context) error {
 	}
 
 	if err := app.Start(root); err != nil {
-		if stopErr := app.Stop(root, false); stopErr != nil {
+		if stopErr := app.Stop(gctx.NeverDone(root), false); stopErr != nil {
 			app.logger.Errorf(root, "forceful stop after start failure also failed: %v", stopErr)
 		}
 		return gerror.WrapCode(gcode.CodeInternalError, err, "app start failed")

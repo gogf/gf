@@ -212,7 +212,7 @@ func main() {
 | `NewWorkerServer(ctx context.Context, tasks ...WorkerTask)` | 使用生命周期`context`创建 WorkerServer |
 | `Add(tasks ...WorkerTask) error` | 在 Start 前添加任务；服务器已启动或已停止时返回错误 |
 | `Start() error` | 并发启动所有任务 |
-| `Stop(graceful bool) error` | 停止所有任务；取消`context`并等待 goroutine 退出 |
+| `Stop(graceful bool) error` | 取消`context`并等待 goroutine 和清理完成；并发调用等待同一次停止完成 |
 
 ### CronServer
 
@@ -221,10 +221,12 @@ func main() {
 | `NewCronServer(ctx context.Context, tasks ...CronTask)` | 使用生命周期`context`创建 CronServer |
 | `Add(tasks ...CronTask) error` | 在 Start 前添加任务；服务器已启动或已停止时返回错误 |
 | `Start() error` | 注册并启动所有 cron 任务 |
-| `Stop(graceful bool) error` | 停止 cron 调度器 |
+| `Stop(graceful bool) error` | 停止调度器并关闭所有任务条目；并发调用等待同一次停止完成 |
 
 ### 配置辅助
 
 | 方法 | 说明 |
 |---|---|
 | `NewServersFromConfig(ctx, HandlerMap) ([]gapp.Server, error)` | 从`scheduler.job`配置创建服务器；非法配置返回错误 |
+
+`scheduler.job`必须是任务对象列表。配置缺失、`null`或空列表时不创建服务器；标量值、列表位置的对象以及列表中的非对象元素都会返回配置错误。

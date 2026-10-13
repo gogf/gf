@@ -51,6 +51,7 @@ type CronServer struct {
 	tasks     []CronTask
 	started   bool
 	stopped   bool
+	stopDone  chan struct{}
 }
 
 // NewCronServer creates and returns a new CronServer with the given tasks.
@@ -98,6 +99,7 @@ func (s *CronServer) Start() error {
 	s.ctx, s.cancel = context.WithCancel(s.parentCtx)
 
 	cron := gcron.New()
+	s.cron = cron
 	for i := range s.tasks {
 		task := s.tasks[i]
 		handler := func(ctx context.Context) {
@@ -109,28 +111,38 @@ func (s *CronServer) Start() error {
 		_, err := cron.AddSingleton(s.ctx, task.Spec, handler, task.Name)
 		if err != nil {
 			cron.Close()
+			for _, entry := range cron.Entries() {
+				entry.Close()
+			}
 			s.cancel()
 			return err
 		}
 	}
 
 	cron.Start()
-	s.cron = cron
 	s.started = true
 	return nil
 }
 
 // Stop stops the cron scheduler.
 // When graceful is true, it waits for in-flight jobs to finish before returning.
-// When graceful is false, running jobs are stopped immediately.
+// When graceful is false, it cancels running jobs without waiting for them.
+// Concurrent Stop callers wait for the first caller's shutdown to finish.
 func (s *CronServer) Stop(graceful bool) error {
 	s.mu.Lock()
+	if s.stopDone != nil {
+		done := s.stopDone
+		s.mu.Unlock()
+		<-done
+		return nil
+	}
 	if !s.started {
 		s.mu.Unlock()
 		return nil
 	}
 	s.started = false
 	s.stopped = true
+	s.stopDone = make(chan struct{})
 	s.mu.Unlock()
 
 	if graceful {
@@ -139,7 +151,12 @@ func (s *CronServer) Stop(graceful bool) error {
 		s.cron.Stop()
 	}
 	s.cron.Close()
+	// Close each timer entry even when its next scheduled execution is far away.
+	for _, entry := range s.cron.Entries() {
+		entry.Close()
+	}
 	s.cancel()
+	close(s.stopDone)
 	return nil
 }
 

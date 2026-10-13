@@ -38,6 +38,8 @@ The package provides adapter constructors for built-in server types:
 
 For gRPC server, use `grpcx.NewGappServerAdapter(s *grpcx.GrpcServer)` from the `contrib/rpc/grpcx` package.
 
+The HTTP adapter uses `ghttp.Server.StartManaged()`, which returns listener, plugin, and registry errors after cleaning partially initialized resources. Standalone `ghttp.Server.Start()` and `Run()` keep their existing fatal error behavior.
+
 ## Boot / Initialization
 
 The `Option` type allows registering initialization logic that runs before servers start. This provides a structured way to set up databases, caches, external connections, and other application-level concerns.

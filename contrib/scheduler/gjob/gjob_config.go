@@ -11,6 +11,7 @@ package gjob
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -60,7 +61,7 @@ type HandlerMap map[string]any
 //
 // The returned slice contains only the servers that have at least one task.
 // Disabled tasks and tasks without a matching handler are skipped.
-// A config read error, an unknown task type, a missing cron spec, or a handler
+// A config read error, malformed job list, an unknown task type, a missing cron spec, or a handler
 // type mismatch is returned so startup can fail instead of silently dropping jobs.
 func NewServersFromConfig(ctx context.Context, handlers HandlerMap) ([]gapp.Server, error) {
 	configs, err := loadConfig(ctx)
@@ -146,15 +147,22 @@ func loadConfig(ctx context.Context) ([]*jobConfig, error) {
 	if err != nil {
 		return nil, gerror.WrapCode(gcode.CodeInvalidConfiguration, err, "failed to get job config")
 	}
-	if cfg.IsNil() || cfg.IsEmpty() {
+	if cfg.IsNil() {
 		return nil, nil
+	}
+
+	value := reflect.ValueOf(cfg.Val())
+	if value.Kind() != reflect.Slice && value.Kind() != reflect.Array {
+		return nil, gerror.NewCode(gcode.CodeInvalidConfiguration, "scheduler.job must be a list of job objects")
+	}
+	// Maps conversion skips invalid elements, so validate the original collection first.
+	for i := 0; i < value.Len(); i++ {
+		if reflect.ValueOf(value.Index(i).Interface()).Kind() != reflect.Map {
+			return nil, gerror.NewCodef(gcode.CodeInvalidConfiguration, "scheduler.job[%d] must be a job object", i)
+		}
 	}
 
 	maps := cfg.Maps()
-	if len(maps) == 0 {
-		return nil, nil
-	}
-
 	configs := make([]*jobConfig, 0, len(maps))
 	for _, m := range maps {
 		var (

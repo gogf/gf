@@ -38,6 +38,8 @@ type Server interface {
 
 对于 gRPC 服务器，请使用`contrib/rpc/grpcx`包中的`grpcx.NewGappServerAdapter(s *grpcx.GrpcServer)`。
 
+HTTP adapter 使用`ghttp.Server.StartManaged()`，在清理部分初始化的资源后返回监听、插件和注册错误。独立运行的`ghttp.Server.Start()`和`Run()`保留原有的错误退出行为。
+
 ## 启动 / 初始化
 
 `Option`类型允许在服务器启动前注册初始化逻辑，为数据库、缓存、外部连接等应用级别的初始化提供结构化的方式。

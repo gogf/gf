@@ -212,7 +212,7 @@ func main() {
 | `NewWorkerServer(ctx context.Context, tasks ...WorkerTask)` | Creates a new WorkerServer with lifecycle context |
 | `Add(tasks ...WorkerTask) error` | Adds tasks before Start; returns error if server already started or stopped |
 | `Start() error` | Starts all tasks concurrently |
-| `Stop(graceful bool) error` | Stops all tasks; cancels context and waits for goroutines to finish |
+| `Stop(graceful bool) error` | Cancels context and waits for goroutines and cleanup; concurrent callers wait for the same shutdown |
 
 ### CronServer
 
@@ -221,10 +221,12 @@ func main() {
 | `NewCronServer(ctx context.Context, tasks ...CronTask)` | Creates a new CronServer with lifecycle context |
 | `Add(tasks ...CronTask) error` | Adds tasks before Start; returns error if server already started or stopped |
 | `Start() error` | Registers and starts all cron tasks |
-| `Stop(graceful bool) error` | Stops the cron scheduler |
+| `Stop(graceful bool) error` | Stops the scheduler and closes its entries; concurrent callers wait for the same shutdown |
 
 ### Config Helper
 
 | Method | Description |
 |---|---|
 | `NewServersFromConfig(ctx, HandlerMap) ([]gapp.Server, error)` | Creates servers from `scheduler.job` config; invalid config returns an error |
+
+`scheduler.job` must be a list of job objects. A missing value, `null`, or an empty list creates no servers; scalar values, objects in place of a list, and non-object list elements return an invalid-configuration error.

@@ -54,6 +54,7 @@ type WorkerServer struct {
 	tasks     []WorkerTask
 	started   bool
 	stopped   bool
+	stopDone  chan struct{}
 }
 
 // NewWorkerServer creates and returns a new WorkerServer with the given tasks.
@@ -109,21 +110,30 @@ func (s *WorkerServer) Start() error {
 	return nil
 }
 
-// Stop stops the worker server by cancelling the internal context and waiting
+// Stop stops the worker server by canceling the internal context and waiting
 // for all task goroutines to finish. The graceful parameter is accepted for
 // gapp.Server compatibility; worker shutdown always waits after cancellation.
+// Concurrent Stop callers wait for the first caller's shutdown to finish.
 func (s *WorkerServer) Stop(_ bool) error {
 	s.mu.Lock()
+	if s.stopDone != nil {
+		done := s.stopDone
+		s.mu.Unlock()
+		<-done
+		return nil
+	}
 	if !s.started {
 		s.mu.Unlock()
 		return nil
 	}
 	s.started = false
 	s.stopped = true
+	s.stopDone = make(chan struct{})
 	s.mu.Unlock()
 
 	s.cancel()
 	s.wg.Wait()
+	close(s.stopDone)
 
 	return nil
 }

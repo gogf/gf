@@ -14,6 +14,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gapp"
 	"github.com/gogf/gf/v2/os/gcfg"
@@ -777,5 +779,107 @@ func TestNewServersFromConfigReadError(t *testing.T) {
 		t.Assert(servers, nil)
 		t.AssertNE(err, nil)
 		t.Assert(strings.Contains(err.Error(), "failed to get job config"), true)
+	})
+}
+
+// TestNewServersFromConfigShape rejects malformed job collections before conversion.
+func TestNewServersFromConfigShape(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		value string
+		valid bool
+	}{
+		{name: "empty list", value: "[]", valid: true},
+		{name: "null", value: "null", valid: true},
+		{name: "string", value: "typo"},
+		{name: "empty string", value: `""`},
+		{name: "number", value: "1"},
+		{name: "boolean", value: "false"},
+		{name: "object", value: "{}"},
+		{name: "scalar list", value: "[typo]"},
+		{name: "mixed list", value: "[{name: worker1, type: worker, enable: true}, typo]"},
+		{name: "null element", value: "[null]"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			gtest.C(t, func(t *gtest.T) {
+				adapter, ok := g.Cfg().GetAdapter().(*gcfg.AdapterFile)
+				if !ok {
+					t.Fatal("expected gcfg.AdapterFile")
+				}
+				adapter.SetContent("scheduler:\n  job: " + tc.value + "\n")
+				defer adapter.SetContent("")
+				servers, err := gjob.NewServersFromConfig(context.Background(), gjob.HandlerMap{
+					"worker1": gjob.WorkerHandler(func(context.Context) func() { return nil }),
+				})
+				t.Assert(len(servers), 0)
+				if tc.valid {
+					t.AssertNil(err)
+				} else {
+					t.Assert(gerror.Code(err), gcode.CodeInvalidConfiguration)
+				}
+			})
+		})
+	}
+}
+
+// TestWorkerServerConcurrentStop waits for the original shutdown in either mode.
+func TestWorkerServerConcurrentStop(t *testing.T) {
+	for _, graceful := range []bool{true, false} {
+		name := "forceful"
+		if graceful {
+			name = "graceful"
+		}
+		t.Run(name, func(t *testing.T) {
+			gtest.C(t, func(t *gtest.T) {
+				var (
+					cleaning = make(chan struct{})
+					release  = make(chan struct{})
+					first    = make(chan error, 1)
+					second   = make(chan error, 1)
+				)
+				defer close(release)
+				s := gjob.NewWorkerServer(nil, gjob.WorkerTask{
+					Name: "blocking-cleanup",
+					Handler: func(context.Context) func() {
+						return func() { close(cleaning); <-release }
+					},
+				})
+				t.AssertNil(s.Start())
+				go func() { first <- s.Stop(graceful) }()
+				select {
+				case <-cleaning:
+				case <-time.After(time.Second):
+					t.Fatal("worker cleanup did not start")
+				}
+				go func() { second <- s.Stop(!graceful) }()
+				select {
+				case err := <-second:
+					t.Fatalf("concurrent Stop returned before cleanup: %v", err)
+				case <-time.After(50 * time.Millisecond):
+				}
+				// Release the cleanup before awaiting both Stop callers.
+				select {
+				case release <- struct{}{}:
+				case <-time.After(time.Second):
+					t.Fatal("worker cleanup did not wait")
+				}
+				t.AssertNil(<-first)
+				t.AssertNil(<-second)
+				t.AssertNil(s.Stop(graceful))
+			})
+		})
+	}
+}
+
+// TestJobServerStopBeforeStartRemainsNoop permits starting an unused server later.
+func TestJobServerStopBeforeStartRemainsNoop(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for _, server := range []gapp.Server{gjob.NewWorkerServer(nil), gjob.NewCronServer(nil)} {
+			t.AssertNil(server.Stop(true))
+			t.AssertNil(server.Stop(false))
+			t.AssertNil(server.Start())
+			t.AssertNil(server.Stop(false))
+			t.AssertNE(server.Start(), nil)
+		}
 	})
 }

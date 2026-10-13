@@ -10,6 +10,7 @@ package grpcx
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -205,6 +206,10 @@ func (s *GrpcServer) doServiceRegister(failureAction serveFailureAction) error {
 	}
 	s.serviceMu.Lock()
 	defer s.serviceMu.Unlock()
+	ctx := gctx.GetInitCtx()
+	if err := s.doServiceDeregisterLocked(ctx); err != nil {
+		return gerror.Wrap(err, "cleanup previous service registration failed")
+	}
 	if len(s.services) == 0 {
 		s.services = []gsvc.Service{&gsvc.LocalService{
 			Name:     s.config.Name,
@@ -212,7 +217,6 @@ func (s *GrpcServer) doServiceRegister(failureAction serveFailureAction) error {
 		}}
 	}
 	var (
-		ctx                = gctx.GetInitCtx()
 		protocol           = `grpc`
 		registeredServices = make([]gsvc.Service, 0, len(s.services))
 	)
@@ -233,12 +237,9 @@ func (s *GrpcServer) doServiceRegister(failureAction serveFailureAction) error {
 		}
 		registered, err := s.registrar.Register(ctx, service)
 		if err != nil {
-			// Roll back only this attempt's successful registrations, retaining services for retry.
-			for _, registeredService := range registeredServices {
-				if deregisterErr := s.registrar.Deregister(ctx, registeredService); deregisterErr != nil {
-					s.Logger().Errorf(ctx, `%+v`, deregisterErr)
-				}
-			}
+			// Retain handles whose rollback fails so shutdown or the next start can retry.
+			s.registeredServices = registeredServices
+			err = errors.Join(err, s.doServiceDeregisterLocked(ctx))
 			if failureAction == serveFailureFatal {
 				s.Logger().Fatalf(ctx, `%+v`, err)
 			}
@@ -257,14 +258,27 @@ func (s *GrpcServer) doServiceDeregister() {
 	}
 	s.serviceMu.Lock()
 	defer s.serviceMu.Unlock()
-	var ctx = gctx.GetInitCtx()
+	ctx := gctx.GetInitCtx()
+	if err := s.doServiceDeregisterLocked(ctx); err != nil {
+		s.Logger().Errorf(ctx, `%+v`, err)
+	}
+}
+
+// doServiceDeregisterLocked removes registrations while retaining failed handles; the caller holds serviceMu.
+func (s *GrpcServer) doServiceDeregisterLocked(ctx context.Context) error {
+	var (
+		failedServices []gsvc.Service
+		deregisterErr  error
+	)
 	for _, service := range s.registeredServices {
 		s.Logger().Debugf(ctx, `service deregister: %+v`, service)
 		if err := s.registrar.Deregister(ctx, service); err != nil {
-			s.Logger().Errorf(ctx, `%+v`, err)
+			failedServices = append(failedServices, service)
+			deregisterErr = errors.Join(deregisterErr, err)
 		}
 	}
-	s.registeredServices = nil
+	s.registeredServices = failedServices
+	return deregisterErr
 }
 
 // Start starts the server in no-blocking way.

@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// HTTP service registration and endpoint construction.
+
 package ghttp
 
 import (
@@ -18,9 +20,9 @@ import (
 )
 
 // doServiceRegister registers current service to Registry.
-func (s *Server) doServiceRegister() {
+func (s *Server) doServiceRegister() error {
 	if s.registrar == nil {
-		return
+		return nil
 	}
 	s.serviceMu.Lock()
 	defer s.serviceMu.Unlock()
@@ -28,7 +30,6 @@ func (s *Server) doServiceRegister() {
 		ctx      = gctx.GetInitCtx()
 		protocol = gsvc.DefaultProtocol
 		insecure = true
-		err      error
 	)
 	if s.config.TLSConfig != nil {
 		protocol = `https`
@@ -38,19 +39,22 @@ func (s *Server) doServiceRegister() {
 		gsvc.MDProtocol: protocol,
 		gsvc.MDInsecure: insecure,
 	}
-	s.service = &gsvc.LocalService{
+	service := &gsvc.LocalService{
 		Name:      s.GetName(),
 		Endpoints: s.calculateListenedEndpoints(ctx),
 		Metadata:  metadata,
 	}
-	s.Logger().Debugf(ctx, `service register: %+v`, s.service)
-	if len(s.service.GetEndpoints()) == 0 {
+	s.Logger().Debugf(ctx, `service register: %+v`, service)
+	if len(service.GetEndpoints()) == 0 {
 		s.Logger().Warningf(ctx, `no endpoints found to register service, abort service registering`)
-		return
+		return nil
 	}
-	if s.service, err = s.registrar.Register(ctx, s.service); err != nil {
-		s.Logger().Fatalf(ctx, `%+v`, err)
+	registered, err := s.registrar.Register(ctx, service)
+	if err != nil {
+		return err
 	}
+	s.service = registered
+	return nil
 }
 
 // doServiceDeregister de-registers current service from Registry.

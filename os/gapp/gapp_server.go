@@ -171,7 +171,7 @@ func NewHTTPServerAdapter(server *ghttp.Server) Server {
 
 // Start starts the HTTP server in non-blocking way.
 func (a *httpServerAdapter) Start() error {
-	return a.server.Start()
+	return a.server.StartManaged()
 }
 
 // Stop stops the HTTP server.

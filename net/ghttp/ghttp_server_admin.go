@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// HTTP administration handlers and graceful or forceful shutdown.
+
 package ghttp
 
 import (
@@ -99,14 +101,7 @@ func (s *Server) EnableAdmin(pattern ...string) {
 // stopServers removes plugins, deregisters the service discovery endpoint if any,
 // then shuts down or force-closes all underlying HTTP servers.
 func (s *Server) stopServers(ctx context.Context, forceful bool) {
-	if len(s.plugins) > 0 {
-		for _, p := range s.plugins {
-			s.Logger().Printf(ctx, `remove plugin: %s`, p.Name())
-			if err := p.Remove(); err != nil {
-				s.Logger().Errorf(ctx, "%+v", err)
-			}
-		}
-	}
+	s.removePlugins(ctx)
 
 	s.doServiceDeregister()
 	for _, v := range s.servers {
