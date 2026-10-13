@@ -61,7 +61,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object any) Error {
 	// Sequence has order for error results.
 	case []string:
 		for _, tag := range assertValue {
-			name, rule, msg := ParseTagValue(tag)
+			name, rule, msg := v.parseTagValue(tag)
 			if len(name) == 0 {
 				continue
 			}
@@ -129,8 +129,8 @@ func (v *Validator) doCheckStruct(ctx context.Context, object any) Error {
 	for _, field := range tagFields {
 		var (
 			isMeta          bool
-			fieldName       = field.Name()                  // Attribute name.
-			name, rule, msg = ParseTagValue(field.TagValue) // The `name` is different from `attribute alias`, which is used for validation only.
+			fieldName       = field.Name()                    // Attribute name.
+			name, rule, msg = v.parseTagValue(field.TagValue) // The `name` is different from `attribute alias`, which is used for validation only.
 		)
 		if len(name) == 0 {
 			if value, ok := fieldToAliasNameMap[fieldName]; ok {
