@@ -15,10 +15,66 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/net/gudp"
 	"github.com/gogf/gf/v2/test/gtest"
 )
+
+// TestBlockingAdapterRejectsDuplicateStart preserves the original socket until Stop.
+func TestBlockingAdapterRejectsDuplicateStart(t *testing.T) {
+	for _, protocol := range []string{"tcp", "udp"} {
+		t.Run(protocol, func(t *testing.T) {
+			gtest.C(t, func(t *gtest.T) {
+				var (
+					adapter Server
+					port    func() int
+					address func() string
+				)
+				if protocol == "tcp" {
+					server := gtcp.NewServer("127.0.0.1:0", func(conn *gtcp.Conn) {
+						if err := conn.Close(); err != nil {
+							t.Error(err)
+						}
+					})
+					adapter, port, address = NewTCPServerAdapter(server), server.GetListenedPort, server.GetListenedAddress
+				} else {
+					server := gudp.NewServer("127.0.0.1:0", func(conn *gudp.ServerConn) {
+						if _, _, err := conn.Recv(-1); err != nil && !gerror.Is(err, net.ErrClosed) {
+							t.Error(err)
+						}
+					})
+					adapter, port, address = NewUDPServerAdapter(server), server.GetListenedPort, server.GetListenedAddress
+				}
+				defer func() { t.AssertNil(adapter.Stop(false)) }()
+				app := New(adapter)
+				t.AssertNil(app.Start(context.Background()))
+				originalAddress := address()
+				err := app.Start(context.Background())
+				t.AssertNE(err, nil)
+				t.Assert(gerror.Code(err), gcode.CodeInternalError)
+				t.Assert(gerror.Code(adapter.Start()), gcode.CodeInvalidOperation)
+				t.Assert(address(), originalAddress)
+				t.AssertNil(app.Stop(context.Background(), false))
+				t.Assert(port(), -1)
+				if protocol == "tcp" {
+					listener, err := net.Listen(protocol, originalAddress)
+					t.AssertNil(err)
+					t.AssertNil(listener.Close())
+				} else {
+					listener, err := net.ListenPacket(protocol, originalAddress)
+					t.AssertNil(err)
+					t.AssertNil(listener.Close())
+				}
+				t.AssertNil(adapter.Start())
+				t.AssertGT(port(), 0)
+				t.AssertNil(adapter.Stop(false))
+				t.Assert(port(), -1)
+			})
+		})
+	}
+}
 
 // TestBlockingAdapterRetryUsesNewListener proves retry waits for its own bind and Stop closes it.
 func TestBlockingAdapterRetryUsesNewListener(t *testing.T) {

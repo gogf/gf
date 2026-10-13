@@ -45,9 +45,23 @@ func (*managedHTTPFailOnceServer) Stop(bool) error { return nil }
 
 // TestHTTPManagedApplicationRollbackRetry serves requests at the reported retry port.
 func TestHTTPManagedApplicationRollbackRetry(t *testing.T) {
+	const helperEnv = "GF_GAPP_MANAGED_HTTP_ROLLBACK_HELPER"
+	if os.Getenv(helperEnv) == "" {
+		gtest.C(t, func(t *gtest.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+			defer cancel()
+			command := exec.CommandContext(ctx, os.Args[0], "-test.run=^TestHTTPManagedApplicationRollbackRetry$")
+			command.Env = append(os.Environ(), helperEnv+"=1")
+			if output, err := command.CombinedOutput(); err != nil {
+				t.Fatalf("managed HTTP rollback subprocess failed: %v\n%s", err, output)
+			}
+		})
+		return
+	}
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			server = ghttp.GetServer(guid.S())
+			name   = guid.S()
+			server = ghttp.GetServer(name)
 			app    = New(NewHTTPServerAdapter(server), &managedHTTPFailOnceServer{})
 			client = &http.Client{Timeout: time.Second}
 		)
@@ -65,6 +79,15 @@ func TestHTTPManagedApplicationRollbackRetry(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(response.StatusCode, http.StatusOK)
 		t.AssertNil(response.Body.Close())
+		t.Assert(ghttp.GetServer(name) == server, true)
+		// Global administration deliberately rate-limits actions for two seconds.
+		time.Sleep(2100 * time.Millisecond)
+		t.AssertNil(ghttp.ShutdownAllServer(context.Background()))
+		connection, err := net.DialTimeout("tcp", server.GetListenedAddress(), time.Second)
+		if err == nil {
+			t.AssertNil(connection.Close())
+			t.Fatal("global shutdown left the retried HTTP listener open")
+		}
 	})
 }
 

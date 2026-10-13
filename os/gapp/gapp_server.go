@@ -134,6 +134,10 @@ func abandonUnreadyServer(port func() int, closeFn func() error, serveErr <-chan
 // On timeout it keeps waiting only long enough to close the listener once the
 // port appears, and returns that close error instead of leaving the server running.
 func startBlockingServer(run func() error, port func() int, closeFn func() error, failPrefix, timeoutMessage string) error {
+	// Reject another Run before it can replace the socket that Stop must close.
+	if port() > 0 {
+		return gerror.NewCode(gcode.CodeInvalidOperation, "server is already listening")
+	}
 	result := newServeResult()
 	go result.watch(run)
 

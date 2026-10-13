@@ -137,17 +137,39 @@ func (s *Server) StartManaged() error {
 // start initializes the server, preserving standalone fatal behavior when managed is false.
 func (s *Server) start(managed bool) (err error) {
 	var ctx = gctx.GetInitCtx()
+	// A running instance must be rejected before its route configuration is changed.
+	if s.Status() == ServerStatusRunning || s.serverCount.Val() > 0 {
+		return gerror.NewCode(gcode.CodeInvalidOperation, "server is already running")
+	}
+	if managed {
+		// Refuse a stale instance before its plugin or registry callbacks can affect a live owner.
+		if current := serverMapping.Get(s.instance); current != nil && current != s && current.serverCount.Val() > 0 {
+			return gerror.NewCode(gcode.CodeInvalidOperation, "another server with the same name is already running")
+		}
+	}
 
 	// Swagger UI.
-	if s.config.SwaggerPath != "" {
+	if s.config.SwaggerPath != "" && !s.hasInternalRoute(s.config.SwaggerPath+"/*", HookBeforeServe, s.swaggerUI) {
 		swaggerui.Init()
 		s.AddStaticPath(s.config.SwaggerPath, swaggerUIPackedPath)
 		s.BindHookHandler(s.config.SwaggerPath+"/*", HookBeforeServe, s.swaggerUI)
 	}
 
 	// OpenApi specification json producing handler.
-	if s.config.OpenApiPath != "" {
+	if s.config.OpenApiPath != "" && !s.hasInternalRoute(s.config.OpenApiPath, "", s.openapiSpec) {
 		s.BindHandler(s.config.OpenApiPath, s.openapiSpec)
+	}
+
+	// Bind PProf before plugins can fail so a retry can reuse completed internal routes.
+	if s.config.PProfEnabled {
+		pattern := s.config.PProfPattern
+		if pattern == "" {
+			pattern = defaultPProfPattern
+		}
+		_, _, uri, parseErr := s.parsePattern(pattern)
+		if parseErr != nil || !s.hasInternalRoute(strings.TrimRight(uri, "/")+"/*action", "", (&utilPProf{}).Index) {
+			s.EnablePProf(s.config.PProfPattern)
+		}
 	}
 
 	// Register group routes.
@@ -156,10 +178,6 @@ func (s *Server) start(managed bool) (err error) {
 	// Server process initialization, which can only be initialized once.
 	serverProcessInit()
 
-	// Server can only be run once.
-	if s.Status() == ServerStatusRunning || s.serverCount.Val() > 0 {
-		return gerror.NewCode(gcode.CodeInvalidOperation, "server is already running")
-	}
 	if managed {
 		// A retry must create fresh server objects instead of reusing closed listeners.
 		s.servers = nil
@@ -195,11 +213,6 @@ func (s *Server) start(managed bool) (err error) {
 		s.config.SessionMaxAge,
 		s.config.SessionStorage,
 	)
-
-	// PProf feature.
-	if s.config.PProfEnabled {
-		s.EnablePProf(s.config.PProfPattern)
-	}
 
 	// Default HTTP handler.
 	if s.config.Handler == nil {
@@ -280,8 +293,8 @@ func (s *Server) start(managed bool) (err error) {
 		}
 	}
 
-	// If this is a child process, it then notifies its parent exit.
-	if gproc.IsChild() {
+	// Standalone reload owns parent retirement; managed servers leave handoff to their lifecycle owner.
+	if !managed && gproc.IsChild() {
 		var gracefulTimeout = time.Duration(s.config.GracefulTimeout) * time.Second
 		gtimer.SetTimeout(ctx, gracefulTimeout, func(ctx context.Context) {
 			intlog.Printf(
@@ -302,8 +315,19 @@ func (s *Server) start(managed bool) (err error) {
 		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
 	if managed {
-		serverRunning.Add(1)
-		s.serverCount.Add(len(s.servers))
+		// Claim the name and publish readiness atomically against a same-name retry.
+		serverMapping.LockFunc(func(mapping map[string]*Server) {
+			if current := mapping[s.instance]; current != nil && current != s && current.serverCount.Val() > 0 {
+				err = gerror.NewCode(gcode.CodeInvalidOperation, "another server with the same name is already running")
+				return
+			}
+			mapping[s.instance] = s
+			serverRunning.Add(1)
+			s.serverCount.Add(len(s.servers))
+		})
+		if err != nil {
+			return err
+		}
 		s.managedServeWG.Add(len(s.servers))
 		for _, server := range s.servers {
 			go s.serveGracefulServer(ctx, server, true)
@@ -312,6 +336,21 @@ func (s *Server) start(managed bool) (err error) {
 	s.doRouterMapDump()
 
 	return nil
+}
+
+// hasInternalRoute reuses only the matching built-in handler, retaining user duplicate checks.
+func (s *Server) hasInternalRoute(pattern string, hook HookName, handler HandlerFunc) bool {
+	domain, method, path, err := s.parsePattern(pattern)
+	if err != nil {
+		return false
+	}
+	name := gdebug.FuncPath(handler)
+	for _, item := range s.routesMap[s.routerMapKey(hook, method, path, domain)] {
+		if item.Name == name {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *Server) getLocalListenedAddress() string {
@@ -666,8 +705,16 @@ func (s *Server) serveGracefulServer(ctx context.Context, server *graceful.Serve
 	// If all the underlying servers' shutdown, the process exits.
 	if s.serverCount.Add(-1) < 1 {
 		notifyShutdown(s.closeChan, managed)
-		if serverRunning.Add(-1) < 1 {
-			serverMapping.Remove(s.instance)
+		remaining := serverRunning.Add(-1)
+		// Keep standalone entries for Wait's plugin cleanup until the last server exits.
+		if managed || remaining < 1 {
+			serverMapping.LockFunc(func(mapping map[string]*Server) {
+				if mapping[s.instance] == s {
+					delete(mapping, s.instance)
+				}
+			})
+		}
+		if remaining < 1 {
 			notifyShutdown(allShutdownChan, managed)
 		}
 	}
