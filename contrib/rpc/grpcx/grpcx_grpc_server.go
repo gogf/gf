@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// Implements gRPC serving and service registration lifecycle management.
+
 package grpcx
 
 import (
@@ -30,14 +32,15 @@ import (
 
 // GrpcServer is the server for GRPC protocol.
 type GrpcServer struct {
-	Server     *grpc.Server
-	config     *GrpcServerConfig
-	listenerMu sync.RWMutex
-	listener   net.Listener
-	services   []gsvc.Service
-	waitGroup  sync.WaitGroup
-	registrar  gsvc.Registrar
-	serviceMu  sync.Mutex
+	Server             *grpc.Server
+	config             *GrpcServerConfig
+	listenerMu         sync.RWMutex
+	listener           net.Listener
+	services           []gsvc.Service // Service definitions retained across registration attempts.
+	registeredServices []gsvc.Service // Registry handles used exclusively for deregistration.
+	waitGroup          sync.WaitGroup
+	registrar          gsvc.Registrar
+	serviceMu          sync.Mutex
 }
 
 // Service implements gsvc.Service interface.
@@ -106,7 +109,7 @@ const (
 	serveFailureLog
 )
 
-// serve binds the listener, starts serving asynchronously, and registers services.
+// serve binds the listener, registers services, and starts serving asynchronously.
 // It does not block on OS signal handling and is intended for external lifecycle managers.
 // failureAction controls whether an unexpected Server.Serve error terminates the process
 // (blocking Run) or is only logged (StartManaged).
@@ -126,11 +129,17 @@ func (s *GrpcServer) serve(failureAction serveFailureAction) error {
 	s.listener = listener
 	s.listenerMu.Unlock()
 
-	go s.doServeAsynchronously(ctx, listener, failureAction)
 	if err := s.doServiceRegister(failureAction); err != nil {
-		s.StopForceful()
+		// A stopped grpc.Server cannot be restarted, so rollback before Serve begins.
+		if closeErr := listener.Close(); closeErr != nil {
+			s.Logger().Errorf(ctx, `close listener after registration failure: %+v`, closeErr)
+		}
+		s.listenerMu.Lock()
+		s.listener = nil
+		s.listenerMu.Unlock()
 		return err
 	}
+	go s.doServeAsynchronously(ctx, listener, failureAction)
 	s.Logger().Infof(
 		ctx,
 		"pid[%d]: grpc server started listening on [%s]",
@@ -203,11 +212,12 @@ func (s *GrpcServer) doServiceRegister(failureAction serveFailureAction) error {
 		}}
 	}
 	var (
-		ctx      = gctx.GetInitCtx()
-		protocol = `grpc`
+		ctx                = gctx.GetInitCtx()
+		protocol           = `grpc`
+		registeredServices = make([]gsvc.Service, 0, len(s.services))
 	)
-	// Register service list after server starts.
-	for i, service := range s.services {
+	// Register services after the listener is bound.
+	for _, service := range s.services {
 		service = &gsvc.LocalService{
 			Name:      service.GetName(),
 			Endpoints: s.calculateListenedEndpoints(ctx),
@@ -223,13 +233,20 @@ func (s *GrpcServer) doServiceRegister(failureAction serveFailureAction) error {
 		}
 		registered, err := s.registrar.Register(ctx, service)
 		if err != nil {
+			// Roll back only this attempt's successful registrations, retaining services for retry.
+			for _, registeredService := range registeredServices {
+				if deregisterErr := s.registrar.Deregister(ctx, registeredService); deregisterErr != nil {
+					s.Logger().Errorf(ctx, `%+v`, deregisterErr)
+				}
+			}
 			if failureAction == serveFailureFatal {
 				s.Logger().Fatalf(ctx, `%+v`, err)
 			}
 			return err
 		}
-		s.services[i] = registered
+		registeredServices = append(registeredServices, registered)
 	}
+	s.registeredServices = registeredServices
 	return nil
 }
 
@@ -241,13 +258,13 @@ func (s *GrpcServer) doServiceDeregister() {
 	s.serviceMu.Lock()
 	defer s.serviceMu.Unlock()
 	var ctx = gctx.GetInitCtx()
-	for _, service := range s.services {
+	for _, service := range s.registeredServices {
 		s.Logger().Debugf(ctx, `service deregister: %+v`, service)
 		if err := s.registrar.Deregister(ctx, service); err != nil {
 			s.Logger().Errorf(ctx, `%+v`, err)
 		}
 	}
-	s.services = s.services[:0]
+	s.registeredServices = nil
 }
 
 // Start starts the server in no-blocking way.

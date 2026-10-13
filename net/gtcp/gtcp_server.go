@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// TCP server listener configuration, serving, and shutdown.
+
 package gtcp
 
 import (
@@ -126,20 +128,24 @@ func (s *Server) Close() error {
 	if s.listen == nil {
 		return nil
 	}
-	return s.listen.Close()
+	if err := s.listen.Close(); err != nil {
+		return err
+	}
+	s.listen = nil
+	return nil
 }
 
 // Run starts running the TCP Server.
 func (s *Server) Run() (err error) {
+	// Keep this Run bound to its own listener while Close clears stored readiness.
+	var listener net.Listener
 	if s.handler == nil {
 		err = gerror.NewCode(gcode.CodeMissingConfiguration, "start running failed: socket handler not defined")
 		return
 	}
 	if s.tlsConfig != nil {
 		// TLS Server
-		s.mu.Lock()
-		s.listen, err = tls.Listen("tcp", s.address, s.tlsConfig)
-		s.mu.Unlock()
+		listener, err = tls.Listen("tcp", s.address, s.tlsConfig)
 		if err != nil {
 			err = gerror.Wrapf(err, `tls.Listen failed for address "%s"`, s.address)
 			return
@@ -151,18 +157,19 @@ func (s *Server) Run() (err error) {
 			err = gerror.Wrapf(err, `net.ResolveTCPAddr failed for address "%s"`, s.address)
 			return err
 		}
-		s.mu.Lock()
-		s.listen, err = net.ListenTCP("tcp", tcpAddr)
-		s.mu.Unlock()
+		listener, err = net.ListenTCP("tcp", tcpAddr)
 		if err != nil {
 			err = gerror.Wrapf(err, `net.ListenTCP failed for address "%s"`, s.address)
 			return err
 		}
 	}
+	s.mu.Lock()
+	s.listen = listener
+	s.mu.Unlock()
 	// Listening loop.
 	for {
 		var conn net.Conn
-		if conn, err = s.listen.Accept(); err != nil {
+		if conn, err = listener.Accept(); err != nil {
 			err = gerror.Wrapf(err, `Listener.Accept failed`)
 			return err
 		} else if conn != nil {

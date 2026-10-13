@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// UDP server connection configuration, serving, and shutdown.
+
 package gudp
 
 import (
@@ -93,11 +95,16 @@ func (s *Server) SetHandler(handler ServerHandler) {
 func (s *Server) Close() (err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	err = s.conn.Close()
-	if err != nil {
-		err = gerror.Wrap(err, "connection failed")
+	if s.conn == nil {
+		return nil
 	}
-	return
+	err = s.conn.Close()
+	if err != nil && !gerror.Is(err, net.ErrClosed) {
+		err = gerror.Wrap(err, "connection failed")
+		return
+	}
+	s.conn = nil
+	return nil
 }
 
 // Run starts listening UDP connection.
@@ -118,10 +125,12 @@ func (s *Server) Run() error {
 		err = gerror.Wrapf(err, `net.ListenUDP failed for address "%s"`, s.address)
 		return err
 	}
+	// Keep the handler bound to this connection when Close clears stored readiness.
+	conn := NewServerConn(listenedConn)
 	s.mu.Lock()
-	s.conn = NewServerConn(listenedConn)
+	s.conn = conn
 	s.mu.Unlock()
-	s.handler(s.conn)
+	s.handler(conn)
 	return nil
 }
 

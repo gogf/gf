@@ -100,8 +100,8 @@ func (r *serveResult) takeErr() error {
 }
 
 // abandonUnreadyServer waits until the server is listening, then closes it.
-// Close is not called before a port exists, because gudp.Server.Close panics
-// when the connection is not stored yet. A close error is returned to the caller.
+// Waiting for the port prevents a late bind from escaping timeout cleanup.
+// A close error is returned to the caller.
 // serveErr, when non-nil, ends the wait early with that Run error.
 func abandonUnreadyServer(port func() int, closeFn func() error, serveErr <-chan error, message string) error {
 	for {
@@ -159,20 +159,6 @@ func startBlockingServer(run func() error, port func() int, closeFn func() error
 	}, result.errCh, timeoutMessage)
 }
 
-// closeIfListening closes a server once, and only after it has a listened port.
-func closeIfListening(closed *bool, mu *sync.Mutex, port func() int, closeFn func() error) error {
-	mu.Lock()
-	defer mu.Unlock()
-	if *closed || port() <= 0 {
-		return nil
-	}
-	if err := closeFn(); err != nil {
-		return err
-	}
-	*closed = true
-	return nil
-}
-
 // httpServerAdapter wraps ghttp.Server to implement the Server interface.
 type httpServerAdapter struct {
 	server *ghttp.Server
@@ -200,9 +186,7 @@ func (a *httpServerAdapter) Stop(graceful bool) error {
 
 // tcpServerAdapter wraps gtcp.Server to implement the Server interface.
 type tcpServerAdapter struct {
-	server  *gtcp.Server
-	closeMu sync.Mutex
-	closed  bool
+	server *gtcp.Server
 }
 
 // NewTCPServerAdapter creates and returns a Server adapter for gtcp.Server.
@@ -217,15 +201,10 @@ func (a *tcpServerAdapter) Start() error {
 	return startBlockingServer(
 		a.server.Run,
 		a.server.GetListenedPort,
-		a.closeListening,
+		a.server.Close,
 		"tcp server start failed",
 		"tcp server failed to start within timeout",
 	)
-}
-
-// closeListening closes the TCP listener once it exists.
-func (a *tcpServerAdapter) closeListening() error {
-	return closeIfListening(&a.closed, &a.closeMu, a.server.GetListenedPort, a.server.Close)
 }
 
 // Stop stops the TCP server.
@@ -233,14 +212,12 @@ func (a *tcpServerAdapter) closeListening() error {
 // stop close the listener immediately. Stop before the listener exists is a no-op
 // so a nil listener is not treated as a successful close of a later bind.
 func (a *tcpServerAdapter) Stop(_ bool) error {
-	return a.closeListening()
+	return a.server.Close()
 }
 
 // udpServerAdapter wraps gudp.Server to implement the Server interface.
 type udpServerAdapter struct {
-	server  *gudp.Server
-	closeMu sync.Mutex
-	closed  bool
+	server *gudp.Server
 }
 
 // NewUDPServerAdapter creates and returns a Server adapter for gudp.Server.
@@ -255,22 +232,15 @@ func (a *udpServerAdapter) Start() error {
 	return startBlockingServer(
 		a.server.Run,
 		a.server.GetListenedPort,
-		a.closeListening,
+		a.server.Close,
 		"udp server start failed",
 		"udp server failed to start within timeout",
 	)
 }
 
-// closeListening closes the UDP connection once it exists.
-// gudp.Server.Close panics when the connection has not been stored yet.
-func (a *udpServerAdapter) closeListening() error {
-	return closeIfListening(&a.closed, &a.closeMu, a.server.GetListenedPort, a.server.Close)
-}
-
 // Stop stops the UDP server.
 // Since UDP has no built-in graceful shutdown concept, both graceful and forceful
-// stop close the connection immediately. Stop before the connection exists does
-// not call Close.
+// stop close the connection immediately. Stop before the connection exists is a no-op.
 func (a *udpServerAdapter) Stop(_ bool) error {
-	return a.closeListening()
+	return a.server.Close()
 }

@@ -26,7 +26,7 @@ func Test_Grpcx_Grpc_Server(t *testing.T) {
 		defer s.Stop()
 		s.serviceMu.Lock()
 		defer s.serviceMu.Unlock()
-		t.Assert(len(s.services) != 0, true)
+		t.Assert(len(s.registeredServices) != 0, true)
 	})
 }
 
@@ -41,8 +41,8 @@ func Test_Grpcx_Grpc_Server_Address(t *testing.T) {
 
 		s.serviceMu.Lock()
 		defer s.serviceMu.Unlock()
-		t.Assert(len(s.services) != 0, true)
-		t.Assert(gstr.Contains(s.services[0].GetEndpoints().String(), "127.0.0.1:"), true)
+		t.Assert(len(s.registeredServices) != 0, true)
+		t.Assert(gstr.Contains(s.registeredServices[0].GetEndpoints().String(), "127.0.0.1:"), true)
 	})
 }
 
@@ -57,7 +57,7 @@ func Test_Grpcx_Grpc_Server_Config(t *testing.T) {
 		s := Server.New(cfg)
 		err := s.doServiceRegister(serveFailureLog)
 		t.AssertNil(err)
-		for _, svc := range s.services {
+		for _, svc := range s.registeredServices {
 			t.Assert(svc.GetEndpoints().String(), addr)
 		}
 	})
@@ -71,7 +71,7 @@ func Test_Grpcx_Grpc_Server_Config(t *testing.T) {
 		s := Server.New(cfg)
 		err := s.doServiceRegister(serveFailureLog)
 		t.AssertNil(err)
-		for _, svc := range s.services {
+		for _, svc := range s.registeredServices {
 			t.Assert(svc.GetEndpoints().String(), addr)
 		}
 	})

@@ -96,7 +96,6 @@ import (
 
     "github.com/gogf/gf/v2/frame/g"
     gjob "github.com/gogf/gf/contrib/scheduler/gjob/v2"
-    "github.com/gogf/gf/v2/os/gapp"
     "github.com/gogf/gf/v2/os/gctx"
 )
 
@@ -138,8 +137,8 @@ package main
 import (
     "context"
 
+    "github.com/gogf/gf/v2/frame/g"
     gjob "github.com/gogf/gf/contrib/scheduler/gjob/v2"
-    "github.com/gogf/gf/v2/os/gapp"
     "github.com/gogf/gf/v2/os/gctx"
 )
 
@@ -167,8 +166,6 @@ func main() {
 package main
 
 import (
-    "context"
-
     "github.com/gogf/gf/v2/frame/g"
     "github.com/gogf/gf/v2/net/ghttp"
     gjob "github.com/gogf/gf/contrib/scheduler/gjob/v2"

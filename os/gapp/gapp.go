@@ -102,6 +102,7 @@ func (app *App) resolveCtx(ctx context.Context) context.Context {
 }
 
 // Add adds one or more Server instances to the App.
+// Registrations made during Boot are rolled back if that boot attempt fails.
 func (app *App) Add(servers ...Server) {
 	app.mu.Lock()
 	defer app.mu.Unlock()
@@ -110,6 +111,7 @@ func (app *App) Add(servers ...Server) {
 
 // Option registers one or more Options to be applied during Boot.
 // Options are applied in registration order.
+// Registrations made during Boot are rolled back if that boot attempt fails.
 func (app *App) Option(opts ...Option) {
 	app.mu.Lock()
 	defer app.mu.Unlock()
@@ -124,7 +126,9 @@ func (app *App) Option(opts ...Option) {
 // calls after the first are no-ops.
 //
 // If an Option's Apply returns an error or panics, Boot rolls back by running
-// any already-collected cleanup hooks in reverse order and returns the error.
+// any already-collected cleanup hooks in reverse order, removing servers and
+// options registered during that attempt, and returning the error. This includes
+// registrations made concurrently by other callers while Boot is in progress.
 // A panic is recovered so Boot is not left marked successful. The returned
 // error is wrapped with "app boot failed"; concurrent waiters receive that
 // same wrapped error.
@@ -157,7 +161,11 @@ func (app *App) Boot(ctx context.Context) (err error) {
 		app.lastBootErr = nil
 		break
 	}
-	baseCtx := normalizeCtx(ctx)
+	var (
+		baseCtx     = normalizeCtx(ctx)
+		serverCount = len(app.servers)
+		optionCount = len(app.options)
+	)
 
 	// Release the lock before applying options. applyOptions reads from
 	// app.options by index so that Options registered dynamically during
@@ -179,6 +187,11 @@ func (app *App) Boot(ctx context.Context) (err error) {
 				app.lifecycleCtx = baseCtx
 			}
 		} else {
+			// A retry must not retain registrations whose initialization was rolled back.
+			clear(app.servers[serverCount:])
+			app.servers = app.servers[:serverCount]
+			clear(app.options[optionCount:])
+			app.options = app.options[:optionCount]
 			app.lastBootErr = gerror.WrapCode(gcode.CodeInternalError, err, "app boot failed")
 			err = app.lastBootErr
 		}
