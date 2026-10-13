@@ -132,10 +132,12 @@ func (m *Model) saveSelectResultToCache(
 	}
 
 	// In case of Cache Penetration.
-	if result != nil && result.IsEmpty() {
+	if result == nil {
 		if m.cacheOption.Force {
 			result = Result{}
-		} else {
+		}
+	} else if result.IsEmpty() {
+		if !m.cacheOption.Force {
 			result = nil
 		}
 	}

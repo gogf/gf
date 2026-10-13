@@ -154,9 +154,23 @@ func Test_Model_Cache_NoExpire(t *testing.T) {
 func Test_Model_Cache_Force(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	// Note: Force cache test is intentionally empty. CacheOption.Force never caches an
-	// empty result, see https://github.com/gogf/gf/issues/4891, so the scenario cannot
-	// be asserted until that is fixed.
+	gtest.C(t, func(t *gtest.T) {
+		option := gdb.CacheOption{
+			Duration: time.Second * 10,
+			Name:     "test_cache_force_empty",
+			Force:    true,
+		}
+		one, err := db.Model(table).Cache(option).Where("id", 100).One()
+		t.AssertNil(err)
+		t.Assert(one.IsEmpty(), true)
+
+		_, err = db.Exec(ctx, "INSERT INTO `"+table+"` (id, passport, password) VALUES (100, 'p', 'w')")
+		t.AssertNil(err)
+
+		one, err = db.Model(table).Cache(option).Where("id", 100).One()
+		t.AssertNil(err)
+		t.Assert(one.IsEmpty(), true)
+	})
 }
 
 // Test_Model_Cache_DisabledInTransaction tests cache is disabled in transactions
