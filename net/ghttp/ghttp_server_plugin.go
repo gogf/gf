@@ -8,7 +8,10 @@
 
 package ghttp
 
-import "context"
+import (
+	"context"
+	"errors"
+)
 
 // Plugin is the interface for server plugin.
 type Plugin interface {
@@ -25,16 +28,25 @@ func (s *Server) Plugin(plugin ...Plugin) {
 	s.plugins = append(s.plugins, plugin...)
 }
 
-// removePlugins detaches installed plugins so shutdown never removes uninstalled ones.
-func (s *Server) removePlugins(ctx context.Context) {
+// removePlugins detaches installed plugins and retains failed removals for later cleanup.
+func (s *Server) removePlugins(ctx context.Context) error {
 	s.pluginMu.Lock()
 	plugins := s.installedPlugins
 	s.installedPlugins = nil
 	s.pluginMu.Unlock()
+	var (
+		failedPlugins []Plugin
+		removeErr     error
+	)
 	for _, p := range plugins {
 		s.Logger().Printf(ctx, `remove plugin: %s`, p.Name())
 		if err := p.Remove(); err != nil {
-			s.Logger().Errorf(ctx, "%+v", err)
+			failedPlugins = append(failedPlugins, p)
+			removeErr = errors.Join(removeErr, err)
 		}
 	}
+	s.pluginMu.Lock()
+	s.installedPlugins = append(s.installedPlugins, failedPlugins...)
+	s.pluginMu.Unlock()
+	return removeErr
 }

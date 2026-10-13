@@ -53,6 +53,7 @@ func TestServerCloseAfterHandlerClose(t *testing.T) {
 			t.AssertNil(conn.Close())
 		})
 		t.AssertNil(server.Run())
+		t.Assert(server.GetListenedPort(), -1)
 		t.AssertNil(server.Close())
 		t.Assert(server.GetListenedPort(), -1)
 		t.AssertNil(server.Close())

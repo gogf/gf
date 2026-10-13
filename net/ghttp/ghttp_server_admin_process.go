@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// HTTP process administration, restart handoff, and global shutdown.
+
 package ghttp
 
 import (
@@ -284,25 +286,31 @@ func shutdownWebServersGracefully(ctx context.Context, signal os.Signal) {
 	} else {
 		glog.Printf(ctx, "pid[%d]: server gracefully shutting down by api", gproc.Pid())
 	}
-	serverMapping.RLockFunc(func(m map[string]*Server) {
-		for _, v := range m {
-			v.doServiceDeregister()
-			for _, s := range v.servers {
-				s.Shutdown(ctx)
-			}
+	// Snapshot ownership so managed Serve can remove its mapping while shutdown waits.
+	for _, server := range serverMapping.Values() {
+		server.doServiceDeregister()
+		for _, underlying := range server.servers {
+			underlying.Shutdown(ctx)
 		}
-	})
+		server.managedServeWG.Wait()
+		if err := server.removePlugins(ctx); err != nil {
+			server.Logger().Errorf(ctx, "%+v", err)
+		}
+	}
 }
 
 // forceCloseWebServers forced shuts down all servers.
 func forceCloseWebServers(ctx context.Context) {
-	serverMapping.RLockFunc(func(m map[string]*Server) {
-		for _, v := range m {
-			for _, s := range v.servers {
-				s.Close(ctx)
-			}
+	// Preserve force-close registry behavior while completing installed plugin cleanup.
+	for _, server := range serverMapping.Values() {
+		for _, underlying := range server.servers {
+			underlying.Close(ctx)
 		}
-	})
+		server.managedServeWG.Wait()
+		if err := server.removePlugins(ctx); err != nil {
+			server.Logger().Errorf(ctx, "%+v", err)
+		}
+	}
 }
 
 // handleProcessMessage receives and handles the message from processes,

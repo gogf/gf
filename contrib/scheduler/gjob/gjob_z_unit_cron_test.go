@@ -160,3 +160,77 @@ func TestCronServerConcurrentStop(t *testing.T) {
 		t.AssertNil(s.Stop(true))
 	})
 }
+
+// TestCronServerStopOwnsGeneratedNameEntries closes timers displaced by automatic names.
+func TestCronServerStopOwnsGeneratedNameEntries(t *testing.T) {
+	for _, graceful := range []bool{true, false} {
+		gtest.C(t, func(t *gtest.T) {
+			s := NewCronServer(nil,
+				CronTask{Name: "cron-1", Spec: "0 0 0 1 1 *", Handler: func(context.Context) error { return nil }},
+				CronTask{Spec: "0 0 0 1 1 *", Handler: func(context.Context) error { return nil }},
+			)
+			t.AssertNil(s.Start())
+			defer func() { t.AssertNil(s.Stop(false)) }()
+			t.Assert(len(s.entries), 2)
+			entries := s.entries
+			t.AssertNil(s.Stop(graceful))
+			for _, entry := range entries {
+				t.Assert(entry.Status(), gcron.StatusClosed)
+			}
+		})
+	}
+}
+
+// TestCronServerFailedStartOwnsGeneratedNameEntries closes every timer before retry.
+func TestCronServerFailedStartOwnsGeneratedNameEntries(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := NewCronServer(nil,
+			CronTask{Name: "cron-1", Spec: "0 0 0 1 1 *", Handler: func(context.Context) error { return nil }},
+			CronTask{Spec: "0 0 0 1 1 *", Handler: func(context.Context) error { return nil }},
+			CronTask{Name: "invalid", Spec: "invalid-spec", Handler: func(context.Context) error { return nil }},
+		)
+		t.AssertNE(s.Start(), nil)
+		t.Assert(len(s.entries), 2)
+		failedEntries := s.entries
+		for _, entry := range failedEntries {
+			t.Assert(entry.Status(), gcron.StatusClosed)
+		}
+		s.tasks = s.tasks[:2]
+		t.AssertNil(s.Start())
+		defer func() { t.AssertNil(s.Stop(false)) }()
+		t.Assert(len(s.entries), 2)
+		t.Assert(s.entries[0] == failedEntries[0], false)
+		t.AssertNil(s.Stop(true))
+		for _, entry := range s.entries {
+			t.Assert(entry.Status(), gcron.StatusClosed)
+		}
+	})
+}
+
+// TestJobServerTaskSliceOwnership keeps independently added tasks isolated between servers.
+func TestJobServerTaskSliceOwnership(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		tasks := make([]WorkerTask, 1, 2)
+		tasks[0] = WorkerTask{Name: "common", Handler: func(context.Context) func() { return nil }}
+		var (
+			first  = NewWorkerServer(nil, tasks...)
+			second = NewWorkerServer(nil, tasks...)
+		)
+		t.AssertNil(first.Add(WorkerTask{Name: "first", Handler: func(context.Context) func() { return nil }}))
+		t.AssertNil(second.Add(WorkerTask{Name: "second", Handler: func(context.Context) func() { return nil }}))
+		t.Assert(first.tasks[1].Name, "first")
+		t.Assert(second.tasks[1].Name, "second")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		tasks := make([]CronTask, 1, 2)
+		tasks[0] = CronTask{Name: "common", Spec: "* * * * * *", Handler: func(context.Context) error { return nil }}
+		var (
+			first  = NewCronServer(nil, tasks...)
+			second = NewCronServer(nil, tasks...)
+		)
+		t.AssertNil(first.Add(CronTask{Name: "first", Spec: "* * * * * *", Handler: func(context.Context) error { return nil }}))
+		t.AssertNil(second.Add(CronTask{Name: "second", Spec: "* * * * * *", Handler: func(context.Context) error { return nil }}))
+		t.Assert(first.tasks[1].Name, "first")
+		t.Assert(second.tasks[1].Name, "second")
+	})
+}

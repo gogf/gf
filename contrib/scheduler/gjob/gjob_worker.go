@@ -10,6 +10,7 @@ package gjob
 
 import (
 	"context"
+	"slices"
 	"sync"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -65,7 +66,7 @@ type WorkerServer struct {
 func NewWorkerServer(ctx context.Context, tasks ...WorkerTask) *WorkerServer {
 	return &WorkerServer{
 		parentCtx: normalizeCtx(ctx),
-		tasks:     tasks,
+		tasks:     slices.Clone(tasks),
 	}
 }
 

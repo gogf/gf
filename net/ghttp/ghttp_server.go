@@ -220,6 +220,9 @@ func (s *Server) start(managed bool) (err error) {
 	}
 
 	// Install external plugins.
+	if err := s.removePlugins(ctx); err != nil {
+		return gerror.Wrap(err, "cleanup previously installed HTTP plugins failed")
+	}
 	for _, p := range s.plugins {
 		if err := p.Install(s); err != nil {
 			if managed {
@@ -562,7 +565,9 @@ func Wait() {
 
 	// Remove plugins.
 	serverMapping.Iterator(func(k string, v *Server) bool {
-		v.removePlugins(ctx)
+		if err := v.removePlugins(ctx); err != nil {
+			v.Logger().Errorf(ctx, "%+v", err)
+		}
 		return true
 	})
 	glog.Infof(ctx, "pid[%d]: all servers shutdown", gproc.Pid())

@@ -241,6 +241,139 @@ func TestUDPAdapterRetryAfterHandlerClose(t *testing.T) {
 	})
 }
 
+// TestUDPAdapterRejectsEarlyClose returns promptly when its handler closes the socket before readiness.
+func TestUDPAdapterRejectsEarlyClose(t *testing.T) {
+	for _, closeServer := range []bool{true, false} {
+		name := "connection"
+		if closeServer {
+			name = "server"
+		}
+		t.Run(name, func(t *testing.T) {
+			gtest.C(t, func(t *gtest.T) {
+				server := gudp.NewServer("127.0.0.1:0", nil)
+				server.SetHandler(func(conn *gudp.ServerConn) {
+					if closeServer {
+						t.AssertNil(server.Close())
+					} else {
+						t.AssertNil(conn.Close())
+					}
+				})
+				adapter := NewUDPServerAdapter(server)
+				defer func() { t.AssertNil(adapter.Stop(false)) }()
+				result := make(chan error, 1)
+				go func() { result <- adapter.Start() }()
+				select {
+				case err := <-result:
+					t.AssertNE(err, nil)
+				case <-time.After(time.Second):
+					t.Fatal("startup did not observe the handler's clean exit")
+				}
+			})
+		})
+	}
+}
+
+// TestUDPAdapterSupportsAsyncHandler preserves handlers that transfer their live socket to a goroutine.
+func TestUDPAdapterSupportsAsyncHandler(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			received = make(chan string, 1)
+			exited   = make(chan struct{})
+			returned = make(chan struct{})
+		)
+		server := gudp.NewServer("127.0.0.1:0", func(conn *gudp.ServerConn) {
+			go func() {
+				defer close(exited)
+				data, _, err := conn.Recv(-1)
+				if err != nil {
+					if !gerror.Is(err, net.ErrClosed) {
+						t.Error(err)
+					}
+					return
+				}
+				received <- string(data)
+			}()
+			close(returned)
+		})
+		adapter := NewUDPServerAdapter(server)
+		defer func() {
+			t.AssertNil(adapter.Stop(false))
+			<-exited
+		}()
+		t.AssertNil(adapter.Start())
+		<-returned
+		client, err := net.DialTimeout("udp", server.GetListenedAddress(), time.Second)
+		t.AssertNil(err)
+		defer func() { t.AssertNil(client.Close()) }()
+		_, err = client.Write([]byte("async"))
+		t.AssertNil(err)
+		select {
+		case data := <-received:
+			t.Assert(data, "async")
+		case <-time.After(time.Second):
+			t.Fatal("asynchronous handler did not receive the datagram")
+		}
+	})
+}
+
+// TestServeResultCleanExit keeps completion observable before and after startup acceptance.
+func TestServeResultCleanExit(t *testing.T) {
+	for _, accepted := range []bool{false, true} {
+		name := "before-start"
+		if accepted {
+			name = "after-start"
+		}
+		t.Run(name, func(t *testing.T) {
+			gtest.C(t, func(t *gtest.T) {
+				result := newServeResult()
+				if accepted {
+					t.AssertNil(result.accept())
+				}
+				result.watch(func() error { return nil })
+				err, completed := result.takeResult()
+				t.AssertNil(err)
+				t.Assert(completed, true)
+				t.AssertNil(result.accept())
+			})
+		})
+	}
+}
+
+// TestAbandonUnreadyServerCleanExit cleans a completed Run without waiting for nonexistent readiness.
+func TestAbandonUnreadyServerCleanExit(t *testing.T) {
+	for _, closeBeforeWait := range []bool{true, false} {
+		name := "during-wait"
+		if closeBeforeWait {
+			name = "before-wait"
+		}
+		t.Run(name, func(t *testing.T) {
+			gtest.C(t, func(t *gtest.T) {
+				var (
+					serveErr = make(chan error)
+					calls    int
+					closed   int
+				)
+				if closeBeforeWait {
+					close(serveErr)
+					closed++
+				}
+				err := abandonUnreadyServer(func() int {
+					if closed == 0 {
+						close(serveErr)
+						closed++
+					}
+					return -1
+				}, func() error {
+					calls++
+					return nil
+				}, serveErr, "startup stopped")
+				t.AssertNE(err, nil)
+				t.Assert(calls, 1)
+			})
+		})
+	}
+}
+
 // retryFailureServer fails once to trigger rollback of another server.
 type retryFailureServer struct {
 	failed bool

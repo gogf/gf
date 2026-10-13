@@ -402,10 +402,11 @@ func (app *App) Run(ctx context.Context) error {
 		return gerror.WrapCode(gcode.CodeInternalError, err, "app start failed")
 	}
 
-	gproc.AddSigHandlerShutdown(func(sig os.Signal) {
+	releaseSignal := registerRunSignal(func(sig os.Signal) {
 		app.logger.Infof(root, "received shutdown signal: %s, shutting down...", sig.String())
 		doShutdown()
 	})
+	defer releaseSignal()
 
 	app.waitForRunExit(root, doShutdown, exitCh)
 	return shutdownErr

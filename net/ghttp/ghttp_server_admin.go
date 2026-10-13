@@ -101,7 +101,9 @@ func (s *Server) EnableAdmin(pattern ...string) {
 // stopServers removes plugins, deregisters the service discovery endpoint if any,
 // then shuts down or force-closes all underlying HTTP servers.
 func (s *Server) stopServers(ctx context.Context, forceful bool) {
-	s.removePlugins(ctx)
+	if err := s.removePlugins(ctx); err != nil {
+		s.Logger().Errorf(ctx, "%+v", err)
+	}
 
 	s.doServiceDeregister()
 	for _, v := range s.servers {

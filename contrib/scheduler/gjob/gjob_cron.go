@@ -10,6 +10,7 @@ package gjob
 
 import (
 	"context"
+	"slices"
 	"sync"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -48,6 +49,7 @@ type CronServer struct {
 	ctx       context.Context
 	cancel    context.CancelFunc
 	cron      *gcron.Cron
+	entries   []*gcron.Entry // All owned entries, including those displaced by automatic names.
 	tasks     []CronTask
 	started   bool
 	stopped   bool
@@ -62,7 +64,7 @@ type CronServer struct {
 func NewCronServer(ctx context.Context, tasks ...CronTask) *CronServer {
 	return &CronServer{
 		parentCtx: normalizeCtx(ctx),
-		tasks:     tasks,
+		tasks:     slices.Clone(tasks),
 	}
 }
 
@@ -108,6 +110,7 @@ func (s *CronServer) Start() error {
 	// Registered entries must not execute until all tasks have been registered.
 	cron.Stop()
 	s.cron = cron
+	s.entries = nil
 	for i := range s.tasks {
 		task := s.tasks[i]
 		handler := func(ctx context.Context) {
@@ -116,15 +119,16 @@ func (s *CronServer) Start() error {
 			}
 		}
 
-		_, err := cron.AddSingleton(s.ctx, task.Spec, handler, task.Name)
+		entry, err := cron.AddSingleton(s.ctx, task.Spec, handler, task.Name)
 		if err != nil {
 			cron.Close()
-			for _, entry := range cron.Entries() {
+			for _, entry := range s.entries {
 				entry.Close()
 			}
 			s.cancel()
 			return err
 		}
+		s.entries = append(s.entries, entry)
 	}
 
 	cron.Start()
@@ -160,7 +164,7 @@ func (s *CronServer) Stop(graceful bool) error {
 	}
 	s.cron.Close()
 	// Close each timer entry even when its next scheduled execution is far away.
-	for _, entry := range s.cron.Entries() {
+	for _, entry := range s.entries {
 		entry.Close()
 	}
 	s.cancel()

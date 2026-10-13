@@ -49,8 +49,9 @@ func newServeResult() *serveResult {
 	return &serveResult{errCh: make(chan error, 1)}
 }
 
-// watch runs the server and records a non-nil Run error.
+// watch records Run errors and closes the result channel even when Run exits cleanly.
 func (r *serveResult) watch(run func() error) {
+	defer close(r.errCh)
 	if adapterServeGate != nil {
 		adapterServeGate()
 	}
@@ -79,7 +80,8 @@ func (r *serveResult) accept() error {
 	r.mu.Lock()
 	r.accepted = true
 	r.mu.Unlock()
-	return r.takeErr()
+	err, _ := r.takeResult()
+	return err
 }
 
 // markAbandoned ignores Run errors caused by closing an unready server.
@@ -89,39 +91,42 @@ func (r *serveResult) markAbandoned() {
 	r.mu.Unlock()
 }
 
-// takeErr returns a Run error already queued for Start, if any.
-func (r *serveResult) takeErr() error {
+// takeResult distinguishes a completed Run from one that has not returned yet.
+func (r *serveResult) takeResult() (error, bool) {
 	select {
 	case err := <-r.errCh:
-		return err
+		return err, true
 	default:
-		return nil
+		return nil, false
 	}
 }
 
 // abandonUnreadyServer waits until the server is listening, then closes it.
 // Waiting for the port prevents a late bind from escaping timeout cleanup.
 // A close error is returned to the caller.
-// serveErr, when non-nil, ends the wait early with that Run error.
+// serveErr also closes on a clean Run exit, so cleanup cannot wait for a socket that will never appear.
 func abandonUnreadyServer(port func() int, closeFn func() error, serveErr <-chan error, message string) error {
+	var serveDone bool
 	for {
 		if serveErr != nil {
 			select {
-			case err := <-serveErr:
+			case err, open := <-serveErr:
+				serveDone = !open
 				if err != nil {
 					return gerror.WrapCode(gcode.CodeInternalError, err, message)
 				}
 			default:
 			}
 		}
-		if port() > 0 {
+		if port() > 0 || serveDone {
 			if closeErr := closeFn(); closeErr != nil {
 				return gerror.WrapCode(gcode.CodeOperationFailed, closeErr, message)
 			}
 			return gerror.NewCode(gcode.CodeOperationFailed, message)
 		}
 		select {
-		case err := <-serveErr:
+		case err, open := <-serveErr:
+			serveDone = !open
 			if err != nil {
 				return gerror.WrapCode(gcode.CodeInternalError, err, message)
 			}
@@ -149,12 +154,15 @@ func startBlockingServer(run func() error, port func() int, closeFn func() error
 			}
 			return nil
 		}
-		if err := result.takeErr(); err != nil {
+		if err, completed := result.takeResult(); err != nil {
 			return gerror.WrapCode(gcode.CodeInternalError, err, failPrefix)
+		} else if completed {
+			timeoutMessage = "server stopped before listening"
+			break
 		}
 		time.Sleep(adapterStartPollInterval)
 	}
-	if err := result.takeErr(); err != nil {
+	if err, _ := result.takeResult(); err != nil {
 		return gerror.WrapCode(gcode.CodeInternalError, err, failPrefix)
 	}
 	return abandonUnreadyServer(port, func() error {

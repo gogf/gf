@@ -12,6 +12,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -31,6 +32,9 @@ func (s *Server) doServiceRegister() error {
 		protocol = gsvc.DefaultProtocol
 		insecure = true
 	)
+	if err := s.doServiceDeregisterLocked(ctx); err != nil {
+		return gerror.Wrap(err, "cleanup previous HTTP service registration failed")
+	}
 	if s.config.TLSConfig != nil {
 		protocol = `https`
 		insecure = false
@@ -64,15 +68,23 @@ func (s *Server) doServiceDeregister() {
 	}
 	s.serviceMu.Lock()
 	defer s.serviceMu.Unlock()
-	if s.service == nil {
-		return
-	}
 	var ctx = gctx.GetInitCtx()
-	s.Logger().Debugf(ctx, `service deregister: %+v`, s.service)
-	if err := s.registrar.Deregister(ctx, s.service); err != nil {
+	if err := s.doServiceDeregisterLocked(ctx); err != nil {
 		s.Logger().Errorf(ctx, `%+v`, err)
 	}
+}
+
+// doServiceDeregisterLocked retains failed registration ownership; the caller holds serviceMu.
+func (s *Server) doServiceDeregisterLocked(ctx context.Context) error {
+	if s.service == nil {
+		return nil
+	}
+	s.Logger().Debugf(ctx, `service deregister: %+v`, s.service)
+	if err := s.registrar.Deregister(ctx, s.service); err != nil {
+		return err
+	}
 	s.service = nil
+	return nil
 }
 
 func (s *Server) calculateListenedEndpoints(ctx context.Context) gsvc.Endpoints {

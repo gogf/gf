@@ -152,6 +152,14 @@ func (s *Server) GetListenedPort() int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if ln := s.conn; ln != nil {
+		// LocalAddr survives Close; checking the descriptor avoids stale readiness after a handler closes it.
+		rawConn, err := ln.SyscallConn()
+		if err != nil {
+			return -1
+		}
+		if err = rawConn.Control(func(uintptr) {}); err != nil {
+			return -1
+		}
 		return ln.LocalAddr().(*net.UDPAddr).Port
 	}
 	return -1
