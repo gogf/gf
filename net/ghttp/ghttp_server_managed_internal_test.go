@@ -10,12 +10,14 @@ package ghttp
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -28,6 +30,39 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 )
+
+// TestHTTPManagedTLSCertificateRetry serves HTTPS after correcting a failed certificate load.
+func TestHTTPManagedTLSCertificateRetry(t *testing.T) {
+	missingPath := filepath.Join(t.TempDir(), "missing")
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			server    = newManagedHTTPTestServer()
+			config    = NewConfig()
+			transport = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+			client    = &http.Client{Timeout: time.Second, Transport: transport}
+		)
+		// The fixture certificate is self-signed; only the handshake and response are under test.
+		defer transport.CloseIdleConnections()
+		config.Address = "127.0.0.1:0"
+		config.TLSConfig = &tls.Config{}
+		config.HTTPSCertPath = missingPath + ".crt"
+		config.HTTPSKeyPath = missingPath + ".key"
+		config.Logger = glog.NewWithWriter(io.Discard)
+		config.DumpRouterMap = false
+		t.AssertNil(server.SetConfig(config))
+		defer func() { t.AssertNil(server.Close()) }()
+		t.AssertNE(server.StartManaged(), nil)
+		server.EnableHTTPS(gtest.DataPath("https", "files", "server.crt"), gtest.DataPath("https", "files", "server.key"))
+		t.AssertNil(server.StartManaged())
+		response, err := client.Get(fmt.Sprintf("https://127.0.0.1:%d/", server.GetListenedHTTPSPort()))
+		t.AssertNil(err)
+		defer func() { t.AssertNil(response.Body.Close()) }()
+		body, err := io.ReadAll(response.Body)
+		t.AssertNil(err)
+		t.Assert(response.StatusCode, http.StatusOK)
+		t.Assert(string(body), "ok")
+	})
+}
 
 // managedTestPlugin records successful installations and removals.
 type managedTestPlugin struct {

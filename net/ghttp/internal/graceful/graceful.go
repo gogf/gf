@@ -221,20 +221,24 @@ func (s *Server) CreateListenerTLS(certFile, keyFile string, tlsConfig ...*tls.C
 	if config.NextProtos == nil {
 		config.NextProtos = []string{"http/1.1"}
 	}
-	var err error
 	if len(config.Certificates) == 0 && config.GetCertificate == nil {
-		config.Certificates = make([]tls.Certificate, 1)
+		var (
+			certificate tls.Certificate
+			err         error
+		)
 		if gres.Contains(certFile) {
-			config.Certificates[0], err = tls.X509KeyPair(
+			certificate, err = tls.X509KeyPair(
 				gres.GetContent(certFile),
 				gres.GetContent(keyFile),
 			)
 		} else {
-			config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
+			certificate, err = tls.LoadX509KeyPair(certFile, keyFile)
 		}
-	}
-	if err != nil {
-		return gerror.Wrapf(err, `open certFile "%s" and keyFile "%s" failed`, certFile, keyFile)
+		if err != nil {
+			return gerror.Wrapf(err, `open certFile "%s" and keyFile "%s" failed`, certFile, keyFile)
+		}
+		// Keep failed loads retryable when the caller reuses its TLS configuration.
+		config.Certificates = []tls.Certificate{certificate}
 	}
 	ln, err := s.getNetListener()
 	if err != nil {

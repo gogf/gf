@@ -11,15 +11,55 @@ package graceful
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"io"
 	"net"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/os/gres"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
+
+// TestPreparedTLSCertificateRetry leaves caller certificates untouched until loading succeeds.
+func TestPreparedTLSCertificateRetry(t *testing.T) {
+	for _, embedded := range []bool{false, true} {
+		name := "file"
+		if embedded {
+			name = "embedded"
+		}
+		t.Run(name, func(t *testing.T) {
+			gtest.C(t, func(t *gtest.T) {
+				var (
+					path      = filepath.Join("..", "..", "testdata", "https", "files")
+					certFile  = filepath.Join(path, "server.crt")
+					keyFile   = filepath.Join(path, "server.key")
+					tlsConfig = &tls.Config{}
+					server    = New("127.0.0.1:0", 0, io.Discard, ServerConfig{Logger: glog.NewWithWriter(io.Discard)})
+				)
+				defer server.Close(context.Background())
+				if embedded {
+					prefix := "tls-retry-" + guid.S()
+					data, err := gres.PackWithOption(path, gres.Option{Prefix: prefix})
+					t.AssertNil(err)
+					t.AssertNil(gres.Add(string(data)))
+					certFile = prefix + "/server.crt"
+					keyFile = prefix + "/server.key"
+					t.Assert(gres.Contains(certFile), true)
+				}
+				t.AssertNE(server.CreateListenerTLS(certFile, keyFile+".missing", tlsConfig), nil)
+				t.Assert(len(tlsConfig.Certificates), 0)
+				t.AssertNil(server.CreateListenerTLS(certFile, keyFile, tlsConfig))
+				t.Assert(len(tlsConfig.Certificates), 1)
+				t.AssertNE(tlsConfig.Certificates[0].PrivateKey, nil)
+			})
+		})
+	}
+}
 
 // preparedCloseFailureListener reports an unexpected failure after releasing its socket.
 type preparedCloseFailureListener struct {
