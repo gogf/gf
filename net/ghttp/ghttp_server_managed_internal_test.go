@@ -10,8 +10,10 @@ package ghttp
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"runtime"
@@ -62,6 +64,7 @@ func (p *managedTestPlugin) Remove() error {
 // managedTestRegistrar can fail registration and records deregistration.
 type managedTestRegistrar struct {
 	registerErr  error
+	registered   gsvc.Service
 	deregistered int
 }
 
@@ -70,6 +73,7 @@ func (r *managedTestRegistrar) Register(_ context.Context, service gsvc.Service)
 	if r.registerErr != nil {
 		return nil, r.registerErr
 	}
+	r.registered = service
 	return service, nil
 }
 
@@ -89,6 +93,45 @@ func newManagedHTTPTestServer() *Server {
 	return s
 }
 
+// TestHTTPManagedCloseRetry replaces closed listeners and advertises only live endpoints.
+func TestHTTPManagedCloseRetry(t *testing.T) {
+	for _, forceful := range []bool{false, true} {
+		name := "graceful"
+		if forceful {
+			name = "forceful"
+		}
+		t.Run(name, func(t *testing.T) {
+			gtest.C(t, func(t *gtest.T) {
+				var (
+					server    = newManagedHTTPTestServer()
+					registrar = &managedTestRegistrar{}
+					client    = &http.Client{Timeout: time.Second}
+				)
+				server.SetLogger(glog.NewWithWriter(io.Discard))
+				server.registrar = registrar
+				server.config.Endpoints = []string{"localhost:0"}
+				defer func() { t.AssertNil(server.Close()) }()
+				for range 3 {
+					t.AssertNil(server.StartManaged())
+					t.Assert(len(server.servers), 1)
+					t.Assert(len(registrar.registered.GetEndpoints()), 1)
+					t.Assert(registrar.registered.GetEndpoints()[0].String(), fmt.Sprintf("localhost:%d", server.GetListenedPort()))
+					response, err := client.Get("http://" + server.GetListenedAddress())
+					t.AssertNil(err)
+					t.Assert(response.StatusCode, http.StatusOK)
+					t.AssertNil(response.Body.Close())
+					if forceful {
+						t.AssertNil(server.Close())
+					} else {
+						t.AssertNil(server.Shutdown())
+					}
+					t.Assert(server.serverCount.Val(), 0)
+				}
+			})
+		})
+	}
+}
+
 // TestHTTPManagedImmediateRestart rejects a second start before Serve is scheduled.
 func TestHTTPManagedImmediateRestart(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
@@ -100,6 +143,23 @@ func TestHTTPManagedImmediateRestart(t *testing.T) {
 		defer func() { t.AssertNil(server.Close()) }()
 		t.AssertNE(server.StartManaged(), nil)
 		t.Assert(len(server.servers), 1)
+	})
+}
+
+// TestHTTPManagedCloseFinishesServe permits immediate retry without standalone notification readers.
+func TestHTTPManagedCloseFinishesServe(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		previous := runtime.GOMAXPROCS(1)
+		defer runtime.GOMAXPROCS(previous)
+		server := newManagedHTTPTestServer()
+		server.SetLogger(glog.NewWithWriter(io.Discard))
+		server.closeChan = make(chan struct{}, 1)
+		server.closeChan <- struct{}{}
+		t.AssertNil(server.StartManaged())
+		t.AssertNil(server.Close())
+		t.Assert(server.serverCount.Val(), 0)
+		t.AssertNil(server.StartManaged())
+		t.AssertNil(server.Close())
 	})
 }
 

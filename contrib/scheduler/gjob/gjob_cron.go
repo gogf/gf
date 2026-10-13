@@ -95,10 +95,18 @@ func (s *CronServer) Start() error {
 	if s.stopped {
 		return gerror.NewCode(gcode.CodeInvalidOperation, "cron server already stopped")
 	}
+	// Validate every handler before any task can produce side effects.
+	for _, task := range s.tasks {
+		if task.Handler == nil {
+			return gerror.NewCodef(gcode.CodeInvalidConfiguration, "cron task %s: handler is nil", task.Name)
+		}
+	}
 
 	s.ctx, s.cancel = context.WithCancel(s.parentCtx)
 
 	cron := gcron.New()
+	// Registered entries must not execute until all tasks have been registered.
+	cron.Stop()
 	s.cron = cron
 	for i := range s.tasks {
 		task := s.tasks[i]

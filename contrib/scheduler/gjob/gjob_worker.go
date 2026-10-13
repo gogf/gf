@@ -97,6 +97,12 @@ func (s *WorkerServer) Start() error {
 	if s.stopped {
 		return gerror.NewCode(gcode.CodeInvalidOperation, "worker server already stopped")
 	}
+	// Validate every handler before any task can produce side effects.
+	for _, task := range s.tasks {
+		if task.Handler == nil {
+			return gerror.NewCodef(gcode.CodeInvalidConfiguration, "worker task %s: handler is nil", task.Name)
+		}
+	}
 
 	s.ctx, s.cancel = context.WithCancel(s.parentCtx)
 

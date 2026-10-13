@@ -21,6 +21,11 @@ import (
 	"testing"
 	"time"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
+
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/glog"
@@ -33,6 +38,66 @@ const testRunServeFatalEnv = "GF_GRPCX_TEST_RUN_SERVE_FATAL"
 
 // testRegisterFatalEnv enables the subprocess path that expects register failure to Fatalf.
 const testRegisterFatalEnv = "GF_GRPCX_TEST_REGISTER_FATAL"
+
+// testRegisterHealthEnv isolates the legacy path that terminates on registration failure.
+const testRegisterHealthEnv = "GF_GRPCX_TEST_REGISTER_HEALTH"
+
+// healthCheckRegistrar verifies that a legacy server serves RPCs during registration.
+type healthCheckRegistrar struct{}
+
+// Register performs a real health RPC before accepting the service.
+func (healthCheckRegistrar) Register(ctx context.Context, service gsvc.Service) (gsvc.Service, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+	client, err := grpc.NewClient(service.GetEndpoints()[0].String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, err
+	}
+	response, rpcErr := grpc_health_v1.NewHealthClient(client).Check(ctx, &grpc_health_v1.HealthCheckRequest{})
+	if err := client.Close(); err != nil {
+		return nil, err
+	}
+	if rpcErr != nil {
+		return nil, rpcErr
+	}
+	if response.GetStatus() != grpc_health_v1.HealthCheckResponse_SERVING {
+		return nil, errors.New("registered service is not serving")
+	}
+	return service, nil
+}
+
+// Deregister releases the test service without additional registry state.
+func (healthCheckRegistrar) Deregister(context.Context, gsvc.Service) error {
+	return nil
+}
+
+// Test_Grpcx_Legacy_ServesDuringRegister keeps registrars with synchronous health checks compatible.
+func Test_Grpcx_Legacy_ServesDuringRegister(t *testing.T) {
+	if os.Getenv(testRegisterHealthEnv) == "1" {
+		gtest.C(t, func(t *gtest.T) {
+			s := newServeErrorTestServer(os.Stdout)
+			s.registrar = healthCheckRegistrar{}
+			grpc_health_v1.RegisterHealthServer(s.Server, health.NewServer())
+			defer s.StopForceful()
+			// Run and Start share this fatal serving path, without entering signal wait here.
+			t.AssertNil(s.serve(serveFailureFatal))
+		})
+		return
+	}
+	gtest.C(t, func(t *gtest.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+		defer cancel()
+		cmd := exec.CommandContext(ctx, os.Args[0], "-test.run=^Test_Grpcx_Legacy_ServesDuringRegister$", "-test.count=1")
+		cmd.Env = append(os.Environ(), testRegisterHealthEnv+"=1")
+		output, err := cmd.CombinedOutput()
+		if ctx.Err() != nil {
+			t.Fatalf("subprocess timed out, output=%s", output)
+		}
+		if err != nil {
+			t.Fatalf("legacy registration failed: %v, output=%s", err, output)
+		}
+	})
+}
 
 // registerFailRegistrar fails every Register call.
 type registerFailRegistrar struct{}

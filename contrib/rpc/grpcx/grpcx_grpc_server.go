@@ -110,7 +110,7 @@ const (
 	serveFailureLog
 )
 
-// serve binds the listener, registers services, and starts serving asynchronously.
+// serve binds the listener and initializes asynchronous serving and service registration.
 // It does not block on OS signal handling and is intended for external lifecycle managers.
 // failureAction controls whether an unexpected Server.Serve error terminates the process
 // (blocking Run) or is only logged (StartManaged).
@@ -130,8 +130,12 @@ func (s *GrpcServer) serve(failureAction serveFailureAction) error {
 	s.listener = listener
 	s.listenerMu.Unlock()
 
+	if failureAction == serveFailureFatal {
+		// Legacy registrars may synchronously verify an RPC before accepting registration.
+		go s.doServeAsynchronously(ctx, listener, failureAction)
+	}
 	if err := s.doServiceRegister(failureAction); err != nil {
-		// A stopped grpc.Server cannot be restarted, so rollback before Serve begins.
+		// Managed starts register before Serve because a stopped grpc.Server cannot be restarted.
 		if closeErr := listener.Close(); closeErr != nil {
 			s.Logger().Errorf(ctx, `close listener after registration failure: %+v`, closeErr)
 		}
@@ -140,7 +144,9 @@ func (s *GrpcServer) serve(failureAction serveFailureAction) error {
 		s.listenerMu.Unlock()
 		return err
 	}
-	go s.doServeAsynchronously(ctx, listener, failureAction)
+	if failureAction == serveFailureLog {
+		go s.doServeAsynchronously(ctx, listener, failureAction)
+	}
 	s.Logger().Infof(
 		ctx,
 		"pid[%d]: grpc server started listening on [%s]",

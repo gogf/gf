@@ -87,10 +87,10 @@ func NewServersFromConfig(ctx context.Context, handlers HandlerMap) ([]gapp.Serv
 		switch cfg.Type {
 		case taskTypeWorker:
 			h, ok := handler.(WorkerHandler)
-			if !ok {
+			if !ok || h == nil {
 				return nil, gerror.NewCodef(
 					gcode.CodeInvalidConfiguration,
-					"job config %s: handler is not WorkerHandler",
+					"job config %s: handler must be a non-nil WorkerHandler",
 					cfg.Name,
 				)
 			}
@@ -108,10 +108,10 @@ func NewServersFromConfig(ctx context.Context, handlers HandlerMap) ([]gapp.Serv
 				)
 			}
 			h, ok := handler.(CronHandler)
-			if !ok {
+			if !ok || h == nil {
 				return nil, gerror.NewCodef(
 					gcode.CodeInvalidConfiguration,
-					"job config %s: handler is not CronHandler",
+					"job config %s: handler must be a non-nil CronHandler",
 					cfg.Name,
 				)
 			}

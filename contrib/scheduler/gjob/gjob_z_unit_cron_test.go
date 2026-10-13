@@ -10,12 +10,60 @@ package gjob
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gcron"
 	"github.com/gogf/gf/v2/test/gtest"
 )
+
+// TestWorkerServerNilHandler checks all tasks before starting any worker.
+func TestWorkerServerNilHandler(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		called := make(chan struct{}, 1)
+		s := NewWorkerServer(nil, WorkerTask{
+			Name: "valid", Handler: func(context.Context) func() { called <- struct{}{}; return nil },
+		})
+		t.AssertNil(s.Add(WorkerTask{Name: "nil-handler"}))
+		err := s.Start()
+		defer func() { t.AssertNil(s.Stop(false)) }()
+		t.Assert(gerror.Code(err), gcode.CodeInvalidConfiguration)
+		t.Assert(s.started, false)
+		t.AssertNil(s.ctx)
+		select {
+		case <-called:
+			t.Fatal("valid worker executed before all handlers were validated")
+		default:
+		}
+		s.tasks = s.tasks[:1]
+		t.AssertNil(s.Start())
+		select {
+		case <-called:
+		case <-time.After(time.Second):
+			t.Fatal("worker did not start after fixing the handler")
+		}
+	})
+}
+
+// TestCronServerNilHandler rejects missing callbacks without registering earlier tasks.
+func TestCronServerNilHandler(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := NewCronServer(nil, CronTask{Name: "valid", Spec: "* * * * * *", Handler: func(context.Context) error { return nil }})
+		t.AssertNil(s.Add(CronTask{Name: "nil-handler", Spec: "* * * * * *"}))
+		err := s.Start()
+		defer func() { t.AssertNil(s.Stop(false)) }()
+		t.Assert(gerror.Code(err), gcode.CodeInvalidConfiguration)
+		t.Assert(s.started, false)
+		t.AssertNil(s.ctx)
+		t.AssertNil(s.cron)
+		s.tasks = s.tasks[:1]
+		t.AssertNil(s.Start())
+		t.Assert(s.cron.Size(), 1)
+	})
+}
 
 // TestCronServerStopClosesSparseEntries releases entries without waiting for their schedule.
 func TestCronServerStopClosesSparseEntries(t *testing.T) {
@@ -38,11 +86,13 @@ func TestCronServerStopClosesSparseEntries(t *testing.T) {
 // TestCronServerFailedStartClosesEntries releases entries from each failed attempt.
 func TestCronServerFailedStartClosesEntries(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		var called atomic.Int32
 		s := NewCronServer(nil,
-			CronTask{Name: "yearly", Spec: "0 0 0 1 1 *", Handler: func(context.Context) error { return nil }},
+			CronTask{Name: "ready", Spec: "* * * * * *", Handler: func(context.Context) error { called.Add(1); return nil }},
 			CronTask{Name: "invalid", Spec: "invalid-spec", Handler: func(context.Context) error { return nil }},
 		)
 		t.AssertNE(s.Start(), nil)
+		t.Assert(called.Load(), 0)
 		t.AssertNE(s.cron, nil)
 		t.Assert(s.cron.Size(), 0)
 		attempt := s.cron

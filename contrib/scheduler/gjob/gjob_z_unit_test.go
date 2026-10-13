@@ -687,6 +687,31 @@ func TestNewServersFromConfigEmptyConfig(t *testing.T) {
 	})
 }
 
+// TestNewServersFromConfigNilHandlers rejects typed nil functions before building servers.
+func TestNewServersFromConfigNilHandlers(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		handler any
+	}{
+		{name: "worker", handler: gjob.WorkerHandler(nil)},
+		{name: "cron", handler: gjob.CronHandler(nil)},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			gtest.C(t, func(t *gtest.T) {
+				adapter, ok := g.Cfg().GetAdapter().(*gcfg.AdapterFile)
+				if !ok {
+					t.Fatal("expected gcfg.AdapterFile")
+				}
+				adapter.SetContent("scheduler:\n  job:\n    - name: nil-task\n      type: " + tc.name + "\n      enable: true\n      spec: '* * * * * *'\n")
+				defer adapter.SetContent("")
+				servers, err := gjob.NewServersFromConfig(context.Background(), gjob.HandlerMap{"nil-task": tc.handler})
+				t.Assert(servers, nil)
+				t.Assert(gerror.Code(err), gcode.CodeInvalidConfiguration)
+			})
+		})
+	}
+}
+
 func TestNewServersFromConfigCronMissingSpec(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		const cronMissingSpecConfig = `

@@ -161,6 +161,8 @@ func (s *Server) start(managed bool) (err error) {
 		return gerror.NewCode(gcode.CodeInvalidOperation, "server is already running")
 	}
 	if managed {
+		// A retry must create fresh server objects instead of reusing closed listeners.
+		s.servers = nil
 		defer func() {
 			if err != nil {
 				s.stopServers(ctx, true)
@@ -302,6 +304,7 @@ func (s *Server) start(managed bool) (err error) {
 	if managed {
 		serverRunning.Add(1)
 		s.serverCount.Add(len(s.servers))
+		s.managedServeWG.Add(len(s.servers))
 		for _, server := range s.servers {
 			go s.serveGracefulServer(ctx, server, true)
 		}
@@ -647,6 +650,9 @@ func (s *Server) startGracefulServer(ctx context.Context, wg *sync.WaitGroup, se
 
 // serveGracefulServer serves one listener and updates shared server completion counters.
 func (s *Server) serveGracefulServer(ctx context.Context, server *graceful.Server, managed bool) {
+	if managed {
+		defer s.managedServeWG.Done()
+	}
 	// Start listening and serving in blocking way.
 	err := server.Serve(ctx)
 	// The process exits if the server is closed with none closing error.
@@ -659,11 +665,23 @@ func (s *Server) serveGracefulServer(ctx context.Context, server *graceful.Serve
 	}
 	// If all the underlying servers' shutdown, the process exits.
 	if s.serverCount.Add(-1) < 1 {
-		s.closeChan <- struct{}{}
+		notifyShutdown(s.closeChan, managed)
 		if serverRunning.Add(-1) < 1 {
 			serverMapping.Remove(s.instance)
-			allShutdownChan <- struct{}{}
+			notifyShutdown(allShutdownChan, managed)
 		}
+	}
+}
+
+// notifyShutdown coalesces managed notifications when no standalone Run or Wait consumes them.
+func notifyShutdown(notification chan struct{}, managed bool) {
+	if !managed {
+		notification <- struct{}{}
+		return
+	}
+	select {
+	case notification <- struct{}{}:
+	default:
 	}
 }
 

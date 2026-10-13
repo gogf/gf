@@ -111,6 +111,7 @@ func (s *Server) stopServers(ctx context.Context, forceful bool) {
 			v.Shutdown(ctx)
 		}
 	}
+	s.managedServeWG.Wait()
 
 	if forceful {
 		s.Logger().Infof(ctx, "pid[%d]: all servers closed", gproc.Pid())

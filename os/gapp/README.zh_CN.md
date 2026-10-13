@@ -113,7 +113,7 @@ func main() {
 
 `App`面向 **单次进程生命周期**（典型的`main()`用法）：
 
-- 首次成功的`Stop`会执行清理 hook 并停止所有服务器，之后的`Stop`调用为 no-op。
+- 首次`Stop`会执行清理 hook 并停止所有服务器。后续调用返回相同的停止结果，不会重复清理；`Run`在退出时也会返回该结果。
 - `Stop`之后再次`Start`可能对个别服务器成功，但`App.Stop`不会再次停止它们。需要新一轮生命周期时请创建新的`App`。
 - `contrib/scheduler/gjob`中的任务服务器（`WorkerServer`、`CronServer`）在`Stop`后也会拒绝再次`Start`。任务只能在`Start`之前添加；若服务器已启动或已停止，`Add`会返回错误。
 

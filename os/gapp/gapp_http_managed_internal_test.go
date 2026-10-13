@@ -10,16 +10,63 @@ package gapp
 
 import (
 	"context"
+	"io"
 	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
+
+// managedHTTPFailOnceServer fails only its first startup to exercise HTTP rollback.
+type managedHTTPFailOnceServer struct {
+	failed bool
+}
+
+// Start returns one failure, then allows application startup retry.
+func (s *managedHTTPFailOnceServer) Start() error {
+	if !s.failed {
+		s.failed = true
+		return gerror.New("other server startup failed")
+	}
+	return nil
+}
+
+// Stop has no resources to release.
+func (*managedHTTPFailOnceServer) Stop(bool) error { return nil }
+
+// TestHTTPManagedApplicationRollbackRetry serves requests at the reported retry port.
+func TestHTTPManagedApplicationRollbackRetry(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			server = ghttp.GetServer(guid.S())
+			app    = New(NewHTTPServerAdapter(server), &managedHTTPFailOnceServer{})
+			client = &http.Client{Timeout: time.Second}
+		)
+		server.SetAddr("127.0.0.1:0")
+		server.SetRegistrar(nil)
+		server.SetLogger(glog.NewWithWriter(io.Discard))
+		server.SetDumpRouterMap(false)
+		server.BindHandler("/", func(r *ghttp.Request) { r.Response.Write("ok") })
+		app.logger = glog.NewWithWriter(io.Discard)
+		t.AssertNE(app.Start(context.Background()), nil)
+		t.AssertNil(app.Start(context.Background()))
+		defer func() { t.AssertNil(app.Stop(context.Background(), false)) }()
+		t.Assert(len(server.GetListenedPorts()), 1)
+		response, err := client.Get("http://" + server.GetListenedAddress())
+		t.AssertNil(err)
+		t.Assert(response.StatusCode, http.StatusOK)
+		t.AssertNil(response.Body.Close())
+	})
+}
 
 // managedHTTPHelperEnv selects the subprocess that exercises formerly fatal startup.
 const managedHTTPHelperEnv = "GF_GAPP_MANAGED_HTTP_HELPER"

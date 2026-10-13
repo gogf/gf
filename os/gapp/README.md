@@ -113,7 +113,7 @@ If `Boot()` is not called explicitly, `Start()` calls it automatically using the
 
 `App` is designed for a **single process lifecycle** (typical `main()` usage):
 
-- The first successful `Stop` runs cleanup hooks and stops all servers. Later `Stop` calls are no-ops.
+- The first `Stop` runs cleanup hooks and stops all servers. Later calls return the same shutdown result without repeating cleanup, and `Run` also returns that result when shutdown completes.
 - `Start` after `Stop` may succeed for individual servers, but `App.Stop` will not stop them again. Create a new `App` for another round.
 - Job servers in `contrib/scheduler/gjob` (`WorkerServer`, `CronServer`) also reject `Start` after `Stop`. Add tasks only before `Start`; `Add` returns an error if called after the server has started or stopped.
 

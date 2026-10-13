@@ -72,7 +72,7 @@ func main() {
 }
 ```
 
-被禁用（`enable: false`）的任务，或`HandlerMap`中没有对应处理函数的任务，会被跳过。读取`scheduler.job`失败、未知任务类型、缺少`cron`的`spec`，或处理函数类型不匹配时，会返回错误，避免进程在这些任务缺失的情况下仍正常启动。
+被禁用（`enable: false`）的任务，或`HandlerMap`中没有对应处理函数的任务，会被跳过。读取`scheduler.job`失败、未知任务类型、缺少`cron`的`spec`、处理函数为 nil 或类型不匹配时，会返回错误，避免进程在这些任务缺失的情况下仍正常启动。直接构造的服务器也会在执行任何任务前校验全部处理函数。
 
 ## WorkerServer
 
@@ -220,7 +220,7 @@ func main() {
 |---|---|
 | `NewCronServer(ctx context.Context, tasks ...CronTask)` | 使用生命周期`context`创建 CronServer |
 | `Add(tasks ...CronTask) error` | 在 Start 前添加任务；服务器已启动或已停止时返回错误 |
-| `Start() error` | 注册并启动所有 cron 任务 |
+| `Start() error` | 校验处理函数、注册全部任务后再启动 cron；注册失败不执行任务 |
 | `Stop(graceful bool) error` | 停止调度器并关闭所有任务条目；并发调用等待同一次停止完成 |
 
 ### 配置辅助

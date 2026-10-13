@@ -49,6 +49,7 @@ type App struct {
 	lifecycleCtx context.Context             // context from first successful Boot; used when Start/Stop get nil ctx
 	logger       *glog.Logger
 	stopOnce     sync.Once // ensures Stop is executed only once
+	stopErr      error     // first Stop result, published to all callers by stopOnce
 }
 
 // bootAttempt keeps completion and its result together so retries cannot replace a waiter's result.
@@ -279,8 +280,8 @@ func (app *App) rollbackStartedServers(ctx context.Context, servers []Server, st
 // server that did start successfully is force-stopped in reverse registration
 // order before the error is returned.
 //
-// When ctx becomes done before all Server.Start calls complete, servers that
-// already started successfully are force-stopped in reverse order and this
+// When ctx becomes done during startup, servers that started successfully
+// are force-stopped in reverse order and this
 // method returns ctx.Err().
 //
 // If Boot has not been called yet, it is called automatically first using the
@@ -288,7 +289,13 @@ func (app *App) rollbackStartedServers(ctx context.Context, servers []Server, st
 // or gctx.GetInitCtx() applies.
 func (app *App) Start(ctx context.Context) error {
 	ctx = app.resolveCtx(ctx)
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if err := app.Boot(ctx); err != nil {
+		return err
+	}
+	if err := ctx.Err(); err != nil {
 		return err
 	}
 
@@ -329,15 +336,14 @@ func (app *App) Start(ctx context.Context) error {
 		close(done)
 	}()
 
-	var cancelErr error
 	select {
 	case <-done:
 	case <-ctx.Done():
 		wg.Wait()
-		cancelErr = ctx.Err()
 	}
 
-	if cancelErr != nil {
+	// Cancellation wins even when startup completion is also ready.
+	if cancelErr := ctx.Err(); cancelErr != nil {
 		app.rollbackStartedServers(ctx, servers, startOK)
 		return cancelErr
 	}
@@ -364,8 +370,8 @@ func (app *App) Start(ctx context.Context) error {
 // and returns any error from graceful Stop; nil means shutdown completed cleanly.
 //
 // App and its registered servers follow a single lifecycle: after the first
-// successful Stop, subsequent Stop calls are no-ops. Create a new App instance
-// if you need a fresh lifecycle (for example in tests).
+// Stop, subsequent Stop calls return the same result without repeating cleanup.
+// Create a new App instance if you need a fresh lifecycle (for example in tests).
 //
 // If ctx is nil, gctx.GetInitCtx() resolves the root context before Boot.
 func (app *App) Run(ctx context.Context) error {
@@ -410,14 +416,13 @@ func (app *App) Run(ctx context.Context) error {
 // StartListen starts the background listener without blocking on waitChan so
 // context-driven shutdown can return without leaving a goroutine stuck in Listen.
 func (app *App) waitForRunExit(ctx context.Context, doShutdown func(), shutdownDone <-chan struct{}) {
-	go func() {
-		<-ctx.Done()
-		doShutdown()
-	}()
-
 	gproc.StartListen()
-
-	<-shutdownDone
+	select {
+	case <-ctx.Done():
+		doShutdown()
+		<-shutdownDone
+	case <-shutdownDone:
+	}
 }
 
 // Stop stops all registered servers.
@@ -426,14 +431,15 @@ func (app *App) waitForRunExit(ctx context.Context, doShutdown func(), shutdownD
 // then servers are stopped in reverse registration order.
 //
 // Stop is idempotent: calling it multiple times is safe and only the first
-// call executes the shutdown logic. After Stop completes, the App cannot
-// shut down servers again; register servers and call Start on a new App for
+// call executes the shutdown logic. All calls return the first shutdown result.
+// After Stop completes, the App cannot shut down servers again;
+// register servers and call Start on a new App for
 // another lifecycle round.
 //
 // If ctx is nil, lifecycleCtx or gctx.GetInitCtx() is used for hooks and logs.
 func (app *App) Stop(ctx context.Context, graceful bool) error {
-	var firstErr error
 	app.stopOnce.Do(func() {
+		var firstErr error
 		opCtx := app.resolveCtx(ctx)
 
 		// Run cleanup hooks in reverse order first.
@@ -466,11 +472,11 @@ func (app *App) Stop(ctx context.Context, graceful bool) error {
 			mode = shutdownModeForcefully
 		}
 		app.logger.Infof(opCtx, "all servers stopped %s", mode)
+		if firstErr != nil {
+			app.stopErr = gerror.WrapCode(gcode.CodeInternalError, firstErr, "app stop failed")
+		}
 	})
-	if firstErr != nil {
-		return gerror.WrapCode(gcode.CodeInternalError, firstErr, "app stop failed")
-	}
-	return nil
+	return app.stopErr
 }
 
 // Servers returns a copy of the registered servers list.

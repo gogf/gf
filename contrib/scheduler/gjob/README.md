@@ -72,7 +72,7 @@ func main() {
 }
 ```
 
-Tasks that are disabled (`enable: false`) or have no matching handler in the `HandlerMap` are skipped. A failure to read `scheduler.job`, an unknown task type, a missing cron spec, or a handler of the wrong type is returned as an error so the process does not start with those jobs missing.
+Tasks that are disabled (`enable: false`) or have no matching handler in the `HandlerMap` are skipped. A failure to read `scheduler.job`, an unknown task type, a missing cron spec, or a nil handler or handler of the wrong type is returned as an error so the process does not start with those jobs missing. Directly constructed servers also validate all handlers before starting any task.
 
 ## WorkerServer
 
@@ -220,7 +220,7 @@ func main() {
 |---|---|
 | `NewCronServer(ctx context.Context, tasks ...CronTask)` | Creates a new CronServer with lifecycle context |
 | `Add(tasks ...CronTask) error` | Adds tasks before Start; returns error if server already started or stopped |
-| `Start() error` | Registers and starts all cron tasks |
+| `Start() error` | Validates handlers, registers all tasks, then starts cron; registration failure executes no tasks |
 | `Stop(graceful bool) error` | Stops the scheduler and closes its entries; concurrent callers wait for the same shutdown |
 
 ### Config Helper
