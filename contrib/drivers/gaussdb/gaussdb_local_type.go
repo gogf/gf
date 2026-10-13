@@ -221,7 +221,7 @@ var localTypeMap = map[string]gdb.LocalType{
 	"time":                           gdb.LocalTypeTime,
 	"timestamp":                      gdb.LocalTypeDatetime,
 	"timestamptz":                    gdb.LocalTypeDatetime,
-	"timetz":                         gdb.LocalTypeDatetime,
+	"timetz":                         gdb.LocalTypeString,
 	"tinterval":                      gdb.LocalTypeString,
 	"trigger":                        gdb.LocalTypeString,
 	"tsquery":                        gdb.LocalTypeString,
