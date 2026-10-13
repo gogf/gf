@@ -161,16 +161,35 @@ func Test_DataType_JSON_Insert(t *testing.T) {
 		result, err := db.Model(table).Data(g.Map{
 			"data": `{"name":"John","age":30}`,
 		}).Insert()
-		t.AssertNil(err)
-		n, _ := result.RowsAffected()
-		t.Assert(n, 1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		n, err := result.RowsAffected()
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Assert(n, int64(1))
+		id, err := result.LastInsertId()
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.AssertGT(id, int64(0))
 
 		// Verify data
-		one, err := db.Model(table).Where("id", 1).One()
-		t.AssertNil(err)
+		one, err := db.Model(table).Where("id", id).One()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if one == nil {
+			t.Fatal("inserted JSON row was not found")
+		}
+		data := one["data"]
+		if data == nil {
+			t.Fatal("inserted JSON value is nil")
+		}
 		expected := map[string]interface{}{"name": "John", "age": float64(30)}
 		var actual map[string]interface{}
-		err = json.Unmarshal([]byte(one["data"].String()), &actual)
+		err = json.Unmarshal([]byte(data.String()), &actual)
 		t.AssertNil(err)
 		t.Assert(actual, expected)
 	})
