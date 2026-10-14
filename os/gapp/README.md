@@ -38,6 +38,8 @@ The package provides adapter constructors for built-in server types:
 
 For gRPC server, use `grpcx.NewGappServerAdapter(s *grpcx.GrpcServer)` from the `contrib/rpc/grpcx` package.
 
+To let a gRPC server start again after `App.Start` rolls it back, register services through the `GrpcServer` itself, for example `pb.RegisterGreeterServer(s, impl)`. A stopped `grpc.Server` cannot serve again, so the next start replays those registrations onto a fresh one. Services registered on `s.Server` directly cannot be replayed, and that restart returns an error.
+
 The HTTP adapter uses `ghttp.Server.StartManaged()`, which returns listener, plugin, and registry errors after cleaning partially initialized resources. Standalone `ghttp.Server.Start()` and `Run()` keep their existing fatal error behavior.
 
 ## Boot / Initialization

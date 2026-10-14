@@ -222,6 +222,7 @@ func Test_doServeAsynchronously_LogsServeErrorWhenManaged(t *testing.T) {
 		s := newServeErrorTestServer(&buf)
 		s.doServeAsynchronously(
 			gctx.GetInitCtx(),
+			s.Server,
 			&acceptFailListener{},
 			serveFailureLog,
 		)
@@ -240,7 +241,7 @@ func Test_doServeAsynchronously_IgnoresErrServerStopped(t *testing.T) {
 		ln, err := net.Listen("tcp", "127.0.0.1:0")
 		t.AssertNil(err)
 
-		s.doServeAsynchronously(gctx.GetInitCtx(), ln, serveFailureFatal)
+		s.doServeAsynchronously(gctx.GetInitCtx(), s.Server, ln, serveFailureFatal)
 		t.Assert(strings.Contains(buf.String(), "grpc server serve error"), false)
 		t.Assert(strings.Contains(buf.String(), "FATA"), false)
 	})

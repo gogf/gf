@@ -41,8 +41,9 @@ type WorkerTask struct {
 // WorkerServer manages a set of background worker tasks that implement the gapp.Server interface.
 // Each task runs in its own goroutine and is terminated when the server stops.
 //
-// WorkerServer follows a single lifecycle: after Stop, Start returns CodeInvalidOperation.
-// Create a new WorkerServer for another lifecycle round.
+// Start may be called again once Stop has returned, so gapp.App.Start can retry
+// after rolling back a failed startup. Start returns CodeInvalidOperation while
+// a Stop is still in progress.
 // When Stop is called, the internal context is cancelled to signal all tasks
 // to stop. The server always waits for task goroutines to finish before
 // returning so lifecycle managers (including gapp rollback) do not proceed early.
@@ -54,8 +55,7 @@ type WorkerServer struct {
 	wg        sync.WaitGroup
 	tasks     []WorkerTask
 	started   bool
-	stopped   bool
-	stopDone  chan struct{}
+	stopDone  chan struct{} // Non-nil while a Stop is in progress.
 }
 
 // NewWorkerServer creates and returns a new WorkerServer with the given tasks.
@@ -71,16 +71,13 @@ func NewWorkerServer(ctx context.Context, tasks ...WorkerTask) *WorkerServer {
 }
 
 // Add adds one or more worker tasks to the server.
-// Tasks must be added before Start is called.
-// Returns CodeInvalidOperation when the server has already started or stopped.
+// Tasks must be added while the server is not running.
+// Returns CodeInvalidOperation when the server has already started.
 func (s *WorkerServer) Add(tasks ...WorkerTask) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.started {
 		return gerror.NewCode(gcode.CodeInvalidOperation, "cannot add worker tasks after server started")
-	}
-	if s.stopped {
-		return gerror.NewCode(gcode.CodeInvalidOperation, "cannot add worker tasks after server stopped")
 	}
 	s.tasks = append(s.tasks, tasks...)
 	return nil
@@ -95,8 +92,9 @@ func (s *WorkerServer) Start() error {
 	if s.started {
 		return gerror.NewCode(gcode.CodeInvalidOperation, "worker server already started")
 	}
-	if s.stopped {
-		return gerror.NewCode(gcode.CodeInvalidOperation, "worker server already stopped")
+	// The WaitGroup cannot be reused until the previous Stop has finished waiting.
+	if s.stopDone != nil {
+		return gerror.NewCode(gcode.CodeInvalidOperation, "worker server is stopping")
 	}
 	// Validate every handler before any task can produce side effects.
 	for _, task := range s.tasks {
@@ -121,6 +119,7 @@ func (s *WorkerServer) Start() error {
 // for all task goroutines to finish. The graceful parameter is accepted for
 // gapp.Server compatibility; worker shutdown always waits after cancellation.
 // Concurrent Stop callers wait for the first caller's shutdown to finish.
+// After Stop returns, the server can be started again.
 func (s *WorkerServer) Stop(_ bool) error {
 	s.mu.Lock()
 	if s.stopDone != nil {
@@ -134,13 +133,17 @@ func (s *WorkerServer) Stop(_ bool) error {
 		return nil
 	}
 	s.started = false
-	s.stopped = true
-	s.stopDone = make(chan struct{})
+	done := make(chan struct{})
+	s.stopDone = done
 	s.mu.Unlock()
 
 	s.cancel()
 	s.wg.Wait()
-	close(s.stopDone)
+
+	s.mu.Lock()
+	s.stopDone = nil
+	s.mu.Unlock()
+	close(done)
 
 	return nil
 }

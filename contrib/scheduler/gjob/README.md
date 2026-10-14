@@ -210,8 +210,8 @@ func main() {
 | Method | Description |
 |---|---|
 | `NewWorkerServer(ctx context.Context, tasks ...WorkerTask)` | Creates a new WorkerServer with lifecycle context |
-| `Add(tasks ...WorkerTask) error` | Adds tasks before Start; returns error if server already started or stopped |
-| `Start() error` | Starts all tasks concurrently |
+| `Add(tasks ...WorkerTask) error` | Adds tasks while the server is not running; returns error if server already started |
+| `Start() error` | Starts all tasks concurrently; can be called again after Stop returns, and returns error while Stop is in progress |
 | `Stop(graceful bool) error` | Cancels context and waits for goroutines and cleanup; concurrent callers wait for the same shutdown |
 
 ### CronServer
@@ -219,8 +219,8 @@ func main() {
 | Method | Description |
 |---|---|
 | `NewCronServer(ctx context.Context, tasks ...CronTask)` | Creates a new CronServer with lifecycle context |
-| `Add(tasks ...CronTask) error` | Adds tasks before Start; returns error if server already started or stopped |
-| `Start() error` | Validates handlers, registers all tasks, then starts cron; registration failure executes no tasks |
+| `Add(tasks ...CronTask) error` | Adds tasks while the server is not running; returns error if server already started |
+| `Start() error` | Validates handlers, registers all tasks, then starts cron; registration failure executes no tasks; can be called again after Stop returns |
 | `Stop(graceful bool) error` | Stops the scheduler and closes its entries; concurrent callers wait for the same shutdown |
 
 ### Config Helper

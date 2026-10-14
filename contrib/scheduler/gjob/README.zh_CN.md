@@ -210,8 +210,8 @@ func main() {
 | 方法 | 说明 |
 |---|---|
 | `NewWorkerServer(ctx context.Context, tasks ...WorkerTask)` | 使用生命周期`context`创建 WorkerServer |
-| `Add(tasks ...WorkerTask) error` | 在 Start 前添加任务；服务器已启动或已停止时返回错误 |
-| `Start() error` | 并发启动所有任务 |
+| `Add(tasks ...WorkerTask) error` | 在服务器未运行时添加任务；服务器已启动时返回错误 |
+| `Start() error` | 并发启动所有任务；Stop 返回后可再次调用，Stop 进行中返回错误 |
 | `Stop(graceful bool) error` | 取消`context`并等待 goroutine 和清理完成；并发调用等待同一次停止完成 |
 
 ### CronServer
@@ -219,8 +219,8 @@ func main() {
 | 方法 | 说明 |
 |---|---|
 | `NewCronServer(ctx context.Context, tasks ...CronTask)` | 使用生命周期`context`创建 CronServer |
-| `Add(tasks ...CronTask) error` | 在 Start 前添加任务；服务器已启动或已停止时返回错误 |
-| `Start() error` | 校验处理函数、注册全部任务后再启动 cron；注册失败不执行任务 |
+| `Add(tasks ...CronTask) error` | 在服务器未运行时添加任务；服务器已启动时返回错误 |
+| `Start() error` | 校验处理函数、注册全部任务后再启动 cron；注册失败不执行任务；Stop 返回后可再次调用 |
 | `Stop(graceful bool) error` | 停止调度器并关闭所有任务条目；并发调用等待同一次停止完成 |
 
 ### 配置辅助

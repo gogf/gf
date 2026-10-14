@@ -343,8 +343,18 @@ func TestCronServerStopGracefulWaitsInFlightJob(t *testing.T) {
 		t.Assert(atomic.LoadInt32(&running), int32(1))
 		t.Assert(atomic.LoadInt32(&done), int32(0))
 
-		err = s.Stop(true)
-		t.AssertNil(err)
+		stopped := make(chan error, 1)
+		go func() { stopped <- s.Stop(true) }()
+		// Add succeeds once Stop has marked the server as no longer running.
+		for i := 0; i < 50 && s.Add() != nil; i++ {
+			time.Sleep(time.Millisecond)
+		}
+		err = s.Start()
+		t.AssertNE(err, nil)
+		t.Assert(gerror.Code(err), gcode.CodeInvalidOperation)
+		t.Assert(strings.Contains(err.Error(), "stopping"), true)
+
+		t.AssertNil(<-stopped)
 		t.Assert(atomic.LoadInt32(&done), int32(1))
 	})
 }
@@ -904,7 +914,109 @@ func TestJobServerStopBeforeStartRemainsNoop(t *testing.T) {
 			t.AssertNil(server.Stop(false))
 			t.AssertNil(server.Start())
 			t.AssertNil(server.Stop(false))
-			t.AssertNE(server.Start(), nil)
+			t.AssertNil(server.Start())
+			t.AssertNil(server.Stop(true))
 		}
+	})
+}
+
+// failOnceServer fails its first Start so gapp.App rolls back the servers that did start.
+type failOnceServer struct {
+	starts int32
+}
+
+// Start fails on the first call and succeeds afterwards.
+func (s *failOnceServer) Start() error {
+	if atomic.AddInt32(&s.starts, 1) == 1 {
+		return gerror.New("bind failed")
+	}
+	return nil
+}
+
+// Stop implements gapp.Server.
+func (s *failOnceServer) Stop(bool) error {
+	return nil
+}
+
+// TestJobServersRestartAfterAppStartRollback keeps job servers usable after a sibling start failure.
+func TestJobServersRestartAfterAppStartRollback(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			workerStarts  int32
+			workerCleanup int32
+			cronCalls     int32
+		)
+		workerSrv := gjob.NewWorkerServer(nil, gjob.WorkerTask{
+			Name: "rollback-worker",
+			Handler: func(ctx context.Context) func() {
+				atomic.AddInt32(&workerStarts, 1)
+				return func() { atomic.AddInt32(&workerCleanup, 1) }
+			},
+		})
+		cronSrv := gjob.NewCronServer(nil, gjob.CronTask{
+			Name: "rollback-cron",
+			Spec: "*/1 * * * * *",
+			Handler: func(ctx context.Context) error {
+				atomic.AddInt32(&cronCalls, 1)
+				return nil
+			},
+		})
+		app := gapp.New(workerSrv, cronSrv, &failOnceServer{})
+
+		err := app.Start(context.Background())
+		t.AssertNE(err, nil)
+		t.Assert(strings.Contains(err.Error(), "bind failed"), true)
+		t.Assert(atomic.LoadInt32(&workerCleanup), int32(1))
+
+		t.AssertNil(app.Start(context.Background()))
+		defer func() { t.AssertNil(app.Stop(context.Background(), true)) }()
+
+		deadline := time.Now().Add(3 * time.Second)
+		for time.Now().Before(deadline) && (atomic.LoadInt32(&workerStarts) < 2 || atomic.LoadInt32(&cronCalls) == 0) {
+			time.Sleep(20 * time.Millisecond)
+		}
+		t.Assert(atomic.LoadInt32(&workerStarts), int32(2))
+		t.Assert(atomic.LoadInt32(&cronCalls) > 0, true)
+	})
+}
+
+// TestWorkerServerStartWhileStopping rejects Start until the previous Stop has finished.
+func TestWorkerServerStartWhileStopping(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			cleaning = make(chan struct{})
+			release  = make(chan struct{})
+			stopped  = make(chan error, 1)
+		)
+		s := gjob.NewWorkerServer(nil, gjob.WorkerTask{
+			Name: "slow-cleanup",
+			Handler: func(context.Context) func() {
+				return func() {
+					select {
+					case <-cleaning:
+					default:
+						close(cleaning)
+					}
+					<-release
+				}
+			},
+		})
+		t.AssertNil(s.Start())
+		go func() { stopped <- s.Stop(false) }()
+		select {
+		case <-cleaning:
+		case <-time.After(time.Second):
+			t.Fatal("worker cleanup did not start")
+		}
+
+		err := s.Start()
+		t.AssertNE(err, nil)
+		t.Assert(gerror.Code(err), gcode.CodeInvalidOperation)
+		t.Assert(strings.Contains(err.Error(), "stopping"), true)
+
+		close(release)
+		t.AssertNil(<-stopped)
+		t.AssertNil(s.Start())
+		t.AssertNil(s.Stop(false))
 	})
 }

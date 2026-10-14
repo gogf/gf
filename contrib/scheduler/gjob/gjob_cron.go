@@ -40,8 +40,9 @@ type CronTask struct {
 // Tasks are registered with the internal gcron.Cron scheduler as singleton jobs
 // and run on their specified schedules.
 //
-// CronServer follows a single lifecycle: after Stop, Start returns CodeInvalidOperation.
-// Create a new CronServer for another lifecycle round.
+// Start may be called again once Stop has returned, so gapp.App.Start can retry
+// after rolling back a failed startup. Start returns CodeInvalidOperation while
+// a Stop is still in progress.
 // When Stop is called, the scheduler is stopped and no more tasks are executed.
 type CronServer struct {
 	mu        sync.Mutex
@@ -52,8 +53,7 @@ type CronServer struct {
 	entries   []*gcron.Entry // All owned entries, including those displaced by automatic names.
 	tasks     []CronTask
 	started   bool
-	stopped   bool
-	stopDone  chan struct{}
+	stopDone  chan struct{} // Non-nil while a Stop is in progress.
 }
 
 // NewCronServer creates and returns a new CronServer with the given tasks.
@@ -69,16 +69,13 @@ func NewCronServer(ctx context.Context, tasks ...CronTask) *CronServer {
 }
 
 // Add adds one or more cron tasks to the server.
-// Tasks must be added before Start is called.
-// Returns CodeInvalidOperation when the server has already started or stopped.
+// Tasks must be added while the server is not running.
+// Returns CodeInvalidOperation when the server has already started.
 func (s *CronServer) Add(tasks ...CronTask) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.started {
 		return gerror.NewCode(gcode.CodeInvalidOperation, "cannot add cron tasks after server started")
-	}
-	if s.stopped {
-		return gerror.NewCode(gcode.CodeInvalidOperation, "cannot add cron tasks after server stopped")
 	}
 	s.tasks = append(s.tasks, tasks...)
 	return nil
@@ -94,8 +91,9 @@ func (s *CronServer) Start() error {
 	if s.started {
 		return gerror.NewCode(gcode.CodeInvalidOperation, "cron server already started")
 	}
-	if s.stopped {
-		return gerror.NewCode(gcode.CodeInvalidOperation, "cron server already stopped")
+	// The previous scheduler and entries are still being closed by Stop.
+	if s.stopDone != nil {
+		return gerror.NewCode(gcode.CodeInvalidOperation, "cron server is stopping")
 	}
 	// Validate every handler before any task can produce side effects.
 	for _, task := range s.tasks {
@@ -140,6 +138,7 @@ func (s *CronServer) Start() error {
 // When graceful is true, it waits for in-flight jobs to finish before returning.
 // When graceful is false, it cancels running jobs without waiting for them.
 // Concurrent Stop callers wait for the first caller's shutdown to finish.
+// After Stop returns, the server can be started again.
 func (s *CronServer) Stop(graceful bool) error {
 	s.mu.Lock()
 	if s.stopDone != nil {
@@ -153,8 +152,8 @@ func (s *CronServer) Stop(graceful bool) error {
 		return nil
 	}
 	s.started = false
-	s.stopped = true
-	s.stopDone = make(chan struct{})
+	done := make(chan struct{})
+	s.stopDone = done
 	s.mu.Unlock()
 
 	if graceful {
@@ -168,7 +167,11 @@ func (s *CronServer) Stop(graceful bool) error {
 		entry.Close()
 	}
 	s.cancel()
-	close(s.stopDone)
+
+	s.mu.Lock()
+	s.stopDone = nil
+	s.mu.Unlock()
+	close(done)
 	return nil
 }
 

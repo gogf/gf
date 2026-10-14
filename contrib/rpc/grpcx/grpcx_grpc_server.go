@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"sort"
 	"sync"
 	"time"
 
@@ -35,10 +36,12 @@ import (
 type GrpcServer struct {
 	Server             *grpc.Server
 	config             *GrpcServerConfig
-	listenerMu         sync.RWMutex
-	listener           net.Listener
-	services           []gsvc.Service // Service definitions retained across registration attempts.
-	registeredServices []gsvc.Service // Registry handles used exclusively for deregistration.
+	listenerMu         sync.RWMutex          // Guards listener, Server replacement, serverStopped, and registrations.
+	listener           net.Listener          // Non-nil only while the current Server is serving.
+	serverStopped      bool                  // Server was stopped after serving and must be rebuilt before the next start.
+	registrations      []serviceRegistration // RegisterService calls replayed onto a rebuilt Server.
+	services           []gsvc.Service        // Service definitions retained across registration attempts.
+	registeredServices []gsvc.Service        // Registry handles used exclusively for deregistration.
 	waitGroup          sync.WaitGroup
 	registrar          gsvc.Registrar
 	serviceMu          sync.Mutex
@@ -49,6 +52,15 @@ type Service struct {
 	gsvc.Service
 	Endpoints gsvc.Endpoints
 }
+
+// serviceRegistration records one RegisterService call for replay onto a rebuilt grpc.Server.
+type serviceRegistration struct {
+	desc *grpc.ServiceDesc
+	impl any
+}
+
+// Compile-time check that GrpcServer can be passed to generated Register*Server functions.
+var _ grpc.ServiceRegistrar = (*GrpcServer)(nil)
 
 // New creates and returns a grpc server.
 func (s modServer) New(conf ...*GrpcServerConfig) *GrpcServer {
@@ -100,6 +112,64 @@ func (s *GrpcServer) Service(services ...gsvc.Service) {
 	s.services = append(s.services, services...)
 }
 
+// RegisterService registers a service implementation on the underlying grpc.Server
+// and records it, so a start after Stop can replay it onto a fresh grpc.Server.
+// It implements grpc.ServiceRegistrar, so generated code can register through
+// GrpcServer, for example pb.RegisterGreeterServer(s, &Controller{}).
+// Services registered on the Server field directly cannot be replayed, and a
+// restart after a stop that served them returns an error.
+func (s *GrpcServer) RegisterService(desc *grpc.ServiceDesc, impl any) {
+	s.listenerMu.Lock()
+	defer s.listenerMu.Unlock()
+	s.Server.RegisterService(desc, impl)
+	s.registrations = append(s.registrations, serviceRegistration{desc: desc, impl: impl})
+}
+
+// rebuildServerLocked replaces a stopped grpc.Server, which grpc-go cannot serve again,
+// with a fresh one carrying the recorded registrations; the caller holds listenerMu.
+func (s *GrpcServer) rebuildServerLocked() error {
+	recorded := make(map[string]struct{}, len(s.registrations))
+	for _, registration := range s.registrations {
+		recorded[registration.desc.ServiceName] = struct{}{}
+	}
+	var unrecorded []string
+	for name := range s.Server.GetServiceInfo() {
+		if _, ok := recorded[name]; !ok {
+			unrecorded = append(unrecorded, name)
+		}
+	}
+	if len(unrecorded) > 0 {
+		// Serving without these services would report a healthy start that answers Unimplemented.
+		sort.Strings(unrecorded)
+		return gerror.NewCodef(
+			gcode.CodeInvalidOperation,
+			`grpc server cannot restart after stop: services %v were registered on GrpcServer.Server directly; register them through GrpcServer.RegisterService, for example pb.RegisterXxxServer(s, impl)`,
+			unrecorded,
+		)
+	}
+	server := grpc.NewServer(s.config.Options...)
+	for _, registration := range s.registrations {
+		server.RegisterService(registration.desc, registration.impl)
+	}
+	s.Server = server
+	s.serverStopped = false
+	return nil
+}
+
+// detachServer clears the listener as a stop begins, so the next start can bind again,
+// and reports whether the returned Server was serving and therefore needs grpc-go's stop.
+// A Server that never served keeps its registrations and stays usable.
+func (s *GrpcServer) detachServer() (*grpc.Server, bool) {
+	s.listenerMu.Lock()
+	defer s.listenerMu.Unlock()
+	if s.listener == nil {
+		return s.Server, false
+	}
+	s.listener = nil
+	s.serverStopped = true
+	return s.Server, true
+}
+
 // serveFailureAction selects how an unexpected Server.Serve error is reported.
 type serveFailureAction int
 
@@ -122,17 +192,25 @@ func (s *GrpcServer) serve(failureAction serveFailureAction) error {
 		s.listenerMu.Unlock()
 		return gerror.NewCode(gcode.CodeInvalidOperation, "grpc server already started")
 	}
+	if s.serverStopped {
+		if err := s.rebuildServerLocked(); err != nil {
+			s.listenerMu.Unlock()
+			return err
+		}
+	}
 	listener, err := net.Listen("tcp", s.config.Address)
 	if err != nil {
 		s.listenerMu.Unlock()
 		return err
 	}
 	s.listener = listener
+	// Serve the instance bound to this listener even if a later restart replaces s.Server.
+	server := s.Server
 	s.listenerMu.Unlock()
 
 	if failureAction == serveFailureFatal {
 		// Legacy registrars may synchronously verify an RPC before accepting registration.
-		go s.doServeAsynchronously(ctx, listener, failureAction)
+		go s.doServeAsynchronously(ctx, server, listener, failureAction)
 	}
 	if err := s.doServiceRegister(failureAction); err != nil {
 		// Managed starts register before Serve because a stopped grpc.Server cannot be restarted.
@@ -145,7 +223,7 @@ func (s *GrpcServer) serve(failureAction serveFailureAction) error {
 		return err
 	}
 	if failureAction == serveFailureLog {
-		go s.doServeAsynchronously(ctx, listener, failureAction)
+		go s.doServeAsynchronously(ctx, server, listener, failureAction)
 	}
 	s.Logger().Infof(
 		ctx,
@@ -169,12 +247,12 @@ func (s *GrpcServer) StartManaged() error {
 	return s.serve(serveFailureLog)
 }
 
-// doServeAsynchronously serves gRPC connections on the given listener.
+// doServeAsynchronously serves gRPC connections of server on the given listener.
 // Unexpected Serve errors terminate the process when failureAction is
 // serveFailureFatal so blocking Run() cannot sit in signal wait with a dead
 // listener. StartManaged uses serveFailureLog so the caller retains lifecycle control.
-func (s *GrpcServer) doServeAsynchronously(ctx context.Context, listener net.Listener, failureAction serveFailureAction) {
-	if err := s.Server.Serve(listener); err != nil && err != grpc.ErrServerStopped {
+func (s *GrpcServer) doServeAsynchronously(ctx context.Context, server *grpc.Server, listener net.Listener, failureAction serveFailureAction) {
+	if err := server.Serve(listener); err != nil && err != grpc.ErrServerStopped {
 		if failureAction == serveFailureFatal {
 			s.Logger().Fatalf(ctx, `%+v`, err)
 		} else {
@@ -304,15 +382,23 @@ func (s *GrpcServer) Wait() {
 }
 
 // Stop gracefully stops the server.
+// The server can be started again afterwards; see RegisterService.
 func (s *GrpcServer) Stop() {
+	server, serving := s.detachServer()
 	s.doServiceDeregister()
-	s.Server.GracefulStop()
+	if serving {
+		server.GracefulStop()
+	}
 }
 
 // StopForceful forcibly stops the server and de-registers services from the registry.
+// The server can be started again afterwards; see RegisterService.
 func (s *GrpcServer) StopForceful() {
+	server, serving := s.detachServer()
 	s.doServiceDeregister()
-	s.Server.Stop()
+	if serving {
+		server.Stop()
+	}
 }
 
 // GetConfig returns the configuration of current Server.

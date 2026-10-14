@@ -38,6 +38,8 @@ type Server interface {
 
 对于 gRPC 服务器，请使用`contrib/rpc/grpcx`包中的`grpcx.NewGappServerAdapter(s *grpcx.GrpcServer)`。
 
+如需让 gRPC 服务器在`App.Start`回滚后能再次启动，请通过`GrpcServer`本身注册服务，例如`pb.RegisterGreeterServer(s, impl)`。已停止的`grpc.Server`无法再次提供服务，下次启动时会把这些注册重放到新的`grpc.Server`上。直接注册在`s.Server`上的服务无法重放，此时再次启动会返回错误。
+
 HTTP adapter 使用`ghttp.Server.StartManaged()`，在清理部分初始化的资源后返回监听、插件和注册错误。独立运行的`ghttp.Server.Start()`和`Run()`保留原有的错误退出行为。
 
 ## 启动 / 初始化
