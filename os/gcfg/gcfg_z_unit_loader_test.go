@@ -205,6 +205,67 @@ server:
 	})
 }
 
+// TestLoader_WatchRecoversAfterLoadError verifies that file watching survives a failed reload.
+func TestLoader_WatchRecoversAfterLoadError(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			configFile     = "./" + guid.S() + ".yaml"
+			invalidContent = "name: ["
+			recoveredName  = "recovered-app"
+			recovered      = "name: " + recoveredName
+			errCh          = make(chan error, 4)
+			changeCh       = make(chan string, 4)
+		)
+		err := gfile.PutContents(configFile, configContent)
+		t.AssertNil(err)
+		defer func() {
+			t.AssertNil(gfile.RemoveFile(configFile))
+		}()
+
+		cfg, err := gcfg.NewAdapterFile(configFile)
+		t.AssertNil(err)
+		loader := gcfg.NewLoaderWithAdapter[TestConfig](cfg, "")
+		loader.OnChange(func(updated TestConfig) error {
+			if updated.Name == recoveredName {
+				changeCh <- updated.Name
+			}
+			return nil
+		})
+		loader.SetWatchErrorHandler(func(_ context.Context, err error) {
+			errCh <- err
+		})
+
+		err = loader.Load(context.Background())
+		t.AssertNil(err)
+		err = loader.Watch(context.Background(), "test-watch-recovery")
+		t.AssertNil(err)
+
+		err = gfile.PutContents(configFile, invalidContent)
+		t.AssertNil(err)
+		select {
+		case loadErr := <-errCh:
+			t.AssertNE(loadErr, nil)
+		case <-time.After(5 * time.Second):
+			t.Fatal("configuration load error was not reported")
+		}
+		t.Assert(loader.Get().Name, "test-app")
+		time.Sleep(10 * time.Millisecond)
+
+		err = gfile.PutContents(configFile, recovered)
+		t.AssertNil(err)
+		select {
+		case name := <-changeCh:
+			t.Assert(name, recoveredName)
+		case <-time.After(5 * time.Second):
+			t.Fatal("configuration watcher did not recover")
+		}
+		t.Assert(loader.Get().Name, recoveredName)
+		stopped, err := loader.StopWatch(context.Background())
+		t.AssertNil(err)
+		t.Assert(stopped, true)
+	})
+}
+
 func TestLoader_SetConverter(t *testing.T) {
 	var configContent2 = `
 name: test-app-2

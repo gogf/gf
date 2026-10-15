@@ -8,6 +8,7 @@ package gcfg
 
 import (
 	"context"
+	"sync"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
@@ -37,6 +38,8 @@ type AdapterFile struct {
 	jsonMap               *gmap.KVMap[string, *gjson.Json] // The parsed JSON objects for configuration files.
 	violenceCheck         bool                             // Whether it does violence check in value index searching. It affects the performance when set true(false in default).
 	watchers              *WatcherRegistry                 // Watchers for watching file changes.
+	watcherMutex          sync.Mutex                       // Mutex for file watcher callback tracking.
+	watcherTokens         map[string]*int                  // Current callback token for each configuration file.
 }
 
 const (
@@ -83,6 +86,7 @@ func NewAdapterFile(fileNameOrPath ...string) (*AdapterFile, error) {
 		searchPaths:           garray.NewStrArray(true),
 		jsonMap:               gmap.NewKVMapWithChecker[string, *gjson.Json](jsonMapChecker, true),
 		watchers:              NewWatcherRegistry(),
+		watcherTokens:         make(map[string]*int),
 	}
 	// Customized dir path from env/cmd.
 	if customPath := command.GetOptWithEnv(commandEnvKeyForPath); customPath != "" {
@@ -300,36 +304,16 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 				} else {
 					err = gerror.Wrap(err, `load configuration failed`)
 				}
+				if filePath != "" && !gres.Contains(filePath) {
+					a.addFileWatcher(usedFileNameOrPath, filePath)
+				}
 				return nil
 			}
 			configJson.SetViolenceCheck(a.violenceCheck)
 			// Add monitor for this configuration file,
 			// any changes of this file will refresh its cache in the Config object.
 			if filePath != "" && !gres.Contains(filePath) {
-				_, err := gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
-					a.jsonMap.Remove(usedFileNameOrPath)
-					if event.IsWrite() || event.IsRemove() || event.IsCreate() || event.IsRename() || event.IsChmod() {
-						fileType := gfile.ExtName(usedFileNameOrPath)
-						adapterCtx := NewAdapterFileCtx().WithFileName(usedFileNameOrPath).WithFilePath(filePath).WithFileType(fileType)
-						switch {
-						case event.IsWrite():
-							adapterCtx.WithOperation(OperationWrite)
-						case event.IsRemove():
-							adapterCtx.WithOperation(OperationRemove)
-						case event.IsCreate():
-							adapterCtx.WithOperation(OperationCreate)
-						case event.IsRename():
-							adapterCtx.WithOperation(OperationRename)
-						case event.IsChmod():
-							adapterCtx.WithOperation(OperationChmod)
-						}
-						a.notifyWatchers(adapterCtx.Ctx)
-					}
-					_ = event.Watcher.Remove(filePath)
-				})
-				if err != nil {
-					intlog.Errorf(context.TODO(), "failed listen config file event[%s]: %v", filePath, err)
-				}
+				a.addFileWatcher(usedFileNameOrPath, filePath)
 			}
 			return configJson
 		})
@@ -338,6 +322,56 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 		return result, err
 	}
 	return
+}
+
+// addFileWatcher registers a callback that invalidates the cached file content on changes.
+func (a *AdapterFile) addFileWatcher(fileNameOrPath, filePath string) {
+	watcherKey := fileNameOrPath + "\x00" + filePath
+	watcherToken := new(int)
+	a.watcherMutex.Lock()
+	if _, ok := a.watcherTokens[watcherKey]; ok {
+		a.watcherMutex.Unlock()
+		return
+	}
+	a.watcherTokens[watcherKey] = watcherToken
+	a.watcherMutex.Unlock()
+
+	_, err := gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
+		a.watcherMutex.Lock()
+		currentToken, ok := a.watcherTokens[watcherKey]
+		if !ok || currentToken != watcherToken {
+			a.watcherMutex.Unlock()
+			return
+		}
+		a.watcherMutex.Unlock()
+
+		a.jsonMap.Remove(fileNameOrPath)
+		if event.IsWrite() || event.IsRemove() || event.IsCreate() || event.IsRename() || event.IsChmod() {
+			fileType := gfile.ExtName(fileNameOrPath)
+			adapterCtx := NewAdapterFileCtx().WithFileName(fileNameOrPath).WithFilePath(filePath).WithFileType(fileType)
+			switch {
+			case event.IsWrite():
+				adapterCtx.WithOperation(OperationWrite)
+			case event.IsRemove():
+				adapterCtx.WithOperation(OperationRemove)
+			case event.IsCreate():
+				adapterCtx.WithOperation(OperationCreate)
+			case event.IsRename():
+				adapterCtx.WithOperation(OperationRename)
+			case event.IsChmod():
+				adapterCtx.WithOperation(OperationChmod)
+			}
+			a.notifyWatchers(adapterCtx.Ctx)
+		}
+	})
+	if err != nil {
+		a.watcherMutex.Lock()
+		if currentToken, ok := a.watcherTokens[watcherKey]; ok && currentToken == watcherToken {
+			delete(a.watcherTokens, watcherKey)
+		}
+		a.watcherMutex.Unlock()
+		intlog.Errorf(context.TODO(), "failed listen config file event[%s]: %v", filePath, err)
+	}
 }
 
 // AddWatcher adds a watcher for the specified configuration file.
