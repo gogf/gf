@@ -35,8 +35,11 @@ type (
 		instance         string                    // Instance name of current HTTP server.
 		config           ServerConfig              // Server configuration.
 		plugins          []Plugin                  // Plugin array to extend server functionality.
+		pluginMu         sync.Mutex                // Protects installed plugin ownership during shutdown.
+		installedPlugins []Plugin                  // Successfully installed plugins awaiting removal.
 		servers          []*graceful.Server        // Underlying http.Server array.
 		serverCount      *gtype.Int                // Underlying http.Server number for internal usage.
+		managedServeWG   sync.WaitGroup            // Waits for managed Serve state cleanup before shutdown returns.
 		closeChan        chan struct{}             // Used for underlying server closing event notification.
 		serveTree        map[string]any            // The route maps tree.
 		serveCache       *gcache.Cache             // Server caches for internal usage.

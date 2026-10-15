@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// HTTP server initialization, listener startup, and serving lifecycle.
+
 package ghttp
 
 import (
@@ -123,18 +125,51 @@ func GetServer(name ...any) *Server {
 // Start starts listening on configured port.
 // This function does not block the process, you can use function Wait blocking the process.
 func (s *Server) Start() error {
+	return s.start(false)
+}
+
+// StartManaged starts HTTP serving under external lifecycle management.
+// Startup failures are returned after partial resources are closed instead of exiting the process.
+func (s *Server) StartManaged() error {
+	return s.start(true)
+}
+
+// start initializes the server, preserving standalone fatal behavior when managed is false.
+func (s *Server) start(managed bool) (err error) {
 	var ctx = gctx.GetInitCtx()
+	// A running instance must be rejected before its route configuration is changed.
+	if s.Status() == ServerStatusRunning || s.serverCount.Val() > 0 {
+		return gerror.NewCode(gcode.CodeInvalidOperation, "server is already running")
+	}
+	if managed {
+		// Refuse a stale instance before its plugin or registry callbacks can affect a live owner.
+		if current := serverMapping.Get(s.instance); current != nil && current != s && current.serverCount.Val() > 0 {
+			return gerror.NewCode(gcode.CodeInvalidOperation, "another server with the same name is already running")
+		}
+	}
 
 	// Swagger UI.
-	if s.config.SwaggerPath != "" {
+	if s.config.SwaggerPath != "" && !s.hasInternalRoute(s.config.SwaggerPath+"/*", HookBeforeServe, s.swaggerUI) {
 		swaggerui.Init()
 		s.AddStaticPath(s.config.SwaggerPath, swaggerUIPackedPath)
 		s.BindHookHandler(s.config.SwaggerPath+"/*", HookBeforeServe, s.swaggerUI)
 	}
 
 	// OpenApi specification json producing handler.
-	if s.config.OpenApiPath != "" {
+	if s.config.OpenApiPath != "" && !s.hasInternalRoute(s.config.OpenApiPath, "", s.openapiSpec) {
 		s.BindHandler(s.config.OpenApiPath, s.openapiSpec)
+	}
+
+	// Bind PProf before plugins can fail so a retry can reuse completed internal routes.
+	if s.config.PProfEnabled {
+		pattern := s.config.PProfPattern
+		if pattern == "" {
+			pattern = defaultPProfPattern
+		}
+		_, _, uri, parseErr := s.parsePattern(pattern)
+		if parseErr != nil || !s.hasInternalRoute(strings.TrimRight(uri, "/")+"/*action", "", (&utilPProf{}).Index) {
+			s.EnablePProf(s.config.PProfPattern)
+		}
 	}
 
 	// Register group routes.
@@ -143,9 +178,15 @@ func (s *Server) Start() error {
 	// Server process initialization, which can only be initialized once.
 	serverProcessInit()
 
-	// Server can only be run once.
-	if s.Status() == ServerStatusRunning {
-		return gerror.NewCode(gcode.CodeInvalidOperation, "server is already running")
+	if managed {
+		// A retry must create fresh server objects instead of reusing closed listeners.
+		s.servers = nil
+		defer func() {
+			if err != nil {
+				s.stopServers(ctx, true)
+				s.servers = nil
+			}
+		}()
 	}
 
 	// Logging path setting check.
@@ -173,21 +214,25 @@ func (s *Server) Start() error {
 		s.config.SessionStorage,
 	)
 
-	// PProf feature.
-	if s.config.PProfEnabled {
-		s.EnablePProf(s.config.PProfPattern)
-	}
-
 	// Default HTTP handler.
 	if s.config.Handler == nil {
 		s.config.Handler = s.ServeHTTP
 	}
 
 	// Install external plugins.
+	if err := s.removePlugins(ctx); err != nil {
+		return gerror.Wrap(err, "cleanup previously installed HTTP plugins failed")
+	}
 	for _, p := range s.plugins {
 		if err := p.Install(s); err != nil {
+			if managed {
+				return err
+			}
 			s.Logger().Fatalf(ctx, `%+v`, err)
 		}
+		s.pluginMu.Lock()
+		s.installedPlugins = append(s.installedPlugins, p)
+		s.pluginMu.Unlock()
 	}
 	// Check the group routes again for internally registered routes.
 	s.handlePreBindItems(ctx)
@@ -208,12 +253,16 @@ func (s *Server) Start() error {
 	if len(fdMapStr) > 0 {
 		sfm := bufferToServerFdMap([]byte(fdMapStr))
 		if v, ok := sfm[s.config.Name]; ok {
-			s.startServer(v)
+			if err := s.startServer(v, managed); err != nil {
+				return err
+			}
 			reloaded = true
 		}
 	}
 	if !reloaded {
-		s.startServer(nil)
+		if err := s.startServer(nil, managed); err != nil {
+			return err
+		}
 	}
 
 	// Swagger UI info.
@@ -247,8 +296,8 @@ func (s *Server) Start() error {
 		}
 	}
 
-	// If this is a child process, it then notifies its parent exit.
-	if gproc.IsChild() {
+	// Standalone reload owns parent retirement; managed servers leave handoff to their lifecycle owner.
+	if !managed && gproc.IsChild() {
 		var gracefulTimeout = time.Duration(s.config.GracefulTimeout) * time.Second
 		gtimer.SetTimeout(ctx, gracefulTimeout, func(ctx context.Context) {
 			intlog.Printf(
@@ -262,10 +311,49 @@ func (s *Server) Start() error {
 		})
 	}
 	s.initOpenApi()
-	s.doServiceRegister()
+	if err := s.doServiceRegister(); err != nil {
+		if managed {
+			return err
+		}
+		s.Logger().Fatalf(ctx, `%+v`, err)
+	}
+	if managed {
+		// Claim the name and publish readiness atomically against a same-name retry.
+		serverMapping.LockFunc(func(mapping map[string]*Server) {
+			if current := mapping[s.instance]; current != nil && current != s && current.serverCount.Val() > 0 {
+				err = gerror.NewCode(gcode.CodeInvalidOperation, "another server with the same name is already running")
+				return
+			}
+			mapping[s.instance] = s
+			serverRunning.Add(1)
+			s.serverCount.Add(len(s.servers))
+		})
+		if err != nil {
+			return err
+		}
+		s.managedServeWG.Add(len(s.servers))
+		for _, server := range s.servers {
+			go s.serveGracefulServer(ctx, server, true)
+		}
+	}
 	s.doRouterMapDump()
 
 	return nil
+}
+
+// hasInternalRoute reuses only the matching built-in handler, retaining user duplicate checks.
+func (s *Server) hasInternalRoute(pattern string, hook HookName, handler HandlerFunc) bool {
+	domain, method, path, err := s.parsePattern(pattern)
+	if err != nil {
+		return false
+	}
+	name := gdebug.FuncPath(handler)
+	for _, item := range s.routesMap[s.routerMapKey(hook, method, path, domain)] {
+		if item.Name == name {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *Server) getLocalListenedAddress() string {
@@ -477,13 +565,8 @@ func Wait() {
 
 	// Remove plugins.
 	serverMapping.Iterator(func(k string, v *Server) bool {
-		if len(v.plugins) > 0 {
-			for _, p := range v.plugins {
-				intlog.Printf(ctx, `remove plugin: %s`, p.Name())
-				if err := p.Remove(); err != nil {
-					intlog.Errorf(ctx, `%+v`, err)
-				}
-			}
+		if err := v.removePlugins(ctx); err != nil {
+			v.Logger().Errorf(ctx, "%+v", err)
 		}
 		return true
 	})
@@ -491,7 +574,7 @@ func Wait() {
 }
 
 // startServer starts the underlying server listening.
-func (s *Server) startServer(fdMap listenerFdMap) {
+func (s *Server) startServer(fdMap listenerFdMap, managed bool) error {
 	var (
 		ctx          = context.TODO()
 		httpsEnabled bool
@@ -571,6 +654,15 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			s.servers = append(s.servers, s.newGracefulServer(itemFunc, 0))
 		}
 	}
+	if managed {
+		// Bind every listener before serving so a later bind failure cannot leave one running.
+		for _, server := range s.servers {
+			if err := s.createServerListener(server); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 	// Start listening asynchronously.
 	serverRunning.Add(1)
 	var wg = &sync.WaitGroup{}
@@ -579,36 +671,69 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 		go s.startGracefulServer(ctx, wg, gs)
 	}
 	wg.Wait()
+	return nil
 }
 
+// createServerListener initializes an HTTP or HTTPS listener without starting Serve.
+func (s *Server) createServerListener(server *graceful.Server) error {
+	if server.IsHttps() {
+		return server.CreateListenerTLS(s.config.HTTPSCertPath, s.config.HTTPSKeyPath, s.config.TLSConfig)
+	}
+	return server.CreateListener()
+}
+
+// startGracefulServer starts a standalone listener and reports readiness before serving.
 func (s *Server) startGracefulServer(ctx context.Context, wg *sync.WaitGroup, server *graceful.Server) {
 	s.serverCount.Add(1)
-	var err error
-	// Create listener.
-	if server.IsHttps() {
-		err = server.CreateListenerTLS(
-			s.config.HTTPSCertPath, s.config.HTTPSKeyPath, s.config.TLSConfig,
-		)
-	} else {
-		err = server.CreateListener()
-	}
-	if err != nil {
+	if err := s.createServerListener(server); err != nil {
 		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
 	wg.Done()
+	s.serveGracefulServer(ctx, server, false)
+}
+
+// serveGracefulServer serves one listener and updates shared server completion counters.
+func (s *Server) serveGracefulServer(ctx context.Context, server *graceful.Server, managed bool) {
+	if managed {
+		defer s.managedServeWG.Done()
+	}
 	// Start listening and serving in blocking way.
-	err = server.Serve(ctx)
+	err := server.Serve(ctx)
 	// The process exits if the server is closed with none closing error.
 	if err != nil && !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
-		s.Logger().Fatalf(ctx, `%+v`, err)
+		if managed {
+			s.Logger().Errorf(ctx, `%+v`, err)
+		} else {
+			s.Logger().Fatalf(ctx, `%+v`, err)
+		}
 	}
 	// If all the underlying servers' shutdown, the process exits.
 	if s.serverCount.Add(-1) < 1 {
-		s.closeChan <- struct{}{}
-		if serverRunning.Add(-1) < 1 {
-			serverMapping.Remove(s.instance)
-			allShutdownChan <- struct{}{}
+		notifyShutdown(s.closeChan, managed)
+		remaining := serverRunning.Add(-1)
+		// Keep standalone entries for Wait's plugin cleanup until the last server exits.
+		if managed || remaining < 1 {
+			serverMapping.LockFunc(func(mapping map[string]*Server) {
+				if mapping[s.instance] == s {
+					delete(mapping, s.instance)
+				}
+			})
 		}
+		if remaining < 1 {
+			notifyShutdown(allShutdownChan, managed)
+		}
+	}
+}
+
+// notifyShutdown coalesces managed notifications when no standalone Run or Wait consumes them.
+func notifyShutdown(notification chan struct{}, managed bool) {
+	if !managed {
+		notification <- struct{}{}
+		return
+	}
+	select {
+	case notification <- struct{}{}:
+	default:
 	}
 }
 
