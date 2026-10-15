@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// This file provides query parameter getters and struct binding.
+
 package ghttp
 
 import (
@@ -79,7 +81,8 @@ func (r *Request) GetQueryMap(kvMap ...map[string]any) map[string]any {
 			for k, v := range kvMap[0] {
 				if postValue, ok := r.queryMap[k]; ok {
 					m[k] = postValue
-				} else {
+				} else if _, ok := m[k]; !ok {
+					// Keep values already supplied by the body pass.
 					m[k] = v
 				}
 			}
