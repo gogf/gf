@@ -323,8 +323,8 @@ func (s *Server) compareRouterPriority(newItem *HandlerItem, oldItem *HandlerIte
 	var uriNew, uriOld string
 	uriNew, _ = gregex.ReplaceString(`\{[^/]+?\}`, "", newItem.Router.Uri)
 	uriOld, _ = gregex.ReplaceString(`\{[^/]+?\}`, "", oldItem.Router.Uri)
-	uriNew, _ = gregex.ReplaceString(`:[^/]+?`, "", uriNew)
-	uriOld, _ = gregex.ReplaceString(`:[^/]+?`, "", uriOld)
+	uriNew, _ = gregex.ReplaceString(`:[^/]+`, "", uriNew)
+	uriOld, _ = gregex.ReplaceString(`:[^/]+`, "", uriOld)
 	uriNew, _ = gregex.ReplaceString(`\*[^/]*`, "", uriNew) // Replace "/*" and "/*any".
 	uriOld, _ = gregex.ReplaceString(`\*[^/]*`, "", uriOld) // Replace "/*" and "/*any".
 	if len(uriNew) > len(uriOld) {
