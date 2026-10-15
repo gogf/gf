@@ -28,13 +28,9 @@ var (
 	errUnsupportedTransaction  = errors.New("unsupported method:Transaction")
 )
 
-const (
-	updateFilterPattern             = `(?i)UPDATE[\s]+?(\w+[\.]?\w+)[\s]+?SET`
-	deleteFilterPattern             = `(?i)DELETE[\s]+?FROM[\s]+?(\w+[\.]?\w+)`
-	filterTypePattern               = `(?i)^UPDATE|DELETE`
-	needParsedSqlInCtx  gctx.StrKey = "NeedParsedSql"
-	driverName                      = "clickhouse"
-)
+const driverName = "clickhouse"
+
+const needParsedSqlInCtx gctx.StrKey = "NeedParsedSql"
 
 func init() {
 	if err := gdb.Register(`clickhouse`, New()); err != nil {
