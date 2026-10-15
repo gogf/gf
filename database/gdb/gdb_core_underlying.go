@@ -488,6 +488,10 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 	for i := range values {
 		scanArgs[i] = &values[i]
 	}
+	convertColumnValue := c.ConvertColumnValueForLocal
+	if c.db != nil {
+		convertColumnValue = c.db.ConvertColumnValueForLocal
+	}
 	for {
 		if err = rows.Scan(scanArgs...); err != nil {
 			return result, err
@@ -503,7 +507,7 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 					convertedValue any
 					columnType     = columnTypes[i]
 				)
-				if convertedValue, err = c.columnValueToLocalValue(ctx, value, columnType); err != nil {
+				if convertedValue, err = convertColumnValue(ctx, columnType, value); err != nil {
 					return nil, err
 				}
 				record[columnTypes[i].Name()] = gvar.New(convertedValue)
@@ -542,6 +546,26 @@ func (c *Core) GetBoolLiteral(v bool) string {
 // dialect syntax (e.g. PostgreSQL's "FOR SHARE") override.
 func (c *Core) GetLockSharedClause() string {
 	return LockInShareMode
+}
+
+// FoldIdentifier returns the unquoted identifier `name` in the letter case the database stores it in.
+// Default returns `name` unchanged; drivers folding unquoted identifiers (e.g. Oracle) override.
+func (c *Core) FoldIdentifier(name string) string {
+	return name
+}
+
+// GetTableNameForFields returns the table name in the table expression `table` that TableFields is called with.
+// Default is the bare name of the first table; drivers resolving qualified names (e.g. Oracle) override.
+func (c *Core) GetTableNameForFields(table string) string {
+	return c.guessPrimaryTableName(table)
+}
+
+// ConvertColumnValueForLocal converts a value scanned from a result set column to local Golang type.
+// Default converts it by the scan type that the underlying driver reports for the column, or else
+// by its database type with ConvertValueForLocal; drivers whose reported scan type does not fit
+// the scanned value (e.g. Oracle's NUMBER) override.
+func (c *Core) ConvertColumnValueForLocal(ctx context.Context, columnType *sql.ColumnType, fieldValue any) (any, error) {
+	return c.columnValueToLocalValue(ctx, fieldValue, columnType)
 }
 
 // columnValueToLocalValue converts a scanned value using column metadata or the driver.

@@ -331,6 +331,11 @@ type DB interface {
 	// It handles type conversion from database-specific types to Go types.
 	ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue any) (any, error)
 
+	// ConvertColumnValueForLocal converts a value scanned from a result set column to the appropriate Go type.
+	// Drivers whose reported scan type does not fit the value they scan override
+	// to convert the value themselves (e.g. NUMBER on Oracle, reported as float64).
+	ConvertColumnValueForLocal(ctx context.Context, columnType *sql.ColumnType, fieldValue any) (any, error)
+
 	// GetFormattedDBTypeNameForField returns the formatted database type name and pattern for a field type.
 	GetFormattedDBTypeNameForField(fieldType string) (typeName, typePattern string)
 
@@ -356,6 +361,19 @@ type DB interface {
 	// Drivers that don't support MySQL's legacy "LOCK IN SHARE MODE" override
 	// to return their dialect equivalent (e.g. "FOR SHARE" on PostgreSQL).
 	GetLockSharedClause() string
+
+	// FoldIdentifier returns the unquoted identifier `name` in the letter case that the
+	// database stores it in, which is `name` itself in default. Drivers whose dialect folds
+	// unquoted identifiers and reports them folded in TableFields (e.g. Oracle, folding them
+	// to upper case) override it, so that field names are matched as the database resolves them.
+	FoldIdentifier(name string) string
+
+	// GetTableNameForFields returns the table name in the table expression `table` of a model,
+	// like "user u" or "user AS u, user_detail ud", that Model.TableFields, HasField and the
+	// data-to-field mapping pass to TableFields, which is the bare name of the first table in
+	// default. Drivers whose TableFields resolves a qualified name (e.g. Oracle, looking up
+	// "owner.table" in that owner's schema) override it, so that the qualifier is kept.
+	GetTableNameForFields(table string) string
 }
 
 // TX defines the interfaces for ORM transaction operations.
@@ -636,6 +654,7 @@ type DoInsertOption struct {
 	OnDuplicateMap map[string]any
 
 	// OnConflict is the custom conflict key of upsert clause, if the database needs it.
+	// It's passed for Save, Replace and InsertIgnore.
 	OnConflict []string
 
 	// InsertOption is the insert operation in constant value.

@@ -402,7 +402,7 @@ func (c *Core) fieldsToSequence(ctx context.Context, table string, fields []stri
 	var (
 		fieldSet               = gset.NewStrSetFrom(fields)
 		fieldsResultInSequence = make([]string, 0)
-		tableFields, err       = c.db.TableFields(ctx, table)
+		tableFields, err       = c.db.TableFields(ctx, c.tableNameForFields(table))
 	)
 	if err != nil {
 		return nil, err
