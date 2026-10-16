@@ -18,7 +18,7 @@ package gconv
 // TODO: change `paramKeyToAttrMap` to `ScanOption` to be more scalable; add `DeepCopy` option for `ScanOption`.
 func Scan(srcValue any, dstPointer any, paramKeyToAttrMap ...map[string]string) (err error) {
 	option := ScanOption{
-		ContinueOnError: true,
+		ContinueOnError: false,
 	}
 	if len(paramKeyToAttrMap) > 0 {
 		option.ParamKeyToAttrMap = paramKeyToAttrMap[0]
