@@ -43,6 +43,8 @@ func (r Record) GMap() *gmap.StrAnyMap {
 
 // Struct converts `r` to a struct.
 // Note that the parameter `pointer` should be type of *struct/**struct.
+// A field name of `r` that differs from the orm tag of an attribute in letter case only, as the
+// column names of a database folding identifiers to upper case do, matches the attribute.
 //
 // Note that it returns sql.ErrNoRows if `r` is empty.
 func (r Record) Struct(pointer any) error {
@@ -54,8 +56,9 @@ func (r Record) Struct(pointer any) error {
 		return nil
 	}
 	return converter.Struct(r, pointer, gconv.StructOption{
-		PriorityTag:     OrmTagForStruct,
-		ContinueOnError: true,
+		PriorityTag:        OrmTagForStruct,
+		CaseInsensitiveTag: true,
+		ContinueOnError:    true,
 	})
 }
 
