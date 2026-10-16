@@ -54,3 +54,23 @@ func Test_parseDecimal(t *testing.T) {
 		}
 	})
 }
+
+func Test_releaseSavePointRegex(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for _, sql := range []string{
+			"RELEASE SAVEPOINT transaction1",
+			"release savepoint transaction1",
+			` RELEASE  SAVEPOINT "point" `,
+		} {
+			t.Assert(releaseSavePointRegex.MatchString(sql), true)
+		}
+		for _, sql := range []string{
+			"SAVEPOINT transaction1",
+			"ROLLBACK TO SAVEPOINT transaction1",
+			"SELECT 'RELEASE SAVEPOINT a' FROM DUAL",
+			"RELEASE SAVEPOINT a; DROP TABLE t",
+		} {
+			t.Assert(releaseSavePointRegex.MatchString(sql), false)
+		}
+	})
+}
