@@ -10,6 +10,7 @@ package dm
 
 import (
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 const dmTimezoneOffsetLimitMinutes = 12 * 60
 
 // Open creates and returns an underlying sql.DB object for DM.
+// Each connection of the pool opens a connector of its own, see connector.
 func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		underlyingDriverName = "dm"
@@ -43,7 +45,11 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 		)
 		return nil, err
 	}
-	return
+	underlyingDriver := db.Driver().(driver.DriverContext)
+	if err = db.Close(); err != nil {
+		return nil, err
+	}
+	return sql.OpenDB(&connector{dsn: source, driver: underlyingDriver}), nil
 }
 
 // buildDataSourceName creates a DM DSN and converts the configured IANA timezone
