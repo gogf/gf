@@ -8,9 +8,12 @@ package dm_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
+
+	"gitee.com/chunanyong/dm"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -21,6 +24,8 @@ import (
 
 var (
 	db        gdb.DB
+	db2       gdb.DB
+	dbPrefix  gdb.DB
 	dblink    gdb.DB
 	dbErr     gdb.DB
 	ctx       context.Context
@@ -35,6 +40,18 @@ const (
 	TestDBName  = "SYSDBA"
 	TestDBType  = "dm"
 	TestCharset = "utf8"
+)
+
+const (
+	TableName        = "t_user"
+	TestSchema1      = "test1"
+	TestSchema2      = "test2"
+	TableNamePrefix1 = "gf_"
+	CreateTime       = "2018-10-24 10:00:00"
+)
+
+const (
+	dmErrObjectExists = -2124
 )
 
 type User struct {
@@ -111,31 +128,108 @@ func init() {
 
 	ctx = context.Background()
 
+	for _, schema := range []string{TestSchema1, TestSchema2} {
+		if _, err := db.Exec(ctx, fmt.Sprintf(`CREATE SCHEMA %s`, schema)); err != nil && !isDmError(err, dmErrObjectExists) {
+			gtest.Fatal(err)
+		}
+	}
+	db2 = db.Schema(TestSchema2)
+
+	nodePrefix := node
+	nodePrefix.Prefix = TableNamePrefix1
+	gdb.AddConfigNode("prefix", nodePrefix)
+	if r, err := gdb.New(nodePrefix); err != nil {
+		gtest.Fatal(err)
+	} else {
+		dbPrefix = r
+	}
+
 	// db.SetDebug(true)
 }
 
 func dropTable(table string) {
+	dropTableWithDb(db, table)
+}
+
+// dropTableWithDb drops `table` in the schema of `db`, both as the upper case name an unquoted
+// identifier folds to and as written, and clears its cached fields, as a table of the same name
+// may be created again.
+func dropTableWithDb(db gdb.DB, table string) {
 	metadataTable := strings.Trim(table, `"`)
 	tableNameMap := map[string]struct{}{
 		strings.ToUpper(metadataTable): {},
 		metadataTable:                  {},
 	}
 	for tableName := range tableNameMap {
-		count, err := db.GetCount(
-			ctx,
-			"SELECT COUNT(*) FROM all_tables WHERE owner = ? And table_name= ?", TestDBName, tableName,
-		)
-		if err != nil {
-			gtest.Fatal(err)
-		}
-
-		if count == 0 {
-			continue
-		}
-		if _, err = db.Exec(ctx, fmt.Sprintf(`DROP TABLE "%s"`, strings.ReplaceAll(tableName, `"`, `""`))); err != nil {
+		if _, err := db.Exec(ctx, fmt.Sprintf(`DROP TABLE IF EXISTS "%s"`, strings.ReplaceAll(tableName, `"`, `""`))); err != nil {
 			gtest.Fatal(err)
 		}
 	}
+	if err := db.GetCore().ClearTableFields(ctx, table); err != nil {
+		gtest.Fatal(err)
+	}
+}
+
+// isDmError reports whether `err` is an error of the DM server with the error code `code`.
+func isDmError(err error, code int32) bool {
+	var dmError *dm.DmError
+	return errors.As(err, &dmError) && dmError.ErrCode == code
+}
+
+// createUserTable creates the table that the MySQL test suites use, see createUserTableWithDb.
+func createUserTable(table ...string) string {
+	return createUserTableWithDb(db, table...)
+}
+
+// createInitUserTable creates the table that the MySQL test suites use with TableSize records.
+func createInitUserTable(table ...string) string {
+	return createInitUserTableWithDb(db, table...)
+}
+
+// createUserTableWithDb creates, in the schema of `db`, the table that the MySQL test suites use,
+// named `table` or else a unique name.
+func createUserTableWithDb(db gdb.DB, table ...string) (name string) {
+	if len(table) > 0 {
+		name = table[0]
+	} else {
+		name = fmt.Sprintf(`%s_%d`, TableName, gtime.TimestampNano())
+	}
+	dropTableWithDb(db, name)
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+	CREATE TABLE %s (
+		ID          INT AUTO_INCREMENT NOT NULL,
+		PASSPORT    VARCHAR(45) NULL,
+		PASSWORD    CHAR(32) NULL,
+		NICKNAME    VARCHAR(45) NULL,
+		CREATE_TIME TIMESTAMP(6) NULL,
+		CREATE_DATE DATE NULL,
+		PRIMARY KEY (ID)
+	)`, name)); err != nil {
+		gtest.Fatal(err)
+	}
+	return name
+}
+
+// createInitUserTableWithDb creates the table of createUserTableWithDb with TableSize records.
+func createInitUserTableWithDb(db gdb.DB, table ...string) (name string) {
+	name = createUserTableWithDb(db, table...)
+	list := make(g.List, 0, TableSize)
+	for i := 1; i <= TableSize; i++ {
+		list = append(list, g.Map{
+			"id":          i,
+			"passport":    fmt.Sprintf(`user_%d`, i),
+			"password":    fmt.Sprintf(`pass_%d`, i),
+			"nickname":    fmt.Sprintf(`name_%d`, i),
+			"create_time": gtime.NewFromStr(CreateTime).String(),
+		})
+	}
+	result, err := db.Insert(ctx, name, list)
+	gtest.AssertNil(err)
+
+	n, e := result.RowsAffected()
+	gtest.Assert(e, nil)
+	gtest.Assert(n, TableSize)
+	return
 }
 
 func createTable(table ...string) (name string) {

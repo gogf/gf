@@ -192,6 +192,7 @@ func (r Result) RecordKeyUint(key string) map[uint]Record {
 
 // Structs converts `r` to struct slice.
 // Note that the parameter `pointer` should be type of *[]struct/*[]*struct.
+// The field names of `r` match the orm tags of the attributes as for Record.Struct.
 func (r Result) Structs(pointer any) (err error) {
 	// If the result is empty and the target pointer is not empty, it returns error.
 	if r.IsEmpty() {
@@ -203,8 +204,9 @@ func (r Result) Structs(pointer any) (err error) {
 	var (
 		sliceOption  = gconv.SliceOption{ContinueOnError: true}
 		structOption = gconv.StructOption{
-			PriorityTag:     OrmTagForStruct,
-			ContinueOnError: true,
+			PriorityTag:        OrmTagForStruct,
+			CaseInsensitiveTag: true,
+			ContinueOnError:    true,
 		}
 	)
 	return converter.Structs(r, pointer, gconv.StructsOption{

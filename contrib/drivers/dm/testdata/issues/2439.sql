@@ -1,0 +1,19 @@
+CREATE TABLE a  (
+    id INT NOT NULL AUTO_INCREMENT,
+    PRIMARY KEY (id)
+);
+INSERT INTO a (id) VALUES ('2');
+
+CREATE TABLE b  (
+    id INT NOT NULL AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL ,
+    PRIMARY KEY (id)
+);
+INSERT INTO b (id, name) VALUES ('2', 'a');
+INSERT INTO b (id, name) VALUES ('3', 'b');
+
+CREATE TABLE c  (
+    id INT NOT NULL AUTO_INCREMENT,
+    PRIMARY KEY (id)
+);
+INSERT INTO c (id) VALUES ('2');

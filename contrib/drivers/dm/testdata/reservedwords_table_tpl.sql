@@ -1,0 +1,20 @@
+CREATE TABLE %s (
+  id INT NOT NULL AUTO_INCREMENT,
+  key VARCHAR(45) DEFAULT NULL,
+  category_id INT NOT NULL,
+  user_id INT NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  content TEXT NOT NULL,
+  sort INT DEFAULT '0',
+  brief VARCHAR(255) DEFAULT NULL,
+  thumb VARCHAR(255) DEFAULT NULL,
+  tags VARCHAR(900) DEFAULT NULL,
+  referer VARCHAR(255) DEFAULT NULL,
+  status SMALLINT DEFAULT '0',
+  view_count INT DEFAULT '0',
+  zan_count INT DEFAULT NULL,
+  cai_count INT DEFAULT NULL,
+  created_at DATETIME DEFAULT NULL,
+  updated_at DATETIME DEFAULT NULL,
+    PRIMARY KEY (id)
+);

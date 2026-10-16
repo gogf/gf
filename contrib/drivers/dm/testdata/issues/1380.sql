@@ -1,0 +1,35 @@
+CREATE TABLE jfy_gift  (
+id INT NOT NULL AUTO_INCREMENT,
+gift_name VARCHAR(32) NOT NULL COMMENT '礼品名称',
+at_least_recharge_count INT NOT NULL DEFAULT 1 COMMENT '最少兑换数量',
+comments CLOB NOT NULL COMMENT '礼品留言',
+content TEXT NOT NULL COMMENT '礼品详情',
+cost_price DECIMAL(10, 2) NULL DEFAULT NULL COMMENT '成本价',
+cover VARCHAR(255) NOT NULL COMMENT '封面',
+covers CLOB NOT NULL COMMENT '礼品图片库',
+description VARCHAR(62) NOT NULL DEFAULT '' COMMENT '礼品备注',
+express_type CLOB NOT NULL COMMENT '配送方式',
+gift_type INT NOT NULL COMMENT '礼品类型：1：实物；2：虚拟；3：优惠券；4：积分券',
+has_props TINYINT NOT NULL DEFAULT 0 COMMENT '是否有多个属性',
+is_limit_sell TINYINT NOT NULL DEFAULT 0 COMMENT '是否限购',
+limit_customer_tags CLOB NOT NULL COMMENT '语序购买的会员标签',
+limit_sell_custom TINYINT NOT NULL DEFAULT 0 COMMENT '是否开启允许购买的会员标签',
+limit_sell_cycle VARCHAR(32) NOT NULL DEFAULT '' COMMENT '限购周期',
+limit_sell_cycle_count INT NOT NULL COMMENT '限购期内允许购买的数量',
+limit_sell_type TINYINT NOT NULL COMMENT '限购类型',
+market_price DECIMAL(10, 2) NOT NULL COMMENT '市场价',
+out_sn VARCHAR(255) NOT NULL COMMENT '内部编码',
+props CLOB NOT NULL COMMENT '规格',
+skus CLOB NOT NULL COMMENT 'SKU',
+score_price DECIMAL(10, 2) NOT NULL COMMENT '兑换所需积分',
+stock INT NOT NULL COMMENT '库存',
+create_at DATETIME(0) NOT NULL COMMENT '创建日期',
+store_id INT NOT NULL COMMENT '所属商城',
+status INT NULL DEFAULT 1 COMMENT '1：下架；20：审核中；30：复审中；99：上架',
+view_count INT NOT NULL DEFAULT 0 COMMENT '访问量',
+sell_count INT NULL DEFAULT 0 COMMENT '销量',
+PRIMARY KEY (id)
+);
+
+
+INSERT INTO jfy_gift VALUES (17, 'GIFT', 1, '[{"name": "身份证", "field": "idcard", "required": false}, {"name": "留言2", "field": "text", "required": false}]', '<p>礼品详情</p>', 0.00, '', '{"list": [{"uid": "vc-upload-1629292486099-3", "url": "https://cdn.taobao.com/sULsYiwaOPjsKGoBXwKtuewPzACpBDfQ.jpg", "name": "O1CN01OH6PIP1Oc5ot06U17_!!922361725.jpg", "status": "done"}, {"uid": "vc-upload-1629292486099-4", "url": "https://cdn.taobao.com/lqLHDcrFTgNvlWyXfLYZwmsrODzIBtFH.jpg", "name": "O1CN018hBckI1Oc5ouc8ppl_!!922361725.jpg", "status": "done"}, {"uid": "vc-upload-1629292486099-5", "url": "https://cdn.taobao.com/pvqyutXckICmHhbPBQtrVLHuMlXuGxUg.jpg", "name": "O1CN0185Ubp91Oc5osQTTcc_!!922361725.jpg", "status": "done"}]}', '支持个性定制的父亲节老师长辈的专属礼物', '["快递包邮", "同城配送"]', 1, 0, 0, '[]', 0, 'day', 0, 1, 0.00, '259402', '[{"name": "颜色", "values": ["红色", "蓝色"]}]', '[{"name": "red", "stock": 10, "gift_id": 1, "cost_price": 80, "score_price": 188, "market_price": 388}, {"name": "blue", "stock": 100, "gift_id": 2, "cost_price": 81, "score_price": 200, "market_price": 288}]', 10.00, 0, '2021-08-18 21:26:13', 100004, 99, 0, 0);

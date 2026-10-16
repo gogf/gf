@@ -50,10 +50,14 @@ func recordValue(record gdb.Record, column string) gdb.Value {
 	return value
 }
 
+// The column comments are joined by SCHEMA_NAME, as the OWNER of ALL_COL_COMMENTS is the user
+// owning the schema, while the OWNER of ALL_TAB_COLUMNS and of the constraint views is the
+// schema itself.
 const (
-	tableFieldsSqlTmp         = `SELECT c.COLUMN_NAME, c.DATA_TYPE, c.DATA_LENGTH, c.DATA_DEFAULT, c.NULLABLE, cc.COMMENTS FROM ALL_TAB_COLUMNS c LEFT JOIN ALL_COL_COMMENTS cc ON c.COLUMN_NAME = cc.COLUMN_NAME AND c.TABLE_NAME = cc.TABLE_NAME AND c.OWNER = cc.OWNER WHERE c.TABLE_NAME = '%s' AND c.OWNER = '%s'`
-	tableFieldsPkSqlSchemaTmp = `SELECT COLS.COLUMN_NAME AS PRIMARY_KEY_COLUMN FROM USER_CONSTRAINTS CONS JOIN USER_CONS_COLUMNS COLS ON CONS.CONSTRAINT_NAME = COLS.CONSTRAINT_NAME WHERE CONS.TABLE_NAME = '%s' AND CONS.CONSTRAINT_TYPE = 'P'`
-	tableFieldsPkSqlDBATmp    = `SELECT COLS.COLUMN_NAME AS PRIMARY_KEY_COLUMN FROM DBA_CONSTRAINTS CONS JOIN DBA_CONS_COLUMNS COLS ON CONS.CONSTRAINT_NAME = COLS.CONSTRAINT_NAME WHERE CONS.TABLE_NAME = '%s' AND CONS.OWNER = '%s' AND CONS.CONSTRAINT_TYPE = 'P'`
+	tableFieldsSqlTmp         = `SELECT c.COLUMN_NAME, c.DATA_TYPE, c.DATA_LENGTH, c.DATA_PRECISION, c.DATA_SCALE, c.DATA_DEFAULT, c.NULLABLE, cc.COMMENTS FROM ALL_TAB_COLUMNS c LEFT JOIN ALL_COL_COMMENTS cc ON c.COLUMN_NAME = cc.COLUMN_NAME AND c.TABLE_NAME = cc.TABLE_NAME AND c.OWNER = cc.SCHEMA_NAME WHERE c.TABLE_NAME = '%s' AND c.OWNER = '%s'`
+	tableFieldsIdentitySqlTmp = `SELECT c.NAME FROM SYSCOLUMNS c JOIN SYSOBJECTS t ON c.ID = t.ID JOIN SYSOBJECTS s ON t.SCHID = s.ID WHERE t.NAME = '%s' AND s.NAME = '%s' AND s.TYPE$ = 'SCH' AND BITAND(c.INFO2, 1) = 1`
+	tableFieldsPkSqlSchemaTmp = `SELECT COLS.COLUMN_NAME AS PRIMARY_KEY_COLUMN FROM USER_CONSTRAINTS CONS JOIN USER_CONS_COLUMNS COLS ON CONS.CONSTRAINT_NAME = COLS.CONSTRAINT_NAME AND CONS.OWNER = COLS.OWNER WHERE CONS.TABLE_NAME = '%s' AND CONS.OWNER = '%s' AND CONS.CONSTRAINT_TYPE = 'P'`
+	tableFieldsPkSqlDBATmp    = `SELECT COLS.COLUMN_NAME AS PRIMARY_KEY_COLUMN FROM DBA_CONSTRAINTS CONS JOIN DBA_CONS_COLUMNS COLS ON CONS.CONSTRAINT_NAME = COLS.CONSTRAINT_NAME AND CONS.OWNER = COLS.OWNER WHERE CONS.TABLE_NAME = '%s' AND CONS.OWNER = '%s' AND CONS.CONSTRAINT_TYPE = 'P'`
 )
 
 // tableNameCandidatesForMetadata returns table name candidates for DM metadata queries.
@@ -109,7 +113,7 @@ func (d *Driver) TableFields(
 	// Query the primary key field
 	pkResult, err = d.DoSelect(
 		ctx, link,
-		fmt.Sprintf(tableFieldsPkSqlSchemaTmp, escapeSingleQuote(usedMetadataTable)),
+		fmt.Sprintf(tableFieldsPkSqlSchemaTmp, escapeSingleQuote(usedMetadataTable), escapeSingleQuote(usedMetadataOwner)),
 	)
 	if err != nil {
 		return nil, err
@@ -122,6 +126,18 @@ func (d *Driver) TableFields(
 		if err != nil {
 			return nil, err
 		}
+	}
+	// Query the identity column, which SYSCOLUMNS marks with the lowest bit of INFO2.
+	identityResult, err := d.DoSelect(
+		ctx, link,
+		fmt.Sprintf(tableFieldsIdentitySqlTmp, escapeSingleQuote(usedMetadataTable), escapeSingleQuote(usedMetadataOwner)),
+	)
+	if err != nil {
+		return nil, err
+	}
+	identityFields := gmap.NewStrStrMap()
+	for _, identity := range identityResult {
+		identityFields.Set(recordValue(identity, "NAME").String(), fieldExtraIdentity)
 	}
 	fields = make(map[string]*gdb.TableField)
 	pkFields := gmap.NewStrStrMap()
@@ -141,14 +157,18 @@ func (d *Driver) TableFields(
 		// For NUMBER(p,s): use DATA_PRECISION and DATA_SCALE
 		// For VARCHAR2/CHAR: use DATA_LENGTH
 		var (
-			fieldType  string
-			columnName = recordValue(m, "COLUMN_NAME").String()
-			dataType   = recordValue(m, "DATA_TYPE").String()
-			dataLength = recordValue(m, "DATA_LENGTH").Int()
+			fieldType     string
+			columnName    = recordValue(m, "COLUMN_NAME").String()
+			dataType      = recordValue(m, "DATA_TYPE").String()
+			dataLength    = recordValue(m, "DATA_LENGTH").Int()
+			dataPrecision = recordValue(m, "DATA_PRECISION")
 		)
-		if dataLength > 0 {
+		switch {
+		case !dataPrecision.IsNil():
+			fieldType = fmt.Sprintf("%s(%d,%d)", dataType, dataPrecision.Int(), recordValue(m, "DATA_SCALE").Int())
+		case dataLength > 0:
 			fieldType = fmt.Sprintf("%s(%d)", dataType, dataLength)
-		} else {
+		default:
 			fieldType = dataType
 		}
 		fields[columnName] = &gdb.TableField{
@@ -158,7 +178,7 @@ func (d *Driver) TableFields(
 			Null:    nullable,
 			Default: recordValue(m, "DATA_DEFAULT").Val(),
 			Key:     pkFields.Get(columnName),
-			// Extra:   recordValue(m, "Extra").String(),
+			Extra:   identityFields.Get(columnName),
 			Comment: recordValue(m, "COMMENTS").String(),
 		}
 	}

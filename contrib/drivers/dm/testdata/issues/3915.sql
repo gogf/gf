@@ -1,0 +1,9 @@
+CREATE TABLE issue3915 (
+    id INT NOT NULL AUTO_INCREMENT COMMENT 'user id',
+    a FLOAT DEFAULT NULL COMMENT 'user name',
+    b FLOAT DEFAULT NULL COMMENT 'user status',
+    PRIMARY KEY (id)
+);
+
+INSERT INTO issue3915 (id,a,b) VALUES (1,1,2);
+INSERT INTO issue3915 (id,a,b) VALUES (2,5,4);
