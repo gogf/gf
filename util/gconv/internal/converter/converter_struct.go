@@ -27,6 +27,12 @@ type StructOption struct {
 	// PriorityTag is the priority tag for struct converting.
 	PriorityTag string
 
+	// CaseInsensitiveTag specifies whether a parameter key that equals the tag of a field in
+	// case-insensitive matches the field, when no key equals the tag exactly. It is checked
+	// before the field name is fuzzy matched. It is false in default, which keeps the tag
+	// matching case-sensitive.
+	CaseInsensitiveTag bool
+
 	// ContinueOnError specifies whether to continue converting the next element
 	// if one element converting fails.
 	ContinueOnError bool
@@ -273,7 +279,6 @@ func (c *Converter) bindStructWithLoopFieldInfos(
 ) (err error) {
 	var (
 		cachedFieldInfo *structcache.CachedFieldInfo
-		fuzzLastKey     string
 		fieldValue      reflect.Value
 		paramKey        string
 		paramValue      any
@@ -308,8 +313,43 @@ func (c *Converter) bindStructWithLoopFieldInfos(
 			continue
 		}
 
-		fuzzLastKey = cachedFieldInfo.LastFuzzyKey.Load().(string)
-		if paramValue, ok = paramsMap[fuzzLastKey]; !ok {
+		// The tags are matched in case-insensitive before the field name is fuzzy matched, if
+		// the option specifies it, as a key may differ from the tag in letter case only, like a
+		// column name that a database folds to upper case.
+		if option.CaseInsensitiveTag {
+			paramKey, paramValue = matchingTagName(
+				cachedFieldInfo.PriorityTagAndFieldName, paramsMap, usedParamsKeyOrTagNameMap,
+			)
+		} else {
+			paramKey = ""
+		}
+		if paramKey != "" {
+			fieldValue = cachedFieldInfo.GetFieldReflectValueFrom(structValue)
+			if err = c.bindVarToStructField(
+				cachedFieldInfo, fieldValue, paramValue, option,
+			); err != nil && !option.ContinueOnError {
+				return err
+			}
+			// handle same field name in nested struct.
+			if len(cachedFieldInfo.OtherSameNameField) > 0 {
+				if err = c.setOtherSameNameField(
+					cachedFieldInfo, paramValue, structValue, option,
+				); err != nil && !option.ContinueOnError {
+					return err
+				}
+			}
+			usedParamsKeyOrTagNameMap[paramKey] = struct{}{}
+			continue
+		}
+
+		// The key that the field matched last time is not used if another field has used it.
+		paramKey = cachedFieldInfo.LastFuzzyKey.Load().(string)
+		if _, used := usedParamsKeyOrTagNameMap[paramKey]; used {
+			ok = false
+		} else {
+			paramValue, ok = paramsMap[paramKey]
+		}
+		if !ok {
 			paramKey, paramValue = fuzzyMatchingFieldName(
 				cachedFieldInfo.RemoveSymbolsFieldName, paramsMap, usedParamsKeyOrTagNameMap,
 			)
@@ -337,6 +377,27 @@ func (c *Converter) bindStructWithLoopFieldInfos(
 		}
 	}
 	return nil
+}
+
+// matchingTagName returns the key in `paramsMap` that is not in `usedParamsKeyMap` and equals one
+// of the tags in `priorityTagAndFieldName` in case-insensitive, with its value. The last item of
+// `priorityTagAndFieldName`, which is the field name, is left to fuzzyMatchingFieldName.
+func matchingTagName(
+	priorityTagAndFieldName []string,
+	paramsMap map[string]any,
+	usedParamsKeyMap map[string]struct{},
+) (string, any) {
+	for _, tagName := range priorityTagAndFieldName[:len(priorityTagAndFieldName)-1] {
+		for paramKey, paramValue := range paramsMap {
+			if _, ok := usedParamsKeyMap[paramKey]; ok {
+				continue
+			}
+			if strings.EqualFold(tagName, paramKey) {
+				return paramKey, paramValue
+			}
+		}
+	}
+	return "", nil
 }
 
 // fuzzy matching rule:
