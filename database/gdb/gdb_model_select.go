@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"reflect"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -271,9 +273,143 @@ func (m *Model) doStructs(pointer any, where ...any) error {
 	return model.doWithScanStructs(pointer)
 }
 
+// isExpandingField reports whether the given field entry can expand to multiple
+// result columns at the SQL level. This includes:
+//   - gdb.Raw / *gdb.Raw expressions (e.g. Raw("name,age")),
+//   - the wildcard "*",
+//   - table-qualified wildcards like "a.*" or "table_name.*".
+//
+// SQL aggregate functions such as COUNT(*) are NOT considered expanding because
+// they always produce exactly one column.
+func isExpandingField(field any) bool {
+	var s string
+	switch v := field.(type) {
+	case Raw:
+		s = string(v)
+	case *Raw:
+		if v == nil {
+			return false
+		}
+		s = string(*v)
+	case string:
+		s = v
+	default:
+		return false
+	}
+	return isExpandingFieldStr(s)
+}
+
+// isExpandingFieldStr checks whether a field string can expand to multiple
+// result columns. It detects wildcards ("*", "a.*") and top-level commas
+// ("name,age") while ignoring commas nested inside parentheses (e.g. function
+// argument lists like "COUNT(DISTINCT `id`,`username`)").
+func isExpandingFieldStr(s string) bool {
+	if s == "*" || gstr.HasSuffix(s, ".*") {
+		return true
+	}
+	depth := 0
+	for _, ch := range s {
+		switch ch {
+		case '(':
+			depth++
+		case ')':
+			if depth > 0 {
+				depth--
+			}
+		case ',':
+			if depth == 0 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// isSingleFieldSpecified reports whether the model has exactly one explicit
+// field that resolves to a single column. FieldsEx is not treated as a
+// single-field specification.
+//
+// It rejects:
+//   - gdb.Raw entries that may expand to multiple columns,
+//   - wildcard "*" and table-qualified wildcards like "a.*".
+func (m *Model) isSingleFieldSpecified() bool {
+	if len(m.fields) != 1 {
+		return false
+	}
+	return !isExpandingField(m.fields[0])
+}
+
+// validateFieldsExSingleColumn checks whether FieldsEx leaves exactly one table
+// column, which is required for scanning into a basic type or a slice of basic
+// types. Value()/Array() cannot be used as a post-query column-count check
+// here, because they return FirstResultColumn before that validation runs.
+func (m *Model) validateFieldsExSingleColumn() error {
+	if m.db == nil {
+		return nil
+	}
+	tableFields, err := m.TableFields(m.tablesInit)
+	if err != nil {
+		return err
+	}
+	if len(tableFields) == 0 {
+		return gerror.Newf(`empty table fields for table "%s"`, m.tablesInit)
+	}
+	remaining := len(tableFields)
+	for _, excluded := range m.fieldsEx {
+		for _, name := range gstr.SplitAndTrim(gconv.String(excluded), ",") {
+			if name == "" {
+				continue
+			}
+			if _, ok := tableFields[name]; ok {
+				remaining--
+			}
+		}
+	}
+	if remaining != 1 {
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`Scan into basic type requires exactly 1 field specified via Fields(), but FieldsEx leaves %d columns after filtering`,
+			remaining,
+		)
+	}
+	return nil
+}
+
+// validateSingleFieldSpecified checks that the model has a field specification
+// suitable for a single-column scan into a basic type or a slice of basic types.
+// It accepts both an explicit single Fields entry and FieldsEx, because FieldsEx
+// can narrow the result to a single column even though m.fields is empty.
+func (m *Model) validateSingleFieldSpecified() error {
+	if m.isSingleFieldSpecified() {
+		return nil
+	}
+	// Reaching here with exactly one field means it is an expanding field
+	// (gdb.Raw or wildcard like "*" / "a.*").
+	if len(m.fields) == 1 {
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`Scan into basic type does not support expanding field %v (gdb.Raw or wildcard); use an explicit field name instead`,
+			m.fields[0],
+		)
+	}
+	if len(m.fields) == 0 && len(m.fieldsEx) > 0 {
+		return m.validateFieldsExSingleColumn()
+	}
+	return gerror.NewCodef(
+		gcode.CodeInvalidParameter,
+		`Scan into basic type requires exactly 1 field specified via Fields(), but got %d`,
+		len(m.fields),
+	)
+}
+
 // Scan automatically calls Struct or Structs function according to the type of parameter `pointer`.
 // It calls function doStruct if `pointer` is type of *struct/**struct.
 // It calls function doStructs if `pointer` is type of *[]struct/*[]*struct.
+//
+// It also supports scanning a single field result into a basic type (int, float, string, bool, etc.),
+// a pointer to a basic type, a slice of basic types, or a slice of pointers to basic types. In these
+// cases exactly one field must be specified via Fields (or a field-producing helper such as FieldSum),
+// otherwise an error is returned. FieldsEx is accepted only when it leaves exactly one column.
 //
 // The optional parameter `where` is the same as the parameter of Model.Where function,  see Model.Where.
 //
@@ -281,17 +417,27 @@ func (m *Model) doStructs(pointer any, where ...any) error {
 // default value and there's no record retrieved with the given conditions from table.
 //
 // Example:
-// user := new(User)
-// err  := db.Model("user").Where("id", 1).Scan(user)
 //
-// user := (*User)(nil)
-// err  := db.Model("user").Where("id", 1).Scan(&user)
+//	user := new(User)
+//	err  := db.Model("user").Where("id", 1).Scan(user)
 //
-// users := ([]User)(nil)
-// err   := db.Model("user").Scan(&users)
+//	user := (*User)(nil)
+//	err  := db.Model("user").Where("id", 1).Scan(&user)
 //
-// users := ([]*User)(nil)
-// err   := db.Model("user").Scan(&users).
+//	users := ([]User)(nil)
+//	err   := db.Model("user").Scan(&users)
+//
+//	users := ([]*User)(nil)
+//	err   := db.Model("user").Scan(&users)
+//
+//	var name string
+//	err   := db.Model("user").Fields("name").Where("id", 1).Scan(&name)
+//
+//	var names []string
+//	err   := db.Model("user").Fields("name").Scan(&names)
+//
+//	var names2 []*string
+//	err   := db.Model("user").Fields("name").Scan(&names2)
 func (m *Model) Scan(pointer any, where ...any) error {
 	reflectInfo := reflection.OriginTypeAndKind(pointer)
 	if reflectInfo.InputKind != reflect.Pointer {
@@ -302,15 +448,63 @@ func (m *Model) Scan(pointer any, where ...any) error {
 	}
 	switch reflectInfo.OriginKind {
 	case reflect.Slice, reflect.Array:
+		// OriginType has all outer pointers stripped, so Elem() gives the slice element type.
+		elemType := reflectInfo.OriginType.Elem()
+		for elemType.Kind() == reflect.Pointer {
+			elemType = elemType.Elem()
+		}
+
+		// Only route to the basic-type slice branch when the element is a true scalar type
+		// (int/uint/float/bool/string). Map/record slices and other non-struct kinds must
+		// fall through to doStructs; otherwise []Record or similar results would be
+		// misclassified as a slice of basic values.
+		if elemType != nil && reflection.IsBasicKind(elemType.Kind()) {
+			if err := m.validateSingleFieldSpecified(); err != nil {
+				return err
+			}
+			// Use a clone to avoid mutating the original model. Do not pass the field
+			// as an argument to Array() because it already lives in m.fields and
+			// Array() would append it again (Fields is append-only).
+			model := m.Clone()
+			if len(where) > 0 {
+				model = model.Where(where[0], where[1:]...)
+			}
+			valueArr, err := model.Array()
+			if err != nil {
+				return err
+			}
+			return valueArr.Scan(pointer)
+		}
 		return m.doStructs(pointer, where...)
 
 	case reflect.Struct, reflect.Invalid:
 		return m.doStruct(pointer, where...)
 
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64, reflect.Bool, reflect.String:
+		if err := m.validateSingleFieldSpecified(); err != nil {
+			return err
+		}
+		model := m.Clone()
+		if len(where) > 0 {
+			model = model.Where(where[0], where[1:]...)
+		}
+		value, err := model.Value()
+		if err != nil {
+			return err
+		}
+		if value == nil {
+			if !empty.IsNil(pointer, true) {
+				return sql.ErrNoRows
+			}
+			return nil
+		}
+		return value.Scan(pointer)
 	default:
 		return gerror.NewCode(
 			gcode.CodeInvalidParameter,
-			`element of parameter "pointer" for function Scan should type of struct/*struct/[]struct/[]*struct`,
+			`element of parameter "pointer" for function Scan should type of struct/*struct/[]struct/[]*struct, or basic type like int/string/float64/bool`,
 		)
 	}
 }
