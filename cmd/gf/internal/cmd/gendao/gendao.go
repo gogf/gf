@@ -42,6 +42,7 @@ type (
 		TablesEx           string   `name:"tablesEx"            short:"x"  brief:"{CGenDaoBriefTablesEx}"`
 		ShardingPattern    []string `name:"shardingPattern"     short:"sp" brief:"{CGenDaoBriefShardingPattern}"`
 		Group              string   `name:"group"               short:"g"  brief:"{CGenDaoBriefGroup}" d:"default"`
+		Schema             string   `name:"schema"                         brief:"{CGenDaoBriefSchema}"`
 		Prefix             string   `name:"prefix"              short:"f"  brief:"{CGenDaoBriefPrefix}"`
 		RemovePrefix       string   `name:"removePrefix"        short:"r"  brief:"{CGenDaoBriefRemovePrefix}"`
 		RemoveFieldPrefix  string   `name:"removeFieldPrefix"   short:"rf" brief:"{CGenDaoBriefRemoveFieldPrefix}"`
@@ -185,6 +186,9 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 	}
 	if db == nil {
 		mlog.Fatal(`database initialization failed, may be invalid database configuration`)
+	}
+	if in.Schema != "" {
+		db = db.Schema(in.Schema)
 	}
 
 	var tableNames []string

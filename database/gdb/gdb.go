@@ -735,6 +735,7 @@ const (
 	defaultModelSafe                      = false
 	defaultCharset                        = `utf8`
 	defaultProtocol                       = `tcp`
+	driverTypePgSQL                       = `pgsql`
 	unionTypeNormal                       = 0
 	unionTypeAll                          = 1
 	defaultMaxIdleConnCount               = 10               // Max idle connection count in pool.
@@ -1140,14 +1141,18 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		n := *c.db.GetConfig()
 		node = &n
 	}
+	if node.Link != "" {
+		node, err = parseConfigNodeLink(node)
+		if err != nil {
+			return nil, err
+		}
+	}
 	if node.Charset == "" {
 		node.Charset = defaultCharset
 	}
 	// Changes the schema.
 	nodeSchema := gutil.GetOrDefaultStr(c.schema, schema...)
-	if nodeSchema != "" {
-		node.Name = nodeSchema
-	}
+	setSchemaToConfigNode(node, nodeSchema)
 	// Update the configuration object in internal data.
 	if err = c.setConfigNodeToCtx(ctx, node); err != nil {
 		return
@@ -1200,4 +1205,16 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		c.db.SetDryRun(node.DryRun)
 	}
 	return
+}
+
+// setSchemaToConfigNode applies schema to the driver-specific configuration field.
+func setSchemaToConfigNode(node *ConfigNode, schema string) {
+	if schema == "" {
+		return
+	}
+	if node.Type == driverTypePgSQL {
+		node.Namespace = schema
+		return
+	}
+	node.Name = schema
 }
