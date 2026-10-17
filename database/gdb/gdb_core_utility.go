@@ -239,11 +239,7 @@ func (c *Core) guessPrimaryTableName(tableStr string) string {
 		array2           = gstr.SplitAndTrim(array1[0], " ")
 		array3           = gstr.SplitAndTrim(array2[0], ".")
 	)
-	if len(array3) >= 2 {
-		guessedTableName = array3[1]
-	} else {
-		guessedTableName = array3[0]
-	}
+	guessedTableName = array3[len(array3)-1]
 	charL, charR := c.db.GetChars()
 	if charL != "" || charR != "" {
 		guessedTableName = gstr.Trim(guessedTableName, charL+charR)
@@ -259,8 +255,9 @@ var tableReferenceModifiers = map[string]bool{"ONLY": true, "LATERAL": true}
 
 // tableNameForFields returns the table name that the fields of the table expression `table` of a
 // statement are looked up by. It is the table of a single table with an alias, like "user u",
-// "db.user AS u" or "`my user` `u`", as it is written without the alias, so that it is looked up
-// as the same table without an alias. Any other table expression is returned as it is.
+// "db.user AS u", "`my user` `u`" or "[dbo].[user] u", as it is written without the alias, so
+// that it is looked up as the same table without an alias. Any other table expression is returned
+// as it is.
 func (c *Core) tableNameForFields(table string) string {
 	words, ok := splitSqlWords(table)
 	hasAlias := len(words) == 2 && !strings.EqualFold(words[1], "AS") ||
@@ -277,8 +274,8 @@ func (c *Core) tableNameForFields(table string) string {
 }
 
 // splitSqlWords splits `s` into its words separated by whitespace, taking an identifier quoted
-// with '`' or '"' as part of a word whatever it contains. It returns false if a quote is not
-// closed or if `s` has a comma outside quotes.
+// with '`', '"' or brackets as part of a word whatever it contains. It returns false if a quote is
+// not closed or if `s` has a comma outside quotes.
 func splitSqlWords(s string) (words []string, ok bool) {
 	var begin = -1
 	for i := 0; i < len(s); i++ {
@@ -291,7 +288,7 @@ func splitSqlWords(s string) (words []string, ok bool) {
 			continue
 		case ',':
 			return nil, false
-		case '`', '"':
+		case '`', '"', '[':
 			end := closingSqlQuote(s, i)
 			if end < 0 {
 				return nil, false
@@ -313,13 +310,18 @@ func splitSqlWords(s string) (words []string, ok bool) {
 }
 
 // closingSqlQuote returns the index of the quote closing the quoted identifier that begins at
-// index `open` of `s`, taking a doubled quote as an escaped one, or -1 if it is not closed.
+// index `open` of `s`, which is ']' for '[' and the opening quote for any other, taking a doubled
+// closing quote as an escaped one, or -1 if it is not closed.
 func closingSqlQuote(s string, open int) int {
+	closing := s[open]
+	if closing == '[' {
+		closing = ']'
+	}
 	for i := open + 1; i < len(s); i++ {
-		if s[i] != s[open] {
+		if s[i] != closing {
 			continue
 		}
-		if i+1 < len(s) && s[i+1] == s[open] {
+		if i+1 < len(s) && s[i+1] == closing {
 			i++
 			continue
 		}
@@ -328,14 +330,15 @@ func closingSqlQuote(s string, open int) int {
 	return -1
 }
 
-// isSqlIdentifier reports whether `s` is an identifier, unquoted or quoted with '`' or '"', or,
-// if `qualified` is true, identifiers joined by '.' like "db.user" or "`db`.`user`".
+// isSqlIdentifier reports whether `s` is an identifier, unquoted or quoted with '`', '"' or
+// brackets, or, if `qualified` is true, identifiers joined by '.' like "db.user", "`db`.`user`"
+// or "[db].[user]".
 func isSqlIdentifier(s string, qualified bool) bool {
 	for i := 0; ; i++ {
 		if i >= len(s) {
 			return false
 		}
-		if s[i] == '`' || s[i] == '"' {
+		if s[i] == '`' || s[i] == '"' || s[i] == '[' {
 			end := closingSqlQuote(s, i)
 			if end <= i+1 {
 				return false

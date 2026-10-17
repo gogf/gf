@@ -9,6 +9,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -215,6 +216,9 @@ func (c *Core) createNewTransaction(
 	return
 }
 
+// callTxFunc calls `f` with `tx`, committing `tx` if `f` succeeds and rolling it back if `f` returns
+// an error or panics. It returns the error of `f`, joined with the error of the rollback if that fails
+// too and having the code of the latter, or the error of the commit.
 func callTxFunc(tx TX, f func(ctx context.Context, tx TX) error) (err error) {
 	defer func() {
 		if err == nil {
@@ -228,7 +232,7 @@ func callTxFunc(tx TX, f func(ctx context.Context, tx TX) error) (err error) {
 		}
 		if err != nil {
 			if e := tx.Rollback(); e != nil {
-				err = e
+				err = gerror.WrapCode(gerror.Code(e), errors.Join(err, e))
 			}
 		} else {
 			if e := tx.Commit(); e != nil {

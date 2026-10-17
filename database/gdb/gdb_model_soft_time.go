@@ -250,7 +250,7 @@ func (m *softTimeMaintainer) getConditionOfTableStringForSoftDeleting(ctx contex
 		array2 = gstr.SplitAndTrim(array1[0], ".")
 	)
 	if len(array2) >= 2 {
-		table = array2[1]
+		table = array2[len(array2)-1]
 		schema = array2[0]
 	} else {
 		table = array2[0]
