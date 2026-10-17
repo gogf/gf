@@ -41,6 +41,48 @@ func Test_patternToRegex(t *testing.T) {
 	})
 }
 
+// Test nullFieldPatternToRegex function.
+func Test_nullFieldPatternToRegex(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// ? matches one or more characters.
+		t.Assert(nullFieldPatternToRegex("table_?"), `table_(.+)`)
+		// No wildcard, special regex chars are quoted as literals.
+		t.Assert(nullFieldPatternToRegex("user"), "user")
+		t.Assert(nullFieldPatternToRegex("a.b"), `a\.b`)
+		t.Assert(nullFieldPatternToRegex("table_["), `table_\[`)
+		// * is not a wildcard of null field pattern, it is quoted as a literal.
+		t.Assert(nullFieldPatternToRegex("trade_*"), `trade_\*`)
+	})
+}
+
+// Test matchNullFieldPattern function.
+func Test_matchNullFieldPattern(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(matchNullFieldPattern("table_user", []string{"table_?"}), true)
+
+		// The pattern is anchored to the whole table name.
+		t.Assert(matchNullFieldPattern("table_user", []string{"user"}), false)
+
+		t.Assert(matchNullFieldPattern("table_user", []string{"foo_?", "table_?"}), true)
+
+		// Patterns that cannot be matched as regex are quoted as literals.
+		t.Assert(matchNullFieldPattern("table_user", []string{"table_[", "(("}), false)
+
+		t.Assert(matchNullFieldPattern("table_user", nil), false)
+	})
+}
+
+// Test validateNullFieldPatterns function.
+func Test_validateNullFieldPatterns(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNil(validateNullFieldPatterns(nil))
+		t.AssertNil(validateNullFieldPatterns([]string{"table_?", "user", "a.b", "table_[", "(("}))
+
+		// A pattern containing invalid UTF-8 cannot be compiled as regex.
+		t.AssertNE(validateNullFieldPatterns([]string{"table_?", "\xff"}), nil)
+	})
+}
+
 // Test filterTablesByPatterns with * wildcard.
 func Test_filterTablesByPatterns_Star(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
