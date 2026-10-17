@@ -9,6 +9,7 @@ package gcfg
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
@@ -39,8 +40,22 @@ type AdapterFile struct {
 	violenceCheck         bool                             // Whether it does violence check in value index searching. It affects the performance when set true(false in default).
 	watchers              *WatcherRegistry                 // Watchers for watching file changes.
 	watcherMutex          sync.Mutex                       // Mutex for file watcher callback tracking.
-	watcherTokens         map[string]*int                  // Current callback token for each configuration file.
+	watcherRegistrations  map[string]*fileWatcher          // Current watcher registration for each configuration file.
 }
+
+// fileWatcher tracks the callback registration and its generation token for a configuration file.
+type fileWatcher struct {
+	token      *int
+	callbackID int
+	watcher    *gfsnotify.Watcher
+}
+
+const (
+	// fileWatcherRearmRetryInterval is the delay between attempts to restore a replaced file watch.
+	fileWatcherRearmRetryInterval = time.Millisecond
+	// fileWatcherRearmRetryCount bounds re-arm attempts when a watched file is removed permanently.
+	fileWatcherRearmRetryCount = 100
+)
 
 const (
 	commandEnvKeyForFile = "gf.gcfg.file" // commandEnvKeyForFile is the configuration key for command argument or environment configuring file name.
@@ -86,7 +101,7 @@ func NewAdapterFile(fileNameOrPath ...string) (*AdapterFile, error) {
 		searchPaths:           garray.NewStrArray(true),
 		jsonMap:               gmap.NewKVMapWithChecker[string, *gjson.Json](jsonMapChecker, true),
 		watchers:              NewWatcherRegistry(),
-		watcherTokens:         make(map[string]*int),
+		watcherRegistrations:  make(map[string]*fileWatcher),
 	}
 	// Customized dir path from env/cmd.
 	if customPath := command.GetOptWithEnv(commandEnvKeyForPath); customPath != "" {
@@ -327,24 +342,31 @@ func (a *AdapterFile) getJson(fileNameOrPath ...string) (configJson *gjson.Json,
 // addFileWatcher registers a callback that invalidates the cached file content on changes.
 func (a *AdapterFile) addFileWatcher(fileNameOrPath, filePath string) {
 	watcherKey := fileNameOrPath + "\x00" + filePath
-	watcherToken := new(int)
+	registration := &fileWatcher{token: new(int)}
 	a.watcherMutex.Lock()
-	if _, ok := a.watcherTokens[watcherKey]; ok {
+	if currentRegistration, ok := a.watcherRegistrations[watcherKey]; ok {
+		watcher := currentRegistration.watcher
 		a.watcherMutex.Unlock()
+		a.rearmFileWatcher(watcher, filePath, nil)
 		return
 	}
-	a.watcherTokens[watcherKey] = watcherToken
+	a.watcherRegistrations[watcherKey] = registration
 	a.watcherMutex.Unlock()
 
-	_, err := gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
+	callback, err := gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
 		a.watcherMutex.Lock()
-		currentToken, ok := a.watcherTokens[watcherKey]
-		if !ok || currentToken != watcherToken {
+		currentRegistration, ok := a.watcherRegistrations[watcherKey]
+		if !ok || currentRegistration != registration {
 			a.watcherMutex.Unlock()
 			return
 		}
+		currentRegistration.watcher = event.Watcher
+		watcher := currentRegistration.watcher
 		a.watcherMutex.Unlock()
 
+		a.rearmFileWatcher(watcher, filePath, func() {
+			a.notifyFileWatcher(fileNameOrPath, filePath, OperationCreate)
+		})
 		a.jsonMap.Remove(fileNameOrPath)
 		if event.IsWrite() || event.IsRemove() || event.IsCreate() || event.IsRename() || event.IsChmod() {
 			fileType := gfile.ExtName(fileNameOrPath)
@@ -364,14 +386,59 @@ func (a *AdapterFile) addFileWatcher(fileNameOrPath, filePath string) {
 			a.notifyWatchers(adapterCtx.Ctx)
 		}
 	})
+	if callback != nil {
+		registration.callbackID = callback.Id
+	}
 	if err != nil {
 		a.watcherMutex.Lock()
-		if currentToken, ok := a.watcherTokens[watcherKey]; ok && currentToken == watcherToken {
-			delete(a.watcherTokens, watcherKey)
+		if currentRegistration, ok := a.watcherRegistrations[watcherKey]; ok && currentRegistration == registration {
+			delete(a.watcherRegistrations, watcherKey)
 		}
 		a.watcherMutex.Unlock()
+		if callback != nil {
+			if removeErr := gfsnotify.RemoveCallback(callback.Id); removeErr != nil {
+				intlog.Errorf(context.TODO(), "failed remove config file watcher[%s]: %v", filePath, removeErr)
+			}
+		}
 		intlog.Errorf(context.TODO(), "failed listen config file event[%s]: %v", filePath, err)
 	}
+}
+
+// rearmFileWatcher restores the underlying watch after an event removed it.
+func (a *AdapterFile) rearmFileWatcher(watcher *gfsnotify.Watcher, filePath string, onRearmed func()) {
+	if watcher == nil {
+		return
+	}
+	if gfile.Exists(filePath) {
+		if err := watcher.ReAdd(filePath); err != nil {
+			intlog.Errorf(context.TODO(), "failed rearm config file watcher[%s]: %v", filePath, err)
+		}
+		return
+	}
+	go func() {
+		for range fileWatcherRearmRetryCount {
+			time.Sleep(fileWatcherRearmRetryInterval)
+			if !gfile.Exists(filePath) {
+				continue
+			}
+			if err := watcher.ReAdd(filePath); err != nil {
+				intlog.Errorf(context.TODO(), "failed rearm config file watcher[%s]: %v", filePath, err)
+				continue
+			}
+			if onRearmed != nil {
+				onRearmed()
+			}
+			return
+		}
+	}()
+}
+
+// notifyFileWatcher invalidates cached content and notifies logical watchers of a file event.
+func (a *AdapterFile) notifyFileWatcher(fileNameOrPath, filePath string, operation OperationType) {
+	a.jsonMap.Remove(fileNameOrPath)
+	adapterCtx := NewAdapterFileCtx().WithFileName(fileNameOrPath).WithFilePath(filePath).WithFileType(gfile.ExtName(fileNameOrPath))
+	adapterCtx.WithOperation(operation)
+	a.notifyWatchers(adapterCtx.Ctx)
 }
 
 // AddWatcher adds a watcher for the specified configuration file.

@@ -9,6 +9,7 @@ package gcfg_test
 import (
 	"context"
 	"errors"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -240,8 +241,7 @@ func TestLoader_WatchRecoversAfterLoadError(t *testing.T) {
 		err = loader.Watch(context.Background(), "test-watch-recovery")
 		t.AssertNil(err)
 
-		err = gfile.PutContents(configFile, invalidContent)
-		t.AssertNil(err)
+		writeConfigAtomically(t, configFile, invalidContent)
 		select {
 		case loadErr := <-errCh:
 			t.AssertNE(loadErr, nil)
@@ -251,8 +251,7 @@ func TestLoader_WatchRecoversAfterLoadError(t *testing.T) {
 		t.Assert(loader.Get().Name, "test-app")
 		time.Sleep(10 * time.Millisecond)
 
-		err = gfile.PutContents(configFile, recovered)
-		t.AssertNil(err)
+		writeConfigAtomically(t, configFile, recovered)
 		select {
 		case name := <-changeCh:
 			t.Assert(name, recoveredName)
@@ -264,6 +263,21 @@ func TestLoader_WatchRecoversAfterLoadError(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(stopped, true)
 	})
+}
+
+// writeConfigAtomically publishes complete configuration content by replacing the target file.
+func writeConfigAtomically(t *gtest.T, configFile, content string) {
+	tempFile := configFile + "." + guid.S() + ".tmp"
+	defer func() {
+		if gfile.Exists(tempFile) {
+			t.AssertNil(gfile.RemoveFile(tempFile))
+		}
+	}()
+	t.AssertNil(gfile.PutContents(tempFile, content))
+	if runtime.GOOS == "windows" {
+		t.AssertNil(gfile.RemoveFile(configFile))
+	}
+	t.AssertNil(gfile.Rename(tempFile, configFile))
 }
 
 func TestLoader_SetConverter(t *testing.T) {
