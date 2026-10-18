@@ -89,6 +89,7 @@ func GetCommand(ctx context.Context) (*Command, error) {
 		cmd.Install,
 		cmd.Version,
 		cmd.Doc,
+		cmd.Agents,
 	)
 	if err != nil {
 		return nil, err

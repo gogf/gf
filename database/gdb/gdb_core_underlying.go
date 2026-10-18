@@ -459,6 +459,14 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 		}
 	}()
 	if !rows.Next() {
+		// A false return from rows.Next() has two meanings: the result set is exhausted,
+		// or the iteration was interrupted by an error, which is only retrievable through
+		// rows.Err(). Without this check an error that aborts the iteration, such as a
+		// deadlock hit while scanning a `SELECT ... FOR UPDATE`, is silently reported to
+		// the caller as an empty result set with a nil error.
+		if err := rows.Err(); err != nil {
+			return nil, err
+		}
 		return nil, nil
 	}
 	// Column names and types.
@@ -480,6 +488,10 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 	for i := range values {
 		scanArgs[i] = &values[i]
 	}
+	convertColumnValue := c.ConvertColumnValueForLocal
+	if c.db != nil {
+		convertColumnValue = c.db.ConvertColumnValueForLocal
+	}
 	for {
 		if err = rows.Scan(scanArgs...); err != nil {
 			return result, err
@@ -495,7 +507,7 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 					convertedValue any
 					columnType     = columnTypes[i]
 				)
-				if convertedValue, err = c.columnValueToLocalValue(ctx, value, columnType); err != nil {
+				if convertedValue, err = convertColumnValue(ctx, columnType, value); err != nil {
 					return nil, err
 				}
 				record[columnTypes[i].Name()] = gvar.New(convertedValue)
@@ -503,6 +515,12 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 		}
 		result = append(result, record)
 		if !rows.Next() {
+			// Same as above. Without this check the caller receives a silently truncated
+			// result set together with a nil error, which is even harder to notice than
+			// an empty one.
+			if err = rows.Err(); err != nil {
+				return nil, err
+			}
 			break
 		}
 	}
@@ -514,9 +532,48 @@ func (c *Core) OrderRandomFunction() string {
 	return "RAND()"
 }
 
+// GetBoolLiteral returns the SQL literal for the given boolean value.
+// Default is "1"/"0" (MySQL bit/int convention); strict-bool drivers override.
+func (c *Core) GetBoolLiteral(v bool) string {
+	if v {
+		return "1"
+	}
+	return "0"
+}
+
+// GetLockSharedClause returns the SQL clause for Model.LockShared().
+// Default is MySQL's legacy "LOCK IN SHARE MODE"; drivers with other
+// dialect syntax (e.g. PostgreSQL's "FOR SHARE") override.
+func (c *Core) GetLockSharedClause() string {
+	return LockInShareMode
+}
+
+// FoldIdentifier returns the unquoted identifier `name` in the letter case the database stores it in.
+// Default returns `name` unchanged; drivers folding unquoted identifiers (e.g. Oracle) override.
+func (c *Core) FoldIdentifier(name string) string {
+	return name
+}
+
+// GetTableNameForFields returns the table name in the table expression `table` that TableFields is called with.
+// Default is the bare name of the first table; drivers resolving qualified names (e.g. Oracle) override.
+func (c *Core) GetTableNameForFields(table string) string {
+	return c.guessPrimaryTableName(table)
+}
+
+// ConvertColumnValueForLocal converts a value scanned from a result set column to local Golang type.
+// Default converts it by the scan type that the underlying driver reports for the column, or else
+// by its database type with ConvertValueForLocal; drivers whose reported scan type does not fit
+// the scanned value (e.g. Oracle's NUMBER) override.
+func (c *Core) ConvertColumnValueForLocal(ctx context.Context, columnType *sql.ColumnType, fieldValue any) (any, error) {
+	return c.columnValueToLocalValue(ctx, fieldValue, columnType)
+}
+
+// columnValueToLocalValue converts a scanned value using column metadata or the driver.
 func (c *Core) columnValueToLocalValue(ctx context.Context, value any, columnType *sql.ColumnType) (any, error) {
 	var scanType = columnType.ScanType()
-	if scanType != nil {
+	// Without a declared database type, ScanType may describe only the first row,
+	// as with SQLite. Let the driver handle later values of a different type.
+	if scanType != nil && (columnType.DatabaseTypeName() != "" || scanType == reflect.TypeOf(value)) {
 		// Common basic builtin types.
 		switch scanType.Kind() {
 		case

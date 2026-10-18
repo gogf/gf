@@ -342,8 +342,8 @@ func (s *Server) listDir(r *Request, f http.File) {
 		}
 		return files[i].Name() < files[j].Name()
 	})
-	if r.Response.Header().Get("Content-Type") == "" {
-		r.Response.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if r.Response.Header().Get(HeaderContentType) == "" {
+		r.Response.Header().Set(HeaderContentType, "text/html; charset=utf-8")
 	}
 	r.Response.Write(`<html>`)
 	r.Response.Write(`<head>`)

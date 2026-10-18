@@ -57,7 +57,6 @@ func (err *Error) Stack() string {
 					Index:   index,
 					Message: loop.error.Error(),
 				})
-				index++
 				break
 			}
 		} else {

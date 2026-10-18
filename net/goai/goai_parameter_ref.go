@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// This file generates OpenAPI parameter references from request fields.
+
 package goai
 
 import (
@@ -26,7 +28,8 @@ type ParameterRef struct {
 	Value *Parameter
 }
 
-func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path, method string) (*ParameterRef, error) {
+// newParameterRefWithStructMethod resolves a request field's parameter location and schema.
+func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path, method string, hasBodyField bool) (*ParameterRef, error) {
 	var (
 		tagMap    = field.TagMap()
 		fieldName = field.TagPriorityName()
@@ -48,6 +51,9 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 		// Automatically detect its "in" attribute.
 		if gstr.ContainsI(path, fmt.Sprintf(`{%s}`, parameter.Name)) {
 			parameter.In = ParameterInPath
+		} else if hasBodyField {
+			// A whole-body field leaves the remaining implicit parameters in the query.
+			parameter.In = ParameterInQuery
 		} else {
 			// Default the parameter input to "query" if method is "GET/DELETE".
 			switch gstr.ToUpper(method) {
@@ -67,6 +73,11 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 
 	case ParameterInCookie, ParameterInHeader, ParameterInQuery:
 
+	case ParameterInBody:
+		// The field tagged with `in:"body"` is documented as the request body instead of an
+		// operation parameter.
+		return nil, nil
+
 	default:
 		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid tag value "%s" for In`, parameter.In)
 	}
@@ -76,6 +87,21 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 		return nil, err
 	}
 	parameter.Schema = schemaRef
+
+	// If the parameter is a query parameter with an object schema,
+	// set style: deepObject and explode: true per OpenAPI 3.0 specification.
+	// This ensures client generators (e.g. openapi-generator) correctly serialize
+	// nested struct query parameters as ?Param[Field]=value.
+	// Only apply defaults when the user has not explicitly set these via struct tags.
+	if parameter.In == ParameterInQuery && schemaRef.Value != nil && schemaRef.Value.Type == TypeObject {
+		if parameter.Style == "" {
+			parameter.Style = "deepObject"
+		}
+		if parameter.Explode == nil {
+			var explodeTrue = true
+			parameter.Explode = &explodeTrue
+		}
+	}
 
 	// Ignore parameter.
 	if !isValidParameterName(parameter.Name) {

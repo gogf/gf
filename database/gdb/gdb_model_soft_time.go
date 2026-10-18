@@ -299,8 +299,12 @@ func (m *softTimeMaintainer) buildDeleteCondition(
 		switch fieldType {
 		case LocalTypeDate, LocalTypeTime, LocalTypeDatetime:
 			return fmt.Sprintf(`%s IS NULL`, quotedName)
-		case LocalTypeInt, LocalTypeUint, LocalTypeInt64, LocalTypeUint64, LocalTypeBool:
+		case LocalTypeInt, LocalTypeUint, LocalTypeInt64, LocalTypeUint64:
 			return fmt.Sprintf(`%s=0`, quotedName)
+		case LocalTypeBool:
+			// WHERE cannot parameterize this predicate; emit a dialect literal
+			// via GetBoolLiteral (pgsql "false", mysql "0"), not a bound value.
+			return fmt.Sprintf(`%s=%s`, quotedName, m.db.GetBoolLiteral(false))
 		default:
 			intlog.Errorf(ctx, `invalid field type "%s" for soft delete condition: prefix=%s, field=%s`, fieldType, prefix, fieldName)
 			return ""
@@ -310,6 +314,10 @@ func (m *softTimeMaintainer) buildDeleteCondition(
 		return fmt.Sprintf(`%s IS NULL`, quotedName)
 
 	default:
+		if fieldType == LocalTypeBool {
+			// Same as SoftTimeTypeAuto bool branch: dialect literal for WHERE.
+			return fmt.Sprintf(`%s=%s`, quotedName, m.db.GetBoolLiteral(false))
+		}
 		return fmt.Sprintf(`%s=0`, quotedName)
 	}
 }
@@ -330,7 +338,10 @@ func (m *softTimeMaintainer) GetFieldValue(
 	default:
 		switch fieldType {
 		case LocalTypeBool:
-			return 1
+			// Bound param (INSERT/UPDATE SET), not a SQL literal. Go bool is
+			// accepted by supported drivers (pgsql/mysql bit(1)/mssql/dm/go-ora);
+			// WHERE soft-delete predicates use GetBoolLiteral instead.
+			return true
 		default:
 			return m.getTimestampValue()
 		}
@@ -363,6 +374,9 @@ func (m *softTimeMaintainer) getEmptyValue(fieldType LocalType) any {
 	switch fieldType {
 	case LocalTypeDate, LocalTypeTime, LocalTypeDatetime:
 		return nil
+	case LocalTypeBool:
+		// Bound "not deleted" value for bool soft-delete columns; see GetFieldValue.
+		return false
 	default:
 		return 0
 	}
@@ -376,7 +390,8 @@ func (m *softTimeMaintainer) getAutoValue(ctx context.Context, fieldType LocalTy
 	case LocalTypeInt, LocalTypeUint, LocalTypeInt64, LocalTypeUint64:
 		return gtime.Timestamp()
 	case LocalTypeBool:
-		return 1
+		// Bound "deleted" value for bool soft-delete columns; see GetFieldValue.
+		return true
 	default:
 		intlog.Errorf(ctx, `invalid field type "%s" for soft time auto value`, fieldType)
 		return nil

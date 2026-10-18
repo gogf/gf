@@ -1,11 +1,10 @@
-version: '2'
-
 services:
   apollo-quick-start:
     image: "loads/apollo-quick-start:latest"
     container_name: apollo-quick-start
     depends_on:
-      - apollo-db
+      apollo-db:
+        condition: service_healthy
     ports:
       - "8080:8080"
       - "8070:8070"
@@ -34,6 +33,12 @@ services:
       - ./sql:/docker-entrypoint-initdb.d
     volumes_from:
       - apollo-dbdata
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
 
   apollo-dbdata:
     image: "alpine:3.8"

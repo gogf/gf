@@ -57,7 +57,7 @@ func (r *Registry) Search(_ context.Context, in gsvc.SearchInput) ([]gsvc.Servic
 			}
 			items = append(items, svc)
 		}
-		return items, nil
+		return mergeServices(items), nil
 	})
 	if err != nil {
 		return nil, gerror.Wrapf(

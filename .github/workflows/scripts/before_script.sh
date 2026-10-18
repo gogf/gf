@@ -2,7 +2,8 @@
 
 # Install gci
 echo "Installing gci..."
-go install github.com/daixiang0/gci@latest
+# Pinned: gci v0.14.0 requires Go >= 1.24, which breaks the 1.23 matrix entries.
+go install github.com/daixiang0/gci@v0.13.6
 
 # Check if the GCI is installed successfully
 if ! command -v gci &> /dev/null
