@@ -202,7 +202,7 @@ func (c *Core) ClearCacheAll(ctx context.Context) (err error) {
 
 // HasField determine whether the field exists in the table.
 func (c *Core) HasField(ctx context.Context, table, field string, schema ...string) (bool, error) {
-	table = c.guessPrimaryTableName(table)
+	table = c.db.GetTableNameForFields(table)
 	tableFields, err := c.db.TableFields(ctx, table, schema...)
 	if err != nil {
 		return false, err
@@ -219,8 +219,9 @@ func (c *Core) HasField(ctx context.Context, table, field string, schema ...stri
 	}
 	charLeft, charRight := c.db.GetChars()
 	field = gstr.Trim(field, charLeft+charRight)
+	foldedField := c.db.FoldIdentifier(field)
 	for _, f := range fieldsArray {
-		if f == field {
+		if f == field || f == foldedField {
 			return true, nil
 		}
 	}
@@ -253,11 +254,123 @@ func (c *Core) guessPrimaryTableName(tableStr string) string {
 	return guessedTableName
 }
 
+// tableReferenceModifiers are the keywords that may precede the table of a table reference.
+var tableReferenceModifiers = map[string]bool{"ONLY": true, "LATERAL": true}
+
+// tableNameForFields returns the table name that the fields of the table expression `table` of a
+// statement are looked up by. It is the table of a single table with an alias, like "user u",
+// "db.user AS u" or "`my user` `u`", as it is written without the alias, so that it is looked up
+// as the same table without an alias. Any other table expression is returned as it is.
+func (c *Core) tableNameForFields(table string) string {
+	words, ok := splitSqlWords(table)
+	hasAlias := len(words) == 2 && !strings.EqualFold(words[1], "AS") ||
+		len(words) == 3 && strings.EqualFold(words[1], "AS")
+	if !ok || !hasAlias {
+		return table
+	}
+	alias := words[len(words)-1]
+	if !isSqlIdentifier(words[0], true) || tableReferenceModifiers[strings.ToUpper(words[0])] ||
+		!isSqlIdentifier(alias, false) {
+		return table
+	}
+	return words[0]
+}
+
+// splitSqlWords splits `s` into its words separated by whitespace, taking an identifier quoted
+// with '`' or '"' as part of a word whatever it contains. It returns false if a quote is not
+// closed or if `s` has a comma outside quotes.
+func splitSqlWords(s string) (words []string, ok bool) {
+	var begin = -1
+	for i := 0; i < len(s); i++ {
+		switch s[i] {
+		case ' ', '\t', '\n', '\r':
+			if begin >= 0 {
+				words = append(words, s[begin:i])
+				begin = -1
+			}
+			continue
+		case ',':
+			return nil, false
+		case '`', '"':
+			end := closingSqlQuote(s, i)
+			if end < 0 {
+				return nil, false
+			}
+			if begin < 0 {
+				begin = i
+			}
+			i = end
+			continue
+		}
+		if begin < 0 {
+			begin = i
+		}
+	}
+	if begin >= 0 {
+		words = append(words, s[begin:])
+	}
+	return words, true
+}
+
+// closingSqlQuote returns the index of the quote closing the quoted identifier that begins at
+// index `open` of `s`, taking a doubled quote as an escaped one, or -1 if it is not closed.
+func closingSqlQuote(s string, open int) int {
+	for i := open + 1; i < len(s); i++ {
+		if s[i] != s[open] {
+			continue
+		}
+		if i+1 < len(s) && s[i+1] == s[open] {
+			i++
+			continue
+		}
+		return i
+	}
+	return -1
+}
+
+// isSqlIdentifier reports whether `s` is an identifier, unquoted or quoted with '`' or '"', or,
+// if `qualified` is true, identifiers joined by '.' like "db.user" or "`db`.`user`".
+func isSqlIdentifier(s string, qualified bool) bool {
+	for i := 0; ; i++ {
+		if i >= len(s) {
+			return false
+		}
+		if s[i] == '`' || s[i] == '"' {
+			end := closingSqlQuote(s, i)
+			if end <= i+1 {
+				return false
+			}
+			i = end + 1
+		} else {
+			begin := i
+			for i < len(s) && isSqlIdentifierChar(s[i]) {
+				i++
+			}
+			if i == begin {
+				return false
+			}
+		}
+		if i == len(s) {
+			return true
+		}
+		if s[i] != '.' || !qualified {
+			return false
+		}
+	}
+}
+
+// isSqlIdentifierChar reports whether `c` can be part of an unquoted identifier: a letter, a digit,
+// '_', '$', '#', or a byte of a multibyte character.
+func isSqlIdentifierChar(c byte) bool {
+	return c == '_' || c == '$' || c == '#' || c >= 0x80 ||
+		('0' <= c && c <= '9') || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
+}
+
 // GetPrimaryKeys retrieves and returns the primary key field names of the specified table.
 // This method extracts primary key information from TableFields.
 // The parameter `schema` is optional, if not specified it uses the default schema.
 func (c *Core) GetPrimaryKeys(ctx context.Context, table string, schema ...string) ([]string, error) {
-	tableFields, err := c.db.TableFields(ctx, table, schema...)
+	tableFields, err := c.db.TableFields(ctx, c.tableNameForFields(table), schema...)
 	if err != nil {
 		return nil, err
 	}
