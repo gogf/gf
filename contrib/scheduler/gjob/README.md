@@ -72,7 +72,7 @@ func main() {
 }
 ```
 
-Tasks that are disabled (`enable: false`) or have no matching handler in the `HandlerMap` are skipped. A failure to read `scheduler.job`, an unknown task type, a missing cron spec, or a nil handler or handler of the wrong type is returned as an error so the process does not start with those jobs missing. Directly constructed servers also validate all handlers before starting any task.
+Tasks that are disabled (`enable: false`) or have no matching handler in the `HandlerMap` are skipped. A failure to read `scheduler.job`, an unknown task type, a missing cron spec, or a `nil` handler or handler of the wrong type is returned as an error so the process does not start with those jobs missing. Directly constructed servers also validate all handlers before starting any task.
 
 ## WorkerServer
 

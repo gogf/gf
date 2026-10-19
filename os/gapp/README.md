@@ -9,8 +9,8 @@ The `gapp` package provides a unified `Server` interface and an `App` struct tha
 ## Context propagation
 
 - `Boot`, `Start`, `Stop`, and `Run` take a `context.Context` for tracing and cancellation.
-- A nil argument is normalized to `gctx.GetInitCtx()`, matching framework defaults such as `ghttp.Server.Start`.
-- After the first successful `Boot`, subsequent `Start`/`Stop` calls with a nil argument reuse the normalized context captured during `Boot`.
+- A `nil` argument is normalized to `gctx.GetInitCtx()`, matching framework defaults such as `ghttp.Server.Start`.
+- After the first successful `Boot`, subsequent `Start`/`Stop` calls with a `nil` argument reuse the normalized context captured during `Boot`.
 - During concurrent server startup in `Start`, if the resolved context completes first, partially started servers are rolled back similar to startup failure cleanup.
 - `Run` shuts down gracefully when receiving an OS shutdown signal **or** when the root context completes; `Stop` receives `gctx.NeverDone(root)` so trace metadata survives while teardown itself is not shortened by parent cancellation.
 
