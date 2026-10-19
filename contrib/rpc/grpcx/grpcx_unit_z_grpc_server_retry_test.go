@@ -101,16 +101,17 @@ func Test_Grpcx_AppRun_RetriesFailedRollback(t *testing.T) {
 func Test_StartManaged_RetriesRollbackBeforeRegistering(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			buf       safeBuffer
-			s         = newServeErrorTestServer(&buf)
-			registrar = &retryRegistrar{failAt: 2, deregisterFailures: 2}
+			buf safeBuffer
+			s   = newServeErrorTestServer(&buf)
+			// Each failed StartManaged deregisters once in rollback and once in Stop.
+			registrar = &retryRegistrar{failAt: 2, deregisterFailures: 4}
 		)
 		s.registrar = registrar
 		s.Service(
 			&gsvc.LocalService{Name: "first", Metadata: gsvc.Metadata{}},
 			&gsvc.LocalService{Name: "second", Metadata: gsvc.Metadata{}},
 		)
-		grpc_health_v1.RegisterHealthServer(s.Server, health.NewServer())
+		grpc_health_v1.RegisterHealthServer(s, health.NewServer())
 		defer s.StopForceful()
 
 		err := s.StartManaged()
@@ -127,7 +128,7 @@ func Test_StartManaged_RetriesRollbackBeforeRegistering(t *testing.T) {
 		t.AssertNil(s.StartManaged())
 		t.Assert(registrar.names, []string{"first", "second", "first", "second"})
 		t.Assert(len(registrar.active), 2)
-		t.Assert(len(registrar.deregisterCalls), 3)
+		t.Assert(len(registrar.deregisterCalls), 5)
 		t.Assert(registrar.deregisterCalls[0] == registrar.deregisterCalls[1], true)
 		t.Assert(registrar.deregisterCalls[1] == registrar.deregisterCalls[2], true)
 		client, clientErr := grpc.NewClient(s.GetListenedAddress(), grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -271,7 +272,7 @@ func Test_StartManaged_RetryAfterRegisterFailure(t *testing.T) {
 					&gsvc.LocalService{Name: "first", Metadata: gsvc.Metadata{}},
 					&gsvc.LocalService{Name: "second", Metadata: gsvc.Metadata{}},
 				)
-				grpc_health_v1.RegisterHealthServer(s.Server, health.NewServer())
+				grpc_health_v1.RegisterHealthServer(s, health.NewServer())
 				defer s.StopForceful()
 
 				err := s.StartManaged()

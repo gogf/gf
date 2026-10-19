@@ -38,7 +38,7 @@ func TestServerCloseClearsListener(t *testing.T) {
 			t.AssertNil(server.Close())
 			select {
 			case err := <-done:
-				t.AssertNE(err, nil)
+				t.AssertNil(err)
 			case <-time.After(time.Second):
 				t.Fatal("TCP serve loop did not exit after close")
 			}

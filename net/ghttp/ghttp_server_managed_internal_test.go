@@ -494,6 +494,47 @@ func TestHTTPManagedRegistrationFailure(t *testing.T) {
 	})
 }
 
+// TestHTTPStandaloneRestartAfterShutdown starts again as soon as Shutdown or Close returns.
+func TestHTTPStandaloneRestartAfterShutdown(t *testing.T) {
+	for _, testCase := range []struct {
+		name string
+		stop func(*Server) error
+	}{
+		{name: "shutdown", stop: (*Server).Shutdown},
+		{name: "close", stop: (*Server).Close},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			gtest.C(t, func(t *gtest.T) {
+				server := newManagedHTTPTestServer()
+				server.SetLogger(glog.NewWithWriter(io.Discard))
+				client := &http.Client{Timeout: time.Second}
+				t.AssertNil(server.Start())
+				assertStandaloneHTTPOk(t, client, server)
+				t.Assert(len(server.servers), 1)
+				t.AssertNil(testCase.stop(server))
+				t.Assert(server.serverCount.Val(), 0)
+				t.AssertNil(server.Start())
+				t.Assert(len(server.servers), 1)
+				t.Assert(server.serverCount.Val(), 1)
+				assertStandaloneHTTPOk(t, client, server)
+				t.AssertNil(server.Close())
+				t.Assert(server.serverCount.Val(), 0)
+			})
+		})
+	}
+}
+
+// assertStandaloneHTTPOk reads the handler body from the server's current listener.
+func assertStandaloneHTTPOk(t *gtest.T, client *http.Client, server *Server) {
+	response, err := client.Get(fmt.Sprintf("http://127.0.0.1:%d/", server.GetListenedPort()))
+	t.AssertNil(err)
+	defer func() { t.AssertNil(response.Body.Close()) }()
+	body, err := io.ReadAll(response.Body)
+	t.AssertNil(err)
+	t.Assert(response.StatusCode, http.StatusOK)
+	t.Assert(string(body), "ok")
+}
+
 // TestHTTPLegacyBindFailureIsFatal verifies standalone startup retains process-exit behavior.
 func TestHTTPLegacyBindFailureIsFatal(t *testing.T) {
 	const helperEnv = "GF_TEST_HTTP_LEGACY_BIND_FAILURE"

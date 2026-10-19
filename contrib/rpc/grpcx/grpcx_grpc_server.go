@@ -208,22 +208,18 @@ func (s *GrpcServer) serve(failureAction serveFailureAction) error {
 	server := s.Server
 	s.listenerMu.Unlock()
 
-	if failureAction == serveFailureFatal {
-		// Legacy registrars may synchronously verify an RPC before accepting registration.
-		go s.doServeAsynchronously(ctx, server, listener, failureAction)
-	}
+	// Registrars may dial this endpoint during Register, so Serve has to accept first.
+	go s.doServeAsynchronously(ctx, server, listener, failureAction)
 	if err := s.doServiceRegister(failureAction); err != nil {
-		// Managed starts register before Serve because a stopped grpc.Server cannot be restarted.
-		if closeErr := listener.Close(); closeErr != nil {
-			s.Logger().Errorf(ctx, `close listener after registration failure: %+v`, closeErr)
+		// Blocking Run has already exited inside doServiceRegister.
+		// Managed start stops the grpc.Server so the next start rebuilds it.
+		if failureAction == serveFailureLog {
+			s.Stop()
+			if closeErr := listener.Close(); closeErr != nil && !gerror.Is(closeErr, net.ErrClosed) {
+				s.Logger().Errorf(ctx, `close listener after registration failure: %+v`, closeErr)
+			}
 		}
-		s.listenerMu.Lock()
-		s.listener = nil
-		s.listenerMu.Unlock()
 		return err
-	}
-	if failureAction == serveFailureLog {
-		go s.doServeAsynchronously(ctx, server, listener, failureAction)
 	}
 	s.Logger().Infof(
 		ctx,

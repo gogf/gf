@@ -170,6 +170,10 @@ func (s *Server) Run() (err error) {
 	for {
 		var conn net.Conn
 		if conn, err = listener.Accept(); err != nil {
+			// Close unblocks Accept with ErrClosed. That is shutdown, not a crash.
+			if gerror.Is(err, net.ErrClosed) {
+				return nil
+			}
 			err = gerror.Wrapf(err, `Listener.Accept failed`)
 			return err
 		} else if conn != nil {

@@ -261,7 +261,8 @@ func TestTCPAndUDPStartTimeoutClosesWhenPortAppears(t *testing.T) {
 	})
 }
 
-func TestTCPServerLogsServeErrorAfterStart(t *testing.T) {
+// TestTCPServerCloseDoesNotLogServeError keeps a healthy Close out of the crash log.
+func TestTCPServerCloseDoesNotLogServeError(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var buf lockedBuffer
 		logger := glog.NewWithWriter(&buf)
@@ -275,11 +276,11 @@ func TestTCPServerLogsServeErrorAfterStart(t *testing.T) {
 		t.AssertNil(adapter.Start())
 		t.AssertNil(tcpServer.Close())
 
-		deadline := time.Now().Add(2 * time.Second)
-		for time.Now().Before(deadline) && !strings.Contains(buf.String(), "server stopped after start") {
+		deadline := time.Now().Add(500 * time.Millisecond)
+		for time.Now().Before(deadline) {
+			t.Assert(strings.Contains(buf.String(), "server stopped after start"), false)
 			time.Sleep(10 * time.Millisecond)
 		}
-		t.Assert(strings.Contains(buf.String(), "server stopped after start"), true)
 	})
 }
 

@@ -117,7 +117,7 @@ func main() {
 
 - 首次`Stop`会执行清理 hook 并停止所有服务器。后续调用返回相同的停止结果，不会重复清理；`Run`在退出时也会返回该结果。
 - `Stop`之后再次`Start`可能对个别服务器成功，但`App.Stop`不会再次停止它们。需要新一轮生命周期时请创建新的`App`。
-- `contrib/scheduler/gjob`中的任务服务器（`WorkerServer`、`CronServer`）在`Stop`后也会拒绝再次`Start`。任务只能在`Start`之前添加；若服务器已启动或已停止，`Add`会返回错误。
+- `contrib/scheduler/gjob`中的任务服务器（`WorkerServer`、`CronServer`）在`Stop`返回后可以再次`Start`。`Add`可在`Start`之前以及`Stop`返回后调用；服务器运行期间`Add`会返回错误。
 
 使用`gapp.Run()`时，请通过 adapter 注册服务器，并在 contrib 服务器上使用`StartManaged()`等非阻塞入口。不要对同一进程中的同一服务器再调用 legacy 阻塞`Run()`（例如`grpcx.GrpcServer.Run()`或 ghttp admin 重启路径），否则可能注册冲突的 OS 信号处理器。
 

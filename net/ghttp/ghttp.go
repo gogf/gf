@@ -39,7 +39,7 @@ type (
 		installedPlugins []Plugin                  // Successfully installed plugins awaiting removal.
 		servers          []*graceful.Server        // Underlying http.Server array.
 		serverCount      *gtype.Int                // Underlying http.Server number for internal usage.
-		managedServeWG   sync.WaitGroup            // Waits for managed Serve state cleanup before shutdown returns.
+		managedServeWG   sync.WaitGroup            // Waits until Serve drops serverCount, so Shutdown and Close return only after restart is safe.
 		closeChan        chan struct{}             // Used for underlying server closing event notification.
 		serveTree        map[string]any            // The route maps tree.
 		serveCache       *gcache.Cache             // Server caches for internal usage.

@@ -178,9 +178,9 @@ func (s *Server) start(managed bool) (err error) {
 	// Server process initialization, which can only be initialized once.
 	serverProcessInit()
 
+	// A retry must create fresh server objects instead of reusing closed listeners.
+	s.servers = nil
 	if managed {
-		// A retry must create fresh server objects instead of reusing closed listeners.
-		s.servers = nil
 		defer func() {
 			if err != nil {
 				s.stopServers(ctx, true)
@@ -664,7 +664,9 @@ func (s *Server) startServer(fdMap listenerFdMap, managed bool) error {
 		return nil
 	}
 	// Start listening asynchronously.
+	// Count the serve goroutines before they run so Shutdown can wait for serverCount to drop.
 	serverRunning.Add(1)
+	s.managedServeWG.Add(len(s.servers))
 	var wg = &sync.WaitGroup{}
 	for _, gs := range s.servers {
 		wg.Add(1)
@@ -694,9 +696,7 @@ func (s *Server) startGracefulServer(ctx context.Context, wg *sync.WaitGroup, se
 
 // serveGracefulServer serves one listener and updates shared server completion counters.
 func (s *Server) serveGracefulServer(ctx context.Context, server *graceful.Server, managed bool) {
-	if managed {
-		defer s.managedServeWG.Done()
-	}
+	defer s.managedServeWG.Done()
 	// Start listening and serving in blocking way.
 	err := server.Serve(ctx)
 	// The process exits if the server is closed with none closing error.

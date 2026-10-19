@@ -71,6 +71,18 @@ func (healthCheckRegistrar) Deregister(context.Context, gsvc.Service) error {
 	return nil
 }
 
+// Test_StartManaged_ServesDuringRegister publishes the endpoint only after Serve is accepting.
+func Test_StartManaged_ServesDuringRegister(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var buf safeBuffer
+		s := newServeErrorTestServer(&buf)
+		s.registrar = healthCheckRegistrar{}
+		grpc_health_v1.RegisterHealthServer(s, health.NewServer())
+		defer s.StopForceful()
+		t.AssertNil(s.StartManaged())
+	})
+}
+
 // Test_Grpcx_Legacy_ServesDuringRegister keeps registrars with synchronous health checks compatible.
 func Test_Grpcx_Legacy_ServesDuringRegister(t *testing.T) {
 	if os.Getenv(testRegisterHealthEnv) == "1" {
