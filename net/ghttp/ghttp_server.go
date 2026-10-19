@@ -104,7 +104,7 @@ func GetServer(name ...any) *Server {
 			closeChan:        make(chan struct{}, 10000),
 			serverCount:      gtype.NewInt(),
 			statusHandlerMap: make(map[string][]HandlerFunc),
-			serveTree:        make(map[string]any),
+			serveTree:        make(map[string]*routeNode),
 			serveCache:       gcache.New(),
 			routesMap:        make(map[string][]*HandlerItem),
 			openapi:          goai.New(),
