@@ -25,6 +25,12 @@ func (w *Watcher) Add(path string, callbackFunc func(event *Event), option ...Wa
 	return w.AddOnce("", path, callbackFunc, option...)
 }
 
+// ReAdd re-registers `path` with the underlying file system watcher while preserving
+// all callbacks already bound to the path.
+func (w *Watcher) ReAdd(path string) error {
+	return w.watcher.Add(path)
+}
+
 // AddOnce monitors `path` with callback function `callbackFunc` only once using unique name
 // `name` to the watcher. If AddOnce is called multiple times with the same `name` parameter,
 // `path` is only added to monitor once.
