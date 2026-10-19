@@ -183,3 +183,41 @@ func Test_Router_Hook_ExitAll(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/hook/test"), "hook")
 	})
 }
+
+// https://github.com/gogf/gf/issues/4178
+// Test_Issue4178 verifies that the hooks bound to the URIs which only differ in the named
+// parameter style are called in the order of {xxx} > :xxx, no matter which one is bound first.
+func Test_Issue4178(t *testing.T) {
+	s := g.Server(guid.S())
+	s.BindHookHandler("/field/{num}", ghttp.HookBeforeServe, func(r *ghttp.Request) {
+		r.Response.Write("1")
+	})
+	s.BindHookHandler("/field/:num", ghttp.HookBeforeServe, func(r *ghttp.Request) {
+		r.Response.Write("2")
+	})
+	s.BindHookHandler("/name/:num", ghttp.HookBeforeServe, func(r *ghttp.Request) {
+		r.Response.Write("2")
+	})
+	s.BindHookHandler("/name/{num}", ghttp.HookBeforeServe, func(r *ghttp.Request) {
+		r.Response.Write("1")
+	})
+	s.BindHandler("/field/:num", func(r *ghttp.Request) {
+		r.Response.Write("-", r.Get("num"))
+	})
+	s.BindHandler("/name/:num", func(r *ghttp.Request) {
+		r.Response.Write("-", r.Get("num"))
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(client.GetContent(ctx, "/field/100"), "12-100")
+		t.Assert(client.GetContent(ctx, "/name/100"), "12-100")
+	})
+}
