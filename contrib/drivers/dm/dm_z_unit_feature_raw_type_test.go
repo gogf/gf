@@ -14,7 +14,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
-	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -617,30 +616,30 @@ func Test_DataType_Datetime_Precision(t *testing.T) {
 	})
 }
 
-// Test_DataType_Datetime_Boundary tests datetime boundary values
+// Test_DataType_Datetime_Boundary tests datetime boundary values.
+// Uses boundaries safe for time.Time on both 32-bit and 64-bit architectures.
+// DM TIMESTAMP supports 0001-01-01 to 9999-12-31, but Go time.Time on 32-bit
+// systems is limited to 1901-12-13 20:45:52 to 2038-01-19 03:14:07.
 func Test_DataType_Datetime_Boundary(t *testing.T) {
-	if strconv.IntSize == 32 {
-		t.Skip("Skipping on 32-bit architecture: time.Time has limited range for year 1000")
-	}
 	table := rawTypeCreateTable("t_rt_dt", "DT TIMESTAMP")
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model(table).Data(g.Map{
-			"dt": gtime.NewFromStr("1000-01-01 00:00:00"),
+			"dt": gtime.NewFromStr("1902-01-01 00:00:00"),
 		}).Insert()
 		t.AssertNil(err)
 
 		_, err = db.Model(table).Data(g.Map{
-			"dt": gtime.NewFromStr("9999-12-31 23:59:59"),
+			"dt": gtime.NewFromStr("2037-12-31 23:59:59"),
 		}).Insert()
 		t.AssertNil(err)
 
 		all, err := db.Model(table).Order("id").All()
 		t.AssertNil(err)
 		t.Assert(len(all), 2)
-		t.Assert(all[0]["DT"].String(), "1000-01-01 00:00:00")
-		t.Assert(all[1]["DT"].String(), "9999-12-31 23:59:59")
+		t.Assert(all[0]["DT"].String(), "1902-01-01 00:00:00")
+		t.Assert(all[1]["DT"].String(), "2037-12-31 23:59:59")
 	})
 }
 
