@@ -12,7 +12,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/gogf/gf/v2/database/gdb"
@@ -67,12 +66,7 @@ func buildDataSourceName(config *gdb.ConfigNode, now time.Time) (string, error) 
 	} else {
 		domain = config.Host
 	}
-	schema := config.Name
-	if len(schema) > 1 && schema[0] == '"' && schema[len(schema)-1] == '"' {
-		schema = schema[1 : len(schema)-1]
-	} else {
-		schema = strings.ToUpper(schema)
-	}
+	schema := foldSchemaName(config.Name)
 	source := fmt.Sprintf(
 		"dm://%s:%s@%s/%s?charset=%s&schema=%s",
 		config.User, config.Pass, domain, schema, config.Charset, schema,

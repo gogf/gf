@@ -13,6 +13,7 @@ import (
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -64,7 +65,8 @@ const (
 // AUTO_INCREMENT column.
 const fieldExtraIdentity = "auto_increment"
 
-// tableNameCandidatesForMetadata returns table name candidates for DM metadata queries.
+// tableNameCandidatesForMetadata returns table name candidates for DM metadata queries of an
+// unquoted table name without schema: the name in upper case, as DM folds it, and as it is written.
 func tableNameCandidatesForMetadata(table string) []string {
 	table = strings.Trim(table, quoteChar)
 	upperTable := strings.ToUpper(table)
@@ -80,6 +82,8 @@ func schemaNameForMetadata(schema string) string {
 }
 
 // TableFields retrieves and returns the fields' information of specified table of current schema.
+// A table qualified with its schema, like `SYSDBA.user`, is looked up in that schema, and a quoted
+// table name, like `"user"`, as it is written.
 func (d *Driver) TableFields(
 	ctx context.Context, table string, schema ...string,
 ) (fields map[string]*gdb.TableField, err error) {
@@ -91,13 +95,19 @@ func (d *Driver) TableFields(
 		usedSchema        = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
 		usedMetadataTable string
 		usedMetadataOwner = schemaNameForMetadata(usedSchema)
+		candidates        = tableNameCandidatesForMetadata(table)
 	)
+	if tableSchema, name, ok := splitTableName(table); ok && (tableSchema != "" || strings.HasPrefix(table, quoteChar)) {
+		if tableSchema != "" {
+			usedMetadataOwner = tableSchema
+		}
+		candidates = []string{name}
+	}
 	// When usedSchema is empty, return the default link
 	if link, err = d.SlaveLink(usedSchema); err != nil {
 		return nil, err
 	}
-	// The link has been distinguished and no longer needs to judge the owner
-	for _, candidate := range tableNameCandidatesForMetadata(table) {
+	for _, candidate := range candidates {
 		usedMetadataTable = candidate
 		result, err = d.DoSelect(
 			ctx, link,
@@ -187,4 +197,21 @@ func (d *Driver) TableFields(
 		}
 	}
 	return fields, nil
+}
+
+// GetTableNameForFields returns the first table in the table expression `table` without its alias,
+// keeping its schema if it is qualified with one and its quotes if it is quoted, so that TableFields
+// looks it up in that schema and as it is written. It returns an empty string if the first table is
+// qualified or quoted but not a table name that splitTableName accepts.
+func (d *Driver) GetTableNameForFields(table string) string {
+	if tables := gstr.SplitAndTrim(table, ","); len(tables) > 0 {
+		first := gstr.SplitAndTrim(tables[0], " ")[0]
+		if _, _, ok := splitTableName(first); ok {
+			return first
+		}
+		if strings.ContainsAny(first, `."`) {
+			return ""
+		}
+	}
+	return d.Core.GetTableNameForFields(table)
 }
