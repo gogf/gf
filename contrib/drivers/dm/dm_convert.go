@@ -16,6 +16,8 @@ import (
 	"time"
 
 	"gitee.com/chunanyong/dm"
+
+	"github.com/gogf/gf/v2/os/gtime"
 )
 
 // characterFieldTypes are the field types whose values are bound as text. The underlying driver
@@ -60,11 +62,21 @@ var exactNumericFieldTypes = map[string]bool{
 // The parameter `fieldValue` is the value that to be committed to record field.
 //
 // Text is written to a character column as text, to a binary column as its bytes, and to an exact
-// numeric column as the decimal number it is with all its digits, as MySQL writes them. A time is passed to the underlying driver as it is, which writes it to a column
-// without time zone as its wall clock in the local time zone, as MySQL does with `loc=Local`.
-// A zero time is written as NULL. The field type is passed to the core in lower case, which formats
-// a time for a DATE or TIME column by the type name in lower case.
+// numeric column as the decimal number it is with all its digits, as MySQL writes them. A time is
+// passed to the underlying driver as it is, which writes it to a column without time zone as its
+// wall clock in the local time zone, as MySQL does with `loc=Local`. A time for a DATE or a TIME
+// column is passed as its own wall clock in the local time zone, of which the column keeps the date
+// or the time of day, as MySQL writes them; the core would format it as text, which DM parses by
+// the NLS_DATE_FORMAT or NLS_TIME_FORMAT of the session. A zero time is written as NULL.
 func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fieldValue any) (any, error) {
+	switch strings.ToUpper(fieldType) {
+	case "DATE", "TIME":
+		if t, ok := timeOfValue(fieldValue); ok {
+			return time.Date(
+				t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), time.Local,
+			), nil
+		}
+	}
 	convertedValue, err := d.Core.ConvertValueForField(ctx, strings.ToLower(fieldType), fieldValue)
 	if err != nil {
 		return nil, err
@@ -89,6 +101,26 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 		}
 	}
 	return convertedValue, nil
+}
+
+// timeOfValue returns the time that `value` is, or false if it is not a time or is a zero time.
+func timeOfValue(value any) (time.Time, bool) {
+	var t time.Time
+	switch v := value.(type) {
+	case time.Time:
+		t = v
+	case *time.Time:
+		if v != nil {
+			t = *v
+		}
+	case gtime.Time:
+		t = v.Time
+	case *gtime.Time:
+		if v != nil {
+			t = v.Time
+		}
+	}
+	return t, !t.IsZero()
 }
 
 // ConvertColumnValueForLocal converts a value scanned from a result set column to local Golang type.
