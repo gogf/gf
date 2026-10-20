@@ -67,6 +67,7 @@ const (
 	dmErrColumnTooLong     = -6169
 	dmErrLobCompare        = -2685
 	dmErrDataOutOfRange    = 6092
+	dmErrInvalidSchema     = -2103
 )
 
 // Test_DM_Date_DropsTimeOfDay tests that a DATE column keeps only the date of a time value, while
@@ -2662,5 +2663,55 @@ func Test_DM_SoftTime_NumberColumns(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(one["NAME"], "name_1")
 		t.AssertGT(one["DELETE_AT"].Int64(), 0)
+	})
+}
+
+// Test_DM_Schema_LetterCase tests the schema that a database object opened with a configured name
+// works in: the name in upper case, as DM folds an unquoted name, or the name inside double quotes
+// as it is, so that an unquoted name does not reach a schema created in lower case.
+func Test_DM_Schema_LetterCase(t *testing.T) {
+	var (
+		upper = strings.ToUpper(dmFeatureTableName("gf_upper"))
+		lower = dmFeatureTableName("gf_lower")
+	)
+	dmFeatureExec(
+		fmt.Sprintf(`CREATE SCHEMA %s`, upper),
+		fmt.Sprintf(`CREATE SCHEMA "%s"`, lower),
+	)
+	defer func() {
+		_, _ = db.Exec(ctx, fmt.Sprintf(`DROP SCHEMA %s CASCADE`, upper))
+		_, _ = db.Exec(ctx, fmt.Sprintf(`DROP SCHEMA "%s" CASCADE`, lower))
+	}()
+
+	currentSchema := func(name string) (string, error) {
+		schemaDb, err := gdb.New(gdb.ConfigNode{
+			Host:    TestDBHost,
+			Port:    TestDBPort,
+			User:    TestDBUser,
+			Pass:    TestDBPass,
+			Name:    name,
+			Type:    TestDBType,
+			Charset: TestCharset,
+		})
+		if err != nil {
+			return "", err
+		}
+		defer schemaDb.Close(ctx)
+		value, err := schemaDb.GetValue(ctx, "SELECT SF_GET_SCHEMA_NAME_BY_ID(CURRENT_SCHID()) FROM DUAL")
+		return value.String(), err
+	}
+	gtest.C(t, func(t *gtest.T) {
+		for name, schema := range map[string]string{
+			strings.ToLower(upper): upper,
+			upper:                  upper,
+			`"` + lower + `"`:      lower,
+		} {
+			current, err := currentSchema(name)
+			t.AssertNil(err)
+			t.Assert(current, schema)
+		}
+
+		_, err := currentSchema(lower)
+		assertDmError(t, err, dmErrInvalidSchema)
 	})
 }

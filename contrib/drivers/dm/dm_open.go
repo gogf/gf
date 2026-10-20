@@ -12,6 +12,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gogf/gf/v2/database/gdb"
@@ -55,6 +56,10 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 // buildDataSourceName creates a DM DSN and converts the configured IANA timezone
 // to the fixed offset in minutes accepted by the DM driver. Daylight-saving zones
 // use the offset active when the DSN is built.
+//
+// The schema of the DSN is the configured name in upper case, as DM folds an unquoted name, or
+// the name written inside double quotes as it is. The underlying driver quotes the schema it
+// sets for the session, which would make an unquoted name match only a schema of that letter case.
 func buildDataSourceName(config *gdb.ConfigNode, now time.Time) (string, error) {
 	var domain string
 	if config.Port != "" {
@@ -62,9 +67,15 @@ func buildDataSourceName(config *gdb.ConfigNode, now time.Time) (string, error) 
 	} else {
 		domain = config.Host
 	}
+	schema := config.Name
+	if len(schema) > 1 && schema[0] == '"' && schema[len(schema)-1] == '"' {
+		schema = schema[1 : len(schema)-1]
+	} else {
+		schema = strings.ToUpper(schema)
+	}
 	source := fmt.Sprintf(
 		"dm://%s:%s@%s/%s?charset=%s&schema=%s",
-		config.User, config.Pass, domain, config.Name, config.Charset, config.Name,
+		config.User, config.Pass, domain, schema, config.Charset, schema,
 	)
 	if config.Timezone != "" {
 		location, err := time.LoadLocation(config.Timezone)
