@@ -510,7 +510,7 @@ func Test_DataType_Decimal_Boundary(t *testing.T) {
 		t.Assert(all[2]["VALUE"].String(), "0.00")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		for _, value := range []float32{math.MaxFloat32, -math.MaxFloat32, math.SmallestNonzeroFloat32} {
+		for _, value := range []float32{3.4e38, -3.4e38, math.SmallestNonzeroFloat32} {
 			id, err := db.Model(table).Data(g.Map{
 				"value_bf": value,
 			}).InsertAndGetId()
@@ -519,6 +519,15 @@ func Test_DataType_Decimal_Boundary(t *testing.T) {
 			one, err := db.Model(table).Where("id", id).One()
 			t.AssertNil(err)
 			t.Assert(one["VALUE_BF"].Float32(), value)
+		}
+
+		// Note: the underlying driver rejects a REAL value beyond 3.4e38, its FLOAT32_MAX, which is
+		// below math.MaxFloat32, before the statement reaches the server, whatever type binds it.
+		for _, value := range []float32{math.MaxFloat32, -math.MaxFloat32} {
+			_, err := db.Model(table).Data(g.Map{
+				"value_bf": value,
+			}).Insert()
+			assertDmError(t, err, dmErrNumericOverflow)
 		}
 	})
 	gtest.C(t, func(t *gtest.T) {
