@@ -77,6 +77,16 @@ func (d *Driver) doInsertDefault(
 			return d.doInsertWithId(ctx, link, table, list, option, id, nil)
 		}
 	}
+	if isIdentity {
+		giving := recordsGivingField(list, key.Name)
+		if giving > 0 && giving < len(list) {
+			return nil, gerror.NewCodef(
+				gcode.CodeNotSupported,
+				`LastInsertId is not supported for records of which only some give the identity column %s`,
+				key.Name,
+			)
+		}
+	}
 	if len(list) == 1 {
 		return d.doInsertReturning(ctx, link, table, list, option, key.Name)
 	}
@@ -89,18 +99,8 @@ func (d *Driver) doInsertDefault(
 		// The result of ToSQL reports 0, as nothing is inserted.
 		return result, err
 	}
-	if isIdentity {
-		switch recordsGivingField(list, key.Name) {
-		case 0:
-			return result, nil
-		case len(list):
-		default:
-			return &insertResult{Result: result, lastInsertIdErr: gerror.NewCodef(
-				gcode.CodeNotSupported,
-				`LastInsertId is not supported for records of which only some give the identity column %s`,
-				key.Name,
-			)}, nil
-		}
+	if isIdentity && recordsGivingField(list, key.Name) == len(list) {
+		return result, nil
 	}
 	value, err := d.DoQuery(ctx, link, fmt.Sprintf(
 		"SELECT %s FROM %s WHERE ROWID = ?", d.QuoteWord(key.Name), d.QuotePrefixTableName(table),
