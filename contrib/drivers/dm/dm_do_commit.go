@@ -27,8 +27,8 @@ var isolationLevelNames = map[sql.IsolationLevel]string{
 
 // DoCommit commits current sql and arguments to underlying sql driver.
 //
-// It begins a transaction with the isolation level and the access mode of its options set by
-// SET TRANSACTION statements, which last for the transaction only, as they do on MySQL. The
+// It begins a transaction with the isolation level and the access mode of its options set by a
+// SET TRANSACTION statement, which lasts for the transaction only, as they do on MySQL. The
 // underlying driver sets them on the session instead, which keeps them on the pooled connection
 // after the transaction ends. An isolation level DM does not support is still passed to the
 // underlying driver, which rejects it.
