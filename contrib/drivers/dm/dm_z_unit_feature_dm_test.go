@@ -67,7 +67,320 @@ const (
 	dmErrLobCompare        = -2685
 	dmErrDataOutOfRange    = 6092
 	dmErrInvalidSchema     = -2103
+	dmErrIdentityInsertOff = -2723
 )
+
+// Test_DM_Time_HistoricalOffsets tests that a time of a zone whose offset is not the current one,
+// like the local mean time of Asia/Shanghai before 1901 or its daylight saving time of 1986 to
+// 1991, is written as its wall clock and read back as the same time, through Data, Where and Exec.
+// The underlying driver converts a time from the offset of its zone, in whole minutes, to the time
+// zone of the session, which is the current offset of the time zone, so that it wrote
+// 1880-10-24 00:00 as 1880-10-23 23:55 and 1988-07-01 12:00 as 11:00. The CI runs the tests in
+// the local time zone Asia/Shanghai, which the pool of this test configures as its Timezone.
+func Test_DM_Time_HistoricalOffsets(t *testing.T) {
+	location, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		gtest.Fatal(err)
+	}
+	pool, err := gdb.New(gdb.ConfigNode{
+		Host:     TestDBHost,
+		Port:     TestDBPort,
+		User:     TestDBUser,
+		Pass:     TestDBPass,
+		Name:     TestDBName,
+		Type:     TestDBType,
+		Timezone: location.String(),
+	})
+	if err != nil {
+		gtest.Fatal(err)
+	}
+	defer pool.Close(ctx)
+
+	table := dmFeatureTableName("t_time_offset")
+	if _, err = pool.Exec(ctx, fmt.Sprintf(
+		`CREATE TABLE %s (ID NUMBER(10) NOT NULL, D DATE, TS TIMESTAMP, PRIMARY KEY (ID))`, table,
+	)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(table)
+
+	var values = []string{"1880-10-24 00:00:00", "1988-07-01 12:00:00", "1000-01-01 00:00:00", "2022-02-14 12:00:01"}
+	gtest.C(t, func(t *gtest.T) {
+		for i, value := range values {
+			at, err := time.ParseInLocation(time.DateTime, value, location)
+			t.AssertNil(err)
+			_, err = pool.Model(table).Data(g.Map{"ID": i, "D": at, "TS": at}).Insert()
+			t.AssertNil(err)
+
+			stored, err := pool.GetOne(ctx, fmt.Sprintf(
+				`SELECT TO_CHAR(D, 'YYYY-MM-DD') D, TO_CHAR(TS, 'YYYY-MM-DD HH24:MI:SS') TS FROM %s WHERE ID = ?`, table,
+			), i)
+			t.AssertNil(err)
+			t.Assert(stored["D"], value[:10])
+			t.Assert(stored["TS"], value)
+
+			one, err := pool.Model(table).Where("TS", at).One()
+			t.AssertNil(err)
+			t.Assert(one["ID"].Int(), i)
+			t.Assert(one["D"].Time().In(location).Format(time.DateOnly), value[:10])
+			t.Assert(one["TS"].Time().In(location).Format(time.DateTime), value)
+			t.Assert(one["TS"].Time().Equal(at), true)
+		}
+	})
+	gtest.C(t, func(t *gtest.T) {
+		at, err := time.ParseInLocation(time.DateTime, values[1], location)
+		t.AssertNil(err)
+		_, err = pool.Exec(ctx, fmt.Sprintf(`UPDATE %s SET TS = ? WHERE ID = 0`, table), at)
+		t.AssertNil(err)
+		value, err := pool.GetValue(ctx, fmt.Sprintf(`SELECT TO_CHAR(TS, 'YYYY-MM-DD HH24:MI:SS') FROM %s WHERE ID = 0`, table))
+		t.AssertNil(err)
+		t.Assert(value, values[1])
+	})
+}
+
+// Test_DM_Time_ConfiguredTimezone tests that a time is written as its wall clock in the configured
+// Timezone, also in its daylight saving time, and read back as the same time.
+func Test_DM_Time_ConfiguredTimezone(t *testing.T) {
+	pool, err := gdb.New(gdb.ConfigNode{
+		Host:     TestDBHost,
+		Port:     TestDBPort,
+		User:     TestDBUser,
+		Pass:     TestDBPass,
+		Name:     TestDBName,
+		Type:     TestDBType,
+		Timezone: "Europe/Moscow",
+	})
+	if err != nil {
+		gtest.Fatal(err)
+	}
+	defer pool.Close(ctx)
+
+	table := dmFeatureTableName("t_time_tz")
+	if _, err = pool.Exec(ctx, fmt.Sprintf(`CREATE TABLE %s (ID NUMBER(10) NOT NULL, TS TIMESTAMP, PRIMARY KEY (ID))`, table)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		for i, c := range []struct {
+			at     time.Time
+			stored string
+		}{
+			{time.Date(2022, 2, 14, 12, 0, 0, 0, time.UTC), "2022-02-14 15:00:00"},
+			{time.Date(1988, 7, 1, 3, 0, 0, 0, time.UTC), "1988-07-01 07:00:00"},
+		} {
+			_, err := pool.Model(table).Data(g.Map{"ID": i, "TS": c.at}).Insert()
+			t.AssertNil(err)
+
+			stored, err := pool.GetValue(ctx, fmt.Sprintf(`SELECT TO_CHAR(TS, 'YYYY-MM-DD HH24:MI:SS') FROM %s WHERE ID = ?`, table), i)
+			t.AssertNil(err)
+			t.Assert(stored, c.stored)
+
+			value, err := pool.Model(table).Where("TS", c.at).Value("TS")
+			t.AssertNil(err)
+			t.Assert(value.Time().Equal(c.at), true)
+
+			count, err := pool.Model(table).Where("TS", sql.NullTime{Time: c.at, Valid: true}).Count()
+			t.AssertNil(err)
+			t.Assert(count, 1)
+		}
+	})
+}
+
+// Test_DM_Time_ColumnTypes tests the time written to the columns of each kind: a character column
+// keeps its text, a column with a time zone keeps its instant also for another offset than the one
+// of the session, and a column with the local time zone keeps its instant also in a session whose
+// time zone is not the one of the database, through Data, and a DATE read in a time zone whose
+// daylight saving time begins at midnight keeps its date.
+func Test_DM_Time_ColumnTypes(t *testing.T) {
+	newPool := func(timezone string) gdb.DB {
+		pool, err := gdb.New(gdb.ConfigNode{
+			Host:     TestDBHost,
+			Port:     TestDBPort,
+			User:     TestDBUser,
+			Pass:     TestDBPass,
+			Name:     TestDBName,
+			Type:     TestDBType,
+			Timezone: timezone,
+		})
+		if err != nil {
+			gtest.Fatal(err)
+		}
+		return pool
+	}
+	table := dmFeatureTableName("t_time_types")
+	dmFeatureExec(fmt.Sprintf(`CREATE TABLE %s (
+		ID NUMBER(10) NOT NULL, V VARCHAR(19), C CHAR(19), D DATE,
+		TZ TIMESTAMP WITH TIME ZONE, LTZ TIMESTAMP WITH LOCAL TIME ZONE, PRIMARY KEY (ID)
+	)`, table))
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		at := time.Date(2026, 7, 15, 12, 0, 0, 0, time.Local)
+		_, err := db.Model(table).Data(g.Map{"ID": 1, "V": at, "C": at}).Insert()
+		t.AssertNil(err)
+		one, err := db.Model(table).Where("ID", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["V"].String(), "2026-07-15 12:00:00")
+		t.Assert(gstr.Trim(one["C"].String()), "2026-07-15 12:00:00")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		pool := newPool("America/New_York")
+		defer pool.Close(ctx)
+		for i, at := range []time.Time{
+			time.Date(2026, 1, 15, 12, 0, 0, 0, time.UTC),
+			time.Date(2026, 7, 15, 12, 0, 0, 0, time.FixedZone("", 9*3600)),
+		} {
+			_, err := pool.Model(table).Data(g.Map{"ID": 10 + i, "TZ": at}).Insert()
+			t.AssertNil(err)
+			value, err := pool.Model(table).Where("ID", 10+i).Value("TZ")
+			t.AssertNil(err)
+			t.Assert(value.Time().Equal(at), true)
+		}
+	})
+	gtest.C(t, func(t *gtest.T) {
+		pool := newPool("Europe/London")
+		defer pool.Close(ctx)
+		at := time.Date(2026, 7, 15, 11, 0, 0, 0, time.UTC)
+		_, err := pool.Model(table).Data(g.Map{"ID": 20, "LTZ": at}).Insert()
+		t.AssertNil(err)
+		value, err := pool.Model(table).Where("ID", 20).Value("LTZ")
+		t.AssertNil(err)
+		t.Assert(value.Time().Equal(at), true)
+		node := gdb.ConfigNode{
+			Host:             TestDBHost,
+			Port:             TestDBPort,
+			User:             TestDBUser,
+			Pass:             TestDBPass,
+			Name:             TestDBName,
+			Type:             TestDBType,
+			Extra:            "timeZone=60",
+			MaxOpenConnCount: 1,
+		}
+		fixedPool, err := gdb.New(node)
+		t.AssertNil(err)
+		defer fixedPool.Close(ctx)
+		stored, err := fixedPool.GetValue(ctx, fmt.Sprintf(`SELECT TO_CHAR(LTZ, 'YYYY-MM-DD HH24:MI:SS') FROM %s WHERE ID = 20`, table))
+		t.AssertNil(err)
+		t.Assert(stored, "2026-07-15 12:00:00")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		dmFeatureExec(fmt.Sprintf(`INSERT INTO %s (ID, D) VALUES (30, DATE '2026-03-08')`, table))
+		pool := newPool("America/Havana")
+		defer pool.Close(ctx)
+		one, err := pool.Model(table).Where("ID", 30).One()
+		t.AssertNil(err)
+		t.Assert(one["D"].String(), "2026-03-08")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		pool := newPool("Asia/Shanghai")
+		defer pool.Close(ctx)
+		at := time.Date(2026, 7, 15, 12, 0, 0, 0, time.Local)
+		st, err := pool.Prepare(ctx, fmt.Sprintf("INSERT INTO %s (ID, D) VALUES (?, ?)", table))
+		t.AssertNil(err)
+		defer st.Close()
+		_, err = st.Exec(40, at)
+		t.AssertNil(err)
+		one, err := pool.Model(table).Where("ID", 40).One()
+		t.AssertNil(err)
+		t.Assert(one["D"].String(), at.Format("2006-01-02"))
+	})
+}
+
+// Test_DM_Time_RawArguments tests that a time passed as a raw argument, of any type and time zone,
+// is bound as its wall clock in the configured Timezone: written by Exec and by a prepared
+// statement, and compared by Where.
+func Test_DM_Time_RawArguments(t *testing.T) {
+	location, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		gtest.Fatal(err)
+	}
+	pool, err := gdb.New(gdb.ConfigNode{
+		Host:     TestDBHost,
+		Port:     TestDBPort,
+		User:     TestDBUser,
+		Pass:     TestDBPass,
+		Name:     TestDBName,
+		Type:     TestDBType,
+		Timezone: location.String(),
+	})
+	if err != nil {
+		gtest.Fatal(err)
+	}
+	defer pool.Close(ctx)
+
+	table := dmFeatureTableName("t_time_raw")
+	dmFeatureExec(fmt.Sprintf(`CREATE TABLE %s (ID NUMBER(10) NOT NULL, TS TIMESTAMP, PRIMARY KEY (ID))`, table))
+	defer dropTable(table)
+
+	// 1988-07-01 03:00 UTC is 12:00 of the daylight saving time of Asia/Shanghai, +09:00.
+	at := time.Date(1988, 7, 1, 3, 0, 0, 0, time.UTC)
+	stored := "1988-07-01 12:00:00"
+	values := []any{
+		at,
+		at.In(time.FixedZone("", 0)),
+		at.In(time.FixedZone("", 8*3600)),
+		at.In(location),
+		&at,
+		gtime.NewFromTime(at.In(time.FixedZone("", 0))),
+		*gtime.NewFromTime(at),
+		sql.NullTime{Time: at.In(time.FixedZone("", 0)), Valid: true},
+	}
+	gtest.C(t, func(t *gtest.T) {
+		for i, value := range values {
+			_, err := pool.Exec(ctx, fmt.Sprintf(`INSERT INTO %s (ID, TS) VALUES (?, ?)`, table), i, value)
+			t.AssertNil(err)
+			s, err := pool.GetValue(ctx, fmt.Sprintf(`SELECT TO_CHAR(TS, 'YYYY-MM-DD HH24:MI:SS') FROM %s WHERE ID = ?`, table), i)
+			t.AssertNil(err)
+			t.Assert(s, stored)
+		}
+		for _, value := range values {
+			count, err := pool.Model(table).Where("TS", value).Count()
+			t.AssertNil(err)
+			t.Assert(count, len(values))
+		}
+	})
+	gtest.C(t, func(t *gtest.T) {
+		st, err := pool.Prepare(ctx, fmt.Sprintf(`INSERT INTO %s (ID, TS) VALUES (?, ?)`, table))
+		t.AssertNil(err)
+		defer st.Close()
+		_, err = st.Exec(100, at.In(time.FixedZone("", 0)))
+		t.AssertNil(err)
+		s, err := pool.GetValue(ctx, fmt.Sprintf(`SELECT TO_CHAR(TS, 'YYYY-MM-DD HH24:MI:SS') FROM %s WHERE ID = 100`, table))
+		t.AssertNil(err)
+		t.Assert(s, stored)
+	})
+}
+
+// Test_DM_Time_SkippedWallClock tests that a wall clock that the daylight saving time of the
+// configured Timezone skips is read as it is stored.
+func Test_DM_Time_SkippedWallClock(t *testing.T) {
+	pool, err := gdb.New(gdb.ConfigNode{
+		Host:     TestDBHost,
+		Port:     TestDBPort,
+		User:     TestDBUser,
+		Pass:     TestDBPass,
+		Name:     TestDBName,
+		Type:     TestDBType,
+		Timezone: "Europe/London",
+	})
+	if err != nil {
+		gtest.Fatal(err)
+	}
+	defer pool.Close(ctx)
+
+	table := dmFeatureTableName("t_time_skipped")
+	dmFeatureExec(fmt.Sprintf(`CREATE TABLE %s (ID NUMBER(10) NOT NULL, TS TIMESTAMP, PRIMARY KEY (ID))`, table))
+	defer dropTable(table)
+
+	// Europe/London skips 2026-03-29 01:00 to 02:00.
+	dmFeatureExec(fmt.Sprintf(`INSERT INTO %s (ID, TS) VALUES (1, TIMESTAMP '2026-03-29 01:30:00')`, table))
+	gtest.C(t, func(t *gtest.T) {
+		value, err := pool.Model(table).Where("ID", 1).Value("TS")
+		t.AssertNil(err)
+		t.Assert(value.Time().Format(time.DateTime), "2026-03-29 01:30:00")
+	})
+}
 
 // Test_DM_Date_DropsTimeOfDay tests that a DATE column keeps only the date of a time value, while
 // a DATETIME column keeps its time of day.
@@ -466,6 +779,147 @@ func Test_DM_LastInsertId_TriggerSequence(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(gconv.Ints(array), []int{4, 5, 6})
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.List{
+			{"passport": "multi_1", "password": "p", "nickname": "n"},
+			{"passport": "multi_2", "password": "p", "nickname": "n"},
+		}).Insert()
+		t.AssertNil(err)
+		n, err := result.RowsAffected()
+		t.AssertNil(err)
+		t.Assert(n, 2)
+		id, err := result.LastInsertId()
+		t.AssertNil(err)
+		t.Assert(id, 8)
+
+		value, err := db.Model(table).Where("id", id).Value("passport")
+		t.AssertNil(err)
+		t.Assert(value, "multi_2")
+	})
+}
+
+// Test_DM_LastInsertId_IdentityBatch tests the last insert id of several records inserted into a
+// table with an identity column: the identity that the server generates for the last record, which
+// leaves the column out, or else the value that the last record gives the column, even 0, which DM
+// keeps as it is with IDENTITY_INSERT on and rejects without it.
+func Test_DM_LastInsertId_IdentityBatch(t *testing.T) {
+	table := createTableWithIdentity(dmFeatureTableName("t_identity_batch"))
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Data(g.List{{"ACCOUNT_NAME": "a1"}, {"ACCOUNT_NAME": "a2"}}).Insert()
+		t.AssertNil(err)
+		n, err := result.RowsAffected()
+		t.AssertNil(err)
+		t.Assert(n, 2)
+		id, err := result.LastInsertId()
+		t.AssertNil(err)
+		name, err := db.Model(table).Where("ID", id).Value("ACCOUNT_NAME")
+		t.AssertNil(err)
+		t.Assert(name, "a2")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		list := g.List{{"ID": 100, "ACCOUNT_NAME": "b1"}, {"ID": 0, "ACCOUNT_NAME": "b2"}}
+		_, err := db.Model(table).Data(list).Insert()
+		assertDmError(t, err, dmErrIdentityInsertOff)
+
+		err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			if _, err := tx.Exec(fmt.Sprintf(`SET IDENTITY_INSERT %s ON`, table)); err != nil {
+				return err
+			}
+			result, err := tx.Model(table).Data(list).Insert()
+			t.AssertNil(err)
+			id, err := result.LastInsertId()
+			t.AssertNil(err)
+			t.Assert(id, 0)
+			_, err = tx.Exec(fmt.Sprintf(`SET IDENTITY_INSERT %s OFF`, table))
+			return err
+		})
+		t.AssertNil(err)
+		name, err := db.Model(table).Where("ID", 0).Value("ACCOUNT_NAME")
+		t.AssertNil(err)
+		t.Assert(name, "b2")
+	})
+}
+
+// Test_DM_Records_AllOrNone tests that an insert or a save of several records writes none of them
+// when the last one fails: on its own, and in the transaction of the caller, which goes on. DM
+// inserts the records by one statement, and merges them by one statement each, which run in one
+// transaction, or back to a savepoint in the transaction of the caller.
+func Test_DM_Records_AllOrNone(t *testing.T) {
+	table := createUserTable()
+	defer dropTable(table)
+
+	insertList := g.List{
+		{"passport": "insert_1", "password": "p", "nickname": "n"},
+		{"passport": nil, "password": "p", "nickname": "n"},
+	}
+	saveList := g.List{
+		{"id": 101, "passport": "save_1", "password": "p", "nickname": "n"},
+		{"id": 102, "passport": nil, "password": "p", "nickname": "n"},
+	}
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).Data(insertList).Insert()
+		assertDmError(t, err, dmErrNotNullViolation)
+		_, err = db.Model(table).Data(saveList).Save()
+		assertDmError(t, err, dmErrNotNullViolation)
+
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			if _, err := tx.Model(table).Data(g.Map{"passport": "kept", "password": "p", "nickname": "n"}).Insert(); err != nil {
+				return err
+			}
+			_, err := tx.Model(table).Data(insertList).Insert()
+			assertDmError(t, err, dmErrNotNullViolation)
+			_, err = tx.Model(table).Data(saveList).Save()
+			assertDmError(t, err, dmErrNotNullViolation)
+			return nil
+		})
+		t.AssertNil(err)
+
+		array, err := db.Model(table).Array("passport")
+		t.AssertNil(err)
+		t.Assert(gconv.Strings(array), []string{"kept"})
+	})
+}
+
+// Test_DM_Records_Schema tests that a save of several records, which DM merges in a transaction of
+// its own, writes the table of the schema of the model, while the configured schema has a table of
+// the same name.
+func Test_DM_Records_Schema(t *testing.T) {
+	table := createUserTable()
+	defer dropTable(table)
+	schema := strings.ToUpper(dmFeatureTableName("gf_records"))
+	dmFeatureExec(
+		fmt.Sprintf(`CREATE SCHEMA %s`, schema),
+		fmt.Sprintf(
+			`CREATE TABLE %s.%s (ID NUMBER(10) NOT NULL, PASSPORT VARCHAR(45) NOT NULL, PASSWORD CHAR(32) NOT NULL, NICKNAME VARCHAR(45) NOT NULL, PRIMARY KEY (ID))`,
+			schema, table,
+		),
+	)
+	defer func() {
+		_, _ = db.Exec(ctx, fmt.Sprintf(`DROP SCHEMA %s CASCADE`, schema))
+	}()
+
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).Schema(schema).Data(g.List{
+			{"id": 1, "passport": "s_1", "password": "p", "nickname": "n"},
+			{"id": 2, "passport": "s_2", "password": "p", "nickname": "n"},
+		}).Save()
+		t.AssertNil(err)
+
+		count, err := db.Model(table).Schema(schema).Count()
+		t.AssertNil(err)
+		t.Assert(count, 2)
+		count, err = db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
+	})
 }
 
 // Test_DM_LastInsertId_NonIntegerPrimaryKey tests inserting without the primary key into
@@ -540,6 +994,47 @@ func Test_DM_LastInsertId_NoPrimaryKey(t *testing.T) {
 		t.Assert(len(all), 2)
 		t.Assert(all[0]["ID"], 7)
 		t.Assert(all[1]["ID"].IsNil(), true)
+	})
+}
+
+// Test_DM_LastInsertId_IdentityGivenBySome tests a batch of which only some records give the
+// identity column, which DM inserts with IDENTITY_INSERT on: the insert succeeds, and LastInsertId
+// fails with CodeNotSupported, as the ROWID of the last record does not tell which value it took.
+// Without IDENTITY_INSERT, DM rejects the record giving the identity column.
+// Note: the core inserts the records of different fields by separate statements in the iteration
+// order of a map, so that the record without the identity column may be inserted before the other
+// one is rejected.
+func Test_DM_LastInsertId_IdentityGivenBySome(t *testing.T) {
+	table := dmFeatureTableName("t_identity_some")
+	dmFeatureExec(fmt.Sprintf(`CREATE TABLE %s (ID INT IDENTITY(1, 1) PRIMARY KEY, NAME VARCHAR(20))`, table))
+	defer dropTable(table)
+	var list = g.List{{"ID": 100, "NAME": "a"}, {"NAME": "b"}}
+
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).Data(list).Insert()
+		assertDmError(t, err, dmErrIdentityInsertOff)
+		_, err = db.Model(table).Delete("1=1")
+		t.AssertNil(err)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			if _, err := tx.Exec(fmt.Sprintf(`SET IDENTITY_INSERT %s ON`, table)); err != nil {
+				return err
+			}
+			result, err := tx.Model(table).Data(list).Insert()
+			t.AssertNil(err)
+			affected, err := result.RowsAffected()
+			t.AssertNil(err)
+			t.Assert(affected, 2)
+			_, err = result.LastInsertId()
+			t.Assert(gerror.Code(err), gcode.CodeNotSupported)
+			_, err = tx.Exec(fmt.Sprintf(`SET IDENTITY_INSERT %s OFF`, table))
+			return err
+		})
+		t.AssertNil(err)
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 2)
 	})
 }
 
@@ -2712,5 +3207,28 @@ func Test_DM_Schema_LetterCase(t *testing.T) {
 
 		_, err := currentSchema(lower)
 		assertDmError(t, err, dmErrInvalidSchema)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		dmFeatureExec(fmt.Sprintf(`CREATE TABLE "%s".T_ITEM (ID INT IDENTITY(1, 1) PRIMARY KEY, NAME VARCHAR(20))`, lower))
+		schemaDb, err := gdb.New(gdb.ConfigNode{
+			Host:    TestDBHost,
+			Port:    TestDBPort,
+			User:    TestDBUser,
+			Pass:    TestDBPass,
+			Name:    `"` + lower + `"`,
+			Type:    TestDBType,
+			Charset: TestCharset,
+		})
+		t.AssertNil(err)
+		defer schemaDb.Close(ctx)
+
+		fields, err := schemaDb.TableFields(ctx, "T_ITEM")
+		t.AssertNil(err)
+		t.Assert(len(fields), 2)
+		t.Assert(fields["ID"].Extra, "auto_increment")
+
+		id, err := schemaDb.Model("T_ITEM").Data(g.Map{"NAME": "a"}).InsertAndGetId()
+		t.AssertNil(err)
+		t.Assert(id, 1)
 	})
 }

@@ -9,6 +9,7 @@ package dm
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -25,6 +26,83 @@ import (
 
 // ctxKeyReturningColumn marks the insert of a record whose primary key DoCommit returns.
 const ctxKeyReturningColumn gctx.StrKey = "dm_returning_column"
+
+// recordsSavepoint is the savepoint that the statements writing several records roll back to in
+// a transaction that is already open, see inOneTransaction.
+const recordsSavepoint = "gf_records"
+
+// txBeginner is a link that begins a transaction on its own pool, like the link of the pool of a
+// schema.
+type txBeginner interface {
+	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
+}
+
+// txLink is the link of a transaction that inOneTransaction begins.
+type txLink struct {
+	*sql.Tx
+}
+
+// IsTransaction implements gdb.Link.
+func (l *txLink) IsTransaction() bool {
+	return true
+}
+
+// IsOnMaster implements gdb.Link.
+func (l *txLink) IsOnMaster() bool {
+	return true
+}
+
+// inOneTransaction runs `f`, which writes several records by more than one statement, so that a
+// failing statement writes none of them: back to a savepoint of the transaction of `link` or `ctx`
+// if there is one, or else in a transaction that it begins on the pool of `link`, which serves the
+// schema of the statements, and passes to `f` as its link.
+func (d *Driver) inOneTransaction(
+	ctx context.Context, link gdb.Link, f func(ctx context.Context, link gdb.Link) (sql.Result, error),
+) (result sql.Result, err error) {
+	if d.GetDryRun() {
+		return f(ctx, link)
+	}
+	if link != nil && link.IsTransaction() || gdb.TXFromCtx(ctx, d.GetGroup()) != nil {
+		if _, err = d.DoExec(ctx, link, "SAVEPOINT "+recordsSavepoint); err != nil {
+			return nil, err
+		}
+		if result, err = f(ctx, link); err != nil {
+			if _, rollbackErr := d.DoExec(ctx, link, "ROLLBACK TO SAVEPOINT "+recordsSavepoint); rollbackErr != nil {
+				err = gerror.WrapCode(gerror.Code(err), errors.Join(err, rollbackErr))
+			}
+		}
+		return result, err
+	}
+	if link == nil {
+		if link, err = d.MasterLink(); err != nil {
+			return nil, err
+		}
+	}
+	beginner, ok := link.(txBeginner)
+	if !ok {
+		return f(ctx, link)
+	}
+	tx, err := beginner.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, gerror.WrapCode(gcode.CodeDbOperationError, err, `BEGIN`)
+	}
+	defer func() {
+		if exception := recover(); exception != nil {
+			_ = tx.Rollback()
+			panic(exception)
+		}
+	}()
+	if result, err = f(ctx, &txLink{Tx: tx}); err != nil {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			err = gerror.WrapCode(gerror.Code(err), errors.Join(err, rollbackErr))
+		}
+		return result, err
+	}
+	if err = tx.Commit(); err != nil {
+		return result, gerror.WrapCode(gcode.CodeDbOperationError, err, `COMMIT`)
+	}
+	return result, nil
+}
 
 // DoInsert inserts or updates data for given table.
 // The list parameter must contain at least one record, which was previously validated.
@@ -73,18 +151,8 @@ func (d *Driver) doInsertDefault(
 	}
 	isIdentity := key.Extra == fieldExtraIdentity
 	if value, ok := recordValueOfField(list[len(list)-1], key.Name); ok {
-		if id, ok := givenKeyValue(value, isIdentity); ok {
+		if id, ok := givenKeyValue(value); ok {
 			return d.doInsertWithId(ctx, link, table, list, option, id, nil)
-		}
-	}
-	if isIdentity {
-		giving := recordsGivingField(list, key.Name)
-		if giving > 0 && giving < len(list) {
-			return nil, gerror.NewCodef(
-				gcode.CodeNotSupported,
-				`LastInsertId is not supported for records of which only some give the identity column %s`,
-				key.Name,
-			)
 		}
 	}
 	if len(list) == 1 {
@@ -99,8 +167,18 @@ func (d *Driver) doInsertDefault(
 		// The result of ToSQL reports 0, as nothing is inserted.
 		return result, err
 	}
-	if isIdentity && recordsGivingField(list, key.Name) == len(list) {
-		return result, nil
+	if isIdentity {
+		switch recordsGivingField(list, key.Name) {
+		case 0:
+			return result, nil
+		case len(list):
+		default:
+			return &insertResult{Result: result, lastInsertIdErr: gerror.NewCodef(
+				gcode.CodeNotSupported,
+				`LastInsertId is not supported for records of which only some give the identity column %s`,
+				key.Name,
+			)}, nil
+		}
 	}
 	value, err := d.DoQuery(ctx, link, fmt.Sprintf(
 		"SELECT %s FROM %s WHERE ROWID = ?", d.QuoteWord(key.Name), d.QuotePrefixTableName(table),
@@ -128,15 +206,14 @@ func (d *Driver) doInsertWithId(
 }
 
 // givenKeyValue returns the integer `value` that a record gives the integer key of a table, or false
-// if the server stores another value: for a raw expression, for a value that is not an integer, like
-// nil or an empty string, which DM stores as NULL, and for 0 given an identity column, which DM
-// generates the identity for.
-func givenKeyValue(value any, isIdentity bool) (int64, bool) {
+// if the server stores another value: for a raw expression, and for a value that is not an integer,
+// like nil or an empty string. An identity column keeps a value given to it as it is, even 0.
+func givenKeyValue(value any) (int64, bool) {
 	if _, isRaw := value.(gdb.Raw); isRaw {
 		return 0, false
 	}
 	id, err := strconv.ParseInt(gconv.String(value), 10, 64)
-	return id, err == nil && (!isIdentity || id != 0)
+	return id, err == nil
 }
 
 // doInsertReturning inserts the record of `list` with the clause returning the value of `column`
@@ -251,13 +328,27 @@ func (d *Driver) doInsertIgnore(ctx context.Context,
 }
 
 // doMergeInsert implements MERGE-based insert operations for DM database, with a MERGE statement
-// for each record, as MySQL inserts or updates the records one after another. The last insert id
-// is the value of the identity column of the last record, as for doInsertDefault: a record that
-// leaves the identity to the server, being the conflict key, matches no record and is inserted
-// with RETURNING.
+// for each record, which inserts or updates the records one after another, all of them in one
+// transaction, see inOneTransaction. The last insert id is the value of the identity column of the
+// last record, as for doInsertDefault: a record that leaves the identity to the server, being the
+// conflict key, matches no record and is inserted with RETURNING.
 // When withUpdate is true, it performs upsert (insert or update).
 // When withUpdate is false, it performs insert ignore (insert only when no conflict).
 func (d *Driver) doMergeInsert(
+	ctx context.Context,
+	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption, withUpdate bool,
+) (result sql.Result, err error) {
+	if len(list) == 1 {
+		return d.doMergeRecords(ctx, link, table, list, option, withUpdate)
+	}
+	return d.inOneTransaction(ctx, link, func(ctx context.Context, link gdb.Link) (sql.Result, error) {
+		return d.doMergeRecords(ctx, link, table, list, option, withUpdate)
+	})
+}
+
+// doMergeRecords executes one MERGE statement for each record of `list`, as doMergeInsert
+// describes, and returns the sum of their affected rows.
+func (d *Driver) doMergeRecords(
 	ctx context.Context,
 	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption, withUpdate bool,
 ) (result sql.Result, err error) {
@@ -319,7 +410,8 @@ func (d *Driver) doMergeInsert(
 	for _, one := range list {
 		if identity != "" {
 			value, _ := recordValueOfField(one, identity)
-			if _, isRaw := value.(gdb.Raw); mergesIdentity && !isRaw && (value == nil || gconv.Int64(value) == 0) {
+			id, given := givenKeyValue(value)
+			if _, isRaw := value.(gdb.Raw); mergesIdentity && !isRaw && !given {
 				// The record matches no record by an identity that it leaves to the server to generate.
 				r, err := d.doInsertReturning(ctx, link, table, gdb.List{one}, option, identity)
 				if err != nil {
@@ -336,7 +428,7 @@ func (d *Driver) doMergeInsert(
 				batchResult.Affected += n
 				continue
 			}
-			lastInsertId = gconv.Int64(value)
+			lastInsertId = id
 		}
 		var (
 			oneLen = len(one)

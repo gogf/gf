@@ -142,12 +142,16 @@ type connector struct {
 	driver      driver.DriverContext
 	dialTimeout time.Duration
 	keepTurn    bool
+	// wallClock is the configured Timezone, or else the local time zone, in which a connection's
+	// session opens with the offset at the moment, unless the timeZone option of the data source
+	// name overrides it; see Connect and sessionTimes.
+	wallClock *time.Location
 }
 
 // newConnector returns the connector of the data source name `dsn` for the underlying driver
 // `d`. Its connections dial within the timeout of the connectTimeout option, in milliseconds.
 func newConnector(dsn string, d driver.DriverContext) *connector {
-	c := &connector{dsn: dsn, driver: d, dialTimeout: defaultConnectTimeout}
+	c := &connector{dsn: dsn, driver: d, dialTimeout: defaultConnectTimeout, wallClock: time.Local}
 	_, query, _ := strings.Cut(dsn, "?")
 	options, _ := url.ParseQuery(query)
 	for key, values := range options {
@@ -175,7 +179,8 @@ func newConnector(dsn string, d driver.DriverContext) *connector {
 	return c
 }
 
-// Connect opens a connection with a connector of its own, see connector.
+// Connect opens a connection with a connector of its own, see connector, and wraps it so that it
+// binds a time argument by the time zone of its own session, see sessionTimes.
 func (c *connector) Connect(ctx context.Context) (driver.Conn, error) {
 	if err := takeLoginTurn(ctx); err != nil {
 		return nil, err
@@ -184,20 +189,34 @@ func (c *connector) Connect(ctx context.Context) (driver.Conn, error) {
 		<-loginSemaphore
 	}()
 	dsn := c.dsn
+	minutes, timeZoneGiven := timeZoneOption(c.dsn)
 	if !c.keepTurn {
 		slot := beginLogin(&login{ctx: ctx, dialTimeout: c.dialTimeout})
 		defer endLogin(slot)
-		separator := "?"
-		if strings.Contains(dsn, "?") {
-			separator = "&"
-		}
-		dsn += separator + "dialName=" + dialName(slot)
+		dsn = appendOption(dsn, "dialName="+dialName(slot))
+	}
+	if !timeZoneGiven {
+		minutes = offsetMinutes(c.wallClock, time.Now())
+		dsn = appendOption(dsn, "timeZone="+strconv.Itoa(minutes))
 	}
 	underlyingConnector, err := c.driver.OpenConnector(dsn)
 	if err != nil {
 		return nil, err
 	}
-	return underlyingConnector.Connect(ctx)
+	conn, err := underlyingConnector.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	session := time.FixedZone("", minutes*60)
+	return newTimedConn(conn, sessionTimes{wallClock: c.wallClock, session: session}), nil
+}
+
+// appendOption returns the data source name `dsn` with the option `option`.
+func appendOption(dsn, option string) string {
+	if strings.Contains(dsn, "?") {
+		return dsn + "&" + option
+	}
+	return dsn + "?" + option
 }
 
 // Driver returns the underlying driver.

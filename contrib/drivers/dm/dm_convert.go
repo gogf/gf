@@ -16,8 +16,6 @@ import (
 	"time"
 
 	"gitee.com/chunanyong/dm"
-
-	"github.com/gogf/gf/v2/os/gtime"
 )
 
 // characterFieldTypes are the field types whose values are bound as text. The underlying driver
@@ -62,19 +60,20 @@ var exactNumericFieldTypes = map[string]bool{
 // The parameter `fieldValue` is the value that to be committed to record field.
 //
 // Text is written to a character column as text, to a binary column as its bytes, and to an exact
-// numeric column as the decimal number it is with all its digits, as MySQL writes them. A time is
-// passed to the underlying driver as it is, which writes it to a column without time zone as its
-// wall clock in the local time zone, as MySQL does with `loc=Local`. A time for a DATE or a TIME
-// column is passed as its own wall clock in the local time zone, of which the column keeps the date
-// or the time of day, as MySQL writes them; the core would format it as text, which DM parses by
-// the NLS_DATE_FORMAT or NLS_TIME_FORMAT of the session. A zero time is written as NULL.
+// numeric column as the decimal number it is with all its digits. A time is written:
+//   - to a column without a time zone as its wall clock in the configured Timezone or else the
+//     local time zone, see sessionTimes; a DATE or a TIME column keeps its date or its time of day;
+//   - to a column with a time zone as its instant, which the column keeps in the offset of the
+//     session;
+//   - to a column with the local time zone as the text of its wall clock in the time zone of the
+//     session, see localTimeFieldTypes;
+//   - to a character column as its text.
+//
+// A zero time is written as NULL.
 func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fieldValue any) (any, error) {
-	switch strings.ToUpper(fieldType) {
-	case "DATE", "TIME":
-		if t, ok := timeOfValue(fieldValue); ok {
-			return time.Date(
-				t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), time.Local,
-			), nil
+	if t, ok := timeOfValue(fieldValue); ok {
+		if value, ok := convertTimeForField(fieldType, t); ok {
+			return value, nil
 		}
 	}
 	convertedValue, err := d.Core.ConvertValueForField(ctx, fieldType, fieldValue)
@@ -103,36 +102,29 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 	return convertedValue, nil
 }
 
-// timeOfValue returns the time that `value` is, or false if it is not a time or is a zero time.
-func timeOfValue(value any) (time.Time, bool) {
-	var t time.Time
-	switch v := value.(type) {
-	case time.Time:
-		t = v
-	case *time.Time:
-		if v != nil {
-			t = *v
-		}
-	case gtime.Time:
-		t = v.Time
-	case *gtime.Time:
-		if v != nil {
-			t = v.Time
-		}
-	}
-	return t, !t.IsZero()
-}
-
 // ConvertColumnValueForLocal converts a value scanned from a result set column to local Golang type.
 // The underlying driver scans the value of an exact numeric column, being DECIMAL, DEC, NUMERIC or
 // NUMBER, as its decimal text without the zero before the decimal point and without trailing
 // zeros, like ".5" for 0.50 of DECIMAL(10,2). That text is formatted with formatDecimal to the
-// scale of the column, as MySQL returns it.
+// scale of the column.
 //
 // The value of a NUMBER column without fractional digits is an integer, as on Oracle: int64, or
 // uint64 beyond the range of int64, or else the text. The result set reports NUMBER without
 // precision with a scale of 0 too, so a value with fractional digits is kept as its text.
+//
+// The value of a DATETIME or a TIMESTAMP column, which the underlying driver returns in the fixed
+// time zone of its session, is relabelled as its wall clock in the configured Timezone or else the
+// local time zone, as ConvertValueForField writes it to such a column. The wall clock of the value
+// is kept as it is if relabelling it would not: a wall clock that a daylight saving time skips, in
+// the time zone of the session, has no equal in the other time zone. The core formats the value of
+// a DATE or a TIME column as the text of its wall clock.
 func (d *Driver) ConvertColumnValueForLocal(ctx context.Context, columnType *sql.ColumnType, fieldValue any) (any, error) {
+	if t, ok := fieldValue.(time.Time); ok {
+		switch columnType.DatabaseTypeName() {
+		case "DATETIME", "TIMESTAMP":
+			fieldValue = relabelWallClock(t, d.wallClockLocation())
+		}
+	}
 	if _, scale, ok := columnType.DecimalSize(); ok {
 		if text, ok := fieldValue.(string); ok {
 			if scale == 0 && columnType.DatabaseTypeName() == "NUMBER" {

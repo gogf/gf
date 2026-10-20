@@ -260,9 +260,53 @@ func Test_connector_KeepTurn(t *testing.T) {
 			_, err = c.Connect(context.Background())
 			t.AssertNil(err)
 			t.Assert(len(underlying.connectors), 1)
-			t.Assert(underlying.connectors[0].dsn, dsn)
+			t.Assert(underlying.connectors[0].dsn, dsn+"&timeZone="+strconv.Itoa(offsetMinutes(time.Local, time.Now())))
 			t.Assert(len(loginSemaphore), 0)
 		}
+	})
+}
+
+// Test_connector_TimeZone tests that a connection opens its session with the offset of the
+// configured Timezone at the moment, as the underlying driver does with the local time zone, so
+// that a pool opened before a change of daylight saving time opens its later connections with the
+// offset after it.
+// Test_connector_TimeZone tests that a connection opens its session with the offset of the time
+// zone of its wall clocks at the moment, as the underlying driver does with the local time zone by
+// default, unless the data source name already names a timeZone option, which it keeps.
+func Test_connector_TimeZone(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		location, err := time.LoadLocation("Europe/London")
+		t.AssertNil(err)
+		var (
+			underlying = &recordingDriver{}
+			c          = newConnector("dm://u:p@h:5236", underlying)
+		)
+		c.wallClock = location
+		conn, err := c.Connect(context.Background())
+		t.AssertNil(err)
+		t.Assert(len(underlying.connectors), 1)
+		t.Assert(strings.Contains(
+			underlying.connectors[0].dsn,
+			"timeZone="+strconv.Itoa(offsetMinutes(location, time.Now())),
+		), true)
+		timed, ok := conn.(*timedConn)
+		t.Assert(ok, true)
+		t.Assert(timed.times.wallClock, location)
+		_, offset := time.Now().In(timed.times.session).Zone()
+		t.Assert(offset/60, offsetMinutes(location, time.Now()))
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			underlying = &recordingDriver{}
+			c          = newConnector("dm://u:p@h:5236?timeZone=180", underlying)
+		)
+		conn, err := c.Connect(context.Background())
+		t.AssertNil(err)
+		t.Assert(strings.Count(underlying.connectors[0].dsn, "timeZone="), 1)
+		timed, ok := conn.(*timedConn)
+		t.Assert(ok, true)
+		_, offset := time.Now().In(timed.times.session).Zone()
+		t.Assert(offset/60, 180)
 	})
 }
 

@@ -76,11 +76,6 @@ func tableNameCandidatesForMetadata(table string) []string {
 	return []string{upperTable, table}
 }
 
-// schemaNameForMetadata returns the schema owner name used in DM metadata queries.
-func schemaNameForMetadata(schema string) string {
-	return strings.ToUpper(strings.Trim(schema, quoteChar))
-}
-
 // TableFields retrieves and returns the fields' information of specified table of current schema.
 // A table qualified with its schema, like `SYSDBA.user`, is looked up in that schema, and a quoted
 // table name, like `"user"`, as it is written.
@@ -94,7 +89,7 @@ func (d *Driver) TableFields(
 		// When no schema is specified, the configuration item is returned by default
 		usedSchema        = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
 		usedMetadataTable string
-		usedMetadataOwner = schemaNameForMetadata(usedSchema)
+		usedMetadataOwner = foldSchemaName(usedSchema)
 		candidates        = tableNameCandidatesForMetadata(table)
 	)
 	if tableSchema, name, ok := splitTableName(table); ok && (tableSchema != "" || strings.HasPrefix(table, quoteChar)) {

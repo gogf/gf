@@ -49,12 +49,15 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	if err = db.Close(); err != nil {
 		return nil, err
 	}
-	return sql.OpenDB(newConnector(source, underlyingDriver)), nil
+	c := newConnector(source, underlyingDriver)
+	c.wallClock = d.wallClockLocation()
+	return sql.OpenDB(c), nil
 }
 
 // buildDataSourceName creates a DM DSN and converts the configured IANA timezone
 // to the fixed offset in minutes accepted by the DM driver. Daylight-saving zones
-// use the offset active when the DSN is built.
+// use the offset active when the DSN is built, which a connection replaces with the offset active
+// when it opens its session, see connector.
 //
 // The schema of the DSN is the configured name in upper case, as DM folds an unquoted name, or
 // the name written inside double quotes as it is. The underlying driver quotes the schema it

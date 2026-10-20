@@ -1012,7 +1012,7 @@ func Test_Types(t *testing.T) {
 		"id":            1,
 		"col_blob":      []byte("i love gf"),
 		"col_binary":    []byte("abcdefgh"),
-		"col_date":      gtime.New("1920-10-24"),
+		"col_date":      gtime.New("1880-10-24"),
 		"col_timestamp": gtime.New("2022-02-14 12:00:01.123456"),
 		"col_decimal":   -123.456,
 		"col_double":    -123.456,
@@ -1043,7 +1043,7 @@ func Test_Types(t *testing.T) {
 		t.Assert(one["COL_BLOB"].String(), data["col_blob"])
 		t.Assert(one["COL_BINARY"].String(), data["col_binary"])
 		// Note: DM DATE holds the date only, without time of day.
-		t.Assert(one["COL_DATE"].String(), "1920-10-24")
+		t.Assert(one["COL_DATE"].String(), "1880-10-24")
 		t.Assert(one["COL_DECIMAL"].String(), -123.46)
 		t.Assert(one["COL_DOUBLE"].String(), data["col_double"])
 		t.Assert(one["COL_BIT"].Int(), data["col_bit"])
@@ -1056,7 +1056,7 @@ func Test_Types(t *testing.T) {
 		t.Assert(obj.Id, 1)
 		t.Assert(obj.ColBlob, data["col_blob"])
 		t.Assert(obj.ColBinary, data["col_binary"])
-		t.Assert(obj.ColDate.Format("Y-m-d"), "1920-10-24")
+		t.Assert(obj.ColDate.Format("Y-m-d"), "1880-10-24")
 		t.Assert(obj.ColDecimal, -123.46)
 		t.Assert(obj.ColDouble, data["col_double"])
 		t.Assert(obj.ColBit, data["col_bit"])

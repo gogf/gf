@@ -88,7 +88,7 @@ var localTypeMap = map[string]gdb.LocalType{
 // `INTERVAL DAY TO SECOND(24)` or `INTERVAL DAY TO SECOND`.
 // A NUMBER column without fractional digits, being NUMBER(p) or NUMBER(p,0), holds integers, as
 // it does on Oracle, and is int64. Any other NUMBER column, DECIMAL, DEC and NUMERIC are exact
-// numbers and string, as DECIMAL is on MySQL.
+// numbers and string.
 func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue any) (gdb.LocalType, error) {
 	var typeName, typePattern string
 	match, _ := gregex.MatchString(`(.+?)\((.+)\)`, fieldType)
