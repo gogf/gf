@@ -7,10 +7,15 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"go/format"
+	"go/parser"
+	"go/token"
+	"strconv"
 
-	"golang.org/x/tools/imports"
+	"golang.org/x/tools/go/ast/astutil"
 
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gproc"
@@ -21,15 +26,20 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/mlog"
 )
 
-// GoFmt formats the source file and adds or removes import statements as necessary.
+// GoFmt formats the source file and removes unused import statements as necessary.
+//
+// It uses the standard library parser/formatter with astutil instead of
+// golang.org/x/tools/imports.Process, which spawns a `go env` subprocess on
+// every single call since x/tools v0.28.0, making code generation about 20x
+// slower for each file.
 func GoFmt(path string) {
 	replaceFunc := func(path, content string) string {
-		res, err := imports.Process(path, []byte(content), nil)
+		res, err := goFormatContent(path, content)
 		if err != nil {
 			mlog.Printf(`error format "%s" go files: %v`, path, err)
 			return content
 		}
-		return string(res)
+		return res
 	}
 
 	var err error
@@ -46,6 +56,33 @@ func GoFmt(path string) {
 	if err != nil {
 		mlog.Printf(`error format "%s" go files: %v`, path, err)
 	}
+}
+
+// goFormatContent formats the content of given file and removes its unused imports.
+func goFormatContent(path, content string) (string, error) {
+	var (
+		fset = token.NewFileSet()
+		file, err = parser.ParseFile(fset, path, content, parser.ParseComments|parser.AllErrors)
+	)
+	if err != nil {
+		return "", err
+	}
+	// Remove unused imports as imports.Process did.
+	for _, imp := range file.Imports {
+		importPath, _ := strconv.Unquote(imp.Path.Value)
+		if !astutil.UsesImport(file, importPath) {
+			if imp.Name != nil {
+				astutil.DeleteNamedImport(fset, file, imp.Name.Name, importPath)
+			} else {
+				astutil.DeleteImport(fset, file, importPath)
+			}
+		}
+	}
+	var buf = new(bytes.Buffer)
+	if err = format.Node(buf, fset, file); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
 
 // GoModTidy executes `go mod tidy` at specified directory `dirPath`.
