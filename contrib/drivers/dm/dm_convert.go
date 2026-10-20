@@ -11,6 +11,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"math/big"
+	"strconv"
 	"strings"
 	"time"
 
@@ -95,9 +96,21 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 // NUMBER, as its decimal text without the zero before the decimal point and without trailing
 // zeros, like ".5" for 0.50 of DECIMAL(10,2). That text is formatted with formatDecimal to the
 // scale of the column, as MySQL returns it.
+//
+// The value of a NUMBER column without fractional digits is an integer, as on Oracle: int64, or
+// uint64 beyond the range of int64, or else the text. The result set reports NUMBER without
+// precision with a scale of 0 too, so a value with fractional digits is kept as its text.
 func (d *Driver) ConvertColumnValueForLocal(ctx context.Context, columnType *sql.ColumnType, fieldValue any) (any, error) {
 	if _, scale, ok := columnType.DecimalSize(); ok {
 		if text, ok := fieldValue.(string); ok {
+			if scale == 0 && columnType.DatabaseTypeName() == "NUMBER" {
+				if i, err := strconv.ParseInt(text, 10, 64); err == nil {
+					return i, nil
+				}
+				if u, err := strconv.ParseUint(text, 10, 64); err == nil {
+					return u, nil
+				}
+			}
 			fieldValue = formatDecimal(text, scale)
 		}
 	}
