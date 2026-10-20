@@ -10,6 +10,8 @@ import (
 	"context"
 	"database/sql/driver"
 	"errors"
+	"net"
+	"strings"
 	"testing"
 	"time"
 
@@ -84,7 +86,11 @@ func (d *blockingDriver) OpenConnector(string) (driver.Connector, error) {
 	return d, nil
 }
 
-func (d *blockingDriver) Connect(context.Context) (driver.Conn, error) {
+func (d *blockingDriver) Connect(ctx context.Context) (driver.Conn, error) {
+	// The underlying driver logs in once dialContext has dialed and taken the turn.
+	if err := takeLoginTurn(ctx); err != nil {
+		return nil, err
+	}
 	d.entered <- struct{}{}
 	<-d.release
 	return nil, nil
@@ -151,5 +157,124 @@ func Test_connector_OpenConnectorError(t *testing.T) {
 		defer cancel()
 		_, err = c.Connect(ctx)
 		t.AssertNil(err)
+	})
+}
+
+// dialingDriver is a driver.DriverContext and the driver.Connector it opens, whose Connect dials
+// through dialContext the address of the data source name, as the underlying driver does, and
+// reports the connection that dialed.
+type dialingDriver struct {
+	dsn       string
+	connected chan string
+}
+
+func (d *dialingDriver) Open(string) (driver.Conn, error) {
+	return nil, driver.ErrSkip
+}
+
+func (d *dialingDriver) OpenConnector(dsn string) (driver.Connector, error) {
+	return &dialingDriver{dsn: dsn, connected: d.connected}, nil
+}
+
+func (d *dialingDriver) Connect(ctx context.Context) (driver.Conn, error) {
+	addr, _, _ := strings.Cut(strings.TrimPrefix(d.dsn, "dm://"), "?")
+	conn, err := dialContext(ctx, addr)
+	if err != nil {
+		return nil, err
+	}
+	_ = conn.Close()
+	d.connected <- addr
+	return nil, nil
+}
+
+func (d *dialingDriver) Driver() driver.Driver {
+	return d
+}
+
+// Test_connector_DialOutsideTurn tests that a connection dialing a server that does not answer
+// does not hold up the login of another connection, and that its dial ends with its timeout.
+func Test_connector_DialOutsideTurn(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer func(dial func(ctx context.Context, network, addr string) (net.Conn, error)) {
+			netDialContext = dial
+		}(netDialContext)
+		netDialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			if addr == "unreachable:5236" {
+				<-ctx.Done()
+				return nil, ctx.Err()
+			}
+			client, server := net.Pipe()
+			_ = server.Close()
+			return client, nil
+		}
+		var (
+			underlying  = &dialingDriver{connected: make(chan string, 2)}
+			unreachable = newConnector("dm://unreachable:5236?connectTimeout=300", underlying)
+			reachable   = newConnector("dm://reachable:5236", underlying)
+			failed      = make(chan error, 1)
+			start       = time.Now()
+		)
+		go func() {
+			_, err := unreachable.Connect(context.Background())
+			failed <- err
+		}()
+		time.Sleep(50 * time.Millisecond)
+		_, err := reachable.Connect(context.Background())
+		t.AssertNil(err)
+		t.Assert(<-underlying.connected, "reachable:5236")
+		t.AssertLT(time.Since(start), 300*time.Millisecond)
+
+		t.Assert(<-failed, context.DeadlineExceeded)
+		t.AssertGE(time.Since(start), 300*time.Millisecond)
+		t.Assert(len(loginSemaphore), 0)
+	})
+}
+
+// Test_newConnector tests the dial function and the dial timeout of the connector of a data
+// source name.
+func Test_newConnector(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var cases = []struct {
+			dsn         string
+			expectDsn   string
+			dialTimeout time.Duration
+			ownDial     bool
+		}{
+			{"dm://u:p@h:5236/S?schema=S", "dm://u:p@h:5236/S?schema=S&dialName=" + dialName, defaultConnectTimeout, false},
+			{"dm://u:p@h:5236", "dm://u:p@h:5236?dialName=" + dialName, defaultConnectTimeout, false},
+			{"dm://u:p@h:5236/S?connectTimeout=1500", "dm://u:p@h:5236/S?connectTimeout=1500&dialName=" + dialName, 1500 * time.Millisecond, false},
+			{"dm://u:p@h:5236/S?CONNECTTIMEOUT=0", "dm://u:p@h:5236/S?CONNECTTIMEOUT=0&dialName=" + dialName, 0, false},
+			{"dm://u:p@h:5236/S?connectTimeout=x", "dm://u:p@h:5236/S?connectTimeout=x&dialName=" + dialName, defaultConnectTimeout, false},
+			{"dm://u:p@h:5236/S?dialName=mine", "dm://u:p@h:5236/S?dialName=mine", defaultConnectTimeout, true},
+		}
+		for _, c := range cases {
+			opened := newConnector(c.dsn, &recordingDriver{})
+			t.Assert(opened.dsn, c.expectDsn)
+			t.Assert(opened.dialTimeout, c.dialTimeout)
+			t.Assert(opened.ownDial, c.ownDial)
+		}
+	})
+}
+
+// Test_connector_OwnDialTakesTurnFirst tests that a connection dialing through a dial function of
+// its own logs in once no other connection does, as it does not dial through dialContext.
+func Test_connector_OwnDialTakesTurnFirst(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			underlying = &recordingDriver{}
+			c          = newConnector("dm://u:p@h:5236?dialName=mine", underlying)
+		)
+		loginSemaphore <- struct{}{}
+		waitCtx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+		defer cancel()
+		_, err := c.Connect(waitCtx)
+		t.Assert(err, context.DeadlineExceeded)
+		t.Assert(len(underlying.connectors), 0)
+
+		<-loginSemaphore
+		_, err = c.Connect(context.Background())
+		t.AssertNil(err)
+		t.Assert(len(underlying.connectors), 1)
+		t.Assert(len(loginSemaphore), 0)
 	})
 }

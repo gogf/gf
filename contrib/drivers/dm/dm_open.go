@@ -49,7 +49,7 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	if err = db.Close(); err != nil {
 		return nil, err
 	}
-	return sql.OpenDB(&connector{dsn: source, driver: underlyingDriver}), nil
+	return sql.OpenDB(newConnector(source, underlyingDriver)), nil
 }
 
 // buildDataSourceName creates a DM DSN and converts the configured IANA timezone
