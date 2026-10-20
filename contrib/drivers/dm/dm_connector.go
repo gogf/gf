@@ -13,14 +13,16 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"gitee.com/chunanyong/dm"
 )
 
 const (
-	// dialName is the name of dialContext among the dial functions of the underlying driver.
-	dialName = "gogf_gf_dm"
+	// dialNamePrefix is the prefix of the names of the dial functions of the login slots, see
+	// loginSlots.
+	dialNamePrefix = "gogf_gf_dm_login_"
 	// defaultConnectTimeout is the timeout of a dial without the connectTimeout option, which is
 	// the default of the option in the underlying driver.
 	defaultConnectTimeout = 5 * time.Second
@@ -31,55 +33,91 @@ const (
 // connections logging in at the same time race.
 var loginSemaphore = make(chan struct{}, 1)
 
-// netDialContext dials the server for dialContext, with the TCP keep-alive period of the
-// underlying driver.
+// netDialContext dials the server for a login, with the TCP keep-alive period of the underlying
+// driver.
 var netDialContext = (&net.Dialer{KeepAlive: 2 * time.Second}).DialContext
 
-func init() {
-	dm.RegisterDialContext(dialName, dialContext)
+// loginSlots holds the logins in progress, each in a slot whose dial function, registered with the
+// underlying driver under the name of the slot, dials for that login, as the underlying driver
+// passes a dial function the address only, with a context of its own. A slot that a login leaves
+// is taken by the next one, so that there are as many slots as logins running at the same time.
+var loginSlots struct {
+	sync.Mutex
+	logins []*login
+	free   []int
 }
 
-// loginKey is the context key of the login of the connection that the context opens.
-type loginKey struct{}
-
-// login is the login of a connection: the timeout of its dial, and whether it holds the turn of
-// loginSemaphore.
+// login is the login of a connection, which holds the turn of loginSemaphore but while it dials:
+// the context and the timeout of its dial.
 type login struct {
+	ctx         context.Context
 	dialTimeout time.Duration
-	holding     bool
 }
 
-// dialContext dials `addr` for the underlying driver within the dial timeout of the login of
-// `ctx`, and then takes the turn of the login, so that a server that cannot be reached holds up
-// its own login only.
-func dialContext(ctx context.Context, addr string) (net.Conn, error) {
-	dialCtx := ctx
-	if l, ok := ctx.Value(loginKey{}).(*login); ok && l.dialTimeout > 0 {
+// dialName returns the name of the dial function of the login slot `slot`.
+func dialName(slot int) string {
+	return dialNamePrefix + strconv.Itoa(slot)
+}
+
+// beginLogin puts the login `l` in a free login slot, registering the dial function of a new slot
+// if none is free, and returns the slot.
+func beginLogin(l *login) int {
+	loginSlots.Lock()
+	defer loginSlots.Unlock()
+	var slot int
+	if n := len(loginSlots.free); n > 0 {
+		slot = loginSlots.free[n-1]
+		loginSlots.free = loginSlots.free[:n-1]
+	} else {
+		slot = len(loginSlots.logins)
+		loginSlots.logins = append(loginSlots.logins, nil)
+		dm.RegisterDialContext(dialName(slot), func(_ context.Context, addr string) (net.Conn, error) {
+			return dialSlot(slot, addr)
+		})
+	}
+	loginSlots.logins[slot] = l
+	return slot
+}
+
+// endLogin frees the login slot `slot`.
+func endLogin(slot int) {
+	loginSlots.Lock()
+	defer loginSlots.Unlock()
+	loginSlots.logins[slot] = nil
+	loginSlots.free = append(loginSlots.free, slot)
+}
+
+// dialSlot dials `addr` for the login of the login slot `slot` within its dial timeout, leaving the
+// turn of the login to the other connections while it dials, so that a server that cannot be
+// reached holds up its own login only. It takes the turn back once the dial ends, before the
+// underlying driver goes on. Without a login in the slot, it dials within the default timeout.
+func dialSlot(slot int, addr string) (net.Conn, error) {
+	loginSlots.Lock()
+	l := loginSlots.logins[slot]
+	loginSlots.Unlock()
+	ctx, timeout := context.Background(), defaultConnectTimeout
+	if l != nil {
+		ctx, timeout = l.ctx, l.dialTimeout
+	}
+	if timeout > 0 {
 		var cancel context.CancelFunc
-		dialCtx, cancel = context.WithTimeout(ctx, l.dialTimeout)
+		ctx, cancel = context.WithTimeout(ctx, timeout)
 		defer cancel()
 	}
-	conn, err := netDialContext(dialCtx, "tcp", addr)
-	if err != nil {
-		return nil, err
+	if l != nil {
+		<-loginSemaphore
+		defer func() {
+			loginSemaphore <- struct{}{}
+		}()
 	}
-	if err = takeLoginTurn(ctx); err != nil {
-		_ = conn.Close()
-		return nil, err
-	}
-	return conn, nil
+	return netDialContext(ctx, "tcp", addr)
 }
 
-// takeLoginTurn takes the turn of loginSemaphore for the login of `ctx`, unless it holds it
-// already, waiting until no other connection logs in or `ctx` is done.
+// takeLoginTurn takes the turn of loginSemaphore, waiting until no other connection logs in or
+// `ctx` is done.
 func takeLoginTurn(ctx context.Context) error {
-	l, ok := ctx.Value(loginKey{}).(*login)
-	if !ok || l.holding {
-		return nil
-	}
 	select {
 	case loginSemaphore <- struct{}{}:
-		l.holding = true
 		return nil
 	case <-ctx.Done():
 		return ctx.Err()
@@ -92,14 +130,18 @@ func takeLoginTurn(ctx context.Context) error {
 // the connection, and every connection of that connector reads them, so that connections sharing
 // a connector race.
 //
-// A connection dials the server through dialContext, which lets it log in once no other
-// connection does, see loginSemaphore. A data source name naming a dial function of its own with
-// the dialName option keeps it, and its connections take the turn before they dial.
+// A connection opens its connector and logs in once no other connection does, see loginSemaphore,
+// as the underlying driver also writes package variables when it opens a connector, which its
+// logins read. It dials the server through the dial function of a login slot, which leaves the
+// turn to the other connections while it dials. A data source name naming a dial function of its
+// own with the dialName option keeps it, and with the driverReconnect or rwSeparate option, under
+// which the underlying driver dials outside the login of a connection, the underlying driver dials
+// as it does; their connections keep the turn while they dial.
 type connector struct {
 	dsn         string
 	driver      driver.DriverContext
 	dialTimeout time.Duration
-	ownDial     bool
+	keepTurn    bool
 }
 
 // newConnector returns the connector of the data source name `dsn` for the underlying driver
@@ -109,40 +151,49 @@ func newConnector(dsn string, d driver.DriverContext) *connector {
 	_, query, _ := strings.Cut(dsn, "?")
 	options, _ := url.ParseQuery(query)
 	for key, values := range options {
-		switch {
-		case strings.EqualFold(key, "dialName"):
-			c.ownDial = true
-		case strings.EqualFold(key, "connectTimeout") && len(values) > 0:
-			if milliseconds, err := strconv.Atoi(values[0]); err == nil && milliseconds >= 0 {
+		var value string
+		if len(values) > 0 {
+			value = values[0]
+		}
+		switch strings.ToLower(key) {
+		case "dialname":
+			c.keepTurn = true
+		case "driverreconnect":
+			if reconnect, err := strconv.ParseBool(value); err == nil && reconnect {
+				c.keepTurn = true
+			}
+		case "rwseparate":
+			if mode, err := strconv.Atoi(value); err == nil && mode > 0 {
+				c.keepTurn = true
+			}
+		case "connecttimeout":
+			if milliseconds, err := strconv.Atoi(value); err == nil && milliseconds >= 0 {
 				c.dialTimeout = time.Duration(milliseconds) * time.Millisecond
 			}
 		}
-	}
-	if !c.ownDial {
-		separator := "?"
-		if strings.Contains(dsn, "?") {
-			separator = "&"
-		}
-		c.dsn += separator + "dialName=" + dialName
 	}
 	return c
 }
 
 // Connect opens a connection with a connector of its own, see connector.
 func (c *connector) Connect(ctx context.Context) (driver.Conn, error) {
-	l := &login{dialTimeout: c.dialTimeout}
-	ctx = context.WithValue(ctx, loginKey{}, l)
-	defer func() {
-		if l.holding {
-			<-loginSemaphore
-		}
-	}()
-	if c.ownDial {
-		if err := takeLoginTurn(ctx); err != nil {
-			return nil, err
-		}
+	if err := takeLoginTurn(ctx); err != nil {
+		return nil, err
 	}
-	underlyingConnector, err := c.driver.OpenConnector(c.dsn)
+	defer func() {
+		<-loginSemaphore
+	}()
+	dsn := c.dsn
+	if !c.keepTurn {
+		slot := beginLogin(&login{ctx: ctx, dialTimeout: c.dialTimeout})
+		defer endLogin(slot)
+		separator := "?"
+		if strings.Contains(dsn, "?") {
+			separator = "&"
+		}
+		dsn += separator + "dialName=" + dialName(slot)
+	}
+	underlyingConnector, err := c.driver.OpenConnector(dsn)
 	if err != nil {
 		return nil, err
 	}
