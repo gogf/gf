@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -618,6 +619,9 @@ func Test_DataType_Datetime_Precision(t *testing.T) {
 
 // Test_DataType_Datetime_Boundary tests datetime boundary values
 func Test_DataType_Datetime_Boundary(t *testing.T) {
+	if strconv.IntSize == 32 {
+		t.Skip("Skipping on 32-bit architecture: time.Time has limited range for year 1000")
+	}
 	table := rawTypeCreateTable("t_rt_dt", "DT TIMESTAMP")
 	defer dropTable(table)
 

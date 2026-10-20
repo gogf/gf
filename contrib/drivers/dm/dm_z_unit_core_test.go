@@ -11,6 +11,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -988,6 +989,9 @@ func Test_DB_Ctx_Logger(t *testing.T) {
 
 // All types testing.
 func Test_Types(t *testing.T) {
+	if strconv.IntSize == 32 {
+		t.Skip("Skipping on 32-bit architecture: time.Time has limited range for dates before 1901")
+	}
 	table := fmt.Sprintf("t_types_%d", gtime.TimestampMicro()%1e9)
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
     CREATE TABLE %s (
