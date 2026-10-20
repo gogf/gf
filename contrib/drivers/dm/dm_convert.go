@@ -77,7 +77,7 @@ func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fie
 			), nil
 		}
 	}
-	convertedValue, err := d.Core.ConvertValueForField(ctx, strings.ToLower(fieldType), fieldValue)
+	convertedValue, err := d.Core.ConvertValueForField(ctx, fieldType, fieldValue)
 	if err != nil {
 		return nil, err
 	}
