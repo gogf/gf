@@ -186,7 +186,7 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 		data = map[string]any{}
 	}
 	// All values of the repeated query parameters for the slice fields.
-	r.mergeRepeatedQueryValues(data, pointer)
+	r.mergeRepeatedQueryValues(data, pointer, parseTypeRequest)
 
 	// A field tagged with `in:"body"` represents the complete request body. Before converting,
 	// remove the request parameter that is named exactly after the field tag name, as the tag

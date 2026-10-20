@@ -225,6 +225,8 @@ func (r *Request) parseQuery() {
 	if r.URL.RawQuery != "" {
 		var err error
 		r.queryMap, err = gstr.Parse(r.URL.RawQuery)
+		// The custom values set by SetQuery are dropped along with the previous query map.
+		r.customQueryKeys = nil
 		if err != nil {
 			panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse Query failed"))
 		}

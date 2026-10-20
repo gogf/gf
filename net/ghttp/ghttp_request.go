@@ -59,6 +59,7 @@ type Request struct {
 	paramsMap       map[string]any       // Custom parameters map.
 	routerMap       map[string]string    // Router parameters map, which might be nil if there are no router parameters.
 	queryMap        map[string]any       // Query parameters map, which is nil if there's no query string.
+	customQueryKeys map[string]struct{}  // Query parameter keys of the custom values set by SetQuery.
 	formMap         map[string]any       // Form parameters map, which is nil if there's no form of data from the client.
 	bodyMap         map[string]any       // Body parameters map, which might be nil if their nobody content.
 	bodyArray       []any                // Body parameters array, which is nil unless the request body is a JSON array for a handler that declares a field tagged with `in:"body"`.

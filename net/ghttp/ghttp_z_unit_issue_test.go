@@ -943,10 +943,11 @@ func Test_Issue4830(t *testing.T) {
 
 // Issue4751Req is the request of Test_Issue4751.
 type Issue4751Req struct {
-	g.Meta `path:"/names" method:"get,post"`
-	Names  []string `json:"names,omitempty"`
-	Ids    []int    `json:"ids"`
-	Name   string   `json:"name"`
+	g.Meta    `path:"/names" method:"get,post"`
+	Names     []string `json:"names,omitempty"`
+	Ids       []int    `json:"ids"`
+	Name      string   `json:"name"`
+	FileNames []string `json:"file.names,omitempty"`
 }
 
 // Issue4751Res is the response of Test_Issue4751.
@@ -992,6 +993,29 @@ func Test_Issue4751(t *testing.T) {
 		var m map[string]any
 		r.Response.Write(r.GetQueryStruct(&m))
 	})
+	s.BindHandler("/custom", func(r *ghttp.Request) {
+		var req, queryReq *Issue4751Req
+		r.SetQuery("names", "b")
+		r.SetParam("ids", 2)
+		if err := r.Parse(&req); err != nil {
+			r.Response.WriteExit(err)
+		}
+		if err := r.ParseQuery(&queryReq); err != nil {
+			r.Response.WriteExit(err)
+		}
+		r.Response.Write(req.Names, req.Ids, queryReq.Names, queryReq.Ids)
+	})
+	s.BindHandler("/file", func(r *ghttp.Request) {
+		var req struct {
+			Names []*ghttp.UploadFile
+		}
+		if err := r.Parse(&req); err != nil {
+			r.Response.WriteExit(err)
+		}
+		for _, file := range req.Names {
+			r.Response.Write(file.Filename)
+		}
+	})
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -1014,6 +1038,21 @@ func Test_Issue4751(t *testing.T) {
 			client.ContentJson().PostContent(ctx, "/names?names=a&names=b", `{"names":["c"]}`),
 			`{"names":["c"],"ids":null,"name":""}`,
 		)
+		// Even if the value from the body is the same as the last one from the query.
+		t.Assert(
+			client.ContentJson().PostContent(ctx, "/names?names=a&names=b", `{"names":"b"}`),
+			`{"names":["b"],"ids":null,"name":""}`,
+		)
+		t.Assert(
+			client.PostContent(ctx, "/names?names=a&names=b", "names=b"),
+			`{"names":["b"],"ids":null,"name":""}`,
+		)
+		// The repeated key is stored in the same way as the query map, which replaces the chars
+		// like '.' and ' ' of the key with '_'.
+		t.Assert(
+			client.GetContent(ctx, "/names?file.names=a&file.names=b"),
+			`{"ids":null,"name":"","file.names":["a","b"]}`,
+		)
 		// The query parameter retrieved by name still keeps the last value only, and so does the
 		// []byte field, which receives the value as a whole like the string field.
 		t.Assert(
@@ -1021,6 +1060,21 @@ func Test_Issue4751(t *testing.T) {
 			`["a","b"],y,b,d`,
 		)
 		t.Assert(client.GetContent(ctx, "/query?Names=a&Names=b&name=x"), `["a","b"]x`)
+		// The query parameters have higher priority than the ones from the body for ParseQuery.
+		t.Assert(
+			client.ContentJson().GetContent(ctx, "/query?names=a&names=b", `{"names":"b"}`),
+			`["a","b"]`,
+		)
+		// The values set by SetQuery and SetParam override all the values of the repeated query
+		// parameters, while ParseQuery ignores the ones set by SetParam.
+		t.Assert(client.GetContent(ctx, "/custom?names=a&names=b&ids=1&ids=2"), `["b"][2]["b"][1,2]`)
+		// The uploaded files have higher priority than the query parameters too.
+		t.Assert(
+			client.PostContent(ctx, "/file?names=a&names=b", g.Map{
+				"names": "@file:" + gtest.DataPath("upload", "file1.txt"),
+			}),
+			`file1.txt`,
+		)
 		// The pointer which is not a struct has no field to merge, and no error either.
 		t.Assert(client.GetContent(ctx, "/map?names=a&names=b"), ``)
 	})

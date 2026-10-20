@@ -13,6 +13,7 @@ import (
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/os/gstructs"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 )
@@ -24,6 +25,10 @@ func (r *Request) SetQuery(key string, value any) {
 		r.queryMap = make(map[string]any)
 	}
 	r.queryMap[key] = value
+	if r.customQueryKeys == nil {
+		r.customQueryKeys = make(map[string]struct{})
+	}
+	r.customQueryKeys[key] = struct{}{}
 }
 
 // GetQuery retrieves and return parameter with the given name `key` from query string
@@ -152,7 +157,7 @@ func (r *Request) doGetQueryStruct(pointer any, mapping ...map[string]string) (d
 	if data == nil {
 		data = map[string]any{}
 	}
-	r.mergeRepeatedQueryValues(data, pointer)
+	r.mergeRepeatedQueryValues(data, pointer, parseTypeQuery)
 	if err = r.mergeDefaultStructValue(data, pointer); err != nil {
 		return data, nil
 	}
@@ -164,19 +169,10 @@ func (r *Request) doGetQueryStruct(pointer any, mapping ...map[string]string) (d
 //
 // The query string is parsed by gstr.Parse, which keeps only the last value of a repeated plain
 // key, so the slice field would receive only that last value without this merging. The value in
-// `data` is replaced only if it is still the last value from the query string, as it might be
-// overridden by the parameters of higher priority, like the form, body or custom ones.
-func (r *Request) mergeRepeatedQueryValues(data map[string]any, pointer any) {
-	if r.URL.RawQuery == "" {
-		return
-	}
-	repeatedValues := make(map[string][]string)
-	for key, values := range r.URL.Query() {
-		// The keys like `names[]` are already parsed as slice by gstr.Parse.
-		if len(values) > 1 && !strings.Contains(key, "[") {
-			repeatedValues[key] = values
-		}
-	}
+// `data` is replaced only if it is still the one from the query string, as it might be overridden
+// by the other parameters according to `requestType`, see isQueryValueOverridden.
+func (r *Request) mergeRepeatedQueryValues(data map[string]any, pointer any, requestType int) {
+	repeatedValues := r.getRepeatedQueryValues()
 	if len(repeatedValues) == 0 {
 		return
 	}
@@ -198,11 +194,67 @@ func (r *Request) mergeRepeatedQueryValues(data map[string]any, pointer any) {
 		if fieldType.Kind() != reflect.Slice || fieldType.Elem().Kind() == reflect.Uint8 {
 			continue
 		}
-		foundKey, foundValue := gutil.MapPossibleItemByKey(data, field.TagPriorityName())
+		foundKey, _ := gutil.MapPossibleItemByKey(data, field.TagPriorityName())
 		values, ok := repeatedValues[foundKey]
-		if !ok || foundValue != values[len(values)-1] {
+		if !ok || r.isQueryValueOverridden(foundKey, requestType) {
 			continue
 		}
 		data[foundKey] = values
 	}
+}
+
+// getRepeatedQueryValues returns all the values of the repeated plain query parameters, like
+// `names=a&names=b`, by the same keys as the ones stored in r.queryMap.
+func (r *Request) getRepeatedQueryValues() map[string][]string {
+	if r.URL.RawQuery == "" {
+		return nil
+	}
+	allValues := make(map[string][]string)
+	for _, part := range strings.Split(r.URL.RawQuery, "&") {
+		// Each part is parsed alone by gstr.Parse, so that its key is changed in the same way
+		// as the whole query string parsed into r.queryMap, like `file.names` into `file_names`.
+		m, err := gstr.Parse(part)
+		if err != nil {
+			// It never happens, as the whole query string has been parsed without error.
+			continue
+		}
+		for key, value := range m {
+			// The keys like `names[]` are already parsed as slice by gstr.Parse.
+			if s, ok := value.(string); ok {
+				allValues[key] = append(allValues[key], s)
+			}
+		}
+	}
+	for key, values := range allValues {
+		if len(values) < 2 {
+			delete(allValues, key)
+		}
+	}
+	return allValues
+}
+
+// isQueryValueOverridden checks whether the value of the query parameter `key` is overridden by
+// the other parameters, following the merging order of the parameters map for `requestType`.
+func (r *Request) isQueryValueOverridden(key string, requestType int) bool {
+	// The custom value set by SetQuery replaces all the values from the query string.
+	if _, ok := r.customQueryKeys[key]; ok {
+		return true
+	}
+	// The query parameters are merged after the body ones by GetQueryMap.
+	if requestType == parseTypeQuery {
+		return false
+	}
+	// The query parameters are overridden by the form, body, custom parameters and the uploaded
+	// files by GetRequestMap.
+	for _, m := range []map[string]any{r.formMap, r.bodyMap, r.paramsMap} {
+		if _, ok := m[key]; ok {
+			return true
+		}
+	}
+	if r.MultipartForm != nil {
+		if _, ok := r.MultipartForm.File[key]; ok {
+			return true
+		}
+	}
+	return false
 }
