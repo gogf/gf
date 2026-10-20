@@ -63,7 +63,6 @@ func dmFeatureOpen(extra string, maxOpen int) gdb.DB {
 // The codes of the DM server errors that the tests of this file expect besides the dmErr constants.
 const (
 	dmErrParamIncompatible = -5403
-	dmErrNumericOverflow   = -6102
 	dmErrColumnTooLong     = -6169
 	dmErrLobCompare        = -2685
 	dmErrDataOutOfRange    = 6092

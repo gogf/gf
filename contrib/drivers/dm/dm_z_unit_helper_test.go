@@ -81,6 +81,7 @@ const (
 	dmErrNotGroupBy          = -4080
 	dmErrValueAsCondition    = -4104
 	dmErrForUpdateNotAllowed = -4596
+	dmErrNumericOverflow     = -6102
 	dmErrTypeMismatch        = -6105
 	dmErrDeadlock            = -6403
 	dmErrLockWait            = -6409
