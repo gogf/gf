@@ -8,6 +8,7 @@ package dm
 
 import (
 	"context"
+	"regexp"
 	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
@@ -40,14 +41,21 @@ var dmlKeywords = map[string]bool{
 	"SELECT": true, "WITH": true, "INSERT": true, "UPDATE": true, "DELETE": true, "MERGE": true,
 }
 
+// rewrittenWordRegex matches the words that DoFilter rewrites, in any letter case and also inside
+// longer words, so that a statement it does not match has nothing to rewrite.
+var rewrittenWordRegex = regexp.MustCompile(`(?i)GROUP_CONCAT|INDEX`)
+
 // DoFilter deals with the sql string before commits it to underlying sql driver.
 // It rewrites the calls of GROUP_CONCAT, a MySQL function that DM does not have, to LISTAGG, and
 // quotes INDEX, a reserved word of DM, where it is an unquoted identifier: anywhere in a SELECT,
 // INSERT, UPDATE, DELETE or MERGE statement. String literals, quoted identifiers and comments are
-// left as they are.
+// left as they are. A statement containing neither word is passed on without being scanned.
 func (d *Driver) DoFilter(
 	ctx context.Context, link gdb.Link, sql string, args []any,
 ) (newSql string, newArgs []any, err error) {
+	if !rewrittenWordRegex.MatchString(sql) {
+		return d.Core.DoFilter(ctx, link, sql, args)
+	}
 	tokens := scanSqlTokens(sql)
 	return d.Core.DoFilter(ctx, link, rewriteSqlTokens(tokens, isDmlStatement(tokens)), args)
 }

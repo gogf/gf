@@ -121,3 +121,22 @@ func Test_DoFilter_IndexKeyword(t *testing.T) {
 		}
 	})
 }
+
+func Test_DoFilter_WithoutRewrittenWord(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		driver := &Driver{Core: &gdb.Core{}}
+		for _, sql := range []string{
+			`SELECT id, name FROM t WHERE id = ?`,
+			`INSERT INTO t(id, name) VALUES(?, ?)`,
+			`SELECT 'it''s' FROM t -- unterminated 'quote`,
+			`UPDATE t SET name = '/*' WHERE id = 1`,
+		} {
+			newSql, _, err := driver.DoFilter(context.Background(), nil, sql, nil)
+			t.AssertNil(err)
+			t.Assert(newSql, sql)
+		}
+		newSql, _, err := driver.DoFilter(context.Background(), nil, `SELECT index FROM t`, nil)
+		t.AssertNil(err)
+		t.Assert(newSql, `SELECT "INDEX" FROM t`)
+	})
+}
