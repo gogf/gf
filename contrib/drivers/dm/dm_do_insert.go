@@ -102,7 +102,7 @@ func (d *Driver) doInsertDefault(
 			)}, nil
 		}
 	}
-	value, err := d.Core.DoQuery(ctx, link, fmt.Sprintf(
+	value, err := d.DoQuery(ctx, link, fmt.Sprintf(
 		"SELECT %s FROM %s WHERE ROWID = ?", d.QuoteWord(key.Name), d.QuotePrefixTableName(table),
 	), reportedId)
 	if err != nil {
@@ -136,7 +136,7 @@ func givenKeyValue(value any, isIdentity bool) (int64, bool) {
 		return 0, false
 	}
 	id, err := strconv.ParseInt(gconv.String(value), 10, 64)
-	return id, err == nil && !(isIdentity && id == 0)
+	return id, err == nil && (!isIdentity || id != 0)
 }
 
 // doInsertReturning inserts the record of `list` with the clause returning the value of `column`
