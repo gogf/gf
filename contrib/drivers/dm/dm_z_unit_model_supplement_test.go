@@ -7,23 +7,13 @@
 package dm_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
-
-// modelSupplementAssertOra asserts that `err` carries the Oracle error `code`.
-func modelSupplementAssertOra(t *gtest.T, err error, code string) {
-	t.AssertNE(err, nil)
-	if !gstr.Contains(err.Error(), code) {
-		t.Error(fmt.Sprintf("expected %s, got: %v", code, err))
-	}
-}
 
 // Test_Model_Batch_InsertWithoutId tests batch insert without primary key, retrieving the ids filled by the trigger.
 func Test_Model_Batch_InsertWithoutId(t *testing.T) {
@@ -103,7 +93,7 @@ func Test_Model_Batch_ReplaceResult(t *testing.T) {
 	})
 }
 
-// Test_Model_Having_Placeholder tests Having with placeholder arguments, which Oracle only accepts
+// Test_Model_Having_Placeholder tests Having with placeholder arguments, which DM only accepts
 // with a GROUP BY for the selected columns.
 func Test_Model_Having_Placeholder(t *testing.T) {
 	table := createInitUserTable()
@@ -111,7 +101,7 @@ func Test_Model_Having_Placeholder(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model(table).Where("id > 1").Having("id > ?", 8).All()
-		modelSupplementAssertOra(t, err, "ORA-00979")
+		assertDmError(t, err, dmErrInvalidHaving)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		all, err := db.Model(table).Fields("id").Where("id > 1").Group("id").Having("id > ?", 8).Order("id").All()
@@ -140,7 +130,7 @@ func Test_Model_Having_FieldValue(t *testing.T) {
 	})
 }
 
-// Test_Model_Delete_Limit tests DELETE with LIMIT, which the driver does not rewrite for Oracle.
+// Test_Model_Delete_Limit tests DELETE with LIMIT, which DM supports.
 func Test_Model_Delete_Limit(t *testing.T) {
 	table := createInitUserTable()
 	defer dropTable(table)
@@ -148,33 +138,36 @@ func Test_Model_Delete_Limit(t *testing.T) {
 	// DELETE...LIMIT
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model(table).Where(1).Limit(2).Delete()
-		modelSupplementAssertOra(t, err, "ORA-00920")
+		assertDmError(t, err, dmErrValueAsCondition)
 
-		_, err = db.Model(table).Where("1=1").Limit(2).Delete()
-		modelSupplementAssertOra(t, err, "ORA-00933")
+		// Note: DM accepts DELETE with LIMIT, like MySQL.
+		result, err := db.Model(table).Where("1=1").Limit(2).Delete()
+		t.AssertNil(err)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 2)
 
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, TableSize-2)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).Where("1=1").Delete()
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
-		t.Assert(n, TableSize)
+		t.Assert(n, TableSize-2)
 	})
 }
 
 // Test_Model_Distinct_AliasHaving tests DISTINCT on an aliased table together with HAVING, which
-// Oracle only accepts with a GROUP BY for the selected column.
+// DM only accepts with a GROUP BY for the selected column.
 func Test_Model_Distinct_AliasHaving(t *testing.T) {
 	table := createInitUserTable()
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model(table, "t").Fields("distinct t.id").Where("id > 1").Having("id > 8").All()
-		modelSupplementAssertOra(t, err, "ORA-00979")
+		assertDmError(t, err, dmErrInvalidHaving)
 
 		all, err := db.Model(table, "t").Fields("distinct t.id").Where("id > 1").Group("t.id").Having("t.id > 8").Order("t.id").All()
 		t.AssertNil(err)
@@ -209,7 +202,7 @@ func Test_Model_InsertAndGetId_WithPrimaryKey(t *testing.T) {
 			"password": "pass_2",
 			"nickname": "name_2",
 		}).InsertAndGetId()
-		modelSupplementAssertOra(t, err, "ORA-00001")
+		assertDmError(t, err, dmErrUniqueViolation)
 
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
@@ -217,18 +210,19 @@ func Test_Model_InsertAndGetId_WithPrimaryKey(t *testing.T) {
 	})
 }
 
-// Test_Model_Update_Limit tests UPDATE with ORDER BY and LIMIT, which the driver does not rewrite for Oracle.
+// Test_Model_Update_Limit tests UPDATE with ORDER BY and LIMIT, which the driver does not rewrite for DM.
 func Test_Model_Update_Limit(t *testing.T) {
 	table := createInitUserTable()
 	defer dropTable(table)
 
 	// UPDATE...LIMIT
 	gtest.C(t, func(t *gtest.T) {
+		// Note: DM accepts UPDATE with LIMIT but not with ORDER BY, which it rejects before WHERE 1.
 		_, err := db.Model(table).Data("nickname", "T100").Where(1).Order("id desc").Limit(2).Update()
-		modelSupplementAssertOra(t, err, "ORA-00920")
+		assertDmError(t, err, dmErrSyntax)
 
 		_, err = db.Model(table).Data("nickname", "T100").Where("1=1").Order("id desc").Limit(2).Update()
-		modelSupplementAssertOra(t, err, "ORA-00933")
+		assertDmError(t, err, dmErrSyntax)
 
 		v1, err := db.Model(table).Fields("nickname").Where("id", 10).Value()
 		t.AssertNil(err)

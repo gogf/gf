@@ -8,6 +8,7 @@ package dm_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -89,11 +90,12 @@ func Test_Ctx_Timeout(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 		defer cancel()
 
-		// Note: on Windows the statement runs to its end before ORA-01013 is returned, as go-ora v2.9.0
-		// cannot interrupt it there (sendOOB in network/net_windows.go does nothing).
+		// Note: the underlying driver does not interrupt a running statement when the context
+		// ends, so the context ends before it.
+		<-ctx.Done()
 		_, err := db.Exec(ctx, "BEGIN DBMS_LOCK.SLEEP(2); END;")
 		t.AssertNE(err, nil)
-		t.AssertIN("ORA-01013", err.Error())
+		t.Assert(errors.Is(err, context.DeadlineExceeded), true)
 
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)

@@ -20,32 +20,34 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
-const (
-	masterSlaveUser          = "gf_ms_slave"
-	masterSlaveErrUserExists = 1920
-)
+const masterSlaveSchema = "gf_ms_slave_schema"
 
 var (
-	masterSlaveUserOnce sync.Once
-	masterSlaveUserErr  error
+	masterSlaveSchemaOnce sync.Once
+	masterSlaveSchemaErr  error
 )
 
-func masterSlavePrepareUser(t *gtest.T) {
-	masterSlaveUserOnce.Do(func() {
-		masterSlaveUserErr = masterSlaveCreateUser()
+func masterSlavePrepareSchema(t *gtest.T) {
+	masterSlaveSchemaOnce.Do(func() {
+		masterSlaveSchemaErr = masterSlaveCreateSchema()
 	})
-	t.AssertNil(masterSlaveUserErr)
+	t.AssertNil(masterSlaveSchemaErr)
 }
 
-func masterSlaveCreateUser() error {
-	_, err := db.Exec(ctx, fmt.Sprintf("CREATE USER %s IDENTIFIED BY %s", masterSlaveUser, TestDBPass))
-	if err != nil && !isDmError(err, masterSlaveErrUserExists) {
+// masterSlaveCreateSchema creates the schema of the slave node unless it exists.
+func masterSlaveCreateSchema() error {
+	_, err := db.Exec(ctx, fmt.Sprintf("CREATE SCHEMA %s", masterSlaveSchema))
+	if err != nil && !isDmError(err, dmErrObjectExists) {
 		return err
 	}
-	_, err = db.Exec(ctx, fmt.Sprintf("GRANT CONNECT, RESOURCE TO %s", masterSlaveUser))
-	return err
+	return nil
 }
 
+// masterSlaveConfigGroup returns a master node on the schema of the tests and a slave node on
+// masterSlaveSchema.
+// Note: the slave node connects as the user of the tests, not as a user of its own like the
+// source test, as the fields of a table are read through the slave node in the schema of the
+// master node, where a user without DBA rights cannot read the constraints (-5504).
 func masterSlaveConfigGroup() gdb.ConfigGroup {
 	return gdb.ConfigGroup{
 		gdb.ConfigNode{
@@ -61,9 +63,9 @@ func masterSlaveConfigGroup() gdb.ConfigGroup {
 		gdb.ConfigNode{
 			Host:   TestDBHost,
 			Port:   TestDBPort,
-			User:   masterSlaveUser,
+			User:   TestDBUser,
 			Pass:   TestDBPass,
-			Name:   TestDBName,
+			Name:   masterSlaveSchema,
 			Type:   TestDBType,
 			Role:   "slave",
 			Weight: 100,
@@ -77,7 +79,7 @@ func masterSlaveTableName() string {
 
 func Test_Master_Slave(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		masterSlavePrepareUser(t)
+		masterSlavePrepareSchema(t)
 	})
 
 	var (
@@ -130,7 +132,7 @@ func Test_Master_Slave(t *testing.T) {
 // Test_Master_Slave_Concurrent_ReadWrite tests concurrent read/write routing
 func Test_Master_Slave_Concurrent_ReadWrite(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		masterSlavePrepareUser(t)
+		masterSlavePrepareSchema(t)
 	})
 
 	var (
@@ -186,7 +188,7 @@ func Test_Master_Slave_Concurrent_ReadWrite(t *testing.T) {
 // Test_Master_Slave_Transaction_Routing tests transaction routing to master
 func Test_Master_Slave_Transaction_Routing(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		masterSlavePrepareUser(t)
+		masterSlavePrepareSchema(t)
 	})
 
 	var (
@@ -239,7 +241,7 @@ func Test_Master_Slave_Transaction_Routing(t *testing.T) {
 // Test_Master_Slave_Explicit_Selection tests explicit master/slave selection
 func Test_Master_Slave_Explicit_Selection(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		masterSlavePrepareUser(t)
+		masterSlavePrepareSchema(t)
 	})
 
 	var (

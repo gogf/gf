@@ -9,6 +9,7 @@ package dm_test
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -220,8 +221,7 @@ func Test_DB_InsertIgnore(t *testing.T) {
 			"nickname":    "T1",
 			"create_time": gtime.Now().String(),
 		})
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-00001", err.Error())
+		assertDmError(t, err, dmErrUniqueViolation)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.InsertIgnore(ctx, table, g.Map{
@@ -967,11 +967,12 @@ func Test_DB_Ctx(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
-		// Note: on Windows the statement runs to its end before ORA-01013 is returned, as go-ora v2.9.0
-		// cannot interrupt it there (sendOOB in network/net_windows.go does nothing).
-		_, err := db.Query(ctx, "BEGIN DBMS_LOCK.SLEEP(3); END;")
+		// Note: DM runs a PL/SQL block through Exec only, and the underlying driver does not
+		// interrupt a running statement when the context ends, so the context ends before it.
+		<-ctx.Done()
+		_, err := db.Exec(ctx, "BEGIN DBMS_LOCK.SLEEP(3); END;")
 		t.AssertNE(err, nil)
-		t.AssertIN("ORA-01013", err.Error())
+		t.Assert(errors.Is(err, context.DeadlineExceeded), true)
 	})
 }
 
@@ -1041,7 +1042,8 @@ func Test_Types(t *testing.T) {
 		t.Assert(one["ID"].Int(), 1)
 		t.Assert(one["COL_BLOB"].String(), data["col_blob"])
 		t.Assert(one["COL_BINARY"].String(), data["col_binary"])
-		t.Assert(one["COL_DATE"].String(), "1880-10-24 00:00:00")
+		// Note: DM DATE holds the date only, without time of day.
+		t.Assert(one["COL_DATE"].String(), "1880-10-24")
 		t.Assert(one["COL_DECIMAL"].String(), -123.46)
 		t.Assert(one["COL_DOUBLE"].String(), data["col_double"])
 		t.Assert(one["COL_BIT"].Int(), data["col_bit"])
@@ -1125,7 +1127,8 @@ func Test_DB_Insert_ToSQL(t *testing.T) {
 			return err
 		})
 		t.AssertNil(err)
-		t.Assert(sql, fmt.Sprintf("INSERT INTO %s(ID,NICKNAME,PASSPORT,PASSWORD) VALUES(1,'n1','t1','p1')", table))
+		// Note: the DM driver keeps the column order of the data and does not sort it.
+		t.Assert(sql, fmt.Sprintf("INSERT INTO %s(ID,PASSPORT,PASSWORD,NICKNAME) VALUES(1,'t1','p1','n1') ", table))
 
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
@@ -1144,7 +1147,8 @@ func Test_DB_Insert_ToSQL(t *testing.T) {
 		})
 		t.AssertNil(err)
 		t.Assert(id, 0)
-		t.Assert(sql, fmt.Sprintf("INSERT INTO %s(NICKNAME,PASSPORT,PASSWORD) VALUES('n2','t2','p2') RETURNING ID INTO :v4", table))
+		// Note: the RETURNING clause that gets the ID is added when the statement is committed.
+		t.Assert(sql, fmt.Sprintf("INSERT INTO %s(PASSPORT,PASSWORD,NICKNAME) VALUES('t2','p2','n2') ", table))
 
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
@@ -1171,7 +1175,9 @@ func Test_DB_Insert_CatchSQL(t *testing.T) {
 		t.AssertGT(len(sqlArray), 0)
 		t.Assert(
 			sqlArray[len(sqlArray)-1],
-			fmt.Sprintf("INSERT INTO %s(NICKNAME,PASSPORT,PASSWORD) VALUES('n1','t1','p1') RETURNING ID INTO :v4", table),
+			// Note: the RETURNING clause that gets the ID is added when the statement is committed,
+			// after CatchSQL catches it.
+			fmt.Sprintf("INSERT INTO %s(PASSPORT,PASSWORD,NICKNAME) VALUES('t1','p1','n1') ", table),
 		)
 
 		one, err := db.Model(table).WherePri(1).One()
@@ -1197,7 +1203,7 @@ func Test_DB_Save_ToSQL(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(sql, fmt.Sprintf(
 			"MERGE INTO %s T1 USING (SELECT 1 AS ID,'n1' AS NICKNAME,'t1' AS PASSPORT,'p1' AS PASSWORD FROM DUAL) T2 ON (T1.ID = T2.ID) "+
-				"WHEN NOT MATCHED THEN INSERT(ID,NICKNAME,PASSPORT,PASSWORD) VALUES (T2.ID,T2.NICKNAME,T2.PASSPORT,T2.PASSWORD)"+
+				"WHEN NOT MATCHED THEN INSERT(ID,NICKNAME,PASSPORT,PASSWORD) VALUES (T2.ID,T2.NICKNAME,T2.PASSPORT,T2.PASSWORD) "+
 				"WHEN MATCHED THEN UPDATE SET T1.NICKNAME = T2.NICKNAME,T1.PASSPORT = T2.PASSPORT,T1.PASSWORD = T2.PASSWORD",
 			table,
 		))

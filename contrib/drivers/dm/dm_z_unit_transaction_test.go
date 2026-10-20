@@ -24,47 +24,45 @@ import (
 )
 
 const (
-	transactionIsolationRejected = "only support default value for isolation"
-	transactionReadOnlyRejected  = "readonly transaction is not supported"
+	transactionDmErrLockTimeout   = -6407
+	transactionDmErrSerialization = -7066
 )
 
+// transactionWaitUnlocked waits up to 10 seconds until no other session locks `table`.
+// Note: DM has no LOCK TABLE ... WAIT n, so the lock is retried with NOWAIT.
 func transactionWaitUnlocked(table string) {
-	tx, err := dblink.Begin(ctx)
-	if err != nil {
-		return
-	}
-	defer tx.Rollback()
-	_, _ = tx.Exec(fmt.Sprintf("LOCK TABLE %s IN EXCLUSIVE MODE WAIT 10", table))
-}
-
-func transactionWaitSnapshotReady(table string) {
 	for i := 0; i < 20; i++ {
-		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
-			if _, err := tx.Exec("SET TRANSACTION READ ONLY"); err != nil {
-				return err
-			}
-			_, err := tx.Model(table).Count()
-			return err
-		})
-		if err == nil || !gstr.Contains(err.Error(), "ORA-01466") {
+		tx, err := dblink.Begin(ctx)
+		if err != nil {
+			return
+		}
+		_, err = tx.Exec(fmt.Sprintf("LOCK TABLE %s IN EXCLUSIVE MODE NOWAIT", table))
+		_ = tx.Rollback()
+		if !isDmError(err, dmErrLockWait) {
 			return
 		}
 		time.Sleep(500 * time.Millisecond)
 	}
 }
 
-func transactionAssertIsolationRejected(t *gtest.T, level sql.IsolationLevel) {
+// transactionAssertIsolation asserts that a transaction with the isolation level `level` runs
+// with the `isolation` and `readOnly` values that V$TRX reports.
+// Note: V$TRX reports READ UNCOMMITTED as 0, READ COMMITTED as 1 and SERIALIZABLE as 3, the
+// driver maps REPEATABLE READ to SERIALIZABLE, and DM makes READ UNCOMMITTED read-only.
+func transactionAssertIsolation(t *gtest.T, level sql.IsolationLevel, isolation int, readOnly string) {
 	called := false
 	err := db.TransactionWithOptions(ctx, gdb.TxOptions{
 		Propagation: gdb.PropagationRequiresNew,
 		Isolation:   level,
 	}, func(ctx context.Context, tx gdb.TX) error {
 		called = true
+		one, err := tx.GetOne("SELECT ISOLATION, READ_ONLY FROM V$TRX WHERE SESS_ID = SESSID()")
+		t.AssertNil(err)
+		t.Assert(one, g.Map{"ISOLATION": isolation, "READ_ONLY": readOnly})
 		return nil
 	})
-	t.AssertNE(err, nil)
-	t.AssertIN(transactionIsolationRejected, err.Error())
-	t.Assert(called, false)
+	t.AssertNil(err)
+	t.Assert(called, true)
 }
 
 func Test_TX_Query(t *testing.T) {
@@ -81,9 +79,9 @@ func Test_TX_Query(t *testing.T) {
 		_, err = tx.Query("SELECT ?+? FROM DUAL", g.Slice{1, 2})
 		t.AssertNil(err)
 
+		// Note: DM reports the unknown statement as an unresolvable member access.
 		_, err = tx.Query("ERROR")
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-00900", err.Error())
+		assertDmError(t, err, dmErrInvalidMember)
 
 		err = tx.Commit()
 		t.AssertNil(err)
@@ -105,9 +103,9 @@ func Test_TX_Exec(t *testing.T) {
 		_, err = tx.Exec("SELECT ?+? FROM DUAL", g.Slice{1, 2})
 		t.AssertNil(err)
 
+		// Note: DM reports the unknown statement as an unresolvable member access.
 		_, err = tx.Exec("ERROR")
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-00900", err.Error())
+		assertDmError(t, err, dmErrInvalidMember)
 
 		err = tx.Commit()
 		t.AssertNil(err)
@@ -745,8 +743,7 @@ func Test_TX_Delete(t *testing.T) {
 		defer tx.Rollback()
 
 		_, err = tx.Delete(table, 1)
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-00920", err.Error())
+		assertDmError(t, err, dmErrValueAsCondition)
 
 		err = tx.Rollback()
 		t.AssertNil(err)
@@ -1731,6 +1728,7 @@ func Test_Transaction_ReadOnly(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
+		// Note: DM supports read-only transactions, so the update runs and DM rejects it.
 		called := false
 		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
 			Propagation: gdb.PropagationRequiresNew,
@@ -1740,9 +1738,8 @@ func Test_Transaction_ReadOnly(t *testing.T) {
 			_, err := tx.Update(table, g.Map{"passport": "changed"}, "id=1")
 			return err
 		})
-		t.AssertNE(err, nil)
-		t.AssertIN(transactionReadOnlyRejected, err.Error())
-		t.Assert(called, false)
+		assertDmError(t, err, dmErrReadOnly)
+		t.Assert(called, true)
 
 		v, err := db.Model(table).Where("id=1").Value("passport")
 		t.AssertNil(err)
@@ -1758,8 +1755,7 @@ func Test_Transaction_ReadOnly(t *testing.T) {
 			_, err = tx.Update(table, g.Map{"passport": "changed"}, "id=1")
 			return err
 		})
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-01456", err.Error())
+		assertDmError(t, err, dmErrReadOnly)
 
 		v, err := db.Model(table).Where("id=1").Value("passport")
 		t.AssertNil(err)
@@ -1773,7 +1769,7 @@ func Test_Transaction_Isolation(t *testing.T) {
 		table := createInitUserTable()
 		defer dropTable(table)
 
-		transactionAssertIsolationRejected(t, sql.LevelReadUncommitted)
+		transactionAssertIsolation(t, sql.LevelReadUncommitted, 0, "Y")
 
 		var dirtyValue string
 		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
@@ -1783,8 +1779,10 @@ func Test_Transaction_Isolation(t *testing.T) {
 			if err != nil {
 				return err
 			}
+			// Note: DM supports READ UNCOMMITTED, so the second transaction reads the uncommitted change.
 			err = db.TransactionWithOptions(ctx, gdb.TxOptions{
 				Propagation: gdb.PropagationRequiresNew,
+				Isolation:   sql.LevelReadUncommitted,
 			}, func(ctx context.Context, tx2 gdb.TX) error {
 				v, err := tx2.Model(table).Where("id=1").Value("passport")
 				dirtyValue = v.String()
@@ -1797,7 +1795,7 @@ func Test_Transaction_Isolation(t *testing.T) {
 		})
 		t.AssertNE(err, nil)
 		t.Assert(err.Error(), "rollback first transaction")
-		t.Assert(dirtyValue, "user_1")
+		t.Assert(dirtyValue, "dirty_read")
 
 		v, err := db.Model(table).Where("id=1").Value("passport")
 		t.AssertNil(err)
@@ -1808,16 +1806,14 @@ func Test_Transaction_Isolation(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitUserTable()
 		defer dropTable(table)
-		transactionWaitSnapshotReady(table)
 
-		transactionAssertIsolationRejected(t, sql.LevelRepeatableRead)
+		transactionAssertIsolation(t, sql.LevelRepeatableRead, 3, "N")
 
+		// Note: DM accepts the isolation level of the options, so the transaction sets none itself.
 		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
 			Propagation: gdb.PropagationRequiresNew,
+			Isolation:   sql.LevelRepeatableRead,
 		}, func(ctx context.Context, tx1 gdb.TX) error {
-			_, err := tx1.Exec("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
-			t.AssertNil(err)
-
 			// First read
 			v1, err := tx1.Model(table).Where("id=1").Value("passport")
 			t.AssertNil(err)
@@ -1862,29 +1858,24 @@ func Test_Transaction_Isolation(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitUserTable()
 		defer dropTable(table)
-		transactionWaitSnapshotReady(table)
 
-		transactionAssertIsolationRejected(t, sql.LevelSerializable)
+		transactionAssertIsolation(t, sql.LevelSerializable, 3, "N")
 
+		// Note: DM accepts the isolation level of the options, so the transactions set none themselves.
 		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
 			Propagation: gdb.PropagationRequiresNew,
+			Isolation:   sql.LevelSerializable,
 		}, func(ctx context.Context, tx1 gdb.TX) error {
-			_, err := tx1.Exec("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
-			t.AssertNil(err)
-
 			// Read all records
-			_, err = tx1.Model(table).All()
+			_, err := tx1.Model(table).All()
 			t.AssertNil(err)
 
 			// Try concurrent insert in another transaction
 			err = db.TransactionWithOptions(ctx, gdb.TxOptions{
 				Propagation: gdb.PropagationRequiresNew,
+				Isolation:   sql.LevelSerializable,
 			}, func(ctx context.Context, tx2 gdb.TX) error {
-				_, err := tx2.Exec("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
-				if err != nil {
-					return err
-				}
-				_, err = tx2.Insert(table, g.Map{
+				_, err := tx2.Insert(table, g.Map{
 					"id":       1000,
 					"passport": "new_user",
 					"password": "pass_1000",
@@ -1911,14 +1902,13 @@ func Test_Transaction_Isolation(t *testing.T) {
 		table := createInitUserTable()
 		defer dropTable(table)
 
-		transactionAssertIsolationRejected(t, sql.LevelReadCommitted)
+		transactionAssertIsolation(t, sql.LevelReadCommitted, 1, "N")
 
+		// Note: DM accepts the isolation level of the options, so the transaction sets none itself.
 		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
 			Propagation: gdb.PropagationRequiresNew,
+			Isolation:   sql.LevelReadCommitted,
 		}, func(ctx context.Context, tx1 gdb.TX) error {
-			_, err := tx1.Exec("SET TRANSACTION ISOLATION LEVEL READ COMMITTED")
-			t.AssertNil(err)
-
 			// First read
 			v1, err := tx1.Model(table).Where("id=1").Value("passport")
 			t.AssertNil(err)
@@ -1995,10 +1985,11 @@ func Test_Transaction_Isolation_ReadCommitted_NonRepeatableRead(t *testing.T) {
 		table := createInitUserTable()
 		defer dropTable(table)
 
-		transactionAssertIsolationRejected(t, sql.LevelReadCommitted)
+		transactionAssertIsolation(t, sql.LevelReadCommitted, 1, "N")
 
 		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
 			Propagation: gdb.PropagationRequiresNew,
+			Isolation:   sql.LevelReadCommitted,
 		}, func(ctx context.Context, tx1 gdb.TX) error {
 			// First read
 			v1, err := tx1.Model(table).Where("id=1").Value("passport")
@@ -2034,16 +2025,14 @@ func Test_Transaction_Isolation_Serializable_PhantomRead(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitUserTable()
 		defer dropTable(table)
-		transactionWaitSnapshotReady(table)
 
-		transactionAssertIsolationRejected(t, sql.LevelSerializable)
+		transactionAssertIsolation(t, sql.LevelSerializable, 3, "N")
 
+		// Note: DM accepts the isolation level of the options, so the transaction sets none itself.
 		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
 			Propagation: gdb.PropagationRequiresNew,
+			Isolation:   sql.LevelSerializable,
 		}, func(ctx context.Context, tx1 gdb.TX) error {
-			_, err := tx1.Exec("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
-			t.AssertNil(err)
-
 			// First count
 			count1, err := tx1.Model(table).Count()
 			t.AssertNil(err)
@@ -2083,16 +2072,14 @@ func Test_Transaction_Isolation_RepeatableRead_ConsistentSnapshot(t *testing.T) 
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitUserTable()
 		defer dropTable(table)
-		transactionWaitSnapshotReady(table)
 
-		transactionAssertIsolationRejected(t, sql.LevelRepeatableRead)
+		transactionAssertIsolation(t, sql.LevelRepeatableRead, 3, "N")
 
+		// Note: DM accepts the isolation level of the options, so the transaction sets none itself.
 		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
 			Propagation: gdb.PropagationRequiresNew,
+			Isolation:   sql.LevelRepeatableRead,
 		}, func(ctx context.Context, tx1 gdb.TX) error {
-			_, err := tx1.Exec("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
-			t.AssertNil(err)
-
 			// Read multiple records
 			records1, err := tx1.Model(table).Where("id IN(?,?)", 1, 2).OrderAsc("id").All()
 			t.AssertNil(err)
@@ -2117,8 +2104,7 @@ func Test_Transaction_Isolation_RepeatableRead_ConsistentSnapshot(t *testing.T) 
 			}
 
 			_, err = tx1.Update(table, g.Map{"nickname": "tx1"}, "id=1")
-			t.AssertNE(err, nil)
-			t.AssertIN("ORA-08177", err.Error())
+			assertDmError(t, err, transactionDmErrSerialization)
 
 			return nil
 		})
@@ -2196,7 +2182,7 @@ func Test_Transaction_Deadlock_TwoTables(t *testing.T) {
 		if errs[0] != nil {
 			winner, victimErr = "tx2_lock", errs[0]
 		}
-		t.AssertIN("ORA-00060", victimErr.Error())
+		assertDmError(t, victimErr, dmErrDeadlock)
 
 		v, err := db.Model(table1).Where("id", 1).Value("passport")
 		t.AssertNil(err)
@@ -2275,7 +2261,7 @@ func Test_Transaction_Deadlock_SameTable(t *testing.T) {
 		if errs[0] != nil {
 			winner, victimErr = "tx2", errs[0]
 		}
-		t.AssertIN("ORA-00060", victimErr.Error())
+		assertDmError(t, victimErr, dmErrDeadlock)
 
 		all, err := db.Model(table).Where("id IN(?,?)", 1, 2).All()
 		t.AssertNil(err)
@@ -2301,8 +2287,7 @@ func Test_Transaction_Deadlock_Retry(t *testing.T) {
 				if err == nil {
 					return nil
 				}
-				errMsg := err.Error()
-				if gstr.Contains(errMsg, "ORA-00060") || gstr.Contains(errMsg, "ORA-30006") {
+				if isDmError(err, dmErrDeadlock) || isDmError(err, transactionDmErrLockTimeout) {
 					retryCount++
 					time.Sleep(50 * time.Millisecond)
 					continue
@@ -2561,8 +2546,7 @@ func Test_Transaction_Nested_SavePoint_RollbackToNonExistent(t *testing.T) {
 
 		// Try to rollback to non-existent savepoint
 		err = tx.RollbackTo("non_existent")
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-01086", err.Error())
+		assertDmError(t, err, dmErrInvalidSavepoint)
 
 		err = tx.Rollback()
 		t.AssertNil(err)
@@ -2950,19 +2934,21 @@ func Test_Transaction_ReadOnly_WithUpdate(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitUserTable()
 		defer dropTable(table)
-		transactionWaitSnapshotReady(table)
 
+		// Note: DM supports read-only transactions, so the transaction runs read-only.
 		called := false
 		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
 			Propagation: gdb.PropagationRequiresNew,
 			ReadOnly:    true,
 		}, func(ctx context.Context, tx gdb.TX) error {
 			called = true
+			readOnly, err := tx.GetValue("SELECT READ_ONLY FROM V$TRX WHERE SESS_ID = SESSID()")
+			t.AssertNil(err)
+			t.Assert(readOnly, "Y")
 			return nil
 		})
-		t.AssertNE(err, nil)
-		t.AssertIN(transactionReadOnlyRejected, err.Error())
-		t.Assert(called, false)
+		t.AssertNil(err)
+		t.Assert(called, true)
 
 		var readCount int
 		err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
@@ -2986,8 +2972,7 @@ func Test_Transaction_ReadOnly_WithUpdate(t *testing.T) {
 			})
 			return err
 		})
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-01456", err.Error())
+		assertDmError(t, err, dmErrReadOnly)
 		t.Assert(readCount, TableSize)
 
 		count, err := db.Model(table).Count()
@@ -3002,6 +2987,7 @@ func Test_Transaction_ReadOnly_WithDelete(t *testing.T) {
 		table := createInitUserTable()
 		defer dropTable(table)
 
+		// Note: DM supports read-only transactions, so the delete runs and DM rejects it.
 		called := false
 		err := db.TransactionWithOptions(ctx, gdb.TxOptions{
 			Propagation: gdb.PropagationRequiresNew,
@@ -3011,9 +2997,8 @@ func Test_Transaction_ReadOnly_WithDelete(t *testing.T) {
 			_, err := tx.Delete(table, "id=1")
 			return err
 		})
-		t.AssertNE(err, nil)
-		t.AssertIN(transactionReadOnlyRejected, err.Error())
-		t.Assert(called, false)
+		assertDmError(t, err, dmErrReadOnly)
+		t.Assert(called, true)
 
 		err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 			_, err := tx.Exec("SET TRANSACTION READ ONLY")
@@ -3023,8 +3008,7 @@ func Test_Transaction_ReadOnly_WithDelete(t *testing.T) {
 			_, err = tx.Delete(table, "id=1")
 			return err
 		})
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-01456", err.Error())
+		assertDmError(t, err, dmErrReadOnly)
 
 		// Verify record still exists
 		count, err := db.Model(table).Where("id=1").Count()

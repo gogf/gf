@@ -527,7 +527,7 @@ func Test_Issue1700(t *testing.T) {
 			t.AssertNil(err)
 			t.Assert(user.Id, 1)
 		}
-		// Note: Userid and UserId are not asserted after Scan. Oracle folds the column UserId to
+		// Note: Userid and UserId are not asserted after Scan. DM folds the column UserId to
 		// USERID, so neither USER_ID nor USERID equals an orm tag and gconv falls back to fuzzy
 		// matching, which ignores case and underscores: both columns match both fields, the pair is
 		// assigned in map iteration order and the choice is cached in LastFuzzyKey, see
@@ -586,18 +586,18 @@ func Test_Issue2105(t *testing.T) {
 func Test_Issue2231(t *testing.T) {
 	var (
 		pattern = `(\w+):([\w\-]*):(.*?)@(\w+?)\((.+?)\)/{0,1}([^\?]*)\?{0,1}(.*)`
-		link    = `oracle:system:oracle@tcp(127.0.0.1:1521)/a正bc式?PREFETCH_ROWS=25&TIMEOUT=60`
+		link    = `dm:SYSDBA:SYSDBA001@tcp(127.0.0.1:5236)/a正bc式?charset=utf8&schema=SYSDBA`
 	)
 	gtest.C(t, func(t *gtest.T) {
 		match, err := gregex.MatchString(pattern, link)
 		t.AssertNil(err)
-		t.Assert(match[1], "oracle")
-		t.Assert(match[2], "system")
-		t.Assert(match[3], "oracle")
+		t.Assert(match[1], "dm")
+		t.Assert(match[2], "SYSDBA")
+		t.Assert(match[3], "SYSDBA001")
 		t.Assert(match[4], "tcp")
-		t.Assert(match[5], "127.0.0.1:1521")
+		t.Assert(match[5], "127.0.0.1:5236")
 		t.Assert(match[6], "a正bc式")
-		t.Assert(match[7], "PREFETCH_ROWS=25&TIMEOUT=60")
+		t.Assert(match[7], "charset=utf8&schema=SYSDBA")
 	})
 }
 
@@ -696,8 +696,7 @@ CREATE TABLE %s (
 		t.Assert(err2, `there should be WHERE condition statement for DELETE operation`)
 
 		_, err3 := db.Model(table).Where(1).Delete()
-		t.AssertNE(err3, nil)
-		t.AssertIN("ORA-00920", err3.Error())
+		assertDmError(t, err3, dmErrValueAsCondition)
 
 		_, err4 := db.Model(table).Where("1=1").Delete()
 		t.AssertNil(err4)
@@ -980,6 +979,7 @@ func Test_Issue3204(t *testing.T) {
 		var (
 			err      error
 			sqlArray []string
+			insertId int64
 			data     = User{
 				Id:       20,
 				Passport: "passport_20",
@@ -987,17 +987,16 @@ func Test_Issue3204(t *testing.T) {
 			}
 		)
 		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
-			_, err = db.Ctx(ctx).Model(table).Data(data).InsertAndGetId()
+			insertId, err = db.Ctx(ctx).Model(table).Data(data).InsertAndGetId()
 			return err
 		})
 		t.AssertNil(err)
+		t.Assert(insertId, 20)
+		// Note: the DM driver keeps the column order of the data and ends the statement with a space.
 		t.AssertIN(sqlArray[len(sqlArray)-1], g.SliceStr{
-			fmt.Sprintf("INSERT INTO %s(ID,PASSPORT) VALUES(20,'passport_20')", table),
-			fmt.Sprintf("INSERT INTO %s(PASSPORT,ID) VALUES('passport_20',20)", table),
+			fmt.Sprintf("INSERT INTO %s(ID,PASSPORT) VALUES(20,'passport_20') ", table),
+			fmt.Sprintf("INSERT INTO %s(PASSPORT,ID) VALUES('passport_20',20) ", table),
 		})
-		// Note: the id returned by InsertAndGetId is not asserted. When the data carries the primary
-		// key the driver adds no RETURNING clause and the id is 0; that block of DoInsert is rewritten
-		// by https://github.com/gogf/gf/pull/4880.
 	})
 	// update data
 	gtest.C(t, func(t *gtest.T) {
@@ -1073,7 +1072,8 @@ func Test_Issue2552_ClearTableFieldsAll(t *testing.T) {
 	table := createUserTable()
 	defer dropTable(table)
 
-	showTableKey := `USER_TAB_COLUMNS`
+	// Note: the DM driver reads the fields of a table from ALL_TAB_COLUMNS.
+	showTableKey := `ALL_TAB_COLUMNS`
 	gtest.C(t, func(t *gtest.T) {
 		ctx := context.Background()
 		sqlArray, err := gdb.CatchSQL(ctx, func(ctx context.Context) error {
@@ -1119,7 +1119,8 @@ func Test_Issue2552_ClearTableFields(t *testing.T) {
 	table := createUserTable()
 	defer dropTable(table)
 
-	showTableKey := `USER_TAB_COLUMNS`
+	// Note: the DM driver reads the fields of a table from ALL_TAB_COLUMNS.
+	showTableKey := `ALL_TAB_COLUMNS`
 	gtest.C(t, func(t *gtest.T) {
 		ctx := context.Background()
 		sqlArray, err := gdb.CatchSQL(ctx, func(ctx context.Context) error {

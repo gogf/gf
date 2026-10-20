@@ -70,10 +70,8 @@ func Test_Func_ToSQL(t *testing.T) {
 			return err
 		})
 		t.AssertNil(err)
-		t.Assert(sql, fmt.Sprintf(
-			"SELECT * FROM (SELECT NICKNAME FROM %s WHERE id=1) WHERE ROWNUM <= 1",
-			table,
-		))
+		// Note: the DM driver pages with LIMIT instead of ROWNUM.
+		t.Assert(sql, fmt.Sprintf("SELECT NICKNAME FROM %s WHERE id=1 LIMIT 1", table))
 	})
 }
 

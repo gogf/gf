@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -23,6 +24,11 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gregex"
+)
+
+var (
+	rawTypeGeometryOnce sync.Once
+	rawTypeGeometryErr  error
 )
 
 func rawTypeCreateTable(prefix, columns string) string {
@@ -145,8 +151,9 @@ func Test_Raw_Where(t *testing.T) {
 	defer dropTable(table2)
 
 	// https://github.com/gogf/gf/issues/3922
+	// Note: the DM driver limits the rows with LIMIT, where Oracle wraps the query with ROWNUM.
 	gtest.C(t, func(t *gtest.T) {
-		expectSql := "SELECT * FROM (SELECT * FROM Test_Raw_Where_Table1 A WHERE NOT EXISTS (SELECT B.id FROM Test_Raw_Where_Table2 B WHERE B.id=A.id)) WHERE ROWNUM <= 1"
+		expectSql := "SELECT * FROM Test_Raw_Where_Table1 AS A WHERE NOT EXISTS (SELECT B.id FROM Test_Raw_Where_Table2 AS B WHERE B.id=A.id) LIMIT 1"
 		sql, err := gdb.ToSQL(ctx, func(ctx context.Context) error {
 			s := db.Model(table2).As("B").Ctx(ctx).Fields("B.id").Where("B.id", gdb.Raw("A.id"))
 			m := db.Model(table1).As("A").Ctx(ctx).Where("NOT EXISTS ?", s).Limit(1)
@@ -157,7 +164,7 @@ func Test_Raw_Where(t *testing.T) {
 		t.Assert(sql, expectSql)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		expectSql := "SELECT * FROM (SELECT * FROM Test_Raw_Where_Table1 A WHERE NOT EXISTS (SELECT B.id FROM Test_Raw_Where_Table2 B WHERE B.id=A.id)) WHERE ROWNUM <= 1"
+		expectSql := "SELECT * FROM Test_Raw_Where_Table1 AS A WHERE NOT EXISTS (SELECT B.id FROM Test_Raw_Where_Table2 AS B WHERE B.id=A.id) LIMIT 1"
 		sql, err := gdb.ToSQL(ctx, func(ctx context.Context) error {
 			s := db.Model(table2).As("B").Ctx(ctx).Fields("B.id").Where(gdb.Raw("B.id=A.id"))
 			m := db.Model(table1).As("A").Ctx(ctx).Where("NOT EXISTS ?", s).Limit(1)
@@ -305,13 +312,14 @@ func Test_DataType_Binary_Large(t *testing.T) {
 		for i := range pattern {
 			pattern[i] = byte(i)
 		}
+		// Note: DM's UTL_RAW.COPIES rejects a result of 16384 bytes (-6803), so the chunk is 8192 bytes.
 		_, err := db.Exec(ctx, fmt.Sprintf(`DECLARE
     b     BLOB;
-    chunk RAW(16384) := UTL_RAW.COPIES(HEXTORAW('%s'), 64);
+    chunk RAW(8192) := UTL_RAW.COPIES(HEXTORAW('%s'), 32);
 BEGIN
     DBMS_LOB.CREATETEMPORARY(b, TRUE);
-    FOR i IN 1..64 LOOP
-        DBMS_LOB.WRITEAPPEND(b, 16384, chunk);
+    FOR i IN 1..128 LOOP
+        DBMS_LOB.WRITEAPPEND(b, 8192, chunk);
     END LOOP;
     INSERT INTO %s (ID, DATA) VALUES (100, b);
     DBMS_LOB.FREETEMPORARY(b);
@@ -374,11 +382,13 @@ func Test_DataType_Binary_Empty(t *testing.T) {
 		}).Insert()
 		t.AssertNil(err)
 
+		// Note: DM stores an empty binary value as it is, where Oracle stores it as NULL.
 		one, err := db.Model(table).Where("id", 1).One()
 		t.AssertNil(err)
 		t.Assert(len(one["DATA"].Bytes()), 0)
-		t.Assert(one["DATA"].IsNil(), true)
-		t.Assert(one["DATA_RAW"].IsNil(), true)
+		t.Assert(one["DATA"].IsNil(), false)
+		t.Assert(len(one["DATA_RAW"].Bytes()), 0)
+		t.Assert(one["DATA_RAW"].IsNil(), false)
 
 		one, err = db.Model(table).Where("id", 2).One()
 		t.AssertNil(err)
@@ -413,12 +423,12 @@ func Test_DataType_Decimal_HighPrecision(t *testing.T) {
 		t.Assert(stored["S2"].String(), intValue)
 		t.Assert(stored["S3"].String(), anyValue)
 	})
-	// Note: the value of a NUMBER column with decimal places or without precision is read as
-	// float64, as before, so only the stored values above are exact.
+	// Note: DM reads the value of a NUMBER column back with all its digits, as MySQL reads a
+	// DECIMAL, where Oracle reads one with decimal places or without precision as float64.
 	gtest.C(t, func(t *gtest.T) {
 		one, err := db.Model(table).Where("id", 1).One()
 		t.AssertNil(err)
-		t.Assert(one["AMOUNT"].Float64(), 12345678.123456789012345678901234567891)
+		t.Assert(one["AMOUNT"].String(), value)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		one, err := db.Model(table).Where("id", 1).One()
@@ -428,7 +438,7 @@ func Test_DataType_Decimal_HighPrecision(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		one, err := db.Model(table).Where("id", 1).One()
 		t.AssertNil(err)
-		t.Assert(one["AMOUNT_ANY"].Float64(), 12345678901234567890.123456789)
+		t.Assert(one["AMOUNT_ANY"].String(), anyValue)
 	})
 }
 
@@ -495,7 +505,9 @@ func Test_DataType_Decimal_Boundary(t *testing.T) {
 		t.Assert(len(all), 3)
 		t.Assert(all[0]["VALUE"].String(), "99999999.99")
 		t.Assert(all[1]["VALUE"].String(), "-99999999.99")
-		t.Assert(all[2]["VALUE"].String(), "0")
+		// Note: DM reads a NUMBER value with the scale of its column, as MySQL reads a DECIMAL,
+		// where Oracle drops the trailing zeros.
+		t.Assert(all[2]["VALUE"].String(), "0.00")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		for _, value := range []float32{math.MaxFloat32, -math.MaxFloat32, math.SmallestNonzeroFloat32} {
@@ -658,11 +670,13 @@ func Test_DataType_Datetime_Update(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(one["DT"].String(), dt2)
 	})
+	// Note: the underlying DM driver takes and gives an interval as a DM interval literal, where
+	// Oracle takes and gives the bare value, like '365 13:59:59'.
 	gtest.C(t, func(t *gtest.T) {
 		id, err := db.Model(table).Data(g.Map{
 			"dt":       gtime.NewFromStr("2024-01-01 10:00:00"),
-			"shift":    "365 13:59:59",
-			"shift_ym": "1-2",
+			"shift":    "INTERVAL '365 13:59:59' DAY(3) TO SECOND",
+			"shift_ym": "INTERVAL '1-2' YEAR TO MONTH",
 		}).InsertAndGetId()
 		t.AssertNil(err)
 
@@ -674,8 +688,8 @@ func Test_DataType_Datetime_Update(t *testing.T) {
 		one, err := db.Model(table).Where("id", id).One()
 		t.AssertNil(err)
 		t.Assert(one["DT"].String(), "2024-12-31 23:59:59")
-		t.Assert(one["SHIFT"].String(), "+365 13:59:59.000000")
-		t.Assert(one["SHIFT_YM"].String(), "+01-02")
+		t.Assert(one["SHIFT"].String(), "INTERVAL '365 13:59:59.000000' DAY(3) TO SECOND(6)")
+		t.Assert(one["SHIFT_YM"].String(), "INTERVAL '01-02' YEAR(2) TO MONTH")
 	})
 }
 
@@ -718,8 +732,7 @@ func Test_DataType_Enum_Invalid(t *testing.T) {
 		_, err := db.Model(table).Data(g.Map{
 			"status": "invalid_status",
 		}).Insert()
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-02290", err.Error())
+		assertDmError(t, err, dmErrCheckViolation)
 
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
@@ -779,25 +792,46 @@ func Test_DataType_Set_Empty(t *testing.T) {
 
 		one, err := db.Model(table).Where("id", 1).One()
 		t.AssertNil(err)
+		// Note: DM stores an empty string as it is, as MySQL does, where Oracle stores it as NULL.
 		t.Assert(one["PERMISSIONS"].String(), "")
-		t.Assert(one["PERMISSIONS"].IsNil(), true)
+		t.Assert(one["PERMISSIONS"].IsNil(), false)
 	})
+}
+
+// rawTypeInitGeometry initializes the DMGEO package of the spatial types and functions once, as a
+// DM instance does not have it until SP_INIT_GEO_SYS creates it.
+func rawTypeInitGeometry(t *testing.T) {
+	rawTypeGeometryOnce.Do(func() {
+		value, err := db.GetValue(ctx, "SELECT SF_CHECK_GEO_SYS() FROM DUAL")
+		if err != nil {
+			rawTypeGeometryErr = err
+			return
+		}
+		if value.Int() == 0 {
+			_, rawTypeGeometryErr = db.Exec(ctx, "CALL SP_INIT_GEO_SYS(1)")
+		}
+	})
+	if rawTypeGeometryErr != nil {
+		t.Fatal(rawTypeGeometryErr)
+	}
 }
 
 // Test_DataType_Geometry_Point tests POINT geometry type
 func Test_DataType_Geometry_Point(t *testing.T) {
-	table := rawTypeCreateTable("t_rt_geo", "LOCATION SDO_GEOMETRY")
+	// Note: DM has no SDO_GEOMETRY; its spatial types and functions are in the DMGEO package.
+	rawTypeInitGeometry(t)
+	table := rawTypeCreateTable("t_rt_geo", "LOCATION SYSGEO.ST_POINT")
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		_, err := db.Exec(ctx, fmt.Sprintf("INSERT INTO %s (LOCATION) VALUES (SDO_GEOMETRY(2001, NULL, SDO_POINT_TYPE(116.4074, 39.9042, NULL), NULL, NULL))", table))
+		_, err := db.Exec(ctx, fmt.Sprintf("INSERT INTO %s (LOCATION) VALUES (DMGEO.ST_GeomFromText('POINT(116.4074 39.9042)', 0))", table))
 		t.AssertNil(err)
 
-		one, err := db.Model(table+" T").
-			Fields("T.LOCATION.SDO_GTYPE AS GTYPE, T.LOCATION.SDO_POINT.X AS X, T.LOCATION.SDO_POINT.Y AS Y").
+		one, err := db.Model(table).
+			Fields("DMGEO.ST_GeometryType(LOCATION) AS GTYPE, DMGEO.ST_X(LOCATION) AS X, DMGEO.ST_Y(LOCATION) AS Y").
 			Where("ID", 1).One()
 		t.AssertNil(err)
-		t.Assert(one["GTYPE"].Int(), 2001)
+		t.Assert(one["GTYPE"].String(), "POINT")
 		t.Assert(one["X"].String(), "116.4074")
 		t.Assert(one["Y"].String(), "39.9042")
 	})
@@ -805,26 +839,32 @@ func Test_DataType_Geometry_Point(t *testing.T) {
 
 // Test_DataType_Geometry_Polygon tests POLYGON geometry type
 func Test_DataType_Geometry_Polygon(t *testing.T) {
-	table := rawTypeCreateTable("t_rt_geo", "AREA SDO_GEOMETRY")
+	// Note: DM has no SDO_GEOMETRY; its spatial types and functions are in the DMGEO package.
+	rawTypeInitGeometry(t)
+	table := rawTypeCreateTable("t_rt_geo", "AREA SYSGEO.ST_POLYGON")
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Exec(ctx, fmt.Sprintf(
-			"INSERT INTO %s (AREA) VALUES (SDO_GEOMETRY(2003, NULL, NULL, SDO_ELEM_INFO_ARRAY(1, 1003, 1), SDO_ORDINATE_ARRAY(0, 0, 10, 0, 10, 10, 0, 10, 0, 0)))",
+			"INSERT INTO %s (AREA) VALUES (DMGEO.ST_GeomFromText('POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))', 0))",
 			table,
 		))
 		t.AssertNil(err)
 
-		one, err := db.Model(table+" T").
-			Fields("T.AREA.SDO_GTYPE AS GTYPE, SDO_GEOM.SDO_AREA(T.AREA, 0.005) AS AREA_SIZE").
+		one, err := db.Model(table).
+			Fields("DMGEO.ST_GeometryType(AREA) AS GTYPE, DMGEO.ST_Area(AREA) AS AREA_SIZE").
 			Where("ID", 1).One()
 		t.AssertNil(err)
-		t.Assert(one["GTYPE"].Int(), 2003)
+		t.Assert(one["GTYPE"].String(), "POLYGON")
 		t.Assert(one["AREA_SIZE"].Float64(), 100)
 
 		vertices, err := db.GetAll(ctx, fmt.Sprintf(
-			"SELECT V.X, V.Y FROM %s T, TABLE(SDO_UTIL.GETVERTICES(T.AREA)) V WHERE T.ID = 1 ORDER BY V.ID",
-			table,
+			`SELECT DMGEO.ST_X(DMGEO.ST_PointN(DMGEO.ST_ExteriorRing(T.AREA), V.N)) AS X,
+				DMGEO.ST_Y(DMGEO.ST_PointN(DMGEO.ST_ExteriorRing(T.AREA), V.N)) AS Y
+			FROM %s T, (SELECT LEVEL AS N FROM DUAL
+				CONNECT BY LEVEL <= (SELECT DMGEO.ST_NumPoints(DMGEO.ST_ExteriorRing(AREA)) FROM %s WHERE ID = 1)) V
+			WHERE T.ID = 1 ORDER BY V.N`,
+			table, table,
 		))
 		t.AssertNil(err)
 		points := make([]string, 0, len(vertices))
@@ -839,12 +879,10 @@ func Test_DataType_Geometry_Polygon(t *testing.T) {
 
 // Test_DataType_Geometry_Null tests NULL geometry values
 func Test_DataType_Geometry_Null(t *testing.T) {
-	table := rawTypeCreateTable("t_rt_geo", "LOCATION SDO_GEOMETRY")
+	// Note: DM has no SDO_GEOMETRY; its spatial types and functions are in the DMGEO package.
+	rawTypeInitGeometry(t)
+	table := rawTypeCreateTable("t_rt_geo", "LOCATION SYSGEO.ST_POINT")
 	defer dropTable(table)
-
-	// Note: inserting nil through the model is not asserted. go-ora v2.9.0 binds a nil value as a
-	// NCHAR NULL, which Oracle rejects for an object column (ORA-00932), see
-	// https://github.com/sijms/go-ora/blob/v2.9.0/v2/parameter_encode.go#L20-L21.
 
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Exec(ctx, fmt.Sprintf("INSERT INTO %s (ID, LOCATION) VALUES (100, NULL)", table))
@@ -853,9 +891,21 @@ func Test_DataType_Geometry_Null(t *testing.T) {
 		count, err := db.Model(table).Where("id", 100).WhereNull("location").Count()
 		t.AssertNil(err)
 		t.Assert(count, 1)
-		// Note: reading the NULL back with One() is not asserted. go-ora v2.9.0 fails to decode an
-		// SDO_GEOMETRY column, even a NULL one ("invalid size for GetInt64"), see
-		// https://github.com/sijms/go-ora/blob/v2.9.0/v2/network/session.go#L1608.
+
+		one, err := db.Model(table).Where("id", 100).One()
+		t.AssertNil(err)
+		t.Assert(one["LOCATION"].IsNil(), true)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).Data(g.Map{
+			"id":       101,
+			"location": nil,
+		}).Insert()
+		t.AssertNil(err)
+
+		count, err := db.Model(table).Where("id", 101).WhereNull("location").Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
 	})
 }
 

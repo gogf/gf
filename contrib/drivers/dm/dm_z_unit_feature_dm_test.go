@@ -60,36 +60,22 @@ func dmFeatureOpen(extra string, maxOpen int) gdb.DB {
 	return newDb
 }
 
-// dmFeatureAssertOra asserts that `err` carries the Oracle error `code`.
-func dmFeatureAssertOra(t *gtest.T, err error, code string) {
-	t.AssertNE(err, nil)
-	if !gstr.Contains(err.Error(), code) {
-		t.Error(fmt.Sprintf("expected %s, got: %v", code, err))
-	}
-}
+// The codes of the DM server errors that the tests of this file expect besides the dmErr constants.
+const (
+	dmErrParamIncompatible = -5403
+	dmErrNumericOverflow   = -6102
+	dmErrColumnTooLong     = -6169
+	dmErrLobCompare        = -2685
+	dmErrDataOutOfRange    = 6092
+)
 
-// dmFeatureRoundTrips returns the number of round trips the session of a database object opened
-// with `extra` takes to fetch 200 rows.
-func dmFeatureRoundTrips(t *gtest.T, extra string) int {
-	const statSql = "SELECT s.VALUE FROM V$MYSTAT s JOIN V$STATNAME n ON s.STATISTIC# = n.STATISTIC# " +
-		"WHERE n.NAME = 'SQL*Net roundtrips to/from client'"
-	extraDb := dmFeatureOpen(extra, 1)
-	defer extraDb.Close(ctx)
-
-	before, err := extraDb.GetValue(ctx, statSql)
-	t.AssertNil(err)
-	all, err := extraDb.GetAll(ctx, "SELECT LEVEL LV FROM dual CONNECT BY LEVEL <= 200")
-	t.AssertNil(err)
-	t.Assert(len(all), 200)
-	after, err := extraDb.GetValue(ctx, statSql)
-	t.AssertNil(err)
-	return after.Int() - before.Int()
-}
-
-// Test_DM_Date_KeepsTimeOfDay tests that a DATE column is read back with its time of day.
-func Test_DM_Date_KeepsTimeOfDay(t *testing.T) {
+// Test_DM_Date_DropsTimeOfDay tests that a DATE column keeps only the date of a time value, while
+// a DATETIME column keeps its time of day.
+// Note: Oracle DATE keeps the time of day; DM DATE is date-only like MySQL DATE, and DM has
+// DATETIME and TIMESTAMP for a time of day.
+func Test_DM_Date_DropsTimeOfDay(t *testing.T) {
 	table := fmt.Sprintf("t_date_%d", gtime.TimestampMicro()%1e9)
-	if _, err := db.Exec(ctx, fmt.Sprintf(`CREATE TABLE %s (ID NUMBER(10) NOT NULL, D DATE, PRIMARY KEY (ID))`, table)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`CREATE TABLE %s (ID NUMBER(10) NOT NULL, D DATE, DT DATETIME, PRIMARY KEY (ID))`, table)); err != nil {
 		gtest.Fatal(err)
 	}
 	defer dropTable(table)
@@ -100,28 +86,37 @@ func Test_DM_Date_KeepsTimeOfDay(t *testing.T) {
 	)
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model(table).Data(g.List{
-			{"ID": 1, "D": withTime},
-			{"ID": 2, "D": midnight},
+			{"ID": 1, "D": withTime, "DT": withTime},
+			{"ID": 2, "D": midnight, "DT": midnight},
 		}).Insert()
 		t.AssertNil(err)
 
-		stored, err := db.GetValue(ctx, fmt.Sprintf(`SELECT TO_CHAR(D, 'YYYY-MM-DD HH24:MI:SS') FROM %s WHERE ID = 1`, table))
+		stored, err := db.GetOne(ctx, fmt.Sprintf(
+			`SELECT TO_CHAR(D, 'YYYY-MM-DD HH24:MI:SS') D, TO_CHAR(DT, 'YYYY-MM-DD HH24:MI:SS') DT FROM %s WHERE ID = 1`, table,
+		))
 		t.AssertNil(err)
-		t.Assert(stored.String(), "2026-03-04 15:26:37")
+		t.Assert(stored["D"], "2026-03-04 00:00:00")
+		t.Assert(stored["DT"], "2026-03-04 15:26:37")
 	})
 
 	gtest.C(t, func(t *gtest.T) {
 		one, err := db.Model(table).Where("ID", 1).One()
 		t.AssertNil(err)
-		t.Assert(one["D"].String(), "2026-03-04 15:26:37")
+		t.Assert(one["D"].String(), "2026-03-04")
+		t.Assert(one["DT"].String(), "2026-03-04 15:26:37")
 
 		one, err = db.Model(table).Where("ID", 2).One()
 		t.AssertNil(err)
-		t.Assert(one["D"].String(), "2026-03-05 00:00:00")
+		t.Assert(one["D"].String(), "2026-03-05")
+		t.Assert(one["DT"].String(), "2026-03-05 00:00:00")
 	})
 
 	gtest.C(t, func(t *gtest.T) {
 		value, err := db.Model(table).Where("ID", 1).Value("D")
+		t.AssertNil(err)
+		t.Assert(value.GTime().String(), "2026-03-04 00:00:00")
+
+		value, err = db.Model(table).Where("ID", 1).Value("DT")
 		t.AssertNil(err)
 		t.Assert(value.GTime().String(), "2026-03-04 15:26:37")
 	})
@@ -130,31 +125,47 @@ func Test_DM_Date_KeepsTimeOfDay(t *testing.T) {
 		type Row struct {
 			Id int
 			D  *gtime.Time
+			Dt *gtime.Time
 		}
 		var rows []Row
 		err := db.Model(table).OrderAsc("ID").Scan(&rows)
 		t.AssertNil(err)
 		t.Assert(len(rows), 2)
-		t.Assert(rows[0].D.String(), "2026-03-04 15:26:37")
+		t.Assert(rows[0].D.String(), "2026-03-04 00:00:00")
+		t.Assert(rows[0].Dt.String(), "2026-03-04 15:26:37")
 		t.Assert(rows[1].D.String(), "2026-03-05 00:00:00")
+		t.Assert(rows[1].Dt.String(), "2026-03-05 00:00:00")
 	})
 
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Where("D", withTime).Count()
 		t.AssertNil(err)
+		t.Assert(count, 0)
+
+		count, err = db.Model(table).Where("D", "2026-03-04").Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+
+		count, err = db.Model(table).Where("DT", withTime).Count()
+		t.AssertNil(err)
 		t.Assert(count, 1)
 
 		count, err = db.Model(table).WhereGT("D", gtime.NewFromStr("2026-03-04 15:00:00")).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+
+		count, err = db.Model(table).WhereGT("DT", gtime.NewFromStr("2026-03-04 15:00:00")).Count()
 		t.AssertNil(err)
 		t.Assert(count, 2)
 	})
 }
 
-// Test_DM_Date_LocalTimeZone tests that a DATE column keeps the instant of a time value
+// Test_DM_Date_LocalTimeZone tests that a DATETIME column keeps the instant of a time value
 // written in any time zone, reading it back in the local time zone.
+// Note: DM DATE is date-only, so the time of day is kept in a DATETIME column.
 func Test_DM_Date_LocalTimeZone(t *testing.T) {
 	table := fmt.Sprintf("t_date_%d", gtime.TimestampMicro()%1e9)
-	if _, err := db.Exec(ctx, fmt.Sprintf(`CREATE TABLE %s (ID NUMBER(10) NOT NULL, D DATE, PRIMARY KEY (ID))`, table)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`CREATE TABLE %s (ID NUMBER(10) NOT NULL, D DATETIME, PRIMARY KEY (ID))`, table)); err != nil {
 		gtest.Fatal(err)
 	}
 	defer dropTable(table)
@@ -182,9 +193,10 @@ func Test_DM_Date_LocalTimeZone(t *testing.T) {
 	})
 }
 
-// Test_DM_Rownum_RawSqlShapes tests the LIMIT rewrite of raw sql whatever the letter case and
-// the whitespace around its tokens, and of statements starting with WITH or a parenthesized operand.
-func Test_DM_Rownum_RawSqlShapes(t *testing.T) {
+// Test_DM_Limit_RawSqlShapes tests LIMIT in raw sql whatever the letter case and the whitespace
+// around its tokens, and in statements starting with WITH or a parenthesized operand.
+// Note: the driver passes LIMIT to DM, which supports it, instead of rewriting it to ROWNUM.
+func Test_DM_Limit_RawSqlShapes(t *testing.T) {
 	table := createInitUserTable()
 	defer dropTable(table)
 
@@ -236,9 +248,9 @@ func Test_DM_Rownum_RawSqlShapes(t *testing.T) {
 	})
 }
 
-// Test_DM_Rownum_HelperColumnHidden tests that the ROW_NUMBER__ column of the ROWNUM rewrite
-// never reaches the results of paged queries.
-func Test_DM_Rownum_HelperColumnHidden(t *testing.T) {
+// Test_DM_Page_NoExtraColumn tests that paged queries return the selected columns only, with no
+// helper column like the ROW_NUMBER__ of a ROWNUM rewrite.
+func Test_DM_Page_NoExtraColumn(t *testing.T) {
 	table := createInitUserTable()
 	defer dropTable(table)
 
@@ -307,8 +319,8 @@ func Test_DM_Rownum_HelperColumnHidden(t *testing.T) {
 	})
 }
 
-// Test_DM_Rownum_JoinSelectStar tests paging a join whose tables share column names.
-func Test_DM_Rownum_JoinSelectStar(t *testing.T) {
+// Test_DM_Page_JoinSelectStar tests paging a join whose tables share column names.
+func Test_DM_Page_JoinSelectStar(t *testing.T) {
 	table1 := createInitUserTable()
 	defer dropTable(table1)
 	table2 := createInitUserTable()
@@ -336,19 +348,24 @@ func Test_DM_Rownum_JoinSelectStar(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(all), 1)
 
-		_, err = db.Model(table1+" a").
+		// Note: Oracle rejects the ROWNUM sub-query of the page for its duplicate column names
+		// (ORA-00918); DM pages the join with LIMIT, as MySQL does.
+		all, err = db.Model(table1+" a").
 			InnerJoin(table2+" b", "a.id = b.id").
 			Fields("a.*, b.*").
 			Order("a.id").
 			Page(2, 3).
 			All()
-		dmFeatureAssertOra(t, err, "ORA-00918")
+		t.AssertNil(err)
+		t.Assert(gconv.Ints(all.Array("ID")), []int{4, 5, 6})
+		t.Assert(len(all[0]), 6)
+		t.Assert(all[0]["NICKNAME"], "name_4")
 	})
 }
 
-// Test_DM_Rownum_LimitOverflow tests paging with a count that reaches the largest int, whose
-// ROWNUM upper bound offset+count does not fit in an int.
-func Test_DM_Rownum_LimitOverflow(t *testing.T) {
+// Test_DM_Limit_Overflow tests paging with a count that reaches the largest int, whose sum with
+// the offset does not fit in an int.
+func Test_DM_Limit_Overflow(t *testing.T) {
 	table := createInitUserTable()
 	defer dropTable(table)
 
@@ -367,10 +384,9 @@ func Test_DM_Rownum_LimitOverflow(t *testing.T) {
 	})
 }
 
-// Test_DM_Rownum_OffsetInSubQuery tests a query with an offset used as a sub-query. Its ROWNUM
-// rewrite selects the ROW_NUMBER__ column besides the columns of the query, which the result of the
-// statement drops but the enclosing query sees.
-func Test_DM_Rownum_OffsetInSubQuery(t *testing.T) {
+// Test_DM_Limit_OffsetInSubQuery tests a query with an offset used as an operand of a union and
+// as a sub-query, which select the columns of the query only.
+func Test_DM_Limit_OffsetInSubQuery(t *testing.T) {
 	table := createInitUserTable()
 	defer dropTable(table)
 
@@ -383,23 +399,24 @@ func Test_DM_Rownum_OffsetInSubQuery(t *testing.T) {
 		t.Assert(gconv.Ints(all.Array("ID")), []int{1, 2, 1})
 	})
 
-	// Note: an operand with an offset has one column more than the others on Oracle 11g, which
-	// has no OFFSET clause to rewrite it into, so the union fails.
+	// Note: Oracle 11g fails these (ORA-01789, ORA-00913), as its ROWNUM rewrite of an offset adds
+	// a column; DM runs LIMIT with an offset as it is.
 	gtest.C(t, func(t *gtest.T) {
-		_, err := db.UnionAll(
+		all, err := db.UnionAll(
 			db.Model(table).Order("id").Limit(2, 3),
 			db.Model(table).Order("id").Limit(1),
 		).All()
-		dmFeatureAssertOra(t, err, "ORA-01789")
+		t.AssertNil(err)
+		t.Assert(gconv.Ints(all.Array("ID")), []int{3, 4, 5, 1})
 	})
 
-	// Note: for the same reason, a sub-query with an offset returns two columns where one is
-	// expected.
 	gtest.C(t, func(t *gtest.T) {
-		_, err := db.Model(table).
+		all, err := db.Model(table).
 			Where("id IN(?)", db.Model(table).Fields("id").Order("id").Limit(2, 3)).
+			Order("id").
 			All()
-		dmFeatureAssertOra(t, err, "ORA-00913")
+		t.AssertNil(err)
+		t.Assert(gconv.Ints(all.Array("ID")), []int{3, 4, 5})
 	})
 }
 
@@ -609,23 +626,25 @@ func Test_DM_Sequence_Nextval(t *testing.T) {
 		t.Assert(value.Int64(), 4)
 	})
 
-	// Note: NEXTVAL is a NUMBER without precision, whose value is read as float64 and loses the
-	// integers beyond 2^53, so a larger sequence value is read with a cast to NUMBER(p).
+	// Note: Oracle reads NEXTVAL, a NUMBER without precision, as float64, losing the integers
+	// beyond 2^53; DM reports NEXTVAL as BIGINT, read as int64 without loss. A cast to NUMBER(19)
+	// is reported as DEC(19,0), read as its exact decimal string.
 	gtest.C(t, func(t *gtest.T) {
 		value, err := db.GetValue(ctx, fmt.Sprintf("SELECT CAST(%s.NEXTVAL AS NUMBER(19)) AS ID FROM dual", bigSeq))
 		t.AssertNil(err)
 		t.Assert(value.String(), "9007199254740993")
-		t.AssertEQ(value.Val(), int64(9007199254740993))
+		t.AssertEQ(value.Val(), "9007199254740993")
 
 		value, err = db.GetValue(ctx, fmt.Sprintf("SELECT %s.NEXTVAL FROM dual", bigSeq))
 		t.AssertNil(err)
-		t.AssertEQ(value.Val(), float64(9007199254740994))
+		t.AssertEQ(value.Val(), int64(9007199254740994))
 	})
 }
 
-// Test_DM_Sequence_NextvalSingleRow tests that reading a sequence value from DUAL with Value and One
-// fails with ORA-02287, as they limit the query to one row with a ROWNUM sub-query, where Oracle does
-// not allow a sequence. Test_DM_Sequence_Nextval reads it with All and raw sql instead.
+// Test_DM_Sequence_NextvalSingleRow tests reading a sequence value from DUAL with Value and One,
+// which limit the query to one row.
+// Note: Oracle fails these with ORA-02287, as its ROWNUM sub-query does not allow a sequence; DM
+// limits the query with LIMIT, which allows it.
 func Test_DM_Sequence_NextvalSingleRow(t *testing.T) {
 	var (
 		table    = createUserTable()
@@ -634,19 +653,23 @@ func Test_DM_Sequence_NextvalSingleRow(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		_, err := db.Model("dual").Fields(sequence + ".NEXTVAL").Value()
-		dmFeatureAssertOra(t, err, "ORA-02287")
+		value, err := db.Model("dual").Fields(sequence + ".NEXTVAL").Value()
+		t.AssertNil(err)
+		t.AssertEQ(value.Val(), int64(1))
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		_, err := db.Model("dual").Fields(sequence + ".NEXTVAL N").One()
-		dmFeatureAssertOra(t, err, "ORA-02287")
+		one, err := db.Model("dual").Fields(sequence + ".NEXTVAL N").One()
+		t.AssertNil(err)
+		t.Assert(len(one), 1)
+		t.AssertEQ(one["N"].Val(), int64(2))
 	})
 }
 
-// Test_DM_Sequence_NextvalSave tests that a sequence value given as Raw to Save fails with
-// ORA-02287, as its MERGE takes the values from a sub-query, where Oracle does not allow a sequence,
-// while Insert writes it into the VALUES clause.
+// Test_DM_Sequence_NextvalSave tests a sequence value given as Raw to Save, whose MERGE takes the
+// values from a sub-query, and to Insert, which writes it into the VALUES clause.
+// Note: Oracle fails the Save with ORA-02287, as it does not allow a sequence in the sub-query of
+// MERGE; DM allows it.
 func Test_DM_Sequence_NextvalSave(t *testing.T) {
 	var (
 		table    = createUserTable()
@@ -655,10 +678,28 @@ func Test_DM_Sequence_NextvalSave(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		_, err := db.Model(table).Data(g.Map{
-			"id": 1, "passport": gdb.Raw(sequence + ".NEXTVAL"), "password": "p", "nickname": "n",
-		}).Save()
-		dmFeatureAssertOra(t, err, "ORA-02287")
+		var previous int64
+		for i := 0; i < 2; i++ {
+			result, err := db.Model(table).Data(g.Map{
+				"id": 1, "passport": gdb.Raw(sequence + ".NEXTVAL"), "password": "p", "nickname": "n",
+			}).Save()
+			t.AssertNil(err)
+			n, err := result.RowsAffected()
+			t.AssertNil(err)
+			t.Assert(n, 1)
+
+			passport, err := db.Model(table).Where("id", 1).Value("passport")
+			t.AssertNil(err)
+			current, err := db.GetValue(ctx, fmt.Sprintf("SELECT %s.CURRVAL FROM dual", sequence))
+			t.AssertNil(err)
+			t.AssertGT(passport.Int64(), previous)
+			t.AssertLE(passport.Int64(), current.Int64())
+			previous = passport.Int64()
+		}
+
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -669,7 +710,7 @@ func Test_DM_Sequence_NextvalSave(t *testing.T) {
 
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
-		t.Assert(count, 1)
+		t.Assert(count, 2)
 	})
 }
 
@@ -1069,7 +1110,7 @@ WHEN NOT MATCHED THEN INSERT (ID, PASSPORT, PASSWORD, NICKNAME) VALUES (s.ID, 'm
 }
 
 // Test_DM_Merge_OnDuplicateExFolded tests that OnDuplicateEx leaves out a column named in
-// another letter case than in OnDuplicate, as Oracle resolves both to the same column.
+// another letter case than in OnDuplicate, as DM resolves both to the same column.
 func Test_DM_Merge_OnDuplicateExFolded(t *testing.T) {
 	table := createInitUserTable()
 	defer dropTable(table)
@@ -1136,8 +1177,9 @@ func Test_DM_Merge_CompositeKeyOrder(t *testing.T) {
 	})
 }
 
-// Test_DM_TableFields_TypeStrings tests the field types that TableFields reports for Oracle
-// types without a MySQL counterpart, and that a NUMBER without precision keeps its decimals.
+// Test_DM_TableFields_TypeStrings tests the field types that TableFields reports for the Oracle
+// compatible types without a MySQL counterpart, as DM reports them, and that a NUMBER without
+// precision keeps its decimals.
 func Test_DM_TableFields_TypeStrings(t *testing.T) {
 	table := dmFeatureTableName("t_types")
 	dmFeatureExec(fmt.Sprintf(`CREATE TABLE %s (
@@ -1163,21 +1205,25 @@ func Test_DM_TableFields_TypeStrings(t *testing.T) {
 		fields, err := db.TableFields(ctx, table)
 		t.AssertNil(err)
 		t.Assert(len(fields), 14)
+		// Note: DM reports BINARY_DOUBLE as DOUBLE, TIMESTAMP WITH TIME ZONE as DATETIME WITH
+		// TIME ZONE and RAW as VARBINARY, the length in bytes of the character types, which is
+		// 6 for VARCHAR2(3 CHAR) with the GB18030 charset of the test server, and the storage
+		// size of the other types.
 		expect := map[string]string{
-			"ID":  "INT(10,0)",
-			"N":   "INT(,)",
-			"I":   "INT(,0)",
-			"F":   "FLOAT(126,)",
-			"BD":  "BINARY_DOUBLE(8)",
-			"TZ":  "TIMESTAMP(6) WITH TIME ZONE(13)",
-			"TL":  "TIMESTAMP(6) WITH LOCAL TIME ZONE(11)",
-			"IDS": "INTERVAL DAY(2) TO SECOND(6)(11)",
-			"IYM": "INTERVAL YEAR(2) TO MONTH(5)",
+			"ID":  "NUMBER(10,0)",
+			"N":   "NUMBER(22)",
+			"I":   "INTEGER(4)",
+			"F":   "FLOAT(8)",
+			"BD":  "DOUBLE(8)",
+			"TZ":  "DATETIME WITH TIME ZONE(10)",
+			"TL":  "TIMESTAMP WITH LOCAL TIME ZONE(8)",
+			"IDS": "INTERVAL DAY TO SECOND(2,6)",
+			"IYM": "INTERVAL YEAR TO MONTH(2,6)",
 			"NV":  "NVARCHAR2(20)",
-			"NC":  "NCHAR(8)",
+			"NC":  "NCHAR(4)",
 			"VB":  "VARCHAR2(6)",
-			"VC":  "VARCHAR2(12)",
-			"R":   "RAW(8)",
+			"VC":  "VARCHAR2(6)",
+			"R":   "VARBINARY(8)",
 		}
 		for name, fieldType := range expect {
 			t.Assert(fields[name].Type, fieldType)
@@ -1195,16 +1241,18 @@ func Test_DM_TableFields_TypeStrings(t *testing.T) {
 		}).Insert()
 		t.AssertNil(err)
 
+		// Note: DM writes the leading zero of a fraction that Oracle leaves out.
 		array, err := db.Model(table).Order("id").Array("TO_CHAR(n)")
 		t.AssertNil(err)
-		t.Assert(array, g.Slice{"3.14159", "12345678901234567890", ".000000000000000000000000000001"})
+		t.Assert(array, g.Slice{"3.14159", "12345678901234567890", "0.000000000000000000000000000001"})
 
-		// Note: the value of a NUMBER column without precision is read as float64.
+		// Note: Oracle reads the value of a NUMBER column without precision as float64; on DM it
+		// is the exact decimal string, like a DECIMAL value on MySQL.
 		array, err = db.Model(table).Order("id").Array("n")
 		t.AssertNil(err)
-		t.Assert(array[0].Float64(), 3.14159)
-		t.Assert(array[1].Float64(), 12345678901234567890.0)
-		t.Assert(array[2].Float64(), 1e-30)
+		t.Assert(array[0].String(), "3.14159")
+		t.Assert(array[1].String(), "12345678901234567890")
+		t.Assert(array[2].String(), "0.000000000000000000000000000001")
 	})
 }
 
@@ -1233,13 +1281,17 @@ func Test_DM_TableFields_CommentAndDefault(t *testing.T) {
 		t.Assert(value, "dflt")
 	})
 
+	// Note: the Oracle driver reports no comment and no default; the DM driver reports the
+	// comment, and the default as the expression DM stores, which quotes a string.
 	gtest.C(t, func(t *gtest.T) {
 		fields, err := db.TableFields(ctx, table)
 		t.AssertNil(err)
 		t.Assert(fields["NAME"].Type, "VARCHAR2(20)")
-		t.Assert(fields["NAME"].Comment, "")
-		t.Assert(fields["NAME"].Default, nil)
+		t.Assert(fields["NAME"].Comment, "the name")
+		t.Assert(fields["NAME"].Default, "'dflt'")
 		t.Assert(fields["NAME"].Extra, "")
+		t.Assert(fields["ID"].Comment, "")
+		t.Assert(fields["ID"].Default, nil)
 	})
 }
 
@@ -1257,10 +1309,10 @@ func Test_DM_TableFields_View(t *testing.T) {
 		fields, err := db.TableFields(ctx, view)
 		t.AssertNil(err)
 		t.Assert(len(fields), 2)
-		t.Assert(fields["ID"].Type, "INT(10,0)")
+		t.Assert(fields["ID"].Type, "NUMBER(10,0)")
 		t.Assert(fields["ID"].Key, "")
 		t.Assert(fields["ID"].Null, false)
-		t.Assert(fields["NICKNAME"].Type, "VARCHAR2(45)")
+		t.Assert(fields["NICKNAME"].Type, "VARCHAR(45)")
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -1282,33 +1334,37 @@ func Test_DM_TableFields_View(t *testing.T) {
 	})
 }
 
-// Test_DM_Model_SchemaQualifiedTable tests querying and changing a table named with its schema.
+// Test_DM_Model_SchemaQualifiedTable tests querying and changing a table named with its schema,
+// the schema of the connection.
 func Test_DM_Model_SchemaQualifiedTable(t *testing.T) {
-	table := createInitUserTable()
+	var (
+		table  = createInitUserTable()
+		schema = TestDBName
+	)
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		one, err := db.Model("SYSTEM."+table).Where("id", 1).One()
+		one, err := db.Model(schema+"."+table).Where("id", 1).One()
 		t.AssertNil(err)
 		t.Assert(one["PASSPORT"], "user_1")
 
-		one, err = db.Model("system."+table).Fields("id, nickname").Where("id", 2).One()
+		one, err = db.Model(strings.ToLower(schema)+"."+table).Fields("id, nickname").Where("id", 2).One()
 		t.AssertNil(err)
 		t.Assert(len(one), 2)
 		t.Assert(one["NICKNAME"], "name_2")
 
-		all, err := db.Model("SYSTEM."+table+" u").Where("u.id > ?", 8).Order("u.id").All()
+		all, err := db.Model(schema+"."+table+" u").Where("u.id > ?", 8).Order("u.id").All()
 		t.AssertNil(err)
 		t.Assert(gconv.Ints(all.Array("ID")), []int{9, 10})
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model("SYSTEM."+table).Where("id", 4).Delete()
+		result, err := db.Model(schema+"."+table).Where("id", 4).Delete()
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 
-		_, err = db.Model("SYSTEM." + table).Data(g.Map{
+		_, err = db.Model(schema + "." + table).Data(g.Map{
 			"id": 11, "passport": "user_11", "password": "p", "nickname": "name_11",
 		}).Insert()
 		t.AssertNil(err)
@@ -1325,7 +1381,7 @@ func Test_DM_Model_SchemaQualifiedFieldTypes(t *testing.T) {
 		table := createUserTable()
 		defer dropTable(table)
 
-		fields, err := db.TableFields(ctx, "SYSTEM."+table)
+		fields, err := db.TableFields(ctx, TestDBName+"."+table)
 		t.AssertNil(err)
 		t.Assert(len(fields), 6)
 	})
@@ -1334,7 +1390,7 @@ func Test_DM_Model_SchemaQualifiedFieldTypes(t *testing.T) {
 		table := createUserTable()
 		defer dropTable(table)
 
-		id, err := db.Model("SYSTEM." + table).Data(g.Map{"passport": "p", "password": "p", "nickname": "n"}).InsertAndGetId()
+		id, err := db.Model(TestDBName + "." + table).Data(g.Map{"passport": "p", "password": "p", "nickname": "n"}).InsertAndGetId()
 		t.AssertNil(err)
 		value, err := db.Model(table).Where("passport", "p").Value("id")
 		t.AssertNil(err)
@@ -1346,7 +1402,7 @@ func Test_DM_Model_SchemaQualifiedFieldTypes(t *testing.T) {
 		table := createInitUserTable()
 		defer dropTable(table)
 
-		_, err := db.Model("SYSTEM."+table).Data("nickname", "schema").Where("id", 3).Update()
+		_, err := db.Model(TestDBName+"."+table).Data("nickname", "schema").Where("id", 3).Update()
 		t.AssertNil(err)
 
 		value, err := db.Model(table).Where("id", 3).Value("nickname")
@@ -1363,7 +1419,7 @@ func Test_DM_Model_SchemaQualifiedFieldTypes(t *testing.T) {
 		_, err := db.Model(table).Data(g.Map{"id": 1, "c": text}).Insert()
 		t.AssertNil(err)
 
-		_, err = db.Model("SYSTEM." + table).Data(g.Map{"id": 2, "c": text}).Insert()
+		_, err = db.Model(TestDBName + "." + table).Data(g.Map{"id": 2, "c": text}).Insert()
 		t.AssertNil(err)
 
 		value, err := db.Model(table).Where("id", 2).Value("c")
@@ -1372,58 +1428,58 @@ func Test_DM_Model_SchemaQualifiedFieldTypes(t *testing.T) {
 	})
 }
 
-// Test_DM_Model_OtherOwnerTable tests the model operations that need the fields of a table
-// qualified with an owner other than the connected user, while the connected user has a table of
-// the same name with other columns.
-func Test_DM_Model_OtherOwnerTable(t *testing.T) {
+// Test_DM_Model_OtherSchemaTable tests the model operations that need the fields of a table
+// qualified with a schema other than the schema of the connection, while the schema of the
+// connection has a table of the same name with other columns.
+// Note: Oracle has a schema per user; DM creates a schema of the connected user with CREATE SCHEMA.
+func Test_DM_Model_OtherSchemaTable(t *testing.T) {
 	var (
-		owner      = "GF_OWNER"
-		table      = dmFeatureTableName("t_owner")
-		ownerTable = owner + "." + table
+		schema      = strings.ToUpper(dmFeatureTableName("gf_schema"))
+		table       = dmFeatureTableName("t_schema")
+		schemaTable = schema + "." + table
 	)
-	_, _ = db.Exec(ctx, "DROP USER "+owner+" CASCADE")
 	dmFeatureExec(
-		fmt.Sprintf(`CREATE USER %s IDENTIFIED BY gf_owner DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS`, owner),
-		fmt.Sprintf(`CREATE TABLE %s (ID NUMBER(10) NOT NULL, PASSPORT VARCHAR2(45), NICKNAME VARCHAR2(45), PRIMARY KEY (ID))`, ownerTable),
+		fmt.Sprintf(`CREATE SCHEMA %s`, schema),
+		fmt.Sprintf(`CREATE TABLE %s (ID NUMBER(10) NOT NULL, PASSPORT VARCHAR2(45), NICKNAME VARCHAR2(45), PRIMARY KEY (ID))`, schemaTable),
 		fmt.Sprintf(`CREATE TABLE %s (ID NUMBER(10) NOT NULL, NAME VARCHAR2(45), PRIMARY KEY (ID))`, table),
 	)
 	defer func() {
 		dropTable(table)
-		_, _ = db.Exec(ctx, "DROP USER "+owner+" CASCADE")
+		dmFeatureExec(fmt.Sprintf(`DROP SCHEMA %s CASCADE`, schema))
 	}()
 
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(db.GetTableNameForFields(ownerTable), ownerTable)
-		t.Assert(db.GetTableNameForFields(ownerTable+" u"), ownerTable)
-		t.Assert(db.GetTableNameForFields(ownerTable+" AS u, "+table+" t"), ownerTable)
+		t.Assert(db.GetTableNameForFields(schemaTable), schemaTable)
+		t.Assert(db.GetTableNameForFields(schemaTable+" u"), schemaTable)
+		t.Assert(db.GetTableNameForFields(schemaTable+" AS u, "+table+" t"), schemaTable)
 		t.Assert(db.GetTableNameForFields(table+" u"), table)
-		t.Assert(db.GetTableNameForFields(","+ownerTable), ownerTable)
+		t.Assert(db.GetTableNameForFields(","+schemaTable), schemaTable)
 
-		fields, err := db.Model(ownerTable + " u").TableFields(ownerTable + " u")
+		fields, err := db.Model(schemaTable + " u").TableFields(schemaTable + " u")
 		t.AssertNil(err)
 		t.Assert(len(fields), 3)
 		t.AssertNE(fields["PASSPORT"], nil)
 
-		has, err := db.GetCore().HasField(ctx, ownerTable, "nickname")
+		has, err := db.GetCore().HasField(ctx, schemaTable, "nickname")
 		t.AssertNil(err)
 		t.Assert(has, true)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		_, err := db.Model(ownerTable).Data(g.Map{"id": 1, "passport": "user_1", "nickname": "name_1"}).Insert()
+		_, err := db.Model(schemaTable).Data(g.Map{"id": 1, "passport": "user_1", "nickname": "name_1"}).Insert()
 		t.AssertNil(err)
 
-		result, err := db.Model(ownerTable).Data("nickname", "owner").Where("id", 1).Update()
+		result, err := db.Model(schemaTable).Data("nickname", "owner").Where("id", 1).Update()
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.GetOne(ctx, fmt.Sprintf(`SELECT PASSPORT, NICKNAME FROM %s WHERE ID = 1`, ownerTable))
+		one, err := db.GetOne(ctx, fmt.Sprintf(`SELECT PASSPORT, NICKNAME FROM %s WHERE ID = 1`, schemaTable))
 		t.AssertNil(err)
 		t.Assert(one["PASSPORT"], "user_1")
 		t.Assert(one["NICKNAME"], "owner")
 
-		one, err = db.Model(ownerTable).FieldsEx("passport").Where("id", 1).One()
+		one, err = db.Model(schemaTable).FieldsEx("passport").Where("id", 1).One()
 		t.AssertNil(err)
 		t.Assert(len(one), 2)
 		t.Assert(one["NICKNAME"], "owner")
@@ -1434,12 +1490,12 @@ func Test_DM_Model_OtherOwnerTable(t *testing.T) {
 	})
 }
 
-// Test_DM_Model_QuotedOwnerTable tests a table whose name is quoted in lower case and qualified
-// with its owner, which Oracle looks up as it is written.
-func Test_DM_Model_QuotedOwnerTable(t *testing.T) {
+// Test_DM_Model_QuotedSchemaTable tests a table whose name is quoted in lower case and qualified
+// with its schema, which DM looks up as it is written.
+func Test_DM_Model_QuotedSchemaTable(t *testing.T) {
 	var (
 		name  = dmFeatureTableName("t_quoted")
-		table = fmt.Sprintf(`"SYSTEM"."%s"`, name)
+		table = fmt.Sprintf(`"%s"."%s"`, TestDBName, name)
 	)
 	dmFeatureExec(fmt.Sprintf(`CREATE TABLE %s (ID NUMBER(10) NOT NULL, NICKNAME VARCHAR2(45), PRIMARY KEY (ID))`, table))
 	defer dmFeatureExec(fmt.Sprintf(`DROP TABLE %s`, table))
@@ -1486,8 +1542,9 @@ func Test_DM_Model_QuotedOwnerTable(t *testing.T) {
 // whose field types still convert the values.
 func Test_DM_Model_AliasedWrite(t *testing.T) {
 	table := dmFeatureTableName("t_alias")
+	// Note: DM DATE is date-only, so the time of day is kept in a DATETIME column.
 	dmFeatureExec(fmt.Sprintf(
-		`CREATE TABLE %s (ID NUMBER(10) NOT NULL, NICKNAME VARCHAR2(45), INFO VARCHAR2(200), DT DATE, PRIMARY KEY (ID))`,
+		`CREATE TABLE %s (ID NUMBER(10) NOT NULL, NICKNAME VARCHAR2(45), INFO VARCHAR2(200), DT DATETIME, PRIMARY KEY (ID))`,
 		table,
 	))
 	defer dropTable(table)
@@ -1576,8 +1633,8 @@ func Test_DM_Model_AliasedWrite(t *testing.T) {
 	})
 }
 
-// Test_DM_Lob_LargeRoundTrip tests CLOB and BLOB values beyond the 4000 and 32767 byte bind
-// limits through insert, update and select.
+// Test_DM_Lob_LargeRoundTrip tests CLOB and BLOB values of more than 4000 and 32767 bytes, and of
+// multibyte characters, through insert, update and select.
 func Test_DM_Lob_LargeRoundTrip(t *testing.T) {
 	table := dmFeatureTableName("t_lob")
 	dmFeatureExec(fmt.Sprintf(`CREATE TABLE %s (ID NUMBER(10) NOT NULL, C CLOB, B BLOB, PRIMARY KEY (ID))`, table))
@@ -1627,8 +1684,8 @@ func Test_DM_Lob_LargeRoundTrip(t *testing.T) {
 	})
 }
 
-// Test_DM_Lob_ComparisonRejected tests that Oracle rejects a CLOB in comparisons, ORDER BY,
-// DISTINCT and GROUP BY, while LIKE and the DBMS_LOB functions work.
+// Test_DM_Lob_ComparisonRejected tests that DM rejects a CLOB in comparisons (-6105), ORDER BY,
+// DISTINCT and GROUP BY (-2685), while LIKE and the DBMS_LOB functions work.
 func Test_DM_Lob_ComparisonRejected(t *testing.T) {
 	table := dmFeatureTableName("t_lobcmp")
 	dmFeatureExec(fmt.Sprintf(`CREATE TABLE %s (ID NUMBER(10) NOT NULL, C CLOB, PRIMARY KEY (ID))`, table))
@@ -1642,13 +1699,13 @@ func Test_DM_Lob_ComparisonRejected(t *testing.T) {
 		t.AssertNil(err)
 
 		_, err = db.Model(table).Where("c", "abc").Count()
-		dmFeatureAssertOra(t, err, "ORA-00932")
+		assertDmError(t, err, dmErrTypeMismatch)
 		_, err = db.Model(table).Order("c").All()
-		dmFeatureAssertOra(t, err, "ORA-00932")
+		assertDmError(t, err, dmErrLobCompare)
 		_, err = db.Model(table).Fields("DISTINCT c").All()
-		dmFeatureAssertOra(t, err, "ORA-00932")
+		assertDmError(t, err, dmErrLobCompare)
 		_, err = db.Model(table).Fields("c").Group("c").All()
-		dmFeatureAssertOra(t, err, "ORA-00932")
+		assertDmError(t, err, dmErrLobCompare)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -1668,6 +1725,9 @@ func Test_DM_Lob_ComparisonRejected(t *testing.T) {
 
 // Test_DM_Varchar2_ByteAndCharSemantics tests the length limits of VARCHAR2 in bytes and in
 // characters, and NVARCHAR2 with characters beyond the basic plane.
+// Note: the GB18030 charset of the test server stores a Chinese character in 2 bytes, where the
+// AL32UTF8 charset of Oracle takes 3, and DM rejects a bound value beyond the byte length of the
+// column with -5403 and a value beyond the character length with -6169, where Oracle has ORA-12899.
 func Test_DM_Varchar2_ByteAndCharSemantics(t *testing.T) {
 	table := dmFeatureTableName("t_vchar")
 	dmFeatureExec(fmt.Sprintf(
@@ -1677,11 +1737,11 @@ func Test_DM_Varchar2_ByteAndCharSemantics(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		_, err := db.Model(table).Data(g.Map{"id": 1, "vb": "中文字"}).Insert()
-		dmFeatureAssertOra(t, err, "ORA-12899")
+		_, err := db.Model(table).Data(g.Map{"id": 1, "vb": "中文字中"}).Insert()
+		assertDmError(t, err, dmErrParamIncompatible)
 
 		_, err = db.Model(table).Data(g.Map{"id": 2, "vc": "abcd"}).Insert()
-		dmFeatureAssertOra(t, err, "ORA-12899")
+		assertDmError(t, err, dmErrColumnTooLong)
 
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
@@ -1689,22 +1749,29 @@ func Test_DM_Varchar2_ByteAndCharSemantics(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		_, err := db.Model(table).Data(g.Map{"id": 3, "vb": "中文", "vc": "中文字", "nv": "中文字符串😀"}).Insert()
+		_, err := db.Model(table).Data(g.Map{"id": 3, "vb": "中文字", "vc": "中文字", "nv": "中文字符串😀"}).Insert()
 		t.AssertNil(err)
 
 		one, err := db.Model(table).Where("id", 3).One()
 		t.AssertNil(err)
-		t.Assert(one["VB"], "中文")
+		t.Assert(one["VB"], "中文字")
 		t.Assert(one["VC"], "中文字")
 		t.Assert(one["NV"], "中文字符串😀")
 
 		value, err := db.Model(table).Where("nv", "中文字符串😀").Value("id")
 		t.AssertNil(err)
 		t.Assert(value, 3)
+
+		lengths, err := db.GetOne(ctx, fmt.Sprintf(
+			"SELECT LENGTHB(VB) VB, LENGTHB(VC) VC, LENGTHB(NV) NV FROM %s WHERE ID = 3", table,
+		))
+		t.AssertNil(err)
+		t.Assert(lengths, g.Map{"VB": 6, "VC": 6, "NV": 14})
 	})
 }
 
-// Test_DM_WhereIn_Over1000 tests that an IN list is limited to 1000 values, which gf does not split.
+// Test_DM_WhereIn_Over1000 tests an IN list of more than 1000 values, which gf does not split.
+// Note: Oracle limits an IN list to 1000 values (ORA-01795); DM does not.
 func Test_DM_WhereIn_Over1000(t *testing.T) {
 	table := createInitUserTable()
 	defer dropTable(table)
@@ -1725,26 +1792,38 @@ func Test_DM_WhereIn_Over1000(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		_, err := db.Model(table).WhereIn("id", ids).Count()
-		dmFeatureAssertOra(t, err, "ORA-01795")
+		count, err := db.Model(table).WhereIn("id", ids).Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
 
-		_, err = db.Model(table).Where("id", ids).Count()
-		dmFeatureAssertOra(t, err, "ORA-01795")
+		count, err = db.Model(table).Where("id", ids).Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
 
-		_, err = db.Model(table).WhereNotIn("id", ids).Count()
-		dmFeatureAssertOra(t, err, "ORA-01795")
+		count, err = db.Model(table).WhereNotIn("id", ids).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
 	})
 }
 
-// Test_DM_EmptyString_IsNull tests that Oracle stores an empty string as NULL and how conditions
-// on an empty string behave.
-func Test_DM_EmptyString_IsNull(t *testing.T) {
+// Test_DM_EmptyString_NotNull tests that DM stores an empty string as it is, not as NULL, and how
+// conditions on an empty string behave.
+// Note: Oracle stores an empty string as NULL, so that it fails a NOT NULL column (ORA-01400);
+// DM keeps it like MySQL.
+func Test_DM_EmptyString_NotNull(t *testing.T) {
 	table := createInitUserTable()
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		_, err := db.Model(table).Data(g.Map{"id": 11, "passport": "", "password": "p", "nickname": "n"}).Insert()
-		dmFeatureAssertOra(t, err, "ORA-01400")
+		_, err := db.Model(table).Data(g.Map{
+			"id": 11, "passport": "", "password": "p", "nickname": "n", "create_time": CreateTime,
+		}).Insert()
+		t.AssertNil(err)
+
+		value, err := db.Model(table).Where("id", 11).Value("passport")
+		t.AssertNil(err)
+		t.Assert(value.IsNil(), false)
+		t.Assert(value.String(), "")
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -1753,23 +1832,24 @@ func Test_DM_EmptyString_IsNull(t *testing.T) {
 
 		value, err := db.Model(table).Where("id", 1).Value("create_time")
 		t.AssertNil(err)
-		t.Assert(value.IsNil(), true)
+		t.Assert(value.IsNil(), false)
+		t.Assert(value.String(), "")
 
 		count, err := db.Model(table).WhereNull("create_time").Count()
 		t.AssertNil(err)
-		t.Assert(count, 1)
+		t.Assert(count, 0)
 
 		count, err = db.Model(table).Where("create_time", "").Count()
 		t.AssertNil(err)
-		t.Assert(count, 0)
+		t.Assert(count, 1)
 
 		count, err = db.Model(table).WhereNot("create_time", "").Count()
 		t.AssertNil(err)
-		t.Assert(count, 0)
+		t.Assert(count, TableSize)
 
 		count, err = db.Model(table).OmitEmptyWhere().Where("create_time", "").Count()
 		t.AssertNil(err)
-		t.Assert(count, TableSize)
+		t.Assert(count, TableSize+1)
 	})
 }
 
@@ -1781,9 +1861,8 @@ func (s dmFeatureValuerString) Value() (driver.Value, error) {
 	return "user_" + string(s), nil
 }
 
-// Test_DM_NamedString_Arguments tests values of a string type defined outside the underlying
-// driver as arguments of Where, of Data and of a raw statement, which the underlying driver does
-// not bind as they are.
+// Test_DM_NamedString_Arguments tests values of a defined string type and of a driver.Valuer as
+// arguments of Where, of Data and of a raw statement, including named arguments.
 func Test_DM_NamedString_Arguments(t *testing.T) {
 	type rvStr string
 	table := createInitUserTable()
@@ -1832,13 +1911,15 @@ func Test_DM_NamedString_Arguments(t *testing.T) {
 	})
 }
 
-// Test_DM_BinaryDouble_BeyondNumberRange tests floats beyond the range of NUMBER, from 1e-130 to
-// 1e126 exclusive, as arguments of Where, of Data in string form and of a raw statement. The
-// underlying driver encodes a float as NUMBER, whose exponent wraps around beyond that range.
-func Test_DM_BinaryDouble_BeyondNumberRange(t *testing.T) {
+// Test_DM_Double_BeyondNumberRange tests floats beyond the range of NUMBER, from 1e-130 to 1e126
+// exclusive, in DOUBLE and REAL columns, as arguments of Where, of Data in string form and of a
+// raw statement.
+// Note: DM has DOUBLE and REAL for the BINARY_DOUBLE and BINARY_FLOAT of Oracle, whose driver
+// encodes a float as NUMBER, and the underlying driver binds a float as DOUBLE.
+func Test_DM_Double_BeyondNumberRange(t *testing.T) {
 	table := dmFeatureTableName("t_bdrange")
 	dmFeatureExec(
-		fmt.Sprintf(`CREATE TABLE %s (ID NUMBER(10) NOT NULL, D BINARY_DOUBLE, F BINARY_FLOAT, PRIMARY KEY (ID))`, table),
+		fmt.Sprintf(`CREATE TABLE %s (ID NUMBER(10) NOT NULL, D DOUBLE, F REAL, PRIMARY KEY (ID))`, table),
 		fmt.Sprintf(`INSERT INTO %s (ID, D, F) VALUES (1, 0, 0)`, table),
 	)
 	defer dropTable(table)
@@ -1870,9 +1951,10 @@ func Test_DM_BinaryDouble_BeyondNumberRange(t *testing.T) {
 		}
 	})
 
+	// Note: DM has no BINARY_DOUBLE literal like 3e+200d, so the literal is a plain number.
 	gtest.C(t, func(t *gtest.T) {
 		for _, value := range values {
-			dmFeatureExec(fmt.Sprintf("UPDATE %s SET d = %vd WHERE id = 1", table, value))
+			dmFeatureExec(fmt.Sprintf("UPDATE %s SET d = %v WHERE id = 1", table, value))
 
 			count, err := db.Model(table).Where("d", value).Count()
 			t.AssertNil(err)
@@ -1880,28 +1962,46 @@ func Test_DM_BinaryDouble_BeyondNumberRange(t *testing.T) {
 		}
 	})
 
+	// Note: Oracle stores the infinities in BINARY_DOUBLE; DM rejects them as an overflow, as
+	// MySQL rejects them in DOUBLE.
 	gtest.C(t, func(t *gtest.T) {
-		for _, value := range []float64{math.Inf(1), math.Inf(-1), math.NaN()} {
-			_, err := db.Model(table).Data(g.Map{"d": value, "f": float32(value)}).Where("id", 1).Update()
-			t.AssertNil(err)
+		for _, value := range []float64{math.Inf(1), math.Inf(-1)} {
+			_, err := db.Model(table).Data(g.Map{"d": value}).Where("id", 1).Update()
+			assertDmError(t, err, dmErrNumericOverflow)
 
-			one, err := db.Model(table).Where("id", 1).One()
-			t.AssertNil(err)
-			t.Assert(one["D"].String(), one["F"].String())
-			t.Assert(one["D"].String(), fmt.Sprint(value))
-
-			count, err := db.Model(table).Where("d", value).Where("f", float32(value)).Count()
-			t.AssertNil(err)
-			t.Assert(count, 1)
+			_, err = db.Model(table).Data(g.Map{"f": float32(value)}).Where("id", 1).Update()
+			assertDmError(t, err, dmErrNumericOverflow)
 		}
 	})
 
+	// Note: DM stores NaN, which equals no value in a condition, NaN included, where Oracle
+	// matches NaN with NaN.
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).Data(g.Map{"d": math.NaN(), "f": float32(math.NaN())}).Where("id", 1).Update()
+		t.AssertNil(err)
+
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["D"].String(), "NaN")
+		t.Assert(one["F"].String(), "NaN")
+
+		count, err := db.Model(table).Where("d", math.NaN()).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
+		count, err = db.Model(table).Where("f", float32(math.NaN())).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
+	})
+
+	// Note: Oracle fails both with ORA-01426; the underlying driver rejects the value for the
+	// NUMBER(10) column (6092), and the condition matches no row.
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model(table).Data("id = ?", 1e200).Where("id", 1).Update()
-		dmFeatureAssertOra(t, err, "ORA-01426")
+		assertDmError(t, err, dmErrDataOutOfRange)
 
-		_, err = db.Model(table).Where("id", 1e200).Count()
-		dmFeatureAssertOra(t, err, "ORA-01426")
+		count, err := db.Model(table).Where("id", 1e200).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -1955,7 +2055,8 @@ func Test_DM_BinaryDouble_BeyondNumberRange(t *testing.T) {
 
 // Test_DM_Number_ResultType tests the Go type of the values of NUMBER columns, which follows the
 // column and not the value: int64 for a column without decimal places, or uint64 and then the
-// decimal string for a value beyond the range of int64, and float64 for any other column.
+// decimal string for a value beyond the range of int64, and the exact decimal string for a column
+// with decimal places, like a DECIMAL column on MySQL.
 func Test_DM_Number_ResultType(t *testing.T) {
 	table := dmFeatureTableName("t_numtype")
 	dmFeatureExec(fmt.Sprintf(`CREATE TABLE %s (
@@ -1979,13 +2080,15 @@ func Test_DM_Number_ResultType(t *testing.T) {
 		all, err := db.Model(table).Order("id").All()
 		t.AssertNil(err)
 		t.Assert(len(all), 4)
+		// Note: Oracle reads NUMBER(p,s>0) and NUMBER without precision as float64; on DM they
+		// are exact. DM reports a NUMBER without precision to the underlying driver as NUMBER(38,0),
+		// so only its decimal text is asserted.
 		for _, record := range all {
 			t.Assert(fmt.Sprintf("%T", record["ID"].Val()), "int64")
-			t.Assert(fmt.Sprintf("%T", record["AMOUNT"].Val()), "float64")
-			t.Assert(fmt.Sprintf("%T", record["ANY_NUM"].Val()), "float64")
+			t.Assert(fmt.Sprintf("%T", record["AMOUNT"].Val()), "string")
 		}
-		t.Assert(all.Array("AMOUNT"), g.Slice{1, 1.5, 1234567890123456.1234, -2})
-		t.Assert(all.Array("ANY_NUM"), g.Slice{1, 1.5, 12345678901234567890.5, -2})
+		t.Assert(all.Array("AMOUNT"), g.Slice{"1.0000", "1.5000", "1234567890123456.1234", "-2.0000"})
+		t.Assert(gconv.Strings(all.Array("ANY_NUM")), []string{"1", "1.5", "12345678901234567890.5", "-2"})
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -1998,9 +2101,11 @@ func Test_DM_Number_ResultType(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
+		// Note: Oracle reports SUM of a NUMBER(10) as a NUMBER without precision, read as float64;
+		// DM reports it as DEC(38,0), an exact number read as its text as DECIMAL is on MySQL.
 		value, err := db.Model(table).Where("id", 2).Value("SUM(id)")
 		t.AssertNil(err)
-		t.AssertEQ(value.Val(), float64(2))
+		t.AssertEQ(value.Val(), "2")
 
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
@@ -2008,32 +2113,38 @@ func Test_DM_Number_ResultType(t *testing.T) {
 	})
 }
 
-// Test_DM_Extra_OptionParsing tests how the Extra option reaches the underlying driver:
-// malformed options are dropped, the others are passed on and validated by the driver.
+// Test_DM_Extra_OptionParsing tests how the Extra option reaches the underlying driver: an
+// option is passed on and applied, while a malformed option, an unknown option and an invalid
+// value are ignored, the default value of the option being kept.
+// Note: go-ora rejects an unknown option or an invalid value when it connects; the DM driver
+// ignores them.
 func Test_DM_Extra_OptionParsing(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		for _, extra := range []string{"PREFETCH_ROWS", "a=b=c&PREFETCH_ROWS", "PREFETCH_ROWS=abc"} {
+		for _, extra := range []string{
+			"columnNameCase", "a=b=c&columnNameCase", "columnNameCase=bad",
+			"FOO=bar", "connectTimeout=abc", "LobMode=bad",
+		} {
 			extraDb := dmFeatureOpen(extra, 0)
-			value, err := extraDb.GetValue(ctx, "SELECT 1 FROM dual")
+			one, err := extraDb.GetOne(ctx, "SELECT 1 AS ID FROM dual")
 			extraDb.Close(ctx)
 			t.AssertNil(err)
-			t.Assert(value, 1)
+			t.Assert(one, g.Map{"ID": 1})
 		}
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		expect := map[string]string{
-			"FOO=bar":                "unknown URL option: FOO",
-			"connection timeout=abc": "value must be an integer",
-			"LOB FETCH=bad":          "LOB FETCH value should be",
-		}
-		for extra, message := range expect {
-			extraDb := dmFeatureOpen(extra, 0)
-			_, err := extraDb.GetValue(ctx, "SELECT 1 FROM dual")
-			extraDb.Close(ctx)
-			t.AssertNE(err, nil)
-			t.Assert(gstr.Contains(err.Error(), message), true)
-		}
+		table := createInitUserTable()
+		defer dropTable(table)
+
+		extraDb := dmFeatureOpen("columnNameCase=lower", 0)
+		defer extraDb.Close(ctx)
+		one, err := extraDb.GetOne(ctx, "SELECT 1 AS ID FROM dual")
+		t.AssertNil(err)
+		t.Assert(one, g.Map{"id": 1})
+
+		one, err = extraDb.Model(table).Fields("id, nickname").Where("id", 2).One()
+		t.AssertNil(err)
+		t.Assert(one, g.Map{"id": 2, "nickname": "name_2"})
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -2045,7 +2156,7 @@ func Test_DM_Extra_OptionParsing(t *testing.T) {
 		_, err := db.Model(table).Data(g.Map{"id": 1, "c": text, "b": []byte(text)}).Insert()
 		t.AssertNil(err)
 
-		extraDb := dmFeatureOpen("LOB FETCH=PRE&CONNECTION TIMEOUT=5", 0)
+		extraDb := dmFeatureOpen("LobMode=2&connectTimeout=5000", 0)
 		defer extraDb.Close(ctx)
 		one, err := extraDb.Model(table).Where("id", 1).One()
 		t.AssertNil(err)
@@ -2054,58 +2165,78 @@ func Test_DM_Extra_OptionParsing(t *testing.T) {
 	})
 }
 
-// Test_DM_Extra_PrefetchRows tests that PREFETCH_ROWS given in Extra replaces the default and
-// changes the number of round trips a fetch takes.
-func Test_DM_Extra_PrefetchRows(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		var (
-			oneRow      = dmFeatureRoundTrips(t, "PREFETCH_ROWS=1")
-			defaultRows = dmFeatureRoundTrips(t, "")
-			manyRows    = dmFeatureRoundTrips(t, "prefetch_rows=1000")
-		)
-		t.AssertGT(oneRow, 100)
-		t.AssertLT(defaultRows, oneRow)
-		t.AssertLT(manyRows, defaultRows)
-		t.AssertLE(manyRows, 10)
-	})
-}
-
-// Test_DM_Extra_NlsTerritory tests that LANGUAGE and TERRITORY given in Extra set the session
-// NLS parameters, and that numbers are written correctly under a comma decimal separator.
-func Test_DM_Extra_NlsTerritory(t *testing.T) {
+// Test_DM_Nls_LanguageAndDateFormat tests that the NLS parameters a session sets apply to that session
+// only, and that values are written and matched correctly under a date format other than the
+// default.
+// Note: DM has no LANGUAGE and TERRITORY connection options like go-ora, nor NLS_TERRITORY and
+// NLS_NUMERIC_CHARACTERS, so the session sets NLS_DATE_LANGUAGE and the date formats.
+func Test_DM_Nls_LanguageAndDateFormat(t *testing.T) {
 	table := dmFeatureTableName("t_nls")
 	dmFeatureExec(fmt.Sprintf(
-		`CREATE TABLE %s (ID NUMBER(10) NOT NULL, AMOUNT NUMBER(18,2), RATIO BINARY_DOUBLE, PRIMARY KEY (ID))`, table,
+		`CREATE TABLE %s (ID NUMBER(10) NOT NULL, D DATE, TM TIME, DT DATETIME, AMOUNT NUMBER(18,2), RATIO DOUBLE, PRIMARY KEY (ID))`, table,
 	))
 	defer dropTable(table)
 
-	extraDb := dmFeatureOpen("LANGUAGE=GERMAN&TERRITORY=GERMANY", 0)
-	defer extraDb.Close(ctx)
+	// Note: the pool has one connection, so that every statement runs in the session that sets
+	// the NLS parameters.
+	sessionDb := dmFeatureOpen("", 1)
+	defer sessionDb.Close(ctx)
+	for _, statement := range []string{
+		"ALTER SESSION SET NLS_DATE_LANGUAGE = 'AMERICAN'",
+		"ALTER SESSION SET NLS_DATE_FORMAT = 'DD.MM.YYYY'",
+		"ALTER SESSION SET NLS_TIME_FORMAT = 'HH24.MI.SS'",
+		"ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'DD.MM.YYYY HH24:MI:SS'",
+	} {
+		if _, err := sessionDb.Exec(ctx, statement); err != nil {
+			gtest.Fatal(err)
+		}
+	}
 
+	const nlsSql = "SELECT TO_CHAR(DATE '2026-03-04', 'fmDay') W, TO_CHAR(DATE '2026-03-04') D, " +
+		"TO_CHAR(TIMESTAMP '2026-03-04 15:26:37') T FROM dual"
 	gtest.C(t, func(t *gtest.T) {
-		one, err := extraDb.GetOne(ctx, "SELECT TO_CHAR(DATE '2026-03-04', 'fmDay') D, TO_CHAR(1234.5, 'FM9G999D0') N FROM dual")
+		one, err := sessionDb.GetOne(ctx, nlsSql)
 		t.AssertNil(err)
-		t.Assert(one["D"], "Mittwoch")
-		t.Assert(one["N"], "1.234,5")
+		t.Assert(one, g.Map{"W": "WEDNESDAY", "D": "04.03.2026", "T": "04.03.2026 15:26:37"})
 
-		one, err = db.GetOne(ctx, "SELECT TO_CHAR(DATE '2026-03-04', 'fmDay') D, TO_CHAR(1234.5, 'FM9G999D0') N FROM dual")
+		one, err = db.GetOne(ctx, nlsSql)
 		t.AssertNil(err)
-		t.Assert(one["D"], "Wednesday")
-		t.Assert(one["N"], "1,234.5")
+		t.Assert(one, g.Map{"W": "星期三", "D": "2026-03-04", "T": "2026-03-04 15:26:37.000000"})
 	})
 
+	withTime := gtime.NewFromStr("2026-03-04 15:26:37")
 	gtest.C(t, func(t *gtest.T) {
-		_, err := extraDb.Model(table).Data(g.Map{"id": 1, "amount": 2.5, "ratio": 1.25}).Insert()
+		_, err := sessionDb.Model(table).Data(g.Map{"id": 1, "dt": withTime, "amount": 2.5, "ratio": 1.25}).Insert()
 		t.AssertNil(err)
 
-		one, err := db.Model(table).Where("id", 1).One()
+		one, err := db.GetOne(ctx, fmt.Sprintf(
+			"SELECT TO_CHAR(DT, 'YYYY-MM-DD HH24:MI:SS') DT, AMOUNT, RATIO FROM %s WHERE ID = 1", table,
+		))
 		t.AssertNil(err)
+		t.Assert(one["DT"], "2026-03-04 15:26:37")
 		t.Assert(one["AMOUNT"].Float64(), 2.5)
 		t.Assert(one["RATIO"].Float64(), 1.25)
 
-		value, err := extraDb.Model(table).Where("amount", 2.5).Value("ratio")
+		count, err := sessionDb.Model(table).Where("dt", withTime).Where("amount", 2.5).Count()
 		t.AssertNil(err)
-		t.Assert(value.Float64(), 1.25)
+		t.Assert(count, 1)
+	})
+
+	// A time is written to a DATE and a TIME column whatever the NLS_DATE_FORMAT and NLS_TIME_FORMAT
+	// of the session are.
+	gtest.C(t, func(t *gtest.T) {
+		_, err := sessionDb.Model(table).Data(g.Map{"id": 2, "d": withTime, "tm": withTime}).Insert()
+		t.AssertNil(err)
+
+		one, err := db.GetOne(ctx, fmt.Sprintf(
+			"SELECT TO_CHAR(D, 'YYYY-MM-DD HH24:MI:SS') D, TO_CHAR(TM, 'HH24:MI:SS') TM FROM %s WHERE ID = 2", table,
+		))
+		t.AssertNil(err)
+		t.Assert(one, g.Map{"D": "2026-03-04 00:00:00", "TM": "15:26:37"})
+
+		count, err := sessionDb.Model(table).Where("d", gtime.NewFromStr("2026-03-04 00:00:00")).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
 	})
 }
 
@@ -2224,32 +2355,34 @@ func Test_DM_WindowFunction_Page(t *testing.T) {
 
 // Test_DM_PlSql_OutBind tests anonymous PL/SQL blocks through Exec, returning values into
 // positional and named out binds.
+// Note: the underlying driver fails to convert a NUMBER out bind into *int64 (6007), so the
+// destination is a sql.NullInt64.
 func Test_DM_PlSql_OutBind(t *testing.T) {
 	table := createUserTable()
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		var id int64
+		var id sql.NullInt64
 		_, err := db.Exec(ctx, fmt.Sprintf(
 			"BEGIN INSERT INTO %s (PASSPORT, PASSWORD, NICKNAME) VALUES (?, 'p', 'n') RETURNING ID INTO ?; END;", table,
 		), "positional", sql.Out{Dest: &id})
 		t.AssertNil(err)
-		t.Assert(id, 1)
+		t.Assert(id, sql.NullInt64{Int64: 1, Valid: true})
 
-		value, err := db.Model(table).Where("id", id).Value("passport")
+		value, err := db.Model(table).Where("id", id.Int64).Value("passport")
 		t.AssertNil(err)
 		t.Assert(value, "positional")
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		var id int64
+		var id sql.NullInt64
 		_, err := db.Exec(ctx, fmt.Sprintf(
 			"BEGIN INSERT INTO %s (PASSPORT, PASSWORD, NICKNAME) VALUES (:passport, 'p', 'n') RETURNING ID INTO :id; END;", table,
 		), sql.Named("passport", "named"), sql.Named("id", sql.Out{Dest: &id}))
 		t.AssertNil(err)
-		t.Assert(id, 2)
+		t.Assert(id, sql.NullInt64{Int64: 2, Valid: true})
 
-		value, err := db.Model(table).Where("id", id).Value("passport")
+		value, err := db.Model(table).Where("id", id.Int64).Value("passport")
 		t.AssertNil(err)
 		t.Assert(value, "named")
 	})
@@ -2268,7 +2401,8 @@ func Test_DM_PlSql_OutBind(t *testing.T) {
 }
 
 // Test_DM_LastInsertId_NonIntegerPrimaryKeyId tests that InsertAndGetId inserts into a table whose
-// primary key is not an integer and returns 0, as there is no integer id to return.
+// primary key is not an integer and returns 0 with a CodeNotSupported error, as there is no integer
+// id to return.
 func Test_DM_LastInsertId_NonIntegerPrimaryKeyId(t *testing.T) {
 	table := dmFeatureTableName("t_rawid")
 	dmFeatureExec(fmt.Sprintf(`CREATE TABLE %s (ID RAW(16) DEFAULT SYS_GUID() NOT NULL, NAME VARCHAR2(20), PRIMARY KEY (ID))`, table))
@@ -2285,6 +2419,8 @@ func Test_DM_LastInsertId_NonIntegerPrimaryKeyId(t *testing.T) {
 	})
 }
 
+// Test_DM_TableAlias_AsKeyword tests table expressions giving the alias of a table or a sub-query
+// with the AS keyword.
 func Test_DM_TableAlias_AsKeyword(t *testing.T) {
 	table := createInitUserTable()
 	defer dropTable(table)
@@ -2333,11 +2469,11 @@ func Test_DM_TableAlias_AsKeyword(t *testing.T) {
 	})
 }
 
-// Test_Model_Insert_EmptyIdentity tests an insert giving the IDENTITY column an empty
+// Test_Model_Insert_EmptyIdentity tests an insert giving the AUTO_INCREMENT column an empty
 // string, which DM takes as NULL, so that it generates the value.
 func Test_Model_Insert_EmptyIdentity(t *testing.T) {
 	table := dmFeatureTableName("t_identity")
-	dmFeatureExec(fmt.Sprintf(`CREATE TABLE %s (ID INT IDENTITY(1, 1) NOT NULL, PASSPORT VARCHAR(45), PRIMARY KEY (ID))`, table))
+	dmFeatureExec(fmt.Sprintf(`CREATE TABLE %s (ID INT AUTO_INCREMENT NOT NULL, PASSPORT VARCHAR(45), PRIMARY KEY (ID))`, table))
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
@@ -2488,5 +2624,43 @@ func Test_DataType_VarBinary_Where(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(one["ID"], 1)
 		t.Assert(one["DATA"], "abc")
+	})
+}
+
+// Test_DM_SoftTime_NumberColumns tests soft time fields holding a unix timestamp in NUMBER(10)
+// columns, the integer columns of tables written for Oracle.
+func Test_DM_SoftTime_NumberColumns(t *testing.T) {
+	table := dmFeatureTableName("t_soft_number")
+	dmFeatureExec(fmt.Sprintf(`CREATE TABLE %s (
+    ID NUMBER(10) NOT NULL,
+    NAME VARCHAR(45),
+    CREATE_AT NUMBER(10),
+    UPDATE_AT NUMBER(10),
+    DELETE_AT NUMBER(10),
+    PRIMARY KEY (ID)
+)`, table))
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).Data(g.Map{"id": 1, "name": "name_1"}).Insert()
+		t.AssertNil(err)
+
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.AssertGT(one["CREATE_AT"].Int64(), 0)
+		t.AssertGT(one["UPDATE_AT"].Int64(), 0)
+		t.Assert(one["DELETE_AT"].Int64(), 0)
+
+		_, err = db.Model(table).WherePri(1).Delete()
+		t.AssertNil(err)
+
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
+
+		one, err = db.Model(table).Unscoped().WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["NAME"], "name_1")
+		t.AssertGT(one["DELETE_AT"].Int64(), 0)
 	})
 }

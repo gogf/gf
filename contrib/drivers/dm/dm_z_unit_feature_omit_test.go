@@ -89,9 +89,11 @@ func Test_Model_OmitEmptyWhere_Extended(t *testing.T) {
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 
+		// Note: DM stores '' as an empty string, not as NULL.
 		one, err := db.Model(table).Where("id", 1).One()
 		t.AssertNil(err)
-		t.Assert(one["NICKNAME"].IsNil(), true)
+		t.Assert(one["NICKNAME"].IsNil(), false)
+		t.Assert(one["NICKNAME"], "")
 
 		// Test with empty slice in Where
 		all, err := db.Model(table).OmitEmptyWhere().Where(g.Map{

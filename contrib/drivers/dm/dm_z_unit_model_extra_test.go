@@ -149,9 +149,8 @@ func Test_Model_BatchInsertWithArrayStruct(t *testing.T) {
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, TableSize)
-		// Note: LastInsertId is not asserted. When the data carries the primary key the driver adds
-		// no RETURNING clause and reports 0; that block of DoInsert is rewritten by
-		// https://github.com/gogf/gf/pull/4880.
+		n, _ = result.LastInsertId()
+		t.Assert(n, TableSize)
 	})
 }
 
@@ -177,8 +176,8 @@ func Test_Model_UpdateAndGetAffected(t *testing.T) {
 		_, err := db.Model(table).Data("nickname", "T200").
 			Where("1=1").Order("id desc").Limit(2).
 			UpdateAndGetAffected()
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-00933", err.Error())
+		// Note: DM accepts UPDATE with LIMIT but not with ORDER BY.
+		assertDmError(t, err, dmErrSyntax)
 	})
 }
 
@@ -1205,11 +1204,10 @@ func Test_Model_Insert_Filter(t *testing.T) {
 			"nickname":    "name_1",
 			"create_time": gtime.Now().String(),
 		}
-		_, err := db.Model(table).Data(data).Insert()
+		result, err := db.Model(table).Data(data).Insert()
 		t.AssertNil(err)
-		// Note: LastInsertId is not asserted. When the data carries the primary key the driver adds
-		// no RETURNING clause and reports 0; that block of DoInsert is rewritten by
-		// https://github.com/gogf/gf/pull/4880.
+		n, _ := result.LastInsertId()
+		t.Assert(n, 1)
 
 		t.Assert(data["uid"], 1)
 	})
@@ -1236,11 +1234,10 @@ func Test_Model_Insert_Filter(t *testing.T) {
 			},
 		}
 
-		_, err := db.Model(table).Data(data).Insert()
+		result, err := db.Model(table).Data(data).Insert()
 		t.AssertNil(err)
-		// Note: LastInsertId is not asserted. When the data carries the primary key the driver adds
-		// no RETURNING clause and reports 0; that block of DoInsert is rewritten by
-		// https://github.com/gogf/gf/pull/4880.
+		n, _ := result.LastInsertId()
+		t.Assert(n, 2)
 
 		t.Assert(data[0]["uid"], 1)
 		t.Assert(data[1]["uid"], 2)
@@ -1535,12 +1532,16 @@ func Test_Model_OmitEmpty(t *testing.T) {
 		t.AssertNE(err, nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
+		// Note: DM stores '' as an empty string, not as NULL, so NOT NULL accepts it.
 		_, err := db.Model(table).OmitEmptyWhere().Data(g.Map{
 			"id":   1,
 			"name": "",
 		}).Save()
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-01400", err.Error())
+		t.AssertNil(err)
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["NAME"].IsNil(), false)
+		t.Assert(one["NAME"], "")
 	})
 }
 
@@ -1564,20 +1565,23 @@ func Test_Model_OmitNil(t *testing.T) {
 		t.AssertNE(err, nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
+		// Note: DM stores '' as an empty string, not as NULL, so NOT NULL accepts it.
 		_, err := db.Model(table).OmitNil().Data(g.Map{
 			"id":   1,
 			"name": "",
 		}).Save()
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-01400", err.Error())
+		t.AssertNil(err)
+		one, err := db.Model(table).WherePri(1).One()
+		t.AssertNil(err)
+		t.Assert(one["NAME"].IsNil(), false)
+		t.Assert(one["NAME"], "")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model(table).OmitNilWhere().Data(g.Map{
 			"id":   1,
 			"name": "",
 		}).Save()
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-01400", err.Error())
+		t.AssertNil(err)
 	})
 }
 
@@ -1682,6 +1686,9 @@ func Test_Model_OnDuplicate(t *testing.T) {
 	})
 }
 
+// modelExtraDmErrMergeOnColumn is the DM error of a MERGE updating a column of its ON condition.
+const modelExtraDmErrMergeOnColumn = -4064
+
 func Test_Model_OnDuplicateWithCounter(t *testing.T) {
 	table := createInitUserTable()
 	defer dropTable(table)
@@ -1697,7 +1704,7 @@ func Test_Model_OnDuplicateWithCounter(t *testing.T) {
 		_, err := db.Model(table).OnConflict("id").OnDuplicate(g.Map{
 			"id": gdb.Counter{Field: "id", Value: 999999},
 		}).Data(data).Save()
-		t.AssertIN("ORA-38104", fmt.Sprint(err))
+		assertDmError(t, err, modelExtraDmErrMergeOnColumn)
 		one, err := db.Model(table).WherePri(1).One()
 		t.AssertNil(err)
 		t.Assert(one["PASSPORT"], "user_1")
@@ -2058,8 +2065,7 @@ func Test_Model_GroupBy(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model(table).Group("id").All()
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-00979", err.Error())
+		assertDmError(t, err, dmErrNotGroupBy)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).Fields("id, nickname").Group("id, nickname").Order("id").All()
@@ -3055,7 +3061,8 @@ func Test_Model_Year_Date_Time_DateTime_Timestamp(t *testing.T) {
 		// select.
 		one, err := db.Model(table).One()
 		t.AssertNil(err)
-		t.Assert(one["DATE_VALUE"].String(), now.Format("Y-m-d H:i:s"))
+		// Note: DM DATE holds the date only, without time of day.
+		t.Assert(one["DATE_VALUE"].String(), now.Format("Y-m-d"))
 		t.Assert(math.Abs(one["DATETIME"].GTime().Sub(now).Seconds()) < 5, true)
 		t.Assert(math.Abs(one["TIMESTAMP"].GTime().Sub(now).Seconds()) < 5, true)
 	})

@@ -154,8 +154,7 @@ func Test_Model_Where_InvalidOperator(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model(table).Where("id INVALID_OP ?", 1).All()
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-00920", err.Error())
+		assertDmError(t, err, dmErrSyntax)
 	})
 }
 
@@ -178,8 +177,7 @@ func Test_Model_Fields_InvalidField(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model(table).Fields("non_existent_field").All()
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-00904", err.Error())
+		assertDmError(t, err, dmErrInvalidColumn)
 	})
 }
 
@@ -204,8 +202,7 @@ func Test_Model_Order_InvalidSyntax(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model(table).Order("id INVALID").All()
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-00933", err.Error())
+		assertDmError(t, err, dmErrSyntax)
 	})
 }
 
@@ -216,8 +213,7 @@ func Test_Model_Group_UnknownColumn(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model(table).Group("non_existent_field").All()
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-00904", err.Error())
+		assertDmError(t, err, dmErrInvalidColumn)
 	})
 }
 
@@ -225,8 +221,7 @@ func Test_Model_Group_UnknownColumn(t *testing.T) {
 func Test_Model_TableNotExist(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model("non_existent_table_xyz").All()
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-00942", err.Error())
+		assertDmError(t, err, dmErrInvalidTable)
 	})
 }
 
@@ -234,8 +229,7 @@ func Test_Model_TableNotExist(t *testing.T) {
 func Test_Model_InvalidTableName(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model("").All()
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-00903", err.Error())
+		assertDmError(t, err, dmErrSyntax)
 	})
 }
 
@@ -349,8 +343,7 @@ func Test_Model_Array_EmptyResult(t *testing.T) {
 func Test_Model_Count_InvalidTable(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model("non_existent_table").Count()
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-00942", err.Error())
+		assertDmError(t, err, dmErrInvalidTable)
 	})
 }
 
@@ -441,8 +434,7 @@ func Test_TX_Rollback_AfterError(t *testing.T) {
 			return err
 		})
 
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-00001", err.Error())
+		assertDmError(t, err, dmErrUniqueViolation)
 
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
@@ -467,8 +459,7 @@ func Test_Model_Insert_DuplicateKey(t *testing.T) {
 		t.AssertNil(err)
 
 		_, err = db.Model(table).Data(data).Insert()
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-00001", err.Error())
+		assertDmError(t, err, dmErrUniqueViolation)
 	})
 }
 
@@ -476,7 +467,6 @@ func Test_Model_Insert_DuplicateKey(t *testing.T) {
 func Test_Model_All_InvalidConnection(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		_, err := dbErr.Model("test_table").All()
-		t.AssertNE(err, nil)
-		t.AssertIN("ORA-01017", err.Error())
+		assertDmError(t, err, dmErrInvalidLogin)
 	})
 }
