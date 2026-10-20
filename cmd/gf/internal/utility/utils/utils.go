@@ -61,7 +61,7 @@ func GoFmt(path string) {
 // goFormatContent formats the content of given file and removes its unused imports.
 func goFormatContent(path, content string) (string, error) {
 	var (
-		fset = token.NewFileSet()
+		fset      = token.NewFileSet()
 		file, err = parser.ParseFile(fset, path, content, parser.ParseComments|parser.AllErrors)
 	)
 	if err != nil {
