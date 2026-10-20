@@ -9,6 +9,7 @@ package dm
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -48,28 +49,28 @@ func (d *Driver) DoCommit(ctx context.Context, in gdb.DoCommitInput) (out gdb.Do
 	return d.Core.DoCommit(ctx, in)
 }
 
-// doBegin begins a transaction with the options of `in`, see DoCommit.
+// doBegin begins a transaction with the options of `in`, see DoCommit. It sets both options by one
+// SET TRANSACTION statement, as a second one would apply to the transaction after this one.
 func (d *Driver) doBegin(ctx context.Context, in gdb.DoCommitInput) (out gdb.DoCommitOutput, err error) {
-	var statements []string
+	var options []string
 	if name, ok := isolationLevelNames[in.TxOptions.Isolation]; ok {
-		statements = append(statements, "SET TRANSACTION ISOLATION LEVEL "+name)
+		options = append(options, "ISOLATION LEVEL "+name)
 		in.TxOptions.Isolation = sql.LevelDefault
 	}
 	if in.TxOptions.ReadOnly {
-		statements = append(statements, "SET TRANSACTION READ ONLY")
+		options = append(options, "READ ONLY")
 		in.TxOptions.ReadOnly = false
 	}
-	if len(statements) > 0 {
-		// The options apply to the transaction that the next statement begins, so a statement
-		// begins it, as a transaction executing none would leave them to the next transaction.
-		statements = append(statements, "SELECT 1 FROM DUAL")
-	}
-	if out, err = d.Core.DoCommit(ctx, in); err != nil {
+	if out, err = d.Core.DoCommit(ctx, in); err != nil || len(options) == 0 {
 		return out, err
 	}
-	for _, statement := range statements {
+	// The options apply to the transaction that the next statement begins, so a statement begins
+	// it, as a transaction executing none would leave them to the next transaction.
+	for _, statement := range []string{"SET TRANSACTION " + strings.Join(options, ", "), "SELECT 1 FROM DUAL"} {
 		if _, err = out.Tx.Exec(statement); err != nil {
-			_ = out.Tx.Rollback()
+			if rollbackErr := out.Tx.Rollback(); rollbackErr != nil {
+				err = errors.Join(err, rollbackErr)
+			}
 			return gdb.DoCommitOutput{}, err
 		}
 	}
