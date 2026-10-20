@@ -52,4 +52,84 @@ func Test_GoFmt(t *testing.T) {
 		utils.GoFmt(filePath)
 		t.Assert(gfile.GetContents(filePath), expect)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Import path with a version suffix whose package name is the second-to-last
+		// segment must be recognized as used. See issue 3835.
+		var (
+			dir      = t.TempDir()
+			filePath = gfile.Join(dir, "example.go")
+			source   = `package main
+
+import (
+	"context"
+
+	"github.com/gogf/gf/contrib/drivers/mysql/v2"
+)
+
+func main() {
+	_ = context.Background()
+	var d mysql.Driver
+	_ = d
+}
+`
+			expect = `package main
+
+import (
+	"context"
+
+	"github.com/gogf/gf/contrib/drivers/mysql/v2"
+)
+
+func main() {
+	_ = context.Background()
+	var d mysql.Driver
+	_ = d
+}
+`
+		)
+		gfile.PutContents(filePath, source)
+		utils.GoFmt(filePath)
+		t.Assert(gfile.GetContents(filePath), expect)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Import whose package name cannot be determined from the path is kept as is,
+		// because removing it mistakenly would break the code.
+		var (
+			dir      = t.TempDir()
+			filePath = gfile.Join(dir, "example.go")
+			source   = `package main
+
+import (
+	"context"
+
+	"github.com/minio/minio-go/v7"
+)
+
+func main() {
+	_ = context.Background()
+	var c *minio.Client
+	_ = c
+}
+`
+			expect = `package main
+
+import (
+	"context"
+
+	"github.com/minio/minio-go/v7"
+)
+
+func main() {
+	_ = context.Background()
+	var c *minio.Client
+	_ = c
+}
+`
+		)
+		gfile.PutContents(filePath, source)
+		utils.GoFmt(filePath)
+		t.Assert(gfile.GetContents(filePath), expect)
+	})
 }
