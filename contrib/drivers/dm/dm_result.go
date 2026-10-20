@@ -10,14 +10,15 @@ import (
 	"database/sql"
 )
 
-// insertResult is the sql.Result of an insert, whose last insert id is the value of the
-// identity column that the driver determines rather than the one the underlying driver reports.
+// insertResult is the sql.Result of an insert, whose last insert id is the value of the primary
+// key that the driver determines rather than the one the underlying driver reports.
 type insertResult struct {
 	sql.Result
-	lastInsertId int64
+	lastInsertId    int64
+	lastInsertIdErr error
 }
 
-// LastInsertId returns the last insert id.
+// LastInsertId returns the last insert id, or the error of a table whose key it cannot report.
 func (r *insertResult) LastInsertId() (int64, error) {
-	return r.lastInsertId, nil
+	return r.lastInsertId, r.lastInsertIdErr
 }

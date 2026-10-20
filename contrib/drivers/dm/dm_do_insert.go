@@ -23,7 +23,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-// ctxKeyReturningColumn marks an insert whose identity column DoCommit returns.
+// ctxKeyReturningColumn marks the insert of a record whose primary key DoCommit returns.
 const ctxKeyReturningColumn gctx.StrKey = "dm_returning_column"
 
 // DoInsert inserts or updates data for given table.
@@ -48,81 +48,153 @@ func (d *Driver) DoInsert(
 	}
 }
 
-// doInsertDefault inserts `list` with the default insert option, so that the last insert id is
-// the value of the identity column of the last record: the value the record gives, or else the
-// value the server generates, which RETURNING gets for a record giving a raw expression or 0, as
-// the underlying driver reports the ROWID of such a record. It is 0 for a table without identity
-// column.
+// doInsertDefault inserts `list` with the default insert option. The last insert id is the value of
+// the key of the last record, the key being the identity column of the table or else its only
+// primary key column: the integer that the record gives the key, or else the value that the server
+// stores, like the value of an identity or of a trigger reading a sequence. RETURNING gets that
+// value for a single record. For several records it is read by the ROWID of the last one, which
+// the underlying driver reports unless the statement generates an identity, then reported as is.
+// The last insert id is 0 for a table without such a key, and an error of code CodeNotSupported
+// for a key that does not hold integers, as on PostgreSQL.
 func (d *Driver) doInsertDefault(
 	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (sql.Result, error) {
-	identity, err := d.identityColumn(ctx, table)
+	key, err := d.insertIdField(ctx, table)
 	if err != nil {
 		return nil, err
 	}
-	if identity == "" {
-		result, err := d.Core.DoInsert(ctx, link, table, list, option)
-		if err != nil {
-			return result, err
+	if key == nil {
+		return d.doInsertWithId(ctx, link, table, list, option, 0, nil)
+	}
+	if !d.isIntegerField(ctx, key) {
+		return d.doInsertWithId(ctx, link, table, list, option, 0, gerror.NewCodef(
+			gcode.CodeNotSupported, `LastInsertId is not supported by primary key type: %s`, key.Type,
+		))
+	}
+	isIdentity := key.Extra == fieldExtraIdentity
+	if value, ok := recordValueOfField(list[len(list)-1], key.Name); ok {
+		if id, ok := givenKeyValue(value, isIdentity); ok {
+			return d.doInsertWithId(ctx, link, table, list, option, id, nil)
 		}
-		return &insertResult{Result: result}, nil
 	}
-	value, _ := recordValueOfField(list[len(list)-1], identity)
-	lastInsertId, generated, ok := identityValue(value)
-	if !ok {
-		return d.Core.DoInsert(ctx, link, table, list, option)
-	}
-	if generated {
-		return d.doInsertReturning(ctx, link, table, list, option, identity)
+	if len(list) == 1 {
+		return d.doInsertReturning(ctx, link, table, list, option, key.Name)
 	}
 	result, err := d.Core.DoInsert(ctx, link, table, list, option)
 	if err != nil {
 		return result, err
 	}
+	reportedId, err := result.LastInsertId()
+	if err != nil || reportedId == 0 {
+		// The result of ToSQL reports 0, as nothing is inserted.
+		return result, err
+	}
+	if isIdentity {
+		switch recordsGivingField(list, key.Name) {
+		case 0:
+			return result, nil
+		case len(list):
+		default:
+			return &insertResult{Result: result, lastInsertIdErr: gerror.NewCodef(
+				gcode.CodeNotSupported,
+				`LastInsertId is not supported for records of which only some give the identity column %s`,
+				key.Name,
+			)}, nil
+		}
+	}
+	value, err := d.Core.DoQuery(ctx, link, fmt.Sprintf(
+		"SELECT %s FROM %s WHERE ROWID = ?", d.QuoteWord(key.Name), d.QuotePrefixTableName(table),
+	), reportedId)
+	if err != nil {
+		return result, err
+	}
+	var lastInsertId int64
+	if len(value) > 0 {
+		lastInsertId = value[0][key.Name].Int64()
+	}
 	return &insertResult{Result: result, lastInsertId: lastInsertId}, nil
 }
 
-// identityValue returns the value `value` that a record gives the identity column, or whether the
-// server generates the value instead, as it does for a raw expression and for 0. It returns false
-// if `value` is not an integer, like nil or an empty string, which the server converts itself.
-func identityValue(value any) (id int64, generated bool, ok bool) {
-	if _, isRaw := value.(gdb.Raw); isRaw {
-		return 0, true, true
+// doInsertWithId inserts `list` with the last insert id `id`, or the error `idErr` of it.
+func (d *Driver) doInsertWithId(
+	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
+	id int64, idErr error,
+) (sql.Result, error) {
+	result, err := d.Core.DoInsert(ctx, link, table, list, option)
+	if err != nil {
+		return result, err
 	}
-	id, err := strconv.ParseInt(gconv.String(value), 10, 64)
-	return id, id == 0, err == nil
+	return &insertResult{Result: result, lastInsertId: id, lastInsertIdErr: idErr}, nil
 }
 
-// doInsertReturning inserts `list` with the last record in a statement of its own, which returns
-// the value of the identity column `identity` as the last insert id.
+// givenKeyValue returns the integer `value` that a record gives the integer key of a table, or false
+// if the server stores another value: for a raw expression, for a value that is not an integer, like
+// nil or an empty string, which DM stores as NULL, and for 0 given an identity column, which DM
+// generates the identity for.
+func givenKeyValue(value any, isIdentity bool) (int64, bool) {
+	if _, isRaw := value.(gdb.Raw); isRaw {
+		return 0, false
+	}
+	id, err := strconv.ParseInt(gconv.String(value), 10, 64)
+	return id, err == nil && !(isIdentity && id == 0)
+}
+
+// doInsertReturning inserts the record of `list` with the clause returning the value of `column`
+// as the last insert id.
 func (d *Driver) doInsertReturning(
-	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption, identity string,
+	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption, column string,
 ) (sql.Result, error) {
-	var affected int64
 	option.InsertOption = gdb.InsertOptionDefault
-	if len(list) > 1 {
-		result, err := d.Core.DoInsert(ctx, link, table, list[:len(list)-1], option)
-		if err != nil {
-			return result, err
+	ctx = context.WithValue(ctx, ctxKeyReturningColumn, column)
+	return d.Core.DoInsert(ctx, link, table, list, option)
+}
+
+// insertIdField returns the field of `table` whose value is the last insert id: its identity
+// column, or else its only primary key column. It returns nil for a table without either.
+func (d *Driver) insertIdField(ctx context.Context, table string) (*gdb.TableField, error) {
+	fields, err := d.GetCore().GetDB().TableFields(ctx, d.GetTableNameForFields(table))
+	if err != nil {
+		return nil, err
+	}
+	var primaryKeys []*gdb.TableField
+	for _, field := range fields {
+		if field.Extra == fieldExtraIdentity {
+			return field, nil
 		}
-		if affected, err = result.RowsAffected(); err != nil {
-			return result, err
+		if strings.EqualFold(field.Key, "PRI") {
+			primaryKeys = append(primaryKeys, field)
 		}
 	}
-	ctx = context.WithValue(ctx, ctxKeyReturningColumn, identity)
-	result, err := d.Core.DoInsert(ctx, link, table, list[len(list)-1:], option)
-	if err != nil {
-		return result, err
+	if len(primaryKeys) == 1 {
+		return primaryKeys[0], nil
 	}
-	n, err := result.RowsAffected()
+	return nil, nil
+}
+
+// isIntegerField reports whether `field` holds integers.
+func (d *Driver) isIntegerField(ctx context.Context, field *gdb.TableField) bool {
+	localType, err := d.CheckLocalTypeForField(ctx, field.Type, nil)
 	if err != nil {
-		return result, err
+		return false
 	}
-	lastInsertId, err := result.LastInsertId()
-	if err != nil {
-		return result, err
+	switch localType {
+	case gdb.LocalTypeInt, gdb.LocalTypeUint, gdb.LocalTypeInt32, gdb.LocalTypeUint32,
+		gdb.LocalTypeInt64, gdb.LocalTypeUint64, gdb.LocalTypeBigInt:
+		return true
+	default:
+		return false
 	}
-	return &insertResult{Result: &gdb.SqlResult{Result: result, Affected: affected + n}, lastInsertId: lastInsertId}, nil
+}
+
+// recordsGivingField returns the number of records of `list` that give the field `name`.
+func recordsGivingField(list gdb.List, name string) int {
+	var n int
+	for _, record := range list {
+		if _, ok := recordValueOfField(record, name); ok {
+			n++
+		}
+	}
+	return n
 }
 
 // identityColumn returns the name of the identity column of `table`, or empty if it has none.

@@ -10,6 +10,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
 )
@@ -31,8 +32,8 @@ var isolationLevelNames = map[sql.IsolationLevel]string{
 // after the transaction ends. An isolation level DM does not support is still passed to the
 // underlying driver, which rejects it.
 //
-// It executes an insert that doInsertDefault marks with the RETURNING clause of the identity
-// column, and returns the value of the column as the last insert id.
+// It executes an insert that doInsertReturning marks with the RETURNING clause of the primary key,
+// and returns the value of the key as the last insert id.
 func (d *Driver) DoCommit(ctx context.Context, in gdb.DoCommitInput) (out gdb.DoCommitOutput, err error) {
 	switch in.Type {
 	case gdb.SqlTypeBegin:
@@ -76,15 +77,16 @@ func (d *Driver) doBegin(ctx context.Context, in gdb.DoCommitInput) (out gdb.DoC
 }
 
 // doExecReturning executes the insert of `in` with the clause returning `column` into an output
-// parameter, which becomes the last insert id of the result.
+// parameter, which becomes the last insert id of the result. The parameter is a sql.NullInt64, as
+// the underlying driver fails to convert a NUMBER column into an *int64 (error 6007).
 func (d *Driver) doExecReturning(ctx context.Context, in gdb.DoCommitInput, column string) (out gdb.DoCommitOutput, err error) {
-	var id int64
-	in.Sql += fmt.Sprintf(" RETURNING %s INTO ?", d.QuoteWord(column))
+	var id sql.NullInt64
+	in.Sql = strings.TrimRight(in.Sql, " ") + fmt.Sprintf(" RETURNING %s INTO ?", d.QuoteWord(column))
 	in.Link = &returningLink{Link: in.Link, dest: &id}
 	if out, err = d.Core.DoCommit(ctx, in); err != nil {
 		return out, err
 	}
-	out.Result = &insertResult{Result: out.Result, lastInsertId: id}
+	out.Result = &insertResult{Result: out.Result, lastInsertId: id.Int64}
 	return out, nil
 }
 
@@ -92,7 +94,7 @@ func (d *Driver) doExecReturning(ctx context.Context, in gdb.DoCommitInput, colu
 // to the arguments of the statement it executes.
 type returningLink struct {
 	gdb.Link
-	dest *int64
+	dest *sql.NullInt64
 }
 
 // ExecContext executes the statement with the RETURNING output parameter appended to `args`.
