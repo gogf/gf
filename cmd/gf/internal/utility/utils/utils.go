@@ -96,9 +96,13 @@ func goFormatContent(path, content string) (string, error) {
 			continue
 		}
 		var (
-			importPath, _ = strconv.Unquote(imp.Path.Value)
-			name, certain = importPackageName(imp)
+			importPath, unquoteErr = strconv.Unquote(imp.Path.Value)
+			name, certain          = importPackageName(imp)
 		)
+		if unquoteErr != nil {
+			// Keep the import if its path cannot be quoted, as it cannot be deleted safely.
+			continue
+		}
 		if !certain {
 			// Keep the import if its package name cannot be determined from the import
 			// path, as removing it mistakenly would break the generated code.

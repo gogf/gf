@@ -31,7 +31,7 @@ func Test_GoFmt(t *testing.T) {
 			source   = "package main\n\nimport (\n\"fmt\"\n\"os\"\n)\n\nfunc main() {\nfmt.Println()\n}\n"
 			expect   = "package main\n\nimport (\n\t\"fmt\"\n)\n\nfunc main() {\n\tfmt.Println()\n}\n"
 		)
-		gfile.PutContents(filePath, source)
+		t.AssertNil(gfile.PutContents(filePath, source))
 		utils.GoFmt(filePath)
 		t.Assert(gfile.GetContents(filePath), expect)
 
@@ -48,7 +48,7 @@ func Test_GoFmt(t *testing.T) {
 			source   = "package main\n\nimport (\nfm \"fmt\"\n\"os\"\n)\n\nfunc main() {\nfm.Println()\n}\n"
 			expect   = "package main\n\nimport (\n\tfm \"fmt\"\n)\n\nfunc main() {\n\tfm.Println()\n}\n"
 		)
-		gfile.PutContents(filePath, source)
+		t.AssertNil(gfile.PutContents(filePath, source))
 		utils.GoFmt(filePath)
 		t.Assert(gfile.GetContents(filePath), expect)
 	})
@@ -88,7 +88,7 @@ func main() {
 }
 `
 		)
-		gfile.PutContents(filePath, source)
+		t.AssertNil(gfile.PutContents(filePath, source))
 		utils.GoFmt(filePath)
 		t.Assert(gfile.GetContents(filePath), expect)
 	})
@@ -128,7 +128,50 @@ func main() {
 }
 `
 		)
-		gfile.PutContents(filePath, source)
+		t.AssertNil(gfile.PutContents(filePath, source))
+		utils.GoFmt(filePath)
+		t.Assert(gfile.GetContents(filePath), expect)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Imports are grouped into the standard library section and the others, and
+		// sorted by import path within each section, as imports.Process did.
+		var (
+			dir      = t.TempDir()
+			filePath = gfile.Join(dir, "example.go")
+			source   = `package main
+
+import (
+	"github.com/gogf/gf/contrib/drivers/mysql/v2"
+	"go/ast"
+	"context"
+)
+
+func main() {
+	_ = context.Background()
+	_ = ast.NewIdent("x")
+	var d mysql.Driver
+	_ = d
+}
+`
+			expect = `package main
+
+import (
+	"context"
+	"go/ast"
+
+	"github.com/gogf/gf/contrib/drivers/mysql/v2"
+)
+
+func main() {
+	_ = context.Background()
+	_ = ast.NewIdent("x")
+	var d mysql.Driver
+	_ = d
+}
+`
+		)
+		t.AssertNil(gfile.PutContents(filePath, source))
 		utils.GoFmt(filePath)
 		t.Assert(gfile.GetContents(filePath), expect)
 	})
