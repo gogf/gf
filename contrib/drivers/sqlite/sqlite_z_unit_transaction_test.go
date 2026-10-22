@@ -1353,6 +1353,61 @@ func Test_Transaction_Propagation(t *testing.T) {
 	})
 }
 
+// See https://github.com/gogf/gf/issues/4260
+func Test_Transaction_Propagation_Empty(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		err := db.TransactionWithOptions(ctx, gdb.TxOptions{}, func(ctx context.Context, tx gdb.TX) error {
+			_, err := tx.Insert(table, g.Map{
+				"id":       1,
+				"passport": "empty",
+			})
+			return err
+		})
+		t.AssertNil(err)
+
+		count, err := db.Model(table).Where("passport", "empty").Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(1))
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+
+		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			_, err := tx.Insert(table, g.Map{
+				"id":       2,
+				"passport": "empty_outer",
+			})
+			t.AssertNil(err)
+
+			err = tx.TransactionWithOptions(ctx, gdb.TxOptions{}, func(ctx context.Context, tx2 gdb.TX) error {
+				_, err := tx2.Insert(table, g.Map{
+					"id":       3,
+					"passport": "empty_inner",
+				})
+				t.AssertNil(err)
+				return gerror.New("rollback to savepoint")
+			})
+			t.AssertNE(err, nil)
+			t.Assert(err.Error(), "rollback to savepoint")
+			return nil
+		})
+		t.AssertNil(err)
+
+		count, err := db.Model(table).Where("passport", "empty_inner").Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(0))
+
+		count, err = db.Model(table).Where("passport", "empty_outer").Count()
+		t.AssertNil(err)
+		t.Assert(count, int64(1))
+	})
+}
+
 func Test_Transaction_Propagation_PropagationSupports(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
@@ -1546,12 +1601,11 @@ func Test_Transaction_ReadOnly(t *testing.T) {
 			_, err := tx.Update(table, g.Map{"passport": "changed"}, "id=1")
 			return err
 		})
-		t.AssertNE(err, nil)
-		t.Assert(gstr.Contains(err.Error(), "unsupported propagation behavior"), true)
+		t.AssertNil(err)
 
 		v, err := db.Model(table).Where("id=1").Value("passport")
 		t.AssertNil(err)
-		t.Assert(v.String(), "user_1")
+		t.Assert(v.String(), "changed")
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -2682,12 +2736,11 @@ func Test_Transaction_ReadOnly_WithUpdate(t *testing.T) {
 			})
 			return err
 		})
-		t.AssertNE(err, nil)
-		t.Assert(gstr.Contains(err.Error(), "unsupported propagation behavior"), true)
+		t.AssertNil(err)
 
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
-		t.Assert(count, int64(TableSize))
+		t.Assert(count, int64(TableSize+1))
 
 		err = db.TransactionWithOptions(ctx, gdb.TxOptions{
 			Propagation: gdb.PropagationRequiresNew,
@@ -2697,7 +2750,7 @@ func Test_Transaction_ReadOnly_WithUpdate(t *testing.T) {
 			t.AssertNil(err)
 
 			_, err = tx.Insert(table, g.Map{
-				"id":       100,
+				"id":       101,
 				"passport": "new_user",
 			})
 			return err
@@ -2706,7 +2759,7 @@ func Test_Transaction_ReadOnly_WithUpdate(t *testing.T) {
 
 		count, err = db.Model(table).Count()
 		t.AssertNil(err)
-		t.Assert(count, int64(TableSize+1))
+		t.Assert(count, int64(TableSize+2))
 	})
 }
 
@@ -2723,23 +2776,22 @@ func Test_Transaction_ReadOnly_WithDelete(t *testing.T) {
 			_, err := tx.Delete(table, "id=1")
 			return err
 		})
-		t.AssertNE(err, nil)
-		t.Assert(gstr.Contains(err.Error(), "unsupported propagation behavior"), true)
+		t.AssertNil(err)
 
 		count, err := db.Model(table).Where("id=1").Count()
 		t.AssertNil(err)
-		t.Assert(count, int64(1))
+		t.Assert(count, int64(0))
 
 		err = db.TransactionWithOptions(ctx, gdb.TxOptions{
 			Propagation: gdb.PropagationRequiresNew,
 			ReadOnly:    true,
 		}, func(ctx context.Context, tx gdb.TX) error {
-			_, err := tx.Delete(table, "id=1")
+			_, err := tx.Delete(table, "id=2")
 			return err
 		})
 		t.AssertNil(err)
 
-		count, err = db.Model(table).Where("id=1").Count()
+		count, err = db.Model(table).Where("id=2").Count()
 		t.AssertNil(err)
 		t.Assert(count, int64(0))
 	})

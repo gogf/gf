@@ -1546,12 +1546,11 @@ func Test_Transaction_ReadOnly(t *testing.T) {
 			_, err := tx.Update(table, g.Map{"passport": "changed"}, "id=1")
 			return err
 		})
-		t.AssertNE(err, nil)
-		t.Assert(gstr.Contains(err.Error(), "unsupported propagation behavior"), true)
+		t.AssertNil(err)
 
 		v, err := db.Model(table).Where("id=1").Value("passport")
 		t.AssertNil(err)
-		t.Assert(v.String(), "user_1")
+		t.Assert(v.String(), "changed")
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -2682,12 +2681,11 @@ func Test_Transaction_ReadOnly_WithUpdate(t *testing.T) {
 			})
 			return err
 		})
-		t.AssertNE(err, nil)
-		t.Assert(gstr.Contains(err.Error(), "unsupported propagation behavior"), true)
+		t.AssertNil(err)
 
 		count, err := db.Model(table).Count()
 		t.AssertNil(err)
-		t.Assert(count, int64(TableSize))
+		t.Assert(count, int64(TableSize+1))
 
 		err = db.TransactionWithOptions(ctx, gdb.TxOptions{
 			Propagation: gdb.PropagationRequiresNew,
@@ -2697,7 +2695,7 @@ func Test_Transaction_ReadOnly_WithUpdate(t *testing.T) {
 			t.AssertNil(err)
 
 			_, err = tx.Insert(table, g.Map{
-				"id":       100,
+				"id":       101,
 				"passport": "new_user",
 			})
 			return err
@@ -2706,7 +2704,7 @@ func Test_Transaction_ReadOnly_WithUpdate(t *testing.T) {
 
 		count, err = db.Model(table).Count()
 		t.AssertNil(err)
-		t.Assert(count, int64(TableSize+1))
+		t.Assert(count, int64(TableSize+2))
 	})
 }
 
@@ -2723,23 +2721,22 @@ func Test_Transaction_ReadOnly_WithDelete(t *testing.T) {
 			_, err := tx.Delete(table, "id=1")
 			return err
 		})
-		t.AssertNE(err, nil)
-		t.Assert(gstr.Contains(err.Error(), "unsupported propagation behavior"), true)
+		t.AssertNil(err)
 
 		count, err := db.Model(table).Where("id=1").Count()
 		t.AssertNil(err)
-		t.Assert(count, int64(1))
+		t.Assert(count, int64(0))
 
 		err = db.TransactionWithOptions(ctx, gdb.TxOptions{
 			Propagation: gdb.PropagationRequiresNew,
 			ReadOnly:    true,
 		}, func(ctx context.Context, tx gdb.TX) error {
-			_, err := tx.Delete(table, "id=1")
+			_, err := tx.Delete(table, "id=2")
 			return err
 		})
 		t.AssertNil(err)
 
-		count, err = db.Model(table).Where("id=1").Count()
+		count, err = db.Model(table).Where("id=2").Count()
 		t.AssertNil(err)
 		t.Assert(count, int64(0))
 	})
