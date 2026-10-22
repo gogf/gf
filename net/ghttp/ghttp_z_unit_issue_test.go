@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 	"testing"
 	"time"
 
@@ -726,6 +727,47 @@ func Test_Issue4093(t *testing.T) {
 
 		t.Assert(client.PostContent(ctx, "/test", `{"pagination":false,"name":"","number":0}`), `{"page":1,"pageSize":10,"pagination":false,"name":"","number":0}`)
 		t.Assert(client.PostContent(ctx, "/test"), `{"page":1,"pageSize":10,"pagination":true,"name":"john","number":1}`)
+	})
+}
+
+// https://github.com/gogf/gf/issues/4128
+func Test_Issue4128(t *testing.T) {
+	var (
+		wg      sync.WaitGroup
+		servers = []*ghttp.Server{g.Server(guid.S()), g.Server(guid.S())}
+		errs    = make([]error, len(servers))
+	)
+	for i, s := range servers {
+		wg.Add(1)
+		go func(i int, s *ghttp.Server) {
+			defer wg.Done()
+			s.Group("/", func(group *ghttp.RouterGroup) {
+				group.GET("/index", func(r *ghttp.Request) {
+					r.Response.Write(i)
+				})
+			})
+			s.SetDumpRouterMap(false)
+			errs[i] = s.Start()
+		}(i, s)
+	}
+	wg.Wait()
+	defer func() {
+		for _, s := range servers {
+			if err := s.Shutdown(); err != nil {
+				t.Error(err)
+			}
+		}
+	}()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		for i, s := range servers {
+			t.AssertNil(errs[i])
+			client := g.Client()
+			client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+			t.Assert(client.GetContent(ctx, "/index"), i)
+		}
 	})
 }
 
