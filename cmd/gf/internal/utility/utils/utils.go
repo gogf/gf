@@ -17,8 +17,10 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	"golang.org/x/tools/go/ast/astutil"
+	"golang.org/x/tools/go/packages"
 
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gproc"
@@ -82,6 +84,19 @@ func goFormatContent(path, content string) (string, error) {
 		}
 		return true
 	})
+	// Resolve the real package names of the unnamed imports, as the package name is
+	// not always a segment of the import path.
+	var unnamedImportPaths = make([]string, 0, len(file.Imports))
+	for _, imp := range file.Imports {
+		if imp.Name != nil {
+			continue
+		}
+		if importPath, unquoteErr := strconv.Unquote(imp.Path.Value); unquoteErr == nil {
+			unnamedImportPaths = append(unnamedImportPaths, importPath)
+		}
+	}
+	var resolvedNames = resolvePackageNames(gfile.Dir(path), unnamedImportPaths)
+
 	// Collect the imports to delete firstly, as astutil.DeleteImport modifies
 	// `file.Imports` that we are iterating, which skips imports and leaves
 	// unused ones behind.
@@ -95,17 +110,15 @@ func goFormatContent(path, content string) (string, error) {
 		if imp.Name != nil && (imp.Name.Name == "_" || imp.Name.Name == ".") {
 			continue
 		}
-		var (
-			importPath, unquoteErr = strconv.Unquote(imp.Path.Value)
-			name, certain          = importPackageName(imp)
-		)
+		var importPath, unquoteErr = strconv.Unquote(imp.Path.Value)
 		if unquoteErr != nil {
 			// Keep the import if its path cannot be quoted, as it cannot be deleted safely.
 			continue
 		}
+		var name, certain = importPackageName(imp, importPath, resolvedNames)
 		if !certain {
-			// Keep the import if its package name cannot be determined from the import
-			// path, as removing it mistakenly would break the generated code.
+			// Keep the import if its package name cannot be determined, as removing it
+			// mistakenly would break the generated code.
 			continue
 		}
 		if _, ok := usedNames[name]; ok {
@@ -145,82 +158,98 @@ func goFormatContent(path, content string) (string, error) {
 // other imports in every import block, as goimports (imports.Process) does. The standard
 // gofmt does not group imports on its own, and gf generated files rely on this grouping.
 //
-// Import blocks containing comments are kept as is, as rewriting them by lines is risky.
+// The import blocks are located by parsing the content, so that lines inside raw strings
+// that look like an import block are never rewritten. Import blocks containing comments
+// are kept as is, as rewriting them by lines is risky.
 func groupImportSections(content string) string {
+	var (
+		fset      = token.NewFileSet()
+		file, err = parser.ParseFile(fset, "", content, parser.ParseComments)
+	)
+	if err != nil {
+		return content
+	}
+	// Collect the line ranges of the import blocks, 1-based and inclusive.
+	type lineRange struct {
+		start, end int
+	}
+	var ranges = make([]lineRange, 0, 2)
+	for _, decl := range file.Decls {
+		genDecl, ok := decl.(*ast.GenDecl)
+		if !ok || genDecl.Tok != token.IMPORT || !genDecl.Lparen.IsValid() {
+			continue
+		}
+		ranges = append(ranges, lineRange{
+			start: fset.Position(genDecl.Lparen).Line,
+			end:   fset.Position(genDecl.Rparen).Line,
+		})
+	}
+	if len(ranges) == 0 {
+		return content
+	}
+
 	var (
 		lines  = strings.Split(content, "\n")
 		result = make([]string, 0, len(lines))
+		cursor = 0 // The index of the first line not handled yet.
 	)
-	for i := 0; i < len(lines); i++ {
-		if gstr.Trim(lines[i]) != "import (" {
-			result = append(result, lines[i])
-			continue
-		}
-		// Find the end of the current import block.
+	for _, r := range ranges {
 		var (
-			end   = i + 1
-			specs = make([]string, 0, 8)
+			start = r.start - 1
+			end   = r.end - 1
 		)
-		for ; end < len(lines); end++ {
-			if gstr.Trim(lines[end]) == ")" {
-				break
-			}
-			specs = append(specs, lines[end])
-		}
-		if end >= len(lines) {
-			// Unbalanced parentheses, keep the content as is.
-			result = append(result, lines[i])
+		if start < cursor || start >= end || end >= len(lines) {
 			continue
 		}
-		// Keep import blocks containing comments as is.
-		var handleable = true
-		for _, spec := range specs {
-			if gstr.Contains(spec, "//") || gstr.Contains(spec, "/*") {
-				handleable = false
-				break
-			}
-		}
-		if !handleable {
-			result = append(result, lines[i])
-			result = append(result, specs...)
-			result = append(result, lines[end])
-			i = end
-			continue
-		}
-		// Split imports into standard library group and third party group.
-		var (
-			stdImports   = make([]string, 0, len(specs))
-			thirdImports = make([]string, 0, len(specs))
-		)
-		for _, spec := range specs {
-			if gstr.Trim(spec) == "" {
-				continue
-			}
-			if isStandardLibraryImport(spec) {
-				stdImports = append(stdImports, spec)
-			} else {
-				thirdImports = append(thirdImports, spec)
-			}
-		}
-		sort.Slice(stdImports, func(i, j int) bool { return importPathOf(stdImports[i]) < importPathOf(stdImports[j]) })
-		sort.Slice(thirdImports, func(i, j int) bool { return importPathOf(thirdImports[i]) < importPathOf(thirdImports[j]) })
-
-		result = append(result, lines[i])
-		result = append(result, stdImports...)
-		if len(stdImports) > 0 && len(thirdImports) > 0 {
-			result = append(result, "")
-		}
-		result = append(result, thirdImports...)
+		result = append(result, lines[cursor:start]...)
+		result = append(result, lines[start])
+		result = append(result, groupImportSpecs(lines[start+1:end])...)
 		result = append(result, lines[end])
-		i = end
+		cursor = end + 1
 	}
+	result = append(result, lines[cursor:]...)
 	return strings.Join(result, "\n")
 }
 
-// isStandardLibraryImport checks and returns whether given import spec line is a
-// standard library import, like `\t"fmt"` or `\tnet/http "net/http"`.
-func isStandardLibraryImport(spec string) bool {
-	var path = importPathOf(spec)
+// groupImportSpecs groups the given import spec lines into standard library section and
+// third party section, sorted by import path within each section.
+func groupImportSpecs(specs []string) []string {
+	// Keep import blocks containing comments as is.
+	for _, spec := range specs {
+		if gstr.Contains(spec, "//") || gstr.Contains(spec, "/*") {
+			return specs
+		}
+	}
+	// Split imports into standard library group and third party group.
+	var (
+		stdImports   = make([]string, 0, len(specs))
+		thirdImports = make([]string, 0, len(specs))
+	)
+	for _, spec := range specs {
+		if gstr.Trim(spec) == "" {
+			continue
+		}
+		if isStandardLibraryImportPath(importPathOf(spec)) {
+			stdImports = append(stdImports, spec)
+		} else {
+			thirdImports = append(thirdImports, spec)
+		}
+	}
+	sort.Slice(stdImports, func(i, j int) bool { return importPathOf(stdImports[i]) < importPathOf(stdImports[j]) })
+	sort.Slice(thirdImports, func(i, j int) bool { return importPathOf(thirdImports[i]) < importPathOf(thirdImports[j]) })
+
+	var result = make([]string, 0, len(specs)+1)
+	result = append(result, stdImports...)
+	if len(stdImports) > 0 && len(thirdImports) > 0 {
+		result = append(result, "")
+	}
+	result = append(result, thirdImports...)
+	return result
+}
+
+// isStandardLibraryImportPath checks and returns whether given import path is of the
+// standard library, like `fmt` and `net/http`.
+func isStandardLibraryImportPath(path string) bool {
 	if path == "" {
 		return false
 	}
@@ -246,32 +275,126 @@ func importPathOf(spec string) string {
 }
 
 // importPackageName retrieves the package name the import refers to, like "gdb" for
-// import path "github.com/gogf/gf/v2/database/gdb".
+// the import path "github.com/gogf/gf/v2/database/gdb".
 //
-// It returns false as the second result if the package name cannot be determined from
-// the import path, for example the path "github.com/minio/minio-go/v7" whose package
-// name is "minio", which is not any segment of the path.
-func importPackageName(imp *ast.ImportSpec) (name string, certain bool) {
+// The real package name resolved by `resolvePackageNames` is preferred, as the package
+// name is not always a segment of the import path, for example
+// "github.com/minio/minio-go/v7" is package "minio", "k8s.io/api/core/v1" is package
+// "v1" and "go.etcd.io/etcd/client/v3" is package "clientv3".
+//
+// It returns false as the second result if the package name cannot be determined, in
+// which case the import should be kept.
+func importPackageName(imp *ast.ImportSpec, importPath string, resolvedNames map[string]string) (name string, certain bool) {
 	if imp.Name != nil {
 		return imp.Name.Name, true
 	}
-	path, err := strconv.Unquote(imp.Path.Value)
-	if err != nil {
-		return "", false
+	if resolvedName, ok := resolvedNames[importPath]; ok && resolvedName != "" {
+		return resolvedName, true
 	}
-	var paths = strings.Split(path, "/")
-	name = paths[len(paths)-1]
-	// The last segment may be a version suffix like "v2", in which case the
-	// package name is usually the second-to-last segment.
-	if len(paths) > 1 && len(name) > 1 && name[0] == 'v' && gstr.IsNumeric(name[1:]) {
-		name = paths[len(paths)-2]
+	// Fall back to the import path when the package name cannot be resolved, which
+	// happens when the import is out of the module context, for example an invalid
+	// import path that gf rewrites. The fallback is only used to detect the usages,
+	// and the import is kept when the last segment is not a reliable package name.
+	if name = packageNameFromPath(importPath); name != "" {
+		return name, true
 	}
-	// The package name cannot be determined if it is not a valid go identifier,
-	// like "minio-go" whose package name is "minio".
+	return "", false
+}
+
+// packageNameFromPath derives the package name from an import path, like "net/http"
+// returns "http".
+//
+// It returns an empty name for the versioned paths, whose package name is not reliable,
+// for example "k8s.io/api/core/v1" is package "v1" while
+// "github.com/gogf/gf/contrib/drivers/mysql/v2" is package "mysql".
+func packageNameFromPath(importPath string) string {
+	var (
+		segments = strings.Split(importPath, "/")
+		name     = segments[len(segments)-1]
+	)
+	// A version suffix like "v1" makes the package name unpredictable.
+	if len(name) > 1 && name[0] == 'v' && gstr.IsNumeric(name[1:]) {
+		return ""
+	}
 	if !isValidGoIdentifier(name) {
-		return "", false
+		return ""
 	}
-	return name, true
+	return name
+}
+
+// resolvePackageNames resolves and returns the real package names of the given import
+// paths in directory `dir`. Every import path is resolved only once and cached, so that
+// the resolving happens once instead of for every file.
+//
+// It is a variable so that tests can stub the resolving.
+var resolvePackageNames = func(dir string, importPaths []string) map[string]string {
+	var (
+		missing []string
+		result  = make(map[string]string, len(importPaths))
+	)
+	packageNamesCacheMu.Lock()
+	for _, importPath := range importPaths {
+		if name, ok := packageNamesCache[importPath]; ok {
+			result[importPath] = name
+			continue
+		}
+		missing = append(missing, importPath)
+	}
+	packageNamesCacheMu.Unlock()
+	if len(missing) == 0 {
+		return result
+	}
+
+	var resolved, loadErr = loadPackageNames(dir, missing)
+	if loadErr != nil || len(resolved) < len(missing) {
+		// Fall back to the current working directory, as the directory may not be in a
+		// go module, for example a temporary directory that gf generates files into.
+		var fallback, fallbackErr = loadPackageNames(gfile.Pwd(), missing)
+		if fallbackErr == nil {
+			if resolved == nil {
+				resolved = make(map[string]string, len(missing))
+			}
+			for importPath, name := range fallback {
+				resolved[importPath] = name
+			}
+		}
+	}
+
+	packageNamesCacheMu.Lock()
+	for _, importPath := range missing {
+		// An empty name means the package name is unavailable, which is also cached to
+		// avoid resolving it for every file.
+		packageNamesCache[importPath] = resolved[importPath]
+		result[importPath] = resolved[importPath]
+	}
+	packageNamesCacheMu.Unlock()
+	return result
+}
+
+// packageNamesCache caches the resolved package names of the import paths.
+var (
+	packageNamesCache   = make(map[string]string)
+	packageNamesCacheMu sync.Mutex
+)
+
+// loadPackageNames loads the real package names of the given import paths in directory
+// `dir` using go/packages, which runs a single `go list` for all the paths.
+func loadPackageNames(dir string, importPaths []string) (map[string]string, error) {
+	var pkgs, err = packages.Load(&packages.Config{
+		Mode: packages.NeedName,
+		Dir:  dir,
+	}, importPaths...)
+	if err != nil {
+		return nil, err
+	}
+	var names = make(map[string]string, len(pkgs))
+	for _, pkg := range pkgs {
+		if pkg.PkgPath == "" || pkg.Name == "" {
+			continue
+		}
+		names[pkg.PkgPath] = pkg.Name
+	}
+	return names, nil
 }
 
 // isValidGoIdentifier checks and returns whether given string is a valid go identifier.
