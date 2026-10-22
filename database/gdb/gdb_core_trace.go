@@ -33,6 +33,7 @@ const (
 	traceEventDbExecutionRows = "db.execution.rows"
 	traceEventDbExecutionTxID = "db.execution.txid"
 	traceEventDbExecutionType = "db.execution.type"
+	traceEventDbExecutionSQL  = "db.execution.sql"
 )
 
 // addSqlToTracing adds sql information to tracer if it's enabled.
@@ -47,8 +48,11 @@ func (c *Core) traceSpanEnd(ctx context.Context, span trace.Span, sql *Sql) {
 	labels = append(labels, gtrace.CommonLabels()...)
 	labels = append(labels,
 		attribute.String(traceAttrDbType, c.db.GetConfig().Type),
-		semconv.DBStatement(sql.Format),
 	)
+	// Only record SQL statement in span attributes when SQL tracing is enabled.
+	if c.db.GetConfig().IsOtelTraceSQLEnabled() {
+		labels = append(labels, semconv.DBStatement(sql.Format))
+	}
 	if c.db.GetConfig().Host != "" {
 		labels = append(labels, attribute.String(traceAttrDbHost, c.db.GetConfig().Host))
 	}
@@ -80,5 +84,11 @@ func (c *Core) traceSpanEnd(ctx context.Context, span trace.Span, sql *Sql) {
 		}
 	}
 	events = append(events, attribute.String(traceEventDbExecutionType, string(sql.Type)))
+
+	// Add SQL statement as event when SQL tracing is enabled.
+	if c.db.GetConfig().IsOtelTraceSQLEnabled() {
+		events = append(events, attribute.String(traceEventDbExecutionSQL, sql.Format))
+	}
+
 	span.AddEvent(traceEventDbExecution, trace.WithAttributes(events...))
 }
