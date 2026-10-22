@@ -122,7 +122,7 @@ type (
 	HandlerType string
 
 	// Listening file descriptor mapping.
-	// The key is either "http" or "https" and the value is its FD.
+	// The key is either schemeHttp or schemeHttps and the value is its FD.
 	listenerFdMap = map[string]string
 
 	// internalPanic is the custom panic for internal usage.

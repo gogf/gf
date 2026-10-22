@@ -230,11 +230,11 @@ func (r *Request) GetRemoteIp() string {
 // GetSchema returns the schema of this request.
 func (r *Request) GetSchema() string {
 	var (
-		scheme = "http"
+		scheme = schemeHttp
 		proto  = r.Header.Get(HeaderXForwardedProto)
 	)
-	if r.TLS != nil || gstr.Equal(proto, "https") {
-		scheme = "https"
+	if r.TLS != nil || gstr.Equal(proto, schemeHttps) {
+		scheme = schemeHttps
 	}
 	return scheme
 }
@@ -242,12 +242,12 @@ func (r *Request) GetSchema() string {
 // GetUrl returns current URL of this request.
 func (r *Request) GetUrl() string {
 	var (
-		scheme = "http"
+		scheme = schemeHttp
 		proto  = r.Header.Get(HeaderXForwardedProto)
 	)
 
-	if r.TLS != nil || gstr.Equal(proto, "https") {
-		scheme = "https"
+	if r.TLS != nil || gstr.Equal(proto, schemeHttps) {
+		scheme = schemeHttps
 	}
 	return fmt.Sprintf(`%s://%s%s`, scheme, r.Host, r.URL.String())
 }
