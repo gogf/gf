@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/os/gstructs"
@@ -205,12 +206,69 @@ func (r *Request) mergeRepeatedQueryValues(data map[string]any, pointer any, req
 
 // getRepeatedQueryValues returns all the values of the repeated plain query parameters, like
 // `names=a&names=b`, by the same keys as the ones stored in r.queryMap.
+//
+// The result is cached until the query string is parsed again. Most query strings have no
+// repeated plain key, which is checked by hasRepeatedQueryKey before parsing all the values.
 func (r *Request) getRepeatedQueryValues() map[string][]string {
-	if r.URL.RawQuery == "" {
-		return nil
+	if r.parsedRepeated {
+		return r.repeatedQuery
 	}
+	r.parsedRepeated = true
+	r.repeatedQuery = nil
+	if hasRepeatedQueryKey(r.URL.RawQuery) {
+		r.repeatedQuery = parseRepeatedQueryValues(r.URL.RawQuery)
+	}
+	return r.repeatedQuery
+}
+
+// hasRepeatedQueryKey checks whether any plain key is repeated in the query string `rawQuery`,
+// comparing the keys as they are stored by gstr.Parse.
+//
+// Only the keys that gstr.Parse changes are parsed for the checking, so a query string like
+// `page=1&size=10` is checked without allocating for each parameter.
+func hasRepeatedQueryKey(rawQuery string) bool {
+	var (
+		part string
+		keys = make(map[string]struct{})
+	)
+	for rawQuery != "" {
+		part, rawQuery, _ = strings.Cut(rawQuery, "&")
+		key, _, found := strings.Cut(part, "=")
+		// The part without a key is ignored by gstr.Parse.
+		if !found || key == "" {
+			continue
+		}
+		// The keys like `names[]` or `user[name]` are not plain ones.
+		if i := strings.IndexByte(key, '['); i >= 0 && strings.IndexByte(key[i+1:], ']') >= 0 {
+			continue
+		}
+		// The key that gstr.Parse changes, like `file.names` into `file_names` or the one with
+		// escaped or invalid UTF-8 characters, is parsed alone to be compared in the same way as
+		// the one stored in r.queryMap.
+		if strings.ContainsAny(key, "%+ .['\"") || !utf8.ValidString(key) {
+			var isPlain bool
+			m, _ := gstr.Parse(part)
+			for k, v := range m {
+				key = k
+				_, isPlain = v.(string)
+			}
+			if !isPlain {
+				continue
+			}
+		}
+		if _, ok := keys[key]; ok {
+			return true
+		}
+		keys[key] = struct{}{}
+	}
+	return false
+}
+
+// parseRepeatedQueryValues parses all the values of the repeated plain query parameters from the
+// query string `rawQuery`, by the same keys as the ones stored in r.queryMap.
+func parseRepeatedQueryValues(rawQuery string) map[string][]string {
 	allValues := make(map[string][]string)
-	for _, part := range strings.Split(r.URL.RawQuery, "&") {
+	for _, part := range strings.Split(rawQuery, "&") {
 		// Each part is parsed alone by gstr.Parse, so that its key is changed in the same way
 		// as the whole query string parsed into r.queryMap, like `file.names` into `file_names`.
 		m, err := gstr.Parse(part)

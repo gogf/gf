@@ -1005,6 +1005,18 @@ func Test_Issue4751(t *testing.T) {
 		}
 		r.Response.Write(req.Names, req.Ids, queryReq.Names, queryReq.Ids)
 	})
+	s.BindHandler("/reload", func(r *ghttp.Request) {
+		var req, reloadedReq *Issue4751Req
+		if err := r.Parse(&req); err != nil {
+			r.Response.WriteExit(err)
+		}
+		r.URL.RawQuery = "names=c&names=d"
+		r.ReloadParam()
+		if err := r.Parse(&reloadedReq); err != nil {
+			r.Response.WriteExit(err)
+		}
+		r.Response.Write(req.Names, reloadedReq.Names)
+	})
 	s.BindHandler("/file", func(r *ghttp.Request) {
 		var req struct {
 			Names []*ghttp.UploadFile
@@ -1068,6 +1080,8 @@ func Test_Issue4751(t *testing.T) {
 		// The values set by SetQuery and SetParam override all the values of the repeated query
 		// parameters, while ParseQuery ignores the ones set by SetParam.
 		t.Assert(client.GetContent(ctx, "/custom?names=a&names=b&ids=1&ids=2"), `["b"][2]["b"][1,2]`)
+		// The repeated query parameters are retrieved again after the query string is reloaded.
+		t.Assert(client.GetContent(ctx, "/reload?names=a&names=b"), `["a","b"]["c","d"]`)
 		// The uploaded files have higher priority than the query parameters too.
 		t.Assert(
 			client.PostContent(ctx, "/file?names=a&names=b", g.Map{
