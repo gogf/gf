@@ -222,9 +222,13 @@ func (r *Request) parseQuery() {
 		return
 	}
 	r.parsedQuery = true
+	// The repeated query parameters are retrieved again from the query string being parsed.
+	r.parsedRepeated = false
 	if r.URL.RawQuery != "" {
 		var err error
 		r.queryMap, err = gstr.Parse(r.URL.RawQuery)
+		// The custom values set by SetQuery are dropped along with the previous query map.
+		r.customQueryKeys = nil
 		if err != nil {
 			panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse Query failed"))
 		}

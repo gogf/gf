@@ -678,3 +678,38 @@ func Test_HandlerFuncInfo_CheckDuplicatedInTag(t *testing.T) {
 		t.Assert(gstr.Contains(err.Error(), `conflicting values "query" and "header"`), true)
 	})
 }
+
+func Test_HasRepeatedQueryKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// The keys are compared as the ones stored by gstr.Parse, which agrees with the values
+		// parsed by parseRepeatedQueryValues.
+		for _, query := range []string{
+			"names=a&names=b",
+			"page=1&names=a&size=10&names=",
+			"file.names=a&file_names=b",
+			"file+names=a&file%20names=b",
+			"%6Eames=a&names=b",
+			"+names=a&names=b",
+			"'names'=a&names=b",
+			"names[=a&names_=b",
+			"names]=a&names]=b",
+			"\xff=a&\xfe=b",
+		} {
+			t.Assert(hasRepeatedQueryKey(query), true)
+			t.Assert(len(parseRepeatedQueryValues(query)) > 0, true)
+		}
+		// The keys which are not plain ones or are ignored by gstr.Parse.
+		for _, query := range []string{
+			"",
+			"page=1&size=10",
+			"names=a&Names=b",
+			"names[]=a&names[]=b",
+			"names%5B%5D=a&names%5B%5D=b",
+			"user[name]=a&user[name]=b",
+			"names&names&=a&=b",
+		} {
+			t.Assert(hasRepeatedQueryKey(query), false)
+			t.Assert(len(parseRepeatedQueryValues(query)) > 0, false)
+		}
+	})
+}
