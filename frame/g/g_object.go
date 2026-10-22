@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/net/gudp"
+	"github.com/gogf/gf/v2/os/gapp"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gres"
@@ -40,6 +41,13 @@ func TCPServer(name ...any) *gtcp.Server {
 // UDPServer returns an instance of udp server with specified name.
 func UDPServer(name ...any) *gudp.Server {
 	return gudp.GetServer(name...)
+}
+
+// App creates and returns a new App instance with optional initial servers.
+// The App manages the lifecycle of multiple servers with unified start/stop
+// and signal handling for graceful shutdown.
+func App(servers ...gapp.Server) *gapp.App {
+	return gapp.New(servers...)
 }
 
 // View returns an instance of template engine object with specified name.
