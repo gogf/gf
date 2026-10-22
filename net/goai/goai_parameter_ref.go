@@ -30,6 +30,11 @@ type ParameterRef struct {
 
 // newParameterRefWithStructMethod resolves a request field's parameter location and schema.
 func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path, method string, hasBodyField bool) (*ParameterRef, error) {
+	// The field tagged with `body:"*"` receives the whole request body, so it is documented as
+	// the request body instead of an operation parameter.
+	if field.TagBody() != "" {
+		return nil, nil
+	}
 	var (
 		tagMap    = field.TagMap()
 		fieldName = field.TagPriorityName()
@@ -72,11 +77,6 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path
 		parameter.Required = true
 
 	case ParameterInCookie, ParameterInHeader, ParameterInQuery:
-
-	case ParameterInBody:
-		// The field tagged with `in:"body"` is documented as the request body instead of an
-		// operation parameter.
-		return nil, nil
 
 	default:
 		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid tag value "%s" for In`, parameter.In)

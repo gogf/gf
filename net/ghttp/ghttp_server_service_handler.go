@@ -14,7 +14,6 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/net/goai"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gtag"
@@ -351,10 +350,11 @@ func (f *handlerFuncInfo) checkDuplicatedInTag() error {
 }
 
 // checkAndCreateReqBodyField retrieves the request struct field that receives the whole request
-// body, which is declared by the `in:"body"` tag on the field.
+// body, which is declared by the `body:"*"` tag on the field.
 //
 // The request body is only able to be received by one field, so it returns error if there are
-// multiple fields tagged with `in:"body"`. It also returns error if the field can not receive
+// multiple fields tagged with `body:"*"`. The tag value should be "*", and the field can not be
+// tagged with the `in` tag at the same time. It also returns error if the field can not receive
 // the JSON array request body: a non-slice type, or an uploading file type, as files are
 // received by the ordinary request struct fields through the multipart/form-data request.
 //
@@ -362,13 +362,30 @@ func (f *handlerFuncInfo) checkDuplicatedInTag() error {
 // the request handling to remove the request parameter of the same name.
 func (f *handlerFuncInfo) checkAndCreateReqBodyField() error {
 	for _, field := range f.ReqStructFields {
-		if field.TagIn() != goai.ParameterInBody {
+		bodyTagValue, hasBodyTag := field.TagLookup(gtag.Body)
+		if !hasBodyTag {
 			continue
+		}
+		if bodyTagValue != "*" {
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid handler: invalid body tag value "%s" for the request struct field "%s", `+
+					`which should be "*" to receive the whole request body`,
+				bodyTagValue, field.Name(),
+			)
+		}
+		if inTagValue := field.TagIn(); inTagValue != "" {
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid handler: the request struct field "%s" can not be tagged with both `+
+					`body:"*" and in:"%s"`,
+				field.Name(), inTagValue,
+			)
 		}
 		if f.ReqBodyFieldName != "" {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
-				`invalid handler: only one request struct field is allowed to be tagged with in:"body", `+
+				`invalid handler: only one request struct field is allowed to be tagged with body:"*", `+
 					`but got both "%s" and "%s"`,
 				f.ReqBodyFieldName, field.Name(),
 			)
@@ -380,9 +397,9 @@ func (f *handlerFuncInfo) checkAndCreateReqBodyField() error {
 		if isFileType(fieldType) {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
-				`invalid handler: the request struct field "%s" tagged with in:"body" is of file type "%s"; `+
+				`invalid handler: the request struct field "%s" tagged with body:"*" is of file type "%s"; `+
 					`files are uploaded by the multipart/form-data request and received by the ordinary `+
-					`fields of the request struct, which does not need the in:"body" tag`,
+					`fields of the request struct, which does not need the body:"*" tag`,
 				field.Name(), field.Type().String(),
 			)
 		}
@@ -393,12 +410,12 @@ func (f *handlerFuncInfo) checkAndCreateReqBodyField() error {
 				hint = `; a fixed-size array can be replaced by a slice with a length validation rule`
 			case reflect.Struct, reflect.Map, reflect.Interface:
 				hint = `; an object request body is received by the ordinary fields of the request ` +
-					`struct, which does not need the in:"body" tag`
+					`struct, which does not need the body:"*" tag`
 			default:
 			}
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
-				`invalid handler: the request struct field "%s" tagged with in:"body" should be type of `+
+				`invalid handler: the request struct field "%s" tagged with body:"*" should be type of `+
 					`slice, but got "%s"%s`,
 				field.Name(), field.Type().String(), hint,
 			)

@@ -261,7 +261,7 @@ func (r *Request) parseBody() {
 		jsonContentType := gstr.ContainsI(contentType, contentTypeJson)
 		// Preserve GET query/form body compatibility while validating JSON-shaped GET bodies.
 		strictJsonContentType := jsonContentType && (r.Method != http.MethodGet || body[0] == '{' || body[0] == '[')
-		// JSON array format check for the request struct declaring a field tagged with `in:"body"`.
+		// JSON array format check for the request struct declaring a field tagged with `body:"*"`.
 		// Note that the array body is accepted no matter what the content type is, just like the
 		// object body is relaxed checked below.
 		if r.isArrayRequestBodyExpected() && body[0] == '[' && body[len(body)-1] == ']' {
@@ -298,7 +298,7 @@ func (r *Request) parseBody() {
 	}
 }
 
-// reqBodyFieldName returns the request struct field name tagged with `in:"body"`, which receives
+// reqBodyFieldName returns the request struct field name tagged with `body:"*"`, which receives
 // the whole request body. It returns empty if there's no such field, or there's no serving
 // handler for current request, for example the static file request or the route not matched
 // request.
@@ -310,18 +310,18 @@ func (r *Request) reqBodyFieldName() string {
 }
 
 // isArrayRequestBodyExpected checks and returns whether the handler serving current request
-// declares a request struct field tagged with `in:"body"`, which receives the whole JSON array
+// declares a request struct field tagged with `body:"*"`, which receives the whole JSON array
 // request body.
 func (r *Request) isArrayRequestBodyExpected() bool {
 	return r.reqBodyFieldName() != ""
 }
 
 // newArrayRequestBodyError creates an error that the request body is not the JSON array the
-// request struct field tagged with `in:"body"` expects.
+// request struct field tagged with `body:"*"` expects.
 func newArrayRequestBodyError(bodyFieldName string) error {
 	return gerror.NewCodef(
 		gcode.CodeInvalidParameter,
-		`the request body should be a JSON array for the request struct field "%s" tagged with in:"body"`,
+		`the request body should be a JSON array for the request struct field "%s" tagged with body:"*"`,
 		bodyFieldName,
 	)
 }
@@ -345,7 +345,7 @@ func (r *Request) parseForm() {
 		var isFormRequest = gstr.Contains(contentType, "form")
 		var err error
 
-		// A field tagged with `in:"body"` only receives the JSON array request body, so the
+		// A field tagged with `body:"*"` only receives the JSON array request body, so the
 		// multipart form is rejected before being parsed: the multipart body never becomes the
 		// JSON array, while parsing it would write the uploaded files to the temporary directory,
 		// or even panic on a malformed multipart body, before being rejected.
@@ -358,7 +358,7 @@ func (r *Request) parseForm() {
 			// To avoid big memory consuming.
 			// The `multipart/` type form always contains binary data, which is not necessary read twice.
 			r.MakeBodyRepeatableRead(true)
-			// A field tagged with `in:"body"` receives the whole request body, so the JSON array
+			// A field tagged with `body:"*"` receives the whole request body, so the JSON array
 			// body is detected before the form decoding below, which would otherwise cut the
 			// array into bogus form parameters.
 			if r.isArrayRequestBodyExpected() {
