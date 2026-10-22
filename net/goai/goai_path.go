@@ -226,7 +226,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		if tagMimeValue != "" {
 			contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
 		}
-		// The field tagged with `in:"body"` receives the whole request body, so the schema of
+		// The field tagged with `body:"*"` receives the whole request body, so the schema of
 		// that field is used as the request body schema instead of the schema of the request
 		// struct, which would otherwise be documented as a wrapping object.
 		var bodySchemaRef *SchemaRef
@@ -405,7 +405,7 @@ func (oai *OpenApiV3) removeOperationDuplicatedProperties(operation *Operation) 
 		}
 
 		// The request body schema might have no properties at all, for example the JSON array
-		// request body of the field tagged with `in:"body"`, of which there's nothing to remove.
+		// request body of the field tagged with `body:"*"`, of which there's nothing to remove.
 		if requestBodyContent.Schema.Value == nil || requestBodyContent.Schema.Value.Properties == nil {
 			continue
 		}
@@ -440,11 +440,11 @@ func (oai *OpenApiV3) doesStructHasNoFields(s any) bool {
 	return reflect.TypeOf(s).NumField() == 0
 }
 
-// findBodyField retrieves and returns the field tagged with `in:"body"` from the given request
+// findBodyField retrieves and returns the field tagged with `body:"*"` from the given request
 // struct fields, which receives the whole request body.
 func findBodyField(structFields []gstructs.Field) (gstructs.Field, bool) {
 	for _, structField := range structFields {
-		if structField.TagIn() == ParameterInBody {
+		if structField.TagBody() != "" {
 			return structField, true
 		}
 	}

@@ -84,8 +84,8 @@ type (
 		IsStrictRoute       bool              // Whether strict route matching is enabled.
 		ReqStructFields     []gstructs.Field  // Request struct fields.
 		ReqStructTags       requestStructTags // Tag usages of the request struct, which is precomputed at handler registration.
-		ReqBodyFieldName    string            // Request struct field name tagged with `in:"body"`, which receives the whole request body.
-		ReqBodyFieldTagName string            // Tag name of the `in:"body"` field, which is resolved once at router registering for the request handling to remove the parameter of the same name.
+		ReqBodyFieldName    string            // Request struct field name tagged with `body:"*"`, which receives the whole request body.
+		ReqBodyFieldTagName string            // Tag name of the `body:"*"` field, which is resolved once at router registering for the request handling to remove the parameter of the same name.
 	}
 
 	// HandlerItem is the registered handler for route handling,
