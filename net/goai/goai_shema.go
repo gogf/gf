@@ -210,7 +210,7 @@ func (oai *OpenApiV3) structToSchema(object any) (*Schema, error) {
 			lstRules := gstr.Split(ref.Value.ValidationRules, "|")
 			for _, rule := range lstRules {
 				if strings.HasPrefix(rule, validationRuleKeyForMax) {
-					if ref.Value.Type == "integer" || ref.Value.Type == "number" {
+					if ref.Value.Type == TypeInteger || ref.Value.Type == TypeNumber {
 						f := gconv.Float64(rule[4:])
 						ref.Value.Max = &f
 					}
@@ -222,7 +222,7 @@ func (oai *OpenApiV3) structToSchema(object any) (*Schema, error) {
 				}
 
 				if strings.HasPrefix(rule, validationRuleKeyForMin) {
-					if ref.Value.Type == "integer" || ref.Value.Type == "number" {
+					if ref.Value.Type == TypeInteger || ref.Value.Type == TypeNumber {
 						f := gconv.Float64(rule[4:])
 						ref.Value.Min = &f
 					}
@@ -244,7 +244,7 @@ func (oai *OpenApiV3) structToSchema(object any) (*Schema, error) {
 				}
 
 				if strings.HasPrefix(rule, validationRuleKeyForBetween) {
-					if ref.Value.Type == "integer" || ref.Value.Type == "number" {
+					if ref.Value.Type == TypeInteger || ref.Value.Type == TypeNumber {
 						lengthRule := gstr.Split(rule[8:], ",")
 						if len(lengthRule) == 2 {
 							minimum := gconv.Float64(lengthRule[0])
