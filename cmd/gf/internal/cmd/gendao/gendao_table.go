@@ -127,7 +127,7 @@ func generateTableFields(fields map[string]*gdb.TableField) string {
 }
 
 // generateDefaultValue generates and returns the default value definition for specified field.
-func generateDefaultValue(value interface{}) string {
+func generateDefaultValue(value any) string {
 	if value == nil {
 		return "nil"
 	}

@@ -23,7 +23,7 @@ func (t wrapper) String() string {
 	}
 	if t.Year() == 0 {
 		// Only time.
-		return t.Format("15:04:05")
+		return t.Format(time.TimeOnly)
 	}
-	return t.Format("2006-01-02 15:04:05")
+	return t.Format(time.DateTime)
 }

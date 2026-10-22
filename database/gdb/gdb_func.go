@@ -702,7 +702,7 @@ func formatWhereInterfaces(db DB, where []any, buffer *bytes.Buffer, newArgs []a
 	for i := 0; i < len(where); i += 2 {
 		str = gconv.String(where[i])
 		if buffer.Len() > 0 {
-			buffer.WriteString(" AND " + db.GetCore().QuoteWord(str) + "=?")
+			buffer.WriteString(sqlAnd + db.GetCore().QuoteWord(str) + "=?")
 		} else {
 			buffer.WriteString(db.GetCore().QuoteWord(str) + "=?")
 		}
@@ -739,7 +739,7 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []any) {
 		quotedKey = in.Prefix + "." + quotedKey
 	}
 	if in.Buffer.Len() > 0 {
-		in.Buffer.WriteString(" AND ")
+		in.Buffer.WriteString(sqlAnd)
 	}
 	// If the value is type of slice, and there's only one '?' holder in
 	// the key string, it automatically adds '?' holder chars according to its arguments count
@@ -852,7 +852,7 @@ func handleSliceAndStructArgsForSql(oldSql string, oldArgs []any) (newSql string
 				// Query("select * from xxx where id in(?)", g.Slice{}) -> select * from xxx where 0=1
 				// Where("id in(?)", g.Slice{}) -> WHERE 0=1
 				if gstr.Contains(newSql, "?") {
-					whereKeyWord := " WHERE "
+					whereKeyWord := sqlWhere
 					if p := gstr.PosI(newSql, whereKeyWord); p == -1 {
 						return "0=1", []any{}
 					} else {

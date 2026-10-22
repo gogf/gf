@@ -26,7 +26,7 @@ const (
 // through given link object and returns the execution result.
 // It handles INSERT statements specially to support LastInsertId.
 func (d *Driver) DoExec(
-	ctx context.Context, link gdb.Link, sql string, args ...interface{},
+	ctx context.Context, link gdb.Link, sql string, args ...any,
 ) (result sql.Result, err error) {
 	if isReleaseSavePoint(sql) {
 		return driver.RowsAffected(0), nil

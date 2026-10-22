@@ -83,7 +83,7 @@ func Test_EnumsParser_Export_WithEnums(t *testing.T) {
 		t.AssertNE(result, "")
 
 		// Parse the result to verify - use raw map to avoid gjson path issues with "."
-		var resultMap map[string][]interface{}
+		var resultMap map[string][]any
 		err := gjson.DecodeTo(result, &resultMap)
 		t.AssertNil(err)
 
@@ -108,7 +108,7 @@ func Test_EnumsParser_Export_IntValues(t *testing.T) {
 		}
 
 		result := p.Export()
-		var resultMap map[string][]interface{}
+		var resultMap map[string][]any
 		err := gjson.DecodeTo(result, &resultMap)
 		t.AssertNil(err)
 
@@ -130,7 +130,7 @@ func Test_EnumsParser_Export_FloatValues(t *testing.T) {
 		}
 
 		result := p.Export()
-		var resultMap map[string][]interface{}
+		var resultMap map[string][]any
 		err := gjson.DecodeTo(result, &resultMap)
 		t.AssertNil(err)
 
@@ -148,7 +148,7 @@ func Test_EnumsParser_Export_BoolValues(t *testing.T) {
 		}
 
 		result := p.Export()
-		var resultMap map[string][]interface{}
+		var resultMap map[string][]any
 		err := gjson.DecodeTo(result, &resultMap)
 		t.AssertNil(err)
 
@@ -168,7 +168,7 @@ func Test_EnumsParser_Export_StringValues(t *testing.T) {
 		}
 
 		result := p.Export()
-		var resultMap map[string][]interface{}
+		var resultMap map[string][]any
 		err := gjson.DecodeTo(result, &resultMap)
 		t.AssertNil(err)
 
@@ -189,7 +189,7 @@ func Test_EnumsParser_Export_MixedTypes(t *testing.T) {
 		}
 
 		result := p.Export()
-		var resultMap map[string][]interface{}
+		var resultMap map[string][]any
 		err := gjson.DecodeTo(result, &resultMap)
 		t.AssertNil(err)
 
@@ -276,7 +276,7 @@ const (
 		t.Assert(len(result) > 2, true) // More than just "{}"
 
 		// Parse result as raw map to handle keys with "/"
-		var resultMap map[string][]interface{}
+		var resultMap map[string][]any
 		err = gjson.DecodeTo(result, &resultMap)
 		t.AssertNil(err)
 

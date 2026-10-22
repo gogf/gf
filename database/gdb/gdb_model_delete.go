@@ -36,7 +36,7 @@ func (m *Model) Delete(where ...any) (result sql.Result, err error) {
 	if m.unscoped {
 		fieldNameDelete = ""
 	}
-	if !gstr.ContainsI(conditionStr, " WHERE ") || (fieldNameDelete != "" && !gstr.ContainsI(conditionStr, " AND ")) {
+	if !gstr.ContainsI(conditionStr, sqlWhere) || (fieldNameDelete != "" && !gstr.ContainsI(conditionStr, sqlAnd)) {
 		intlog.Printf(
 			ctx,
 			`sql condition string "%s" has no WHERE for DELETE operation, fieldNameDelete: %s`,
