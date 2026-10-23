@@ -43,6 +43,7 @@ type (
 		routesMap        map[string][]*HandlerItem // Route map mainly for route dumps and repeated route checks.
 		statusHandlerMap map[string][]HandlerFunc  // Custom status handler map.
 		sessionManager   *gsession.Manager         // Session manager.
+		sessionIdFunc    func(r *Request) string   // Custom session id generator. Nil uses the built-in generator.
 		openapi          *goai.OpenApiV3           // The OpenApi specification management object.
 		serviceMu        sync.Mutex                // Concurrent safety for operations of attribute service.
 		service          gsvc.Service              // The service for Registry.
