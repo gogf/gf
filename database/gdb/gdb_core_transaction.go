@@ -50,6 +50,7 @@ const (
 // TxOptions defines options for transaction control.
 type TxOptions struct {
 	// Propagation specifies the propagation behavior.
+	// If empty, the propagation of DefaultTxOptions is used.
 	Propagation Propagation
 	// Isolation is the transaction isolation level.
 	// If zero, the driver or database's default level is used.
@@ -136,6 +137,9 @@ func (c *Core) TransactionWithOptions(
 		ctx = c.db.GetCtx()
 	}
 	ctx = c.injectInternalCtxData(ctx)
+	if opts.Propagation == "" {
+		opts.Propagation = DefaultTxOptions().Propagation
+	}
 
 	// Check current transaction from context
 	var (

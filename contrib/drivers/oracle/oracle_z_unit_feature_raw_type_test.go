@@ -204,9 +204,9 @@ func Test_DataType_JSON_Insert(t *testing.T) {
 
 		one, err := db.Model(table).Where("id", 1).One()
 		t.AssertNil(err)
-		expected := map[string]interface{}{"name": "John", "age": float64(30)}
+		expected := map[string]any{"name": "John", "age": float64(30)}
 		for _, column := range []string{"DATA", "DATA_NCLOB", "DATA_VC", "DATA_LONG"} {
-			var actual map[string]interface{}
+			var actual map[string]any
 			err = json.Unmarshal([]byte(one[column].String()), &actual)
 			t.AssertNil(err)
 			t.Assert(actual, expected)
@@ -249,8 +249,8 @@ func Test_DataType_JSON_Update(t *testing.T) {
 
 		one, err := db.Model(table).Where("id", 1).One()
 		t.AssertNil(err)
-		expected := map[string]interface{}{"name": "Grace", "age": float64(29)}
-		var actual map[string]interface{}
+		expected := map[string]any{"name": "Grace", "age": float64(29)}
+		var actual map[string]any
 		err = json.Unmarshal([]byte(one["DATA"].String()), &actual)
 		t.AssertNil(err)
 		t.Assert(actual, expected)
