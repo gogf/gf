@@ -151,6 +151,15 @@ func generateStructFieldDefinition(
 		}
 	}
 
+	// Convert NULL fields of matched tables to pointer types in entity files.
+	// It is executed after both type mappings above, as they may replace the field type
+	// that was already converted to a pointer or was not a pointer yet.
+	if !in.IsDo && field.Null && len(in.NullFieldPattern) > 0 && !strings.HasPrefix(localTypeNameStr, "*") {
+		if matchNullFieldPattern(in.TableName, in.NullFieldPattern) {
+			localTypeNameStr = "*" + localTypeNameStr
+		}
+	}
+
 	attrLines = []string{
 		"    #" + formatFieldName(newFiledName, FieldNameCaseCamel),
 		" #" + localTypeNameStr,
