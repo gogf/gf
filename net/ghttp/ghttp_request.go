@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gres"
 	"github.com/gogf/gf/v2/os/gsession"
@@ -101,14 +103,9 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 	request.Middleware = &middleware{
 		request: request,
 	}
-	// Custom session id creating function.
-	err := request.Session.SetIdFunc(func(ttl time.Duration) string {
-		var (
-			address = request.RemoteAddr
-			header  = fmt.Sprintf("%v", request.Header)
-		)
-		intlog.Print(r.Context(), address, header)
-		return guid.S([]byte(address), []byte(header))
+	// Session id generator. SetSessionIdFunc overrides the built-in generator.
+	err := request.Session.SetIdFunc(func(_ time.Duration) string {
+		return s.generateSessionId(request)
 	})
 	if err != nil {
 		panic(err)
@@ -125,6 +122,32 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 		request.URL.Path = "/"
 	}
 	return request
+}
+
+// generateSessionId returns the session id for this generation.
+// It panics if the function set by SetSessionIdFunc returns an empty id.
+func (s *Server) generateSessionId(r *Request) string {
+	if s.sessionIdFunc != nil {
+		id := s.sessionIdFunc(r)
+		if id == "" {
+			panic(gerror.NewCode(
+				gcode.CodeInvalidParameter,
+				"empty session id returned by SetSessionIdFunc",
+			))
+		}
+		return id
+	}
+	return defaultSessionId(r)
+}
+
+// defaultSessionId creates a session id from the client address and request headers.
+func defaultSessionId(r *Request) string {
+	var (
+		address = r.RemoteAddr
+		header  = fmt.Sprintf("%v", r.Header)
+	)
+	intlog.Print(r.Context(), address, header)
+	return guid.S([]byte(address), []byte(header))
 }
 
 // WebSocket upgrades current request as a websocket request.
