@@ -505,3 +505,59 @@ func Test_Model_Join_ComplexConditions(t *testing.T) {
 		t.Assert(r[1]["id"], "5")
 	})
 }
+
+// Test_Model_FieldsExPrefix_Join tests FieldsEx/FieldsExPrefix on joined tables without explicit fields.
+// https://github.com/gogf/gf/issues/4266
+func Test_Model_FieldsExPrefix_Join(t *testing.T) {
+	var (
+		table1 = "table1_" + gtime.TimestampNanoStr()
+		table2 = "table2_" + gtime.TimestampNanoStr()
+	)
+	createInitTable(table1)
+	defer dropTable(table1)
+	createInitTable(table2)
+	defer dropTable(table2)
+
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table1, "u").
+			LeftJoin(table2, "ud", "ud.id=u.id").
+			FieldsEx("passport", "password", "nickname", "create_time").
+			FieldsExPrefix("ud", "id", "password", "create_time").
+			Where("u.id", 1).
+			All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(len(r[0]), 3)
+		t.Assert(r[0]["id"], 1)
+		t.Assert(r[0]["passport"], "user_1")
+		t.Assert(r[0]["nickname"], "name_1")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table1).
+			LeftJoinOnField(table2, "id").
+			FieldsExPrefix(table1, "passport", "password", "nickname", "create_time").
+			FieldsExPrefix(table2, "id", "passport", "password", "create_time").
+			WherePrefix(table1, "id", 2).
+			All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(len(r[0]), 2)
+		t.Assert(r[0]["id"], 2)
+		t.Assert(r[0]["nickname"], "name_2")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table1).As("u").
+			LeftJoin(table2, "ud", "ud.id=u.id").
+			FieldsExPrefix("u", "passport", "password", "nickname", "create_time").
+			FieldsExPrefix("ud", "id", "passport", "password", "create_time").
+			Where("u.id", 3).
+			All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(len(r[0]), 2)
+		t.Assert(r[0]["id"], 3)
+		t.Assert(r[0]["nickname"], "name_3")
+	})
+}

@@ -55,7 +55,7 @@ func (m *Model) FieldsPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...any)
 
 // FieldsEx appends `fieldNamesOrMapStruct` to the excluded operation fields of the model,
 // multiple fields joined using char ','.
-// Note that this function supports only single table operations.
+// Note that for join statements, the fields are excluded from the main table.
 // The parameter `fieldNamesOrMapStruct` can be type of string/map/*map/struct/*struct.
 //
 // Example:
@@ -82,7 +82,7 @@ func (m *Model) doFieldsEx(table string, fieldNamesOrMapStruct ...any) *Model {
 }
 
 // FieldsExPrefix performs as function FieldsEx but add extra prefix for each field.
-// Note that this function must be used together with FieldsPrefix, otherwise it will be invalid.
+// It can be used in join statements with or without FieldsPrefix.
 func (m *Model) FieldsExPrefix(prefixOrAlias string, fieldNamesOrMapStruct ...any) *Model {
 	fields := m.filterFieldsFrom(
 		m.getTableNameByPrefixOrAlias(prefixOrAlias),

@@ -53,6 +53,7 @@ type Model struct {
 	onDuplicateEx   any               // onDuplicateEx is used for excluding some columns on Upsert clause.
 	onConflict      any               // onConflict is used for conflict keys on Upsert clause.
 	tableAliasMap   map[string]string // Table alias to true table name, usually used in join statements.
+	tableRefs       []tableRef        // Tables and their column prefixes in join statements, used by FieldsEx.
 	softTimeOption  SoftTimeOption    // SoftTimeOption is the option to customize soft time feature for Model.
 	shardingConfig  ShardingConfig    // ShardingConfig for database/table sharding feature.
 	shardingValue   any               // Sharding value for sharding feature.
@@ -237,6 +238,9 @@ func (m *Model) As(as string) *Model {
 			array := gstr.Split(model.tables, split)
 			array[len(array)-1], _ = gregex.ReplaceString(`(.+) ON`, fmt.Sprintf(`$1 AS %s ON`, as), array[len(array)-1])
 			model.tables = gstr.Join(array, split)
+			if n := len(model.tableRefs); n > 0 {
+				model.tableRefs[n-1].prefix = m.QuoteWord(as)
+			}
 		} else {
 			// For base table.
 			model.tables = gstr.TrimRight(model.tables) + " AS " + as
@@ -302,6 +306,10 @@ func (m *Model) Clone() *Model {
 	if n := len(m.having); n > 0 {
 		newModel.having = make([]any, n)
 		copy(newModel.having, m.having)
+	}
+	if n := len(m.tableRefs); n > 0 {
+		newModel.tableRefs = make([]tableRef, n)
+		copy(newModel.tableRefs, m.tableRefs)
 	}
 	return newModel
 }

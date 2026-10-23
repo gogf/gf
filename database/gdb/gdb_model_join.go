@@ -144,6 +144,12 @@ func (m *Model) InnerJoinOnFields(table, firstField, operator, secondField strin
 	))
 }
 
+// tableRef holds a table of join statement and the prefix used to reference its columns.
+type tableRef struct {
+	table  string // Table name, which is empty for sub-query.
+	prefix string // Quoted table name or alias, which is empty if unknown.
+}
+
 // doJoin does "LEFT/RIGHT/INNER JOIN ... ON ..." statement on the model.
 // The parameter `tableOrSubQueryAndJoinConditions` can be joined table and its joined condition,
 // and also with its alias name.
@@ -174,15 +180,25 @@ func (m *Model) doJoin(operator joinOperator, tableOrSubQueryAndJoinConditions .
 			joinStr = m.db.GetCore().QuotePrefixTableName(table)
 		}
 	}
+	// Record the main table reference before the first join.
+	if len(model.tableRefs) == 0 {
+		model.tableRefs = append(model.tableRefs, m.parseMainTableRef(model.tables))
+	}
+	// Column prefix of the joined table, empty for sub-query without alias.
+	prefix := ""
+	if table != "" {
+		prefix = joinStr
+	}
 	// Generate join condition statement string.
 	conditionLength := len(tableOrSubQueryAndJoinConditions)
 	switch {
 	case conditionLength > 2:
 		alias = tableOrSubQueryAndJoinConditions[1]
+		prefix = m.db.GetCore().QuoteWord(alias)
 		model.tables += fmt.Sprintf(
 			" %s JOIN %s AS %s ON (%s)",
 			operator, joinStr,
-			m.db.GetCore().QuoteWord(alias),
+			prefix,
 			tableOrSubQueryAndJoinConditions[2],
 		)
 		m.tableAliasMap[alias] = table
@@ -198,7 +214,22 @@ func (m *Model) doJoin(operator joinOperator, tableOrSubQueryAndJoinConditions .
 			" %s JOIN %s", operator, joinStr,
 		)
 	}
+	model.tableRefs = append(model.tableRefs, tableRef{table: table, prefix: prefix})
 	return model
+}
+
+// parseMainTableRef parses the main table name and its column prefix from `tables`,
+// like: "`user`", "`user` AS `u`", "`user` u".
+// The returned prefix is empty if `tables` contains multiple tables, like: "`user` u, `user_detail` ud".
+func (m *Model) parseMainTableRef(tables string) tableRef {
+	if tables == "" || gstr.Contains(tables, ",") {
+		return tableRef{}
+	}
+	array := gstr.SplitAndTrim(tables, " ")
+	return tableRef{
+		table:  array[0],
+		prefix: m.QuoteWord(array[len(array)-1]),
+	}
 }
 
 // getTableNameByPrefixOrAlias checks and returns the table name if `prefixOrAlias` is an alias of a table,

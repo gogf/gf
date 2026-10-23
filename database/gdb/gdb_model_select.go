@@ -853,6 +853,9 @@ func (m *Model) getFieldsFiltered() string {
 			field := gconv.String(v)
 			fieldsArray = append(fieldsArray, field[gstr.PosR(field, "-")+1:])
 		}
+	} else if len(m.tableRefs) > 0 {
+		// Filter fields of all joined tables with fieldEx.
+		fieldsArray = m.getJoinedTableFields(fieldsExSet)
 	} else {
 		if gstr.Contains(m.tables, " ") {
 			panic("function FieldsEx supports only single table operations")
@@ -881,6 +884,40 @@ func (m *Model) getFieldsFiltered() string {
 		newFields += m.QuoteWord(k)
 	}
 	return newFields
+}
+
+// getJoinedTableFields returns the prefixed fields of all tables in join statement in sequence.
+// Fields without prefix in `fieldsExSet` are excluded from the main table, just like FieldsEx.
+// It uses "prefix.*" for sub-query whose fields cannot be retrieved.
+func (m *Model) getJoinedTableFields(fieldsExSet *gset.StrSet) []string {
+	fieldsArray := make([]string, 0, 8)
+	for i, ref := range m.tableRefs {
+		if ref.prefix == "" {
+			panic("function FieldsEx supports only single table operations")
+		}
+		if ref.table == "" {
+			fieldsArray = append(fieldsArray, ref.prefix+".*")
+			continue
+		}
+		tableFields, err := m.TableFields(ref.table)
+		if err != nil {
+			panic(err)
+		}
+		if len(tableFields) == 0 {
+			panic(fmt.Sprintf(`empty table fields for table "%s"`, ref.table))
+		}
+		names := make([]string, len(tableFields))
+		for k, v := range tableFields {
+			names[v.Index] = k
+		}
+		for _, name := range names {
+			if i == 0 && fieldsExSet.Contains(name) {
+				continue
+			}
+			fieldsArray = append(fieldsArray, ref.prefix+"."+m.QuoteWord(name))
+		}
+	}
+	return fieldsArray
 }
 
 // formatCondition formats where arguments of the model and returns a new condition sql and its arguments.
