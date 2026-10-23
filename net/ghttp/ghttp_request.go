@@ -14,7 +14,6 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gres"
 	"github.com/gogf/gf/v2/os/gsession"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -142,12 +141,7 @@ func (s *Server) generateSessionId(r *Request) string {
 
 // defaultSessionId creates a session id from the client address and request headers.
 func defaultSessionId(r *Request) string {
-	var (
-		address = r.RemoteAddr
-		header  = fmt.Sprintf("%v", r.Header)
-	)
-	intlog.Print(r.Context(), address, header)
-	return guid.S([]byte(address), []byte(header))
+	return guid.S([]byte(r.RemoteAddr), []byte(fmt.Sprintf("%v", r.Header)))
 }
 
 // WebSocket upgrades current request as a websocket request.
