@@ -122,7 +122,7 @@ func main() {
 	}
 
 	// OpenTelemetry provider.
-	provider := otelmetric.MustProvider(metric.WithReader(exporter))
+	provider := otelmetric.MustProvider(otelmetric.WithReader(exporter))
 	provider.SetAsGlobal()
 	defer provider.Shutdown(ctx)
 
