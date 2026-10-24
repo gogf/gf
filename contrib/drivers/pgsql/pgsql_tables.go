@@ -47,17 +47,17 @@ func init() {
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
 func (d *Driver) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
-	var (
-		result     gdb.Result
-		usedSchema = gutil.GetOrDefaultStr(d.GetConfig().Namespace, schema...)
-	)
-	if usedSchema == "" {
-		usedSchema = defaultSchema
-	}
 	// DO NOT use `usedSchema` as parameter for function `SlaveLink`.
 	link, err := d.SlaveLink(schema...)
 	if err != nil {
 		return nil, err
+	}
+	var (
+		result     gdb.Result
+		usedSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+	)
+	if usedSchema == "" {
+		usedSchema = defaultSchema
 	}
 
 	useRelpartbound := ""
