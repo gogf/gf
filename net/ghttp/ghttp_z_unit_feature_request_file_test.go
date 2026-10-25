@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -22,6 +23,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gmeta"
 	"github.com/gogf/gf/v2/util/guid"
+	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 func Test_Params_File_Single(t *testing.T) {
@@ -412,5 +414,47 @@ func Test_Params_Strict_Route_File_Batch_Up_Multiple(t *testing.T) {
 		t.Assert(content, "file1.txt,file2.txt")
 		t.Assert(gfile.GetContents(dstPath1), gfile.GetContents(srcPath1))
 		t.Assert(gfile.GetContents(dstPath2), gfile.GetContents(srcPath2))
+	})
+}
+
+// https://github.com/gogf/gf/issues/4252
+func Test_Params_File_Batch_Up_One_Custom_Rule(t *testing.T) {
+	const ruleName = "issue-4252-upload-files"
+	gvalid.RegisterRule(ruleName, func(ctx context.Context, in gvalid.RuleFuncInput) error {
+		files, ok := in.Value.Interface().(ghttp.UploadFiles)
+		if !ok {
+			return gerror.Newf("unexpected type %T", in.Value.Interface())
+		}
+		if len(files) != 1 {
+			return gerror.Newf("unexpected file count %d", len(files))
+		}
+		return nil
+	})
+	defer gvalid.DeleteRule(ruleName)
+
+	type Req struct {
+		gmeta.Meta `method:"post" mime:"multipart/form-data"`
+		Files      ghttp.UploadFiles `type:"file" v:"issue-4252-upload-files"`
+	}
+	type Res struct{}
+
+	s := g.Server(guid.S())
+	s.BindHandler("/upload/batch", func(ctx context.Context, req *Req) (res *Res, err error) {
+		g.RequestFromCtx(ctx).Response.WriteExit(req.Files[0].Filename)
+		return
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		content := client.PostContent(ctx, "/upload/batch", g.Map{
+			"files": "@file:" + gtest.DataPath("upload", "file1.txt"),
+		})
+		t.Assert(content, "file1.txt")
 	})
 }

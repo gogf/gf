@@ -187,6 +187,8 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 	}
 	// All values of the repeated query parameters for the slice fields.
 	r.mergeRepeatedQueryValues(data, pointer, parseTypeRequest)
+	// A single uploading file for the uploading file slice fields.
+	r.mergeSingleUploadFileValues(data, pointer)
 
 	// A field tagged with `in:"body"` represents the complete request body. Before converting,
 	// remove the request parameter that is named exactly after the field tag name, as the tag

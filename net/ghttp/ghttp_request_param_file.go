@@ -10,6 +10,7 @@ import (
 	"context"
 	"io"
 	"mime/multipart"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -18,8 +19,10 @@ import (
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/util/grand"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // UploadFile wraps the multipart uploading file with more and convenient features.
@@ -139,4 +142,37 @@ func (r *Request) GetUploadFiles(name string) UploadFiles {
 		return uploadFiles
 	}
 	return nil
+}
+
+// mergeSingleUploadFileValues wraps the single uploading file in `data` as UploadFiles for the
+// uploading file slice fields of struct `pointer`.
+//
+// The request map stores a single uploaded file as *UploadFile, which the struct converting
+// handles but the validation receives as it is, so a custom rule on an UploadFiles field would
+// get *UploadFile instead of UploadFiles.
+func (r *Request) mergeSingleUploadFileValues(data map[string]any, pointer any) {
+	if r.MultipartForm == nil || len(r.MultipartForm.File) == 0 {
+		return
+	}
+	fields, err := gstructs.Fields(gstructs.FieldsInput{
+		Pointer:         pointer,
+		RecursiveOption: gstructs.RecursiveOptionEmbedded,
+	})
+	if err != nil {
+		// The `pointer` is not a struct, which has no field to merge.
+		return
+	}
+	for _, field := range fields {
+		fieldType := field.Field.Type
+		for fieldType.Kind() == reflect.Pointer {
+			fieldType = fieldType.Elem()
+		}
+		if fieldType.Kind() != reflect.Slice || !isFileType(fieldType) {
+			continue
+		}
+		foundKey, foundValue := gutil.MapPossibleItemByKey(data, field.TagPriorityName())
+		if uploadFile, ok := foundValue.(*UploadFile); ok {
+			data[foundKey] = UploadFiles{uploadFile}
+		}
+	}
 }
