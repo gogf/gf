@@ -904,7 +904,7 @@ func (m *Model) getJoinedTableFields(fieldsExSet *gset.StrSet) []string {
 			panic(err)
 		}
 		if len(tableFields) == 0 {
-			panic(fmt.Sprintf(`empty table fields for table "%s"`, ref.table))
+			panic(fmt.Sprintf(`empty table fields for table %q`, ref.table))
 		}
 		names := make([]string, len(tableFields))
 		for k, v := range tableFields {
