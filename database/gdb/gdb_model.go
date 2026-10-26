@@ -240,6 +240,7 @@ func (m *Model) As(as string) *Model {
 			model.tables = gstr.Join(array, split)
 			if n := len(model.tableRefs); n > 0 {
 				model.tableRefs[n-1].prefix = m.QuoteWord(as)
+				model.tableRefs[n-1].alias = true
 			}
 		} else {
 			// For base table.

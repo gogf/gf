@@ -146,8 +146,9 @@ func (m *Model) InnerJoinOnFields(table, firstField, operator, secondField strin
 
 // tableRef holds a table of join statement and the prefix used to reference its columns.
 type tableRef struct {
-	table  string // Table name, which is empty for sub-query.
+	table  string // Quoted table name with table prefix, which is empty for sub-query.
 	prefix string // Quoted table name or alias, which is empty if unknown.
+	alias  bool   // Whether prefix is an alias.
 }
 
 // doJoin does "LEFT/RIGHT/INNER JOIN ... ON ..." statement on the model.
@@ -189,12 +190,14 @@ func (m *Model) doJoin(operator joinOperator, tableOrSubQueryAndJoinConditions .
 	if table != "" {
 		prefix = joinStr
 	}
+	isAlias := false
 	// Generate join condition statement string.
 	conditionLength := len(tableOrSubQueryAndJoinConditions)
 	switch {
 	case conditionLength > 2:
 		alias = tableOrSubQueryAndJoinConditions[1]
 		prefix = m.db.GetCore().QuoteWord(alias)
+		isAlias = true
 		model.tables += fmt.Sprintf(
 			" %s JOIN %s AS %s ON (%s)",
 			operator, joinStr,
@@ -214,7 +217,10 @@ func (m *Model) doJoin(operator joinOperator, tableOrSubQueryAndJoinConditions .
 			" %s JOIN %s", operator, joinStr,
 		)
 	}
-	model.tableRefs = append(model.tableRefs, tableRef{table: table, prefix: prefix})
+	if table != "" {
+		table = joinStr
+	}
+	model.tableRefs = append(model.tableRefs, tableRef{table: table, prefix: prefix, alias: isAlias})
 	return model
 }
 
@@ -229,6 +235,7 @@ func (m *Model) parseMainTableRef(tables string) tableRef {
 	return tableRef{
 		table:  array[0],
 		prefix: m.QuoteWord(array[len(array)-1]),
+		alias:  len(array) > 1,
 	}
 }
 

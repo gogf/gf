@@ -561,3 +561,44 @@ func Test_Model_FieldsExPrefix_Join(t *testing.T) {
 		t.Assert(r[0]["nickname"], "name_3")
 	})
 }
+
+// Test_Model_FieldsExPrefix_Join_TablePrefix tests FieldsEx/FieldsExPrefix on joined tables with table prefix.
+func Test_Model_FieldsExPrefix_Join_TablePrefix(t *testing.T) {
+	var (
+		table1 = "table1_" + gtime.TimestampNanoStr()
+		table2 = "table2_" + gtime.TimestampNanoStr()
+	)
+	createInitTableWithDb(dbPrefix, TableNamePrefix+table1)
+	defer dropTable(TableNamePrefix + table1)
+	createInitTableWithDb(dbPrefix, TableNamePrefix+table2)
+	defer dropTable(TableNamePrefix + table2)
+
+	gtest.C(t, func(t *gtest.T) {
+		r, err := dbPrefix.Model(table1, "u").
+			LeftJoin(table2, "ud", "ud.id=u.id").
+			FieldsEx("passport", "password", "nickname", "create_time").
+			FieldsExPrefix("ud", "id", "password", "create_time").
+			Where("u.id", 1).
+			All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(len(r[0]), 3)
+		t.Assert(r[0]["id"], 1)
+		t.Assert(r[0]["passport"], "user_1")
+		t.Assert(r[0]["nickname"], "name_1")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		r, err := dbPrefix.Model(table1).
+			LeftJoin(table2, TableNamePrefix+table2+".id="+TableNamePrefix+table1+".id").
+			FieldsExPrefix(table1, "passport", "password", "nickname", "create_time").
+			FieldsExPrefix(TableNamePrefix+table2, "id", "passport", "password", "create_time").
+			Where(TableNamePrefix+table1+".id", 2).
+			All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(len(r[0]), 2)
+		t.Assert(r[0]["id"], 2)
+		t.Assert(r[0]["nickname"], "name_2")
+	})
+}
