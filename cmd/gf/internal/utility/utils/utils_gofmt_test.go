@@ -22,8 +22,27 @@ func Test_GoFmt(t *testing.T) {
 		var (
 			dir      = t.TempDir()
 			filePath = gfile.Join(dir, "example.go")
-			source   = "package main\n\nimport (\n\"fmt\"\n\"os\"\n)\n\nfunc main() {\nfmt.Println()\n}\n"
-			expect   = "package main\n\nimport (\n\t\"fmt\"\n)\n\nfunc main() {\n\tfmt.Println()\n}\n"
+			source   = `package main
+
+import (
+"fmt"
+"os"
+)
+
+func main() {
+fmt.Println()
+}
+`
+			expect = `package main
+
+import (
+	"fmt"
+)
+
+func main() {
+	fmt.Println()
+}
+`
 		)
 		t.AssertNil(gfile.PutContents(filePath, source))
 		utils.GoFmt(filePath)
@@ -39,8 +58,27 @@ func Test_GoFmt(t *testing.T) {
 		var (
 			dir      = t.TempDir()
 			filePath = gfile.Join(dir, "example.go")
-			source   = "package main\n\nimport (\nfm \"fmt\"\n\"os\"\n)\n\nfunc main() {\nfm.Println()\n}\n"
-			expect   = "package main\n\nimport (\n\tfm \"fmt\"\n)\n\nfunc main() {\n\tfm.Println()\n}\n"
+			source   = `package main
+
+import (
+fm "fmt"
+"os"
+)
+
+func main() {
+fm.Println()
+}
+`
+			expect = `package main
+
+import (
+	fm "fmt"
+)
+
+func main() {
+	fm.Println()
+}
+`
 		)
 		t.AssertNil(gfile.PutContents(filePath, source))
 		utils.GoFmt(filePath)

@@ -47,8 +47,28 @@ func Test_GoFmt_ResolvedPackageNames(t *testing.T) {
 		// A unused package whose name is not any segment of the import path is removed.
 		var (
 			filePath = gfile.Join(t.TempDir(), "example.go")
-			source   = "package main\n\nimport (\n\t\"context\"\n\n\t\"github.com/minio/minio-go/v7\"\n)\n\nfunc main() {\n\t_ = context.Background()\n}\n"
-			expect   = "package main\n\nimport (\n\t\"context\"\n)\n\nfunc main() {\n\t_ = context.Background()\n}\n"
+			source   = `package main
+
+import (
+	"context"
+
+	"github.com/minio/minio-go/v7"
+)
+
+func main() {
+	_ = context.Background()
+}
+`
+			expect = `package main
+
+import (
+	"context"
+)
+
+func main() {
+	_ = context.Background()
+}
+`
 		)
 		out, err := goFormatContent(filePath, source)
 		t.AssertNil(err)
@@ -60,7 +80,17 @@ func Test_GoFmt_ResolvedPackageNames(t *testing.T) {
 		// See the k8s.io/api/core/v1 case: the package name is "v1" instead of "core".
 		var (
 			filePath = gfile.Join(t.TempDir(), "example.go")
-			source   = "package main\n\nimport (\n\t\"k8s.io/api/core/v1\"\n)\n\nfunc main() {\n\tvar pod v1.Pod\n\t_ = pod\n}\n"
+			source   = `package main
+
+import (
+	"k8s.io/api/core/v1"
+)
+
+func main() {
+	var pod v1.Pod
+	_ = pod
+}
+`
 		)
 		out, err := goFormatContent(filePath, source)
 		t.AssertNil(err)
@@ -72,7 +102,16 @@ func Test_GoFmt_ResolvedPackageNames(t *testing.T) {
 		// See the go.etcd.io/etcd/client/v3 case: the package name is "clientv3".
 		var (
 			filePath = gfile.Join(t.TempDir(), "example.go")
-			source   = "package main\n\nimport (\n\t\"go.etcd.io/etcd/client/v3\"\n)\n\nfunc main() {\n\t_ = clientv3.Config{}\n}\n"
+			source   = `package main
+
+import (
+	"go.etcd.io/etcd/client/v3"
+)
+
+func main() {
+	_ = clientv3.Config{}
+}
+`
 		)
 		out, err := goFormatContent(filePath, source)
 		t.AssertNil(err)
@@ -84,7 +123,21 @@ func Test_GoFmt_ResolvedPackageNames(t *testing.T) {
 		// must be kept as is instead of being grouped or sorted.
 		var (
 			filePath = gfile.Join(t.TempDir(), "example.go")
-			source   = "package main\n\nimport (\n\t\"fmt\"\n)\n\nvar template = `import (\n\t\"github.com/not/used\"\n\t\"os\"\n)`\n\nfunc main() {\n\tfmt.Println(template)\n}\n"
+			source   = `package main
+
+import (
+	"fmt"
+)
+
+var template = ` + "`" + `import (
+	"github.com/not/used"
+	"os"
+)` + "`" + `
+
+func main() {
+	fmt.Println(template)
+}
+`
 		)
 		out, err := goFormatContent(filePath, source)
 		t.AssertNil(err)
@@ -105,8 +158,28 @@ func Test_GoFmt_UnresolvedPackageName(t *testing.T) {
 		// name is unknown.
 		var (
 			filePath = gfile.Join(t.TempDir(), "example.go")
-			source   = "package main\n\nimport (\n\t\"context\"\n\n\t\"github.com/foo/bar\"\n)\n\nfunc main() {\n\t_ = context.Background()\n}\n"
-			expect   = "package main\n\nimport (\n\t\"context\"\n)\n\nfunc main() {\n\t_ = context.Background()\n}\n"
+			source   = `package main
+
+import (
+	"context"
+
+	"github.com/foo/bar"
+)
+
+func main() {
+	_ = context.Background()
+}
+`
+			expect = `package main
+
+import (
+	"context"
+)
+
+func main() {
+	_ = context.Background()
+}
+`
 		)
 		out, err := goFormatContent(filePath, source)
 		t.AssertNil(err)
@@ -118,7 +191,20 @@ func Test_GoFmt_UnresolvedPackageName(t *testing.T) {
 		// "github.com/minio/minio-go/v7" is "minio" instead of any path segment.
 		var (
 			filePath = gfile.Join(t.TempDir(), "example.go")
-			source   = "package main\n\nimport (\n\t\"context\"\n\n\t\"github.com/minio/minio-go/v7\"\n)\n\nfunc main() {\n\t_ = context.Background()\n\tvar c *minio.Client\n\t_ = c\n}\n"
+			source   = `package main
+
+import (
+	"context"
+
+	"github.com/minio/minio-go/v7"
+)
+
+func main() {
+	_ = context.Background()
+	var c *minio.Client
+	_ = c
+}
+`
 		)
 		out, err := goFormatContent(filePath, source)
 		t.AssertNil(err)
@@ -145,7 +231,17 @@ func Test_GoFmt_DotImport(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			filePath = gfile.Join(t.TempDir(), "example.go")
-			source   = "package main\n\nimport (\n\t. \"fmt\"\n\t\"os\"\n)\n\nfunc main() {\n\t_ = os.Args\n}\n"
+			source   = `package main
+
+import (
+	. "fmt"
+	"os"
+)
+
+func main() {
+	_ = os.Args
+}
+`
 		)
 		out, err := goFormatContent(filePath, source)
 		t.AssertNil(err)
@@ -164,10 +260,38 @@ func Test_GoFmt_RealPackageNames(t *testing.T) {
 
 		var (
 			filePath = gfile.Join(dir, "example.go")
-			source   = "package main\n\nimport (\n\t\"context\"\n\n\t\"golang.org/x/tools/go/packages\"\n\n\t\"github.com/gogf/gf/contrib/drivers/mysql/v2\"\n)\n\nfunc main() {\n\t_ = context.Background()\n\tvar d mysql.Driver\n\t_ = d\n}\n"
+			source   = `package main
+
+import (
+	"context"
+
+	"golang.org/x/tools/go/packages"
+
+	"github.com/gogf/gf/contrib/drivers/mysql/v2"
+)
+
+func main() {
+	_ = context.Background()
+	var d mysql.Driver
+	_ = d
+}
+`
 			// The unused `golang.org/x/tools/go/packages` is removed by its real name
 			// "packages", and the used mysql driver is kept by its real name "mysql".
-			expect = "package main\n\nimport (\n\t\"context\"\n\n\t\"github.com/gogf/gf/contrib/drivers/mysql/v2\"\n)\n\nfunc main() {\n\t_ = context.Background()\n\tvar d mysql.Driver\n\t_ = d\n}\n"
+			expect = `package main
+
+import (
+	"context"
+
+	"github.com/gogf/gf/contrib/drivers/mysql/v2"
+)
+
+func main() {
+	_ = context.Background()
+	var d mysql.Driver
+	_ = d
+}
+`
 		)
 		out, err := goFormatContent(filePath, source)
 		t.AssertNil(err)
