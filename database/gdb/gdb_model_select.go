@@ -899,10 +899,10 @@ func (m *Model) formatCondition(
 	conditionWhere, conditionArgs = m.whereBuilder.Build()
 	softDeletingCondition := m.softTimeMaintainer().GetDeleteCondition(ctx)
 	if m.rawSql != "" && conditionWhere != "" {
-		if gstr.ContainsI(m.rawSql, " WHERE ") {
-			conditionWhere = " AND " + conditionWhere
+		if gstr.ContainsI(m.rawSql, sqlWhere) {
+			conditionWhere = sqlAnd + conditionWhere
 		} else {
-			conditionWhere = " WHERE " + conditionWhere
+			conditionWhere = sqlWhere + conditionWhere
 		}
 	} else if !m.unscoped && softDeletingCondition != "" {
 		if conditionWhere == "" {
@@ -912,7 +912,7 @@ func (m *Model) formatCondition(
 		}
 	} else {
 		if conditionWhere != "" {
-			conditionWhere = " WHERE " + conditionWhere
+			conditionWhere = sqlWhere + conditionWhere
 		}
 	}
 	// HAVING.

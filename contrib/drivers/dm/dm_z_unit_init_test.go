@@ -8,9 +8,12 @@ package dm_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
+
+	"gitee.com/chunanyong/dm"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -35,6 +38,11 @@ const (
 	TestDBName  = "SYSDBA"
 	TestDBType  = "dm"
 	TestCharset = "utf8"
+)
+
+const (
+	TableName        = "t_user"
+	TableNamePrefix1 = "gf_"
 )
 
 type User struct {
@@ -115,27 +123,122 @@ func init() {
 }
 
 func dropTable(table string) {
+	dropTableWithDb(db, table)
+}
+
+// dropTableWithDb drops `table` in the schema of `db`, both as the upper case name an unquoted
+// identifier folds to and as written, with the sequence that createUserTableWithDb creates for
+// it, and clears its cached fields, as a table of the same name may be created again.
+func dropTableWithDb(db gdb.DB, table string) {
 	metadataTable := strings.Trim(table, `"`)
 	tableNameMap := map[string]struct{}{
 		strings.ToUpper(metadataTable): {},
 		metadataTable:                  {},
 	}
 	for tableName := range tableNameMap {
-		count, err := db.GetCount(
-			ctx,
-			"SELECT COUNT(*) FROM all_tables WHERE owner = ? And table_name= ?", TestDBName, tableName,
-		)
-		if err != nil {
-			gtest.Fatal(err)
-		}
-
-		if count == 0 {
-			continue
-		}
-		if _, err = db.Exec(ctx, fmt.Sprintf(`DROP TABLE "%s"`, strings.ReplaceAll(tableName, `"`, `""`))); err != nil {
+		if _, err := db.Exec(ctx, fmt.Sprintf(`DROP TABLE IF EXISTS "%s"`, strings.ReplaceAll(tableName, `"`, `""`))); err != nil {
 			gtest.Fatal(err)
 		}
 	}
+	if !strings.Contains(table, `"`) {
+		if _, err := db.Exec(ctx, fmt.Sprintf(`DROP SEQUENCE IF EXISTS %s_ID_SEQ`, table)); err != nil {
+			gtest.Fatal(err)
+		}
+	}
+	if err := db.GetCore().ClearTableFields(ctx, table); err != nil {
+		gtest.Fatal(err)
+	}
+}
+
+// isDmError reports whether `err` is an error of the DM server with the error code `code`.
+func isDmError(err error, code int32) bool {
+	var dmError *dm.DmError
+	return errors.As(err, &dmError) && dmError.ErrCode == code
+}
+
+// createUserTable creates the table that the ported test suites use, see createUserTableWithDb.
+func createUserTable(table ...string) string {
+	return createUserTableWithDb(db, table...)
+}
+
+// createInitUserTable creates the table that the ported test suites use with TableSize records.
+func createInitUserTable(table ...string) string {
+	return createInitUserTableWithDb(db, table...)
+}
+
+// createUserTableWithDb creates, in the schema of `db`, the table that the ported test suites
+// use, named `table` or else a unique name, with a sequence and a trigger that fill in its ID
+// when an insert gives none.
+func createUserTableWithDb(db gdb.DB, table ...string) (name string) {
+	if len(table) > 0 {
+		name = table[0]
+	} else {
+		name = fmt.Sprintf("user_%d", gtime.TimestampMicro())
+	}
+	dropTableWithDb(db, name)
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+    CREATE TABLE %s (
+        ID NUMBER(10) NOT NULL,
+        PASSPORT VARCHAR(45) NOT NULL,
+        PASSWORD CHAR(32) NOT NULL,
+        NICKNAME VARCHAR(45) NOT NULL,
+        CREATE_TIME VARCHAR(45),
+        SALARY NUMBER(18,2),
+        PRIMARY KEY (ID)
+    )`, name)); err != nil {
+		gtest.Fatal(err)
+	}
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+    CREATE SEQUENCE %s_ID_SEQ
+    START WITH 1
+    INCREMENT BY 1
+    MINVALUE 1
+    MAXVALUE 9999999999
+    NOCYCLE
+    NOCACHE`, name)); err != nil {
+		gtest.Fatal(err)
+	}
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
+CREATE OR REPLACE TRIGGER %s_ID_TRG
+BEFORE INSERT ON %s
+FOR EACH ROW
+BEGIN
+    IF :NEW.ID IS NULL THEN
+        :NEW.ID := %s_ID_SEQ.NEXTVAL;
+    END IF;
+END;`, name, name, name)); err != nil {
+		gtest.Fatal(err)
+	}
+	return
+}
+
+// createInitUserTableWithDb creates the table of createUserTableWithDb with TableSize records.
+func createInitUserTableWithDb(db gdb.DB, table ...string) (name string) {
+	name = createUserTableWithDb(db, table...)
+	var (
+		values = make([]string, 0, TableSize)
+		args   = make([]any, 0, TableSize*5)
+	)
+	for i := 1; i <= TableSize; i++ {
+		values = append(values, fmt.Sprintf(
+			"INTO %s (ID, PASSPORT, PASSWORD, NICKNAME, CREATE_TIME) VALUES (?, ?, ?, ?, ?)", name,
+		))
+		args = append(args,
+			i,
+			fmt.Sprintf(`user_%d`, i),
+			fmt.Sprintf(`pass_%d`, i),
+			fmt.Sprintf(`name_%d`, i),
+			gtime.Now().String(),
+		)
+	}
+	result, err := db.Exec(ctx, "INSERT ALL "+strings.Join(values, " ")+" SELECT 1 FROM DUAL", args...)
+	gtest.AssertNil(err)
+	n, e := result.RowsAffected()
+	gtest.Assert(e, nil)
+	gtest.Assert(n, TableSize)
+	_, err = db.TableFields(ctx, name)
+	gtest.AssertNil(err)
+	return
 }
 
 func createTable(table ...string) (name string) {

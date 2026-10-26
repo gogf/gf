@@ -8,6 +8,8 @@
 package mssql
 
 import (
+	"time"
+
 	_ "github.com/microsoft/go-mssqldb"
 
 	"github.com/gogf/gf/v2/database/gdb"
@@ -16,11 +18,11 @@ import (
 // Driver is the driver for SQL server database.
 type Driver struct {
 	*gdb.Core
+	location *time.Location // The time zone in which values of the types without time zone are written and read.
 }
 
 const (
-	rowNumberAliasForSelect = `ROW_NUMBER__`
-	quoteChar               = `"`
+	quoteChar = `"`
 )
 
 func init() {
@@ -37,8 +39,13 @@ func New() gdb.Driver {
 // New creates and returns a database object for SQL server.
 // It implements the interface of gdb.Driver for extra database driver installation.
 func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
+	location, err := configNodeToLocation(node)
+	if err != nil {
+		return nil, err
+	}
 	return &Driver{
-		Core: core,
+		Core:     core,
+		location: location,
 	}, nil
 }
 

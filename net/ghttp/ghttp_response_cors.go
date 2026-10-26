@@ -107,7 +107,7 @@ func (r *Response) CORS(options CORSOptions) {
 	// No continue service handling if it's OPTIONS request.
 	// Note that there's special checks in previous router searching,
 	// so if it goes to here it means there's already serving handler exist.
-	if gstr.Equal(r.Request.Method, "OPTIONS") {
+	if gstr.Equal(r.Request.Method, http.MethodOptions) {
 		if r.Status == 0 {
 			r.Status = http.StatusOK
 		}
