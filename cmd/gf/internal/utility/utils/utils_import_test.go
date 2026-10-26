@@ -89,24 +89,50 @@ func Test_GoFmt_ResolvedPackageNames(t *testing.T) {
 	})
 }
 
-// Test_GoFmt_UnresolvedPackageName asserts that an import is kept when its package name
-// cannot be resolved, even though it looks unused. The package name is not always a
-// segment of the import path, so removing the import by a guessed name would break the
-// generated code that references the package.
+// Test_GoFmt_UnresolvedPackageName asserts that an import whose package name cannot be
+// resolved is handled by the name assumed from its import path, as goimports does. The
+// generated go files do not compile with an unused import left behind, so the unused ones
+// are removed while the used ones are kept.
 func Test_GoFmt_UnresolvedPackageName(t *testing.T) {
 	var restore = stubResolvePackageNames(nil)
 	defer restore()
 
 	gtest.C(t, func(t *gtest.T) {
+		// An unused import is removed by its assumed name, even though its real package
+		// name is unknown.
 		var (
 			filePath = gfile.Join(t.TempDir(), "example.go")
-			// The import path "github.com/foo/bar" would be guessed as package "bar",
-			// but the real package name could be anything, for example "baz".
-			source = "package main\n\nimport (\n\t\"context\"\n\n\t\"github.com/foo/bar\"\n)\n\nfunc main() {\n\t_ = context.Background()\n}\n"
+			source   = "package main\n\nimport (\n\t\"context\"\n\n\t\"github.com/foo/bar\"\n)\n\nfunc main() {\n\t_ = context.Background()\n}\n"
+			expect   = "package main\n\nimport (\n\t\"context\"\n)\n\nfunc main() {\n\t_ = context.Background()\n}\n"
+		)
+		out, err := goFormatContent(filePath, source)
+		t.AssertNil(err)
+		t.Assert(out, expect)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// An import whose assumed name is in use is kept, as the package name of
+		// "github.com/minio/minio-go/v7" is "minio" instead of any path segment.
+		var (
+			filePath = gfile.Join(t.TempDir(), "example.go")
+			source   = "package main\n\nimport (\n\t\"context\"\n\n\t\"github.com/minio/minio-go/v7\"\n)\n\nfunc main() {\n\t_ = context.Background()\n\tvar c *minio.Client\n\t_ = c\n}\n"
 		)
 		out, err := goFormatContent(filePath, source)
 		t.AssertNil(err)
 		t.Assert(out, source)
+	})
+}
+
+// Test_AssumedPackageName asserts the package names assumed from the import paths.
+func Test_AssumedPackageName(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(assumedPackageName("github.com/minio/minio-go/v7"), "minio")
+		t.Assert(assumedPackageName("github.com/gogf/gf/v2"), "gf")
+		t.Assert(assumedPackageName("go.etcd.io/etcd/client/v3"), "client")
+		t.Assert(assumedPackageName("github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/genservice/service"), "service")
+		t.Assert(assumedPackageName("k8s.io/api/core/v1"), "core")
+		t.Assert(assumedPackageName("example.com/go-redis"), "redis")
+		t.Assert(assumedPackageName("example.com/foo.bar"), "foo")
 	})
 }
 

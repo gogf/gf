@@ -14,6 +14,7 @@ import (
 	"go/format"
 	"go/parser"
 	"go/token"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -126,10 +127,14 @@ func goFormatContent(path, content string) (string, error) {
 			name = resolvedNames[importPath]
 		}
 		if name == "" {
-			// Keep the import if its package name cannot be resolved, as guessing the name
-			// from the import path may remove an import that is in use, for example the
-			// import path "github.com/foo/bar" whose package name is "baz".
-			continue
+			// The real package name is unavailable, for example when the file is generated into
+			// a directory that is outside of any go module. Fall back to the name assumed from
+			// the import path, which is what goimports does, so that the unused imports are
+			// removed anyway: a generated file with an unused import left behind does not compile.
+			name = assumedPackageName(importPath)
+			if name == "" {
+				continue
+			}
 		}
 		if _, ok := usedNames[name]; ok {
 			continue
@@ -282,6 +287,31 @@ func importPathOf(spec string) string {
 		return ""
 	}
 	return spec[start+1 : end]
+}
+
+// assumedPackageName returns the package name assumed from the given import path, which is
+// used only when the real package name cannot be resolved by `go list`. It follows the same
+// rules as goimports: the trailing version suffix like "/v2" is skipped, the "go-" prefix is
+// trimmed, and the name is cut at the first "-" or ".", so "github.com/minio/minio-go/v7"
+// is assumed as "minio".
+func assumedPackageName(importPath string) string {
+	var base = path.Base(importPath)
+	if strings.HasPrefix(base, "v") {
+		if _, err := strconv.Atoi(base[1:]); err == nil {
+			var dir = path.Dir(importPath)
+			if dir != "." {
+				base = path.Base(dir)
+			}
+		}
+	}
+	base = strings.TrimPrefix(base, "go-")
+	if index := strings.IndexByte(base, '-'); index >= 0 {
+		base = base[:index]
+	}
+	if index := strings.IndexByte(base, '.'); index >= 0 {
+		base = base[:index]
+	}
+	return base
 }
 
 // resolvePackageNames resolves and returns the real package names of the given import
