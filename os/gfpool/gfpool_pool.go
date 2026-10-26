@@ -7,12 +7,14 @@
 package gfpool
 
 import (
+	"context"
 	"os"
 	"time"
 
 	"github.com/gogf/gf/v2/container/gpool"
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gfsnotify"
 )
 
@@ -70,7 +72,12 @@ func (p *Pool) File() (*File, error) {
 		f := v.(*File)
 		f.stat, err = os.Stat(f.path)
 		if f.flag&os.O_CREATE > 0 {
-			if os.IsNotExist(err) {
+			// The file may have been renamed or removed and another file created at the same path,
+			// eg: logging file rotation, so it reopens the file if the path is no longer the opened file.
+			if os.IsNotExist(err) || (err == nil && !f.isSameFile(f.stat)) {
+				if closeErr := f.File.Close(); closeErr != nil {
+					intlog.Errorf(context.TODO(), `%+v`, closeErr)
+				}
 				if f.File, err = os.OpenFile(f.path, f.flag, f.perm); err != nil {
 					return nil, err
 				} else {
@@ -115,6 +122,15 @@ func (p *Pool) File() (*File, error) {
 		}
 		return f, nil
 	}
+}
+
+// isSameFile checks whether the opened file pointer is the file described by `stat`.
+func (f *File) isSameFile(stat os.FileInfo) bool {
+	fpStat, err := f.File.Stat()
+	if err != nil {
+		return false
+	}
+	return os.SameFile(fpStat, stat)
 }
 
 // Close closes current file pointer pool.
