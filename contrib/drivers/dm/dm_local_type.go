@@ -86,17 +86,34 @@ var localTypeMap = map[string]gdb.LocalType{
 // CheckLocalTypeForField checks and returns corresponding local golang type for given db type.
 // The parameter `fieldType` is the type name reported by the driver, like `VARCHAR(10)`,
 // `INTERVAL DAY TO SECOND(24)` or `INTERVAL DAY TO SECOND`.
+// A NUMBER column without fractional digits, being NUMBER(p) or NUMBER(p,0), holds integers, as
+// it does on Oracle, and is int64. Any other NUMBER column, DECIMAL, DEC and NUMERIC are exact
+// numbers and string.
 func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue any) (gdb.LocalType, error) {
-	var typeName string
+	var typeName, typePattern string
 	match, _ := gregex.MatchString(`(.+?)\((.+)\)`, fieldType)
 	if len(match) == 3 {
 		typeName = gstr.Trim(match[1])
+		typePattern = gstr.Trim(match[2])
 	} else {
 		typeName = fieldType
 	}
 	typeName = strings.ToLower(typeName)
+	if typeName == "number" && isIntegerNumber(typePattern) {
+		return gdb.LocalTypeInt64, nil
+	}
 	if localType, ok := localTypeMap[typeName]; ok {
 		return localType, nil
 	}
 	return d.Core.CheckLocalTypeForField(ctx, fieldType, fieldValue)
+}
+
+// isIntegerNumber reports whether `pattern`, the precision and scale of a NUMBER type like "10"
+// or "10,0", gives the type no fractional digit. NUMBER without precision holds any number.
+func isIntegerNumber(pattern string) bool {
+	if pattern == "" {
+		return false
+	}
+	_, scale, ok := strings.Cut(pattern, ",")
+	return !ok || strings.TrimSpace(scale) == "0"
 }

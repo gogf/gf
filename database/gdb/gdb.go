@@ -802,6 +802,13 @@ const (
 	InsertOnDuplicateKeyUpdate = "ON DUPLICATE KEY UPDATE"
 )
 
+// SQL fragments used to assemble conditions.
+// The leading and trailing spaces are intentional.
+const (
+	sqlWhere = " WHERE "
+	sqlAnd   = " AND "
+)
+
 type SqlType string
 
 const (
@@ -895,6 +902,9 @@ const (
 	fieldTypeJson       = "json"
 	fieldTypeJsonb      = "jsonb"
 )
+
+// modifierUnsigned is a field type modifier, like `int(10) unsigned`.
+const modifierUnsigned = "unsigned"
 
 var (
 	// checker is the checker function for instances map.

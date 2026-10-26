@@ -38,27 +38,27 @@ func Test_BuildDataSourceName_TimezoneOffset(t *testing.T) {
 				{
 					timezone: "Asia/Shanghai",
 					now:      time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC),
-					expected: "dm://user:pass@localhost:5236/test?charset=utf8&schema=test&timeZone=480",
+					expected: "dm://user:pass@localhost:5236/TEST?charset=utf8&schema=TEST&timeZone=480",
 				},
 				{
 					timezone: "America/New_York",
 					now:      time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC),
-					expected: "dm://user:pass@localhost:5236/test?charset=utf8&schema=test&timeZone=-300",
+					expected: "dm://user:pass@localhost:5236/TEST?charset=utf8&schema=TEST&timeZone=-300",
 				},
 				{
 					timezone: "America/New_York",
 					now:      time.Date(2026, time.July, 1, 0, 0, 0, 0, time.UTC),
-					expected: "dm://user:pass@localhost:5236/test?charset=utf8&schema=test&timeZone=-240",
+					expected: "dm://user:pass@localhost:5236/TEST?charset=utf8&schema=TEST&timeZone=-240",
 				},
 				{
 					timezone: "Etc/GMT-12",
 					now:      time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC),
-					expected: "dm://user:pass@localhost:5236/test?charset=utf8&schema=test&timeZone=720",
+					expected: "dm://user:pass@localhost:5236/TEST?charset=utf8&schema=TEST&timeZone=720",
 				},
 				{
 					timezone: "Etc/GMT+12",
 					now:      time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC),
-					expected: "dm://user:pass@localhost:5236/test?charset=utf8&schema=test&timeZone=-720",
+					expected: "dm://user:pass@localhost:5236/TEST?charset=utf8&schema=TEST&timeZone=-720",
 				},
 			}
 		)
@@ -86,7 +86,7 @@ func Test_BuildDataSourceName_OptionalParameters(t *testing.T) {
 		}, time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC))
 
 		t.AssertNil(err)
-		t.Assert(source, "dm://user:pass@localhost/test?charset=utf8&schema=test&compress=1")
+		t.Assert(source, "dm://user:pass@localhost/TEST?charset=utf8&schema=TEST&compress=1")
 	})
 }
 
@@ -113,5 +113,30 @@ func Test_BuildDataSourceName_UnsupportedTimezoneOffset(t *testing.T) {
 
 		t.AssertNE(err, nil)
 		t.Assert(gerror.Code(err), gcode.CodeInvalidParameter)
+	})
+}
+
+// Test_BuildDataSourceName_SchemaLetterCase verifies that the schema of the DSN is the configured
+// name in upper case, as DM folds an unquoted name, or the name inside double quotes as it is.
+func Test_BuildDataSourceName_SchemaLetterCase(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for name, schema := range map[string]string{
+			"test":        "TEST",
+			"Test_1":      "TEST_1",
+			"TEST":        "TEST",
+			`"test"`:      "test",
+			`"My Schema"`: "My Schema",
+			`"`:           `"`,
+		} {
+			source, err := buildDataSourceName(&gdb.ConfigNode{
+				Host:    "localhost",
+				User:    "user",
+				Pass:    "pass",
+				Name:    name,
+				Charset: "utf8",
+			}, time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC))
+			t.AssertNil(err)
+			t.Assert(source, "dm://user:pass@localhost/"+schema+"?charset=utf8&schema="+schema)
+		}
 	})
 }
