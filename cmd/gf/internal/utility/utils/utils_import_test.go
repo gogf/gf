@@ -4,6 +4,9 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// This file contains unit tests for unused-import cleanup and package-name
+// resolving used by GoFmt.
+
 package utils
 
 import (
