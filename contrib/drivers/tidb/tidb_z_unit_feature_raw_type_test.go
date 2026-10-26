@@ -155,8 +155,8 @@ func Test_DataType_JSON_Insert(t *testing.T) {
 		// Verify data
 		one, err := db.Model(table).Where("id", 1).One()
 		t.AssertNil(err)
-		expected := map[string]interface{}{"name": "John", "age": float64(30)}
-		var actual map[string]interface{}
+		expected := map[string]any{"name": "John", "age": float64(30)}
+		var actual map[string]any
 		err = json.Unmarshal([]byte(one["data"].String()), &actual)
 		t.AssertNil(err)
 		t.Assert(actual, expected)
@@ -214,8 +214,8 @@ func Test_DataType_JSON_Set(t *testing.T) {
 		// Verify updated data
 		one, err := db.Model(table).Where("id", 1).One()
 		t.AssertNil(err)
-		expected := map[string]interface{}{"name": "Bob", "age": float64(30)}
-		var actual map[string]interface{}
+		expected := map[string]any{"name": "Bob", "age": float64(30)}
+		var actual map[string]any
 		err = json.Unmarshal([]byte(one["data"].String()), &actual)
 		t.AssertNil(err)
 		t.Assert(actual, expected)
@@ -351,8 +351,8 @@ func Test_DataType_JSON_Update(t *testing.T) {
 		// Verify update
 		one, err := db.Model(table).Where("id", 1).One()
 		t.AssertNil(err)
-		expected := map[string]interface{}{"name": "Grace", "age": float64(29)}
-		var actual map[string]interface{}
+		expected := map[string]any{"name": "Grace", "age": float64(29)}
+		var actual map[string]any
 		err = json.Unmarshal([]byte(one["data"].String()), &actual)
 		t.AssertNil(err)
 		t.Assert(actual, expected)

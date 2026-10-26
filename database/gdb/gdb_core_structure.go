@@ -231,7 +231,7 @@ func (c *Core) GetFormattedDBTypeNameForField(fieldType string) (typeName, typeP
 		typePattern = gstr.Trim(match[2])
 	} else {
 		var array = gstr.SplitAndTrim(fieldType, " ")
-		if len(array) > 1 && gstr.Equal(array[0], "unsigned") {
+		if len(array) > 1 && gstr.Equal(array[0], modifierUnsigned) {
 			typeName = array[1]
 		} else if len(array) > 0 {
 			typeName = array[0]
@@ -268,7 +268,7 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ a
 		fieldTypeMediumInt,
 		fieldTypeMediumint,
 		fieldTypeSerial:
-		if gstr.ContainsI(fieldType, "unsigned") {
+		if gstr.ContainsI(fieldType, modifierUnsigned) {
 			return LocalTypeUint, nil
 		}
 		return LocalTypeInt, nil
@@ -277,7 +277,7 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ a
 		fieldTypeBigInt,
 		fieldTypeBigint,
 		fieldTypeBigserial:
-		if gstr.ContainsI(fieldType, "unsigned") {
+		if gstr.ContainsI(fieldType, modifierUnsigned) {
 			return LocalTypeUint64, nil
 		}
 		return LocalTypeInt64, nil
@@ -310,7 +310,7 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ a
 		if typePattern == "1" {
 			return LocalTypeBool, nil
 		}
-		if gstr.ContainsI(fieldType, "unsigned") {
+		if gstr.ContainsI(fieldType, modifierUnsigned) {
 			return LocalTypeUint64Bytes, nil
 		}
 		return LocalTypeInt64Bytes, nil
@@ -347,25 +347,25 @@ func (c *Core) CheckLocalTypeForField(ctx context.Context, fieldType string, _ a
 		case strings.Contains(typeName, "text") || strings.Contains(typeName, "char") || strings.Contains(typeName, "character"):
 			return LocalTypeString, nil
 
-		case strings.Contains(typeName, "float") || strings.Contains(typeName, "double") || strings.Contains(typeName, "numeric"):
+		case strings.Contains(typeName, fieldTypeFloat) || strings.Contains(typeName, fieldTypeDouble) || strings.Contains(typeName, fieldTypeNumeric):
 			return LocalTypeFloat64, nil
 
-		case strings.Contains(typeName, "bool"):
+		case strings.Contains(typeName, fieldTypeBool):
 			return LocalTypeBool, nil
 
-		case strings.Contains(typeName, "binary") || strings.Contains(typeName, "blob"):
+		case strings.Contains(typeName, fieldTypeBinary) || strings.Contains(typeName, fieldTypeBlob):
 			return LocalTypeBytes, nil
 
-		case strings.Contains(typeName, "int"):
-			if gstr.ContainsI(fieldType, "unsigned") {
+		case strings.Contains(typeName, fieldTypeInt):
+			if gstr.ContainsI(fieldType, modifierUnsigned) {
 				return LocalTypeUint, nil
 			}
 			return LocalTypeInt, nil
 
-		case strings.Contains(typeName, "time"):
+		case strings.Contains(typeName, fieldTypeTime):
 			return LocalTypeDatetime, nil
 
-		case strings.Contains(typeName, "date"):
+		case strings.Contains(typeName, fieldTypeDate):
 			return LocalTypeDatetime, nil
 
 		default:
@@ -392,7 +392,7 @@ func (c *Core) ConvertValueForLocal(
 	switch typeName {
 	case LocalTypeBytes:
 		var typeNameStr = string(typeName)
-		if strings.Contains(typeNameStr, "binary") || strings.Contains(typeNameStr, "blob") {
+		if strings.Contains(typeNameStr, fieldTypeBinary) || strings.Contains(typeNameStr, fieldTypeBlob) {
 			return fieldValue, nil
 		}
 		return gconv.Bytes(fieldValue), nil

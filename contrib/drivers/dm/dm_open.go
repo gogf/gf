@@ -10,6 +10,7 @@ package dm
 
 import (
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 const dmTimezoneOffsetLimitMinutes = 12 * 60
 
 // Open creates and returns an underlying sql.DB object for DM.
+// Each connection of the pool opens a connector of its own, see connector.
 func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 	var (
 		underlyingDriverName = "dm"
@@ -43,12 +45,23 @@ func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
 		)
 		return nil, err
 	}
-	return
+	underlyingDriver := db.Driver().(driver.DriverContext)
+	if err = db.Close(); err != nil {
+		return nil, err
+	}
+	c := newConnector(source, underlyingDriver)
+	c.wallClock = d.wallClockLocation()
+	return sql.OpenDB(c), nil
 }
 
 // buildDataSourceName creates a DM DSN and converts the configured IANA timezone
 // to the fixed offset in minutes accepted by the DM driver. Daylight-saving zones
-// use the offset active when the DSN is built.
+// use the offset active when the DSN is built, which a connection replaces with the offset active
+// when it opens its session, see connector.
+//
+// The schema of the DSN is the configured name in upper case, as DM folds an unquoted name, or
+// the name written inside double quotes as it is. The underlying driver quotes the schema it
+// sets for the session, which would make an unquoted name match only a schema of that letter case.
 func buildDataSourceName(config *gdb.ConfigNode, now time.Time) (string, error) {
 	var domain string
 	if config.Port != "" {
@@ -56,9 +69,10 @@ func buildDataSourceName(config *gdb.ConfigNode, now time.Time) (string, error) 
 	} else {
 		domain = config.Host
 	}
+	schema := foldSchemaName(config.Name)
 	source := fmt.Sprintf(
 		"dm://%s:%s@%s/%s?charset=%s&schema=%s",
-		config.User, config.Pass, domain, config.Name, config.Charset, config.Name,
+		config.User, config.Pass, domain, schema, config.Charset, schema,
 	)
 	if config.Timezone != "" {
 		location, err := time.LoadLocation(config.Timezone)
