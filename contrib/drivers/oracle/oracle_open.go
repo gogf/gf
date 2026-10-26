@@ -20,22 +20,17 @@ import (
 
 // Open creates and returns an underlying sql.DB object for oracle.
 func (d *Driver) Open(config *gdb.ConfigNode) (db *sql.DB, err error) {
-	var (
-		source               string
-		underlyingDriverName = "oracle"
-	)
-	source = gora.BuildUrl(
+	source := gora.BuildUrl(
 		config.Host, gconv.Int(config.Port), config.Name, config.User, config.Pass, openOptions(config),
 	)
-
-	if db, err = sql.Open(underlyingDriverName, source); err != nil {
-		err = gerror.WrapCodef(
+	connector, err := gora.GetDefaultDriver().OpenConnector(source)
+	if err != nil {
+		return nil, gerror.WrapCodef(
 			gcode.CodeDbOperationError, err,
-			`sql.Open failed for driver "%s" by source "%s"`, underlyingDriverName, source,
+			`open oracle connector failed by source "%s"`, source,
 		)
-		return nil, err
 	}
-	return
+	return sql.OpenDB(detachCancelConnector{Connector: connector}), nil
 }
 
 // openOptions returns the options of the underlying driver for `config`. An option given in
