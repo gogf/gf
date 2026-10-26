@@ -183,7 +183,10 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	if err != nil {
 		return err
 	}
-	bodyField, hasBodyField := findBodyField(bodyStructFields)
+	bodyField, hasBodyField, err := findBodyField(bodyStructFields)
+	if err != nil {
+		return err
+	}
 	structFields, err := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         inputObject.Interface(),
 		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
@@ -226,7 +229,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		if tagMimeValue != "" {
 			contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
 		}
-		// The field tagged with `in:"body"` receives the whole request body, so the schema of
+		// The field tagged with `body:"*"` receives the whole request body, so the schema of
 		// that field is used as the request body schema instead of the schema of the request
 		// struct, which would otherwise be documented as a wrapping object.
 		var bodySchemaRef *SchemaRef
@@ -405,7 +408,7 @@ func (oai *OpenApiV3) removeOperationDuplicatedProperties(operation *Operation) 
 		}
 
 		// The request body schema might have no properties at all, for example the JSON array
-		// request body of the field tagged with `in:"body"`, of which there's nothing to remove.
+		// request body of the field tagged with `body:"*"`, of which there's nothing to remove.
 		if requestBodyContent.Schema.Value == nil || requestBodyContent.Schema.Value.Properties == nil {
 			continue
 		}
@@ -440,15 +443,42 @@ func (oai *OpenApiV3) doesStructHasNoFields(s any) bool {
 	return reflect.TypeOf(s).NumField() == 0
 }
 
-// findBodyField retrieves and returns the field tagged with `in:"body"` from the given request
+// findBodyField retrieves and returns the field tagged with `body:"*"` from the given request
 // struct fields, which receives the whole request body.
-func findBodyField(structFields []gstructs.Field) (gstructs.Field, bool) {
+//
+// It returns error for any field tagged with the body tag but not the whole-body value, which is
+// the same rule as the handler registration. All fields are validated even if a body field is
+// already found, so that an invalid tag value never passes silently.
+func findBodyField(structFields []gstructs.Field) (gstructs.Field, bool, error) {
+	var (
+		bodyField    gstructs.Field
+		hasBodyField bool
+	)
 	for _, structField := range structFields {
-		if structField.TagIn() == ParameterInBody {
-			return structField, true
+		bodyTagValue, hasBodyTag := structField.TagLookup(gtag.Body)
+		if !hasBodyTag {
+			continue
+		}
+		if bodyTagValue != gtag.BodyValueAll {
+			return gstructs.Field{}, false, newInvalidBodyTagValueError(bodyTagValue, structField.Name())
+		}
+		if !hasBodyField {
+			bodyField = structField
+			hasBodyField = true
 		}
 	}
-	return gstructs.Field{}, false
+	return bodyField, hasBodyField, nil
+}
+
+// newInvalidBodyTagValueError creates the error for an invalid body tag value, which is reported
+// by both the handler registration and the OpenAPI generation.
+func newInvalidBodyTagValueError(bodyTagValue, fieldName string) error {
+	return gerror.NewCodef(
+		gcode.CodeInvalidParameter,
+		`invalid body tag value "%s" for the request struct field "%s", which should be "%s" `+
+			`to receive the whole request body`,
+		bodyTagValue, fieldName, gtag.BodyValueAll,
+	)
 }
 
 func (oai *OpenApiV3) tagMapToPath(tagMap map[string]string, path *Path) error {
