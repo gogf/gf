@@ -115,10 +115,20 @@ func goFormatContent(path, content string) (string, error) {
 			// Keep the import if its path cannot be quoted, as it cannot be deleted safely.
 			continue
 		}
-		var name, certain = importPackageName(imp, importPath, resolvedNames)
-		if !certain {
-			// Keep the import if its package name cannot be determined, as removing it
-			// mistakenly would break the generated code.
+		// The package name is not always a segment of the import path, for example
+		// "github.com/minio/minio-go/v7" is package "minio" and "k8s.io/api/core/v1"
+		// is package "v1", so the real name resolved by `resolvePackageNames` is used
+		// for the unnamed imports.
+		var name string
+		if imp.Name != nil {
+			name = imp.Name.Name
+		} else {
+			name = resolvedNames[importPath]
+		}
+		if name == "" {
+			// Keep the import if its package name cannot be resolved, as guessing the name
+			// from the import path may remove an import that is in use, for example the
+			// import path "github.com/foo/bar" whose package name is "baz".
 			continue
 		}
 		if _, ok := usedNames[name]; ok {
@@ -274,54 +284,6 @@ func importPathOf(spec string) string {
 	return spec[start+1 : end]
 }
 
-// importPackageName retrieves the package name the import refers to, like "gdb" for
-// the import path "github.com/gogf/gf/v2/database/gdb".
-//
-// The real package name resolved by `resolvePackageNames` is preferred, as the package
-// name is not always a segment of the import path, for example
-// "github.com/minio/minio-go/v7" is package "minio", "k8s.io/api/core/v1" is package
-// "v1" and "go.etcd.io/etcd/client/v3" is package "clientv3".
-//
-// It returns false as the second result if the package name cannot be determined, in
-// which case the import should be kept.
-func importPackageName(imp *ast.ImportSpec, importPath string, resolvedNames map[string]string) (name string, certain bool) {
-	if imp.Name != nil {
-		return imp.Name.Name, true
-	}
-	if resolvedName, ok := resolvedNames[importPath]; ok && resolvedName != "" {
-		return resolvedName, true
-	}
-	// Fall back to the import path when the package name cannot be resolved, which
-	// happens when the import is out of the module context, for example an invalid
-	// import path that gf rewrites. The fallback is only used to detect the usages,
-	// and the import is kept when the last segment is not a reliable package name.
-	if name = packageNameFromPath(importPath); name != "" {
-		return name, true
-	}
-	return "", false
-}
-
-// packageNameFromPath derives the package name from an import path, like "net/http"
-// returns "http".
-//
-// It returns an empty name for the versioned paths, whose package name is not reliable,
-// for example "k8s.io/api/core/v1" is package "v1" while
-// "github.com/gogf/gf/contrib/drivers/mysql/v2" is package "mysql".
-func packageNameFromPath(importPath string) string {
-	var (
-		segments = strings.Split(importPath, "/")
-		name     = segments[len(segments)-1]
-	)
-	// A version suffix like "v1" makes the package name unpredictable.
-	if len(name) > 1 && name[0] == 'v' && gstr.IsNumeric(name[1:]) {
-		return ""
-	}
-	if !isValidGoIdentifier(name) {
-		return ""
-	}
-	return name
-}
-
 // resolvePackageNames resolves and returns the real package names of the given import
 // paths in directory `dir`. Every import path is resolved only once and cached, so that
 // the resolving happens once instead of for every file.
@@ -395,24 +357,6 @@ func loadPackageNames(dir string, importPaths []string) (map[string]string, erro
 		names[pkg.PkgPath] = pkg.Name
 	}
 	return names, nil
-}
-
-// isValidGoIdentifier checks and returns whether given string is a valid go identifier.
-func isValidGoIdentifier(name string) bool {
-	if name == "" {
-		return false
-	}
-	for i := 0; i < len(name); i++ {
-		var c = name[i]
-		if c == '_' || c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' {
-			if i == 0 && c >= '0' && c <= '9' {
-				return false
-			}
-			continue
-		}
-		return false
-	}
-	return true
 }
 
 // GoModTidy executes `go mod tidy` at specified directory `dirPath`.

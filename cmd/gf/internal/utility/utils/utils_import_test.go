@@ -89,6 +89,41 @@ func Test_GoFmt_ResolvedPackageNames(t *testing.T) {
 	})
 }
 
+// Test_GoFmt_UnresolvedPackageName asserts that an import is kept when its package name
+// cannot be resolved, even though it looks unused. The package name is not always a
+// segment of the import path, so removing the import by a guessed name would break the
+// generated code that references the package.
+func Test_GoFmt_UnresolvedPackageName(t *testing.T) {
+	var restore = stubResolvePackageNames(nil)
+	defer restore()
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			filePath = gfile.Join(t.TempDir(), "example.go")
+			// The import path "github.com/foo/bar" would be guessed as package "bar",
+			// but the real package name could be anything, for example "baz".
+			source = "package main\n\nimport (\n\t\"context\"\n\n\t\"github.com/foo/bar\"\n)\n\nfunc main() {\n\t_ = context.Background()\n}\n"
+		)
+		out, err := goFormatContent(filePath, source)
+		t.AssertNil(err)
+		t.Assert(out, source)
+	})
+}
+
+// Test_GoFmt_DotImport asserts that dot imports are kept as is, as their usages cannot
+// be determined. It is the same behavior as golang.org/x/tools/imports.Process.
+func Test_GoFmt_DotImport(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			filePath = gfile.Join(t.TempDir(), "example.go")
+			source   = "package main\n\nimport (\n\t. \"fmt\"\n\t\"os\"\n)\n\nfunc main() {\n\t_ = os.Args\n}\n"
+		)
+		out, err := goFormatContent(filePath, source)
+		t.AssertNil(err)
+		t.Assert(out, source)
+	})
+}
+
 // Test_GoFmt_RealPackageNames asserts the unused imports are removed by the package names
 // resolved from the module, which is the case of gf gen service.
 func Test_GoFmt_RealPackageNames(t *testing.T) {
