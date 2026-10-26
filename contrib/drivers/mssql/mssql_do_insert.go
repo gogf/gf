@@ -9,21 +9,36 @@ package mssql
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+)
+
+const (
+	internalIdentityFieldInCtx gctx.StrKey = "identity_field"
+	fieldExtraIdentity         string      = "IDENTITY"
+	// mergeSavePoint is the savepoint that the MERGE statements of several records roll back to in
+	// the transaction of the caller if one of them fails.
+	mergeSavePoint string = "gf_merge"
 )
 
 // DoInsert inserts or updates data for given table.
 // The list parameter must contain at least one record, which was previously validated.
+// The table is written to without the alias that `table` may give it, which SQL Server rejects in
+// INSERT and MERGE.
 func (d *Driver) DoInsert(
 	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (result sql.Result, err error) {
+	table = tableWithoutAlias(table)
 	switch option.InsertOption {
 	case gdb.InsertOptionSave:
 		return d.doSave(ctx, link, table, list, option)
@@ -37,8 +52,28 @@ func (d *Driver) DoInsert(
 		return d.doInsertIgnore(ctx, link, table, list, option)
 
 	default:
+		identityField, err := d.getIdentityField(ctx, table)
+		if err != nil {
+			return nil, err
+		}
+		ctx = context.WithValue(ctx, internalIdentityFieldInCtx, identityField)
 		return d.Core.DoInsert(ctx, link, table, list, option)
 	}
+}
+
+// getIdentityField returns the name of the IDENTITY column of `table`, or an empty string if the
+// table has none.
+func (d *Driver) getIdentityField(ctx context.Context, table string) (string, error) {
+	tableFields, err := d.GetDB().TableFields(ctx, table)
+	if err != nil {
+		return "", err
+	}
+	for _, field := range tableFields {
+		if field.Extra == fieldExtraIdentity {
+			return field.Name, nil
+		}
+	}
+	return "", nil
 }
 
 // doSave support upsert for MSSQL
@@ -56,10 +91,39 @@ func (d *Driver) doInsertIgnore(ctx context.Context,
 	return d.doMergeInsert(ctx, link, table, list, option, false)
 }
 
-// doMergeInsert implements MERGE-based insert operations for MSSQL database.
+// doMergeInsert implements MERGE-based insert operations for MSSQL database, executing one MERGE
+// statement for each record of `list`, all of them in one transaction, or back to a savepoint of
+// the transaction of `link` or `ctx` if there is one, so that a failing record writes none of them.
 // When withUpdate is true, it performs upsert (insert or update).
 // When withUpdate is false, it performs insert ignore (insert only when no conflict).
 func (d *Driver) doMergeInsert(
+	ctx context.Context,
+	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption, withUpdate bool,
+) (result sql.Result, err error) {
+	if len(list) > 1 && !d.GetDryRun() {
+		if (link == nil || !link.IsTransaction()) && gdb.TXFromCtx(ctx, d.GetGroup()) == nil {
+			err = d.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+				result, err = d.doMergeRecords(ctx, link, table, list, option, withUpdate)
+				return err
+			})
+			return result, err
+		}
+		if _, err = d.DoExec(ctx, link, "SAVE TRANSACTION "+mergeSavePoint); err != nil {
+			return nil, err
+		}
+		if result, err = d.doMergeRecords(ctx, link, table, list, option, withUpdate); err != nil {
+			if _, e := d.DoExec(ctx, link, "ROLLBACK TRANSACTION "+mergeSavePoint); e != nil {
+				err = errors.Join(err, e)
+			}
+		}
+		return result, err
+	}
+	return d.doMergeRecords(ctx, link, table, list, option, withUpdate)
+}
+
+// doMergeRecords executes one MERGE statement for each record of `list`, as doMergeInsert
+// describes, and returns the sum of their affected rows.
+func (d *Driver) doMergeRecords(
 	ctx context.Context,
 	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption, withUpdate bool,
 ) (result sql.Result, err error) {
@@ -99,69 +163,138 @@ func (d *Driver) doMergeInsert(
 	}
 
 	var (
-		one            = list[0]
-		oneLen         = len(one)
-		charL, charR   = d.GetChars()
-		conflictKeySet = gset.NewStrSet(false)
-
-		// queryHolders:	Handle data with Holder that need to be merged
-		// queryValues:		Handle data that need to be merged
-		// insertKeys:		Handle valid keys that need to be inserted
-		// insertValues:	Handle values that need to be inserted
-		// updateValues:	Handle values that need to be updated (only when withUpdate=true)
-		queryHolders = make([]string, oneLen)
-		queryValues  = make([]any, oneLen)
-		insertKeys   = make([]string, oneLen)
-		insertValues = make([]string, oneLen)
-		updateValues []string
+		charL, charR       = d.GetChars()
+		conflictKeySet     = gset.NewStrSet(false)
+		quotedConflictKeys = make([]string, len(conflictKeys))
+		mergeResult        = new(Result)
 	)
 
 	// conflictKeys slice type conv to set type
-	for _, conflictKey := range conflictKeys {
+	for index, conflictKey := range conflictKeys {
 		conflictKeySet.Add(gstr.ToUpper(conflictKey))
+		quotedConflictKeys[index] = charL + conflictKey + charR
 	}
 
-	index := 0
-	for key, value := range one {
-		queryHolders[index] = "?"
-		queryValues[index] = value
-		insertKeys[index] = charL + key + charR
-		insertValues[index] = "T2." + charL + key + charR
+	for _, one := range list {
+		var (
+			oneLen = len(one)
+			keys   = make([]string, 0, oneLen)
 
-		// Build updateValues only when withUpdate is true
-		// Filter conflict keys and soft created fields from updateValues
-		if withUpdate && !(conflictKeySet.Contains(key) || d.Core.IsSoftCreatedFieldName(key)) {
-			updateValues = append(
-				updateValues,
-				fmt.Sprintf(`T1.%s = T2.%s`, charL+key+charR, charL+key+charR),
-			)
+			// queryHolders:	Handle data with Holder that need to be merged
+			// queryValues:		Handle data that need to be merged
+			// insertKeys:		Handle valid keys that need to be inserted
+			// insertValues:	Handle values that need to be inserted
+			// updateValues:	Handle values that need to be updated (only when withUpdate=true)
+			queryHolders = make([]string, oneLen)
+			queryValues  = make([]any, 0, oneLen)
+			insertKeys   = make([]string, oneLen)
+			insertValues = make([]string, oneLen)
+			updateValues []string
+		)
+
+		for key := range one {
+			keys = append(keys, key)
 		}
-		index++
-	}
+		sort.Strings(keys)
+		for index, key := range keys {
+			keyWithChar := charL + key + charR
+			if s, ok := one[key].(gdb.Raw); ok {
+				queryHolders[index] = gconv.String(s)
+			} else {
+				queryHolders[index] = "?"
+				queryValues = append(queryValues, one[key])
+			}
+			insertKeys[index] = keyWithChar
+			insertValues[index] = "T2." + keyWithChar
+		}
+		// Build updateValues only when withUpdate is true
+		if withUpdate {
+			updateValues = d.formatMergeUpdateValues(keys, conflictKeySet, option)
+		}
 
-	var (
-		batchResult = new(gdb.SqlResult)
-		sqlStr      = parseSqlForMerge(table, queryHolders, insertKeys, insertValues, updateValues, conflictKeys)
-	)
-	r, err := d.DoExec(ctx, link, sqlStr, queryValues...)
-	if err != nil {
-		return r, err
+		sqlStr := parseSqlForMerge(table, queryHolders, insertKeys, insertValues, updateValues, quotedConflictKeys)
+		r, err := d.DoExec(ctx, link, sqlStr, queryValues...)
+		if err != nil {
+			return r, err
+		}
+		n, err := r.RowsAffected()
+		if err != nil {
+			return r, err
+		}
+		mergeResult.rowsAffected += n
 	}
-	if n, err := r.RowsAffected(); err != nil {
-		return r, err
-	} else {
-		batchResult.Result = r
-		batchResult.Affected += n
+	return mergeResult, nil
+}
+
+// formatMergeUpdateValues returns the assignments of the MERGE UPDATE SET clause for a record
+// with the given `keys`. It follows OnDuplicate/OnDuplicateEx of `option` if specified, or else
+// updates every key except conflict keys, and except soft created fields for Save. A conflict key
+// assigned from its own source column is left out, as it cannot change the matched row.
+func (d *Driver) formatMergeUpdateValues(
+	keys []string, conflictKeySet *gset.StrSet, option gdb.DoInsertOption,
+) (updateValues []string) {
+	charL, charR := d.GetChars()
+	if option.OnDuplicateStr != "" {
+		return []string{option.OnDuplicateStr}
 	}
-	return batchResult, nil
+	if len(option.OnDuplicateMap) > 0 {
+		updateKeys := make([]string, 0, len(option.OnDuplicateMap))
+		for key := range option.OnDuplicateMap {
+			updateKeys = append(updateKeys, key)
+		}
+		sort.Strings(updateKeys)
+		for _, key := range updateKeys {
+			keyWithChar := charL + key + charR
+			switch value := option.OnDuplicateMap[key].(type) {
+			case gdb.Raw, *gdb.Raw:
+				updateValues = append(updateValues, fmt.Sprintf(`T1.%s = %s`, keyWithChar, gconv.String(value)))
+
+			case gdb.Counter, *gdb.Counter:
+				var counter gdb.Counter
+				switch v := value.(type) {
+				case gdb.Counter:
+					counter = v
+				case *gdb.Counter:
+					counter = *v
+				}
+				operator, columnVal := "+", counter.Value
+				if columnVal < 0 {
+					operator, columnVal = "-", -columnVal
+				}
+				updateValues = append(updateValues, fmt.Sprintf(
+					`T1.%s = T1.%s%s%s`,
+					keyWithChar, charL+counter.Field+charR, operator, gconv.String(columnVal),
+				))
+
+			default:
+				column := gconv.String(value)
+				if conflictKeySet.Contains(gstr.ToUpper(key)) && strings.EqualFold(key, column) {
+					continue
+				}
+				updateValues = append(updateValues, fmt.Sprintf(`T1.%s = T2.%s`, keyWithChar, charL+column+charR))
+			}
+		}
+		return updateValues
+	}
+	for _, key := range keys {
+		if conflictKeySet.Contains(gstr.ToUpper(key)) {
+			continue
+		}
+		if option.InsertOption == gdb.InsertOptionSave && d.IsSoftCreatedFieldName(key) {
+			continue
+		}
+		keyWithChar := charL + key + charR
+		updateValues = append(updateValues, fmt.Sprintf(`T1.%s = T2.%s`, keyWithChar, keyWithChar))
+	}
+	return updateValues
 }
 
 // parseSqlForMerge generates MERGE statement for MSSQL database.
 // When updateValues is empty, it only inserts (INSERT IGNORE behavior).
 // When updateValues is provided, it performs upsert (INSERT or UPDATE).
 // Examples:
-// - INSERT IGNORE: MERGE INTO table T1 USING (...) T2 ON (...) WHEN NOT MATCHED THEN INSERT(...) VALUES (...)
-// - UPSERT: MERGE INTO table T1 USING (...) T2 ON (...) WHEN NOT MATCHED THEN INSERT(...) VALUES (...) WHEN MATCHED THEN UPDATE SET ...
+// - INSERT IGNORE: MERGE INTO table WITH (HOLDLOCK) AS T1 USING (...) T2 ON (...) WHEN NOT MATCHED THEN INSERT(...) VALUES (...)
+// - UPSERT: MERGE INTO table WITH (HOLDLOCK) AS T1 USING (...) T2 ON (...) WHEN NOT MATCHED THEN INSERT(...) VALUES (...) WHEN MATCHED THEN UPDATE SET ...
 func parseSqlForMerge(table string,
 	queryHolders, insertKeys, insertValues, updateValues, duplicateKey []string,
 ) (sqlStr string) {
@@ -182,11 +315,11 @@ func parseSqlForMerge(table string,
 
 	// Build SQL based on whether UPDATE is needed
 	pattern := gstr.Trim(
-		`MERGE INTO %s T1 USING (VALUES(%s)) T2 (%s) ON (%s) WHEN NOT MATCHED THEN INSERT(%s) VALUES (%s)`,
+		`MERGE INTO %s WITH (HOLDLOCK) AS T1 USING (VALUES(%s)) T2 (%s) ON (%s) WHEN NOT MATCHED THEN INSERT(%s) VALUES (%s)`,
 	)
 	if len(updateValues) > 0 {
 		// Upsert: INSERT or UPDATE
-		pattern += gstr.Trim(` WHEN MATCHED THEN UPDATE SET %s`)
+		pattern += ` WHEN MATCHED THEN UPDATE SET %s`
 		return fmt.Sprintf(
 			pattern+";",
 			table,

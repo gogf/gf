@@ -2,6 +2,7 @@ package gtime
 
 import (
 	"database/sql/driver"
+	"time"
 )
 
 // Scan implements interface used by Scan in package database/sql for Scanning value
@@ -27,7 +28,7 @@ func (t *Time) Value() (driver.Value, error) {
 
 	if t.Year() == 0 {
 		// Only time.
-		return t.Format("15:04:05"), nil
+		return t.Format(time.TimeOnly), nil
 	}
 
 	return t.Time, nil
