@@ -188,7 +188,7 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 	// All values of the repeated query parameters for the slice fields.
 	r.mergeRepeatedQueryValues(data, pointer, parseTypeRequest)
 
-	// A field tagged with `in:"body"` represents the complete request body. Before converting,
+	// A field tagged with `body:"*"` represents the complete request body. Before converting,
 	// remove the request parameter that is named exactly after the field tag name, as the tag
 	// name is matched with a higher priority than the field name by the struct converting,
 	// which would otherwise overwrite the body array. Both names are resolved at router
@@ -209,7 +209,7 @@ func (r *Request) doGetRequestStruct(pointer any, mapping ...map[string]string) 
 		return data, nil
 	}
 
-	// The request struct field tagged with `in:"body"` receives the whole request body, which
+	// The request struct field tagged with `body:"*"` receives the whole request body, which
 	// is a JSON array instead of being split into the request parameters.
 	// The field name comes from reqBodyFieldName, which is empty when there is no serving handler.
 	if bodyFieldName := r.reqBodyFieldName(); bodyFieldName != "" {
