@@ -183,7 +183,10 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	if err != nil {
 		return err
 	}
-	bodyField, hasBodyField := findBodyField(bodyStructFields)
+	bodyField, hasBodyField, err := findBodyField(bodyStructFields)
+	if err != nil {
+		return err
+	}
 	structFields, err := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         inputObject.Interface(),
 		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
@@ -442,13 +445,40 @@ func (oai *OpenApiV3) doesStructHasNoFields(s any) bool {
 
 // findBodyField retrieves and returns the field tagged with `body:"*"` from the given request
 // struct fields, which receives the whole request body.
-func findBodyField(structFields []gstructs.Field) (gstructs.Field, bool) {
+//
+// It returns error for any field tagged with the body tag but not the whole-body value, which is
+// the same rule as the handler registration. All fields are validated even if a body field is
+// already found, so that an invalid tag value never passes silently.
+func findBodyField(structFields []gstructs.Field) (gstructs.Field, bool, error) {
+	var (
+		bodyField    gstructs.Field
+		hasBodyField bool
+	)
 	for _, structField := range structFields {
-		if structField.TagBody() != "" {
-			return structField, true
+		bodyTagValue, hasBodyTag := structField.TagLookup(gtag.Body)
+		if !hasBodyTag {
+			continue
+		}
+		if bodyTagValue != gtag.BodyValueAll {
+			return gstructs.Field{}, false, newInvalidBodyTagValueError(bodyTagValue, structField.Name())
+		}
+		if !hasBodyField {
+			bodyField = structField
+			hasBodyField = true
 		}
 	}
-	return gstructs.Field{}, false
+	return bodyField, hasBodyField, nil
+}
+
+// newInvalidBodyTagValueError creates the error for an invalid body tag value, which is reported
+// by both the handler registration and the OpenAPI generation.
+func newInvalidBodyTagValueError(bodyTagValue, fieldName string) error {
+	return gerror.NewCodef(
+		gcode.CodeInvalidParameter,
+		`invalid body tag value "%s" for the request struct field "%s", which should be "%s" `+
+			`to receive the whole request body`,
+		bodyTagValue, fieldName, gtag.BodyValueAll,
+	)
 }
 
 func (oai *OpenApiV3) tagMapToPath(tagMap map[string]string, path *Path) error {

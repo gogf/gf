@@ -592,12 +592,6 @@ type reqBodyWithInTagReq struct {
 	Items []int `json:"items" body:"*" in:"query"`
 }
 
-// reqBodyOldInTagReq declares the old `in:"body"` tag, which no longer receives the whole
-// request body.
-type reqBodyOldInTagReq struct {
-	Items []int `json:"items" in:"body"`
-}
-
 func newReqBodyFuncInfo(t *gtest.T, pointer any) handlerFuncInfo {
 	fields, err := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         pointer,
@@ -619,11 +613,6 @@ func Test_HandlerFuncInfo_CheckAndCreateReqBodyField(t *testing.T) {
 
 		// No field tagged with `body:"*"`.
 		var info = newReqBodyFuncInfo(t, &reqBodyAbsentReq{})
-		t.AssertNil(info.checkAndCreateReqBodyField())
-		t.Assert(info.ReqBodyFieldName, "")
-
-		// The old `in:"body"` tag no longer receives the whole request body.
-		info = newReqBodyFuncInfo(t, &reqBodyOldInTagReq{})
 		t.AssertNil(info.checkAndCreateReqBodyField())
 		t.Assert(info.ReqBodyFieldName, "")
 

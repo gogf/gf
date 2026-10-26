@@ -18,6 +18,7 @@ import (
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 // Parameters is specified by OpenAPI/Swagger 3.0 standard.
@@ -31,8 +32,12 @@ type ParameterRef struct {
 // newParameterRefWithStructMethod resolves a request field's parameter location and schema.
 func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path, method string, hasBodyField bool) (*ParameterRef, error) {
 	// The field tagged with `body:"*"` receives the whole request body, so it is documented as
-	// the request body instead of an operation parameter.
-	if field.TagBody() != "" {
+	// the request body instead of an operation parameter. Other body tag values are rejected by
+	// the same rule as the handler registration.
+	if bodyTagValue, hasBodyTag := field.TagLookup(gtag.Body); hasBodyTag {
+		if bodyTagValue != gtag.BodyValueAll {
+			return nil, newInvalidBodyTagValueError(bodyTagValue, field.Name())
+		}
 		return nil, nil
 	}
 	var (

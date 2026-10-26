@@ -46,7 +46,8 @@ const (
 	Json                 = "json"            // Json tag is supported by stdlib.
 	Security             = "security"        // Security defines scheme for authentication. Detail to see https://swagger.io/docs/specification/authentication/
 	In                   = "in"              // Swagger distinguishes between the following parameter types based on the parameter location. Detail to see https://swagger.io/docs/specification/describing-parameters/
-	Body                 = "body"            // Body tag marks the request struct field that receives the whole request body; the only value is "*" currently, other values are reserved.
+	Body                 = "body"            // Body tag marks the request struct field that receives the whole request body.
+	BodyValueAll         = "*"               // BodyValueAll is the only valid value of the Body tag currently, which marks the field receives the whole request body; other values are reserved.
 	Required             = "required"        // OpenAPIv3 required attribute name for request body.
 	Status               = "status"          // Response status code, usually for OpenAPI in response struct.
 	ResponseExample      = "responseExample" // Response example resource path, usually for OpenAPI in response struct.

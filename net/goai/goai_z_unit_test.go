@@ -1482,19 +1482,32 @@ func TestOpenApiV3_ArrayRequestBody(t *testing.T) {
 
 }
 
-// TestOpenApiV3_InvalidInBody ensures the old `in:"body"` tag is not treated as the whole
-// request body marker.
-func TestOpenApiV3_InvalidInBody(t *testing.T) {
+// TestOpenApiV3_InvalidBodyTagValue ensures the body tag values other than the whole-body one
+// are rejected, which is the same rule as the handler registration.
+func TestOpenApiV3_InvalidBodyTagValue(t *testing.T) {
+	type InvalidValueReq struct {
+		Items []string `json:"items" body:"messages"`
+	}
+	type EmptyValueReq struct {
+		Items []string `json:"items" body:""`
+	}
 	gtest.C(t, func(t *gtest.T) {
-		var handler = func(_ context.Context, _ *struct {
-			Items []string `json:"items" in:"body"`
-		}) (*struct{}, error) {
-			return nil, nil
-		}
 		var oai = goai.New()
-		err := oai.Add(goai.AddInput{Path: "/invalid-in-body", Method: http.MethodPost, Object: handler})
+		err := oai.Add(goai.AddInput{
+			Path:   "/invalid-body-value",
+			Method: http.MethodPost,
+			Object: func(_ context.Context, _ *InvalidValueReq) (*struct{}, error) { return nil, nil },
+		})
 		t.AssertNE(err, nil)
-		t.Assert(strings.Contains(err.Error(), `invalid tag value "body" for In`), true)
+		t.Assert(strings.Contains(err.Error(), `invalid body tag value "messages"`), true)
+
+		err = oai.Add(goai.AddInput{
+			Path:   "/empty-body-value",
+			Method: http.MethodPost,
+			Object: func(_ context.Context, _ *EmptyValueReq) (*struct{}, error) { return nil, nil },
+		})
+		t.AssertNE(err, nil)
+		t.Assert(strings.Contains(err.Error(), `invalid body tag value ""`), true)
 	})
 }
 

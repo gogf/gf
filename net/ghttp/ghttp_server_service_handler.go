@@ -353,10 +353,11 @@ func (f *handlerFuncInfo) checkDuplicatedInTag() error {
 // body, which is declared by the `body:"*"` tag on the field.
 //
 // The request body is only able to be received by one field, so it returns error if there are
-// multiple fields tagged with `body:"*"`. The tag value should be "*", and the field can not be
-// tagged with the `in` tag at the same time. It also returns error if the field can not receive
-// the JSON array request body: a non-slice type, or an uploading file type, as files are
-// received by the ordinary request struct fields through the multipart/form-data request.
+// multiple fields tagged with `body:"*"`. The tag value should be gtag.BodyValueAll, and the
+// field can not be tagged with the `in` tag at the same time. It also returns error if the field
+// can not receive the JSON array request body: a non-slice type, or an uploading file type, as
+// files are received by the ordinary request struct fields through the multipart/form-data
+// request.
 //
 // It is called once at handler registration, which also resolves the tag name of the field for
 // the request handling to remove the request parameter of the same name.
@@ -366,12 +367,12 @@ func (f *handlerFuncInfo) checkAndCreateReqBodyField() error {
 		if !hasBodyTag {
 			continue
 		}
-		if bodyTagValue != "*" {
+		if bodyTagValue != gtag.BodyValueAll {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid handler: invalid body tag value "%s" for the request struct field "%s", `+
-					`which should be "*" to receive the whole request body`,
-				bodyTagValue, field.Name(),
+					`which should be "%s" to receive the whole request body`,
+				bodyTagValue, field.Name(), gtag.BodyValueAll,
 			)
 		}
 		if inTagValue := field.TagIn(); inTagValue != "" {

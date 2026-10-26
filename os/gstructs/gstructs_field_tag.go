@@ -95,12 +95,6 @@ func (f *Field) TagIn() string {
 	return v
 }
 
-// TagBody returns the most commonly used tag `body` value of the field.
-func (f *Field) TagBody() string {
-	v := f.Tag(gtag.Body)
-	return v
-}
-
 // TagPriorityName checks and returns tag name that matches the name item in `gtag.StructTagPriority`.
 // It or else returns attribute field Name if it doesn't have a tag name by `gtag.StructsTagPriority`.
 func (f *Field) TagPriorityName() string {
