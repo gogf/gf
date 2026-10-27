@@ -272,3 +272,172 @@ v2    = "true"
 		t.Assert(c.MustGetEffective(ctx, "app.debug"), "true")
 	})
 }
+
+func Test_GetWithEnv_NormalizePattern(t *testing.T) {
+	// Test configuration where keys with underscores should be normalized to dots
+	content := `
+[server]
+    address = "127.0.0.1:8000"
+    port = 8080
+[redis]
+    user = "default"
+`
+	gtest.C(t, func(t *gtest.T) {
+		c, err := gcfg.New()
+		t.AssertNil(err)
+		c.GetAdapter().(*gcfg.AdapterFile).SetContent(content)
+		defer c.GetAdapter().(*gcfg.AdapterFile).ClearContent()
+
+		// Test 1: GetWithEnv with uppercase underscore pattern should find config with dot notation.
+		// SERVER_ADDRESS should be normalized to server.address and find the config value.
+		t.Assert(c.MustGetWithEnv(ctx, "SERVER_ADDRESS").String(), "127.0.0.1:8000")
+
+		// Test 2: GetWithEnv with dot notation pattern should still work (regression test).
+		t.Assert(c.MustGetWithEnv(ctx, "server.address").String(), "127.0.0.1:8000")
+
+		// Test 3: GetWithEnv with uppercase underscore pattern for existing config.
+		t.Assert(c.MustGetWithEnv(ctx, "SERVER_PORT").Int(), 8080)
+
+		// Test 4: GetWithEnv with dot notation pattern for existing config.
+		t.Assert(c.MustGetWithEnv(ctx, "server.port").Int(), 8080)
+
+		// Test 5: When config exists, env variable should not override (config takes priority).
+		t.Assert(genv.Set("SERVER_ADDRESS", "from-env"), nil)
+		defer genv.Remove("SERVER_ADDRESS")
+		// Config value should take precedence over env variable.
+		t.Assert(c.MustGetWithEnv(ctx, "SERVER_ADDRESS").String(), "127.0.0.1:8000")
+		t.Assert(c.MustGetWithEnv(ctx, "server.address").String(), "127.0.0.1:8000")
+
+		// Test 6: When config doesn't exist, should fallback to env variable.
+		t.Assert(genv.Set("APP_NAME", "myapp"), nil)
+		defer genv.Remove("APP_NAME")
+		// APP_NAME should be normalized to app.name, not found in config, fallback to env.
+		t.Assert(c.MustGetWithEnv(ctx, "APP_NAME").String(), "myapp")
+
+		// Test 7: Mixed case with underscores fallback to env.
+		t.Assert(genv.Set("MY_CUSTOM_KEY", "custom-value"), nil)
+		defer genv.Remove("MY_CUSTOM_KEY")
+		// MY_CUSTOM_KEY should be normalized to my.custom.key, not found in config, fallback to env.
+		t.Assert(c.MustGetWithEnv(ctx, "MY_CUSTOM_KEY").String(), "custom-value")
+	})
+}
+
+// Test_FormatCmdKey_BehaviorExplanation documents the boundary behavior of FormatCmdKey conversion.
+// FormatCmdKey converts to lowercase and replaces underscores with dots.
+//
+// Conversion rules:
+//   - "my_custom_key" → "my.custom.key"
+//   - "SERVER_ADDRESS" → "server.address"
+//   - "a.b_c.d" → "a.b.c.d"
+//
+// Note: The pattern "_" converts to "." which is a special pattern in config
+// that retrieves all configuration data.
+func Test_FormatCmdKey_BehaviorExplanation(t *testing.T) {
+	// Test configuration with various key formats that correspond to FormatCmdKey conversion results
+	content := `
+[my.custom]
+    key = "value1"
+[a.b.c]
+    d = "value2"
+[server]
+    address = "127.0.0.1:8000"
+`
+	gtest.C(t, func(t *gtest.T) {
+		c, err := gcfg.New()
+		t.AssertNil(err)
+		c.GetAdapter().(*gcfg.AdapterFile).SetContent(content)
+		defer c.GetAdapter().(*gcfg.AdapterFile).ClearContent()
+
+		// Test 1: Simple underscore conversion: MY_CUSTOM_KEY → my.custom.key
+		// FormatCmdKey("MY_CUSTOM_KEY") = "my.custom.key"
+		// Config has [my] custom_key = "value1", which matches "my.custom.key" after normalization
+		t.Assert(c.MustGetWithEnv(ctx, "MY_CUSTOM_KEY").String(), "value1")
+
+		// Test 2: Mixed dot and underscore: A_B_C_D → a.b.c.d (FormatCmdKey converts underscores to dots)
+		// FormatCmdKey("A_B_C_D") = "a.b.c.d"
+		// Config has [a] b_c_d = "value2", which matches "a.b.c.d" after normalization
+		t.Assert(c.MustGetWithEnv(ctx, "A_B_C_D").String(), "value2")
+
+		// Test 3: Pure dot notation: server.address should still work
+		t.Assert(c.MustGetWithEnv(ctx, "server.address").String(), "127.0.0.1:8000")
+
+		// Test 4: Uppercase with dots: SERVER.ADDRESS → FormatCmdKey("SERVER.ADDRESS") = "server.address"
+		// Config has server.address, so it should match
+		t.Assert(c.MustGetWithEnv(ctx, "SERVER.ADDRESS").String(), "127.0.0.1:8000")
+
+		// Test 5: All underscores: ALL_UNDERSCORES → all.underscores (no matching config, fallback to env)
+		t.Assert(genv.Set("ALL_UNDERSCORES", "underscore-value"), nil)
+		defer genv.Remove("ALL_UNDERSCORES")
+		t.Assert(c.MustGetWithEnv(ctx, "ALL_UNDERSCORES").String(), "underscore-value")
+
+		// Test 6: Single character key (no matching config, fallback to env)
+		t.Assert(genv.Set("K", "single"), nil)
+		defer genv.Remove("K")
+		t.Assert(c.MustGetWithEnv(ctx, "K").String(), "single")
+	})
+}
+
+func Test_GetWithCmd_NormalizePattern(t *testing.T) {
+	content := `
+[server]
+    address = "127.0.0.1:8000"
+    port = 8080
+`
+	gtest.C(t, func(t *gtest.T) {
+		c, err := gcfg.New()
+		t.AssertNil(err)
+		c.GetAdapter().(*gcfg.AdapterFile).SetContent(content)
+		defer c.GetAdapter().(*gcfg.AdapterFile).ClearContent()
+
+		// Reset command line state
+		gcmd.Init([]string{"gf"}...)
+
+		// Test 1: GetWithCmd with dot notation pattern should find config.
+		t.Assert(c.MustGetWithCmd(ctx, "server.address").String(), "127.0.0.1:8000")
+
+		// Test 2: GetWithCmd with underscore pattern should be normalized and find config.
+		t.Assert(c.MustGetWithCmd(ctx, "SERVER_ADDRESS").String(), "127.0.0.1:8000")
+
+		// Test 3: GetWithCmd with dot notation for port.
+		t.Assert(c.MustGetWithCmd(ctx, "server.port").Int(), 8080)
+
+		// Test 4: GetWithCmd with underscore pattern for port.
+		t.Assert(c.MustGetWithCmd(ctx, "SERVER_PORT").Int(), 8080)
+
+		// Test 5: Command line should be used as fallback when config value not found.
+		gcmd.Init([]string{"gf", "--app.name=myapp"}...)
+		t.Assert(c.MustGetWithCmd(ctx, "APP_NAME").String(), "myapp")
+	})
+}
+
+func Test_GetEffective_NormalizePattern(t *testing.T) {
+	content := `
+[server]
+    address = "127.0.0.1:8000"
+    port = 8080
+`
+	gtest.C(t, func(t *gtest.T) {
+		c, err := gcfg.New()
+		t.AssertNil(err)
+		c.GetAdapter().(*gcfg.AdapterFile).SetContent(content)
+		defer c.GetAdapter().(*gcfg.AdapterFile).ClearContent()
+
+		// Reset command line state
+		gcmd.Init([]string{"gf"}...)
+
+		// Test 1: GetEffective with underscore pattern should find config via normalized key.
+		t.Assert(c.MustGetEffective(ctx, "SERVER_ADDRESS").String(), "127.0.0.1:8000")
+
+		// Test 2: GetEffective with dot notation should still work (regression).
+		t.Assert(c.MustGetEffective(ctx, "server.address").String(), "127.0.0.1:8000")
+
+		// Test 3: Environment variable should override config in GetEffective.
+		t.Assert(genv.Set("SERVER_ADDRESS", "from-env"), nil)
+		defer genv.Remove("SERVER_ADDRESS")
+		t.Assert(c.MustGetEffective(ctx, "SERVER_ADDRESS").String(), "from-env")
+
+		// Test 4: Command line should override both env and config.
+		gcmd.Init([]string{"gf", "--server.address=from-cmd"}...)
+		t.Assert(c.MustGetEffective(ctx, "SERVER_ADDRESS").String(), "from-cmd")
+	})
+}

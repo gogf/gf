@@ -11,12 +11,12 @@ import (
 	"strconv"
 
 	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // RuleMaxLength implements `max-length` rule:
 // Length is equal or lesser than :max.
 // The length is calculated using unicode string, which means one chinese character or letter both has the length of 1.
+// For a slice, an array or a map the length is the number of its elements.
 //
 // Format: max-length:max
 type RuleMaxLength struct{}
@@ -34,10 +34,7 @@ func (r RuleMaxLength) Message() string {
 }
 
 func (r RuleMaxLength) Run(in RunInput) error {
-	var (
-		valueRunes = gconv.Runes(in.Value.String())
-		valueLen   = len(valueRunes)
-	)
+	valueLen := valueLength(in.Value.Val())
 	max, err := strconv.Atoi(in.RulePattern)
 	if valueLen > max || err != nil {
 		return errors.New(gstr.Replace(in.Message, "{max}", strconv.Itoa(max)))

@@ -58,6 +58,10 @@ func Instance(name ...string) *Config {
 	if len(name) > 0 && name[0] != "" {
 		instanceName = name[0]
 	}
+	// It checks the existing instance with the reading lock, as it is created on first usage.
+	if cached, found := localInstances.Search(instanceName); found {
+		return cached
+	}
 	return localInstances.GetOrSetFuncLock(instanceName, func() *Config {
 		adapterFile, err := NewAdapterFile()
 		if err != nil {
@@ -123,7 +127,7 @@ func (c *Config) Get(ctx context.Context, pattern string, def ...any) (*gvar.Var
 // variable as fallback only when the configuration value is not found. If you need standard
 // priority where environment variables can override configuration values, use GetEffective instead.
 func (c *Config) GetWithEnv(ctx context.Context, pattern string, def ...any) (*gvar.Var, error) {
-	value, err := c.Get(ctx, pattern)
+	value, err := c.Get(ctx, utils.FormatCmdKey(pattern))
 	if err != nil && gerror.Code(err) != gcode.CodeNotFound {
 		return nil, err
 	}
@@ -149,7 +153,7 @@ func (c *Config) GetWithEnv(ctx context.Context, pattern string, def ...any) (*g
 // as fallback only when config value is not found. If you need standard priority where
 // command line arguments can override config file values, use GetEffective instead.
 func (c *Config) GetWithCmd(ctx context.Context, pattern string, def ...any) (*gvar.Var, error) {
-	value, err := c.Get(ctx, pattern)
+	value, err := c.Get(ctx, utils.FormatCmdKey(pattern))
 	if err != nil && gerror.Code(err) != gcode.CodeNotFound {
 		return nil, err
 	}
@@ -192,7 +196,7 @@ func (c *Config) GetEffective(ctx context.Context, pattern string, def ...any) (
 	}
 
 	// 3. Configuration file
-	value, err := c.Get(ctx, pattern)
+	value, err := c.Get(ctx, utils.FormatCmdKey(pattern))
 	if err != nil && gerror.Code(err) != gcode.CodeNotFound {
 		return nil, err
 	}

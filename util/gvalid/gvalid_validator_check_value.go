@@ -45,16 +45,27 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 	)
 	// Custom error messages handling.
 	var (
-		msgArray     = make([]string, 0)
-		customMsgMap = make(map[string]string)
+		msgArray     []string
+		customMsgMap map[string]string
 	)
 	switch messages := in.Messages.(type) {
 	case string:
 		msgArray = strings.Split(messages, "|")
 
+	// The custom messages from struct tag parsing and from `Messages` function are
+	// usually of type map[string]string, which are directly usable without conversion.
+	// Note that it is only read in the following logic, so it is used directly without a copy.
+	case map[string]string:
+		customMsgMap = messages
+
 	default:
-		for k, message := range gconv.Map(in.Messages) {
-			customMsgMap[k] = gconv.String(message)
+		if messages != nil {
+			if msgMap := gconv.Map(messages); len(msgMap) > 0 {
+				customMsgMap = make(map[string]string, len(msgMap))
+				for k, message := range msgMap {
+					customMsgMap[k] = gconv.String(message)
+				}
+			}
 		}
 	}
 	// Handle the char '|' in the rule,
@@ -103,10 +114,8 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 	)
 	for index := 0; index < len(ruleItems); {
 		var (
-			err         error
-			results     = ruleRegex.FindStringSubmatch(ruleItems[index]) // split single rule.
-			ruleKey     = gstr.Trim(results[1])                          // rule key like "max" in rule "max: 6"
-			rulePattern = gstr.Trim(results[2])                          // rule pattern is like "6" in rule:"max:6"
+			err                  error
+			ruleKey, rulePattern = parseRuleItem(ruleItems[index]) // split single rule, like "max:6" to "max" and "6".
 		)
 
 		if !hasBailRule && ruleKey == ruleNameBail {
@@ -126,6 +135,9 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 		}
 
 		if len(msgArray) > index {
+			if customMsgMap == nil {
+				customMsgMap = make(map[string]string)
+			}
 			customMsgMap[ruleKey] = strings.TrimSpace(msgArray[index])
 		}
 

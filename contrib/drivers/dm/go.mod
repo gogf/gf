@@ -5,8 +5,8 @@ go 1.23.0
 replace github.com/gogf/gf/v2 => ../../../
 
 require (
-	gitee.com/chunanyong/dm v1.8.12
-	github.com/gogf/gf/v2 v2.10.0
+	gitee.com/chunanyong/dm v1.8.23
+	github.com/gogf/gf/v2 v2.10.4
 )
 
 require (

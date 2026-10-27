@@ -7,9 +7,12 @@
 package ghttp_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net/http"
+	"sync"
 	"testing"
 	"time"
 
@@ -727,6 +730,47 @@ func Test_Issue4093(t *testing.T) {
 	})
 }
 
+// https://github.com/gogf/gf/issues/4128
+func Test_Issue4128(t *testing.T) {
+	var (
+		wg      sync.WaitGroup
+		servers = []*ghttp.Server{g.Server(guid.S()), g.Server(guid.S())}
+		errs    = make([]error, len(servers))
+	)
+	for i, s := range servers {
+		wg.Add(1)
+		go func(i int, s *ghttp.Server) {
+			defer wg.Done()
+			s.Group("/", func(group *ghttp.RouterGroup) {
+				group.GET("/index", func(r *ghttp.Request) {
+					r.Response.Write(i)
+				})
+			})
+			s.SetDumpRouterMap(false)
+			errs[i] = s.Start()
+		}(i, s)
+	}
+	wg.Wait()
+	defer func() {
+		for _, s := range servers {
+			if err := s.Shutdown(); err != nil {
+				t.Error(err)
+			}
+		}
+	}()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		for i, s := range servers {
+			t.AssertNil(errs[i])
+			client := g.Client()
+			client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+			t.Assert(client.GetContent(ctx, "/index"), i)
+		}
+	})
+}
+
 // Issue4227Req
 type Issue4227Req struct {
 	g.Meta      `path:"/hello/:path_param" method:"post"`
@@ -782,5 +826,312 @@ func Test_Issue4227(t *testing.T) {
 		resp3 := client.PostContent(ctx, "/hello/123", `{}`)
 		t.Assert(resp3, `{"Authorization":"Bearer token123","query_param":false,"path_param":123,"cookie_param":true,"body_param":false}`)
 
+	})
+}
+
+// https://github.com/gogf/gf/issues/4765
+// Test_Issue4765 verifies that a request carrying a non-canonical method casing does not
+// pollute the router searching cache.
+//
+// Such a request does not match a route registered with the canonical method, as the method
+// token is case-sensitive(RFC 9110 section 9.1). But its serveItem-less searching result must
+// not be shared with the canonical method, or else every subsequent well-formed request would
+// be served from that cache item and 404 as well.
+//
+// The method to search with has two sources, and both are covered here: the request line, and
+// the Access-Control-Request-Method header of a preflight request.
+func Test_Issue4765(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.GET("/user-case", func(r *ghttp.Request) {
+			r.Response.Write("ok")
+		})
+		group.GET("/preflight-case", func(r *ghttp.Request) {
+			r.Response.Write("ok")
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	var (
+		prefix     = fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		httpClient = &http.Client{}
+	)
+	// doRequest sends a request using the raw net/http client, as gclient normalizes the
+	// method to uppercase internally and cannot produce a non-canonical method casing.
+	doRequest := func(t *gtest.T, method, path string, header map[string]string) (int, string) {
+		req, err := http.NewRequest(method, prefix+path, nil)
+		t.AssertNil(err)
+		for k, v := range header {
+			req.Header.Set(k, v)
+		}
+		resp, err := httpClient.Do(req)
+		t.AssertNil(err)
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
+		t.AssertNil(err)
+		return resp.StatusCode, string(body)
+	}
+
+	// The method to search with comes from the request line.
+	gtest.C(t, func(t *gtest.T) {
+		cases := []struct {
+			method string
+			status int
+			body   string
+		}{
+			// Non-canonical casing does not match the route registered as "GET".
+			{"get", http.StatusNotFound, "Not Found"},
+			{"Get", http.StatusNotFound, "Not Found"},
+			// The canonical method still works, which proves the searching result of the
+			// requests above was not cached under the canonical key.
+			{"GET", http.StatusOK, "ok"},
+			{"GET", http.StatusOK, "ok"},
+		}
+		for _, c := range cases {
+			status, body := doRequest(t, c.method, "/user-case", nil)
+			t.Assert(status, c.status)
+			t.Assert(body, c.body)
+		}
+	})
+
+	// The method to search with comes from the Access-Control-Request-Method header, which
+	// is client-supplied as well and is not normalized either.
+	gtest.C(t, func(t *gtest.T) {
+		status, body := doRequest(t, http.MethodOptions, "/preflight-case", map[string]string{
+			"Origin":                        "http://example.com",
+			"Access-Control-Request-Method": "get",
+		})
+		t.Assert(status, http.StatusNotFound)
+		t.Assert(body, "Not Found")
+
+		for i := 0; i < 2; i++ {
+			status, body = doRequest(t, http.MethodGet, "/preflight-case", nil)
+			t.Assert(status, http.StatusOK)
+			t.Assert(body, "ok")
+		}
+	})
+}
+
+// https://github.com/gogf/gf/issues/4830
+// Test_Issue4830 verifies that the router layer and the parameter layer agree on the method
+// of a request.
+//
+// The router searches with the method token as it was received, and `r.Method` keeps that very
+// value, so the framework internal branches on `r.Method`(eg the GET body fallback of GetQuery)
+// and the user code(eg method based middleware) can never diverge from the routing result of
+// the same request.
+func Test_Issue4830(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(func(r *ghttp.Request) {
+			if r.Method == http.MethodDelete {
+				r.Response.WriteStatusExit(http.StatusForbidden, "blocked")
+			}
+			r.Middleware.Next()
+		})
+		group.GET("/query", func(r *ghttp.Request) {
+			r.Response.Write(r.Method, ",", r.GetQuery("a"))
+		})
+		group.DELETE("/delete", func(r *ghttp.Request) {
+			r.Response.Write("reached")
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			prefix     = fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+			httpClient = &http.Client{}
+			cases      = []struct {
+				method string
+				path   string
+				status int
+				body   string
+			}{
+				// The handler observes the method the request was routed with, so GetQuery
+				// takes its GET branch and falls back to the request body.
+				{"GET", "/query", http.StatusOK, "GET,frombody"},
+				// Non-canonical casing never reaches the handler, so there is no request that
+				// the router treats as GET while the parameter layer does not.
+				{"get", "/query", http.StatusNotFound, "Not Found"},
+				// The middleware observes the same method as the router did.
+				{"DELETE", "/delete", http.StatusForbidden, "blocked"},
+				{"delete", "/delete", http.StatusNotFound, "Not Found"},
+				{"DeLeTe", "/delete", http.StatusNotFound, "Not Found"},
+			}
+		)
+		for _, c := range cases {
+			req, err := http.NewRequest(c.method, prefix+c.path, bytes.NewBufferString(`{"a":"frombody"}`))
+			t.AssertNil(err)
+			req.Header.Set("Content-Type", "application/json")
+			resp, err := httpClient.Do(req)
+			t.AssertNil(err)
+			body, err := io.ReadAll(resp.Body)
+			t.AssertNil(err)
+			resp.Body.Close()
+			t.Assert(resp.StatusCode, c.status)
+			t.Assert(string(body), c.body)
+		}
+	})
+}
+
+// Issue4751Req is the request of Test_Issue4751.
+type Issue4751Req struct {
+	g.Meta    `path:"/names" method:"get,post"`
+	Names     []string `json:"names,omitempty"`
+	Ids       []int    `json:"ids"`
+	Name      string   `json:"name"`
+	FileNames []string `json:"file.names,omitempty"`
+}
+
+// Issue4751Res is the response of Test_Issue4751.
+type Issue4751Res struct{}
+
+// cIssue4751 is the controller of Test_Issue4751.
+type cIssue4751 struct{}
+
+// Names writes the parsed request as JSON.
+func (c *cIssue4751) Names(ctx context.Context, req *Issue4751Req) (res *Issue4751Res, err error) {
+	g.RequestFromCtx(ctx).Response.WriteJson(req)
+	return
+}
+
+// https://github.com/gogf/gf/issues/4751
+// Test_Issue4751 verifies that all the values of a repeated plain query parameter are bound to
+// the slice field of the request struct.
+func Test_Issue4751(t *testing.T) {
+	type plainReq struct {
+		Names []string
+		Name  string
+		Data  []byte
+	}
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Bind(&cIssue4751{})
+	})
+	s.BindHandler("/plain", func(r *ghttp.Request) {
+		var req plainReq
+		if err := r.Parse(&req); err != nil {
+			r.Response.WriteExit(err)
+		}
+		r.Response.Write(req.Names, ",", req.Name, ",", r.Get("names"), ",", req.Data)
+	})
+	s.BindHandler("/query", func(r *ghttp.Request) {
+		var req *plainReq
+		if err := r.ParseQuery(&req); err != nil {
+			r.Response.WriteExit(err)
+		}
+		r.Response.Write(req.Names, req.Name)
+	})
+	s.BindHandler("/map", func(r *ghttp.Request) {
+		var m map[string]any
+		r.Response.Write(r.GetQueryStruct(&m))
+	})
+	s.BindHandler("/custom", func(r *ghttp.Request) {
+		var req, queryReq *Issue4751Req
+		r.SetQuery("names", "b")
+		r.SetParam("ids", 2)
+		if err := r.Parse(&req); err != nil {
+			r.Response.WriteExit(err)
+		}
+		if err := r.ParseQuery(&queryReq); err != nil {
+			r.Response.WriteExit(err)
+		}
+		r.Response.Write(req.Names, req.Ids, queryReq.Names, queryReq.Ids)
+	})
+	s.BindHandler("/reload", func(r *ghttp.Request) {
+		var req, reloadedReq *Issue4751Req
+		if err := r.Parse(&req); err != nil {
+			r.Response.WriteExit(err)
+		}
+		r.URL.RawQuery = "names=c&names=d"
+		r.ReloadParam()
+		if err := r.Parse(&reloadedReq); err != nil {
+			r.Response.WriteExit(err)
+		}
+		r.Response.Write(req.Names, reloadedReq.Names)
+	})
+	s.BindHandler("/file", func(r *ghttp.Request) {
+		var req struct {
+			Names []*ghttp.UploadFile
+		}
+		if err := r.Parse(&req); err != nil {
+			r.Response.WriteExit(err)
+		}
+		for _, file := range req.Names {
+			r.Response.Write(file.Filename)
+		}
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(
+			client.GetContent(ctx, "/names?names=a&names=b&ids=1&ids=2&name=x&name=y"),
+			`{"names":["a","b"],"ids":[1,2],"name":"y"}`,
+		)
+		t.Assert(client.GetContent(ctx, "/names?names=a"), `{"names":["a"],"ids":null,"name":""}`)
+		t.Assert(client.GetContent(ctx, "/names?names=a&names="), `{"names":["a",""],"ids":null,"name":""}`)
+		t.Assert(client.GetContent(ctx, "/names?names[]=a&names[]=b"), `{"names":["a","b"],"ids":null,"name":""}`)
+		// The parameters from the body have higher priority than the ones from the query.
+		t.Assert(
+			client.ContentJson().PostContent(ctx, "/names?names=a&names=b", `{"names":["c"]}`),
+			`{"names":["c"],"ids":null,"name":""}`,
+		)
+		// Even if the value from the body is the same as the last one from the query.
+		t.Assert(
+			client.ContentJson().PostContent(ctx, "/names?names=a&names=b", `{"names":"b"}`),
+			`{"names":["b"],"ids":null,"name":""}`,
+		)
+		t.Assert(
+			client.PostContent(ctx, "/names?names=a&names=b", "names=b"),
+			`{"names":["b"],"ids":null,"name":""}`,
+		)
+		// The repeated key is stored in the same way as the query map, which replaces the chars
+		// like '.' and ' ' of the key with '_'.
+		t.Assert(
+			client.GetContent(ctx, "/names?file.names=a&file.names=b"),
+			`{"ids":null,"name":"","file.names":["a","b"]}`,
+		)
+		// The query parameter retrieved by name still keeps the last value only, and so does the
+		// []byte field, which receives the value as a whole like the string field.
+		t.Assert(
+			client.GetContent(ctx, "/plain?names=a&names=b&name=x&name=y&data=c&data=d"),
+			`["a","b"],y,b,d`,
+		)
+		t.Assert(client.GetContent(ctx, "/query?Names=a&Names=b&name=x"), `["a","b"]x`)
+		// The query parameters have higher priority than the ones from the body for ParseQuery.
+		t.Assert(
+			client.ContentJson().GetContent(ctx, "/query?names=a&names=b", `{"names":"b"}`),
+			`["a","b"]`,
+		)
+		// The values set by SetQuery and SetParam override all the values of the repeated query
+		// parameters, while ParseQuery ignores the ones set by SetParam.
+		t.Assert(client.GetContent(ctx, "/custom?names=a&names=b&ids=1&ids=2"), `["b"][2]["b"][1,2]`)
+		// The repeated query parameters are retrieved again after the query string is reloaded.
+		t.Assert(client.GetContent(ctx, "/reload?names=a&names=b"), `["a","b"]["c","d"]`)
+		// The uploaded files have higher priority than the query parameters too.
+		t.Assert(
+			client.PostContent(ctx, "/file?names=a&names=b", g.Map{
+				"names": "@file:" + gtest.DataPath("upload", "file1.txt"),
+			}),
+			`file1.txt`,
+		)
+		// The pointer which is not a struct has no field to merge, and no error either.
+		t.Assert(client.GetContent(ctx, "/map?names=a&names=b"), ``)
 	})
 }

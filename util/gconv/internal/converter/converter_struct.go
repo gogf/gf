@@ -130,6 +130,14 @@ func (c *Converter) Struct(params, pointer any, option ...StructOption) (err err
 		return nil
 	}
 
+	// Time destinations must keep the source location. Do not fall through to
+	// generic map/JSON converting, which serializes gtime without timezone.
+	// This runs after custom converters so registered type converters keep
+	// documented precedence over the built-in time fast path.
+	if ok, err = c.assignIfTimeDestination(pointerElemReflectValue, paramsInterface); ok || err != nil {
+		return err
+	}
+
 	// Normal unmarshalling interfaces checks.
 	if ok, err = bindVarToReflectValueWithInterfaceCheck(pointerReflectValue, paramsInterface); ok {
 		return err
@@ -499,9 +507,16 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 	}
 
 	kind := structFieldValue.Kind()
-	// Converting using `Set` interface implements, for some types.
+	// Converting using common interfaces before falling through to reflection-based conversion.
 	switch kind {
-	case reflect.Slice, reflect.Array, reflect.Pointer, reflect.Interface:
+	case reflect.Array:
+		// Array values are addressable when they come from struct fields;
+		// use interface checks (IUnmarshalValue/IUnmarshalText/IUnmarshalJSON)
+		// instead of ISet which requires IsNil — not valid for arrays.
+		if ok, err = bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok || err != nil {
+			return err
+		}
+	case reflect.Slice, reflect.Pointer, reflect.Interface:
 		if !structFieldValue.IsNil() {
 			if v, ok := structFieldValue.Interface().(localinterface.ISet); ok {
 				v.Set(value)

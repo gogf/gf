@@ -29,6 +29,7 @@ const (
 
 var (
 	db         gdb.DB
+	dbInvalid  gdb.DB
 	configNode gdb.ConfigNode
 	ctx        = context.TODO()
 )
@@ -37,10 +38,16 @@ func init() {
 	configNode = gdb.ConfigNode{
 		Link: `pgsql:postgres:12345678@tcp(127.0.0.1:5432)`,
 	}
+	// Unreachable port for Test_Model_All_InvalidConnection (lazy connect on first query).
+	// Same +10 offset convention as MySQL 3306→3316 / MariaDB 3307→3317.
+	nodeInvalid := gdb.ConfigNode{
+		Link: `pgsql:postgres:12345678@tcp(127.0.0.1:5442)`,
+	}
 
 	// pgsql only permit to connect to the designation database.
 	// so you need to create the pgsql database before you use orm
 	gdb.AddConfigNode(gdb.DefaultGroupName, configNode)
+	gdb.AddConfigNode("nodeinvalid", nodeInvalid)
 	if r, err := gdb.New(configNode); err != nil {
 		gtest.Fatal(err)
 	} else {
@@ -58,6 +65,13 @@ func init() {
 		db = db.Schema(configNode.Name)
 	}
 
+	// Invalid db (connection opens lazily; first query is expected to fail).
+	if r, err := gdb.NewByGroup("nodeinvalid"); err != nil {
+		gtest.Error(err)
+	} else {
+		dbInvalid = r
+	}
+	dbInvalid = dbInvalid.Schema(SchemaName)
 }
 
 func createTable(table ...string) string {
@@ -77,13 +91,15 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 
 	dropTableWithDb(db, name)
 
+	// Non-PK columns are nullable to allow partial inserts in ported tests
+	// (OmitEmpty/OmitNil/Hook/Concurrent/Transaction tests).
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 		CREATE TABLE %s (
 		   	id bigserial  NOT NULL,
-		   	passport varchar(45) NOT NULL,
-		   	password varchar(32) NOT NULL,
-		   	nickname varchar(45) NOT NULL,
-		   	create_time timestamp NOT NULL,
+		   	passport varchar(45) NULL,
+		   	password varchar(32) NULL,
+		   	nickname varchar(45) NULL,
+		   	create_time timestamp NULL,
 		    favorite_movie varchar[],
 		    favorite_music text[],
 			numeric_values numeric[],

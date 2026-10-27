@@ -208,12 +208,13 @@ func Test_Model_PageCache(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		// First page query with cache
-		all, err := db.Model(table).PageCache(
+		all, count, err := db.Model(table).PageCache(
 			gdb.CacheOption{Duration: time.Second * 10, Name: "test_page_count"},
 			gdb.CacheOption{Duration: time.Second * 10, Name: "test_page_data"},
-		).Page(1, 3).All()
+		).Page(1, 3).AllAndCount(false)
 		t.AssertNil(err)
 		t.Assert(len(all), 3)
+		t.Assert(count, 10)
 
 		// Insert new record
 		_, err = db.Model(table).Data(g.Map{
@@ -223,12 +224,14 @@ func Test_Model_PageCache(t *testing.T) {
 		t.AssertNil(err)
 
 		// Query again - should return cached results
-		all, err = db.Model(table).PageCache(
+		all, count, err = db.Model(table).PageCache(
 			gdb.CacheOption{Duration: time.Second * 10, Name: "test_page_count"},
 			gdb.CacheOption{Duration: time.Second * 10, Name: "test_page_data"},
-		).Page(1, 3).All()
+		).Page(1, 3).AllAndCount(false)
 		t.AssertNil(err)
-		t.Assert(len(all), 3) // cached results
+		t.Assert(len(all), 3)
+		// Count comes from the cache, so it still reports the pre-insert value.
+		t.Assert(count, 10)
 
 		// Clear page cache by updating with Duration=-1
 		_, err = db.Model(table).Cache(gdb.CacheOption{
@@ -238,17 +241,19 @@ func Test_Model_PageCache(t *testing.T) {
 		t.AssertNil(err)
 
 		// Query with fresh cache - should return updated count
-		all, err = db.Model(table).PageCache(
+		all, count, err = db.Model(table).PageCache(
 			gdb.CacheOption{Duration: time.Second * 10, Name: "test_page_count"},
 			gdb.CacheOption{Duration: time.Second * 10, Name: "test_page_data"},
-		).Page(1, 3).All()
+		).Page(1, 3).AllAndCount(false)
 		t.AssertNil(err)
-		t.Assert(len(all), 3) // still 3 items per page
+		t.Assert(len(all), 3)
+		// Count cache was cleared above, so the new row is visible.
+		t.Assert(count, 11)
 
 		// Verify total count increased
-		count, err := db.Model(table).Count()
+		totalCount, err := db.Model(table).Count()
 		t.AssertNil(err)
-		t.Assert(count, 11)
+		t.Assert(totalCount, 11)
 	})
 }
 

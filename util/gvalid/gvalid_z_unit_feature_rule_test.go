@@ -7,6 +7,7 @@
 package gvalid_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gtag"
+	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 var (
@@ -279,6 +281,11 @@ func Test_Date(t *testing.T) {
 			"2010/11/01": true,
 			"2010=11=01": false,
 			"123":        false,
+			"2026-1111":  false, // Bug: invalid format should not pass
+			"2026-13-33": false, // Bug: invalid date should not pass
+			"2026-02-29": false, // Non-leap year should not pass
+			"2024-02-29": true,  // Leap year should pass
+			"202611-11":  false, // Invalid separator should not pass
 		}
 		for k, v := range m {
 			err := g.Validator().Data(k).Rules("date").Run(ctx)
@@ -1109,6 +1116,11 @@ func Test_Not_Regex(t *testing.T) {
 		err := g.Validator().Data("abcde6").Rules(rule).Run(ctx)
 		t.AssertNil(err)
 	})
+	// "not-regex|foo" has no colon. The pattern "|foo" matches every value, so the value is rejected.
+	gtest.C(t, func(t *gtest.T) {
+		err := g.Validator().Data("abc").Rules(`not-regex|foo`).Run(ctx)
+		t.AssertNE(err, nil)
+	})
 }
 
 // issue: https://github.com/gogf/gf/issues/1077
@@ -1748,5 +1760,32 @@ func Test_Uppercase(t *testing.T) {
 				t.AssertNE(err, nil)
 			}
 		}
+	})
+}
+
+// It tests the rule parsing when the rule pattern contains char ':'.
+func Test_Rule_PatternContainingColon(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var rule = `regex:^\d+:\w+$`
+		t.AssertNil(g.Validator().Data("123:abc").Rules(rule).Run(ctx))
+		t.AssertNE(g.Validator().Data("abc").Rules(rule).Run(ctx), nil)
+	})
+}
+
+// It tests custom rule which name contains non-ASCII chars.
+// It used to panic as the rule name was parsed using regexp `^([\w-]+):{0,1}(.*)`.
+func Test_Rule_NonAsciiName(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			rule = "中文规则"
+			f    = func(ctx context.Context, in gvalid.RuleFuncInput) error {
+				if in.Value.String() != "ok" {
+					return gerror.New("the value should be ok")
+				}
+				return nil
+			}
+		)
+		t.AssertNil(g.Validator().RuleFunc(rule, f).Data("ok").Rules(rule).Run(ctx))
+		t.AssertNE(g.Validator().RuleFunc(rule, f).Data("no").Rules(rule).Run(ctx), nil)
 	})
 }

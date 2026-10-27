@@ -147,12 +147,12 @@ func TimestampNanoStr() string {
 
 // Date returns current date in string like "2006-01-02".
 func Date() string {
-	return time.Now().Format("2006-01-02")
+	return time.Now().Format(time.DateOnly)
 }
 
 // Datetime returns current datetime in string like "2006-01-02 15:04:05".
 func Datetime() string {
-	return time.Now().Format("2006-01-02 15:04:05")
+	return time.Now().Format(time.DateTime)
 }
 
 // ISO8601 returns current datetime in ISO8601 format like "2006-01-02T15:04:05-07:00".
