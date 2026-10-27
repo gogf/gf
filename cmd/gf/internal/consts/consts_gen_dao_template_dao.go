@@ -15,8 +15,6 @@ package {{.TplPackageName}}
 
 import (
 	"{{.TplImportPrefix}}/internal"
-
-	"github.com/gogf/gf/v2/database/gdb"
 )
 
 // {{.TplTableNameCamelLowerCase}}Dao is the data access object for the table {{.TplTableName}}.
