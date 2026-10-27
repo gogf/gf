@@ -207,4 +207,58 @@ func main() {
 		utils.GoFmt(filePath)
 		t.Assert(gfile.GetContents(filePath), expect)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// The blank-line-separated groups written by hand are kept, and only the imports
+		// inside every group are sorted. gf gen service formats the main.go of the user,
+		// whose import block usually contains three groups: the blank imports, the gf
+		// packages and the project packages. Merging them into one sorted group as this
+		// tool used to do is unwanted, as it rewrites the style of the user's code.
+		var (
+			dir      = t.TempDir()
+			filePath = gfile.Join(dir, "main.go")
+			source   = `package main
+
+import (
+	"context"
+
+	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
+
+	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/frame/g"
+
+	"demo/internal/logic"
+	"demo/internal/cmd"
+)
+
+func main(ctx context.Context) {
+	g.Log().Print(ctx, cmd.Name, logic.Name, gctx.CtxId(ctx))
+}
+`
+			// The specs inside every group are sorted, the groups are kept as is: the
+			// standard library, the blank import, the gf packages and the project packages
+			// are never merged into a single group.
+			expect = `package main
+
+import (
+	"context"
+
+	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
+
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gctx"
+
+	"demo/internal/cmd"
+	"demo/internal/logic"
+)
+
+func main(ctx context.Context) {
+	g.Log().Print(ctx, cmd.Name, logic.Name, gctx.CtxId(ctx))
+}
+`
+		)
+		t.AssertNil(gfile.PutContents(filePath, source))
+		utils.GoFmt(filePath)
+		t.Assert(gfile.GetContents(filePath), expect)
+	})
 }

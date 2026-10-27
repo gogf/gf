@@ -24,6 +24,9 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
+// daoIndexGdbImportLine is the rendered gdb import line of the dao index file.
+const daoIndexGdbImportLine = `"github.com/gogf/gf/v2/database/gdb"`
+
 // renderDaoIndex renders the dao index template for the given table.
 func renderDaoIndex(t *gtest.T, tableName string, sharding bool) string {
 	var (
@@ -45,34 +48,56 @@ func renderDaoIndex(t *gtest.T, tableName string, sharding bool) string {
 	return content
 }
 
-// Test_Gen_Dao_IndexTemplateImport asserts that the dao index template provides the gdb
-// import for the sharding handler, and that the unused import is dropped for the files
-// which do not reference it.
+// Test_Gen_Dao_IndexTemplateImport asserts that the dao index template does not hard-code the
+// gdb import, and that the import is ensured by the generator for the sharding tables only.
 func Test_Gen_Dao_IndexTemplateImport(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var (
-			dir      = t.TempDir()
-			sharding = renderDaoIndex(t, "users", true)
-			normal   = renderDaoIndex(t, "users", false)
-		)
+		// The template itself is import-minimal: gdb is not part of it, so that the
+		// non-sharding files never carry an unused import.
+		t.Assert(gstr.Contains(consts.TemplateGenDaoIndexContent, "database/gdb"), false)
+		t.Assert(gstr.Contains(renderDaoIndex(t, "users", true), "database/gdb"), false)
+	})
 
-		// The sharding handler references gdb.Model and gdb.ShardingConfig.
+	gtest.C(t, func(t *gtest.T) {
+		var dir = t.TempDir()
+
+		// The sharding handler references gdb.Model, so the generator ensures the import.
 		var shardingPath = gfile.Join(dir, "users.go")
-		t.AssertNil(gfile.PutContents(shardingPath, sharding))
+		t.AssertNil(gfile.PutContents(shardingPath, renderDaoIndex(t, "users", true)))
+		_, err := utils.EnsureImports(shardingPath, utils.ImportSpec{Path: daoIndexGdbImportPath})
+		t.AssertNil(err)
 		utils.GoFmt(shardingPath)
 		var shardingContent = gfile.GetContents(shardingPath)
-		t.Assert(gstr.Contains(shardingContent, `"github.com/gogf/gf/v2/database/gdb"`), true)
+		t.Assert(gstr.Contains(shardingContent, daoIndexGdbImportLine), true)
 		// The formatted file must be valid go code.
-		_, err := parser.ParseFile(token.NewFileSet(), shardingPath, shardingContent, parser.ParseComments)
+		_, err = parser.ParseFile(token.NewFileSet(), shardingPath, shardingContent, parser.ParseComments)
 		t.AssertNil(err)
 
-		// The non-sharding file does not reference gdb, so the import must be dropped.
+		// The non-sharding file does not reference gdb, so no import is ensured and the
+		// formatted file stays free of it.
 		var normalPath = gfile.Join(dir, "users_normal.go")
-		t.AssertNil(gfile.PutContents(normalPath, normal))
+		t.AssertNil(gfile.PutContents(normalPath, renderDaoIndex(t, "users", false)))
 		utils.GoFmt(normalPath)
 		var normalContent = gfile.GetContents(normalPath)
 		t.Assert(gstr.Contains(normalContent, "database/gdb"), false)
 		_, err = parser.ParseFile(token.NewFileSet(), normalPath, normalContent, parser.ParseComments)
 		t.AssertNil(err)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// EnsureImports is idempotent for the dao index file, so that re-generating an
+		// existing sharding dao file does not duplicate the import.
+		var (
+			path    = gfile.Join(t.TempDir(), "users.go")
+			content = renderDaoIndex(t, "users", true)
+		)
+		t.AssertNil(gfile.PutContents(path, content))
+		changed, err := utils.EnsureImports(path, utils.ImportSpec{Path: daoIndexGdbImportPath})
+		t.AssertNil(err)
+		t.Assert(changed, true)
+		changed, err = utils.EnsureImports(path, utils.ImportSpec{Path: daoIndexGdbImportPath})
+		t.AssertNil(err)
+		t.Assert(changed, false)
+		t.Assert(gstr.Count(gfile.GetContents(path), daoIndexGdbImportLine), 1)
 	})
 }

@@ -15,6 +15,7 @@ import (
 
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // stubResolvePackageNames replaces the package name resolving with the given names and
@@ -209,6 +210,230 @@ func main() {
 		out, err := goFormatContent(filePath, source)
 		t.AssertNil(err)
 		t.Assert(out, source)
+	})
+}
+
+// Test_GoFmt_ShadowedImport asserts that an unused import shadowed by a declaration of the
+// same name inside the file is removed, as golang.org/x/tools/imports.Process does. An
+// identifier bound to a declaration never refers to the imported package.
+func Test_GoFmt_ShadowedImport(t *testing.T) {
+	var restore = stubResolvePackageNames(map[string]string{
+		"strings": "strings",
+	})
+	defer restore()
+
+	gtest.C(t, func(t *gtest.T) {
+		// The local variable shadows the import, so the import is unused and removed.
+		var (
+			filePath = gfile.Join(t.TempDir(), "example.go")
+			source   = `package main
+
+import (
+	"strings"
+)
+
+type T struct {
+	Name string
+}
+
+func main() {
+	strings := T{}
+	_ = strings.Name
+}
+`
+			expect = `package main
+
+type T struct {
+	Name string
+}
+
+func main() {
+	strings := T{}
+	_ = strings.Name
+}
+`
+		)
+		out, err := goFormatContent(filePath, source)
+		t.AssertNil(err)
+		t.Assert(out, expect)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// The import is used in `a` while the local variable shadows it in `b` only, so the
+		// import must be kept: the scopes of the two functions do not overlap.
+		var (
+			filePath = gfile.Join(t.TempDir(), "example.go")
+			source   = `package main
+
+import (
+	"strings"
+)
+
+type T struct {
+	Name string
+}
+
+func a() bool {
+	return strings.Contains("a", "b")
+}
+
+func b() string {
+	strings := T{}
+	return strings.Name
+}
+`
+		)
+		out, err := goFormatContent(filePath, source)
+		t.AssertNil(err)
+		t.Assert(out, source)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// The function parameter and the type switch variable shadow the import as well.
+		var (
+			filePath = gfile.Join(t.TempDir(), "example.go")
+			source   = `package main
+
+import (
+	"strings"
+)
+
+type T struct {
+	Name string
+}
+
+func f(strings T) string {
+	switch strings := any(strings).(type) {
+	case T:
+		return strings.Name
+	}
+	return ""
+}
+
+func g() bool {
+	for strings := range []int{1} {
+		_ = strings
+	}
+	return strings.Contains("a", "b")
+}
+`
+		)
+		out, err := goFormatContent(filePath, source)
+		t.AssertNil(err)
+		t.Assert(gstr.Contains(out, `"strings"`), true)
+	})
+}
+
+// Test_EnsureImports asserts that the required imports are added, that an existing import is
+// left untouched, and that the import alias is respected.
+func Test_EnsureImports(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// A file without any import declaration gets an import block.
+		var (
+			filePath = gfile.Join(t.TempDir(), "example.go")
+			source   = `package main
+
+func main() {
+	_ = grpcx.GrpcServer{}
+	_ = context.Background()
+}
+`
+			expect = `package main
+
+import (
+	"context"
+
+	"github.com/gogf/gf/v2/net/grpcx"
+)
+
+func main() {
+	_ = grpcx.GrpcServer{}
+	_ = context.Background()
+}
+`
+		)
+		t.AssertNil(gfile.PutContents(filePath, source))
+		changed, err := EnsureImports(
+			filePath,
+			ImportSpec{Path: "context"},
+			ImportSpec{Path: "github.com/gogf/gf/v2/net/grpcx"},
+		)
+		t.AssertNil(err)
+		t.Assert(changed, true)
+		GoFmt(filePath)
+		t.Assert(gfile.GetContents(filePath), expect)
+
+		// The imports already exist, so nothing is changed and the file is not written.
+		t.AssertNil(gfile.PutContents(filePath, expect))
+		changed, err = EnsureImports(
+			filePath,
+			ImportSpec{Path: "context"},
+			ImportSpec{Path: "github.com/gogf/gf/v2/net/grpcx"},
+		)
+		t.AssertNil(err)
+		t.Assert(changed, false)
+		t.Assert(gfile.GetContents(filePath), expect)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// The alias is used for the api package, as the package name is not the version.
+		var (
+			filePath = gfile.Join(t.TempDir(), "example.go")
+			source   = `package main
+
+type Controller struct {
+	v1.UnimplementedAccountServer
+}
+`
+			// A single import is rendered without parentheses, which is what gofmt does.
+			expect = `package main
+
+import v1 "github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/issue/3953/account/v1"
+
+type Controller struct {
+	v1.UnimplementedAccountServer
+}
+`
+		)
+		t.AssertNil(gfile.PutContents(filePath, source))
+		changed, err := EnsureImports(filePath, ImportSpec{
+			Name: "v1",
+			Path: "github.com/gogf/gf/cmd/gf/v2/internal/cmd/testdata/issue/3953/account/v1",
+		})
+		t.AssertNil(err)
+		t.Assert(changed, true)
+		t.Assert(gfile.GetContents(filePath), expect)
+		// The added import is used, so GoFmt keeps it.
+		GoFmt(filePath)
+		t.Assert(gfile.GetContents(filePath), expect)
+	})
+}
+
+// Test_EnsureImports_Error asserts the invalid arguments of EnsureImports are reported.
+func Test_EnsureImports_Error(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// No spec, nothing to do.
+		changed, err := EnsureImports(gfile.Join(t.TempDir(), "example.go"))
+		t.AssertNil(err)
+		t.Assert(changed, false)
+
+		// The file does not exist.
+		_, err = EnsureImports(
+			gfile.Join(t.TempDir(), "example.go"),
+			ImportSpec{Path: "context"},
+		)
+		t.AssertNE(err, nil)
+
+		// The import path is empty.
+		var filePath = gfile.Join(t.TempDir(), "example.go")
+		t.AssertNil(gfile.PutContents(filePath, "package main\n"))
+		_, err = EnsureImports(filePath, ImportSpec{})
+		t.AssertNE(err, nil)
+
+		// The content is not valid go code.
+		t.AssertNil(gfile.PutContents(filePath, "package main\n\nfunc {"))
+		_, err = EnsureImports(filePath, ImportSpec{Path: "context"})
+		t.AssertNE(err, nil)
 	})
 }
 
