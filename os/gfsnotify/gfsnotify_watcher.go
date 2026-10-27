@@ -138,6 +138,8 @@ func (w *Watcher) Close() {
 	if err := w.watcher.Close(); err != nil {
 		intlog.Errorf(context.TODO(), `%+v`, err)
 	}
+	// Wait for the watch loop to stop pushing events before closing the queue.
+	w.watchLoopWg.Wait()
 	w.events.Close()
 }
 
