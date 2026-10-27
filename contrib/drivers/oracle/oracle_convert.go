@@ -1,0 +1,265 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+package oracle
+
+import (
+	"context"
+	"database/sql"
+	"database/sql/driver"
+	"math"
+	"reflect"
+	"strconv"
+	"strings"
+	"time"
+
+	gora "github.com/sijms/go-ora/v2"
+
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
+)
+
+// localTypeMap maps every type name the underlying driver can report, being the names that
+// `TNSType.String` of `github.com/sijms/go-ora` returns, to the local Go type of its value.
+//
+// The mapping is exhaustive by design and Test_LocalTypeCoverage fails when the driver
+// gains a type name that is missing here. Matching the name exactly, rather than looking
+// for keywords in it, is what keeps the INTERVAL types from being taken for integers
+// because their names happen to contain "int", which used to convert their values to 0.
+var localTypeMap = map[string]gdb.LocalType{
+	"bdouble":          gdb.LocalTypeFloat64,
+	"bfloat":           gdb.LocalTypeFloat64,
+	"char":             gdb.LocalTypeString,
+	"charz":            gdb.LocalTypeString,
+	"date":             gdb.LocalTypeDatetime,
+	"float":            gdb.LocalTypeFloat64,
+	"ibdouble":         gdb.LocalTypeFloat64,
+	"ibfloat":          gdb.LocalTypeFloat64,
+	"intervalds":       gdb.LocalTypeString, // was int
+	"intervalds_dty":   gdb.LocalTypeString, // was int
+	"intervalym":       gdb.LocalTypeString, // was int
+	"intervalym_dty":   gdb.LocalTypeString, // was int
+	"long":             gdb.LocalTypeString,
+	"longraw":          gdb.LocalTypeString,
+	"longvarchar":      gdb.LocalTypeString,
+	"longvarraw":       gdb.LocalTypeString,
+	"nchar":            gdb.LocalTypeString,
+	"nullstr":          gdb.LocalTypeString,
+	"number":           gdb.LocalTypeString,
+	"ocibloblocator":   gdb.LocalTypeBytes,
+	"ocicloblocator":   gdb.LocalTypeString,
+	"ocidate":          gdb.LocalTypeDatetime,
+	"ocifilelocator":   gdb.LocalTypeString,
+	"ociref":           gdb.LocalTypeString,
+	"ocistring":        gdb.LocalTypeString,
+	"ocixmltype":       gdb.LocalTypeString,
+	"raw":              gdb.LocalTypeString,
+	"refcursor":        gdb.LocalTypeString,
+	"resultset":        gdb.LocalTypeString,
+	"rowid":            gdb.LocalTypeString,
+	"sb1":              gdb.LocalTypeString,
+	"timestamp":        gdb.LocalTypeDatetime,
+	"timestampdty":     gdb.LocalTypeDatetime,
+	"timestampeltz":    gdb.LocalTypeDatetime,
+	"timestampltz_dty": gdb.LocalTypeDatetime,
+	"timestamptz":      gdb.LocalTypeDatetime,
+	"timestamptz_dty":  gdb.LocalTypeDatetime,
+	"timetz":           gdb.LocalTypeDatetime,
+	"uint":             gdb.LocalTypeInt,
+	"urowid":           gdb.LocalTypeString,
+	"varchar":          gdb.LocalTypeString,
+	"varnum":           gdb.LocalTypeString,
+	"varraw":           gdb.LocalTypeString,
+	"xmltype":          gdb.LocalTypeString,
+}
+
+// CheckLocalTypeForField checks and returns corresponding local golang type for given db type.
+// The parameter `fieldType` is the type name reported by the driver, like `NUMBER`,
+// `IntervalDS_DTY` or `TimeStampTZ_DTY`.
+func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue any) (gdb.LocalType, error) {
+	var typeName string
+	match, _ := gregex.MatchString(`(.+?)\((.+)\)`, fieldType)
+	if len(match) == 3 {
+		typeName = gstr.Trim(match[1])
+	} else {
+		typeName = fieldType
+	}
+	typeName = strings.ToLower(typeName)
+	if localType, ok := localTypeMap[typeName]; ok {
+		return localType, nil
+	}
+	return d.Core.CheckLocalTypeForField(ctx, fieldType, fieldValue)
+}
+
+// characterFieldTypes are the field types whose values are bound as text.
+var characterFieldTypes = map[string]bool{
+	"CHAR":      true,
+	"NCHAR":     true,
+	"VARCHAR":   true,
+	"VARCHAR2":  true,
+	"NVARCHAR2": true,
+	"LONG":      true,
+	"CLOB":      true,
+	"NCLOB":     true,
+}
+
+// zonelessTimeTypes are the type names the driver reports for the time values that carry no
+// time zone, which the driver returns labeled as UTC.
+var zonelessTimeTypes = map[string]bool{
+	"DATE":         true,
+	"TIMESTAMP":    true,
+	"TimeStampDTY": true,
+}
+
+// ConvertValueForField converts value to the type of the record field.
+// The parameter `fieldType` is the field type of the table, like `VARCHAR2`, `TIMESTAMP` or `CLOB`.
+// The parameter `fieldValue` is the value that to be committed to record field.
+func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fieldValue any) (any, error) {
+	convertedValue, err := d.Core.ConvertValueForField(ctx, fieldType, fieldValue)
+	if err != nil {
+		return nil, err
+	}
+	if b, ok := convertedValue.([]byte); ok && characterFieldTypes[fieldType] {
+		convertedValue = string(b)
+	}
+	switch fieldType {
+	case "DATE", "TIMESTAMP":
+		switch t := convertedValue.(type) {
+		case time.Time:
+			return t.In(time.Local), nil
+		case *time.Time:
+			return t.In(time.Local), nil
+		}
+	}
+	return convertedValue, nil
+}
+
+// ConvertValueForLocal converts value to local Golang type of value according field type name from database.
+// The parameter `fieldType` is the type name reported by the driver, like `NUMBER`,
+// `TimeStampDTY` or `TimeStampTZ_DTY`.
+func (d *Driver) ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue any) (any, error) {
+	if t, ok := fieldValue.(time.Time); ok && zonelessTimeTypes[fieldType] {
+		fieldValue = time.Date(
+			t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), time.Local,
+		)
+	}
+	return d.Core.ConvertValueForLocal(ctx, fieldType, fieldValue)
+}
+
+// ConvertColumnValueForLocal converts a value scanned from a result set column to local Golang type.
+// The underlying driver scans a NUMBER value as its exact decimal string, but reports float64 as
+// the scan type of every NUMBER column. The value of a NUMBER column without decimal places, being
+// NUMBER(p) or NUMBER(p,0), is converted to int64, or to uint64 beyond the range of int64, or else
+// kept as the string, so that an integer does not lose precision. The value of any other NUMBER
+// column, including NUMBER without precision and scale, is converted by the scan type to float64,
+// as for any other column.
+func (d *Driver) ConvertColumnValueForLocal(ctx context.Context, columnType *sql.ColumnType, fieldValue any) (any, error) {
+	if columnType.DatabaseTypeName() == "NUMBER" {
+		if _, scale, ok := columnType.DecimalSize(); ok && scale == 0 {
+			if s, ok := fieldValue.(string); ok {
+				if i, err := strconv.ParseInt(s, 10, 64); err == nil {
+					return i, nil
+				}
+				if u, err := strconv.ParseUint(s, 10, 64); err == nil {
+					return u, nil
+				}
+				return s, nil
+			}
+		}
+	}
+	return d.Core.ConvertColumnValueForLocal(ctx, columnType, fieldValue)
+}
+
+// convertArgument converts `value`, an argument of a statement, to a value that the underlying
+// driver binds without loss: a value of a string type defined outside the underlying driver to a
+// string, and a float that NUMBER cannot hold to a numeric literal. A driver.Valuer is converted
+// by its Value method first, as database/sql does, and a sql.NamedArg keeps its name.
+func convertArgument(value any) (any, error) {
+	if namedArg, ok := value.(sql.NamedArg); ok {
+		converted, err := convertArgument(namedArg.Value)
+		if err != nil {
+			return nil, err
+		}
+		namedArg.Value = converted
+		return namedArg, nil
+	}
+	if valuer, ok := value.(driver.Valuer); ok {
+		var err error
+		if value, err = callValuerValue(valuer); err != nil {
+			return nil, err
+		}
+	}
+	value = convertNamedString(value)
+	if s, ok := formatBinaryFloat(value); ok {
+		return s, nil
+	}
+	return value, nil
+}
+
+// callValuerValue returns the value of `valuer` as database/sql does: nil for a nil pointer whose
+// element type implements driver.Valuer, or else the result of its Value method.
+func callValuerValue(valuer driver.Valuer) (driver.Value, error) {
+	if reflectValue := reflect.ValueOf(valuer); reflectValue.Kind() == reflect.Pointer && reflectValue.IsNil() &&
+		reflectValue.Type().Elem().Implements(reflect.TypeOf((*driver.Valuer)(nil)).Elem()) {
+		return nil, nil
+	}
+	return valuer.Value()
+}
+
+// convertNamedString returns the value of a string type defined outside the underlying driver
+// as a string, as the underlying driver only binds the string types it defines.
+func convertNamedString(value any) any {
+	switch value.(type) {
+	case string, gdb.Raw, *gdb.Raw, gora.NVarChar, *gora.NVarChar:
+		return value
+	}
+	reflectValue := reflect.ValueOf(value)
+	for reflectValue.Kind() == reflect.Pointer && !reflectValue.IsNil() {
+		reflectValue = reflectValue.Elem()
+	}
+	if reflectValue.Kind() == reflect.String {
+		return reflectValue.String()
+	}
+	return value
+}
+
+// formatBinaryFloat formats a float value that NUMBER cannot hold, being NaN, an infinity, or a
+// nonzero value whose absolute value is less than 1e-130 or not less than 1e126, see
+// https://docs.oracle.com/cd/E11882_01/server.112/e41084/sql_elements001.htm#SQLRF00222,
+// as a numeric literal without decimal separator, like `17976931348623157e292`, which Oracle
+// converts to BINARY_DOUBLE or BINARY_FLOAT without loss whatever the NLS settings of the session.
+// The underlying driver binds a float as NUMBER, whose exponent wraps around beyond that range.
+func formatBinaryFloat(value any) (string, bool) {
+	reflectValue := reflect.ValueOf(value)
+	for reflectValue.Kind() == reflect.Pointer && !reflectValue.IsNil() {
+		reflectValue = reflectValue.Elem()
+	}
+	var bitSize int
+	switch reflectValue.Kind() {
+	case reflect.Float32:
+		bitSize = 32
+	case reflect.Float64:
+		bitSize = 64
+	default:
+		return "", false
+	}
+	f := reflectValue.Float()
+	if magnitude := math.Abs(f); magnitude == 0 || (magnitude >= 1e-130 && magnitude < 1e126) {
+		return "", false
+	}
+	text := strconv.FormatFloat(f, 'e', -1, bitSize)
+	mantissa, exponentText, ok := strings.Cut(text, "e")
+	if !ok {
+		return text, true
+	}
+	exponent, _ := strconv.Atoi(exponentText)
+	if integer, fraction, ok := strings.Cut(mantissa, "."); ok {
+		mantissa = integer + fraction
+		exponent -= len(fraction)
+	}
+	return mantissa + "e" + strconv.Itoa(exponent), true
+}

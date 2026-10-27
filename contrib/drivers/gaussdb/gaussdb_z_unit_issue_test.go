@@ -272,3 +272,79 @@ func Test_IssuePointInterval_NotConvertedToInt(t *testing.T) {
 		t.Assert(one["d"].Ints(), []int{4, 5})
 	})
 }
+
+// Test_Issue4842 tests that types whose names merely contain "int" are not detected as
+// integers and read back as 0. The driver lists most of them explicitly, but int2vector
+// is only covered by the fallback detection of the core. The daterange and reltime scalars
+// were listed as a datetime, which lost everything the parser could not read as a date.
+// The int1 and int16 arrays were listed as a scalar integer, which loses the array the
+// same way, and the int16 scalar is a 16-byte integer that does not fit an int at all.
+// See https://github.com/gogf/gf/issues/4842
+func Test_Issue4842(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// The int2vector value must match its own text rendering rather than becoming 0.
+		one, err := db.GetOne(ctx, `SELECT indkey AS v, indkey::text AS expect FROM pg_index LIMIT 1`)
+		t.AssertNil(err)
+		t.Assert(one["v"].String(), one["expect"].String())
+	})
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.GetOne(ctx, `SELECT '(1.5,2.5)'::point AS a, '2 days'::interval AS b,
+			'[1,10)'::int4range AS c, '[1,10)'::int8range AS d`)
+		t.AssertNil(err)
+		t.Assert(one["a"].String(), `(1.5,2.5)`)
+		t.Assert(one["b"].String(), `2 days`)
+		t.Assert(one["c"].String(), `[1,10)`)
+		t.Assert(one["d"].String(), `[1,10)`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The daterange and reltime scalars keep their text instead of being parsed as a
+		// datetime, which kept the lower bound of a range only and dropped a relative time.
+		one, err := db.GetOne(ctx, `SELECT '[2026-01-01,2026-02-01)'::daterange AS a,
+			'1 day'::reltime AS b, ARRAY['1 day'::reltime] AS c`)
+		t.AssertNil(err)
+		t.Assert(one["a"].String(), `[2026-01-01,2026-02-01)`)
+		t.Assert(one["b"].String(), `1 day`)
+		t.Assert(one["c"].Strings(), g.SliceStr{"1 day"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// Genuine integer types must keep being detected as integers.
+		one, err := db.GetOne(ctx, `SELECT 41::int2 AS a, 42::int4 AS b, 43::int8 AS c`)
+		t.AssertNil(err)
+		t.Assert(one["a"].Int(), 41)
+		t.Assert(one["b"].Int(), 42)
+		t.Assert(one["c"].Int64(), int64(43))
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// int1[] and int16[] are arrays, like the _int2 listed next to them, and were read
+		// as a single integer, which turned the whole array literal into 0. int16 is the
+		// 16-byte integer of GaussDB rather than a 16-bit one, so reading it as an int
+		// truncated any value beyond int64 instead of keeping its decimal text.
+		one, err := db.GetOne(ctx, `SELECT '{1,2,255}'::int1[] AS a, 255::int1 AS b,
+			'{1,170141183460469231731687303715884105727}'::int16[] AS c,
+			170141183460469231731687303715884105727::int16 AS d`)
+		t.AssertNil(err)
+		t.Assert(one["a"].Ints(), g.SliceInt{1, 2, 255})
+		t.Assert(one["b"].Int(), 255)
+		t.Assert(one["c"].Strings(), g.SliceStr{"1", "170141183460469231731687303715884105727"})
+		t.Assert(one["d"].String(), `170141183460469231731687303715884105727`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// int1[] is a plain tinyint array, so a declared column reads back as one too.
+		// int16 has no column form: GaussDB rejects it with "not supported to create".
+		table := "issue4842_int1_array_" + gtime.TimestampMicroStr()
+		if _, err := db.Exec(ctx, fmt.Sprintf(
+			`CREATE TABLE %s (id int PRIMARY KEY, v int1[], w tinyint)`, table,
+		)); err != nil {
+			gtest.Fatal(err)
+		}
+		defer dropTable(table)
+
+		_, err := db.Exec(ctx, fmt.Sprintf(`INSERT INTO %s VALUES (1, '{1,2,255}', 7)`, table))
+		t.AssertNil(err)
+
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["v"].Ints(), g.SliceInt{1, 2, 255})
+		t.Assert(one["w"].Int(), 7)
+	})
+}
