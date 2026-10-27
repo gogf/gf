@@ -78,7 +78,7 @@ func GoFmt(path string) {
 type ImportSpec struct {
 	// Name is the optional import alias, like `v1` in `v1 "path/to/api/v1"`.
 	Name string
-	// Path is the import path, like `github.com/gogf/gf/v2/net/grpcx`.
+	// Path is the import path, like `github.com/gogf/gf/contrib/rpc/grpcx/v2`.
 	Path string
 }
 

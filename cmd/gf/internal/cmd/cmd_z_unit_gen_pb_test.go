@@ -10,7 +10,9 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"path"
 	"path/filepath"
+	"strconv"
 	"testing"
 
 	"github.com/gogf/gf/v2/os/gfile"
@@ -35,11 +37,21 @@ func assertControllerImports(t *gtest.T, filePath string) {
 	// The local names bound by the import declaration of the file.
 	var importedNames = make(map[string]struct{})
 	for _, spec := range file.Imports {
-		var name = gstr.Trim(spec.Path.Value, `"`)
+		var (
+			importPath = gstr.Trim(spec.Path.Value, `"`)
+			name       = importPath
+		)
 		if spec.Name != nil {
 			name = spec.Name.Name
 		} else {
-			name = gfile.Basename(name)
+			name = gfile.Basename(importPath)
+			// A versioned module path like `github.com/gogf/gf/contrib/rpc/grpcx/v2` binds the
+			// package name `grpcx` instead of `v2`, which is what the import declaration does.
+			if len(name) > 1 && name[0] == 'v' {
+				if _, err = strconv.Atoi(name[1:]); err == nil {
+					name = path.Base(path.Dir(importPath))
+				}
+			}
 		}
 		importedNames[name] = struct{}{}
 	}
@@ -180,7 +192,7 @@ func TestGenPb_ControllerImports(t *testing.T) {
 		t.AssertNil(err)
 		content = gfile.GetContents(controllers[0])
 		t.Assert(gstr.Count(content, `"context"`), 1)
-		t.Assert(gstr.Count(content, `"github.com/gogf/gf/v2/net/grpcx"`), 1)
+		t.Assert(gstr.Count(content, `"github.com/gogf/gf/contrib/rpc/grpcx/v2"`), 1)
 		assertControllerImports(t, controllers[0])
 	})
 

@@ -47,8 +47,9 @@ const (
 	// generated controller methods.
 	controllerContextImportPath = "context"
 	// controllerGrpcxImportPath is the import path of the grpcx package used by the generated
-	// controller registration function.
-	controllerGrpcxImportPath = "github.com/gogf/gf/v2/net/grpcx"
+	// controller registration function. The grpcx package lives in the contrib module, and it
+	// is not part of the core framework module.
+	controllerGrpcxImportPath = "github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	// controllerGcodeImportPath is the import path of the gcode package used by the generated
 	// controller methods.
 	controllerGcodeImportPath = "github.com/gogf/gf/v2/errors/gcode"

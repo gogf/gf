@@ -343,7 +343,7 @@ func main() {
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/net/grpcx"
+	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 )
 
 func main() {
@@ -356,7 +356,7 @@ func main() {
 		changed, err := EnsureImports(
 			filePath,
 			ImportSpec{Path: "context"},
-			ImportSpec{Path: "github.com/gogf/gf/v2/net/grpcx"},
+			ImportSpec{Path: "github.com/gogf/gf/contrib/rpc/grpcx/v2"},
 		)
 		t.AssertNil(err)
 		t.Assert(changed, true)
@@ -368,7 +368,7 @@ func main() {
 		changed, err = EnsureImports(
 			filePath,
 			ImportSpec{Path: "context"},
-			ImportSpec{Path: "github.com/gogf/gf/v2/net/grpcx"},
+			ImportSpec{Path: "github.com/gogf/gf/contrib/rpc/grpcx/v2"},
 		)
 		t.AssertNil(err)
 		t.Assert(changed, false)
