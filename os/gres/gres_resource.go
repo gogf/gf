@@ -22,7 +22,7 @@ import (
 
 // Resource is the resource manager for the file system.
 type Resource struct {
-	tree *gtree.BTree
+	tree *gtree.BKVTree[string, *File]
 }
 
 const (
@@ -32,9 +32,7 @@ const (
 // New creates and returns a new resource object.
 func New() *Resource {
 	return &Resource{
-		tree: gtree.NewBTree(defaultTreeM, func(v1, v2 any) int {
-			return strings.Compare(v1.(string), v2.(string))
-		}),
+		tree: gtree.NewBKVTree[string, *File](defaultTreeM, strings.Compare),
 	}
 }
 
@@ -84,7 +82,7 @@ func (r *Resource) Get(path string) *File {
 	}
 	result := r.tree.Get(path)
 	if result != nil {
-		return result.(*File)
+		return result
 	}
 	return nil
 }
@@ -189,17 +187,17 @@ func (r *Resource) doScanDir(path string, pattern string, recursive bool, onlyFi
 	}
 	// Used for type checking for first entry.
 	first := true
-	r.tree.IteratorFrom(path, true, func(key, value any) bool {
+	r.tree.IteratorFrom(path, true, func(key string, value *File) bool {
 		if first {
-			if !value.(*File).FileInfo().IsDir() {
+			if !value.FileInfo().IsDir() {
 				return false
 			}
 			first = false
 		}
-		if onlyFile && value.(*File).FileInfo().IsDir() {
+		if onlyFile && value.FileInfo().IsDir() {
 			return true
 		}
-		name = key.(string)
+		name = key
 		if len(name) <= length {
 			return true
 		}
@@ -217,7 +215,7 @@ func (r *Resource) doScanDir(path string, pattern string, recursive bool, onlyFi
 		}
 		for _, p := range patterns {
 			if match, err := filepath.Match(p, gfile.Basename(name)); err == nil && match {
-				files = append(files, value.(*File))
+				files = append(files, value)
 				return true
 			}
 		}
@@ -275,8 +273,8 @@ func (r *Resource) Export(src, dst string, option ...ExportOption) error {
 // Dump prints the files of current resource object.
 func (r *Resource) Dump() {
 	var info os.FileInfo
-	r.tree.Iterator(func(key, value any) bool {
-		info = value.(*File).FileInfo()
+	r.tree.Iterator(func(key string, value *File) bool {
+		info = value.FileInfo()
 		fmt.Printf(
 			"%v %8s %s\n",
 			gtime.New(info.ModTime()).ISO8601(),
