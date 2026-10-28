@@ -98,12 +98,13 @@ jobs:
     - name: Build & Test
       run: bash .github/workflows/scripts/ci-sub.sh
 
-    # Only one canonical matrix entry writes the build cache back, keeping all eight
-    # matrix entries inside the repository's 10GB cache budget.
+    # The build cache is restored by all eight matrix entries but saved only for the
+    # latest Go version, on master pushes, keeping the budget at one entry per
+    # architecture instead of one per matrix entry.
     - name: Save Go build cache
       # `cache-hit` is true when this month's entry already exists; saving again would
       # fail, as cache entries are immutable.
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && matrix.goarch == 'amd64' && steps.build-cache.outputs.cache-hit != 'true' }}
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && steps.build-cache.outputs.cache-hit != 'true' }}
       uses: actions/cache/save@v4
       with:
         path: ~/.cache/go-build

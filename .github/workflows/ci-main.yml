@@ -358,14 +358,13 @@ jobs:
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
       run: bash .github/workflows/scripts/ci-main.sh coverage
 
-    # Only one canonical matrix entry writes the build cache back. Allowing every
-    # entry to save would multiply the cache budget by the matrix size, and GitHub
-    # caps the whole repository at 10GB, at which point LRU eviction would start
-    # dropping the entries that are still in use.
+    # The build cache is restored by every matrix entry but saved only for the latest
+    # Go version, on master pushes, so old Go versions never take cache budget. Both
+    # architectures save their own entry, as stdlib objects differ per architecture.
     - name: Save Go build cache
       # `cache-hit` is true when this month's entry already exists; saving again would
       # fail, as cache entries are immutable.
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && matrix.goarch == 'amd64' && steps.build-cache.outputs.cache-hit != 'true' }}
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && steps.build-cache.outputs.cache-hit != 'true' }}
       uses: actions/cache/save@v4
       with:
         path: ~/.cache/go-build
