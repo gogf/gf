@@ -116,9 +116,8 @@ func EnsureImports(filePath string, specs ...ImportSpec) (changed bool, err erro
 		if imp, ok := findImportByPath(file, spec.Path); ok {
 			if imp.Name != nil {
 				// A blank or dot import cannot be combined with a normal import of the same path.
-				// An explicit alias is accepted when it is the required one. When no explicit
-				// name is required, it is accepted as is, as its real package name cannot be
-				// verified here without resolving the package.
+				// When no name is required, an existing alias is accepted as is, as its real
+				// package name cannot be verified here without resolving the package.
 				if imp.Name.Name == "_" || imp.Name.Name == "." {
 					return false, gerror.NewCodef(
 						gcode.CodeInvalidOperation,
@@ -153,7 +152,6 @@ func EnsureImports(filePath string, specs ...ImportSpec) (changed bool, err erro
 	return true, nil
 }
 
-// findImportByPath retrieves and returns the import declaration of given import path.
 func findImportByPath(file *ast.File, importPath string) (*ast.ImportSpec, bool) {
 	for _, imp := range file.Imports {
 		importedPath, err := strconv.Unquote(imp.Path.Value)
