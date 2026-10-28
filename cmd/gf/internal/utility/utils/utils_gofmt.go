@@ -86,6 +86,11 @@ type ImportSpec struct {
 // `filePath`. It returns true if the file content is changed, and the file is left untouched
 // (not written) when all the given imports already exist.
 //
+// An import is matched by its path: an already imported path is never imported again, as Go
+// does not allow importing the same path twice even with different names. It returns an error
+// if the existing import uses a blank or dot name, or an explicit alias that differs from the
+// required alias.
+//
 // It is the counterpart of GoFmt, which only removes the unused imports. The code generators
 // use EnsureImports to declare the imports the generated code requires, and then call GoFmt
 // to format the file and to remove the imports that are not used by the generated content.
@@ -108,6 +113,28 @@ func EnsureImports(filePath string, specs ...ImportSpec) (changed bool, err erro
 		if spec.Path == "" {
 			return false, gerror.NewCodef(gcode.CodeInvalidParameter, `the import path cannot be empty`)
 		}
+		if imp, ok := findImportByPath(file, spec.Path); ok {
+			if imp.Name != nil {
+				// A blank or dot import cannot be combined with a normal import of the same path.
+				// When no name is required, an existing alias is accepted as is, as its real
+				// package name cannot be verified here without resolving the package.
+				if imp.Name.Name == "_" || imp.Name.Name == "." {
+					return false, gerror.NewCodef(
+						gcode.CodeInvalidOperation,
+						`the import path "%s" is already imported as "%s" and cannot be imported again`,
+						spec.Path, imp.Name.Name,
+					)
+				}
+				if spec.Name != "" && imp.Name.Name != spec.Name {
+					return false, gerror.NewCodef(
+						gcode.CodeInvalidOperation,
+						`the import path "%s" is already imported as "%s", cannot ensure it as "%s"`,
+						spec.Path, imp.Name.Name, spec.Name,
+					)
+				}
+			}
+			continue
+		}
 		if astutil.AddNamedImport(fset, file, spec.Name, spec.Path) {
 			changed = true
 		}
@@ -123,6 +150,16 @@ func EnsureImports(filePath string, specs ...ImportSpec) (changed bool, err erro
 		return false, err
 	}
 	return true, nil
+}
+
+func findImportByPath(file *ast.File, importPath string) (*ast.ImportSpec, bool) {
+	for _, imp := range file.Imports {
+		importedPath, err := strconv.Unquote(imp.Path.Value)
+		if err == nil && importedPath == importPath {
+			return imp, true
+		}
+	}
+	return nil, false
 }
 
 // goFormatContent formats the content of given file and removes its unused imports.

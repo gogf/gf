@@ -409,6 +409,91 @@ type Controller struct {
 	})
 }
 
+func Test_EnsureImports_ExistingPath(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			filePath = gfile.Join(t.TempDir(), "example.go")
+			source   = `package main
+
+import (
+	"demo/api/hello/v1"
+)
+
+var _ = v1.Hello{}
+`
+		)
+		t.AssertNil(gfile.PutContents(filePath, source))
+		changed, err := EnsureImports(filePath, ImportSpec{Name: "v1", Path: "demo/api/hello/v1"})
+		t.AssertNil(err)
+		t.Assert(changed, false)
+		t.Assert(gfile.GetContents(filePath), source)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			filePath = gfile.Join(t.TempDir(), "example.go")
+			source   = `package main
+
+import v1 "demo/api/hello/v1"
+
+var _ = v1.Hello{}
+`
+		)
+		t.AssertNil(gfile.PutContents(filePath, source))
+		changed, err := EnsureImports(filePath, ImportSpec{Name: "v1", Path: "demo/api/hello/v1"})
+		t.AssertNil(err)
+		t.Assert(changed, false)
+		t.Assert(gfile.GetContents(filePath), source)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			filePath = gfile.Join(t.TempDir(), "example.go")
+			source   = `package main
+
+import context "context"
+
+var _ = context.Background()
+`
+		)
+		t.AssertNil(gfile.PutContents(filePath, source))
+		changed, err := EnsureImports(filePath, ImportSpec{Path: "context"})
+		t.AssertNil(err)
+		t.Assert(changed, false)
+		t.Assert(gfile.GetContents(filePath), source)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			filePath = gfile.Join(t.TempDir(), "example.go")
+			source   = `package main
+
+import hello "demo/api/hello/v1"
+
+var _ = hello.Hello{}
+`
+		)
+		t.AssertNil(gfile.PutContents(filePath, source))
+		_, err := EnsureImports(filePath, ImportSpec{Name: "v1", Path: "demo/api/hello/v1"})
+		t.AssertNE(err, nil)
+		t.Assert(gfile.GetContents(filePath), source)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			filePath = gfile.Join(t.TempDir(), "example.go")
+			source   = `package main
+
+import _ "demo/api/hello/v1"
+`
+		)
+		t.AssertNil(gfile.PutContents(filePath, source))
+		_, err := EnsureImports(filePath, ImportSpec{Path: "demo/api/hello/v1"})
+		t.AssertNE(err, nil)
+		t.Assert(gfile.GetContents(filePath), source)
+	})
+}
+
 // Test_EnsureImports_Error asserts the invalid arguments of EnsureImports are reported.
 func Test_EnsureImports_Error(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
