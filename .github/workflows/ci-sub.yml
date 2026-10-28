@@ -66,33 +66,47 @@ jobs:
       id: cache-month
       run: echo "month=$(date +%Y%m)" >> "$GITHUB_OUTPUT"
 
+    # Downloaded modules are independent of the Go version and architecture, so the
+    # key omits both and all eight matrix entries share a single cache entry.
     # The examples repository is cloned at runtime, so its go.sum files cannot take
-    # part in the cache key. Monthly rotation handles that drift, while the
-    # restore-keys tiers keep incremental hits working within a month.
-    - name: Cache Go modules
+    # part in the key; the restore-keys tier covers that drift.
+    - name: Restore Go module cache
       uses: actions/cache@v4
       with:
         path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go${{ matrix.go-version }}-mod-${{ steps.cache-month.outputs.month }}-${{ hashFiles('go.mod', 'go.sum') }}
+        key: ${{ runner.os }}-go-mod-sub-${{ hashFiles('go.mod', 'go.sum') }}
         restore-keys: |
-          ${{ runner.os }}-go${{ matrix.go-version }}-mod-${{ steps.cache-month.outputs.month }}-
-          ${{ runner.os }}-go${{ matrix.go-version }}-mod-
+          ${{ runner.os }}-go-mod-sub-
 
-    # Go build cache is content-addressed, so reusing entries from any source version
-    # is safe: stale entries are simply not hit.
-    - name: Cache Go build cache
-      uses: actions/cache@v4
+    # Go build cache is content-addressed, so stale entries are simply not hit and it
+    # is safe to restore across source changes. It is restored for every matrix entry
+    # but only saved once (see the save step below) to stay within the 10GB budget.
+    - name: Restore Go build cache
+      id: build-cache
+      uses: actions/cache/restore@v4
       with:
         path: ~/.cache/go-build
-        key: ${{ runner.os }}-go${{ matrix.go-version }}-build-${{ steps.cache-month.outputs.month }}-${{ hashFiles('go.mod', 'go.sum') }}
+        key: ${{ runner.os }}-go-build-sub-${{ matrix.go-version }}-${{ matrix.goarch }}-${{ steps.cache-month.outputs.month }}
         restore-keys: |
-          ${{ runner.os }}-go${{ matrix.go-version }}-build-${{ steps.cache-month.outputs.month }}-
-          ${{ runner.os }}-go${{ matrix.go-version }}-build-
+          ${{ runner.os }}-go-build-sub-${{ matrix.go-version }}-${{ matrix.goarch }}-
+          ${{ runner.os }}-go-build-sub-${{ matrix.go-version }}-
+          ${{ runner.os }}-go-build-sub-
 
     - name: Before Script
       run:  bash .github/workflows/scripts/before_script.sh
 
     - name: Build & Test
       run: bash .github/workflows/scripts/ci-sub.sh
+
+    # Only one canonical matrix entry writes the build cache back, keeping all eight
+    # matrix entries inside the repository's 10GB cache budget.
+    - name: Save Go build cache
+      # `cache-hit` is true when this month's entry already exists; saving again would
+      # fail, as cache entries are immutable.
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && matrix.goarch == 'amd64' && steps.build-cache.outputs.cache-hit != 'true' }}
+      uses: actions/cache/save@v4
+      with:
+        path: ~/.cache/go-build
+        key: ${{ steps.build-cache.outputs.cache-primary-key }}
 
 
