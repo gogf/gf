@@ -152,9 +152,12 @@ jobs:
       # ClickHouse backend server.
       # docker run \
       # -p 9000:9000 -p 8123:8123 -p 9001:9001 \
+      # -e TZ=Asia/Shanghai \
       # clickhouse/clickhouse-server:24.11.1.2557-alpine
       clickhouse-server:
         image: clickhouse/clickhouse-server:24.11.1.2557-alpine
+        env:
+          TZ: Asia/Shanghai
         ports:
           - 9000:9000
           - 8123:8123
@@ -213,6 +216,32 @@ jobs:
         image: zookeeper:3.8
         ports:
           - 2181:2181
+
+      # TiDB server, MySQL protocol.
+      # docker run -p 4000:4000 pingcap/tidb:v8.5.1
+      tidb:
+        image: pingcap/tidb:v8.5.1
+        ports:
+          - 4000:4000
+        options: >-
+          --health-cmd "curl -sf http://127.0.0.1:10080/status"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+      # OceanBase server in mini mode, MySQL protocol.
+      # docker run -p 2881:2881 -e MODE=mini oceanbase/oceanbase-ce:4.3.5-lts
+      oceanbase:
+        image: oceanbase/oceanbase-ce:4.3.5-lts
+        env:
+          MODE: mini
+        ports:
+          - 2881:2881
+        options: >-
+          --health-cmd "obclient -h127.0.0.1 -P2881 -uroot@test -e \"SELECT 1\""
+          --health-interval 10s
+          --health-timeout 10s
+          --health-retries 30
 
     steps:
     - name: Setup Timezone

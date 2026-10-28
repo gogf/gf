@@ -117,14 +117,26 @@ func init() {
 	ctx = context.Background()
 }
 
-func createTable(table ...string) (name string) {
+func createTable(table ...string) string {
+	return createTableWithDb(db, table...)
+}
+
+func createInitTable(table ...string) string {
+	return createInitTableWithDb(db, table...)
+}
+
+func dropTable(table string) {
+	dropTableWithDb(db, table)
+}
+
+func createTableWithDb(db gdb.DB, table ...string) (name string) {
 	if len(table) > 0 {
 		name = table[0]
 	} else {
-		name = fmt.Sprintf("user_%d", gtime.Timestamp())
+		name = fmt.Sprintf("user_%d", gtime.TimestampNano())
 	}
 
-	dropTable(name)
+	dropTableWithDb(db, name)
 
 	if _, err := db.Exec(context.Background(), fmt.Sprintf(`
 		IF NOT EXISTS (SELECT * FROM sys.objects WHERE name='%s' and type='U')
@@ -144,8 +156,8 @@ func createTable(table ...string) (name string) {
 	return
 }
 
-func createInitTable(table ...string) (name string) {
-	name = createTable(table...)
+func createInitTableWithDb(db gdb.DB, table ...string) (name string) {
+	name = createTableWithDb(db, table...)
 	array := garray.New(true)
 	for i := 1; i <= TableSize; i++ {
 		array.Append(g.Map{
@@ -165,7 +177,7 @@ func createInitTable(table ...string) (name string) {
 	return
 }
 
-func dropTable(table string) {
+func dropTableWithDb(db gdb.DB, table string) {
 	if _, err := db.Exec(context.Background(), fmt.Sprintf(`
 		IF EXISTS (SELECT * FROM sys.objects WHERE name='%s' and type='U')
 		DROP TABLE [%s]

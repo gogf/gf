@@ -2219,3 +2219,121 @@ func Test_Issue4698(t *testing.T) {
 func Test_Issue2231(t *testing.T) {
 	t.Skip("MariaDB-specific regex link test not applicable to PostgreSQL")
 }
+
+// Test_IssuePointInterval_NotConvertedToInt verifies that column types whose
+// names merely contain an integer keyword are not converted to integers.
+//
+// gdb's fallback type detection matches "int" as a substring, so "point" and
+// "interval" were both classified as integers and their values became 0.
+func Test_IssuePointInterval_NotConvertedToInt(t *testing.T) {
+	table := "issue_point_interval_" + gtime.TimestampMicroStr()
+	if _, err := db.Exec(ctx, fmt.Sprintf(
+		`CREATE TABLE %s (
+			id int PRIMARY KEY, pt point, span interval,
+			r4 int4range, r8 int8range, mr int4multirange,
+			pts point[], spans interval[]
+		)`,
+		table,
+	)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Exec(ctx, fmt.Sprintf(
+			`INSERT INTO %s VALUES (
+				1, '(1.5,2.5)', '2 days',
+				'[1,5)', '[10,50)', '{[1,5)}',
+				'{"(1,2)","(3,4)"}', '{"1 day","2 days"}'
+			)`,
+			table,
+		))
+		t.AssertNil(err)
+
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+
+		// Scalar values keep their real content instead of collapsing to 0.
+		t.Assert(one["pt"].String(), "(1.5,2.5)")
+		t.Assert(one["span"].String(), "2 days")
+		t.Assert(one["r4"].String(), "[1,5)")
+		t.Assert(one["r8"].String(), "[10,50)")
+		t.Assert(one["mr"].String(), "{[1,5)}")
+
+		// Array forms are read as their element text representation.
+		t.Assert(one["pts"].Strings(), g.SliceStr{"(1,2)", "(3,4)"})
+		t.Assert(one["spans"].Strings(), g.SliceStr{"1 day", "2 days"})
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Real integer columns are unaffected.
+		intTable := "issue_int_control_" + gtime.TimestampMicroStr()
+		if _, err := db.Exec(ctx, fmt.Sprintf(
+			`CREATE TABLE %s (id int PRIMARY KEY, a int2, b int4, c int8, d int4[])`, intTable,
+		)); err != nil {
+			gtest.Fatal(err)
+		}
+		defer dropTable(intTable)
+
+		_, err := db.Exec(ctx, fmt.Sprintf(`INSERT INTO %s VALUES (1, 1, 2, 3, '{4,5}')`, intTable))
+		t.AssertNil(err)
+
+		one, err := db.Model(intTable).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["a"].Int(), 1)
+		t.Assert(one["b"].Int(), 2)
+		t.Assert(one["c"].Int64(), int64(3))
+		t.Assert(one["d"].Ints(), []int{4, 5})
+	})
+}
+
+// Test_Issue4842 tests the type names that the keyword matching of the core used to infer
+// a wrong type for, because the name embeds a keyword: int2vector was taken for an integer
+// and read back as 0, while the arrays of temporal types were taken for a single datetime,
+// which dropped every element but the first. The range types were taken for a datetime too,
+// which kept their lower bound only.
+// See https://github.com/gogf/gf/issues/4842
+func Test_Issue4842(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// int2vector: its name embeds "int" while holding a vector of attribute numbers.
+		one, err := db.GetOne(ctx, `SELECT indkey AS v, indkey::text AS expect FROM pg_index LIMIT 1`)
+		t.AssertNil(err)
+		t.Assert(one["v"].String(), one["expect"].String())
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// Arrays of temporal types keep all of their elements.
+		one, err := db.GetOne(ctx, `SELECT
+			ARRAY['2026-01-01'::date, '2026-01-02'::date] AS a,
+			ARRAY['10:00:00'::time, '11:00:00'::time] AS b,
+			ARRAY['2026-01-01 10:00:00'::timestamp, '2026-01-02 11:00:00'::timestamp] AS c,
+			ARRAY['[2026-01-01,2026-02-01)'::daterange] AS d`)
+		t.AssertNil(err)
+		t.Assert(one["a"].Strings(), g.SliceStr{"2026-01-01", "2026-01-02"})
+		t.Assert(one["b"].Strings(), g.SliceStr{"10:00:00", "11:00:00"})
+		t.Assert(one["c"].Strings(), g.SliceStr{"2026-01-01 10:00:00", "2026-01-02 11:00:00"})
+		t.Assert(one["d"].Strings(), g.SliceStr{"[2026-01-01,2026-02-01)"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// Scalar ranges keep both bounds instead of collapsing to the lower one.
+		one, err := db.GetOne(ctx, `SELECT '[2026-01-01,2026-02-01)'::daterange AS a,
+			'[2026-01-01 10:00:00,2026-02-01 11:00:00)'::tsrange AS b,
+			'[1,10)'::int4range AS c,
+			'[1.5,2.5)'::numrange AS d`)
+		t.AssertNil(err)
+		t.Assert(one["a"].String(), `[2026-01-01,2026-02-01)`)
+		t.Assert(one["b"].String(), `["2026-01-01 10:00:00","2026-02-01 11:00:00")`)
+		t.Assert(one["c"].String(), `[1,10)`)
+		t.Assert(one["d"].String(), `[1.5,2.5)`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// Genuine integer and temporal scalars are unaffected.
+		one, err := db.GetOne(ctx, `SELECT 41::int2 AS a, 42::int4 AS b, 43::int8 AS c,
+			'2026-01-01'::date AS d, '10:00:00'::time AS e`)
+		t.AssertNil(err)
+		t.Assert(one["a"].Int(), 41)
+		t.Assert(one["b"].Int(), 42)
+		t.Assert(one["c"].Int64(), int64(43))
+		t.Assert(one["d"].String(), `2026-01-01`)
+		t.Assert(one["e"].String(), `10:00:00`)
+	})
+}

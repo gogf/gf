@@ -226,7 +226,7 @@ func (m *softTimeMaintainer) GetDeleteCondition(ctx context.Context) string {
 	}
 	conditionArray.FilterEmpty()
 	if conditionArray.Len() > 0 {
-		return conditionArray.Join(" AND ")
+		return conditionArray.Join(sqlAnd)
 	}
 	// Only one table.
 	fieldName, fieldType := m.GetFieldInfo(ctx, "", m.tablesInit, SoftTimeFieldDelete)
@@ -250,7 +250,7 @@ func (m *softTimeMaintainer) getConditionOfTableStringForSoftDeleting(ctx contex
 		array2 = gstr.SplitAndTrim(array1[0], ".")
 	)
 	if len(array2) >= 2 {
-		table = array2[1]
+		table = array2[len(array2)-1]
 		schema = array2[0]
 	} else {
 		table = array2[0]

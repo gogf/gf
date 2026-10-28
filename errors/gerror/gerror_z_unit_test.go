@@ -9,6 +9,7 @@ package gerror_test
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -763,11 +764,22 @@ func Test_Stack_NilError(t *testing.T) {
 
 func Test_Stack_WithStandardError(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		// Test stack with wrapped standard error
+		// Wrapping a standard error appends it as the last numbered stack entry.
 		stdErr := errors.New("standard error")
 		err := gerror.Wrap(stdErr, "wrapped")
 		stack := gerror.Stack(err)
-		t.Assert(len(stack) > 0, true)
+		t.Assert(strings.Contains(stack, "1. wrapped\n"), true)
+		t.Assert(strings.Contains(stack, "2. standard error\n"), true)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// Nested wraps still number the trailing standard error after all gerror layers.
+		stdErr := errors.New("standard error")
+		err := gerror.Wrap(stdErr, "mid")
+		err = gerror.Wrap(err, "outer")
+		stack := gerror.Stack(err)
+		t.Assert(strings.Contains(stack, "1. outer\n"), true)
+		t.Assert(strings.Contains(stack, "2. mid\n"), true)
+		t.Assert(strings.Contains(stack, "3. standard error\n"), true)
 	})
 }
 

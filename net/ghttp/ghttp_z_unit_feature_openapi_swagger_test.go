@@ -8,7 +8,9 @@ package ghttp_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -62,8 +64,59 @@ func Test_OpenApi_Swagger(t *testing.T) {
 		t.Assert(c.GetContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"OK","data":{"Id":1,"Age":18,"Name":"john"}}`)
 		t.Assert(c.GetContent(ctx, "/test/error"), `{"code":50,"message":"error","data":{"Id":1,"Age":0,"Name":""}}`)
 
-		t.Assert(gstr.Contains(c.GetContent(ctx, "/swagger/"), `API Reference`), true)
-		t.Assert(gstr.Contains(c.GetContent(ctx, "/api.json"), `/test/error`), true)
+		response, err := c.Get(ctx, "/swagger/")
+		t.AssertNil(err)
+		defer func() {
+			t.AssertNil(response.Close())
+		}()
+		t.Assert(response.StatusCode, http.StatusOK)
+		html := response.ReadAllString()
+		t.Assert(gstr.Contains(html, `API Reference`), true)
+		t.Assert(gstr.Contains(html, `<script src="https://cdn.redoc.ly/redoc/v2.5.3/bundles/redoc.standalone.js">`), true)
+		t.Assert(gstr.Contains(html, `redoc/latest/`), false)
+		t.Assert(gstr.Contains(html, `<redoc spec-url="/api.json"`), true)
+		t.Assert(gstr.Contains(html, `{SwaggerUIDocUrl}`), false)
+
+		specResponse, err := c.Get(ctx, "/api.json")
+		t.AssertNil(err)
+		defer func() {
+			t.AssertNil(specResponse.Close())
+		}()
+		t.Assert(specResponse.StatusCode, http.StatusOK)
+		var spec struct {
+			OpenAPI string                                `json:"openapi"`
+			Paths   map[string]map[string]json.RawMessage `json:"paths"`
+		}
+		t.AssertNil(json.Unmarshal(specResponse.ReadAll(), &spec))
+		t.AssertNE(spec.OpenAPI, "")
+		t.AssertNE(spec.Paths["/test"]["get"], nil)
+		t.AssertNE(spec.Paths["/test/error"]["get"], nil)
+	})
+}
+
+// Test_OpenApi_Swagger_CustomTemplate verifies that custom HTML is preserved and all document placeholders are replaced.
+func Test_OpenApi_Swagger_CustomTemplate(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		s.SetAddr("127.0.0.1:0")
+		s.SetSwaggerPath("/swagger")
+		s.SetOpenApiPath("/custom-api.json")
+		s.SetSwaggerUITemplate(`<html><body><a href="{SwaggerUIDocUrl}">{SwaggerUIDocUrl}</a></body></html>`)
+		s.SetDumpRouterMap(false)
+		t.AssertNil(s.Start())
+		defer func() {
+			t.AssertNil(s.Shutdown())
+		}()
+
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		response, err := c.Get(ctx, "/swagger/")
+		t.AssertNil(err)
+		defer func() {
+			t.AssertNil(response.Close())
+		}()
+		t.Assert(response.StatusCode, http.StatusOK)
+		t.Assert(response.ReadAllString(), `<html><body><a href="/custom-api.json">/custom-api.json</a></body></html>`)
 	})
 }
 
