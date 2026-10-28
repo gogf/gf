@@ -21,10 +21,11 @@ import (
 )
 
 const (
-	TableSize   = 10
-	TablePrefix = "t_"
-	SchemaName  = "test"
-	CreateTime  = "2018-10-24 10:00:00"
+	TableSize    = 10
+	TablePrefix  = "t_"
+	DatabaseName = "test"
+	SchemaName   = "public"
+	CreateTime   = "2018-10-24 10:00:00"
 )
 
 var (
@@ -56,13 +57,20 @@ func init() {
 
 	if configNode.Name == "" {
 		schemaTemplate := "SELECT 'CREATE DATABASE %s' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '%s')"
-		if _, err := db.Exec(ctx, fmt.Sprintf(schemaTemplate, SchemaName, SchemaName)); err != nil {
+		if _, err := db.Exec(ctx, fmt.Sprintf(schemaTemplate, DatabaseName, DatabaseName)); err != nil {
 			gtest.Error(err)
 		}
-
-		db = db.Schema(SchemaName)
+		configNode.Link = `pgsql:postgres:12345678@tcp(127.0.0.1:5432)/` + DatabaseName
+		if err := gdb.SetConfigGroup(gdb.DefaultGroupName, gdb.ConfigGroup{configNode}); err != nil {
+			gtest.Error(err)
+		}
+		if r, err := gdb.NewByGroup(); err != nil {
+			gtest.Error(err)
+		} else {
+			db = r.Schema(SchemaName)
+		}
 	} else {
-		db = db.Schema(configNode.Name)
+		db = db.Schema(SchemaName)
 	}
 
 	// Invalid db (connection opens lazily; first query is expected to fail).
