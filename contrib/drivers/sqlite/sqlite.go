@@ -9,6 +9,9 @@ package sqlite
 
 import (
 	_ "github.com/glebarez/go-sqlite"
+	// Keeps modernc.org/sqlite a direct requirement, so its version survives the release
+	// script dropping indirect requirements and is not resolved back to the glebarez minimum.
+	_ "modernc.org/sqlite/lib"
 
 	"github.com/gogf/gf/v2/database/gdb"
 )
