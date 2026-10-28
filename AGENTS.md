@@ -2,7 +2,7 @@
 
 This is the [GoFrame](https://goframe.org) framework (`github.com/gogf/gf/v2`) — a modular Go application framework. The repository is a **multi-module monorepo**: the root module hosts the core framework, while `cmd/gf` and every directory under `contrib/` are independent Go modules with their own `go.mod`.
 
-- Root module: `github.com/gogf/gf/v2` (Go 1.23+)
+- Root module: `github.com/gogf/gf/v2` (Go 1.25+)
 - Tooling module: `cmd/gf` (CLI: `gf` command, separate `go.work`)
 - Plugin modules under `contrib/`: `config/*`, `drivers/*` (mysql, pgsql, mssql, oracle, sqlite, clickhouse, dm, gaussdb, mariadb, oceanbase, tidb, sqlitecgo), `metric/*`, `nosql/*`, `registry/*`, `rpc/grpcx`, `sdk/*`, `trace/*`. Each is published as its own module so users only pull what they need.
 
@@ -101,7 +101,7 @@ cd cmd/gf && go run . <subcommand>   # iterate on the gf CLI itself
 - **`gdb` is driver-agnostic.** The core in `database/gdb` exposes interfaces; concrete drivers (`contrib/drivers/mysql`, etc.) register themselves via `init()` when imported. The same model pattern applies to `gredis`, `gcfg` (apollo/nacos/polaris adapters), and `gsvc` (etcd/consul/nacos/polaris/zookeeper registries).
 - **`internal/` is private.** Sub-packages (`intlog`, `instance`, `reflection`, `utils`, `json`, `command`) are not part of the public API surface — do not import them from outside the root module, and avoid leaking their types in exported signatures.
 - **Tests use `gtest`, not stdlib `testing` directly.** `test/gtest` provides `gtest.C(t, func(t *gtest.T){...})` blocks, fluent assertions (`t.Assert`, `t.AssertNE`, `t.AssertNil`), and is the project-wide convention. Match this style when adding tests.
-- **CI matrix.** Tests run on Go 1.23, 1.24, 1.25 across 386 and amd64. `contrib/*` only runs on the latest Go version (`LATEST_GO_VERSION` in `.github/workflows/ci-main.yml`). Code that requires the latest stdlib should live in `contrib/` or be guarded.
+- **CI matrix.** Tests run on Go 1.25 and 1.26 across 386 and amd64. `contrib/*` only runs on the latest Go version (`LATEST_GO_VERSION` in `.github/workflows/ci-main.yml`). Code that requires the latest stdlib should live in `contrib/` or be guarded. `golangci-lint` is pinned to the Go version declared in the root `go.mod` `go` directive, so keep them in sync when bumping either one.
 - **Lint config matters.** `.golangci.yml` enforces a 380-char line limit, function length up to 340 lines, custom import grouping (`gci` with `prefix(github.com/gogf/gf/v2)` ahead of `cmd`/`contrib`/`example`), `gofmt -s` with rewrites (`interface{}` → `any`, `ioutil.*` → `io`/`os`, `reflect.Ptr` → `reflect.Pointer`). Run `make lint` before pushing.
 
 # Karpathy Guidelines
