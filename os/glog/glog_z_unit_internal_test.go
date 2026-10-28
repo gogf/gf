@@ -21,8 +21,13 @@ var (
 	ctx = context.TODO()
 )
 
-// fatalAsyncHelperEnv marks the child process that calls Fatal/Fatalf on an async logger.
-const fatalAsyncHelperEnv = "GF_GLOG_FATAL_ASYNC_HELPER"
+const (
+	// fatalAsyncHelperEnv marks the child process that calls Fatal/Fatalf on an async logger.
+	fatalAsyncHelperEnv = "GF_GLOG_FATAL_ASYNC_HELPER"
+	// fatalAsyncHelperNotExitedCode is the child process exit code used when Fatal/Fatalf
+	// return without exiting the process, which fails the parent assertion.
+	fatalAsyncHelperNotExitedCode = 3
+)
 
 func Test_Print(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
@@ -97,10 +102,15 @@ func Test_Fatal_Async(t *testing.T) {
 		l := New()
 		l.SetAsync(true)
 		l.SetStack(false)
-		if method == "Fatalf" {
+		switch method {
+		case "Fatalf":
 			l.Fatalf(ctx, "%d %d %d", 1, 2, 3)
+		default:
+			l.Fatal(ctx, 1, 2, 3)
 		}
-		l.Fatal(ctx, 1, 2, 3)
+		// Fatal/Fatalf always exit the process, so reaching here means they did not,
+		// which must be reported to the parent assertion instead of inlining the test.
+		os.Exit(fatalAsyncHelperNotExitedCode)
 	}
 	gtest.C(t, func(t *gtest.T) {
 		for _, method := range []string{"Fatal", "Fatalf"} {
