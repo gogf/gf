@@ -76,7 +76,9 @@ func getPortByPid(pid int) int {
 	if path == "" {
 		return 0
 	}
-	return gconv.Int(gfile.GetContentsWithCache(path))
+	// The port of a pid never changes once written, and GetContentsWithCache would
+	// register a gfsnotify watch for every distinct pid just to cache a tiny file.
+	return gconv.Int(gfile.GetContents(path))
 }
 
 // getCommFilePath returns the pid to port mapping file path for given pid.

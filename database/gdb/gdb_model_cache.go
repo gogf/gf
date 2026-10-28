@@ -118,7 +118,7 @@ func (m *Model) saveSelectResultToCache(
 		return
 	}
 	// Special handler for Value/Count operations result.
-	if len(result) > 0 {
+	if !m.cacheOption.Force && len(result) > 0 {
 		var core = m.db.GetCore()
 		switch selectType {
 		case SelectTypeValue, SelectTypeArray, SelectTypeCount:
@@ -132,10 +132,12 @@ func (m *Model) saveSelectResultToCache(
 	}
 
 	// In case of Cache Penetration.
-	if result != nil && result.IsEmpty() {
+	if result == nil {
 		if m.cacheOption.Force {
 			result = Result{}
-		} else {
+		}
+	} else if result.IsEmpty() {
+		if !m.cacheOption.Force {
 			result = nil
 		}
 	}

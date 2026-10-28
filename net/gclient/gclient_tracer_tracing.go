@@ -10,18 +10,14 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"io"
-	"net/http"
 	"net/http/httptrace"
 	"net/textproto"
 	"strings"
-	"sync"
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -29,29 +25,20 @@ import (
 // clientTracerTracing is used for implementing httptrace.ClientTrace.
 type clientTracerTracing struct {
 	context.Context
-	span        trace.Span
-	request     *http.Request
-	requestBody []byte
-	headers     map[string]any
-	mtx         sync.Mutex
+	span    trace.Span
+	headers map[string]any
 }
 
 // newClientTracerTracing creates and returns object of httptrace.ClientTrace.
 func newClientTracerTracing(
 	ctx context.Context,
 	span trace.Span,
-	request *http.Request,
 ) *httptrace.ClientTrace {
 	ct := &clientTracerTracing{
 		Context: ctx,
 		span:    span,
-		request: request,
 		headers: make(map[string]any),
 	}
-
-	reqBodyContent, _ := io.ReadAll(ct.request.Body)
-	ct.requestBody = reqBodyContent
-	ct.request.Body = utils.NewReadCloser(reqBodyContent, false)
 
 	return &httptrace.ClientTrace{
 		GetConn:              ct.GetConn,

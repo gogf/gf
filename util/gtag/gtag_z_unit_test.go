@@ -135,6 +135,16 @@ func Test_Parse(t *testing.T) {
 	})
 }
 
+func Test_Parse_NoPlaceholder(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Content without any variable placeholder returns directly.
+		t.Assert(gtag.Parse(`required|length:1,30#name is required`), `required|length:1,30#name is required`)
+		// Content with unregistered placeholder keeps unchanged.
+		content := fmt.Sprintf(`this is {%s}`, guid.S())
+		t.Assert(gtag.Parse(content), content)
+	})
+}
+
 func Test_SetGlobalEnums(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		oldEnumsJson, err := gtag.GetGlobalEnums()

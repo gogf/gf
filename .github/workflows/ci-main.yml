@@ -152,9 +152,12 @@ jobs:
       # ClickHouse backend server.
       # docker run \
       # -p 9000:9000 -p 8123:8123 -p 9001:9001 \
+      # -e TZ=Asia/Shanghai \
       # clickhouse/clickhouse-server:24.11.1.2557-alpine
       clickhouse-server:
         image: clickhouse/clickhouse-server:24.11.1.2557-alpine
+        env:
+          TZ: Asia/Shanghai
         ports:
           - 9000:9000
           - 8123:8123
