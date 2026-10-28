@@ -45,11 +45,11 @@ func assertControllerImports(t *gtest.T, filePath string) {
 			name = spec.Name.Name
 		} else {
 			name = gfile.Basename(importPath)
-			// A versioned module path like `github.com/gogf/gf/contrib/rpc/grpcx/v2` binds the
-			// package name `grpcx` instead of `v2`, which is what the import declaration does.
+			// A version-like segment can be the package name (`v1` in `api/hello/v1`) or a
+			// module version (`grpcx` in `contrib/rpc/grpcx/v2`); accept both.
 			if len(name) > 1 && name[0] == 'v' {
 				if _, err = strconv.Atoi(name[1:]); err == nil {
-					name = path.Base(path.Dir(importPath))
+					importedNames[path.Base(path.Dir(importPath))] = struct{}{}
 				}
 			}
 		}
@@ -241,6 +241,74 @@ func TestGenPb_ControllerImports(t *testing.T) {
 		t.Assert(gstr.Contains(content, `"github.com/gogf/gf/v2/errors/gcode"`), true)
 		t.Assert(gstr.Contains(content, `"github.com/gogf/gf/v2/errors/gerror"`), true)
 		t.Assert(gstr.Contains(content, "gerror.NewCode(gcode.CodeNotImplemented)"), true)
+		assertControllerImports(t, controllerPath)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			outputPath     = gfile.Join(gfile.Pwd(), "tmp_genpb_"+guid.S())
+			protoPath      = filepath.Join(outputPath, "protobuf")
+			protoFilePath  = filepath.Join(protoPath, "hello", "v1", "hello.proto")
+			outputApiPath  = filepath.Join(outputPath, "api")
+			outputCtrlPath = filepath.Join(outputPath, "controller")
+			in             = genpb.CGenPbInput{
+				Path:       protoPath,
+				OutputApi:  outputApiPath,
+				OutputCtrl: outputCtrlPath,
+			}
+			protoContent = `syntax = "proto3";
+
+package v1;
+
+option go_package = "hello/v1";
+
+service Hello {
+  rpc SayHello (SayHelloReq) returns (SayHelloRes) {
+  }
+}
+
+message SayHelloReq {
+  string name = 1;
+}
+
+message SayHelloRes {
+  string message = 1;
+}
+`
+			apiImportSuffix = `/api/hello/v1"`
+		)
+		defer gfile.Remove(outputPath)
+		t.AssertNil(gfile.Mkdir(filepath.Dir(protoFilePath)))
+		t.AssertNil(gfile.PutContents(protoFilePath, protoContent))
+		t.AssertNil(gfile.Mkdir(outputApiPath))
+		t.AssertNil(gfile.Mkdir(outputCtrlPath))
+
+		_, err := genpb.CGenPb{}.Pb(ctx, in)
+		t.AssertNil(err)
+
+		var controllers, scanErr = gfile.ScanDirFile(outputCtrlPath, "*.go", true)
+		t.AssertNil(scanErr)
+		t.Assert(len(controllers), 1)
+		var controllerPath = controllers[0]
+
+		var content = gfile.GetContents(controllerPath)
+		t.Assert(gstr.Count(content, apiImportSuffix), 1)
+		t.Assert(gstr.Contains(content, `v1 "`), true)
+
+		// Older gf versions imported the api package without an alias.
+		content = gstr.Replace(content, `v1 "`, `"`)
+		var methodIndex = gstr.Pos(content, "func (*Controller)")
+		t.Assert(methodIndex > 0, true)
+		content = gstr.SubStr(content, 0, methodIndex)
+		content = gstr.TrimRight(content) + "\n"
+		t.AssertNil(gfile.PutContents(controllerPath, content))
+
+		_, err = genpb.CGenPb{}.Pb(ctx, in)
+		t.AssertNil(err)
+
+		content = gfile.GetContents(controllerPath)
+		t.Assert(gstr.Count(content, apiImportSuffix), 1)
+		t.Assert(gstr.Contains(content, `v1 "`), false)
 		assertControllerImports(t, controllerPath)
 	})
 }
