@@ -59,7 +59,35 @@ jobs:
       uses: actions/setup-go@v7
       with:
         go-version: ${{ matrix.go-version }}
-        cache-dependency-path: '**/go.sum' 
+        # Cache is managed manually below.
+        cache: false
+
+    - name: Get current month
+      id: cache-month
+      run: echo "month=$(date +%Y%m)" >> "$GITHUB_OUTPUT"
+
+    # The examples repository is cloned at runtime, so its go.sum files cannot take
+    # part in the cache key. Monthly rotation handles that drift, while the
+    # restore-keys tiers keep incremental hits working within a month.
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go${{ matrix.go-version }}-mod-${{ steps.cache-month.outputs.month }}-${{ hashFiles('go.mod', 'go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go${{ matrix.go-version }}-mod-${{ steps.cache-month.outputs.month }}-
+          ${{ runner.os }}-go${{ matrix.go-version }}-mod-
+
+    # Go build cache is content-addressed, so reusing entries from any source version
+    # is safe: stale entries are simply not hit.
+    - name: Cache Go build cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/go-build
+        key: ${{ runner.os }}-go${{ matrix.go-version }}-build-${{ steps.cache-month.outputs.month }}-${{ hashFiles('go.mod', 'go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go${{ matrix.go-version }}-build-${{ steps.cache-month.outputs.month }}-
+          ${{ runner.os }}-go${{ matrix.go-version }}-build-
 
     - name: Before Script
       run:  bash .github/workflows/scripts/before_script.sh
