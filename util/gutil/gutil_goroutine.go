@@ -21,9 +21,10 @@ func Go(
 	ctx context.Context,
 	goroutineFunc func(ctx context.Context),
 	recoverFunc func(ctx context.Context, exception error),
+	finallyFunc ...func(ctx context.Context),
 ) {
 	if goroutineFunc == nil {
 		return
 	}
-	go TryCatch(ctx, goroutineFunc, recoverFunc)
+	go TryCatch(ctx, goroutineFunc, recoverFunc, finallyFunc...)
 }
