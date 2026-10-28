@@ -98,6 +98,9 @@ func (r *Request) GetFormStruct(pointer any, mapping ...map[string]string) error
 
 func (r *Request) doGetFormStruct(pointer any, mapping ...map[string]string) (data map[string]any, err error) {
 	r.parseForm()
+	if err = r.GetError(); err != nil {
+		return nil, err
+	}
 	data = r.formMap
 	if data == nil {
 		data = map[string]any{}

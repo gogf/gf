@@ -62,30 +62,15 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 		return d.Core.DoExec(ctx, link, sql, args...)
 	}
 
-	// Only the insert operation with primary key can execute the following code
-
-	// Sql filtering.
-	sql, args = d.FormatSqlBeforeExecuting(sql, args)
-	sql, args, err = d.DoFilter(ctx, link, sql, args)
+	// Only the insert operation with primary key can execute the following code.
+	// Delegate to Core.DoQuery so it handles FormatSqlBeforeExecuting, DoFilter,
+	// CatchSQL capture, and DoCommit uniformly — avoids silently dropping the SQL
+	// from CatchSQLManager when RETURNING is appended.
+	records, err := d.Core.DoQuery(ctx, link, sql, args...)
 	if err != nil {
 		return nil, err
 	}
-
-	// Link execution.
-	var out gdb.DoCommitOutput
-	out, err = d.DoCommit(ctx, gdb.DoCommitInput{
-		Link:          link,
-		Sql:           sql,
-		Args:          args,
-		Stmt:          nil,
-		Type:          gdb.SqlTypeQueryContext,
-		IsTransaction: link.IsTransaction(),
-	})
-
-	if err != nil {
-		return nil, err
-	}
-	affected := len(out.Records)
+	affected := len(records)
 	if affected > 0 {
 		if !strings.Contains(pkField.Type, "int") {
 			return Result{
@@ -97,8 +82,8 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...
 			}, nil
 		}
 
-		if out.Records[affected-1][primaryKey] != nil {
-			lastInsertId := out.Records[affected-1][primaryKey].Int64()
+		if records[affected-1][primaryKey] != nil {
+			lastInsertId := records[affected-1][primaryKey].Int64()
 			return Result{
 				affected:     int64(affected),
 				lastInsertId: lastInsertId,

@@ -12,9 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
       - name: Mirror GitHub to Gitee
-        uses: Yikun/hub-mirror-action@v1.4
+        uses: Yikun/hub-mirror-action@v1.5
         with:
           src: github/gogf
           dst: gitee/johng

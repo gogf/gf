@@ -159,7 +159,7 @@ func TestDoInsertGetId(t *testing.T) {
 	createInsertAndGetIdTableForTest()
 	gtest.C(t, func(t *gtest.T) {
 		table := "ip_to_id"
-		data := map[string]interface{}{
+		data := map[string]any{
 			"ip": "192.168.179.1",
 		}
 		id, err := db.InsertAndGetId(gctx.New(), table, data)
@@ -168,7 +168,7 @@ func TestDoInsertGetId(t *testing.T) {
 		// fmt.Println("id:", id)
 
 		// multiple insert test
-		dataAry := []map[string]interface{}{{"ip": "192.168.5.9"}, {"ip": "192.168.5.10"}}
+		dataAry := []map[string]any{{"ip": "192.168.5.9"}, {"ip": "192.168.5.10"}}
 		id1, err1 := db.InsertAndGetId(gctx.New(), table, dataAry)
 		t.AssertNil(err1)
 		t.AssertGT(id1, 0)

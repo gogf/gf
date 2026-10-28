@@ -240,8 +240,8 @@ func (s *Server) doSetHandler(
 	// 2. The field "fuzz" specifies this node is a fuzzy node, which has no certain name.
 	// 3. The field "list" is the list item of the node, MOST OF THE NODES HAVE THIS ITEM,
 	//    especially the fuzzy node. NOTE THAT the fuzzy node must have the "list" item,
-	//    and the leaf node also has "list" item. If the node is not a fuzzy node either
-	//    a leaf, it neither has "list" item.
+	//    and the leaf node also has "list" item. If the node is neither a fuzzy node nor
+	//    a leaf, it has no "list" item.
 	// 4. The "list" item is a list containing registered router items ordered by their
 	//    priorities from high to low. If it's a fuzzy node, all the sub router items
 	//    from this fuzzy node will also be added to its "list" item.
@@ -261,7 +261,7 @@ func (s *Server) doSetHandler(
 			// Navigate into the fuzz child node.
 			p = p.ensureFuzz()
 		} else {
-			// Make a new child bucket for the current segment if not exists, then navigate.
+			// Make a new child node for the current segment if not exists, then navigate.
 			p = p.ensureChild(part)
 			// The leaf node must have a list item containing the router item.
 			if i == len(array)-1 {
@@ -339,8 +339,8 @@ func (s *Server) compareRouterPriority(newItem *HandlerItem, oldItem *HandlerIte
 	var uriNew, uriOld string
 	uriNew, _ = gregex.ReplaceString(`\{[^/]+?\}`, "", newItem.Router.Uri)
 	uriOld, _ = gregex.ReplaceString(`\{[^/]+?\}`, "", oldItem.Router.Uri)
-	uriNew, _ = gregex.ReplaceString(`:[^/]+?`, "", uriNew)
-	uriOld, _ = gregex.ReplaceString(`:[^/]+?`, "", uriOld)
+	uriNew, _ = gregex.ReplaceString(`:[^/]+`, "", uriNew)
+	uriOld, _ = gregex.ReplaceString(`:[^/]+`, "", uriOld)
 	uriNew, _ = gregex.ReplaceString(`\*[^/]*`, "", uriNew) // Replace "/*" and "/*any".
 	uriOld, _ = gregex.ReplaceString(`\*[^/]*`, "", uriOld) // Replace "/*" and "/*any".
 	if len(uriNew) > len(uriOld) {

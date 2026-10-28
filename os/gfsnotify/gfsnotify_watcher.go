@@ -8,6 +8,8 @@ package gfsnotify
 
 import (
 	"context"
+	"path/filepath"
+	"strings"
 
 	"github.com/gogf/gf/v2/container/glist"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -23,6 +25,12 @@ import (
 func (w *Watcher) Add(path string, callbackFunc func(event *Event), option ...WatchOption,
 ) (callback *Callback, err error) {
 	return w.AddOnce("", path, callbackFunc, option...)
+}
+
+// ReAdd re-registers `path` with the underlying file system watcher while preserving
+// all callbacks already bound to the path.
+func (w *Watcher) ReAdd(path string) error {
+	return w.watcher.Add(path)
 }
 
 // AddOnce monitors `path` with callback function `callbackFunc` only once using unique name
@@ -130,6 +138,8 @@ func (w *Watcher) Close() {
 	if err := w.watcher.Close(); err != nil {
 		intlog.Errorf(context.TODO(), `%+v`, err)
 	}
+	// Wait for the watch loop to stop pushing events before closing the queue.
+	w.watchLoopWg.Wait()
 	w.events.Close()
 }
 
@@ -175,15 +185,82 @@ func (w *Watcher) Remove(path string) error {
 
 // RemoveCallback removes callback with given callback id from watcher.
 //
-// Note that, it auto removes the path watching if there's no callback bound on it.
+// It removes the underlying watch when no callback remains on the path.
+// Subdirectory watches added for recursive monitoring are removed together with
+// that path, unless a callback on the subdirectory or a recursive ancestor still needs them.
 func (w *Watcher) RemoveCallback(callbackID int) {
-	if callback := callbackIdMap.Get(callbackID); callback != nil {
-		if r := w.callbacks.Get(callback.Path); r != nil {
-			r.Remove(callback.elem)
+	callback := callbackIdMap.Get(callbackID)
+	if callback == nil {
+		return
+	}
+	callbackIdMap.Remove(callbackID)
+	if callback.name != "" {
+		w.nameSet.Remove(callback.name)
+	}
+	w.callbacks.LockFunc(func(m map[string]*glist.TList[*Callback]) {
+		list, ok := m[callback.Path]
+		if !ok {
+			return
 		}
-		callbackIdMap.Remove(callbackID)
-		if callback.name != "" {
-			w.nameSet.Remove(callback.name)
+		list.Remove(callback.elem)
+		if list.Len() > 0 {
+			return
 		}
+		delete(m, callback.Path)
+		pathIsDir := fileIsDir(callback.Path)
+		if pathIsDir && hasRecursiveCallbackIn(m, callback.Path) {
+			return
+		}
+		if err := w.watcher.Remove(callback.Path); err != nil {
+			intlog.Errorf(context.TODO(), `remove watch failed for path "%s": %v`, callback.Path, err)
+		}
+		if pathIsDir {
+			w.removeDescendantWatches(m, callback.Path)
+		}
+	})
+}
+
+// The caller must hold the callbacks map lock.
+func (w *Watcher) removeDescendantWatches(m map[string]*glist.TList[*Callback], path string) {
+	for _, watchedPath := range w.watcher.WatchList() {
+		if !isDescendantPath(path, watchedPath) {
+			continue
+		}
+		if _, exists := m[watchedPath]; exists {
+			continue
+		}
+		if hasRecursiveCallbackIn(m, watchedPath) {
+			continue
+		}
+		if err := w.watcher.Remove(watchedPath); err != nil {
+			intlog.Errorf(context.TODO(), `remove watch failed for path "%s": %v`, watchedPath, err)
+		}
+	}
+}
+
+func isDescendantPath(root, candidate string) bool {
+	rel, err := filepath.Rel(root, candidate)
+	if err != nil {
+		return false
+	}
+	parentPrefix := ".." + string(filepath.Separator)
+	return rel != "." && rel != ".." && !strings.HasPrefix(rel, parentPrefix)
+}
+
+// The caller must hold the callbacks map lock.
+func hasRecursiveCallbackIn(m map[string]*glist.TList[*Callback], path string) bool {
+	for dirPath := fileDir(path); ; {
+		if list, ok := m[dirPath]; ok {
+			for _, callback := range list.FrontAll() {
+				if callback.recursive {
+					return true
+				}
+			}
+		}
+		parentDirPath := fileDir(dirPath)
+		if parentDirPath == dirPath {
+			return false
+		}
+		dirPath = parentDirPath
 	}
 }

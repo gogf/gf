@@ -63,6 +63,26 @@ func Test_CustomError1(t *testing.T) {
 	}
 }
 
+func Test_CustomError_MapStringString(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			rule = "integer|length:6,16"
+			msgs = map[string]string{
+				"integer": "请输入一个整数",
+				"length":  "参数长度不对啊老铁",
+			}
+			err = g.Validator().Data("6.66").Rules(rule).Messages(msgs).Run(context.TODO())
+		)
+		t.AssertNE(err, nil)
+		t.Assert(err.Map()["integer"].Error(), msgs["integer"])
+		t.Assert(err.Map()["length"].Error(), msgs["length"])
+		// The input messages map should not be modified by the validation.
+		t.Assert(len(msgs), 2)
+		t.Assert(msgs["integer"], "请输入一个整数")
+		t.Assert(msgs["length"], "参数长度不对啊老铁")
+	})
+}
+
 func Test_CustomError2(t *testing.T) {
 	rule := "integer|length:6,16"
 	msgs := "请输入一个整数|参数长度不对啊老铁"

@@ -235,6 +235,110 @@ func Test_RedBlackTree_LRNode(t *testing.T) {
 	})
 }
 
+func Test_RedBlackTree_PopLeftRight(t *testing.T) {
+	expect := map[any]any{"key4": "val4", "key1": "val1", "key2": "val2", "key3": "val3"}
+	//safe
+	gtest.C(t, func(t *gtest.T) {
+		m := gtree.NewRedBlackTreeFrom(gutil.ComparatorString, expect)
+		left := m.Left()
+		poppedLeft := m.PopLeft()
+		t.Assert(poppedLeft.Key, left.Key)
+		t.Assert(poppedLeft.Value, left.Value)
+		t.Assert(m.Contains("key1"), false)
+		t.Assert(m.Size(), 3)
+
+		right := m.Right()
+		poppedRight := m.PopRight()
+		t.Assert(poppedRight.Key, right.Key)
+		t.Assert(poppedRight.Value, right.Value)
+		t.Assert(m.Contains("key4"), false)
+		t.Assert(m.Size(), 2)
+
+		t.Assert(m.PopLeft().Key, "key2")
+		t.Assert(m.PopRight().Key, "key3")
+		t.Assert(m.Size(), 0)
+		t.Assert(m.PopLeft(), nil)
+		t.Assert(m.PopRight(), nil)
+	})
+	//unsafe
+	gtest.C(t, func(t *gtest.T) {
+		m := gtree.NewRedBlackTreeFrom(gutil.ComparatorString, expect, true)
+		left := m.Left()
+		poppedLeft := m.PopLeft()
+		t.Assert(poppedLeft.Key, left.Key)
+		t.Assert(poppedLeft.Value, left.Value)
+		t.Assert(m.Contains("key1"), false)
+		t.Assert(m.Size(), 3)
+
+		right := m.Right()
+		poppedRight := m.PopRight()
+		t.Assert(poppedRight.Key, right.Key)
+		t.Assert(poppedRight.Value, right.Value)
+		t.Assert(m.Contains("key4"), false)
+		t.Assert(m.Size(), 2)
+
+		t.Assert(m.PopLeft().Key, "key2")
+		t.Assert(m.PopRight().Key, "key3")
+		t.Assert(m.Size(), 0)
+		t.Assert(m.PopLeft(), nil)
+		t.Assert(m.PopRight(), nil)
+	})
+}
+
+func Test_RedBlackKVTree_PopLeftRight(t *testing.T) {
+	expect := map[int]string{4: "val4", 1: "val1", 2: "val2", 3: "val3"}
+	//safe
+	gtest.C(t, func(t *gtest.T) {
+		m := gtree.NewRedBlackKVTreeFrom[int, string](gutil.ComparatorTStr[int], expect)
+		left := m.Left()
+		t.Assert(m.PopLeft(), left)
+		t.Assert(m.Contains(1), false)
+		t.Assert(m.Size(), 3)
+
+		right := m.Right()
+		t.Assert(m.PopRight(), right)
+		t.Assert(m.Contains(4), false)
+		t.Assert(m.Size(), 2)
+
+		t.Assert(m.PopLeft(), &gtree.RedBlackKVTreeNode[int, string]{
+			Key:   2,
+			Value: "val2",
+		})
+		t.Assert(m.PopRight(), &gtree.RedBlackKVTreeNode[int, string]{
+			Key:   3,
+			Value: "val3",
+		})
+		t.Assert(m.Size(), 0)
+		t.Assert(m.PopLeft(), nil)
+		t.Assert(m.PopRight(), nil)
+	})
+	//unsafe
+	gtest.C(t, func(t *gtest.T) {
+		m := gtree.NewRedBlackKVTreeFrom[int, string](gutil.ComparatorTStr[int], expect, true)
+		left := m.Left()
+		t.Assert(m.PopLeft(), left)
+		t.Assert(m.Contains(1), false)
+		t.Assert(m.Size(), 3)
+
+		right := m.Right()
+		t.Assert(m.PopRight(), right)
+		t.Assert(m.Contains(4), false)
+		t.Assert(m.Size(), 2)
+
+		t.Assert(m.PopLeft(), &gtree.RedBlackKVTreeNode[int, string]{
+			Key:   2,
+			Value: "val2",
+		})
+		t.Assert(m.PopRight(), &gtree.RedBlackKVTreeNode[int, string]{
+			Key:   3,
+			Value: "val3",
+		})
+		t.Assert(m.Size(), 0)
+		t.Assert(m.PopLeft(), nil)
+		t.Assert(m.PopRight(), nil)
+	})
+}
+
 func Test_RedBlackTree_CeilingFloor(t *testing.T) {
 	expect := map[any]any{
 		20: "val20",

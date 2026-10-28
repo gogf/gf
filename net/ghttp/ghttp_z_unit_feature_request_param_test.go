@@ -8,11 +8,13 @@ package ghttp_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -94,6 +96,26 @@ func (c *cUserTagDefault) User(ctx context.Context, req *UserTagDefaultReq) (res
 	return
 }
 
+type UserInvalidJsonReq struct {
+	g.Meta `path:"/user-invalid-json" method:"post,get" summary:"user invalid json api"`
+	Name   string
+}
+
+type UserInvalidJsonRes struct {
+	g.Meta `mime:"application/json"`
+	Name   string
+}
+
+var (
+	UserInvalidJson = cUserInvalidJson{}
+)
+
+type cUserInvalidJson struct{}
+
+func (c *cUserInvalidJson) User(ctx context.Context, req *UserInvalidJsonReq) (res *UserInvalidJsonRes, err error) {
+	return &UserInvalidJsonRes{Name: req.Name}, nil
+}
+
 func Test_ParamsTagDefault(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
@@ -147,6 +169,49 @@ func Test_ParamsTagDefault(t *testing.T) {
 		// Test providing JSON content via GET request
 		resp = client.ContentJson().GetContent(ctx, "/user-default", `{"id":500,"isVip":false}`)
 		t.Assert(resp, `{"Id":500,"Name":"john","Age":18,"Score":99.9,"IsVip":false,"NickName":"nickname-default","EmptyStr":"","Email":"","Address":""}`)
+	})
+}
+
+func Test_ParamsInvalidJsonReportsParseError(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareHandlerResponse)
+		group.Bind(UserInvalidJson)
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	for i := 0; i < 100 && s.GetListenedPort() == 0; i++ {
+		time.Sleep(10 * time.Millisecond)
+	}
+	if s.GetListenedPort() == 0 {
+		t.Fatal("server did not start listening")
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		reqCtx := context.Background()
+		client := g.Client()
+		client.SetPrefix(prefix)
+
+		assertInvalidParameter := func(resp string) {
+			var payload struct {
+				Code int                 `json:"code"`
+				Data *UserInvalidJsonRes `json:"data"`
+			}
+			err := json.Unmarshal([]byte(resp), &payload)
+			t.AssertNil(err)
+			t.Assert(payload.Code, gcode.CodeInvalidParameter.Code())
+			t.Assert(payload.Data, nil)
+		}
+
+		for _, body := range []string{`{"name":}`, `[{"name":"john"}]`, `name=john`} {
+			assertInvalidParameter(client.ContentJson().PostContent(reqCtx, "/user-invalid-json", body))
+		}
+		for _, body := range []string{`{"name":}`, `[{"name":"john"}]`} {
+			assertInvalidParameter(client.ContentJson().GetContent(reqCtx, "/user-invalid-json", body))
+		}
 	})
 }
 
@@ -218,5 +283,45 @@ func Test_Params_Valid(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/user"), `{"Query":"","Page":1,"PageSize":20}`)
 		t.Assert(client.GetContent(ctx, "/user?page_index=0"), `{"code":51,"message":"The page_index value `+"`0`"+` must be equal or greater than 1","data":null}`)
 		t.Assert(client.GetContent(ctx, "/user?size=100"), `{"code":51,"message":"The size value `+"`100`"+` must be between 1 and 50","data":null}`)
+	})
+}
+
+// Test_Params_Parse_RouteNotFound checks that parsing a request struct for a request matching no
+// route does not panic: there's no serving handler for such request, of which the request struct
+// information is not available.
+func Test_Params_Parse_RouteNotFound(t *testing.T) {
+	// RouteNotFoundReq is parsed in the middleware for every request.
+	type RouteNotFoundReq struct {
+		Name string `json:"name" d:"default-name"`
+	}
+	s := g.Server(guid.S())
+	// The middleware parses the request struct for every request, including the requests
+	// matching no route.
+	s.BindMiddlewareDefault(func(r *ghttp.Request) {
+		var req = &RouteNotFoundReq{}
+		if err := r.Parse(req); err != nil {
+			r.SetError(err)
+			return
+		}
+		r.Middleware.Next()
+	})
+	s.BindHandler("/user", func(r *ghttp.Request) {
+		r.Response.Write("ok")
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		var client = g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		// The request matching no route is responded as not found, instead of the internal
+		// server error caused by the request struct parsing.
+		t.Assert(client.GetContent(ctx, "/no-such-route"), "Not Found")
+		// The request matching a route is served as usual.
+		t.Assert(client.GetContent(ctx, "/user"), "ok")
 	})
 }

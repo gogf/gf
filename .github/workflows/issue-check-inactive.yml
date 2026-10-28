@@ -14,15 +14,40 @@ permissions:
 jobs:
   issue-check-inactive:
     permissions:
-      issues: write # for actions-cool/issues-helper to update issues
-     # pull-requests: write # for actions-cool/issues-helper to update PRs
+      issues: write # to add the inactive label
     runs-on: ubuntu-latest
     steps:
       - name: check-inactive
-        uses: actions-cool/issues-helper@v3
+        uses: actions/github-script@v9
         with:
-          actions: 'check-inactive'
-          inactive-label: 'inactive'
-          inactive-day: 30
-          issue-state: open
-          exclude-labels: 'bug,planned,$exclude-empty'
+          script: |
+            const INACTIVE_LABEL = 'inactive'
+            const EXCLUDE_LABELS = ['bug', 'planned']
+            const INACTIVE_DAYS = 30
+            const cutoff = new Date(Date.now() - INACTIVE_DAYS * 24 * 60 * 60 * 1000)
+
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100,
+            })
+
+            for (const issue of issues) {
+              if (issue.pull_request) continue
+              if (new Date(issue.updated_at) > cutoff) continue
+
+              const labels = issue.labels.map(l => (typeof l === 'string' ? l : l.name))
+              // Issues carrying no label at all are left alone, matching the
+              // previous `$exclude-empty` entry in exclude-labels.
+              if (labels.length === 0) continue
+              if (labels.some(l => EXCLUDE_LABELS.includes(l))) continue
+              if (labels.includes(INACTIVE_LABEL)) continue
+
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: [INACTIVE_LABEL],
+              })
+            }

@@ -142,6 +142,11 @@ func Trim(str string, characterMask ...string) string {
 }
 
 // FormatCmdKey formats string `s` as command key using uniformed format.
+// It converts the string to lowercase and replaces all underscores with dots.
+// For example:
+//   - "my_custom_key" becomes "my.custom.key"
+//   - "SERVER_ADDRESS" becomes "server.address"
+//   - "a.b_c.d" becomes "a.b.c.d"
 func FormatCmdKey(s string) string {
 	return strings.ToLower(strings.ReplaceAll(s, "_", "."))
 }
