@@ -18,6 +18,7 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // TestOpen test open file cache
@@ -321,4 +322,26 @@ func Test_ConcurrentGFPool(t *testing.T) {
 	//	wg.Wait()
 	//	t.Assert(gstr.Count(gfile.GetContents(path), "@1234567890#"), 2000)
 	// })
+}
+
+// Test_RenamedFileRecreated tests that the pooled file pointer of a renamed file
+// is not reused after a new file is created at the same path, like log rotation.
+func Test_RenamedFileRecreated(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		path := gfile.Temp(gtime.TimestampNanoStr())
+		for i := 0; i < 4; i++ {
+			f, err := gfpool.Open(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666, time.Minute)
+			t.AssertNil(err)
+			_, err = f.WriteString(gconv.String(i))
+			t.AssertNil(err)
+			t.AssertNil(f.Close())
+			t.AssertNil(gfile.Rename(path, path+gconv.String(i)))
+			t.AssertNil(gfile.PutContents(path, ""))
+		}
+		for i := 0; i < 4; i++ {
+			t.Assert(gfile.GetContents(path+gconv.String(i)), gconv.String(i))
+			t.AssertNil(gfile.RemoveFile(path + gconv.String(i)))
+		}
+		t.AssertNil(gfile.RemoveFile(path))
+	})
 }

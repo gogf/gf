@@ -58,6 +58,10 @@ func Instance(name ...string) *Config {
 	if len(name) > 0 && name[0] != "" {
 		instanceName = name[0]
 	}
+	// It checks the existing instance with the reading lock, as it is created on first usage.
+	if cached, found := localInstances.Search(instanceName); found {
+		return cached
+	}
 	return localInstances.GetOrSetFuncLock(instanceName, func() *Config {
 		adapterFile, err := NewAdapterFile()
 		if err != nil {

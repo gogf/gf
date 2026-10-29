@@ -316,6 +316,20 @@ func doQuoteTableName(table, prefix, charLeft, charRight string) string {
 	return gstr.Join(array1, ",")
 }
 
+// mapPossibleItemByFieldKey acts like gutil.MapPossibleItemByKey on map `data` keyed by
+// field names, but before the fuzzy matching it looks up `key` folded by DB.FoldIdentifier.
+func mapPossibleItemByFieldKey(db DB, data map[string]any, key string) (foundKey string, foundValue any) {
+	if v, ok := data[key]; ok {
+		return key, v
+	}
+	if foldedKey := db.FoldIdentifier(key); foldedKey != key {
+		if v, ok := data[foldedKey]; ok {
+			return foldedKey, v
+		}
+	}
+	return gutil.MapPossibleItemByKey(data, key)
+}
+
 // doQuoteWord checks given string `s` a word, if true quotes it with `charLeft` and `charRight`
 // and returns the quoted string; or else returns `s` without any change.
 func doQuoteWord(s, charLeft, charRight string) string {
@@ -551,7 +565,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 			if ormTagValue == "" {
 				ormTagValue = structField.Name
 			}
-			foundKey, foundValue := gutil.MapPossibleItemByKey(data, ormTagValue)
+			foundKey, foundValue := mapPossibleItemByFieldKey(db, data, ormTagValue)
 			if foundKey != "" {
 				if in.OmitNil && empty.IsNil(foundValue) {
 					continue
@@ -688,7 +702,7 @@ func formatWhereInterfaces(db DB, where []any, buffer *bytes.Buffer, newArgs []a
 	for i := 0; i < len(where); i += 2 {
 		str = gconv.String(where[i])
 		if buffer.Len() > 0 {
-			buffer.WriteString(" AND " + db.GetCore().QuoteWord(str) + "=?")
+			buffer.WriteString(sqlAnd + db.GetCore().QuoteWord(str) + "=?")
 		} else {
 			buffer.WriteString(db.GetCore().QuoteWord(str) + "=?")
 		}
@@ -725,7 +739,7 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []any) {
 		quotedKey = in.Prefix + "." + quotedKey
 	}
 	if in.Buffer.Len() > 0 {
-		in.Buffer.WriteString(" AND ")
+		in.Buffer.WriteString(sqlAnd)
 	}
 	// If the value is type of slice, and there's only one '?' holder in
 	// the key string, it automatically adds '?' holder chars according to its arguments count
@@ -838,7 +852,7 @@ func handleSliceAndStructArgsForSql(oldSql string, oldArgs []any) (newSql string
 				// Query("select * from xxx where id in(?)", g.Slice{}) -> select * from xxx where 0=1
 				// Where("id in(?)", g.Slice{}) -> WHERE 0=1
 				if gstr.Contains(newSql, "?") {
-					whereKeyWord := " WHERE "
+					whereKeyWord := sqlWhere
 					if p := gstr.PosI(newSql, whereKeyWord); p == -1 {
 						return "0=1", []any{}
 					} else {

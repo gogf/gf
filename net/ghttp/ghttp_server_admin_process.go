@@ -313,7 +313,7 @@ func handleProcessMessage() {
 	)
 	for {
 		if msg := gproc.Receive(adminGProcCommGroup); msg != nil {
-			if bytes.EqualFold(msg.Data, []byte("exit")) {
+			if bytes.EqualFold(msg.Data, []byte(gprocMessageExit)) {
 				intlog.Printf(ctx, "%d: process message: exit", gproc.Pid())
 				shutdownWebServersGracefully(ctx, nil)
 				allShutdownChan <- struct{}{}

@@ -24,16 +24,24 @@ require github.com/gogf/gf/contrib/registry/nacos/v2 latest
 package main
 
 import (
+	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
+
 	"github.com/gogf/gf/contrib/registry/nacos/v2"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/net/gsvc"
+	"github.com/gogf/gf/v2/os/gctx"
 )
 
 func main() {
-	gsvc.SetRegistry(nacos.New(`127.0.0.1:8848`).
-        SetClusterName("DEFAULT").
-        SetGroupName("DEFAULT_GROUP"))
+	registry, err := nacos.NewWithConfig(gctx.New(), nacos.Config{
+		ServerConfigs: []constant.ServerConfig{*constant.NewServerConfig("127.0.0.1", 8848)},
+		ClientConfig:  constant.NewClientConfig(constant.WithNamespaceId("public")),
+	}, nacos.WithClusterName("DEFAULT"), nacos.WithGroupName("DEFAULT_GROUP"))
+	if err != nil {
+		panic(err)
+	}
+	gsvc.SetRegistry(registry)
 
 	s := g.Server(`hello.svc`)
 	s.BindHandler("/", func(r *ghttp.Request) {

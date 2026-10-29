@@ -88,15 +88,15 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 			downloadName = gfile.Basename(path)
 		}
 	}
-	r.Header().Set("Content-Type", "application/force-download")
-	r.Header().Set("Accept-Ranges", "bytes")
+	r.Header().Set(HeaderContentType, "application/force-download")
+	r.Header().Set(HeaderAcceptRanges, "bytes")
 	if utils.IsASCII(downloadName) {
-		r.Header().Set("Content-Disposition", fmt.Sprintf(`attachment;filename=%s`, url.QueryEscape(downloadName)))
+		r.Header().Set(HeaderContentDisposition, fmt.Sprintf(`attachment;filename=%s`, url.QueryEscape(downloadName)))
 	} else {
-		r.Header().Set("Content-Disposition", fmt.Sprintf(`attachment;filename*=UTF-8''%s`, url.QueryEscape(downloadName)))
+		r.Header().Set(HeaderContentDisposition, fmt.Sprintf(`attachment;filename*=UTF-8''%s`, url.QueryEscape(downloadName)))
 	}
 
-	r.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
+	r.Header().Set(HeaderAccessControlExposeHeaders, HeaderContentDisposition)
 	r.Server.serveFile(r.Request, serveFile)
 }
 
@@ -104,7 +104,7 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 // The optional parameter `code` specifies the http status code for redirecting,
 // which commonly can be 301 or 302. It's 302 in default.
 func (r *Response) RedirectTo(location string, code ...int) {
-	r.Header().Set("Location", location)
+	r.Header().Set(HeaderLocation, location)
 	if len(code) > 0 {
 		r.WriteHeader(code[0])
 	} else {
@@ -133,9 +133,9 @@ func (r *Response) ServeContent(name string, modTime time.Time, content io.ReadS
 
 // Flush outputs the buffer content to the client and clears the buffer.
 func (r *Response) Flush() {
-	r.Header().Set(responseHeaderTraceID, gtrace.GetTraceID(r.Request.Context()))
+	r.Header().Set(HeaderTraceId, gtrace.GetTraceID(r.Request.Context()))
 	if r.Server.config.ServerAgent != "" {
-		r.Header().Set("Server", r.Server.config.ServerAgent)
+		r.Header().Set(HeaderServer, r.Server.config.ServerAgent)
 	}
 	r.BufferWriter.Flush()
 }

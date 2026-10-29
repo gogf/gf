@@ -50,7 +50,7 @@ var localTypeMap = map[string]gdb.LocalType{
 	"character varying":               gdb.LocalTypeString,
 	"clob":                            gdb.LocalTypeString,
 	"date":                            gdb.LocalTypeDate,
-	"date32":                          gdb.LocalTypeDatetime,
+	"date32":                          gdb.LocalTypeDate,
 	"datetime":                        gdb.LocalTypeDatetime,
 	"datetime32":                      gdb.LocalTypeDatetime,
 	"datetime64":                      gdb.LocalTypeDatetime,
@@ -167,11 +167,13 @@ var localTypeMap = map[string]gdb.LocalType{
 
 // CheckLocalTypeForField checks and returns corresponding local golang type for given db type.
 // The parameter `fieldType` is the type name reported by the driver, like `Int64`,
-// `Point`, `IntervalDay` or `Array(Nullable(Int64))`.
+// `Point`, `IntervalDay` or `Array(Nullable(Int64))`. A `Nullable(T)` or `LowCardinality(T)`
+// value is a value of `T`, so the type `T` it wraps is checked instead.
 //
 // `bit` is left to the core, as its local type depends on its precision rather than its
 // name: the core takes bit(1) as a boolean.
 func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue any) (gdb.LocalType, error) {
+	fieldType = unwrapNullable(fieldType)
 	var typeName string
 	match, _ := gregex.MatchString(`(.+?)\((.+)\)`, fieldType)
 	if len(match) == 3 {
@@ -187,4 +189,22 @@ func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, f
 		return localType, nil
 	}
 	return d.Core.CheckLocalTypeForField(ctx, fieldType, fieldValue)
+}
+
+// unwrapNullable returns the type that the `Nullable(T)` and `LowCardinality(T)` wrappers of
+// `fieldType` wrap, like `DateTime` for `LowCardinality(Nullable(DateTime))`, or `fieldType`
+// itself if it is not wrapped.
+func unwrapNullable(fieldType string) string {
+	for {
+		var unwrapped bool
+		for _, wrapper := range []string{"Nullable(", "LowCardinality("} {
+			if strings.HasPrefix(fieldType, wrapper) && strings.HasSuffix(fieldType, ")") {
+				fieldType = fieldType[len(wrapper) : len(fieldType)-1]
+				unwrapped = true
+			}
+		}
+		if !unwrapped {
+			return fieldType
+		}
+	}
 }

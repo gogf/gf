@@ -2,7 +2,7 @@
 
 This is the [GoFrame](https://goframe.org) framework (`github.com/gogf/gf/v2`) — a modular Go application framework. The repository is a **multi-module monorepo**: the root module hosts the core framework, while `cmd/gf` and every directory under `contrib/` are independent Go modules with their own `go.mod`.
 
-- Root module: `github.com/gogf/gf/v2` (Go 1.23+)
+- Root module: `github.com/gogf/gf/v2` (Go 1.25+)
 - Tooling module: `cmd/gf` (CLI: `gf` command, separate `go.work`)
 - Plugin modules under `contrib/`: `config/*`, `drivers/*` (mysql, pgsql, mssql, oracle, sqlite, clickhouse, dm, gaussdb, mariadb, oceanbase, tidb, sqlitecgo), `metric/*`, `nosql/*`, `registry/*`, `rpc/grpcx`, `sdk/*`, `trace/*`. Each is published as its own module so users only pull what they need.
 
@@ -101,9 +101,8 @@ cd cmd/gf && go run . <subcommand>   # iterate on the gf CLI itself
 - **`gdb` is driver-agnostic.** The core in `database/gdb` exposes interfaces; concrete drivers (`contrib/drivers/mysql`, etc.) register themselves via `init()` when imported. The same model pattern applies to `gredis`, `gcfg` (apollo/nacos/polaris adapters), and `gsvc` (etcd/consul/nacos/polaris/zookeeper registries).
 - **`internal/` is private.** Sub-packages (`intlog`, `instance`, `reflection`, `utils`, `json`, `command`) are not part of the public API surface — do not import them from outside the root module, and avoid leaking their types in exported signatures.
 - **Tests use `gtest`, not stdlib `testing` directly.** `test/gtest` provides `gtest.C(t, func(t *gtest.T){...})` blocks, fluent assertions (`t.Assert`, `t.AssertNE`, `t.AssertNil`), and is the project-wide convention. Match this style when adding tests.
-- **CI matrix.** Tests run on Go 1.23, 1.24, 1.25 across 386 and amd64. `contrib/*` only runs on the latest Go version (`LATEST_GO_VERSION` in `.github/workflows/ci-main.yml`). Code that requires the latest stdlib should live in `contrib/` or be guarded.
+- **CI matrix.** Tests run on Go 1.25, 1.26 and 1.27 on amd64; the latest Go version also tests the root module on 386, without `-race` as the race detector does not support 386. `contrib/*` only runs on the latest Go version (`LATEST_GO_VERSION` in `.github/workflows/ci-main.yml`), split into parallel groups by `module_group` in `.github/workflows/scripts/ci-main.sh`. Code that requires the latest stdlib should live in `contrib/` or be guarded. `golangci-lint` is pinned to the Go version declared in the root `go.mod` `go` directive, so keep them in sync when bumping either one.
 - **Lint config matters.** `.golangci.yml` enforces a 380-char line limit, function length up to 340 lines, custom import grouping (`gci` with `prefix(github.com/gogf/gf/v2)` ahead of `cmd`/`contrib`/`example`), `gofmt -s` with rewrites (`interface{}` → `any`, `ioutil.*` → `io`/`os`, `reflect.Ptr` → `reflect.Pointer`). Run `make lint` before pushing.
-- **OpenSpec changes live under `openspec/changes/`** and drive every non-trivial change through the workflow defined below. The active iteration directory must be checked before starting work — see the Development Workflow Rules section.
 
 # Karpathy Guidelines
 
@@ -174,21 +173,7 @@ Technical documentation such as `README.md` must follow `.agents/instructions/ma
 
 # Development Workflow Rules
 
-This project follows `SDD` and uses the `OpenSpec` tool to drive implementation. Change records are stored under `openspec/changes/`. Each change includes `proposal.md`, `design.md`, `specs/`, and `tasks.md`.
-
-**Execution workflow**:
-1. Use the `/opsx:explore` slash command at `.agents/prompts/opsx/explore.md` to conduct an exploratory discussion based on the requirement description, analyze the problem, design the solution, and assess risks.
-2. Once the exploratory discussion finishes and the solution is clear, use the `/opsx:propose` slash command at `.agents/prompts/opsx/propose.md` to turn it into a formal `OpenSpec` change proposal. The command format is `/opsx:propose feature-name`, where `feature-name` is a descriptive name for the current change in `kebab-case`, such as `user-auth` or `data-export`. A new change directory will then be generated automatically under `openspec/changes`, containing incremental spec documents (`spec/`), the technical implementation plan (`design.md`), the proposal and rationale (`proposal.md`), and the implementation task list (`tasks.md`).
-3. Then run the `/opsx:apply` slash command at `.agents/prompts/opsx/apply.md` to execute the items in `tasks.md` one by one, completing code changes, tests, and documentation updates. After the work is done, the `/gf-review` skill must be invoked for code and spec review.
-4. When users report issues or improvement requests, the `/gf-feedback` skill must be used to fix and verify them, and the related `OpenSpec` documents must be updated. After the work is done, the `/gf-review` skill must be invoked for review.
-5. After the user confirms that the current iteration is complete and has no remaining issues, run the `/opsx:archive` slash command at `.agents/prompts/opsx/archive.md` to archive the change. Before archiving, the `/gf-review` skill must be used for a full change review to ensure code quality and compliance with the spec.
-
-**Key rules**:
-- **An `OpenSpec` change is considered active until it is archived**: any change directory that still exists directly under `openspec/changes/` and has **not been moved to** `openspec/changes/archive/` is an active change. **Even if the change has completed all tasks and `openspec list --json` shows `status: complete`, it must still be treated as active until the archive step has been executed.**
-- When a user reports a bug, defect, or improvement request in either Chinese or English, and there is an active `OpenSpec` change in the project, the `gf-feedback` skill must be used. **Unless the user explicitly asks to create a new change, the feedback must always be appended to the current active iteration, even if it is unrelated to the main feature of that iteration**, so that everything can be managed and archived together.
-- The `/gf-review` review skill is triggered automatically after `/opsx:apply` completes, after `/opsx:feedback` completes, and before `/opsx:archive`.
 - During development tasks executed with tools such as `Claude Code` or `Codex CLI`, if the work can be parallelized effectively with `SubAgent` and doing so would clearly improve efficiency, that option must be evaluated first and adopted whenever appropriate. Only skip `SubAgent` when the task is strongly dependent on serial context, the split cost is too high, or it introduces obvious collaboration risk.
-- When creating new iteration documents, the content of `proposal.md`, `design.md`, `tasks.md`, and the incremental specs must be written in English.
 
 # Code Development Rules
 - All source code must include comments, such as package comments, file comments, method comments for both public and private methods, constant comments, variable comments, and comments for key logic.
