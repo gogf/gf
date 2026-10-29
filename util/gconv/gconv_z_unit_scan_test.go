@@ -283,9 +283,16 @@ func TestScan(t *testing.T) {
 			t.Assert("奥林帕斯山", scanExpects.mapStrAny["Place"])
 
 			err = gconv.Scan(test, &scanExpects.mapAnyAny)
-			t.Assert(err, gerror.New(
-				"json.UnmarshalUseNumber failed: json: cannot unmarshal object into Go value of type map[interface {}]interface {}",
-			))
+			// map[any]any is rejected by encoding/json v1 but accepted when jsonv2
+			// is enabled, which is the default since Go 1.27.
+			if err != nil {
+				t.Assert(err, gerror.New(
+					"json.UnmarshalUseNumber failed: json: cannot unmarshal object into Go value of type map[interface {}]interface {}",
+				))
+			} else {
+				t.Assert("Mars", scanExpects.mapAnyAny["Name"])
+				t.Assert("奥林帕斯山", scanExpects.mapAnyAny["Place"])
+			}
 
 			err = gconv.Scan(test, &scanExpects.structSub)
 			t.AssertNil(err)
@@ -329,9 +336,19 @@ func TestScan(t *testing.T) {
 
 			var maa = []map[any]any{scanExpects.mapAnyAny, scanExpects.mapAnyAny}
 			err = gconv.Scan(jsons, &maa)
-			t.Assert(err, gerror.New(
-				"json.UnmarshalUseNumber failed: json: cannot unmarshal object into Go value of type map[interface {}]interface {}",
-			))
+			// map[any]any is rejected by encoding/json v1 but accepted when jsonv2
+			// is enabled, which is the default since Go 1.27.
+			if err != nil {
+				t.Assert(err, gerror.New(
+					"json.UnmarshalUseNumber failed: json: cannot unmarshal object into Go value of type map[interface {}]interface {}",
+				))
+			} else {
+				t.Assert(len(maa), 2)
+				for k := range maa {
+					t.Assert("Mars", maa[k]["Name"])
+					t.Assert("奥林帕斯山", maa[k]["Place"])
+				}
+			}
 
 			var ss = []scanStructTest{scanExpects.structSub, scanExpects.structSub}
 			err = gconv.Scan(jsons, &ss)

@@ -36,7 +36,7 @@ concurrency:
 env:
   TZ: "Asia/Shanghai"
   # for unit testing cases of some components that only execute on the latest go version.
-  LATEST_GO_VERSION: "1.26"
+  LATEST_GO_VERSION: "1.27"
 
 jobs:
   code-test:
@@ -45,9 +45,17 @@ jobs:
         # 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
         # When adding new go version to the list, make sure:
         # 1. Update the `LATEST_GO_VERSION` env variable.
+        # 2. Update the go version of the `include` entries.
         # 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        go-version: [ "1.25", "1.26" ]
-        goarch: [ "386", "amd64" ]
+        go-version: [ "1.25", "1.26", "1.27" ]
+        group: [ "core" ]
+        include:
+          - go-version: "1.27"
+            group: "drivers-1"
+          - go-version: "1.27"
+            group: "drivers-2"
+          - go-version: "1.27"
+            group: "386"
 
     runs-on: ubuntu-latest
 
@@ -295,7 +303,32 @@ jobs:
       uses: actions/setup-go@v7
       with:
         go-version: ${{ matrix.go-version }}
-        cache-dependency-path: '**/go.sum'
+        # Cache is managed manually below: setup-go keys a single cache entry on all
+        # `**/go.sum` files, which invalidates the whole cache whenever any of the 30+
+        # submodules bumps a dependency.
+        cache: false
+
+    - name: Get current month
+      id: cache-month
+      run: echo "month=$(date +%Y%m)" >> "$GITHUB_OUTPUT"
+
+    - name: Restore Go module cache
+      id: mod-cache
+      uses: actions/cache/restore@v6
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-mod-main-${{ matrix.group == '386' && 'core' || matrix.group }}-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-mod-main-${{ matrix.group == '386' && 'core' || matrix.group }}-
+
+    - name: Restore Go build cache
+      id: build-cache
+      uses: actions/cache/restore@v6
+      with:
+        path: ~/.cache/go-build
+        key: ${{ runner.os }}-go-build-main-${{ matrix.go-version }}-${{ matrix.group }}-${{ steps.cache-month.outputs.month }}
+        restore-keys: |
+          ${{ runner.os }}-go-build-main-${{ matrix.go-version }}-${{ matrix.group }}-
 
     - name: Install Protoc
       uses: arduino/setup-protoc@v3
@@ -316,11 +349,25 @@ jobs:
 
     - name: Build & Test
       if: ${{ (github.event_name == 'push' && github.ref != 'refs/heads/master') || github.event_name == 'pull_request' }}
-      run: bash .github/workflows/scripts/ci-main.sh
+      run: bash .github/workflows/scripts/ci-main.sh ${{ matrix.group }}
 
     - name: Build & Test & Coverage
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-      run: bash .github/workflows/scripts/ci-main.sh coverage
+      run: bash .github/workflows/scripts/ci-main.sh ${{ matrix.group }} coverage
+
+    - name: Save Go module cache
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && matrix.group != '386' && steps.mod-cache.outputs.cache-hit != 'true' }}
+      uses: actions/cache/save@v6
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ steps.mod-cache.outputs.cache-primary-key }}
+
+    - name: Save Go build cache
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && steps.build-cache.outputs.cache-hit != 'true' }}
+      uses: actions/cache/save@v6
+      with:
+        path: ~/.cache/go-build
+        key: ${{ steps.build-cache.outputs.cache-primary-key }}
 
     - name: Stop Redis Cluster Containers
       run:  docker compose -f ".github/workflows/redis/docker-compose.yml" down
@@ -337,7 +384,7 @@ jobs:
     - name: Report Coverage
       uses: codecov/codecov-action@v7
       # Only report coverage on the latest go version
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION }}
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && matrix.group != '386' }}
       with:
-        flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
+        flags: go-${{ matrix.go-version }}
         token: ${{ secrets.CODECOV_TOKEN }}
