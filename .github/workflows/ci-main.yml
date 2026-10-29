@@ -317,9 +317,9 @@ jobs:
       uses: actions/cache/restore@v6
       with:
         path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-mod-main-${{ matrix.group }}-${{ hashFiles('**/go.sum') }}
+        key: ${{ runner.os }}-go-mod-main-${{ matrix.group == '386' && 'core' || matrix.group }}-${{ hashFiles('**/go.sum') }}
         restore-keys: |
-          ${{ runner.os }}-go-mod-main-${{ matrix.group }}-
+          ${{ runner.os }}-go-mod-main-${{ matrix.group == '386' && 'core' || matrix.group }}-
 
     - name: Restore Go build cache
       id: build-cache
@@ -356,14 +356,14 @@ jobs:
       run: bash .github/workflows/scripts/ci-main.sh ${{ matrix.group }} coverage
 
     - name: Save Go module cache
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && steps.mod-cache.outputs.cache-hit != 'true' }}
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && matrix.group != '386' && steps.mod-cache.outputs.cache-hit != 'true' }}
       uses: actions/cache/save@v6
       with:
         path: ~/go/pkg/mod
         key: ${{ steps.mod-cache.outputs.cache-primary-key }}
 
     - name: Save Go build cache
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && steps.build-cache.outputs.cache-hit != 'true' }}
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && steps.build-cache.outputs.cache-hit != 'true' }}
       uses: actions/cache/save@v6
       with:
         path: ~/.cache/go-build

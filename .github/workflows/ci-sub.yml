@@ -97,7 +97,7 @@ jobs:
         key: ${{ steps.mod-cache.outputs.cache-primary-key }}
 
     - name: Save Go build cache
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && steps.build-cache.outputs.cache-hit != 'true' }}
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && steps.build-cache.outputs.cache-hit != 'true' }}
       uses: actions/cache/save@v6
       with:
         path: ~/.cache/go-build
