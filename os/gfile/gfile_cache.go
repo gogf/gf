@@ -60,6 +60,7 @@ func GetBytesWithCache(path string, duration ...time.Duration) []byte {
 		ctx      = context.Background()
 		expire   = cacheDuration
 		cacheKey = commandEnvKeyForCache + path
+		callback *gfsnotify.Callback
 	)
 
 	if len(duration) > 0 {
@@ -67,10 +68,11 @@ func GetBytesWithCache(path string, duration ...time.Duration) []byte {
 	}
 	r, _ := internalCache.GetOrSetFuncLock(ctx, cacheKey, func(ctx context.Context) (any, error) {
 		b := GetBytes(path)
-		if b != nil {
+		// A negative duration does not cache the content, so no watch is needed.
+		if b != nil && expire >= 0 {
 			// Adding this `path` to gfsnotify,
 			// it will clear its cache if there's any changes of the file.
-			_, _ = gfsnotify.Add(path, func(event *gfsnotify.Event) {
+			callback, _ = gfsnotify.Add(path, func(event *gfsnotify.Event) {
 				_, err := internalCache.Remove(ctx, cacheKey)
 				if err != nil {
 					intlog.Errorf(ctx, `%+v`, err)
@@ -80,6 +82,11 @@ func GetBytesWithCache(path string, duration ...time.Duration) []byte {
 		}
 		return b, nil
 	}, expire)
+	if callback != nil && expire > 0 {
+		time.AfterFunc(expire, func() {
+			_ = gfsnotify.RemoveCallback(callback.Id)
+		})
+	}
 	if r != nil {
 		return r.Bytes()
 	}

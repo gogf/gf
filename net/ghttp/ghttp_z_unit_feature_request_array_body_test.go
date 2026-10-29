@@ -40,12 +40,12 @@ type arrayBodyNestedItem struct {
 	Extra arrayBodyExtra `json:"extra"`
 }
 
-// ArrayBodyReq declares the JSON array request body by the field tagged with `in:"body"`, of
+// ArrayBodyReq declares the JSON array request body by the field tagged with `body:"*"`, of
 // which the `Id` attribute is still retrieved from the request parameters as usual.
 type ArrayBodyReq struct {
 	g.Meta   `path:"/array-body" method:"post" mime:"application/json" summary:"array body api"`
 	Id       int             `json:"id" d:"100"`
-	Messages []arrayBodyItem `json:"messages" dc:"message list" in:"body"`
+	Messages []arrayBodyItem `json:"messages" dc:"message list" body:"*"`
 }
 
 // ArrayBodyRes is the response struct showing what the handler received.
@@ -61,18 +61,18 @@ type ArrayBodyRes struct {
 type ArrayBodyPathReq struct {
 	g.Meta   `path:"/array-body/{id}" method:"post" mime:"application/json"`
 	Id       int             `json:"id"`
-	Messages []arrayBodyItem `json:"messages" in:"body"`
+	Messages []arrayBodyItem `json:"messages" body:"*"`
 }
 
 // ArrayBodyNestedReq declares the JSON array request body of nested elements.
 type ArrayBodyNestedReq struct {
 	g.Meta `path:"/array-body-nested" method:"post" mime:"application/json"`
-	Items  []arrayBodyNestedItem `json:"items" in:"body"`
+	Items  []arrayBodyNestedItem `json:"items" body:"*"`
 }
 
 type ArrayBodyPointerReq struct {
 	g.Meta `path:"/array-body-pointer" method:"post" mime:"application/json"`
-	Items  *[]int `json:"items" in:"body"`
+	Items  *[]int `json:"items" body:"*"`
 }
 
 // ArrayBodyPlainReq is an ordinary request struct that does not declare the array request body.
@@ -347,7 +347,7 @@ func Test_Request_JsonArrayBody_ObjectBodyRejected(t *testing.T) {
 	s := newArrayBodyServer()
 	client := startArrayBodyServer(t, s)
 
-	// The object body is not acceptable for the field tagged with `in:"body"`, which is reported
+	// The object body is not acceptable for the field tagged with `body:"*"`, which is reported
 	// as an invalid parameter instead of being silently bound as a one-element slice.
 	for _, body := range []string{
 		`{"messages":[{"id":1,"name":"john"}]}`,
