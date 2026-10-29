@@ -16,7 +16,19 @@ import (
 )
 
 func Test_Gzip_UnGzip(t *testing.T) {
-	src := "Hello World!!"
+	var (
+		src  = "Hello World!!"
+		gzip = []byte{
+			0x1f, 0x8b, 0x08, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0xff,
+			0xf2, 0x48, 0xcd, 0xc9, 0xc9,
+			0x57, 0x08, 0xcf, 0x2f, 0xca,
+			0x49, 0x51, 0x54, 0x04, 0x04,
+			0x00, 0x00, 0xff, 0xff, 0x9d,
+			0x24, 0xa8, 0xd1, 0x0d, 0x00,
+			0x00, 0x00,
+		}
+	)
 
 	gtest.C(t, func(t *gtest.T) {
 		arr := []byte(src)
@@ -28,7 +40,11 @@ func Test_Gzip_UnGzip(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(result, arr)
 
-		result, _ = gcompress.UnGzip(data[1:])
+		result, err = gcompress.UnGzip(gzip)
+		t.AssertNil(err)
+		t.Assert(result, arr)
+
+		result, _ = gcompress.UnGzip(gzip[1:])
 		t.Assert(result, nil)
 	})
 }

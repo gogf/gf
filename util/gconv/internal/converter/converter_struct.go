@@ -19,6 +19,8 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/structcache"
 )
 
+var rawMessageType = reflect.TypeOf((*json.RawMessage)(nil)).Elem()
+
 // StructOption is the option for Struct converting.
 type StructOption struct {
 	// ParamKeyToAttrMap is the map for custom parameter key to attribute name mapping.
@@ -562,9 +564,9 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 				)
 				for i := 0; i < reflectValue.Len(); i++ {
 					converted = false
-					elemTypeName = elemType.String()
-					if elemTypeName == "" {
-						elemTypeName = elemType.Name()
+					elemTypeName = elemType.Name()
+					if elemTypeName == "" || elemType == rawMessageType {
+						elemTypeName = elemType.String()
 					}
 					var elem reflect.Value
 					if elemType.Kind() == reflect.Pointer {
@@ -601,7 +603,7 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 			var (
 				elem         reflect.Value
 				elemType     = structFieldValue.Type().Elem()
-				elemTypeName = elemType.String()
+				elemTypeName = elemType.Name()
 				converted    bool
 			)
 			switch reflectValue.Kind() {
@@ -622,8 +624,8 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 				}
 			default:
 			}
-			if elemTypeName == "" {
-				elemTypeName = elemType.Name()
+			if elemTypeName == "" || elemType == rawMessageType {
+				elemTypeName = elemType.String()
 			}
 			if elemType.Kind() == reflect.Pointer {
 				elem = reflect.New(elemType.Elem()).Elem()

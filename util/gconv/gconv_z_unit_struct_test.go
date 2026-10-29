@@ -370,3 +370,28 @@ func TestStructRawMessageSliceFromSingleValue(t *testing.T) {
 		t.Assert(ff.Val[0], []byte(`{"hello":"world"}`))
 	})
 }
+
+func TestStructCustomRawMessageSlice(t *testing.T) {
+	type RawMessage []byte
+	type tFF struct {
+		Val []RawMessage `json:"val"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		ff := &tFF{}
+		err := gconv.Struct(map[string]any{
+			"val": map[string]any{"hello": "world"},
+		}, ff)
+		t.AssertNil(err)
+		t.AssertEQ(len(ff.Val), 1)
+		t.Assert(string(ff.Val[0]), `{"hello":"world"}`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		ff := &tFF{}
+		err := gconv.Struct(map[string]any{
+			"val": []any{map[string]any{"hello": "world"}},
+		}, ff)
+		t.AssertNil(err)
+		t.AssertEQ(len(ff.Val), 1)
+		t.Assert(string(ff.Val[0]), `{"hello":"world"}`)
+	})
+}
