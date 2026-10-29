@@ -1,6 +1,25 @@
 #!/usr/bin/env bash
 
-coverage=$1
+group=$1
+coverage=$2
+
+race=-race
+if [ "$group" = "386" ]; then
+    export GOARCH=386
+    race=
+    coverage=
+fi
+
+module_group() {
+    case $1 in
+        ./contrib/drivers/dm|./contrib/drivers/mssql|./contrib/drivers/oceanbase|./contrib/drivers/oracle|./contrib/drivers/sqlitecgo)
+            echo "drivers-1" ;;
+        ./contrib/drivers/*)
+            echo "drivers-2" ;;
+        *)
+            echo "core" ;;
+    esac
+}
 
 # find all path that contains go.mod.
 for file in `find . -name go.mod`; do
@@ -19,6 +38,14 @@ for file in `find . -name go.mod`; do
     
     if [[ $file =~ "/testdata/" ]]; then
         echo "ignore testdata path $file"
+        continue 1
+    fi
+    
+    if [ "$group" = "386" ]; then
+        if [ "$dirpath" != "." ]; then
+            continue 1
+        fi
+    elif [ "$(module_group $dirpath)" != "$group" ]; then
         continue 1
     fi
     
@@ -44,13 +71,13 @@ for file in `find . -name go.mod`; do
     
     # test with coverage
     if [ "${coverage}" = "coverage" ]; then
-        go test ./... -count=1 -race -coverprofile=coverage.out -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
+        go test ./... -count=1 $race -coverprofile=coverage.out -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
         
         if grep -q "/gogf/gf/.*/v2" go.mod; then
             sed -i "s/gogf\/gf\(\/.*\)\/v2/gogf\/gf\/v2\1/g" coverage.out
         fi
     else
-        go test ./... -count=1 -race || exit 1
+        go test ./... -count=1 $race || exit 1
     fi
     
     cd -
