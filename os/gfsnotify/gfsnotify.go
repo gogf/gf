@@ -27,12 +27,13 @@ import (
 
 // Watcher is the monitor for file changes.
 type Watcher struct {
-	watcher   *fsnotify.Watcher                            // Underlying fsnotify object.
-	events    *gqueue.TQueue[*Event]                       // Used for internal event management.
-	cache     *gcache.Cache                                // Used for repeated event filter.
-	nameSet   *gset.StrSet                                 // Used for AddOnce feature.
-	callbacks *gmap.KVMap[string, *glist.TList[*Callback]] // Path(file/folder) to callbacks mapping.
-	closeChan chan struct{}                                // Used for watcher closing notification.
+	watcher     *fsnotify.Watcher                            // Underlying fsnotify object.
+	events      *gqueue.TQueue[*Event]                       // Used for internal event management.
+	cache       *gcache.Cache                                // Used for repeated event filter.
+	nameSet     *gset.StrSet                                 // Used for AddOnce feature.
+	callbacks   *gmap.KVMap[string, *glist.TList[*Callback]] // Path(file/folder) to callbacks mapping.
+	closeChan   chan struct{}                                // Used for watcher closing notification.
+	watchLoopWg sync.WaitGroup                               // Waits for watchLoop to stop before closing the event queue.
 }
 
 // Callback is the callback function for Watcher.
@@ -109,6 +110,7 @@ func New() (*Watcher, error) {
 		intlog.Printf(context.TODO(), "New watcher failed: %v", err)
 		return nil, err
 	}
+	w.watchLoopWg.Add(1)
 	go w.watchLoop()
 	go w.eventLoop()
 	return w, nil
