@@ -36,7 +36,7 @@ concurrency:
 env:
   TZ: "Asia/Shanghai"
   # for unit testing cases of some components that only execute on the latest go version.
-  LATEST_GO_VERSION: "1.26"
+  LATEST_GO_VERSION: "1.27"
 
 jobs:
   code-test:
@@ -47,14 +47,14 @@ jobs:
         # 1. Update the `LATEST_GO_VERSION` env variable.
         # 2. Update the go version of the `include` entries.
         # 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        go-version: [ "1.25", "1.26" ]
+        go-version: [ "1.25", "1.26", "1.27" ]
         group: [ "core" ]
         include:
-          - go-version: "1.26"
+          - go-version: "1.27"
             group: "drivers-1"
-          - go-version: "1.26"
+          - go-version: "1.27"
             group: "drivers-2"
-          - go-version: "1.26"
+          - go-version: "1.27"
             group: "386"
 
     runs-on: ubuntu-latest
