@@ -7,9 +7,11 @@
 package mysql_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -1886,6 +1888,144 @@ PRIMARY KEY (user_id)
 		t.AssertNil(err)
 		t.Assert(user3.ID, 3)
 		t.AssertNil(user3.UserDetail)
+	})
+}
+
+func countSelectSQL(sqlArray []string) (count int) {
+	for _, sql := range sqlArray {
+		if gstr.HasPrefix(sql, "SELECT") {
+			count++
+		}
+	}
+	return
+}
+
+// Nested associations under a one-to-one relation should be queried per layer,
+// not once per parent record.
+func Test_Table_Relation_WithAll_List_Nested(t *testing.T) {
+	var (
+		tableUser       = "user"
+		tableUserDetail = "user_detail"
+		tableUserScores = "user_scores"
+	)
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user.sql"), tableUser)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUser)
+
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_detail.sql"), tableUserDetail)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUserDetail)
+
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_scores.sql"), tableUserScores)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUserScores)
+
+	type UserScores struct {
+		gmeta.Meta `orm:"table:user_scores"`
+		Id         int `json:"id"`
+		Uid        int `json:"uid"`
+		Score      int `json:"score"`
+	}
+
+	type UserDetail struct {
+		gmeta.Meta `orm:"table:user_detail"`
+		Uid        int           `json:"uid"`
+		Address    string        `json:"address"`
+		UserScores []*UserScores `orm:"with:uid"`
+	}
+
+	type User struct {
+		gmeta.Meta `orm:"table:user"`
+		Id         int         `json:"id"`
+		Name       string      `json:"name"`
+		UserDetail *UserDetail `orm:"with:uid=id"`
+	}
+
+	type UserDetailValue struct {
+		gmeta.Meta `orm:"table:user_detail"`
+		Uid        int          `json:"uid"`
+		Address    string       `json:"address"`
+		UserScores []UserScores `orm:"with:uid"`
+	}
+
+	type UserValue struct {
+		gmeta.Meta `orm:"table:user"`
+		Id         int             `json:"id"`
+		Name       string          `json:"name"`
+		UserDetail UserDetailValue `orm:"with:uid=id"`
+	}
+
+	// Initialize the data.
+	var err error
+	for i := 1; i <= 5; i++ {
+		_, err = db.Insert(ctx, tableUser, g.Map{
+			"id":   i,
+			"name": fmt.Sprintf(`name_%d`, i),
+		})
+		gtest.AssertNil(err)
+		_, err = db.Insert(ctx, tableUserDetail, g.Map{
+			"uid":     i,
+			"address": fmt.Sprintf(`address_%d`, i),
+		})
+		gtest.AssertNil(err)
+		for j := 1; j <= 5; j++ {
+			_, err = db.Insert(ctx, tableUserScores, g.Map{
+				"uid":   i,
+				"score": j,
+			})
+			gtest.AssertNil(err)
+		}
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			users    []*User
+			sqlArray []string
+		)
+		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			return db.Ctx(ctx).Model(tableUser).WithAll().Order("id").Scan(&users)
+		})
+		t.AssertNil(err)
+		// One query per layer: users, user_detail, user_scores.
+		t.Assert(countSelectSQL(sqlArray), 3)
+		t.Assert(len(users), 5)
+		for i, user := range users {
+			t.Assert(user.Id, i+1)
+			t.AssertNE(user.UserDetail, nil)
+			t.Assert(user.UserDetail.Uid, i+1)
+			t.Assert(user.UserDetail.Address, fmt.Sprintf(`address_%d`, i+1))
+			t.Assert(len(user.UserDetail.UserScores), 5)
+			for j, score := range user.UserDetail.UserScores {
+				t.Assert(score.Uid, i+1)
+				t.Assert(score.Score, j+1)
+			}
+		}
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			users    []UserValue
+			sqlArray []string
+		)
+		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			return db.Ctx(ctx).Model(tableUser).WithAll().Order("id").Scan(&users)
+		})
+		t.AssertNil(err)
+		t.Assert(countSelectSQL(sqlArray), 3)
+		t.Assert(len(users), 5)
+		for i, user := range users {
+			t.Assert(user.Id, i+1)
+			t.Assert(user.UserDetail.Uid, i+1)
+			t.Assert(user.UserDetail.Address, fmt.Sprintf(`address_%d`, i+1))
+			t.Assert(len(user.UserDetail.UserScores), 5)
+			for j, score := range user.UserDetail.UserScores {
+				t.Assert(score.Uid, i+1)
+				t.Assert(score.Score, j+1)
+			}
+		}
 	})
 }
 

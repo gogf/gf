@@ -326,6 +326,9 @@ func doScanList(in doScanListInput) (err error) {
 		relationFromAttrValue          reflect.Value
 		relationFromAttrField          reflect.Value
 		relationBindToFieldNameChecked bool
+		// Related structs of all parent records, scanned recursively in one batch
+		// so that nested relation queries are issued per layer instead of per parent.
+		nextScanValues []reflect.Value
 	)
 	for i := 0; i < arrayValue.Len(); i++ {
 		arrayElemValue := arrayValue.Index(i)
@@ -392,10 +395,18 @@ func doScanList(in doScanListInput) (err error) {
 					if err = results.Structs(bindToAttrValue.Addr()); err != nil {
 						return err
 					}
-					// Recursively Scan.
+					// Collect related structs for batched recursion.
 					if in.Model != nil {
-						if err = in.Model.doWithScanStructs(bindToAttrValue.Addr()); err != nil {
-							return nil
+						for j := 0; j < bindToAttrValue.Len(); j++ {
+							item := bindToAttrValue.Index(j)
+							if item.Kind() == reflect.Pointer {
+								if item.IsNil() {
+									continue
+								}
+							} else {
+								item = item.Addr()
+							}
+							nextScanValues = append(nextScanValues, item)
 						}
 					}
 				} else {
@@ -452,11 +463,9 @@ func doScanList(in doScanListInput) (err error) {
 					return err
 				}
 			}
-			// Recursively Scan.
+			// Collect related struct for batched recursion.
 			if in.Model != nil {
-				if err = in.Model.doWithScanStruct(element); err != nil {
-					return err
-				}
+				nextScanValues = append(nextScanValues, element.Addr())
 			}
 			bindToAttrValue.Set(element.Addr())
 
@@ -496,15 +505,26 @@ func doScanList(in doScanListInput) (err error) {
 					return err
 				}
 			}
-			// Recursively Scan.
+			// Collect related struct for batched recursion.
 			if in.Model != nil {
-				if err = in.Model.doWithScanStruct(bindToAttrValue); err != nil {
-					return err
-				}
+				nextScanValues = append(nextScanValues, bindToAttrValue.Addr())
 			}
 
 		default:
 			return gerror.NewCodef(gcode.CodeInvalidParameter, `unsupported attribute type: %s`, bindToAttrKind.String())
+		}
+	}
+	if in.Model != nil && len(nextScanValues) > 0 {
+		nextScanSlice := reflect.MakeSlice(
+			reflect.SliceOf(nextScanValues[0].Type()), len(nextScanValues), len(nextScanValues),
+		)
+		for i, v := range nextScanValues {
+			nextScanSlice.Index(i).Set(v)
+		}
+		nextScanSlicePointer := reflect.New(nextScanSlice.Type())
+		nextScanSlicePointer.Elem().Set(nextScanSlice)
+		if err = in.Model.doWithScanStructs(nextScanSlicePointer.Interface()); err != nil {
+			return err
 		}
 	}
 	reflect.ValueOf(in.StructSlicePointer).Elem().Set(arrayValue)
