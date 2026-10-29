@@ -312,19 +312,34 @@ jobs:
       id: cache-month
       run: echo "month=$(date +%Y%m)" >> "$GITHUB_OUTPUT"
 
-    # Each matrix entry downloads and builds a different set of modules, so it keeps
-    # its own module and build cache. Only the latest Go version saves them, on master
-    # pushes, to stay within the 10GB repository budget.
-    - name: Restore Go cache
-      id: go-cache
+    # Go module cache. Downloaded modules are independent of the Go version and of
+    # the target architecture, so the key intentionally omits both: every matrix entry
+    # shares one cache entry instead of creating several. It is append-only and never
+    # rots, so it is not rotated monthly either. Keyed on the root go.mod/go.sum,
+    # which changes far less often than `**/go.sum`; the restore-keys tier keeps
+    # dependency bumps incremental.
+    - name: Restore Go module cache
+      uses: actions/cache@v6
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-mod-main-${{ hashFiles('go.mod', 'go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-mod-main-
+
+    # Go build cache is content-addressed, so stale entries are simply not hit and it
+    # is safe to restore across source changes. It is restored for every matrix entry
+    # but only saved once per Go version (see the save step below), because each
+    # version builds incompatible artifacts. The 386 group and amd64 groups share one
+    # cache per Go version: only the 386 group exports GOARCH=386, the others stay at
+    # the runner's native amd64.
+    - name: Restore Go build cache
+      id: build-cache
       uses: actions/cache/restore@v6
       with:
-        path: |
-          ~/go/pkg/mod
-          ~/.cache/go-build
-        key: ${{ runner.os }}-go-main-${{ matrix.go-version }}-${{ matrix.group }}-${{ steps.cache-month.outputs.month }}
+        path: ~/.cache/go-build
+        key: ${{ runner.os }}-go-build-main-${{ matrix.go-version }}-${{ steps.cache-month.outputs.month }}
         restore-keys: |
-          ${{ runner.os }}-go-main-${{ matrix.go-version }}-${{ matrix.group }}-
+          ${{ runner.os }}-go-build-main-${{ matrix.go-version }}-
 
     - name: Install Protoc
       uses: arduino/setup-protoc@v3
@@ -351,15 +366,27 @@ jobs:
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
       run: bash .github/workflows/scripts/ci-main.sh ${{ matrix.group }} coverage
 
-    - name: Save Go cache
-      # Cache entries are immutable, so this month's entry is only saved once.
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && steps.go-cache.outputs.cache-hit != 'true' }}
+    # The module cache is saved only by the core group on the latest Go version: it
+    # runs both the root and contrib modules, so it downloads the superset of all
+    # dependencies. Other groups would save incomplete snapshots.
+    - name: Save Go module cache
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && matrix.group == 'core' }}
       uses: actions/cache/save@v6
       with:
-        path: |
-          ~/go/pkg/mod
-          ~/.cache/go-build
-        key: ${{ steps.go-cache.outputs.cache-primary-key }}
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-mod-main-${{ hashFiles('go.mod', 'go.sum') }}
+        save-always: true
+
+    # The build cache is saved once per Go version on the latest group that finished.
+    # We don't key it by group: the 386 group exports GOARCH=386, but all other
+    # groups stay at the runner's native amd64, so they share one cache per Go version.
+    - name: Save Go build cache
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && steps.build-cache.outputs.cache-hit != 'true' }}
+      uses: actions/cache/save@v6
+      with:
+        path: ~/.cache/go-build
+        key: ${{ runner.os }}-go-build-main-${{ matrix.go-version }}-${{ steps.cache-month.outputs.month }}
+        save-always: true
 
     - name: Stop Redis Cluster Containers
       run:  docker compose -f ".github/workflows/redis/docker-compose.yml" down

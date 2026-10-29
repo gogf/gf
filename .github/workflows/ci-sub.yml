@@ -65,18 +65,28 @@ jobs:
       id: cache-month
       run: echo "month=$(date +%Y%m)" >> "$GITHUB_OUTPUT"
 
-    # Only the latest Go version saves the cache, on master pushes, to stay within
-    # the 10GB repository budget.
-    - name: Restore Go cache
-      id: go-cache
+    # Go module cache: shared across all matrix entries, keyed on the root go.sum.
+    # Sub CI only tests kubecm (which reads contrib/config/) and examples/, so it
+    # does not download the full dependency tree. The restore-keys fall back to main
+    # CI's cache (`-go-mod-main-`), which is a superset.
+    - name: Restore Go module cache
+      uses: actions/cache@v6
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-mod-sub-${{ hashFiles('go.mod', 'go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-mod-sub-
+          ${{ runner.os }}-go-mod-main-
+
+    # Go build cache: per Go version, monthly rotation.
+    - name: Restore Go build cache
+      id: build-cache
       uses: actions/cache/restore@v6
       with:
-        path: |
-          ~/go/pkg/mod
-          ~/.cache/go-build
-        key: ${{ runner.os }}-go-sub-${{ matrix.go-version }}-${{ steps.cache-month.outputs.month }}
+        path: ~/.cache/go-build
+        key: ${{ runner.os }}-go-build-sub-${{ matrix.go-version }}-${{ steps.cache-month.outputs.month }}
         restore-keys: |
-          ${{ runner.os }}-go-sub-${{ matrix.go-version }}-
+          ${{ runner.os }}-go-build-sub-${{ matrix.go-version }}-
 
     - name: Before Script
       run:  bash .github/workflows/scripts/before_script.sh
@@ -84,14 +94,20 @@ jobs:
     - name: Build & Test
       run: bash .github/workflows/scripts/ci-sub.sh
 
-    - name: Save Go cache
-      # Cache entries are immutable, so this month's entry is only saved once.
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && steps.go-cache.outputs.cache-hit != 'true' }}
+    - name: Save Go module cache
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION }}
       uses: actions/cache/save@v6
       with:
-        path: |
-          ~/go/pkg/mod
-          ~/.cache/go-build
-        key: ${{ steps.go-cache.outputs.cache-primary-key }}
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-mod-sub-${{ hashFiles('go.mod', 'go.sum') }}
+        save-always: true
+
+    - name: Save Go build cache
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && steps.build-cache.outputs.cache-hit != 'true' }}
+      uses: actions/cache/save@v6
+      with:
+        path: ~/.cache/go-build
+        key: ${{ runner.os }}-go-build-sub-${{ matrix.go-version }}-${{ steps.cache-month.outputs.month }}
+        save-always: true
 
 
