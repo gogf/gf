@@ -2029,6 +2029,144 @@ func Test_Table_Relation_WithAll_List_Nested(t *testing.T) {
 	})
 }
 
+// Four-layer association chain: one query per layer, independent of the parent count.
+func Test_Table_Relation_WithAll_List_NestedDeep(t *testing.T) {
+	var (
+		tableUser         = "user"
+		tableUserScores   = "user_scores"
+		tableScoreDetails = "score_details"
+		tableDetailMeta   = "detail_meta"
+	)
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user.sql"), tableUser)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUser)
+
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_scores.sql"), tableUserScores)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUserScores)
+
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_score_details.sql"), tableScoreDetails)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableScoreDetails)
+
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_detail_meta.sql"), tableDetailMeta)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableDetailMeta)
+
+	type DetailMeta struct {
+		gmeta.Meta `orm:"table:detail_meta"`
+		Id         int    `json:"id"`
+		DetailId   int    `json:"detail_id"`
+		MetaKey    string `json:"meta_key"`
+	}
+
+	type ScoreDetails struct {
+		gmeta.Meta `orm:"table:score_details"`
+		Id         int           `json:"id"`
+		ScoreId    int           `json:"score_id"`
+		DetailInfo string        `json:"detail_info"`
+		DetailMeta []*DetailMeta `orm:"with:detail_id=id, order:id asc"`
+	}
+
+	type UserScores struct {
+		gmeta.Meta   `orm:"table:user_scores"`
+		Id           int             `json:"id"`
+		Uid          int             `json:"uid"`
+		Score        int             `json:"score"`
+		ScoreDetails []*ScoreDetails `orm:"with:score_id=id, order:id asc"`
+	}
+
+	type User struct {
+		gmeta.Meta `orm:"table:user"`
+		Id         int           `json:"id"`
+		Name       string        `json:"name"`
+		UserScores []*UserScores `orm:"with:uid=id, order:id asc"`
+	}
+
+	// Initialize the data.
+	var err error
+	for i := 1; i <= 5; i++ {
+		_, err = db.Insert(ctx, tableUser, g.Map{
+			"id":   i,
+			"name": fmt.Sprintf(`name_%d`, i),
+		})
+		gtest.AssertNil(err)
+		for j := 1; j <= 5; j++ {
+			var scoreId int64
+			scoreId, err = db.InsertAndGetId(ctx, tableUserScores, g.Map{
+				"uid":   i,
+				"score": j,
+			})
+			gtest.AssertNil(err)
+			for k := 1; k <= 4; k++ {
+				var detailId int64
+				detailId, err = db.InsertAndGetId(ctx, tableScoreDetails, g.Map{
+					"score_id":    scoreId,
+					"detail_info": fmt.Sprintf(`detail_%d_%d_%d`, i, j, k),
+				})
+				gtest.AssertNil(err)
+				for m := 1; m <= 3; m++ {
+					_, err = db.Insert(ctx, tableDetailMeta, g.Map{
+						"detail_id": detailId,
+						"meta_key":  fmt.Sprintf(`meta_%d_%d_%d_%d`, i, j, k, m),
+					})
+					gtest.AssertNil(err)
+				}
+			}
+		}
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			users    []*User
+			sqlArray []string
+		)
+		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			return db.Ctx(ctx).Model(tableUser).WithAll().Order("id").Scan(&users)
+		})
+		t.AssertNil(err)
+		// One query per layer: user, user_scores, score_details, detail_meta.
+		t.Assert(countSelectSQL(sqlArray), 4)
+		t.Assert(len(users), 5)
+		for i, user := range users {
+			t.Assert(user.Id, i+1)
+			t.Assert(len(user.UserScores), 5)
+			for j, score := range user.UserScores {
+				t.Assert(score.Uid, i+1)
+				t.Assert(score.Score, j+1)
+				t.Assert(len(score.ScoreDetails), 4)
+				for k, detail := range score.ScoreDetails {
+					t.Assert(detail.ScoreId, score.Id)
+					t.Assert(detail.DetailInfo, fmt.Sprintf(`detail_%d_%d_%d`, i+1, j+1, k+1))
+					t.Assert(len(detail.DetailMeta), 3)
+					for m, meta := range detail.DetailMeta {
+						t.Assert(meta.DetailId, detail.Id)
+						t.Assert(meta.MetaKey, fmt.Sprintf(`meta_%d_%d_%d_%d`, i+1, j+1, k+1, m+1))
+					}
+				}
+			}
+		}
+	})
+
+	// The query count does not grow with the number of parent records.
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			users    []*User
+			sqlArray []string
+		)
+		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			return db.Ctx(ctx).Model(tableUser).WithAll().Where("id", []int{1, 2}).Order("id").Scan(&users)
+		})
+		t.AssertNil(err)
+		t.Assert(len(users), 2)
+		t.Assert(countSelectSQL(sqlArray), 4)
+	})
+}
+
 func Test_Table_Relation_WithAll_Order(t *testing.T) {
 	var (
 		tableUser       = "user101"
