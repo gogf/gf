@@ -601,7 +601,7 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 			var (
 				elem         reflect.Value
 				elemType     = structFieldValue.Type().Elem()
-				elemTypeName = elemType.Name()
+				elemTypeName = elemType.String()
 				converted    bool
 			)
 			switch reflectValue.Kind() {
@@ -623,7 +623,7 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 			default:
 			}
 			if elemTypeName == "" {
-				elemTypeName = elemType.String()
+				elemTypeName = elemType.Name()
 			}
 			if elemType.Kind() == reflect.Pointer {
 				elem = reflect.New(elemType.Elem()).Elem()

@@ -7,6 +7,7 @@
 package gconv_test
 
 import (
+	"encoding/json"
 	"strconv"
 	"testing"
 	"time"
@@ -343,5 +344,29 @@ func TestStructs(t *testing.T) {
 				t.Assert(expect.PlanetPlaceJson, "")
 			}
 		}
+	})
+}
+
+func TestStructRawMessageSliceFromSingleValue(t *testing.T) {
+	type tFF struct {
+		Val []json.RawMessage `json:"val"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		ff := &tFF{}
+		err := gconv.Struct(map[string]any{
+			"val": map[string]any{"hello": "world"},
+		}, ff)
+		t.AssertNil(err)
+		t.AssertEQ(len(ff.Val), 1)
+		t.Assert(ff.Val[0], []byte(`{"hello":"world"}`))
+	})
+	gtest.C(t, func(t *gtest.T) {
+		ff := &tFF{}
+		err := gconv.Struct(map[string]any{
+			"val": []any{map[string]any{"hello": "world"}},
+		}, ff)
+		t.AssertNil(err)
+		t.AssertEQ(len(ff.Val), 1)
+		t.Assert(ff.Val[0], []byte(`{"hello":"world"}`))
 	})
 }
