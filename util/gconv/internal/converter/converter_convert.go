@@ -366,7 +366,7 @@ func (c *Converter) doConvert(in doConvertInput, option ConvertOption) (converte
 			MapOption:   option.MapOption,
 		})
 
-	case "RawMessage", "json.RawMessage", "Value", "jsontext.Value":
+	case "RawMessage", "json.RawMessage", "jsontext.Value":
 		// issue 3449
 		// json.RawMessage is aliased to jsontext.Value under GOEXPERIMENT=jsonv2 (Go 1.27+)
 		bytes, err := json.Marshal(in.FromValue)

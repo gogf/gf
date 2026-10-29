@@ -562,9 +562,9 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 				)
 				for i := 0; i < reflectValue.Len(); i++ {
 					converted = false
-					elemTypeName = elemType.Name()
+					elemTypeName = elemType.String()
 					if elemTypeName == "" {
-						elemTypeName = elemType.String()
+						elemTypeName = elemType.Name()
 					}
 					var elem reflect.Value
 					if elemType.Kind() == reflect.Pointer {

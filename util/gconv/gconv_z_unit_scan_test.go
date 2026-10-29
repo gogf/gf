@@ -289,6 +289,9 @@ func TestScan(t *testing.T) {
 				t.Assert(err, gerror.New(
 					"json.UnmarshalUseNumber failed: json: cannot unmarshal object into Go value of type map[interface {}]interface {}",
 				))
+			} else {
+				t.Assert("Mars", scanExpects.mapAnyAny["Name"])
+				t.Assert("奥林帕斯山", scanExpects.mapAnyAny["Place"])
 			}
 
 			err = gconv.Scan(test, &scanExpects.structSub)
@@ -339,6 +342,12 @@ func TestScan(t *testing.T) {
 				t.Assert(err, gerror.New(
 					"json.UnmarshalUseNumber failed: json: cannot unmarshal object into Go value of type map[interface {}]interface {}",
 				))
+			} else {
+				t.Assert(len(maa), 2)
+				for k := range maa {
+					t.Assert("Mars", maa[k]["Name"])
+					t.Assert("奥林帕斯山", maa[k]["Place"])
+				}
 			}
 
 			var ss = []scanStructTest{scanExpects.structSub, scanExpects.structSub}

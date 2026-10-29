@@ -16,20 +16,20 @@ import (
 func Test_Zlib_UnZlib(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		src := "hello, world\n"
-		data, err := gcompress.Zlib([]byte(src))
+		compressed, err := gcompress.Zlib([]byte(src))
 		t.AssertNil(err)
-		t.AssertGT(len(data), 0)
+		t.AssertGT(len(compressed), 0)
 
-		result, err := gcompress.UnZlib(data)
+		result, err := gcompress.UnZlib(compressed)
 		t.AssertNil(err)
 		t.Assert(result, []byte(src))
 
-		data, _ = gcompress.Zlib(nil)
+		data, _ := gcompress.Zlib(nil)
 		t.Assert(data, nil)
 		data, _ = gcompress.UnZlib(nil)
 		t.Assert(data, nil)
 
-		result, _ = gcompress.UnZlib(data[0:0])
-		t.Assert(result, nil)
+		data, _ = gcompress.UnZlib(compressed[1:])
+		t.Assert(data, nil)
 	})
 }
