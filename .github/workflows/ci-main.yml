@@ -45,9 +45,17 @@ jobs:
         # 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
         # When adding new go version to the list, make sure:
         # 1. Update the `LATEST_GO_VERSION` env variable.
+        # 2. Update the go version of the `include` entries.
         # 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
         go-version: [ "1.25", "1.26" ]
-        goarch: [ "386", "amd64" ]
+        group: [ "core" ]
+        include:
+          - go-version: "1.26"
+            group: "drivers-1"
+          - go-version: "1.26"
+            group: "drivers-2"
+          - go-version: "1.26"
+            group: "386"
 
     runs-on: ubuntu-latest
 
@@ -304,34 +312,19 @@ jobs:
       id: cache-month
       run: echo "month=$(date +%Y%m)" >> "$GITHUB_OUTPUT"
 
-    # Go module cache. Downloaded modules are independent of the Go version and of
-    # the target architecture, so the key intentionally omits both: every matrix entry
-    # shares one cache entry instead of creating four. It is append-only and never
-    # rots, so it is not rotated monthly either. Keyed on the root go.mod/go.sum,
-    # which changes far less often than `**/go.sum`; the restore-keys tier keeps
-    # dependency bumps incremental.
-    - name: Restore Go module cache
-      uses: actions/cache@v4
+    # Each matrix entry downloads and builds a different set of modules, so it keeps
+    # its own module and build cache. Only the latest Go version saves them, on master
+    # pushes, to stay within the 10GB repository budget.
+    - name: Restore Go cache
+      id: go-cache
+      uses: actions/cache/restore@v6
       with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-mod-main-${{ hashFiles('go.mod', 'go.sum') }}
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+        key: ${{ runner.os }}-go-main-${{ matrix.go-version }}-${{ matrix.group }}-${{ steps.cache-month.outputs.month }}
         restore-keys: |
-          ${{ runner.os }}-go-mod-main-
-
-    # Go build cache is content-addressed, so stale entries are simply not hit and it
-    # is safe to restore across source changes. It is restored for every matrix entry
-    # but only saved for one canonical entry (see the save step below), because each
-    # Go version/architecture pair would otherwise consume its own cache budget.
-    - name: Restore Go build cache
-      id: build-cache
-      uses: actions/cache/restore@v4
-      with:
-        path: ~/.cache/go-build
-        key: ${{ runner.os }}-go-build-main-${{ matrix.go-version }}-${{ matrix.goarch }}-${{ steps.cache-month.outputs.month }}
-        restore-keys: |
-          ${{ runner.os }}-go-build-main-${{ matrix.go-version }}-${{ matrix.goarch }}-
-          ${{ runner.os }}-go-build-main-${{ matrix.go-version }}-
-          ${{ runner.os }}-go-build-main-
+          ${{ runner.os }}-go-main-${{ matrix.go-version }}-${{ matrix.group }}-
 
     - name: Install Protoc
       uses: arduino/setup-protoc@v3
@@ -352,23 +345,21 @@ jobs:
 
     - name: Build & Test
       if: ${{ (github.event_name == 'push' && github.ref != 'refs/heads/master') || github.event_name == 'pull_request' }}
-      run: bash .github/workflows/scripts/ci-main.sh
+      run: bash .github/workflows/scripts/ci-main.sh ${{ matrix.group }}
 
     - name: Build & Test & Coverage
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-      run: bash .github/workflows/scripts/ci-main.sh coverage
+      run: bash .github/workflows/scripts/ci-main.sh ${{ matrix.group }} coverage
 
-    # The build cache is restored by every matrix entry but saved only for the latest
-    # Go version, on master pushes, so old Go versions never take cache budget. Both
-    # architectures save their own entry, as stdlib objects differ per architecture.
-    - name: Save Go build cache
-      # `cache-hit` is true when this month's entry already exists; saving again would
-      # fail, as cache entries are immutable.
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && steps.build-cache.outputs.cache-hit != 'true' }}
-      uses: actions/cache/save@v4
+    - name: Save Go cache
+      # Cache entries are immutable, so this month's entry is only saved once.
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && steps.go-cache.outputs.cache-hit != 'true' }}
+      uses: actions/cache/save@v6
       with:
-        path: ~/.cache/go-build
-        key: ${{ steps.build-cache.outputs.cache-primary-key }}
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+        key: ${{ steps.go-cache.outputs.cache-primary-key }}
 
     - name: Stop Redis Cluster Containers
       run:  docker compose -f ".github/workflows/redis/docker-compose.yml" down
@@ -385,7 +376,7 @@ jobs:
     - name: Report Coverage
       uses: codecov/codecov-action@v7
       # Only report coverage on the latest go version
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION }}
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && matrix.group != '386' }}
       with:
-        flags: go-${{ matrix.go-version }}-${{ matrix.goarch }}
+        flags: go-${{ matrix.go-version }}
         token: ${{ secrets.CODECOV_TOKEN }}
