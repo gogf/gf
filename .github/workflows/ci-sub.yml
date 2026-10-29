@@ -65,20 +65,15 @@ jobs:
       id: cache-month
       run: echo "month=$(date +%Y%m)" >> "$GITHUB_OUTPUT"
 
-    # Go module cache: shared across all matrix entries, keyed on the root go.sum.
-    # Sub CI only tests kubecm (which reads contrib/config/) and examples/, so it
-    # does not download the full dependency tree. The restore-keys fall back to main
-    # CI's cache (`-go-mod-main-`), which is a superset.
     - name: Restore Go module cache
-      uses: actions/cache@v6
+      id: mod-cache
+      uses: actions/cache/restore@v6
       with:
         path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-mod-sub-${{ hashFiles('go.mod', 'go.sum') }}
+        key: ${{ runner.os }}-go-mod-sub-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-mod-sub-
-          ${{ runner.os }}-go-mod-main-
 
-    # Go build cache: per Go version, monthly rotation.
     - name: Restore Go build cache
       id: build-cache
       uses: actions/cache/restore@v6
@@ -95,19 +90,15 @@ jobs:
       run: bash .github/workflows/scripts/ci-sub.sh
 
     - name: Save Go module cache
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION }}
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && steps.mod-cache.outputs.cache-hit != 'true' }}
       uses: actions/cache/save@v6
       with:
         path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-mod-sub-${{ hashFiles('go.mod', 'go.sum') }}
-        save-always: true
+        key: ${{ steps.mod-cache.outputs.cache-primary-key }}
 
     - name: Save Go build cache
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && steps.build-cache.outputs.cache-hit != 'true' }}
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && steps.build-cache.outputs.cache-hit != 'true' }}
       uses: actions/cache/save@v6
       with:
         path: ~/.cache/go-build
-        key: ${{ runner.os }}-go-build-sub-${{ matrix.go-version }}-${{ steps.cache-month.outputs.month }}
-        save-always: true
-
-
+        key: ${{ steps.build-cache.outputs.cache-primary-key }}
