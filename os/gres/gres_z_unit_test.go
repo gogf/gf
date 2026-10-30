@@ -367,3 +367,26 @@ func TestFile_Export(t *testing.T) {
 		t.Assert(len(files), 2)
 	})
 }
+
+// https://github.com/gogf/gf/issues/4782
+func Test_Issue4782(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for _, prefix := range []string{`api/i18n`, `api\i18n`} {
+			data, err := gres.Pack(gtest.DataPath("files"), prefix)
+			t.AssertNil(err)
+
+			files, err := gres.UnpackContent(string(data))
+			t.AssertNil(err)
+			for _, file := range files {
+				t.Assert(strings.Contains(file.Name(), `\`), false)
+			}
+
+			r := gres.New()
+			t.AssertNil(r.Add(string(data)))
+			t.Assert(r.Contains("api"), true)
+			t.Assert(r.Contains("api/i18n"), true)
+			t.Assert(r.Get("api/i18n").FileInfo().IsDir(), true)
+			t.Assert(r.Contains("api/i18n/root/index.html"), true)
+		}
+	})
+}
