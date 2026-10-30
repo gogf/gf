@@ -1005,6 +1005,7 @@ func (m *Model) formatCondition(
 		havingStr, havingArgs := formatWhereHolder(ctx, m.db, formatWhereHolderInput{
 			WhereHolder: havingHolder,
 			OmitNil:     m.option&optionOmitNilWhere > 0,
+			OmitZero:    m.option&optionOmitZeroWhere > 0,
 			OmitEmpty:   m.option&optionOmitEmptyWhere > 0,
 			Schema:      m.schema,
 			Table:       m.tables,
