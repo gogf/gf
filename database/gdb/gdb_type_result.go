@@ -9,10 +9,12 @@ package gdb
 import (
 	"database/sql"
 	"math"
+	"reflect"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -192,6 +194,7 @@ func (r Result) RecordKeyUint(key string) map[uint]Record {
 
 // Structs converts `r` to struct slice.
 // Note that the parameter `pointer` should be type of *[]struct/*[]*struct.
+// It also accepts *[]map/*[]*map, which are filled with the same values as List.
 func (r Result) Structs(pointer any) (err error) {
 	// If the result is empty and the target pointer is not empty, it returns error.
 	if r.IsEmpty() {
@@ -199,6 +202,17 @@ func (r Result) Structs(pointer any) (err error) {
 			return sql.ErrNoRows
 		}
 		return nil
+	}
+	// Struct converting does not fill map elements, so map slices are
+	// converted from List instead.
+	if reflectInfo := reflection.OriginTypeAndKind(pointer); reflectInfo.OriginKind == reflect.Slice {
+		elemType := reflectInfo.OriginType.Elem()
+		if elemType.Kind() == reflect.Pointer {
+			elemType = elemType.Elem()
+		}
+		if elemType.Kind() == reflect.Map {
+			return converter.Scan(r.List(), pointer, gconv.ScanOption{ContinueOnError: true})
+		}
 	}
 	var (
 		sliceOption  = gconv.SliceOption{ContinueOnError: true}

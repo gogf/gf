@@ -116,3 +116,36 @@ func Test_Issue4747(t *testing.T) {
 		t.Assert(ok, true)
 	})
 }
+
+// Test_Issue4787 tests that Result.Structs fills map slices with the record
+// values, the same as Result.List, instead of leaving empty maps.
+// See https://github.com/gogf/gf/issues/4787
+func Test_Issue4787(t *testing.T) {
+	var result = Result{
+		{"id": gvar.New(1), "name": gvar.New("john")},
+		{"id": gvar.New(2), "name": gvar.New("smith")},
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var list []map[string]any
+		t.AssertNil(result.Structs(&list))
+		t.Assert(len(list), 2)
+		t.AssertEQ(list[0]["id"], 1)
+		t.AssertEQ(list[0]["name"], "john")
+		t.AssertEQ(list[1]["id"], 2)
+		t.AssertEQ(list[1]["name"], "smith")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var list []*map[string]any
+		t.AssertNil(result.Structs(&list))
+		t.Assert(len(list), 2)
+		t.AssertEQ((*list[0])["name"], "john")
+		t.AssertEQ((*list[1])["name"], "smith")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var list []map[string]string
+		t.AssertNil(result.Structs(&list))
+		t.Assert(len(list), 2)
+		t.AssertEQ(list[0]["id"], "1")
+		t.AssertEQ(list[1]["name"], "smith")
+	})
+}
