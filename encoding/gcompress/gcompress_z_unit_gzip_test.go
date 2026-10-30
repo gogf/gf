@@ -32,14 +32,20 @@ func Test_Gzip_UnGzip(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		arr := []byte(src)
-		data, _ := gcompress.Gzip(arr)
-		t.Assert(data, gzip)
+		data, err := gcompress.Gzip(arr)
+		t.AssertNil(err)
+		t.AssertGT(len(data), 0)
 
-		data, _ = gcompress.UnGzip(gzip)
-		t.Assert(data, arr)
+		result, err := gcompress.UnGzip(data)
+		t.AssertNil(err)
+		t.Assert(result, arr)
 
-		data, _ = gcompress.UnGzip(gzip[1:])
-		t.Assert(data, nil)
+		result, err = gcompress.UnGzip(gzip)
+		t.AssertNil(err)
+		t.Assert(result, arr)
+
+		result, _ = gcompress.UnGzip(gzip[1:])
+		t.Assert(result, nil)
 	})
 }
 

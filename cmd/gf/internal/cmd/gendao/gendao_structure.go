@@ -168,8 +168,9 @@ func generateStructFieldDefinition(
 	jsonTag := gstr.CaseConvert(newFiledName, gstr.CaseTypeMatch(in.JsonCase))
 	attrLines = append(attrLines, fmt.Sprintf(` #%sjson:"%s"`, tagKey, jsonTag))
 	// orm tag
-	if !in.IsDo {
-		// entity
+	if !in.IsDo || newFiledName != field.Name {
+		// entity, or do whose attribute name no longer matches the table field
+		// after removing the field prefix.
 		attrLines = append(attrLines, fmt.Sprintf(` #orm:"%s"`, field.Name))
 	}
 	attrLines = append(attrLines, fmt.Sprintf(` #description:"%s"%s`, descriptionTag, tagKey))
