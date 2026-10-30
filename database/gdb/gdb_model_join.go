@@ -183,25 +183,24 @@ func (m *Model) doJoin(operator joinOperator, tableOrSubQueryAndJoinConditions .
 	}
 	// Record the main table reference before the first join.
 	if len(model.tableRefs) == 0 {
-		model.tableRefs = append(model.tableRefs, m.parseMainTableRef(model.tables))
+		model.tableRefs = append(model.tableRefs, m.parseTableRef(model.tables))
 	}
 	// Column prefix of the joined table, empty for sub-query without alias.
-	prefix := ""
+	ref := tableRef{}
 	if table != "" {
-		prefix = joinStr
+		ref = m.parseTableRef(joinStr)
 	}
-	isAlias := false
 	// Generate join condition statement string.
 	conditionLength := len(tableOrSubQueryAndJoinConditions)
 	switch {
 	case conditionLength > 2:
 		alias = tableOrSubQueryAndJoinConditions[1]
-		prefix = m.db.GetCore().QuoteWord(alias)
-		isAlias = true
+		ref.prefix = m.db.GetCore().QuoteWord(alias)
+		ref.alias = true
 		model.tables += fmt.Sprintf(
 			" %s JOIN %s AS %s ON (%s)",
 			operator, joinStr,
-			prefix,
+			ref.prefix,
 			tableOrSubQueryAndJoinConditions[2],
 		)
 		m.tableAliasMap[alias] = table
@@ -217,26 +216,30 @@ func (m *Model) doJoin(operator joinOperator, tableOrSubQueryAndJoinConditions .
 			" %s JOIN %s", operator, joinStr,
 		)
 	}
-	if table != "" {
-		table = joinStr
-	}
-	model.tableRefs = append(model.tableRefs, tableRef{table: table, prefix: prefix, alias: isAlias})
+	model.tableRefs = append(model.tableRefs, ref)
 	return model
 }
 
-// parseMainTableRef parses the main table name and its column prefix from `tables`,
+// parseTableRef parses the table name and its column prefix from the table expression `s`,
 // like: "`user`", "`user` AS `u`", "`user` u".
-// The returned prefix is empty if `tables` contains multiple tables, like: "`user` u, `user_detail` ud".
-func (m *Model) parseMainTableRef(tables string) tableRef {
-	if tables == "" || gstr.Contains(tables, ",") {
+// The returned prefix is empty for any other form, like: "`user` u, `user_detail` ud".
+func (m *Model) parseTableRef(s string) tableRef {
+	words, ok := splitSqlWords(s)
+	if !ok || len(words) == 0 {
 		return tableRef{}
 	}
-	array := gstr.SplitAndTrim(tables, " ")
-	return tableRef{
-		table:  array[0],
-		prefix: m.QuoteWord(array[len(array)-1]),
-		alias:  len(array) > 1,
+	if len(words) == 1 {
+		if !isSqlIdentifier(words[0], true) {
+			return tableRef{}
+		}
+		return tableRef{table: words[0], prefix: words[0]}
 	}
+	// It is "t a" or "t AS a" if the table is found without the alias.
+	table := m.db.GetCore().tableNameForFields(s)
+	if table == s {
+		return tableRef{}
+	}
+	return tableRef{table: table, prefix: m.QuoteWord(words[len(words)-1]), alias: true}
 }
 
 // getTableNameByPrefixOrAlias checks and returns the table name if `prefixOrAlias` is an alias of a table,

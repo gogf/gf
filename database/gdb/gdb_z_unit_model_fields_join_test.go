@@ -80,3 +80,52 @@ func Test_Model_FieldsExPrefix_Join_FoldIdentifier(t *testing.T) {
 		t.Assert(fields, `"u"."LANG","l"."ID"`)
 	})
 }
+
+// Test_Model_FieldsEx_Join_AliasInTable asserts that the alias written in the joined table string,
+// like "t b" or "t AS b", is used as the column prefix, and that any other form still panics.
+func Test_Model_FieldsEx_Join_AliasInTable(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		db := newDialectFakeDB("id", "lang")
+		fields := db.Model("a u").
+			LeftJoin("b l", "l.id=u.id").
+			FieldsEx("lang").
+			FieldsExPrefix("l", "id").
+			getFieldsFiltered()
+		t.Assert(fields, `"u"."id","l"."lang"`)
+		t.Assert(db.lookups[len(db.lookups)-1], "#b")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		db := newDialectFakeDB("id", "lang")
+		fields := db.Model("a").
+			InnerJoin("b AS l", "l.id=a.id").
+			FieldsExPrefix("l", "lang").
+			getFieldsFiltered()
+		t.Assert(fields, `"a"."id","a"."lang","l"."id"`)
+		t.Assert(db.lookups[len(db.lookups)-1], "#b")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		db := newDialectFakeDB("id", "lang")
+		defer func() {
+			t.Assert(recover(), "function FieldsEx supports only single table operations")
+		}()
+		db.Model("a").
+			InnerJoin("b AS l x", "l.id=a.id").
+			FieldsEx("lang").
+			getFieldsFiltered()
+		t.Error("expected panic")
+	})
+}
+
+// Test_Model_FieldsEx_Join_AsWithoutOn asserts that As does not change the column prefix of a
+// table joined without ON clause, as the alias is not added to the join statement.
+func Test_Model_FieldsEx_Join_AsWithoutOn(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		db := newDialectFakeDB("id", "lang")
+		fields := db.Model("a").
+			InnerJoin("b").
+			As("l").
+			FieldsEx("lang").
+			getFieldsFiltered()
+		t.Assert(fields, `"a"."id","b"."id","b"."lang"`)
+	})
+}

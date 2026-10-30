@@ -236,9 +236,11 @@ func (m *Model) As(as string) *Model {
 		if gstr.ContainsI(model.tables, split) {
 			// For join table.
 			array := gstr.Split(model.tables, split)
-			array[len(array)-1], _ = gregex.ReplaceString(`(.+) ON`, fmt.Sprintf(`$1 AS %s ON`, as), array[len(array)-1])
+			last := array[len(array)-1]
+			array[len(array)-1], _ = gregex.ReplaceString(`(.+) ON`, fmt.Sprintf(`$1 AS %s ON`, as), last)
 			model.tables = gstr.Join(array, split)
-			if n := len(model.tableRefs); n > 0 {
+			// Only update the prefix if the alias is actually added to the join statement.
+			if n := len(model.tableRefs); n > 0 && array[len(array)-1] != last {
 				model.tableRefs[n-1].prefix = m.QuoteWord(as)
 				model.tableRefs[n-1].alias = true
 			}

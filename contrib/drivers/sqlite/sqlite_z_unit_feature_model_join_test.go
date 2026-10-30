@@ -560,6 +560,41 @@ func Test_Model_FieldsExPrefix_Join(t *testing.T) {
 		t.Assert(r[0]["id"], 3)
 		t.Assert(r[0]["nickname"], "name_3")
 	})
+
+	// Alias written in the joined table string: "t b" and "t AS b".
+	for _, joinTable := range []string{table2 + " ud", table2 + " AS ud"} {
+		gtest.C(t, func(t *gtest.T) {
+			r, err := db.Model(table1+" u").
+				LeftJoin(joinTable, "ud.id=u.id").
+				FieldsEx("passport", "password", "nickname", "create_time").
+				FieldsExPrefix("ud", "id", "password", "create_time").
+				Where("u.id", 4).
+				All()
+			t.AssertNil(err)
+			t.Assert(len(r), 1)
+			t.Assert(len(r[0]), 3)
+			t.Assert(r[0]["id"], 4)
+			t.Assert(r[0]["passport"], "user_4")
+			t.Assert(r[0]["nickname"], "name_4")
+		})
+	}
+
+	// As without ON clause does not alias the joined table.
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table1).
+			InnerJoin(table2).
+			As("ud").
+			FieldsExPrefix(table1, "passport", "password", "nickname", "create_time").
+			FieldsExPrefix(table2, "id", "passport", "password", "create_time").
+			Where(table1+".id", 5).
+			Where(table2+".id", 5).
+			All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(len(r[0]), 2)
+		t.Assert(r[0]["id"], 5)
+		t.Assert(r[0]["nickname"], "name_5")
+	})
 }
 
 // Test_Model_FieldsExPrefix_Join_TablePrefix tests FieldsEx/FieldsExPrefix on joined tables with table prefix.
