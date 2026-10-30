@@ -85,6 +85,11 @@ generated go file name case for dao/table/do/entity files, cases are as follows:
 specifying the configuration group name of database for generated ORM instance,
 it's not necessary and the default value is "default"
 `
+	CGenDaoBriefNullFieldPattern = `
+pattern that must match the whole original table name; NULL fields of a matched
+table are generated as pointer type *T instead of T, where "?" matches one or
+more characters and "*" has no special meaning, e.g. "table_?"
+`
 	CGenDaoBriefJsonCase = `
 generated json tag case for model struct, cases are as follows:
 | Case            | Example            |
@@ -154,6 +159,7 @@ func init() {
 		`CGenDaoBriefFieldMapping`:       CGenDaoBriefFieldMapping,
 		`CGenDaoBriefShardingPattern`:    CGenDaoBriefShardingPattern,
 		`CGenDaoBriefGroup`:              CGenDaoBriefGroup,
+		`CGenDaoBriefNullFieldPattern`:   CGenDaoBriefNullFieldPattern,
 		`CGenDaoBriefJsonCase`:           CGenDaoBriefJsonCase,
 		`CGenDaoBriefTplDaoIndexPath`:    CGenDaoBriefTplDaoIndexPath,
 		`CGenDaoBriefTplDaoInternalPath`: CGenDaoBriefTplDaoInternalPath,
