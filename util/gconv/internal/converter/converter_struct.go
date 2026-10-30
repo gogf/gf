@@ -545,6 +545,10 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 	// Note that the slice element might be type of struct,
 	// so it uses Struct function doing the converting internally.
 	case reflect.Slice, reflect.Array:
+		// It uses the underlying slice of a wrapper like *gvar.Var, so that each element is converted.
+		if v, ok := value.(localinterface.IVal); ok && utils.IsSlice(v.Val()) {
+			value = v.Val()
+		}
 		var (
 			reflectArray  reflect.Value
 			reflectValue  = reflect.ValueOf(value)
