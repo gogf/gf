@@ -1393,3 +1393,41 @@ func Test_Issue4429_NonComparableIValDoesNotPanic(t *testing.T) {
 		t.Assert(got.IsZero(), true)
 	})
 }
+
+// Test_Issue4747 tests converting slices wrapped by gvar.Var into slice attributes.
+// See https://github.com/gogf/gf/issues/4747
+func Test_Issue4747(t *testing.T) {
+	type Item struct {
+		Id     int     `json:"id"`
+		Weight float64 `json:"weight"`
+	}
+	type Order struct {
+		Items    []Item  `json:"items"`
+		ItemPtrs []*Item `json:"item_ptrs"`
+		Empty    []Item  `json:"empty"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			order Order
+			items = g.List{
+				{"id": 1, "weight": "1.5"},
+				{"id": 2, "weight": "2.5"},
+			}
+			err = gconv.Struct(g.Map{
+				"items":     gvar.New(items),
+				"item_ptrs": gvar.New(items),
+				"empty":     gvar.New(g.List{}),
+			}, &order)
+		)
+		t.AssertNil(err)
+		t.Assert(len(order.Items), 2)
+		t.Assert(order.Items[0].Id, 1)
+		t.Assert(order.Items[0].Weight, 1.5)
+		t.Assert(order.Items[1].Id, 2)
+		t.Assert(order.Items[1].Weight, 2.5)
+		t.Assert(len(order.ItemPtrs), 2)
+		t.Assert(order.ItemPtrs[1].Id, 2)
+		t.Assert(order.ItemPtrs[1].Weight, 2.5)
+		t.Assert(len(order.Empty), 0)
+	})
+}

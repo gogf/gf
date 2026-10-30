@@ -117,6 +117,6 @@ func Test_LoadContentType(t *testing.T) {
 		j, err := gjson.LoadContentType("toml", data)
 		t.AssertNil(err)
 		value := j.Get("value").Int64()
-		t.Assert(value, 79937385836643329)
+		t.Assert(value, int64(79937385836643329))
 	})
 }
