@@ -505,3 +505,167 @@ func Test_Model_Join_ComplexConditions(t *testing.T) {
 		t.Assert(r[1]["id"], "5")
 	})
 }
+
+// Test_Model_FieldsExPrefix_Join tests FieldsEx/FieldsExPrefix on joined tables without explicit fields.
+// https://github.com/gogf/gf/issues/4266
+func Test_Model_FieldsExPrefix_Join(t *testing.T) {
+	var (
+		table1 = "table1_" + gtime.TimestampNanoStr()
+		table2 = "table2_" + gtime.TimestampNanoStr()
+	)
+	createInitTable(table1)
+	defer dropTable(table1)
+	createInitTable(table2)
+	defer dropTable(table2)
+
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table1, "u").
+			LeftJoin(table2, "ud", "ud.id=u.id").
+			FieldsEx("passport", "password", "nickname", "create_time").
+			FieldsExPrefix("ud", "id", "password", "create_time").
+			Where("u.id", 1).
+			All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(len(r[0]), 3)
+		t.Assert(r[0]["id"], 1)
+		t.Assert(r[0]["passport"], "user_1")
+		t.Assert(r[0]["nickname"], "name_1")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table1).
+			LeftJoinOnField(table2, "id").
+			FieldsExPrefix(table1, "passport", "password", "nickname", "create_time").
+			FieldsExPrefix(table2, "id", "passport", "password", "create_time").
+			WherePrefix(table1, "id", 2).
+			All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(len(r[0]), 2)
+		t.Assert(r[0]["id"], 2)
+		t.Assert(r[0]["nickname"], "name_2")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table1).As("u").
+			LeftJoin(table2, "ud", "ud.id=u.id").
+			FieldsExPrefix("u", "passport", "password", "nickname", "create_time").
+			FieldsExPrefix("ud", "id", "passport", "password", "create_time").
+			Where("u.id", 3).
+			All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(len(r[0]), 2)
+		t.Assert(r[0]["id"], 3)
+		t.Assert(r[0]["nickname"], "name_3")
+	})
+
+	// Alias written in the joined table string: "t b" and "t AS b".
+	for _, joinTable := range []string{table2 + " ud", table2 + " AS ud"} {
+		gtest.C(t, func(t *gtest.T) {
+			r, err := db.Model(table1+" u").
+				LeftJoin(joinTable, "ud.id=u.id").
+				FieldsEx("passport", "password", "nickname", "create_time").
+				FieldsExPrefix("ud", "id", "password", "create_time").
+				Where("u.id", 4).
+				All()
+			t.AssertNil(err)
+			t.Assert(len(r), 1)
+			t.Assert(len(r[0]), 3)
+			t.Assert(r[0]["id"], 4)
+			t.Assert(r[0]["passport"], "user_4")
+			t.Assert(r[0]["nickname"], "name_4")
+		})
+	}
+
+	// Upper-case alias and lower-case "as" in the table strings.
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table1+" as U").
+			LeftJoin(table2+" as UD", "UD.id=U.id").
+			FieldsEx("passport", "password", "nickname", "create_time").
+			FieldsExPrefix("UD", "id", "password", "create_time").
+			Where("U.id", 4).
+			All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(len(r[0]), 3)
+		t.Assert(r[0]["id"], 4)
+		t.Assert(r[0]["passport"], "user_4")
+		t.Assert(r[0]["nickname"], "name_4")
+	})
+
+	// As after a join with ON clause aliases the joined table.
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table1).
+			LeftJoin(table2, "UD.id="+table1+".id").
+			As("UD").
+			FieldsExPrefix(table1, "passport", "password", "nickname", "create_time").
+			FieldsExPrefix("UD", "id", "passport", "password", "create_time").
+			Where(table1+".id", 6).
+			All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(len(r[0]), 2)
+		t.Assert(r[0]["id"], 6)
+		t.Assert(r[0]["nickname"], "name_6")
+	})
+
+	// As without ON clause does not alias the joined table.
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table1).
+			InnerJoin(table2).
+			As("ud").
+			FieldsExPrefix(table1, "passport", "password", "nickname", "create_time").
+			FieldsExPrefix(table2, "id", "passport", "password", "create_time").
+			Where(table1+".id", 5).
+			Where(table2+".id", 5).
+			All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(len(r[0]), 2)
+		t.Assert(r[0]["id"], 5)
+		t.Assert(r[0]["nickname"], "name_5")
+	})
+}
+
+// Test_Model_FieldsExPrefix_Join_TablePrefix tests FieldsEx/FieldsExPrefix on joined tables with table prefix.
+func Test_Model_FieldsExPrefix_Join_TablePrefix(t *testing.T) {
+	var (
+		table1 = "table1_" + gtime.TimestampNanoStr()
+		table2 = "table2_" + gtime.TimestampNanoStr()
+	)
+	createInitTableWithDb(dbPrefix, TableNamePrefix+table1)
+	defer dropTable(TableNamePrefix + table1)
+	createInitTableWithDb(dbPrefix, TableNamePrefix+table2)
+	defer dropTable(TableNamePrefix + table2)
+
+	gtest.C(t, func(t *gtest.T) {
+		r, err := dbPrefix.Model(table1, "u").
+			LeftJoin(table2, "ud", "ud.id=u.id").
+			FieldsEx("passport", "password", "nickname", "create_time").
+			FieldsExPrefix("ud", "id", "password", "create_time").
+			Where("u.id", 1).
+			All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(len(r[0]), 3)
+		t.Assert(r[0]["id"], 1)
+		t.Assert(r[0]["passport"], "user_1")
+		t.Assert(r[0]["nickname"], "name_1")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		r, err := dbPrefix.Model(table1).
+			LeftJoin(table2, TableNamePrefix+table2+".id="+TableNamePrefix+table1+".id").
+			FieldsExPrefix(table1, "passport", "password", "nickname", "create_time").
+			FieldsExPrefix(TableNamePrefix+table2, "id", "passport", "password", "create_time").
+			Where(TableNamePrefix+table1+".id", 2).
+			All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(len(r[0]), 2)
+		t.Assert(r[0]["id"], 2)
+		t.Assert(r[0]["nickname"], "name_2")
+	})
+}

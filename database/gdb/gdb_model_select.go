@@ -853,6 +853,9 @@ func (m *Model) getFieldsFiltered() string {
 			field := gconv.String(v)
 			fieldsArray = append(fieldsArray, field[gstr.PosR(field, "-")+1:])
 		}
+	} else if len(m.tableRefs) > 0 {
+		// Filter fields of all joined tables with fieldEx.
+		fieldsArray = m.getJoinedTableFields(fieldsExSet)
 	} else {
 		if gstr.Contains(m.tables, " ") {
 			panic("function FieldsEx supports only single table operations")
@@ -881,6 +884,83 @@ func (m *Model) getFieldsFiltered() string {
 		newFields += m.QuoteWord(k)
 	}
 	return newFields
+}
+
+// getJoinedTableFields returns the prefixed fields of all tables in join statement in sequence.
+// Fields without prefix in `fieldsExSet` are excluded from the main table, just like FieldsEx.
+// It uses "prefix.*" for sub-query whose fields cannot be retrieved.
+func (m *Model) getJoinedTableFields(fieldsExSet *gset.StrSet) []string {
+	fieldsArray := make([]string, 0, 8)
+	for i, ref := range m.tableRefs {
+		if ref.prefix == "" {
+			panic("function FieldsEx supports only single table operations")
+		}
+		if ref.table == "" {
+			fieldsArray = append(fieldsArray, ref.prefix+".*")
+			continue
+		}
+		tableFields, err := m.TableFields(ref.table)
+		if err != nil {
+			panic(err)
+		}
+		if len(tableFields) == 0 {
+			panic(fmt.Sprintf(`empty table fields for table %q`, ref.table))
+		}
+		names := make([]string, len(tableFields))
+		for k, v := range tableFields {
+			names[v.Index] = k
+		}
+		excluded := m.getJoinedTableFieldsEx(ref, i == 0, fieldsExSet)
+		for _, name := range names {
+			if excluded.Contains(name) {
+				continue
+			}
+			fieldsArray = append(fieldsArray, ref.prefix+"."+m.QuoteWord(name))
+		}
+	}
+	return fieldsArray
+}
+
+// getJoinedTableFieldsEx returns the excluded field names of table `ref` from `fieldsExSet`,
+// folded like the table fields. The prefix and the field of each excluded item are matched
+// separately, so that "user.id", "`gf_user`.`id`" and "db.items.secret" are all recognized.
+// Fields without prefix are excluded only if `isMain` is true.
+func (m *Model) getJoinedTableFieldsEx(ref tableRef, isMain bool, fieldsExSet *gset.StrSet) *gset.StrSet {
+	var (
+		excluded  = gset.NewStrSet()
+		refPrefix = m.unquoteIdentifier(ref.prefix)
+	)
+	fieldsExSet.Iterator(func(v string) bool {
+		var (
+			pos   = gstr.PosR(v, ".")
+			field = m.unquoteIdentifier(v[pos+1:])
+		)
+		if pos < 0 {
+			if !isMain {
+				return true
+			}
+		} else {
+			prefix := v[:pos]
+			// Table name without alias may be given without table prefix.
+			if m.unquoteIdentifier(prefix) != refPrefix &&
+				(ref.alias || m.unquoteIdentifier(m.db.GetCore().QuotePrefixTableName(prefix)) != refPrefix) {
+				return true
+			}
+		}
+		excluded.Add(field, m.db.FoldIdentifier(field))
+		return true
+	})
+	return excluded
+}
+
+// unquoteIdentifier removes the security chars from each part of the dot-separated identifier `s`.
+func (m *Model) unquoteIdentifier(s string) string {
+	charL, charR := m.db.GetChars()
+	array := gstr.SplitAndTrim(s, ".")
+	for i, v := range array {
+		array[i] = gstr.Trim(v, charL+charR)
+	}
+	return gstr.Join(array, ".")
 }
 
 // formatCondition formats where arguments of the model and returns a new condition sql and its arguments.
