@@ -207,7 +207,9 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...a
 			}
 		}
 	}
-	if l.config.Flags&F_ASYNC > 0 {
+	// Fatal logging exits the process right after printing, so it is always printed
+	// synchronously, or else the content would be lost before the async job runs.
+	if l.config.Flags&F_ASYNC > 0 && level != LEVEL_FATA {
 		input.IsAsync = true
 		err := asyncPool.Add(ctx, func(ctx context.Context) {
 			input.Next(ctx)
