@@ -241,7 +241,7 @@ func (m *Model) As(as string) *Model {
 			model.tables = gstr.Join(array, split)
 			// Only update the prefix if the alias is actually added to the join statement.
 			if n := len(model.tableRefs); n > 0 && array[len(array)-1] != last {
-				model.tableRefs[n-1].prefix = m.QuoteWord(as)
+				model.tableRefs[n-1].prefix = as
 				model.tableRefs[n-1].alias = true
 			}
 		} else {

@@ -239,7 +239,7 @@ func (m *Model) parseTableRef(s string) tableRef {
 	if table == s {
 		return tableRef{}
 	}
-	return tableRef{table: table, prefix: m.QuoteWord(words[len(words)-1]), alias: true}
+	return tableRef{table: table, prefix: words[len(words)-1], alias: true}
 }
 
 // getTableNameByPrefixOrAlias checks and returns the table name if `prefixOrAlias` is an alias of a table,

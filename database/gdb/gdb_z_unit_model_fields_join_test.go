@@ -91,7 +91,7 @@ func Test_Model_FieldsEx_Join_AliasInTable(t *testing.T) {
 			FieldsEx("lang").
 			FieldsExPrefix("l", "id").
 			getFieldsFiltered()
-		t.Assert(fields, `"u"."id","l"."lang"`)
+		t.Assert(fields, `u."id",l."lang"`)
 		t.Assert(db.lookups[len(db.lookups)-1], "#b")
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -100,8 +100,17 @@ func Test_Model_FieldsEx_Join_AliasInTable(t *testing.T) {
 			InnerJoin("b AS l", "l.id=a.id").
 			FieldsExPrefix("l", "lang").
 			getFieldsFiltered()
-		t.Assert(fields, `"a"."id","a"."lang","l"."id"`)
+		t.Assert(fields, `"a"."id","a"."lang",l."id"`)
 		t.Assert(db.lookups[len(db.lookups)-1], "#b")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		db := newDialectFakeDB("id", "lang")
+		fields := db.Model("a as X").
+			LeftJoin("b as Y", "Y.id=X.id").
+			FieldsEx("lang").
+			FieldsExPrefix("Y", "id").
+			getFieldsFiltered()
+		t.Assert(fields, `X."id",Y."lang"`)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		db := newDialectFakeDB("id", "lang")
@@ -127,5 +136,37 @@ func Test_Model_FieldsEx_Join_AsWithoutOn(t *testing.T) {
 			FieldsEx("lang").
 			getFieldsFiltered()
 		t.Assert(fields, `"a"."id","b"."id","b"."lang"`)
+	})
+}
+
+// Test_Model_FieldsEx_Join_AliasAsWritten asserts that the aliases written in the table string or
+// given to As are used as written for the column prefix, so that a mixed-case alias matches the
+// unquoted alias in the FROM clause, and that explicit aliases are still quoted.
+func Test_Model_FieldsEx_Join_AliasAsWritten(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		db := newDialectFakeDB("id", "lang")
+		fields := db.Model("a X").
+			LeftJoin("b", "b.id=X.id").
+			FieldsEx("lang").
+			getFieldsFiltered()
+		t.Assert(fields, `X."id","b"."id","b"."lang"`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		db := newDialectFakeDB("id", "lang")
+		fields := db.Model("a").As("X").
+			LeftJoin("b", "Y", "Y.id=X.id").
+			FieldsEx("lang").
+			FieldsExPrefix("Y", "id").
+			getFieldsFiltered()
+		t.Assert(fields, `X."id","Y"."lang"`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		db := newDialectFakeDB("id", "lang")
+		fields := db.Model("a").
+			LeftJoin("b", "b.id=a.id").
+			As("Y").
+			FieldsExPrefix("Y", "id").
+			getFieldsFiltered()
+		t.Assert(fields, `"a"."id","a"."lang",Y."lang"`)
 	})
 }

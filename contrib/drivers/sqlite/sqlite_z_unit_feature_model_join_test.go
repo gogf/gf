@@ -579,6 +579,38 @@ func Test_Model_FieldsExPrefix_Join(t *testing.T) {
 		})
 	}
 
+	// Upper-case alias and lower-case "as" in the table strings.
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table1+" as U").
+			LeftJoin(table2+" as UD", "UD.id=U.id").
+			FieldsEx("passport", "password", "nickname", "create_time").
+			FieldsExPrefix("UD", "id", "password", "create_time").
+			Where("U.id", 4).
+			All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(len(r[0]), 3)
+		t.Assert(r[0]["id"], 4)
+		t.Assert(r[0]["passport"], "user_4")
+		t.Assert(r[0]["nickname"], "name_4")
+	})
+
+	// As after a join with ON clause aliases the joined table.
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table1).
+			LeftJoin(table2, "UD.id="+table1+".id").
+			As("UD").
+			FieldsExPrefix(table1, "passport", "password", "nickname", "create_time").
+			FieldsExPrefix("UD", "id", "passport", "password", "create_time").
+			Where(table1+".id", 6).
+			All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(len(r[0]), 2)
+		t.Assert(r[0]["id"], 6)
+		t.Assert(r[0]["nickname"], "name_6")
+	})
+
 	// As without ON clause does not alias the joined table.
 	gtest.C(t, func(t *gtest.T) {
 		r, err := db.Model(table1).
