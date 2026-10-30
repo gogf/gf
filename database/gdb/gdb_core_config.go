@@ -472,8 +472,12 @@ func parseConfigNodeLink(node *ConfigNode) (*ConfigNode, error) {
 	if node.Extra != "" {
 		if m, _ := gstr.Parse(node.Extra); len(m) > 0 {
 			// "time_zone" is a mysql session variable for the driver, which should not be
-			// fuzzy-matched to the Timezone(loc) attribute.
-			delete(m, "time_zone")
+			// fuzzy-matched to the Timezone(loc) attribute. Mysql variable names are case-insensitive.
+			for k := range m {
+				if gstr.Equal(k, "time_zone") {
+					delete(m, k)
+				}
+			}
 			_ = gconv.Struct(m, &node)
 		}
 	}
