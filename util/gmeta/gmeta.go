@@ -8,7 +8,9 @@
 package gmeta
 
 import (
+	"maps"
 	"reflect"
+	"sync"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/os/gstructs"
@@ -23,25 +25,45 @@ const metaAttributeName = "Meta"
 // metaType holds the reflection. Type of Meta, used for efficient type comparison.
 var metaType = reflect.TypeOf(Meta{})
 
+// metaCache caches parsed metadata by struct type, mapping reflect.Type to map[string]string.
+var metaCache sync.Map
+
 // Data retrieves and returns all metadata from `object`.
+// The returned map is a copy, so it is safe for the caller to modify it.
 func Data(object any) map[string]string {
-	reflectType, err := gstructs.StructType(object)
-	if err != nil {
+	data, ok := cachedData(object)
+	if !ok {
 		return nil
 	}
-	if field, ok := reflectType.FieldByName(metaAttributeName); ok {
-		if field.Type == metaType {
-			return gstructs.ParseTag(string(field.Tag))
-		}
-	}
-	return map[string]string{}
+	return maps.Clone(data)
 }
 
 // Get retrieves and returns specified metadata by `key` from `object`.
 func Get(object any, key string) *gvar.Var {
-	v, ok := Data(object)[key]
+	data, _ := cachedData(object)
+	v, ok := data[key]
 	if !ok {
 		return nil
 	}
 	return gvar.New(v)
+}
+
+// cachedData returns the metadata of `object` from cache, parsing and caching it on first access
+// of its struct type. The returned map is shared and must not be modified.
+func cachedData(object any) (map[string]string, bool) {
+	reflectType, err := gstructs.StructType(object)
+	if err != nil {
+		return nil, false
+	}
+	if data, ok := metaCache.Load(reflectType.Type); ok {
+		return data.(map[string]string), true
+	}
+	data := map[string]string{}
+	if field, ok := reflectType.FieldByName(metaAttributeName); ok {
+		if field.Type == metaType {
+			data = gstructs.ParseTag(string(field.Tag))
+		}
+	}
+	metaCache.Store(reflectType.Type, data)
+	return data, true
 }
