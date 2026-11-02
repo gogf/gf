@@ -10,6 +10,7 @@ package gmeta
 import (
 	"maps"
 	"reflect"
+	"strings"
 	"sync"
 
 	"github.com/gogf/gf/v2/container/gvar"
@@ -25,22 +26,37 @@ const metaAttributeName = "Meta"
 // metaType holds the reflection. Type of Meta, used for efficient type comparison.
 var metaType = reflect.TypeOf(Meta{})
 
-// metaCache caches parsed metadata by struct type, mapping reflect.Type to map[string]string.
+// metaCache caches metadata by struct type, mapping reflect.Type to *metaCacheItem.
 var metaCache sync.Map
+
+// metaCacheItem is the cached metadata of a struct type.
+type metaCacheItem struct {
+	data map[string]string // data is the parsed metadata, used when tag is empty.
+	tag  string            // tag is the raw tag that may contain gtag placeholders and is parsed on every read.
+}
 
 // Data retrieves and returns all metadata from `object`.
 // The returned map is a copy, so it is safe for the caller to modify it.
 func Data(object any) map[string]string {
-	data, ok := cachedData(object)
-	if !ok {
+	item := cachedItem(object)
+	if item == nil {
 		return nil
 	}
-	return maps.Clone(data)
+	if item.tag != "" {
+		return gstructs.ParseTag(item.tag)
+	}
+	return maps.Clone(item.data)
 }
 
 // Get retrieves and returns specified metadata by `key` from `object`.
 func Get(object any, key string) *gvar.Var {
-	data, _ := cachedData(object)
+	var data map[string]string
+	if item := cachedItem(object); item != nil {
+		data = item.data
+		if item.tag != "" {
+			data = gstructs.ParseTag(item.tag)
+		}
+	}
 	v, ok := data[key]
 	if !ok {
 		return nil
@@ -48,22 +64,27 @@ func Get(object any, key string) *gvar.Var {
 	return gvar.New(v)
 }
 
-// cachedData returns the metadata of `object` from cache, parsing and caching it on first access
-// of its struct type. The returned map is shared and must not be modified.
-func cachedData(object any) (map[string]string, bool) {
+// cachedItem returns the cached metadata of `object`, creating it on first access of its struct type.
+// It returns nil if `object` is not a struct.
+func cachedItem(object any) *metaCacheItem {
 	reflectType, err := gstructs.StructType(object)
 	if err != nil {
-		return nil, false
+		return nil
 	}
-	if data, ok := metaCache.Load(reflectType.Type); ok {
-		return data.(map[string]string), true
+	if item, ok := metaCache.Load(reflectType.Type); ok {
+		return item.(*metaCacheItem)
 	}
-	data := map[string]string{}
-	if field, ok := reflectType.FieldByName(metaAttributeName); ok {
-		if field.Type == metaType {
-			data = gstructs.ParseTag(string(field.Tag))
+	item := &metaCacheItem{data: map[string]string{}}
+	if field, ok := reflectType.FieldByName(metaAttributeName); ok && field.Type == metaType {
+		tag := string(field.Tag)
+		// Tags with gtag placeholders (possibly escaped) keep being parsed on read,
+		// so later gtag.Set/SetOver calls still take effect.
+		if strings.ContainsAny(tag, `{\`) {
+			item.tag = tag
+		} else {
+			item.data = gstructs.ParseTag(tag)
 		}
 	}
-	metaCache.Store(reflectType.Type, data)
-	return data, true
+	metaCache.Store(reflectType.Type, item)
+	return item
 }
