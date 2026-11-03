@@ -157,7 +157,7 @@ func Test_Tables_Method(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		// Test with specific schema - use the test schema
-		tables, err := db.Tables(ctx, "test")
+		tables, err := db.Tables(ctx, SchemaName)
 		t.AssertNil(err)
 		t.Assert(len(tables) >= 0, true)
 	})
@@ -237,7 +237,7 @@ func Test_TableFields_WithSchema(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		// Test with schema parameter
-		fields, err := db.TableFields(ctx, table, "test")
+		fields, err := db.TableFields(ctx, table, SchemaName)
 		t.AssertNil(err)
 		t.Assert(len(fields) > 0, true)
 	})
