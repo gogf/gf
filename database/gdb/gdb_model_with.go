@@ -314,19 +314,9 @@ func (m *Model) doWithScanStructs(pointer any) error {
 		}
 		if values, ok := relatedTargetValue.([]any); ok && chunkSize > 0 && len(values) > chunkSize {
 			var merged Result
-			for start := 0; start < len(values); start += chunkSize {
-				end := start + chunkSize
-				if end > len(values) {
-					end = len(values)
-				}
-				// Model operations modify the model in place by default, so clone per chunk
-				// to avoid accumulating fields and where conditions across chunks.
-				part, err := model.Clone().Fields(fieldKeys).
-					Where(relatedSourceName, values[start:end]).All()
-				if err != nil && err != sql.ErrNoRows {
-					return err
-				}
-				merged = append(merged, part...)
+			merged, err = queryRelatedValues(model, fieldKeys, relatedSourceName, values, chunkSize)
+			if err != nil {
+				return err
 			}
 			// Bind once with the model so nested relations are still scanned per layer.
 			err = model.doScanListWithResult(merged, pointer, fieldName, "", parsedTagOutput.With)
@@ -341,6 +331,27 @@ func (m *Model) doWithScanStructs(pointer any) error {
 		}
 	}
 	return nil
+}
+
+func queryRelatedValues(
+	model *Model, fieldKeys []string, sourceName string, values []any, chunkSize int,
+) (Result, error) {
+	var merged Result
+	for start := 0; start < len(values); start += chunkSize {
+		end := start + chunkSize
+		if end > len(values) {
+			end = len(values)
+		}
+		// Model operations modify the model in place by default, so clone per chunk
+		// to avoid accumulating fields and where conditions across chunks.
+		part, err := model.Clone().Fields(fieldKeys).
+			Where(sourceName, values[start:end]).All()
+		if err != nil && err != sql.ErrNoRows {
+			return nil, err
+		}
+		merged = append(merged, part...)
+	}
+	return merged, nil
 }
 
 type parseWithTagInFieldStructOutput struct {

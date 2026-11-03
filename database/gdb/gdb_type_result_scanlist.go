@@ -395,7 +395,6 @@ func doScanList(in doScanListInput) (err error) {
 					if err = results.Structs(bindToAttrValue.Addr()); err != nil {
 						return err
 					}
-					// Collect related structs for batched recursion.
 					if in.Model != nil {
 						for j := 0; j < bindToAttrValue.Len(); j++ {
 							item := bindToAttrValue.Index(j)
@@ -463,7 +462,6 @@ func doScanList(in doScanListInput) (err error) {
 					return err
 				}
 			}
-			// Collect related struct for batched recursion.
 			if in.Model != nil {
 				nextScanValues = append(nextScanValues, element.Addr())
 			}
@@ -505,7 +503,6 @@ func doScanList(in doScanListInput) (err error) {
 					return err
 				}
 			}
-			// Collect related struct for batched recursion.
 			if in.Model != nil {
 				nextScanValues = append(nextScanValues, bindToAttrValue.Addr())
 			}
@@ -523,8 +520,6 @@ func doScanList(in doScanListInput) (err error) {
 	return nil
 }
 
-// doWithScanStructsByValues scans next-level relations of the given related
-// struct values in one batch, so nested relation queries are issued per layer.
 func (m *Model) doWithScanStructsByValues(values []reflect.Value) error {
 	slice := reflect.MakeSlice(reflect.SliceOf(values[0].Type()), len(values), len(values))
 	for i, value := range values {
