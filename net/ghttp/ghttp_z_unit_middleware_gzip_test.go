@@ -96,3 +96,36 @@ func Test_Middleware_Gzip(t *testing.T) {
 		t.Assert(string(content), expected)
 	})
 }
+
+func Test_Middleware_Gzip_StreamResponse(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareGzip)
+		group.GET("/stream", func(r *ghttp.Request) {
+			r.Response.Header().Set("Content-Type", "text/event-stream")
+			r.Response.Write("data: first\n\n")
+			r.Response.Flush()
+			// The response is already committed; the trailing content must not be compressed.
+			r.Response.Write("data: " + strings.Repeat("x", 2048) + "\n\n")
+		})
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		resp, err := client.Header(map[string]string{
+			"Accept-Encoding": "gzip",
+		}).Get(ctx, "/stream")
+		t.AssertNil(err)
+		t.Assert(resp.Header.Get("Content-Encoding"), "")
+
+		content, err := io.ReadAll(resp.Body)
+		t.AssertNil(err)
+		t.Assert(string(content), "data: first\n\ndata: "+strings.Repeat("x", 2048)+"\n\n")
+	})
+}
