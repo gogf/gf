@@ -2190,6 +2190,309 @@ func Test_Table_Relation_WithAll_List_NestedDeep(t *testing.T) {
 	})
 }
 
+// Relation IN lists are split into chunks to respect database limits.
+func Test_Table_Relation_WithAll_List_Chunk(t *testing.T) {
+	var (
+		tableUser       = "user"
+		tableUserDetail = "user_detail"
+		tableUserScores = "user_scores"
+	)
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user.sql"), tableUser)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUser)
+
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_detail.sql"), tableUserDetail)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUserDetail)
+
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_scores.sql"), tableUserScores)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUserScores)
+
+	type UserScores struct {
+		gmeta.Meta `orm:"table:user_scores"`
+		Id         int `json:"id"`
+		Uid        int `json:"uid"`
+		Score      int `json:"score"`
+	}
+	type UserDetail struct {
+		gmeta.Meta `orm:"table:user_detail"`
+		Uid        int           `json:"uid"`
+		Address    string        `json:"address"`
+		UserScores []*UserScores `orm:"with:uid, order:id asc, chunkSize:3"`
+	}
+	type User struct {
+		gmeta.Meta `orm:"table:user"`
+		Id         int         `json:"id"`
+		Name       string      `json:"name"`
+		UserDetail *UserDetail `orm:"with:uid=id, chunkSize:3"`
+	}
+
+	type UserScoresValue struct {
+		gmeta.Meta `orm:"table:user_scores"`
+		Id         int `json:"id"`
+		Uid        int `json:"uid"`
+		Score      int `json:"score"`
+	}
+	type UserDetailValue struct {
+		gmeta.Meta `orm:"table:user_detail"`
+		Uid        int               `json:"uid"`
+		Address    string            `json:"address"`
+		UserScores []UserScoresValue `orm:"with:uid, order:id asc, chunkSize:3"`
+	}
+	type UserValue struct {
+		gmeta.Meta `orm:"table:user"`
+		Id         int             `json:"id"`
+		Name       string          `json:"name"`
+		UserDetail UserDetailValue `orm:"with:uid=id, chunkSize:3"`
+	}
+
+	// Initialize the data.
+	var err error
+	for i := 1; i <= 10; i++ {
+		_, err = db.Insert(ctx, tableUser, g.Map{
+			"id":   i,
+			"name": fmt.Sprintf(`name_%d`, i),
+		})
+		gtest.AssertNil(err)
+		_, err = db.Insert(ctx, tableUserDetail, g.Map{
+			"uid":     i,
+			"address": fmt.Sprintf(`address_%d`, i),
+		})
+		gtest.AssertNil(err)
+		for j := 1; j <= 3; j++ {
+			_, err = db.Insert(ctx, tableUserScores, g.Map{
+				"uid":   i,
+				"score": j,
+			})
+			gtest.AssertNil(err)
+		}
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			users    []*User
+			sqlArray []string
+		)
+		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			return db.Ctx(ctx).Model(tableUser).WithAll().Order("id").Scan(&users)
+		})
+		t.AssertNil(err)
+		// users 1 + user_detail ceil(10/3) + user_scores ceil(10/3).
+		t.Assert(countSelectSQL(sqlArray), 9)
+		t.Assert(len(users), 10)
+		for i, user := range users {
+			t.Assert(user.Id, i+1)
+			t.AssertNE(user.UserDetail, nil)
+			t.Assert(user.UserDetail.Uid, i+1)
+			t.Assert(user.UserDetail.Address, fmt.Sprintf(`address_%d`, i+1))
+			t.Assert(len(user.UserDetail.UserScores), 3)
+			for j, score := range user.UserDetail.UserScores {
+				t.Assert(score.Uid, i+1)
+				t.Assert(score.Score, j+1)
+			}
+		}
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			users    []UserValue
+			sqlArray []string
+		)
+		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			return db.Ctx(ctx).Model(tableUser).WithAll().Order("id").Scan(&users)
+		})
+		t.AssertNil(err)
+		t.Assert(countSelectSQL(sqlArray), 9)
+		t.Assert(len(users), 10)
+		for i, user := range users {
+			t.Assert(user.Id, i+1)
+			t.Assert(user.UserDetail.Uid, i+1)
+			t.Assert(len(user.UserDetail.UserScores), 3)
+			for j, score := range user.UserDetail.UserScores {
+				t.Assert(score.Uid, i+1)
+				t.Assert(score.Score, j+1)
+			}
+		}
+	})
+}
+
+// The default chunk size applies without tag configuration, and chunkSize:0 disables it.
+func Test_Table_Relation_WithAll_List_ChunkDefault(t *testing.T) {
+	var (
+		tableUser       = "user"
+		tableUserDetail = "user_detail"
+	)
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user.sql"), tableUser)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUser)
+
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_detail.sql"), tableUserDetail)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUserDetail)
+
+	type UserDetail struct {
+		gmeta.Meta `orm:"table:user_detail"`
+		Uid        int    `json:"uid"`
+		Address    string `json:"address"`
+	}
+	type User struct {
+		gmeta.Meta `orm:"table:user"`
+		Id         int         `json:"id"`
+		Name       string      `json:"name"`
+		UserDetail *UserDetail `orm:"with:uid=id"`
+	}
+	type UserNoChunk struct {
+		gmeta.Meta `orm:"table:user"`
+		Id         int         `json:"id"`
+		Name       string      `json:"name"`
+		UserDetail *UserDetail `orm:"with:uid=id, chunkSize:0"`
+	}
+
+	const n = 501
+	var (
+		users   = make([]g.Map, 0, n)
+		details = make([]g.Map, 0, n)
+	)
+	for i := 1; i <= n; i++ {
+		users = append(users, g.Map{
+			"id":   i,
+			"name": fmt.Sprintf(`name_%d`, i),
+		})
+		details = append(details, g.Map{
+			"uid":     i,
+			"address": fmt.Sprintf(`address_%d`, i),
+		})
+	}
+	_, err := db.Ctx(ctx).Model(tableUser).Data(users).Batch(1000).Insert()
+	gtest.AssertNil(err)
+	_, err = db.Ctx(ctx).Model(tableUserDetail).Data(details).Batch(1000).Insert()
+	gtest.AssertNil(err)
+
+	gtest.C(t, func(t *gtest.T) {
+		var users0 []*User
+		sqlArray, err := gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			return db.Ctx(ctx).Model(tableUser).WithAll().Order("id").Scan(&users0)
+		})
+		t.AssertNil(err)
+		// users 1 + user_detail ceil(501/500).
+		t.Assert(countSelectSQL(sqlArray), 3)
+		t.Assert(len(users0), n)
+		t.AssertNE(users0[0].UserDetail, nil)
+		t.Assert(users0[0].UserDetail.Uid, 1)
+		t.AssertNE(users0[n-1].UserDetail, nil)
+		t.Assert(users0[n-1].UserDetail.Uid, n)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		var users0 []*UserNoChunk
+		sqlArray, err := gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			return db.Ctx(ctx).Model(tableUser).WithAll().Order("id").Scan(&users0)
+		})
+		t.AssertNil(err)
+		t.Assert(countSelectSQL(sqlArray), 2)
+		t.Assert(len(users0), n)
+		t.AssertNE(users0[n-1].UserDetail, nil)
+		t.Assert(users0[n-1].UserDetail.Uid, n)
+	})
+}
+
+// Chunking does not multiply queries of deeper relation layers.
+func Test_Table_Relation_WithAll_List_ChunkNested(t *testing.T) {
+	var (
+		tableUser         = "user"
+		tableUserScores   = "user_scores"
+		tableScoreDetails = "score_details"
+	)
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user.sql"), tableUser)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUser)
+
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_user_scores.sql"), tableUserScores)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUserScores)
+
+	if _, err := db.Exec(ctx, fmt.Sprintf(gtest.DataContent("with_tpl_score_details.sql"), tableScoreDetails)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableScoreDetails)
+
+	type ScoreDetails struct {
+		gmeta.Meta `orm:"table:score_details"`
+		Id         int    `json:"id"`
+		ScoreId    int    `json:"score_id"`
+		DetailInfo string `json:"detail_info"`
+	}
+	type UserScores struct {
+		gmeta.Meta   `orm:"table:user_scores"`
+		Id           int             `json:"id"`
+		Uid          int             `json:"uid"`
+		Score        int             `json:"score"`
+		ScoreDetails []*ScoreDetails `orm:"with:score_id=id, order:id asc, chunkSize:3"`
+	}
+	type User struct {
+		gmeta.Meta `orm:"table:user"`
+		Id         int           `json:"id"`
+		Name       string        `json:"name"`
+		UserScores []*UserScores `orm:"with:uid=id, order:id asc, chunkSize:2"`
+	}
+
+	// Initialize the data: 5 users * 5 scores * 1 detail.
+	var err error
+	for i := 1; i <= 5; i++ {
+		_, err = db.Insert(ctx, tableUser, g.Map{
+			"id":   i,
+			"name": fmt.Sprintf(`name_%d`, i),
+		})
+		gtest.AssertNil(err)
+		for j := 1; j <= 5; j++ {
+			var scoreId int64
+			scoreId, err = db.InsertAndGetId(ctx, tableUserScores, g.Map{
+				"uid":   i,
+				"score": j,
+			})
+			gtest.AssertNil(err)
+			_, err = db.Insert(ctx, tableScoreDetails, g.Map{
+				"score_id":    scoreId,
+				"detail_info": fmt.Sprintf(`detail_%d_%d`, i, j),
+			})
+			gtest.AssertNil(err)
+		}
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			users    []*User
+			sqlArray []string
+		)
+		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			return db.Ctx(ctx).Model(tableUser).WithAll().Order("id").Scan(&users)
+		})
+		t.AssertNil(err)
+		// users 1 + user_scores ceil(5/2) + score_details ceil(25/3).
+		// Rescanning nested relations per chunk would make score_details 3*9.
+		t.Assert(countSelectSQL(sqlArray), 13)
+		t.Assert(len(users), 5)
+		for i, user := range users {
+			t.Assert(user.Id, i+1)
+			t.Assert(len(user.UserScores), 5)
+			for j, score := range user.UserScores {
+				t.Assert(score.Uid, i+1)
+				t.Assert(score.Score, j+1)
+				t.Assert(len(score.ScoreDetails), 1)
+				t.Assert(score.ScoreDetails[0].DetailInfo, fmt.Sprintf(`detail_%d_%d`, i+1, j+1))
+			}
+		}
+	})
+}
+
 func Test_Table_Relation_WithAll_Order(t *testing.T) {
 	var (
 		tableUser       = "user101"
