@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"database/sql"
+	"errors"
 	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -186,7 +187,7 @@ func (m *Model) doWithScanStruct(pointer any) error {
 			Where(relatedSourceName, relatedTargetValue).
 			Scan(bindToReflectValue)
 		// It ignores sql.ErrNoRows in with feature.
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return err
 		}
 	}
@@ -326,7 +327,7 @@ func (m *Model) doWithScanStructs(pointer any) error {
 				ScanList(pointer, fieldName, parsedTagOutput.With)
 		}
 		// It ignores sql.ErrNoRows in with feature.
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return err
 		}
 	}
@@ -346,7 +347,7 @@ func queryRelatedValues(
 		// to avoid accumulating fields and where conditions across chunks.
 		part, err := model.Clone().Fields(fieldKeys).
 			Where(sourceName, values[start:end]).All()
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return nil, err
 		}
 		merged = append(merged, part...)
