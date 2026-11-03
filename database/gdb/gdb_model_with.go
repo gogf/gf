@@ -309,8 +309,8 @@ func (m *Model) doWithScanStructs(pointer any) error {
 			model = model.Cache(m.cacheOption)
 		}
 		chunkSize := defaultWithChunkSize
-		if parsedTagOutput.ChunkSize != "" {
-			chunkSize = gconv.Int(parsedTagOutput.ChunkSize)
+		if parsedTagOutput.Chunk != "" {
+			chunkSize = gconv.Int(parsedTagOutput.Chunk)
 		}
 		if values, ok := relatedTargetValue.([]any); ok && chunkSize > 0 && len(values) > chunkSize {
 			var merged Result
@@ -344,11 +344,11 @@ func (m *Model) doWithScanStructs(pointer any) error {
 }
 
 type parseWithTagInFieldStructOutput struct {
-	With      string
-	Where     string
-	Order     string
-	Unscoped  string
-	ChunkSize string
+	With     string
+	Where    string
+	Order    string
+	Unscoped string
+	Chunk    string
 }
 
 func (m *Model) parseWithTagInFieldStruct(field gstructs.Field) (output parseWithTagInFieldStructOutput) {
@@ -376,6 +376,6 @@ func (m *Model) parseWithTagInFieldStruct(field gstructs.Field) (output parseWit
 	output.Where = data[OrmTagForWithWhere]
 	output.Order = data[OrmTagForWithOrder]
 	output.Unscoped = data[OrmTagForWithUnscoped]
-	output.ChunkSize = data[OrmTagForWithChunkSize]
+	output.Chunk = data[OrmTagForWithChunk]
 	return
 }

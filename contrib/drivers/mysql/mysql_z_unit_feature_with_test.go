@@ -2222,13 +2222,13 @@ func Test_Table_Relation_WithAll_List_Chunk(t *testing.T) {
 		gmeta.Meta `orm:"table:user_detail"`
 		Uid        int           `json:"uid"`
 		Address    string        `json:"address"`
-		UserScores []*UserScores `orm:"with:uid, order:id asc, chunkSize:3"`
+		UserScores []*UserScores `orm:"with:uid, order:id asc, chunk:3"`
 	}
 	type User struct {
 		gmeta.Meta `orm:"table:user"`
 		Id         int         `json:"id"`
 		Name       string      `json:"name"`
-		UserDetail *UserDetail `orm:"with:uid=id, chunkSize:3"`
+		UserDetail *UserDetail `orm:"with:uid=id, chunk:3"`
 	}
 
 	type UserScoresValue struct {
@@ -2241,13 +2241,13 @@ func Test_Table_Relation_WithAll_List_Chunk(t *testing.T) {
 		gmeta.Meta `orm:"table:user_detail"`
 		Uid        int               `json:"uid"`
 		Address    string            `json:"address"`
-		UserScores []UserScoresValue `orm:"with:uid, order:id asc, chunkSize:3"`
+		UserScores []UserScoresValue `orm:"with:uid, order:id asc, chunk:3"`
 	}
 	type UserValue struct {
 		gmeta.Meta `orm:"table:user"`
 		Id         int             `json:"id"`
 		Name       string          `json:"name"`
-		UserDetail UserDetailValue `orm:"with:uid=id, chunkSize:3"`
+		UserDetail UserDetailValue `orm:"with:uid=id, chunk:3"`
 	}
 
 	// Initialize the data.
@@ -2320,7 +2320,7 @@ func Test_Table_Relation_WithAll_List_Chunk(t *testing.T) {
 	})
 }
 
-// The default chunk size applies without tag configuration, and chunkSize:0 disables it.
+// The default chunk size applies without tag configuration, and chunk:0 disables it.
 func Test_Table_Relation_WithAll_List_ChunkDefault(t *testing.T) {
 	var (
 		tableUser       = "user"
@@ -2351,7 +2351,7 @@ func Test_Table_Relation_WithAll_List_ChunkDefault(t *testing.T) {
 		gmeta.Meta `orm:"table:user"`
 		Id         int         `json:"id"`
 		Name       string      `json:"name"`
-		UserDetail *UserDetail `orm:"with:uid=id, chunkSize:0"`
+		UserDetail *UserDetail `orm:"with:uid=id, chunk:0"`
 	}
 
 	const n = 501
@@ -2435,13 +2435,13 @@ func Test_Table_Relation_WithAll_List_ChunkNested(t *testing.T) {
 		Id           int             `json:"id"`
 		Uid          int             `json:"uid"`
 		Score        int             `json:"score"`
-		ScoreDetails []*ScoreDetails `orm:"with:score_id=id, order:id asc, chunkSize:3"`
+		ScoreDetails []*ScoreDetails `orm:"with:score_id=id, order:id asc, chunk:3"`
 	}
 	type User struct {
 		gmeta.Meta `orm:"table:user"`
 		Id         int           `json:"id"`
 		Name       string        `json:"name"`
-		UserScores []*UserScores `orm:"with:uid=id, order:id asc, chunkSize:2"`
+		UserScores []*UserScores `orm:"with:uid=id, order:id asc, chunk:2"`
 	}
 
 	// Initialize the data: 5 users * 5 scores * 1 detail.
