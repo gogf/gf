@@ -12,11 +12,5 @@ const (
 	schemeHttps = "https"
 )
 
-// Keys of the router serve tree.
-const (
-	routerKeyFuzz = "*fuzz"
-	routerKeyList = "*list"
-)
-
 // gprocMessageExit is the process communication message for graceful shutdown.
 const gprocMessageExit = "exit"
