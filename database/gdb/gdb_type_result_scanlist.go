@@ -515,18 +515,22 @@ func doScanList(in doScanListInput) (err error) {
 		}
 	}
 	if in.Model != nil && len(nextScanValues) > 0 {
-		nextScanSlice := reflect.MakeSlice(
-			reflect.SliceOf(nextScanValues[0].Type()), len(nextScanValues), len(nextScanValues),
-		)
-		for i, v := range nextScanValues {
-			nextScanSlice.Index(i).Set(v)
-		}
-		nextScanSlicePointer := reflect.New(nextScanSlice.Type())
-		nextScanSlicePointer.Elem().Set(nextScanSlice)
-		if err = in.Model.doWithScanStructs(nextScanSlicePointer.Interface()); err != nil {
+		if err = in.Model.doWithScanStructsByValues(nextScanValues); err != nil {
 			return err
 		}
 	}
 	reflect.ValueOf(in.StructSlicePointer).Elem().Set(arrayValue)
 	return nil
+}
+
+// doWithScanStructsByValues scans next-level relations of the given related
+// struct values in one batch, so nested relation queries are issued per layer.
+func (m *Model) doWithScanStructsByValues(values []reflect.Value) error {
+	slice := reflect.MakeSlice(reflect.SliceOf(values[0].Type()), len(values), len(values))
+	for i, value := range values {
+		slice.Index(i).Set(value)
+	}
+	pointer := reflect.New(slice.Type())
+	pointer.Elem().Set(slice)
+	return m.doWithScanStructs(pointer.Interface())
 }
