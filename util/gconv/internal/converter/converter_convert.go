@@ -366,8 +366,10 @@ func (c *Converter) doConvert(in doConvertInput, option ConvertOption) (converte
 			MapOption:   option.MapOption,
 		})
 
-	case "RawMessage", "json.RawMessage":
+	case "RawMessage", "json.RawMessage", "jsontext.Value":
 		// issue 3449
+		// json.RawMessage is an alias of jsontext.Value when jsonv2 is enabled,
+		// which is the default since Go 1.27.
 		bytes, err := json.Marshal(in.FromValue)
 		if err != nil {
 			return nil, err

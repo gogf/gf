@@ -17,13 +17,19 @@ func Test_Zlib_UnZlib(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		src := "hello, world\n"
 		dst := []byte{120, 156, 202, 72, 205, 201, 201, 215, 81, 40, 207, 47, 202, 73, 225, 2, 4, 0, 0, 255, 255, 33, 231, 4, 147}
-		data, _ := gcompress.Zlib([]byte(src))
-		t.Assert(data, dst)
+		compressed, err := gcompress.Zlib([]byte(src))
+		t.AssertNil(err)
+		t.AssertGT(len(compressed), 0)
 
-		data, _ = gcompress.UnZlib(dst)
-		t.Assert(data, []byte(src))
+		result, err := gcompress.UnZlib(compressed)
+		t.AssertNil(err)
+		t.Assert(result, []byte(src))
 
-		data, _ = gcompress.Zlib(nil)
+		result, err = gcompress.UnZlib(dst)
+		t.AssertNil(err)
+		t.Assert(result, []byte(src))
+
+		data, _ := gcompress.Zlib(nil)
 		t.Assert(data, nil)
 		data, _ = gcompress.UnZlib(nil)
 		t.Assert(data, nil)

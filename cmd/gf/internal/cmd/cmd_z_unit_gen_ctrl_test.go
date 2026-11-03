@@ -12,6 +12,7 @@ import (
 
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
 	"github.com/gogf/gf/v2/util/gutil"
 
@@ -404,5 +405,63 @@ func Test_Gen_Ctrl_UseMerge_Issue3460(t *testing.T) {
 			expect := gfile.GetContents(expectFile)
 			t.Assert(val, expect)
 		}
+	})
+}
+
+// https://github.com/gogf/gf/issues/4289
+func Test_Gen_Ctrl_UseMerge_Issue4289(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctrlPath  = gfile.Temp(guid.S())
+			apiFolder = gtest.DataPath("genctrl", "merge", "add_new_ctrl", "api")
+			in        = genctrl.CGenCtrlInput{
+				SrcFolder: apiFolder,
+				DstFolder: ctrlPath,
+				Merge:     true,
+			}
+		)
+
+		err := gfile.Mkdir(ctrlPath)
+		t.AssertNil(err)
+		defer gfile.RemoveAll(ctrlPath)
+		defer gfile.RemoveAll(filepath.Join(apiFolder, "/dict/dict.go"))
+
+		_, err = genctrl.CGenCtrl{}.Ctrl(ctx, in)
+		t.AssertNil(err)
+
+		// Add an aliased third-party import whose base name equals the api version.
+		ctrlFile := filepath.Join(ctrlPath, "/dict/dict_v1_dict_type.go")
+		err = gfile.PutContents(ctrlFile, gstr.Replace(
+			gfile.GetContents(ctrlFile),
+			"import (",
+			"import (\n\tthirdparty \"github.com/example/thirdparty/v1\"\n",
+			1,
+		))
+		t.AssertNil(err)
+
+		// Add a new api, then execute the command again.
+		var (
+			dictModuleFileName = filepath.Join(apiFolder, "/dict/v1/dict_type.go")
+			apiFileContents    = gfile.GetContents(dictModuleFileName)
+		)
+		defer func() {
+			t.AssertNil(gfile.PutContents(dictModuleFileName, apiFileContents))
+		}()
+		err = gfile.PutContentsAppend(dictModuleFileName, `
+
+type DictTypeAddReq struct {
+	g.Meta
+}
+type DictTypeAddRes struct {
+}
+`)
+		t.AssertNil(err)
+
+		_, err = genctrl.CGenCtrl{}.Ctrl(ctx, in)
+		t.AssertNil(err)
+
+		content := gfile.GetContents(ctrlFile)
+		t.Assert(gstr.Count(content, ") DictTypeAdd("), 1)
+		t.Assert(gstr.Count(content, ") DictTypeAddPage("), 1)
 	})
 }

@@ -9,6 +9,8 @@ package glog
 import (
 	"bytes"
 	"context"
+	"os"
+	"os/exec"
 	"testing"
 
 	"github.com/gogf/gf/v2/test/gtest"
@@ -17,6 +19,14 @@ import (
 
 var (
 	ctx = context.TODO()
+)
+
+const (
+	// fatalAsyncHelperEnv marks the child process that calls Fatal/Fatalf on an async logger.
+	fatalAsyncHelperEnv = "GF_GLOG_FATAL_ASYNC_HELPER"
+	// fatalAsyncHelperNotExitedCode is the child process exit code used when Fatal/Fatalf
+	// return without exiting the process, which fails the parent assertion.
+	fatalAsyncHelperNotExitedCode = 3
 )
 
 func Test_Print(t *testing.T) {
@@ -82,6 +92,36 @@ func Test_Error(t *testing.T) {
 		l.Errorf(ctx, "%d %d %d", 1, 2, 3)
 		t.Assert(gstr.Count(w.String(), defaultLevelPrefixes[LEVEL_ERRO]), 2)
 		t.Assert(gstr.Count(w.String(), "1 2 3"), 2)
+	})
+}
+
+// Test_Fatal_Async checks that Fatal/Fatalf still print their content when the logger
+// is async. They exit the process, so they are called in a child process.
+func Test_Fatal_Async(t *testing.T) {
+	if method := os.Getenv(fatalAsyncHelperEnv); method != "" {
+		l := New()
+		l.SetAsync(true)
+		l.SetStack(false)
+		switch method {
+		case "Fatalf":
+			l.Fatalf(ctx, "%d %d %d", 1, 2, 3)
+		default:
+			l.Fatal(ctx, 1, 2, 3)
+		}
+		// Fatal/Fatalf always exit the process, so reaching here means they did not,
+		// which must be reported to the parent assertion instead of inlining the test.
+		os.Exit(fatalAsyncHelperNotExitedCode)
+	}
+	gtest.C(t, func(t *gtest.T) {
+		for _, method := range []string{"Fatal", "Fatalf"} {
+			cmd := exec.Command(os.Args[0], "-test.run=^Test_Fatal_Async$")
+			cmd.Env = append(os.Environ(), fatalAsyncHelperEnv+"="+method)
+			output, err := cmd.CombinedOutput()
+			t.AssertNE(err, nil)
+			t.Assert(cmd.ProcessState.ExitCode(), 1)
+			t.Assert(gstr.Count(string(output), defaultLevelPrefixes[LEVEL_FATA]), 1)
+			t.Assert(gstr.Count(string(output), "1 2 3"), 1)
+		}
 	})
 }
 
