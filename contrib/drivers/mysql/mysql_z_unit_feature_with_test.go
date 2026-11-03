@@ -2027,6 +2027,29 @@ func Test_Table_Relation_WithAll_List_Nested(t *testing.T) {
 			}
 		}
 	})
+
+	// Explicit `With` types take the same batched recursion path as `WithAll`.
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			users    []*User
+			sqlArray []string
+		)
+		sqlArray, err = gdb.CatchSQL(ctx, func(ctx context.Context) error {
+			return db.Ctx(ctx).Model(tableUser).
+				With(UserDetail{}, UserScores{}).
+				Order("id").Scan(&users)
+		})
+		t.AssertNil(err)
+		t.Assert(countSelectSQL(sqlArray), 3)
+		t.Assert(len(users), 5)
+		for i, user := range users {
+			t.Assert(user.Id, i+1)
+			t.AssertNE(user.UserDetail, nil)
+			t.Assert(user.UserDetail.Uid, i+1)
+			t.Assert(user.UserDetail.Address, fmt.Sprintf(`address_%d`, i+1))
+			t.Assert(len(user.UserDetail.UserScores), 5)
+		}
+	})
 }
 
 // Four-layer association chain: one query per layer, independent of the parent count.
