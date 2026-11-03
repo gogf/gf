@@ -59,13 +59,14 @@ type iTableName interface {
 }
 
 const (
-	OrmTagForStruct       = "orm"
-	OrmTagForTable        = "table"
-	OrmTagForWith         = "with"
-	OrmTagForWithWhere    = "where"
-	OrmTagForWithOrder    = "order"
-	OrmTagForWithUnscoped = "unscoped"
-	OrmTagForDo           = "do"
+	OrmTagForStruct        = "orm"
+	OrmTagForTable         = "table"
+	OrmTagForWith          = "with"
+	OrmTagForWithWhere     = "where"
+	OrmTagForWithOrder     = "order"
+	OrmTagForWithUnscoped  = "unscoped"
+	OrmTagForWithChunkSize = "chunkSize"
+	OrmTagForDo            = "do"
 )
 
 var (

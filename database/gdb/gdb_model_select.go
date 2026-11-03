@@ -411,6 +411,18 @@ func (m *Model) ScanList(structSlicePointer any, bindToAttrName string, relation
 	case 1:
 		relationFields = relationAttrNameAndFields[0]
 	}
+	return m.doScanListWithResult(result, structSlicePointer, bindToAttrName, relationAttrName, relationFields)
+}
+
+// doScanListWithResult binds the given result to the struct slice attribute and
+// scans its nested relations recursively.
+func (m *Model) doScanListWithResult(
+	result Result, structSlicePointer any, bindToAttrName, relationAttrName, relationFields string,
+) error {
+	out, err := checkGetSliceElementInfoForScanList(structSlicePointer, bindToAttrName)
+	if err != nil {
+		return err
+	}
 	return doScanList(doScanListInput{
 		Model:              m,
 		Result:             result,

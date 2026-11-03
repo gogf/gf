@@ -15,8 +15,14 @@ import (
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 )
+
+// defaultWithChunkSize is the default maximum number of relation keys in one IN
+// condition, as databases like Oracle and SQL Server limit the IN list length or
+// the parameter count.
+const defaultWithChunkSize = 500
 
 // With creates and returns an ORM model based on metadata of given object.
 // It also enables model association operations feature on given `object`.
@@ -302,9 +308,33 @@ func (m *Model) doWithScanStructs(pointer any) error {
 		if m.cacheEnabled && m.cacheOption.Name == "" {
 			model = model.Cache(m.cacheOption)
 		}
-		err = model.Fields(fieldKeys).
-			Where(relatedSourceName, relatedTargetValue).
-			ScanList(pointer, fieldName, parsedTagOutput.With)
+		chunkSize := defaultWithChunkSize
+		if parsedTagOutput.ChunkSize != "" {
+			chunkSize = gconv.Int(parsedTagOutput.ChunkSize)
+		}
+		if values, ok := relatedTargetValue.([]any); ok && chunkSize > 0 && len(values) > chunkSize {
+			var merged Result
+			for start := 0; start < len(values); start += chunkSize {
+				end := start + chunkSize
+				if end > len(values) {
+					end = len(values)
+				}
+				// Model operations modify the model in place by default, so clone per chunk
+				// to avoid accumulating fields and where conditions across chunks.
+				part, err := model.Clone().Fields(fieldKeys).
+					Where(relatedSourceName, values[start:end]).All()
+				if err != nil && err != sql.ErrNoRows {
+					return err
+				}
+				merged = append(merged, part...)
+			}
+			// Bind once with the model so nested relations are still scanned per layer.
+			err = model.doScanListWithResult(merged, pointer, fieldName, "", parsedTagOutput.With)
+		} else {
+			err = model.Fields(fieldKeys).
+				Where(relatedSourceName, relatedTargetValue).
+				ScanList(pointer, fieldName, parsedTagOutput.With)
+		}
 		// It ignores sql.ErrNoRows in with feature.
 		if err != nil && err != sql.ErrNoRows {
 			return err
@@ -314,10 +344,11 @@ func (m *Model) doWithScanStructs(pointer any) error {
 }
 
 type parseWithTagInFieldStructOutput struct {
-	With     string
-	Where    string
-	Order    string
-	Unscoped string
+	With      string
+	Where     string
+	Order     string
+	Unscoped  string
+	ChunkSize string
 }
 
 func (m *Model) parseWithTagInFieldStruct(field gstructs.Field) (output parseWithTagInFieldStructOutput) {
@@ -345,5 +376,6 @@ func (m *Model) parseWithTagInFieldStruct(field gstructs.Field) (output parseWit
 	output.Where = data[OrmTagForWithWhere]
 	output.Order = data[OrmTagForWithOrder]
 	output.Unscoped = data[OrmTagForWithUnscoped]
+	output.ChunkSize = data[OrmTagForWithChunkSize]
 	return
 }
