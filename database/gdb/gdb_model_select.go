@@ -410,11 +410,25 @@ func (m *Model) validateSingleFieldSpecified() error {
 // a pointer to a basic type, a slice of basic types, or a slice of pointers to basic types. In these
 // cases exactly one field must be specified via Fields (or a field-producing helper such as FieldSum),
 // otherwise an error is returned. FieldsEx is accepted only when it leaves exactly one column.
+// `[]byte` and `[]uint8` targets are treated as a single column value that keeps its raw bytes,
+// not as a slice of scalar values.
 //
 // The optional parameter `where` is the same as the parameter of Model.Where function,  see Model.Where.
 //
 // Note that it returns sql.ErrNoRows if the given parameter `pointer` pointed to a variable that has
 // default value and there's no record retrieved with the given conditions from table.
+//
+// # No row versus NULL column value
+//
+// Scanning into a variable of basic type distinguishes the two cases:
+//   - no record matches: sql.ErrNoRows is returned when the target holds a default value,
+//     consistent with Record.Struct and Result.Structs;
+//   - a record matches but the column value is NULL: the target is left untouched and
+//     no error is returned, which follows gconv.Scan semantics for a nil source value.
+//     Note that a pointer target ends up as a nil pointer in this case.
+//
+// Scanning into a slice of basic types also follows Result.Structs: no record leaves the
+// target untouched and returns sql.ErrNoRows only when the target already holds values.
 //
 // Example:
 //
@@ -438,6 +452,9 @@ func (m *Model) validateSingleFieldSpecified() error {
 //
 //	var names2 []*string
 //	err   := db.Model("user").Fields("name").Scan(&names2)
+//
+//	var avatar []byte
+//	err   := db.Model("user").Fields("avatar").Where("id", 1).Scan(&avatar)
 func (m *Model) Scan(pointer any, where ...any) error {
 	reflectInfo := reflection.OriginTypeAndKind(pointer)
 	if reflectInfo.InputKind != reflect.Pointer {
@@ -454,26 +471,19 @@ func (m *Model) Scan(pointer any, where ...any) error {
 			elemType = elemType.Elem()
 		}
 
+		// `[]byte` and `[]uint8` hold one column raw value instead of a slice of scalar
+		// values. Their element kind is `uint8`, so the multi-row scalar branch would
+		// decode each row into one byte and silently truncate every value.
+		if elemType != nil && elemType.Kind() == reflect.Uint8 {
+			return m.scanBasicType(pointer, where...)
+		}
+
 		// Only route to the basic-type slice branch when the element is a true scalar type
 		// (int/uint/float/bool/string). Map/record slices and other non-struct kinds must
 		// fall through to doStructs; otherwise []Record or similar results would be
 		// misclassified as a slice of basic values.
 		if elemType != nil && reflection.IsBasicKind(elemType.Kind()) {
-			if err := m.validateSingleFieldSpecified(); err != nil {
-				return err
-			}
-			// Use a clone to avoid mutating the original model. Do not pass the field
-			// as an argument to Array() because it already lives in m.fields and
-			// Array() would append it again (Fields is append-only).
-			model := m.Clone()
-			if len(where) > 0 {
-				model = model.Where(where[0], where[1:]...)
-			}
-			valueArr, err := model.Array()
-			if err != nil {
-				return err
-			}
-			return valueArr.Scan(pointer)
+			return m.scanSliceOfBasicType(pointer, where...)
 		}
 		return m.doStructs(pointer, where...)
 
@@ -483,30 +493,86 @@ func (m *Model) Scan(pointer any, where ...any) error {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
 		reflect.Float32, reflect.Float64, reflect.Bool, reflect.String:
-		if err := m.validateSingleFieldSpecified(); err != nil {
-			return err
-		}
-		model := m.Clone()
-		if len(where) > 0 {
-			model = model.Where(where[0], where[1:]...)
-		}
-		value, err := model.Value()
-		if err != nil {
-			return err
-		}
-		if value == nil {
-			if !empty.IsNil(pointer, true) {
-				return sql.ErrNoRows
-			}
-			return nil
-		}
-		return value.Scan(pointer)
+		return m.scanBasicType(pointer, where...)
 	default:
 		return gerror.NewCode(
 			gcode.CodeInvalidParameter,
 			`element of parameter "pointer" for function Scan should type of struct/*struct/[]struct/[]*struct, or basic type like int/string/float64/bool`,
 		)
 	}
+}
+
+// scanBasicType scans a single column value into a variable of basic type, or into a pointer
+// to a basic type. It keeps the no-row and NULL value semantics aligned with Record.Struct:
+// no row returns sql.ErrNoRows for a non-nil target, while a NULL column value leaves the
+// target untouched without error.
+func (m *Model) scanBasicType(pointer any, where ...any) error {
+	if err := m.validateSingleFieldSpecified(); err != nil {
+		return err
+	}
+	// Use a clone to avoid mutating the original model.
+	model := m.Clone()
+	if len(where) > 0 {
+		model = model.Where(where[0], where[1:]...)
+	}
+	// One() is used instead of Value() because Value() returns nil both for no matching
+	// record and for a NULL column value, which makes the two cases indistinguishable.
+	record, err := model.One()
+	if err != nil {
+		return err
+	}
+	if record == nil {
+		// No record matches.
+		if !empty.IsNil(pointer, true) {
+			return sql.ErrNoRows
+		}
+		return nil
+	}
+	if len(record) != 1 {
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`invalid fields for "Scan" operation, result fields number "%d"%s, but expect one`,
+			len(record),
+			gjson.MustEncodeString(m.getRecordFields(record)),
+		)
+	}
+	for _, value := range record {
+		// A record matches but the column value is NULL, which leaves the target untouched.
+		if value == nil {
+			return nil
+		}
+		return value.Scan(pointer)
+	}
+	return nil
+}
+
+// scanSliceOfBasicType scans a single column result into a slice of basic types, or a slice
+// of pointers to basic types. The no-row behavior is aligned with Result.Structs: it returns
+// sql.ErrNoRows and keeps the target untouched when the target already holds values, and
+// keeps a nil slice as nil otherwise.
+func (m *Model) scanSliceOfBasicType(pointer any, where ...any) error {
+	if err := m.validateSingleFieldSpecified(); err != nil {
+		return err
+	}
+	// Use a clone to avoid mutating the original model. Do not pass the field
+	// as an argument to Array() because it already lives in m.fields and
+	// Array() would append it again (Fields is append-only).
+	model := m.Clone()
+	if len(where) > 0 {
+		model = model.Where(where[0], where[1:]...)
+	}
+	valueArr, err := model.Array()
+	if err != nil {
+		return err
+	}
+	if len(valueArr) == 0 {
+		// Keep the no-row semantics identical to Result.Structs.
+		if !empty.IsEmpty(pointer, true) {
+			return sql.ErrNoRows
+		}
+		return nil
+	}
+	return valueArr.Scan(pointer)
 }
 
 // ScanAndCount scans a single record or record array that matches the given conditions and counts the total number

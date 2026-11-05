@@ -2223,8 +2223,8 @@ func Test_Issue3977(t *testing.T) {
 		t.Assert(username, "username1")
 	})
 
-	// Scanning into a non-nil pointer when no row matches should return sql.ErrNoRows,
-	// consistent with Record.Struct/Result.Structs. See PR review comment.
+	// Scanning when no row matches should be consistent with Record.Struct/Result.Structs
+	// for the same target kinds. See PR review comment.
 	gtest.C(t, func(t *gtest.T) {
 		// basic type
 		var name string
@@ -2239,11 +2239,68 @@ func Test_Issue3977(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(namePtr, nil)
 
-		// slice of basic type: empty result yields an empty slice, NOT sql.ErrNoRows
+		// slice of basic type, nil target: it stays nil without error, same as Result.Structs.
 		var names []string
 		err = db.Model(table).Fields("username").Where("id", 9999).Scan(&names)
 		t.AssertNil(err)
-		t.Assert(len(names), 0)
+		t.AssertNil(names)
+
+		// slice of basic type, non-empty target: it keeps its values and returns
+		// sql.ErrNoRows, same as Result.Structs.
+		kept := []string{"keep"}
+		err = db.Model(table).Fields("username").Where("id", 9999).Scan(&kept)
+		t.Assert(err, sql.ErrNoRows)
+		t.Assert(kept, []string{"keep"})
+	})
+
+	// A record whose column value is NULL is not the same as no matching record: the
+	// target is left untouched and no error is returned.
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Exec(ctx, fmt.Sprintf(
+			"INSERT INTO `%s`(%s, %s) VALUES(4, NULL, 33)", table, "username", "age",
+		))
+		t.AssertNil(err)
+
+		name := "keep"
+		err = db.Model(table).Fields("username").Where("id", 4).Scan(&name)
+		t.AssertNil(err)
+		t.Assert(name, "keep")
+
+		var namePtr *string
+		err = db.Model(table).Fields("username").Where("id", 4).Scan(&namePtr)
+		t.AssertNil(err)
+		t.Assert(namePtr, nil)
+
+		// The other columns of the same record are still readable.
+		var age int
+		err = db.Model(table).Fields("age").Where("id", 4).Scan(&age)
+		t.AssertNil(err)
+		t.Assert(age, 33)
+	})
+
+	// `[]byte` and `[]uint8` targets keep the raw column bytes instead of being treated
+	// as a slice of scalar values.
+	gtest.C(t, func(t *gtest.T) {
+		binaryTable := "issue3977_binary"
+		dropTable(binaryTable)
+		defer dropTable(binaryTable)
+		_, err := db.Exec(ctx, fmt.Sprintf(
+			"CREATE TABLE `%s`(id bigint NOT NULL, bin blob, PRIMARY KEY(id))", binaryTable,
+		))
+		t.AssertNil(err)
+		expected := []byte{0xDE, 0xAD, 0xBE, 0xEF, 0x01, 0x02, 0x03, 0x04}
+		_, err = db.Model(binaryTable).Data(g.Map{"id": 1, "bin": expected}).Insert()
+		t.AssertNil(err)
+
+		var bin []byte
+		err = db.Model(binaryTable).Fields("bin").Where("id", 1).Scan(&bin)
+		t.AssertNil(err)
+		t.Assert(bin, expected)
+
+		var bin2 []uint8
+		err = db.Model(binaryTable).Fields("bin").Where("id", 1).Scan(&bin2)
+		t.AssertNil(err)
+		t.Assert(bin2, expected)
 	})
 
 	// Raw
