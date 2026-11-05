@@ -131,12 +131,12 @@ func Test_TranslateMap(t *testing.T) {
 		t.Log(str)
 		t.Assert(str, "xy")
 
-		str = i18n.Tm(context.Background(), "replace_map_empty1", map[string]interface{}{"a":"A"})
+		str = i18n.Tm(context.Background(), "replace_map_empty1", map[string]interface{}{"a": "A"})
 		t.Log(str)
 		t.Assert(str, "")
 
 		//replace_map_special
-		str = i18n.Tm(context.Background(), "replace_map_special", map[string]interface{}{"a":"中文$1\\路径"})
+		str = i18n.Tm(context.Background(), "replace_map_special", map[string]interface{}{"a": "中文$1\\路径"})
 		t.Log(str)
 		t.Assert(str, "中文$1\\路径")
 	})
