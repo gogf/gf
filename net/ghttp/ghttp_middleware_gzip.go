@@ -18,6 +18,7 @@ import (
 // 1. The response is already compressed (Content-Encoding header is set)
 // 2. The client does not accept gzip compression
 // 3. The response body length is too small (less than 1KB)
+// 4. The response has already been flushed to the client. Later writes stay uncompressed.
 //
 // To disable compression for specific routes, you can use the group middleware:
 //
@@ -33,6 +34,11 @@ func MiddlewareGzip(r *Request) {
 
 	// Execute the next handlers first
 	r.Middleware.Next()
+
+	// Headers are already on the wire, so the body cannot be re-encoded.
+	if r.Response.IsHeaderWrote() {
+		return
+	}
 
 	// Skip if already compressed or empty response
 	if r.Response.Header().Get(HeaderContentEncoding) != "" {
