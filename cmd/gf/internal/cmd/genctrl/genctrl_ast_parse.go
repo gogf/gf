@@ -72,7 +72,7 @@ func (c CGenCtrl) getStructsNameInSrc(filePath string) (structInfos []*structInf
 	return
 }
 
-// getImportsInDst retrieves all import paths in the file.
+// getImportsInDst retrieves all import lines in the file, formatted as `alias "path"` or `"path"`.
 func (c CGenCtrl) getImportsInDst(filePath string) (imports []string, err error) {
 	var (
 		fileContent = gfile.GetContents(filePath)
@@ -86,7 +86,11 @@ func (c CGenCtrl) getImportsInDst(filePath string) (imports []string, err error)
 
 	ast.Inspect(node, func(n ast.Node) bool {
 		if imp, ok := n.(*ast.ImportSpec); ok {
-			imports = append(imports, imp.Path.Value)
+			if imp.Name != nil {
+				imports = append(imports, imp.Name.Name+" "+imp.Path.Value)
+			} else {
+				imports = append(imports, imp.Path.Value)
+			}
 		}
 		return true
 	})

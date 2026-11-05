@@ -26,6 +26,11 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
+// daoIndexGdbImportPath is the gdb import path used by the sharding handler of the dao index
+// file. The dao index template does not import it, as the non-sharding content of the template
+// does not use gdb, so the import is ensured by generateDaoIndex for the sharding tables.
+const daoIndexGdbImportPath = "github.com/gogf/gf/v2/database/gdb"
+
 func generateDao(ctx context.Context, in CGenDaoInternalInput) {
 	var (
 		dirPathDao         = gfile.Join(in.Path, in.DaoPath)
@@ -134,6 +139,17 @@ func generateDaoIndex(in generateDaoIndexInput) {
 		if err = gfile.PutContents(path, strings.TrimSpace(indexContent)); err != nil {
 			mlog.Fatalf("writing content to '%s' failed: %v", path, err)
 		} else {
+			// The sharding handler written by the template uses gdb, while the template does not
+			// import it, as the non-sharding content does not reference gdb at all. The import is
+			// declared here instead of in the template so that the template stays import-free and
+			// the unused import is never written to the non-sharding files.
+			if in.IsSharding {
+				if _, importErr := utils.EnsureImports(path, utils.ImportSpec{
+					Path: daoIndexGdbImportPath,
+				}); importErr != nil {
+					mlog.Fatalf(`adding import to "%s" failed: %v`, path, importErr)
+				}
+			}
 			utils.GoFmt(path)
 			mlog.Print("generated:", gfile.RealPath(path))
 		}

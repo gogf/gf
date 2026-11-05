@@ -19,6 +19,79 @@ go.work.sum
 !cmd/gf/go.work
 .windsurfrules
 
+# =============================================================================
+# Agent private project directories
+# Managed locally by `gf agents` / `make agents`.
+# Sources live under .agents/skills and .agents/prompts; per-tool symlinks
+# created at the repo root must not be committed.
+# =============================================================================
+/.adal/
+/.aider-desk/
+/.augment/
+/.autohand/
+/.bob/
+/.claude/
+/.codeartsdoer/
+/.codebuddy/
+/.codemaker/
+/.codestudio/
+/.codex/
+/.commandcode/
+/.continue/
+/.cortex/
+/.crush/
+/.cursor/
+/.devin/
+/.factory/
+/.forge/
+/.gemini/
+/.goose/
+/.grok/
+/.hermes/
+/.iflow/
+/.inferencesh/
+/.jazz/
+/.junie/
+/.kilocode/
+/.kiro/
+/.kode/
+/.lingma/
+/.mcpjam/
+/.moxby/
+/.mux/
+/.neovate/
+/.ona/
+/.openhands/
+/.pi/
+/.pochi/
+/.qoder/
+/.qwen/
+/.reasonix/
+/.roo/
+/.rovodev/
+/.tabnine/
+/.terramind/
+/.tinycloud/
+/.trae/
+/.vibe/
+/.windsurf/
+/.zencoder/
+
+# rootCollision agent (openclaw) — only created with explicit AGENT=openclaw FORCE=1.
+# Ignored to keep an opt-in symlink from polluting the repo root if a user enables it.
+/skills
+
+# AGENTS.md is the only truth; per-tool guide files are local symlinks.
+/CLAUDE.md
+/GEMINI.md
+/CRUSH.md
+/IFLOW.md
+/QWEN.md
+/TABNINE.md
+/CONVENTIONS.md
+/.augment-guidelines
+/.continuerules
+
 # Ignore for docs
 openspec/
 localdocs/

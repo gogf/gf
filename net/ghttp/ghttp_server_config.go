@@ -275,7 +275,7 @@ type ServerConfig struct {
 func NewConfig() ServerConfig {
 	return ServerConfig{
 		Name:                    DefaultServerName,
-		Address:                 ":0",
+		Address:                 FreePortAddress,
 		HTTPSAddr:               "",
 		Listeners:               nil,
 		Handler:                 nil,

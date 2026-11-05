@@ -9,15 +9,100 @@ package dm
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
+
+// ctxKeyReturningColumn marks the insert of a record whose primary key DoCommit returns.
+const ctxKeyReturningColumn gctx.StrKey = "dm_returning_column"
+
+// recordsSavepoint is the savepoint that the statements writing several records roll back to in
+// a transaction that is already open, see inOneTransaction.
+const recordsSavepoint = "gf_records"
+
+// txBeginner is a link that begins a transaction on its own pool, like the link of the pool of a
+// schema.
+type txBeginner interface {
+	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
+}
+
+// txLink is the link of a transaction that inOneTransaction begins.
+type txLink struct {
+	*sql.Tx
+}
+
+// IsTransaction implements gdb.Link.
+func (l *txLink) IsTransaction() bool {
+	return true
+}
+
+// IsOnMaster implements gdb.Link.
+func (l *txLink) IsOnMaster() bool {
+	return true
+}
+
+// inOneTransaction runs `f`, which writes several records by more than one statement, so that a
+// failing statement writes none of them: back to a savepoint of the transaction of `link` or `ctx`
+// if there is one, or else in a transaction that it begins on the pool of `link`, which serves the
+// schema of the statements, and passes to `f` as its link.
+func (d *Driver) inOneTransaction(
+	ctx context.Context, link gdb.Link, f func(ctx context.Context, link gdb.Link) (sql.Result, error),
+) (result sql.Result, err error) {
+	if d.GetDryRun() {
+		return f(ctx, link)
+	}
+	if link != nil && link.IsTransaction() || gdb.TXFromCtx(ctx, d.GetGroup()) != nil {
+		if _, err = d.DoExec(ctx, link, "SAVEPOINT "+recordsSavepoint); err != nil {
+			return nil, err
+		}
+		if result, err = f(ctx, link); err != nil {
+			if _, rollbackErr := d.DoExec(ctx, link, "ROLLBACK TO SAVEPOINT "+recordsSavepoint); rollbackErr != nil {
+				err = gerror.WrapCode(gerror.Code(err), errors.Join(err, rollbackErr))
+			}
+		}
+		return result, err
+	}
+	if link == nil {
+		if link, err = d.MasterLink(); err != nil {
+			return nil, err
+		}
+	}
+	beginner, ok := link.(txBeginner)
+	if !ok {
+		return f(ctx, link)
+	}
+	tx, err := beginner.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, gerror.WrapCode(gcode.CodeDbOperationError, err, `BEGIN`)
+	}
+	defer func() {
+		if exception := recover(); exception != nil {
+			_ = tx.Rollback()
+			panic(exception)
+		}
+	}()
+	if result, err = f(ctx, &txLink{Tx: tx}); err != nil {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			err = gerror.WrapCode(gerror.Code(err), errors.Join(err, rollbackErr))
+		}
+		return result, err
+	}
+	if err = tx.Commit(); err != nil {
+		return result, gerror.WrapCode(gcode.CodeDbOperationError, err, `COMMIT`)
+	}
+	return result, nil
+}
 
 // DoInsert inserts or updates data for given table.
 // The list parameter must contain at least one record, which was previously validated.
@@ -37,14 +122,194 @@ func (d *Driver) DoInsert(
 		return d.doInsertIgnore(ctx, link, table, list, option)
 
 	default:
-		// DM database supports IDENTITY auto-increment columns natively.
-		// The driver automatically returns LastInsertId through sql.Result.
-		//
-		// Note: DM IDENTITY columns cannot accept explicit ID values unless
-		// IDENTITY_INSERT is enabled. When using tables with IDENTITY columns,
-		// avoid providing explicit ID values in the data.
-		return d.Core.DoInsert(ctx, link, table, list, option)
+		return d.doInsertDefault(ctx, link, table, list, option)
 	}
+}
+
+// doInsertDefault inserts `list` with the default insert option. The last insert id is the value of
+// the key of the last record, the key being the identity column of the table or else its only
+// primary key column: the integer that the record gives the key, or else the value that the server
+// stores, like the value of an identity or of a trigger reading a sequence. RETURNING gets that
+// value for a single record. For several records it is read by the ROWID of the last one, which
+// the underlying driver reports unless the statement generates an identity, then reported as is.
+// The last insert id is 0 for a table without such a key, and an error of code CodeNotSupported
+// for a key that does not hold integers, as on PostgreSQL.
+func (d *Driver) doInsertDefault(
+	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
+) (sql.Result, error) {
+	key, err := d.insertIdField(ctx, table)
+	if err != nil {
+		return nil, err
+	}
+	if key == nil {
+		return d.doInsertWithId(ctx, link, table, list, option, 0, nil)
+	}
+	if !d.isIntegerField(ctx, key) {
+		return d.doInsertWithId(ctx, link, table, list, option, 0, gerror.NewCodef(
+			gcode.CodeNotSupported, `LastInsertId is not supported by primary key type: %s`, key.Type,
+		))
+	}
+	isIdentity := key.Extra == fieldExtraIdentity
+	if value, ok := recordValueOfField(list[len(list)-1], key.Name); ok {
+		if id, ok := givenKeyValue(value); ok {
+			return d.doInsertWithId(ctx, link, table, list, option, id, nil)
+		}
+	}
+	if len(list) == 1 {
+		return d.doInsertReturning(ctx, link, table, list, option, key.Name)
+	}
+	result, err := d.Core.DoInsert(ctx, link, table, list, option)
+	if err != nil {
+		return result, err
+	}
+	reportedId, err := result.LastInsertId()
+	if err != nil || reportedId == 0 {
+		// The result of ToSQL reports 0, as nothing is inserted.
+		return result, err
+	}
+	if isIdentity {
+		switch recordsGivingField(list, key.Name) {
+		case 0:
+			return result, nil
+		case len(list):
+		default:
+			return &insertResult{Result: result, lastInsertIdErr: gerror.NewCodef(
+				gcode.CodeNotSupported,
+				`LastInsertId is not supported for records of which only some give the identity column %s`,
+				key.Name,
+			)}, nil
+		}
+	}
+	value, err := d.DoQuery(ctx, link, fmt.Sprintf(
+		"SELECT %s FROM %s WHERE ROWID = ?", d.QuoteWord(key.Name), d.QuotePrefixTableName(table),
+	), reportedId)
+	if err != nil {
+		return result, err
+	}
+	var lastInsertId int64
+	if len(value) > 0 {
+		lastInsertId = value[0][key.Name].Int64()
+	}
+	return &insertResult{Result: result, lastInsertId: lastInsertId}, nil
+}
+
+// doInsertWithId inserts `list` with the last insert id `id`, or the error `idErr` of it.
+func (d *Driver) doInsertWithId(
+	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
+	id int64, idErr error,
+) (sql.Result, error) {
+	result, err := d.Core.DoInsert(ctx, link, table, list, option)
+	if err != nil {
+		return result, err
+	}
+	return &insertResult{Result: result, lastInsertId: id, lastInsertIdErr: idErr}, nil
+}
+
+// givenKeyValue returns the integer `value` that a record gives the integer key of a table, or false
+// if the server stores another value: for a raw expression, and for a value that is not an integer,
+// like nil or an empty string. An identity column keeps a value given to it as it is, even 0.
+func givenKeyValue(value any) (int64, bool) {
+	if _, isRaw := value.(gdb.Raw); isRaw {
+		return 0, false
+	}
+	id, err := strconv.ParseInt(gconv.String(value), 10, 64)
+	return id, err == nil
+}
+
+// doInsertReturning inserts the record of `list` with the clause returning the value of `column`
+// as the last insert id.
+func (d *Driver) doInsertReturning(
+	ctx context.Context, link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption, column string,
+) (sql.Result, error) {
+	option.InsertOption = gdb.InsertOptionDefault
+	ctx = context.WithValue(ctx, ctxKeyReturningColumn, column)
+	return d.Core.DoInsert(ctx, link, table, list, option)
+}
+
+// insertIdField returns the field of `table` whose value is the last insert id: its identity
+// column, or else its only primary key column. It returns nil for a table without either.
+func (d *Driver) insertIdField(ctx context.Context, table string) (*gdb.TableField, error) {
+	fields, err := d.GetCore().GetDB().TableFields(ctx, d.GetTableNameForFields(table))
+	if err != nil {
+		return nil, err
+	}
+	var primaryKeys []*gdb.TableField
+	for _, field := range fields {
+		if field.Extra == fieldExtraIdentity {
+			return field, nil
+		}
+		if strings.EqualFold(field.Key, "PRI") {
+			primaryKeys = append(primaryKeys, field)
+		}
+	}
+	if len(primaryKeys) == 1 {
+		return primaryKeys[0], nil
+	}
+	return nil, nil
+}
+
+// isIntegerField reports whether `field` holds integers.
+func (d *Driver) isIntegerField(ctx context.Context, field *gdb.TableField) bool {
+	localType, err := d.CheckLocalTypeForField(ctx, field.Type, nil)
+	if err != nil {
+		return false
+	}
+	switch localType {
+	case gdb.LocalTypeInt, gdb.LocalTypeUint, gdb.LocalTypeInt32, gdb.LocalTypeUint32,
+		gdb.LocalTypeInt64, gdb.LocalTypeUint64, gdb.LocalTypeBigInt:
+		return true
+	default:
+		return false
+	}
+}
+
+// recordsGivingField returns the number of records of `list` that give the field `name`.
+func recordsGivingField(list gdb.List, name string) int {
+	var n int
+	for _, record := range list {
+		if _, ok := recordValueOfField(record, name); ok {
+			n++
+		}
+	}
+	return n
+}
+
+// identityColumn returns the name of the identity column of `table`, or empty if it has none.
+func (d *Driver) identityColumn(ctx context.Context, table string) (string, error) {
+	fields, err := d.GetCore().GetDB().TableFields(ctx, d.GetTableNameForFields(table))
+	if err != nil {
+		return "", err
+	}
+	for _, field := range fields {
+		if field.Extra == fieldExtraIdentity {
+			return field.Name, nil
+		}
+	}
+	return "", nil
+}
+
+// recordValueOfField returns the value of the field `name` in `record`, whose keys may differ
+// from the field name in letter case.
+func recordValueOfField(record gdb.Map, name string) (any, bool) {
+	if value, ok := record[name]; ok {
+		return value, true
+	}
+	for key, value := range record {
+		if strings.EqualFold(key, name) {
+			return value, true
+		}
+	}
+	return nil, false
+}
+
+// tableWithoutAlias returns `table` without the alias that it may give the table, like
+// "user u" or "user AS u", which a MERGE statement does not accept.
+func tableWithoutAlias(table string) string {
+	words := strings.Fields(table)
+	if len(words) == 2 || len(words) == 3 && strings.EqualFold(words[1], "AS") {
+		return words[0]
+	}
+	return table
 }
 
 // doSave support upsert for dm
@@ -62,17 +327,36 @@ func (d *Driver) doInsertIgnore(ctx context.Context,
 	return d.doMergeInsert(ctx, link, table, list, option, false)
 }
 
-// doMergeInsert implements MERGE-based insert operations for DM database.
+// doMergeInsert implements MERGE-based insert operations for DM database, with a MERGE statement
+// for each record, which inserts or updates the records one after another, all of them in one
+// transaction, see inOneTransaction. The last insert id is the value of the identity column of the
+// last record, as for doInsertDefault: a record that leaves the identity to the server, being the
+// conflict key, matches no record and is inserted with RETURNING.
 // When withUpdate is true, it performs upsert (insert or update).
 // When withUpdate is false, it performs insert ignore (insert only when no conflict).
 func (d *Driver) doMergeInsert(
 	ctx context.Context,
 	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption, withUpdate bool,
 ) (result sql.Result, err error) {
+	if len(list) == 1 {
+		return d.doMergeRecords(ctx, link, table, list, option, withUpdate)
+	}
+	return d.inOneTransaction(ctx, link, func(ctx context.Context, link gdb.Link) (sql.Result, error) {
+		return d.doMergeRecords(ctx, link, table, list, option, withUpdate)
+	})
+}
+
+// doMergeRecords executes one MERGE statement for each record of `list`, as doMergeInsert
+// describes, and returns the sum of their affected rows.
+func (d *Driver) doMergeRecords(
+	ctx context.Context,
+	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption, withUpdate bool,
+) (result sql.Result, err error) {
+	table = tableWithoutAlias(table)
 	// If OnConflict is not specified, automatically get the primary key of the table
 	conflictKeys := option.OnConflict
 	if len(conflictKeys) == 0 {
-		primaryKeys, err := d.Core.GetPrimaryKeys(ctx, table)
+		primaryKeys, err := d.GetPrimaryKeys(ctx, table)
 		if err != nil {
 			return nil, gerror.WrapCode(
 				gcode.CodeInternalError,
@@ -100,26 +384,14 @@ func (d *Driver) doMergeInsert(
 				table,
 			)
 		}
-		// TODO consider composite primary keys.
+		sort.Strings(primaryKeys)
 		conflictKeys = primaryKeys
 	}
 
 	var (
-		one            = list[0]
-		oneLen         = len(one)
 		charL, charR   = d.GetChars()
 		conflictKeySet = gset.NewStrSet(false)
-
-		// queryHolders:	Handle data with Holder that need to be merged
-		// queryValues:		Handle data that need to be merged
-		// insertKeys:		Handle valid keys that need to be inserted
-		// insertValues:	Handle values that need to be inserted
-		// updateValues:	Handle values that need to be updated (only when withUpdate=true)
-		queryHolders = make([]string, oneLen)
-		queryValues  = make([]any, oneLen)
-		insertKeys   = make([]string, oneLen)
-		insertValues = make([]string, oneLen)
-		updateValues []string
+		batchResult    = new(gdb.SqlResult)
 	)
 
 	// conflictKeys slice type conv to set type
@@ -127,40 +399,152 @@ func (d *Driver) doMergeInsert(
 		conflictKeySet.Add(gstr.ToUpper(conflictKey))
 	}
 
-	index := 0
-	for key, value := range one {
-		keyWithChar := charL + key + charR
-		queryHolders[index] = fmt.Sprintf("? AS %s", keyWithChar)
-		queryValues[index] = value
-		insertKeys[index] = keyWithChar
-		insertValues[index] = fmt.Sprintf("T2.%s", keyWithChar)
-
-		// Build updateValues only when withUpdate is true
-		// Filter conflict keys and soft created fields from updateValues
-		if withUpdate && !(conflictKeySet.Contains(key) || d.Core.IsSoftCreatedFieldName(key)) {
-			updateValues = append(
-				updateValues,
-				fmt.Sprintf(`T1.%s = T2.%s`, keyWithChar, keyWithChar),
-			)
-		}
-		index++
-	}
-
-	var (
-		batchResult = new(gdb.SqlResult)
-		sqlStr      = parseSqlForMerge(table, queryHolders, insertKeys, insertValues, updateValues, conflictKeys)
-	)
-	r, err := d.DoExec(ctx, link, sqlStr, queryValues...)
+	identity, err := d.identityColumn(ctx, table)
 	if err != nil {
-		return r, err
+		return nil, err
 	}
-	if n, err := r.RowsAffected(); err != nil {
-		return r, err
-	} else {
-		batchResult.Result = r
-		batchResult.Affected += n
+	var (
+		lastInsertId   int64
+		mergesIdentity = identity != "" && len(conflictKeys) == 1 && strings.EqualFold(conflictKeys[0], identity)
+	)
+	for _, one := range list {
+		if identity != "" {
+			value, _ := recordValueOfField(one, identity)
+			id, given := givenKeyValue(value)
+			if _, isRaw := value.(gdb.Raw); mergesIdentity && !isRaw && !given {
+				// The record matches no record by an identity that it leaves to the server to generate.
+				r, err := d.doInsertReturning(ctx, link, table, gdb.List{one}, option, identity)
+				if err != nil {
+					return r, err
+				}
+				if lastInsertId, err = r.LastInsertId(); err != nil {
+					return r, err
+				}
+				n, err := r.RowsAffected()
+				if err != nil {
+					return r, err
+				}
+				batchResult.Result = r
+				batchResult.Affected += n
+				continue
+			}
+			lastInsertId = id
+		}
+		var (
+			oneLen = len(one)
+			keys   = make([]string, 0, oneLen)
+
+			// queryHolders:	Handle data with Holder that need to be merged
+			// queryValues:		Handle data that need to be merged
+			// insertKeys:		Handle valid keys that need to be inserted
+			// insertValues:	Handle values that need to be inserted
+			// updateValues:	Handle values that need to be updated (only when withUpdate=true)
+			queryHolders = make([]string, oneLen)
+			queryValues  = make([]any, 0, oneLen)
+			insertKeys   = make([]string, oneLen)
+			insertValues = make([]string, oneLen)
+			updateValues []string
+		)
+		for key := range one {
+			keys = append(keys, key)
+		}
+		sort.Strings(keys)
+		for index, key := range keys {
+			keyWithChar := charL + key + charR
+			if s, ok := one[key].(gdb.Raw); ok {
+				queryHolders[index] = fmt.Sprintf("%s AS %s", gconv.String(s), keyWithChar)
+			} else {
+				queryHolders[index] = fmt.Sprintf("? AS %s", keyWithChar)
+				queryValues = append(queryValues, one[key])
+			}
+			insertKeys[index] = keyWithChar
+			insertValues[index] = fmt.Sprintf("T2.%s", keyWithChar)
+		}
+		// Build updateValues only when withUpdate is true
+		if withUpdate {
+			updateValues = d.formatMergeUpdateValues(keys, conflictKeySet, option)
+		}
+
+		sqlStr := parseSqlForMerge(
+			d.QuotePrefixTableName(table), queryHolders, insertKeys, insertValues, updateValues, conflictKeys,
+		)
+		r, err := d.DoExec(ctx, link, sqlStr, queryValues...)
+		if err != nil {
+			return r, err
+		}
+		if n, err := r.RowsAffected(); err != nil {
+			return r, err
+		} else {
+			batchResult.Result = r
+			batchResult.Affected += n
+		}
 	}
-	return batchResult, nil
+	return &insertResult{Result: batchResult, lastInsertId: lastInsertId}, nil
+}
+
+// formatMergeUpdateValues returns the assignments of the MERGE UPDATE SET clause for a record
+// with the given `keys`. It follows OnDuplicate/OnDuplicateEx of `option` if specified, or else
+// updates every key except conflict keys and, unless the whole record is replaced, soft created
+// fields. A conflict key assigned from its own source column is left out, as it cannot change
+// the matched row.
+func (d *Driver) formatMergeUpdateValues(
+	keys []string, conflictKeySet *gset.StrSet, option gdb.DoInsertOption,
+) (updateValues []string) {
+	charL, charR := d.GetChars()
+	if option.OnDuplicateStr != "" {
+		return []string{option.OnDuplicateStr}
+	}
+	if len(option.OnDuplicateMap) > 0 {
+		updateKeys := make([]string, 0, len(option.OnDuplicateMap))
+		for key := range option.OnDuplicateMap {
+			updateKeys = append(updateKeys, key)
+		}
+		sort.Strings(updateKeys)
+		for _, key := range updateKeys {
+			keyWithChar := charL + key + charR
+			switch value := option.OnDuplicateMap[key].(type) {
+			case gdb.Raw, *gdb.Raw:
+				updateValues = append(updateValues, fmt.Sprintf(`T1.%s = %s`, keyWithChar, gconv.String(value)))
+
+			case gdb.Counter, *gdb.Counter:
+				var counter gdb.Counter
+				switch v := value.(type) {
+				case gdb.Counter:
+					counter = v
+				case *gdb.Counter:
+					counter = *v
+				}
+				operator, columnVal := "+", counter.Value
+				if columnVal < 0 {
+					operator, columnVal = "-", -columnVal
+				}
+				updateValues = append(updateValues, fmt.Sprintf(
+					`T1.%s = T1.%s%s%s`,
+					keyWithChar, charL+counter.Field+charR, operator, gconv.String(columnVal),
+				))
+
+			default:
+				column := gconv.String(value)
+				if conflictKeySet.Contains(gstr.ToUpper(key)) && strings.EqualFold(key, column) {
+					continue
+				}
+				updateValues = append(updateValues, fmt.Sprintf(`T1.%s = T2.%s`, keyWithChar, charL+column+charR))
+			}
+		}
+		return updateValues
+	}
+	// Filter conflict keys, and soft created fields unless the whole record is replaced.
+	for _, key := range keys {
+		if conflictKeySet.Contains(gstr.ToUpper(key)) {
+			continue
+		}
+		if option.InsertOption != gdb.InsertOptionReplace && d.IsSoftCreatedFieldName(key) {
+			continue
+		}
+		keyWithChar := charL + key + charR
+		updateValues = append(updateValues, fmt.Sprintf(`T1.%s = T2.%s`, keyWithChar, keyWithChar))
+	}
+	return updateValues
 }
 
 // parseSqlForMerge generates MERGE statement for DM database.
@@ -191,7 +575,7 @@ func parseSqlForMerge(table string,
 	pattern := gstr.Trim(`MERGE INTO %s T1 USING (SELECT %s FROM DUAL) T2 ON (%s) WHEN NOT MATCHED THEN INSERT(%s) VALUES (%s)`)
 	if len(updateValues) > 0 {
 		// Upsert: INSERT or UPDATE
-		pattern += gstr.Trim(`WHEN MATCHED THEN UPDATE SET %s`)
+		pattern += ` WHEN MATCHED THEN UPDATE SET %s`
 		return fmt.Sprintf(
 			pattern, table, queryHolderStr, duplicateKeyStr, insertKeyStr, insertValueStr,
 			strings.Join(updateValues, ","),

@@ -12,12 +12,12 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // RuleLength implements `length` rule:
 // Length between :min and :max.
 // The length is calculated using unicode string, which means one chinese character or letter both has the length of 1.
+// For a slice, an array or a map the length is the number of its elements.
 //
 // Format: length:min,max
 type RuleLength struct{}
@@ -35,10 +35,7 @@ func (r RuleLength) Message() string {
 }
 
 func (r RuleLength) Run(in RunInput) error {
-	var (
-		valueRunes = gconv.Runes(in.Value.String())
-		valueLen   = len(valueRunes)
-	)
+	valueLen := valueLength(in.Value.Val())
 	var (
 		min   = 0
 		max   = 0

@@ -16,6 +16,7 @@ import (
 
 // watchLoop starts the loop for event listening from underlying inotify monitor.
 func (w *Watcher) watchLoop() {
+	defer w.watchLoopWg.Done()
 	for {
 		select {
 		// close event.

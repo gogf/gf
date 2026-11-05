@@ -30,7 +30,7 @@ concurrency:
 env:
   TZ: "Asia/Shanghai"
   # for unit testing cases of some components that only execute on the latest go version.
-  LATEST_GO_VERSION: "1.26"
+  LATEST_GO_VERSION: "1.27"
 
 jobs:
   code-test:
@@ -40,8 +40,7 @@ jobs:
         # When adding new go version to the list, make sure:
         # 1. Update the `LATEST_GO_VERSION` env variable.
         # 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        go-version: [ "1.23", "1.24", "1.25", "1.26" ]
-        goarch: [ "386", "amd64" ]
+        go-version: [ "1.25", "1.26", "1.27" ]
 
     runs-on: ubuntu-latest
 
@@ -59,7 +58,30 @@ jobs:
       uses: actions/setup-go@v7
       with:
         go-version: ${{ matrix.go-version }}
-        cache-dependency-path: '**/go.sum' 
+        # Cache is managed manually below.
+        cache: false
+
+    - name: Get current month
+      id: cache-month
+      run: echo "month=$(date +%Y%m)" >> "$GITHUB_OUTPUT"
+
+    - name: Restore Go module cache
+      id: mod-cache
+      uses: actions/cache/restore@v6
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-mod-sub-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-mod-sub-
+
+    - name: Restore Go build cache
+      id: build-cache
+      uses: actions/cache/restore@v6
+      with:
+        path: ~/.cache/go-build
+        key: ${{ runner.os }}-go-build-sub-${{ matrix.go-version }}-${{ steps.cache-month.outputs.month }}
+        restore-keys: |
+          ${{ runner.os }}-go-build-sub-${{ matrix.go-version }}-
 
     - name: Before Script
       run:  bash .github/workflows/scripts/before_script.sh
@@ -67,4 +89,16 @@ jobs:
     - name: Build & Test
       run: bash .github/workflows/scripts/ci-sub.sh
 
+    - name: Save Go module cache
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && steps.mod-cache.outputs.cache-hit != 'true' }}
+      uses: actions/cache/save@v6
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ steps.mod-cache.outputs.cache-primary-key }}
 
+    - name: Save Go build cache
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && steps.build-cache.outputs.cache-hit != 'true' }}
+      uses: actions/cache/save@v6
+      with:
+        path: ~/.cache/go-build
+        key: ${{ steps.build-cache.outputs.cache-primary-key }}

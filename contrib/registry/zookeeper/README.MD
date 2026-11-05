@@ -1,4 +1,4 @@
-# GoFrame Etcd Registry
+# GoFrame Zookeeper Registry
 
 Use `zookeeper` as service registration and discovery management.
 

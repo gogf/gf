@@ -10,6 +10,7 @@ import (
 	"archive/zip"
 	"io"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -79,6 +80,8 @@ func doZipPathWriter(srcPath string, zipWriter *zip.Writer, option ...Option) er
 			headerPrefix = gfile.Basename(absolutePath)
 		}
 	}
+	// Zip entry names always use '/' as separator, whatever the OS.
+	headerPrefix = strings.ReplaceAll(headerPrefix, `\`, `/`)
 	headerPrefix = strings.ReplaceAll(headerPrefix, `//`, `/`)
 	for _, file := range files {
 		// It here calculates the file name prefix, especially packing the directory.
@@ -112,7 +115,7 @@ func doZipPathWriter(srcPath string, zipWriter *zip.Writer, option ...Option) er
 			if tmpPath == `/` || !strings.Contains(tmpPath, `/`) {
 				break
 			}
-			tmpPath = gfile.Dir(tmpPath)
+			tmpPath = path.Dir(tmpPath)
 		}
 	}
 	return nil

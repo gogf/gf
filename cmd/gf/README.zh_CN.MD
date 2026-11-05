@@ -2,13 +2,13 @@
 
 # gf
 
-`gf` 是一个强大的 CLI 工具，用于便捷地构建 [GoFrame](https://goframe.org) 应用程序。
+`gf`是一个强大的 CLI 工具，用于便捷地构建 [GoFrame](https://goframe.org) 应用程序。
 
 ## 1. 安装
 
-## 1) 预编译二进制文件
+## 1）预编译二进制文件
 
-您也可以使用预构建的二进制文件安装 `gf` 工具：<https://github.com/gogf/gf/releases>
+您也可以使用预构建的二进制文件安装`gf`工具：<https://github.com/gogf/gf/releases>
 
 1. `Mac` & `Linux`
 
@@ -16,27 +16,27 @@
     wget -O gf https://github.com/gogf/gf/releases/latest/download/gf_$(go env GOOS)_$(go env GOARCH) && chmod +x gf && ./gf install -y && rm ./gf
    ```
 
-   > 如果您使用 `zsh`，您可能需要通过命令 `alias gf=gf` 重命名别名以解决 `gf` 和 `git fetch` 之间的冲突。
+   > 如果您使用`zsh`，您可能需要通过命令`alias gf=gf`重命名别名以解决`gf`和`git fetch`之间的冲突。
 
 2. `Windows`
    手动下载，在命令行中执行，然后按照说明操作。
 
 3. 数据库支持
 
-   |     数据库     | 内置支持 |                                                                             说明                                                                             |
-   | :--------: | :-------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-   |   mysql    |       是       |                                                                                -                                                                                |
-   |  mariadb   |       是       |                                                                                -                                                                                |
-   |    tidb    |       是       |                                                                                -                                                                                |
-   |   mssql    |       是       |                                                                                -                                                                                |
-   |   oracle   |       是       |                                                                                -                                                                                |
-   |   pgsql    |       是       |                                                                                -                                                                                |
-   |   sqlite   |       是       |                                                                                -                                                                                |
-   | sqlitecgo  |       否        | 要在 32 位架构系统上支持 sqlite 数据库，请手动向[源代码](./internal/cmd/cmd_gen_dao.go)添加包导入并进行构建。 |
-   | clickhouse |       是        |                                                                                -                                                                                |
-   |     dm     |       否        |                              手动向[源代码](./internal/cmd/cmd_gen_dao.go)添加包导入并进行构建。                              |
+   | 数据库 | 内置支持 | 说明 |
+   | --- | --- | --- |
+   | `mysql` | 是 | - |
+   | `mariadb` | 是 | - |
+   | `tidb` | 是 | - |
+   | `mssql` | 是 | - |
+   | `oracle` | 是 | - |
+   | `pgsql` | 是 | - |
+   | `sqlite` | 是 | - |
+   | `sqlitecgo` | 否 | 32 位`sqlite`：在`cmd_gen_dao.go`中导入后重新构建。 |
+   | `clickhouse` | 是 | - |
+   | `dm` | 否 | 在`cmd_gen_dao.go`中导入后重新构建。 |
 
-## 2) 手动安装
+## 2）手动安装
 
 ```shell
 go install github.com/gogf/gf/cmd/gf/v2@latest # 最新版本
@@ -64,6 +64,7 @@ $ gf -h
     install    将 gf 二进制文件安装到系统(可能需要 root/admin 权限)
     version    显示当前二进制文件的版本信息
     doc        下载 https://pages.goframe.org/ 本地运行
+    agents     将本地 AI 编码助手路径软链到`.agents`和`AGENTS.md`
 
 选项
     -y, --yes       对所有命令都使用 yes，不再提示
@@ -77,6 +78,6 @@ $ gf -h
 
 ## 3. 常见问题
 
-### 1). 命令 `gf run` 返回 `pipe: too many open files`
+### 1）．命令`gf run`返回`pipe: too many open files`
 
-请使用 `ulimit -n 65535` 扩大系统配置以增加当前终端 shell 会话的最大打开文件数，然后再运行 `gf run`。
+请使用`ulimit -n 65535`扩大系统配置以增加当前终端 shell 会话的最大打开文件数，然后再运行`gf run`。
