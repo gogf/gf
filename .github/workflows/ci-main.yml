@@ -113,14 +113,15 @@ jobs:
             exit 0
             ;;
           core)
-            # contrib modules are only tested on the latest Go version (see
-            # ci-main.sh), so the older legs of this group only build the root module.
-            if [ "${{ matrix.go-version }}" != "$LATEST_GO_VERSION" ]; then
-              echo "Go ${{ matrix.go-version }} only tests the root module, no service needed."
-              exit 0
+            # `cmd/gf` belongs to this group and its tests hit real mysql and postgres
+            # instances on every Go version, while the contrib backends below are only
+            # exercised on the latest one (see ci-main.sh).
+            services="mysql postgres"
+            ports="3306 5432"
+            if [ "${{ matrix.go-version }}" = "$LATEST_GO_VERSION" ]; then
+              services="mysql postgres etcd redis polaris zookeeper"
+              ports="3306 5432 2379 6379 8090 2181"
             fi
-            services="etcd redis polaris zookeeper"
-            ports="2379 6379 8090 2181"
             ;;
           drivers-1)
             services="mssql oracle dm oceanbase"
