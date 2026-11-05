@@ -347,6 +347,22 @@ func (m *Model) validateFieldsExSingleColumn() error {
 	if m.db == nil {
 		return nil
 	}
+	// In join statements, FieldsEx filters the fields of all joined tables, so the
+	// remaining column count must be computed the same way getFieldsFiltered does,
+	// instead of only counting the fields of the main table. Sub-query references
+	// contribute one "prefix.*" entry here; such expanding columns are still caught
+	// after the query by the column-count check in scanBasicType.
+	if len(m.tableRefs) > 0 {
+		fieldsArray := m.getJoinedTableFields(gset.NewStrSetFrom(gconv.Strings(m.fieldsEx)))
+		if len(fieldsArray) != 1 {
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`Scan into basic type requires exactly 1 field specified via Fields(), but FieldsEx leaves %d columns after filtering`,
+				len(fieldsArray),
+			)
+		}
+		return nil
+	}
 	tableFields, err := m.TableFields(m.tablesInit)
 	if err != nil {
 		return err

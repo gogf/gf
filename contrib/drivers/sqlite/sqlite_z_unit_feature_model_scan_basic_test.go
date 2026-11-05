@@ -16,6 +16,7 @@ import (
 
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // createScanBasicTypeTable creates a table for basic type scanning tests, where
@@ -138,5 +139,36 @@ func Test_Model_Scan_BasicTypeSliceNoRow(t *testing.T) {
 		t.Assert(err, sql.ErrNoRows)
 		t.Assert(len(users), 1)
 		t.Assert(users[0].Name, "keep")
+	})
+}
+
+// Test_Model_Scan_BasicTypeFieldsExJoin verifies that FieldsEx validation in join
+// statements counts the columns of all joined tables, so a multi-column result is
+// rejected before the query runs instead of failing on the scanned record.
+func Test_Model_Scan_BasicTypeFieldsExJoin(t *testing.T) {
+	table := createScanBasicTypeTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// FieldsEx leaves one column of the main table, but the joined table
+		// contributes its columns too, so the result has more than one column.
+		var name string
+		err := db.Model(table+" a").LeftJoin(table+" b", "b.id=a.id").
+			FieldsEx("a.id", "a.age", "a.bin").
+			Where("a.id", 1).Scan(&name)
+		t.AssertNE(err, nil)
+		t.Assert(gstr.Contains(err.Error(), "FieldsEx leaves"), true)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// FieldsEx leaves exactly one column across all joined tables.
+		var bin []byte
+		err := db.Model(table+" a").LeftJoin(table+" b", "b.id=a.id").
+			FieldsEx(
+				"a.id", "a.name", "a.age",
+				"b.id", "b.name", "b.age", "b.bin",
+			).
+			Where("a.id", 1).Scan(&bin)
+		t.AssertNil(err)
+		t.Assert(bin, []byte{0xDE, 0xAD, 0xBE, 0xEF, 0x01, 0x02, 0x03, 0x04})
 	})
 }
