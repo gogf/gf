@@ -9,5 +9,6 @@
     "replace_map_over": "你好",
     "replace_map_empty": "x{$a}y",
     "replace_map_empty1": "",
-    "replace_map_special": "{$a}"
+    "replace_map_special": "{$a}",
+    "replace_map_repeat1": "{$a}"
 }
