@@ -191,6 +191,36 @@ func Test_MatchGlob_WindowsPath(t *testing.T) {
 	})
 }
 
+func Test_MatchGlob_NoGlobstar_SeparatorHandling(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Without "**", "*" should NOT match path separators
+		// (this was broken on Windows where filepath.Match allows it)
+		matched, err := gfile.MatchGlob("*.go", "main.go")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("*.go", "sub/main.go")
+		t.AssertNil(err)
+		t.Assert(matched, false)
+
+		matched, err = gfile.MatchGlob("*.go", `sub\main.go`)
+		t.AssertNil(err)
+		t.Assert(matched, false)
+
+		matched, err = gfile.MatchGlob("a*b", "axxb")
+		t.AssertNil(err)
+		t.Assert(matched, true)
+
+		matched, err = gfile.MatchGlob("a*b", "a/b")
+		t.AssertNil(err)
+		t.Assert(matched, false)
+
+		matched, err = gfile.MatchGlob("a*b", `a\b`)
+		t.AssertNil(err)
+		t.Assert(matched, false)
+	})
+}
+
 func Test_MatchGlob_InvalidGlobstar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// "**" not as complete path component should be treated as two "*"

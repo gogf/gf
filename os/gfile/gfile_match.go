@@ -8,7 +8,6 @@ package gfile
 
 import (
 	"path"
-	"path/filepath"
 	"strings"
 )
 
@@ -48,9 +47,13 @@ import (
 //	MatchGlob("[abc]", "a")                          => true, nil
 //	MatchGlob("[", "a")                              => false, error (malformed)
 func MatchGlob(pattern, name string) (bool, error) {
-	// If no **, use standard filepath.Match
+	// If no **, normalize separators and use path.Match
+	// path.Match treats only "/" as separator on all platforms, preventing
+	// "*" from matching separators on Windows (where filepath.Match does).
 	if !strings.Contains(pattern, "**") {
-		return filepath.Match(pattern, name)
+		pattern = strings.ReplaceAll(pattern, "\\", "/")
+		name = strings.ReplaceAll(name, "\\", "/")
+		return path.Match(pattern, name)
 	}
 	return matchGlobstar(pattern, name)
 }
