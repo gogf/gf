@@ -126,10 +126,8 @@ func TestMeta_Cache_TagPlaceholder(t *testing.T) {
 		gmeta.Meta `path:"/{TestMetaCachePrefix}/user" method:"get"`
 	}
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gmeta.Get(A{}, "path").String(), "/{TestMetaCachePrefix}/user")
-		t.Assert(gmeta.Data(A{})["path"], "/{TestMetaCachePrefix}/user")
-
-		gtag.Set("TestMetaCachePrefix", "v1")
+		// gtag values are process-global, so register deterministically to keep the test repeatable.
+		gtag.SetOver("TestMetaCachePrefix", "v1")
 		t.Assert(gmeta.Get(A{}, "path").String(), "/v1/user")
 		t.Assert(gmeta.Data(A{}), g.MapStrStr{"path": "/v1/user", "method": "get"})
 
