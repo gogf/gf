@@ -110,8 +110,14 @@ func Test_Middleware_Gzip_StreamResponse(t *testing.T) {
 		})
 	})
 	s.SetDumpRouterMap(false)
-	s.Start()
-	defer s.Shutdown()
+	if err := s.Start(); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := s.Shutdown(); err != nil {
+			t.Error(err)
+		}
+	}()
 	time.Sleep(100 * time.Millisecond)
 
 	gtest.C(t, func(t *gtest.T) {
