@@ -2257,7 +2257,7 @@ func Test_Issue3977(t *testing.T) {
 	// target is left untouched and no error is returned.
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Exec(ctx, fmt.Sprintf(
-			"INSERT INTO `%s`(%s, %s) VALUES(4, NULL, 33)", table, "username", "age",
+			"INSERT INTO `%s`(id, %s, %s) VALUES(4, NULL, 33)", table, "username", "age",
 		))
 		t.AssertNil(err)
 
