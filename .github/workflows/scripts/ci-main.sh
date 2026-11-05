@@ -81,6 +81,11 @@ for file in `find . -name go.mod`; do
     fi
     
     cd -
-    # clean docker containers and images to free disk space
-    # bash .github/workflows/scripts/ci-main-clean.sh "$dirpath"
+    # Free disk space on the drivers legs, where the heaviest images (mssql, oracle,
+    # dm, oceanbase) are pulled and their containers keep growing. The services used
+    # by the core group are shared by many modules, so teardown is limited to the
+    # drivers groups, where each module owns its own database.
+    if [[ "$group" == drivers-* ]]; then
+        bash .github/workflows/scripts/ci-main-clean.sh "$dirpath"
+    fi
 done

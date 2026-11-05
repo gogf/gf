@@ -50,11 +50,13 @@ SERVICE_PORTS["mssql"]="1433:1433"
 SERVICE_ENVS["mssql"]="-e TZ=Asia/Shanghai -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD=LoremIpsum86"
 
 SERVICES["clickhouse"]="clickhouse/clickhouse-server:24.11.1.2557-alpine"
-SERVICE_PORTS["clickhouse"]="9000:9000 -p 8123:8123 -p 9001:9001"
+# Ports are space separated `host:container` pairs: the `-p` flag is added by
+# start_service for every entry.
+SERVICE_PORTS["clickhouse"]="9000:9000 8123:8123 9001:9001"
 SERVICE_ENVS["clickhouse"]="-e TZ=Asia/Shanghai"
 
 SERVICES["polaris"]="polarismesh/polaris-standalone:v1.17.2"
-SERVICE_PORTS["polaris"]="8090:8090 -p 8091:8091 -p 8093:8093 -p 9090:9090 -p 9091:9091"
+SERVICE_PORTS["polaris"]="8090:8090 8091:8091 8093:8093 9090:9090 9091:9091"
 
 SERVICES["oracle"]="loads/oracle-xe-11g-r2:11.2.0"
 SERVICE_PORTS["oracle"]="1521:1521"
@@ -68,14 +70,21 @@ SERVICE_PORTS["gaussdb"]="9950:5432"
 SERVICE_ENVS["gaussdb"]="-e GS_PASSWORD=UTpass@1234 -e TZ=Asia/Shanghai"
 SERVICE_OPTS["gaussdb"]="--privileged=true"
 
+SERVICES["tidb"]="pingcap/tidb:v8.5.1"
+SERVICE_PORTS["tidb"]="4000:4000"
+
+SERVICES["oceanbase"]="oceanbase/oceanbase-ce:4.3.5-lts"
+SERVICE_PORTS["oceanbase"]="2881:2881"
+SERVICE_ENVS["oceanbase"]="-e MODE=mini"
+
 SERVICES["zookeeper"]="zookeeper:3.8"
 SERVICE_PORTS["zookeeper"]="2181:2181"
 
 # Service groups
-GROUP_DB="mysql mariadb postgres mssql oracle dm gaussdb clickhouse"
+GROUP_DB="mysql mariadb postgres mssql oracle dm gaussdb clickhouse tidb oceanbase"
 GROUP_CACHE="redis etcd"
 GROUP_REGISTRY="polaris zookeeper"
-GROUP_ALL="etcd redis mysql mariadb postgres mssql clickhouse polaris oracle dm gaussdb zookeeper"
+GROUP_ALL="etcd redis mysql mariadb postgres mssql clickhouse polaris oracle dm gaussdb tidb oceanbase zookeeper"
 
 # Working directories
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -116,6 +125,26 @@ get_container_name() {
     echo "${PREFIX}-$1"
 }
 
+# Pull the image of a service, retrying transient registry failures.
+# The `services:` block of a workflow retries the pull internally, so a single
+# network hiccup never fails the job there; the retries keep this equivalent.
+pull_image() {
+    local image=$1
+    local attempt
+
+    for attempt in 1 2 3; do
+        if docker pull "$image" > /dev/null 2>&1; then
+            print_success "Image pulled: $image"
+            return 0
+        fi
+        print_warning "Pulling $image failed (attempt $attempt/3)"
+        [ "$attempt" -lt 3 ] && sleep 5
+    done
+
+    print_error "Failed to pull image: $image"
+    return 1
+}
+
 # Start a single service
 start_service() {
     local service=$1
@@ -144,6 +173,10 @@ start_service() {
     fi
 
     print_info "Starting $service..."
+
+    if ! pull_image "$image"; then
+        return 1
+    fi
     
     # Build docker run command
     local cmd="docker run -d --name $container_name"
@@ -169,6 +202,8 @@ start_service() {
         print_success "$service started (container: $container_name)"
     else
         print_error "Failed to start $service"
+        print_error "Command: $cmd"
+        docker logs --tail 30 "$container_name" 2>&1 || true
         return 1
     fi
 }
@@ -388,7 +423,8 @@ show_help() {
     echo ""
     echo "Services:"
     echo "  Basic: etcd, redis, mysql, mariadb, postgres, mssql,"
-    echo "         clickhouse, polaris, oracle, dm, gaussdb, zookeeper"
+    echo "         clickhouse, polaris, oracle, dm, gaussdb, tidb,"
+    echo "         oceanbase, zookeeper"
     echo "  Compose: apollo, nacos, redis-cluster, consul"
     echo ""
     echo "Service Groups:"
