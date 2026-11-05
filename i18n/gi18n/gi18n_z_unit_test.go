@@ -118,7 +118,6 @@ func Test_TranslateMap(t *testing.T) {
 		t.Log(str)
 		t.Assert(str, "hello 3000 {$name} is ok")
 
-
 		str = i18n.Tm(context.Background(), "replace_map_repeat", map[string]interface{}{"a": "A"})
 		t.Log(str)
 		t.Assert(str, "A/A")
