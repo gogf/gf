@@ -118,7 +118,7 @@ func Test_TranslateMap(t *testing.T) {
 		t.Log(str)
 		t.Assert(str, "hello 3000 {$name} is ok")
 
-		//replace_map_repeat
+
 		str = i18n.Tm(context.Background(), "replace_map_repeat", map[string]interface{}{"a": "A"})
 		t.Log(str)
 		t.Assert(str, "A/A")
@@ -126,7 +126,7 @@ func Test_TranslateMap(t *testing.T) {
 		str = i18n.Tm(context.Background(), "replace_map_over", map[string]interface{}{"a": "A"})
 		t.Log(str)
 		t.Assert(str, "你好")
-		//replace_map_empty
+
 		str = i18n.Tm(context.Background(), "replace_map_empty", map[string]interface{}{"a": ""})
 		t.Log(str)
 		t.Assert(str, "xy")
@@ -135,7 +135,6 @@ func Test_TranslateMap(t *testing.T) {
 		t.Log(str)
 		t.Assert(str, "")
 
-		//replace_map_special
 		str = i18n.Tm(context.Background(), "replace_map_special", map[string]interface{}{"a": "中文$1\\路径"})
 		t.Log(str)
 		t.Assert(str, "中文$1\\路径")
