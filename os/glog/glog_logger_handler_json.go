@@ -18,32 +18,32 @@ import (
 
 // reservedJsonHandlerKeys defines the reserved keys that cannot be overwritten by context values or content flattening.
 var reservedJsonHandlerKeys = gset.NewStrSetFrom([]string{
-	"Time",
-	"TraceId",
-	"CtxStr",
-	"Level",
-	"CallerFunc",
-	"CallerPath",
-	"Prefix",
-	"Content",
-	"Stack",
+	structureKeyTime,
+	structureKeyTraceId,
+	structureKeyCtxStr,
+	structureKeyLevel,
+	structureKeyCallerFunc,
+	structureKeyCallerPath,
+	structureKeyPrefix,
+	structureKeyContent,
+	structureKeyStack,
 })
 
 // HandlerJson is a handler for output logging content as a single json string.
 func HandlerJson(ctx context.Context, in *HandlerInput) {
 	output := gmap.NewStrAnyMap()
-	output.Set("Time", in.TimeFormat)
-	setJsonHandlerOutputValue(output, "TraceId", in.TraceId)
+	output.Set(structureKeyTime, in.TimeFormat)
+	setJsonHandlerOutputValue(output, structureKeyTraceId, in.TraceId)
 	setJsonHandlerOutputCtxValues(ctx, in, output)
-	output.Set("Level", in.LevelFormat)
-	setJsonHandlerOutputValue(output, "CallerFunc", in.CallerFunc)
-	setJsonHandlerOutputValue(output, "CallerPath", in.CallerPath)
-	setJsonHandlerOutputValue(output, "Prefix", in.Prefix)
+	output.Set(structureKeyLevel, in.LevelFormat)
+	setJsonHandlerOutputValue(output, structureKeyCallerFunc, in.CallerFunc)
+	setJsonHandlerOutputValue(output, structureKeyCallerPath, in.CallerPath)
+	setJsonHandlerOutputValue(output, structureKeyPrefix, in.Prefix)
 	// Deprecated: CtxStr will be removed in the next major version.
 	// Context values are now exported as individual top-level JSON fields.
-	setJsonHandlerOutputValue(output, "CtxStr", in.CtxStr)
+	setJsonHandlerOutputValue(output, structureKeyCtxStr, in.CtxStr)
 	setJsonHandlerOutputContent(output, in)
-	setJsonHandlerOutputValue(output, "Stack", in.Stack)
+	setJsonHandlerOutputValue(output, structureKeyStack, in.Stack)
 
 	// Output json content.
 	jsonBytes, err := json.Marshal(output.Map())
@@ -110,5 +110,5 @@ func setJsonHandlerOutputContent(output *gmap.StrAnyMap, in *HandlerInput) {
 		}
 		return
 	}
-	output.Set("Content", content)
+	output.Set(structureKeyContent, content)
 }

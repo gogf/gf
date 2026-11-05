@@ -82,7 +82,7 @@ func (m *Model) Update(dataAndWhere ...any) (result sql.Result, err error) {
 		newData = updateStr
 	}
 
-	if !gstr.ContainsI(conditionStr, " WHERE ") {
+	if !gstr.ContainsI(conditionStr, sqlWhere) {
 		intlog.Printf(
 			ctx,
 			`sql condition string "%s" has no WHERE for UPDATE operation, fieldNameUpdate: %s`,

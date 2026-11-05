@@ -18,7 +18,7 @@ type Driver struct {
 
 const (
 	rowNumberAliasForSelect = `ROW_NUMBER__`
-	quoteChar               = `"`
+	quoteChar               = ``
 )
 
 func init() {
@@ -41,6 +41,7 @@ func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 }
 
 // GetChars returns the security char for this type of database.
+// Oracle generated SQL uses unquoted identifiers, while raw SQL keeps explicit quotes.
 func (d *Driver) GetChars() (charLeft string, charRight string) {
 	return quoteChar, quoteChar
 }

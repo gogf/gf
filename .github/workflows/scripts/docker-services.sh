@@ -51,6 +51,7 @@ SERVICE_ENVS["mssql"]="-e TZ=Asia/Shanghai -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD
 
 SERVICES["clickhouse"]="clickhouse/clickhouse-server:24.11.1.2557-alpine"
 SERVICE_PORTS["clickhouse"]="9000:9000 -p 8123:8123 -p 9001:9001"
+SERVICE_ENVS["clickhouse"]="-e TZ=Asia/Shanghai"
 
 SERVICES["polaris"]="polarismesh/polaris-standalone:v1.17.2"
 SERVICE_PORTS["polaris"]="8090:8090 -p 8091:8091 -p 8093:8093 -p 9090:9090 -p 9091:9091"

@@ -10,6 +10,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gtime"
 )
 
@@ -72,8 +74,7 @@ func (c *Converter) builtInAnyConvertFuncForTime(from any, to reflect.Value) err
 	if err != nil {
 		return err
 	}
-	*to.Addr().Interface().(*time.Time) = t
-	return nil
+	return setConvertedTimeValue(to, t)
 }
 
 func (c *Converter) builtInAnyConvertFuncForGTime(from any, to reflect.Value) error {
@@ -84,6 +85,60 @@ func (c *Converter) builtInAnyConvertFuncForGTime(from any, to reflect.Value) er
 	if v == nil {
 		v = gtime.New()
 	}
-	*to.Addr().Interface().(*gtime.Time) = *v
-	return nil
+	return setConvertedGTimeValue(to, *v)
+}
+
+// setConvertedTimeValue assigns t to to without requiring to.Addr().
+// Struct conversion may pass an unaddressable time.Time value.
+func setConvertedTimeValue(to reflect.Value, t time.Time) error {
+	switch {
+	case to.Kind() == reflect.Struct && to.CanSet():
+		to.Set(reflect.ValueOf(t))
+		return nil
+	case to.Kind() == reflect.Pointer:
+		if to.IsNil() {
+			if !to.CanSet() {
+				return unsettableTimeDestinationError(to)
+			}
+			to.Set(reflect.New(to.Type().Elem()))
+		}
+		return setConvertedTimeValue(to.Elem(), t)
+	case to.CanAddr():
+		*to.Addr().Interface().(*time.Time) = t
+		return nil
+	default:
+		return unsettableTimeDestinationError(to)
+	}
+}
+
+// setConvertedGTimeValue assigns v to to without requiring to.Addr().
+func setConvertedGTimeValue(to reflect.Value, v gtime.Time) error {
+	switch {
+	case to.Kind() == reflect.Struct && to.CanSet():
+		to.Set(reflect.ValueOf(v))
+		return nil
+	case to.Kind() == reflect.Pointer:
+		if to.IsNil() {
+			if !to.CanSet() {
+				return unsettableTimeDestinationError(to)
+			}
+			to.Set(reflect.New(to.Type().Elem()))
+		}
+		return setConvertedGTimeValue(to.Elem(), v)
+	case to.CanAddr():
+		*to.Addr().Interface().(*gtime.Time) = v
+		return nil
+	default:
+		return unsettableTimeDestinationError(to)
+	}
+}
+
+// unsettableTimeDestinationError reports that a converted time value cannot be
+// written to the given destination.
+func unsettableTimeDestinationError(to reflect.Value) error {
+	return gerror.NewCodef(
+		gcode.CodeInvalidParameter,
+		`cannot assign converted time value to unsettable destination of type "%s"`,
+		to.Type(),
+	)
 }

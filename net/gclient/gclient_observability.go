@@ -72,7 +72,7 @@ func internalMiddlewareObservability(c *Client, r *http.Request) (response *Resp
 	)
 	// Tracing.
 	if !isUsingDefaultProvider {
-		baseClientTracer = newClientTracerTracing(ctx, span, r)
+		baseClientTracer = newClientTracerTracing(ctx, span)
 	}
 	// Metrics.
 	if gmetric.IsEnabled() {

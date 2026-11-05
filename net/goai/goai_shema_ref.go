@@ -117,6 +117,11 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 		}
 		// keep the example value as nil.
 	case TypeArray:
+		// Dereference pointers before resolving the array element type. Without this,
+		// a field such as `*[]Item` is documented as an array containing another array.
+		for golangType.Kind() == reflect.Pointer {
+			golangType = golangType.Elem()
+		}
 		subSchemaRef, err := oai.newSchemaRefWithGolangType(golangType.Elem(), nil)
 		if err != nil {
 			return nil, err

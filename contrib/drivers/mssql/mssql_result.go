@@ -6,17 +6,18 @@
 
 package mssql
 
-// Result instance of sql.Result
+// Result implements sql.Result interface for SQL Server database.
 type Result struct {
 	lastInsertId int64
 	rowsAffected int64
-	err          error
 }
 
+// LastInsertId returns the last insert id.
 func (r *Result) LastInsertId() (int64, error) {
-	return r.lastInsertId, r.err
+	return r.lastInsertId, nil
 }
 
+// RowsAffected returns the rows affected.
 func (r *Result) RowsAffected() (int64, error) {
-	return r.rowsAffected, r.err
+	return r.rowsAffected, nil
 }
