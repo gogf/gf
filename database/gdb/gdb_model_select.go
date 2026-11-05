@@ -354,13 +354,17 @@ func (m *Model) validateFieldsExSingleColumn() error {
 	if len(tableFields) == 0 {
 		return gerror.Newf(`empty table fields for table "%s"`, m.tablesInit)
 	}
-	remaining := len(tableFields)
+	var (
+		remaining     = len(tableFields)
+		excludedNames = make(map[string]bool, len(tableFields))
+	)
 	for _, excluded := range m.fieldsEx {
 		for _, name := range gstr.SplitAndTrim(gconv.String(excluded), ",") {
 			if name == "" {
 				continue
 			}
-			if _, ok := tableFields[name]; ok {
+			if _, ok := tableFields[name]; ok && !excludedNames[name] {
+				excludedNames[name] = true
 				remaining--
 			}
 		}
