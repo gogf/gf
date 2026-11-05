@@ -75,7 +75,13 @@ for file in `find . -name go.mod`; do
                 
                 go mod tidy
                 go build ./...
-                go test ./... -race || exit 1
+                # kubecm is the only tested module of this workflow, and it is skipped
+                # by ci-main.sh, so its coverage is uploaded from here instead.
+                if [ "${coverage}" = "coverage" ]; then
+                    go test ./... -race -coverprofile=coverage.out -covermode=atomic || exit 1
+                else
+                    go test ./... -race || exit 1
+                fi
             else
                 echo "  ✗ Current Go version ($current_go_version) does not meet requirement (go$go_mod_version), skipping"
             fi

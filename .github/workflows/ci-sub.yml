@@ -87,7 +87,26 @@ jobs:
       run:  bash .github/workflows/scripts/before_script.sh
 
     - name: Build & Test
+      if: ${{ github.event_name == 'push' && github.ref != 'refs/heads/master' }}
       run: bash .github/workflows/scripts/ci-sub.sh
+
+    # Coverage is collected on master and on pull requests, matching ci-main.yml.
+    - name: Build & Test & Coverage
+      if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event_name == 'pull_request' }}
+      run: bash .github/workflows/scripts/ci-sub.sh coverage
+
+    - name: Report Coverage
+      uses: codecov/codecov-action@v7
+      # kubecm is tested here only, as ci-main.sh skips it. The flag follows the same
+      # `go-<version>-<group>` convention as ci-main.yml. This upload is deliberately
+      # NOT counted in .codecov.yml's after_n_builds: the job depends on minikube and
+      # may never upload, which would otherwise stall the statuses of the commit. It
+      # arrives after the main reports and updates the coverage once processed.
+      if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/master' || github.event_name == 'pull_request') && matrix.go-version == env.LATEST_GO_VERSION }}
+      with:
+        flags: go-${{ matrix.go-version }}-kubecm
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: false
 
     - name: Save Go module cache
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && steps.mod-cache.outputs.cache-hit != 'true' }}

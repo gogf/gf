@@ -28,10 +28,12 @@ on:
         required: false
         default: false
 
-# This allows a subsequently queued workflow run to interrupt previous runs
+# This allows a subsequently queued workflow run to interrupt previous runs.
+# Runs on master are never cancelled: a cancelled matrix leg would leave its commit
+# with a partial coverage report, as only part of the Codecov uploads would arrive.
 concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 env:
   TZ: "Asia/Shanghai"
@@ -348,11 +350,13 @@ jobs:
       run:  bash .github/workflows/scripts/before_script.sh
 
     - name: Build & Test
-      if: ${{ (github.event_name == 'push' && github.ref != 'refs/heads/master') || github.event_name == 'pull_request' }}
+      if: ${{ github.event_name == 'push' && github.ref != 'refs/heads/master' }}
       run: bash .github/workflows/scripts/ci-main.sh ${{ matrix.group }}
 
+    # Coverage is collected on master and on pull requests, so that a PR reports
+    # its own coverage for the commit under test instead of relying on master's.
     - name: Build & Test & Coverage
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+      if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event_name == 'pull_request' }}
       run: bash .github/workflows/scripts/ci-main.sh ${{ matrix.group }} coverage
 
     - name: Save Go module cache
@@ -383,8 +387,12 @@ jobs:
 
     - name: Report Coverage
       uses: codecov/codecov-action@v7
-      # Only report coverage on the latest go version
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.go-version == env.LATEST_GO_VERSION && matrix.group != '386' }}
+      # Reports on master and on pull requests, on the latest go version only. The flag
+      # carries both dimensions, `go-<version>-<group>`, and .codecov.yml waits for all
+      # of them before publishing statuses. Failures here must not fail the CI run, as
+      # the token is not available to pull requests coming from forks.
+      if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/master' || github.event_name == 'pull_request') && matrix.go-version == env.LATEST_GO_VERSION && matrix.group != '386' }}
       with:
-        flags: go-${{ matrix.go-version }}
+        flags: go-${{ matrix.go-version }}-${{ matrix.group }}
         token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: false
