@@ -98,6 +98,47 @@ func Test_TranslateMap(t *testing.T) {
 		str := i18n.Tm(context.Background(), "replace_map_test", map[string]interface{}{"name": "blue", "score": "3000"})
 		t.Log(str)
 		t.Assert(str, "hello 3000 blue is ok")
+		str = i18n.Tm(context.Background(), "replace_map_test1", map[string]interface{}{"name": "blue", "score": "3000"})
+		t.Log(str)
+		t.Assert(str, "hello 3000 {$name_} is ok")
+
+		str = i18n.Tm(context.Background(), "replace_map_test", nil)
+		t.Log(str)
+		t.Assert(str, "hello {$score} {$name} is ok")
+
+		str = i18n.Tm(context.Background(), "replace_map_test", map[string]interface{}{})
+		t.Log(str)
+		t.Assert(str, "hello {$score} {$name} is ok")
+
+		str = i18n.Tm(context.Background(), "replace_map_test", map[string]interface{}{"name": "blue"})
+		t.Log(str)
+		t.Assert(str, "hello {$score} blue is ok")
+
+		str = i18n.Tm(context.Background(), "replace_map_test", map[string]interface{}{"score": "3000"})
+		t.Log(str)
+		t.Assert(str, "hello 3000 {$name} is ok")
+
+		//replace_map_repeat
+		str = i18n.Tm(context.Background(), "replace_map_repeat", map[string]interface{}{"a": "A"})
+		t.Log(str)
+		t.Assert(str, "A/A")
+
+		str = i18n.Tm(context.Background(), "replace_map_over", map[string]interface{}{"a": "A"})
+		t.Log(str)
+		t.Assert(str, "你好")
+		//replace_map_empty
+		str = i18n.Tm(context.Background(), "replace_map_empty", map[string]interface{}{"a": ""})
+		t.Log(str)
+		t.Assert(str, "xy")
+
+		str = i18n.Tm(context.Background(), "replace_map_empty1", map[string]interface{}{"a":"A"})
+		t.Log(str)
+		t.Assert(str, "")
+
+		//replace_map_special
+		str = i18n.Tm(context.Background(), "replace_map_special", map[string]interface{}{"a":"中文$1\\路径"})
+		t.Log(str)
+		t.Assert(str, "中文$1\\路径")
 	})
 }
 

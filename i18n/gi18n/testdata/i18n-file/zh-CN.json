@@ -3,5 +3,11 @@
     "世界": "world",
     "hello": "你好",
     "world": "世界",
-    "replace_map_test": "hello :score :name is ok"
+    "replace_map_test": "hello {$score} {$name} is ok",
+    "replace_map_test1": "hello {$score} {$name_} is ok",
+    "replace_map_repeat": "{$a}/{$a}",
+    "replace_map_over": "你好",
+    "replace_map_empty": "x{$a}y",
+    "replace_map_empty1": "",
+    "replace_map_special": "{$a}"
 }

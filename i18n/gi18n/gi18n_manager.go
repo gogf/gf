@@ -177,14 +177,14 @@ func (m *Manager) Tm(ctx context.Context, content string, valMap map[string]any)
 }
 
 // TranslateMap parameter replacement is order-independent.
-// replaced param format is :{key}.  for example: content is "my name is :name.",the valMap is map[string]interface{} {"name":"alias"}
+// replaced param format is {$key}.  for example: content is "my name is {$name}.",the valMap is map[string]interface{} {"name":"alias"}
 // the result of translation is "my name is alias."
 func (m *Manager) TranslateMap(ctx context.Context, content string, valMap map[string]any) string {
 	result := m.Translate(ctx, content)
 	mpStrStr := gconv.MapStrStr(valMap)
 	if len(mpStrStr) > 0 {
 		for k, v := range mpStrStr {
-			rpKey := ":" + k
+			rpKey := fmt.Sprintf("{$%s}", k)
 			result = strings.ReplaceAll(result, rpKey, v)
 		}
 	}
