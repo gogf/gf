@@ -478,7 +478,7 @@ func (m *Model) Scan(pointer any, where ...any) error {
 		// `[]byte` and `[]uint8` hold one column raw value instead of a slice of scalar
 		// values. Their element kind is `uint8`, so the multi-row scalar branch would
 		// decode each row into one byte and silently truncate every value.
-		if elemType != nil && elemType.Kind() == reflect.Uint8 {
+		if reflectInfo.OriginKind == reflect.Slice && reflectInfo.OriginType.Elem().Kind() == reflect.Uint8 {
 			return m.scanBasicType(pointer, where...)
 		}
 
