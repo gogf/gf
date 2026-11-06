@@ -9,7 +9,6 @@ package gi18n
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/text/gstr"
 	"strings"
 	"sync"
 
