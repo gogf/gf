@@ -2,25 +2,23 @@ module github.com/gogf/gf/example
 
 go 1.21
 
-toolchain go1.22.4
-
 require (
-	github.com/gogf/gf/contrib/config/apollo/v2 v2.7.2
-	github.com/gogf/gf/contrib/config/consul/v2 v2.7.2
-	github.com/gogf/gf/contrib/config/kubecm/v2 v2.7.2
-	github.com/gogf/gf/contrib/config/nacos/v2 v2.7.2
-	github.com/gogf/gf/contrib/config/polaris/v2 v2.7.2
-	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.7.2
-	github.com/gogf/gf/contrib/metric/otelmetric/v2 v2.7.2
-	github.com/gogf/gf/contrib/nosql/redis/v2 v2.7.2
-	github.com/gogf/gf/contrib/registry/etcd/v2 v2.7.2
-	github.com/gogf/gf/contrib/registry/file/v2 v2.7.2
-	github.com/gogf/gf/contrib/registry/nacos/v2 v2.7.2
-	github.com/gogf/gf/contrib/registry/polaris/v2 v2.7.2
-	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.7.2
-	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.7.2
-	github.com/gogf/gf/contrib/trace/otlphttp/v2 v2.7.2
-	github.com/gogf/gf/v2 v2.7.2
+	github.com/gogf/gf/contrib/config/apollo/v2 v2.7.3
+	github.com/gogf/gf/contrib/config/consul/v2 v2.7.3
+	github.com/gogf/gf/contrib/config/kubecm/v2 v2.7.3
+	github.com/gogf/gf/contrib/config/nacos/v2 v2.7.3
+	github.com/gogf/gf/contrib/config/polaris/v2 v2.7.3
+	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.7.3
+	github.com/gogf/gf/contrib/metric/otelmetric/v2 v2.7.3
+	github.com/gogf/gf/contrib/nosql/redis/v2 v2.7.3
+	github.com/gogf/gf/contrib/registry/etcd/v2 v2.7.3
+	github.com/gogf/gf/contrib/registry/file/v2 v2.7.3
+	github.com/gogf/gf/contrib/registry/nacos/v2 v2.7.3
+	github.com/gogf/gf/contrib/registry/polaris/v2 v2.7.3
+	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.7.3
+	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.7.3
+	github.com/gogf/gf/contrib/trace/otlphttp/v2 v2.7.3
+	github.com/gogf/gf/v2 v2.7.3
 	github.com/hashicorp/consul/api v1.24.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/nacos-group/nacos-sdk-go/v2 v2.2.7
@@ -35,9 +33,15 @@ require (
 
 require (
 	github.com/BurntSushi/toml v1.4.0 // indirect
+	github.com/alibabacloud-go/darabonba-array v0.1.0 // indirect
+	github.com/alibabacloud-go/darabonba-encode-util v0.0.2 // indirect
+	github.com/alibabacloud-go/darabonba-map v0.0.2 // indirect
+	github.com/alibabacloud-go/darabonba-string v1.0.2 // indirect
 	github.com/alibabacloud-go/debug v1.0.1 // indirect
+	github.com/alibabacloud-go/openapi-util v0.1.0 // indirect
 	github.com/alibabacloud-go/tea v1.2.2 // indirect
 	github.com/alibabacloud-go/tea-utils v1.4.4 // indirect
+	github.com/alibabacloud-go/tea-utils/v2 v2.0.3 // indirect
 	github.com/aliyun/alibaba-cloud-sdk-go v1.63.7 // indirect
 	github.com/aliyun/alibabacloud-dkms-gcs-go-sdk v0.5.1 // indirect
 	github.com/aliyun/alibabacloud-dkms-transfer-go-sdk v0.1.9 // indirect
@@ -84,8 +88,8 @@ require (
 	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
-	github.com/joy999/nacos-sdk-go v0.0.0-20231120071639-10a34b3e7288 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -114,6 +118,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.8.1 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
+	github.com/tjfoc/gmsm v1.4.1 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.7 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.7 // indirect
 	go.etcd.io/etcd/client/v3 v3.5.7 // indirect
@@ -138,8 +143,6 @@ require (
 	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/term v0.23.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
-	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto v0.0.0-20240102182953-50ed04b92917 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240528184218-531527333157 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240823204242-4ba0660f739c // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect

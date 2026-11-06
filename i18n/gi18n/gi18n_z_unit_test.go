@@ -7,7 +7,6 @@
 package gi18n_test
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gbase64"
@@ -99,8 +98,52 @@ func Test_TranslateMap(t *testing.T) {
 		})
 		i18n.SetLanguage("zh-CN")
 		str := i18n.Tm(context.Background(), "replace_map_test", map[string]interface{}{"name": "blue", "score": "3000"})
-		fmt.Println(str)
+		t.Log(str)
 		t.Assert(str, "hello 3000 blue is ok")
+		str = i18n.Tm(context.Background(), "replace_map_test1", map[string]interface{}{"name": "blue", "score": "3000"})
+		t.Log(str)
+		t.Assert(str, "hello 3000 {$name_} is ok")
+
+		str = i18n.Tm(context.Background(), "replace_map_test", nil)
+		t.Log(str)
+		t.Assert(str, "hello {$score} {$name} is ok")
+
+		str = i18n.Tm(context.Background(), "replace_map_test", map[string]interface{}{})
+		t.Log(str)
+		t.Assert(str, "hello {$score} {$name} is ok")
+
+		str = i18n.Tm(context.Background(), "replace_map_test", map[string]interface{}{"name": "blue"})
+		t.Log(str)
+		t.Assert(str, "hello {$score} blue is ok")
+
+		str = i18n.Tm(context.Background(), "replace_map_test", map[string]interface{}{"score": "3000"})
+		t.Log(str)
+		t.Assert(str, "hello 3000 {$name} is ok")
+
+
+		str = i18n.Tm(context.Background(), "replace_map_repeat", map[string]interface{}{"a": "A"})
+		t.Log(str)
+		t.Assert(str, "A/A")
+
+		str = i18n.Tm(context.Background(), "replace_map_over", map[string]interface{}{"a": "A"})
+		t.Log(str)
+		t.Assert(str, "你好")
+
+		str = i18n.Tm(context.Background(), "replace_map_empty", map[string]interface{}{"a": ""})
+		t.Log(str)
+		t.Assert(str, "xy")
+
+		str = i18n.Tm(context.Background(), "replace_map_empty1", map[string]interface{}{"a": "A"})
+		t.Log(str)
+		t.Assert(str, "")
+
+		str = i18n.Tm(context.Background(), "replace_map_special", map[string]interface{}{"a": "中文$1\\路径"})
+		t.Log(str)
+		t.Assert(str, "中文$1\\路径")
+
+		str = i18n.Tm(context.Background(), "replace_map_repeat1", map[string]interface{}{"a": "{$a}"})
+		t.Log(str)
+		t.Assert(str, "{$a}")
 	})
 }
 
