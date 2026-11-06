@@ -117,19 +117,15 @@ jobs:
             # postgres instances on every Go version, while the contrib backends below
             # are only exercised on the latest one (see ci-main.sh).
             services="mysql mariadb postgres"
-            ports="3306 3307 5432"
             if [ "${{ matrix.go-version }}" = "$LATEST_GO_VERSION" ]; then
               services="mysql mariadb postgres etcd redis polaris zookeeper"
-              ports="3306 3307 5432 2379 6379 8090 2181"
             fi
             ;;
           drivers-1)
             services="mssql oracle dm oceanbase"
-            ports="1433 1521 5236 2881"
             ;;
           drivers-2)
             services="mysql mariadb postgres clickhouse gaussdb tidb"
-            ports="3306 3307 5432 9000 9950 4000"
             ;;
           *)
             echo "Unknown group '${{ matrix.group }}': add its services here." >&2
@@ -137,25 +133,12 @@ jobs:
             ;;
         esac
         bash .github/workflows/scripts/docker-services.sh start "$services"
-        # A container only accepts connections once its published ports are open.
-        # Whether the server behind the port is ready yet is left to the clients, which
-        # already retry: the previous `services:` block did not wait either.
-        for port in $ports; do
-          for i in $(seq 1 90); do
-            if (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null; then
-              exec 3<&- 3>&-
-              echo "Port $port is open."
-              break
-            fi
-            if [ "$i" -eq 90 ]; then
-              echo "Port $port did not open within 180s." >&2
-              docker ps -a
-              bash .github/workflows/scripts/docker-services.sh status || true
-              exit 1
-            fi
-            sleep 2
-          done
-        done
+        # The `services:` block waited for the containers declaring a HEALTHCHECK to
+        # report `healthy` before running any step, and several test packages connect
+        # from a package level `init()` and fail at once. The same wait is reproduced
+        # here: `healthy` where a HEALTHCHECK is declared, an open published port
+        # otherwise.
+        bash .github/workflows/scripts/docker-services.sh wait "$services"
 
     # The config and registry backends of the core group are multi-container setups and
     # keep their own compose files.
@@ -269,9 +252,15 @@ jobs:
       uses: codecov/codecov-action@v7
       # Reports on master and on pull requests, on the latest go version only. The flag
       # carries both dimensions, `go-<version>-<group>`, and .codecov.yml waits for all
-      # of them before publishing statuses. Failures here must not fail the CI run, as
-      # the token is not available to pull requests coming from forks.
-      if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/master' || github.event_name == 'pull_request') && matrix.go-version == env.LATEST_GO_VERSION && matrix.group != '386' }}
+      # of them before publishing statuses.
+      #
+      # `always()` is required: .codecov.yml waits for three uploads per commit, so a
+      # leg that fails its tests must still upload whatever it produced, otherwise the
+      # statuses of the commit stay pending forever. Failures here must not fail the CI
+      # run either, as the token is not available to pull requests coming from forks;
+      # those upload tokenlessly, as Codecov accepts tokenless uploads for the
+      # `fork:branch` names the action derives for them.
+      if: ${{ always() && (github.event_name == 'push' && github.ref == 'refs/heads/master' || github.event_name == 'pull_request') && matrix.go-version == env.LATEST_GO_VERSION && matrix.group != '386' }}
       with:
         flags: go-${{ matrix.go-version }}-${{ matrix.group }}
         token: ${{ secrets.CODECOV_TOKEN }}

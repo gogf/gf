@@ -48,6 +48,9 @@ SERVICE_OPTS["postgres"]="--health-cmd pg_isready --health-interval 10s --health
 SERVICES["mssql"]="mcr.microsoft.com/mssql/server:2022-latest"
 SERVICE_PORTS["mssql"]="1433:1433"
 SERVICE_ENVS["mssql"]="-e TZ=Asia/Shanghai -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD=LoremIpsum86"
+# The password is repeated literally: the health command runs inside the container,
+# where the host shell that builds the `docker run` command cannot expand variables.
+SERVICE_OPTS["mssql"]="--health-cmd '/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P LoremIpsum86 -N -C -l 30 -Q \"SELECT 1\" || exit 1' --health-start-period 10s --health-interval 10s --health-timeout 5s --health-retries 10"
 
 SERVICES["clickhouse"]="clickhouse/clickhouse-server:24.11.1.2557-alpine"
 # Ports are space separated `host:container` pairs: the `-p` flag is added by
@@ -72,10 +75,12 @@ SERVICE_OPTS["gaussdb"]="--privileged=true"
 
 SERVICES["tidb"]="pingcap/tidb:v8.5.1"
 SERVICE_PORTS["tidb"]="4000:4000"
+SERVICE_OPTS["tidb"]="--health-cmd 'curl -sf http://127.0.0.1:10080/status' --health-interval 5s --health-timeout 5s --health-retries 12"
 
 SERVICES["oceanbase"]="oceanbase/oceanbase-ce:4.3.5-lts"
 SERVICE_PORTS["oceanbase"]="2881:2881"
 SERVICE_ENVS["oceanbase"]="-e MODE=mini"
+SERVICE_OPTS["oceanbase"]="--health-cmd 'obclient -h127.0.0.1 -P2881 -uroot@test -e \"SELECT 1\"' --health-interval 10s --health-timeout 10s --health-retries 30"
 
 SERVICES["zookeeper"]="zookeeper:3.8"
 SERVICE_PORTS["zookeeper"]="2181:2181"
@@ -220,6 +225,95 @@ stop_service() {
     else
         print_warning "$service is not running"
     fi
+}
+
+# Wait until a service reports healthy, for the services that declare a HEALTHCHECK.
+# The `services:` block of a workflow waits for `healthy` before running any step, so
+# the containers that used to declare `--health-*` options must be waited on here as
+# well: their tests connect from a package level `init()` and fail immediately.
+wait_service_healthy() {
+    local service=$1
+    local container_name=$(get_container_name "$service")
+    # Generous default: oceanbase declares 30 retries with a 10s interval, which is
+    # already 300s before the start period is counted in.
+    local timeout=${2:-600}
+    local waited=0
+    local status
+
+    while :; do
+        status=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' \
+            "$container_name" 2>/dev/null || echo "missing")
+        case $status in
+            healthy)
+                print_success "$service is healthy"
+                return 0
+                ;;
+            none)
+                # No HEALTHCHECK declared: nothing to wait for.
+                return 0
+                ;;
+            missing)
+                print_error "$service container does not exist"
+                return 1
+                ;;
+        esac
+        if [ "$waited" -ge "$timeout" ]; then
+            print_error "$service did not become healthy within ${timeout}s (status: $status)"
+            docker logs --tail 50 "$container_name" 2>&1 || true
+            return 1
+        fi
+        sleep 5
+        waited=$((waited + 5))
+    done
+}
+
+# Wait until a service accepts connections on its published host ports.
+# Used for the services without a HEALTHCHECK, where the only observable readiness
+# signal is the port being open; the clients retry the rest.
+wait_service_port() {
+    local service=$1
+    local ports="${SERVICE_PORTS[$service]}"
+    local timeout=${2:-180}
+    local waited
+    local port
+    local host_port
+
+    for port in $ports; do
+        host_port=${port%%:*}
+        waited=0
+        while :; do
+            if (exec 3<>"/dev/tcp/127.0.0.1/$host_port") 2>/dev/null; then
+                exec 3<&- 3>&-
+                print_success "$service port $host_port is open"
+                break
+            fi
+            if [ "$waited" -ge "$timeout" ]; then
+                print_error "$service port $host_port did not open within ${timeout}s"
+                docker logs --tail 50 "$(get_container_name "$service")" 2>&1 || true
+                return 1
+            fi
+            sleep 2
+            waited=$((waited + 2))
+        done
+    done
+}
+
+# Wait for a service or a service group to be ready.
+wait_services() {
+    local services=$1
+    local service
+
+    for service in $services; do
+        if [ -z "${SERVICES[$service]}" ]; then
+            print_error "Unknown service: $service"
+            return 1
+        fi
+        if [ -n "${SERVICE_OPTS[$service]}" ] && [[ "${SERVICE_OPTS[$service]}" == *--health-cmd* ]]; then
+            wait_service_healthy "$service" || return 1
+        else
+            wait_service_port "$service" || return 1
+        fi
+    done
 }
 
 # Remove a single service
@@ -412,6 +506,7 @@ show_help() {
     echo ""
     echo "Commands:"
     echo "  start <service|group>    Start service or service group"
+    echo "  wait <service|group>     Wait until service or service group is ready"
     echo "  stop <service|group>     Stop service or service group"
     echo "  restart <service|group>  Restart service or service group"
     echo "  remove <service|group>   Remove service container"
@@ -751,6 +846,13 @@ main() {
                     start_service "$service"
                 done
             fi
+            ;;
+        wait)
+            if [ -z "$target" ]; then
+                print_error "Please specify service name or service group"
+                exit 1
+            fi
+            wait_services "$(parse_services "$target")"
             ;;
         stop)
             if [ -z "$target" ]; then

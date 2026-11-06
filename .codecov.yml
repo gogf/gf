@@ -5,13 +5,13 @@ codecov:
     # go-1.27-core, go-1.27-drivers-1 and go-1.27-drivers-2. Codecov merges every upload
     # it receives for a commit, so without this setting the statuses and PR comments are
     # computed on the first arriving report, that is only a third of the code covered by
-    # the run. Keep this number in sync with the amount of legs executing the
-    # "Report Coverage" step in ci-main.yml.
+    # the run.
     #
-    # ci-sub.yml also uploads a `go-<version>-kubecm` report, which is intentionally not
-    # counted here: that workflow depends on minikube and may never reach the upload, and
-    # a missing report would silently stall the statuses of the commit. Its report is
-    # merged in as soon as it arrives, updating the coverage afterwards.
+    # The count is per commit and does not distinguish flags, so it must match the exact
+    # amount of uploads a commit receives. ci-sub.yml deliberately does not upload: its
+    # kubecm job depends on minikube and may never reach the upload, and an extra upload
+    # would make this number wrong in the other direction. Keep it in sync with the
+    # amount of legs executing the "Report Coverage" step in ci-main.yml.
     after_n_builds: 3
     wait_for_ci: true
 
