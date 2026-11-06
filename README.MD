@@ -25,7 +25,7 @@ Use it as a full application framework, or pick individual components as needed.
 
 ## Installation
 
-`GoFrame` requires `Go 1.23` or later.
+`GoFrame` requires `Go 1.25` or later.
 
 In an existing module, add the framework:
 
