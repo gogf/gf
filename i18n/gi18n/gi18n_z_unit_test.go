@@ -89,6 +89,64 @@ func Test_TranslateFormat(t *testing.T) {
 	})
 }
 
+func Test_TranslateMap(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		i18n := gi18n.New(gi18n.Options{
+			Path: gtest.DataPath("i18n-file"),
+		})
+
+		i18n.SetLanguage("zh-CN")
+		str := i18n.Tm(context.Background(), "replace_map_test", map[string]interface{}{"name": "blue", "score": "3000"})
+		t.Assert(str, "hello 3000 blue is ok")
+
+		values := map[string]any{"name": "火山", "points": "3000"}
+		str = i18n.Tm(context.Background(), "replace_map_t1", values)
+		t.Assert(str, "火山获得3000积分")
+
+		i18n.SetLanguage("en")
+		str = i18n.Tm(context.Background(), "replace_map_t1", values)
+		t.Assert(str, "3000 Points earned by 火山")
+
+		// nested test
+		valNested := map[string]any{"name": "{$points}", "points": 3000}
+		for i := 0; i < 1000; i++ {
+			str = i18n.Tm(context.Background(), "replace_map_t1", valNested)
+			t.Assert(str, "3000 Points earned by {$points}")
+		}
+
+		i18n.SetLanguage("zh-CN")
+		str = i18n.Tm(context.Background(), "replace_map_test", nil)
+		t.Assert(str, "hello {$score} {$name} is ok")
+
+		str = i18n.Tm(context.Background(), "replace_map_test", map[string]interface{}{})
+		t.Assert(str, "hello {$score} {$name} is ok")
+
+		str = i18n.Tm(context.Background(), "replace_map_test", map[string]interface{}{"name": "blue"})
+		t.Assert(str, "hello {$score} blue is ok")
+
+		str = i18n.Tm(context.Background(), "replace_map_test", map[string]interface{}{"score": "3000"})
+		t.Assert(str, "hello 3000 {$name} is ok")
+
+		str = i18n.Tm(context.Background(), "replace_map_repeat", map[string]interface{}{"a": "A"})
+		t.Assert(str, "A/A")
+
+		str = i18n.Tm(context.Background(), "replace_map_over", map[string]interface{}{"a": "A"})
+		t.Assert(str, "你好")
+
+		str = i18n.Tm(context.Background(), "replace_map_empty", map[string]interface{}{"a": ""})
+		t.Assert(str, "xy")
+
+		str = i18n.Tm(context.Background(), "replace_map_empty1", map[string]interface{}{"a": "A"})
+		t.Assert(str, "")
+
+		str = i18n.Tm(context.Background(), "replace_map_special", map[string]interface{}{"a": "中文$1\\路径"})
+		t.Assert(str, "中文$1\\路径")
+
+		str = i18n.Tm(context.Background(), "replace_map_repeat1", map[string]interface{}{"a": "{$a}"})
+		t.Assert(str, "{$a}")
+	})
+}
+
 func Test_DefaultManager(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err := gi18n.SetPath(gtest.DataPath("i18n"))

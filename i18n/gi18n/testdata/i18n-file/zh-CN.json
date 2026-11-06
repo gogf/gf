@@ -2,5 +2,13 @@
     "你好": "hello",
     "世界": "world",
     "hello": "你好",
-    "world": "世界"
+    "world": "世界",
+    "replace_map_t1": "{$name}获得{$points}积分",
+    "replace_map_test": "hello {$score} {$name} is ok",
+    "replace_map_repeat": "{$a}/{$a}",
+    "replace_map_over": "你好",
+    "replace_map_empty": "x{$a}y",
+    "replace_map_empty1": "",
+    "replace_map_special": "{$a}",
+    "replace_map_repeat1": "{$a}"
 }
