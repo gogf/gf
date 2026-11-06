@@ -81,6 +81,11 @@ jobs:
       # toolcache and the preinstalled SDKs are counted in, which is not enough for the
       # service images of the drivers groups. The Go toolcache is kept, as setup-go
       # resolves the matrix versions from it.
+      #
+      # No `docker system prune` / `docker builder prune` here: the runner is fresh, so
+      # both reported "Total reclaimed space: 0B" while still enumerating every image,
+      # container, volume and build cache entry. The services are started after this
+      # step anyway, so there is nothing of ours to reclaim at this point.
       run: |
         df -h /
         sudo rm -rf \
@@ -95,10 +100,6 @@ jobs:
           /opt/hostedtoolcache/PyPy \
           /opt/hostedtoolcache/Ruby \
           /opt/hostedtoolcache/node || true
-        # Only dangling images, stopped containers, unused volumes and the build cache
-        # are reclaimed; running service containers and their images are left as is.
-        docker system prune -f --volumes || true
-        docker builder prune -af || true
         df -h /
 
     # Services are started here instead of in a job level `services:` block. Those are
