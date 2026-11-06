@@ -81,11 +81,10 @@ for file in `find . -name go.mod`; do
     fi
     
     cd -
-    # Free disk space on the drivers legs, where the heaviest images (mssql, oracle,
-    # dm, oceanbase) are pulled and their containers keep growing. The services used
-    # by the core group are shared by many modules, so teardown is limited to the
-    # drivers groups, where each module owns its own database.
-    if [[ "$group" == drivers-* ]]; then
-        bash .github/workflows/scripts/ci-main-clean.sh "$dirpath"
-    fi
+    # Docker cleanup is intentionally disabled. The services are started once per job
+    # in the "Start Services" step and shared by every module of the group, so tearing
+    # them down after a single module would break the modules that follow. The master
+    # runs complete the drivers groups without it, so there is no disk pressure to
+    # relieve here either.
+    # bash .github/workflows/scripts/ci-main-clean.sh "$dirpath"
 done
