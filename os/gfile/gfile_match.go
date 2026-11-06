@@ -69,12 +69,14 @@ func matchGlobstar(pattern, name string) (bool, error) {
 	// Check if "**" appears as a valid globstar (complete path component).
 	// If not, treat "**" as two regular "*" wildcards.
 	if !hasValidGlobstar(pattern) {
-		// Replace "**" with a placeholder, then use filepath.Match
-		// Since filepath.Match treats "*" as matching non-separator chars,
+		// Replace "**" with a placeholder, then use path.Match
+		// Since path.Match treats "*" as matching non-separator chars,
 		// "**" is equivalent to "*" in terms of matching (both match any
 		// sequence of non-separator characters).
+		// Separators are normalized to "/" above, so use path.Match rather than
+		// filepath.Match, whose "*" matches "/" on Windows.
 		normalizedPattern := strings.ReplaceAll(pattern, "**", "*")
-		return filepath.Match(normalizedPattern, name)
+		return path.Match(normalizedPattern, name)
 	}
 
 	return doMatchGlobstar(pattern, name)
@@ -184,7 +186,7 @@ func doMatchGlobstarCore(pattern, name string, memo map[string]bool) (bool, erro
 		// No valid globstar, use standard match
 		// Replace any "**" with "*" since they're not valid globstars
 		normalizedPattern := strings.ReplaceAll(pattern, "**", "*")
-		return filepath.Match(normalizedPattern, name)
+		return path.Match(normalizedPattern, name)
 	}
 
 	// Split pattern at the valid globstar position
@@ -225,7 +227,7 @@ func doMatchGlobstarCore(pattern, name string, memo map[string]bool) (bool, erro
 			}
 
 			for i, pp := range prefixParts {
-				matched, err := filepath.Match(pp, nameParts[i])
+				matched, err := path.Match(pp, nameParts[i])
 				if err != nil {
 					return false, err
 				}
