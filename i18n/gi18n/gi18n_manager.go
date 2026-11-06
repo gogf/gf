@@ -164,10 +164,37 @@ func (m *Manager) Tf(ctx context.Context, format string, values ...any) string {
 	return m.TranslateFormat(ctx, format, values...)
 }
 
-// TranslateFormat translates, formats and returns the `format` with configured language
-// and given `values`.
+// TranslateFormat translates,formats and returns the format with configured language
+// and given values using positional arguments (fmt.Sprintf)
 func (m *Manager) TranslateFormat(ctx context.Context, format string, values ...any) string {
 	return fmt.Sprintf(m.Translate(ctx, format), values...)
+}
+
+// Tm is alias of TranslateMap for convenience.
+func (m *Manager) Tm(ctx context.Context, content string, valMap map[string]any) string {
+	return m.TranslateMap(ctx, content, valMap)
+}
+
+// TranslateMap parameter replacement is order-independent.
+// replaced param format is {$key}.  for example: content is "my name is {$name}.",the valMap is map[string]interface{} {"name":"alias"}
+// the result of translation is "my name is alias."
+func (m *Manager) TranslateMap(ctx context.Context, content string, valMap map[string]any) string {
+	result := m.Translate(ctx, content)
+	mpStrStr := gconv.MapStrStr(valMap)
+	if len(mpStrStr) > 0 {
+		parPattern := `\{\$(.*?)\}`
+		result, _ = gregex.ReplaceStringFuncMatch(
+			parPattern, result,
+			func(match []string) string {
+				if v, ok := mpStrStr[match[1]]; ok {
+					return v
+				}
+				// return match[1] will return the content between delimiters
+				// return match[0] will return the original content
+				return match[0]
+			})
+	}
+	return result
 }
 
 // Translate translates `content` with configured language.

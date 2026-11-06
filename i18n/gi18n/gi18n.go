@@ -40,6 +40,18 @@ func TranslateFormat(ctx context.Context, format string, values ...any) string {
 	return Instance().TranslateFormat(ctx, format, values...)
 }
 
+// Tm is alias of TranslateMap for convenience.
+func Tm(ctx context.Context, content string, valMap map[string]any) string {
+	return Instance().TranslateMap(ctx, content, valMap)
+}
+
+// TranslateMap parameter replacement is order-independent.
+// replaced param format is {$key}.  for example: content is "my name is {$name}.",the valMap is map[string]interface{} {"name":"alias"}
+// the result of translation is "my name is alias."
+func TranslateMap(ctx context.Context, content string, valMap map[string]any) string {
+	return Instance().TranslateMap(ctx, content, valMap)
+}
+
 // Translate translates `content` with configured language and returns the translated content.
 func Translate(ctx context.Context, content string) string {
 	return Instance().Translate(ctx, content)

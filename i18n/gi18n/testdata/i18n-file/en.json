@@ -1,0 +1,5 @@
+{
+    "hello": "你好",
+    "world": "世界",
+    "replace_map_t1": "{$points} Points earned by {$name}"
+}
