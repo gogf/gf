@@ -74,7 +74,7 @@ func (m *Model) checkAndRemoveSelectCache(ctx context.Context) {
 }
 
 func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args ...any) (result Result, err error) {
-	if !m.cacheEnabled || m.tx != nil {
+	if !m.cacheEnabled || m.tx != nil || TXFromCtx(ctx, m.db.GetGroup()) != nil {
 		return
 	}
 	var (
@@ -104,7 +104,7 @@ func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args .
 func (m *Model) saveSelectResultToCache(
 	ctx context.Context, selectType SelectType, result Result, sql string, args ...any,
 ) (err error) {
-	if !m.cacheEnabled || m.tx != nil {
+	if !m.cacheEnabled || m.tx != nil || TXFromCtx(ctx, m.db.GetGroup()) != nil {
 		return
 	}
 	var (
