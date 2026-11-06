@@ -187,6 +187,9 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ...ScanOption) (er
 				srcElem := srcValueReflectValue.Index(i).Interface()
 				target := newSlice.Index(i)
 
+				// For pointer element types (e.g. []*int), allocate the element
+				// and dereference it so the scalar setters below can write the
+				// converted value directly into the pointed-to slot.
 				if target.Kind() == reflect.Pointer {
 					if target.IsNil() {
 						target.Set(reflect.New(target.Type().Elem()))
