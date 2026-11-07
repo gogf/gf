@@ -42,6 +42,7 @@ type (
 		TablesEx           string   `name:"tablesEx"            short:"x"  brief:"{CGenDaoBriefTablesEx}"`
 		ShardingPattern    []string `name:"shardingPattern"     short:"sp" brief:"{CGenDaoBriefShardingPattern}"`
 		Group              string   `name:"group"               short:"g"  brief:"{CGenDaoBriefGroup}" d:"default"`
+		NullFieldPattern   []string `name:"nullFieldPattern"    short:"nf" brief:"{CGenDaoBriefNullFieldPattern}"`
 		Prefix             string   `name:"prefix"              short:"f"  brief:"{CGenDaoBriefPrefix}"`
 		RemovePrefix       string   `name:"removePrefix"        short:"r"  brief:"{CGenDaoBriefRemovePrefix}"`
 		RemoveFieldPrefix  string   `name:"removeFieldPrefix"   short:"rf" brief:"{CGenDaoBriefRemoveFieldPrefix}"`
@@ -162,6 +163,11 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 		if err != nil {
 			mlog.Fatalf(`invalid configuration of "%s": %+v`, CGenDaoConfig, err)
 		}
+	}
+	// Validate null field patterns as early as possible, so an invalid pattern is reported
+	// before any database access or file generation.
+	if err = validateNullFieldPatterns(in.NullFieldPattern); err != nil {
+		mlog.Fatalf(`%+v`, err)
 	}
 	if dirRealPath := gfile.RealPath(in.Path); dirRealPath == "" {
 		mlog.Fatalf(`path "%s" does not exist`, in.Path)
@@ -455,6 +461,44 @@ func patternToRegex(pattern string) string {
 		"\n": ".",
 	})
 	return pattern
+}
+
+// nullFieldPatternToRegex converts a null field pattern to a regex pattern without anchors.
+// Unlike patternToRegex, `?` here matches one or more characters, so the pattern "table_?"
+// keeps matching the table "table_user". All other characters are quoted as literals.
+func nullFieldPatternToRegex(pattern string) string {
+	pattern = gstr.ReplaceByMap(pattern, map[string]string{
+		"\r": "",
+		"\n": "",
+	})
+	// Hold the wildcard by a placeholder that survives regex quoting.
+	pattern = gstr.Replace(pattern, "?", "\n")
+	pattern = gregex.Quote(pattern)
+	return gstr.Replace(pattern, "\n", `(.+)`)
+}
+
+// validateNullFieldPatterns validates if given null field patterns can be compiled as
+// regular expressions, and returns the first invalid one with its compiling error.
+func validateNullFieldPatterns(patterns []string) error {
+	for _, pattern := range patterns {
+		if err := gregex.Validate("^" + nullFieldPatternToRegex(pattern) + "$"); err != nil {
+			return fmt.Errorf(`invalid null field pattern "%s": %v`, pattern, err)
+		}
+	}
+	return nil
+}
+
+// matchNullFieldPattern checks whether given table name matches any of given null field patterns.
+// The pattern is anchored to the whole table name, so a pattern without wildcard like "user"
+// does not match the table "table_user". The patterns should be validated by
+// validateNullFieldPatterns before generating.
+func matchNullFieldPattern(tableName string, patterns []string) bool {
+	for _, pattern := range patterns {
+		if gregex.IsMatchString("^"+nullFieldPatternToRegex(pattern)+"$", tableName) {
+			return true
+		}
+	}
+	return false
 }
 
 // filterTablesByPatterns filters tables by given patterns.
