@@ -65,6 +65,7 @@ const (
 	OrmTagForWithWhere    = "where"
 	OrmTagForWithOrder    = "order"
 	OrmTagForWithUnscoped = "unscoped"
+	OrmTagForWithChunk    = "chunk"
 	OrmTagForDo           = "do"
 )
 
