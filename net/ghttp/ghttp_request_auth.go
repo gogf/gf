@@ -18,7 +18,7 @@ import (
 // and asks client for authentication. It returns true if authentication success, else returns
 // false if failure.
 func (r *Request) BasicAuth(user, pass string, tips ...string) bool {
-	auth := r.Header.Get("Authorization")
+	auth := r.Header.Get(HeaderAuthorization)
 	if auth == "" {
 		r.setBasicAuth(tips...)
 		return false
@@ -60,6 +60,6 @@ func (r *Request) setBasicAuth(tips ...string) {
 	} else {
 		realm = "Need Login"
 	}
-	r.Response.Header().Set("WWW-Authenticate", fmt.Sprintf(`Basic realm="%s"`, realm))
+	r.Response.Header().Set(HeaderWwwAuthenticate, fmt.Sprintf(`Basic realm="%s"`, realm))
 	r.Response.WriteHeader(http.StatusUnauthorized)
 }

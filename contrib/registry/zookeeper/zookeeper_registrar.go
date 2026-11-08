@@ -51,7 +51,7 @@ func (r *Registry) Register(_ context.Context, service gsvc.Service) (gsvc.Servi
 			"Error with marshal Content to Json string",
 		)
 	}
-	servicePath := path.Join(servicePrefixPath, service.GetName())
+	servicePath := path.Join(servicePrefixPath, instanceNodeName(service))
 	if err = r.ensureName(servicePath, data, zk.FlagEphemeral); err != nil {
 		return service, gerror.Wrapf(
 			err,
@@ -67,7 +67,7 @@ func (r *Registry) Register(_ context.Context, service gsvc.Service) (gsvc.Servi
 func (r *Registry) Deregister(ctx context.Context, service gsvc.Service) error {
 	ch := make(chan error, 1)
 	prefix := strings.Trim(strings.ReplaceAll(service.GetPrefix(), "/", "-"), "-")
-	servicePath := path.Join(r.opts.namespace, prefix, service.GetName())
+	servicePath := path.Join(r.opts.namespace, prefix, instanceNodeName(service))
 	go func() {
 		err := r.conn.Delete(servicePath, -1)
 		ch <- err

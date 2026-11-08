@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// This file builds OpenAPI operations and their request and response metadata.
+
 package goai
 
 import (
@@ -172,15 +174,31 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	// =================================================================================================================
 	// Request Parameter.
 	// =================================================================================================================
-	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
+	// Find the whole-body field using the HTTP handler's embedded-field scan before
+	// resolving implicit parameter locations. Parameter fields keep their own scan below.
+	bodyStructFields, err := gstructs.Fields(gstructs.FieldsInput{
+		Pointer:         inputObject.Interface(),
+		RecursiveOption: gstructs.RecursiveOptionEmbedded,
+	})
+	if err != nil {
+		return err
+	}
+	bodyField, hasBodyField, err := findBodyField(bodyStructFields)
+	if err != nil {
+		return err
+	}
+	structFields, err := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         inputObject.Interface(),
 		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 	})
+	if err != nil {
+		return err
+	}
 	for _, structField := range structFields {
 		if operation.Parameters == nil {
 			operation.Parameters = []ParameterRef{}
 		}
-		parameterRef, err := oai.newParameterRefWithStructMethod(structField, in.Path, in.Method)
+		parameterRef, err := oai.newParameterRefWithStructMethod(structField, in.Path, in.Method, hasBodyField)
 		if err != nil {
 			return err
 		}
@@ -211,10 +229,39 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		if tagMimeValue != "" {
 			contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
 		}
+		// The field tagged with `body:"*"` receives the whole request body, so the schema of
+		// that field is used as the request body schema instead of the schema of the request
+		// struct, which would otherwise be documented as a wrapping object.
+		var bodySchemaRef *SchemaRef
+		if hasBodyField {
+			schemaRef, err := oai.newSchemaRefWithGolangType(bodyField.Type().Type, bodyField.TagMap())
+			if err != nil {
+				return err
+			}
+			bodySchemaRef = schemaRef
+			requestBody.Description = bodyField.TagDescription()
+			// Preserve metadata-required bodies and only promote unconditional field rules.
+			// Schema validation rules already exclude aliases and custom error messages.
+			if schemaRef.Value != nil {
+				for _, rule := range gstr.Split(schemaRef.Value.ValidationRules, "|") {
+					if rule == validationRuleKeyForRequired {
+						requestBody.Required = true
+						break
+					}
+				}
+			}
+		}
 		for _, v := range contentTypes {
-			if isInputStructEmpty {
+			switch {
+			case bodySchemaRef != nil:
+				requestBody.Content[v] = MediaType{
+					Schema: bodySchemaRef,
+				}
+
+			case isInputStructEmpty:
 				requestBody.Content[v] = MediaType{}
-			} else {
+
+			default:
 				schemaRef, err := oai.getRequestSchemaRef(getRequestSchemaRefInput{
 					BusinessStructName: inputStructTypeName,
 					RequestObject:      oai.Config.CommonRequest,
@@ -360,6 +407,12 @@ func (oai *OpenApiV3) removeOperationDuplicatedProperties(operation *Operation) 
 			}
 		}
 
+		// The request body schema might have no properties at all, for example the JSON array
+		// request body of the field tagged with `body:"*"`, of which there's nothing to remove.
+		if requestBodyContent.Schema.Value == nil || requestBodyContent.Schema.Value.Properties == nil {
+			continue
+		}
+
 		// Check the Value public field for the request body.
 		if commonRequest := requestBodyContent.Schema.Value.Properties.Get(dataField); commonRequest != nil {
 			commonRequest.Value.Required = oai.removeItemsFromArray(commonRequest.Value.Required, duplicatedParameterNames)
@@ -388,6 +441,44 @@ func (oai *OpenApiV3) removeItemsFromArray(array []string, items []any) []string
 
 func (oai *OpenApiV3) doesStructHasNoFields(s any) bool {
 	return reflect.TypeOf(s).NumField() == 0
+}
+
+// findBodyField retrieves and returns the field tagged with `body:"*"` from the given request
+// struct fields, which receives the whole request body.
+//
+// It returns error for any field tagged with the body tag but not the whole-body value, which is
+// the same rule as the handler registration. All fields are validated even if a body field is
+// already found, so that an invalid tag value never passes silently.
+func findBodyField(structFields []gstructs.Field) (gstructs.Field, bool, error) {
+	var (
+		bodyField    gstructs.Field
+		hasBodyField bool
+	)
+	for _, structField := range structFields {
+		bodyTagValue, hasBodyTag := structField.TagLookup(gtag.Body)
+		if !hasBodyTag {
+			continue
+		}
+		if bodyTagValue != gtag.BodyValueAll {
+			return gstructs.Field{}, false, newInvalidBodyTagValueError(bodyTagValue, structField.Name())
+		}
+		if !hasBodyField {
+			bodyField = structField
+			hasBodyField = true
+		}
+	}
+	return bodyField, hasBodyField, nil
+}
+
+// newInvalidBodyTagValueError creates the error for an invalid body tag value, which is reported
+// by both the handler registration and the OpenAPI generation.
+func newInvalidBodyTagValueError(bodyTagValue, fieldName string) error {
+	return gerror.NewCodef(
+		gcode.CodeInvalidParameter,
+		`invalid body tag value "%s" for the request struct field "%s", which should be "%s" `+
+			`to receive the whole request body`,
+		bodyTagValue, fieldName, gtag.BodyValueAll,
+	)
 }
 
 func (oai *OpenApiV3) tagMapToPath(tagMap map[string]string, path *Path) error {

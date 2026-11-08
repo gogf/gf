@@ -104,7 +104,7 @@ func (r *Response) WriteflnExit(format string, params ...any) {
 
 // WriteJson writes `content` to the response with JSON format.
 func (r *Response) WriteJson(content any) {
-	r.Header().Set("Content-Type", contentTypeJson)
+	r.Header().Set(HeaderContentType, contentTypeJson)
 	// If given string/[]byte, response it directly to the client.
 	switch content.(type) {
 	case string, []byte:
@@ -131,7 +131,7 @@ func (r *Response) WriteJsonExit(content any) {
 //
 // Note that there should be a "callback" parameter in the request for JSONP format.
 func (r *Response) WriteJsonP(content any) {
-	r.Header().Set("Content-Type", contentTypeJavascript)
+	r.Header().Set(HeaderContentType, contentTypeJavascript)
 	// If given string/[]byte, response it directly to client.
 	switch content.(type) {
 	case string, []byte:
@@ -142,7 +142,6 @@ func (r *Response) WriteJsonP(content any) {
 	if b, err := json.Marshal(content); err != nil {
 		panic(gerror.Wrap(err, `WriteJsonP failed`))
 	} else {
-		// r.Header().Set("Content-Type", "application/json")
 		if callback := r.Request.Get("callback").String(); callback != "" {
 			buffer := []byte(callback)
 			buffer = append(buffer, byte('('))
@@ -167,7 +166,7 @@ func (r *Response) WriteJsonPExit(content any) {
 
 // WriteXml writes `content` to the response with XML format.
 func (r *Response) WriteXml(content any, rootTag ...string) {
-	r.Header().Set("Content-Type", contentTypeXml)
+	r.Header().Set(HeaderContentType, contentTypeXml)
 	// If given string/[]byte, response it directly to clients.
 	switch content.(type) {
 	case string, []byte:

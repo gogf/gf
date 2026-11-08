@@ -34,7 +34,7 @@ func (m *Model) QuoteWord(s string) string {
 func (m *Model) TableFields(tableStr string, schema ...string) (fields map[string]*TableField, err error) {
 	var (
 		ctx        = m.GetCtx()
-		usedTable  = m.db.GetCore().guessPrimaryTableName(tableStr)
+		usedTable  = m.db.GetTableNameForFields(tableStr)
 		usedSchema = gutil.GetOrDefaultStr(m.schema, schema...)
 	)
 	// Strip quote characters from schema name, as it may come from cross-database
@@ -126,7 +126,7 @@ func (m *Model) mappingAndFilterToTableFields(table string, fields []any, filter
 			if _, ok := fieldsKeyMap[inputField]; !ok {
 				// Example:
 				// id, name
-				if foundKey, _ := gutil.MapPossibleItemByKey(fieldsKeyMap, inputField); foundKey != "" {
+				if foundKey, _ := mapPossibleItemByFieldKey(m.db, fieldsKeyMap, inputField); foundKey != "" {
 					outputFieldsArray = append(outputFieldsArray, foundKey)
 				} else if !filter {
 					outputFieldsArray = append(outputFieldsArray, inputField)
