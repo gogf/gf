@@ -32,7 +32,8 @@ if [ -n "$dirpath" ]; then
         ;;
         "pgsql")
             echo "Cleaning postgres resources..."
-            containers=$(docker ps -aq --filter "name=$dirname" 2>/dev/null)
+            # The module directory is `pgsql`, while the container is `goframe-postgres`.
+            containers=$(docker ps -aq --filter "name=postgres" 2>/dev/null)
             if [ -n "$containers" ]; then
                 echo "Stopping and removing postgres containers..."
                 docker stop $containers 2>/dev/null || true
@@ -69,6 +70,46 @@ if [ -n "$dirpath" ]; then
                 docker rm -f $containers 2>/dev/null || true
             fi
             docker rmi -f $(docker images -q clickhouse/clickhouse-server 2>/dev/null) 2>/dev/null || true
+        ;;
+        "oceanbase")
+            echo "Cleaning oceanbase resources..."
+            containers=$(docker ps -aq --filter "name=$dirname" 2>/dev/null)
+            if [ -n "$containers" ]; then
+                echo "Stopping and removing oceanbase containers..."
+                docker stop $containers 2>/dev/null || true
+                docker rm -f $containers 2>/dev/null || true
+            fi
+            docker rmi -f $(docker images -q oceanbase/oceanbase-ce 2>/dev/null) 2>/dev/null || true
+        ;;
+        "mariadb")
+            echo "Cleaning mariadb resources..."
+            containers=$(docker ps -aq --filter "name=$dirname" 2>/dev/null)
+            if [ -n "$containers" ]; then
+                echo "Stopping and removing mariadb containers..."
+                docker stop $containers 2>/dev/null || true
+                docker rm -f $containers 2>/dev/null || true
+            fi
+            docker rmi -f $(docker images -q mariadb 2>/dev/null) 2>/dev/null || true
+        ;;
+        "tidb")
+            echo "Cleaning tidb resources..."
+            containers=$(docker ps -aq --filter "name=$dirname" 2>/dev/null)
+            if [ -n "$containers" ]; then
+                echo "Stopping and removing tidb containers..."
+                docker stop $containers 2>/dev/null || true
+                docker rm -f $containers 2>/dev/null || true
+            fi
+            docker rmi -f $(docker images -q pingcap/tidb 2>/dev/null) 2>/dev/null || true
+        ;;
+        "gaussdb")
+            echo "Cleaning gaussdb resources..."
+            containers=$(docker ps -aq --filter "name=$dirname" 2>/dev/null)
+            if [ -n "$containers" ]; then
+                echo "Stopping and removing gaussdb containers..."
+                docker stop $containers 2>/dev/null || true
+                docker rm -f $containers 2>/dev/null || true
+            fi
+            docker rmi -f $(docker images -q opengauss/opengauss 2>/dev/null) 2>/dev/null || true
         ;;
         # "redis")
         #     echo "Cleaning redis resources..."

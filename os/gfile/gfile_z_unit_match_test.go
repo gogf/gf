@@ -179,6 +179,15 @@ func Test_MatchGlob_WindowsPath(t *testing.T) {
 		matched, err = gfile.MatchGlob("src\\**\\*.go", "src/foo/main.go")
 		t.AssertNil(err)
 		t.Assert(matched, true)
+
+		// "*" must not match a separator, whatever the separator style
+		matched, err = gfile.MatchGlob("src/**/a/*.go", "src\\a\\b\\main.go")
+		t.AssertNil(err)
+		t.Assert(matched, false)
+
+		matched, err = gfile.MatchGlob("a**b", "a\\b")
+		t.AssertNil(err)
+		t.Assert(matched, false)
 	})
 }
 
