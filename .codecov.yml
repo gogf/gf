@@ -1,2 +1,29 @@
+# Codecov configuration for the multi-module GoFrame CI (.github/workflows/ci-main.yml).
+codecov:
+  notify:
+    # ci-main.yml uploads one report per matrix group, flagged as `go-<version>-<group>`:
+    # go-1.27-core, go-1.27-drivers-1 and go-1.27-drivers-2. Codecov merges every upload
+    # it receives for a commit, so without this setting the statuses and PR comments are
+    # computed on the first arriving report, that is only a third of the code covered by
+    # the run.
+    #
+    # The count is per commit and does not distinguish flags, so it must match the exact
+    # amount of uploads a commit receives. ci-sub.yml deliberately does not upload: its
+    # kubecm job depends on minikube and may never reach the upload, and an extra upload
+    # would make this number wrong in the other direction. Keep it in sync with the
+    # amount of legs executing the "Report Coverage" step in ci-main.yml.
+    after_n_builds: 3
+    wait_for_ci: true
+
+# Flags follow `go-<version>-<group>`, keeping the Go version as part of the flag name
+# and tracking every group of that version on its own. Default rules apply to any flag
+# a future run introduces (for example a new Go version), so no hardcoded flag list has
+# to be kept in sync with the CI matrix. carryforward makes a flag reuse its last known
+# value when a run does not upload it (for example a skipped group), instead of
+# treating its files as missing.
+flag_management:
+  default_rules:
+    carryforward: true
+
 ignore:
   - "cmd"  # ignore cmd folders and all its contents

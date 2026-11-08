@@ -81,6 +81,10 @@ for file in `find . -name go.mod`; do
     fi
     
     cd -
-    # clean docker containers and images to free disk space
+    # Docker cleanup is intentionally disabled. The services are started once per job
+    # in the "Start Services" step and shared by every module of the group, so tearing
+    # them down after a single module would break the modules that follow. The master
+    # runs complete the drivers groups without it, so there is no disk pressure to
+    # relieve here either.
     # bash .github/workflows/scripts/ci-main-clean.sh "$dirpath"
 done
