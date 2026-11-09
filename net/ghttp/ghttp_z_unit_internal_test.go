@@ -744,3 +744,60 @@ func Test_HasRepeatedQueryKey(t *testing.T) {
 		}
 	})
 }
+
+// Test_Request_ParseBody_AutoDecodingBody checks the relaxed JSON/XML body decoding
+// controlled by the AutoDecodingBody configuration.
+func Test_Request_ParseBody_AutoDecodingBody(t *testing.T) {
+	newRequest := func(body string) *Request {
+		return &Request{
+			Request: httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body)),
+			Server:  &Server{config: NewConfig()},
+		}
+	}
+	gtest.C(t, func(t *gtest.T) {
+		// The JSON body is decoded even if the content type does not declare it.
+		r := newRequest(`{"id":1,"name":"john"}`)
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyMap, map[string]any{"id": 1, "name": "john"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The XML body is decoded even if the content type does not declare it.
+		r := newRequest(`<doc><id>1</id><name>john</name></doc>`)
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyMap, map[string]any{"id": "1", "name": "john"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The XML body with the xml header is decoded only once, and the result is not
+		// overridden by the default parameters decoding.
+		r := newRequest(`<?xml version="1.0" encoding="UTF-8"?><doc><id>1</id></doc>`)
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyMap, map[string]any{"id": "1"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// A JSON-shaped body that is not valid JSON falls back to the default parameters
+		// decoding instead of being dropped.
+		r := newRequest(`{invalid json}`)
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyMap, map[string]any{})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// An XML-shaped body that is not valid XML falls back to the default parameters
+		// decoding instead of being dropped.
+		r := newRequest(`<not xml at all>`)
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyMap, map[string]any{})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The relaxed decoding is disabled by the AutoDecodingBody configuration.
+		r := newRequest(`{"id":1,"name":"john"}`)
+		r.Server.config.AutoDecodingBody = false
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyMap, map[string]any{})
+	})
+}

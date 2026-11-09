@@ -293,17 +293,25 @@ func (r *Request) parseBody() {
 				return
 			}
 		} else if r.isAutoDecodingBodyEnabled() && body[0] == '{' && body[len(body)-1] == '}' {
-			_ = json.UnmarshalUseNumber(body, &r.bodyMap)
+			// The body looks like JSON but the content type does not declare it, so the
+			// decoding failure falls back to the default parameters decoding below.
+			if err := json.UnmarshalUseNumber(body, &r.bodyMap); err == nil {
+				return
+			}
+			r.bodyMap = nil
 		}
 		// XML format checks.
 		if gstr.ContainsI(contentType, contentTypeXmlSubstring) {
 			r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
 		} else if r.isAutoDecodingBodyEnabled() {
-			if len(body) > 5 && bytes.EqualFold(body[:5], xmlHeaderBytes) {
-				r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
-			}
-			if body[0] == '<' && body[len(body)-1] == '>' {
-				r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
+			// The body looks like XML but the content type does not declare it, so the
+			// decoding failure falls back to the default parameters decoding below.
+			if len(body) > 5 && bytes.EqualFold(body[:5], xmlHeaderBytes) ||
+				body[0] == '<' && body[len(body)-1] == '>' {
+				if m, err := gxml.DecodeWithoutRoot(body); err == nil {
+					r.bodyMap = m
+					return
+				}
 			}
 		}
 		// Default parameters decoding.
