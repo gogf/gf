@@ -11,6 +11,7 @@ import (
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // Test_Issue4699 tests negative values for Limit/Page/Offset should be treated as zero.
@@ -108,6 +109,93 @@ func Test_ScanValidateSingleFieldSpecified(t *testing.T) {
 		m8 := &Model{fields: []any{"COUNT(*)"}}
 		t.AssertNil(m8.validateSingleFieldSpecified())
 		t.Assert(m8.isSingleFieldSpecified(), true)
+
+		// Fields and FieldsEx naming the same field → reject, because the only
+		// field is filtered out and the projection would be empty.
+		m9 := &Model{fields: []any{"name"}, fieldsEx: []any{"name"}}
+		t.AssertNE(m9.validateSingleFieldSpecified(), nil)
+		t.Assert(m9.isSingleFieldSpecified(), false)
+
+		// FieldsEx naming another field → accept.
+		m10 := &Model{fields: []any{"name"}, fieldsEx: []any{"age"}}
+		t.AssertNil(m10.validateSingleFieldSpecified())
+		t.Assert(m10.isSingleFieldSpecified(), true)
+	})
+}
+
+// Test_ScanIsExpandingFieldStr tests the field string parsing that decides whether a
+// single Fields entry can expand to multiple result columns.
+func Test_ScanIsExpandingFieldStr(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Wildcards, also with surrounding spaces.
+		t.Assert(isExpandingFieldStr("*"), true)
+		t.Assert(isExpandingFieldStr(" * "), true)
+		t.Assert(isExpandingFieldStr("a.*"), true)
+		t.Assert(isExpandingFieldStr(" a.* "), true)
+
+		// Top-level commas.
+		t.Assert(isExpandingFieldStr("name,age"), true)
+		t.Assert(isExpandingFieldStr("name, age"), true)
+
+		// Commas nested in parentheses are function arguments, not column separators.
+		t.Assert(isExpandingFieldStr("COUNT(DISTINCT `id`,`username`)"), false)
+		t.Assert(isExpandingFieldStr("COUNT(*)"), false)
+
+		// Commas inside quoted identifiers or string literals are not separators.
+		t.Assert(isExpandingFieldStr("`a,b`"), false)
+		t.Assert(isExpandingFieldStr(`"a,b"`), false)
+		t.Assert(isExpandingFieldStr("'a,b'"), false)
+		t.Assert(isExpandingFieldStr("[a,b]"), false)
+		t.Assert(isExpandingFieldStr("CONCAT(`a,b`, 'x,y')"), false)
+
+		// Plain single columns.
+		t.Assert(isExpandingFieldStr("name"), false)
+		t.Assert(isExpandingFieldStr("a.name"), false)
+	})
+}
+
+// Test_ScanValidateFieldsExSingleColumn tests validateFieldsExSingleColumn with a real
+// DB, so that the column-count check is actually exercised instead of being skipped
+// by a nil db.
+func Test_ScanValidateFieldsExSingleColumn(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		db := newDialectFakeDB("id", "name", "age")
+
+		// FieldsEx leaves exactly one column → accept.
+		t.AssertNil(db.Model("a").FieldsEx("id", "name").validateSingleFieldSpecified())
+
+		// FieldsEx leaves two columns → reject.
+		err := db.Model("a").FieldsEx("id").validateSingleFieldSpecified()
+		t.AssertNE(err, nil)
+		t.Assert(gstr.Contains(err.Error(), "FieldsEx leaves 2 columns"), true)
+
+		// A repeated exclusion is counted only once.
+		err = db.Model("a").FieldsEx("id", "id").validateSingleFieldSpecified()
+		t.AssertNE(err, nil)
+		t.Assert(gstr.Contains(err.Error(), "FieldsEx leaves 2 columns"), true)
+
+		// An unknown field does not reduce the column count.
+		err = db.Model("a").FieldsEx("unknown").validateSingleFieldSpecified()
+		t.AssertNE(err, nil)
+		t.Assert(gstr.Contains(err.Error(), "FieldsEx leaves 3 columns"), true)
+
+		// A single table with an alias is still a single table operation.
+		t.AssertNil(db.Model("a u").FieldsEx("id", "name").validateSingleFieldSpecified())
+		t.AssertNil(db.Model("a AS u").FieldsEx("id", "name").validateSingleFieldSpecified())
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// In a join statement the columns of all joined tables are counted.
+		db := newDialectFakeDB("id", "name")
+		err := db.Model("a").LeftJoin("b", "b.id=a.id").
+			FieldsEx("a.id", "a.name", "b.id").
+			validateSingleFieldSpecified()
+		t.AssertNil(err)
+
+		err = db.Model("a").LeftJoin("b", "b.id=a.id").
+			FieldsEx("a.id", "a.name").
+			validateSingleFieldSpecified()
+		t.AssertNE(err, nil)
+		t.Assert(gstr.Contains(err.Error(), "FieldsEx leaves 2 columns"), true)
 	})
 }
 

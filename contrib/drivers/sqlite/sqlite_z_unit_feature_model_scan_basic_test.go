@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -170,5 +171,133 @@ func Test_Model_Scan_BasicTypeFieldsExJoin(t *testing.T) {
 			Where("a.id", 1).Scan(&bin)
 		t.AssertNil(err)
 		t.Assert(bin, []byte{0xDE, 0xAD, 0xBE, 0xEF, 0x01, 0x02, 0x03, 0x04})
+	})
+}
+
+// Test_Model_Scan_BasicTypeFieldsExTableAlias verifies that FieldsEx works on a single
+// table with an alias, which is still a single table operation, instead of panicking
+// with "FieldsEx supports only single table operations".
+func Test_Model_Scan_BasicTypeFieldsExTableAlias(t *testing.T) {
+	table := createScanBasicTypeTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// "table a" is a single table with an alias, so FieldsEx must not panic.
+		var age int
+		err := db.Model(table+" a").FieldsEx("id", "name", "bin").Where("a.id", 1).Scan(&age)
+		t.AssertNil(err)
+		t.Assert(age, 18)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The same with an explicit AS alias.
+		var name string
+		err := db.Model(table+" AS a").FieldsEx("id", "age", "bin").Where("a.id", 1).Scan(&name)
+		t.AssertNil(err)
+		t.Assert(name, "alice")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// FieldsEx leaving more than one column is still rejected before the query runs.
+		var age int
+		err := db.Model(table+" a").FieldsEx("id").Where("a.id", 1).Scan(&age)
+		t.AssertNE(err, nil)
+		t.Assert(gstr.Contains(err.Error(), "FieldsEx leaves"), true)
+	})
+}
+
+// Test_Model_Scan_BasicTypeSlicePointerNull verifies that a NULL column value scanned
+// into a slice of pointers to basic types yields a nil element, matching the single
+// value path where a NULL leaves a nil pointer.
+func Test_Model_Scan_BasicTypeSlicePointerNull(t *testing.T) {
+	table := createScanBasicTypeTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		var names []*string
+		err := db.Model(table).Fields("name").Order("id").Scan(&names)
+		t.AssertNil(err)
+		t.Assert(len(names), 2)
+		t.AssertNE(names[0], nil)
+		t.Assert(*names[0], "alice")
+		// The second row has a NULL name, so its element must stay a nil pointer.
+		t.AssertNil(names[1])
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The single value path reports the same thing for the same NULL column.
+		var name *string
+		err := db.Model(table).Fields("name").Where("id", 2).Scan(&name)
+		t.AssertNil(err)
+		t.AssertNil(name)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// Non-pointer slice elements keep the zero value for a NULL column.
+		var names []string
+		err := db.Model(table).Fields("name").Order("id").Scan(&names)
+		t.AssertNil(err)
+		t.Assert(names, []string{"alice", ""})
+	})
+}
+
+// Test_Model_Scan_BasicTypeFieldsExSameField verifies that Fields and FieldsEx naming
+// the same field is rejected with a clear error instead of producing an empty field
+// list and invalid SQL like "SELECT  FROM ...".
+func Test_Model_Scan_BasicTypeFieldsExSameField(t *testing.T) {
+	table := createScanBasicTypeTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		var name string
+		err := db.Model(table).Fields("name").FieldsEx("name").Where("id", 1).Scan(&name)
+		t.AssertNE(err, nil)
+		t.Assert(gstr.Contains(err.Error(), "excluded by FieldsEx"), true)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The same for a slice target.
+		var names []string
+		err := db.Model(table).Fields("name").FieldsEx("name").Scan(&names)
+		t.AssertNE(err, nil)
+		t.Assert(gstr.Contains(err.Error(), "excluded by FieldsEx"), true)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// FieldsEx naming another field keeps the single field valid.
+		var name string
+		err := db.Model(table).Fields("name").FieldsEx("age").Where("id", 1).Scan(&name)
+		t.AssertNil(err)
+		t.Assert(name, "alice")
+	})
+}
+
+// Test_Model_Scan_BasicTypeSliceMultiColumn verifies that a projection that the
+// pre-query validation cannot recognize as multi-column is still rejected after the
+// query, instead of silently keeping only the first column.
+func Test_Model_Scan_BasicTypeSliceMultiColumn(t *testing.T) {
+	table := createScanBasicTypeTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// A quoted identifier containing a comma is a single column, so it is accepted.
+		var names []string
+		err := db.Model(table).Fields("`name`").Order("id").Scan(&names)
+		t.AssertNil(err)
+		t.Assert(names, []string{"alice", ""})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// A raw expression that expands to two columns is rejected.
+		var names []string
+		err := db.Model(table).Fields(gdb.Raw("name, age")).Order("id").Scan(&names)
+		t.AssertNE(err, nil)
+		t.Assert(gstr.Contains(err.Error(), "expanding field"), true)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// A sub-query join contributes one "prefix.*" entry to the pre-query column
+		// count, so the validation passes, but the actual result has several columns.
+		// The post-query column-count check must reject it instead of keeping only the
+		// first column.
+		var names []string
+		err := db.Model(table+" a").
+			LeftJoin(fmt.Sprintf("(SELECT id, name, age FROM `%s`)", table), "b", "b.id=a.id").
+			FieldsEx("a.id", "a.name", "a.age", "a.bin").
+			Order("a.id").Scan(&names)
+		t.AssertNE(err, nil)
+		t.Assert(gstr.Contains(err.Error(), "but expect one"), true)
 	})
 }

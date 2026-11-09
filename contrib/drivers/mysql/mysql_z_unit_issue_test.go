@@ -2104,7 +2104,13 @@ func Test_Issue3977(t *testing.T) {
 		var usernames2 []*string
 		err = db.Model(table).Fields("username").Scan(&usernames2)
 		t.AssertNil(err)
-		t.Assert(usernames2, []string{"username1", "username2", "username3"})
+		// Assert the pointers themselves instead of converting to []string, which would
+		// lose whether an element is a nil pointer.
+		t.Assert(len(usernames2), 3)
+		for i, expected := range []string{"username1", "username2", "username3"} {
+			t.AssertNE(usernames2[i], nil)
+			t.Assert(*usernames2[i], expected)
+		}
 
 	})
 	// float64 *float64
@@ -2171,7 +2177,11 @@ func Test_Issue3977(t *testing.T) {
 		var id2s []*int64
 		err = db.Model(table).Fields("id").Where("state", true).Scan(&id2s)
 		t.AssertNil(err)
-		t.Assert(id2s, []int64{1, 2})
+		t.Assert(len(id2s), 2)
+		for i, expected := range []int64{1, 2} {
+			t.AssertNE(id2s[i], nil)
+			t.Assert(*id2s[i], expected)
+		}
 
 		var total int64
 		err = db.Model(table).FieldSum("id").WhereIn("id", []int64{1, 2, 3, 4, 5}).Scan(&total)
@@ -2204,7 +2214,11 @@ func Test_Issue3977(t *testing.T) {
 		var states2 []*bool
 		err = db.Model(table).Fields("state").Scan(&states2)
 		t.AssertNil(err)
-		t.Assert(states2, []bool{true, true, false})
+		t.Assert(len(states2), 3)
+		for i, expected := range []bool{true, true, false} {
+			t.AssertNE(states2[i], nil)
+			t.Assert(*states2[i], expected)
+		}
 	})
 
 	// FieldsEx that leaves more than one column must be rejected, otherwise
@@ -2270,6 +2284,18 @@ func Test_Issue3977(t *testing.T) {
 		err = db.Model(table).Fields("username").Where("id", 4).Scan(&namePtr)
 		t.AssertNil(err)
 		t.Assert(namePtr, nil)
+
+		// A slice of pointers keeps a nil element for the NULL column value, matching
+		// the single value path above.
+		var namePtrs []*string
+		err = db.Model(table).Fields("username").Order("id").Scan(&namePtrs)
+		t.AssertNil(err)
+		t.Assert(len(namePtrs), 4)
+		for i, expected := range []string{"username1", "username2", "username3"} {
+			t.AssertNE(namePtrs[i], nil)
+			t.Assert(*namePtrs[i], expected)
+		}
+		t.Assert(namePtrs[3], nil)
 
 		// The other columns of the same record are still readable.
 		var age int
@@ -2345,6 +2371,38 @@ func Test_Issue3977(t *testing.T) {
 		t.Assert(username, "username1")
 		err = db.Model(table).FieldsEx([]string{"id", "age", "state", "create_at", "update_at"}).Where("id", 1).Scan(&username)
 		t.Assert(err.Error(), "Scan into basic type requires exactly 1 field specified via Fields(), but FieldsEx leaves 2 columns after filtering")
+	})
+
+	// A single table with an alias is still a single table operation, so FieldsEx must
+	// not panic with "FieldsEx supports only single table operations".
+	gtest.C(t, func(t *gtest.T) {
+		var username string
+		err := db.Model(table+" u").
+			FieldsEx("id", "age", "balance", "state", "create_at", "update_at").
+			Where("u.id", 1).Scan(&username)
+		t.AssertNil(err)
+		t.Assert(username, "username1")
+
+		var username2 string
+		err = db.Model(table+" AS u").
+			FieldsEx("id", "age", "balance", "state", "create_at", "update_at").
+			Where("u.id", 2).Scan(&username2)
+		t.AssertNil(err)
+		t.Assert(username2, "username2")
+	})
+
+	// Fields and FieldsEx naming the same field must be rejected instead of producing
+	// an empty projection and invalid SQL like "SELECT  FROM ...".
+	gtest.C(t, func(t *gtest.T) {
+		var username string
+		err := db.Model(table).Fields("username").FieldsEx("username").Where("id", 1).Scan(&username)
+		t.AssertNE(err, nil)
+		t.Assert(gstr.Contains(err.Error(), "excluded by FieldsEx"), true)
+
+		var usernames []string
+		err = db.Model(table).Fields("username").FieldsEx("username").Scan(&usernames)
+		t.AssertNE(err, nil)
+		t.Assert(gstr.Contains(err.Error(), "excluded by FieldsEx"), true)
 	})
 
 	gtest.C(t, func(t *gtest.T) {

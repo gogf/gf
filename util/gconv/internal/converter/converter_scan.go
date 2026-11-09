@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
@@ -186,6 +187,14 @@ func (c *Converter) Scan(srcValue any, dstPointer any, option ...ScanOption) (er
 			for i := range srcLen {
 				srcElem := srcValueReflectValue.Index(i).Interface()
 				target := newSlice.Index(i)
+
+				// A nil source element for a pointer to a basic type keeps the element
+				// as a nil pointer, so that a NULL column value stays distinguishable
+				// from a zero value, matching the single value scan path.
+				if srcElem == nil && target.Kind() == reflect.Pointer &&
+					reflection.IsBasicKind(target.Type().Elem().Kind()) {
+					continue
+				}
 
 				// For pointer element types (e.g. []*int), allocate the element
 				// and dereference it so the scalar setters below can write the

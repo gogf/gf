@@ -300,16 +300,35 @@ func isExpandingField(field any) bool {
 }
 
 // isExpandingFieldStr checks whether a field string can expand to multiple
-// result columns. It detects wildcards ("*", "a.*") and top-level commas
-// ("name,age") while ignoring commas nested inside parentheses (e.g. function
-// argument lists like "COUNT(DISTINCT `id`,`username`)").
+// result columns. It detects wildcards ("*", "a.*", also with surrounding
+// spaces) and top-level commas ("name,age") while ignoring commas nested inside
+// parentheses (e.g. function argument lists like "COUNT(DISTINCT `id`,`username`)")
+// and commas inside quoted identifiers or string literals.
 func isExpandingFieldStr(s string) bool {
+	s = gstr.Trim(s)
 	if s == "*" || gstr.HasSuffix(s, ".*") {
 		return true
 	}
-	depth := 0
+	var (
+		depth      int
+		quote      rune
+		quoteClose rune
+	)
 	for _, ch := range s {
+		// Inside a quoted identifier or string literal, only the closing quote matters.
+		if quote != 0 {
+			if ch == quoteClose {
+				quote = 0
+			}
+			continue
+		}
 		switch ch {
+		case '`', '"', '\'':
+			quote = ch
+			quoteClose = ch
+		case '[':
+			quote = ch
+			quoteClose = ']'
 		case '(':
 			depth++
 		case ')':
@@ -331,12 +350,29 @@ func isExpandingFieldStr(s string) bool {
 //
 // It rejects:
 //   - gdb.Raw entries that may expand to multiple columns,
-//   - wildcard "*" and table-qualified wildcards like "a.*".
+//   - wildcard "*" and table-qualified wildcards like "a.*",
+//   - a field that FieldsEx filters out, which would leave an empty projection.
 func (m *Model) isSingleFieldSpecified() bool {
 	if len(m.fields) != 1 {
 		return false
 	}
-	return !isExpandingField(m.fields[0])
+	if isExpandingField(m.fields[0]) {
+		return false
+	}
+	return !m.isFieldExcludedByFieldsEx(m.fields[0])
+}
+
+// isFieldExcludedByFieldsEx reports whether `field` is filtered out by FieldsEx.
+// It matches the same way getFieldsFiltered does: the field string is compared
+// as written (after stripping the "-" prefix used by Fields) against the
+// FieldsEx entries.
+func (m *Model) isFieldExcludedByFieldsEx(field any) bool {
+	if len(m.fieldsEx) == 0 {
+		return false
+	}
+	fieldStr := gconv.String(field)
+	fieldStr = fieldStr[gstr.PosR(fieldStr, "-")+1:]
+	return gset.NewStrSetFrom(gconv.Strings(m.fieldsEx)).Contains(fieldStr)
 }
 
 // validateFieldsExSingleColumn checks whether FieldsEx leaves exactly one table
@@ -403,9 +439,18 @@ func (m *Model) validateSingleFieldSpecified() error {
 	if m.isSingleFieldSpecified() {
 		return nil
 	}
-	// Reaching here with exactly one field means it is an expanding field
-	// (gdb.Raw or wildcard like "*" / "a.*").
 	if len(m.fields) == 1 {
+		// The single field is filtered out by FieldsEx, which leaves an empty
+		// projection and produces invalid SQL like "SELECT  FROM ...".
+		if m.isFieldExcludedByFieldsEx(m.fields[0]) {
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`Scan into basic type requires exactly 1 field, but field %v is excluded by FieldsEx`,
+				m.fields[0],
+			)
+		}
+		// Reaching here with exactly one field means it is an expanding field
+		// (gdb.Raw or wildcard like "*" / "a.*").
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`Scan into basic type does not support expanding field %v (gdb.Raw or wildcard); use an explicit field name instead`,
@@ -445,10 +490,14 @@ func (m *Model) validateSingleFieldSpecified() error {
 //     consistent with Record.Struct and Result.Structs;
 //   - a record matches but the column value is NULL: the target is left untouched and
 //     no error is returned, which follows gconv.Scan semantics for a nil source value.
-//     Note that a pointer target ends up as a nil pointer in this case.
+//     Note that a pointer target ends up as a nil pointer in this case, and a slice of
+//     pointers keeps a nil element for that row.
 //
 // Scanning into a slice of basic types also follows Result.Structs: no record leaves the
 // target untouched and returns sql.ErrNoRows only when the target already holds values.
+// The result must still have exactly one column, which is checked after the query as
+// well, so a projection that the pre-query validation cannot recognize as multi-column
+// is rejected instead of silently keeping only the first column.
 //
 // Example:
 //
@@ -581,18 +630,30 @@ func (m *Model) scanSliceOfBasicType(pointer any, where ...any) error {
 	if len(where) > 0 {
 		model = model.Where(where[0], where[1:]...)
 	}
-	valueArr, err := model.Array()
+	// doGetAll is used instead of Array() because Array() returns the first result
+	// column without checking the column count, which would silently drop the extra
+	// columns of a projection that the pre-query validation failed to recognize.
+	all, err := model.doGetAll(model.GetCtx(), SelectTypeArray, false)
 	if err != nil {
 		return err
 	}
-	if len(valueArr) == 0 {
+	if len(all) == 0 {
 		// Keep the no-row semantics identical to Result.Structs.
 		if !empty.IsEmpty(pointer, true) {
 			return sql.ErrNoRows
 		}
 		return nil
 	}
-	return valueArr.Scan(pointer)
+	recordFields := m.getRecordFields(all[0])
+	if len(recordFields) != 1 {
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`invalid fields for "Scan" operation, result fields number "%d"%s, but expect one`,
+			len(recordFields),
+			gjson.MustEncodeString(recordFields),
+		)
+	}
+	return all.Array(recordFields[0]).Scan(pointer)
 }
 
 // ScanAndCount scans a single record or record array that matches the given conditions and counts the total number
@@ -1147,7 +1208,11 @@ func (m *Model) getFieldsFiltered() string {
 		// Filter fields of all joined tables with fieldEx.
 		fieldsArray = m.getJoinedTableFields(fieldsExSet)
 	} else {
-		if gstr.Contains(m.tables, " ") {
+		// A single table with an alias, like "user u" or "user AS u", is still a single
+		// table operation: its fields are looked up by the table name without the alias.
+		// Only a table expression that is not a single identifier after removing the
+		// alias, like "user,user_detail" or "user JOIN user_detail", is rejected.
+		if tableName := m.db.GetCore().tableNameForFields(m.tables); !isSqlIdentifier(tableName, true) {
 			panic("function FieldsEx supports only single table operations")
 		}
 		// Filter table fields with fieldEx.
