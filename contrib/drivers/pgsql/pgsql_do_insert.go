@@ -51,12 +51,13 @@ func (d *Driver) DoInsert(
 
 	// pgsql support InsertIgnore natively, so no need to set primary key in context.
 	case gdb.InsertOptionIgnore, gdb.InsertOptionDefault:
-		// Get table fields to retrieve the primary key TableField object (not just the name)
-		// because DoExec needs the `TableField.Type` to determine if LastInsertId is supported.
+		// DoExec appends RETURNING for this field and uses its type to decide whether
+		// LastInsertId is supported. The column is the generated primary key, which is
+		// not always the first key column in table order.
 		tableFields, err := d.GetCore().GetDB().TableFields(ctx, table)
 		if err == nil {
-			if fields := gdb.PrimaryKeyFields(tableFields); len(fields) > 0 {
-				ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, *fields[0])
+			if field := gdb.InsertIDField(gdb.PrimaryKeyFields(tableFields)); field != nil {
+				ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, *field)
 			}
 		}
 

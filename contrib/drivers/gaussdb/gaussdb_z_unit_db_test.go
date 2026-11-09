@@ -128,6 +128,38 @@ func Test_DB_Save_CompositePrimaryKey(t *testing.T) {
 			g.Map{"a": 5, "name": "n5"},
 		})
 		t.AssertNE(err, nil)
+		// The incomplete batch must not leave the first row behind.
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+	})
+}
+
+// Test_InsertAndGetId_CompositePrimaryKey reads the generated key when it is not the first column.
+func Test_InsertAndGetId_CompositePrimaryKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("t_ck_id_%d", gtime.TimestampNano())
+		defer dropTable(table)
+		_, err := db.Exec(ctx, fmt.Sprintf(`
+			CREATE TABLE %s (
+				tenant_id INTEGER NOT NULL,
+				id BIGSERIAL NOT NULL,
+				name VARCHAR(45),
+				PRIMARY KEY (id, tenant_id)
+			)
+		`, table))
+		t.AssertNil(err)
+
+		id, err := db.InsertAndGetId(ctx, table, g.Map{
+			"tenant_id": 7,
+			"name":      "n1",
+		})
+		t.AssertNil(err)
+		t.AssertNE(id, int64(7))
+
+		one, err := db.GetOne(ctx, fmt.Sprintf("SELECT id FROM %s WHERE tenant_id=?", table), 7)
+		t.AssertNil(err)
+		t.Assert(one["id"].Int64(), id)
 	})
 }
 

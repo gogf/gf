@@ -408,6 +408,53 @@ func PrimaryKeyFields(tableFields map[string]*TableField) []*TableField {
 	return keys
 }
 
+const (
+	// generatedSerialMark matches a PostgreSQL serial type name.
+	generatedSerialMark = "serial"
+	// generatedNextvalMark matches a sequence default such as nextval('id_seq'::regclass).
+	generatedNextvalMark = "nextval("
+	// generatedAutoIncrementMark matches an auto-increment column extra.
+	generatedAutoIncrementMark = "auto_increment"
+	// generatedIdentityMark matches an identity column extra.
+	generatedIdentityMark = "identity"
+)
+
+// InsertIDField returns the primary-key field whose generated value an insert should read back.
+// PrimaryKeyFields orders every key column by table index, which is the order ON CONFLICT needs.
+// That first column is not always the generated one: PRIMARY KEY (id, tenant_id) still generates
+// id when tenant_id is declared first. A column is treated as generated when its type contains
+// serial, its default calls nextval, or its extra marks auto_increment or identity.
+// When none match, the first key column is returned.
+func InsertIDField(fields []*TableField) *TableField {
+	if len(fields) == 0 {
+		return nil
+	}
+	for _, field := range fields {
+		if isGeneratedKeyField(field) {
+			return field
+		}
+	}
+	return fields[0]
+}
+
+// isGeneratedKeyField reports whether the database fills the column on insert.
+func isGeneratedKeyField(field *TableField) bool {
+	if field == nil {
+		return false
+	}
+	if strings.Contains(strings.ToLower(field.Type), generatedSerialMark) {
+		return true
+	}
+	extra := strings.ToLower(field.Extra)
+	if strings.Contains(extra, generatedAutoIncrementMark) || strings.Contains(extra, generatedIdentityMark) {
+		return true
+	}
+	if field.Default == nil {
+		return false
+	}
+	return strings.Contains(strings.ToLower(fmt.Sprint(field.Default)), generatedNextvalMark)
+}
+
 // HasPrimaryKeys reports whether every record contains all primary-key columns.
 // Column names are compared case-insensitively. An empty list or empty primary-key
 // list is not a usable conflict target.
