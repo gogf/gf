@@ -220,12 +220,12 @@ func (s *Server) doSetHandler(
 		}
 		// Check if it's a fuzzy node.
 		if gregex.IsMatchString(`^[:\*]|\{[\w\.\-]+\}|\*`, part) {
-			part = "*fuzz"
+			part = routerKeyFuzz
 			// If it's a fuzzy node, it creates a "*list" item - which is a list - in the hash map.
 			// All the sub router items from this fuzzy node will also be added to its "*list" item.
-			if v, ok := p.(map[string]any)["*list"]; !ok {
+			if v, ok := p.(map[string]any)[routerKeyList]; !ok {
 				newListForFuzzy := glist.New()
-				p.(map[string]any)["*list"] = newListForFuzzy
+				p.(map[string]any)[routerKeyList] = newListForFuzzy
 				lists = append(lists, newListForFuzzy)
 			} else {
 				lists = append(lists, v.(*glist.List))
@@ -241,10 +241,10 @@ func (s *Server) doSetHandler(
 		// The leaf can be furthermore extended by adding more ket-value pairs into its map.
 		// Note that the `v != "*fuzz"` comparison is required as the list might be added in the former
 		// fuzzy checks.
-		if i == len(array)-1 && part != "*fuzz" {
-			if v, ok := p.(map[string]any)["*list"]; !ok {
+		if i == len(array)-1 && part != routerKeyFuzz {
+			if v, ok := p.(map[string]any)[routerKeyList]; !ok {
 				leafList := glist.New()
-				p.(map[string]any)["*list"] = leafList
+				p.(map[string]any)[routerKeyList] = leafList
 				lists = append(lists, leafList)
 			} else {
 				lists = append(lists, v.(*glist.List))
@@ -323,8 +323,8 @@ func (s *Server) compareRouterPriority(newItem *HandlerItem, oldItem *HandlerIte
 	var uriNew, uriOld string
 	uriNew, _ = gregex.ReplaceString(`\{[^/]+?\}`, "", newItem.Router.Uri)
 	uriOld, _ = gregex.ReplaceString(`\{[^/]+?\}`, "", oldItem.Router.Uri)
-	uriNew, _ = gregex.ReplaceString(`:[^/]+?`, "", uriNew)
-	uriOld, _ = gregex.ReplaceString(`:[^/]+?`, "", uriOld)
+	uriNew, _ = gregex.ReplaceString(`:[^/]+`, "", uriNew)
+	uriOld, _ = gregex.ReplaceString(`:[^/]+`, "", uriOld)
 	uriNew, _ = gregex.ReplaceString(`\*[^/]*`, "", uriNew) // Replace "/*" and "/*any".
 	uriOld, _ = gregex.ReplaceString(`\*[^/]*`, "", uriOld) // Replace "/*" and "/*any".
 	if len(uriNew) > len(uriOld) {

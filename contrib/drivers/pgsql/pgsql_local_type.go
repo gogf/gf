@@ -191,7 +191,7 @@ var localTypeMap = map[string]gdb.LocalType{
 	"time":             gdb.LocalTypeTime,
 	"timestamp":        gdb.LocalTypeDatetime,
 	"timestamptz":      gdb.LocalTypeDatetime,
-	"timetz":           gdb.LocalTypeDatetime,
+	"timetz":           gdb.LocalTypeString, // was datetime; preserve UTC offset
 	"tinterval":        gdb.LocalTypeString, // was int
 	"trigger":          gdb.LocalTypeString,
 	"tsm_handler":      gdb.LocalTypeString,

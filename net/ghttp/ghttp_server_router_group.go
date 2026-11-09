@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sync"
 
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/internal/consts"
@@ -49,14 +50,14 @@ const (
 )
 
 var (
-	preBindItems = make([]*preBindItem, 0, 64)
+	preBindItems   = make([]*preBindItem, 0, 64)
+	preBindItemsMu sync.Mutex // Guards preBindItems, which servers in different goroutines share.
 )
 
 // handlePreBindItems is called when server starts, which does really route registering to the server.
 func (s *Server) handlePreBindItems(ctx context.Context) {
-	if len(preBindItems) == 0 {
-		return
-	}
+	preBindItemsMu.Lock()
+	var items []*preBindItem
 	for _, item := range preBindItems {
 		if item.bound {
 			continue
@@ -68,8 +69,14 @@ func (s *Server) handlePreBindItems(ctx context.Context) {
 		if item.group.domain != nil && item.group.domain.server != s {
 			continue
 		}
-		item.group.doBindRoutersToServer(ctx, item)
 		item.bound = true
+		items = append(items, item)
+	}
+	preBindItemsMu.Unlock()
+
+	// Bind outside the lock so a slow or route-registering bind never holds the shared mutex.
+	for _, item := range items {
+		item.group.doBindRoutersToServer(ctx, item)
 	}
 }
 
@@ -268,6 +275,8 @@ func (g *RouterGroup) Middleware(handlers ...HandlerFunc) *RouterGroup {
 // preBindToLocalArray adds the route registering parameters to an internal variable array for lazily registering feature.
 func (g *RouterGroup) preBindToLocalArray(bindType string, pattern string, object any, params ...any) *RouterGroup {
 	_, file, line := gdebug.CallerWithFilter([]string{consts.StackFilterKeyForGoFrame})
+	preBindItemsMu.Lock()
+	defer preBindItemsMu.Unlock()
 	preBindItems = append(preBindItems, &preBindItem{
 		group:    g,
 		bindType: bindType,

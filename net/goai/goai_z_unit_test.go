@@ -12,6 +12,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/gogf/gf/v2/encoding/gjson"
@@ -1381,7 +1382,7 @@ func Test_ValidationRules(t *testing.T) {
 }
 
 // TestOpenApiV3_ArrayRequestBody tests the OpenAPI schema generation for the request struct that
-// declares the JSON array request body by the field tagged with `in:"body"`.
+// declares the JSON array request body by the field tagged with `body:"*"`.
 func TestOpenApiV3_ArrayRequestBody(t *testing.T) {
 	// ChatMessage is the element type of the JSON array request body.
 	type ChatMessage struct {
@@ -1392,7 +1393,7 @@ func TestOpenApiV3_ArrayRequestBody(t *testing.T) {
 	type BatchChatReq struct {
 		g.Meta   `path:"/batch/chat/{id}" method:"post" mime:"application/json" summary:"batch chat"`
 		Id       int           `json:"id" dc:"Id"`
-		Messages []ChatMessage `json:"messages" dc:"Message list" in:"body"`
+		Messages []ChatMessage `json:"messages" dc:"Message list" body:"*"`
 	}
 	type BatchChatRes struct {
 		Results []string `json:"results" dc:"Results"`
@@ -1412,7 +1413,7 @@ func TestOpenApiV3_ArrayRequestBody(t *testing.T) {
 		var operation = oai.Paths["/batch/chat/{id}"].Post
 		t.AssertNE(operation, nil)
 
-		// The field tagged with `in:"body"` is documented as the request body, not a parameter.
+		// The field tagged with `body:"*"` is documented as the request body, not a parameter.
 		t.Assert(len(operation.Parameters), 1)
 		t.Assert(operation.Parameters[0].Value.Name, "id")
 
@@ -1437,7 +1438,7 @@ func TestOpenApiV3_ArrayRequestBody(t *testing.T) {
 		// Pointer-to-slice body fields must be documented as one-dimensional arrays.
 		type PointerBatchReq struct {
 			g.Meta `path:"/batch/chat-pointer" method:"post" mime:"application/json"`
-			Items  *[]ChatMessage `json:"items" in:"body"`
+			Items  *[]ChatMessage `json:"items" body:"*"`
 		}
 		var pointerHandler = func(ctx context.Context, req *PointerBatchReq) (res *BatchChatRes, err error) {
 			return
@@ -1452,7 +1453,7 @@ func TestOpenApiV3_ArrayRequestBody(t *testing.T) {
 		// matter the embedded struct is tagged or not: the field is scanned with the same
 		// recursive option as the HTTP handler registering.
 		type EmbeddedBase struct {
-			Items []ChatMessage `json:"items" in:"body"`
+			Items []ChatMessage `json:"items" body:"*"`
 		}
 		type EmbeddedTaggedReq struct {
 			g.Meta       `path:"/batch/chat-embedded-tagged" method:"post" mime:"application/json"`
@@ -1481,6 +1482,35 @@ func TestOpenApiV3_ArrayRequestBody(t *testing.T) {
 
 }
 
+// TestOpenApiV3_InvalidBodyTagValue ensures the body tag values other than the whole-body one
+// are rejected, which is the same rule as the handler registration.
+func TestOpenApiV3_InvalidBodyTagValue(t *testing.T) {
+	type InvalidValueReq struct {
+		Items []string `json:"items" body:"messages"`
+	}
+	type EmptyValueReq struct {
+		Items []string `json:"items" body:""`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var oai = goai.New()
+		err := oai.Add(goai.AddInput{
+			Path:   "/invalid-body-value",
+			Method: http.MethodPost,
+			Object: func(_ context.Context, _ *InvalidValueReq) (*struct{}, error) { return nil, nil },
+		})
+		t.AssertNE(err, nil)
+		t.Assert(strings.Contains(err.Error(), `invalid body tag value "messages"`), true)
+
+		err = oai.Add(goai.AddInput{
+			Path:   "/empty-body-value",
+			Method: http.MethodPost,
+			Object: func(_ context.Context, _ *EmptyValueReq) (*struct{}, error) { return nil, nil },
+		})
+		t.AssertNE(err, nil)
+		t.Assert(strings.Contains(err.Error(), `invalid body tag value ""`), true)
+	})
+}
+
 // TestOpenApiV3_ArrayRequestBody_Parameters preserves ordinary and explicit parameters alongside an array body.
 func TestOpenApiV3_ArrayRequestBody_Parameters(t *testing.T) {
 	// BatchReq combines inferred query and path parameters with explicitly located parameters.
@@ -1491,7 +1521,7 @@ func TestOpenApiV3_ArrayRequestBody_Parameters(t *testing.T) {
 		Query   string   `json:"query" in:"query"`
 		Header  string   `json:"header" in:"header"`
 		Cookie  string   `json:"cookie" in:"cookie"`
-		Items   []string `json:"items" in:"body"`
+		Items   []string `json:"items" body:"*"`
 		Ignored string   `json:"-"`
 	}
 	var handler = func(_ context.Context, _ *BatchReq) (*struct{}, error) {
@@ -1562,7 +1592,7 @@ func TestOpenApiV3_ArrayRequestBody_Required(t *testing.T) {
 		{
 			name: "optional",
 			handler: func(_ context.Context, _ *struct {
-				Items []string `in:"body"`
+				Items []string `body:"*"`
 			}) (*struct{}, error) {
 				return nil, nil
 			},
@@ -1570,7 +1600,7 @@ func TestOpenApiV3_ArrayRequestBody_Required(t *testing.T) {
 		{
 			name: "required",
 			handler: func(_ context.Context, _ *struct {
-				Items []string `in:"body" v:"required"`
+				Items []string `body:"*" v:"required"`
 			}) (*struct{}, error) {
 				return nil, nil
 			},
@@ -1579,7 +1609,7 @@ func TestOpenApiV3_ArrayRequestBody_Required(t *testing.T) {
 		{
 			name: "long_validation_tag",
 			handler: func(_ context.Context, _ *struct {
-				Items []string `in:"body" valid:"required"`
+				Items []string `body:"*" valid:"required"`
 			}) (*struct{}, error) {
 				return nil, nil
 			},
@@ -1588,7 +1618,7 @@ func TestOpenApiV3_ArrayRequestBody_Required(t *testing.T) {
 		{
 			name: "alias_and_message",
 			handler: func(_ context.Context, _ *struct {
-				Items []string `in:"body" v:"Messages@required#Please provide messages"`
+				Items []string `body:"*" v:"Messages@required#Please provide messages"`
 			}) (*struct{}, error) {
 				return nil, nil
 			},
@@ -1597,7 +1627,7 @@ func TestOpenApiV3_ArrayRequestBody_Required(t *testing.T) {
 		{
 			name: "combined_rules",
 			handler: func(_ context.Context, _ *struct {
-				Items []string `in:"body" v:"length:1,10|required#Invalid length|Please provide messages"`
+				Items []string `body:"*" v:"length:1,10|required#Invalid length|Please provide messages"`
 			}) (*struct{}, error) {
 				return nil, nil
 			},
@@ -1606,7 +1636,7 @@ func TestOpenApiV3_ArrayRequestBody_Required(t *testing.T) {
 		{
 			name: "required_if",
 			handler: func(_ context.Context, _ *struct {
-				Items []string `in:"body" v:"required-if:Enabled,true"`
+				Items []string `body:"*" v:"required-if:Enabled,true"`
 			}) (*struct{}, error) {
 				return nil, nil
 			},
@@ -1614,7 +1644,7 @@ func TestOpenApiV3_ArrayRequestBody_Required(t *testing.T) {
 		{
 			name: "required_with",
 			handler: func(_ context.Context, _ *struct {
-				Items []string `in:"body" v:"required-with:Enabled"`
+				Items []string `body:"*" v:"required-with:Enabled"`
 			}) (*struct{}, error) {
 				return nil, nil
 			},
@@ -1623,7 +1653,7 @@ func TestOpenApiV3_ArrayRequestBody_Required(t *testing.T) {
 			name: "meta_required",
 			handler: func(_ context.Context, _ *struct {
 				g.Meta `required:"true"`
-				Items  []string `in:"body"`
+				Items  []string `body:"*"`
 			}) (*struct{}, error) {
 				return nil, nil
 			},
@@ -1633,7 +1663,7 @@ func TestOpenApiV3_ArrayRequestBody_Required(t *testing.T) {
 			name: "meta_optional_field_required",
 			handler: func(_ context.Context, _ *struct {
 				g.Meta `required:"false"`
-				Items  []string `in:"body" v:"required"`
+				Items  []string `body:"*" v:"required"`
 			}) (*struct{}, error) {
 				return nil, nil
 			},
@@ -1659,7 +1689,7 @@ func TestOpenApiV3_ArrayRequestBody_Required(t *testing.T) {
 		var (
 			oai     = goai.New()
 			handler = func(_ context.Context, _ *struct {
-				Body any `in:"body"`
+				Body any `body:"*"`
 			}) (*struct{}, error) {
 				return nil, nil
 			}
@@ -1677,7 +1707,7 @@ func TestOpenApiV3_ArrayRequestBody_Required(t *testing.T) {
 func TestOpenApiV3_ArrayRequestBody_EmbeddedMetadata(t *testing.T) {
 	// BodyFields supplies the whole request body through an embedded field.
 	type BodyFields struct {
-		Items *[]string `json:"items" in:"body" v:"required" dc:"Batch items"`
+		Items *[]string `json:"items" body:"*" v:"required" dc:"Batch items"`
 	}
 	// EmbeddedReq retains ordinary query metadata alongside its embedded body.
 	type EmbeddedReq struct {

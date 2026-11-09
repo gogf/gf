@@ -154,9 +154,59 @@ func Test_Model_Cache_NoExpire(t *testing.T) {
 func Test_Model_Cache_Force(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	// Note: Force cache test is intentionally empty. CacheOption.Force never caches an
-	// empty result, see https://github.com/gogf/gf/issues/4891, so the scenario cannot
-	// be asserted until that is fixed.
+	gtest.C(t, func(t *gtest.T) {
+		missingOption := gdb.CacheOption{
+			Duration: time.Second * 10,
+			Name:     "test_cache_force_empty",
+			Force:    true,
+		}
+		one, err := db.Model(table).Cache(missingOption).Where("id", 100).One()
+		t.AssertNil(err)
+		t.Assert(one.IsEmpty(), true)
+
+		_, err = db.Exec(ctx, "INSERT INTO `"+table+"` (id, passport, password) VALUES (100, 'p', 'w')")
+		t.AssertNil(err)
+
+		one, err = db.Model(table).Cache(missingOption).Where("id", 100).One()
+		t.AssertNil(err)
+		t.Assert(one.IsEmpty(), true)
+
+		_, err = db.Exec(ctx, "INSERT INTO `"+table+"` (id, passport, password) VALUES (101, '', 'w')")
+		t.AssertNil(err)
+		valueOption := gdb.CacheOption{
+			Duration: time.Second * 10,
+			Name:     "test_cache_force_empty_value",
+			Force:    true,
+		}
+		value, err := db.Model(table).Cache(valueOption).Where("id", 101).Value("passport")
+		t.AssertNil(err)
+		t.Assert(value.String(), "")
+
+		_, err = db.Exec(ctx, "UPDATE `"+table+"` SET passport = 'updated' WHERE id = 101")
+		t.AssertNil(err)
+		value, err = db.Model(table).Cache(valueOption).Where("id", 101).Value("passport")
+		t.AssertNil(err)
+		t.Assert(value.String(), "")
+
+		_, err = db.Exec(ctx, "INSERT INTO `"+table+"` (id, passport, password) VALUES (102, '', 'w')")
+		t.AssertNil(err)
+		arrayOption := gdb.CacheOption{
+			Duration: time.Second * 10,
+			Name:     "test_cache_force_empty_array",
+			Force:    true,
+		}
+		values, err := db.Model(table).Cache(arrayOption).Where("id", 102).Array("passport")
+		t.AssertNil(err)
+		t.Assert(len(values), 1)
+		t.Assert(values[0].String(), "")
+
+		_, err = db.Exec(ctx, "UPDATE `"+table+"` SET passport = 'updated' WHERE id = 102")
+		t.AssertNil(err)
+		values, err = db.Model(table).Cache(arrayOption).Where("id", 102).Array("passport")
+		t.AssertNil(err)
+		t.Assert(len(values), 1)
+		t.Assert(values[0].String(), "")
+	})
 }
 
 // Test_Model_Cache_DisabledInTransaction tests cache is disabled in transactions
@@ -186,6 +236,42 @@ func Test_Model_Cache_DisabledInTransaction(t *testing.T) {
 			return nil
 		})
 		t.AssertNil(err)
+	})
+}
+
+// Test_Model_Cache_DisabledInCtxTransaction tests cache is disabled for db models
+// that run in a transaction carried by the context.
+// https://github.com/gogf/gf/issues/2049
+func Test_Model_Cache_DisabledInCtxTransaction(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		cacheOption := gdb.CacheOption{
+			Duration: time.Second * 10,
+			Name:     "test_ctx_tx_cache",
+		}
+		err := db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			one, err := db.Model(table).Ctx(ctx).Cache(cacheOption).Where("id", 1).One()
+			t.AssertNil(err)
+			t.Assert(one["passport"], "user_1")
+
+			_, err = tx.Model(table).Data(g.Map{"passport": "tx_update"}).Where("id", 1).Update()
+			t.AssertNil(err)
+
+			one, err = db.Model(table).Ctx(ctx).Cache(cacheOption).Where("id", 1).One()
+			t.AssertNil(err)
+			t.Assert(one["passport"], "tx_update")
+			return nil
+		})
+		t.AssertNil(err)
+
+		// Nothing read inside the transaction should have been cached.
+		_, err = db.Model(table).Data(g.Map{"passport": "after_tx"}).Where("id", 1).Update()
+		t.AssertNil(err)
+		one, err := db.Model(table).Ctx(ctx).Cache(cacheOption).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["passport"], "after_tx")
 	})
 }
 

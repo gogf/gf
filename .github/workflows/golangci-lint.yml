@@ -25,11 +25,24 @@ on:
       - fix/**
       - feat/**
 
+# Cancel in-progress runs for the same branch/PR.
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
 jobs:
   golang-ci:
     strategy:
       matrix:
-        go-version: [ "stable" ]
+        # Aligned with the `go` directive in go.mod, instead of "stable":
+        # 1. `go` directive in go.mod is the minimum Go version this project supports,
+        #    so lint runs on exactly that version to catch compatibility issues early.
+        # 2. Using "stable" would drift with every new Go release, and golangci-lint
+        #    bundles its own `go/types` which may fail to decode the export data of a
+        #    newer Go version, producing confusing errors such as
+        #    "export data version is greater than maximum supported version".
+        # 3. When bumping the `go` directive in go.mod, update this value as well.
+        go-version: [ "1.25" ]
 
     name: golang-ci-lint
     runs-on: ubuntu-latest
@@ -45,7 +58,9 @@ jobs:
       - name: golang-ci-lint
         uses: golangci/golangci-lint-action@v9
         with:
-          # Required: specify the golangci-lint version without the patch version to always use the latest patch.
+          # Pinned to a specific version to keep local and CI results identical.
+          # Upgrading it may introduce new checks, so upgrade deliberately.
+          version: v2.13.1
           only-new-issues: true
           skip-cache: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
