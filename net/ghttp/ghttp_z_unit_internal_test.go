@@ -801,3 +801,39 @@ func Test_Request_ParseBody_AutoDecodingBody(t *testing.T) {
 		t.Assert(r.bodyMap, map[string]any{})
 	})
 }
+
+// Test_IsJsonBody checks the JSON body shape detection.
+func Test_IsJsonBody(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for _, body := range []string{`{}`, `{"id":1}`, `{"a":{"b":1}}`} {
+			t.Assert(isJsonBody([]byte(body)), true)
+		}
+		for _, body := range []string{``, `{`, `}`, `[]`, `[1,2]`, `{"id":1`, `id:1}`} {
+			t.Assert(isJsonBody([]byte(body)), false)
+		}
+	})
+}
+
+// Test_IsXmlBody checks the XML body shape detection.
+func Test_IsXmlBody(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for _, body := range []string{
+			`<doc><id>1</id></doc>`,
+			`<?xml version="1.0"?><doc/>`,
+			`<?XML version="1.0"?><doc/>`,
+			`<a>`,
+		} {
+			t.Assert(isXmlBody([]byte(body)), true)
+		}
+		for _, body := range []string{
+			``,
+			`<`,
+			`>`,
+			`<?xm`,
+			`{"id":1}`,
+			`plain text`,
+		} {
+			t.Assert(isXmlBody([]byte(body)), false)
+		}
+	})
+}

@@ -41,6 +41,23 @@ var (
 	xmlHeaderBytes = []byte("<?xml")
 )
 
+// isJsonBody checks and returns whether the given body content looks like a JSON object.
+func isJsonBody(body []byte) bool {
+	return len(body) > 0 && body[0] == '{' && body[len(body)-1] == '}'
+}
+
+// isXmlBody checks and returns whether the given body content looks like XML, which either
+// starts with the xml header or is wrapped by a pair of angle brackets.
+func isXmlBody(body []byte) bool {
+	if len(body) == 0 {
+		return false
+	}
+	if len(body) >= len(xmlHeaderBytes) && bytes.EqualFold(body[:len(xmlHeaderBytes)], xmlHeaderBytes) {
+		return true
+	}
+	return body[0] == '<' && body[len(body)-1] == '>'
+}
+
 // Parse is the most commonly used function, which converts request parameters to struct or struct
 // slice. It also automatically validates the struct or every element of the struct slice according
 // to the validation tag of the struct.
@@ -292,7 +309,7 @@ func (r *Request) parseBody() {
 				r.SetError(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse JSON body failed"))
 				return
 			}
-		} else if r.isAutoDecodingBodyEnabled() && body[0] == '{' && body[len(body)-1] == '}' {
+		} else if r.isAutoDecodingBodyEnabled() && isJsonBody(body) {
 			// The body looks like JSON but the content type does not declare it, so the
 			// decoding failure falls back to the default parameters decoding below.
 			if err := json.UnmarshalUseNumber(body, &r.bodyMap); err == nil {
@@ -303,15 +320,12 @@ func (r *Request) parseBody() {
 		// XML format checks.
 		if gstr.ContainsI(contentType, contentTypeXmlSubstring) {
 			r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
-		} else if r.isAutoDecodingBodyEnabled() {
+		} else if r.isAutoDecodingBodyEnabled() && isXmlBody(body) {
 			// The body looks like XML but the content type does not declare it, so the
 			// decoding failure falls back to the default parameters decoding below.
-			if len(body) > 5 && bytes.EqualFold(body[:5], xmlHeaderBytes) ||
-				body[0] == '<' && body[len(body)-1] == '>' {
-				if m, err := gxml.DecodeWithoutRoot(body); err == nil {
-					r.bodyMap = m
-					return
-				}
+			if m, err := gxml.DecodeWithoutRoot(body); err == nil {
+				r.bodyMap = m
+				return
 			}
 		}
 		// Default parameters decoding.
