@@ -96,7 +96,7 @@ func GetServer(name ...any) *Server {
 	if len(name) > 0 && name[0] != "" {
 		serverName = gconv.String(name[0])
 	}
-	v := serverMapping.GetOrSetFuncLock(serverName, func() any {
+	return serverMapping.GetOrSetFuncLock(serverName, func() *Server {
 		s := &Server{
 			instance:         serverName,
 			plugins:          make([]Plugin, 0),
@@ -118,7 +118,6 @@ func GetServer(name ...any) *Server {
 		s.Use(internalMiddlewareServerTracing)
 		return s
 	})
-	return v.(*Server)
 }
 
 // Start starts listening on configured port.
@@ -257,7 +256,7 @@ func (s *Server) Start() error {
 				`pid[%d]: notice parent server graceful shuttingdown, ppid: %d`,
 				gproc.Pid(), gproc.PPid(),
 			)
-			if err := gproc.Send(gproc.PPid(), []byte("exit"), adminGProcCommGroup); err != nil {
+			if err := gproc.Send(gproc.PPid(), []byte(gprocMessageExit), adminGProcCommGroup); err != nil {
 				intlog.Errorf(ctx, `server error in process communication: %+v`, err)
 			}
 		})
@@ -477,10 +476,9 @@ func Wait() {
 	<-allShutdownChan
 
 	// Remove plugins.
-	serverMapping.Iterator(func(k string, v any) bool {
-		s := v.(*Server)
-		if len(s.plugins) > 0 {
-			for _, p := range s.plugins {
+	serverMapping.Iterator(func(k string, v *Server) bool {
+		if len(v.plugins) > 0 {
+			for _, p := range v.plugins {
 				intlog.Printf(ctx, `remove plugin: %s`, p.Name())
 				if err := p.Remove(); err != nil {
 					intlog.Errorf(ctx, `%+v`, err)
@@ -510,7 +508,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 		}
 		httpsEnabled = len(s.config.HTTPSAddr) > 0
 		var array []string
-		if v, ok := fdMap["https"]; ok && len(v) > 0 {
+		if v, ok := fdMap[schemeHttps]; ok && len(v) > 0 {
 			array = strings.Split(v, ",")
 		} else {
 			array = strings.Split(s.config.HTTPSAddr, ",")
@@ -545,7 +543,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 		s.config.Address = defaultHttpAddr
 	}
 	var array []string
-	if v, ok := fdMap["http"]; ok && len(v) > 0 {
+	if v, ok := fdMap[schemeHttp]; ok && len(v) > 0 {
 		array = gstr.SplitAndTrim(v, ",")
 	} else {
 		array = gstr.SplitAndTrim(s.config.Address, ",")
@@ -629,24 +627,24 @@ func (s *Server) Status() ServerStatus {
 }
 
 // getListenerFdMap retrieves and returns the socket file descriptors.
-// The key of the returned map is "http" and "https".
+// The key of the returned map is schemeHttp or schemeHttps.
 func (s *Server) getListenerFdMap() map[string]string {
 	m := map[string]string{
-		"https": "",
-		"http":  "",
+		schemeHttps: "",
+		schemeHttp:  "",
 	}
 	for _, v := range s.servers {
 		str := v.GetAddress() + "#" + gconv.String(v.Fd()) + ","
 		if v.IsHttps() {
-			if len(m["https"]) > 0 {
-				m["https"] += ","
+			if len(m[schemeHttps]) > 0 {
+				m[schemeHttps] += ","
 			}
-			m["https"] += str
+			m[schemeHttps] += str
 		} else {
-			if len(m["http"]) > 0 {
-				m["http"] += ","
+			if len(m[schemeHttp]) > 0 {
+				m[schemeHttp] += ","
 			}
-			m["http"] += str
+			m[schemeHttp] += str
 		}
 	}
 	return m

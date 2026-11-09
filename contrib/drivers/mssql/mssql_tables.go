@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	tablesSqlTmp = `SELECT NAME FROM SYSOBJECTS WHERE XTYPE='U' AND STATUS >= 0 ORDER BY NAME`
+	tablesSqlTmp = `SELECT name FROM sys.objects WHERE type='U' AND is_ms_shipped = 0 ORDER BY name`
 )
 
 // Tables retrieves and returns the tables of current schema.

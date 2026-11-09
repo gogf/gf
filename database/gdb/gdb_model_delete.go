@@ -31,14 +31,12 @@ func (m *Model) Delete(where ...any) (result sql.Result, err error) {
 	var (
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(ctx, false, false)
 		conditionStr                                  = conditionWhere + conditionExtra
-		fieldNameDelete, fieldTypeDelete              = m.softTimeMaintainer().GetFieldNameAndTypeForDelete(
-			ctx, "", m.tablesInit,
-		)
+		fieldNameDelete, fieldTypeDelete              = m.softTimeMaintainer().GetFieldInfo(ctx, "", m.tablesInit, SoftTimeFieldDelete)
 	)
 	if m.unscoped {
 		fieldNameDelete = ""
 	}
-	if !gstr.ContainsI(conditionStr, " WHERE ") || (fieldNameDelete != "" && !gstr.ContainsI(conditionStr, " AND ")) {
+	if !gstr.ContainsI(conditionStr, sqlWhere) || (fieldNameDelete != "" && !gstr.ContainsI(conditionStr, sqlAnd)) {
 		intlog.Printf(
 			ctx,
 			`sql condition string "%s" has no WHERE for DELETE operation, fieldNameDelete: %s`,
@@ -52,7 +50,7 @@ func (m *Model) Delete(where ...any) (result sql.Result, err error) {
 
 	// Soft deleting.
 	if fieldNameDelete != "" {
-		dataHolder, dataValue := m.softTimeMaintainer().GetDataByFieldNameAndTypeForDelete(
+		dataHolder, dataValue := m.softTimeMaintainer().GetDeleteData(
 			ctx, "", fieldNameDelete, fieldTypeDelete,
 		)
 		in := &HookUpdateInput{

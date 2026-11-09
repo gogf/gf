@@ -35,6 +35,7 @@ func init() {
 		Name:  "default",
 		Type:  "clickhouse",
 		Debug: false,
+		Extra: "mutations_sync=1",
 	}
 	var err error
 	db, err = gdb.New(node)

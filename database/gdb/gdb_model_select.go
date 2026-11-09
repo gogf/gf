@@ -52,9 +52,19 @@ func (m *Model) AllAndCount(useFieldForCount bool) (result Result, totalCount in
 	// Clone the model for counting
 	countModel := m.Clone()
 
-	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
-	if !useFieldForCount {
-		countModel.fields = []any{Raw("1")}
+	// Decide how to build the COUNT() expression:
+	// - If caller explicitly wants to use the single field expression for counting,
+	//   honor it (e.g. Fields("DISTINCT col") with useFieldForCount = true).
+	// - Otherwise, clear fields to let Count() use its default COUNT(1),
+	//   avoiding invalid COUNT(field1, field2, ...) with multiple fields,
+	//   or incorrect COUNT(DISTINCT 1) when Distinct() is set.
+	if useFieldForCount && len(m.fields) == 1 {
+		countModel.fields = m.fields
+	} else {
+		countModel.fields = nil
+	}
+	if len(m.pageCacheOption) > 0 {
+		countModel = countModel.Cache(m.pageCacheOption[0])
 	}
 
 	// Get the total count of records
@@ -68,8 +78,13 @@ func (m *Model) AllAndCount(useFieldForCount bool) (result Result, totalCount in
 		return
 	}
 
+	resultModel := m.Clone()
+	if len(m.pageCacheOption) > 1 {
+		resultModel = resultModel.Cache(m.pageCacheOption[1])
+	}
+
 	// Retrieve all records
-	result, err = m.doGetAll(m.GetCtx(), SelectTypeDefault, false)
+	result, err = resultModel.doGetAll(m.GetCtx(), SelectTypeDefault, false)
 	return
 }
 
@@ -333,11 +348,20 @@ func (m *Model) Scan(pointer any, where ...any) error {
 func (m *Model) ScanAndCount(pointer any, totalCount *int, useFieldForCount bool) (err error) {
 	// support Fields with *, example: .Fields("a.*, b.name"). Count sql is select count(1) from xxx
 	countModel := m.Clone()
-	// If useFieldForCount is false, set the fields to a constant value of 1 for counting
-	if !useFieldForCount {
-		countModel.fields = []any{Raw("1")}
+	// Decide how to build the COUNT() expression:
+	// - If caller explicitly wants to use the single field expression for counting,
+	//   honor it (e.g. Fields("DISTINCT col") with useFieldForCount = true).
+	// - Otherwise, clear fields to let Count() use its default COUNT(1),
+	//   avoiding invalid COUNT(field1, field2, ...) with multiple fields,
+	//   or incorrect COUNT(DISTINCT 1) when Distinct() is set.
+	if useFieldForCount && len(m.fields) == 1 {
+		countModel.fields = m.fields
+	} else {
+		countModel.fields = nil
 	}
-
+	if len(m.pageCacheOption) > 0 {
+		countModel = countModel.Cache(m.pageCacheOption[0])
+	}
 	// Get the total count of records
 	*totalCount, err = countModel.Count()
 	if err != nil {
@@ -348,7 +372,11 @@ func (m *Model) ScanAndCount(pointer any, totalCount *int, useFieldForCount bool
 	if *totalCount == 0 {
 		return
 	}
-	err = m.Scan(pointer)
+	scanModel := m.Clone()
+	if len(m.pageCacheOption) > 1 {
+		scanModel = scanModel.Cache(m.pageCacheOption[1])
+	}
+	err = scanModel.Scan(pointer)
 	return
 }
 
@@ -382,6 +410,16 @@ func (m *Model) ScanList(structSlicePointer any, bindToAttrName string, relation
 		relationFields = relationAttrNameAndFields[1]
 	case 1:
 		relationFields = relationAttrNameAndFields[0]
+	}
+	return m.doScanListWithResult(result, structSlicePointer, bindToAttrName, relationAttrName, relationFields)
+}
+
+func (m *Model) doScanListWithResult(
+	result Result, structSlicePointer any, bindToAttrName, relationAttrName, relationFields string,
+) error {
+	out, err := checkGetSliceElementInfoForScanList(structSlicePointer, bindToAttrName)
+	if err != nil {
+		return err
 	}
 	return doScanList(doScanListInput{
 		Model:              m,
@@ -601,12 +639,22 @@ func (m *Model) UnionAll(unions ...*Model) *Model {
 // The parameter `limit` can be either one or two number, if passed two number is passed,
 // it then sets "LIMIT limit[0],limit[1]" statement for the model, or else it sets "LIMIT limit[0]"
 // statement.
+// Note: Negative values are treated as zero.
 func (m *Model) Limit(limit ...int) *Model {
 	model := m.getModel()
 	switch len(limit) {
 	case 1:
+		if limit[0] < 0 {
+			limit[0] = 0
+		}
 		model.limit = limit[0]
 	case 2:
+		if limit[0] < 0 {
+			limit[0] = 0
+		}
+		if limit[1] < 0 {
+			limit[1] = 0
+		}
 		model.start = limit[0]
 		model.limit = limit[1]
 	}
@@ -615,8 +663,12 @@ func (m *Model) Limit(limit ...int) *Model {
 
 // Offset sets the "OFFSET" statement for the model.
 // It only makes sense for some databases like SQLServer, PostgreSQL, etc.
+// Note: Negative values are treated as zero.
 func (m *Model) Offset(offset int) *Model {
 	model := m.getModel()
+	if offset < 0 {
+		offset = 0
+	}
 	model.offset = offset
 	return model
 }
@@ -631,10 +683,14 @@ func (m *Model) Distinct() *Model {
 // Page sets the paging number for the model.
 // The parameter `page` is started from 1 for paging.
 // Note that, it differs that the Limit function starts from 0 for "LIMIT" statement.
+// Note: Negative limit values are treated as zero.
 func (m *Model) Page(page, limit int) *Model {
 	model := m.getModel()
 	if page <= 0 {
 		page = 1
+	}
+	if limit < 0 {
+		limit = 0
 	}
 	model.start = (page - 1) * limit
 	model.limit = limit
@@ -710,8 +766,12 @@ func (m *Model) getFormattedSqlAndArgs(
 		}
 		// Raw SQL Model.
 		if m.rawSql != "" {
-			sqlWithHolder = fmt.Sprintf("SELECT %s FROM (%s) AS T", queryFields, m.rawSql)
-			return sqlWithHolder, nil
+			conditionWhere, conditionExtra, conditionArgs := m.formatCondition(ctx, false, true)
+			sqlWithHolder = fmt.Sprintf(
+				"SELECT %s FROM (%s%s) AS T",
+				queryFields, m.rawSql, conditionWhere+conditionExtra,
+			)
+			return sqlWithHolder, conditionArgs
 		}
 		conditionWhere, conditionExtra, conditionArgs := m.formatCondition(ctx, false, true)
 		sqlWithHolder = fmt.Sprintf("SELECT %s FROM %s%s", queryFields, m.tables, conditionWhere+conditionExtra)
@@ -749,108 +809,14 @@ func (m *Model) getHolderAndArgsAsSubModel(ctx context.Context) (holder string, 
 	return
 }
 
-func (m *Model) parseTableAlias(tableInitStr string) (alias string, tableName string) {
-	// Split by space to separate table from alias
-	// Format can be: `table` alias or `table` AS `alias` or just table alias
-	parts := gstr.SplitAndTrim(tableInitStr, " ")
-	charL, charR := m.db.GetCore().GetChars()
-
-	if len(parts) >= 2 {
-		// Check if second part is "AS" keyword
-		if gstr.Equal(parts[1], "AS") && len(parts) >= 3 {
-			// Format: table AS alias
-			alias = gstr.Trim(parts[2], charL+charR)
-			tableName = gstr.Trim(parts[0], charL+charR)
-		} else if !gstr.Equal(parts[1], "AS") {
-			// Format: table alias (without AS keyword)
-			alias = gstr.Trim(parts[1], charL+charR)
-			tableName = gstr.Trim(parts[0], charL+charR)
-		} else {
-			// Only table name with "AS" keyword but no alias
-			tableName = gstr.Trim(parts[0], charL+charR)
-		}
-	} else if len(parts) == 1 {
-		// No alias, use table name directly
-		tableName = gstr.Trim(parts[0], charL+charR)
-	}
-
-	return alias, tableName
-}
-
 func (m *Model) getAutoPrefix() string {
 	autoPrefix := ""
 	if gstr.Contains(m.tables, " JOIN ") {
-		// Try to get alias from tablesInit
-		alias, _ := m.parseTableAlias(m.tablesInit)
-		if alias != "" {
-			autoPrefix = m.QuoteWord(alias)
-		}
-
-		// Fallback to table name if alias not found
-		if autoPrefix == "" {
-			autoPrefix = m.QuoteWord(
-				m.db.GetCore().guessPrimaryTableName(m.tablesInit),
-			)
-		}
+		autoPrefix = m.QuoteWord(
+			m.db.GetCore().guessPrimaryTableName(m.tablesInit),
+		)
 	}
 	return autoPrefix
-}
-
-// getPrefixByField attempts to find the correct table prefix for a given field name
-// by checking which table in the JOIN contains this field. It returns:
-// - The quoted table prefix/alias if the field belongs to a specific joined table
-// - An empty string if the field cannot be determined or belongs to multiple tables
-//
-// This function searches through all tables involved in the query (main table and joined tables)
-// and checks their schema to find which table contains the specified field.
-func (m *Model) getPrefixByField(fieldName string) string {
-	// If there's no JOIN, no need to add prefix
-	if !gstr.Contains(m.tables, " JOIN ") {
-		return ""
-	}
-
-	// Get all table names and aliases involved in the query
-	var tables = make(map[string]string) // map[alias/tableName]realTableName
-
-	// Add main table
-	alias, tableName := m.parseTableAlias(m.tablesInit)
-	if alias != "" {
-		tables[alias] = tableName
-	} else if tableName != "" {
-		tables[tableName] = tableName
-	}
-
-	// Add joined tables from tableAliasMap
-	for alias, tableName := range m.tableAliasMap {
-		tables[alias] = tableName
-	}
-
-	// Check which table contains this field
-	var matchedPrefix string
-	var matchCount int
-
-	for aliasOrTable, realTable := range tables {
-		tableFields, err := m.TableFields(realTable)
-		if err != nil {
-			// If we can't get table fields, skip this table
-			continue
-		}
-
-		// Check if this table contains the field
-		if _, exists := tableFields[fieldName]; exists {
-			matchedPrefix = aliasOrTable
-			matchCount++
-		}
-	}
-
-	// Only return prefix if field uniquely belongs to one table
-	if matchCount == 1 {
-		return m.QuoteWord(matchedPrefix)
-	}
-
-	// If field exists in multiple tables or not found, return empty
-	// to avoid ambiguity - user should specify the table explicitly
-	return ""
 }
 
 func (m *Model) getFieldsAsStr() string {
@@ -897,6 +863,9 @@ func (m *Model) getFieldsFiltered() string {
 			field := gconv.String(v)
 			fieldsArray = append(fieldsArray, field[gstr.PosR(field, "-")+1:])
 		}
+	} else if len(m.tableRefs) > 0 {
+		// Filter fields of all joined tables with fieldEx.
+		fieldsArray = m.getJoinedTableFields(fieldsExSet)
 	} else {
 		if gstr.Contains(m.tables, " ") {
 			panic("function FieldsEx supports only single table operations")
@@ -927,6 +896,83 @@ func (m *Model) getFieldsFiltered() string {
 	return newFields
 }
 
+// getJoinedTableFields returns the prefixed fields of all tables in join statement in sequence.
+// Fields without prefix in `fieldsExSet` are excluded from the main table, just like FieldsEx.
+// It uses "prefix.*" for sub-query whose fields cannot be retrieved.
+func (m *Model) getJoinedTableFields(fieldsExSet *gset.StrSet) []string {
+	fieldsArray := make([]string, 0, 8)
+	for i, ref := range m.tableRefs {
+		if ref.prefix == "" {
+			panic("function FieldsEx supports only single table operations")
+		}
+		if ref.table == "" {
+			fieldsArray = append(fieldsArray, ref.prefix+".*")
+			continue
+		}
+		tableFields, err := m.TableFields(ref.table)
+		if err != nil {
+			panic(err)
+		}
+		if len(tableFields) == 0 {
+			panic(fmt.Sprintf(`empty table fields for table %q`, ref.table))
+		}
+		names := make([]string, len(tableFields))
+		for k, v := range tableFields {
+			names[v.Index] = k
+		}
+		excluded := m.getJoinedTableFieldsEx(ref, i == 0, fieldsExSet)
+		for _, name := range names {
+			if excluded.Contains(name) {
+				continue
+			}
+			fieldsArray = append(fieldsArray, ref.prefix+"."+m.QuoteWord(name))
+		}
+	}
+	return fieldsArray
+}
+
+// getJoinedTableFieldsEx returns the excluded field names of table `ref` from `fieldsExSet`,
+// folded like the table fields. The prefix and the field of each excluded item are matched
+// separately, so that "user.id", "`gf_user`.`id`" and "db.items.secret" are all recognized.
+// Fields without prefix are excluded only if `isMain` is true.
+func (m *Model) getJoinedTableFieldsEx(ref tableRef, isMain bool, fieldsExSet *gset.StrSet) *gset.StrSet {
+	var (
+		excluded  = gset.NewStrSet()
+		refPrefix = m.unquoteIdentifier(ref.prefix)
+	)
+	fieldsExSet.Iterator(func(v string) bool {
+		var (
+			pos   = gstr.PosR(v, ".")
+			field = m.unquoteIdentifier(v[pos+1:])
+		)
+		if pos < 0 {
+			if !isMain {
+				return true
+			}
+		} else {
+			prefix := v[:pos]
+			// Table name without alias may be given without table prefix.
+			if m.unquoteIdentifier(prefix) != refPrefix &&
+				(ref.alias || m.unquoteIdentifier(m.db.GetCore().QuotePrefixTableName(prefix)) != refPrefix) {
+				return true
+			}
+		}
+		excluded.Add(field, m.db.FoldIdentifier(field))
+		return true
+	})
+	return excluded
+}
+
+// unquoteIdentifier removes the security chars from each part of the dot-separated identifier `s`.
+func (m *Model) unquoteIdentifier(s string) string {
+	charL, charR := m.db.GetChars()
+	array := gstr.SplitAndTrim(s, ".")
+	for i, v := range array {
+		array[i] = gstr.Trim(v, charL+charR)
+	}
+	return gstr.Join(array, ".")
+}
+
 // formatCondition formats where arguments of the model and returns a new condition sql and its arguments.
 // Note that this function does not change any attribute value of the `m`.
 //
@@ -941,12 +987,12 @@ func (m *Model) formatCondition(
 	}
 	// WHERE
 	conditionWhere, conditionArgs = m.whereBuilder.Build()
-	softDeletingCondition := m.softTimeMaintainer().GetWhereConditionForDelete(ctx)
+	softDeletingCondition := m.softTimeMaintainer().GetDeleteCondition(ctx)
 	if m.rawSql != "" && conditionWhere != "" {
-		if gstr.ContainsI(m.rawSql, " WHERE ") {
-			conditionWhere = " AND " + conditionWhere
+		if gstr.ContainsI(m.rawSql, sqlWhere) {
+			conditionWhere = sqlAnd + conditionWhere
 		} else {
-			conditionWhere = " WHERE " + conditionWhere
+			conditionWhere = sqlWhere + conditionWhere
 		}
 	} else if !m.unscoped && softDeletingCondition != "" {
 		if conditionWhere == "" {
@@ -956,7 +1002,7 @@ func (m *Model) formatCondition(
 		}
 	} else {
 		if conditionWhere != "" {
-			conditionWhere = " WHERE " + conditionWhere
+			conditionWhere = sqlWhere + conditionWhere
 		}
 	}
 	// HAVING.

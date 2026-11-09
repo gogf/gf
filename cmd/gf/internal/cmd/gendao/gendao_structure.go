@@ -98,7 +98,6 @@ func generateStructFieldDefinition(
 		err              error
 		localTypeName    gdb.LocalType
 		localTypeNameStr string
-		jsonTag          = gstr.CaseConvert(field.Name, gstr.CaseTypeMatch(in.JsonCase))
 	)
 
 	if in.TypeMapping != nil && len(in.TypeMapping) > 0 {
@@ -156,10 +155,13 @@ func generateStructFieldDefinition(
 		"    #" + formatFieldName(newFiledName, FieldNameCaseCamel),
 		" #" + localTypeNameStr,
 	}
+
+	jsonTag := gstr.CaseConvert(newFiledName, gstr.CaseTypeMatch(in.JsonCase))
 	attrLines = append(attrLines, fmt.Sprintf(` #%sjson:"%s"`, tagKey, jsonTag))
 	// orm tag
-	if !in.IsDo {
-		// entity
+	if !in.IsDo || newFiledName != field.Name {
+		// entity, or do whose attribute name no longer matches the table field
+		// after removing the field prefix.
 		attrLines = append(attrLines, fmt.Sprintf(` #orm:"%s"`, field.Name))
 	}
 	attrLines = append(attrLines, fmt.Sprintf(` #description:"%s"%s`, descriptionTag, tagKey))
@@ -205,6 +207,28 @@ func formatFieldName(fieldName string, nameCase FieldNameCase) string {
 	default:
 		return ""
 	}
+}
+
+// formatFileName formats and returns a new file name for generated source files.
+func formatFileName(fileName, nameCase string) string {
+	if nameCase == "" {
+		nameCase = string(gstr.Snake)
+	}
+	fileName = normalizeNameForCaseConvert(fileName)
+	fileName = gstr.Trim(gstr.CaseConvert(fileName, gstr.CaseTypeMatch(nameCase)), "-_.")
+	if len(fileName) > 5 && fileName[len(fileName)-5:] == "_test" {
+		// Add suffix to avoid the table name which contains "_test",
+		// which would make the go file a testing file.
+		fileName += "_table"
+	}
+	return fileName
+}
+
+func normalizeNameForCaseConvert(name string) string {
+	if isAllUpper(name) {
+		return strings.ToLower(name)
+	}
+	return name
 }
 
 // isAllUpper checks and returns whether given `fieldName` all letters are upper case.

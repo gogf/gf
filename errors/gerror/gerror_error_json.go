@@ -10,8 +10,8 @@ import (
 	"encoding/json"
 )
 
-// MarshalJSON implements the interface MarshalJSON for json.Marshal.
-// Note that do not use pointer as its receiver here.
-func (err Error) MarshalJSON() ([]byte, error) {
+// MarshalJSON implements the interface json.Marshaler for Error.
+// It serializes the error using its string representation.
+func (err *Error) MarshalJSON() ([]byte, error) {
 	return json.Marshal(err.Error())
 }

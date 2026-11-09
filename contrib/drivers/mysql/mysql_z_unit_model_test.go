@@ -2944,7 +2944,9 @@ func Test_Model_Raw(t *testing.T) {
 			Limit(2).
 			Count()
 		t.AssertNil(err)
-		t.Assert(count, int64(6))
+		// Raw SQL selects {1,5,7,8,9,10}, Where filters to id < 8 AND id IN {1,2,3,4,5,6,7}
+		// Result: {1,5,7} = 3 records
+		t.Assert(count, int64(3))
 	})
 }
 

@@ -33,12 +33,18 @@ type cRun struct {
 	g.Meta `name:"run" usage:"{cRunUsage}" brief:"{cRunBrief}" eg:"{cRunEg}" dc:"{cRunDc}"`
 }
 
+type watchPath struct {
+	Path      string
+	Recursive bool
+}
+
 type cRunApp struct {
-	File       string   // Go run file name.
-	Path       string   // Directory storing built binary.
-	Options    string   // Extra "go run" options.
-	Args       string   // Custom arguments.
-	WatchPaths []string // Watch paths for live reload.
+	File           string   // Go run file name.
+	Path           string   // Directory storing built binary.
+	Options        string   // Extra "go run" options.
+	Args           string   // Custom arguments.
+	WatchPaths     []string // Watch paths for live reload.
+	IgnorePatterns []string // Custom ignore patterns.
 }
 
 const (
@@ -48,43 +54,47 @@ const (
 gf run main.go
 gf run main.go --args "server -p 8080"
 gf run main.go -mod=vendor
-gf run main.go -w "manifest/config/*.yaml"
+gf run main.go -w internal,api
+gf run main.go -i ".git,node_modules"
 `
 	cRunDc = `
 The "run" command is used for running go codes with hot-compiled-like feature,
 which compiles and runs the go codes asynchronously when codes change.
 `
-	cRunFileBrief       = `building file path.`
-	cRunPathBrief       = `output directory path for built binary file. it's "./" in default`
-	cRunExtraBrief      = `the same options as "go run"/"go build" except some options as follows defined`
-	cRunArgsBrief       = `custom arguments for your process`
-	cRunWatchPathsBrief = `watch additional paths for live reload, separated by ",". i.e. "manifest/config/*.yaml"`
+	cRunFileBrief          = `building file path.`
+	cRunPathBrief          = `output directory path for built binary file. it's "./" in default`
+	cRunExtraBrief         = `the same options as "go run"/"go build" except some options as follows defined`
+	cRunArgsBrief          = `custom arguments for your process`
+	cRunWatchPathsBrief    = `watch additional paths for live reload, separated by ",". i.e. "internal,api"`
+	cRunIgnorePatternBrief = `custom ignore patterns for watch, separated by ",". i.e. ".git,node_modules". default patterns: node_modules, vendor, .*, _*. Glob syntax: "*" matches any chars, "?" matches single char, "[abc]" matches char class. Note: patterns match directory names only, not paths`
 )
 
 var process *gproc.Process
 
 func init() {
 	gtag.Sets(g.MapStrStr{
-		`cRunUsage`:           cRunUsage,
-		`cRunBrief`:           cRunBrief,
-		`cRunEg`:              cRunEg,
-		`cRunDc`:              cRunDc,
-		`cRunFileBrief`:       cRunFileBrief,
-		`cRunPathBrief`:       cRunPathBrief,
-		`cRunExtraBrief`:      cRunExtraBrief,
-		`cRunArgsBrief`:       cRunArgsBrief,
-		`cRunWatchPathsBrief`: cRunWatchPathsBrief,
+		`cRunUsage`:              cRunUsage,
+		`cRunBrief`:              cRunBrief,
+		`cRunEg`:                 cRunEg,
+		`cRunDc`:                 cRunDc,
+		`cRunFileBrief`:          cRunFileBrief,
+		`cRunPathBrief`:          cRunPathBrief,
+		`cRunExtraBrief`:         cRunExtraBrief,
+		`cRunArgsBrief`:          cRunArgsBrief,
+		`cRunWatchPathsBrief`:    cRunWatchPathsBrief,
+		`cRunIgnorePatternBrief`: cRunIgnorePatternBrief,
 	})
 }
 
 type (
 	cRunInput struct {
-		g.Meta     `name:"run" config:"gfcli.run"`
-		File       string   `name:"FILE"       arg:"true" brief:"{cRunFileBrief}" v:"required"`
-		Path       string   `name:"path"       short:"p"  brief:"{cRunPathBrief}" d:"./"`
-		Extra      string   `name:"extra"      short:"e"  brief:"{cRunExtraBrief}"`
-		Args       string   `name:"args"       short:"a"  brief:"{cRunArgsBrief}"`
-		WatchPaths []string `name:"watchPaths" short:"w"  brief:"{cRunWatchPathsBrief}"`
+		g.Meta         `name:"run" config:"gfcli.run"`
+		File           string   `name:"FILE"           arg:"true" brief:"{cRunFileBrief}" v:"required"`
+		Path           string   `name:"path"           short:"p"  brief:"{cRunPathBrief}" d:"./"`
+		Extra          string   `name:"extra"          short:"e"  brief:"{cRunExtraBrief}"`
+		Args           string   `name:"args"           short:"a"  brief:"{cRunArgsBrief}"`
+		WatchPaths     []string `name:"watchPaths"     short:"w"  brief:"{cRunWatchPathsBrief}"`
+		IgnorePatterns []string `name:"ignorePatterns" short:"i"  brief:"{cRunIgnorePatternBrief}"`
 	}
 	cRunOutput struct{}
 )
@@ -101,17 +111,25 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		mlog.Fatalf(`command "go" not found in your environment, please install golang first to proceed this command`)
 	}
 
-	if len(in.WatchPaths) == 1 {
-		in.WatchPaths = strings.Split(in.WatchPaths[0], ",")
+	// Parse comma-separated values in WatchPaths
+	if len(in.WatchPaths) > 0 {
+		in.WatchPaths = parseCommaSeparatedArgs(in.WatchPaths)
 		mlog.Printf("watchPaths: %v", in.WatchPaths)
 	}
 
+	// Parse comma-separated values in IgnorePatterns
+	if len(in.IgnorePatterns) > 0 {
+		in.IgnorePatterns = parseCommaSeparatedArgs(in.IgnorePatterns)
+		mlog.Printf("ignorePatterns: %v", in.IgnorePatterns)
+	}
+
 	app := &cRunApp{
-		File:       in.File,
-		Path:       filepath.FromSlash(in.Path),
-		Options:    in.Extra,
-		Args:       in.Args,
-		WatchPaths: in.WatchPaths,
+		File:           in.File,
+		Path:           filepath.FromSlash(in.Path),
+		Options:        in.Extra,
+		Args:           in.Args,
+		WatchPaths:     in.WatchPaths,
+		IgnorePatterns: in.IgnorePatterns,
 	}
 	dirty := gtype.NewBool()
 
@@ -121,6 +139,7 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 			return
 		}
 
+		// Check if the file extension is 'go'.
 		if gfile.ExtName(event.Path) != "go" {
 			return
 		}
@@ -138,15 +157,11 @@ func (c cRun) Index(ctx context.Context, in cRunInput) (out *cRunOutput, err err
 		})
 	}
 
-	if len(app.WatchPaths) > 0 {
-		for _, path := range app.WatchPaths {
-			_, err = gfsnotify.Add(gfile.RealPath(path), callbackFunc)
-			if err != nil {
-				mlog.Fatal(err)
-			}
-		}
-	} else {
-		_, err = gfsnotify.Add(gfile.RealPath("."), callbackFunc)
+	// Get directories to watch (recursive or non-recursive monitoring).
+	watchPaths := app.getWatchPaths()
+	for _, wp := range watchPaths {
+		option := gfsnotify.WatchOption{NoRecursive: !wp.Recursive}
+		_, err = gfsnotify.Add(wp.Path, callbackFunc, option)
 		if err != nil {
 			mlog.Fatal(err)
 		}
@@ -249,35 +264,181 @@ func (app *cRunApp) End(ctx context.Context, sig os.Signal, outputPath string) {
 }
 
 func (app *cRunApp) genOutputPath() (outputPath string) {
-	var renamePath string
 	outputPath = gfile.Join(app.Path, gfile.Name(app.File))
 	if runtime.GOOS == "windows" {
 		outputPath += ".exe"
 		if gfile.Exists(outputPath) {
-			renamePath = outputPath + "~"
+			renamePath := outputPath + "~"
 			if err := gfile.Rename(outputPath, renamePath); err != nil {
 				mlog.Print(err)
 			}
+			// Clean up the renamed old binary file
+			defer func() {
+				if gfile.Exists(renamePath) {
+					_ = gfile.Remove(renamePath)
+				}
+			}()
 		}
 	}
 	return filepath.FromSlash(outputPath)
 }
 
-func matchWatchPaths(watchPaths []string, eventPath string) bool {
-	for _, path := range watchPaths {
-		absPath, err := filepath.Abs(path)
-		if err != nil {
-			mlog.Printf("match watchPath '%s' error: %s", path, err.Error())
+// getWatchPaths uses DFS to find the minimal set of directories to watch.
+// Rule: if a directory and all its descendants have no ignored subdirectories, watch it;
+// otherwise, recurse into valid children and watch the current directory non-recursively.
+func (app *cRunApp) getWatchPaths() []watchPath {
+	roots := []string{"."}
+	if len(app.WatchPaths) > 0 {
+		roots = app.WatchPaths
+	}
+
+	// Use custom ignore patterns if provided, otherwise use default.
+	ignorePatterns := defaultIgnorePatterns
+	if len(app.IgnorePatterns) > 0 {
+		ignorePatterns = app.IgnorePatterns
+	}
+
+	var watchPaths []watchPath
+
+	for _, root := range roots {
+		absRoot := gfile.RealPath(root)
+		if absRoot == "" {
+			mlog.Printf("watch path '%s' not found, skipping", root)
 			continue
 		}
-		matched, err := filepath.Match(absPath, eventPath)
-		if err != nil {
-			mlog.Printf("match watchPath '%s' error: %s", path, err.Error())
+		if isIgnoredDirName(absRoot, ignorePatterns) {
 			continue
 		}
-		if matched {
+		app.collectWatchPaths(absRoot, ignorePatterns, &watchPaths)
+	}
+
+	if len(watchPaths) == 0 {
+		mlog.Printf("no directories to watch, using current directory")
+		if absCur := gfile.RealPath("."); absCur != "" {
+			return []watchPath{{Path: absCur, Recursive: true}}
+		}
+		return []watchPath{{Path: ".", Recursive: true}}
+	}
+
+	mlog.Printf("watching %d paths", len(watchPaths))
+	for _, wp := range watchPaths {
+		recursiveStr := "recursive"
+		if !wp.Recursive {
+			recursiveStr = "non-recursive"
+		}
+		mlog.Debugf("  - %s (%s)", wp.Path, recursiveStr)
+	}
+	return watchPaths
+}
+
+// collectWatchPaths performs a DFS traversal to collect the minimal set of directories to watch.
+// Returns true if the directory or any of its descendants contains ignored directories.
+// Rule: if a directory has no ignored descendants at any depth, watch it recursively;
+// otherwise, watch it non-recursively and recurse into valid children.
+func (app *cRunApp) collectWatchPaths(dir string, ignorePatterns []string, watchPaths *[]watchPath) bool {
+	entries, err := gfile.ScanDir(dir, "*", false)
+	if err != nil {
+		mlog.Printf("scan directory '%s' error: %s", dir, err.Error())
+		// If we can't scan the directory, add it to watch list as fallback
+		*watchPaths = append(*watchPaths, watchPath{Path: dir, Recursive: true})
+		return false
+	}
+
+	// First pass: identify valid subdirectories and check for directly ignored children
+	var validSubDirs []string
+	hasIgnoredChild := false
+	for _, entry := range entries {
+		if !gfile.IsDir(entry) {
+			continue
+		}
+		if isIgnoredDirName(entry, ignorePatterns) {
+			hasIgnoredChild = true
+		} else {
+			validSubDirs = append(validSubDirs, entry)
+		}
+	}
+
+	// If already has ignored child, we know this dir needs non-recursive watch
+	if hasIgnoredChild {
+		*watchPaths = append(*watchPaths, watchPath{Path: dir, Recursive: false})
+		for _, subDir := range validSubDirs {
+			app.collectWatchPaths(subDir, ignorePatterns, watchPaths)
+		}
+		return true
+	}
+
+	// No ignored children, but need to check descendants recursively
+	// Collect results from all subdirectories first
+	subResults := make([]bool, len(validSubDirs))
+	subWatchPaths := make([][]watchPath, len(validSubDirs))
+	hasIgnoredDescendant := false
+
+	for i, subDir := range validSubDirs {
+		var subPaths []watchPath
+		subResults[i] = app.collectWatchPaths(subDir, ignorePatterns, &subPaths)
+		subWatchPaths[i] = subPaths
+		if subResults[i] {
+			hasIgnoredDescendant = true
+		}
+	}
+
+	if !hasIgnoredDescendant {
+		// No ignored descendants at any depth, watch this directory recursively
+		*watchPaths = append(*watchPaths, watchPath{Path: dir, Recursive: true})
+		return false
+	}
+
+	// Has ignored descendants, watch current directory non-recursively
+	// and add all collected subdirectory watch paths
+	*watchPaths = append(*watchPaths, watchPath{Path: dir, Recursive: false})
+	for _, subPaths := range subWatchPaths {
+		*watchPaths = append(*watchPaths, subPaths...)
+	}
+	return true
+}
+
+// defaultIgnorePatterns contains glob patterns for directory names that should be ignored when watching.
+// These directories typically contain third-party code or non-source files.
+// Supported glob syntax (filepath.Match):
+//   - "*" matches any sequence of non-separator characters
+//   - "?" matches any single non-separator character
+//   - "[abc]" matches any character in the bracket
+//   - "[a-z]" matches any character in the range
+//   - "[^abc]" or "[!abc]" matches any character not in the bracket
+//
+// Note: patterns match directory base names only, not full paths (no "/" or path separators allowed).
+var defaultIgnorePatterns = []string{
+	"node_modules",
+	"vendor",
+	".*", // All hidden directories (covers .git, .svn, .hg, .idea, .vscode, etc.)
+	"_*", // Directories starting with underscore
+}
+
+// isIgnoredDirName checks if a directory name matches any ignored pattern.
+// It accepts either a full path or just the directory name, but only matches against the base name.
+// Note: patterns should not contain "/" as they only match directory names, not paths.
+func isIgnoredDirName(name string, ignorePatterns []string) bool {
+	baseName := gfile.Basename(name)
+	for _, pattern := range ignorePatterns {
+		if matched, _ := filepath.Match(pattern, baseName); matched {
 			return true
 		}
 	}
 	return false
+}
+
+// parseCommaSeparatedArgs parses command line arguments that may contain comma-separated values.
+// It handles both single argument with commas (e.g., "a,b,c") and multiple arguments.
+func parseCommaSeparatedArgs(args []string) []string {
+	var result []string
+	for _, arg := range args {
+		parts := strings.Split(arg, ",")
+		for _, part := range parts {
+			trimmed := strings.TrimSpace(part)
+			if trimmed != "" {
+				result = append(result, trimmed)
+			}
+		}
+	}
+	return result
 }

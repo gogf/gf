@@ -120,7 +120,8 @@ func (m *Model) Data(data ...any) *Model {
 }
 
 // OnConflict sets the primary key or index when columns conflicts occurs.
-// It's not necessary for MySQL driver.
+// It's used by Save, and by Replace and InsertIgnore on the databases performing them as an
+// upsert, like the MERGE statement on Oracle. It's not necessary for MySQL driver.
 func (m *Model) OnConflict(onConflict ...any) *Model {
 	if len(onConflict) == 0 {
 		return m
@@ -262,9 +263,9 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 	var (
 		list                             List
 		stm                              = m.softTimeMaintainer()
-		fieldNameCreate, fieldTypeCreate = stm.GetFieldNameAndTypeForCreate(ctx, "", m.tablesInit)
-		fieldNameUpdate, fieldTypeUpdate = stm.GetFieldNameAndTypeForUpdate(ctx, "", m.tablesInit)
-		fieldNameDelete, fieldTypeDelete = stm.GetFieldNameAndTypeForDelete(ctx, "", m.tablesInit)
+		fieldNameCreate, fieldTypeCreate = stm.GetFieldInfo(ctx, "", m.tablesInit, SoftTimeFieldCreate)
+		fieldNameUpdate, fieldTypeUpdate = stm.GetFieldInfo(ctx, "", m.tablesInit, SoftTimeFieldUpdate)
+		fieldNameDelete, fieldTypeDelete = stm.GetFieldInfo(ctx, "", m.tablesInit, SoftTimeFieldDelete)
 	)
 	// m.data was already converted to type List/Map by function Data
 	newData, err := m.filterDataForInsertOrUpdate(m.data)
@@ -295,20 +296,20 @@ func (m *Model) doInsertWithOption(ctx context.Context, insertOption InsertOptio
 	if !m.unscoped && isSoftTimeFeatureEnabled {
 		for k, v := range list {
 			if fieldNameCreate != "" && empty.IsNil(v[fieldNameCreate]) {
-				fieldCreateValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeCreate, false)
+				fieldCreateValue := stm.GetFieldValue(ctx, fieldTypeCreate, false)
 				if fieldCreateValue != nil {
 					v[fieldNameCreate] = fieldCreateValue
 				}
 			}
 			if fieldNameUpdate != "" && empty.IsNil(v[fieldNameUpdate]) {
-				fieldUpdateValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeUpdate, false)
+				fieldUpdateValue := stm.GetFieldValue(ctx, fieldTypeUpdate, false)
 				if fieldUpdateValue != nil {
 					v[fieldNameUpdate] = fieldUpdateValue
 				}
 			}
 			// for timestamp field that should initialize the delete_at field with value, for example 0.
 			if fieldNameDelete != "" && empty.IsNil(v[fieldNameDelete]) {
-				fieldDeleteValue := stm.GetValueByFieldTypeForCreateOrUpdate(ctx, fieldTypeDelete, true)
+				fieldDeleteValue := stm.GetFieldValue(ctx, fieldTypeDelete, true)
 				if fieldDeleteValue != nil {
 					v[fieldNameDelete] = fieldDeleteValue
 				}
@@ -347,21 +348,23 @@ func (m *Model) formatDoInsertOption(insertOption InsertOption, columnNames []st
 		InsertOption: insertOption,
 		BatchCount:   m.getBatch(),
 	}
+	if insertOption != InsertOptionDefault {
+		if option.OnConflict, err = m.formatOnConflictKeys(m.onConflict); err != nil {
+			return option, err
+		}
+	}
 	if insertOption != InsertOptionSave {
 		return
 	}
-
-	onConflictKeys, err := m.formatOnConflictKeys(m.onConflict)
-	if err != nil {
-		return option, err
-	}
-	option.OnConflict = onConflictKeys
 
 	onDuplicateExKeys, err := m.formatOnDuplicateExKeys(m.onDuplicateEx)
 	if err != nil {
 		return option, err
 	}
-	onDuplicateExKeySet := gset.NewStrSetFrom(onDuplicateExKeys)
+	onDuplicateExKeySet := gset.NewStrSet()
+	for _, key := range onDuplicateExKeys {
+		onDuplicateExKeySet.Add(m.db.FoldIdentifier(key))
+	}
 	if m.onDuplicate != nil {
 		switch m.onDuplicate.(type) {
 		case Raw, *Raw:
@@ -373,7 +376,7 @@ func (m *Model) formatDoInsertOption(insertOption InsertOption, columnNames []st
 			case reflect.String:
 				option.OnDuplicateMap = make(map[string]any)
 				for _, v := range gstr.SplitAndTrim(reflectInfo.OriginValue.String(), ",") {
-					if onDuplicateExKeySet.Contains(v) {
+					if onDuplicateExKeySet.Contains(m.db.FoldIdentifier(v)) {
 						continue
 					}
 					option.OnDuplicateMap[v] = v
@@ -382,7 +385,7 @@ func (m *Model) formatDoInsertOption(insertOption InsertOption, columnNames []st
 			case reflect.Map:
 				option.OnDuplicateMap = make(map[string]any)
 				for k, v := range gconv.Map(m.onDuplicate) {
-					if onDuplicateExKeySet.Contains(k) {
+					if onDuplicateExKeySet.Contains(m.db.FoldIdentifier(k)) {
 						continue
 					}
 					option.OnDuplicateMap[k] = v
@@ -391,7 +394,7 @@ func (m *Model) formatDoInsertOption(insertOption InsertOption, columnNames []st
 			case reflect.Slice, reflect.Array:
 				option.OnDuplicateMap = make(map[string]any)
 				for _, v := range gconv.Strings(m.onDuplicate) {
-					if onDuplicateExKeySet.Contains(v) {
+					if onDuplicateExKeySet.Contains(m.db.FoldIdentifier(v)) {
 						continue
 					}
 					option.OnDuplicateMap[v] = v
@@ -408,7 +411,7 @@ func (m *Model) formatDoInsertOption(insertOption InsertOption, columnNames []st
 	} else if onDuplicateExKeySet.Size() > 0 {
 		option.OnDuplicateMap = make(map[string]any)
 		for _, v := range columnNames {
-			if onDuplicateExKeySet.Contains(v) {
+			if onDuplicateExKeySet.Contains(m.db.FoldIdentifier(v)) {
 				continue
 			}
 			option.OnDuplicateMap[v] = v

@@ -17,17 +17,30 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
+// NilChecker is a function that checks whether the given value is nil.
+type NilChecker[V any] func(V) bool
+
 // KVMap wraps map type `map[K]V` and provides more map features.
 type KVMap[K comparable, V any] struct {
 	mu   rwmutex.RWMutex
 	data map[K]V
+
+	// nilChecker is the custom nil checker function.
+	// It uses empty.IsNil if it's nil.
+	nilChecker NilChecker[V]
 }
 
 // NewKVMap creates and returns an empty hash map.
-// The parameter `safe` is used to specify whether to use the map in concurrent-safety mode,
-// which is false by default.
+// The parameter `safe` is used to specify whether to use the map in concurrent-safety mode, which is false by default.
 func NewKVMap[K comparable, V any](safe ...bool) *KVMap[K, V] {
 	return NewKVMapFrom(make(map[K]V), safe...)
+}
+
+// NewKVMapWithChecker creates and returns an empty hash map with a custom nil checker.
+// The parameter `checker` is a function used to determine if a value is nil.
+// The parameter `safe` is used to specify whether to use the map in concurrent-safety mode, which is false by default.
+func NewKVMapWithChecker[K comparable, V any](checker NilChecker[V], safe ...bool) *KVMap[K, V] {
+	return NewKVMapWithCheckerFrom(make(map[K]V), checker, safe...)
 }
 
 // NewKVMapFrom creates and returns a hash map from given map `data`.
@@ -39,6 +52,37 @@ func NewKVMapFrom[K comparable, V any](data map[K]V, safe ...bool) *KVMap[K, V] 
 		data: data,
 	}
 	return m
+}
+
+// NewKVMapWithCheckerFrom creates and returns a hash map from given map `data` with a custom nil checker.
+// Note that, the param `data` map will be set as the underlying data map (no deep copy),
+// and there might be some concurrent-safe issues when changing the map outside.
+// The parameter `checker` is a function used to determine if a value is nil.
+// The parameter `safe` is used to specify whether to use the map in concurrent-safety mode, which is false by default.
+func NewKVMapWithCheckerFrom[K comparable, V any](data map[K]V, checker NilChecker[V], safe ...bool) *KVMap[K, V] {
+	m := NewKVMapFrom[K, V](data, safe...)
+	m.SetNilChecker(checker)
+	return m
+}
+
+// SetNilChecker registers a custom nil checker function for the map values.
+// This function is used to determine if a value should be considered as nil.
+// The nil checker function takes a value of type V and returns a boolean indicating
+// whether the value should be treated as nil.
+func (m *KVMap[K, V]) SetNilChecker(nilChecker NilChecker[V]) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.nilChecker = nilChecker
+}
+
+// isNil checks whether the given value is nil.
+// It first checks if a custom nil checker function is registered and uses it if available,
+// otherwise it falls back to the default empty.IsNil function.
+func (m *KVMap[K, V]) isNil(v V) bool {
+	if m.nilChecker != nil {
+		return m.nilChecker(v)
+	}
+	return empty.IsNil(v)
 }
 
 // Iterator iterates the hash map readonly with custom callback function `f`.
@@ -201,11 +245,12 @@ func (m *KVMap[K, V]) Pops(size int) map[K]V {
 	return newMap
 }
 
-// doSetWithLockCheck checks whether value of the key exists with mutex.Lock,
-// if not exists, set value to the map with given `key`,
-// or else just return the existing value.
+// doSetWithLockCheck sets value with given `value` if it does not exist,
+// and then returns this value and whether it exists.
 //
-// It returns value with given `key`.
+// It is a helper function for GetOrSet* functions.
+//
+// Note that, it does not add the value to the map if the given `value` is nil.
 func (m *KVMap[K, V]) doSetWithLockCheck(key K, value V) (val V, ok bool) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -217,8 +262,7 @@ func (m *KVMap[K, V]) doSetWithLockCheck(key K, value V) (val V, ok bool) {
 	if v, ok := m.data[key]; ok {
 		return v, true
 	}
-
-	if any(value) != nil {
+	if !m.isNil(value) {
 		m.data[key] = value
 	}
 	return value, false
@@ -234,6 +278,8 @@ func (m *KVMap[K, V]) GetOrSet(key K, value V) V {
 // GetOrSetFunc returns the value by key,
 // or sets value with returned value of callback function `f` if it does not exist
 // and then returns this value.
+//
+// Note that, it does not add the value to the map if the returned value of `f` is nil.
 func (m *KVMap[K, V]) GetOrSetFunc(key K, f func() V) V {
 	v, _ := m.doSetWithLockCheck(key, f())
 	return v
@@ -245,6 +291,8 @@ func (m *KVMap[K, V]) GetOrSetFunc(key K, f func() V) V {
 //
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f`
 // with mutex.Lock of the hash map.
+//
+// Note that, it does not add the value to the map if the returned value of `f` is nil.
 func (m *KVMap[K, V]) GetOrSetFuncLock(key K, f func() V) V {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -255,7 +303,7 @@ func (m *KVMap[K, V]) GetOrSetFuncLock(key K, f func() V) V {
 		return v
 	}
 	value := f()
-	if any(value) != nil {
+	if !m.isNil(value) {
 		m.data[key] = value
 	}
 	return value
@@ -283,6 +331,54 @@ func (m *KVMap[K, V]) GetVarOrSetFunc(key K, f func() V) *gvar.Var {
 // The returned Var is un-concurrent safe.
 func (m *KVMap[K, V]) GetVarOrSetFuncLock(key K, f func() V) *gvar.Var {
 	return gvar.New(m.GetOrSetFuncLock(key, f))
+}
+
+// GetOrSetFuncWithError returns the value by key,
+// or sets value with returned value of callback function `f` if it does not exist
+// and then returns this value.
+//
+// Note that, it does not add the value to the map if the returned value of `f` is nil
+// or if `f` returns a non-nil error.
+func (m *KVMap[K, V]) GetOrSetFuncWithError(key K, f func() (V, error)) (V, error) {
+	if v, ok := m.Search(key); ok {
+		return v, nil
+	}
+	value, err := f()
+	if err != nil {
+		var zero V
+		return zero, err
+	}
+	v, _ := m.doSetWithLockCheck(key, value)
+	return v, nil
+}
+
+// GetOrSetFuncLockWithError returns the value by key,
+// or sets value with returned value of callback function `f` if it does not exist
+// and then returns this value.
+//
+// GetOrSetFuncLockWithError differs with GetOrSetFuncWithError function is that it executes function `f`
+// with mutex.Lock of the hash map.
+//
+// Note that, it does not add the value to the map if the returned value of `f` is nil
+// or if `f` returns a non-nil error.
+func (m *KVMap[K, V]) GetOrSetFuncLockWithError(key K, f func() (V, error)) (V, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = make(map[K]V)
+	}
+	if v, ok := m.data[key]; ok {
+		return v, nil
+	}
+	value, err := f()
+	if err != nil {
+		var zero V
+		return zero, err
+	}
+	if !m.isNil(value) {
+		m.data[key] = value
+	}
+	return value, nil
 }
 
 // SetIfNotExist sets `value` to the map if the `key` does not exist, and then returns true.
@@ -325,6 +421,49 @@ func (m *KVMap[K, V]) SetIfNotExistFuncLock(key K, f func() V) bool {
 		return true
 	}
 	return false
+}
+
+// SetIfNotExistFuncWithError sets value with return value of callback function `f`, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
+// It returns (false, error) if `f` returns a non-nil error, and `value` would not be stored.
+func (m *KVMap[K, V]) SetIfNotExistFuncWithError(key K, f func() (V, error)) (bool, error) {
+	if m.Contains(key) {
+		return false, nil
+	}
+	value, err := f()
+	if err != nil {
+		return false, err
+	}
+	if m.isNil(value) {
+		return true, nil
+	}
+	return m.SetIfNotExist(key, value), nil
+}
+
+// SetIfNotExistFuncLockWithError sets value with return value of callback function `f`, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
+// It returns (false, error) if `f` returns a non-nil error, and `value` would not be stored.
+// Note that, it does not add the value to the map if the returned value of `f` is nil.
+//
+// SetIfNotExistFuncLockWithError differs with SetIfNotExistFuncWithError function is that
+// it executes function `f` with mutex.Lock of the hash map.
+func (m *KVMap[K, V]) SetIfNotExistFuncLockWithError(key K, f func() (V, error)) (bool, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = make(map[K]V)
+	}
+	if _, ok := m.data[key]; ok {
+		return false, nil
+	}
+	value, err := f()
+	if err != nil {
+		return false, err
+	}
+	if !m.isNil(value) {
+		m.data[key] = value
+	}
+	return true, nil
 }
 
 // Remove deletes value from map by given `key`, and return this deleted value.
@@ -484,6 +623,9 @@ func (m *KVMap[K, V]) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
+// DO NOT change this receiver to pointer type, as the KVMap can be used as a var defined variable, like:
+// var m gmap.KVMap[int, string]
+// Please refer to corresponding tests for more details.
 func (m KVMap[K, V]) MarshalJSON() ([]byte, error) {
 	return json.Marshal(gconv.Map(m.Map()))
 }

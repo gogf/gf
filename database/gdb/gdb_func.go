@@ -65,6 +65,7 @@ const (
 	OrmTagForWithWhere    = "where"
 	OrmTagForWithOrder    = "order"
 	OrmTagForWithUnscoped = "unscoped"
+	OrmTagForWithChunk    = "chunk"
 	OrmTagForDo           = "do"
 )
 
@@ -151,13 +152,26 @@ func isDoStruct(object any) bool {
 // getTableNameFromOrmTag retrieves and returns the table name from struct object.
 func getTableNameFromOrmTag(object any) string {
 	var tableName string
-	// Use the interface value.
-	if r, ok := object.(iTableName); ok {
-		tableName = r.TableName()
+	var actualObj = object
+
+	if rv, ok := object.(reflect.Value); ok {
+		// Check if reflect.Value is valid
+		if rv.IsValid() && rv.CanInterface() {
+			actualObj = rv.Interface()
+		} else {
+			// If reflect.Value is invalid, we cannot proceed with interface checks
+			return ""
+		}
 	}
-	// User meta data tag "orm".
-	if tableName == "" {
-		if ormTag := gmeta.Get(object, OrmTagForStruct); !ormTag.IsEmpty() {
+
+	// Check iTableName interface
+	if actualObj != nil {
+		if r, ok := actualObj.(iTableName); ok {
+			return r.TableName()
+		}
+
+		// User meta data tag "orm".
+		if ormTag := gmeta.Get(actualObj, OrmTagForStruct); !ormTag.IsEmpty() {
 			match, _ := gregex.MatchString(
 				fmt.Sprintf(`%s\s*:\s*([^,]+)`, OrmTagForTable),
 				ormTag.String(),
@@ -166,17 +180,19 @@ func getTableNameFromOrmTag(object any) string {
 				tableName = match[1]
 			}
 		}
-	}
-	// Use the struct name of snake case.
-	if tableName == "" {
-		if t, err := gstructs.StructType(object); err != nil {
-			panic(err)
-		} else {
-			tableName = gstr.CaseSnakeFirstUpper(
-				gstr.StrEx(t.String(), "."),
-			)
+
+		// Use the struct name of snake case.
+		if tableName == "" {
+			if t, err := gstructs.StructType(actualObj); err != nil {
+				panic(err)
+			} else {
+				tableName = gstr.CaseSnakeFirstUpper(
+					gstr.StrEx(t.String(), "."),
+				)
+			}
 		}
 	}
+
 	return tableName
 }
 
@@ -299,6 +315,20 @@ func doQuoteTableName(table, prefix, charLeft, charRight string) string {
 		array1[k1] = gstr.Join(array2, " ")
 	}
 	return gstr.Join(array1, ",")
+}
+
+// mapPossibleItemByFieldKey acts like gutil.MapPossibleItemByKey on map `data` keyed by
+// field names, but before the fuzzy matching it looks up `key` folded by DB.FoldIdentifier.
+func mapPossibleItemByFieldKey(db DB, data map[string]any, key string) (foundKey string, foundValue any) {
+	if v, ok := data[key]; ok {
+		return key, v
+	}
+	if foldedKey := db.FoldIdentifier(key); foldedKey != key {
+		if v, ok := data[foldedKey]; ok {
+			return foldedKey, v
+		}
+	}
+	return gutil.MapPossibleItemByKey(data, key)
 }
 
 // doQuoteWord checks given string `s` a word, if true quotes it with `charLeft` and `charRight`
@@ -536,7 +566,7 @@ func formatWhereHolder(ctx context.Context, db DB, in formatWhereHolderInput) (n
 			if ormTagValue == "" {
 				ormTagValue = structField.Name
 			}
-			foundKey, foundValue := gutil.MapPossibleItemByKey(data, ormTagValue)
+			foundKey, foundValue := mapPossibleItemByFieldKey(db, data, ormTagValue)
 			if foundKey != "" {
 				if in.OmitNil && empty.IsNil(foundValue) {
 					continue
@@ -673,7 +703,7 @@ func formatWhereInterfaces(db DB, where []any, buffer *bytes.Buffer, newArgs []a
 	for i := 0; i < len(where); i += 2 {
 		str = gconv.String(where[i])
 		if buffer.Len() > 0 {
-			buffer.WriteString(" AND " + db.GetCore().QuoteWord(str) + "=?")
+			buffer.WriteString(sqlAnd + db.GetCore().QuoteWord(str) + "=?")
 		} else {
 			buffer.WriteString(db.GetCore().QuoteWord(str) + "=?")
 		}
@@ -710,7 +740,7 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []any) {
 		quotedKey = in.Prefix + "." + quotedKey
 	}
 	if in.Buffer.Len() > 0 {
-		in.Buffer.WriteString(" AND ")
+		in.Buffer.WriteString(sqlAnd)
 	}
 	// If the value is type of slice, and there's only one '?' holder in
 	// the key string, it automatically adds '?' holder chars according to its arguments count
@@ -719,6 +749,14 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []any) {
 		reflectValue = reflect.ValueOf(in.Value)
 		reflectKind  = reflectValue.Kind()
 	)
+	// Check if the value implements iString interface (like uuid.UUID).
+	// These types should be treated as single values, not arrays.
+	if reflectKind == reflect.Array {
+		if v, ok := in.Value.(iString); ok {
+			in.Value = v.String()
+			reflectKind = reflect.String
+		}
+	}
 	switch reflectKind {
 	// Slice argument.
 	case reflect.Slice, reflect.Array:
@@ -780,9 +818,7 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []any) {
 
 // handleSliceAndStructArgsForSql is an important function, which handles the sql and all its arguments
 // before committing them to underlying driver.
-func handleSliceAndStructArgsForSql(
-	oldSql string, oldArgs []any,
-) (newSql string, newArgs []any) {
+func handleSliceAndStructArgsForSql(oldSql string, oldArgs []any) (newSql string, newArgs []any) {
 	newSql = oldSql
 	if len(oldArgs) == 0 {
 		return
@@ -800,6 +836,13 @@ func handleSliceAndStructArgsForSql(
 				newArgs = append(newArgs, oldArg)
 				continue
 			}
+			// It does not split types that implement fmt.Stringer interface (like uuid.UUID).
+			// These types should be converted to string instead of being expanded as arrays.
+			// Eg: table.Where("uuid = ?", uuid.UUID{...})
+			if v, ok := oldArg.(iString); ok {
+				newArgs = append(newArgs, v.String())
+				continue
+			}
 			var (
 				valueHolderCount = gstr.Count(newSql, "?")
 				argSliceLength   = argReflectInfo.OriginValue.Len()
@@ -810,7 +853,7 @@ func handleSliceAndStructArgsForSql(
 				// Query("select * from xxx where id in(?)", g.Slice{}) -> select * from xxx where 0=1
 				// Where("id in(?)", g.Slice{}) -> WHERE 0=1
 				if gstr.Contains(newSql, "?") {
-					whereKeyWord := " WHERE "
+					whereKeyWord := sqlWhere
 					if p := gstr.PosI(newSql, whereKeyWord); p == -1 {
 						return "0=1", []any{}
 					} else {
@@ -953,6 +996,7 @@ func FormatMultiLineSqlToSingle(sql string) (string, error) {
 	return sql, nil
 }
 
+// genTableFieldsCacheKey generates cache key for table fields.
 func genTableFieldsCacheKey(group, schema, table string) string {
 	return fmt.Sprintf(
 		`%s%s@%s#%s`,
@@ -963,6 +1007,7 @@ func genTableFieldsCacheKey(group, schema, table string) string {
 	)
 }
 
+// genSelectCacheKey generates cache key for select.
 func genSelectCacheKey(table, group, schema, name, sql string, args ...any) string {
 	if name == "" {
 		name = fmt.Sprintf(
@@ -974,4 +1019,14 @@ func genSelectCacheKey(table, group, schema, name, sql string, args ...any) stri
 		)
 	}
 	return fmt.Sprintf(`%s%s`, cachePrefixSelectCache, name)
+}
+
+// genTableNamesCacheKey generates cache key for table names.
+func genTableNamesCacheKey(group string) string {
+	return fmt.Sprintf(`Tables:%s`, group)
+}
+
+// genSoftTimeFieldNameTypeCacheKey generates cache key for soft time field name and type.
+func genSoftTimeFieldNameTypeCacheKey(schema, table string, candidateFields []string) string {
+	return fmt.Sprintf(`getSoftFieldNameAndType:%s#%s#%s`, schema, table, strings.Join(candidateFields, "_"))
 }

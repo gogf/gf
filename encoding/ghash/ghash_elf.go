@@ -29,9 +29,9 @@ func ELF64(str []byte) uint64 {
 		x    uint64
 	)
 	for i := 0; i < len(str); i++ {
-		hash = (hash << 4) + uint64(str[i])
-		if x = hash & 0xF000000000000000; x != 0 {
-			hash ^= x >> 24
+		hash = (hash << 8) + uint64(str[i])
+		if x = hash & 0xFF00000000000000; x != 0 {
+			hash ^= x >> 48
 			hash &= ^x + 1
 		}
 	}

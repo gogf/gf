@@ -22,6 +22,15 @@ import (
 	"github.com/gogf/gf/v2/util/guid"
 )
 
+// clientIpHeaderNames are the request header names for client ip retrieving, in fallback order.
+var clientIpHeaderNames = []string{
+	headerProxyClientIp,
+	headerWlProxyClientIp,
+	headerHttpClientIp,
+	headerHttpXForwardedFor,
+	HeaderXRealIp,
+}
+
 // Request is the context object for a request.
 type Request struct {
 	*http.Request
@@ -47,11 +56,15 @@ type Request struct {
 	parsedQuery     bool                 // A bool marking whether the GET parameters parsed.
 	parsedBody      bool                 // A bool marking whether the request body parsed.
 	parsedForm      bool                 // A bool marking whether request Form parsed for HTTP method PUT, POST, PATCH.
+	parsedRepeated  bool                 // A bool marking whether the repeated query parameters parsed into repeatedQuery.
 	paramsMap       map[string]any       // Custom parameters map.
 	routerMap       map[string]string    // Router parameters map, which might be nil if there are no router parameters.
 	queryMap        map[string]any       // Query parameters map, which is nil if there's no query string.
+	customQueryKeys map[string]struct{}  // Query parameter keys of the custom values set by SetQuery.
+	repeatedQuery   map[string][]string  // All values of the repeated plain query parameters, which is nil if there's none.
 	formMap         map[string]any       // Form parameters map, which is nil if there's no form of data from the client.
 	bodyMap         map[string]any       // Body parameters map, which might be nil if their nobody content.
+	bodyArray       []any                // Body parameters array, which is nil unless the request body is a JSON array for a handler that declares a field tagged with `body:"*"`.
 	error           error                // Current executing error of the request.
 	exitAll         bool                 // A bool marking whether current request is exited.
 	parsedHost      string               // The parsed host name for current host used by GetHost function.
@@ -180,7 +193,7 @@ func (r *Request) IsFileRequest() bool {
 
 // IsAjaxRequest checks and returns whether current request is an AJAX request.
 func (r *Request) IsAjaxRequest() bool {
-	return strings.EqualFold(r.Header.Get("X-Requested-With"), "XMLHttpRequest")
+	return strings.EqualFold(r.Header.Get(HeaderXRequestedWith), "XMLHttpRequest")
 }
 
 // GetClientIp returns the client ip of this request without port.
@@ -189,25 +202,18 @@ func (r *Request) GetClientIp() string {
 	if r.clientIp != "" {
 		return r.clientIp
 	}
-	realIps := r.Header.Get("X-Forwarded-For")
+	realIps := r.Header.Get(HeaderXForwardedFor)
 	if realIps != "" && len(realIps) != 0 && !strings.EqualFold("unknown", realIps) {
 		ipArray := strings.Split(realIps, ",")
 		r.clientIp = ipArray[0]
 	}
 	if r.clientIp == "" {
-		r.clientIp = r.Header.Get("Proxy-Client-IP")
-	}
-	if r.clientIp == "" {
-		r.clientIp = r.Header.Get("WL-Proxy-Client-IP")
-	}
-	if r.clientIp == "" {
-		r.clientIp = r.Header.Get("HTTP_CLIENT_IP")
-	}
-	if r.clientIp == "" {
-		r.clientIp = r.Header.Get("HTTP_X_FORWARDED_FOR")
-	}
-	if r.clientIp == "" {
-		r.clientIp = r.Header.Get("X-Real-IP")
+		for _, headerName := range clientIpHeaderNames {
+			if ip := r.Header.Get(headerName); ip != "" {
+				r.clientIp = ip
+				break
+			}
+		}
 	}
 	if r.clientIp == "" {
 		r.clientIp = r.GetRemoteIp()
@@ -227,11 +233,11 @@ func (r *Request) GetRemoteIp() string {
 // GetSchema returns the schema of this request.
 func (r *Request) GetSchema() string {
 	var (
-		scheme = "http"
-		proto  = r.Header.Get("X-Forwarded-Proto")
+		scheme = schemeHttp
+		proto  = r.Header.Get(HeaderXForwardedProto)
 	)
-	if r.TLS != nil || gstr.Equal(proto, "https") {
-		scheme = "https"
+	if r.TLS != nil || gstr.Equal(proto, schemeHttps) {
+		scheme = schemeHttps
 	}
 	return scheme
 }
@@ -239,12 +245,12 @@ func (r *Request) GetSchema() string {
 // GetUrl returns current URL of this request.
 func (r *Request) GetUrl() string {
 	var (
-		scheme = "http"
-		proto  = r.Header.Get("X-Forwarded-Proto")
+		scheme = schemeHttp
+		proto  = r.Header.Get(HeaderXForwardedProto)
 	)
 
-	if r.TLS != nil || gstr.Equal(proto, "https") {
-		scheme = "https"
+	if r.TLS != nil || gstr.Equal(proto, schemeHttps) {
+		scheme = schemeHttps
 	}
 	return fmt.Sprintf(`%s://%s%s`, scheme, r.Host, r.URL.String())
 }
@@ -260,7 +266,7 @@ func (r *Request) GetSessionId() string {
 
 // GetReferer returns referer of this request.
 func (r *Request) GetReferer() string {
-	return r.Header.Get("Referer")
+	return r.Header.Get(HeaderReferer)
 }
 
 // GetError returns the error occurs in the procedure of the request.

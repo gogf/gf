@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 )
 
+// Driver is the driver for dm database.
 type Driver struct {
 	*gdb.Core
 }
@@ -47,7 +48,9 @@ func (d *Driver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 	}, nil
 }
 
-// GetChars returns the security char for this type of database.
+// GetChars returns empty security chars for this type of database.
+// DM treats unquoted identifiers as uppercase identifiers. The framework should
+// not add quotes automatically, as quoted identifiers become case-sensitive.
 func (d *Driver) GetChars() (charLeft string, charRight string) {
-	return quoteChar, quoteChar
+	return "", ""
 }

@@ -18,9 +18,6 @@ pack.template-mono:
 	@cd temp && gf pack template-mono ../internal/packed/template-mono.go -n=packed -y
 	@rm -fr temp
 
-# Note:
-# command `sed` only works on MacOS.
-# use `grep -irl 'template-single' temp| xargs sed -i'' -e 's/template-single/template-mono-app/g'` on other platforms.
 pack.template-mono-app:
 	@rm -fr temp
 	@mkdir temp || exit 0
@@ -31,6 +28,6 @@ pack.template-mono-app:
 	@rm -fr temp/template-mono-app/.gitignore
 	@rm -fr temp/template-mono-app/go.mod
 	@rm -fr temp/template-mono-app/go.sum
-	@grep -irl 'template-single' temp| xargs sed -i '' -e 's/template-single/template-mono-app/g'
+	@grep -irl 'template-single' temp| xargs perl -pi -e 's/template-single/template-mono-app/g'
 	@cd temp && gf pack template-mono-app ../internal/packed/template-mono-app.go -n=packed -y
 	@rm -fr temp

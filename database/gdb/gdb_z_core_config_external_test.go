@@ -8,6 +8,7 @@ package gdb_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -1187,5 +1188,42 @@ func Test_IsConfigured(t *testing.T) {
 
 		result := gdb.IsConfigured()
 		t.Assert(result, true)
+	})
+}
+
+func Test_ConfigNode_ConnectionPoolSettings(t *testing.T) {
+	// Test connection pool configuration fields
+	gtest.C(t, func(t *gtest.T) {
+		// Save original config and restore after test
+		originalConfig := gdb.GetAllConfig()
+		defer func() {
+			gdb.SetConfig(originalConfig)
+		}()
+
+		// Reset config
+		gdb.SetConfig(make(gdb.Config))
+
+		testNode := gdb.ConfigNode{
+			Host:             "127.0.0.1",
+			Port:             "3306",
+			User:             "root",
+			Pass:             "123456",
+			Name:             "test_db",
+			Type:             "mysql",
+			MaxIdleConnCount: 10,
+			MaxOpenConnCount: 100,
+			MaxConnLifeTime:  30 * time.Second,
+			MaxIdleConnTime:  10 * time.Second,
+		}
+
+		err := gdb.AddConfigNode("pool_test", testNode)
+		t.AssertNil(err)
+
+		result := gdb.GetAllConfig()
+		t.Assert(len(result), 1)
+		t.Assert(result["pool_test"][0].MaxIdleConnCount, 10)
+		t.Assert(result["pool_test"][0].MaxOpenConnCount, 100)
+		t.Assert(result["pool_test"][0].MaxConnLifeTime, 30*time.Second)
+		t.Assert(result["pool_test"][0].MaxIdleConnTime, 10*time.Second)
 	})
 }

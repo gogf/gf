@@ -19,6 +19,8 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/structcache"
 )
 
+var rawMessageType = reflect.TypeOf((*json.RawMessage)(nil)).Elem()
+
 // StructOption is the option for Struct converting.
 type StructOption struct {
 	// ParamKeyToAttrMap is the map for custom parameter key to attribute name mapping.
@@ -30,6 +32,15 @@ type StructOption struct {
 	// ContinueOnError specifies whether to continue converting the next element
 	// if one element converting fails.
 	ContinueOnError bool
+
+	// OmitEmpty specifies whether to skip assignment when the source value is empty
+	// (empty string, zero value, etc.), preserving the existing value in the
+	// destination field.
+	OmitEmpty bool
+
+	// OmitNil specifies whether to skip assignment when the source value is nil,
+	// preserving the existing value in the destination field.
+	OmitNil bool
 }
 
 func (c *Converter) getStructOption(option ...StructOption) StructOption {
@@ -119,6 +130,14 @@ func (c *Converter) Struct(params, pointer any, option ...StructOption) (err err
 	}
 	if ok {
 		return nil
+	}
+
+	// Time destinations must keep the source location. Do not fall through to
+	// generic map/JSON converting, which serializes gtime without timezone.
+	// This runs after custom converters so registered type converters keep
+	// documented precedence over the built-in time fast path.
+	if ok, err = c.assignIfTimeDestination(pointerElemReflectValue, paramsInterface); ok || err != nil {
+		return err
 	}
 
 	// Normal unmarshalling interfaces checks.
@@ -363,6 +382,13 @@ func (c *Converter) bindVarToStructField(
 			}
 		}
 	}()
+	// Check if the value should be omitted based on OmitEmpty or OmitNil options
+	if option.OmitNil && empty.IsNil(srcValue) {
+		return nil
+	}
+	if option.OmitEmpty && empty.IsEmpty(srcValue) {
+		return nil
+	}
 	// Directly converting.
 	if empty.IsNil(srcValue) {
 		fieldValue.Set(reflect.Zero(fieldValue.Type()))
@@ -483,9 +509,16 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 	}
 
 	kind := structFieldValue.Kind()
-	// Converting using `Set` interface implements, for some types.
+	// Converting using common interfaces before falling through to reflection-based conversion.
 	switch kind {
-	case reflect.Slice, reflect.Array, reflect.Pointer, reflect.Interface:
+	case reflect.Array:
+		// Array values are addressable when they come from struct fields;
+		// use interface checks (IUnmarshalValue/IUnmarshalText/IUnmarshalJSON)
+		// instead of ISet which requires IsNil — not valid for arrays.
+		if ok, err = bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok || err != nil {
+			return err
+		}
+	case reflect.Slice, reflect.Pointer, reflect.Interface:
 		if !structFieldValue.IsNil() {
 			if v, ok := structFieldValue.Interface().(localinterface.ISet); ok {
 				v.Set(value)
@@ -512,6 +545,10 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 	// Note that the slice element might be type of struct,
 	// so it uses Struct function doing the converting internally.
 	case reflect.Slice, reflect.Array:
+		// It uses the underlying slice of a wrapper like *gvar.Var, so that each element is converted.
+		if v, ok := value.(localinterface.IVal); ok && utils.IsSlice(v.Val()) {
+			value = v.Val()
+		}
 		var (
 			reflectArray  reflect.Value
 			reflectValue  = reflect.ValueOf(value)
@@ -532,7 +569,7 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 				for i := 0; i < reflectValue.Len(); i++ {
 					converted = false
 					elemTypeName = elemType.Name()
-					if elemTypeName == "" {
+					if elemTypeName == "" || elemType == rawMessageType {
 						elemTypeName = elemType.String()
 					}
 					var elem reflect.Value
@@ -591,7 +628,7 @@ func (c *Converter) bindVarToReflectValue(structFieldValue reflect.Value, value 
 				}
 			default:
 			}
-			if elemTypeName == "" {
+			if elemTypeName == "" || elemType == rawMessageType {
 				elemTypeName = elemType.String()
 			}
 			if elemType.Kind() == reflect.Pointer {

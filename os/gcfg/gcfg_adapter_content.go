@@ -86,7 +86,7 @@ func (a *AdapterContent) Data(ctx context.Context) (data map[string]any, err err
 }
 
 // AddWatcher adds a watcher for the specified configuration file.
-func (a *AdapterContent) AddWatcher(name string, fn func(ctx context.Context)) {
+func (a *AdapterContent) AddWatcher(name string, fn WatcherFunc) {
 	a.watchers.Add(name, fn)
 }
 
@@ -98,6 +98,11 @@ func (a *AdapterContent) RemoveWatcher(name string) {
 // GetWatcherNames returns all watcher names.
 func (a *AdapterContent) GetWatcherNames() []string {
 	return a.watchers.GetNames()
+}
+
+// IsWatching checks and returns whether the specified `name` is watching.
+func (a *AdapterContent) IsWatching(name string) bool {
+	return a.watchers.IsWatching(name)
 }
 
 // notifyWatchers notifies all watchers.

@@ -119,16 +119,25 @@ func checkActionFrequency() error {
 // forkReloadProcess creates a new child process and copies the fd to child process.
 func forkReloadProcess(ctx context.Context, newExeFilePath ...string) error {
 	var (
-		binaryPath = os.Args[0]
+		binaryPath = gfile.SelfPath()
 	)
 	if len(newExeFilePath) > 0 && newExeFilePath[0] != "" {
 		binaryPath = newExeFilePath[0]
+	}
+	if binaryPath == "" {
+		return gerror.NewCodef(
+			gcode.CodeInvalidOperation,
+			"cannot determine current executable path: gfile.SelfPath() returned empty and no executable override was provided (goos=%s, goarch=%s, overrideProvided=%t)",
+			runtime.GOOS,
+			runtime.GOARCH,
+			len(newExeFilePath) > 0 && newExeFilePath[0] != "",
+		)
 	}
 	if !gfile.Exists(binaryPath) {
 		return gerror.Newf(`binary file path "%s" does not exist`, binaryPath)
 	}
 	var (
-		p   = gproc.NewProcess(binaryPath, os.Args[1:], os.Environ())
+		p   = gproc.NewProcess(binaryPath, getCurrentProcessArgs(), os.Environ())
 		sfm = getServerFdMap()
 	)
 	for name, m := range sfm {
@@ -165,17 +174,20 @@ func forkReloadProcess(ctx context.Context, newExeFilePath ...string) error {
 // forkRestartProcess creates a new server process.
 func forkRestartProcess(ctx context.Context, newExeFilePath ...string) error {
 	var (
-		path = os.Args[0]
+		path = gfile.SelfPath()
 	)
 	if len(newExeFilePath) > 0 && newExeFilePath[0] != "" {
 		path = newExeFilePath[0]
+	}
+	if path == "" {
+		return gerror.NewCode(gcode.CodeInvalidOperation, "cannot determine current executable path")
 	}
 	if err := os.Unsetenv(adminActionReloadEnvKey); err != nil {
 		intlog.Errorf(ctx, `%+v`, err)
 	}
 	env := os.Environ()
 	env = append(env, adminActionRestartEnvKey+"=1")
-	p := gproc.NewProcess(path, os.Args[1:], env)
+	p := gproc.NewProcess(path, getCurrentProcessArgs(), env)
 	if _, err := p.Start(ctx); err != nil {
 		glog.Errorf(
 			ctx,
@@ -187,12 +199,19 @@ func forkRestartProcess(ctx context.Context, newExeFilePath ...string) error {
 	return nil
 }
 
+func getCurrentProcessArgs() []string {
+	if len(os.Args) > 1 {
+		return os.Args[1:]
+	}
+	return nil
+}
+
 // getServerFdMap returns all the servers name to file descriptor mapping as map.
 func getServerFdMap() map[string]listenerFdMap {
 	sfm := make(map[string]listenerFdMap)
-	serverMapping.RLockFunc(func(m map[string]any) {
+	serverMapping.RLockFunc(func(m map[string]*Server) {
 		for k, v := range m {
-			sfm[k] = v.(*Server).getListenerFdMap()
+			sfm[k] = v.getListenerFdMap()
 		}
 	})
 	return sfm
@@ -220,19 +239,21 @@ func restartWebServers(ctx context.Context, signal os.Signal, newExeFilePath str
 	if runtime.GOOS == "windows" {
 		if signal != nil {
 			// Controlled by signal.
-			forceCloseWebServers(ctx)
 			if err := forkRestartProcess(ctx, newExeFilePath); err != nil {
 				intlog.Errorf(ctx, `%+v`, err)
+				return err
 			}
+			forceCloseWebServers(ctx)
 			return nil
 		}
 		// Controlled by web page.
 		// It should ensure the response wrote to client and then close all servers gracefully.
 		gtimer.SetTimeout(ctx, time.Second, func(ctx context.Context) {
-			forceCloseWebServers(ctx)
 			if err := forkRestartProcess(ctx, newExeFilePath); err != nil {
 				intlog.Errorf(ctx, `%+v`, err)
+				return
 			}
+			forceCloseWebServers(ctx)
 		})
 		return nil
 	}
@@ -263,11 +284,10 @@ func shutdownWebServersGracefully(ctx context.Context, signal os.Signal) {
 	} else {
 		glog.Printf(ctx, "pid[%d]: server gracefully shutting down by api", gproc.Pid())
 	}
-	serverMapping.RLockFunc(func(m map[string]any) {
+	serverMapping.RLockFunc(func(m map[string]*Server) {
 		for _, v := range m {
-			server := v.(*Server)
-			server.doServiceDeregister()
-			for _, s := range server.servers {
+			v.doServiceDeregister()
+			for _, s := range v.servers {
 				s.Shutdown(ctx)
 			}
 		}
@@ -276,9 +296,9 @@ func shutdownWebServersGracefully(ctx context.Context, signal os.Signal) {
 
 // forceCloseWebServers forced shuts down all servers.
 func forceCloseWebServers(ctx context.Context) {
-	serverMapping.RLockFunc(func(m map[string]any) {
+	serverMapping.RLockFunc(func(m map[string]*Server) {
 		for _, v := range m {
-			for _, s := range v.(*Server).servers {
+			for _, s := range v.servers {
 				s.Close(ctx)
 			}
 		}
@@ -293,7 +313,7 @@ func handleProcessMessage() {
 	)
 	for {
 		if msg := gproc.Receive(adminGProcCommGroup); msg != nil {
-			if bytes.EqualFold(msg.Data, []byte("exit")) {
+			if bytes.EqualFold(msg.Data, []byte(gprocMessageExit)) {
 				intlog.Printf(ctx, "%d: process message: exit", gproc.Pid())
 				shutdownWebServersGracefully(ctx, nil)
 				allShutdownChan <- struct{}{}

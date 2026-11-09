@@ -294,6 +294,9 @@ type DB interface {
 	// SetMaxConnLifeTime sets the maximum amount of time a connection may be reused.
 	SetMaxConnLifeTime(d time.Duration)
 
+	// SetMaxIdleConnTime sets the maximum amount of time a connection may be idle before being closed.
+	SetMaxIdleConnTime(d time.Duration)
+
 	// ===========================================================================
 	// Utility methods.
 	// ===========================================================================
@@ -328,6 +331,11 @@ type DB interface {
 	// It handles type conversion from database-specific types to Go types.
 	ConvertValueForLocal(ctx context.Context, fieldType string, fieldValue any) (any, error)
 
+	// ConvertColumnValueForLocal converts a value scanned from a result set column to the appropriate Go type.
+	// Drivers whose reported scan type does not fit the value they scan override
+	// to convert the value themselves (e.g. NUMBER on Oracle, reported as float64).
+	ConvertColumnValueForLocal(ctx context.Context, columnType *sql.ColumnType, fieldValue any) (any, error)
+
 	// GetFormattedDBTypeNameForField returns the formatted database type name and pattern for a field type.
 	GetFormattedDBTypeNameForField(fieldType string) (typeName, typePattern string)
 
@@ -342,6 +350,30 @@ type DB interface {
 	// OrderRandomFunction returns the SQL function for random ordering.
 	// The implementation is database-specific (e.g., RAND() for MySQL).
 	OrderRandomFunction() string
+
+	// GetBoolLiteral returns the SQL literal for the given boolean value.
+	// Drivers with strict boolean types (e.g. pgsql, gaussdb, clickhouse)
+	// return "true"/"false"; others return "1"/"0" for bit/int-based
+	// boolean columns.
+	GetBoolLiteral(v bool) string
+
+	// GetLockSharedClause returns the SQL clause emitted by Model.LockShared().
+	// Drivers that don't support MySQL's legacy "LOCK IN SHARE MODE" override
+	// to return their dialect equivalent (e.g. "FOR SHARE" on PostgreSQL).
+	GetLockSharedClause() string
+
+	// FoldIdentifier returns the unquoted identifier `name` in the letter case that the
+	// database stores it in, which is `name` itself in default. Drivers whose dialect folds
+	// unquoted identifiers and reports them folded in TableFields (e.g. Oracle, folding them
+	// to upper case) override it, so that field names are matched as the database resolves them.
+	FoldIdentifier(name string) string
+
+	// GetTableNameForFields returns the table name in the table expression `table` of a model,
+	// like "user u" or "user AS u, user_detail ud", that Model.TableFields, HasField and the
+	// data-to-field mapping pass to TableFields, which is the bare name of the first table in
+	// default. Drivers whose TableFields resolves a qualified name (e.g. Oracle, looking up
+	// "owner.table" in that owner's schema) override it, so that the qualifier is kept.
+	GetTableNameForFields(table string) string
 }
 
 // TX defines the interfaces for ORM transaction operations.
@@ -510,24 +542,25 @@ type StatsItem interface {
 
 // Core is the base struct for database management.
 type Core struct {
-	db            DB              // DB interface object.
-	ctx           context.Context // Context for chaining operation only. Do not set a default value in Core initialization.
-	group         string          // Configuration group name.
-	schema        string          // Custom schema for this object.
-	debug         *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
-	cache         *gcache.Cache   // Cache manager, SQL result cache only.
-	links         *gmap.Map       // links caches all created links by node.
-	logger        glog.ILogger    // Logger for logging functionality.
-	config        *ConfigNode     // Current config node.
-	localTypeMap  *gmap.StrAnyMap // Local type map for database field type conversion.
-	dynamicConfig dynamicConfig   // Dynamic configurations, which can be changed in runtime.
-	innerMemCache *gcache.Cache   // Internal memory cache for storing temporary data.
+	db            DB                               // DB interface object.
+	ctx           context.Context                  // Context for chaining operation only. Do not set a default value in Core initialization.
+	group         string                           // Configuration group name.
+	schema        string                           // Custom schema for this object.
+	debug         *gtype.Bool                      // Enable debug mode for the database, which can be changed in runtime.
+	cache         *gcache.Cache                    // Cache manager, SQL result cache only.
+	links         *gmap.KVMap[ConfigNode, *sql.DB] // links caches all created links by node.
+	logger        glog.ILogger                     // Logger for logging functionality.
+	config        *ConfigNode                      // Current config node.
+	localTypeMap  *gmap.StrAnyMap                  // Local type map for database field type conversion.
+	dynamicConfig dynamicConfig                    // Dynamic configurations, which can be changed in runtime.
+	innerMemCache *gcache.Cache                    // Internal memory cache for storing temporary data.
 }
 
 type dynamicConfig struct {
 	MaxIdleConnCount int
 	MaxOpenConnCount int
 	MaxConnLifeTime  time.Duration
+	MaxIdleConnTime  time.Duration
 }
 
 // DoCommitInput is the input parameters for function DoCommit.
@@ -621,6 +654,7 @@ type DoInsertOption struct {
 	OnDuplicateMap map[string]any
 
 	// OnConflict is the custom conflict key of upsert clause, if the database needs it.
+	// It's passed for Save, Replace and InsertIgnore.
 	OnConflict []string
 
 	// InsertOption is the insert operation in constant value.
@@ -768,6 +802,13 @@ const (
 	InsertOnDuplicateKeyUpdate = "ON DUPLICATE KEY UPDATE"
 )
 
+// SQL fragments used to assemble conditions.
+// The leading and trailing spaces are intentional.
+const (
+	sqlWhere = " WHERE "
+	sqlAnd   = " AND "
+)
+
 type SqlType string
 
 const (
@@ -794,22 +835,32 @@ const (
 	LocalTypeDatetime     LocalType = "datetime"
 	LocalTypeInt          LocalType = "int"
 	LocalTypeUint         LocalType = "uint"
+	LocalTypeInt32        LocalType = "int32"
+	LocalTypeUint32       LocalType = "uint32"
 	LocalTypeInt64        LocalType = "int64"
 	LocalTypeUint64       LocalType = "uint64"
 	LocalTypeBigInt       LocalType = "bigint"
 	LocalTypeIntSlice     LocalType = "[]int"
+	LocalTypeUintSlice    LocalType = "[]uint"
+	LocalTypeInt32Slice   LocalType = "[]int32"
+	LocalTypeUint32Slice  LocalType = "[]uint32"
 	LocalTypeInt64Slice   LocalType = "[]int64"
 	LocalTypeUint64Slice  LocalType = "[]uint64"
 	LocalTypeStringSlice  LocalType = "[]string"
-	LocalTypeFloat64Slice LocalType = "[]float64"
 	LocalTypeInt64Bytes   LocalType = "int64-bytes"
 	LocalTypeUint64Bytes  LocalType = "uint64-bytes"
 	LocalTypeFloat32      LocalType = "float32"
 	LocalTypeFloat64      LocalType = "float64"
+	LocalTypeFloat32Slice LocalType = "[]float32"
+	LocalTypeFloat64Slice LocalType = "[]float64"
 	LocalTypeBytes        LocalType = "[]byte"
+	LocalTypeBytesSlice   LocalType = "[][]byte"
 	LocalTypeBool         LocalType = "bool"
+	LocalTypeBoolSlice    LocalType = "[]bool"
 	LocalTypeJson         LocalType = "json"
 	LocalTypeJsonb        LocalType = "jsonb"
+	LocalTypeUUID         LocalType = "uuid.UUID"
+	LocalTypeUUIDSlice    LocalType = "[]uuid.UUID"
 )
 
 const (
@@ -852,9 +903,14 @@ const (
 	fieldTypeJsonb      = "jsonb"
 )
 
+// modifierUnsigned is a field type modifier, like `int(10) unsigned`.
+const modifierUnsigned = "unsigned"
+
 var (
+	// checker is the checker function for instances map.
+	checker = func(v DB) bool { return v == nil }
 	// instances is the management map for instances.
-	instances = gmap.NewStrAnyMap(true)
+	instances = gmap.NewKVMapWithChecker[string, DB](checker, true)
 
 	// driverMap manages all custom registered driver.
 	driverMap = map[string]Driver{}
@@ -928,6 +984,9 @@ func NewByGroup(group ...string) (db DB, err error) {
 	)
 }
 
+// linksChecker is the checker function for links map.
+var linksChecker = func(v *sql.DB) bool { return v == nil }
+
 // newDBByConfigNode creates and returns an ORM object with given configuration node and group name.
 //
 // Very Note:
@@ -944,7 +1003,7 @@ func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 		group:         group,
 		debug:         gtype.NewBool(),
 		cache:         gcache.New(),
-		links:         gmap.New(true),
+		links:         gmap.NewKVMapWithChecker[ConfigNode, *sql.DB](linksChecker, true),
 		logger:        glog.New(),
 		config:        node,
 		localTypeMap:  gmap.NewStrAnyMap(true),
@@ -953,6 +1012,7 @@ func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 			MaxIdleConnCount: node.MaxIdleConnCount,
 			MaxOpenConnCount: node.MaxOpenConnCount,
 			MaxConnLifeTime:  node.MaxConnLifeTime,
+			MaxIdleConnTime:  node.MaxIdleConnTime,
 		},
 	}
 	if v, ok := driverMap[node.Type]; ok {
@@ -970,19 +1030,14 @@ func newDBByConfigNode(node *ConfigNode, group string) (db DB, err error) {
 // Instance returns an instance for DB operations.
 // The parameter `name` specifies the configuration group name,
 // which is DefaultGroupName in default.
-func Instance(name ...string) (db DB, err error) {
+func Instance(name ...string) (DB, error) {
 	group := configs.group
 	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
-	v := instances.GetOrSetFuncLock(group, func() any {
-		db, err = NewByGroup(group)
-		return db
+	return instances.GetOrSetFuncLockWithError(group, func() (DB, error) {
+		return NewByGroup(group)
 	})
-	if v != nil {
-		return v.(DB), nil
-	}
-	return
 }
 
 // getConfigNodeByGroup calculates and returns a configuration node of given group. It
@@ -1109,37 +1164,44 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 	}
 
 	// Cache the underlying connection pool object by node.
-	var (
-		instanceCacheFunc = func() any {
-			if sqlDb, err = c.db.Open(node); err != nil {
-				return nil
-			}
-			if sqlDb == nil {
-				return nil
-			}
-			if c.dynamicConfig.MaxIdleConnCount > 0 {
-				sqlDb.SetMaxIdleConns(c.dynamicConfig.MaxIdleConnCount)
-			} else {
-				sqlDb.SetMaxIdleConns(defaultMaxIdleConnCount)
-			}
-			if c.dynamicConfig.MaxOpenConnCount > 0 {
-				sqlDb.SetMaxOpenConns(c.dynamicConfig.MaxOpenConnCount)
-			} else {
-				sqlDb.SetMaxOpenConns(defaultMaxOpenConnCount)
-			}
-			if c.dynamicConfig.MaxConnLifeTime > 0 {
-				sqlDb.SetConnMaxLifetime(c.dynamicConfig.MaxConnLifeTime)
-			} else {
-				sqlDb.SetConnMaxLifetime(defaultMaxConnLifeTime)
-			}
-			return sqlDb
+	instanceCacheFunc := func() *sql.DB {
+		if sqlDb, err = c.db.Open(node); err != nil {
+			return nil
 		}
-		// it here uses NODE VALUE not pointer as the cache key, in case of oracle ORA-12516 error.
+		if sqlDb == nil {
+			return nil
+		}
+		if c.dynamicConfig.MaxIdleConnCount > 0 {
+			sqlDb.SetMaxIdleConns(c.dynamicConfig.MaxIdleConnCount)
+		} else {
+			sqlDb.SetMaxIdleConns(defaultMaxIdleConnCount)
+		}
+		if c.dynamicConfig.MaxOpenConnCount > 0 {
+			sqlDb.SetMaxOpenConns(c.dynamicConfig.MaxOpenConnCount)
+		} else {
+			sqlDb.SetMaxOpenConns(defaultMaxOpenConnCount)
+		}
+		if c.dynamicConfig.MaxConnLifeTime > 0 {
+			sqlDb.SetConnMaxLifetime(c.dynamicConfig.MaxConnLifeTime)
+		} else {
+			sqlDb.SetConnMaxLifetime(defaultMaxConnLifeTime)
+		}
+		if c.dynamicConfig.MaxIdleConnTime > 0 {
+			sqlDb.SetConnMaxIdleTime(c.dynamicConfig.MaxIdleConnTime)
+		}
+		return sqlDb
+	}
+	// It here uses NODE VALUE not pointer as the cache key, in case of oracle ORA-12516 error.
+	// It checks the existing pool with the reading lock, as it is created on first usage.
+	var instanceValue *sql.DB
+	if cached, found := c.links.Search(*node); found {
+		instanceValue = cached
+	} else {
 		instanceValue = c.links.GetOrSetFuncLock(*node, instanceCacheFunc)
-	)
+	}
 	if instanceValue != nil && sqlDb == nil {
 		// It reads from instance map.
-		sqlDb = instanceValue.(*sql.DB)
+		sqlDb = instanceValue
 	}
 	if node.Debug {
 		c.db.SetDebug(node.Debug)

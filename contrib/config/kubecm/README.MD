@@ -1,10 +1,10 @@
 # kubecm
-Package `kubecm` implements GoFrame `gcfg.Adapter` using kubernetes configmap.
+Package `kubecm` implements GoFrame `gcfg.Adapter` using a Kubernetes `ConfigMap`.
 
 # Limit
 
-```go
-glang version >= v.18
+```text
+golang version >= 1.18
 ```
 
 # Installation
@@ -35,7 +35,7 @@ Note the configmap name `test-configmap`, and its item name in data `config.yaml
 
 ## Create a custom boot package
 
-If you wish using configuration from kubernetes configmap globally,
+If you wish using configuration from a Kubernetes `ConfigMap` globally,
 it is strongly recommended creating a custom boot package in very top import, 
 which sets the Adapter of default configuration instance before any other package boots.
 

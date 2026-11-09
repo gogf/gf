@@ -37,11 +37,13 @@ type cEnvInput struct {
 type cEnvOutput struct{}
 
 func (c cEnv) Index(ctx context.Context, in cEnvInput) (out *cEnvOutput, err error) {
-	result, err := gproc.ShellExec(ctx, "go env")
-	if err != nil {
-		mlog.Fatal(err)
-	}
+	result, execErr := gproc.ShellExec(ctx, "go env")
+	// Note: go env may return non-zero exit code when there are warnings (e.g., invalid characters in env vars),
+	// but it still outputs valid environment variables. So we only fail if result is empty.
 	if result == "" {
+		if execErr != nil {
+			mlog.Fatal(execErr)
+		}
 		mlog.Fatal(`retrieving Golang environment variables failed, did you install Golang?`)
 	}
 	var (
@@ -59,7 +61,9 @@ func (c cEnv) Index(ctx context.Context, in cEnvInput) (out *cEnvOutput, err err
 		}
 		match, _ := gregex.MatchString(`(.+?)=(.*)`, line)
 		if len(match) < 3 {
-			mlog.Fatalf(`invalid Golang environment variable: "%s"`, line)
+			// Skip lines that don't match key=value format (e.g., warning messages from go env)
+			mlog.Debugf(`invalid Golang environment variable: "%s"`, line)
+			continue
 		}
 		array = append(array, []string{gstr.Trim(match[1]), gstr.Trim(match[2])})
 	}

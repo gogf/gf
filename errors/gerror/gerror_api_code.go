@@ -7,7 +7,6 @@
 package gerror
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -26,7 +25,8 @@ func NewCode(code gcode.Code, text ...string) error {
 func NewCodef(code gcode.Code, format string, args ...any) error {
 	return &Error{
 		stack: callers(),
-		text:  fmt.Sprintf(format, args...),
+		text:  format,
+		args:  args,
 		code:  code,
 	}
 }
@@ -46,7 +46,8 @@ func NewCodeSkip(code gcode.Code, skip int, text ...string) error {
 func NewCodeSkipf(code gcode.Code, skip int, format string, args ...any) error {
 	return &Error{
 		stack: callers(skip),
-		text:  fmt.Sprintf(format, args...),
+		text:  format,
+		args:  args,
 		code:  code,
 	}
 }
@@ -74,7 +75,8 @@ func WrapCodef(code gcode.Code, err error, format string, args ...any) error {
 	return &Error{
 		error: err,
 		stack: callers(),
-		text:  fmt.Sprintf(format, args...),
+		text:  format,
+		args:  args,
 		code:  code,
 	}
 }
@@ -104,7 +106,8 @@ func WrapCodeSkipf(code gcode.Code, skip int, err error, format string, args ...
 	return &Error{
 		error: err,
 		stack: callers(skip),
-		text:  fmt.Sprintf(format, args...),
+		text:  format,
+		args:  args,
 		code:  code,
 	}
 }

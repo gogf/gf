@@ -5,10 +5,6 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package pgsql implements gdb.Driver, which supports operations for database PostgreSQL.
-//
-// Note:
-// 1. It does not support Replace features.
-// 2. It does not support Insert Ignore features.
 package pgsql
 
 import (

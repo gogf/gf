@@ -1159,6 +1159,13 @@ func Test_ListKVMap_MarshalJSON_Error(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(string(b), `{"a":"1"}`)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		var m gmap.ListKVMap[int, int]
+		m.Set(1, 10)
+		b, err := json.Marshal(m)
+		t.AssertNil(err)
+		t.Assert(string(b), `{"1":10}`)
+	})
 }
 
 // Test empty map operations
@@ -1339,5 +1346,71 @@ func Test_ListKVMap_UnmarshalValue_NilData(t *testing.T) {
 		t.Assert(m.Size(), 2)
 		t.Assert(m.Get("a"), "1")
 		t.Assert(m.Get("b"), "2")
+	})
+}
+
+// Test typed nil values
+func Test_ListKVMap_TypedNil(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string
+			Age  int
+		}
+		m1 := gmap.NewListKVMap[int, *Student](true)
+		for i := 0; i < 10; i++ {
+			m1.GetOrSetFuncLock(i, func() *Student {
+				if i%2 == 0 {
+					return &Student{}
+				}
+				return nil
+			})
+		}
+		t.Assert(m1.Size(), 5)
+
+		m2 := gmap.NewListKVMap[int, *Student](true)
+		m2.SetNilChecker(func(student *Student) bool {
+			return student == nil
+		})
+		for i := 0; i < 10; i++ {
+			m2.GetOrSetFuncLock(i, func() *Student {
+				if i%2 == 0 {
+					return &Student{}
+				}
+				return nil
+			})
+		}
+		t.Assert(m2.Size(), 5)
+	})
+}
+
+func Test_NewListKVMapWithChecker_TypedNil(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Name string
+			Age  int
+		}
+		m1 := gmap.NewListKVMap[int, *Student](true)
+		for i := 0; i < 10; i++ {
+			m1.GetOrSetFuncLock(i, func() *Student {
+				if i%2 == 0 {
+					return &Student{}
+				}
+				return nil
+			})
+		}
+		t.Assert(m1.Size(), 5)
+
+		m2 := gmap.NewListKVMapWithChecker[int, *Student](func(student *Student) bool {
+			return student == nil
+		}, true)
+		for i := 0; i < 10; i++ {
+			m2.GetOrSetFuncLock(i, func() *Student {
+				if i%2 == 0 {
+					return &Student{}
+				}
+				return nil
+			})
+		}
+		t.Assert(m2.Size(), 5)
 	})
 }

@@ -18,7 +18,9 @@ import (
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/guid"
 )
 
@@ -60,5 +62,44 @@ func Test_Log(t *testing.T) {
 		logPath3 := gfile.Join(logDir, "error-"+gtime.Now().Format("Ymd")+".log")
 		// fmt.Println(gfile.GetContents(logPath3))
 		t.Assert(gstr.Contains(gfile.GetContents(logPath3), "custom error"), true)
+	})
+}
+
+func Test_Log_ErrorLogDuration(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		logDir := gfile.Temp(gtime.TimestampNanoStr())
+		s := g.Server(guid.S())
+		s.BindHandler("/error", func(r *ghttp.Request) {
+			time.Sleep(100 * time.Millisecond)
+			panic("custom error")
+		})
+		s.SetLogPath(logDir)
+		s.SetAccessLogEnabled(true)
+		s.SetErrorLogEnabled(true)
+		s.SetLogStdout(false)
+		s.Start()
+		defer s.Shutdown()
+		defer gfile.Remove(logDir)
+		time.Sleep(100 * time.Millisecond)
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		t.Assert(client.GetContent(ctx, "/error"), "exception recovered: custom error")
+
+		var (
+			durationPattern = `/error HTTP/1\.1" ([\d.]+),`
+			accessLogPath   = gfile.Join(logDir, "access-"+gtime.Now().Format("Ymd")+".log")
+			errorLogPath    = gfile.Join(logDir, "error-"+gtime.Now().Format("Ymd")+".log")
+		)
+		accessMatch, err := gregex.MatchString(durationPattern, gfile.GetContents(accessLogPath))
+		t.AssertNil(err)
+		t.Assert(len(accessMatch), 2)
+		errorMatch, err := gregex.MatchString(durationPattern, gfile.GetContents(errorLogPath))
+		t.AssertNil(err)
+		t.Assert(len(errorMatch), 2)
+		// Both logs record the request duration in seconds.
+		t.Assert(errorMatch[1], accessMatch[1])
+		t.AssertGE(gconv.Float64(errorMatch[1]), 0.1)
+		t.AssertLT(gconv.Float64(errorMatch[1]), 10)
 	})
 }

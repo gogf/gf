@@ -50,6 +50,18 @@ func (m *Model) Cache(option CacheOption) *Model {
 	return model
 }
 
+// PageCache sets the cache feature for pagination queries. It allows to configure
+// separate cache options for count query and data query in pagination.
+//
+// Note that, the cache feature is disabled if the model is performing select statement
+// on a transaction.
+func (m *Model) PageCache(countOption CacheOption, dataOption CacheOption) *Model {
+	model := m.getModel()
+	model.pageCacheOption = []CacheOption{countOption, dataOption}
+	model.cacheEnabled = true
+	return model
+}
+
 // checkAndRemoveSelectCache checks and removes the cache in insert/update/delete statement if
 // cache feature is enabled.
 func (m *Model) checkAndRemoveSelectCache(ctx context.Context) {
@@ -62,7 +74,7 @@ func (m *Model) checkAndRemoveSelectCache(ctx context.Context) {
 }
 
 func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args ...any) (result Result, err error) {
-	if !m.cacheEnabled || m.tx != nil {
+	if !m.cacheEnabled || m.tx != nil || TXFromCtx(ctx, m.db.GetGroup()) != nil {
 		return
 	}
 	var (
@@ -92,7 +104,7 @@ func (m *Model) getSelectResultFromCache(ctx context.Context, sql string, args .
 func (m *Model) saveSelectResultToCache(
 	ctx context.Context, selectType SelectType, result Result, sql string, args ...any,
 ) (err error) {
-	if !m.cacheEnabled || m.tx != nil {
+	if !m.cacheEnabled || m.tx != nil || TXFromCtx(ctx, m.db.GetGroup()) != nil {
 		return
 	}
 	var (
@@ -106,7 +118,7 @@ func (m *Model) saveSelectResultToCache(
 		return
 	}
 	// Special handler for Value/Count operations result.
-	if len(result) > 0 {
+	if !m.cacheOption.Force && len(result) > 0 {
 		var core = m.db.GetCore()
 		switch selectType {
 		case SelectTypeValue, SelectTypeArray, SelectTypeCount:
@@ -120,10 +132,12 @@ func (m *Model) saveSelectResultToCache(
 	}
 
 	// In case of Cache Penetration.
-	if result != nil && result.IsEmpty() {
+	if result == nil {
 		if m.cacheOption.Force {
 			result = Result{}
-		} else {
+		}
+	} else if result.IsEmpty() {
+		if !m.cacheOption.Force {
 			result = nil
 		}
 	}

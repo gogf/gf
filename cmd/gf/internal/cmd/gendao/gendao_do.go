@@ -36,7 +36,7 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 		}
 		var (
 			newTableName        = in.NewTableNames[i]
-			doFilePath          = gfile.Join(dirPathDo, gstr.CaseSnake(newTableName)+".go")
+			doFilePath          = gfile.Join(dirPathDo, formatFileName(newTableName, in.FileNameCase)+".go")
 			structDefinition, _ = generateStructDefinition(ctx, generateStructDefinitionInput{
 				CGenDaoInternalInput: in,
 				TableName:            tableName,
@@ -47,12 +47,12 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 		)
 		// replace all types to any.
 		structDefinition, _ = gregex.ReplaceStringFuncMatch(
-			"([A-Z]\\w*?)\\s+([\\w\\*\\.]+?)\\s+(//)",
+			"([A-Z]\\w*?)\\s+([\\w\\*\\.]+?)\\s+(`[^`]*`\\s*)?(//)",
 			structDefinition,
 			func(match []string) string {
 				// If the type is already a pointer/slice/map, it does nothing.
 				if !gstr.HasPrefix(match[2], "*") && !gstr.HasPrefix(match[2], "[]") && !gstr.HasPrefix(match[2], "map") {
-					return fmt.Sprintf(`%s any %s`, match[1], match[3])
+					return fmt.Sprintf(`%s any %s%s`, match[1], match[3], match[4])
 				}
 				return match[0]
 			},

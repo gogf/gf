@@ -31,7 +31,7 @@ func (s *Server) handleAccessLog(r *Request) {
 		r.GetClientIp(), r.Referer(), r.UserAgent(),
 	)
 	logger := instance.GetOrSetFuncLock(loggerInstanceKey, func() any {
-		l := s.Logger()
+		l := s.Logger().Clone()
 		l.SetFile(s.config.AccessLogPattern)
 		l.SetStdoutPrint(s.config.LogStdout)
 		l.SetLevelPrint(false)
@@ -59,7 +59,7 @@ func (s *Server) handleErrorLog(err error, r *Request) {
 	content := fmt.Sprintf(
 		`%d "%s %s %s %s %s" %.3f, %s, "%s", "%s", %d, "%s", "%+v"`,
 		r.Response.Status, r.Method, scheme, r.Host, r.URL.String(), r.Proto,
-		float64(r.LeaveTime.Sub(r.EnterTime))/1000,
+		float64(r.LeaveTime.Sub(r.EnterTime).Milliseconds())/1000,
 		r.GetClientIp(), r.Referer(), r.UserAgent(),
 		code.Code(), code.Message(), codeDetailStr,
 	)
@@ -73,7 +73,7 @@ func (s *Server) handleErrorLog(err error, r *Request) {
 		content += ", " + err.Error()
 	}
 	logger := instance.GetOrSetFuncLock(loggerInstanceKey, func() any {
-		l := s.Logger()
+		l := s.Logger().Clone()
 		l.SetStack(false)
 		l.SetFile(s.config.ErrorLogPattern)
 		l.SetStdoutPrint(s.config.LogStdout)

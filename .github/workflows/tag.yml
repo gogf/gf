@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Github Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
       - name: Auto Creating Tags For Contrib Packages
         run: |
           git config --global user.email "tagrobot@goframe.org"
@@ -32,7 +32,7 @@ jobs:
           go env -w GOPRIVATE=github.com/gogf/gf
           .github/workflows/scripts/update_version.sh ./cmd/gf ${{ github.ref_name }}
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v4
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: 'update gf cli to ${{ github.ref_name }}'
           title: 'fix: update gf cli to ${{ github.ref_name }}'
