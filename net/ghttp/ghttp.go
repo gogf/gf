@@ -150,20 +150,43 @@ const (
 )
 
 const (
-	supportedHttpMethods               = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
-	defaultMethod                      = "ALL"
-	routeCacheDuration                 = time.Hour
-	ctxKeyForRequest       gctx.StrKey = "gHttpRequestObject"
-	contentTypeXml                     = "text/xml"
-	contentTypeHtml                    = "text/html"
-	contentTypeJson                    = "application/json"
-	contentTypeJavascript              = "application/javascript"
-	swaggerUIPackedPath                = "/goframe/swaggerui"
-	specialMethodNameInit              = "Init"
-	specialMethodNameShut              = "Shut"
-	specialMethodNameIndex             = "Index"
-	defaultEndpointPort                = 80
-	noPrintInternalRoute               = "internalMiddlewareServerTracing"
+	supportedHttpMethods             = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+	defaultMethod                    = "ALL"
+	routeCacheDuration               = time.Hour
+	ctxKeyForRequest     gctx.StrKey = "gHttpRequestObject"
+
+	// Common text content types.
+	contentTypeHtml        = "text/html"
+	contentTypeXml         = "text/xml"
+	contentTypeEventStream = "text/event-stream"
+	contentTypeTextPrefix  = "text/"
+
+	// Common application content types.
+	contentTypeJson           = "application/json"
+	contentTypeApplicationXml = "application/xml"
+	contentTypeXhtmlXml       = "application/xhtml+xml"
+	contentTypeJavascript     = "application/javascript"
+	contentTypeForm           = "application/x-www-form-urlencoded"
+	contentTypeOctetStream    = "application/octet-stream"
+	contentTypeForceDownload  = "application/force-download"
+
+	// Common multipart content types.
+	contentTypeMultipartPrefix = "multipart/"
+	contentTypeMixedReplace    = "multipart/x-mixed-replace"
+
+	// Content type matching patterns, which are used for the substring or suffix matching
+	// of the content type, as the content type might carry parameters or vendor prefixes.
+	contentTypeXmlSubstring = "/xml"
+	contentTypeJsonSuffix   = "+json"
+	contentTypeXmlSuffix    = "+xml"
+	contentTypeFormKeyword  = "form"
+
+	swaggerUIPackedPath    = "/goframe/swaggerui"
+	specialMethodNameInit  = "Init"
+	specialMethodNameShut  = "Shut"
+	specialMethodNameIndex = "Index"
+	defaultEndpointPort    = 80
+	noPrintInternalRoute   = "internalMiddlewareServerTracing"
 )
 
 const (

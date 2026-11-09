@@ -21,12 +21,6 @@ type DefaultHandlerResponse struct {
 	Data    any    `json:"data"    dc:"Result data for certain request according API definition"`
 }
 
-const (
-	contentTypeEventStream  = "text/event-stream"
-	contentTypeOctetStream  = "application/octet-stream"
-	contentTypeMixedReplace = "multipart/x-mixed-replace"
-)
-
 var (
 	// streamContentType is the content types for stream response.
 	streamContentType = []string{contentTypeEventStream, contentTypeOctetStream, contentTypeMixedReplace}

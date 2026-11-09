@@ -253,8 +253,8 @@ func (r *Request) parseBody() {
 		return
 	}
 	// If it's a multipart request, it does not parse the body content.
-	contentType := r.Header.Get("Content-Type")
-	if gstr.Contains(contentType, "multipart/") {
+	contentType := r.Header.Get(HeaderContentType)
+	if gstr.Contains(contentType, contentTypeMultipartPrefix) {
 		return
 	}
 
@@ -296,7 +296,7 @@ func (r *Request) parseBody() {
 			_ = json.UnmarshalUseNumber(body, &r.bodyMap)
 		}
 		// XML format checks.
-		if gstr.ContainsI(contentType, "/xml") {
+		if gstr.ContainsI(contentType, contentTypeXmlSubstring) {
 			r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
 		} else if r.isAutoDecodingBodyEnabled() {
 			if len(body) > 5 && bytes.EqualFold(body[:5], xmlHeaderBytes) {
@@ -363,8 +363,8 @@ func (r *Request) parseForm() {
 	}
 
 	if contentType := r.Header.Get(HeaderContentType); contentType != "" {
-		var isMultiPartRequest = gstr.Contains(contentType, "multipart/")
-		var isFormRequest = gstr.Contains(contentType, "form")
+		var isMultiPartRequest = gstr.Contains(contentType, contentTypeMultipartPrefix)
+		var isFormRequest = gstr.Contains(contentType, contentTypeFormKeyword)
 		var err error
 
 		// A field tagged with `body:"*"` only receives the JSON array request body, so the
@@ -518,24 +518,24 @@ func (r *Request) isBinaryContentType(contentType string) bool {
 	mimeType = strings.ToLower(mimeType)
 
 	// if the MIME type is text, then it's definitely not binary
-	if strings.HasPrefix(mimeType, "text/") {
+	if strings.HasPrefix(mimeType, contentTypeTextPrefix) {
 		return false
 	}
 
 	// defined non-binary MIME types
 	nonBinaryTypes := map[string]struct{}{
-		"application/json":                  {},
-		"application/xml":                   {},
-		"application/x-www-form-urlencoded": {},
-		"application/javascript":            {},
-		"application/xhtml+xml":             {},
+		contentTypeJson:           {},
+		contentTypeApplicationXml: {},
+		contentTypeForm:           {},
+		contentTypeJavascript:     {},
+		contentTypeXhtmlXml:       {},
 	}
 	if _, ok := nonBinaryTypes[mimeType]; ok {
 		return false
 	}
 
 	// if the MIME type is JSON or XML, it's definitely not binary
-	if strings.HasSuffix(mimeType, "+json") || strings.HasSuffix(mimeType, "+xml") {
+	if strings.HasSuffix(mimeType, contentTypeJsonSuffix) || strings.HasSuffix(mimeType, contentTypeXmlSuffix) {
 		return false
 	}
 
