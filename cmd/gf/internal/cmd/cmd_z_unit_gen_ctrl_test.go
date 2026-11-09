@@ -483,8 +483,12 @@ func Test_Gen_Ctrl_UseMerge_Issue4954(t *testing.T) {
 
 			err := gfile.Mkdir(ctrlPath)
 			t.AssertNil(err)
-			defer gfile.RemoveAll(ctrlPath)
-			defer gfile.RemoveAll(filepath.Join(apiFolder, "/dict/dict.go"))
+			defer func() {
+				t.AssertNil(gfile.RemoveAll(ctrlPath))
+			}()
+			defer func() {
+				t.AssertNil(gfile.RemoveAll(filepath.Join(apiFolder, "/dict/dict.go")))
+			}()
 
 			_, err = genctrl.CGenCtrl{}.Ctrl(ctx, in)
 			t.AssertNil(err)
