@@ -376,6 +376,15 @@ func Test_GroupSortedSet_ZRange(t *testing.T) {
 			t.AssertEQ(ret[i].String(), expected[i])
 		}
 
+		// Score range with infinite and exclusive bounds.
+		ret, err = redis.GroupSortedSet().ZRange(ctx, k, "(1", "+inf", gredis.ZRangeOption{ByScore: true})
+		t.AssertNil(err)
+		t.AssertEQ(ret.Strings(), []string{"two", "three"})
+
+		ret, err = redis.GroupSortedSet().ZRange(ctx, k, "+inf", "-inf", gredis.ZRangeOption{ByScore: true, Rev: true})
+		t.AssertNil(err)
+		t.AssertEQ(ret.Strings(), []string{"three", "two", "one"})
+
 		// ret, err = redis.GroupSortedSet().ZRange(ctx, k, 0, -1,
 		// 	gredis.ZRangeOption{WithScores: true})
 		// t.AssertNil(err)
@@ -805,5 +814,29 @@ func Test_GroupSortedSet_ZLexCount(t *testing.T) {
 		t.AssertNil(err)
 		t.AssertEQ(cnt, int64(5))
 
+	})
+}
+
+func Test_GroupSortedSet_ZRange_ByLex(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer redis.FlushDB(ctx)
+
+		var (
+			k                         = guid.S()
+			option *gredis.ZAddOption = new(gredis.ZAddOption)
+		)
+
+		for _, member := range []string{"a", "b", "c", "d"} {
+			_, err := redis.ZAdd(ctx, k, option, gredis.ZAddMember{Member: member, Score: 0})
+			t.AssertNil(err)
+		}
+
+		ret, err := redis.GroupSortedSet().ZRange(ctx, k, "[b", "(d", gredis.ZRangeOption{ByLex: true})
+		t.AssertNil(err)
+		t.AssertEQ(ret.Strings(), []string{"b", "c"})
+
+		ret, err = redis.GroupSortedSet().ZRange(ctx, k, "-", "+", gredis.ZRangeOption{ByLex: true})
+		t.AssertNil(err)
+		t.AssertEQ(ret.Strings(), []string{"a", "b", "c", "d"})
 	})
 }

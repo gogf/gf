@@ -224,7 +224,6 @@ func loadContentWithOptions(data []byte, options Options) (*Json, error) {
 		return NewWithOptions(decodedData, options), nil
 
 	default:
-
 	}
 	// ignore some duplicated types, like js and yml,
 	// which are not necessary shown in error message.

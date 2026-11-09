@@ -56,7 +56,7 @@ func NewListKVMap[K comparable, V any](safe ...bool) *ListKVMap[K, V] {
 // which is false by default.
 func NewListKVMapWithChecker[K comparable, V any](checker NilChecker[V], safe ...bool) *ListKVMap[K, V] {
 	m := NewListKVMap[K, V](safe...)
-	m.RegisterNilChecker(checker)
+	m.SetNilChecker(checker)
 	return m
 }
 
@@ -81,11 +81,11 @@ func NewListKVMapWithCheckerFrom[K comparable, V any](data map[K]V, nilChecker N
 	return m
 }
 
-// RegisterNilChecker registers a custom nil checker function for the map values.
+// SetNilChecker registers a custom nil checker function for the map values.
 // This function is used to determine if a value should be considered as nil.
 // The nil checker function takes a value of type V and returns a boolean indicating
 // whether the value should be treated as nil.
-func (m *ListKVMap[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) {
+func (m *ListKVMap[K, V]) SetNilChecker(nilChecker NilChecker[V]) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.nilChecker = nilChecker
@@ -93,12 +93,12 @@ func (m *ListKVMap[K, V]) RegisterNilChecker(nilChecker NilChecker[V]) {
 
 // isNil checks whether the given value is nil.
 // It first checks if a custom nil checker function is registered and uses it if available,
-// otherwise it performs a standard nil check using any(v) == nil.
+// otherwise it falls back to the default empty.IsNil function.
 func (m *ListKVMap[K, V]) isNil(v V) bool {
 	if m.nilChecker != nil {
 		return m.nilChecker(v)
 	}
-	return any(v) == nil
+	return empty.IsNil(v)
 }
 
 // Iterator is alias of IteratorAsc.
@@ -400,8 +400,58 @@ func (m *ListKVMap[K, V]) GetVarOrSetFuncLock(key K, f func() V) *gvar.Var {
 	return gvar.New(m.GetOrSetFuncLock(key, f))
 }
 
+// GetOrSetFuncWithError returns the value by key,
+// or sets value with returned value of callback function `f` if it does not exist
+// and then returns this value.
+//
+// Note that, it does not add the value to the map if the returned value of `f` is nil
+// or if `f` returns a non-nil error.
+func (m *ListKVMap[K, V]) GetOrSetFuncWithError(key K, f func() (V, error)) (V, error) {
+	if v, ok := m.Search(key); ok {
+		return v, nil
+	}
+	value, err := f()
+	if err != nil {
+		var zero V
+		return zero, err
+	}
+	return m.doSetWithLockCheck(key, value), nil
+}
+
+// GetOrSetFuncLockWithError returns the value by key,
+// or sets value with returned value of callback function `f` if it does not exist
+// and then returns this value.
+//
+// GetOrSetFuncLockWithError differs with GetOrSetFuncWithError function is that it executes function `f`
+// with mutex.Lock of the map.
+//
+// Note that, it does not add the value to the map if the returned value of `f` is nil
+// or if `f` returns a non-nil error.
+func (m *ListKVMap[K, V]) GetOrSetFuncLockWithError(key K, f func() (V, error)) (V, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = make(map[K]*glist.TElement[*gListKVMapNode[K, V]])
+		m.list = glist.NewT[*gListKVMapNode[K, V]]()
+	}
+	if e, ok := m.data[key]; ok {
+		return e.Value.value, nil
+	}
+	value, err := f()
+	if err != nil {
+		var zero V
+		return zero, err
+	}
+	if !m.isNil(value) {
+		m.data[key] = m.list.PushBack(&gListKVMapNode[K, V]{key, value})
+	}
+	return value, nil
+}
+
 // SetIfNotExist sets `value` to the map if the `key` does not exist, and then returns true.
 // It returns false if `key` exists, and `value` would be ignored.
+//
+// Note that it does not add the value to the map if `value` is nil.
 func (m *ListKVMap[K, V]) SetIfNotExist(key K, value V) bool {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -421,7 +471,23 @@ func (m *ListKVMap[K, V]) SetIfNotExist(key K, value V) bool {
 
 // SetIfNotExistFunc sets value with return value of callback function `f`, and then returns true.
 // It returns false if `key` exists, and `value` would be ignored.
+//
+// Note that, it does not add the value to the map if the returned value of `f` is nil.
 func (m *ListKVMap[K, V]) SetIfNotExistFunc(key K, f func() V) bool {
+	if m.Contains(key) {
+		return false
+	}
+	return m.SetIfNotExist(key, f())
+}
+
+// SetIfNotExistFuncLock sets value with return value of callback function `f`, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
+//
+// SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
+// it executes function `f` with mutex.Lock of the map.
+//
+// Note that, it does not add the value to the map if the returned value of `f` is nil.
+func (m *ListKVMap[K, V]) SetIfNotExistFuncLock(key K, f func() V) bool {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -439,12 +505,31 @@ func (m *ListKVMap[K, V]) SetIfNotExistFunc(key K, f func() V) bool {
 	return true
 }
 
-// SetIfNotExistFuncLock sets value with return value of callback function `f`, and then returns true.
+// SetIfNotExistFuncWithError sets value with return value of callback function `f`, and then returns true.
 // It returns false if `key` exists, and `value` would be ignored.
+// It returns (false, error) if `f` returns a non-nil error, and `value` would not be stored.
 //
-// SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
+// Note that, it does not add the value to the map if the returned value of `f` is nil.
+func (m *ListKVMap[K, V]) SetIfNotExistFuncWithError(key K, f func() (V, error)) (bool, error) {
+	if m.Contains(key) {
+		return false, nil
+	}
+	value, err := f()
+	if err != nil {
+		return false, err
+	}
+	return m.SetIfNotExist(key, value), nil
+}
+
+// SetIfNotExistFuncLockWithError sets value with return value of callback function `f`, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
+// It returns (false, error) if `f` returns a non-nil error, and `value` would not be stored.
+//
+// SetIfNotExistFuncLockWithError differs with SetIfNotExistFuncWithError function is that
 // it executes function `f` with mutex.Lock of the map.
-func (m *ListKVMap[K, V]) SetIfNotExistFuncLock(key K, f func() V) bool {
+//
+// Note that, it does not add the value to the map if the returned value of `f` is nil.
+func (m *ListKVMap[K, V]) SetIfNotExistFuncLockWithError(key K, f func() (V, error)) (bool, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -453,13 +538,16 @@ func (m *ListKVMap[K, V]) SetIfNotExistFuncLock(key K, f func() V) bool {
 		m.list = glist.NewT[*gListKVMapNode[K, V]]()
 	}
 	if _, ok := m.data[key]; ok {
-		return false
+		return false, nil
 	}
-	value := f()
+	value, err := f()
+	if err != nil {
+		return false, err
+	}
 	if !m.isNil(value) {
 		m.data[key] = m.list.PushBack(&gListKVMapNode[K, V]{key, value})
 	}
-	return true
+	return true, nil
 }
 
 // Remove deletes value from map by given `key`, and return this deleted value.
@@ -609,6 +697,9 @@ func (m *ListKVMap[K, V]) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
+// DO NOT change this receiver to pointer type, as the ListKVMap can be used as a var defined variable, like:
+// var m gmap.ListKVMap[string]string
+// Please refer to corresponding tests for more details.
 func (m ListKVMap[K, V]) MarshalJSON() (jsonBytes []byte, err error) {
 	if m.data == nil {
 		return []byte("{}"), nil

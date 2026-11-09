@@ -8,6 +8,7 @@ package gtag
 
 import (
 	"regexp"
+	"strings"
 
 	"github.com/gogf/gf/v2/errors/gerror"
 )
@@ -56,6 +57,10 @@ func Get(name string) string {
 // gtag.Set("demo", "content")
 // Parse(`This is {demo}`) -> `This is content`.
 func Parse(content string) string {
+	// Fast path: there is no variable placeholder, which means no need for regexp replacing.
+	if strings.IndexByte(content, '{') < 0 {
+		return content
+	}
 	return regex.ReplaceAllStringFunc(content, func(s string) string {
 		if v, ok := data[s[1:len(s)-1]]; ok {
 			return v

@@ -34,9 +34,15 @@ func (m *Model) QuoteWord(s string) string {
 func (m *Model) TableFields(tableStr string, schema ...string) (fields map[string]*TableField, err error) {
 	var (
 		ctx        = m.GetCtx()
-		usedTable  = m.db.GetCore().guessPrimaryTableName(tableStr)
+		usedTable  = m.db.GetTableNameForFields(tableStr)
 		usedSchema = gutil.GetOrDefaultStr(m.schema, schema...)
 	)
+	// Strip quote characters from schema name, as it may come from cross-database
+	// table parsing (e.g., `schema`.`table`) and contain database-specific quote chars.
+	charL, charR := m.db.GetChars()
+	if usedSchema != "" && (charL != "" || charR != "") {
+		usedSchema = gstr.Trim(usedSchema, charL+charR)
+	}
 	// Sharding feature.
 	usedSchema, err = m.getActualSchema(ctx, usedSchema)
 	if err != nil {
@@ -94,6 +100,10 @@ func (m *Model) mappingAndFilterToTableFields(table string, fields []any, filter
 			fieldStr         = gconv.String(field)
 			inputFieldsArray []string
 		)
+		// Skip empty string fields.
+		if fieldStr == "" {
+			continue
+		}
 		switch {
 		case gregex.IsMatchString(regularFieldNameWithoutDotRegPattern, fieldStr):
 			inputFieldsArray = append(inputFieldsArray, fieldStr)
@@ -116,7 +126,7 @@ func (m *Model) mappingAndFilterToTableFields(table string, fields []any, filter
 			if _, ok := fieldsKeyMap[inputField]; !ok {
 				// Example:
 				// id, name
-				if foundKey, _ := gutil.MapPossibleItemByKey(fieldsKeyMap, inputField); foundKey != "" {
+				if foundKey, _ := mapPossibleItemByFieldKey(m.db, fieldsKeyMap, inputField); foundKey != "" {
 					outputFieldsArray = append(outputFieldsArray, foundKey)
 				} else if !filter {
 					outputFieldsArray = append(outputFieldsArray, inputField)

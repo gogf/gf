@@ -9,6 +9,7 @@ package pgsql_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -109,6 +110,13 @@ func Test_CheckLocalTypeForField(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
+		// Test bytea type
+		localType, err := driver.CheckLocalTypeForField(ctx, "bytea", nil)
+		t.AssertNil(err)
+		t.Assert(localType, gdb.LocalTypeBytes)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
 		// Test bytea array type
 		localType, err := driver.CheckLocalTypeForField(ctx, "_bytea", nil)
 		t.AssertNil(err)
@@ -154,6 +162,13 @@ func Test_CheckLocalTypeForField(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(localType, gdb.LocalTypeInt32Slice)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// timetz must be classified as a string to preserve its UTC offset.
+		localType, err := driver.CheckLocalTypeForField(ctx, "timetz", nil)
+		t.AssertNil(err)
+		t.Assert(localType, gdb.LocalTypeString)
+	})
 }
 
 // Test_ConvertValueForLocal tests the ConvertValueForLocal method
@@ -162,6 +177,42 @@ func Test_ConvertValueForLocal(t *testing.T) {
 		ctx    = context.Background()
 		driver = pgsql.Driver{}
 	)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Positive and negative offsets must both survive local conversion.
+		for _, value := range []string{"12:34:56+08", "12:34:56-05"} {
+			result, err := driver.ConvertValueForLocal(ctx, "timetz", []byte(value))
+			t.AssertNil(err)
+			t.Assert(result, value)
+		}
+
+		for _, testCase := range []struct {
+			value time.Time
+			want  string
+		}{
+			{time.Date(0, time.January, 1, 12, 34, 56, 0, time.FixedZone("", 8*60*60)), "12:34:56+08"},
+			{time.Date(0, time.January, 1, 12, 34, 56, 0, time.FixedZone("", -5*60*60)), "12:34:56-05"},
+			{time.Date(0, time.January, 1, 12, 34, 56, 0, time.FixedZone("", 5*60*60+30*60)), "12:34:56+05:30"},
+			{time.Date(0, time.January, 1, 12, 34, 56, 0, time.FixedZone("", 5*60*60+30*60+15)), "12:34:56+05:30:15"},
+			{time.Date(0, time.January, 1, 12, 34, 56, 123456000, time.FixedZone("", 5*60*60+30*60)), "12:34:56.123456+05:30"},
+		} {
+			result, err := driver.ConvertValueForLocal(ctx, "timetz", testCase.value)
+			t.AssertNil(err)
+			t.Assert(result, testCase.want)
+		}
+
+		for _, testCase := range []struct {
+			value any
+			want  string
+		}{
+			{"12:34:56+08", "12:34:56+08"},
+			{[]byte("12:34:56-05"), "12:34:56-05"},
+		} {
+			result, err := driver.ConvertValueForLocal(ctx, "timetz", testCase.value)
+			t.AssertNil(err)
+			t.Assert(result, testCase.want)
+		}
+	})
 
 	gtest.C(t, func(t *gtest.T) {
 		// Test _int2 array conversion
@@ -362,6 +413,17 @@ func Test_ConvertValueForLocal(t *testing.T) {
 		_, err := driver.ConvertValueForLocal(ctx, "_bytea", "invalid")
 		t.AssertNE(err, nil)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test bytea conversion - should preserve []byte as-is
+		input := []byte{0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x5D, 0x5B}
+		result, err := driver.ConvertValueForLocal(ctx, "bytea", input)
+		t.AssertNil(err)
+		resultBytes, ok := result.([]byte)
+		t.Assert(ok, true)
+		t.Assert(len(resultBytes), len(input))
+		t.Assert(resultBytes, input)
+	})
 }
 
 // Test_ConvertValueForField tests the ConvertValueForField method
@@ -405,5 +467,15 @@ func Test_ConvertValueForField(t *testing.T) {
 		result, err := driver.ConvertValueForField(ctx, "jsonb", []string{"a", "b"})
 		t.AssertNil(err)
 		t.Assert(result, `["a","b"]`)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// Test []byte value for bytea type (should preserve raw bytes, not do []->{} replacement)
+		input := []byte{0xDE, 0xAD, 0x5B, 0x5D, 0xBE, 0xEF}
+		result, err := driver.ConvertValueForField(ctx, "bytea", input)
+		t.AssertNil(err)
+		resultBytes, ok := result.([]byte)
+		t.Assert(ok, true)
+		t.Assert(resultBytes, input)
 	})
 }

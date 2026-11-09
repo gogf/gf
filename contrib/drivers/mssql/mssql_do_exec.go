@@ -9,27 +9,26 @@ package mssql
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
 	"regexp"
 	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 )
 
-const (
-	// INSERT statement prefixes
-	insertPrefixDefault = "INSERT INTO"
-	insertPrefixIgnore  = "INSERT IGNORE INTO"
+// outputInsertedClause is the OUTPUT clause returning a column of the inserted rows.
+const outputInsertedClause = " OUTPUT INSERTED.%s"
 
+// The constants of GetInsertOutputSql.
+//
+// Deprecated: GetInsertOutputSql is deprecated.
+const (
 	// Database field attributes
-	fieldExtraIdentity = "IDENTITY"
-	fieldKeyPrimary    = "PRI"
+	fieldKeyPrimary = "PRI"
 
 	// SQL keywords and syntax markers
-	outputKeyword      = "OUTPUT"
-	insertValuesMarker = ") VALUES" // find the position of the string "VALUES" in the INSERT SQL statement to embed output code for retrieving the last inserted ID
+	outputKeyword = "OUTPUT"
 
 	// Object and field references
 	insertedObjectName = "INSERTED"
@@ -41,7 +40,29 @@ const (
 
 // DoExec commits the sql string and its arguments to underlying driver
 // through given link object and returns the execution result.
-func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args ...interface{}) (result sql.Result, err error) {
+// The INSERT statements of DoInsert return the IDENTITY column of the inserted rows through an
+// OUTPUT clause, whose first value is reported as LastInsertId.
+func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args ...any) (result sql.Result, err error) {
+	if isReleaseSavePoint(sqlStr) {
+		return driver.RowsAffected(0), nil
+	}
+	identityField, isInsert := ctx.Value(internalIdentityFieldInCtx).(string)
+	if !isInsert {
+		return d.Core.DoExec(ctx, link, sqlStr, args...)
+	}
+	pos := insertColumnListEnd(sqlStr)
+	if identityField == "" || pos < 0 {
+		r, err := d.Core.DoExec(ctx, link, sqlStr, args...)
+		if err != nil {
+			return r, err
+		}
+		affected, err := r.RowsAffected()
+		if err != nil {
+			return nil, err
+		}
+		return &Result{rowsAffected: affected}, nil
+	}
+
 	// Transaction checks.
 	if link == nil {
 		if tx := gdb.TXFromCtx(ctx, d.GetGroup()); tx != nil {
@@ -57,60 +78,36 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args 
 			link = &txLinkMssql{tx.GetSqlTX()}
 		}
 	}
+	sqlStr = sqlStr[:pos] + fmt.Sprintf(outputInsertedClause, d.QuoteWord(identityField)) + sqlStr[pos:]
+	return d.Core.DoExec(ctx, &outputLink{Link: link}, sqlStr, args...)
+}
 
-	// SQL filtering.
-	sqlStr, args = d.FormatSqlBeforeExecuting(sqlStr, args)
-	sqlStr, args, err = d.DoFilter(ctx, link, sqlStr, args)
-	if err != nil {
-		return nil, err
-	}
-
-	if !strings.HasPrefix(sqlStr, insertPrefixDefault) && !strings.HasPrefix(sqlStr, insertPrefixIgnore) {
-		return d.Core.DoExec(ctx, link, sqlStr, args)
-	}
-	// Find the first position of VALUES marker in the INSERT statement.
-	pos := strings.Index(sqlStr, insertValuesMarker)
-
-	table := d.GetTableNameFromSql(sqlStr)
-	outPutSql := d.GetInsertOutputSql(ctx, table)
-	// rebuild sql add output
+// insertColumnListEnd returns the position following the parenthesis that closes the column list
+// of the INSERT statement `sqlStr` built by gdb.Core.DoInsert, or -1 if there is none.
+// Parentheses inside quoted identifiers are skipped.
+func insertColumnListEnd(sqlStr string) int {
 	var (
-		sqlValueBefore = sqlStr[:pos+1]
-		sqlValueAfter  = sqlStr[pos+1:]
+		depth  int
+		quoted bool
 	)
-
-	sqlStr = fmt.Sprintf("%s%s%s", sqlValueBefore, outPutSql, sqlValueAfter)
-
-	// fmt.Println("sql str:", sqlStr)
-	// Link execution.
-	var out gdb.DoCommitOutput
-	out, err = d.DoCommit(ctx, gdb.DoCommitInput{
-		Link:          link,
-		Sql:           sqlStr,
-		Args:          args,
-		Stmt:          nil,
-		Type:          gdb.SqlTypeQueryContext,
-		IsTransaction: link.IsTransaction(),
-	})
-	if err != nil {
-		return &Result{lastInsertId: 0, rowsAffected: 0, err: err}, err
+	for i := 0; i < len(sqlStr); i++ {
+		if sqlStr[i] == quoteChar[0] {
+			quoted = !quoted
+			continue
+		}
+		if quoted {
+			continue
+		}
+		switch sqlStr[i] {
+		case '(':
+			depth++
+		case ')':
+			if depth--; depth == 0 {
+				return i + 1
+			}
+		}
 	}
-	stdSqlResult := out.Records
-	if len(stdSqlResult) == 0 {
-		err = gerror.WrapCode(
-			gcode.CodeDbOperationError,
-			gerror.New("affected count is zero"),
-			`sql.Result.RowsAffected failed`,
-		)
-		return &Result{lastInsertId: 0, rowsAffected: 0, err: err}, err
-	}
-	// For batch insert, OUTPUT clause returns one row per inserted row.
-	// So the rowsAffected should be the count of returned records.
-	rowsAffected := int64(len(stdSqlResult))
-	// get last_insert_id from the first returned row
-	lastInsertId := stdSqlResult[0].GMap().GetVar(lastInsertIdFieldAlias).Int64()
-
-	return &Result{lastInsertId: lastInsertId, rowsAffected: rowsAffected}, err
+	return -1
 }
 
 // GetTableNameFromSql get table name from sql statement
@@ -119,6 +116,8 @@ func (d *Driver) DoExec(ctx context.Context, link gdb.Link, sqlStr string, args 
 // "user u"
 // "DbLog.dbo.user",
 // "user as u".
+//
+// Deprecated: DoExec no longer uses it, and it will be removed in the future.
 func (d *Driver) GetTableNameFromSql(sqlStr string) (table string) {
 	// INSERT INTO "ip_to_id"("ip") OUTPUT  1 as AffectCount,INSERTED.id as ID VALUES(?)
 	var (
@@ -164,6 +163,8 @@ func (l *txLinkMssql) IsOnMaster() bool {
 }
 
 // GetInsertOutputSql  gen get last_insert_id code
+//
+// Deprecated: DoExec no longer uses it, and it will be removed in the future.
 func (d *Driver) GetInsertOutputSql(ctx context.Context, table string) string {
 	fds, errFd := d.GetDB().TableFields(ctx, table)
 	if errFd != nil {
@@ -189,4 +190,33 @@ func (d *Driver) GetInsertOutputSql(ctx context.Context, table string) string {
 	}
 	return strings.Join(extraSqlAry, ",")
 	// sql example:INSERT INTO "ip_to_id"("ip") OUTPUT  1 as AffectCount,INSERTED.id as ID VALUES(?)
+}
+
+// outputLink is a gdb.Link that executes an INSERT statement carrying an OUTPUT clause as a query,
+// as SQL Server returns the OUTPUT values as a result set.
+type outputLink struct {
+	gdb.Link
+}
+
+// ExecContext executes the INSERT statement `query` and returns a result reporting the count of
+// the rows it returns as RowsAffected and the value of the first one as LastInsertId.
+func (l *outputLink) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
+	rows, err := l.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	result := new(Result)
+	for rows.Next() {
+		if result.rowsAffected == 0 {
+			if err = rows.Scan(&result.lastInsertId); err != nil {
+				return nil, err
+			}
+		}
+		result.rowsAffected++
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return result, nil
 }

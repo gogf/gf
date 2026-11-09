@@ -31,6 +31,12 @@ func (c *Converter) Float32(anyInput any) (float32, error) {
 		// TODO: It might panic here for these types.
 		return gbinary.DecodeToFloat32(value), nil
 	default:
+		// Unwrap reflect.Value input for consistency with Bool converter.
+		if rv, ok := anyInput.(reflect.Value); ok {
+			if rv.IsValid() && rv.CanInterface() {
+				return c.Float32(rv.Interface())
+			}
+		}
 		rv := reflect.ValueOf(anyInput)
 		switch rv.Kind() {
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
@@ -93,6 +99,12 @@ func (c *Converter) Float64(anyInput any) (float64, error) {
 		// TODO: It might panic here for these types.
 		return gbinary.DecodeToFloat64(value), nil
 	default:
+		// Unwrap reflect.Value input for consistency with Bool converter.
+		if rv, ok := anyInput.(reflect.Value); ok {
+			if rv.IsValid() && rv.CanInterface() {
+				return c.Float64(rv.Interface())
+			}
+		}
 		rv := reflect.ValueOf(anyInput)
 		switch rv.Kind() {
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:

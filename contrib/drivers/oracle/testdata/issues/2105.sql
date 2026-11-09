@@ -1,0 +1,6 @@
+CREATE TABLE issue2105 (
+    id   VARCHAR2(255) NOT NULL,
+    json CLOB,
+    PRIMARY KEY (id)
+);
+INSERT INTO issue2105 VALUES ('1', NULL);

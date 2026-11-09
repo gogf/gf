@@ -11,7 +11,6 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"time"
@@ -58,31 +57,56 @@ var (
 	defaultClientAgent = fmt.Sprintf(`GClient %s at %s`, gf.VERSION, hostname)
 )
 
-// New creates and returns a new HTTP client object.
+// New creates and returns a new HTTP client object with a default timeout of 30 seconds.
 func New() *Client {
+	return NewWithTimeout(30 * time.Second)
+}
+
+// NewWithTimeout creates and returns a new HTTP client object with specified timeout.
+//
+// The transport is cloned from http.DefaultTransport to inherit standard library defaults
+// (such as Proxy, HTTP/2 knobs, and future Go defaults), then customized with the project's
+// own TLS, keep-alive, and connection pool settings.
+func NewWithTimeout(timeout time.Duration) *Client {
+	// Clone from http.DefaultTransport to inherit standard library defaults,
+	// then override with project-specific settings.
+	var transport *http.Transport
+	if defaultTransport, ok := http.DefaultTransport.(*http.Transport); ok {
+		transport = defaultTransport.Clone()
+	} else {
+		// Fallback to manual construction if DefaultTransport is not *http.Transport
+		// (e.g., if the application replaced it with a custom RoundTripper)
+		transport = &http.Transport{
+			DisableKeepAlives:     true,
+			MaxIdleConns:          100,
+			MaxIdleConnsPerHost:   50,
+			MaxConnsPerHost:       100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+			ForceAttemptHTTP2:     true,
+		}
+	}
+	// No validation for https certification of the server in default.
+	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	transport.DisableKeepAlives = true
+	transport.MaxIdleConnsPerHost = 50
+	transport.MaxConnsPerHost = 100
+	defaultClient := http.Client{
+		Transport: transport,
+		Timeout:   timeout,
+	}
+	return NewWithHttpClient(&defaultClient)
+}
+
+// NewWithHttpClient creates and returns a new Client with given http.Client.
+// It panics if client is nil.
+func NewWithHttpClient(client *http.Client) *Client {
+	if client == nil {
+		panic(`gclient: client must not be nil`)
+	}
 	c := &Client{
-		Client: http.Client{
-			Transport: &http.Transport{
-				// No validation for https certification of the server in default.
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-				DisableKeepAlives:     true,
-				MaxIdleConns:          100,
-				MaxIdleConnsPerHost:   50,
-				MaxConnsPerHost:       100,
-				IdleConnTimeout:       90 * time.Second,
-				ResponseHeaderTimeout: 30 * time.Second,
-				ExpectContinueTimeout: 1 * time.Second,
-				TLSHandshakeTimeout:   10 * time.Second,
-				ForceAttemptHTTP2:     true,
-				DisableCompression:    false,
-				DialContext: (&net.Dialer{
-					Timeout:   30 * time.Second,
-					KeepAlive: 30 * time.Second,
-				}).DialContext,
-			},
-		},
+		Client:    *client,
 		header:    make(map[string]string),
 		cookies:   make(map[string]string),
 		builder:   gsel.GetBuilder(),

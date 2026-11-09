@@ -8,7 +8,6 @@ package ghttp
 
 import (
 	"context"
-	"os"
 	"strings"
 	"time"
 
@@ -59,7 +58,11 @@ func (p *utilAdmin) Restart(r *Request) {
 	// Custom start binary path when this process exits.
 	path := r.GetQuery("newExeFilePath").String()
 	if path == "" {
-		path = os.Args[0]
+		path = gfile.SelfPath()
+	}
+	if path == "" {
+		r.Response.WriteExit("cannot determine current executable path")
+		return
 	}
 	if err = RestartAllServer(ctx, path); err == nil {
 		r.Response.WriteExit("server restarted")

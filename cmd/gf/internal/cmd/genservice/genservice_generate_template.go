@@ -43,8 +43,10 @@ func (c CGenService) generateType(generatedContent *bytes.Buffer, srcStructFunct
 		for _, funcInfo := range funcSlice {
 			// Remove package name calls of `dstPackageName` in produced codes.
 			funcHead, _ := gregex.ReplaceString(
-				fmt.Sprintf(`\*{0,1}%s\.`, dstPackageName),
-				``, funcInfo["funcHead"],
+				// Keep the optional pointer `*` (if any), but remove the `dstPackageName.` prefix
+				// so `*service.Type` becomes `*Type`.
+				fmt.Sprintf(`(\*)?%s\.`, dstPackageName),
+				`$1`, funcInfo["funcHead"],
 			)
 			funcContent = funcInfo["funcComment"] + funcHead
 			funcContents = append(funcContents, funcContent)

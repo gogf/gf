@@ -461,6 +461,70 @@ func Test_Gen_Dao_Issue3749(t *testing.T) {
 	})
 }
 
+// https://github.com/gogf/gf/issues/4111
+// The generated do struct should keep the orm tag of fields whose prefix is removed.
+func Test_Gen_Dao_Issue4111(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err         error
+			table       = "table_user"
+			path        = gfile.Temp(guid.S())
+			linkSqlite3 = fmt.Sprintf("sqlite::@file(%s/db.sqlite3)", path)
+			sqlContent  = fmt.Sprintf(
+				gtest.DataContent(`issue`, `4111`, `user.sqlite3.sql`),
+				table,
+			)
+		)
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+		defer gfile.Remove(path)
+
+		dbSqlite3, err := gdb.New(gdb.ConfigNode{
+			Link: linkSqlite3,
+		})
+		t.AssertNil(err)
+
+		array := gstr.SplitAndTrim(sqlContent, ";")
+		for _, v := range array {
+			if _, err = dbSqlite3.Exec(ctx, v); err != nil {
+				t.AssertNil(err)
+			}
+		}
+
+		var (
+			group = "test"
+			in    = gendao.CGenDaoInput{
+				Path:              path,
+				Link:              linkSqlite3,
+				Group:             group,
+				Tables:            table,
+				RemoveFieldPrefix: "f_",
+			}
+		)
+		err = gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		// for go mod import path auto retrieve.
+		err = gfile.Copy(
+			gtest.DataPath("gendao", "go.mod.txt"),
+			gfile.Join(path, "go.mod"),
+		)
+		t.AssertNil(err)
+
+		_, err = gendao.CGenDao{}.Dao(ctx, in)
+		t.AssertNil(err)
+
+		// content
+		var (
+			testPath   = gtest.DataPath(`issue`, `4111`)
+			doFile     = filepath.FromSlash(path + "/model/do/table_user.go")
+			expectFile = filepath.FromSlash(testPath + "/model/do/table_user.go")
+		)
+		//_ = gfile.PutContents(expectFile, gfile.GetContents(doFile))
+		t.Assert(gfile.GetContents(doFile), gfile.GetContents(expectFile))
+	})
+}
+
 // https://github.com/gogf/gf/issues/4629
 // Test tables pattern matching with * wildcard.
 func Test_Gen_Dao_Issue4629_TablesPattern_Star(t *testing.T) {

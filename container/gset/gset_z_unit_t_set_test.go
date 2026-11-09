@@ -601,10 +601,10 @@ func Test_TSet_TypedNil(t *testing.T) {
 		set := gset.NewTSet[*Student](true)
 		var s *Student = nil
 		exist := set.AddIfNotExist(s)
-		t.Assert(exist, true)
+		t.Assert(exist, false)
 
 		set2 := gset.NewTSet[*Student](true)
-		set2.RegisterNilChecker(func(student *Student) bool {
+		set2.SetNilChecker(func(student *Student) bool {
 			return student == nil
 		})
 		exist2 := set2.AddIfNotExist(s)
@@ -621,7 +621,7 @@ func Test_NewTSetWithChecker_TypedNil(t *testing.T) {
 		set := gset.NewTSet[*Student](true)
 		var s *Student = nil
 		exist := set.AddIfNotExist(s)
-		t.Assert(exist, true)
+		t.Assert(exist, false)
 
 		set2 := gset.NewTSetWithChecker[*Student](func(student *Student) bool {
 			return student == nil
