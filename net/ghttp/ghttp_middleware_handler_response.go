@@ -16,9 +16,9 @@ import (
 
 // DefaultHandlerResponse is the default implementation of HandlerResponse.
 type DefaultHandlerResponse struct {
-	Code    int         `json:"code"    dc:"Error code"`
-	Message string      `json:"message" dc:"Error message"`
-	Data    interface{} `json:"data"    dc:"Result data for certain request according API definition"`
+	Code    int    `json:"code"    dc:"Error code"`
+	Message string `json:"message" dc:"Error message"`
+	Data    any    `json:"data"    dc:"Result data for certain request according API definition"`
 }
 
 const (
@@ -37,12 +37,12 @@ func MiddlewareHandlerResponse(r *Request) {
 	r.Middleware.Next()
 
 	// There's custom buffer content, it then exits current handler.
-	if r.Response.BufferLength() > 0 || r.Response.Writer.BytesWritten() > 0 {
+	if r.Response.BufferLength() > 0 || r.Response.BytesWritten() > 0 {
 		return
 	}
 
 	// It does not output common response content if it is stream response.
-	mediaType, _, _ := mime.ParseMediaType(r.Response.Header().Get("Content-Type"))
+	mediaType, _, _ := mime.ParseMediaType(r.Response.Header().Get(HeaderContentType))
 	for _, ct := range streamContentType {
 		if mediaType == ct {
 			return

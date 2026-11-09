@@ -20,7 +20,7 @@ import (
 // Search searches and returns services with specified condition.
 func (r *Registry) Search(_ context.Context, in gsvc.SearchInput) ([]gsvc.Service, error) {
 	prefix := strings.Trim(strings.ReplaceAll(in.Prefix, "/", "-"), "-")
-	instances, err, _ := r.group.Do(prefix, func() (interface{}, error) {
+	instances, err, _ := r.group.Do(prefix, func() (any, error) {
 		serviceNamePath := path.Join(r.opts.namespace, prefix)
 		servicesID, _, err := r.conn.Children(serviceNamePath)
 		if err != nil {
@@ -57,7 +57,7 @@ func (r *Registry) Search(_ context.Context, in gsvc.SearchInput) ([]gsvc.Servic
 			}
 			items = append(items, svc)
 		}
-		return items, nil
+		return mergeServices(items), nil
 	})
 	if err != nil {
 		return nil, gerror.Wrapf(

@@ -9,8 +9,14 @@ package gconv_test
 import (
 	"fmt"
 	"math/big"
+	"os"
+	"os/exec"
+	"reflect"
+	"strings"
 	"testing"
 	"time"
+
+	_ "time/tzdata"
 
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/container/gvar"
@@ -30,7 +36,7 @@ func Test_Issue1227(t *testing.T) {
 		}
 		tests := []struct {
 			name   string
-			origin interface{}
+			origin any
 			want   string
 		}{
 			{
@@ -75,7 +81,7 @@ func Test_Issue1227(t *testing.T) {
 		}
 		tests := []struct {
 			name   string
-			origin interface{}
+			origin any
 			want   string
 		}{
 			{
@@ -123,7 +129,7 @@ func Test_Issue1227(t *testing.T) {
 // https://github.com/gogf/gf/issues/1607
 type issue1607Float64 float64
 
-func (f *issue1607Float64) UnmarshalValue(value interface{}) error {
+func (f *issue1607Float64) UnmarshalValue(value any) error {
 	if v, ok := value.(*big.Rat); ok {
 		f64, _ := v.Float64()
 		*f = issue1607Float64(f64)
@@ -140,7 +146,7 @@ func Test_Issue1607(t *testing.T) {
 		rat.SetFloat64(1.5)
 
 		var demos = make([]Demo, 1)
-		err := gconv.Scan([]map[string]interface{}{
+		err := gconv.Scan([]map[string]any{
 			{"A": 1, "B": rat},
 		}, &demos)
 		t.AssertNil(err)
@@ -307,7 +313,7 @@ func Test_Issue2395(t *testing.T) {
 		}
 		var ()
 		obj := Test{Num: 0}
-		t.Assert(gconv.Interfaces(obj), []interface{}{obj})
+		t.Assert(gconv.Interfaces(obj), []any{obj})
 	})
 }
 
@@ -318,7 +324,7 @@ func Test_Issue2371(t *testing.T) {
 			s = struct {
 				Time time.Time `json:"time"`
 			}{}
-			jsonMap = map[string]interface{}{"time": "2022-12-15 16:11:34"}
+			jsonMap = map[string]any{"time": "2022-12-15 16:11:34"}
 		)
 
 		err := gconv.Struct(jsonMap, &s)
@@ -333,7 +339,7 @@ func Test_Issue2901(t *testing.T) {
 		ForceUpdateTime *time.Time
 	}
 	gtest.C(t, func(t *gtest.T) {
-		src := map[string]interface{}{
+		src := map[string]any{
 			"FORCE_UPDATE_TIME": time.Now(),
 		}
 		m := GameApp2{}
@@ -372,7 +378,7 @@ func Test_Issue3006(t *testing.T) {
 // https://github.com/gogf/gf/issues/3731
 func Test_Issue3731(t *testing.T) {
 	type Data struct {
-		Doc map[string]interface{} `json:"doc"`
+		Doc map[string]any `json:"doc"`
 	}
 
 	gtest.C(t, func(t *gtest.T) {
@@ -434,7 +440,7 @@ func Test_Issue3789(t *testing.T) {
 		ItemInput
 	}
 	gtest.C(t, func(t *gtest.T) {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"id":       1,
 			"secondId": 2,
 			"thirdId":  3,
@@ -713,7 +719,7 @@ func doTestIssue3800(t *testing.T) {
 func Test_Issue3821(t *testing.T) {
 	// Scan
 	gtest.C(t, func(t *gtest.T) {
-		var record = map[string]interface{}{
+		var record = map[string]any{
 			`user_id`:   1,
 			`user_name`: "teemo",
 		}
@@ -795,7 +801,7 @@ func Test_Issue3903(t *testing.T) {
 			TestA
 			UserId int `json:"NewUserId"  description:""`
 		}
-		var input = map[string]interface{}{
+		var input = map[string]any{
 			"user_id": gvar.New(100, true),
 		}
 		var a TestB
@@ -803,5 +809,625 @@ func Test_Issue3903(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(a.TestA.UserId, 100)
 		t.Assert(a.UserId, 100)
+	})
+}
+
+// https://github.com/gogf/gf/issues/4218
+func Test_Issue4218(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type SysMenuVo struct {
+			MenuId   int64        `json:"menuId"     orm:"menu_id"`
+			MenuName string       `json:"menuName"   orm:"menu_name"`
+			Children []*SysMenuVo `json:"children"   orm:"children"`
+			ParentId int64        `json:"parentId"   orm:"parent_id"`
+		}
+		menus := []*SysMenuVo{
+			{
+				MenuId:   1,
+				MenuName: "系统管理",
+				ParentId: 0,
+			},
+			{
+				MenuId:   2,
+				MenuName: "字典查询",
+				ParentId: 1,
+			},
+		}
+		var parent *SysMenuVo
+		err := gconv.Scan(menus[0], &parent)
+		t.AssertNil(err)
+		t.Assert(parent.MenuId, 1)
+		t.Assert(parent.ParentId, 0)
+
+		parent.Children = append(parent.Children, menus[1])
+
+		t.Assert(len(menus[0].Children), 1)
+		t.Assert(menus[0].Children[0].MenuId, 2)
+		t.Assert(menus[0].Children[0].ParentId, 1)
+	})
+}
+
+// https://github.com/gogf/gf/issues/4542
+func Test_Issue4542(t *testing.T) {
+	// Test case 1: Nested map conversion - map[string]any to map[string]map[string]float64
+	// This is the original bug report scenario
+	gtest.C(t, func(t *gtest.T) {
+		type ExchangeRate map[string]map[string]float64
+
+		// Source data from JSON unmarshalling (nested map[string]any)
+		source := map[string]any{
+			"USD": map[string]any{
+				"CNY": 7.0,
+				"EUR": 0.85,
+			},
+			"EUR": map[string]any{
+				"CNY": 8.2,
+				"USD": 1.18,
+			},
+		}
+
+		var exchangeRate ExchangeRate
+		err := gconv.Scan(source, &exchangeRate)
+		t.AssertNil(err)
+		t.Assert(len(exchangeRate), 2)
+		t.Assert(len(exchangeRate["USD"]), 2)
+		t.Assert(exchangeRate["USD"]["CNY"], 7.0)
+		t.Assert(exchangeRate["USD"]["EUR"], 0.85)
+		t.Assert(exchangeRate["EUR"]["CNY"], 8.2)
+		t.Assert(exchangeRate["EUR"]["USD"], 1.18)
+	})
+
+	// Test case 2: Deeply nested map conversion (3 levels)
+	// Verifies recursion terminates correctly at base types
+	gtest.C(t, func(t *gtest.T) {
+		type DeepMap map[string]map[string]map[string]int
+
+		source := map[string]any{
+			"level1": map[string]any{
+				"level2": map[string]any{
+					"level3": 100,
+				},
+			},
+		}
+
+		var deepMap DeepMap
+		err := gconv.Scan(source, &deepMap)
+		t.AssertNil(err)
+		t.Assert(deepMap["level1"]["level2"]["level3"], 100)
+	})
+
+	// Test case 3: Map with different key types
+	gtest.C(t, func(t *gtest.T) {
+		source := map[string]any{
+			"1": map[string]any{
+				"value": 100,
+			},
+			"2": map[string]any{
+				"value": 200,
+			},
+		}
+
+		var result map[int]map[string]int
+		err := gconv.Scan(source, &result)
+		t.AssertNil(err)
+		t.Assert(result[1]["value"], 100)
+		t.Assert(result[2]["value"], 200)
+	})
+
+	// Test case 4: Empty nested map - verifies recursion terminates on empty map
+	gtest.C(t, func(t *gtest.T) {
+		source := map[string]any{
+			"USD": map[string]any{},
+		}
+
+		var result map[string]map[string]float64
+		err := gconv.Scan(source, &result)
+		t.AssertNil(err)
+		t.Assert(len(result), 1)
+		t.Assert(len(result["USD"]), 0)
+	})
+
+	// Test case 5: Mixed struct and map in nested structure
+	// Verifies struct conversion still works (no regression)
+	gtest.C(t, func(t *gtest.T) {
+		type Config struct {
+			Name  string
+			Value int
+		}
+
+		source := map[string]any{
+			"config1": map[string]any{
+				"Name":  "test1",
+				"Value": 100,
+			},
+			"config2": map[string]any{
+				"Name":  "test2",
+				"Value": 200,
+			},
+		}
+
+		// Map value is struct - should still work
+		var result map[string]Config
+		err := gconv.Scan(source, &result)
+		t.AssertNil(err)
+		t.Assert(result["config1"].Name, "test1")
+		t.Assert(result["config1"].Value, 100)
+		t.Assert(result["config2"].Name, "test2")
+		t.Assert(result["config2"].Value, 200)
+	})
+
+	// Test case 6: Very deep nesting (5 levels) - stress test for recursion
+	gtest.C(t, func(t *gtest.T) {
+		source := map[string]any{
+			"l1": map[string]any{
+				"l2": map[string]any{
+					"l3": map[string]any{
+						"l4": map[string]any{
+							"l5": "deep_value",
+						},
+					},
+				},
+			},
+		}
+
+		var result map[string]map[string]map[string]map[string]map[string]string
+		err := gconv.Scan(source, &result)
+		t.AssertNil(err)
+		t.Assert(result["l1"]["l2"]["l3"]["l4"]["l5"], "deep_value")
+	})
+
+	// Test case 7: Source value is not a map (should be converted first)
+	// Verifies no infinite recursion when source doesn't match expected structure
+	gtest.C(t, func(t *gtest.T) {
+		source := map[string]any{
+			"key": "not_a_map",
+		}
+
+		var result map[string]map[string]string
+		err := gconv.Scan(source, &result)
+		// This should not cause infinite recursion, but conversion may fail or return empty
+		// The key point is it should not hang
+		t.AssertNil(err)
+	})
+}
+
+// issue4786ArrayValue models an array-backed value that unmarshals from text.
+type issue4786ArrayValue [16]byte
+
+// UnmarshalText stores text in the array-backed value.
+func (v *issue4786ArrayValue) UnmarshalText(text []byte) error {
+	copy(v[:], text)
+	return nil
+}
+
+// issue4786Request models the request shape reported in issue #4786.
+type issue4786Request struct {
+	// Values contains array-backed values parsed from request parameters.
+	Values []issue4786ArrayValue `json:"values"`
+}
+
+// Test_Issue4786 verifies textual slices bind to array-backed unmarshalling types.
+func Test_Issue4786(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var result issue4786Request
+		err := gconv.Struct(
+			g.Map{"values": []string{"first", "second"}},
+			&result,
+		)
+		t.AssertNil(err)
+		t.Assert(len(result.Values), 2)
+		t.Assert(string(result.Values[0][:5]), "first")
+		t.Assert(string(result.Values[1][:6]), "second")
+	})
+}
+
+// Test_Issue4786_SingleValue verifies single string value converts to slice with one array-backed element.
+func Test_Issue4786_SingleValue(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var result issue4786Request
+		err := gconv.Struct(
+			g.Map{"values": "single"},
+			&result,
+		)
+		t.AssertNil(err)
+		t.Assert(len(result.Values), 1)
+		t.Assert(string(result.Values[0][:6]), "single")
+	})
+}
+
+// Test_Issue4786_EmptySlice verifies empty slice source produces empty result.
+func Test_Issue4786_EmptySlice(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var result issue4786Request
+		err := gconv.Struct(
+			g.Map{"values": []string{}},
+			&result,
+		)
+		t.AssertNil(err)
+		t.Assert(len(result.Values), 0)
+	})
+}
+
+// Test_Issue4786_AnySlice verifies []any source type converts to array-backed slice.
+func Test_Issue4786_AnySlice(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var result issue4786Request
+		err := gconv.Struct(
+			g.Map{"values": []any{"hello", "world"}},
+			&result,
+		)
+		t.AssertNil(err)
+		t.Assert(len(result.Values), 2)
+		t.Assert(string(result.Values[0][:5]), "hello")
+		t.Assert(string(result.Values[1][:5]), "world")
+	})
+}
+
+// issue4786SmallArray is a smaller array type for testing different sizes.
+type issue4786SmallArray [4]byte
+
+// UnmarshalText stores text in the small array-backed value.
+func (v *issue4786SmallArray) UnmarshalText(text []byte) error {
+	copy(v[:], text)
+	return nil
+}
+
+// issue4786SmallRequest contains small array-backed values.
+type issue4786SmallRequest struct {
+	Values []issue4786SmallArray `json:"values"`
+}
+
+// Test_Issue4786_DifferentArraySize verifies conversion works with different array sizes.
+func Test_Issue4786_DifferentArraySize(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var result issue4786SmallRequest
+		err := gconv.Struct(
+			g.Map{"values": []string{"ab", "cd"}},
+			&result,
+		)
+		t.AssertNil(err)
+		t.Assert(len(result.Values), 2)
+		t.Assert(string(result.Values[0][:2]), "ab")
+		t.Assert(string(result.Values[1][:2]), "cd")
+	})
+}
+
+// https://github.com/gogf/gf/issues/4429
+// https://github.com/gogf/gf/issues/4841
+func issue4429UTCSample() (time.Time, *gtime.Time) {
+	utcTime := time.Date(2025, 9, 16, 11, 32, 42, 878465000, time.UTC)
+	return utcTime, gtime.NewFromTime(utcTime)
+}
+
+// issue4429NaiveStringHelperEnv marks the isolated subprocess that evaluates
+// timezone-less datetime strings under TZ=Asia/Shanghai.
+const issue4429NaiveStringHelperEnv = "GF_GCONV_ISSUE4429_NAIVE_LOCAL"
+
+// issue4429NaiveStringHelperCommandEnv builds the child-process environment.
+// Existing TZ and helper markers are dropped so the appended values win.
+func issue4429NaiveStringHelperCommandEnv() []string {
+	env := make([]string, 0, len(os.Environ())+2)
+	for _, item := range os.Environ() {
+		if strings.HasPrefix(item, "TZ=") || strings.HasPrefix(item, issue4429NaiveStringHelperEnv+"=") {
+			continue
+		}
+		env = append(env, item)
+	}
+	return append(env, issue4429NaiveStringHelperEnv+"=1", "TZ=Asia/Shanghai")
+}
+
+// issue4429RunNaiveStringHelper re-executes the current test in a child process
+// whose local timezone is Asia/Shanghai. Mutating time.Local in-process races
+// with leftover timers from other tests that call time.Now().
+func issue4429RunNaiveStringHelper(t *testing.T) {
+	cmd := exec.Command(
+		os.Args[0],
+		"-test.run=^Test_Issue4429_NaiveStringStaysLocal$",
+		"-test.count=1",
+		"-test.v=true",
+	)
+	cmd.Env = issue4429NaiveStringHelperCommandEnv()
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("naive local-string helper failed: %v\n%s", err, output)
+	}
+	if !strings.Contains(string(output), "PASS: Test_Issue4429_NaiveStringStaysLocal") {
+		t.Fatalf("naive local-string helper did not pass:\n%s", output)
+	}
+}
+
+func issue4429AssertUTCTime(t *gtest.T, got time.Time, want time.Time) {
+	t.Assert(got.UnixNano(), want.UnixNano())
+	_, offset := got.Zone()
+	t.Assert(offset, 0)
+}
+
+func Test_Issue4429_StructsToTimeSlice(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		utcTime, gtimeUTC := issue4429UTCSample()
+		rows := []map[string]any{
+			{"now": gtimeUTC},
+		}
+
+		var timeResult []time.Time
+		err := gconv.Structs(rows, &timeResult)
+		t.AssertNil(err)
+		t.Assert(len(timeResult), 1)
+		issue4429AssertUTCTime(t, timeResult[0], utcTime)
+
+		var timePtrResult []*time.Time
+		err = gconv.Structs(rows, &timePtrResult)
+		t.AssertNil(err)
+		t.Assert(len(timePtrResult), 1)
+		t.AssertNE(timePtrResult[0], nil)
+		issue4429AssertUTCTime(t, *timePtrResult[0], utcTime)
+
+		var gtimeResult []*gtime.Time
+		err = gconv.Structs(rows, &gtimeResult)
+		t.AssertNil(err)
+		t.Assert(len(gtimeResult), 1)
+		t.AssertNE(gtimeResult[0], nil)
+		t.Assert(gtimeResult[0].Unix(), gtimeUTC.Unix())
+		issue4429AssertUTCTime(t, gtimeResult[0].Time, utcTime)
+
+		var gtimeValueResult []gtime.Time
+		err = gconv.Structs(rows, &gtimeValueResult)
+		t.AssertNil(err)
+		t.Assert(len(gtimeValueResult), 1)
+		t.Assert(gtimeValueResult[0].Unix(), gtimeUTC.Unix())
+		issue4429AssertUTCTime(t, gtimeValueResult[0].Time, utcTime)
+	})
+}
+
+func Test_Issue4429_StructFieldAndScalar(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		utcTime, gtimeUTC := issue4429UTCSample()
+
+		issue4429AssertUTCTime(t, gconv.Time(gtimeUTC), utcTime)
+		issue4429AssertUTCTime(t, gconv.GTime(gtimeUTC).Time, utcTime)
+		t.Assert(gconv.GTime(gtimeUTC).Unix(), gtimeUTC.Unix())
+
+		type timeRow struct {
+			Now time.Time
+		}
+		var timeField timeRow
+		err := gconv.Struct(map[string]any{"now": gtimeUTC}, &timeField)
+		t.AssertNil(err)
+		issue4429AssertUTCTime(t, timeField.Now, utcTime)
+
+		type gtimeRow struct {
+			Now *gtime.Time
+		}
+		var gtimeField gtimeRow
+		err = gconv.Struct(map[string]any{"now": gtimeUTC}, &gtimeField)
+		t.AssertNil(err)
+		t.AssertNE(gtimeField.Now, nil)
+		t.Assert(gtimeField.Now.Unix(), gtimeUTC.Unix())
+		issue4429AssertUTCTime(t, gtimeField.Now.Time, utcTime)
+
+		var gotTime time.Time
+		err = gconv.Struct(map[string]any{"now": gtimeUTC}, &gotTime)
+		t.AssertNil(err)
+		issue4429AssertUTCTime(t, gotTime, utcTime)
+
+		var gotTimePtr *time.Time
+		err = gconv.Struct(map[string]any{"now": gtimeUTC}, &gotTimePtr)
+		t.AssertNil(err)
+		t.AssertNE(gotTimePtr, nil)
+		issue4429AssertUTCTime(t, *gotTimePtr, utcTime)
+
+		var gotGTime *gtime.Time
+		err = gconv.Struct(map[string]any{"now": gtimeUTC}, &gotGTime)
+		t.AssertNil(err)
+		t.AssertNE(gotGTime, nil)
+		t.Assert(gotGTime.Unix(), gtimeUTC.Unix())
+
+		var gotGTimeValue gtime.Time
+		err = gconv.Struct(map[string]any{"now": gtimeUTC}, &gotGTimeValue)
+		t.AssertNil(err)
+		t.Assert(gotGTimeValue.Unix(), gtimeUTC.Unix())
+		issue4429AssertUTCTime(t, gotGTimeValue.Time, utcTime)
+
+		var gvarTimeResult []time.Time
+		err = gconv.Structs([]map[string]any{{"now": gvar.New(gtimeUTC)}}, &gvarTimeResult)
+		t.AssertNil(err)
+		t.Assert(len(gvarTimeResult), 1)
+		issue4429AssertUTCTime(t, gvarTimeResult[0], utcTime)
+
+		recordRows := []map[string]*gvar.Var{
+			{"now": gvar.New(gtimeUTC)},
+		}
+		var recordTimeResult []time.Time
+		err = gconv.Structs(recordRows, &recordTimeResult)
+		t.AssertNil(err)
+		t.Assert(len(recordTimeResult), 1)
+		issue4429AssertUTCTime(t, recordTimeResult[0], utcTime)
+	})
+}
+
+func Test_Issue4429_NaiveStringStaysLocal(t *testing.T) {
+	if os.Getenv(issue4429NaiveStringHelperEnv) != "1" {
+		issue4429RunNaiveStringHelper(t)
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		got := gconv.Time("2025-09-16 11:32:42")
+		_, offset := got.Zone()
+		t.Assert(offset, 8*3600)
+		t.Assert(got.Year(), 2025)
+		t.Assert(got.Month(), time.September)
+		t.Assert(got.Day(), 16)
+		t.Assert(got.Hour(), 11)
+		t.Assert(got.Minute(), 32)
+		t.Assert(got.Second(), 42)
+
+		gotGTime := gconv.GTime("2025-09-16 11:32:42")
+		t.AssertNE(gotGTime, nil)
+		_, gtimeOffset := gotGTime.Zone()
+		t.Assert(gtimeOffset, 8*3600)
+	})
+}
+
+func Test_Issue4429_TypedAndWrappedSources(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		utcTime, gtimeUTC := issue4429UTCSample()
+
+		issue4429AssertUTCTime(t, gconv.Time(utcTime), utcTime)
+		issue4429AssertUTCTime(t, gconv.Time(&utcTime), utcTime)
+		issue4429AssertUTCTime(t, gconv.Time(*gtimeUTC), utcTime)
+		t.Assert(gconv.Time((*time.Time)(nil)), time.Time{})
+		t.Assert(gconv.Time((*gtime.Time)(nil)), time.Time{})
+
+		t.AssertNE(gconv.GTime(*gtimeUTC), nil)
+		issue4429AssertUTCTime(t, gconv.GTime(*gtimeUTC).Time, utcTime)
+		t.AssertNE(gconv.GTime(utcTime), nil)
+		issue4429AssertUTCTime(t, gconv.GTime(utcTime).Time, utcTime)
+		t.AssertNE(gconv.GTime(&utcTime), nil)
+		issue4429AssertUTCTime(t, gconv.GTime(&utcTime).Time, utcTime)
+		t.Assert(gconv.GTime((*time.Time)(nil)), nil)
+		t.Assert(gconv.GTime((*gtime.Time)(nil)), nil)
+
+		issue4429AssertUTCTime(t, gconv.Time(map[any]any{"now": gtimeUTC}), utcTime)
+		t.AssertNE(gconv.GTime(map[any]any{"now": gtimeUTC}), nil)
+		t.Assert(gconv.GTime(map[any]any{"now": gtimeUTC}).Unix(), gtimeUTC.Unix())
+
+		emptyTime := gconv.Time(map[string]any{})
+		t.Assert(emptyTime.IsZero(), true)
+		t.Assert(gconv.GTime(map[string]any{}), nil)
+	})
+}
+
+func Test_Issue4429_GTimeStringOutputUnchanged(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		_, gtimeUTC := issue4429UTCSample()
+		t.Assert(gconv.String(gtimeUTC), gtimeUTC.String())
+		t.Assert(gconv.String(*gtimeUTC), gtimeUTC.String())
+		t.Assert(gconv.String(gtimeUTC), "2025-09-16 11:32:42")
+	})
+}
+
+type issue4429CustomTimeSrc struct {
+	Hour int
+}
+
+type issue4429PanicIVal struct{}
+
+func (p *issue4429PanicIVal) Val() any {
+	if p == nil {
+		panic("typed-nil IVal must not call Val")
+	}
+	return nil
+}
+
+type issue4429SelfValMap map[string]any
+
+func (m issue4429SelfValMap) Val() any {
+	return m
+}
+
+func Test_Issue4429_CustomConverterKeepsPrecedence(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		conv := gconv.NewConverter()
+		customTime := time.Date(2024, 1, 2, 3, 4, 5, 0, time.FixedZone("X", 3*3600))
+		err := conv.RegisterTypeConverterFunc(func(in issue4429CustomTimeSrc) (*time.Time, error) {
+			t := customTime.Add(time.Duration(in.Hour) * time.Hour)
+			return &t, nil
+		})
+		t.AssertNil(err)
+
+		var got time.Time
+		err = conv.Struct(issue4429CustomTimeSrc{Hour: 1}, &got)
+		t.AssertNil(err)
+		t.Assert(got.UnixNano(), customTime.Add(time.Hour).UnixNano())
+		_, offset := got.Zone()
+		t.Assert(offset, 3*3600)
+
+		var scanned time.Time
+		err = conv.Scan(issue4429CustomTimeSrc{Hour: 2}, &scanned)
+		t.AssertNil(err)
+		t.Assert(scanned.UnixNano(), customTime.Add(2*time.Hour).UnixNano())
+	})
+}
+
+func Test_Issue4429_UnsettableTimeDestinationReturnsError(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		_, gtimeUTC := issue4429UTCSample()
+		src := map[string]any{"now": gtimeUTC}
+
+		err := gconv.Struct(src, reflect.ValueOf(time.Time{}))
+		t.AssertNE(err, nil)
+
+		err = gconv.Struct(src, reflect.ValueOf((*time.Time)(nil)))
+		t.AssertNE(err, nil)
+
+		err = gconv.Struct(src, reflect.ValueOf(gtime.Time{}))
+		t.AssertNE(err, nil)
+
+		err = gconv.Struct(src, reflect.ValueOf((*gtime.Time)(nil)))
+		t.AssertNE(err, nil)
+	})
+}
+
+func Test_Issue4429_TypedNilIValDoesNotPanic(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var typedNilVar *gvar.Var
+		t.Assert(gconv.Time(typedNilVar), time.Time{})
+		t.Assert(gconv.GTime(typedNilVar), nil)
+
+		var typedNilIVal *issue4429PanicIVal
+		t.Assert(gconv.Time(typedNilIVal), time.Time{})
+		t.Assert(gconv.GTime(typedNilIVal), nil)
+	})
+}
+
+func Test_Issue4429_NonComparableIValDoesNotPanic(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		utcTime, gtimeUTC := issue4429UTCSample()
+
+		issue4429AssertUTCTime(t, gconv.Time(issue4429SelfValMap{"now": gtimeUTC}), utcTime)
+		t.AssertNE(gconv.GTime(issue4429SelfValMap{"now": gtimeUTC}), nil)
+		t.Assert(gconv.GTime(issue4429SelfValMap{"now": gtimeUTC}).Unix(), gtimeUTC.Unix())
+
+		got := gconv.Time(issue4429SelfValMap{"id": 1, "name": "x"})
+		t.Assert(got.IsZero(), true)
+	})
+}
+
+// Test_Issue4747 tests converting slices wrapped by gvar.Var into slice attributes.
+// See https://github.com/gogf/gf/issues/4747
+func Test_Issue4747(t *testing.T) {
+	type Item struct {
+		Id     int     `json:"id"`
+		Weight float64 `json:"weight"`
+	}
+	type Order struct {
+		Items    []Item  `json:"items"`
+		ItemPtrs []*Item `json:"item_ptrs"`
+		Empty    []Item  `json:"empty"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			order Order
+			items = g.List{
+				{"id": 1, "weight": "1.5"},
+				{"id": 2, "weight": "2.5"},
+			}
+			err = gconv.Struct(g.Map{
+				"items":     gvar.New(items),
+				"item_ptrs": gvar.New(items),
+				"empty":     gvar.New(g.List{}),
+			}, &order)
+		)
+		t.AssertNil(err)
+		t.Assert(len(order.Items), 2)
+		t.Assert(order.Items[0].Id, 1)
+		t.Assert(order.Items[0].Weight, 1.5)
+		t.Assert(order.Items[1].Id, 2)
+		t.Assert(order.Items[1].Weight, 2.5)
+		t.Assert(len(order.ItemPtrs), 2)
+		t.Assert(order.ItemPtrs[1].Id, 2)
+		t.Assert(order.ItemPtrs[1].Weight, 2.5)
+		t.Assert(len(order.Empty), 0)
 	})
 }

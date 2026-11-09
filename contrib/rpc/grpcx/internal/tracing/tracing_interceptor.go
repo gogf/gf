@@ -31,7 +31,7 @@ type messageType attribute.KeyValue
 
 // Event adds an event of the messageType to the span associated with the
 // passed context with id and size (if message is a proto message).
-func (m messageType) Event(ctx context.Context, id int, message interface{}) {
+func (m messageType) Event(ctx context.Context, id int, message any) {
 	span := trace.SpanFromContext(ctx)
 	if p, ok := message.(proto.Message); ok {
 		span.AddEvent("message", trace.WithAttributes(
@@ -81,7 +81,7 @@ type clientStream struct {
 
 var _ = proto.Marshal
 
-func (w *clientStream) RecvMsg(m interface{}) error {
+func (w *clientStream) RecvMsg(m any) error {
 	err := w.ClientStream.RecvMsg(m)
 
 	if err == nil && !w.desc.ServerStreams {
@@ -98,7 +98,7 @@ func (w *clientStream) RecvMsg(m interface{}) error {
 	return err
 }
 
-func (w *clientStream) SendMsg(m interface{}) error {
+func (w *clientStream) SendMsg(m any) error {
 	err := w.ClientStream.SendMsg(m)
 
 	w.sentMessageID++
@@ -196,7 +196,7 @@ func (w *serverStream) Context() context.Context {
 	return w.ctx
 }
 
-func (w *serverStream) RecvMsg(m interface{}) error {
+func (w *serverStream) RecvMsg(m any) error {
 	err := w.ServerStream.RecvMsg(m)
 
 	if err == nil {
@@ -207,7 +207,7 @@ func (w *serverStream) RecvMsg(m interface{}) error {
 	return err
 }
 
-func (w *serverStream) SendMsg(m interface{}) error {
+func (w *serverStream) SendMsg(m any) error {
 	err := w.ServerStream.SendMsg(m)
 
 	w.sentMessageID++

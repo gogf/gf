@@ -10,6 +10,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"reflect"
 
@@ -28,13 +29,13 @@ import (
 
 // Query commits one query SQL to underlying driver and returns the execution result.
 // It is most commonly used for data querying.
-func (c *Core) Query(ctx context.Context, sql string, args ...interface{}) (result Result, err error) {
+func (c *Core) Query(ctx context.Context, sql string, args ...any) (result Result, err error) {
 	return c.db.DoQuery(ctx, nil, sql, args...)
 }
 
 // DoQuery commits the sql string and its arguments to underlying driver
 // through given link object and returns the execution result.
-func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error) {
+func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...any) (result Result, err error) {
 	// Transaction checks.
 	if link == nil {
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
@@ -86,13 +87,13 @@ func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...inter
 
 // Exec commits one query SQL to underlying driver and returns the execution result.
 // It is most commonly used for data inserting and updating.
-func (c *Core) Exec(ctx context.Context, sql string, args ...interface{}) (result sql.Result, err error) {
+func (c *Core) Exec(ctx context.Context, sql string, args ...any) (result sql.Result, err error) {
 	return c.db.DoExec(ctx, nil, sql, args...)
 }
 
 // DoExec commits the sql string and its arguments to underlying driver
 // through given link object and returns the execution result.
-func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error) {
+func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...any) (result sql.Result, err error) {
 	// Transaction checks.
 	if link == nil {
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
@@ -103,7 +104,7 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 			return nil, err
 		}
 	} else if !link.IsTransaction() {
-		// If current link is not transaction link, it checks and retrieves transaction from context.
+		// If current link is not transaction link, it tries retrieving transaction object from context.
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
 			link = &txLink{tx.GetSqlTX()}
 		}
@@ -146,8 +147,8 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 // The parameter `link` specifies the current database connection operation object. You can modify the sql
 // string `sql` and its arguments `args` as you wish before they're committed to driver.
 func (c *Core) DoFilter(
-	ctx context.Context, link Link, sql string, args []interface{},
-) (newSql string, newArgs []interface{}, err error) {
+	ctx context.Context, link Link, sql string, args []any,
+) (newSql string, newArgs []any, err error) {
 	return sql, args, nil
 }
 
@@ -166,9 +167,22 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 		timestampMilli1      = gtime.TimestampMilli()
 	)
 
+	// Panic recovery to handle panics from underlying database drivers
+	defer func() {
+		if exception := recover(); exception != nil {
+			if err == nil {
+				if v, ok := exception.(error); ok && gerror.HasStack(v) {
+					err = v
+				} else {
+					err = gerror.WrapCodef(gcode.CodeDbOperationError, gerror.NewCodef(gcode.CodeInternalPanic, "%+v", exception), FormatSqlWithArgs(in.Sql, in.Args))
+				}
+			}
+		}
+	}()
+
 	// Trace span start.
 	tr := otel.GetTracerProvider().Tracer(traceInstrumentName, trace.WithInstrumentationVersion(gf.VERSION))
-	ctx, span := tr.Start(ctx, string(in.Type), trace.WithSpanKind(trace.SpanKindInternal))
+	ctx, span := tr.Start(ctx, string(in.Type), trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	// Execution by type.
@@ -296,7 +310,7 @@ func (c *Core) DoCommit(ctx context.Context, in DoCommitInput) (out DoCommitOutp
 	if c.db.GetDebug() {
 		c.writeSqlToLogger(ctx, sqlObj)
 	}
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		err = gerror.WrapCode(
 			gcode.CodeDbOperationError,
 			err,
@@ -446,6 +460,14 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 		}
 	}()
 	if !rows.Next() {
+		// A false return from rows.Next() has two meanings: the result set is exhausted,
+		// or the iteration was interrupted by an error, which is only retrievable through
+		// rows.Err(). Without this check an error that aborts the iteration, such as a
+		// deadlock hit while scanning a `SELECT ... FOR UPDATE`, is silently reported to
+		// the caller as an empty result set with a nil error.
+		if err := rows.Err(); err != nil {
+			return nil, err
+		}
 		return nil, nil
 	}
 	// Column names and types.
@@ -460,12 +482,16 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 		}
 	}
 	var (
-		values   = make([]interface{}, len(columnTypes))
+		values   = make([]any, len(columnTypes))
 		result   = make(Result, 0)
-		scanArgs = make([]interface{}, len(values))
+		scanArgs = make([]any, len(values))
 	)
 	for i := range values {
 		scanArgs[i] = &values[i]
+	}
+	convertColumnValue := c.ConvertColumnValueForLocal
+	if c.db != nil {
+		convertColumnValue = c.db.ConvertColumnValueForLocal
 	}
 	for {
 		if err = rows.Scan(scanArgs...); err != nil {
@@ -479,10 +505,10 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 				record[columnTypes[i].Name()] = nil
 			} else {
 				var (
-					convertedValue interface{}
+					convertedValue any
 					columnType     = columnTypes[i]
 				)
-				if convertedValue, err = c.columnValueToLocalValue(ctx, value, columnType); err != nil {
+				if convertedValue, err = convertColumnValue(ctx, columnType, value); err != nil {
 					return nil, err
 				}
 				record[columnTypes[i].Name()] = gvar.New(convertedValue)
@@ -490,6 +516,12 @@ func (c *Core) RowsToResult(ctx context.Context, rows *sql.Rows) (Result, error)
 		}
 		result = append(result, record)
 		if !rows.Next() {
+			// Same as above. Without this check the caller receives a silently truncated
+			// result set together with a nil error, which is even harder to notice than
+			// an empty one.
+			if err = rows.Err(); err != nil {
+				return nil, err
+			}
 			break
 		}
 	}
@@ -501,11 +533,48 @@ func (c *Core) OrderRandomFunction() string {
 	return "RAND()"
 }
 
-func (c *Core) columnValueToLocalValue(
-	ctx context.Context, value interface{}, columnType *sql.ColumnType,
-) (interface{}, error) {
+// GetBoolLiteral returns the SQL literal for the given boolean value.
+// Default is "1"/"0" (MySQL bit/int convention); strict-bool drivers override.
+func (c *Core) GetBoolLiteral(v bool) string {
+	if v {
+		return "1"
+	}
+	return "0"
+}
+
+// GetLockSharedClause returns the SQL clause for Model.LockShared().
+// Default is MySQL's legacy "LOCK IN SHARE MODE"; drivers with other
+// dialect syntax (e.g. PostgreSQL's "FOR SHARE") override.
+func (c *Core) GetLockSharedClause() string {
+	return LockInShareMode
+}
+
+// FoldIdentifier returns the unquoted identifier `name` in the letter case the database stores it in.
+// Default returns `name` unchanged; drivers folding unquoted identifiers (e.g. Oracle) override.
+func (c *Core) FoldIdentifier(name string) string {
+	return name
+}
+
+// GetTableNameForFields returns the table name in the table expression `table` that TableFields is called with.
+// Default is the bare name of the first table; drivers resolving qualified names (e.g. Oracle) override.
+func (c *Core) GetTableNameForFields(table string) string {
+	return c.guessPrimaryTableName(table)
+}
+
+// ConvertColumnValueForLocal converts a value scanned from a result set column to local Golang type.
+// Default converts it by the scan type that the underlying driver reports for the column, or else
+// by its database type with ConvertValueForLocal; drivers whose reported scan type does not fit
+// the scanned value (e.g. Oracle's NUMBER) override.
+func (c *Core) ConvertColumnValueForLocal(ctx context.Context, columnType *sql.ColumnType, fieldValue any) (any, error) {
+	return c.columnValueToLocalValue(ctx, fieldValue, columnType)
+}
+
+// columnValueToLocalValue converts a scanned value using column metadata or the driver.
+func (c *Core) columnValueToLocalValue(ctx context.Context, value any, columnType *sql.ColumnType) (any, error) {
 	var scanType = columnType.ScanType()
-	if scanType != nil {
+	// Without a declared database type, ScanType may describe only the first row,
+	// as with SQLite. Let the driver handle later values of a different type.
+	if scanType != nil && (columnType.DatabaseTypeName() != "" || scanType == reflect.TypeOf(value)) {
 		// Common basic builtin types.
 		switch scanType.Kind() {
 		case
@@ -513,10 +582,7 @@ func (c *Core) columnValueToLocalValue(
 			reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
 			reflect.Float32, reflect.Float64:
-			return gconv.Convert(
-				gconv.String(value),
-				columnType.ScanType().String(),
-			), nil
+			return gconv.Convert(gconv.String(value), scanType.String()), nil
 		default:
 		}
 	}

@@ -1,7 +1,7 @@
 // Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with gm file,
+// If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gmap provides most commonly used map container which also support concurrent-safe/unsafe switch feature.
@@ -24,7 +24,7 @@ func New(safe ...bool) *Map {
 // there might be some concurrent-safe issues when changing the map outside.
 // The parameter `safe` is used to specify whether using tree in concurrent-safety,
 // which is false in default.
-func NewFrom(data map[interface{}]interface{}, safe ...bool) *Map {
+func NewFrom(data map[any]any, safe ...bool) *Map {
 	return NewAnyAnyMapFrom(data, safe...)
 }
 
@@ -40,6 +40,6 @@ func NewHashMap(safe ...bool) *Map {
 // there might be some concurrent-safe issues when changing the map outside.
 // The parameter `safe` is used to specify whether using tree in concurrent-safety,
 // which is false in default.
-func NewHashMapFrom(data map[interface{}]interface{}, safe ...bool) *Map {
+func NewHashMapFrom(data map[any]any, safe ...bool) *Map {
 	return NewAnyAnyMapFrom(data, safe...)
 }

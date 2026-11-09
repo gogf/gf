@@ -57,7 +57,6 @@ func (err *Error) Stack() string {
 					Index:   index,
 					Message: loop.error.Error(),
 				})
-				index++
 				break
 			}
 		} else {
@@ -103,7 +102,7 @@ func filterLinesOfStackInfos(infos []*stackInfo) {
 func formatStackInfos(infos []*stackInfo) string {
 	buffer := bytes.NewBuffer(nil)
 	for i, info := range infos {
-		buffer.WriteString(fmt.Sprintf("%d. %s\n", i+1, info.Message))
+		fmt.Fprintf(buffer, "%d. %s\n", i+1, info.Message)
 		if info.Lines != nil && info.Lines.Len() > 0 {
 			formatStackLines(buffer, info.Lines)
 		}
@@ -124,10 +123,11 @@ func formatStackLines(buffer *bytes.Buffer, lines *list.List) string {
 		if i >= 9 {
 			space = " "
 		}
-		buffer.WriteString(fmt.Sprintf(
+		fmt.Fprintf(
+			buffer,
 			"   %d).%s%s\n        %s\n",
 			i+1, space, line.Function, line.FileLine,
-		))
+		)
 	}
 	return buffer.String()
 }

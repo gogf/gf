@@ -546,4 +546,32 @@ func Test_Fields_TagPriorityName(t *testing.T) {
 		t.Assert(fields[2].TagPriorityName(), "pass_json")
 		t.Assert(fields[3].TagPriorityName(), "IsMen")
 	})
+	// Tag with omitempty option should return name only, not "name,omitempty".
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Name string `json:"user_name,omitempty"`
+			Age  uint   `gconv:"age,string" json:"age_json"`
+		}
+		var user *User
+		fields, _ := gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         user,
+			RecursiveOption: 0,
+		})
+		t.Assert(fields[0].TagPriorityName(), "user_name")
+		t.Assert(fields[1].TagPriorityName(), "age")
+	})
+	// Empty tag name with options (e.g., gconv:",omitempty") should fallthrough to next priority tag.
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Name string `gconv:",omitempty" json:"name_json"`
+			Age  uint   `gconv:",string" param:",omitempty" json:"age_json"`
+		}
+		var user *User
+		fields, _ := gstructs.Fields(gstructs.FieldsInput{
+			Pointer:         user,
+			RecursiveOption: 0,
+		})
+		t.Assert(fields[0].TagPriorityName(), "name_json")
+		t.Assert(fields[1].TagPriorityName(), "age_json")
+	})
 }

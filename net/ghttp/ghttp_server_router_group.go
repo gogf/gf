@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sync"
 
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/internal/consts"
@@ -34,10 +35,10 @@ type (
 		group    *RouterGroup
 		bindType string
 		pattern  string
-		object   interface{}   // Can be handler, controller or object.
-		params   []interface{} // Extra parameters for route registering depending on the type.
-		source   string        // Handler is a register at a certain source file path: line.
-		bound    bool          // Is this item bound to server?
+		object   any    // Can be handler, controller or object.
+		params   []any  // Extra parameters for route registering depending on the type.
+		source   string // Handler is a register at a certain source file path: line.
+		bound    bool   // Is this item bound to server?
 	}
 )
 
@@ -49,14 +50,14 @@ const (
 )
 
 var (
-	preBindItems = make([]*preBindItem, 0, 64)
+	preBindItems   = make([]*preBindItem, 0, 64)
+	preBindItemsMu sync.Mutex // Guards preBindItems, which servers in different goroutines share.
 )
 
 // handlePreBindItems is called when server starts, which does really route registering to the server.
 func (s *Server) handlePreBindItems(ctx context.Context) {
-	if len(preBindItems) == 0 {
-		return
-	}
+	preBindItemsMu.Lock()
+	var items []*preBindItem
 	for _, item := range preBindItems {
 		if item.bound {
 			continue
@@ -68,8 +69,14 @@ func (s *Server) handlePreBindItems(ctx context.Context) {
 		if item.group.domain != nil && item.group.domain.server != s {
 			continue
 		}
-		item.group.doBindRoutersToServer(ctx, item)
 		item.bound = true
+		items = append(items, item)
+	}
+	preBindItemsMu.Unlock()
+
+	// Bind outside the lock so a slow or route-registering bind never holds the shared mutex.
+	for _, item := range items {
+		item.group.doBindRoutersToServer(ctx, item)
 	}
 }
 
@@ -151,7 +158,7 @@ func (g *RouterGroup) Clone() *RouterGroup {
 }
 
 // Bind does batch route registering feature for a router group.
-func (g *RouterGroup) Bind(handlerOrObject ...interface{}) *RouterGroup {
+func (g *RouterGroup) Bind(handlerOrObject ...any) *RouterGroup {
 	var (
 		ctx   = context.TODO()
 		group = g.Clone()
@@ -181,7 +188,7 @@ func (g *RouterGroup) Bind(handlerOrObject ...interface{}) *RouterGroup {
 }
 
 // ALL register an http handler to give the route pattern and all http methods.
-func (g *RouterGroup) ALL(pattern string, object interface{}, params ...interface{}) *RouterGroup {
+func (g *RouterGroup) ALL(pattern string, object any, params ...any) *RouterGroup {
 	return g.Clone().preBindToLocalArray(
 		groupBindTypeHandler,
 		defaultMethod+":"+pattern,
@@ -191,66 +198,66 @@ func (g *RouterGroup) ALL(pattern string, object interface{}, params ...interfac
 }
 
 // ALLMap registers http handlers for http methods using map.
-func (g *RouterGroup) ALLMap(m map[string]interface{}) {
+func (g *RouterGroup) ALLMap(m map[string]any) {
 	for pattern, object := range m {
 		g.ALL(pattern, object)
 	}
 }
 
 // Map registers http handlers for http methods using map.
-func (g *RouterGroup) Map(m map[string]interface{}) {
+func (g *RouterGroup) Map(m map[string]any) {
 	for pattern, object := range m {
 		g.preBindToLocalArray(groupBindTypeHandler, pattern, object)
 	}
 }
 
 // GET registers an http handler to give the route pattern and the http method: GET.
-func (g *RouterGroup) GET(pattern string, object interface{}, params ...interface{}) *RouterGroup {
+func (g *RouterGroup) GET(pattern string, object any, params ...any) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "GET:"+pattern, object, params...)
 }
 
 // PUT registers an http handler to give the route pattern and the http method: PUT.
-func (g *RouterGroup) PUT(pattern string, object interface{}, params ...interface{}) *RouterGroup {
+func (g *RouterGroup) PUT(pattern string, object any, params ...any) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "PUT:"+pattern, object, params...)
 }
 
 // POST registers an http handler to give the route pattern and the http method: POST.
-func (g *RouterGroup) POST(pattern string, object interface{}, params ...interface{}) *RouterGroup {
+func (g *RouterGroup) POST(pattern string, object any, params ...any) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "POST:"+pattern, object, params...)
 }
 
 // DELETE registers an http handler to give the route pattern and the http method: DELETE.
-func (g *RouterGroup) DELETE(pattern string, object interface{}, params ...interface{}) *RouterGroup {
+func (g *RouterGroup) DELETE(pattern string, object any, params ...any) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "DELETE:"+pattern, object, params...)
 }
 
 // PATCH registers an http handler to give the route pattern and the http method: PATCH.
-func (g *RouterGroup) PATCH(pattern string, object interface{}, params ...interface{}) *RouterGroup {
+func (g *RouterGroup) PATCH(pattern string, object any, params ...any) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "PATCH:"+pattern, object, params...)
 }
 
 // HEAD registers an http handler to give the route pattern and the http method: HEAD.
-func (g *RouterGroup) HEAD(pattern string, object interface{}, params ...interface{}) *RouterGroup {
+func (g *RouterGroup) HEAD(pattern string, object any, params ...any) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "HEAD:"+pattern, object, params...)
 }
 
 // CONNECT registers an http handler to give the route pattern and the http method: CONNECT.
-func (g *RouterGroup) CONNECT(pattern string, object interface{}, params ...interface{}) *RouterGroup {
+func (g *RouterGroup) CONNECT(pattern string, object any, params ...any) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "CONNECT:"+pattern, object, params...)
 }
 
 // OPTIONS register an http handler to give the route pattern and the http method: OPTIONS.
-func (g *RouterGroup) OPTIONS(pattern string, object interface{}, params ...interface{}) *RouterGroup {
+func (g *RouterGroup) OPTIONS(pattern string, object any, params ...any) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "OPTIONS:"+pattern, object, params...)
 }
 
 // TRACE registers an http handler to give the route pattern and the http method: TRACE.
-func (g *RouterGroup) TRACE(pattern string, object interface{}, params ...interface{}) *RouterGroup {
+func (g *RouterGroup) TRACE(pattern string, object any, params ...any) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "TRACE:"+pattern, object, params...)
 }
 
 // REST registers an http handler to give the route pattern according to REST rule.
-func (g *RouterGroup) REST(pattern string, object interface{}) *RouterGroup {
+func (g *RouterGroup) REST(pattern string, object any) *RouterGroup {
 	return g.Clone().preBindToLocalArray(groupBindTypeRest, pattern, object)
 }
 
@@ -266,8 +273,10 @@ func (g *RouterGroup) Middleware(handlers ...HandlerFunc) *RouterGroup {
 }
 
 // preBindToLocalArray adds the route registering parameters to an internal variable array for lazily registering feature.
-func (g *RouterGroup) preBindToLocalArray(bindType string, pattern string, object interface{}, params ...interface{}) *RouterGroup {
+func (g *RouterGroup) preBindToLocalArray(bindType string, pattern string, object any, params ...any) *RouterGroup {
 	_, file, line := gdebug.CallerWithFilter([]string{consts.StackFilterKeyForGoFrame})
+	preBindItemsMu.Lock()
+	defer preBindItemsMu.Unlock()
 	preBindItems = append(preBindItems, &preBindItem{
 		group:    g,
 		bindType: bindType,

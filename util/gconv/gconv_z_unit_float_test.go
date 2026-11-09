@@ -25,7 +25,7 @@ var (
 )
 
 var floatTests = []struct {
-	value    interface{}
+	value    any
 	expect32 float32
 	expect64 float64
 }{
@@ -147,7 +147,7 @@ func TestFloat32s(t *testing.T) {
 			[]float32{123, 34, 78, 97, 109, 101, 34, 58, 34, 69, 97, 114, 116, 104, 34, 125, 34})
 
 		// []interface
-		t.AssertEQ(gconv.Float32s([]interface{}{1, 2, 3}), []float32{1, 2, 3})
+		t.AssertEQ(gconv.Float32s([]any{1, 2, 3}), []float32{1, 2, 3})
 
 		// gvar.Var
 		t.AssertEQ(gconv.Float32s(
@@ -190,7 +190,7 @@ func TestFloat64s(t *testing.T) {
 			[]float64{123, 34, 78, 97, 109, 101, 34, 58, 34, 69, 97, 114, 116, 104, 34, 125, 34})
 
 		// []interface
-		t.AssertEQ(gconv.Float64s([]interface{}{1, 2, 3}), []float64{1, 2, 3})
+		t.AssertEQ(gconv.Float64s([]any{1, 2, 3}), []float64{1, 2, 3})
 
 		// gvar.Var
 		t.AssertEQ(gconv.Float64s(

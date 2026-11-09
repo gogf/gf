@@ -18,7 +18,7 @@ import (
 // WriteTpl parses and responses given template file.
 // The parameter `params` specifies the template variables for parsing.
 func (r *Response) WriteTpl(tpl string, params ...gview.Params) error {
-	r.Header().Set("Content-Type", contentTypeHtml)
+	r.Header().Set(HeaderContentType, contentTypeHtml)
 	b, err := r.ParseTpl(tpl, params...)
 	if err != nil {
 		if !gmode.IsProduct() {
@@ -33,7 +33,7 @@ func (r *Response) WriteTpl(tpl string, params ...gview.Params) error {
 // WriteTplDefault parses and responses the default template file.
 // The parameter `params` specifies the template variables for parsing.
 func (r *Response) WriteTplDefault(params ...gview.Params) error {
-	r.Header().Set("Content-Type", contentTypeHtml)
+	r.Header().Set(HeaderContentType, contentTypeHtml)
 	b, err := r.ParseTplDefault(params...)
 	if err != nil {
 		if !gmode.IsProduct() {
@@ -48,7 +48,7 @@ func (r *Response) WriteTplDefault(params ...gview.Params) error {
 // WriteTplContent parses and responses the template content.
 // The parameter `params` specifies the template variables for parsing.
 func (r *Response) WriteTplContent(content string, params ...gview.Params) error {
-	r.Header().Set("Content-Type", contentTypeHtml)
+	r.Header().Set(HeaderContentType, contentTypeHtml)
 	b, err := r.ParseTplContent(content, params...)
 	if err != nil {
 		if !gmode.IsProduct() {
@@ -79,14 +79,19 @@ func (r *Response) ParseTplContent(content string, params ...gview.Params) (stri
 
 // buildInVars merges build-in variables into `params` and returns the new template variables.
 // TODO performance improving.
-func (r *Response) buildInVars(params ...map[string]interface{}) map[string]interface{} {
+func (r *Response) buildInVars(params ...map[string]any) map[string]any {
 	m := gutil.MapMergeCopy(r.Request.viewParams)
 	if len(params) > 0 {
 		gutil.MapMerge(m, params[0])
 	}
 	// Retrieve custom template variables from request object.
-	sessionMap := gconv.MapDeep(r.Request.Session.MustData())
-	gutil.MapMerge(m, map[string]interface{}{
+	sessionMap := gconv.Map(r.Request.Session.MustData(),
+		gconv.MapOption{
+			Deep:            true,
+			OmitEmpty:       false,
+			ContinueOnError: true,
+		})
+	gutil.MapMerge(m, map[string]any{
 		"Form":    r.Request.GetFormMap(),
 		"Query":   r.Request.GetQueryMap(),
 		"Request": r.Request.GetMap(),

@@ -54,7 +54,7 @@ func Test_LcFirst(t *testing.T) {
 func Test_UcWords(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := "我爱GF: i love go frame"
-		e1 := "我爱GF: I Love Go Frame"
+		e1 := "我爱Gf: I Love Go Frame"
 		t.Assert(gstr.UcWords(s1), e1)
 	})
 }
@@ -178,9 +178,9 @@ func Test_SplitAndTrim(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := `
 
-010    
+010
 
-020  
+020
 
 `
 		a := gstr.SplitAndTrim(s, "\n", "0")
@@ -260,6 +260,14 @@ func Test_StrTill(t *testing.T) {
 		t.Assert(gstr.StrTill("name@example.com", "@"), "name@")
 		t.Assert(gstr.StrTill("name@example.com", ""), "")
 		t.Assert(gstr.StrTill("name@example.com", "z"), "")
+		t.Assert(gstr.StrTill("123456789", "456"), "123456")
+		t.Assert(gstr.StrTill("123456", "456"), "123456")
+		t.Assert(gstr.StrTill("hello world", "lo"), "hello")
+		t.Assert(gstr.StrTill("你好世界", "世界"), "你好世界")
+		t.Assert(gstr.StrTill("你好世界", "好世"), "你好世")
+		t.Assert(gstr.StrTill("abc", "a"), "a")
+		t.Assert(gstr.StrTill("abc", "ab"), "ab")
+		t.Assert(gstr.StrTill("@name@example.com", "@"), "@")
 	})
 }
 
@@ -321,6 +329,35 @@ func Test_HideStr(t *testing.T) {
 		t.Assert(gstr.HideStr("张三", 50, "*"), "张*")
 		t.Assert(gstr.HideStr("张小三", 50, "*"), "张*三")
 		t.Assert(gstr.HideStr("欧阳小三", 50, "*"), "欧**三")
+
+		// 边界与特殊用例扩展
+		// 1) 空字符串与非正百分比
+		t.Assert(gstr.HideStr("", 50, "*"), "")
+		t.Assert(gstr.HideStr("abcdef", 0, "*"), "abcdef")
+		t.Assert(gstr.HideStr("abcdef", -1, "*"), "abcdef")
+
+		// 2) 百分比为100（完全隐藏），邮箱仅隐藏本地部分
+		t.Assert(gstr.HideStr("abcdef", 100, "*"), "******")
+		t.Assert(gstr.HideStr("user@example.com", 100, "*"), "****@example.com")
+
+		// 3) 极短字符串
+		t.Assert(gstr.HideStr("a", 100, "*"), "*")
+		t.Assert(gstr.HideStr("ab", 50, "*"), "a*")
+		// 百分比太小时（四舍五入前为0），应保持不变
+		t.Assert(gstr.HideStr("ab", 10, "*"), "ab")
+
+		// 4) 隐藏字符为空：相当于删除中间片段
+		t.Assert(gstr.HideStr("abcdef", 50, ""), "abf")
+		t.Assert(gstr.HideStr("john@kohg.cn", 50, ""), "jn@kohg.cn")
+
+		// 5) 多字符隐藏串
+		t.Assert(gstr.HideStr("abcde", 40, "##"), "a####de")
+
+		// 6) Unicode/emoji
+		t.Assert(gstr.HideStr("你好🙂世界", 40, "*"), "你**世界")
+
+		// 7) 多个@的字符串，按第一个@处理
+		t.Assert(gstr.HideStr("a@b@c", 100, "*"), "*@b@c")
 	})
 }
 

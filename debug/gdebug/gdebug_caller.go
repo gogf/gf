@@ -32,6 +32,9 @@ func init() {
 	if goRootForFilter != "" {
 		goRootForFilter = strings.ReplaceAll(goRootForFilter, "\\", "/")
 	}
+	if len(os.Args) == 0 {
+		return
+	}
 	// Initialize internal package variable: selfPath.
 	selfPath, _ = exec.LookPath(os.Args[0])
 	if selfPath != "" {
@@ -187,12 +190,12 @@ func CallerFileLineShort() string {
 }
 
 // FuncPath returns the complete function path of given `f`.
-func FuncPath(f interface{}) string {
+func FuncPath(f any) string {
 	return runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
 }
 
 // FuncName returns the function name of given `f`.
-func FuncName(f interface{}) string {
+func FuncName(f any) string {
 	path := FuncPath(f)
 	if path == "" {
 		return ""

@@ -30,15 +30,16 @@ const (
 )
 
 var (
+	poolChecker = func(v *gpool.Pool) bool { return v == nil }
 	// addressPoolMap is a mapping for address to its pool object.
-	addressPoolMap = gmap.NewStrAnyMap(true)
+	addressPoolMap = gmap.NewKVMapWithChecker[string, *gpool.Pool](poolChecker, true)
 )
 
 // NewPoolConn creates and returns a connection with pool feature.
 func NewPoolConn(addr string, timeout ...time.Duration) (*PoolConn, error) {
-	v := addressPoolMap.GetOrSetFuncLock(addr, func() interface{} {
+	v := addressPoolMap.GetOrSetFuncLock(addr, func() *gpool.Pool {
 		var pool *gpool.Pool
-		pool = gpool.New(defaultPoolExpire, func() (interface{}, error) {
+		pool = gpool.New(defaultPoolExpire, func() (any, error) {
 			if conn, err := NewConn(addr, timeout...); err == nil {
 				return &PoolConn{conn, pool, connStatusActive}, nil
 			} else {
@@ -47,7 +48,7 @@ func NewPoolConn(addr string, timeout ...time.Duration) (*PoolConn, error) {
 		})
 		return pool
 	})
-	value, err := v.(*gpool.Pool).Get()
+	value, err := v.Get()
 	if err != nil {
 		return nil, err
 	}

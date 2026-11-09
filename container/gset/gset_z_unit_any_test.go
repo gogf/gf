@@ -26,7 +26,7 @@ func TestSet_Var(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var s gset.Set
 		s.Add(1, 1, 2)
-		s.Add([]interface{}{3, 4}...)
+		s.Add([]any{3, 4}...)
 		t.Assert(s.Size(), 4)
 		t.AssertIN(1, s.Slice())
 		t.AssertIN(2, s.Slice())
@@ -46,7 +46,7 @@ func TestSet_New(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.New()
 		s.Add(1, 1, 2)
-		s.Add([]interface{}{3, 4}...)
+		s.Add([]any{3, 4}...)
 		t.Assert(s.Size(), 4)
 		t.AssertIN(1, s.Slice())
 		t.AssertIN(2, s.Slice())
@@ -66,7 +66,7 @@ func TestSet_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewSet()
 		s.Add(1, 1, 2)
-		s.Add([]interface{}{3, 4}...)
+		s.Add([]any{3, 4}...)
 		t.Assert(s.Size(), 4)
 		t.AssertIN(1, s.Slice())
 		t.AssertIN(2, s.Slice())
@@ -84,8 +84,8 @@ func TestSet_Basic(t *testing.T) {
 
 func TestSet_Iterator_Deadlock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		set := gset.NewFrom([]interface{}{1, 2, 3, 4, 5}, true)
-		set.Iterator(func(k interface{}) bool {
+		set := gset.NewFrom([]any{1, 2, 3, 4, 5}, true)
+		set.Iterator(func(k any) bool {
 			if gconv.Int(k)%2 == 0 {
 				set.Remove(k)
 			}
@@ -107,11 +107,11 @@ func TestSet_Iterator(t *testing.T) {
 
 		a1 := garray.New(true)
 		a2 := garray.New(true)
-		s.Iterator(func(v interface{}) bool {
+		s.Iterator(func(v any) bool {
 			a1.Append(1)
 			return false
 		})
-		s.Iterator(func(v interface{}) bool {
+		s.Iterator(func(v any) bool {
 			a2.Append(1)
 			return true
 		})
@@ -125,12 +125,12 @@ func TestSet_LockFunc(t *testing.T) {
 		s := gset.NewSet()
 		s.Add(1, 2, 3)
 		t.Assert(s.Size(), 3)
-		s.LockFunc(func(m map[interface{}]struct{}) {
+		s.LockFunc(func(m map[any]struct{}) {
 			delete(m, 1)
 		})
 		t.Assert(s.Size(), 2)
-		s.RLockFunc(func(m map[interface{}]struct{}) {
-			t.Assert(m, map[interface{}]struct{}{
+		s.RLockFunc(func(m map[any]struct{}) {
+			t.Assert(m, map[any]struct{}{
 				3: {},
 				2: {},
 			})
@@ -187,6 +187,19 @@ func TestSet_Union(t *testing.T) {
 		t.Assert(s3.Contains(3), true)
 		t.Assert(s3.Contains(4), true)
 	})
+
+	// Test with nil element in slice
+	gtest.C(t, func(t *gtest.T) {
+		s1 := gset.NewSet()
+		s2 := gset.NewSet()
+		s1.Add(1, 2)
+		s2.Add(3, 4)
+		s3 := s1.Union(s2, nil)
+		t.Assert(s3.Contains(1), true)
+		t.Assert(s3.Contains(2), true)
+		t.Assert(s3.Contains(3), true)
+		t.Assert(s3.Contains(4), true)
+	})
 }
 
 func TestSet_Diff(t *testing.T) {
@@ -235,6 +248,14 @@ func TestSet_Complement(t *testing.T) {
 		t.Assert(s3.Contains(2), false)
 		t.Assert(s3.Contains(4), true)
 		t.Assert(s3.Contains(5), true)
+	})
+
+	// Test with nil full set
+	gtest.C(t, func(t *gtest.T) {
+		s1 := gset.NewSet()
+		s1.Add(1, 2, 3)
+		s3 := s1.Complement(nil)
+		t.Assert(s3.Size(), 0)
 	})
 }
 
@@ -352,7 +373,7 @@ func TestSet_Pops(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.New(true)
-		a := []interface{}{1, 2, 3, 4}
+		a := []any{1, 2, 3, 4}
 		s.Add(a...)
 		t.Assert(s.Size(), 4)
 		t.Assert(s.Pops(-2), nil)
@@ -362,7 +383,7 @@ func TestSet_Pops(t *testing.T) {
 
 func TestSet_Json(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		s1 := []interface{}{"a", "b", "d", "c"}
+		s1 := []any{"a", "b", "d", "c"}
 		a1 := gset.NewFrom(s1)
 		b1, err1 := json.Marshal(a1)
 		b2, err2 := json.Marshal(s1)
@@ -442,7 +463,7 @@ func TestSet_Walk(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var set gset.Set
 		set.Add(g.Slice{1, 2}...)
-		set.Walk(func(item interface{}) interface{} {
+		set.Walk(func(item any) any {
 			return gconv.Int(item) + 10
 		})
 		t.Assert(set.Size(), 2)

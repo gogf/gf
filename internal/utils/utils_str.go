@@ -9,6 +9,7 @@ package utils
 import (
 	"bytes"
 	"strings"
+	"unicode"
 )
 
 // DefaultTrimChars are the characters which are stripped by Trim* functions in default.
@@ -64,7 +65,7 @@ func IsNumeric(s string) bool {
 		}
 		if s[i] == '.' {
 			dotCount++
-			if i > 0 && i < length-1 {
+			if i > 0 && i < length-1 && s[i-1] >= '0' && s[i-1] <= '9' {
 				continue
 			} else {
 				return false
@@ -141,6 +142,11 @@ func Trim(str string, characterMask ...string) string {
 }
 
 // FormatCmdKey formats string `s` as command key using uniformed format.
+// It converts the string to lowercase and replaces all underscores with dots.
+// For example:
+//   - "my_custom_key" becomes "my.custom.key"
+//   - "SERVER_ADDRESS" becomes "server.address"
+//   - "a.b_c.d" becomes "a.b.c.d"
 func FormatCmdKey(s string) string {
 	return strings.ToLower(strings.ReplaceAll(s, "_", "."))
 }
@@ -166,4 +172,14 @@ func StripSlashes(str string) string {
 		buf.WriteRune(char)
 	}
 	return buf.String()
+}
+
+// IsASCII checks whether given string is ASCII characters.
+func IsASCII(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] > unicode.MaxASCII {
+			return false
+		}
+	}
+	return true
 }

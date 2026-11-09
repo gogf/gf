@@ -60,7 +60,7 @@ func (f *File) Export(dst string, option ...ExportOption) error {
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (f File) MarshalJSON() ([]byte, error) {
 	info := f.FileInfo()
-	return json.Marshal(map[string]interface{}{
+	return json.Marshal(map[string]any{
 		"name": f.Name(),
 		"size": info.Size(),
 		"time": info.ModTime(),

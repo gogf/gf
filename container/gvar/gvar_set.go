@@ -11,7 +11,7 @@ import (
 )
 
 // Set sets `value` to `v`, and returns the old value.
-func (v *Var) Set(value interface{}) (old interface{}) {
+func (v *Var) Set(value any) (old any) {
 	if v.safe {
 		if t, ok := v.value.(*gtype.Interface); ok {
 			old = t.Set(value)

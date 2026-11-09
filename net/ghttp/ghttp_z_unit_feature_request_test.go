@@ -56,7 +56,7 @@ func Test_Params_Basic(t *testing.T) {
 			r.Response.Write(r.GetQuery("string").String())
 		}
 		if r.GetQuery("map") != nil {
-			r.Response.Write(r.GetQueryMap()["map"].(map[string]interface{})["b"])
+			r.Response.Write(r.GetQueryMap()["map"].(map[string]any)["b"])
 		}
 		if r.GetQuery("a") != nil {
 			r.Response.Write(r.GetQueryMapStrStr()["a"])
@@ -89,7 +89,7 @@ func Test_Params_Basic(t *testing.T) {
 			r.Response.Write(r.Get("string").String())
 		}
 		if r.Get("map") != nil {
-			r.Response.Write(r.GetMap()["map"].(map[string]interface{})["b"])
+			r.Response.Write(r.GetMap()["map"].(map[string]any)["b"])
 		}
 		if r.Get("a") != nil {
 			r.Response.Write(r.GetMapStrStr()["a"])
@@ -123,7 +123,7 @@ func Test_Params_Basic(t *testing.T) {
 			r.Response.Write(r.Get("string").String())
 		}
 		if r.Get("map") != nil {
-			r.Response.Write(r.GetMap()["map"].(map[string]interface{})["b"])
+			r.Response.Write(r.GetMap()["map"].(map[string]any)["b"])
 		}
 		if r.Get("a") != nil {
 			r.Response.Write(r.GetMapStrStr()["a"])
@@ -156,7 +156,7 @@ func Test_Params_Basic(t *testing.T) {
 			r.Response.Write(r.Get("string").String())
 		}
 		if r.Get("map") != nil {
-			r.Response.Write(r.GetMap()["map"].(map[string]interface{})["b"])
+			r.Response.Write(r.GetMap()["map"].(map[string]any)["b"])
 		}
 		if r.Get("a") != nil {
 			r.Response.Write(r.GetMapStrStr()["a"])
@@ -189,7 +189,7 @@ func Test_Params_Basic(t *testing.T) {
 			r.Response.Write(r.GetForm("string").String())
 		}
 		if r.Get("map") != nil {
-			r.Response.Write(r.GetFormMap()["map"].(map[string]interface{})["b"])
+			r.Response.Write(r.GetFormMap()["map"].(map[string]any)["b"])
 		}
 		if r.Get("a") != nil {
 			r.Response.Write(r.GetFormMapStrStr()["a"])
@@ -363,7 +363,11 @@ func Test_Params_Basic(t *testing.T) {
 func Test_Params_Header(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/header", func(r *ghttp.Request) {
-		r.Response.Write(r.GetHeader("test"))
+		r.Response.Write(map[string]any{
+			"without-def":   r.GetHeader("no-header"),
+			"with-def":      r.GetHeader("no-header", "my-default"),
+			"x-custom-with": r.GetHeader("x-custom", "my-default"),
+		})
 	})
 	s.SetDumpRouterMap(false)
 	s.Start()
@@ -374,8 +378,14 @@ func Test_Params_Header(t *testing.T) {
 		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
 		client := g.Client()
 		client.SetPrefix(prefix)
+		client.SetHeader("x-custom", "custom-value")
 
-		t.Assert(client.Header(g.MapStrStr{"test": "123456"}).GetContent(ctx, "/header"), "123456")
+		resp := client.GetContent(ctx, "/header")
+		t.Assert(gjson.New(resp).Map(), g.Map{
+			"without-def":   "",
+			"with-def":      "my-default",
+			"x-custom-with": "custom-value",
+		})
 	})
 }
 
@@ -441,16 +451,16 @@ func Test_Params_GetRequestMap(t *testing.T) {
 		r.Response.Write(r.GetRequestMap())
 	})
 	s.BindHandler("/withKVMap", func(r *ghttp.Request) {
-		m := r.GetRequestMap(map[string]interface{}{"id": 2})
+		m := r.GetRequestMap(map[string]any{"id": 2})
 		r.Response.Write(m["id"])
 	})
 	s.BindHandler("/paramsMapWithKVMap", func(r *ghttp.Request) {
 		r.SetParam("name", "john")
-		m := r.GetRequestMap(map[string]interface{}{"id": 2})
+		m := r.GetRequestMap(map[string]any{"id": 2})
 		r.Response.Write(m["id"])
 	})
 	s.BindHandler("/{name}.map", func(r *ghttp.Request) {
-		m := r.GetRequestMap(map[string]interface{}{"id": 2})
+		m := r.GetRequestMap(map[string]any{"id": 2})
 		r.Response.Write(m["id"])
 	})
 	s.SetDumpRouterMap(false)
@@ -728,7 +738,7 @@ func Test_Params_GetQueryMap(t *testing.T) {
 		}
 	})
 	s.BindHandler("/GetQueryMapWithKVMap", func(r *ghttp.Request) {
-		if m := r.GetQueryMap(map[string]interface{}{"id": 1}); len(m) > 0 {
+		if m := r.GetQueryMap(map[string]any{"id": 1}); len(m) > 0 {
 			r.Response.Write(m["id"])
 		}
 	})

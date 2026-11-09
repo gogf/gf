@@ -38,7 +38,7 @@ type (
 		servers          []*graceful.Server        // Underlying http.Server array.
 		serverCount      *gtype.Int                // Underlying http.Server number for internal usage.
 		closeChan        chan struct{}             // Used for underlying server closing event notification.
-		serveTree        map[string]interface{}    // The route maps tree.
+		serveTree        map[string]any            // The route maps tree.
 		serveCache       *gcache.Cache             // Server caches for internal usage.
 		routesMap        map[string][]*HandlerItem // Route map mainly for route dumps and repeated route checks.
 		statusHandlerMap map[string][]HandlerFunc  // Custom status handler map.
@@ -64,11 +64,11 @@ type (
 		Handler          *HandlerItem // The handler.
 		Server           string       // Server name.
 		Address          string       // Listening address.
-		Domain           string       // Bound domain.
+		Domain           string       // Bound domain, eg: example.com
 		Type             HandlerType  // Route handler type.
 		Middleware       string       // Bound middleware.
-		Method           string       // Handler method name.
-		Route            string       // Route URI.
+		Method           string       // Handler method name, eg: get, post.
+		Route            string       // Route URI, eg: /api/v1/user/{id}.
 		Priority         int          // Just for reference.
 		IsServiceHandler bool         // Is a service handler.
 	}
@@ -78,11 +78,14 @@ type (
 
 	// handlerFuncInfo contains the HandlerFunc address and its reflection type.
 	handlerFuncInfo struct {
-		Func            HandlerFunc      // Handler function address.
-		Type            reflect.Type     // Reflect type information for current handler, which is used for extensions of the handler feature.
-		Value           reflect.Value    // Reflect value information for current handler, which is used for extensions of the handler feature.
-		IsStrictRoute   bool             // Whether strict route matching is enabled.
-		ReqStructFields []gstructs.Field // Request struct fields.
+		Func                HandlerFunc       // Handler function address.
+		Type                reflect.Type      // Reflect type information for current handler, which is used for extensions of the handler feature.
+		Value               reflect.Value     // Reflect value information for current handler, which is used for extensions of the handler feature.
+		IsStrictRoute       bool              // Whether strict route matching is enabled.
+		ReqStructFields     []gstructs.Field  // Request struct fields.
+		ReqStructTags       requestStructTags // Tag usages of the request struct, which is precomputed at handler registration.
+		ReqBodyFieldName    string            // Request struct field name tagged with `body:"*"`, which receives the whole request body.
+		ReqBodyFieldTagName string            // Tag name of the `body:"*"` field, which is resolved once at router registering for the request handling to remove the parameter of the same name.
 	}
 
 	// HandlerItem is the registered handler for route handling,
@@ -119,7 +122,7 @@ type (
 	HandlerType string
 
 	// Listening file descriptor mapping.
-	// The key is either "http" or "https" and the value is its FD.
+	// The key is either schemeHttp or schemeHttps and the value is its FD.
 	listenerFdMap = map[string]string
 
 	// internalPanic is the custom panic for internal usage.
@@ -132,7 +135,6 @@ const (
 )
 
 const (
-	HeaderXUrlPath                    = "x-url-path"         // Used for custom route handler, which does not change URL.Path.
 	HookBeforeServe       HookName    = "HOOK_BEFORE_SERVE"  // Hook handler before route handler/file serving.
 	HookAfterServe        HookName    = "HOOK_AFTER_SERVE"   // Hook handler after route handler/file serving.
 	HookBeforeOutput      HookName    = "HOOK_BEFORE_OUTPUT" // Hook handler before response output.
@@ -157,7 +159,6 @@ const (
 	contentTypeJson                    = "application/json"
 	contentTypeJavascript              = "application/javascript"
 	swaggerUIPackedPath                = "/goframe/swaggerui"
-	responseHeaderTraceID              = "Trace-ID"
 	specialMethodNameInit              = "Init"
 	specialMethodNameShut              = "Shut"
 	specialMethodNameIndex             = "Index"
@@ -176,9 +177,12 @@ var (
 	// It is used for quick HTTP method searching using map.
 	methodsMap = make(map[string]struct{})
 
+	// checker is used for checking whether the value is nil.
+	checker = func(v *Server) bool { return v == nil }
+
 	// serverMapping stores more than one server instances for current processes.
 	// The key is the name of the server, and the value is its instance.
-	serverMapping = gmap.NewStrAnyMap(true)
+	serverMapping = gmap.NewKVMapWithChecker[string, *Server](checker, true)
 
 	// serverRunning marks the running server counts.
 	// If there is no successful server running or all servers' shutdown, this value is 0.

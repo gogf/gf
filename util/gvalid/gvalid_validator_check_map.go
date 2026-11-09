@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
+func (v *Validator) doCheckMap(ctx context.Context, params any) Error {
 	if params == nil {
 		return nil
 	}
@@ -31,7 +31,7 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 	// Sequence has order for error results.
 	case []string:
 		for _, tag := range assertValue {
-			name, rule, msg := ParseTagValue(tag)
+			name, rule, msg := v.parseTagValue(tag)
 			if len(name) == 0 {
 				continue
 			}
@@ -87,16 +87,10 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 			customMessage = msg
 		}
 	}
-	var (
-		value     interface{}
-		validator = v.Clone()
-	)
+	var value any
 
 	// It checks the struct recursively if its attribute is an embedded struct.
 	// Ignore inputParamMap, assoc, rules and messages from parent.
-	validator.assoc = nil
-	validator.rules = nil
-	validator.messages = nil
 	for _, item := range inputParamMap {
 		originTypeAndKind := reflection.OriginTypeAndKind(item)
 		switch originTypeAndKind.OriginKind {

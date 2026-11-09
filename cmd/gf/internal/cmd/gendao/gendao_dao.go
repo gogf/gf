@@ -26,6 +26,11 @@ import (
 	"github.com/gogf/gf/cmd/gf/v2/internal/utility/utils"
 )
 
+// daoIndexGdbImportPath is the gdb import path used by the sharding handler of the dao index
+// file. The dao index template does not import it, as the non-sharding content of the template
+// does not use gdb, so the import is ensured by generateDaoIndex for the sharding tables.
+const daoIndexGdbImportPath = "github.com/gogf/gf/v2/database/gdb"
+
 func generateDao(ctx context.Context, in CGenDaoInternalInput) {
 	var (
 		dirPathDao         = gfile.Join(in.Path, in.DaoPath)
@@ -69,20 +74,13 @@ func generateDaoSingle(ctx context.Context, in generateDaoSingleInput) {
 	var (
 		tableNameCamelCase      = formatFieldName(in.NewTableName, FieldNameCaseCamel)
 		tableNameCamelLowerCase = formatFieldName(in.NewTableName, FieldNameCaseCamelLower)
-		tableNameSnakeCase      = gstr.CaseSnake(in.NewTableName)
+		fileName                = formatFileName(in.NewTableName, in.FileNameCase)
 		importPrefix            = in.ImportPrefix
 	)
 	if importPrefix == "" {
 		importPrefix = utils.GetImportPath(gfile.Join(in.Path, in.DaoPath))
 	} else {
 		importPrefix = gstr.Join(g.SliceStr{importPrefix, in.DaoPath}, "/")
-	}
-
-	fileName := gstr.Trim(tableNameSnakeCase, "-_.")
-	if len(fileName) > 5 && fileName[len(fileName)-5:] == "_test" {
-		// Add suffix to avoid the table name which contains "_test",
-		// which would make the go file a testing file.
-		fileName += "_table"
 	}
 
 	// dao - index
@@ -127,6 +125,7 @@ func generateDaoIndex(in generateDaoIndexInput) {
 		tplView.ClearAssigns()
 		tplView.Assigns(gview.Params{
 			tplVarTableSharding:           in.IsSharding,
+			tplVarTableShardingPrefix:     in.NewTableName + "_",
 			tplVarImportPrefix:            in.ImportPrefix,
 			tplVarTableName:               in.TableName,
 			tplVarTableNameCamelCase:      in.TableNameCamelCase,
@@ -140,6 +139,17 @@ func generateDaoIndex(in generateDaoIndexInput) {
 		if err = gfile.PutContents(path, strings.TrimSpace(indexContent)); err != nil {
 			mlog.Fatalf("writing content to '%s' failed: %v", path, err)
 		} else {
+			// The sharding handler written by the template uses gdb, while the template does not
+			// import it, as the non-sharding content does not reference gdb at all. The import is
+			// declared here instead of in the template so that the template stays import-free and
+			// the unused import is never written to the non-sharding files.
+			if in.IsSharding {
+				if _, importErr := utils.EnsureImports(path, utils.ImportSpec{
+					Path: daoIndexGdbImportPath,
+				}); importErr != nil {
+					mlog.Fatalf(`adding import to "%s" failed: %v`, path, importErr)
+				}
+			}
 			utils.GoFmt(path)
 			mlog.Print("generated:", gfile.RealPath(path))
 		}
@@ -210,13 +220,9 @@ func generateColumnNamesForDao(fieldMap map[string]*gdb.TableField, removeFieldP
 			fmt.Sprintf(` #"%s",`, field.Name),
 		}
 	}
-	tw := tablewriter.NewWriter(buffer)
-	tw.SetBorder(false)
-	tw.SetRowLine(false)
-	tw.SetAutoWrapText(false)
-	tw.SetColumnSeparator("")
-	tw.AppendBulk(array)
-	tw.Render()
+	table := tablewriter.NewTable(buffer, twRenderer, twConfig)
+	table.Bulk(array)
+	table.Render()
 	namesContent := buffer.String()
 	// Let's do this hack of table writer for indent!
 	namesContent = gstr.Replace(namesContent, "  #", "")
@@ -251,13 +257,9 @@ func generateColumnDefinitionForDao(fieldMap map[string]*gdb.TableField, removeF
 			" #" + fmt.Sprintf(`// %s`, comment),
 		}
 	}
-	tw := tablewriter.NewWriter(buffer)
-	tw.SetBorder(false)
-	tw.SetRowLine(false)
-	tw.SetAutoWrapText(false)
-	tw.SetColumnSeparator("")
-	tw.AppendBulk(array)
-	tw.Render()
+	table := tablewriter.NewTable(buffer, twRenderer, twConfig)
+	table.Bulk(array)
+	table.Render()
 	defineContent := buffer.String()
 	// Let's do this hack of table writer for indent!
 	defineContent = gstr.Replace(defineContent, "  #", "")

@@ -20,11 +20,11 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/localinterface"
 )
 
-func (c *Converter) String(any any) (string, error) {
-	if empty.IsNil(any) {
+func (c *Converter) String(anyInput any) (string, error) {
+	if empty.IsNil(anyInput) {
 		return "", nil
 	}
-	switch value := any.(type) {
+	switch value := anyInput.(type) {
 	case int:
 		return strconv.Itoa(value), nil
 	case int8:
@@ -78,6 +78,14 @@ func (c *Converter) String(any any) (string, error) {
 		}
 		return value.String(), nil
 	default:
+		// Unwrap reflect.Value input early so that the IString/IError checks below
+		// do not accidentally match reflect.Value's own String() method, which returns
+		// the reflection type name (e.g. "<int Value>") instead of the actual value.
+		if rv, ok := value.(reflect.Value); ok {
+			if rv.IsValid() && rv.CanInterface() {
+				return c.String(rv.Interface())
+			}
+		}
 		if f, ok := value.(localinterface.IString); ok {
 			// If the variable implements the String() interface,
 			// then use that interface to perform the conversion
@@ -106,7 +114,7 @@ func (c *Converter) String(any any) (string, error) {
 			}
 		case reflect.String:
 			return rv.String(), nil
-		case reflect.Ptr:
+		case reflect.Pointer:
 			if rv.IsNil() {
 				return "", nil
 			}

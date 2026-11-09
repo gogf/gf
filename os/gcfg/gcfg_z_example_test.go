@@ -66,7 +66,7 @@ func ExampleConfig_GetWithCmd() {
 	// cmd:yes
 }
 
-func Example_NewWithAdapter() {
+func ExampleConfig_newWithAdapter() {
 	var (
 		ctx          = gctx.New()
 		content      = `{"a":"b", "c":1}`

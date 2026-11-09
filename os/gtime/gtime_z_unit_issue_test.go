@@ -71,3 +71,13 @@ func Test_Issue3558(t *testing.T) {
 		t.Assert(gfTimeFormat, stdTimeFormat)
 	})
 }
+
+// Test_Issue4307 https://github.com/gogf/gf/issues/4307
+func Test_Issue4307(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var timeNil *time.Time = nil
+		// This should not panic.
+		gfTime := gtime.New(timeNil)
+		t.AssertNil(gfTime)
+	})
+}

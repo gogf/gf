@@ -160,13 +160,13 @@ func (m *Manager) T(ctx context.Context, content string) string {
 }
 
 // Tf is alias of TranslateFormat for convenience.
-func (m *Manager) Tf(ctx context.Context, format string, values ...interface{}) string {
+func (m *Manager) Tf(ctx context.Context, format string, values ...any) string {
 	return m.TranslateFormat(ctx, format, values...)
 }
 
 // TranslateFormat translates, formats and returns the `format` with configured language
 // and given `values`.
-func (m *Manager) TranslateFormat(ctx context.Context, format string, values ...interface{}) string {
+func (m *Manager) TranslateFormat(ctx context.Context, format string, values ...any) string {
 	return fmt.Sprintf(m.Translate(ctx, format), values...)
 }
 
@@ -267,7 +267,8 @@ func (m *Manager) init(ctx context.Context) {
 				if m.data[lang] == nil {
 					m.data[lang] = make(map[string]string)
 				}
-				if j, err := gjson.LoadContent(file.Content()); err == nil {
+				options := gjson.Options{Type: gfile.ExtName(name)}
+				if j, err := gjson.LoadWithOptions(file.Content(), options); err == nil {
 					for k, v := range j.Var().Map() {
 						m.data[lang][k] = gconv.String(v)
 					}
@@ -298,7 +299,7 @@ func (m *Manager) init(ctx context.Context) {
 			if m.data[lang] == nil {
 				m.data[lang] = make(map[string]string)
 			}
-			if j, err := gjson.LoadContent(gfile.GetBytes(file)); err == nil {
+			if j, err := gjson.LoadPath(file, gjson.Options{}); err == nil {
 				for k, v := range j.Var().Map() {
 					m.data[lang][k] = gconv.String(v)
 				}

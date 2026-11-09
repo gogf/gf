@@ -13,6 +13,19 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 )
 
+// StructsOption is the option for Structs function.
+type StructsOption struct {
+	SliceOption  SliceOption
+	StructOption StructOption
+}
+
+func (c *Converter) getStructsOption(option ...StructsOption) StructsOption {
+	if len(option) > 0 {
+		return option[0]
+	}
+	return StructsOption{}
+}
+
 // Structs converts any slice to given struct slice.
 //
 // It automatically checks and converts json string to []map if `params` is string/[]byte.
@@ -20,9 +33,7 @@ import (
 // The parameter `pointer` should be type of pointer to slice of struct.
 // Note that if `pointer` is a pointer to another pointer of type of slice of struct,
 // it will create the struct/pointer internally.
-func (c *Converter) Structs(
-	params any, pointer any, sliceOption SliceOption, structOption StructOption,
-) (err error) {
+func (c *Converter) Structs(params any, pointer any, option ...StructsOption) (err error) {
 	defer func() {
 		// Catch the panic, especially the reflection operation panics.
 		if exception := recover(); exception != nil {
@@ -38,7 +49,7 @@ func (c *Converter) Structs(
 	pointerRv, ok := pointer.(reflect.Value)
 	if !ok {
 		pointerRv = reflect.ValueOf(pointer)
-		if kind := pointerRv.Kind(); kind != reflect.Ptr {
+		if kind := pointerRv.Kind(); kind != reflect.Pointer {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				"pointer should be type of pointer, but got: %v", kind,
@@ -47,11 +58,12 @@ func (c *Converter) Structs(
 	}
 	// Converting `params` to map slice.
 	var (
-		paramsList []any
-		paramsRv   = reflect.ValueOf(params)
-		paramsKind = paramsRv.Kind()
+		paramsList    []any
+		paramsRv      = reflect.ValueOf(params)
+		paramsKind    = paramsRv.Kind()
+		structsOption = c.getStructsOption(option...)
 	)
-	for paramsKind == reflect.Ptr {
+	for paramsKind == reflect.Pointer {
 		paramsRv = paramsRv.Elem()
 		paramsKind = paramsRv.Kind()
 	}
@@ -62,8 +74,11 @@ func (c *Converter) Structs(
 			paramsList[i] = paramsRv.Index(i).Interface()
 		}
 	default:
-		paramsMaps, err := c.SliceMap(params, sliceOption, MapOption{
-			ContinueOnError: structOption.ContinueOnError,
+		paramsMaps, err := c.SliceMap(params, SliceMapOption{
+			SliceOption: structsOption.SliceOption,
+			MapOption: MapOption{
+				ContinueOnError: structsOption.StructOption.ContinueOnError,
+			},
 		})
 		if err != nil {
 			return err
@@ -84,7 +99,7 @@ func (c *Converter) Structs(
 		pointerRvElem    = pointerRv.Elem()
 		pointerRvLength  = pointerRvElem.Len()
 	)
-	if itemTypeKind == reflect.Ptr {
+	if itemTypeKind == reflect.Pointer {
 		// Pointer element.
 		for i := 0; i < len(paramsList); i++ {
 			var tempReflectValue reflect.Value
@@ -95,7 +110,7 @@ func (c *Converter) Structs(
 			if !tempReflectValue.IsValid() {
 				tempReflectValue = reflect.New(itemType.Elem()).Elem()
 			}
-			if err = c.Struct(paramsList[i], tempReflectValue, structOption); err != nil {
+			if err = c.Struct(paramsList[i], tempReflectValue, structsOption.StructOption); err != nil {
 				return err
 			}
 			reflectElemArray.Index(i).Set(tempReflectValue.Addr())
@@ -109,7 +124,7 @@ func (c *Converter) Structs(
 			} else {
 				tempReflectValue = reflect.New(itemType).Elem()
 			}
-			if err = c.Struct(paramsList[i], tempReflectValue, structOption); err != nil {
+			if err = c.Struct(paramsList[i], tempReflectValue, structsOption.StructOption); err != nil {
 				return err
 			}
 			reflectElemArray.Index(i).Set(tempReflectValue)

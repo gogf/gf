@@ -9,17 +9,17 @@ package ghttp
 import "github.com/gogf/gf/v2/container/gvar"
 
 // SetParam sets custom parameter with key-value pairs.
-func (r *Request) SetParam(key string, value interface{}) {
+func (r *Request) SetParam(key string, value any) {
 	if r.paramsMap == nil {
-		r.paramsMap = make(map[string]interface{})
+		r.paramsMap = make(map[string]any)
 	}
 	r.paramsMap[key] = value
 }
 
 // SetParamMap sets custom parameter with key-value pair maps.
-func (r *Request) SetParamMap(data map[string]interface{}) {
+func (r *Request) SetParamMap(data map[string]any) {
 	if r.paramsMap == nil {
-		r.paramsMap = make(map[string]interface{})
+		r.paramsMap = make(map[string]any)
 	}
 	for k, v := range data {
 		r.paramsMap[k] = v
@@ -29,7 +29,7 @@ func (r *Request) SetParamMap(data map[string]interface{}) {
 // GetParam returns custom parameter with a given name `key`.
 // It returns `def` if `key` does not exist.
 // It returns nil if `def` is not passed.
-func (r *Request) GetParam(key string, def ...interface{}) *gvar.Var {
+func (r *Request) GetParam(key string, def ...any) *gvar.Var {
 	if len(r.paramsMap) > 0 {
 		if value, ok := r.paramsMap[key]; ok {
 			return gvar.New(value)

@@ -55,7 +55,7 @@ func ExampleGetOpt() {
 	// Opt["o"]: "gf.exe", Opt["y"]: "", Opt["d"]: "default value"
 }
 
-func ExampleGetOpt_Def() {
+func ExampleGetOpt_def() {
 	gcmd.Init("gf", "build", "main.go", "-o=gf.exe", "-y")
 
 	fmt.Println(gcmd.GetOpt("s", "Def").String())
@@ -146,7 +146,7 @@ func ExampleCommand_AddCommand() {
 	//     start
 }
 
-func ExampleCommand_AddCommand_Repeat() {
+func ExampleCommand_AddCommand_repeat() {
 	commandRoot := &gcmd.Command{
 		Name: "gf",
 	}
@@ -183,7 +183,7 @@ func ExampleCommand_AddObject() {
 	//     root    root env command
 }
 
-func ExampleCommand_AddObject_Error() {
+func ExampleCommand_AddObject_error() {
 	var (
 		command = gcmd.Command{
 			Name: "start",

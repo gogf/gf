@@ -8,6 +8,8 @@ package zookeeper
 
 import (
 	"context"
+	"reflect"
+	"sort"
 	"testing"
 	"time"
 
@@ -24,7 +26,7 @@ func TestRegistry(t *testing.T) {
 	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-0-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 
@@ -46,19 +48,19 @@ func TestRegistryMany(t *testing.T) {
 	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-1-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 	svc1 := &gsvc.LocalService{
 		Name:      "goframe-provider-2-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9001"),
 	}
 	svc2 := &gsvc.LocalService{
 		Name:      "goframe-provider-3-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9002"),
 	}
 
@@ -101,7 +103,7 @@ func TestGetService(t *testing.T) {
 	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-4-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 
@@ -138,7 +140,7 @@ func TestWatch(t *testing.T) {
 	svc := &gsvc.LocalService{
 		Name:      "goframe-provider-4-tcp",
 		Version:   "test",
-		Metadata:  map[string]interface{}{"app": "goframe", gsvc.MDProtocol: "tcp"},
+		Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
 		Endpoints: gsvc.NewEndpoints("127.0.0.1:9000"),
 	}
 	t.Log("watch")
@@ -185,5 +187,63 @@ func TestWatch(t *testing.T) {
 	if err == nil {
 		// if nil, stop failed
 		t.Fatal()
+	}
+}
+
+// TestRegistryMultiInstance tests that instances of the same service do not overwrite each other.
+func TestRegistryMultiInstance(t *testing.T) {
+	r := New([]string{"127.0.0.1:2181"}, WithRootPath("/gogf"))
+	ctx := context.Background()
+
+	newService := func(endpoint string) *gsvc.LocalService {
+		return &gsvc.LocalService{
+			Name:      "goframe-provider-5-tcp",
+			Version:   "test",
+			Metadata:  map[string]any{"app": "goframe", gsvc.MDProtocol: "tcp"},
+			Endpoints: gsvc.NewEndpoints(endpoint),
+		}
+	}
+	searchEndpoints := func() []string {
+		services, err := r.Search(ctx, gsvc.SearchInput{Name: "goframe-provider-5-tcp", Prefix: newService("").GetPrefix()})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(services) > 1 {
+			t.Fatalf("expected instances merged into one service, got %d services", len(services))
+		}
+		endpoints := make([]string, 0)
+		for _, service := range services {
+			for _, endpoint := range service.GetEndpoints() {
+				endpoints = append(endpoints, endpoint.String())
+			}
+		}
+		sort.Strings(endpoints)
+		return endpoints
+	}
+
+	s1, err := r.Register(ctx, newService("127.0.0.1:9100"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	s2, err := r.Register(ctx, newService("127.0.0.1:9101"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if endpoints := searchEndpoints(); !reflect.DeepEqual(endpoints, []string{"127.0.0.1:9100", "127.0.0.1:9101"}) {
+		t.Fatalf("unexpected endpoints after registering two instances: %v", endpoints)
+	}
+
+	if err = r.Deregister(ctx, s1); err != nil {
+		t.Fatal(err)
+	}
+	if endpoints := searchEndpoints(); !reflect.DeepEqual(endpoints, []string{"127.0.0.1:9101"}) {
+		t.Fatalf("unexpected endpoints after deregistering one instance: %v", endpoints)
+	}
+
+	if err = r.Deregister(ctx, s2); err != nil {
+		t.Fatal(err)
+	}
+	if endpoints := searchEndpoints(); len(endpoints) != 0 {
+		t.Fatalf("unexpected endpoints after deregistering all instances: %v", endpoints)
 	}
 }

@@ -72,7 +72,7 @@ func Test_PrintStack(t *testing.T) {
 
 func Test_GoroutineId(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.AssertGT(gdebug.GoroutineId(), 0)
+		t.AssertGT(gdebug.GoroutineID(), 0)
 	})
 }
 

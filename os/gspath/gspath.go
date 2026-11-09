@@ -39,8 +39,10 @@ type SPathCacheItem struct {
 }
 
 var (
+	// checker is the checking function for checking the value is nil or not.
+	checker = func(v *SPath) bool { return v == nil }
 	// Path to searching object mapping, used for instance management.
-	pathsMap = gmap.NewStrAnyMap(true)
+	pathsMap = gmap.NewKVMapWithChecker[string, *SPath](checker, true)
 )
 
 // New creates and returns a new path searching manager.
@@ -52,9 +54,7 @@ func New(path string, cache bool) *SPath {
 		sp.cache = gmap.NewStrStrMap(true)
 	}
 	if len(path) > 0 {
-		if _, err := sp.Add(path); err != nil {
-			// intlog.Print(err)
-		}
+		_, _ = sp.Add(path)
 	}
 	return sp
 }
@@ -67,9 +67,9 @@ func Get(root string, cache bool) *SPath {
 	if root == "" {
 		root = "/"
 	}
-	return pathsMap.GetOrSetFuncLock(root, func() interface{} {
+	return pathsMap.GetOrSetFuncLock(root, func() *SPath {
 		return New(root, cache)
-	}).(*SPath)
+	})
 }
 
 // Search searches file `name` under path `root`.

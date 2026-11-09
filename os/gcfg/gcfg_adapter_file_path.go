@@ -56,20 +56,20 @@ func (a *AdapterFile) SetPath(directoryPath string) (err error) {
 	if realPath == "" {
 		buffer := bytes.NewBuffer(nil)
 		if a.searchPaths.Len() > 0 {
-			buffer.WriteString(fmt.Sprintf(
+			fmt.Fprintf(buffer,
 				`SetPath failed: cannot find directory "%s" in following paths:`,
 				directoryPath,
-			))
+			)
 			a.searchPaths.RLockFunc(func(array []string) {
 				for k, v := range array {
-					buffer.WriteString(fmt.Sprintf("\n%d. %s", k+1, v))
+					fmt.Fprintf(buffer, "\n%d. %s", k+1, v)
 				}
 			})
 		} else {
-			buffer.WriteString(fmt.Sprintf(
+			fmt.Fprintf(buffer,
 				`SetPath failed: path "%s" does not exist`,
 				directoryPath,
-			))
+			)
 		}
 		return gerror.New(buffer.String())
 	}
@@ -136,20 +136,18 @@ func (a *AdapterFile) doAddPath(directoryPath string) (err error) {
 	if realPath == "" {
 		buffer := bytes.NewBuffer(nil)
 		if a.searchPaths.Len() > 0 {
-			buffer.WriteString(fmt.Sprintf(
+			fmt.Fprintf(buffer,
 				`AddPath failed: cannot find directory "%s" in following paths:`,
-				directoryPath,
-			))
+				directoryPath)
 			a.searchPaths.RLockFunc(func(array []string) {
 				for k, v := range array {
-					buffer.WriteString(fmt.Sprintf("\n%d. %s", k+1, v))
+					fmt.Fprintf(buffer, "\n%d. %s", k+1, v)
 				}
 			})
 		} else {
-			buffer.WriteString(fmt.Sprintf(
+			fmt.Fprintf(buffer,
 				`AddPath failed: path "%s" does not exist`,
-				directoryPath,
-			))
+				directoryPath)
 		}
 		return gerror.New(buffer.String())
 	}
@@ -246,7 +244,7 @@ func (a *AdapterFile) GetFilePath(fileNameOrPath ...string) (filePath string, er
 	var (
 		fileExtName        string
 		tempFileNameOrPath string
-		usedFileNameOrPath = a.defaultFileNameOrPath
+		usedFileNameOrPath = a.defaultFileNameOrPath.String()
 	)
 	if len(fileNameOrPath) > 0 {
 		usedFileNameOrPath = fileNameOrPath[0]
@@ -269,34 +267,30 @@ func (a *AdapterFile) GetFilePath(fileNameOrPath ...string) (filePath string, er
 		var buffer = bytes.NewBuffer(nil)
 		if a.searchPaths.Len() > 0 {
 			if !gstr.InArray(supportedFileTypes, fileExtName) {
-				buffer.WriteString(fmt.Sprintf(
+				fmt.Fprintf(buffer,
 					`possible config files "%s" or "%s" not found in resource manager or following system searching paths:`,
-					usedFileNameOrPath, fmt.Sprintf(`%s.%s`, usedFileNameOrPath, gstr.Join(supportedFileTypes, "/")),
-				))
+					usedFileNameOrPath, fmt.Sprintf(`%s.%s`, usedFileNameOrPath, gstr.Join(supportedFileTypes, "/")))
 			} else {
-				buffer.WriteString(fmt.Sprintf(
+				fmt.Fprintf(buffer,
 					`specified config file "%s" not found in resource manager or following system searching paths:`,
-					usedFileNameOrPath,
-				))
+					usedFileNameOrPath)
 			}
 			a.searchPaths.RLockFunc(func(array []string) {
 				index := 1
 				for _, searchPath := range array {
 					searchPath = gstr.TrimRight(searchPath, `\/`)
 					for _, tryFolder := range localSystemTryFolders {
-						buffer.WriteString(fmt.Sprintf(
+						fmt.Fprintf(buffer,
 							"\n%d. %s",
-							index, gfile.Join(searchPath, tryFolder),
-						))
+							index, gfile.Join(searchPath, tryFolder))
 						index++
 					}
 				}
 			})
 		} else {
-			buffer.WriteString(fmt.Sprintf(
+			fmt.Fprintf(buffer,
 				`cannot find config file "%s" with no filePath configured`,
-				usedFileNameOrPath,
-			))
+				usedFileNameOrPath)
 		}
 		err = gerror.NewCode(gcode.CodeNotFound, buffer.String())
 	}

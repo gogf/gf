@@ -33,7 +33,7 @@ func (c CGenService) generateType(generatedContent *bytes.Buffer, srcStructFunct
 	generatedContent.WriteString("type(")
 	generatedContent.WriteString("\n")
 
-	srcStructFunctions.Iterator(func(key, value interface{}) bool {
+	srcStructFunctions.Iterator(func(key, value any) bool {
 		var (
 			funcContents = make([]string, 0)
 			funcContent  string
@@ -43,8 +43,10 @@ func (c CGenService) generateType(generatedContent *bytes.Buffer, srcStructFunct
 		for _, funcInfo := range funcSlice {
 			// Remove package name calls of `dstPackageName` in produced codes.
 			funcHead, _ := gregex.ReplaceString(
-				fmt.Sprintf(`\*{0,1}%s\.`, dstPackageName),
-				``, funcInfo["funcHead"],
+				// Keep the optional pointer `*` (if any), but remove the `dstPackageName.` prefix
+				// so `*service.Type` becomes `*Type`.
+				fmt.Sprintf(`(\*)?%s\.`, dstPackageName),
+				`$1`, funcInfo["funcHead"],
 			)
 			funcContent = funcInfo["funcComment"] + funcHead
 			funcContents = append(funcContents, funcContent)
@@ -71,7 +73,7 @@ func (c CGenService) generateVar(generatedContent *bytes.Buffer, srcStructFuncti
 	// Generating variable and register definitions.
 	var variableContent string
 
-	srcStructFunctions.Iterator(func(key, value interface{}) bool {
+	srcStructFunctions.Iterator(func(key, value any) bool {
 		structName := key.(string)
 		variableContent += gstr.Trim(gstr.ReplaceByMap(consts.TemplateGenServiceContentVariable, g.MapStrStr{
 			"{StructName}":    structName,
@@ -93,7 +95,7 @@ func (c CGenService) generateVar(generatedContent *bytes.Buffer, srcStructFuncti
 // See: const.TemplateGenServiceContentRegister
 func (c CGenService) generateFunc(generatedContent *bytes.Buffer, srcStructFunctions *gmap.ListMap) {
 	// Variable register function definitions.
-	srcStructFunctions.Iterator(func(key, value interface{}) bool {
+	srcStructFunctions.Iterator(func(key, value any) bool {
 		structName := key.(string)
 		generatedContent.WriteString(gstr.Trim(gstr.ReplaceByMap(consts.TemplateGenServiceContentRegister, g.MapStrStr{
 			"{StructName}":    structName,

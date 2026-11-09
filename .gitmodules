@@ -1,3 +1,0 @@
-[submodule "examples"]
-	path = examples
-	url = git@github.com:gogf/examples.git

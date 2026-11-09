@@ -7,6 +7,7 @@
 package gconv_test
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -68,7 +69,7 @@ func TestScanBasicTypes(t *testing.T) {
 
 		// Map conversion
 		{
-			map[string]interface{}{"name": "john", "age": 18},
+			map[string]any{"name": "john", "age": 18},
 			new(User),
 			&User{Name: "john", Age: 18},
 		},
@@ -78,21 +79,21 @@ func TestScanBasicTypes(t *testing.T) {
 			&User{Name: "john", Age: 18},
 		},
 		{
-			map[string]interface{}{"name": "john", "age": 18},
+			map[string]any{"name": "john", "age": 18},
 			new(UserWithTag),
 			&UserWithTag{Name: "john", Age: 18},
 		},
 		{
 			map[string]string{"name": "john", "age": "18"},
-			new(map[string]interface{}),
-			&map[string]interface{}{"name": "john", "age": "18"},
+			new(map[string]any),
+			&map[string]any{"name": "john", "age": "18"},
 		},
 
 		// Struct conversion
 		{
 			User{Name: "john", Age: 18},
-			new(map[string]interface{}),
-			&map[string]interface{}{"Name": "john", "Age": 18},
+			new(map[string]any),
+			&map[string]any{"Name": "john", "Age": 18},
 		},
 		{
 			&User{Name: "john", Age: 18},
@@ -101,7 +102,7 @@ func TestScanBasicTypes(t *testing.T) {
 		},
 
 		// Special cases
-		{nil, new(interface{}), nil},
+		{nil, new(any), nil},
 		{nil, new(*int), (*int)(nil)},
 		{[]byte(nil), new(string), ""},
 		{"", new(int), 0},
@@ -167,5 +168,119 @@ func TestScanBasicTypes(t *testing.T) {
 		t.AssertNil(err)
 		t.AssertNE(i, nil)
 		t.Assert(*i, v)
+	})
+}
+
+// TestScanReflectValueInput tests that the basic converter functions correctly unwrap
+// reflect.Value inputs instead of treating the wrapper as the converted value.
+func TestScanReflectValueInput(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// reflect.Value wrapping a bool.
+		t.Assert(gconv.Bool(reflect.ValueOf(true)), true)
+		t.Assert(gconv.Bool(reflect.ValueOf(false)), false)
+		// reflect.Value wrapping an int.
+		t.Assert(gconv.Int64(reflect.ValueOf(42)), int64(42))
+		t.Assert(gconv.Int(reflect.ValueOf(42)), 42)
+		// reflect.Value wrapping a uint.
+		t.Assert(gconv.Uint64(reflect.ValueOf(uint(42))), uint64(42))
+		// reflect.Value wrapping a float.
+		t.Assert(gconv.Float64(reflect.ValueOf(3.14)), 3.14)
+		t.Assert(gconv.Float32(reflect.ValueOf(float32(1.5))), float32(1.5))
+		// reflect.Value wrapping a string.
+		t.Assert(gconv.String(reflect.ValueOf("hello")), "hello")
+		// reflect.Value wrapping non-string kinds should unwrap and convert correctly,
+		// not return the reflection type name (e.g. "<int Value>").
+		t.Assert(gconv.String(reflect.ValueOf(42)), "42")
+		t.Assert(gconv.String(reflect.ValueOf(3.14)), "3.14")
+		t.Assert(gconv.String(reflect.ValueOf(true)), "true")
+	})
+}
+
+// TestScanPointerElementSlice tests scanning into slices whose elements are pointers to
+// basic types (e.g. []*int, []*string), which is supported by converter_scan.go.
+func TestScanPointerElementSlice(t *testing.T) {
+	// []string -> []*string
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			src = []string{"a", "b", "c"}
+			dst []*string
+		)
+		err := gconv.Scan(src, &dst)
+		t.AssertNil(err)
+		t.Assert(len(dst), len(src))
+		for i, v := range src {
+			t.AssertNE(dst[i], nil)
+			t.Assert(*dst[i], v)
+		}
+	})
+	// []int -> []*int
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			src = []int{1, 2, 3}
+			dst []*int
+		)
+		err := gconv.Scan(src, &dst)
+		t.AssertNil(err)
+		t.Assert(len(dst), len(src))
+		for i, v := range src {
+			t.AssertNE(dst[i], nil)
+			t.Assert(*dst[i], v)
+		}
+	})
+	// []int64 -> []*int64
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			src = []int64{10, 20, 30}
+			dst []*int64
+		)
+		err := gconv.Scan(src, &dst)
+		t.AssertNil(err)
+		t.Assert(len(dst), len(src))
+		for i, v := range src {
+			t.AssertNE(dst[i], nil)
+			t.Assert(*dst[i], v)
+		}
+	})
+	// []float64 -> []*float64
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			src = []float64{1.1, 2.2, 3.3}
+			dst []*float64
+		)
+		err := gconv.Scan(src, &dst)
+		t.AssertNil(err)
+		t.Assert(len(dst), len(src))
+		for i, v := range src {
+			t.AssertNE(dst[i], nil)
+			t.Assert(*dst[i], v)
+		}
+	})
+	// []bool -> []*bool
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			src = []bool{true, false, true}
+			dst []*bool
+		)
+		err := gconv.Scan(src, &dst)
+		t.AssertNil(err)
+		t.Assert(len(dst), len(src))
+		for i, v := range src {
+			t.AssertNE(dst[i], nil)
+			t.Assert(*dst[i], v)
+		}
+	})
+	// []string -> []*int (cross-type pointer element conversion)
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			src = []string{"1", "2", "3"}
+			dst []*int
+		)
+		err := gconv.Scan(src, &dst)
+		t.AssertNil(err)
+		t.Assert(len(dst), len(src))
+		for i, v := range []int{1, 2, 3} {
+			t.AssertNE(dst[i], nil)
+			t.Assert(*dst[i], v)
+		}
 	})
 }

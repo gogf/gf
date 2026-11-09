@@ -1,12 +1,20 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package ghttp_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -88,6 +96,26 @@ func (c *cUserTagDefault) User(ctx context.Context, req *UserTagDefaultReq) (res
 	return
 }
 
+type UserInvalidJsonReq struct {
+	g.Meta `path:"/user-invalid-json" method:"post,get" summary:"user invalid json api"`
+	Name   string
+}
+
+type UserInvalidJsonRes struct {
+	g.Meta `mime:"application/json"`
+	Name   string
+}
+
+var (
+	UserInvalidJson = cUserInvalidJson{}
+)
+
+type cUserInvalidJson struct{}
+
+func (c *cUserInvalidJson) User(ctx context.Context, req *UserInvalidJsonReq) (res *UserInvalidJsonRes, err error) {
+	return &UserInvalidJsonRes{Name: req.Name}, nil
+}
+
 func Test_ParamsTagDefault(t *testing.T) {
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
@@ -144,6 +172,49 @@ func Test_ParamsTagDefault(t *testing.T) {
 	})
 }
 
+func Test_ParamsInvalidJsonReportsParseError(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareHandlerResponse)
+		group.Bind(UserInvalidJson)
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	for i := 0; i < 100 && s.GetListenedPort() == 0; i++ {
+		time.Sleep(10 * time.Millisecond)
+	}
+	if s.GetListenedPort() == 0 {
+		t.Fatal("server did not start listening")
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		reqCtx := context.Background()
+		client := g.Client()
+		client.SetPrefix(prefix)
+
+		assertInvalidParameter := func(resp string) {
+			var payload struct {
+				Code int                 `json:"code"`
+				Data *UserInvalidJsonRes `json:"data"`
+			}
+			err := json.Unmarshal([]byte(resp), &payload)
+			t.AssertNil(err)
+			t.Assert(payload.Code, gcode.CodeInvalidParameter.Code())
+			t.Assert(payload.Data, nil)
+		}
+
+		for _, body := range []string{`{"name":}`, `[{"name":"john"}]`, `name=john`} {
+			assertInvalidParameter(client.ContentJson().PostContent(reqCtx, "/user-invalid-json", body))
+		}
+		for _, body := range []string{`{"name":}`, `[{"name":"john"}]`} {
+			assertInvalidParameter(client.ContentJson().GetContent(reqCtx, "/user-invalid-json", body))
+		}
+	})
+}
+
 func Benchmark_ParamTagIn(b *testing.B) {
 	b.StopTimer()
 
@@ -167,4 +238,90 @@ func Benchmark_ParamTagIn(b *testing.B) {
 	for i := 1; i < b.N; i++ {
 		client.PostContent(ctx, "/user", "id="+strconv.Itoa(i))
 	}
+}
+
+type UserValidReq struct {
+	g.Meta   `path:"/user" method:"get" tags:"XXX" summary:"XXX"`
+	Query    string `p:"query" dc:"查询参数"`
+	Page     int    `p:"page_index" v:"min:1" dc:"页码，从1开始" d:"1"`
+	PageSize int    `p:"size" v:"between:1,50" dc:"每页大小，最大50" d:"20"`
+}
+
+type UserValidRes struct {
+	g.Meta `mime:"application/json"`
+}
+
+var (
+	UserValid = cUserValid{}
+)
+
+type cUserValid struct{}
+
+func (c *cUserValid) User(ctx context.Context, req *UserValidReq) (res *UserValidRes, err error) {
+	g.RequestFromCtx(ctx).Response.WriteJson(req)
+	return
+}
+
+// Test_Params_Valid for #4442
+func Test_Params_Valid(t *testing.T) {
+	s := g.Server(guid.S())
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Middleware(ghttp.MiddlewareHandlerResponse)
+		group.Bind(UserValid)
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort())
+		client := g.Client()
+		client.SetPrefix(prefix)
+
+		t.Assert(client.GetContent(ctx, "/user"), `{"Query":"","Page":1,"PageSize":20}`)
+		t.Assert(client.GetContent(ctx, "/user?page_index=0"), `{"code":51,"message":"The page_index value `+"`0`"+` must be equal or greater than 1","data":null}`)
+		t.Assert(client.GetContent(ctx, "/user?size=100"), `{"code":51,"message":"The size value `+"`100`"+` must be between 1 and 50","data":null}`)
+	})
+}
+
+// Test_Params_Parse_RouteNotFound checks that parsing a request struct for a request matching no
+// route does not panic: there's no serving handler for such request, of which the request struct
+// information is not available.
+func Test_Params_Parse_RouteNotFound(t *testing.T) {
+	// RouteNotFoundReq is parsed in the middleware for every request.
+	type RouteNotFoundReq struct {
+		Name string `json:"name" d:"default-name"`
+	}
+	s := g.Server(guid.S())
+	// The middleware parses the request struct for every request, including the requests
+	// matching no route.
+	s.BindMiddlewareDefault(func(r *ghttp.Request) {
+		var req = &RouteNotFoundReq{}
+		if err := r.Parse(req); err != nil {
+			r.SetError(err)
+			return
+		}
+		r.Middleware.Next()
+	})
+	s.BindHandler("/user", func(r *ghttp.Request) {
+		r.Response.Write("ok")
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		var client = g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		// The request matching no route is responded as not found, instead of the internal
+		// server error caused by the request struct parsing.
+		t.Assert(client.GetContent(ctx, "/no-such-route"), "Not Found")
+		// The request matching a route is served as usual.
+		t.Assert(client.GetContent(ctx, "/user"), "ok")
+	})
 }

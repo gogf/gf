@@ -21,10 +21,25 @@ type Adapter interface {
 	// Pattern like:
 	// "x.y.z" for map item.
 	// "x.0.y" for slice item.
-	Get(ctx context.Context, pattern string) (value interface{}, err error)
+	Get(ctx context.Context, pattern string) (value any, err error)
 
 	// Data retrieves and returns all configuration data in current resource as map.
 	// Note that this function may lead lots of memory usage if configuration data is too large,
 	// you can implement this function if necessary.
-	Data(ctx context.Context) (data map[string]interface{}, err error)
+	Data(ctx context.Context) (data map[string]any, err error)
+}
+
+// WatcherFunc is the callback function type for configuration watchers.
+type WatcherFunc = func(context.Context)
+
+// WatcherAdapter is the interface for configuration watcher.
+type WatcherAdapter interface {
+	// AddWatcher adds a watcher function for specified `pattern` and `resource`.
+	AddWatcher(name string, fn WatcherFunc)
+	// RemoveWatcher removes the watcher function for specified `pattern` and `resource`.
+	RemoveWatcher(name string)
+	// GetWatcherNames returns all watcher names.
+	GetWatcherNames() []string
+	// IsWatching checks and returns whether the specified `pattern` is watching.
+	IsWatching(name string) bool
 }

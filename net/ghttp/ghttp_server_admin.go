@@ -8,7 +8,6 @@ package ghttp
 
 import (
 	"context"
-	"os"
 	"strings"
 	"time"
 
@@ -23,7 +22,7 @@ type utilAdmin struct{}
 
 // Index shows the administration page.
 func (p *utilAdmin) Index(r *Request) {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"pid":  gproc.Pid(),
 		"path": gfile.SelfPath(),
 		"uri":  strings.TrimRight(r.URL.Path, "/"),
@@ -59,7 +58,11 @@ func (p *utilAdmin) Restart(r *Request) {
 	// Custom start binary path when this process exits.
 	path := r.GetQuery("newExeFilePath").String()
 	if path == "" {
-		path = os.Args[0]
+		path = gfile.SelfPath()
+	}
+	if path == "" {
+		r.Response.WriteExit("cannot determine current executable path")
+		return
 	}
 	if err = RestartAllServer(ctx, path); err == nil {
 		r.Response.WriteExit("server restarted")

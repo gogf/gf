@@ -58,7 +58,7 @@ type DoneInfo struct {
 	// trailing metadata.
 	//
 	// The only supported type now is *orca_v1.LoadReport.
-	ServerLoad interface{}
+	ServerLoad any
 }
 
 // DoneInfoMD is a mapping from metadata keys to value array.

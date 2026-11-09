@@ -33,13 +33,18 @@ import (
 type Conn struct {
 	ps    *redis.PubSub
 	redis *Redis
+	// conn is a dedicated connection pinned to this Conn instance (via go-redis
+	// StickyConnPool), ensuring that connection-stateful commands like MULTI/EXEC
+	// or SELECT always run on the same underlying connection.
+	// It is nil for cluster clients, where commands fall back to the shared pool.
+	conn *redis.Conn
 }
 
 // traceItem holds the information for redis trace.
 type traceItem struct {
 	err       error
 	command   string
-	args      []interface{}
+	args      []any
 	costMilli int64
 }
 
@@ -55,7 +60,7 @@ const (
 
 // Do send a command to the server and returns the received reply.
 // It uses json.Marshal for struct/slice/map type values before committing them to redis.
-func (c *Conn) Do(ctx context.Context, command string, args ...interface{}) (reply *gvar.Var, err error) {
+func (c *Conn) Do(ctx context.Context, command string, args ...any) (reply *gvar.Var, err error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -80,7 +85,7 @@ func (c *Conn) Do(ctx context.Context, command string, args ...interface{}) (rep
 
 	// Trace span start.
 	tr := otel.GetTracerProvider().Tracer(traceInstrumentName, trace.WithInstrumentationVersion(gf.VERSION))
-	_, span := tr.Start(ctx, "Redis."+command, trace.WithSpanKind(trace.SpanKindInternal))
+	_, span := tr.Start(ctx, "Redis."+command, trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	timestampMilli1 := gtime.TimestampMilli()
@@ -99,7 +104,7 @@ func (c *Conn) Do(ctx context.Context, command string, args ...interface{}) (rep
 
 // Do send a command to the server and returns the received reply.
 // It uses json.Marshal for struct/slice/map type values before committing them to redis.
-func (c *Conn) doCommand(ctx context.Context, command string, args ...interface{}) (reply *gvar.Var, err error) {
+func (c *Conn) doCommand(ctx context.Context, command string, args ...any) (reply *gvar.Var, err error) {
 	argStrSlice := gconv.Strings(args)
 	switch gstr.ToLower(command) {
 	case `subscribe`:
@@ -125,10 +130,14 @@ func (c *Conn) doCommand(ctx context.Context, command string, args ...interface{
 		}
 
 	default:
-		arguments := make([]interface{}, len(args)+1)
-		copy(arguments, []interface{}{command})
+		arguments := make([]any, len(args)+1)
+		copy(arguments, []any{command})
 		copy(arguments[1:], args)
-		reply, err = c.resultToVar(c.redis.client.Do(ctx, arguments...).Result())
+		if c.conn != nil {
+			reply, err = c.resultToVar(c.conn.Do(ctx, arguments...).Result())
+		} else {
+			reply, err = c.resultToVar(c.redis.client.Do(ctx, arguments...).Result())
+		}
 		if err != nil {
 			err = gerror.Wrapf(err, `Redis Client Do failed with arguments "%v"`, arguments)
 		}
@@ -137,7 +146,7 @@ func (c *Conn) doCommand(ctx context.Context, command string, args ...interface{
 }
 
 // resultToVar converts redis operation result to gvar.Var.
-func (c *Conn) resultToVar(result interface{}, err error) (*gvar.Var, error) {
+func (c *Conn) resultToVar(result any, err error) (*gvar.Var, error) {
 	if err == redis.Nil {
 		err = nil
 	}
@@ -146,7 +155,7 @@ func (c *Conn) resultToVar(result interface{}, err error) (*gvar.Var, error) {
 		case []byte:
 			return gvar.New(string(v)), err
 
-		case []interface{}:
+		case []any:
 			return gvar.New(gconv.Strings(v)), err
 
 		case *redis.Message:
@@ -189,6 +198,16 @@ func (c *Conn) Close(ctx context.Context) (err error) {
 			err = gerror.Wrapf(err, `Redis PubSub Close failed`)
 		}
 	}
+	if c.conn != nil {
+		// Return the pinned connection to the shared connection pool.
+		if closeErr := c.conn.Close(); closeErr != nil {
+			closeErr = gerror.Wrap(closeErr, `Redis Connection Close failed`)
+			if err == nil {
+				err = closeErr
+			}
+		}
+		c.conn = nil
+	}
 	return
 }
 
@@ -196,7 +215,7 @@ func (c *Conn) Close(ctx context.Context) (err error) {
 //
 // https://redis.io/commands/subscribe/
 func (c *Conn) Subscribe(ctx context.Context, channel string, channels ...string) ([]*gredis.Subscription, error) {
-	args := append([]interface{}{channel}, gconv.Interfaces(channels)...)
+	args := append([]any{channel}, gconv.Interfaces(channels)...)
 	_, err := c.Do(ctx, "Subscribe", args...)
 	if err != nil {
 		return nil, err
@@ -223,7 +242,7 @@ func (c *Conn) Subscribe(ctx context.Context, channel string, channels ...string
 //
 // https://redis.io/commands/psubscribe/
 func (c *Conn) PSubscribe(ctx context.Context, pattern string, patterns ...string) ([]*gredis.Subscription, error) {
-	args := append([]interface{}{pattern}, gconv.Interfaces(patterns)...)
+	args := append([]any{pattern}, gconv.Interfaces(patterns)...)
 	_, err := c.Do(ctx, "PSubscribe", args...)
 	if err != nil {
 		return nil, err

@@ -24,7 +24,7 @@ func Test_OriginValueAndKind(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var s = "s"
 		out := gutil.OriginValueAndKind(&s)
-		t.Assert(out.InputKind, reflect.Ptr)
+		t.Assert(out.InputKind, reflect.Pointer)
 		t.Assert(out.OriginKind, reflect.String)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -36,7 +36,7 @@ func Test_OriginValueAndKind(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var s []int
 		out := gutil.OriginValueAndKind(&s)
-		t.Assert(out.InputKind, reflect.Ptr)
+		t.Assert(out.InputKind, reflect.Pointer)
 		t.Assert(out.OriginKind, reflect.Slice)
 	})
 }
@@ -51,7 +51,7 @@ func Test_OriginTypeAndKind(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var s = "s"
 		out := gutil.OriginTypeAndKind(&s)
-		t.Assert(out.InputKind, reflect.Ptr)
+		t.Assert(out.InputKind, reflect.Pointer)
 		t.Assert(out.OriginKind, reflect.String)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -63,7 +63,7 @@ func Test_OriginTypeAndKind(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var s []int
 		out := gutil.OriginTypeAndKind(&s)
-		t.Assert(out.InputKind, reflect.Ptr)
+		t.Assert(out.InputKind, reflect.Pointer)
 		t.Assert(out.OriginKind, reflect.Slice)
 	})
 }

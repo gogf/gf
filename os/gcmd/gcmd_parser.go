@@ -212,7 +212,7 @@ func (p *Parser) setOptionValue(name, value string) {
 }
 
 // GetOpt returns the option value named `name` as gvar.Var.
-func (p *Parser) GetOpt(name string, def ...interface{}) *gvar.Var {
+func (p *Parser) GetOpt(name string, def ...any) *gvar.Var {
 	if p == nil {
 		return nil
 	}
@@ -257,7 +257,7 @@ func (p *Parser) GetArgAll() []string {
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (p *Parser) MarshalJSON() ([]byte, error) {
-	return json.Marshal(map[string]interface{}{
+	return json.Marshal(map[string]any{
 		"parsedArgs":       p.parsedArgs,
 		"parsedOptions":    p.parsedOptions,
 		"passedOptions":    p.passedOptions,

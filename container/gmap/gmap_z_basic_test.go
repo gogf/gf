@@ -1,7 +1,7 @@
 // Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with gm file,
+// If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
 package gmap_test
@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-func getValue() interface{} {
+func getValue() any {
 	return 3
 }
 
@@ -71,7 +71,7 @@ func Test_Map_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.New()
 		m.Set("key1", "val1")
-		t.Assert(m.Keys(), []interface{}{"key1"})
+		t.Assert(m.Keys(), []any{"key1"})
 
 		t.Assert(m.Get("key1"), "val1")
 		t.Assert(m.Size(), 1)
@@ -91,14 +91,14 @@ func Test_Map_Basic(t *testing.T) {
 		t.AssertIN("val1", m.Values())
 
 		m.Flip()
-		t.Assert(m.Map(), map[interface{}]interface{}{"val3": "key3", "val1": "key1"})
+		t.Assert(m.Map(), map[any]any{"val3": "key3", "val1": "key1"})
 
 		m.Clear()
 		t.Assert(m.Size(), 0)
 		t.Assert(m.IsEmpty(), true)
 
-		m2 := gmap.NewFrom(map[interface{}]interface{}{1: 1, "key1": "val1"})
-		t.Assert(m2.Map(), map[interface{}]interface{}{1: 1, "key1": "val1"})
+		m2 := gmap.NewFrom(map[any]any{1: 1, "key1": "val1"})
+		t.Assert(m2.Map(), map[any]any{1: 1, "key1": "val1"})
 	})
 }
 
@@ -118,30 +118,30 @@ func Test_Map_Set_Fun(t *testing.T) {
 func Test_Map_Batch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.New()
-		m.Sets(map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
-		t.Assert(m.Map(), map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
-		m.Removes([]interface{}{"key1", 1})
-		t.Assert(m.Map(), map[interface{}]interface{}{"key2": "val2", "key3": "val3"})
+		m.Sets(map[any]any{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
+		t.Assert(m.Map(), map[any]any{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
+		m.Removes([]any{"key1", 1})
+		t.Assert(m.Map(), map[any]any{"key2": "val2", "key3": "val3"})
 	})
 }
 
 func Test_Map_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		expect := map[interface{}]interface{}{1: 1, "key1": "val1"}
+		expect := map[any]any{1: 1, "key1": "val1"}
 
 		m := gmap.NewFrom(expect)
-		m.Iterator(func(k interface{}, v interface{}) bool {
+		m.Iterator(func(k any, v any) bool {
 			t.Assert(expect[k], v)
 			return true
 		})
 		// 断言返回值对遍历控制
 		i := 0
 		j := 0
-		m.Iterator(func(k interface{}, v interface{}) bool {
+		m.Iterator(func(k any, v any) bool {
 			i++
 			return true
 		})
-		m.Iterator(func(k interface{}, v interface{}) bool {
+		m.Iterator(func(k any, v any) bool {
 			j++
 			return false
 		})
@@ -152,12 +152,12 @@ func Test_Map_Iterator(t *testing.T) {
 
 func Test_Map_Lock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		expect := map[interface{}]interface{}{1: 1, "key1": "val1"}
+		expect := map[any]any{1: 1, "key1": "val1"}
 		m := gmap.NewFrom(expect)
-		m.LockFunc(func(m map[interface{}]interface{}) {
+		m.LockFunc(func(m map[any]any) {
 			t.Assert(m, expect)
 		})
-		m.RLockFunc(func(m map[interface{}]interface{}) {
+		m.RLockFunc(func(m map[any]any) {
 			t.Assert(m, expect)
 		})
 	})
@@ -166,7 +166,7 @@ func Test_Map_Lock(t *testing.T) {
 func Test_Map_Clone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		// clone 方法是深克隆
-		m := gmap.NewFrom(map[interface{}]interface{}{1: 1, "key1": "val1"})
+		m := gmap.NewFrom(map[any]any{1: 1, "key1": "val1"})
 		m_clone := m.Clone()
 		m.Remove(1)
 		// 修改原 map,clone 后的 map 不影响
@@ -185,6 +185,6 @@ func Test_Map_Basic_Merge(t *testing.T) {
 		m1.Set("key1", "val1")
 		m2.Set("key2", "val2")
 		m1.Merge(m2)
-		t.Assert(m1.Map(), map[interface{}]interface{}{"key1": "val1", "key2": "val2"})
+		t.Assert(m1.Map(), map[any]any{"key1": "val1", "key2": "val2"})
 	})
 }

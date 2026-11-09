@@ -25,7 +25,6 @@ func Levenshtein(str1, str2 string, costIns, costRep, costDel int) int {
 		return -1
 	}
 
-	tmp := make([]int, l2+1)
 	p1 := make([]int, l2+1)
 	p2 := make([]int, l2+1)
 	var c0, c1, c2 int
@@ -51,9 +50,7 @@ func Levenshtein(str1, str2 string, costIns, costRep, costDel int) int {
 			}
 			p2[i2+1] = c0
 		}
-		tmp = p1
-		p1 = p2
-		p2 = tmp
+		p1, p2 = p2, p1
 	}
 	c0 = p1[l2]
 

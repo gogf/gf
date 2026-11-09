@@ -11,59 +11,202 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
+// escapeSingleQuote escapes single quotes in the string to prevent SQL injection.
+// In SQL, single quotes are escaped by doubling them (two single quotes).
+func escapeSingleQuote(s string) string {
+	return strings.ReplaceAll(s, "'", "''")
+}
+
+// lookupRecordValue returns the value of the given column from the record, ignoring
+// the case of the column name, together with whether the column is present.
+//
+// The underlying DM driver accepts the DSN option `columnNameCase=lower|upper`,
+// which rewrites the case of every column name of a result set. As the metadata
+// queries of this package are written with uppercase column names, a plain map
+// lookup returns nothing once the option is set to `lower`. Looking the column up
+// case-insensitively keeps the metadata readable for any value of that option.
+func lookupRecordValue(record gdb.Record, column string) (gdb.Value, bool) {
+	if value, ok := record[column]; ok {
+		return value, true
+	}
+	for name, value := range record {
+		if strings.EqualFold(name, column) {
+			return value, true
+		}
+	}
+	return nil, false
+}
+
+// recordValue returns the value of the given column from the record, ignoring the
+// case of the column name. It returns a nil value when the column is absent, which
+// is still safe to read from.
+func recordValue(record gdb.Record, column string) gdb.Value {
+	value, _ := lookupRecordValue(record, column)
+	return value
+}
+
+// The column comments are joined by SCHEMA_NAME, as the OWNER of ALL_COL_COMMENTS is the user
+// owning the schema, while the OWNER of ALL_TAB_COLUMNS and of the constraint views is the
+// schema itself.
 const (
-	tableFieldsSqlTmp = `SELECT * FROM ALL_TAB_COLUMNS WHERE Table_Name= '%s' AND OWNER = '%s'`
+	tableFieldsSqlTmp         = `SELECT c.COLUMN_NAME, c.DATA_TYPE, c.DATA_LENGTH, c.DATA_PRECISION, c.DATA_SCALE, c.DATA_DEFAULT, c.NULLABLE, cc.COMMENTS FROM ALL_TAB_COLUMNS c LEFT JOIN ALL_COL_COMMENTS cc ON c.COLUMN_NAME = cc.COLUMN_NAME AND c.TABLE_NAME = cc.TABLE_NAME AND c.OWNER = cc.SCHEMA_NAME WHERE c.TABLE_NAME = '%s' AND c.OWNER = '%s'`
+	tableFieldsIdentitySqlTmp = `SELECT c.NAME FROM SYSCOLUMNS c JOIN SYSOBJECTS t ON c.ID = t.ID JOIN SYSOBJECTS s ON t.SCHID = s.ID WHERE t.NAME = '%s' AND s.NAME = '%s' AND s.TYPE$ = 'SCH' AND BITAND(c.INFO2, 1) = 1`
+	tableFieldsPkSqlSchemaTmp = `SELECT COLS.COLUMN_NAME AS PRIMARY_KEY_COLUMN FROM USER_CONSTRAINTS CONS JOIN USER_CONS_COLUMNS COLS ON CONS.CONSTRAINT_NAME = COLS.CONSTRAINT_NAME AND CONS.OWNER = COLS.OWNER WHERE CONS.TABLE_NAME = '%s' AND CONS.OWNER = '%s' AND CONS.CONSTRAINT_TYPE = 'P'`
+	tableFieldsPkSqlDBATmp    = `SELECT COLS.COLUMN_NAME AS PRIMARY_KEY_COLUMN FROM DBA_CONSTRAINTS CONS JOIN DBA_CONS_COLUMNS COLS ON CONS.CONSTRAINT_NAME = COLS.CONSTRAINT_NAME AND CONS.OWNER = COLS.OWNER WHERE CONS.TABLE_NAME = '%s' AND CONS.OWNER = '%s' AND CONS.CONSTRAINT_TYPE = 'P'`
 )
 
+// fieldExtraIdentity is the TableField.Extra of an identity column, as MySQL reports it for an
+// AUTO_INCREMENT column.
+const fieldExtraIdentity = "auto_increment"
+
+// tableNameCandidatesForMetadata returns table name candidates for DM metadata queries of an
+// unquoted table name without schema: the name in upper case, as DM folds it, and as it is written.
+func tableNameCandidatesForMetadata(table string) []string {
+	table = strings.Trim(table, quoteChar)
+	upperTable := strings.ToUpper(table)
+	if upperTable == table {
+		return []string{table}
+	}
+	return []string{upperTable, table}
+}
+
 // TableFields retrieves and returns the fields' information of specified table of current schema.
+// A table qualified with its schema, like `SYSDBA.user`, is looked up in that schema, and a quoted
+// table name, like `"user"`, as it is written.
 func (d *Driver) TableFields(
 	ctx context.Context, table string, schema ...string,
 ) (fields map[string]*gdb.TableField, err error) {
 	var (
-		result gdb.Result
-		link   gdb.Link
+		result   gdb.Result
+		pkResult gdb.Result
+		link     gdb.Link
 		// When no schema is specified, the configuration item is returned by default
-		usedSchema = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		usedSchema        = gutil.GetOrDefaultStr(d.GetSchema(), schema...)
+		usedMetadataTable string
+		usedMetadataOwner = foldSchemaName(usedSchema)
+		candidates        = tableNameCandidatesForMetadata(table)
 	)
+	if tableSchema, name, ok := splitTableName(table); ok && (tableSchema != "" || strings.HasPrefix(table, quoteChar)) {
+		if tableSchema != "" {
+			usedMetadataOwner = tableSchema
+		}
+		candidates = []string{name}
+	}
 	// When usedSchema is empty, return the default link
 	if link, err = d.SlaveLink(usedSchema); err != nil {
 		return nil, err
 	}
-	// The link has been distinguished and no longer needs to judge the owner
-	result, err = d.DoSelect(
+	for _, candidate := range candidates {
+		usedMetadataTable = candidate
+		result, err = d.DoSelect(
+			ctx, link,
+			fmt.Sprintf(
+				tableFieldsSqlTmp,
+				escapeSingleQuote(usedMetadataTable),
+				escapeSingleQuote(usedMetadataOwner),
+			),
+		)
+		if err != nil {
+			return nil, err
+		}
+		if !result.IsEmpty() {
+			break
+		}
+	}
+	// Query the primary key field
+	pkResult, err = d.DoSelect(
 		ctx, link,
-		fmt.Sprintf(
-			tableFieldsSqlTmp,
-			strings.ToUpper(table),
-			strings.ToUpper(d.GetSchema()),
-		),
+		fmt.Sprintf(tableFieldsPkSqlSchemaTmp, escapeSingleQuote(usedMetadataTable), escapeSingleQuote(usedMetadataOwner)),
 	)
 	if err != nil {
 		return nil, err
 	}
+	if pkResult.IsEmpty() {
+		pkResult, err = d.DoSelect(
+			ctx, link,
+			fmt.Sprintf(tableFieldsPkSqlDBATmp, escapeSingleQuote(usedMetadataTable), escapeSingleQuote(usedMetadataOwner)),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+	// Query the identity column, which SYSCOLUMNS marks with the lowest bit of INFO2.
+	identityResult, err := d.DoSelect(
+		ctx, link,
+		fmt.Sprintf(tableFieldsIdentitySqlTmp, escapeSingleQuote(usedMetadataTable), escapeSingleQuote(usedMetadataOwner)),
+	)
+	if err != nil {
+		return nil, err
+	}
+	identityFields := gmap.NewStrStrMap()
+	for _, identity := range identityResult {
+		identityFields.Set(recordValue(identity, "NAME").String(), fieldExtraIdentity)
+	}
 	fields = make(map[string]*gdb.TableField)
+	pkFields := gmap.NewStrStrMap()
+	for _, pk := range pkResult {
+		pkFields.Set(recordValue(pk, "PRIMARY_KEY_COLUMN").String(), "PRI")
+	}
 	for i, m := range result {
-		// m[NULLABLE] returns "N" "Y"
+		// NULLABLE returns "N" "Y"
 		// "N" means not null
 		// "Y" means could be null
 		var nullable bool
-		if m["NULLABLE"].String() != "N" {
+		if recordValue(m, "NULLABLE").String() != "N" {
 			nullable = true
 		}
-		fields[m["COLUMN_NAME"].String()] = &gdb.TableField{
+
+		// Build field type with length/precision
+		// For NUMBER(p,s): use DATA_PRECISION and DATA_SCALE
+		// For VARCHAR2/CHAR: use DATA_LENGTH
+		var (
+			fieldType     string
+			columnName    = recordValue(m, "COLUMN_NAME").String()
+			dataType      = recordValue(m, "DATA_TYPE").String()
+			dataLength    = recordValue(m, "DATA_LENGTH").Int()
+			dataPrecision = recordValue(m, "DATA_PRECISION")
+		)
+		switch {
+		case !dataPrecision.IsNil():
+			fieldType = fmt.Sprintf("%s(%d,%d)", dataType, dataPrecision.Int(), recordValue(m, "DATA_SCALE").Int())
+		case dataLength > 0:
+			fieldType = fmt.Sprintf("%s(%d)", dataType, dataLength)
+		default:
+			fieldType = dataType
+		}
+		fields[columnName] = &gdb.TableField{
 			Index:   i,
-			Name:    m["COLUMN_NAME"].String(),
-			Type:    m["DATA_TYPE"].String(),
+			Name:    columnName,
+			Type:    fieldType,
 			Null:    nullable,
-			Default: m["DATA_DEFAULT"].Val(),
-			// Key:     m["Key"].String(),
-			// Extra:   m["Extra"].String(),
-			// Comment: m["Comment"].String(),
+			Default: recordValue(m, "DATA_DEFAULT").Val(),
+			Key:     pkFields.Get(columnName),
+			Extra:   identityFields.Get(columnName),
+			Comment: recordValue(m, "COMMENTS").String(),
 		}
 	}
 	return fields, nil
+}
+
+// GetTableNameForFields returns the first table in the table expression `table` without its alias,
+// keeping its schema if it is qualified with one and its quotes if it is quoted, so that TableFields
+// looks it up in that schema and as it is written. It returns an empty string if the first table is
+// qualified or quoted but not a table name that splitTableName accepts.
+func (d *Driver) GetTableNameForFields(table string) string {
+	if tables := gstr.SplitAndTrim(table, ","); len(tables) > 0 {
+		first := gstr.SplitAndTrim(tables[0], " ")[0]
+		if _, _, ok := splitTableName(first); ok {
+			return first
+		}
+		if strings.ContainsAny(first, `."`) {
+			return ""
+		}
+	}
+	return d.Core.GetTableNameForFields(table)
 }

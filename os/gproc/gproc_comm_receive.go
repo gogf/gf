@@ -39,15 +39,10 @@ func Receive(group ...string) *MsgRequest {
 	} else {
 		groupName = defaultGroupNameForProcComm
 	}
-	queue := commReceiveQueues.GetOrSetFuncLock(groupName, func() interface{} {
-		return gqueue.New(maxLengthForProcMsgQueue)
-	}).(*gqueue.Queue)
-
-	// Blocking receiving.
-	if v := queue.Pop(); v != nil {
-		return v.(*MsgRequest)
-	}
-	return nil
+	queue := commReceiveQueues.GetOrSetFuncLock(groupName, func() *gqueue.TQueue[*MsgRequest] {
+		return gqueue.NewTQueue[*MsgRequest](maxLengthForProcMsgQueue)
+	})
+	return queue.Pop()
 }
 
 // receiveTcpListening scans local for available port and starts listening.
@@ -110,7 +105,7 @@ func receiveTcpHandler(conn *gtcp.Conn) {
 			} else {
 				// Push to buffer queue.
 				response.Code = 1
-				v.(*gqueue.Queue).Push(msg)
+				v.Push(msg)
 			}
 		} else {
 			// Empty package.

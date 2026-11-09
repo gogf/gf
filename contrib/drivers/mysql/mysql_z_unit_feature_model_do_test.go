@@ -22,11 +22,11 @@ func Test_Model_Insert_Data_DO(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			g.Meta     `orm:"do:true"`
-			Id         interface{}
-			Passport   interface{}
-			Password   interface{}
-			Nickname   interface{}
-			CreateTime interface{}
+			Id         any
+			Passport   any
+			Password   any
+			Nickname   any
+			CreateTime any
 		}
 		data := User{
 			Id:       1,
@@ -55,11 +55,11 @@ func Test_Model_Insert_Data_List_DO(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			g.Meta     `orm:"do:true"`
-			Id         interface{}
-			Passport   interface{}
-			Password   interface{}
-			Nickname   interface{}
-			CreateTime interface{}
+			Id         any
+			Passport   any
+			Password   any
+			Nickname   any
+			CreateTime any
 		}
 		data := g.Slice{
 			User{
@@ -103,11 +103,11 @@ func Test_Model_Update_Data_DO(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			g.Meta     `orm:"do:true"`
-			Id         interface{}
-			Passport   interface{}
-			Password   interface{}
-			Nickname   interface{}
-			CreateTime interface{}
+			Id         any
+			Passport   any
+			Password   any
+			Nickname   any
+			CreateTime any
 		}
 		data := User{
 			Id:       1,
@@ -140,11 +140,11 @@ func Test_Model_Update_Pointer_Data_DO(t *testing.T) {
 		}
 		type UserDo struct {
 			g.Meta     `orm:"do:true"`
-			Id         interface{}
-			Passport   interface{}
-			Password   interface{}
-			Nickname   interface{}
-			CreateTime interface{}
+			Id         any
+			Passport   any
+			Password   any
+			Nickname   any
+			CreateTime any
 		}
 		var (
 			nickname = NN("nickname_111")
@@ -177,11 +177,11 @@ func Test_Model_Where_DO(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			g.Meta     `orm:"do:true"`
-			Id         interface{}
-			Passport   interface{}
-			Password   interface{}
-			Nickname   interface{}
-			CreateTime interface{}
+			Id         any
+			Passport   any
+			Password   any
+			Nickname   any
+			CreateTime any
 		}
 		where := User{
 			Id:       1,
@@ -203,11 +203,11 @@ func Test_Model_Insert_Data_ForDao(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		type UserForDao struct {
-			Id         interface{}
-			Passport   interface{}
-			Password   interface{}
-			Nickname   interface{}
-			CreateTime interface{}
+			Id         any
+			Passport   any
+			Password   any
+			Nickname   any
+			CreateTime any
 		}
 		data := UserForDao{
 			Id:       1,
@@ -235,11 +235,11 @@ func Test_Model_Insert_Data_List_ForDao(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		type UserForDao struct {
-			Id         interface{}
-			Passport   interface{}
-			Password   interface{}
-			Nickname   interface{}
-			CreateTime interface{}
+			Id         any
+			Passport   any
+			Password   any
+			Nickname   any
+			CreateTime any
 		}
 		data := g.Slice{
 			UserForDao{
@@ -282,11 +282,11 @@ func Test_Model_Update_Data_ForDao(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		type UserForDao struct {
-			Id         interface{}
-			Passport   interface{}
-			Password   interface{}
-			Nickname   interface{}
-			CreateTime interface{}
+			Id         any
+			Passport   any
+			Password   any
+			Nickname   any
+			CreateTime any
 		}
 		data := UserForDao{
 			Id:       1,
@@ -311,11 +311,11 @@ func Test_Model_Where_ForDao(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		type UserForDao struct {
-			Id         interface{}
-			Passport   interface{}
-			Password   interface{}
-			Nickname   interface{}
-			CreateTime interface{}
+			Id         any
+			Passport   any
+			Password   any
+			Nickname   any
+			CreateTime any
 		}
 		where := UserForDao{
 			Id:       1,
@@ -348,7 +348,7 @@ func Test_Model_Where_FieldPrefix(t *testing.T) {
 
 		type InstanceDo struct {
 			g.Meta `orm:"table:instance, do:true"`
-			ID     interface{} `orm:"f_id"`
+			ID     any `orm:"f_id"`
 		}
 		var instance *Instance
 		err := db.Model("instance").Where(InstanceDo{
@@ -376,7 +376,7 @@ func Test_Model_Where_FieldPrefix(t *testing.T) {
 
 		type InstanceDo struct {
 			g.Meta `orm:"table:instance, do:true"`
-			ID     interface{} `orm:"f_id,omitempty"`
+			ID     any `orm:"f_id,omitempty"`
 		}
 		var instance *Instance
 		err := db.Model("instance").Where(InstanceDo{

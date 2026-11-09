@@ -20,6 +20,7 @@ func Map(value any, option ...MapOption) map[string]any {
 // MapDeep does Map function recursively, which means if the attribute of `value`
 // is also a struct/*struct, calls Map function on this attribute converting it to
 // a map[string]any type variable.
+//
 // Deprecated: used Map instead.
 func MapDeep(value any, tags ...string) map[string]any {
 	result, _ := defaultConverter.Map(value, MapOption{
@@ -40,6 +41,7 @@ func MapStrStr(value any, option ...MapOption) map[string]string {
 
 // MapStrStrDeep converts `value` to map[string]string recursively.
 // Note that there might be data copy for this map type converting.
+//
 // Deprecated: used MapStrStr instead.
 func MapStrStrDeep(value any, tags ...string) map[string]string {
 	if r, ok := value.(map[string]string); ok {

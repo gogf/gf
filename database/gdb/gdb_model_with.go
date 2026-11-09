@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"database/sql"
+	"errors"
 	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -15,8 +16,14 @@ import (
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 )
+
+// defaultWithChunkSize is the default maximum number of relation keys in one IN
+// condition, as databases like Oracle and SQL Server limit the IN list length or
+// the parameter count.
+const defaultWithChunkSize = 500
 
 // With creates and returns an ORM model based on metadata of given object.
 // It also enables model association operations feature on given `object`.
@@ -43,7 +50,7 @@ import (
 // Or:
 //
 //	db.With(UserDetail{}, UserScores{}).Scan(xxx)
-func (m *Model) With(objects ...interface{}) *Model {
+func (m *Model) With(objects ...any) *Model {
 	model := m.getModel()
 	for _, object := range objects {
 		if m.tables == "" {
@@ -66,8 +73,8 @@ func (m *Model) WithAll() *Model {
 }
 
 // doWithScanStruct handles model association operations feature for single struct.
-func (m *Model) doWithScanStruct(pointer interface{}) error {
-	if len(m.withArray) == 0 && m.withAll == false {
+func (m *Model) doWithScanStruct(pointer any) error {
+	if len(m.withArray) == 0 && !m.withAll {
 		return nil
 	}
 	var (
@@ -124,7 +131,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 			fieldKeys          []string
 			relatedSourceName  = array[0]
 			relatedTargetName  = array[1]
-			relatedTargetValue interface{}
+			relatedTargetValue any
 		)
 		// Find the value of related attribute from `pointer`.
 		for attributeName, attributeValue := range currentStructFieldMap {
@@ -141,7 +148,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 			)
 		}
 		bindToReflectValue := field.Value
-		if bindToReflectValue.Kind() != reflect.Ptr && bindToReflectValue.CanAddr() {
+		if bindToReflectValue.Kind() != reflect.Pointer && bindToReflectValue.CanAddr() {
 			bindToReflectValue = bindToReflectValue.Addr()
 		}
 
@@ -180,7 +187,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 			Where(relatedSourceName, relatedTargetValue).
 			Scan(bindToReflectValue)
 		// It ignores sql.ErrNoRows in with feature.
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return err
 		}
 	}
@@ -189,8 +196,8 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 
 // doWithScanStructs handles model association operations feature for struct slice.
 // Also see doWithScanStruct.
-func (m *Model) doWithScanStructs(pointer interface{}) error {
-	if len(m.withArray) == 0 && m.withAll == false {
+func (m *Model) doWithScanStructs(pointer any) error {
+	if len(m.withArray) == 0 && !m.withAll {
 		return nil
 	}
 	if v, ok := pointer.(reflect.Value); ok {
@@ -251,7 +258,7 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 			fieldKeys          []string
 			relatedSourceName  = array[0]
 			relatedTargetName  = array[1]
-			relatedTargetValue interface{}
+			relatedTargetValue any
 		)
 		// Find the value slice of related attribute from `pointer`.
 		for attributeName := range currentStructFieldMap {
@@ -302,15 +309,50 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 		if m.cacheEnabled && m.cacheOption.Name == "" {
 			model = model.Cache(m.cacheOption)
 		}
-		err = model.Fields(fieldKeys).
-			Where(relatedSourceName, relatedTargetValue).
-			ScanList(pointer, fieldName, parsedTagOutput.With)
+		chunkSize := defaultWithChunkSize
+		if parsedTagOutput.Chunk != "" {
+			chunkSize = gconv.Int(parsedTagOutput.Chunk)
+		}
+		if values, ok := relatedTargetValue.([]any); ok && chunkSize > 0 && len(values) > chunkSize {
+			var merged Result
+			merged, err = queryRelatedValues(model, fieldKeys, relatedSourceName, values, chunkSize)
+			if err != nil {
+				return err
+			}
+			// Bind once with the model so nested relations are still scanned per layer.
+			err = model.doScanListWithResult(merged, pointer, fieldName, "", parsedTagOutput.With)
+		} else {
+			err = model.Fields(fieldKeys).
+				Where(relatedSourceName, relatedTargetValue).
+				ScanList(pointer, fieldName, parsedTagOutput.With)
+		}
 		// It ignores sql.ErrNoRows in with feature.
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return err
 		}
 	}
 	return nil
+}
+
+func queryRelatedValues(
+	model *Model, fieldKeys []string, sourceName string, values []any, chunkSize int,
+) (Result, error) {
+	var merged Result
+	for start := 0; start < len(values); start += chunkSize {
+		end := start + chunkSize
+		if end > len(values) {
+			end = len(values)
+		}
+		// Model operations modify the model in place by default, so clone per chunk
+		// to avoid accumulating fields and where conditions across chunks.
+		part, err := model.Clone().Fields(fieldKeys).
+			Where(sourceName, values[start:end]).All()
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return nil, err
+		}
+		merged = append(merged, part...)
+	}
+	return merged, nil
 }
 
 type parseWithTagInFieldStructOutput struct {
@@ -318,6 +360,7 @@ type parseWithTagInFieldStructOutput struct {
 	Where    string
 	Order    string
 	Unscoped string
+	Chunk    string
 }
 
 func (m *Model) parseWithTagInFieldStruct(field gstructs.Field) (output parseWithTagInFieldStructOutput) {
@@ -333,12 +376,18 @@ func (m *Model) parseWithTagInFieldStruct(field gstructs.Field) (output parseWit
 			key = array[0]
 			data[key] = gstr.Trim(array[1])
 		} else {
-			data[key] += " " + gstr.Trim(v)
+			if key == OrmTagForWithOrder {
+				// supporting multiple order fields
+				data[key] += "," + gstr.Trim(v)
+			} else {
+				data[key] += " " + gstr.Trim(v)
+			}
 		}
 	}
 	output.With = data[OrmTagForWith]
 	output.Where = data[OrmTagForWithWhere]
 	output.Order = data[OrmTagForWithOrder]
 	output.Unscoped = data[OrmTagForWithUnscoped]
+	output.Chunk = data[OrmTagForWithChunk]
 	return
 }

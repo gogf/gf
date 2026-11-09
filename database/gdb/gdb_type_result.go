@@ -9,10 +9,12 @@ package gdb
 import (
 	"database/sql"
 	"math"
+	"reflect"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/internal/reflection"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -76,8 +78,8 @@ func (r Result) List() List {
 // Array retrieves and returns specified column values as slice.
 // The parameter `field` is optional is the column field is only one.
 // The default `field` is the first field name of the first item in `Result` if parameter `field` is not given.
-func (r Result) Array(field ...string) []Value {
-	array := make([]Value, len(r))
+func (r Result) Array(field ...string) Array {
+	array := make(Array, len(r))
 	if len(r) == 0 {
 		return array
 	}
@@ -102,7 +104,7 @@ func (r Result) MapKeyValue(key string) map[string]Value {
 	var (
 		s              string
 		m              = make(map[string]Value)
-		tempMap        = make(map[string][]interface{})
+		tempMap        = make(map[string][]any)
 		hasMultiValues bool
 	)
 	for _, item := range r {
@@ -192,7 +194,8 @@ func (r Result) RecordKeyUint(key string) map[uint]Record {
 
 // Structs converts `r` to struct slice.
 // Note that the parameter `pointer` should be type of *[]struct/*[]*struct.
-func (r Result) Structs(pointer interface{}) (err error) {
+// It also accepts *[]map/*[]*map, which are filled with the same values as List.
+func (r Result) Structs(pointer any) (err error) {
 	// If the result is empty and the target pointer is not empty, it returns error.
 	if r.IsEmpty() {
 		if !empty.IsEmpty(pointer, true) {
@@ -200,12 +203,26 @@ func (r Result) Structs(pointer interface{}) (err error) {
 		}
 		return nil
 	}
+	// Struct converting does not fill map elements, so map slices are
+	// converted from List instead.
+	if reflectInfo := reflection.OriginTypeAndKind(pointer); reflectInfo.OriginKind == reflect.Slice {
+		elemType := reflectInfo.OriginType.Elem()
+		if elemType.Kind() == reflect.Pointer {
+			elemType = elemType.Elem()
+		}
+		if elemType.Kind() == reflect.Map {
+			return converter.Scan(r.List(), pointer, gconv.ScanOption{ContinueOnError: true})
+		}
+	}
 	var (
-		sliceOption = gconv.SliceOption{ContinueOnError: true}
-		mapOption   = gconv.StructOption{
+		sliceOption  = gconv.SliceOption{ContinueOnError: true}
+		structOption = gconv.StructOption{
 			PriorityTag:     OrmTagForStruct,
 			ContinueOnError: true,
 		}
 	)
-	return converter.Structs(r, pointer, sliceOption, mapOption)
+	return converter.Structs(r, pointer, gconv.StructsOption{
+		SliceOption:  sliceOption,
+		StructOption: structOption,
+	})
 }

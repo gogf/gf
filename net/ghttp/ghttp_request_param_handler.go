@@ -6,10 +6,12 @@
 
 package ghttp
 
-import "github.com/gogf/gf/v2/util/gmeta"
+import (
+	"github.com/gogf/gf/v2/os/gstructs"
+)
 
 // GetHandlerResponse retrieves and returns the handler response object and its error.
-func (r *Request) GetHandlerResponse() interface{} {
+func (r *Request) GetHandlerResponse() any {
 	return r.handlerResponse
 }
 
@@ -18,24 +20,24 @@ func (r *Request) GetServeHandler() *HandlerItemParsed {
 	return r.serveHandler
 }
 
-// GetMetaTag retrieves and returns the metadata value associated with the given key from the request struct.
-// The meta value is from struct tags from g.Meta/gmeta.Meta type.
-// For example:
+// reqStructFields returns the request struct fields registered on the serving handler.
 //
-//	type GetMetaTagReq struct {
-//	    g.Meta `path:"/test" method:"post" summary:"meta_tag" tags:"meta"`
-//	    // ...
-//	}
-//
-// r.GetServeHandler().GetMetaTag("summary") // returns "meta_tag"
-// r.GetServeHandler().GetMetaTag("method")  // returns "post"
-func (h *HandlerItemParsed) GetMetaTag(key string) string {
-	if h == nil || h.Handler == nil {
-		return ""
+// It returns nil if there's no serving handler for current request, for example the static file
+// request or the route not matched request, of which the request struct parsing then works
+// without the registered field information.
+func (r *Request) reqStructFields() []gstructs.Field {
+	if r.serveHandler == nil || r.serveHandler.Handler == nil {
+		return nil
 	}
-	metaValue := gmeta.Get(h.Handler.Info.Type.In(1), key)
-	if metaValue != nil {
-		return metaValue.String()
+	return r.serveHandler.Handler.Info.ReqStructFields
+}
+
+// reqStructTags returns the request struct tag usages registered on the serving handler.
+// The boolean is false when current request has no serving handler, for example a static file
+// request or a request matching no route.
+func (r *Request) reqStructTags() (requestStructTags, bool) {
+	if r.serveHandler == nil || r.serveHandler.Handler == nil {
+		return requestStructTags{}, false
 	}
-	return ""
+	return r.serveHandler.Handler.Info.ReqStructTags, true
 }

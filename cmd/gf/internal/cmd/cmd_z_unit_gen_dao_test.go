@@ -69,6 +69,7 @@ func Test_Gen_Dao_Default(t *testing.T) {
 				NoJsonTag:          false,
 				NoModelComment:     false,
 				Clear:              false,
+				GenTable:           false,
 				TypeMapping:        nil,
 				FieldMapping:       nil,
 			}
@@ -107,7 +108,7 @@ func Test_Gen_Dao_Default(t *testing.T) {
 			filepath.FromSlash(testPath + "/model/do/table_user.go"),
 			filepath.FromSlash(testPath + "/model/entity/table_user.go"),
 		}
-		for i, _ := range files {
+		for i := range files {
 			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
 		}
 	})
@@ -161,6 +162,7 @@ func Test_Gen_Dao_TypeMapping(t *testing.T) {
 				NoJsonTag:          false,
 				NoModelComment:     false,
 				Clear:              false,
+				GenTable:           false,
 				TypeMapping: map[gendao.DBFieldTypeName]gendao.CustomAttributeType{
 					"int": {
 						Type:   "int64",
@@ -208,7 +210,7 @@ func Test_Gen_Dao_TypeMapping(t *testing.T) {
 			filepath.FromSlash(testPath + "/model/do/table_user.go"),
 			filepath.FromSlash(testPath + "/model/entity/table_user.go"),
 		}
-		for i, _ := range files {
+		for i := range files {
 			//_ = gfile.PutContents(expectFiles[i], gfile.GetContents(files[i]))
 			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
 		}
@@ -263,6 +265,7 @@ func Test_Gen_Dao_FieldMapping(t *testing.T) {
 				NoJsonTag:          false,
 				NoModelComment:     false,
 				Clear:              false,
+				GenTable:           false,
 				TypeMapping: map[gendao.DBFieldTypeName]gendao.CustomAttributeType{
 					"int": {
 						Type:   "int64",
@@ -311,7 +314,7 @@ func Test_Gen_Dao_FieldMapping(t *testing.T) {
 			filepath.FromSlash(testPath + "/model/do/table_user.go"),
 			filepath.FromSlash(testPath + "/model/entity/table_user.go"),
 		}
-		for i, _ := range files {
+		for i := range files {
 			//_ = gfile.PutContents(expectFiles[i], gfile.GetContents(files[i]))
 			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
 		}
@@ -403,9 +406,66 @@ func Test_Gen_Dao_Sqlite3(t *testing.T) {
 			filepath.FromSlash(testPath + "/model/do/table_user.go"),
 			filepath.FromSlash(testPath + "/model/entity/table_user.go"),
 		}
-		for i, _ := range files {
+		for i := range files {
 			//_ = gfile.PutContents(expectFiles[i], gfile.GetContents(files[i]))
 			t.Assert(gfile.GetContents(files[i]), gfile.GetContents(expectFiles[i]))
 		}
+	})
+}
+
+func Test_Gen_Dao_FileNameCaseSnakeFirstUpper(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err        error
+			db         = testDB
+			table      = "sys_i18n_message"
+			sqlContent = fmt.Sprintf(
+				gtest.DataContent(`gendao`, `user.tpl.sql`),
+				table,
+			)
+		)
+		dropTableWithDb(db, table)
+		array := gstr.SplitAndTrim(sqlContent, ";")
+		for _, v := range array {
+			if _, err = db.Exec(ctx, v); err != nil {
+				t.AssertNil(err)
+			}
+		}
+		defer dropTableWithDb(db, table)
+
+		var (
+			path = gfile.Temp(guid.S())
+			in   = gendao.CGenDaoInput{
+				Path:         path,
+				Link:         link,
+				Group:        "test",
+				Tables:       table,
+				FileNameCase: "SnakeFirstUpper",
+			}
+		)
+		err = gutil.FillStructWithDefault(&in)
+		t.AssertNil(err)
+
+		err = gfile.Mkdir(path)
+		t.AssertNil(err)
+		defer gfile.Remove(path)
+
+		err = gfile.Copy(
+			gtest.DataPath("gendao", "go.mod.txt"),
+			gfile.Join(path, "go.mod"),
+		)
+		t.AssertNil(err)
+
+		_, err = gendao.CGenDao{}.Dao(ctx, in)
+		t.AssertNil(err)
+
+		files, err := gfile.ScanDir(path, "*.go", true)
+		t.AssertNil(err)
+		t.Assert(files, []string{
+			filepath.FromSlash(path + "/dao/internal/sys_i18n_message.go"),
+			filepath.FromSlash(path + "/dao/sys_i18n_message.go"),
+			filepath.FromSlash(path + "/model/do/sys_i18n_message.go"),
+			filepath.FromSlash(path + "/model/entity/sys_i18n_message.go"),
+		})
 	})
 }

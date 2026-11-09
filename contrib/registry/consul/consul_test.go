@@ -27,7 +27,7 @@ func createTestService() gsvc.Service {
 	return &gsvc.LocalService{
 		Name:    testServiceName,
 		Version: testServiceVersion,
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"region": "cn-east-1",
 			"zone":   "a",
 		},
@@ -56,7 +56,7 @@ func Test_Registry_Basic(t *testing.T) {
 		serviceWithInvalidMeta := &gsvc.LocalService{
 			Name:    testServiceName,
 			Version: testServiceVersion,
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"invalid": make(chan int), // This will fail JSON marshaling
 			},
 			Endpoints: []gsvc.Endpoint{
@@ -105,7 +105,7 @@ func Test_Registry_Basic(t *testing.T) {
 		servicesWithInvalidMeta, err := registry.Search(ctx, gsvc.SearchInput{
 			Name:     testServiceName,
 			Version:  testServiceVersion,
-			Metadata: map[string]interface{}{"nonexistent": "value"},
+			Metadata: map[string]any{"nonexistent": "value"},
 		})
 		t.AssertNil(err)
 		t.Assert(len(servicesWithInvalidMeta), 0)
@@ -213,7 +213,7 @@ func Test_Registry_MultipleServices(t *testing.T) {
 		service1 := &gsvc.LocalService{
 			Name:    testServiceName,
 			Version: "1.0.0",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"region": "us-east-1",
 			},
 			Endpoints: []gsvc.Endpoint{
@@ -224,7 +224,7 @@ func Test_Registry_MultipleServices(t *testing.T) {
 		service2 := &gsvc.LocalService{
 			Name:    testServiceName,
 			Version: "2.0.0",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"region": "us-west-1",
 			},
 			Endpoints: []gsvc.Endpoint{
@@ -272,7 +272,7 @@ func Test_Registry_MultipleServices(t *testing.T) {
 		// Test search with metadata
 		servicesEast, err := registry.Search(ctx, gsvc.SearchInput{
 			Name: testServiceName,
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"region": "us-east-1",
 			},
 		})
@@ -328,7 +328,7 @@ func Test_Registry_MultipleServicesMetadataFiltering(t *testing.T) {
 		service1 := &gsvc.LocalService{
 			Name:    testServiceName,
 			Version: "1.0.0",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"region": "us-east-1",
 				"env":    "dev",
 			},
@@ -340,7 +340,7 @@ func Test_Registry_MultipleServicesMetadataFiltering(t *testing.T) {
 		service2 := &gsvc.LocalService{
 			Name:    testServiceName,
 			Version: "2.0.0",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"region": "us-west-1",
 				"env":    "prod",
 			},
@@ -364,7 +364,7 @@ func Test_Registry_MultipleServicesMetadataFiltering(t *testing.T) {
 		// Test search with metadata filtering
 		servicesDev, err := registry.Search(ctx, gsvc.SearchInput{
 			Name: testServiceName,
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"env": "dev",
 			},
 		})
@@ -374,7 +374,7 @@ func Test_Registry_MultipleServicesMetadataFiltering(t *testing.T) {
 
 		servicesProd, err := registry.Search(ctx, gsvc.SearchInput{
 			Name: testServiceName,
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"env": "prod",
 			},
 		})
@@ -394,7 +394,7 @@ func Test_Registry_MultipleServicesVersionFiltering(t *testing.T) {
 		service1 := &gsvc.LocalService{
 			Name:    testServiceName,
 			Version: "1.0.0",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"region": "us-east-1",
 			},
 			Endpoints: []gsvc.Endpoint{
@@ -405,7 +405,7 @@ func Test_Registry_MultipleServicesVersionFiltering(t *testing.T) {
 		service2 := &gsvc.LocalService{
 			Name:    testServiceName,
 			Version: "2.0.0",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"region": "us-west-1",
 			},
 			Endpoints: []gsvc.Endpoint{

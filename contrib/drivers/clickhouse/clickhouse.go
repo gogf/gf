@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/os/gctx"
 )
 
-// Driver is the driver for postgresql database.
+// Driver is the driver for clickhouse database.
 type Driver struct {
 	*gdb.Core
 }
@@ -28,14 +28,9 @@ var (
 	errUnsupportedTransaction  = errors.New("unsupported method:Transaction")
 )
 
-const (
-	updateFilterPattern              = `(?i)UPDATE[\s]+?(\w+[\.]?\w+)[\s]+?SET`
-	deleteFilterPattern              = `(?i)DELETE[\s]+?FROM[\s]+?(\w+[\.]?\w+)`
-	filterTypePattern                = `(?i)^UPDATE|DELETE`
-	replaceSchemaPattern             = `@(.+?)/([\w\.\-]+)+`
-	needParsedSqlInCtx   gctx.StrKey = "NeedParsedSql"
-	driverName                       = "clickhouse"
-)
+const driverName = "clickhouse"
+
+const needParsedSqlInCtx gctx.StrKey = "NeedParsedSql"
 
 func init() {
 	if err := gdb.Register(`clickhouse`, New()); err != nil {

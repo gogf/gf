@@ -9,6 +9,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -19,9 +20,15 @@ import (
 type Propagation string
 
 const (
+	// PropagationNested starts a nested transaction if already in a transaction,
+	// or behaves like PropagationRequired if not in a transaction.
+	//
+	// It is the default behavior.
+	PropagationNested Propagation = "NESTED"
+
 	// PropagationRequired starts a new transaction if not in a transaction,
 	// or uses the existing transaction if already in a transaction.
-	PropagationRequired Propagation = "" // REQUIRED
+	PropagationRequired Propagation = "REQUIRED"
 
 	// PropagationSupports executes within the existing transaction if present,
 	// otherwise executes without transaction.
@@ -29,10 +36,6 @@ const (
 
 	// PropagationRequiresNew starts a new transaction, and suspends the current transaction if one exists.
 	PropagationRequiresNew Propagation = "REQUIRES_NEW"
-
-	// PropagationNested starts a nested transaction if already in a transaction,
-	// or behaves like PropagationRequired if not in a transaction.
-	PropagationNested Propagation = "NESTED"
 
 	// PropagationNotSupported executes non-transactional, suspends any existing transaction.
 	PropagationNotSupported Propagation = "NOT_SUPPORTED"
@@ -47,6 +50,7 @@ const (
 // TxOptions defines options for transaction control.
 type TxOptions struct {
 	// Propagation specifies the propagation behavior.
+	// If empty, the propagation of DefaultTxOptions is used.
 	Propagation Propagation
 	// Isolation is the transaction isolation level.
 	// If zero, the driver or database's default level is used.
@@ -55,10 +59,13 @@ type TxOptions struct {
 	ReadOnly bool
 }
 
+// Context key types for transaction to avoid collisions
+type transactionCtxKey string
+
 const (
-	transactionPointerPrefix    = "transaction"
-	contextTransactionKeyPrefix = "TransactionObjectForGroup_"
-	transactionIdForLoggerCtx   = "TransactionId"
+	transactionPointerPrefix                      = "transaction"
+	contextTransactionKeyPrefix                   = "TransactionObjectForGroup_"
+	transactionIdForLoggerCtx   transactionCtxKey = "TransactionId"
 )
 
 var transactionIdGenerator = gtype.NewUint64()
@@ -66,7 +73,8 @@ var transactionIdGenerator = gtype.NewUint64()
 // DefaultTxOptions returns the default transaction options.
 func DefaultTxOptions() TxOptions {
 	return TxOptions{
-		Propagation: PropagationRequired,
+		// Note the default propagation type is PropagationNested not PropagationRequired.
+		Propagation: PropagationNested,
 	}
 }
 
@@ -129,6 +137,9 @@ func (c *Core) TransactionWithOptions(
 		ctx = c.db.GetCtx()
 	}
 	ctx = c.injectInternalCtxData(ctx)
+	if opts.Propagation == "" {
+		opts.Propagation = DefaultTxOptions().Propagation
+	}
 
 	// Check current transaction from context
 	var (
@@ -138,11 +149,14 @@ func (c *Core) TransactionWithOptions(
 	switch opts.Propagation {
 	case PropagationRequired:
 		if currentTx != nil {
-			return currentTx.Transaction(ctx, f)
+			return f(ctx, currentTx)
 		}
 		return c.createNewTransaction(ctx, opts, f)
 
 	case PropagationSupports:
+		if currentTx == nil {
+			currentTx = c.newEmptyTX()
+		}
 		return f(ctx, currentTx)
 
 	case PropagationMandatory:
@@ -160,7 +174,7 @@ func (c *Core) TransactionWithOptions(
 
 	case PropagationNotSupported:
 		ctx = WithoutTX(ctx, group)
-		return f(ctx, nil)
+		return f(ctx, c.newEmptyTX())
 
 	case PropagationNever:
 		if currentTx != nil {
@@ -169,22 +183,12 @@ func (c *Core) TransactionWithOptions(
 				"transaction propagation NEVER cannot run within an existing transaction",
 			)
 		}
-		return f(ctx, nil)
+		ctx = WithoutTX(ctx, group)
+		return f(ctx, c.newEmptyTX())
 
 	case PropagationNested:
 		if currentTx != nil {
-			// Create savepoint for nested transaction
-			if err = currentTx.Begin(); err != nil {
-				return err
-			}
-			defer func() {
-				if err != nil {
-					if rbErr := currentTx.Rollback(); rbErr != nil {
-						err = gerror.Wrap(err, rbErr.Error())
-					}
-				}
-			}()
-			return f(ctx, currentTx)
+			return currentTx.Transaction(ctx, f)
 		}
 		return c.createNewTransaction(ctx, opts, f)
 
@@ -216,6 +220,9 @@ func (c *Core) createNewTransaction(
 	return
 }
 
+// callTxFunc calls `f` with `tx`, committing `tx` if `f` succeeds and rolling it back if `f` returns
+// an error or panics. It returns the error of `f`, joined with the error of the rollback if that fails
+// too and having the code of the latter, or the error of the commit.
 func callTxFunc(tx TX, f func(ctx context.Context, tx TX) error) (err error) {
 	defer func() {
 		if err == nil {
@@ -229,7 +236,7 @@ func callTxFunc(tx TX, f func(ctx context.Context, tx TX) error) (err error) {
 		}
 		if err != nil {
 			if e := tx.Rollback(); e != nil {
-				err = e
+				err = gerror.WrapCode(gerror.Code(e), errors.Join(err, e))
 			}
 		} else {
 			if e := tx.Commit(); e != nil {
@@ -280,13 +287,17 @@ func TXFromCtx(ctx context.Context, group string) TX {
 		if tx.IsClosed() {
 			return nil
 		}
+		// no underlying sql tx.
+		if tx.GetSqlTX() == nil {
+			return nil
+		}
 		tx = tx.Ctx(ctx)
 		return tx
 	}
 	return nil
 }
 
-// transactionKeyForContext forms and returns a string for storing transaction object of certain database group into context.
-func transactionKeyForContext(group string) string {
-	return contextTransactionKeyPrefix + group
+// transactionKeyForContext forms and returns a key for storing transaction object of certain database group into context.
+func transactionKeyForContext(group string) transactionCtxKey {
+	return transactionCtxKey(contextTransactionKeyPrefix + group)
 }

@@ -1,66 +1,90 @@
 #!/usr/bin/env bash
 
-coverage=$1
+group=$1
+coverage=$2
 
-# update code of submodules
-git clone https://github.com/gogf/examples
+race=-race
+if [ "$group" = "386" ]; then
+    export GOARCH=386
+    race=
+    coverage=
+fi
 
-# update go.mod in examples directory to replace github.com/gogf/gf packages with local directory
-bash .github/workflows/scripts/replace_examples_gomod.sh
+module_group() {
+    case $1 in
+        ./contrib/drivers/dm|./contrib/drivers/mssql|./contrib/drivers/oceanbase|./contrib/drivers/oracle|./contrib/drivers/sqlitecgo)
+            echo "drivers-1" ;;
+        ./contrib/drivers/*)
+            echo "drivers-2" ;;
+        *)
+            echo "core" ;;
+    esac
+}
 
 # find all path that contains go.mod.
 for file in `find . -name go.mod`; do
     dirpath=$(dirname $file)
     echo $dirpath
-
-    # ignore mssql tests as its docker service failed
-    # TODO remove this ignoring codes after the mssql docker service OK
-    if [ "mssql" = $(basename $dirpath) ]; then
-        continue 1
-    fi
-
-    # package kuhecm was moved to sub ci procedure.
+    
+    # package kubecm was moved to sub ci procedure.
     if [ "kubecm" = $(basename $dirpath) ]; then
         continue 1
     fi
-
-    # Check if it's a contrib directory or examples directory
-    if [[ $dirpath =~ "/contrib/" ]] || [[ $dirpath =~ "/examples/" ]]; then
-        # Check if go version meets the requirement
-        if ! go version | grep -qE "go${LATEST_GO_VERSION}"; then
-            echo "ignore path $dirpath as go version is not ${LATEST_GO_VERSION}: $(go version)"
-            continue 1
-        fi
-        # If it's examples directory, only build without tests
-        if [[ $dirpath =~ "/examples/" ]]; then
-            echo "the examples directory only needs to be built, not unit tests and coverage tests."
-            cd $dirpath
-            go mod tidy
-            go build ./...
-            cd -
-            continue 1
-        fi
+    
+    # examples directory was moved to sub ci procedure.
+    if [[ $dirpath =~ "/examples/" ]]; then
+        continue 1
     fi
-
+    
     if [[ $file =~ "/testdata/" ]]; then
         echo "ignore testdata path $file"
         continue 1
     fi
-
+    
+    if [ "$group" = "386" ]; then
+        if [ "$dirpath" != "." ]; then
+            continue 1
+        fi
+    elif [ "$(module_group $dirpath)" != "$group" ]; then
+        continue 1
+    fi
+    
+    # Check if it's a contrib directory
+    if [[ $dirpath =~ "/contrib/" ]]; then
+        # Check if go version meets the requirement
+        if ! go version | grep -qE "go${LATEST_GO_VERSION}"; then
+            echo "ignore path $dirpath as go version is not ${LATEST_GO_VERSION}: $(go version)"
+            # clean docker containers and images to free disk space
+            # bash .github/workflows/scripts/ci-main-clean.sh "$dirpath"
+            continue 1
+        fi
+    fi
+    
+    # if [[ $dirpath = "." ]]; then
+    #     # No space left on device error sometimes occurs in CI pipelines, so clean the cache before tests.
+    #     go clean -cache
+    # fi
+    
     cd $dirpath
     go mod tidy
     go build ./...
-
+    
     # test with coverage
     if [ "${coverage}" = "coverage" ]; then
-      go test ./... -race -coverprofile=coverage.out -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
-
-      if grep -q "/gogf/gf/.*/v2" go.mod; then
-        sed -i "s/gogf\/gf\(\/.*\)\/v2/gogf\/gf\/v2\1/g" coverage.out
-      fi
+        go test ./... -count=1 $race -coverprofile=coverage.out -covermode=atomic -coverpkg=./...,github.com/gogf/gf/... || exit 1
+        
+        if grep -q "/gogf/gf/.*/v2" go.mod; then
+            sed -i "s/gogf\/gf\(\/.*\)\/v2/gogf\/gf\/v2\1/g" coverage.out
+        fi
     else
-      go test ./... -race || exit 1
+        go test ./... -count=1 $race || exit 1
     fi
-
+    
     cd -
+    # Docker cleanup is intentionally disabled. The services are started once per job
+    # in the "Start Services" step and shared by every module of the group, so tearing
+    # them down after a single module would break the modules that follow. The master
+    # runs complete the drivers groups without it, so there is no disk pressure to
+    # relieve here either.
+    # bash .github/workflows/scripts/ci-main-clean.sh "$dirpath"
 done

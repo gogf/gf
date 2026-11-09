@@ -35,7 +35,7 @@ func (r RequestBodyRef) MarshalJSON() ([]byte, error) {
 
 type getRequestSchemaRefInput struct {
 	BusinessStructName string
-	RequestObject      interface{}
+	RequestObject      any
 	RequestDataField   string
 }
 

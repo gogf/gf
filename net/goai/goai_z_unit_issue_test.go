@@ -122,9 +122,9 @@ func Test_Issue3135(t *testing.T) {
 
 type Issue3889CommonRes struct {
 	g.Meta  `mime:"application/json"`
-	Code    int         `json:"code"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    any    `json:"data"`
 }
 
 type Issue3889Req struct {
@@ -163,7 +163,7 @@ var Issue3889ErrorRes = map[int][]gcode.Code{
 func (r Issue3889Res) EnhanceResponseStatus() map[goai.EnhancedStatusCode]goai.EnhancedStatusType {
 	Codes401 := Issue3889ErrorRes[401]
 	// iterate Codes401 to generate Examples
-	var Examples401 []interface{}
+	var Examples401 []any
 	for _, code := range Codes401 {
 		example := Issue3889CommonRes{
 			Code:    code.Code(),
@@ -347,5 +347,226 @@ func Test_Issue3235(t *testing.T) {
 			"test name desc")
 		t.Assert(api.Components.Schemas.Get(reqPath).Value.Properties.Get("User").Description,
 			"test user desc")
+	})
+}
+
+type Issue4247NoBodyReq struct {
+	g.Meta    `path:"/cluster/{cluster_id}/node/{name}/drain" method:"post" tags:"节点管理" summary:"驱逐节点" dc:"该接口会先设置节点不可调度，再进行驱逐"`
+	ClusterId string `json:"cluster_id" v:"required" dc:"集群ID" `
+	Name      string `json:"name"       v:"required" dc:"节点名称"`
+}
+type Issue4247NoBodyRes struct{}
+
+type Issue4247HasBodyReq struct {
+	g.Meta    `path:"/cluster/{cluster_id}/node/{name}/join" method:"post" tags:"节点管理" summary:"增加节点" dc:"增加节点"`
+	ClusterId string `json:"cluster_id" v:"required" dc:"集群ID" `
+	Name      string `json:"name"       v:"required" dc:"节点名称"`
+	Type      string `json:"type"       v:"required" dc:"节点类型"`
+}
+type Issue4247HasBodyRes struct{}
+
+type Issue4247 struct{}
+
+func (Issue4247) Issue4247NoBody(ctx context.Context, req *Issue4247NoBodyReq) (res *Issue4247NoBodyRes, err error) {
+	res = &Issue4247NoBodyRes{}
+	return
+}
+
+func (Issue4247) Issue4247HasBody(ctx context.Context, req *Issue4247HasBodyReq) (res *Issue4247HasBodyRes, err error) {
+	res = &Issue4247HasBodyRes{}
+	return
+}
+
+// https://github.com/gogf/gf/issues/4784
+func Test_Issue4784(t *testing.T) {
+	type FilterOptions struct {
+		IncludeDeleted bool `json:"includeDeleted"`
+		Status         int  `json:"status"`
+	}
+	type Issue4784Req struct {
+		g.Meta  `path:"/test" method:"GET" tags:"default"`
+		Name    string        `json:"name" in:"query"`
+		Options FilterOptions `json:"options" in:"query"`
+	}
+	type Issue4784Res struct{}
+
+	f := func(ctx context.Context, req *Issue4784Req) (res *Issue4784Res, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		oai := goai.New()
+		err := oai.Add(goai.AddInput{
+			Object: f,
+		})
+		t.AssertNil(err)
+
+		// Verify path and method exist.
+		t.AssertNE(oai.Paths["/test"].Get, nil)
+		params := oai.Paths["/test"].Get.Parameters
+		t.Assert(len(params), 2)
+
+		// First param: Name (string type) — should NOT have style/explode.
+		t.Assert(params[0].Value.Name, "name")
+		t.Assert(params[0].Value.In, goai.ParameterInQuery)
+		t.Assert(params[0].Value.Style, "")
+		t.AssertNil(params[0].Value.Explode)
+
+		// Second param: Options (object type) — should have style=deepObject and explode=true.
+		t.Assert(params[1].Value.Name, "options")
+		t.Assert(params[1].Value.In, goai.ParameterInQuery)
+		t.Assert(params[1].Value.Style, "deepObject")
+		t.Assert(params[1].Value.Explode != nil, true)
+		t.Assert(*params[1].Value.Explode, true)
+	})
+}
+
+// Test_Issue4784_Override verifies that explicit style/explode set via struct tags
+// are NOT overwritten by the deepObject default logic.
+func Test_Issue4784_Override(t *testing.T) {
+	type FilterOptions struct {
+		IncludeDeleted bool `json:"includeDeleted"`
+	}
+	type Issue4784OverrideReq struct {
+		g.Meta  `path:"/test" method:"GET" tags:"default"`
+		Options FilterOptions `json:"options" in:"query" style:"form" explode:"false"`
+	}
+	type Issue4784OverrideRes struct{}
+
+	f := func(ctx context.Context, req *Issue4784OverrideReq) (res *Issue4784OverrideRes, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		oai := goai.New()
+		err := oai.Add(goai.AddInput{
+			Object: f,
+		})
+		t.AssertNil(err)
+
+		params := oai.Paths["/test"].Get.Parameters
+		t.Assert(len(params), 1)
+
+		// Options has explicit style=form and explode=false from struct tags — should NOT be overridden.
+		t.Assert(params[0].Value.Name, "options")
+		t.Assert(params[0].Value.Style, "form")
+		t.Assert(params[0].Value.Explode != nil, true)
+		t.Assert(*params[0].Value.Explode, false)
+	})
+}
+
+// https://github.com/gogf/gf/issues/4247
+func Test_Issue4247(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := g.Server(guid.S())
+		s.Use(ghttp.MiddlewareHandlerResponse)
+		s.Group("/", func(group *ghttp.RouterGroup) {
+			group.Bind(
+				new(Issue4247),
+			)
+		})
+		s.SetLogger(nil)
+		s.SetOpenApiPath("/api.json")
+		s.SetDumpRouterMap(false)
+		s.Start()
+
+		defer s.Shutdown()
+		time.Sleep(100 * time.Millisecond)
+
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		apiContent := c.GetBytes(ctx, "/api.json")
+		j, err := gjson.LoadJson(apiContent)
+		t.AssertNil(err)
+		requestBody := `{"content":{"application/json":{"schema":{"description":"增加节点","properties":{"type":{"description":"节点类型","format":"string","type":"string"}},"required":["type"],"type":"object"}}}}`
+		t.Assert(j.Get(`paths./cluster/{cluster_id}/node/{name}/drain.post.requestBody`).IsEmpty(), true)
+		t.Assert(j.Get(`paths./cluster/{cluster_id}/node/{name}/join.post.requestBody`).String(), requestBody)
+	})
+}
+
+// https://github.com/gogf/gf/issues/4746
+func Test_Issue4746(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Issue4746InterfaceReq struct {
+			g.Meta `path:"/interface" method:"post"`
+			Values []any `json:"values" v:"in:a,b"`
+		}
+		type Issue4746InterfaceRes struct{}
+
+		f := func(ctx context.Context, req *Issue4746InterfaceReq) (res *Issue4746InterfaceRes, err error) {
+			return
+		}
+
+		oai := goai.New()
+		err := oai.Add(goai.AddInput{Object: f})
+		t.AssertNil(err)
+
+		schemaRef := oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Issue4746InterfaceReq`)
+		t.AssertNE(schemaRef, nil)
+		values := schemaRef.Value.Properties.Get(`values`)
+		t.AssertNE(values, nil)
+		t.Assert(values.Value.Type, goai.TypeArray)
+		t.Assert(len(values.Value.Enum), 0)
+		t.AssertNE(values.Value.Items, nil)
+		t.AssertNE(values.Value.Items.Value, nil)
+		t.Assert(values.Value.Items.Value.Enum, g.Slice{"a", "b"})
+		t.Assert(len(values.Value.Items.Value.AllOf), 1)
+		t.AssertNE(values.Value.Items.Value.AllOf[0].Ref, "")
+
+		b, err := values.MarshalJSON()
+		t.AssertNil(err)
+		j := gjson.New(b)
+		t.Assert(j.Get(`enum`).IsNil(), true)
+		t.Assert(j.Get(`items.enum`).Strings(), g.SliceStr{"a", "b"})
+		t.AssertNE(j.Get(`items.allOf.0.$ref`).String(), "")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Issue4746StringReq struct {
+			g.Meta `path:"/string" method:"post"`
+			Values []string `json:"values" v:"in:a,b"`
+		}
+		type Issue4746StringRes struct{}
+
+		f := func(ctx context.Context, req *Issue4746StringReq) (res *Issue4746StringRes, err error) {
+			return
+		}
+
+		oai := goai.New()
+		err := oai.Add(goai.AddInput{Object: f})
+		t.AssertNil(err)
+
+		schemaRef := oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Issue4746StringReq`)
+		t.AssertNE(schemaRef, nil)
+		values := schemaRef.Value.Properties.Get(`values`)
+		t.AssertNE(values, nil)
+		t.Assert(values.Value.Type, goai.TypeArray)
+		t.Assert(len(values.Value.Enum), 0)
+		t.AssertNE(values.Value.Items, nil)
+		t.AssertNE(values.Value.Items.Value, nil)
+		t.Assert(values.Value.Items.Value.Enum, g.Slice{"a", "b"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Issue4746NoEnumReq struct {
+			g.Meta `path:"/no-enum" method:"post"`
+			Values []any `json:"values"`
+		}
+		type Issue4746NoEnumRes struct{}
+
+		f := func(ctx context.Context, req *Issue4746NoEnumReq) (res *Issue4746NoEnumRes, err error) {
+			return
+		}
+
+		oai := goai.New()
+		err := oai.Add(goai.AddInput{Object: f})
+		t.AssertNil(err)
+
+		schemaRef := oai.Components.Schemas.Get(`github.com.gogf.gf.v2.net.goai_test.Issue4746NoEnumReq`)
+		t.AssertNE(schemaRef, nil)
+		values := schemaRef.Value.Properties.Get(`values`)
+		t.AssertNE(values, nil)
+		t.Assert(values.Value.Type, goai.TypeArray)
+		t.Assert(len(values.Value.Enum), 0)
+		t.AssertNE(values.Value.Items, nil)
+		t.AssertNil(values.Value.Items.Value)
 	})
 }

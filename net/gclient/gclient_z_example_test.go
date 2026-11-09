@@ -182,7 +182,7 @@ func fromHex(s string) []byte {
 	return b
 }
 
-func ExampleNew_MultiConn_Recommend() {
+func ExampleNew_ctx() {
 	var (
 		ctx    = gctx.New()
 		client = g.Client()
@@ -201,11 +201,11 @@ func ExampleNew_MultiConn_Recommend() {
 	}
 
 	// Output:
-	//{"id":1,"name":"john"}
-	//{"id":1,"name":"john"}
-	//{"id":1,"name":"john"}
-	//{"id":1,"name":"john"}
-	//{"id":1,"name":"john"}
+	// {"id":1,"name":"john"}
+	// {"id":1,"name":"john"}
+	// {"id":1,"name":"john"}
+	// {"id":1,"name":"john"}
+	// {"id":1,"name":"john"}
 }
 
 func ExampleClient_Header() {
@@ -884,7 +884,7 @@ func ExampleClient_RequestContent() {
 	// GET: query: 10000, john
 }
 
-func ExampleClient_RawRequest() {
+func ExampleClient_Get_url() {
 	url := "http://127.0.0.1:8999"
 	response, _ := g.Client().Get(ctx, url, g.Map{
 		"id":   10000,

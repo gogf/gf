@@ -23,13 +23,13 @@ import (
 )
 
 type doCheckValueInput struct {
-	Name      string                 // Name specifies the name of parameter `value`, which might be the custom tag name of the parameter.
-	Value     interface{}            // Value specifies the value for the rules to be validated.
-	ValueType reflect.Type           // ValueType specifies the type of the value, mainly used for value type id retrieving.
-	Rule      string                 // Rule specifies the validation rules string, like "required", "required|between:1,100", etc.
-	Messages  interface{}            // Messages specifies the custom error messages for this rule from parameters input, which is usually type of map/slice.
-	DataRaw   interface{}            // DataRaw specifies the `raw data` which is passed to the Validator. It might be type of map/struct or a nil value.
-	DataMap   map[string]interface{} // DataMap specifies the map that is converted from `dataRaw`. It is usually used internally
+	Name      string         // Name specifies the name of parameter `value`, which might be the custom tag name of the parameter.
+	Value     any            // Value specifies the value for the rules to be validated.
+	ValueType reflect.Type   // ValueType specifies the type of the value, mainly used for value type id retrieving.
+	Rule      string         // Rule specifies the validation rules string, like "required", "required|between:1,100", etc.
+	Messages  any            // Messages specifies the custom error messages for this rule from parameters input, which is usually type of map/slice.
+	DataRaw   any            // DataRaw specifies the `raw data` which is passed to the Validator. It might be type of map/struct or a nil value.
+	DataMap   map[string]any // DataMap specifies the map that is converted from `dataRaw`. It is usually used internally
 }
 
 // doCheckValue does the really rules validation for single key-value.
@@ -45,16 +45,27 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 	)
 	// Custom error messages handling.
 	var (
-		msgArray     = make([]string, 0)
-		customMsgMap = make(map[string]string)
+		msgArray     []string
+		customMsgMap map[string]string
 	)
 	switch messages := in.Messages.(type) {
 	case string:
 		msgArray = strings.Split(messages, "|")
 
+	// The custom messages from struct tag parsing and from `Messages` function are
+	// usually of type map[string]string, which are directly usable without conversion.
+	// Note that it is only read in the following logic, so it is used directly without a copy.
+	case map[string]string:
+		customMsgMap = messages
+
 	default:
-		for k, message := range gconv.Map(in.Messages) {
-			customMsgMap[k] = gconv.String(message)
+		if messages != nil {
+			if msgMap := gconv.Map(messages); len(msgMap) > 0 {
+				customMsgMap = make(map[string]string, len(msgMap))
+				for k, message := range msgMap {
+					customMsgMap[k] = gconv.String(message)
+				}
+			}
 		}
 	}
 	// Handle the char '|' in the rule,
@@ -103,10 +114,8 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 	)
 	for index := 0; index < len(ruleItems); {
 		var (
-			err         error
-			results     = ruleRegex.FindStringSubmatch(ruleItems[index]) // split single rule.
-			ruleKey     = gstr.Trim(results[1])                          // rule key like "max" in rule "max: 6"
-			rulePattern = gstr.Trim(results[2])                          // rule pattern is like "6" in rule:"max:6"
+			err                  error
+			ruleKey, rulePattern = parseRuleItem(ruleItems[index]) // split single rule, like "max:6" to "max" and "6".
 		)
 
 		if !hasBailRule && ruleKey == ruleNameBail {
@@ -126,6 +135,9 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 		}
 
 		if len(msgArray) > index {
+			if customMsgMap == nil {
+				customMsgMap = make(map[string]string)
+			}
 			customMsgMap[ruleKey] = strings.TrimSpace(msgArray[index])
 		}
 
@@ -133,7 +145,7 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 			message        = v.getErrorMessageByRule(ctx, ruleKey, customMsgMap)
 			customRuleFunc = v.getCustomRuleFunc(ruleKey)
 			builtinRule    = builtin.GetRule(ruleKey)
-			foreachValues  = []interface{}{in.Value}
+			foreachValues  = []any{in.Value}
 		)
 		if hasForeachRule {
 			// As it marks `foreach`, so it converts the value to slice.
@@ -224,7 +236,7 @@ CheckDone:
 }
 
 type doCheckValueRecursivelyInput struct {
-	Value               interface{}                 // Value to be validated.
+	Value               any                         // Value to be validated.
 	Type                reflect.Type                // Struct/map/slice type which to be recursively validated.
 	Kind                reflect.Kind                // Struct/map/slice kind to be asserted in following switch case.
 	ErrorMaps           map[string]map[string]error // The validated failed error map.
@@ -233,7 +245,7 @@ type doCheckValueRecursivelyInput struct {
 
 func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValueRecursivelyInput) {
 	switch in.Kind {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
 			Value:               in.Value,
 			Type:                in.Type.Elem(),
@@ -246,9 +258,9 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 		// Ignore data, assoc, rules and messages from parent.
 		var (
 			validator           = v.Clone()
-			toBeValidatedObject interface{}
+			toBeValidatedObject any
 		)
-		if in.Type.Kind() == reflect.Ptr {
+		if in.Type.Kind() == reflect.Pointer {
 			toBeValidatedObject = reflect.New(in.Type.Elem()).Interface()
 		} else {
 			toBeValidatedObject = reflect.New(in.Type).Interface()
@@ -292,7 +304,7 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 		// []struct []map
 		case reflect.Struct, reflect.Map:
 			loop = true
-		case reflect.Ptr:
+		case reflect.Pointer:
 			loop = true
 		}
 		// When it is a base type array,
@@ -300,7 +312,7 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 		// otherwise it will cause memory leakage
 		// https://github.com/gogf/gf/issues/4092
 		if loop {
-			var array []interface{}
+			var array []any
 			if gjson.Valid(in.Value) {
 				array = gconv.Interfaces(gconv.Bytes(in.Value))
 			} else {

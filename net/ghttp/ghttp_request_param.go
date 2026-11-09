@@ -52,27 +52,28 @@ var (
 // 2. Multiple struct, post content like: [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
 //
 // TODO: Improve the performance by reducing duplicated reflect usage on the same variable across packages.
-func (r *Request) Parse(pointer interface{}) error {
-	return r.doParse(pointer, parseTypeRequest)
+func (r *Request) Parse(pointer any) error {
+	return r.doParse(pointer, parseTypeRequest, true)
 }
 
 // ParseQuery performs like function Parse, but only parses the query parameters.
-func (r *Request) ParseQuery(pointer interface{}) error {
-	return r.doParse(pointer, parseTypeQuery)
+func (r *Request) ParseQuery(pointer any) error {
+	return r.doParse(pointer, parseTypeQuery, true)
 }
 
 // ParseForm performs like function Parse, but only parses the form parameters or the body content.
-func (r *Request) ParseForm(pointer interface{}) error {
-	return r.doParse(pointer, parseTypeForm)
+func (r *Request) ParseForm(pointer any) error {
+	return r.doParse(pointer, parseTypeForm, true)
 }
 
 // doParse parses the request data to struct/structs according to request type.
-func (r *Request) doParse(pointer interface{}, requestType int) error {
+// The parameter `withValidation` specifies whether doing validation for the given pointer.
+func (r *Request) doParse(pointer any, requestType int, withValidation bool) error {
 	var (
 		reflectVal1  = reflect.ValueOf(pointer)
 		reflectKind1 = reflectVal1.Kind()
 	)
-	if reflectKind1 != reflect.Ptr {
+	if reflectKind1 != reflect.Pointer {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`invalid parameter type "%v", of which kind should be of *struct/**struct/*[]struct/*[]*struct, but got: "%v"`,
@@ -88,10 +89,10 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 	// Single struct, post content like:
 	// 1. {"id":1, "name":"john"}
 	// 2. ?id=1&name=john
-	case reflect.Ptr, reflect.Struct:
+	case reflect.Pointer, reflect.Struct:
 		var (
 			err  error
-			data map[string]interface{}
+			data map[string]any
 		)
 		// Converting.
 		switch requestType {
@@ -109,12 +110,16 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 			}
 		}
 		// Validation.
-		if err = gvalid.New().
-			Bail().
-			Data(pointer).
-			Assoc(data).
-			Run(r.Context()); err != nil {
-			return err
+		// The validation rules here are all from struct tag, which are static,
+		// so the parsed rule value cache is enabled for performance.
+		if withValidation {
+			if err = gvalid.New(true).
+				Bail().
+				Data(pointer).
+				Assoc(data).
+				Run(r.Context()); err != nil {
+				return err
+			}
 		}
 
 	// Multiple struct, it only supports JSON type post content like:
@@ -129,13 +134,17 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 		if err = j.Var().Scan(pointer); err != nil {
 			return err
 		}
-		for i := 0; i < reflectVal2.Len(); i++ {
-			if err = gvalid.New().
-				Bail().
-				Data(reflectVal2.Index(i)).
-				Assoc(j.Get(gconv.String(i)).Map()).
-				Run(r.Context()); err != nil {
-				return err
+		if withValidation {
+			for i := 0; i < reflectVal2.Len(); i++ {
+				// The validation rules here are all from struct tag, which are static,
+				// so the parsed rule value cache is enabled for performance.
+				if err = gvalid.New(true).
+					Bail().
+					Data(reflectVal2.Index(i)).
+					Assoc(j.Get(gconv.String(i)).Map()).
+					Run(r.Context()); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -145,7 +154,7 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 // Get is alias of GetRequest, which is one of the most commonly used functions for
 // retrieving parameter.
 // See r.GetRequest.
-func (r *Request) Get(key string, def ...interface{}) *gvar.Var {
+func (r *Request) Get(key string, def ...any) *gvar.Var {
 	return r.GetRequest(key, def...)
 }
 
@@ -185,26 +194,26 @@ func (r *Request) GetBodyString() string {
 // Note that the request content is read from request BODY, not from any field of FORM.
 func (r *Request) GetJson() (*gjson.Json, error) {
 	return gjson.LoadWithOptions(r.GetBody(), gjson.Options{
-		Type:      gjson.ContentTypeJson,
+		Type:      gjson.ContentTypeJSON,
 		StrNumber: true,
 	})
 }
 
 // GetMap is an alias and convenient function for GetRequestMap.
 // See GetRequestMap.
-func (r *Request) GetMap(def ...map[string]interface{}) map[string]interface{} {
+func (r *Request) GetMap(def ...map[string]any) map[string]any {
 	return r.GetRequestMap(def...)
 }
 
 // GetMapStrStr is an alias and convenient function for GetRequestMapStrStr.
 // See GetRequestMapStrStr.
-func (r *Request) GetMapStrStr(def ...map[string]interface{}) map[string]string {
+func (r *Request) GetMapStrStr(def ...map[string]any) map[string]string {
 	return r.GetRequestMapStrStr(def...)
 }
 
 // GetStruct is an alias and convenient function for GetRequestStruct.
 // See GetRequestStruct.
-func (r *Request) GetStruct(pointer interface{}, mapping ...map[string]string) error {
+func (r *Request) GetStruct(pointer any, mapping ...map[string]string) error {
 	return r.GetRequestStruct(pointer, mapping...)
 }
 
@@ -214,9 +223,13 @@ func (r *Request) parseQuery() {
 		return
 	}
 	r.parsedQuery = true
+	// The repeated query parameters are retrieved again from the query string being parsed.
+	r.parsedRepeated = false
 	if r.URL.RawQuery != "" {
 		var err error
 		r.queryMap, err = gstr.Parse(r.URL.RawQuery)
+		// The custom values set by SetQuery are dropped along with the previous query map.
+		r.customQueryKeys = nil
 		if err != nil {
 			panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse Query failed"))
 		}
@@ -230,6 +243,11 @@ func (r *Request) parseBody() {
 		return
 	}
 	r.parsedBody = true
+	// The body might be re-parsed after being changed, for example the middleware calling
+	// ReloadParam, so the previously parsed results are reset to avoid the stale ones being
+	// mixed up between the object and array formats.
+	r.bodyMap = nil
+	r.bodyArray = nil
 	// There's no data posted.
 	if r.ContentLength == 0 {
 		return
@@ -248,23 +266,39 @@ func (r *Request) parseBody() {
 	if body := r.GetBody(); len(body) > 0 {
 		// Trim space/new line characters.
 		body = bytes.TrimSpace(body)
-
-		// json/xml content type checks.
-		if gstr.Contains(contentType, "/json") {
-			_ = json.UnmarshalUseNumber(body, &r.bodyMap)
+		if len(body) == 0 {
 			return
 		}
-		if gstr.Contains(contentType, "/xml") {
-			r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
-			return
-		}
-		// Auto decoding body content.
-		if r.Server.config.AutoDecodingBody {
-			// JSON format checks.
-			if body[0] == '{' && body[len(body)-1] == '}' {
-				_ = json.UnmarshalUseNumber(body, &r.bodyMap)
+		jsonContentType := gstr.ContainsI(contentType, contentTypeJson)
+		// Preserve GET query/form body compatibility while validating JSON-shaped GET bodies.
+		strictJsonContentType := jsonContentType && (r.Method != http.MethodGet || body[0] == '{' || body[0] == '[')
+		// JSON array format check for the request struct declaring a field tagged with `body:"*"`.
+		// Note that the array body is accepted no matter what the content type is, just like the
+		// object body is relaxed checked below.
+		if r.isArrayRequestBodyExpected() && body[0] == '[' && body[len(body)-1] == ']' {
+			var array []any
+			if err := json.UnmarshalUseNumber(body, &array); err == nil {
+				r.bodyArray = array
+				return
+			} else if strictJsonContentType {
+				r.SetError(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse JSON body failed"))
+				return
 			}
-			// XML format checks.
+			// It is not a valid JSON array, falling back to the default parameters decoding below.
+		}
+		// JSON format checks.
+		if strictJsonContentType {
+			if err := json.UnmarshalUseNumber(body, &r.bodyMap); err != nil {
+				r.SetError(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse JSON body failed"))
+				return
+			}
+		} else if r.isAutoDecodingBodyEnabled() && body[0] == '{' && body[len(body)-1] == '}' {
+			_ = json.UnmarshalUseNumber(body, &r.bodyMap)
+		}
+		// XML format checks.
+		if gstr.ContainsI(contentType, "/xml") {
+			r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
+		} else if r.isAutoDecodingBodyEnabled() {
 			if len(body) > 5 && bytes.EqualFold(body[:5], xmlHeaderBytes) {
 				r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
 			}
@@ -277,6 +311,41 @@ func (r *Request) parseBody() {
 			r.bodyMap, _ = gstr.Parse(r.GetBodyString())
 		}
 	}
+}
+
+// isAutoDecodingBodyEnabled checks and returns whether the server configuration enables
+// automatic request body decoding. It returns false if the request has no server bound,
+// for example the request object is created directly in unit tests.
+func (r *Request) isAutoDecodingBodyEnabled() bool {
+	return r.Server != nil && r.Server.config.AutoDecodingBody
+}
+
+// reqBodyFieldName returns the request struct field name tagged with `body:"*"`, which receives
+// the whole request body. It returns empty if there's no such field, or there's no serving
+// handler for current request, for example the static file request or the route not matched
+// request.
+func (r *Request) reqBodyFieldName() string {
+	if r.serveHandler == nil || r.serveHandler.Handler == nil {
+		return ""
+	}
+	return r.serveHandler.Handler.Info.ReqBodyFieldName
+}
+
+// isArrayRequestBodyExpected checks and returns whether the handler serving current request
+// declares a request struct field tagged with `body:"*"`, which receives the whole JSON array
+// request body.
+func (r *Request) isArrayRequestBodyExpected() bool {
+	return r.reqBodyFieldName() != ""
+}
+
+// newArrayRequestBodyError creates an error that the request body is not the JSON array the
+// request struct field tagged with `body:"*"` expects.
+func newArrayRequestBodyError(bodyFieldName string) error {
+	return gerror.NewCodef(
+		gcode.CodeInvalidParameter,
+		`the request body should be a JSON array for the request struct field "%s" tagged with body:"*"`,
+		bodyFieldName,
+	)
 }
 
 // parseForm parses the request form for HTTP method PUT, POST, PATCH.
@@ -293,15 +362,34 @@ func (r *Request) parseForm() {
 		return
 	}
 
-	if contentType := r.Header.Get("Content-Type"); contentType != "" {
+	if contentType := r.Header.Get(HeaderContentType); contentType != "" {
 		var isMultiPartRequest = gstr.Contains(contentType, "multipart/")
 		var isFormRequest = gstr.Contains(contentType, "form")
 		var err error
+
+		// A field tagged with `body:"*"` only receives the JSON array request body, so the
+		// multipart form is rejected before being parsed: the multipart body never becomes the
+		// JSON array, while parsing it would write the uploaded files to the temporary directory,
+		// or even panic on a malformed multipart body, before being rejected.
+		if isMultiPartRequest && r.isArrayRequestBodyExpected() {
+			r.SetError(newArrayRequestBodyError(r.reqBodyFieldName()))
+			return
+		}
 
 		if !isMultiPartRequest {
 			// To avoid big memory consuming.
 			// The `multipart/` type form always contains binary data, which is not necessary read twice.
 			r.MakeBodyRepeatableRead(true)
+			// A field tagged with `body:"*"` receives the whole request body, so the JSON array
+			// body is detected before the form decoding below, which would otherwise cut the
+			// array into bogus form parameters.
+			if r.isArrayRequestBodyExpected() {
+				r.parseBody()
+				if r.bodyArray != nil {
+					r.formMap = nil
+					return
+				}
+			}
 		}
 		if isMultiPartRequest {
 			// multipart/form-data, multipart/mixed
@@ -320,7 +408,9 @@ func (r *Request) parseForm() {
 			for name, values := range r.PostForm {
 				// Invalid parameter name.
 				// Only allow chars of: '\w', '[', ']', '-'.
-				if !gregex.IsMatchString(`^[\w\-\[\]]+$`, name) && len(r.PostForm) == 1 {
+				// The content type check is only necessary for the single parameter case,
+				// which might be JSON/XML content passed as the parameter name.
+				if len(r.PostForm) == 1 && !gregex.IsMatchString(`^[\w\-\[\]]+$`, name) {
 					// It might be JSON/XML content.
 					if s := gstr.Trim(name + strings.Join(values, " ")); len(s) > 0 {
 						if s[0] == '{' && s[len(s)-1] == '}' || s[0] == '<' && s[len(s)-1] == '>' {
@@ -411,6 +501,12 @@ func (r *Request) GetMultipartFiles(name string) []*multipart.FileHeader {
 
 // isBinaryContentType check the content type is binary or not.
 func (r *Request) isBinaryContentType(contentType string) bool {
+	// An empty content type is not binary, as the body is parsed by the default
+	// parameters decoding, which keeps the compatibility for the clients that
+	// do not set the content type.
+	if contentType == "" {
+		return false
+	}
 	// parseMediaType
 	mimeType, _, err := mime.ParseMediaType(contentType)
 	// If the content type is invalid, it's treated as binary.

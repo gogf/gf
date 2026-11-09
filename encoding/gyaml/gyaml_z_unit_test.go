@@ -76,7 +76,7 @@ func Test_Decode(t *testing.T) {
 		result, err := gyaml.Decode([]byte(yamlStr))
 		t.AssertNil(err)
 
-		t.Assert(result, map[string]interface{}{
+		t.Assert(result, map[string]any{
 			"url":      "https://goframe.org",
 			"server":   g.Slice{"120.168.117.21", "120.168.117.22"},
 			"pi":       3.14,
@@ -88,10 +88,10 @@ func Test_Decode(t *testing.T) {
 
 func Test_DecodeTo(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		result := make(map[string]interface{})
+		result := make(map[string]any)
 		err := gyaml.DecodeTo([]byte(yamlStr), &result)
 		t.AssertNil(err)
-		t.Assert(result, map[string]interface{}{
+		t.Assert(result, map[string]any{
 			"url":      "https://goframe.org",
 			"server":   g.Slice{"120.168.117.21", "120.168.117.22"},
 			"pi":       3.14,
@@ -106,7 +106,7 @@ func Test_DecodeError(t *testing.T) {
 		_, err := gyaml.Decode([]byte(yamlErr))
 		t.AssertNE(err, nil)
 
-		result := make(map[string]interface{})
+		result := make(map[string]any)
 		err = gyaml.DecodeTo([]byte(yamlErr), &result)
 		t.AssertNE(err, nil)
 	})
@@ -143,10 +143,6 @@ func Test_ToJson(t *testing.T) {
 		}
 
 		p := gjson.New(res)
-		if err != nil {
-			t.Errorf("parser failed. %v", err)
-			return
-		}
 		expectJson, err := p.ToJson()
 		if err != nil {
 			t.Errorf("parser ToJson failed. %v", err)

@@ -51,26 +51,26 @@ func SetHeaderPrint(enabled bool) {
 	}
 }
 
-func Print(v ...interface{}) {
+func Print(v ...any) {
 	logger.Print(ctx, v...)
 }
 
-func Printf(format string, v ...interface{}) {
+func Printf(format string, v ...any) {
 	logger.Printf(ctx, format, v...)
 }
 
-func Fatal(v ...interface{}) {
+func Fatal(v ...any) {
 	logger.Fatal(ctx, v...)
 }
 
-func Fatalf(format string, v ...interface{}) {
+func Fatalf(format string, v ...any) {
 	logger.Fatalf(ctx, format, v...)
 }
 
-func Debug(v ...interface{}) {
+func Debug(v ...any) {
 	logger.Debug(ctx, v...)
 }
 
-func Debugf(format string, v ...interface{}) {
+func Debugf(format string, v ...any) {
 	logger.Debugf(ctx, format, v...)
 }
