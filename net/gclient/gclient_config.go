@@ -88,6 +88,29 @@ func (c *Client) SetCookieMap(m map[string]string) *Client {
 	return c
 }
 
+// SetQuery sets a custom query parameter pair for the client.
+func (c *Client) SetQuery(key string, value any) *Client {
+	if c.queryParams == nil {
+		c.queryParams = make(map[string]any)
+	}
+	c.queryParams[key] = value
+	return c
+}
+
+// SetQueryMap sets custom query parameters with map.
+func (c *Client) SetQueryMap(m map[string]any) *Client {
+	if len(m) == 0 {
+		return c
+	}
+	if c.queryParams == nil {
+		c.queryParams = make(map[string]any, len(m))
+	}
+	for k, v := range m {
+		c.queryParams[k] = v
+	}
+	return c
+}
+
 // SetPrefix sets the request server URL prefix.
 func (c *Client) SetPrefix(prefix string) *Client {
 	c.prefix = prefix

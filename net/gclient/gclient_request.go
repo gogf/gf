@@ -14,7 +14,9 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -22,6 +24,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gurl"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/httputil"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
@@ -164,7 +167,7 @@ func (c *Client) DoRequest(
 // prepareRequest verifies request parameters, builds and returns http request.
 func (c *Client) prepareRequest(ctx context.Context, method, url string, data ...any) (req *http.Request, err error) {
 	method = strings.ToUpper(method)
-	url = c.prepareRequestURL(url)
+	url = c.appendQueryParams(c.prepareRequestURL(url))
 	var (
 		params             string
 		mediaType          string
@@ -205,6 +208,71 @@ func (c *Client) prepareRequestURL(url string) string {
 		url = httpProtocolName + `://` + url
 	}
 	return url
+}
+
+// appendQueryParams appends the client custom query parameters to the url.
+func (c *Client) appendQueryParams(url string) string {
+	queryParams := c.encodeQueryParams()
+	if queryParams == "" {
+		return url
+	}
+	if !strings.Contains(url, "?") {
+		return url + "?" + queryParams
+	}
+	if strings.HasSuffix(url, "?") || strings.HasSuffix(url, "&") {
+		return url + queryParams
+	}
+	return url + "&" + queryParams
+}
+
+// encodeQueryParams encodes the client custom query parameters into query string.
+// The parameter keys are sorted to keep the request url deterministic.
+func (c *Client) encodeQueryParams() string {
+	if len(c.queryParams) == 0 {
+		return ""
+	}
+	var (
+		buffer = bytes.NewBuffer(nil)
+		keys   = make([]string, 0, len(c.queryParams))
+	)
+	for key := range c.queryParams {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		value := c.queryParams[key]
+		if empty.IsNil(value) {
+			continue
+		}
+		reflectValue := reflect.ValueOf(value)
+		switch reflectValue.Kind() {
+		case reflect.Slice, reflect.Array:
+			// Byte sequences are treated as single string values.
+			if reflectValue.Type().Elem().Kind() != reflect.Uint8 {
+				for i := 0; i < reflectValue.Len(); i++ {
+					writeQueryParam(
+						buffer, key, gconv.String(reflectValue.Index(i).Interface()), c.noUrlEncode,
+					)
+				}
+				continue
+			}
+		}
+		writeQueryParam(buffer, key, gconv.String(value), c.noUrlEncode)
+	}
+	return buffer.String()
+}
+
+// writeQueryParam writes one "key=value" pair into the buffer.
+func writeQueryParam(buffer *bytes.Buffer, key, value string, noUrlEncode bool) {
+	if buffer.Len() > 0 {
+		buffer.WriteByte('&')
+	}
+	if !noUrlEncode {
+		value = gurl.Encode(value)
+	}
+	buffer.WriteString(key)
+	buffer.WriteByte('=')
+	buffer.WriteString(value)
 }
 
 // resolveRequestMediaType parses and returns the media type from the client custom

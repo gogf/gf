@@ -31,6 +31,14 @@ func (c *Client) Header(m map[string]string) *Client {
 	return newClient
 }
 
+// Query is a chaining function,
+// which sets custom query parameters with map for next request.
+func (c *Client) Query(m map[string]any) *Client {
+	newClient := c.Clone()
+	newClient.SetQueryMap(m)
+	return newClient
+}
+
 // HeaderRaw is a chaining function,
 // which sets custom HTTP header using raw string for next request.
 func (c *Client) HeaderRaw(headers string) *Client {
