@@ -338,6 +338,34 @@ func Test_parseConfigNodeLink_WithType(t *testing.T) {
 		t.Assert(newNode.Charset, `utf8`)
 		t.Assert(newNode.Protocol, `tcp`)
 	})
+	// https://github.com/gogf/gf/issues/4759
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: "mysql:root:12345678@tcp(127.0.0.1:3306)/test?loc=UTC&time_zone=%27%2B00%3A00%27&parseTime=True",
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Timezone, ``)
+		t.Assert(newNode.Extra, `loc=UTC&time_zone=%27%2B00%3A00%27&parseTime=True`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: "mysql:root:12345678@tcp(127.0.0.1:3306)/test?TIME_ZONE=%27%2B08%3A00%27&parseTime=True",
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Timezone, ``)
+		t.Assert(newNode.Extra, `TIME_ZONE=%27%2B08%3A00%27&parseTime=True`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		node := &ConfigNode{
+			Link: "mysql:root:12345678@tcp(127.0.0.1:3306)/test?Time_Zone=%27%2B08%3A00%27&parseTime=True",
+		}
+		newNode, err := parseConfigNodeLink(node)
+		t.AssertNil(err)
+		t.Assert(newNode.Timezone, ``)
+		t.Assert(newNode.Extra, `Time_Zone=%27%2B08%3A00%27&parseTime=True`)
+	})
 }
 
 func Test_Func_doQuoteWord(t *testing.T) {

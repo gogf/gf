@@ -9,6 +9,7 @@ package gproc
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"sync"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -76,7 +77,9 @@ func getPortByPid(pid int) int {
 	if path == "" {
 		return 0
 	}
-	return gconv.Int(gfile.GetContentsWithCache(path))
+	// The port of a pid never changes once written, and GetContentsWithCache would
+	// register a gfsnotify watch for every distinct pid just to cache a tiny file.
+	return gconv.Int(gfile.GetContents(path))
 }
 
 // getCommFilePath returns the pid to port mapping file path for given pid.
@@ -92,10 +95,7 @@ func getCommFilePath(pid int) string {
 // getCommPidFolderPath retrieves and returns the available directory for storing pid mapping files.
 func getCommPidFolderPath() (folderPath string, err error) {
 	commPidFolderPathOnce.Do(func() {
-		availablePaths := []string{
-			"/var/tmp",
-			"/var/run",
-		}
+		availablePaths := getCommPidSystemFolderPaths(runtime.GOOS)
 		if path, _ := gfile.Home(".config"); path != "" {
 			availablePaths = append(availablePaths, path)
 		}
@@ -119,4 +119,18 @@ func getCommPidFolderPath() (folderPath string, err error) {
 	})
 	folderPath = commPidFolderPath
 	return
+}
+
+// getCommPidSystemFolderPaths returns the system folders that are tried first for storing
+// pid mapping files on the given operating system.
+// The "/var/tmp" and "/var/run" folders exist only on Unix-like systems. On Windows such
+// paths resolve to the root of the current drive, like "C:\var\tmp", so they are not used.
+func getCommPidSystemFolderPaths(goos string) []string {
+	if goos == "windows" {
+		return []string{}
+	}
+	return []string{
+		"/var/tmp",
+		"/var/run",
+	}
 }

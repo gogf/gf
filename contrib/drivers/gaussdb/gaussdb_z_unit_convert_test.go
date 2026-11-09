@@ -9,6 +9,7 @@ package gaussdb_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -39,6 +40,12 @@ func Test_CheckLocalTypeForField(t *testing.T) {
 		localType, err = driver.CheckLocalTypeForField(ctx, "int8", nil)
 		t.AssertNil(err)
 		t.Assert(localType, gdb.LocalTypeInt64)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		localType, err := driver.CheckLocalTypeForField(ctx, "timetz", nil)
+		t.AssertNil(err)
+		t.Assert(localType, gdb.LocalTypeString)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -198,6 +205,36 @@ func Test_ConvertValueForLocal(t *testing.T) {
 		ctx    = context.Background()
 		driver = gaussdb.Driver{}
 	)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Connector time.Time values must retain their clock and numeric UTC offset.
+		for _, testCase := range []struct {
+			value time.Time
+			want  string
+		}{
+			{time.Date(0, time.January, 1, 12, 34, 56, 0, time.FixedZone("", 8*60*60)), "12:34:56+08"},
+			{time.Date(0, time.January, 1, 12, 34, 56, 0, time.FixedZone("", -5*60*60)), "12:34:56-05"},
+			{time.Date(0, time.January, 1, 12, 34, 56, 0, time.FixedZone("", 5*60*60+30*60)), "12:34:56+05:30"},
+			{time.Date(0, time.January, 1, 12, 34, 56, 0, time.FixedZone("", 5*60*60+30*60+15)), "12:34:56+05:30:15"},
+			{time.Date(0, time.January, 1, 12, 34, 56, 123456000, time.FixedZone("", 5*60*60+30*60)), "12:34:56.123456+05:30"},
+		} {
+			result, err := driver.ConvertValueForLocal(ctx, "timetz", testCase.value)
+			t.AssertNil(err)
+			t.Assert(result, testCase.want)
+		}
+
+		for _, testCase := range []struct {
+			value any
+			want  string
+		}{
+			{"12:34:56+08", "12:34:56+08"},
+			{[]byte("12:34:56-05"), "12:34:56-05"},
+		} {
+			result, err := driver.ConvertValueForLocal(ctx, "timetz", testCase.value)
+			t.AssertNil(err)
+			t.Assert(result, testCase.want)
+		}
+	})
 
 	gtest.C(t, func(t *gtest.T) {
 		// Test _int2 array conversion

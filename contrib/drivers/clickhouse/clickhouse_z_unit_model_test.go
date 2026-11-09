@@ -8,7 +8,6 @@ package clickhouse_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/gogf/gf/v2/database/gdb"
@@ -54,9 +53,12 @@ func Test_Model_Raw(t *testing.T) {
 			"password": "pass_1",
 			"nickname": "name_1",
 		}).Insert()
-		t.Assert(strings.Contains(err.Error(), "converting gdb.Raw to UInt64 is unsupported"), true)
+		t.AssertNil(err)
+		t.AssertNE(result, nil)
 
-		t.AssertNil(result)
+		count, err := db.Model(table).Where("id", 6).Where("passport", "port_1").Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
 	})
 }
 

@@ -105,10 +105,6 @@ type HookDeleteInput struct {
 	Args      []any  // The arguments for sql place-holders.
 }
 
-const (
-	whereKeyInCondition = " WHERE "
-)
-
 // IsTransaction checks and returns whether current operation is during transaction.
 func (h *internalParamHook) IsTransaction() bool {
 	return h.link.IsTransaction()
@@ -228,14 +224,14 @@ func (h *HookUpdateInput) Next(ctx context.Context) (result sql.Result, err erro
 
 	if h.handler != nil && !h.handlerCalled {
 		h.handlerCalled = true
-		if gstr.HasPrefix(h.Condition, whereKeyInCondition) {
+		if gstr.HasPrefix(h.Condition, sqlWhere) {
 			h.removedWhere = true
-			h.Condition = gstr.TrimLeftStr(h.Condition, whereKeyInCondition)
+			h.Condition = gstr.TrimLeftStr(h.Condition, sqlWhere)
 		}
 		return h.handler(ctx, h)
 	}
 	if h.removedWhere {
-		h.Condition = whereKeyInCondition + h.Condition
+		h.Condition = sqlWhere + h.Condition
 	}
 
 	// No need to handle table change.
@@ -275,14 +271,14 @@ func (h *HookDeleteInput) Next(ctx context.Context) (result sql.Result, err erro
 
 	if h.handler != nil && !h.handlerCalled {
 		h.handlerCalled = true
-		if gstr.HasPrefix(h.Condition, whereKeyInCondition) {
+		if gstr.HasPrefix(h.Condition, sqlWhere) {
 			h.removedWhere = true
-			h.Condition = gstr.TrimLeftStr(h.Condition, whereKeyInCondition)
+			h.Condition = gstr.TrimLeftStr(h.Condition, sqlWhere)
 		}
 		return h.handler(ctx, h)
 	}
 	if h.removedWhere {
-		h.Condition = whereKeyInCondition + h.Condition
+		h.Condition = sqlWhere + h.Condition
 	}
 
 	// No need to handle table change.

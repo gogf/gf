@@ -24,7 +24,7 @@
 
 ## 安装
 
-`GoFrame`要求`Go 1.23`或更高版本。
+`GoFrame`要求`Go 1.25`或更高版本。
 
 在已有模块中添加框架：
 
@@ -92,7 +92,7 @@ cd hello && gf run main.go
 💖 [感谢所有使 GoFrame 成为可能的贡献者](https://github.com/gogf/gf/graphs/contributors) 💖
 
 <a href="https://github.com/gogf/gf/graphs/contributors">
-<img src="https://goframe.org/img/contributors.svg?version=v2.10.3" alt="goframe contributors"/>
+<img src="https://goframe.org/img/contributors.svg?version=v2.10.4" alt="goframe contributors"/>
 </a>
 
 ## 许可证
