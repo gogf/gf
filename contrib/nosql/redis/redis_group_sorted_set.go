@@ -118,8 +118,11 @@ func (r GroupSortedSet) ZCount(ctx context.Context, key string, min, max string)
 // ZRange can perform different types of range queries: by index (rank), by the score, or by lexicographical
 // order.
 //
+// The `start` and `stop` can be indexes like 0 and -1, scores like "(1" and "+inf" with ByScore,
+// or lexicographical bounds like "[a" and "(c" with ByLex.
+//
 // https://redis.io/commands/zrange/
-func (r GroupSortedSet) ZRange(ctx context.Context, key string, start, stop int64, option ...gredis.ZRangeOption) (gvar.Vars, error) {
+func (r GroupSortedSet) ZRange(ctx context.Context, key string, start, stop any, option ...gredis.ZRangeOption) (gvar.Vars, error) {
 	var usedOption any
 	if len(option) > 0 {
 		usedOption = option[0]
