@@ -8,6 +8,7 @@ package gtree_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/v2/container/gtree"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -211,5 +212,87 @@ func Test_NewRedBlackKVTreeWithChecker_TypedNil(t *testing.T) {
 			}
 		}
 		t.Assert(redBlackTree2.Size(), 5)
+	})
+}
+
+type kvIteratorFromTree interface {
+	Set(key int, value int)
+	IteratorAscFrom(key int, match bool, f func(key int, value int) bool)
+	IteratorDescFrom(key int, match bool, f func(key int, value int) bool)
+}
+
+func newKVIteratorFromTrees() map[string]kvIteratorFromTree {
+	return map[string]kvIteratorFromTree{
+		"AVLKVTree":      gtree.NewAVLKVTree[int, int](gutil.ComparatorTStr[int], true),
+		"BKVTree":        gtree.NewBKVTree[int, int](3, gutil.ComparatorTStr[int], true),
+		"RedBlackKVTree": gtree.NewRedBlackKVTree[int, int](gutil.ComparatorTStr[int], true),
+	}
+}
+
+// runWithin fails the test instead of hanging when `f` doesn't return in time.
+func runWithin(t *gtest.T, name string, f func()) {
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		f()
+	}()
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatalf("%s: iteration did not return", name)
+	}
+}
+
+func Test_KVTree_IteratorFrom_Stop(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for name, tree := range newKVIteratorFromTrees() {
+			for i := 1; i <= 10; i++ {
+				tree.Set(i, i*10)
+			}
+			var asc, desc []int
+			runWithin(t, name, func() {
+				tree.IteratorAscFrom(3, true, func(key, value int) bool {
+					asc = append(asc, value)
+					return len(asc) < 3
+				})
+				tree.IteratorDescFrom(8, true, func(key, value int) bool {
+					desc = append(desc, value)
+					return len(desc) < 3
+				})
+			})
+			t.AssertEQ(asc, []int{30, 40, 50})
+			t.AssertEQ(desc, []int{80, 70, 60})
+		}
+	})
+}
+
+func Test_KVTree_IteratorFrom_ConcurrentWrite(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for name, tree := range newKVIteratorFromTrees() {
+			for i := 1; i <= 5; i++ {
+				tree.Set(i, i)
+			}
+			var (
+				visited int
+				written = make(chan struct{})
+			)
+			runWithin(t, name, func() {
+				tree.IteratorAscFrom(1, true, func(key, value int) bool {
+					if visited == 0 {
+						// A writer waiting for the lock must not block the
+						// rest of the iteration.
+						go func() {
+							tree.Set(100, 100)
+							close(written)
+						}()
+						time.Sleep(50 * time.Millisecond)
+					}
+					visited++
+					return true
+				})
+			})
+			<-written
+			t.Assert(visited, 5)
+		}
 	})
 }
