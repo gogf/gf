@@ -206,7 +206,7 @@ func (c CGenCtrl) generateByModule(
 	if err != nil {
 		return err
 	}
-	apiItemsInDst, err := c.getApiItemsInDst(dstModuleFolderPath)
+	apiItemsInDst, err := c.getApiItemsInDst(dstModuleFolderPath, apiItemsInSrc)
 	if err != nil {
 		return err
 	}
