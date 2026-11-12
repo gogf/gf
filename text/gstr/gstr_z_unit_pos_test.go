@@ -156,3 +156,17 @@ func Test_PosRIRune(t *testing.T) {
 		t.Assert(gstr.PosRIRune(s1, "China"), 2)
 	})
 }
+
+// A two-byte character before the match must count as one rune.
+func Test_PosRune_TwoByteChar(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s1 := "éa"
+		t.Assert(gstr.PosRune(s1, "a"), 1)
+		t.Assert(gstr.PosIRune(s1, "A"), 1)
+		t.Assert(gstr.PosRRune(s1, "a"), 1)
+		t.Assert(gstr.PosRIRune(s1, "A"), 1)
+		t.Assert(gstr.PosRune("aéb", "é"), 1)
+		t.Assert(gstr.PosRune("ab", "b"), 1)
+		t.Assert(gstr.PosRune("ab", "c"), -1)
+	})
+}
