@@ -490,3 +490,19 @@ func Test_SubStrFromREx(t *testing.T) {
 		t.Assert(gstr.SubStrFromREx("我爱GoFrameGood", `Frame`), `Good`)
 	})
 }
+
+func Test_Soundex(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.Soundex("Robert"), "R163")
+		t.Assert(gstr.Soundex("Rupert"), "R163")
+		t.Assert(gstr.Soundex("Euler"), "E460")
+		t.Assert(gstr.Soundex("Ellery"), "E460")
+		t.Assert(gstr.Soundex("Gauss"), "G200")
+		t.Assert(gstr.Soundex("Hilbert"), "H416")
+		t.Assert(gstr.Soundex("Heilbronn"), "H416")
+		t.Assert(gstr.Soundex("Knuth"), "K530")
+		t.Assert(gstr.Soundex("Lloyd"), "L300")
+		t.Assert(gstr.Soundex("Lukasiewicz"), "L222")
+		t.Assert(gstr.Soundex("Hello"), "H400")
+	})
+}
