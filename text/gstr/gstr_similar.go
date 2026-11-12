@@ -138,7 +138,7 @@ func Soundex(str string) string {
 			} else {
 				code = int(table[code-'A'])
 				if code != last {
-					if code != 0 {
+					if code != '0' {
 						sd[small] = rune(code)
 						small++
 					}

@@ -168,5 +168,23 @@ func Test_PosRune_TwoByteChar(t *testing.T) {
 		t.Assert(gstr.PosRune("aéb", "é"), 1)
 		t.Assert(gstr.PosRune("ab", "b"), 1)
 		t.Assert(gstr.PosRune("ab", "c"), -1)
+
+		// pos==2 that is two ASCII bytes must not regress.
+		t.Assert(gstr.PosRune("ab_", "_"), 2)
+		t.Assert(gstr.PosIRune("ab_", "_"), 2)
+		t.Assert(gstr.PosRRune("ab_", "_"), 2)
+		t.Assert(gstr.PosRIRune("ab_", "_"), 2)
+
+		// multiple two-byte runes before the match.
+		t.Assert(gstr.PosRune("éàü_", "_"), 3)
+
+		// mixed widths: one 3-byte CJK + one 2-byte + one ASCII before match.
+		t.Assert(gstr.PosRune("我éa!", "!"), 3)
+
+		// PosRRune: last occurrence with two-byte chars before.
+		t.Assert(gstr.PosRRune("éaéa", "a"), 3)
+
+		// PosRIRune: case-insensitive last occurrence.
+		t.Assert(gstr.PosRIRune("éAéA", "a"), 3)
 	})
 }
