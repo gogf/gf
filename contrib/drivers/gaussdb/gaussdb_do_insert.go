@@ -589,11 +589,11 @@ var uncastFieldTypes = map[string]struct{}{
 // a modifier would make the server reject int4(32) and, for numeric(10,2), round the
 // value by a scale that gf does not report.
 //
-// String types (typcategory 'S') are left out. A placeholder is already text, so a cast
-// to them adds nothing, and in the A compatible mode it turns an empty string into NULL,
-// which a plain assignment of the parameter does not.
+// String types (typcategory 'S') are left out: a placeholder is already text, so a cast
+// to them adds nothing, and a domain over a string type keeps the category of its base
+// type while its own typname is not in uncastFieldTypes.
 const fieldTypesSqlTmp = `
-SELECT a.attname AS field, format_type(a.atttypid, NULL) AS type
+SELECT a.attname AS field, t.typname AS typname, format_type(a.atttypid, NULL) AS type
 FROM pg_attribute a JOIN pg_type t ON t.oid = a.atttypid
 WHERE a.attrelid = $1::regclass AND a.attnum > 0 AND NOT a.attisdropped AND t.typcategory <> 'S'`
 
@@ -602,6 +602,11 @@ WHERE a.attrelid = $1::regclass AND a.attnum > 0 AND NOT a.attisdropped AND t.ty
 // table fields hold only types that need no cast, which is the common case. Otherwise the
 // types are read from the catalog: TableField.Type is the bare pg_type.typname, which
 // cannot be resolved for a type outside the search path.
+//
+// uncastFieldTypes decides both whether the catalog is queried and which of its rows are
+// kept. Reading the type of a column just because another column of the table needed one
+// would change how an empty string is written to a timestamp or date column, depending on
+// an unrelated column of the table.
 func (d *Driver) getFieldTypes(ctx context.Context, link gdb.Link, table string) (map[string]string, error) {
 	tableFields, err := d.GetCore().GetDB().TableFields(ctx, table)
 	if err != nil {
@@ -623,6 +628,9 @@ func (d *Driver) getFieldTypes(ctx context.Context, link gdb.Link, table string)
 	}
 	types := make(map[string]string, len(result))
 	for _, m := range result {
+		if _, ok := uncastFieldTypes[m["typname"].String()]; ok {
+			continue
+		}
 		types[strings.ToLower(m["field"].String())] = m["type"].String()
 	}
 	return types, nil

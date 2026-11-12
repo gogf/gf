@@ -654,6 +654,39 @@ func Test_Issue4843(t *testing.T) {
 		t.Assert(one["val"].Bool(), true)
 	})
 
+	// Writing an empty string to a timestamp, date, or integer column fails consistently,
+	// regardless of whether the table contains an unrelated boolean column. The catalog is
+	// queried only when a column type that needs a cast is present, but the types returned
+	// are filtered so that int/date/timestamp are never cast.
+	gtest.C(t, func(t *gtest.T) {
+		t1 := fmt.Sprintf("issue4843_no_bool_%d", gtime.TimestampNano())
+		_, err := db.Exec(ctx, fmt.Sprintf(`CREATE TABLE %s (id bigserial PRIMARY KEY, ts timestamp)`, t1))
+		t.AssertNil(err)
+		defer dropTable(t1)
+
+		_, err = db.Model(t1).Data(g.Map{"id": 1, "ts": ""}).Save()
+		t.AssertNE(err, nil)
+		t.Assert(gstr.Contains(err.Error(), "invalid input syntax"), true)
+
+		t2 := fmt.Sprintf("issue4843_with_bool_%d", gtime.TimestampNano())
+		_, err = db.Exec(ctx, fmt.Sprintf(
+			`CREATE TABLE %s (id bigserial PRIMARY KEY, ts timestamp, flag boolean)`, t2,
+		))
+		t.AssertNil(err)
+		defer dropTable(t2)
+
+		_, err = db.Model(t2).Data(g.Map{"id": 1, "ts": "", "flag": true}).Save()
+		t.AssertNE(err, nil)
+		t.Assert(gstr.Contains(err.Error(), "invalid input syntax"), true)
+
+		_, err = db.Model(t2).Data(g.Map{"id": 1, "ts": "2024-01-02 03:04:05", "flag": true}).Save()
+		t.AssertNil(err)
+		one, err := db.Model(t2).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["ts"].String(), "2024-01-02 03:04:05")
+		t.Assert(one["flag"].Bool(), true)
+	})
+
 	// A string column is not cast even when the table needs casts for other columns: in
 	// the A compatible mode a cast turns an empty string into NULL, while the parameter
 	// assigned as it is stays an empty string.
