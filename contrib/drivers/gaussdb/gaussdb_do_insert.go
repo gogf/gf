@@ -61,11 +61,7 @@ func (d *Driver) DoInsert(
 func (d *Driver) doSave(ctx context.Context,
 	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (result sql.Result, err error) {
-	fieldTypes, err := d.getFieldTypes(ctx, link, table)
-	if err != nil {
-		return nil, err
-	}
-	return d.doMergeInsert(ctx, link, table, list, option, true, fieldTypes)
+	return d.doMergeInsert(ctx, link, table, list, option, true, nil)
 }
 
 // doInsertIgnore implements INSERT IGNORE operation using MERGE statement for GaussDB.
@@ -263,6 +259,17 @@ func (d *Driver) doMergeInsert(
 		}
 	}
 
+	// Resolve the cast type for each column now that we know this record goes through
+	// the MERGE path. getFieldTypes is deferred to here so that doUpdateThenInsert calls
+	// above do not pay the catalog round-trip.
+	if withUpdate && fieldTypes == nil {
+		var ftErr error
+		fieldTypes, ftErr = d.getFieldTypes(ctx, link, table)
+		if ftErr != nil {
+			return nil, ftErr
+		}
+	}
+
 	// If OnConflict is not specified, automatically get the primary key of the table
 	conflictKeys := option.OnConflict
 	if len(conflictKeys) == 0 {
@@ -343,7 +350,7 @@ func (d *Driver) doMergeInsert(
 	for key, value := range one {
 		keyWithChar := charL + key + charR
 		holder := fmt.Sprintf("$%d", index+1)
-		if fieldType := fieldTypes[strings.ToLower(key)]; fieldType != "" {
+		if fieldType, ok := fieldTypes[key]; ok && fieldType != "" {
 			holder += "::" + fieldType
 		}
 		queryHolders[index] = fmt.Sprintf("%s AS %s", holder, keyWithChar)
@@ -564,8 +571,10 @@ func trimTypeModifier(fieldType string) string {
 }
 
 // uncastFieldTypes are the types, by pg_type.typname, that a placeholder is assigned to
-// as it is: the string types, and the numeric and date types that GaussDB converts from
-// text on assignment. A table made of them needs no cast at all.
+// as it is: the string types, and the types GaussDB converts from text on assignment,
+// which is every non-string type with an implicit cast from text in pg_cast. A table made
+// of them needs no cast at all, and it is the set on which the driver behaves as it did
+// before the casts were introduced.
 var uncastFieldTypes = map[string]struct{}{
 	"bpchar":    {},
 	"char":      {},
@@ -573,12 +582,15 @@ var uncastFieldTypes = map[string]struct{}{
 	"date":      {},
 	"float4":    {},
 	"float8":    {},
+	"int1":      {},
 	"int2":      {},
 	"int4":      {},
 	"int8":      {},
+	"interval":  {},
 	"name":      {},
 	"numeric":   {},
 	"nvarchar2": {},
+	"regclass":  {},
 	"text":      {},
 	"timestamp": {},
 	"varchar":   {},
@@ -589,19 +601,19 @@ var uncastFieldTypes = map[string]struct{}{
 // a modifier would make the server reject int4(32) and, for numeric(10,2), round the
 // value by a scale that gf does not report.
 //
-// String types (typcategory 'S') are left out. A placeholder is already text, so a cast
-// to them adds nothing, and in the A compatible mode it turns an empty string into NULL,
-// which a plain assignment of the parameter does not.
+// String types (typcategory 'S') are left out: a placeholder is already text, so a cast
+// to them adds nothing, and a domain over a string type keeps the category of its base
+// type while its own typname is not in uncastFieldTypes.
 const fieldTypesSqlTmp = `
-SELECT a.attname AS field, format_type(a.atttypid, NULL) AS type
+SELECT a.attname AS field, t.typname AS typname, format_type(a.atttypid, NULL) AS type
 FROM pg_attribute a JOIN pg_type t ON t.oid = a.atttypid
 WHERE a.attrelid = $1::regclass AND a.attnum > 0 AND NOT a.attisdropped AND t.typcategory <> 'S'`
 
-// getFieldTypes returns the type that the placeholder of a column must be cast to, keyed
-// by lower-cased column name. The result is empty, without any query, when the cached
-// table fields hold only types that need no cast, which is the common case. Otherwise the
-// types are read from the catalog: TableField.Type is the bare pg_type.typname, which
-// cannot be resolved for a type outside the search path.
+// getFieldTypes returns the cast target type for each column, keyed by lower-cased column
+// name. It returns an empty map without querying the catalog when all cached table fields
+// are in uncastFieldTypes. TableField.Type carries a length modifier (e.g. "int1(8)"), so
+// trimTypeModifier is applied before the lookup. The doUpdateThenInsert path does not use
+// these casts.
 func (d *Driver) getFieldTypes(ctx context.Context, link gdb.Link, table string) (map[string]string, error) {
 	tableFields, err := d.GetCore().GetDB().TableFields(ctx, table)
 	if err != nil {
@@ -623,7 +635,10 @@ func (d *Driver) getFieldTypes(ctx context.Context, link gdb.Link, table string)
 	}
 	types := make(map[string]string, len(result))
 	for _, m := range result {
-		types[strings.ToLower(m["field"].String())] = m["type"].String()
+		if _, ok := uncastFieldTypes[m["typname"].String()]; ok {
+			continue
+		}
+		types[m["field"].String()] = m["type"].String()
 	}
 	return types, nil
 }

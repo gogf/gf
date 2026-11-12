@@ -654,6 +654,72 @@ func Test_Issue4843(t *testing.T) {
 		t.Assert(one["val"].Bool(), true)
 	})
 
+	// Writing an empty string to a type that GaussDB converts from text on assignment fails
+	// consistently, regardless of whether the table contains an unrelated boolean column.
+	// The catalog is queried only when a column type that needs a cast is present, but the
+	// types returned are filtered so that such a column is never cast: in the A compatible
+	// mode a cast would turn the empty string into NULL, which silently writes NULL instead
+	// of failing, and on a NOT NULL column changes the error to a not-null violation.
+	gtest.C(t, func(t *gtest.T) {
+		cases := []struct {
+			name      string
+			columnDef string
+			errorText string
+		}{
+			{"tinyint", "v tinyint", "invalid input syntax for integer"},
+			{"interval", "v interval", "invalid input syntax for type interval"},
+			{"regclass", "v regclass", "invalid name syntax"},
+			{"timestamp", "v timestamp", "invalid input syntax for type timestamp"},
+			{"int4", "v int4", "invalid input syntax for integer"},
+		}
+		for _, c := range cases {
+			// The column alone: no other column triggers the catalog query.
+			t1 := fmt.Sprintf("issue4843_alone_%s_%d", c.name, gtime.TimestampNano())
+			_, err := db.Exec(ctx, fmt.Sprintf(
+				`CREATE TABLE %s (id bigserial PRIMARY KEY, %s)`, t1, c.columnDef,
+			))
+			t.AssertNil(err)
+			defer dropTable(t1)
+			_, err = db.Model(t1).Data(g.Map{"id": 1, "v": ""}).Save()
+			t.AssertNE(err, nil)
+			t.Assert(gstr.Contains(err.Error(), c.errorText), true)
+
+			// The column beside a boolean, which makes the catalog query run.
+			t2 := fmt.Sprintf("issue4843_bool_%s_%d", c.name, gtime.TimestampNano())
+			_, err = db.Exec(ctx, fmt.Sprintf(
+				`CREATE TABLE %s (id bigserial PRIMARY KEY, %s, flag boolean)`, t2, c.columnDef,
+			))
+			t.AssertNil(err)
+			defer dropTable(t2)
+			_, err = db.Model(t2).Data(g.Map{"id": 1, "v": "", "flag": true}).Save()
+			t.AssertNE(err, nil)
+			t.Assert(gstr.Contains(err.Error(), c.errorText), true)
+		}
+	})
+
+	// The same types still accept a value that fits them.
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("issue4843_uncast_values_%d", gtime.TimestampNano())
+		_, err := db.Exec(ctx, fmt.Sprintf(
+			`CREATE TABLE %s (id bigserial PRIMARY KEY, a tinyint, b interval, c regclass, d timestamp, flag boolean)`,
+			table,
+		))
+		t.AssertNil(err)
+		defer dropTable(table)
+
+		_, err = db.Model(table).Data(g.Map{
+			"id": 1, "a": 7, "b": "1 day", "c": "pg_class", "d": "2024-01-02 03:04:05", "flag": true,
+		}).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["a"].Int(), 7)
+		t.Assert(one["b"].String(), "1 day")
+		t.Assert(one["c"].String(), "pg_class")
+		t.Assert(one["d"].String(), "2024-01-02 03:04:05")
+		t.Assert(one["flag"].Bool(), true)
+	})
+
 	// A string column is not cast even when the table needs casts for other columns: in
 	// the A compatible mode a cast turns an empty string into NULL, while the parameter
 	// assigned as it is stays an empty string.
@@ -745,5 +811,32 @@ func Test_Issue4843(t *testing.T) {
 		one, err := db.Model(table).Where("id", 1).One()
 		t.AssertNil(err)
 		t.Assert(one["nickname"].String(), "a")
+	})
+
+	// Two columns whose names are identical when lower-cased must each get the correct cast.
+	// "value" is int4 (no cast) and "Value" is boolean (needs cast); if the map were keyed
+	// by lower-case name both columns would collide and the int4 column would receive the
+	// boolean cast, causing Save to fail with a type error.
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("issue4843_casecolumns_%d", gtime.TimestampNano())
+		_, err := db.Exec(ctx, fmt.Sprintf(
+			`CREATE TABLE %s (id bigserial PRIMARY KEY, value int4, "Value" boolean)`, table,
+		))
+		t.AssertNil(err)
+		defer dropTable(table)
+
+		_, err = db.Model(table).Data(g.Map{"id": 1, "value": 42, "Value": true}).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["value"].Int(), 42)
+		t.Assert(one["Value"].Bool(), true)
+
+		_, err = db.Model(table).Data(g.Map{"id": 1, "value": 99, "Value": false}).Save()
+		t.AssertNil(err)
+		one, err = db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["value"].Int(), 99)
+		t.Assert(one["Value"].Bool(), false)
 	})
 }
