@@ -24,12 +24,13 @@ func Replace(origin, search, replace string, count ...int) string {
 
 // ReplaceI returns a copy of the string `origin`
 // in which string `search` replaced by `replace` case-insensitively.
+// It returns `origin` unchanged if `search` is empty.
 func ReplaceI(origin, search, replace string, count ...int) string {
 	n := -1
 	if len(count) > 0 {
 		n = count[0]
 	}
-	if n == 0 {
+	if n == 0 || search == "" {
 		return origin
 	}
 	var (

@@ -11,7 +11,7 @@ package gtime
 
 import (
 	"context"
-	"fmt"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -391,17 +391,23 @@ func ParseDuration(s string) (duration time.Duration, err error) {
 		}
 		return time.Duration(num), nil
 	}
-	match, err := gregex.MatchString(`^([\-\d]+)[dD](.*)$`, s)
+	match, err := gregex.MatchString(`^([\-+]?)([\d.]+)[dD](.*)$`, s)
 	if err != nil {
 		return 0, err
 	}
-	if len(match) == 3 {
-		num, err = strconv.ParseInt(match[1], 10, 64)
+	if len(match) == 4 {
+		// Parse the day count as hours, so that it takes a fraction like the other units.
+		var days time.Duration
+		days, err = time.ParseDuration(match[2] + "h")
 		if err != nil {
-			err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `strconv.ParseInt failed for string "%s"`, match[1])
+			err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `time.ParseDuration failed for string "%s"`, s)
 			return 0, err
 		}
-		s = fmt.Sprintf(`%dh%s`, num*24, match[2])
+		if days > math.MaxInt64/24 {
+			return 0, gerror.NewCodef(gcode.CodeInvalidParameter, `duration out of range for string "%s"`, s)
+		}
+		// Keep the sign in front, so it applies to the whole duration as in time.ParseDuration.
+		s = match[1] + (days * 24).String() + match[3]
 		duration, err = time.ParseDuration(s)
 		if err != nil {
 			err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `time.ParseDuration failed for string "%s"`, s)
