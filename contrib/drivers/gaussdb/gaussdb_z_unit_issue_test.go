@@ -7,9 +7,13 @@
 package gaussdb_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
+	"time"
 
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -346,5 +350,493 @@ func Test_Issue4842(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(one["v"].Ints(), g.SliceInt{1, 2, 255})
 		t.Assert(one["w"].Int(), 7)
+	})
+}
+
+// Test_Issue4843 tests that Save and Replace work on columns that do not accept a text
+// value, such as boolean, json, jsonb, uuid, bytea, timestamptz and the array types.
+// Both are built as a MERGE whose USING branch carries every value as an untyped
+// parameter, which the server takes as text, so assigning it to such a column failed.
+// See https://github.com/gogf/gf/issues/4843
+func Test_Issue4843(t *testing.T) {
+	type typedCase struct {
+		colType string
+		value   any
+		updated any
+		expect  func(v *gvar.Var) any
+		want    any
+		wantUpd any
+	}
+	var (
+		asString = func(v *gvar.Var) any { return v.String() }
+		asBool   = func(v *gvar.Var) any { return v.Bool() }
+		asInts   = func(v *gvar.Var) any { return v.Ints() }
+		asStrs   = func(v *gvar.Var) any { return v.Strings() }
+		asUnix   = func(v *gvar.Var) any { return v.GTime().Timestamp() }
+		cases    = []typedCase{
+			{"boolean", true, false, asBool, true, false},
+			{"int4", 42, 43, asString, "42", "43"},
+			{"varchar(20)", "abc", "abd", asString, "abc", "abd"},
+			{"numeric(10,2)", "12.34", "56.78", asString, "12.34", "56.78"},
+			{"timestamptz", "2024-01-02 03:04:05+00", "2024-02-03 04:05:06+00", asUnix,
+				time.Date(2024, 1, 2, 3, 4, 5, 0, time.UTC).Unix(),
+				time.Date(2024, 2, 3, 4, 5, 6, 0, time.UTC).Unix()},
+			{"json", `{"a":1}`, `{"a":2}`, asString, `{"a":1}`, `{"a":2}`},
+			{"jsonb", `{"a":1}`, `{"a":2}`, asString, `{"a": 1}`, `{"a": 2}`},
+			{"uuid", "550e8400-e29b-41d4-a716-446655440000", "550e8400-e29b-41d4-a716-446655440001", asString,
+				"550e8400-e29b-41d4-a716-446655440000", "550e8400-e29b-41d4-a716-446655440001"},
+			{"bytea", []byte("hello"), []byte("world"), asString, "hello", "world"},
+			{"int4[]", []int{1, 2}, []int{3, 4}, asInts, []int{1, 2}, []int{3, 4}},
+			{"text[]", []string{"a", "b"}, []string{"c", "d"}, asStrs, []string{"a", "b"}, []string{"c", "d"}},
+			{"numeric[]", "{1.5,2.5}", "{3.5,4.5}", asStrs, []string{"1.5", "2.5"}, []string{"3.5", "4.5"}},
+		}
+	)
+	for _, c := range cases {
+		c := c
+		gtest.C(t, func(t *gtest.T) {
+			table := fmt.Sprintf("issue4843_%d", gtime.TimestampNano())
+			_, err := db.Exec(ctx, fmt.Sprintf(
+				`CREATE TABLE %s (id bigserial PRIMARY KEY, nickname varchar(45), val %s)`, table, c.colType,
+			))
+			t.AssertNil(err)
+			defer dropTable(table)
+
+			// Save inserts a new row.
+			_, err = db.Model(table).Data(g.Map{"id": 1, "nickname": "n1", "val": c.value}).Save()
+			t.Assert(err, nil)
+			one, err := db.Model(table).Where("id", 1).One()
+			t.AssertNil(err)
+			t.Assert(one["nickname"].String(), "n1")
+			t.Assert(c.expect(one["val"]), c.want)
+
+			// Save updates the existing row.
+			_, err = db.Model(table).Data(g.Map{"id": 1, "nickname": "n2", "val": c.updated}).Save()
+			t.Assert(err, nil)
+			one, err = db.Model(table).Where("id", 1).One()
+			t.AssertNil(err)
+			t.Assert(one["nickname"].String(), "n2")
+			t.Assert(c.expect(one["val"]), c.wantUpd)
+
+			// Replace is built the same way.
+			_, err = db.Model(table).Data(g.Map{"id": 1, "nickname": "n3", "val": c.value}).Replace()
+			t.Assert(err, nil)
+			one, err = db.Model(table).Where("id", 1).One()
+			t.AssertNil(err)
+			t.Assert(one["nickname"].String(), "n3")
+			t.Assert(c.expect(one["val"]), c.want)
+		})
+	}
+
+	// Reading a whole row and writing it back, with a mix of typed and NULL columns.
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("issue4843_rmw_%d", gtime.TimestampNano())
+		_, err := db.Exec(ctx, fmt.Sprintf(`CREATE TABLE %s (
+			id bigserial PRIMARY KEY, passport varchar(45) NOT NULL, age int4, score numeric(10,2),
+			active boolean, created timestamp, birthday date, meta jsonb, ext uuid, tags text[])`, table))
+		t.AssertNil(err)
+		defer dropTable(table)
+
+		_, err = db.Model(table).Data(g.Map{
+			"id": 1, "passport": "p", "age": 18, "score": "9.50", "active": true,
+			"created": "2024-01-02 03:04:05", "birthday": "2000-01-02", "meta": `{"a":1}`,
+			"tags": []string{"x", "y"},
+		}).Insert()
+		t.AssertNil(err)
+
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		data := one.Map()
+		data["passport"] = "p2"
+		_, err = db.Model(table).Data(data).Save()
+		t.AssertNil(err)
+
+		one, err = db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["passport"].String(), "p2")
+		t.Assert(one["age"].Int(), 18)
+		t.Assert(one["score"].String(), "9.50")
+		t.Assert(one["active"].Bool(), true)
+		t.Assert(one["meta"].String(), `{"a": 1}`)
+		t.Assert(one["ext"].IsNil(), true)
+		t.Assert(one["tags"].Strings(), g.SliceStr{"x", "y"})
+	})
+
+	// A batch of records, each saved through its own MERGE.
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("issue4843_batch_%d", gtime.TimestampNano())
+		_, err := db.Exec(ctx, fmt.Sprintf(
+			`CREATE TABLE %s (id bigserial PRIMARY KEY, nickname varchar(45), val boolean)`, table,
+		))
+		t.AssertNil(err)
+		defer dropTable(table)
+
+		_, err = db.Model(table).Data(g.Map{"id": 1, "nickname": "old", "val": false}).Insert()
+		t.AssertNil(err)
+		_, err = db.Model(table).Data(g.List{
+			{"id": 1, "nickname": "a", "val": true},
+			{"id": 2, "nickname": "b", "val": true},
+		}).Save()
+		t.AssertNil(err)
+
+		all, err := db.Model(table).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all), 2)
+		t.Assert(all[0]["nickname"].String(), "a")
+		t.Assert(all[0]["val"].Bool(), true)
+		t.Assert(all[1]["nickname"].String(), "b")
+		t.Assert(all[1]["val"].Bool(), true)
+	})
+
+	// Custom update columns and transactions go through the same MERGE.
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("issue4843_dup_%d", gtime.TimestampNano())
+		_, err := db.Exec(ctx, fmt.Sprintf(
+			`CREATE TABLE %s (id bigserial PRIMARY KEY, nickname varchar(45), val boolean)`, table,
+		))
+		t.AssertNil(err)
+		defer dropTable(table)
+
+		_, err = db.Model(table).Data(g.Map{"id": 1, "nickname": "keep", "val": false}).Insert()
+		t.AssertNil(err)
+		_, err = db.Model(table).Data(g.Map{"id": 1, "nickname": "ignored", "val": true}).
+			OnDuplicate("val").Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["nickname"].String(), "keep")
+		t.Assert(one["val"].Bool(), true)
+
+		err = db.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+			_, err := tx.Model(table).Data(g.Map{"id": 1, "nickname": "tx", "val": false}).Save()
+			return err
+		})
+		t.AssertNil(err)
+		one, err = db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["nickname"].String(), "tx")
+		t.Assert(one["val"].Bool(), false)
+	})
+
+	// The cast must not carry the type modifier: a value that does not fit the column is
+	// rejected as Insert rejects it, and the scale of a numeric column is kept.
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("issue4843_mod_%d", gtime.TimestampNano())
+		_, err := db.Exec(ctx, fmt.Sprintf(
+			`CREATE TABLE %s (id bigserial PRIMARY KEY, short varchar(5), amount numeric(10,2), fixed char(5))`, table,
+		))
+		t.AssertNil(err)
+		defer dropTable(table)
+
+		_, err = db.Model(table).Data(g.Map{"id": 1, "short": "abcdefgh"}).Insert()
+		t.AssertNE(err, nil)
+		_, err = db.Model(table).Data(g.Map{"id": 1, "short": "abcdefgh"}).Save()
+		t.AssertNE(err, nil)
+		_, err = db.Model(table).Data(g.Map{"id": 1, "short": "abcdefgh"}).Replace()
+		t.AssertNE(err, nil)
+		n, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(n, 0)
+
+		_, err = db.Model(table).Data(g.Map{"id": 1, "short": "abc", "amount": "12.345", "fixed": "ab"}).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["short"].String(), "abc")
+		t.Assert(one["amount"].String(), "12.35")
+		t.Assert(one["fixed"].String(), "ab   ")
+	})
+
+	// A column of a user defined type created with a quoted, mixed-case name.
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			suffix   = gtime.TimestampMicroStr()
+			typeName = `"MyEnum` + suffix + `"`
+			table    = "issue4843_enum_" + suffix
+		)
+		_, err := db.Exec(ctx, fmt.Sprintf(`CREATE TYPE %s AS ENUM ('a', 'b')`, typeName))
+		t.AssertNil(err)
+		defer func() {
+			_, err := db.Exec(ctx, fmt.Sprintf(`DROP TYPE IF EXISTS %s CASCADE`, typeName))
+			t.AssertNil(err)
+		}()
+		_, err = db.Exec(ctx, fmt.Sprintf(
+			`CREATE TABLE %s (id bigserial PRIMARY KEY, nickname varchar(45), val %s)`, table, typeName,
+		))
+		t.AssertNil(err)
+		defer dropTable(table)
+
+		_, err = db.Model(table).Data(g.Map{"id": 1, "nickname": "n1", "val": "a"}).Save()
+		t.AssertNil(err)
+		_, err = db.Model(table).Data(g.Map{"id": 1, "nickname": "n2", "val": "b"}).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["nickname"].String(), "n2")
+		t.Assert(one["val"].String(), "b")
+	})
+
+	// A column whose type lives in a schema that is not on the search path.
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			suffix = gtime.TimestampMicroStr()
+			schema = "issue4843_s_" + suffix
+			table  = "issue4843_xs_" + suffix
+		)
+		_, err := db.Exec(ctx, fmt.Sprintf(`CREATE SCHEMA %s`, schema))
+		t.AssertNil(err)
+		defer func() {
+			_, err := db.Exec(ctx, fmt.Sprintf(`DROP SCHEMA IF EXISTS %s CASCADE`, schema))
+			t.AssertNil(err)
+		}()
+		_, err = db.Exec(ctx, fmt.Sprintf(`CREATE DOMAIN %s.dom_int AS int4`, schema))
+		t.AssertNil(err)
+		_, err = db.Exec(ctx, fmt.Sprintf(`CREATE TYPE %s.en_t AS ENUM ('a', 'b')`, schema))
+		t.AssertNil(err)
+		_, err = db.Exec(ctx, fmt.Sprintf(
+			`CREATE TABLE %s (id bigserial PRIMARY KEY, di %s.dom_int, en %s.en_t)`, table, schema, schema,
+		))
+		t.AssertNil(err)
+		defer dropTable(table)
+
+		_, err = db.Model(table).Data(g.Map{"id": 1, "di": 7, "en": "a"}).Save()
+		t.AssertNil(err)
+		_, err = db.Model(table).Data(g.Map{"id": 1, "di": 8, "en": "b"}).Save()
+		t.AssertNil(err)
+		_, err = db.Model(table).Data(g.Map{"id": 1, "di": nil, "en": nil}).Replace()
+		t.AssertNil(err)
+		_, err = db.Model(table).Data(g.Map{"id": 2, "di": 9, "en": "a"}).Replace()
+		t.AssertNil(err)
+
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["di"].IsNil(), true)
+		t.Assert(one["en"].IsNil(), true)
+		one, err = db.Model(table).Where("id", 2).One()
+		t.AssertNil(err)
+		t.Assert(one["di"].Int(), 9)
+		t.Assert(one["en"].String(), "a")
+	})
+
+	// The column type is changed after the table was already written to once. The cached
+	// table fields do not follow a change by themselves, as everywhere else in gf, and
+	// ClearTableFields refreshes them.
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("issue4843_alter_%d", gtime.TimestampNano())
+		_, err := db.Exec(ctx, fmt.Sprintf(`CREATE TABLE %s (id bigserial PRIMARY KEY, val int4)`, table))
+		t.AssertNil(err)
+		defer dropTable(table)
+
+		_, err = db.Model(table).Data(g.Map{"id": 1, "val": 7}).Save()
+		t.AssertNil(err)
+		_, err = db.Exec(ctx, fmt.Sprintf(`ALTER TABLE %s ALTER COLUMN val TYPE varchar(20)`, table))
+		t.AssertNil(err)
+		_, err = db.Model(table).Data(g.Map{"id": 2, "val": "hello"}).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).Where("id", 2).One()
+		t.AssertNil(err)
+		t.Assert(one["val"].String(), "hello")
+
+		_, err = db.Exec(ctx, fmt.Sprintf(`ALTER TABLE %s ALTER COLUMN val TYPE boolean USING false`, table))
+		t.AssertNil(err)
+		t.AssertNil(db.GetCore().ClearTableFields(ctx, table))
+		_, err = db.Model(table).Data(g.Map{"id": 3, "val": true}).Save()
+		t.AssertNil(err)
+		_, err = db.Model(table).Data(g.Map{"id": 3, "val": false}).Save()
+		t.AssertNil(err)
+		_, err = db.Model(table).Data(g.Map{"id": 4, "val": true}).Save()
+		t.AssertNil(err)
+
+		one, err = db.Model(table).Where("id", 3).One()
+		t.AssertNil(err)
+		t.Assert(one["val"].Bool(), false)
+		one, err = db.Model(table).Where("id", 4).One()
+		t.AssertNil(err)
+		t.Assert(one["val"].Bool(), true)
+	})
+
+	// Writing an empty string to a type that GaussDB converts from text on assignment fails
+	// consistently, regardless of whether the table contains an unrelated boolean column.
+	// The catalog is queried only when a column type that needs a cast is present, but the
+	// types returned are filtered so that such a column is never cast: in the A compatible
+	// mode a cast would turn the empty string into NULL, which silently writes NULL instead
+	// of failing, and on a NOT NULL column changes the error to a not-null violation.
+	gtest.C(t, func(t *gtest.T) {
+		cases := []struct {
+			name      string
+			columnDef string
+			errorText string
+		}{
+			{"tinyint", "v tinyint", "invalid input syntax for integer"},
+			{"interval", "v interval", "invalid input syntax for type interval"},
+			{"regclass", "v regclass", "invalid name syntax"},
+			{"timestamp", "v timestamp", "invalid input syntax for type timestamp"},
+			{"int4", "v int4", "invalid input syntax for integer"},
+		}
+		for _, c := range cases {
+			// The column alone: no other column triggers the catalog query.
+			t1 := fmt.Sprintf("issue4843_alone_%s_%d", c.name, gtime.TimestampNano())
+			_, err := db.Exec(ctx, fmt.Sprintf(
+				`CREATE TABLE %s (id bigserial PRIMARY KEY, %s)`, t1, c.columnDef,
+			))
+			t.AssertNil(err)
+			defer dropTable(t1)
+			_, err = db.Model(t1).Data(g.Map{"id": 1, "v": ""}).Save()
+			t.AssertNE(err, nil)
+			t.Assert(gstr.Contains(err.Error(), c.errorText), true)
+
+			// The column beside a boolean, which makes the catalog query run.
+			t2 := fmt.Sprintf("issue4843_bool_%s_%d", c.name, gtime.TimestampNano())
+			_, err = db.Exec(ctx, fmt.Sprintf(
+				`CREATE TABLE %s (id bigserial PRIMARY KEY, %s, flag boolean)`, t2, c.columnDef,
+			))
+			t.AssertNil(err)
+			defer dropTable(t2)
+			_, err = db.Model(t2).Data(g.Map{"id": 1, "v": "", "flag": true}).Save()
+			t.AssertNE(err, nil)
+			t.Assert(gstr.Contains(err.Error(), c.errorText), true)
+		}
+	})
+
+	// The same types still accept a value that fits them.
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("issue4843_uncast_values_%d", gtime.TimestampNano())
+		_, err := db.Exec(ctx, fmt.Sprintf(
+			`CREATE TABLE %s (id bigserial PRIMARY KEY, a tinyint, b interval, c regclass, d timestamp, flag boolean)`,
+			table,
+		))
+		t.AssertNil(err)
+		defer dropTable(table)
+
+		_, err = db.Model(table).Data(g.Map{
+			"id": 1, "a": 7, "b": "1 day", "c": "pg_class", "d": "2024-01-02 03:04:05", "flag": true,
+		}).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["a"].Int(), 7)
+		t.Assert(one["b"].String(), "1 day")
+		t.Assert(one["c"].String(), "pg_class")
+		t.Assert(one["d"].String(), "2024-01-02 03:04:05")
+		t.Assert(one["flag"].Bool(), true)
+	})
+
+	// A string column is not cast even when the table needs casts for other columns: in
+	// the A compatible mode a cast turns an empty string into NULL, while the parameter
+	// assigned as it is stays an empty string.
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("issue4843_text_%d", gtime.TimestampNano())
+		_, err := db.Exec(ctx, fmt.Sprintf(
+			`CREATE TABLE %s (id bigserial PRIMARY KEY, a varchar(10) NOT NULL, b text NOT NULL, c char(3) NOT NULL, d varchar(10), flag boolean)`, table,
+		))
+		t.AssertNil(err)
+		defer dropTable(table)
+
+		_, err = db.Model(table).Data(g.Map{"id": 1, "a": "", "b": "", "c": "", "d": "", "flag": true}).Save()
+		t.AssertNil(err)
+		_, err = db.Model(table).Data(g.Map{"id": 1, "a": "", "b": "x", "c": "y", "d": "", "flag": false}).Replace()
+		t.AssertNil(err)
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["a"].IsNil(), false)
+		t.Assert(one["a"].String(), "")
+		t.Assert(one["b"].String(), "x")
+		t.Assert(one["c"].String(), "y  ")
+		t.Assert(one["d"].IsNil(), false)
+		t.Assert(one["d"].String(), "")
+		t.Assert(one["flag"].Bool(), false)
+	})
+
+	// InsertIgnore is not built as a MERGE; it keeps working and keeps ignoring.
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("issue4843_ignore_%d", gtime.TimestampNano())
+		_, err := db.Exec(ctx, fmt.Sprintf(
+			`CREATE TABLE %s (id bigserial PRIMARY KEY, nickname varchar(45), val boolean)`, table,
+		))
+		t.AssertNil(err)
+		defer dropTable(table)
+
+		_, err = db.Model(table).Data(g.Map{"id": 1, "nickname": "n1", "val": true}).InsertIgnore()
+		t.AssertNil(err)
+		_, err = db.Model(table).Data(g.Map{"id": 1, "nickname": "n2", "val": false}).InsertIgnore()
+		t.AssertNil(err)
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["nickname"].String(), "n1")
+		t.Assert(one["val"].Bool(), true)
+	})
+
+	// A table that is gone is reported as such, and not as a failure to read its columns.
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("issue4843_gone_%d", gtime.TimestampNano())
+		_, err := db.Model(table).Data(g.Map{"id": 1, "val": true}).Save()
+		t.AssertNE(err, nil)
+		t.Assert(gstr.Contains(err.Error(), "does not exist"), true)
+
+		// The cached columns of a table that is dropped afterwards are stale, and the
+		// catalog query for them then fails on the same table.
+		_, err = db.Exec(ctx, fmt.Sprintf(`CREATE TABLE %s (id bigserial PRIMARY KEY, val boolean)`, table))
+		t.AssertNil(err)
+		_, err = db.Model(table).Data(g.Map{"id": 1, "val": true}).Save()
+		t.AssertNil(err)
+		t.AssertNil(db.GetCore().ClearTableFields(ctx, table))
+		_, err = db.Model(table).Data(g.Map{"id": 2, "val": true}).Save()
+		t.AssertNil(err)
+		dropTableWithDb(db, table)
+		t.AssertNil(db.GetCore().SetTableFields(ctx, table, map[string]*gdb.TableField{
+			"id":  {Name: "id", Type: "int8"},
+			"val": {Name: "val", Type: "bool"},
+		}))
+		_, err = db.Model(table).Data(g.Map{"id": 3, "val": true}).Save()
+		t.AssertNE(err, nil)
+		t.Assert(gstr.Contains(err.Error(), "does not exist"), true)
+	})
+
+	// A failing record in a batch fails the batch, with its own error.
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("issue4843_batchfail_%d", gtime.TimestampNano())
+		_, err := db.Exec(ctx, fmt.Sprintf(
+			`CREATE TABLE %s (id bigserial PRIMARY KEY, nickname varchar(45) NOT NULL, val boolean)`, table,
+		))
+		t.AssertNil(err)
+		defer dropTable(table)
+
+		_, err = db.Model(table).Data(g.List{
+			{"id": 1, "nickname": "a", "val": true},
+			{"id": 2, "nickname": nil, "val": true},
+		}).Save()
+		t.AssertNE(err, nil)
+		t.Assert(gstr.Contains(err.Error(), "nickname"), true)
+
+		// The record before the failing one was already written, as it is on master.
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["nickname"].String(), "a")
+	})
+
+	// Two columns whose names are identical when lower-cased must each get the correct cast.
+	// "value" is int4 (no cast) and "Value" is boolean (needs cast); if the map were keyed
+	// by lower-case name both columns would collide and the int4 column would receive the
+	// boolean cast, causing Save to fail with a type error.
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("issue4843_casecolumns_%d", gtime.TimestampNano())
+		_, err := db.Exec(ctx, fmt.Sprintf(
+			`CREATE TABLE %s (id bigserial PRIMARY KEY, value int4, "Value" boolean)`, table,
+		))
+		t.AssertNil(err)
+		defer dropTable(table)
+
+		_, err = db.Model(table).Data(g.Map{"id": 1, "value": 42, "Value": true}).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["value"].Int(), 42)
+		t.Assert(one["Value"].Bool(), true)
+
+		_, err = db.Model(table).Data(g.Map{"id": 1, "value": 99, "Value": false}).Save()
+		t.AssertNil(err)
+		one, err = db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["value"].Int(), 99)
+		t.Assert(one["Value"].Bool(), false)
 	})
 }
