@@ -738,7 +738,10 @@ func (m *Model) doGetAllBySql(
 			},
 			handler: m.hookHandler.Select,
 		},
-		Model:      m,
+		Model: m,
+		// Table keeps the logical table expression without the partition clause, which is
+		// part of the statement in Sql: hooks also use Table for metadata lookups, which
+		// resolve the table name and cannot take a clause.
 		Table:      m.tables,
 		Schema:     m.schema,
 		Sql:        sql,
@@ -756,6 +759,7 @@ func (m *Model) doGetAllBySql(
 func (m *Model) getFormattedSqlAndArgs(
 	ctx context.Context, selectType SelectType, limit1 bool,
 ) (sqlWithHolder string, holderArgs []any) {
+	tableExpression := m.getPartitionedTableExpression()
 	switch selectType {
 	case SelectTypeCount:
 		queryFields := "COUNT(1)"
@@ -774,7 +778,7 @@ func (m *Model) getFormattedSqlAndArgs(
 			return sqlWithHolder, conditionArgs
 		}
 		conditionWhere, conditionExtra, conditionArgs := m.formatCondition(ctx, false, true)
-		sqlWithHolder = fmt.Sprintf("SELECT %s FROM %s%s", queryFields, m.tables, conditionWhere+conditionExtra)
+		sqlWithHolder = fmt.Sprintf("SELECT %s FROM %s%s", queryFields, tableExpression, conditionWhere+conditionExtra)
 		if len(m.groupBy) > 0 {
 			sqlWithHolder = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", sqlWithHolder)
 		}
@@ -795,10 +799,34 @@ func (m *Model) getFormattedSqlAndArgs(
 		// DISTINCT t.user_id uid
 		sqlWithHolder = fmt.Sprintf(
 			"SELECT %s%s FROM %s%s",
-			m.distinct, m.getFieldsFiltered(), m.tables, conditionWhere+conditionExtra,
+			m.distinct, m.getFieldsFiltered(), tableExpression, conditionWhere+conditionExtra,
 		)
 		return sqlWithHolder, conditionArgs
 	}
+}
+
+// getPartitionedTableExpression returns the table expression of the model with the
+// partition clause of its driver inserted after the first table name, keeping a
+// following alias or JOIN valid: "`user` PARTITION (p0) AS u LEFT JOIN ...".
+// It returns the table expression unchanged if no partition is set, or if the driver
+// has no syntax for selecting partitions.
+func (m *Model) getPartitionedTableExpression() string {
+	if len(m.partition) == 0 || m.tables == "" {
+		return m.tables
+	}
+	clause := m.db.FormatPartitionClause(m.partition)
+	if clause == "" {
+		return m.tables
+	}
+	// The clause goes right after the first table name, before its alias or a JOIN.
+	var index = len(m.tables)
+	if i := gstr.Pos(m.tables, " "); i != -1 && i < index {
+		index = i
+	}
+	if i := gstr.Pos(m.tables, ","); i != -1 && i < index {
+		index = i
+	}
+	return m.tables[:index] + " " + clause + m.tables[index:]
 }
 
 func (m *Model) getHolderAndArgsAsSubModel(ctx context.Context) (holder string, args []any) {

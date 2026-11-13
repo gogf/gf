@@ -135,11 +135,6 @@ func Test_Partition_Range_Insert_And_Query(t *testing.T) {
 }
 
 func Test_Partition_Range_PartitionQuery(t *testing.T) {
-	// Known limitation: Model.Partition() sets m.partition field but it's not used in SQL generation
-	// See: database/gdb/gdb_model_select.go lines 735,755 - m.tables is used without PARTITION clause
-	// TODO: Add PARTITION clause support to GoFrame query builder
-	t.Skip("Partition clause in SELECT queries not yet supported in GoFrame query builder")
-
 	table := createRangePartitionTable()
 	defer dropPartitionTable(table)
 
@@ -162,6 +157,53 @@ func Test_Partition_Range_PartitionQuery(t *testing.T) {
 
 		// Query multiple partitions
 		result, err = db3.Model(table).Partition("p2021", "p2022").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 2)
+	})
+}
+
+func Test_Partition_Range_PartitionQuery_Join(t *testing.T) {
+	table := createRangePartitionTable()
+	defer dropPartitionTable(table)
+	refTable := fmt.Sprintf(`%s_ref`, table)
+	if _, err := db3.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS `%s`", refTable)); err != nil {
+		gtest.Fatal(err)
+	}
+	if _, err := db3.Exec(ctx, fmt.Sprintf(
+		"CREATE TABLE `%s` (id int(11) NOT NULL, region varchar(50) DEFAULT NULL)", refTable,
+	)); err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropPartitionTable(refTable)
+
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Slice{
+			g.Map{"id": 1, "sales_date": "2020-06-15", "amount": 1000.50, "region": "north"},
+			g.Map{"id": 2, "sales_date": "2021-03-20", "amount": 2000.75, "region": "south"},
+			g.Map{"id": 3, "sales_date": "2022-09-10", "amount": 3000.00, "region": "north"},
+			g.Map{"id": 4, "sales_date": "2023-12-01", "amount": 4000.25, "region": "south"},
+		}
+		_, err := db3.Model(table).Data(data).Insert()
+		t.AssertNil(err)
+		_, err = db3.Model(refTable).Data(g.Slice{
+			g.Map{"id": 1, "region": "north"},
+			g.Map{"id": 2, "region": "south"},
+			g.Map{"id": 3, "region": "north"},
+			g.Map{"id": 4, "region": "south"},
+		}).Insert()
+		t.AssertNil(err)
+
+		// The clause goes before the alias, so the statement stays valid with a JOIN.
+		result, err := db3.Model(table).Partition("p2022").As("t").
+			LeftJoin(refTable+" r", "r.id = t.id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 1)
+		t.Assert(result[0]["id"].Int(), 3)
+		t.Assert(result[0]["region"], "north")
+
+		// Two partitions, still restricted.
+		result, err = db3.Model(table).Partition("p2021", "p2022").As("t").
+			LeftJoin(refTable+" r", "r.id = t.id").All()
 		t.AssertNil(err)
 		t.Assert(len(result), 2)
 	})
@@ -198,11 +240,6 @@ func Test_Partition_Hash_Insert_And_Distribution(t *testing.T) {
 }
 
 func Test_Partition_List_Insert_And_Query(t *testing.T) {
-	// Known limitation: Model.Partition() sets m.partition field but it's not used in SQL generation
-	// See: database/gdb/gdb_model_select.go lines 735,755 - m.tables is used without PARTITION clause
-	// TODO: Add PARTITION clause support to GoFrame query builder
-	t.Skip("Partition clause in SELECT queries not yet supported in GoFrame query builder")
-
 	table := createListPartitionTable()
 	defer dropPartitionTable(table)
 
