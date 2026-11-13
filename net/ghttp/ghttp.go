@@ -159,14 +159,11 @@ const (
 	contentTypeHtml        = "text/html"
 	contentTypeXml         = "text/xml"
 	contentTypeEventStream = "text/event-stream"
-	contentTypeTextPrefix  = "text/"
 
 	// Common application content types.
 	contentTypeJson           = "application/json"
 	contentTypeApplicationXml = "application/xml"
-	contentTypeXhtmlXml       = "application/xhtml+xml"
 	contentTypeJavascript     = "application/javascript"
-	contentTypeForm           = "application/x-www-form-urlencoded"
 	contentTypeOctetStream    = "application/octet-stream"
 	contentTypeForceDownload  = "application/force-download"
 
@@ -176,10 +173,8 @@ const (
 
 	// Content type matching patterns, which are used for the substring or suffix matching
 	// of the content type, as the content type might carry parameters or vendor prefixes.
-	contentTypeXmlSubstring = "/xml"
-	contentTypeJsonSuffix   = "+json"
-	contentTypeXmlSuffix    = "+xml"
-	contentTypeFormKeyword  = "form"
+	contentTypeXmlSuffix   = "+xml"
+	contentTypeFormKeyword = "form"
 
 	swaggerUIPackedPath    = "/goframe/swaggerui"
 	specialMethodNameInit  = "Init"

@@ -39,7 +39,63 @@ const (
 var (
 	// xmlHeaderBytes is the most common XML format header.
 	xmlHeaderBytes = []byte("<?xml")
+
+	// binaryContentTypePrefixes are the content type prefixes that are treated as binary,
+	// which should not be parsed as request parameters.
+	binaryContentTypePrefixes = []string{
+		"image/",
+		"audio/",
+		"video/",
+	}
 )
+
+// parseContentType parses and returns the lowercased media type of the given content type
+// header, which drops the parameters like charset. It returns empty if the content type
+// cannot be parsed.
+func parseContentType(contentType string) string {
+	if contentType == "" {
+		return ""
+	}
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return ""
+	}
+	return strings.ToLower(mediaType)
+}
+
+// isXmlContentType checks and returns whether the given media type declares XML content,
+// which includes `application/xml`, `text/xml` and the vendor types with `+xml` suffix.
+func isXmlContentType(mediaType string) bool {
+	return mediaType == contentTypeApplicationXml ||
+		mediaType == contentTypeXml ||
+		strings.HasSuffix(mediaType, contentTypeXmlSuffix)
+}
+
+// isBinaryContentType checks and returns whether the given content type is binary, which
+// should not be parsed as request parameters.
+func isBinaryContentType(contentType string) bool {
+	// An empty content type is not binary, as the body is parsed by the default
+	// parameters decoding, which keeps the compatibility for the clients that
+	// do not set the content type.
+	if contentType == "" {
+		return false
+	}
+	mediaType := parseContentType(contentType)
+	// A content type that cannot be parsed is not treated as binary, so the body is left
+	// to the default parameters decoding, which keeps the compatibility.
+	if mediaType == "" {
+		return false
+	}
+	if mediaType == contentTypeOctetStream {
+		return true
+	}
+	for _, prefix := range binaryContentTypePrefixes {
+		if strings.HasPrefix(mediaType, prefix) {
+			return true
+		}
+	}
+	return false
+}
 
 // isJsonBody checks and returns whether the given body content looks like a JSON object.
 func isJsonBody(body []byte) bool {
@@ -276,9 +332,10 @@ func (r *Request) parseBody() {
 	}
 
 	// Skip binary content types, which should not be parsed.
-	if r.isBinaryContentType(contentType) {
+	if isBinaryContentType(contentType) {
 		return
 	}
+	mediaType := parseContentType(contentType)
 
 	if body := r.GetBody(); len(body) > 0 {
 		// Trim space/new line characters.
@@ -318,8 +375,13 @@ func (r *Request) parseBody() {
 			r.bodyMap = nil
 		}
 		// XML format checks.
-		if gstr.ContainsI(contentType, contentTypeXmlSubstring) {
-			r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
+		if isXmlContentType(mediaType) {
+			m, err := gxml.DecodeWithoutRoot(body)
+			if err != nil {
+				r.SetError(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse XML body failed"))
+				return
+			}
+			r.bodyMap = m
 		} else if r.isAutoDecodingBodyEnabled() && isXmlBody(body) {
 			// The body looks like XML but the content type does not declare it, so the
 			// decoding failure falls back to the default parameters decoding below.
@@ -336,10 +398,10 @@ func (r *Request) parseBody() {
 }
 
 // isAutoDecodingBodyEnabled checks and returns whether the server configuration enables
-// automatic request body decoding. It returns false if the request has no server bound,
-// for example the request object is created directly in unit tests.
+// automatic request body decoding. The configuration is a disable flag, so its zero value
+// keeps the automatic decoding enabled, which is compatible with the previous versions.
 func (r *Request) isAutoDecodingBodyEnabled() bool {
-	return r.Server != nil && r.Server.config.AutoDecodingBody
+	return r.Server == nil || !r.Server.config.AutoDecodingBodyDisabled
 }
 
 // reqBodyFieldName returns the request struct field name tagged with `body:"*"`, which receives
@@ -519,49 +581,4 @@ func (r *Request) GetMultipartFiles(name string) []*multipart.FileHeader {
 		return files
 	}
 	return nil
-}
-
-// isBinaryContentType check the content type is binary or not.
-func (r *Request) isBinaryContentType(contentType string) bool {
-	// An empty content type is not binary, as the body is parsed by the default
-	// parameters decoding, which keeps the compatibility for the clients that
-	// do not set the content type.
-	if contentType == "" {
-		return false
-	}
-	// parseMediaType
-	mimeType, _, err := mime.ParseMediaType(contentType)
-	// If the content type is invalid, it's treated as binary.
-	if err != nil {
-		return true
-	}
-
-	// Lowercase the MIME type for easier comparison
-	mimeType = strings.ToLower(mimeType)
-
-	// if the MIME type is text, then it's definitely not binary
-	if strings.HasPrefix(mimeType, contentTypeTextPrefix) {
-		return false
-	}
-
-	// defined non-binary MIME types
-	nonBinaryTypes := map[string]struct{}{
-		contentTypeJson:           {},
-		contentTypeApplicationXml: {},
-		contentTypeForm:           {},
-		contentTypeJavascript:     {},
-		contentTypeXhtmlXml:       {},
-	}
-	if _, ok := nonBinaryTypes[mimeType]; ok {
-		return false
-	}
-
-	// if the MIME type is JSON or XML, it's definitely not binary
-	if strings.HasSuffix(mimeType, contentTypeJsonSuffix) || strings.HasSuffix(mimeType, contentTypeXmlSuffix) {
-		return false
-	}
-
-	// otherwise, it's binary
-	// (this includes application/octet-stream、image/*、video/*、audio/*)
-	return true
 }

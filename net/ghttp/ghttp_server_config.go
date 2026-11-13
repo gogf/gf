@@ -268,8 +268,10 @@ type ServerConfig struct {
 	// DumpRouterMap specifies whether automatically dumps router map when server starts.
 	DumpRouterMap bool `json:"dumpRouterMap"`
 
-	// AutoDecodingBody specifies whether automatically decodes request body using common encoding types: json/xml.
-	AutoDecodingBody bool `json:"auto_decoding_body"`
+	// AutoDecodingBodyDisabled specifies whether disables automatically decoding request body
+	// using common encoding types: json/xml. The automatic decoding is enabled in default, so
+	// its zero value keeps the previous behavior.
+	AutoDecodingBodyDisabled bool `json:"autoDecodingBodyDisabled"`
 }
 
 // NewConfig creates and returns a ServerConfig object with default configurations.
@@ -316,7 +318,6 @@ func NewConfig() ServerConfig {
 		Graceful:                false,
 		GracefulTimeout:         2, // seconds
 		GracefulShutdownTimeout: 5, // seconds
-		AutoDecodingBody:        true,
 	}
 }
 
