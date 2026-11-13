@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"mime"
 	"mime/multipart"
 	"net/http"
 	"reflect"
@@ -38,7 +39,86 @@ const (
 var (
 	// xmlHeaderBytes is the most common XML format header.
 	xmlHeaderBytes = []byte("<?xml")
+
+	// binaryContentTypePrefixes are the content type prefixes that are treated as binary,
+	// which should not be parsed as request parameters.
+	binaryContentTypePrefixes = []string{
+		"image/",
+		"audio/",
+		"video/",
+	}
 )
+
+// parseContentType parses and returns the lowercased media type of the given content type
+// header, which drops the parameters like charset. It returns empty if the content type
+// cannot be parsed.
+func parseContentType(contentType string) string {
+	if contentType == "" {
+		return ""
+	}
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return ""
+	}
+	return strings.ToLower(mediaType)
+}
+
+// isJsonContentType checks and returns whether the given media type declares JSON content,
+// which includes `application/json` and the vendor types with `+json` suffix.
+func isJsonContentType(mediaType string) bool {
+	return mediaType == contentTypeJson || strings.HasSuffix(mediaType, contentTypeJsonSuffix)
+}
+
+// isXmlContentType checks and returns whether the given media type declares XML content,
+// which includes `application/xml`, `text/xml` and the vendor types with `+xml` suffix.
+func isXmlContentType(mediaType string) bool {
+	return mediaType == contentTypeApplicationXml ||
+		mediaType == contentTypeXml ||
+		strings.HasSuffix(mediaType, contentTypeXmlSuffix)
+}
+
+// isBinaryContentType checks and returns whether the given content type is binary, which
+// should not be parsed as request parameters.
+func isBinaryContentType(contentType string) bool {
+	// An empty content type is not binary, as the body is parsed by the default
+	// parameters decoding, which keeps the compatibility for the clients that
+	// do not set the content type.
+	if contentType == "" {
+		return false
+	}
+	mediaType := parseContentType(contentType)
+	// A content type that cannot be parsed is not treated as binary, so the body is left
+	// to the default parameters decoding, which keeps the compatibility.
+	if mediaType == "" {
+		return false
+	}
+	if mediaType == contentTypeOctetStream {
+		return true
+	}
+	for _, prefix := range binaryContentTypePrefixes {
+		if strings.HasPrefix(mediaType, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+// isJsonBody checks and returns whether the given body content looks like a JSON object.
+func isJsonBody(body []byte) bool {
+	return len(body) > 0 && body[0] == '{' && body[len(body)-1] == '}'
+}
+
+// isXmlBody checks and returns whether the given body content looks like XML, which either
+// starts with the xml header or is wrapped by a pair of angle brackets.
+func isXmlBody(body []byte) bool {
+	if len(body) == 0 {
+		return false
+	}
+	if len(body) >= len(xmlHeaderBytes) && bytes.EqualFold(body[:len(xmlHeaderBytes)], xmlHeaderBytes) {
+		return true
+	}
+	return body[0] == '<' && body[len(body)-1] == '>'
+}
 
 // Parse is the most commonly used function, which converts request parameters to struct or struct
 // slice. It also automatically validates the struct or every element of the struct slice according
@@ -251,20 +331,33 @@ func (r *Request) parseBody() {
 	if r.ContentLength == 0 {
 		return
 	}
+	// If it's a multipart request, it does not parse the body content.
+	contentType := r.Header.Get(HeaderContentType)
+	if gstr.Contains(contentType, contentTypeMultipartPrefix) {
+		return
+	}
+
+	// Skip binary content types, which should not be parsed.
+	if isBinaryContentType(contentType) {
+		return
+	}
+	mediaType := parseContentType(contentType)
+
 	if body := r.GetBody(); len(body) > 0 {
 		// Trim space/new line characters.
 		body = bytes.TrimSpace(body)
 		if len(body) == 0 {
 			return
 		}
-		contentType := r.Header.Get(HeaderContentType)
-		jsonContentType := gstr.ContainsI(contentType, contentTypeJson)
+		jsonContentType := isJsonContentType(mediaType)
 		// Preserve GET query/form body compatibility while validating JSON-shaped GET bodies.
 		strictJsonContentType := jsonContentType && (r.Method != http.MethodGet || body[0] == '{' || body[0] == '[')
 		// JSON array format check for the request struct declaring a field tagged with `body:"*"`.
 		// Note that the array body is accepted no matter what the content type is, just like the
-		// object body is relaxed checked below.
-		if r.isArrayRequestBodyExpected() && body[0] == '[' && body[len(body)-1] == ']' {
+		// object body is relaxed checked below, so it is also controlled by the automatic decoding.
+		if r.isArrayRequestBodyExpected() &&
+			(strictJsonContentType || r.isAutoDecodingBodyEnabled()) &&
+			body[0] == '[' && body[len(body)-1] == ']' {
 			var array []any
 			if err := json.UnmarshalUseNumber(body, &array); err == nil {
 				r.bodyArray = array
@@ -281,21 +374,42 @@ func (r *Request) parseBody() {
 				r.SetError(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse JSON body failed"))
 				return
 			}
-		} else if body[0] == '{' && body[len(body)-1] == '}' {
-			_ = json.UnmarshalUseNumber(body, &r.bodyMap)
+		} else if r.isAutoDecodingBodyEnabled() && isJsonBody(body) {
+			// The body looks like JSON but the content type does not declare it, so the
+			// decoding failure falls back to the default parameters decoding below.
+			if err := json.UnmarshalUseNumber(body, &r.bodyMap); err == nil {
+				return
+			}
+			r.bodyMap = nil
 		}
 		// XML format checks.
-		if len(body) > 5 && bytes.EqualFold(body[:5], xmlHeaderBytes) {
-			r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
-		}
-		if body[0] == '<' && body[len(body)-1] == '>' {
-			r.bodyMap, _ = gxml.DecodeWithoutRoot(body)
+		if isXmlContentType(mediaType) {
+			m, err := gxml.DecodeWithoutRoot(body)
+			if err != nil {
+				r.SetError(gerror.WrapCode(gcode.CodeInvalidParameter, err, "Parse XML body failed"))
+				return
+			}
+			r.bodyMap = m
+		} else if r.isAutoDecodingBodyEnabled() && isXmlBody(body) {
+			// The body looks like XML but the content type does not declare it, so the
+			// decoding failure falls back to the default parameters decoding below.
+			if m, err := gxml.DecodeWithoutRoot(body); err == nil {
+				r.bodyMap = m
+				return
+			}
 		}
 		// Default parameters decoding.
-		if (contentType == "" || !gstr.Contains(contentType, "multipart/")) && r.bodyMap == nil {
+		if r.bodyMap == nil {
 			r.bodyMap, _ = gstr.Parse(r.GetBodyString())
 		}
 	}
+}
+
+// isAutoDecodingBodyEnabled checks and returns whether the server configuration enables
+// automatic request body decoding. The configuration is a disable flag, so its zero value
+// keeps the automatic decoding enabled, which is compatible with the previous versions.
+func (r *Request) isAutoDecodingBodyEnabled() bool {
+	return r.Server == nil || !r.Server.config.AutoDecodingBodyDisabled
 }
 
 // reqBodyFieldName returns the request struct field name tagged with `body:"*"`, which receives
@@ -341,8 +455,8 @@ func (r *Request) parseForm() {
 	}
 
 	if contentType := r.Header.Get(HeaderContentType); contentType != "" {
-		var isMultiPartRequest = gstr.Contains(contentType, "multipart/")
-		var isFormRequest = gstr.Contains(contentType, "form")
+		var isMultiPartRequest = gstr.Contains(contentType, contentTypeMultipartPrefix)
+		var isFormRequest = gstr.Contains(contentType, contentTypeFormKeyword)
 		var err error
 
 		// A field tagged with `body:"*"` only receives the JSON array request body, so the

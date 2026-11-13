@@ -205,7 +205,7 @@ type ServerConfig struct {
 	// Logging.
 	// ======================================================================================================
 
-	Logger           *glog.Logger `json:"logger"`           // Logger specifies the logger for server.
+	Logger           *glog.Logger `json:"logger"`           // Logger directly specifies the logger for server.
 	LogPath          string       `json:"logPath"`          // LogPath specifies the directory for storing logging files.
 	LogLevel         string       `json:"logLevel"`         // LogLevel specifies the logging level for logger.
 	LogStdout        bool         `json:"logStdout"`        // LogStdout specifies whether printing logging content to stdout.
@@ -267,6 +267,11 @@ type ServerConfig struct {
 
 	// DumpRouterMap specifies whether automatically dumps router map when server starts.
 	DumpRouterMap bool `json:"dumpRouterMap"`
+
+	// AutoDecodingBodyDisabled specifies whether disables automatically decoding request body
+	// using common encoding types: json/xml. The automatic decoding is enabled in default, so
+	// its zero value keeps the previous behavior.
+	AutoDecodingBodyDisabled bool `json:"autoDecodingBodyDisabled"`
 }
 
 // NewConfig creates and returns a ServerConfig object with default configurations.
