@@ -37,6 +37,17 @@ func Test_Replace(t *testing.T) {
 	})
 }
 
+// An empty search string used to loop forever.
+func Test_ReplaceI_EmptySearch(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.ReplaceI("abc", "", "x"), "abc")
+		t.Assert(gstr.ReplaceI("abc", "", "x", 2), "abc")
+		t.Assert(gstr.ReplaceI("", "", "x"), "")
+		t.Assert(gstr.ReplaceIByArray("abc", g.ArrayStr{"", "x", "B", "-"}), "a-c")
+		t.Assert(gstr.ReplaceIByMap("abc", g.MapStrStr{"": "x"}), "abc")
+	})
+}
+
 func Test_ReplaceI_1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := "abcd乱入的中文ABCD"

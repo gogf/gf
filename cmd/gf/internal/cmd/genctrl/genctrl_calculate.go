@@ -7,6 +7,7 @@
 package genctrl
 
 import (
+	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -57,13 +58,19 @@ func (c CGenCtrl) getApiItemsInSrc(apiModuleFolderPath string) (items []apiItem,
 	return
 }
 
-func (c CGenCtrl) getApiItemsInDst(dstFolder string) (items []apiItem, err error) {
+// getApiItemsInDst retrieves the api items implemented by the controllers in dstFolder.
+// The import paths of apiItemsInSrc are used to find the api import of each controller file.
+func (c CGenCtrl) getApiItemsInDst(dstFolder string, apiItemsInSrc []apiItem) (items []apiItem, err error) {
 	if !gfile.Exists(dstFolder) {
 		return nil, nil
 	}
 	type importItem struct {
 		Path  string
 		Alias string
+	}
+	apiImportSet := gset.NewStrSet()
+	for _, item := range apiItemsInSrc {
+		apiImportSet.Add(item.Import)
 	}
 	filePaths, err := gfile.ScanDir(dstFolder, "*.go", true)
 	if err != nil {
@@ -120,8 +127,14 @@ func (c CGenCtrl) getApiItemsInDst(dstFolder string) (items []apiItem, err error
 					continue
 				}
 				if gfile.Basename(item.Path) == version {
-					importPath = item.Path
-					break
+					// A third-party import like "github.com/xuri/excelize/v2" can end with the version too.
+					if apiImportSet.Contains(item.Path) {
+						importPath = item.Path
+						break
+					}
+					if importPath == "" {
+						importPath = item.Path
+					}
 				}
 			}
 			item := apiItem{
