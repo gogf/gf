@@ -954,6 +954,14 @@ func Test_Request_ParseBody_ArrayBody(t *testing.T) {
 		t.AssertNil(r.bodyArray)
 	})
 	gtest.C(t, func(t *gtest.T) {
+		// The array body is not decoded when the automatic decoding is disabled and the
+		// content type is not set.
+		r := newRequest(``, `[1,2]`, true)
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.AssertNil(r.bodyArray)
+	})
+	gtest.C(t, func(t *gtest.T) {
 		// The array body is still decoded when the automatic decoding is disabled but the
 		// content type declares JSON.
 		r := newRequest(`application/json`, `[1,2]`, true)
