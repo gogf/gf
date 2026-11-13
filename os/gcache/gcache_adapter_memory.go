@@ -121,7 +121,6 @@ func (c *AdapterMemory) SetMap(ctx context.Context, data map[any]any, duration t
 // It does not expire if `duration` == 0.
 // It deletes the `key` if `duration` < 0 or given `value` is nil.
 func (c *AdapterMemory) SetIfNotExist(ctx context.Context, key any, value any, duration time.Duration) (bool, error) {
-	defer c.handleLruKey(ctx, key)
 	isContained, err := c.Contains(ctx, key)
 	if err != nil {
 		return false, err
@@ -144,7 +143,6 @@ func (c *AdapterMemory) SetIfNotExist(ctx context.Context, key any, value any, d
 // It does not expire if `duration` == 0.
 // It deletes the `key` if `duration` < 0 or given `value` is nil.
 func (c *AdapterMemory) SetIfNotExistFunc(ctx context.Context, key any, f Func, duration time.Duration) (bool, error) {
-	defer c.handleLruKey(ctx, key)
 	isContained, err := c.Contains(ctx, key)
 	if err != nil {
 		return false, err
@@ -171,7 +169,6 @@ func (c *AdapterMemory) SetIfNotExistFunc(ctx context.Context, key any, f Func, 
 // Note that it differs from function `SetIfNotExistFunc` is that the function `f` is executed within
 // writing mutex lock for concurrent safety purpose.
 func (c *AdapterMemory) SetIfNotExistFuncLock(ctx context.Context, key any, f Func, duration time.Duration) (bool, error) {
-	defer c.handleLruKey(ctx, key)
 	isContained, err := c.Contains(ctx, key)
 	if err != nil {
 		return false, err
@@ -205,7 +202,6 @@ func (c *AdapterMemory) Get(ctx context.Context, key any) (*gvar.Var, error) {
 // It deletes the `key` if `duration` < 0 or given `value` is nil, but it does nothing
 // if `value` is a function and the function result is nil.
 func (c *AdapterMemory) GetOrSet(ctx context.Context, key any, value any, duration time.Duration) (*gvar.Var, error) {
-	defer c.handleLruKey(ctx, key)
 	v, err := c.Get(ctx, key)
 	if err != nil {
 		return nil, err
@@ -224,7 +220,6 @@ func (c *AdapterMemory) GetOrSet(ctx context.Context, key any, value any, durati
 // It deletes the `key` if `duration` < 0 or given `value` is nil, but it does nothing
 // if `value` is a function and the function result is nil.
 func (c *AdapterMemory) GetOrSetFunc(ctx context.Context, key any, f Func, duration time.Duration) (*gvar.Var, error) {
-	defer c.handleLruKey(ctx, key)
 	v, err := c.Get(ctx, key)
 	if err != nil {
 		return nil, err
@@ -253,7 +248,6 @@ func (c *AdapterMemory) GetOrSetFunc(ctx context.Context, key any, f Func, durat
 // Note that it differs from function `GetOrSetFunc` is that the function `f` is executed within
 // writing mutex lock for concurrent safety purpose.
 func (c *AdapterMemory) GetOrSetFuncLock(ctx context.Context, key any, f Func, duration time.Duration) (*gvar.Var, error) {
-	defer c.handleLruKey(ctx, key)
 	v, err := c.Get(ctx, key)
 	if err != nil {
 		return nil, err
@@ -386,8 +380,13 @@ func (c *AdapterMemory) Close(ctx context.Context) error {
 // before setting it to the cache.
 func (c *AdapterMemory) doSetWithLockCheck(ctx context.Context, key any, value any, duration time.Duration) (result *gvar.Var, err error) {
 	expireTimestamp := c.getInternalExpire(duration)
-	v, err := c.data.SetWithLock(ctx, key, value, expireTimestamp)
-	c.eventList.PushBack(&adapterMemoryEvent{k: key, e: expireTimestamp})
+	v, stored, exists, err := c.data.SetWithLock(ctx, key, value, expireTimestamp)
+	if stored {
+		c.eventList.PushBack(&adapterMemoryEvent{k: key, e: expireTimestamp})
+	}
+	if exists {
+		c.handleLruKey(ctx, key)
+	}
 	return gvar.New(v), err
 }
 

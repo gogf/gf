@@ -447,7 +447,11 @@ func (tree *RedBlackKVTree[K, V]) IteratorAscFrom(key K, match bool, f func(key 
 		return
 	}
 	for ; index < len(keys); index++ {
-		f(keys[index], tree.Get(keys[index]))
+		// The read lock is already held, so read the value without locking again.
+		value, _ := tree.doGet(keys[index])
+		if !f(keys[index], value) {
+			break
+		}
 	}
 }
 
@@ -484,7 +488,11 @@ func (tree *RedBlackKVTree[K, V]) IteratorDescFrom(key K, match bool, f func(key
 		return
 	}
 	for ; index >= 0; index-- {
-		f(keys[index], tree.Get(keys[index]))
+		// The read lock is already held, so read the value without locking again.
+		value, _ := tree.doGet(keys[index])
+		if !f(keys[index], value) {
+			break
+		}
 	}
 }
 
