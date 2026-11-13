@@ -299,11 +299,53 @@ func Test_ParseDuration(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(d.String(), "3m0s")
 	})
+	// fractions and signs on days, as with the other units
+	gtest.C(t, func(t *gtest.T) {
+		for s, expect := range map[string]string{
+			"1.5d":   "36h0m0s",
+			"0.5d":   "12h0m0s",
+			".5d":    "12h0m0s",
+			"-1.5d":  "-36h0m0s",
+			"+1d":    "24h0m0s",
+			"+1d2h":  "26h0m0s",
+			"-0d1h":  "-1h0m0s",
+			"1.25D":  "30h0m0s",
+			"0.5d1h": "13h0m0s",
+		} {
+			d, err := gtime.ParseDuration(s)
+			t.AssertNil(err)
+			t.Assert(d.String(), expect)
+		}
+	})
 	// error
 	gtest.C(t, func(t *gtest.T) {
 		d, err := gtime.ParseDuration("-1dd2h3m")
 		t.AssertNE(err, nil)
 		t.Assert(d.String(), "0s")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		for _, s := range []string{"1..5d", "1.5.2d", "2d3", "--1d", "1000000000d"} {
+			d, err := gtime.ParseDuration(s)
+			t.AssertNE(err, nil)
+			t.Assert(d.String(), "0s")
+		}
+	})
+	// the largest day count that fits into time.Duration, and the first one that overflows
+	gtest.C(t, func(t *gtest.T) {
+		d, err := gtime.ParseDuration("106751d")
+		t.AssertNil(err)
+		t.Assert(d.String(), "2562024h0m0s")
+
+		d, err = gtime.ParseDuration("-106751d")
+		t.AssertNil(err)
+		t.Assert(d.String(), "-2562024h0m0s")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		for _, s := range []string{"106752d", "-106752d"} {
+			d, err := gtime.ParseDuration(s)
+			t.AssertNE(err, nil)
+			t.Assert(d.String(), "0s")
+		}
 	})
 }
 
