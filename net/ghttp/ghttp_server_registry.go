@@ -4,12 +4,15 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// HTTP service registration and endpoint construction.
+
 package ghttp
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -18,9 +21,9 @@ import (
 )
 
 // doServiceRegister registers current service to Registry.
-func (s *Server) doServiceRegister() {
+func (s *Server) doServiceRegister() error {
 	if s.registrar == nil {
-		return
+		return nil
 	}
 	s.serviceMu.Lock()
 	defer s.serviceMu.Unlock()
@@ -28,8 +31,10 @@ func (s *Server) doServiceRegister() {
 		ctx      = gctx.GetInitCtx()
 		protocol = gsvc.DefaultProtocol
 		insecure = true
-		err      error
 	)
+	if err := s.doServiceDeregisterLocked(ctx); err != nil {
+		return gerror.Wrap(err, "cleanup previous HTTP service registration failed")
+	}
 	if s.config.TLSConfig != nil {
 		protocol = `https`
 		insecure = false
@@ -38,19 +43,22 @@ func (s *Server) doServiceRegister() {
 		gsvc.MDProtocol: protocol,
 		gsvc.MDInsecure: insecure,
 	}
-	s.service = &gsvc.LocalService{
+	service := &gsvc.LocalService{
 		Name:      s.GetName(),
 		Endpoints: s.calculateListenedEndpoints(ctx),
 		Metadata:  metadata,
 	}
-	s.Logger().Debugf(ctx, `service register: %+v`, s.service)
-	if len(s.service.GetEndpoints()) == 0 {
+	s.Logger().Debugf(ctx, `service register: %+v`, service)
+	if len(service.GetEndpoints()) == 0 {
 		s.Logger().Warningf(ctx, `no endpoints found to register service, abort service registering`)
-		return
+		return nil
 	}
-	if s.service, err = s.registrar.Register(ctx, s.service); err != nil {
-		s.Logger().Fatalf(ctx, `%+v`, err)
+	registered, err := s.registrar.Register(ctx, service)
+	if err != nil {
+		return err
 	}
+	s.service = registered
+	return nil
 }
 
 // doServiceDeregister de-registers current service from Registry.
@@ -60,15 +68,23 @@ func (s *Server) doServiceDeregister() {
 	}
 	s.serviceMu.Lock()
 	defer s.serviceMu.Unlock()
-	if s.service == nil {
-		return
-	}
 	var ctx = gctx.GetInitCtx()
-	s.Logger().Debugf(ctx, `service deregister: %+v`, s.service)
-	if err := s.registrar.Deregister(ctx, s.service); err != nil {
+	if err := s.doServiceDeregisterLocked(ctx); err != nil {
 		s.Logger().Errorf(ctx, `%+v`, err)
 	}
+}
+
+// doServiceDeregisterLocked retains failed registration ownership; the caller holds serviceMu.
+func (s *Server) doServiceDeregisterLocked(ctx context.Context) error {
+	if s.service == nil {
+		return nil
+	}
+	s.Logger().Debugf(ctx, `service deregister: %+v`, s.service)
+	if err := s.registrar.Deregister(ctx, s.service); err != nil {
+		return err
+	}
 	s.service = nil
+	return nil
 }
 
 func (s *Server) calculateListenedEndpoints(ctx context.Context) gsvc.Endpoints {

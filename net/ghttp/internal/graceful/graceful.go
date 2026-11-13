@@ -221,20 +221,24 @@ func (s *Server) CreateListenerTLS(certFile, keyFile string, tlsConfig ...*tls.C
 	if config.NextProtos == nil {
 		config.NextProtos = []string{"http/1.1"}
 	}
-	var err error
 	if len(config.Certificates) == 0 && config.GetCertificate == nil {
-		config.Certificates = make([]tls.Certificate, 1)
+		var (
+			certificate tls.Certificate
+			err         error
+		)
 		if gres.Contains(certFile) {
-			config.Certificates[0], err = tls.X509KeyPair(
+			certificate, err = tls.X509KeyPair(
 				gres.GetContent(certFile),
 				gres.GetContent(keyFile),
 			)
 		} else {
-			config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
+			certificate, err = tls.LoadX509KeyPair(certFile, keyFile)
 		}
-	}
-	if err != nil {
-		return gerror.Wrapf(err, `open certFile "%s" and keyFile "%s" failed`, certFile, keyFile)
+		if err != nil {
+			return gerror.Wrapf(err, `open certFile "%s" and keyFile "%s" failed`, certFile, keyFile)
+		}
+		// Keep failed loads retryable when the caller reuses its TLS configuration.
+		config.Certificates = []tls.Certificate{certificate}
 	}
 	ln, err := s.getNetListener()
 	if err != nil {
@@ -331,9 +335,6 @@ func (s *Server) getNetListener() (net.Listener, error) {
 
 // Shutdown shuts down the server gracefully.
 func (s *Server) Shutdown(ctx context.Context) {
-	if s.status.Val() == ServerStatusStopped {
-		return
-	}
 	timeoutCtx, cancelFunc := context.WithTimeout(
 		ctx,
 		time.Duration(s.config.GracefulShutdownTimeout)*time.Second,
@@ -346,6 +347,7 @@ func (s *Server) Shutdown(ctx context.Context) {
 			gproc.Pid(), s.getProto(), s.address, err,
 		)
 	}
+	s.closeRawListener(ctx)
 }
 
 // setRawListener sets `rawListener` with given net.Listener.
@@ -365,14 +367,22 @@ func (s *Server) getRawListener() net.Listener {
 // Close shuts down the server forcibly.
 // for graceful shutdown, please use Server.shutdown.
 func (s *Server) Close(ctx context.Context) {
-	if s.status.Val() == ServerStatusStopped {
-		return
-	}
 	if err := s.httpServer.Close(); err != nil {
 		s.config.Logger.Errorf(
 			ctx,
 			"%d: %s server [%s] closed error: %v",
 			gproc.Pid(), s.getProto(), s.address, err,
 		)
+	}
+	s.closeRawListener(ctx)
+}
+
+// closeRawListener also releases listeners prepared before net/http starts serving.
+func (s *Server) closeRawListener(ctx context.Context) {
+	// Before Serve starts, net/http does not yet own the listener and cannot close it.
+	if listener := s.getRawListener(); listener != nil {
+		if err := listener.Close(); err != nil && !gerror.Is(err, net.ErrClosed) {
+			s.config.Logger.Errorf(ctx, "close prepared listener [%s]: %v", s.address, err)
+		}
 	}
 }
