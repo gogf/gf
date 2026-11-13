@@ -181,14 +181,14 @@ func (d *memoryData) SetMap(data map[any]any, expireTime int64) error {
 	return nil
 }
 
-func (d *memoryData) SetWithLock(ctx context.Context, key any, value any, expireTimestamp int64) (any, error) {
+// SetWithLock sets `key` with `value` if `key` does not exist or is expired.
+// The returned `stored` is true if the item was written by this call, and `exists`
+// is true if `key` is in the cache after the call.
+func (d *memoryData) SetWithLock(ctx context.Context, key any, value any, expireTimestamp int64) (result any, stored, exists bool, err error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	var (
-		err error
-	)
 	if v, ok := d.data[key]; ok && !v.IsExpired() {
-		return v.v, nil
+		return v.v, false, true, nil
 	}
 	f, ok := value.(Func)
 	if !ok {
@@ -197,14 +197,14 @@ func (d *memoryData) SetWithLock(ctx context.Context, key any, value any, expire
 	}
 	if ok {
 		if value, err = f(ctx); err != nil {
-			return nil, err
+			return nil, false, false, err
 		}
 		if value == nil {
-			return nil, nil
+			return nil, false, false, nil
 		}
 	}
 	d.data[key] = memoryDataItem{v: value, e: expireTimestamp}
-	return value, nil
+	return value, true, true, nil
 }
 
 func (d *memoryData) Delete(key any) {
