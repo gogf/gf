@@ -63,6 +63,12 @@ func parseContentType(contentType string) string {
 	return strings.ToLower(mediaType)
 }
 
+// isJsonContentType checks and returns whether the given media type declares JSON content,
+// which includes `application/json` and the vendor types with `+json` suffix.
+func isJsonContentType(mediaType string) bool {
+	return mediaType == contentTypeJson || strings.HasSuffix(mediaType, contentTypeJsonSuffix)
+}
+
 // isXmlContentType checks and returns whether the given media type declares XML content,
 // which includes `application/xml`, `text/xml` and the vendor types with `+xml` suffix.
 func isXmlContentType(mediaType string) bool {
@@ -343,13 +349,15 @@ func (r *Request) parseBody() {
 		if len(body) == 0 {
 			return
 		}
-		jsonContentType := gstr.ContainsI(contentType, contentTypeJson)
+		jsonContentType := isJsonContentType(mediaType)
 		// Preserve GET query/form body compatibility while validating JSON-shaped GET bodies.
 		strictJsonContentType := jsonContentType && (r.Method != http.MethodGet || body[0] == '{' || body[0] == '[')
 		// JSON array format check for the request struct declaring a field tagged with `body:"*"`.
 		// Note that the array body is accepted no matter what the content type is, just like the
-		// object body is relaxed checked below.
-		if r.isArrayRequestBodyExpected() && body[0] == '[' && body[len(body)-1] == ']' {
+		// object body is relaxed checked below, so it is also controlled by the automatic decoding.
+		if r.isArrayRequestBodyExpected() &&
+			(strictJsonContentType || r.isAutoDecodingBodyEnabled()) &&
+			body[0] == '[' && body[len(body)-1] == ']' {
 			var array []any
 			if err := json.UnmarshalUseNumber(body, &array); err == nil {
 				r.bodyArray = array

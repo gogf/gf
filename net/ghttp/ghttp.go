@@ -173,6 +173,7 @@ const (
 
 	// Content type matching patterns, which are used for the substring or suffix matching
 	// of the content type, as the content type might carry parameters or vendor prefixes.
+	contentTypeJsonSuffix  = "+json"
 	contentTypeXmlSuffix   = "+xml"
 	contentTypeFormKeyword = "form"
 
