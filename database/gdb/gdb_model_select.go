@@ -774,10 +774,17 @@ func (m *Model) getFormattedSqlAndArgs(
 			return sqlWithHolder, conditionArgs
 		}
 		conditionWhere, conditionExtra, conditionArgs := m.formatCondition(ctx, false, true)
-		sqlWithHolder = fmt.Sprintf("SELECT %s FROM %s%s", queryFields, m.tables, conditionWhere+conditionExtra)
 		if len(m.groupBy) > 0 {
-			sqlWithHolder = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", sqlWithHolder)
+			// Count of a grouped model counts the number of groups: the grouped query becomes a
+			// derived table and Count counts its rows. The derived table only needs to reproduce
+			// the group cardinality, so its select list is a single COUNT(1); the model fields are
+			// not counted here, as a multi-field list would form an invalid COUNT(a, b, ...)
+			// expression.
+			groupedQuery := fmt.Sprintf("SELECT COUNT(1) FROM %s%s", m.tables, conditionWhere+conditionExtra)
+			sqlWithHolder = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", groupedQuery)
+			return sqlWithHolder, conditionArgs
 		}
+		sqlWithHolder = fmt.Sprintf("SELECT %s FROM %s%s", queryFields, m.tables, conditionWhere+conditionExtra)
 		return sqlWithHolder, conditionArgs
 
 	default:
