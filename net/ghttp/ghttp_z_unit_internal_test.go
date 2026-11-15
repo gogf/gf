@@ -744,3 +744,295 @@ func Test_HasRepeatedQueryKey(t *testing.T) {
 		}
 	})
 }
+
+// Test_Request_ParseBody_AutoDecodingBody checks the relaxed JSON/XML body decoding
+// controlled by the AutoDecodingBodyDisabled configuration.
+func Test_Request_ParseBody_AutoDecodingBody(t *testing.T) {
+	newRequest := func(body string) *Request {
+		return &Request{
+			Request: httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body)),
+			Server:  &Server{config: NewConfig()},
+		}
+	}
+	gtest.C(t, func(t *gtest.T) {
+		// The JSON body is decoded even if the content type does not declare it.
+		r := newRequest(`{"id":1,"name":"john"}`)
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyMap, map[string]any{"id": 1, "name": "john"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The XML body is decoded even if the content type does not declare it.
+		r := newRequest(`<doc><id>1</id><name>john</name></doc>`)
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyMap, map[string]any{"id": "1", "name": "john"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The XML body with the xml header is decoded only once, and the result is not
+		// overridden by the default parameters decoding.
+		r := newRequest(`<?xml version="1.0" encoding="UTF-8"?><doc><id>1</id></doc>`)
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyMap, map[string]any{"id": "1"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// A JSON-shaped body that is not valid JSON falls back to the default parameters
+		// decoding instead of being dropped.
+		r := newRequest(`{invalid json}`)
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyMap, map[string]any{})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// An XML-shaped body that is not valid XML falls back to the default parameters
+		// decoding instead of being dropped.
+		r := newRequest(`<not xml at all>`)
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyMap, map[string]any{})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The relaxed decoding is disabled by the AutoDecodingBodyDisabled configuration.
+		r := newRequest(`{"id":1,"name":"john"}`)
+		r.Server.config.AutoDecodingBodyDisabled = true
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyMap, map[string]any{})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The zero-value server keeps the relaxed decoding enabled, which is compatible
+		// with the previous versions.
+		r := &Request{
+			Request: httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"id":1}`)),
+			Server:  &Server{},
+		}
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyMap, map[string]any{"id": 1})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The request without server bound keeps the relaxed decoding enabled.
+		r := &Request{
+			Request: httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"id":1}`)),
+		}
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyMap, map[string]any{"id": 1})
+	})
+}
+
+// Test_Request_ParseBody_ContentType checks the body decoding for the declared content types.
+func Test_Request_ParseBody_ContentType(t *testing.T) {
+	newRequest := func(contentType, body string) *Request {
+		r := &Request{
+			Request: httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body)),
+			Server:  &Server{config: NewConfig()},
+		}
+		r.Header.Set(HeaderContentType, contentType)
+		return r
+	}
+	gtest.C(t, func(t *gtest.T) {
+		// The JSON content type with a space instead of a semicolon is still parsed as JSON.
+		r := newRequest(`application/json charset=utf-8`, `{"id":1}`)
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyMap, map[string]any{"id": 1})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// A non-JSON content type with a JSON body is still decoded by the relaxed decoding.
+		r := newRequest(`application/graphql`, `{"query":"{ id }"}`)
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyMap, map[string]any{"query": "{ id }"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The vendor XML content type is decoded as XML.
+		r := newRequest(`application/atom+xml`, `<doc><id>1</id></doc>`)
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyMap, map[string]any{"id": "1"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The vendor JSON content types are decoded as JSON.
+		for _, contentType := range []string{
+			`application/problem+json`,
+			`application/vnd.api+json`,
+		} {
+			r := newRequest(contentType, `{"id":1}`)
+			r.parseBody()
+			t.AssertNil(r.GetError())
+			t.Assert(r.bodyMap, map[string]any{"id": 1})
+		}
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The vendor JSON content types are decoded as JSON even if the automatic decoding
+		// is disabled, as the content type declares the JSON content explicitly.
+		r := newRequest(`application/problem+json`, `{"id":1}`)
+		r.Server.config.AutoDecodingBodyDisabled = true
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyMap, map[string]any{"id": 1})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The vendor XML content type is decoded as XML even if the automatic decoding is
+		// disabled, as the content type declares the XML content explicitly.
+		r := newRequest(`application/atom+xml`, `<doc><id>1</id></doc>`)
+		r.Server.config.AutoDecodingBodyDisabled = true
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyMap, map[string]any{"id": "1"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The JSON content type carrying an xml-like parameter is not treated as XML, so the
+		// decoded JSON object is not overridden.
+		r := newRequest(`application/json; profile="https://example.com/xml"`, `{"id":1}`)
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyMap, map[string]any{"id": 1})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// An invalid XML body with the declared XML content type returns an error.
+		r := newRequest(`application/xml`, `<not xml at all>`)
+		r.parseBody()
+		t.AssertNE(r.GetError(), nil)
+		t.Assert(gerror.Code(r.GetError()), gcode.CodeInvalidParameter)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The binary content types are not parsed.
+		for _, contentType := range []string{
+			`image/png`,
+			`audio/mpeg`,
+			`video/mp4`,
+			`application/octet-stream`,
+		} {
+			r := newRequest(contentType, `{"id":1}`)
+			r.parseBody()
+			t.AssertNil(r.GetError())
+			t.AssertNil(r.bodyMap)
+		}
+	})
+}
+
+// Test_Request_ParseBody_ArrayBody checks the JSON array body decoding for the request struct
+// declaring a field tagged with `body:"*"`.
+func Test_Request_ParseBody_ArrayBody(t *testing.T) {
+	// The request is bound to the handler without being served, as the serving procedure
+	// parses the request body and rejects the request when the array body is not decoded.
+	newRequest := func(contentType, body string, autoDecodingBodyDisabled bool) *Request {
+		s, _ := newTestHandler(t, func(ctx context.Context, req *reqBodyValidReq) (*testRequestTagsRes, error) {
+			return nil, nil
+		})
+		s.config.AutoDecodingBodyDisabled = autoDecodingBodyDisabled
+		req := httptest.NewRequest(http.MethodPost, "/test", strings.NewReader(body))
+		req.Header.Set(HeaderContentType, contentType)
+		r := newRequest(s, req, httptest.NewRecorder())
+		r.handlers, r.serveHandler, r.hasHookHandler, r.hasServeHandler = s.getHandlersWithCache(r)
+		return r
+	}
+	gtest.C(t, func(t *gtest.T) {
+		// The array body is decoded when the content type declares JSON.
+		r := newRequest(`application/json`, `[1,2]`, false)
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyArray, []any{1, 2})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The array body is decoded by the relaxed decoding when the content type does not
+		// declare JSON.
+		r := newRequest(`text/plain`, `[1,2]`, false)
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyArray, []any{1, 2})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The array body is not decoded by the relaxed decoding when the automatic decoding
+		// is disabled.
+		r := newRequest(`text/plain`, `[1,2]`, true)
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.AssertNil(r.bodyArray)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The array body is not decoded when the automatic decoding is disabled and the
+		// content type is not set.
+		r := newRequest(``, `[1,2]`, true)
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.AssertNil(r.bodyArray)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// The array body is still decoded when the automatic decoding is disabled but the
+		// content type declares JSON.
+		r := newRequest(`application/json`, `[1,2]`, true)
+		r.parseBody()
+		t.AssertNil(r.GetError())
+		t.Assert(r.bodyArray, []any{1, 2})
+	})
+}
+
+// Test_IsBinaryContentType checks the binary content type detection.
+func Test_IsBinaryContentType(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for _, contentType := range []string{
+			`image/png`,
+			`image/svg+xml`,
+			`audio/mpeg`,
+			`video/mp4`,
+			`application/octet-stream`,
+			`IMAGE/PNG`,
+		} {
+			t.Assert(isBinaryContentType(contentType), true)
+		}
+		for _, contentType := range []string{
+			``,
+			`application/json`,
+			`application/json; charset=utf-8`,
+			`application/json charset=utf-8`,
+			`application/xml`,
+			`text/xml`,
+			`application/atom+xml`,
+			`application/graphql`,
+			`text/plain`,
+			`application/x-www-form-urlencoded`,
+		} {
+			t.Assert(isBinaryContentType(contentType), false)
+		}
+	})
+}
+
+// Test_IsJsonBody checks the JSON body shape detection.
+func Test_IsJsonBody(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for _, body := range []string{`{}`, `{"id":1}`, `{"a":{"b":1}}`} {
+			t.Assert(isJsonBody([]byte(body)), true)
+		}
+		for _, body := range []string{``, `{`, `}`, `[]`, `[1,2]`, `{"id":1`, `id:1}`} {
+			t.Assert(isJsonBody([]byte(body)), false)
+		}
+	})
+}
+
+// Test_IsXmlBody checks the XML body shape detection.
+func Test_IsXmlBody(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for _, body := range []string{
+			`<doc><id>1</id></doc>`,
+			`<?xml version="1.0"?><doc/>`,
+			`<?XML version="1.0"?><doc/>`,
+			`<a>`,
+		} {
+			t.Assert(isXmlBody([]byte(body)), true)
+		}
+		for _, body := range []string{
+			``,
+			`<`,
+			`>`,
+			`<?xm`,
+			`{"id":1}`,
+			`plain text`,
+		} {
+			t.Assert(isXmlBody([]byte(body)), false)
+		}
+	})
+}

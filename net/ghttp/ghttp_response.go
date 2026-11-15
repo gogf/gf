@@ -88,7 +88,7 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 			downloadName = gfile.Basename(path)
 		}
 	}
-	r.Header().Set(HeaderContentType, "application/force-download")
+	r.Header().Set(HeaderContentType, contentTypeForceDownload)
 	r.Header().Set(HeaderAcceptRanges, "bytes")
 	if utils.IsASCII(downloadName) {
 		r.Header().Set(HeaderContentDisposition, fmt.Sprintf(`attachment;filename=%s`, url.QueryEscape(downloadName)))
