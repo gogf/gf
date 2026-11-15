@@ -65,3 +65,9 @@ func (*StorageFile) setSessionFile(ctx context.Context, path string, content []b
 	// Publish only complete snapshots after closing the temporary file.
 	return gfile.Rename(tempPath, path)
 }
+
+// readSessionBytes reads the session file. On Unix the atomic rename makes a
+// read lock unnecessary.
+func (*StorageFile) readSessionBytes(path string) []byte {
+	return gfile.GetBytes(path)
+}
