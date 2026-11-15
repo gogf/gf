@@ -42,16 +42,13 @@ func (d *Driver) DoInsert(
 		return d.doInsertIgnore(ctx, link, table, list, option)
 
 	case gdb.InsertOptionDefault:
-		// Get table fields to retrieve the primary key TableField object (not just the name)
-		// because DoExec needs the `TableField.Type` to determine if LastInsertId is supported.
+		// DoExec appends RETURNING for this field and uses its type to decide whether
+		// LastInsertId is supported. The column is the generated primary key, which is
+		// not always the first key column in table order.
 		tableFields, err := d.GetCore().GetDB().TableFields(ctx, table)
 		if err == nil {
-			for _, field := range tableFields {
-				if strings.EqualFold(field.Key, "pri") {
-					pkField := *field
-					ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, pkField)
-					break
-				}
+			if field := gdb.InsertIDField(gdb.PrimaryKeyFields(tableFields)); field != nil {
+				ctx = context.WithValue(ctx, internalPrimaryKeyInCtx, *field)
 			}
 		}
 
@@ -210,6 +207,16 @@ func (d *Driver) doUpdateThenInsert(ctx context.Context,
 	return batchResult, nil
 }
 
+// missingSavePrimaryKeysError is returned when Save or Replace data omits a primary-key column.
+func missingSavePrimaryKeysError(table string) error {
+	return gerror.NewCodef(
+		gcode.CodeMissingParameter,
+		`Replace/Save operation requires conflict detection: `+
+			`either specify OnConflict() columns or include all primary key values for table '%s' in the save data`,
+		table,
+	)
+}
+
 // doMergeInsert implements MERGE-based insert operations for GaussDB.
 // When withUpdate is true, it performs upsert (insert or update).
 // When withUpdate is false, it performs insert ignore (insert only when no conflict).
@@ -217,6 +224,23 @@ func (d *Driver) doMergeInsert(
 	ctx context.Context,
 	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption, withUpdate bool,
 ) (result sql.Result, err error) {
+	// Save and Replace check the whole batch before any row is written. The loop below
+	// runs one MERGE per record outside a transaction, so a later incomplete row would
+	// otherwise leave the earlier rows committed. InsertIgnore keeps its per-row fallback.
+	if withUpdate && len(list) > 1 && len(option.OnConflict) == 0 {
+		primaryKeys, primaryKeyErr := d.Core.GetPrimaryKeys(ctx, table)
+		if primaryKeyErr != nil {
+			return nil, gerror.WrapCode(
+				gcode.CodeInternalError,
+				primaryKeyErr,
+				`failed to get primary keys for table`,
+			)
+		}
+		if !gdb.HasPrimaryKeys(list, primaryKeys) {
+			return nil, missingSavePrimaryKeysError(table)
+		}
+	}
+
 	// For batch operations (multiple records), process each record individually
 	if len(list) > 1 {
 		var (
@@ -268,21 +292,9 @@ func (d *Driver) doMergeInsert(
 				`failed to get primary keys for table`,
 			)
 		}
-		foundPrimaryKey := false
-		for _, primaryKey := range primaryKeys {
-			for dataKey := range list[0] {
-				if strings.EqualFold(dataKey, primaryKey) {
-					foundPrimaryKey = true
-					break
-				}
-			}
-			if foundPrimaryKey {
-				break
-			}
-		}
-		if !foundPrimaryKey {
-			// For InsertIgnore without primary key, try normal insert and ignore duplicate errors
-			// For Save/Replace, primary key is required
+		if !gdb.HasPrimaryKeys(list, primaryKeys) {
+			// For InsertIgnore without a complete primary key, try normal insert and ignore duplicate errors.
+			// For Save/Replace, every record must include all primary-key columns.
 			if !withUpdate {
 				result, err := d.Core.DoInsert(ctx, link, table, list, option)
 				if err != nil {
@@ -295,14 +307,8 @@ func (d *Driver) doMergeInsert(
 				}
 				return result, nil
 			}
-			return nil, gerror.NewCodef(
-				gcode.CodeMissingParameter,
-				`Replace/Save operation requires conflict detection: `+
-					`either specify OnConflict() columns or ensure table '%s' has a primary key in the data`,
-				table,
-			)
+			return nil, missingSavePrimaryKeysError(table)
 		}
-		// TODO consider composite primary keys.
 		conflictKeys = primaryKeys
 	}
 

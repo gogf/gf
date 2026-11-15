@@ -35,6 +35,8 @@ func (m *Model) Wheref(format string, args ...any) *Model {
 // key value. That is, if primary key is "id" and given `where` parameter as "123", the
 // WherePri function treats the condition as "id=123", but Model.Where treats the condition
 // as string "123".
+// Note that for a table with a composite primary key, the single-value/slice form matches
+// the first primary key column in table column order only, which may affect multiple records.
 // See WhereBuilder.WherePri.
 func (m *Model) WherePri(where any, args ...any) *Model {
 	return m.callWhereBuilder(m.whereBuilder.WherePri(where, args...))

@@ -292,6 +292,8 @@ func (m *Model) getLink(master bool) Link {
 }
 
 // getPrimaryKey retrieves and returns the primary key name of the model table.
+// For a table with a composite primary key, it returns the first primary key column
+// in table column order.
 // It parses m.tables to retrieve the primary table name, supporting m.tables like:
 // "user", "user u", "user as u, user_detail as ud".
 func (m *Model) getPrimaryKey() string {
@@ -300,10 +302,9 @@ func (m *Model) getPrimaryKey() string {
 	if err != nil {
 		return ""
 	}
-	for name, field := range tableFields {
-		if gstr.ContainsI(field.Key, "pri") {
-			return name
-		}
+	// For a composite primary key, use the first primary key column in table column order.
+	if fields := PrimaryKeyFields(tableFields); len(fields) > 0 {
+		return fields[0].Name
 	}
 	return ""
 }

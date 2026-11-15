@@ -11,7 +11,6 @@ package sqlite
 import (
 	"context"
 	"database/sql"
-	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -31,7 +30,7 @@ func (d *Driver) DoInsert(
 				`failed to get primary keys for Save operation`,
 			)
 		}
-		if !saveDataHasPrimaryKeys(list, primaryKeys) {
+		if !gdb.HasPrimaryKeys(list, primaryKeys) {
 			return nil, gerror.NewCodef(
 				gcode.CodeMissingParameter,
 				`Save operation requires conflict detection: `+
@@ -42,29 +41,4 @@ func (d *Driver) DoInsert(
 		option.OnConflict = primaryKeys
 	}
 	return d.Core.DoInsert(ctx, link, table, list, option)
-}
-
-// saveDataHasPrimaryKeys reports whether every save record contains all primary keys.
-func saveDataHasPrimaryKeys(list gdb.List, primaryKeys []string) bool {
-	if len(list) == 0 || len(primaryKeys) == 0 {
-		return false
-	}
-	for _, item := range list {
-		for _, primaryKey := range primaryKeys {
-			if !saveDataHasKey(item, primaryKey) {
-				return false
-			}
-		}
-	}
-	return true
-}
-
-// saveDataHasKey reports whether the save data contains the given key case-insensitively.
-func saveDataHasKey(data gdb.Map, key string) bool {
-	for dataKey := range data {
-		if strings.EqualFold(dataKey, key) {
-			return true
-		}
-	}
-	return false
 }

@@ -94,6 +94,75 @@ func Test_DB_Save(t *testing.T) {
 	})
 }
 
+// Test_DB_Save_CompositePrimaryKey requires every Save record to include all composite key columns.
+func Test_DB_Save_CompositePrimaryKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("t_ck_%d", gtime.TimestampNano())
+		defer dropTable(table)
+		_, err := db.Exec(ctx, fmt.Sprintf(`
+			CREATE TABLE %s (
+				a INTEGER NOT NULL,
+				b INTEGER NOT NULL,
+				name VARCHAR(45),
+				PRIMARY KEY (a, b)
+			)
+		`, table))
+		t.AssertNil(err)
+
+		fields, err := db.TableFields(ctx, table)
+		t.AssertNil(err)
+		t.Assert(fields["a"].Key, "pri")
+		t.Assert(fields["b"].Key, "pri")
+		keys, err := db.GetCore().GetPrimaryKeys(ctx, table)
+		t.AssertNil(err)
+		t.Assert(keys, []string{"a", "b"})
+
+		_, err = db.Save(ctx, table, g.Map{"a": 1, "b": 2, "name": "n1"})
+		t.AssertNil(err)
+
+		_, err = db.Save(ctx, table, g.Map{"a": 1, "name": "n2"})
+		t.AssertNE(err, nil)
+
+		_, err = db.Save(ctx, table, g.Slice{
+			g.Map{"a": 3, "b": 4, "name": "n3"},
+			g.Map{"a": 5, "name": "n5"},
+		})
+		t.AssertNE(err, nil)
+		// The incomplete batch must not leave the first row behind.
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
+	})
+}
+
+// Test_InsertAndGetId_CompositePrimaryKey reads the generated key when it is not the first column.
+func Test_InsertAndGetId_CompositePrimaryKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("t_ck_id_%d", gtime.TimestampNano())
+		defer dropTable(table)
+		_, err := db.Exec(ctx, fmt.Sprintf(`
+			CREATE TABLE %s (
+				tenant_id INTEGER NOT NULL,
+				id BIGSERIAL NOT NULL,
+				name VARCHAR(45),
+				PRIMARY KEY (id, tenant_id)
+			)
+		`, table))
+		t.AssertNil(err)
+
+		id, err := db.InsertAndGetId(ctx, table, g.Map{
+			"tenant_id": 7,
+			"name":      "n1",
+		})
+		t.AssertNil(err)
+		t.AssertNE(id, int64(7))
+
+		one, err := db.GetOne(ctx, fmt.Sprintf("SELECT id FROM %s WHERE tenant_id=?", table), 7)
+		t.AssertNil(err)
+		t.Assert(one["id"].Int64(), id)
+	})
+}
+
 func Test_DB_Replace(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		createTable("t_user")

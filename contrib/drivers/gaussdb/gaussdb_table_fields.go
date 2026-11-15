@@ -14,6 +14,7 @@ import (
 )
 
 var (
+	// ANY(conkey) marks every column of a composite primary/unique key, not only conkey[1].
 	tableFieldsSqlTmp = `
 SELECT
     a.attname                                                                            AS field,
@@ -26,7 +27,7 @@ SELECT
     numeric_scale                                                                        AS scale
 FROM pg_attribute a
     LEFT JOIN pg_class c                 ON a.attrelid = c.oid
-    LEFT JOIN pg_constraint d            ON d.conrelid = c.oid AND a.attnum = d.conkey[1]
+    LEFT JOIN pg_constraint d            ON d.conrelid = c.oid AND a.attnum = ANY(d.conkey)
     LEFT JOIN pg_description b           ON a.attrelid = b.objoid AND a.attnum = b.objsubid
     LEFT JOIN pg_type t                  ON a.atttypid = t.oid
     LEFT JOIN information_schema.columns ic ON ic.column_name = a.attname AND ic.table_name = c.relname
