@@ -185,7 +185,7 @@ func CaseKebab(s string) string {
 // CaseKebabScreaming converts a string to KEBAB-CASE-SCREAMING.
 //
 // Example:
-// CaseKebab("AnyKindOfString") -> ANY-KIND-OF-STRING
+// CaseKebabScreaming("AnyKindOfString") -> ANY-KIND-OF-STRING
 func CaseKebabScreaming(s string) string {
 	return CaseDelimitedScreaming(s, '-', true)
 }

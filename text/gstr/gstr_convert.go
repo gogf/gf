@@ -33,7 +33,7 @@ func Chr(ascii int) string {
 // Ord converts the first byte of a string to a value between 0 and 255.
 //
 // Example:
-// Chr("A") -> 65
+// Ord("A") -> 65
 func Ord(char string) int {
 	return int(char[0])
 }
@@ -72,7 +72,7 @@ func Reverse(str string) string {
 // See http://php.net/manual/en/function.number-format.php.
 //
 // Example:
-// NumberFormat(1234.56, 2, ".", "")  -> 1234,56
+// NumberFormat(1234.56, 2, ".", "")  -> 1234.56
 // NumberFormat(1234.56, 2, ",", " ") -> 1 234,56
 func NumberFormat(number float64, decimals int, decPoint, thousandsSep string) string {
 	neg := false
