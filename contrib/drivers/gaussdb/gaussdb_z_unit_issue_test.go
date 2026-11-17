@@ -779,4 +779,50 @@ func Test_Issue4843(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(one["nickname"].String(), "a")
 	})
+
+	// Two columns whose names are identical when lower-cased must each get the correct cast.
+	// "value" is int4 (no cast) and "Value" is boolean (needs cast); if the map were keyed
+	// by lower-case name both columns would collide and the int4 column would receive the
+	// boolean cast, causing Save to fail with a type error.
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("issue4843_casecolumns_%d", gtime.TimestampNano())
+		_, err := db.Exec(ctx, fmt.Sprintf(
+			`CREATE TABLE %s (id bigserial PRIMARY KEY, value int4, "Value" boolean)`, table,
+		))
+		t.AssertNil(err)
+		defer dropTable(table)
+
+		_, err = db.Model(table).Data(g.Map{"id": 1, "value": 42, "Value": true}).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["value"].Int(), 42)
+		t.Assert(one["Value"].Bool(), true)
+
+		_, err = db.Model(table).Data(g.Map{"id": 1, "value": 99, "Value": false}).Save()
+		t.AssertNil(err)
+		one, err = db.Model(table).Where("id", 1).One()
+		t.AssertNil(err)
+		t.Assert(one["value"].Int(), 99)
+		t.Assert(one["Value"].Bool(), false)
+	})
+
+	// ToSQL must return a MERGE with ::boolean casts even under dry-run. The catalog
+	// query inside getFieldTypes must execute despite the dry-run context, otherwise
+	// the placeholders carry no type and the captured SQL cannot be executed directly.
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf("issue4843_tosql_%d", gtime.TimestampNano())
+		_, err := db.Exec(ctx, fmt.Sprintf(
+			`CREATE TABLE %s (id bigserial PRIMARY KEY, nickname varchar(45), val boolean)`, table,
+		))
+		t.AssertNil(err)
+		defer dropTable(table)
+
+		sqlStr, err := gdb.ToSQL(ctx, func(ctx context.Context) error {
+			_, err := db.Model(table).Ctx(ctx).Data(g.Map{"id": 1, "nickname": "n1", "val": true}).Save()
+			return err
+		})
+		t.AssertNil(err)
+		t.Assert(gstr.Contains(sqlStr, "::boolean"), true)
+	})
 }

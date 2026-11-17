@@ -16,6 +16,7 @@ import (
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -61,11 +62,7 @@ func (d *Driver) DoInsert(
 func (d *Driver) doSave(ctx context.Context,
 	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption,
 ) (result sql.Result, err error) {
-	fieldTypes, err := d.getFieldTypes(ctx, link, table)
-	if err != nil {
-		return nil, err
-	}
-	return d.doMergeInsert(ctx, link, table, list, option, true, fieldTypes)
+	return d.doMergeInsert(ctx, link, table, list, option, true, nil)
 }
 
 // doInsertIgnore implements INSERT IGNORE operation using MERGE statement for GaussDB.
@@ -214,15 +211,24 @@ func (d *Driver) doUpdateThenInsert(ctx context.Context,
 // doMergeInsert implements MERGE-based insert operations for GaussDB.
 // When withUpdate is true, it performs upsert (insert or update).
 // When withUpdate is false, it performs insert ignore (insert only when no conflict).
-// The fieldTypes are the types the placeholders of the USING branch are cast to, keyed
-// by lower-cased column name; only upsert uses them.
+// fieldTypes maps column name to its cast type for the USING branch; keys are the
+// original column names as returned by the catalog. It is resolved once before the
+// batch loop, or lazily on the single-record path. Pass nil on the first call.
 func (d *Driver) doMergeInsert(
 	ctx context.Context,
 	link gdb.Link, table string, list gdb.List, option gdb.DoInsertOption, withUpdate bool,
 	fieldTypes map[string]string,
 ) (result sql.Result, err error) {
-	// For batch operations (multiple records), process each record individually
+	// For batch operations (multiple records), resolve fieldTypes once before the loop
+	// so every single-record call reuses the same map and avoids a catalog round-trip
+	// per record.
 	if len(list) > 1 {
+		if withUpdate && fieldTypes == nil {
+			fieldTypes, err = d.getFieldTypes(ctx, link, table)
+			if err != nil {
+				return nil, err
+			}
+		}
 		var (
 			batchResult   = new(gdb.SqlResult)
 			totalAffected int64
@@ -260,6 +266,16 @@ func (d *Driver) doMergeInsert(
 		if hasConflictKeyUpdate {
 			// Use UPDATE + INSERT approach when conflict keys need to be updated
 			return d.doUpdateThenInsert(ctx, link, table, list, option)
+		}
+	}
+
+	// Resolve the cast type for each column now that we know this record goes through
+	// the MERGE path. getFieldTypes is deferred to here so that doUpdateThenInsert calls
+	// above do not pay the catalog round-trip.
+	if withUpdate && fieldTypes == nil {
+		fieldTypes, err = d.getFieldTypes(ctx, link, table)
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -343,7 +359,7 @@ func (d *Driver) doMergeInsert(
 	for key, value := range one {
 		keyWithChar := charL + key + charR
 		holder := fmt.Sprintf("$%d", index+1)
-		if fieldType := fieldTypes[strings.ToLower(key)]; fieldType != "" {
+		if fieldType, ok := fieldTypes[key]; ok && fieldType != "" {
 			holder += "::" + fieldType
 		}
 		queryHolders[index] = fmt.Sprintf("%s AS %s", holder, keyWithChar)
@@ -573,12 +589,15 @@ var uncastFieldTypes = map[string]struct{}{
 	"date":      {},
 	"float4":    {},
 	"float8":    {},
+	"int1":      {},
 	"int2":      {},
 	"int4":      {},
 	"int8":      {},
+	"interval":  {},
 	"name":      {},
 	"numeric":   {},
 	"nvarchar2": {},
+	"regclass":  {},
 	"text":      {},
 	"timestamp": {},
 	"varchar":   {},
@@ -598,7 +617,7 @@ FROM pg_attribute a JOIN pg_type t ON t.oid = a.atttypid
 WHERE a.attrelid = $1::regclass AND a.attnum > 0 AND NOT a.attisdropped AND t.typcategory <> 'S'`
 
 // getFieldTypes returns the type that the placeholder of a column must be cast to, keyed
-// by lower-cased column name. The result is empty, without any query, when the cached
+// by column name (original case as returned by the catalog). The result is empty, without any query, when the cached
 // table fields hold only types that need no cast, which is the common case. Otherwise the
 // types are read from the catalog: TableField.Type is the bare pg_type.typname, which
 // cannot be resolved for a type outside the search path.
@@ -622,7 +641,8 @@ func (d *Driver) getFieldTypes(ctx context.Context, link gdb.Link, table string)
 	if !needCast {
 		return map[string]string{}, nil
 	}
-	result, err := d.DoSelect(ctx, link, fieldTypesSqlTmp, table)
+	catalogCtx := context.WithValue(ctx, gctx.StrKey("CtxKeyInternalProducedSQL"), struct{}{})
+	result, err := d.DoSelect(catalogCtx, link, fieldTypesSqlTmp, table)
 	if err != nil {
 		return nil, err
 	}
@@ -631,7 +651,7 @@ func (d *Driver) getFieldTypes(ctx context.Context, link gdb.Link, table string)
 		if _, ok := uncastFieldTypes[m["typname"].String()]; ok {
 			continue
 		}
-		types[strings.ToLower(m["field"].String())] = m["type"].String()
+		types[m["field"].String()] = m["type"].String()
 	}
 	return types, nil
 }
