@@ -78,13 +78,12 @@ func (c *controllerGenerator) doGenerateCtrlNewByModuleAndVersion(
 	dstModuleFolderPath, module, version, importPath string,
 ) (err error) {
 	var (
-		moduleFilePath        = filepath.FromSlash(gfile.Join(dstModuleFolderPath, module+".go"))
-		moduleFilePathNew     = filepath.FromSlash(gfile.Join(dstModuleFolderPath, module+"_new.go"))
-		ctrlName              = fmt.Sprintf(`Controller%s`, gstr.UcFirst(version))
-		interfaceName         = fmt.Sprintf(`%s.I%s%s`, module, gstr.CaseCamel(module), gstr.UcFirst(version))
-		newFuncName           = fmt.Sprintf(`New%s`, gstr.UcFirst(version))
-		newFuncNameDefinition = fmt.Sprintf(`func %s()`, newFuncName)
-		alreadyCreated        bool
+		moduleFilePath    = filepath.FromSlash(gfile.Join(dstModuleFolderPath, module+".go"))
+		moduleFilePathNew = filepath.FromSlash(gfile.Join(dstModuleFolderPath, module+"_new.go"))
+		ctrlName          = fmt.Sprintf(`Controller%s`, gstr.UcFirst(version))
+		interfaceName     = fmt.Sprintf(`%s.I%s%s`, module, gstr.CaseCamel(module), gstr.UcFirst(version))
+		newFuncName       = fmt.Sprintf(`New%s`, gstr.UcFirst(version))
+		alreadyCreated    bool
 	)
 	if !gfile.Exists(moduleFilePath) {
 		content := gstr.ReplaceByMap(consts.TemplateGenCtrlControllerEmpty, g.MapStrStr{
@@ -110,7 +109,7 @@ func (c *controllerGenerator) doGenerateCtrlNewByModuleAndVersion(
 		return err
 	}
 	for _, filePath := range filePaths {
-		if gstr.Contains(gfile.GetContents(filePath), newFuncNameDefinition) {
+		if ctrlConstructorExists(filePath, ctrlName, newFuncName) {
 			alreadyCreated = true
 			break
 		}
@@ -274,6 +273,40 @@ func methodExists(filePath, ctrlName, methodName string) bool {
 			// Check if both receiver type and method name match
 			if recvType == ctrlName && funcDecl.Name.Name == methodName {
 				return true
+			}
+		}
+	}
+	return false
+}
+
+// ctrlConstructorExists checks if the controller constructor (a top-level function
+// named newFuncName) or the controller type (named ctrlName) already exists in the
+// file. It uses AST parsing so a constructor with parameters, such as
+// `func NewV1(greeting string)`, is detected as already created instead of being
+// treated as missing and appended again as a parameterless duplicate.
+func ctrlConstructorExists(filePath, ctrlName, newFuncName string) bool {
+	fset := token.NewFileSet()
+	node, err := parser.ParseFile(fset, filePath, nil, parser.ParseComments)
+	if err != nil {
+		// If parsing fails (e.g., file doesn't exist or invalid syntax), return false
+		return false
+	}
+	for _, decl := range node.Decls {
+		switch d := decl.(type) {
+		case *ast.FuncDecl:
+			// A top-level function (no receiver) with the constructor name,
+			// whatever its parameters are.
+			if d.Recv == nil && d.Name.Name == newFuncName {
+				return true
+			}
+		case *ast.GenDecl:
+			// A type declaration with the controller name.
+			if d.Tok == token.TYPE {
+				for _, spec := range d.Specs {
+					if ts, ok := spec.(*ast.TypeSpec); ok && ts.Name.Name == ctrlName {
+						return true
+					}
+				}
 			}
 		}
 	}
