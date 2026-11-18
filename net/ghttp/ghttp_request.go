@@ -78,9 +78,10 @@ type Request struct {
 
 // staticFile is the file struct for static file service.
 type staticFile struct {
-	File  *gres.File // Resource file object.
-	Path  string     // File path.
-	IsDir bool       // Is directory.
+	File     *gres.File // Resource file object.
+	Path     string     // File path.
+	RootPath string     // Root directory of `Path` for searched disk files, empty for explicit paths.
+	IsDir    bool       // Is directory.
 }
 
 // newRequest creates and returns a new request object.

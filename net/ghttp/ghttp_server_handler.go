@@ -9,6 +9,7 @@ package ghttp
 import (
 	"net/http"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -245,8 +246,9 @@ func (s *Server) searchStaticFile(uri string) *staticFile {
 				path, dir = gspath.Search(item.Path, uri[len(item.Prefix):], s.config.IndexFiles...)
 				if path != "" {
 					return &staticFile{
-						Path:  path,
-						IsDir: dir,
+						Path:     path,
+						RootPath: item.Path,
+						IsDir:    dir,
 					}
 				}
 			}
@@ -264,8 +266,9 @@ func (s *Server) searchStaticFile(uri string) *staticFile {
 			}
 			if path, dir = gspath.Search(p, uri, s.config.IndexFiles...); path != "" {
 				return &staticFile{
-					Path:  path,
-					IsDir: dir,
+					Path:     path,
+					RootPath: p,
+					IsDir:    dir,
 				}
 			}
 		}
@@ -300,7 +303,7 @@ func (s *Server) serveFile(r *Request, f *staticFile, allowIndex ...bool) {
 		return
 	}
 	// Use file from dist.
-	file, err := os.Open(f.Path)
+	file, err := openStaticFile(f)
 	if err != nil {
 		r.Response.WriteStatus(http.StatusForbidden)
 		return
@@ -323,6 +326,34 @@ func (s *Server) serveFile(r *Request, f *staticFile, allowIndex ...bool) {
 	} else {
 		r.Response.ServeContent(info.Name(), info.ModTime(), file)
 	}
+}
+
+// openStaticFile opens the disk file of `f`. A file found by searching a configured
+// static directory is opened through a root-anchored os.Root, so that paths escaping
+// the root, including symbolic links, are rejected.
+func openStaticFile(f *staticFile) (*os.File, error) {
+	if f.RootPath == "" {
+		return os.Open(f.Path)
+	}
+	relPath, err := filepath.Rel(f.RootPath, f.Path)
+	if err != nil {
+		return nil, err
+	}
+	if !filepath.IsLocal(relPath) {
+		return nil, gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`path "%s" is outside of root "%s"`,
+			f.Path, f.RootPath,
+		)
+	}
+	root, err := os.OpenRoot(f.RootPath)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = root.Close()
+	}()
+	return root.Open(relPath)
 }
 
 // listDir lists the sub files of specified directory as HTML content to the client.

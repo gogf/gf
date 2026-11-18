@@ -10,6 +10,7 @@ package ghttp_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -72,6 +73,48 @@ func Test_Static_ServerRoot_Security(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/test.html"), "test")
 		t.Assert(client.GetContent(ctx, "/../main.html"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/..%2Fmain.html"), "Not Found")
+	})
+}
+
+func Test_Static_ServerRoot_Security_Escape(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			base       = t.TempDir()
+			rootDir    = gfile.Join(base, "static")
+			siblingDir = gfile.Join(base, "static-evil")
+			outsideDir = gfile.Join(base, "outside")
+		)
+		t.AssertNil(gfile.Mkdir(rootDir))
+		t.AssertNil(gfile.Mkdir(siblingDir))
+		t.AssertNil(gfile.Mkdir(outsideDir))
+		t.AssertNil(gfile.PutContents(gfile.Join(rootDir, "index.html"), "index"))
+		t.AssertNil(gfile.PutContents(gfile.Join(rootDir, "inside.txt"), "inside"))
+		t.AssertNil(gfile.PutContents(gfile.Join(siblingDir, "secret.txt"), "sibling-secret"))
+		t.AssertNil(gfile.PutContents(gfile.Join(outsideDir, "secret.txt"), "symlink-secret"))
+
+		if err := os.Symlink("inside.txt", gfile.Join(rootDir, "alias.txt")); err != nil {
+			t.Skip("symbolic links are not supported")
+		}
+		t.AssertNil(os.Symlink(gfile.Join("..", "outside", "secret.txt"), gfile.Join(rootDir, "escape.txt")))
+
+		s := g.Server(guid.S())
+		s.SetServerRoot(rootDir)
+		s.Start()
+		defer s.Shutdown()
+		time.Sleep(100 * time.Millisecond)
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		// Valid paths, including a symbolic link inside the root, still work.
+		t.Assert(client.GetContent(ctx, "/"), "index")
+		t.Assert(client.GetContent(ctx, "/inside.txt"), "inside")
+		t.Assert(client.GetContent(ctx, "/alias.txt"), "inside")
+
+		// A sibling directory sharing the root path prefix must not be served.
+		t.AssertNE(client.GetContent(ctx, "/../static-evil/secret.txt"), "sibling-secret")
+
+		// A symbolic link pointing outside the root must not be served.
+		t.AssertNE(client.GetContent(ctx, "/escape.txt"), "symlink-secret")
 	})
 }
 
