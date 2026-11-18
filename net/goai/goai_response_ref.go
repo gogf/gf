@@ -146,10 +146,9 @@ func (oai *OpenApiV3) getResponseSchemaRef(in getResponseSchemaRefInput) (*Schem
 	}
 	if in.CommonResponseDataField == "" && bizResponseStructSchemaRef != nil {
 		// Normal response.
-		bizResponseStructSchemaRef.Value.Properties.Iterator(func(key string, ref SchemaRef) bool {
+		for key, ref := range bizResponseStructSchemaRef.Value.Properties.Iterator {
 			schema.Properties.Set(key, ref)
-			return true
-		})
+		}
 	} else {
 		// Common response.
 		structFields, _ := gstructs.Fields(gstructs.FieldsInput{
