@@ -289,7 +289,7 @@ func (c *Client) newMultipartRequest(method, url, params string) (req *http.Requ
 		writer          = multipart.NewWriter(buffer)
 		isFileUploading = false
 	)
-	for _, item := range strings.Split(params, "&") {
+	for item := range strings.SplitSeq(params, "&") {
 		var isFile bool
 		if isFile, err = writeMultipartItem(writer, item); err != nil {
 			return nil, err
