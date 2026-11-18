@@ -108,9 +108,9 @@ func (cf *Converter) checkTypeImplInterface(t reflect.Type) AnyConvertFunc {
 }
 
 var (
-	implUnmarshalText  = reflect.TypeOf((*localinterface.IUnmarshalText)(nil)).Elem()
-	implUnmarshalJSON  = reflect.TypeOf((*localinterface.IUnmarshalJSON)(nil)).Elem()
-	implUnmarshalValue = reflect.TypeOf((*localinterface.IUnmarshalValue)(nil)).Elem()
+	implUnmarshalText  = reflect.TypeFor[localinterface.IUnmarshalText]()
+	implUnmarshalJSON  = reflect.TypeFor[localinterface.IUnmarshalJSON]()
+	implUnmarshalValue = reflect.TypeFor[localinterface.IUnmarshalValue]()
 )
 
 func checkTypeIsCommonInterface(field reflect.StructField) bool {
