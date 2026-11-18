@@ -440,7 +440,8 @@ func Test_Basic(t *testing.T) {
 		j = gjson.New(`[1,2,3]`)
 		err = j.Set("\"0\".1", 11)
 		t.AssertNil(err)
-		t.Assert(j.Get("1"), 11)
+		t.Assert(j.Get("\"0\".1"), 11)
+		t.Assert(j.Get("1"), nil)
 
 		j = gjson.New(`[1,2,3]`)
 		err = j.Set("11111111111111111111111", 11)

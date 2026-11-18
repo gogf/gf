@@ -347,3 +347,49 @@ func Test_Set_WithEmptyStruct(t *testing.T) {
 		t.Assert(j.MustToJsonString(), `{"aa":"123"}`)
 	})
 }
+
+func Test_Set_GrowNestedSlice(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(nil)
+		t.AssertNil(j.Set("a.1.0", 1))
+		t.AssertNil(j.Set("a.2.0", 2))
+		t.Assert(j.Get("a.2.0"), 2)
+		t.Assert(j.MustToJsonString(), `{"a":[null,[1],[2]]}`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(`{"a":[[1]]}`)
+		t.AssertNil(j.Set("a.0.2", 3))
+		t.AssertNil(j.Set("a.1.0.k", "v"))
+		t.Assert(j.MustToJsonString(), `{"a":[[1,null,3],[{"k":"v"}]]}`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(`{"a":[[1]],"b":2}`)
+		t.AssertNil(j.Set("a.0.b", 3))
+		t.Assert(j.MustToJsonString(), `{"a":[{"b":3}],"b":2}`)
+	})
+}
+
+func Test_Set_KeyOnSlice(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(`[1,2,3]`)
+		t.AssertNil(j.Set("a.b", 1))
+		t.Assert(j.MustToJsonString(), `{"a":{"b":1}}`)
+	})
+}
+
+func Test_Remove_MissingPath(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(`[1,{"a":2}]`)
+		t.AssertNil(j.Remove("a"))
+		t.AssertNil(j.Remove("2.a"))
+		t.AssertNil(j.Remove("1.b.0"))
+		t.AssertNil(j.Remove("0.a"))
+		t.Assert(j.MustToJsonString(), `[1,{"a":2}]`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(`{"a":[1,{"b":2}]}`)
+		t.AssertNil(j.Remove("a.1.b"))
+		t.AssertNil(j.Remove("a.0"))
+		t.Assert(j.MustToJsonString(), `{"a":[{}]}`)
+	})
+}

@@ -89,16 +89,17 @@ type iVal interface {
 // setValue sets `value` to `j` by `pattern`.
 // Note:
 // 1. If value is nil and removed is true, means deleting this value;
-// 2. It's quite complicated in hierarchical data search, node creating and data assignment;
+// 2. Missing nodes on the way are created: a slice for a numeric key and a map otherwise;
 func (j *Json) setValue(pattern string, value any, removed bool) error {
 	var (
-		err    error
-		array  = strings.Split(pattern, string(j.c))
-		length = len(array)
+		err   error
+		array = strings.Split(pattern, string(j.c))
 	)
 	if value, err = j.convertValue(value); err != nil {
 		return err
 	}
+	j.mu.Lock()
+	defer j.mu.Unlock()
 	// Initialization checks.
 	if *j.p == nil {
 		if gstr.IsNumeric(array[0]) {
@@ -107,194 +108,113 @@ func (j *Json) setValue(pattern string, value any, removed bool) error {
 			*j.p = make(map[string]any)
 		}
 	}
-	var (
-		pparent *any = nil // Parent pointer.
-		pointer      = j.p // Current pointer.
-	)
-	j.mu.Lock()
-	defer j.mu.Unlock()
-	for i := 0; i < length; i++ {
-		switch (*pointer).(type) {
-		case map[string]any:
-			if i == length-1 {
-				if removed && value == nil {
-					// Delete item from map.
-					delete((*pointer).(map[string]any), array[i])
-				} else {
-					if (*pointer).(map[string]any) == nil {
-						*pointer = map[string]any{}
-					}
-					(*pointer).(map[string]any)[array[i]] = value
-				}
-			} else {
-				// If the key does not exit in the map.
-				if v, ok := (*pointer).(map[string]any)[array[i]]; !ok {
-					if removed && value == nil {
-						goto done
-					}
-					// Creating new node.
-					if gstr.IsNumeric(array[i+1]) {
-						// Creating array node.
-						n, _ := strconv.Atoi(array[i+1])
-						var v any = make([]any, n+1)
-						pparent = j.setPointerWithValue(pointer, array[i], v)
-						pointer = &v
-					} else {
-						// Creating map node.
-						var v any = make(map[string]any)
-						pparent = j.setPointerWithValue(pointer, array[i], v)
-						pointer = &v
-					}
-				} else {
-					pparent = pointer
-					pointer = &v
-				}
-			}
+	if removed && value == nil {
+		*j.p = j.removeNodeValue(*j.p, array)
+		return nil
+	}
+	node, err := j.setNodeValue(*j.p, array, value)
+	if err != nil {
+		return err
+	}
+	*j.p = node
+	return nil
+}
 
-		case []any:
-			// A string key.
-			if !gstr.IsNumeric(array[i]) {
-				if i == length-1 {
-					*pointer = map[string]any{array[i]: value}
-				} else {
-					var v any = make(map[string]any)
-					*pointer = v
-					pparent = pointer
-					pointer = &v
-				}
-				continue
-			}
-			// Numeric index.
-			valueNum, err := strconv.Atoi(array[i])
+// setNodeValue sets `value` to `node` by the hierarchical `keys` and returns the node.
+// The returned node differs from `node` if `node` had to be grown or replaced, so that the
+// caller must always store it back into its parent.
+func (j *Json) setNodeValue(node any, keys []string, value any) (any, error) {
+	if len(keys) == 0 {
+		return value, nil
+	}
+	var key = keys[0]
+	switch v := node.(type) {
+	case map[string]any:
+		if v == nil {
+			v = make(map[string]any)
+		}
+		child, err := j.setNodeValue(v[key], keys[1:], value)
+		if err != nil {
+			return nil, err
+		}
+		v[key] = child
+		return v, nil
+
+	case []any:
+		// A string key replaces the slice with a map below.
+		if gstr.IsNumeric(key) {
+			index, err := j.sliceIndex(key)
 			if err != nil {
-				err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `strconv.Atoi failed for string "%s"`, array[i])
-				return err
+				return nil, err
 			}
-
-			if i == length-1 {
-				// Leaf node.
-				if len((*pointer).([]any)) > valueNum {
-					if removed && value == nil {
-						// Deleting element.
-						if pparent == nil {
-							*pointer = append((*pointer).([]any)[:valueNum], (*pointer).([]any)[valueNum+1:]...)
-						} else {
-							j.setPointerWithValue(pparent, array[i-1], append((*pointer).([]any)[:valueNum], (*pointer).([]any)[valueNum+1:]...))
-						}
-					} else {
-						(*pointer).([]any)[valueNum] = value
-					}
-				} else {
-					if removed && value == nil {
-						goto done
-					}
-					if pparent == nil {
-						// It is the root node.
-						j.setPointerWithValue(pointer, array[i], value)
-					} else {
-						// It is not the root node.
-						s := make([]any, valueNum+1)
-						copy(s, (*pointer).([]any))
-						s[valueNum] = value
-						j.setPointerWithValue(pparent, array[i-1], s)
-					}
-				}
-			} else {
-				// Branch node.
-				if gstr.IsNumeric(array[i+1]) {
-					n, _ := strconv.Atoi(array[i+1])
-					pSlice := (*pointer).([]any)
-					if len(pSlice) > valueNum {
-						item := pSlice[valueNum]
-						if s, ok := item.([]any); ok {
-							for i := 0; i < n-len(s); i++ {
-								s = append(s, nil)
-							}
-							pparent = pointer
-							pointer = &pSlice[valueNum]
-						} else {
-							if removed && value == nil {
-								goto done
-							}
-							var v any = make([]any, n+1)
-							pparent = j.setPointerWithValue(pointer, array[i], v)
-							pointer = &v
-						}
-					} else {
-						if removed && value == nil {
-							goto done
-						}
-						var v any = make([]any, n+1)
-						pparent = j.setPointerWithValue(pointer, array[i], v)
-						pointer = &v
-					}
-				} else {
-					pSlice := (*pointer).([]any)
-					if len(pSlice) > valueNum {
-						pparent = pointer
-						pointer = &(*pointer).([]any)[valueNum]
-					} else {
-						s := make([]any, valueNum+1)
-						copy(s, pSlice)
-						s[valueNum] = make(map[string]any)
-						if pparent != nil {
-							// i > 0
-							j.setPointerWithValue(pparent, array[i-1], s)
-							pparent = pointer
-							pointer = &s[valueNum]
-						} else {
-							// i = 0
-							var v any = s
-							*pointer = v
-							pparent = pointer
-							pointer = &s[valueNum]
-						}
-					}
-				}
+			if index >= len(v) {
+				s := make([]any, index+1)
+				copy(s, v)
+				v = s
 			}
-
-		// If the variable pointed to by the `pointer` is not of a reference type,
-		// then it modifies the variable via its the parent, ie: pparent.
-		default:
-			if removed && value == nil {
-				goto done
+			child, err := j.setNodeValue(v[index], keys[1:], value)
+			if err != nil {
+				return nil, err
 			}
-			if gstr.IsNumeric(array[i]) {
-				n, _ := strconv.Atoi(array[i])
-				s := make([]any, n+1)
-				if i == length-1 {
-					s[n] = value
-				}
-				if pparent != nil {
-					pparent = j.setPointerWithValue(pparent, array[i-1], s)
-				} else {
-					*pointer = s
-					pparent = pointer
-				}
-			} else {
-				var v1, v2 any
-				if i == length-1 {
-					v1 = map[string]any{
-						array[i]: value,
-					}
-				} else {
-					v1 = map[string]any{
-						array[i]: nil,
-					}
-				}
-				if pparent != nil {
-					pparent = j.setPointerWithValue(pparent, array[i-1], v1)
-				} else {
-					*pointer = v1
-					pparent = pointer
-				}
-				v2 = v1.(map[string]any)[array[i]]
-				pointer = &v2
-			}
+			v[index] = child
+			return v, nil
 		}
 	}
-done:
-	return nil
+	// The node does not exist or cannot hold `key`, so it is replaced by a new node.
+	if gstr.IsNumeric(key) {
+		index, err := j.sliceIndex(key)
+		if err != nil {
+			return nil, err
+		}
+		return j.setNodeValue(make([]any, index+1), keys, value)
+	}
+	return j.setNodeValue(make(map[string]any), keys, value)
+}
+
+// removeNodeValue deletes the value of the hierarchical `keys` from `node` and returns the node.
+// Nothing is changed if the value does not exist.
+func (j *Json) removeNodeValue(node any, keys []string) any {
+	var key = keys[0]
+	switch v := node.(type) {
+	case map[string]any:
+		child, ok := v[key]
+		if !ok {
+			return v
+		}
+		if len(keys) == 1 {
+			delete(v, key)
+		} else {
+			v[key] = j.removeNodeValue(child, keys[1:])
+		}
+		return v
+
+	case []any:
+		if !gstr.IsNumeric(key) {
+			return v
+		}
+		index, err := j.sliceIndex(key)
+		if err != nil || index >= len(v) {
+			return v
+		}
+		if len(keys) == 1 {
+			return append(v[:index], v[index+1:]...)
+		}
+		v[index] = j.removeNodeValue(v[index], keys[1:])
+		return v
+	}
+	return node
+}
+
+// sliceIndex converts the numeric `key` to a slice index.
+func (j *Json) sliceIndex(key string) (int, error) {
+	index, err := strconv.Atoi(key)
+	if err != nil {
+		return 0, gerror.WrapCodef(gcode.CodeInvalidParameter, err, `strconv.Atoi failed for string "%s"`, key)
+	}
+	if index < 0 {
+		return 0, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid slice index "%s"`, key)
+	}
+	return index, nil
 }
 
 // convertValue converts `value` to map[string]any or []any,
@@ -346,31 +266,6 @@ func (j *Json) convertValue(value any) (convertedValue any, err error) {
 			return value, nil
 		}
 	}
-}
-
-// setPointerWithValue sets `key`:`value` to `pointer`, the `key` may be a map key or slice index.
-// It returns the pointer to the new value set.
-func (j *Json) setPointerWithValue(pointer *any, key string, value any) *any {
-	switch (*pointer).(type) {
-	case map[string]any:
-		(*pointer).(map[string]any)[key] = value
-		return &value
-	case []any:
-		n, _ := strconv.Atoi(key)
-		if len((*pointer).([]any)) > n {
-			(*pointer).([]any)[n] = value
-			return &(*pointer).([]any)[n]
-		} else {
-			s := make([]any, n+1)
-			copy(s, (*pointer).([]any))
-			s[n] = value
-			*pointer = s
-			return &s[n]
-		}
-	default:
-		*pointer = value
-	}
-	return pointer
 }
 
 // getPointerByPattern returns a pointer to the value by specified `pattern`.
