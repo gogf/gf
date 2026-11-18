@@ -199,7 +199,7 @@ func (oai *OpenApiV3) structToSchema(object any) (*Schema, error) {
 		schema.Properties.Set(fieldName, *schemaRef)
 	}
 
-	schema.Properties.Iterator(func(key string, ref SchemaRef) bool {
+	for key, ref := range schema.Properties.Iterator {
 		if ref.Value != nil && ref.Value.ValidationRules != "" {
 			validationRuleSet := gset.NewStrSetFrom(gstr.Split(ref.Value.ValidationRules, "|"))
 			if validationRuleSet.Contains(validationRuleKeyForRequired) {
@@ -259,8 +259,7 @@ func (oai *OpenApiV3) structToSchema(object any) (*Schema, error) {
 		if !isValidParameterName(key) {
 			ignoreProperties = append(ignoreProperties, key)
 		}
-		return true
-	})
+	}
 
 	if len(ignoreProperties) > 0 {
 		schema.Properties.Removes(ignoreProperties)

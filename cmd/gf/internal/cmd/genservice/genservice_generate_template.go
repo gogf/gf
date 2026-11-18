@@ -33,7 +33,7 @@ func (c CGenService) generateType(generatedContent *bytes.Buffer, srcStructFunct
 	generatedContent.WriteString("type(")
 	generatedContent.WriteString("\n")
 
-	srcStructFunctions.Iterator(func(key, value any) bool {
+	for key, value := range srcStructFunctions.Iterator {
 		var (
 			funcContents = make([]string, 0)
 			funcContent  string
@@ -60,8 +60,7 @@ func (c CGenService) generateType(generatedContent *bytes.Buffer, srcStructFunct
 			})),
 		)
 		generatedContent.WriteString("\n")
-		return true
-	})
+	}
 
 	generatedContent.WriteString(")")
 	generatedContent.WriteString("\n")
@@ -73,15 +72,14 @@ func (c CGenService) generateVar(generatedContent *bytes.Buffer, srcStructFuncti
 	// Generating variable and register definitions.
 	var variableContent string
 
-	srcStructFunctions.Iterator(func(key, value any) bool {
+	for key := range srcStructFunctions.Iterator {
 		structName := key.(string)
 		variableContent += gstr.Trim(gstr.ReplaceByMap(consts.TemplateGenServiceContentVariable, g.MapStrStr{
 			"{StructName}":    structName,
 			"{InterfaceName}": "I" + structName,
 		}))
 		variableContent += "\n"
-		return true
-	})
+	}
 	if variableContent != "" {
 		generatedContent.WriteString("var(")
 		generatedContent.WriteString("\n")
@@ -95,13 +93,12 @@ func (c CGenService) generateVar(generatedContent *bytes.Buffer, srcStructFuncti
 // See: const.TemplateGenServiceContentRegister
 func (c CGenService) generateFunc(generatedContent *bytes.Buffer, srcStructFunctions *gmap.ListMap) {
 	// Variable register function definitions.
-	srcStructFunctions.Iterator(func(key, value any) bool {
+	for key := range srcStructFunctions.Iterator {
 		structName := key.(string)
 		generatedContent.WriteString(gstr.Trim(gstr.ReplaceByMap(consts.TemplateGenServiceContentRegister, g.MapStrStr{
 			"{StructName}":    structName,
 			"{InterfaceName}": "I" + structName,
 		})))
 		generatedContent.WriteString("\n\n")
-		return true
-	})
+	}
 }
