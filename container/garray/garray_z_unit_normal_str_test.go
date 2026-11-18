@@ -107,6 +107,12 @@ func TestStrArray_Sort(t *testing.T) {
 		t.Assert(array.Slice(), expect1)
 		array.Sort(true)
 		t.Assert(array.Slice(), expect2)
+
+		array2 := garray.NewStrArrayFrom([]string{"b", "a", "b", "c", "a"})
+		array2.Sort()
+		t.Assert(array2.Slice(), []string{"a", "a", "b", "b", "c"})
+		array2.Sort(true)
+		t.Assert(array2.Slice(), []string{"c", "b", "b", "a", "a"})
 	})
 }
 

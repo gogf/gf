@@ -8,6 +8,7 @@ package garray
 
 import (
 	"bytes"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -116,8 +117,8 @@ func (a *StrArray) Sort(reverse ...bool) *StrArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if len(reverse) > 0 && reverse[0] {
-		sort.Slice(a.array, func(i, j int) bool {
-			return strings.Compare(a.array[i], a.array[j]) >= 0
+		slices.SortFunc(a.array, func(x, y string) int {
+			return strings.Compare(y, x)
 		})
 	} else {
 		sort.Strings(a.array)

@@ -289,7 +289,7 @@ func (c *Client) newMultipartRequest(method, url, params string) (req *http.Requ
 		writer          = multipart.NewWriter(buffer)
 		isFileUploading = false
 	)
-	for _, item := range strings.Split(params, "&") {
+	for item := range strings.SplitSeq(params, "&") {
 		var isFile bool
 		if isFile, err = writeMultipartItem(writer, item); err != nil {
 			return nil, err
@@ -318,19 +318,19 @@ func (c *Client) newMultipartRequest(method, url, params string) (req *http.Requ
 // writeMultipartItem writes one "key=value" item into the multipart writer.
 // It returns whether this item is a file uploading one.
 func writeMultipartItem(writer *multipart.Writer, item string) (isFile bool, err error) {
-	array := strings.SplitN(item, "=", 2)
-	if len(array) < 2 {
+	fieldName, fieldValue, found := strings.Cut(item, "=")
+	if !found {
 		return false, nil
 	}
-	if len(array[1]) > 6 && strings.Compare(array[1][0:6], httpParamFileHolder) == 0 {
-		path := array[1][6:]
+	if len(fieldValue) > 6 && strings.Compare(fieldValue[0:6], httpParamFileHolder) == 0 {
+		path := fieldValue[6:]
 		if !gfile.Exists(path) {
 			return false, gerror.NewCodef(gcode.CodeInvalidParameter, `"%s" does not exist`, path)
 		}
 		var (
 			file          io.Writer
 			formFileName  = gfile.Basename(path)
-			formFieldName = array[0]
+			formFieldName = fieldName
 		)
 		// it sets post content type as `application/octet-stream`
 		if file, err = writer.CreateFormFile(formFieldName, formFileName); err != nil {
@@ -353,10 +353,6 @@ func writeMultipartItem(writer *multipart.Writer, item string) (isFile bool, err
 		}
 		return true, nil
 	}
-	var (
-		fieldName  = array[0]
-		fieldValue = array[1]
-	)
 	// Decode URL-encoded field name and value.
 	// If decoding fails, use the original value.
 	if v, err := gurl.Decode(fieldName); err == nil {

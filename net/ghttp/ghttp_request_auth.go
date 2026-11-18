@@ -23,24 +23,24 @@ func (r *Request) BasicAuth(user, pass string, tips ...string) bool {
 		r.setBasicAuth(tips...)
 		return false
 	}
-	authArray := strings.SplitN(auth, " ", 2)
-	if len(authArray) != 2 {
+	authScheme, authPayload, found := strings.Cut(auth, " ")
+	if !found {
 		r.Response.WriteStatus(http.StatusForbidden)
 		return false
 	}
-	switch authArray[0] {
+	switch authScheme {
 	case "Basic":
-		authBytes, err := gbase64.DecodeString(authArray[1])
+		authBytes, err := gbase64.DecodeString(authPayload)
 		if err != nil {
 			r.Response.WriteStatus(http.StatusForbidden, err.Error())
 			return false
 		}
-		authArray := strings.SplitN(string(authBytes), ":", 2)
-		if len(authArray) != 2 {
+		username, password, found := strings.Cut(string(authBytes), ":")
+		if !found {
 			r.Response.WriteStatus(http.StatusForbidden)
 			return false
 		}
-		if authArray[0] != user || authArray[1] != pass {
+		if username != user || password != pass {
 			r.setBasicAuth(tips...)
 			return false
 		}
