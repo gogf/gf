@@ -7,7 +7,7 @@
 package garray
 
 import (
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -30,9 +30,7 @@ func defaultComparatorStr(a, b string) int {
 // defaultSorter is a generic sorting function that sorts a slice of comparable types
 // using the provided comparator function.
 func defaultSorter[T comparable](values []T, comparator func(a T, b T) int) {
-	sort.Slice(values, func(i, j int) bool {
-		return comparator(values[i], values[j]) < 0
-	})
+	slices.SortFunc(values, comparator)
 }
 
 // quickSortInt is the quick-sorting algorithm implements for int.
