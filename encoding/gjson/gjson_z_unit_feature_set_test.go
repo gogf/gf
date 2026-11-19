@@ -393,3 +393,50 @@ func Test_Remove_MissingPath(t *testing.T) {
 		t.Assert(j.MustToJsonString(), `{"a":[{}]}`)
 	})
 }
+
+func Test_Set_InvalidSliceIndex(t *testing.T) {
+	// A negative index is rejected and leaves the data unchanged.
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(nil)
+		t.AssertNE(j.Set("a.-1", 1), nil)
+		t.Assert(j.MustToJsonString(), `{}`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(`{"a":{"b":1}}`)
+		t.AssertNE(j.Set("a.c.-1", 1), nil)
+		t.Assert(j.MustToJsonString(), `{"a":{"b":1}}`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(`[1,2,3]`)
+		t.AssertNE(j.Set("-1", 1), nil)
+		t.Assert(j.MustToJsonString(), `[1,2,3]`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(`[[1]]`)
+		t.AssertNE(j.Set("0.-1", 1), nil)
+		t.Assert(j.MustToJsonString(), `[[1]]`)
+	})
+	// An index overflowing int is rejected as well.
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(`{"a":[1]}`)
+		t.AssertNE(j.Set("a.11111111111111111111111", 1), nil)
+		t.Assert(j.MustToJsonString(), `{"a":[1]}`)
+	})
+}
+
+func Test_Remove_InvalidSliceIndex(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(`[1,2,3]`)
+		t.AssertNil(j.Remove("-1"))
+		t.AssertNil(j.Remove("3"))
+		t.AssertNil(j.Remove("11111111111111111111111"))
+		t.Assert(j.MustToJsonString(), `[1,2,3]`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(`{"a":[1,[2]]}`)
+		t.AssertNil(j.Remove("a.-1"))
+		t.AssertNil(j.Remove("a.1.-1"))
+		t.AssertNil(j.Remove("a.5.0"))
+		t.Assert(j.MustToJsonString(), `{"a":[1,[2]]}`)
+	})
+}
