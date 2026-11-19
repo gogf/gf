@@ -7,18 +7,22 @@
 package glog
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"log/slog"
+	"runtime"
 	"slices"
 	"strings"
 )
 
 // SlogHandler is a slog.Handler that forwards records to a glog Logger.
-// It maps slog levels to glog levels and appends the record attributes to the
-// message as "key=value" pairs, with attribute groups prefixed by "group.".
+// It maps slog levels to glog levels and forwards the record attributes as
+// key-value pairs of the logging values, so the configured glog handlers format
+// them the same way as direct key-value logging calls.
 type SlogHandler struct {
 	logger *Logger
-	attrs  []string
+	attrs  []any
 	groups []string
 }
 
@@ -40,36 +44,30 @@ func (h *SlogHandler) Enabled(ctx context.Context, level slog.Level) bool {
 
 // Handle forwards the record to the underlying logger.
 func (h *SlogHandler) Handle(ctx context.Context, record slog.Record) error {
-	var b strings.Builder
-	b.WriteString(record.Message)
-	for _, attr := range h.attrs {
-		b.WriteString(" ")
-		b.WriteString(attr)
+	level := slogLevelToGlogLevel(record.Level)
+	if !h.logger.checkLevel(level) {
+		return nil
 	}
+	values := make([]any, 0, 1+len(h.attrs)+2*record.NumAttrs())
+	values = append(values, record.Message)
+	values = append(values, h.attrs...)
 	var prefix string
 	if len(h.groups) > 0 {
 		prefix = strings.Join(h.groups, ".") + "."
 	}
 	record.Attrs(func(attr slog.Attr) bool {
-		if line := formatSlogAttr(prefix, attr); line != "" {
-			b.WriteString(" ")
-			b.WriteString(line)
-		}
+		values = appendSlogAttr(values, prefix, attr)
 		return true
 	})
-	message := b.String()
-	switch slogLevelToGlogLevel(record.Level) {
-	case LEVEL_DEBU:
-		h.logger.Debug(ctx, message)
-	case LEVEL_INFO:
-		h.logger.Info(ctx, message)
-	case LEVEL_NOTI:
-		h.logger.Notice(ctx, message)
-	case LEVEL_WARN:
-		h.logger.Warning(ctx, message)
-	default:
-		h.logger.Error(ctx, message)
+	var stack string
+	if level == LEVEL_ERRO && h.logger.config.StStatus == 1 {
+		if record.PC != 0 {
+			stack = slogStackFromPC(record.PC, h.logger.stackFilters())
+		} else {
+			stack = h.logger.GetStack()
+		}
 	}
+	h.logger.printWithCaller(ctx, level, record.PC, stack, values...)
 	return nil
 }
 
@@ -78,21 +76,19 @@ func (h *SlogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	if len(attrs) == 0 {
 		return h
 	}
-	prefix := ""
+	var prefix string
 	if len(h.groups) > 0 {
 		prefix = strings.Join(h.groups, ".") + "."
 	}
-	formatted := make([]string, 0, len(attrs))
+	pairs := make([]any, 0, 2*len(attrs))
 	for _, attr := range attrs {
-		if line := formatSlogAttr(prefix, attr); line != "" {
-			formatted = append(formatted, line)
-		}
+		pairs = appendSlogAttr(pairs, prefix, attr)
 	}
-	if len(formatted) == 0 {
+	if len(pairs) == 0 {
 		return h
 	}
 	newHandler := *h
-	newHandler.attrs = append(slices.Clone(h.attrs), formatted...)
+	newHandler.attrs = append(slices.Clone(h.attrs), pairs...)
 	return &newHandler
 }
 
@@ -123,33 +119,89 @@ func slogLevelToGlogLevel(level slog.Level) int {
 	}
 }
 
-// formatSlogAttr formats one attribute as "key=value", expanding nested groups
-// into "group.key=value" pairs.
-func formatSlogAttr(prefix string, attr slog.Attr) string {
-	var b strings.Builder
-	appendSlogAttr(&b, prefix, attr)
-	return b.String()
-}
-
-func appendSlogAttr(b *strings.Builder, prefix string, attr slog.Attr) {
+// appendSlogAttr appends `attr` to `values` as key-value pairs, expanding nested
+// groups into "group.key" keys.
+func appendSlogAttr(values []any, prefix string, attr slog.Attr) []any {
+	if attr.Equal(slog.Attr{}) {
+		return values
+	}
 	attr.Value = attr.Value.Resolve()
 	if attr.Equal(slog.Attr{}) {
-		return
+		return values
 	}
 	if attr.Value.Kind() == slog.KindGroup {
 		if attr.Key != "" {
 			prefix += attr.Key + "."
 		}
 		for _, child := range attr.Value.Group() {
-			appendSlogAttr(b, prefix, child)
+			values = appendSlogAttr(values, prefix, child)
 		}
-		return
+		return values
 	}
-	if b.Len() > 0 {
-		b.WriteString(" ")
+	return append(values, prefix+attr.Key, attr.Value.String())
+}
+
+// slogStackFromPC returns the stack content beginning at the frame of `pc`, which is
+// the user call site recorded in the slog record. Starting from the record PC keeps
+// the log/slog and SlogHandler frames out of the stack even in -trimpath builds, where
+// runtime.GOROOT() is empty and GOROOT based filtering takes no effect.
+func slogStackFromPC(pc uintptr, filters []string) string {
+	pcs := make([]uintptr, 64)
+	for {
+		if n := runtime.Callers(2, pcs); n < len(pcs) {
+			pcs = pcs[:n]
+			break
+		}
+		pcs = make([]uintptr, 2*len(pcs))
 	}
-	b.WriteString(prefix)
-	b.WriteString(attr.Key)
-	b.WriteString("=")
-	b.WriteString(attr.Value.String())
+	start := slices.Index(pcs, pc)
+	if start < 0 {
+		return ""
+	}
+	var (
+		index  = 1
+		space  = "  "
+		buffer = bytes.NewBuffer(nil)
+		goRoot = strings.ReplaceAll(runtime.GOROOT(), "\\", "/")
+		frames = runtime.CallersFrames(pcs[start:])
+	)
+	for {
+		frame, more := frames.Next()
+		if !slogStackFrameFiltered(frame.File, filters, goRoot) {
+			function := frame.Function
+			if function == "" {
+				function = "unknown"
+			}
+			if index > 9 {
+				space = " "
+			}
+			fmt.Fprintf(buffer, "%d.%s%s\n    %s:%d\n", index, space, function, frame.File, frame.Line)
+			index++
+		}
+		if !more {
+			break
+		}
+	}
+	return buffer.String()
+}
+
+// slogStackFrameFiltered reports whether the stack frame of `file` should be filtered out.
+func slogStackFrameFiltered(file string, filters []string, goRoot string) bool {
+	if file == "" {
+		return true
+	}
+	for _, filter := range filters {
+		if filter != "" && strings.Contains(file, filter) {
+			return true
+		}
+	}
+	if goRoot != "" {
+		file = strings.ReplaceAll(file, "\\", "/")
+		if strings.HasPrefix(file, goRoot) && len(file) > len(goRoot) {
+			if separator := file[len(goRoot)]; separator == '/' || separator == '\\' {
+				return true
+			}
+		}
+	}
+	return false
 }
