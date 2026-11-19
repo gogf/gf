@@ -83,7 +83,8 @@ func (c *controllerGenerator) doGenerateCtrlNewByModuleAndVersion(
 		ctrlName          = fmt.Sprintf(`Controller%s`, gstr.UcFirst(version))
 		interfaceName     = fmt.Sprintf(`%s.I%s%s`, module, gstr.CaseCamel(module), gstr.UcFirst(version))
 		newFuncName       = fmt.Sprintf(`New%s`, gstr.UcFirst(version))
-		alreadyCreated    bool
+		ctrlTypeExists    bool
+		ctrlFuncExists    bool
 	)
 	if !gfile.Exists(moduleFilePath) {
 		content := gstr.ReplaceByMap(consts.TemplateGenCtrlControllerEmpty, g.MapStrStr{
@@ -109,21 +110,36 @@ func (c *controllerGenerator) doGenerateCtrlNewByModuleAndVersion(
 		return err
 	}
 	for _, filePath := range filePaths {
-		if ctrlConstructorExists(filePath, ctrlName, newFuncName) {
-			alreadyCreated = true
+		typeExists, funcExists := ctrlConstructorStatus(filePath, ctrlName, newFuncName)
+		ctrlTypeExists = ctrlTypeExists || typeExists
+		ctrlFuncExists = ctrlFuncExists || funcExists
+		if ctrlTypeExists && ctrlFuncExists {
 			break
 		}
 	}
-	if !alreadyCreated {
-		content := gstr.ReplaceByMap(consts.TemplateGenCtrlControllerNewFunc, g.MapStrStr{
-			"{CtrlName}":      ctrlName,
-			"{NewFuncName}":   newFuncName,
-			"{InterfaceName}": interfaceName,
-		})
-		err = gfile.PutContentsAppend(moduleFilePathNew, content)
-		if err != nil {
-			return err
-		}
+	// Append only the missing piece: the controller type and the constructor
+	// function are checked separately, so a file that declares only one of
+	// them no longer ends up with a duplicate of it or a missing constructor.
+	var template string
+	switch {
+	case ctrlTypeExists && ctrlFuncExists:
+		// Both already exist, nothing to append.
+		return
+	case ctrlTypeExists:
+		template = consts.TemplateGenCtrlControllerNewFuncOnly
+	case ctrlFuncExists:
+		template = consts.TemplateGenCtrlControllerNewType
+	default:
+		template = consts.TemplateGenCtrlControllerNewFunc
+	}
+	content := gstr.ReplaceByMap(template, g.MapStrStr{
+		"{CtrlName}":      ctrlName,
+		"{NewFuncName}":   newFuncName,
+		"{InterfaceName}": interfaceName,
+	})
+	err = gfile.PutContentsAppend(moduleFilePathNew, content)
+	if err != nil {
+		return err
 	}
 	return
 }
@@ -279,17 +295,18 @@ func methodExists(filePath, ctrlName, methodName string) bool {
 	return false
 }
 
-// ctrlConstructorExists checks if the controller constructor (a top-level function
-// named newFuncName) or the controller type (named ctrlName) already exists in the
-// file. It uses AST parsing so a constructor with parameters, such as
-// `func NewV1(greeting string)`, is detected as already created instead of being
-// treated as missing and appended again as a parameterless duplicate.
-func ctrlConstructorExists(filePath, ctrlName, newFuncName string) bool {
+// ctrlConstructorStatus checks separately whether the controller type (named
+// ctrlName) and the constructor function (a top-level function named
+// newFuncName) already exist in the file. It uses AST parsing so a
+// constructor with parameters, such as `func NewV1(greeting string)`, is
+// detected as already created instead of being treated as missing and
+// appended again as a parameterless duplicate.
+func ctrlConstructorStatus(filePath, ctrlName, newFuncName string) (typeExists, funcExists bool) {
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, filePath, nil, parser.ParseComments)
 	if err != nil {
 		// If parsing fails (e.g., file doesn't exist or invalid syntax), return false
-		return false
+		return false, false
 	}
 	for _, decl := range node.Decls {
 		switch d := decl.(type) {
@@ -297,18 +314,18 @@ func ctrlConstructorExists(filePath, ctrlName, newFuncName string) bool {
 			// A top-level function (no receiver) with the constructor name,
 			// whatever its parameters are.
 			if d.Recv == nil && d.Name.Name == newFuncName {
-				return true
+				funcExists = true
 			}
 		case *ast.GenDecl:
 			// A type declaration with the controller name.
 			if d.Tok == token.TYPE {
 				for _, spec := range d.Specs {
 					if ts, ok := spec.(*ast.TypeSpec); ok && ts.Name.Name == ctrlName {
-						return true
+						typeExists = true
 					}
 				}
 			}
 		}
 	}
-	return false
+	return typeExists, funcExists
 }
