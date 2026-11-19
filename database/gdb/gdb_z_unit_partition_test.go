@@ -171,6 +171,44 @@ func Test_Model_Partition_WriteRefused(t *testing.T) {
 	})
 }
 
+// Test_Model_Partition_InsertRefused asserts that every insert statement carrying partition
+// names is refused as well: Replace and Save can update or delete rows of a partition the
+// caller did not name, which the SELECT-only refusal left open.
+func Test_Model_Partition_InsertRefused(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		db := newPartitionFakeDB(true, "id", "name")
+		_, err := db.Model("user").Partition("p0").Data("name", "john").Insert()
+		t.Assert(gerror.Code(err), gcode.CodeNotSupported)
+		_, err = db.Model("user").Partition("p0").Data("name", "john").InsertIgnore()
+		t.Assert(gerror.Code(err), gcode.CodeNotSupported)
+		_, err = db.Model("user").Partition("p0").Data("name", "john").InsertAndGetId()
+		t.Assert(gerror.Code(err), gcode.CodeNotSupported)
+		_, err = db.Model("user").Partition("p0").Data("name", "john").Replace()
+		t.Assert(gerror.Code(err), gcode.CodeNotSupported)
+		_, err = db.Model("user").Partition("p0").Data("name", "john").Save()
+		t.Assert(gerror.Code(err), gcode.CodeNotSupported)
+
+		// The data variants reach the same refusal.
+		_, err = db.Model("user").Partition("p0").Insert("name", "john")
+		t.Assert(gerror.Code(err), gcode.CodeNotSupported)
+	})
+}
+
+// Test_Model_Partition_WriteNotRefusedWithoutClause asserts that a driver without partition
+// selection syntax is not refused on a write: the names never reach the statement on such a
+// driver, for SELECT either, so Partition() is inert rather than half-applied.
+func Test_Model_Partition_WriteNotRefusedWithoutClause(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		db := newPartitionFakeDB(false, "id", "name")
+		t.AssertNil(db.Model("user").Partition("p0").checkPartitionForWrite("INSERT"))
+		t.AssertNil(db.Model("user").Partition("p0").checkPartitionForWrite("UPDATE"))
+		t.AssertNil(db.Model("user").Partition("p0").checkPartitionForWrite("DELETE"))
+
+		coreDB := newDialectFakeDB("id", "name")
+		t.AssertNil(coreDB.Model("user").Partition("p0").checkPartitionForWrite("DELETE"))
+	})
+}
+
 // Test_Model_Partition_CoreDefault asserts that the Core default FormatPartitionClause
 // returns an empty string, which causes the table expression to be emitted unchanged.
 func Test_Model_Partition_CoreDefault(t *testing.T) {

@@ -200,18 +200,42 @@ func (m *Model) Partition(partitions ...string) *Model {
 // than executed without the restriction: a query that over-returns is visible to the
 // caller, a delete or update that over-matches silently changes rows in partitions the
 // caller did not name.
+//
+// A driver without partition selection syntax leaves the names unused for SELECT as well,
+// so Partition() is inert there and a write is not refused: the names never had an effect.
 func (m *Model) checkPartitionForWrite(operation string) error {
 	if len(m.partition) == 0 {
+		return nil
+	}
+	if m.db.FormatPartitionClause(m.partition) == "" {
 		return nil
 	}
 	return gerror.NewCode(
 		gcode.CodeNotSupported,
 		fmt.Sprintf(
-			"Model.Partition() cannot restrict a %s statement to the named partitions, "+
-				"it would silently affect all partitions",
+			"Model.Partition() names the partitions of a SELECT statement only, "+
+				"%s is emitted without the clause and would affect every partition",
 			operation,
 		),
 	)
+}
+
+// partitionOperationOfInsert returns the name of the statement that an insert option emits,
+// for the message of checkPartitionForWrite.
+func partitionOperationOfInsert(option InsertOption) string {
+	switch option {
+	case InsertOptionReplace:
+		return "REPLACE"
+
+	case InsertOptionSave:
+		return "SAVE"
+
+	case InsertOptionIgnore:
+		return "INSERT IGNORE"
+
+	default:
+		return "INSERT"
+	}
 }
 
 // Model acts like Core.Model except it operates on transaction.
