@@ -204,7 +204,7 @@ func convertArgument(value any) (any, error) {
 // element type implements driver.Valuer, or else the result of its Value method.
 func callValuerValue(valuer driver.Valuer) (driver.Value, error) {
 	if reflectValue := reflect.ValueOf(valuer); reflectValue.Kind() == reflect.Pointer && reflectValue.IsNil() &&
-		reflectValue.Type().Elem().Implements(reflect.TypeOf((*driver.Valuer)(nil)).Elem()) {
+		reflectValue.Type().Elem().Implements(reflect.TypeFor[driver.Valuer]()) {
 		return nil, nil
 	}
 	return valuer.Value()

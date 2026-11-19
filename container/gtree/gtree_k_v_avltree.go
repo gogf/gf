@@ -353,20 +353,18 @@ func (tree *AVLKVTree[K, V]) MarshalJSON() (jsonBytes []byte, err error) {
 // Map returns all key-value pairs as map.
 func (tree *AVLKVTree[K, V]) Map() map[K]V {
 	m := make(map[K]V, tree.Size())
-	tree.IteratorAsc(func(key K, value V) bool {
+	for key, value := range tree.IteratorAsc {
 		m[key] = value
-		return true
-	})
+	}
 	return m
 }
 
 // MapStrAny returns all key-value items as map[string]any.
 func (tree *AVLKVTree[K, V]) MapStrAny() map[string]any {
 	m := make(map[string]any, tree.Size())
-	tree.IteratorAsc(func(key K, value V) bool {
+	for key, value := range tree.IteratorAsc {
 		m[gconv.String(key)] = value
-		return true
-	})
+	}
 	return m
 }
 
@@ -551,7 +549,7 @@ func (tree *AVLKVTree[K, V]) Flip(comparator ...func(v1, v2 K) int) {
 		newKey   K
 		newValue V
 	)
-	tree.IteratorAsc(func(key K, value V) bool {
+	for key, value := range tree.IteratorAsc {
 		if err := gconv.Scan(key, &newValue); err != nil {
 			panic(err)
 		}
@@ -559,8 +557,7 @@ func (tree *AVLKVTree[K, V]) Flip(comparator ...func(v1, v2 K) int) {
 			panic(err)
 		}
 		t.doSet(newKey, newValue)
-		return true
-	})
+	}
 	tree.Clear()
 	tree.Sets(t.Map())
 }
