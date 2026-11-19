@@ -66,10 +66,9 @@ func (oai *OpenApiV3) getRequestSchemaRef(in getRequestSchemaRefInput) (*SchemaR
 		schema.Required = append(schema.Required, bizRequestStructSchemaRef.Value.Required...)
 
 		// Normal request.
-		bizRequestStructSchemaRef.Value.Properties.Iterator(func(key string, ref SchemaRef) bool {
+		for key, ref := range bizRequestStructSchemaRef.Value.Properties.Iterator {
 			schema.Properties.Set(key, ref)
-			return true
-		})
+		}
 	} else {
 		// Common request.
 		structFields, _ := gstructs.Fields(gstructs.FieldsInput{

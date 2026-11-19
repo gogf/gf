@@ -451,12 +451,11 @@ func (c *AdapterMemory) syncEventAndClearExpired(ctx context.Context) {
 		expireTime = currentEk - i*1000
 		if expireSet = c.expireSets.Get(expireTime); expireSet != nil {
 			// Iterating the set to delete all keys in it.
-			expireSet.Iterator(func(key any) bool {
+			for key := range expireSet.Iterator {
 				c.deleteExpiredKey(key)
 				// remove auto expired key for lru.
 				c.lru.Remove(key)
-				return true
-			})
+			}
 			// Deleting the set after all of its keys are deleted.
 			c.expireSets.Delete(expireTime)
 		}
