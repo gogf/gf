@@ -95,6 +95,15 @@ func (l *Logger) getFilePath(now time.Time) string {
 
 // print prints `s` to defined writer, logging file or passed `std`.
 func (l *Logger) print(ctx context.Context, level int, stack string, values ...any) {
+	l.printWithCaller(ctx, level, 0, stack, values...)
+}
+
+// printWithCaller is like print, but it derives the caller information from `callerPC`
+// when it is not zero, instead of walking the call stack. It is used by adapters, like
+// SlogHandler, whose records carry the user call site that is not adjacent to this package.
+func (l *Logger) printWithCaller(
+	ctx context.Context, level int, callerPC uintptr, stack string, values ...any,
+) {
 	// Lazy initialize for rotation feature.
 	// It uses atomic reading operation to enhance the performance checking.
 	// It here uses CAP for performance and concurrent safety.
@@ -161,10 +170,7 @@ func (l *Logger) print(ctx context.Context, level int, stack string, values ...a
 
 	// Caller path and Fn name.
 	if l.config.Flags&(F_FILE_LONG|F_FILE_SHORT|F_CALLER_FN) > 0 {
-		callerFnName, path, line := gdebug.CallerWithFilter(
-			[]string{consts.StackFilterKeyForGoFrame},
-			l.config.StSkip,
-		)
+		callerFnName, path, line := callerInfo(callerPC, l.config.StSkip)
 		if l.config.Flags&F_CALLER_FN > 0 {
 			if len(callerFnName) > 2 {
 				input.CallerFunc = fmt.Sprintf(`[%s]`, callerFnName)
@@ -401,6 +407,11 @@ func (l *Logger) GetStack(skip ...int) string {
 	if len(skip) > 0 {
 		stackSkip += skip[0]
 	}
+	return gdebug.StackWithFilters(l.stackFilters(), stackSkip)
+}
+
+// stackFilters returns the path filters used for stack content filtering.
+func (l *Logger) stackFilters() []string {
 	filters := []string{pathFilterKey}
 	if l.config.StFilter != "" {
 		filters = append(filters, l.config.StFilter)
@@ -409,5 +420,15 @@ func (l *Logger) GetStack(skip ...int) string {
 	if errors.IsStackModeBrief() {
 		filters = append(filters, consts.StackFilterKeyForGoFrame)
 	}
-	return gdebug.StackWithFilters(filters, stackSkip)
+	return filters
+}
+
+// callerInfo returns the caller function name, file path and line number.
+// It derives them from `pc` when it is not zero, or else it walks the call stack.
+func callerInfo(pc uintptr, skip int) (function string, path string, line int) {
+	if pc != 0 {
+		frame, _ := runtime.CallersFrames([]uintptr{pc}).Next()
+		return frame.Function, frame.File, frame.Line
+	}
+	return gdebug.CallerWithFilter([]string{consts.StackFilterKeyForGoFrame}, skip)
 }
