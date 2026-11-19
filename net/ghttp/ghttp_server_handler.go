@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -303,7 +304,7 @@ func (s *Server) serveFile(r *Request, f *staticFile, allowIndex ...bool) {
 		return
 	}
 	// Use file from dist.
-	file, err := openStaticFile(f)
+	file, err := openStaticFile(r.Context(), f)
 	if err != nil {
 		r.Response.WriteStatus(http.StatusForbidden)
 		return
@@ -331,11 +332,19 @@ func (s *Server) serveFile(r *Request, f *staticFile, allowIndex ...bool) {
 // openStaticFile opens the disk file of `f`. A file found by searching a configured
 // static directory is opened through a root-anchored os.Root, so that paths escaping
 // the root, including symbolic links, are rejected.
-func openStaticFile(f *staticFile) (*os.File, error) {
+func openStaticFile(ctx context.Context, f *staticFile) (*os.File, error) {
 	if f.RootPath == "" {
 		return os.Open(f.Path)
 	}
-	relPath, err := filepath.Rel(f.RootPath, f.Path)
+	rootPath, err := filepath.Abs(f.RootPath)
+	if err != nil {
+		return nil, err
+	}
+	path, err := filepath.Abs(f.Path)
+	if err != nil {
+		return nil, err
+	}
+	relPath, err := filepath.Rel(rootPath, path)
 	if err != nil {
 		return nil, err
 	}
@@ -343,15 +352,17 @@ func openStaticFile(f *staticFile) (*os.File, error) {
 		return nil, gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`path "%s" is outside of root "%s"`,
-			f.Path, f.RootPath,
+			path, rootPath,
 		)
 	}
-	root, err := os.OpenRoot(f.RootPath)
+	root, err := os.OpenRoot(rootPath)
 	if err != nil {
 		return nil, err
 	}
 	defer func() {
-		_ = root.Close()
+		if err := root.Close(); err != nil {
+			intlog.Errorf(ctx, `close static file root "%s" failed: %+v`, rootPath, err)
+		}
 	}()
 	return root.Open(relPath)
 }
