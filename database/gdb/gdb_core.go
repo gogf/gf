@@ -478,19 +478,18 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 			sqlResult    SqlResult
 			rowsAffected int64
 		)
-		keyListMap.Iterator(func(key, value any) bool {
+		for _, value := range keyListMap.Iterator {
 			tmpResult, err = c.DoInsert(ctx, link, table, value.(List), option)
 			if err != nil {
-				return false
+				break
 			}
 			rowsAffected, err = tmpResult.RowsAffected()
 			if err != nil {
-				return false
+				break
 			}
 			sqlResult.Result = tmpResult
 			sqlResult.Affected += rowsAffected
-			return true
-		})
+		}
 		return &sqlResult, err
 	}
 

@@ -271,7 +271,7 @@ func hasRepeatedQueryKey(rawQuery string) bool {
 // query string `rawQuery`, by the same keys as the ones stored in r.queryMap.
 func parseRepeatedQueryValues(rawQuery string) map[string][]string {
 	allValues := make(map[string][]string)
-	for _, part := range strings.Split(rawQuery, "&") {
+	for part := range strings.SplitSeq(rawQuery, "&") {
 		// Each part is parsed alone by gstr.Parse, so that its key is changed in the same way
 		// as the whole query string parsed into r.queryMap, like `file.names` into `file_names`.
 		m, err := gstr.Parse(part)
