@@ -212,7 +212,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 			}
 		}
 		if needCompressFileArray.Len() > 0 {
-			needCompressFileArray.Iterator(func(_ int, path string) bool {
+			for _, path := range needCompressFileArray.Iterator {
 				err := gcompress.GzipFile(path, path+".gz")
 				if err == nil {
 					intlog.Printf(ctx, `compressed done, remove original logging file: %s`, path)
@@ -222,8 +222,7 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 				} else {
 					intlog.Print(ctx, err)
 				}
-				return true
-			})
+			}
 			// Update the files array.
 			files, err = gfile.ScanDirFile(l.config.Path, pattern, true)
 			if err != nil {
@@ -274,24 +273,22 @@ func (l *Logger) rotateChecksTimely(ctx context.Context) {
 				mtime       time.Time
 				subDuration time.Duration
 			)
-			backupFiles.Iterator(func(_ int, v any) bool {
+			for _, v := range backupFiles.Iterator {
 				path := v.(string)
 				mtime = gfile.MTime(path)
 				subDuration = now.Sub(mtime)
-				if subDuration > l.config.RotateBackupExpire {
-					intlog.Printf(
-						ctx,
-						`%v - %v = %v > %v, remove expired backup file: %s`,
-						now, mtime, subDuration, l.config.RotateBackupExpire, path,
-					)
-					if err = gfile.RemoveFile(path); err != nil {
-						intlog.Errorf(ctx, `%+v`, err)
-					}
-					return true
-				} else {
-					return false
+				if subDuration <= l.config.RotateBackupExpire {
+					break
 				}
-			})
+				intlog.Printf(
+					ctx,
+					`%v - %v = %v > %v, remove expired backup file: %s`,
+					now, mtime, subDuration, l.config.RotateBackupExpire, path,
+				)
+				if err = gfile.RemoveFile(path); err != nil {
+					intlog.Errorf(ctx, `%+v`, err)
+				}
+			}
 		}
 	}
 }

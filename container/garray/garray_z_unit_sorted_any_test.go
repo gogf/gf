@@ -40,6 +40,14 @@ func TestSortedArray_NewSortedArrayFrom(t *testing.T) {
 
 		t.Assert(array2.Len(), 4)
 		t.Assert(array2, []any{"k", "i", "j", "h"})
+
+		array3 := garray.NewSortedArrayFrom(
+			[]any{"b", "a", "b", "c"},
+			func(v1, v2 any) int {
+				return strings.Compare(gconv.String(v2), gconv.String(v1))
+			},
+		)
+		t.Assert(array3, []any{"c", "b", "b", "a"})
 	})
 }
 
