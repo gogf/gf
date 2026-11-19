@@ -11,6 +11,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 	"unicode"
@@ -96,14 +97,15 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 // formatContentDisposition returns an RFC 6266 attachment value with a sanitized
 // filename parameter.
 func formatContentDisposition(name string) string {
-	name = gfile.Basename(strings.TrimSpace(name))
+	// Normalize backslashes first so paths are split the same way on all platforms.
+	name = path.Base(strings.ReplaceAll(strings.TrimSpace(name), `\`, "/"))
 	name = strings.Map(func(r rune) rune {
 		if unicode.IsControl(r) {
 			return -1
 		}
 		return r
 	}, name)
-	name = strings.Trim(strings.TrimSpace(name), `/\`)
+	name = strings.Trim(strings.TrimSpace(name), "/")
 	if name == "" || name == "." || name == ".." {
 		name = "download"
 	}

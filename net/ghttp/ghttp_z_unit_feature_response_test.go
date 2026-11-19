@@ -63,6 +63,10 @@ func Test_Response_ServeFileDownload(t *testing.T) {
 		}
 		r.Response.ServeFileDownload(filePath.String())
 	})
+	s.BindHandler("/ServeFileDownloadWithContentType", func(r *ghttp.Request) {
+		r.Response.Header().Set("Content-Type", "application/x-custom")
+		r.Response.ServeFileDownload(gtest.DataPath("upload", "file1.txt"))
+	})
 	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
@@ -110,9 +114,17 @@ func Test_Response_ServeFileDownload(t *testing.T) {
 			{"report 2026.pdf", `attachment; filename="report 2026.pdf"`},
 			{`a"b;c.txt`, `attachment; filename="a\"b;c.txt"`},
 			{"dir/report.pdf", "attachment; filename=report.pdf"},
+			{`dir\report.pdf`, "attachment; filename=report.pdf"},
+			{`C:\fakepath\report.pdf`, "attachment; filename=report.pdf"},
 			{"报表 2026.pdf", `attachment; filename*=utf-8''%E6%8A%A5%E8%A1%A8%202026.pdf`},
 			{"evil\r\nX-Injected: 1.txt", `attachment; filename="evilX-Injected: 1.txt"`},
 			{".", "attachment; filename=download"},
+			{"..", "attachment; filename=download"},
+			{`..\..`, "attachment; filename=download"},
+			{"   ", "attachment; filename=download"},
+			{"\x01", "attachment; filename=download"},
+			{"/", "attachment; filename=download"},
+			{`\`, "attachment; filename=download"},
 		} {
 			resp, err := client.Get(ctx, "/ServeFileDownload", g.Map{
 				"filePath": srcPath,
@@ -122,6 +134,12 @@ func Test_Response_ServeFileDownload(t *testing.T) {
 			t.Assert(resp.Header.Get("Content-Disposition"), testCase.expected)
 			t.Assert(strings.HasPrefix(resp.Header.Get("Content-Type"), "text/plain"), true)
 		}
+
+		resp, err = client.Get(ctx, "/ServeFileDownloadWithContentType")
+		t.AssertNil(err)
+		t.Assert(resp.ReadAllString(), "file1.txt: This file is for uploading unit test case.")
+		t.Assert(resp.Header.Get("Content-Type"), "application/x-custom")
+		t.Assert(resp.Header.Get("Content-Disposition"), "attachment; filename=file1.txt")
 	})
 }
 
