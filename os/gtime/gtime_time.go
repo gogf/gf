@@ -157,7 +157,7 @@ func (t *Time) Timestamp() int64 {
 	if t.IsZero() {
 		return 0
 	}
-	return t.UnixNano() / 1e9
+	return t.Unix()
 }
 
 // TimestampMilli returns the timestamp in milliseconds.
@@ -165,7 +165,7 @@ func (t *Time) TimestampMilli() int64 {
 	if t.IsZero() {
 		return 0
 	}
-	return t.UnixNano() / 1e6
+	return t.UnixMilli()
 }
 
 // TimestampMicro returns the timestamp in microseconds.
@@ -173,7 +173,7 @@ func (t *Time) TimestampMicro() int64 {
 	if t.IsZero() {
 		return 0
 	}
-	return t.UnixNano() / 1e3
+	return t.UnixMicro()
 }
 
 // TimestampNano returns the timestamp in nanoseconds.
