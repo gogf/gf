@@ -139,18 +139,14 @@ func Test_SlogHandler_LogValuer(t *testing.T) {
 func Test_SlogHandler_EmptyAttr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			ctx    = context.Background()
-			buffer = bytes.NewBuffer(nil)
-			logger = glog.NewWithWriter(buffer)
-			// Record.AddAttrs omits empty Attr, so feed the handler directly.
-			handler = glog.NewSlogHandler(logger).WithAttrs([]slog.Attr{
-				{}, slog.String("k", "v"),
-			})
-			slogger = slog.New(handler)
+			ctx     = context.Background()
+			buffer  = bytes.NewBuffer(nil)
+			logger  = glog.NewWithWriter(buffer)
+			slogger = slog.New(glog.NewSlogHandler(logger))
 		)
 		logger.SetLevel(glog.LEVEL_ALL)
 
-		slogger.InfoContext(ctx, "empty attr")
+		slogger.InfoContext(ctx, "empty attr", slog.Attr{}, slog.String("k", "v"))
 
 		output := buffer.String()
 		t.Assert(strings.Contains(output, "empty attr k v"), true)
