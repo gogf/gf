@@ -325,20 +325,18 @@ func (tree *BKVTree[K, V]) Replace(data map[K]V) {
 // Map returns all key-value pairs as map.
 func (tree *BKVTree[K, V]) Map() map[K]V {
 	m := make(map[K]V, tree.Size())
-	tree.IteratorAsc(func(key K, value V) bool {
+	for key, value := range tree.IteratorAsc {
 		m[key] = value
-		return true
-	})
+	}
 	return m
 }
 
 // MapStrAny returns all key-value items as map[string]any.
 func (tree *BKVTree[K, V]) MapStrAny() map[string]any {
 	m := make(map[string]any, tree.Size())
-	tree.IteratorAsc(func(key K, value V) bool {
+	for key, value := range tree.IteratorAsc {
 		m[gconv.String(key)] = value
-		return true
-	})
+	}
 	return m
 }
 

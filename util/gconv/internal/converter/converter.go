@@ -72,7 +72,7 @@ func NewConverter() *Converter {
 func (c *Converter) RegisterTypeConverterFunc(f any) (err error) {
 	var (
 		fReflectType = reflect.TypeOf(f)
-		errType      = reflect.TypeOf((*error)(nil)).Elem()
+		errType      = reflect.TypeFor[error]()
 	)
 	if fReflectType.Kind() != reflect.Func ||
 		fReflectType.NumIn() != 1 || fReflectType.NumOut() != 2 ||
@@ -150,8 +150,8 @@ func (c *Converter) registerBuiltInAnyConvertFunc() {
 		stringType  = reflect.TypeOf("")
 		bytesType   = reflect.TypeOf([]byte{})
 		boolType    = reflect.TypeOf(false)
-		timeType    = reflect.TypeOf((*time.Time)(nil)).Elem()
-		gtimeType   = reflect.TypeOf((*gtime.Time)(nil)).Elem()
+		timeType    = reflect.TypeFor[time.Time]()
+		gtimeType   = reflect.TypeFor[gtime.Time]()
 	)
 	c.RegisterAnyConverterFunc(
 		c.builtInAnyConvertFuncForInt64, intType, int8Type, int16Type, int32Type, int64Type,

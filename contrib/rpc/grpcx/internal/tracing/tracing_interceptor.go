@@ -264,17 +264,17 @@ func peerFromCtx(ctx context.Context) string {
 // on a gRPC's FullMethod.
 func parseFullMethod(fullMethod string) (string, []attribute.KeyValue) {
 	name := strings.TrimLeft(fullMethod, "/")
-	parts := strings.SplitN(name, "/", 2)
-	if len(parts) != 2 {
+	service, method, found := strings.Cut(name, "/")
+	if !found {
 		// Invalid format, does not follow `/package.service/method`.
 		return name, []attribute.KeyValue(nil)
 	}
 
 	var attrs []attribute.KeyValue
-	if service := parts[0]; service != "" {
+	if service != "" {
 		attrs = append(attrs, semconv.RPCServiceKey.String(service))
 	}
-	if method := parts[1]; method != "" {
+	if method != "" {
 		attrs = append(attrs, semconv.RPCMethodKey.String(method))
 	}
 	return name, attrs
