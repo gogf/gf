@@ -221,12 +221,28 @@ func (d *Driver) doMergeInsert(
 ) (result sql.Result, err error) {
 	// For batch operations (multiple records), resolve fieldTypes once before the loop
 	// so every single-record call reuses the same map and avoids a catalog round-trip
-	// per record.
+	// per record. Skip the catalog lookup when every record in the batch will be routed
+	// to doUpdateThenInsert (conflict key in OnDuplicate), because that path never uses
+	// the cast map.
 	if len(list) > 1 {
 		if withUpdate && fieldTypes == nil {
-			fieldTypes, err = d.getFieldTypes(ctx, link, table)
-			if err != nil {
-				return nil, err
+			needsCast := true
+			if len(option.OnDuplicateMap) > 0 && len(option.OnConflict) > 0 {
+				conflictKeySet := gset.NewStrSetFrom(option.OnConflict)
+				for updateKey := range option.OnDuplicateMap {
+					if conflictKeySet.Contains(strings.ToLower(updateKey)) ||
+						conflictKeySet.Contains(strings.ToUpper(updateKey)) ||
+						conflictKeySet.Contains(updateKey) {
+						needsCast = false
+						break
+					}
+				}
+			}
+			if needsCast {
+				fieldTypes, err = d.getFieldTypes(ctx, link, table)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 		var (

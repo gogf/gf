@@ -687,6 +687,44 @@ func Test_Issue4843(t *testing.T) {
 		t.Assert(one["flag"].Bool(), true)
 	})
 
+	// tinyint (int1), interval, and regclass are in uncastFieldTypes: writing '' to them
+	// must keep failing with an input-syntax error, both when the column is alone (no
+	// catalog query) and when it sits beside a boolean column (catalog queried, but these
+	// types are filtered and never cast). An implicit cast from text would silently turn
+	// '' into NULL in A compatible mode instead of rejecting it.
+	gtest.C(t, func(t *gtest.T) {
+		for _, tc := range []struct {
+			colDef  string
+			errText string
+		}{
+			{"v tinyint", "invalid input syntax"},
+			{"v interval", "invalid input syntax"},
+			{"v regclass", "invalid"},
+		} {
+			t1 := fmt.Sprintf("issue4843_emptystr_%d", gtime.TimestampNano())
+			_, err := db.Exec(ctx, fmt.Sprintf(
+				`CREATE TABLE %s (id bigserial PRIMARY KEY, %s)`, t1, tc.colDef,
+			))
+			t.AssertNil(err)
+			defer dropTable(t1)
+
+			_, err = db.Model(t1).Data(g.Map{"id": 1, "v": ""}).Save()
+			t.AssertNE(err, nil)
+			t.Assert(gstr.Contains(err.Error(), tc.errText), true)
+
+			t2 := fmt.Sprintf("issue4843_emptystr_bool_%d", gtime.TimestampNano())
+			_, err = db.Exec(ctx, fmt.Sprintf(
+				`CREATE TABLE %s (id bigserial PRIMARY KEY, %s, flag boolean)`, t2, tc.colDef,
+			))
+			t.AssertNil(err)
+			defer dropTable(t2)
+
+			_, err = db.Model(t2).Data(g.Map{"id": 1, "v": "", "flag": true}).Save()
+			t.AssertNE(err, nil)
+			t.Assert(gstr.Contains(err.Error(), tc.errText), true)
+		}
+	})
+
 	// A string column is not cast even when the table needs casts for other columns: in
 	// the A compatible mode a cast turns an empty string into NULL, while the parameter
 	// assigned as it is stays an empty string.
