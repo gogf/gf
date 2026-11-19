@@ -19,7 +19,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv/internal/structcache"
 )
 
-var rawMessageType = reflect.TypeOf((*json.RawMessage)(nil)).Elem()
+var rawMessageType = reflect.TypeFor[json.RawMessage]()
 
 // StructOption is the option for Struct converting.
 type StructOption struct {

@@ -95,6 +95,12 @@ func TestIntArray_Sort(t *testing.T) {
 		array.Sort(true)
 		t.Assert(array.Slice(), expect2)
 		t.Assert(array2.Slice(), expect2)
+
+		array3 := garray.NewIntArrayFrom([]int{3, -1, 3, 0, -1})
+		array3.Sort()
+		t.Assert(array3.Slice(), []int{-1, -1, 0, 3, 3})
+		array3.Sort(true)
+		t.Assert(array3.Slice(), []int{3, 3, 0, -1, -1})
 	})
 }
 
