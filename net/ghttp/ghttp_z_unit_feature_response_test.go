@@ -9,7 +9,6 @@ package ghttp_test
 import (
 	"fmt"
 	"net/http"
-	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -58,6 +57,10 @@ func Test_Response_ServeFileDownload(t *testing.T) {
 	s := g.Server(guid.S())
 	s.BindHandler("/ServeFileDownload", func(r *ghttp.Request) {
 		filePath := r.GetQuery("filePath")
+		if name := r.GetQuery("name").String(); name != "" {
+			r.Response.ServeFileDownload(filePath.String(), name)
+			return
+		}
 		r.Response.ServeFileDownload(filePath.String())
 	})
 	s.SetDumpRouterMap(false)
@@ -86,13 +89,39 @@ func Test_Response_ServeFileDownload(t *testing.T) {
 		resp, err := client.Get(ctx, "/ServeFileDownload", "filePath="+srcPath)
 		t.AssertNil(err)
 		t.Assert(resp.ReadAllString(), "file1.txt: This file is for uploading unit test case.")
-		t.Assert(resp.Header.Get("Content-Disposition"), "attachment;filename=file1.txt")
+		t.Assert(resp.Header.Get("Content-Disposition"), "attachment; filename=file1.txt")
+		t.Assert(strings.HasPrefix(resp.Header.Get("Content-Type"), "text/plain"), true)
+		t.Assert(resp.Header.Get("Accept-Ranges"), "bytes")
 
 		srcPath = gtest.DataPath("upload", "中文.txt")
 		resp, err = client.Get(ctx, "/ServeFileDownload", "filePath="+srcPath)
 		t.AssertNil(err)
 		t.Assert(resp.ReadAllString(), "中文.txt: This file is for uploading unit test case.")
-		t.Assert(resp.Header.Get("Content-Disposition"), "attachment;filename*=UTF-8''"+url.QueryEscape("中文.txt"))
+		t.Assert(
+			resp.Header.Get("Content-Disposition"),
+			`attachment; filename*=utf-8''%E4%B8%AD%E6%96%87.txt`,
+		)
+
+		srcPath = gtest.DataPath("upload", "file1.txt")
+		for _, testCase := range []struct {
+			name     string
+			expected string
+		}{
+			{"report 2026.pdf", `attachment; filename="report 2026.pdf"`},
+			{`a"b;c.txt`, `attachment; filename="a\"b;c.txt"`},
+			{"dir/report.pdf", "attachment; filename=report.pdf"},
+			{"报表 2026.pdf", `attachment; filename*=utf-8''%E6%8A%A5%E8%A1%A8%202026.pdf`},
+			{"evil\r\nX-Injected: 1.txt", `attachment; filename="evilX-Injected: 1.txt"`},
+			{".", "attachment; filename=download"},
+		} {
+			resp, err := client.Get(ctx, "/ServeFileDownload", g.Map{
+				"filePath": srcPath,
+				"name":     testCase.name,
+			})
+			t.AssertNil(err)
+			t.Assert(resp.Header.Get("Content-Disposition"), testCase.expected)
+			t.Assert(strings.HasPrefix(resp.Header.Get("Content-Type"), "text/plain"), true)
+		}
 	})
 }
 
