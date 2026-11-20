@@ -43,7 +43,7 @@ func NewTraceID() (traceID trace.TraceID) {
 
 // NewSpanID creates and returns a span ID.
 func NewSpanID() (spanID trace.SpanID) {
-	copy(spanID[:], gbinary.EncodeInt64(time.Now().UnixNano()/1e3))
+	copy(spanID[:], gbinary.EncodeInt64(time.Now().UnixMicro()))
 	copy(spanID[4:], grand.B(4))
 	return
 }
