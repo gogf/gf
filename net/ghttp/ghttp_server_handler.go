@@ -9,7 +9,7 @@ package ghttp
 import (
 	"net/http"
 	"os"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/gogf/gf/v2/encoding/ghtml"
@@ -333,14 +333,15 @@ func (s *Server) listDir(r *Request, f http.File) {
 		return
 	}
 	// The folder type has the most priority than file.
-	sort.Slice(files, func(i, j int) bool {
-		if files[i].IsDir() && !files[j].IsDir() {
-			return true
+	slices.SortFunc(files, func(a, b os.FileInfo) int {
+		aIsDir, bIsDir := a.IsDir(), b.IsDir()
+		if aIsDir && !bIsDir {
+			return -1
 		}
-		if !files[i].IsDir() && files[j].IsDir() {
-			return false
+		if !aIsDir && bIsDir {
+			return 1
 		}
-		return files[i].Name() < files[j].Name()
+		return strings.Compare(a.Name(), b.Name())
 	})
 	if r.Response.Header().Get(HeaderContentType) == "" {
 		r.Response.Header().Set(HeaderContentType, "text/html; charset=utf-8")
