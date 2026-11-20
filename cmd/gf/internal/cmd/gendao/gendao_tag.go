@@ -19,6 +19,7 @@ const (
 gf gen dao
 gf gen dao -l "mysql:root:12345678@tcp(127.0.0.1:3306)/test"
 gf gen dao -p ./model -g user-center -t user,user_detail,user_login
+gf gen dao -l "pgsql:postgres:12345678@tcp(127.0.0.1:5432)/test" --schema tenant_a
 gf gen dao -r user_
 `
 
@@ -33,6 +34,8 @@ CONFIGURATION SUPPORT
 		- link:     "mysql:root:12345678@tcp(127.0.0.1:3306)/test"
 		  tables:   "order,products"
 		  jsonCase: "CamelLower"
+		- link:     "pgsql:postgres:12345678@tcp(127.0.0.1:5432)/test"
+		  schema:   "tenant_a"
 		- link:   "mysql:root:12345678@tcp(127.0.0.1:3306)/primary"
 		  path:   "./my-app"
 		  prefix: "primary_"
@@ -85,6 +88,7 @@ generated go file name case for dao/table/do/entity files, cases are as follows:
 specifying the configuration group name of database for generated ORM instance,
 it's not necessary and the default value is "default"
 `
+	CGenDaoBriefSchema   = `specifying the database schema used to discover and generate table models`
 	CGenDaoBriefJsonCase = `
 generated json tag case for model struct, cases are as follows:
 | Case            | Example            |
@@ -154,6 +158,7 @@ func init() {
 		`CGenDaoBriefFieldMapping`:       CGenDaoBriefFieldMapping,
 		`CGenDaoBriefShardingPattern`:    CGenDaoBriefShardingPattern,
 		`CGenDaoBriefGroup`:              CGenDaoBriefGroup,
+		`CGenDaoBriefSchema`:             CGenDaoBriefSchema,
 		`CGenDaoBriefJsonCase`:           CGenDaoBriefJsonCase,
 		`CGenDaoBriefTplDaoIndexPath`:    CGenDaoBriefTplDaoIndexPath,
 		`CGenDaoBriefTplDaoInternalPath`: CGenDaoBriefTplDaoInternalPath,
