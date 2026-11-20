@@ -7,8 +7,10 @@
 package gutil_test
 
 import (
+	"math"
 	"testing"
 
+	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gutil"
 )
@@ -80,7 +82,7 @@ func Test_ComparatorUint8(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorUint8(1, 1), 0)
-		t.Assert(gutil.ComparatorUint8(2, 6), 252)
+		t.Assert(gutil.ComparatorUint8(2, 6), -1)
 		t.Assert(gutil.ComparatorUint8(2, 1), 1)
 	})
 }
@@ -89,7 +91,7 @@ func Test_ComparatorUint16(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorUint16(1, 1), 0)
-		t.Assert(gutil.ComparatorUint16(1, 2), 65535)
+		t.Assert(gutil.ComparatorUint16(1, 2), -1)
 		t.Assert(gutil.ComparatorUint16(2, 1), 1)
 	})
 }
@@ -98,7 +100,7 @@ func Test_ComparatorUint32(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorUint32(1, 1), 0)
-		t.Assert(gutil.ComparatorUint32(-1000, 2147483640), 2147482656)
+		t.Assert(gutil.ComparatorUint32(1, 2), -1)
 		t.Assert(gutil.ComparatorUint32(2, 1), 1)
 	})
 }
@@ -134,7 +136,7 @@ func Test_ComparatorByte(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.ComparatorByte(1, 1), 0)
-		t.Assert(gutil.ComparatorByte(1, 2), 255)
+		t.Assert(gutil.ComparatorByte(1, 2), -1)
 		t.Assert(gutil.ComparatorByte(2, 1), 1)
 	})
 }
@@ -145,6 +147,29 @@ func Test_ComparatorRune(t *testing.T) {
 		t.Assert(gutil.ComparatorRune(1, 1), 0)
 		t.Assert(gutil.ComparatorRune(1, 2), -1)
 		t.Assert(gutil.ComparatorRune(2, 1), 1)
+	})
+}
+
+// Test_Comparator_Overflow checks that the integer comparators keep the sign of the comparison
+// when the difference of both values does not fit into the compared type.
+func Test_Comparator_Overflow(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gutil.ComparatorInt(math.MaxInt, -1), 1)
+		t.Assert(gutil.ComparatorInt8(100, -100), 1)
+		t.Assert(gutil.ComparatorInt8(-100, 100), -1)
+		t.Assert(gutil.ComparatorInt16(30000, -30000), 1)
+		t.Assert(gutil.ComparatorInt32(math.MaxInt32, -1), 1)
+		t.Assert(gutil.ComparatorInt64(int64(math.MaxInt64), -1), 1)
+		t.Assert(gutil.ComparatorUint(0, 1), -1)
+		t.Assert(gutil.ComparatorUint32(0, uint32(math.MaxUint32)), -1)
+		t.Assert(gutil.ComparatorUint64(uint64(math.MaxUint64), 0), 1)
+		t.Assert(gutil.ComparatorByte(200, 100), 1)
+		t.Assert(gutil.ComparatorRune(math.MinInt32, 1), -1)
+
+		// A sorted array relies on the sign of the comparator result.
+		array := garray.NewSortedArray(gutil.ComparatorUint8)
+		array.Add(2, 6, 1, 200)
+		t.Assert(array.Slice(), []any{1, 2, 6, 200})
 	})
 }
 
