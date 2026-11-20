@@ -186,7 +186,7 @@ func (a *AdapterFile) doGetFilePath(fileNameOrPath string) (filePath string) {
 			tempPath = tryFolder + fileNameOrPath
 			if resFile = gres.Get(tempPath); resFile != nil {
 				fileInfo, _ = resFile.Stat()
-				if fileInfo != nil && !fileInfo.IsDir() {
+				if !fileInfo.IsDir() {
 					filePath = resFile.Name()
 					return
 				}
@@ -198,7 +198,7 @@ func (a *AdapterFile) doGetFilePath(fileNameOrPath string) (filePath string) {
 					tempPath = searchPath + tryFolder + fileNameOrPath
 					if resFile = gres.Get(tempPath); resFile != nil {
 						fileInfo, _ = resFile.Stat()
-						if fileInfo != nil && !fileInfo.IsDir() {
+						if !fileInfo.IsDir() {
 							filePath = resFile.Name()
 							return
 						}

@@ -7,14 +7,14 @@ require (
 	github.com/charmbracelet/bubbletea v1.3.6
 	github.com/charmbracelet/huh v1.0.0
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/gogf/gf/contrib/drivers/clickhouse/v2 v2.10.4
-	github.com/gogf/gf/contrib/drivers/dm/v2 v2.10.4
-	github.com/gogf/gf/contrib/drivers/mssql/v2 v2.10.4
-	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.10.4
-	github.com/gogf/gf/contrib/drivers/oracle/v2 v2.10.4
-	github.com/gogf/gf/contrib/drivers/pgsql/v2 v2.10.4
-	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.10.4
-	github.com/gogf/gf/v2 v2.10.4
+	github.com/gogf/gf/contrib/drivers/clickhouse/v2 v2.10.5
+	github.com/gogf/gf/contrib/drivers/dm/v2 v2.10.5
+	github.com/gogf/gf/contrib/drivers/mssql/v2 v2.10.5
+	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.10.5
+	github.com/gogf/gf/contrib/drivers/oracle/v2 v2.10.5
+	github.com/gogf/gf/contrib/drivers/pgsql/v2 v2.10.5
+	github.com/gogf/gf/contrib/drivers/sqlite/v2 v2.10.5
+	github.com/gogf/gf/v2 v2.10.5
 	github.com/gogf/selfupdate v0.0.0-20231215043001-5c48c528462f
 	github.com/olekukonko/tablewriter v1.1.0
 	github.com/schollz/progressbar/v3 v3.15.0
@@ -44,7 +44,7 @@ require (
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
-	github.com/glebarez/go-sqlite v1.21.2 // indirect
+	github.com/glebarez/go-sqlite v1.22.0 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
 	github.com/go-faster/errors v0.7.1 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
@@ -70,6 +70,7 @@ require (
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
+	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/olekukonko/errors v1.1.0 // indirect
 	github.com/olekukonko/ll v0.0.9 // indirect
 	github.com/paulmach/orb v0.11.1 // indirect
@@ -85,15 +86,17 @@ require (
 	go.opentelemetry.io/otel/metric v1.45.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.45.0 // indirect
 	go.opentelemetry.io/otel/trace v1.45.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.6 // indirect
 	golang.org/x/crypto v0.41.0 // indirect
+	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b // indirect
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/term v0.34.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	modernc.org/libc v1.22.5 // indirect
-	modernc.org/mathutil v1.5.0 // indirect
-	modernc.org/memory v1.5.0 // indirect
-	modernc.org/sqlite v1.23.1 // indirect
+	modernc.org/libc v1.66.3 // indirect
+	modernc.org/mathutil v1.7.1 // indirect
+	modernc.org/memory v1.11.0 // indirect
+	modernc.org/sqlite v1.39.0 // indirect
 )

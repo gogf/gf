@@ -43,10 +43,10 @@ func NewFrom(items any, safe ...bool) *Set {
 }
 
 // lazyInit lazily initializes the set.
-func (a *Set) lazyInit() {
-	a.once.Do(func() {
-		if a.TSet == nil {
-			a.TSet = NewTSet[any]()
+func (set *Set) lazyInit() {
+	set.once.Do(func() {
+		if set.TSet == nil {
+			set.TSet = NewTSet[any]()
 		}
 	})
 }
