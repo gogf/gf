@@ -8,6 +8,7 @@ package ghttp
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -17,7 +18,6 @@ import (
 	"github.com/gogf/gf/v2/os/gsession"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/os/gview"
-	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
 )
@@ -176,9 +176,8 @@ func (r *Request) GetHeader(key string, def ...string) string {
 // GetHost returns current request host name, which might be a domain or an IP without port.
 func (r *Request) GetHost() string {
 	if len(r.parsedHost) == 0 {
-		array, _ := gregex.MatchString(`(.+):(\d+)`, r.Host)
-		if len(array) > 1 {
-			r.parsedHost = array[1]
+		if host, _, err := net.SplitHostPort(r.Host); err == nil {
+			r.parsedHost = host
 		} else {
 			r.parsedHost = r.Host
 		}
@@ -222,11 +221,11 @@ func (r *Request) GetClientIp() string {
 
 // GetRemoteIp returns the ip from RemoteAddr.
 func (r *Request) GetRemoteIp() string {
-	array, _ := gregex.MatchString(`(.+):(\d+)`, r.RemoteAddr)
-	if len(array) > 1 {
-		return strings.Trim(array[1], "[]")
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
 	}
-	return r.RemoteAddr
+	return host
 }
 
 // GetSchema returns the schema of this request.

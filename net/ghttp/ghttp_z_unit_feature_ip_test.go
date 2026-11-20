@@ -10,6 +10,8 @@ package ghttp_test
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -18,6 +20,30 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/guid"
 )
+
+func TestRequest_GetHostAndRemoteIp(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var testCases = []struct {
+			host       string
+			remoteAddr string
+			expectHost string
+			expectIp   string
+		}{
+			{"example.com:8080", "192.0.2.1:1234", "example.com", "192.0.2.1"},
+			{"example.com", "", "example.com", ""},
+			{"[::1]:8080", "[2001:db8::1]:1234", "::1", "2001:db8::1"},
+			{"[::1]", "2001:db8::1", "[::1]", "2001:db8::1"},
+			{"::1", "bad-addr", "::1", "bad-addr"},
+		}
+		for _, testCase := range testCases {
+			r := &ghttp.Request{Request: httptest.NewRequest(http.MethodGet, "/", nil)}
+			r.Host = testCase.host
+			r.RemoteAddr = testCase.remoteAddr
+			t.Assert(r.GetHost(), testCase.expectHost)
+			t.Assert(r.GetRemoteIp(), testCase.expectIp)
+		}
+	})
+}
 
 func TestRequest_GetRemoteIp(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
