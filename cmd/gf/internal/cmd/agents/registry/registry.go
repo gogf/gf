@@ -20,7 +20,7 @@ package registry
 
 import (
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/gogf/gf/cmd/gf/v2/internal/cmd/agents/common"
@@ -120,8 +120,8 @@ func init() {
 	for index := range agents {
 		normalizeAgent(&agents[index])
 	}
-	sort.Slice(agents, func(left, right int) bool {
-		return agents[left].Name < agents[right].Name
+	slices.SortFunc(agents, func(a, b Agent) int {
+		return strings.Compare(a.Name, b.Name)
 	})
 	rebuildAliasMap()
 	common.SetAgentAliasResolver(ResolveAlias)

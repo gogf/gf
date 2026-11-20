@@ -33,50 +33,6 @@ func defaultSorter[T comparable](values []T, comparator func(a T, b T) int) {
 	slices.SortFunc(values, comparator)
 }
 
-// quickSortInt is the quick-sorting algorithm implements for int.
-func quickSortInt(values []int, comparator func(a, b int) int) {
-	if len(values) <= 1 {
-		return
-	}
-	mid, i := values[0], 1
-	head, tail := 0, len(values)-1
-	for head < tail {
-		if comparator(values[i], mid) > 0 {
-			values[i], values[tail] = values[tail], values[i]
-			tail--
-		} else {
-			values[i], values[head] = values[head], values[i]
-			head++
-			i++
-		}
-	}
-	values[head] = mid
-	quickSortInt(values[:head], comparator)
-	quickSortInt(values[head+1:], comparator)
-}
-
-// quickSortStr is the quick-sorting algorithm implements for string.
-func quickSortStr(values []string, comparator func(a, b string) int) {
-	if len(values) <= 1 {
-		return
-	}
-	mid, i := values[0], 1
-	head, tail := 0, len(values)-1
-	for head < tail {
-		if comparator(values[i], mid) > 0 {
-			values[i], values[tail] = values[tail], values[i]
-			tail--
-		} else {
-			values[i], values[head] = values[head], values[i]
-			head++
-			i++
-		}
-	}
-	values[head] = mid
-	quickSortStr(values[:head], comparator)
-	quickSortStr(values[head+1:], comparator)
-}
-
 // tToAnySlice converts []T to []any
 func tToAnySlice[T any](values []T) []any {
 	if values == nil {
