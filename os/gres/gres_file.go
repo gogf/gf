@@ -40,11 +40,11 @@ func (f *File) Content() []byte {
 		return nil
 	}
 	defer reader.Close()
-	buffer := bytes.NewBuffer(nil)
-	if _, err = io.Copy(buffer, reader); err != nil {
+	content, err := io.ReadAll(reader)
+	if err != nil {
 		return nil
 	}
-	return buffer.Bytes()
+	return content
 }
 
 // FileInfo returns an os.FileInfo for the FileHeader.

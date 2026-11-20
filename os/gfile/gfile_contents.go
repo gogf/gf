@@ -8,6 +8,7 @@ package gfile
 
 import (
 	"bufio"
+	"bytes"
 	"io"
 	"os"
 
@@ -100,10 +101,8 @@ func GetNextCharOffset(reader io.ReaderAt, char byte, start int64) int64 {
 	offset := start
 	for {
 		if n, err := reader.ReadAt(buffer, offset); n > 0 {
-			for i := 0; i < n; i++ {
-				if buffer[i] == char {
-					return int64(i) + offset
-				}
+			if i := bytes.IndexByte(buffer[:n], char); i >= 0 {
+				return int64(i) + offset
 			}
 			offset += int64(n)
 		} else if err != nil {

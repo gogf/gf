@@ -175,10 +175,11 @@ func unZipFileWithReader(reader *zip.Reader, dstFolderPath string, zippedPrefix 
 		name = gstr.Replace(file.Name, `\`, `/`)
 		name = gstr.Trim(name, "/")
 		if prefix != "" {
-			if !strings.HasPrefix(name, prefix) {
+			trimmedName, ok := strings.CutPrefix(name, prefix)
+			if !ok {
 				continue
 			}
-			name = name[len(prefix):]
+			name = trimmedName
 		}
 		dstPath = filepath.Join(dstFolderPath, name)
 		if file.FileInfo().IsDir() {
