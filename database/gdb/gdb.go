@@ -362,6 +362,15 @@ type DB interface {
 	// to return their dialect equivalent (e.g. "FOR SHARE" on PostgreSQL).
 	GetLockSharedClause() string
 
+	// FormatPartitionClause returns the SQL clause that restricts a statement to the
+	// table partitions named by Model.Partition(), like "PARTITION (p0,p1)" on MySQL,
+	// or an empty string if the dialect has no such clause.
+	// It returns an empty string in default, which leaves the partition names unused:
+	// a dialect that does not understand the clause must not be given one, as PostgreSQL
+	// reads "FROM t PARTITION (p0)" as a table alias and silently reads every partition
+	// with a renamed first column.
+	FormatPartitionClause(partitions []string) string
+
 	// FoldIdentifier returns the unquoted identifier `name` in the letter case that the
 	// database stores it in, which is `name` itself in default. Drivers whose dialect folds
 	// unquoted identifiers and reports them folded in TableFields (e.g. Oracle, folding them
