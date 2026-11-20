@@ -34,7 +34,7 @@ func (s *cronSchedule) checkMinIntervalAndItemMapMeet(
 ) (ok bool) {
 	if s.everySeconds != 0 {
 		// It checks using interval.
-		secondsAfterCreated := lastCheckTime.UnixNano()/1e9 - s.createTimestamp
+		secondsAfterCreated := lastCheckTime.Unix() - s.createTimestamp
 		if secondsAfterCreated > 0 {
 			return secondsAfterCreated%s.everySeconds == 0
 		}
