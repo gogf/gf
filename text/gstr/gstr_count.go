@@ -7,7 +7,6 @@
 package gstr
 
 import (
-	"bytes"
 	"strings"
 	"unicode"
 )
@@ -28,19 +27,8 @@ func CountI(s, substr string) int {
 // It considers parameter `str` as unicode string.
 func CountWords(str string) map[string]int {
 	m := make(map[string]int)
-	buffer := bytes.NewBuffer(nil)
-	for _, r := range str {
-		if unicode.IsSpace(r) {
-			if buffer.Len() > 0 {
-				m[buffer.String()]++
-				buffer.Reset()
-			}
-		} else {
-			buffer.WriteRune(r)
-		}
-	}
-	if buffer.Len() > 0 {
-		m[buffer.String()]++
+	for _, word := range strings.Fields(str) {
+		m[word]++
 	}
 	return m
 }
