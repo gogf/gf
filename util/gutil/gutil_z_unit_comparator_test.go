@@ -187,8 +187,8 @@ func Test_ComparatorIntOverflow(t *testing.T) {
 		t.Assert(gutil.ComparatorInt8(math.MinInt8, math.MaxInt8), -1)
 		t.Assert(gutil.ComparatorInt16(math.MinInt16, math.MaxInt16), -1)
 		t.Assert(gutil.ComparatorInt32(math.MinInt32, math.MaxInt32), -1)
-		t.Assert(gutil.ComparatorInt64(math.MinInt64, math.MaxInt64), -1)
-		t.Assert(gutil.ComparatorInt64(math.MaxInt64, math.MinInt64), 1)
+		t.Assert(gutil.ComparatorInt64(int64(math.MinInt64), int64(math.MaxInt64)), -1)
+		t.Assert(gutil.ComparatorInt64(int64(math.MaxInt64), int64(math.MinInt64)), 1)
 	})
 }
 
