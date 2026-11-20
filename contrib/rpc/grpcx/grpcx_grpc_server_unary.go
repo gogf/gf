@@ -87,3 +87,59 @@ func (s *GrpcServer) handleErrorLog(
 		Stdout(s.config.LogStdout).
 		File(s.config.ErrorLogPattern).Path(s.config.LogPath).Error(ctx, content)
 }
+
+// UnaryTimeout is the unary interceptor that limits the handling duration of a request using
+// `Timeout` and `MethodTimeouts` of the server configuration. It does nothing if no timeout applies.
+//
+// The handler runs in a separate goroutine so that the request returns with `DeadlineExceeded`
+// on time even if the handler blocks and ignores the context.
+func (s *GrpcServer) UnaryTimeout(
+	ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
+) (any, error) {
+	timeout, ok := s.config.MethodTimeouts[info.FullMethod]
+	if !ok {
+		timeout = s.config.Timeout
+	}
+	if timeout <= 0 {
+		return handler(ctx, req)
+	}
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	type result struct {
+		res      any
+		err      error
+		panicked any
+	}
+	// Buffered, so that the goroutine never leaks if the request has already timed out.
+	resultChan := make(chan result, 1)
+	go func() {
+		var r result
+		defer func() {
+			if p := recover(); p != nil {
+				r.panicked = p
+			}
+			resultChan <- r
+		}()
+		r.res, r.err = handler(ctx, req)
+	}()
+
+	select {
+	case r := <-resultChan:
+		if r.panicked != nil {
+			panic(r.panicked)
+		}
+		return r.res, r.err
+	case <-ctx.Done():
+		// Prefer the real result if it is ready at the same moment.
+		select {
+		case r := <-resultChan:
+			if r.panicked != nil {
+				panic(r.panicked)
+			}
+			return r.res, r.err
+		default:
+		}
+		return nil, status.FromContextError(ctx.Err()).Err()
+	}
+}
