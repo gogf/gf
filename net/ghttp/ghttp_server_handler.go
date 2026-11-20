@@ -336,19 +336,10 @@ func openStaticFile(ctx context.Context, f *staticFile) (*os.File, error) {
 	if f.RootPath == "" {
 		return os.Open(f.Path)
 	}
-	rootPath, err := filepath.Abs(f.RootPath)
-	if err != nil {
-		return nil, err
-	}
-	path, err := filepath.Abs(f.Path)
-	if err != nil {
-		return nil, err
-	}
+	rootPath := gfile.Abs(f.RootPath)
+	path := gfile.Abs(f.Path)
 	relPath, err := filepath.Rel(rootPath, path)
-	if err != nil {
-		return nil, err
-	}
-	if !filepath.IsLocal(relPath) {
+	if err != nil || !filepath.IsLocal(relPath) {
 		return nil, gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`path "%s" is outside of root "%s"`,
