@@ -325,6 +325,18 @@ func (s *Server) serveFile(r *Request, f *staticFile, allowIndex ...bool) {
 	}
 }
 
+// compareStaticFiles sorts directories before files, then by name.
+func compareStaticFiles(a, b os.FileInfo) int {
+	aIsDir, bIsDir := a.IsDir(), b.IsDir()
+	if aIsDir && !bIsDir {
+		return -1
+	}
+	if !aIsDir && bIsDir {
+		return 1
+	}
+	return strings.Compare(a.Name(), b.Name())
+}
+
 // listDir lists the sub files of specified directory as HTML content to the client.
 func (s *Server) listDir(r *Request, f http.File) {
 	files, err := f.Readdir(-1)
@@ -333,16 +345,7 @@ func (s *Server) listDir(r *Request, f http.File) {
 		return
 	}
 	// The folder type has the most priority than file.
-	slices.SortFunc(files, func(a, b os.FileInfo) int {
-		aIsDir, bIsDir := a.IsDir(), b.IsDir()
-		if aIsDir && !bIsDir {
-			return -1
-		}
-		if !aIsDir && bIsDir {
-			return 1
-		}
-		return strings.Compare(a.Name(), b.Name())
-	})
+	slices.SortFunc(files, compareStaticFiles)
 	if r.Response.Header().Get(HeaderContentType) == "" {
 		r.Response.Header().Set(HeaderContentType, "text/html; charset=utf-8")
 	}
