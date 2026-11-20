@@ -34,10 +34,10 @@ func NewIntSetFrom(items []int, safe ...bool) *IntSet {
 }
 
 // lazyInit lazily initializes the set.
-func (a *IntSet) lazyInit() {
-	a.once.Do(func() {
-		if a.TSet == nil {
-			a.TSet = NewTSet[int]()
+func (set *IntSet) lazyInit() {
+	set.once.Do(func() {
+		if set.TSet == nil {
+			set.TSet = NewTSet[int]()
 		}
 	})
 }
