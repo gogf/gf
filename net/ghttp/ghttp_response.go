@@ -12,10 +12,12 @@ import (
 	"mime"
 	"net/http"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 	"unicode"
 
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/net/ghttp/internal/response"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -92,6 +94,55 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 	r.Header().Set(HeaderContentDisposition, formatContentDisposition(downloadName))
 	r.Header().Set(HeaderAccessControlExposeHeaders, HeaderContentDisposition)
 	r.Server.serveFile(r.Request, serveFile)
+}
+
+// ServeReader streams the content of reader to the client without buffering it
+// in memory. The size specifies the number of bytes to send, and a negative
+// size means the content length is unknown. Range requests are not supported
+// and no Accept-Ranges header is set. If reader implements io.Closer, it is
+// closed after the content is sent.
+//
+// Note that the content is written to the client directly, so it should not be
+// mixed with Response.Write in the same handler.
+func (r *Response) ServeReader(reader io.Reader, size int64) {
+	r.serveReader(reader, size)
+}
+
+// ServeReaderDownload streams the content of reader as a download. The
+// contentType defaults to application/octet-stream when omitted. Its size,
+// Range and io.Closer behavior is the same as ServeReader.
+func (r *Response) ServeReaderDownload(reader io.Reader, size int64, name string, contentType ...string) {
+	r.Header().Set(HeaderContentDisposition, formatContentDisposition(name))
+	r.Header().Set(HeaderAccessControlExposeHeaders, HeaderContentDisposition)
+	downloadContentType := "application/octet-stream"
+	if len(contentType) > 0 && contentType[0] != "" {
+		downloadContentType = contentType[0]
+	}
+	r.Header().Set(HeaderContentType, downloadContentType)
+	r.serveReader(reader, size)
+}
+
+// serveReader is the shared implementation of ServeReader and ServeReaderDownload.
+func (r *Response) serveReader(reader io.Reader, size int64) {
+	if size >= 0 {
+		r.Header().Set(HeaderContentLength, strconv.FormatInt(size, 10))
+	}
+	if closer, ok := reader.(io.Closer); ok {
+		defer func() {
+			if err := closer.Close(); err != nil {
+				intlog.Errorf(r.Request.Context(), `close response reader failed: %+v`, err)
+			}
+		}()
+	}
+	writer := r.RawWriter()
+	// HEAD requests receive the headers only and must not consume the reader.
+	if r.Request.Method == http.MethodHead {
+		writer.WriteHeader(http.StatusOK)
+		return
+	}
+	if _, err := io.Copy(writer, reader); err != nil {
+		intlog.Errorf(r.Request.Context(), `stream response content failed: %+v`, err)
+	}
 }
 
 // formatContentDisposition returns an RFC 6266 attachment value with a sanitized
