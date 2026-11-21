@@ -141,33 +141,22 @@ func (c *Core) TableFields(ctx context.Context, table string, schema ...string) 
 	return
 }
 
-// ClearTableFields removes certain cached table fields of current configuration group.
+// ClearTableFields clears the cached field data for the specified table so that the
+// next call to TableFields re-queries the database. The table's existence marker is
+// preserved so that HasTable continues to return true without a DB round-trip.
 func (c *Core) ClearTableFields(ctx context.Context, table string, schema ...string) (err error) {
-	tableFieldsCacheKey := genTableFieldsCacheKey(
+	c.db.GetCore().registry.Set(
 		c.db.GetGroup(),
 		gutil.GetOrDefaultStr(c.db.GetSchema(), schema...),
 		table,
+		nil,
 	)
-	_, err = c.innerMemCache.Remove(ctx, tableFieldsCacheKey)
 	return
 }
 
 // ClearTableFieldsAll removes all cached table fields of current configuration group.
 func (c *Core) ClearTableFieldsAll(ctx context.Context) (err error) {
-	var (
-		keys, _     = c.innerMemCache.KeyStrings(ctx)
-		cachePrefix = cachePrefixTableFields
-		removedKeys = make([]any, 0)
-	)
-	for _, key := range keys {
-		if gstr.HasPrefix(key, cachePrefix) {
-			removedKeys = append(removedKeys, key)
-		}
-	}
-
-	if len(removedKeys) > 0 {
-		err = c.innerMemCache.Removes(ctx, removedKeys)
-	}
+	c.db.GetCore().registry.ClearAll()
 	return
 }
 
@@ -194,9 +183,7 @@ func (c *Core) ClearCacheAll(ctx context.Context) (err error) {
 	if err = c.db.GetCache().Clear(ctx); err != nil {
 		return err
 	}
-	if err = c.GetInnerMemCache().Clear(ctx); err != nil {
-		return err
-	}
+	c.db.GetCore().registry.ClearAll()
 	return
 }
 
