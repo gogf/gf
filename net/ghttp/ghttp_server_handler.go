@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"html"
 	"net/http"
 	"net/url"
 	"os"
@@ -14,7 +15,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/gogf/gf/v2/encoding/ghtml"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
@@ -330,7 +330,7 @@ func (s *Server) serveFile(r *Request, f *staticFile, allowIndex ...bool) {
 // formatDirHref returns an HTML-safe, URL-escaped href for a directory path.
 func formatDirHref(urlPath string) string {
 	u := url.URL{Path: urlPath}
-	return ghtml.SpecialChars(u.String())
+	return html.EscapeString(u.String())
 }
 
 // listDir lists the sub files of specified directory as HTML content to the client.
@@ -360,7 +360,7 @@ func (s *Server) listDir(r *Request, f http.File) {
 	r.Response.Write(`</style>`)
 	r.Response.Write(`</head>`)
 	r.Response.Write(`<body>`)
-	r.Response.Writef(`<h1>Index of %s</h1>`, ghtml.SpecialChars(r.URL.Path))
+	r.Response.Writef(`<h1>Index of %s</h1>`, html.EscapeString(r.URL.Path))
 	r.Response.Writef(`<hr />`)
 	r.Response.Write(`<table>`)
 	if r.URL.Path != "/" {
@@ -379,7 +379,7 @@ func (s *Server) listDir(r *Request, f http.File) {
 			size = "-"
 		}
 		r.Response.Write(`<tr>`)
-		r.Response.Writef(`<td><a href="%s">%s</a></td>`, formatDirHref(prefix+"/"+name), ghtml.SpecialChars(name))
+		r.Response.Writef(`<td><a href="%s">%s</a></td>`, formatDirHref(prefix+"/"+name), html.EscapeString(name))
 		r.Response.Writef(`<td style="width:300px;text-align:center;">%s</td>`, gtime.New(file.ModTime()).ISO8601())
 		r.Response.Writef(`<td style="width:80px;text-align:right;">%s</td>`, size)
 		r.Response.Write(`</tr>`)
