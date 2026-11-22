@@ -65,8 +65,7 @@ func Decode(data []byte) (res map[string]any, err error) {
 		}
 	}
 	if err = scanner.Err(); err != nil {
-		err = gerror.Wrapf(err, `scanner.Scan failed`)
-		return nil, err
+		return nil, gerror.Wrapf(err, `scanner.Scan failed`)
 	}
 
 	if !haveSection {
