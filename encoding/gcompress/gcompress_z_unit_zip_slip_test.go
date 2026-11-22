@@ -90,6 +90,63 @@ func Test_UnZipContent_SymlinkEscape(t *testing.T) {
 	})
 }
 
+func Test_UnZipContent_SkipAndErrorPaths(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		newZip := func(build func(writer *zip.Writer)) []byte {
+			var buffer bytes.Buffer
+			writer := zip.NewWriter(&buffer)
+			build(writer)
+			t.AssertNil(writer.Close())
+			return buffer.Bytes()
+		}
+
+		root := t.TempDir()
+
+		// Entries collapsing to "" or "." are skipped.
+		dst := gfile.Join(root, "skip")
+		content := newZip(func(writer *zip.Writer) {
+			for _, name := range []string{"/", "./"} {
+				_, err := writer.Create(name)
+				t.AssertNil(err)
+			}
+		})
+		t.AssertNil(gcompress.UnZipContent(content, dst))
+		t.Assert(gfile.Exists(gfile.Join(dst, "x")), false)
+
+		// Directory entry conflicting with an existing file.
+		dst = gfile.Join(root, "dir-conflict")
+		t.AssertNil(gfile.Mkdir(dst))
+		t.AssertNil(os.WriteFile(gfile.Join(dst, "a"), nil, 0644))
+		content = newZip(func(writer *zip.Writer) {
+			_, err := writer.Create("a/")
+			t.AssertNil(err)
+		})
+		t.AssertNE(gcompress.UnZipContent(content, dst), nil)
+
+		// Unsupported compression method.
+		dst = gfile.Join(root, "bad-method")
+		content = newZip(func(writer *zip.Writer) {
+			_, err := writer.CreateRaw(&zip.FileHeader{
+				Name:   "bad.txt",
+				Method: 99,
+			})
+			t.AssertNil(err)
+		})
+		t.AssertNE(gcompress.UnZipContent(content, dst), nil)
+
+		// File entry conflicting with an existing directory.
+		dst = gfile.Join(root, "file-conflict")
+		t.AssertNil(gfile.Mkdir(gfile.Join(dst, "b")))
+		content = newZip(func(writer *zip.Writer) {
+			fileWriter, err := writer.Create("b")
+			t.AssertNil(err)
+			_, err = fileWriter.Write([]byte("x"))
+			t.AssertNil(err)
+		})
+		t.AssertNE(gcompress.UnZipContent(content, dst), nil)
+	})
+}
+
 func Test_UnZipContent_NormalAndPrefix(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var buffer bytes.Buffer
