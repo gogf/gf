@@ -150,6 +150,26 @@ func Test_ViolenceCheck(t *testing.T) {
 	})
 }
 
+func Test_NegativeIndex(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		j, err := gjson.DecodeToJson([]byte(`{"a":[1,2,3]}`))
+		t.AssertNil(err)
+		t.Assert(j.Get("a.0"), 1)
+		t.Assert(j.Get("a.-1"), nil)
+		t.Assert(j.Get("a.-4"), nil)
+
+		j.SetViolenceCheck(true)
+		t.Assert(j.Get("a.0"), 1)
+		t.Assert(j.Get("a.-1"), nil)
+		t.Assert(j.Get("a.-4"), nil)
+
+		t.AssertNE(j.Set("a.-1", 9), nil)
+		t.AssertNE(j.Remove("a.-1"), nil)
+		t.AssertNE(gjson.New(nil).Set("-1", 9), nil)
+		t.Assert(j.Get("a").Interfaces(), g.Slice{1, 2, 3})
+	})
+}
+
 func Test_GetVar(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {

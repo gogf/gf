@@ -170,6 +170,9 @@ func (j *Json) setValue(pattern string, value any, removed bool) error {
 				err = gerror.WrapCodef(gcode.CodeInvalidParameter, err, `strconv.Atoi failed for string "%s"`, array[i])
 				return err
 			}
+			if valueNum < 0 {
+				return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid array index "%s" in pattern "%s"`, array[i], pattern)
+			}
 
 			if i == length-1 {
 				// Leaf node.
@@ -261,6 +264,9 @@ func (j *Json) setValue(pattern string, value any, removed bool) error {
 			}
 			if gstr.IsNumeric(array[i]) {
 				n, _ := strconv.Atoi(array[i])
+				if n < 0 {
+					return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid array index "%s" in pattern "%s"`, array[i], pattern)
+				}
 				s := make([]any, n+1)
 				if i == length-1 {
 					s[n] = value
@@ -480,7 +486,7 @@ func (j *Json) checkPatternByPointer(key string, pointer *any) *any {
 	case []any:
 		if gstr.IsNumeric(key) {
 			n, err := strconv.Atoi(key)
-			if err == nil && len((*pointer).([]any)) > n {
+			if err == nil && n >= 0 && len((*pointer).([]any)) > n {
 				return &(*pointer).([]any)[n]
 			}
 		}
