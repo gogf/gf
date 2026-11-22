@@ -167,6 +167,20 @@ func Test_NegativeIndex(t *testing.T) {
 		t.AssertNE(j.Remove("a.-1"), nil)
 		t.AssertNE(gjson.New(nil).Set("-1", 9), nil)
 		t.Assert(j.Get("a").Interfaces(), g.Slice{1, 2, 3})
+
+		// Negative indexes in non-leaf segments used as the next node size.
+		t.AssertNE(gjson.New(`{}`).Set("x.-1", 1), nil)
+		t.AssertNE(gjson.New(`{}`).Set("x.-2", 1), nil)
+		t.AssertNE(gjson.New(`{"a":[1]}`).Set("a.0.-2", 1), nil)
+		t.AssertNE(gjson.New(`{"a":[]}`).Set("a.5.-2", 1), nil)
+
+		// Negative numeric keys of a map are still valid.
+		m := gjson.New(`{"m":{"-1":7}}`)
+		t.Assert(m.Get("m.-1"), 7)
+		t.AssertNil(m.Set("m.-2", 8))
+		t.Assert(m.Get("m.-2"), 8)
+		t.AssertNil(m.Remove("m.-2"))
+		t.Assert(m.Get("m.-2"), nil)
 	})
 }
 

@@ -136,6 +136,9 @@ func (j *Json) setValue(pattern string, value any, removed bool) error {
 					if gstr.IsNumeric(array[i+1]) {
 						// Creating array node.
 						n, _ := strconv.Atoi(array[i+1])
+						if n < 0 {
+							return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid array index "%s" in pattern "%s"`, array[i+1], pattern)
+						}
 						var v any = make([]any, n+1)
 						pparent = j.setPointerWithValue(pointer, array[i], v)
 						pointer = &v
@@ -206,6 +209,9 @@ func (j *Json) setValue(pattern string, value any, removed bool) error {
 				// Branch node.
 				if gstr.IsNumeric(array[i+1]) {
 					n, _ := strconv.Atoi(array[i+1])
+					if n < 0 {
+						return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid array index "%s" in pattern "%s"`, array[i+1], pattern)
+					}
 					pSlice := (*pointer).([]any)
 					if len(pSlice) > valueNum {
 						item := pSlice[valueNum]
