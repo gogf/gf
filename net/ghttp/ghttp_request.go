@@ -176,10 +176,18 @@ func (r *Request) GetHeader(key string, def ...string) string {
 // GetHost returns current request host name, which might be a domain or an IP without port.
 func (r *Request) GetHost() string {
 	if len(r.parsedHost) == 0 {
-		if host, _, err := net.SplitHostPort(r.Host); err == nil {
-			r.parsedHost = host
-		} else {
+		host, port, err := net.SplitHostPort(r.Host)
+		switch {
+		case err != nil:
 			r.parsedHost = r.Host
+		case host == "":
+			return r.Host
+		case port == "" || strings.Trim(port, "0123456789") != "":
+			r.parsedHost = r.Host
+		case strings.HasPrefix(r.Host, "["):
+			r.parsedHost = "[" + host + "]"
+		default:
+			r.parsedHost = host
 		}
 	}
 	return r.parsedHost

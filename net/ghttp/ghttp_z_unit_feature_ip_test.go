@@ -31,7 +31,10 @@ func TestRequest_GetHostAndRemoteIp(t *testing.T) {
 		}{
 			{"example.com:8080", "192.0.2.1:1234", "example.com", "192.0.2.1"},
 			{"example.com", "", "example.com", ""},
-			{"[::1]:8080", "[2001:db8::1]:1234", "::1", "2001:db8::1"},
+			{"example.com:http", "", "example.com:http", ""},
+			{"example.com:", "", "example.com:", ""},
+			{":8080", "", ":8080", ""},
+			{"[::1]:8080", "[2001:db8::1]:1234", "[::1]", "2001:db8::1"},
 			{"[::1]", "2001:db8::1", "[::1]", "2001:db8::1"},
 			{"::1", "bad-addr", "::1", "bad-addr"},
 		}
