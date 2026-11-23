@@ -135,3 +135,18 @@ func Test_Bits(t *testing.T) {
 		}
 	})
 }
+
+func Test_EncodeBitsToBytes(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gbinary.EncodeBitsToBytes(nil), []byte{})
+		// Bits are encoded left to right and padded with zeros to the byte boundary.
+		t.Assert(gbinary.EncodeBitsToBytes([]gbinary.Bit{1, 1, 0}), []byte{0xC0})
+		t.Assert(gbinary.EncodeBitsToBytes([]gbinary.Bit{1, 0, 1, 0, 1, 0, 1, 0}), []byte{0xAA})
+		t.Assert(gbinary.EncodeBitsToBytes([]gbinary.Bit{1, 0, 1, 0, 1, 0, 1, 0, 1}), []byte{0xAA, 0x80})
+
+		// The input slice, including its spare capacity, must not be modified.
+		backing := []gbinary.Bit{1, 1, 0, 1, 1, 1}
+		t.Assert(gbinary.EncodeBitsToBytes(backing[:3]), []byte{0xC0})
+		t.Assert(backing, []gbinary.Bit{1, 1, 0, 1, 1, 1})
+	})
+}
