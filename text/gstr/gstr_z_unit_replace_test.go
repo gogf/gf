@@ -48,6 +48,20 @@ func Test_ReplaceI_EmptySearch(t *testing.T) {
 	})
 }
 
+// The lower case of "İ", of the Kelvin sign "K" and of an invalid byte has another byte length.
+func Test_ReplaceI_LowerCaseSize(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.ReplaceI("İstanbul abc", "ABC", "x"), "İstanbul x")
+		t.Assert(gstr.ReplaceI("İabc İabc", "ABC", "x"), "İx İx")
+		t.Assert(gstr.ReplaceI("\xffabc", "ABC", "x"), "\xffx")
+		t.Assert(gstr.ReplaceI("İstanbul", "İSTANBUL", "x"), "x")
+		t.Assert(gstr.ReplaceI("abk", "K", "x"), "abk")
+		t.Assert(gstr.ReplaceIFunc("İİabc", "ABC", func(s string) string {
+			return "[" + s + "]"
+		}), "İİ[abc]")
+	})
+}
+
 func Test_ReplaceI_1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := "abcd乱入的中文ABCD"

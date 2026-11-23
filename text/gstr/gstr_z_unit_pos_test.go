@@ -62,6 +62,14 @@ func Test_PosI(t *testing.T) {
 		t.Assert(gstr.PosI(s1, "c"), 6)
 		t.Assert(gstr.PosI(s1, "china"), 6)
 	})
+	// The lower case of "İ" and of an invalid byte has another byte length.
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.PosI("İabc", "ABC"), 2)
+		t.Assert(gstr.PosI("İİabc", "ABC", 2), 4)
+		t.Assert(gstr.PosI("\xffabc", "ABC"), 1)
+		t.Assert(gstr.PosI("İstanbul", "İSTANBUL"), 0)
+		t.Assert(gstr.PosIRune("İabc", "ABC"), 1)
+	})
 }
 
 func Test_PosIRune(t *testing.T) {
@@ -135,6 +143,12 @@ func Test_PosRI(t *testing.T) {
 		t.Assert(gstr.PosRI(s1, "爱"), 3)
 		t.Assert(gstr.PosRI(s1, "C"), 19)
 		t.Assert(gstr.PosRI(s1, "China"), 6)
+	})
+	// The lower case of "İ" and of an invalid byte has another byte length.
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.PosRI("abcİABC", "abc"), 5)
+		t.Assert(gstr.PosRI("\xffabc", "ABC"), 1)
+		t.Assert(gstr.PosRIRune("abcİABC", "abc"), 4)
 	})
 }
 

@@ -6,7 +6,29 @@
 
 package gstr
 
-import "strings"
+import (
+	"strings"
+	"unicode"
+	"unicode/utf8"
+)
+
+// toLowerKeepSize converts `s` to lower case like strings.ToLower, but it leaves a rune unchanged
+// if its lower case has another byte length, for example "İ" or an invalid UTF-8 byte.
+// A byte offset in the result is therefore the same offset in `s`.
+func toLowerKeepSize(s string) string {
+	var b strings.Builder
+	b.Grow(len(s))
+	for i := 0; i < len(s); {
+		r, size := utf8.DecodeRuneInString(s[i:])
+		if lower := unicode.ToLower(r); utf8.RuneLen(lower) == size {
+			b.WriteRune(lower)
+		} else {
+			b.WriteString(s[i : i+size])
+		}
+		i += size
+	}
+	return b.String()
+}
 
 // Pos returns the position of the first occurrence of `needle`
 // in `haystack` from `startOffset`, case-sensitively.
@@ -55,7 +77,7 @@ func PosI(haystack, needle string, startOffset ...int) int {
 	if offset < 0 {
 		offset += length
 	}
-	pos := strings.Index(strings.ToLower(haystack[offset:]), strings.ToLower(needle))
+	pos := strings.Index(toLowerKeepSize(haystack[offset:]), toLowerKeepSize(needle))
 	if pos == -1 {
 		return -1
 	}
@@ -123,7 +145,7 @@ func PosRI(haystack, needle string, startOffset ...int) int {
 	} else {
 		haystack = haystack[offset:]
 	}
-	pos = strings.LastIndex(strings.ToLower(haystack), strings.ToLower(needle))
+	pos = strings.LastIndex(toLowerKeepSize(haystack), toLowerKeepSize(needle))
 	if offset > 0 && pos != -1 {
 		pos += offset
 	}
