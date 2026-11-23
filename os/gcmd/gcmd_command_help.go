@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 
 	"github.com/gogf/gf/v2/text/gstr"
 )
@@ -27,10 +28,8 @@ func (c *Command) PrintTo(writer io.Writer) {
 	var (
 		prefix    = gstr.Repeat(" ", 4)
 		buffer    = bytes.NewBuffer(nil)
-		arguments = make([]Argument, len(c.Arguments))
+		arguments = slices.Clone(c.Arguments)
 	)
-	// Copy options for printing.
-	copy(arguments, c.Arguments)
 	// Add built-in help option, just for info only.
 	arguments = append(arguments, defaultHelpOption)
 

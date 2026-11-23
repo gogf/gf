@@ -6,16 +6,13 @@
 
 package gstr
 
+import "slices"
+
 // SearchArray searches string `s` in string slice `a` case-sensitively,
 // returns its index in `a`.
 // If `s` is not found in `a`, it returns -1.
 func SearchArray(a []string, s string) int {
-	for i, v := range a {
-		if s == v {
-			return i
-		}
-	}
-	return NotFoundIndex
+	return slices.Index(a, s)
 }
 
 // InArray checks whether string `s` in slice `a`.
