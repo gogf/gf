@@ -96,25 +96,25 @@ cd hello && gf run main.go
 
 | Top-level package | Sub-packages | Description |
 | --- | --- | --- |
-| `frame/` | `g`, `gins` | Application facade and singleton container |
-| `net/` | `ghttp`, `gclient`, `gtcp`, `gudp`, `goai`, `gsvc`, `gsel`, `gtrace`, `gipv4`, `gipv6` | HTTP server and client, TCP/UDP, OpenAPI, service registry, load balancing, tracing, IP utilities |
-| `database/` | `gdb`, `gredis` | ORM and Redis client core |
-| `os/` (services) | `gcfg`, `glog`, `gcache`, `gsession`, `gview`, `gcron`, `gtimer`, `gcmd`, `gmetric`, `gmlock`, `gmutex` | Config, logging, cache, session, template, cron, CLI, metrics, memory lock, mutex |
+| `frame/` | [`g`](frame/g), [`gins`](frame/gins) | Application facade and singleton container |
+| `net/` | [`ghttp`](net/ghttp), [`gclient`](net/gclient), [`gtcp`](net/gtcp), [`gudp`](net/gudp), [`goai`](net/goai), [`gsvc`](net/gsvc), [`gsel`](net/gsel), [`gtrace`](net/gtrace), [`gipv4`](net/gipv4), [`gipv6`](net/gipv6) | HTTP server and client, TCP/UDP, OpenAPI, service registry, load balancing, tracing, IP utilities |
+| `database/` | [`gdb`](database/gdb), [`gredis`](database/gredis) | ORM and Redis client core |
+| `os/` (services) | [`gcfg`](os/gcfg), [`glog`](os/glog), [`gcache`](os/gcache), [`gsession`](os/gsession), [`gview`](os/gview), [`gcron`](os/gcron), [`gtimer`](os/gtimer), [`gcmd`](os/gcmd), [`gmetric`](os/gmetric), [`gmlock`](os/gmlock), [`gmutex`](os/gmutex) | Config, logging, cache, session, template, cron, CLI, metrics, memory lock, mutex |
 
 ### Utility libraries
 
 | Top-level package | Sub-packages | Description |
 | --- | --- | --- |
-| `os/` (base) | `gfile`, `gfsnotify`, `gproc`, `grpool`, `gfpool`, `gctx`, `genv`, `gtime`, `gres`, `gspath`, `gstructs`, `gbuild` | Files, file watching, processes, goroutine pool, file pointer pool, context, environment, time, resources, search path, structs, build info |
-| `container/` | `garray`, `gmap`, `gset`, `glist`, `gqueue`, `gring`, `gtree`, `gpool`, `gtype`, `gvar` | Concurrent-safe array, map, set, list, queue, ring, tree, object pool, type wrapper, generic variable |
-| `encoding/` | `gjson`, `gyaml`, `gtoml`, `gini`, `gxml`, `gproperties`, `gbase64`, `gbinary`, `gcharset`, `gcompress`, `ghash`, `ghtml`, `gurl` | Codecs, charset conversion, compression, hashing, HTML and URL handling |
-| `crypto/` | `gaes`, `gdes`, `grsa`, `gmd5`, `gsha1`, `gsha256`, `gsha512`, `gcrc32` | Symmetric and asymmetric encryption, digest algorithms |
-| `util/` | `gconv`, `gvalid`, `gmeta`, `gtag`, `gmode`, `gpage`, `grand`, `guid`, `gutil` | Type conversion, validation, metadata, struct tags, mode bits, pagination, random, unique ID, general utilities |
-| `text/` | `gstr`, `gregex` | String handling and regex wrapper |
-| `errors/` | `gerror`, `gcode` | Stack-aware errors and error codes |
-| `i18n/` | `gi18n` | Internationalization |
-| `debug/` | `gdebug` | Debug information |
-| `test/` | `gtest` | Unit test helpers |
+| `os/` (base) | [`gfile`](os/gfile), [`gfsnotify`](os/gfsnotify), [`gproc`](os/gproc), [`grpool`](os/grpool), [`gfpool`](os/gfpool), [`gctx`](os/gctx), [`genv`](os/genv), [`gtime`](os/gtime), [`gres`](os/gres), [`gspath`](os/gspath), [`gstructs`](os/gstructs), [`gbuild`](os/gbuild) | Files, file watching, processes, goroutine pool, file pointer pool, context, environment, time, resources, search path, structs, build info |
+| `container/` | [`garray`](container/garray), [`gmap`](container/gmap), [`gset`](container/gset), [`glist`](container/glist), [`gqueue`](container/gqueue), [`gring`](container/gring), [`gtree`](container/gtree), [`gpool`](container/gpool), [`gtype`](container/gtype), [`gvar`](container/gvar) | Concurrent-safe array, map, set, list, queue, ring, tree, object pool, type wrapper, generic variable |
+| `encoding/` | [`gjson`](encoding/gjson), [`gyaml`](encoding/gyaml), [`gtoml`](encoding/gtoml), [`gini`](encoding/gini), [`gxml`](encoding/gxml), [`gproperties`](encoding/gproperties), [`gbase64`](encoding/gbase64), [`gbinary`](encoding/gbinary), [`gcharset`](encoding/gcharset), [`gcompress`](encoding/gcompress), [`ghash`](encoding/ghash), [`ghtml`](encoding/ghtml), [`gurl`](encoding/gurl) | Codecs, charset conversion, compression, hashing, HTML and URL handling |
+| `crypto/` | [`gaes`](crypto/gaes), [`gdes`](crypto/gdes), [`grsa`](crypto/grsa), [`gmd5`](crypto/gmd5), [`gsha1`](crypto/gsha1), [`gsha256`](crypto/gsha256), [`gsha512`](crypto/gsha512), [`gcrc32`](crypto/gcrc32) | Symmetric and asymmetric encryption, digest algorithms |
+| `util/` | [`gconv`](util/gconv), [`gvalid`](util/gvalid), [`gmeta`](util/gmeta), [`gtag`](util/gtag), [`gmode`](util/gmode), [`gpage`](util/gpage), [`grand`](util/grand), [`guid`](util/guid), [`gutil`](util/gutil) | Type conversion, validation, metadata, struct tags, mode bits, pagination, random, unique ID, general utilities |
+| `text/` | [`gstr`](text/gstr), [`gregex`](text/gregex) | String handling and regex wrapper |
+| `errors/` | [`gerror`](errors/gerror), [`gcode`](errors/gcode) | Stack-aware errors and error codes |
+| `i18n/` | [`gi18n`](i18n/gi18n) | Internationalization |
+| `debug/` | [`gdebug`](debug/gdebug) | Debug information |
+| `test/` | [`gtest`](test/gtest) | Unit test helpers |
 
 ### Ecosystem modules (`contrib/`)
 

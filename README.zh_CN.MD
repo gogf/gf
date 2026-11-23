@@ -95,25 +95,25 @@ cd hello && gf run main.go
 
 | 顶层包 | 子包 | 说明 |
 | --- | --- | --- |
-| `frame/` | `g`、`gins` | 应用门面与单例容器 |
-| `net/` | `ghttp`、`gclient`、`gtcp`、`gudp`、`goai`、`gsvc`、`gsel`、`gtrace`、`gipv4`、`gipv6` | HTTP 服务与客户端、TCP/UDP、OpenAPI、服务注册、负载均衡、链路追踪、IP 工具 |
-| `database/` | `gdb`、`gredis` | ORM 与 Redis 客户端核心 |
-| `os/`（服务） | `gcfg`、`glog`、`gcache`、`gsession`、`gview`、`gcron`、`gtimer`、`gcmd`、`gmetric`、`gmlock`、`gmutex` | 配置、日志、缓存、会话、模板、定时任务、命令行、指标、内存锁、互斥锁 |
+| `frame/` | [`g`](frame/g)、[`gins`](frame/gins) | 应用门面与单例容器 |
+| `net/` | [`ghttp`](net/ghttp)、[`gclient`](net/gclient)、[`gtcp`](net/gtcp)、[`gudp`](net/gudp)、[`goai`](net/goai)、[`gsvc`](net/gsvc)、[`gsel`](net/gsel)、[`gtrace`](net/gtrace)、[`gipv4`](net/gipv4)、[`gipv6`](net/gipv6) | HTTP 服务与客户端、TCP/UDP、OpenAPI、服务注册、负载均衡、链路追踪、IP 工具 |
+| `database/` | [`gdb`](database/gdb)、[`gredis`](database/gredis) | ORM 与 Redis 客户端核心 |
+| `os/`（服务） | [`gcfg`](os/gcfg)、[`glog`](os/glog)、[`gcache`](os/gcache)、[`gsession`](os/gsession)、[`gview`](os/gview)、[`gcron`](os/gcron)、[`gtimer`](os/gtimer)、[`gcmd`](os/gcmd)、[`gmetric`](os/gmetric)、[`gmlock`](os/gmlock)、[`gmutex`](os/gmutex) | 配置、日志、缓存、会话、模板、定时任务、命令行、指标、内存锁、互斥锁 |
 
 ### 工具库
 
 | 顶层包 | 子包 | 说明 |
 | --- | --- | --- |
-| `os/`（基础） | `gfile`、`gfsnotify`、`gproc`、`grpool`、`gfpool`、`gctx`、`genv`、`gtime`、`gres`、`gspath`、`gstructs`、`gbuild` | 文件、文件监听、进程、协程池、文件指针池、上下文、环境变量、时间、资源、搜索路径、结构体、构建信息 |
-| `container/` | `garray`、`gmap`、`gset`、`glist`、`gqueue`、`gring`、`gtree`、`gpool`、`gtype`、`gvar` | 并发安全的数组、字典、集合、列表、队列、环、树、对象池、类型包装、通用变量 |
-| `encoding/` | `gjson`、`gyaml`、`gtoml`、`gini`、`gxml`、`gproperties`、`gbase64`、`gbinary`、`gcharset`、`gcompress`、`ghash`、`ghtml`、`gurl` | 各类编解码、字符集转换、压缩、哈希、HTML 与 URL 处理 |
-| `crypto/` | `gaes`、`gdes`、`grsa`、`gmd5`、`gsha1`、`gsha256`、`gsha512`、`gcrc32` | 对称与非对称加密、摘要算法 |
-| `util/` | `gconv`、`gvalid`、`gmeta`、`gtag`、`gmode`、`gpage`、`grand`、`guid`、`gutil` | 类型转换、数据校验、元数据、结构体标签、权限位、分页、随机数、唯一 ID、通用工具 |
-| `text/` | `gstr`、`gregex` | 字符串处理与正则封装 |
-| `errors/` | `gerror`、`gcode` | 带堆栈的错误与错误码 |
-| `i18n/` | `gi18n` | 国际化 |
-| `debug/` | `gdebug` | 调试信息 |
-| `test/` | `gtest` | 单元测试辅助 |
+| `os/`（基础） | [`gfile`](os/gfile)、[`gfsnotify`](os/gfsnotify)、[`gproc`](os/gproc)、[`grpool`](os/grpool)、[`gfpool`](os/gfpool)、[`gctx`](os/gctx)、[`genv`](os/genv)、[`gtime`](os/gtime)、[`gres`](os/gres)、[`gspath`](os/gspath)、[`gstructs`](os/gstructs)、[`gbuild`](os/gbuild) | 文件、文件监听、进程、协程池、文件指针池、上下文、环境变量、时间、资源、搜索路径、结构体、构建信息 |
+| `container/` | [`garray`](container/garray)、[`gmap`](container/gmap)、[`gset`](container/gset)、[`glist`](container/glist)、[`gqueue`](container/gqueue)、[`gring`](container/gring)、[`gtree`](container/gtree)、[`gpool`](container/gpool)、[`gtype`](container/gtype)、[`gvar`](container/gvar) | 并发安全的数组、字典、集合、列表、队列、环、树、对象池、类型包装、通用变量 |
+| `encoding/` | [`gjson`](encoding/gjson)、[`gyaml`](encoding/gyaml)、[`gtoml`](encoding/gtoml)、[`gini`](encoding/gini)、[`gxml`](encoding/gxml)、[`gproperties`](encoding/gproperties)、[`gbase64`](encoding/gbase64)、[`gbinary`](encoding/gbinary)、[`gcharset`](encoding/gcharset)、[`gcompress`](encoding/gcompress)、[`ghash`](encoding/ghash)、[`ghtml`](encoding/ghtml)、[`gurl`](encoding/gurl) | 各类编解码、字符集转换、压缩、哈希、HTML 与 URL 处理 |
+| `crypto/` | [`gaes`](crypto/gaes)、[`gdes`](crypto/gdes)、[`grsa`](crypto/grsa)、[`gmd5`](crypto/gmd5)、[`gsha1`](crypto/gsha1)、[`gsha256`](crypto/gsha256)、[`gsha512`](crypto/gsha512)、[`gcrc32`](crypto/gcrc32) | 对称与非对称加密、摘要算法 |
+| `util/` | [`gconv`](util/gconv)、[`gvalid`](util/gvalid)、[`gmeta`](util/gmeta)、[`gtag`](util/gtag)、[`gmode`](util/gmode)、[`gpage`](util/gpage)、[`grand`](util/grand)、[`guid`](util/guid)、[`gutil`](util/gutil) | 类型转换、数据校验、元数据、结构体标签、权限位、分页、随机数、唯一 ID、通用工具 |
+| `text/` | [`gstr`](text/gstr)、[`gregex`](text/gregex) | 字符串处理与正则封装 |
+| `errors/` | [`gerror`](errors/gerror)、[`gcode`](errors/gcode) | 带堆栈的错误与错误码 |
+| `i18n/` | [`gi18n`](i18n/gi18n) | 国际化 |
+| `debug/` | [`gdebug`](debug/gdebug) | 调试信息 |
+| `test/` | [`gtest`](test/gtest) | 单元测试辅助 |
 
 ### 生态模块（`contrib/`）
 
