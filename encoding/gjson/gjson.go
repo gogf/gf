@@ -206,10 +206,7 @@ func (j *Json) setValue(pattern string, value any, removed bool) error {
 					pSlice := (*pointer).([]any)
 					if len(pSlice) > valueNum {
 						item := pSlice[valueNum]
-						if s, ok := item.([]any); ok {
-							for i := 0; i < n-len(s); i++ {
-								s = append(s, nil)
-							}
+						if _, ok := item.([]any); ok {
 							pparent = pointer
 							pointer = &pSlice[valueNum]
 						} else {
