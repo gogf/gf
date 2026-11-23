@@ -97,9 +97,9 @@ cd hello && gf run main.go
 
 | 顶层包 | 子包 | 说明 |
 | --- | --- | --- |
-| `frame/` | [`g`](frame/g)、[`gins`](frame/gins) | 应用门面与单例容器。`g` 提供`g.Server()`、`g.DB()`、`g.Cfg()`等全局入口，`gins` 负责底层单例注册与依赖注入 |
-| `net/` | [`ghttp`](net/ghttp)、[`gclient`](net/gclient)、[`gtcp`](net/gtcp)、[`gudp`](net/gudp)、[`gipv4`](net/gipv4)、[`gipv6`](net/gipv6) | 网络通信。`ghttp` 提供路由、中间件、静态文件、WebSocket、平滑重启；`gclient` 提供链式 HTTP 客户端；`gtcp`/`gudp` 提供 TCP/UDP 服务端与客户端；`gipv4`/`gipv6` 提供 IP 地址解析与校验 |
-| `database/` | [`gdb`](database/gdb)、[`gredis`](database/gredis) | 数据访问。`gdb` 是驱动无关的 ORM，支持模型、事务、软删除、分表分库、钩子；`gredis` 定义 Redis 客户端抽象，支持单机、集群、哨兵模式 |
+| `frame/` | [`g`](frame/g)、[`gins`](frame/gins) | 应用门面与单例容器。`g`提供`g.Server()`、`g.DB()`、`g.Cfg()`等全局入口，`gins`负责单例注册与核心组件实例管理 |
+| `net/` | [`ghttp`](net/ghttp)、[`gclient`](net/gclient)、[`gtcp`](net/gtcp)、[`gudp`](net/gudp)、[`gipv4`](net/gipv4)、[`gipv6`](net/gipv6) | 网络通信。`ghttp`提供路由、中间件、静态文件、WebSocket、平滑重启；`gclient`提供链式 HTTP 客户端；`gtcp`/`gudp`提供 TCP/UDP 服务端与客户端；`gipv4`/`gipv6`提供 IP 地址解析与校验 |
+| `database/` | [`gdb`](database/gdb)、[`gredis`](database/gredis) | 数据访问。`gdb`是驱动无关的 ORM，支持模型、事务、软删除、分表分库、钩子；`gredis`定义 Redis 客户端抽象，支持单机、集群、哨兵模式 |
 | `os/` | [`gcfg`](os/gcfg)、[`glog`](os/glog)、[`gcache`](os/gcache)、[`gsession`](os/gsession)、[`gview`](os/gview)、[`gcron`](os/gcron)、[`gtimer`](os/gtimer) | 应用服务。配置支持多格式与热更新；日志支持分级输出、文件切割与链路上下文；缓存提供带过期时间的内存 LRU 与可插拔适配；会话支持文件、内存、Redis 存储；模板支持内置函数与 i18n；定时任务支持秒级 cron、间隔与一次性定时器 |
 
 ### 服务治理
@@ -108,8 +108,8 @@ cd hello && gf run main.go
 
 | 顶层包 | 子包 | 说明 |
 | --- | --- | --- |
-| `net/` | [`gsvc`](net/gsvc)、[`gsel`](net/gsel)、[`gtrace`](net/gtrace)、[`goai`](net/goai) | `gsvc` 定义服务注册与发现接口；`gsel` 定义负载均衡选择器；`gtrace` 封装 OpenTelemetry 链路追踪；`goai` 生成 OpenAPI 文档 |
-| `os/` | [`gmetric`](os/gmetric) | 指标抽象层，定义 Counter、Gauge、Histogram 等指标接口，上报实现见`contrib/metric/otelmetric` |
+| `net/` | [`gsvc`](net/gsvc)、[`gsel`](net/gsel)、[`gtrace`](net/gtrace)、[`goai`](net/goai) | `gsvc`定义服务注册与发现接口；`gsel`定义负载均衡选择器；`gtrace`封装 OpenTelemetry 链路追踪；`goai`生成 OpenAPI 文档 |
+| `os/` | [`gmetric`](os/gmetric) | 指标抽象层，定义`Counter`、`UpDownCounter`、`Histogram`以及`ObservableCounter`、`ObservableUpDownCounter`、`ObservableGauge`等指标接口，上报实现见`contrib/metric/otelmetric` |
 
 ### 工具库
 
@@ -121,9 +121,9 @@ cd hello && gf run main.go
 | `container/` | [`garray`](container/garray)、[`gmap`](container/gmap)、[`gset`](container/gset)、[`glist`](container/glist)、[`gqueue`](container/gqueue)、[`gring`](container/gring)、[`gtree`](container/gtree)、[`gpool`](container/gpool)、[`gtype`](container/gtype)、[`gvar`](container/gvar) | 并发安全容器。数组、字典、集合、列表、队列、环、树、对象池、类型包装、通用变量，均支持并发访问 |
 | `encoding/` | [`gjson`](encoding/gjson)、[`gyaml`](encoding/gyaml)、[`gtoml`](encoding/gtoml)、[`gini`](encoding/gini)、[`gxml`](encoding/gxml)、[`gproperties`](encoding/gproperties)、[`gbase64`](encoding/gbase64)、[`gbinary`](encoding/gbinary)、[`gcharset`](encoding/gcharset)、[`gcompress`](encoding/gcompress)、[`ghash`](encoding/ghash)、[`ghtml`](encoding/ghtml)、[`gurl`](encoding/gurl) | 编解码与格式转换。JSON、YAML、TOML、INI、XML、Properties 解析，Base64、二进制、字符集转换、压缩、哈希、HTML 转义、URL 编解码 |
 | `crypto/` | [`gaes`](crypto/gaes)、[`gdes`](crypto/gdes)、[`grsa`](crypto/grsa)、[`gmd5`](crypto/gmd5)、[`gsha1`](crypto/gsha1)、[`gsha256`](crypto/gsha256)、[`gsha512`](crypto/gsha512)、[`gcrc32`](crypto/gcrc32) | 加密与摘要。AES、DES 对称加密，RSA 非对称加密，MD5、SHA1、SHA256、SHA512 摘要，CRC32 校验 |
-| `util/` | [`gconv`](util/gconv)、[`gvalid`](util/gvalid)、[`gmeta`](util/gmeta)、[`gtag`](util/gtag)、[`gmode`](util/gmode)、[`gpage`](util/gpage)、[`grand`](util/grand)、[`guid`](util/guid)、[`gutil`](util/gutil) | 通用工具。类型转换、数据校验、元数据、结构体标签、权限位、分页、随机数、唯一 ID |
+| `util/` | [`gconv`](util/gconv)、[`gvalid`](util/gvalid)、[`gmeta`](util/gmeta)、[`gtag`](util/gtag)、[`gmode`](util/gmode)、[`gpage`](util/gpage)、[`grand`](util/grand)、[`guid`](util/guid)、[`gutil`](util/gutil) | 通用工具。类型转换、数据校验、元数据、结构体标签、运行模式（`develop`、`testing`、`staging`、`product`）、分页、随机数、唯一 ID |
 | `text/` | [`gstr`](text/gstr)、[`gregex`](text/gregex) | 文本处理。字符串查找、替换、分割、格式化，正则表达式封装 |
-| `errors/` | [`gerror`](errors/gerror)、[`gcode`](errors/gcode) | 错误处理。`gerror` 提供带堆栈的错误包装，`gcode` 定义标准错误码 |
+| `errors/` | [`gerror`](errors/gerror)、[`gcode`](errors/gcode) | 错误处理。`gerror`提供带堆栈的错误包装，`gcode`定义标准错误码 |
 | `i18n/` | [`gi18n`](i18n/gi18n) | 国际化，支持多语言资源加载与翻译 |
 | `debug/` | [`gdebug`](debug/gdebug) | 调试辅助，打印调用栈与变量信息 |
 | `test/` | [`gtest`](test/gtest) | 单元测试辅助，提供`gtest.C`用例块与链式断言 |
