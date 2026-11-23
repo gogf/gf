@@ -92,7 +92,8 @@ func (s *GrpcServer) handleErrorLog(
 // `Timeout` and `MethodTimeouts` of the server configuration. It does nothing if no timeout applies.
 //
 // The handler runs in a separate goroutine so that the request returns with `DeadlineExceeded`
-// on time even if the handler blocks and ignores the context.
+// on time even if the handler blocks and ignores the context. Cancellation is cooperative: a handler
+// that never looks at the context keeps running in the background after the request has returned.
 func (s *GrpcServer) UnaryTimeout(
 	ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
 ) (any, error) {
@@ -111,11 +112,14 @@ func (s *GrpcServer) UnaryTimeout(
 		err      error
 		panicked any
 	}
-	// Buffered, so that the goroutine never leaks if the request has already timed out.
+	// Buffered, so that the handler goroutine can always deliver its result and exit
+	// even if the request has already timed out and nobody receives it anymore.
 	resultChan := make(chan result, 1)
 	go func() {
 		var r result
 		defer func() {
+			// A panic can not cross goroutines, so it is passed back and rethrown in the request goroutine,
+			// where `UnaryRecover` turns it into an error.
 			if p := recover(); p != nil {
 				r.panicked = p
 			}
@@ -131,15 +135,6 @@ func (s *GrpcServer) UnaryTimeout(
 		}
 		return r.res, r.err
 	case <-ctx.Done():
-		// Prefer the real result if it is ready at the same moment.
-		select {
-		case r := <-resultChan:
-			if r.panicked != nil {
-				panic(r.panicked)
-			}
-			return r.res, r.err
-		default:
-		}
 		return nil, status.FromContextError(ctx.Err()).Err()
 	}
 }

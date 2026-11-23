@@ -56,6 +56,8 @@ type GrpcServerConfig struct {
 	// (optional) Timeout is the maximum duration for handling a unary request on the server side.
 	// The handling context is canceled and the client gets a `DeadlineExceeded` error once it is reached,
 	// even if the handler does not honor the context. A client deadline that is shorter still takes effect.
+	// Cancellation is cooperative: a handler that ignores the context is not stopped, it keeps running
+	// in the background until it returns on its own.
 	// It is not limited if the value is not greater than 0.
 	Timeout time.Duration
 

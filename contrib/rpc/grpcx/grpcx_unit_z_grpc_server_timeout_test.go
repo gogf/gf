@@ -31,6 +31,9 @@ type slowGreeter struct {
 }
 
 func (slowGreeter) SayHello(_ context.Context, in *protobuf.HelloRequest) (*protobuf.HelloReply, error) {
+	if in.GetName() == "panic" {
+		panic("boom")
+	}
 	d, err := time.ParseDuration(in.GetName())
 	if err != nil {
 		return nil, err
@@ -39,7 +42,7 @@ func (slowGreeter) SayHello(_ context.Context, in *protobuf.HelloRequest) (*prot
 	return &protobuf.HelloReply{Message: "Hello " + in.GetName()}, nil
 }
 
-func startTimeoutServer(c *grpcx.GrpcServerConfig) (protobuf.GreeterClient, func()) {
+func startTimeoutServer(t *testing.T, c *grpcx.GrpcServerConfig) (protobuf.GreeterClient, func()) {
 	c.Name = guid.S()
 	c.Address = "127.0.0.1:0"
 	s := grpcx.Server.New(c)
@@ -54,7 +57,9 @@ func startTimeoutServer(c *grpcx.GrpcServerConfig) (protobuf.GreeterClient, func
 		panic(err)
 	}
 	return protobuf.NewGreeterClient(conn), func() {
-		_ = conn.Close()
+		if err := conn.Close(); err != nil {
+			t.Errorf("close client connection failed: %v", err)
+		}
 		s.Stop()
 	}
 }
@@ -62,7 +67,7 @@ func startTimeoutServer(c *grpcx.GrpcServerConfig) (protobuf.GreeterClient, func
 func Test_Grpcx_Grpc_Server_Timeout(t *testing.T) {
 	c := grpcx.Server.NewConfig()
 	c.Timeout = 200 * time.Millisecond
-	client, stop := startTimeoutServer(c)
+	client, stop := startTimeoutServer(t, c)
 	defer stop()
 
 	gtest.C(t, func(t *gtest.T) {
@@ -77,11 +82,18 @@ func Test_Grpcx_Grpc_Server_Timeout(t *testing.T) {
 		_, err = client.SayHello(ctx, &protobuf.HelloRequest{Name: "3s"})
 		t.Assert(status.Code(err), codes.DeadlineExceeded)
 		t.Assert(time.Since(start) < 2*time.Second, true)
+
+		// A handler panic is turned into an error and does not crash the server.
+		_, err = client.SayHello(ctx, &protobuf.HelloRequest{Name: "panic"})
+		t.AssertNE(err, nil)
+		res, err = client.SayHello(ctx, &protobuf.HelloRequest{Name: "10ms"})
+		t.AssertNil(err)
+		t.Assert(res.Message, "Hello 10ms")
 	})
 }
 
 func Test_Grpcx_Grpc_Server_Timeout_Disabled(t *testing.T) {
-	client, stop := startTimeoutServer(grpcx.Server.NewConfig())
+	client, stop := startTimeoutServer(t, grpcx.Server.NewConfig())
 	defer stop()
 
 	gtest.C(t, func(t *gtest.T) {
@@ -97,7 +109,7 @@ func Test_Grpcx_Grpc_Server_Timeout_Method(t *testing.T) {
 	c.MethodTimeouts = map[string]time.Duration{
 		"/protobuf.Greeter/SayHello": 0,
 	}
-	client, stop := startTimeoutServer(c)
+	client, stop := startTimeoutServer(t, c)
 	defer stop()
 
 	// The method specific value overrides the global one, 0 means unlimited.
@@ -111,7 +123,7 @@ func Test_Grpcx_Grpc_Server_Timeout_Method(t *testing.T) {
 	c.MethodTimeouts = map[string]time.Duration{
 		"/protobuf.Greeter/SayHello": 100 * time.Millisecond,
 	}
-	client2, stop2 := startTimeoutServer(c)
+	client2, stop2 := startTimeoutServer(t, c)
 	defer stop2()
 	gtest.C(t, func(t *gtest.T) {
 		_, err := client2.SayHello(gctx.New(), &protobuf.HelloRequest{Name: "2s"})
