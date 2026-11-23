@@ -218,13 +218,7 @@ func BeDecodeToUint(b []byte) uint {
 }
 
 func BeDecodeToBool(b []byte) bool {
-	if len(b) == 0 {
-		return false
-	}
-	if bytes.Equal(b, make([]byte, len(b))) {
-		return false
-	}
-	return true
+	return len(bytes.Trim(b, "\x00")) > 0
 }
 
 func BeDecodeToInt8(b []byte) int8 {
