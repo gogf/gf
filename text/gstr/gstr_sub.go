@@ -162,7 +162,7 @@ func SubStrRune(str string, start int, length ...int) (substr string) {
 // StrLimit("123456", 3)      -> "123..."
 // StrLimit("123456", 3, "~") -> "123~"
 func StrLimit(str string, length int, suffix ...string) string {
-	if len(str) < length {
+	if len(str) <= length {
 		return str
 	}
 	suffixStr := defaultSuffixForStrLimit
@@ -181,7 +181,7 @@ func StrLimit(str string, length int, suffix ...string) string {
 // StrLimitRune("一起学习吧！", 2, "~") -> "一起~"
 func StrLimitRune(str string, length int, suffix ...string) string {
 	runes := []rune(str)
-	if len(runes) < length {
+	if len(runes) <= length {
 		return str
 	}
 	suffixStr := defaultSuffixForStrLimit
