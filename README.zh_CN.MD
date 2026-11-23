@@ -29,7 +29,7 @@
 在已有模块中添加框架：
 
 ```bash
-go get github.com/gogf/gf/v2@latest
+go get -v github.com/gogf/gf/v2@latest
 ```
 
 安装`gf`命令行工具：
