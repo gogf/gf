@@ -39,6 +39,16 @@ Install the `gf` CLI:
 go install github.com/gogf/gf/cmd/gf/v2@latest
 ```
 
+## Documentation
+
+- Official Site: [https://goframe.org](https://goframe.org)
+- Official Site(en): [https://goframe.org/en](https://goframe.org/en)
+- 国内镜像：[https://goframe.org.cn](https://goframe.org.cn)
+- Mirror Site: [https://pages.goframe.org](https://pages.goframe.org)
+- Mirror Site: [Offline Docs](https://github.com/gogf/goframe.org-pdf?tab=readme-ov-file#%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC)
+- GoDoc API: [https://pkg.go.dev/github.com/gogf/gf/v2](https://pkg.go.dev/github.com/gogf/gf/v2)
+- Doc Source: [https://github.com/gogf/gf-site](https://github.com/gogf/gf-site)
+
 ## Usage
 
 Create `main.go`:
@@ -78,15 +88,44 @@ gf init hello
 cd hello && gf run main.go
 ```
 
-## Documentation
+## Feature Map
 
-- Official Site: [https://goframe.org](https://goframe.org)
-- Official Site(en): [https://goframe.org/en](https://goframe.org/en)
-- 国内镜像：[https://goframe.org.cn](https://goframe.org.cn)
-- Mirror Site: [https://pages.goframe.org](https://pages.goframe.org)
-- Mirror Site: [Offline Docs](https://github.com/gogf/goframe.org-pdf?tab=readme-ov-file#%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC)
-- GoDoc API: [https://pkg.go.dev/github.com/gogf/gf/v2](https://pkg.go.dev/github.com/gogf/gf/v2)
-- Doc Source: [https://github.com/gogf/gf-site](https://github.com/gogf/gf-site)
+`GoFrame` is a collection of independent modules. Use it as a full application framework, or import only the packages you need.
+
+### Core components
+
+| Top-level package | Sub-packages | Description |
+| --- | --- | --- |
+| `frame/` | `g`, `gins` | Application facade and singleton container |
+| `net/` | `ghttp`, `gclient`, `gtcp`, `gudp`, `goai`, `gsvc`, `gsel`, `gtrace`, `gipv4`, `gipv6` | HTTP server and client, TCP/UDP, OpenAPI, service registry, load balancing, tracing, IP utilities |
+| `database/` | `gdb`, `gredis` | ORM and Redis client core |
+| `os/` (services) | `gcfg`, `glog`, `gcache`, `gsession`, `gview`, `gcron`, `gtimer`, `gcmd`, `gmetric`, `gmlock`, `gmutex` | Config, logging, cache, session, template, cron, CLI, metrics, memory lock, mutex |
+
+### Utility libraries
+
+| Top-level package | Sub-packages | Description |
+| --- | --- | --- |
+| `os/` (base) | `gfile`, `gfsnotify`, `gproc`, `grpool`, `gfpool`, `gctx`, `genv`, `gtime`, `gres`, `gspath`, `gstructs`, `gbuild` | Files, file watching, processes, goroutine pool, file pointer pool, context, environment, time, resources, search path, structs, build info |
+| `container/` | `garray`, `gmap`, `gset`, `glist`, `gqueue`, `gring`, `gtree`, `gpool`, `gtype`, `gvar` | Concurrent-safe array, map, set, list, queue, ring, tree, object pool, type wrapper, generic variable |
+| `encoding/` | `gjson`, `gyaml`, `gtoml`, `gini`, `gxml`, `gproperties`, `gbase64`, `gbinary`, `gcharset`, `gcompress`, `ghash`, `ghtml`, `gurl` | Codecs, charset conversion, compression, hashing, HTML and URL handling |
+| `crypto/` | `gaes`, `gdes`, `grsa`, `gmd5`, `gsha1`, `gsha256`, `gsha512`, `gcrc32` | Symmetric and asymmetric encryption, digest algorithms |
+| `util/` | `gconv`, `gvalid`, `gmeta`, `gtag`, `gmode`, `gpage`, `grand`, `guid`, `gutil` | Type conversion, validation, metadata, struct tags, mode bits, pagination, random, unique ID, general utilities |
+| `text/` | `gstr`, `gregex` | String handling and regex wrapper |
+| `errors/` | `gerror`, `gcode` | Stack-aware errors and error codes |
+| `i18n/` | `gi18n` | Internationalization |
+| `debug/` | `gdebug` | Debug information |
+| `test/` | `gtest` | Unit test helpers |
+
+### Ecosystem modules (`contrib/`)
+
+| Area | Modules |
+| --- | --- |
+| [Database drivers](contrib/drivers/README.MD) | [`mysql`](contrib/drivers/mysql), [`pgsql`](contrib/drivers/pgsql), [`mssql`](contrib/drivers/mssql), [`oracle`](contrib/drivers/oracle), [`sqlite`](contrib/drivers/sqlite), [`sqlitecgo`](contrib/drivers/sqlitecgo), [`clickhouse`](contrib/drivers/clickhouse), [`dm`](contrib/drivers/dm), [`gaussdb`](contrib/drivers/gaussdb), [`mariadb`](contrib/drivers/mariadb), [`oceanbase`](contrib/drivers/oceanbase), [`tidb`](contrib/drivers/tidb) |
+| Config adapters | `apollo`, `consul`, `nacos`, `polaris`, `kubecm` |
+| Service registry | `etcd`, `consul`, `nacos`, `polaris`, `zookeeper`, `file` |
+| RPC | `grpcx` |
+| Tracing / metrics | `otlpgrpc`, `otlphttp`, `otelmetric` |
+| Redis adapter | `redis` |
 
 ## Contributors
 

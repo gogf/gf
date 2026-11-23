@@ -38,6 +38,16 @@ go get -u github.com/gogf/gf/v2
 go install github.com/gogf/gf/cmd/gf/v2@latest
 ```
 
+## 文档
+
+- 官方网站：[https://goframe.org](https://goframe.org)
+- 官方网站（en）：[https://goframe.org/en](https://goframe.org/en)
+- 国内镜像：[https://goframe.org.cn](https://goframe.org.cn)
+- 镜像网站：[https://pages.goframe.org](https://pages.goframe.org)
+- 镜像网站：[离线文档](https://github.com/gogf/goframe.org-pdf?tab=readme-ov-file#%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC)
+- `Go`包文档：[https://pkg.go.dev/github.com/gogf/gf/v2](https://pkg.go.dev/github.com/gogf/gf/v2)
+- 文档源码：[https://github.com/gogf/gf-site](https://github.com/gogf/gf-site)
+
 ## 使用
 
 创建`main.go`：
@@ -77,15 +87,44 @@ gf init hello
 cd hello && gf run main.go
 ```
 
-## 文档
+## 功能地图
 
-- 官方网站：[https://goframe.org](https://goframe.org)
-- 官方网站（en）：[https://goframe.org/en](https://goframe.org/en)
-- 国内镜像：[https://goframe.org.cn](https://goframe.org.cn)
-- 镜像网站：[https://pages.goframe.org](https://pages.goframe.org)
-- 镜像网站：[离线文档](https://github.com/gogf/goframe.org-pdf?tab=readme-ov-file#%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC)
-- `Go`包文档：[https://pkg.go.dev/github.com/gogf/gf/v2](https://pkg.go.dev/github.com/gogf/gf/v2)
-- 文档源码：[https://github.com/gogf/gf-site](https://github.com/gogf/gf-site)
+`GoFrame`由一组相互独立的模块组成，既可作为完整的应用框架使用，也可只引入需要的包。
+
+### 核心组件
+
+| 顶层包 | 子包 | 说明 |
+| --- | --- | --- |
+| `frame/` | `g`、`gins` | 应用门面与单例容器 |
+| `net/` | `ghttp`、`gclient`、`gtcp`、`gudp`、`goai`、`gsvc`、`gsel`、`gtrace`、`gipv4`、`gipv6` | HTTP 服务与客户端、TCP/UDP、OpenAPI、服务注册、负载均衡、链路追踪、IP 工具 |
+| `database/` | `gdb`、`gredis` | ORM 与 Redis 客户端核心 |
+| `os/`（服务） | `gcfg`、`glog`、`gcache`、`gsession`、`gview`、`gcron`、`gtimer`、`gcmd`、`gmetric`、`gmlock`、`gmutex` | 配置、日志、缓存、会话、模板、定时任务、命令行、指标、内存锁、互斥锁 |
+
+### 工具库
+
+| 顶层包 | 子包 | 说明 |
+| --- | --- | --- |
+| `os/`（基础） | `gfile`、`gfsnotify`、`gproc`、`grpool`、`gfpool`、`gctx`、`genv`、`gtime`、`gres`、`gspath`、`gstructs`、`gbuild` | 文件、文件监听、进程、协程池、文件指针池、上下文、环境变量、时间、资源、搜索路径、结构体、构建信息 |
+| `container/` | `garray`、`gmap`、`gset`、`glist`、`gqueue`、`gring`、`gtree`、`gpool`、`gtype`、`gvar` | 并发安全的数组、字典、集合、列表、队列、环、树、对象池、类型包装、通用变量 |
+| `encoding/` | `gjson`、`gyaml`、`gtoml`、`gini`、`gxml`、`gproperties`、`gbase64`、`gbinary`、`gcharset`、`gcompress`、`ghash`、`ghtml`、`gurl` | 各类编解码、字符集转换、压缩、哈希、HTML 与 URL 处理 |
+| `crypto/` | `gaes`、`gdes`、`grsa`、`gmd5`、`gsha1`、`gsha256`、`gsha512`、`gcrc32` | 对称与非对称加密、摘要算法 |
+| `util/` | `gconv`、`gvalid`、`gmeta`、`gtag`、`gmode`、`gpage`、`grand`、`guid`、`gutil` | 类型转换、数据校验、元数据、结构体标签、权限位、分页、随机数、唯一 ID、通用工具 |
+| `text/` | `gstr`、`gregex` | 字符串处理与正则封装 |
+| `errors/` | `gerror`、`gcode` | 带堆栈的错误与错误码 |
+| `i18n/` | `gi18n` | 国际化 |
+| `debug/` | `gdebug` | 调试信息 |
+| `test/` | `gtest` | 单元测试辅助 |
+
+### 生态模块（`contrib/`）
+
+| 领域 | 模块 |
+| --- | --- |
+| [数据库驱动](contrib/drivers/README.MD) | [`mysql`](contrib/drivers/mysql)、[`pgsql`](contrib/drivers/pgsql)、[`mssql`](contrib/drivers/mssql)、[`oracle`](contrib/drivers/oracle)、[`sqlite`](contrib/drivers/sqlite)、[`sqlitecgo`](contrib/drivers/sqlitecgo)、[`clickhouse`](contrib/drivers/clickhouse)、[`dm`](contrib/drivers/dm)、[`gaussdb`](contrib/drivers/gaussdb)、[`mariadb`](contrib/drivers/mariadb)、[`oceanbase`](contrib/drivers/oceanbase)、[`tidb`](contrib/drivers/tidb) |
+| 配置适配 | `apollo`、`consul`、`nacos`、`polaris`、`kubecm` |
+| 服务注册 | `etcd`、`consul`、`nacos`、`polaris`、`zookeeper`、`file` |
+| RPC | `grpcx` |
+| 链路追踪 / 指标 | `otlpgrpc`、`otlphttp`、`otelmetric` |
+| Redis 适配 | `redis` |
 
 ## 贡献者
 
