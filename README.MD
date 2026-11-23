@@ -147,39 +147,21 @@ Standalone modules that require a separate `go get`, grouped by domain.
 
 The `gf` CLI ships with `GoFrame` and covers daily development tasks such as project scaffolding, code generation, building and deployment.
 
-### Project and runtime
+```bash
+go install github.com/gogf/gf/cmd/gf/v2@latest
+```
+
+Commonly used commands:
 
 | Command | Description |
 | --- | --- |
 | `gf init` | Create and initialize an empty `GoFrame` project |
-| `gf run` | Run Go code with hot-compiled-like behavior, rebuilding and restarting on change |
-| `gf build` | Cross-build the project for multiple platforms and architectures |
-| `gf pack` | Pack any file or directory into a resource file or Go source file |
-| `gf docker` | Build a Docker image for the current project |
-| `gf up` | Upgrade the `GoFrame` version or tool version in the current project |
-
-### Code generation
-
-| Command | Description |
-| --- | --- |
+| `gf run` | Run Go code with hot-compiled-like behavior |
 | `gf gen dao` | Generate `dao`, `do` and `entity` code from database tables |
 | `gf gen ctrl` | Parse `api` definitions and generate controller and SDK code |
-| `gf gen service` | Parse structs and methods in packages and generate `service` interface files |
-| `gf gen pb` | Parse `proto` files and generate protobuf code |
-| `gf gen pbentity` | Generate `entity` message files in protobuf3 format |
-| `gf gen enums` | Parse Go files in the project and generate enum definition files |
+| `gf build` | Cross-build the project for multiple platforms and architectures |
 
-### Environment and helpers
-
-| Command | Description |
-| --- | --- |
-| `gf env` | Show current Golang environment variables |
-| `gf fix` | Auto-fix code after upgrading to a new `GoFrame` version |
-| `gf tpl` | Template parsing and building |
-| `gf doc` | Download `https://pages.goframe.org/` to run locally |
-| `gf install` | Install the `gf` binary to the system (may require admin permission) |
-| `gf version` | Show version information of the current binary |
-| `gf agents` | Link local AI coding-agent paths to `.agents` and `AGENTS.md` |
+See [`cmd/gf`](cmd/gf/README.MD) for the full command list and usage details.
 
 ## Contributors
 
