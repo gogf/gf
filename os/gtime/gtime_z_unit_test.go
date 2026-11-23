@@ -35,7 +35,7 @@ func Test_Microsecond(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		micros := gtime.TimestampMicro()
 		timeTemp := time.Unix(0, micros*1e3)
-		t.Assert(micros, timeTemp.UnixNano()/1e3)
+		t.Assert(micros, timeTemp.UnixMicro())
 	})
 }
 
@@ -43,7 +43,7 @@ func Test_Millisecond(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		millis := gtime.TimestampMilli()
 		timeTemp := time.Unix(0, millis*1e6)
-		t.Assert(millis, timeTemp.UnixNano()/1e6)
+		t.Assert(millis, timeTemp.UnixMilli())
 	})
 }
 
@@ -52,6 +52,18 @@ func Test_Second(t *testing.T) {
 		s := gtime.Timestamp()
 		timeTemp := time.Unix(s, 0)
 		t.Assert(s, timeTemp.Unix())
+	})
+}
+
+func Test_TimestampOfBefore1970(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// 1969-12-31 23:59:58.4999995 UTC: the Unix helpers floor the
+		// sub-second part, the previous UnixNano()/1eN divisions truncated
+		// towards zero.
+		timeTemp := gtime.NewFromTime(time.Unix(-1, -500000500))
+		t.Assert(timeTemp.Timestamp(), int64(-2))
+		t.Assert(timeTemp.TimestampMilli(), int64(-1501))
+		t.Assert(timeTemp.TimestampMicro(), int64(-1500001))
 	})
 }
 

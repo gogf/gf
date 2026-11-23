@@ -7,10 +7,12 @@
 package ghttp
 
 import (
+	"context"
 	"io/fs"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -38,5 +40,17 @@ func Test_CompareStaticFiles(t *testing.T) {
 		t.Assert(compareStaticFiles(dirA, dirB) < 0, true)
 		t.Assert(compareStaticFiles(fileB, fileA) > 0, true)
 		t.Assert(compareStaticFiles(fileA, fileA), 0)
+	})
+}
+
+func Test_OpenStaticFile_MissingRoot(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		rootPath := gfile.Join(t.TempDir(), "missing")
+		file, err := openStaticFile(context.Background(), &staticFile{
+			RootPath: rootPath,
+			Path:     gfile.Join(rootPath, "file.txt"),
+		})
+		t.AssertNil(file)
+		t.AssertNE(err, nil)
 	})
 }
