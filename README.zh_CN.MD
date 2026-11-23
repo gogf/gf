@@ -132,23 +132,19 @@ cd hello && gf run main.go
 
 需要单独`go get`的独立模块，按领域划分。
 
-| 领域 | 模块 |
-| --- | --- |
-| [数据库驱动](contrib/drivers/README.MD) | [`mysql`](contrib/drivers/mysql)、[`pgsql`](contrib/drivers/pgsql)、[`mssql`](contrib/drivers/mssql)、[`oracle`](contrib/drivers/oracle)、[`sqlite`](contrib/drivers/sqlite)、[`sqlitecgo`](contrib/drivers/sqlitecgo)、[`clickhouse`](contrib/drivers/clickhouse)、[`dm`](contrib/drivers/dm)、[`gaussdb`](contrib/drivers/gaussdb)、[`mariadb`](contrib/drivers/mariadb)、[`oceanbase`](contrib/drivers/oceanbase)、[`tidb`](contrib/drivers/tidb) |
-| 配置适配 | [`apollo`](contrib/config/apollo/README.MD)、[`consul`](contrib/config/consul)、[`nacos`](contrib/config/nacos/README.MD)、[`polaris`](contrib/config/polaris/README.MD)、[`kubecm`](contrib/config/kubecm/README.MD) |
-| 服务注册 | [`etcd`](contrib/registry/etcd/README.MD)、[`consul`](contrib/registry/consul/README.MD)、[`nacos`](contrib/registry/nacos/README.MD)、[`polaris`](contrib/registry/polaris/README.MD)、[`zookeeper`](contrib/registry/zookeeper/README.MD)、[`file`](contrib/registry/file/README.MD) |
-| RPC | [`grpcx`](contrib/rpc/grpcx) |
-| 链路追踪 / 指标 | [`otlpgrpc`](contrib/trace/otlpgrpc)、[`otlphttp`](contrib/trace/otlphttp)、[`otelmetric`](contrib/metric/otelmetric/README.MD) |
-| Redis 适配 | [`redis`](contrib/nosql/redis/README.MD) |
-| SDK 工具 | [`httpclient`](contrib/sdk/httpclient) |
+| 领域 | 模块 | 说明 |
+| --- | --- | --- |
+| [数据库驱动](contrib/drivers/README.MD) | [`mysql`](contrib/drivers/mysql)、[`pgsql`](contrib/drivers/pgsql)、[`mssql`](contrib/drivers/mssql)、[`oracle`](contrib/drivers/oracle)、[`sqlite`](contrib/drivers/sqlite)、[`sqlitecgo`](contrib/drivers/sqlitecgo)、[`clickhouse`](contrib/drivers/clickhouse)、[`dm`](contrib/drivers/dm)、[`gaussdb`](contrib/drivers/gaussdb)、[`mariadb`](contrib/drivers/mariadb)、[`oceanbase`](contrib/drivers/oceanbase)、[`tidb`](contrib/drivers/tidb) | `gdb`的数据库驱动实现，通过匿名导入注册到框架 |
+| 配置适配 | [`apollo`](contrib/config/apollo/README.MD)、[`consul`](contrib/config/consul)、[`nacos`](contrib/config/nacos/README.MD)、[`polaris`](contrib/config/polaris/README.MD)、[`kubecm`](contrib/config/kubecm/README.MD) | `gcfg`的远程配置源适配，支持配置监听与热更新 |
+| 服务注册 | [`etcd`](contrib/registry/etcd/README.MD)、[`consul`](contrib/registry/consul/README.MD)、[`nacos`](contrib/registry/nacos/README.MD)、[`polaris`](contrib/registry/polaris/README.MD)、[`zookeeper`](contrib/registry/zookeeper/README.MD)、[`file`](contrib/registry/file/README.MD) | `gsvc`的服务注册与发现实现，`file`为本地文件实现，适合开发调试 |
+| RPC | [`grpcx`](contrib/rpc/grpcx) | 基于`gRPC`的 RPC 组件，集成服务注册、负载均衡与链路追踪 |
+| 链路追踪 / 指标 | [`otlpgrpc`](contrib/trace/otlpgrpc)、[`otlphttp`](contrib/trace/otlphttp)、[`otelmetric`](contrib/metric/otelmetric/README.MD) | `gtrace`与`gmetric`的 OpenTelemetry 实现，支持 gRPC 与 HTTP 两种上报协议 |
+| Redis 适配 | [`redis`](contrib/nosql/redis/README.MD) | `gredis`的适配实现，基于`go-redis`，同时可作为`gcache`与`gsession`的存储后端 |
+| SDK 工具 | [`httpclient`](contrib/sdk/httpclient) | 面向 SDK 场景的 HTTP 客户端封装，支持自定义响应处理与请求响应日志 |
 
 ## 命令行工具
 
 `gf`是`GoFrame`提供的项目开发命令行工具，覆盖项目创建、代码生成、构建部署等日常开发环节。
-
-```bash
-go install github.com/gogf/gf/cmd/gf/v2@latest
-```
 
 常用命令：
 

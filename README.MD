@@ -133,15 +133,15 @@ General-purpose capabilities that can be imported independently without the fram
 
 Standalone modules that require a separate `go get`, grouped by domain.
 
-| Area | Modules |
-| --- | --- |
-| [Database drivers](contrib/drivers/README.MD) | [`mysql`](contrib/drivers/mysql), [`pgsql`](contrib/drivers/pgsql), [`mssql`](contrib/drivers/mssql), [`oracle`](contrib/drivers/oracle), [`sqlite`](contrib/drivers/sqlite), [`sqlitecgo`](contrib/drivers/sqlitecgo), [`clickhouse`](contrib/drivers/clickhouse), [`dm`](contrib/drivers/dm), [`gaussdb`](contrib/drivers/gaussdb), [`mariadb`](contrib/drivers/mariadb), [`oceanbase`](contrib/drivers/oceanbase), [`tidb`](contrib/drivers/tidb) |
-| Config adapters | [`apollo`](contrib/config/apollo/README.MD), [`consul`](contrib/config/consul), [`nacos`](contrib/config/nacos/README.MD), [`polaris`](contrib/config/polaris/README.MD), [`kubecm`](contrib/config/kubecm/README.MD) |
-| Service registry | [`etcd`](contrib/registry/etcd/README.MD), [`consul`](contrib/registry/consul/README.MD), [`nacos`](contrib/registry/nacos/README.MD), [`polaris`](contrib/registry/polaris/README.MD), [`zookeeper`](contrib/registry/zookeeper/README.MD), [`file`](contrib/registry/file/README.MD) |
-| RPC | [`grpcx`](contrib/rpc/grpcx) |
-| Tracing / metrics | [`otlpgrpc`](contrib/trace/otlpgrpc), [`otlphttp`](contrib/trace/otlphttp), [`otelmetric`](contrib/metric/otelmetric/README.MD) |
-| Redis adapter | [`redis`](contrib/nosql/redis/README.MD) |
-| SDK utilities | [`httpclient`](contrib/sdk/httpclient) |
+| Area | Modules | Description |
+| --- | --- | --- |
+| [Database drivers](contrib/drivers/README.MD) | [`mysql`](contrib/drivers/mysql), [`pgsql`](contrib/drivers/pgsql), [`mssql`](contrib/drivers/mssql), [`oracle`](contrib/drivers/oracle), [`sqlite`](contrib/drivers/sqlite), [`sqlitecgo`](contrib/drivers/sqlitecgo), [`clickhouse`](contrib/drivers/clickhouse), [`dm`](contrib/drivers/dm), [`gaussdb`](contrib/drivers/gaussdb), [`mariadb`](contrib/drivers/mariadb), [`oceanbase`](contrib/drivers/oceanbase), [`tidb`](contrib/drivers/tidb) | Database driver implementations for `gdb`, registered into the framework via blank import |
+| Config adapters | [`apollo`](contrib/config/apollo/README.MD), [`consul`](contrib/config/consul), [`nacos`](contrib/config/nacos/README.MD), [`polaris`](contrib/config/polaris/README.MD), [`kubecm`](contrib/config/kubecm/README.MD) | Remote config source adapters for `gcfg`, supporting config watching and hot reload |
+| Service registry | [`etcd`](contrib/registry/etcd/README.MD), [`consul`](contrib/registry/consul/README.MD), [`nacos`](contrib/registry/nacos/README.MD), [`polaris`](contrib/registry/polaris/README.MD), [`zookeeper`](contrib/registry/zookeeper/README.MD), [`file`](contrib/registry/file/README.MD) | Service registry and discovery implementations for `gsvc`; `file` is a local file implementation suited for development and debugging |
+| RPC | [`grpcx`](contrib/rpc/grpcx) | gRPC-based RPC component integrating service registry, load balancing and tracing |
+| Tracing / metrics | [`otlpgrpc`](contrib/trace/otlpgrpc), [`otlphttp`](contrib/trace/otlphttp), [`otelmetric`](contrib/metric/otelmetric/README.MD) | OpenTelemetry implementations for `gtrace` and `gmetric`, supporting both gRPC and HTTP exporters |
+| Redis adapter | [`redis`](contrib/nosql/redis/README.MD) | Adapter implementation for `gredis` based on `go-redis`, also usable as the storage backend for `gcache` and `gsession` |
+| SDK utilities | [`httpclient`](contrib/sdk/httpclient) | HTTP client wrapper for SDK scenarios, supporting custom response handlers and request/response logging |
 
 ## Command-line tool
 
