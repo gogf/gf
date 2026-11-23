@@ -235,20 +235,15 @@ func Test_StrToTime(t *testing.T) {
 // when it differs from the offset the local zone has at the parsed time.
 func Test_StrToTime_ZoneOffsetWithDST(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		location, err := time.LoadLocation("America/New_York")
+		// Asia/Shanghai, the zone the tests run in, is +08:00 now
+		// but was +09:00 in the summer of 1988.
+		timeTemp, err := gtime.StrToTime("1988-07-01T12:00:00+08:00")
 		t.AssertNil(err)
-		oldLocal := time.Local
-		time.Local = location
-		defer func() { time.Local = oldLocal }()
+		t.Assert(timeTemp.Time.UTC().Format(time.RFC3339), "1988-07-01T04:00:00Z")
 
-		// The local offset is -04:00 in July and -05:00 in January.
-		timeTemp, err := gtime.StrToTime("2024-07-01T12:00:00-05:00")
+		timeTemp, err = gtime.StrToTime("1988-07-01T12:00:00+09:00")
 		t.AssertNil(err)
-		t.Assert(timeTemp.Time.UTC().Format(time.RFC3339), "2024-07-01T17:00:00Z")
-
-		timeTemp, err = gtime.StrToTime("2024-01-01T12:00:00-04:00")
-		t.AssertNil(err)
-		t.Assert(timeTemp.Time.UTC().Format(time.RFC3339), "2024-01-01T16:00:00Z")
+		t.Assert(timeTemp.Time.UTC().Format(time.RFC3339), "1988-07-01T03:00:00Z")
 	})
 }
 
