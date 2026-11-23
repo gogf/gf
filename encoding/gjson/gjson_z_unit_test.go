@@ -209,6 +209,22 @@ func Test_NegativeIndex(t *testing.T) {
 		t.AssertNE(j.Set("a.0.b.c.-1", 9), nil)
 		t.Assert(j.MustToJsonString(), before)
 
+		// Failures below an already created node also leave the data unchanged.
+		j = gjson.New(`{}`)
+		before = j.MustToJsonString()
+		t.AssertNE(j.Set("x.0.-1", 1), nil)
+		t.Assert(j.MustToJsonString(), before)
+
+		j = gjson.New(`{"a":[]}`)
+		before = j.MustToJsonString()
+		t.AssertNE(j.Set("a.5.b.-1", 1), nil)
+		t.Assert(j.MustToJsonString(), before)
+
+		j = gjson.New(`{"a":[[1]]}`)
+		before = j.MustToJsonString()
+		t.AssertNE(j.Remove("a.0.-1"), nil)
+		t.Assert(j.MustToJsonString(), before)
+
 		// Negative numeric keys of a map are still valid.
 		m := gjson.New(`{"m":{"-1":7}}`)
 		t.Assert(m.Get("m.-1"), 7)
