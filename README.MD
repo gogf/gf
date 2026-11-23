@@ -147,10 +147,6 @@ Standalone modules that require a separate `go get`, grouped by domain.
 
 The `gf` CLI ships with `GoFrame` and covers daily development tasks such as project scaffolding, code generation, building and deployment.
 
-```bash
-go install github.com/gogf/gf/cmd/gf/v2@latest
-```
-
 Commonly used commands:
 
 | Command | Description |
