@@ -92,31 +92,46 @@ cd hello && gf run main.go
 
 `GoFrame` is a collection of independent modules. Use it as a full application framework, or import only the packages you need.
 
-### Core components
+### Application framework
+
+Runtime components required to build a complete application: entry facade, network communication, data access and common services.
 
 | Top-level package | Sub-packages | Description |
 | --- | --- | --- |
-| `frame/` | [`g`](frame/g), [`gins`](frame/gins) | Application facade and singleton container |
-| `net/` | [`ghttp`](net/ghttp), [`gclient`](net/gclient), [`gtcp`](net/gtcp), [`gudp`](net/gudp), [`goai`](net/goai), [`gsvc`](net/gsvc), [`gsel`](net/gsel), [`gtrace`](net/gtrace), [`gipv4`](net/gipv4), [`gipv6`](net/gipv6) | HTTP server and client, TCP/UDP, OpenAPI, service registry, load balancing, tracing, IP utilities |
-| `database/` | [`gdb`](database/gdb), [`gredis`](database/gredis) | ORM and Redis client core |
-| `os/` (services) | [`gcfg`](os/gcfg), [`glog`](os/glog), [`gcache`](os/gcache), [`gsession`](os/gsession), [`gview`](os/gview), [`gcron`](os/gcron), [`gtimer`](os/gtimer), [`gcmd`](os/gcmd), [`gmetric`](os/gmetric), [`gmlock`](os/gmlock), [`gmutex`](os/gmutex) | Config, logging, cache, session, template, cron, CLI, metrics, memory lock, mutex |
+| `frame/` | [`g`](frame/g), [`gins`](frame/gins) | Application facade and singleton container. `g` exposes global entry points such as `g.Server()`, `g.DB()` and `g.Cfg()`; `gins` handles singleton registration and dependency injection |
+| `net/` | [`ghttp`](net/ghttp), [`gclient`](net/gclient), [`gtcp`](net/gtcp), [`gudp`](net/gudp), [`gipv4`](net/gipv4), [`gipv6`](net/gipv6) | Network communication. `ghttp` provides routing, middleware, static files, WebSocket and graceful restart; `gclient` provides a chainable HTTP client; `gtcp`/`gudp` provide TCP/UDP server and client; `gipv4`/`gipv6` provide IP address parsing and validation |
+| `database/` | [`gdb`](database/gdb), [`gredis`](database/gredis) | Data access. `gdb` is a driver-agnostic ORM supporting models, transactions, soft delete, sharding and hooks; `gredis` defines the Redis client abstraction with single, cluster and sentinel modes |
+| `os/` | [`gcfg`](os/gcfg), [`glog`](os/glog), [`gcache`](os/gcache), [`gsession`](os/gsession), [`gview`](os/gview), [`gcron`](os/gcron), [`gtimer`](os/gtimer) | Application services. Config supports multiple formats and hot reload; logging supports leveled output, file rotation and trace context; cache provides in-memory LRU with expiry and pluggable adapters; session supports file, memory and Redis storage; template supports built-in functions and i18n; cron supports second-level schedules, intervals and one-shot timers |
+
+### Service governance
+
+Abstraction layer for microservice scenarios. It defines interfaces and common capabilities only; concrete implementations live in `contrib/`.
+
+| Top-level package | Sub-packages | Description |
+| --- | --- | --- |
+| `net/` | [`gsvc`](net/gsvc), [`gsel`](net/gsel), [`gtrace`](net/gtrace), [`goai`](net/goai) | `gsvc` defines service registry and discovery interfaces; `gsel` defines load-balancing selectors; `gtrace` wraps OpenTelemetry tracing; `goai` generates OpenAPI documents |
+| `os/` | [`gmetric`](os/gmetric) | Metric abstraction layer defining Counter, Gauge and Histogram interfaces. See `contrib/metric/otelmetric` for the reporting implementation |
 
 ### Utility libraries
 
+General-purpose capabilities that can be imported independently without the framework runtime.
+
 | Top-level package | Sub-packages | Description |
 | --- | --- | --- |
-| `os/` (base) | [`gfile`](os/gfile), [`gfsnotify`](os/gfsnotify), [`gproc`](os/gproc), [`grpool`](os/grpool), [`gfpool`](os/gfpool), [`gctx`](os/gctx), [`genv`](os/genv), [`gtime`](os/gtime), [`gres`](os/gres), [`gspath`](os/gspath), [`gstructs`](os/gstructs), [`gbuild`](os/gbuild) | Files, file watching, processes, goroutine pool, file pointer pool, context, environment, time, resources, search path, structs, build info |
-| `container/` | [`garray`](container/garray), [`gmap`](container/gmap), [`gset`](container/gset), [`glist`](container/glist), [`gqueue`](container/gqueue), [`gring`](container/gring), [`gtree`](container/gtree), [`gpool`](container/gpool), [`gtype`](container/gtype), [`gvar`](container/gvar) | Concurrent-safe array, map, set, list, queue, ring, tree, object pool, type wrapper, generic variable |
-| `encoding/` | [`gjson`](encoding/gjson), [`gyaml`](encoding/gyaml), [`gtoml`](encoding/gtoml), [`gini`](encoding/gini), [`gxml`](encoding/gxml), [`gproperties`](encoding/gproperties), [`gbase64`](encoding/gbase64), [`gbinary`](encoding/gbinary), [`gcharset`](encoding/gcharset), [`gcompress`](encoding/gcompress), [`ghash`](encoding/ghash), [`ghtml`](encoding/ghtml), [`gurl`](encoding/gurl) | Codecs, charset conversion, compression, hashing, HTML and URL handling |
-| `crypto/` | [`gaes`](crypto/gaes), [`gdes`](crypto/gdes), [`grsa`](crypto/grsa), [`gmd5`](crypto/gmd5), [`gsha1`](crypto/gsha1), [`gsha256`](crypto/gsha256), [`gsha512`](crypto/gsha512), [`gcrc32`](crypto/gcrc32) | Symmetric and asymmetric encryption, digest algorithms |
-| `util/` | [`gconv`](util/gconv), [`gvalid`](util/gvalid), [`gmeta`](util/gmeta), [`gtag`](util/gtag), [`gmode`](util/gmode), [`gpage`](util/gpage), [`grand`](util/grand), [`guid`](util/guid), [`gutil`](util/gutil) | Type conversion, validation, metadata, struct tags, mode bits, pagination, random, unique ID, general utilities |
-| `text/` | [`gstr`](text/gstr), [`gregex`](text/gregex) | String handling and regex wrapper |
-| `errors/` | [`gerror`](errors/gerror), [`gcode`](errors/gcode) | Stack-aware errors and error codes |
-| `i18n/` | [`gi18n`](i18n/gi18n) | Internationalization |
-| `debug/` | [`gdebug`](debug/gdebug) | Debug information |
-| `test/` | [`gtest`](test/gtest) | Unit test helpers |
+| `os/` | [`gfile`](os/gfile), [`gfsnotify`](os/gfsnotify), [`gproc`](os/gproc), [`grpool`](os/grpool), [`gfpool`](os/gfpool), [`gctx`](os/gctx), [`genv`](os/genv), [`gtime`](os/gtime), [`gres`](os/gres), [`gspath`](os/gspath), [`gstructs`](os/gstructs), [`gbuild`](os/gbuild), [`gcmd`](os/gcmd), [`gmlock`](os/gmlock), [`gmutex`](os/gmutex) | System and runtime utilities. File I/O, file watching, process management, goroutine pool, file pointer pool, context, environment variables, time handling, resource management, search path, struct reflection, build info, CLI parsing, memory lock, mutex |
+| `container/` | [`garray`](container/garray), [`gmap`](container/gmap), [`gset`](container/gset), [`glist`](container/glist), [`gqueue`](container/gqueue), [`gring`](container/gring), [`gtree`](container/gtree), [`gpool`](container/gpool), [`gtype`](container/gtype), [`gvar`](container/gvar) | Concurrent-safe containers. Array, map, set, list, queue, ring, tree, object pool, type wrapper and generic variable, all safe for concurrent access |
+| `encoding/` | [`gjson`](encoding/gjson), [`gyaml`](encoding/gyaml), [`gtoml`](encoding/gtoml), [`gini`](encoding/gini), [`gxml`](encoding/gxml), [`gproperties`](encoding/gproperties), [`gbase64`](encoding/gbase64), [`gbinary`](encoding/gbinary), [`gcharset`](encoding/gcharset), [`gcompress`](encoding/gcompress), [`ghash`](encoding/ghash), [`ghtml`](encoding/ghtml), [`gurl`](encoding/gurl) | Codecs and format conversion. JSON, YAML, TOML, INI, XML and Properties parsing; Base64, binary, charset conversion, compression, hashing, HTML escaping and URL encoding |
+| `crypto/` | [`gaes`](crypto/gaes), [`gdes`](crypto/gdes), [`grsa`](crypto/grsa), [`gmd5`](crypto/gmd5), [`gsha1`](crypto/gsha1), [`gsha256`](crypto/gsha256), [`gsha512`](crypto/gsha512), [`gcrc32`](crypto/gcrc32) | Encryption and digests. AES and DES symmetric encryption, RSA asymmetric encryption, MD5, SHA1, SHA256 and SHA512 digests, CRC32 checksums |
+| `util/` | [`gconv`](util/gconv), [`gvalid`](util/gvalid), [`gmeta`](util/gmeta), [`gtag`](util/gtag), [`gmode`](util/gmode), [`gpage`](util/gpage), [`grand`](util/grand), [`guid`](util/guid), [`gutil`](util/gutil) | General utilities. Type conversion, validation, metadata, struct tags, mode bits, pagination, random numbers and unique IDs |
+| `text/` | [`gstr`](text/gstr), [`gregex`](text/gregex) | Text processing. String search, replace, split and format; regex wrapper |
+| `errors/` | [`gerror`](errors/gerror), [`gcode`](errors/gcode) | Error handling. `gerror` provides stack-aware error wrapping; `gcode` defines standard error codes |
+| `i18n/` | [`gi18n`](i18n/gi18n) | Internationalization with multi-language resource loading and translation |
+| `debug/` | [`gdebug`](debug/gdebug) | Debug helpers for printing call stacks and variable information |
+| `test/` | [`gtest`](test/gtest) | Unit test helpers providing `gtest.C` blocks and fluent assertions |
 
 ### Ecosystem modules (`contrib/`)
+
+Standalone modules that require a separate `go get`, grouped by domain.
 
 | Area | Modules |
 | --- | --- |
@@ -126,6 +141,7 @@ cd hello && gf run main.go
 | RPC | [`grpcx`](contrib/rpc/grpcx) |
 | Tracing / metrics | [`otlpgrpc`](contrib/trace/otlpgrpc), [`otlphttp`](contrib/trace/otlphttp), [`otelmetric`](contrib/metric/otelmetric/README.MD) |
 | Redis adapter | [`redis`](contrib/nosql/redis/README.MD) |
+| SDK utilities | [`httpclient`](contrib/sdk/httpclient) |
 
 ## Contributors
 

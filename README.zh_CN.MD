@@ -91,31 +91,46 @@ cd hello && gf run main.go
 
 `GoFrame`由一组相互独立的模块组成，既可作为完整的应用框架使用，也可只引入需要的包。
 
-### 核心组件
+### 应用框架
+
+构建一个完整应用所需的运行时组件，涵盖入口门面、网络通信、数据访问与常用服务。
 
 | 顶层包 | 子包 | 说明 |
 | --- | --- | --- |
-| `frame/` | [`g`](frame/g)、[`gins`](frame/gins) | 应用门面与单例容器 |
-| `net/` | [`ghttp`](net/ghttp)、[`gclient`](net/gclient)、[`gtcp`](net/gtcp)、[`gudp`](net/gudp)、[`goai`](net/goai)、[`gsvc`](net/gsvc)、[`gsel`](net/gsel)、[`gtrace`](net/gtrace)、[`gipv4`](net/gipv4)、[`gipv6`](net/gipv6) | HTTP 服务与客户端、TCP/UDP、OpenAPI、服务注册、负载均衡、链路追踪、IP 工具 |
-| `database/` | [`gdb`](database/gdb)、[`gredis`](database/gredis) | ORM 与 Redis 客户端核心 |
-| `os/`（服务） | [`gcfg`](os/gcfg)、[`glog`](os/glog)、[`gcache`](os/gcache)、[`gsession`](os/gsession)、[`gview`](os/gview)、[`gcron`](os/gcron)、[`gtimer`](os/gtimer)、[`gcmd`](os/gcmd)、[`gmetric`](os/gmetric)、[`gmlock`](os/gmlock)、[`gmutex`](os/gmutex) | 配置、日志、缓存、会话、模板、定时任务、命令行、指标、内存锁、互斥锁 |
+| `frame/` | [`g`](frame/g)、[`gins`](frame/gins) | 应用门面与单例容器。`g` 提供`g.Server()`、`g.DB()`、`g.Cfg()`等全局入口，`gins` 负责底层单例注册与依赖注入 |
+| `net/` | [`ghttp`](net/ghttp)、[`gclient`](net/gclient)、[`gtcp`](net/gtcp)、[`gudp`](net/gudp)、[`gipv4`](net/gipv4)、[`gipv6`](net/gipv6) | 网络通信。`ghttp` 提供路由、中间件、静态文件、WebSocket、平滑重启；`gclient` 提供链式 HTTP 客户端；`gtcp`/`gudp` 提供 TCP/UDP 服务端与客户端；`gipv4`/`gipv6` 提供 IP 地址解析与校验 |
+| `database/` | [`gdb`](database/gdb)、[`gredis`](database/gredis) | 数据访问。`gdb` 是驱动无关的 ORM，支持模型、事务、软删除、分表分库、钩子；`gredis` 定义 Redis 客户端抽象，支持单机、集群、哨兵模式 |
+| `os/` | [`gcfg`](os/gcfg)、[`glog`](os/glog)、[`gcache`](os/gcache)、[`gsession`](os/gsession)、[`gview`](os/gview)、[`gcron`](os/gcron)、[`gtimer`](os/gtimer) | 应用服务。配置支持多格式与热更新；日志支持分级输出、文件切割与链路上下文；缓存提供带过期时间的内存 LRU 与可插拔适配；会话支持文件、内存、Redis 存储；模板支持内置函数与 i18n；定时任务支持秒级 cron、间隔与一次性定时器 |
+
+### 服务治理
+
+面向微服务场景的抽象层，只定义接口与通用能力，具体实现由`contrib/`提供。
+
+| 顶层包 | 子包 | 说明 |
+| --- | --- | --- |
+| `net/` | [`gsvc`](net/gsvc)、[`gsel`](net/gsel)、[`gtrace`](net/gtrace)、[`goai`](net/goai) | `gsvc` 定义服务注册与发现接口；`gsel` 定义负载均衡选择器；`gtrace` 封装 OpenTelemetry 链路追踪；`goai` 生成 OpenAPI 文档 |
+| `os/` | [`gmetric`](os/gmetric) | 指标抽象层，定义 Counter、Gauge、Histogram 等指标接口，上报实现见`contrib/metric/otelmetric` |
 
 ### 工具库
 
+可独立引入的通用能力，不依赖框架运行时，单独使用也成立。
+
 | 顶层包 | 子包 | 说明 |
 | --- | --- | --- |
-| `os/`（基础） | [`gfile`](os/gfile)、[`gfsnotify`](os/gfsnotify)、[`gproc`](os/gproc)、[`grpool`](os/grpool)、[`gfpool`](os/gfpool)、[`gctx`](os/gctx)、[`genv`](os/genv)、[`gtime`](os/gtime)、[`gres`](os/gres)、[`gspath`](os/gspath)、[`gstructs`](os/gstructs)、[`gbuild`](os/gbuild) | 文件、文件监听、进程、协程池、文件指针池、上下文、环境变量、时间、资源、搜索路径、结构体、构建信息 |
-| `container/` | [`garray`](container/garray)、[`gmap`](container/gmap)、[`gset`](container/gset)、[`glist`](container/glist)、[`gqueue`](container/gqueue)、[`gring`](container/gring)、[`gtree`](container/gtree)、[`gpool`](container/gpool)、[`gtype`](container/gtype)、[`gvar`](container/gvar) | 并发安全的数组、字典、集合、列表、队列、环、树、对象池、类型包装、通用变量 |
-| `encoding/` | [`gjson`](encoding/gjson)、[`gyaml`](encoding/gyaml)、[`gtoml`](encoding/gtoml)、[`gini`](encoding/gini)、[`gxml`](encoding/gxml)、[`gproperties`](encoding/gproperties)、[`gbase64`](encoding/gbase64)、[`gbinary`](encoding/gbinary)、[`gcharset`](encoding/gcharset)、[`gcompress`](encoding/gcompress)、[`ghash`](encoding/ghash)、[`ghtml`](encoding/ghtml)、[`gurl`](encoding/gurl) | 各类编解码、字符集转换、压缩、哈希、HTML 与 URL 处理 |
-| `crypto/` | [`gaes`](crypto/gaes)、[`gdes`](crypto/gdes)、[`grsa`](crypto/grsa)、[`gmd5`](crypto/gmd5)、[`gsha1`](crypto/gsha1)、[`gsha256`](crypto/gsha256)、[`gsha512`](crypto/gsha512)、[`gcrc32`](crypto/gcrc32) | 对称与非对称加密、摘要算法 |
-| `util/` | [`gconv`](util/gconv)、[`gvalid`](util/gvalid)、[`gmeta`](util/gmeta)、[`gtag`](util/gtag)、[`gmode`](util/gmode)、[`gpage`](util/gpage)、[`grand`](util/grand)、[`guid`](util/guid)、[`gutil`](util/gutil) | 类型转换、数据校验、元数据、结构体标签、权限位、分页、随机数、唯一 ID、通用工具 |
-| `text/` | [`gstr`](text/gstr)、[`gregex`](text/gregex) | 字符串处理与正则封装 |
-| `errors/` | [`gerror`](errors/gerror)、[`gcode`](errors/gcode) | 带堆栈的错误与错误码 |
-| `i18n/` | [`gi18n`](i18n/gi18n) | 国际化 |
-| `debug/` | [`gdebug`](debug/gdebug) | 调试信息 |
-| `test/` | [`gtest`](test/gtest) | 单元测试辅助 |
+| `os/` | [`gfile`](os/gfile)、[`gfsnotify`](os/gfsnotify)、[`gproc`](os/gproc)、[`grpool`](os/grpool)、[`gfpool`](os/gfpool)、[`gctx`](os/gctx)、[`genv`](os/genv)、[`gtime`](os/gtime)、[`gres`](os/gres)、[`gspath`](os/gspath)、[`gstructs`](os/gstructs)、[`gbuild`](os/gbuild)、[`gcmd`](os/gcmd)、[`gmlock`](os/gmlock)、[`gmutex`](os/gmutex) | 系统与运行时工具。文件读写、文件监听、进程管理、协程池、文件指针池、上下文、环境变量、时间处理、资源管理、搜索路径、结构体反射、构建信息、命令行解析、内存锁、互斥锁 |
+| `container/` | [`garray`](container/garray)、[`gmap`](container/gmap)、[`gset`](container/gset)、[`glist`](container/glist)、[`gqueue`](container/gqueue)、[`gring`](container/gring)、[`gtree`](container/gtree)、[`gpool`](container/gpool)、[`gtype`](container/gtype)、[`gvar`](container/gvar) | 并发安全容器。数组、字典、集合、列表、队列、环、树、对象池、类型包装、通用变量，均支持并发访问 |
+| `encoding/` | [`gjson`](encoding/gjson)、[`gyaml`](encoding/gyaml)、[`gtoml`](encoding/gtoml)、[`gini`](encoding/gini)、[`gxml`](encoding/gxml)、[`gproperties`](encoding/gproperties)、[`gbase64`](encoding/gbase64)、[`gbinary`](encoding/gbinary)、[`gcharset`](encoding/gcharset)、[`gcompress`](encoding/gcompress)、[`ghash`](encoding/ghash)、[`ghtml`](encoding/ghtml)、[`gurl`](encoding/gurl) | 编解码与格式转换。JSON、YAML、TOML、INI、XML、Properties 解析，Base64、二进制、字符集转换、压缩、哈希、HTML 转义、URL 编解码 |
+| `crypto/` | [`gaes`](crypto/gaes)、[`gdes`](crypto/gdes)、[`grsa`](crypto/grsa)、[`gmd5`](crypto/gmd5)、[`gsha1`](crypto/gsha1)、[`gsha256`](crypto/gsha256)、[`gsha512`](crypto/gsha512)、[`gcrc32`](crypto/gcrc32) | 加密与摘要。AES、DES 对称加密，RSA 非对称加密，MD5、SHA1、SHA256、SHA512 摘要，CRC32 校验 |
+| `util/` | [`gconv`](util/gconv)、[`gvalid`](util/gvalid)、[`gmeta`](util/gmeta)、[`gtag`](util/gtag)、[`gmode`](util/gmode)、[`gpage`](util/gpage)、[`grand`](util/grand)、[`guid`](util/guid)、[`gutil`](util/gutil) | 通用工具。类型转换、数据校验、元数据、结构体标签、权限位、分页、随机数、唯一 ID |
+| `text/` | [`gstr`](text/gstr)、[`gregex`](text/gregex) | 文本处理。字符串查找、替换、分割、格式化，正则表达式封装 |
+| `errors/` | [`gerror`](errors/gerror)、[`gcode`](errors/gcode) | 错误处理。`gerror` 提供带堆栈的错误包装，`gcode` 定义标准错误码 |
+| `i18n/` | [`gi18n`](i18n/gi18n) | 国际化，支持多语言资源加载与翻译 |
+| `debug/` | [`gdebug`](debug/gdebug) | 调试辅助，打印调用栈与变量信息 |
+| `test/` | [`gtest`](test/gtest) | 单元测试辅助，提供`gtest.C`用例块与链式断言 |
 
 ### 生态模块（`contrib/`）
+
+需要单独`go get`的独立模块，按领域划分。
 
 | 领域 | 模块 |
 | --- | --- |
@@ -125,6 +140,7 @@ cd hello && gf run main.go
 | RPC | [`grpcx`](contrib/rpc/grpcx) |
 | 链路追踪 / 指标 | [`otlpgrpc`](contrib/trace/otlpgrpc)、[`otlphttp`](contrib/trace/otlphttp)、[`otelmetric`](contrib/metric/otelmetric/README.MD) |
 | Redis 适配 | [`redis`](contrib/nosql/redis/README.MD) |
+| SDK 工具 | [`httpclient`](contrib/sdk/httpclient) |
 
 ## 贡献者
 
