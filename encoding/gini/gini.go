@@ -108,11 +108,7 @@ func Encode(data map[string]any) (res []byte, err error) {
 		}
 		break
 	}
-	res = make([]byte, w.Len())
-	if n, err = w.Read(res); err != nil || n == 0 {
-		return nil, gerror.Wrapf(err, "w.Read failed")
-	}
-	return res, nil
+	return w.Bytes(), nil
 }
 
 // ToJson convert INI format to JSON.
