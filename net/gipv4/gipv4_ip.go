@@ -9,7 +9,7 @@ package gipv4
 
 import (
 	"net"
-	"strconv"
+	"net/netip"
 	"strings"
 
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -112,35 +112,15 @@ func GetIntranetIpArray() (ips []string, err error) {
 
 // IsIntranet checks and returns whether given ip an intranet ip.
 //
-// Local: 127.0.0.1
+// Loopback: 127.0.0.0/8, ::1
 // A: 10.0.0.0--10.255.255.255
 // B: 172.16.0.0--172.31.255.255
 // C: 192.168.0.0--192.168.255.255
+// IPv6 ULA: fc00::/7
 func IsIntranet(ip string) bool {
-	if ip == "127.0.0.1" {
-		return true
-	}
-	array := strings.Split(ip, ".")
-	if len(array) != 4 {
+	addr, err := netip.ParseAddr(ip)
+	if err != nil {
 		return false
 	}
-	// A
-	if array[0] == "10" || (array[0] == "192" && array[1] == "168") {
-		return true
-	}
-	// C
-	if array[0] == "192" && array[1] == "168" {
-		return true
-	}
-	// B
-	if array[0] == "172" {
-		second, err := strconv.ParseInt(array[1], 10, 64)
-		if err != nil {
-			return false
-		}
-		if second >= 16 && second <= 31 {
-			return true
-		}
-	}
-	return false
+	return addr.IsPrivate() || addr.IsLoopback()
 }
