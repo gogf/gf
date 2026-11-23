@@ -121,11 +121,11 @@ cd hello && gf run main.go
 | Area | Modules |
 | --- | --- |
 | [Database drivers](contrib/drivers/README.MD) | [`mysql`](contrib/drivers/mysql), [`pgsql`](contrib/drivers/pgsql), [`mssql`](contrib/drivers/mssql), [`oracle`](contrib/drivers/oracle), [`sqlite`](contrib/drivers/sqlite), [`sqlitecgo`](contrib/drivers/sqlitecgo), [`clickhouse`](contrib/drivers/clickhouse), [`dm`](contrib/drivers/dm), [`gaussdb`](contrib/drivers/gaussdb), [`mariadb`](contrib/drivers/mariadb), [`oceanbase`](contrib/drivers/oceanbase), [`tidb`](contrib/drivers/tidb) |
-| Config adapters | `apollo`, `consul`, `nacos`, `polaris`, `kubecm` |
-| Service registry | `etcd`, `consul`, `nacos`, `polaris`, `zookeeper`, `file` |
-| RPC | `grpcx` |
-| Tracing / metrics | `otlpgrpc`, `otlphttp`, `otelmetric` |
-| Redis adapter | `redis` |
+| Config adapters | [`apollo`](contrib/config/apollo/README.MD), [`consul`](contrib/config/consul), [`nacos`](contrib/config/nacos/README.MD), [`polaris`](contrib/config/polaris/README.MD), [`kubecm`](contrib/config/kubecm/README.MD) |
+| Service registry | [`etcd`](contrib/registry/etcd/README.MD), [`consul`](contrib/registry/consul/README.MD), [`nacos`](contrib/registry/nacos/README.MD), [`polaris`](contrib/registry/polaris/README.MD), [`zookeeper`](contrib/registry/zookeeper/README.MD), [`file`](contrib/registry/file/README.MD) |
+| RPC | [`grpcx`](contrib/rpc/grpcx) |
+| Tracing / metrics | [`otlpgrpc`](contrib/trace/otlpgrpc), [`otlphttp`](contrib/trace/otlphttp), [`otelmetric`](contrib/metric/otelmetric/README.MD) |
+| Redis adapter | [`redis`](contrib/nosql/redis/README.MD) |
 
 ## Contributors
 

@@ -120,11 +120,11 @@ cd hello && gf run main.go
 | 领域 | 模块 |
 | --- | --- |
 | [数据库驱动](contrib/drivers/README.MD) | [`mysql`](contrib/drivers/mysql)、[`pgsql`](contrib/drivers/pgsql)、[`mssql`](contrib/drivers/mssql)、[`oracle`](contrib/drivers/oracle)、[`sqlite`](contrib/drivers/sqlite)、[`sqlitecgo`](contrib/drivers/sqlitecgo)、[`clickhouse`](contrib/drivers/clickhouse)、[`dm`](contrib/drivers/dm)、[`gaussdb`](contrib/drivers/gaussdb)、[`mariadb`](contrib/drivers/mariadb)、[`oceanbase`](contrib/drivers/oceanbase)、[`tidb`](contrib/drivers/tidb) |
-| 配置适配 | `apollo`、`consul`、`nacos`、`polaris`、`kubecm` |
-| 服务注册 | `etcd`、`consul`、`nacos`、`polaris`、`zookeeper`、`file` |
-| RPC | `grpcx` |
-| 链路追踪 / 指标 | `otlpgrpc`、`otlphttp`、`otelmetric` |
-| Redis 适配 | `redis` |
+| 配置适配 | [`apollo`](contrib/config/apollo/README.MD)、[`consul`](contrib/config/consul)、[`nacos`](contrib/config/nacos/README.MD)、[`polaris`](contrib/config/polaris/README.MD)、[`kubecm`](contrib/config/kubecm/README.MD) |
+| 服务注册 | [`etcd`](contrib/registry/etcd/README.MD)、[`consul`](contrib/registry/consul/README.MD)、[`nacos`](contrib/registry/nacos/README.MD)、[`polaris`](contrib/registry/polaris/README.MD)、[`zookeeper`](contrib/registry/zookeeper/README.MD)、[`file`](contrib/registry/file/README.MD) |
+| RPC | [`grpcx`](contrib/rpc/grpcx) |
+| 链路追踪 / 指标 | [`otlpgrpc`](contrib/trace/otlpgrpc)、[`otlphttp`](contrib/trace/otlphttp)、[`otelmetric`](contrib/metric/otelmetric/README.MD) |
+| Redis 适配 | [`redis`](contrib/nosql/redis/README.MD) |
 
 ## 贡献者
 
