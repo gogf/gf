@@ -9,6 +9,7 @@ package gstr
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"regexp"
 	"slices"
 	"strconv"
@@ -79,7 +80,15 @@ func NumberFormat(number float64, decimals int, decPoint, thousandsSep string) s
 		number = -number
 		neg = true
 	}
-	// Will round off
+	// PHP rounds half away from zero, whereas Sprintf rounds half to even.
+	pow := math.Pow10(decimals)
+	if rounded := math.Round(number*pow) / pow; !math.IsInf(rounded, 0) && !math.IsNaN(rounded) {
+		number = rounded
+	}
+	// PHP drops the sign of a number that is rounded to zero.
+	if number == 0 {
+		neg = false
+	}
 	str := fmt.Sprintf("%."+strconv.Itoa(decimals)+"F", number)
 	prefix, suffix := "", ""
 	if decimals > 0 {

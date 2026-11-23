@@ -176,6 +176,19 @@ func Test_NumberFormat(t *testing.T) {
 		t.Assert(gstr.NumberFormat(1234567.8910, 2, "#", "/"), "1/234/567#89")
 		t.Assert(gstr.NumberFormat(-1234567.8910, 2, "#", "/"), "-1/234/567#89")
 	})
+	// A half is rounded away from zero, as PHP number_format does.
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.NumberFormat(0.5, 0, ".", ","), "1")
+		t.Assert(gstr.NumberFormat(2.5, 0, ".", ","), "3")
+		t.Assert(gstr.NumberFormat(-2.5, 0, ".", ","), "-3")
+		t.Assert(gstr.NumberFormat(0.125, 2, ".", ","), "0.13")
+		t.Assert(gstr.NumberFormat(1234.5, 0, ".", ","), "1,235")
+		t.Assert(gstr.NumberFormat(1234.4, 0, ".", ","), "1,234")
+		t.Assert(gstr.NumberFormat(0, 2, ".", ","), "0.00")
+		// The sign is dropped when the number is rounded to zero.
+		t.Assert(gstr.NumberFormat(-0.001, 2, ".", ","), "0.00")
+		t.Assert(gstr.NumberFormat(-0.4, 0, ".", ","), "0")
+	})
 }
 
 func Test_ChunkSplit(t *testing.T) {
