@@ -44,7 +44,12 @@ func Test_Gzip_UnGzip(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(result, arr)
 
-		result, _ = gcompress.UnGzip(gzip[1:])
+		result, err = gcompress.UnGzip(gzip[1:])
+		t.AssertNE(err, nil)
+		t.Assert(result, nil)
+
+		result, err = gcompress.UnGzip(gzip[:len(gzip)-8])
+		t.AssertNE(err, nil)
 		t.Assert(result, nil)
 	})
 }
