@@ -95,3 +95,37 @@ func Benchmark_New_Nil_And_Set_Multiple_Level(b *testing.B) {
 		p.Set("0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0", []int{1, 2, 3})
 	}
 }
+
+func Benchmark_Set_Existing_Simple_Json(b *testing.B) {
+	j := gjson.New(jsonStr1)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		j.Set("name", "john")
+	}
+}
+
+func Benchmark_Set_Existing_Array_Index_Json(b *testing.B) {
+	j := gjson.New(jsonStr1)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		j.Set("slice.1", 2)
+	}
+}
+
+func Benchmark_Set_Existing_Complicated_Json(b *testing.B) {
+	j := gjson.New(jsonStr2)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		j.Set("MsgSeq", 23)
+	}
+}
+
+func Benchmark_Set_Existing_Simple_Json_Parallel(b *testing.B) {
+	j := gjson.New(jsonStr1, true)
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			j.Set("name", "john")
+		}
+	})
+}
