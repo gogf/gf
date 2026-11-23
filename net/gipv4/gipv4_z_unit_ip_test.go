@@ -62,14 +62,23 @@ func TestIsIntranet(t *testing.T) {
 		expected bool
 	}{
 		{"127.0.0.1", true},
+		{"127.0.0.2", true},
+		{"127.255.255.255", true},
 		{"10.0.0.1", true},
 		{"172.16.0.1", true},
 		{"172.31.255.255", true},
 		{"192.168.0.1", true},
 		{"192.168.255.255", true},
+		{"::1", true},
+		{"fc00::1", true},
 		{"8.8.8.8", false},
+		{"172.15.0.1", false},
 		{"172.32.0.1", false},
+		{"192.169.0.1", false},
+		{"fe80::1", false},
 		{"256.256.256.256", false},
+		{"10.0.0.1/24", false},
+		{"", false},
 	}
 
 	gtest.C(t, func(t *gtest.T) {

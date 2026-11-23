@@ -42,18 +42,17 @@ func UnZlib(data []byte) ([]byte, error) {
 	if len(data) < 13 {
 		return data, nil
 	}
-	var (
-		out             bytes.Buffer
-		bytesReader     = bytes.NewReader(data)
-		zlibReader, err = zlib.NewReader(bytesReader)
-	)
+	zlibReader, err := zlib.NewReader(bytes.NewReader(data))
 	if err != nil {
 		err = gerror.Wrapf(err, `zlib.NewReader failed`)
 		return nil, err
 	}
-	if _, err = io.Copy(&out, zlibReader); err != nil {
-		err = gerror.Wrapf(err, `io.Copy failed`)
+	defer zlibReader.Close()
+
+	out, err := io.ReadAll(zlibReader)
+	if err != nil {
+		err = gerror.Wrapf(err, `io.ReadAll failed`)
 		return nil, err
 	}
-	return out.Bytes(), nil
+	return out, nil
 }

@@ -34,7 +34,12 @@ func Test_Zlib_UnZlib(t *testing.T) {
 		data, _ = gcompress.UnZlib(nil)
 		t.Assert(data, nil)
 
-		data, _ = gcompress.UnZlib(dst[1:])
+		data, err = gcompress.UnZlib(dst[1:])
+		t.AssertNE(err, nil)
+		t.Assert(data, nil)
+
+		data, err = gcompress.UnZlib(dst[:len(dst)-2])
+		t.AssertNE(err, nil)
 		t.Assert(data, nil)
 	})
 }
