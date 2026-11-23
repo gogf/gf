@@ -30,7 +30,7 @@ Use it as a full application framework, or pick individual components as needed.
 In an existing module, add the framework:
 
 ```bash
-go get -u github.com/gogf/gf/v2
+go get github.com/gogf/gf/v2@latest
 ```
 
 Install the `gf` CLI:
