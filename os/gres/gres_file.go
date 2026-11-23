@@ -44,6 +44,10 @@ func (f *File) Content() []byte {
 	if err != nil {
 		return nil
 	}
+	if len(content) == 0 {
+		// Keeps nil for empty content, consistent with the previous bytes.Buffer implementation.
+		return nil
+	}
 	return content
 }
 
