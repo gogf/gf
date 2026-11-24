@@ -180,7 +180,9 @@ func Test_Basic(t *testing.T) {
 		t.AssertNil(err)
 		defer rc.Close()
 
-		t.Assert(file.Content() == nil, true)
+		content := file.Content()
+		t.Assert(content != nil, true)
+		t.Assert(len(content), 0)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -207,7 +209,9 @@ func Test_Basic(t *testing.T) {
 		t.AssertNil(resource.Add(string(data)))
 		file := resource.Get(gfile.Basename(tempDir) + "/" + fileName)
 		t.AssertNE(file, nil)
-		t.Assert(file.Content() == nil, true)
+		content := file.Content()
+		t.Assert(content != nil, true)
+		t.Assert(len(content), 0)
 	})
 }
 
