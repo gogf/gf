@@ -9,7 +9,6 @@ package garray
 import (
 	"fmt"
 	"slices"
-	"sort"
 	"sync"
 
 	"github.com/gogf/gf/v2/util/gconv"
@@ -134,7 +133,7 @@ func (a *IntArray) Sort(reverse ...bool) *IntArray {
 			return defaultComparatorInt(y, x)
 		})
 	} else {
-		sort.Ints(a.array)
+		slices.Sort(a.array)
 	}
 	return a
 }
