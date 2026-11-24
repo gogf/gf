@@ -184,13 +184,17 @@ func ReadLines(file string, callback func(line string) error) error {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
+	// Keep the default initial buffer and lift the 64KB max token size limit.
 	scanner.Buffer(nil, math.MaxInt)
 	for scanner.Scan() {
 		if err = callback(scanner.Text()); err != nil {
 			return err
 		}
 	}
-	return scanner.Err()
+	if err = scanner.Err(); err != nil {
+		return gerror.Wrapf(err, `Read file "%s" failed`, file)
+	}
+	return nil
 }
 
 // ReadLinesBytes reads file content line by line, which is passed to the callback function `callback` as []byte.
@@ -206,11 +210,15 @@ func ReadLinesBytes(file string, callback func(bytes []byte) error) error {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
+	// Keep the default initial buffer and lift the 64KB max token size limit.
 	scanner.Buffer(nil, math.MaxInt)
 	for scanner.Scan() {
 		if err = callback(scanner.Bytes()); err != nil {
 			return err
 		}
 	}
-	return scanner.Err()
+	if err = scanner.Err(); err != nil {
+		return gerror.Wrapf(err, `Read file "%s" failed`, file)
+	}
+	return nil
 }

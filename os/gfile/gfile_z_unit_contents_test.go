@@ -389,6 +389,16 @@ func Test_ReadLines_LongLine(t *testing.T) {
 	})
 }
 
+func Test_ReadLines_ScannerError(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Reading a directory fails at scanner read, not at open.
+		err := gfile.ReadLines(t.TempDir(), func(line string) error {
+			return nil
+		})
+		t.Assert(err != nil, true)
+	})
+}
+
 func Test_ReadLinesBytes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
@@ -435,5 +445,15 @@ func Test_ReadLinesBytes_LongLine(t *testing.T) {
 		t.Assert(len(getList), 2)
 		t.Assert(string(getList[0]), longLine)
 		t.Assert(string(getList[1]), "second")
+	})
+}
+
+func Test_ReadLinesBytes_ScannerError(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		// Reading a directory fails at scanner read, not at open.
+		err := gfile.ReadLinesBytes(t.TempDir(), func(line []byte) error {
+			return nil
+		})
+		t.Assert(err != nil, true)
 	})
 }
