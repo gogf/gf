@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
-	"sort"
+	"slices"
 	"strings"
 
 	"golang.org/x/mod/semver"
@@ -73,8 +73,8 @@ func GetModuleVersions(ctx context.Context, modulePath string) (*VersionInfo, er
 	if len(parts) > 1 {
 		info.Versions = parts[1:]
 		// Sort versions in descending order (newest first)
-		sort.Slice(info.Versions, func(i, j int) bool {
-			return semver.Compare(info.Versions[i], info.Versions[j]) > 0
+		slices.SortFunc(info.Versions, func(a, b string) int {
+			return semver.Compare(b, a)
 		})
 		info.Latest = info.Versions[0]
 	}

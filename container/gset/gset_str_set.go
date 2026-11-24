@@ -35,10 +35,10 @@ func NewStrSetFrom(items []string, safe ...bool) *StrSet {
 }
 
 // lazyInit lazily initializes the set.
-func (a *StrSet) lazyInit() {
-	a.once.Do(func() {
-		if a.TSet == nil {
-			a.TSet = NewTSet[string]()
+func (set *StrSet) lazyInit() {
+	set.once.Do(func() {
+		if set.TSet == nil {
+			set.TSet = NewTSet[string]()
 		}
 	})
 }

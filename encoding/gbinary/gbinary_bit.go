@@ -33,12 +33,12 @@ func EncodeBitsWithUint(bits []Bit, ui uint, l int) []Bit {
 // EncodeBitsToBytes . does encode bits to bytes
 // Convert bits to [] byte, encode from left to right, and add less than 1 byte from 0 to the end.
 func EncodeBitsToBytes(bits []Bit) []byte {
-	if len(bits)%8 != 0 {
-		for i := 0; i < len(bits)%8; i++ {
-			bits = append(bits, 0)
-		}
+	if padding := (8 - len(bits)%8) % 8; padding > 0 {
+		padded := make([]Bit, len(bits)+padding)
+		copy(padded, bits)
+		bits = padded
 	}
-	b := make([]byte, 0)
+	b := make([]byte, 0, len(bits)/8)
 	for i := 0; i < len(bits); i += 8 {
 		b = append(b, byte(DecodeBitsToUint(bits[i:i+8])))
 	}

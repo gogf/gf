@@ -17,6 +17,15 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
+func Test_Set_NestedArray(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(`{"a":[[1]]}`)
+		t.AssertNil(j.Set("a.0.3", 9))
+		t.Assert(j.Get("a.0.3"), 9)
+		t.Assert(j.Get("a.0").Array(), g.Array{1, nil, nil, 9})
+	})
+}
+
 func Test_Set1(t *testing.T) {
 	e := []byte(`{"k1":{"k11":[1,2,3]},"k2":"v2"}`)
 	p := gjson.New(map[string]string{

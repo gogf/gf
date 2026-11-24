@@ -28,7 +28,7 @@ func (a *SortedIntArray) lazyInit() {
 	a.once.Do(func() {
 		if a.SortedTArray == nil {
 			a.SortedTArray = NewSortedTArraySize(0, defaultComparatorInt, false)
-			a.SetSorter(quickSortInt)
+			a.SetSorter(defaultSorter[int])
 		}
 	})
 }
@@ -53,7 +53,7 @@ func NewSortedIntArrayComparator(comparator func(a, b int) int, safe ...bool) *S
 // which is false in default.
 func NewSortedIntArraySize(cap int, safe ...bool) *SortedIntArray {
 	a := NewSortedTArraySize(cap, defaultComparatorInt, safe...)
-	a.SetSorter(quickSortInt)
+	a.SetSorter(defaultSorter[int])
 	return &SortedIntArray{
 		SortedTArray: a,
 	}
@@ -398,7 +398,7 @@ func (a *SortedIntArray) UnmarshalJSON(b []byte) error {
 	a.lazyInit()
 	if a.comparator == nil || a.sorter == nil {
 		a.comparator = defaultComparatorInt
-		a.sorter = quickSortInt
+		a.sorter = defaultSorter[int]
 		a.array = make([]int, 0)
 	}
 
@@ -410,7 +410,7 @@ func (a *SortedIntArray) UnmarshalValue(value any) (err error) {
 	a.lazyInit()
 	if a.comparator == nil || a.sorter == nil {
 		a.comparator = defaultComparatorInt
-		a.sorter = quickSortInt
+		a.sorter = defaultSorter[int]
 	}
 
 	return a.SortedTArray.UnmarshalValue(value)

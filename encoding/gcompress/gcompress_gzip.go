@@ -90,21 +90,19 @@ func GzipPathWriter(filePath string, writer io.Writer, level ...int) error {
 
 // UnGzip decompresses `data` with gzip algorithm.
 func UnGzip(data []byte) ([]byte, error) {
-	var buf bytes.Buffer
 	reader, err := gzip.NewReader(bytes.NewReader(data))
 	if err != nil {
 		err = gerror.Wrap(err, `gzip.NewReader failed`)
 		return nil, err
 	}
-	if _, err = io.Copy(&buf, reader); err != nil {
-		err = gerror.Wrap(err, `io.Copy failed`)
+	defer reader.Close()
+
+	out, err := io.ReadAll(reader)
+	if err != nil {
+		err = gerror.Wrap(err, `io.ReadAll failed`)
 		return nil, err
 	}
-	if err = reader.Close(); err != nil {
-		err = gerror.Wrap(err, `reader.Close failed`)
-		return buf.Bytes(), err
-	}
-	return buf.Bytes(), nil
+	return out, nil
 }
 
 // UnGzipFile decompresses srcFilePath `src` to `dst` using gzip algorithm.
