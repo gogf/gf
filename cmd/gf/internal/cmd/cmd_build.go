@@ -59,7 +59,7 @@ The "build" command is most commonly used command, which is designed as a powerf
 It provides much more features for building binary:
 1. Cross-Compiling for many platforms and architectures.
 2. Configuration file support for compiling.
-3. Built-In Variables.
+3. Built-in Variables.
 `
 	cBuildAd = `
 PLATFORMS
