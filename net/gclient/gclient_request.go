@@ -13,6 +13,7 @@ import (
 	"mime"
 	"mime/multipart"
 	"net/http"
+	neturl "net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -262,12 +263,17 @@ func (c *Client) newGetRequest(method, url, params, mediaType string) (req *http
 			httpHeaderContentTypeXml:
 			bodyBuffer = bytes.NewBuffer([]byte(params))
 		default:
-			// It appends the parameters to the url
+			// It appends the parameters to the query part of the url
 			// if http method is GET and Content-Type is not specified.
-			if gstr.Contains(url, "?") {
-				url = url + "&" + params
-			} else {
-				url = url + "?" + params
+			// The fragment is kept at the end, as parameters appended
+			// after it would not be sent to the server.
+			if u, err := neturl.Parse(url); err == nil {
+				if u.RawQuery != "" {
+					u.RawQuery += "&" + params
+				} else {
+					u.RawQuery = params
+				}
+				url = u.String()
 			}
 			bodyBuffer = bytes.NewBuffer(nil)
 		}

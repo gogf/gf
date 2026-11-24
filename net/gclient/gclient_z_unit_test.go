@@ -720,6 +720,37 @@ func TestClient_NoUrlEncode(t *testing.T) {
 	})
 }
 
+func TestClient_Get_UrlWithFragment(t *testing.T) {
+	s := g.Server(guid.S())
+	s.BindHandler("/path", func(r *ghttp.Request) {
+		r.Response.Write(r.URL.RawQuery)
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		var params = g.Map{
+			"a": 1,
+		}
+		// Parameters must still be sent if the url carries a fragment.
+		t.Assert(c.GetContent(ctx, `/path#frag`, params), `a=1`)
+		// Existing query parameters are kept before the fragment.
+		t.Assert(c.GetContent(ctx, `/path?b=2#frag`, params), `b=2&a=1`)
+		// A question mark inside the fragment does not start a query.
+		t.Assert(c.GetContent(ctx, `/path#frag?b=2`, params), `a=1`)
+
+		// Raw parameters that are not encoded survive the fragment handling.
+		t.Assert(c.NoUrlEncode().GetContent(ctx, `/path#frag`, g.Map{
+			"path": "/data/binlog",
+		}), `path=/data/binlog`)
+	})
+}
+
 func TestClient_NewWithHttpClient_NilPanics(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var panicked bool
