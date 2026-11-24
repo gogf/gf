@@ -3,7 +3,7 @@ module github.com/gogf/gf/contrib/config/nacos/v2
 go 1.25.0
 
 require (
-	github.com/gogf/gf/v2 v2.10.4
+	github.com/gogf/gf/v2 v2.10.5
 	github.com/nacos-group/nacos-sdk-go/v2 v2.3.6
 )
 
@@ -73,6 +73,7 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.6 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
@@ -84,7 +85,6 @@ require (
 	google.golang.org/protobuf v1.36.5 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 replace github.com/gogf/gf/v2 => ../../../

@@ -2,7 +2,7 @@ module github.com/gogf/gf/contrib/sdk/httpclient/v2
 
 go 1.25.0
 
-require github.com/gogf/gf/v2 v2.10.4
+require github.com/gogf/gf/v2 v2.10.5
 
 require (
 	github.com/BurntSushi/toml v1.5.0 // indirect
@@ -29,10 +29,10 @@ require (
 	go.opentelemetry.io/otel/metric v1.45.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.45.0 // indirect
 	go.opentelemetry.io/otel/trace v1.45.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.6 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.25.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 replace github.com/gogf/gf/v2 => ../../../

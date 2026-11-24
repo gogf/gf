@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	gitee.com/opengauss/openGauss-connector-go-pq v1.0.7
-	github.com/gogf/gf/v2 v2.10.4
+	github.com/gogf/gf/v2 v2.10.5
 	github.com/google/uuid v1.6.0
 )
 
@@ -33,12 +33,12 @@ require (
 	go.opentelemetry.io/otel/metric v1.45.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.45.0 // indirect
 	go.opentelemetry.io/otel/trace v1.45.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.6 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.25.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 replace (

@@ -9,7 +9,8 @@ package gproperties
 
 import (
 	"bytes"
-	"sort"
+	"maps"
+	"slices"
 	"strings"
 
 	"github.com/magiconair/properties"
@@ -49,13 +50,7 @@ func Encode(data map[string]any) (res []byte, err error) {
 
 	flattened = flattenAndMergeMap(flattened, data, "", ".")
 
-	keys := make([]string, 0, len(flattened))
-
-	for key := range flattened {
-		keys = append(keys, key)
-	}
-
-	sort.Strings(keys)
+	keys := slices.Sorted(maps.Keys(flattened))
 
 	for _, key := range keys {
 		_, _, err := pr.Set(key, gconv.String(flattened[key]))

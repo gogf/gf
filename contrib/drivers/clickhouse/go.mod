@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.40.1
-	github.com/gogf/gf/v2 v2.10.4
+	github.com/gogf/gf/v2 v2.10.5
 	github.com/google/uuid v1.6.0
 	github.com/shopspring/decimal v1.4.0
 )
@@ -41,6 +41,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.45.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.45.0 // indirect
 	go.opentelemetry.io/otel/trace v1.45.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.6 // indirect
 	golang.org/x/net v0.42.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.27.0 // indirect

@@ -328,6 +328,14 @@ func Test_KVMap_MapCopy(t *testing.T) {
 		m.Set("d", "4")
 		t.Assert(data["d"], "")
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		// A nil underlying map still returns a non-nil empty copy.
+		m := gmap.NewKVMapFrom[string, string](nil)
+		data := m.MapCopy()
+		t.AssertNE(data, nil)
+		t.Assert(len(data), 0)
+	})
 }
 
 func Test_KVMap_MapStrAny(t *testing.T) {

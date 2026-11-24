@@ -12,7 +12,7 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -458,7 +458,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 			tmpKeys = append(tmpKeys, k)
 		}
 		if mapLen > 1 {
-			sort.Strings(tmpKeys)
+			slices.Sort(tmpKeys)
 		}
 		keys = tmpKeys // for fieldsToSequence
 

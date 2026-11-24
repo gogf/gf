@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -344,8 +344,8 @@ func collectAgentUniverse(_ string) []selectableAgent {
 		}
 		out = append(out, entry)
 	}
-	sort.Slice(out, func(left, right int) bool {
-		return out[left].Name < out[right].Name
+	slices.SortFunc(out, func(a, b selectableAgent) int {
+		return strings.Compare(a.Name, b.Name)
 	})
 	return out
 }

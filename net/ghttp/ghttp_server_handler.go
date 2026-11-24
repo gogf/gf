@@ -7,12 +7,16 @@
 package ghttp
 
 import (
+	"context"
+	"html"
 	"net/http"
+	"net/url"
 	"os"
-	"sort"
+	"path"
+	"path/filepath"
+	"slices"
 	"strings"
 
-	"github.com/gogf/gf/v2/encoding/ghtml"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
@@ -245,8 +249,9 @@ func (s *Server) searchStaticFile(uri string) *staticFile {
 				path, dir = gspath.Search(item.Path, uri[len(item.Prefix):], s.config.IndexFiles...)
 				if path != "" {
 					return &staticFile{
-						Path:  path,
-						IsDir: dir,
+						Path:     path,
+						RootPath: item.Path,
+						IsDir:    dir,
 					}
 				}
 			}
@@ -264,8 +269,9 @@ func (s *Server) searchStaticFile(uri string) *staticFile {
 			}
 			if path, dir = gspath.Search(p, uri, s.config.IndexFiles...); path != "" {
 				return &staticFile{
-					Path:  path,
-					IsDir: dir,
+					Path:     path,
+					RootPath: p,
+					IsDir:    dir,
 				}
 			}
 		}
@@ -300,7 +306,7 @@ func (s *Server) serveFile(r *Request, f *staticFile, allowIndex ...bool) {
 		return
 	}
 	// Use file from dist.
-	file, err := os.Open(f.Path)
+	file, err := openStaticFile(r.Context(), f)
 	if err != nil {
 		r.Response.WriteStatus(http.StatusForbidden)
 		return
@@ -325,6 +331,53 @@ func (s *Server) serveFile(r *Request, f *staticFile, allowIndex ...bool) {
 	}
 }
 
+// compareStaticFiles sorts directories before files, then by name.
+func compareStaticFiles(a, b os.FileInfo) int {
+	aIsDir, bIsDir := a.IsDir(), b.IsDir()
+	if aIsDir && !bIsDir {
+		return -1
+	}
+	if !aIsDir && bIsDir {
+		return 1
+	}
+	return strings.Compare(a.Name(), b.Name())
+}
+
+// formatDirHref returns an HTML-safe, URL-escaped href for a directory path.
+func formatDirHref(urlPath string) string {
+	u := url.URL{Path: urlPath}
+	return html.EscapeString(u.String())
+}
+
+// openStaticFile opens the disk file of `f`. A file found by searching a configured
+// static directory is opened through a root-anchored os.Root, so that paths escaping
+// the root, including symbolic links, are rejected.
+func openStaticFile(ctx context.Context, f *staticFile) (*os.File, error) {
+	if f.RootPath == "" {
+		return os.Open(f.Path)
+	}
+	rootPath := gfile.Abs(f.RootPath)
+	path := gfile.Abs(f.Path)
+	relPath, err := filepath.Rel(rootPath, path)
+	if err != nil || !filepath.IsLocal(relPath) {
+		return nil, gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`path "%s" is outside of root "%s"`,
+			path, rootPath,
+		)
+	}
+	root, err := os.OpenRoot(rootPath)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err := root.Close(); err != nil {
+			intlog.Errorf(ctx, `close static file root "%s" failed: %+v`, rootPath, err)
+		}
+	}()
+	return root.Open(relPath)
+}
+
 // listDir lists the sub files of specified directory as HTML content to the client.
 func (s *Server) listDir(r *Request, f http.File) {
 	files, err := f.Readdir(-1)
@@ -333,15 +386,7 @@ func (s *Server) listDir(r *Request, f http.File) {
 		return
 	}
 	// The folder type has the most priority than file.
-	sort.Slice(files, func(i, j int) bool {
-		if files[i].IsDir() && !files[j].IsDir() {
-			return true
-		}
-		if !files[i].IsDir() && files[j].IsDir() {
-			return false
-		}
-		return files[i].Name() < files[j].Name()
-	})
+	slices.SortFunc(files, compareStaticFiles)
 	if r.Response.Header().Get(HeaderContentType) == "" {
 		r.Response.Header().Set(HeaderContentType, "text/html; charset=utf-8")
 	}
@@ -352,12 +397,12 @@ func (s *Server) listDir(r *Request, f http.File) {
 	r.Response.Write(`</style>`)
 	r.Response.Write(`</head>`)
 	r.Response.Write(`<body>`)
-	r.Response.Writef(`<h1>Index of %s</h1>`, r.URL.Path)
+	r.Response.Writef(`<h1>Index of %s</h1>`, html.EscapeString(r.URL.Path))
 	r.Response.Writef(`<hr />`)
 	r.Response.Write(`<table>`)
 	if r.URL.Path != "/" {
 		r.Response.Write(`<tr>`)
-		r.Response.Writef(`<td><a href="%s">..</a></td>`, gfile.Dir(r.URL.Path))
+		r.Response.Writef(`<td><a href="%s">..</a></td>`, formatDirHref(path.Dir(r.URL.Path)))
 		r.Response.Write(`</tr>`)
 	}
 	name := ""
@@ -371,7 +416,7 @@ func (s *Server) listDir(r *Request, f http.File) {
 			size = "-"
 		}
 		r.Response.Write(`<tr>`)
-		r.Response.Writef(`<td><a href="%s/%s">%s</a></td>`, prefix, name, ghtml.SpecialChars(name))
+		r.Response.Writef(`<td><a href="%s">%s</a></td>`, formatDirHref(prefix+"/"+name), html.EscapeString(name))
 		r.Response.Writef(`<td style="width:300px;text-align:center;">%s</td>`, gtime.New(file.ModTime()).ISO8601())
 		r.Response.Writef(`<td style="width:80px;text-align:right;">%s</td>`, size)
 		r.Response.Write(`</tr>`)
