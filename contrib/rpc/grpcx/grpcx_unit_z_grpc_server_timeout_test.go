@@ -130,3 +130,35 @@ func Test_Grpcx_Grpc_Server_Timeout_Method(t *testing.T) {
 		t.Assert(status.Code(err), codes.DeadlineExceeded)
 	})
 }
+
+func Test_Grpcx_Grpc_Server_UnaryTimeout_Direct(t *testing.T) {
+	c := grpcx.Server.NewConfig()
+	c.Name = guid.S()
+	c.Timeout = time.Second
+	s := grpcx.Server.New(c)
+	info := &grpc.UnaryServerInfo{FullMethod: "/test.Service/Method"}
+
+	gtest.C(t, func(t *gtest.T) {
+		// A panic of the handler is rethrown in the calling goroutine.
+		t.AssertNE(recoverPanic(func() {
+			_, _ = s.UnaryTimeout(gctx.New(), nil, info, func(ctx context.Context, req any) (any, error) {
+				panic("boom")
+			})
+		}), nil)
+
+		// A normal result is returned as is.
+		res, err := s.UnaryTimeout(gctx.New(), nil, info, func(ctx context.Context, req any) (any, error) {
+			return "ok", nil
+		})
+		t.AssertNil(err)
+		t.Assert(res, "ok")
+	})
+}
+
+func recoverPanic(f func()) (p any) {
+	defer func() {
+		p = recover()
+	}()
+	f()
+	return nil
+}

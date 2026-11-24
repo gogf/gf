@@ -118,8 +118,10 @@ func (s *GrpcServer) UnaryTimeout(
 	go func() {
 		var r result
 		defer func() {
-			// A panic can not cross goroutines, so it is passed back and rethrown in the request goroutine,
-			// where `UnaryRecover` turns it into an error.
+			// A panic can not cross goroutines, so it is passed back and rethrown in the request goroutine.
+			// With the default interceptor chain `UnaryRecover` runs inside this goroutine and already
+			// converts handler panics into errors, so this only applies to callers that use `UnaryTimeout`
+			// without an inner recover interceptor.
 			if p := recover(); p != nil {
 				r.panicked = p
 			}
