@@ -7,6 +7,7 @@
 package gcompress_test
 
 import (
+	"archive/zip"
 	"bytes"
 	"testing"
 
@@ -15,6 +16,35 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 )
+
+func Test_UnZipContent_Prefix(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var buf bytes.Buffer
+		writer := zip.NewWriter(&buf)
+		for _, entry := range []struct {
+			name    string
+			content string
+		}{
+			{"a/1.txt", "1"},
+			{"b/2.txt", "2"},
+		} {
+			w, err := writer.Create(entry.name)
+			t.AssertNil(err)
+			_, err = w.Write([]byte(entry.content))
+			t.AssertNil(err)
+		}
+		t.AssertNil(writer.Close())
+
+		tempDirPath := gfile.Temp(gtime.TimestampNanoStr())
+		t.AssertNil(gfile.Mkdir(tempDirPath))
+		defer func() { t.AssertNil(gfile.Remove(tempDirPath)) }()
+
+		t.AssertNil(gcompress.UnZipContent(buf.Bytes(), tempDirPath, "a"))
+		t.Assert(gfile.GetContents(gfile.Join(tempDirPath, "1.txt")), "1")
+		t.Assert(gfile.Exists(gfile.Join(tempDirPath, "2.txt")), false)
+		t.Assert(gfile.Exists(gfile.Join(tempDirPath, "b")), false)
+	})
+}
 
 func Test_ZipPath(t *testing.T) {
 	// file

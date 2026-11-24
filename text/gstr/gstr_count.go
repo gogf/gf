@@ -27,7 +27,7 @@ func CountI(s, substr string) int {
 // It considers parameter `str` as unicode string.
 func CountWords(str string) map[string]int {
 	m := make(map[string]int)
-	for _, word := range strings.Fields(str) {
+	for word := range strings.FieldsSeq(str) {
 		m[word]++
 	}
 	return m

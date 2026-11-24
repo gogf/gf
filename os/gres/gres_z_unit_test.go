@@ -197,7 +197,7 @@ func Test_Basic(t *testing.T) {
 			fileName = "empty.txt"
 		)
 		t.AssertNil(gfile.Mkdir(tempDir))
-		defer gfile.Remove(tempDir)
+		defer func() { t.AssertNil(gfile.Remove(tempDir)) }()
 		t.AssertNil(gfile.PutContents(gfile.Join(tempDir, fileName), ""))
 
 		data, err := gres.Pack(tempDir)
