@@ -9,6 +9,7 @@ package gfile
 import (
 	"bufio"
 	"io"
+	"math"
 	"os"
 
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -183,12 +184,13 @@ func ReadLines(file string, callback func(line string) error) error {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
+	scanner.Buffer(nil, math.MaxInt)
 	for scanner.Scan() {
 		if err = callback(scanner.Text()); err != nil {
 			return err
 		}
 	}
-	return nil
+	return scanner.Err()
 }
 
 // ReadLinesBytes reads file content line by line, which is passed to the callback function `callback` as []byte.
@@ -204,10 +206,11 @@ func ReadLinesBytes(file string, callback func(bytes []byte) error) error {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
+	scanner.Buffer(nil, math.MaxInt)
 	for scanner.Scan() {
 		if err = callback(scanner.Bytes()); err != nil {
 			return err
 		}
 	}
-	return nil
+	return scanner.Err()
 }
