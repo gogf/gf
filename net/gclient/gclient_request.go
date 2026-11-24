@@ -13,7 +13,6 @@ import (
 	"mime"
 	"mime/multipart"
 	"net/http"
-	neturl "net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -267,14 +266,17 @@ func (c *Client) newGetRequest(method, url, params, mediaType string) (req *http
 			// if http method is GET and Content-Type is not specified.
 			// The fragment is kept at the end, as parameters appended
 			// after it would not be sent to the server.
-			if u, err := neturl.Parse(url); err == nil {
-				if u.RawQuery != "" {
-					u.RawQuery += "&" + params
-				} else {
-					u.RawQuery = params
-				}
-				url = u.String()
+			base, fragment, hasFragment := strings.Cut(url, "#")
+			base, query, hasQuery := strings.Cut(base, "?")
+			if hasQuery && query != "" {
+				base += "?" + query + "&" + params
+			} else {
+				base += "?" + params
 			}
+			if hasFragment {
+				base += "#" + fragment
+			}
+			url = base
 			bodyBuffer = bytes.NewBuffer(nil)
 		}
 	} else {

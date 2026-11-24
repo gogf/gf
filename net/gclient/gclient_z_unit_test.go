@@ -737,12 +737,30 @@ func TestClient_Get_UrlWithFragment(t *testing.T) {
 		var params = g.Map{
 			"a": 1,
 		}
-		// Parameters must still be sent if the url carries a fragment.
-		t.Assert(c.GetContent(ctx, `/path#frag`, params), `a=1`)
+		// Parameters must still be sent if the url carries a fragment,
+		// and the fragment must be kept in the request.
+		resp, err := c.Get(ctx, `/path#frag`, params)
+		t.AssertNil(err)
+		t.Assert(resp.ReadAllString(), `a=1`)
+		t.Assert(resp.Request.URL.Fragment, `frag`)
+
 		// Existing query parameters are kept before the fragment.
-		t.Assert(c.GetContent(ctx, `/path?b=2#frag`, params), `b=2&a=1`)
+		resp, err = c.Get(ctx, `/path?b=2#frag`, params)
+		t.AssertNil(err)
+		t.Assert(resp.ReadAllString(), `b=2&a=1`)
+		t.Assert(resp.Request.URL.Fragment, `frag`)
+
+		// An empty query is replaced by the parameters.
+		resp, err = c.Get(ctx, `/path?#frag`, params)
+		t.AssertNil(err)
+		t.Assert(resp.ReadAllString(), `a=1`)
+		t.Assert(resp.Request.URL.Fragment, `frag`)
+
 		// A question mark inside the fragment does not start a query.
-		t.Assert(c.GetContent(ctx, `/path#frag?b=2`, params), `a=1`)
+		resp, err = c.Get(ctx, `/path#frag?b=2`, params)
+		t.AssertNil(err)
+		t.Assert(resp.ReadAllString(), `a=1`)
+		t.Assert(resp.Request.URL.Fragment, `frag?b=2`)
 
 		// Raw parameters that are not encoded survive the fragment handling.
 		t.Assert(c.NoUrlEncode().GetContent(ctx, `/path#frag`, g.Map{
