@@ -59,7 +59,7 @@ The "build" command is most commonly used command, which is designed as a powerf
 It provides much more features for building binary:
 1. Cross-Compiling for many platforms and architectures.
 2. Configuration file support for compiling.
-3. Build-In Variables.
+3. Built-In Variables.
 `
 	cBuildAd = `
 PLATFORMS
@@ -363,7 +363,7 @@ func (c cBuild) doBinaryBuild(
 	}
 }
 
-// getBuildInVarStr retrieves and returns the custom build-in variables in configuration
+// getBuildInVarStr retrieves and returns the custom built-in variables in configuration
 // file as json.
 func (c cBuild) getBuildInVarStr(ctx context.Context, in cBuildInput) string {
 	buildInVarMap := in.VarMap
