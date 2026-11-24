@@ -283,8 +283,5 @@ func isRealPathUnderRoot(root, path string) bool {
 		return true
 	}
 	realRoot, err := filepath.EvalSymlinks(root)
-	if err != nil {
-		return false
-	}
-	return isPathUnderRoot(realRoot, realPath)
+	return err == nil && isPathUnderRoot(realRoot, realPath)
 }
