@@ -7,7 +7,6 @@
 package gtrace
 
 import (
-	"mime"
 	"net/http"
 	"strings"
 
@@ -43,13 +42,12 @@ func SafeContent(data []byte) string {
 // `Content-Encoding` header. Content codings are case-insensitive and may
 // carry parameters, eg. "GZip" or "gzip; level=1".
 func isGzipEncoded(header http.Header) bool {
-	for part := range strings.SplitSeq(header.Get("Content-Encoding"), ",") {
-		mediaType, _, err := mime.ParseMediaType(strings.TrimSpace(part))
-		if err != nil {
-			continue
-		}
-		if strings.EqualFold(mediaType, "gzip") {
-			return true
+	for _, value := range header.Values("Content-Encoding") {
+		for part := range strings.SplitSeq(value, ",") {
+			coding, _, _ := strings.Cut(part, ";")
+			if strings.EqualFold(strings.TrimSpace(coding), "gzip") {
+				return true
+			}
 		}
 	}
 	return false
