@@ -42,6 +42,14 @@ func TestRowEncodeAndDecode(t *testing.T) {
 			return
 		}
 		t.Assert(res, urlStr)
+
+		// Literal '+' is preserved, matching PHP rawurldecode.
+		res, err = gurl.RawDecode("a+b%20c%2Bd")
+		t.AssertNil(err)
+		t.Assert(res, "a+b c+d")
+
+		_, err = gurl.RawDecode("%zz")
+		t.AssertNE(err, nil)
 	})
 }
 

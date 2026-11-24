@@ -45,6 +45,44 @@ go install github.com/gogf/gf/cmd/gf/v2@v2.5.5 # 特定版本(应该 >= v2.5.5)
 
 ## 2. 命令
 
+`gf`命令按用途分为三组：项目与运行、代码生成、环境与辅助。
+
+### 2.1 项目与运行
+
+| 命令 | 说明 |
+| --- | --- |
+| `gf init` | 创建并初始化一个空的`GoFrame`项目 |
+| `gf run` | 以热编译方式运行`Go`代码，修改后自动重新编译并重启 |
+| `gf build` | 交叉编译项目，支持多平台与多架构 |
+| `gf pack` | 将任意文件或目录打包为资源文件或`Go`源码文件 |
+| `gf docker` | 为当前项目构建`Docker`镜像 |
+| `gf up` | 升级当前项目中的`GoFrame`版本或工具版本 |
+
+### 2.2 代码生成
+
+| 命令 | 说明 |
+| --- | --- |
+| `gf gen dao` | 根据数据库表结构生成`dao`、`do`、`entity`代码 |
+| `gf gen ctrl` | 解析`api`定义，生成控制器与`SDK`代码 |
+| `gf gen service` | 解析包内结构体与方法，生成`service`接口文件 |
+| `gf gen pb` | 解析`proto`文件，生成`protobuf`代码 |
+| `gf gen pbentity` | 生成`protobuf3`格式的`entity`消息文件 |
+| `gf gen enums` | 解析项目中的`Go`文件，生成枚举定义文件 |
+
+### 2.3 环境与辅助
+
+| 命令 | 说明 |
+| --- | --- |
+| `gf env` | 查看当前`Golang`环境变量 |
+| `gf fix` | 升级`GoFrame`版本后自动修复代码 |
+| `gf tpl` | 模板解析与构建 |
+| `gf doc` | 下载`https://pages.goframe.org/`到本地运行 |
+| `gf install` | 安装`gf`二进制到系统（可能需要管理员权限） |
+| `gf version` | 查看当前二进制版本信息 |
+| `gf agents` | 将本地 AI 编码助手路径链接到`.agents`与`AGENTS.md` |
+
+### 2.4 完整帮助输出
+
 ```shell
 $ gf -h
 用法
