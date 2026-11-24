@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gbuild manages the build-in variables from "gf build".
+// Package gbuild manages the built-in variables from "gf build".
 package gbuild
 
 import (
@@ -70,7 +70,7 @@ func Info() BuildInfo {
 	}
 }
 
-// Get retrieves and returns the build-in binary variable with given name.
+// Get retrieves and returns the built-in binary variable with given name.
 func Get(name string, def ...any) *gvar.Var {
 	if v, ok := builtInVarMap[name]; ok {
 		return gvar.New(v)
@@ -81,7 +81,7 @@ func Get(name string, def ...any) *gvar.Var {
 	return nil
 }
 
-// Data returns the custom build-in variables as the map.
+// Data returns the custom built-in variables as the map.
 func Data() map[string]any {
 	return builtInVarMap
 }
