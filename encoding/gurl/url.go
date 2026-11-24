@@ -40,7 +40,7 @@ func RawEncode(str string) string {
 // Decode URL-encoded strings.
 // See http://php.net/manual/en/function.rawurldecode.php.
 func RawDecode(str string) (string, error) {
-	return url.QueryUnescape(strings.ReplaceAll(str, "%20", "+"))
+	return url.PathUnescape(str)
 }
 
 // BuildQuery Generate URL-encoded query string.

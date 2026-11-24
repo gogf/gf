@@ -34,6 +34,22 @@ func TestSlash(t *testing.T) {
 	})
 }
 
+// TestSlash_InvalidInterval checks that an interval below 1 is rejected,
+// as it can never step through the range.
+func TestSlash_InvalidInterval(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for _, spec := range []string{
+			"*/0 * * * * *",
+			"* 1-30/0 * * * *",
+			"* * */-1 * * *",
+		} {
+			s, err := newSchedule(spec)
+			t.AssertNE(err, nil)
+			t.AssertNil(s)
+		}
+	})
+}
+
 func TestNext(t *testing.T) {
 	runs := []struct {
 		time, spec string
