@@ -10,10 +10,13 @@ package ghttp_test
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -72,6 +75,76 @@ func Test_Static_ServerRoot_Security(t *testing.T) {
 		t.Assert(client.GetContent(ctx, "/test.html"), "test")
 		t.Assert(client.GetContent(ctx, "/../main.html"), "Not Found")
 		t.Assert(client.GetContent(ctx, "/..%2Fmain.html"), "Not Found")
+	})
+}
+
+func Test_Static_ServerRoot_Security_Escape(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			base       = t.TempDir()
+			rootDir    = gfile.Join(base, "static")
+			siblingDir = gfile.Join(base, "static-evil")
+			outsideDir = gfile.Join(base, "outside")
+		)
+		t.AssertNil(gfile.Mkdir(rootDir))
+		t.AssertNil(gfile.Mkdir(siblingDir))
+		t.AssertNil(gfile.Mkdir(outsideDir))
+		t.AssertNil(gfile.PutContents(gfile.Join(rootDir, "index.html"), "index"))
+		t.AssertNil(gfile.PutContents(gfile.Join(rootDir, "inside.txt"), "inside"))
+		t.AssertNil(gfile.PutContents(gfile.Join(siblingDir, "secret.txt"), "sibling-secret"))
+		t.AssertNil(gfile.PutContents(gfile.Join(outsideDir, "secret.txt"), "symlink-secret"))
+
+		if err := os.Symlink("inside.txt", gfile.Join(rootDir, "alias.txt")); err != nil {
+			t.Skip("symbolic links are not supported")
+		}
+		t.AssertNil(os.Symlink(gfile.Join("..", "outside", "secret.txt"), gfile.Join(rootDir, "escape.txt")))
+
+		s := g.Server(guid.S())
+		s.SetServerRoot(rootDir)
+		t.AssertNil(s.Start())
+		defer func() {
+			t.AssertNil(s.Shutdown())
+		}()
+		time.Sleep(100 * time.Millisecond)
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+
+		// Valid paths, including a symbolic link inside the root, still work.
+		t.Assert(client.GetContent(ctx, "/"), "index")
+		t.Assert(client.GetContent(ctx, "/inside.txt"), "inside")
+		t.Assert(client.GetContent(ctx, "/alias.txt"), "inside")
+
+		// A sibling directory sharing the root path prefix must not be served.
+		t.AssertNE(client.GetContent(ctx, "/../static-evil/secret.txt"), "sibling-secret")
+
+		// A symbolic link pointing outside the root must not be served.
+		t.AssertNE(client.GetContent(ctx, "/escape.txt"), "symlink-secret")
+	})
+}
+
+func Test_Static_RelativeSearchPath(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		cwd, err := os.Getwd()
+		t.AssertNil(err)
+		staticDir := gfile.Join(t.TempDir(), "static")
+		t.AssertNil(gfile.Mkdir(staticDir))
+		t.AssertNil(gfile.PutContents(gfile.Join(staticDir, "file.txt"), "relative"))
+		relativePath, err := filepath.Rel(cwd, staticDir)
+		t.AssertNil(err)
+
+		s := g.Server(guid.S())
+		config := ghttp.NewConfig()
+		config.SearchPaths = []string{relativePath}
+		config.FileServerEnabled = true
+		t.AssertNil(s.SetConfig(config))
+		t.AssertNil(s.Start())
+		defer func() {
+			t.AssertNil(s.Shutdown())
+		}()
+		time.Sleep(100 * time.Millisecond)
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+		t.Assert(client.GetContent(ctx, "/file.txt"), "relative")
 	})
 }
 

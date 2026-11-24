@@ -11,7 +11,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"io"
+	"math"
 	"strings"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -23,25 +23,18 @@ import (
 func Decode(data []byte) (res map[string]any, err error) {
 	res = make(map[string]any)
 	var (
+		scanner     = bufio.NewScanner(bytes.NewReader(data))
 		fieldMap    = make(map[string]any)
-		bytesReader = bytes.NewReader(data)
-		bufioReader = bufio.NewReader(bytesReader)
 		section     string
 		lastSection string
 		haveSection bool
-		line        string
 	)
+	// Scanner limits a line to 64KB by default, while ReadString had no limit.
+	scanner.Buffer(nil, math.MaxInt)
 
-	for {
-		line, err = bufioReader.ReadString('\n')
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			err = gerror.Wrapf(err, `bufioReader.ReadString failed`)
-			return nil, err
-		}
-		if line = strings.TrimSpace(line); len(line) == 0 {
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if len(line) == 0 {
 			continue
 		}
 
@@ -69,6 +62,9 @@ func Decode(data []byte) (res map[string]any, err error) {
 			fieldMap[strings.TrimSpace(key)] = strings.TrimSpace(value)
 			res[section] = fieldMap
 		}
+	}
+	if err = scanner.Err(); err != nil {
+		return nil, gerror.Wrapf(err, `scanner.Scan failed`)
 	}
 
 	if !haveSection {
@@ -107,11 +103,7 @@ func Encode(data map[string]any) (res []byte, err error) {
 		}
 		break
 	}
-	res = make([]byte, w.Len())
-	if n, err = w.Read(res); err != nil || n == 0 {
-		return nil, gerror.Wrapf(err, "w.Read failed")
-	}
-	return res, nil
+	return w.Bytes(), nil
 }
 
 // ToJson convert INI format to JSON.

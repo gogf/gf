@@ -9,6 +9,7 @@ package garray
 import (
 	"bytes"
 	"math"
+	"slices"
 	"sort"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -148,9 +149,7 @@ func (a *TArray[T]) InsertBefore(index int, values ...T) error {
 	if index < 0 || index >= len(a.array) {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
-	rear := append([]T{}, a.array[index:]...)
-	a.array = append(a.array[0:index], values...)
-	a.array = append(a.array, rear...)
+	a.array = slices.Insert(a.array, index, values...)
 	return nil
 }
 
@@ -161,9 +160,7 @@ func (a *TArray[T]) InsertAfter(index int, values ...T) error {
 	if index < 0 || index >= len(a.array) {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
-	rear := append([]T{}, a.array[index+1:]...)
-	a.array = append(a.array[0:index+1], values...)
-	a.array = append(a.array, rear...)
+	a.array = slices.Insert(a.array, index+1, values...)
 	return nil
 }
 
@@ -445,8 +442,7 @@ func (a *TArray[T]) Interfaces() []any {
 // Clone returns a new array, which is a copy of current array.
 func (a *TArray[T]) Clone() (newArray *TArray[T]) {
 	a.mu.RLock()
-	array := make([]T, len(a.array))
-	copy(array, a.array)
+	array := cloneSlice(a.array)
 	a.mu.RUnlock()
 	return NewTArrayFrom(array, a.mu.IsSafe())
 }
@@ -475,17 +471,7 @@ func (a *TArray[T]) Search(value T) int {
 }
 
 func (a *TArray[T]) doSearchWithoutLock(value T) int {
-	if len(a.array) == 0 {
-		return -1
-	}
-	result := -1
-	for index, v := range a.array {
-		if v == value {
-			result = index
-			break
-		}
-	}
-	return result
+	return slices.Index(a.array, value)
 }
 
 // Unique uniques the array, clear repeated items.
@@ -660,9 +646,7 @@ func (a *TArray[T]) Shuffle() *TArray[T] {
 func (a *TArray[T]) Reverse() *TArray[T] {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	for i, j := 0, len(a.array)-1; i < j; i, j = i+1, j-1 {
-		a.array[i], a.array[j] = a.array[j], a.array[i]
-	}
+	slices.Reverse(a.array)
 	return a
 }
 

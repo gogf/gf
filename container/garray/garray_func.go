@@ -33,6 +33,15 @@ func defaultSorter[T comparable](values []T, comparator func(a T, b T) int) {
 	slices.SortFunc(values, comparator)
 }
 
+// cloneSlice returns a non-nil copy of the given slice.
+func cloneSlice[T any](values []T) []T {
+	cloned := slices.Clone(values)
+	if cloned == nil {
+		cloned = make([]T, 0)
+	}
+	return cloned
+}
+
 // quickSortInt is the quick-sorting algorithm implements for int.
 func quickSortInt(values []int, comparator func(a, b int) int) {
 	if len(values) <= 1 {
