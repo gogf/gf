@@ -581,6 +581,11 @@ func Test_Basic(t *testing.T) {
 		t.AssertNil(j.Remove("x"))
 		t.Assert(j.MustToJsonString(), `[1,2,3]`)
 
+		// Removing a missing child from a map creates nothing.
+		j = gjson.New(`{}`)
+		t.AssertNil(j.Remove("x.y"))
+		t.Assert(j.MustToJsonString(), `{}`)
+
 		name := struct {
 			Name string
 		}{Name: "gf"}

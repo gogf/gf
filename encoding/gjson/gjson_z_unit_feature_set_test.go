@@ -29,6 +29,17 @@ func Test_Set_NestedArray(t *testing.T) {
 		t.AssertNil(j.Set("a.x", 2))
 		t.Assert(j.Get("a.x"), 2)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(nil)
+		t.AssertNil(j.Set("a", map[string]any{"b": map[string]any(nil)}))
+		t.AssertNil(j.Set("a.b.c", 1))
+		t.Assert(j.MustToJsonString(), `{"a":{"b":{"c":1}}}`)
+
+		j = gjson.New(nil)
+		t.AssertNil(j.Set("a", map[string]any{"b": map[string]any(nil)}))
+		t.AssertNil(j.Set("a.b.c.d", 1))
+		t.Assert(j.MustToJsonString(), `{"a":{"b":{"c":{"d":1}}}}`)
+	})
 }
 
 func Test_Set1(t *testing.T) {
