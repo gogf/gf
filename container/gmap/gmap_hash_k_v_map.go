@@ -7,7 +7,9 @@
 package gmap
 
 import (
+	"maps"
 	"reflect"
+	"slices"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/deepcopy"
@@ -112,22 +114,23 @@ func (m *KVMap[K, V]) Map() map[K]V {
 	if !m.mu.IsSafe() {
 		return m.data
 	}
-	data := make(map[K]V, len(m.data))
-	for k, v := range m.data {
-		data[k] = v
-	}
-	return data
+	return cloneMapData(m.data)
 }
 
 // MapCopy returns a shallow copy of the underlying data of the hash map.
 func (m *KVMap[K, V]) MapCopy() map[K]V {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	data := make(map[K]V, len(m.data))
-	for k, v := range m.data {
-		data[k] = v
+	return cloneMapData(m.data)
+}
+
+// cloneMapData returns a non-nil copy of the given map.
+func cloneMapData[K comparable, V any](data map[K]V) map[K]V {
+	cloned := maps.Clone(data)
+	if cloned == nil {
+		cloned = make(map[K]V)
 	}
-	return data
+	return cloned
 }
 
 // MapStrAny returns a copy of the underlying data of the map as map[string]any.
@@ -146,22 +149,18 @@ func (m *KVMap[K, V]) MapStrAny() map[string]any {
 func (m *KVMap[K, V]) FilterEmpty() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	for k, v := range m.data {
-		if empty.IsEmpty(v) {
-			delete(m.data, k)
-		}
-	}
+	maps.DeleteFunc(m.data, func(_ K, v V) bool {
+		return empty.IsEmpty(v)
+	})
 }
 
 // FilterNil deletes all key-value pair of which the value is nil.
 func (m *KVMap[K, V]) FilterNil() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	for k, v := range m.data {
-		if empty.IsNil(v) {
-			delete(m.data, k)
-		}
-	}
+	maps.DeleteFunc(m.data, func(_ K, v V) bool {
+		return empty.IsNil(v)
+	})
 }
 
 // Set sets key-value to the hash map.
@@ -494,30 +493,14 @@ func (m *KVMap[K, V]) Removes(keys []K) {
 func (m *KVMap[K, V]) Keys() []K {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	var (
-		keys  = make([]K, len(m.data))
-		index = 0
-	)
-	for key := range m.data {
-		keys[index] = key
-		index++
-	}
-	return keys
+	return slices.AppendSeq(make([]K, 0, len(m.data)), maps.Keys(m.data))
 }
 
 // Values returns all values of the map as a slice.
 func (m *KVMap[K, V]) Values() []V {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	var (
-		values = make([]V, len(m.data))
-		index  = 0
-	)
-	for _, value := range m.data {
-		values[index] = value
-		index++
-	}
-	return values
+	return slices.AppendSeq(make([]V, 0, len(m.data)), maps.Values(m.data))
 }
 
 // Contains checks whether a key exists.
