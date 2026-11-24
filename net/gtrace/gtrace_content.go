@@ -7,6 +7,7 @@
 package gtrace
 
 import (
+	"mime"
 	"net/http"
 	"strings"
 
@@ -18,7 +19,7 @@ import (
 // It appends string `...` to the tail of the result if the content size is greater than `MaxContentLogSize`.
 func SafeContentForHttp(data []byte, header http.Header) (string, error) {
 	var err error
-	if gzipAccepted(header) {
+	if isGzipEncoded(header) {
 		if data, err = gcompress.UnGzip(data); err != nil {
 			return string(data), err
 		}
@@ -38,16 +39,18 @@ func SafeContent(data []byte) string {
 	return content
 }
 
-// gzipAccepted returns whether the client will accept gzip-encoded content.
-func gzipAccepted(header http.Header) bool {
-	a := header.Get("Content-Encoding")
-	parts := strings.Split(a, ",")
-	for _, part := range parts {
-		part = strings.TrimSpace(part)
-		if part == "gzip" || strings.HasPrefix(part, "gzip;") {
+// isGzipEncoded returns whether the content is gzip-encoded according to the
+// `Content-Encoding` header. Content codings are case-insensitive and may
+// carry parameters, eg. "GZip" or "gzip; level=1".
+func isGzipEncoded(header http.Header) bool {
+	for part := range strings.SplitSeq(header.Get("Content-Encoding"), ",") {
+		mediaType, _, err := mime.ParseMediaType(strings.TrimSpace(part))
+		if err != nil {
+			continue
+		}
+		if strings.EqualFold(mediaType, "gzip") {
 			return true
 		}
 	}
-
 	return false
 }

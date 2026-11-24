@@ -109,3 +109,33 @@ func TestSafeContent(t *testing.T) {
 		t.Assert(t3, standData+"...")
 	})
 }
+
+func Test_SafeContentForHttp_ContentEncoding(t *testing.T) {
+	var (
+		content           = strings.Repeat("gzip content ", 10)
+		compressedData, _ = gcompress.Gzip([]byte(content))
+	)
+	gtest.C(t, func(t *gtest.T) {
+		// Content codings are case-insensitive.
+		for _, encoding := range []string{"gzip", "GZip", "GZIP"} {
+			header := http.Header{"Content-Encoding": []string{encoding}}
+			s, err := gtrace.SafeContentForHttp(compressedData, header)
+			t.AssertNil(err)
+			t.Assert(s, content)
+		}
+		// Parameters on the content coding are ignored.
+		for _, encoding := range []string{" gzip ", "gzip; level=1", "GZip ; level=1"} {
+			header := http.Header{"Content-Encoding": []string{encoding}}
+			s, err := gtrace.SafeContentForHttp(compressedData, header)
+			t.AssertNil(err)
+			t.Assert(s, content)
+		}
+		// Other content codings are not decompressed.
+		for _, encoding := range []string{"", "identity", "br", "x-gzip"} {
+			header := http.Header{"Content-Encoding": []string{encoding}}
+			s, err := gtrace.SafeContentForHttp([]byte(content), header)
+			t.AssertNil(err)
+			t.Assert(s, content)
+		}
+	})
+}
