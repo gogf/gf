@@ -79,28 +79,12 @@ func ComparatorUint64(a, b any) int {
 
 // ComparatorFloat32 provides a basic comparison on float32.
 func ComparatorFloat32(a, b any) int {
-	aFloat := gconv.Float32(a)
-	bFloat := gconv.Float32(b)
-	if aFloat == bFloat {
-		return 0
-	}
-	if aFloat > bFloat {
-		return 1
-	}
-	return -1
+	return cmp.Compare(gconv.Float32(a), gconv.Float32(b))
 }
 
 // ComparatorFloat64 provides a basic comparison on float64.
 func ComparatorFloat64(a, b any) int {
-	aFloat := gconv.Float64(a)
-	bFloat := gconv.Float64(b)
-	if aFloat == bFloat {
-		return 0
-	}
-	if aFloat > bFloat {
-		return 1
-	}
-	return -1
+	return cmp.Compare(gconv.Float64(a), gconv.Float64(b))
 }
 
 // ComparatorByte provides a basic comparison on byte.
@@ -115,16 +99,7 @@ func ComparatorRune(a, b any) int {
 
 // ComparatorTime provides a basic comparison on time.Time.
 func ComparatorTime(a, b any) int {
-	aTime := gconv.Time(a)
-	bTime := gconv.Time(b)
-	switch {
-	case aTime.After(bTime):
-		return 1
-	case aTime.Before(bTime):
-		return -1
-	default:
-		return 0
-	}
+	return gconv.Time(a).Compare(gconv.Time(b))
 }
 
 // ComparatorT provides a generic comparison for ordered types.

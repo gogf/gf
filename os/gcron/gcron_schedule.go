@@ -214,7 +214,8 @@ func parsePatternItem(
 			intervalArray = strings.Split(itemElem, "/")
 		)
 		if len(intervalArray) == 2 {
-			if number, err = strconv.Atoi(intervalArray[1]); err != nil {
+			// An interval below 1 never moves the loop below past rangeMax.
+			if number, err = strconv.Atoi(intervalArray[1]); err != nil || number < 1 {
 				return nil, gerror.NewCodef(
 					gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, itemElem,
 				)

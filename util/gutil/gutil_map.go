@@ -7,6 +7,7 @@
 package gutil
 
 import (
+	"maps"
 	"reflect"
 
 	"github.com/gogf/gf/v2/internal/utils"
@@ -47,19 +48,15 @@ func MapMerge(dstMap map[string]any, srcMaps ...map[string]any) {
 		return
 	}
 	for _, m := range srcMaps {
-		for k, v := range m {
-			dstMap[k] = v
-		}
+		maps.Copy(dstMap, m)
 	}
 }
 
 // MapMergeCopy creates and returns a new map which merges all map from `src`.
-func MapMergeCopy(maps ...map[string]any) (copy map[string]any) {
+func MapMergeCopy(srcMaps ...map[string]any) (copy map[string]any) {
 	copy = make(map[string]any)
-	for _, m := range maps {
-		for k, v := range m {
-			copy[k] = v
-		}
+	for _, m := range srcMaps {
+		maps.Copy(copy, m)
 	}
 	return
 }

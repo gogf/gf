@@ -14,7 +14,7 @@ package gspath
 import (
 	"context"
 	"os"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -244,7 +244,7 @@ func (sp *SPath) AllPaths() []string {
 	}
 	paths := sp.cache.Keys()
 	if len(paths) > 0 {
-		sort.Strings(paths)
+		slices.Sort(paths)
 	}
 	return paths
 }
