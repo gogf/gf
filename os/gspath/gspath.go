@@ -168,13 +168,18 @@ func (sp *SPath) Search(name string, indexFiles ...string) (filePath string, isD
 			path := ""
 			for _, v := range array {
 				path = filepath.Join(v, name)
+				// The result must stay under the searching directory,
+				// including after resolving symbolic links.
+				relativePath, err := filepath.Rel(v, path)
+				if err != nil || !filepath.IsLocal(relativePath) {
+					continue
+				}
+				path = filepath.Join(v, relativePath)
 				stat, err := os.Stat(path)
 				if stat == nil || os.IsNotExist(err) {
 					continue
 				}
 				path = gfile.Abs(path)
-				// The result must stay under the searching directory,
-				// including after resolving symbolic links.
 				if !isRealPathUnderRoot(v, path) {
 					continue
 				}
