@@ -51,7 +51,7 @@ func (r *WatcherRegistry) GetNames() []string {
 // Each callback is executed in a separate goroutine with panic recovery to prevent
 // one watcher's panic from affecting others.
 func (r *WatcherRegistry) Notify(ctx context.Context) {
-	r.watchers.Iterator(func(k string, fn WatcherFunc) bool {
+	for k, fn := range r.watchers.Iterator {
 		go func(k string, fn WatcherFunc, ctx context.Context) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -60,6 +60,5 @@ func (r *WatcherRegistry) Notify(ctx context.Context) {
 			}()
 			fn(ctx)
 		}(k, fn, ctx)
-		return true
-	})
+	}
 }

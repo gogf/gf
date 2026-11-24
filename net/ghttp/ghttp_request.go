@@ -78,9 +78,10 @@ type Request struct {
 
 // staticFile is the file struct for static file service.
 type staticFile struct {
-	File  *gres.File // Resource file object.
-	Path  string     // File path.
-	IsDir bool       // Is directory.
+	File     *gres.File // Resource file object.
+	Path     string     // File path.
+	RootPath string     // Root directory of `Path` for searched disk files, empty for explicit paths.
+	IsDir    bool       // Is directory.
 }
 
 // newRequest creates and returns a new request object.
@@ -204,8 +205,7 @@ func (r *Request) GetClientIp() string {
 	}
 	realIps := r.Header.Get(HeaderXForwardedFor)
 	if realIps != "" && len(realIps) != 0 && !strings.EqualFold("unknown", realIps) {
-		ipArray := strings.Split(realIps, ",")
-		r.clientIp = ipArray[0]
+		r.clientIp, _, _ = strings.Cut(realIps, ",")
 	}
 	if r.clientIp == "" {
 		for _, headerName := range clientIpHeaderNames {

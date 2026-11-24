@@ -8,7 +8,7 @@ package garray
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 	"sync"
 
 	"github.com/gogf/gf/v2/util/gconv"
@@ -129,11 +129,11 @@ func (a *IntArray) Sort(reverse ...bool) *IntArray {
 	defer a.mu.Unlock()
 
 	if len(reverse) > 0 && reverse[0] {
-		sort.Slice(a.array, func(i, j int) bool {
-			return a.array[i] >= a.array[j]
+		slices.SortFunc(a.array, func(x, y int) int {
+			return defaultComparatorInt(y, x)
 		})
 	} else {
-		sort.Ints(a.array)
+		slices.Sort(a.array)
 	}
 	return a
 }

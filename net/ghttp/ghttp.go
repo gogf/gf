@@ -165,7 +165,6 @@ const (
 	contentTypeApplicationXml = "application/xml"
 	contentTypeJavascript     = "application/javascript"
 	contentTypeOctetStream    = "application/octet-stream"
-	contentTypeForceDownload  = "application/force-download"
 
 	// Common multipart content types.
 	contentTypeMultipartPrefix = "multipart/"

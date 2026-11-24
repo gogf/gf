@@ -8,13 +8,14 @@
 package ghttp
 
 import (
-	"fmt"
 	"io"
+	"mime"
 	"net/http"
-	"net/url"
+	"path"
+	"strings"
 	"time"
+	"unicode"
 
-	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/net/ghttp/internal/response"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -88,16 +89,27 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 			downloadName = gfile.Basename(path)
 		}
 	}
-	r.Header().Set(HeaderContentType, contentTypeForceDownload)
-	r.Header().Set(HeaderAcceptRanges, "bytes")
-	if utils.IsASCII(downloadName) {
-		r.Header().Set(HeaderContentDisposition, fmt.Sprintf(`attachment;filename=%s`, url.QueryEscape(downloadName)))
-	} else {
-		r.Header().Set(HeaderContentDisposition, fmt.Sprintf(`attachment;filename*=UTF-8''%s`, url.QueryEscape(downloadName)))
-	}
-
+	r.Header().Set(HeaderContentDisposition, formatContentDisposition(downloadName))
 	r.Header().Set(HeaderAccessControlExposeHeaders, HeaderContentDisposition)
 	r.Server.serveFile(r.Request, serveFile)
+}
+
+// formatContentDisposition returns an RFC 6266 attachment value with a sanitized
+// filename parameter.
+func formatContentDisposition(name string) string {
+	// Normalize backslashes first so paths are split the same way on all platforms.
+	name = path.Base(strings.ReplaceAll(strings.TrimSpace(name), `\`, "/"))
+	name = strings.Map(func(r rune) rune {
+		if unicode.IsControl(r) {
+			return -1
+		}
+		return r
+	}, name)
+	name = strings.Trim(strings.TrimSpace(name), "/")
+	if name == "" || name == "." || name == ".." {
+		name = "download"
+	}
+	return mime.FormatMediaType("attachment", map[string]string{"filename": name})
 }
 
 // RedirectTo redirects the client to another location.

@@ -160,10 +160,9 @@ func (m *ListKVMap[K, V]) Map() map[K]V {
 	var data map[K]V
 	if m.list != nil {
 		data = make(map[K]V, len(m.data))
-		m.list.IteratorAsc(func(e *glist.TElement[*gListKVMapNode[K, V]]) bool {
+		for e := range m.list.IteratorAsc {
 			data[e.Value.key] = e.Value.value
-			return true
-		})
+		}
 	}
 	m.mu.RUnlock()
 	return data
@@ -175,10 +174,9 @@ func (m *ListKVMap[K, V]) MapStrAny() map[string]any {
 	var data map[string]any
 	if m.list != nil {
 		data = make(map[string]any, len(m.data))
-		m.list.IteratorAsc(func(e *glist.TElement[*gListKVMapNode[K, V]]) bool {
+		for e := range m.list.IteratorAsc {
 			data[gconv.String(e.Value.key)] = e.Value.value
-			return true
-		})
+		}
 	}
 	m.mu.RUnlock()
 	return data
@@ -189,12 +187,11 @@ func (m *ListKVMap[K, V]) FilterEmpty() {
 	m.mu.Lock()
 	if m.list != nil {
 		var keys = make([]K, 0, m.list.Size())
-		m.list.IteratorAsc(func(e *glist.TElement[*gListKVMapNode[K, V]]) bool {
+		for e := range m.list.IteratorAsc {
 			if empty.IsEmpty(e.Value.value) {
 				keys = append(keys, e.Value.key)
 			}
-			return true
-		})
+		}
 
 		if len(keys) > 0 {
 			for _, key := range keys {
@@ -586,11 +583,10 @@ func (m *ListKVMap[K, V]) Keys() []K {
 		index = 0
 	)
 	if m.list != nil {
-		m.list.IteratorAsc(func(e *glist.TElement[*gListKVMapNode[K, V]]) bool {
+		for e := range m.list.IteratorAsc {
 			keys[index] = e.Value.key
 			index++
-			return true
-		})
+		}
 	}
 	m.mu.RUnlock()
 	return keys
@@ -604,11 +600,10 @@ func (m *ListKVMap[K, V]) Values() []V {
 		index  = 0
 	)
 	if m.list != nil {
-		m.list.IteratorAsc(func(e *glist.TElement[*gListKVMapNode[K, V]]) bool {
+		for e := range m.list.IteratorAsc {
 			values[index] = e.Value.value
 			index++
-			return true
-		})
+		}
 	}
 	m.mu.RUnlock()
 	return values
@@ -676,15 +671,14 @@ func (m *ListKVMap[K, V]) Merge(other *ListKVMap[K, V]) {
 		defer other.mu.RUnlock()
 	}
 	var node *gListKVMapNode[K, V]
-	other.list.IteratorAsc(func(e *glist.TElement[*gListKVMapNode[K, V]]) bool {
+	for e := range other.list.IteratorAsc {
 		node = e.Value
 		if e, ok := m.data[node.key]; !ok {
 			m.data[node.key] = m.list.PushBack(&gListKVMapNode[K, V]{node.key, node.value})
 		} else {
 			e.Value = &gListKVMapNode[K, V]{node.key, node.value}
 		}
-		return true
-	})
+	}
 }
 
 // String returns the map as a string.
@@ -706,18 +700,17 @@ func (m ListKVMap[K, V]) MarshalJSON() (jsonBytes []byte, err error) {
 	}
 	buffer := bytes.NewBuffer(nil)
 	buffer.WriteByte('{')
-	m.Iterator(func(key K, value V) bool {
+	for key, value := range m.Iterator {
 		valueBytes, valueJSONErr := json.Marshal(value)
 		if valueJSONErr != nil {
 			err = valueJSONErr
-			return false
+			break
 		}
 		if buffer.Len() > 1 {
 			buffer.WriteByte(',')
 		}
 		fmt.Fprintf(buffer, `"%v":%s`, key, valueBytes)
-		return true
-	})
+	}
 	buffer.WriteByte('}')
 	return buffer.Bytes(), nil
 }
@@ -779,10 +772,9 @@ func (m *ListKVMap[K, V]) DeepCopy() any {
 	defer m.mu.RUnlock()
 	data := make(map[K]V, len(m.data))
 	if m.list != nil {
-		m.list.IteratorAsc(func(e *glist.TElement[*gListKVMapNode[K, V]]) bool {
+		for e := range m.list.IteratorAsc {
 			data[e.Value.key] = deepcopy.Copy(e.Value.value).(V)
-			return true
-		})
+		}
 	}
 	return NewListKVMapFrom(data, m.mu.IsSafe())
 }

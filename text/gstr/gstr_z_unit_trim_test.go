@@ -57,6 +57,12 @@ func Test_TrimRightStr(t *testing.T) {
 		t.Assert(gstr.TrimRightStr("我爱中国人", "人"), "我爱中国")
 		t.Assert(gstr.TrimRightStr("我爱中国人", "爱中国人"), "我")
 	})
+	// An empty `cut` strips nothing.
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.TrimRightStr("gogo", ""), "gogo")
+		t.Assert(gstr.TrimRightStr("gogo", "", 1), "gogo")
+		t.Assert(gstr.TrimStr("gogo", ""), "gogo")
+	})
 }
 
 func Test_TrimLeft(t *testing.T) {
@@ -79,6 +85,11 @@ func Test_TrimLeftStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.TrimLeftStr("我爱中国人", "我爱"), "中国人")
 		t.Assert(gstr.TrimLeftStr("我爱中国人", "我爱中国"), "人")
+	})
+	// An empty `cut` strips nothing.
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.TrimLeftStr("gogo", ""), "gogo")
+		t.Assert(gstr.TrimLeftStr("gogo", "", 1), "gogo")
 	})
 }
 

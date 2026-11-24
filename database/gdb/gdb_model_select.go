@@ -940,26 +940,25 @@ func (m *Model) getJoinedTableFieldsEx(ref tableRef, isMain bool, fieldsExSet *g
 		excluded  = gset.NewStrSet()
 		refPrefix = m.unquoteIdentifier(ref.prefix)
 	)
-	fieldsExSet.Iterator(func(v string) bool {
+	for v := range fieldsExSet.Iterator {
 		var (
 			pos   = gstr.PosR(v, ".")
 			field = m.unquoteIdentifier(v[pos+1:])
 		)
 		if pos < 0 {
 			if !isMain {
-				return true
+				continue
 			}
 		} else {
 			prefix := v[:pos]
 			// Table name without alias may be given without table prefix.
 			if m.unquoteIdentifier(prefix) != refPrefix &&
 				(ref.alias || m.unquoteIdentifier(m.db.GetCore().QuotePrefixTableName(prefix)) != refPrefix) {
-				return true
+				continue
 			}
 		}
 		excluded.Add(field, m.db.FoldIdentifier(field))
-		return true
-	})
+	}
 	return excluded
 }
 

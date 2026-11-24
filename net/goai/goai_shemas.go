@@ -55,10 +55,9 @@ func (s *Schemas) Removes(names []any) {
 func (s *Schemas) Map() map[string]SchemaRef {
 	s.init()
 	m := make(map[string]SchemaRef)
-	s.refs.Iterator(func(key, value any) bool {
+	for key, value := range s.refs.Iterator {
 		m[key.(string)] = value.(SchemaRef)
-		return true
-	})
+	}
 	return m
 }
 
