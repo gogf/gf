@@ -4,6 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// This file covers raw listener matching by listening address.
+
 package graceful
 
 import (
@@ -19,7 +21,7 @@ func Test_New_RawListener(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		listener, err := net.Listen("tcp", "127.0.0.1:0")
 		t.AssertNil(err)
-		defer listener.Close()
+		defer func() { t.AssertNil(listener.Close()) }()
 
 		var (
 			port   = strconv.Itoa(listener.Addr().(*net.TCPAddr).Port)
