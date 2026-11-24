@@ -14,8 +14,8 @@ package gspath
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"sort"
-	"strings"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
@@ -23,7 +23,6 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // SPath manages the path searching feature.
@@ -108,7 +107,7 @@ func (sp *SPath) Set(path string) (realPath string, err error) {
 	}
 	// The set path must be a directory.
 	if gfile.IsDir(realPath) {
-		realPath = strings.TrimRight(realPath, gfile.Separator)
+		realPath = filepath.Clean(realPath)
 		if sp.paths.Search(realPath) != -1 {
 			for _, v := range sp.paths.Slice() {
 				sp.removeMonitorByPath(v)
@@ -146,7 +145,7 @@ func (sp *SPath) Add(path string) (realPath string, err error) {
 		// fmt.Println("gspath:", realPath, sp.paths.Search(realPath))
 		// It will not add twice for the same directory.
 		if sp.paths.Search(realPath) < 0 {
-			realPath = strings.TrimRight(realPath, gfile.Separator)
+			realPath = filepath.Clean(realPath)
 			sp.paths.Append(realPath)
 			sp.updateCacheByPath(realPath)
 			sp.addMonitorByPath(realPath)
@@ -168,16 +167,20 @@ func (sp *SPath) Search(name string, indexFiles ...string) (filePath string, isD
 		sp.paths.LockFunc(func(array []string) {
 			path := ""
 			for _, v := range array {
-				path = gfile.Join(v, name)
-				if stat, err := os.Stat(path); stat != nil && !os.IsNotExist(err) {
-					path = gfile.Abs(path)
-					// Security check: the result file path must be under the searching directory.
-					if len(path) >= len(v) && path[:len(v)] == v {
-						filePath = path
-						isDir = stat.IsDir()
-						break
-					}
+				path = filepath.Join(v, name)
+				stat, err := os.Stat(path)
+				if stat == nil || os.IsNotExist(err) {
+					continue
 				}
+				path = gfile.Abs(path)
+				// The result must stay under the searching directory,
+				// including after resolving symbolic links.
+				if !isRealPathUnderRoot(v, path) {
+					continue
+				}
+				filePath = path
+				isDir = stat.IsDir()
+				break
 			}
 		})
 		if len(indexFiles) > 0 && isDir {
@@ -222,9 +225,7 @@ func (sp *SPath) Remove(path string) {
 	}
 	if gfile.Exists(path) {
 		for _, v := range sp.paths.Slice() {
-			name := gstr.Replace(path, v, "")
-			name = sp.formatCacheName(name)
-			sp.cache.Remove(name)
+			sp.cache.Remove(sp.nameFromPath(path, v))
 		}
 	} else {
 		name := sp.formatCacheName(path)
@@ -252,4 +253,33 @@ func (sp *SPath) AllPaths() []string {
 // Size returns the count of the searching directories.
 func (sp *SPath) Size() int {
 	return sp.paths.Len()
+}
+
+// isPathUnderRoot reports whether path is lexically under root.
+func isPathUnderRoot(root, path string) bool {
+	relativePath, err := filepath.Rel(root, path)
+	if err != nil {
+		return false
+	}
+	return relativePath == "." || filepath.IsLocal(relativePath)
+}
+
+// isRealPathUnderRoot reports whether path stays under root after resolving
+// symbolic links. A path without symbolic links is checked lexically only.
+func isRealPathUnderRoot(root, path string) bool {
+	if !isPathUnderRoot(root, path) {
+		return false
+	}
+	realPath, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return false
+	}
+	if realPath == path {
+		return true
+	}
+	realRoot, err := filepath.EvalSymlinks(root)
+	if err != nil {
+		return false
+	}
+	return isPathUnderRoot(realRoot, realPath)
 }

@@ -10,6 +10,7 @@
 package gspath
 
 import (
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -38,9 +39,8 @@ func (sp *SPath) formatCacheName(name string) string {
 
 // nameFromPath converts `filePath` to cache name.
 func (sp *SPath) nameFromPath(filePath, rootPath string) string {
-	name := gstr.Replace(filePath, rootPath, "")
-	name = sp.formatCacheName(name)
-	return name
+	name := strings.TrimPrefix(filePath, rootPath)
+	return sp.formatCacheName(name)
 }
 
 // makeCacheValue formats `filePath` to cache value.
@@ -63,20 +63,37 @@ func (sp *SPath) parseCacheValue(value string) (filePath string, isDir bool) {
 // If `filePath` is a directory, it also adds its all sub files/directories recursively
 // to the cache.
 func (sp *SPath) addToCache(filePath, rootPath string) {
+	realRoot, err := filepath.EvalSymlinks(rootPath)
+	if err != nil {
+		return
+	}
 	// Add itself firstly.
-	idDir := gfile.IsDir(filePath)
-	sp.cache.SetIfNotExist(
-		sp.nameFromPath(filePath, rootPath), sp.makeCacheValue(filePath, idDir),
-	)
+	if !sp.addToCacheItem(filePath, rootPath, realRoot) {
+		return
+	}
 	// If it's a directory, it adds all of its sub files/directories.
-	if idDir {
+	if gfile.IsDir(filePath) {
 		if files, err := gfile.ScanDir(filePath, "*", true); err == nil {
 			// fmt.Println("gspath add to cache:", filePath, files)
 			for _, path := range files {
-				sp.cache.SetIfNotExist(sp.nameFromPath(path, rootPath), sp.makeCacheValue(path, gfile.IsDir(path)))
+				sp.addToCacheItem(path, rootPath, realRoot)
 			}
 		}
 	}
+}
+
+// addToCacheItem adds one item to cache, and reports whether the item is added.
+// Items resolving outside `realRoot` are skipped.
+func (sp *SPath) addToCacheItem(filePath, rootPath, realRoot string) bool {
+	realPath, err := filepath.EvalSymlinks(filePath)
+	if err != nil || !isPathUnderRoot(realRoot, realPath) {
+		return false
+	}
+	sp.cache.SetIfNotExist(
+		sp.nameFromPath(filePath, rootPath),
+		sp.makeCacheValue(filePath, gfile.IsDir(filePath)),
+	)
+	return true
 }
 
 // addMonitorByPath adds gfsnotify monitoring recursively.
