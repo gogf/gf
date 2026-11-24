@@ -40,13 +40,7 @@ func EntitiesDecode(s string) string {
 // "&", "<", ">", `"`, "'".
 // Referer: http://php.net/manual/zh/function.htmlspecialchars.php
 func SpecialChars(s string) string {
-	return strings.NewReplacer(
-		"&", "&amp;",
-		"<", "&lt;",
-		">", "&gt;",
-		`"`, "&#34;",
-		"'", "&#39;",
-	).Replace(s)
+	return html.EscapeString(s)
 }
 
 // SpecialCharsDecode decodes some special chars for content, these special chars are:

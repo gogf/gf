@@ -124,6 +124,12 @@ func Test_StrLimit(t *testing.T) {
 		t.Assert(gstr.StrLimit("我爱GoFrame", 8, ""), "我爱Go")
 		t.Assert(gstr.StrLimit("*", 4, ""), "*")
 	})
+	// No suffix for a string that is not longer than `length`.
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.StrLimit("abc", 3), "abc")
+		t.Assert(gstr.StrLimit("abc", 3, "~"), "abc")
+		t.Assert(gstr.StrLimit("abcd", 3), "abc...")
+	})
 }
 
 func Test_StrLimitRune(t *testing.T) {
@@ -133,6 +139,12 @@ func Test_StrLimitRune(t *testing.T) {
 		t.Assert(gstr.StrLimitRune("我爱GoFrame", 2, "**"), "我爱**")
 		t.Assert(gstr.StrLimitRune("我爱GoFrame", 4, ""), "我爱Go")
 		t.Assert(gstr.StrLimitRune("*", 4, ""), "*")
+	})
+	// No suffix for a string that is not longer than `length`.
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.StrLimitRune("我爱", 2), "我爱")
+		t.Assert(gstr.StrLimitRune("我爱", 2, "~"), "我爱")
+		t.Assert(gstr.StrLimitRune("我爱Go", 2), "我爱...")
 	})
 }
 

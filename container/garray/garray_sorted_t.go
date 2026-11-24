@@ -9,6 +9,7 @@ package garray
 import (
 	"bytes"
 	"math"
+	"slices"
 
 	"github.com/gogf/gf/v2/internal/deepcopy"
 	"github.com/gogf/gf/v2/internal/empty"
@@ -344,12 +345,16 @@ func (a *SortedTArray[T]) Range(start int, end ...int) []T {
 	offsetEnd := len(a.array)
 	if len(end) > 0 && end[0] < offsetEnd {
 		offsetEnd = end[0]
-	}
-	if start > offsetEnd {
-		return nil
+		// A negative end counts back from the end of the array.
+		if offsetEnd < 0 {
+			offsetEnd += len(a.array)
+		}
 	}
 	if start < 0 {
 		start = 0
+	}
+	if start > offsetEnd {
+		return nil
 	}
 	array := ([]T)(nil)
 	if a.mu.IsSafe() {
@@ -515,21 +520,17 @@ func (a *SortedTArray[T]) Unique() *SortedTArray[T] {
 	if len(a.array) == 0 {
 		return a
 	}
-	for i := 0; i < len(a.array)-1; {
-		if a.getComparator()(a.array[i], a.array[i+1]) == 0 {
-			a.array = append(a.array[:i+1], a.array[i+2:]...)
-		} else {
-			i++
-		}
-	}
+	comparator := a.getComparator()
+	a.array = slices.CompactFunc(a.array, func(x, y T) bool {
+		return comparator(x, y) == 0
+	})
 	return a
 }
 
 // Clone returns a new array, which is a copy of current array.
 func (a *SortedTArray[T]) Clone() (newArray *SortedTArray[T]) {
 	a.mu.RLock()
-	array := make([]T, len(a.array))
-	copy(array, a.array)
+	array := cloneSlice(a.array)
 	a.mu.RUnlock()
 	return NewSortedTArrayFrom[T](array, a.comparator, a.mu.IsSafe())
 }
