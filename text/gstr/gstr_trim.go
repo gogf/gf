@@ -40,7 +40,8 @@ func TrimLeftStr(str string, cut string, count ...int) string {
 		lenCut   = len(cut)
 		cutCount = 0
 	)
-	for len(str) >= lenCut && str[0:lenCut] == cut {
+	// An empty `cut` strips nothing, without the check it never ends.
+	for lenCut > 0 && len(str) >= lenCut && str[0:lenCut] == cut {
 		str = str[lenCut:]
 		cutCount++
 		if len(count) > 0 && count[0] != -1 && cutCount >= count[0] {
@@ -67,7 +68,8 @@ func TrimRightStr(str string, cut string, count ...int) string {
 		lenCut   = len(cut)
 		cutCount = 0
 	)
-	for lenStr >= lenCut && str[lenStr-lenCut:lenStr] == cut {
+	// An empty `cut` strips nothing, without the check it never ends.
+	for lenCut > 0 && lenStr >= lenCut && str[lenStr-lenCut:lenStr] == cut {
 		lenStr = lenStr - lenCut
 		str = str[:lenStr]
 		cutCount++
