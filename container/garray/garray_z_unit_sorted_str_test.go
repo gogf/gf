@@ -788,6 +788,21 @@ func TestSortedStrArray_UnmarshalValue(t *testing.T) {
 		t.Assert(v.Name, "john")
 		t.Assert(v.Array.Slice(), g.SliceStr{"1", "2", "3"})
 	})
+	// A manually constructed array has a nil sorter and takes the defaults on unmarshal.
+	gtest.C(t, func(t *gtest.T) {
+		array := &garray.SortedStrArray{
+			SortedTArray: garray.NewSortedTArraySize(0, gstr.Compare),
+		}
+		t.AssertNil(json.Unmarshal([]byte(`["1","3","2"]`), array))
+		t.Assert(array.Slice(), g.SliceStr{"1", "2", "3"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := &garray.SortedStrArray{
+			SortedTArray: garray.NewSortedTArraySize(0, gstr.Compare),
+		}
+		t.AssertNil(array.UnmarshalValue([]string{"1", "3", "2"}))
+		t.Assert(array.Slice(), g.SliceStr{"1", "2", "3"})
+	})
 }
 func TestSortedStrArray_Filter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {

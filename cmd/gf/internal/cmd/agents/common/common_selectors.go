@@ -15,7 +15,6 @@ package common
 import (
 	"fmt"
 	"slices"
-	"sort"
 	"strings"
 	"unicode"
 )
@@ -177,8 +176,8 @@ func ResolveTargets[S SpecLike](selectors []string, registry []S, policy TargetP
 	if len(unknown) > 0 {
 		return nil, fmt.Errorf("unknown agent(s): %s", strings.Join(unknown, ", "))
 	}
-	sort.Slice(out, func(left, right int) bool {
-		return out[left].SpecName() < out[right].SpecName()
+	slices.SortFunc(out, func(a, b S) int {
+		return strings.Compare(a.SpecName(), b.SpecName())
 	})
 	return out, nil
 }

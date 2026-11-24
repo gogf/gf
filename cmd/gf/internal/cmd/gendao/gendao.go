@@ -7,9 +7,10 @@
 package gendao
 
 import (
+	"cmp"
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
@@ -257,8 +258,8 @@ func doGenDaoForArray(ctx context.Context, index int, in CGenDaoInput) {
 	// https://github.com/gogf/gf/issues/4603
 	sortedShardingPatterns := make([]string, len(in.ShardingPattern))
 	copy(sortedShardingPatterns, in.ShardingPattern)
-	sort.Slice(sortedShardingPatterns, func(i, j int) bool {
-		return len(sortedShardingPatterns[i]) > len(sortedShardingPatterns[j])
+	slices.SortFunc(sortedShardingPatterns, func(a, b string) int {
+		return cmp.Compare(len(b), len(a))
 	})
 	for i, tableName := range tableNames {
 		newTableName := tableName
