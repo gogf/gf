@@ -187,6 +187,7 @@ func (sp *SPath) Search(name string, indexFiles ...string) (filePath string, isD
 				if err != nil || !filepath.IsLocal(relativePath) {
 					continue
 				}
+				path = filepath.Join(v, relativePath)
 				stat, err := os.Stat(path)
 				if err != nil {
 					continue
@@ -203,11 +204,12 @@ func (sp *SPath) Search(name string, indexFiles ...string) (filePath string, isD
 		})
 		if len(indexFiles) > 0 && isDir {
 			for _, file := range indexFiles {
-				path := filepath.Join(filePath, file)
 				// Index files must also stay under the found directory.
-				if !isPathUnderRoot(filePath, path) {
+				relativePath, err := filepath.Rel(filePath, filepath.Join(filePath, file))
+				if err != nil || !filepath.IsLocal(relativePath) {
 					continue
 				}
+				path := filepath.Join(filePath, relativePath)
 				if _, err := os.Stat(path); err != nil {
 					continue
 				}
