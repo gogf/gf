@@ -7,9 +7,8 @@
 package gfile
 
 import (
+	"slices"
 	"strings"
-
-	"github.com/gogf/gf/v2/container/garray"
 )
 
 // fileSortFunc is the comparison function for files.
@@ -18,23 +17,20 @@ import (
 func fileSortFunc(path1, path2 string) int {
 	isDirPath1 := IsDir(path1)
 	isDirPath2 := IsDir(path2)
-	if isDirPath1 && !isDirPath2 {
-		return -1
-	}
-	if !isDirPath1 && isDirPath2 {
+	if isDirPath1 != isDirPath2 {
+		if isDirPath1 {
+			return -1
+		}
 		return 1
 	}
-	if n := strings.Compare(path1, path2); n != 0 {
-		return n
-	} else {
-		return -1
-	}
+	return strings.Compare(path1, path2)
 }
 
 // SortFiles sorts the `files` in order of: directory -> file.
 // Note that the item of `files` should be absolute path.
 func SortFiles(files []string) []string {
-	array := garray.NewSortedStrArrayComparator(fileSortFunc)
-	array.Add(files...)
-	return array.Slice()
+	sortedFiles := make([]string, len(files))
+	copy(sortedFiles, files)
+	slices.SortFunc(sortedFiles, fileSortFunc)
+	return sortedFiles
 }

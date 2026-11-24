@@ -14,7 +14,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/gogf/gf/v2/errors/gcode"
@@ -331,6 +331,18 @@ func (s *Server) serveFile(r *Request, f *staticFile, allowIndex ...bool) {
 	}
 }
 
+// compareStaticFiles sorts directories before files, then by name.
+func compareStaticFiles(a, b os.FileInfo) int {
+	aIsDir, bIsDir := a.IsDir(), b.IsDir()
+	if aIsDir && !bIsDir {
+		return -1
+	}
+	if !aIsDir && bIsDir {
+		return 1
+	}
+	return strings.Compare(a.Name(), b.Name())
+}
+
 // formatDirHref returns an HTML-safe, URL-escaped href for a directory path.
 func formatDirHref(urlPath string) string {
 	u := url.URL{Path: urlPath}
@@ -374,15 +386,7 @@ func (s *Server) listDir(r *Request, f http.File) {
 		return
 	}
 	// The folder type has the most priority than file.
-	sort.Slice(files, func(i, j int) bool {
-		if files[i].IsDir() && !files[j].IsDir() {
-			return true
-		}
-		if !files[i].IsDir() && files[j].IsDir() {
-			return false
-		}
-		return files[i].Name() < files[j].Name()
-	})
+	slices.SortFunc(files, compareStaticFiles)
 	if r.Response.Header().Get(HeaderContentType) == "" {
 		r.Response.Header().Set(HeaderContentType, "text/html; charset=utf-8")
 	}
