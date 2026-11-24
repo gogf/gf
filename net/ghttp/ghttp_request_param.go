@@ -57,10 +57,22 @@ func parseContentType(contentType string) string {
 		return ""
 	}
 	mediaType, _, err := mime.ParseMediaType(contentType)
-	if err != nil {
-		return ""
+	if err == nil {
+		return strings.ToLower(mediaType)
 	}
-	return strings.ToLower(mediaType)
+	// The standard library might still return the media type along with the error, for
+	// example `application/json; charset` returns `application/json` with
+	// ErrInvalidMediaParameter. Keep it so the declared type is not lost.
+	if mediaType != "" {
+		return strings.ToLower(mediaType)
+	}
+	// The header cannot be parsed at all, for example `application/json charset=utf-8`
+	// uses a space instead of a semicolon. Take the leading token as the media type,
+	// which keeps the declared type for the strict decoding.
+	if fields := strings.Fields(contentType); len(fields) > 0 {
+		return strings.ToLower(strings.TrimSuffix(fields[0], ";"))
+	}
+	return ""
 }
 
 // isJsonContentType checks and returns whether the given media type declares JSON content,
@@ -77,18 +89,12 @@ func isXmlContentType(mediaType string) bool {
 		strings.HasSuffix(mediaType, contentTypeXmlSuffix)
 }
 
-// isBinaryContentType checks and returns whether the given content type is binary, which
-// should not be parsed as request parameters.
-func isBinaryContentType(contentType string) bool {
-	// An empty content type is not binary, as the body is parsed by the default
-	// parameters decoding, which keeps the compatibility for the clients that
-	// do not set the content type.
-	if contentType == "" {
-		return false
-	}
-	mediaType := parseContentType(contentType)
-	// A content type that cannot be parsed is not treated as binary, so the body is left
-	// to the default parameters decoding, which keeps the compatibility.
+// isBinaryMediaType checks and returns whether the given media type is binary, which should
+// not be parsed as request parameters.
+func isBinaryMediaType(mediaType string) bool {
+	// An empty media type is not binary, as the body is parsed by the default parameters
+	// decoding, which keeps the compatibility for the clients that do not set the content
+	// type, or the content type that cannot be parsed.
 	if mediaType == "" {
 		return false
 	}
@@ -337,11 +343,12 @@ func (r *Request) parseBody() {
 		return
 	}
 
+	// The content type is parsed once here and reused by the checks below.
+	mediaType := parseContentType(contentType)
 	// Skip binary content types, which should not be parsed.
-	if isBinaryContentType(contentType) {
+	if isBinaryMediaType(mediaType) {
 		return
 	}
-	mediaType := parseContentType(contentType)
 
 	if body := r.GetBody(); len(body) > 0 {
 		// Trim space/new line characters.

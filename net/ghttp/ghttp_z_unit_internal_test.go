@@ -912,6 +912,31 @@ func Test_Request_ParseBody_ContentType(t *testing.T) {
 			t.AssertNil(r.bodyMap)
 		}
 	})
+	gtest.C(t, func(t *gtest.T) {
+		// The declared JSON content type is still recognized when the header carries a
+		// malformed parameter, so the strict JSON decoding runs even if the automatic
+		// decoding is disabled.
+		for _, contentType := range []string{
+			`application/json; charset`,
+			`application/json charset=utf-8`,
+		} {
+			r := newRequest(contentType, `{"id":1}`)
+			r.Server.config.AutoDecodingBodyDisabled = true
+			r.parseBody()
+			t.AssertNil(r.GetError())
+			t.Assert(r.bodyMap, map[string]any{"id": 1})
+		}
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// A JSON array with a malformed JSON content type is rejected by the strict JSON
+		// decoding, which keeps the behavior of the previous versions.
+		r := newRequest(`application/json; charset`, `[1,2]`)
+		r.Server.config.AutoDecodingBodyDisabled = true
+		r.parseBody()
+		t.AssertNE(r.GetError(), nil)
+		t.Assert(gerror.Code(r.GetError()), gcode.CodeInvalidParameter)
+		t.AssertNil(r.bodyArray)
+	})
 }
 
 // Test_Request_ParseBody_ArrayBody checks the JSON array body decoding for the request struct
@@ -972,23 +997,21 @@ func Test_Request_ParseBody_ArrayBody(t *testing.T) {
 }
 
 // Test_IsBinaryContentType checks the binary content type detection.
-func Test_IsBinaryContentType(t *testing.T) {
+// Test_IsBinaryMediaType checks the binary media type detection.
+func Test_IsBinaryMediaType(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		for _, contentType := range []string{
+		for _, mediaType := range []string{
 			`image/png`,
 			`image/svg+xml`,
 			`audio/mpeg`,
 			`video/mp4`,
 			`application/octet-stream`,
-			`IMAGE/PNG`,
 		} {
-			t.Assert(isBinaryContentType(contentType), true)
+			t.Assert(isBinaryMediaType(mediaType), true)
 		}
-		for _, contentType := range []string{
+		for _, mediaType := range []string{
 			``,
 			`application/json`,
-			`application/json; charset=utf-8`,
-			`application/json charset=utf-8`,
 			`application/xml`,
 			`text/xml`,
 			`application/atom+xml`,
@@ -996,7 +1019,28 @@ func Test_IsBinaryContentType(t *testing.T) {
 			`text/plain`,
 			`application/x-www-form-urlencoded`,
 		} {
-			t.Assert(isBinaryContentType(contentType), false)
+			t.Assert(isBinaryMediaType(mediaType), false)
+		}
+	})
+}
+
+// Test_ParseContentType checks the media type parsing, especially the headers that the
+// standard library cannot parse cleanly.
+func Test_ParseContentType(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for contentType, expected := range map[string]string{
+			``:                                  ``,
+			`application/json`:                  `application/json`,
+			`application/json; charset=utf-8`:   `application/json`,
+			`Application/JSON; charset=utf-8`:   `application/json`,
+			`application/json; charset`:         `application/json`,
+			`application/json charset=utf-8`:    `application/json`,
+			`application/problem+json`:          `application/problem+json`,
+			`application/atom+xml`:              `application/atom+xml`,
+			`text/plain; charset=iso-8859-1`:    `text/plain`,
+			`application/x-www-form-urlencoded`: `application/x-www-form-urlencoded`,
+		} {
+			t.Assert(parseContentType(contentType), expected)
 		}
 	})
 }
