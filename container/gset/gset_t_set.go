@@ -8,6 +8,7 @@ package gset
 
 import (
 	"bytes"
+	"maps"
 
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
@@ -309,15 +310,7 @@ func (set *TSet[T]) Equal(other *TSet[T]) bool {
 	defer set.mu.RUnlock()
 	other.mu.RLock()
 	defer other.mu.RUnlock()
-	if len(set.data) != len(other.data) {
-		return false
-	}
-	for key := range set.data {
-		if _, ok := other.data[key]; !ok {
-			return false
-		}
-	}
-	return true
+	return maps.Equal(set.data, other.data)
 }
 
 // IsSubsetOf checks whether the current set is a sub-set of `other`.
@@ -350,15 +343,9 @@ func (set *TSet[T]) Union(others ...*TSet[T]) (newSet *TSet[T]) {
 		if set != other {
 			other.mu.RLock()
 		}
-		for k, v := range set.data {
-			newSet.data[k] = v
-		}
+		maps.Copy(newSet.data, set.data)
 		if set != other {
-			for k, v := range other.data {
-				newSet.data[k] = v
-			}
-		}
-		if set != other {
+			maps.Copy(newSet.data, other.data)
 			other.mu.RUnlock()
 		}
 	}
@@ -447,9 +434,7 @@ func (set *TSet[T]) Merge(others ...*TSet[T]) *TSet[T] {
 		if set != other {
 			other.mu.RLock()
 		}
-		for k, v := range other.data {
-			set.data[k] = v
-		}
+		maps.Copy(set.data, other.data)
 		if set != other {
 			other.mu.RUnlock()
 		}
