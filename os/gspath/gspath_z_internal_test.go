@@ -47,17 +47,13 @@ func Test_isPathUnderRoot_MixedPaths(t *testing.T) {
 
 func Test_isRealPathUnderRoot(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		base := t.TempDir()
-		root := filepath.Join(base, "root")
-		outside := filepath.Join(base, "outside")
+		root := filepath.Join(t.TempDir(), "root")
 		t.AssertNil(os.Mkdir(root, 0o755))
-		t.AssertNil(os.Mkdir(outside, 0o755))
-		t.AssertNil(os.WriteFile(filepath.Join(outside, "secret.txt"), []byte("secret"), 0o644))
+		realRoot, err := filepath.EvalSymlinks(root)
+		t.AssertNil(err)
 
-		// Lexically outside the root.
-		t.Assert(isRealPathUnderRoot(root, filepath.Join(outside, "secret.txt")), false)
 		// Missing paths cannot be resolved.
-		t.Assert(isRealPathUnderRoot(root, filepath.Join(root, "missing.txt")), false)
+		t.Assert(isRealPathUnderRoot(realRoot, filepath.Join(root, "missing.txt")), false)
 	})
 }
 

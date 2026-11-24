@@ -43,12 +43,28 @@ func TestSPath_Search_SymlinkEscape(t *testing.T) {
 		path, _ = gspath.Search(root, "escape-dir/secret.txt")
 		t.Assert(path, "")
 
+		// Index files resolving inside the root are returned,
+		// and those resolving outside the root are not.
+		insideDir := filepath.Join(root, "dir-in")
+		outsideDir := filepath.Join(root, "dir-out")
+		t.AssertNil(os.Mkdir(insideDir, 0o755))
+		t.AssertNil(os.Mkdir(outsideDir, 0o755))
+		t.AssertNil(os.Symlink(filepath.Join(root, "inside.txt"), filepath.Join(insideDir, "index.html")))
+		t.AssertNil(os.Symlink(filepath.Join(outside, "secret.txt"), filepath.Join(outsideDir, "index.html")))
+		path, isDir := gspath.Search(root, "dir-in", "index.html")
+		t.Assert(path, filepath.Join(insideDir, "index.html"))
+		t.Assert(isDir, false)
+		path, isDir = gspath.Search(root, "dir-out", "index.html")
+		t.Assert(path, outsideDir)
+		t.Assert(isDir, true)
+
 		// Cache entries are validated by their resolved paths as well.
-		path, _ = gspath.SearchWithCache(root, "inside-link.txt")
+		sp := gspath.New(root, true)
+		path, _ = sp.Search("inside-link.txt")
 		t.Assert(path, filepath.Join(root, "inside-link.txt"))
-		path, _ = gspath.SearchWithCache(root, "escape-file.txt")
+		path, _ = sp.Search("escape-file.txt")
 		t.Assert(path, "")
-		path, _ = gspath.SearchWithCache(root, "escape-dir/secret.txt")
+		path, _ = sp.Search("escape-dir/secret.txt")
 		t.Assert(path, "")
 	})
 }

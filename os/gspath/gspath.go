@@ -27,8 +27,9 @@ import (
 
 // SPath manages the path searching feature.
 type SPath struct {
-	paths *garray.StrArray // The searching directories array.
-	cache *gmap.StrStrMap  // Searching cache map, it is not enabled if it's nil.
+	paths     *garray.StrArray // The searching directories array.
+	realPaths *gmap.StrStrMap  // Searching directories mapping to their real paths with symbolic links resolved.
+	cache     *gmap.StrStrMap  // Searching cache map, it is not enabled if it's nil.
 }
 
 // SPathCacheItem is a cache item for searching.
@@ -47,7 +48,8 @@ var (
 // New creates and returns a new path searching manager.
 func New(path string, cache bool) *SPath {
 	sp := &SPath{
-		paths: garray.NewStrArray(true),
+		paths:     garray.NewStrArray(true),
+		realPaths: gmap.NewStrStrMap(true),
 	}
 	if cache {
 		sp.cache = gmap.NewStrStrMap(true)
@@ -108,6 +110,10 @@ func (sp *SPath) Set(path string) (realPath string, err error) {
 	// The set path must be a directory.
 	if gfile.IsDir(realPath) {
 		realPath = filepath.Clean(realPath)
+		realRoot, err := filepath.EvalSymlinks(realPath)
+		if err != nil {
+			return "", gerror.Wrapf(err, `resolve real path of "%s" failed`, realPath)
+		}
 		if sp.paths.Search(realPath) != -1 {
 			for _, v := range sp.paths.Slice() {
 				sp.removeMonitorByPath(v)
@@ -115,9 +121,11 @@ func (sp *SPath) Set(path string) (realPath string, err error) {
 		}
 		intlog.Print(context.TODO(), "paths clear:", sp.paths)
 		sp.paths.Clear()
+		sp.realPaths.Clear()
 		if sp.cache != nil {
 			sp.cache.Clear()
 		}
+		sp.realPaths.Set(realPath, realRoot)
 		sp.paths.Append(realPath)
 		sp.updateCacheByPath(realPath)
 		sp.addMonitorByPath(realPath)
@@ -146,6 +154,11 @@ func (sp *SPath) Add(path string) (realPath string, err error) {
 		// It will not add twice for the same directory.
 		if sp.paths.Search(realPath) < 0 {
 			realPath = filepath.Clean(realPath)
+			realRoot, err := filepath.EvalSymlinks(realPath)
+			if err != nil {
+				return "", gerror.Wrapf(err, `resolve real path of "%s" failed`, realPath)
+			}
+			sp.realPaths.Set(realPath, realRoot)
 			sp.paths.Append(realPath)
 			sp.updateCacheByPath(realPath)
 			sp.addMonitorByPath(realPath)
@@ -164,42 +177,46 @@ func (sp *SPath) Add(path string) (realPath string, err error) {
 func (sp *SPath) Search(name string, indexFiles ...string) (filePath string, isDir bool) {
 	// No cache enabled.
 	if sp.cache == nil {
-		sp.paths.LockFunc(func(array []string) {
-			path := ""
+		var realRoot string
+		sp.paths.RLockFunc(func(array []string) {
 			for _, v := range array {
-				path = filepath.Join(v, name)
+				path := filepath.Join(v, name)
 				// The result must stay under the searching directory,
 				// including after resolving symbolic links.
 				relativePath, err := filepath.Rel(v, path)
 				if err != nil || !filepath.IsLocal(relativePath) {
 					continue
 				}
-				path = filepath.Join(v, relativePath)
 				stat, err := os.Stat(path)
-				if stat == nil || os.IsNotExist(err) {
+				if err != nil {
 					continue
 				}
-				path = gfile.Abs(path)
-				if !isRealPathUnderRoot(v, path) {
+				vRealRoot := sp.realPaths.Get(v)
+				if vRealRoot == "" || !isRealPathUnderRoot(vRealRoot, path) {
 					continue
 				}
 				filePath = path
 				isDir = stat.IsDir()
+				realRoot = vRealRoot
 				break
 			}
 		})
 		if len(indexFiles) > 0 && isDir {
-			if name == "/" {
-				name = ""
-			}
-			path := ""
 			for _, file := range indexFiles {
-				path = filePath + gfile.Separator + file
-				if gfile.Exists(path) {
-					filePath = path
-					isDir = false
-					break
+				path := filepath.Join(filePath, file)
+				// Index files must also stay under the found directory.
+				if !isPathUnderRoot(filePath, path) {
+					continue
 				}
+				if _, err := os.Stat(path); err != nil {
+					continue
+				}
+				if !isRealPathUnderRoot(realRoot, path) {
+					continue
+				}
+				filePath = path
+				isDir = false
+				break
 			}
 		}
 		return
@@ -269,19 +286,13 @@ func isPathUnderRoot(root, path string) bool {
 	return relativePath == "." || filepath.IsLocal(relativePath)
 }
 
-// isRealPathUnderRoot reports whether path stays under root after resolving
-// symbolic links. A path without symbolic links is checked lexically only.
-func isRealPathUnderRoot(root, path string) bool {
-	if !isPathUnderRoot(root, path) {
-		return false
-	}
+// isRealPathUnderRoot reports whether path stays under realRoot after resolving
+// symbolic links. The caller must ensure that path is lexically under the
+// searching root, and realRoot is that root with symbolic links resolved.
+func isRealPathUnderRoot(realRoot, path string) bool {
 	realPath, err := filepath.EvalSymlinks(path)
 	if err != nil {
 		return false
 	}
-	if realPath == path {
-		return true
-	}
-	realRoot, err := filepath.EvalSymlinks(root)
-	return err == nil && isPathUnderRoot(realRoot, realPath)
+	return realPath == path || isPathUnderRoot(realRoot, realPath)
 }

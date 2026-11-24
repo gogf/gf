@@ -32,15 +32,23 @@ func TestSPath_Search_Escape(t *testing.T) {
 		name := gfile.Join("..", "root-evil", "secret.txt")
 		path, _ := gspath.Search(root, name)
 		t.Assert(path, "")
-		path, _ = gspath.SearchWithCache(root, name)
+		sp := gspath.New(root, true)
+		path, _ = sp.Search(name)
 		t.Assert(path, "")
 
 		// Normal files are still found in both modes.
 		path, isDir := gspath.Search(root, "inside.txt")
 		t.Assert(path, filepath.Join(root, "inside.txt"))
 		t.Assert(isDir, false)
-		path, isDir = gspath.SearchWithCache(root, "inside.txt")
+		path, isDir = sp.Search("inside.txt")
 		t.Assert(path, filepath.Join(root, "inside.txt"))
 		t.Assert(isDir, false)
+
+		// Index files must stay under the found directory.
+		t.AssertNil(gfile.Mkdir(filepath.Join(root, "sub")))
+		t.AssertNil(os.WriteFile(filepath.Join(root, "secret.html"), []byte("secret"), 0o644))
+		path, isDir = gspath.Search(root, "sub", gfile.Join("..", "secret.html"))
+		t.Assert(path, filepath.Join(root, "sub"))
+		t.Assert(isDir, true)
 	})
 }
