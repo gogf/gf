@@ -570,6 +570,17 @@ func Test_Basic(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(j.Get("0"), 1)
 
+		// Removing a non-numeric path from an array keeps the array unchanged.
+		j = gjson.New(`{"a":[1,2,3]}`)
+		t.AssertNil(j.Remove("a.x"))
+		t.Assert(j.MustToJsonString(), `{"a":[1,2,3]}`)
+		t.AssertNil(j.Remove("a.x.y"))
+		t.Assert(j.MustToJsonString(), `{"a":[1,2,3]}`)
+
+		j = gjson.New(`[1,2,3]`)
+		t.AssertNil(j.Remove("x"))
+		t.Assert(j.MustToJsonString(), `[1,2,3]`)
+
 		name := struct {
 			Name string
 		}{Name: "gf"}

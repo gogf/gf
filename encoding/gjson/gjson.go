@@ -113,6 +113,7 @@ func (j *Json) setValue(pattern string, value any, removed bool) error {
 	return nil
 }
 
+// setPathArgs holds the state shared by one Set or Remove operation.
 type setPathArgs struct {
 	pattern  string
 	value    any
@@ -137,6 +138,7 @@ func (j *Json) setPath(node any, array []string, args *setPathArgs) (any, error)
 	}
 }
 
+// setMapPath resolves one pattern segment against a map node.
 func (j *Json) setMapPath(node map[string]any, segment string, rest []string, args *setPathArgs) (any, error) {
 	if len(rest) == 0 {
 		if args.removing {
@@ -170,8 +172,12 @@ func (j *Json) setMapPath(node map[string]any, segment string, rest []string, ar
 	return node, nil
 }
 
+// setArrayPath resolves one pattern segment against an array node.
 func (j *Json) setArrayPath(node []any, segment string, rest []string, args *setPathArgs) (any, error) {
 	if !gstr.IsNumeric(segment) {
+		if args.removing {
+			return node, nil
+		}
 		if len(rest) == 0 {
 			return map[string]any{segment: args.value}, nil
 		}
@@ -222,6 +228,7 @@ func (j *Json) setArrayPath(node []any, segment string, rest []string, args *set
 	return extended, nil
 }
 
+// setDefaultPath replaces a scalar node with the hierarchy built from the remaining segments.
 func (j *Json) setDefaultPath(node any, segment string, rest []string, args *setPathArgs) (any, error) {
 	if args.removing {
 		return node, nil
@@ -253,6 +260,7 @@ func (j *Json) setDefaultPath(node any, segment string, rest []string, args *set
 	return nodeArray, nil
 }
 
+// parseArrayIndex parses a non-negative array index from a pattern segment.
 func parseArrayIndex(segment, pattern string) (int, error) {
 	n, err := strconv.Atoi(segment)
 	if err != nil {
@@ -264,6 +272,7 @@ func parseArrayIndex(segment, pattern string) (int, error) {
 	return n, nil
 }
 
+// newSetNode creates an empty node matching the type implied by the next segment.
 func newSetNode(segment, pattern string) (any, error) {
 	if !gstr.IsNumeric(segment) {
 		return map[string]any{}, nil

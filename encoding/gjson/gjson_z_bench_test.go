@@ -100,7 +100,9 @@ func Benchmark_Set_Existing_Simple_Json(b *testing.B) {
 	j := gjson.New(jsonStr1)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		j.Set("name", "john")
+		if err := j.Set("name", "john"); err != nil {
+			b.Fatal(err)
+		}
 	}
 }
 
@@ -108,7 +110,9 @@ func Benchmark_Set_Existing_Array_Index_Json(b *testing.B) {
 	j := gjson.New(jsonStr1)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		j.Set("slice.1", 2)
+		if err := j.Set("slice.1", 2); err != nil {
+			b.Fatal(err)
+		}
 	}
 }
 
@@ -116,7 +120,9 @@ func Benchmark_Set_Existing_Complicated_Json(b *testing.B) {
 	j := gjson.New(jsonStr2)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		j.Set("MsgSeq", 23)
+		if err := j.Set("MsgSeq", 23); err != nil {
+			b.Fatal(err)
+		}
 	}
 }
 
@@ -125,7 +131,9 @@ func Benchmark_Set_Existing_Simple_Json_Parallel(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			j.Set("name", "john")
+			if err := j.Set("name", "john"); err != nil {
+				b.Error(err)
+			}
 		}
 	})
 }
