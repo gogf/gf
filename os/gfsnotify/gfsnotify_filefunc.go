@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -88,7 +88,7 @@ func fileScanDir(path string, pattern string, recursive ...bool) ([]string, erro
 		return nil, err
 	}
 	if len(list) > 0 {
-		sort.Strings(list)
+		slices.Sort(list)
 	}
 	return list, nil
 }

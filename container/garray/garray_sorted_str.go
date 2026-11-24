@@ -30,7 +30,7 @@ func (a *SortedStrArray) lazyInit() {
 	a.once.Do(func() {
 		if a.SortedTArray == nil {
 			a.SortedTArray = NewSortedTArraySize(0, defaultComparatorStr, false)
-			a.SetSorter(quickSortStr)
+			a.SetSorter(defaultSorter[string])
 		}
 	})
 }
@@ -55,7 +55,7 @@ func NewSortedStrArrayComparator(comparator func(a, b string) int, safe ...bool)
 // which is false in default.
 func NewSortedStrArraySize(cap int, safe ...bool) *SortedStrArray {
 	a := NewSortedTArraySize(cap, defaultComparatorStr, safe...)
-	a.SetSorter(quickSortStr)
+	a.SetSorter(defaultSorter[string])
 	return &SortedStrArray{
 		SortedTArray: a,
 	}
@@ -67,7 +67,7 @@ func NewSortedStrArraySize(cap int, safe ...bool) *SortedStrArray {
 func NewSortedStrArrayFrom(array []string, safe ...bool) *SortedStrArray {
 	a := NewSortedStrArraySize(0, safe...)
 	a.array = array
-	quickSortStr(a.array, a.getComparator())
+	defaultSorter(a.array, a.getComparator())
 	return a
 }
 
@@ -414,7 +414,7 @@ func (a *SortedStrArray) UnmarshalJSON(b []byte) error {
 	a.lazyInit()
 	if a.comparator == nil || a.sorter == nil {
 		a.comparator = defaultComparatorStr
-		a.sorter = quickSortStr
+		a.sorter = defaultSorter[string]
 		a.array = make([]string, 0)
 	}
 	return a.SortedTArray.UnmarshalJSON(b)
@@ -425,7 +425,7 @@ func (a *SortedStrArray) UnmarshalValue(value any) (err error) {
 	a.lazyInit()
 	if a.comparator == nil || a.sorter == nil {
 		a.comparator = defaultComparatorStr
-		a.sorter = quickSortStr
+		a.sorter = defaultSorter[string]
 	}
 
 	return a.SortedTArray.UnmarshalValue(value)
