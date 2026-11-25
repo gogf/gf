@@ -132,33 +132,32 @@ func Test_SafeContentForHttp_GzipEncoded(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		for _, c := range []struct {
-			name   string
 			header http.Header
 			data   []byte
 			expect string
 		}{
 			// Content codings are case-insensitive.
-			{"lower case", http.Header{"Content-Encoding": {"gzip"}}, compressedData, content},
-			{"mixed case", http.Header{"Content-Encoding": {"GZip"}}, compressedData, content},
-			{"upper case", http.Header{"Content-Encoding": {"GZIP"}}, compressedData, content},
+			{http.Header{"Content-Encoding": {"gzip"}}, compressedData, content},
+			{http.Header{"Content-Encoding": {"GZip"}}, compressedData, content},
+			{http.Header{"Content-Encoding": {"GZIP"}}, compressedData, content},
 			// Parameters and surrounding blanks of the content coding are ignored.
-			{"blank padded", http.Header{"Content-Encoding": {" gzip "}}, compressedData, content},
-			{"valid parameter", http.Header{"Content-Encoding": {"gzip; level=1"}}, compressedData, content},
-			{"parameter with blank", http.Header{"Content-Encoding": {"GZip ; level=1"}}, compressedData, content},
-			{"invalid parameter", http.Header{"Content-Encoding": {"gzip; foo"}}, compressedData, content},
+			{http.Header{"Content-Encoding": {" gzip "}}, compressedData, content},
+			{http.Header{"Content-Encoding": {"gzip; level=1"}}, compressedData, content},
+			{http.Header{"Content-Encoding": {"GZip ; level=1"}}, compressedData, content},
+			{http.Header{"Content-Encoding": {"gzip; foo"}}, compressedData, content},
 			// Every coding of a comma separated value is checked.
-			{"second coding in one line", http.Header{"Content-Encoding": {"br, gzip"}}, compressedData, content},
+			{http.Header{"Content-Encoding": {"br, gzip"}}, compressedData, content},
 			// Every Content-Encoding header line is checked.
-			{"second header line", http.Header{"Content-Encoding": {"br", "gzip"}}, compressedData, content},
+			{http.Header{"Content-Encoding": {"br", "gzip"}}, compressedData, content},
 			// Other content codings are not decompressed.
-			{"missing header", http.Header{}, []byte(content), content},
-			{"empty coding", http.Header{"Content-Encoding": {""}}, []byte(content), content},
-			{"identity coding", http.Header{"Content-Encoding": {"identity"}}, []byte(content), content},
-			{"br coding", http.Header{"Content-Encoding": {"br"}}, []byte(content), content},
+			{http.Header{}, []byte(content), content},
+			{http.Header{"Content-Encoding": {""}}, []byte(content), content},
+			{http.Header{"Content-Encoding": {"identity"}}, []byte(content), content},
+			{http.Header{"Content-Encoding": {"br"}}, []byte(content), content},
 			// `x-gzip` is an alias of `gzip` in RFC 9110, but it is not handled on purpose.
-			{"x-gzip coding", http.Header{"Content-Encoding": {"x-gzip"}}, []byte(content), content},
+			{http.Header{"Content-Encoding": {"x-gzip"}}, []byte(content), content},
 			// The coding name is compared as a whole, not by prefix.
-			{"prefixed coding", http.Header{"Content-Encoding": {"gzipx"}}, []byte(content), content},
+			{http.Header{"Content-Encoding": {"gzipx"}}, []byte(content), content},
 		} {
 			s, err := gtrace.SafeContentForHttp(c.data, c.header)
 			t.AssertNil(err)
